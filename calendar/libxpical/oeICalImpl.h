@@ -35,11 +35,81 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "oeIICal.h"
+#include <vector>
+#include "nsITimer.h"
 
 #define OE_ICAL_CID \
 { 0x0a8c5de7, 0x0d19, 0x4b95, { 0x82, 0xf4, 0xe0, 0xaf, 0x92, 0x45, 0x32, 0x27 } }
 
 #define OE_ICAL_CONTRACTID "@mozilla.org/ical;1"
+
+class EventList {
+public:
+    oeIICalEvent* event;
+    EventList* next;
+    EventList() {
+        event = NULL;
+        next = NULL;
+    }
+    ~EventList() {
+        if( event )
+            event->Release();
+        if( next )
+            delete next;
+    }
+    void Add( oeIICalEvent* e) {
+        if( !event ) {
+            event = e;
+        } else {
+            if( !next ) {
+                next = new EventList();
+            }
+            next->Add( e );
+        }
+    }
+    oeIICalEvent* GetEventById( PRUint32 id ) {
+        if( !event )
+            return NULL;
+        PRUint32 eid=0;
+        event->GetId( &eid );
+        if( eid == id )
+            return event;
+        if( next )
+            return next->GetEventById( id );
+        return NULL;
+    }
+    void Remove( PRUint32 id ) {
+        if( !event )
+            return;
+        PRUint32 eid=0;
+        event->GetId( &eid );
+        if( eid == id ) {
+            event->Release();
+            if( next ) {
+                event = next->event;
+                EventList *tmp = next;
+                next = next->next;
+                tmp->next = NULL;
+                tmp->event = NULL;
+                delete tmp;
+            } else {
+                event = NULL;
+            }
+        } else {
+            if( next )
+                next->Remove( id );
+        }
+    }
+/*    int Count() {
+        int result=0;
+        if( !event )
+            return 0;
+        result++;
+        if( next )
+            result += next->Count();
+        return result;
+    }*/
+};
 
 class oeICalImpl : public oeIICal
 {
@@ -68,4 +138,11 @@ class oeICalImpl : public oeIICal
         * commented out (because this macro already defines them.)
         */
         NS_DECL_OEIICAL
+        void SetupAlarmManager();
+private:
+    vector<oeIICalObserver*> m_observerlist;
+    bool m_batchMode;
+    EventList m_eventlist;
+    nsITimer *m_alarmtimer;
+    char serveraddr[200];
 };

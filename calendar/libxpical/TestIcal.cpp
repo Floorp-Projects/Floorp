@@ -37,10 +37,7 @@
 #include <unistd.h>
 #include <oeIICal.h>
 #include <oeICalImpl.h>
-#include <oeICalEventImpl.h>
 #include <nsIServiceManager.h>
-//#include <nsXPIDLString.h>
-
 
 main()
 {
@@ -82,7 +79,7 @@ main()
         return -2;
     }
 
-    mysample->SetServer( "/home/mostafah/calendar" );
+    mysample->SetServer( "/tmp/.oecalendar" );
     rv = mysample->Test();
 
     if ( rv != NS_OK )

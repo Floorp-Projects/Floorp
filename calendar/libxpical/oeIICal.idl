@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+interface nsISimpleEnumerator;
 
 /**
  * The uuid is a unique number identifying the interface normally
@@ -49,58 +50,97 @@
  *
  */
 
+[scriptable, uuid(db180127-cc56-40c6-a8ef-7e329e1c4142)]
+interface oeIDateTime : nsISupports
+{
+    attribute short year;
+    attribute short month;
+    attribute short day;
+    attribute short hour;
+    attribute short minute;
+    PRTime getTime();
+    void setTime( in unsigned long long ms );
+    string toString();
+};
+
 [scriptable, uuid(89c5cd5a-af2d-45e6-83c7-2f2420a13626)]
 interface oeIICalEvent : nsISupports
 {
-	attribute unsigned long Id;
-	attribute string Title;
-	attribute string Description;
-	attribute string Location;
-    attribute string Category;
-	attribute boolean PrivateEvent;
-	attribute boolean AllDay;
-	attribute boolean Alarm;
-//	attribute boolean AlarmWentOff;
-	attribute unsigned long AlarmLength;
-	attribute string AlarmEmailAddress;
-	attribute string InviteEmailAddress;
-	attribute string SnoozeTime;
-    attribute short RecurType;
-    attribute unsigned long RecurInterval;
-	attribute string RepeatUnits;
-	attribute boolean RepeatForever;
-	void SetStartDate( in short year, in short month, in short day, in short hour, in short min);
-	void SetEndDate( in short year, in short month, in short day, in short hour, in short min);
-	void SetRecurInfo( in short type, in unsigned long interval, in short endyear, in short endmonth, in short endday);
-	string GetNextRecurrence( in short year, in short month, in short day );
-	string GetRecurEndDate();
-	string GetStartDate();
-	string GetEndDate();
-//	void SetAlarm(in short year, in short month, in short day, in short hour, in short min);
+    readonly attribute oeIDateTime start;
+    readonly attribute oeIDateTime end;
+    readonly attribute unsigned long id;
+    attribute string title;
+    attribute string description;
+    attribute string location;
+    attribute string category;
+    attribute boolean privateEvent;
+    attribute unsigned long syncId;
+    attribute boolean allDay;
+    attribute boolean alarm;
+    attribute string alarmUnits;
+    attribute unsigned long alarmLength;
+    attribute string alarmEmailAddress;
+    attribute string inviteEmailAddress;
+    attribute unsigned long recurInterval;
+    readonly attribute oeIDateTime recurEnd;
+    attribute boolean recur;
+    attribute string recurUnits;
+    attribute boolean recurForever;
+    attribute short recurWeekdays;
+    attribute short recurWeekNumber;
+    attribute PRTime lastAlarmAck;
+    boolean getNextRecurrence( in PRTime begin, out PRTime result);
+    string getIcalString();
+    void parseIcalString(in string icalstr);
+    void addException( in PRTime exdate );
+	nsISimpleEnumerator getExceptions();
+//    PRTime calculateAlarmTime();
+};
+
+[scriptable, uuid(b8584baa-1507-40d4-b542-5a2758e1c86d)]
+interface oeIICalObserver : nsISupports
+{
+    void onStartBatch();
+    void onEndBatch();
+    void onLoad();
+    void onAddItem( in oeIICalEvent e);
+    void onModifyItem( in oeIICalEvent e, in oeIICalEvent olde );
+    void onDeleteItem( in oeIICalEvent e);
+    void onAlarm( in oeIICalEvent e);
 };
 
 [scriptable, uuid(981ab93d-ad51-45bb-a4a2-e158c2cfdeb4)]
 interface oeIICal : nsISupports
 {
 	void Test();
-	long AddEvent( in oeIICalEvent icalevent );
-	void DeleteEvent( in long id );
-	oeIICalEvent FetchEvent( in long id );
-	void SnoozeEvent( in long id );
-	string SearchAlarm( in short year, in short month, in short day,
-					in short hour, in short min );
-	string SearchEvent( in short styear, in short stmonth, in short stday,
-					in short sthour, in short stmin,
-					in short endyear, in short endmonth, in short endday,
-					in short endhour, in short endmin );
-	void SetServer( in string str );
-	long UpdateEvent( in oeIICalEvent icalevent );
-	string SearchForEvent( in string sqlstr );
+
+    attribute boolean batchMode;
+
+	void setServer( in string str );
+    void addObserver( in oeIICalObserver observer );
+	long addEvent( in oeIICalEvent icalevent );
+	long modifyEvent( in oeIICalEvent icalevent );
+	void deleteEvent( in long id );
+	oeIICalEvent fetchEvent( in long id );
+	nsISimpleEnumerator searchBySQL( in string sqlstr );
+	nsISimpleEnumerator getAllEvents();
+	nsISimpleEnumerator getEventsForMonth(in PRTime date, out nsISimpleEnumerator datelist );
+	nsISimpleEnumerator getEventsForWeek(in PRTime date, out nsISimpleEnumerator datelist );
+	nsISimpleEnumerator getEventsForDay(in PRTime date, out nsISimpleEnumerator datelist );
+	nsISimpleEnumerator getEventsForRange(in PRTime begindate, in PRTime enddate, out nsISimpleEnumerator datelist );
+	nsISimpleEnumerator getNextNEvents(in PRTime begindate, in long count, out nsISimpleEnumerator datelist );
+
+//	nsISimpleEnumerator searchAlarm( in short year, in short month, in short day,
+//					in short hour, in short min );
+//	void AckAlarm( in oeIICalEvent icalevent );
 };
+
 
 %{ C++
 extern nsresult
 NS_NewICal(oeIICal** inst);
 extern nsresult
 NS_NewICalEvent(oeIICalEvent** inst);
+extern nsresult
+NS_NewDateTime(oeIDateTime** inst);
 %}

@@ -40,36 +40,171 @@
 
 #define __cplusplus__ 1
 
-
+#include <vector>
 #include "oeICalImpl.h"
 #include "oeICalEventImpl.h"
 #include "nsMemory.h"
-#include "stdlib.h"                                
+#include "stdlib.h"   
+#include "nsCOMPtr.h"
+#include "nsISimpleEnumerator.h"
+                             
 extern "C" {
     #include "icalss.h"
 }
 
-#define MAXEVENTSTRINGSIZE 500
+icaltimetype ConvertFromPrtime( PRTime indate );
 
-char serveraddr[200]="/var/calendar/mostafah";
-char *idliststr; //global string for returning id list strings
-
-void
-cc_searched(unsigned long id)
+/* event enumerator */
+class NS_COM
+oeEventEnumerator : public nsISimpleEnumerator
 {
-	char tmp[80];
-	char *newstr;
-	sprintf( tmp, "%lu,", id );
-	if( idliststr == NULL ) {
-		idliststr = new char[strlen( tmp ) + 1];
-		strcpy( idliststr, tmp );
-	} else {
-		newstr = new char[ strlen( idliststr ) + strlen( tmp ) + 1 ];
-		sprintf( newstr, "%s%s", idliststr, tmp );
-		delete idliststr;
-		idliststr = newstr;
-	}
+  public:
+    oeEventEnumerator();
+    virtual ~oeEventEnumerator();
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsISimpleEnumerator interface
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    NS_IMETHOD Init( oeIICal* iCal );
+    NS_IMETHOD AddEventId( PRInt32 id );
+
+  private:
+    PRUint32 mCurrentIndex;
+    vector<PRInt32> mIdVector;
+    nsCOMPtr<oeIICal> mICal;
+};
+
+oeEventEnumerator::oeEventEnumerator( ) 
+:
+    mCurrentIndex( 0 )
+{
+    NS_INIT_REFCNT();
 }
+
+oeEventEnumerator::~oeEventEnumerator()
+{
+}
+
+NS_IMPL_ISUPPORTS1(oeEventEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+oeEventEnumerator::HasMoreElements(PRBool *result)
+{
+    if( mCurrentIndex >= mIdVector.size() )
+    {
+        *result = PR_FALSE;
+    }
+    else
+    {
+        *result = PR_TRUE;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+oeEventEnumerator::GetNext(nsISupports **_retval)
+{
+        
+    if( mCurrentIndex >= mIdVector.size() )
+    {
+        *_retval = nsnull;
+    }
+    else
+    {
+        PRInt32 eventId = mIdVector[ mCurrentIndex ];
+        
+        oeIICalEvent* event;      
+        nsresult rv = mICal->FetchEvent( eventId, &event);
+        if( NS_FAILED( rv ) ) 
+           return rv;
+
+        *_retval = event;
+        ++mCurrentIndex;
+    }
+    
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+oeEventEnumerator::AddEventId(PRInt32 id)
+{
+    mIdVector.push_back( id );
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+oeEventEnumerator::Init(oeIICal* iCal)
+{
+    mICal = iCal;
+    return NS_OK;
+}
+
+
+/* date enumerator */
+oeDateEnumerator::oeDateEnumerator( ) 
+:
+    mCurrentIndex( 0 )
+{
+    NS_INIT_REFCNT();
+}
+
+oeDateEnumerator::~oeDateEnumerator()
+{
+}
+
+NS_IMPL_ISUPPORTS1(oeDateEnumerator, nsISimpleEnumerator)
+
+NS_IMETHODIMP
+oeDateEnumerator::HasMoreElements(PRBool *result)
+{
+    if( mCurrentIndex >= mIdVector.size() )
+    {
+        *result = PR_FALSE;
+    }
+    else
+    {
+        *result = PR_TRUE;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+oeDateEnumerator::GetNext(nsISupports **_retval)
+{
+        
+    if( mCurrentIndex >= mIdVector.size() )
+    {
+        *_retval = nsnull;
+    }
+    else
+    {
+        nsISupportsPRTime* date = new nsSupportsPRTimeImpl();
+        date->AddRef();
+        date->SetData( mIdVector[ mCurrentIndex ] );
+        *_retval = date;
+        ++mCurrentIndex;
+    }
+    
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+oeDateEnumerator::AddDate(PRTime date)
+{
+    mIdVector.push_back( date );
+    return NS_OK;
+}
+
+
+
+
+
+
 
 //////////////////////////////////////////////////
 //   ICal Factory
@@ -90,23 +225,35 @@ NS_NewICal( oeIICal** inst )
     return NS_OK;
 }
 
-
 oeICalImpl::oeICalImpl()
 {
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::oeICalImpl()\n" );
+#endif
         NS_INIT_REFCNT();
+
+        m_batchMode = false;
+
+        nsresult rv;
+        nsCOMPtr<nsITimer> alarmtimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+        alarmtimer->QueryInterface(NS_GET_IID(nsITimer), (void **)&m_alarmtimer);
+        if( NS_FAILED( rv ) )
+            m_alarmtimer = NULL;
+        else
+            m_alarmtimer->Init( NULL, this, 0, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
 }
 
 oeICalImpl::~oeICalImpl()
 {
-
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::~oeICalImpl()\n" );
+#endif
+    for( int i=0; i<m_observerlist.size(); i++ ) {
+        m_observerlist[i]->Release();
+    }
+    if( m_alarmtimer && ( m_alarmtimer->GetDelay() != 0 ) )
+        m_alarmtimer->Cancel();
 }
-
-char icalrawcalendarstr[] = "BEGIN:VCALENDAR\n\
-BEGIN:VEVENT\n\
-UID:900000000\n\
-END:VEVENT\n\
-END:VCALENDAR\n\
-";
 
 /**
  * NS_IMPL_ISUPPORTS1 expands to a simple implementation of the nsISupports
@@ -136,10 +283,19 @@ NS_IMPL_ISUPPORTS1(oeICalImpl, oeIICal);
 NS_IMETHODIMP
 oeICalImpl::Test(void)
 {
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::Test()\n" );
+#endif
     icalfileset *stream;
     icalcomponent *icalcalendar,*icalevent;
     struct icaltimetype start, end;
     char uidstr[10]="900000000";
+    char icalrawcalendarstr[] = "BEGIN:VCALENDAR\n\
+BEGIN:VEVENT\n\
+UID:900000000\n\
+END:VEVENT\n\
+END:VCALENDAR\n\
+";
     
     stream = icalfileset_new(serveraddr);
     assert(stream != 0);
@@ -165,7 +321,8 @@ oeICalImpl::Test(void)
     icalproperty *category = icalproperty_new_categories( "Personal" );
     icalcomponent_add_property( icalevent, category );
 
-    icalproperty *classp = icalproperty_new_class( "PRIVATE" );
+    icalproperty *classp = icalproperty_new_class( ICAL_CLASS_PRIVATE );
+//    icalproperty *classp = icalproperty_new_class( "PRIVATE" );
     icalcomponent_add_property( icalevent, classp );
 
     start.year = 2001; start.month = 8; start.day = 15;
@@ -259,6 +416,16 @@ oeICalImpl::Test(void)
 
     icalcomponent_add_property( icalevent, xprop );
     //
+
+    struct icaltriggertype trig;
+    icalcomponent *valarm = icalcomponent_new_valarm();
+    trig.time.year = trig.time.month = trig.time.day = trig.time.hour = trig.time.minute = trig.time.second = 0;
+    trig.duration.is_neg = true;
+    trig.duration.days = trig.duration.weeks = trig.duration.hours = trig.duration.seconds = 0;
+    trig.duration.minutes = 1;
+    xprop = icalproperty_new_trigger( trig );
+    icalcomponent_add_property( valarm, xprop );
+    icalcomponent_add_component( icalevent, valarm );
 
     icalfileset_add_component(stream,icalcalendar);
 
@@ -357,12 +524,73 @@ oeICalImpl::Test(void)
 NS_IMETHODIMP
 oeICalImpl::SetServer( const char *str ) {
 #ifdef ICAL_DEBUG
-    printf( "SetServer()\n" );
+    printf( "oeICalImpl::SetServer(%s)\n", str );
 #endif
 	strcpy( serveraddr, str );
 
-	return NS_OK;
+    icalfileset *stream;
+    
+    stream = icalfileset_new(serveraddr);
+    assert(stream != 0);
+    
+    icalcomponent *comp;
+    for( comp = icalfileset_get_first_component( stream );
+        comp != 0;
+        comp = icalfileset_get_next_component( stream ) ) {
+        
+        nsresult rv;
+        oeICalEventImpl *icalevent;
+        if( NS_FAILED( rv = NS_NewICalEvent((oeIICalEvent**) &icalevent ))) {
+            return rv;
+        }
+        
+        icalevent->ParseIcalComponent( comp );
+
+        m_eventlist.Add( icalevent );
+    }
+    
+    icalfileset_free(stream);
+    
+    for( int i=0; i<m_observerlist.size(); i++ ) {
+        m_observerlist[i]->OnLoad();
+    }
+    
+    SetupAlarmManager();
+
+    return NS_OK;
 }
+
+
+/* attribute boolean batchMode; */
+NS_IMETHODIMP oeICalImpl::GetBatchMode(PRBool *aBatchMode)
+{
+    *aBatchMode = m_batchMode;
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP oeICalImpl::SetBatchMode(PRBool aBatchMode)
+{
+    bool newBatchMode = aBatchMode;
+
+    if( m_batchMode != newBatchMode )
+    {
+        m_batchMode = aBatchMode;
+        
+        for( int i=0; i<m_observerlist.size(); i++ ) 
+        {
+            if( m_batchMode )
+                m_observerlist[i]->OnStartBatch();
+            else
+                m_observerlist[i]->OnEndBatch();
+
+        }
+    }
+    
+    return NS_OK;
+}
+
 
 /**
 *
@@ -377,12 +605,12 @@ oeICalImpl::SetServer( const char *str ) {
 *   RETURN
 *      None
 */
-NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalcalendar, PRInt32 *retid)
+NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent, PRInt32 *retid)
 {
 #ifdef ICAL_DEBUG
-    printf( "AddEvent()\n" );
+    printf( "oeICalImpl::AddEvent()\n" );
 #endif
-	unsigned long   id;
+	unsigned long newid;
     icalfileset *stream;
     icalcomponent *vcalendar,*fetchedcal;
     char uidstr[10];
@@ -390,37 +618,35 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalcalendar, PRInt32 *retid)
 	*retid = 0;
     stream = icalfileset_new(serveraddr);
     assert(stream != 0);
-
-    vcalendar = ((oeICalEventImpl *)icalcalendar)->vcalendar;
-	
-    icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
-    assert( vevent != 0);
-
-    icalproperty *uid = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
-    assert( uid != 0);
     
     do {
-        id = 900000000 + ((rand()%0x4ff) << 16) + rand()%0xFFFF;
-        sprintf( uidstr, "%lu", id );
+        newid = 900000000 + ((rand()%0x4ff) << 16) + rand()%0xFFFF;
+        sprintf( uidstr, "%lu", newid );
     } while ( (fetchedcal = icalfileset_fetch( stream, uidstr )) != 0 );
-    
-    icalproperty_set_uid( uid, uidstr );
-    
-    icalcomponent *vcalclone = icalcomponent_new_clone( vcalendar );
-    assert(vcalclone != 0);
 
-    icalfileset_add_component( stream, vcalclone );
-	*retid = id;
+    ((oeICalEventImpl *)icalevent)->SetId( newid );
+    vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
+	
+    icalfileset_add_component( stream, vcalendar );
+	*retid = newid;
 
     icalfileset_commit( stream );
     icalfileset_free( stream );
+
+    icalevent->AddRef();
+    m_eventlist.Add( icalevent );
+
+    for( int i=0; i<m_observerlist.size(); i++ ) {
+        m_observerlist[i]->OnAddItem( icalevent );
+    }
+
+    SetupAlarmManager();
     return NS_OK;
 }
 
-
 /**
 *
-*   UpdateEvent
+*   ModifyEvent
 *
 *   DESCRIPTION: Updates an event
 *
@@ -431,44 +657,51 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalcalendar, PRInt32 *retid)
 *   RETURN
 *      None
 */
-NS_IMETHODIMP oeICalImpl::UpdateEvent(oeIICalEvent *icalcalendar, PRInt32 *retid)
+NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, PRInt32 *retid)
 {
 #ifdef ICAL_DEBUG
-    printf( "UpdateEvent()\n" );
+    printf( "oeICalImpl::ModifyEvent()\n" );
 #endif
 	unsigned long id;
     icalfileset *stream;
-    icalcomponent *vcalendar,*vcalclone;
+    icalcomponent *vcalendar;
     char uidstr[10];
 
     stream = icalfileset_new(serveraddr);
     assert(stream != 0);
     
-    vcalendar = ((oeICalEventImpl *)icalcalendar)->vcalendar;
-    icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
-    assert( vevent != 0);
-
-    icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
-    assert( prop != 0);
+    ((oeICalEventImpl *)icalevent)->GetId( (PRUint32 *)&id );
+    vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
     
-    id = atol( icalproperty_get_value_as_string( prop ) );
-
     sprintf( uidstr, "%lu", id );
+    
     icalcomponent *fetchedcal = icalfileset_fetch( stream, uidstr );
     
+    oeICalEventImpl *oldevent;
     if( fetchedcal ) {
         icalfileset_remove_component( stream, fetchedcal );
+        nsresult rv;
+        if( NS_FAILED( rv = NS_NewICalEvent((oeIICalEvent**) &oldevent ))) {
+            return rv;
+        }
+        oldevent->ParseIcalComponent( fetchedcal );
         icalcomponent_free( fetchedcal );
     }
     
-    vcalclone = icalcomponent_new_clone( vcalendar );
-
-    icalfileset_add_component( stream, vcalclone );
+    icalfileset_add_component( stream, vcalendar );
     
     *retid = id;
 	
     icalfileset_commit( stream );
     icalfileset_free(stream);
+    
+    for( int i=0; i<m_observerlist.size(); i++ ) {
+        m_observerlist[i]->OnModifyItem( icalevent, oldevent );
+    }
+
+    oldevent->Release();
+
+    SetupAlarmManager();
     return NS_OK;
 }
 
@@ -488,137 +721,14 @@ NS_IMETHODIMP oeICalImpl::UpdateEvent(oeIICalEvent *icalcalendar, PRInt32 *retid
 */
 NS_IMETHODIMP oeICalImpl::FetchEvent(PRInt32 id, oeIICalEvent **ev)
 {
-#ifdef ICAL_DEBUG
-    printf( "FetchEvent()\n" );
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalImpl::FetchEvent()\n" );
 #endif
-
-    icalfileset *stream;
-    char uidstr[10];
-    
-    stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
-    
-    sprintf( uidstr, "%lu", id );
-
-    nsresult rv;
-	oeICalEventImpl *icalevent;
-	if( NS_FAILED( rv = NS_NewICalEvent((oeIICalEvent**) &icalevent ))) {
-	        *ev = NULL;
-		return rv;
-	}
-	icalcomponent_free( icalevent->vcalendar );
-	
-    icalcomponent *tmpcomp = icalfileset_fetch( stream, uidstr );
-    if( tmpcomp == 0 ) {
-		printf("FetchEvent() failed\n");
-        *ev = NULL;
-		return NS_OK;
+    oeIICalEvent* event = m_eventlist.GetEventById( id );
+    if( event != NULL ) {
+        event->AddRef();
     }
-
-    icalevent->vcalendar = icalcomponent_new_clone( tmpcomp );
-
-	*ev = icalevent;
-
-    icalfileset_free(stream);
-
-    return NS_OK;
-}
-
-/**
-*
-*   SearchEvent
-*
-*   DESCRIPTION: Searches for events
-*
-*   PARAMETERS: 
-*	startstr	- String representation of the start date-time
-*	endstr		- String representation of the end date-time
-*	resultstr   - Place to store the string representation of the id list
-*
-*   RETURN
-*      None
-*/
-NS_IMETHODIMP
-oeICalImpl::SearchEvent( PRInt16 startyear, PRInt16 startmonth, PRInt16 startday,
-				 PRInt16 starthour, PRInt16 startmin,
-			  	 PRInt16 endyear, PRInt16 endmonth, PRInt16 endday,
-				 PRInt16 endhour, PRInt16 endmin,
-			  	 char **resultstr )
-{
-#ifdef ICAL_DEBUG
-    printf( "SearchEvent()\n" );
-#endif
-    icalgauge* gauge;
-    char sqlstr[200];
-    icalfileset *stream;
-    
-    idliststr = NULL;
-    
-    stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
-    
-    sprintf( sqlstr, "SELECT * FROM VEVENT WHERE DTSTART >= '%04d%02d%02dT%02d%02d00' and DTEND < '%04d%02d%02dT%02d%02d00'",
-             startyear,startmonth,startday,starthour,startmin,
-             endyear,endmonth,endday,endhour,endmin );
-    gauge = icalgauge_new_from_sql( sqlstr );
-    assert( gauge != 0 );
-    
-    icalfileset_select( stream, gauge );
-
-    icalcomponent *comp;
-    for( comp = icalfileset_get_first_component( stream );
-        comp != 0;
-        comp = icalfileset_get_next_component( stream ) ) {
-        icalcomponent *vevent = icalcomponent_get_first_component( comp, ICAL_VEVENT_COMPONENT );
-        assert( vevent != 0);
-
-        icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
-        assert( prop != 0);
-
-        cc_searched( atol( icalproperty_get_value_as_string( prop ) ) );
-    }
-	
-    *resultstr = idliststr;
-
-    icalfileset_free(stream);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-oeICalImpl::SearchForEvent( const char *sqlstr, char **resultstr )
-{
-#ifdef ICAL_DEBUG
-    printf( "SearchForEvent()\n" );
-#endif
-    icalgauge* gauge;
-    icalfileset *stream;
-    
-    idliststr = NULL;
-    
-    stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
-    
-    gauge = icalgauge_new_from_sql( (char *)sqlstr );
-    assert( gauge != 0 );
-    
-    icalfileset_select( stream, gauge );
-
-    icalcomponent *comp;
-    for( comp = icalfileset_get_first_component( stream );
-        comp != 0;
-        comp = icalfileset_get_next_component( stream ) ) {
-        icalcomponent *vevent = icalcomponent_get_first_component( comp, ICAL_VEVENT_COMPONENT );
-        assert( vevent != 0);
-
-        icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
-        assert( prop != 0);
-
-        cc_searched( atol( icalproperty_get_value_as_string( prop ) ) );
-    }
-	
-    *resultstr = idliststr;
-
-    icalfileset_free(stream);
+    *ev = event;
     return NS_OK;
 }
 
@@ -638,7 +748,7 @@ NS_IMETHODIMP
 oeICalImpl::DeleteEvent( PRInt32 id )
 {
 #ifdef ICAL_DEBUG
-    printf( "DeleteEvent()\n" );
+    printf( "oeICalImpl::DeleteEvent( %lu )\n", id );
 #endif
     icalfileset *stream;
     char uidstr[10];
@@ -652,6 +762,9 @@ oeICalImpl::DeleteEvent( PRInt32 id )
     
     if( fetchedcal == 0 ) {
         icalfileset_free(stream);
+#ifdef ICAL_DEBUG
+    printf( "WARNING Event not found.\n" );
+#endif
         return NS_OK;
     }
     
@@ -661,7 +774,342 @@ oeICalImpl::DeleteEvent( PRInt32 id )
     icalfileset_commit( stream );
     icalfileset_free(stream);
 	
+    oeIICalEvent *icalevent;
+    FetchEvent( id , &icalevent );
+
+    m_eventlist.Remove( id );
+    
+    for( int i=0; i<m_observerlist.size(); i++ ) {
+        m_observerlist[i]->OnDeleteItem( icalevent );
+    }
+
+    icalevent->Release();
+
+    SetupAlarmManager();
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalImpl::GetAllEvents()\n" );
+#endif
+    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator();
+    
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    eventEnum->Init( this );
+    
+    EventList *tmplistptr = &m_eventlist;
+    while( tmplistptr ) {
+        if( tmplistptr->event ) {
+            PRUint32 tmpid;
+            tmplistptr->event->GetId( &tmpid );
+            eventEnum->AddEventId( tmpid );
+        }
+        tmplistptr = tmplistptr->next;
+    }
+
+    // bump ref count
+    return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
+}
+
+NS_IMETHODIMP
+oeICalImpl::SearchBySQL( const char *sqlstr,  nsISimpleEnumerator **resultList )
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::SearchBySQL()\n" );
+#endif
+    icalgauge* gauge;
+    icalfileset *stream;
+    
+    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
+    
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    eventEnum->Init( this );
+    
+    stream = icalfileset_new(serveraddr);
+    assert(stream != 0);
+    
+    gauge = icalgauge_new_from_sql( (char *)sqlstr );
+    assert( gauge != 0 );
+    
+    icalfileset_select( stream, gauge );
+
+    icalcomponent *comp;
+    for( comp = icalfileset_get_first_component( stream );
+        comp != 0;
+        comp = icalfileset_get_next_component( stream ) ) {
+        icalcomponent *vevent = icalcomponent_get_first_component( comp, ICAL_VEVENT_COMPONENT );
+        assert( vevent != 0);
+
+        icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
+        assert( prop != 0);
+
+        eventEnum->AddEventId( atol( icalproperty_get_value_as_string( prop ) ) );
+    }
+	
+    icalfileset_free(stream);
+    
+    // bump ref count
+    return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
+}
+
+NS_IMETHODIMP
+oeICalImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::GetEventsForMonth()\n" );
+#endif
+    struct icaltimetype checkdate = ConvertFromPrtime( datems );
+    checkdate.day = 1;
+    checkdate.hour = 0;
+    checkdate.minute = 0;
+    checkdate.second = 0;
+    icaltime_adjust( &checkdate, 0, 0 , 0, -1 );
+#ifdef ICAL_DEBUG_ALL
+    printf( "CHECKDATE: %s\n" , icaltime_as_ctime( checkdate ) );
+#endif
+    PRTime checkdateinms = icaltime_as_timet( checkdate );
+    checkdateinms *= 1000;
+
+    struct icaltimetype checkenddate = ConvertFromPrtime( datems );
+    checkenddate.month++;
+    checkenddate.day = 1;
+    checkenddate.hour = 0;
+    checkenddate.minute = 0;
+    checkenddate.second = 0;
+    checkenddate = icaltime_normalize( checkenddate );
+#ifdef ICAL_DEBUG_ALL
+    printf( "CHECKENDDATE: %s\n" , icaltime_as_ctime( checkenddate ) );
+#endif
+    PRTime checkenddateinms = icaltime_as_timet( checkenddate );
+    checkenddateinms *= 1000;
+
+    return GetEventsForRange(checkdateinms ,checkenddateinms ,datelist ,eventlist );
+}
+
+NS_IMETHODIMP
+oeICalImpl::GetEventsForWeek( PRTime datems, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::GetEventsForWeek()\n" );
+#endif
+
+    struct icaltimetype checkdate = ConvertFromPrtime( datems );
+    checkdate.hour = 0;
+    checkdate.minute = 0;
+    checkdate.second = 0;
+    icaltime_adjust( &checkdate, 0, 0 , 0, -1 );
+    PRTime checkdateinms = icaltime_as_timet( checkdate );
+    checkdateinms *= 1000;
+
+    struct icaltimetype checkenddate = ConvertFromPrtime( datems );
+    checkenddate.hour = 0;
+    checkenddate.minute = 0;
+    checkenddate.second = 0;
+    icaltime_adjust( &checkenddate, 7, 0 , 0, 0 );
+    PRTime checkenddateinms = icaltime_as_timet( checkenddate );
+    checkenddateinms *= 1000;
+
+    return GetEventsForRange(checkdateinms ,checkenddateinms ,datelist ,eventlist );
+}
+
+NS_IMETHODIMP
+oeICalImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::GetEventsForDay()\n" );
+#endif
+
+    struct icaltimetype checkdate = ConvertFromPrtime( datems );
+    checkdate.hour = 0;
+    checkdate.minute = 0;
+    checkdate.second = 0;
+    icaltime_adjust( &checkdate, 0, 0, 0, -1 );
+    PRTime checkdateinms = icaltime_as_timet( checkdate );
+    checkdateinms *= 1000;
+
+    struct icaltimetype checkenddate = ConvertFromPrtime( datems );
+    checkenddate.hour = 0;
+    checkenddate.minute = 0;
+    checkenddate.second = 0;
+    icaltime_adjust( &checkenddate, 1, 0, 0, 0 );
+    PRTime checkenddateinms = icaltime_as_timet( checkenddate );
+    checkenddateinms *= 1000;
+
+    return GetEventsForRange(checkdateinms ,checkenddateinms ,datelist ,eventlist );
+}
+
+NS_IMETHODIMP
+oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalImpl::GetEventsForRange()\n" );
+#endif
+    
+    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
+    
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<oeDateEnumerator> dateEnum = new oeDateEnumerator( );
+    
+    if (!dateEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    eventEnum->Init( this );
+
+    EventList *tmplistptr = &m_eventlist;
+    int i=0;
+    while( tmplistptr ) {
+        if( tmplistptr->event ) {
+            oeIICalEvent* tmpevent = tmplistptr->event;
+            PRBool isvalid;
+            PRTime checkdateloop = checkdateinms;
+            tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
+            while( isvalid && (checkdateloop<checkenddateinms) ) {
+                PRUint32 tmpid;
+                tmpevent->GetId( &tmpid );
+                eventEnum->AddEventId( tmpid );
+                dateEnum->AddDate( checkdateloop );
+                tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
+            }
+        }
+        tmplistptr = tmplistptr->next;
+        i++;
+    }
+
+    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
+    dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::GetNextNEvents()\n" );
+#endif
+    
+    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
+    
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<oeDateEnumerator> dateEnum = new oeDateEnumerator( );
+    
+    if (!dateEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    eventEnum->Init( this );
+
+    struct icaltimetype checkdate = ConvertFromPrtime( datems );
+    checkdate.hour = 0;
+    checkdate.minute = 0;
+    checkdate.second = 0;
+    icaltime_adjust( &checkdate, 0, 0, 0, -1 );
+    PRTime checkdateinms = icaltime_as_timet( checkdate );
+    checkdateinms *= 1000;
+    
+    EventList *tmplistptr = &m_eventlist;
+    int i=0,count=0;
+    while( tmplistptr ) {
+        if( tmplistptr->event ) {
+            oeIICalEvent* tmpevent = tmplistptr->event;
+            PRBool isvalid;
+            PRTime checkdateloop = checkdateinms;
+            tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
+            while( isvalid ) {
+                PRUint32 tmpid;
+                tmpevent->GetId( &tmpid );
+                eventEnum->AddEventId( tmpid );
+                dateEnum->AddDate( checkdateloop );
+                count++;
+                if( count == maxcount )
+                    break;
+                tmpevent->GetNextRecurrence( checkdateloop, &checkdateloop, &isvalid );
+            }
+        }
+        tmplistptr = tmplistptr->next;
+        i++;
+    }
+
+    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
+    dateEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)datelist);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+oeICalImpl::AddObserver(oeIICalObserver *observer)
+{
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::AddObserver()\n" );
+#endif
+    if( observer ) {
+        observer->AddRef();
+        m_observerlist.push_back( observer );
+        observer->OnLoad();
+    }
+    return NS_OK;
+}
+
+void AlarmTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+#ifdef ICAL_DEBUG
+    printf( "AlarmTimerCallback\n" );
+#endif
+    oeICalImpl *icallib = (oeICalImpl *)aClosure;
+    icallib->SetupAlarmManager();
+}
+
+void oeICalImpl::SetupAlarmManager() {
+#ifdef ICAL_DEBUG
+    printf( "oeICalImpl::SetupAlarmManager()\n" );
+#endif
+
+    PRTime todayinms = time( NULL );
+    todayinms *= 1000;
+    icaltimetype now = ConvertFromPrtime( todayinms );
+
+//    printf( "NOW IS: %s\n", icaltime_as_ctime( now ) );
+
+    icaltimetype nextalarm = icaltime_null_time();
+    EventList *tmplistptr = &m_eventlist;
+    while( tmplistptr ) {
+        oeICalEventImpl *event = (oeICalEventImpl *)(tmplistptr->event);
+        if( event ) {
+            icaltimetype begin=icaltime_null_time();
+            begin.year = 1970; begin.month=1; begin.day=1;
+            icaltimetype alarmtime = begin;
+            do {
+                alarmtime = event->GetNextAlarmTime( alarmtime );
+                if( icaltime_is_null_time( alarmtime ) )
+                    break;
+                if( icaltime_compare( alarmtime, now ) <= 0 ) {
+                    printf( "ALARM WENT OFF: %s\n", icaltime_as_ctime( alarmtime ) );
+                    
+                    for( int i=0; i<m_observerlist.size(); i++ ) {
+                        m_observerlist[i]->OnAlarm( event );
+                    }
+                }
+                else {
+                    if( icaltime_is_null_time( nextalarm ) )
+                        nextalarm = alarmtime;
+                    else if( icaltime_compare( nextalarm, alarmtime ) > 0 )
+                        nextalarm = alarmtime;
+                    break;
+                }
+            } while ( 1 );
+        }
+        tmplistptr = tmplistptr->next;
+    }
+    if( m_alarmtimer && ( m_alarmtimer->GetDelay() != 0 ) )
+        m_alarmtimer->Cancel();
+    if( !icaltime_is_null_time( nextalarm ) ) {
+        printf( "NEXT ALARM IS: %s\n", icaltime_as_ctime( nextalarm ) );
+        time_t timediff = icaltime_as_timet( nextalarm ) - icaltime_as_timet( now );
+        m_alarmtimer->Init( AlarmTimerCallback, this, timediff*1000, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
+    }
 }
 
 /**
@@ -676,10 +1124,11 @@ oeICalImpl::DeleteEvent( PRInt32 id )
 *   RETURN
 *      None
 */
+/*
 NS_IMETHODIMP
 oeICalImpl::SnoozeEvent( PRInt32 id )
 {
-/*    cal_open(serveraddr, 0);
+    cal_open(serveraddr, 0);
 	if( 0 ) {
 		printf("cal_open() failed - SnoozeEvent\n");
 		return 0;
@@ -695,10 +1144,12 @@ oeICalImpl::SnoozeEvent( PRInt32 id )
 		printf("cal_close() failed\n");
 		return 0;
 	}
-*/	
+	
 	return NS_OK;
 }
+*/
 
+/*
 void GetNextRecurrence( icalcomponent *vevent, PRInt16 year, PRInt16 month, PRInt16 day, struct icaldurationtype before, char *aRetVal ) {
 
     struct icaltimetype start, estart, next;
@@ -729,7 +1180,7 @@ void GetNextRecurrence( icalcomponent *vevent, PRInt16 year, PRInt16 month, PRIn
             }
         }
     }
-}
+}*/
 
 /**
 *
@@ -744,20 +1195,26 @@ void GetNextRecurrence( icalcomponent *vevent, PRInt16 year, PRInt16 month, PRIn
 *   RETURN
 *      None
 */
+/*
 NS_IMETHODIMP
 oeICalImpl::SearchAlarm( PRInt16 startyear, PRInt16 startmonth, PRInt16 startday,
 				 PRInt16 starthour, PRInt16 startmin,
-			  	 char **resultstr )
+			  	 nsISimpleEnumerator **resultList )
 {
 #ifdef ICAL_DEBUG
-    printf( "SearchAlarm()\n" );
+    printf( "oeICalImpl::SearchAlarm()\n" );
 #endif
     icalfileset *stream;
     icaltimetype check,checkend;
     icaldurationtype checkduration;
     icalproperty *prop;
 
-    idliststr = NULL;
+    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
+    
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    eventEnum->Init( this );
     
     check.year = startyear; check.month = startmonth; check.day = startday; 
     check.hour = starthour; check.minute = startmin; check.second = 0; 
@@ -807,13 +1264,14 @@ oeICalImpl::SearchAlarm( PRInt16 startyear, PRInt16 startmonth, PRInt16 startday
                 prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
                 assert( prop != 0);
 
-                cc_searched( atol( icalproperty_get_value_as_string( prop ) ) );
+                eventEnum->AddEventId( atol( icalproperty_get_value_as_string( prop ) ) );
             }
         }
     }
 	
-    *resultstr = idliststr;
 
     icalfileset_free(stream);
-    return NS_OK;
-}
+    
+    // bump ref count
+    return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
+}*/

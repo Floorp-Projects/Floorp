@@ -1,4 +1,4 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* 
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,14 +11,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is OEone Calendar Code, released October 31st, 2001.
+ * The Original Code is OEone Corporation.
  *
  * The Initial Developer of the Original Code is
  * OEone Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
- * the Initial Developer. All Rights Reserved.
+ * Portions created by OEone Corporation are Copyright (C) 2001
+ * OEone Corporation. All Rights Reserved.
  *
- * Contributor(s): Mostafa Hosseini <mostafah@oeone.com>
+ * Contributor(s): Mostafa Hosseini (mostafah@oeone.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -32,48 +32,32 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * ***** END LICENSE BLOCK ***** */
+ * 
+*/
 
-#include "oeICalImpl.h"
-#include "oeICalEventImpl.h"
-#include "oeDateTimeImpl.h"
-#include "oeICalStartupHandler.h"
+#ifndef __OE_DATETIMEIMPL_H__
+#define __OE_DATETIMEIMPL_H__
 
-#include "nsIGenericFactory.h"
+#include "oeIICal.h"
+extern "C" {
+    #include "ical.h"
+}
 
+#define OE_DATETIME_CID \
+{ 0x78b5b255, 0x7450, 0x47c0, { 0xba, 0x16, 0x0a, 0x6e, 0x7e, 0x80, 0x6e, 0x5d } }
 
+#define OE_DATETIME_CONTRACTID "@mozilla.org/oedatetime;1"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalImpl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalEventImpl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeDateTimeImpl);
-NS_GENERIC_FACTORY_CONSTRUCTOR(oeICalStartupHandler);
-
-static nsModuleComponentInfo pModuleInfo[] =
+class oeDateTimeImpl : public oeIDateTime
 {
-  { "ICal Service",
-    OE_ICAL_CID,
-    OE_ICAL_CONTRACTID,
-    oeICalImplConstructor,
-  },
-  { "ICal Event",
-    OE_ICALEVENT_CID,
-    OE_ICALEVENT_CONTRACTID,
-    oeICalEventImplConstructor,
-  },
-  { "ICal DateTime",
-    OE_DATETIME_CID,
-    OE_DATETIME_CONTRACTID,
-    oeDateTimeImplConstructor,
-  },
-  {
-    "Calendar Startup Handler",
-    OE_ICALSTARTUPHANDLER_CID,
-    OE_ICALSTARTUPHANDLER_CONTRACTID,
-    oeICalStartupHandlerConstructor,
-    oeICalStartupHandler::RegisterProc,
-    oeICalStartupHandler::UnregisterProc
-  }
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_OEIDATETIME
+  oeDateTimeImpl();
+  virtual ~oeDateTimeImpl();
+  void AdjustToWeekday( short weekday );
+  /* additional members */
+  struct icaltimetype m_datetime;
 };
 
-NS_IMPL_NSGETMODULE("ICal Component", pModuleInfo)
-
+#endif

@@ -35,6 +35,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "oeIICal.h"
+#include "oeDateTimeImpl.h"
+#include "nsISimpleEnumerator.h"
+#include "nsISupportsPrimitives.h"
+#include "nsSupportsPrimitives.h"
+#include <vector>
+
 extern "C" {
     #include "ical.h"
 }
@@ -44,6 +50,25 @@ extern "C" {
 
 #define OE_ICALEVENT_CONTRACTID "@mozilla.org/icalevent;1"
 
+class NS_COM
+oeDateEnumerator : public nsISimpleEnumerator
+{
+  public:
+    oeDateEnumerator();
+    virtual ~oeDateEnumerator();
+
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+
+    // nsISimpleEnumerator interface
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    NS_IMETHOD AddDate( PRTime date );
+
+  private:
+    PRUint32 mCurrentIndex;
+    vector<PRTime> mIdVector;
+};
 
 /* oeIcalEvent Header file */
 class oeICalEventImpl : public oeIICalEvent
@@ -51,10 +76,41 @@ class oeICalEventImpl : public oeIICalEvent
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_OEIICALEVENT
-  icalcomponent *vcalendar;
   oeICalEventImpl();
   virtual ~oeICalEventImpl();
   /* additional members */
+  void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar );
+  icalcomponent *AsIcalComponent();
+  NS_IMETHODIMP SetId( PRUint32 newid );
+  icaltimetype GetNextAlarmTime( icaltimetype begin );
+private:
+    unsigned long m_id;
+    unsigned long m_syncid;
+    char *m_title;
+    char *m_description;
+    char *m_location;
+    char *m_category;
+    bool m_isprivate;
+    bool m_allday;
+    bool m_hasalarm;
+    unsigned long m_alarmlength;
+    char *m_alarmunits;
+    char *m_alarmemail;
+    char *m_inviteemail;
+    short m_recurtype;
+    unsigned long m_recurinterval;
+    bool m_recur;
+    bool m_recurforever;
+    char *m_recurunits;
+    short m_recurweekdays;
+    short m_recurweeknumber;
+    oeDateTimeImpl *m_start;
+    oeDateTimeImpl *m_end;
+    oeDateTimeImpl *m_recurend;
+    icaltimetype m_lastalarmack;
+    vector<PRTime> m_exceptiondates;
+    icaltimetype GetNextRecurrence( icaltimetype begin );
+    icaltimetype oeICalEventImpl::CalculateAlarmTime( icaltimetype date );
+    bool IsExcepted( PRTime date );
 };
-
 
