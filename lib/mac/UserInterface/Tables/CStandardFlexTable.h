@@ -100,6 +100,14 @@ public:
 	virtual Boolean 	GetNotifyOnSelectionChange();
 	void				SetRightmostVisibleColumn(UInt16 inLastDesiredColumn);
 
+		// an externally public way to tell the table to begin an inplace edit. This is
+		// useful when handling menu commands, etc and not mouse clicks in the table.
+	void				DoInlineEditing ( const STableCell & inCell ) ;
+	
+	virtual void		RefreshCellRange(
+							const STableCell	&inTopLeft,
+							const STableCell	&inBotRight); // Overridden to fix a bug in PP.
+
 protected:
 	enum { kMinRowHeight = 18, kDistanceFromIconToText = 5, kIconMargin = 4, kIndentPerLevel = 10,
 			kIconWidth = 16 };
@@ -122,9 +130,6 @@ protected:
 	virtual void		DrawSelf();		
 	virtual Boolean		HandleKeyPress(const EventRecord &inKeyEvent);
 
-	virtual void		RefreshCellRange(
-							const STableCell	&inTopLeft,
-							const STableCell	&inBotRight); // Overridden to fix a bug in PP.
 	virtual void		Click(SMouseDownEvent &inMouseDown);
 	virtual void		BeTarget();
 	virtual void		DontBeTarget();
