@@ -106,6 +106,7 @@ bin\components\layout_xul.xpt
 bin\components\layout_xul_tree.xpt
 bin\components\locale.xpt
 bin\components\lwbrk.xpt
+bin\components\migration.xpt
 bin\components\mimetype.xpt
 bin\components\mozbrwsr.xpt
 bin\components\mozfind.xpt
