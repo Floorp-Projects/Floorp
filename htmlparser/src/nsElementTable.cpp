@@ -218,6 +218,7 @@ CTagList  gTBodyAutoClose(1,0,eHTMLTag_thead);
 CTagList  gCaptionAutoClose(1,0,eHTMLTag_tbody);
 CTagList  gLIAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
 CTagList  gPAutoClose(2,0,eHTMLTag_p,eHTMLTag_li);
+CTagList  gHRAutoClose(1,0,eHTMLTag_p);
 CTagList  gOLAutoClose(3,0,eHTMLTag_p,eHTMLTag_ol,eHTMLTag_ul);
 CTagList  gDivAutoClose(1,0,eHTMLTag_p);
 
@@ -555,7 +556,7 @@ nsHTMLElement gHTMLElements[] = {
 
   { /*tag*/                             eHTMLTag_hr,
 	  /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
-    /*autoclose starttags and endtags*/ 0,0,0,
+    /*autoclose starttags and endtags*/ &gHRAutoClose,0,0,
     /*parent,incl,exclgroups*/          kBlock, kNone, kNone,	
     /*special properties*/              0,
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
