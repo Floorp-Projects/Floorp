@@ -718,7 +718,7 @@ SiteWalkerDlgProc(HWND hDlg, UINT msg, WPARAM wParam,LPARAM lParam)
             SetDlgItemText(hDlg,IDC_SITE_NAME, gTop100List[gTop100Pointer]);
             EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),TRUE);
             if (gWinData)
-               gWinData->LoadURL(gTop100List[gTop100Pointer]);
+               gWinData->LoadURL(nsString(gTop100List[gTop100Pointer]));
          }
          return FALSE;
       case WM_COMMAND:
@@ -731,7 +731,7 @@ SiteWalkerDlgProc(HWND hDlg, UINT msg, WPARAM wParam,LPARAM lParam)
                      EnableWindow(GetDlgItem(hDlg,ID_SITE_NEXT),TRUE);
                      SetDlgItemText(hDlg,IDC_SITE_NAME, p);
                      if (gWinData)
-                        gWinData->LoadURL(gTop100List[gTop100Pointer]);
+                        gWinData->LoadURL(nsString(gTop100List[gTop100Pointer]));
                   }
                   else  {
                      EnableWindow(GetDlgItem(hDlg,ID_SITE_NEXT),FALSE);
@@ -746,7 +746,7 @@ SiteWalkerDlgProc(HWND hDlg, UINT msg, WPARAM wParam,LPARAM lParam)
                      EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),TRUE);
                      SetDlgItemText(hDlg,IDC_SITE_NAME, gTop100List[--gTop100Pointer]);
                      if (gWinData)
-                        gWinData->LoadURL(gTop100List[gTop100Pointer]);
+                        gWinData->LoadURL(nsString(gTop100List[gTop100Pointer]));
                   }
                   else  {
                      EnableWindow(GetDlgItem(hDlg,ID_SITE_PREVIOUS),FALSE);

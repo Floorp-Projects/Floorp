@@ -29,11 +29,16 @@
 #include <windows.h>
 #include <ole2.h>
 
+#include "plstr.h"
+#include "prmem.h"
 #include "prprf.h"
+#include "prlink.h"
 #include "nsIFactory.h"
 #include "nsIWebShell.h"
 #include "nsString.h"
 #include "plevent.h"
+#include "prthread.h"
+#include "private/pprthred.h"
 
 static HMODULE g_DllInst = NULL;
 
@@ -63,8 +68,11 @@ BOOL WINAPI DllMain(HINSTANCE hDllInst,
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
+          {
+            // save our instance
             g_DllInst = hDllInst;
-            break;
+          }
+          break;
 
         case DLL_PROCESS_DETACH:
             break;
@@ -100,10 +108,33 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv)
     // for now here is as good a place as any...
     //
     if (TRUE == isFirstTime) {
-        PL_InitializeEventsLib("");
-        NS_SetupRegistry();
 
-        isFirstTime = FALSE;
+      // Get dll directory
+      char binpath[_MAX_PATH];
+      ::GetModuleFileName(g_DllInst, binpath, _MAX_PATH);
+      char *lastslash = PL_strrchr(binpath, '\\');
+      if (lastslash) *lastslash = '\0';
+      
+      // Get existing search path
+      int len = GetEnvironmentVariable("PATH", NULL, 0);
+      char *newpath = (char *) PR_Malloc(sizeof(char) * (len +
+                                                         PL_strlen(binpath) +
+                                                         2)); // ';' + '\0'
+      GetEnvironmentVariable("PATH", newpath, len + 1);
+      PL_strcat(newpath, ";");
+      PL_strcat(newpath, binpath);
+      
+      // Set new search path
+      SetEnvironmentVariable("PATH", newpath);
+      
+      // Clean up
+      PR_Free(newpath);
+      
+      //        PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
+      PL_InitializeEventsLib("");
+      NS_SetupRegistry();
+      
+      isFirstTime = FALSE;
     }
 
     if (WebShellCID == rclsid) {
@@ -131,7 +162,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv)
 /*
  * Helper function to register a key/sub-key in the Windows registry...
  */
-void RegisterKey(char *aKey, const char *aSubKey, const char *aValue)
+void RegisterKey(char *aKey, const char *aSubKey, const char *aValue, const char* aValueName=NULL)
 {
     LONG rv;
     HKEY hKey;
@@ -156,7 +187,7 @@ void RegisterKey(char *aKey, const char *aSubKey, const char *aValue)
     if (rv == ERROR_SUCCESS) {
         if (NULL != aValue) {
             RegSetValueEx(hKey,
-                          NULL,
+                          aValueName,
                           0,
                           REG_SZ,
                           (const BYTE*)aValue,
@@ -165,7 +196,6 @@ void RegisterKey(char *aKey, const char *aSubKey, const char *aValue)
         RegCloseKey(hKey);
     }
 }
-
 
 /*
  * Helper function to remove a key/sub-key from the Windows registry...
@@ -250,6 +280,7 @@ STDAPI DllRegisterServer(void)
     RegisterKey(WebShellCLSIDkey, "VersionIndependentProgID", WEBSHELL_GLOBAL_PROGID_KEY);
     RegisterKey(WebShellCLSIDkey, "NotInsertable",            NULL);
     RegisterKey(WebShellCLSIDkey, "InprocServer32",           WebShellDLLPath);
+    RegisterKey(WebShellCLSIDkey, "InprocServer32",           "Apartment", "ThreadingModel");
 
     // Free up memory...
     if (WebShellCLSID) {
@@ -330,3 +361,4 @@ STDAPI DllUnregisterServer(void)
 }
 
 #endif // XP_PC
+

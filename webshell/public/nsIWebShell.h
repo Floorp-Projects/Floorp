@@ -46,25 +46,41 @@ class nsIPref;
 
 //----------------------------------------------------------------------
 
+typedef enum {
+  nsLoadURL,
+  nsLoadHistory,
+  nsLoadLink,
+  nsLoadRefresh
+} nsLoadType;
+
 // Container for web shell's
 class nsIWebShellContainer : public nsISupports {
 public:
-  NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
+  NS_IMETHOD SetTitle(const PRUnichar* aTitle) = 0;
 
-  NS_IMETHOD GetTitle(nsString& aResult) = 0;
+  NS_IMETHOD GetTitle(PRUnichar** aResult) = 0;
 
   // History control
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const nsString& aURL) = 0;
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const nsString& aURL) = 0;
+  NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason) = 0;
+  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL) = 0;
 
   // XXX not yet implemented; should we?
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const nsString& aURL) = 0;
+  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax) = 0;
+  NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus) = 0;
+
+  NS_IMETHOD OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec) = 0;
 
   // Chrome control
 // NS_IMETHOD SetHistoryIndex(PRInt32 aIndex, PRInt32 aMaxIndex) = 0;
 
   // Link traversing control
 };
+
+typedef enum {
+  nsReload,
+  nsReloadBypassCache,
+  nsReloadBypassProxy
+} nsReloadType;
 
 // Return value from WillLoadURL
 #define NS_WEB_SHELL_CANCEL_URL_LOAD      0xC0E70000
@@ -84,21 +100,23 @@ public:
 class nsIWebShell : public nsIContentViewerContainer {
 public:
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
-                  const nsRect& aBounds,
+                  PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto,
                   PRBool aAllowPlugins = PR_TRUE) = 0;
 
   NS_IMETHOD Destroy() = 0;
 
-  NS_IMETHOD GetBounds(nsRect& aResult) = 0;
+  NS_IMETHOD GetBounds(PRInt32 &x, PRInt32 &y, PRInt32 &w, PRInt32 &h) = 0;
 
-  NS_IMETHOD SetBounds(const nsRect& aBounds) = 0;
+  NS_IMETHOD SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h) = 0;
 
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
 
   NS_IMETHOD Show() = 0;
 
   NS_IMETHOD Hide() = 0;
+
+  NS_IMETHOD Repaint(PRBool aForce) = 0;
 
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer) = 0;
   NS_IMETHOD GetContentViewer(nsIContentViewer*& aResult) = 0;
@@ -109,8 +127,6 @@ public:
   NS_IMETHOD SetObserver(nsIStreamObserver* anObserver) = 0;
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult) = 0;
 
-  NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
-
   NS_IMETHOD SetPrefs(nsIPref* aPrefs) = 0;
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs) = 0;
 
@@ -120,9 +136,9 @@ public:
   NS_IMETHOD GetChildCount(PRInt32& aResult) = 0;
   NS_IMETHOD AddChild(nsIWebShell* aChild) = 0;
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult) = 0;
-  NS_IMETHOD GetName(nsString& aName) = 0;
-  NS_IMETHOD SetName(const nsString& aName) = 0;
-  NS_IMETHOD FindChildWithName(const nsString& aName,
+  NS_IMETHOD GetName(PRUnichar** aName) = 0;
+  NS_IMETHOD SetName(const PRUnichar* aName) = 0;
+  NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult) = 0;
 
   // XXX these are here until there a better way to pass along info to a sub doc
@@ -131,21 +147,27 @@ public:
   NS_IMETHOD GetMarginHeight(PRInt32& aWidth)  = 0;
   NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
 
-  // History api's
-  NS_IMETHOD Back() = 0;
-  NS_IMETHOD Forward() = 0;
-  NS_IMETHOD Reload() = 0;
-  NS_IMETHOD LoadURL(const nsString& aURLSpec,
+  // Document load api's
+  NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult) = 0;
+  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE) = 0;
+  NS_IMETHOD Stop(void) = 0;
+  NS_IMETHOD Reload(nsReloadType aType) = 0;
+  
+  // History api's
+  NS_IMETHOD Back() = 0;
+  NS_IMETHOD CanBack() = 0;
+  NS_IMETHOD Forward() = 0;
+  NS_IMETHOD CanForward() = 0;
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex) = 0;
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
-  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, nsString& aURLResult) = 0;
+  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, PRUnichar **aURLResult) = 0;
 
   // Chrome api's
-  NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
+  NS_IMETHOD SetTitle(const PRUnichar *aTitle) = 0;
 
-  NS_IMETHOD GetTitle(nsString& aResult) = 0;
+  NS_IMETHOD GetTitle(PRUnichar **aResult) = 0;
   // SetToolBar
   // SetMenuBar
   // SetStatusBar

@@ -525,7 +525,8 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   nsIViewManager* viewMan = presShell->GetViewManager();  
   NS_RELEASE(presShell);
-  rv = view->Init(viewMan, viewBounds, parView, &kCChildCID);
+  rv = view->Init(viewMan, viewBounds,
+                  parView, &kCChildCID);
   viewMan->InsertChild(parView, view, 0);
   NS_RELEASE(viewMan);
   SetView(view);
@@ -534,8 +535,10 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   nsRect webBounds(0, 0, NSToCoordRound(aSize.width * t2p), 
                    NSToCoordRound(aSize.height * t2p));
 
-  mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), webBounds, 
-                   content->GetScrolling());
+  mWebShell->Init(widget->GetNativeData(NS_NATIVE_WIDGET), 
+                  webBounds.x, webBounds.y,
+                  webBounds.width, webBounds.height,
+                  content->GetScrolling());
   NS_RELEASE(content);
   NS_RELEASE(widget);
 
@@ -594,10 +597,12 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
   float t2p = aPresContext.GetTwipsToPixels();
   nsRect subBounds;
 
-  mWebShell->GetBounds(subBounds);
+  mWebShell->GetBounds(subBounds.x, subBounds.y,
+                       subBounds.width, subBounds.height);
   subBounds.width  = NSToCoordRound(aDesiredSize.width * t2p);
   subBounds.height = NSToCoordRound(aDesiredSize.height * t2p);
-  mWebShell->SetBounds(subBounds);
+  mWebShell->SetBounds(subBounds.x, subBounds.y,
+                       subBounds.width, subBounds.height);
 
   aStatus = NS_FRAME_COMPLETE;
 

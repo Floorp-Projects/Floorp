@@ -23,7 +23,6 @@
 #include "nsISupports.h"
 
 class nsIFrame;
-class nsString;
 class nsIPostData;
 struct nsGUIEvent;
 
@@ -51,8 +50,8 @@ public:
    * targeted (it may be an empty string).
    */
   NS_IMETHOD OnLinkClick(nsIFrame* aFrame, 
-                         const nsString& aURLSpec,
-                         const nsString& aTargetSpec,
+                         const PRUnichar* aURLSpec,
+                         const PRUnichar* aTargetSpec,
                          nsIPostData* aPostData = 0) = 0;
 
   /**
@@ -62,13 +61,13 @@ public:
    * targeted (it may be an empty string).
    */
   NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
-                        const nsString& aURLSpec,
-                        const nsString& aTargetSpec) = 0;
+                        const PRUnichar* aURLSpec,
+                        const PRUnichar* aTargetSpec) = 0;
 
   /**
    * Get the state of a link to a given absolute URL
    */
-  NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState) = 0;
+  NS_IMETHOD GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState) = 0;
 };
 
 #endif /* nsILinkHandler_h___ */
