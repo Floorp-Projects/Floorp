@@ -435,7 +435,13 @@ function askNCIFileNameAndSave()
 				sgName = suggestNCIFileName(null);
 
 			var fName = prompt("Enter the file name for this configuration (must end with .NCI)", sgName);
-			
+
+			//NCI files are to be saved only in the config folder. 
+			while ((fName != null) && pathMentioned(fName))			
+			{
+				fName = prompt("Please enter file name only. This file will be saved by default to " + top.globals.getConfigFolder(top.globals), sgName);
+			}
+
 			//if they entered an improper suffix, prompt again, and again
 			while ((fName != null) && ((fName.substring(fName.length-4, fName.length)  != ".NCI") && (fName.substring(fName.length-4, fName.length)  != ".nci")))
 			{
@@ -474,9 +480,9 @@ function askNCIFileNameAndSave()
 	{
 		//save the file
 		writeToFile(fName);
-		refreshConfigFrame(fName);
 		top.globals.document.setupPlugin.FlushCache();
-		alert("This file is saved as " + top.globals.getConfigFolder(self) + fName);
+		alert("This file is saved as " + top.globals.getConfigFolder(top.globals) + fName);
+		refreshConfigFrame(fName);
 		return fName;
 	}
 	else
@@ -484,6 +490,22 @@ function askNCIFileNameAndSave()
 		//alert("Could not save this configuration because you did not provide a Name");
 		return null;
 	}
+}
+
+// Checks if user mentioned path name in the filename field.
+function pathMentioned(fileName)
+{
+	debug("In pathMentioned");
+
+	var isAPath = false;
+
+	if ((fileName != null) && (fileName != ""))
+	{
+		if ((fileName.charAt(1) == ':') && (fileName.charAt(2) == '\\'))
+			isAPath = true;
+	}
+
+	return isAPath;	
 }
 
 
@@ -646,7 +668,7 @@ function saveNewOrOldFile()
 		//debug("Saving: without asking to: " + fileName);
 		writeToFile(fileName);
 		top.globals.document.setupPlugin.FlushCache();
-		// alert("This file is saved as " + top.globals.getConfigFolder(self) + fName);
+		// alert("This file is saved as " + top.globals.getConfigFolder(top.globals) + fName);
 	}
 	return fileName;
 }
