@@ -1252,7 +1252,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_ol:
     case eHTMLTag_ul:
       // XXX kipp was here
-      result=PRBool(!strchr(gHeadingTags,aChild)); break;
+      result=PRBool(0 != strchr(gTagSet1,aChild));
+      break;
 
     case eHTMLTag_nobr:
       result=PR_TRUE; break;
