@@ -160,6 +160,7 @@ ifeq ($(OS_ARCH),Linux)
 	TOOLKIT_LDFLAGS     = -lXm -lXp -lXt -lXext -lX11 -lSM -lICE
 	EXTRA_PRE_LDFLAGS   = -rdynamic
 	EXTRA_POST_LDFLAGS  =
+	POST_LINK_COMMAND   =
 endif
 
 ifeq ($(OS_ARCH),IRIX)
@@ -167,6 +168,7 @@ ifeq ($(OS_ARCH),IRIX)
 	TOOLKIT_LDFLAGS     = -lXm -lXt -lX11
 	EXTRA_PRE_LDFLAGS   = -woff 84,85
 	EXTRA_POST_LDFLAGS  =
+	POST_LINK_COMMAND   =
 endif
 
 ifeq ($(OS_ARCH),SunOS)
@@ -174,6 +176,7 @@ ifeq ($(OS_ARCH),SunOS)
 	TOOLKIT_LDFLAGS     = -lXm -lXt -lXext -lX11
 	EXTRA_PRE_LDFLAGS   =
 	EXTRA_POST_LDFLAGS  =
+	POST_LINK_COMMAND   =
 endif
 
 ifeq ($(OS_ARCH),HP-UX)
@@ -181,11 +184,13 @@ ifeq ($(OS_ARCH),HP-UX)
 	TOOLKIT_LDFLAGS     = -lXm -lXt -lX11
 	EXTRA_PRE_LDFLAGS   =
 	EXTRA_POST_LDFLAGS  = -lpthread
+	POST_LINK_COMMAND   = chatr +s enable
 endif
 
 $(PROGS): $(OBJS) #$(EX_LIBS)
 	@$(MAKE_OBJDIR)
 	$(CCC) $(EXTRA_PRE_LDFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(TOOLKIT_LIB_PATH) $(TOOLKIT_LDFLAGS) $(EXTRA_POST_LDFLAGS)
+	$(POST_LINK_COMMAND) $@
 
 export::
 
