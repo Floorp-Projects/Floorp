@@ -35,19 +35,12 @@ REQUIRES        = xpcom \
                   locale \
                   layout \
                   content \
-                  uriloader \
                   txmgr \
                   htmlparser \
                   necko \
                   pref \
                   view \
                   appshell \
-                  rdf \
-                  webshell \
-                  timer \
-                  txtsvc \
-                  intl \
-                  docshell \
                   gfx \
                   widget \
                   xuldoc \

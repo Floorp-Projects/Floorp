@@ -35,16 +35,10 @@ REQUIRES        = xpcom \
                   layout \
                   locale \
                   content \
-                  uriloader \
                   txmgr \
                   htmlparser \
                   necko \
                   pref \
-                  view \
-                  webshell \
-                  timer \
-                  intl \
-                  docshell \
                   gfx \
                   widget \
                   $(NULL)

@@ -36,18 +36,12 @@ REQUIRES        = xpcom \
                   locale \
                   layout \
                   content \
-                  uriloader \
                   txmgr \
                   htmlparser \
                   necko \
                   pref \
                   view \
-                  webshell \
-                  timer \
-                  txtsvc \
-                  intl \
                   lwbrk \
-                  docshell \
                   gfx \
                   widget \
                   $(NULL)

@@ -35,14 +35,12 @@ REQUIRES        = xpcom \
                   string \
                   dom \
                   layout \
-                  locale \
                   content \
                   uriloader \
                   txmgr \
                   htmlparser \
                   necko \
                   pref \
-                  view \
                   webshell \
                   timer \
                   intl \

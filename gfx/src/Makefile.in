@@ -32,7 +32,6 @@ LIBRARY_NAME	= gkgfx
 EXPORT_LIBRARY = 1
 REQUIRES	= xpcom \
 		  string \
-		  content \
 		  widget \
 		  locale \
 		  view \

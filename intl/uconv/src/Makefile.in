@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  chardet \
 		  necko \
-		  pref \
 		  $(NULL)
 
 CSRCS		= \

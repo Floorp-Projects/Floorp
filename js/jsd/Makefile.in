@@ -37,7 +37,6 @@ REQUIRES	= xpcom \
 		  js \
 		  xpconnect \
 		  widget \
-		  appshell \
 		  pref \
 		  $(NULL)
 

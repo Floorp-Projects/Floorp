@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  editor \
 		  appcomps \
-		  rdf \
 		  webbrwsr \
 		  uconv \
 		  chardet \
