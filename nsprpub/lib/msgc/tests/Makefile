@@ -80,8 +80,13 @@ endif
 ifeq ($(OS_ARCH), IRIX)
 LDOPTS += -rpath $(PWD)/$(DIST)/lib -rdata_shared
 
+# For 6.x machines, include this flag
+ifeq ($(basename $(OS_RELEASE)),6)
 ifeq ($(USE_N32),1)
 LDOPTS += -n32
+else
+LDOPTS += -32
+endif
 endif
 
 endif
