@@ -111,7 +111,7 @@ function serverPageInit() {
   if (gOnNewsServerPage)
   {
     var newsServer = document.getElementById("newsServer");
-    var pageData = parent.GetPageData()
+    var pageData = parent.GetPageData();
     try 
     {
       newsServer.value = pageData.newsserver.hostname.value;
