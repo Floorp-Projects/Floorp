@@ -104,7 +104,7 @@ static void pt_PostNotifies(PRLock *lock, PRBool unlock)
                 while (notified->cv[index].times-- > 0)
                 {
                     rv = pthread_cond_signal(&cv->cv);
-                    PR_ASSERT((0 == rv) || (EINVAL == rv));
+                    PR_ASSERT(0 == rv);
                 }
             }
 #if defined(DEBUG)
