@@ -412,7 +412,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 -(IBAction) viewSource:(id)aSender
 {
   NSWindow* mainWindow = [mApplication mainWindow];
-  if (mainWindow && [[mainWindow windowController] respondsToSelector:@selector(viewSource)] )
+  if (mainWindow && [[mainWindow windowController] respondsToSelector:@selector(viewSource:)] )
     [[mainWindow windowController] viewSource: self];
 }
 

@@ -159,6 +159,8 @@ enum {
 - (nsCocoaBrowserListener*)getCocoaBrowserListener;
 - (void)setWebBrowser:(nsIWebBrowser*)browser;
 
+- (NSString*)getFocusedURLString;
+
   // given a point in window coordinates, find the Gecko event sink of the ChildView the
   // point is over.
 - (void) findEventSink:(nsIEventSink**)outSink forPoint:(NSPoint)inPoint inWindow:(NSWindow*)inWind;

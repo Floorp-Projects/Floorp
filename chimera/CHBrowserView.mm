@@ -791,7 +791,7 @@ void nsHeaderSniffer::PerformSave()
         defaultFileName = mDefaultFilename;
     }
 
-    if (defaultFileName.IsEmpty())
+    if (defaultFileName.IsEmpty() && mURL)
         // (5) Use the host.
         mURL->GetHost(defaultFileName);
     
@@ -1289,6 +1289,32 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
          bypassCache: YES
           filterView: aFilterView
           filterList: aFilterList];
+}
+
+-(NSString*)getFocusedURLString
+{
+  nsCOMPtr<nsIWebBrowserFocus> wbf(do_QueryInterface(_webBrowser));
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  wbf->GetFocusedWindow(getter_AddRefs(domWindow));
+  if (!domWindow)
+    _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  if (!domWindow)
+    return @"";
+
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  domWindow->GetDocument(getter_AddRefs(domDocument));
+  if (!domDocument)
+    return @"";
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(domDocument));
+  if (!nsDoc)
+    return @"";
+  nsCOMPtr<nsIDOMLocation> location;
+  nsDoc->GetLocation(getter_AddRefs(location));
+  if (!location)
+    return @"";
+  nsAutoString urlStr;
+  location->GetHref(urlStr);
+  return [NSString stringWithCharacters: urlStr.get() length: nsCRT::strlen(urlStr.get())];
 }
 
 - (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
