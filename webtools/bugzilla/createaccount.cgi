@@ -61,10 +61,10 @@ Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:
 print "Content-Type: text/html\n\n";
 
 my $login = $::FORM{'login'};
-my $realname = trim($::FORM{'realname'});
 
 if (defined($login)) {
     # We've been asked to create an account.
+    my $realname = trim($::FORM{'realname'});
     CheckEmailSyntax($login);
     trick_taint($login);
     $vars->{'login'} = $login;
