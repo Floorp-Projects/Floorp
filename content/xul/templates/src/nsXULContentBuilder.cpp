@@ -1131,10 +1131,18 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
     nsCOMPtr<nsIRDFResource> resource;
     nsXULContentUtils::GetElementRefResource(aElement, getter_AddRefs(resource));
     if (resource) {
+        
+        // If we've already done initial reflow, the set notify to PR_TRUE
+        // to force notifications when content elements are added to the document.        
+        PRBool notify = PR_FALSE;
+        nsIPresShell *shell = mRoot->GetDocument()->GetShellAt(0);
+        if (shell)
+          shell->GetDidInitialReflow(&notify);
+        
         // The element has a resource; that means that it corresponds
         // to something in the graph, so we need to go to the graph to
         // create its contents.
-        CreateContainerContents(aElement, resource, PR_FALSE, aContainer, aNewIndexInContainer);
+        CreateContainerContents(aElement, resource, notify, aContainer, aNewIndexInContainer);
     }
 
     return NS_OK;
