@@ -1325,12 +1325,19 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
   nsCOMPtr<nsIDOMNode> parentNode;
   //we also need to check to see if the result frame's content's parent is equal to the weaknode used of course.
-
-  result = node->GetParentNode(getter_AddRefs(parentNode));
-  if ((NS_FAILED(result) || parentNode != weakNodeUsed) && node != weakNodeUsed) //we are not pointing to same node! offset is meaningless
-    offsetused = -1;//0 because when grabbing a child content we grab the IDX'th object or: body has 2 children, 
-                   //index 0 of parent is the first child so if we say the first child is the frame then say offset is 0 we are correct
-  
+  //except for special case of text frames where they are their own parent.
+  nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(node);
+  if (NS_SUCCEEDED(result) && textNode && node != weakNodeUsed)//then the offset is meaningless.
+  {
+    offsetused = 0;//0 because when grabbing a child content we grab the IDX'th object or: body has 2 children, 
+                     //index 0 of parent is the first child so if we say the first child is the frame then say offset is 0 we are correct
+  }
+  else
+  {
+    result = node->GetParentNode(getter_AddRefs(parentNode));
+    if ((NS_FAILED(result) || parentNode != weakNodeUsed) && node != weakNodeUsed) //we are not pointing to same node! offset is meaningless
+      offsetused = -1;
+  }  
   nsPeekOffsetStruct pos;
   pos.SetData(mTracker, desiredX, aAmount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE, PR_TRUE);
   switch (aKeycode){
