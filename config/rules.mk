@@ -689,15 +689,6 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 
 %: SCCS/s.%
 
-ifdef DIRS
-$(DIRS)::
-	@set $(EXIT_ON_ERROR);			\
-	echo "cd $@; $(MAKE)";			\
-	cd $@; $(MAKE);				\
-	set +e;					\
-	$(CLICK_STOPWATCH)
-endif
-
 ###############################################################################
 # Update Makefiles
 ###############################################################################
@@ -706,9 +697,11 @@ endif
 Makefile: Makefile.in
 	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH)
 
+ifdef SUBMAKEFILES
 # VPATH does not work on some machines in this case, so add $(srcdir)
 $(SUBMAKEFILES): % : $(srcdir)/%.in
 	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH) $@
+endif
 
 ###############################################################################
 # Bunch of things that extend the 'export' rule (in order):
