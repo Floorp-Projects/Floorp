@@ -41,6 +41,7 @@ REQUIRES  =             \
             necko       \
             view        \
 			libart_lgpl \
+			xpconnect   \
             $(NULL) 
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
