@@ -312,15 +312,18 @@ static PRBool typeFromExtEquals(const char *aExt, const char *aType)
   fileExtToUse.Append(aExt);
 
   HKEY hKey;
+  PRBool eq = PR_FALSE;
   LONG err = ::RegOpenKeyEx( HKEY_CLASSES_ROOT, fileExtToUse.get(), 0, KEY_QUERY_VALUE, &hKey);
   if (err == ERROR_SUCCESS)
   {
      LPBYTE pBytes = GetValueBytes( hKey, "Content Type");
-     PRBool eq = strcmp((const char *)pBytes, aType) == 0;
-     delete[] pBytes;
-     return eq;
+     if (pBytes)
+     {
+       eq = strcmp((const char *)pBytes, aType) == 0;
+       delete[] pBytes;
+     }
   }
-  return PR_FALSE;
+  return eq;
 }
 
 already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetByExtension(const char *aFileExt, const char *aTypeHint)
