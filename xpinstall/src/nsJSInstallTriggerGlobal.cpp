@@ -148,12 +148,32 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
     return JS_FALSE;
 
+
   // make sure XPInstall is enabled, return false if not
   PRBool enabled = PR_FALSE;
   nativeThis->UpdateEnabled(&enabled);
   if (!enabled)
       return JS_TRUE;
 
+
+  // get window.location to construct relative URLs
+  nsString baseURL;
+  JSObject* global = JS_GetGlobalObject(cx);
+  if (global)
+  {
+    jsval v;
+    if (JS_GetProperty(cx,global,"location",&v))
+    {
+      ConvertJSValToStr( baseURL, cx, v );
+      PRInt32 lastslash = baseURL.RFindChar('/');
+      if (lastslash != kNotFound)
+      {
+        baseURL.Truncate(lastslash+1);
+      }
+    }
+  }
+
+  
   // parse associative array of installs
   if ( argc >= 1 && JSVAL_IS_OBJECT(argv[0]) )
   {
@@ -179,7 +199,13 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
         {
             nsXPITriggerItem *item = new nsXPITriggerItem( name, URL );
             if ( item )
+            {
+                if ( item->IsRelativeURL() )
+                {
+                  item->mURL.Insert( baseURL, 0 );
+                }
                 trigger->Add( item );
+            }
             else
                 ; // XXX signal error somehow
         }
@@ -189,11 +215,13 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
       JS_DestroyIdArray( cx, ida );
     }
 
+
     // save callback function if any (ignore bad args for now)
     if ( argc >= 2 && JS_TypeOfValue(cx,argv[1]) == JSTYPE_FUNCTION )
     {
       trigger->SaveCallback( cx, argv[1] );
     }
+
 
     // pass on only if good stuff found
     if (trigger->Size() > 0)
