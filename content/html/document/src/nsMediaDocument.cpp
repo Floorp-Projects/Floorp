@@ -267,6 +267,13 @@ nsMediaDocument::CreateSyntheticDocument()
 nsresult
 nsMediaDocument::StartLayout()
 {
+  // Reset scrolling to default settings for this shell.
+  // This must happen before the initial reflow, when we create the root frame
+  nsCOMPtr<nsIScrollable> scrollableContainer(do_QueryReferent(mDocumentContainer));
+  if (scrollableContainer) {
+    scrollableContainer->ResetScrollbarPreferences();
+  }
+
   PRUint32 numberOfShells = GetNumberOfShells();
   for (PRUint32 i = 0; i < numberOfShells; i++) {
     nsIPresShell *shell = GetShellAt(i);

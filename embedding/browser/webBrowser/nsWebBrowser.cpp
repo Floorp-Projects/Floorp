@@ -1524,6 +1524,15 @@ NS_IMETHODIMP nsWebBrowser::SetScrollRangeEx(PRInt32 aMinHorizontalPos,
       aMaxHorizontalPos, aMinVerticalPos, aMaxVerticalPos);
 }
 
+NS_IMETHODIMP nsWebBrowser::GetCurrentScrollbarPreferences(PRInt32 aScrollOrientation,
+   PRInt32* aScrollbarPref)
+{
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsScrollable->GetCurrentScrollbarPreferences(aScrollOrientation,
+      aScrollbarPref);
+}
+
 NS_IMETHODIMP nsWebBrowser::GetDefaultScrollbarPreferences(PRInt32 aScrollOrientation,
    PRInt32* aScrollbarPref)
 {
@@ -1533,6 +1542,16 @@ NS_IMETHODIMP nsWebBrowser::GetDefaultScrollbarPreferences(PRInt32 aScrollOrient
       aScrollbarPref);
 }
 
+NS_IMETHODIMP nsWebBrowser::SetCurrentScrollbarPreferences(PRInt32 aScrollOrientation,
+   PRInt32 aScrollbarPref)
+{
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsScrollable->SetCurrentScrollbarPreferences(aScrollOrientation,
+      aScrollbarPref);
+
+}
+
 NS_IMETHODIMP nsWebBrowser::SetDefaultScrollbarPreferences(PRInt32 aScrollOrientation,
    PRInt32 aScrollbarPref)
 {
@@ -1540,6 +1559,13 @@ NS_IMETHODIMP nsWebBrowser::SetDefaultScrollbarPreferences(PRInt32 aScrollOrient
 
    return mDocShellAsScrollable->SetDefaultScrollbarPreferences(aScrollOrientation,
       aScrollbarPref);
+}
+
+NS_IMETHODIMP nsWebBrowser::ResetScrollbarPreferences()
+{
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsScrollable->ResetScrollbarPreferences();
 }
 
 NS_IMETHODIMP nsWebBrowser::GetScrollbarVisibility(PRBool* aVerticalVisible,
