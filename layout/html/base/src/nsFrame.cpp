@@ -4103,7 +4103,12 @@ NS_IMETHODIMP nsFrame::GetBidiProperty(nsIPresContext* aPresContext,
     if (frameManager) {
       frameManager->GetFrameProperty( (nsIFrame*)this, aPropertyName, 0, &val);
       if (val) {
-        nsCRT::memcpy(aPropertyValue, &val, aSize);
+        // to fix bidi on big endian. We need to copy the right bytes from the void*, not the first aSize bytes.
+#if IS_BIG_ENDIAN
+        memcpy(aPropertyValue, ((char*)&val)+sizeof(void*) - aSize, aSize);
+#else
+        memcpy(aPropertyValue, &val, aSize);
+#endif
       }
     }
   }
