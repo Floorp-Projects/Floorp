@@ -43,6 +43,7 @@
 #include "nsIMsgSendLaterListener.h"
 #include "nsMsgCopy.h"
 #include "nsMsgComposeStringBundle.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -541,7 +542,7 @@ nsMsgSendLater::StartNextMailFileSend()
 {
   nsFileSpec    fileSpec;
   nsresult      rv;
-  char          *aMessageURI = nsnull;
+  nsXPIDLCString  aMessageURI;
 
   PRBool hasMore = PR_FALSE;
 
@@ -576,7 +577,7 @@ nsMsgSendLater::StartNextMailFileSend()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  myRDFNode->GetValue(&aMessageURI);
+  myRDFNode->GetValue(getter_Copies(aMessageURI));
 
   char *tString = nsnull;
   nsString      subject;

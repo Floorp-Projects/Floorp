@@ -89,10 +89,9 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
     nsCOMPtr<nsIRDFResource> msgNode(do_QueryInterface(m_message));
     if (msgNode)
     {
-      char* uri;
-      msgNode->GetValue(&uri);
-      if (uri)
-        ReleaseMessageServiceFromURI(uri, m_messageService);
+      nsXPIDLCString uri;
+      msgNode->GetValue(getter_Copies(uri));
+      ReleaseMessageServiceFromURI(uri, m_messageService);
     }
   }
 }
@@ -1815,8 +1814,8 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsIMessage *message,
   if (message)
     mCopyState->m_message = do_QueryInterface(message, &rv);
 
-	char *uri;
-	messageNode->GetValue(&uri);
+	nsXPIDLCString uri;
+	messageNode->GetValue(getter_Copies(uri));
 
 	nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
 	rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,

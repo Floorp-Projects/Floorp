@@ -462,5 +462,6 @@ HackUpAURIToPlayWith(void)
   char    *tURI;
   myRDFNode->GetValue(&tURI);
   nsString   workURI(tURI);
+  nsAllocator::Free(tURI);
   return workURI.ToNewUnicode(); 
 }
