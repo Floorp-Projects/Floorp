@@ -39,6 +39,10 @@
 #include "ptrarray.h"
 #include "jlog.h"
 
+#ifdef XP_PC
+#include "io.h"
+#endif
+
 /****************************************************************
 ***    UTILITY ROUTINES
 ***    In case we want to actually put this code into a dll,
