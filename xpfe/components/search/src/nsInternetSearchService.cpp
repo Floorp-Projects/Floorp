@@ -369,7 +369,9 @@ nsCOMPtr<nsISupportsArray>	InternetSearchDataSource::mUpdateArray;
 nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::mLocalstore;
 nsCOMPtr<nsIRDFDataSource>	InternetSearchDataSource::categoryDataSource;
 PRBool				InternetSearchDataSource::gEngineListBuilt = PR_FALSE;
+#ifdef MOZ_PHOENIX
 PRBool        InternetSearchDataSource::gReorderedEngineList = PR_FALSE;
+#endif
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mBackgroundLoadGroup;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mLoadGroup;
 nsCOMPtr<nsIPref>		InternetSearchDataSource::prefs;
@@ -4926,7 +4928,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
       if (NS_FAILED(rv))
       {
         sprintf(prefNameBuf, "browser.search.order.%s",
-                NS_ConvertUCS2toUTF8(engineName).get(), i);
+                NS_ConvertUCS2toUTF8(engineName).get());
         rv = rootBranch->GetComplexValue(prefNameBuf, 
                                          NS_GET_IID(nsIPrefLocalizedString),
                                          getter_AddRefs(orderParam));
