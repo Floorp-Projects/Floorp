@@ -46,7 +46,14 @@ bin="$dir/.."
 
 for t in $dir/test_*.js
 do
-    LD_LIBRARY_PATH=$bin $bin/xpcshell -f $dir/head.js -f $t -f $dir/tail.js 2> $t.log 1>&2
+    if [ `uname` = "Darwin" ]; then
+        DYLD_LIBRARY_PATH=$bin
+        export DYLD_LIBRARY_PATH
+    else
+        LD_LIBRARY_PATH=$bin
+        export LD_LIBRARY_PATH
+    fi
+    $bin/xpcshell -f $dir/head.js -f $t -f $dir/tail.js 2> $t.log 1>&2
     if [ `grep -c '\*\*\* PASS' $t.log` = 0 ]
     then
         echo "$t: FAIL (see $t.log)"
