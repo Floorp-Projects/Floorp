@@ -82,7 +82,6 @@ protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(nsCString& aDownloadsFileURL);
   nsresult GetDataSource(nsIRDFDataSource** aDataSource);
-  nsresult AssertProgressInfo();
   nsresult DownloadStarted(const char* aPersistentDescriptor);
   nsresult AssertProgressInfoFor(const char* aPersistentDescriptor);
 
