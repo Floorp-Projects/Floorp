@@ -22,7 +22,7 @@
     </content>
   </binding>
   
-  <binding id="radio" extends="resource:/chrome/radioBindings.xml#radio">
+  <binding id="radio" extends="chrome://global/content/radioBindings.xml#radio">
     <content excludes="observes">
       <xul:box flex="1" class="radio-internal-box" autostretch="never" valign="middle">
         <xul:box class="radio-checkmark-box-1" autostretch="never" inherits="disabled">
@@ -38,7 +38,7 @@
     </content>
   </binding>
 
-  <binding id="checkbox" extends="resource:/chrome/xulBindings.xml#checkbox">
+  <binding id="checkbox" extends="chrome://global/content/xulBindings.xml#checkbox">
     <content excludes="observes">
       <xul:box flex="1" class="checkbox-internal-box" autostretch="never" valign="middle">
         <xul:box class="checkbox-checkmark-box-1" autostretch="never" inherits="disabled">

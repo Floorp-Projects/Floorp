@@ -5,7 +5,7 @@
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <!-- Message Pane Widgets -->
-  <binding id="mail-emailaddress" extends="resource:/chrome/xulBindings.xml#basetext">
+  <binding id="mail-emailaddress" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
       	<xul:box inherits="orient" autostretch="never" flex="1">
           <xul:box orient="vertical"  autostretch="never" flex="1">

@@ -271,7 +271,7 @@
   
 menubutton.button-toolbar-4
   {
-    behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-single-right");
+    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
   }
   
 .button-toolbar-4 > .button-internal-box,

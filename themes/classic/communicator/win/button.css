@@ -70,7 +70,7 @@
   /* outer frame */
   .button-toolbar-1
     {
-      behavior            : url("resource:/chrome/xulBindings.xml#buttontop");
+      behavior            : url("chrome://global/content/xulBindings.xml#buttontop");
       min-width           : 0px;
       margin              : 2px 2px 0px 4px;
       border              : 1px solid transparent;
@@ -279,7 +279,7 @@
   
 menubutton.button-toolbar-4
   {
-    behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-single-right");
+    behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
   }
   
 .button-toolbar-4 > .button-internal-box,

@@ -3,7 +3,7 @@
 /********* XP Scrollbar *********/
 
 scrollbar {
-   behavior: url("resource:/chrome/xulBindings.xml#scrollbar");
+   behavior: url("chrome://global/content/xulBindings.xml#scrollbar");
 }
 
 slider {
@@ -26,7 +26,7 @@ scrollbar[value="hidden"] {
 /********* XP Scrollbar *********/
 
 thumb {
-  behavior: url(resource:/chrome/xulBindings.xml#thumb);
+  behavior: url(chrome://global/content/xulBindings.xml#thumb);
   user-focus: ignore;
   user-select: none;
   background-color: #CCCCCC;

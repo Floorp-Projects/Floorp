@@ -4,7 +4,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="buttonleft" extends="resource:/chrome/xulBindings.xml#basetext">
+  <binding id="buttonleft" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
       <xul:box class="button-box-1" autostretch="never" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1">
@@ -17,7 +17,7 @@
     </content>
   </binding>
 
-  <binding id="buttonright" extends="resource:/chrome/xulBindings.xml#basetext">
+  <binding id="buttonright" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
       <xul:box class="button-box-1" autostretch="never" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1">
@@ -30,7 +30,7 @@
     </content>
   </binding>
   
-  <binding id="buttontop" extends="resource:/chrome/xulBindings.xml#basetext">
+  <binding id="buttontop" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
       <xul:box class="button-box-1" autostretch="never" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical">
@@ -43,7 +43,7 @@
     </content>
   </binding>
 
-  <binding id="buttonbottom" extends="resource:/chrome/xulBindings.xml#basetext">
+  <binding id="buttonbottom" extends="chrome://global/content/xulBindings.xml#basetext">
     <content excludes="observes,template">
       <xul:box class="button-box-1" autostretch="never" flex="1">
         <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical">
