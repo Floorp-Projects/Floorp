@@ -210,62 +210,6 @@ NS_IMETHODIMP  nsFontMetricsGTK::Destroy()
   return NS_OK;
 }
 
-char *
-nsFontMetricsGTK::PickAppropriateSize(char **names, XFontStruct *fonts,
-                                      int cnt, nscoord desired)
-{
-  int         idx;
-  float       app2dev;
-  mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-  PRInt32     desiredPix = NSToIntRound(app2dev * desired);
-  XFontStruct *curfont;
-  PRInt32     closestMin = -1, minIndex = 0;
-  PRInt32     closestMax = 1<<30, maxIndex = 0;
-
-  // Find exact match, closest smallest and closest largest. If the
-  // largest is too much larger always pick the smallest.
-  for (idx = 0, curfont = fonts; idx < cnt; idx++, curfont++)
-  {
-    PRInt32 height = curfont->ascent + curfont->descent;
-    if (height == desiredPix) {
-      // Winner. Found an *exact* match
-      return names[idx];
-    }
-
-    if (height < desiredPix) {
-      // If the height is closer to the desired height, remember this font
-      if (height > closestMin) {
-        closestMin = height;
-        minIndex = idx;
-      }
-    }
-    else {
-      if (height < closestMax) {
-        closestMax = height;
-        maxIndex = idx;
-      }
-    }
-  }
-
-  // If the closest smaller font is closer than the closest larger
-  // font, use it.
-#ifdef NOISY_FONTS
-  printf(" *** desiredPix=%d(%d) min=%d max=%d *** ",
-         desiredPix, desired, closestMin, closestMax);
-#endif
-  if (desiredPix - closestMin <= closestMax - desiredPix) {
-    return names[minIndex];
-  }
-
-  // If the closest larger font is more than 2 pixels too big, use the
-  // closest smaller font. This is done to prevent things from being
-  // way too large.
-  if (closestMax - desiredPix > 2) {
-    return names[minIndex];
-  }
-  return names[maxIndex];
-}
-
 void nsFontMetricsGTK::RealizeFont()
 {
   XFontStruct *fontInfo;

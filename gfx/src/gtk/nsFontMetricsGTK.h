@@ -157,7 +157,6 @@ public:
   nsCOMPtr<nsIAtom> mLangGroup;
 
 protected:
-  char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
   void RealizeFont();
 
   nsIDeviceContext    *mDeviceContext;
