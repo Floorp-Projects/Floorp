@@ -42,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 
+#include "nsIWindowMediator.h"
 
 // we need all these for GetAttribute() - *sigh*
 #include "nsIDocShell.h"
@@ -73,7 +74,8 @@ static void
 GetAttribute( nsIXULWindow* inWindow,
               const nsAString& inAttribute, nsAString& outValue);
 
-static nsIDOMNode* GetDOMNodeFromDocShell(nsIDocShell* aShell);
+static already_AddRefed<nsIDOMNode>
+GetDOMNodeFromDocShell(nsIDocShell* aShell);
 
 
 nsresult
@@ -100,6 +102,13 @@ nsWindowDataSource::Init()
     rv = rdfc->MakeSeq(this, kNC_WindowRoot, &mContainer);
     if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIWindowMediator> windowMediator =
+        do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = windowMediator->AddListener(this);
+    if (NS_FAILED(rv)) return rv;
+        
     return NS_OK;
 }
 
@@ -467,10 +476,10 @@ GetAttribute( nsIXULWindow* inWindow,
   }
 }
 
-nsIDOMNode*
+already_AddRefed<nsIDOMNode>
 GetDOMNodeFromDocShell(nsIDocShell *aShell)
 {
-  nsCOMPtr<nsIDOMNode> node;
+  nsIDOMNode* node = nsnull;
 
   nsCOMPtr<nsIContentViewer> cv;
   aShell->GetContentViewer(getter_AddRefs(cv));
@@ -485,7 +494,7 @@ GetDOMNodeFromDocShell(nsIDocShell *aShell)
           nsCOMPtr<nsIDOMElement> element;
           domdoc->GetDocumentElement(getter_AddRefs(element));
           if (element)
-            node = do_QueryInterface(element);
+              CallQueryInterface(element, &node);
         }
       }
     }
@@ -495,3 +504,11 @@ GetDOMNodeFromDocShell(nsIDocShell *aShell)
 }
 
 
+#if 0
+// this is how we need to be registered:
+  { "Window Mediator",
+    NS_WINDOWDATASOURCE_CID,
+    NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
+    nsWindowDataSourceConstructor,
+  },
+#endif
