@@ -40,6 +40,7 @@
 #include "pkcs11i.h"
 #include "mcom_db.h"
 #include "cdbhdl.h"
+#include "secerr.h"
 
 #define FREE_CLEAR(p) if (p) { PORT_Free(p); p = NULL; }
 
@@ -510,6 +511,18 @@ secmod_FreeData(DBT *data)
     }
 }
 
+static void
+secmod_FreeSlotStrings(char **slotStrings, int count)
+{
+    int i;
+
+    for (i=0; i < count; i++) {
+	if (slotStrings[i]) {
+	    PR_smprintf_free(slotStrings[i]);
+	}
+    }
+}
+
 /*
  * build a module from the data base entry.
  */
@@ -518,128 +531,227 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
 {
     secmodData *encoded;
     secmodSlotData *slots;
-    char *commonName = NULL,*dllName = NULL,*parameters = NULL;
+    PLArenaPool *arena;
+    char *commonName 		= NULL;
+    char *dllName    		= NULL;
+    char *parameters 		= NULL;
+    char *nss;
+    char *moduleSpec;
+    char **slotStrings 		= NULL;
     unsigned char *names;
-    unsigned short len;
     unsigned long slotCount;
-    unsigned short offset;
-    PRBool isOldVersion  = PR_FALSE;
-    PRBool internal, isFIPS, isModuleDB=PR_FALSE, isModuleDBOnly=PR_FALSE;
-    PRBool extended=PR_FALSE;
-    PRBool hasRootCerts=PR_FALSE,hasRootTrust=PR_FALSE;
-    unsigned long trustOrder=PK11_DEFAULT_TRUST_ORDER, 
-				cipherOrder=PK11_DEFAULT_CIPHER_ORDER;
-    unsigned long ssl0=0, ssl1=0;
-    char **slotStrings = NULL;
-    unsigned long slotID,defaultFlags,timeout;
-    char *nss,*moduleSpec;
+    unsigned long ssl0		=0;
+    unsigned long ssl1		=0;
+    unsigned long slotID;
+    unsigned long defaultFlags;
+    unsigned long timeout;
+    unsigned long trustOrder	=PK11_DEFAULT_TRUST_ORDER;
+    unsigned long cipherOrder	=PK11_DEFAULT_CIPHER_ORDER;
+    unsigned short len;
+    unsigned short namesOffset  = 0;	/* start of the names block */
+    unsigned short namesRunningOffset;	/* offset to name we are 
+					 * currently processing */
+    unsigned short slotOffset;
+    PRBool isOldVersion  	= PR_FALSE;
+    PRBool internal;
+    PRBool isFIPS;
+    PRBool isModuleDB    	=PR_FALSE;
+    PRBool isModuleDBOnly	=PR_FALSE;
+    PRBool extended      	=PR_FALSE;
     int i;
 
-    PLArenaPool *arena;
 
     arena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
-    if (arena == NULL) return NULL;
+    if (arena == NULL) 
+    	return NULL;
+
+#define CHECK_SIZE(x) \
+    if ((unsigned int) data->size < (unsigned int)(x)) goto db_loser
+
+    /* -------------------------------------------------------------
+    ** Process the buffer header, which is the secmodData struct. 
+    ** It may be an old or new version.  Check the length fo each. 
+    */
+
+    CHECK_SIZE( offsetof(secmodData, trustOrder[0]) );
 
     encoded = (secmodData *)data->data;
-    names = (unsigned char *)data->data;
-    offset = SECMOD_GETSHORT(encoded->slotOffset);
-    slots = (secmodSlotData *) (names + offset + 2);
-    slotCount = SECMOD_GETSHORT(names + offset);
-    names += SECMOD_GETSHORT(encoded->nameStart);
 
-    * retInternal = internal = (encoded->internal != 0) ? PR_TRUE: PR_FALSE;
-    isFIPS = (encoded->fips != 0) ? PR_TRUE: PR_FALSE;
-    len = SECMOD_GETSHORT(names);
+    internal = (encoded->internal != 0) ? PR_TRUE: PR_FALSE;
+    isFIPS   = (encoded->fips     != 0) ? PR_TRUE: PR_FALSE;
 
+    if (retInternal)
+	*retInternal = internal;
+    if (internal) {
+	parameters = PORT_ArenaStrdup(arena,defParams);
+	if (parameters == NULL) 
+	    goto loser;
+    }
     if (internal && (encoded->major == SECMOD_DB_NOUI_VERSION_MAJOR) &&
  	(encoded->minor <= SECMOD_DB_NOUI_VERSION_MINOR)) {
 	isOldVersion = PR_TRUE;
     }
-
     if ((encoded->major == SECMOD_DB_EXT1_VERSION_MAJOR) &&
 	(encoded->minor >= SECMOD_DB_EXT1_VERSION_MINOR)) {
-	trustOrder = SECMOD_GETLONG(encoded->trustOrder);
-	cipherOrder = SECMOD_GETLONG(encoded->cipherOrder);
-	isModuleDB = (encoded->isModuleDB != 0) ? PR_TRUE: PR_FALSE;
+	CHECK_SIZE( sizeof(secmodData));
+	trustOrder     = SECMOD_GETLONG(encoded->trustOrder);
+	cipherOrder    = SECMOD_GETLONG(encoded->cipherOrder);
+	isModuleDB     = (encoded->isModuleDB != 0) ? PR_TRUE: PR_FALSE;
 	isModuleDBOnly = (encoded->isModuleDBOnly != 0) ? PR_TRUE: PR_FALSE;
-	extended = PR_TRUE;
+	extended       = PR_TRUE;
     } 
-
     if (internal && !extended) {
 	trustOrder = 0;
 	cipherOrder = 100;
     }
-
-    /* decode the common name */
-    commonName = (char*)PORT_ArenaAlloc(arena,len+1);
-    if (commonName == NULL) {
-	PORT_FreeArena(arena,PR_TRUE);
-	return NULL;
-    }
-    PORT_Memcpy(commonName,&names[2],len);
-    commonName[len] = 0;
-
-    /* decode the DLL name */
-    names += len+2;
-    len = SECMOD_GETSHORT(names);
-    if (len) {
-	dllName = (char*)PORT_ArenaAlloc(arena,len + 1);
-	if (dllName == NULL) {
-	    PORT_FreeArena(arena,PR_TRUE);
-	    return NULL;
-	}
-	PORT_Memcpy(dllName,&names[2],len);
-	dllName[len] = 0;
-    }
-    if (!internal && extended) {
-	names += len+2;
-	len = SECMOD_GETSHORT(names);
-	if (len) {
-	    parameters = (char*)PORT_ArenaAlloc(arena,len + 1);
-	    if (parameters == NULL) {
-		PORT_FreeArena(arena,PR_TRUE);
-		return NULL;
-	    }
-	    PORT_Memcpy(parameters,&names[2],len);
-	    parameters[len] = 0;
-	}
-    }
-    if (internal) {
-	parameters = PORT_ArenaStrdup(arena,defParams);
-    }
-
     /* decode SSL cipher enable flags */
     ssl0 = SECMOD_GETLONG(encoded->ssl);
-    ssl1 = SECMOD_GETLONG(&encoded->ssl[4]);
+    ssl1 = SECMOD_GETLONG(encoded->ssl + 4);
+
+    slotOffset  = SECMOD_GETSHORT(encoded->slotOffset);
+    namesOffset = SECMOD_GETSHORT(encoded->nameStart);
+
+
+    /*--------------------------------------------------------------
+    ** Now process the variable length set of names.                
+    ** The names have this structure:
+    ** struct {
+    **     BYTE  commonNameLen[ 2 ];
+    **     BYTE  commonName   [ commonNameLen ];
+    **     BTTE  libNameLen   [ 2 ];
+    **     BYTE  libName      [ libNameLen ];
+    ** If it is "extended" it also has these members:
+    **     BYTE  initStringLen[ 2 ];
+    **     BYTE  initString   [ initStringLen ];
+    ** }
+    */
+
+    namesRunningOffset = namesOffset;
+    /* copy the module's common name */
+    CHECK_SIZE( namesRunningOffset + 2);
+    names = (unsigned char *)data->data;
+    len   = SECMOD_GETSHORT(names);
+
+    CHECK_SIZE( namesRunningOffset + 2 + len);
+    commonName = (char*)PORT_ArenaAlloc(arena,len+1);
+    if (commonName == NULL) 
+	goto loser;
+    PORT_Memcpy(commonName, names + namesRunningOffset + 2, len);
+    commonName[len] = 0;
+    namesRunningOffset += len + 2;
+
+    /* copy the module's shared library file name. */
+    CHECK_SIZE( namesRunningOffset + 2);
+    len = SECMOD_GETSHORT(names + namesRunningOffset);
+    if (len) {
+	CHECK_SIZE( namesRunningOffset + 2 + len);
+	dllName = (char*)PORT_ArenaAlloc(arena,len + 1);
+	if (dllName == NULL) 
+	    goto loser;
+	PORT_Memcpy(dllName, names + namesRunningOffset + 2, len);
+	dllName[len] = 0;
+    }
+    namesRunningOffset += len + 2;
+
+    /* copy the module's initialization string, if present. */
+    if (!internal && extended) {
+	CHECK_SIZE( namesRunningOffset + 2);
+	len = SECMOD_GETSHORT(names);
+	if (len) {
+	    CHECK_SIZE( namesRunningOffset + 2 + len );
+	    parameters = (char*)PORT_ArenaAlloc(arena,len + 1);
+	    if (parameters == NULL) 
+		goto loser;
+	    PORT_Memcpy(parameters,names + namesRunningOffset + 2, len);
+	    parameters[len] = 0;
+	}
+	namesRunningOffset += len + 2;
+    }
+
+    /* 
+     * Consistancy check: Make sure the slot and names blocks don't
+     * overlap. These blocks can occur in any order, so this check is made 
+     * in 2 parts. First we check the case where the slot block starts 
+     * after the name block. Later, when we have the slot block length,
+     * we check the case where slot block starts before the name block.
+     * NOTE: in most cases any overlap will likely be detected by invalid 
+     * data read from the blocks, but it's better to find out sooner 
+     * than later.
+     */
+    if (slotOffset >= namesOffset) { /* slot block starts after name block */
+	if (slotOffset < namesRunningOffset) {
+	    goto db_loser;
+	}
+    }
+
+    /* ------------------------------------------------------------------
+    ** Part 3, process the slot table.
+    ** This part has this structure:
+    ** struct {
+    **     BYTE slotCount [ 2 ];
+    **     secmodSlotData [ slotCount ];
+    ** {
+    */
+
+    CHECK_SIZE( slotOffset + 2 );
+    slotCount = SECMOD_GETSHORT((unsigned char *)data->data + slotOffset);
+
+    /* 
+     * Consistancy check: Part2. We now have the slot block length, we can 
+     * check the case where the slotblock procedes the name block.
+     */
+    if (slotOffset < namesOffset) { /* slot block starts before name block */
+	if (namesOffset < slotOffset + 2 + slotCount*sizeof(secmodSlotData)) {
+	    goto db_loser;
+	}
+    }
+
+    CHECK_SIZE( (slotOffset + 2 + slotCount * sizeof(secmodSlotData)));
+    slots = (secmodSlotData *) ((unsigned char *)data->data + slotOffset + 2);
 
     /*  slotCount; */
-    slotStrings = (char **)PORT_ArenaAlloc(arena, slotCount * sizeof(char *));
-    for (i=0; i < (int) slotCount; i++) {
-	slotID = SECMOD_GETLONG(slots[i].slotID);
-	defaultFlags = SECMOD_GETLONG(slots[i].defaultFlags);
+    slotStrings = (char **)PORT_ArenaZAlloc(arena, slotCount * sizeof(char *));
+    for (i=0; i < (int) slotCount; i++, slots++) {
+	PRBool hasRootCerts	=PR_FALSE;
+	PRBool hasRootTrust	=PR_FALSE;
+	slotID       = SECMOD_GETLONG(slots->slotID);
+	defaultFlags = SECMOD_GETLONG(slots->defaultFlags);
+	timeout      = SECMOD_GETLONG(slots->timeout);
+	hasRootCerts = slots->hasRootCerts;
 	if (isOldVersion && internal && (slotID != 2)) {
 		unsigned long internalFlags=
 			pk11_argSlotFlags("slotFlags",SECMOD_SLOT_FLAGS);
 		defaultFlags |= internalFlags;
 	}
-	timeout = SECMOD_GETLONG(slots[i].timeout);
-	hasRootCerts = slots[i].hasRootCerts;
 	if (hasRootCerts && !extended) {
 	    trustOrder = 100;
 	}
 
 	slotStrings[i] = pk11_mkSlotString(slotID, defaultFlags, timeout, 
-	                                   (unsigned char)slots[i].askpw, 
+	                                   (unsigned char)slots->askpw, 
 	                                   hasRootCerts, hasRootTrust);
+	if (slotStrings[i] == NULL) {
+	    secmod_FreeSlotStrings(slotStrings,i);
+	    goto loser;
+	}
     }
 
     nss = pk11_mkNSS(slotStrings, slotCount, internal, isFIPS, isModuleDB, 
-	isModuleDBOnly, internal, trustOrder, cipherOrder, ssl0, ssl1);
+		     isModuleDBOnly, internal, trustOrder, cipherOrder, 
+		     ssl0, ssl1);
+    secmod_FreeSlotStrings(slotStrings,slotCount);
+    if (nss == NULL) 
+	goto loser;
     moduleSpec = pk11_mkNewModuleSpec(dllName,commonName,parameters,nss);
     PR_smprintf_free(nss);
     PORT_FreeArena(arena,PR_TRUE);
+    return moduleSpec;
 
-    return (moduleSpec);
+db_loser:
+    PORT_SetError(SEC_ERROR_BAD_DATABASE);
+loser:
+    PORT_FreeArena(arena,PR_TRUE);
+    return NULL;
 }
 
 
