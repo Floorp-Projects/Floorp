@@ -23,9 +23,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= libxpt
 
-SIMPLE_PROGRAMS	= xpt_dump
+SIMPLE_PROGRAMS	= xpt_dump xpt_link
 
-CSRCS		= xpt_dump.c
+CSRCS		= xpt_dump.c xpt_link.c
 
 LDFLAGS		= 		\
 		  -L$(DIST)/bin \

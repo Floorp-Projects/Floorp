@@ -21,7 +21,8 @@ IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\xpt_dump.exe
-PROGRAMS = $(PROG1)
+PROG2 = .\$(OBJDIR)\xpt_link.exe
+PROGRAMS = $(PROG1) $(PROG2)
 
 LCFLAGS=-DUSE_NSREG
 
@@ -69,3 +70,6 @@ clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
 $(PROG1): $(OBJDIR) xpt_dump.c
+
+$(PROG2): $(OBJDIR) xpt_link.c
+
