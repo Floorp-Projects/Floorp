@@ -45,6 +45,8 @@
 #include "nsIURL.h"
 #include "nsIDNSService.h"
 #include "nsIChannel.h"
+#include "nsIHTTPChannel.h"
+#include "nsHTTPEnums.h"
 #include "nsIProgressEventSink.h"
 #endif // NECKO
 #include "nsIGenericFactory.h"
@@ -132,7 +134,7 @@ public:
                   nsIInputStream* aPostDataStream,
                   nsIStreamListener* aListener);
 
-    nsresult Bind(nsIURI* aURL, nsIStreamListener* aListener);
+    nsresult Bind(nsIURI* aURL, nsIStreamListener* aListener, nsIInputStream *postDataStream = nsnull);
 
 #ifdef NECKO
     // nsIStreamObserver methods:
@@ -1583,9 +1585,6 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
     /* Store any POST data into the URL */
     if (nsnull != aPostDataStream) {
 #ifdef NECKO
-        NS_ASSERTION(0, "FIX ME");
-
-        
 
 #else
         static NS_DEFINE_IID(kPostToServerIID, NS_IPOSTTOSERVER_IID);
@@ -1620,14 +1619,15 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
     /*
      * Initiate the network request...
      */
-    rv = Bind(url, aListener);
+    rv = Bind(url, aListener, aPostDataStream);
+    NS_IF_RELEASE(aPostDataStream);
     NS_RELEASE(url);
 
     return rv;
 }
 
 
-nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener)
+nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener, nsIInputStream *postDataStream)
 {
   nsresult rv = NS_OK;
 
@@ -1680,6 +1680,15 @@ nsresult nsDocumentBindInfo::Bind(nsIURI* aURL, nsIStreamListener* aListener)
   rv = NS_OpenURI(getter_AddRefs(channel), aURL);
   if (NS_FAILED(rv)) return rv;
 
+  if (postDataStream)
+  {
+      nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
+      if (httpChannel)
+      {
+          httpChannel->SetRequestMethod(HM_POST);
+          httpChannel->SetPostDataStream(postDataStream);
+      }
+  }
   m_DocLoader->SetDocumentChannel(channel);
 
   rv = loadGroup->AddChannel(channel, nsnull);
