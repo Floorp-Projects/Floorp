@@ -4741,7 +4741,7 @@ PK11_WaitForTokenEvent(PK11SlotInfo *slot, PK11TokenEvent event,
 	if (waitForRemoval && series != PK11_GetSlotSeries(slot)) {
 	    return PK11TokenChanged;
 	}
-	if (timeout != PR_INTERVAL_NO_WAIT) {
+	if (timeout == PR_INTERVAL_NO_WAIT) {
 	    return waitForRemoval ? PK11TokenPresent : PK11TokenRemoved;
 	}
 	if (timeout != PR_INTERVAL_NO_TIMEOUT ) {
