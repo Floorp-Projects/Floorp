@@ -278,6 +278,7 @@ nsWidget::nsWidget()
   mXIC = 0;
 
   mIMEShellWidget = 0;
+  mIMEChildWidget = 0;
   mIMECallComposeStart = PR_FALSE;
   mIMECallComposeEnd = PR_TRUE;
 
@@ -2732,6 +2733,12 @@ nsWidget::GetXIC()
       mXIC->SetPreeditSpotLocation(0, mXICFontSize);
     }
   }
+  if (mXIC) {
+    nsWidget* parent = (nsWidget*)mParent.get();
+    if (parent) {
+      parent->mIMEChildWidget = this;
+    }
+  }
   return;
 }
 #endif // USE_XIM 
@@ -3189,10 +3196,11 @@ nsWidget::IMESetFocusWidget()
       PrimeICSpotTimer();
     }
   } else {
-    // FIXME: we shouldn't call UnsetFocusWidget() when focus
-    //        is moved to toolbar or SetFocusWidget() again to
-    //        input Widget (bug 17419)
-
+    if (mIMEChildWidget) {
+      IMEActivateWidget();
+      mIMEChildWidget->IMESetFocusWidget();
+      return;
+    }
     // kinput2 does not work well if we call UnsetFocusWidget()
     // when mIMEIsDeactivating is true
     if (mIMEShellWidget->mIMEIsDeactivating == PR_FALSE) {
