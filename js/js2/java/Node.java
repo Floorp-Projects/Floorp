@@ -424,6 +424,24 @@ public class Node implements Cloneable {
     
     /************************************************************************************************/
 
+    PostorderNodeIterator findTryNode(JSStack theStack, PostorderNodeIterator ni)
+    {
+        while (true) {
+            Node p = ni.peekParent();
+            if (p == null) {
+                StackValue ret = theStack.popFrame();
+                ni = ret.p;
+                if (ni == null) return null;
+            }
+            else {
+                if (p.type == TokenStream.TRY)
+                    return ni;
+                ni.pop();
+            }
+        }
+        
+    }
+
     PostorderNodeIterator execute(JSStack theStack, PostorderNodeIterator ni)
     {
         StackValue lhs;
@@ -435,20 +453,53 @@ public class Node implements Cloneable {
             case TokenStream.NUMBER :
                 num = (Number)getDatum();
                 System.out.println("number " + num.doubleValue());
+                theStack.push(new StackValue(num.doubleValue()));
                 return ni;
                 
             case TokenStream.SETNAME :
-                System.out.println("setname");
+                rhs = theStack.pop();   // the new value
+                lhs = theStack.pop();   // the target lvalue
+                System.out.println("setname " + lhs.s + " to " + rhs.d);
                 return ni;
                 
             case TokenStream.BINDNAME :
+                System.out.println("bindname " + getString());
+                theStack.push(new StackValue(getString()));
+                return ni;
+                
+            case TokenStream.NAME :
                 System.out.println("name " + getString());
+                theStack.push(new StackValue(22.0));
+                return ni;
+                
+            case TokenStream.CALL :
+                System.out.println("call");
+                lhs = theStack.pop();       // the function object
+                /*
+                    here we look up the first arg, find that it's a known function
+                    and return the nodeIterator for it's tree. Also, begin execution
+                    for that function by constructing a frame on the stack.
+                */
+                theStack.newFrame(new StackValue(ni));
+                ni = new PostorderNodeIterator(Brenda.tf);
+                return ni;
+            
+            case TokenStream.RETURN :
+                lhs = theStack.pop();   // the return value
+                rhs = theStack.pop();   // the return address
+                ni = rhs.p;
+                theStack.push(lhs);
                 return ni;
                 
             case TokenStream.ADD :
                 rhs = theStack.pop();
                 lhs = theStack.pop();
-                theStack.push(new StackValue(lhs.dbl + rhs.dbl));
+                theStack.push(new StackValue(lhs.d + rhs.d));
+                return ni;
+                           
+            case TokenStream.THROW :
+                lhs = theStack.pop();           // the exception object
+                ni = findTryNode(theStack, ni);
                 return ni;
                 
         }   

@@ -22,6 +22,10 @@ public class Interpreter {
             ni = n.execute(theStack, ni);
             n = ni.nextNode();
         }
+        
+        while (!theStack.isEmpty()) {
+            System.out.println("Stack Slot contains " + theStack.pop());
+        }
 
 
     }
