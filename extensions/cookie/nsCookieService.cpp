@@ -144,7 +144,10 @@ nsCookieService::Init()
 
     nsIEventQueue* eventQ; 
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv); 
-    if (NS_SUCCEEDED(rv)) { 
+    if (NS_SUCCEEDED(rv)) {
+        rv = eventQService->CreateThreadEventQueue();
+        if (NS_FAILED(rv)) return rv;
+
         rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ); 
     } 
     if (NS_FAILED(rv)) return rv; 
