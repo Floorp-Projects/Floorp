@@ -119,9 +119,7 @@ nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
   mSubscribedAtom = do_GetAtom("subscribed");
   mNntpAtom = do_GetAtom("nntp");
 
-  // our filters are on the server, they are on a per newsgroup basis
-  // but this will make the filter UI enable for news accounts
-  // which is what we want
+  // we have server wide and per group filters
   m_canHaveFilters = PR_TRUE;
 
   SetupNewsrcSaveTimer();
@@ -610,13 +608,6 @@ nsNntpIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
   rv = nntpService->UpdateCounts(this, aMsgWindow);
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNntpIncomingServer::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
-{
-  // news servers don't have filters, each newsgroup does.
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 

@@ -127,6 +127,7 @@ protected:
 private:
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
   nsCOMPtr <nsIMsgFilterList> m_filterList;
+  nsCOMPtr <nsIMsgFilterList> m_serverFilterList;
   nsCOMPtr <nsIMsgDBHdr> m_newMsgHdr; /* current message header we're building */
   PRBool m_addHdrToDB;
 };

@@ -183,13 +183,18 @@ nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
   rv = server->GetType(getter_Copies(type));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // for news, the filter file is
+  PRBool isServer = PR_FALSE;
+  rv = folder->GetIsServer(&isServer);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  // for news folders (not servers), the filter file is
   // mcom.test.dat
   // where the summary file is 
   // mcom.test.msf
   // since the log is an html file we make it
   // mcom.test.htm
-  if (type.Equals("nntp")) {
+  if (type.Equals("nntp") && !isServer) 
+  {
     nsCOMPtr<nsIFileSpec> thisFolder;
     rv = m_folder->GetPath(getter_AddRefs(thisFolder));
     NS_ENSURE_SUCCESS(rv, rv);

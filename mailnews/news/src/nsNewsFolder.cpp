@@ -1867,6 +1867,14 @@ NS_IMETHODIMP nsMsgNewsFolder::Shutdown(PRBool shutdownChildren)
 NS_IMETHODIMP
 nsMsgNewsFolder::SetFilterList(nsIMsgFilterList *aFilterList)
 {
+  if (mIsServer)
+  {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    nsresult rv = GetServer(getter_AddRefs(server));
+    NS_ENSURE_SUCCESS(rv,rv);
+    return server->SetFilterList(aFilterList);
+  }
+
   mFilterList = aFilterList;
   return NS_OK;
 }
@@ -1874,6 +1882,14 @@ nsMsgNewsFolder::SetFilterList(nsIMsgFilterList *aFilterList)
 NS_IMETHODIMP
 nsMsgNewsFolder::GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult)
 {
+  if (mIsServer)
+  {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    nsresult rv = GetServer(getter_AddRefs(server));
+    NS_ENSURE_SUCCESS(rv,rv);
+    return server->GetFilterList(aMsgWindow, aResult);
+  }
+
   if (!mFilterList) 
   {
     nsCOMPtr<nsIFileSpec> thisFolder;

@@ -588,29 +588,48 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   GET_TOKEN (); /* xref */
   
   // apply filters
-  // XXX todo, and then do spam classification
+  // XXX TODO
+  // do spam classification for news
 
   nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
   
-  if (!m_filterList) {
+  if (!m_filterList) 
+  {
     rv = folder->GetFilterList(m_msgWindow, getter_AddRefs(m_filterList));
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  
+  if (!m_serverFilterList)
+  {
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = folder->GetServer(getter_AddRefs(server));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = server->GetFilterList(m_msgWindow, getter_AddRefs(m_serverFilterList));
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
   // flag for kill
   // if the action is Delete, and we get a hit (see ApplyFilterHit())
-  // we set this to PR_FALSE.  if false, we won't add it to the db
+  // we set this to PR_FALSE.  if false, we won't add it to the db.
   m_addHdrToDB = PR_TRUE;
-  
+
   PRUint32 filterCount = 0;
   if (m_filterList) {
   	rv = m_filterList->GetFilterCount(&filterCount);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
+  PRUint32 serverFilterCount = 0;
+  if (m_serverFilterList) {
+  	rv = m_serverFilterList->GetFilterCount(&serverFilterCount);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
   // only do this if we have filters
-  if (filterCount) {
+  if (filterCount || serverFilterCount) 
+  {
     // build up a "headers" for filter code
     nsXPIDLCString subject;
     rv = newMsgHdr->GetSubject(getter_Copies(subject));
@@ -671,8 +690,21 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
       // so keep track of the header
       m_newMsgHdr = newMsgHdr;
       
-      rv = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::NewsRule, newMsgHdr, folder, m_newsDB, 
-        headers, headersSize, this, m_msgWindow);
+      // the per-newsgroup filters should probably go first. It doesn't matter
+      // right now since nothing stops filter execution for newsgroups, but if something
+      // does, like adding a "stop execution" action, then users should be able to
+      // override the global filters in the per-newsgroup filters.
+      if (filterCount)
+      {
+        rv = m_filterList->ApplyFiltersToHdr(nsMsgFilterType::NewsRule, newMsgHdr, folder, m_newsDB, 
+          headers, headersSize, this, m_msgWindow);
+      }
+      if (serverFilterCount)
+      {
+        rv = m_serverFilterList->ApplyFiltersToHdr(nsMsgFilterType::NewsRule, newMsgHdr, folder, m_newsDB, 
+          headers, headersSize, this, m_msgWindow);
+      }
+
       PR_Free ((void*) headers);
       NS_ENSURE_SUCCESS(rv,rv);
     }
@@ -681,8 +713,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   // if we deleted it, don't add it
   if (m_addHdrToDB) {
     rv = m_newsDB->AddNewHdrToDB(newMsgHdr, PR_TRUE);
-    if (NS_FAILED(rv)) 
-      return rv;           
+    NS_ENSURE_SUCCESS(rv,rv);
   }
   
   return NS_OK;
@@ -709,8 +740,10 @@ NS_IMETHODIMP nsNNTPNewsgroupList::ApplyFilterHit(nsIMsgFilter *aFilter, nsIMsgW
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool loggingEnabled = PR_FALSE;
-  if (m_filterList && numActions)
-    m_filterList->GetLoggingEnabled(&loggingEnabled);
+  nsCOMPtr<nsIMsgFilterList> currentFilterList;
+  rv = aFilter->GetFilterList(getter_AddRefs(currentFilterList));
+  if (NS_SUCCEEDED(rv) && currentFilterList && numActions)
+    currentFilterList->GetLoggingEnabled(&loggingEnabled);
 
   for (PRUint32 actionIndex = 0; actionIndex < numActions; actionIndex++)
   {
@@ -737,7 +770,7 @@ NS_IMETHODIMP nsNNTPNewsgroupList::ApplyFilterHit(nsIMsgFilter *aFilter, nsIMsgW
           m_newMsgHdr->OrFlags(MSG_FLAG_IGNORED, &newFlags);
         }
         break;
-      case nsMsgFilterAction::WatchThread: 
+      case nsMsgFilterAction::WatchThread:
         {
           PRUint32 newFlags;
           m_newMsgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);

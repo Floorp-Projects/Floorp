@@ -86,7 +86,6 @@ public:
     NS_IMETHOD CloseCachedConnections();
     NS_IMETHOD PerformBiff(nsIMsgWindow *aMsgWindow);
     NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
-    NS_IMETHOD GetFilterList(nsIMsgWindow *aMsgWindow, nsIMsgFilterList **aResult);
     NS_IMETHOD OnUserOrHostNameChanged(const char *oldName, const char *newName);
 
     // for nsMsgLineBuffer

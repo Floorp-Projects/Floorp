@@ -161,12 +161,11 @@ function onCancel()
 }
 */
 
-function onServerClick(event)
+function onFilterServerClick(selection)
 {
-    var itemURI = event.target.id;
+    var itemURI = selection.getAttribute('id');
 
-    // Return if same server is selected.
-    if (itemURI == gCurrentServerURI)
+    if (!itemURI || itemURI == gCurrentServerURI)
       return;
 
     // Save the current filters to disk before switching because
