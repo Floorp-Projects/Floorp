@@ -5146,57 +5146,55 @@ HT_SetNodeData (HT_Resource node, void *token, uint32 tokenType, void *data)
 
 	if (HT_IsNodeDataEditable(node, token, tokenType))
 	{
-		if (HT_GetNodeData(node, token, tokenType, &oldData))
+		HT_GetNodeData(node, token, tokenType, &oldData);
+		switch(tokenType)
 		{
-			switch(tokenType)
+		case	HT_COLUMN_STRING:
+			if ((token == gNavCenter->RDF_URLShortcut) && (data != NULL) &&
+				((*(char *)data) != '\0'))
 			{
-			case	HT_COLUMN_STRING:
-				if ((token == gNavCenter->RDF_URLShortcut) && (data != NULL) &&
-					((*(char *)data) != '\0'))
+				dirty = htVerifyUniqueToken(node, token,
+					tokenType, (char *)data);
+			}
+			else if (data != NULL && oldData != NULL)
+			{
+				if (!strcmp(data, oldData))
 				{
-					dirty = htVerifyUniqueToken(node, token,
-						tokenType, (char *)data);
+					dirty = PR_FALSE;
 				}
-				else if (data != NULL && oldData != NULL)
+			}
+			if (dirty == PR_TRUE)
+			{
+				if (oldData != NULL)
 				{
-					if (!strcmp(data, oldData))
-					{
-						dirty = PR_FALSE;
-					}
+					RDF_Unassert(node->view->pane->db, node->node,
+						token, oldData, RDF_STRING_TYPE);
 				}
-				if (dirty == PR_TRUE)
+				if ((data != NULL) && (((char *)data)[0] != '\0'))
 				{
-					if (oldData != NULL)
+					RDF_Assert(node->view->pane->db, node->node,
+						token, data, RDF_STRING_TYPE);
+				}
+				if (token == gNavCenter->RDF_smallIcon ||
+				    token == gNavCenter->RDF_largeIcon)
+				{
+					if (node->flags & HT_FREEICON_URL_FLAG)
 					{
-						RDF_Unassert(node->view->pane->db, node->node,
-							token, oldData, RDF_STRING_TYPE);
-					}
-					if ((data != NULL) && (((char *)data)[0] != '\0'))
-					{
-						RDF_Assert(node->view->pane->db, node->node,
-							token, data, RDF_STRING_TYPE);
-					}
-					if (token == gNavCenter->RDF_smallIcon ||
-					    token == gNavCenter->RDF_largeIcon)
-					{
-						if (node->flags & HT_FREEICON_URL_FLAG)
+						if (node->url[0] != NULL)
 						{
-							if (node->url[0] != NULL)
-							{
-								freeMem(node->url[0]);
-								node->url[0] = NULL;
-							}
-							if (node->url[1] != NULL)
-							{
-								freeMem(node->url[1]);
-								node->url[1] = NULL;
-							}
+							freeMem(node->url[0]);
+							node->url[0] = NULL;
+						}
+						if (node->url[1] != NULL)
+						{
+							freeMem(node->url[1]);
+							node->url[1] = NULL;
 						}
 					}
 				}
-				error = HT_NoErr;
-			break;
 			}
+			error = HT_NoErr;
+		break;
 		}
 	}
 	return(error);
