@@ -73,7 +73,7 @@ static PRBool pk11_FindAttrInTemplate(CK_ATTRIBUTE *attr,
 	unsigned int numAttrs, CK_ATTRIBUTE_TYPE target);
 
 #ifdef NSS_ENABLE_ECC
-extern int SECKEY_ECParams2KeySize(SECItem *params);
+extern int SECKEY_ECParamsToKeySize(SECItem *params);
 #endif /* NSS_ENABLE_ECC */
 
 /*
@@ -1281,7 +1281,7 @@ PK11_SignatureLen(SECKEYPrivateKey *key)
 	    if (theTemplate.pValue != NULL) {
 	        params.len = theTemplate.ulValueLen;
 		params.data = (unsigned char *) theTemplate.pValue;
-	        length = SECKEY_ECParams2KeySize(&params);
+	        length = SECKEY_ECParamsToKeySize(&params);
 	        PORT_Free(theTemplate.pValue);
 	    }
 	    length = ((length + 7)/8) * 2;

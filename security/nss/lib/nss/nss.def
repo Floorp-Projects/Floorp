@@ -775,7 +775,6 @@ PK11_PubDeriveExtended;
 PK11_PubUnwrapSymKeyWithFlagsPerm;
 PK11_UnwrapSymKeyWithFlagsPerm;
 SECITEM_ArenaDupItem;
-SECKEY_ECParams2KeySize;
 SECMOD_GetDBModuleList;
 SECMOD_GetDeadModuleList;
 SEC_ASN1DecoderAbort;
