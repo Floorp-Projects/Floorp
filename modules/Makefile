@@ -34,6 +34,7 @@ DIRS		= \
     zlib \
     li \
     progress \
+    plugin \
 	$(NULL)
 
 ifndef MOZ_SECURITY
