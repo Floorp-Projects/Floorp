@@ -270,6 +270,7 @@ public:
     void                              put(char c);
     PRInt32                           write(const void* s, PRInt32 n);
     virtual nsresult                  flush();
+    nsresult                          lastWriteStatus();
 
     // Output streamers.  Add more as needed (but you have to add delegators to the derived
     // classes, too, because these operators don't inherit).
@@ -294,9 +295,11 @@ private:
                                       nsOutputStream(const nsOutputStream& rhs);
     nsOutputStream&                   operator=(const nsOutputStream& rhs);
 
+    nsresult                          mWriteStatus;
+
 // DATA
 protected:
-    nsCOMPtr<nsIOutputStream>          mOutputStream;
+    nsCOMPtr<nsIOutputStream>         mOutputStream;
 }; // class nsOutputStream
 
 typedef nsOutputStream nsBasicOutStream; // Historic support for this name
