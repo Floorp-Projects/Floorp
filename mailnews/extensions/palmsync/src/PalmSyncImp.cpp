@@ -445,10 +445,14 @@ void CPalmSyncImp::CopyCString(LPTSTR *destStr, const nsAFlatCString& srcStr)
   if (!destStr)
     return;
 
-  PRInt32 length = sizeof(char) * (srcStr.Length()+1);
+  // these strings are defined as wide in the idl, so we need to add up to 3
+  // bytes of 0 byte padding at the end (if the string is an odd number of
+  // bytes long, we need one null byte to pad out the last char to a wide char
+  // and then  two more nulls as a wide null terminator. 
+  PRInt32 length = sizeof(char) * (srcStr.Length()+3);
   *destStr = (LPTSTR) CoTaskMemAlloc(length);
   char *sp = (char *)*destStr;
-  strncpy(sp, srcStr.get(), length-1);
+  strncpy(sp, srcStr.get(), length-1); // this will null fill the end of destStr
   sp[length-1] = '\0';
 }
 

@@ -821,7 +821,11 @@ void nsAbIPCCard::CopyValue(PRBool isUnicode, nsString & attribValue, LPTSTR * r
         else { 
             nsCAutoString cStr; 
             cStr = NS_LossyConvertUCS2toASCII(attribValue);
-            length = cStr.Length()+1;
+            // These strings are defined as wide in the idl, so we need to add up to 3
+            // bytes of 0 byte padding at the end (if the string is an odd number of 
+            // bytes long, we need one null byte to pad out the last char to a wide char
+            // and then  two more nulls as a wide null terminator.
+            length = cStr.Length()+3;
             char * str = (char *) CoTaskMemAlloc(length);
             strncpy(str, cStr.get(), length-1);
             str[length-1] = '\0';
@@ -912,8 +916,12 @@ void nsAbIPCCard::JoinAddress(PRBool isUnicode, LPTSTR *ptrAddress, nsString &ad
   if(!strLength)
     return;
 
-  // Allocate space for 'strLength' plus one for null and one for "\x0A".
-  strLength += 2;
+  // Allocate space for 'strLength' plus three for nulls and one for "\x0A".
+  // These strings are defined as wide in the idl, so we need to add up to 3
+  // bytes of 0 byte padding at the end (if the string is an odd number of 
+  // bytes long, we need one null byte to pad out the last char to a wide char
+  // and then  two more nulls as a wide null terminator.
+  strLength += 4;
   if(isUnicode)
   { 
     PRUnichar * uniStr = (PRUnichar *) CoTaskMemAlloc(sizeof(PRUnichar) * (strLength));
