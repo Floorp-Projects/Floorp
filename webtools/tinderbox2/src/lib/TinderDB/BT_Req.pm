@@ -75,7 +75,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.1 $ )[1];
+$VERSION = ( qw $Revision: 1.2 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -167,126 +167,130 @@ sub apply_db_updates {
   my ($self, $tree, ) = @_;
   
   my $queue_name = ReqData::tree2queue($tree);
-  my $req_log =  ReqData::tree2logfile($tree);
+  my @req_logs =  ReqData::tree2logfiles($tree);
   my $added_lines = 0; 
   my $last_tree_data = find_last_data($tree);
   my $year = 1900 + (localtime(time()))[5];
 
-  # We may not have req running on every branch so the log files may
-  # not exist.
+  foreach $req_log (@req_logs) {
 
-  (-r $req_log) || 
-      next;
-
-  open (REQ_LOG, "<$req_log") ||
-      die("Could not open req logfile: $req_log\n");
+      # We may not have req running on every branch so the log files may
+      # not exist.
+      
+      (-r $req_log) || 
+          next;
+      
+      open (REQ_LOG, "<$req_log") ||
+          die("Could not open req logfile: $req_log\n");
   
-  foreach $line (<REQ_LOG>) {
+      foreach $line (<REQ_LOG>) {
+          
+          
+          # the log file looks like this.
+          
+          # FW: CVS update: reef/distrib/sets (#2) created via mail by Rich@reefedge.com. 12:32:37, Nov 15
+          # FW: CVS update: reef/distrib/sets (#2) given to rich by jim. 13:46:13, Nov 15
+          
+          
+          if ( $line =~ m!
+               ^(.+)			# the subject can contain spaces
+               \s+\(\#(\d+)\)\s+	# bug number in parentheses
+               (.*)		 	# the action taken, can contain spaces
+               \s+by\s+			#
+               ([A-Za-z0-9\.\@]+)\.\s+	# author (may contain '@', '.',) 
+               # with a period terminator
+               (\d+)\:(\d+)\:(\d+)\,\s	# time in colon delimited format 
+               # with coma terminator
+               (\w+)\s(\d+)\n$		# three letter month and month day
+               !x ) {
+              
+              my %tinderbox = (
+                               'Subject' => $1, 
+                               'Ticket_Num' => $2, 
+                               'Complete_Action' => $3,
+                               'Action' => $3, 
+                               'Author' => $4, 
+                               'Hour' => $5, 
+                               'Minute' => $6, 
+                               'Second' => $7, 
+                               'Month' => $8, 
+                               'Month_Day' => $9,
+                               
+                               'Tree' => $tree,
+                               'Queue' => $queue_name,
+                               );
+              
+              my $month = MailProcess::monthstr2mon($tinderbox{'Month'});
+              
+              my ($timenow) = timelocal
+                  (
+                   $tinderbox{'Second'},
+                   $tinderbox{'Minute'},
+                   $tinderbox{'Hour'},
+                   $tinderbox{'Month_Day'},
+                   $month,
+                   $year,
+                   );
+              
+              $tinderbox{'Timenow'} = $timenow;
+              
+              # we wish for all actions to be listed in our progress table
+              # so they can not encode user names.
+              # Examples of actions as parsed above:
+              # 	given to rich 
+              # 	user set to jim@reefedge.com 
+              
+              $tinderbox{'Action'} =~ s/ to .*$//;
+              $tinderbox{'Action'} =~ s/ via mail//;
+              
+              # skip records which are already in the database.
+	  
+              ($timenow >= $last_tree_data) ||
+                  next;
+              
+              # remove special characters and convert any spaces to '_'
+              
+              foreach $key (keys %tinderbox) {
+                  $value = $tinderbox{$key};
+                  ($key, $value) = clean_bug_input($key, $value);
+                  $tinderbox{$key} = $value;
+              }
+              
+              $tinderbox{'tinderbox_timenow'} = $timenow;
+              $tinderbox{'tinderbox_status'} = $tinderbox{'Action'};
+              $tinderbox{'tinderbox_bug_id'} = $tinderbox{'Ticket_Num'};
+              
+              $DATABASE
+              {$tree}
+              {$timenow}
+              {$tinderbox{'Action'}}
+              {$tinderbox{'Ticket_Num'}} = \%tinderbox;
+              
+              $added_lines++;
+              
+          } # if matches regexp
       
-
-      # the log file looks like this.
-
-      # FW: CVS update: reef/distrib/sets (#2) created via mail by Rich@reefedge.com. 12:32:37, Nov 15
-      # FW: CVS update: reef/distrib/sets (#2) given to rich by jim. 13:46:13, Nov 15
+      } # foreach $line
       
+      close(REQ_LOG) ||
+          die("Could not close req logfile: $req_log\n");
       
-      if ( $line =~ m!
-	   ^(.+)			# the subject can contain spaces
-	   \s+\(\#(\d+)\)\s+		# bug number in parentheses
-	   (.*)		 		# the action taken, can contain spaces
-	   \s+by\s+			#
-	   ([A-Za-z0-9\.\@]+)\.\s+	# author (may contain '@', '.',) 
-	   				# with a period terminator
-	   (\d+)\:(\d+)\:(\d+)\,\s	# time in colon delimited format 
-					# with coma terminator
-	   (\w+)\s(\d+)\n$		# three letter month and month day
-	   !x ) {
-	  
-	  my %tinderbox = (
-			'Subject' => $1, 
-			'Ticket_Num' => $2, 
-			'Complete_Action' => $3,
-			'Action' => $3, 
-			'Author' => $4, 
-			'Hour' => $5, 
-			'Minute' => $6, 
-			'Second' => $7, 
-			'Month' => $8, 
-			'Month_Day' => $9,
+  } # foreach $req_log
 
-			'Tree' => $tree,
-			'Queue' => $queue_name,
-			);
-	  
-	  my $month = MailProcess::monthstr2mon($tinderbox{'Month'});
-	  
-	  my ($timenow) = timelocal
-	      (
-	       $tinderbox{'Second'},
-	       $tinderbox{'Minute'},
-	       $tinderbox{'Hour'},
-	       $tinderbox{'Month_Day'},
-	       $month,
-	       $year,
-	       );
-
-	  $tinderbox{'Timenow'} = $timenow;
-
-	  # we wish for all actions to be listed in our progress table
-	  # so they can not encode user names.
-	  # Examples of actions as parsed above:
-	  # 	given to rich 
-	  # 	user set to jim@reefedge.com 
-
-	  $tinderbox{'Action'} =~ s/ to .*$//;
-	  $tinderbox{'Action'} =~ s/ via mail//;
-
-	  # skip records which are already in the database.
-	  
-	  ($timenow >= $last_tree_data) ||
-	      next;
-
-	  # remove special characters and convert any spaces to '_'
-
-	  foreach $key (keys %tinderbox) {
-	      $value = $tinderbox{$key};
-	      ($key, $value) = clean_bug_input($key, $value);
-	      $tinderbox{$key} = $value;
-	  }
-
-	  $tinderbox{'tinderbox_timenow'} = $timenow;
-	  $tinderbox{'tinderbox_status'} = $tinderbox{'Action'};
-	  $tinderbox{'tinderbox_bug_id'} = $tinderbox{'Ticket_Num'};
-
-	  $DATABASE
-	  {$tree}
-	  {$timenow}
-	  {$tinderbox{'Action'}}
-	  {$tinderbox{'Ticket_Num'}} = \%tinderbox;
-	  
-	  $added_lines++;
-
-      } # if matches regexp
-      
-  } # foreach $line
-  
-  close(REQ_LOG) ||
-      die("Could not close req logfile: $req_log\n");
-  
   ($added_lines) ||
       return 0;
-
+  
   $METADATA{$tree}{'updates_since_trim'}+= $added_lines;
-
+  
   if ( ($METADATA{$tree}{'updates_since_trim'} >
         $TinderDB::MAX_UPDATES_SINCE_TRIM)
-     ) {
-    $METADATA{$tree}{'updates_since_trim'}=0;
-    trim_db_history(@_);
+       ) {
+      $METADATA{$tree}{'updates_since_trim'}=0;
+      trim_db_history(@_);
   }
-
+  
   $self->savetree_db($tree);
-
+  
   return $added_lines;
 }
 
