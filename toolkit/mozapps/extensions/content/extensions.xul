@@ -70,6 +70,8 @@
   <keyset id="extensionsKeys">
     <key id="key_close"   key="&cmd.close.commandKey;"    modifiers="accel" command="cmd_close" 
          oncommand="gExtensionsViewController.doCommand('cmd_close');"/>
+    <key id="key_close2"  keycode="VK_ESCAPE"                               command="cmd_close"
+         oncommand="gExtensionsViewController.doCommand('cmd_close');"/>
     <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel" command="cmd_about" 
          oncommand="gExtensionsViewController.doCommand('cmd_about');"/>
     <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel" command="cmd_options"
