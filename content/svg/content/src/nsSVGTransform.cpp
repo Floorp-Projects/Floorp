@@ -188,9 +188,22 @@ nsSVGTransform::GetValueString(nsAString& aValue)
                                   NS_LITERAL_STRING("skewY(%g)").get(), mAngle);
       }
       break;
+    case nsIDOMSVGTransform::SVG_TRANSFORM_MATRIX:
+      {
+        float a,b,c,d,e,f;
+        mMatrix->GetA(&a);
+        mMatrix->GetB(&b);
+        mMatrix->GetC(&c);
+        mMatrix->GetD(&d);
+        mMatrix->GetE(&e);
+        mMatrix->GetF(&f);
+        nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
+                                  NS_LITERAL_STRING("matrix(%g, %g, %g, %g, %g, %g)").get(),
+                                  a, b, c, d, e, f);
+      } 
     default:
       buf[0] = '\0';
-      NS_NOTYETIMPLEMENTED("write me!");
+      NS_ERROR("unknown transformation type");
       break;
   }
 
