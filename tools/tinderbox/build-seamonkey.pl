@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.76 $ ';
+$::Version = '$Revision: 1.77 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -460,7 +460,7 @@ BEGIN {
     my %sig_num = ();
     my @sig_name = ();
 
-    sub sig_name {
+    sub signal_name {
         # Find the name of a signal number
         my ($number) = @_;
         
@@ -492,8 +492,6 @@ sub fork_and_log {
         open STDERR, ">&STDOUT";
         select STDOUT; $| = 1;  # make STDOUT unbuffered
         select STDERR; $| = 1;  # make STDERR unbuffered
-        my $now = localtime();
-        print "$cmd started $now\n";
         exec $cmd;
         die "Could not exec()";
     }
@@ -527,12 +525,53 @@ sub wait_for_pid {
             die; # Propagate the error up.
         }
     }
-    unless ($timed_out) {
-        my $now = localtime();
-        print_log "Child exited $now\n";
-    }
-    return $timed_out, $exit_value, sig_name($signal_num), $dumped_core;
+    my $signal_name = $signal_num ? signal_name($signal_num) : '';
+
+    return { timed_out=>$timed_out, 
+             exit_value=>$exit_value,
+             signal_name=>$signal_name,
+             dumped_core=>$dumped_core };
 }
+
+sub run_test {
+    my ($home_dir, $binary_dir, $binary, $logfile, $timeout_secs) = @_;
+    my $now = localtime();
+    
+    print_log "Begin: $now\n";
+    print_log "$binary\n";
+
+    my $pid = fork_and_log($home_dir, $binary_dir, $binary, $logfile);
+    my $result = wait_for_pid($pid, $timeout_secs);
+
+    $now = localtime();
+    print_log "End:   $now\n";
+
+    return $result;
+}    
+
+sub print_test_errors {
+    my ($result, $name) = @_;
+
+    if (not $result->{timed_out} and $result->{exit_value} != 0) {
+        if ($result->{signal_name} ne '') {
+            print_log "Error: $name: received SIG$result->{signal_name}\n";
+        }
+        print_log "Error: $name: exited with status $result->{exit_value}\n";
+        if ($result->{dumped_core}) {
+            print_log "Error: $name: dumped core.\n";
+        }
+    }
+}
+
+sub print_logfile {
+    my ($logfile, $test_name) = @_;
+    print_log "----------- Output from $test_name ------------- \n";
+    open READRUNLOG, "$logfile";
+    print_log "  $_" while <READRUNLOG>;
+    close READRUNLOG;
+    print_log "----------- End Output from $test_name --------- \n";
+}
+
 
 # Start up Mozilla, test passes if Mozilla is still alive
 # after $timeout_secs (seconds).
@@ -544,28 +583,19 @@ sub AliveTest {
     my $binary_log = "$build_dir/runlog";
     local $_;
 
-    my $pid = fork_and_log($build_dir, $binary_dir, $binary_basename,
-                           $binary_log);
-    my ($timed_out, $exit_value, $sig_name, $dumped_core)
-      = wait_for_pid($pid, $timeout_secs);
-    print_log "----------- Output from $binary_basename for alive test --------------- \n";
-    open READRUNLOG, "$binary_log";
-    print_log "  $_" while <READRUNLOG>;
-    close READRUNLOG;
-    print_log "----------- End Output from $binary_basename for alive test ----------- \n";
-    if (not $timed_out) {
-        print_log "Error: alive test: $binary_basename received"
-                  ." SIG$sig_name\n" if $sig_name ne 'ZERO';
-        print_log "Error: alive test: $binary_basename exited with status "
-                  ." $exit_value\n";
-        if ($dumped_core) {
-            print_log "Error: alive test: $binary_basename dumped core.\n";
-        }
+    my $result = run_test($build_dir, $binary_dir, $binary_basename,
+                          $binary_log, $timeout_secs);
+
+    print_logfile($binary_log, "$binary_basename alive test");
+    
+    if ($result->{timed_out}) {
+        print_log "$binary_basename successfully stayed up"
+                  ." for $timeout_secs seconds.\n";
+        return 'success';
+    } else {
+        print_test_errors($result, $binary_basename);
         print_log "Turn the tree orange now.\n";
         return 'testfailed';
-    } else {
-        print_log "$binary_basename still up after $timeout_secs seconds\n";
-        return 'success';
     }
 }
 
@@ -592,33 +622,23 @@ sub FileBasedTest {
 
     # Assume the app is the first argument in the execString.
     my ($binary_basename) = (split /\s+/, $test_command)[0];
-    my $binary = "$binary_dir/$binary_basename";
     my $binary_log = "$build_dir/$test_name.log";
 
-    my $pid = fork_and_log($build_dir, $binary_dir, $test_command, $binary_log);
-    my ($timed_out, $exit_value, $sig_name, $dumped_core)
-      = wait_for_pid($pid, $timeout_secs);
+    my $result = run_test($build_dir, $binary_dir, $test_command,
+                          $binary_log, $timeout_secs);
 
-    print_log "----------- Output from $test_name test --------------- \n";
-    open READRUNLOG, "$binary_log";
-    print_log $_ while <READRUNLOG>;
-    close READRUNLOG;
-    print_log "----------- End of output from $test_name test -------- \n";
-
-    if ($timed_out) {
-        print_log "Error: $test_name timed out after $timeout_secs.\n";
+    print_logfile($binary_log, $test_name);
+    
+    if ($result->{timed_out}) {
+        print_log "Error: $test_name timed out after $timeout_secs seconds.\n";
         return 'testfailed';
-    } elsif ($exit_value == 0) {
-        print_log "$test_name exited normally\n";
+    } elsif ($result->{exit_value} != 0) {
+        print_test_errors($result, $test_name);
+        return 'testfailed';
     } else {
-        print_log "Error: $test_name received SIG$sig_name\n"
-          if $sig_name ne 'ZERO';
-        print_log "Error: $test_name exited with status $exit_value\n";
-        if ($dumped_core) {
-            print_log "Error: $test_name dumped core.\n";
-        }
-        return 'testfailed';
+        print_log "$test_name exited normally\n";
     }
+
     my $found_token = file_has_token($binary_log, $status_token);
     if ($found_token) {
         print_log "Found status token in log file: $status_token\n";
@@ -630,7 +650,7 @@ sub FileBasedTest {
         (not $status_token_means_pass and not $found_token)) {
         return 'success';
     } else {
-        print_log "Error: $test_name has failed.  Turn the tree orange now.\n";
+        print_log "Error: $test_name has failed. Turn the tree orange now.\n";
         return 'testfailed';
     }
 } # FileBasedTest
@@ -644,9 +664,6 @@ sub BloatTest {
     my $timeout_secs = 120;
     local $_;
 
-    # Turn on ref counting to track leaks (bloaty tool).
-    $ENV{XPCOM_MEM_BLOAT_LOG} = "1"; 
-    
     rename($binary_log, $old_binary_log);
     
     unless (-e "$binary_dir/bloaturls.txt") {
@@ -654,33 +671,26 @@ sub BloatTest {
         return 'testfailed';
     }
 
+
+    $ENV{XPCOM_MEM_BLOAT_LOG} = 1; # Turn on ref counting to track leaks.
     my $cmd = "$binary_basename -f bloaturls.txt";
-    my $pid = fork_and_log($build_dir, $binary_dir, $cmd, $binary_log);
-    my ($timed_out, $exit_value, $sig_name, $dumped_core)
-      = wait_for_pid($pid, $timeout_secs);
+    my $result = run_test($build_dir, $binary_dir, $cmd, $binary_log,
+                          $timeout_secs);
+    delete $ENV{XPCOM_MEM_BLOAT_LOG};
+
+    print_logfile($binary_log, "bloat test");
     
-    print_log "----------- BloatTest Output --------------- \n";
-    open READRUNLOG, "$binary_log";
-    print_log "  $_" while <READRUNLOG>;
-    close READRUNLOG;
-    print_log "----------- End of BloatTest Output -------- \n";
-    
-    if ($timed_out or $exit_value) {
-        if ($timed_out) {
-            print_log "Error: BloatTest timed out after $timeout_secs.\n";
+    if ($result->{timed_out} or $result->{exit_value}) {
+        if ($result->{timed_out}) {
+            print_log "Error: bloat test timed out after"
+                      ." $timeout_secs seconds.\n";
         } else {
-            print_log "Error: BloatTest received SIG$sig_name\n"
-              if $sig_name ne 'ZERO';
-            print_log "Error: BloatTest exited with status $exit_value\n";
-            if ($dumped_core) {
-                print_log "Error: BloatTest dumped core.\n";
-            }
-            print_log "Turn the tree orange now.\n";
+            print_test_errors($result, $binary_basename);
         }
-        # HACK.  Clobber isn't reporting bloat status properly,
-        # only turn tree orange for depend build.  This has
-        # been filed as bug 22052.  -mcafee
+        # HACK. Clobber is not reporting bloat status properly, only turn
+        # tree orange for depend build (bug 22052).  -mcafee
         if ($Settings::BuildDepend) {
+            print_log "Turn the tree orange now.\n";
             return 'testfailed';
         } else {
             return 'success';
