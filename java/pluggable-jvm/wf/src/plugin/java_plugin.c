@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  * 
- * $Id: java_plugin.c,v 1.2 2001/07/12 19:58:15 edburns%acm.org Exp $
+ * $Id: java_plugin.c,v 1.3 2001/07/17 22:15:21 edburns%acm.org Exp $
  * 
  * Contributor(s):
  * 
@@ -231,7 +231,7 @@ static char* getJDKhome()
 static jint loadJVM(const char* name) {
   dll_t handle;
   char *libpath, *newlibpath, *pluginlibpath;
-  char *libjvm, *java_home, *jre_home;
+  char *libjvm, *java_home, *jre_home, *libhpi;
   int   tmplen;
   static int loaded = 0;
 
@@ -285,12 +285,22 @@ static jint loadJVM(const char* name) {
 #ifdef XP_UNIX
   sprintf(libjvm, "%s/jre/lib/"ARCH"/"JVMKIND"/%s", JDK_home,
 	  name);
+  /* this stuff meaningful for strange platforms like Sparc Linux
+     where libjvm.so uses libhpi.so, but doesn't depends on it */
+  libhpi = (char*) malloc(strlen(JDK_home)+60);
+  sprintf(libhpi, 
+          "%s/jre/lib/"ARCH"/native_threads/libhpi.so", 
+          JDK_home
+          );
+  /* we don't care about possible errors - just try to load libjvm.so later */
+  dlopen(libhpi, RTLD_GLOBAL | RTLD_NOW);
+  free (libhpi);
 #else
   sprintf(libjvm, 
 	  "%s"FILE_SEPARATOR"jre"FILE_SEPARATOR"bin"FILE_SEPARATOR""JVMKIND""FILE_SEPARATOR"%s", 
 	  JDK_home, name);
 #endif
-  
+
 #endif
   putenv(java_home);
   putenv(jre_home);
