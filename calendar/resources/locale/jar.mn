@@ -1,3 +1,16 @@
+calendar-ca-AD.jar:
+    locale/ca-AD/calendar/calendar.dtd (ca-AD/calendar.dtd)
+    locale/ca-AD/calendar/calendar.properties (ca-AD/calendar.properties)
+    locale/ca-AD/calendar/categories.properties  (ca-AD/categories.properties) 
+    locale/ca-AD/calendar/contents.rdf (ca-AD/contents.rdf)
+    locale/ca-AD/calendar/dateFormat.properties (ca-AD/dateFormat.properties)
+    locale/ca-AD/calendar/email.properties (ca-AD/email.properties)
+    locale/ca-AD/calendar/global.dtd (ca-AD/global.dtd)
+    locale/ca-AD/calendar/menuOverlay.dtd (ca-AD/menuOverlay.dtd)
+    locale/ca-AD/calendar/overlay.dtd  (ca-AD/overlay.dtd) 
+    locale/ca-AD/calendar/prefs.dtd  (ca-AD/prefs.dtd) 
+    locale/ca-AD/calendar/selectAddresses.dtd (ca-AD/selectAddresses.dtd)
+
 calendar-cs-CZ.jar:
     locale/cs-CZ/calendar/calendar.dtd (cs-CZ/calendar.dtd)
     locale/cs-CZ/calendar/calendar.properties (cs-CZ/calendar.properties)
@@ -192,6 +205,19 @@ calendar-sv-SE.jar:
     locale/sv-SE/calendar/overlay.dtd  (sv-SE/overlay.dtd) 
     locale/sv-SE/calendar/prefs.dtd  (sv-SE/prefs.dtd) 
     locale/sv-SE/calendar/selectAddresses.dtd (sv-SE/selectAddresses.dtd)
+
+calendar-tr-TR.jar:
+    locale/tr-TR/calendar/calendar.dtd (tr-TR/calendar.dtd)
+    locale/tr-TR/calendar/calendar.properties (tr-TR/calendar.properties)
+    locale/tr-TR/calendar/categories.properties  (tr-TR/categories.properties) 
+    locale/tr-TR/calendar/contents.rdf (tr-TR/contents.rdf)
+    locale/tr-TR/calendar/dateFormat.properties (tr-TR/dateFormat.properties)
+    locale/tr-TR/calendar/email.properties (tr-TR/email.properties)
+    locale/tr-TR/calendar/global.dtd (tr-TR/global.dtd)
+    locale/tr-TR/calendar/menuOverlay.dtd (tr-TR/menuOverlay.dtd)
+    locale/tr-TR/calendar/overlay.dtd  (tr-TR/overlay.dtd) 
+    locale/tr-TR/calendar/prefs.dtd  (tr-TR/prefs.dtd) 
+    locale/tr-TR/calendar/selectAddresses.dtd (tr-TR/selectAddresses.dtd)
 
 calendar-wen-DE.jar:
     locale/wen-DE/calendar/calendar.dtd (wen-DE/calendar.dtd)
