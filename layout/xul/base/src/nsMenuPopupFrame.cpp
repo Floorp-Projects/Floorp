@@ -326,13 +326,13 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIContent* aMenuItem)
 
   // Unset the current child.
   if (mCurrentMenu) {
-    printf("Unsetting current child.\n");
+    //printf("Unsetting current child.\n");
     mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
   }
 
   // Set the new child.
   if (aMenuItem) {
-    printf("Setting new child.\n");
+    //printf("Setting new child.\n");
     aMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
   }
   mCurrentMenu = aMenuItem;
