@@ -86,6 +86,16 @@ IS_COMPONENT =  1
 endif
 endif
 
+# Linux ARM
+ifeq ($(OS_ARCH),Linux)
+ifeq (arm,$(findstring arm,$(OS_TEST)))
+IS_COMPONENT =  1
+endif
+ifeq (sa110,$(findstring sa110,$(OS_TEST)))   
+IS_COMPONENT =  1
+endif
+endif
+
 DEFINES	+= -DJSFILE -DJS_THREADSAFE
 
 CPPSRCS=		\
