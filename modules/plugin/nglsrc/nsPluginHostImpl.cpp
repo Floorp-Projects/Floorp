@@ -2951,11 +2951,7 @@ LoadXPCOMPlugin(nsIComponentManager* aComponentManager,
   // To figure out the filename of the plugin, we'll need to get the
   // plugin's CID, and then navigate through the XPCOM registry to
   // pull out the DLL name to which the CID is registered.
-  nsAutoString path;
-  path.AppendWithConversion("software/mozilla/XPCOM/classID/");
-  path.AppendWithConversion(aCID);
-    // this contortion to append is a hack until I can figure out why the right |operator+| is not found
-    //  and/or why it doesn't know what a |nsPromiseConcatenation| is ... on some platforms
+  nsAutoString path(NS_LITERAL_STRING("software/mozilla/XPCOM/classID/") + NS_ConvertUCS2toASCII(aCID));
 
   nsRegistryKey cidKey;
   rv = aRegistry->GetKey(nsIRegistry::Common, path.GetUnicode(), &cidKey);
