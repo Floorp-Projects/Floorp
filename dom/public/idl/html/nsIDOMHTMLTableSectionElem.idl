@@ -24,13 +24,11 @@
 [scriptable, uuid(a6cf90b5-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLTableSectionElement : nsIDOMHTMLElement
 {
-
-            attribute  DOMString            align;
-            attribute  DOMString            ch;
-            attribute  DOMString            chOff;
-            attribute  DOMString            vAlign;
-   readonly attribute  nsIDOMHTMLCollection       rows;
-   nsIDOMHTMLElement               insertRow(in long index);
-   void                      deleteRow(in long index);
+           attribute DOMString            align;
+           attribute DOMString            ch;
+           attribute DOMString            chOff;
+           attribute DOMString            vAlign;
+  readonly attribute nsIDOMHTMLCollection rows;
+  nsIDOMHTMLElement         insertRow(in long index);
+  void                      deleteRow(in long index);
 };
-
