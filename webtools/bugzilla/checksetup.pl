@@ -3906,17 +3906,19 @@ if (TableExists("attachstatuses") && TableExists("attachstatusdefs")) {
 
     print "done.\n";
 }
-
 # 2004-12-13 Nick.Barnes@pobox.com bug 262268
 # Check flag type names for spaces and commas, and rename them.
 if (TableExists("flagtypes")) {
-    # Get names and IDs which are broken.
+    # Get all names and IDs, to find broken ones and to
+    # check for collisions when renaming.
     $sth = $dbh->prepare("SELECT name, id FROM flagtypes");
     $sth->execute();
 
     my %flagtypes;
     my @badflagnames;
     
+    # find broken flagtype names, and populate a hash table
+    # to check for collisions.
     while (my ($name, $id) = $sth->fetchrow_array()) {
         $flagtypes{$name} = $id;
         if ($name =~ /[ ,]/) {
@@ -3929,7 +3931,9 @@ if (TableExists("flagtypes")) {
         my $sth = $dbh->prepare("UPDATE flagtypes SET name = ? WHERE id = ?");
         foreach $flagname (@badflagnames) {
             print "  Bad flag type name \"$flagname\" ...\n";
+            # find a new name for this flagtype.
             ($tryflagname = $flagname) =~ tr/ ,/__/;
+            # avoid collisions with existing flagtype names.
             while (defined($flagtypes{$tryflagname})) {
                 print "  ... can't rename as \"$tryflagname\" ...\n";
                 $tryflagname .= "'";
