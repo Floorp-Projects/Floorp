@@ -93,8 +93,6 @@ public:
   NS_IMETHOD Initialize(nsICmdLineService*aCmdLineService);
   NS_IMETHOD Run(void);
   NS_IMETHOD Shutdown(void);
-  NS_IMETHOD GetPrimordialThread(PRThread **aThread)
-                { *aThread = mPrimordialThread; return NS_OK; }
 
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
@@ -128,7 +126,6 @@ protected:
   nsIAppShell* mAppShell;
   nsISupportsArray* mWindowList;
   nsICmdLineService* mCmdLineService;
-  PRThread* mPrimordialThread;
 };
 
 
@@ -139,7 +136,6 @@ nsAppShellService::nsAppShellService()
   mAppShell     = nsnull;
   mWindowList   = nsnull;
   mCmdLineService = nsnull;
-  mPrimordialThread = nsnull;
 }
 
 nsAppShellService::~nsAppShellService()
@@ -167,9 +163,6 @@ nsAppShellService::Initialize( nsICmdLineService *aCmdLineService )
 #ifdef MOZ_FULLCIRCLE
   FCInitialize();
 #endif
-  // assume no new threads have been spun up yet, or at least if they have,
-  // they haven't been made the current one
-  mPrimordialThread = PR_CurrentThread();
 
   // Remember cmd line service.
   mCmdLineService = aCmdLineService;

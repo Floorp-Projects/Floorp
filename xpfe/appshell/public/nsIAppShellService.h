@@ -48,7 +48,6 @@ public:
   NS_IMETHOD Initialize(nsICmdLineService * aCmdLineService) = 0;
   NS_IMETHOD Run(void) = 0;
   NS_IMETHOD Shutdown(void) = 0;
-  NS_IMETHOD GetPrimordialThread(PRThread **aThread) = 0;
 
   NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 

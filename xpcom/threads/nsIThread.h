@@ -63,6 +63,15 @@ public:
     // returns the nsIThread for an arbitrary PRThread:
     static NS_COM nsresult GetIThread(PRThread* prthread, nsIThread* *result);
 
+    // initializes the "main" thread (really, just saves the current thread
+    // at time of calling. meant to be called once at app startup, in lieu
+    // of proper static initializers, to save the primordial thread
+    // for later recall.)
+    static NS_COM nsresult SetMainThread();
+
+    // return the "main" thread
+    static NS_COM nsresult GetMainThread(nsIThread **result);
+
     NS_IMETHOD Join() = 0;
 
     NS_IMETHOD GetPriority(PRThreadPriority *result) = 0;
