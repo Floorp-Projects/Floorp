@@ -81,7 +81,7 @@ static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 
 #ifndef NECKO
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 #else
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
