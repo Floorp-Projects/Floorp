@@ -219,7 +219,7 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccName(nsAString& _retval)
 
 /** Constructor */
 nsXULTabsAccessible::nsXULTabsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsContainerAccessible(aNode, aShell)
+nsAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -227,5 +227,32 @@ nsContainerAccessible(aNode, aShell)
 NS_IMETHODIMP nsXULTabsAccessible::GetAccRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PAGETABLIST;
+  return NS_OK;
+}
+
+/** no actions */
+NS_IMETHODIMP nsXULTabsAccessible::GetAccNumActions(PRUint8 *_retval)
+{
+  *_retval = eNo_Action;
+  return NS_OK;
+}
+
+/** no state -- normal */
+NS_IMETHODIMP nsXULTabsAccessible::GetAccState(PRUint32 *_retval)
+{
+  *_retval = 0;
+  return NS_OK;
+}
+
+/** no value */
+NS_IMETHODIMP nsXULTabsAccessible::GetAccValue(nsAString& _retval)
+{
+  return NS_OK;
+}
+
+/** no name*/
+NS_IMETHODIMP nsXULTabsAccessible::GetAccName(nsAString& _retval)
+{
+  _retval.Truncate();
   return NS_OK;
 }
