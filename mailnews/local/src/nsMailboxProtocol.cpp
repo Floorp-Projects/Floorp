@@ -66,10 +66,12 @@ NS_IMPL_ADDREF(nsMailboxProtocol)
 NS_IMPL_RELEASE(nsMailboxProtocol)
 NS_IMPL_QUERY_INTERFACE(nsMailboxProtocol, nsIStreamListener::GetIID()); /* we need to pass in the interface ID of this interface */
 
+
 nsMailboxProtocol::nsMailboxProtocol(nsIURL * aURL)
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
+  
   Initialize(aURL);
 }
 
@@ -80,7 +82,7 @@ nsMailboxProtocol::~nsMailboxProtocol()
 
 	// free our local state
 	PR_FREEIF(m_dataBuf);
-
+	
 	// free handles on all networking objects...
 	NS_IF_RELEASE(m_outputStream); 
 	NS_IF_RELEASE(m_outputConsumer);
@@ -197,10 +199,16 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 		if (m_tempMessageFile)
 			PR_Close(m_tempMessageFile);
 
-		char * fileUrl = PR_smprintf("file://%s", MESSAGE_PATH_URL);
 		if (m_displayConsumer)
-			m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
-		PR_FREEIF(fileUrl);
+		{
+			nsFilePath filePath(MESSAGE_PATH);
+			nsFileURL  fileURL(filePath);
+			const char * message_path_url = PL_strdup(fileURL.GetAsString());
+
+			m_displayConsumer->LoadURL(nsAutoString(message_path_url), nsnull, PR_TRUE, nsURLReload, 0);
+
+			PR_FREEIF(message_path_url);
+		}
 	}
 
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
@@ -516,9 +524,16 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 
 				// mscott: hack alert...now that the file is done...turn around and fire a file url 
 				// to display the message....
-				char * fileUrl = PR_smprintf("file:///%s", MESSAGE_PATH_URL);
 				if (m_displayConsumer)
-					m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
+				{
+					nsFilePath filePath(MESSAGE_PATH);
+					nsFileURL  fileURL(filePath);
+					const char * message_path_url = PL_strdup(fileURL.GetAsString());
+
+					m_displayConsumer->LoadURL(nsAutoString(message_path_url), nsnull, PR_TRUE, nsURLReload, 0);
+
+					PR_FREEIF(message_path_url);
+				}
 
 				ClearFlag(MAILBOX_PAUSE_FOR_READ);
 			} // otherwise process the line

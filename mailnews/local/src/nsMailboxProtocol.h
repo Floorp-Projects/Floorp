@@ -31,17 +31,14 @@
 
 #ifdef XP_UNIX
 #define MESSAGE_PATH "/usr/tmp/tempMessage.eml"
-#define MESSAGE_PATH_URL MESSAGE_PATH
 #endif
 
 #ifdef XP_PC
 #define MESSAGE_PATH  "c:\\temp\\tempMessage.eml"
-#define MESSAGE_PATH_URL "/C|/temp/tempMessage.eml"
 #endif
 
 #ifdef XP_MAC
 #define MESSAGE_PATH  "tempMessage.eml"
-#define MESSAGE_PATH_URL "tempMessage.eml"
 #endif
 
 // State Flags (Note, I use the word state in terms of storing 
@@ -152,6 +149,7 @@ private:
 	PRFileDesc* m_tempMessageFile;
 	nsIWebShell				* m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
 	
+
 	PRInt32	  ProcessMailboxState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
 	PRInt32	  CloseConnection(); // releases and closes down this protocol instance...
 
