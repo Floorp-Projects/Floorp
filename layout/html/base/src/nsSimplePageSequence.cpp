@@ -268,7 +268,6 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
   nsIDeviceContext* dc = aPresContext.GetDeviceContext();
   nsresult          rv = NS_OK;
 
-  rv = dc->BeginDocument();
   if (NS_FAILED(rv)) {
     if (nsnull != aStatusCallback) {
       aStatusCallback->OnError(ePrintError_Error);
@@ -331,11 +330,6 @@ nsSimplePageSequenceFrame::Print(nsIPresContext&         aPresContext,
     }
   
     // Finish printing of the document
-    if (NS_SUCCEEDED(rv)) {
-      rv = dc->EndDocument();
-    } else {
-      // rv = dc->AbortDocument();
-    }
     if (NS_FAILED(rv) && (nsnull != aStatusCallback)) {
       aStatusCallback->OnError(ePrintError_Error);
     }
