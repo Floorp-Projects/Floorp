@@ -31,7 +31,7 @@ NS_IMPL_ISUPPORTS(nsFileWidget, NS_IFILEWIDGET_IID)
 // nsFileWidget constructor
 //
 //-------------------------------------------------------------------------
-nsFileWidget::nsFileWidget() : nsObject(), nsIFileWidget()
+nsFileWidget::nsFileWidget() : nsIFileWidget()
 {
   NS_INIT_REFCNT();
   mWnd = NULL;

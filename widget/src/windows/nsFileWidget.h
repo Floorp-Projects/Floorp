@@ -28,7 +28,7 @@
  * Native Win32 FileSelector wrapper
  */
 
-class nsFileWidget : public nsObject, public nsIFileWidget 
+class nsFileWidget : public nsIFileWidget 
 {
   public:
                             nsFileWidget(); 
