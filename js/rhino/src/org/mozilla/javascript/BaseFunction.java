@@ -133,7 +133,7 @@ public class BaseFunction extends IdScriptable implements Function {
 
     protected void setIdValue(int id, Object value) {
         if (id == Id_prototype) {
-            prototypeProperty = (value != null) ? value : NULL_TAG;
+            prototypeProperty = (value != null) ? value : UniqueTag.NULL_VALUE;
             return;
         }
         super.setIdValue(id, value);
@@ -188,7 +188,7 @@ public class BaseFunction extends IdScriptable implements Function {
      * prototype property of this Function object
      */
     public void setImmunePrototypeProperty(Object value) {
-        prototypeProperty = (value != null) ? value : NULL_TAG;
+        prototypeProperty = (value != null) ? value : UniqueTag.NULL_VALUE;
         prototypePropertyAttrs = DONTENUM | READONLY | PERMANENT;
     }
 
@@ -280,7 +280,7 @@ public class BaseFunction extends IdScriptable implements Function {
                 }
             }
         }
-        else if (result == NULL_TAG) { result = null; }
+        else if (result == UniqueTag.NULL_VALUE) { result = null; }
         return result;
     }
 

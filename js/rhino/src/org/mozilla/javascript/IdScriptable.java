@@ -59,11 +59,6 @@ may override scopeInit or fillConstructorProperties methods.
 public abstract class IdScriptable extends ScriptableObject
     implements IdFunctionMaster
 {
-    /** NULL_TAG can be used to distinguish between uninitialized and null
-     ** values
-     */
-    protected static final Object NULL_TAG = UniqueTag.NULL_VALUE;
-
     public boolean has(String name, Scriptable start) {
         if (maxId != 0) {
             int id = mapNameToId(name);
@@ -97,7 +92,7 @@ public abstract class IdScriptable extends ScriptableObject
                     if (value == null) {
                         value = getIdValue(id);
                     }
-                    else if (value == NULL_TAG) {
+                    else if (value == UniqueTag.NULL_VALUE) {
                         value = null;
                     }
                     return value;
@@ -117,7 +112,7 @@ public abstract class IdScriptable extends ScriptableObject
                         if (value == null) {
                             value = getIdValue(id);
                         }
-                        else if (value == NULL_TAG) {
+                        else if (value == UniqueTag.NULL_VALUE) {
                             value = null;
                         }
                         return value;
@@ -310,7 +305,8 @@ public abstract class IdScriptable extends ScriptableObject
      */
     protected void setIdValue(int id, Object value) {
         synchronized (this) {
-            ensureIdData()[id - 1] = (value != null) ? value : NULL_TAG;
+            Object[] data = ensureIdData();
+            data[id - 1] = (value != null) ? value : UniqueTag.NULL_VALUE;
         }
     }
 
@@ -324,7 +320,7 @@ public abstract class IdScriptable extends ScriptableObject
             Object[] data = ensureIdData();
             Object curValue = data[id - 1];
             if (curValue == null) {
-                data[id - 1] = (value != null) ? value : NULL_TAG;
+                data[id - 1] = (value != null) ? value : UniqueTag.NULL_VALUE;
             }
             else {
                 value = curValue;
