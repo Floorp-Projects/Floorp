@@ -72,6 +72,13 @@ typedef struct IMAGE
 	HBITMAP hBitmap;
 }IMAGE;
 
+typedef struct WIZBUT
+{
+	CString back;
+	CString next;
+	CString cancel;
+}WIZBUT;
+
 typedef struct VARS
 {
 	CString title;
@@ -80,6 +87,7 @@ typedef struct VARS
 	CString image;
 	CString visibility;
 	CString functionality;
+	WIZBUT *wizbut;
 }VARS;
 
 typedef struct PAGE
