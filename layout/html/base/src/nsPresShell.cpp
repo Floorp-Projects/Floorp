@@ -533,7 +533,7 @@ PresShell::Init(nsIDocument* aDocument,
                                                  getter_AddRefs(domselection));
   if (!NS_SUCCEEDED(result))
     return result;
-  result = domselection->QueryInterface(kIDOMSelectionIID,
+  result = domselection->QueryInterface(kIFrameSelectionIID,
                                         getter_AddRefs(mSelection));
   if (!NS_SUCCEEDED(result))
     return result;
