@@ -655,6 +655,7 @@ cryptojs_CreateCRMFRequests(PCMT_CONTROL control, void *window,
     if (rsrcids == nsnull) {
         return NS_ERROR_FAILURE;
     }
+    memset(rsrcids, 0, sizeof(CMUint32)*numRequests);
     for (i=0; i<numRequests; i++) {
       rv = cryptojs_CreateNewCRMFReqForKey(control, cx, keyids[i].keyId, 
                                            keyids[i].keyGenType,
@@ -696,6 +697,9 @@ cryptojs_CreateCRMFRequests(PCMT_CONTROL control, void *window,
     JS_RemoveRoot(cx, &handlerInfo->scope);
     return NS_OK;
  loser:
+    if (rsrcids){
+      cryptojs_DestroyCRMFRequests(control, rsrcids, numRequests);
+    }
     return NS_ERROR_FAILURE;
 }
 
@@ -1286,6 +1290,12 @@ nsCryptoRunnable::Run() {
   if (fp) {
     mHandlerInfo->cx->fp = nsnull;
   }
+  cryptojs_DestroyKeys(mHandlerInfo->control, mHandlerInfo->keyids, 
+                       mHandlerInfo->numRequests);
+  CMT_DestroyResource(mHandlerInfo->control,
+                      mHandlerInfo->keyGenContext,
+                      SSM_RESTYPE_KEYGEN_CONTEXT);
+  delete []mHandlerInfo->keyids;
   return NS_ERROR_FAILURE;
 }
 
