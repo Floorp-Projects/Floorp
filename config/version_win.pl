@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-use diagnostics;
+#use diagnostics;
 require strict;
 use Getopt::Long;
 use Getopt::Std;
