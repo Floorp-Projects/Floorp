@@ -49,16 +49,26 @@
               </menu>
               <menu value="&walletCookieManager.label;">
                 <menupopup>
-                  <menuitem value="&walletDisplayCookiesCmd.label;" oncommand="WalletDialog('cookie');"/> 
-                  <menuitem value="&walletAllowCookiesCmd.label;" oncommand="WalletAction('cookieAllow');"/> 
-                  <menuitem value="&walletBlockCookiesCmd.label;" oncommand="WalletAction('cookieBlock');"/> 
+                  <menuitem value="&walletDisplayCookiesCmd.label;"
+                            oncommand="WalletDialog('cookie');"/> 
+                  <menuitem id="AllowCookies" value="&walletAllowCookiesCmd.label;"
+                            msg="&walletAllowCookiesMsg.label;"
+                            oncommand="WalletAction('cookieAllow');"/> 
+                  <menuitem id="BlockCookies" value="&walletBlockCookiesCmd.label;"
+                            msg="&walletBlockCookiesMsg.label;"
+                            oncommand="WalletAction('cookieBlock');"/> 
                 </menupopup>
               </menu>
               <menu value="&walletImageManager.label;" id="image">
                 <menupopup>
-                  <menuitem value="&walletDisplayImagesCmd.label;" oncommand="WalletDialog('image');"/> 
-                  <menuitem value="&walletAllowImagesCmd.label;" oncommand="WalletAction('imageAllow');"/> 
-                  <menuitem value="&walletBlockImagesCmd.label;" oncommand="WalletAction('imageBlock');"/> 
+                  <menuitem value="&walletDisplayImagesCmd.label;"
+                            oncommand="WalletDialog('image');"/> 
+                  <menuitem id="AllowImages" value="&walletAllowImagesCmd.label;"
+                            msg="&walletAllowImagesMsg.label;"
+                            oncommand="WalletAction('imageAllow');"/> 
+                  <menuitem id="BlockImages" value="&walletBlockImagesCmd.label;"
+                            msg="&walletBlockImagesMsg.label;"
+                            oncommand="WalletAction('imageBlock');"/> 
                 </menupopup>
               </menu>
               <menu value="&walletFormManager.label;" id="wallet">

@@ -30,10 +30,14 @@
 <!ENTITY walletDisplaySignonsCmd.label "View Stored Passwords">
 <!ENTITY walletDisplayCookiesCmd.label "View Stored Cookies">
 <!ENTITY walletAllowCookiesCmd.label "Allow Site to Set Cookies">
+<!ENTITY walletAllowCookiesMsg.label "Cookies from this site will always be accepted">
 <!ENTITY walletBlockCookiesCmd.label "Block Site from Setting Cookies">
+<!ENTITY walletBlockCookiesMsg.label "Cookies from this site will always be rejected">
 <!ENTITY walletDisplayImagesCmd.label "View Sites that can/cannot Display Images">
 <!ENTITY walletAllowImagesCmd.label "Allow Site to Display Images">
+<!ENTITY walletAllowImagesMsg.label "Images from this site will always be downloaded">
 <!ENTITY walletBlockImagesCmd.label "Block Site from Displaying Images">
+<!ENTITY walletBlockImagesMsg.label "Images from this site will never be downloaded">
 <!ENTITY walletInterviewCmd.label "Interview">
 <!ENTITY walletSamplesCmd.label "Demonstration">
 <!ENTITY walletChangePasswordCmd.label "Change Master Password...">

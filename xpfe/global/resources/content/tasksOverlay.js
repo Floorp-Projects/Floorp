@@ -360,14 +360,23 @@ function WalletAction( action )
     COOKIEPERMISSION = 0;
     IMAGEPERMISSION = 1;
 
+    var element;
     if (action == "cookieAllow") {
       cookieViewer.AddPermission(window.content, true, COOKIEPERMISSION);
+      element = document.getElementById("AllowCookies");
+      alert(element.getAttribute("msg"));
     } else if (action == "cookieBlock") {
       cookieViewer.AddPermission(window.content, false, COOKIEPERMISSION);
+      element = document.getElementById("BlockCookies");
+      alert(element.getAttribute("msg"));
     } else if (action == "imageAllow") {
       cookieViewer.AddPermission(window.content, true, IMAGEPERMISSION);
+      element = document.getElementById("AllowImages");
+      alert(element.getAttribute("msg"));
     } else if (action == "imageBlock") {
       cookieViewer.AddPermission(window.content, false, IMAGEPERMISSION);
+      element = document.getElementById("BlockImages");
+      alert(element.getAttribute("msg"));
     }
     return;
   }
