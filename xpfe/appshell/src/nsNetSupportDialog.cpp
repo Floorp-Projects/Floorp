@@ -45,7 +45,7 @@ static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_CID( kCommonDialogsCID,          NS_CommonDialog_CID);
 
 
-bool GetNSIPrompt( nsCOMPtr<nsIPrompt> & outPrompt )
+PRBool GetNSIPrompt( nsCOMPtr<nsIPrompt> & outPrompt )
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
