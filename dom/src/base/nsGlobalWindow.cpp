@@ -1459,7 +1459,8 @@ GlobalWindowImpl::HoldTimeout(nsTimeoutImpl *aTimeout)
 }
 
 void
-GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout)
+GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
+                              nsIScriptContext* aContext)
 {
   JSContext *cx;
   
@@ -1467,7 +1468,12 @@ GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout)
     return;
   }
   
-  cx = (JSContext *)mContext->GetNativeContext();
+  if (aContext) {
+    cx = (JSContext *)aContext->GetNativeContext();
+  }
+  else {
+    cx = (JSContext *)mContext->GetNativeContext();
+  }
   
   if (aTimeout->expr) {
     PR_FREEIF(aTimeout->expr);
@@ -1527,9 +1533,12 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     jsval result;
     nsITimer *timer;
 
-    /* Make sure that we don't go away as a result of running timeouts */
+    /* Make sure that the window or the script context don't go away as 
+       a result of running timeouts */
     GlobalWindowImpl* temp = this;
     NS_ADDREF(temp);
+    nsIScriptContext* tempContext = mContext;
+    NS_ADDREF(tempContext);
 
     timer = aTimeout->timer;
     cx = (JSContext *)mContext->GetNativeContext();
@@ -1555,6 +1564,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
        eligible for execution yet.  Go away. */
     if (!last_expired_timeout) {
       NS_RELEASE(temp);
+      NS_RELEASE(tempContext);
       return PR_TRUE;
     }
 
@@ -1613,18 +1623,19 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
                              timeout->argc + 1, timeout->argv, &result);
       }
 
-      mContext->ScriptEvaluated();
+      tempContext->ScriptEvaluated();
 
       mRunningTimeout = nsnull;
       /* If the temporary reference is the only one that is keeping
          the timeout around, the document was released and we should
          restart this function. */
       if (timeout->ref_count == 1) {
-        DropTimeout(timeout);
+        DropTimeout(timeout, tempContext);
         NS_RELEASE(temp);
+        NS_RELEASE(tempContext);
         return PR_FALSE;
       }
-      DropTimeout(timeout);
+      DropTimeout(timeout, tempContext);
 
       /* If we have a regular interval timer, we re-fire the
        *  timeout, accounting for clock drift.
@@ -1654,6 +1665,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         nsresult err = NS_NewTimer(&timeout->timer);
         if (NS_OK != err) {
           NS_RELEASE(temp);
+          NS_RELEASE(tempContext);
           return PR_TRUE;
         } 
         
@@ -1661,6 +1673,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
                                    delay32);
         if (NS_OK != err) {
           NS_RELEASE(temp);
+          NS_RELEASE(tempContext);
           return PR_TRUE;
         } 
         // Increment ref_count to indicate that this timer is holding
@@ -1673,7 +1686,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       next = timeout->next;
       mTimeouts = next;
       // Drop timeout struct since it's out of the list
-      DropTimeout(timeout);
+      DropTimeout(timeout, tempContext);
 
       /* Free the timeout if this is not a repeating interval
        *  timeout (or if it was an interval timeout, but we were
@@ -1690,8 +1703,10 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     mTimeouts = dummy_timeout.next;
     mTimeoutInsertionPoint = nsnull;
 
-    /* Get rid of our temporary reference to ourselves */
+    /* Get rid of our temporary reference to ourselves and the 
+       script context */
     NS_RELEASE(temp);
+    NS_RELEASE(tempContext);
     return PR_TRUE;
 }
 

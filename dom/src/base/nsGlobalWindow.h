@@ -219,7 +219,8 @@ protected:
   void          InsertTimeoutIntoList(nsTimeoutImpl **aInsertionPoint,
                                       nsTimeoutImpl *aTimeout);
   void          ClearAllTimeouts();
-  void          DropTimeout(nsTimeoutImpl *aTimeout);
+  void          DropTimeout(nsTimeoutImpl *aTimeout,
+                            nsIScriptContext* aContext=nsnull);
   void          HoldTimeout(nsTimeoutImpl *aTimeout);
   nsresult      GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser);
   nsresult      CheckWindowName(JSContext *cx, nsString& aName);
