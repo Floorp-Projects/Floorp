@@ -100,7 +100,9 @@ function getFolder( window )
 		}
 
 		var pathArray = path.split( "/" );
-		path = pathArray.join( "\\" ) + "\\";
+		path = pathArray.join( "\\" );
+		if ( path.charAt( path.length - 1 ) != '\\' )
+			path = path + "\\";
 
 		//debug( "drive: " + drive + " path: " + path );
 
