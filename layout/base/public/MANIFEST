@@ -21,6 +21,8 @@ nsIPresContext.h
 nsIPresShell.h
 nsIReflowCommand.h
 nsISpaceManager.h
+nsFrameList.h
+nsFrameTraversal.h
 nsLayoutAtoms.h
 nsStyleCoord.h
 nsStyleStruct.h

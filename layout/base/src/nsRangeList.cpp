@@ -539,7 +539,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, ns
     PRInt32 contentoffset;
     //check to make sure the frame REALLY has the focus point.
     if (NS_SUCCEEDED(aFrame->GetSelected(&selected,&beginoffset,&endoffset, &contentoffset))){
-      if (domnode != mFocusNode  || (contentoffset + beginoffset) != mFocusOffset) //not really the insertion frame
+      if (domnode != mFocusNode  || (contentoffset + endoffset) != mFocusOffset) //not really the insertion frame
         return NS_ERROR_FAILURE;
     }
 
@@ -552,15 +552,18 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent, ns
         //we need to look for the previous PAINTED location to move the cursor to.
         printf("debug vk left\n");
         if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirPrevious, endoffset, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
-          return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, PR_FALSE);
+          return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
         break;
       case nsIDOMEvent::VK_RIGHT : 
         //we need to look for the next PAINTED location to move the cursor to.
         printf("debug vk right\n");
         if (NS_SUCCEEDED(aFrame->PeekOffset(eSelectCharacter, eDirNext, endoffset, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
-          return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, PR_FALSE);
+          return TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
+      case nsIDOMEvent::VK_UP : 
+        printf("debug vk up\n");
+        break;
     default :break;
     }
   }
