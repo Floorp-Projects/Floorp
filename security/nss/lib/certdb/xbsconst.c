@@ -106,8 +106,9 @@ SECStatus CERT_EncodeBasicConstraintValue
 	    }
 	}
 	if (SEC_ASN1EncodeItem (arena, encodedValue, &encodeContext,
-				CERTBasicConstraintsTemplate) == NULL)
+				CERTBasicConstraintsTemplate) == NULL) {
 	    GEN_BREAK (SECFailure);
+	}
     } while (0);
     if (our_pool)
 	PORT_FreeArena (our_pool, PR_FALSE);
