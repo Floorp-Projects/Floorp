@@ -65,9 +65,9 @@ typedef gboolean (*nodeHandler)(TreeState *);
  */
 extern nodeHandler *nodeDispatch[TREESTATE_NUM];
 
-extern nodeHandler headerDispatch[];
-extern nodeHandler invokeDispatch[];
-extern nodeHandler docDispatch[];
+extern nodeHandler *headerDispatch();
+extern nodeHandler *invokeDispatch();
+extern nodeHandler *docDispatch();
 
 /*
  * nodeHandler that reports an error.

@@ -436,49 +436,37 @@ op_dcl(TreeState *state)
     return TRUE;
 }
 
-nodeHandler headerDispatch[] = {
-  pass_1,          /* IDLN_NONE */
-  NULL,            /* IDLN_ANY */
-  list,            /* IDLN_LIST */
-  NULL,            /* IDLN_GENTREE */
-  NULL,            /* IDLN_INTEGER */
-  NULL,            /* IDLN_STRING */
-  NULL,            /* IDLN_WIDE_STRING */
-  NULL,            /* IDLN_CHAR */
-  NULL,            /* IDLN_WIDE_CHAR */
-  NULL,            /* IDLN_FIXED */
-  NULL,            /* IDLN_FLOAT */
-  NULL,            /* IDLN_BOOLEAN */
-  ident,           /* IDLN_IDENT */
-  NULL,            /* IDLN_TYPE_DCL */
-  NULL,            /* IDLN_CONST_DCL */
-  NULL,            /* IDLN_EXCEPT_DCL */
-  attr_dcl,        /* IDLN_ATTR_DCL */
-  op_dcl,          /* IDLN_OP_DCL */
-  param_dcls,      /* IDLN_PARAM_DCL */
-  NULL,            /* IDLN_FORWARD_DCL */
-  type_integer,    /* IDLN_TYPE_INTEGER */
-  type,            /* IDLN_TYPE_FLOAT */
-  type,            /* IDLN_TYPE_FIXED */
-  type,            /* IDLN_TYPE_CHAR */
-  type,            /* IDLN_TYPE_WIDE_CHAR */
-  type,            /* IDLN_TYPE_STRING */
-  type,            /* IDLN_TYPE_WIDE_STRING */
-  type,            /* IDLN_TYPE_BOOLEAN */
-  type,            /* IDLN_TYPE_OCTET */
-  type,            /* IDLN_TYPE_ANY */
-  type,            /* IDLN_TYPE_OBJECT */
-  do_enum,            /* IDLN_TYPE_ENUM */
-  type,            /* IDLN_TYPE_SEQUENCE */
-  type,            /* IDLN_TYPE_ARRAY */
-  type,            /* IDLN_TYPE_STRUCT */
-  type,            /* IDLN_TYPE_UNION */
-  NULL,            /* IDLN_MEMBER */
-  NULL,            /* IDLN_NATIVE */
-  NULL,            /* IDLN_CASE_STMT */
-  interface,       /* IDLN_INTERFACE */
-  NULL,            /* IDLN_MODULE */
-  NULL,            /* IDLN_BINOP */
-  NULL,            /* IDLN_UNARYOP */
-  NULL             /* IDLN_TYPE_TYPECODE */
-};
+nodeHandler *headerDispatch()
+{
+  static nodeHandler table[IDLN_LAST];
+  static gboolean initialized = FALSE;
+
+  if (!initialized) {
+    table[IDLN_NONE] = pass_1;
+    table[IDLN_LIST] = list;
+    table[IDLN_IDENT] = ident;
+    table[IDLN_ATTR_DCL] = attr_dcl;
+    table[IDLN_OP_DCL] = op_dcl;
+    table[IDLN_PARAM_DCL] = param_dcls;
+    table[IDLN_TYPE_INTEGER] = type_integer;
+    table[IDLN_TYPE_FLOAT] = type;
+    table[IDLN_TYPE_FIXED] = type;
+    table[IDLN_TYPE_CHAR] = type;
+    table[IDLN_TYPE_WIDE_CHAR] = type;
+    table[IDLN_TYPE_STRING] = type;
+    table[IDLN_TYPE_WIDE_STRING] = type;
+    table[IDLN_TYPE_BOOLEAN] = type;
+    table[IDLN_TYPE_OCTET] = type;
+    table[IDLN_TYPE_ANY] = type;
+    table[IDLN_TYPE_OBJECT] = type;
+    table[IDLN_TYPE_ENUM] = do_enum;
+    table[IDLN_TYPE_SEQUENCE] = type;
+    table[IDLN_TYPE_ARRAY] = type;
+    table[IDLN_TYPE_STRUCT] = type;
+    table[IDLN_TYPE_UNION] = type;
+    table[IDLN_INTERFACE] = interface;
+    initialized = TRUE;
+  }
+  
+  return table;  
+}
