@@ -24,7 +24,24 @@ extern "C" {
 #include "xp.h"
 #include "xpgetstr.h"
 #include "prprf.h"
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
+
+/*
+ * This is a c++ header, which includes other c++ headers.  It needs to
+ * be complied as c++ source.
+ *
+ * If everything in this page needs to be compiled as C code, then why
+ * isnt this file a .c file ?
+ *
+ */
 #include "nsTarget.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 #ifdef XXX
 extern int CAPS_TARGET_RISK_STR_LOW;
