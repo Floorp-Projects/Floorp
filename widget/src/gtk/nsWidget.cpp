@@ -438,8 +438,8 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 #ifdef GTK_HAVE_FEATURES_1_1_14
   else
       ::gtk_widget_queue_draw_area(mWidget,
-                                   aRect.width, aRect.height,
-                                   aRect.x, aRect.y);
+                                   aRect.x, aRect.y,
+                                   aRect.width, aRect.height);
 #endif
 
   return NS_OK;

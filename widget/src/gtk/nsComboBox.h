@@ -62,9 +62,10 @@ public:
 protected:
     NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
 
+    GtkWidget  *mCombo;  /* workaround for gtkcombo bug */
     GtkWidget  *mPullDownMenu;
     GtkWidget  *mOptionMenu;
-  GList *mItems;
+    GList *mItems;
     PRBool  mMultiSelect;
     int     mNumItems;
 };
