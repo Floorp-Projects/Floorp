@@ -31,6 +31,19 @@
    **/
   function Startup()
     {
+      // Check for an existing pref window.
+      const kWindowMediatorContractID = "@mozilla.org/rdf/datasource;1?name=window-mediator";
+      const kWindowMediatorIID = Components.interfaces.nsIWindowMediator;
+      const kWindowMediator = Components.classes[kWindowMediatorContractID].getService(kWindowMediatorIID);
+      var windows = kWindowMediator.getEnumerator("mozilla:preferences");
+      var prefWindow;
+      while ((prefWindow = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindow)) &&
+              prefWindow != window) {
+        // Prefs already open, activate it and close this one.
+        prefWindow.focus();
+        window.close();
+      }
+
       hPrefWindow = new nsPrefWindow('panelFrame');  
       
       if( !hPrefWindow )
