@@ -61,51 +61,54 @@ LLIBS=                          \
 
 include <$(DEPTH)\config\rules.mak>
 
+# Define this so nobody can screw it up.
+DISTRES=$(DIST)\bin\res\samples
+
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
-	$(MAKE_INSTALL) appshell.html $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) status.html $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) status.xul $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) toolbar.xml $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) BrowserInitPage.html $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) contentframe.html $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) sidebar.html $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) xul.css $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) dialogs.css $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) navigator.css $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) navigator.xul $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) viewSource.xul $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) saveToDisk.xul $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) NetSupportUserPassword.xul $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) downloadProgress.xul $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) downloadProgress.css $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) navigator-mozillazine0.css $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) navigator-test1.xul $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) navigator-goofy.css $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) navigator-shiny.css $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) raindrops_light.gif $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) skindemo.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) appshell.html $(DISTRES)
+	$(MAKE_INSTALL) status.html $(DISTRES)
+	$(MAKE_INSTALL) status.xul $(DISTRES)
+	$(MAKE_INSTALL) toolbar.xml $(DISTRES)
+	$(MAKE_INSTALL) BrowserInitPage.html $(DISTRES)
+	$(MAKE_INSTALL) contentframe.html $(DISTRES)
+	$(MAKE_INSTALL) sidebar.html $(DISTRES)
+	$(MAKE_INSTALL) xul.css $(DISTRES)
+	$(MAKE_INSTALL) dialogs.css $(DISTRES)
+	$(MAKE_INSTALL) navigator.css $(DISTRES)
+	$(MAKE_INSTALL) navigator.xul $(DISTRES)
+	$(MAKE_INSTALL) viewSource.xul $(DISTRES)
+	$(MAKE_INSTALL) unknownContent.xul $(DISTRES)
+	$(MAKE_INSTALL) NetSupportUserPassword.xul $(DISTRES)
+	$(MAKE_INSTALL) downloadProgress.xul $(DISTRES)
+	$(MAKE_INSTALL) downloadProgress.css $(DISTRES)
+	$(MAKE_INSTALL) navigator-mozillazine0.css $(DISTRES)
+	$(MAKE_INSTALL) navigator-test1.xul $(DISTRES)
+	$(MAKE_INSTALL) navigator-goofy.css $(DISTRES)
+	$(MAKE_INSTALL) navigator-shiny.css $(DISTRES)
+	$(MAKE_INSTALL) raindrops_light.gif $(DISTRES)
+	$(MAKE_INSTALL) skindemo.xul $(DISTRES)
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DIST)\res\samples\appshell.html
-	rm -f $(DIST)\res\samples\status.html
-	rm -f $(DIST)\res\samples\status.xul
-	rm -f $(DIST)\res\samples\BrowserInitPage.html
-	rm -f $(DIST)\res\samples\contentframe.html
-	rm -f $(DIST)\res\samples\sidebar.html
-	rm -f $(DIST)\res\samples\xul.css
-	rm -f $(DIST)\res\samples\navigator.xul
-	rm -f $(DIST)\res\samples\viewSource.xul
-	rm -f $(DIST)\res\samples\saveToDisk.xul
-	rm -f $(DIST)\res\samples\downloadProgress.xul
-	rm -f $(DIST)\res\samples\downloadProgress.css
-	rm -f $(DIST)\res\samples\dialogs.css
-	rm -f $(DIST)\res\samples\navigator.css
-	rm -f $(DIST)\res\samples\navigator-mozillazine0.css
-	rm -f $(DIST)\res\samples\navigator-test1.xul
-	rm -f $(DIST)\res\samples\navigator-goofy.css
-	rm -f $(DIST)\res\samples\navigator-shiny.css
-	rm -f $(DIST)\res\samples\raindrops_light.gif
-	rm -f $(DIST)\bin\res\samples\NetSupportUserPassword.xul
+	rm -f $(DISTRES)\appshell.html
+	rm -f $(DISTRES)\status.html
+	rm -f $(DISTRES)\status.xul
+	rm -f $(DISTRES)\BrowserInitPage.html
+	rm -f $(DISTRES)\contentframe.html
+	rm -f $(DISTRES)\sidebar.html
+	rm -f $(DISTRES)\xul.css
+	rm -f $(DISTRES)\navigator.xul
+	rm -f $(DISTRES)\viewSource.xul
+	rm -f $(DISTRES)\unknownContent.xul
+	rm -f $(DISTRES)\downloadProgress.xul
+	rm -f $(DISTRES)\downloadProgress.css
+	rm -f $(DISTRES)\dialogs.css
+	rm -f $(DISTRES)\navigator.css
+	rm -f $(DISTRES)\navigator-mozillazine0.css
+	rm -f $(DISTRES)\navigator-test1.xul
+	rm -f $(DISTRES)\navigator-goofy.css
+	rm -f $(DISTRES)\navigator-shiny.css
+	rm -f $(DISTRES)\raindrops_light.gif
+	rm -f $(DISTRES)\NetSupportUserPassword.xul
 

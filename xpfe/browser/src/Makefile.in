@@ -36,7 +36,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/dialogs.css \
 	$(srcdir)/navigator.css \
 	$(srcdir)/navigator.xul \
-	$(srcdir)/saveToDisk.xul \
+	$(srcdir)/unknownContent.xul \
 	$(srcdir)/viewSource.xul \
 	$(srcdir)/downloadProgress.xul \
 	$(srcdir)/downloadProgress.css \
