@@ -49,6 +49,7 @@ use File::Path;
 use File::Basename;
 use IO::Handle;
 
+$DEPTH            = "../../";
 $gDirScripts      = dirname($0);  # directory of the running script
 $gDirScripts      =~ s/\\/\//g;
 $gDirCwd          = cwd();
@@ -62,12 +63,26 @@ $gOsPkg           = undef;
 $inProductName    = undef;
 $inStagingScript  = undef;
 $inOs             = undef;
-$gDirMozRoot      = StageUtils::GetAbsPath("moz_root");
-$inDirDestStage   = "$gDirMozRoot/stage";
-
 ParseArgV(@ARGV);
 
-$inDirSrcDist     = StageUtils::GetAbsPath("moz_dist") if !defined($inDirSrcDist);
+if(!defined($topobjdir))
+{
+  chdir($DEPTH);
+  $topobjdir = cwd();
+  chdir($gDirCwd);
+}
+
+$inDirDestStage   = "$topobjdir/stage" if !defined($inDirDestStage);
+$inDirSrcDist     = "$topobjdir/dist"  if !defined($inDirSrcDist);
+
+if(defined($ENV{DEBUG_INSTALLER_BUILD}))
+{
+  print "\n make_stage.pl\n";
+  print "   topobjdir     : $topobjdir\n";
+  print "   gDirCwd       : $gDirCwd\n";
+  print "   inDirDestStage: $inDirDestStage\n";
+  print "   inDirSrcDist  : $inDirSrcDist\n";
+}
 
 if(!$inProductName || !$inOs)
 {
@@ -128,6 +143,15 @@ sub ParseArgV
     if($myArgv[$counter] =~ /^[-,\/]h$/i)
     {
       PrintUsage();
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]objDir$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $topobjdir = $myArgv[$counter];
+        $topobjdir =~ s/\\/\//g;
+      }
     }
     elsif($myArgv[$counter] =~ /^[-,\/]dd$/i)
     {

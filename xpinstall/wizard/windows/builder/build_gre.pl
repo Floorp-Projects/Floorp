@@ -41,11 +41,6 @@ use File::Basename;
 
 $DEPTH         = "../../../..";
 $topsrcdir     = GetTopSrcDir();
-$inStagePath   = "$topsrcdir/stage";
-$inDistPath    = "$topsrcdir/dist";
-$inXpiURL      = "ftp://not.supplied.invalid";
-$inRedirIniURL = $inXpiURL;
-
 # ensure that Packager.pm is in @INC, since we might not be called from
 # mozilla/xpinstall/packager
 push(@INC, "$topsrcdir/../mozilla/xpinstall/packager");
@@ -53,16 +48,27 @@ require StageUtils;
 
 ParseArgv(@ARGV);
 
-$DEPTH            = "$topsrcdir" if !defined($DEPTH);
+$topobjdir        = $topsrcdir                   if !defined($topobjdir);
+$inStagePath      = "$topobjdir/stage"           if !defined($inStagePath);
+$inDistPath       = "$topobjdir/dist"            if !defined($inDistPath);
+$inXpiURL         = "ftp://not.supplied.invalid" if !defined($inXpiURL);
+$inRedirIniURL    = $inXpiURL                    if !defined($inRedirIniURL);
 $cwdBuilder       = "$topsrcdir/xpinstall/wizard/windows/builder";
-$stageDir         = "$topsrcdir/stage";
 $gDistInstallPath = "$inDistPath/inst_gre";
 $gPackagerPath    = "$topsrcdir/xpinstall/packager";
 
-chdir("$gPackagerPath/win_gre");
-if(system("perl makeall.pl -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
+if(defined($ENV{DEBUG_INSTALLER_BUILD}))
 {
-  die "\n Error: perl makeall.pl -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
+  print " build_gre.pl\n";
+  print "   topobjdir  : $topobjdir\n";
+  print "   inDistPath : $inDistPath\n";
+  print "   inStagePath: $inStagePath\n";
+}
+
+chdir("$gPackagerPath/win_gre");
+if(system("perl makeall.pl -objDir \"$topobjdir\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
+{
+  die "\n Error: perl makeall.pl -objDir \"$topobjdir\" -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
 }
 
 chdir($cwdBuilder);
@@ -91,6 +97,8 @@ sub PrintUsage
        options available are:
 
            -h                - this usage.
+
+           -objDir <path>    - the build directory (defaults to a srcdir build)
 
            -stagePath <path> - Full path to where the mozilla stage dir is at.
                                Default path, if one is not set, is:
@@ -125,12 +133,22 @@ sub ParseArgv
     {
       PrintUsage();
     }
+    elsif($myArgv[$counter] =~ /^[-,\/]objDir$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $topobjdir = $myArgv[$counter];
+        $topobjdir =~ s/\\/\//g;
+      }
+    }
     elsif($myArgv[$counter] =~ /^[-,\/]stagePath$/i)
     {
       if($#myArgv >= ($counter + 1))
       {
         ++$counter;
         $inStagePath = $myArgv[$counter];
+        $inStagePath =~ s/\\/\//g;
       }
     }
     elsif($myArgv[$counter] =~ /^[-,\/]distPath$/i)
@@ -139,6 +157,7 @@ sub ParseArgv
       {
         ++$counter;
         $inDistPath = $myArgv[$counter];
+        $inDistPath =~ s/\\/\//g;
       }
     }
     elsif($myArgv[$counter] =~ /^[-,\/]aurl$/i)
