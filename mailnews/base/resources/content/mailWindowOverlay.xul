@@ -188,6 +188,21 @@ Rights Reserved.
 			  ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template> 
+			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule> 
+				<rule nc:NoSelect="true">
+					<menupopup>
+						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+					</menupopup>
+				</rule>
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 					<menupopup>
 						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
@@ -240,6 +255,21 @@ Rights Reserved.
 			ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template>
+			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule> 
+				<rule nc:NoSelect="true">
+					<menupopup>
+						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+					</menupopup>
+				</rule>
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 					<menupopup>
 						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
@@ -393,6 +423,21 @@ Rights Reserved.
 			  ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template> 
+			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule> 
+				<rule nc:NoSelect="true">
+					<menupopup>
+						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+					</menupopup>
+				</rule>
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 					<menupopup>
 						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
@@ -445,6 +490,21 @@ Rights Reserved.
 			ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template>
+			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule> 
+				<rule nc:NoSelect="true">
+					<menupopup>
+						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+					</menupopup>
+				</rule>
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 					<menupopup>
 						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
@@ -763,6 +823,21 @@ Rights Reserved.
 		 ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template> 
+			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule> 
+				<rule nc:NoSelect="true">
+					<menupopup>
+						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+					</menupopup>
+				</rule>
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 					<menupopup>
 						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
@@ -812,6 +887,21 @@ Rights Reserved.
 		 ignore="http://home.netscape.com/NC-rdf#MessageChild">
 			<menupopup/>
 			<template>
+			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule> 
+				<rule nc:NoSelect="true">
+					<menupopup>
+						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+					</menupopup>
+				</rule>
 				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 					<menupopup>
 						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
@@ -889,6 +979,21 @@ Rights Reserved.
 			<menu id="FileButtonMenu" observes="cmd_file" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild">
 				<button class="button-toolbar-2 top" observes="cmd_file" id="button-file" value="&fileButton.label;"  tooltip="aTooltip" tooltiptext="&fileButton.tooltip;"/>
 				<template> 
+				<rule nc:NoSelect="true" iscontainer="true" isempty="false">
+					<menupopup>
+						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
+							<menupopup>
+								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
+								<menuseparator/>
+							</menupopup>
+						</menu>
+					</menupopup>
+				</rule> 
+				<rule nc:NoSelect="true">
+					<menupopup>
+						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+					</menupopup>
+				</rule>
 					<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
 						<menupopup>
 							<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
