@@ -64,6 +64,9 @@ public:
   NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState) = 0;
 
   NS_IMETHOD GetFocusedContent(nsIContent **aContent) = 0;
+
+  // This is an experiement and may be temporary
+  NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) = 0;
 };
 
 #define NS_EVENT_STATE_UNSPECIFIED  0x0000

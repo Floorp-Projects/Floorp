@@ -58,6 +58,9 @@ public:
   NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState);
   NS_IMETHOD GetFocusedContent(nsIContent **aContent);
 
+  // This is an experiement and may be temporary
+  NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) { mConsumeFocusEvents = aDoConsume; return NS_OK; }
+
 protected:
   void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, nsEventStatus& aStatus);
   void GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
@@ -99,6 +102,7 @@ protected:
   nsIContent* mCurrentFocus;
   PRInt32 mCurrentTabIndex;
   nsIWidget * mLastWindowToHaveFocus; // last native window to get focus via the evs
+  PRBool      mConsumeFocusEvents;
 
   nsIPresContext* mPresContext;      // Not refcnted
   nsIDocument* mDocument;            // [OWNER], but doesn't need to be.
