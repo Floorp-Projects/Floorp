@@ -87,6 +87,11 @@ public:
    */
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
 
+  /**
+   * Reflow the frame model with a reflow reason of eReflowReason_StyleChange
+   */
+  NS_IMETHOD StyleChangeReflow() = 0;
+
   virtual nsIFrame* GetRootFrame() = 0;
 
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent) = 0;
