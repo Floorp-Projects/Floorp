@@ -152,13 +152,15 @@ protected:
   PRInt32 mTextSize;
   PRUint32 mScriptLineNo;
   
-  PRPackedBool mConstrainSize;
-  PRPackedBool mInTitle;
-  PRPackedBool mPrettyPrintXML;
-  PRPackedBool mPrettyPrintHasSpecialRoot;
-  PRPackedBool mPrettyPrintHasFactoredElements;
-  PRPackedBool mHasProcessedBase;
-
+  PRUint8 mConstrainSize : 1;
+  PRUint8 mInTitle : 1;
+  PRUint8 mPrettyPrintXML : 1;
+  PRUint8 mPrettyPrintHasSpecialRoot : 1;
+  PRUint8 mPrettyPrintHasFactoredElements : 1;
+  PRUint8 mHasProcessedBase : 1;
+  PRUint8 mAllowAutoXLinks : 1;
+  PRUint8 unused : 1;  // bit available if someone needs one
+  
   nsCOMArray<nsIContent>           mContentStack;
   nsCOMArray<nsINameSpace>         mNameSpaceStack;
   nsCOMPtr<nsIDocumentTransformer> mXSLTProcessor;
