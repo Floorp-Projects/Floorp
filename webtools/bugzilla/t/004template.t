@@ -18,15 +18,16 @@
 # Rights Reserved.
 #
 # Contributor(s): Jacob Steenhagen <jake@acutex.net>
+#                   Zach Lipton <zach@zachlipton.com>
 #
 
 #################
 #Bugzilla Test 4#
-##Templates######
+####Templates####
 
 BEGIN { use lib "t/"; }
 BEGIN { use Support::Templates; }
-BEGIN { $tests = @Support::Templates::testitems * 2; }
+BEGIN { $tests = @Support::Templates::testitems * 3; }
 BEGIN { use Test::More tests => $tests; }
 
 use strict;
@@ -80,10 +81,23 @@ foreach my $file(@testitems) {
         }
     }
     else {
-        ok(1, "$file doesn't exists, skipping test");
+        ok(1, "$file doesn't exist, skipping test");
     }
 }
 open STDOUT, ">&SAVEOUT";     # redirect back to original stream
 open STDERR, ">&SAVEERR";
 close SAVEOUT;
 close SAVEERR;
+
+# check to see that all templates have a version string:
+
+foreach my $file(@testitems) {
+    open(TMPL,"$include_path/$file");
+    my $firstline = <TMPL>;
+    if ($firstline =~ /<!-- \d+\.\d+\@[\w\._]+ -->/) {
+        ok(1,"$file has a version string");
+    } else {
+        ok(0,"$file does not have a version string --ERROR");
+    }
+    close(TMPL);
+}

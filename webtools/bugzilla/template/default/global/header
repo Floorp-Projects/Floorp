@@ -1,3 +1,4 @@
+<!-- 1.0@bugzilla.org -->
 [% DEFAULT
   title = ""
   h1 = title
