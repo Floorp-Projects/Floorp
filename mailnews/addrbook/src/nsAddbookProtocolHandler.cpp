@@ -533,63 +533,69 @@ nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirec
   return rv;
 }
 
+#define       MAX_FIELDS  39
+
 NS_IMETHODIMP    
 nsAddbookProtocolHandler::BuildAllHTML(nsIAddrDatabase *aDatabase, nsIAbDirectory *directory, 
                                        nsString &workBuffer)
 {
   nsresult                rv = NS_OK;
-  reportColumnStruct      *reportColumns[] = {
-                                            (kFirstNameColumn, PR_FALSE)
-                                            (kLastNameColumn, PR_FALSE)
-                                            (kDisplayNameColumn, PR_FALSE)
-                                            (kNicknameColumn, PR_FALSE)
-                                            (kPriEmailColumn, PR_FALSE)
-                                            (k2ndEmailColumn, PR_FALSE)
-                                            (kPlainTextColumn, PR_FALSE)
-                                            (kWorkPhoneColumn, PR_FALSE)
-                                            (kHomePhoneColumn, PR_FALSE)
-                                            (kFaxColumn, PR_FALSE)
-                                            (kPagerColumn, PR_FALSE)
-                                            (kCellularColumn, PR_FALSE)
-                                            (kHomeAddressColumn, PR_FALSE)
-                                            (kHomeAddress2Column, PR_FALSE)
-                                            (kHomeCityColumn, PR_FALSE)
-                                            (kHomeStateColumn, PR_FALSE)
-                                            (kHomeZipCodeColumn, PR_FALSE)
-                                            (kHomeCountryColumn, PR_FALSE)
-                                            (kWorkAddressColumn, PR_FALSE)
-                                            (kWorkAddress2Column, PR_FALSE)
-                                            (kWorkCityColumn, PR_FALSE)
-                                            (kWorkStateColumn, PR_FALSE)
-                                            (kWorkZipCodeColumn, PR_FALSE)
-                                            (kWorkCountryColumn, PR_FALSE)
-                                            (kJobTitleColumn, PR_FALSE)
-                                            (kDepartmentColumn, PR_FALSE)
-                                            (kCompanyColumn, PR_FALSE)
-                                            (kWebPage1Column, PR_FALSE)
-                                            (kWebPage2Column, PR_FALSE)
-                                            (kBirthYearColumn, PR_FALSE)
-                                            (kBirthMonthColumn, PR_FALSE)
-                                            (kBirthDayColumn, PR_FALSE)
-                                            (kCustom1Column, PR_FALSE)
-                                            (kCustom2Column, PR_FALSE)
-                                            (kCustom3Column, PR_FALSE)
-                                            (kCustom4Column, PR_FALSE)
-                                            (kNotesColumn, PR_FALSE)
-                                            (kLastModifiedDateColumn, PR_FALSE)
-                                            (nsnull, PR_FALSE)
-                                           };
+  reportColumnStruct      reportColumns[MAX_FIELDS];
+  PRUnichar               *aName = nsnull;
+  nsCOMPtr <nsIAbCard>    workCard;
 
-  PRUnichar                     *aName = nsnull;
-  nsCOMPtr <nsIAbCard>          workCard;
+  reportColumns[0].abField = kFirstNameColumn;
+  reportColumns[1].abField = kLastNameColumn;
+  reportColumns[2].abField = kDisplayNameColumn;
+  reportColumns[3].abField = kNicknameColumn;
+  reportColumns[4].abField = kPriEmailColumn;
+  reportColumns[5].abField = k2ndEmailColumn;
+  reportColumns[6].abField = kPlainTextColumn;
+  reportColumns[7].abField = kWorkPhoneColumn;
+  reportColumns[8].abField = kHomePhoneColumn;
+  reportColumns[9].abField = kFaxColumn;
+  reportColumns[10].abField = kPagerColumn;
+  reportColumns[11].abField = kCellularColumn;
+  reportColumns[12].abField = kHomeAddressColumn;
+  reportColumns[13].abField = kHomeAddress2Column;
+  reportColumns[14].abField = kHomeCityColumn;
+  reportColumns[15].abField = kHomeStateColumn;
+  reportColumns[16].abField = kHomeZipCodeColumn;
+  reportColumns[17].abField = kHomeCountryColumn;
+  reportColumns[18].abField = kWorkAddressColumn;
+  reportColumns[19].abField = kWorkAddress2Column;
+  reportColumns[20].abField = kWorkCityColumn;
+  reportColumns[21].abField = kWorkStateColumn;
+  reportColumns[22].abField = kWorkZipCodeColumn;
+  reportColumns[23].abField = kWorkCountryColumn;
+  reportColumns[24].abField = kJobTitleColumn;
+  reportColumns[25].abField = kDepartmentColumn;
+  reportColumns[26].abField = kCompanyColumn;
+  reportColumns[27].abField = kWebPage1Column;
+  reportColumns[28].abField = kWebPage2Column;
+  reportColumns[29].abField = kBirthYearColumn;
+  reportColumns[30].abField = kBirthMonthColumn;
+  reportColumns[31].abField = kBirthDayColumn;
+  reportColumns[32].abField = kCustom1Column;
+  reportColumns[33].abField = kCustom2Column;
+  reportColumns[34].abField = kCustom3Column;
+  reportColumns[35].abField = kCustom4Column;
+  reportColumns[36].abField = kNotesColumn;
+  reportColumns[37].abField = kLastModifiedDateColumn;
+  reportColumns[38].abField = nsnull;
+
+  for (PRInt32 i=0; i<MAX_FIELDS; i++)
+  {
+    reportColumns[i].includeIt = PR_FALSE;
+  }
 
   // Ok, build a little HTML for output...
   workBuffer.Append("<HTML><BODY>");
   workBuffer.Append("<CENTER>");
   workBuffer.Append("<TABLE BORDER>");
 
-  NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result)
-
+  // RICHIE - need more work here
+  // NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result)
 
   if (NS_SUCCEEDED(workCard->GetName(&aName)) && (aName))
   {
