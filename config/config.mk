@@ -513,10 +513,7 @@ DEFINES         += -DSMOOTH_PROGRESS
 endif
 
 ifdef MOZ_EDITOR
-#
-# Enable HTMLArea form element support.
-#
-DEFINES		+= -DENDER -DMOZ_ENDER_MIME
+DEFINES		+= -DNGEDITOR
 endif
 
 ifdef MOZ_SECURITY
@@ -526,13 +523,6 @@ endif
 # Crash-reporting system
 ifdef MOZ_FULLCIRCLE
 DEFINES		+= -DMOZ_FULLCIRCLE
-endif
-
-ifdef MOZ_EDITOR
-DEFINES		+= -DEDITOR -DEDITOR_UI
-BUILD_EDITOR	= 1
-BUILD_EDITOR_UI	= 1
-BUILD_EDT	= 1
 endif
 
 # Build layers by default

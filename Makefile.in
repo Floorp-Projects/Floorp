@@ -68,8 +68,13 @@ DIRS +=				\
   view				\
   widget			\
   layout			\
-  webshell			\
-  xpfe
+  webshell
+
+ifdef MOZ_EDITOR
+DIRS += editor
+endif
+
+DIRS += xpfe
 
 include $(topsrcdir)/config/config.mk
 
