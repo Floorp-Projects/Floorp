@@ -83,6 +83,7 @@
 #include "nsIDOMFormListener.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIStyledContent.h"
+#include "nsIRDFContent.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
 #include "nsXULTreeElement.h"
@@ -255,6 +256,7 @@ public:
 
     // Implementation methods
     nsresult GetResource(nsIRDFResource** aResource);
+
     nsresult EnsureContentsGenerated(void) const;
 
     nsresult AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);

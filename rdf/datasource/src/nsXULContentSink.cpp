@@ -40,6 +40,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIParser.h"
 #include "nsIPresShell.h"
+#include "nsIRDFContent.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -239,7 +240,7 @@ protected:
     nsIDocument* mDocument;
     nsIParser*   mParser;
     
-    nsIContent*  mFragmentRoot;
+    nsIRDFResource*  mFragmentRoot;
 
 };
 
@@ -842,24 +843,66 @@ XULContentSinkImpl::AddEntityReference(const nsIParserNode& aNode)
 NS_IMETHODIMP
 XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFDataSource* aDataSource)
 {
+    nsresult rv;
+
     NS_PRECONDITION(aDocument != nsnull, "null ptr");
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
-
+    
     nsCOMPtr<nsIXULChildDocument> childDocument;
     childDocument = do_QueryInterface(mDocument);
     if (childDocument != nsnull) {
         childDocument->GetFragmentRoot(&mFragmentRoot);
+        NS_PRECONDITION(mFragmentRoot, "must have a fragment root to place the fragment properly");
         if (mFragmentRoot) {
             // We're totally a subdocument. Find the root document's
             // data source and make assertions there.
+            
+            // First of all, find the root document.
+            nsIDocument* rootDocument; 
+            nsIDocument* currDocument; 
+            currDocument = aDocument; 
+            NS_ADDREF(currDocument); 
+            while (currDocument != nsnull) { 
+                NS_IF_RELEASE(rootDocument); 
+                rootDocument = currDocument; 
+                currDocument = rootDocument->GetParentDocument(); 
+            } 
+
+            // Retrieve the root data source. 
+            nsCOMPtr<nsIRDFDocument> rdfRootDoc; 
+            rdfRootDoc = do_QueryInterface(rootDocument); 
+            if (rdfRootDoc == nsnull) { 
+                NS_ERROR("Root document of a XUL fragment is not an RDF doc."); 
+                NS_RELEASE(rootDocument); 
+                return rv; 
+            } 
+
+            nsCOMPtr<nsIRDFDataSource> docDataSource; 
+            if (NS_FAILED(rv = rdfRootDoc->GetDocumentDataSource(getter_AddRefs(docDataSource)))) { 
+                NS_ERROR("Unable to retrieve an RDF document's data source."); 
+                NS_RELEASE(rootDocument); 
+                return rv; 
+            } 
+  
+            NS_IF_RELEASE(mDataSource);
+            mDataSource = docDataSource.get();
+            NS_ADDREF(mDataSource);
         }
+        else return NS_ERROR_NULL_POINTER;
     }
+    else {
 
-    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
-    if (! aDataSource)
-        return NS_ERROR_NULL_POINTER;
+        NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+        if (! aDataSource)
+            return NS_ERROR_NULL_POINTER;
 
+        NS_IF_RELEASE(mDataSource);
+        mDataSource = aDataSource;
+        NS_ADDREF(aDataSource);
+    }
+    
+    
     NS_IF_RELEASE(mDocument);
     mDocument = aDocument;
     NS_ADDREF(mDocument);
@@ -867,20 +910,17 @@ XULContentSinkImpl::Init(nsIDocument* aDocument, nsIWebShell* aWebShell, nsIRDFD
     NS_IF_RELEASE(mDocumentURL);
     mDocumentURL = mDocument->GetDocumentURL();
 
-    NS_IF_RELEASE(mDataSource);
-    mDataSource = aDataSource;
-    NS_ADDREF(aDataSource);
-
-	  nsresult rv;
-
     if (NS_FAILED(rv = mDocument->GetNameSpaceManager(mNameSpaceManager))) {
         NS_ERROR("unable to get document namespace manager");
         return rv;
     }
 
-    rv = mNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
-    
+    if (mFragmentRoot) {
+        // XUL Namespace isn't registered if we're a root document.
+        rv = mNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
+    }
+
     mState = eXULContentSinkState_InProlog;
 
     return NS_OK;
@@ -1146,12 +1186,21 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
         // container).
         mHaveSetRootResource = PR_TRUE;
 
-        nsCOMPtr<nsIRDFDocument> rdfDoc;
-        if (NS_SUCCEEDED(mDocument->QueryInterface(nsIRDFDocument::GetIID(),
-                                                   (void**) getter_AddRefs(rdfDoc)))) {
-            if (NS_FAILED(rv = rdfDoc->SetRootResource(rdfResource))) {
-                NS_ERROR("couldn't set root resource");
-                return rv;
+        if (mFragmentRoot) {
+            // We're a subdocument.  We need to take this fragment
+            // node (which is the root of the fragment) and completely
+            // discard it.  The fragment root's resource is actually what
+            // should become the root of this subtree.
+            rdfResource = dont_QueryInterface(mFragmentRoot);
+        }
+        else {
+            nsCOMPtr<nsIRDFDocument> rdfDoc;
+            if (NS_SUCCEEDED(mDocument->QueryInterface(nsIRDFDocument::GetIID(),
+                                                       (void**) getter_AddRefs(rdfDoc)))) {
+                if (NS_FAILED(rv = rdfDoc->SetRootResource(rdfResource))) {
+                    NS_ERROR("couldn't set root resource");
+                    return rv;
+                }
             }
         }
     }
