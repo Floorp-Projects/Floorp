@@ -225,7 +225,7 @@ cert_trav_callback(CERTCertificate *cert, SECItem *k, void *data)
           PR_fprintf(outputFD,
 			"    Issued by: %s (%s)\n", issuerCert->nickname, issuerCN);
  
-        expires = DER_UTCDayToAscii (&cert->validity.notAfter);
+        expires = DER_TimeChoiceDayToAscii(&cert->validity.notAfter);
 
         if (expires)
           PR_fprintf(outputFD, "    Expires: %s\n", expires);
@@ -248,7 +248,7 @@ cert_trav_callback(CERTCertificate *cert, SECItem *k, void *data)
 				secErrorString(rv));            }
           }
 
-        expires = DER_UTCDayToAscii (&issuerCert->validity.notAfter);
+        expires = DER_TimeChoiceDayToAscii (&issuerCert->validity.notAfter);
         if (expires == NULL) expires = "(unknown)";
 
         rv = CERT_CertTimesValid (issuerCert);
