@@ -112,12 +112,6 @@ toolbarpaletteitem[place="toolbar"] .bookmarks-toolbar-items {
   visibility: hidden;
 }
 
-/* ::::: print preview toolbar ::::: */
-
-toolbar[printpreview="true"] {
-  -moz-binding: url("chrome://communicator/content/printPreviewBindings.xml#printpreviewtoolbar");
-}
-
 /* ::::: bookmark menus ::::: */
 
 menu.bookmark-item,

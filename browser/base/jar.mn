@@ -16,6 +16,7 @@ browser.jar:
 *       content/browser/pageReport.js                 (content/pageReport.js)
 *       content/browser/pageReportFirstTime.xul       (content/pageReportFirstTime.xul)   
         content/browser/search.xml                    (content/search.xml)
+        content/browser/printPreviewBindings.xml      (content/printPreviewBindings.xml)
 
 classic.jar:
         skin/classic/browser/browser.css              (skin/browser.css)
