@@ -60,39 +60,39 @@ NS_IMPL_ADDREF(nsJSEventListener)
 
 NS_IMPL_RELEASE(nsJSEventListener)
 
-static nsString onPrefix = "on";
+//static nsString onPrefix = "on";
 
 nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   jsval funval, result;
   jsval argv[1];
-  JSObject *mEventObj;
-  char* mEventChars;
-  nsString mEventString;
+  JSObject *eventObj;
+  char* eventChars;
+  nsAutoString eventString;
   nsresult rv;
 
-  if (NS_OK != aEvent->GetType(mEventString)) {
+  if (NS_OK != aEvent->GetType(eventString)) {
     //JS can't handle this event yet or can't handle it at all
     return NS_OK;
   }
 
-  mEventString = onPrefix + mEventString;
+  eventString.Insert("on", 0, 2);
 
-  mEventChars = mEventString.ToNewCString();
+  eventChars = eventString.ToNewCString();
 
-  if (!JS_LookupProperty(mContext, mJSObj, mEventChars, &funval)) {
-    nsCRT::free(mEventChars);
+  if (!JS_LookupProperty(mContext, mJSObj, eventChars, &funval)) {
+    nsCRT::free(eventChars);
     return NS_ERROR_FAILURE;
   }
 
-  nsCRT::free(mEventChars);
+  nsCRT::free(eventChars);
 
   if (JS_TypeOfValue(mContext, funval) != JSTYPE_FUNCTION) {
     return NS_OK;
   }
 
   nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(mContext);
-  if (NS_OK != NS_NewScriptUIEvent(mScriptCX, aEvent, nsnull, (void**)&mEventObj)) {
+  if (NS_OK != NS_NewScriptUIEvent(mScriptCX, aEvent, nsnull, (void**)&eventObj)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -106,7 +106,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     return rv;
   }
 
-  argv[0] = OBJECT_TO_JSVAL(mEventObj);
+  argv[0] = OBJECT_TO_JSVAL(eventObj);
   PRBool ok = JS_CallFunctionValue(mContext, mJSObj, funval, 1, argv, &result);
 
   mScriptCX->ScriptEvaluated();
