@@ -35,6 +35,10 @@ XPIDLSRCS	= \
 		$(NULL)
 
 ifdef MOZ_XUL
+XPIDLSRCS += \
+		nsIXULOverlayProvider.idl \
+		$(NULL)
+
 EXPORTS		= \
 		nsIXULContentSink.h \
 		nsIXULDocument.h \
