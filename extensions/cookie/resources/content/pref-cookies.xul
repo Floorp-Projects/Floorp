@@ -96,6 +96,9 @@
                             (lifetimeBehavior.value != 1);
     if (parent.hPrefWindow.getPrefIsLocked(lifetimeDays.getAttribute("prefstring")) )
       lifetimeDays.disabled = true;
+    
+    if (! lifetimeDays.disabled)
+      lifetimeDays.focus();
   }
   ]]>
   </script>
