@@ -162,9 +162,12 @@ typedef FILE          * XP_File;
 #define XP_FileRead(dest,count,file)    PR_Read((file), (dest), (count))
 #define XP_FileWrite(src,count,file)    PR_Write((file), (src), (count))
 #define XP_FileTell(file)               PR_Seek(file, 0, PR_SEEK_CUR)
-#define XP_FileFlush(file)              PR_Sync(file)
 #define XP_FileClose(file)              PR_Close(file)
-
+#ifdef XP_MAC
+#define XP_FileFlush(file)              PR_Sync(file)
+#else
+#define XP_FileFlush(file)              ((void)1)
+#endif
 #define XP_ASSERT(x)        PR_ASSERT((x))
 
 #define XP_STRCAT(a,b)      PL_strcat((a),(b))
