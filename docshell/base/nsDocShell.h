@@ -70,6 +70,7 @@
 #include "nsISHContainer.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellHistory.h"
+#include "nsIURIFixup.h"
 
 #define MAKE_LOAD_TYPE(type, flags) ((type) | ((flags) << 16))
 
@@ -209,10 +210,6 @@ protected:
 #endif
 
    NS_IMETHOD CreateFixupURI(const PRUnichar* aStringURI, nsIURI** aURI);
-   NS_IMETHOD FileURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
-   NS_IMETHOD ConvertFileToStringURI(nsString& aIn, nsString& aOut);
-   NS_IMETHOD ConvertStringURIToFileCharset(nsString& aIn, nsCString& aOut);
-   NS_IMETHOD KeywordURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD GetCurrentDocumentOwner(nsISupports** aOwner);
    NS_IMETHOD DoURILoad(nsIURI* aURI, nsIURI* aReferrer, nsISupports *aOwner,
       PRBool inheritOwnerFromDocument, nsURILoadCommand aLoadCmd, 
@@ -283,6 +280,7 @@ protected:
    nsCOMPtr<nsISHistory>      mSessionHistory;
    nsCOMPtr<nsIGlobalHistory> mGlobalHistory;
    nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
+   nsCOMPtr<nsIURIFixup>      mURIFixup;
    PRInt32                    mMarginWidth;
    PRInt32                    mMarginHeight;
    PRInt32                    mItemType;

@@ -50,6 +50,7 @@
 // Local Includes
 #include "nsDocShell.h"
 #include "nsDocShellLoadInfo.h"
+#include "nsCDefaultURIFixup.h"
 
 // Helper Classes
 #include "nsDOMError.h"
@@ -57,14 +58,12 @@
 #include "nsHTTPEnums.h"
 
 // Interfaces Needed
-#include "nsICharsetConverterManager.h"
 #include "nsIHTTPChannel.h"
 #include "nsIDataChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIWebProgress.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILocaleService.h"
-#include "nsIPlatformCharset.h"
 #include "nsITimer.h"
 #include "nsIFileStream.h"
 
@@ -84,8 +83,6 @@
 #include "nsIFocusController.h"
 
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
@@ -3037,195 +3034,19 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
       mViewMode = mLastViewMode;
    }
 
-   // Just try to create an URL out of it
-   NS_NewURI(aURI, uriString, nsnull);
-   if(*aURI)
-      return NS_OK;
-
-   // Check for if it is a file URL
-   FileURIFixup(uriString.GetUnicode(), aURI);
-   if(*aURI)
-      return NS_OK;
-
-   // See if it is a keyword
-   KeywordURIFixup(uriString.GetUnicode(), aURI);
-   if(*aURI)
-      return NS_OK;
-
-   // See if a protocol needs to be added
-   PRInt32 checkprotocol = uriString.Find("://",0);
-   // if no scheme (protocol) is found, assume http or ftp.
-   if (checkprotocol == -1) {
-      // find host name
-      PRInt32 hostPos = uriString.FindCharInSet("./:");
-      if (hostPos == -1) 
-         hostPos = uriString.Length();
-
-      // extract host name
-      nsAutoString hostSpec;
-      uriString.Left(hostSpec, hostPos);
-
-      // insert url spec corresponding to host name
-      if (hostSpec.EqualsIgnoreCase("ftp")) 
-         uriString.InsertWithConversion("ftp://", 0, 6);
-      else 
-         uriString.InsertWithConversion("http://", 0, 7);
-   } // end if checkprotocol
-   return NS_NewURI(aURI, uriString, nsnull);
-}
-
-NS_IMETHODIMP nsDocShell::FileURIFixup(const PRUnichar* aStringURI, 
-   nsIURI** aURI)
-{
-   nsAutoString uriSpecIn(aStringURI);
-   nsAutoString uriSpecOut(aStringURI);
-
-   ConvertFileToStringURI(uriSpecIn, uriSpecOut);
-
-   if(0 == uriSpecOut.Find("file:", 0))
+   // Create the fixup object if necessary
+   if (!mURIFixup)
+   {
+      mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
+      if (!mURIFixup)
       {
-      // if this is file url, we need to  convert the URI
-      // from Unicode to the FS charset
-      nsCAutoString inFSCharset;
-      NS_ENSURE_SUCCESS(ConvertStringURIToFileCharset(uriSpecOut, inFSCharset),
-         NS_ERROR_FAILURE);
-
-      if(NS_SUCCEEDED(NS_NewURI(aURI, inFSCharset.GetBuffer(), nsnull)))
-         return NS_OK;
-      } 
-   return NS_ERROR_FAILURE;
-}
-
-#define FILE_PROTOCOL "file://"
-
-NS_IMETHODIMP nsDocShell::ConvertFileToStringURI(nsString& aIn, nsString& aOut)
-{
-#ifdef XP_PC
-   // Check for \ in the url-string or just a drive (PC)
-   if(kNotFound != aIn.FindChar(PRUnichar('\\')) || ((aIn.Length() == 2 ) && (aIn.Last() == PRUnichar(':') || aIn.Last() == PRUnichar('|'))))
-      {
-#elif XP_UNIX
-   // Check if it starts with / or \ (UNIX)
-   const PRUnichar * up = aIn.GetUnicode();
-   if((PRUnichar('/') == *up) || (PRUnichar('\\') == *up))
-      {
-#else
-   if(0) 
-      {  
-      // Do nothing (All others for now) 
-#endif
-
-#ifdef XP_PC
-      // Translate '\' to '/'
-      aOut.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
-      aOut.ReplaceChar(PRUnichar(':'), PRUnichar('|'));
-#endif
-
-      // Build the file URL
-      aOut.InsertWithConversion(FILE_PROTOCOL,0);
+          // No fixup service so try and create a URI and see what happens
+          return NS_NewURI(aURI, uriString, nsnull);
       }
+   }
 
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::ConvertStringURIToFileCharset(nsString& aIn, 
-   nsCString& aOut)
-{
-   aOut = "";
-   // for file url, we need to convert the nsString to the file system
-   // charset before we pass to NS_NewURI
-   static nsAutoString fsCharset;
-   // find out the file system charset first
-   if(0 == fsCharset.Length())
-      {
-      fsCharset.AssignWithConversion("ISO-8859-1"); // set the fallback first.
-      nsCOMPtr<nsIPlatformCharset> plat(do_GetService(kPlatformCharsetCID));
-      NS_ENSURE_TRUE(plat, NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(plat->GetCharset(kPlatformCharsetSel_FileName, fsCharset),
-         NS_ERROR_FAILURE);
-      }
-   // We probably should cache ccm here.
-   // get a charset converter from the manager
-   nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(kCharsetConverterManagerCID));
-   NS_ENSURE_TRUE(ccm, NS_ERROR_FAILURE);
-   
-   nsCOMPtr<nsIUnicodeEncoder> fsEncoder;
-   NS_ENSURE_SUCCESS(ccm->GetUnicodeEncoder(&fsCharset, 
-      getter_AddRefs(fsEncoder)), NS_ERROR_FAILURE);
-
-   PRInt32 bufLen = 0;
-   NS_ENSURE_SUCCESS(fsEncoder->GetMaxLength(aIn.GetUnicode(), aIn.Length(),
-      &bufLen), NS_ERROR_FAILURE);
-   aOut.SetCapacity(bufLen+1);
-   PRInt32 srclen = aIn.Length();
-   NS_ENSURE_SUCCESS(fsEncoder->Convert(aIn.GetUnicode(), &srclen, 
-      (char*)aOut.GetBuffer(), &bufLen), NS_ERROR_FAILURE);
-
-   ((char*)aOut.GetBuffer())[bufLen]='\0';
-   aOut.SetLength(bufLen);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::KeywordURIFixup(const PRUnichar* aStringURI, 
-   nsIURI** aURI)
-{
-   NS_ENSURE_STATE(mPrefs);
-
-   PRBool keywordsEnabled = PR_FALSE;
-   NS_ENSURE_SUCCESS(mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled),
-      NS_ERROR_FAILURE);
-
-   if(!keywordsEnabled)
-      return NS_ERROR_FAILURE;
-
-   // These are keyword formatted strings
-   // "what is mozilla"
-   // "what is mozilla?"
-   // "?mozilla"
-   // "?What is mozilla"
-
-   // These are not keyword formatted strings
-   // "www.blah.com" - anything with a dot in it 
-   // "nonQualifiedHost:80" - anything with a colon in it
-   // "nonQualifiedHost?"
-   // "nonQualifiedHost?args"
-   // "nonQualifiedHost?some args"
-
-   nsAutoString uriString(aStringURI);
-   if(uriString.FindChar('.') == -1 && uriString.FindChar(':') == -1)
-      {
-      PRInt32 qMarkLoc = uriString.FindChar('?');
-      PRInt32 spaceLoc = uriString.FindChar(' ');
-
-      PRBool keyword = PR_FALSE;
-      if(qMarkLoc == 0)
-         keyword = PR_TRUE;
-      else if((spaceLoc > 0) && ((qMarkLoc == -1) || (spaceLoc < qMarkLoc)))
-         keyword = PR_TRUE;
-
-      if(keyword)
-         {
-         nsCAutoString keywordSpec("keyword:");
-         char *utf8Spec = uriString.ToNewUTF8String();
-         if(utf8Spec)
-            {
-            char* escapedUTF8Spec = nsEscape(utf8Spec, url_Path);
-            if(escapedUTF8Spec) 
-               {
-               keywordSpec.Append(escapedUTF8Spec);
-               NS_NewURI(aURI, keywordSpec.GetBuffer(), nsnull);
-               nsMemory::Free(escapedUTF8Spec);
-               } // escapedUTF8Spec
-            nsMemory::Free(utf8Spec);
-            } // utf8Spec
-         } // keyword 
-      } // FindChar
-
-   if(*aURI)
-      return NS_OK;
-
-   return NS_ERROR_FAILURE;
+   // Call the fixup object
+   return mURIFixup->CreateFixupURI(aStringURI, aURI);
 }
 
 NS_IMETHODIMP nsDocShell::GetCurrentDocumentOwner(nsISupports** aOwner)
