@@ -24,13 +24,13 @@ function ThreadPaneOnClick(event)
         event.target.localName != "treeitem" &&
         event.target.localName != "image")
         return;
-    
-    if (event.target.localName == "image")
-      var targetclass = event.target.parentNode.getAttribute('class');
-    else 
-      var targetclass = event.target.getAttribute('class');
 
-    dump('targetclass = ' + targetclass + '\n');
+    var targetclass = event.target.getAttribute('class');
+    
+    if (event.target.localName == "image" && targetclass != 'tree-cell-twisty')
+      targetclass = event.target.parentNode.getAttribute('class');
+
+    //dump('targetclass = ' + targetclass + '\n');
 
 	if(targetclass.indexOf('unreadcol') != -1)
 	{
@@ -56,7 +56,6 @@ function ThreadPaneOnClick(event)
     }
 	else if(event.detail == 2)
 	{
-    dump("Howdy partner.\n");
 		ThreadPaneDoubleClick(event.target.parentNode.parentNode);
 	}
 }
