@@ -2268,9 +2268,11 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
   //Capturing stage
   if (NS_EVENT_FLAG_BUBBLE != aFlags) {
     nsIScriptGlobalObject* mGlobal;
-    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&mGlobal)) {
-      mGlobal->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
-      NS_RELEASE(mGlobal);
+    if (mScriptContextOwner != nsnull) {
+	    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&mGlobal)) {
+	      mGlobal->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+	      NS_RELEASE(mGlobal);
+	    }
     }
   }
   
