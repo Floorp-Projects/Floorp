@@ -1,41 +1,54 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="EditorDialog.css" type="text/css"?>
-<!DOCTYPE dialog>
+<!DOCTYPE window SYSTEM "imagedlog.dtd">
 <window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40">
 
   <table xmlns="http://www.w3.org/TR/REC-html40">
     <tr>
-      <td width=500>
+      <td width="500">
         <fieldset><legend> Image Location and Name </legend>
           <input type="file" value=" Choose File... " size="50" length="50" maxlength="255" name="image.url" />
           <p/>
-          <xul:checkbox value="Leave Image at Original Location" disabled />
-          <xul:label>Leave Image at Original Location</xul:label>
-          <xul:checkbox value="Page Background" disabled />
-          <xul:label>Page Background</xul:label>
-          <input type="button" class=genericbutton value=" Edit Image " disabled />
+          <p>
+            <xul:checkbox value="Leave Image at Original Location" disabled />
+            Leave Image at Original Location
+
+            <xul:checkbox value="Page Background" disabled />
+            Page Background
+
+            <input type="button" class="genericbutton" value=" Edit Image " disabled />
+          </p>
+          
           <p/>
-          <xul:label>Alternative Text</xul:label>
-          <input type="text" size="30" length="30" maxlength="255" name="image.alttext" />
+          <p>
+            Alternative Text
+            <input type="text" size="30" length="30" maxlength="255" name="image.alttext" />
+          </p>
+
         </fieldset>
 
-        <table cellspacing=0 cellpadding=0 width="100%">
+        <table cellspacing="0" cellpadding="0" width="100%">
           <tr>
-            <td width="55%" valign=top>
+            <td width="55%" valign="top">
               <fieldset><legend> Dimensions </legend>
                 <p />
-                <xul:radio name="image.dimensionType" value="Original Size" checked />
-                <xul:label>Original Size</xul:label>
-                <br />
-                <xul:radio name="image.dimensionType" value="Custom Size" />
-                <xul:label>Custom Size</xul:label>
+                <p>
+                  <xul:radio name="image.dimensionType" value="Original Size" checked />
+                  Original Size
+                </p>
+                <p>
+                  <xul:radio name="image.dimensionType" value="Custom Size" />
+                  Custom Size
+                </p>
 
-                <table cellspacing=0 cellpadding=2 width="100%" valign=top>
+                <table cellspacing="0" cellpadding="2" width="100%" valign="top">
                   <tr>
-                    <td width=8></td>
-                    <td width=40 valign=middle align=right> Height </td>
-                    <td valign=middle>
+                    <td width="8"></td>
+                    <td width="40" valign="middle" align="right">
+                      <p>Height</p>
+                    </td>
+                    <td valign="middle">
                       <input type="text" size="4" length="4" maxlength="4" name="image.height" />
                       <select size="1" name="image.heightType">
                         <optgroup label="pixels">
@@ -48,8 +61,8 @@
 
                   <tr>
                   <td/>
-                  <td valign=middle align=right>
-                    <xul:label>Width</xul:label>
+                  <td valign="middle" align="right">
+                    <p>Width</p>
                   </td>
                   <td>
                     <input type="text" size="4" length="4" maxlength="4" name="image.width" />
@@ -66,8 +79,10 @@
                     <td/>
                     <td/>
                     <td>
-                      <xul:checkbox value="Constrain" disabled />
-                      <xul:label>Constrain</xul:label>
+                      <p>
+                        <xul:checkbox value="Constrain" disabled />
+                        Constrain
+                      </p>
                     </td>
                   </tr>
                 </table>
@@ -90,40 +105,40 @@
               <p/>
 
               <fieldset><legend> Space Around Image </legend>
-                <table cellspacing=0 cellpadding=2 width="100%">
-                  <tr valign=middle>
-                    <td align=right>
-                      <xul:label>Left and Right</xul:label>
+                <table cellspacing="0" cellpadding="2" width="100%">
+                  <tr valign="middle">
+                    <td align="right">
+                      <p>Left and Right</p>
                     </td>
                     <td>
                       <input type="text" size="4" length="4" maxlength="4" name="image.leftRightSpacing" />
                     </td>
                     <td>
-                      <xul:label>pixels</xul:label>
+                      <p>pixels</p>
                     </td>
                   </tr>
 
-                  <tr valign=middle>
+                  <tr valign="middle">
                     <td>
-                      <xul:label>Top and Bottom</xul:label>
+                      <p>Top and Bottom</p>
                     </td>
                     <td>
                       <input type="text" size="4" length="4" maxlength="4" name="image.topBottomSpacing" />
                     </td>
                     <td>
-                      <xul:label>pixels</xul:label>
+                      <p>pixels</p>
                     </td>
                   </tr>
 
-                  <tr valign=middle>
-                    <td align=right>
-                      <xul:label>Solid Border</xul:label>
+                  <tr valign="middle">
+                    <td align="right">
+                      <p>Solid Border</p>
                     </td>
                     <td>
                       <input type="text" size="4" length="4" maxlength="4" name="image.borderWidth" />
                     </td>
                     <td>
-                      <xul:label>pixels</xul:label>
+                      <p>pixels</p>
                     </td>
                   </tr>
                 </table>
@@ -134,10 +149,10 @@
 
           <tr>
             <td>
-              <input type="button" class=genericbutton value=" Remove Image Map " disabled />
+              <input type="button" class="genericbutton" value=" Remove Image Map " disabled />
             </td>
-            <td align=right>
-              <input type="button" class=genericbutton value=" Extra HTML... " disabled />
+            <td align="right">
+              <input type="button" class="genericbutton" value=" Extra HTML... " disabled />
             </td>
           </tr>
         </table>
