@@ -1162,6 +1162,8 @@ network/cache/nu/Makefile
 network/cache/nu/include/Makefile
 network/cache/nu/public/Makefile
 network/cache/nu/src/Makefile
+network/cache/nu/tests/Makefile
+network/cache/nu/tests/fftest/Makefile
 network/client/Makefile
 network/cnvts/Makefile
 network/cstream/Makefile
@@ -1194,6 +1196,9 @@ rdf/content/src/Makefile
 rdf/datasource/Makefile
 rdf/datasource/public/Makefile
 rdf/datasource/src/Makefile
+rdf/tests/Makefile
+rdf/tests/localfile/Makefile
+rdf/tests/rdfsink/Makefile
 sun-java/Makefile
 sun-java/stubs/Makefile
 sun-java/stubs/include/Makefile
