@@ -1594,6 +1594,8 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	PORT_SetError( PK11_MapError(crv) );
     }
 
+    cert->nssCertificate->token = slot->nssToken;
+
 done:
     SECITEM_FreeItem(keyID,PR_TRUE);
     PK11_RestoreROSession(slot,rwsession);
