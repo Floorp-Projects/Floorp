@@ -83,6 +83,10 @@ CFG=MozillaControl - Win32 Debug
 # PROP Default_Filter "*.cpp,*.c,*.idl,*.rc"
 # Begin Source File
 
+SOURCE=.\ControlSite.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MozillaBrowser.cpp
 # End Source File
 # Begin Source File
@@ -116,6 +120,10 @@ SOURCE=.\WebShellContainer.cpp
 # Begin Source File
 
 SOURCE=.\BrowserDiagnostics.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ControlSite.h
 # End Source File
 # Begin Source File
 
