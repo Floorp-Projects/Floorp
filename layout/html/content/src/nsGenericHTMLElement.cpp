@@ -1124,6 +1124,9 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
       {
         if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
 
+          // both mouse and key events are input events, so this is ok.
+          nsInputEvent* inputEvent = NS_STATIC_CAST(nsInputEvent*, aEvent);
+          
           nsKeyEvent * keyEvent;
           if (aEvent->eventStructType == NS_KEY_EVENT) {
             //Handle key commands from keys with char representation here, not on KeyDown
@@ -1139,8 +1142,13 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIContent* aOuter,
             if (target.Length() == 0) {
               GetBaseTarget(target);
             }
-            ret = TriggerLink(aPresContext, eLinkVerb_Replace,
-                                     baseURL, href, target, PR_TRUE);
+            // if meta (cmd on mac) is down, open in new window.
+            if ( inputEvent->isMeta )
+              ret = TriggerLink(aPresContext, eLinkVerb_New,
+                                       baseURL, href, target, PR_TRUE);
+            else
+              ret = TriggerLink(aPresContext, eLinkVerb_Replace,
+                                      baseURL, href, target, PR_TRUE);
             NS_IF_RELEASE(baseURL);
             *aEventStatus = nsEventStatus_eConsumeDoDefault;
           }
