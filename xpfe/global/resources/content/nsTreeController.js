@@ -45,7 +45,7 @@ const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const nsTransferable_contractid = "@mozilla.org/widget/transferable;1";
 const clipboard_contractid = "@mozilla.org/widget/clipboard;1";
 const rdf_contractid = "@mozilla.org/rdf/rdf-service;1";
-const separatorUri = NC_NS + "BookmarkSeparator";
+const SEPARATOR_URI = NC_NS + "BookmarkSeparator";
 const supportswstring_contractid = "@mozilla.org/supports-wstring;1";
 const rdfc_contractid = "@mozilla.org/rdf/container;1";
 
@@ -126,7 +126,7 @@ function nsTreeController_copy(tree)
         {
             // gack, need to generalize this
             var type = node.getAttribute("type");
-            if (type == seperatorUri)
+            if (type == SEPARATOR_URI)
             {
                 // Note: can't encode separators in text, just html
                 html += "<hr><p>";
