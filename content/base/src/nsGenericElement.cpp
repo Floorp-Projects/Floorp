@@ -1797,7 +1797,8 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   PRBool intermediateCapture = PR_FALSE;
   //Capturing stage evaluation
   if (NS_EVENT_FLAG_BUBBLE != aFlags && aEvent->message != NS_PAGE_LOAD
-      && aEvent->message != NS_SCRIPT_LOAD) {
+      && aEvent->message != NS_SCRIPT_LOAD &&
+      aEvent->message != NS_IMAGE_ERROR && aEvent->message != NS_IMAGE_LOAD) {
     //Initiate capturing phase.  Special case first call to document
     if (parent) {
       parent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
@@ -1836,8 +1837,8 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   //Bubbling stage
   if (NS_EVENT_FLAG_CAPTURE != aFlags && mDocument &&
-      aEvent->message != NS_PAGE_LOAD &&
-      aEvent->message != NS_SCRIPT_LOAD) {
+      aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_SCRIPT_LOAD &&
+      aEvent->message != NS_IMAGE_ERROR && aEvent->message != NS_IMAGE_LOAD) {
     if (parent) {
       /*
        * If there's a parent we pass the event to the parent...
