@@ -1,0 +1,155 @@
+/* -*- Mode: C; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Ben Goodger <ben@netscape.com>
+ *   Josh Soref  <timeless@mac.com>
+ */
+
+/**
+ * Style rules for bookmark items in Navigator. 
+ **/ 
+
+ 
+  #home-button
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/home.gif");
+    }
+    
+  #home-button:hover
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/home-hover.gif");
+    }
+    
+  #home-button:hover:active
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/home-active.gif");
+    }
+
+/**
+ * Personal toolbar items
+ **/
+  .bookmarkitem
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
+      cursor	          : pointer;
+    }
+
+  .bookmarkfolder
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
+    }
+  
+  .bookmarkfolder > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
+    {
+      display             : none;
+    }
+    
+  .bookmarkfolder[open="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+    }  
+
+/* Bookmark item/folder buttons on the personal toolbar */
+
+  /* need to override default border on button-toolbar buttons/menubuttons */    
+  .button-toolbar.bookmarkitem
+    {
+      -moz-binding        : url("chrome://global/skin/classicBindings.xml#toolbarbutton-left");
+      border              : none;      
+      vertical-align      : middle;
+    }
+    
+  .button-toolbar.bookmarkitem,
+  .button-toolbar.bookmarkfolder
+    {
+      max-width           : 10em;
+    }
+    
+  .button-toolbar.bookmarkfolder > box > text 
+    {
+      max-width: 8em  !important;
+    }
+    
+  .toolbarbutton-top-icon 
+    {
+      max-width           : 2em;
+    }
+    
+  .toolbarbutton-left-text 
+    {
+      max-width           : 8em;
+    }
+    
+  .button-toolbar.bookmarkfolder, .button-toolbar.bookmarkfolder:hover
+    {
+      border              : none;
+    }    
+    
+  .button-toolbar.bookmarkitem > .toolbarbutton-left-icon
+    {
+      margin-right        : 4px;
+    }
+
+  .bookmarkfolder.button-toolbar:hover
+    {
+      color               : #0000FF;
+      cursor              : pointer;
+      border              : none;      
+    }
+
+  .bookmarkfolder.button-toolbar:hover:active
+    {
+      color               : #FF0000;
+      border              : none;
+    }    
+  .bookmarkitem.button-toolbar:hover
+    {
+      color               : #0000FF;
+      text-decoration     : underline;
+      cursor              : pointer;
+      border              : none;      
+    }
+
+  .bookmarkitem.button-toolbar:hover:active
+    {
+      color               : #FF0000;
+      text-decoration     : underline;
+      border              : none;
+    }
+
+  /* drag and drop feedback */
+  .bookmarkitem.button-toolbar[dragover-left="true"]
+    {
+      margin-left         : 0px;
+      border-left         : 2px solid threeddarkshadow;
+    }
+
+  .bookmarkitem.button-toolbar[dragover-right="true"]
+    {
+      margin-right        : 0px;
+      border-right        : 2px solid threeddarkshadow;
+    }
+
+  .menubutton-toolbar-single-text[dragover-top="true"]
+    {
+      background-color    : threeddarkshadow;
+      color               : threedhighlight;
+    }
+    

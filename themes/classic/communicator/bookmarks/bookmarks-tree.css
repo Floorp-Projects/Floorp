@@ -1,0 +1,140 @@
+/* -*- Mode: C; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Ben Goodger <ben@netscape.com>
+ *   Josh Soref  <timeless@mac.com>
+ */
+
+/** 
+ * Style rules for bookmarks tree items. Ideally this would be usage agnostic, but
+ * there's window/panel specific cruft in here too. 
+ **/    
+  .treecell-bookmark
+    {
+      list-style-image    : inherit;
+    }
+
+  .treeitem-bookmark
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
+    }
+ 
+  .treeitem-bookmark[container="true"][open="true"][loading="true"]
+    {
+      list-style-image    : url("chrome://global/skin/loading.gif") ! important ;
+    }
+
+  .treeitem-bookmark[status="new"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item-updated.gif") ! important ;
+    }
+
+  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"],
+  .treeitem-bookmark[container="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
+    }
+
+  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"][open="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+    }
+
+  .treeitem-bookmark[container="true"][open="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+    }
+
+  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/personal-folder-closed.gif") !important;
+    }
+
+  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/personal-folder-open.gif") !important;
+    }
+
+  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
+    }
+
+  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#Bookmark"]
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/location.gif");
+    }
+
+/**
+ * XXX - need to create some different icons for file system objects
+ **/    
+  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/directory/file-folder-open.gif");
+    }
+
+  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"]
+    {
+      list-style-image    : url("chrome://communicator/skin/directory/file-folder-closed.gif");
+    }
+
+  .treeitem-bookmark[type="http://home.netscape.com/NC-rdf#FileSystemObject"]
+    {
+      list-style-image    : url("chrome://communicator/skin/directory/file-icon.gif");
+    }
+
+/**
+ * Bookmarks tree 
+ **/    
+  .bookmarks-panel-tree, .bookmarks-panel-tree > .tree-container-treerows
+    {
+      border              : none;
+    }
+
+  #bookmarksTree
+    {
+      border-top          : none;
+      border-bottom       : none;
+    }
+
+/** 
+ * XXX - disable print plus. This needs to go into ns/!!!
+ */    
+  #navprintplus
+    {
+      display             : none !important; 
+    }
+      
+  #status-bar
+    {
+      height              : 1em;
+    }
+    
+  #notification-icon  
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/notification.gif");
+    }    
+    
+  #schedule-icon  
+    {
+      list-style-image    : url("chrome://communicator/skin/bookmarks/schedule.gif");
+    }    
+    
+        
