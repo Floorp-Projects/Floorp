@@ -361,5 +361,7 @@ nsIView * nsScrollingView :: GetScrolledView(void)
       retview = nsnull;
   }
 
+  NS_IF_ADDREF(retview);
+
   return retview;
 }
