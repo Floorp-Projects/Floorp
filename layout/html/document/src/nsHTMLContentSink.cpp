@@ -1178,7 +1178,28 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode,
          result = container->ChildAt(0, child);
          if (NS_SUCCEEDED(result)) {
            // Remove it from its old parent (the demoted container)
-           result = container->RemoveChildAt(0, PR_FALSE);
+
+           // If the child is a form control, cache the form that contains it.
+           // After the form control is removed from it's container, restore
+           // it's form.
+            nsIFormControl* childFormControl = nsnull;
+            result = child->QueryInterface(kIFormControlIID, (void**)&childFormControl);
+            if (NS_SUCCEEDED(result)) {
+                // It is a form control, so get it's form and cache it.
+              nsIDOMHTMLFormElement* formElem = nsnull;
+              childFormControl->GetForm(&formElem);
+                // Removing the child will set it's form control to nsnull.
+              result = container->RemoveChildAt(0, PR_FALSE);
+               // Restore the child's form control using the cache'd pointer.
+              childFormControl->SetForm(formElem);
+   
+              NS_RELEASE(childFormControl);
+              NS_IF_RELEASE(formElem);
+            } else {
+               result = container->RemoveChildAt(0, PR_FALSE);
+            }
+   
+
            if (NS_SUCCEEDED(result)) {
              result = parent->AppendChildTo(child, PR_FALSE);
              SetDocumentInChildrenOf(child, mSink->mDocument);
