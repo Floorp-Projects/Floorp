@@ -38,8 +38,10 @@
 
 #include "ToolbarButton.h"
 #include "ToolbarCascade.h"
+#include "ToolbarNavigation.h"
 #include "ToolbarSeparator.h"
 #include "ToolbarUrlBar.h"
+#include "ToolbarWindowList.h"
 
 #if DEBUG_radha
 #define D(x) x
@@ -353,10 +355,48 @@ XFE_RDFToolbar::addItem(HT_Resource node)
     // Normal items
     else
     {
-		item = new XFE_ToolbarButton(_frame,
-									 _toolbar,
-									 node,
-									 "toolbarButton");
+		if (XFE_RDFUtils::ht_IsFECommand(node))
+		{
+			if (XFE_RDFUtils::ht_GetFECommand(node) == xfeCmdBack)
+			{
+				item = new XFE_ToolbarNavigation(_frame,
+												 _toolbar,
+												 node,
+												 "toolbarNavigation",
+												 False);
+			}
+			else if (XFE_RDFUtils::ht_GetFECommand(node) == xfeCmdForward)
+			{
+				item = new XFE_ToolbarNavigation(_frame,
+												 _toolbar,
+												 node,
+												 "toolbarNavigation",
+												 True);
+			}
+			else if (XP_STRNCMP(HT_GetNodeURL(node),
+								"command:windowList",
+								XP_STRLEN("command:windowList")) == 0)
+			{
+				item = new XFE_ToolbarWindowList(_frame,
+												 _toolbar,
+												 node,
+												 "toolbarWindowList");
+			}
+			else
+			{
+				item = new XFE_ToolbarButton(_frame,
+											 _toolbar,
+											 node,
+											 "toolbarButton");
+			}
+		}
+		else
+		{
+			item = new XFE_ToolbarButton(_frame,
+										 _toolbar,
+										 node,
+										 "toolbarButton");
+		}
     }
 
 	if (item)
