@@ -199,7 +199,7 @@ namespace JavaScript
                                         // If lengthKnown is false, this is the serialPos of this Item instead of a length
             bool hasKind(Kind k) const {return kind == k;}
 
-            explicit Item(Kind kind): kind(kind), lengthKnown(true) {}
+            explicit Item(Kind kind): kind(kind), lengthKnown(true), length(0) {}
             Item(Kind kind, uint32 length): kind(kind), lengthKnown(true), length(length) {}
             Item(Kind kind, uint32 length, uint32 beginSerialPos):
                     kind(kind), lengthKnown(false), length(length), totalLength(beginSerialPos) {}

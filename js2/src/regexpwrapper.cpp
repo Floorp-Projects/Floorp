@@ -2792,7 +2792,8 @@ REMatchResult *REExecute(JS2Metadata *meta, JS2RegExp *re, const jschar *str, ui
     REGlobalData gData;
     REMatchState *x, *result;
     const jschar *cp;
-    uint32 start;
+    uint32 start, p;
+	REMatchResult *returnValue = NULL;
 
     start = index;
     if (start > length)
@@ -2812,17 +2813,21 @@ REMatchResult *REExecute(JS2Metadata *meta, JS2RegExp *re, const jschar *str, ui
 
     result = MatchRegExp(&gData, x);
     if (!gData.ok) 
-        return NULL;
+        goto out;
     if (!result)
-        return NULL;
+        goto out;
 
-    REMatchResult *returnValue = (REMatchResult *)malloc(sizeof(REMatchResult) + (re->parenCount - 1) * sizeof(RECapture));
+    returnValue = (REMatchResult *)malloc(sizeof(REMatchResult) + (re->parenCount - 1) * sizeof(RECapture));
     returnValue->startIndex = gData.start + gData.skipped;
     returnValue->endIndex = result->cp - str;
     returnValue->parenCount = re->parenCount;
-    for (uint32 p = 0; p < re->parenCount; p++) {
+    for (p = 0; p < re->parenCount; p++) {
         returnValue->parens[p] = result->parens[p];
     }
+out:
+    free(x);
+	free(gData.stateStack);
+	free(gData.backTrackStack);
     return returnValue;
 }
 
@@ -2831,7 +2836,8 @@ REMatchResult *REMatch(JS2Metadata *meta, JS2RegExp *re, const jschar *str, uint
     REGlobalData gData;
     REMatchState *x, *result;
     const jschar *cp;
-    uint32 j;
+    uint32 j, p;
+	REMatchResult *returnValue = NULL;
 
     cp = JSSTRING_CHARS(str);
     gData.cpbegin = cp;
@@ -2849,17 +2855,21 @@ REMatchResult *REMatch(JS2Metadata *meta, JS2RegExp *re, const jschar *str, uint
         x->parens[j].index = -1;
     result = executeREBytecode(&gData, x, false);
     if (!gData.ok) 
-        return NULL;
+        goto out;
     if (!result)
-        return NULL;
+        goto out;
 
-    REMatchResult *returnValue = (REMatchResult *)malloc(sizeof(REMatchResult) + (re->parenCount - 1) * sizeof(RECapture));
+    returnValue = (REMatchResult *)malloc(sizeof(REMatchResult) + (re->parenCount - 1) * sizeof(RECapture));
     returnValue->startIndex = gData.skipped;
     returnValue->endIndex = result->cp - str;
     returnValue->parenCount = re->parenCount;
-    for (uint32 p = 0; p < re->parenCount; p++) {
+    for (p = 0; p < re->parenCount; p++) {
         returnValue->parens[p] = result->parens[p];
     }
+out:
+    free(x);
+	free(gData.stateStack);
+	free(gData.backTrackStack);
     return returnValue;
 }
 

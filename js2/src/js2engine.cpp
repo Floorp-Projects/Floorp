@@ -130,7 +130,6 @@ namespace MetaData {
                     // one that matches the handler's. The bytecode container, pc and
                     // sp are all reset appropriately, and execution continues.
                     HandlerData *hndlr = (HandlerData *)mTryStack.top();
-//                    mTryStack.pop();
                     ActivationFrame *curAct = (activationStackEmpty()) ? NULL : (activationStackTop - 1);
                 
                     js2val x = JS2VAL_UNDEFINED;
@@ -507,6 +506,8 @@ namespace MetaData {
                   valueOf_StringAtom(world.identifiers["valueOf"]),
                   packageFrame(NULL),
                   parameterFrame(NULL),
+				  parameterCount(0),
+				  superConstructorCalled(false),
                   localFrame(NULL),
                   parameterSlots(NULL),
                   traceInstructions(false)
@@ -527,6 +528,9 @@ namespace MetaData {
 
     JS2Engine::~JS2Engine()
     {
+        while (!mTryStack.empty()) {
+            popHandler();
+        }
         delete [] execStack;
         delete [] activationStack;
     }

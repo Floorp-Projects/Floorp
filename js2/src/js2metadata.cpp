@@ -1150,6 +1150,7 @@ namespace MetaData {
                 }
 
                 bCon->setLabel(sw->breakLabelID);
+				delete frV;
             }
             break;
         case StmtNode::While:
@@ -4032,6 +4033,7 @@ static const uint8 urlCharType[256] =
 
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new LocalMember(Member::ForbiddenMember, true);
+		forbiddenMember->acquire();
     
         FunctionInstance *fInst = NULL;
         DEFINE_ROOTKEEPER(this, rk1, fInst);
@@ -4211,6 +4213,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         clear();                // don't blow off the contents of 'this' as the destructors for
                                 // embedded objects will get messed up (as they run on exit).
         delete engine;
+		delete forbiddenMember;
         if (bCon) delete bCon;
     }
 
@@ -5064,7 +5067,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             LocalBindingEntry *lbe = *bi;
             for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
-/*                if (ns.first->name) JS2Object::mark(ns.first->name); */
                 ns.second->content->mark();
             }
         }            
@@ -5166,6 +5168,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if (mSplitValue)
             delete mSplitValue;
     }
+
+	RegExpInstance::~RegExpInstance()             { if (mRegExp) { js_DestroyRegExp(mRegExp); free(mRegExp);} }
+
 
 /************************************************************************************
  *

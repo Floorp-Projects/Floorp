@@ -2525,7 +2525,7 @@ js2val RegExp_exec(Context *cx, const js2val thisValue, js2val *argv, uint32 arg
                     String *parenStr = new String(str->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
                     JSValue::instance(result)->setProperty(cx, *numberToString(i + 1), NULL, JSValue::newString(parenStr));
                 }
-		else
+                else
                     JSValue::instance(result)->setProperty(cx, *numberToString(i + 1), NULL, kUndefinedValue);
             }
             // XXX SpiderMonkey also adds 'index' and 'input' properties to the result
@@ -2544,7 +2544,7 @@ js2val RegExp_exec(Context *cx, const js2val thisValue, js2val *argv, uint32 arg
                 index = match->endIndex;
                 thisInst->setProperty(cx, cx->LastIndex_StringAtom, CURRENT_ATTR, JSValue::newNumber((float64)index));
             }
-
+            free(match);
         }
 
     }
@@ -2563,8 +2563,10 @@ static js2val RegExp_test(Context *cx, const js2val thisValue, js2val *argv, uin
         RegExp_Type->getProperty(cx, cx->Multiline_StringAtom, CURRENT_ATTR);
         js2val globalMultiline = cx->popValue();
         REMatchState *match = REExecute(thisInst->mRegExp, str->begin(), 0, (int32)str->length(), JSValue::boolean(JSValue::toBoolean(cx, globalMultiline)));
-        if (match)
+        if (match) {
+            free(match);
             return kTrueValue;
+        }
     }
     return kFalseValue;
 }

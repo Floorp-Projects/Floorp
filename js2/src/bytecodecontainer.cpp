@@ -157,6 +157,10 @@ namespace MetaData {
     void BytecodeContainer::saveFrame(Frame *f)                { saveObject(f); }
     void BytecodeContainer::addRegExp(RegExpInstance *x, size_t pos)   { emitOp(eRegExp, pos); saveObject(x); addShort((uint16)(mObjectList.size() - 1)); }
 
+    BytecodeContainer::~BytecodeContainer()          
+	{
+		
+	}
 
 }
 }

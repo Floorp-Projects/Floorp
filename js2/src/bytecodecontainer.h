@@ -99,7 +99,7 @@ public:
 #endif
                             { }
     
-    BytecodeContainer::~BytecodeContainer()          { }
+    BytecodeContainer::~BytecodeContainer();
 
 
     void mark();

@@ -182,6 +182,7 @@ private:
 class Pond {
 public:
     Pond(size_t sz, Pond *nextPond);
+	~Pond() { delete [] pondBase; if (nextPond) delete nextPond; }
     
     void *allocFromPond(JS2Metadata *meta, size_t sz, PondScum::ScumFlag flag);
     uint32 returnToPond(PondScum *p);
@@ -420,12 +421,16 @@ public:
             InstanceGetterMember, 
             InstanceSetterMember };
     
-    Member(MemberKind kind) : memberKind(kind)    { }
+    Member(MemberKind kind) : memberKind(kind), count(0)    { }
     virtual ~Member()                       { }
     MemberKind memberKind;
 
 
     virtual void mark()                     { }
+
+	void acquire()	{ count++; }
+	bool release()  { ASSERT(count > 0); return ((--count) == 0); }
+	int count;
 };
 
 // A local member is either forbidden, a dynamic variable, a variable, a constructor method, a getter or a setter:
@@ -538,12 +543,13 @@ public:
 // the other binding is for writing only).
 class LocalBinding {
 public:
-    LocalBinding(AccessSet accesses, LocalMember *content, bool enumerable) : accesses(accesses), content(content), xplicit(false), enumerable(enumerable) { }
+    LocalBinding(AccessSet accesses, LocalMember *content, bool enumerable) 
+		: accesses(accesses), content(content), xplicit(false), enumerable(enumerable) { content->acquire(); }
 
 // The qualified name is to be inferred from the map where this binding is kept
 //    QualifiedName qname;        // The qualified name bound by this binding
 
-    virtual ~LocalBinding() { /*delete content;*/ } // XXX what about aliases!!!
+    virtual ~LocalBinding() { if (content->release()) delete content; }
 
     AccessSet accesses;
     LocalMember *content;       // The member to which this qualified name was bound
@@ -616,8 +622,9 @@ public:
 
 class InstanceBinding {
 public:
-    InstanceBinding(AccessSet accesses, InstanceMember *content) : accesses(accesses), content(content) { }
-    virtual ~InstanceBinding() { delete content; }
+    InstanceBinding(AccessSet accesses, InstanceMember *content) 
+		: accesses(accesses), content(content) { content->acquire(); }
+    virtual ~InstanceBinding() { if (content->release()) delete content; }
 
 // The qualified name is to be inferred from the map where this binding is kept
 //    QualifiedName qname;         // The qualified name bound by this binding
@@ -1040,7 +1047,7 @@ public:
 // that contains the RegExp object
 class RegExpInstance : public SimpleInstance {
 public:
-    RegExpInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type) { }
+    RegExpInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type), mRegExp(NULL) { }
 
     void setLastIndex(JS2Metadata *meta, js2val a);
     void setGlobal(JS2Metadata *meta, js2val a);
@@ -1055,7 +1062,7 @@ public:
     js2val getSource(JS2Metadata *meta);
 
     JS2RegExp  *mRegExp;
-    virtual ~RegExpInstance()             { }
+    virtual ~RegExpInstance();
 };
 
 

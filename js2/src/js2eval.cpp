@@ -67,6 +67,7 @@ namespace MetaData {
         Pragma::Flags flags = Pragma::js1;
         Parser p(world, a, flags, str, fileName);
         CompilationData *oldData = NULL;
+		BytecodeContainer *new_bCon = NULL;
         try {
             StmtNode *parsedStatements = p.parseProgram();
             ASSERT(p.lexer.peek(true).hasKind(Token::end));
@@ -84,6 +85,7 @@ namespace MetaData {
             }
             if (parsedStatements) {
                 oldData = startCompilationUnit(NULL, str, fileName);
+				new_bCon = bCon;
                 ValidateStmtList(parsedStatements);
                 result = ExecuteStmtList(RunPhase, parsedStatements);
             }
@@ -91,10 +93,14 @@ namespace MetaData {
         catch (Exception &x) {
             if (oldData)
                 restoreCompilationUnit(oldData);
+			if (new_bCon)
+				delete new_bCon;
             throw x;
         }
         if (oldData)
             restoreCompilationUnit(oldData);
+		if (new_bCon)
+			delete new_bCon;
         return result;
     }
 
@@ -1063,6 +1069,8 @@ VariableMemberCommon:
                             if (multiname->listContains(ns.first)) {
                                 (*lbeP)->bindingList.erase(i);
                                 deletedOne = true;
+                                if (ns.second->content->release())
+                                    delete ns.second->content;
                                 break;
                             }
                         }

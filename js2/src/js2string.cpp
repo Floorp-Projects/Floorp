@@ -134,8 +134,11 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
     JS2RegExp *re = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(regexp)))->mRegExp;
 
     REMatchResult *match = REExecute(meta, re, str->begin(), 0, (int32)str->length(), false);
-    if (match)
-        return meta->engine->allocNumber((float64)(match->startIndex));
+    if (match) {
+        js2val result = meta->engine->allocNumber((float64)(match->startIndex));
+        free(match);
+        return result;
+    }
     else
         return meta->engine->allocNumber(-1.0);
 
@@ -197,6 +200,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
 				A = new (meta) ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
             meta->arrayClass->WritePublic(meta, OBJECT_TO_JS2VAL(A), meta->engine->numberToStringAtom(index), true, matchStr);
             index++;
+            free(match);
         }
         thisInst->setLastIndex(meta, meta->engine->allocNumber((float64)lastIndex));
         return OBJECT_TO_JS2VAL(A);
@@ -308,7 +312,9 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 
     while (true) {
         match = REExecute(meta, re, S->begin(), lastIndex, toInt32(S->length()), false);
-        if (match) {
+        if (!match)
+            break;
+        else {
             String insertString;
             uint32 start = 0;
             while (true) {
@@ -331,9 +337,8 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
                     // and then add the replacement string
             newString += insertString;
         }
-        else
-            break;
         lastIndex = match->endIndex;        // use lastIndex to grab remainder after break
+        free(match);
         if ((re->flags & JSREG_GLOB) == 0)
             break;
     }
