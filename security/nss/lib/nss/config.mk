@@ -107,10 +107,19 @@ SHARED_LIBRARY_DIRS = \
 
 
 ifeq ($(OS_TARGET),SunOS)
+ifeq ($(BUILD_SUN_PKG), 1)
 # The -R '$ORIGIN' linker option instructs this library to search for its
 # dependencies in the same directory where it resides.
+ifeq ($(USE_64), 1)
+MKSHLIB += -R '$$ORIGIN:/usr/lib/mps/secv1/sparcv9:/usr/lib/mps/sparcv9'
+else
+MKSHLIB += -R '$$ORIGIN:/usr/lib/mps/secv1:/usr/lib/mps'
+endif
+else
 MKSHLIB += -R '$$ORIGIN'
 endif
+endif
+
 
 ifeq (,$(filter-out WINNT WIN95,$(OS_TARGET)))
 ifndef NS_USE_GCC
