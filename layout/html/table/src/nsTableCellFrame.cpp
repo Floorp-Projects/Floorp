@@ -428,7 +428,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
           NS_STYLE_TABLE_EMPTY_CELLS_SHOW            == cellTableStyle->mEmptyCells || 
           NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND == cellTableStyle->mEmptyCells) {
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *myBorder, 0, 0);
+                                        aDirtyRect, rect, *myBorder, 0, 0, PR_TRUE);
       }
       // draw the border except when the cell is empty and 'empty-cells: hide || -moz-show-background' is set
       if (!GetContentEmpty() || 

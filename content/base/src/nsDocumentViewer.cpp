@@ -3160,6 +3160,15 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO)
     printcon->SetPrintSettings(mPrt->mPrintSettings);
   }
 
+
+  // set the presentation context to the value in the print settings
+  PRBool printBGColors;
+  mPrt->mPrintSettings->GetPrintBGColors(&printBGColors);
+  aPO->mPresContext->SetBackgroundColorDraw(printBGColors);
+  mPrt->mPrintSettings->GetPrintBGImages(&printBGColors);
+  aPO->mPresContext->SetBackgroundImageDraw(printBGColors);
+
+
   // init it with the DC
   (aPO->mPresContext)->Init(mPrt->mPrintDocDC);
 

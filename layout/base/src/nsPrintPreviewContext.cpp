@@ -74,7 +74,8 @@ PrintPreviewContext::PrintPreviewContext() :
   mPageDim(-1,-1,-1,-1),
   mCanPaginatedScroll(PR_TRUE)
 {
-  SetBackgroundDraw(PR_FALSE);
+  SetBackgroundImageDraw(PR_FALSE);
+  SetBackgroundColorDraw(PR_FALSE);
 }
 
 PrintPreviewContext::~PrintPreviewContext()

@@ -168,8 +168,10 @@ public:
   NS_IMETHOD SetIsRenderingOnlySelection(PRBool aVal) { mIsRenderingOnlySelection = aVal; return NS_OK; }
   NS_IMETHOD IsRenderingOnlySelection(PRBool* aResult);
 
-  NS_IMETHOD GetBackgroundDraw(PRBool &aCanDraw) { aCanDraw = mDrawBackground; return NS_OK; }
-  NS_IMETHOD SetBackgroundDraw(PRBool aCanDraw) { mDrawBackground = aCanDraw; return NS_OK; }
+  NS_IMETHOD GetBackgroundImageDraw(PRBool &aCanDraw) { aCanDraw = mDrawImageBackground; return NS_OK; }
+  NS_IMETHOD SetBackgroundImageDraw(PRBool aCanDraw) { mDrawImageBackground = aCanDraw; return NS_OK; }
+  NS_IMETHOD GetBackgroundColorDraw(PRBool &aCanDraw) { aCanDraw = mDrawColorBackground; return NS_OK; }
+  NS_IMETHOD SetBackgroundColorDraw(PRBool aCanDraw) { mDrawColorBackground = aCanDraw; return NS_OK; }
 
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
@@ -250,7 +252,8 @@ protected:
   PRUint8               mFocusRingWidth;          // set in GetUserPrefs
   PRPackedBool          mFocusRingOnAnything;     // set in GetUserPrefs
 
-  PRPackedBool  				mDrawBackground;
+  PRPackedBool  				mDrawImageBackground;
+  PRPackedBool  				mDrawColorBackground;
   PRUint8               mDefaultBackgroundImageAttachment;
   PRUint8               mDefaultBackgroundImageRepeat;
 

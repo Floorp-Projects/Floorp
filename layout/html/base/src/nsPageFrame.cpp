@@ -750,7 +750,7 @@ nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
                              mStyleContext->GetStyleData(eStyleStruct_Border));
 
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *border, 0, 0);      
+                                    aDirtyRect, rect, *border, 0, 0, PR_TRUE);      
   }
 }
 

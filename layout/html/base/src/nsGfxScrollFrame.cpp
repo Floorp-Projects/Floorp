@@ -602,19 +602,9 @@ nsGfxScrollFrame::Paint(nsIPresContext*   aPresContext,
 {
 nsresult result;
 
-  // there are some mechanisms to turn off background painting for print and print preview, these 
-  // need to be turned on for the time being.. just for this paint.. then reset to the
-  // original values before this routine returns.
-  PRBool canDraw;
-  aPresContext->GetBackgroundDraw(canDraw);
-  aPresContext->SetBackgroundDraw(PR_TRUE);
 
   // Paint our children
-  result = nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                                 aWhichLayer);
-
-  aPresContext->SetBackgroundDraw(canDraw);
-
+  result = nsBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,aWhichLayer);
   return result;
 
 }

@@ -130,7 +130,8 @@ public:
                               const nsRect& aBorderArea,
                               const nsStyleBorder& aBorder,
                               nscoord aDX,
-                              nscoord aDY);
+                              nscoord aDY,
+                              PRBool aUsePrintSettings=PR_FALSE);
 
   /**
    * Same as |PaintBackground|, except using the provided style context
@@ -145,7 +146,8 @@ public:
                                     const nsStyleBackground& aColor,
                                     const nsStyleBorder& aBorder,
                                     nscoord aDX,
-                                    nscoord aDY);
+                                    nscoord aDY,
+                                    PRBool aUsePrintSettings=PR_FALSE);
 
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,
