@@ -714,6 +714,14 @@ sub quoteUrls {
         $item = GetBugLink($num, $item);
         $things[$count++] = $item;
     }
+    while ($text =~ s/\battachment(\s|%\#)*(\d+)/"##$count##"/ei) {
+        my $item = $&;
+        my $num = $2;
+        $item = value_quote($item); # Not really necessary, since we know
+                                    # there's no special chars in it.
+        $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+        $things[$count++] = $item;
+    }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
         my $item = $&;
         my $num = $1;
