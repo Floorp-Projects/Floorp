@@ -297,11 +297,11 @@ void FE_ReadScreen()
 	offset = ( rowBytes * y ) + (UInt32)( (float)x * bytesPerPixel );
 	
 	/* don't read past the end of the pixmap's rowbytes */
-	bytesToRead = MIN(	(UInt32)( w * bytesPerPixel ),
+	bytesToRead = PR_MIN(	(UInt32)( w * bytesPerPixel ),
 						(UInt32)( rowBytes - ( x * bytesPerPixel ) ) );
 
 	/* don't read past the end of the graphics device pixmap */
-	rowsToRead = MIN(	h, 
+	rowsToRead = PR_MIN(	h, 
 						( screenHeight - y ) );
 	
 	p = GetPixBaseAddr( pmap ) + offset;
