@@ -297,7 +297,7 @@ nsresult
 FileInputStreamImpl::PumpFileStream()
 {
   if (mInFile->eof())
-    NS_BASE_STREAM_EOF;
+    return NS_BASE_STREAM_EOF;
   
   mBufLen = mInFile->read(mBuf, sizeof(mBuf));
   if (mBufLen > 0)
