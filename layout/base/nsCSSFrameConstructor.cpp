@@ -2370,19 +2370,24 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
       view->GetViewFlags(&viewFlags);
       view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
     }
-    
+
     // Set the initial child lists
     contentFrame->SetInitialChildList(aPresContext, nsnull,
-                                   childItems.childList);
-    if (aState.mAbsoluteItems.childList) {
-      contentFrame->SetInitialChildList(aPresContext,
-                                     nsLayoutAtoms::absoluteList,
-                                     aState.mAbsoluteItems.childList);
-    }
-    if (aState.mFloatedItems.childList) {
-      contentFrame->SetInitialChildList(aPresContext,
-                                     nsLayoutAtoms::floaterList,
-                                     aState.mFloatedItems.childList);
+                                      childItems.childList);
+ 
+    // only support absolute positioning if we are a block.
+    // if we are a box don't do it.
+    if (isBlockFrame) {
+        if (aState.mAbsoluteItems.childList) {
+          contentFrame->SetInitialChildList(aPresContext,
+                                         nsLayoutAtoms::absoluteList,
+                                         aState.mAbsoluteItems.childList);
+        }
+        if (aState.mFloatedItems.childList) {
+          contentFrame->SetInitialChildList(aPresContext,
+                                         nsLayoutAtoms::floaterList,
+                                         aState.mFloatedItems.childList);
+        }
     }
   }
 
@@ -3357,15 +3362,21 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
     // cache our display type
   const nsStyleDisplay* styleDisplay;
   newFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
-  
+
+  /*
   PRUint32 childFlags = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay) ? NS_BLOCK_SHRINK_WRAP : 0;
   // inherit the FieldSet state 
   PRUint32 parentState;
   newFrame->GetFrameState( &parentState );
   childFlags |= parentState;
+  childFlags |= NS_BLOCK_SHRINK_WRAP;
+*/
 
   nsIFrame * areaFrame;
-  NS_NewAreaFrame(shell, &areaFrame, childFlags);
+//  NS_NewAreaFrame(shell, &areaFrame, childFlags);
+
+
+  NS_NewBlockFrame(shell, &areaFrame);
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
@@ -4370,10 +4381,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
       newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
     }
 
+    // xul does not support absolute positioning
+    nsIFrame* geometricParent = aParentFrame;
+
+    /*
     nsIFrame* geometricParent = isAbsolutelyPositioned
         ? aState.mAbsoluteItems.containingBlock
         : aParentFrame;
-
+    */
     // if the new frame was already initialized to initialize it again.
     if (!frameHasBeenInitialized) {
 

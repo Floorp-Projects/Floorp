@@ -51,6 +51,7 @@ public:
     nsIFrame* frame;
     PRBool prefWidthIntrinsic;
     PRBool prefHeightIntrinsic;
+    PRBool neverReflowed;
 };
 
 class nsInfoList 

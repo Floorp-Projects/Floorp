@@ -236,6 +236,7 @@ public:
     // make these flags!
     PRBool mHorizontal;
     PRBool mIsRoot;
+    PRBool mNeverReflowed;
 
     Valignment mValign;
     Halignment mHalign;
@@ -277,6 +278,7 @@ nsBoxFrame::nsBoxFrame()
   // if not otherwise specified boxes by default are horizontal.
   mInner->mHorizontal = PR_TRUE;
   mInner->mIsRoot = PR_FALSE;
+  mInner->mNeverReflowed = PR_TRUE;
   mInner->mValign = nsBoxFrameInner::vAlign_Default;
   mInner->mHalign = nsBoxFrameInner::hAlign_Default;
 
@@ -631,7 +633,10 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
         nsString reason("To get pref size");
 
         nsHTMLReflowState state(aReflowState);
-        state.reason = eReflowReason_Initial;
+        state.availableWidth = NS_INTRINSICSIZE;
+        state.availableHeight = NS_INTRINSICSIZE;
+        state.reason = eReflowReason_Resize;
+
         nsIFrame* incrementalChild = nsnull;
 
         mInner->FlowChildAt(aFrame, aPresContext, desiredSize, state, status, aSize, 0, 0, PR_FALSE, incrementalChild, redraw, reason);
@@ -759,10 +764,11 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   //---------------------------------------------------------
     nsIFrame* incrementalChild = nsnull;
 
-    if ( aReflowState.reason == eReflowReason_Initial) {
+    if (mInner->mNeverReflowed) {
        // on the initial reflow see if we are the root box.
        // the root box.
        mInner->mIsRoot = PR_TRUE;
+       mInner->mNeverReflowed = PR_FALSE;
 
        // see if we are the root box
        nsIFrame* parent = mParent;
@@ -775,9 +781,10 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
             parent->GetParent(&parent);
        }
        if (mInner->mIsRoot) 
-           printf("--------INITIAL REFLOW--------\n");
-
-    } else if ( aReflowState.reason == eReflowReason_Incremental ) {
+           printf("-------- BOX IS ROOT --------\n");
+    }
+    
+    if ( aReflowState.reason == eReflowReason_Incremental ) {
         nsIReflowCommand::ReflowType  reflowType;
         aReflowState.reflowCommand->GetType(reflowType);
 
@@ -1567,6 +1574,13 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
       PRBool needsReflow = PR_FALSE;
       nsReflowReason reason = aReflowState.reason;
 
+      if (aInfo.neverReflowed) {
+          NS_ASSERTION(reason != eReflowReason_Incremental,"Error should not be incremental!!");
+          reason = eReflowReason_Initial;
+      } else if (reason == eReflowReason_Initial) {
+          reason = eReflowReason_Resize;
+      }
+       
       switch(reason)
       {
          // if the child we are reflowing is the child we popped off the incremental 
@@ -1622,31 +1636,38 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
 
       // if we don't need a reflow then 
       // lets see if we are already that size. Yes? then don't even reflow. We are done.
-      if (!needsReflow && aInfo.calculatedSize.width != NS_INTRINSICSIZE && aInfo.calculatedSize.height != NS_INTRINSICSIZE) {
+      if (!needsReflow) {
           
-          // if the new calculated size has a 0 width or a 0 height
-          if ((currentRect.width == 0 || currentRect.height == 0) && (aInfo.calculatedSize.width == 0 || aInfo.calculatedSize.height == 0)) {
-               needsReflow = PR_FALSE;
-               desiredSize.width = aInfo.calculatedSize.width - (margin.left + margin.right);
-               desiredSize.height = aInfo.calculatedSize.height - (margin.top + margin.bottom);
-               childFrame->SizeTo(aPresContext, desiredSize.width, desiredSize.height);
-          } else {
-            desiredSize.width = currentRect.width;
-            desiredSize.height = currentRect.height;
+          if (aInfo.calculatedSize.width != NS_INTRINSICSIZE && aInfo.calculatedSize.height != NS_INTRINSICSIZE) {
+          
+              // if the new calculated size has a 0 width or a 0 height
+              if ((currentRect.width == 0 || currentRect.height == 0) && (aInfo.calculatedSize.width == 0 || aInfo.calculatedSize.height == 0)) {
+                   needsReflow = PR_FALSE;
+                   desiredSize.width = aInfo.calculatedSize.width - (margin.left + margin.right);
+                   desiredSize.height = aInfo.calculatedSize.height - (margin.top + margin.bottom);
+                   childFrame->SizeTo(aPresContext, desiredSize.width, desiredSize.height);
+              } else {
+                desiredSize.width = currentRect.width;
+                desiredSize.height = currentRect.height;
 
-            // remove the margin. The rect of our child does not include it but our calculated size does.
-            nscoord calcWidth = aInfo.calculatedSize.width - (margin.left + margin.right);
-            nscoord calcHeight = aInfo.calculatedSize.height - (margin.top + margin.bottom);
+                // remove the margin. The rect of our child does not include it but our calculated size does.
+                nscoord calcWidth = aInfo.calculatedSize.width - (margin.left + margin.right);
+                nscoord calcHeight = aInfo.calculatedSize.height - (margin.top + margin.bottom);
 
-            // don't reflow if we are already the right size
-            if (currentRect.width == calcWidth && currentRect.height == calcHeight)
-                  needsReflow = PR_FALSE;
-            else
-                  needsReflow = PR_TRUE;
+                // don't reflow if we are already the right size
+                if (currentRect.width == calcWidth && currentRect.height == calcHeight)
+                      needsReflow = PR_FALSE;
+                else
+                      needsReflow = PR_TRUE;
        
+              }
+          } else {
+              // if the width or height are intrinsic alway reflow because
+              // we don't know what it should be.
+             needsReflow = PR_TRUE;
           }
-      }      
-
+      }
+                             
       // ok now reflow the child into the springs calculated space
       if (needsReflow) {
 
@@ -1763,6 +1784,7 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
         }
 
         childFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+        aInfo.neverReflowed = PR_FALSE;
 
         NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
 
@@ -2364,6 +2386,9 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
+   nsMargin debugInset(0,0,0,0);
+   mInner->GetDebugInset(debugInset);
+
    nsresult rv;
 
    aSize.Clear();
@@ -2392,6 +2417,14 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
             // get the size of the child. This is the min, max, preferred, and spring constant
             // it does not include its border.
             rv = GetChildBoxInfo(aPresContext, aReflowState, info->frame, *info);
+
+            // make sure we can see the debug info
+            if (info->prefSize.width < debugInset.left)
+              info->prefSize.width = debugInset.left;
+
+            if (info->prefSize.height < debugInset.top)
+              info->prefSize.height = debugInset.top;
+
             NS_ASSERTION(rv == NS_OK,"failed to child box info");
             if (NS_FAILED(rv))
              return rv;
@@ -2441,8 +2474,6 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
   nsMargin inset(0,0,0,0);
   GetInset(inset);
 
-  nsMargin debugInset(0,0,0,0);
-  mInner->GetDebugInset(debugInset);
   inset += debugInset;
 
   nsSize in(inset.left+inset.right,inset.top+inset.bottom);
@@ -2801,6 +2832,7 @@ nsCalculatedBoxInfoImpl::nsCalculatedBoxInfoImpl(nsIFrame* aFrame)
     prefWidthIntrinsic = PR_TRUE;
     prefHeightIntrinsic = PR_TRUE;
     needsRecalc = PR_TRUE;
+    neverReflowed = PR_TRUE;
 }
 
 nsCalculatedBoxInfoImpl::~nsCalculatedBoxInfoImpl()
