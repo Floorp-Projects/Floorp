@@ -58,7 +58,11 @@
 #include "nsIHttpChannel.h"
 #include "nsIFileChannel.h"
 #include "nsIWyciwygChannel.h"
+
+#ifndef MOZ_MINOTAUR
 #include "nsIFTPChannel.h"
+#endif
+
 #include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
@@ -579,13 +583,19 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     nsCOMPtr<nsIFileChannel> fileRequest(do_QueryInterface(aRequest));
     if (!fileRequest) {
       nsCOMPtr<nsIWyciwygChannel> wyciwygRequest(do_QueryInterface(aRequest));
-      if (!wyciwygRequest) {
+      if (!wyciwygRequest) 
+      {
+#ifndef MOZ_MINOTAUR
         nsCOMPtr<nsIFTPChannel> ftpRequest(do_QueryInterface(aRequest));
-        if (!ftpRequest) {
+        if (!ftpRequest) 
+        {
+#endif
           PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
                  ("SecureUI:%p: OnStateChange: not relevant for sub content\n", this));
           isSubDocumentRelevant = PR_FALSE;
+#ifndef MOZ_MINOTAUR
         }
+#endif
       }
     }
   }
