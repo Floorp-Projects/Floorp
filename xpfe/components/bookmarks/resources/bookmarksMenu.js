@@ -198,7 +198,8 @@ var BookmarksMenu = {
     if (target.localName == "menu"                 &&
         target.parentNode.localName != "menupopup")
       return BookmarksUtils.DROP_ON;
-    if (target.id == "bookmarks-ptf") {
+    if (target.id == "bookmarks-ptf" || 
+        target.id == "bookmarks-chevron") {
       return BookmarksUtils.DROP_ON;
     }
 
@@ -497,6 +498,7 @@ var BookmarksMenuDNDObserver = {
       this._observers = [
         document.getElementById("bookmarks-ptf"),
         document.getElementById("BookmarksMenu").parentNode,
+        document.getElementById("bookmarks-chevron").parentNode,
         document.getElementById("PersonalToolbar")
       ]
     }
