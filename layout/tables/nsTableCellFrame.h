@@ -20,7 +20,6 @@
 
 #include "nscore.h"
 #include "nsContainerFrame.h"
-#include "nsTableCell.h"
 #include "nsTableFrame.h"
 
 struct nsStyleSpacing;
@@ -34,6 +33,9 @@ struct nsStyleSpacing;
 class nsTableCellFrame : public nsContainerFrame
 {
 public:
+
+  void Init(PRInt32 aRowSpan, PRInt32 aColSpan, PRInt32 aColIndex);
+
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
                            nsIFrame*   aParent);
@@ -93,7 +95,37 @@ protected:
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
   void      MapHTMLBorderStyle(nsIPresContext* aPresContext,nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
+
+protected:
+  /** the number of rows spanned by this cell */
+  int          mRowSpan;
+    
+  /** the number of columns spanned by this cell */
+  int          mColSpan;
+
+  /** the starting column for this cell */
+  int          mColIndex;
+
 };
+
+inline void nsTableCellFrame::Init(PRInt32 aRowSpan, PRInt32 aColSpan, PRInt32 aColIndex)
+{
+  NS_PRECONDITION(0<aRowSpan,  "bad row span arg");
+  NS_PRECONDITION(0<aColSpan,  "bad col span arg");
+  NS_PRECONDITION(0<=aColIndex, "bad col index arg");
+  mRowSpan = aRowSpan;
+  mColSpan = aColSpan;
+  mColIndex = aColIndex;
+}
+
+inline PRInt32 nsTableCellFrame::GetRowSpan()
+{  return mRowSpan;}
+
+inline PRInt32 nsTableCellFrame::GetColSpan()
+{  return mColSpan;}
+
+inline PRInt32 nsTableCellFrame::GetColIndex()
+{  return mColIndex;}
 
 
 #endif

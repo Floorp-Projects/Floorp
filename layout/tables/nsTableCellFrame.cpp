@@ -26,10 +26,14 @@
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
 #include "nsCSSLayout.h"
+#include "nsHTMLValue.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPtr.h"
 #include "nsIView.h"
+// evil dep's to be removed ASAP
+#include "nsTablePart.h"
+#include "nsTableContent.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -47,6 +51,9 @@ nsTableCellFrame::nsTableCellFrame(nsIContent* aContent,
                                    nsIFrame*   aParentFrame)
   : nsContainerFrame(aContent, aParentFrame)
 {
+  mRowSpan=1;
+  mColSpan=1;
+  mColIndex=0;
 }
 
 nsTableCellFrame::~nsTableCellFrame()
@@ -143,42 +150,6 @@ void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
       kidYTop = height/2 - childHeight/2;
   }
   mFirstChild->MoveTo(kidRect.x, kidYTop);
-}
-
-/** helper method to get the row span of this frame's content (which must be a cell) */
-PRInt32 nsTableCellFrame::GetRowSpan()
-{
-  PRInt32 result = 0;
-  nsTableCell *cellContent = (nsTableCell *)mContent;
-  if (nsnull!=cellContent)
-  {
-    result = cellContent->GetRowSpan();
-  }
-  return result;
-}
-
-/** helper method to get the col span of this frame's content (which must be a cell) */
-PRInt32 nsTableCellFrame::GetColSpan()
-{
-  PRInt32 result = 0;
-  nsTableCell *cellContent = (nsTableCell *)mContent;
-  if (nsnull!=cellContent)
-  {
-    result = cellContent->GetColSpan();
-  }
-  return result;
-}
-
-/** helper method to get the col index of this frame's content (which must be a cell) */
-PRInt32 nsTableCellFrame::GetColIndex()
-{
-  PRInt32 result = 0;
-  nsTableCell *cellContent = (nsTableCell *)mContent;
-  if (nsnull!=cellContent)
-  {
-    result = cellContent->GetColIndex();
-  }
-  return result;
 }
 
 void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
@@ -583,7 +554,7 @@ void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)
 {
   nsHTMLValue value;
 
-  ((nsTableCell*)mContent)->GetAttribute(nsHTMLAtoms::align, value);
+  ((nsHTMLTagContent*)mContent)->GetAttribute(nsHTMLAtoms::align, value);
   if (value.GetUnit() == eHTMLUnit_Enumerated) 
   {
     nsStyleText* text = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);

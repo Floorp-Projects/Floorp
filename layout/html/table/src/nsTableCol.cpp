@@ -46,6 +46,8 @@ static nsIAtom *HACKattribute=nsnull;
 nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsFrame(aContent, aParentFrame)
 {
+  mColIndex = 0;
+  mRepeat = 0;
 }
 
 
@@ -78,14 +80,6 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
   }
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
-}
-
-PRInt32 nsTableColFrame::GetColumnIndex()
-{ 
-  if (nsnull!=mContent)
-    return ((nsTableCol *)mContent)->GetColumnIndex();
-  else
-    return 0;
 }
 
 
@@ -203,6 +197,8 @@ void nsTableCol::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     }
     return;
   }
+  // unknown attributes are handled by my parent
+  nsTableContent::SetAttribute(aAttribute, aValue);
 }
 
 void nsTableCol::MapAttributesInto(nsIStyleContext* aContext,
@@ -267,6 +263,7 @@ nsTableCol::CreateFrame(nsIPresContext* aPresContext,
   if (NS_OK != rv) {
     return rv;
   }
+  ((nsTableColFrame*)frame)->Init(mColIndex, mRepeat);
   frame->SetStyleContext(aPresContext, aStyleContext);
   aResult = frame;
   return rv;

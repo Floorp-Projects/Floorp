@@ -30,7 +30,6 @@
 #include "nsHTMLIIDs.h"
 
 NS_DEF_PTR(nsTableCol);
-NS_DEF_PTR(nsTableCell);
 NS_DEF_PTR(nsIStyleContext);
 
 

@@ -19,6 +19,7 @@
 #include "nsTableCol.h"
 #include "nsVoidArray.h"
 #include "nsCellLayoutData.h"
+#include "nsTableCell.h"
 
 nsColLayoutData::nsColLayoutData(nsTableCol *aCol)
 {

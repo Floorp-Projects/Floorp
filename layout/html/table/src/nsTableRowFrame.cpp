@@ -1159,8 +1159,7 @@ nsTableRowFrame::SetColumnStyleFromCell(nsIPresContext*   aPresContext,
   // also acts as the width attribute for the entire column
   if ((nsnull!=aCellSC) && (nsnull!=aCellFrame))
   {
-    PRInt32 rowIndex = ((nsTableRow*)mContent)->GetRowIndex();
-    if (0==rowIndex)
+    if (0==mRowIndex)
     {
       // get the cell style info
       const nsStylePosition* cellPosition = (const nsStylePosition*) aCellSC->GetStyleData(eStyleStruct_Position);

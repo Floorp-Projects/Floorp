@@ -150,6 +150,7 @@ nsTableCell::CreateFrame(nsIPresContext* aPresContext,
   if (NS_OK != rv) {
     return rv;
   }
+  ((nsTableCellFrame*)frame)->Init(mRowSpan, mColSpan, mColIndex);
   frame->SetStyleContext(aPresContext, aStyleContext);
   aResult = frame;
   return rv;

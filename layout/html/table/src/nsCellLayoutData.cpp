@@ -18,8 +18,8 @@
 #include "nsCRT.h"
 #include "nsCellLayoutData.h"
 #include "nsSize.h"
+#include "nsVoidArray.h"
 #include "nsIFrame.h"
-#include "nsTableCell.h"
 #include "nsIStyleContext.h"
 #include "nsIPtr.h"
 
@@ -528,14 +528,15 @@ void nsCellLayoutData::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 indent;
 
-  nsTableCell* cell;
+  nsIContent* cell;
 
-  mCellFrame->GetContent((nsIContent*&)cell);
+  mCellFrame->GetContent(cell);
   if (cell != nsnull)
   {
+    /*
     for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
     fprintf(out,"RowSpan = %d ColSpan = %d \n",cell->GetRowSpan(),cell->GetColSpan());
-    
+    */
     for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
     fprintf(out,"Margin -- Top: %d Left: %d Bottom: %d Right: %d \n",  
                 NS_TWIPS_TO_POINTS_INT(mMargin.top),

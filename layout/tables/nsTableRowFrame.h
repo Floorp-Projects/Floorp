@@ -40,6 +40,8 @@ struct RowReflowState;
 class nsTableRowFrame : public nsContainerFrame
 {
 public:
+  /** Initialization procedure */
+  void Init(PRInt32 aRowIndex);
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aInstancePtrResult  the new object is returned in this out-param
@@ -166,9 +168,18 @@ protected:
                                    nsIStyleContext * aCellSC);
 
 private:
+  PRInt32  mRowIndex;
   nscoord  mTallestCell;          // not my height, but the height of my tallest child
   nscoord  mCellMaxTopMargin;
   nscoord  mCellMaxBottomMargin;
+
 };
+
+
+inline void nsTableRowFrame::Init(PRInt32 aRowIndex)
+{
+  NS_ASSERTION(0<=aRowIndex, "bad param row index");
+  mRowIndex = aRowIndex;
+}
 
 #endif
