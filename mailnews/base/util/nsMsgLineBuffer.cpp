@@ -46,72 +46,72 @@ MOZ_DECL_CTOR_COUNTER(nsByteArray)
 
 nsByteArray::nsByteArray()
 {
-	MOZ_COUNT_CTOR(nsByteArray);
-	m_buffer = NULL;
-	m_bufferSize = 0;
-	m_bufferPos = 0;
+  MOZ_COUNT_CTOR(nsByteArray);
+  m_buffer = NULL;
+  m_bufferSize = 0;
+  m_bufferPos = 0;
 }
 
 nsByteArray::~nsByteArray()
 {
-	MOZ_COUNT_DTOR(nsByteArray);
-	PR_FREEIF(m_buffer);
+  MOZ_COUNT_DTOR(nsByteArray);
+  PR_FREEIF(m_buffer);
 }
 
 nsresult nsByteArray::GrowBuffer(PRUint32 desired_size, PRUint32 quantum)
 {
-	if (m_bufferSize < desired_size)
-	{
-		char *new_buf;
-		PRUint32 increment = desired_size - m_bufferSize;
-		if (increment < quantum) /* always grow by a minimum of N bytes */
-			increment = quantum;
-
-
-		new_buf = (m_buffer
-				 ? (char *) PR_REALLOC (m_buffer, (m_bufferSize + increment))
-				 : (char *) PR_MALLOC (m_bufferSize + increment));
-		if (! new_buf)
-			return NS_ERROR_OUT_OF_MEMORY;
-		m_buffer = new_buf;
-		m_bufferSize += increment;
-	}
+  if (m_bufferSize < desired_size)
+  {
+    char *new_buf;
+    PRUint32 increment = desired_size - m_bufferSize;
+    if (increment < quantum) /* always grow by a minimum of N bytes */
+      increment = quantum;
+    
+    
+    new_buf = (m_buffer
+      ? (char *) PR_REALLOC (m_buffer, (m_bufferSize + increment))
+      : (char *) PR_MALLOC (m_bufferSize + increment));
+    if (! new_buf)
+      return NS_ERROR_OUT_OF_MEMORY;
+    m_buffer = new_buf;
+    m_bufferSize += increment;
+  }
   return 0;
 }
 
 nsresult nsByteArray::AppendString(const char *string)
 {
-	PRUint32 strLength = (string) ? PL_strlen(string) : 0;
-	return AppendBuffer(string, strLength);
-
+  PRUint32 strLength = (string) ? PL_strlen(string) : 0;
+  return AppendBuffer(string, strLength);
+  
 }
 
 nsresult nsByteArray::AppendBuffer(const char *buffer, PRUint32 length)
 {
-	nsresult ret = NS_OK;
-	if (m_bufferPos + length > m_bufferSize)
-		ret = GrowBuffer(m_bufferPos + length, 1024);
-	if (ret == NS_OK)
-	{
-		memcpy(m_buffer + m_bufferPos, buffer, length);
-		m_bufferPos += length;
-	}
-	return ret;
+  nsresult ret = NS_OK;
+  if (m_bufferPos + length > m_bufferSize)
+    ret = GrowBuffer(m_bufferPos + length, 1024);
+  if (ret == NS_OK)
+  {
+    memcpy(m_buffer + m_bufferPos, buffer, length);
+    m_bufferPos += length;
+  }
+  return ret;
 }
 
 MOZ_DECL_CTOR_COUNTER(nsMsgLineBuffer)
 
 nsMsgLineBuffer::nsMsgLineBuffer(nsMsgLineBufferHandler *handler, PRBool convertNewlinesP)
 {
-	MOZ_COUNT_CTOR(nsMsgLineBuffer);
-	m_handler = handler;
-	m_convertNewlinesP = convertNewlinesP;
-    m_lookingForCRLF = PR_TRUE;
+  MOZ_COUNT_CTOR(nsMsgLineBuffer);
+  m_handler = handler;
+  m_convertNewlinesP = convertNewlinesP;
+  m_lookingForCRLF = PR_TRUE;
 }
 
 nsMsgLineBuffer::~nsMsgLineBuffer()
 {
-	MOZ_COUNT_DTOR(nsMsgLineBuffer);
+  MOZ_COUNT_DTOR(nsMsgLineBuffer);
 }
 
 void
@@ -347,15 +347,21 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
   // so aInputStream will be nsnull...
   if (!endOfLine && aInputStream) // get some more data from the server
   {
+    nsresult rv;
     PRUint32 numBytesInStream = 0;
     PRUint32 numBytesCopied = 0;
-    nsresult rv = aInputStream->Available(&numBytesInStream);
+    PRBool nonBlockingStream;
+    aInputStream->IsNonBlocking(&nonBlockingStream);
+    rv = aInputStream->Available(&numBytesInStream);
     if (NS_FAILED(rv))
     {
       if (prv)
         *prv = rv;
       return nsnull;
     }
+    if (!nonBlockingStream && numBytesInStream == 0) // if no data available,
+      numBytesInStream = m_dataBufferSize / 2; // ask for half the data buffer size.
+
     // if the number of bytes we want to read from the stream, is greater than the number
     // of bytes left in our buffer, then we need to shift the start pos and its contents
     // down to the beginning of m_dataBuffer...

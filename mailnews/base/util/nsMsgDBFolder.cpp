@@ -741,12 +741,11 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParen
 NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator)
 {
-	if(aFlags & MSG_FLAG_NEW) {
-		CheckWithNewMessagesStatus(PR_TRUE);
-	}
-
-	//Do both flat and thread notifications
-	return OnKeyAddedOrDeleted(aKeyChanged, aParentKey, aFlags, aInstigator, PR_TRUE, PR_TRUE, PR_TRUE);
+  if(aFlags & MSG_FLAG_NEW) 
+    CheckWithNewMessagesStatus(PR_TRUE);
+  
+  //Do both flat and thread notifications
+  return OnKeyAddedOrDeleted(aKeyChanged, aParentKey, aFlags, aInstigator, PR_TRUE, PR_TRUE, PR_TRUE);
 }
 
 nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
@@ -783,19 +782,18 @@ nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aPar
 NS_IMETHODIMP nsMsgDBFolder::OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, 
 						nsIDBChangeListener * aInstigator)
 {
-	//In reality we probably want to just change the parent because otherwise we will lose things like
-	//selection.
+  //In reality we probably want to just change the parent because otherwise we will lose things like
+  //selection.
 
-	//First delete the child from the old threadParent
-	OnKeyAddedOrDeleted(aKeyChanged, oldParent, 0, aInstigator, PR_FALSE, PR_FALSE, PR_TRUE);
-	//Then add it to the new threadParent
-	OnKeyAddedOrDeleted(aKeyChanged, newParent, 0, aInstigator, PR_TRUE, PR_FALSE, PR_TRUE);
-	return NS_OK;
+  //First delete the child from the old threadParent
+  OnKeyAddedOrDeleted(aKeyChanged, oldParent, 0, aInstigator, PR_FALSE, PR_FALSE, PR_TRUE);
+  //Then add it to the new threadParent
+  OnKeyAddedOrDeleted(aKeyChanged, newParent, 0, aInstigator, PR_TRUE, PR_FALSE, PR_TRUE);
+  return NS_OK;
 }
 
 
-NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
-													 instigator)
+NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator)
 {
     if (mDatabase)
     {
@@ -823,25 +821,25 @@ NS_IMETHODIMP nsMsgDBFolder::GetManyHeadersToDownload(PRBool *retval)
 
 nsresult nsMsgDBFolder::MsgFitsDownloadCriteria(nsMsgKey msgKey, PRBool *result)
 {
-	if(!mDatabase)
-		return NS_ERROR_FAILURE;
-
-	nsresult rv;
-	nsCOMPtr<nsIMsgDBHdr> hdr;
-	rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
-	if(NS_FAILED(rv))
-		return rv;
-
+  if(!mDatabase)
+    return NS_ERROR_FAILURE;
+  
+  nsresult rv;
+  nsCOMPtr<nsIMsgDBHdr> hdr;
+  rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
+  if(NS_FAILED(rv))
+    return rv;
+  
   if (hdr)
   {
     PRUint32 msgFlags = 0;
-
+    
     hdr->GetFlags(&msgFlags);
     // check if we already have this message body offline
     if (! (msgFlags & MSG_FLAG_OFFLINE))
     {
       *result = PR_TRUE;
-    // check against the server download size limit .
+      // check against the server download size limit .
       nsCOMPtr <nsIMsgIncomingServer> incomingServer;
       rv = GetServer(getter_AddRefs(incomingServer));
       if (NS_SUCCEEDED(rv) && incomingServer)
