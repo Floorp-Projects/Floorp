@@ -111,7 +111,7 @@ NS_NewViewportFrame(nsIFrame** aNewFrame)
 NS_IMETHODIMP
 ViewportFrame::Destroy(nsIPresContext& aPresContext)
 {
-  mFixedFrames.DeleteFrames(aPresContext);
+  mFixedFrames.DestroyFrames(aPresContext);
   return nsContainerFrame::Destroy(aPresContext);
 }
 
@@ -309,7 +309,7 @@ ViewportFrame::IncrementalReflow(nsIPresContext&          aPresContext,
     nsIFrame* childFrame;
     aReflowState.reflowCommand->GetChildFrame(childFrame);
 
-    PRBool result = mFixedFrames.DeleteFrame(aPresContext, childFrame);
+    PRBool result = mFixedFrames.DestroyFrame(aPresContext, childFrame);
     NS_ASSERTION(result, "didn't find frame to delete");
 
   } else if (nsIReflowCommand::FrameInserted == type) {

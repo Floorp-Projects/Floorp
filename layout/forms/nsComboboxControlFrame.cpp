@@ -973,7 +973,7 @@ NS_IMETHODIMP
 nsComboboxControlFrame::Destroy(nsIPresContext& aPresContext)
 {
    // Cleanup frames in popup child list
-  mPopupFrames.DeleteFrames(aPresContext);
+  mPopupFrames.DestroyFrames(aPresContext);
   return nsAreaFrame::Destroy(aPresContext);
 }
 

@@ -29,7 +29,7 @@ static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 void
 nsAbsoluteContainingBlock::DestroyFrames(nsIPresContext& aPresContext)
 {
-  mAbsoluteFrames.DeleteFrames(aPresContext);
+  mAbsoluteFrames.DestroyFrames(aPresContext);
 }
 
 nsresult
@@ -114,7 +114,7 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIPresContext&          aPresConte
         nsIFrame* childFrame;
         aReflowState.reflowCommand->GetChildFrame(childFrame);
 
-        PRBool result = mAbsoluteFrames.DeleteFrame(aPresContext, childFrame);
+        PRBool result = mAbsoluteFrames.DestroyFrame(aPresContext, childFrame);
         NS_ASSERTION(result, "didn't find frame to delete");
 
       } else if (nsIReflowCommand::FrameInserted == type) {

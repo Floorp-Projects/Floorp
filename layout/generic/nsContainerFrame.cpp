@@ -76,7 +76,7 @@ nsContainerFrame::Destroy(nsIPresContext& aPresContext)
   }
 
   // Delete the primary child list
-  mFrames.DeleteFrames(aPresContext);
+  mFrames.DestroyFrames(aPresContext);
 
   // Base class will destroy the frame
   return nsFrame::Destroy(aPresContext);

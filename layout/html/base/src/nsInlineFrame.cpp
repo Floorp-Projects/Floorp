@@ -320,7 +320,7 @@ nsInlineFrame::GetFrameType(nsIAtom** aType) const
 NS_IMETHODIMP
 nsInlineFrame::Destroy(nsIPresContext& aPresContext)
 {
-  mFrames.DeleteFrames(aPresContext);
+  mFrames.DestroyFrames(aPresContext);
   return nsInlineFrameSuper::Destroy(aPresContext);
 }
 
@@ -980,7 +980,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
       if (NS_FRAME_NOT_SPLITTABLE != st) {
         aOldFrame->RemoveFromFlow();
       }
-      parent->mFrames.DeleteFrame(aPresContext, aOldFrame);
+      parent->mFrames.DestroyFrame(aPresContext, aOldFrame);
       aOldFrame = oldFrameNextInFlow;
       if (nsnull != aOldFrame) {
         aOldFrame->GetParent((nsIFrame**) &parent);
@@ -1012,7 +1012,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
     nsFrameList blockKids(kids);
     if (1 == blockKids.GetLength()) {
       // Remove the anonymous block
-      mFrames.DeleteFrame(aPresContext, anonymousBlock);
+      mFrames.DestroyFrame(aPresContext, anonymousBlock);
       generateReflowCommand = PR_TRUE;
       target = this;
 #ifdef NOISY_ANON_BLOCK

@@ -186,7 +186,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
           deletedFrame->GetRect(damageRect);
           Invalidate(damageRect, PR_FALSE);
 
-          mFrames.DeleteFrame(aPresContext, deletedFrame);
+          mFrames.DestroyFrame(aPresContext, deletedFrame);
         }
         break;
 
