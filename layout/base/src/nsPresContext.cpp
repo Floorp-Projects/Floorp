@@ -646,15 +646,15 @@ nsPresContext::StartLoadImage(const nsString& aURL,
     }
     return NS_OK;
   }
-  if (nsnull == aTargetFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
 
-  // Mark frame as having loaded an image
-  nsFrameState state;
-  aTargetFrame->GetFrameState(&state);
-  state |= NS_FRAME_HAS_LOADED_IMAGES;
-  aTargetFrame->SetFrameState(state);
+  // Allow for a null target frame argument (for precached images)
+  if (nsnull != aTargetFrame) {
+    // Mark frame as having loaded an image
+    nsFrameState state;
+    aTargetFrame->GetFrameState(&state);
+    state |= NS_FRAME_HAS_LOADED_IMAGES;
+    aTargetFrame->SetFrameState(state);
+  }
 
   // Lookup image request in our loaders array (maybe the load request
   // has already been made for that url at the desired size).
