@@ -965,13 +965,13 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   // we were given by the row group frame
   aDesiredSize.width = aReflowState.x;
   aDesiredSize.height = aReflowState.maxCellVertSpace;  
-#ifdef DEBUG
+#ifdef DEBUG_karnaze
   nscoord overAllocated = aDesiredSize.width - aReflowState.reflowState.availableWidth;
   if (overAllocated > 0) {
     float p2t;
     aPresContext.GetScaledPixelsToTwips(&p2t);
     if (overAllocated > p2t) {
-      printf("row over allocated by %d twips", overAllocated);
+      printf("row over allocated by %d\n twips", overAllocated);
     }
   }
 #endif
