@@ -37,54 +37,195 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "stdlib.h"
+#include "prenv.h"
+#include "nspr.h"
 
-#ifdef XP_MAC
-#include "macstdlibextras.h"
-#endif
+#include "nsXPCOMPrivate.h" // for XPCOM_DLL defines.
 
-#include "plstr.h"
-#include "prlink.h"
+#include "nsXPCOMGlue.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
-#include "nsDependentString.h"
+#include "nsEmbedString.h"
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 
-static PRBool gUnreg = PR_FALSE, gSilent = PR_FALSE, gQuiet = PR_FALSE;
 
+static PRBool gUnreg = PR_FALSE, gQuiet = PR_FALSE;
 
-nsresult Register(nsIComponentRegistrar* registrar, const char *path) 
-{ 
-  nsresult rv;
-  nsCOMPtr<nsILocalFile> spec( do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv) );
+static const char* gXPCOMLocation = nsnull;
+static const char* gCompRegLocation = nsnull;
+static const char* gXPTIDatLocation = nsnull;
+static char* gPathEnvString = nsnull;
 
-  if (NS_FAILED(rv) || (!spec)) 
+class DirectoryServiceProvider : public nsIDirectoryServiceProvider
+{
+  public:
+  DirectoryServiceProvider() {}
+  virtual ~DirectoryServiceProvider() {};
+  
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
+};
+
+NS_IMPL_ISUPPORTS1(DirectoryServiceProvider, nsIDirectoryServiceProvider)
+
+NS_IMETHODIMP
+DirectoryServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+{    
+  nsCOMPtr<nsILocalFile> localFile;
+  nsresult rv = NS_ERROR_FAILURE;
+
+  *_retval = nsnull;
+  *persistant = PR_TRUE;
+
+  const char* fileLocation = nsnull;
+
+  if(strcmp(prop, NS_XPCOM_CURRENT_PROCESS_DIR) == 0 && gXPCOMLocation)
   {
-      printf("create nsILocalFile failed\n");
-      return NS_ERROR_FAILURE;
+    fileLocation = gXPCOMLocation;
   }
+  else if(strcmp(prop, NS_XPCOM_COMPONENT_REGISTRY_FILE) == 0 && gCompRegLocation)
+  {
+    fileLocation = gCompRegLocation;
+  }    
+  else if(strcmp(prop, NS_XPCOM_XPTI_REGISTRY_FILE) == 0 && gXPTIDatLocation)
+  {
+    fileLocation = gXPTIDatLocation;
+  }
+  else
+    return NS_ERROR_FAILURE;
 
-  rv = spec->InitWithNativePath(nsDependentCString(path));
+  rv = NS_NewNativeLocalFile(nsEmbedCString(fileLocation), PR_TRUE, getter_AddRefs(localFile));  
   if (NS_FAILED(rv)) return rv;
-  return registrar->AutoRegister(spec);
+
+  return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
 }
 
-nsresult Unregister(nsIComponentRegistrar *registrar, const char *path) 
+int startup_xpcom()
 {
   nsresult rv;
-  nsCOMPtr<nsILocalFile> spec( do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv) );
 
-  if (NS_FAILED(rv) || (!spec)) 
+  if (gXPCOMLocation) {
+    int len = strlen(gXPCOMLocation);
+    char* xpcomPath = (char*) malloc(len + sizeof(XPCOM_DLL) + sizeof(XPCOM_FILE_PATH_SEPARATOR) + 1);
+    sprintf(xpcomPath, "%s" XPCOM_FILE_PATH_SEPARATOR XPCOM_DLL, gXPCOMLocation);
+
+    rv = XPCOMGlueStartup(xpcomPath);
+
+    free(xpcomPath);
+
+    const char* path = PR_GetEnv(XPCOM_SEARCH_KEY);
+    if (!path) {
+      path = "";
+    }
+
+    if (gPathEnvString)
+      PR_smprintf_free(gPathEnvString);
+
+    gPathEnvString = PR_smprintf("%s=%s;%s",
+                                 XPCOM_SEARCH_KEY,
+                                 gXPCOMLocation,
+                                 path);
+
+    if (gXPCOMLocation)
+      PR_SetEnv(gPathEnvString);
+  }
+  else 
   {
-      fputs("create nsILocalFile failed\n", stderr);
-      return NS_ERROR_FAILURE;
+    rv = XPCOMGlueStartup(nsnull);
   }
 
-  rv = spec->InitWithNativePath(nsDependentCString(path));
-  if (NS_FAILED(rv)) return rv;
-  return registrar->AutoUnregister(spec);
+  if (NS_FAILED(rv)) 
+  {
+    printf("Can not initialize XPCOM Glue\n");
+    return -1;
+  }
+
+  DirectoryServiceProvider *provider = new DirectoryServiceProvider();
+  if ( !provider )
+  {
+    NS_WARNING("GRE_Startup failed");
+    XPCOMGlueShutdown();
+    return -1;
+  }
+
+  nsCOMPtr<nsILocalFile> file;
+  if (gXPCOMLocation) 
+  {
+    rv = NS_NewNativeLocalFile(nsEmbedCString(gXPCOMLocation), 
+                               PR_TRUE, 
+                               getter_AddRefs(file));
+  }
+
+  NS_ADDREF(provider);
+  rv = NS_InitXPCOM2(nsnull, file, provider);
+  NS_RELEASE(provider);
+    
+  if (NS_FAILED(rv)) {
+    printf("Can not initialize XPCOM\n");
+    XPCOMGlueShutdown();
+    return -1;
+  }
+
+  return 0;
 }
+
+void shutdown_xpcom()
+{
+  nsresult rv;
+
+  rv = NS_ShutdownXPCOM(nsnull);
+
+  if (NS_FAILED(rv)) {
+    printf("Can not shutdown XPCOM cleanly\n");
+  }
+
+  rv = XPCOMGlueShutdown();
+  
+  if (NS_FAILED(rv)) {
+    printf("Can not shutdown XPCOM Glue cleanly\n");
+  }
+  if (gPathEnvString)
+    PR_smprintf_free(gPathEnvString);
+}
+
+
+nsresult Register(const char *path) 
+{ 
+  startup_xpcom();
+
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> spec;
+  
+  if (path) {
+    rv = NS_NewNativeLocalFile(nsEmbedCString(path), 
+                               PR_TRUE, 
+                               getter_AddRefs(spec));
+  }
+
+  nsCOMPtr<nsIComponentRegistrar> registrar;
+  rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
+  if (NS_FAILED(rv)) {
+    printf("Can not aquire component registrar\n");
+    return -1;
+  }
+
+  if (gUnreg)
+    rv = registrar->AutoUnregister(spec);
+  else
+    rv = registrar->AutoRegister(spec);
+
+  spec = 0;
+  registrar = 0;
+
+  shutdown_xpcom();
+  return rv;
+}
+
 
 void ReportSuccess(const char *file)
 {
@@ -99,66 +240,133 @@ void ReportSuccess(const char *file)
 
 void ReportError(nsresult err, const char *file)
 {
-  if (gSilent)
-    return;
-
   if (gUnreg)
-    fputs("Unregistration failed: (", stderr);
+    printf("Unregistration failed: (");
   else
-    fputs("Registration failed: (", stderr);
+    printf("Registration failed: (");
   
-  switch (err) {
-  case NS_ERROR_FACTORY_NOT_LOADED:
-    fputs("Factory not loaded", stderr);
-    break;
-  case NS_NOINTERFACE:
-    fputs("No Interface", stderr);
-    break;
-  case NS_ERROR_NULL_POINTER:
-    fputs("Null pointer", stderr);
-    break;
-  case NS_ERROR_OUT_OF_MEMORY:
-    fputs("Out of memory", stderr);
-    break;
-  default:
-    fprintf(stderr, "%x", (unsigned)err);
+  switch (err) 
+  {
+    case NS_ERROR_FACTORY_NOT_LOADED:
+      printf("Factory not loaded");
+      break;
+    case NS_NOINTERFACE:
+      printf("No Interface");
+      break;
+    case NS_ERROR_NULL_POINTER:
+      printf("Null pointer");
+      break;
+    case NS_ERROR_OUT_OF_MEMORY:
+      printf("Out of memory");
+      break;
+    default:
+      printf("%x", (unsigned)err);
   }
-
-  fprintf(stderr, ") %s\n", file);
+  
+  printf(") %s\n", file);
 }
 
-int ProcessArgs(nsIComponentRegistrar *registrar, int argc, char *argv[])
+void printHelp()
+{
+  printf(
+"Mozilla regxpcom - a registration tool for xpcom components                    \n"
+"                                                                               \n"
+"Usage: regxpcom [options] [file-or-directory]                                  \n"
+"                                                                               \n"
+"Options:                                                                       \n"
+"         -x path        Specifies the location of a directory containing the   \n"
+"                        xpcom library which will be used when registering new  \n"
+"                        component libraries.  This path will also be added to  \n"
+"                        the \"load library\" path.  If not specified, the      \n"
+"                        current working directory will be used.                \n"
+"         -c path        Specifies the location of the compreg.dat file.  If    \n"
+"                        not specifed, the compreg.dat file will be in its      \n"
+"                        default location.                                      \n"
+"         -d path        Specifies the location of the xpti.dat file.  If not   \n"
+"                        specifed, the compreg.dat file will be in its default  \n"
+"                        location.                                              \n"
+"         -a             Option to register all files in the default component  \n"
+"                        directories.  This is the default behavoir if regxpcom \n"
+"                        is called without any arguments.                       \n"
+"         -h             Displays this help screen.  Must be the only option    \n"
+"                        specified.                                             \n"
+"         -u             Option to uninstall the files-or-directory instead of  \n"
+"                        registering them.                                      \n"
+"         -q             Quiets some of the output of regxpcom.                 \n\n");
+}
+
+int ProcessArgs(int argc, char *argv[])
 {
   int i = 1, result = 0;
   nsresult res;
 
-  while (i < argc) {
-    if (argv[i][0] == '-') {
+  while (i < argc) 
+  {
+    if (argv[i][0] == '-') 
+    {
       int j;
-      for (j = 1; argv[i][j] != '\0'; j++) {
-        switch (argv[i][j]) {
-        case 'u':
-          gUnreg = PR_TRUE;
+      for (j = 1; argv[i][j] != '\0'; j++) 
+      {
+        switch (argv[i][j]) 
+        {
+          case 'h':
+            printHelp();
+            return 0;  // we are all done!
+
+          case 'u':
+            gUnreg = PR_TRUE;
+            break;
+
+          case 'q':
+            gQuiet = PR_TRUE;
+            break;
+
+          case 'a':
+          {
+            res = Register(nsnull);
+            if (NS_FAILED(res)) 
+            {
+              ReportError(res, "component directory");
+              result = -1;
+            } 
+            else 
+            {
+              ReportSuccess("component directory");
+            }
+          }
           break;
-        case 'Q':
-          gSilent = PR_TRUE;
-          /* fall through */
-        case 'q':
-          gQuiet = PR_TRUE;
-          break;
-        default:
-          fprintf(stderr, "Unknown option '%c'\n", argv[i][j]);
+
+          case 'x':
+            gXPCOMLocation = argv[++i];
+            j = strlen(gXPCOMLocation) - 1;
+            break;
+
+          case 'c':
+            gCompRegLocation = argv[++i];
+            j = strlen(gCompRegLocation) - 1;
+            break;
+
+          case 'd':
+            gXPTIDatLocation = argv[++i];
+            j = strlen(gXPTIDatLocation) - 1;
+            break;
+
+          default:
+            printf("Unknown option '%c'\n", argv[i][j]);
         }
       }
-    } else {
-      if (gUnreg == PR_TRUE)
-        res = Unregister(registrar, argv[i]);
-      else
-        res = Register(registrar, argv[i]);
-      if (NS_FAILED(res)) {
+    } 
+    else
+    {
+      res = Register(argv[i]);
+      
+      if (NS_FAILED(res)) 
+      {
         ReportError(res, argv[i]);
         result = -1;
-      } else {
+      } 
+      else 
+      {
         ReportSuccess(argv[i]);
       }
     }
@@ -167,41 +375,27 @@ int ProcessArgs(nsIComponentRegistrar *registrar, int argc, char *argv[])
   return result;
 }
 
+
 int main(int argc, char *argv[])
 {
   int ret;
   nsresult rv;
 
-#ifdef XP_MAC
-#if DEBUG
-  InitializeSIOUX(1);
-#endif
-#endif
+  /* With no arguments, regxpcom will autoregister */
+  if (argc <= 1)
   {
-    nsCOMPtr<nsIServiceManager> servMan;
-    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    
+    startup_xpcom();
+    nsCOMPtr<nsIComponentRegistrar> registrar;
+    rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
     if (NS_FAILED(rv)) {
-      printf("Can not initialize XPCOM\n");
+      printf("Can not aquire component registrar\n");
       return -1;
     }
-    
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
- 
-    /* With no arguments, RegFactory will autoregister */
-    if (argc <= 1)
-    {
-      rv = registrar->AutoRegister(nsnull);
-      ret = (NS_FAILED(rv)) ? -1 : 0;
-    }
-    else
-    {
-      ret = ProcessArgs(registrar, argc, argv);
-    }
-  } // this scopes the nsCOMPtrs
-  // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-  rv = NS_ShutdownXPCOM(nsnull);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-  return ret;
+    rv = registrar->AutoRegister(nsnull);
+    ret = (NS_FAILED(rv)) ? -1 : 0;
+    shutdown_xpcom();
+    return ret;
+  }
+  
+  return ProcessArgs(argc, argv);
 }

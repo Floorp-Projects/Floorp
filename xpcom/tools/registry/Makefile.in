@@ -29,15 +29,23 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 CPPSRCS		= regxpcom.cpp
 
+DEFINES		+= -DXPCOM_GLUE 
+
 REQUIRES	= string \
 		  embedstring \
+		  xpcom \
 	          $(NULL)
 
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../../build \
+		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LIBS            = \
-		$(MOZ_COMPONENT_LIBS) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
