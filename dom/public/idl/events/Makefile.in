@@ -29,17 +29,20 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 XPIDL_MODULE	= dom_events
 
-XPIDLSRCS =					\
+SDK_XPIDLSRCS =                                 \
 	nsIDOMDocumentEvent.idl			\
 	nsIDOMEvent.idl				\
-	nsIDOMNSEvent.idl			\
 	nsIDOMEventTarget.idl			\
+	nsIDOMEventListener.idl			\
+	$(NULL)
+
+XPIDLSRCS =					\
+	nsIDOMNSEvent.idl			\
 	nsIDOMKeyEvent.idl			\
 	nsIDOMMouseEvent.idl			\
 	nsIDOMMutationEvent.idl			\
 	nsIDOMUIEvent.idl			\
 	nsIDOMNSUIEvent.idl			\
-	nsIDOMEventListener.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -114,7 +114,6 @@ XPIDLSRCS	= \
 		nsICollection.idl \
 		nsIEnumerator.idl \
 		nsIPersistentProperties2.idl \
-		nsIProperties.idl \
 		nsIPropertyBag.idl \
 		nsIRecyclingAllocator.idl \
 		nsIVariant.idl \
@@ -128,6 +127,7 @@ XPIDLSRCS	= \
 SDK_XPIDLSRCS   = \
 		nsIObserverService.idl	   \
 		nsIObserver.idl		   \
+		nsIProperties.idl          \
 		nsISimpleEnumerator.idl	   \
 		$(NULL)
 

@@ -40,6 +40,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpconnect
 
+SDK_XPIDLSRCS   = \
+		mozIJSSubScriptLoader.idl \
+		$(NULL)
+
 XPIDLSRCS	= \
 		xpccomponents.idl \
 		xpcjsid.idl \
@@ -50,7 +54,6 @@ XPIDLSRCS	= \
 		nsIXPCSecurityManager.idl \
 		nsIXPCScriptable.idl \
 		nsIScriptError.idl \
-		mozIJSSubScriptLoader.idl \
 		nsIXPCScriptNotify.idl \
 		nsIScriptableInterfaces.idl \
 		$(NULL)

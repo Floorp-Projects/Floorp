@@ -63,12 +63,15 @@ CPPSRCS		= \
 		nsCookieHTTPNotify.cpp \
 		$(NULL)
 
-XPIDLSRCS	= \
+SDK_XPIDLSRCS   = \
+		nsICookie.idl \
 		nsICookieManager.idl \
+		$(NULL)
+
+XPIDLSRCS	= \
 		nsICookieConsent.idl \
 		nsIImgManager.idl \
 		nsIPermissionManager.idl \
-		nsICookie.idl \
 		nsIPermission.idl \
 		$(NULL)
 

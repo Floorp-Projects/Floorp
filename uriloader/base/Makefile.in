@@ -49,9 +49,11 @@ CPPSRCS = 							\
 				nsURILoader.cpp 		\
 				nsDocLoader.cpp			\
 				$(NULL)
+SDK_XPIDLSRCS = 						\
+				nsIURIContentListener.idl 	\
+				$(NULL)
 XPIDLSRCS = 							\
 				nsIContentHandler.idl 		\
-				nsIURIContentListener.idl 	\
 				nsIURILoader.idl	 	\
 				nsCURILoader.idl		\
 				nsIDownload.idl   \

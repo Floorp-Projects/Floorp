@@ -60,12 +60,15 @@ nsIContentList.h \
 nsIFrameLoader.h \
 $(NULL)
 
+SDK_XPIDLSRCS   = \
+		nsISelection.idl  \
+		$(NULL)
+
 XPIDLSRCS	= \
 		nsIContentPolicy.idl        \
 		nsISelectionController.idl  \
 		nsISelectionDisplay.idl  \
 		nsISelectionListener.idl  \
-		nsISelection.idl  \
 		nsISelectionPrivate.idl  \
 		nsIScriptLoader.idl  \
 		nsIScriptLoaderObserver.idl  \

@@ -29,9 +29,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= webshell
 XPIDL_MODULE = webshell_idls
 
+SDK_XPIDLSRCS = \
+        nsIClipboardCommands.idl \
+        $(NULL)
+
 XPIDLSRCS = \
         nsIRefreshURI.idl \
-        nsIClipboardCommands.idl \
         nsIContentViewerContainer.idl \
         nsIDocumentLoaderFactory.idl \
         $(NULL)

@@ -37,12 +37,20 @@ REQUIRES	= xpcom \
 		  embedcomponents \
 		  $(NULL)
 
-EXPORTS         = \
+SDK_HEADERS         = \
                 nsEmbedAPI.h \
                 $(NULL)
 
-XPIDLSRCS	    = \
+SDK_XPIDLSRCS   = \
                 nsIWindowCreator.idl \
+                $(NULL)
+
+
+SDK_BINARY     =                        \
+		$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
+		$(NULL)
+
+XPIDLSRCS	    = \
                 nsIWindowCreator2.idl \
                 $(NULL)
 
