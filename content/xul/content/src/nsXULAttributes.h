@@ -39,6 +39,7 @@
 #include "nsVoidArray.h"
 
 class nsIURI;
+class nsINodeInfo;
 
 //----------------------------------------------------------------------
 
@@ -112,8 +113,7 @@ protected:
     static void  operator delete(void* aObject, size_t aSize);
 
     nsXULAttribute(nsIContent* aContent,
-                   PRInt32 aNameSpaceID,
-                   nsIAtom* aName,
+                   nsINodeInfo* aNodeInfo,
                    const nsString& aValue);
 
     virtual ~nsXULAttribute();
@@ -121,8 +121,7 @@ protected:
 public:
     static nsresult
     Create(nsIContent* aContent,
-           PRInt32 aNameSpaceID,
-           nsIAtom* aName,
+           nsINodeInfo* aNodeInfo,
            const nsString& aValue,
            nsXULAttribute** aResult);
 
@@ -142,22 +141,20 @@ public:
     // Implementation methods
     void GetQualifiedName(nsString& aAttributeName);
 
-    PRInt32 GetNameSpaceID() const { return mNameSpaceID; }
-    nsIAtom* GetName() const { return mName; }
-    nsresult SetValueInternal(const nsString& aValue);
-    nsresult GetValueAsAtom(nsIAtom** aResult);
+    nsINodeInfo* GetNodeInfo() const { return mNodeInfo; }
+    nsresult     SetValueInternal(const nsString& aValue);
+    nsresult     GetValueAsAtom(nsIAtom** aResult);
 
 protected:
     union {
-        nsIContent* mContent;  // The content object that owns the attribute
-        nsXULAttribute* mNext; // For objects on the freelist
+        nsIContent* mContent;   // The content object that owns the attribute
+        nsXULAttribute* mNext;  // For objects on the freelist
     };
 
-    void*       mScriptObject; // The attribute's script object, if reified
-    PRInt32     mNameSpaceID;  // The attribute namespace
-    nsIAtom*    mName;         // The attribute name
-    void*       mValue;        // The attribute value; either an nsIAtom* or PRUnichar*,
-                               // with the low-order bit tagging its type
+    void*        mScriptObject; // The attribute's script object, if reified
+    nsINodeInfo* mNodeInfo;     // The attribute name
+    void*        mValue;        // The attribute value; either an nsIAtom* or PRUnichar*,
+                                // with the low-order bit tagging its type
 
     static const PRInt32 kMaxAtomValueLength;
 

@@ -41,6 +41,7 @@
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsIContent.h"
+#include "nsINodeInfo.h"
 #include "nsICSSParser.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMScriptObjectFactory.h"
@@ -203,13 +204,11 @@ nsXULAttribute::operator delete(void* aObject, size_t aSize)
 }
 
 nsXULAttribute::nsXULAttribute(nsIContent* aContent,
-                               PRInt32 aNameSpaceID,
-                               nsIAtom* aName,
+                               nsINodeInfo* aNodeInfo,
                                const nsString& aValue)
     : mContent(aContent),
       mScriptObject(nsnull),
-      mNameSpaceID(aNameSpaceID),
-      mName(aName),
+      mNodeInfo(aNodeInfo),
       mValue(nsnull)
 {
     NS_INIT_REFCNT();
@@ -218,13 +217,13 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
         kIdAtom = NS_NewAtom("id");
     }
 
-    NS_IF_ADDREF(aName);
+    NS_IF_ADDREF(aNodeInfo);
     SetValueInternal(aValue);
 }
 
 nsXULAttribute::~nsXULAttribute()
 {
-    NS_IF_RELEASE(mName);
+    NS_IF_RELEASE(mNodeInfo);
     ReleaseValue();
 
     if (--gRefCnt == 0) {
@@ -234,16 +233,16 @@ nsXULAttribute::~nsXULAttribute()
 
 nsresult
 nsXULAttribute::Create(nsIContent* aContent,
-                       PRInt32 aNameSpaceID,
-                       nsIAtom* aName,
+                       nsINodeInfo* aNodeInfo,
                        const nsString& aValue,
                        nsXULAttribute** aResult)
 {
+    NS_ENSURE_ARG_POINTER(aNodeInfo);
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    if (! (*aResult = new nsXULAttribute(aContent, aNameSpaceID, aName, aValue)))
+    if (! (*aResult = new nsXULAttribute(aContent, aNodeInfo, aValue)))
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aResult);
@@ -284,10 +283,7 @@ nsXULAttribute::QueryInterface(REFNSIID aIID, void** aResult)
 NS_IMETHODIMP
 nsXULAttribute::GetNodeName(nsString& aNodeName)
 {
-    const PRUnichar *unicodeString;
-    mName->GetUnicode(&unicodeString);
-
-    aNodeName.Assign(unicodeString);
+    GetQualifiedName(aNodeName);
     return NS_OK;
 }
 
@@ -369,29 +365,41 @@ nsXULAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 NS_IMETHODIMP
 nsXULAttribute::GetNamespaceURI(nsString& aNamespaceURI)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mNodeInfo->GetNamespaceURI(aNamespaceURI);
 }
 
 NS_IMETHODIMP
 nsXULAttribute::GetPrefix(nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mNodeInfo->GetPrefix(aPrefix);
 }
 
 NS_IMETHODIMP
 nsXULAttribute::SetPrefix(const nsString& aPrefix)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+    // XXX: Validate the prefix string!
+
+    nsINodeInfo *newNodeInfo = nsnull;
+    nsCOMPtr<nsIAtom> prefix;
+
+    if (aPrefix.Length()) {
+        prefix = dont_AddRef(NS_NewAtom(aPrefix));
+        NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
+    }
+
+    nsresult rv = mNodeInfo->PrefixChanged(prefix, newNodeInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_RELEASE(mNodeInfo);
+    mNodeInfo = newNodeInfo;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULAttribute::GetLocalName(nsString& aLocalName)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mNodeInfo->GetLocalName(aLocalName);
 }
 
 NS_IMETHODIMP
@@ -421,8 +429,9 @@ nsXULAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsXULAttribute::HasChildNodes(PRBool* aReturn)
 {
-    NS_NOTYETIMPLEMENTED("write me");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG_POINTER(aReturn);
+    *aReturn = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -435,8 +444,7 @@ nsXULAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsXULAttribute::Normalize()
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -453,9 +461,7 @@ nsXULAttribute::Supports(const nsString& aFeature, const nsString& aVersion,
 NS_IMETHODIMP
 nsXULAttribute::GetName(nsString& aName)
 {
-    const PRUnichar *unicodeString;
-    mName->GetUnicode(&unicodeString);
-    aName.Assign(unicodeString);
+    GetQualifiedName(aName);
     return NS_OK;
 }
 
@@ -478,15 +484,7 @@ nsXULAttribute::SetValue(const nsString& aValue)
 {
     // We call back to the content node's SetValue() method so we can
     // share all of the work that it does.
-    nsCOMPtr<nsIDOMElement> element( do_QueryInterface(mContent) );
-    if (element) {
-        nsAutoString qualifiedName;
-        GetQualifiedName(qualifiedName);
-        return element->SetAttribute(qualifiedName, aValue);
-    }
-    else {
-        return NS_ERROR_FAILURE;
-    }
+    return mContent->SetAttribute(mNodeInfo, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -541,13 +539,15 @@ nsXULAttribute::SetScriptObject(void *aScriptObject)
 void
 nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
 {
+// This should be removed, call sites should be replaced with mNodeInfo->Get...
     aQualifiedName.Truncate();
-    if ((mNameSpaceID != kNameSpaceID_None) &&
-        (mNameSpaceID != kNameSpaceID_Unknown)) {
+    PRInt32 nsid;
+    mNodeInfo->GetNamespaceID(nsid);
+    if ((nsid != kNameSpaceID_None) && (nsid != kNameSpaceID_Unknown)) {
         nsresult rv;
 
         nsIAtom* prefix;
-        rv = mContent->GetNameSpacePrefixFromId(mNameSpaceID, prefix);
+        rv = mContent->GetNameSpacePrefixFromId(nsid, prefix);
 
         if (NS_SUCCEEDED(rv) && (prefix != nsnull)) {
             const PRUnichar *unicodeString;
@@ -558,8 +558,15 @@ nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
         }
     }
     const PRUnichar *unicodeString;
-    mName->GetUnicode(&unicodeString);
+    nsCOMPtr<nsIAtom> name;
+    mNodeInfo->GetNameAtom(*getter_AddRefs(name));
+    name->GetUnicode(&unicodeString);
     aQualifiedName.Append(unicodeString);
+
+    // All the above code should be replaced with this one line once
+    // nsINodeInfo is fully functional in attributes.
+
+    // mNodeInfo->GetQualifiedName(aQualifiedName);
 }
 
 
@@ -574,7 +581,7 @@ nsXULAttribute::SetValueInternal(const nsString& aValue)
     // atom table: the style system frequently asks for it, and if the
     // table is "unprimed" we see quite a bit of thrashing as the 'id'
     // value is repeatedly added and then removed from the atom table.
-    if ((aValue.Length() <= kMaxAtomValueLength) || (mName == kIdAtom)) {
+    if ((aValue.Length() <= kMaxAtomValueLength) || mNodeInfo->Equals(kIdAtom)) {
         newAtom = getter_AddRefs( NS_NewAtom(aValue.GetUnicode()) );
     }
 
@@ -727,10 +734,12 @@ nsXULAttributes::GetNamedItem(const nsString& aName, nsIDOMNode** aReturn)
     // graph. The problem is, how else do we get the named item?
     for (PRInt32 i = mAttributes.Count() - 1; i >= 0; --i) {
         nsXULAttribute* attr = (nsXULAttribute*) mAttributes[i];
-        if (((nameSpaceID == attr->GetNameSpaceID()) ||
+        nsINodeInfo *ni = attr->GetNodeInfo();
+
+        if ((ni->NamespaceEquals(nameSpaceID) ||
              (nameSpaceID == kNameSpaceID_Unknown) ||
              (nameSpaceID == kNameSpaceID_None)) &&
-            (name == attr->GetName())) {
+            ni->Equals(name)) {
             NS_ADDREF(attr);
             *aReturn = attr;
             break;
