@@ -166,6 +166,13 @@ protected:
 
   PRBool GetBodyContent();
 
+  virtual nsresult Reset(nsIURL *aURL);
+  nsresult WriteCommon(JSContext *cx, 
+                       jsval *argv, 
+                       PRUint32 argc,
+                       PRBool aNewlineTerminate);
+
+
   nsIHTMLStyleSheet*    mAttrStyleSheet;
   nsIHTMLCSSStyleSheet* mStyleAttrStyleSheet;
   nsDTDMode mDTDMode;

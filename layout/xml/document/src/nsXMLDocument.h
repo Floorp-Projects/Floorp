@@ -72,6 +72,7 @@ public:
 
 protected:
   void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);
+  virtual nsresult Reset(nsIURL* aUrl);
 
 
   // For HTML elements in our content model
