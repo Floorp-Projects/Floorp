@@ -401,6 +401,7 @@ PR_IMPLEMENT(void)
 PR_ResetProcessAttr(PRProcessAttr *attr)
 {
     PR_FREEIF(attr->currentDirectory);
+    PR_FREEIF(attr->fdInheritBuffer);
     memset(attr, 0, sizeof(*attr));
 }
 
@@ -408,6 +409,7 @@ PR_IMPLEMENT(void)
 PR_DestroyProcessAttr(PRProcessAttr *attr)
 {
     PR_FREEIF(attr->currentDirectory);
+    PR_FREEIF(attr->fdInheritBuffer);
     PR_DELETE(attr);
 }
 
@@ -464,6 +466,121 @@ PR_ProcessAttrSetCurrentDirectory(
     }
     strcpy(attr->currentDirectory, dir);
     return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(PRStatus)
+PR_ProcessAttrSetInheritableFD(
+    PRProcessAttr *attr,
+    PRFileDesc *fd,
+    const char *name)
+{
+    /* We malloc the fd inherit buffer in multiples of this number. */
+#define FD_INHERIT_BUFFER_INCR 128
+    /* The length of "NSPR_INHERIT_FDS=" */
+#define NSPR_INHERIT_FDS_STRLEN 17
+    /* The length of osfd (PRInt32) printed in hexadecimal with 0x prefix */
+#define OSFD_STRLEN 10
+    int newSize;
+    int remainder;
+    char *newBuffer;
+    int nwritten;
+    char *cur;
+    int freeSize;
+
+    if (fd->identity != PR_NSPR_IO_LAYER) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+    if (!fd->secret->inheritable) {
+        PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, 0);
+        return PR_FAILURE;
+    }
+
+    /*
+     * We also need to account for the : separators and the
+     * terminating null byte.
+     */
+    if (NULL == attr->fdInheritBuffer) {
+        /* The first time, we print "NSPR_INHERIT_FDS=<name>:<val>" */
+        newSize = NSPR_INHERIT_FDS_STRLEN + strlen(name)
+                + OSFD_STRLEN + 1 + 1;
+    } else {
+        /* At other times, we print ":<name>:<val>" */
+        newSize = attr->fdInheritBufferUsed + strlen(name)
+                + OSFD_STRLEN + 2 + 1;
+    }
+    if (newSize > attr->fdInheritBufferSize) {
+        /* Make newSize a multiple of FD_INHERIT_BUFFER_INCR */
+        remainder = newSize % FD_INHERIT_BUFFER_INCR;
+        if (remainder != 0) {
+            newSize += (FD_INHERIT_BUFFER_INCR - remainder);
+        }
+        if (NULL == attr->fdInheritBuffer) {
+            newBuffer = (char *) PR_MALLOC(newSize);
+        } else {
+            newBuffer = (char *) PR_REALLOC(attr->fdInheritBuffer, newSize);
+        }
+        if (NULL == newBuffer) {
+            PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+            return PR_FAILURE;
+        }
+        attr->fdInheritBuffer = newBuffer;
+        attr->fdInheritBufferSize = newSize;
+    }
+    cur = attr->fdInheritBuffer + attr->fdInheritBufferUsed;
+    freeSize = attr->fdInheritBufferSize - attr->fdInheritBufferUsed;
+    if (0 == attr->fdInheritBufferUsed) {
+        nwritten = PR_snprintf(cur, freeSize, "NSPR_INHERIT_FDS=%s:0x%lx",
+                name, fd->secret->md.osfd);
+    } else {
+        nwritten = PR_snprintf(cur, freeSize, ":%s:0x%lx",
+                name, fd->secret->md.osfd);
+    }
+    attr->fdInheritBufferUsed += nwritten; 
+    return PR_SUCCESS;
+}
+
+PR_IMPLEMENT(PRFileDesc *) PR_GetInheritedFD(
+    const char *name)
+{
+    PRFileDesc *fd;
+    const char *envVar;
+    const char *ptr;
+    int len = strlen(name);
+    PRInt32 osfd;
+    int nColons;
+
+    envVar = PR_GetEnv("NSPR_INHERIT_FDS");
+    if (NULL == envVar || '\0' == envVar[0]) {
+        PR_SetError(PR_UNKNOWN_ERROR, 0);
+        return NULL;
+    }
+
+    ptr = envVar;
+    while (1) {
+        if ((ptr[len] == ':') && (strncmp(ptr, name, len) == 0)) {
+            ptr += len + 1;
+            PR_sscanf(ptr, "0x%lx", &osfd);
+            fd = PR_ImportFile(osfd);
+            return fd;
+        }
+        /* Skip two colons */
+        nColons = 0;
+        while (*ptr) {
+            if (*ptr == ':') {
+                if (++nColons == 2) {
+                    break;
+                }
+            }
+            ptr++;
+        }
+        if (*ptr == '\0') {
+            PR_SetError(PR_UNKNOWN_ERROR, 0);
+            return NULL;
+        }
+        ptr++;
+    }
+    return NULL;
 }
 
 PR_IMPLEMENT(PRProcess*) PR_CreateProcess(

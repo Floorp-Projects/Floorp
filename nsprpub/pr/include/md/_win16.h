@@ -279,6 +279,7 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 #define _MD_GET_SOCKET_ERROR()    WSAGetLastError()
 #define _MD_SET_SOCKET_ERROR(_err) WSASetLastError(_err)
 
+#define _MD_INIT_FILEDESC(fd)
 #define _MD_MAKE_NONBLOCK             _PR_MD_MAKE_NONBLOCK
 #define _MD_SHUTDOWN                  _PR_MD_SHUTDOWN
 #define _MD_LISTEN                      _PR_MD_LISTEN
@@ -337,7 +338,6 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 /* --- Threading Stuff --- */
 #define _MD_DEFAULT_STACK_SIZE      32767L
 #define _MD_INIT_THREAD             _PR_MD_INIT_THREAD
-#define _MD_INIT_PRIMORDIAL_THREAD  _PR_MD_INIT_PRIMORDIAL_THREAD
 #define _MD_CREATE_THREAD(t,f,p,sc,st,stsiz) (PR_SUCCESS)
 #define _MD_YIELD                   _PR_MD_YIELD
 #define _MD_SET_PRIORITY(t,p)            

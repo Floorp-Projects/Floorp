@@ -207,6 +207,7 @@ extern PRInt32 _MD_CloseFile(PRInt32 osfd);
 #define _MD_GET_SOCKET_ERROR()    WSAGetLastError()
 #define _MD_SET_SOCKET_ERROR(_err) WSASetLastError(_err)
 
+#define _MD_INIT_FILEDESC(fd)
 extern void _MD_MakeNonblock(PRFileDesc *f);
 #define _MD_MAKE_NONBLOCK             _MD_MakeNonblock
 #define _MD_SHUTDOWN                  _PR_MD_SHUTDOWN
@@ -220,6 +221,7 @@ extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
 #define _MD_GETPEERNAME               _PR_MD_GETPEERNAME
 #define _MD_GETSOCKOPT                _PR_MD_GETSOCKOPT
 #define _MD_SETSOCKOPT                _PR_MD_SETSOCKOPT
+#define _MD_SET_FD_INHERITABLE        _PR_MD_SET_FD_INHERITABLE
 #define _MD_SELECT                    select
 #define _MD_FSYNC                     _PR_MD_FSYNC
 #define READ_FD                       1
@@ -281,7 +283,6 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_DEFAULT_STACK_SIZE            0
 #define _MD_INIT_THREAD             _PR_MD_INIT_THREAD
 #define _MD_INIT_ATTACHED_THREAD    _PR_MD_INIT_THREAD
-#define _MD_INIT_PRIMORDIAL_THREAD  _PR_MD_INIT_PRIMORDIAL_THREAD
 #define _MD_CREATE_THREAD           _PR_MD_CREATE_THREAD
 #define _MD_YIELD                   _PR_MD_YIELD
 #define _MD_SET_PRIORITY            _PR_MD_SET_PRIORITY

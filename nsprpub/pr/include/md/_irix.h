@@ -377,7 +377,6 @@ PR_EXTERN(void) _MD_InitLocks(void);
 PR_EXTERN(void) _MD_CleanThread(struct PRThread *thread);
 #define _MD_CLEAN_THREAD _MD_CleanThread
 
-#define _MD_INIT_PRIMORDIAL_THREAD(threadp)
 #define _MD_YIELD()    sginap(0)
 
 /* The _PR_MD_WAIT_LOCK and _PR_MD_WAKEUP_WAITER functions put to sleep and

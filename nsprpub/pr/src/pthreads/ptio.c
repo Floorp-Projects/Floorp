@@ -2545,6 +2545,9 @@ static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type)
     {
         fd->secret->md.osfd = osfd;
         fd->secret->state = _PR_FILEDESC_OPEN;
+        /* By default, a Unix fd is not closed on exec. */
+        PR_ASSERT(0 == fcntl(osfd, F_GETFD, 0));
+        fd->secret->inheritable = PR_TRUE;
         switch (type)
         {
             case PR_DESC_FILE:
@@ -2609,6 +2612,9 @@ PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
         fcntl(osfd, F_SETFL, flags | _PR_FCNTL_FLAGS);
     }
     fd->secret->state = _PR_FILEDESC_OPEN;
+    /* By default, a Unix fd is not closed on exec. */
+    PR_ASSERT(0 == fcntl(osfd, F_GETFD, 0));
+    fd->secret->inheritable = PR_TRUE;
     return fd;
     
 failed:
@@ -3238,6 +3244,34 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
     flags = fcntl(pipefd[1], F_GETFL, 0);
     flags |= _PR_FCNTL_FLAGS;
     (void)fcntl(pipefd[1], F_SETFL, flags);
+    return PR_SUCCESS;
+}
+
+/*
+** Set the inheritance attribute of a file descriptor.
+*/
+PR_IMPLEMENT(PRStatus) PR_SetFDInheritable(
+    PRFileDesc *fd,
+    PRBool inheritable)
+{
+    /*
+     * Only a non-layered, NSPR file descriptor can be inherited
+     * by a child process.
+     */
+    if (fd->identity != PR_NSPR_IO_LAYER)
+    {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+    if (fd->secret->inheritable != inheritable)
+    {
+        if (fcntl(fd->secret->md.osfd, F_SETFD,
+        inheritable ? 0 : FD_CLOEXEC) == -1)
+        {
+            return PR_FAILURE;
+        }
+        fd->secret->inheritable = inheritable;
+    }
     return PR_SUCCESS;
 }
 

@@ -53,8 +53,8 @@
  * arithmetic, ties are broken by the IEEE round-even rule.  Otherwise
  * ties are broken by biased rounding (add half and chop).
  *
- * Inspired loosely by William D. Clinger's paper "How to Read Floating
- * Point Numbers Accurately" [Proc. ACM SIGPLAN '90, pp. 92-101].
+ * Inspired loosely by William D. Clinger's paper "How to Read
+ * Floating-Point Numbers Accurately" [Proc. ACM SIGPLAN '90, pp. 92-101].
  *
  * Modifications:
  *
@@ -1810,7 +1810,7 @@ quorem(Bigint *b, Bigint *S)
 /* PR_dtoa for IEEE arithmetic (dmg): convert double to ASCII string.
  *
  * Inspired by "How to Print Floating-Point Numbers Accurately" by
- * Guy L. Steele, Jr. and Jon L. White [Proc. ACM SIGPLAN '90, pp. 92-101].
+ * Guy L. Steele, Jr. and Jon L. White [Proc. ACM SIGPLAN '90, pp. 112-126].
  *
  * Modifications:
  *	1. Rather than iterating, we use a simple numeric overestimate

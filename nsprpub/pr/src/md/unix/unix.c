@@ -1271,6 +1271,18 @@ PRStatus _MD_setsockopt(PRFileDesc *fd, PRInt32 level,
     return rv==0?PR_SUCCESS:PR_FAILURE;
 }
 
+PRStatus _MD_set_fd_inheritable(PRFileDesc *fd, PRBool inheritable)
+{
+    int rv;
+
+    rv = fcntl(fd->secret->md.osfd, F_SETFD, inheritable ? 0 : FD_CLOEXEC);
+    if (-1 == rv) {
+        PR_SetError(PR_UNKNOWN_ERROR, _MD_ERRNO());
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+}
+
 /************************************************************************/
 #if !defined(_PR_USE_POLL)
 
@@ -2080,6 +2092,13 @@ void _MD_BlockClockInterrupts()
 void _MD_UnblockClockInterrupts()
 {
     sigprocmask(SIG_UNBLOCK, &timer_set, 0);
+}
+
+void _MD_InitFileDesc(PRFileDesc *fd)
+{
+    /* By default, a Unix fd is not closed on exec. */
+    PR_ASSERT(0 == fcntl(fd->secret->md.osfd, F_GETFD, 0));
+    fd->secret->inheritable = PR_TRUE;
 }
 
 void _MD_MakeNonblock(PRFileDesc *fd)

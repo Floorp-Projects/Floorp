@@ -71,7 +71,6 @@ extern void bcopy(const char *, char *, int);
 ** SA_RESTART to 0.
 */
 #define SA_RESTART 0
-#define SA_SIGINFO 0
 
 /* stdio.h */
 extern int printf(const char *, ...);

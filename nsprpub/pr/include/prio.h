@@ -1509,6 +1509,55 @@ PR_EXTERN(PRStatus)	PR_SetSocketOption(
 /*
  *********************************************************************
  *
+ * File descriptor inheritance
+ *
+ *********************************************************************
+ */
+
+/*
+ ************************************************************************
+ * FUNCTION: PR_SetFDInheritable
+ * DESCRIPTION:
+ *    Set the inheritance attribute of a file descriptor.
+ *
+ * INPUTS:
+ *     PRFileDesc *fd
+ *       Points to a PRFileDesc object.
+ *     PRBool inheritable
+ *       If PR_TRUE, the file descriptor fd is set to be inheritable
+ *       by a child process.  If PR_FALSE, the file descriptor is set
+ *       to be not inheritable by a child process.
+ * RETURN: PRStatus
+ *     Upon successful completion, PR_SetFDInheritable returns PR_SUCCESS.  
+ *     Otherwise, it returns PR_FAILURE.  Further failure information can 
+ *     be obtained by calling PR_GetError().
+ *************************************************************************
+ */
+PR_EXTERN(PRStatus) PR_SetFDInheritable(
+    PRFileDesc *fd,
+    PRBool inheritable);
+
+/*
+ ************************************************************************
+ * FUNCTION: PR_GetInheritedFD
+ * DESCRIPTION:
+ *    Get an inherited file descriptor with the specified name.
+ *
+ * INPUTS:
+ *     const char *name
+ *       The name of the inherited file descriptor.
+ * RETURN: PRFileDesc *
+ *     Upon successful completion, PR_GetInheritedFD returns the
+ *     inherited file descriptor with the specified name.  Otherwise,  
+ *     it returns NULL.  Further failure information can be obtained
+ *     by calling PR_GetError().
+ *************************************************************************
+ */
+PR_EXTERN(PRFileDesc *) PR_GetInheritedFD(const char *name);
+
+/*
+ *********************************************************************
+ *
  * Memory-mapped files
  *
  *********************************************************************

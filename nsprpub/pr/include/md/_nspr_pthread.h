@@ -231,8 +231,6 @@ PR_EXTERN(void) _MD_InitLocks(void);
 PR_EXTERN(void) _MD_CleanThread(struct PRThread *thread);
 #define _MD_CLEAN_THREAD _MD_CleanThread
 
-#define _MD_INIT_PRIMORDIAL_THREAD(threadp)
-
 PR_EXTERN(PRStatus) _MD_CreateThread(
                         struct PRThread *thread,
                         void (*start) (void *),
