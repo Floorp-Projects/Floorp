@@ -506,8 +506,15 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
         /* Delete the URL_Struct... */
         NET_FreeURLStruct(URL_s);
     }
-    if (NULL != window_id) {
-//        free_stub_context(window_id);
-    }
 }
 
+/*
+ * Ugly hack to free contexts
+ */
+
+extern "C" void net_ReleaseContext(MWContext *context)
+{
+    if (context) {
+        free_stub_context(context);
+    }
+}

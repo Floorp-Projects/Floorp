@@ -284,6 +284,9 @@ PRIVATE void stub_Progress(MWContext *context, const char *msg)
     }
 }
 
+PRIVATE void stub_AllConnectionsComplete(MWContext *context)
+{
+}
 
 #define MAKE_FE_TYPES_PREFIX(func)	func##_t
 #define MAKE_FE_FUNCS_TYPES
@@ -358,7 +361,7 @@ PRIVATE void stub_Progress(MWContext *context, const char *msg)
 #define stub_PromptUsernameAndPassword      (PromptUsernameAndPassword_t)stub_PromptUsernameAndPassword
 #define stub_PromptPassword                 (PromptPassword_t)stub_PromptPassword
 #define stub_EnableClicking                 (EnableClicking_t)stub_noop
-#define stub_AllConnectionsComplete         (AllConnectionsComplete_t)stub_noop
+#define stub_AllConnectionsComplete         (AllConnectionsComplete_t)stub_AllConnectionsComplete
 #define stub_ImageSize                      (ImageSize_t)stub_noop
 #define stub_ImageData                      (ImageData_t)stub_noop
 #define stub_ImageIcon                      (ImageIcon_t)stub_noop
