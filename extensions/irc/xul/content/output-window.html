@@ -1,11 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
-<!--DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN"-->
-
 <html>
     <head>
-      <style>
+      <style type="text/css">
         [hidden="true"] {
           display: none;
         }
@@ -24,7 +22,7 @@
           border: 1px black solid;
         }
 
-        #h-table,
+        .h-table,
         #net-url,
         #ch-url {
           width: 100%;
@@ -78,8 +76,8 @@
         
       </style>
 
-      <meta http-equiv="content-type" content="text/html; charset=utf-8">
-      <script src="chrome://chatzilla/content/output-window.js"/>
+      <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+      <script type="application/x-javascript" src="chrome://chatzilla/content/output-window.js"/>
     </head>
 
   <body class="chatzilla-body">
@@ -87,7 +85,7 @@
     <div class="header-outer">
 
       <div class="header" id="cli-container" hidden="true">
-        <table id="h-table">
+        <table class="h-table">
           <tbody>
             <tr>
               <td class="label" localize="output.knownnets"></td>
@@ -102,7 +100,7 @@
       </div>
 
       <div class="header" id="net-container" hidden="true">
-        <table id="h-table">
+        <table class="h-table">
           <tbody>
             <tr>
               <td class="label" id="net-url-l" localize="output.url"></td>
@@ -114,14 +112,13 @@
                   condition="red" localize="output.notconn"></td>
               <td class="label" id="net-lag-l" localize="output.lag"></td>
               <td class="value" id="net-lag" localize="unknown"></td>
-            </td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div class="header" id="ch-container" hidden="true">
-        <table id="h-table">
+        <table class="h-table">
           <tbody>
             <tr>
               <td class="label" id="ch-url-l" localize="output.url"></td>
@@ -140,7 +137,7 @@
                 <span id="ch-topicnodes" localize="none"></span>
                 <input hidden="true" id="ch-topicinput" style="width:100%"
                        onblur="cancelTopicEdit();"
-                       onkeypress="onTopicKeypress(event);">
+                       onkeypress="onTopicKeypress(event);"/>
               </td>
             </tr>
           </tbody>
@@ -148,7 +145,7 @@
       </div>
       
       <div class="header" id="usr-container" hidden="true">
-        <table id="h-table">
+        <table class="h-table">
           <tbody>
             <tr>
               <td class="label" localize="output.url"></td>
@@ -170,7 +167,7 @@
       </div>
 
       <div class="header" id="dcc-chat-container" hidden="true">
-        <table id="h-table">
+        <table class="h-table">
           <tbody>
             <tr>
               <td class="label" localize="output.url"></td>
@@ -189,7 +186,7 @@
       </div>
 
       <div class="header" id="dcc-file-container" hidden="true">
-        <table id="h-table">
+        <table class="h-table">
           <tbody>
             <tr>
               <td class="label" localize="output.file"></td>

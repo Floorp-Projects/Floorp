@@ -80,12 +80,21 @@ function initPrefs()
     var logDefault = client.prefManager.logPath.clone();
     logDefault.append(escapeFileName("client.log"));
 
+    var gotos = ["goto-url",        "goto-url-newwin", 
+                 "goto-url-newtab", "goto-url-newtab"];
+    if (client.host == "XULrunner")
+    {
+        gotos = ["goto-url-external", "goto-url-external", 
+                 "goto-url-external", "goto-url-external"];
+    }
+
     var prefs =
         [
          ["activityFlashDelay", 200,      "global"],
          ["aliases",            [],       "lists.aliases"],
          ["autoAwayCap",        300,      "global"],
          ["autoRejoin",         false,    ".connect"],
+         ["awayNick",           "",       ".ident"],
          ["bugURL",           "https://bugzilla.mozilla.org/show_bug.cgi?id=%s",
                                           "global"],
          ["channelHeader",      true,     "global.header"],
@@ -118,10 +127,10 @@ function initPrefs()
                                                                         ".log"],
          ["logFile.user",       "$(network)/users/$(user).$y-$m-$d.log",".log"],
          ["logFolder",          getURLSpecFromFile(logPath.path), ".log"],
-         ["messages.click",     "goto-url",          "global.links"],
-         ["messages.ctrlClick", "goto-url-newwin",   "global.links"],
-         ["messages.metaClick", "goto-url-newtab",   "global.links"],
-         ["messages.middleClick", "goto-url-newtab", "global.links"],
+         ["messages.click",     gotos[0],   "global.links"],
+         ["messages.ctrlClick", gotos[1],   "global.links"],
+         ["messages.metaClick", gotos[2],   "global.links"],
+         ["messages.middleClick", gotos[3], "global.links"],
          ["motif.dark",         "chrome://chatzilla/skin/output-dark.css",
                                           "appearance.motif"],
          ["motif.light",        "chrome://chatzilla/skin/output-light.css",
@@ -153,6 +162,7 @@ function initPrefs()
          ["notify.aggressive",  true,     "global"],
          ["nickCompleteStr",    ":",      "global"],
          ["nickname",           DEFAULT_NICK, ".ident"],
+         ["nicknameList",       [],       "lists.nicknameList"],
          ["outgoing.colorCodes",  false,  "global"],
          ["outputWindowURL",   "chrome://chatzilla/content/output-window.html",
                                           "appearance.misc"],
@@ -217,6 +227,25 @@ function makeLogName(obj, type)
         return rv;
     };
 
+    function replaceNonPrintables(ch) {
+        var rv = ch.charCodeAt().toString(16);
+        if (rv.length == 1)
+            rv = "0" + rv;
+        else if (rv.length == 3)
+            rv = "u0" + rv;
+        else if (rv.length == 4)
+            rv = "u" + rv;
+
+        return "%" + rv;
+    };
+
+    function encode(text)
+    {
+        text = text.replace(/[^-A-Z0-9_#!.,'@~\[\]{}()%$"]/gi, replaceNonPrintables);
+
+        return encodeURIComponent(text);
+    };
+
     /*  /\$\(([^)]+)\)|\$(\w)/g   *
      *       <----->     <-->     *
      *      longName   shortName  *
@@ -227,18 +256,19 @@ function makeLogName(obj, type)
         {
             // Remember to encode these, don't want some dodgy # breaking stuff.
             if (longName in longCodes)
-                return encodeURIComponent(longCodes[longName]);
+                return encode(longCodes[longName]);
             dd("Unknown long code: " + longName);
-            return;
+            return match;
         }
         else if (typeof shortName != "undefined" && shortName)
         {
             if (shortName in shortCodes)
-                return encodeURIComponent(shortCodes[shortName]);
+                return encode(shortCodes[shortName]);
             dd("Unknown short code: " + shortName);
-            return;
+            return match;
         }
         dd("Unknown match: " + match);
+        return match;
     };
 
     var base = client.prefs["logFolder"];
@@ -319,6 +349,8 @@ function getNetworkPrefManager(network)
     var prefs =
         [
          ["autoRejoin",       defer, ".connect"],
+         ["away",             "",    "hidden"],
+         ["awayNick",         defer, ".ident"],
          ["charset",          defer, ".connect"],
          ["collapseMsgs",     defer, "appearance.misc"],
          ["connectTries",     defer, ".connect"],
@@ -333,6 +365,7 @@ function getNetworkPrefManager(network)
          ["logFileName",      makeLogNameNetwork,         ".log"],
          ["motif.current",    defer, "appearance.motif"],
          ["nickname",         defer, ".ident"],
+         ["nicknameList",     defer, "lists.nicknameList"],
          ["notifyList",       [],    "lists.notifyList"],
          ["outputWindowURL",  defer, "appearance.misc"],
          ["reconnect",        defer, ".connect"],

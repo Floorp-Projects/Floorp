@@ -40,6 +40,7 @@
 const JSIRC_ERR_NO_SOCKET = "JSIRCE:NS";
 const JSIRC_ERR_EXHAUSTED = "JSIRCE:E";
 const JSIRC_ERR_CANCELLED = "JSIRCE:C";
+const JSIRC_ERR_OFFLINE   = "JSIRCE:OFFLINE";
 
 function userIsMe (user)
 {
@@ -230,6 +231,7 @@ function net_cancel()
 CIRCNetwork.prototype.onDoConnect =
 function net_doconnect(e)
 {
+    const NS_ERROR_OFFLINE = 0x804b0010;
     var c;
 
     // Clear the timer, if there is one.
@@ -295,12 +297,27 @@ function net_doconnect(e)
         ev.connectAttempt = this.connectAttempt;
         this.eventPump.addEvent (ev);
 
-        if (!this.serverList[host].connect(null))
+        try
         {
-            /* connect failed, try again  */
-            ev = new CEvent ("network", "do-connect", this, "onDoConnect");
-            ev.requireSecurity = e.requireSecurity;
-            this.eventPump.addEvent (ev);
+            if (!this.serverList[host].connect(null))
+            {
+                /* connect failed, try again  */
+                ev = new CEvent ("network", "do-connect", this, "onDoConnect");
+                ev.requireSecurity = e.requireSecurity;
+                this.eventPump.addEvent (ev);
+            }
+        }
+        catch(ex)
+        {
+            this.state = NET_OFFLINE;
+    
+            ev = new CEvent ("network", "error", this, "onError");
+            ev.server = this;
+            ev.debug = "Exception opening socket: " + ex;
+            ev.errorCode = JSIRC_ERR_NO_SOCKET;
+            if ((typeof ex == "object") && (ex.result == NS_ERROR_OFFLINE))
+                ev.errorCode = JSIRC_ERR_OFFLINE;
+            this.eventPump.addEvent(ev);
         }
     }
     else
@@ -563,11 +580,12 @@ function serv_sda (request, inStream, sourceOffset, count)
                          "onDataAvailable");
 
     ev.line = this.connection.readData(0, count);
+
     /* route data-available as we get it.  the data-available handler does
      * not do much, so we can probably get away with this without starving
      * the UI even under heavy input traffic.
      */
-    this.parent.eventPump.routeEvent (ev);
+    this.parent.eventPump.routeEvent(ev);
 }
 
 CIRCServer.prototype.onStreamClose =
@@ -833,6 +851,17 @@ function serv_whois (target)
     this.sendData("WHOIS " + fromUnicode(target, this) + "\n");
 }
 
+CIRCServer.prototype.whowas =
+function serv_whowas(target, limit)
+{
+    if (typeof limit == "undefined")
+        limit = 1;
+    else if (limit == 0)
+        limit = "";
+
+    this.sendData("WHOWAS " + fromUnicode(target, this) + " " + limit + "\n");
+}
+
 CIRCServer.prototype.onDisconnect =
 function serv_disconnect(e)
 {
@@ -975,7 +1004,7 @@ function serv_poll(e)
     {
         ev = new CEvent ("server", "data-available", this, "onDataAvailable");
         ev.line = line;
-        this.parent.eventPump.addEvent (ev);
+        this.parent.eventPump.routeEvent(ev);
     }
 
     return true;
@@ -1006,7 +1035,12 @@ function serv_ppline(e)
         var ev = new CEvent("server", "rawdata", this, "onRawData");
         ev.data = lines[i].replace(/\r/g, "");
         if (ev.data)
-            this.parent.eventPump.addEvent (ev);
+        {
+            if (ev.data.match(/^(?::[^ ]+ )?32[123] /i))
+                this.parent.eventPump.addBulkEvent(ev);
+            else
+                this.parent.eventPump.addEvent(ev);
+        }
     }
 
     return true;

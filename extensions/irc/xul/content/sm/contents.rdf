@@ -19,6 +19,7 @@
   </RDF:Seq>
 
   <RDF:Seq about="chrome://chatzilla/content/chatzilla.xul">
+    <RDF:li>chrome://chatzilla/content/sm/overlay.xul</RDF:li>
     <RDF:li>chrome://communicator/content/utilityOverlay.xul</RDF:li>
   </RDF:Seq>
 

@@ -388,6 +388,10 @@ a.chatzilla-link:hover {
     content: url(chrome://chatzilla/skin/images/face-dizzy.png);
 }
 
+.chatzilla-emote[type="face-dizzy-back"]:after {
+    content: url(chrome://chatzilla/skin/images/face-dizzy-back.png);
+}
+
 .chatzilla-emote[type="face-eek"]:after {
     content: url(chrome://chatzilla/skin/images/face-eek.png);
 }
@@ -430,6 +434,10 @@ a.chatzilla-link:hover {
 
 .chatzilla-emote[type="face-red"]:after {
     content: url(chrome://chatzilla/skin/images/face-red.png);
+}
+
+.chatzilla-emote[type="face-rofl"]:after {
+    content: url(chrome://chatzilla/skin/images/face-rofl.png);
 }
 
 .chatzilla-emote[type="face-rolleyes"]:after {

@@ -41,6 +41,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzilla.dtd">
 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://chatzilla/skin/chatzilla.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>

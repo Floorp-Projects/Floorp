@@ -858,6 +858,9 @@ function my_showtonet (e)
             for (var i = 0; i < cmdary.length; ++i)
                 this.dispatch(cmdary[i])
 
+            if (this.prefs["away"])
+                this.dispatch("away", { reason: this.prefs["away"] });
+
             if (this.lastServer)
             {
                 var c, u;
@@ -916,6 +919,13 @@ function my_showtonet (e)
                                         t.primServ.me.encodedName + "\n");
                 };
                 setTimeout(delayFn, 1000 * Math.random(), this);
+            }
+
+            // Had some collision during connect.
+            if (this.primServ.me.unicodeName != this.prefs["nickname"])
+            {
+                this.reclaimLeft = this.RECLAIM_TIMEOUT;
+                this.reclaimName();
             }
 
             str = e.decodeParam(2);
@@ -987,6 +997,11 @@ function my_302(e)
 CIRCNetwork.prototype.on303 = /* ISON (aka notify) reply */
 function my_303 (e)
 {
+    function lower(text)
+    {
+        return e.server.toLowerCase(text);
+    };
+
     var onList = new Array();
     // split() gives an array of one item ("") when splitting "", which we
     // don't want, so only do the split if there's something to split.
@@ -1004,9 +1019,9 @@ function my_303 (e)
 
     for (i = 0; i < this.prefs["notifyList"].length; i++)
     {
-        if (!arrayContains(onList, this.prefs["notifyList"][i]))
+        if (!arrayContains(onList, lower(this.prefs["notifyList"][i])))
             /* user is not on */
-            offList.push (this.prefs["notifyList"][i]);
+            offList.push(lower(this.prefs["notifyList"][i]));
     }
 
     if ("onList" in this)
@@ -1052,20 +1067,94 @@ function my_303 (e)
 
 }
 
+/* away off reply */
+CIRCNetwork.prototype.on305 =
+function my_305(e)
+{
+    this.display(MSG_AWAY_OFF);
+
+    return true;
+}
+
+/* away on reply */
+CIRCNetwork.prototype.on306 =
+function my_306(e)
+{
+    this.display(getMsg(MSG_AWAY_ON, this.prefs["away"]));
+
+    return true;
+}
+
+
+CIRCNetwork.prototype.on263 = /* 'try again' */
+function my_263 (e)
+{
+    /* Urgh, this one's a pain. We need to abort whatever we tried, and start
+     * it again if appropriate.
+     *
+     * Known causes of this message:
+     *   - LIST, with or without a parameter.
+     */
+
+    if (("_list" in this) && !this._list.done &&
+        (!("count" in this._list) || (this._list.count == 0)))
+    {
+        // We attempted a LIST, and we think it failed. :)
+        this._list.done = true;
+        this._list.error = e.decodeParam(2);
+        // Return early for this one if we're saving it.
+        if (("saveTo" in this._list) && this._list.saveTo)
+            return true;
+    }
+
+    e.destMethod = "onUnknown";
+    e.destObject = this;
+    return true;
+}
+
+CIRCNetwork.prototype.list =
+function my_list(word, file)
+{
+    if (("_list" in this) && !this._list.done)
+        return false;
+
+    this._list = new Array();
+    this._list.string = word;
+    this._list.regexp = null;
+    this._list.done = false;
+    this._list.count = 0;
+    this._list.saveTo = file;
+
+    if (word instanceof RegExp)
+    {
+        this._list.regexp = word;
+        this._list.string = "";
+        word = "";
+    }
+
+    if (word)
+        this.primServ.sendData("LIST " + fromUnicode(word, this) + "\n");
+    else
+        this.primServ.sendData("LIST\n");
+
+    return true;
+}
+
 CIRCNetwork.prototype.listInit =
 function my_list_init ()
 {
+    const NORMAL_FILE_TYPE = Components.interfaces.nsIFile.NORMAL_FILE_TYPE;
 
     function checkEndList (network)
     {
-        if (network.list.count == network.list.lastLength)
+        if (network._list.count == network._list.lastLength)
         {
             network.on323();
         }
         else
         {
-            network.list.lastLength = network.list.count;
-            network.list.endTimeout =
+            network._list.lastLength = network._list.count;
+            network._list.endTimeout =
                 setTimeout(checkEndList, 5000, network);
         }
     }
@@ -1073,7 +1162,7 @@ function my_list_init ()
     function outputList (network)
     {
         const CHUNK_SIZE = 5;
-        var list = network.list;
+        var list = network._list;
         if (list.length > list.displayed)
         {
             var start = list.displayed;
@@ -1093,7 +1182,7 @@ function my_list_init ()
             }
             network.displayHere(getMsg(MSG_LIST_END,
                                        [list.displayed, list.count]));
-            delete network.list;
+            delete network._list;
         }
         else
         {
@@ -1101,19 +1190,33 @@ function my_list_init ()
         }
     }
 
-    if (!("list" in this))
+    if (!("_list" in this))
     {
-        this.list = new Array();
-        this.list.regexp = null;
+        this._list = new Array();
+        this._list.regexp = null;
+        this._list.done = false;
+        this._list.count = 0;
     }
-    if (client.currentObject != this)
-        display (getMsg(MSG_LIST_REROUTED, this.unicodeName));
-    this.list.lastLength = 0;
-    this.list.done = false;
-    this.list.count = 0;
-    this.list.displayed = 0;
-    setTimeout(outputList, 250, this);
-    this.list.endTimeout = setTimeout(checkEndList, 1500, this);
+
+    if (("saveTo" in this._list) && this._list.saveTo)
+    {
+        var file = new LocalFile(this._list.saveTo);
+        if (!file.localFile.exists())
+        {
+            // futils.umask may be 0022. Result is 0644.
+            file.localFile.create(NORMAL_FILE_TYPE, 0666 & ~futils.umask);
+        }
+        this._list.file = new LocalFile(file.localFile, ">");
+    }
+    else
+    {
+        this._list.displayed = 0;
+        if (client.currentObject != this)
+            display (getMsg(MSG_LIST_REROUTED, this.unicodeName));
+        setTimeout(outputList, 250, this);
+    }
+    this._list.lastLength = 0;
+    this._list.endTimeout = setTimeout(checkEndList, 5000, this);
 }
 
 CIRCNetwork.prototype.on321 = /* LIST reply header */
@@ -1121,34 +1224,49 @@ function my_321 (e)
 {
 
     this.listInit();
-    this.displayHere (e.params[2] + " " + e.params[3], "321");
+
+    if (!("saveTo" in this._list))
+        this.displayHere (e.params[2] + " " + e.params[3], "321");
 }
 
 CIRCNetwork.prototype.on323 = /* end of LIST reply */
 function my_323 (e)
 {
-    if (this.list.endTimeout)
+    if (this._list.endTimeout)
     {
-        clearTimeout(this.list.endTimeout);
-        delete this.list.endTimeout;
+        clearTimeout(this._list.endTimeout);
+        delete this._list.endTimeout;
     }
-    this.list.done = true;
-    this.list.event323 = e;
+    if (("file" in this._list))
+        this._list.file.close();
+
+    this._list.done = true;
+    this._list.event323 = e;
 }
 
 CIRCNetwork.prototype.on322 = /* LIST reply */
 function my_listrply (e)
 {
-    if (!("list" in this) || !("done" in this.list))
+    if (!("_list" in this) || !("done" in this._list))
         this.listInit();
-    ++this.list.count;
+
+    ++this._list.count;
 
     var chanName = e.decodeParam(2);
     var topic = e.decodeParam(4);
-    if (!this.list.regexp || chanName.match(this.list.regexp) ||
-        topic.match(this.list.regexp))
+    if (!this._list.regexp || chanName.match(this._list.regexp) ||
+        topic.match(this._list.regexp))
     {
-        this.list.push([chanName, e.params[3], topic]);
+        if (!("file" in this._list))
+        {
+            this._list.push([chanName, e.params[3], topic]);
+        }
+        else
+        {
+            this._list.file.write(fromUnicode(chanName, "UTF-8") + " " +
+                                  e.params[3] + " " +
+                                  fromUnicode(topic, "UTF-8") + "\n");
+        }
     }
 }
 
@@ -1329,17 +1447,65 @@ function my_invite (e)
 CIRCNetwork.prototype.on433 = /* nickname in use */
 function my_433 (e)
 {
-    if ((e.params[2] == this.INITIAL_NICK) && (this.state == NET_CONNECTING))
+    var nick = toUnicode(e.params[2], this);
+
+    if ("pendingReclaimCheck" in this)
     {
-        var newnick = this.INITIAL_NICK + "_";
+        delete this.pendingReclaimCheck;
+        return;
+    }
+
+    if (this.state == NET_CONNECTING)
+    {
+        // Force a number, thanks.
+        var nickIndex = 1 * arrayIndexOf(this.prefs["nicknameList"], nick);
+        var newnick;
+
+        dd("433: failed with " + nick + " (" + nickIndex + ")");
+
+        var tryList = true;
+
+        if ((("_firstNick" in this) && (this._firstNick == -1)) ||
+            (this.prefs["nicknameList"].length == 0) ||
+            ((nickIndex != -1) && (this.prefs["nicknameList"].length < 2)))
+        {
+            tryList = false;
+        }
+
+        if (tryList)
+        {
+            nickIndex = (nickIndex + 1) % this.prefs["nicknameList"].length;
+
+            if (("_firstNick" in this) && (this._firstNick == nickIndex))
+            {
+                // We're back where we started. Give up with this method.
+                this._firstNick = -1;
+                tryList = false;
+            }
+        }
+
+        if (tryList)
+        {
+            newnick = this.prefs["nicknameList"][nickIndex];
+            dd("     trying " + newnick + " (" + nickIndex + ")");
+
+            // Save first index we've tried.
+            if (!("_firstNick" in this))
+                this._firstNick = nickIndex;
+        }
+        else
+        {
+            newnick = this.INITIAL_NICK + "_";
+            dd("     trying " + newnick);
+        }
+
         this.INITIAL_NICK = newnick;
-        e.server.parent.display (getMsg(MSG_RETRY_NICK, [e.params[2], newnick]),
-                                 "433");
-        this.primServ.sendData("NICK " + newnick + "\n");
+        this.display(getMsg(MSG_RETRY_NICK, [nick, newnick]), "433");
+        this.primServ.sendData("NICK " + fromUnicode(newnick, this) + "\n");
     }
     else
     {
-        this.display (getMsg(MSG_NICK_IN_USE, e.params[2]), "433");
+        this.display(getMsg(MSG_NICK_IN_USE, nick), "433");
     }
 }
 
@@ -1348,6 +1514,8 @@ function my_sconnect (e)
 {
     this.busy = true;
     updateProgress();
+    if ("_firstNick" in this)
+        delete this._firstNick;
 
     this.display (getMsg(MSG_CONNECTION_ATTEMPT,
                          [this.getURL(), e.server.getURL(), e.connectAttempt,
@@ -1372,6 +1540,10 @@ function my_neterror (e)
                 msg = MSG_ERR_EXHAUSTED;
                 break;
 
+            case JSIRC_ERR_OFFLINE:
+                msg = MSG_ERR_OFFLINE;
+                break;
+
             case JSIRC_ERR_CANCELLED:
                 msg = MSG_ERR_CANCELLED;
                 type = "INFO";
@@ -1383,6 +1555,12 @@ function my_neterror (e)
 
     dispatch("sync-header");
     updateTitle();
+
+    if (this.state == NET_OFFLINE)
+    {
+        this.busy = false;
+        updateProgress();
+    }
 
     this.display(msg, type);
 }
@@ -1489,10 +1667,14 @@ CIRCNetwork.prototype.onUserMode =
 function my_umode (e)
 {
     if ("user" in e && e.user)
+    {
         e.user.updateHeader();
-
-    //display(getMsg(MSG_USER_MODE, [e.params[1], e.params[2]]), MT_MODE);
-    display(getMsg(MSG_USER_MODE, [e.user.unicodeName, e.params[2]]), MT_MODE);
+        display(getMsg(MSG_USER_MODE, [e.user.unicodeName, e.params[2]]), MT_MODE);
+    }
+    else
+    {
+        display(getMsg(MSG_USER_MODE, [e.params[1], e.params[2]]), MT_MODE);
+    }
 }
 
 CIRCNetwork.prototype.onNick =
@@ -1522,6 +1704,39 @@ function my_netpong (e)
 {
     this.updateHeader(this);
 }
+
+CIRCNetwork.prototype.reclaimName =
+function my_reclaimname()
+{
+    var network = this;
+
+    function callback() {
+        network.reclaimName();
+    };
+
+    if ("pendingReclaimCheck" in this)
+        delete this.pendingReclaimCheck;
+
+    // Function to attempt to get back the nickname the user wants.
+    if ((this.state != NET_ONLINE) || !this.primServ)
+        return false;
+
+    if (this.primServ.me.unicodeName == this.prefs["nickname"])
+        return false;
+
+    this.reclaimLeft -= this.RECLAIM_WAIT;
+
+    if (this.reclaimLeft <= 0)
+        return false;
+
+    this.pendingReclaimCheck = true;
+    this.primServ.sendData("NICK " + fromUnicode(this.prefs["nickname"], this) + "\n");
+
+    setTimeout(callback, this.RECLAIM_WAIT);
+
+    return true;
+}
+
 
 /* We want to override the base implementations. */
 CIRCChannel.prototype._join = CIRCChannel.prototype.join;
@@ -1729,7 +1944,8 @@ function my_cjoin (e)
      */
     if (!userIsMe(e.user))
         this.addUsers([e.user]);
-    updateUserList()
+    if (client.currentObject == this)
+        updateUserList();
     this.updateHeader();
 }
 
@@ -1744,6 +1960,7 @@ function my_cpart (e)
     {
         this.display (getMsg(MSG_YOU_LEFT, e.channel.unicodeName), "PART",
                       e.user, this);
+
         if (client.currentObject == this)
             /* hide the tree while we remove (possibly tons) of nodes */
             client.rdf.setTreeRoot("user-list", client.rdf.resNullChan);
@@ -1892,7 +2109,8 @@ function my_cnick (e)
      */
     this.removeUsers([e.server.addUser(e.oldNick)]);
     this.addUsers([e.user]);
-    updateUserList();
+    if (client.currentObject == this)
+        updateUserList();
 }
 
 CIRCChannel.prototype.onQuit =

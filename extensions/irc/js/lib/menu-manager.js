@@ -45,6 +45,7 @@ function MenuManager (commandManager, menuSpecs, contextFunction, commandStr)
     this.menuSpecs = menuSpecs;
     this.contextFunction = contextFunction;
     this.commandStr = commandStr;
+    this.repeatId = 0;
 
     this.onPopupShowing =
         function mmgr_onshow (event) { return menuManager.showPopup (event); };
@@ -96,7 +97,7 @@ function mmgr_createtb(document, menuid)
             domID = this.menuSpecs[id].domID;
         else
             domID = id;
-        
+
         if (id.indexOf(menuid + ":") == 0)
             this.createMenu(menu, null, id, domID);
     }
@@ -141,24 +142,26 @@ function mmgr_hookpop (node)
 MenuManager.prototype.showPopup =
 function mmgr_showpop (event)
 {
-    //dd ("showPopup {");
     /* returns true if the command context has the properties required to
      * execute the command associated with |menuitem|.
      */
     function satisfied()
     {
-        if (menuitem.hasAttribute("isSeparator") || 
+        if (menuitem.hasAttribute("isSeparator") ||
             !menuitem.hasAttribute("commandname"))
         {
             return true;
         }
+
+        if (menuitem.hasAttribute("repeatfor"))
+            return false;
 
         if (!("menuManager" in cx))
         {
             dd ("no menuManager in cx");
             return false;
         }
-        
+
         var name = menuitem.getAttribute("commandname");
         var commandManager = cx.menuManager.commandManager;
         var commands = commandManager.commands;
@@ -173,13 +176,13 @@ function mmgr_showpop (event)
         delete cx.parseError;
         return rv;
     };
-    
+
     /* Convenience function for "enabledif", etc, attributes. */
     function has (prop)
     {
         return (prop in cx);
     };
-    
+
     /* evals the attribute named |attr| on the node |node|. */
     function evalIfAttribute (node, attr)
     {
@@ -187,7 +190,7 @@ function mmgr_showpop (event)
         var expr = node.getAttribute(attr);
         if (!expr)
             return true;
-        
+
         expr = expr.replace (/\Wand\W/gi, " && ");
         expr = expr.replace (/\Wor\W/gi, " || ");
 
@@ -202,10 +205,29 @@ function mmgr_showpop (event)
         }
         return true;
     };
-    
+
+    /* evals the attribute named |attr| on the node |node|. */
+    function evalAttribute(node, attr)
+    {
+        var ex;
+        var expr = node.getAttribute(attr);
+        if (!expr)
+            return null;
+
+        try
+        {
+            return eval("(" + expr + ")");
+        }
+        catch (ex)
+        {
+            dd ("caught exception evaling '" + node.getAttribute("id") + "'.'" +
+                attr + "': '" + expr + "'\n" + ex);
+        }
+        return null;
+    };
+
     var cx;
     var popup = event.originalTarget;
-    var menuitem = popup.firstChild;
 
     /* If the host provided a |contextFunction|, use it now.  Remember the
      * return result as this.cx for use if something from this menu is actually
@@ -220,8 +242,82 @@ function mmgr_showpop (event)
         cx = this.cx = { menuManager: this, originalEvent: event };
     }
 
+    var menuitem = popup.firstChild;
     do
     {
+        if (!menuitem.hasAttribute("repeatfor"))
+            continue;
+
+        // Remove auto-generated items (located prior to real item).
+        while (menuitem.previousSibling &&
+               menuitem.previousSibling.hasAttribute("repeatgenerated"))
+        {
+            menuitem.parentNode.removeChild(menuitem.previousSibling);
+        }
+
+        if (!("repeatList" in cx))
+            cx.repeatList = new Object();
+
+        // Get the array of new items to add.
+        var ary = evalAttribute(menuitem, "repeatfor");
+
+        if ((typeof ary != "object") || !(ary instanceof Array))
+            ary = [];
+
+        /* The item itself should only be shown if there's no items in the
+         * array - this base item is always disabled.
+         */
+        if (ary.length > 0)
+            menuitem.setAttribute("hidden", "true");
+        else
+            menuitem.removeAttribute("hidden");
+
+        // Save the array in the context object.
+        cx.repeatList[menuitem.getAttribute("repeatid")] = ary;
+
+        // Get the max. number of items we're allowed to show from |ary|.
+        var limit = evalAttribute(menuitem, "repeatlimit");
+        // Make sure we've got a number at all...
+        if (typeof limit != "number")
+            limit = ary.length;
+        // ...and make sure it's no higher than |ary.length|.
+        limit = Math.min(ary.length, limit);
+
+        var cmd = menuitem.getAttribute("commandname");
+        var props = { repeatgenerated: true, repeatindex: -1,
+                      repeatid: menuitem.getAttribute("repeatid"),
+                      repeatmap: menuitem.getAttribute("repeatmap") };
+
+        /* Clone non-repeat attributes. All attributes except those starting
+         * with 'repeat', and those matching 'hidden' or 'disabled' are saved
+         * to |props|, which is then supplied to |appendMenuItem| later.
+         */
+        for (var i = 0; i < menuitem.attributes.length; i++)
+        {
+            var name = menuitem.attributes[i].nodeName;
+            if (!name.match(/^(repeat|(hidden|disabled)$)/))
+                props[name] = menuitem.getAttribute(name);
+        }
+
+        for (i = 0; i < limit; i++)
+        {
+            props.repeatindex = i;
+            this.appendMenuItem(popup, menuitem, cmd, props);
+        }
+    } while ((menuitem = menuitem.nextSibling));
+
+    menuitem = popup.firstChild;
+    do
+    {
+        if (menuitem.hasAttribute("repeatgenerated") &&
+            menuitem.hasAttribute("repeatmap"))
+        {
+            cx.index = menuitem.getAttribute("repeatindex");
+            ary = cx.repeatList[menuitem.getAttribute("repeatid")];
+            var item = ary[cx.index];
+            evalAttribute(menuitem, "repeatmap");
+        }
+
         /* should it be visible? */
         if (menuitem.hasAttribute("visibleif"))
         {
@@ -242,7 +338,7 @@ function mmgr_showpop (event)
                 label = menuitem.getAttribute("backupLabel");
             menuitem.setAttribute("label", label);
         }
-        
+
         /* ok, it's visible, maybe it should be disabled? */
         if (satisfied())
         {
@@ -260,7 +356,7 @@ function mmgr_showpop (event)
         {
             menuitem.setAttribute ("disabled", "true");
         }
-        
+
         /* should it have a check? */
         if (menuitem.hasAttribute("checkedif"))
         {
@@ -269,11 +365,8 @@ function mmgr_showpop (event)
             else
                 menuitem.removeAttribute ("checked");
         }
-        
     } while ((menuitem = menuitem.nextSibling));
 
-    //dd ("}");
-    
     return true;
 }
 
@@ -304,10 +397,10 @@ MenuManager.prototype.appendSubMenu =
 function mmgr_addsmenu (parentNode, beforeNode, menuName, domId, label, attribs)
 {
     var document = parentNode.ownerDocument;
-    
+
     /* sometimes the menu is already there, for overlay purposes. */
     var menu = document.getElementById(domId);
-    
+
     if (!menu)
     {
         menu = document.createElement ("menu");
@@ -316,12 +409,12 @@ function mmgr_addsmenu (parentNode, beforeNode, menuName, domId, label, attribs)
     }
 
     var menupopup = menu.firstChild;
-    
+
     if (!menupopup)
     {
         menupopup = document.createElement ("menupopup");
         menupopup.setAttribute ("id", domId + "-popup");
-        menu.appendChild(menupopup);    
+        menu.appendChild(menupopup);
         menupopup = menu.firstChild;
     }
 
@@ -386,14 +479,14 @@ function mmgr_addpmenu (parentNode, beforeNode, menuName, id, label, attribs)
 MenuManager.prototype.appendMenuItem =
 function mmgr_addmenu (parentNode, beforeNode, commandName, attribs)
 {
-    var menuManager = this;    
-    
+    var menuManager = this;
+
     var document = parentNode.ownerDocument;
     if (commandName == "-")
         return this.appendMenuSeparator(parentNode, beforeNode, attribs);
-    
+
     var parentId = parentNode.getAttribute("id");
-    
+
     if (!ASSERT(commandName in this.commandManager.commands,
                 "unknown command " + commandName + " targeted for " +
                 parentId))
@@ -416,12 +509,14 @@ function mmgr_addmenu (parentNode, beforeNode, commandName, attribs)
     }
     menuitem.setAttribute ("oncommand", this.commandStr);
 
-    if (typeof attribs == "object")
+    if ((typeof attribs == "object") && attribs)
     {
         for (var p in attribs)
             menuitem.setAttribute (p, attribs[p]);
+        if ("repeatfor" in attribs)
+            menuitem.setAttribute("repeatid", this.repeatId++);
     }
-    
+
     command.uiElements.push(menuitem);
     parentNode.insertBefore (menuitem, beforeNode);
 
@@ -465,16 +560,16 @@ function mmgr_addtb (parentNode, beforeNode, commandName, attribs)
         return this.appendToolbarSeparator(parentNode, beforeNode, attribs);
 
     var parentId = parentNode.getAttribute("id");
-    
+
     if (!ASSERT(commandName in this.commandManager.commands,
                 "unknown command " + commandName + " targeted for " +
                 parentId))
     {
         return null;
     }
-    
+
     var command = this.commandManager.commands[commandName];
-    var document = parentNode.ownerDocument;    
+    var document = parentNode.ownerDocument;
     var tbitem = document.createElement ("toolbarbutton");
 
     var id = parentNode.getAttribute("id") + ":" + commandName;
@@ -490,7 +585,7 @@ function mmgr_addtb (parentNode, beforeNode, commandName, attribs)
         for (var p in attribs)
             tbitem.setAttribute (p, attribs[p]);
     }
-    
+
     command.uiElements.push(tbitem);
     parentNode.insertBefore (tbitem, beforeNode);
 
@@ -506,7 +601,7 @@ function mmgr_addtb (parentNode, beforeNode, commandName, attribs)
 MenuManager.prototype.appendToolbarSeparator =
 function mmgr_addmenu (parentNode, beforeNode, attribs)
 {
-    var document = parentNode.ownerDocument;    
+    var document = parentNode.ownerDocument;
     var tbitem = document.createElement ("toolbarseparator");
     tbitem.setAttribute ("isSeparator", true);
     if (typeof attribs == "object")
@@ -530,12 +625,12 @@ function mmgr_newmenu (parentNode, beforeNode, menuName, domId, attribs)
 {
     if (typeof domId == "undefined")
         domId = menuName;
-    
+
     if (!ASSERT(menuName in this.menuSpecs, "unknown menu name " + menuName))
         return null;
 
     var menuSpec = this.menuSpecs[menuName];
-    
+
     var subMenu = this.appendSubMenu (parentNode, beforeNode, menuName, domId,
                                       menuSpec.label, attribs);
 
@@ -552,7 +647,7 @@ function mmgr_newitems (parentNode, beforeNode, menuItems)
     };
 
     var parentId = parentNode.getAttribute("id");
-    
+
     for (var i in menuItems)
     {
         var itemName = menuItems[i][0];
@@ -582,5 +677,5 @@ function mmgr_newitems (parentNode, beforeNode, menuItems)
             dd ("unknown command " + itemName + " referenced in " + parentId);
         }
     }
-        
+
 }

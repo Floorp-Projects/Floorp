@@ -49,8 +49,6 @@
     <script src="chrome://global/content/nsTransferable.js"/>
     <script src="chrome://global/content/nsClipboard.js"/>
     <script src="chrome://global/content/nsDragAndDrop.js"/>
-    <script src="chrome://communicator/content/contentAreaUtils.js"/>
-    <script src="chrome://communicator/content/contentAreaDD.js"/>
 
     <script><![CDATA[
         /* utils.js overloads the standard JS messages with prompt service 

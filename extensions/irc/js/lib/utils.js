@@ -40,7 +40,7 @@
 var utils = new Object();
 
 var DEBUG = true;
-var dd;
+var dd, warn, TEST, ASSERT;
 
 if (DEBUG) {
     var _dd_pfx = "";
@@ -91,8 +91,22 @@ if (DEBUG) {
                  _dd_lastDumpWasOpen = false;
              }
          }
+    warn = function (msg) { dd("** WARNING " + msg + " **"); }
+    TEST = ASSERT = function _assert(expr, msg) {
+                 if (!expr) {
+                     var m = "** ASSERTION FAILED: " + msg + " **\n" +
+                             getStackTrace();
+                     try {
+                         alert(m);
+                     } catch(ex) {}
+                     dd(m);
+                     return false;
+                 } else {
+                     return true;
+                 }
+             }
 } else {
-    dd = function (){};
+    dd = warn = TEST = ASSERT = function (){};
 }
 
 var jsenv = new Object();

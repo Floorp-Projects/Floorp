@@ -219,6 +219,9 @@ treechildren:-moz-tree-cell-text(away-false) {
 treechildren::-moz-tree-cell-text(away-false) {
 }
 
+menuitem[header="true"] {
+    text-align: center;
+}
 
 .colorGrid
 {

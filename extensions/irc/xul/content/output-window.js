@@ -305,6 +305,8 @@ function setHeaderState(state)
 
 function updateHeader()
 {
+    document.title = view.getURL();
+    
     if (!header || hasAttribute("container", "hidden"))
         return;
 

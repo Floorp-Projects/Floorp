@@ -94,14 +94,14 @@ echo -n "  Constructing JAR package"
 echo -n .
 pushd "$CONFIGDIR" >/dev/null
 echo -n .
-OUT=`perl make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR" -d "$JARROOT" < "$FEDIR/jar.mn" 2>&1`
-if [ "$?" != "0" ]; then echo ERROR; echo $OUT; exit 1; fi
+perl make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR" -d "$JARROOT" < "$FEDIR/jar.mn" 1>log.tmp 2>&1
+if [ "$?" != "0" ]; then echo ERROR; cat log.tmp; exit 1; fi
 echo -n .
-OUT=`perl make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR/sm" -d "$JARROOT" < "$FEDIR/sm/jar.mn" 2>&1`
-if [ "$?" != "0" ]; then echo ERROR; echo $OUT; exit 1; fi
+perl make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR/sm" -d "$JARROOT" < "$FEDIR/sm/jar.mn" 1>log.tmp 2>&1
+if [ "$?" != "0" ]; then echo ERROR; cat log.tmp; exit 1; fi
 echo -n .
-OUT=`perl make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR/ff" -d "$JARROOT" < "$FEDIR/ff/jar.mn" 2>&1`
-if [ "$?" != "0" ]; then echo ERROR; echo $OUT; exit 1; fi
+perl make-jars.pl -v -z zip -p preprocessor.pl -s "$FEDIR/ff" -d "$JARROOT" < "$FEDIR/ff/jar.mn" 1>log.tmp 2>&1
+if [ "$?" != "0" ]; then echo ERROR; cat log.tmp; exit 1; fi
 echo -n .
 popd >/dev/null
 echo   ".         done"
@@ -110,18 +110,18 @@ echo   ".         done"
 # Make XPI.
 echo -n "  Constructing XPI package"
 echo -n .
-OUT=`cp -v "$JARROOT/chatzilla.jar" "$XPIROOT/chrome/"`
-if [ "$?" != "0" ]; then echo ERROR; echo $OUT; exit 1; fi
+cp -v "$JARROOT/chatzilla.jar" "$XPIROOT/chrome/" 1>log.tmp 2>&1
+if [ "$?" != "0" ]; then echo ERROR; cat log.tmp; exit 1; fi
 echo -n .
-OUT=`cp -v "$FEDIR/js/lib/chatzilla-service.js" "$XPIROOT/components/"`
-if [ "$?" != "0" ]; then echo ERROR; echo $OUT; exit 1; fi
+cp -v "$FEDIR/js/lib/chatzilla-service.js" "$XPIROOT/components/" 1>log.tmp 2>&1
+if [ "$?" != "0" ]; then echo ERROR; cat log.tmp; exit 1; fi
 echo -n .
 chmod 664 "$XPIROOT/chrome/chatzilla.jar"
 echo -n .
 chmod 664 "$XPIROOT/components/chatzilla-service.js"
 echo -n .
-pushd "$XPIROOT" >/dev/null; OUT=`zip -vr ../chatzilla-$VERSION.xpi * 2>&1`; popd >/dev/null
-if [ "$?" != "0" ]; then echo ERROR; echo $OUT; exit 1; fi
+pushd "$XPIROOT" >/dev/null; zip -vr ../chatzilla-$VERSION.xpi * 1>log.tmp 2>&1; popd >/dev/null
+if [ "$?" != "0" ]; then echo ERROR; cat log.tmp; exit 1; fi
 echo   ".         done"
 
 

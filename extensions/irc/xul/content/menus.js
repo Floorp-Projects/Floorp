@@ -44,18 +44,18 @@ function initMenus()
         return "client.prefs['motif.current'] == " +
             "client.prefs['motif." + name + "']";
     };
-    
+
     function isFontFamily(name)
     {
         return "cx.sourceObject.prefs['font.family'] == '" + name + "'";
     };
-    
+
     function isFontFamilyCustom()
     {
-        return "!cx.sourceObject.prefs['font.family']." + 
+        return "!cx.sourceObject.prefs['font.family']." +
                "match(/^(default|(sans-)?serif|monospace)$/)";
     };
-    
+
     function isFontSize(size)
     {
         return "cx.fontSize == cx.fontSizeDefault + " + size;
@@ -83,12 +83,12 @@ function initMenus()
         {
             params = { sourceWindow: window };
         }
-            
+
         dispatch (commandName, params);
 
         delete client.menuManager.cx;
     };
-    
+
     client.onMenuCommand = onMenuCommand;
     client.menuSpecs = new Object();
     var menuManager = new MenuManager(client.commandManager,
@@ -113,17 +113,28 @@ function initMenus()
         getContext: getDefaultContext,
         items:
         [
+         ["join"],
+         // Planned future menu items, not implemented yet.
+         //["attach"],
+         //["-"],
+         //["manage-networks"],
+         //["manage-plugins"],
+         ["-"],
          ["leave",       {visibleif: inChannel}],
          ["delete-view", {visibleif: "!" + inChannel}],
          ["disconnect"],
+         ["-"],
+         ["print"],
          ["-"],
          [navigator.platform.search(/win/i) == -1 ? "quit" : "exit"]
         ]
     };
 
     var Mozilla = "(client.host == 'Mozilla')";
-    var FirefoxOnLinux = "((client.host == 'Firefox') and (client.platform == 'Linux'))";
-    var FirefoxNotOnLinux = "((client.host == 'Firefox') and !(client.platform == 'Linux'))";
+    var ToolkitAppOnLinux = "((client.host != 'Mozilla') and " +
+                            "(client.platform == 'Linux'))";
+    var ToolkitAppNotOnLinux = "((client.host != 'Mozilla') and " +
+                               "!(client.platform == 'Linux'))";
 
     client.menuSpecs["mainmenu:edit"] = {
         label: MSG_MNU_EDIT,
@@ -142,8 +153,8 @@ function initMenus()
          ["-",                   {visibleif: Mozilla}],
          ["cmd-mozilla-prefs",   {visibleif: Mozilla}],
          ["cmd-chatzilla-prefs", {visibleif: Mozilla}],
-         ["-",                   {visibleif: FirefoxOnLinux}],
-         ["cmd-prefs",           {visibleif: FirefoxOnLinux}]
+         ["-",                   {visibleif: ToolkitAppOnLinux}],
+         ["cmd-prefs",           {visibleif: ToolkitAppOnLinux}]
         ]
     };
 
@@ -152,7 +163,7 @@ function initMenus()
         getContext: getDefaultContext,
         items:
         [
-         ["cmd-chatzilla-opts", {visibleif: FirefoxNotOnLinux}]
+         ["cmd-chatzilla-opts", {visibleif: ToolkitAppNotOnLinux}]
         ]
     };
 
@@ -230,7 +241,7 @@ function initMenus()
 
         ]
     };
-    
+
     client.menuSpecs["popup:fonts"] = {
         label: MSG_MNU_FONTS,
         getContext: getFontContext,
@@ -247,7 +258,7 @@ function initMenus()
                  {type: "checkbox", checkedif: isFontSize(0)}],
          ["font-size-large",
                  {type: "checkbox", checkedif: isFontSize(+2)}],
-         ["font-size-other", 
+         ["font-size-other",
                  {type: "checkbox", checkedif: isFontSizeCustom()}],
          ["-"],
          ["font-family-default",
@@ -258,7 +269,7 @@ function initMenus()
                  {type: "checkbox", checkedif: isFontFamily("sans-serif")}],
          ["font-family-monospace",
                  {type: "checkbox", checkedif: isFontFamily("monospace")}],
-         ["font-family-other", 
+         ["font-family-other",
                  {type: "checkbox", checkedif: isFontFamilyCustom()}]
         ]
     };
@@ -295,11 +306,12 @@ function initMenus()
                            checkedif: "client.prefs['sortUsersByMode']"}],
          ["toggle-umode", {type: "checkbox",
                            checkedif: "client.prefs['showModeSymbols']"}],
-         ["-"],
-         [">popup:opcommands", {enabledif: "cx.channel && " + isopish + "cx.user"}],
-         ["whois"],
-         ["query"],
-         ["version"],
+         ["-", {visibleif: "cx.nickname"}],
+         ["label-user", {visibleif: "cx.nickname", header: true}],
+         [">popup:opcommands", {visibleif: "cx.channel && " + isopish + "cx.user"}],
+         ["whois",   {visibleif: "cx.nickname"}],
+         ["query",   {visibleif: "cx.nickname"}],
+         ["version", {visibleif: "cx.nickname"}],
         ]
     };
 
@@ -323,11 +335,13 @@ function initMenus()
          ["toggle-oas",
                  {type: "checkbox",
                   checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
-         ["-"],
-         [">popup:opcommands", {enabledif: "cx.channel && " + isopish + "cx.user"}],
-         ["whois"],
-         ["query"],
-         ["version"],
+         ["-", {visibleif: "cx.channel && cx.nickname"}],
+         ["label-user", {visibleif: "cx.channel && cx.nickname", header: true}],
+         [">popup:opcommands", {visibleif: "cx.channel && " + isopish + "cx.user"}],
+         ["whois",   {visibleif: "cx.user"}],
+         ["whowas",  {visibleif: "cx.nickname && !cx.user"}],
+         ["query",   {visibleif: "cx.nickname"}],
+         ["version", {visibleif: "cx.nickname"}],
          ["-"],
          ["leave",       {visibleif: inChannel}],
          ["delete-view", {visibleif: "!" + inChannel}],
@@ -361,17 +375,34 @@ function createMenus()
 {
     client.menuManager.createMenus(document, "mainmenu");
     client.menuManager.createContextMenus(document);
+
+    // The menus and the component bar need to be hidden on some hosts.
+    var winMenu   = document.getElementById("windowMenu");
+    var tasksMenu = document.getElementById("tasksMenu");
+    var toolsMenu = document.getElementById("mainmenu:tools");
+    var comBar    = document.getElementById("component-bar");
+
+    if (client.host != "Mozilla") {
+        tasksMenu.parentNode.removeChild(tasksMenu);
+        winMenu.parentNode.removeChild(winMenu);
+    } else {
+        comBar.collapsed = false;
+    }
+
+    if ((client.host == "Mozilla") || (client.platform == "Linux")) {
+        toolsMenu.parentNode.removeChild(toolsMenu);
+    }
 }
 
 function getCommandContext (id, event)
 {
     var cx = { originalEvent: event };
-    
+
     if (id in client.menuSpecs)
     {
         if ("getContext" in client.menuSpecs[id])
             cx = client.menuSpecs[id].getContext(cx);
-        else if ("cx" in client.menuManager) 
+        else if ("cx" in client.menuManager)
         {
             //dd ("using existing context");
             cx = client.menuManager.cx;

@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const __cz_version   = "0.9.66";
+const __cz_version   = "0.9.67";
 const __cz_condition = "green";
 const __cz_suffix    = "";
 const __cz_guid      = "59c81df5-4b7a-477b-912d-4e0fdf64e5f2";
@@ -113,6 +113,8 @@ client.lastTabUp = new Date();
 CIRCNetwork.prototype.INITIAL_CHANNEL = "";
 CIRCNetwork.prototype.MAX_MESSAGES = 100;
 CIRCNetwork.prototype.IGNORE_MOTD = false;
+CIRCNetwork.prototype.RECLAIM_WAIT = 15000;
+CIRCNetwork.prototype.RECLAIM_TIMEOUT = 400000;
 
 CIRCServer.prototype.READ_TIMEOUT = 0;
 CIRCServer.prototype.PRUNE_OLD_USERS = 0; // prune on user quit.
@@ -146,6 +148,8 @@ function init()
 
     initRDF();
     initMessages();
+    // Must be after messages, since it uses 'em.
+    initApplicationCompatibility();
     initCommands();
     initPrefs();
     initMunger();
@@ -176,9 +180,7 @@ function init()
     client.commandManager.installKeys(document);
     createMenus();
 
-    // Need to do this *after* creating menu items, or we'll only re-create
-    // ones we've removed because they aren't needed for the current host.
-    initApplicationCompatibility();
+    initIcons();
 
     client.busy = false;
     updateProgress();
@@ -266,8 +268,18 @@ function initStatic()
     var ary = navigator.userAgent.match (/(rv:[^;)\s]+).*?Gecko\/(\d+)/);
     if (ary)
     {
-        client.userAgent = getMsg(MSG_VERSION_REPLY,
-                                  [ver, "Mozilla " + ary[1] + "/" + ary[2]]);
+        if (navigator.vendor)
+        {
+            client.userAgent = getMsg(MSG_VERSION_REPLY,
+                                      [ver, navigator.vendor + " " + 
+                                       navigator.vendorSub + "/" + ary[2]]);
+        }
+        else
+        {
+            client.userAgent = getMsg(MSG_VERSION_REPLY,
+                                      [ver, client.host + " " + 
+                                       ary[1] + "/" + ary[2]]);
+        }
     }
     else
     {
@@ -287,8 +299,6 @@ function initStatic()
     client.progressPanel = document.getElementById("status-progress-panel");
     client.progressBar = document.getElementById("status-progress-bar");
 
-    client.lineEnd = "\n";
-
     client.logFile = null;
     setInterval("onNotifyTimeout()", client.NOTIFY_TIMEOUT);
     setInterval("onWhoTimeout()", client.AWAY_TIMEOUT);
@@ -303,12 +313,22 @@ function initApplicationCompatibility()
     // This routine does nothing more than tweak the UI based on the host
     // application.
 
-    var windowMenu = document.getElementById("windowMenu");
-
     // Set up simple host and platform information.
-    client.host = "Mozilla";
-    if (!windowMenu.firstChild)
-        client.host = "Firefox";
+    client.host = "Unknown";
+    if ("getBrowserURL" in window)
+    {
+        var url = getBrowserURL();
+        if (url == "chrome://navigator/content/navigator.xul")
+            client.host = "Mozilla";
+        else if (url == "chrome://browser/content/browser.xul")
+            client.host = "Firefox";
+        else
+            showErrorDlg(getMsg(MSG_ERR_UNKNOWN_HOST, url));
+    }
+    else
+    {
+        client.host = "XULrunner";
+    }
 
     client.platform = "Unknown";
     if (navigator.platform.search(/mac/i) > -1)
@@ -317,6 +337,8 @@ function initApplicationCompatibility()
         client.platform = "Windows";
     if (navigator.platform.search(/linux/i) > -1)
         client.platform = "Linux";
+    if (navigator.platform.search(/os\/2/i) > -1)
+        client.platform = "OS/2";
 
     client.hostPlatform = client.host + client.platform;
 
@@ -328,23 +350,8 @@ function initApplicationCompatibility()
     // \n logs.
     if (client.platform == "Windows")
         client.lineEnd = "\r\n";
-
-    // The menus and the component bar need to be hidden on some hosts.
-    var winMenu   = document.getElementById("windowMenu");
-    var tasksMenu = document.getElementById("tasksMenu");
-    var toolsMenu = document.getElementById("mainmenu:tools");
-    var comBar    = document.getElementById("component-bar");
-
-    if (client.host == "Firefox") {
-        tasksMenu.parentNode.removeChild(tasksMenu);
-        winMenu.parentNode.removeChild(winMenu);
-    } else {
-        comBar.collapsed = false;
-    }
-
-    if ((client.host != "Firefox") || (client.platform == "Linux")) {
-        toolsMenu.parentNode.removeChild(toolsMenu);
-    }
+    else
+        client.lineEnd = "\n";
 }
 
 function initNetworks()
@@ -361,6 +368,56 @@ function initNetworks()
     client.addNetwork("efnet",
                       [{name: "irc.prison.net", port: 6667},
                        {name: "irc.magic.ca", port: 6667}]);
+}
+
+function initIcons()
+{
+    // Make sure we got the ChatZilla icon(s) in place first.
+    const iconName = "chatzilla-window";
+    const suffixes = [".ico", ".xpm", "16.xpm"];
+
+    /* when installing on Mozilla, the XPI has the power to put the icons where
+     * they are needed - in Firefox, it doesn't. So we move them here, instead.
+     */
+    if (client.host != "Firefox")
+        return;
+
+    var sourceDir = getSpecialDirectory("ProfD");
+    sourceDir.append("extensions");
+    sourceDir.append("{" + __cz_guid + "}");
+    sourceDir.append("defaults");
+
+    var destDir = getSpecialDirectory("AChrom");
+    destDir.append("icons");
+    destDir.append("default");
+    if (!destDir.exists())
+    {
+        try
+        {
+            mkdir(destDir);
+        }
+        catch(ex)
+        {
+            return;
+        }
+    }
+
+    for (var i = 0; i < suffixes.length; i++)
+    {
+        var iconDest = destDir.clone();
+        iconDest.append(iconName + suffixes[i]);
+        var iconSrc = sourceDir.clone();
+        iconSrc.append(iconName + suffixes[i]);
+
+        if (iconSrc.exists() && !iconDest.exists())
+        {
+            try
+            {
+                iconSrc.copyTo(iconDest.parent, iconDest.leafName);
+            }
+            catch(ex){}
+        }
+    }
 }
 
 function importFromFrame(method)
@@ -720,24 +777,30 @@ function insertSmiley(emoticon, containerTag)
 {
     var type = "error";
 
-    if (emoticon.search(/\>[=:;][-^v]?[(|]/) != -1)
+    if (emoticon.search(/\>[-^v]?\)/) != -1)
+        type = "face-alien";
+    else if (emoticon.search(/\>[=:;][-^v]?[(|]/) != -1)
         type = "face-angry";
     else if (emoticon.search(/[=:;][-^v]?[Ss\\\/]/) != -1)
         type = "face-confused";
     else if (emoticon.search(/[B8][-^v]?[)\]]/) != -1)
         type = "face-cool";
-    else if (emoticon.search(/[=:;]\~[-^v]?\(/) != -1)
+    else if (emoticon.search(/[=:;][~'][-^v]?\(/) != -1)
         type = "face-cry";
-    else if (emoticon.search(/o[._]O|O[._]o/) != -1)
+    else if (emoticon.search(/o[._]O/) != -1)
         type = "face-dizzy";
+    else if (emoticon.search(/O[._]o/) != -1)
+        type = "face-dizzy-back";
     else if (emoticon.search(/o[._]o|O[._]O/) != -1)
         type = "face-eek";
     else if (emoticon.search(/\>[=:;][-^v]?D/) != -1)
         type = "face-evil";
+    else if (emoticon.search(/[=:;][-^v]?DD/) != -1)
+        type = "face-lol";
     else if (emoticon.search(/[=:;][-^v]?D/) != -1)
         type = "face-laugh";
     else if (emoticon.search(/\([-^v]?D|[xX][-^v]?D/) != -1)
-        type = "face-lol";
+        type = "face-rofl";
     else if (emoticon.search(/[=:;][-^v]?\|/) != -1)
         type = "face-normal";
     else if (emoticon.search(/[=:;][-^v]?\?/) != -1)
@@ -1042,12 +1105,21 @@ function getDefaultFontSize()
 
 function getDefaultContext(cx)
 {
-    return getObjectDetails(client.currentObject, cx);
+    if (!cx)
+        cx = new Object();
+    /* Use __proto__ here and in all other get*Context so that the command can
+     * tell the difference between getObjectDetails and actual parameters. See
+     * cmdJoin for more details.
+     */
+    cx.__proto__ = getObjectDetails(client.currentObject);
+    return cx;
 }
 
 function getMessagesContext(cx, element)
 {
-    cx = getObjectDetails(client.currentObject, cx);
+    if (!cx)
+        cx = new Object();
+    cx.__proto__ = getObjectDetails(client.currentObject);
     if (!element)
         element = document.popupNode;
 
@@ -1083,6 +1155,10 @@ function getMessagesContext(cx, element)
                     cx.nickname = cx.user.unicodeName;
                     cx.canonNick = cx.user.canonicalName;
                 }
+                else
+                {
+                    cx.nickname = nickname;
+                }
                 break;
         }
 
@@ -1094,6 +1170,8 @@ function getMessagesContext(cx, element)
 
 function getTabContext(cx, element)
 {
+    if (!cx)
+        cx = new Object();
     if (!element)
         element = document.popupNode;
 
@@ -1109,7 +1187,9 @@ function getTabContext(cx, element)
 
 function getUserlistContext(cx)
 {
-    cx = getObjectDetails(client.currentObject, cx);
+    if (!cx)
+        cx = new Object();
+    cx.__proto__ = getObjectDetails(client.currentObject);
     if (!cx.channel)
         return cx;
 
@@ -1154,7 +1234,9 @@ function getUserlistContext(cx)
 
 function getFontContext(cx)
 {
-    cx = getObjectDetails(client.currentObject, cx);
+    if (!cx)
+        cx = new Object();
+    cx.__proto__ = getObjectDetails(client.currentObject);
     cx.fontSizeDefault = getDefaultFontSize();
     var view = client;
 
@@ -1222,7 +1304,7 @@ function cycleView (amount)
 // Plays the sound for a particular event on a type of object.
 function playEventSounds(type, event)
 {
-    if (!client.sound)
+    if (!client.sound || !client.prefs["sound.enabled"])
         return;
 
     // Converts .TYPE values into the event object names.
@@ -1263,7 +1345,7 @@ function playEventSounds(type, event)
 // Blocks a particular type of event sound occuring.
 function blockEventSounds(type, event)
 {
-    if (!client.sound)
+    if (!client.sound || !client.prefs["sound.enabled"])
         return;
 
     // Converts .TYPE values into the event object names.
@@ -1294,7 +1376,7 @@ function playSounds(list)
 
 function playSound(file)
 {
-    if (!client.sound || !file)
+    if (!client.sound || !client.prefs["sound.enabled"] || !file)
         return;
 
     if (file == "beep")
@@ -2202,8 +2284,16 @@ function setCurrentObject (obj)
         scrollDown(obj.frame, false);
 
     // Input area should have the same direction as the output area
-    var contentArea = client.currentObject.frame.contentDocument.body;
-    client.input.setAttribute("dir", contentArea.getAttribute("dir"));
+    if (("frame" in client.currentObject) &&
+        client.currentObject.frame &&
+        ("contentDocument" in client.currentObject.frame) &&
+        client.currentObject.frame.contentDocument &&
+        ("body" in client.currentObject.frame.contentDocument) &&
+        client.currentObject.frame.contentDocument.body)
+    {
+        var contentArea = client.currentObject.frame.contentDocument.body;
+        client.input.setAttribute("dir", contentArea.getAttribute("dir"));
+    }
     client.input.focus();
 }
 
@@ -3517,8 +3607,8 @@ function __display(message, msgtype, sourceObj, destObj)
             // Stop logging before showing any messages!
             this.prefs["log"] = false;
             dd("Log file write error: " + formatException(ex));
-            this.displayHere(getMsg(MSG_LOGFILE_WRITE_ERROR,
-                             this.prefs["logFileName"]), "ERROR");
+            this.displayHere(getMsg(MSG_LOGFILE_WRITE_ERROR, getLogPath(this)),
+                             "ERROR");
         }
     }
 }
@@ -3690,6 +3780,11 @@ function findPreviousColumnInfo(table)
     return {extents: extents, nickColumns: nickCols, nested: false};
 }
 
+function getLogPath(obj)
+{
+    return getURLSpecFromFile(obj.prefs["logFileName"]);
+}
+
 client.getConnectionCount =
 function cli_gccount ()
 {
@@ -3758,18 +3853,17 @@ function cli_startlog (view)
     {
         view.prefs["log"] = false;
         dd("Log file open error: " + formatException(ex));
-        view.displayHere(getMsg(MSG_LOGFILE_ERROR,
-                                view.prefs["logFileName"]), MT_ERROR);
+        view.displayHere(getMsg(MSG_LOGFILE_ERROR, getLogPath(view)), MT_ERROR);
         return;
     }
 
-    view.displayHere(getMsg(MSG_LOGFILE_OPENED, view.prefs["logFileName"]));
+    view.displayHere(getMsg(MSG_LOGFILE_OPENED, getLogPath(view)));
 }
 
 client.closeLogFile =
 function cli_stoplog (view)
 {
-    view.displayHere(getMsg(MSG_LOGFILE_CLOSING, view.prefs["logFileName"]));
+    view.displayHere(getMsg(MSG_LOGFILE_CLOSING, getLogPath(view)));
 
     if (view.logFile)
     {
