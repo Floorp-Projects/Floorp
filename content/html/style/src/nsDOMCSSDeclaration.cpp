@@ -247,7 +247,7 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
   declString.Append(aValue);
   declString.Append(aPriority);
 
-  return ParseDeclaration(declString);
+  return ParseDeclaration(declString, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP 

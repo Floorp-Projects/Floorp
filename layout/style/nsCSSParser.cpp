@@ -55,9 +55,6 @@ static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 
-#define NS_CSS_PARSER_DROP_DECLARATION \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,1)
-
 
 MOZ_DECL_CTOR_COUNTER(SelectorList);
 
@@ -149,6 +146,7 @@ public:
   NS_IMETHOD ParseAndAppendDeclaration(const nsString&    aBuffer,
                                        nsIURI*            aBaseURL,
                                        nsICSSDeclaration* aDeclaration,
+                                       PRBool             aParseOnlyOneDecl,
                                        PRInt32*           aHint);
 
   NS_IMETHOD GetCharset(/*out*/nsString &aCharsetDest) const;
@@ -555,6 +553,7 @@ NS_IMETHODIMP
 CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
                                          nsIURI*            aBaseURL,
                                          nsICSSDeclaration* aDeclaration,
+                                         PRBool             aParseOnlyOneDecl,
                                          PRInt32*           aHint)
 {
 //  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
@@ -581,15 +580,26 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
 
   PRInt32 hint = NS_STYLE_HINT_NONE;
 
-  if (! ParseDeclaration(errorCode, aDeclaration, PR_FALSE, hint)) {
-    hint = NS_STYLE_HINT_NONE;
-  }
   if (nsnull != aHint) {
     *aHint = hint;
   }
 
+  do {
+    if (ParseDeclaration(errorCode, aDeclaration, PR_FALSE, hint)) {
+      if (aHint && hint > *aHint) {
+        *aHint = hint;
+      }
+    } else {
+      if (errorCode != -1) { // -1 means EOF so we ignore that
+        rv = errorCode;
+      }
+
+      break;
+    }
+  } while (!aParseOnlyOneDecl);
+
   ReleaseScanner();
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------

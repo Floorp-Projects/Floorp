@@ -114,7 +114,10 @@ public:
   virtual void DropReference();
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult ParseDeclaration(const nsString& aDecl);
+  virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
+  virtual nsresult ParseDeclaration(const nsString& aDecl,
+                                    PRBool aParseOnlyOneDecl,
+                                    PRBool aClearOldDecl);
   virtual nsresult GetParent(nsISupports **aParent);
 
 protected:
@@ -229,8 +232,34 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsICSSDeclaration **aDecl,
   return result;
 }
 
+nsresult
+nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsICSSDeclaration *aDecl)
+{
+  nsHTMLValue val;
+  nsIStyleRule* rule;
+  nsICSSStyleRule*  cssRule;
+  nsresult result = NS_OK;
+
+  if (nsnull != mContent) {
+    mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
+    if (eHTMLUnit_ISupports == val.GetUnit()) {
+      rule = (nsIStyleRule*) val.GetISupportsValue();
+      result = rule->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule);
+      if (NS_OK == result) {
+        cssRule->SetDeclaration(aDecl);
+        NS_RELEASE(cssRule);
+      }      
+      NS_RELEASE(rule);
+    }
+  }
+
+  return result;
+}
+
 nsresult 
-nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsString& aDecl)
+nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsString& aDecl,
+                                               PRBool aParseOnlyOneDecl,
+                                               PRBool aClearOldDecl)
 {
   nsICSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
@@ -265,9 +294,34 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsString& aDecl)
       if (doc) {
         doc->BeginUpdate();
       }
-      result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl, &hint);
+      nsCOMPtr<nsICSSDeclaration> declClone;
+      decl->Clone(*getter_AddRefs(declClone));
+
+      if (aClearOldDecl) {
+        // This should be done with decl->Clear() once such a method exists.
+        nsAutoString propName;
+        PRUint32 count, i;
+
+        decl->Count(&count);
+
+        for (i = 0; i < count; i++) {
+          decl->GetNthProperty(0, propName);
+
+          nsCSSProperty prop = nsCSSProps::LookupProperty(propName);
+          nsCSSValue val;
+
+          decl->RemoveProperty(prop, val);
+        }
+      }
+
+      result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
+                                                    aParseOnlyOneDecl, &hint);
+      if (result == NS_CSS_PARSER_DROP_DECLARATION) {
+        SetCSSDeclaration(declClone);
+        result = NS_OK;
+      }
       if (doc) {
-        if (NS_SUCCEEDED(result)) {
+        if (NS_SUCCEEDED(result) && result != NS_CSS_PARSER_DROP_DECLARATION) {
           doc->AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::style, hint);
         }
         doc->EndUpdate();

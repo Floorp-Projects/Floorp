@@ -64,8 +64,12 @@ public:
   virtual void DropReference() = 0;
   virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
                                      PRBool aAllocate) = 0;
+  // Note! This will only set the declaration if a style rule already exists
+  virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl) = 0;
 
-  virtual nsresult ParseDeclaration(const nsString& aDecl) = 0;
+  virtual nsresult ParseDeclaration(const nsString& aDecl,
+                                    PRBool aParseOnlyOneDecl,
+                                    PRBool aClearOldDecl) = 0;
   virtual nsresult GetParent(nsISupports **aParent) = 0;
   
 protected:
