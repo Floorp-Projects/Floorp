@@ -709,7 +709,7 @@ endif
 endif
 
 $(HOST_SIMPLE_PROGRAMS): host_%$(BIN_SUFFIX): %.ho $(HOST_EXTRA_DEPS) Makefile Makefile.in
-	$(HOST_CC) -o $@ $(HOST_CFLAGS) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 
 #
 # Purify target.  Solaris/sparc only to start.
@@ -883,7 +883,7 @@ endif
 
 $(OBJ_PREFIX)%.ho: %.c Makefile.in
 	$(REPORT_BUILD)
-	$(ELOG) $(HOST_CC) -o $@ -c $(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS) $<
+	$(ELOG) $(HOST_CC) -o $@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $<
 
 moc_%.cpp: %.h Makefile.in
 	$(MOC) $< -o $@ 
