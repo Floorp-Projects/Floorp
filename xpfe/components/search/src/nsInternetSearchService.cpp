@@ -1736,7 +1736,7 @@ InternetSearchDataSource::addToBookmarks(nsIRDFResource *src)
 			char	*uri = getSearchURI(src);
 			if (uri)
 			{
-				rv = bookmarks->AddBookmark(uri, name, nsIBookmarksService::BOOKMARK_SEARCH_TYPE );
+				rv = bookmarks->AddBookmark(uri, name, nsIBookmarksService::BOOKMARK_SEARCH_TYPE, nsnull);
 				Recycle(uri);
 			}
 		}
