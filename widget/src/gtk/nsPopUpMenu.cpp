@@ -92,7 +92,7 @@ NS_METHOD nsPopUpMenu::AddSeparator()
 {
   GtkWidget *widget;
   widget = gtk_menu_item_new ();
-  gtk_menu_append (GTK_MENU (mMenu), widget);
+  gtk_menu_shell_append (GTK_MENU_SHELL (mMenu), widget);
 #if 0
   Widget widget = XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass,
                                           mMenu,
