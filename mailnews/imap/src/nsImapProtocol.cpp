@@ -576,7 +576,15 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
       PRInt32 port=-1;
       server->GetPort(&port);
 
-      if (port <= 0) port = IMAP_PORT;
+      if (port <= 0)
+      {
+        PRBool isSecure = PR_FALSE;
+        // Be a bit smarter about setting the default port
+        if (NS_SUCCEEDED(server->GetIsSecure(&isSecure)) && isSecure) 
+          port = SECURE_IMAP_PORT;
+        else
+          port = IMAP_PORT;
+      }
       
       nsXPIDLCString hostName;
             
@@ -591,15 +599,12 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         char *connectionType = nsnull;
         
         if (NS_SUCCEEDED(server->GetIsSecure(&isSecure)) && isSecure) 
-        {
           connectionType = "ssl-forcehandshake";
-          port = SECURE_IMAP_PORT;
-        }
 
-		    if (m_overRideUrlConnectionInfo)
-			    rv = socketService->CreateTransportOfType(connectionType, m_logonHost.GetBuffer(), m_logonPort, nsnull, -1, 0, 0, getter_AddRefs(m_channel));
-		    else
-			    rv = socketService->CreateTransportOfType(connectionType, hostName, port, nsnull, -1, 0, 0, getter_AddRefs(m_channel));
+        if (m_overRideUrlConnectionInfo)
+            rv = socketService->CreateTransportOfType(connectionType, m_logonHost.GetBuffer(), m_logonPort, nsnull, -1, 0, 0, getter_AddRefs(m_channel));
+        else
+            rv = socketService->CreateTransportOfType(connectionType, hostName, port, nsnull, -1, 0, 0, getter_AddRefs(m_channel));
         
         if (NS_SUCCEEDED(rv))
           rv = m_channel->OpenOutputStream(0, -1, 0, getter_AddRefs(m_outputStream));

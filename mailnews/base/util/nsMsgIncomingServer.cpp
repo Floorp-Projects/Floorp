@@ -1085,9 +1085,10 @@ nsMsgIncomingServer::GetPort(PRInt32 *aPort)
     rv = getProtocolInfo(getter_AddRefs(protocolInfo));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // First param is set to FALSE so that the non-secure
-    // default port is returned
-    return protocolInfo->GetDefaultServerPort(PR_FALSE, aPort);
+    PRBool isSecure = PR_FALSE;
+    // Try this, and if it fails, fall back to the non-secure port
+    GetIsSecure(&isSecure);
+    return protocolInfo->GetDefaultServerPort(isSecure, aPort);
 }
 
 NS_IMETHODIMP
