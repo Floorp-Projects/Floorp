@@ -1,5 +1,6 @@
 // All the definition here after are temporary and must be removed in the future when be defined somewhere else...
 
+#include "rosetta_mailnews.h"
 #include "nsMsgCompose.h"
 
 void				FE_DestroyMailCompositionContext(MWContext*) {return;}
@@ -49,17 +50,6 @@ void				MIME_GetMessageCryptoState(MWContext *,XP_Bool *,XP_Bool *,XP_Bool *,XP_
 History_entry *		SHIST_GetCurrent(History *) {return NULL;}
 int					MISC_ValidateReturnAddress (MWContext *,const char *) {return NULL;}
 
-/*
-msgcompose_s.lib(nsMsgCompFields.obj) : error LNK2001: unresolved external symbol "public: virtual __thiscall msg_StringArray::~msg_StringArray(void)" (??1msg_StringArray@@UAE@XZ)
-msgcompose_s.lib(nsMsgCompFields.obj) : error LNK2001: unresolved external symbol "public: char * __thiscall msg_StringArray::ExportTokenList(char const *)" (?ExportTokenList@msg_StringArray@@QAEPADPBD@Z)
-msgcompose_s.lib(nsMsgCompFields.obj) : error LNK2001: unresolved external symbol "public: virtual void __thiscall msg_StringArray::InsertAt(int,void *,int)" (?InsertAt@msg_StringArray@@UAEXHPAXH@Z)
-msgcompose_s.lib(nsMsgCompFields.obj) : error LNK2001: unresolved external symbol "public: void __thiscall XPPtrArray::RemoveAt(int,int)" (?RemoveAt@XPPtrArray@@QAEXHH@Z)
-msgcompose_s.lib(nsMsgCompFields.obj) : error LNK2001: unresolved external symbol "public: int __thiscall XPPtrArray::GetSize(void)const " (?GetSize@XPPtrArray@@QBEHXZ)
-msgcompose_s.lib(nsMsgCompFields.obj) : error LNK2001: unresolved external symbol "public: int __thiscall msg_StringArray::ImportTokenList(char const *,char const *)" (?ImportTokenList@msg_StringArray@@QAEHPBD0@Z)
-msgcompose_s.lib(nsMsgCompFields.obj) : error LNK2001: unresolved external symbol "public: __thiscall msg_StringArray::msg_StringArray(int,int (__cdecl*)(void const *,void const *))" (??0msg_StringArray@@QAE@HP6AHPBX0@Z@Z)
-msgcompose_s.lib(nsMsgCompFields.obj) : error LNK2001: unresolved external symbol "public: void * __thiscall XPPtrArray::GetAt(int)const " (?GetAt@XPPtrArray@@QBEPAXH@Z)
-*/
-
 extern "C" {
 int MK_MSG_SAVE_TEMPLATE;
 int MK_MSG_INVALID_FOLLOWUP_TO_HEADER;
@@ -67,6 +57,6 @@ int MK_MSG_INVALID_NEWS_HEADER;
 int	MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS;
 
 void FE_MsgShowHeaders(MSG_Pane *, MSG_HEADER_SET) {return;}
-void FE_SecurityOptionsChanged (MWContext *) {return;}
+HJ98703
 }
 
