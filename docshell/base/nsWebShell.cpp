@@ -2770,66 +2770,18 @@ nsWebShell::LoadDocument(const char* aURL,
   return NS_OK;
 }
 
-
-
-NS_IMETHODIMP
+NS_IMETHODIMP 
 nsWebShell::ReloadDocument(const char* aCharset, 
-                           nsCharsetSource aSource)
-{
+                           nsCharsetSource aSource) 
+{ 
 
+  // XXX hack. kee the aCharset and aSource wait to pick it up 
+  mHintCharset = aCharset; 
+  mHintCharsetSource= aSource; 
 
-  // XXX hack. kee the aCharset and aSource wait to pick it up
-  mHintCharset = aCharset;
-  mHintCharsetSource= aSource;
-  nsString * s=nsnull;
-
-  /* The generic session history code that is in webshell 
-   * is now obsolete. Use nsISessionHistory instead
-   */
-#ifdef OLD_HISTORY  
-  s = (nsString*) mHistory.ElementAt(mHistoryIndex);
-#else
-  if (mSHist) {
-     PRInt32  indix = 0;
-     nsresult rv;
-     rv = mSHist->getCurrentIndex(indix);
-     if (NS_SUCCEEDED(rv)) {
-        const PRUnichar * url=nsnull;
-        rv = mSHist->GetURLForIndex(indix, &url);
-        if (NS_SUCCEEDED(rv))
-          s = new nsString(url);       
-     }
-  }
-
-#endif
-
-  nsresult rv = NS_OK;
-  if(s) {
-    char* url = s->ToNewCString();
-    if(url) {
-#ifdef  OLD_HISTORY
-		/* Don't just decrement the index, remove the element too.
-		 * Just decrementing the index, causes some kind of corruption
-		 * in mHistory and crash in LoadURL(). The element anyway
-		 * gets appended back in LoadURL();
-		 */
-		if (mHistoryIndex >= 0) {
-			mHistory.RemoveElementAt(mHistoryIndex);
-            mHistoryIndex--;
-		}
-#endif  /* OLD_HISTORY */
-      /* When using nsISessionHistory, the refresh callback should
-       * probably call LoadURL with PR_FALSE as the third argument.
-       * Not sure how well this method is being used.
-       */
-      rv =  this->RefreshURL((const char*)url,0,PR_FALSE);
-      delete [] url;
-    }
-    delete s;
-  }
-
-  return NS_OK;
+  return Reload( nsIChannel::LOAD_NORMAL); 
 }
+
 
 NS_IMETHODIMP
 nsWebShell::StopDocumentLoad(void)
