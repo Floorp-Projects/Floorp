@@ -113,6 +113,7 @@ private:
   nsresult RequestOverrideInfo(nsIMsgWindow *aMsgWindow);
   nsresult CreateHostSpecificPrefName(const char *prefPrefix, nsCAutoString &prefName);
 
+  nsresult DoomUrlIfChannelHasError(nsIImapUrl *aImapUrl, PRBool *urlDoomed);
   PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
   nsresult GetFormattedName(const PRUnichar *constructedPrettyName, PRUnichar **formattedPrettyName);  
   nsresult CreatePrefNameWithRedirectorType(const char *prefSuffix, nsCAutoString &prefName);

@@ -59,7 +59,8 @@ interface nsIImapServerSink : nsISupports {
 
   void setCapability(in unsigned long capability);
   void loadNextQueuedUrl(out boolean urlRun);
-
+  // if previous url failed, this gives server chance to abort urls with same mock channel
+  void abortQueuedUrls(); 
   void getImapStringByID(in long aMsgId, out wstring aString);
   void formatStringWithHostNameByID(in long aMsgId, out wstring aString);
   void fEAlert(in wstring aString, in nsIMsgWindow aMsgWindow);

@@ -487,64 +487,41 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 {
   PRUint32 cnt = 0;
   nsresult rv = NS_OK;
-	PRBool urlRun = PR_FALSE;
-  PRBool removeUrlFromQueue = PR_FALSE;
+  PRBool urlRun = PR_FALSE;
   PRBool keepGoing = PR_TRUE;
-
+  
   nsAutoCMonitor(this);
   m_urlQueue->Count(&cnt);
-
+  
   while (cnt > 0 && !urlRun && keepGoing)
   {
     nsCOMPtr<nsISupports> aSupport(getter_AddRefs(m_urlQueue->ElementAt(0)));
     nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
     nsCOMPtr<nsIMsgMailNewsUrl> aMailNewsUrl(do_QueryInterface(aSupport, &rv));
-
+    
+    PRBool removeUrlFromQueue = PR_FALSE;
     if (aImapUrl)
     {
-      nsCOMPtr <nsIImapMockChannel> mockChannel;
-
-      if (NS_SUCCEEDED(aImapUrl->GetMockChannel(getter_AddRefs(mockChannel))) && mockChannel)
-      {
-        nsCOMPtr<nsIRequest> request = do_QueryInterface(mockChannel);
-        if (!request)
-          return NS_ERROR_FAILURE;
-        request->GetStatus(&rv);
-        if (NS_FAILED(rv))
-        {
-          nsresult res;
-          removeUrlFromQueue = PR_TRUE;
-
-          mockChannel->Close(); // try closing it to get channel listener nulled out.
-
-          if (aMailNewsUrl)
-          {
-            nsCOMPtr<nsICacheEntryDescriptor>  cacheEntry;
-            res = aMailNewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
-            if (NS_SUCCEEDED(res) && cacheEntry)
-              cacheEntry->Doom();
-          }
-        }
-      }
-      // Note that we're relying on no one diddling the rv from the mock channel status
-      // between the place we set it and here.
-      if (NS_SUCCEEDED(rv))
+      rv = DoomUrlIfChannelHasError(aImapUrl, &removeUrlFromQueue);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // if we didn't doom the url, lets run it.
+      if (!removeUrlFromQueue)
       {
         nsISupports *aConsumer = (nsISupports*)m_urlConsumers.ElementAt(0);
         NS_IF_ADDREF(aConsumer);
-      
+        
         nsCOMPtr <nsIImapProtocol>  protocolInstance ;
         rv = CreateImapConnection(nsnull, aImapUrl, getter_AddRefs(protocolInstance));
         if (NS_SUCCEEDED(rv) && protocolInstance)
         {
-		      nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
-		      if (NS_SUCCEEDED(rv) && url)
-		      {
-			      rv = protocolInstance->LoadUrl(url, aConsumer);
+          nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
+          if (NS_SUCCEEDED(rv) && url)
+          {
+            rv = protocolInstance->LoadUrl(url, aConsumer);
             NS_ASSERTION(NS_SUCCEEDED(rv), "failed running queued url");
-			      urlRun = PR_TRUE;
+            urlRun = PR_TRUE;
             removeUrlFromQueue = PR_TRUE;
-		      }
+          }
         }
         else
           keepGoing = PR_FALSE;
@@ -558,12 +535,83 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
     }
     m_urlQueue->Count(&cnt);
   }
-	if (aResult)
-		*aResult = urlRun;
-
+  if (aResult)
+    *aResult = urlRun;
+  
   return rv;
 }
 
+NS_IMETHODIMP
+nsImapIncomingServer::AbortQueuedUrls()
+{
+  PRUint32 cnt = 0;
+  nsresult rv = NS_OK;
+  
+  nsAutoCMonitor(this);
+  m_urlQueue->Count(&cnt);
+  
+  while (cnt > 0)
+  {
+    nsCOMPtr<nsISupports> aSupport(getter_AddRefs(m_urlQueue->ElementAt(cnt - 1)));
+    nsCOMPtr<nsIImapUrl> aImapUrl(do_QueryInterface(aSupport, &rv));
+    PRBool removeUrlFromQueue = PR_FALSE;
+    
+    if (aImapUrl)
+    {
+      rv = DoomUrlIfChannelHasError(aImapUrl, &removeUrlFromQueue);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (removeUrlFromQueue)
+      {
+        m_urlQueue->RemoveElementAt(cnt - 1);
+        m_urlConsumers.RemoveElementAt(cnt - 1);
+      }
+    }
+    cnt--;
+  }
+  
+  return rv;
+}
+
+// if this url has a channel with an error, doom it and its mem cache entries,
+// and notify url listeners.
+nsresult nsImapIncomingServer::DoomUrlIfChannelHasError(nsIImapUrl *aImapUrl, PRBool *urlDoomed)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIMsgMailNewsUrl> aMailNewsUrl(do_QueryInterface(aImapUrl, &rv));
+  
+  if (aMailNewsUrl && aImapUrl)
+  {
+    nsCOMPtr <nsIImapMockChannel> mockChannel;
+    
+    if (NS_SUCCEEDED(aImapUrl->GetMockChannel(getter_AddRefs(mockChannel))) && mockChannel)
+    {
+      nsresult requestStatus;
+      nsCOMPtr<nsIRequest> request = do_QueryInterface(mockChannel);
+      if (!request)
+        return NS_ERROR_FAILURE;
+      request->GetStatus(&requestStatus);
+      if (NS_FAILED(requestStatus))
+      {
+        nsresult res;
+        *urlDoomed = PR_TRUE;
+        
+        mockChannel->Close(); // try closing it to get channel listener nulled out.
+        
+        if (aMailNewsUrl)
+        {
+          nsCOMPtr<nsICacheEntryDescriptor>  cacheEntry;
+          res = aMailNewsUrl->GetMemCacheEntry(getter_AddRefs(cacheEntry));
+          if (NS_SUCCEEDED(res) && cacheEntry)
+            cacheEntry->Doom();
+          // we're aborting this url - tell listeners
+          aMailNewsUrl->SetUrlState(PR_FALSE, NS_MSG_ERROR_URL_ABORTED);
+        }
+      }
+    }
+  }
+  return rv;
+}
 
 NS_IMETHODIMP
 nsImapIncomingServer::RemoveConnection(nsIImapProtocol* aImapConnection)
