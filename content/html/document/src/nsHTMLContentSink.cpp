@@ -565,22 +565,6 @@ HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
   aResult.Truncate();
   aResult.Append(value);
   aResult.Trim("\b\r\t\n",PR_TRUE,PR_TRUE,PR_TRUE);
-
-  if ( !aResult.IsEmpty() ) {
-    // Strip quotes if present
-    PRUnichar first = aResult.First();
-    if ((first == '\"') || (first == '\'')) {
-      if (aResult.Last() == first) {
-        aResult.Cut(0, 1);
-        PRInt32 pos = aResult.Length() - 1;
-        if (pos >= 0) {
-          aResult.Cut(pos, 1);
-        }
-      } else {
-        // Mismatched quotes - leave them in
-      }
-    }
-  }
 }
 
 nsresult
@@ -4602,28 +4586,48 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     }
   }
 
-  // Don't include script loading and evaluation in the stopwatch
-  // that is measuring content creation time
-  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::ProcessSCRIPTTag()\n"));
-  MOZ_TIMER_STOP(mWatch);
+  nsCOMPtr<nsIScriptLoader> loader;
+  if(mFrameset) {
+    // Fix bug 82498
+    // We don't want to evaluate scripts in a frameset document.
+    if (mDocument) {
+      mDocument->GetScriptLoader(getter_AddRefs(loader));
+      if (loader) {
+        loader->Suspend();
+      }
+    }
+  }
+  else {
+    // Don't include script loading and evaluation in the stopwatch
+    // that is measuring content creation time
+    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::ProcessSCRIPTTag()\n"));
+    MOZ_TIMER_STOP(mWatch);
 
-  // Assume that we're going to block the parser with a script load.
-  // If it's an inline script, we'll be told otherwise in the call
-  // to our ScriptAvailable method.
-  mNeedToBlockParser = PR_TRUE;
+    // Assume that we're going to block the parser with a script load.
+    // If it's an inline script, we'll be told otherwise in the call
+    // to our ScriptAvailable method.
+    mNeedToBlockParser = PR_TRUE;
 
-  nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(element));
-  mScriptElements.AppendElement(scriptElement);
+    nsCOMPtr<nsIDOMHTMLScriptElement> scriptElement(do_QueryInterface(element));
+    mScriptElements.AppendElement(scriptElement);
+  }
 
   // Insert the child into the content tree. This will evaluate the
   // script as well.
   if (mCurrentContext->mStack[mCurrentContext->mStackPos-1].mInsertionPoint != -1) {
-      parent->InsertChildAt(element, 
-                            mCurrentContext->mStack[mCurrentContext->mStackPos-1].mInsertionPoint++, 
-                            PR_FALSE, PR_FALSE);
+    parent->InsertChildAt(element, 
+                          mCurrentContext->mStack[mCurrentContext->mStackPos-1].mInsertionPoint++, 
+                          PR_FALSE, PR_FALSE);
   }
   else {
     parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
+  }
+
+  // To prevent script evaluation, in a frameset document, we
+  // suspended the script loader. Now that the script content
+  // has been handled let's resume the script loader.
+  if(loader) {
+    loader->Resume();
   }
 
   // If the act of insertion evaluated the script, we're fine.

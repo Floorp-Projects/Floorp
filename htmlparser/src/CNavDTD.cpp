@@ -2432,9 +2432,14 @@ nsresult CNavDTD::CollectSkippedContent(nsIParserNode& aNode,PRInt32 &aCount) {
             // since this is an entity, we know that it's only one character.
             // check to see if it's a CR, in which case we'll need to do line
             // termination conversion at the end.
-            if(mScratch.Length()>0){
+            if(!mScratch.IsEmpty()){
               aMustConvertLinebreaks |= (mScratch[0] == kCR);
               theNode->mSkippedContent->Append(mScratch);
+            }
+            else {
+              // We thought it was an entity but it is not! - bug 79492
+              theNode->mSkippedContent->Append(PRUnichar('&'));
+              theNode->mSkippedContent->Append(theNextToken->GetStringValue());
             }
           }
         else theNextToken->AppendSource(*theNode->mSkippedContent);

@@ -1887,10 +1887,10 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk) {
         }
         
         else if (NS_ERROR_HTMLPARSER_STOPPARSING==result) {
-          mInternalState=result;
           // Note: Parser Terminate() calls DidBuildModel.
-          if(NS_ERROR_HTMLPARSER_STOPPARSING!=theTokenizerResult) {
+          if(mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
             DidBuildModel(mStreamStatus);
+            mInternalState = result;
           }
           break;
         }
