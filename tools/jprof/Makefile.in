@@ -82,6 +82,6 @@ test:
 	@echo LIBMALLOC = $(LIBMALLOC)
 	@echo TARGETS = $(TARGETS)
 
-libs::
+install::
 	$(INSTALL) -m 555 $(OTHER_LIBRARIES) $(DIST)/lib
 	$(INSTALL) -m 555 $(OTHER_LIBRARIES) $(DIST)/bin
