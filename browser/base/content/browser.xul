@@ -24,6 +24,7 @@ Contributor(s):
 
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://navigator/content/navigator.css" type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/bookmarks/bookmarksOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
