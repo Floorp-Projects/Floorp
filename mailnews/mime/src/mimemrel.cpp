@@ -817,13 +817,13 @@ flush_tag(MimeMultipartRelated* relobj)
     char* part_url;
     char* ptr = buf;
     char *ptr2;
-    PRBool isquote = PR_FALSE;
+    char quoteDelimiter = '\0';
     while (*ptr && *ptr != '=') ptr++;
     if (*ptr == '=') {
       ptr++;
-      if (*ptr == '"') {
-        isquote = PR_TRUE;
-        /* Take up the double quote and leading space here as well. */
+      if (*ptr == '"' || *ptr == '\'') {
+        quoteDelimiter = *ptr;
+        /* Take up the quote and leading space here as well. */
         /* Safe because there's a '>' at the end */
         do {ptr++;} while (nsCRT::IsAsciiSpace(*ptr));
       }
@@ -832,9 +832,9 @@ flush_tag(MimeMultipartRelated* relobj)
     if (status < 0) return status;
     buf = ptr;
     if (!*buf) break;
-    if (isquote) 
+    if (quoteDelimiter) 
     {
-      ptr = PL_strnchr(buf, '"', length - (buf - relobj->curtag));
+      ptr = PL_strnchr(buf, quoteDelimiter, length - (buf - relobj->curtag));
     } else {
       for (ptr = buf; *ptr ; ptr++) {
         if (*ptr == '>' || nsCRT::IsAsciiSpace(*ptr)) break;
