@@ -89,6 +89,8 @@ RDFHTMLBuilderImpl::RDFHTMLBuilderImpl(void)
     : mDocument(nsnull),
       mDB(nsnull)
 {
+	NS_INIT_REFCNT();
+
     if (nsnull == kIdAtom) {
         kIdAtom = NS_NewAtom("ID");
     }
