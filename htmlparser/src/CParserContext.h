@@ -53,9 +53,6 @@ public:
     ~CParserContext();
                           
 
-    PRInt32             mMajorIteration;
-    PRInt32             mMinorIteration;
-
     nsString            mSourceType;
     eAutoDetectResult   mAutoDetectStatus;
 

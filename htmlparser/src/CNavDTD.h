@@ -304,6 +304,15 @@ class CNavDTD : public nsIDTD {
      */
     virtual PRBool HasOpenContainer(eHTMLTags aContainer) const;
 
+    /**
+     * This method is used to determine the index on the stack of the
+     * nearest container tag that can constrain autoclosure.
+     * @update	gess 7/15/98
+     * @param   id of tag you want to test for
+     * @return  index of gating tag on context stack. kNotFound otherwise
+     */
+    virtual PRBool IsGatedFromClosing(eHTMLTags aChild) const;
+
 
     /**
      * Retrieve the tag type of the topmost item on context vector stack
@@ -320,6 +329,13 @@ class CNavDTD : public nsIDTD {
      */
     virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTag) const;
 
+    /**
+     * Finds the topmost occurance of given tag within context vector stack.
+     * @update	gess5/11/98
+     * @param   tag to be found
+     * @return  index of topmost tag occurance -- may be -1 (kNotFound).
+     */
+    virtual PRInt32 GetTopmostIndexOf(char aTagSet[]) const;
 
     /**
      * The following set of methods are used to partially construct 

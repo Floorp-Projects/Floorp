@@ -378,8 +378,8 @@ eAutoDetectResult nsParser::AutoDetectContentType(nsString& aBuffer,nsString& aT
  */
 PRInt32 nsParser::WillBuildModel(nsString& aFilename){
 
-  mParserContext->mMajorIteration=-1;
-  mParserContext->mMinorIteration=-1;
+  mMajorIteration=-1;
+  mMinorIteration=-1;
 
   mParserContext->mParseMode=DetermineParseMode();  
   if(PR_TRUE==FindSuitableDTD(*mParserContext)) {
@@ -567,14 +567,12 @@ PRInt32 nsParser::BuildModel() {
   nsDequeIterator e=mParserContext->mTokenDeque.End(); 
   nsDequeIterator theMarkPos(e);
 
-//  mParserContext->mMajorIteration++;
-
   if(!mParserContext->mCurrentPos)
     mParserContext->mCurrentPos=new nsDequeIterator(mParserContext->mTokenDeque.Begin());
 
   PRInt32 result=kNoError;
   while((kNoError==result) && ((*mParserContext->mCurrentPos<e))){
-    mParserContext->mMinorIteration++;
+    mMinorIteration++;
     CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
 
     theMarkPos=*mParserContext->mCurrentPos;
@@ -800,7 +798,7 @@ PRBool nsParser::WillTokenize(){
 PRInt32 nsParser::Tokenize(){
   CToken* theToken=0;
   PRInt32 result=kNoError;
-  PRBool  done=(0==++mParserContext->mMajorIteration) ? (!WillTokenize()) : PR_FALSE;
+  PRBool  done=(0==++mMajorIteration) ? (!WillTokenize()) : PR_FALSE;
   
 
   while((PR_FALSE==done) && (kNoError==result)) {

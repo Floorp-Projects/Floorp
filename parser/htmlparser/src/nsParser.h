@@ -337,7 +337,10 @@ protected:
     char*               mTransferBuffer;
    *****************************************************/
 
+
     CParserContext*     mParserContext;
+    PRInt32             mMajorIteration;
+    PRInt32             mMinorIteration;
 
   /*****************************************************
     The above fields are moving into parse-context 

@@ -49,7 +49,6 @@ CParserContext::CParserContext(CScanner* aScanner,
   mPrevContext=aPreviousContext;
   mListener=aListener;
   NS_IF_ADDREF(mListener);
-  mMajorIteration=mMinorIteration=-1;
   mParseMode=eParseMode_unknown;
   mAutoDetectStatus=eUnknownDetect;
   mTransferBuffer=new char[eTransferBufferSize+1];

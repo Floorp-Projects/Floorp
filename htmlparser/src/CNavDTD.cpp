@@ -77,12 +77,18 @@ static char gHeadingTags[]={
   0};
 
 static char  gStyleTags[]={
-  eHTMLTag_a,       eHTMLTag_b,     eHTMLTag_big,
-  eHTMLTag_blink,   eHTMLTag_cite,  eHTMLTag_em, 
-  eHTMLTag_font,    eHTMLTag_i,     eHTMLTag_kbd,     
-  eHTMLTag_s,       eHTMLTag_small, eHTMLTag_strike,  
-  eHTMLTag_strong,  eHTMLTag_sub,   eHTMLTag_sup,     
-  eHTMLTag_tt,      eHTMLTag_u,     eHTMLTag_var,     
+  eHTMLTag_a,       eHTMLTag_b,       eHTMLTag_big,
+  eHTMLTag_blink,   eHTMLTag_center,  eHTMLTag_cite,  
+  eHTMLTag_em,      eHTMLTag_font,    eHTMLTag_i,     
+  eHTMLTag_kbd,     eHTMLTag_s,       eHTMLTag_small, 
+  eHTMLTag_strike,  eHTMLTag_strong,  eHTMLTag_sub,   
+  eHTMLTag_sup,     eHTMLTag_tt,      eHTMLTag_u,     
+  eHTMLTag_var,     
+  0};
+
+static char gTableTags[]={ 
+  eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  eHTMLTag_tbody,   
+  eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,     eHTMLTag_td, 
   0};
   
 static char  gWhitespaceTags[]={
@@ -680,7 +686,8 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
   // close the explicit style tag (goofy, huh?)
 
 
-    //now check to see if this token should be omitted...
+    //now check to see if this token should be omitted, or 
+    //if it's gated from closing by the presence of another tag.
   if(PR_TRUE==CanOmitEndTag(GetTopNode(),tokenTagType)) {
     UpdateStyleStackForCloseTag(tokenTagType,tokenTagType);
     return result;
@@ -1024,8 +1031,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_noframes,  eHTMLTag_noscript,
     eHTMLTag_object,    eHTMLTag_ol,        eHTMLTag_p,         eHTMLTag_pre,
     eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
-    eHTMLTag_samp,      eHTMLTag_script,
-    eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,
+    eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
+    eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_table,     eHTMLTag_text,
     
     eHTMLTag_textarea,  eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_ul,        
@@ -1046,8 +1053,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_label,     eHTMLTag_map,       eHTMLTag_newline,   eHTMLTag_nobr,
     eHTMLTag_object,    eHTMLTag_p, 
     eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
-    eHTMLTag_samp,      eHTMLTag_script,    
-    eHTMLTag_select,    eHTMLTag_small,     eHTMLTag_span,      eHTMLTag_strong,    
+    eHTMLTag_samp,      eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,     
+    eHTMLTag_spacer,    eHTMLTag_span,      eHTMLTag_strong,    
     eHTMLTag_sub,       eHTMLTag_sup,       eHTMLTag_text,      eHTMLTag_textarea,  
     eHTMLTag_tt,        eHTMLTag_u,         eHTMLTag_userdefined, eHTMLTag_var,       
     eHTMLTag_whitespace,
@@ -1065,13 +1072,12 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
     eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
 
-    eHTMLTag_label,     eHTMLTag_legend,    
-    eHTMLTag_li,  eHTMLTag_newline,
+    eHTMLTag_label,     eHTMLTag_legend,    eHTMLTag_li,        eHTMLTag_newline,
         
     eHTMLTag_noframes,
-    eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_p, eHTMLTag_pre,
+    eHTMLTag_noscript,  eHTMLTag_object,    eHTMLTag_p,         eHTMLTag_pre,
     eHTMLTag_q,         eHTMLTag_s,         eHTMLTag_strike,    
-    eHTMLTag_samp,      eHTMLTag_small,
+    eHTMLTag_samp,      eHTMLTag_small,     eHTMLTag_spacer,
     eHTMLTag_span,      eHTMLTag_strong,    eHTMLTag_sub,       eHTMLTag_sup,   
     eHTMLTag_td,        eHTMLTag_text,
     
@@ -1169,7 +1175,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
 
     case eHTMLTag_dl:
       {
-        char okTags[]={eHTMLTag_dd,eHTMLTag_dt,0};
+        char okTags[]={eHTMLTag_dd,eHTMLTag_dt,eHTMLTag_whitespace,eHTMLTag_newline,0};
         result=PRBool(0!=strchr(okTags,aChild));
       }
       break;
@@ -1207,8 +1213,8 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_head:
       {
         static char  okTags[]={
-          eHTMLTag_base,  eHTMLTag_isindex, eHTMLTag_link,  eHTMLTag_meta,
-          eHTMLTag_script,eHTMLTag_style,   eHTMLTag_title, 0};
+          eHTMLTag_base,    eHTMLTag_isindex, eHTMLTag_link,  eHTMLTag_meta,
+          eHTMLTag_script,  eHTMLTag_style,   eHTMLTag_title, 0};
         result=PRBool(0!=strchr(okTags,aChild));
       }
       break;
@@ -1226,8 +1232,6 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
       result=PRBool(0!=strchr(gTagSet1,aChild)); break;
 
     case eHTMLTag_layer:
-      break;
-
     case eHTMLTag_link:
       break;    //singletons can't contain anything...
 
@@ -1473,7 +1477,7 @@ PRBool IsCompatibleStyleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
  *  @return  PR_TRUE if given tag can contain other tags
  */
 PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
-  PRBool result=PR_FALSE;
+  PRBool  result=PR_FALSE;
 
   //begin with some simple (and obvious) cases...
   switch((eHTMLTags)aChild) {
@@ -1486,7 +1490,7 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
     case eHTMLTag_newline:    
     case eHTMLTag_whitespace:
 
-      switch((eHTMLTags)aParent) {
+      switch(aParent) {
         case eHTMLTag_html:     case eHTMLTag_head:   
         case eHTMLTag_title:    case eHTMLTag_map:    
         case eHTMLTag_tr:       case eHTMLTag_table:  
@@ -1500,7 +1504,9 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
       break;
 
     default:
-      if(IsCompatibleStyleTag(aChild,GetTopNode()))
+      if(IsGatedFromClosing(aChild))
+        result=PR_TRUE;
+      else if(IsCompatibleStyleTag(aChild,GetTopNode()))
         result=PR_FALSE;
       else result=(!HasOpenContainer(aChild));
       break;
@@ -1531,12 +1537,14 @@ PRBool CNavDTD::IsContainer(eHTMLTags aTag) const {
     case eHTMLTag_meta:
 //    case eHTMLTag_option:     
     case eHTMLTag_param:
-    case eHTMLTag_style:      case eHTMLTag_spacer:
+    case eHTMLTag_style:      
+    case eHTMLTag_spacer:
     case eHTMLTag_wbr:
     case eHTMLTag_form:
     case eHTMLTag_newline:
     case eHTMLTag_whitespace:
     case eHTMLTag_text: 
+    case eHTMLTag_unknown:
       result=PR_FALSE;
       break;
 
@@ -1721,6 +1729,69 @@ PRBool CNavDTD::HasOpenContainer(eHTMLTags aContainer) const {
 }
 
 /**
+ *  Call this method when you want to determine whether a
+ *  given tag should be prevented (gated) from closing.
+ *
+ *  @update  gess 7/15/96
+ *  @param   aTag the tag to be tested for autoclosure
+ *  @return  TRUE if tag is gated.
+ */
+PRBool CNavDTD::IsGatedFromClosing(eHTMLTags aChildTag) const {
+  PRBool  result=PR_FALSE;
+  PRInt32 tagPos=GetTopmostIndexOf(aChildTag);
+  PRInt32 theGatePos=kNotFound;
+
+  switch(aChildTag) {
+    case eHTMLTag_li:
+      {
+        static char theGateTags[]={eHTMLTag_ol,eHTMLTag_ul,0};
+        theGatePos=GetTopmostIndexOf(theGateTags);
+      }
+      break;
+
+    case eHTMLTag_a:      case eHTMLTag_b:
+    case eHTMLTag_big:    case eHTMLTag_blink:
+    case eHTMLTag_center:
+    case eHTMLTag_cite:   case eHTMLTag_em:
+    case eHTMLTag_font:   case eHTMLTag_i:    
+    case eHTMLTag_kbd:    case eHTMLTag_s:    
+    case eHTMLTag_small:  case eHTMLTag_strike:  
+    case eHTMLTag_strong: case eHTMLTag_sub:   
+    case eHTMLTag_sup:    case eHTMLTag_tt:
+    case eHTMLTag_u:      case eHTMLTag_var:
+      {
+        static char theGateTags[]={ 
+          eHTMLTag_caption, eHTMLTag_col, eHTMLTag_colgroup,  eHTMLTag_tbody,   
+          eHTMLTag_tfoot,   eHTMLTag_tr,  eHTMLTag_thead,     eHTMLTag_td, 
+          eHTMLTag_body,0};
+        theGatePos=GetTopmostIndexOf(theGateTags);
+      }
+      break;
+
+    case eHTMLTag_td:
+    case eHTMLTag_tr:
+      theGatePos=GetTopmostIndexOf(gTableTags);
+      break;
+    
+/*      
+    eHTMLTag_table
+    eHTMLTag_tbody
+    eHTMLTag_thead
+    eHTMLTag_tfoot
+    eHTMLTag_caption  
+    eHTMLTag_col   
+    eHTMLTag_colgroup
+*/
+
+    default:
+      break;
+  }
+  if(kNotFound!=theGatePos)
+    result=PRBool(theGatePos>tagPos);
+  return result;
+}
+
+/**
  *  This method retrieves the HTMLTag type of the topmost
  *  container on the stack.
  *  
@@ -1731,6 +1802,22 @@ eHTMLTags CNavDTD::GetTopNode() const {
   return mContextStack.Last();
 }
 
+/**
+ *  Determine whether the given tag is open anywhere
+ *  in our context stack.
+ *  
+ *  @update  gess 4/2/98
+ *  @param   eHTMLTags tag to be searched for in stack
+ *  @return  topmost index of tag on stack
+ */
+PRInt32 CNavDTD::GetTopmostIndexOf(char aTagSet[]) const {
+  int i=0;
+  for(i=mContextStack.mCount-1;i>=0;i--){
+    if(0!=strchr(aTagSet,mContextStack.mTags[i]))
+      return i;
+  }
+  return kNotFound;
+}
 
 /**
  *  Determine whether the given tag is open anywhere
