@@ -95,15 +95,32 @@ sub get_module_map {
 }
 
 sub parse_modules {
+    local @finaloptions=();
     while( $l = &get_line ){
+        @finaloptions=();
+
         ($mod_name, $flag, @params) = split(/[ \t]+/,$l);
-        if( $flag ne '-a' ){
-            next;
+        while ( $flag =~ /^-.$/){
+            if( $flag eq '-a' ){
+                $flag="";
+                last;
+            }
+            if ( $flag eq '-l' ){ # then keep it
+                push @finaloptions, ($flag, shift @params);
+                $flag= shift @options;
+                next;
+            }
+            if( $flag =~ /^-.$/ ){ 
+                shift @params; # skip parameter's argument 
+                $flag = shift @params;
+                next;
+            }
+            last; # No options found...
         }
-        $modules->{$mod_name} = [@params];
+        unshift @params, $flag if ( $flag ne "" );
+        $modules->{$mod_name} = [(@finaloptions,@params)];
     }
 }
-
 
 sub build_map {
     local($name,$mod_map) = @_;
@@ -112,12 +129,13 @@ sub build_map {
     $local = $NOT_LOCAL;
     $bFound = 0;
 
+#    printf "looking for $name in %s<br>\n",join(",", @{$modules->{$name}});
     for $i ( @{$modules->{$name}} ){
         $bFound = 1;
         if( $i eq '-l' ){
             $local = $IS_LOCAL;
-        }
-        elsif( !build_map($i, $mod_map )){
+        } 
+        elsif( ($i eq $name) || !build_map($i, $mod_map )){
             $mod_map->{$i} = $local;   
         }
     }
