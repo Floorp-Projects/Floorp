@@ -23,9 +23,15 @@
 
 /* Public Methods */
 
-nsWinProfile::nsWinProfile( nsSoftwareUpdate* suObj, nsFolderSpec* folder, char* file )
+nsWinProfile::nsWinProfile( nsInstall* suObj, const nsString& folder, const nsString& file )
 {
-	filename = folder->MakeFullPath(file, NULL); /* can I pass NULL here? */
+  filename = new nsString(folder);
+  if(filename->Last() != '\\')
+  {
+    filename->Append("\\");
+  }
+  filename->Append(file);
+
 	su = suObj;
 
 //	principal = suObj->GetPrincipal();
@@ -34,17 +40,23 @@ nsWinProfile::nsWinProfile( nsSoftwareUpdate* suObj, nsFolderSpec* folder, char*
 //	target = (nsUserTarget*)nsTarget::findTarget(INSTALL_PRIV);
 }
 
-PRInt32
-nsWinProfile::getString(nsString section, nsString key, nsString* aReturn )
+nsWinProfile::~nsWinProfile()
 {
-  *aReturn = nativeGetString(section, key);
-  return NS_OK;
+  delete filename;
 }
 
 PRInt32
-nsWinProfile::writeString( char* section, char* key, char* value, PRInt32* aReturn )
+nsWinProfile::getString(nsString section, nsString key, nsString* aReturn)
+{
+  return nativeGetString(section, key, aReturn);
+}
+
+PRInt32
+nsWinProfile::writeString(nsString section, nsString key, nsString value, PRInt32* aReturn)
 {
   nsWinProfileItem* wi = new nsWinProfileItem(this, section, key, value);
+
+  *aReturn = NS_OK;
 
   if(wi == NULL)
     return PR_FALSE;
@@ -64,7 +76,7 @@ nsInstall* nsWinProfile::installObject()
 }
 
 PRInt32
-nsWinProfile::finalWriteString( char* section, char* key, char* value )
+nsWinProfile::finalWriteString( nsString section, nsString key, nsString value )
 {
 	/* do we need another security check here? */
 	return nativeWriteString(section, key, value);
@@ -72,38 +84,61 @@ nsWinProfile::finalWriteString( char* section, char* key, char* value )
 
 /* Private Methods */
 
-PRInt32
-nsWinProfile::nativeWriteString( char* section, char* key, char* value )
-{
-  int success = 0;
-
-	/* make sure conversions worked */
-  if(section != NULL && key != NULL && filename != NULL)
-    success = WritePrivateProfileString( section, key, value, filename );
-
-  return success;
-}
-
 #define STRBUFLEN 255
   
-char* nsWinProfile::nativeGetString(nsString section, nsString key )
+PRInt32
+nsWinProfile::nativeGetString(nsString section, nsString key, nsString* aReturn )
 {
-	int   numChars;
-  char  valbuf[STRBUFLEN];
-  char* value = NULL;
+	int       numChars;
+  char      valbuf[STRBUFLEN];
+  char*     sectionCString;
+  char*     keyCString;
+  char*     filenameCString;
 
   /* make sure conversions worked */
-  if(section != "nsnull" && key != "nsnull" && filename != NULL)
+  if(section.First() != '\0' && key.First() != '\0' && filename->First() != '\0')
   {
-    numChars = GetPrivateProfileString( section, key, "", valbuf, STRBUFLEN, filename );
+    sectionCString  = section.ToNewCString();
+    keyCString      = key.ToNewCString();
+    filenameCString = filename->ToNewCString();
 
-    /* if the value fit in the buffer */
-    if(numChars < STRBUFLEN)
-    {
-      value = XP_STRDUP(valbuf);
-    }
+    numChars        = GetPrivateProfileString(sectionCString, keyCString, "", valbuf, STRBUFLEN, filenameCString);
+
+    *aReturn        = valbuf;
+
+    delete [] sectionCString;
+    delete [] keyCString;
+    delete [] filenameCString;
   }
 
-  return value;
+  return numChars;
+}
+
+PRInt32
+nsWinProfile::nativeWriteString( nsString section, nsString key, nsString value )
+{
+  char* sectionCString;
+  char* keyCString;
+  char* valueCString;
+  char* filenameCString;
+  int   success = 0;
+
+	/* make sure conversions worked */
+  if(section.First() != '\0' && key.First() != '\0' && filename->First() != '\0')
+  {
+    sectionCString  = section.ToNewCString();
+    keyCString      = key.ToNewCString();
+    valueCString    = value.ToNewCString();
+    filenameCString = filename->ToNewCString();
+
+    success = WritePrivateProfileString( sectionCString, keyCString, valueCString, filenameCString );
+
+    delete [] sectionCString;
+    delete [] keyCString;
+    delete [] valueCString;
+    delete [] filenameCString;
+  }
+
+  return success;
 }
 

@@ -22,53 +22,51 @@
 #include "prtypes.h"
 
 #include "nsInstall.h"
-#include "nsFolderSpec.h"
 
-struct nsWinProfile {
+class nsWinProfile
+{
+  public:
 
-public:
+    /* Public Fields */
 
-  /* Public Fields */
+    /* Public Methods */
 
-  /* Public Methods */
+    nsWinProfile( nsInstall* suObj, const nsString& folder, const nsString& file );
+    ~nsWinProfile(); 
 
-  nsWinProfile( nsSoftwareUpdate* suObj, nsFolderSpec* folder, char* file );
-  
-  /**
-   * Schedules a write into a windows "ini" file.  "Value" can be
-   * null to delete the value, but we don't support deleting an entire
-   * section via a null "key".  The actual write takes place during
-   * SoftwareUpdate.FinalizeInstall();
-   *
-   * @return  false for failure, true for success
-   */
-  PRInt32 writeString( char* section, char* key, char* value, PRInt32* aReturn );
-  
-  /**
-   * Reads a value from a windows "ini" file.  We don't support using
-   * a null "key" to return a list of keys--you have to know what you want
-   *
-   * @return  String value from INI, "" if not found, null if error
-   */
-  PRInt32 getString( char* section, char* key, nsString* aReturn );
-  
-  char* getFilename();
-  nsInstall* softUpdate();
-  
-  int finalWriteString( char* section, char* key, char* value );
-  
-  
-private:
-  
-  /* Private Fields */
-  char* filename;
-  nsInstall* su;
-  
-  nsUserTarget* target;
-  
-  /* Private Methods */
-  int nativeWriteString( char* section, char* key, char* value );
-  char* nativeGetString( char* section, char* key );
+    /**
+     * Schedules a write into a windows "ini" file.  "Value" can be
+     * null to delete the value, but we don't support deleting an entire
+     * section via a null "key".  The actual write takes place during
+     * SoftwareUpdate.FinalizeInstall();
+     *
+     * @return  false for failure, true for success
+     */
+    PRInt32 writeString( nsString section, nsString key, nsString value, PRInt32* aReturn );
+    
+    /**
+     * Reads a value from a windows "ini" file.  We don't support using
+     * a null "key" to return a list of keys--you have to know what you want
+     *
+     * @return  String value from INI, "" if not found, null if error
+     */
+    PRInt32 getString( nsString section, nsString key, nsString* aReturn );
+    
+    nsString* getFilename();
+    nsInstall* installObject();
+    
+    PRInt32 finalWriteString( nsString section, nsString key, nsString value );
+
+    
+  private:
+    
+    /* Private Fields */
+    nsString*  filename;
+    nsInstall* su;
+    
+    /* Private Methods */
+    PRInt32 nativeWriteString( nsString section, nsString key, nsString value );
+    PRInt32 nativeGetString( nsString section, nsString key, nsString* aReturn );
 };
 
 #endif /* nsWinProfile_h__ */

@@ -85,6 +85,7 @@ class nsInstallInfo
 class nsInstall
 {
     friend class nsWinReg;
+    friend class nsWinProfile;
 
     public:
        
@@ -171,7 +172,7 @@ class nsInstall
         PRInt32    GetFolder(const nsString& aTargetFolder, const nsString& aSubdirectory, nsString** aFolder);
         PRInt32    GetFolder(const nsString& aTargetFolder, nsString** aFolder);
         PRInt32    GetLastError(PRInt32* aReturn);
-        PRInt32    GetWinProfile(const nsString& aFolder, const nsString& aFile, PRInt32* aReturn);
+        PRInt32    GetWinProfile(JSContext* jscontext, JSClass* WinProfileClass, const nsString& aFolder, const nsString& aFile, jsval* aReturn);
         PRInt32    GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    Patch(const nsString& aRegName, nsIDOMInstallVersion* aVersion, const nsString& aJarSource, const nsString& aFolder, const nsString& aTargetName, PRInt32* aReturn);

@@ -17,7 +17,6 @@
  */
 
 #include "jsapi.h"
-//#include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 
@@ -25,9 +24,6 @@
 #include "nsInstall.h"
 #include "nsWinReg.h"
 #include "nsJSWinReg.h"
-
-//extern JSClass WinRegClass;
-// extern JSClass WinProfileClass;
 
 static void PR_CALLBACK WinRegCleanup(JSContext *cx, JSObject *obj);
 
@@ -448,14 +444,6 @@ WinReg(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   return JS_FALSE;
 }
 
-//
-// WinProfile constructor
-//
-PR_STATIC_CALLBACK(JSBool)
-WinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  return JS_FALSE;
-}
 
 /***********************************************************************/
 //

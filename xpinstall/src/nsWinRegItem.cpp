@@ -40,19 +40,15 @@ nsWinRegItem::nsWinRegItem(nsWinReg* regObj, PRInt32 root, PRInt32 action, nsStr
 
 nsWinRegItem::~nsWinRegItem()
 {
-  if(subkey != nsnull)
-    delete subkey;
-
-  if(name != nsnull)
-    delete name;
-
-  if(value != nsnull)
-    delete value;
+  delete reg;
+  delete subkey;
+  delete name;
+  delete value;
 }
 
 PRInt32 nsWinRegItem::Complete()
 {
-  PRInt32 aReturn;
+  PRInt32 aReturn = NS_OK;
 
   switch (command)
   {
@@ -96,51 +92,51 @@ char* nsWinRegItem::toString()
 	{
 	case NS_WIN_REG_CREATE:
 		keyString = keystr(rootkey, subkey, nsnull);
-    result = new nsString(kCRK);
+    result    = new nsString(kCRK);
     result->Append(*keyString);
     resultCString = result->ToNewCString();
-    delete [] keyString;
-    delete [] result;
+    delete keyString;
+    delete result;
 		return resultCString;
 	case NS_WIN_REG_DELETE:
 		keyString = keystr(rootkey, subkey, nsnull);
-    result = new nsString(kDRK);
+    result    = new nsString(kDRK);
     result->Append(*keyString);
     resultCString = result->ToNewCString();
-    delete [] keyString;
-    delete [] result;
+    delete keyString;
+    delete result;
 		return resultCString;
 	case NS_WIN_REG_DELETE_VAL:
 		keyString = keystr(rootkey, subkey, name);
-    result = new nsString(kDRV);
+    result    = new nsString(kDRV);
     result->Append(*keyString);
     resultCString = result->ToNewCString();
-    delete [] keyString;
-    delete [] result;
+    delete keyString;
+    delete result;
 		return resultCString;
 	case NS_WIN_REG_SET_VAL_STRING:
 		keyString = keystr(rootkey, subkey, name);
-    result = new nsString(kSRV);
+    result    = new nsString(kSRV);
     result->Append(*keyString);
     resultCString = result->ToNewCString();
-    delete [] keyString;
-    delete [] result;
+    delete keyString;
+    delete result;
 		return resultCString;
 	case NS_WIN_REG_SET_VAL:
 		keyString = keystr(rootkey, subkey, name);
-    result = new nsString(kSRV);
+    result    = new nsString(kSRV);
     result->Append(*keyString);
     resultCString = result->ToNewCString();
-    delete [] keyString;
-    delete [] result;
+    delete keyString;
+    delete result;
 		return resultCString;
 	default:
 		keyString = keystr(rootkey, subkey, name);
-    result = new nsString(kUNK);
+    result    = new nsString(kUNK);
     result->Append(*keyString);
     resultCString = result->ToNewCString();
-    delete [] keyString;
-    delete [] result;
+    delete keyString;
+    delete result;
 		return resultCString;
 	}
 }
@@ -193,7 +189,7 @@ nsString* nsWinRegItem::keystr(PRInt32 root, nsString* subkey, nsString* name)
     finalstr->Append(*name);
     finalstr->Append("]");
 	}
-  delete [] rootstr;
+  delete rootstr;
   return finalstr;
 }
 

@@ -36,15 +36,17 @@ public:
   /* Public Methods */
 
   nsWinProfileItem(nsWinProfile* profileObj,
-                   char* sectionName,
-                   char* keyName,
-                   char* val);
+                   nsString sectionName,
+                   nsString keyName,
+                   nsString val);
+
+  ~nsWinProfileItem();
 
   /**
    * Completes the install:
    * - writes the data into the .INI file
    */
-  char* Complete();
+  PRInt32 Complete();
   
   float GetInstallOrder();
   
@@ -54,7 +56,7 @@ public:
   void Abort();
   
   // no need for set-up
-  char* Prepare();
+  PRInt32 Prepare();
   
   /* should these be protected? */
   PRBool CanUninstall();
@@ -63,13 +65,13 @@ public:
 private:
   
   /* Private Fields */
-  nsWinProfile* profile; // initiating profile object
-  char* section;     // Name of section
-  char* key;         // Name of key
-  char* value;       // data to write
+  nsWinProfile* profile;     // initiating profile object
+  nsString*     section;     // Name of section
+  nsString*     key;         // Name of key
+  nsString*     value;       // data to write
   
   /* Private Methods */
-  
+ 
 };
 
 PR_END_EXTERN_C

@@ -59,6 +59,7 @@
 
 #ifdef XP_WIN
 #include "nsWinReg.h"
+#include "nsWinProfile.h"
 #endif
 
 #ifdef XP_PC
@@ -2278,9 +2279,24 @@ nsInstall::GetLastError(PRInt32* aReturn)
 }
 
 PRInt32    
-nsInstall::GetWinProfile(const nsString& aFolder, const nsString& aFile, PRInt32* aReturn)
+nsInstall::GetWinProfile(JSContext* jscontext, JSClass* WinProfileClass, const nsString& aFolder, const nsString& aFile, jsval* aReturn)
 {
 #ifdef XP_WIN
+    JSObject*     winProfileObject;
+    nsWinProfile* nativeWinProfileObject = new nsWinProfile(this, aFolder, aFile);
+    JSObject*     winProfilePrototype    = this->RetrieveWinProfilePrototype();
+
+    winProfileObject = JS_NewObject(jscontext, WinProfileClass, winProfilePrototype, NULL);
+    if(winProfileObject == NULL)
+    {
+      return PR_FALSE;
+    }
+
+    JS_SetPrivate(jscontext, winProfileObject, nativeWinProfileObject);
+
+    *aReturn = OBJECT_TO_JSVAL(winProfileObject);
+#else
+    *aReturn = JSVAL_NULL;
 #endif /* XP_WIN */
 
     return NS_OK;

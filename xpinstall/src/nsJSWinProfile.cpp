@@ -25,8 +25,6 @@
 #include "nsWinProfile.h"
 #include "nsJSWinProfile.h"
 
-static void PR_CALLBACK WinProfileCleanup(JSContext *cx, JSObject *obj);
-
 extern void nsCvrtJSValToStr(nsString&  aString,
                              JSContext* aContext,
                              jsval      aValue);
@@ -168,15 +166,11 @@ JSClass WinProfileClass = {
   JS_ResolveStub,
   JS_ConvertStub,
   WinProfileCleanup
-;
+};
 
 
 static JSConstDoubleSpec winprofile_constants[] = 
 {
-//    { nsWinProfile::HKEY_CLASSES_ROOT,           "HKEY_CLASSES_ROOT"            },
-//    { nsWinProfile::HKEY_CURRENT_USER,           "HKEY_CURRENT_USER"            },
-//    { nsWinProfile::HKEY_LOCAL_MACHINE,          "HKEY_LOCAL_MACHINE"           },
-//    { nsWinProfile::HKEY_USERS,                  "HKEY_USERS"                   },
     {0}
 };
 
@@ -209,7 +203,7 @@ InitWinProfilePrototype(JSContext *jscontext, JSObject *global, JSObject **winPr
     return NS_ERROR_FAILURE;
   }
 
-  if(PR_FALSE == JS_DefineConstDoubles(jscontext, *winProfilePrototype, winProfile_constants))
+  if(PR_FALSE == JS_DefineConstDoubles(jscontext, *winProfilePrototype, winprofile_constants))
     return NS_ERROR_FAILURE;
 
   return NS_OK;
