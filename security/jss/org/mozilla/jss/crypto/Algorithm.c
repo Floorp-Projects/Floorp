@@ -249,3 +249,16 @@ Java_org_mozilla_jss_crypto_EncryptionAlgorithm_getIVLength
         return PK11_GetIVLength(mech);
     }
 }
+
+/*
+ * This must be synchronized with SymmetricKey.Usage
+ */
+CK_ULONG JSS_symkeyUsage[] = {
+    CKA_ENCRYPT,        /* 0 */
+    CKA_DECRYPT,        /* 1 */
+    CKA_WRAP,           /* 2 */
+    CKA_UNWRAP,         /* 3 */
+    CKA_SIGN,           /* 4 */
+    CKA_VERIFY,         /* 5 */
+    0UL
+};
