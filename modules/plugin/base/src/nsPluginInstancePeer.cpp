@@ -37,7 +37,6 @@
 
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptObjectOwner.h"
 
 #if defined(XP_PC) && !defined(XP_OS2)
 #include "windows.h"
@@ -839,27 +838,22 @@ printf("instance peer setwindowsize called\n");
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
 {
-	*outJSWindow = NULL;
-	nsresult rv = NS_ERROR_FAILURE;
-    NS_WITH_SERVICE ( nsIJVMManager, jvm, nsIJVMManager::GetCID(), &rv);
-    if ( NS_SUCCEEDED ( rv ) && jvm != nsnull ) {
-      nsCOMPtr<nsIDocument> document;   
-	   if (mOwner->GetDocument(getter_AddRefs(document)) == NS_OK) {
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        document->GetScriptGlobalObject(getter_AddRefs(global));
-        if(global) {
-          nsCOMPtr<nsIScriptContext> context;
-		    global->GetContext(getter_AddRefs(context));
-			 if (nsnull != context) {
-            nsCOMPtr<nsIScriptObjectOwner> window(do_QueryInterface(global));
-            if (window) {
-              rv = window->GetScriptObject(context, (void**)outJSWindow);
-			   }
-			 }
-		  }
-	   }
-    } 
-	return rv;
+  *outJSWindow = NULL;
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDocument> document;   
+
+  rv = mOwner->GetDocument(getter_AddRefs(document));
+
+  if (NS_SUCCEEDED(rv) && document) {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    document->GetScriptGlobalObject(getter_AddRefs(global));
+
+    if(global) {
+      *outJSWindow = global->GetGlobalJSObject();
+    }
+  } 
+
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSThread(PRUint32 *outThreadID)
@@ -870,24 +864,27 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSThread(PRUint32 *outThreadID)
 
 NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSContext(JSContext* *outContext)
 {
-	*outContext = NULL;
-	nsresult rv = NS_ERROR_FAILURE;
-   NS_WITH_SERVICE(nsIJVMManager, jvm, nsIJVMManager::GetCID(), &rv);
-   if (NS_SUCCEEDED(rv) && jvm != nsnull ) {
-     nsCOMPtr<nsIDocument> document;
-	  if (mOwner->GetDocument(getter_AddRefs(document)) == NS_OK) {
-       nsCOMPtr<nsIScriptGlobalObject> global;
-       document->GetScriptGlobalObject(getter_AddRefs(global));
-		 if (global) {
-         nsCOMPtr<nsIScriptContext> context;
-			if (global->GetContext(getter_AddRefs(context)) == NS_OK) {
-				*outContext = (JSContext*) context->GetNativeContext();
-				rv = NS_OK;
-			}
-		 }
-	  }
-   } 
-	return rv;
+  *outContext = NULL;
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDocument> document;
+
+  rv = mOwner->GetDocument(getter_AddRefs(document));
+
+  if (NS_SUCCEEDED(rv) && document) {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+    document->GetScriptGlobalObject(getter_AddRefs(global));
+
+    if (global) {
+      nsCOMPtr<nsIScriptContext> context;
+
+      if (global->GetContext(getter_AddRefs(context)) == NS_OK) {
+        *outContext = (JSContext*) context->GetNativeContext();
+        rv = NS_OK;
+      }
+    }
+  }
+
+  return rv;
 }
 
 nsresult nsPluginInstancePeerImpl::Initialize(nsIPluginInstanceOwner *aOwner,
