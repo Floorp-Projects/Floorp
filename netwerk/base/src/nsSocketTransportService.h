@@ -45,6 +45,7 @@
 #include "nsIInputStream.h"
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
+#include "nsIDNSService.h"
 
 #if defined(XP_PC) || defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_MAC)
 //
@@ -97,6 +98,8 @@ public:
     
     nsresult  GetNeckoStringByName (const char *aName, PRUnichar **aString);
 
+    nsIDNSService* GetCachedDNSService() { return mDNSService.get(); }
+
 protected:
     nsIThread*            mThread;
     PRFileDesc*           mThreadEvent;
@@ -108,7 +111,8 @@ protected:
     PRInt32               mSelectFDSetCount;
     PRPollDesc*           mSelectFDSet;
     nsSocketTransport**   mActiveTransportList;
-	nsCOMPtr<nsIStringBundle>   m_stringBundle;
+    nsCOMPtr<nsIStringBundle>   m_stringBundle;
+    nsCOMPtr<nsIDNSService>     mDNSService;
 };
 
 

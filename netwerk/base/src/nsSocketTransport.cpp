@@ -68,7 +68,6 @@ static PRLogModuleInfo *gSocketTransportLog = nsnull;
 #define LOG(args) PR_LOG(gSocketTransportLog, PR_LOG_DEBUG, args)
 
 static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
-static NS_DEFINE_CID(kDNSService, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -650,15 +649,17 @@ nsresult nsSocketTransport::doResolveHost(void)
         //
         mNetAddress.ipv6.port = PR_htons(((mProxyPort != -1 && !mProxyTransparent) ? mProxyPort : mPort));
 
-        nsCOMPtr<nsIDNSService> pDNSService(do_GetService(kDNSService, &rv));
-        if (NS_FAILED(rv)) return rv;
+        PR_ExitMonitor(mMonitor);
+
+        nsIDNSService* pDNSService = mService->GetCachedDNSService();
+        if (!pDNSService) {
+            return NS_ERROR_UNEXPECTED;
+        }
 
         //
         // Give up the SocketTransport lock.  This allows the DNS thread to call the
         // nsIDNSListener notifications without blocking...
         //
-        PR_ExitMonitor(mMonitor);
-
         rv = pDNSService->Lookup((mProxyHost && !mProxyTransparent) ? mProxyHost : mHostName, 
                                  this, 
                                  nsnull, 
@@ -918,8 +919,10 @@ nsSocketTransport::doBlockingConnection()
     // The hostname has not been resolved yet...
     //
     if (PR_IsNetAddrType(&mNetAddress, PR_IpAddrAny)) {
-        nsCOMPtr<nsIDNSService> pDNSService(do_GetService(kDNSService, &rv));
-        if (NS_FAILED(rv)) return rv;
+        nsIDNSService* pDNSService = mService->GetCachedDNSService();
+        if (!pDNSService) {
+            return NS_ERROR_UNEXPECTED;
+        }
 
         nsXPIDLCString result;
         const char *host = (mProxyHost && !mProxyTransparent) ? mProxyHost : mHostName;
