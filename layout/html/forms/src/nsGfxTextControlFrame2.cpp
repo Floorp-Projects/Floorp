@@ -1393,6 +1393,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
           col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
         }
         mailEditor->SetBodyWrapWidth(col);
+        delete spec;
       }
     }
 
