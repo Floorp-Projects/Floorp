@@ -1989,3 +1989,17 @@ nsRenderingContextGTK::my_gdk_draw_text (GdkDrawable *drawable,
   else
     g_error("undefined font type\n");
 }
+
+
+
+NS_IMETHODIMP nsRenderingContextGTK::DrawImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsPoint * aDestPoint)
+{
+  UpdateGC();
+  return nsRenderingContextImpl::DrawImage(aImage, aSrcRect, aDestPoint);
+}
+
+NS_IMETHODIMP nsRenderingContextGTK::DrawScaledImage(imgIContainer *aImage, const nsRect * aSrcRect, const nsRect * aDestRect)
+{
+  UpdateGC();
+  return nsRenderingContextImpl::DrawScaledImage(aImage, aSrcRect, aDestRect);
+}
