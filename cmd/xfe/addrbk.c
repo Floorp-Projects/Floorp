@@ -120,14 +120,18 @@ void FE_InitAddrBook()
 	PR_snprintf(tmp, sizeof (tmp), 
 				"%.900s/.netscape/address-book.html", home); 
 	{
+#ifndef MOZ_NEWADDR
 		DIR_Server *pabDir = NULL;
 		DIR_GetPersonalAddressBook(directories, &pabDir);
 		AB_InitializeAddressBook(pabDir, &AddrBook, tmp);
+#endif
 	}
 }
 
 void FE_CloseAddrBook() {
+#ifndef MOZ_NEWADDR
   AB_CloseAddressBook(&AddrBook);
+#endif
 }
 
 #else

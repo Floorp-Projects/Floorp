@@ -1221,6 +1221,7 @@ XFE_AddressFolderView::changedItem(char *pString, int*  iconType,
 extern "C" char * xfe_ExpandName(char * pString, int* iconID, short* xxx,
                                  ABook *pAddrBook, DIR_Server *pDirServer)
 {
+#if !defined(MOZ_NEWADDR)
         ABID entryID;
         ABID field;
         char * fullname;
@@ -1258,6 +1259,7 @@ extern "C" char * xfe_ExpandName(char * pString, int* iconID, short* xxx,
 
           if (fullname) return fullname;  
        }
+#endif
        return NULL; 
 }
 

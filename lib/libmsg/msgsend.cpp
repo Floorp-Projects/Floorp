@@ -39,7 +39,7 @@
 #include "msgprefs.h"
 #include "msgmast.h"
 #include "msgcpane.h"
-#ifdef MOZ_SECURITY
+#ifndef NO_SECURITY
 #include  HG02902
 #endif
 #include "grpinfo.h"
@@ -1416,10 +1416,12 @@ MSG_RegisterConverters (void)
 									NULL, MIME_VCardConverter);
 
   /* Decoders from mimejul.c for text/calendar */
+#ifdef MOZ_CALENDAR
   NET_RegisterContentTypeConverter (TEXT_CALENDAR, FO_PRESENT,
 									NULL, MIME_JulianConverter);
   NET_RegisterContentTypeConverter (TEXT_CALENDAR, FO_PRINT,
 									NULL, MIME_JulianConverter);
+#endif
 
 
 }

@@ -30,7 +30,9 @@
 #include "libmime.h"
 #include "merrors.h"
 #include "mkimap4.h"
-
+#ifdef XP_MAC
+#include "msg_srch.h"
+#endif
 
 /* for XP_GetString() */
 #include "xpgetstr.h"
@@ -58,6 +60,8 @@ typedef enum _MailboxStates {
 	MAILBOX_COMPRESS_FOLDER,
 	MAILBOX_FINISH_COMPRESS_FOLDER,
 	MAILBOX_BACKGROUND,
+	MAILBOX_NULL,
+	MAILBOX_NULL2,
 	MAILBOX_DELIVER_QUEUED,
 	MAILBOX_FINISH_DELIVER_QUEUED,
 	MAILBOX_DONE,
@@ -117,16 +121,16 @@ net_MailboxLoad (ActiveEntry * ce)
 	char *wholeUrl;
 
 	/* temp, until imap urls have their own identifier */
-	if (!PL_strncasecmp(ce->URL_s->address, "mailbox://", 10) )
+	if (!XP_STRNCASECMP(ce->URL_s->address, "IMAP://", 7) )
 		return NET_IMAP4Load(ce);
 
-	if (PL_strcasecmp(ce->URL_s->address, "mailbox:displayattachments") == 0) {
+	if (XP_STRCASECMP(ce->URL_s->address, "mailbox:displayattachments") == 0) {
 		MIME_DisplayAttachmentPane(ce->window_id);
 		return -1;
 	}
 
 
-    cd = PR_NEW(MailboxConData);
+    cd = XP_NEW(MailboxConData);
 	path = NET_ParseURL(ce->URL_s->address, GET_PATH_PART);
 	search = NET_ParseURL(ce->URL_s->address, GET_SEARCH_PART);
 	part = search;
@@ -140,12 +144,12 @@ net_MailboxLoad (ActiveEntry * ce)
       }
 
     /* init */
-    memset(cd, 0, sizeof(MailboxConData));
+    XP_MEMSET(cd, 0, sizeof(MailboxConData));
 	cd->msgnum = -1;
 
-	wholeUrl = PL_strdup(ce->URL_s->address);
+	wholeUrl = XP_STRDUP(ce->URL_s->address);
 
-#ifndef XP_MAC /* #### Giant Evil Mac Pathname Hack */
+#ifndef XP_MAC /* #### Fix Mac Pathname */
 	NET_UnEscape (path);
 	NET_UnEscape (wholeUrl);
 #endif /* !XP_MAC */
@@ -154,12 +158,12 @@ net_MailboxLoad (ActiveEntry * ce)
 	if (!cd->pane)
 	{
 #ifdef DEBUG_phil
-		PR_LogPrint ("NET_MailboxLoad: url->msg_pane NULL for URL: %s\n", ce->URL_s->address);
+		XP_Trace ("NET_MailboxLoad: url->msg_pane NULL for URL: %s\n", ce->URL_s->address);
 #endif
 		/* If we're displaying a message, there'll be a '?' in the url */
-		if (PL_strchr(wholeUrl, '?'))
+		if (XP_STRCHR(wholeUrl, '?'))
 		{
-		  if (PL_strstr(wholeUrl, "?compress-folder") || PL_strstr(wholeUrl, "?deliver-queued"))
+		  if (XP_STRSTR(wholeUrl, "?compress-folder") || XP_STRSTR(wholeUrl, "?deliver-queued"))
 			cd->pane = MSG_FindPane(ce->window_id, MSG_FOLDERPANE); /* ###phil tar to the tarpit */
 		  else
 		  {
@@ -199,7 +203,7 @@ net_MailboxLoad (ActiveEntry * ce)
 		if (cd->pane == NULL)
 			cd->pane = MSG_FindPane(ce->window_id, MSG_THREADPANE);
 	/*	###whs this isn't really true the way things are set up. */
-	/*	PR_ASSERT(cd->pane && MSG_GetContext(cd->pane) == ce->window_id); */
+	/*	XP_ASSERT(cd->pane && MSG_GetContext(cd->pane) == ce->window_id); */
 	}
 	if (cd->pane == NULL) 
 	{
@@ -207,7 +211,7 @@ net_MailboxLoad (ActiveEntry * ce)
 		return -1; /* ### */
 	}
 
-	if (PL_strcasecmp(wholeUrl, "mailbox:copymessages") == 0)
+	if (XP_STRCASECMP(wholeUrl, "mailbox:copymessages") == 0)
 		cd->next_state = MAILBOX_COPY_MESSAGES;
 	else
 	{
@@ -217,27 +221,30 @@ net_MailboxLoad (ActiveEntry * ce)
 
 	if (part && *part == '?') part++;
 	while (part) {
-	  char* amp = PL_strchr(part, '&');
+	  char* amp = XP_STRCHR(part, '&');
 	  if (amp) *amp++ = '\0';
-	  if (PL_strncmp(part, "id=", 3) == 0) {
-		cd->msg_id = PL_strdup (NET_UnEscape (part+3));
-	  } else if (PL_strncmp(part, "number=", 7) == 0) {
+	  if (XP_STRNCMP(part, "id=", 3) == 0) {
+		cd->msg_id = XP_STRDUP (NET_UnEscape (part+3));
+	  } else if (XP_STRNCMP(part, "number=", 7) == 0) {
 		cd->msgnum = atol(part + 7);
 		if (cd->msgnum == 0 && part[7] != '0') cd->msgnum = -1;
-	  } else if (PL_strncmp(part, "uidl=", 5) == 0) {
+	  } else if (XP_STRNCMP(part, "uidl=", 5) == 0) {
 		/* ### Vile hack time.  If a UIDL was specified, then tell libmsg about
 		   it, giving it a chance to arrange so that when this URL is all done,
 		   MSG_GetNewMail gets called. */
 		MSG_PrepareToIncUIDL(cd->pane, ce->URL_s, NET_UnEscape(part + 5));
 	  } else if (ce->URL_s->internal_url &&
-				 PL_strncmp(part, "compress-folder", 15) == 0) {
+				 XP_STRNCMP(part, "compress-folder", 15) == 0) {
 		cd->next_state = MAILBOX_COMPRESS_FOLDER;
 	  } else if (ce->URL_s->internal_url &&
-				 PL_strncmp(part, "deliver-queued", 14) == 0) {
+				 XP_STRNCMP(part, "deliver-queued", 14) == 0) {
 		cd->next_state = MAILBOX_DELIVER_QUEUED;
 	  } else if (ce->URL_s->internal_url &&
-				 PL_strncmp(part, "background", 10) == 0) {
+				 XP_STRNCMP(part, "background", 10) == 0) {
 		cd->next_state = MAILBOX_BACKGROUND;
+	  } else if (ce->URL_s->internal_url &&
+				 XP_STRNCMP(part, "null", 10) == 0) {
+		cd->next_state = MAILBOX_NULL;
 	  }
 	  part = amp;
 	}
@@ -284,7 +291,7 @@ mail_generate_html_footer_fn (const char *dest, void *closure,
 				: 0);
   if (uidl)
 	{
-	  PR_Free(uidl);
+	  XP_FREE(uidl);
 	  return MSG_GeneratePartialMessageBlurb (cd->pane,
 											  cur_entry->URL_s,
 											  closure, headers);
@@ -299,41 +306,41 @@ mail_generate_reference_url_fn (const char *dest, void *closure,
 {
   ActiveEntry *cur_entry = (ActiveEntry *) closure;
   char *addr = cur_entry->URL_s->address;
-  char *search = (addr ? PL_strchr (addr, '?') : 0);
+  char *search = (addr ? XP_STRCHR (addr, '?') : 0);
   char *id2;
   char *new_dest;
   char *result;
 
   if (!dest || !*dest) return 0;
-  id2 = PL_strdup (dest);
+  id2 = XP_STRDUP (dest);
   if (!id2) return 0;
-  if (id2[PL_strlen (id2)-1] == '>')
-	id2[PL_strlen (id2)-1] = 0;
+  if (id2[XP_STRLEN (id2)-1] == '>')
+	id2[XP_STRLEN (id2)-1] = 0;
   if (id2[0] == '<')
 	new_dest = NET_Escape (id2+1, URL_PATH);
   else
 	new_dest = NET_Escape (id2, URL_PATH);
 
   FREEIF (id2);
-  result = (char *) PR_Malloc ((search ? search - addr : 0) +
-							  (new_dest ? PL_strlen (new_dest) : 0) +
+  result = (char *) XP_ALLOC ((search ? search - addr : 0) +
+							  (new_dest ? XP_STRLEN (new_dest) : 0) +
 							  40);
   if (result && new_dest)
 	{
 	  if (search)
 		{
-		  memcpy (result, addr, search - addr);
+		  XP_MEMCPY (result, addr, search - addr);
 		  result[search - addr] = 0;
 		}
 	  else if (addr)
-		PL_strcpy (result, addr);
+		XP_STRCPY (result, addr);
 	  else
 		*result = 0;
-	  PL_strcat (result, "?id=");
-	  PL_strcat (result, new_dest);
+	  XP_STRCAT (result, "?id=");
+	  XP_STRCAT (result, new_dest);
 
-	  if (search && PL_strstr (search, "&headers=all"))
-		PL_strcat (result, "&headers=all");
+	  if (search && XP_STRSTR (search, "&headers=all"))
+		XP_STRCAT (result, "&headers=all");
 	}
   FREEIF (new_dest);
   return result;
@@ -349,9 +356,9 @@ net_make_mail_msg_stream (ActiveEntry *ce)
 
   if (ce->format_out == FO_PRESENT || ce->format_out == FO_CACHE_AND_PRESENT)
 	{
-	  MimeDisplayOptions *opt = PR_NEW (MimeDisplayOptions);
+	  MimeDisplayOptions *opt = XP_NEW (MimeDisplayOptions);
 	  if (!opt) return MK_OUT_OF_MEMORY;
-	  memset (opt, 0, sizeof(*opt));
+	  XP_MEMSET (opt, 0, sizeof(*opt));
 
 	  opt->generate_reference_url_fn      = mail_generate_reference_url_fn;
 	  opt->generate_header_html_fn		  = 0;
@@ -379,8 +386,8 @@ net_ProcessMailbox (ActiveEntry *ce)
     MailboxConData * cd = (MailboxConData *)ce->con_data;
 
 	/* temp, until imap urls have their own identifier */
-	if ((!PL_strncasecmp(ce->URL_s->address, "mailbox://", 10) ) ||
-		(!PL_strncasecmp(ce->URL_s->address, "view-source:mailbox://",22)))
+	if ((!XP_STRNCASECMP(ce->URL_s->address, "IMAP://", 7) ) ||
+		(!XP_STRNCASECMP(ce->URL_s->address, "view-source:IMAP://",19)))
 		return NET_ProcessIMAP4(ce);
 
     cd->pause_for_read = FALSE; /* already paused; reset */
@@ -388,7 +395,7 @@ net_ProcessMailbox (ActiveEntry *ce)
     while(!cd->pause_for_read)
       {
 #ifdef DEBUG_username
-		PR_LogPrint("NET_ProcessMailbox: at top of loop, state %d, status %d", cd->next_state, ce->status);
+		XP_Trace("NET_ProcessMailbox: at top of loop, state %d, status %d", cd->next_state, ce->status);
 #endif
 
         switch(cd->next_state) {
@@ -397,15 +404,15 @@ net_ProcessMailbox (ActiveEntry *ce)
             if (!ce->URL_s->load_background) {
 			  char *fmt = XP_GetString( XP_MAIL_READING_FOLDER );
 			  char *folder = cd->folder_name;
-			  char *s = PL_strrchr (folder, '/');
+			  char *s = XP_STRRCHR (folder, '/');
 			  if (s)
 				folder = s+1;
-			  s = (char *) PR_Malloc(PL_strlen(fmt) + PL_strlen(folder) + 20);
+			  s = (char *) XP_ALLOC(XP_STRLEN(fmt) + XP_STRLEN(folder) + 20);
 			  if (s)
 				{
-				  sprintf (s, fmt, folder);
+				  XP_SPRINTF (s, fmt, folder);
                   NET_Progress(ce->window_id, s);
-				  PR_Free(s);
+				  XP_FREE(s);
 				}
 			}
             ce->status = MSG_BeginOpenFolderSock(cd->pane,
@@ -417,20 +424,20 @@ net_ProcessMailbox (ActiveEntry *ce)
             if(ce->status == MK_CONNECTED)
               {
 #ifdef DEBUG_username
-				PR_LogPrint ("NET_ProcessMailBox: next state is MAILBOX_OPEN_MESSAGE");
+				XP_Trace ("NET_ProcessMailBox: next state is MAILBOX_OPEN_MESSAGE");
 #endif
                 cd->next_state = MAILBOX_OPEN_MESSAGE;
               }
             else if(ce->status > -1)
               {
 #ifdef DEBUG_username
-				PR_LogPrint ("NET_ProcessMailBox: next state is MAILBOX_FINISH_OPEN_FOLDER");
+				XP_Trace ("NET_ProcessMailBox: next state is MAILBOX_FINISH_OPEN_FOLDER");
 #endif
             	cd->pause_for_read = TRUE;
                 cd->next_state = MAILBOX_FINISH_OPEN_FOLDER;
               }
 #ifdef DEBUG_username
-			PR_LogPrint ("NET_ProcessMailBox: MAILBOX_OPEN_FOLDER got error %d", ce->status);
+			XP_Trace ("NET_ProcessMailBox: MAILBOX_OPEN_FOLDER got error %d", ce->status);
 #endif
             break;
 
@@ -458,6 +465,7 @@ net_ProcessMailbox (ActiveEntry *ce)
 				 * asking for a message
 			 	 */
             	cd->next_state = MAILBOX_DONE;
+				NET_Progress(ce->window_id, XP_GetString( XP_MAIL_READING_FOLDER_DONE ) );
 			  }
 			else
 			  {
@@ -485,7 +493,7 @@ net_ProcessMailbox (ActiveEntry *ce)
           	  }
 			else
 			  {
-				PR_ASSERT (cd->stream);
+				XP_ASSERT (cd->stream);
             	cd->next_state = MAILBOX_READ_MESSAGE;
 			  }
 
@@ -513,7 +521,7 @@ net_ProcessMailbox (ActiveEntry *ce)
 #endif
 					while (cd->input_buffer == NULL) {
 						cd->input_buffer =
-							(char*) PR_Malloc(cd->input_buffer_size);
+							(char*) XP_ALLOC(cd->input_buffer_size);
 						if (!cd->input_buffer) {
 							cd->input_buffer_size /= 2;
 							if (cd->input_buffer_size < 512) {
@@ -562,15 +570,15 @@ net_ProcessMailbox (ActiveEntry *ce)
                 (!ce->URL_s->load_background)) {
 				char *fmt= XP_GetString( XP_COMPRESSING_FOLDER );
 				char *folder = cd->folder_name;
-				char *s = PL_strrchr (folder, '/');
+				char *s = XP_STRRCHR (folder, '/');
 				if (s)
 				  folder = s+1;
-				s = (char *)PR_Malloc (PL_strlen(fmt) + PL_strlen(folder) + 20);
+				s = (char *)XP_ALLOC (XP_STRLEN(fmt) + XP_STRLEN(folder) + 20);
 				if (s)
 				  {
-					sprintf (s, fmt, folder);
+					XP_SPRINTF (s, fmt, folder);
 					NET_Progress(ce->window_id, s);
-					PR_Free(s);
+					XP_FREE(s);
 				  }
 			  }
 			ce->status = MSG_BeginCompressFolder(cd->pane, ce->URL_s,
@@ -602,6 +610,16 @@ net_ProcessMailbox (ActiveEntry *ce)
 			} else {
 			  cd->pause_for_read = TRUE;
 			}
+			break;
+
+		case MAILBOX_NULL:
+			ce->status = MK_WAITING_FOR_CONNECTION;
+			cd->next_state = MAILBOX_NULL2;
+			cd->pause_for_read = TRUE;
+			break;
+		case MAILBOX_NULL2:
+			ce->status = MK_CONNECTED;
+			cd->next_state = MAILBOX_DONE;
 			break;
 
 		case MAILBOX_DELIVER_QUEUED:
@@ -673,7 +691,7 @@ net_ProcessMailbox (ActiveEntry *ce)
           	NET_ClearCallNetlibAllTheTime(ce->window_id, "mkmailbx");
 
 			if (cd->input_buffer) {
-				PR_Free(cd->input_buffer);
+				XP_FREE(cd->input_buffer);
 				cd->input_buffer = NULL;
 			}
 
@@ -732,7 +750,7 @@ net_ProcessMailbox (ActiveEntry *ce)
         
         default: /* should never happen !!! */
             TRACEMSG(("MAILBOX: BAD STATE!"));
-			PR_ASSERT(0);
+			XP_ASSERT(0);
             cd->next_state = MAILBOX_ERROR_DONE;
             break;
         }
@@ -749,7 +767,7 @@ net_ProcessMailbox (ActiveEntry *ce)
       } /* while(!cd->pause_for_read) */
     
 #ifdef DEBUG_username
-	  PR_LogPrint ("Leaving NET_ProcessMailbox with status %d", ce->status);
+	  XP_Trace ("Leaving NET_ProcessMailbox with status %d", ce->status);
 #endif
 
     return(ce->status);
@@ -763,7 +781,7 @@ net_InterruptMailbox(ActiveEntry * ce)
     MailboxConData * cd = (MailboxConData *)ce->con_data;
 
 	/* temp until imap urls have their own identifier */
-	if (!PL_strncasecmp(ce->URL_s->address, "mailbox://", 10) )
+	if (!XP_STRNCASECMP(ce->URL_s->address, "IMAP://", 7) )
 		return NET_InterruptIMAP4(ce);
 
     cd->next_state = MAILBOX_ERROR_DONE;

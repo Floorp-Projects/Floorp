@@ -58,8 +58,8 @@ INCLUDES = $(LOCAL_INCLUDES)
 
 EXTRA_LIBS=
 
-REQUIRES= network 
-EXPORTS= certurl.h
+REQUIRES= network ldap
+EXPORTS= mkcertld.h
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
@@ -70,6 +70,7 @@ LINCS= \
     -I$(XPDIST)\public\pref	\
     -I$(XPDIST)\public\js	\
     -I$(XPDIST)\public\security	\
+    -I$(XPDIST)\public\ldap	\
     -I$(XPDIST)\public\network 
 #!endif
 

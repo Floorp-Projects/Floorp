@@ -21,12 +21,12 @@ MODULE		= crtldurl
 LIBRARY_NAME	= crtldurl
 
 CSRCS		= \
-	mkcretld.c	\
+	mkcertld.c	\
 	$(NULL)
 
-EXPORTS= crtldurl.h
+EXPORTS= mkcertld.h
 
-REQUIRES	= network nspr2 dbm util pref js java fileurl \
+REQUIRES	= ldap network nspr2 dbm util pref js java fileurl \
 	security layer img httpurl
 
 include $(DEPTH)/config/rules.mk

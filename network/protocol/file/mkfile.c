@@ -741,7 +741,7 @@ net_setup_file_stream (ActiveEntry * cur_entry)
 		PR_ASSERT(0);
 #endif /* MOZILLA_CLIENT */
 	  }
-	  else if (!PL_strncmp(CE_URL_S->address, "Mailbox://", 10))
+	  else if (!PL_strncmp(CE_URL_S->address, "IMAP://", 7))
 	  {
 #ifdef MOZILLA_CLIENT
 #ifdef MOZ_MAIL_NEWS
@@ -938,6 +938,7 @@ net_read_directory_chunk (ActiveEntry * cur_entry)
         PL_strcpy(full_path, CD_FILENAME);
         PL_strcat(full_path, "/");
         PL_strcat(full_path, dir_entry->d_name);
+	memset(&stat_entry, 0, sizeof(XP_StatStruct));	/* paranoia */
 
         if(XP_Stat(full_path, &stat_entry, xpURL) != -1)
           {
@@ -945,6 +946,9 @@ net_read_directory_chunk (ActiveEntry * cur_entry)
 
             if(S_ISDIR(stat_entry.st_mode))
 			  {
+#ifdef XP_MAC
+				stat_entry.st_size = 0;		/* Mac stat gives spurious size data for folders */
+#endif
                 file_entry->special_type = NET_DIRECTORY;
 				StrAllocCat(file_entry->filename, "/");
 			  }
@@ -1004,7 +1008,7 @@ net_return_local_file_part_from_url(char *address)
 		return NULL;
 
 	/* imap urls are never local */
-	if (!PL_strncasecmp(address,"mailbox://",10))
+	if (!PL_strncasecmp(address,"IMAP://",7))
 		return NULL;
 
 	/* mailbox url's are always local, but don't always point to a file */
@@ -1578,7 +1582,11 @@ PRIVATE void net_IdxConvComplete(NET_StreamClass *inputStream)
 			 *
 			 * note: add 4 to the date to get rid of the day of the week
 			 */
-            if(file_entry->size)
+            if(file_entry->size
+#ifdef XP_MAC
+				|| file_entry->special_type == NET_FILE_TYPE	/* show size for zero-length files */
+#endif            
+            )
               {
                  PR_snprintf(&out_buf[PL_strlen(out_buf)], 
 						sizeof(out_buf) - PL_strlen(out_buf), 

@@ -1085,6 +1085,11 @@ extern Bool NET_IsURLInMemCache(URL_Struct *URL_s);
  */
 extern XP_Bool NET_IsLocalFileURL(char *address);
 
+
+/* read the Cache File allocation table.
+ */
+extern void NET_ReadCacheFAT(char * cachefatfile, XP_Bool stat_files);
+
 /* unload the disk cache FAT list to disk
  *
  * set final_call to true if this is the last call to

@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "xp_help.h"
 #include "pch.h"
 #include <assert.h>
 #include "dllcom.h"
@@ -30,6 +29,7 @@
 #include "mninterf.h"
 #include "mnprefid.h"
 #include "msgcom.h"
+#include "xp_help.h"
 
 //#define MOZ_NO_LDAP    1
 #undef MOZ_LDAP

@@ -30,7 +30,12 @@
 #include "pmsgfilt.h"
 #include "msgimap.h"
 #include "imaphost.h"
-#include "mkreg.h"
+
+extern "C" 
+{
+  #include "mkreg.h"
+}
+
 #include "ptrarray.h"
 
 #ifdef XP_MAC

@@ -30,6 +30,6 @@ endif
 EXPORTS= cnetinit.h
 
 REQUIRES	= netcache network img layer fileurl httpurl ftpurl abouturl \
-	gophurl jsurl remoturl dataurl util
+	gophurl jsurl remoturl dataurl util security
 
 include $(DEPTH)/config/rules.mk

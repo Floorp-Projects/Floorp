@@ -40,9 +40,9 @@
 #include "Outliner.h"
 #include "Outlinable.h"
 #include "PrefsData.h"
-#ifdef MOZ_LDAP
- #include "dirprefs.h"
-#endif
+/* #ifdef MOZ_LDAP */ /* (rb) This file is required  */
+#include "dirprefs.h"
+/* #endif */
 #ifdef MOZ_MAIL_NEWS
 #include "PrefsDialogMServer.h"
 #include "PrefsMailFolderDlg.h"
@@ -748,32 +748,7 @@ private:
 class XFE_PrefsIncomingMServer
 {
 public:
-<<<<<<< PrefsDialog.h
 
-	// Constructors, Destructors
-
-	XFE_PrefsPageMailNewsComposition(XFE_PrefsDialog  *dialog);
-	virtual ~XFE_PrefsPageMailNewsComposition();
-
-	// Manipulators
-
-	virtual void create();
-	virtual void init();
-	virtual void install();
-	virtual void save();
-
-	// Gets
-
-	PrefsDataMailNewsComposition *getData();
-
-	// Callbacks - page Mail News/Composition
-
-	static void cb_more(Widget, XtPointer, XtPointer);
-
-private:	
-
-	// Data
-=======
     XFE_PrefsIncomingMServer(Widget incomingServerBox, XFE_PrefsPage *page);
     virtual ~XFE_PrefsIncomingMServer();
     XFE_PrefsPage *getPage() { return prefsPage; };
@@ -841,12 +816,7 @@ private:
     XFE_PrefsPage *prefsPage;
     Widget m_local_dir_text;
 };
->>>>>>> 3.1.14.1
 
-<<<<<<< PrefsDialog.h
-	PrefsDataMailNewsComposition        *m_prefsDataMailNewsComposition;
-=======
->>>>>>> 3.1.14.1
 
  // News Servers Data
 class XFE_PrefsNewsServer
@@ -913,43 +883,6 @@ private:
 class XFE_PrefsPageMailNewsCopies : public XFE_PrefsPage
 {
 public:
-<<<<<<< PrefsDialog.h
-
-	// Constructors, Destructors
-
-	XFE_PrefsPageMailNewsNserver(XFE_PrefsDialog  *dialog);
-	virtual ~XFE_PrefsPageMailNewsNserver();
-
-	// Manipulators
-
-	virtual void create();
-	virtual void init();
-	virtual void install();
-	virtual void save();
-	virtual Boolean verify();
-
-	// Gets
-
-	PrefsDataMailNewsNserver *getData();
-
-	// Callbacks - page Mail News/News Server
-
-	static void cb_browse(Widget, XtPointer, XtPointer);
-	HG92727
-
-private:	
-
-	// Data
-
-	PrefsDataMailNewsNserver        *m_prefsDataMailNewsNserver;
-};
-
-// ************************* XFE_PrefsPageMailNewsAddrBook  *************************
-
-class XFE_PrefsPageMailNewsAddrBook : public XFE_PrefsPage, public XFE_Outlinable
-{
-public:
-=======
   
     XFE_PrefsPageMailNewsCopies(XFE_PrefsDialog *dialog);
     virtual ~XFE_PrefsPageMailNewsCopies();
@@ -1033,84 +966,9 @@ private:
     Widget m_nohtml_both_toggle;
     
 };
->>>>>>> 3.1.14.1
-
-<<<<<<< PrefsDialog.h
-	// Constructors, Destructors
-
-	XFE_PrefsPageMailNewsAddrBook(XFE_PrefsDialog  *dialog);
-	virtual ~XFE_PrefsPageMailNewsAddrBook();
-
-	// Manipulators
-
-	virtual void create();
-	virtual void init();
-	virtual void install();
-	virtual void save();
-
-	void    insertDir(DIR_Server *dir);
-	void    insertDirAtPos(int pos, DIR_Server *dir);
-	void    deleteDirAtPos(int pos);
-	void    swapDirs(int pos1, int pos2, int selPos);
-	void    setSelectionPos(int pos);
-	void    deselectPos(int pos);
-
-	// Gets
-
-	PrefsDataMailNewsAddrBook *getData();
-
-	// Outlinable interface methods
-	virtual void *ConvFromIndex(int index);
-	virtual int ConvToIndex(void *item);
-
-	virtual char *getColumnName(int column);
-	virtual char *getColumnHeaderText(int column);
-	virtual fe_icon *getColumnHeaderIcon(int column);
-	virtual EOutlinerTextStyle getColumnHeaderStyle(int column);
-	virtual void *acquireLineData(int line);
-	virtual void getTreeInfo(XP_Bool *expandable, XP_Bool *is_expanded, int *depth, 
-							 OutlinerAncestorInfo **ancestor);
-	virtual EOutlinerTextStyle getColumnStyle(int column);
-	virtual char *getColumnText(int column);
-	virtual fe_icon *getColumnIcon(int column);
-	virtual void releaseLineData();
-
-	virtual void Buttonfunc(const OutlineButtonFuncData *data);
-	virtual void Flippyfunc(const OutlineFlippyFuncData *data);
-
-	virtual XFE_Outliner *getOutliner();
-	// Get tooltipString & docString; 
-	// returned string shall be freed by the callee
-	// row < 0 indicates heading row; otherwise it is a content row
-	// (starting from 0)
-	//
-	virtual char *getCellTipString(int /* row */, int /* column */) {return NULL;}
-	virtual char *getCellDocString(int /* row */, int /* column */) {return NULL;}
 
 
-	// Callbacks - page Mail News/Address Book
 
-	static void cb_add(Widget, XtPointer, XtPointer);
-	static void cb_edit(Widget, XtPointer, XtPointer);
-	static void cb_delete(Widget, XtPointer, XtPointer);
-	static void cb_promote(Widget, XtPointer, XtPointer);
-	static void cb_demote(Widget, XtPointer, XtPointer);
-	static void cb_toggleNameOrder(Widget, XtPointer, XtPointer);
-
-private:	
-=======
->>>>>>> 3.1.14.1
-
-<<<<<<< PrefsDialog.h
-	// Data
-
-	static const int OUTLINER_COLUMN_NAME;
-	static const int OUTLINER_COLUMN_MAX_LENGTH;
-	static const int OUTLINER_INIT_POS;
-
-	PrefsDataMailNewsAddrBook  *m_prefsDataMailNewsAddrBook;
-	int                         m_rowIndex;
-=======
 // ************************* XFE_PrefsPageMailNewsReceipts ******************
 
 
@@ -1139,7 +997,6 @@ private:
     Widget m_sentmail_toggle;
     Widget m_never_toggle;
     Widget m_some_toggle;
->>>>>>> 3.1.14.1
 };
 
 #endif /* MOZ_MAIL_NEWS */

@@ -60,7 +60,7 @@ INCLUDES = $(LOCAL_INCLUDES)
 
 EXTRA_LIBS=
 
-REQUIRES= network 
+REQUIRES= network security
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
@@ -76,7 +76,8 @@ LINCS= \
     -I$(XPDIST)\public\jsurl	\
     -I$(XPDIST)\public\certurl	\
     -I$(XPDIST)\public\remoturl	\
-    -I$(XPDIST)\public\marimurl 
+    -I$(XPDIST)\public\marimurl \
+    -I$(XPDIST)\public\security 
 #!endif
 
 !endif

@@ -1014,6 +1014,11 @@ BEGIN
     EDITTEXT        IDC_EDIT_HOST,34,8,142,14,ES_AUTOHSCROLL
 END
 
+// XXX - spider - the resource linker is blowing up thinking id 230 is duplicate,
+//                but I cannot find it.  Can the module owner reviewing this code
+//                help me track down this dup id.  The resource compiler is happy, not
+//                even an error, but the linker dies with corrupt file
+#ifndef MOZ_MAIL_NEWS
 IDD_ADDRESSBOOK DIALOG DISCARDABLE  0, 0, 332, 34
 STYLE WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
 FONT 8, "MS Sans Serif"
@@ -1025,6 +1030,7 @@ BEGIN
     EDITTEXT        IDC_ADDRNAME,134,16,133,13,ES_AUTOHSCROLL
     PUSHBUTTON      "Search...",IDC_DIRSEARCH,277,16,50,13
 END
+#endif
 
 
 1536 DIALOG DISCARDABLE  0, 0, 181, 132
@@ -2261,7 +2267,6 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 64
     END
-END
 
     IDD_NETPROFILE_LOGIN, DIALOG
     BEGIN

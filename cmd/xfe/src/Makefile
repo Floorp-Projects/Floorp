@@ -51,6 +51,7 @@ REQUIRES	=\
 			style \
 			xfeicons \
 			rdf \
+			progress \
 			xpcom \
 			netcnvts \
 			msg \
@@ -225,6 +226,10 @@ CPPSRCS		+= \
 		  PrefsPageNServer.cpp \
 		  ProgressFrame.cpp \
 		  SubUpgradeDialog.cpp \
+		  TabView.cpp \
+		  XmLFolderDialog.cpp \
+		  XmLFolderView.cpp \
+		  ViewDashBDlg.cpp \
 		  $(NULL)
 endif
 

@@ -1,3 +1,4 @@
+#include "rosetta.h"
 #include "xp.h"
 #include "net.h"
 #include "netutils.h"
@@ -23,6 +24,9 @@
 
 #include "abouturl.h"
 
+/* XXX ugh.  FE_GetNetDir returns XP_STRDUP'd result, must be XP_FREE'd */
+#include "xp_mem.h"
+
 extern int XP_NETSITE_  ;
 extern int XP_LOCATION_ ;
 extern int XP_FILE_MIME_TYPE_   ;
@@ -44,8 +48,7 @@ extern int XP_MAC_CREATOR_      ;
 extern int XP_CHARSET_  ;
 extern int XP_STATUS_UNKNOWN ;
 extern int XP_MSG_UNKNOWN ;
-extern int XP_SECURITY_ ;
-extern int XP_CERTIFICATE_      ;
+HG42784
 extern int XP_UNTITLED_DOCUMENT ;
 extern int XP_HAS_THE_FOLLOWING_STRUCT  ;
 extern int XP_DOCUMENT_INFO ;
@@ -189,25 +192,8 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 		ADD_CELL(XP_GetString(XP_CHARSET_), XP_GetString(XP_MSG_UNKNOWN));
 	  }
 
-	if(URL_s->cache_file || URL_s->memory_copy)
-		sec_msg = SECNAV_PrettySecurityStatus(URL_s->security_on, 
-                                              URL_s->sec_info);
-	else
-		sec_msg = PL_strdup(XP_GetString(XP_STATUS_UNKNOWN));
+	HG76363
 
-	if(sec_msg)
-	  {
-		ADD_CELL(XP_GetString(XP_SECURITY_), sec_msg);
-		PR_Free(sec_msg);
-	  }
-
-    sec_msg = SECNAV_SSLSocketCertString(URL_s->sec_info);
-
-	if(sec_msg)
-	  {
-		ADD_CELL(XP_GetString(XP_CERTIFICATE_), sec_msg);
-		PR_Free(sec_msg);
-	  }
 	StrAllocCat(output, "</TABLE>");
 
 	if(URL_s->content_type 
@@ -302,9 +288,9 @@ net_gen_pics_document(ActiveEntry *cur_entry)
 <FRAME src='%spicsfail.htm'> \
 </FRAMESET>"
 
-        rv = PR_smprintf(PICS_HTML, help_dir);
+	rv = PR_smprintf(PICS_HTML, help_dir);
 
-        PR_Free(help_dir);
+	XP_FREE(help_dir);
     }
 
 
@@ -739,6 +725,7 @@ PRIVATE Bool net_about_kludge(URL_Struct *URL_s)
 	 !PL_strcmp((char*)user, "\207\170\210\214\200\205") ||			/* paquin */
 	 !PL_strcmp((char*)user, "\207\170\214\203\173") ||			/* pauld */
 	 !PL_strcmp((char*)user, "\207\172\177\174\205") ||			/* pchen */
+	 !PL_strcmp((char*)user, "\207\177\200\203") ||				/* phil */
 	 !PL_strcmp((char*)user, "\207\200\174\211\211\174") ||			/* pierre */
 	 !PL_strcmp((char*)user, "\207\200\176\203\174\213") ||			/* piglet */
 	 !PL_strcmp((char*)user, "\207\200\205\202\174\211\213\206\205") ||	/* pinkerton */
@@ -750,6 +737,7 @@ PRIVATE Bool net_about_kludge(URL_Struct *URL_s)
 	 !PL_strcmp((char*)user, "\211\201\172") ||				/* rjc */
 	 !PL_strcmp((char*)user, "\211\204\216") ||				/* rmw */
 	 !PL_strcmp((char*)user, "\211\170\204\211\170\201") ||		/* ramraj */
+	 !PL_strcmp((char*)user, "\211\200\172\170\211\173\206\171") ||  	/* ricardob */
 	 !PL_strcmp((char*)user, "\211\206\171\204") ||				/* robm */
 	 !PL_strcmp((char*)user, "\211\206\174\171\174\211") ||			/* roeber */
 	 !PL_strcmp((char*)user, "\211\207\206\213\213\212") ||			/* rpotts */

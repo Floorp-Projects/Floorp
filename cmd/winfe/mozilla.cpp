@@ -1584,6 +1584,7 @@ BOOL CNetscapeApp::InitInstance()
 	}
 	if (ldapFile) XP_FREE(ldapFile);
 
+#ifndef MOZ_NEWADDR
 	DIR_Server* pab = NULL;
 
 	DIR_GetPersonalAddressBook (theApp.m_directories, &pab);
@@ -1592,6 +1593,7 @@ BOOL CNetscapeApp::InitInstance()
 	msg = m_UserDirectory;
     msg += "\\address.htm";
 	AB_InitializeAddressBook(pab, &m_pABook, (const char *) msg);
+#endif
 #endif /* MOZ_LDAP */
 
     //  Initialize slave URL loading context.
@@ -2270,8 +2272,10 @@ int CNetscapeApp::ExitInstance()
     NET_ShutdownNetLib();
 
 #ifdef MOZ_MAIL_NEWS
+#ifndef MOZ_LITE
     if (m_pABook)
 		AB_CloseAddressBook(&m_pABook);
+#endif
     WFE_MSGShutdown();
 #endif /* MOZ_MAIL_NEWS */
 

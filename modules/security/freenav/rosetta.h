@@ -15,6 +15,9 @@
  * Reserved.
  */
 
+#ifndef _ROSETTA_H_
+#define _ROSETTA_H_
+
 #define HG87729
 #define HG92192 FALSE
 #define HG21872
@@ -227,15 +230,15 @@
 #define HG87237
 #define HG52423
 #define HG76373 TRUE
-#define HG72388 FALSE;
-#define HG52223 FALSE;
+#define HG72388 TRUE;
+#define HG52223 TRUE;
 #define HG53535
 #define HG52528 FALSE;
 #define HG73277 FALSE
 #define HG73738
 #define HG62522
 #define HG62363
-#define HG24242
+#define HG24242 this_entry->protocol = HTTP_TYPE_URL;
 #define HG42469
 #define HG87376
 #define HG76363
@@ -331,13 +334,13 @@
 #define HG20476
 #define HG87358
 #define HG93765
-#define HG92743
+#define HG92743 Bool dummy,
 #define HG83665
-#define HG98376
+#define HG98376 FALSE,
 #define HG92362
 #define HG26300
-#define HG27229 "mkfile.h"
-#define HG27230
+#define HG27229 "rosetta.h"
+#define HG27230 FALSE,
 #define HG27326 "mkutils.h"
 #define HG32828
 #define HG26363 "msgnet.h"
@@ -362,13 +365,13 @@
 #define HG23833
 #define HG28330
 #define HG10299 "gui.h"
-#define HG10300
+#define HG10300 FALSE,
 #define HG82332
 #define HG32949
 #define HG38737
 #define HG29239
 #define HG28287
-#define HG22999
+#define HG22999 FALSE,
 #define HG93230
 #define HG29399
 #define HG20900
@@ -380,14 +383,16 @@
 #define HG23298
 #define HG29898
 #define HG22201
-#define HG38738
-#define HG02873
+#define HG38738 FALSE,
+#define HG02873 FALSE,
 #define HG92892
 #define HG92871
 #define HG82772
 #define HG03903
 #define HG82773 FALSE
 #define HG22087
+#define HG22088
+#define HG22089 FALSE
 #define HG21092
 #define HG09309
 #define HG29802 0
@@ -399,7 +404,7 @@
 #define HG29398
 #define HG83273
 #define HG09438 "mkpop3.h"
-#define HG09439
+#define HG09439 FALSE,
 #define HG23535 "mktcp.h"
 #define HG27655
 #define HG83763
@@ -427,6 +432,7 @@
 #define HG75442
 #define HG59731
 #define HG56898
+#define HG78111 FALSE
 
 /* WINDOWS FRONT END */
 
@@ -488,6 +494,7 @@
 #define HG79266
 #define HG72611
 #define HG72625
+#define HG47991
 #define HG27367
 #define HG72671
 #define HG72729 ss = XP_GetString(XFE_SECURITY_DISABLED);
@@ -609,31 +616,63 @@
 #define HG21182
 #define HG02030
 #define HG93649
+#define HG18966
+#define HG27311
+#define HG89217
+#define HG82167
+#define HG21761
+#define HG10280
+#define HG19271
+#define HG10977
+#define HG19711
+#define HG19189
+#define HG71676
+#define HG71851
+#define HG78266
+#define HG18177
+#define HG18760
+#define HG71661
+#define HG90177
+#define HG79299
+#define HG21897 m_port_text
+#define HG17661 m_port_text
+#define HG18261
+#define HG19877
+#define HG19871
+#define HG19773
+#define HG18162
+#define HG13181
+#define HG14871 FALSE
+#define HG19861 FALSE
+#define HG21511
+#define HG19721
+#define HG19511
+#define HG17271
+#define HG18671
+#define HG19616
+#define HG19879
+#define HG17922
+#define HG98219 SetDlgItemInt(IDC_EDIT_PORT_NO, LDAP_PORT);
+#define HG92710
+#define HG27626
+#define HG28981
+#define HG72186
+#define HG92672
+#define HG90271
+#define HG92177
+#define HG98216
+#define HG91761 SetDlgItemInt(IDC_EDIT_PORT_NO, LDAP_PORT);
+
+#define HG51387
+#define HG51388
+#define HG51389
+
+#define HG43287
+#define HG43288
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif /* _ROSETTA_H_ */
 
 
 

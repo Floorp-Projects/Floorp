@@ -1563,6 +1563,11 @@ ResDef(XFE_NEWSSERVER_DEFAULT, XFE_ERR_OFFSET+631, " (default)")
 ResDef(XFE_FORWARD_INLINE, XFE_ERR_OFFSET+632, "Inline")
 ResDef(XFE_FORWARD_QUOTED, XFE_ERR_OFFSET+633, "Quoted")
 ResDef(XFE_FORWARD_ATTACH, XFE_ERR_OFFSET+634, "As Attachment")
+
+ResDef(XFE_SUBUPGRADE_AUTOSUBSCRIBE, XFE_ERR_OFFSET+635, "Automatically subscribe to all my folders on \"%s\"")
+
+ResDef(XFE_MOVEMAIL_TAB, XFE_ERR_OFFSET + 636, "MoveMail")
+
 END_STR(mcom_cmd_xfe_xfe_err_h_strings)
 
 #endif /* __XFE_XFE_ERR_H_ */

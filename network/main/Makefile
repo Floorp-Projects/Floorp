@@ -17,6 +17,8 @@
 
 DEPTH		= ../..
 
+include $(DEPTH)/config/config.mk
+
 MODULE		= network
 LIBRARY_NAME	= network
 
@@ -51,11 +53,11 @@ CSRCS += \
 endif
 
 EXPORTS= mkstream.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
-	mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h \
+	netstream.h mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h \
         mkutils.h mktrace.h
 
 
-REQUIRES	= jtools nspr2 dbm util js parse lay style pref htmldlgs java \
+REQUIRES	= ldapurl imap4url jtools progress nspr2 dbm util js parse lay style pref htmldlgs java \
 	libfont netcache httpurl cnetinit security img layer netcnvts network \
 	mimetype ldap net
 

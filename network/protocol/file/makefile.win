@@ -58,7 +58,7 @@ INCLUDES = $(LOCAL_INCLUDES)
 
 EXTRA_LIBS=
 
-REQUIRES= network 
+REQUIRES= network security
 EXPORTS= fileurl.h
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
@@ -72,6 +72,7 @@ LINCS= \
     -I$(PUBLIC)\jtools  \
     -I$(PUBLIC)\network \
     -I$(PUBLIC)\mimetype \
+    -I$(PUBLIC)\security \
     $(NULL)
 #!endif
 

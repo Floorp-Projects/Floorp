@@ -154,6 +154,7 @@ typedef enum {
 
 /* Declared in mkgeturl.c. NET_GetURL uses these variables to determine
  * whether or not the pac file has been loaded. */
+extern XP_Bool NET_FindProxyInJSC(void);
 extern XP_Bool NET_GlobalAcLoaded;
 extern PRBool NET_ProxyAcLoaded;
 
@@ -768,22 +769,13 @@ PRIVATE unsigned int pacf_write_ready(NET_StreamClass *stream) {
     return MAX_WRITE_READY;
 }
 
-PRIVATE void pacf_complete(NET_StreamClass *stream) {
-    PACF_Object *obj=stream->data_object;
-	jsval result;
-    XP_StatStruct st;
-    JSBool ok;	
+PUBLIC XP_Bool
+NET_InitPacfContext(void)
+{
+	XP_Bool first_time = TRUE;
 
-retry:
-    if (!obj->flag || obj->flag == 2) {
-	pacf_loading = FALSE;
+	if ( first_time == FALSE ) return TRUE;
 
-
-	/*  JONM -- Check me over please!
-	  proxyConfig =
-	  MOCHA_DefineNewObject(decoder->js_context, decoder->window_object,
-				"ProxyConfig", &pc_class, NULL, NULL, 0,
-				pc_props, pc_methods); */
 	PREF_GetConfigContext(&configContext);
 	PREF_GetGlobalConfigObject(&globalConfig);
 
@@ -796,13 +788,13 @@ retry:
 		if (!JS_DefineProperties(configContext,
 					 proxyConfig,
 					 pc_props)) {
-		return;
+		return FALSE;
 		}
 
 		if (!JS_DefineFunctions(configContext,
 					proxyConfig,
 					pc_methods)) {
-		return;
+		return FALSE;
 		}
 
 	}
@@ -812,10 +804,23 @@ retry:
 					&pc_class, 
 					NULL, 
 					0);
-	/*MOCHA_DefineNewObject(decoder->js_context, proxyConfig, "bindings",
-			      &pc_class, NULL, NULL, 0, no_props, 0); */
 
-    }
+	first_time = FALSE;
+
+	return TRUE;
+}
+
+PRIVATE void pacf_complete(NET_StreamClass *stream) {
+    PACF_Object *obj=stream->data_object;
+	jsval result;
+    XP_StatStruct st;
+    JSBool ok;	
+
+retry:
+    if (!obj->flag || obj->flag == 2) {
+		pacf_loading = FALSE;
+		if ( !NET_InitPacfContext() ) return;
+	}
 
     if (!pacf_src_buf) {
 	if ( pacf_do_failover == FALSE && !NET_UsingPadPac() ) {
@@ -1107,11 +1112,11 @@ MODULE_PRIVATE char *pacf_find_proxies_for_url(MWContext *context,
     /* If proxy failover is not allowed, and we weren't
      * able to autoload the proxy, return a string that
      * pacf_get_proxy_addr will always fail with. */
-    if ( !pacf_do_failover && !pacf_loading && !pacf_ok ) {
+    if ( !pacf_do_failover && !pacf_loading && !pacf_ok && !NET_FindProxyInJSC()) {
       return "";
     }
 
-    if (!orig_url || !pacf_ok || pacf_loading || pacf_find_proxy_undefined)
+    if ( !NET_FindProxyInJSC() && (!orig_url || !pacf_ok || pacf_loading || pacf_find_proxy_undefined))
 	return NULL;
 
     if (!(bad_url = PL_strdup(orig_url)))
@@ -1178,14 +1183,25 @@ MODULE_PRIVATE char *pacf_find_proxies_for_url(MWContext *context,
 	if (p)
 	    *p = '\0';
     }
-	    sprintf(buf, "FindProxyForURL(\"%s\",\"%s\",\"%s\")", safe_url, host,
+
+	if ( NET_FindProxyInJSC() ) {
+	    XP_SPRINTF(buf, "ProxyConfig.FindProxyForURL(\"%s\",\"%s\",\"%s\")", safe_url, host,
 	       method ? method : "" );
+	} else {
+	    XP_SPRINTF(buf, "FindProxyForURL(\"%s\",\"%s\",\"%s\")", safe_url, host,
+	       method ? method : "" );
+	}
 
     if (!JS_AddRoot(configContext, &rv))
 	goto out;
 
+	if ( NET_FindProxyInJSC() ) {
+		ok = JS_EvaluateScript(configContext, globalConfig,
+			   buf, strlen(buf), 0, 0, &rv);
+	} else {
 		ok = JS_EvaluateScript(configContext, proxyConfig,
 			   buf, strlen(buf), 0, 0, &rv);
+	}
 
     if (ok) {
 	if (JSVAL_IS_STRING(rv)) {

@@ -681,10 +681,13 @@ NET_ParseDate(char *date_string)
 #endif
 }
 
+/* Also skip '>' as part of host name */
+
 MODULE_PRIVATE char * 
 NET_ParseURL (const char *url, int parts_requested)
 {
-	char *rv=0,*colon, *slash, *ques_mark, *hash_mark, *atSign, *host, *passwordColon;
+	char *rv=0,*colon, *slash, *ques_mark, *hash_mark;
+	char *atSign, *host, *passwordColon, *gtThan;
 
 	assert(url);
 
@@ -769,6 +772,11 @@ NET_ParseURL (const char *url, int parts_requested)
 				if(ques_mark)
 					*ques_mark = '\0';
 
+				gtThan = PL_strchr(host, '>');
+
+				if (gtThan)
+					*gtThan = '\0';
+
 /*
  * Protect systems whose header files forgot to let the client know when
  * gethostbyname would trash their stack.
@@ -805,6 +813,9 @@ NET_ParseURL (const char *url, int parts_requested)
 
 				if(ques_mark)
 					*ques_mark = '?';
+
+				if (gtThan)
+					*gtThan = '>';
 			  }
           }
 	  }
@@ -928,7 +939,9 @@ int netCharType[256] =
 		 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,	/* 1x */
 		 0,0,0,0,0,0,0,0,0,0,7,4,0,7,7,4,	/* 2x   !"#$%&'()*+,-./	 */
          7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,	/* 3x  0123456789:;<=>?	 */
-	     7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 4x  @ABCDEFGHIJKLMNO  */
+	     0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 4x  @ABCDEFGHIJKLMNO  */
+	     /* bits for '@' changed from 7 to 0 so '@' can be escaped   */
+	     /* in usernames and passwords in publishing.                */
 	     7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,7,	/* 5X  PQRSTUVWXYZ[\]^_	 */
 	     0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,	/* 6x  `abcdefghijklmno	 */
 	     7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,	/* 7X  pqrstuvwxyz{\}~	DEL */

@@ -265,6 +265,7 @@ ifdef MOZ_LOC_INDEP
 BASIC_LIBS	+= $(DIST)/lib/libli.a
 endif
 
+
 ifdef JAVA_OR_OJI
 JAVA_JMC = $(DIST)/lib/libjmc.a      # XXX To be removed...
 endif
@@ -289,9 +290,13 @@ BASIC_LIBS_2	= \
 
 ifdef MOZ_MAIL_NEWS
 BASIC_LIBS	+= \
-		  $(DIST)/lib/libnet.a \
 		  $(DIST)/lib/libns_mime.a \
 		  $(NULL)
+
+BASIC_LIBS_2	+= \
+		  $(DIST)/lib/libldap.a \
+		  $(NULL)
+
 endif
 
 BASIC_LIBS	+= \
@@ -304,14 +309,39 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libmozmsg.a \
 		  $(DIST)/lib/libmsg.a \
 		  $(DIST)/lib/libmime.a \
-		  $(DIST)/lib/libnet.a \
+		  $(DIST)/lib/libaddr.a \
+		  $(DIST)/lib/libneo.a \
+		  $(DIST)/lib/libaddr.a \
+		  $(NULL)
+endif
+
+ifdef MOZ_LDAP
+BASIC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a 
+endif
+
+ifdef MOZ_MAIL_NEWS
+BASIC_LIBS	+= $(DIST)/lib/libnntpurl.a \
+		  $(DIST)/lib/libsmtpurl.a	\
+		  $(DIST)/lib/libimap4url.a	\
+		  $(DIST)/lib/libpop3url.a	\
+		  $(DIST)/lib/libmailbxurl.a	\
+		  $(DIST)/lib/libcrtldurl.a	\
+		  $(NULL)
+endif
+
+ifdef MOZ_MAIL_NEWS
+ifdef MOZ_LDAP
+BASIC_LIBS	+= $(DIST)/lib/libldapurl.a \
+		  $(NULL)
+endif
+endif
+
+ifdef MOZ_CALENDAR
+BASIC_LIBS	+= \
 		  $(DIST)/lib/libjulian.a \
 		  $(DIST)/lib/libnscnv30.a \
 		  $(DIST)/lib/libnsuni30.a \
 		  $(DIST)/lib/libnsfmt30.a \
-		  $(DIST)/lib/libaddr.a \
-		  $(DIST)/lib/libneo.a \
-		  $(DIST)/lib/libaddr.a \
 		  $(NULL)
 endif
 
@@ -411,10 +441,6 @@ endif
 
 ifndef MOZ_SECURITY
 EXPORT_LIB	+= $(DIST)/lib/libsecfree.a 
-endif
-
-ifdef MOZ_LDAP
-BASIC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a 
 endif
 
 LOCALES		= $(LOCALE_MAP) $(MAIL_IM_HACK) $(NEWS_IM_HACK)

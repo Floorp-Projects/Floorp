@@ -33,6 +33,8 @@
  * Modifications/Addition: Gagan Saksena, 97
  */
 
+#include "rosetta.h"
+
 #ifndef EXT_DB_ROUTINES
 #include "secnav.h"
 #include "sechash.h"
@@ -188,7 +190,7 @@ total_size += old_obj->string ? PL_strlen(old_obj->string)+1 : 0
 	ADD_STRING_SIZE(charset);
 	ADD_STRING_SIZE(filename);
     total_size += sizeof(uint32); /* size of secinfo */
-	total_size += SECNAV_SSLSocketStatusLength(old_obj->sec_info);
+	total_size += HG73653(old_obj->sec_info);
 	ADD_STRING_SIZE(page_services_url);
 
 #undef ADD_STRING_SIZE
@@ -220,8 +222,8 @@ total_size += old_obj->string ? PL_strlen(old_obj->string)+1 : 0
      * char                  * filename;
      * int32                   filename_len;
 	 *
-     * int32                   security_on;
-     * unsigned char         * sec_info;
+     * int32                   HG52242;
+     * unsigned char         * HG42320;
 	 *
      * int32                   method;
 	 *
@@ -291,6 +293,7 @@ total_size += old_obj->string ? PL_strlen(old_obj->string)+1 : 0
   	COPY_INT32((void *)cur_ptr, &total_size);
   	cur_ptr = cur_ptr + sizeof(int32);
 
+	HG73209
 	/* put the version number of the structure
 	 * format that we are using
 	 * By using a version string when writting
@@ -315,12 +318,13 @@ total_size += old_obj->string ? PL_strlen(old_obj->string)+1 : 0
 
 	STUFF_BOOL(is_relative_path);
 
-	STUFF_NUMBER(security_on);
+	HG98379
 
 #ifndef EXT_DB_ROUTINES
+    HG42539
     /* save the security info */
     if ( old_obj->sec_info ) {
-		len = SECNAV_SSLSocketStatusLength(old_obj->sec_info);
+		len = HG65293(old_obj->sec_info);
 		COPY_INT32((void *)cur_ptr, &len);
 		cur_ptr = cur_ptr + sizeof(int32);
 
@@ -484,6 +488,7 @@ net_DBDataToCacheStruct(DBT * db_obj)
 		return(NULL);
 	  }
 
+	HG32839
 	RETRIEVE_TIMET(last_modified);
 	RETRIEVE_TIMET(last_accessed);
 	RETRIEVE_TIMET(expires);
@@ -497,26 +502,7 @@ net_DBDataToCacheStruct(DBT * db_obj)
 
 	RETRIEVE_BOOL(is_relative_path);
 
-	RETRIEVE_NUMBER(security_on);
-
-    /* security info */
-    if(cur_ptr > max_ptr)
-        return(rv);
-	COPY_INT32(&len, cur_ptr);
-	cur_ptr += sizeof(int32);
-
-    if ( len == 0 ) {
-        rv->sec_info = NULL;
-    } else {
-        rv->sec_info = PR_Malloc(len);
-        if ( rv->sec_info == NULL ) {
-            return(rv);
-        }
-
-        memcpy(rv->sec_info, cur_ptr, len);
-        cur_ptr += len;
-    }
-
+	HG72761
 
 	RETRIEVE_NUMBER(method);
 
@@ -636,8 +622,7 @@ net_GenCacheDBKey(char *address, char *post_data, int32 post_data_size)
 	size += str_len;        /* for address string */
 	size += sizeof(int32);  /* for size of post_data */
 
-	if(post_data_size)
-		size += MD5_HASH_SIZE;
+	HG42490
 
 	rv->size = size;
 	rv->data = PR_Malloc(size);
@@ -653,6 +638,7 @@ net_GenCacheDBKey(char *address, char *post_data, int32 post_data_size)
 	/* put in the checksum size */
 	COPY_INT32(data_ptr, &size);
 	data_ptr = data_ptr + sizeof(int32);
+	HG83777
 	
 	/* put in the size of the address string */
 	COPY_INT32(data_ptr, &str_len);
@@ -667,20 +653,7 @@ net_GenCacheDBKey(char *address, char *post_data, int32 post_data_size)
 		*hash = '#';
 
 	/* put in the size of the post data */
-	if(post_data_size)
-	  {
-		int32 size_of_md5 = MD5_HASH_SIZE;
-		unsigned char post_data_hash[MD5_HASH_SIZE];
-
-		MD5_HashBuf(post_data_hash, (unsigned char*)post_data, post_data_size);
-
-		COPY_INT32(data_ptr, &size_of_md5);
-		data_ptr = data_ptr + sizeof(int32);
-
-		/* put in the post data if there is any */
-		memcpy(data_ptr, post_data_hash, sizeof(post_data_hash));
-	  }
-	else
+	HG73699
 	  {
 		COPY_INT32(data_ptr, &post_data_size);
 		data_ptr = data_ptr + sizeof(int32);
@@ -703,6 +676,7 @@ net_GetAddressFromCacheKey(DBT *key)
 	/* check for minimum size */
 	if(key->size < 10)
 		return(NULL);
+	HG72873
 
 	/* validate size checksum */
 	data = (char *)key->data;

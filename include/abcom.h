@@ -46,6 +46,9 @@ XP_BEGIN_PROTOS
 /* #define FE_IMPLEMENTS_VISIBLE_NC */  /* as each platform uses the new API, we should set this flag */
 /* #define MOZ_NEWADDR */ /* FE address book developers should uncomment this flag. Leave it commented for the tree */
 
+/* XXX - It dun't work without it */
+#define MOZ_NEWADDR 1
+
 const ABID AB_ABIDUNKNOWN = 0;   /* Find a better home for this somewhere! */
 
 /* new errors added by mscott for the 2 pane AB UI. I will eventually name this enumerated type AB_Error */

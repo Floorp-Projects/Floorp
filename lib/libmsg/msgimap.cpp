@@ -51,6 +51,7 @@
 #include "msgundmg.h"
 #include "prlong.h"
 #include "msgbiff.h"
+#include "netutils.h"
 
 extern "C"
 {

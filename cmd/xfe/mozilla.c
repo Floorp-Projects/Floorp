@@ -39,7 +39,7 @@
 #include "secnav.h"
 #include "secrng.h"
 #include "mozjava.h"
-#ifdef MOZ_MAIL_NEWS
+#ifdef MOZ_CALENDAR
 #include "nlsxp.h"
 #endif
 #ifdef MOZ_SMARTUPDATE
@@ -2100,7 +2100,7 @@ main
   mozilla_thread = PR_CurrentThread();
   fdset_lock = PR_NewNamedMonitor("mozilla-fdset-lock");
 
-#ifdef MOZ_MAIL_NEWS
+#ifdef MOZ_CALENDAR
   NLS_EncInitialize(NULL,NULL);
 #endif
   /*

@@ -23,6 +23,7 @@
  */
 
 /* Please leave outside of ifdef for windows precompiled headers */
+#include "rosetta.h"
 #include "xp.h"
 
 #ifdef MOZILLA_CLIENT
@@ -996,10 +997,7 @@ NET_MemCacheConverter (FO_Present_Types format_out,
 		goto malloc_failure;  /* skip memory cacheing */
 	  }
     
-	/* copy security info */
-	memory_copy->cache_obj.security_on             = URL_s->security_on;
-    memory_copy->cache_obj.sec_info =
-        SECNAV_CopySSLSocketStatus(URL_s->sec_info);
+	HG83363
 
 	/* build the stream object */
     stream = PR_NEW(NET_StreamClass);
@@ -1235,11 +1233,7 @@ NET_FindURLInMemCache(URL_Struct * URL_s, MWContext *ctxt)
  		URL_s->last_modified       = found_cache_obj->cache_obj.last_modified;
  		URL_s->is_netsite          = found_cache_obj->cache_obj.is_netsite;
 
-		/* copy security info */
-		URL_s->security_on         = found_cache_obj->cache_obj.security_on;
-        URL_s->sec_info =
-            SECNAV_CopySSLSocketStatus(found_cache_obj->cache_obj.sec_info);
-
+		HG26557
 		net_cache_adding_object++; /* semaphore */
 		/* reorder objects so that the list is in last accessed order */
 		XP_ListRemoveObject(net_MemoryCacheList, found_cache_obj);
@@ -1881,10 +1875,7 @@ PUT_PART(buffer);
 		  }
 		TABLE_BOTTOM;
 
-		TABLE_TOP("Secure:");
-		sprintf(buffer, "%s", cache_obj->security_on ? "TRUE" : "FALSE");
-		PUT_PART(buffer);
-		TABLE_BOTTOM;
+		HG27328
 
 		PL_strcpy(buffer, "\n<P>\n");
 		PUT_PART(buffer);

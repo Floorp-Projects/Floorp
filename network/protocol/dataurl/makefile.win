@@ -58,7 +58,7 @@ INCLUDES = $(LOCAL_INCLUDES)
 
 EXTRA_LIBS=
 
-REQUIRES= network 
+REQUIRES= network security
 EXPORTS= dataurl.h
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
@@ -70,6 +70,7 @@ LINCS= \
     -I$(XPDIST)\public\pref	\
     -I$(XPDIST)\public\js	\
     -I$(XPDIST)\public\netcnvts	\
+    -I$(XPDIST)\public\security	\
     -I$(XPDIST)\public\network 
 #!endif
 

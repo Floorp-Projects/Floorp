@@ -31,6 +31,9 @@
 #include "xpassert.h"
 #include "xfe.h"
 #include "PrefsDialog.h"
+#include "PrefsPageMessages.h"
+#include "PrefsPageNServer.h"
+#include "PrefsPageAddress.h"
 #include "prefapi.h"
 
 #include <Xm/Label.h>
@@ -233,7 +236,7 @@ typedef enum _prefsPageType {
 	PAGE_TYPE_MAILNEWS_MESSAGES,
 	PAGE_TYPE_MAILNEWS_MAILSERVER,
 	PAGE_TYPE_MAILNEWS_NSERVER,
-    PAGE_TYPE_MAILNEWS_ADDRESS,
+	PAGE_TYPE_MAILNEWS_ADDRESS,
 	PAGE_TYPE_MAILNEWS_COPIES,
 	PAGE_TYPE_MAILNEWS_HTML,
 	PAGE_TYPE_MAILNEWS_RECEIPTS,
@@ -1828,15 +1831,9 @@ void XFE_PrefsDialog::newPage(XFE_PrefsPage *&page,
 	case PAGE_TYPE_MAILNEWS_MAILSERVER:
 		page = new XFE_PrefsPageMailNewsMserver(this);
 		break;
-	case PAGE_TYPE_MAILNEWS_NEWSSERVER:
-		page = new XFE_PrefsPageMailNewsNserver(this);
-		break;
 	case PAGE_TYPE_MAILNEWS_NSERVER:
 		page = new XFE_PrefsPageNServer(this);
 		break;
-	case PAGE_TYPE_MAILNEWS_ADDRBOOK:
-		page = new XFE_PrefsPageMailNewsAddrBook(this);
-        	break;
         case PAGE_TYPE_MAILNEWS_ADDRESS:
         	page = new XFE_PrefsPageAddress(this);
         	break;

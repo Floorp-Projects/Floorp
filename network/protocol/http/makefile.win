@@ -60,7 +60,7 @@ INCLUDES = $(LOCAL_INCLUDES)
 EXTRA_LIBS=
 
 REQUIRES= network 
-EXPORTS= httpurl.h cookies.h httpauth.h jscookie.h
+EXPORTS= mkaccess.h httpurl.h cookies.h httpauth.h jscookie.h
 
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"

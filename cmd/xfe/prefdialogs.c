@@ -664,7 +664,7 @@ fe_InstallPreferences (MWContext *context)
 	/* spider begin */
         FE_SARCacheDir = fe_globalPrefs.sar_cache_dir ;
         /* spider end */
-	NET_DontDiskCacheSSL(!fe_globalPrefs.cache_ssl_p);
+        HG47991
 
 	/* bookmark_file
 	 */

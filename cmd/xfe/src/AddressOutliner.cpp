@@ -1676,6 +1676,8 @@ extern "C" char * xfe_ExpandForNameCompletion(char * pString,
                                               ABook *pAddrBook,
                                               DIR_Server *pDirServer)
 {
+#if !defined(MOZ_NEWADDR)
+
     ABID entryID;
     ABID field;
     char *pName = XP_STRDUP(pString);
@@ -1723,7 +1725,7 @@ extern "C" char * xfe_ExpandForNameCompletion(char * pString,
 		
 	}
     }
-
+#endif
         return NULL;
 }
 

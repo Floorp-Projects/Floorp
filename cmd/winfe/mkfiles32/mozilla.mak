@@ -416,7 +416,16 @@ LINK_LIBS= \
     $(DIST)\lib\netutil.lib \
     $(DIST)\lib\network.lib \
     $(DIST)\lib\cnetinit.lib \
+!ifdef MOZ_MAIL_NEWS
+    $(DIST)\lib\nntpurl.lib \
+    $(DIST)\lib\smtpurl.lib \
+    $(DIST)\lib\pop3url.lib \
+    $(DIST)\lib\mailbxurl.lib \
+    $(DIST)\lib\imap4url.lib \
+    $(DIST)\lib\certurl.lib \
+!endif
 !ifdef MOZ_LDAP
+    $(DIST)\lib\ldapurl.lib \
 !ifdef MOZ_JAVA
     $(DIST)\lib\nsldap32v30.lib \
 !endif
@@ -881,6 +890,8 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmime\mimedrft.c
 	$(DEPTH)\lib\libmisc\mime.c
 	$(DEPTH)\lib\libmisc\dirprefs.c
+!endif
+!ifdef MOZ_CALENDAR
 	$(DEPTH)\lib\libmime\mimecal.c
 !endif
 
@@ -923,9 +934,8 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 
 !ifdef MOZ_MAIL_NEWS
 	$(DEPTH)\lib\libmsg\ad_strm.c 
+	$(DEPTH)\lib\libmsg\addrutil.cpp 
 	$(DEPTH)\lib\libmsg\msgppane.cpp 
-	$(DEPTH)\lib\libmsg\addr.c
-	$(DEPTH)\lib\libmsg\addrutil.c
 	$(DEPTH)\lib\libmsg\ap_decod.c
 	$(DEPTH)\lib\libmsg\ap_encod.c
 	$(DEPTH)\lib\libmsg\appledbl.c
@@ -1002,7 +1012,6 @@ $(OUTDIR)\mozilla.dep: $(DEPTH)\cmd\winfe\mkfiles32\mozilla.mak
 	$(DEPTH)\lib\libmsg\thrhead.cpp
 	$(DEPTH)\lib\libmsg\thrlstst.cpp
 	$(DEPTH)\lib\libmsg\thrnewvw.cpp
-	$(DEPTH)\lib\libmsg\mozdb.cpp
 !endif
 
 !ifndef MOZ_NGLAYOUT
@@ -2457,6 +2466,17 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\cnetinit.lib +
 !ifdef MOZ_MAIL_NEWS
 	$(DIST)\lib\mnrc16.lib +
+!endif
+!ifdef MOZ_MAIL_NEWS
+    $(DIST)\lib\nntpurl.lib +
+    $(DIST)\lib\smtpurl.lib +
+    $(DIST)\lib\pop3url.lib +
+    $(DIST)\lib\mailbxurl.lib +
+    $(DIST)\lib\imap4url.lib +
+    $(DIST)\lib\certurl.lib +
+!endif
+!ifdef MOZ_LDAP
+    $(DIST)\lib\ldapurl.lib +
 !endif
 !ifdef MOZ_CALENDAR
     $(DIST)\lib\cal3240.lib +

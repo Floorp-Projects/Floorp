@@ -35,7 +35,7 @@
 #include "msgcom.h"
 #include "mime.h"
 #include "secrng.h"
-#include "ssl.h"
+#include HG38763
 #include "prefapi.h"
 #include "secnav.h"
 #include "preenc.h"
@@ -822,7 +822,7 @@ HG29784
            fprintf(stderr, "Fwrite wrote less than requested!\n");
 #endif
 
-        /* safty for broken SSL_write */
+        /* safety for broken write */
         if(amt_wrt > amt_to_wrt)
             amt_wrt = amt_to_wrt;
 
@@ -2122,25 +2122,9 @@ NET_IsFQDNMailAddress(const char * string)
 	return(FALSE);
 }
 
-static int use_ssl_for_imap4 = -1; /* -1 if uninitialized, 0 if FALSE, 1 if TRUE. */
+HG83778
 
-/* fix Mac warning about missing prototype */
-MODULE_PRIVATE int PR_CALLBACK net_use_ssl_for_imap4_changed_func(const char *pref,
-																  void *data);
 
-MODULE_PRIVATE int PR_CALLBACK net_use_ssl_for_imap4_changed_func(const char *pref,
-																  void *data) 
-{
-	int status = PREF_NOERROR;
-
-	if (!PL_strcasecmp(pref,"mail.imap.server_ssl")) {
-		XP_Bool	new_val;
-
-		status = PREF_GetBoolPref("mail.imap.server_ssl", &new_val);
-		use_ssl_for_imap4 = (int)new_val;
-	}
-	return status;
-}
 
 
 /* returns true if the URL is a secure URL address
@@ -2152,8 +2136,7 @@ NET_IsURLSecure(char * address)
 
    TRACEMSG(("NET_IsURLSecure called, type: %d", type));
 
-	if(type == SECURE_HTTP_TYPE_URL
-		|| type == INTERNAL_IMAGE_TYPE_URL
+	if(HG83773 type == INTERNAL_IMAGE_TYPE_URL
 		|| type == SECURE_LDAP_TYPE_URL)
 		return(TRUE);
 
@@ -2174,22 +2157,7 @@ NET_IsURLSecure(char * address)
 		 * IMAP URLs begin with "mailbox://" unlike POP URLs which begin
 		 * with "mailbox:".
 		 */
-	if(!PL_strncasecmp(address, "mailbox://", 10)) {
-		if (use_ssl_for_imap4 < 0) { /* If uninitialized. */
-			XP_Bool new_val;
-			int status = PREF_GetBoolPref("mail.imap.server_ssl", &new_val);
-
-			if (status == PREF_NOERROR) {
-				use_ssl_for_imap4 = (int)new_val;
-				PREF_RegisterCallback("mail.imap.server_ssl",
-					                  net_use_ssl_for_imap4_changed_func, NULL);
-			}
-			else {
-				return FALSE;
-			}
-		}
-		return (Bool)use_ssl_for_imap4;
-	}
+	HG35632
 
 	
 	TRACEMSG(("NET_IsURLSecure: URL NOT SECURE"));
@@ -2998,9 +2966,8 @@ NET_URL_Type (CONST char *URL)
     switch(*URL) {
     case 'a':
     case 'A':
-		if(!PL_strncasecmp(URL,"about:security", 14))
-		    return(SECURITY_TYPE_URL);
-		else if(!PL_strncasecmp(URL,"about:",6))
+		HG83787
+		if(!PL_strncasecmp(URL,"about:",6))
 		    return(ABOUT_TYPE_URL);
 		else if(!PL_strncasecmp(URL,"addbook:",8))
 		    return(ADDRESS_BOOK_TYPE_URL);
@@ -3036,8 +3003,7 @@ NET_URL_Type (CONST char *URL)
 	case 'H':
 		if(!PL_strncasecmp(URL,"http:",5))
 		    return(HTTP_TYPE_URL);
-		else if(!PL_strncasecmp(URL,"https:",6))
-		    return(SECURE_HTTP_TYPE_URL);
+		HG73678
 		break;
 	case 'i':
 	case 'I':
@@ -3057,10 +3023,7 @@ NET_URL_Type (CONST char *URL)
 			return(HTML_DIALOG_HANDLER_TYPE_URL);
 		else if(!PL_strncasecmp(URL,"internal-panel-handler",22))
 			return(HTML_PANEL_HANDLER_TYPE_URL);
-		else if(!PL_strncasecmp(URL,"internal-security-",18))
-			return(INTERNAL_SECLIB_TYPE_URL);
-		else if(!PL_strncasecmp(URL,"internal-certldap",17))
-			return(INTERNAL_CERTLDAP_TYPE_URL);
+		HG84378
 		else if(!PL_strncasecmp(URL,"IMAP:",5))
 			return(IMAP_TYPE_URL);
 		break;
@@ -3075,8 +3038,7 @@ NET_URL_Type (CONST char *URL)
 		    return(MOCHA_TYPE_URL);
 		else if (!PL_strncasecmp(URL, "ldap:",5))
 			return(LDAP_TYPE_URL);
-		else if (!PL_strncasecmp(URL, "ldaps:",6))
-			return(SECURE_LDAP_TYPE_URL);
+		HG84772
 		break;
 	case 'm':
 	case 'M':
@@ -3524,3 +3486,5 @@ NET_GetURLQuick (URL_Struct * URL_s,
 		return status;
 	}
 }
+
+

@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "rosetta.h"
 #include "mkutils.h"
 #include "mktcp.h"
 #include "gui.h"
@@ -52,7 +53,7 @@ NET_ExplainErrorDetails (int code, ...)
 
   if (IS_SSL_ERROR(code) || IS_SEC_ERROR(code)) {
 	  const char *s = XP_GetString(code);
-	  msg = (s ? PL_strdup(s) : 0);
+	  msg = (s ? XP_STRDUP(s) : 0);
   }
 
   if (!msg)
@@ -142,7 +143,7 @@ NET_ExplainErrorDetails (int code, ...)
 	case MK_MSG_ERROR_WRITING_MAIL_FOLDER:
 	case MK_MSG_SEARCH_FAILED:
 	case MK_MSG_FOLDER_BUSY:
-		msg = PL_strdup(XP_GetString(code));
+		msg = XP_STRDUP(XP_GetString(code));
 		break;
 
 	case MK_TCP_READ_ERROR:
@@ -156,7 +157,7 @@ NET_ExplainErrorDetails (int code, ...)
 			/*
 			 * For SSL/SEC errors, use the message without a wrapper.
 			 */
-			msg = PL_strdup(XP_GetString(sub_error));
+			msg = XP_STRDUP(XP_GetString(sub_error));
 		} else if (code == MK_UNABLE_TO_CONNECT &&
 				   (sub_error == XP_ERRNO_EINVAL
 					|| sub_error == XP_ERRNO_EADDRINUSE)) {
@@ -164,7 +165,7 @@ NET_ExplainErrorDetails (int code, ...)
 			 * With unable-to-connect errors, some errno values/strings
 			 * are not more helpful, so just use a plain message for these.
 			 */
-			msg = PL_strdup(XP_GetString(MK_UNABLE_TO_CONNECT2));
+			msg = XP_STRDUP(XP_GetString(MK_UNABLE_TO_CONNECT2));
 		} else {
 			msg = PR_smprintf(XP_GetString(code), XP_GetString(sub_error));
 		}

@@ -18,6 +18,8 @@
 #ifndef MKTCP_H
 #define MKTCP_H
 
+#include "rosetta.h"
+
 PR_BEGIN_EXTERN_C
 
 /* state machine data for host connect */
@@ -95,7 +97,7 @@ NET_BeginConnect  (CONST char   *url,
 				   char         *protocol,
 				   int           default_port,
 				   PRFileDesc  **s, 
-				   Bool       use_security, 
+				   HG92743
 				   TCP_ConData **tcp_con_data, 
 				   MWContext    *window_id,
 				   char        **error_msg,

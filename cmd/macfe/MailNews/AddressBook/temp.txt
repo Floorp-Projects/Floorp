@@ -1,0 +1,3 @@
+total 8
+drwxr-xr-x    2 sfraser  nuucp       4096 May 18 20:47 CVS
+-rw-r--r--    1 sfraser  nuucp          0 May 18 20:48 temp.txt
