@@ -224,7 +224,7 @@ function setupFixedUI()
   //
   // but for now, this isn't needed.  we'll assume those who implement
   // redirector types want to show fixed values.
-  var showFixedValues = gRedirectorType != null;
+  var showFixedValues = gRedirectorType ? true : false;
 
   var controls = [document.getElementById("fixedServerName"), 
                   document.getElementById("fixedUserName"),
