@@ -93,6 +93,7 @@ function OnLoadMsgHeaderPane()
     msgPaneData.NewsgroupValue = document.getElementById("NewsgroupValue");
 
     msgPaneData.UserAgentBox = document.getElementById("UserAgentBox");
+    msgPaneData.UserAgentToolbar = document.getElementById("headerPart3");
     msgPaneData.UserAgentValue = document.getElementById("UserAgentValue");
 
     msgPaneData.ViewAllHeadersToolbar = document.getElementById("viewAllHeadersToolbar");
@@ -166,8 +167,8 @@ var messageHeaderSink = {
       currentHeaderData[lowerCaseHeaderName] = foo;
       if (lowerCaseHeaderName == "from")
       {
- 		var  collectIncoming = pref.GetBoolPref("mail.collect_email_address_incoming");
-         if (collectIncoming && headerValue && abAddressCollector)
+ 		    var  collectIncoming = pref.GetBoolPref("mail.collect_email_address_incoming");
+        if (collectIncoming && headerValue && abAddressCollector)
           abAddressCollector.collectUnicodeAddress(headerValue);  
       }
  
@@ -433,7 +434,7 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
       {
         itemInDocument = parentDiv.appendChild(item);
       }
-      
+
       itemInDocument.setAttribute("value", fullAddress);    
       itemInDocument.setTextAttribute("emailAddress", emailAddress);
       itemInDocument.setTextAttribute("fullAddress", fullAddress);  
@@ -486,15 +487,23 @@ function UpdateMessageHeaders()
   else
     hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, ""); 
 
-
   if (gShowUserAgent)
   { 
     if (currentHeaderData["user-agent"])
+    {
       hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData["user-agent"].headerValue);
+      if (msgPaneData.UserAgentToolbar)
+        msgPaneData.UserAgentToolbar.removeAttribute("hidden");
+    }
     else
+    {
       hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, "");
+      if (msgPaneData.UserAgentToolbar)
+        msgPaneData.UserAgentToolbar.setAttribute("hidden", "true"); 
+    }
 
   }
+  
   if (this.FinishEmailProcessing != undefined)
     FinishEmailProcessing();
 }
@@ -544,8 +553,8 @@ function HideMessageHeaderPane()
   if (node)
     node.setAttribute("hidden", "true");
   node = document.getElementById("headerPart3");
-  if (node)
-    node.setAttribute("hidden", "true");
+  if (msgPaneData.UserAgentToolbar)
+    msgPaneData.UserAgentToolbar.setAttribute("hidden", "true");
 
 }
 
