@@ -10,8 +10,8 @@
 <!ENTITY move.label "Move incoming messages determined to be junk mail to:">
 <!ENTITY otherFolder.label "Other:">
 <!ENTITY junkFolderOn.label "&quot;Junk&quot; folder on:">
-<!ENTITY purge1.label "Automatically delete messages marked as junk mail after">
+<!ENTITY purge1.label "Automatically delete junk messages older than">
 <!ENTITY purge1.accesskey "u">
-<!ENTITY purge2.label "days">
+<!ENTITY purge2.label "days from this folder">
 <!ENTITY whitelist.label "Do not mark messages as junk mail if the sender is in my address book:">
 <!ENTITY whitelist.accesskey "D">
