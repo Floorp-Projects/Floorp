@@ -167,6 +167,10 @@ ifdef MOZ_ENABLE_GTK2
 tier_9_dirs     += widget/src/gtkxtbin
 endif
 
+ifdef MOZ_IPCD
+tier_9_dirs += ipc/ipcd
+endif
+
 tier_9_dirs	+= \
 		modules/libutil \
 		netwerk \
