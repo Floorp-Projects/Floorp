@@ -1417,6 +1417,11 @@ void nsMsgFolder::ChangeNumPendingUnread(PRInt32 delta)
 		PRInt32 oldUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
 		mNumPendingUnreadMessages += delta;
 		PRInt32 newUnreadMessages = mNumUnreadMessages + mNumPendingUnreadMessages;
+    nsCOMPtr<nsIMsgDatabase> db;
+    nsCOMPtr<nsIDBFolderInfo> folderInfo;
+    nsresult rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+    if (NS_SUCCEEDED(rv) && folderInfo)
+      folderInfo->SetImapUnreadPendingMessages(mNumPendingUnreadMessages);
 
 		NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, newUnreadMessages);
 	}
@@ -1430,6 +1435,11 @@ void nsMsgFolder::ChangeNumPendingTotalMessages(PRInt32 delta)
 		mNumPendingTotalMessages += delta;
 		PRInt32 newTotalMessages = mNumTotalMessages + mNumPendingTotalMessages;
 
+    nsCOMPtr<nsIMsgDatabase> db;
+    nsCOMPtr<nsIDBFolderInfo> folderInfo;
+    nsresult rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
+    if (NS_SUCCEEDED(rv) && folderInfo)
+      folderInfo->SetImapTotalPendingMessages(mNumPendingTotalMessages);
 		NotifyIntPropertyChanged(kTotalMessagesAtom, oldTotalMessages, newTotalMessages);
 	}
 
