@@ -68,7 +68,7 @@
 #include "nsIXULDocumentInfo.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIDocumentLoader.h"
-#include "nsIWebshell.h"
+#include "nsIWebShell.h"
 
 // XXX These are needed as scaffolding until we get to a more
 // DOM-based solution.
