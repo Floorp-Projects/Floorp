@@ -33,7 +33,7 @@ static NS_DEFINE_IID(kEditorCID,       NS_EDITOR_CID);
 nsresult
 getEditFactory(nsIFactory **aFactory)
 {
-  static COM_auto_ptr<nsIFactory>  g_pNSIFactory;
+  static nsCOMPtr<nsIFactory>  g_pNSIFactory;
   PR_EnterMonitor(getEditorMonitor());
   nsresult result = NS_ERROR_FAILURE;
   if (!g_pNSIFactory)

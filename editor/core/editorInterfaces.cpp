@@ -219,7 +219,7 @@ nsEditorMouseListener::ProcessEvent(nsIDOMEvent* aEvent)
 nsresult
 nsEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  COM_auto_ptr<nsIDOMNode> target;
+  nsCOMPtr<nsIDOMNode> target;
   if (NS_OK == aMouseEvent->GetTarget(getter_AddRefs(target))) {
 //    nsSetCurrentNode(aTarget);
   }

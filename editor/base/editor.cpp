@@ -126,7 +126,7 @@ nsEditor::~nsEditor()
 {
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
-  COM_auto_ptr<nsIDOMEventReceiver> erP;
+  nsCOMPtr<nsIDOMEventReceiver> erP;
   nsresult t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
   if (NS_SUCCEEDED( t_result )) 
   {
@@ -198,7 +198,7 @@ nsEditor::Init(nsIDOMDocument *aDomInterface)
 //    NS_NOTREACHED("Mouse Listener");
     return t_result;
   }
-  COM_auto_ptr<nsIDOMEventReceiver> erP;
+  nsCOMPtr<nsIDOMEventReceiver> erP;
   t_result = mDomInterfaceP->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
   if (NS_OK != t_result) 
   {
@@ -214,7 +214,7 @@ nsEditor::Init(nsIDOMDocument *aDomInterface)
   now to handle selection
   */
   /*
-  COM_auto_ptr<nsIDocument> document;
+  nsCOMPtr<nsIDocument> document;
   if (NS_SUCCEEDED(t_result = mDomInterfaceP->QueryInterface(kIDocumentIID, getter_AddRefs(document))))
   {
     if (!NS_SUCCEEDED(t_result = document->GetSelection(*getter_AddRefs(mSelectionP))))
@@ -306,9 +306,9 @@ nsEditor::MouseClick(int aX,int aY)
 nsresult
 nsEditor::AppendText(nsString *aStr)
 {
-  COM_auto_ptr<nsIDOMNode> currentNode;
-  COM_auto_ptr<nsIDOMNode> textNode;
-  COM_auto_ptr<nsIDOMText> text;
+  nsCOMPtr<nsIDOMNode> currentNode;
+  nsCOMPtr<nsIDOMNode> textNode;
+  nsCOMPtr<nsIDOMText> text;
   if (!aStr)
     return NS_ERROR_NULL_POINTER;
   if (NS_SUCCEEDED(GetCurrentNode(getter_AddRefs(currentNode))) && 
@@ -328,7 +328,7 @@ nsEditor::GetCurrentNode(nsIDOMNode ** aNode)
   if (!aNode)
     return NS_ERROR_NULL_POINTER;
   /* If no node set, get first text node */
-  COM_auto_ptr<nsIDOMElement> docNode;
+  nsCOMPtr<nsIDOMElement> docNode;
 
   if (NS_SUCCEEDED(mDomInterfaceP->GetDocumentElement(getter_AddRefs(docNode))))
   {
@@ -351,15 +351,15 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
   PRUint16 mType;
   PRBool mCNodes;
 
-  COM_auto_ptr<nsIDOMNode> answer;
+  nsCOMPtr<nsIDOMNode> answer;
   
   aNode->GetNodeType(&mType);
 
   if (nsIDOMNode::ELEMENT_NODE == mType) {
     if (NS_SUCCEEDED(aNode->HasChildNodes(&mCNodes)) && PR_TRUE == mCNodes) 
     {
-      COM_auto_ptr<nsIDOMNode> node1;
-      COM_auto_ptr<nsIDOMNode> node2;
+      nsCOMPtr<nsIDOMNode> node1;
+      nsCOMPtr<nsIDOMNode> node2;
 
       if (!NS_SUCCEEDED(aNode->GetFirstChild(getter_AddRefs(node1))))
       {

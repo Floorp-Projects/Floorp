@@ -17,7 +17,7 @@
  */
 
 #include "nsTransactionManager.h"
-#include "COM_auto_ptr.h"
+#include "nsCOMPtr.h"
 
 #define LOCK_TX_MANAGER(mgr)
 #define UNLOCK_TX_MANAGER(mgr)

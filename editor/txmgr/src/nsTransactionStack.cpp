@@ -17,7 +17,7 @@
  */
 
 #include "nsTransactionStack.h"
-#include "COM_auto_ptr.h"
+#include "nsCOMPtr.h"
 
 nsTransactionStack::nsTransactionStack()
   : mRF(), mQue(mRF)

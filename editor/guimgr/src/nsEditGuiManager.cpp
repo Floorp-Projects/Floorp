@@ -17,7 +17,7 @@
  */
 
 #include "nsEditGuiManager.h"
-#include "COM_auto_ptr.h"
+#include "nsCOMPtr.h"
 
 #define LOCK_GUI_MANAGER(mgr)
 #define UNLOCK_GUI_MANAGER(mgr)
