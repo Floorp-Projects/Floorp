@@ -1088,16 +1088,13 @@ preferred_conversion(JSContext *cx, JNIEnv *jEnv, jsval js_val,
     js_type = compute_jsj_type(cx, js_val);
     rank1 = rank_table[js_type][(int)descriptor1->type - 2];
     rank2 = rank_table[js_type][(int)descriptor2->type - 2];
-        
-    /* Fast path for conversion from most JS types */  
-    if (rank1 < rank2)
-        return JSJPREF_FIRST_ARG;
 
     /*
      * Special logic is required for matching the classes of wrapped
      * Java objects.
      */
-    if (rank2 == 0) {
+    if (((js_type == JSJTYPE_JAVAOBJECT) || (js_type == JSJTYPE_JAVAARRAY)) &&
+	IS_REFERENCE_TYPE(descriptor2->type)) {
         java_class1 = descriptor1->java_class;
         java_class2 = descriptor2->java_class;
         
@@ -1113,7 +1110,7 @@ preferred_conversion(JSContext *cx, JNIEnv *jEnv, jsval js_val,
          * For JavaObject arguments, any compatible reference type is preferable
          * to any primitive Java type or to java.lang.String.
          */
-        if (rank1 != 0)
+        if (rank2 < rank1)
             return JSJPREF_SECOND_ARG;
         
         /*
@@ -1129,6 +1126,10 @@ preferred_conversion(JSContext *cx, JNIEnv *jEnv, jsval js_val,
         /* This can happen in unusual situations involving interface types. */
         return JSJPREF_AMBIGUOUS;
     }
+    
+    /* Fast path for conversion from most JS types */  
+    if (rank1 < rank2)
+        return JSJPREF_FIRST_ARG;
     
     if (rank1 > rank2)
         return JSJPREF_SECOND_ARG;
@@ -1393,12 +1394,6 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
         }
     }
 
-    /* Prevent deadlocking if we re-enter JS on another thread as a result of a Java
-       method call and that new thread wants to perform a GC. */
-#ifdef JSJ_THREADSAFE
-    JS_EndRequest(cx);
-#endif
-
 #define CALL_JAVA_METHOD(type, member)                                       \
     JS_BEGIN_MACRO                                                           \
     if (is_static_method) {                                                  \
@@ -1463,8 +1458,7 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
         
     case JAVA_SIGNATURE_UNKNOWN:
         JS_ASSERT(0);
-        error_occurred = JS_TRUE;
-        goto out;
+        return JS_FALSE;
             
     /* Non-primitive (reference) type */
     default:
@@ -1474,7 +1468,6 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
     }
 
 out:
-
     JSJ_SetDefaultJSContextForJavaThread(old_cx, jsj_env);
 
     if (localv) {
@@ -1486,10 +1479,6 @@ out:
     }
     if (jargv)
        JS_free(cx, jargv);
-
-#ifdef JSJ_THREADSAFE
-    JS_BeginRequest(cx);
-#endif
 
     if (!error_occurred) {
         success = jsj_ConvertJavaValueToJSValue(cx, jEnv, return_val_signature, &java_value, vp);
@@ -1567,18 +1556,8 @@ invoke_java_constructor(JSContext *cx,
     }
 #endif
 
-    /* Prevent deadlocking if we re-enter JS on another thread as a result of a Java
-       method call and that new thread wants to perform a GC. */
-#ifdef JSJ_THREADSAFE
-    JS_EndRequest(cx);
-#endif
-
     /* Call the constructor */
     java_object = (*jEnv)->NewObjectA(jEnv, java_class, methodID, jargv);
-
-#ifdef JSJ_THREADSAFE
-    JS_BeginRequest(cx);
-#endif
 
     JSJ_SetDefaultJSContextForJavaThread(old_cx, jsj_env);
 
@@ -1676,23 +1655,19 @@ jsj_JavaConstructorWrapper(JSContext *cx, JSObject *obj,
     JavaMemberDescriptor *member_descriptor;
     JSJavaThreadState *jsj_env;
     JNIEnv *jEnv;
-    JSBool result;
 
+    /* Get the Java per-thread environment pointer for this JSContext */
+    jsj_env = jsj_MapJSContextToJSJThread(cx, &jEnv);
+    if (!jEnv)
+        return JS_FALSE;
     obj = JSVAL_TO_OBJECT(argv[-2]);
     class_descriptor = JS_GetPrivate(cx, obj);
     JS_ASSERT(class_descriptor);
     if (!class_descriptor)
         return JS_FALSE;
-  
-    /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_env = jsj_EnterJava(cx, &jEnv);
-    if (!jEnv)
-        return JS_FALSE;
     member_descriptor = jsj_LookupJavaClassConstructors(cx, jEnv, class_descriptor);
-    result = java_constructor_wrapper(cx, jsj_env, member_descriptor, 
-                                      class_descriptor, argc, argv, vp);
-    jsj_ExitJava(jsj_env);
-    return result;
+    return java_constructor_wrapper(cx, jsj_env, member_descriptor, 
+                                    class_descriptor, argc, argv, vp);
 }
 
 
@@ -1734,15 +1709,14 @@ jsj_JavaStaticMethodWrapper(JSContext *cx, JSObject *obj,
     jsval idval;
     JNIEnv *jEnv;
     JSJavaThreadState *jsj_env;
-    JSBool result;
+
+    /* Get the Java per-thread environment pointer for this JSContext */
+    jsj_env = jsj_MapJSContextToJSJThread(cx, &jEnv);
+    if (!jEnv)
+        return JS_FALSE;
     
     class_descriptor = JS_GetPrivate(cx, obj);
     if (!class_descriptor)
-        return JS_FALSE;
-
-    /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_env = jsj_EnterJava(cx, &jEnv);
-    if (!jEnv)
         return JS_FALSE;
     
     JS_ASSERT(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION);
@@ -1750,9 +1724,7 @@ jsj_JavaStaticMethodWrapper(JSContext *cx, JSObject *obj,
     idval = STRING_TO_JSVAL(JS_InternString(cx, JS_GetFunctionName(function)));
     JS_ValueToId(cx, idval, &id);
 
-    result = static_method_wrapper(cx, jsj_env, class_descriptor, id, argc, argv, vp);
-    jsj_ExitJava(jsj_env);
-    return result;
+    return static_method_wrapper(cx, jsj_env, class_descriptor, id, argc, argv, vp);
 }
 
 JS_DLL_CALLBACK JSBool
@@ -1768,7 +1740,11 @@ jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
     JSJavaThreadState *jsj_env;
     JNIEnv *jEnv;
     jobject java_obj;
-    JSBool result;
+
+    /* Get the Java per-thread environment pointer for this JSContext */
+    jsj_env = jsj_MapJSContextToJSJThread(cx, &jEnv);
+    if (!jEnv)
+        return JS_FALSE;
     
     java_wrapper = JS_GetPrivate(cx, obj);
     if (!java_wrapper)
@@ -1781,22 +1757,14 @@ jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
     JS_ValueToId(cx, idval, &id);
     class_descriptor = java_wrapper->class_descriptor;
     
-    /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_env = jsj_EnterJava(cx, &jEnv);
-    if (!jEnv)
-        return JS_FALSE;
-
     /* Try to find an instance method with the given name first */
     member_descriptor = jsj_LookupJavaMemberDescriptorById(cx, jEnv, class_descriptor, id);
     if (member_descriptor)
-        result = invoke_overloaded_java_method(cx, jsj_env, member_descriptor,
-                                               JS_FALSE, java_obj, 
-                                               class_descriptor, argc, argv, vp);
+        return invoke_overloaded_java_method(cx, jsj_env, member_descriptor,
+                                             JS_FALSE, java_obj, 
+                                             class_descriptor, argc, argv, vp);
 
     /* If no instance method was found, try for a static method or constructor */
-    else
-	result = static_method_wrapper(cx, jsj_env, class_descriptor, id, argc, argv, vp);
-    jsj_ExitJava(jsj_env);
-    return result;
+    return static_method_wrapper(cx, jsj_env, class_descriptor, id, argc, argv, vp);
 }
 
