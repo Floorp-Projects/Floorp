@@ -100,37 +100,31 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
 		}
 	}
 
-    // Set up arguments for "window.open"
-    void *stackPtr;
-    char params[36];
-
-    if (modal) {  // if you change this, remember to change the buffer size above.
-	    strcpy(params, "menubar=no,height=%d,width=%d,dependent");
+  // Set up arguments for "window.open"
+  // Do not modify the string after the "modal ?" statement
+  // without first consulting the PSM team.  Either ddrinan or javi
+  char buffer[256];
+  PR_snprintf(buffer,
+              sizeof(buffer),
+              modal ? "menubar=no,height=%d,width=%d,dependent,modal"
+              : "menubar=no,height=%d,width=%d",
+              height,
+              width );
+  void *stackPtr;
+  argv = JS_PushArguments(jsContext, &stackPtr, "sss", urlStr, "_blank", buffer);
+  if (argv) {
+    // open the window
+    nsIDOMWindowInternal *newWindow;
+    if (modal && win) {
+      parentWindow->OpenDialog(jsContext, argv, 3, &newWindow);
     } else {
-		strcpy(params, "menubar=no,height=%d,width=%d");
-	}
-
-	char buffer[256];
-    PR_snprintf(buffer,
-		sizeof(buffer),
-        params,
-        height,
-        width );
-
-	argv = JS_PushArguments(jsContext, &stackPtr, "sss", urlStr, "_blank", buffer);
-	if (argv) {
-		// open the window
-		nsIDOMWindowInternal *newWindow;
-		if (modal && win) {
-			parentWindow->OpenDialog(jsContext, argv, 3, &newWindow);
-		} else {
-			parentWindow->Open(jsContext, argv, 3, &newWindow);
-		}
-        newWindow->ResizeTo(width, height);
-        JS_PopArguments(jsContext, stackPtr);
-	}
-loser:
-    return rv;
+      parentWindow->Open(jsContext, argv, 3, &newWindow);
+    }
+    newWindow->ResizeTo(width, height);
+    JS_PopArguments(jsContext, stackPtr);
+  }
+ loser:
+  return rv;
 }
 
 NS_IMETHODIMP
