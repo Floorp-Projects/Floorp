@@ -307,6 +307,8 @@ void nsDocument::SetDocumentCharacterSet(nsCharSetID aCharSetID)
   mCharacterSet = aCharSetID;
 }
 
+#if 0
+// XXX Temp hack: moved to nsMarkupDocument
 nsresult nsDocument::CreateShell(nsIPresContext* aContext,
                                  nsIViewManager* aViewManager,
                                  nsIStyleSet* aStyleSet,
@@ -333,6 +335,7 @@ nsresult nsDocument::CreateShell(nsIPresContext* aContext,
   *aInstancePtrResult = shell;
   return NS_OK;
 }
+#endif
 
 PRBool nsDocument::DeleteShell(nsIPresShell* aShell)
 {

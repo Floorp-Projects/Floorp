@@ -32,6 +32,8 @@
 #include "nsHTMLValue.h"
 #include "nsXIFConverter.h"
 
+#include "nsIPresShell.h"
+
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 
@@ -43,6 +45,37 @@ nsMarkupDocument::nsMarkupDocument() : nsDocument()
 
 nsMarkupDocument::~nsMarkupDocument()
 {
+}
+
+// XXX Temp hack: moved from nsDocument to fix circular linkage problem...
+extern NS_LAYOUT nsresult
+  NS_NewPresShell(nsIPresShell** aInstancePtrResult);
+
+nsresult nsMarkupDocument::CreateShell(nsIPresContext* aContext,
+                                       nsIViewManager* aViewManager,
+                                       nsIStyleSet* aStyleSet,
+                                       nsIPresShell** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  nsIPresShell* shell;
+  nsresult rv = NS_NewPresShell(&shell);
+  if (NS_OK != rv) {
+    return rv;
+  }
+
+  if (NS_OK != shell->Init(this, aContext, aViewManager, aStyleSet)) {
+    NS_RELEASE(shell);
+    return rv;
+  }
+
+  // Note: we don't hold a ref to the shell (it holds a ref to us)
+  mPresShells.AppendElement(shell);
+  *aInstancePtrResult = shell;
+  return NS_OK;
 }
 
 /**

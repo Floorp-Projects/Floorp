@@ -85,10 +85,13 @@ public:
    * it's presentation context (presentation context's <b>must not</b> be
    * shared among multiple presentation shell's).
    */
+#if 0
+  // XXX Temp hack: moved to nsMarkupDocument
   virtual nsresult CreateShell(nsIPresContext* aContext,
                                nsIViewManager* aViewManager,
                                nsIStyleSet* aStyleSet,
                                nsIPresShell** aInstancePtrResult);
+#endif
   virtual PRBool DeleteShell(nsIPresShell* aShell);
   virtual PRInt32 GetNumberOfShells();
   virtual nsIPresShell* GetShellAt(PRInt32 aIndex);

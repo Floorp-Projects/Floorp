@@ -53,6 +53,12 @@ public:
   virtual void ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   
+  // XXX Temp hack: moved from nsDocument
+  virtual nsresult CreateShell(nsIPresContext* aContext,
+                               nsIViewManager* aViewManager,
+                               nsIStyleSet* aStyleSet,
+                               nsIPresShell** aInstancePtrResult);
+
 protected:
   virtual void CSSSelectorToXIF(nsXIFConverter& aConverter, nsCSSSelector& aSelector);
   virtual void CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDeclaration& aDeclaration);
