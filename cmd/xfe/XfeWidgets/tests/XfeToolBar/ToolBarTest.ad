@@ -54,8 +54,10 @@ ToolBarTest*ToolBar.spacing:				0
 
 ToolBarTest*ToolBar.forceWidth:				false
 
-ToolBarTest*ToolBar.usePreferredWidth:		true
+ToolBarTest*ToolBar.usePreferredWidth:		false
 ToolBarTest*ToolBar.usePreferredHeight:		true
+
+ToolBarTest*ToolBar.maxNumRows:				20
 
 !ToolBarTest*ToolBar.selectionPolicy:		tool_bar_select_single
 !ToolBarTest*ToolBar.selectionModifiers:		Shift
@@ -107,12 +109,11 @@ ToolBarTest*hsep.width:						20
 
 
 ToolBarTest*Scale.leftAttachment:		        attach_form
-ToolBarTest*Scale.topAttachment:			attach_widget
-ToolBarTest*Scale.bottomAttachment:		        attach_none
+ToolBarTest*Scale.topAttachment:				attach_none
+ToolBarTest*Scale.bottomAttachment:		        attach_form
 ToolBarTest*Scale.rightAttachment:		        attach_none
-ToolBarTest*Scale.leftOffset:				5
-ToolBarTest*Scale.topOffset:				50
-ToolBarTest*Scale.topWidget:			        ToolBar
+ToolBarTest*Scale.leftOffset:					5
+ToolBarTest*Scale.bottomOffset:					5
 ToolBarTest*Scale.orientation:			        horizontal
 
 
