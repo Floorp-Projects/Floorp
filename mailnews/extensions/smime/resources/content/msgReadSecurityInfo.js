@@ -115,9 +115,15 @@ function onLoad()
         break;
 
       case nsICMSMessageErrors.VERIFY_HEADER_MISMATCH:
-        sigInfoLabel = "SIInvalidLabel";
-        sigInfoHeader = "SIInvalidHeader";
+        sigInfoLabel = "SIPartiallyValidLabel";
+        sigInfoHeader = "SIPartiallyValidHeader";
         sigInfo = "SIHeaderMismatch";
+        break;
+
+      case nsICMSMessageErrors.VERIFY_CERT_WITHOUT_ADDRESS:
+        sigInfoLabel = "SIPartiallyValidLabel";
+        sigInfoHeader = "SIPartiallyValidHeader";
+        sigInfo = "SICertWithoutAddress";
         break;
 
       case nsICMSMessageErrors.VERIFY_UNTRUSTED:

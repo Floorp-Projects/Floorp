@@ -177,6 +177,7 @@ MimeMultCMS_get_content_info(MimeObject *obj,
 extern PRBool MimeEncryptedCMS_encrypted_p (MimeObject *obj);
 extern PRBool MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 											 nsICMSMessage *,
+											 PRBool *signing_cert_without_email_address,
 											 char **);
 extern char *MimeCMS_MakeSAURL(MimeObject *obj);
 extern char *IMAP_CreateReloadAllPartsUrl(const char *url);
@@ -482,11 +483,19 @@ MimeMultCMS_generate (void *crypto_closure)
         data->verify_error = -1;
       }
     } else {
+		  PRBool signing_cert_without_email_address;
+
 		  good_p = MimeCMSHeadersAndCertsMatch(data->self,
 												 data->content_info,
+												 &signing_cert_without_email_address,
 												 &data->sender_addr);
       if (!good_p) {
-        signature_status = nsICMSMessageErrors::VERIFY_HEADER_MISMATCH;
+        if (signing_cert_without_email_address) {
+          signature_status = nsICMSMessageErrors::VERIFY_CERT_WITHOUT_ADDRESS;
+        }
+        else {
+          signature_status = nsICMSMessageErrors::VERIFY_HEADER_MISMATCH;
+        }
         if (!data->verify_error) {
           data->verify_error = -1;
           // XXX Fix this		data->verify_error = SEC_ERROR_CERT_ADDR_MISMATCH; XXX //

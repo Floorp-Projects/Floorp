@@ -50,6 +50,10 @@
   list-style-image: url("chrome://messenger/skin/smime/icons/sbSignUnknown.gif");
 }
 
+#status-bar[signed="mismatch"] #signed-status {
+  list-style-image: url("chrome://messenger/skin/smime/icons/sbSignUnknown.gif");
+}
+
 #status-bar[signed="notok"] #signed-status {
   list-style-image: url("chrome://messenger/skin/smime/icons/sbSignNotOk.gif");
 }

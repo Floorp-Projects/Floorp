@@ -54,20 +54,27 @@ var smimeHeaderSink =
     gSignedUINode.collapsed = false;
     gSignedStatusPanel.collapsed = false;
   
-    if (nsICMSMessageErrors.SUCCESS == aSignatureStatus)
-    {
-      gSignedUINode.setAttribute("signed", "ok");
-      gStatusBar.setAttribute("signed", "ok");      
-    }
-    else if(nsICMSMessageErrors.VERIFY_NOT_YET_ATTEMPTED == aSignatureStatus)
-    {
-      gSignedUINode.setAttribute("signed", "unknown");
-      gStatusBar.setAttribute("signed", "unknown");
-    }
-    else
-    {
-      gSignedUINode.setAttribute("signed", "notok");
-      gStatusBar.setAttribute("signed", "notok");
+    switch (aSignatureStatus) {
+      case nsICMSMessageErrors.SUCCESS:
+        gSignedUINode.setAttribute("signed", "ok");
+        gStatusBar.setAttribute("signed", "ok");
+        break;
+
+      case nsICMSMessageErrors.VERIFY_NOT_YET_ATTEMPTED:
+        gSignedUINode.setAttribute("signed", "unknown");
+        gStatusBar.setAttribute("signed", "unknown");
+        break;
+
+      case nsICMSMessageErrors.VERIFY_CERT_WITHOUT_ADDRESS:
+      case nsICMSMessageErrors.VERIFY_HEADER_MISMATCH:
+        gSignedUINode.setAttribute("signed", "mismatch");
+        gStatusBar.setAttribute("signed", "mismatch");
+        break;
+
+      default:
+        gSignedUINode.setAttribute("signed", "notok");
+        gStatusBar.setAttribute("signed", "notok");
+        break;
     }
   },
 

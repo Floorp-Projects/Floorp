@@ -210,6 +210,7 @@ extern char *IMAP_CreateReloadAllPartsUrl(const char *url);
 PRBool
 MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 							  nsICMSMessage *content_info,
+							  PRBool *signing_cert_without_email_address,
 							  char **sender_email_addr_return)
 {
   MimeHeaders *msg_headers = 0;
@@ -226,6 +227,11 @@ MimeCMSHeadersAndCertsMatch(MimeObject *obj,
 	{
 	  content_info->GetSignerEmailAddress (getter_Copies(cert_addr));
 	}
+
+  if (signing_cert_without_email_address)
+  {
+    *signing_cert_without_email_address = (!cert_addr);
+  }
 
   if (!cert_addr) {
     // no address, no match
@@ -528,15 +534,22 @@ MimeCMS_eof (void *crypto_closure, PRBool abort_p)
         }
       }
       else {
+        PRBool signing_cert_without_email_address;
         if (MimeCMSHeadersAndCertsMatch(data->self,
 											                  data->content_info,
+											                  &signing_cert_without_email_address,
 											                  &data->sender_addr))
         {
           status = nsICMSMessageErrors::SUCCESS;
         }
         else
         {
-          status = nsICMSMessageErrors::VERIFY_HEADER_MISMATCH;
+          if (signing_cert_without_email_address) {
+            status = nsICMSMessageErrors::VERIFY_CERT_WITHOUT_ADDRESS;
+          }
+          else {
+            status = nsICMSMessageErrors::VERIFY_HEADER_MISMATCH;
+          }
         }
       }
 
@@ -662,8 +675,10 @@ MimeCMS_generate (void *crypto_closure)
       }
 		  else
 			{
+			  PRBool signing_cert_without_email_address;
 			  good_p = MimeCMSHeadersAndCertsMatch(data->self,
 													 data->content_info,
+													 &signing_cert_without_email_address,
 													 &data->sender_addr);
 			  if (!good_p && !data->verify_error) {
           // data->verify_error = SEC_ERROR_CERT_ADDR_MISMATCH; XXX Fix later XXX //
