@@ -50,6 +50,7 @@ LINCS = \
 LLIBS	= \
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
+	$(DIST)\lib\js3250.lib \
 !ifndef NECKO
 	$(DIST)\lib\netlib.lib \
 !endif
@@ -62,7 +63,6 @@ LLIBS	= \
 #//------------------------------------------------------------------------
 OBJS =							\
 	.\$(OBJDIR)\nsFindComponent.obj	\
-	.\$(OBJDIR)\nsFindDialog.obj	\
 	$(NULL)
 
 #//------------------------------------------------------------------------
