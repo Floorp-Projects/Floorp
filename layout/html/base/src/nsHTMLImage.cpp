@@ -366,7 +366,20 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aDesiredSize.height = mRect.height;
   }
   else {
+    // XXX Don't create a view, because we want whatever is below the image
+    // to show through while the image is loading; Likewise for transparent
+    // images and broken images
+    //
+    // What we really want to do is to create a view, and indicate that the
+    // view has a transparent content area. Do this while it's loading,
+    // and then when it's fully loaded mark the view as opaque if the
+    // image is opaque.
+    //
+    // We can't use that approach yet, because currently the compositor doesn't
+    // support transparent views...
+  #if 0
     nsHTMLBase::CreateViewForFrame(aPresContext, this, mStyleContext, PR_TRUE);
+  #endif
 
     // Setup url before starting the image load
     nsAutoString src;
