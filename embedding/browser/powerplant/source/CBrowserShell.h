@@ -120,6 +120,8 @@ public:
     virtual OSStatus HandleOffsetToPos(PRInt32 offset, PRInt16 *pointX, PRInt16 *pointY);
     virtual OSStatus HandlePosToOffset(PRInt16 currentPointX, PRInt16 currentPointY, 
                                        PRInt32 *offset, PRInt16 *regionClass);
+    virtual OSStatus HandleGetSelectedText(nsAString& selectedText);
+    
     
     // CBrowserShell
         

@@ -105,5 +105,11 @@ interface nsIMacTextInputEventSink : nsISupports
    */   
 
   OSStatus HandlePosToOffset ( in short currentPointX, in short currentPointY, out long offset, out short regionClass);
+
+  /**
+   * Entry point for kEventTextInputGetSelectedText events into Gecko for Unicode Document
+   */   
+
+  OSStatus HandleGetSelectedText ( out AString selectedText);
   
 };

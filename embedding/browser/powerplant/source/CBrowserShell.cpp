@@ -1680,3 +1680,18 @@ OSStatus CBrowserShell::HandlePosToOffset(
     return err;
   return NS_FAILED(res) ? eventNotHandledErr : noErr;
 }
+
+OSStatus CBrowserShell::HandleGetSelectedText(nsAString& selectedText)
+{
+  nsCOMPtr<nsIMacTextInputEventSink> tieSink;
+  tieSink = do_QueryInterface(mEventSink);
+  if (!tieSink)
+    return eventNotHandledErr;
+    
+  OSStatus err = noErr;
+  nsresult res = tieSink->HandleGetSelectedText( selectedText, &err);
+  if (noErr != err)
+    return err;
+  return NS_FAILED(res) ? eventNotHandledErr : noErr;
+}
+

@@ -2434,6 +2434,33 @@ nsresult nsMacEventHandler::UnicodeHandleUpdateInputArea(PRUnichar* text, long c
 error:
   return res;
 }
+
+nsresult nsMacEventHandler::HandleUnicodeGetSelectedText(nsAString& outString)
+{
+  outString.Truncate(0);
+  nsWindow* focusedWidget = gEventDispatchHandler.GetActive();
+  if (!focusedWidget)
+    focusedWidget = mTopLevelWidget;
+
+  nsReconversionEvent reconversionEvent;
+  reconversionEvent.eventStructType = NS_RECONVERSION_QUERY;
+  reconversionEvent.message = NS_RECONVERSION_QUERY;
+  reconversionEvent.point.x = 0;
+  reconversionEvent.point.y = 0;
+  reconversionEvent.nativeMsg = nsnull;
+  reconversionEvent.time = PR_IntervalNow();
+  reconversionEvent.widget = focusedWidget;
+  reconversionEvent.theReply.mReconversionString = NULL;
+
+  nsresult res = focusedWidget->DispatchWindowEvent(reconversionEvent);
+
+  if (NS_SUCCEEDED(res)) {
+     outString.Assign(reconversionEvent.theReply.mReconversionString);
+     nsMemory::Free(reconversionEvent.theReply.mReconversionString);
+  } 
+  return res; 
+  
+}
 //-------------------------------------------------------------------------
 //
 // HandleStartComposition
@@ -2451,7 +2478,7 @@ nsresult nsMacEventHandler::HandleStartComposition(void)
 	if(nsnull == mIMECompositionStr)
 	{
 		return NS_ERROR_OUT_OF_MEMORY;
-	}
+	}	
 	// 
 	// get the focused widget [tague: may need to rethink this later]
 	//

@@ -237,6 +237,25 @@ OSStatus CTextInputEventHandler::HandleUpdateActiveInputArea(
      ::free(hiliteRng);
   return err;
 }
+//*************************************************************************************
+//  HandleUpdateActiveInputArea
+//*************************************************************************************
+OSStatus CTextInputEventHandler::HandleGetSelectedText(
+  CBrowserShell* aBrowserShell, 
+  EventHandlerCallRef inHandlerCallRef, 
+  EventRef inEvent)
+{
+  NS_ENSURE_TRUE(aBrowserShell, eventNotHandledErr);
+
+  nsAutoString outString;
+  OSStatus err = aBrowserShell->HandleGetSelectedText(outString);   
+  if (noErr != err)
+    return eventParameterNotFoundErr;
+  
+  err = ::SetEventParameter(inEvent, kEventParamTextInputReplyText, typeUnicodeText,
+                          outString.Length()*sizeof(PRUnichar), outString.get());
+  return err; 
+}
 
 
 //*************************************************************************************
@@ -321,7 +340,8 @@ OSStatus CTextInputEventHandler::HandleAll(EventHandlerCallRef inHandlerCallRef,
   if ((kEventTextInputUpdateActiveInputArea != eventKind) &&
                   (kEventTextInputUnicodeForKeyEvent!= eventKind) &&
                   (kEventTextInputOffsetToPos != eventKind) &&
-                  (kEventTextInputPosToOffset != eventKind))
+                  (kEventTextInputPosToOffset != eventKind) &&
+                  (kEventTextInputGetSelectedText != eventKind))
     return eventNotHandledErr;
     
   switch(eventKind)
@@ -334,6 +354,8 @@ OSStatus CTextInputEventHandler::HandleAll(EventHandlerCallRef inHandlerCallRef,
       return HandleOffsetToPos(aBrowserShell, inHandlerCallRef, inEvent);
     case kEventTextInputPosToOffset:
       return HandlePosToOffset(aBrowserShell, inHandlerCallRef, inEvent);
+    case kEventTextInputGetSelectedText:
+      return HandleGetSelectedText(aBrowserShell, inHandlerCallRef, inEvent);
   }
   return eventNotHandledErr;
 }
@@ -356,14 +378,15 @@ static pascal OSStatus TextInputHandler(EventHandlerCallRef inHandlerCallRef, Ev
 void InitializeTextInputEventHandling()
 {
   static CTextInputEventHandler Singleton;
-  EventTypeSpec eventTypes[4] = {
+  EventTypeSpec eventTypes[5] = {
     {kEventClassTextInput, kEventTextInputUpdateActiveInputArea },
     {kEventClassTextInput, kEventTextInputUnicodeForKeyEvent },
     {kEventClassTextInput, kEventTextInputOffsetToPos },
-    {kEventClassTextInput, kEventTextInputPosToOffset }
+    {kEventClassTextInput, kEventTextInputPosToOffset },
+    {kEventClassTextInput, kEventTextInputGetSelectedText }
   };  
   
   EventHandlerUPP textInputUPP = NewEventHandlerUPP(TextInputHandler); 
-  OSStatus err = InstallApplicationEventHandler( textInputUPP, 4, eventTypes, &Singleton, NULL);
+  OSStatus err = InstallApplicationEventHandler( textInputUPP, 5, eventTypes, &Singleton, NULL);
   NS_ASSERTION(err==noErr, "Cannot install carbon event");
 }

@@ -1671,6 +1671,15 @@ nsMacWindow::HandlePosToOffset(PRInt16 currentPointX, PRInt16 currentPointY,
   return NS_OK;
 }
 
+/* OSStatus HandleGetSelectedText (out AString selectedText); */
+NS_IMETHODIMP 
+nsMacWindow::HandleGetSelectedText(nsAString & selectedText, OSStatus *_retval)
+{
+  *_retval = noErr;
+  NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
+  return mMacEventHandler->HandleUnicodeGetSelectedText(selectedText);
+}
+
 #pragma mark -
 
 

@@ -57,6 +57,7 @@ AEEventHandlerUPP nsMacTSMMessagePump::mPos2OffsetUPP = NULL;
 AEEventHandlerUPP nsMacTSMMessagePump::mOffset2PosUPP = NULL;
 AEEventHandlerUPP nsMacTSMMessagePump::mUpdateUPP = NULL;
 AEEventHandlerUPP nsMacTSMMessagePump::mKeyboardUPP = NULL;
+AEEventHandlerUPP nsMacTSMMessagePump::mGetSelectedTextUPP = NULL;
 
 //-------------------------------------------------------------------------
 //
@@ -96,6 +97,13 @@ nsMacTSMMessagePump::nsMacTSMMessagePump()
 
     err = AEInstallEventHandler(kTextServiceClass, kUnicodeNotFromInputMethod, mKeyboardUPP, (long)this, false);
     NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandlers[FromInputMethod] failed");
+
+    mGetSelectedTextUPP = NewAEEventHandlerUPP(nsMacTSMMessagePump::UnicodeGetSelectedTextHandler);
+    NS_ASSERTION(mGetSelectedTextUPP!=NULL, "nsMacTSMMessagePump::InstallTSMAEHandlers: NewAEEventHandlerUPP[GetSelectedText] failed");
+
+    err = AEInstallEventHandler(kTextServiceClass, kGetSelectedText, mGetSelectedTextUPP, (long)this, false);
+    NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandlers[GetSelectedText] failed");
+
   }
 
 }
@@ -122,6 +130,10 @@ nsMacTSMMessagePump::~nsMacTSMMessagePump()
     err = AERemoveEventHandler(kTextServiceClass, kUnicodeNotFromInputMethod, mKeyboardUPP, false);
     NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandlers[FromInputMethod] failed");
     ::DisposeAEEventHandlerUPP(mKeyboardUPP);
+
+    err = AERemoveEventHandler(kTextServiceClass, kGetSelectedText, mGetSelectedTextUPP, false);
+    NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::InstallTSMAEHandlers: AEInstallEventHandlers[GetSelectedText] failed");
+    ::DisposeAEEventHandlerUPP(mGetSelectedTextUPP);
   }
 
 }
@@ -563,4 +575,55 @@ pascal OSErr nsMacTSMMessagePump::UnicodeNotFromInputMethodHandler(const AppleEv
 
   (void)::AEDisposeDesc(&text);
   return err;
+}
+
+
+pascal OSErr nsMacTSMMessagePump::UnicodeGetSelectedTextHandler(const AppleEvent *theAppleEvent, AppleEvent *reply, long handlerRefcon)
+{
+  OSErr err;  
+  DescType returnedType;
+  nsMacEventHandler*  eventHandler;  
+  Size actualSize;
+  long maxReturnSize = 0;
+  long returnSize;
+  nsresult res;
+
+  //
+  // Extract the nsMacEvenbtHandler for this TSMDocument.  It's stored as the refcon.
+  //
+  err = AEGetParamPtr(theAppleEvent, keyAETSMDocumentRefcon, typeLongInteger, &returnedType,
+            &eventHandler, sizeof(eventHandler), &actualSize);
+  NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::UnicodeGetSelectedTextHandler: AEGetParamPtr[TSMRefcon] failed.");
+  if (err!=noErr) 
+    return err;
+  
+  //
+  // Extract the Offset parameter
+  //
+  err = AEGetParamPtr(theAppleEvent, keyAEBufferSize, typeLongInteger, &returnedType,
+            &maxReturnSize, sizeof(maxReturnSize), &actualSize);
+  // optional parameter, ignore if we cannot get it.
+  
+  //
+  // Pass the OffsetToPosition request to the widgets to handle
+  //
+  nsAutoString outString;
+  res = eventHandler->HandleUnicodeGetSelectedText(outString);
+  NS_ASSERTION(NS_SUCCEEDED(res), "nsMacMessagePup::UnicodeGetSelectedTextHandler: HandleGetSelectedText handler failed.");
+  if (NS_FAILED(res)) 
+    return paramErr;
+  
+  //
+  // build up the reply (point)
+  //
+  returnSize = outString.Length()*sizeof(PRUnichar);
+  if ((maxReturnSize >0) && (returnSize > maxReturnSize))
+    returnSize = maxReturnSize & ~1L; // Round down
+  
+  err = AEPutParamPtr(reply, keyAETheData, typeUnicodeText, outString.get(), returnSize);
+  NS_ASSERTION(err==noErr, "nsMacTSMMessagePump::UnicodeGetSelectedTextHandler: AEPutParamPtr[Point] failed.");
+  if (err!=noErr) 
+    return err;
+  
+  return noErr;
 }
