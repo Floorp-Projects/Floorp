@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsnce.c,v 1.26 2003/10/19 01:25:10 nelsonb%netscape.com Exp $
+ * $Id: sslsnce.c,v 1.27 2003/10/22 01:00:10 wchang0222%aol.com Exp $
  */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
@@ -1374,12 +1374,12 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char * envString)
     */
     locks_to_initialize = cache->numSIDCacheLocks + 2;
     newLocks = PORT_NewArray(sidCacheLock, locks_to_initialize);
-    cache->sidCacheLocks = newLocks;
     if (!newLocks)
     	goto loser;
     /* copy the old locks */
     memcpy(newLocks, cache->sidCacheLocks, 
            locks_to_initialize * sizeof(sidCacheLock));
+    cache->sidCacheLocks = newLocks;
     /* fix the locks */		
     for (; locks_initialized < locks_to_initialize; ++locks_initialized) {
         /* now, make a local PRLock in this sslMutex for this child process */
