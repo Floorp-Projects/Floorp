@@ -121,11 +121,13 @@ real_checkout:
 
 build:
 	$(MAKE) -f client.mk build
-	$(MAKE) -C embedding/config
+	cd `$(MAKE) -f client.mk echo_objdir` && \
+	$(MAKE) -C embedding/config && \
+	CONFIG_FILES=camino/Makefile ./config.status && \
 	$(MAKE) -C camino
 
 clean distclean:
 	$(MAKE) -f client.mk $@
-	$(RM) -rf camino/build
+	cd `$(MAKE) -f client.mk echo_objdir` && $(RM) -rf camino/build
 
 .PHONY: checkout real_checkout build clean distclean
