@@ -215,13 +215,12 @@ void FormatAndPrintOutput(const char *theInput, int theVar, int outputMode)
 void RequestName(nsIRequest *request, nsCString &stringMsg,
 						   int displayMethod)
 {
-    nsXPIDLString theReqName;
 	nsresult rv;
 
-	rv = request->GetName(getter_Copies(theReqName));
+	rv = request->GetName(stringMsg);
+
 	if(NS_SUCCEEDED(rv))
 	{
-		stringMsg.AssignWithConversion(theReqName);
 		FormatAndPrintOutput("nsIRequest: The request name = ", stringMsg.get(), displayMethod);
 	}
 	else
