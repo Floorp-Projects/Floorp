@@ -154,7 +154,12 @@ ifeq ($(OS_RELEASE),5.8)
 endif
 ifeq ($(SYSV_SPARC),1)
 SOLARIS_AS = /usr/ccs/bin/as
+ifdef NS_USE_GCC
+LD = gcc
+DSO_LDOPTS += -shared -Wl,-B,symbolic,-z,defs,-z,now,-z,text,-M,mapfile.Solaris
+else
 MKSHLIB += -B symbolic -z defs -z now -z text -M mapfile.Solaris
+endif
 ifdef USE_PURE_32
 # this builds for Sparc v8 pure 32-bit architecture
     DEFINES += -DMP_USE_LONG_LONG_MULTIPLY -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
@@ -269,20 +274,19 @@ $(SPARCFIX): sparcfix.c
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ -O sparcfix.c -lelf
 
-$(OBJDIR)/mpv_sparcv8.o $(OBJDIR)/montmulfv8.o : $(OBJDIR)/%.o : %.s $(SPARCFIX)
-	@$(MAKE_OBJDIR)
-	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $*.s
-	$(SPARCFIX) $@
-
-$(OBJDIR)/mpv_sparcv9.o $(OBJDIR)/montmulfv9.o : $(OBJDIR)/%.o : %.s
+#$(OBJDIR)/mpv_sparcv8.o $(OBJDIR)/montmulfv8.o : $(OBJDIR)/%.o : %.s $(SPARCFIX)
+$(OBJDIR)/mpv_sparcv8.o $(OBJDIR)/montmulfv8.o : $(OBJDIR)/%.o : %.s 
 	@$(MAKE_OBJDIR)
 	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $*.s
 #	$(SPARCFIX) $@
 
+$(OBJDIR)/mpv_sparcv9.o $(OBJDIR)/montmulfv9.o : $(OBJDIR)/%.o : %.s
+	@$(MAKE_OBJDIR)
+	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $*.s
+
 $(OBJDIR)/mpv_sparc.o: vis_64.il vis_proto.h mpv_sparc.c
 	@$(MAKE_OBJDIR)
 	$(CC) -o $@ $(SOLARIS_FLAGS) -c vis_64.il mpv_sparc.c
-#       $(SPARCFIX) $@
 
 $(OBJDIR)/mpmontg.o: mpmontg.c montmulf.h
 endif

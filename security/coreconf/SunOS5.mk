@@ -35,17 +35,6 @@
 
 include $(CORE_DEPTH)/coreconf/UNIX.mk
 
-ifeq ($(USE_64), 1)
-	ARCHFLAG=-xarch=v9
-	LD=/usr/ccs/bin/ld
-else
-  ifdef USE_HYBRID
-	ARCHFLAG=-xarch=v8plus
-  else
-	ARCHFLAG=-xarch=v8
-  endif
-endif
-
 #
 # Temporary define for the Client; to be removed when binary release is used
 #
@@ -54,6 +43,35 @@ ifdef MOZILLA_CLIENT
 	ifndef NS_USE_NATIVE
 		NS_USE_GCC = 1
 	endif
+endif
+
+# Sun's WorkShop defines v8, v8plus and v9 architectures.
+# gcc on Solaris defines v8 and v9 "cpus".  
+# gcc's v9 is equivalent to Workshop's v8plus.
+# gcc apparently has no equivalent to Workshop's v9
+# We always use Sun's assembler and linker, which use Sun's naming convention.
+
+ifeq ($(USE_64), 1)
+  ifdef NS_USE_GCC
+      ARCHFLAG= UNKNOWN 
+  else
+      ARCHFLAG=-xarch=v9
+  endif
+      LD=/usr/ccs/bin/ld
+else
+  ifdef NS_USE_GCC
+    ifdef USE_HYBRID
+      ARCHFLAG=-mcpu=v9 -Wa,-xarch=v8plus
+    else
+      ARCHFLAG=-mcpu=v8
+    endif
+  else
+    ifdef USE_HYBRID
+      ARCHFLAG=-xarch=v8plus
+    else
+      ARCHFLAG=-xarch=v8
+    endif
+  endif
 endif
 
 #
@@ -87,6 +105,7 @@ ifdef NS_USE_GCC
 	else
 		OS_CFLAGS += $(NOMD_OS_CFLAGS) -MDupdate $(DEPENDENCIES)
 	endif
+	OS_CFLAGS += $(ARCHFLAG)
 else
 	CC         = cc
 	CCC        = CC
