@@ -30,7 +30,7 @@ Rights Reserved.
 <!ENTITY autoCompact.label              "Automatically compact folders">
 <!ENTITY autoCompact2.label             "when it will save over">
 <!ENTITY autoCompact.accesskey          "c">
-<!ENTITY kb.label                       "kB">
+<!ENTITY kb.label                       "KB">
 <!ENTITY newgroupMsgOnly.label          "Newsgroup Messages Only">
 <!ENTITY whenToClean.label              "When it's time to clean up messages:">
 <!-- LOCALIZATION NOTE keepMsgs.label: This string is followed by a number, then by days.label -->

@@ -5,7 +5,7 @@
 <!ENTITY offlineNewFolder.accesskey "h">
 <!ENTITY offlineNotDownload.label "Do not download messages locally that are larger than">
 <!ENTITY offlineNotDownload.accesskey "d">
-<!ENTITY kb.label "kB">
+<!ENTITY kb.label "KB">
 <!ENTITY days.label "days">
 <!ENTITY daysAgo.label "days ago">
 <!ENTITY message.label "messages">
