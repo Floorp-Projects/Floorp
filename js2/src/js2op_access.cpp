@@ -38,7 +38,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             b = pop();
-            if (!meta->readProperty(b, mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&b, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             push(a);
         }
@@ -78,9 +78,10 @@
             LookupKind lookup(false, JS2VAL_NULL);
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
-            b = top();
-            if (!meta->readProperty(b, mn, &lookup, RunPhase, &a))
+            b = pop();
+            if (!meta->readProperty(&b, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
+            push(b);
             push(a);
         }
         break;
@@ -143,7 +144,7 @@
             b = pop();
             const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(b, &mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&b, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
@@ -190,7 +191,7 @@
             b = top();
             const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(b, &mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&b, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;
@@ -206,7 +207,7 @@
             const String *indexStr = meta->toString(indexVal);
             push(STRING_TO_JS2VAL(indexStr));
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(b, &mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&b, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
             indexVal = JS2VAL_VOID;

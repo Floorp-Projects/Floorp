@@ -71,6 +71,14 @@ js2val String_Constructor(JS2Metadata *meta, const js2val /*thisValue*/, js2val 
     return thatValue;
 }
 
+static js2val String_Call(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
+{   
+    if (argc > 0)
+        return STRING_TO_JS2VAL(meta->engine->allocStringPtr(meta->toString(argv[0])));
+    else
+        return STRING_TO_JS2VAL(meta->engine->allocStringPtr(""));
+}
+
 js2val String_fromCharCode(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {
     String *resultStr = meta->engine->allocStringPtr((String *)NULL);   // can't use Empty_StringAtom; because we're modifying this below
@@ -83,7 +91,9 @@ js2val String_fromCharCode(JS2Metadata *meta, const js2val /*thisValue*/, js2val
 
 static js2val String_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (meta->objectType(thisValue) != meta->stringClass)
+    if (!JS2VAL_IS_OBJECT(thisValue) 
+            || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
+            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->stringClass))
         meta->reportError(Exception::typeError, "String.toString called on something other than a string thing", meta->engine->errorPos());
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thisValue));
     return STRING_TO_JS2VAL(strInst->mValue);
@@ -91,8 +101,10 @@ static js2val String_toString(JS2Metadata *meta, const js2val thisValue, js2val 
 
 static js2val String_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if (meta->objectType(thisValue) != meta->stringClass)
-        meta->reportError(Exception::typeError, "String.toString called on something other than a string thing", meta->engine->errorPos());
+    if (!JS2VAL_IS_OBJECT(thisValue) 
+            || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
+            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->stringClass))
+        meta->reportError(Exception::typeError, "String.valueOf called on something other than a string thing", meta->engine->errorPos());
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thisValue));
     return STRING_TO_JS2VAL(strInst->mValue);
 }
@@ -783,6 +795,7 @@ void initStringObject(JS2Metadata *meta)
     publicNamespaceList.push_back(meta->publicNamespace);
 
     meta->stringClass->construct = String_Constructor;
+    meta->stringClass->call = String_Call;
 
     meta->stringClass->prototype = new StringInstance(meta->objectClass->prototype, meta->booleanClass);
     

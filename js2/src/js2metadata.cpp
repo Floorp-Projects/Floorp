@@ -3407,26 +3407,26 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     // Read the value of a property in the container. Return true/false if that container has
     // the property or not. If it does, return it's value
-    bool JS2Metadata::readProperty(js2val containerVal, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
+    bool JS2Metadata::readProperty(js2val *containerVal, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval)
     {
         bool isSimpleInstance = false;
         JS2Object *container;
-        if (JS2VAL_IS_PRIMITIVE(containerVal)) {
+        if (JS2VAL_IS_PRIMITIVE(*containerVal)) {
 readClassProperty:
-            JS2Class *c = objectType(containerVal);
+            JS2Class *c = objectType(*containerVal);
             InstanceBinding *ib = resolveInstanceMemberName(c, multiname, ReadAccess, phase);
             if ((ib == NULL) && isSimpleInstance) 
-                return readDynamicProperty(JS2VAL_TO_OBJECT(containerVal), multiname, lookupKind, phase, rval);
+                return readDynamicProperty(JS2VAL_TO_OBJECT(*containerVal), multiname, lookupKind, phase, rval);
             else {
                 // XXX Spec. would have us passing a primitive here since ES4 is 'not addressing' the issue
                 // of so-called wrapper objects.
-                if (!JS2VAL_IS_OBJECT(containerVal))
-                    containerVal = toObject(containerVal);
+                if (!JS2VAL_IS_OBJECT(*containerVal))
+                    *containerVal = toObject(*containerVal);
                 else
-                    return readInstanceMember(containerVal, c, (ib) ? &ib->qname : NULL, phase, rval);
+                    return readInstanceMember(*containerVal, c, (ib) ? &ib->qname : NULL, phase, rval);
             }
         }
-        container = JS2VAL_TO_OBJECT(containerVal);
+        container = JS2VAL_TO_OBJECT(*containerVal);
         switch (container->kind) {
         case AttributeObjectKind:
         case MultinameKind:
@@ -4000,7 +4000,7 @@ deleteClassProperty:
                                                 // if the function isn't defined
         js2val fnVal;
 
-        if (readProperty(thisValue, &mn, &lookup, RunPhase, &fnVal)) {
+        if (readProperty(&thisValue, &mn, &lookup, RunPhase, &fnVal)) {
             if (JS2VAL_IS_OBJECT(fnVal)) {
                 JS2Object *fnObj = JS2VAL_TO_OBJECT(fnVal);
                 FunctionWrapper *fWrap = NULL;

@@ -893,7 +893,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&baseVal, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             meta->writeProperty(baseVal, mn, &lookup, true, allocNumber(num + 1.0), RunPhase);
@@ -907,7 +907,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&baseVal, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             meta->writeProperty(baseVal, mn, &lookup, true, allocNumber(num - 1.0), RunPhase);
@@ -921,7 +921,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&baseVal, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
@@ -935,7 +935,7 @@
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&baseVal, mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
@@ -951,7 +951,7 @@
             baseVal = pop();
             const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
             meta->writeProperty(baseVal, &mn, &lookup, true, allocNumber(num + 1.0), RunPhase);
@@ -967,7 +967,7 @@
             baseVal = pop();
             const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
             meta->writeProperty(baseVal, &mn, &lookup, true, allocNumber(num - 1.0), RunPhase);
@@ -983,7 +983,7 @@
             baseVal = pop();
             const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
@@ -999,7 +999,7 @@
             baseVal = pop();
             const String *indexStr = meta->toString(indexVal);
             Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
+            if (!meta->readProperty(&baseVal, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);

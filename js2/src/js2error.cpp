@@ -110,8 +110,9 @@ js2val Error_toString(JS2Metadata *meta, const js2val thisValue, js2val *argv, u
     js2val result;
     LookupKind lookup(false, JS2VAL_NULL);
     Multiname mn(&meta->world.identifiers["message"], meta->publicNamespace);
+    js2val a = thisValue;
 
-    if (meta->readProperty(thisValue, &mn, &lookup, RunPhase, &result)) {
+    if (meta->readProperty(&a, &mn, &lookup, RunPhase, &result)) {
         if (JS2VAL_IS_STRING(result))
             return result;
         else

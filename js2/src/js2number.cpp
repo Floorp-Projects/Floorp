@@ -77,18 +77,30 @@ namespace MetaData {
 
     static js2val Number_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
     {
-        if (meta->objectType(thisValue) != meta->numberClass)
+        if (!JS2VAL_IS_OBJECT(thisValue) 
+                || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
+                || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->numberClass))
             meta->reportError(Exception::typeError, "Number.toString called on something other than a number thing", meta->engine->errorPos());
         NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thisValue));
         return STRING_TO_JS2VAL(meta->engine->numberToString(&numInst->mValue));
     }
 
-#define MAKE_INSTANCE_VARIABLE(name, type) \
-    m = new InstanceVariable(type, false, false, meta->numberClass->slotCount++); \
-    meta->defineInstanceMember(meta->numberClass, &meta->cxt, &meta->world.identifiers[name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+    static js2val Number_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
+    {
+        if (!JS2VAL_IS_OBJECT(thisValue) 
+                || (JS2VAL_TO_OBJECT(thisValue)->kind != PrototypeInstanceKind)
+                || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type != meta->numberClass))
+            meta->reportError(Exception::typeError, "Number.valueOf called on something other than a number thing", meta->engine->errorPos());
+        NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thisValue));
+        return meta->engine->allocNumber(numInst->mValue);
+    }
+
 
     void initNumberObject(JS2Metadata *meta)
     {
+        NamespaceList publicNamespaceList;
+        publicNamespaceList.push_back(meta->publicNamespace);
+
         meta->numberClass->construct = Number_Constructor;
         meta->numberClass->call = Number_Call;
 
@@ -104,10 +116,6 @@ namespace MetaData {
             { "POSITIVE_INFINITY", positiveInfinity },
             { "NEGATIVE_INFINITY", negativeInfinity },
         };
-
-        NamespaceList publicNamespaceList;
-        publicNamespaceList.push_back(meta->publicNamespace);
-
         uint32 i;
         meta->env->addFrame(meta->numberClass);
         for (i = 0; i < N_CONSTANTS_COUNT; i++)
@@ -116,6 +124,54 @@ namespace MetaData {
             meta->defineLocalMember(meta->env, &meta->world.identifiers[NumberObjectConstants[i].name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         }
         meta->env->removeTopFrame();
+
+
+        typedef struct {
+            char *name;
+            uint16 length;
+            NativeCode *code;
+        } PrototypeFunction;
+
+        PrototypeFunction prototypeFunctions[] =
+        {
+            { "toString",            0, Number_toString },
+            { "valueOf",             0, Number_valueOf  },
+            { NULL }
+        };
+
+        meta->numberClass->prototype = new NumberInstance(meta->objectClass->prototype, meta->numberClass);
+
+        // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
+        meta->env->addFrame(meta->numberClass);
+            Variable *v = new Variable(meta->numberClass, OBJECT_TO_JS2VAL(meta->numberClass->prototype), true);
+            meta->defineLocalMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+            v = new Variable(meta->numberClass, INT_TO_JS2VAL(1), true);
+            meta->defineLocalMember(meta->env, meta->engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        meta->env->removeTopFrame();
+
+
+        PrototypeFunction *pf = &prototypeFunctions[0];
+        while (pf->name) {
+            SimpleInstance *callInst = new SimpleInstance(meta->functionClass);
+            callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
+    /*
+    XXX not static members, since those can't be accessed from the instance
+              Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
+              meta->defineLocalMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+    */
+            InstanceMember *m = new InstanceMethod(callInst);
+            meta->defineInstanceMember(meta->numberClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+
+    /*
+        Dynamic property of the prototype:
+    */
+            FunctionInstance *fInst = new FunctionInstance(meta->functionClass->prototype, meta->functionClass);
+            fInst->fWrap = callInst->fWrap;
+            meta->writeDynamicProperty(meta->numberClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+            meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
+            
+            pf++;
+        }
 
     }
 
