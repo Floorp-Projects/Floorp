@@ -20,7 +20,6 @@
 #define nspr_linux_defs_h___
 
 #include "prthread.h"
-#include <sys/time.h>
 
 /*
  * Internal configuration macros
@@ -65,7 +64,9 @@
 #endif
 
 #define USE_SETJMP
-#undef _PR_POLL_AVAILABLE
+#if defined(__GLIBC__) && __GLIBC__ >= 2
+#define _PR_POLL_AVAILABLE
+#endif
 #undef _PR_USE_POLL
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #if defined(__alpha)
@@ -294,6 +295,7 @@ struct _MDSegment {
 /*
  * md-specific cpu structure field
  */
+#include <sys/time.h>  /* for FD_SETSIZE */
 #define _PR_MD_MAX_OSFD FD_SETSIZE
 
 struct _MDCPU_Unix {
@@ -379,7 +381,7 @@ extern PRIntervalTime _PR_UNIX_TicksPerSecond(void);
 #define _MD_SELECT __select
 
 #ifdef _PR_POLL_AVAILABLE
-#include <poll.h>
+#include <sys/poll.h>
 extern int __syscall_poll(struct pollfd *ufds, unsigned long int nfds,
 	int timeout);
 #define _MD_POLL __syscall_poll
