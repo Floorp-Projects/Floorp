@@ -168,7 +168,7 @@ public:
    * @param event event to dispatch
    * @result event handling status
    */
-  virtual PRBool DispatchEvent(nsIEvent *event) = 0;
+  virtual nsEventStatus DispatchEvent(nsGUIEvent *aEvent) = 0;
 
   /**
    * Used to grab/capture all mouse events for a specific view,
