@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corporation 
+ * 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/20/2000   IBM Corp.       BiDi - ability to change the default direction of the browser
+ *
  */
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
@@ -93,6 +106,7 @@ nsPresContext::nsPresContext()
   mDefaultBackgroundImageAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   mDefaultBackgroundImageRepeat = NS_STYLE_BG_REPEAT_XY;
   mDefaultBackgroundImageOffsetX = mDefaultBackgroundImageOffsetY = 0;
+  mDefaultDirection = NS_STYLE_DIRECTION_LTR;
 }
 
 nsPresContext::~nsPresContext()
@@ -122,6 +136,7 @@ nsPresContext::~nsPresContext()
     mPrefs->UnregisterCallback("browser.base_font_scaler", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("browser.wfe.use_windows_colors", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("font.", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.display.direction", PrefChangedCallback, (void*)this);
   }
 }
 
@@ -233,6 +248,9 @@ nsPresContext::GetUserPreferences()
       mDefaultBackgroundColor = (nscolor)colorPref;
     }
   }
+  if (NS_OK == mPrefs->GetIntPref("browser.display.direction", &prefInt)) {
+    mDefaultDirection = prefInt;
+  }
 
   GetFontPreferences();
 }
@@ -286,6 +304,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mPrefs->RegisterCallback("browser.base_font_scaler", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("browser.wfe.use_windows_colors", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("font.", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.display.direction", PrefChangedCallback, (void*)this);
 
     // Initialize our state from the user preferences
     GetUserPreferences();
@@ -1015,5 +1034,20 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
 
   *aManager = mEventManager;
   NS_IF_ADDREF(*aManager);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetDefaultDirection(PRUint8* aDirection)
+{
+  *aDirection = mDefaultDirection;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsPresContext::SetDefaultDirection(PRUint8 aDirection)
+{
+  mDefaultDirection = aDirection;
   return NS_OK;
 }

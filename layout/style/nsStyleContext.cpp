@@ -19,6 +19,19 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   IBM Corporation 
+ * 
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/20/2000   IBM Corp.       BiDi - ability to change the default direction of the browser
+ *
  */
 #include "nsIStyleContext.h"
 #include "nsIMutableStyleContext.h"
@@ -1000,7 +1013,7 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
     mVisible = aParent->mVisible;
   }
   else {
-    mDirection = NS_STYLE_DIRECTION_LTR;
+    aPresContext->GetDefaultDirection(&mDirection);
     mVisible = NS_STYLE_VISIBILITY_VISIBLE;
   }
   mDisplay = NS_STYLE_DISPLAY_INLINE;
