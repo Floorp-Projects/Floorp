@@ -12,11 +12,6 @@
       <property name="group" onset="this.setAttribute('group',val); return val;"
                             onget="return this.getAttribute('group');"/>
     </interface>
-    <handlers>
-      <handler type="command">
-        if( !this.checked ) this.checked = true;
-      </handler>
-    </handlers>
   </binding>
   
   <binding id="radiogroup" extends="xul:box">
@@ -61,24 +56,28 @@
     </interface>
     <handlers>
       <handler type="click">
+       <![CDATA[
         try
           {
-            if( event.target.localName == "radio" )
+            if( !event.target.disabled && event.target.localName == "radio" )
               this.selectedItem = event.target;
           }
         catch(e)
           {
           }
+       ]]>
       </handler>
       <handler type="keypress" key=" ">
+       <![CDATA[
         try
           {
-            if( event.target.localName == "radio" )
+            if( !event.target.disabled && event.target.localName == "radio" )
               this.selectedItem = event.target;
           }
         catch(e)
           {
           }
+       ]]>
       </handler>     
     </handlers>
   </binding>
