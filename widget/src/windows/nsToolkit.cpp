@@ -379,6 +379,17 @@ ATOM WINAPI nsRegisterClass(const WNDCLASSW *aClassW)
   return RegisterClassA(&wClass);
 }
 
+BOOL WINAPI nsUnregisterClass(LPCWSTR aClassW, HINSTANCE aInst)
+{
+  char classA[MAX_PATH+1];
+
+  if (aClassW)  {
+    ConvertWtoA(aClassW, MAX_PATH, classA);
+    return UnregisterClassA((LPCSTR)classA, aInst);
+  }
+  return FALSE;
+}
+
 BOOL WINAPI nsSHGetPathFromIDList(LPCITEMIDLIST aIdList, LPWSTR aPathW)
 {
   char pathA[MAX_PATH+1];
@@ -424,6 +435,7 @@ LPITEMIDLIST WINAPI nsSHBrowseForFolder(LPBROWSEINFOW aBiW)
   return itemIdList;
 }
 
+HMODULE             nsToolkit::mShell32Module = NULL;
 NS_DefWindowProc    nsToolkit::mDefWindowProc = DefWindowProcA;
 NS_CallWindowProc   nsToolkit::mCallWindowProc = CallWindowProcA;
 NS_SetWindowLong    nsToolkit::mSetWindowLong = SetWindowLongA;
@@ -437,6 +449,7 @@ NS_GetSaveFileName  nsToolkit::mGetSaveFileName = nsGetSaveFileName;
 NS_GetClassName     nsToolkit::mGetClassName = nsGetClassName;
 NS_CreateWindowEx   nsToolkit::mCreateWindowEx = nsCreateWindowEx;
 NS_RegisterClass    nsToolkit::mRegisterClass = nsRegisterClass; 
+NS_UnregisterClass  nsToolkit::mUnregisterClass = nsUnregisterClass; 
 NS_SHGetPathFromIDList  nsToolkit::mSHGetPathFromIDList = nsSHGetPathFromIDList; 
 NS_SHBrowseForFolder    nsToolkit::mSHBrowseForFolder = nsSHBrowseForFolder; 
 
@@ -594,14 +607,15 @@ nsToolkit::Startup(HMODULE hModule)
       nsToolkit::mGetClassName = GetClassNameW;
       nsToolkit::mCreateWindowEx = CreateWindowExW;
       nsToolkit::mRegisterClass = RegisterClassW; 
+      nsToolkit::mUnregisterClass = UnregisterClassW; 
       // Explicit call of SHxxxW in Win95 makes moz fails to run (170969)
       // we use GetProcAddress() to hide
-      HMODULE module = ::LoadLibrary("Shell32.dll");
-      if (module) {
-        nsToolkit::mSHGetPathFromIDList = (NS_SHGetPathFromIDList)GetProcAddress(module, "SHGetPathFromIDListW"); 
+      nsToolkit::mShell32Module = ::LoadLibrary("Shell32.dll");
+      if (nsToolkit::mShell32Module) {
+        nsToolkit::mSHGetPathFromIDList = (NS_SHGetPathFromIDList)GetProcAddress(nsToolkit::mShell32Module, "SHGetPathFromIDListW"); 
         if (!nsToolkit::mSHGetPathFromIDList)
           nsToolkit::mSHGetPathFromIDList = &nsSHGetPathFromIDList;
-        nsToolkit::mSHBrowseForFolder = (NS_SHBrowseForFolder)GetProcAddress(module, "SHBrowseForFolderW"); 
+        nsToolkit::mSHBrowseForFolder = (NS_SHBrowseForFolder)GetProcAddress(nsToolkit::mShell32Module, "SHBrowseForFolderW"); 
         if (!nsToolkit::mSHBrowseForFolder)
           nsToolkit::mSHBrowseForFolder = &nsSHBrowseForFolder;
       }
@@ -650,8 +664,11 @@ nsToolkit::Startup(HMODULE hModule)
 void
 nsToolkit::Shutdown()
 {
+    if (nsToolkit::mShell32Module)
+      ::FreeLibrary(nsToolkit::mShell32Module);
+
     //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
-    ::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance);
+    nsToolkit::mUnregisterClass(L"nsToolkitClass", nsToolkit::mDllInstance);
 }
 
 nsIEventQueue* 
