@@ -464,12 +464,16 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       }
 
       case NS_ACTIVATE: {
+#ifdef DEBUG_saari
         printf("nsWebShellWindow::NS_ACTIVATE\n");
+#endif
         break;
       }
       
       case NS_DEACTIVATE: {
+#ifdef DEBUG_saari
         printf("nsWebShellWindow::NS_DEACTIVATE\n");
+#endif
         
         void* data;
         aEvent->widget->GetClientData(data);
@@ -500,7 +504,9 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       }
       
       case NS_GOTFOCUS: {
+#ifdef DEBUG_saari
         printf("nsWebShellWindow::GOTFOCUS\n");
+#endif
         void* data;
         aEvent->widget->GetClientData(data);
         if (!data)
