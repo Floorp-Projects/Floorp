@@ -78,7 +78,8 @@ ShowComponentsWin(void)
 	SetRect(&dataBounds, 0, 0, 1, gControls->cfg->numComps);
 	SetPt( &cSize, 0, 0);
 	gControls->cw->compList = LNew((const Rect*)&gControls->cw->compListBox, (const Rect*)&dataBounds,
-									cSize, 0, gWPtr, true, false, false, true);
+									cSize, rCheckboxLDEF, gWPtr, true, false, false, true);
+	(*gControls->cw->compList)->selFlags = 68; /* NOTE: 64 (aka lExtendDrag) + 4 (aka lUseSense) = 68 */
 	
 	// populate controls
 	bCellSelected = PopulateCompInfo();

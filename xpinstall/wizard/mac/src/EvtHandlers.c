@@ -122,10 +122,16 @@ void HandleKeyDown(EventRecord* evt)
 				if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
 					ShowComponentsWin();
 				else
+				{
+					ClearDiskSpaceMsgs();
 					ShowTerminalWin();
+				}
 				return;				
 			case kComponentsID:
 				KillControls(gWPtr);
+				gControls->cw->compListBox.top = 0;
+				EraseRect(&gControls->cw->compListBox);
+				ClearDiskSpaceMsgs();
 				ShowTerminalWin();
 				return;
 			case kTerminalID:
