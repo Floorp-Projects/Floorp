@@ -1008,7 +1008,7 @@ XFE_RDFPopupMenu::XFE_RDFPopupMenu(String name, Widget parent,
 void
 XFE_RDFPopupMenu::PushButtonActivate(Widget w, XtPointer userData)
 {
-    HT_DoMenuCmd(m_pane, (HT_MenuCmd)userData);
+    HT_DoMenuCmd(m_pane, (HT_MenuCmd)(int)userData);
 }
 
 void
