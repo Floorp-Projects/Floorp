@@ -324,10 +324,7 @@ class basic_nsAReadableString
         // ...yes, I expect to be sub-classed.
 
       nsReadingIterator<CharT>& BeginReading( nsReadingIterator<CharT>& ) const;
-      nsReadingIterator<CharT>  BeginReading() const; // deprecated
-
       nsReadingIterator<CharT>& EndReading( nsReadingIterator<CharT>& ) const;
-      nsReadingIterator<CharT>  EndReading() const;   // deprecated
 
       virtual PRUint32  Length() const = 0;
       PRBool  IsEmpty() const;
@@ -493,16 +490,6 @@ basic_nsAReadableString<CharT>::BeginReading( nsReadingIterator<CharT>& aResult 
     return aResult;
   }
 
-  // deprecated
-template <class CharT>
-inline
-nsReadingIterator<CharT>
-basic_nsAReadableString<CharT>::BeginReading() const
-  {
-    nsReadingIterator<CharT> result;
-    return BeginReading(result); // copies (since I return a value, not a reference)
-  }
-
 template <class CharT>
 inline
 nsReadingIterator<CharT>&
@@ -513,16 +500,6 @@ basic_nsAReadableString<CharT>::EndReading( nsReadingIterator<CharT>& aResult ) 
     aResult.mPosition = aResult.mFragment.mEnd;
     // must not |normalize_backward| as that would likely invalidate tests like |while ( first != last )|
     return aResult;
-  }
-
-  // deprecated
-template <class CharT>
-inline
-nsReadingIterator<CharT>
-basic_nsAReadableString<CharT>::EndReading() const
-  {
-    nsReadingIterator<CharT> result;
-    return EndReading(result); // copies (since I return a value, not a reference) 
   }
 
 template <class CharT>
@@ -1490,7 +1467,7 @@ basic_nsPromiseFlatString<CharT>::basic_nsPromiseFlatString( const basic_nsARead
       }
 
     // Now figure out what we want to do with the string
-    start = aString.BeginReading();
+    aString.BeginReading(start);
     // XXX Not guaranteed null-termination in the first case
     // If it's a single buffer, we just use the implementation's buffer
     if ( buffer_count == 1 ) 

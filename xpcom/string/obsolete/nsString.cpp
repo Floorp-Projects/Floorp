@@ -777,8 +777,8 @@ void nsCString::AssignWithConversion( const nsAReadableString& aString ) {
   PRInt32 count = aString.Length();
 
   if(count){   
-    nsReadingIterator<PRUnichar> start(aString.BeginReading());
-    nsReadingIterator<PRUnichar> end(aString.EndReading());
+    nsReadingIterator<PRUnichar> start; aString.BeginReading(start);
+    nsReadingIterator<PRUnichar> end;   aString.EndReading(end);
     
     while (start != end) {
       PRUint32 fraglen = start.size_forward();
@@ -800,8 +800,8 @@ void nsCString::AppendWithConversion( const nsAReadableString& aString ) {
   PRInt32 count = aString.Length();
 
   if(count){   
-    nsReadingIterator<PRUnichar> start(aString.BeginReading());
-    nsReadingIterator<PRUnichar> end(aString.EndReading());
+    nsReadingIterator<PRUnichar> start; aString.BeginReading(start);
+    nsReadingIterator<PRUnichar> end;   aString.EndReading(end);
     
     while (start != end) {
       PRUint32 fraglen = start.size_forward();
@@ -1470,8 +1470,8 @@ void nsCString::DebugDump(void) const {
 
 NS_ConvertUCS2toUTF8::NS_ConvertUCS2toUTF8( const nsAReadableString& aString )
   {
-    nsReadingIterator<PRUnichar> start(aString.BeginReading());
-    nsReadingIterator<PRUnichar> end(aString.EndReading());
+    nsReadingIterator<PRUnichar> start; aString.BeginReading(start);
+    nsReadingIterator<PRUnichar> end;   aString.EndReading(end);
     
     while (start != end) {
       nsReadableFragment<PRUnichar> frag(start.fragment());

@@ -4357,8 +4357,8 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                     // wouldn't get redirected to the correct URL.
                     if (millis == -1 && (nsCRT::IsAsciiDigit(token.First()) || token.First()==PRUnichar('.'))) {
                         PRBool tokenIsANumber = PR_TRUE;
-                        nsReadingIterator<PRUnichar> doneIterating(token.EndReading());
-                        nsReadingIterator<PRUnichar> iter(token.BeginReading());
+                        nsReadingIterator<PRUnichar> doneIterating; token.EndReading(doneIterating);
+                        nsReadingIterator<PRUnichar> iter;          token.BeginReading(iter);
                         while ( iter != doneIterating )
                           {
                             if (!(tokenIsANumber = nsCRT::IsAsciiDigit(*iter)) && *iter!=PRUnichar('.'))

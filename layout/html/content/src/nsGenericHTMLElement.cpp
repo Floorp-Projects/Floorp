@@ -2128,7 +2128,7 @@ nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
       if (aTable->value == v) {
         aResult.Append(NS_ConvertASCIItoUCS2(aTable->tag));
         if (aFoldCase) {
-          nsWritingIterator<PRUnichar> start(aResult.BeginWriting());
+          nsWritingIterator<PRUnichar> start; aResult.BeginWriting(start);
           *start.get() = nsCRT::ToUpper(*start.get());
         }
         return PR_TRUE;
