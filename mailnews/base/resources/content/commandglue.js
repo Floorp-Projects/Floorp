@@ -153,8 +153,11 @@ function ChangeFolderByURI(uri)
   var resource = RDF.GetResource(uri);
   var msgfolder =
       resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-  window.title = "Netscape: " + msgfolder.name + " on " +
-      msgfolder.server.prettyName;
+  if (msgfolder.isServer)
+      window.title = "Netscape: " + msgfolder.name;
+  else
+      window.title = "Netscape: " + msgfolder.name + " on " +
+          msgfolder.server.prettyName;
 
   var folder = GetThreadTreeFolder();
   var beforeTime = new Date();
