@@ -10,6 +10,8 @@
 
 <html:script language="JavaScript" src="chrome://global/content/tasksOverlay.js"/>
 
+    <broadcasterset id="broadcasterset"/>
+ 
 	<!-- Tasks Menu -->
 	<menu id="tasksMenu" value="&tasksMenu.label;"  datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
         <template>
@@ -76,7 +78,7 @@
 		  </popup>
 		
 		  
-	  	 <box align="horizontal">
+	  	 <box id="taskButtons" align="horizontal">
   			
   	 		<titledbutton align="left" id="mini-nav" value="" onclick="toNavigator();"/>
   	 		<titledbutton align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
