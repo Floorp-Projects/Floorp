@@ -29,6 +29,7 @@
 #include "plstr.h"
 #include "FullPath.h"
 #include "net.h"
+#include "xp_mem.h" // for XP_FREE
 
 // Returns a full pathname to the given file
 // Returned value is allocated with XP_ALLOC, and must be freed with XP_FREE
