@@ -37,14 +37,17 @@
     </multipanel>
 
     <multipanel id="bxMethods" label="&bindingMethods.label;" open="true" persist="open">
-      <tree id="olMethods" class="tree-list plain" flex="1"
-                onselect="viewer.onMethodSelected()">
+      <tree id="olMethods"
+            class="tree-list plain"
+            flex="1"
+            contextmenu="ppDOMContext"
+            onselect="viewer.onMethodSelected()">
         <treecols>
           <treecol id="olcMethodName" flex="1"/>
         </treecols>
         <treechildren id="olbMethods"
                       alternatingbackground="true"
-                      context="ppDOMContext"/>
+        />
       </tree>
     </multipanel>
   
@@ -54,40 +57,49 @@
           <radio id="raPropGetter" label="&bindingGetter.label;" selected="true" oncommand="viewer.onPropSelected()"/>
           <radio id="raPropSetter" label="&bindingSetter.label;" oncommand="viewer.onPropSelected()"/>
         </radiogroup>
-        <tree id="olProps" class="tree-list plain" flex="1"
-                  onselect="viewer.onPropSelected()">
+        <tree id="olProps"
+              class="tree-list plain"
+              flex="1"
+              contextmenu="ppDOMContext"
+              onselect="viewer.onPropSelected()">
           <treecols>
             <treecol id="olcPropName" label="&bindingProperty.label;" flex="1"/>
           </treecols>
           <treechildren id="olbProps"
                         alternatingbackground="true"
-                        context="ppDOMContext"/>
+          />
         </tree>
       </vbox>
     </multipanel>
 
     <multipanel id="bxHandlers" label="&bindingHandlers.label;" persist="open">
-      <tree id="olHandlers" class="tree-list plain" flex="1"
-                onselect="viewer.onHandlerSelected()">
+      <tree id="olHandlers"
+            class="tree-list plain"
+            flex="1"
+            contextmenu="ppDOMContext"
+            onselect="viewer.onHandlerSelected()">
         <treecols>
           <treecol id="olcHandlerEvent" flex="1"/>
           <treecol id="olcHandlerPhase"/>
         </treecols>
         <treechildren id="olbHandlers"
                       alternatingbackground="true"
-                      context="ppDOMContext"/>
+        />
       </tree>
     </multipanel>
   
     <multipanel id="bxResources" label="&bindingResources.label;" persist="open">
-      <tree id="olResources" class="tree-list plain" flex="1">
+      <tree id="olResources"
+            contextmenu="ppDOMContext"
+            class="tree-list plain"
+            flex="1">
         <treecols>
           <treecol id="olcResourceType" flex="1"/>
           <treecol id="olcResourceSrc" flex="2"/>
         </treecols>
         <treechildren id="olbResources"
                       alternatingbackground="true"
-                      context="ppDOMContext"/>
+        />
       </tree>
     </multipanel>
 
