@@ -1107,21 +1107,95 @@ void
 nsWindow::HandleGDKEvent(GdkEvent *event)
 {
   switch (event->any.type)
-    {
-    case GDK_MOTION_NOTIFY:
-      OnMotionNotifySignal (&event->motion);
-      break;
-    case GDK_BUTTON_PRESS:
-    case GDK_2BUTTON_PRESS:
-    case GDK_3BUTTON_PRESS:
-      OnButtonPressSignal (&event->button);
-      break;
-    case GDK_BUTTON_RELEASE:
-      OnButtonReleaseSignal (&event->button);
-      break;
-    default:
-      break;
+  {
+  case GDK_MOTION_NOTIFY:
+  {
+    XEvent xevent;
+    while (XCheckMaskEvent(GDK_DISPLAY(), ButtonMotionMask, &xevent));
+    OnMotionNotifySignal (&event->motion);
+  }
+  break;
+  case GDK_BUTTON_PRESS:
+  case GDK_2BUTTON_PRESS:
+  case GDK_3BUTTON_PRESS:
+    OnButtonPressSignal (&event->button);
+    break;
+  case GDK_BUTTON_RELEASE:
+    OnButtonReleaseSignal (&event->button);
+    break;
+  default:
+    break;
+  }
+
+
+#if 0
+  // this code does it the ugly way.
+  XEvent xevent;
+
+  switch (event->any.type)
+  {
+  case GDK_MOTION_NOTIFY:
+    OnMotionNotifySignal (&event->motion);
+    break;
+  case GDK_BUTTON_PRESS:
+  case GDK_2BUTTON_PRESS:
+  case GDK_3BUTTON_PRESS:
+  {
+    GdkEventMask mask = (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
+                                       GDK_BUTTON_RELEASE_MASK |
+                                       GDK_ENTER_NOTIFY_MASK |
+                                       GDK_LEAVE_NOTIFY_MASK |
+                                       GDK_EXPOSURE_MASK |
+                                       GDK_FOCUS_CHANGE_MASK |
+                                       GDK_KEY_PRESS_MASK |
+                                       GDK_KEY_RELEASE_MASK);
+    
+    gdk_window_set_events(((GdkEventButton*)event)->window,
+                          mask);
+    OnButtonPressSignal (&event->button);
+
+
+    while (!XCheckTypedEvent(GDK_DISPLAY(), ButtonRelease, &xevent)) {
+      int x,y;
+      gdk_window_get_pointer(((GdkEventButton*)event)->window, &x, &y, nsnull);
+      XMotionEvent bevent;
+      bevent.x = x;
+      bevent.y = y;
+      HandleXlibMotionNotifyEvent(&bevent);
     }
+    XPutBackEvent(GDK_DISPLAY(), &xevent);
+
+    printf("button press finished\n");
+  }
+  break;
+
+  case GDK_BUTTON_RELEASE:
+  {
+    GdkEventMask mask = (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
+                              GDK_BUTTON_RELEASE_MASK |
+                              GDK_ENTER_NOTIFY_MASK |
+                              GDK_LEAVE_NOTIFY_MASK |
+                              GDK_EXPOSURE_MASK |
+                              GDK_FOCUS_CHANGE_MASK |
+                              GDK_KEY_PRESS_MASK |
+                              GDK_KEY_RELEASE_MASK |
+                              GDK_POINTER_MOTION_MASK |
+                              GDK_POINTER_MOTION_HINT_MASK);
+    
+    gdk_window_set_events(((GdkEventButton*)event)->window,
+                          mask);
+    
+    HandleXlibButtonEvent((XButtonEvent *)event);
+  }
+
+  OnButtonReleaseSignal (&event->button);
+  break;
+  default:
+    break;
+  }
+
+#endif
+
 }
 
 
