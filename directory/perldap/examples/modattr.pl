@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: modattr.pl,v 1.1 1998/07/30 06:49:03 leif Exp $
+# $Id: modattr.pl,v 1.2 1998/07/30 06:49:18 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -37,7 +37,6 @@ use Mozilla::LDAP::Utils;		# LULU, utilities.
 #
 $APPNAM	= "modattr";
 $USAGE	= "$APPNAM [-dnvW] -b base -h host -D bind -w pswd -P cert attr=value filter";
-$AUTHOR	= "Leif Hedstrom <leif\@netscape.com>";
 
 
 #############################################################################
