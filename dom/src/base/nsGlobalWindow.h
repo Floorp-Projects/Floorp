@@ -123,23 +123,6 @@ public:
   // nsIDOMJSWindow
   NS_DECL_NSIDOMJSWINDOW
 
-#if 0
-  // nsIJSScriptObject
-  virtual PRBool AddProperty(JSContext *aContext, JSObject *aObj,
-                             jsval aID, jsval *aVp);
-  virtual PRBool DeleteProperty(JSContext *aContext, JSObject *aObj,
-                                jsval aID, jsval *aVp);
-  virtual PRBool GetProperty(JSContext *aContext, JSObject *aObj,
-                             jsval aID, jsval *aVp);
-  virtual PRBool SetProperty(JSContext *aContext, JSObject *aObj,
-                             jsval aID, jsval *aVp);
-  virtual PRBool EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                         PRBool *aDidDefineProperty);
-  virtual PRBool Convert(JSContext *aContext, JSObject *aObj, jsval aID);
-  virtual void   Finalize(JSContext *aContext, JSObject *aObj);
-#endif
-
   // nsIDOMEventTarget
   NS_IMETHOD AddEventListener(const nsAReadableString& aType,
                               nsIDOMEventListener* aListener,

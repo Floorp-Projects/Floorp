@@ -34,7 +34,6 @@
 #include "prprf.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
-#include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsString.h"
@@ -49,9 +48,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSNativeInitializer.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 
 static struct ResultMap 
