@@ -811,12 +811,16 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   else if (type == eHTMLTag_hr &&
            (mFlags & nsIDocumentEncoder::OutputFormatted))
   {
+    EnsureVerticalSpace(0);
+
     // Make a line of dashes as wide as the wrap width
     nsAutoString line;
     int width = (mWrapColumn > 0 ? mWrapColumn : 25);
     while (line.Length() < width)
       line += '-';
     Write(line);
+
+    EnsureVerticalSpace(0);
   }
   
   return NS_OK;
