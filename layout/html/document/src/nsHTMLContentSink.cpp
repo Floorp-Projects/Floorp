@@ -300,6 +300,8 @@ public:
   nsresult AddLeaf(const nsIParserNode& aNode);
   nsresult AddLeaf(nsIHTMLContent* aContent);
   nsresult AddComment(const nsIParserNode& aNode);
+  nsresult DemoteContainer(const nsIParserNode& aNode, 
+                           nsIHTMLContent*& aParent);
   nsresult End();
 
   nsresult GrowStack();
@@ -308,6 +310,8 @@ public:
   nsresult FlushTags();
 
   PRBool   IsCurrentContainer(nsHTMLTag mType);
+  PRBool   IsAncestorContainer(nsHTMLTag mType);
+  nsIHTMLContent* GetCurrentContainer();
 
   void MaybeMarkSinkDirty();
   void MaybeMarkSinkClean();
@@ -933,6 +937,29 @@ SinkContext::IsCurrentContainer(nsHTMLTag aTag)
   }
 }
 
+PRBool
+SinkContext::IsAncestorContainer(nsHTMLTag aTag)
+{
+  PRInt32 stackPos = mStackPos-1;
+
+  while (stackPos >= 0) {
+    if (aTag == mStack[stackPos].mType) {
+      return PR_TRUE;
+    }
+    stackPos--;
+  }
+
+  return PR_FALSE;
+}
+
+nsIHTMLContent*
+SinkContext::GetCurrentContainer()
+{
+  nsIHTMLContent* content = mStack[mStackPos-1].mContent;
+  NS_ADDREF(content);
+  return content;
+}
+
 void
 SinkContext::MaybeMarkSinkDirty()
 {
@@ -1030,6 +1057,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
 nsresult
 SinkContext::CloseContainer(const nsIParserNode& aNode)
 {
+  nsresult result = NS_OK;
   FlushText();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
@@ -1044,7 +1072,7 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   if (0 == (mStack[mStackPos].mFlags & APPENDED)) {
     NS_ASSERTION(mStackPos > 0, "container w/o parent");
     nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
-    parent->AppendChildTo(content, PR_FALSE);
+    result = parent->AppendChildTo(content, PR_FALSE);
   }
   NS_IF_RELEASE(content);
 
@@ -1053,6 +1081,19 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   case eHTMLTag_table:
     mSink->mInMonolithicContainer--;
     break;
+  case eHTMLTag_form:
+    {
+      nsHTMLTag parserNodeType = nsHTMLTag(aNode.GetNodeType());
+      
+      // If there's a FORM on the stack, but this close tag doesn't
+      // close the form, then close out the form *and* close out the
+      // next container up. This is since the parser doesn't do fix up
+      // of forms. When the end FORM tag comes through, we'll ignore
+      // it.
+      if (parserNodeType != nodeType) {
+        result = CloseContainer(aNode);
+      }
+    }
   default:
     break;
   }
@@ -1067,7 +1108,94 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   }
 #endif
 
-  return NS_OK;
+  return result;
+}
+
+static void
+SetDocumentInChildrenOf(nsIContent* aContent, 
+                        nsIDocument* aDocument)
+{
+  PRInt32 i, n;
+  aContent->ChildCount(n);
+  for (i = 0; i < n; i++) {
+    nsIContent* child;
+    aContent->ChildAt(i, child);
+    if (nsnull != child) {
+      child->SetDocument(aDocument, PR_TRUE);
+      NS_RELEASE(child);
+    }
+  }
+}
+
+nsresult
+SinkContext::DemoteContainer(const nsIParserNode& aNode, 
+                             nsIHTMLContent*& aParent)
+{
+  nsresult result = NS_OK;
+  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
+
+  aParent = nsnull;
+  // Search for the nearest container on the stack of the
+  // specified type
+  PRInt32 stackPos = mStackPos-1;
+  while ((stackPos > 0) && (nodeType != mStack[stackPos].mType)) {
+    stackPos--;
+  }
+  
+  // If we find such a container
+  if (stackPos > 0) {
+    nsIHTMLContent* container = mStack[stackPos].mContent;
+    
+    // See if it has a parent on the stack. It should for all the
+    // cases for which this is called, but put in a check anyway
+    if (stackPos > 1) {
+      nsIHTMLContent* parent = mStack[stackPos-1].mContent;
+      
+      // If the demoted container hasn't yet been appended to its
+      // parent, do so now.
+      if (0 == (mStack[stackPos].mFlags & APPENDED)) {
+        result = parent->AppendChildTo(container, PR_FALSE);
+      }
+      
+     if (NS_SUCCEEDED(result)) {
+       // Move all of the demoted containers children to its parent
+       PRInt32 i, count;
+       container->ChildCount(count);
+       
+       for (i = 0; i < count && NS_SUCCEEDED(result); i++) {
+         nsIContent* child;
+         
+         // Since we're removing as we go along, always get the
+         // first child
+         result = container->ChildAt(0, child);
+         if (NS_SUCCEEDED(result)) {
+           // Remove it from its old parent (the demoted container)
+           result = container->RemoveChildAt(0, PR_FALSE);
+           if (NS_SUCCEEDED(result)) {
+             result = parent->AppendChildTo(child, PR_FALSE);
+             SetDocumentInChildrenOf(child, mSink->mDocument);
+           }
+           NS_RELEASE(child);
+         }
+       }
+       
+       // Remove the current element from the context stack,
+       // since it's been demoted.
+       while (stackPos < mStackPos-1) {
+         mStack[stackPos].mType = mStack[stackPos+1].mType;
+         mStack[stackPos].mContent = mStack[stackPos+1].mContent;
+         mStack[stackPos].mFlags = mStack[stackPos+1].mFlags;
+         stackPos++;
+       }
+       mStackPos--;
+     }
+     aParent = parent;
+     NS_ADDREF(parent);
+    }
+    NS_RELEASE(container);
+  }
+  
+  return result;
 }
 
 nsresult
@@ -1820,33 +1948,59 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
+  nsresult result = NS_OK;
+  nsIHTMLContent* content = nsnull;
+  
   mCurrentContext->FlushText();
-
+  
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::OpenForm", aNode);
-
-  // Close out previous form if it's there
+  
+  // Close out previous form if it's there. If there is one
+  // around, it's probably because the last one wasn't well-formed.
   NS_IF_RELEASE(mCurrentForm);
-
-  // set the current form
-  nsAutoString tmp("form");
-  nsIAtom* atom = NS_NewAtom(tmp);
-  nsIHTMLContent* iContent = nsnull;
-  nsresult rv = NS_NewHTMLFormElement(&iContent, atom);
-  if ((NS_OK == rv) && iContent) {
-    iContent->QueryInterface(kIDOMHTMLFormElementIID, (void**)&mCurrentForm);
-    NS_RELEASE(iContent);
+  
+  // Check if the parent is a table, tbody, thead, tfoot, tr, col or
+  // colgroup. If so, this is just going to be a leaf element.
+  // If so, we fix up by making the form leaf content.
+  if (mCurrentContext->IsCurrentContainer(eHTMLTag_table) ||
+      mCurrentContext->IsCurrentContainer(eHTMLTag_tbody) ||
+      mCurrentContext->IsCurrentContainer(eHTMLTag_thead) ||
+      mCurrentContext->IsCurrentContainer(eHTMLTag_tfoot) ||
+      mCurrentContext->IsCurrentContainer(eHTMLTag_tr) ||
+      mCurrentContext->IsCurrentContainer(eHTMLTag_col) ||
+      mCurrentContext->IsCurrentContainer(eHTMLTag_colgroup)) {
+    nsAutoString tmp("form");
+    nsIAtom* atom = NS_NewAtom(tmp);
+    result = NS_NewHTMLFormElement(&content, atom);
+    if (NS_SUCCEEDED(result) && content) {
+      content->QueryInterface(kIDOMHTMLFormElementIID, (void**)&mCurrentForm);
+      NS_RELEASE(content);
+    }
+    NS_RELEASE(atom);
+    
+    result = AddLeaf(aNode);
   }
-  NS_RELEASE(atom);
-
-  AddLeaf(aNode);
-
+  else {
+    // Otherwise the form can be a content parent.
+    result = mCurrentContext->OpenContainer(aNode);
+    if (NS_SUCCEEDED(result)) {
+        
+      content = mCurrentContext->GetCurrentContainer();
+      if (nsnull != content) {
+        result = content->QueryInterface(kIDOMHTMLFormElementIID, 
+                                         (void**)&mCurrentForm);
+        NS_RELEASE(content);
+      }
+    }
+  }
+   
   // add the form to the document
   if (mCurrentForm) {
     mHTMLDocument->AddForm(mCurrentForm);
   }
-
-  return NS_OK;
+  
+  return result;
 }
 
 // XXX MAYBE add code to place close form tag into the content model
@@ -1854,11 +2008,31 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 {
+  nsresult result = NS_OK;
+
   mCurrentContext->FlushText();
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseForm", aNode);
-  NS_IF_RELEASE(mCurrentForm);
-  return NS_OK;
+
+  if (nsnull != mCurrentForm) {
+    // Check if this is a well-formed form
+    if (mCurrentContext->IsCurrentContainer(eHTMLTag_form)) {
+      result = mCurrentContext->CloseContainer(aNode);
+    }
+    else if (mCurrentContext->IsAncestorContainer(eHTMLTag_form)) {
+      nsIHTMLContent* parent;
+      result = mCurrentContext->DemoteContainer(aNode, parent);
+      if (NS_SUCCEEDED(result)) {
+        if (parent == mBody) {
+          NotifyBody();
+        }
+        NS_IF_RELEASE(parent);
+      }
+    }
+    NS_RELEASE(mCurrentForm);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP

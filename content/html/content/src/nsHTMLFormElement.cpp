@@ -123,7 +123,7 @@ public:
 
 protected:
   nsFormControlList*       mControls;
-  nsGenericHTMLLeafElement mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 // nsFormControlList

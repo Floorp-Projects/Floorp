@@ -2632,6 +2632,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*          aPresContext
       }
       else if (nsHTMLAtoms::form == aTag) {
         rv = NS_NewFormFrame(&newFrame);
+        processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::frameset == aTag) {
         rv = NS_NewHTMLFramesetFrame(&newFrame);
