@@ -29,64 +29,36 @@ include $(DEPTH)/config/autoconf.mk
 
 ifndef MOZ_NSS_AUTOCONF
 
-CORE_DEPTH=$(topsrcdir)/security
-
-ifndef MOZ_DEBUG
-OPT_GMAKE_FLAGS = BUILD_OPT=1
-BUILD_OPT=1
-OBJDIR_TAG=_OPT
-endif
-
-include $(CORE_DEPTH)/coreconf/arch.mk
-ifeq (,$(filter-out FreeBSD NetBSD,$(OS_TARGET)))
-include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
+ifeq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+LOADABLE_ROOT_MODULE = nssckbi$(DLL_SUFFIX)
 else
-include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
+LOADABLE_ROOT_MODULE = libnssckbi$(DLL_SUFFIX)
 endif
-include $(CORE_DEPTH)/coreconf/prefix.mk
-#
-# Set CPU_TAG (cut and pasted from mozilla/security/coreconf/ruleset.mk)
-#
+FREEBL_PURE32_MODULE = libfreebl_pure32_3$(DLL_SUFFIX)
+FREEBL_HYBRID_MODULE = libfreebl_hybrid_3$(DLL_SUFFIX)
 
-#
-# At this time, the CPU_TAG value is actually assigned
-#
-
-CPU_TAG:=
-
-#
-# When the process is not 386-based on Windows NT, override the
-# value of $(CPU_TAG).
-#
-ifeq ($(OS_ARCH), WINNT)
-	ifneq ($(CPU_ARCH),x386)
-		CPU_TAG:=_$(CPU_ARCH)
-	endif
-endif
-
-#
-# Always set CPU_TAG on Linux & OpenVMS
-#
-ifneq (,$(filter Linux OpenVMS,$(OS_ARCH)))
-	CPU_TAG:=_$(CPU_ARCH)
-endif
-
-LOADABLE_ROOT_MODULE := $(DLL_PREFIX)nssckbi.$(DLL_SUFFIX)
-CORECONF_OBJDIR:=$(OBJDIR_NAME)
-FREEBL_PURE_MODULE := $(DLL_PREFIX)freebl_pure32_3.$(DLL_SUFFIX)
-FREEBL_HYBRID_MODULE := $(DLL_PREFIX)freebl_hybrid_3.$(DLL_SUFFIX)
-
-endif # MOZ_NSS_AUTOCONF
-
-include $(DEPTH)/config/autoconf.mk
-
-ifndef MOZ_NSS_AUTOCONF
 # NSS makefiles are not safe for parallel execution.
-DEFAULT_GMAKE_FLAGS = -j1 $(OPT_GMAKE_FLAGS)
-DEFAULT_GMAKE_FLAGS += SOURCE_MDHEADERS_DIR=$(MOZ_BUILD_ROOT)/dist/include/nspr
+DEFAULT_GMAKE_FLAGS = MAKE="$(MAKE) -j1" -j1
+DEFAULT_GMAKE_FLAGS += MOZILLA_INCLUDES="-I$(MOZ_BUILD_ROOT)/dist/include -I$(MOZ_BUILD_ROOT)/dist/include/nspr"
+DEFAULT_GMAKE_FLAGS += SOURCE_MD_DIR=$(MOZ_BUILD_ROOT)/dist
+DEFAULT_GMAKE_FLAGS += DIST=$(MOZ_BUILD_ROOT)/dist
 DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 DEFAULT_GMAKE_FLAGS += NO_MDUPDATE=1
-CORECONF_INSTALL     = $(DIST)/$(CORECONF_OBJDIR)
+ifndef MOZ_DEBUG
+DEFAULT_GMAKE_FLAGS += BUILD_OPT=1
+endif
+ifdef GNU_CC
+DEFAULT_GMAKE_FLAGS += NS_USE_GCC=1 NS_USE_NATIVE=
+else
+DEFAULT_GMAKE_FLAGS += NS_USE_GCC= NS_USE_NATIVE=1
+endif
+ifdef USE_N32
+# It is not really necessary to specify USE_PTHREADS=1.  USE_PTHREADS
+# merely adds _PTH to coreconf's OBJDIR name.
+DEFAULT_GMAKE_FLAGS += USE_N32=1 USE_PTHREADS=1
+endif
+# coreconf also uses USE_64.
+
 SUBMAKEFILES = ssl/Makefile pki/Makefile
 else
 DIRS		= ssl pki
@@ -97,7 +69,7 @@ include $(topsrcdir)/config/rules.mk
 ifndef MOZ_NSS_AUTOCONF
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 
-export::
+depend dependclean export::
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
@@ -111,14 +83,13 @@ ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	fi;
 endif
 	cd $(MOZ_BUILD_ROOT)/security/coreconf; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
-	cd $(MOZ_BUILD_ROOT)/security/nss; $(MAKE) $(DEFAULT_GMAKE_FLAGS) moz_import
-	cd $(MOZ_BUILD_ROOT)/security/nss; $(INSTALL) $(DIST)/include $(DIST)/public/dbm
+	cd $(DIST)/lib; cp -f libmozdbm_s.$(LIB_SUFFIX) libdbm.$(LIB_SUFFIX)
 	cd $(MOZ_BUILD_ROOT)/security/nss/lib; $(MAKE) $(DEFAULT_GMAKE_FLAGS)
-	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DIST)/bin
 ifneq (,$(filter SunOS HP-UX,$(OS_ARCH)))
 ifneq ($(OS_TEST),i86pc)
-	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(FREEBL_PURE_MODULE) $(DIST)/bin
-	$(INSTALL) -m 755 $(CORECONF_INSTALL)/lib/$(FREEBL_HYBRID_MODULE) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_PURE32_MODULE) $(DIST)/bin
+	$(INSTALL) -m 755 $(DIST)/lib/$(FREEBL_HYBRID_MODULE) $(DIST)/bin
 endif
 endif
 	$(MAKE) -C ssl $@
@@ -136,9 +107,6 @@ else
 	fi;
 	if test -d $(MOZ_BUILD_ROOT)/security/coreconf; then    \
 		rm -rf $(MOZ_BUILD_ROOT)/security/coreconf;     \
-	fi;
-	if test -d $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR); then      \
-		rm -rf $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR);       \
 	fi;
 endif
 
