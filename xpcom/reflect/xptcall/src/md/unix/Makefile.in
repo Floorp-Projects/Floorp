@@ -104,7 +104,9 @@ endif
 endif
 
 # HP-UX/PA32
+# for gas and gcc, check comment in xptcinvoke_asm_pa32.s
 ifeq ($(OS_ARCH),HP-UX)
+ifneq ($(CC),gcc)
 CPPSRCS		= \
 		  xptcinvoke_pa32.cpp \
 		  xptcstubs_pa32.cpp \
@@ -113,6 +115,7 @@ ASFILES		= \
 		  xptcstubs_asm_pa32.s \
 		  xptcinvoke_asm_pa32.s \
 		  $(NULL)
+endif
 endif
 
 # AIX/PPC
