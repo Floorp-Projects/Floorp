@@ -731,10 +731,28 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
   }
 
   nsRect   rect = mBounds;
+  PtWidget_t *aWidget = GetNativeData(NS_NATIVE_WIDGET);
+  long widgetFlags = PtWidgetFlags(aWidget);
 
-    if ( GetParentClippedArea(rect) == PR_TRUE)
-    {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Clipped rect=(%i,%i,%i,%i)\n", rect.x, rect.y, rect.width, rect.height  ));
+  if (Pt_DISJOINT && widgetFlags)
+  {
+     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 - This is a disjoint widget so ignore parent clipping\n"));
+
+     if (PtWidgetIsRealized(mWidget))
+     {
+        if (aIsSynchronous)
+        {
+          UpdateWidgetDamage();
+        }
+        else
+        {
+          QueueWidgetDamage();
+        }
+     }
+  }    
+  else if ( GetParentClippedArea(rect) == PR_TRUE)
+  {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Clipped rect=(%i,%i,%i,%i)\n", rect.x, rect.y, rect.width, rect.height  ));
 
 	  /* Damage has to be relative Widget coords */
       mUpdateArea->SetTo( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
@@ -756,11 +774,11 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 	  {
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Not Relealized skipping Damage Queue\n"));
 	  }
-    }
-    else
-	{
+  }
+  else
+  {
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 1 Skipping because GetParentClippedArea(rect returned empty rect\n"));
-    }
+  }
 
   return NS_OK;
 }
@@ -870,8 +888,6 @@ PRBool nsWidget::GetParentClippedArea( nsRect &rect )
 {
 // Traverse parent heirarchy and clip the passed-in rect bounds
 
-PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea 1\n"));
-
   PtArg_t    arg;
   PhArea_t   *area;
   PtWidget_t *parent;
@@ -879,7 +895,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea 1\n"));
   nsRect     rect2;
   PtWidget_t *disjoint = PtFindDisjoint( mWidget );
 
-PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea Clipping widget (%p) rect: %d,%d,%d,%d\n", this, rect.x, rect.y, rect.width, rect.height ));
+PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea Clipping widget (%p) rect: %d,%d,%d,%d disjointParent=<%p>\n", this, rect.x, rect.y, rect.width, rect.height, disjoint ));
 
   // convert passed-in rect to absolute window coords first...
   PtWidgetOffset( mWidget, &offset );
@@ -2190,8 +2206,20 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> mUpdate
           extent.ul.y = area.pos.y;
           extent.lr.x = extent.ul.x + area.size.w - 1;
           extent.lr.y = extent.ul.y + area.size.h - 1;
+
+#if 1
+          PtWidget_t *aPtWidget;
+		  nsWidget   *aWidget = GetInstance( (PtWidget_t *) dqe->widget );
+          aPtWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);		  
+          PtDamageExtent( aPtWidget, &extent);
+   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d rect=<%d,%d,%d,%d> next=<%p>\n",  aPtWidget, i, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y, dqe->next));
+
+#else
           PtDamageExtent( dqe->widget, &extent);
-PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d rect=<%d,%d,%d,%d> next=<%p>\n", dqe->widget, i, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y, dqe->next));
+   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d rect=<%d,%d,%d,%d> next=<%p>\n", dqe->widget, i, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y, dqe->next));
+
+#endif
+
 
 		}
 		else
@@ -2208,8 +2236,16 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d rect
           extent.lr.x = extent.ul.x + temp_rect.width - 1;
           extent.lr.y = extent.ul.y + temp_rect.height - 1;
 		
+#if 1
+          PtWidget_t *aPtWidget;
+		  nsWidget   *aWidget = GetInstance( (PtWidget_t *) dqe->widget );
+          aPtWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);		  
+          PtDamageExtent( aPtWidget, &extent);
+          PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d rect=<%d,%d,%d,%d> next=<%p>\n", aPtWidget, i, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y, dqe->next));
+#else
           PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> %d rect=<%d,%d,%d,%d> next=<%p>\n", dqe->widget, i, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y, dqe->next));
           PtDamageExtent( dqe->widget, &extent);
+#endif
         }
   
         dqe->inst->mUpdateArea->FreeRects(regionRectSet);
