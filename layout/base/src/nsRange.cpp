@@ -1782,17 +1782,25 @@ nsRange::CreateContextualFragment(const nsString& aFragment,
               nsCOMPtr<nsIDOMNode> temp;
               nsAutoString tagName;
               PRUnichar* name = nsnull;
-              
-              parent->GetNodeName(tagName);
-              // XXX Wish we didn't have to allocate here
-              name = tagName.ToNewUnicode();
-              if (name) {
-                tagStack->Push(name);
-                temp = parent;
-                result = temp->GetParentNode(getter_AddRefs(parent));
+              PRUint16 nodeType;
+
+              parent->GetNodeType(&nodeType);
+              if (nsIDOMNode::ELEMENT_NODE == nodeType) {
+                parent->GetNodeName(tagName);
+                // XXX Wish we didn't have to allocate here
+                name = tagName.ToNewUnicode();
+                if (name) {
+                  tagStack->Push(name);
+                  temp = parent;
+                  result = temp->GetParentNode(getter_AddRefs(parent));
+                }
+                else {
+                  result = NS_ERROR_OUT_OF_MEMORY;
+                }
               }
               else {
-                result = NS_ERROR_OUT_OF_MEMORY;
+                temp = parent;
+                result = temp->GetParentNode(getter_AddRefs(parent));
               }
             }
             
