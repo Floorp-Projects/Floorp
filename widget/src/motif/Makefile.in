@@ -58,6 +58,7 @@ CPPSRCS= \
 	nsLabel.cpp \
 	nsDialog.cpp \
 	nsWindow.cpp \
+	nsTimer.cpp \
 	nsXtEventHandler.cpp \
         nsXtManageWidget.cpp
 
