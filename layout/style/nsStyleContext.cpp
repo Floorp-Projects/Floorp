@@ -276,6 +276,43 @@ void nsStyleSpacing::CalcBorderPaddingFor(const nsIFrame* aFrame, nsMargin& aBor
   }
 }
 
+PRBool nsStyleSpacing::GetMargin(nsMargin& aMargin) const
+{
+  if (mHasCachedMargin) {
+    aMargin = mCachedMargin;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool nsStyleSpacing::GetPadding(nsMargin& aPadding) const
+{
+  if (mHasCachedPadding) {
+    aPadding = mCachedPadding;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool nsStyleSpacing::GetBorder(nsMargin& aBorder) const
+{
+  if (mHasCachedBorder) {
+    aBorder = mCachedBorder;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+PRBool nsStyleSpacing::GetBorderPadding(nsMargin& aBorderPadding) const
+{
+  if (mHasCachedPadding && mHasCachedBorder) {
+    aBorderPadding = mCachedBorderPadding;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
 
 struct StyleSpacingImpl: public nsStyleSpacing {
   StyleSpacingImpl(void)
@@ -291,7 +328,11 @@ void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* 
   // spacing values not inherited
   mMargin.Reset();
   mPadding.Reset();
-  mBorder.Reset();
+  nsStyleCoord  medium(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
+  mBorder.SetLeft(medium);
+  mBorder.SetTop(medium);
+  mBorder.SetRight(medium);
+  mBorder.SetBottom(medium);
   mBorderStyle[0] = NS_STYLE_BORDER_STYLE_NONE;
   mBorderStyle[1] = NS_STYLE_BORDER_STYLE_NONE;
   mBorderStyle[2] = NS_STYLE_BORDER_STYLE_NONE;
