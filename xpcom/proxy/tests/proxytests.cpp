@@ -115,7 +115,7 @@ NS_SetupRegistry()
 class nsTestXPCFoo : public nsITestXPCFoo
 {
     NS_DECL_ISUPPORTS
-    NS_IMETHOD Test(int p1, int p2, int* retval);
+    NS_IMETHOD Test(PRInt32 p1, PRInt32 p2, PRInt32* retval);
     NS_IMETHOD Test2();
     nsTestXPCFoo();
     virtual ~nsTestXPCFoo();
@@ -135,9 +135,9 @@ nsTestXPCFoo::~nsTestXPCFoo()
 static NS_DEFINE_IID(kITestXPCFooIID, NS_ITESTXPCFOO_IID);
 NS_IMPL_ISUPPORTS(nsTestXPCFoo,kITestXPCFooIID)
 
-NS_IMETHODIMP nsTestXPCFoo::Test(int p1, int p2, int* retval)
+NS_IMETHODIMP nsTestXPCFoo::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
-    printf("Thread (%d) Test Called successfully! Party on...\n", p1);
+    printf("Thread (%ld) Test Called successfully! Party on...\n", p1);
     *retval = 0;
     return NS_OK;
 }
@@ -158,7 +158,7 @@ NS_IMETHODIMP nsTestXPCFoo::Test2()
 class nsTestXPCFoo2 : public nsITestXPCFoo
 {
     NS_DECL_ISUPPORTS
-    NS_IMETHOD Test(int p1, int p2, int* retval);
+    NS_IMETHOD Test(PRInt32 p1, PRInt32 p2, PRInt32* retval);
     NS_IMETHOD Test2();
     nsTestXPCFoo2();
     virtual ~nsTestXPCFoo2();
@@ -177,9 +177,9 @@ nsTestXPCFoo2::~nsTestXPCFoo2()
 //kITestXPCFooIID defined above for nsTestXPCFoo(1)
 NS_IMPL_ISUPPORTS(nsTestXPCFoo2,kITestXPCFooIID)
 
-NS_IMETHODIMP nsTestXPCFoo2::Test(int p1, int p2, int* retval)
+NS_IMETHODIMP nsTestXPCFoo2::Test(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 {
-    printf("Thread (%d) nsTestXPCFoo2::Test2() called successfully! Party on...\n", p1);
+    printf("Thread (%ld) nsTestXPCFoo2::Test2() called successfully! Party on...\n", p1);
     *retval = 0;
     return NS_OK;
 }
@@ -200,7 +200,7 @@ NS_IMETHODIMP nsTestXPCFoo2::Test2()
 typedef struct _ArgsStruct
 {
     PLEventQueue* queue;
-    int           threadNumber;
+    PRInt32           threadNumber;
 }ArgsStruct;
 
 
@@ -255,9 +255,9 @@ void TestCase_TwoClassesOneInterface(void *arg)
         NS_RELEASE(foo2);
 
     
-        int a;
+        PRInt32 a;
         nsresult rv;
-        int threadNumber = argsStruct->threadNumber;
+        PRInt32 threadNumber = argsStruct->threadNumber;
 
         //printf("Thread (%ld) Prior to calling proxyObject->Test.\n", threadNumber);
         rv = proxyObject->Test(threadNumber, 0, &a);   
@@ -392,7 +392,7 @@ main(int argc, char **argv)
                             // sleep about longer, and try again.
 
     printf("Spawn Threads:\n");
-    for (int spawn = 0; spawn < numberOfThreads; spawn++)
+    for (PRInt32 spawn = 0; spawn < numberOfThreads; spawn++)
     {
 
         ArgsStruct *args = (ArgsStruct *) malloc (sizeof(ArgsStruct));
@@ -408,7 +408,7 @@ main(int argc, char **argv)
                                             PR_JOINABLE_THREAD,
                                             0 );
 
-        printf("\tThread (%d) spawned\n", spawn);
+        printf("\tThread (%ld) spawned\n", spawn);
 
         //PR_Sleep( PR_MillisecondsToInterval(250) );
     }
@@ -417,12 +417,12 @@ main(int argc, char **argv)
     
    
     printf("Wait for threads.\n");
-    for (int i = 0; i < numberOfThreads; i++)
+    for (PRInt32 i = 0; i < numberOfThreads; i++)
     {
         PRStatus rv;
-        printf("Thread (%d) Join...\n", i);
+        printf("Thread (%ld) Join...\n", i);
         rv = PR_JoinThread(threads[i]);
-        printf("Thread (%d) Joined. (error: %ld).\n", i, rv);
+        printf("Thread (%ld) Joined. (error: %ld).\n", i, rv);
     }
 
     PR_Interrupt(aEventThread);
