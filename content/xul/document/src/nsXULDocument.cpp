@@ -2944,7 +2944,7 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
 
     // Try to share the style sheets (this is evil, but it might just work)
     // First do a prepare to pick up a new inline and attr style sheet
-    if (NS_FAILED(rv = PrepareStyleSheets(mDocumentURL))) {
+    if (NS_FAILED(rv = popupDoc->PrepareStyleSheets(mDocumentURL))) {
       NS_ERROR("problem initializing style sheets.");
       return rv;
     }
