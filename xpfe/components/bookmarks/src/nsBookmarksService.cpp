@@ -745,6 +745,14 @@ BookmarkParser::ParseBookmark(const nsString& aLine, nsCOMPtr<nsIRDFContainer>& 
 			// save ping ETag
 			if (pingETag.Length() > 0)
 			{
+				PRInt32		offset;
+
+				// Note: don't allow quotes in etag
+				while ((offset = pingETag.FindChar('\"')) >= 0)
+				{
+					pingETag.Cut(offset, 1);
+				}
+
 				nsCOMPtr<nsIRDFLiteral>	pingLiteral;
 				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(pingETag.GetUnicode(),
 								    getter_AddRefs(pingLiteral))))
