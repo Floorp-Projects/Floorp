@@ -1,0 +1,71 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIFileSpec.idl"
+
+
+%{ C++
+#define SMTP_PORT	25
+%}
+
+[scriptable, uuid(16ADF2F1-BBAD-11d2-804E-006008128C4E)]
+interface nsISmtpUrl : nsISupports {
+	/////////////////////////////////////////////////////////////////////////////// 
+	// SMTP Parse specific getters --> retrieves portions from the url spec...
+	///////////////////////////////////////////////////////////////////////////////
+	
+	// mscott: I used to have individual getters for ALL of these fields but it was
+	// getting way out of hand...besides in the actual protocol, we want all of these
+	// fields anyway so why go through the extra step of making the protocol call
+	// 12 get functions...
+	void GetMessageContents(out string aToPart, out string aCcPart, out string aBccPart, 
+		out string aFromPart, out string aFollowUpToPart, out string aOrganizationPart, 
+		out string aReplyToPart, out string aSubjectPart, out string aBodyPart, out string aHtmlPart, 
+		out string aReferencePart, out string aAttachmentPart, out string aPriorityPart, 
+		out string aNewsgroupPart, out string aNewsHostPart, out boolean aforcePlainText);
+
+	// Caller must call PR_FREE on list when it is done with it. This list is a list of all
+	// recipients to send the email to. each name is NULL terminated...
+	void GetAllRecipients(out string aRecipientsList);
+
+	attribute boolean PostMessage;
+
+	// the message can be stored in a file....allow accessors for getting and setting
+	// the file name to post...
+	attribute nsIFileSpec PostMessageFile;
+
+	/////////////////////////////////////////////////////////////////////////////// 
+	// SMTP Url instance specific getters and setters --> info the protocol needs
+	// to know in order to run the url...these are NOT event sinks which are things
+	// the caller needs to know...
+	///////////////////////////////////////////////////////////////////////////////
+
+	// by default the url is really a bring up the compose window mailto url...
+	// you need to call this function if you want to force the message to be posted
+	// to the mailserver...
+
+	// mscott -- when we have identities it would be nice to just have an identity 
+	// interface here that would encapsulte things like username, domain, password,
+	// etc...
+
+	// mscott - I found getting the user email address very cumbersome to use with an nsString -->
+	// particularly when it came to parsing the user name and extracting the domain.....so I'm going to
+	// change the get value to a const char **...
+	attribute string UserEmailAddress;
+};
