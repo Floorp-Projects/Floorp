@@ -433,6 +433,26 @@ PRStatus _MD_KillProcess(PRProcess *process)
 	PR_SetError(PR_NOT_IMPLEMENTED_ERROR, unimpErr);
 	return PR_FAILURE;
 }
+
+//##############################################################################
+//##############################################################################
+#pragma mark -
+#pragma mark ATOMIC OPERATIONS
+
+#ifdef _PR_HAVE_ATOMIC_OPS
+PRInt32
+_MD_AtomicSet(PRInt32 *val, PRInt32 newval)
+{
+    PRInt32 rv;
+    do  {
+        rv = *val;
+    } while (!OTCompareAndSwap32(rv, newval, (UInt32*)val));
+
+    return rv;
+}
+
+#endif // _PR_HAVE_ATOMIC_OPS
+
 //##############################################################################
 //##############################################################################
 #pragma mark -
