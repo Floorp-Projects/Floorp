@@ -40,7 +40,7 @@
 #include <secoidt.h>
 #include <keyt.h>   /* for PQGParams */
 #include <blapi.h>
-#include <pqgutil.h>
+#include <pk11pqg.h>
 
 #include <jss_bigint.h>
 #include <jssutil.h>
@@ -137,8 +137,8 @@ generate(JNIEnv *env, jclass PQGParamsClass, jint keySize, jint seedBytes)
 
 
     /***********************************************************************
-     * PQG_ParamGen doesn't take a key size, it takes an index that points to
-     * a valid key size.
+     * PK11_PQG_ParamGen doesn't take a key size, it takes an index that
+     * points to a valid key size.
      */
     keySizeIndex = PQG_PBITS_TO_INDEX(keySize);
     if(keySizeIndex == -1 || keySize<512 || keySize>1024) {
@@ -152,9 +152,9 @@ generate(JNIEnv *env, jclass PQGParamsClass, jint keySize, jint seedBytes)
      * Do the actual parameter generation.
      */
     if(seedBytes == 0) {
-        status = PQG_ParamGen(keySizeIndex, &pParams, &pVfy);
+        status = PK11_PQG_ParamGen(keySizeIndex, &pParams, &pVfy);
     } else {
-        status = PQG_ParamGenSeedLen(keySizeIndex, seedBytes, &pParams, &pVfy);
+        status = PK11_PQG_ParamGenSeedLen(keySizeIndex, seedBytes, &pParams, &pVfy);
     }
     if(status != SECSuccess) {
         JSS_throw(env, PQG_PARAM_GEN_EXCEPTION);
@@ -185,16 +185,16 @@ generate(JNIEnv *env, jclass PQGParamsClass, jint keySize, jint seedBytes)
     /***********************************************************************
      * Convert the parameters to Java types.
      */
-    if( PQG_GetPrimeFromParams( pParams, &P) ||
-        PQG_GetSubPrimeFromParams( pParams, &Q) ||
-        PQG_GetBaseFromParams( pParams, &G) ||
-        PQG_GetHFromVerify( pVfy, &H) ||
-        PQG_GetSeedFromVerify( pVfy, &seed) )
+    if( PK11_PQG_GetPrimeFromParams( pParams, &P) ||
+        PK11_PQG_GetSubPrimeFromParams( pParams, &Q) ||
+        PK11_PQG_GetBaseFromParams( pParams, &G) ||
+        PK11_PQG_GetHFromVerify( pVfy, &H) ||
+        PK11_PQG_GetSeedFromVerify( pVfy, &seed) )
     {
         JSS_throw(env, PQG_PARAM_GEN_EXCEPTION);
         goto finish;
     }
-    counter = PQG_GetCounterFromVerify(pVfy);
+    counter = PK11_PQG_GetCounterFromVerify(pVfy);
 
     /*
      * construct P
@@ -297,10 +297,10 @@ generate(JNIEnv *env, jclass PQGParamsClass, jint keySize, jint seedBytes)
 
 finish:
     if(pParams!=NULL) {
-        PQG_DestroyParams(pParams);
+        PK11_PQG_DestroyParams(pParams);
     }
     if(pVfy!=NULL) {
-        PQG_DestroyVerify(pVfy);
+        PK11_PQG_DestroyVerify(pVfy);
     }
     SECITEM_FreeItem(&P, PR_FALSE /*don't free P itself*/);
     SECITEM_FreeItem(&Q, PR_FALSE);
@@ -359,8 +359,8 @@ Java_org_mozilla_jss_crypto_PQGParams_paramsAreValidNative
     /***********************************************************************
      * Construct PQGParams and PQGVerify structures.
      */
-    pParams = PQG_NewParams(&P, &Q, &G);
-    pVfy = PQG_NewVerify(counter, &seed, &H);
+    pParams = PK11_PQG_NewParams(&P, &Q, &G);
+    pVfy = PK11_PQG_NewVerify(counter, &seed, &H);
     if(pParams==NULL || pVfy==NULL) {
         JSS_throw(env, OUT_OF_MEMORY_ERROR);
         goto finish;
@@ -369,7 +369,7 @@ Java_org_mozilla_jss_crypto_PQGParams_paramsAreValidNative
     /***********************************************************************
      * Perform the verification.
      */
-    if( PQG_VerifyParams(pParams, pVfy, &verifyResult) != PR_SUCCESS) {
+    if( PK11_PQG_VerifyParams(pParams, pVfy, &verifyResult) != PR_SUCCESS) {
         JSS_throw(env, OUT_OF_MEMORY_ERROR);
         goto finish;
     }
@@ -383,8 +383,8 @@ finish:
     SECITEM_FreeItem(&G, PR_FALSE);
     SECITEM_FreeItem(&seed, PR_FALSE);
     SECITEM_FreeItem(&H, PR_FALSE);
-    PQG_DestroyParams(pParams);
-    PQG_DestroyVerify(pVfy);
+    PK11_PQG_DestroyParams(pParams);
+    PK11_PQG_DestroyVerify(pVfy);
 
     return valid;
 }

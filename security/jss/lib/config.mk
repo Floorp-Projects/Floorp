@@ -41,24 +41,9 @@ SHARED_LIBRARY_DIRS = \
     ../org/mozilla/jss/pkcs11 \
     ../org/mozilla/jss/ssl \
     ../org/mozilla/jss/util \
-    ../org/mozilla/jss/hclhacks \
     $(NULL)
 
 EXTRA_LIBS += \
-    $(LIBNSS) \
-    $(LIBSSL) \
-    $(LIBCRYPTOHI) \
-    $(LIBCERTHI) \
-    $(LIBNSSB) \
-    $(LIBPK11WRAP) \
-    $(LIBJAR) \
-    $(LIBPKCS12) \
-    $(LIBPKCS7) \
-    $(LIBSMIME) \
-    $(LIBSOFTOKEN) \
-    $(LIBCERTDB) \
-    $(LIBFREEBL) \
-    $(LIBSECUTIL) \
     $(LIBDBM) \
     $(NULL)
 
@@ -72,6 +57,9 @@ DLLFLAGS += -DEF:jss.def
 #RESNAME = jss.rc
 
 EXTRA_SHARED_LIBS += \
+    $(DIST)/lib/nss/nss3.lib
+    $(DIST)/lib/nss/smime3.lib
+    $(DIST)/lib/nss/ssl3.lib
     $(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
     $(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
     $(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
@@ -83,6 +71,9 @@ else
 
 EXTRA_SHARED_LIBS += \
     -L$(DIST)/lib \
+    -lnss3 \
+    -lsmime3 \
+    -lssl3 \
     -lplc4 \
     -lplds4 \
     -lnspr4 \

@@ -447,21 +447,12 @@ JNIEXPORT void JNICALL
 Java_org_mozilla_jss_pkcs11_PK11Store_deleteCert
     (JNIEnv *env, jobject this, jobject certObject)
 {
-    PK11SlotInfo *slot, *certSlot=NULL;
-    CK_OBJECT_HANDLE certID;
     CERTCertificate *cert;
+    SECStatus status;
 
     PR_ASSERT(env!=NULL && this!=NULL);
     if(certObject == NULL) {
         JSS_throw(env, NO_SUCH_ITEM_ON_TOKEN_EXCEPTION);
-        goto finish;
-    }
-
-    /**************************************************
-     * Get the C structures
-     **************************************************/
-    if( JSS_PK11_getStoreSlotPtr(env, this, &slot) != PR_SUCCESS) {
-        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
         goto finish;
     }
 
@@ -470,56 +461,9 @@ Java_org_mozilla_jss_pkcs11_PK11Store_deleteCert
         goto finish;
     }
 
-    certID = PK11_FindObjectForCert(cert, NULL, &certSlot);
-
-    /***************************************************
-     * Validate structures
-     ***************************************************/
-    if( slot != certSlot) {
-        if( certSlot == NULL ) {
-            /* try deleting from internal cert database */
-            if( SEC_DeletePermCertificate(cert) != SECSuccess) {
-                JSS_throwMsg(env, TOKEN_EXCEPTION,
-                    "Unable to delete certificate from internal database");
-            } 
-        } else {
-            JSS_throw(env, NO_SUCH_ITEM_ON_TOKEN_EXCEPTION);
-        }
-        goto finish; /* in any case we're done */
-    }
-
-    /***************************************************
-     * Perform the destruction
-     ***************************************************/
-    if( PK11_Authenticate(certSlot, PR_TRUE /*loadCerts*/, NULL /*wincx*/)
-            != SECSuccess)
-    {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to login to token");
-        goto finish;
-    }
-    if( PK11_DestroyTokenObject(certSlot, certID) != SECSuccess)
-    {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to actually destroy object");
-        goto finish;
-    }
-
-    if ((cert->istemp != PR_TRUE) && (cert->istemp != PR_FALSE)) {
-      /* the cloning feature somehow doesn't have istemp initialized */ 
-      cert->istemp = PR_FALSE;
-    }
-
-    /* This call returns SECSuccess if cert istemp is PR_FALSE */
-    if (cert->istemp == PR_TRUE) {
-	if( CERT_DeleteTempCertificate(cert) != SECSuccess ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to delete temporary cert");
-        goto finish;
-	}
-    }
+    status = PK11_DeleteTokenCertAndKey(cert, NULL);
 
 finish: 
-    if(certSlot != NULL) {
-        PK11_FreeSlot(certSlot);
-    }
     return;
 }
 
@@ -633,438 +577,7 @@ finish:
     return ret;
 }
 
-typedef enum {
-    SUCCESS=0,
-    TOKEN_FAILURE,
-    DECODE_FAILURE,
-    LOGIN_FAILURE,
-    OUT_OF_MEM,
-    KEYID_FAILURE,
-    KEY_EXISTS
-} ImportResult;
-
-
-
-SECKEYLowPrivateKey *
-seckey_decrypt_private_key(SECKEYEncryptedPrivateKeyInfo *epki,
-               SECItem *pwitem);
-
-SECKEYEncryptedPrivateKeyInfo *
-seckey_encrypt_private_key(
-        SECKEYLowPrivateKey *pk, SECItem *pwitem, SECKEYKeyDBHandle *keydb,
-        SECOidTag algorithm);
-
 int PK11_NumberObjectsFor(PK11SlotInfo*, CK_ATTRIBUTE*, int);
-
-
-/***********************************************************************
- * decoding part copied from keydb.c seckey_decode_encrypted_private_key
- 
- */
-static ImportResult
-decodeAndImportEncryptedKey(SECKEYDBKey *dbkey, SECItem *pwitem,
-                        PK11SlotInfo *slot, KeyType keyType, PRBool temporary)
-{
-    SECKEYLowPrivateKey *pk = NULL;
-    SECKEYEncryptedPrivateKeyInfo *epki=NULL;
-    SECKEYEncryptedPrivateKeyInfo *newepki=NULL;
-    PRArenaPool *temparena = NULL;
-    SECStatus rv = SECFailure;
-    SECOidTag algorithm;
-    SECItem *publicValue = NULL;
-    SECItem nickname;
-    ImportResult result=DECODE_FAILURE;
-
-    PR_ASSERT(dbkey!=NULL && pwitem!=NULL);
-
-    temparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if(temparena == NULL) {
-        return OUT_OF_MEM;
-    }
-
-    epki = (SECKEYEncryptedPrivateKeyInfo *)
-        PORT_ArenaZAlloc(temparena, sizeof(SECKEYEncryptedPrivateKeyInfo));
-    if(epki == NULL) {
-        goto loser;
-    }
-
-    rv = SEC_ASN1DecodeItem(temparena, epki,
-                            SECKEY_EncryptedPrivateKeyInfoTemplate,
-                            &(dbkey->derPK));
-    if(rv != SECSuccess) {
-        goto loser;
-    }
-
-    algorithm = SECOID_GetAlgorithmTag(&(epki->algorithm));
-    switch(algorithm)
-    {
-      case SEC_OID_RC4:
-        rv = SECITEM_CopyItem(temparena, &(epki->algorithm.parameters),
-                              &(dbkey->salt));
-        break;
-      default:
-        break;
-    }
-
-    pk = seckey_decrypt_private_key(epki, pwitem);
-    if(pk == NULL) {
-        result = DECODE_FAILURE;
-        goto loser;
-    }
-
-    if(pk->keyType == dsaKey) {
-        publicValue = &pk->u.dsa.publicValue;
-    } else {
-        PR_ASSERT( pk->keyType == rsaKey );
-        publicValue = &pk->u.rsa.modulus;
-    }
-
-    newepki = seckey_encrypt_private_key(pk, pwitem, NULL /*keydb*/,
-                SEC_OID_PKCS12_PBE_WITH_SHA1_AND_128_BIT_RC4);
-    if(newepki == NULL) {
-        result = DECODE_FAILURE;
-        goto loser;
-    }
-
-    /***************************************************
-     * Login to the token if necessary
-     ***************************************************/
-    if( PK11_Authenticate(slot, PR_TRUE /*loadcerts*/, NULL /*wincx*/)
-            != SECSuccess)
-    {
-        result = LOGIN_FAILURE;
-        goto loser;
-    }
-
-
-    nickname.len = 0;
-    nickname.data = NULL;
-    rv = PK11_ImportEncryptedPrivateKeyInfo(slot, newepki, pwitem, &nickname,
-            publicValue, !temporary, PR_TRUE /*private*/, keyType,
-            0 /*default key usage*/, NULL /*wincx*/);
-    if(rv == SECSuccess) {
-        result = SUCCESS;
-    } else {
-        result = TOKEN_FAILURE;
-    }
-
-loser:
-    if(pk) {
-        SECKEY_LowDestroyPrivateKey(pk);
-    }
-    if(newepki) {
-        SECKEY_DestroyEncryptedPrivateKeyInfo(newepki, PR_TRUE /* freeit */);
-    }
-    PORT_FreeArena(temparena, PR_TRUE);
-    return result;
-}
-
-/***********************************************************************
- * decoding part copied from keydb.c seckey_decode_encrypted_private_key
- 
- */
-static ImportResult
-decodeAndImportKey(SECItem *dervalue,
-                  PK11SlotInfo *slot, KeyType keyType, PRBool temporary)
-{
-    SECKEYLowPrivateKey *pk = NULL;
-    SECKEYPrivateKeyInfo *pki = NULL;
-    PRArenaPool *temparena = NULL;
-    PRArenaPool *pkarena = NULL;
-    SECStatus rv = SECFailure;
-    SECOidTag algorithm;
-    SECItem *publicValue = NULL;
-    SECItem *keyid = NULL;
-	SECKEYPrivateKey *existingpk = NULL;
-    SECItem nickname;
-    ImportResult result=DECODE_FAILURE;
-
-    PR_ASSERT(dervalue!=NULL);
-
-    temparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    pkarena   = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-
-    if(temparena == NULL) {
-        return OUT_OF_MEM;
-    }
-    if(pkarena == NULL) {
-        return OUT_OF_MEM;
-    }
-
-    pki = PR_NEWZAP(SECKEYPrivateKeyInfo);
-    if(pki == NULL) {
-        result = DECODE_FAILURE;
-        goto loser;
-    }
-
-    pk = PR_NEWZAP(SECKEYLowPrivateKey);
-    if(pk == NULL) {
-        result = DECODE_FAILURE;
-        goto loser;
-    }
-
-    rv = SEC_ASN1DecodeItem(temparena, pki,
-                            SECKEY_PrivateKeyInfoTemplate,
-                            dervalue);
-    if(rv != SECSuccess) {
-        goto loser;
-    }
-
-
-	/* decode the PublicKey from inside the PublicKeyInfo structure */
-	/* the format of this encoding is defined by the algorithm
-       in the publickeyinfo, so we have to use different ASN
-	   templates depending on which key is which */
-
-    switch(SECOID_GetAlgorithmTag(&pki->algorithm)) {
-		case SEC_OID_X500_RSA_ENCRYPTION:
-		case SEC_OID_PKCS1_RSA_ENCRYPTION:
-			pk->keyType = rsaKey;
-			rv = SEC_ASN1DecodeItem(pkarena, pk,
-									SECKEY_RSAPrivateKeyTemplate,
-									&pki->privateKey);
-			break;
-		case SEC_OID_ANSIX9_DSA_SIGNATURE:
-			pk->keyType = dsaKey;
-			rv = SEC_ASN1DecodeItem(pkarena, pk,
-									SECKEY_DSAPrivateKeyTemplate,
-									&pki->privateKey);
-			if (rv != SECSuccess)
-                    goto loser;
-			rv = SEC_ASN1DecodeItem(pkarena, &pk->u.dsa.params,
-									SECKEY_PQGParamsTemplate,
-									&pki->algorithm.parameters);
-                break;
-		default:
-			rv = SECFailure;
-			break;
-		}
-
- 	/* pull out public key */
-
-    if(pk->keyType == dsaKey) {
-        publicValue = &pk->u.dsa.publicValue;
-    } else {
-        PR_ASSERT( pk->keyType == rsaKey );
-        publicValue = &pk->u.rsa.modulus;
-    }
-
-    /***************************************************
-     * Login to the token if necessary
-     ***************************************************/
-    if( PK11_Authenticate(slot, PR_TRUE /*loadcerts*/, NULL /*wincx*/)
-            != SECSuccess)
-    {
-        result = LOGIN_FAILURE;
-        goto loser;
-    }
-
-    /***************************************************
-     * Throw a 'key exists' exception if the key is
-	 * already in the token
-     ***************************************************/
-	/* first make the key id - a 'nickname' for the key
-	   derived from the public key
-	*/
-	keyid = PK11_MakeIDFromPubKey(publicValue);
-	if (keyid == NULL) {
-		result = KEYID_FAILURE;
-		goto loser;
-	}
-	existingpk = PK11_FindKeyByKeyID(slot,keyid,NULL);
-	if (existingpk != NULL) {
-		result = KEY_EXISTS;
-		goto loser;
-	}
-
-    nickname.len = 0;
-    nickname.data = NULL;
-
-    rv = PK11_ImportPrivateKeyInfo(slot, pki, &nickname,
-		publicValue, PR_TRUE /*PERM*/, PR_TRUE /*PRIVATE*/, 
-		0 /*keyusage*/, NULL /*wincx*/ );
-
-    if(rv == SECSuccess) {
-        result = SUCCESS;
-    } else {
-        result = TOKEN_FAILURE;
-		/* if the public key import failed, we are responsible
-		   freeing this memory - otherwise it's the
-		   responsiblity of the owner of the key */
-    	PORT_FreeArena(pkarena, PR_TRUE);
-    }
-
-loser:
-    if(existingpk) {
-		SECKEY_DestroyPrivateKey(existingpk);
-	}
-    if(keyid) {
-        SECITEM_FreeItem(keyid,PR_TRUE);
-    }
-    if(pk) {
-        SECKEY_LowDestroyPrivateKey(pk);
-    }
-    if(pki) {
-        SECKEY_DestroyPrivateKeyInfo(pki, PR_TRUE /* freeit */);
-    }
-    PORT_FreeArena(temparena, PR_TRUE);
-    return result;
-}
- 
-
-/***********************************************************************
- * importEncryptedPrivateKey
- */
-static void
-importEncryptedPrivateKey
-    (   JNIEnv *env,
-        jobject this,
-        jbyteArray encodedKeyArray,
-        jobject passwordObject,
-        jbyteArray saltArray,
-        jbyteArray globalSaltArray,
-        jobject keyTypeObj,
-        PRBool temporary            )
-{
-    SECKEYDBKey dbkey;
-    SECItem *pwitem=NULL;
-    ImportResult result;
-    PK11SlotInfo *slot;
-    jthrowable excep;
-    KeyType keyType;
-
-
-    keyType = JSS_PK11_getKeyType(env, keyTypeObj);
-    if( keyType == nullKey ) {
-        /* exception was thrown */
-        goto finish;
-    }
-
-    /*
-     * initialize so we can goto finish
-     */
-    dbkey.arena = NULL;
-    dbkey.version = 0;
-    dbkey.nickname = NULL;
-    dbkey.salt.data = NULL;
-    dbkey.salt.len = 0;
-    dbkey.derPK.data = NULL;
-    dbkey.derPK.len = 0;
-
-
-    PR_ASSERT(env!=NULL && this!=NULL);
-
-    if(encodedKeyArray == NULL || passwordObject==NULL || saltArray==NULL) {
-        JSS_throw(env, NULL_POINTER_EXCEPTION);
-        goto finish;
-    }
-
-    /*
-     * Extract the encoded key into the DBKEY
-     */
-    dbkey.derPK.len = (*env)->GetArrayLength(env, encodedKeyArray);
-    if(dbkey.derPK.len <= 0) {
-        JSS_throwMsg(env, INVALID_KEY_FORMAT_EXCEPTION, "Key array is empty");
-        goto finish;
-    }
-    dbkey.derPK.data = (unsigned char*)
-            (*env)->GetByteArrayElements(env, encodedKeyArray, NULL);
-    if(dbkey.derPK.data == NULL) {
-        ASSERT_OUTOFMEM(env);
-        goto finish;
-    }
-
-    /*
-     * Extract the salt into the DBKEY
-     */
-    dbkey.salt.len = (*env)->GetArrayLength(env, saltArray);
-    if(dbkey.salt.len <= 0) {
-        JSS_throwMsg(env, INVALID_KEY_FORMAT_EXCEPTION, "Salt array is empty");
-        goto finish;
-    }
-    dbkey.salt.data = (unsigned char*)
-            (*env)->GetByteArrayElements(env, saltArray, NULL);
-    if(dbkey.salt.data == NULL) {
-        ASSERT_OUTOFMEM(env);
-        goto finish;
-    }
-
-    /*
-     * Extract the password into a SECItem, which has the side effect
-     * of clearing the password.
-     */
-    pwitem = passwordToSecitem(env, passwordObject, globalSaltArray);
-    if(pwitem == NULL) {
-        PR_ASSERT( (*env)->ExceptionOccurred(env) );
-        goto finish;
-    }
-
-    /*
-     * Get the PKCS #11 slot
-     */
-    if( JSS_PK11_getStoreSlotPtr(env, this, &slot) != PR_SUCCESS) {
-        PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
-        goto finish;
-    }
-
-    /*
-     * Now decode and import
-     */
-    result = decodeAndImportEncryptedKey(&dbkey, pwitem, slot, keyType, temporary);
-    if( result == TOKEN_FAILURE ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to import key to token");
-    } else if( result == DECODE_FAILURE ) {
-        JSS_throwMsg(env, INVALID_KEY_FORMAT_EXCEPTION,
-            "Failed to decode key");
-    } else if( result == LOGIN_FAILURE ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to login to token");
-    } else {
-        PR_ASSERT( result == SUCCESS );
-    }
-
-finish:
-    /* Save any exceptions */
-    if( (excep=(*env)->ExceptionOccurred(env)) ) {
-        (*env)->ExceptionClear(env);
-    }
-    if(dbkey.derPK.data != NULL) {
-        (*env)->ReleaseByteArrayElements(   env,
-                                            encodedKeyArray,
-                                            (jbyte*) dbkey.derPK.data,
-                                            JNI_ABORT           );
-    }
-    if(dbkey.salt.data != NULL) {
-        (*env)->ReleaseByteArrayElements(   env,
-                                            saltArray,
-                                            (jbyte*) dbkey.salt.data,
-                                            JNI_ABORT           );
-    }
-    if(pwitem) {
-        SECITEM_ZfreeItem(pwitem, PR_TRUE);
-    }
-    /* now re-throw the exception */
-    if( excep ) {
-        (*env)->Throw(env, excep);
-    }
-}
-
-
-/***********************************************************************
- * PK11Store.importEncryptedPrivateKey
- */
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_pkcs11_PK11Store_importEncryptedPrivateKey
-    (   JNIEnv *env,
-        jobject this,
-        jbyteArray encodedKeyArray,
-        jobject passwordObject,
-        jbyteArray saltArray,
-        jbyteArray globalSaltArray,
-        jobject keyTypeObj        )
-{
-    importEncryptedPrivateKey(env, this, encodedKeyArray, passwordObject,
-        saltArray, globalSaltArray, keyTypeObj, PR_FALSE /* not temporary */);
-}
 
 /***********************************************************************
  * importPrivateKey
@@ -1078,11 +591,11 @@ importPrivateKey
         PRBool temporary            )
 {
     SECItem derPK;
-    ImportResult result;
     PK11SlotInfo *slot;
     jthrowable excep;
     KeyType keyType;
-
+    SECStatus status;
+    SECItem nickname;
 
     keyType = JSS_PK11_getKeyType(env, keyTypeObj);
     if( keyType == nullKey ) {
@@ -1093,7 +606,6 @@ importPrivateKey
     /*
      * initialize so we can goto finish
      */
-    /* dbkey.arena = NULL; */
     derPK.data = NULL;
     derPK.len = 0;
 
@@ -1128,23 +640,15 @@ importPrivateKey
         goto finish;
     }
 
-    /*
-     * Now decode and import
-     */
-    result = decodeAndImportKey(&derPK, slot, keyType, temporary);
-    if( result == TOKEN_FAILURE ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to import key to token");
-    } else if( result == DECODE_FAILURE ) {
-        JSS_throwMsg(env, INVALID_KEY_FORMAT_EXCEPTION,
-            "Failed to decode key");
-    } else if( result == KEY_EXISTS) {
-        JSS_throwMsg(env, KEY_EXISTS_EXCEPTION, "Key already in token");
-    } else if( result == KEYID_FAILURE ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Error creating Key ID");
-    } else if( result == LOGIN_FAILURE ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to login to token");
-    } else {
-        PR_ASSERT( result == SUCCESS );
+    nickname.len = 0;
+    nickname.data = NULL;
+
+    status = PK11_ImportDERPrivateKeyInfo(slot, &derPK, &nickname,
+                NULL /*public value*/, PR_TRUE /*isPerm*/,
+                PR_TRUE /*isPrivate*/, 0 /*keyUsage*/, NULL /*wincx*/);
+    if(status != SECSuccess) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to import private key info");
+        goto finish;
     }
 
 finish:
@@ -1177,21 +681,4 @@ Java_org_mozilla_jss_pkcs11_PK11Store_importPrivateKey
 {
     importPrivateKey(env, this, keyArray,
         keyTypeObj, PR_FALSE /* not temporary */);
-}
-
-/***********************************************************************
- * PK11Store.importTemporaryEncryptedPrivateKey
- */
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_pkcs11_PK11Store_importTemporaryEncryptedPrivateKey
-    (   JNIEnv *env,
-        jobject this,
-        jbyteArray encodedKeyArray,
-        jobject passwordObject,
-        jbyteArray saltArray,
-        jbyteArray globalSaltArray,
-        jobject keyTypeObj        )
-{
-    importEncryptedPrivateKey(env, this, encodedKeyArray, passwordObject,
-        saltArray, globalSaltArray, keyTypeObj, PR_FALSE /* temporary */);
 }

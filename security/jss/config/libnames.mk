@@ -36,12 +36,6 @@
 #######################################################################
 
 #
-# jss hclhacks library
-#
-
-LIBJSSHCLHACKS = $(SOURCE_LIB_DIR)/$(LIB_PREFIX)jsshclhacks$(STATIC_LIB_EXTENSION)$(STATIC_LIB_SUFFIX_FOR_LINKING)
-
-#
 # jss library
 #
 
@@ -130,12 +124,6 @@ endif
 #######################################################################
 # Initialize variables containing DYNAMIC component library names     #
 #######################################################################
-
-#
-# jss hclhacks library
-#
-
-DLLJSSHCLHACKS = $(SOURCE_LIB_DIR)/$(DLL_PREFIX)jsshclhacks$(DYNAMIC_LIB_EXTENSION)$(JDK_DEBUG_SUFFIX)$(DYNAMIC_LIB_SUFFIX_FOR_LINKING)
 
 #
 # jss library

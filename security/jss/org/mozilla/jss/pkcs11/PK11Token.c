@@ -992,7 +992,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_generatePK10
 	    PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
 	    goto finish;
 	  }
-	dsaParams = PQG_NewParams(&p, &q, &g);
+	dsaParams = PK11_PQG_NewParams(&p, &q, &g);
 	if(dsaParams == NULL) {
 	  JSS_throw(env, OUT_OF_MEMORY_ERROR);
 	  goto finish;
@@ -1037,7 +1037,7 @@ finish:
       SECITEM_FreeItem(&p, PR_FALSE);
       SECITEM_FreeItem(&q, PR_FALSE);
       SECITEM_FreeItem(&g, PR_FALSE);
-      PQG_DestroyParams(dsaParams);
+      PK11_PQG_DestroyParams(dsaParams);
     }
 
     if (b64request == NULL) {

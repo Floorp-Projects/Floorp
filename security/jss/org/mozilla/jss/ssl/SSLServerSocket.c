@@ -117,7 +117,7 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
     /* setup the handshake callback */
     status = SSL_HandshakeCallback(newSD->fd, JSSL_HandshakeCallback,
                                     newSD);
-    if( status != PR_SUCCESS ) {
+    if( status != SECSuccess ) {
         JSS_throwMsg(env, SOCKET_EXCEPTION,
             "Unable to install handshake callback");
     }

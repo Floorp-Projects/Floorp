@@ -47,12 +47,6 @@
 #include <pk11util.h>
 #include <Algorithm.h>
 
-#define LITTLE_HCLHACK
-#ifdef LITTLE_HCLHACK
-/* PKCS #11 HACK */
-#include <secmodi.h>
-#endif
-
 #define MAX_PRIVATE_KEY_LEN     MAX_RSA_MODULUS_LEN
 
 /*
@@ -61,21 +55,6 @@
  * modulus and exponent. 4096 bytes will hold at least a 4096-bit RSA key.
  */
 #define MAX_WRAPPED_KEY_LEN     4096
-
-#ifdef LITTLE_HCLHACK
-
-static void
-pk11_EnterKeyMonitor(PK11SymKey *symKey) {
-    if (!symKey->sessionOwner || !(symKey->slot->isThreadSafe))
-        PK11_EnterSlotMonitor(symKey->slot);
-}
-
-static void
-pk11_ExitKeyMonitor(PK11SymKey *symKey) {
-    if (!symKey->sessionOwner || !(symKey->slot->isThreadSafe))
-        PK11_ExitSlotMonitor(symKey->slot);
-}
-#endif
 
 /***********************************************************************
  *

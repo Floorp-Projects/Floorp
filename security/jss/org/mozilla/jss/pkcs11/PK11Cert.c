@@ -250,6 +250,15 @@ JSS_PK11_getCertPtr(JNIEnv *env, jobject certObject, CERTCertificate **ptr)
 			CERT_PROXY_SIG, (void**)ptr);
 }
 
+/*
+ * This is a shady way of deciding if the cert is a user cert.
+ * Hopefully it will work. What we used to do was check for cert->slot.
+ */
+#define isUserCert(cert) \
+    ( ((cert)->trust->sslFlags           & CERTDB_USER) || \
+      ((cert)->trust->emailFlags         & CERTDB_USER) || \
+      ((cert)->trust->objectSigningFlags & CERTDB_USER) )
+
 /****************************************************************
  *
  * J S S _ P K 1 1 _ w r a p C e r t
@@ -267,23 +276,19 @@ JSS_PK11_wrapCert(JNIEnv *env, CERTCertificate **cert)
 	jbyteArray byteArray;
 	jobject Cert=NULL;
     char *className;
-    PK11SlotInfo *certSlot = NULL;
-    CK_OBJECT_HANDLE certID;
+    PK11SlotInfo *slot = NULL;
 
 	PR_ASSERT(env!=NULL && cert!=NULL && *cert!=NULL);
 
 	byteArray = JSS_ptrToByteArray(env, *cert);
 
-    /*
-     * This call will update the correct slot to cert->slot, which otherwise
-     * might not be accurate.
-     */
-    certID = PK11_FindObjectForCert(*cert, NULL, &certSlot);
+    /* Is this a user cert? */
+    slot = PK11_KeyForCertExists(*cert, NULL /*keyPtr*/, NULL /*wincx*/);
 
 	/*
 	 * Lookup the class and constructor
 	 */
-    if( (*cert)->slot ) {
+    if( slot ) {
         if( (*cert)->isperm ) {
             /* it has a slot and it's in the permanent database */
             className = INTERNAL_TOKEN_CERT_CLASS_NAME;
@@ -327,8 +332,8 @@ finish:
 	if(Cert==NULL) {
 		CERT_DestroyCertificate(*cert);
 	}
-    if(certSlot!=NULL) {
-        PK11_FreeSlot(certSlot);
+    if( slot != NULL ) {
+        PK11_FreeSlot(slot);
     }
 	*cert = NULL;
 	return Cert;

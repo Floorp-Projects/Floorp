@@ -43,14 +43,6 @@ public final class PK11Store implements CryptoStore {
     ////////////////////////////////////////////////////////////
     // Private Keys
     ////////////////////////////////////////////////////////////
-    public native void
-    importEncryptedPrivateKey(  byte[] encodedKey,
-                                Password password,
-                                byte[] salt,
-                                byte[] globalSalt,
-                                PrivateKey.Type type    )
-        throws InvalidKeyFormatException, TokenException;
-
     /**
      * Imports a raw private key into this token.
      *
@@ -62,31 +54,6 @@ public final class PK11Store implements CryptoStore {
     importPrivateKey(  byte[] key,
                        PrivateKey.Type type       )
         throws TokenException,KeyAlreadyImportedException;
-
-
-
-    /** 
-     * @deprecated
-     */
-    public void
-    importEncryptedPrivateKey(  byte[] encodedKey,
-                                Password password,
-                                byte[] salt,
-                                byte[] globalSalt         )
-                throws InvalidKeyFormatException, TokenException {
-
-        importEncryptedPrivateKey(  encodedKey, password, salt, globalSalt,
-                                    PrivateKey.RSA );
-    }
-                
-
-    public native void
-    importTemporaryEncryptedPrivateKey( byte[] encodedKey,
-                                        Password password,
-                                        byte[] salt,
-                                        byte[] globalSalt,
-                                        PrivateKey.Type type )
-        throws InvalidKeyFormatException, TokenException;
 
     public synchronized PrivateKey[]
     getPrivateKeys() throws TokenException {

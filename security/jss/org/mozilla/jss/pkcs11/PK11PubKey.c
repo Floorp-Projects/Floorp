@@ -47,8 +47,6 @@
 #include <jssutil.h>
 #include "pk11util.h"
 
-#include <hclhacks.h>
-
 #include "java_ids.h"
 #include <jss_exceptions.h>
 #include <jss_bigint.h>
@@ -569,7 +567,6 @@ Java_org_mozilla_jss_pkcs11_PK11PubKey_getEncoded
     (JNIEnv *env, jobject this)
 {
     SECKEYPublicKey *pubk;
-    CERTSubjectPublicKeyInfo *spki=NULL;
     jbyteArray encodedBA=NULL;
     SECItem *spkiDER=NULL;
     
@@ -579,19 +576,7 @@ Java_org_mozilla_jss_pkcs11_PK11PubKey_getEncoded
         goto finish;
     }
 
-    /* get the subjectpublickeyinfo */
-    spki = SECKEY_CreateSubjectPublicKeyInfo(pubk);
-    if( spki == NULL ) {
-        /* out of memory? */
-        JSS_trace(env, JSS_TRACE_ERROR, "unable to convert public key to"
-            " SubjectPublicKeyInfo");
-        JSS_throw(env, OUT_OF_MEMORY_ERROR);
-        goto finish;
-    }
-
-    /* DER-encode the subjectpublickeyinfo */
-    spkiDER = SEC_ASN1EncodeItem(NULL /*arena*/, NULL/*dest*/, spki,
-                    CERT_SubjectPublicKeyInfoTemplate);
+    spkiDER = PK11_DEREncodePublicKey(pubk);
     if( spkiDER == NULL ) {
         JSS_trace(env, JSS_TRACE_ERROR, "unable to DER-encode"
                 " SubjectPublicKeyInfo");
@@ -603,9 +588,6 @@ Java_org_mozilla_jss_pkcs11_PK11PubKey_getEncoded
     encodedBA = JSS_SECItemToByteArray(env, spkiDER);
 
 finish:
-    if(spki!=NULL) {
-        SECKEY_DestroySubjectPublicKeyInfo(spki);
-    }
     if(spkiDER!=NULL) {
         SECITEM_FreeItem(spkiDER, PR_TRUE /*freeit*/);
     }

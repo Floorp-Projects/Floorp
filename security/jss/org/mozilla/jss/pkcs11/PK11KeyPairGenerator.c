@@ -256,7 +256,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
         PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
         goto finish;
     }
-    params = PQG_NewParams(&p, &q, &g);
+    params = PK11_PQG_NewParams(&p, &q, &g);
     if(params == NULL) {
         JSS_throw(env, OUT_OF_MEMORY_ERROR);
         goto finish;
@@ -301,6 +301,6 @@ finish:
     SECITEM_FreeItem(&p, PR_FALSE);
     SECITEM_FreeItem(&q, PR_FALSE);
     SECITEM_FreeItem(&g, PR_FALSE);
-    PQG_DestroyParams(params);
+    PK11_PQG_DestroyParams(params);
     return keyPair;
 }

@@ -49,56 +49,6 @@ public interface CryptoStore {
     ////////////////////////////////////////////////////////////
 
     /**
-     * Imports an encoded, encrypted private key into this token.
-     *
-     * @param encodedKey The encoded, encrypted private key. These bytes
-     *      are expected to be a DER-encoded PKCS #8 EncryptedKeyInfo.
-     *      Currently, the only encryption algorithm is RC4.
-     * @param password The password that encodes this key. The password
-     *      will be cleared by this method. This password,
-     *      together with the salt, are used to construct the decrypting key.
-     * @param salt The password salt.
-     * @exception InvalidKeyFormatException If the key cannot be decoded.
-     *      This may be caused by supplying an incorrect password, or
-     *      it may be due to corrupted data.
-     * @exception TokenException If the key cannot be imported to this token.
-     * @deprecated A key type should be specified so that the correct usages
-     *      can be enabled on the key.
-     */
-    public void
-    importEncryptedPrivateKey(  byte[] encodedKey,
-                                Password password,
-                                byte[] salt,
-                                byte[] globalSalt       )
-        throws InvalidKeyFormatException, TokenException;
-
-    /**
-     * Imports an encoded, encrypted private key into this token.
-     *
-     * @param encodedKey The encoded, encrypted private key. These bytes
-     *      are expected to be a DER-encoded PKCS #8 EncryptedKeyInfo.
-     *      Currently, the only encryption algorithm is RC4.
-     * @param password The password that encodes this key. The password
-     *      will be cleared by this method. This password,
-     *      together with the salt, are used to construct the decrypting key.
-     * @param salt The password salt.
-     * @param type The type of the private key. This is used to enable the
-     *      right operations for the key.
-     * @exception InvalidKeyFormatException If the key cannot be decoded.
-     *      This may be caused by supplying an incorrect password, or
-     *      it may be due to corrupted data.
-     * @exception TokenException If the key cannot be imported to this token.
-	 * @deprecated Use importPrivateKey instead.
-     */
-    public void
-    importEncryptedPrivateKey(  byte[] encodedKey,
-                                Password password,
-                                byte[] salt,
-                                byte[] globalSalt,
-                                PrivateKey.Type type       )
-        throws InvalidKeyFormatException, TokenException;
-
-    /**
      * Imports a raw private key into this token.
      *
      * @param key The private key.
@@ -110,33 +60,6 @@ public interface CryptoStore {
                        PrivateKey.Type type       )
         throws TokenException, KeyAlreadyImportedException;
 
-
-    /**
-     * Imports an encoded, encrypted private key into this token, and stores
-     *      it as a temporary (session) object. The key will be deleted
-     *      when it is garbage collected.
-     *
-     * @param encodedKey The encoded, encrypted private key. These bytes
-     *      are expected to be a DER-encoded PKCS #8 EncryptedKeyInfo.
-     *      Currently, the only encryption algorithm is RC4.
-     * @param password The password that encodes this key. The password
-     *      will be cleared by this method. This password,
-     *      together with the salt, are used to construct the decrypting key.
-     * @param salt The password salt.
-     * @param type The type of the private key. This is used to enable the
-     *      right operations for the key.
-     * @exception InvalidKeyFormatException If the key cannot be decoded.
-     *      This may be caused by supplying an incorrect password, or
-     *      it may be due to corrupted data.
-     * @exception TokenException If the key cannot be imported to this token.
-     */
-    public void
-    importTemporaryEncryptedPrivateKey( byte[] encodedKey,
-                                        Password password,
-                                        byte[] salt,
-                                        byte[] globalSalt,
-                                        PrivateKey.Type type       )
-        throws InvalidKeyFormatException, TokenException;
 
     /**
      * Returns all private keys stored on this token.

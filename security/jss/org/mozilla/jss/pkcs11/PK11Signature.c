@@ -48,9 +48,6 @@
 #include <jss_exceptions.h>
 #include "pk11util.h"
 
-/*** temporary? ***/
-#include <hclhacks.h>
-
 static PRStatus
 getPrivateKey(JNIEnv *env, jobject sig, SECKEYPrivateKey**key);
 
@@ -120,7 +117,7 @@ JNIEXPORT void JNICALL
 Java_org_mozilla_jss_pkcs11_PK11Signature_initVfyContext
 	(JNIEnv *env, jobject this)
 {
-	VFYContext2 *ctxt=NULL;
+	VFYContext *ctxt=NULL;
 	jobject contextProxy=NULL;
 	SECKEYPublicKey *pubk;
 
@@ -129,13 +126,14 @@ Java_org_mozilla_jss_pkcs11_PK11Signature_initVfyContext
 		goto finish;
 	}
 	
-	ctxt = VFY_CreateContext2(pubk, getAlgorithm(env, this));
+	ctxt = VFY_CreateContext(pubk, NULL /*sig*/, getAlgorithm(env, this),
+                NULL /*wincx*/);
 	if( ctxt == NULL) {
 		JSS_throwMsg(env, TOKEN_EXCEPTION,
 			"Unable to create verification context");
 		goto finish;
 	}
-	if( VFY_Begin2(ctxt) != SECSuccess) {
+	if( VFY_Begin(ctxt) != SECSuccess) {
 		JSS_throwMsg(env, TOKEN_EXCEPTION,
 			"Unable to begin verification context");
 		goto finish;
@@ -155,7 +153,7 @@ finish:
 	if(contextProxy==NULL && ctxt!=NULL) {
 		/* we created a context but not the Java wrapper, so we need to
 	 	 * delete the context here */
-		VFY_DestroyContext2(ctxt, PR_TRUE /*freeit*/);
+		VFY_DestroyContext(ctxt, PR_TRUE /*freeit*/);
 	}
 }
 
@@ -201,7 +199,7 @@ Java_org_mozilla_jss_pkcs11_PK11Signature_engineUpdateNative
         }
     } else {
         PR_ASSERT( type == VFY_CONTEXT );
-        if( VFY_Update2( (VFYContext2*)ctxt,
+        if( VFY_Update( (VFYContext*)ctxt,
                         (unsigned char*)bytes,
                         (unsigned) numBytes ) != SECSuccess)
         {
@@ -280,7 +278,7 @@ Java_org_mozilla_jss_pkcs11_PK11Signature_engineVerifyNative
 	(JNIEnv *env, jobject this, jbyteArray sigArray)
 {
 	jboolean verified = JNI_FALSE;
-	VFYContext2 *ctxt;
+	VFYContext *ctxt;
 	SigContextType type;
 	SECItem sigItem = {siBuffer, NULL, 0};
 
@@ -316,7 +314,7 @@ Java_org_mozilla_jss_pkcs11_PK11Signature_engineVerifyNative
 	/*
 	 * Finish the verification operation
 	 */
-	if( VFY_End2(ctxt, &sigItem, NULL) == SECSuccess) {
+	if( VFY_EndWithSignature(ctxt, &sigItem) == SECSuccess) {
 		verified = JNI_TRUE;
 	} else if( PR_GetError() != SEC_ERROR_BAD_SIGNATURE) {
 		PR_ASSERT(PR_FALSE);
@@ -668,7 +666,7 @@ Java_org_mozilla_jss_pkcs11_SigContextProxy_releaseNativeResources
         SGN_DestroyContext( (SGNContext*)proxy->ctxt, PR_TRUE /*freeit*/);
     } else {
         PR_ASSERT(proxy->type == VFY_CONTEXT);
-        VFY_DestroyContext2( (VFYContext2*)proxy->ctxt, PR_TRUE /*freeit*/);
+        VFY_DestroyContext( (VFYContext*)proxy->ctxt, PR_TRUE /*freeit*/);
     }
     PR_Free(proxy);
 

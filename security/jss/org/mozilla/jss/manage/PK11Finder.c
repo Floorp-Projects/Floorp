@@ -48,6 +48,11 @@
 #include "pk11util.h"
 #include <java_ids.h>
 
+/*
+ * This is a semi-private NSS function, exposed only for JSS.
+ */
+SECStatus
+CERT_ImportCAChainTrusted(SECItem *certs, int numcerts, SECCertUsage certUsage);
 
 /*****************************************************************
  *
@@ -89,34 +94,6 @@ finish:
     return certObject;
 }
 
-/*
- * Creates or adds to a list of all certs with a give nickname, sorted by
- * validity time, newest first.  Invalid certs are considered older than valid
- * certs. If validOnly is set, do not include invalid certs on list.
- */
-static CERTCertList *
-CreateNicknameCertList(CERTCertList *certList, CERTCertDBHandle *handle,
-                            char *nickname, int64 sorttime, PRBool validOnly)
-{
-    CERTCertificate *cert;
-    CERTCertList *ret;
-
-    cert = CERT_FindCertByNickname(handle, nickname);
-    if ( cert == NULL ) {
-        cert = PK11_FindCertFromNickname(nickname,NULL);
-        if( cert == NULL ) {
-            return NULL;
-        }
-    }
-
-    ret = CERT_CreateSubjectCertList(certList, handle, &cert->derSubject,
-                                     sorttime, validOnly);
-
-    CERT_DestroyCertificate(cert);
-
-    return(ret);
-}
-
 /*****************************************************************
  *
  * CryptoManager. f i n d C e r t s B y N i c k n a m e N a t i v e
@@ -142,8 +119,7 @@ Java_org_mozilla_jss_CryptoManager_findCertsByNicknameNative
     }
 
     /* get the list of certs with the given nickname */
-    list = CreateNicknameCertList(NULL, CERT_GetDefaultCertDB(),
-                    (char*)nickChars, PR_Now(), PR_FALSE /* validOnly */);
+    list = PK11_FindCertsFromNickname( (char*)nickChars, NULL /*wincx*/);
     if( list == NULL ) {
         count = 0;
     } else {
@@ -555,156 +531,6 @@ loser:
     return SECFailure;
 }
 
-static SECStatus
-ImportCAChain(SECItem *certs, int numcerts, SECCertUsage certUsage)
-{
-    SECStatus rv;
-    SECItem *derCert;
-    SECItem certKey;
-    PRArenaPool *arena;
-    CERTCertificate *cert = NULL;
-    CERTCertificate *newcert = NULL;
-    CERTCertDBHandle *handle;
-    CERTCertTrust trust;
-    PRBool isca;
-    char *nickname;
-    unsigned int certtype;
-    
-    handle = CERT_GetDefaultCertDB();
-    
-    arena = NULL;
-
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if ( ! arena ) {
-        goto loser;
-    }
-
-    while (numcerts--) {
-        derCert = certs;
-        certs++;
-        
-        /* get the key (issuer+cn) from the cert */
-        rv = CERT_KeyFromDERCert(arena, derCert, &certKey);
-        if ( rv != SECSuccess ) {
-            goto loser;
-        }
-
-        /* same cert already exists in the database, don't need to do
-         * anything more with it
-         */
-        cert = CERT_FindCertByKey(handle, &certKey);
-        if ( cert ) {
-            CERT_DestroyCertificate(cert);
-            cert = NULL;
-            continue;
-        }
-
-        /* decode my certificate */
-        newcert = CERT_DecodeDERCertificate(derCert, PR_FALSE, NULL);
-        if ( newcert == NULL ) {
-            goto loser;
-        }
-
-        /* does it have the CA extension */
-        
-        /*
-         * Make sure that if this is an intermediate CA in the chain that
-         * it was given permission by its signer to be a CA.
-         */
-        isca = CERT_IsCACert(newcert, &certtype);
-
-        if ( isca ) {
-
-            /* SSL ca's must have the ssl bit set */
-            if ( ( certUsage == certUsageSSLCA ) &&
-                ( ( certtype & NS_CERT_TYPE_SSL_CA ) != NS_CERT_TYPE_SSL_CA ) ){
-                goto endloop;
-            }
-
-            /* it passed all of the tests, so lets add it to the database */
-            /* mark it as a CA */
-            PORT_Memset((void *)&trust, 0, sizeof(trust));
-            switch ( certUsage ) {
-            case certUsageSSLCA:
-                trust.sslFlags = CERTDB_VALID_CA;
-                break;
-            case certUsageUserCertImport:
-                if ( ( certtype & NS_CERT_TYPE_SSL_CA ) == NS_CERT_TYPE_SSL_CA){
-                    trust.sslFlags = CERTDB_VALID_CA;
-                }
-                if ( ( certtype & NS_CERT_TYPE_EMAIL_CA ) ==
-                    NS_CERT_TYPE_EMAIL_CA ) {
-                    trust.emailFlags = CERTDB_VALID_CA;
-                }
-                if ( ( certtype & NS_CERT_TYPE_OBJECT_SIGNING_CA ) ==
-                    NS_CERT_TYPE_OBJECT_SIGNING_CA ) {
-                    trust.objectSigningFlags = CERTDB_VALID_CA;
-                }
-                break;
-            default:
-                PORT_Assert(0);
-                break;
-            }
-        } else {
-            trust.sslFlags = CERTDB_VALID_CA;
-            trust.emailFlags =  CERTDB_VALID_CA;
-            trust.objectSigningFlags = CERTDB_VALID_CA;
-        }
-        
-        cert = CERT_NewTempCertificate(handle, derCert, NULL, PR_FALSE,
-            PR_TRUE);
-        if ( cert == NULL ) {
-            goto loser;
-        }
-        
-        /* get a default nickname for it */
-        nickname = CERT_MakeCANickname(cert);
-
-        rv = CERT_AddTempCertToPerm(cert, nickname, &trust);
-        /* free the nickname */
-        if ( nickname ) {
-            PORT_Free(nickname);
-        }
-
-        CERT_DestroyCertificate(cert);
-        cert = NULL;
-        
-        if ( rv != SECSuccess ) {
-            goto loser;
-        }
-
-endloop:
-        if ( newcert ) {
-            CERT_DestroyCertificate(newcert);
-            newcert = NULL;
-        }
-        
-    }
-
-    rv = SECSuccess;
-    goto done;
-loser:
-    rv = SECFailure;
-done:
-    
-    if ( newcert ) {
-        CERT_DestroyCertificate(newcert);
-        newcert = NULL;
-    }
-    
-    if ( cert ) {
-        CERT_DestroyCertificate(cert);
-        cert = NULL;
-    }
-    
-    if ( arena ) {
-        PORT_FreeArena(arena, PR_FALSE);
-    }
-
-    return(rv);
-}
-
-
 /***********************************************************************
  * CryptoManager.importCertToPerm
  *  - add the certificate to the permanent database 
@@ -716,52 +542,139 @@ Java_org_mozilla_jss_CryptoManager_importCertToPermNative
     (JNIEnv *env, jobject this, jobject cert, jstring nickString)
 {
     SECStatus rv;
-    CERTCertificate *newCert;
-    CERTCertTrust    trustflags;
+    CERTCertificate *oldCert;
     jobject          result=NULL;
     char *nickname=NULL;
+    CERTCertificate **certArray = NULL;
+    SECItem *derCertArray[1];
 
     /* first, get the NSS cert pointer from the 'cert' object */
 
-    if ( JSS_PK11_getCertPtr(env, cert, &newCert) != PR_SUCCESS) {
+    if ( JSS_PK11_getCertPtr(env, cert, &oldCert) != PR_SUCCESS) {
         PR_ASSERT( (*env)->ExceptionOccurred(env) != NULL);
         goto finish;
     }
-    PR_ASSERT(newCert != NULL);
+    PR_ASSERT(oldCert != NULL);
 
     if (nickString != NULL) {
         nickname = (char*) (*env)->GetStringUTFChars(env, nickString, NULL);
     }
-
-    trustflags.sslFlags = 0;
-    trustflags.emailFlags = 0;
-    trustflags.objectSigningFlags = 0;
-
     /* Then, add to permanent database */
 
-    rv = CERT_AddTempCertToPerm(newCert, nickname,
-               &trustflags);
-
-    if (rv == SECSuccess) {
-        /* build return object */
-        result = JSS_PK11_wrapCert(env, &newCert);
+    derCertArray[0] = &oldCert->derCert;
+    rv = CERT_ImportCerts(CERT_GetDefaultCertDB(), -1 /* usage */,
+            1, derCertArray, &certArray, PR_TRUE /*keepCerts*/,
+            PR_FALSE /*caOnly*/, nickname);
+    if( rv != SECSuccess || certArray == NULL || certArray[0] == NULL) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to insert certificate"
+                " into permanent database");
+        goto finish;
     }
-    else {
-        /*  CERT_AddTempCertToPerm does not properly set NSPR
-            Error value, so no detail can be retrieved
-        */
-        JSS_throwMsg(env, TOKEN_EXCEPTION,
-                    "Unable to insert certificate into permanent database");
+    result = JSS_PK11_wrapCert(env, &certArray[0]);
 
-
-    }
+finish:
+    /* this checks for NULL */
+    CERT_DestroyCertArray(certArray, 1);
     if (nickname != NULL) {
         (*env)->ReleaseStringUTFChars(env, nickString, nickname);
     }
-
-finish:
     return result;
+}
 
+static unsigned char*
+data_start(unsigned char *buf, int length, unsigned int *data_length,
+    PRBool includeTag)
+{
+    unsigned char tag;
+    int used_length= 0;
+
+    tag = buf[used_length++];
+
+    /* blow out when we come to the end */
+    if (tag == 0) {
+        return NULL;
+    }
+
+    *data_length = buf[used_length++];
+
+    if (*data_length&0x80) {
+        int  len_count = *data_length & 0x7f;
+
+        *data_length = 0;
+
+        while (len_count-- > 0) {
+            *data_length = (*data_length << 8) | buf[used_length++];
+        } 
+    }
+
+    if (*data_length > (length-used_length) ) {
+        *data_length = length-used_length;
+        return NULL;
+    }
+    if (includeTag) *data_length += used_length;
+
+    return (buf + (includeTag ? 0 : used_length));      
+}
+
+static PRStatus
+getCertFields(SECItem *derCert, SECItem *issuer,
+                     SECItem *serial, SECItem *subject)
+{
+    unsigned char *buf;
+    unsigned int buf_length;
+    unsigned char *date;
+    unsigned int datelen;
+    unsigned char *cert = derCert->data;
+    unsigned int cert_length = derCert->len;
+
+    /* get past the signature wrap */
+    buf = data_start(cert,cert_length,&buf_length,PR_FALSE);
+    if (buf == NULL) return PR_FAILURE;
+
+    /* get into the raw cert data */
+    buf = data_start(buf,buf_length,&buf_length,PR_FALSE);
+    if (buf == NULL) return PR_FAILURE;
+
+    /* skip past any optional version number */
+    if ((buf[0] & 0xa0) == 0xa0) {
+        date = data_start(buf,buf_length,&datelen,PR_FALSE);
+        if (date == NULL) return PR_FAILURE;
+        buf_length -= (date-buf) + datelen;
+        buf = date + datelen;
+    }
+
+    /* serial number */
+    serial->data = data_start(buf,buf_length,&serial->len,PR_FALSE);
+    if (serial->data == NULL) return PR_FAILURE;
+    buf_length -= (serial->data-buf) + serial->len;
+    buf = serial->data + serial->len;
+
+    /* skip the OID */
+    date = data_start(buf,buf_length,&datelen,PR_FALSE);
+    if (date == NULL) return PR_FAILURE;
+    buf_length -= (date-buf) + datelen;
+    buf = date + datelen;
+
+    /* issuer */
+    issuer->data = data_start(buf,buf_length,&issuer->len,PR_TRUE);
+    if (issuer->data == NULL) return PR_FAILURE;
+    buf_length -= (issuer->data-buf) + issuer->len;
+    buf = issuer->data + issuer->len;
+
+    /* skip the date */
+    date = data_start(buf,buf_length,&datelen,PR_FALSE);
+    if (date == NULL) return PR_FAILURE;
+    buf_length -= (date-buf) + datelen;
+    buf = date + datelen;
+
+    /*subject */
+    subject->data=data_start(buf,buf_length,&subject->len,PR_TRUE);
+    if (subject->data == NULL) return PR_FAILURE;
+    buf_length -= (subject->data-buf) + subject->len;
+    buf = subject->data +subject->len;
+
+    /*subject */
+    return PR_SUCCESS;
 }
 
 
@@ -771,7 +684,7 @@ finish:
  *    0 if no leaf found. 
  *    1 if leaf is found
  */
-static int find_leaf_cert(
+static int find_child_cert(
   CERTCertDBHandle *certdb,
   SECItem *derCerts, 
   int numCerts, 
@@ -780,47 +693,41 @@ static int find_leaf_cert(
   int *leaf_link
 ) 
 {
-      CERTCertificate *curCert = NULL;
-      CERTCertificate *theCert = NULL;
-      int i;
-      int status = 0;
+    int i;
+    int status = 0;
+    SECItem parentIssuer, parentSerial, parentSubject;
+    PRStatus decodeStatus;
 
-      theCert= CERT_NewTempCertificate(certdb, &derCerts[cur_link], 
-                 NULL, PR_FALSE /* isperm */, PR_TRUE /*copyDER*/);
-      if (theCert == NULL) {
+    decodeStatus = getCertFields(&derCerts[cur_link], &parentIssuer,
+        &parentSerial, &parentSubject);
+    if( decodeStatus != PR_SUCCESS ) {
         status = -1;
         goto finish;
-      }
-      for (i=0; i<numCerts; i++) {
+    }
+
+    for (i=0; i<numCerts; i++) {
+        SECItem childIssuer, childSerial, childSubject;
+
         if (linked[i] == 1) {
-          /* help speeding up the searching */
-          continue;
+            continue;
         }
-        curCert = CERT_NewTempCertificate(certdb, &derCerts[i], NULL,
-              PR_FALSE /* isperm */, PR_TRUE /*copyDER*/);
-        if(curCert == NULL) {
-          status = -1;
-          goto finish;
+        status = getCertFields(&derCerts[i], &childIssuer, &childSerial,
+                                &childSubject);
+        if( status != PR_SUCCESS ) {
+            status = -1;
+            goto finish;
         }
-        if (SECITEM_CompareItem(&theCert->derSubject, 
-                                &curCert->derIssuer) == SECEqual) {
-          linked[i] = 1;
-          *leaf_link = i;
-          status = 1; /* got it */
-          goto finish;
+        if (SECITEM_CompareItem(&parentSubject, &childIssuer) == SECEqual) {
+            linked[i] = 1;
+            *leaf_link = i;
+            status = 1; /* got it */
+            goto finish;
         } 
-        CERT_DeleteTempCertificate(curCert);
-        curCert = NULL;
-      } /* for */
+      }
 
 finish:
-      if (theCert != NULL) {
-        CERT_DeleteTempCertificate(theCert);
-      }
-      if (curCert != NULL) {
-        CERT_DeleteTempCertificate(curCert);
-      }
-      return status;
+    /* nothing allocated, nothing freed */
+    return status;
 }
 
 /**
@@ -829,52 +736,52 @@ finish:
  *   1 on success
  *   0 otherwise
  */
-static int find_leaf_cert_in_chain(
+static int find_leaf_cert(
   CERTCertDBHandle *certdb,
   SECItem *derCerts, 
   int numCerts, 
   SECItem *theDerCert
 )
 {
-  int status = 1;
-  int found;
-  int i;
-  int cur_link, leaf_link;
-  int *linked = NULL;
+    int status = 1;
+    int found;
+    int i;
+    int cur_link, leaf_link;
+    int *linked = NULL;
 
-  linked = PR_Malloc( sizeof(int) * numCerts );
+    linked = PR_Malloc( sizeof(int) * numCerts );
 
-  /* initialize the bitmap */
-  for (i = 0; i < numCerts; i++) {
-    linked[i] = 0;
-  }
+    /* initialize the bitmap */
+    for (i = 0; i < numCerts; i++) {
+      linked[i] = 0;
+    }
 
-  /* pick the first cert to start with */
-  leaf_link = 0;
-  cur_link = leaf_link;
-  linked[leaf_link] = 1;
+    /* pick the first cert to start with */
+    leaf_link = 0;
+    cur_link = leaf_link;
+    linked[leaf_link] = 1;
 
-  while (((found = find_leaf_cert(certdb, 
-     derCerts, numCerts, linked, cur_link, &leaf_link)) == 1))
-  {
-    cur_link = leaf_link;   
-  }
-  if (found == -1) {
-    /* the certificate chain is problemtic! */
-    status = 0; 
-    goto finish;
-  }
+    while (((found = find_child_cert(certdb, 
+       derCerts, numCerts, linked, cur_link, &leaf_link)) == 1))
+    {
+        cur_link = leaf_link;   
+    }
+    if (found == -1) {
+        /* the certificate chain is problemtic! */
+        status = 0; 
+        goto finish;
+    }
   
-  *theDerCert = derCerts[leaf_link]; 
+    *theDerCert = derCerts[leaf_link]; 
 
 finish:
 
-  if (linked != NULL) {
-    PR_Free(linked);
-  }
+    if (linked != NULL) {
+        PR_Free(linked);
+    }
 
-  return status;
-} /* find_leaf_cert_in_chain */
+    return status;
+} /* find_leaf_cert */
 
 /***********************************************************************
  * CryptoManager.importCertPackage
@@ -893,15 +800,16 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     SECStatus status;
     int i, userCertFound = 0;
     DERCertCollection collection;
-    CERTCertificate *leafCert=NULL;
     CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
     CK_OBJECT_HANDLE keyID;
     PK11SlotInfo *slot=NULL;
     char *nickChars = NULL;
     PRBool certExists = PR_FALSE;
     jobject leafObject=NULL;
-    CERTIssuerAndSN *issuerAndSN;
-    PLArenaPool *arena=NULL;
+    CERTIssuerAndSN issuerAndSN;
+    PRStatus decodeStatus;
+    SECItem leafSubject;
+    CERTCertificate *leafCert = NULL;
 
     /***************************************************
      * Validate arguments
@@ -961,24 +869,12 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
      ***************************************************/
     if (numCerts > 1) {
         for (certi=0; certi<numCerts; certi++) {
-            leafCert = CERT_NewTempCertificate(certdb, &derCerts[certi], NULL,
-                            PR_FALSE /* isperm */, PR_TRUE /*copyDER*/);
-            if(leafCert == NULL) {
-                JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
-                    "Failed to create new temporary certificate");
-                goto finish;
-            }
-
-            slot = PK11_KeyForCertExists(leafCert, &keyID, NULL);
-            if (slot !=NULL) { /* found the use cert */
+            slot = PK11_KeyForDERCertExists(&derCerts[certi], &keyID, NULL);
+            if (slot != NULL) { /* found the user cert */
                 theDerCert = derCerts[certi];
-                /* delete it so it wouldn't cause conflict */
-                CERT_DeleteTempCertificate(leafCert);
-                break; /*certi now indicates the location of our user cert in chain*/
+                /*certi now indicates the location of our user cert in chain*/
+                break;
             }
-
-            /* delete it so it wouldn't cause conflict */
-            CERT_DeleteTempCertificate(leafCert);
 
         } /* end for */
 
@@ -988,7 +884,7 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
         */
         if ((slot == NULL)) { /* same as "noUser = 1" */
             /* #397713 */
-            if (!find_leaf_cert_in_chain(certdb, derCerts,
+            if (!find_leaf_cert(certdb, derCerts,
                     numCerts, &theDerCert))
             {
                 JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
@@ -1005,25 +901,20 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     /***************************************************
      * Check to see if this certificate already exists in the database
      ***************************************************/
-    if( SEC_CertDBKeyConflict( &theDerCert, certdb ) ) {
+    if( PK11_KeyForDERCertExists(&theDerCert, NULL/*keyPtr*/, NULL/*wincx*/) ) {
       certExists = PR_TRUE;
     }
 
     /***************************************************
      * Create a new cert structure for the leaf cert
      ***************************************************/
-    leafCert = CERT_NewTempCertificate(certdb, &theDerCert, NULL,
-                PR_FALSE /* isperm */, PR_TRUE /*copyDER*/);
-    if(leafCert == NULL) {
+
+    /* get issuer and serial number of leaf certificate */
+    decodeStatus = getCertFields(&theDerCert, &issuerAndSN.derIssuer,
+        &issuerAndSN.serialNumber, &leafSubject);
+    if( decodeStatus != PR_SUCCESS ) {
         JSS_throwMsg(env, CERTIFICATE_ENCODING_EXCEPTION,
-            "Failed to create new temporary certificate");
-        goto finish;
-    }
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    issuerAndSN = CERT_GetCertIssuerAndSN(arena, leafCert);
-    if(issuerAndSN == NULL) {
-        PR_ASSERT(PR_FALSE);
-        JSS_throw(env, OUT_OF_MEMORY_ERROR);
+            "Failed to extract issuer and serial number from certificate");
         goto finish;
     }
 
@@ -1033,10 +924,10 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     if(noUser) {
         slot = NULL;
     } else { 
-        slot = PK11_KeyForCertExists(leafCert, &keyID, NULL);
+        slot = PK11_KeyForDERCertExists(&theDerCert, &keyID, NULL);
     }
     if( slot == NULL ) {
-        if( !noUser && !CERT_IsCACert(leafCert, NULL)) {
+        if( !noUser && !CERT_IsCADERCert(&theDerCert, NULL)) {
             /*****************************************
              * This isn't a CA cert, but it also doesn't have a matching
              * key, so it's supposed to be a user cert but it has failed
@@ -1062,9 +953,7 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
         /***************************************************
          * Check for nickname conflicts
          ***************************************************/
-        if( SEC_CertNicknameConflict(nickChars,
-                                     &leafCert->derSubject,
-                                     certdb))
+        if( SEC_CertNicknameConflict(nickChars, &leafSubject, certdb))
         {
             JSS_throw(env, NICKNAME_CONFLICT_EXCEPTION);
             goto finish;
@@ -1074,7 +963,7 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
          * Import this certificate onto its token.
          ***************************************************/
         PK11_FreeSlot(slot);
-        slot = PK11_ImportCertForKey(leafCert, nickChars, NULL);
+        slot = PK11_ImportDERCertForKey(&theDerCert, nickChars, NULL);
         if( slot == NULL ) {
             /* We already checked for this, shouldn't fail here */
             if(PR_GetError() == SEC_ERROR_ADDING_CERT) {
@@ -1092,24 +981,12 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     }
 
     /***************************************************
-     * Destroy the leaf cert before calling ImportCAChain.
-     * If a cert is already present in the temp database, ImportCAChain
-     * will skip it.  So we want to take the leaf cert of the database
-     * in case it is a CA cert that needs to be properly imported
-     * by ImportCAChain.
-     ***************************************************/
-    if(leafCert != NULL) {
-        CERT_DestroyCertificate(leafCert);
-        leafCert = NULL;
-    }
-
-    /***************************************************
      * Now add the rest of the certs (which should all be CAs)
      ***************************************************/
     if( numCerts-userCertFound>= 1 ) {
 
       if (certi == 0) {
-        status = ImportCAChain(derCerts+userCertFound,
+        status = CERT_ImportCAChainTrusted(derCerts+userCertFound,
                                     numCerts-userCertFound,
                                     certUsageUserCertImport);
         if(status != SECSuccess) {
@@ -1121,7 +998,7 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
             goto finish;
         }
       } else if (certi == numCerts) {
-        status = ImportCAChain(derCerts,
+        status = CERT_ImportCAChainTrusted(derCerts,
                                     numCerts-userCertFound,
                                     certUsageUserCertImport);
         if(status != SECSuccess) {
@@ -1133,7 +1010,7 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
             goto finish;
         }
       } else {
-        status = ImportCAChain(derCerts,
+        status = CERT_ImportCAChainTrusted(derCerts,
                    certi,
                    certUsageUserCertImport);
         if(status != SECSuccess) {
@@ -1145,7 +1022,7 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
             goto finish;
         }
 
-        status = ImportCAChain(derCerts+certi+1,
+        status = CERT_ImportCAChainTrusted(derCerts+certi+1,
                    numCerts-certi-1,
                    certUsageUserCertImport);
         if(status != SECSuccess) {
@@ -1172,9 +1049,9 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
      ***************************************************/
     if(slot && !leafIsCA) {
         PK11_FreeSlot(slot);
-        leafCert = PK11_FindCertByIssuerAndSN(&slot, issuerAndSN, NULL);
+        leafCert = PK11_FindCertByIssuerAndSN(&slot, &issuerAndSN, NULL);
     } else {
-        leafCert = CERT_FindCertByIssuerAndSN(certdb, issuerAndSN);
+        leafCert = CERT_FindCertByIssuerAndSN(certdb, &issuerAndSN);
     }
     PR_ASSERT( leafCert != NULL );
     leafObject = JSS_PK11_wrapCert(env, &leafCert);
@@ -1195,9 +1072,6 @@ finish:
     }
     if(leafCert != NULL) {
         CERT_DestroyCertificate(leafCert);
-    }
-    if(arena != NULL) {
-        PORT_FreeArena(arena, PR_FALSE);
     }
 
     return leafObject;
@@ -1507,99 +1381,32 @@ finish:
     return pkcs7ByteArray;
 }
 
-/***********************************************************************
+/***************************************************************************
+ * getCerts
  *
- * Data structures for traversing certificates in the permanent
- * database.
+ * Gathers all certificates of the given type into a Java array.
  */
-typedef struct CertNode {
-    CERTCertificate *cert;
-    struct CertNode *next;
-} CertNode;
-
-typedef struct {
-    CertNode *head;
-    CertNode *tail;
-    int numCACerts;
-    int numCerts;
-} CertCollection;
-
-/***********************************************************************
- * c o l l e c t _ c e r t s
- */
-static SECStatus
-collect_certs(CERTCertificate *cert, SECItem *key, void *arg)
+static jobjectArray 
+getCerts(JNIEnv *env, PK11CertListType type)
 {
-    CertCollection *collection = (CertCollection*)arg;
-    CertNode *node;
-    
-    PR_ASSERT( collection != NULL);
-
-    node = PR_MALLOC( sizeof(CertNode) );
-    if( node == NULL ) {
-        return SECFailure;
-    }
-
-    /***************************************************
-     * Add the cert to the linked list
-     ***************************************************/
-    /*node->cert = CERT_DupCertificate(cert);*/
-    /*
-     * We need to do it this way because the certs that come into this
-     * function aren't initialized properly. Many of their fields
-     * point to data on the stack, and isperm==0.
-     */
-    node->cert = CERT_FindCertByKeyNoLocking(CERT_GetDefaultCertDB(),
-                                             &cert->certKey);
-
-    node->next = NULL;
-    if( collection->head == NULL ) {
-        PR_ASSERT( collection->tail == NULL );
-        collection->head = collection->tail = node;
-    } else {
-        PR_ASSERT( collection->tail != NULL );
-        collection->tail->next = node;
-        collection->tail = node;
-    }
-
-    /***************************************************
-     * Count the number of CA certs.
-     ***************************************************/
-    if( CERT_IsCACert(node->cert, NULL) ) {
-        collection->numCACerts++;
-    }
-    collection->numCerts++;
-
-    return SECSuccess;
-}
-
-/***********************************************************************
- * CryptoManager.getCACerts
- */
-JNIEXPORT jobjectArray JNICALL
-Java_org_mozilla_jss_CryptoManager_getCACerts
-    (JNIEnv *env, jobject this)
-{
-    CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-    SECStatus rv;
-    CertCollection collection = { NULL, NULL, 0};
     jobjectArray certArray = NULL;
-    CertNode *node;
     jclass certClass;
-    int i;
     jobject certObject;
+    CERTCertList *certList = NULL;
+    CERTCertListNode *node;
+    int numCerts, i;
 
-    PR_ASSERT(certdb != NULL);
-
-    /***************************************************
-     * Traverse all permanent certificates, building a linked
-     * list and counting the number of CA certs.
-     ***************************************************/
-    rv = SEC_TraversePermCerts(certdb, collect_certs, (void*) &collection);
-    if(rv == SECFailure) {
-        JSS_trace(env, JSS_TRACE_ERROR,
-            "Traversing permanent certificates failed");
+    certList = PK11_ListCerts(type, NULL);
+    if( certList == NULL ) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unable to list certificates");
         goto finish;
+    }
+
+    /* first count the damn certs */
+    numCerts = 0;
+    for( node = CERT_LIST_HEAD(certList); ! CERT_LIST_END(node, certList);
+            node = CERT_LIST_NEXT(node) ) {
+        ++numCerts;
     }
 
     /**************************************************
@@ -1612,107 +1419,7 @@ Java_org_mozilla_jss_CryptoManager_getCACerts
     }
 
     certArray = (*env)->NewObjectArray( env,
-                                        collection.numCACerts,
-                                        certClass,
-                                        NULL );
-    if( certArray == NULL ) {
-        ASSERT_OUTOFMEM(env);
-        goto finish;
-    }
-    PR_ASSERT( (*env)->ExceptionOccurred(env) == NULL );
-
-
-    /**************************************************
-     * Put all the CA certs in the array
-     **************************************************/
-    i = 0;
-    while( collection.head != NULL) {
-        node = collection.head;
-
-        PR_ASSERT(node->cert != NULL);
-
-        /*
-         * Only add CA certs
-         */
-        if( CERT_IsCACert(node->cert, NULL) ) {
-            PR_ASSERT( i < collection.numCACerts );
-
-            certObject = JSS_PK11_wrapCert(env, &(node->cert));
-            if( certObject == NULL ) {
-                goto finish;
-            }
-            (*env)->SetObjectArrayElement(env, certArray, i, certObject);
-            if( (*env)->ExceptionOccurred(env) ) {
-                goto finish;
-            }
-            ++i;
-        }
-
-        /*
-         * Delete each node as we traverse it.
-         */
-        collection.head = collection.head->next;
-        if( node->cert != NULL ) {
-            CERT_DestroyCertificate(node->cert);
-        }
-        PR_Free(node);
-    }
-    PR_ASSERT( i == collection.numCACerts );
-
-finish:
-    /* Free any nodes that didn't already get deleted. */
-    while( collection.head != NULL ) {
-        node = collection.head;
-        collection.head = collection.head->next;
-        if( node->cert != NULL) {
-            CERT_DestroyCertificate(node->cert);
-        }
-        PR_Free(node);
-    }
-
-    return certArray;
-}
-
-/***********************************************************************
- * CryptoManager.getPermCerts
- */
-JNIEXPORT jobjectArray JNICALL
-Java_org_mozilla_jss_CryptoManager_getPermCerts
-    (JNIEnv *env, jobject this)
-{
-    CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-    SECStatus rv;
-    CertCollection collection = { NULL, NULL, 0};
-    jobjectArray certArray = NULL;
-    CertNode *node;
-    jclass certClass;
-    int i;
-    jobject certObject;
-
-    PR_ASSERT(certdb != NULL);
-
-    /***************************************************
-     * Traverse all permanent certificates, building a linked
-     * list and counting the number of CA certs.
-     ***************************************************/
-    rv = SEC_TraversePermCerts(certdb, collect_certs, (void*) &collection);
-    if(rv == SECFailure) {
-        JSS_trace(env, JSS_TRACE_ERROR,
-            "Traversing permanent certificates failed");
-        goto finish;
-    }
-
-    /**************************************************
-     * Create array of Java certificates
-     **************************************************/
-    certClass = (*env)->FindClass(env, INTERNAL_CERT_CLASS_NAME);
-    if(certClass == NULL) {
-        ASSERT_OUTOFMEM(env);
-        goto finish;
-    }
-
-    certArray = (*env)->NewObjectArray( env,
-                                        collection.numCerts,
+                                        numCerts,
                                         certClass,
                                         NULL );
     if( certArray == NULL ) {
@@ -1726,12 +1433,10 @@ Java_org_mozilla_jss_CryptoManager_getPermCerts
      * Put all the certs in the array
      **************************************************/
     i = 0;
-    while( collection.head != NULL) {
-        node = collection.head;
+    for( node = CERT_LIST_HEAD(certList); ! CERT_LIST_END(node, certList);
+            node = CERT_LIST_NEXT(node) ) {
 
-        PR_ASSERT(node->cert != NULL);
-
-        PR_ASSERT( i < collection.numCerts );
+        PR_ASSERT( i < numCerts );
 
         certObject = JSS_PK11_wrapCert(env, &(node->cert));
         if( certObject == NULL ) {
@@ -1743,31 +1448,37 @@ Java_org_mozilla_jss_CryptoManager_getPermCerts
         }
         ++i;
 
-        /*
-         * Delete each node as we traverse it.
-         */
-        collection.head = collection.head->next;
-        if( node->cert != NULL ) {
-            CERT_DestroyCertificate(node->cert);
-        }
-        PR_Free(node);
     }
-    PR_ASSERT( i == collection.numCerts );
+    PR_ASSERT( i == numCerts );
 
 finish:
-    /* Free any nodes that didn't already get deleted. */
-    while( collection.head != NULL ) {
-        node = collection.head;
-        collection.head = collection.head->next;
-        if( node->cert != NULL) {
-            CERT_DestroyCertificate(node->cert);
-        }
-        PR_Free(node);
+    if( certList != NULL ) {
+        CERT_DestroyCertList(certList);
     }
 
     return certArray;
 }
 
+
+/***********************************************************************
+ * CryptoManager.getCACerts
+ */
+JNIEXPORT jobjectArray JNICALL
+Java_org_mozilla_jss_CryptoManager_getCACerts
+    (JNIEnv *env, jobject this)
+{
+    return getCerts(env, PK11CertListCA);
+}
+
+/***********************************************************************
+ * CryptoManager.getPermCerts
+ */
+JNIEXPORT jobjectArray JNICALL
+Java_org_mozilla_jss_CryptoManager_getPermCerts
+    (JNIEnv *env, jobject this)
+{
+    return getCerts(env, PK11CertListUnique);
+}
 
 
  /* Imports a CRL, and stores it into the cert7.db

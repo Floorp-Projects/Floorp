@@ -39,6 +39,7 @@
 #include <key.h>
 #include <certt.h>
 #include <secpkcs5.h> /* for hand-generating SHA-1 PBA HMAC key */
+#include <pk11pqg.h>
 
 #include "jssutil.h"
 #include "pk11util.h"
@@ -47,12 +48,6 @@
 #include <Algorithm.h>
 #include <pk11func.h>
 #include <secoid.h>
-
-#define HCLHACK
-#ifdef HCLHACK
-/* PKCS #11 HACK */
-#include <secmodi.h>
-#endif
 
 /***********************************************************************
  *
