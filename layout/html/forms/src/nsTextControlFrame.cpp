@@ -195,6 +195,14 @@ nsTextControlFrame::GetCID()
   }
 }
 
+void 
+nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsHTMLReflowMetrics& aDesiredLayoutSize)
+{
+  nsSize widgetSize;
+  GetDesiredSize(aPresContext, aReflowState, aDesiredLayoutSize, widgetSize);
+}
 
 #define DEFAULT_PIXEL_WIDTH 20
 void 
