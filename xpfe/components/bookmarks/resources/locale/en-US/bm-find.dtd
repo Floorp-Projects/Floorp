@@ -30,7 +30,7 @@
 
 <!ENTITY search.button.label            "Find">
 <!ENTITY search.button.accesskey        "n">
-<!ENTITY save.button.label              "Bookmark Search Results">
+<!ENTITY save.button.label              "Bookmark this Search">
 <!ENTITY save.button.accesskey          "b">
 
 <!ENTITY bookmarks.label                "Bookmarks">
