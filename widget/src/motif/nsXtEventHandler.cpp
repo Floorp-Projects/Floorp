@@ -614,7 +614,7 @@ void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
       }
 
       widgetWindow->SetResizeRect(rect);
-      widgetWindow->SetBounds(rect);
+//      widgetWindow->SetBounds(rect);
       widgetWindow->SetResized(PR_TRUE);
 
 #if 0
