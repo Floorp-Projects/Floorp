@@ -119,6 +119,54 @@ sub ProcessFormFields {
 }
 
 
+sub ProcessMultipartFormFields {
+    my ($boundary) = (@_);
+    $boundary =~ s/^-*//;
+    my $remaining = $ENV{"CONTENT_LENGTH"};
+    my $inheader = 1;
+    my $itemname = "";
+#    open(DEBUG, ">debug") || die "Can't open debugging thing";
+#    print DEBUG "Boundary is '$boundary'\n";
+    while ($remaining > 0 && ($_ = <STDIN>)) {
+        $remaining -= length($_);
+#        print DEBUG "< $_";
+        if ($_ =~ m/^-*$boundary/) {
+#            print DEBUG "Entered header\n";
+            $inheader = 1;
+            $itemname = "";
+            next;
+        }
+
+        if ($inheader) {
+            if (m/^\s*$/) {
+                $inheader = 0;
+#                print DEBUG "left header\n";
+                $::FORM{$itemname} = "";
+            }
+            if (m/^Content-Disposition:\s*form-data\s*;\s*name\s*=\s*"([^\"]+)"/i) {
+                $itemname = $1;
+#                print DEBUG "Found itemname $itemname\n";
+                if (m/;\s*filename\s*=\s*"([^\"]+)"/i) {
+                    $::FILENAME{$itemname} = $1;
+                }
+            }
+            
+            next;
+        }
+        $::FORM{$itemname} .= $_;
+    }
+    delete $::FORM{""};
+    # Get rid of trailing newlines.
+    foreach my $i (keys %::FORM) {
+        chomp($::FORM{$i});
+        $::FORM{$i} =~ s/\r$//;
+    }
+}
+        
+
+
+
+
 sub FormData {
     my ($field) = (@_);
     return $::FORM{$field};
@@ -475,10 +523,18 @@ if (defined $ENV{"REQUEST_METHOD"}) {
         } else {
             $::buffer = "";
         }
+        ProcessFormFields $::buffer;
     } else {
-	read STDIN, $::buffer, $ENV{"CONTENT_LENGTH"} || die "Couldn't get form data";
+        if ($ENV{"CONTENT_TYPE"} =~
+            m@multipart/form-data; boundary=\s*([^; ]+)@) {
+            ProcessMultipartFormFields($1);
+            $::buffer = "";
+        } else {
+            read STDIN, $::buffer, $ENV{"CONTENT_LENGTH"} ||
+                die "Couldn't get form data";
+            ProcessFormFields $::buffer;
+        }
     }
-    ProcessFormFields $::buffer;
 }
 
 

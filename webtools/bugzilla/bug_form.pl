@@ -22,6 +22,8 @@ use diagnostics;
 use strict;
 
 
+my %knownattachments;
+
 # This routine quoteUrls contains inspirations from the HTML::FromText CPAN
 # module by Gareth Rees <garethr@cre.canon.co.uk>.  It has been heavily hacked,
 # all that is really recognizable from the original is bits of the regular
@@ -71,6 +73,14 @@ sub quoteUrls {
                                 # there's no special chars in it.
         my $base = Param('urlbase');
         $item = qq{<A HREF="${base}show_bug.cgi?id=$num">$item</A>};
+        $things[$count++] = $item;
+    }
+    while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
+        my $item = $&;
+        my $num = $1;
+        if (exists $knownattachments{$num}) {
+            $item = qq{<A HREF="showattachment.cgi?attach_id=$num">$item</A>};
+        }
         $things[$count++] = $item;
     }
 
@@ -276,6 +286,20 @@ if (Param("usestatuswhiteboard")) {
     "\" SIZE=60></
   </TR>";
 }
+
+print "<tr><td align=right><B>Attachments:</b></td>\n";
+SendSQL("select attach_id, creation_ts, description from attachments where bug_id = $::FORM{'id'}");
+while (MoreSQLData()) {
+    my ($id, $date, $desc) = (FetchSQLData());
+    if ($date =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
+        $date = "$3/$4/$2 $5:$6";
+    }
+    my $link = "showattachment.cgi?attach_id=$id";
+    $desc = value_quote($desc);
+    print qq{<td><a href="$link">$date</a></td><td colspan=4>$desc</td></tr><tr><td></td>};
+    $knownattachments{$id} = 1;
+}
+print "<td colspan=6><a href=createattachment.cgi?id=$::FORM{'id'}>Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr>\n";
 
 
 print "

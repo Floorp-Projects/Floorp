@@ -10,6 +10,9 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+4/8/99 Added ability to store patches with bugs.  This requires a new table
+to store the data, so you will need to run the "makeattachmenttable.sh" script.
+
 3/25/99 Unfortunately, the HTML::FromText CPAN module had too many bugs, and
 so I had to roll my own.  We no longer use the HTML::FromText CPAN module.
 
