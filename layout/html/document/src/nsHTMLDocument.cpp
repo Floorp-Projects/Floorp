@@ -3051,7 +3051,6 @@ PRBool nsHTMLDocument::SearchBlock(BlockText  & aBlockText,
   }
 
 #if 0
-//DEBUG MJUDGE
   if (str) {
     PRInt32 inx = str - contentStr;
 
@@ -3457,7 +3456,6 @@ static nsIDOMNode * FindDOMNode(nsIDOMNode * aNode, nsIContent * aContent)
 NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
 {
 #if 0
-//DEBUG MJUDGE
   aIsFound         = PR_FALSE;
   mShouldMatchCase = aMatchCase;
 
