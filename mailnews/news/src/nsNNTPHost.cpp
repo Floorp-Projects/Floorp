@@ -45,6 +45,27 @@ NS_IMPL_ISUPPORTS(nsNNTPHost, GetIID())
 nsNNTPHost::nsNNTPHost()
 {
 	NS_INIT_REFCNT();
+
+    m_hostname = nsnull;
+    m_username = nsnull;
+    m_nameAndPort = nsnull;
+    m_fullUIName = nsnull;
+    m_groups = nsnull;
+    m_newsgrouplists = nsnull;
+    m_hostinfo = nsnull;
+    m_optionLines = nsnull;
+    m_filename = nsnull;
+    m_dbfilename = nsnull;
+    m_writetimer = nsnull;
+    m_urlbase = nsnull;
+    m_searchableGroupCharsets = nsnull;
+    m_groupTree = nsnull;
+    m_hostinfofilename = nsnull;
+    M_FileOwner = nsnull;
+    m_groupFile = nsnull;
+	m_groupFilePermissions = nsnull;
+    m_block = nsnull;
+    m_runningURL = nsnull;
 }
 
 /* we're not supposed to implement this */

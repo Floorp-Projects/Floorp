@@ -61,7 +61,6 @@
 
 #include "nsIMsgHeaderParser.h" 
 
-#include "nsNNTPHost.h"
 #include "nsMsgKeySet.h"
 
 #include "nsNewsUtils.h"
@@ -447,17 +446,29 @@ nsDummyBufferStream::QueryInterface(REFNSIID aIID, void** result)
 nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
     : nsMsgProtocol(aURL, nsnull)
 {
-	m_messageID = nsnull;
+    m_ProxyServer = nsnull;
+    m_lineStreamBuffer = nsnull;
+    m_responseText = nsnull;
+    m_dataBuf = nsnull;
+    m_path = nsnull;
+    m_currentGroup = nsnull;
+    
 	m_cancelFromHdr = nsnull;
 	m_cancelNewsgroups = nsnull;
 	m_cancelDistribution = nsnull;
 	m_cancelID = nsnull;
+
+	m_messageID = nsnull;
+
+    m_commandSpecificData = nsnull;
+    m_searchData = nsnull;
 
     if (aMsgWindow) {
         m_msgWindow = aMsgWindow;
     }
 
 	m_runningURL = null_nsCOMPtr();
+
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
@@ -466,7 +477,9 @@ nsNNTPProtocol::~nsNNTPProtocol()
         m_nntpServer->WriteNewsrcFile();
     }
 	PR_FREEIF(m_currentGroup);
-    delete m_lineStreamBuffer;
+    if (m_lineStreamBuffer) {
+        delete m_lineStreamBuffer;
+    }
 }
 
 nsresult nsNNTPProtocol::Initialize(void)
@@ -654,13 +667,8 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   {
       PRInt32 port = 0;
  
-	  rv = nsComponentManager::CreateInstance(kNNTPHostCID,
-                                            nsnull,
-                                            NS_GET_IID(nsINNTPHost),
-                                            getter_AddRefs(m_newsHost));
-                          
-      if (NS_FAILED(rv) || (!m_newsHost)) 
-          goto FAIL;
+      m_newsHost = do_CreateInstance(kNNTPHostCID, &rv);
+      if (NS_FAILED(rv) || (!m_newsHost)) goto FAIL;
 
       // m_newsHost holds m_runningURL (make this a weak reference)
       // m_runningURL holds m_newsHost
