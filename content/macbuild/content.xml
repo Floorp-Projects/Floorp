@@ -54,7 +54,7 @@
 <PROJECT>
     <TARGETLIST>
         <TARGET>
-            <NAME>content.shlb</NAME>
+            <NAME>content.o</NAME>
             <SETTINGLIST>
 
                 <!-- Settings for "Source Trees" panel -->
@@ -123,7 +123,7 @@
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>Targetname</NAME><VALUE>content.shlb</VALUE></SETTING>
+                <SETTING><NAME>Targetname</NAME><VALUE>content.o</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
                     <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
@@ -504,121 +504,6 @@
                 <SETTING><NAME>MWWarning_C_warn_notinlined</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWWarning_C_warn_structclass</NAME><VALUE>0</VALUE></SETTING>
 
-                <!-- Settings for "FTP Panel" panel -->
-                <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_PathFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_tree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_uploadDir</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_port</NAME><VALUE>21</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_SendBin</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ShouldLog</NAME><VALUE>1</VALUE></SETTING>
-
-                <!-- Settings for "Java Command Line" panel -->
-                <SETTING><NAME>MWCommandLine_Java_clsName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWCommandLine_Java_args</NAME><VALUE></VALUE></SETTING>
-
-                <!-- Settings for "PJavaDebugging" panel -->
-                <SETTING><NAME>MWVJavaDebugging_Protocol</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWVJavaDebugging_JDKVersion</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWVJavaDebugging_TimeOut</NAME><VALUE>10</VALUE></SETTING>
-                <SETTING><NAME>MWVJavaDebugging_SupportSlowDevices</NAME><VALUE>false</VALUE></SETTING>
-
-                <!-- Settings for "Java Language" panel -->
-                <SETTING><NAME>MWJava_Language_optimize</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_warnDeprecated</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_emitMap</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_strictFileNames</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_strictFileHierarchy</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_1_1_Compatible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_emitHeaders</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_headerType</NAME><VALUE>JNINativeHeaders</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_packageFilter</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_genComments</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_genHeaders</NAME><VALUE>false</VALUE></SETTING>
-
-                <!-- Settings for "Java MRJAppBuilder" panel -->
-                <SETTING><NAME>MWJava_MRJAppBuilder_outFile</NAME><VALUE>MRJApplication</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_merge</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_quitMenu</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_grow</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutType</NAME><VALUE>Console</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrType</NAME><VALUE>Console</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinType</NAME><VALUE>Console</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconPVersion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconFile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPVersion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPICTFile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_aboutName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutPVersion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutFile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutAppend</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrFile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrAppend</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinFile</NAME><VALUE></VALUE></SETTING>
-
-                <!-- Settings for "Java Output" panel -->
-                <SETTING><NAME>MWJava_Output_outputtype</NAME><VALUE>JarFile</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_outfile</NAME><VALUE>JavaClasses.jar</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_ftype</NAME><VALUE>1514754080</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_fcreator</NAME><VALUE>1297570384</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_compress</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_genManifest</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_trunctype</NAME><VALUE>Front</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_deleteClasses</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_consoleApp</NAME><VALUE>1</VALUE></SETTING>
-
-                <!-- Settings for "Java Project" panel -->
-                <SETTING><NAME>MWJava_Proj_projtype</NAME><VALUE>Applet</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_mainClassName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_HTMLAppCreator</NAME><VALUE>1145457748</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_HTMLAppName</NAME><VALUE>Apple Applet Runner</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_PathVersion</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_PathType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_PathFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_tree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_HTMLAppWin32Name</NAME><VALUE>Internet Explorer</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_compress</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_useVM</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_vmarguments</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_vmName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_simPropFile</NAME><VALUE></VALUE></SETTING>
-
-                <!-- Settings for "JavaDoc Project" panel -->
-                <SETTING><NAME>MWJavaDoc_Proj_Version</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Depricated</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Author</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Index</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Tree</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_SunResolveToSame</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Shortnames</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Folder</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_GenerateAPILinks</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_scope</NAME><VALUE>Public</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_fcreator</NAME><VALUE>1297303877</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_encodingName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_decodingName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_javaPackagePath</NAME><VALUE>http://java.sun.com/products/jdk/1.1/docs/api/</VALUE></SETTING>
-
                 <!-- Settings for "MacOS Merge Panel" panel -->
                 <SETTING><NAME>MWMerge_MacOS_projectType</NAME><VALUE>Application</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_outputName</NAME><VALUE>Merge Out</VALUE></SETTING>
@@ -776,10 +661,10 @@
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->
-                <SETTING><NAME>MWProject_PPC_type</NAME><VALUE>SharedLibrary</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_outfile</NAME><VALUE>content.shlb</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_filecreator</NAME><VALUE>MOZZ</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>shlb</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_type</NAME><VALUE>Library</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_outfile</NAME><VALUE>content.o</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_filecreator</NAME><VALUE>????</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>????</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_size</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_minsize</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>0</VALUE></SETTING>
@@ -818,92 +703,6 @@
                 <SETTING><NAME>MWRez_Language_escapecontrolchars</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWRez_Language_prefixname</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWRez_Language_filteredtypes</NAME><VALUE>'CODE' 'DATA' 'PICT'</VALUE></SETTING>
-
-                <!-- Settings for "WinRC Compiler" panel -->
-                <SETTING><NAME>MWWinRC_prefixname</NAME><VALUE></VALUE></SETTING>
-
-                <!-- Settings for "x86 CodeGen" panel -->
-                <SETTING><NAME>MWCodeGen_X86_processor</NAME><VALUE>Generic</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_alignment</NAME><VALUE>bytes8</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_exceptions</NAME><VALUE>ZeroOverhead</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_mmx</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_3dnow</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_use_mmx_3dnow_convention</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_machinecodelisting</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_intrinsics</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_syminfo</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_codeviewinfo</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_cmov_fcomi</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_sse</NAME><VALUE>0</VALUE></SETTING>
-
-                <!-- Settings for "x86 Disassembler" panel -->
-                <SETTING><NAME>PDisasmX86_showHeaders</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showSymTab</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showCode</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showSource</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showHex</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showRelocation</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showComments</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showDebug</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showExceptions</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showData</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showRaw</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_verbose</NAME><VALUE>false</VALUE></SETTING>
-
-                <!-- Settings for "x86 Exceptions Panel" panel -->
-                <SETTING><NAME>MWDebugger_X86_Exceptions</NAME>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                </SETTING>
-
-                <!-- Settings for "x86 Global Optimizer" panel -->
-                <SETTING><NAME>GlobalOptimizer_X86_optimizationlevel</NAME><VALUE>Level0</VALUE></SETTING>
-                <SETTING><NAME>GlobalOptimizer_X86_optfor</NAME><VALUE>Speed</VALUE></SETTING>
-
-                <!-- Settings for "x86 Linker" panel -->
-                <SETTING><NAME>MWLinker_X86_entrypointusage</NAME><VALUE>Default</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_entrypoint</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_subsystem</NAME><VALUE>WinGUI</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_subsysmajorid</NAME><VALUE>4</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_subsysminorid</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_usrmajorid</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_usrminorid</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_commandfile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_generatemap</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_linksym</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_linkCV</NAME><VALUE>1</VALUE></SETTING>
-
-                <!-- Settings for "x86 Project" panel -->
-                <SETTING><NAME>MWProject_X86_type</NAME><VALUE>Application</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_outfile</NAME><VALUE>noname.exe</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_baseaddress</NAME><VALUE>4194304</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_maxstacksize</NAME><VALUE>1024</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_minstacksize</NAME><VALUE>4</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_size</NAME><VALUE>1024</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_minsize</NAME><VALUE>4</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_importlib</NAME><VALUE></VALUE></SETTING>
                 <PANELDATA><NAME>xpidl Settings</NAME><VALUE>
                     0001000101000000000000000000000000000000000000000000000000000000
                     0000000000000000
@@ -2004,20 +1803,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentDLF.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentModule.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsStyleContext.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -2152,20 +1937,6 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsParserUtils.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>contentshared.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Library</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentHTTPStartup.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -2357,13 +2128,6 @@
                     <PATH>nsFrameLoader.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>UnicharUtilsStatic.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
@@ -2592,7 +2356,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-		    <PATH>nsDOMEventGroup.cpp</PATH>
+                    <PATH>nsDOMEventGroup.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -3297,16 +3061,6 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentDLF.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentModule.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsStyleContext.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -3403,16 +3157,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsParserUtils.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>contentshared.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentHTTPStartup.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -3552,11 +3296,6 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>UnicharUtilsStatic.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsHTMLSharedLeafElement.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -3663,7 +3402,7 @@
             </LINKORDER>
         </TARGET>
         <TARGET>
-            <NAME>contentDebug.shlb</NAME>
+            <NAME>contentDebug.o</NAME>
             <SETTINGLIST>
 
                 <!-- Settings for "Source Trees" panel -->
@@ -3732,7 +3471,7 @@
                 <SETTING><NAME>Linker</NAME><VALUE>MacOS PPC Linker</VALUE></SETTING>
                 <SETTING><NAME>PreLinker</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>PostLinker</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>Targetname</NAME><VALUE>contentDebug.shlb</VALUE></SETTING>
+                <SETTING><NAME>Targetname</NAME><VALUE>contentDebug.o</VALUE></SETTING>
                 <SETTING><NAME>OutputDirectory</NAME>
                     <SETTING><NAME>Path</NAME><VALUE>:</VALUE></SETTING>
                     <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
@@ -4113,121 +3852,6 @@
                 <SETTING><NAME>MWWarning_C_warn_notinlined</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWWarning_C_warn_structclass</NAME><VALUE>0</VALUE></SETTING>
 
-                <!-- Settings for "FTP Panel" panel -->
-                <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_PathFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_tree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_uploadDir</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ftp_port</NAME><VALUE>21</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_SendBin</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_ShouldLog</NAME><VALUE>1</VALUE></SETTING>
-
-                <!-- Settings for "Java Command Line" panel -->
-                <SETTING><NAME>MWCommandLine_Java_clsName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWCommandLine_Java_args</NAME><VALUE></VALUE></SETTING>
-
-                <!-- Settings for "PJavaDebugging" panel -->
-                <SETTING><NAME>MWVJavaDebugging_Protocol</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWVJavaDebugging_JDKVersion</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWVJavaDebugging_TimeOut</NAME><VALUE>10</VALUE></SETTING>
-                <SETTING><NAME>MWVJavaDebugging_SupportSlowDevices</NAME><VALUE>false</VALUE></SETTING>
-
-                <!-- Settings for "Java Language" panel -->
-                <SETTING><NAME>MWJava_Language_optimize</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_warnDeprecated</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_emitMap</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_strictFileNames</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_strictFileHierarchy</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_1_1_Compatible</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_emitHeaders</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_headerType</NAME><VALUE>JNINativeHeaders</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_packageFilter</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_genComments</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Language_genHeaders</NAME><VALUE>false</VALUE></SETTING>
-
-                <!-- Settings for "Java MRJAppBuilder" panel -->
-                <SETTING><NAME>MWJava_MRJAppBuilder_outFile</NAME><VALUE>MRJApplication</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_merge</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_quitMenu</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_grow</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutType</NAME><VALUE>Console</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrType</NAME><VALUE>Console</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinType</NAME><VALUE>Console</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconPVersion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_appIconFile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPVersion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_splashScreenPICTFile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_aboutName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutPVersion</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutFile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdoutAppend</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrFile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stderrAppend</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinPType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinPFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinPTree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_MRJAppBuilder_stdinFile</NAME><VALUE></VALUE></SETTING>
-
-                <!-- Settings for "Java Output" panel -->
-                <SETTING><NAME>MWJava_Output_outputtype</NAME><VALUE>JarFile</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_outfile</NAME><VALUE>JavaClasses.jar</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_ftype</NAME><VALUE>1514754080</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_fcreator</NAME><VALUE>1297570384</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_compress</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_genManifest</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_trunctype</NAME><VALUE>Front</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_deleteClasses</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Output_consoleApp</NAME><VALUE>1</VALUE></SETTING>
-
-                <!-- Settings for "Java Project" panel -->
-                <SETTING><NAME>MWJava_Proj_projtype</NAME><VALUE>Applet</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_mainClassName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_HTMLAppCreator</NAME><VALUE>1145457748</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_HTMLAppName</NAME><VALUE>Apple Applet Runner</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_PathVersion</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_PathType</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_PathFormat</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_tree</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_HTMLAppWin32Name</NAME><VALUE>Internet Explorer</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_compress</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_useVM</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_vmarguments</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_vmName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJava_Proj_simPropFile</NAME><VALUE></VALUE></SETTING>
-
-                <!-- Settings for "JavaDoc Project" panel -->
-                <SETTING><NAME>MWJavaDoc_Proj_Version</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Depricated</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Author</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Index</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Tree</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_SunResolveToSame</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Shortnames</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_Folder</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_GenerateAPILinks</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_scope</NAME><VALUE>Public</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_fcreator</NAME><VALUE>1297303877</VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_encodingName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_decodingName</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWJavaDoc_Proj_javaPackagePath</NAME><VALUE>http://java.sun.com/products/jdk/1.1/docs/api/</VALUE></SETTING>
-
                 <!-- Settings for "MacOS Merge Panel" panel -->
                 <SETTING><NAME>MWMerge_MacOS_projectType</NAME><VALUE>Application</VALUE></SETTING>
                 <SETTING><NAME>MWMerge_MacOS_outputName</NAME><VALUE>Merge Out</VALUE></SETTING>
@@ -4385,10 +4009,10 @@
                 <SETTING><NAME>MWPEF_collapsereloads</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "PPC Project" panel -->
-                <SETTING><NAME>MWProject_PPC_type</NAME><VALUE>SharedLibrary</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_outfile</NAME><VALUE>contentDebug.shlb</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_filecreator</NAME><VALUE>MOZZ</VALUE></SETTING>
-                <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>shlb</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_type</NAME><VALUE>Library</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_outfile</NAME><VALUE>contentDebug.o</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_filecreator</NAME><VALUE>????</VALUE></SETTING>
+                <SETTING><NAME>MWProject_PPC_filetype</NAME><VALUE>????</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_size</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_minsize</NAME><VALUE>0</VALUE></SETTING>
                 <SETTING><NAME>MWProject_PPC_stacksize</NAME><VALUE>0</VALUE></SETTING>
@@ -4427,92 +4051,6 @@
                 <SETTING><NAME>MWRez_Language_escapecontrolchars</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWRez_Language_prefixname</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWRez_Language_filteredtypes</NAME><VALUE>'CODE' 'DATA' 'PICT'</VALUE></SETTING>
-
-                <!-- Settings for "WinRC Compiler" panel -->
-                <SETTING><NAME>MWWinRC_prefixname</NAME><VALUE></VALUE></SETTING>
-
-                <!-- Settings for "x86 CodeGen" panel -->
-                <SETTING><NAME>MWCodeGen_X86_processor</NAME><VALUE>Generic</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_alignment</NAME><VALUE>bytes8</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_exceptions</NAME><VALUE>ZeroOverhead</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_mmx</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_3dnow</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_use_mmx_3dnow_convention</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_machinecodelisting</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_intrinsics</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_syminfo</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_codeviewinfo</NAME><VALUE>1</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_cmov_fcomi</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWCodeGen_X86_extinst_sse</NAME><VALUE>0</VALUE></SETTING>
-
-                <!-- Settings for "x86 Disassembler" panel -->
-                <SETTING><NAME>PDisasmX86_showHeaders</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showSymTab</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showCode</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showSource</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showHex</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showRelocation</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showComments</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showDebug</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showExceptions</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showData</NAME><VALUE>true</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_showRaw</NAME><VALUE>false</VALUE></SETTING>
-                <SETTING><NAME>PDisasmX86_verbose</NAME><VALUE>false</VALUE></SETTING>
-
-                <!-- Settings for "x86 Exceptions Panel" panel -->
-                <SETTING><NAME>MWDebugger_X86_Exceptions</NAME>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                    <SETTING><VALUE>0</VALUE></SETTING>
-                </SETTING>
-
-                <!-- Settings for "x86 Global Optimizer" panel -->
-                <SETTING><NAME>GlobalOptimizer_X86_optimizationlevel</NAME><VALUE>Level0</VALUE></SETTING>
-                <SETTING><NAME>GlobalOptimizer_X86_optfor</NAME><VALUE>Speed</VALUE></SETTING>
-
-                <!-- Settings for "x86 Linker" panel -->
-                <SETTING><NAME>MWLinker_X86_entrypointusage</NAME><VALUE>Default</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_entrypoint</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_subsystem</NAME><VALUE>WinGUI</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_subsysmajorid</NAME><VALUE>4</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_subsysminorid</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_usrmajorid</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_usrminorid</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_commandfile</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_generatemap</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_linksym</NAME><VALUE>0</VALUE></SETTING>
-                <SETTING><NAME>MWLinker_X86_linkCV</NAME><VALUE>1</VALUE></SETTING>
-
-                <!-- Settings for "x86 Project" panel -->
-                <SETTING><NAME>MWProject_X86_type</NAME><VALUE>Application</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_outfile</NAME><VALUE>noname.exe</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_baseaddress</NAME><VALUE>4194304</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_maxstacksize</NAME><VALUE>1024</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_minstacksize</NAME><VALUE>4</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_size</NAME><VALUE>1024</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_minsize</NAME><VALUE>4</VALUE></SETTING>
-                <SETTING><NAME>MWProject_X86_importlib</NAME><VALUE></VALUE></SETTING>
                 <PANELDATA><NAME>xpidl Settings</NAME><VALUE>
                     0001000101000000000000000000000000000000000000000000000000000000
                     0000000000000000
@@ -5613,20 +5151,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentDLF.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentModule.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsStyleContext.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -5761,20 +5285,6 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsParserUtils.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>contentsharedDebug.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Library</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentHTTPStartup.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
@@ -5966,13 +5476,6 @@
                     <PATH>nsFrameLoader.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>UnicharUtilsStaticDebug.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Library</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
@@ -6906,16 +6409,6 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentDLF.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentModule.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsStyleContext.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -7012,16 +6505,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsParserUtils.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>contentsharedDebug.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsContentHTTPStartup.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -7161,11 +6644,6 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>UnicharUtilsStaticDebug.o</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsHTMLSharedLeafElement.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -7274,324 +6752,304 @@
     </TARGETLIST>
 
     <TARGETORDER>
-        <ORDEREDTARGET><NAME>content.shlb</NAME></ORDEREDTARGET>
-        <ORDEREDTARGET><NAME>contentDebug.shlb</NAME></ORDEREDTARGET>
+        <ORDEREDTARGET><NAME>content.o</NAME></ORDEREDTARGET>
+        <ORDEREDTARGET><NAME>contentDebug.o</NAME></ORDEREDTARGET>
     </TARGETORDER>
 
     <GROUPLIST>
         <GROUP><NAME>base</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCommentNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsContentIterator.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsContentList.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsContentPolicy.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsContentUtils.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsSyncLoadService.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDocument.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDocumentEncoder.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDocumentFragment.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDocumentViewer.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsPagePrintTimer.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsPrintData.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsPrintEngine.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsPrintObject.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsPrintPreviewListener.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMAttribute.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMAttributeMap.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMDocumentType.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsGeneratedIterator.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsGenericDOMDataNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsGenericDOMNodeList.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsGenericElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLContentSerializer.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsNameSpaceManager.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsNodeInfo.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsNodeInfoManager.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsPlainTextSerializer.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsRange.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsSelection.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsStyleContext.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsStyleLinkElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsStyleSet.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsTextContentChangeData.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsTextNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsTreeWalker.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLContentSerializer.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsParserUtils.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsScriptLoader.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsScriptEventManager.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsRuleNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsContentAreaDragDrop.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsFrameLoader.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>mozSanitizingSerializer.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
         </GROUP>
-        <GROUP><NAME>build</NAME>
-            <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>nsContentDLF.cpp</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>nsContentModule.cpp</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>nsContentHTTPStartup.cpp</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-        </GROUP>
         <GROUP><NAME>events</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMEvent.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMEventGroup.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMMutationEvent.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsEventListenerManager.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsEventStateManager.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsPrivateTextRange.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -7599,355 +7057,355 @@
         </GROUP>
         <GROUP><NAME>html/content</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>GenericElementCollection.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsAttributeContent.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsFormSubmission.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsGenericDOMHTMLCollection.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsGenericHTMLElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLAnchorElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLAppletElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLAreaElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLBaseFontElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLBodyElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLBRElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLButtonElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLDelElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLDirectoryElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLDivElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLDListElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLFieldSetElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLFontElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLFormElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLFrameElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLFrameSetElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLHeadElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLHeadingElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLHRElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLHtmlElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLIFrameElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLImageElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLInputElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLInsElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLLabelElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLLegendElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLLIElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLLinkElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLMapElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLMenuElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLMetaElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLModElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLObjectElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLOListElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLOptGroupElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLOptionElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLParagraphElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLPreElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLQuoteElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLScriptElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLSelectElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLSharedLeafElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLSpanElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLStyleElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLTableCaptionElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLTableCellElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLTableColElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLTableElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLTableRowElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLTableSectionElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLTextAreaElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLTitleElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLUListElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLUnknownElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -7955,43 +7413,43 @@
         </GROUP>
         <GROUP><NAME>html/document</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLContentSink.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLDocument.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLFragmentContentSink.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsImageDocument.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsMarkupDocument.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsWyciwygChannel.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsWyciwygProtocolHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -7999,133 +7457,133 @@
         </GROUP>
         <GROUP><NAME>html/style</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsComputedDOMStyle.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSDeclaration.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSLoader.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSOMFactory.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSParser.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMCSSRect.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSRule.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSRules.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSScanner.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSStyleRule.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSStyleSheet.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsCSSValue.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMCSSAttrDeclaration.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMCSSDeclaration.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLAttributes.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLCSSStyleSheet.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsHTMLStyleSheet.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsInspectorCSSUtils.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsROCSSPrimitiveValue.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsStyleUtil.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMCSSRGBColor.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsDOMCSSValueList.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8133,181 +7591,181 @@
         </GROUP>
         <GROUP><NAME>xbl</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsBindingManager.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLBinding.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLContextMenuHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLCustomHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLContentSink.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLDocumentInfo.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLDragHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLEventHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLFocusHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLFormHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLInsertionPoint.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLKeyHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLLoadHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLMouseHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLMouseMotionHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLMutationHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLProtoImpl.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLProtoImplField.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLProtoImplMethod.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLProtoImplProperty.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLPrototypeBinding.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLPrototypeHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLPrototypeResources.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLResourceLoader.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLScrollHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLService.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLWindowDragHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLWindowHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLWindowKeyHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXBLXULHandler.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8315,43 +7773,43 @@
         </GROUP>
         <GROUP><NAME>xml/content</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLCDATASection.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLEntity.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLNamedNodeMap.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLNotation.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLProcessingInstruction.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLStylesheetPI.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8359,25 +7817,25 @@
         </GROUP>
         <GROUP><NAME>xml/document</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLContentSink.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLPrettyPrinter.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXMLDocument.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsFIXptr.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8385,13 +7843,13 @@
         </GROUP>
         <GROUP><NAME>xsl</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsTransformMediator.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXSLContentSink.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8399,31 +7857,31 @@
         </GROUP>
         <GROUP><NAME>xul/content</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsRDFDOMNodeList.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULAttributes.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULAttributeValue.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULPopupListener.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULElement.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8431,43 +7889,43 @@
         </GROUP>
         <GROUP><NAME>xul/document</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsElementMap.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULCommandDispatcher.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULContentSink.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULControllers.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULDocument.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULPrototypeCache.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULPrototypeDocument.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8475,133 +7933,133 @@
         </GROUP>
         <GROUP><NAME>xul/templates</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsRuleNetwork.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULContentUtils.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULSortService.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULTemplateBuilder.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsClusterKey.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsClusterKeySet.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsConflictSet.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsContentSupportMap.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsContentTagTestNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsContentTestNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsInstantiationNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsTreeRows.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsTreeRowTestNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsRDFConInstanceTestNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsRDFConMemberTestNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsRDFPropertyTestNode.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsResourceSet.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsTemplateMatch.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsTemplateMatchSet.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsTemplateRule.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULContentBuilder.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>nsXULTreeBuilder.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8610,7 +8068,7 @@
         <GROUP><NAME>Options</NAME>
             <GROUP><NAME>Debug</NAME>
                 <FILEREF>
-                    <TARGETNAME>contentDebug.shlb</TARGETNAME>
+                    <TARGETNAME>contentDebug.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>contentSVGDebug.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8618,79 +8076,53 @@
             </GROUP>
             <GROUP><NAME>Optimized</NAME>
                 <FILEREF>
-                    <TARGETNAME>content.shlb</TARGETNAME>
+                    <TARGETNAME>content.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>contentSVG.o</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </GROUP>
         </GROUP>
-        <GROUP><NAME>Static Libs</NAME>
-            <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>UnicharUtilsStatic.o</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>contentDebug.shlb</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>UnicharUtilsStaticDebug.o</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>contentshared.o</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-            <FILEREF>
-                <TARGETNAME>contentDebug.shlb</TARGETNAME>
-                <PATHTYPE>Name</PATHTYPE>
-                <PATH>contentsharedDebug.o</PATH>
-                <PATHFORMAT>MacOS</PATHFORMAT>
-            </FILEREF>
-        </GROUP>
         <GROUP><NAME>NS Libraries</NAME>
             <GROUP><NAME>Optimized</NAME>
                 <FILEREF>
-                    <TARGETNAME>content.shlb</TARGETNAME>
+                    <TARGETNAME>content.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>gfx.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>content.shlb</TARGETNAME>
+                    <TARGETNAME>content.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>JavaScript.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>content.shlb</TARGETNAME>
+                    <TARGETNAME>content.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>libutil.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>content.shlb</TARGETNAME>
+                    <TARGETNAME>content.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSPR20.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>content.shlb</TARGETNAME>
+                    <TARGETNAME>content.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSRuntime.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>content.shlb</TARGETNAME>
+                    <TARGETNAME>content.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSStdLib.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>content.shlb</TARGETNAME>
+                    <TARGETNAME>content.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>xpcom.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8698,43 +8130,43 @@
             </GROUP>
             <GROUP><NAME>Debug</NAME>
                 <FILEREF>
-                    <TARGETNAME>contentDebug.shlb</TARGETNAME>
+                    <TARGETNAME>contentDebug.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>gfxDebug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>contentDebug.shlb</TARGETNAME>
+                    <TARGETNAME>contentDebug.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>JavaScriptDebug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>contentDebug.shlb</TARGETNAME>
+                    <TARGETNAME>contentDebug.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>libutilDebug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>contentDebug.shlb</TARGETNAME>
+                    <TARGETNAME>contentDebug.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSPR20Debug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>contentDebug.shlb</TARGETNAME>
+                    <TARGETNAME>contentDebug.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSRuntimeDebug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>contentDebug.shlb</TARGETNAME>
+                    <TARGETNAME>contentDebug.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>NSStdLibDebug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
-                    <TARGETNAME>contentDebug.shlb</TARGETNAME>
+                    <TARGETNAME>contentDebug.o</TARGETNAME>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>xpcomDebug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
@@ -8743,13 +8175,13 @@
         </GROUP>
         <GROUP><NAME>System Libraries</NAME>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>InterfacesStubs</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
             <FILEREF>
-                <TARGETNAME>content.shlb</TARGETNAME>
+                <TARGETNAME>content.o</TARGETNAME>
                 <PATHTYPE>Name</PATHTYPE>
                 <PATH>NSComponentStartup.o</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>

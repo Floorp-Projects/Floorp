@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+BUILD_DATE = gbdate.h
+
 MODULE		= layout
 LIBRARY_NAME	= gklayout
 EXPORT_LIBRARY = 1
@@ -50,10 +52,28 @@ REQUIRES	= xpcom \
 		  necko \
 		  dom \
 		  editor \
+		  webshell \
+		  docshell \
+		  htmlparser \
+		  js \
+		  xpconnect \
+		  uriloader \
+		  caps \
+		  necko2 \
+		  rdf \
+		  xuldoc \
+		  imglib2 \
+		  pref \
+		  unicharutil \
+		  xul \
+		  xultmpl \
+		  lwbrk \
 		  $(NULL)
 
 CPPSRCS		= \
 		nsLayoutModule.cpp \
+		nsContentHTTPStartup.cpp \
+		nsContentDLF.cpp \
 		$(NULL)
 
 ifndef MKSHLIB_FORCE_ALL
@@ -73,6 +93,18 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)gkconshared_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkxultree_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkxulgrid_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconevents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconhtmlstyle_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxsldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxultmpl_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxbl_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconbase_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 ifdef MOZ_MATHML
@@ -85,6 +117,8 @@ endif
 ifdef MOZ_SVG
 SHARED_LIBRARY_LIBS += \
                 $(DIST)/lib/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
                 $(NSNULL)
 endif
 
@@ -118,6 +152,14 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../html/style/src \
 		   -I$(srcdir)/../xul/content/src \
 		   -I$(srcdir)/../xul/base/src \
+		   -I$(srcdir)/../../content/base/src \
+		   -I$(srcdir)/../../content/html/content/src \
+		   -I$(srcdir)/../../content/html/document/src \
+		   -I$(srcdir)/../../content/html/style/src \
+		   -I$(srcdir)/../../content/xul/content/src \
+		   -I$(srcdir)/../../content/xul/templates/src \
+		   -I$(srcdir)/../../content/events/src \
+		   -I. \
 		   $(NULL)
 
 ifdef MOZ_MATHML
@@ -125,3 +167,11 @@ INCLUDES += -I$(srcdir)/../mathml/content/src
 endif
 
 DEFINES += -D_IMPL_NS_LAYOUT
+
+GARBAGE += $(BUILD_DATE)
+
+export:: $(BUILD_DATE)
+
+$(BUILD_DATE): gbdate.pl
+	$(RM) $@
+	$(PERL) $(srcdir)/gbdate.pl > $@

@@ -130,8 +130,6 @@ bin/components/editor.dll
 ;bin/components/evntloop.dll
 bin/components/find.xpt
 bin/components/gfx.xpt
-;bin/components/gkcontent.dll
-bin/components/gkcontnt.dll
 bin/components/content_base.xpt
 bin/components/content_html.xpt
 bin/components/content_xslt.xpt
