@@ -34,7 +34,7 @@
 /*
  * CMS signerInfo methods.
  *
- * $Id: cmssiginfo.c,v 1.10 2002/08/27 00:05:05 kaie%netscape.com Exp $
+ * $Id: cmssiginfo.c,v 1.11 2002/08/27 13:14:39 kaie%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -729,6 +729,51 @@ NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs(NSSCMSSignerInfo *signerinfo, CERTCertific
 	goto loser;
 
     if ((attr = NSS_CMSAttribute_Create(poolp, SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE, smimeekp, PR_TRUE)) == NULL)
+	goto loser;
+
+    if (NSS_CMSSignerInfo_AddAuthAttr(signerinfo, attr) != SECSuccess)
+	goto loser;
+
+    PORT_ArenaUnmark (poolp, mark);
+    return SECSuccess;
+
+loser:
+    PORT_ArenaRelease (poolp, mark);
+    return SECFailure;
+}
+
+/* 
+ * NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs - add a SMIMEEncryptionKeyPreferences attribute to the
+ * authenticated (i.e. signed) attributes of "signerinfo", using the OID prefered by Microsoft.
+ *
+ * This is expected to be included in outgoing signed messages for email (S/MIME),
+ * if compatibility with Microsoft mail clients is wanted.
+ */
+SECStatus
+NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs(NSSCMSSignerInfo *signerinfo, CERTCertificate *cert, CERTCertDBHandle *certdb)
+{
+    NSSCMSAttribute *attr;
+    SECItem *smimeekp = NULL;
+    void *mark;
+    PLArenaPool *poolp;
+
+    /* verify this cert for encryption */
+    if (CERT_VerifyCert(certdb, cert, PR_TRUE, certUsageEmailRecipient, PR_Now(), signerinfo->cmsg->pwfn_arg, NULL) != SECSuccess) {
+	return SECFailure;
+    }
+
+    poolp = signerinfo->cmsg->poolp;
+    mark = PORT_ArenaMark(poolp);
+
+    smimeekp = SECITEM_AllocItem(poolp, NULL, 0);
+    if (smimeekp == NULL)
+	goto loser;
+
+    /* create new signing time attribute */
+    if (NSS_SMIMEUtil_CreateMSSMIMEEncKeyPrefs(poolp, smimeekp, cert) != SECSuccess)
+	goto loser;
+
+    if ((attr = NSS_CMSAttribute_Create(poolp, SEC_OID_MS_SMIME_ENCRYPTION_KEY_PREFERENCE, smimeekp, PR_TRUE)) == NULL)
 	goto loser;
 
     if (NSS_CMSSignerInfo_AddAuthAttr(signerinfo, attr) != SECSuccess)
