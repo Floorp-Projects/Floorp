@@ -24,19 +24,21 @@
 <!-- extracted from ./bookmarks.xul -->
 
 <!ENTITY command.newBookmark.label     "New Bookmark">
-<!ENTITY command.newBookmark.accesskey "n">
+<!ENTITY command.newBookmark.accesskey "b">
 <!ENTITY command.newFolder.label       "New Folder">
 <!ENTITY command.newFolder.accesskey   "f">
 <!ENTITY command.newSeparator.label    "New Separator">
 <!ENTITY command.newSeparator.accesskey "s">
 <!ENTITY menuitem.import.label         "Import Bookmarks...">
+<!ENTITY menuitem.import.accesskey     "i">
 <!ENTITY menuitem.export.label         "Export Bookmarks...">
+<!ENTITY menuitem.export.accesskey     "e">
 <!ENTITY menuitem.find.label           "Find Bookmarks...">
 <!ENTITY command.findBookmarks.label   "Find...">
 <!ENTITY menuitem.find.accesskey       "f">
 <!ENTITY edit.find.keybinding          "f">
 <!ENTITY command.properties.label      "Properties">
-<!ENTITY command.properties.accesskey  "i">
+<!ENTITY command.properties.accesskey  "r">
 <!ENTITY edit.properties.keybinding    "i">
 <!ENTITY command.rename.label          "Rename...">
 <!ENTITY command.delete.label          "Delete">

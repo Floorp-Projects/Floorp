@@ -132,13 +132,21 @@
           <menuitem label="&command.newBookmark.label;" 
                     accesskey="&command.newBookmark.accesskey;"
                     observes="cmd_newbookmark"/>
-          <menuitem label="&command.newFolder.label;" observes="cmd_newfolder"/>
-          <menuitem label="&command.newSeparator.label;" observes="cmd_newseparator"/>
+          <menuitem label="&command.newFolder.label;" 
+                    accesskey="&command.newFolder.accesskey;"
+                    observes="cmd_newfolder"/>
+          <menuitem label="&command.newSeparator.label;"
+                    accesskey="&command.newSeparator.accesskey;"
+                    observes="cmd_newseparator"/>
           <menuseparator/>
           <menuitem id="menu_close"/>
           <menuseparator/>
-          <menuitem label="&menuitem.import.label;" observes="cmd_import"/>
-          <menuitem label="&menuitem.export.label;" observes="cmd_export"/>
+          <menuitem label="&menuitem.import.label;"
+                    accesskey="&menuitem.import.accesskey;"
+                    observes="cmd_import"/>
+          <menuitem label="&menuitem.export.label;"
+                    accesskey="&menuitem.export.accesskey;"
+                    observes="cmd_export"/>
           <menuseparator/>
           <menuitem observes="cmd_properties" key="bm_key_properties" 
                     label="&command.properties.label;" 
