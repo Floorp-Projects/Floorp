@@ -1,8 +1,10 @@
 
     interface CSSStyleDeclaration {
       wstring getPropertyValue(in wstring propertyName);
-      wstring getPropertyWeight(in wstring propertyName);
-      void setProperty(in wstring propertyName, in wstring value, in wstring weight);
+      wstring getPropertyPriority(in wstring propertyName);
+      void setProperty(in wstring propertyName, in wstring value, in wstring priority);
+      readonly attribute unsigned long length;
+      wstring item(in unsigned long index); /* Returns property name */
 
       attribute wstring azimuth;
       attribute wstring background;

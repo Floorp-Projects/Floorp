@@ -5,7 +5,6 @@
       readonly attribute wstring href;
 
       readonly attribute StyleSheetCollection imports;
-      readonly attribute MediaGroupCollection mediaGroups;
       readonly attribute CSSStyleRuleCollection rules;
 
       unsigned long addRule(in wstring selector, in wstring declaration, in unsigned long index);
