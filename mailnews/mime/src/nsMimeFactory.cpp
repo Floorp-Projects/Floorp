@@ -16,8 +16,10 @@
  * Reserved.
  */
 
+#include "pratom.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsRepository.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
@@ -35,6 +37,8 @@ static   NS_DEFINE_IID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCE
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
+static PRInt32 g_LockCount = 0;
+static PRInt32 g_InstanceCount = 0;
 
 class nsMimeFactory : public nsIFactory
 {   
@@ -42,11 +46,11 @@ class nsMimeFactory : public nsIFactory
     // nsISupports methods
     NS_DECL_ISUPPORTS 
     
-      nsMimeFactory(const nsCID &aClass); 
+    nsMimeFactory(const nsCID &aClass); 
   
     // nsIFactory methods   
     NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_IMETHOD LockFactory(PRBool aLock);
   
   protected:
     virtual   ~nsMimeFactory();   
@@ -137,7 +141,12 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 
 nsresult nsMimeFactory::LockFactory(PRBool aLock)  
 {  
-  // Not implemented in simplest case.  
+  if (aLock) {
+    PR_AtomicIncrement(&g_LockCount);
+  } else {
+    PR_AtomicDecrement(&g_LockCount);
+  }
+
   return NS_OK;
 }  
 
@@ -158,3 +167,28 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
 }
+
+
+extern "C" NS_EXPORT PRBool NSCanUnload()
+{
+  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+}
+
+extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
+{
+  printf("*** Mime being registered\n");
+  nsRepository::RegisterFactory(kCMimeMimeObjectClassAccessCID, path, 
+                                PR_TRUE, PR_TRUE);
+  nsRepository::RegisterFactory(kCMimeRFC822HTMLConverterCID, path, 
+                                PR_TRUE, PR_TRUE);
+  return NS_OK;
+}
+
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path)
+{
+  printf("*** Mime being unregistered\n");
+  nsRepository::UnregisterFactory(kCMimeMimeObjectClassAccessCID, path);
+  nsRepository::UnregisterFactory(kCMimeRFC822HTMLConverterCID, path);
+  return NS_OK;
+}
+
