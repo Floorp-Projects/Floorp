@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -59,7 +59,28 @@ protected:
 	NS_METHOD	getFindResults(nsIRDFResource *source, nsISimpleEnumerator** aResult);
 	NS_METHOD	getFindName(nsIRDFResource *source, nsIRDFLiteral** aResult);
 	NS_METHOD	parseResourceIntoFindTokens(nsIRDFResource *u, findTokenPtr tokens);
-	NS_METHOD	doMatch(nsIRDFLiteral *literal, const nsString &matchMethod, const nsString &matchText);
+
+    // matching functions, based on type
+	PRBool doMatch(nsIRDFLiteral  *literal,
+                   const nsAReadableString& matchMethod,
+                   const nsString& matchText);
+    PRBool matchNode(nsIRDFNode *aNode,
+                     const nsAReadableString& matchMethod,
+                     const nsString& matchText);
+    
+	PRBool doDateMatch(nsIRDFDate *literal,
+                       const nsAReadableString& matchMethod,
+                       const nsAReadableString& matchText);
+	PRBool doIntMatch (nsIRDFInt  *literal,
+                       const nsAReadableString& matchMethod,
+                       const nsString& matchText);
+
+    PRBool dateMatches(nsIRDFDate *literal,
+                       const nsAReadableString& method,
+                       const PRInt64& matchDate);
+    
+    NS_METHOD   parseDate(const nsAReadableString& aDate, PRInt64* aResult);
+    
 	NS_METHOD	parseFindURL(nsIRDFResource *u, nsISupportsArray *array);
 
 public:

@@ -259,7 +259,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 			// fake out the generic builder (i.e. return anything in this case)
 			// so that search containers never appear to be empty
 			*target = source;
-			NS_ADDREF(source);
+			NS_ADDREF(*target);
 			return(NS_OK);
 		}
 	}
@@ -330,53 +330,141 @@ LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenP
 
 
 
-NS_METHOD
-LocalSearchDataSource::doMatch(nsIRDFLiteral *literal, const nsString &matchMethod, const nsString &matchText)
+PRBool
+LocalSearchDataSource::doMatch(nsIRDFLiteral *literal,
+                               const nsAReadableString &matchMethod,
+                               const nsString &matchText)
 {
 	PRBool		found = PR_FALSE;
 
-	if ((nsnull == literal) || matchMethod.IsEmpty() || matchText.IsEmpty())
+	if ((nsnull == literal) ||
+            matchMethod.IsEmpty() ||
+            matchText.IsEmpty())
 		return(found);
 
 	const	PRUnichar	*str = nsnull;
 	literal->GetValueConst( &str );
 	if (! str)	return(found);
 	nsAutoString	value(str);
-
-    if (matchMethod.EqualsIgnoreCase("contains"))
+        
+        if (matchMethod.Equals(NS_LITERAL_STRING("contains")))
 	{
-		if (value.Find(matchText, PR_TRUE) >= 0)
-			found = PR_TRUE;
+            if (value.Find(matchText, PR_TRUE) >= 0)
+                found = PR_TRUE;
 	}
-    else if (matchMethod.EqualsIgnoreCase("startswith"))
+        else if (matchMethod.Equals(NS_LITERAL_STRING("startswith")))
 	{
-		if (value.Find(matchText, PR_TRUE) == 0)
-			found = PR_TRUE;
+            if (value.Find(matchText, PR_TRUE) == 0)
+                found = PR_TRUE;
 	}
-    else if (matchMethod.EqualsIgnoreCase("endswith"))
+        else if (matchMethod.Equals(NS_LITERAL_STRING("endswith")))
 	{
-		PRInt32 pos = value.RFind(matchText, PR_TRUE);
-		if ((pos >= 0) && (pos == (PRInt32(value.Length()) - PRInt32(matchText.Length()))))
-			found = PR_TRUE;
+            PRInt32 pos = value.RFind(matchText, PR_TRUE);
+            if ((pos >= 0) &&
+                (pos == (PRInt32(value.Length()) -
+                         PRInt32(matchText.Length()))))
+                found = PR_TRUE;
 	}
-    else if (matchMethod.EqualsIgnoreCase("is"))
+        else if (matchMethod.Equals(NS_LITERAL_STRING("is")))
 	{
-		if (value.EqualsIgnoreCase(matchText))
-			found = PR_TRUE;
+            if (value.EqualsIgnoreCase(matchText))
+                found = PR_TRUE;
 	}
-    else if (matchMethod.EqualsIgnoreCase("isnot"))
+        else if (matchMethod.Equals(NS_LITERAL_STRING("isnot")))
 	{
-		if (!value.EqualsIgnoreCase(matchText))
-			found = PR_TRUE;
+            if (!value.EqualsIgnoreCase(matchText))
+                found = PR_TRUE;
 	}
-    else if (matchMethod.EqualsIgnoreCase("doesntcontain"))
+        else if (matchMethod.Equals(NS_LITERAL_STRING("doesntcontain")))
 	{
-		if (value.Find(matchText, PR_TRUE) < 0)
-			found = PR_TRUE;
+            if (value.Find(matchText, PR_TRUE) < 0)
+                found = PR_TRUE;
 	}
-	return(found);
+        return(found);
 }
 
+PRBool
+LocalSearchDataSource::doDateMatch(nsIRDFDate *aDate,
+                                   const nsAReadableString& matchMethod,
+                                   const nsAReadableString& matchText)
+{
+    PRBool found = PR_FALSE;
+    
+    if (matchMethod.Equals(NS_LITERAL_STRING("isbefore")) ||
+        matchMethod.Equals(NS_LITERAL_STRING("isafter")))
+    {
+        PRInt64 matchDate;
+        nsresult rv = parseDate(matchText, &matchDate);
+        if (NS_SUCCEEDED(rv))
+            found = dateMatches(aDate, matchMethod, matchDate);
+    }
+
+    return found;
+}
+
+PRBool
+LocalSearchDataSource::doIntMatch(nsIRDFInt *aInt,
+                                  const nsAReadableString& matchMethod,
+                                  const nsString& matchText)
+{
+    nsresult rv;
+    PRBool found = PR_FALSE;
+    
+    PRInt32 val;
+    rv = aInt->GetValue(&val);
+    if (NS_FAILED(rv)) return PR_FALSE;
+    
+    PRInt32 error=0;
+    PRInt32 matchVal = matchText.ToInteger(&error);
+    if (error != 0) return PR_FALSE;
+    
+    if (matchMethod.Equals(NS_LITERAL_STRING("is")))
+        found = (val == matchVal);
+    else if (matchMethod.Equals(NS_LITERAL_STRING("isgreater")))
+        found = (val > matchVal);
+    else if (matchMethod.Equals(NS_LITERAL_STRING("isless")))
+        found = (val < matchVal);
+
+    return found;
+}
+
+NS_METHOD
+LocalSearchDataSource::parseDate(const nsAReadableString& aDate,
+                                 PRInt64 *aResult)
+{
+    // date is in the form of msec since epoch, but use NSPR to
+    // parse the time
+    PRTime *outTime = NS_STATIC_CAST(PRTime*,aResult);
+    PRStatus err;
+    err = PR_ParseTimeString(NS_ConvertUCS2toUTF8(aDate),
+                             PR_FALSE, // PR_FALSE == use current timezone
+                             outTime);
+    NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+    
+    return NS_OK;
+}
+
+
+PRBool
+LocalSearchDataSource::dateMatches(nsIRDFDate *aDate,
+                                   const nsAReadableString& method,
+                                   const PRInt64& matchDate)
+{
+    PRInt64 date;
+    aDate->GetValue(&date);
+    PRBool matches = PR_FALSE;
+    
+    if (method.Equals(NS_LITERAL_STRING("isbefore")))
+        matches = LL_CMP(date, <, matchDate);
+    
+    else if (method.Equals(NS_LITERAL_STRING("isafter")))
+        matches = LL_CMP(date, >, matchDate);
+
+    else if (method.Equals(NS_LITERAL_STRING("is")))
+        matches = LL_EQ(date, matchDate);
+
+    return matches;
+}
 
 
 NS_METHOD
@@ -392,74 +480,98 @@ LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
 	tokens[3].token = "text";
 	tokens[4].token = NULL;
 
-	// parse find URI, get parameters, search in appropriate datasource(s), return results
-	if (NS_SUCCEEDED(rv = parseResourceIntoFindTokens(u, tokens)))
-	{
-		nsCAutoString       dsName;
-		dsName.AssignWithConversion(tokens[0].value);
+	// parse find URI, get parameters, search in appropriate
+	// datasource(s), return results
+        rv = parseResourceIntoFindTokens(u, tokens);
+        if (NS_FAILED(rv)) return rv;
+        
+        nsCAutoString       dsName;
+        dsName.AssignWithConversion(tokens[0].value);
+        
+        nsCOMPtr<nsIRDFDataSource>  datasource;
+        rv = gRDFService->GetDataSource(dsName, getter_AddRefs(datasource));
+        if (NS_FAILED(rv)) return rv;
+        
+        nsCOMPtr<nsISimpleEnumerator>   cursor;
+        rv = datasource->GetAllResources(getter_AddRefs(cursor));
+        if (NS_FAILED(rv)) return rv;
+        
+        while (PR_TRUE) 
+        {
+            PRBool hasMore;
+            rv = cursor->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv))
+                break;
+                
+            if (! hasMore)
+                break;
+                        
+            nsCOMPtr<nsISupports> isupports;
+            rv = cursor->GetNext(getter_AddRefs(isupports));
+            if (NS_FAILED(rv))
+                continue;
+            
+            nsCOMPtr<nsIRDFResource>    source(do_QueryInterface(isupports));
+            if (!source) continue;
+            
+            const char	*uri = nsnull;
+            source->GetValueConst(&uri);
 
-		nsCOMPtr<nsIRDFDataSource>  datasource;
-		if (NS_SUCCEEDED(rv = gRDFService->GetDataSource(dsName, getter_AddRefs(datasource))))
-		{
-			nsCOMPtr<nsISimpleEnumerator>   cursor;
-			if (NS_SUCCEEDED(rv = datasource->GetAllResources(getter_AddRefs(cursor))))
-			{
-				while (PR_TRUE) 
-				{
-					PRBool hasMore;
-					rv = cursor->HasMoreElements(&hasMore);
-					if (NS_FAILED(rv))
-						break;
+            if (!uri) continue;
+            
+            // never match against a "find:" URI
+            if (PL_strncmp(uri, kFindProtocol, sizeof(kFindProtocol)-1) == 0)
+                continue;
+            
+            nsCOMPtr<nsIRDFResource>    property;
+            rv = gRDFService->GetUnicodeResource(tokens[1].value.GetUnicode(),
+                                                 getter_AddRefs(property));
+            
+            if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE) || !property)
+                continue;
+            
+            nsCOMPtr<nsIRDFNode>    value;
+            rv = datasource->GetTarget(source, property,
+                                       PR_TRUE, getter_AddRefs(value));
+            if (NS_FAILED(rv) || (rv == NS_RDF_NO_VALUE) || !value)
+                continue;
+            
+            PRBool found = PR_FALSE;
+            found = matchNode(value, tokens[2].value, tokens[3].value);
+                
+            if (found)
+                array->AppendElement(source);
+        }
 
-					if (! hasMore)
-						break;
-
-					nsCOMPtr<nsISupports> isupports;
-					rv = cursor->GetNext(getter_AddRefs(isupports));
-					if (NS_SUCCEEDED(rv))
-					{
-						nsCOMPtr<nsIRDFResource>    source = do_QueryInterface(isupports);
-						if (source)
-						{
-							const char	*uri = nsnull;
-							source->GetValueConst(&uri);
-
-							// never match against a "find:" URI
-							if ((uri) && (PL_strncmp(uri, kFindProtocol, sizeof(kFindProtocol) - 1)))
-							{
-								nsCOMPtr<nsIRDFResource>    property;
-								if (NS_SUCCEEDED(rv = gRDFService->GetUnicodeResource(tokens[1].value.GetUnicode(),
-								    getter_AddRefs(property))) && (rv != NS_RDF_NO_VALUE) && (nsnull != property))
-								{
-									nsCOMPtr<nsIRDFNode>    value;
-									if (NS_SUCCEEDED(rv = datasource->GetTarget(source, property, PR_TRUE, getter_AddRefs(value))) &&
-										(rv != NS_RDF_NO_VALUE) && (nsnull != value))
-									{
-										nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(value);
-										if (literal)
-										{
-											if (PR_TRUE == doMatch(literal, tokens[2].value, tokens[3].value))
-											{
-												array->AppendElement(source);
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-				if (rv == NS_RDF_CURSOR_EMPTY)
-				{
-					rv = NS_OK;
-				}
-			}
-		}
-	}
+        if (rv == NS_RDF_CURSOR_EMPTY)
+        {
+            rv = NS_OK;
+        }
 	return(rv);
 }
 
+// could speed up date/integer matching signifigantly by caching the
+// last successful match data type (i.e. string, date, int) and trying
+// to QI against that first
+PRBool
+LocalSearchDataSource::matchNode(nsIRDFNode *aValue,
+                                 const nsAReadableString& matchMethod,
+                                 const nsString& matchText)
+{
+    nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(aValue));
+    if (literal)
+        return doMatch(literal, matchMethod, matchText);
 
+    nsCOMPtr<nsIRDFDate> dateLiteral(do_QueryInterface(aValue));
+    if (dateLiteral)
+        return doDateMatch(dateLiteral, matchMethod, matchText);
+    
+    nsCOMPtr<nsIRDFInt> intLiteral(do_QueryInterface(aValue));
+    if (intLiteral)
+        return doIntMatch(intLiteral, matchMethod, matchText);
+
+    return PR_FALSE;
+}
 
 NS_METHOD
 LocalSearchDataSource::getFindResults(nsIRDFResource *source, nsISimpleEnumerator** aResult)
