@@ -55,8 +55,7 @@ static const NSString *kEllipsis = @"...";
 - (nsIWebNavigation*) currentWebNavigation
 {
   // get controller for current window
-  BrowserWindowController *controller;
-  controller = (BrowserWindowController*)[[NSApp mainWindow] windowController];
+  BrowserWindowController *controller = [[NSApp delegate] getMainWindowBrowserController];
   if (!controller) return nsnull;
   
   // get web navigation for current browser
