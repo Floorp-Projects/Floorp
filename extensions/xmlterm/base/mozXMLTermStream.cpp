@@ -179,7 +179,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
     // Open stream in named subframe of current frame
     XMLT_LOG(mozXMLTermStream::Open,22,("frameName=%s\n", frameName));
 
-    nsAutoString innerFrameName = frameName;
+    nsAutoString innerFrameName; innerFrameName.AssignWithConversion(frameName);
 
     // Get DOM IFRAME element
     nsCOMPtr<nsIDOMDocument> domDoc;
@@ -221,12 +221,12 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
 
     if (mMaxResizeHeight > 0) {
       // Set initial IFRAME size to be as wide as the window, but very short
-      nsAutoString attWidth = "width";
-      nsAutoString valWidth = "100%";
+      nsAutoString attWidth; attWidth.AssignWithConversion("width");
+      nsAutoString valWidth; valWidth.AssignWithConversion("100%");
       mDOMIFrameElement->SetAttribute(attWidth,valWidth);
 
-      nsAutoString attHeight = "height";
-      nsAutoString valHeight = "10";
+      nsAutoString attHeight; attHeight.AssignWithConversion("height");
+      nsAutoString valHeight; valHeight.AssignWithConversion("10");
       mDOMIFrameElement->SetAttribute(attHeight,valHeight);
     }
 
@@ -472,9 +472,9 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
 
   if ((pageHeight > shellHeight) || (pageWidth > shellWidth)) {
     // Page larger than docshell
-    nsAutoString attHeight = "height";
-    nsAutoString attWidth = "width";
-    nsAutoString attValue = "";
+    nsAutoString attHeight; attHeight.AssignWithConversion("height");
+    nsAutoString attWidth; attWidth.AssignWithConversion("width");
+    nsAutoString attValue; attValue.SetLength(0);
 
     PRInt32 newPageHeight = pageHeight;
     PRInt32 excessWidth = (pageWidth+scrollBarWidth - shellWidth);
@@ -484,7 +484,7 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
 
     if (excessWidth > 0) {
       // Widen IFRAME beyond page width by scrollbar width
-      attValue = "";
+      attValue.SetLength(0);
       attValue.Append(shellWidth+scrollBarWidth);
       mDOMIFrameElement->SetAttribute(attWidth,attValue);
 
@@ -501,14 +501,14 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
              pageWidth, pageHeight, newPageHeight);
 
       // Reset IFRAME width
-      attValue = "";
+      attValue.SetLength(0);
       attValue.Append(shellWidth);
       mDOMIFrameElement->SetAttribute(attWidth,attValue);
     }
 
     // Resize IFRAME height to match page height (subject to a maximum)
     if (newPageHeight > maxHeight) newPageHeight = maxHeight;
-    attValue = "";
+    attValue.SetLength(0);
     attValue.Append(newPageHeight);
     mDOMIFrameElement->SetAttribute(attHeight,attValue);
   }

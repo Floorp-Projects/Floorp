@@ -94,12 +94,12 @@ NS_NewXMLTerminal(mozIXMLTerminal** aXMLTerminal)
 mozXMLTerminal::mozXMLTerminal() :
   mInitialized(PR_FALSE),
 
-  mCookie(""),
+  mCookie(nsAutoString()),
 
-  mCommand(""),
-  mPromptExpr(""),
+  mCommand(nsAutoString()),
+  mPromptExpr(nsAutoString()),
 
-  mInitInput(""),
+  mInitInput(nsAutoString()),
 
   mXMLTermShell(nsnull),
   mDocShell(nsnull),
@@ -244,8 +244,8 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
          result, (unsigned int) contViewer.get());
 
   // NOTE: Need to parse args string!!!
-  mCommand = "";
-  mPromptExpr = "";
+  mCommand.SetLength(0);
+  mPromptExpr.SetLength(0);
   mInitInput = args;
 
   // Initialization completed
@@ -263,7 +263,8 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
     XMLT_LOG(mozXMLTerminal::Init,22,("done setting DocLoaderObs\n"));
 
     // Load initial XMLterm background document
-    nsCAutoString urlCString(aURL);
+    nsCAutoString urlCString;
+    urlCString.AssignWithConversion(aURL);
 
     nsCOMPtr<nsIURI> uri;
     result = uri->SetSpec(urlCString.GetBuffer());
@@ -691,7 +692,8 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
     result = mLineTermAux->Write(sendStr.GetUnicode(), aCookie);
     if (NS_FAILED(result)) {
       // Abort XMLterm session
-      nsAutoString abortCode = "SendText";
+      nsAutoString abortCode;
+      abortCode.AssignWithConversion("SendText");
       mXMLTermSession->Abort(mLineTermAux, abortCode);
       return NS_ERROR_FAILURE;
     }
@@ -713,7 +715,7 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
   if (!mPresShell)
     return NS_ERROR_FAILURE;
 
-  mPresShell->SetCaretEnabled(PR_TRUE);
+  //mPresShell->SetCaretEnabled(PR_TRUE);
 
   nsCOMPtr<nsICaret> caret;
   if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret)))) {
@@ -764,18 +766,19 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
   if (NS_FAILED(result))
     return result;
 
-  nsAutoString flavor ( bestFlavor );
+  nsAutoString flavor;
+  flavor.AssignWithConversion(bestFlavor);
 
   char* temCStr = flavor.ToNewCString();
   XMLT_LOG(mozXMLTerminal::Paste,20,("flavour=%s\n", temCStr));
   nsAllocator::Free(temCStr);
 
-  if (flavor.Equals(kHTMLMime) || flavor.Equals(kUnicodeMime)) {
+  if (flavor.EqualsWithConversion(kHTMLMime) || flavor.EqualsWithConversion(kUnicodeMime)) {
     nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
     if (textDataObj && objLen > 0) {
       PRUnichar* text = nsnull;
       textDataObj->ToString ( &text );
-      pasteString.SetString ( text, objLen / 2 );
+      pasteString.Assign( text, objLen / 2 );
       result = SendTextAux(pasteString);
     }
   }
@@ -890,7 +893,7 @@ NS_IMETHODIMP mozXMLTerminal::MatchesCookie(const PRUnichar* aCookie,
     return NS_ERROR_NULL_POINTER;
 
   // Check if supplied cookie matches XMLTerm cookie
-  *_retval = mCookie.Equals(aCookie);
+  *_retval = mCookie.EqualsWithConversion(aCookie);
 
   if (!(*_retval)) {
     XMLT_ERROR("mozXMLTerminal::MatchesCookie: Error - Cookie mismatch\n");
