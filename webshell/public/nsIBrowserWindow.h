@@ -46,6 +46,7 @@ struct nsRect;
 #define NS_CHROME_PERSONAL_TOOLBAR_ON 0x080
 #define NS_CHROME_SCROLLBARS_ON       0x100
 #define NS_CHROME_TITLEBAR_ON         0x200
+#define NS_CHROME_OPEN_AS_CHROME      0x400
 
 /**
  * API to a "browser window". A browser window contains a toolbar, a web shell
