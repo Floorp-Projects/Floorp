@@ -46,6 +46,7 @@ CPPSRCS =				\
     nsXULSortService.cpp            \
 	nsXULTreeElement.cpp		\
 	nsXULDocumentInfo.cpp		\
+	nsXULPopupListener.cpp \
 	$(NULL)
 
 EXPORTS = \
