@@ -156,20 +156,6 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 #define WEB_TRACE(_bit,_args)
 #endif
 
-
-#if OLD_EVENT_QUEUE
-  /* The following is not used for the GTK version of the browser.
-   * It is still lurking around  for Motif
-   */
-PLEventQueue* gWebShell_UnixEventQueue;
-
-void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
-{
-  gWebShell_UnixEventQueue = aEventQueue;
-}
-#endif  /* OLD_EVENT_QUEUE  */
-
-
 static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -255,7 +241,7 @@ public:
   NS_IMETHOD GoForward();
   NS_IMETHOD LoadURI(const PRUnichar* aURI);
   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-      nsIInputStream* aPostData, loadType aLoadType);
+      const char* aWindowTarget, nsIInputStream* aPostData, loadType aLoadType);
 
   NS_IMETHOD Stop(void);
 
@@ -1202,8 +1188,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
       nsURILoadCommand loadCmd = nsIURILoader::viewNormal;
       if (nsCRT::strcasecmp(aCommand, "view-link-click") == 0)
         loadCmd = nsIURILoader::viewUserClick;
-      else if (nsCRT::strcasecmp(aCommand, "view-source") == 0)
-        loadCmd = nsIURILoader::viewSource;
 
       rv = pURILoader->OpenURI(pChannel, loadCmd, aWindowTarget /* window target */, 
                                NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this));
@@ -1263,10 +1247,11 @@ NS_IMETHODIMP nsWebShell::LoadURI(const PRUnichar* aURI)
 }
 
 NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   nsIInputStream* aPostData, loadType aLoadType)
+   const char* aWindowTarget, nsIInputStream* aPostData, loadType aLoadType)
 {
 #ifdef DOCSHELL_LOAD
-   return nsDocShell::InternalLoad(aURI, aReferrer, aPostData, aLoadType);
+   return nsDocShell::InternalLoad(aURI, aReferrer, aWindowTarget, aPostData, 
+      aLoadType);
 #else /*!DOCSHELL_LOAD*/
    PRBool updateHistory = PR_TRUE;
    switch(aLoadType)
@@ -1294,7 +1279,7 @@ NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       aReferrer->GetSpec(getter_Copies(referrer));
 
    return LoadURI(aURI, "view", nsnull, updateHistory, nsIChannel::LOAD_NORMAL,
-      nsnull, nsAutoString(referrer).GetUnicode(), nsnull);
+      nsnull, nsAutoString(referrer).GetUnicode(), aWindowTarget);
 #endif /*!DOCSHELL_LOAD*/
 }
 
@@ -1380,8 +1365,7 @@ nsWebShell::DoContent(const char * aContentType,
 
   OnLoadingSite(aOpenedChannel);
 
-   return CreateContentViewer(aContentType, aCommand, aOpenedChannel, 
-      aContentHandler); 
+   return CreateContentViewer(aContentType, aOpenedChannel, aContentHandler); 
 }
 
 nsresult nsWebShell::PrepareToLoadURI(nsIURI * aUri, 
@@ -1518,7 +1502,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     const char * aWindowTarget)
 {
   nsresult rv = NS_OK;
-  PRBool isMail= PR_FALSE; // XXX mailto: hack
   PRBool keywordsEnabled = PR_FALSE;
 
   /* 
@@ -1636,35 +1619,30 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
             }
           } // end if colon
 
-          // XXX mailto: hack
-          if ((urlSpec.Find("mailto:", PR_TRUE)) >= 0)
-              isMail = PR_TRUE;
+          rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
+          if(NS_ERROR_UNKNOWN_PROTOCOL == rv)
+             {
+             // we weren't able to find a protocol handler
+             rv = InitDialogVars();
+             if (NS_FAILED(rv)) return rv;
 
-          if (!isMail) {
-              rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
-              if (NS_ERROR_UNKNOWN_PROTOCOL == rv) {
-                  // we weren't able to find a protocol handler
-                  rv = InitDialogVars();
-                  if (NS_FAILED(rv)) return rv;
+             nsXPIDLString messageStr;
+             nsAutoString name("protocolNotFound");
+             rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+             if (NS_FAILED(rv)) return rv;
 
-                  nsXPIDLString messageStr;
-                  nsAutoString name("protocolNotFound");
-                  rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
-                  if (NS_FAILED(rv)) return rv;
+             NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
 
-                  NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
+             // extract the scheme
+             nsAutoString scheme;
+             urlSpec.Left(scheme, colon);
 
-                  // extract the scheme
-                  nsAutoString scheme;
-                  urlSpec.Left(scheme, colon);
+             nsAutoString dnsMsg(scheme);
+             dnsMsg.Append(' ');
+             dnsMsg.Append(messageStr);
 
-                  nsAutoString dnsMsg(scheme);
-                  dnsMsg.Append(' ');
-                  dnsMsg.Append(messageStr);
-
-                  (void)mPrompter->Alert(dnsMsg.GetUnicode());
-              } // end unknown protocol
-          } // end !isMail
+             (void)mPrompter->Alert(dnsMsg.GetUnicode());
+             } // end unknown protocol
       }
    }
   }
@@ -1740,7 +1718,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
 
   /* Add the page to session history */
-  if (aModifyHistory && shist && (!isMail))  {
+  if (aModifyHistory && shist)  {
         PRInt32  ret;
         nsCAutoString referrer(aReferrer);
         ret = shist->Add(spec, referrer, this);
