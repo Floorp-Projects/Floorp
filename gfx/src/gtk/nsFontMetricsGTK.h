@@ -63,6 +63,7 @@ public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   void LoadFont(void);
+  PRBool IsEmptyFont(GdkFont*);
 
   inline int SupportsChar(PRUnichar aChar)
     { return mFont && FONT_HAS_GLYPH(mMap, aChar); };
@@ -93,6 +94,7 @@ public:
 
 protected:
   GdkFont*               mFont;
+  PRBool                 mAlreadyCalledLoadFont;
 };
 
 class nsFontMetricsGTK : public nsIFontMetrics

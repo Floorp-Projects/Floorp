@@ -1743,13 +1743,45 @@ GetMapFor10646Font(XFontStruct* aFont)
   return map;
 }
 
+PRBool
+nsFontGTK::IsEmptyFont(GdkFont* aGdkFont)
+{
+  if (!aGdkFont)
+    return PR_TRUE;
+
+  XFontStruct* xFont = (XFontStruct*) GDK_FONT_XFONT(aGdkFont);
+
+  //
+  // scan and see if we can find at least one glyph
+  //
+  if (xFont->per_char) {
+    PRInt32 minByte1 = xFont->min_byte1;
+    PRInt32 maxByte1 = xFont->max_byte1;
+    PRInt32 minByte2 = xFont->min_char_or_byte2;
+    PRInt32 maxByte2 = xFont->max_char_or_byte2;
+    PRInt32 charsPerRow = maxByte2 - minByte2 + 1;
+    for (PRInt32 row = minByte1; row <= maxByte1; row++) {
+      PRInt32 offset = (((row - minByte1) * charsPerRow) - minByte2);
+      for (PRInt32 cell = minByte2; cell <= maxByte2; cell++) {
+        XCharStruct* bounds = &xFont->per_char[offset + cell];
+        if (bounds->ascent || bounds->descent) {
+          return PR_FALSE;
+        }
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
 void
 nsFontGTK::LoadFont(void)
 {
-  if (mFont) {
+  if (mAlreadyCalledLoadFont) {
     return;
   }
 
+  mAlreadyCalledLoadFont = PR_TRUE;
   GdkFont* gdkFont = ::gdk_font_load(mName);
   if (gdkFont) {
     XFontStruct* xFont = (XFontStruct*) GDK_FONT_XFONT(gdkFont);
@@ -1760,6 +1792,35 @@ nsFontGTK::LoadFont(void)
         return;
       }
     }
+
+//
+// since we are very close to a release point
+// limit the risk of this fix 
+// please remove soon
+//
+// Redhat 6.2 Japanese has invalid jisx201 fonts
+// Solaris 2.6 has invalid cns11643 fonts for planes 4-7
+if ((mCharSetInfo == &JISX0201)
+    || (mCharSetInfo == &CNS116434)
+    || (mCharSetInfo == &CNS116435)
+    || (mCharSetInfo == &CNS116436)
+    || (mCharSetInfo == &CNS116437)
+   ) {
+
+    if (IsEmptyFont(gdkFont)) {
+#ifdef NS_FONT_DEBUG_LOAD_FONT
+      if (gDebug & NS_FONT_DEBUG_LOAD_FONT) {
+        printf("\n");
+        printf("***************************************\n");
+        printf("invalid font \"%s\", %s %d\n", mName, __FILE__, __LINE__);
+        printf("***************************************\n");
+        printf("\n");
+      }
+#endif
+      ::gdk_font_unref(gdkFont);
+      return;
+    }
+}
     mFont = gdkFont;
 
 #if 0
