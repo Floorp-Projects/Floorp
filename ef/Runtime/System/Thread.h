@@ -36,7 +36,7 @@ typedef CONTEXT ThreadContext;
 typedef void* HANDLE;
 typedef struct sigcontext ThreadContext; 
 
-#elif defined (__FreeBSD__)
+#elif defined (__FreeBSD__) || defined (__NetBSD__)
 
 #include <machine/signal.h>
 
