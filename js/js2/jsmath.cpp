@@ -99,7 +99,7 @@ using namespace JSTypes;
 
 #endif
 
-JSValue math_abs(Context *cx, const JSValues& argv)
+static JSValue math_abs(Context *, const JSValues& argv)
 {
     if (argv.size() > 0) {
         JSValue num = argv[1].toNumber();
@@ -112,7 +112,7 @@ JSValue math_abs(Context *cx, const JSValues& argv)
     return kUndefinedValue;
 }
 
-JSValue math_acos(Context *cx, const JSValues& argv)
+static JSValue math_acos(Context *, const JSValues& argv)
 {
     if (argv.size() > 0) {
         JSValue num = argv[1].toNumber();
@@ -121,7 +121,7 @@ JSValue math_acos(Context *cx, const JSValues& argv)
     return kUndefinedValue;
 }
 
-JSValue math_asin(Context *cx, const JSValues& argv)
+static JSValue math_asin(Context *, const JSValues& argv)
 {
     if (argv.size() > 0) {
         JSValue num = argv[1].toNumber();
@@ -130,7 +130,7 @@ JSValue math_asin(Context *cx, const JSValues& argv)
     return kUndefinedValue;
 }
 
-JSValue math_atan(Context *cx, const JSValues& argv)
+static JSValue math_atan(Context *, const JSValues& argv)
 {
     if (argv.size() > 0) {
         JSValue num = argv[1].toNumber();
@@ -139,7 +139,7 @@ JSValue math_atan(Context *cx, const JSValues& argv)
     return kUndefinedValue;
 }
 
-JSValue math_atan2(Context *cx, const JSValues& argv)
+static JSValue math_atan2(Context *, const JSValues& argv)
 {
     if (argv.size() > 1) {
         JSValue num1 = argv[1].toNumber();
@@ -149,7 +149,7 @@ JSValue math_atan2(Context *cx, const JSValues& argv)
     return kUndefinedValue;
 }
 
-JSValue math_ceil(Context *cx, const JSValues& argv)
+static JSValue math_ceil(Context *, const JSValues& argv)
 {
     if (argv.size() > 0) {
         JSValue num = argv[1].toNumber();
@@ -167,7 +167,7 @@ struct MathFunctionEntry {
     { "asin",    math_asin },
     { "atan",    math_atan },
     { "atan2",   math_atan2 },
-    { "ceil",    math_acos },
+    { "ceil",    math_ceil },
     { "acos",    math_acos },
     { "acos",    math_acos }
 };

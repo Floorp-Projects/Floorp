@@ -158,7 +158,7 @@ namespace Debugger {
             /*NOT_REACHED ("Instruction map is empty, waah.");*/
 
         InstructionMap::iterator pos_iter =
-            iCode->mInstructionMap->upper_bound (pc - iCode->its_iCode->begin());
+            iCode->mInstructionMap->upper_bound (static_cast<uint32>(pc - iCode->its_iCode->begin()));
         if (pos_iter != iCode->mInstructionMap->begin())
             --pos_iter;
     

@@ -45,7 +45,7 @@ using namespace Interpreter;
 
 /********** Object Object Stuff **************************/
 
-JSValue object_toString(Context *cx, const JSValues& argv)
+static JSValue object_toString(Context *, const JSValues& argv)
 {
     if (argv.size() > 0) {
         JSString *s = new JSString("[object ");
@@ -58,7 +58,7 @@ JSValue object_toString(Context *cx, const JSValues& argv)
     return kUndefinedValue;
 }
 
-JSValue objectConstructor(Context *cx, const JSValues& argv)
+static JSValue objectConstructor(Context *, const JSValues& argv)
 {
     ASSERT(argv.size() > 0);
     JSValue theThis = argv[0];
@@ -108,13 +108,13 @@ void JSObject::initObjectObject(JSScope *g)
 /********** Function Object Stuff **************************/
 
 // An empty function that returns undefined
-JSValue functionPrototypeFunction(Context *cx, const JSValues& argv)
+static JSValue functionPrototypeFunction(Context *, const JSValues &)
 {
     return kUndefinedValue;
 }
 
 
-JSValue function_constructor(Context *cx, const JSValues& argv)
+static JSValue function_constructor(Context *cx, const JSValues& argv)
 {
     // build a function from the arguments into the this.
     ASSERT(argv.size() > 0);
@@ -129,16 +129,16 @@ JSValue function_constructor(Context *cx, const JSValues& argv)
     return theThis;
 }
 
-JSValue function_toString(Context *cx, const JSValues& argv)
+static JSValue function_toString(Context *, const JSValues &)
 {
     return JSValue(new JSString("function XXX() { }" ));
 }
-JSValue function_apply(Context *cx, const JSValues& argv)
+static JSValue function_apply(Context *, const JSValues &)
 {
     // XXX
     return kUndefinedValue;
 }
-JSValue function_call(Context *cx, const JSValues& argv)
+static JSValue function_call(Context *, const JSValues &)
 {
     // XXX
     return kUndefinedValue;
