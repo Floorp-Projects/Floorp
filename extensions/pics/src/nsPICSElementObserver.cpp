@@ -146,7 +146,9 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID,
       const nsString& theValue1=valueArray[0];
       char *val1 = theValue1.ToNewCString();
       if(theValue1.EqualsIgnoreCase("\"PICS-LABEL\"")) {
+#ifdef DEBUG
         printf("\nReceived notification for a PICS-LABEl\n");
+#endif
         const nsString& theValue2=valueArray[1];
         char *label = theValue2.ToNewCString();
         if (valueArray[numOfAttributes]) {
