@@ -963,7 +963,7 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:mailnews:imap:resources:locale:en-US:MANIFEST",             "$messengerLocale", 0);
 
     _InstallResources(":mozilla:mailnews:mime:resources:MANIFEST",                          "$messengerLocale", 0);
-    _InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",               "$mailnews_dir:messenger:", 0);
+    _InstallResources(":mozilla:mailnews:mime:cthandlers:resources:MANIFEST",               "$messengerLocale", 0);
 
     # messenger compose resides within messenger
     my($messengercomposeContent) = "$messengerContent" . "messengercompose:";
