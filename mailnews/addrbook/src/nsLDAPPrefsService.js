@@ -30,6 +30,7 @@ const NS_LDAPPREFSSERVICE_IID = Components.interfaces.nsILDAPPrefsService;
 
 /* interfaces used in this file */
 const nsISupports        = Components.interfaces.nsISupports;
+const nsISupportsString  = Components.interfaces.nsISupportsString;
 const nsIPrefBranch      = Components.interfaces.nsIPrefBranch;
 const nsILDAPURL         = Components.interfaces.nsILDAPURL;
 
@@ -206,7 +207,8 @@ function () {
       }
       ldapUrl.host = host;
       try{
-        ldapUrl.dn = gPrefInt.getCharPref(pref_string + ".searchBase");
+        ldapUrl.dn = gPrefInt.getComplexValue(pref_string + ".searchBase",
+                                              nsISupportsString).data;
       }
       catch (ex) {
       }

@@ -1038,8 +1038,9 @@ function setupLdapAutocompleteSession()
             // override default search filter template?
             //
             try { 
-                LDAPSession.filterTemplate = sPrefs.getCharPref(
-                    autocompleteDirectory + ".autoComplete.filterTemplate");
+                LDAPSession.filterTemplate = sPrefs.getComplexValue(
+                    autocompleteDirectory + ".autoComplete.filterTemplate",
+                    Components.interfaces.nsISupportsString).data;
 
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
