@@ -399,7 +399,6 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
         host = ToNewCString(mHTTPProxyHost);
         type = "http";
         port = mHTTPProxyPort;
-        return NS_OK;
     }
     
     if (!mHTTPSProxyHost.IsEmpty() && mHTTPSProxyPort > 0 &&
@@ -407,7 +406,6 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
         host = ToNewCString(mHTTPSProxyHost);
         type = "http";
         port = mHTTPSProxyPort;
-        return NS_OK;
     }
     
     if (!mFTPProxyHost.IsEmpty() && mFTPProxyPort > 0 &&
@@ -415,7 +413,6 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
         host = ToNewCString(mFTPProxyHost);
         type = "http";
         port = mFTPProxyPort;
-        return NS_OK;
     }
 
     if (!mGopherProxyHost.IsEmpty() && mGopherProxyPort > 0 &&
@@ -423,7 +420,6 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
         host = ToNewCString(mGopherProxyHost);
         type = "http";
         port = mGopherProxyPort;
-        return NS_OK;
     }
     
     if (!mSOCKSProxyHost.IsEmpty() && mSOCKSProxyPort > 0) {
@@ -433,7 +429,6 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
         else
             type = "socks";
         port = mSOCKSProxyPort;
-        return NS_OK;
     }
 
     if (type)
