@@ -25,6 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIProgressEventSink.h"
+#include "nsFtpConnectionThread.h" // for nsConnCacheObj class
 
 #if defined(PR_LOGGING)
 //
@@ -55,7 +56,7 @@ nsFtpProtocolHandler::nsFtpProtocolHandler() {
 // cleans up a connection list entry
 PRBool CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
     // XXX do we need to explicitly close the streams?
-    delete aData;
+    delete (nsConnCacheObj*)aData;
     return PR_TRUE;
 }
 
