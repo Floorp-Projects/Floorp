@@ -432,9 +432,9 @@ nsMsgAccountManagerDataSource::ArcLabelsOut(nsIRDFResource *source,
   
   if (source == kNC_AccountRoot) {
     arcs->AppendElement(kNC_Server);
+	arcs->AppendElement(kNC_Child);
   }
 
-  arcs->AppendElement(kNC_Child);
   arcs->AppendElement(kNC_Settings);
   arcs->AppendElement(kNC_Name);
   arcs->AppendElement(kNC_PageTag);
