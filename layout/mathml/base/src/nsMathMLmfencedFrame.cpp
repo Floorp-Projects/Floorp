@@ -129,7 +129,7 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
 {
   nsresult rv;
   nsAutoString value, data;
-  PRBool isMutable;
+  PRBool isMutable = PR_FALSE;
 
   //////////////  
   // see if the opening fence is there ...
@@ -142,7 +142,7 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
   else if (NS_CONTENT_ATTR_NOT_THERE == rv)
     data = PRUnichar('('); // default as per the MathML REC
   else
-    data = nsAutoString();
+    data.Truncate();
 
   if (0 < data.Length()) {
     mOpenChar = new nsMathMLChar;
@@ -163,7 +163,7 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
   else if (NS_CONTENT_ATTR_NOT_THERE == rv)
     data = PRUnichar(')'); // default as per the MathML REC
   else
-    data = nsAutoString();
+    data.Truncate();
 
   if (0 < data.Length()) {
     mCloseChar = new nsMathMLChar;
@@ -184,16 +184,11 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsIPresContext* aPresContext)
   else if (NS_CONTENT_ATTR_NOT_THERE == rv)
     data = PRUnichar(','); // default as per the MathML REC
   else
-    data = nsAutoString();
+    data.Truncate();
 
   mSeparatorsCount = data.Length();
   if (0 < mSeparatorsCount) {
-    PRInt32 sepCount = -1;
-    nsIFrame* childFrame = mFrames.FirstChild();
-    while (childFrame) {
-      sepCount++;
-      childFrame->GetNextSibling(&childFrame);
-    }
+    PRInt32 sepCount = mFrames.GetLength() - 1;
     if (0 < sepCount) {
       mSeparatorsChar = new nsMathMLChar[sepCount];
       if (!mSeparatorsChar) return NS_ERROR_OUT_OF_MEMORY;

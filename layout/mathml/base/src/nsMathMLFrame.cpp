@@ -468,7 +468,7 @@ nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
 
   // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
   PRInt32 i = 0;
-  nsIAtom* namedspaceAtom;
+  nsIAtom* namedspaceAtom = nsnull;
   if (aString.Equals(NS_LITERAL_STRING("veryverythinmathspace"))) {
     i = 1;
     namedspaceAtom = nsMathMLAtoms::veryverythinmathspace_;
