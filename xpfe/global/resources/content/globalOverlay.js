@@ -99,6 +99,17 @@ function goSetMenuValue(command, labelAttribute)
   }
 }
 
+function goSetAccessKey(command, valueAttribute)
+{
+  var commandNode = top.document.getElementById(command);
+  if ( commandNode )
+  {
+    var value = commandNode.getAttribute(valueAttribute);
+    if ( value )
+      commandNode.setAttribute('accesskey', value);
+  }
+}
+
 // this function is used to inform all the controllers attached to a node that an event has occurred
 // (e.g. the tree controllers need to be informed of blur events so that they can change some of the
 // menu items back to their default values)
