@@ -62,7 +62,7 @@ static uRange g_GB2312Ranges[] = {
 // Class nsGB2312ToUnicode [implementation]
 
 nsGB2312ToUnicode::nsGB2312ToUnicode() 
-: nsTablesDecoderSupport(2, 
+: nsMultiTableDecoderSupport(2, 
                         (uRange *) &g_GB2312Ranges,
                         (uShiftTable**) &g_GB2312ShiftTableSet, 
                         (uMappingTable**) &g_GB2312MappingTableSet)

@@ -78,7 +78,7 @@ static PRUint16 *g_EUCKRMappingTableSet [] ={
 // Class nsEUCKRToUnicode [implementation]
 
 nsEUCKRToUnicode::nsEUCKRToUnicode() 
-: nsTablesDecoderSupport(2,
+: nsMultiTableDecoderSupport(2,
                         (uRange*) &g_EUCKRRanges,
                         (uShiftTable**) &g_EUCKRShiftTableSet, 
                         (uMappingTable**) &g_EUCKRMappingTableSet)
