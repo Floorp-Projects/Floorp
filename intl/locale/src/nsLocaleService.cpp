@@ -30,7 +30,7 @@
 
 #include <ctype.h>
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include "nsIWin32Locale.h"
 #endif
 #ifdef XP_OS2
@@ -51,7 +51,7 @@
 // iids
 //
 static NS_DEFINE_IID(kILocaleIID,NS_ILOCALE_IID);
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 static NS_DEFINE_IID(kIWin32LocaleIID,NS_IWIN32LOCALE_IID);
 #endif
 #ifdef XP_OS2
@@ -67,7 +67,7 @@ static NS_DEFINE_IID(kIMacLocaleIID,NS_IMACLOCALE_IID);
 //
 // cids
 //
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 static NS_DEFINE_CID(kWin32LocaleFactoryCID,NS_WIN32LOCALEFACTORY_CID);
 #endif
 #ifdef XP_OS2
@@ -179,7 +179,7 @@ nsLocaleService::nsLocaleService(void)
 :	mSystemLocale(nsnull), mApplicationLocale(nsnull)
 {
 	NS_INIT_REFCNT();
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 	nsIWin32Locale*	win32Converter;
 	nsString		xpLocale;
 	nsresult result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,

@@ -111,7 +111,7 @@ PREF_ReadUserJSFile(const char *filename);
 PrefResult
 PREF_ReadLIJSFile(const char *filename);
 
-#if defined (XP_PC) || defined (XP_MAC)
+#if defined (XP_WIN) || defined (XP_MAC) || defined(XP_OS2)
 /* PREF_Init actually returns a profile object */
 void *
 PREF_InitProfile(void);

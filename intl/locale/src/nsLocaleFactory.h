@@ -28,10 +28,10 @@
 #include "nsIFactory.h"
 #include "nsILocale.h"
 #include "nsILocaleFactory.h"
-#ifdef XP_OS2
-#include "nsIOS2Locale.h"
-#elif defined(XP_PC)
+#ifdef XP_WIN
 #include "nsIWin32Locale.h"
+#elif defined(XP_OS2)
+#include "nsIOS2Locale.h"
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 #include "nsIPosixLocale.h"
 #endif
@@ -57,10 +57,10 @@ private:
   nsString**	fCategoryList;
   nsILocale*	fSystemLocale;
   nsILocale*	fApplicationLocale;
-#ifdef XP_OS2
-  nsIOS2Locale*		fOS2LocaleInterface;
-#elif defined(XP_PC)
-  nsIWin32Locale*		fWin32LocaleInterface;
+#ifdef XP_WIN
+  nsIWin32Locale*   fWin32LocaleInterface;
+#elif defined(XP_OS2)
+  nsIOS2Locale*     fOS2LocaleInterface;
 #elif defined(XP_UNIX) || defined(XP_BEOS)
   nsIPosixLocale*   fPosixLocaleInterface;
 #endif

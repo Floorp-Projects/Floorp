@@ -73,7 +73,7 @@ PrefResult PREF_SavePrefFileSpecWith(
 #ifdef XP_MAC
 #  define LINEBREAK           "\012"
 #  define LINEBREAK_LEN 1
-#elif defined(XP_PC) || defined(XP_OS2)
+#elif defined(XP_WIN) || defined(XP_OS2)
 #  define LINEBREAK           "\015\012"
 #  define LINEBREAK_LEN       2
 #elif defined(XP_UNIX) || defined(XP_BEOS)

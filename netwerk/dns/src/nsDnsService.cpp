@@ -44,10 +44,10 @@
 // Platform specific defines and includes
 ////////////////////////////////////////////////////////////////////////////////
 
-// PC
-#if defined(XP_PC) && !defined(XP_OS2)
+// WIN
+#if defined(XP_WIN)
 #define WM_DNS_SHUTDOWN         (WM_USER + 200)
-#endif /* XP_PC */
+#endif /* XP_WIN */
 
 // MAC
 #if defined(XP_MAC)
@@ -180,7 +180,7 @@ protected:
     nsInetHostInfo              mInetHostInfo;
 #endif
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HANDLE                      mLookupHandle;
     PRUint32                    mMsgID;
@@ -398,7 +398,7 @@ nsDNSLookup::Reset(void)
     // Initialize result holders
     mHostEntry.bufLen = PR_NETDB_BUF_SIZE;
     mHostEntry.bufPtr = mHostEntry.buffer;
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     mMsgID    = 0;
 #endif
 
@@ -567,17 +567,7 @@ nsDNSLookup::InitiateLookup(void)
         rv = NS_ERROR_UNEXPECTED;
 #endif /* XP_MAC */
 
-#ifdef XP_OS2
-    // temporary SYNC version
-    status = PR_GetHostByName(mHostName, 
-                              mHostEntry.buffer, 
-                              PR_NETDB_BUF_SIZE, 
-                              &(mHostEntry.hostEnt));
-
-    if (PR_SUCCESS != status) rv = NS_ERROR_UNKNOWN_HOST;
-             
-    return CompleteLookup(rv);
-#elif defined(XP_PC)
+#if defined(XP_WIN)
     mMsgID = nsDNSService::gService->AllocMsgID();
     if (mMsgID == 0)
         return NS_ERROR_UNEXPECTED;
@@ -598,7 +588,7 @@ nsDNSLookup::InitiateLookup(void)
 		    // those systems.  For more info, see bug 23709.
         }
     }
-#endif /* XP_PC */
+#endif /* XP_WIN */
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
     // temporary SYNC version
@@ -616,6 +606,18 @@ nsDNSLookup::InitiateLookup(void)
     nsDNSService::gService->mLookups.Remove(&key);
     
 #endif /* XP_UNIX */
+
+#if defined(XP_OS2)
+    // temporary SYNC version
+    status = PR_GetHostByName(mHostName, 
+                              mHostEntry.buffer, 
+                              PR_NETDB_BUF_SIZE, 
+                              &(mHostEntry.hostEnt));
+
+    if (PR_SUCCESS != status) rv = NS_ERROR_UNKNOWN_HOST;
+             
+    return CompleteLookup(rv);
+#endif
 
     return rv;
 }
@@ -763,7 +765,7 @@ nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code,
 }
 #endif /* XP_MAC */
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 
 struct FindCompletedClosure {
     UINT                mMsg;
@@ -833,7 +835,7 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     return result;
 }
-#endif /* XP_PC */
+#endif /* XP_WIN */
 
 #ifdef XP_UNIX
 
@@ -877,7 +879,7 @@ nsDNSService::nsDNSService()
 #endif /* TARGET_CARBON */
 #endif /* defined(XP_MAC) */
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     // initialize bit vector for allocating message IDs.
 	int i;
 	for (i=0; i<4; i++)
@@ -921,18 +923,18 @@ nsDNSService::Init()
         return NS_ERROR_OUT_OF_MEMORY;
 #endif
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     // sync with DNS thread to allow it to create the DNS window
     nsAutoMonitor mon(mMonitor);
 #endif
 
-#if defined(XP_MAC) || (defined(XP_PC) && !defined(XP_OS2))
+#if defined(XP_MAC) || defined(XP_WIN)
     // create DNS thread
     NS_ASSERTION(mThread == nsnull, "nsDNSService not shut down");
     rv = NS_NewThread(getter_AddRefs(mThread), this, 0, PR_JOINABLE_THREAD);
 #endif
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     mon.Wait();
 #endif
 
@@ -1034,7 +1036,7 @@ nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 nsresult
 nsDNSService::InitDNSThread(void)
 {
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     WNDCLASS    wc;
     char *      windowClass = "Mozilla:DNSWindowClass";
 
@@ -1058,7 +1060,7 @@ nsDNSService::InitDNSThread(void)
     // sync with Create thread
     nsAutoMonitor mon(mMonitor);
     mon.Notify();
-#endif /* XP_PC */
+#endif /* XP_WIN */
 
     return NS_OK;
 }
@@ -1071,14 +1073,14 @@ nsDNSService::Run(void)
     rv = InitDNSThread();
     if (NS_FAILED(rv)) return rv;
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     MSG msg;
     
     while(GetMessage(&msg, mDNSWindow, 0, 0)) {
         // no TranslateMessage() because we're not expecting input
         DispatchMessage(&msg);
     }
-#endif /* XP_PC */
+#endif /* XP_WIN */
 
 #if defined(XP_MAC)
     OSErr			    err;
@@ -1383,7 +1385,7 @@ nsDNSService::Shutdown()
             PR_Mac_PostAsyncNotify(dnsServiceThread);
         rv = mThread->Join();
 
-#elif defined(XP_PC) && !defined(XP_OS2)
+#elif defined(XP_WIN)
 
         SendMessage(mDNSWindow, WM_DNS_SHUTDOWN, 0, 0);
         rv = mThread->Join();
@@ -1411,7 +1413,7 @@ nsDNSService::Shutdown()
     return rv;
 }
 
-#if defined(XP_PC)  && !defined(XP_OS2)
+#if defined(XP_WIN)
 
 PRUint32
 nsDNSService::AllocMsgID(void)
