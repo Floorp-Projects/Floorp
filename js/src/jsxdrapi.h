@@ -169,4 +169,6 @@ JS_FindClassById(JSXDRState *xdr, uint32 id);
 #define JSXDR_MAGIC_SCRIPT_2        0xdead0002
 #define JSXDR_MAGIC_SCRIPT_CURRENT  JSXDR_MAGIC_SCRIPT_2
 
+JS_END_EXTERN_C
+
 #endif /* ! jsxdrapi_h___ */
