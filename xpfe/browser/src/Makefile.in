@@ -50,6 +50,10 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  $(NULL)
 
+ifdef MOZ_PHOENIX
+REQUIRES += browsercomps history
+endif
+
 CPPSRCS		= \
 		nsBrowserInstance.cpp \
 		nsBrowserStatusFilter.cpp \
