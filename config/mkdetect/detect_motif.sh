@@ -431,7 +431,7 @@ motif_check_xpm()
 			# the confusion ?  Anyway, do 'grep -v XmXpm' to catch this
 			# problem.  In this case Xpm is not needed, since the symbols
 			# are builtin to the libXm library.
-			_count=`strings $_lib | grep Xpm | grep -v XmXpm wc -l`
+			_count=`strings $_lib | grep Xpm | grep -v XmXpm | wc -l`
 		fi
 	fi
 
