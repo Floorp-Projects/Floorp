@@ -1039,7 +1039,7 @@ nsComboboxControlFrame::SelectionChanged(PRBool aDoDispatchEvent)
     // Send reflow command because the new text maybe larger
     nsIReflowCommand* cmd;
     nsresult          rv;
-    rv = NS_NewHTMLReflowCommand(&cmd, displayFrame, nsIReflowCommand::ContentChanged);
+    rv = NS_NewHTMLReflowCommand(&cmd, displayFrame, nsIReflowCommand::StyleChanged);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIPresShell> shell;
       rv = mPresContext->GetShell(getter_AddRefs(shell));
