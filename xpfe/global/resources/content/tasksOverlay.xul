@@ -93,17 +93,17 @@
 		  
 	  	 <box id="taskButtons" align="horizontal">
   			
-  	 		<titledbutton align="left" id="mini-nav" value="" onclick="toNavigator();"/>
-  	 		<titledbutton align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
-  	 		<titledbutton align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
-  	 		<titledbutton align="left" id="mini-comp" value="" onclick="toEditor();" />
+  	 		<titledbutton class="toolbar-flat" align="left" id="mini-nav" value="" onclick="toNavigator();"/>
+  	 		<titledbutton class="toolbar-flat" align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
+  	 		<titledbutton class="toolbar-flat" align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
+  	 		<titledbutton class="toolbar-flat" align="left" id="mini-comp" value="" onclick="toEditor();" />
 	      </box>
 		  <spring flex="100%"/>
 	 	  <box align="horizontal">
-  	 		<titledbutton align="right"  class="popup" popup="mozillaPopup"
+  	 		<titledbutton align="right"  class="popup toolbar-flat" popup="mozillaPopup"
 			   popupanchor="bottomright" value="&mozillaButton.label;" />
 			   
-			<titledbutton align="right" class="popup" value="&openWinButton.label;" popup="windowPopup"
+			<titledbutton align="right" class="popup toolbar-flat" value="&openWinButton.label;" popup="windowPopup"
 			 popupanchor="topleft" popupalign="bottomleft"  />
 
           </box>

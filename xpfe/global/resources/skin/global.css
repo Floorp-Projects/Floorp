@@ -860,6 +860,26 @@ menupopup > menuitem[menuactive="true"].standard {
 
 
 /******** Titled buttons **********/
+titledbutton.toolbar-flat {
+   color: #99CCCC;
+   font: inherit;
+   border: none;
+   padding: 1px;
+   margin: 0px;
+}
+
+titledbutton.toolbar-flat:hover {
+	text-decoration: none;
+	background-color: #336699;
+  color: #CCFFFF;
+}
+
+titledbutton.toolbar-flat:active {
+	text-decoration: none;
+  color: #CCFFFF;
+  padding: 2px 0px 0px 2px;
+}
+
 
 titledbutton.push {
   border: 1px outset white;

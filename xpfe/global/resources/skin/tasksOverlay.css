@@ -28,32 +28,14 @@ toolbar#taskbar {
 }
 
 toolbar#taskbar titledbutton {
-	margin: 0px;
 	margin-right: 1em;
-	color: #99CCCC;
-	border: none;
-	padding: 1px;
 	padding-left: 3px;
 }
 
 toolbar#taskbar titledbutton:hover {
-	background-color: #336699;
-	border: 1px outset #336699;
-	border: none;
-	color: #CCFFFF;
-	text-decoration: none;
-	padding: 1px;
 	padding-left: 3px;
 }
 
 toolbar#taskbar titledbutton:active {
-	background-color: #336699;
-	border: 1px inset #336699
-	border: none;
-	color: #CCFFFF;
-	text-decoration: none;
-	padding-top: 2px;
-	padding-left: 4px;
-	padding-right: 0px;
-	padding-bottom: 0px;
+  padding: 2px 0px 0px 4px;
 }
