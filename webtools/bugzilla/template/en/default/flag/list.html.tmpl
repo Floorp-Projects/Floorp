@@ -21,6 +21,7 @@
 
 <script type="text/javascript">
 <!-- 
+  var stored_onload = window.onload;
   // Enables or disables a requestee field depending on whether or not
   // the user is requesting the corresponding flag.
   function toggleRequesteeField(flagField)
@@ -58,6 +59,9 @@
         if (flagField && flagField.value != "?")
             inputElement.disabled = true;
       }
+    }
+    if (stored_onload) {
+        stored_onload();
     }
   }
   window.onload = disableRequesteeFields;
