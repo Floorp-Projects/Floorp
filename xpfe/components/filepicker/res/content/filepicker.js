@@ -1,6 +1,5 @@
 /* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 
-const nsIFile             = Components.interfaces.nsIFile;
 const nsILocalFile        = Components.interfaces.nsILocalFile;
 const nsILocalFile_PROGID = "component://mozilla/file/local";
 
@@ -49,7 +48,7 @@ function onOK()
   file.initWithPath(textInput.value);
 
   if (file.isFile() && !file.isDirectory()) {
-    retvals.file = file.QueryInterface(nsIFile);
+    retvals.file = file;
     return true;
   }
 
@@ -61,8 +60,6 @@ function onCancel()
   // Close the window.
   return true;
 }
-
-
 
 function onClick(e) {
 
@@ -198,7 +195,7 @@ function getDirectoryContents(parentElement, dirContents)
   var i = 0;
   var array = new Array();
   while (dirContents.HasMoreElements()) {
-    array[i] = dirContents.GetNext().QueryInterface(nsIFile);
+    array[i] = dirContents.GetNext().QueryInterface(nsILocalFile);
     i++;
   }
 

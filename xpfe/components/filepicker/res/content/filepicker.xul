@@ -26,6 +26,9 @@
 
 <box align="horizontal">
   <tree id="directoryList" onclick="onClick(event);" flex="1">
+    <treecol/>
+    <treecol/>
+    <treecol/>
     <treehead>
       <treerow>
         <treecell value="Name"/>
