@@ -764,6 +764,9 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports
     mailnewsUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
     if (msgIsInLocalCache)
     {
+      nsXPIDLCString group;
+      nsXPIDLCString commandSpecificData;
+      rv = ParseURL(m_url, getter_Copies(group), &m_messageID, getter_Copies(commandSpecificData));
       nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder);
       if (folder && NS_SUCCEEDED(rv))
       {

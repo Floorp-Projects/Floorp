@@ -419,6 +419,12 @@ nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
     }
     rv = GetNewMessages(aWindow);
   }
+  if (rv == NS_MSG_ERROR_OFFLINE)
+  {
+    rv = NS_OK;
+    NotifyFolderEvent(mFolderLoadedAtom);
+  }
+
   return rv;
 }
 
