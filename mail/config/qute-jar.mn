@@ -25,13 +25,7 @@ skin/classic/communicator/alerts,                    classic/skin/classic/commun
 skin/classic/communicator/profile,                   classic/skin/classic/communicator/profile
 
 skin/classic/communicator/contents.rdf,              classic/skin/classic/communicator/contents.rdf
-skin/classic/communicator/tasksOverlay.css,          classic/skin/classic/communicator/tasksOverlay.css
-skin/classic/communicator/button.css,                classic/skin/classic/communicator/button.css
-skin/classic/communicator/dialogs.css,               classic/skin/classic/communicator/dialogs.css
-skin/classic/communicator/printing.css,              classic/skin/classic/communicator/printing.css
 skin/classic/communicator/communicator.css,          classic/skin/classic/communicator/communicator.css
-skin/classic/communicator/formatting.css,            classic/skin/classic/communicator/formatting.css
-skin/classic/communicator/prefpanels.css,            classic/skin/classic/communicator/prefpanels.css
 skin/classic/communicator/smileys.css,               classic/skin/classic/communicator/smileys.css
 
 skin/classic/communicator/icons/offline.gif,                      classic/skin/classic/communicator/icons/offline.gif

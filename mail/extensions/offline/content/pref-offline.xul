@@ -18,8 +18,7 @@
 # Copyright (C) 1998-1999 Netscape Communications Corporation. All
 # Rights Reserved.
 
-<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://messenger-offline/locale/pref-offline.dtd">
 
