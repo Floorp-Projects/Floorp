@@ -30,7 +30,12 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rsa.c,v 1.15 2000/09/22 16:24:16 mcgreer%netscape.com Exp $
+ */
+
+/*
+ * RSA key generation, public key op, private key op.
+ *
+ * $Id: rsa.c,v 1.16 2000/09/29 02:10:23 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -127,7 +132,8 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
     int prerr = 0;
     RSAPrivateKey *key = NULL;
     PRArenaPool *arena = NULL;
-    if (!publicExponent) {
+    /* Require key size to be a multiple of 16 bits. */
+    if (!publicExponent && keySizeInBits % 16 != 0) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }
@@ -197,48 +203,6 @@ cleanup:
     return key;
 }
 
-int compare_key(RSAPrivateKey *key)
-{
-    mp_int e, p, q;
-    RSAPrivateKey *mykey;
-    PRArenaPool *arena;
-    mp_err err;
-    SECStatus rv;
-    mp_init(&e);
-    mp_init(&p);
-    mp_init(&q);
-    arena = PORT_NewArena(NSS_FREEBL_DEFAULT_CHUNKSIZE);
-    if (!arena) {
-	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	return -1;
-    }
-    mykey = (RSAPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(RSAPrivateKey));
-    if (!mykey) {
-	PORT_SetError(SEC_ERROR_NO_MEMORY);
-	PORT_FreeArena(arena, PR_TRUE);
-	return -1;
-    }
-    mykey->arena = arena;
-    SECITEM_TO_MPINT(key->publicExponent, &e);
-    SECITEM_TO_MPINT(key->prime1, &p);
-    SECITEM_TO_MPINT(key->prime2, &q);
-    SECITEM_CopyItem(arena, &mykey->publicExponent, &key->publicExponent);
-    SECITEM_CopyItem(arena, &mykey->prime1, &key->prime1);
-    SECITEM_CopyItem(arena, &mykey->prime2, &key->prime2);
-    rsa_keygen_from_primes(&p, &q, &e, mykey);
-cleanup:
-    rv = ( SECITEM_CompareItem(&key->modulus, &mykey->modulus) &&
-           SECITEM_CompareItem(&key->publicExponent, &mykey->publicExponent) &&
-           SECITEM_CompareItem(&key->privateExponent,&mykey->privateExponent) &&
-           SECITEM_CompareItem(&key->prime1, &mykey->prime1) &&
-           SECITEM_CompareItem(&key->prime2, &mykey->prime2) &&
-           SECITEM_CompareItem(&key->exponent1, &mykey->exponent1) &&
-           SECITEM_CompareItem(&key->exponent2, &mykey->exponent2) &&
-           SECITEM_CompareItem(&key->coefficient, &mykey->coefficient) );
-    PORT_FreeArena(arena, PR_TRUE);
-    return rv;
-}
-
 static unsigned int
 rsa_modulusLen(SECItem *modulus)
 {
@@ -302,31 +266,62 @@ cleanup:
 }
 
 /*
-** Perform a raw private-key operation 
-**	Length of input and output buffers are equal to key's modulus len.
+**  RSA Private key operation (no CRT).
 */
 SECStatus 
-RSA_PrivateKeyOp(RSAPrivateKey *key, 
+rsa_PrivateKeyOp(RSAPrivateKey *key, 
                  unsigned char *output, 
                  unsigned char *input)
 {
-    mp_int p, q, d_p, d_q, qInv;
-    mp_int m, m1, m2, b2, h, c;
+    mp_int n, d, m, c;
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
-    unsigned int offset;
     unsigned int modLen;
     modLen = rsa_modulusLen(&key->modulus);
-    if (!key || !output || !input) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
+    MP_DIGITS(&n) = 0;
+    MP_DIGITS(&d) = 0;
+    MP_DIGITS(&m) = 0;
+    MP_DIGITS(&c) = 0;
+    CHECK_MPI_OK( mp_init(&n) );
+    CHECK_MPI_OK( mp_init(&d) );
+    CHECK_MPI_OK( mp_init(&m) );
+    CHECK_MPI_OK( mp_init(&c) );
+    /* copy private key parameters into mp integers */
+    SECITEM_TO_MPINT(key->modulus,         &n); /* n */
+    SECITEM_TO_MPINT(key->privateExponent, &d); /* d */
+    /* copy input into mp integer c */
+    OCTETS_TO_MPINT(input, &c, modLen);
+    /* 1. m = c**d mod n */
+    CHECK_MPI_OK( mp_exptmod(&c, &d, &n, &m) );
+    /* m is the output */
+    err = mp_to_fixlen_octets(&m, output, modLen);
+    if (err >= 0) err = MP_OKAY;
+cleanup:
+    mp_clear(&n);
+    mp_clear(&d);
+    mp_clear(&m);
+    mp_clear(&c);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
     }
-    /* check input out of range (needs to be in range [0..n-1]) */
-    offset = (key->modulus.data[0] == 0) ? 1 : 0; /* may be leading 0 */
-    if (memcmp(input, key->modulus.data + offset, modLen) >= 0) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
-    }
+    return rv;
+}
+
+/*
+**  RSA Private key operation using CRT.
+*/
+SECStatus 
+rsa_PrivateKeyOpCRT(RSAPrivateKey *key, 
+                    unsigned char *output, 
+                    unsigned char *input)
+{
+    mp_int p, q, d_p, d_q, qInv;
+    mp_int m, m1, m2, b2, h, c, ctmp;
+    mp_err   err = MP_OKAY;
+    SECStatus rv = SECSuccess;
+    unsigned int modLen;
+    modLen = rsa_modulusLen(&key->modulus);
     MP_DIGITS(&p)    = 0;
     MP_DIGITS(&q)    = 0;
     MP_DIGITS(&d_p)  = 0;
@@ -338,6 +333,7 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
     MP_DIGITS(&b2)   = 0;
     MP_DIGITS(&h)    = 0;
     MP_DIGITS(&c)    = 0;
+    MP_DIGITS(&ctmp) = 0;
     CHECK_MPI_OK( mp_init(&p)    );
     CHECK_MPI_OK( mp_init(&q)    );
     CHECK_MPI_OK( mp_init(&d_p)  );
@@ -349,18 +345,21 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
     CHECK_MPI_OK( mp_init(&b2)   );
     CHECK_MPI_OK( mp_init(&h)    );
     CHECK_MPI_OK( mp_init(&c)    );
+    CHECK_MPI_OK( mp_init(&ctmp) );
     /* copy private key parameters into mp integers */
     SECITEM_TO_MPINT(key->prime1,      &p);    /* p */
     SECITEM_TO_MPINT(key->prime2,      &q);    /* q */
     SECITEM_TO_MPINT(key->exponent1,   &d_p);  /* d_p  = d mod (p-1) */
-    SECITEM_TO_MPINT(key->exponent2,   &d_q);  /* d_p  = q mod (q-1) */
+    SECITEM_TO_MPINT(key->exponent2,   &d_q);  /* d_p  = d mod (q-1) */
     SECITEM_TO_MPINT(key->coefficient, &qInv); /* qInv = q**-1 mod p */
     /* copy input into mp integer c */
     OCTETS_TO_MPINT(input, &c, modLen);
     /* 1. m1 = c**d_p mod p */
-    CHECK_MPI_OK( mp_exptmod(&c, &d_p, &p, &m1) );
+    CHECK_MPI_OK( mp_mod(&c, &p, &ctmp) );
+    CHECK_MPI_OK( mp_exptmod(&ctmp, &d_p, &p, &m1) );
     /* 2. m2 = c**d_q mod q */
-    CHECK_MPI_OK( mp_exptmod(&c, &d_q, &q, &m2) );
+    CHECK_MPI_OK( mp_mod(&c, &q, &ctmp) );
+    CHECK_MPI_OK( mp_exptmod(&ctmp, &d_q, &q, &m2) );
     /* 3.  h = (m1 - m2) * qInv mod p */
     CHECK_MPI_OK( mp_submod(&m1, &m2, &p, &h) );
     CHECK_MPI_OK( mp_mulmod(&h, &qInv, &p, &h)  );
@@ -387,4 +386,37 @@ cleanup:
 	rv = SECFailure;
     }
     return rv;
+}
+
+/*
+** Perform a raw private-key operation 
+**	Length of input and output buffers are equal to key's modulus len.
+*/
+SECStatus 
+RSA_PrivateKeyOp(RSAPrivateKey *key, 
+                 unsigned char *output, 
+                 unsigned char *input)
+{
+    unsigned int modLen;
+    unsigned int offset;
+    if (!key || !output || !input) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    /* check input out of range (needs to be in range [0..n-1]) */
+    modLen = rsa_modulusLen(&key->modulus);
+    offset = (key->modulus.data[0] == 0) ? 1 : 0; /* may be leading 0 */
+    if (memcmp(input, key->modulus.data + offset, modLen) >= 0) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    if ( key->prime1.len      == 0 ||
+         key->prime2.len      == 0 ||
+         key->exponent1.len   == 0 ||
+         key->exponent2.len   == 0 ||
+         key->coefficient.len == 0) {
+	return rsa_PrivateKeyOp(key, output, input);
+    } else {
+	return rsa_PrivateKeyOpCRT(key, output, input);
+    }
 }

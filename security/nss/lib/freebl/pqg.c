@@ -31,6 +31,12 @@
  * GPL.
  */
 
+/*
+ * PQG parameter generation/verification.  Based on FIPS 186-1.
+ *
+ * $Id: pqg.c,v 1.4 2000/09/29 02:10:23 mcgreer%netscape.com Exp $
+ */
+
 #include "prerr.h"
 #include "secerr.h"
 
@@ -79,10 +85,10 @@ getPQseed(SECItem *seed)
     }
 #ifdef FIPS_186_1_A5_TEST
     memcpy(seed->data, fips_186_1_a5_pqseed, seed->len);
+    return SECSuccess;
 #else
     return RNG_GenerateGlobalRandomBytes(seed->data, seed->len);
 #endif
-    return SECSuccess;
 }
 
 /* Generate a candidate h value.  If in testing mode, use the h value
@@ -137,7 +143,7 @@ addToSeedThenSHA(const SECItem * seed,
 	CHECK_MPI_OK( mp_add_d(&s, (mp_digit)addend, &s) );
     } else {
 	CHECK_MPI_OK( mp_init(&tmp) );
-	CHECK_MPI_OK( mp_set_int(&tmp, addend) ); /* XXX needs to be ulong! */
+	CHECK_MPI_OK( mp_set_ulong(&tmp, addend) );
 	CHECK_MPI_OK( mp_add(&s, &tmp, &s) );
     }
     CHECK_MPI_OK( mp_div_2d(&s, (mp_digit)g, NULL, &sum) );/*sum = s mod 2**g */
@@ -179,7 +185,8 @@ const SECItem   *   seed,       /* input.  */
     **/
     CHECK_SEC_OK( SHA1_HashBuf(sha1, seed->data, seed->len) );
     CHECK_SEC_OK( addToSeedThenSHA(seed, 1, g, sha2) );
-    for (i=0; i<SHA1_LENGTH; ++i) U[i] = sha1[i] ^ sha2[i];
+    for (i=0; i<SHA1_LENGTH; ++i) 
+	U[i] = sha1[i] ^ sha2[i];
     /* ******************************************************************
     ** Step 3.
     ** "Form Q from U by setting the most signficant bit (the 2**159 bit)
@@ -216,7 +223,7 @@ const mp_int    *   Q,          /* input.  */
     unsigned int  n;            /* Per FIPS 186, appendix 2.2. */
     mp_digit      b;            /* Per FIPS 186, appendix 2.2. */
     unsigned char V_k[SHA1_LENGTH];
-    mp_int        W, X, c, twoQ, V_n, tmp, shift;
+    mp_int        W, X, c, twoQ, V_n, tmp;
     mp_err    err = MP_OKAY;
     SECStatus rv  = SECSuccess;
     /* Initialize bignums */
@@ -226,14 +233,12 @@ const mp_int    *   Q,          /* input.  */
     MP_DIGITS(&twoQ)  = 0;
     MP_DIGITS(&V_n)   = 0;
     MP_DIGITS(&tmp)   = 0;
-    MP_DIGITS(&shift) = 0;
     CHECK_MPI_OK( mp_init(&W)    );
     CHECK_MPI_OK( mp_init(&X)    );
     CHECK_MPI_OK( mp_init(&c)    );
     CHECK_MPI_OK( mp_init(&twoQ) );
     CHECK_MPI_OK( mp_init(&tmp)  );
     CHECK_MPI_OK( mp_init(&V_n)  );
-    CHECK_MPI_OK( mp_init(&shift));
     /* L - 1 = n*160 + b */
     n = (L - 1) / BITS_IN_Q;
     b = (L - 1) % BITS_IN_Q;
@@ -247,7 +252,7 @@ const mp_int    *   Q,          /* input.  */
     **    W = V_0 + (V_1 * 2**160) + ... + (V_n-1 * 2**((n-1)*160)) 
     **         + ((V_n mod 2**b) * 2**(n*160))
     */
-    for (k=0; k<n; ++k) { /* Do the first n-1 terms of V_k */
+    for (k=0; k<n; ++k) { /* Do the first n terms of V_k */
 	/* Do step 7 for iteration k.
 	** V_k = SHA[(seed + offset + k) mod 2**g]
 	*/
@@ -255,20 +260,18 @@ const mp_int    *   Q,          /* input.  */
 	/* Do step 8 for iteration k.
 	** W += V_k * 2**(k*160)
 	*/
-	OCTETS_TO_MPINT(V_k, &tmp, SHA1_LENGTH);           /* get bignum V_k */
-	CHECK_MPI_OK( mp_2expt(&shift, (mp_digit)k*160) ); /* 2**(k*160)     */
-	CHECK_MPI_OK( mp_mul(&tmp, &shift, &tmp) );        /* V_k << shift   */
-	CHECK_MPI_OK( mp_add(&W, &tmp, &W) );              /* W += tmp       */
+	OCTETS_TO_MPINT(V_k, &tmp, SHA1_LENGTH);      /* get bignum V_k     */
+	CHECK_MPI_OK( mpl_lsh(&tmp, &tmp, k*160) );   /* tmp = V_k << k*160 */
+	CHECK_MPI_OK( mp_add(&W, &tmp, &W) );         /* W += tmp           */
     }
     /* Step 8, continued.
     **   [W += ((V_n mod 2**b) * 2**(n*160))] 
     */
     CHECK_SEC_OK( addToSeedThenSHA(seed, offset + n, g, V_k) );
-    OCTETS_TO_MPINT(V_k, &V_n, SHA1_LENGTH);           /* get bignum V_n     */
-    CHECK_MPI_OK( mp_div_2d(&V_n, b, NULL, &tmp) );    /* tmp = V_n mod 2**b */
-    CHECK_MPI_OK( mp_2expt(&shift, (mp_digit)n*160) ); /* 2**(n*160)         */
-    CHECK_MPI_OK( mp_mul(&tmp, &shift, &tmp) );        /* tmp << shift       */
-    CHECK_MPI_OK( mp_add(&W, &tmp, &W) );              /* W += tmp           */
+    OCTETS_TO_MPINT(V_k, &V_n, SHA1_LENGTH);          /* get bignum V_n     */
+    CHECK_MPI_OK( mp_div_2d(&V_n, b, NULL, &tmp) );   /* tmp = V_n mod 2**b */
+    CHECK_MPI_OK( mpl_lsh(&tmp, &tmp, n*160) );       /* tmp = tmp << n*160 */
+    CHECK_MPI_OK( mp_add(&W, &tmp, &W) );             /* W += tmp           */
     /* Step 8, continued.
     ** "and let X = W + 2**(L-1).
     **  Note that 0 <= W < 2**(L-1) and hence 2**(L-1) <= X < 2**L."
@@ -291,7 +294,6 @@ cleanup:
     mp_clear(&twoQ);
     mp_clear(&V_n);
     mp_clear(&tmp);
-    mp_clear(&shift);
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	return SECFailure;
@@ -311,31 +313,41 @@ makeGfromH(const mp_int *P,     /* input.  */
 {
     mp_int exp, pm1;
     mp_err err = MP_OKAY;
+    SECStatus rv = SECSuccess;
     *passed = PR_FALSE;
     MP_DIGITS(&exp) = 0;
     MP_DIGITS(&pm1) = 0;
     CHECK_MPI_OK( mp_init(&exp) );
     CHECK_MPI_OK( mp_init(&pm1) );
     CHECK_MPI_OK( mp_sub_d(P, 1, &pm1) );        /* P - 1            */
-    CHECK_MPI_OK( mp_mod(H, &pm1, H) );          /* H = H mod (P-1)  */
+    if ( mp_cmp(&H, &pm1) > 0)                   /* H = H mod (P-1)  */
+	CHECK_MPI_OK( mp_sub(&H, &pm1, &H) );
+    /* Let b = 2**n (smallest power of 2 greater than P).
+    ** Since P-1 >= b/2, and H < b, quotient(H/(P-1)) = 0 or 1
+    ** so the above operation safely computes H mod (P-1)
+    */
     /* Check for H = to 0 or 1.  Regen H if so.  (Regen means return error). */
-    if (mp_cmp_z(H) == 0 || mp_cmp_d(H, 1) == 0)
+    if (mp_cmp_d(H, 1) <= 0) {
+	rv = SECFailure;
 	goto cleanup;
+    }
     /* Compute G, according to the equation  G = (H ** ((P-1)/Q)) mod P */
     CHECK_MPI_OK( mp_div(&pm1, Q, &exp, NULL) );  /* exp = (P-1)/Q      */
     CHECK_MPI_OK( mp_exptmod(H, &exp, P, G) );    /* G = H ** exp mod P */
     /* Check for G == 0 or G == 1, return error if so. */
-    if (mp_cmp_z(G) == 0 || mp_cmp_d(G, 1) == 0)
+    if (mp_cmp_d(G, 1) <= 0) {
+	rv = SECFailure;
 	goto cleanup;
+    }
     *passed = PR_TRUE;
 cleanup:
     mp_clear(&exp);
     mp_clear(&pm1);
     if (err) {
 	MP_TO_SEC_ERROR(err);
-	return SECFailure;
+	rv = SECFailure;
     }
-    return SECSuccess;
+    return rv;
 }
 
 SECStatus
@@ -388,7 +400,7 @@ PQG_ParamGenSeedLen(unsigned int j, unsigned int seedBytes,
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
     }
-    params = (PQGParams *)PORT_ArenaAlloc(arena, sizeof(PQGParams));
+    params = (PQGParams *)PORT_ArenaZAlloc(arena, sizeof(PQGParams));
     if (!params) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	PORT_FreeArena(arena, PR_TRUE);
@@ -401,7 +413,7 @@ PQG_ParamGenSeedLen(unsigned int j, unsigned int seedBytes,
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
     }
-    verify = (PQGVerify *)PORT_ArenaAlloc(arena, sizeof(PQGVerify));
+    verify = (PQGVerify *)PORT_ArenaZAlloc(arena, sizeof(PQGVerify));
     if (!verify) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	PORT_FreeArena(arena, PR_TRUE);
@@ -567,7 +579,7 @@ PQG_VerifyParams(const PQGParams *params,
     int j;
 #define CHECKPARAM(cond)      \
     if (!(cond)) {            \
-	rv = *result = SECFailure; \
+	*result = SECFailure; \
 	goto cleanup;         \
     }
     if (!params || !vfy || !result) {
@@ -595,30 +607,27 @@ PQG_VerifyParams(const PQGParams *params,
     SECITEM_TO_MPINT(params->subPrime, &Q);
     SECITEM_TO_MPINT(params->base,     &G);
     /* 1.  Q is 160 bits long. */
-    CHECKPARAM( params->subPrime.len == DSA_SUBPRIME_LEN &&
-                params->subPrime.data[0] & 0x80 );
+    CHECKPARAM( mpl_significant_bits(&Q) == 160 );
     /* 2.  P is one of the 9 valid lengths. */
-    L = params->prime.len * 8;
-    CHECKPARAM( params->prime.data[0] & 0x80 );
-    for (j=0; j<9; j++)
-	if (L == PQG_INDEX_TO_PBITS(j)) break;
-    CHECKPARAM( j < 9 );
+    L = mpl_significant_bits(&P);
+    j = PQG_PBITS_TO_INDEX(L);
+    CHECKPARAM( j >= 0 && j <= 8 );
     /* 3.  G < P */
     CHECKPARAM( mp_cmp(&G, &P) < 0 );
     /* 4.  P % Q == 1 */
-    rv = mp_mod(&P, &Q, &r);
+    CHECK_MPI_OK( mp_mod(&P, &Q, &r) );
     CHECKPARAM( mp_cmp_d(&r, 1) == 0 );
     /* 5.  Q is prime */
-    CHECKPARAM( mpp_pprime(&Q, NUMITER) == MP_YES ); /* XXX rabin test */
+    CHECKPARAM( mpp_pprime(&Q, NUMITER) == MP_YES );
     /* 6.  P is prime */
-    CHECKPARAM( mpp_pprime(&P, NUMITER) == MP_YES ); /* XXX rabin test */
+    CHECKPARAM( mpp_pprime(&P, NUMITER) == MP_YES );
     /* Steps 7-12 are done only if the optional PQGVerify is supplied. */
     if (!vfy) goto cleanup;
     /* 7.  counter < 4096 */
     CHECKPARAM( vfy->counter < 4096 );
     /* 8.  g >= 160 and g < 2048   (g is length of seed in bits) */
     g = vfy->seed.len * 8;
-    CHECKPARAM( g >= 160 && g < 4096 );
+    CHECKPARAM( g >= 160 && g < 2048 );
     /* 9.  Q generated from SEED matches Q in PQGParams. */
     CHECK_SEC_OK( makeQfromSeed(g, &vfy->seed, &Q_) );
     CHECKPARAM( mp_cmp(&Q, &Q_) == 0 );
@@ -628,7 +637,7 @@ PQG_VerifyParams(const PQGParams *params,
     CHECK_SEC_OK( makePfromQandSeed(L, offset, g, &vfy->seed, &Q, &P_) );
     CHECKPARAM( mp_cmp(&P, &P_) == 0 );
     /* Next two are optional: if h == 0 ignore */
-    if (vfy->h.len == 0) return rv;
+    if (vfy->h.len == 0) goto cleanup;
     /* 11. 1 < h < P-1 */
     SECITEM_TO_MPINT(vfy->h, &h);
     CHECK_MPI_OK( mpl_set_bit(&P, 0, 0) ); /* P is prime, p-1 == zero 1st bit */
@@ -648,6 +657,7 @@ cleanup:
     mp_clear(&h);
     if (err) {
 	MP_TO_SEC_ERROR(err);
+	rv = SECFailure;
     }
     return rv;
 }

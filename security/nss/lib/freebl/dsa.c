@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: dsa.c,v 1.3 2000/09/16 15:56:06 mcgreer%netscape.com Exp $
+ * $Id: dsa.c,v 1.4 2000/09/29 02:10:22 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -89,7 +89,7 @@ dsa_NewKey(PQGParams *params, DSAPrivateKey **privKey, unsigned char *xb)
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
     }
-    key = (DSAPrivateKey *)PORT_ArenaAlloc(arena, sizeof(DSAPrivateKey));
+    key = (DSAPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(DSAPrivateKey));
     if (!key) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	PORT_FreeArena(arena, PR_TRUE);

@@ -31,6 +31,13 @@
  * GPL.
  */
 
+/*
+ * Diffie-Hellman parameter generation, key generation, and secret derivation.
+ * KEA secret generation and verification.
+ *
+ * $Id: dh.c,v 1.5 2000/09/29 02:10:24 mcgreer%netscape.com Exp $
+ */
+
 #include "prerr.h"
 #include "secerr.h"
 
@@ -63,7 +70,7 @@ DH_GenParam(int primeLen, DHParams **params)
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
     }
-    dhparams = (DHParams *)PORT_ArenaAlloc(arena, sizeof(DHParams));
+    dhparams = (DHParams *)PORT_ArenaZAlloc(arena, sizeof(DHParams));
     if (!dhparams) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	PORT_FreeArena(arena, PR_TRUE);
@@ -94,18 +101,25 @@ DH_GenParam(int primeLen, DHParams **params)
     CHECK_MPI_OK( mp_div_2(&psub1, &q)    );
     /* construct a generator from the prime. */
     ab = PORT_Alloc(primeLen);
+    /* generate a candidate number a in p's field */
+    CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(ab, primeLen) );
+    CHECK_MPI_OK( mp_read_unsigned_octets(&a, ab, primeLen) );
+    /* force a < p (note that quot(a/p) <= 1) */
+    if ( mp_cmp(&a, &p) > 0 )
+	CHECK_MPI_OK( mp_sub(&a, &p, &a) );
     do {
-	/* generate a candidate number a in p's field */
-	CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(ab, primeLen) );
-	CHECK_MPI_OK( mp_read_unsigned_octets(&a, ab, primeLen) );
-	/* force a < P-1 */
-	CHECK_MPI_OK( mp_mod(&a, &psub1, &a) );
-	/* check that a is in the range [2..P-1] */
-	if ( mp_cmp_d(&a, 2) < 0) continue;
-	/* check that a**q mod p != 1 */
+	/* check that a is in the range [2..p-1] */
+	if ( mp_cmp_d(&a, 2) < 0 || mp_cmp(&a, &psub1) >= 0) {
+	    /* a is outside of the allowed range.  Set a=3 and keep going. */
+            mp_set(&a, 3);
+	}
+	/* if a**q mod p != 1 then a is a generator */
 	CHECK_MPI_OK( mp_exptmod(&a, &q, &p, &test) );
-    } while ( mp_cmp_d(&test, 1) == 0 );
-    /* a is a generator, finish up */
+	if ( mp_cmp_d(&test, 1) != 0 )
+	    break;
+	/* increment the candidate and try again. */
+	CHECK_MPI_OK( mp_add_d(&a, 1, &a) );
+    } while (PR_TRUE);
     MPINT_TO_SECITEM(&p, &dhparams->prime, arena);
     MPINT_TO_SECITEM(&a, &dhparams->base, arena);
     *params = dhparams;
@@ -144,7 +158,7 @@ DH_NewKey(DHParams *params, DHPrivateKey **privKey)
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return SECFailure;
     }
-    key = (DHPrivateKey *)PORT_ArenaAlloc(arena, sizeof(DHPrivateKey));
+    key = (DHPrivateKey *)PORT_ArenaZAlloc(arena, sizeof(DHPrivateKey));
     if (!key) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	PORT_FreeArena(arena, PR_TRUE);
@@ -161,8 +175,10 @@ DH_NewKey(DHParams *params, DHPrivateKey **privKey)
     CHECK_MPI_OK( mp_init(&Ya) );
     /* Set private key's p */
     CHECK_SEC_OK( SECITEM_CopyItem(arena, &key->prime, &params->prime) );
+    SECITEM_TO_MPINT(key->prime, &p);
     /* Set private key's g */
     CHECK_SEC_OK( SECITEM_CopyItem(arena, &key->base, &params->base) );
+    SECITEM_TO_MPINT(key->base, &g);
     /* Generate private key xa */
     SECITEM_AllocItem(arena, &key->privateValue, DH_SECRET_KEY_LEN);
     RNG_GenerateGlobalRandomBytes(key->privateValue.data, 
@@ -172,7 +188,7 @@ DH_NewKey(DHParams *params, DHPrivateKey **privKey)
     CHECK_MPI_OK( mp_mod(&xa, &p, &xa) );
     /* Compute public key Ya = g ** xa mod p */
     CHECK_MPI_OK( mp_exptmod(&g, &xa, &p, &Ya) );
-    MPINT_TO_SECITEM(&g, &key->publicValue, key->arena);
+    MPINT_TO_SECITEM(&Ya, &key->publicValue, key->arena);
     *privKey = key;
 cleanup:
     mp_clear(&g);
@@ -197,7 +213,8 @@ DH_Derive(SECItem *publicValue,
 {
     mp_int p, Xa, Yb, ZZ;
     mp_err err = MP_OKAY;
-    unsigned int len;
+    unsigned int len, nb;
+    unsigned char *secret = NULL;
     if (!publicValue || !prime || !privateValue || !derivedSecret) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
@@ -216,21 +233,31 @@ DH_Derive(SECItem *publicValue,
     SECITEM_TO_MPINT(*prime,        &p);
     /* ZZ = (Yb)**Xa mod p */
     CHECK_MPI_OK( mp_exptmod(&Yb, &Xa, &p, &ZZ) );
+    /* number of bytes in the derived secret */
     len = mp_unsigned_octet_size(&ZZ);
-    /* Take minimum of bytes requested and bytes in shared secret,
-    ** if maxOutBytes is 0 take all of the bytes from the prime.
+    /* allocate a buffer which can hold the entire derived secret. */
+    secret = PORT_Alloc(len);
+    /* grab the derived secret */
+    err = mp_to_unsigned_octets(&ZZ, secret, len);
+    if (err >= 0) err = MP_OKAY;
+    /* Take minimum of bytes requested and bytes in derived secret,
+    ** if maxOutBytes is 0 take all of the bytes from the derived secret.
     */
     if (maxOutBytes > 0)
-	len = PR_MIN(len, maxOutBytes);
-    /* It is the caller's responsibility to free this buffer. */
-    SECITEM_AllocItem(NULL, derivedSecret, len);
-    err = mp_to_unsigned_octets(&ZZ, derivedSecret->data, len);
-    if (err >= 0) err = MP_OKAY;
+	nb = PR_MIN(len, maxOutBytes);
+    else
+	nb = len;
+    SECITEM_AllocItem(NULL, derivedSecret, nb);
+    memcpy(derivedSecret->data, secret, nb);
 cleanup:
     mp_clear(&p);
     mp_clear(&Xa);
     mp_clear(&Yb);
     mp_clear(&ZZ);
+    if (secret) {
+	/* free the buffer allocated for the full secret. */
+	PORT_ZFree(secret, len);
+    }
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	if (derivedSecret->data) 
@@ -250,11 +277,14 @@ KEA_Derive(SECItem *prime,
 {
     mp_int p, Y, R, r, x, t, u, w;
     mp_err err;
+    unsigned char *secret = NULL;
+    unsigned int len, offset;
     if (!prime || !public1 || !public2 || !private1 || !private2 ||
         !derivedSecret) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
+    memset(derivedSecret, 0, sizeof *derivedSecret);
     MP_DIGITS(&p) = 0;
     MP_DIGITS(&Y) = 0;
     MP_DIGITS(&R) = 0;
@@ -282,10 +312,23 @@ KEA_Derive(SECItem *prime,
     CHECK_MPI_OK( mp_exptmod(&R, &x, &p, &u) );
     /* w = (t + u) mod p */
     CHECK_MPI_OK( mp_addmod(&t, &u, &p, &w) );
-    /* allocate output buffer and return */
-    SECITEM_AllocItem(NULL, derivedSecret, KEA_DERIVED_SECRET_LEN);
-    err = mp_to_fixlen_octets(&w, derivedSecret->data, KEA_DERIVED_SECRET_LEN);
+    /* allocate a buffer for the full derived secret */
+    len = mp_unsigned_octet_size(&w);
+    secret = PORT_Alloc(len);
+    /* grab the secret */
+    err = mp_to_unsigned_octets(&w, secret, len);
     if (err > 0) err = MP_OKAY;
+    /* allocate output buffer */
+    SECITEM_AllocItem(NULL, derivedSecret, KEA_DERIVED_SECRET_LEN);
+    memset(derivedSecret->data, 0, derivedSecret->len);
+    /* copy in the 128 lsb of the secret */
+    if (len >= KEA_DERIVED_SECRET_LEN) {
+	memcpy(derivedSecret->data, secret + (len - KEA_DERIVED_SECRET_LEN),
+	       KEA_DERIVED_SECRET_LEN);
+    } else {
+	offset = KEA_DERIVED_SECRET_LEN - len;
+	memcpy(derivedSecret->data + offset, secret, len);
+    }
 cleanup:
     mp_clear(&p);
     mp_clear(&Y);
@@ -295,6 +338,8 @@ cleanup:
     mp_clear(&t);
     mp_clear(&u);
     mp_clear(&w);
+    if (secret)
+	PORT_ZFree(secret, len);
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	return SECFailure;
