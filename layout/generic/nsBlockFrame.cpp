@@ -2187,16 +2187,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       inlineFloatBreakType = NS_STYLE_CLEAR_NONE;
     }
 
-    // Make sure |aState.mPrevBottomMargin| is at the correct position
-    // before calling PropagateFloatDamage.
-    if (needToRecoverState &&
-        (line->IsDirty() || line->IsPreviousMarginDirty())) {
-      // We need to reconstruct the bottom margin only if we didn't
-      // reflow the previous line and we do need to reflow (or repair
-      // the top position of) the next line.
-      aState.ReconstructMarginAbove(line);
-    }
-
     PRBool previousMarginWasDirty = line->IsPreviousMarginDirty();
     if (previousMarginWasDirty) {
       // If the previous margin is dirty, reflow the current line
@@ -2206,7 +2196,18 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // Lines that aren't dirty but get slid past our height constraint must
       // be reflowed.
       line->MarkDirty();
-    } else if (!line->IsDirty()) {
+    }
+
+    // Make sure |aState.mPrevBottomMargin| is at the correct position
+    // before calling PropagateFloatDamage.
+    if (needToRecoverState && line->IsDirty()) {
+      // We need to reconstruct the bottom margin only if we didn't
+      // reflow the previous line and we do need to reflow (or repair
+      // the top position of) the next line.
+      aState.ReconstructMarginAbove(line);
+    }
+
+    if (!line->IsDirty()) {
       // See if there's any reflow damage that requires that we mark the
       // line dirty.
       PropagateFloatDamage(aState, line, deltaY);

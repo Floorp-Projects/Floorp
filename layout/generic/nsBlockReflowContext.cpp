@@ -665,6 +665,8 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   nscoord x = mX;
   nscoord y = mY;
 
+  nscoord backupContainingBlockAdvance = 0;
+
   // Check whether the block's bottom margin collapses with its top
   // margin. See CSS 2.1 section 8.3.1; those rules seem to match
   // nsBlockFrame::IsEmpty(). Any such block must have zero height so
@@ -696,6 +698,16 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
     // nsBlockFrame::ShouldApplyTopMargin will have returned PR_FALSE,
     // and mTopMargin and aClearance will have been zero in
     // ReflowBlock.
+
+    // If we did apply our top margin, but now we're collapsing it
+    // into the bottom margin, we need to back up the containing
+    // block's y-advance by our top margin so that it doesn't get
+    // counted twice. Note that here we're allowing the line's bounds
+    // to become different from the block's position; we do this
+    // because the containing block will place the next line at the
+    // line's YMost, and it must place the next line at a different
+    // point from where this empty block will be.
+    backupContainingBlockAdvance = mTopMargin.get();
   }
   else {
     // See if the frame fit. If it's the first frame then it always
@@ -773,7 +785,8 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
     mMargin.left = align.mLeftMargin;
     mMargin.right = align.mRightMargin;
     
-    aInFlowBounds = nsRect(x, y, mMetrics.width, mMetrics.height);
+    aInFlowBounds = nsRect(x, y - backupContainingBlockAdvance,
+                           mMetrics.width, mMetrics.height);
 
     // Apply CSS relative positioning
     const nsStyleDisplay* styleDisp = mFrame->GetStyleDisplay();
