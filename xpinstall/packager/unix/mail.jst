@@ -40,6 +40,14 @@ if (verifyDiskSpace(communicatorFolder, srDest))
                    getFolder("Chrome","messenger.jar"),
                    "content/messenger-smime/");
 
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-mdn/");
+
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-views/");
+
     if (err==SUCCESS)
     {
 	    err = performInstall(); 

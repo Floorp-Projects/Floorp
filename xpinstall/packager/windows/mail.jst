@@ -394,6 +394,12 @@ if(verifyDiskSpace(fProgram, srDest))
                    "content/messenger-smime/");
     registerChrome(CONTENT | DELAYED_CHROME,
                    getFolder("Chrome","messenger.jar"),
+                   "content/messenger-mdn/");
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
+                   "content/messenger-views/");
+    registerChrome(CONTENT | DELAYED_CHROME,
+                   getFolder("Chrome","messenger.jar"),
                    "content/messenger-mapi/");
 
     // log comments for uninstalling the registry keys created by mail for setting
