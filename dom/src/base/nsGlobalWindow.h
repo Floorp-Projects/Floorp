@@ -46,6 +46,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMDocument.h"
+#include "nsISidebar.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
