@@ -1436,37 +1436,6 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
   nsCRT::free(url);
 
-  //Set the "at-work" protocol icon.
-
-  nsXPIDLCString scheme;
-  aURL->GetScheme(getter_Copies(scheme));
-  
-  nsIFileSpec* chrome = NS_LocateFileOrDirectory( nsSpecialFileSpec::App_ChromeDirectory);
-  
-  if (chrome)
-  {
-      chrome->AppendRelativeUnixPath("netwerk/content/default/");
-      chrome->AppendRelativeUnixPath(scheme);
-      PRBool exists;
-      chrome->Exists(&exists);
-
-      if (exists)
-      {
-          nsAutoString iconURIString;
-  
-          iconURIString.SetString("chrome://netwerk/content/");
-          iconURIString.Append(scheme);
-          iconURIString.Append("/working.gif");
-
-          setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", iconURIString);
-      }
-      else
-      {
-        setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", emptyStr);
-      }
-
-      NS_RELEASE(chrome);
-  }
   return NS_OK;
 }
 
@@ -1583,41 +1552,6 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
 
   //Enable the reload button
   setAttribute(mWebShell, "canReload", "disabled", "");
-
-  //Set the protocol icon.
-  nsIFileSpec* chrome = NS_LocateFileOrDirectory( nsSpecialFileSpec::App_ChromeDirectory);
-  
-  if (chrome)
-  {
-      PRBool exists;
-      nsXPIDLCString scheme;
-
-      aUrl->GetScheme(getter_Copies(scheme));
-
-      chrome->AppendRelativeUnixPath("netwerk/content/default/");
-      chrome->AppendRelativeUnixPath(scheme);
-      chrome->Exists(&exists);
-  
-      if (exists)
-      {
-        nsAutoString iconURIString;
-
-        iconURIString.SetString("chrome://netwerk/content/");
-        iconURIString.Append(scheme);
-        if (NS_SUCCEEDED(aStatus))
-            iconURIString.Append("/successful.gif");
-        else
-            iconURIString.Append("/failure.gif");
-
-        setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", iconURIString);
-      }
-      else
-      {
-        setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", "");
-      }
-
-    NS_RELEASE(chrome);
-  } 
 
   return NS_OK;
 }
