@@ -1581,11 +1581,11 @@ function checkForDefaultBrowser()
 
 function ShowAndSelectContentsOfURLBar()
 {
-  var navBar = document.getElementById("nav-bar");
+  var navBar = document.getElementById("LocationToolbar");
   
   // If it's hidden, show it.
   if (navBar.getAttribute("hidden") == "true")
-    goToggleToolbar('nav-bar','cmd_viewnavbar');
+    goToggleToolbar('LocationToolbar','cmd_viewlocationbar');
 
   if (gURLBar.value)
     gURLBar.select();
