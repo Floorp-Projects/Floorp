@@ -579,11 +579,7 @@ endif
 GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
 ifneq (,$(filter-out WINNT, $(OS_ARCH)))
-ifdef CROSS_COMPILE
-NSINSTALL	= $(CONFIG_TOOLS)/host_nsinstall
-else
 NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
-endif
 
 ifeq ($(NSDISTMODE),copy)
 # copy files, but preserve source mtime
