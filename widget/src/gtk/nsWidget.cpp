@@ -158,33 +158,31 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
-#ifdef DBG
-   g_print("nsWidget::Move(%3d,%3d)   - %s %p\n", aX, aY, mWidget->name, this);
-#endif
+  if (mBounds.x == aX && mBounds.y == aY)
+    return NS_ERROR_FAILURE;
+
   mBounds.x = aX;
   mBounds.y = aY;
+
   gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+
   return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-//#ifdef DBG
-  g_print("nsWidget::Resize(%3d,%3d) - %s %p %s\n", aWidth, aHeight, mWidget->name, this, aRepaint ? "paint" : "no paint");
-//#endif
-  if (aWidth > 2000)
-  {
-    g_print("we have problems!  aWidth == %d, setting to 0\n", aWidth);
-    aWidth = -1;
-  }
-  if (aHeight > 2000)
-  {
-    g_print("we have problems!  aHeight == %d, setting to 0\n", aHeight);
-    aHeight = -1;
-  }
+  if (mBounds.width == aWidth && mBounds.height == aHeight)
+    return NS_ERROR_FAILURE;
+
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   gtk_widget_set_usize(mWidget, aWidth, aHeight);
+
+/*
+  if (aRepaint)
+    gtk_widget_queue_resize(mWidget);
+*/
+
   if (aRepaint && GTK_IS_WIDGET (mWidget) &&
       GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
 
@@ -204,15 +202,30 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
     gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
     gdk_window_unref (event.window);
   }
+
   return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 			   PRUint32 aHeight, PRBool aRepaint)
 {
-    Resize(aWidth, aHeight, aRepaint);
-    Move(aX, aY);
-    return NS_OK;
+  GtkAllocation alloc;
+  alloc.x = aX;
+  alloc.y = aY;
+  alloc.width = aWidth;
+  alloc.height = aHeight;
+  
+  mBounds.x = aX;
+  mBounds.y = aY;
+  mBounds.width = aWidth;
+  mBounds.height = aHeight;
+
+  gtk_widget_size_allocate (mWidget, &alloc);
+  
+  if (aRepaint)
+    gtk_widget_queue_draw(mWidget);
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -492,28 +505,19 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
       parentWidget = GTK_WIDGET(shellWidget);
   }
 
-#ifdef DBG
-  g_print("--\n");
-#endif
-
   CreateNative (parentWidget);
-
-  Resize(mBounds.width, mBounds.height, PR_TRUE);
 
   if (parentWidget)
   {
     gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
-#ifdef DBG
-    g_print("nsWidget::SWC(%3d,%3d)    - %s %p\n", mBounds.x, mBounds.y, mWidget->name, this);
-#endif
   }
+  Resize(mBounds.width, mBounds.height, PR_FALSE);
 
   InitCallbacks();
   CreateGC();
 
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
-
 
   DispatchStandardEvent(NS_CREATE);
   return NS_OK;

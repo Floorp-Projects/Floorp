@@ -161,6 +161,30 @@ void InitAllocationEvent(GtkAllocation *aAlloc,
 }
 
 //==============================================================
+void InitConfigureEvent(GdkEventConfigure *aConf,
+                            gpointer   p,
+                            nsSizeEvent &anEvent,
+                            PRUint32   aEventType)
+{
+  anEvent.message = aEventType;
+  anEvent.widget  = (nsWidget *) p;
+  NS_ADDREF(anEvent.widget);
+
+  anEvent.eventStructType = NS_SIZE_EVENT;
+
+  if (aConf != NULL) {
+    nsRect *foo = new nsRect(aConf->x, aConf->y, aConf->width, aConf->height);
+    anEvent.windowSize = foo;
+    anEvent.point.x = aConf->x;
+    anEvent.point.y = aConf->y;
+    anEvent.mWinWidth = aConf->width;
+    anEvent.mWinHeight = aConf->height;
+  }
+// this usually returns 0
+  anEvent.time = 0;
+}
+
+//==============================================================
 void InitMouseEvent(GdkEventButton *aGEB,
                             gpointer   p,
                             nsMouseEvent &anEvent,
@@ -282,12 +306,36 @@ void InitKeyEvent(GdkEventKey *aGEK,
 
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
+  g_print("size_allocate: %p, {x=%i, y=%i, w=%i, h=%i}\n", w, alloc->x,
+           alloc->y,
+	   alloc->width,
+	   alloc->height);
+  
   nsSizeEvent sevent;
   InitAllocationEvent(alloc, p, sevent, NS_SIZE);
+  sevent.mWinWidth = gtk_widget_get_toplevel(w)->allocation.width;
+  sevent.mWinHeight = gtk_widget_get_toplevel(w)->allocation.height;
 
   nsWindow *win = (nsWindow *)p;
 
   win->OnResize(sevent);
+}
+
+gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
+{
+  g_print("configure_event: {x=%i, y=%i, w=%i, h=%i}\n", conf->x,
+           conf->y,
+	   conf->width,
+	   conf->height);
+  
+  nsSizeEvent sevent;
+  InitConfigureEvent(conf, p, sevent, NS_SIZE);
+
+  nsWindow *win = (nsWindow *)p;
+
+  win->OnResize(sevent);
+
+  return PR_FALSE;
 }
 
 gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)

@@ -58,7 +58,6 @@ nsWindow::nsWindow()
   strcpy(gInstanceClassName, "nsWindow");
   mFontMetrics = nsnull;
   mVBox = nsnull;
-  mIgnoreResize = PR_FALSE;
   mResized = PR_FALSE;
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
@@ -202,7 +201,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   mWidget = gtk_layout_new(PR_FALSE, PR_FALSE);
 
   gtk_widget_set_events (mWidget,
-  
                          GDK_BUTTON_PRESS_MASK |
                          GDK_BUTTON_RELEASE_MASK |
                          GDK_POINTER_MOTION_MASK |
@@ -221,18 +219,12 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
                        GTK_SIGNAL_FUNC(window_realize_callback),
                        NULL);
 
-    gtk_signal_connect(GTK_OBJECT(mainWindow),
-                       "size_allocate",
-                       GTK_SIGNAL_FUNC(handle_size_allocate),
-                       this);
-
 // VBox for the menu, etc.
     mVBox = gtk_vbox_new(PR_FALSE, 0);
     gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
     gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
   }
-  gtk_widget_show(mWidget);
   // Force cursor to default setting
   gtk_widget_set_name(mWidget, "nsWindow");
   mCursor = eCursor_select;
@@ -248,6 +240,12 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
+
+  gtk_signal_connect_after(GTK_OBJECT(mWidget),
+                     "size_allocate",
+                     GTK_SIGNAL_FUNC(handle_size_allocate),
+                     this);
+
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_press_event",
 		     GTK_SIGNAL_FUNC(handle_button_press_event),
