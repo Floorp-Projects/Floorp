@@ -3158,7 +3158,7 @@ nsMsgLocalMailFolder::GetIncomingServerType()
 
 #ifdef HAVE_MOVEMAIL
   // next try "movemail"
-  url->SetScheme(NS_LITERAL_CSTRING("movemail");
+  url->SetScheme(NS_LITERAL_CSTRING("movemail"));
   rv = accountManager->FindServerByURI(url, PR_FALSE,
                                   getter_AddRefs(server));
   if (NS_SUCCEEDED(rv) && server) 
