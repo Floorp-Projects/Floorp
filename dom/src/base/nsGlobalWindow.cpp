@@ -49,7 +49,6 @@
 #include "nsBarProps.h"
 
 // Helper Classes
-#include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsJSUtils.h"
 #include "prmem.h"
@@ -197,17 +196,6 @@ static const char kPkcs11ContractID[] = NS_PKCS11_CONTRACTID;
 
 GlobalWindowImpl::GlobalWindowImpl()
   : mJSObject(nsnull),
-    mNavigator(nsnull),
-    mScreen(nsnull),
-    mHistory(nsnull),
-    mFrames(nsnull),
-    mLocation(nsnull),
-    mMenubar(nsnull),
-    mToolbar(nsnull),
-    mLocationbar(nsnull),
-    mPersonalbar(nsnull),
-    mStatusbar(nsnull),
-    mScrollbars(nsnull),
     mTimeouts(nsnull),
     mTimeoutInsertionPoint(&mTimeouts),
     mRunningTimeout(nsnull),
@@ -280,17 +268,17 @@ GlobalWindowImpl::ShutDown()
 void
 GlobalWindowImpl::CleanUp()
 {
-  NS_IF_RELEASE(mNavigator);
-  NS_IF_RELEASE(mScreen);
-  NS_IF_RELEASE(mHistory);
-  NS_IF_RELEASE(mMenubar);
-  NS_IF_RELEASE(mToolbar);
-  NS_IF_RELEASE(mLocationbar);
-  NS_IF_RELEASE(mPersonalbar);
-  NS_IF_RELEASE(mStatusbar);
-  NS_IF_RELEASE(mScrollbars);
-  NS_IF_RELEASE(mLocation);
-  NS_IF_RELEASE(mFrames);
+  mNavigator = nsnull;
+  mScreen = nsnull;
+  mHistory = nsnull;
+  mMenubar = nsnull;
+  mToolbar = nsnull;
+  mLocationbar = nsnull;
+  mPersonalbar = nsnull;
+  mStatusbar = nsnull;
+  mScrollbars = nsnull;
+  mLocation = nsnull;
+  mFrames = nsnull;
 
   ClearControllers();
 
@@ -460,7 +448,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
         mNavigator->SetDocShell(nsnull);
 
-        NS_RELEASE(mNavigator);
+        mNavigator = nsnull;
       }
     }
 
@@ -576,8 +564,8 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
         if (mContext && mJSObject) {
           if (mNavigator) {
-            nsISupports* navigator =
-              NS_REINTERPRET_CAST(nsISupports*, mNavigator);
+            nsIDOMNavigator* navigator =
+              NS_STATIC_CAST(nsIDOMNavigator*, mNavigator.get());
             sXPConnect->WrapNative(cx, mJSObject, navigator,
                                    NS_GET_IID(nsIDOMNavigator),
                                    getter_AddRefs(mNavigatorHolder));
@@ -1074,12 +1062,12 @@ GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 {
   if (!mNavigator) {
     mNavigator = new NavigatorImpl(mDocShell);
-    NS_ENSURE_TRUE(mNavigator, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(mNavigator);
+    if (!mNavigator) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  *aNavigator = mNavigator;
-  NS_ADDREF(*aNavigator);
+  NS_ADDREF(*aNavigator = mNavigator);
 
   return NS_OK;
 }
@@ -1089,12 +1077,13 @@ GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
 {
   if (!mScreen && mDocShell) {
     mScreen = new ScreenImpl(mDocShell);
-    NS_ENSURE_TRUE(mScreen, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(mScreen);
+    if (!mScreen) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  *aScreen = mScreen;
-  NS_ADDREF(*aScreen);
+  NS_ADDREF(*aScreen = mScreen);
+
   return NS_OK;
 }
 
@@ -1103,11 +1092,13 @@ GlobalWindowImpl::GetHistory(nsIDOMHistory** aHistory)
 {
   if (!mHistory && mDocShell) {
     mHistory = new HistoryImpl(mDocShell);
-    NS_ENSURE_TRUE(mHistory, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(mHistory);
+    if (!mHistory) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
-  *aHistory = mHistory;
-  NS_ADDREF(*aHistory);
+
+  NS_ADDREF(*aHistory = mHistory);
+
   return NS_OK;
 }
 
@@ -1217,18 +1208,18 @@ GlobalWindowImpl::GetMenubar(nsIDOMBarProp** aMenubar)
 {
   if (!mMenubar) {
     mMenubar = new MenubarPropImpl();
-    if (mMenubar) {
-      NS_ADDREF(mMenubar);
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-      if (mDocShell &&
-          NS_SUCCEEDED(GetWebBrowserChrome(getter_AddRefs(browserChrome)))) {
-        mMenubar->SetWebBrowserChrome(browserChrome);
-      }
+    if (!mMenubar) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+    GetWebBrowserChrome(getter_AddRefs(browserChrome));
+
+    mMenubar->SetWebBrowserChrome(browserChrome);
   }
 
-  *aMenubar = mMenubar;
-  NS_IF_ADDREF(mMenubar);
+  NS_ADDREF(*aMenubar = mMenubar);
+
   return NS_OK;
 }
 
@@ -1237,18 +1228,18 @@ GlobalWindowImpl::GetToolbar(nsIDOMBarProp** aToolbar)
 {
   if (!mToolbar) {
     mToolbar = new ToolbarPropImpl();
-    if (mToolbar) {
-      NS_ADDREF(mToolbar);
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-      if (mDocShell &&
-          NS_SUCCEEDED(GetWebBrowserChrome(getter_AddRefs(browserChrome)))) {
-        mToolbar->SetWebBrowserChrome(browserChrome);
-      }
+    if (!mToolbar) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+    GetWebBrowserChrome(getter_AddRefs(browserChrome));
+
+    mToolbar->SetWebBrowserChrome(browserChrome);
   }
 
-  *aToolbar = mToolbar;
-  NS_IF_ADDREF(mToolbar);
+  NS_ADDREF(*aToolbar = mToolbar);
+
   return NS_OK;
 }
 
@@ -1257,18 +1248,18 @@ GlobalWindowImpl::GetLocationbar(nsIDOMBarProp** aLocationbar)
 {
   if (!mLocationbar) {
     mLocationbar = new LocationbarPropImpl();
-    if (mLocationbar) {
-      NS_ADDREF(mLocationbar);
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-      if (mDocShell &&
-          NS_SUCCEEDED(GetWebBrowserChrome(getter_AddRefs(browserChrome)))) {
-        mLocationbar->SetWebBrowserChrome(browserChrome);
-      }
+    if (!mLocationbar) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+    GetWebBrowserChrome(getter_AddRefs(browserChrome));
+
+    mLocationbar->SetWebBrowserChrome(browserChrome);
   }
 
-  *aLocationbar = mLocationbar;
-  NS_IF_ADDREF(mLocationbar);
+  NS_ADDREF(*aLocationbar = mLocationbar);
+
   return NS_OK;
 }
 
@@ -1277,18 +1268,18 @@ GlobalWindowImpl::GetPersonalbar(nsIDOMBarProp** aPersonalbar)
 {
   if (!mPersonalbar) {
     mPersonalbar = new PersonalbarPropImpl();
-    if (mPersonalbar) {
-      NS_ADDREF(mPersonalbar);
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-      if (mDocShell &&
-          NS_SUCCEEDED(GetWebBrowserChrome(getter_AddRefs(browserChrome)))) {
-        mPersonalbar->SetWebBrowserChrome(browserChrome);
-      }
+    if (!mPersonalbar) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+    GetWebBrowserChrome(getter_AddRefs(browserChrome));
+
+    mPersonalbar->SetWebBrowserChrome(browserChrome);
   }
 
-  *aPersonalbar = mPersonalbar;
-  NS_IF_ADDREF(mPersonalbar);
+  NS_ADDREF(*aPersonalbar = mPersonalbar);
+
   return NS_OK;
 }
 
@@ -1297,18 +1288,18 @@ GlobalWindowImpl::GetStatusbar(nsIDOMBarProp** aStatusbar)
 {
   if (!mStatusbar) {
     mStatusbar = new StatusbarPropImpl();
-    if (mStatusbar) {
-      NS_ADDREF(mStatusbar);
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-      if (mDocShell &&
-          NS_SUCCEEDED(GetWebBrowserChrome(getter_AddRefs(browserChrome)))) {
-        mStatusbar->SetWebBrowserChrome(browserChrome);
-      }
+    if (!mStatusbar) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+    GetWebBrowserChrome(getter_AddRefs(browserChrome));
+
+    mStatusbar->SetWebBrowserChrome(browserChrome);
   }
 
-  *aStatusbar = mStatusbar;
-  NS_IF_ADDREF(mStatusbar);
+  NS_ADDREF(*aStatusbar = mStatusbar);
+
   return NS_OK;
 }
 
@@ -1317,18 +1308,18 @@ GlobalWindowImpl::GetScrollbars(nsIDOMBarProp** aScrollbars)
 {
   if (!mScrollbars) {
     mScrollbars = new ScrollbarsPropImpl(this);
-    if (mScrollbars) {
-      NS_ADDREF(mScrollbars);
-      nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-      if (mDocShell &&
-          NS_SUCCEEDED(GetWebBrowserChrome(getter_AddRefs(browserChrome)))) {
-        mScrollbars->SetWebBrowserChrome(browserChrome);
-      }
+    if (!mScrollbars) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+    GetWebBrowserChrome(getter_AddRefs(browserChrome));
+
+    mScrollbars->SetWebBrowserChrome(browserChrome);
   }
 
-  *aScrollbars = mScrollbars;
-  NS_IF_ADDREF(mScrollbars);
+  NS_ADDREF(*aScrollbars = mScrollbars);
+
   return NS_OK;
 }
 
@@ -1353,12 +1344,13 @@ GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
 {
   if (!mFrames && mDocShell) {
     mFrames = new nsDOMWindowList(mDocShell);
-    NS_ENSURE_TRUE(mFrames, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(mFrames);
+    if (!mFrames) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   *aFrames = NS_STATIC_CAST(nsIDOMWindowCollection *, mFrames);
-  NS_IF_ADDREF(mFrames);
+  NS_ADDREF(*aFrames);
 
   return NS_OK;
 }
@@ -4208,11 +4200,12 @@ GlobalWindowImpl::GetLocation(nsIDOMLocation ** aLocation)
 {
   if (!mLocation && mDocShell) {
     mLocation = new LocationImpl(mDocShell);
-    NS_IF_ADDREF(mLocation);
+    if (!mLocation) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  *aLocation = mLocation;
-  NS_IF_ADDREF(mLocation);
+  NS_ADDREF(*aLocation = mLocation);
 
   return NS_OK;
 }
@@ -5769,16 +5762,12 @@ NS_NewScriptGlobalObject(PRBool aIsChrome, nsIScriptGlobalObject **aResult)
 //*****************************************************************************
 
 NavigatorImpl::NavigatorImpl(nsIDocShell *aDocShell) :
-  mMimeTypes(nsnull),
-  mPlugins(nsnull),
   mDocShell(aDocShell)
 {
 }
 
 NavigatorImpl::~NavigatorImpl()
 {
-  NS_IF_RELEASE(mMimeTypes);
-  NS_IF_RELEASE(mPlugins);
   sPrefInternal_id = JSVAL_VOID;
 }
 
@@ -6012,11 +6001,12 @@ NavigatorImpl::GetMimeTypes(nsIDOMMimeTypeArray **aMimeTypes)
 {
   if (!mMimeTypes) {
     mMimeTypes = new MimeTypeArrayImpl(this);
-    NS_IF_ADDREF(mMimeTypes);
+    if (!mMimeTypes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  *aMimeTypes = mMimeTypes;
-  NS_IF_ADDREF(mMimeTypes);
+  NS_ADDREF(*aMimeTypes = mMimeTypes);
 
   return NS_OK;
 }
@@ -6026,14 +6016,12 @@ NavigatorImpl::GetPlugins(nsIDOMPluginArray **aPlugins)
 {
   if (!mPlugins) {
     mPlugins = new PluginArrayImpl(this, mDocShell);
-    if (!mPlugins)
+    if (!mPlugins) {
       return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(mPlugins);
+    }
   }
 
-  *aPlugins = mPlugins;
-  NS_ADDREF(mPlugins);
+  NS_ADDREF(*aPlugins = mPlugins);
 
   return NS_OK;
 }
@@ -6271,8 +6259,8 @@ NavigatorImpl::LoadingNewDocument()
   // Release these so that they will be recreated for the
   // new document (if requested).  The plugins or mime types
   // arrays may have changed.  See bug 150087.
-  NS_IF_RELEASE(mMimeTypes);
-  NS_IF_RELEASE(mPlugins);
+  mMimeTypes = nsnull;
+  mPlugins = nsnull;
 }
 
 nsresult

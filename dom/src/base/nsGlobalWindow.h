@@ -46,6 +46,7 @@
 // Local Includes
 // Helper Classes
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
 
@@ -280,17 +281,17 @@ protected:
   nsCOMPtr<nsIEventListenerManager> mListenerManager;
   nsCOMPtr<nsISidebar>          mSidebar;
   JSObject*                     mJSObject;
-  NavigatorImpl*                mNavigator;
-  ScreenImpl*                   mScreen;
-  HistoryImpl*                  mHistory;
-  nsDOMWindowList*              mFrames;
-  LocationImpl*                 mLocation;
-  BarPropImpl*                  mMenubar;
-  BarPropImpl*                  mToolbar;
-  BarPropImpl*                  mLocationbar;
-  BarPropImpl*                  mPersonalbar;
-  BarPropImpl*                  mStatusbar;
-  BarPropImpl*                  mScrollbars;
+  nsRefPtr<NavigatorImpl>       mNavigator;
+  nsRefPtr<ScreenImpl>          mScreen;
+  nsRefPtr<HistoryImpl>         mHistory;
+  nsRefPtr<nsDOMWindowList>     mFrames;
+  nsRefPtr<LocationImpl>        mLocation;
+  nsRefPtr<BarPropImpl>         mMenubar;
+  nsRefPtr<BarPropImpl>         mToolbar;
+  nsRefPtr<BarPropImpl>         mLocationbar;
+  nsRefPtr<BarPropImpl>         mPersonalbar;
+  nsRefPtr<BarPropImpl>         mStatusbar;
+  nsRefPtr<BarPropImpl>         mScrollbars;
   nsTimeoutImpl*                mTimeouts;
   nsTimeoutImpl**               mTimeoutInsertionPoint;
   nsTimeoutImpl*                mRunningTimeout;
@@ -459,8 +460,8 @@ public:
   nsresult RefreshMIMEArray();
 
 protected:
-  MimeTypeArrayImpl* mMimeTypes;
-  PluginArrayImpl* mPlugins;
+  nsRefPtr<MimeTypeArrayImpl> mMimeTypes;
+  nsRefPtr<PluginArrayImpl> mPlugins;
   nsIDocShell* mDocShell; // weak reference
 
   static jsval       sPrefInternal_id;
