@@ -172,7 +172,7 @@ function LoadAvailableCharSets()
              if(row) {
                 var cell= row.firstChild;
                 if(cell) {
-                   cell.setAttribute("data", charsetDict[i][1]);
+                   cell.setAttribute("value", charsetDict[i][1]);
                 }
              }
              if(charset == charsetDict[i][1] ) 
@@ -203,7 +203,7 @@ function SelectCharset()
 {
   if(initDone) {
     try {
-      charset = GetSelectedTreelistAttribute(dialog.charsetTree, "data");
+      charset = GetSelectedTreelistAttribute(dialog.charsetTree, "value");
       //dump("charset = " + charset + "\n");
       if(charset != "") {
          charsetWasChanged = true;

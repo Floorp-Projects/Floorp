@@ -249,7 +249,7 @@
 
     <command id="cmd_viewCompToolbar"     oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');"         checked="true"/>
     <command id="cmd_viewFormatToolbar"   oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');"     checked="true"/>
-    <command id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');" checked="false"/>
+    <command id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');" checked="true"/>
     <command id="cmd_viewtaskbar"         oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');"                 checked="true"/>
 
     <!-- Obsolete; these will go away -->
@@ -434,14 +434,14 @@
     <menuseparator position="8"/>
 
     <!-- Note: the 'Init' menu methods for Paragraph, List, and Align
-         assume that the id = 'menu_'+tagName (the 'data' label),
+         assume that the id = 'menu_'+tagName (the 'value' label),
          except for the first ('none') item
      -->
     <!-- Paragraph Style submenu -->
     <menu id="paragraphMenu" label="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
           position="9" oncreate="InitParagraphMenu()">
-      <menupopup oncommand="doStatefulCommand('cmd_paragraphState', event.target.getAttribute('data'))">
+      <menupopup oncommand="doStatefulCommand('cmd_paragraphState', event.target.getAttribute('value'))">
         <menuitem id="menu_bodyText"  type="radio" name="1" label="&bodyTextCmd.label;"             accesskey="&bodytext.accesskey;"              value=""/>
         <menuitem id="menu_p"         type="radio" name="1" label="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  value="p"/>
         <menuitem id="menu_h1"        type="radio" name="1" label="&heading1Cmd.label;"             accesskey="&heading1.accesskey;"            value="h1"/>
@@ -482,7 +482,7 @@
         oncreate="InitAlignMenu()"
         position="14">
       <!-- Align submenu -->
-      <menupopup oncommand="doStatefulCommand('cmd_align', event.target.getAttribute('data'))">
+      <menupopup oncommand="doStatefulCommand('cmd_align', event.target.getAttribute('value'))">
         <menuitem id="menu_left"    label="&alignLeft.label;"  accesskey="&alignleft.accesskey;"      type="radio" name="1" value="left"/>
         <menuitem id="menu_center"  label="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  type="radio" name="1" value="center"/>
         <menuitem id="menu_right"   label="&alignRight.label;"   accesskey="&alignright.accesskey;"   type="radio" name="1" value="right"/>
