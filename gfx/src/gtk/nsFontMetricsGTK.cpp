@@ -1456,7 +1456,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
       s--;
     }
     else if (s != begin) {
-      if ((s->mSize - desiredSize) > (desiredSize - (s - 1)->mSize)) {
+      if ((s->mSize - desiredSize) >= (desiredSize - (s - 1)->mSize)) {
         s--;
       }
     }
@@ -1496,7 +1496,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
           }
         }
         if (s->mActualSize >= desiredSize) {
-          if ((s->mActualSize - desiredSize) >
+          if ((s->mActualSize - desiredSize) >=
               (desiredSize - (s - 1)->mActualSize)) {
             s--;
           }
