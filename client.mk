@@ -374,6 +374,12 @@ checkout::
 	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
 	else true; \
 	fi
+ifdef RUN_AUTOCONF_LOCALLY
+	@echo "Removing local configures" ; \
+	cd $(ROOTDIR) && \
+	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
+		mozilla/directory/c-sdk/ldap/configure
+endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk'; \
         cd $(ROOTDIR); \
@@ -406,6 +412,12 @@ real_checkout:
 	  false; \
 	else true; \
 	fi
+ifdef RUN_AUTOCONF_LOCALLY
+	@echo Generating configures using $(AUTOCONF) ; \
+	cd $(TOPSRCDIR) && $(AUTOCONF) && \
+	cd $(TOPSRCDIR)/nsprpub && $(AUTOCONF) && \
+	cd $(TOPSRCDIR)/directory/c-sdk/ldap && $(AUTOCONF)
+endif
 
 fast-update:
 #	@: Backup the last checkout log.
@@ -413,6 +425,12 @@ fast-update:
 	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
 	else true; \
 	fi
+ifdef RUN_AUTOCONF_LOCALLY
+	@echo "Removing local configures" ; \
+	cd $(ROOTDIR) && \
+	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
+		mozilla/directory/c-sdk/ldap/configure
+endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk'; \
         cd $(ROOTDIR); \
@@ -450,6 +468,12 @@ real_fast-update:
 	  false; \
 	else true; \
 	fi
+ifdef RUN_AUTOCONF_LOCALLY
+	@echo Generating configures using $(AUTOCONF) ; \
+	cd $(TOPSRCDIR) && $(AUTOCONF) && \
+	cd $(TOPSRCDIR)/nsprpub && $(AUTOCONF) && \
+	cd $(TOPSRCDIR)/directory/c-sdk/ldap && $(AUTOCONF)
+endif
 
 ####################################
 # Web configure
@@ -493,8 +517,7 @@ CONFIG_CACHE  := $(wildcard $(OBJDIR)/config.cache)
 ifdef RUN_AUTOCONF_LOCALLY
 EXTRA_CONFIG_DEPS := \
 	$(TOPSRCDIR)/aclocal.m4 \
-	$(TOPSRCDIR)/build/autoconf/gtk.m4 \
-	$(TOPSRCDIR)/build/autoconf/altoptions.m4 \
+	$(wildcard $(TOPSRCDIR)/build/autoconf/*.m4) \
 	$(NULL)
 
 $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
