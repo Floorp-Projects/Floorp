@@ -44,6 +44,26 @@ public:
     // Initialization routine. Must be called after this object is constructed.
     nsresult Init();
 
+    static NS_METHOD
+    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
+        nsresult rv;
+        if (aOuter)
+            return NS_ERROR_NO_AGGREGATION;
+
+        nsStreamConverterService* _s = new nsStreamConverterService();
+        if (_s == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(_s);
+        rv = _s->Init();
+        if (NS_FAILED(rv)) {
+            delete _s;
+            return rv;
+        }
+        rv = _s->QueryInterface(aIID, aResult);
+        NS_RELEASE(_s);
+        return rv;
+    }
+
 private:
     // Responsible for finding a converter for the given MIME-type.
     nsresult FindConverter(const char *aProgID, nsVoidArray **aEdgeList);

@@ -42,9 +42,29 @@ nsStreamConverterService::nsStreamConverterService() {
     mAdjacencyList = nsnull;
 }
 
+// Delete all the entries in the adjacency list
+PRBool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
+    SCTableData *entry = (SCTableData*)aData;
+    NS_ASSERTION(entry->key && entry->keyString && entry->data, "malformed adjacency list entry");
+    delete entry->key;
+    delete entry->keyString;
+
+    // clear out the edges
+    nsVoidArray *edges = (nsVoidArray*)entry->data;
+    nsIAtom *vertex;
+    while ( (vertex = (nsIAtom*)edges->ElementAt(0)) ) {
+        NS_RELEASE(vertex);
+        edges->RemoveElementAt(0);
+    }
+    delete entry->data;
+    delete entry;
+    return PR_TRUE;   
+};
+
 nsStreamConverterService::~nsStreamConverterService() {
-    //mAdjacencyList->Enumerate(DeleteEntry, nsnull);
-    //mAdjacencyList->Reset();
+    // Clean up the adjacency list table.
+    mAdjacencyList->Enumerate(DeleteAdjacencyEntry, nsnull);
+    mAdjacencyList->Reset();
     delete mAdjacencyList;
 }
 
@@ -110,8 +130,11 @@ nsStreamConverterService::BuildGraph() {
         rv = node->GetName(&name);
         if (NS_FAILED(rv)) return rv;
 
+        nsString2 actualProgID(NS_ISTREAMCONVERTER_KEY, eOneByte);
+        actualProgID.Append(name);
+
         // now we've got the PROGID, let's parse it up.
-        rv = AddAdjacency(name);
+        rv = AddAdjacency(actualProgID.GetBuffer());
 
         // cleanup
         nsCRT::free(name);
@@ -144,20 +167,41 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
     // Each MIME-type is a vertex in the graph, so first lets make sure
     // each MIME-type is represented as a key in our hashtable.
 
+    PRBool delFrom = PR_TRUE, delTo = PR_TRUE;
     nsStringKey *fromKey = new nsStringKey(fromStr.GetBuffer());
     if (!fromKey) return NS_ERROR_OUT_OF_MEMORY;
     nsStringKey *toKey = new nsStringKey(toStr.GetBuffer());
-    if (!toKey) return NS_ERROR_OUT_OF_MEMORY;
+    if (!toKey) {
+        delete fromKey;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     SCTableData *edges = (SCTableData*)mAdjacencyList->Get(fromKey);
     if (!edges) {
         // There is no fromStr vertex, create one.
         SCTableData *data = new SCTableData;
-        if (!data) return NS_ERROR_OUT_OF_MEMORY;
+        if (!data) {
+            delete fromKey;
+            delete toKey;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         data->key = fromKey;
-        data->keyString = new nsString2(fromStr.GetBuffer());
+        delFrom = PR_FALSE;
+        data->keyString = new nsString2(fromStr.GetBuffer(), eOneByte);
+        if (!data->keyString) {
+            delete fromKey;
+            delete toKey;
+            delete data;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         data->data = new nsVoidArray();
-        if (!data->data) return NS_ERROR_OUT_OF_MEMORY;
+        if (!data->data) {
+            delete data->keyString;
+            delete fromKey;
+            delete toKey;
+            delete data;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         mAdjacencyList->Put(fromKey, data);
     }
 
@@ -165,21 +209,42 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
     if (!edges) {
         // There is no toStr vertex, create one.
         SCTableData *data = new SCTableData;
-        if (!data) return NS_ERROR_OUT_OF_MEMORY;
+        if (!data) {
+            delete fromKey;
+            delete toKey;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         data->key = toKey;
-        data->keyString = new nsString2(toStr.GetBuffer());
+        delTo = PR_FALSE;
+        data->keyString = new nsString2(toStr.GetBuffer(), eOneByte);
+        if (!data->keyString) {
+            delete fromKey;
+            delete toKey;
+            delete data;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         data->data = new nsVoidArray();
-        if (!data->data) return NS_ERROR_OUT_OF_MEMORY;
+        if (!data->data) {
+            delete data->keyString;
+            delete fromKey;
+            delete toKey;
+            delete data;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         mAdjacencyList->Put(toKey, data);
     }
-
+    if (delTo)
+        delete toKey;
     
     // Now we know the FROM and TO types are represented as keys in the hashtable.
     // Let's "connect" the verticies, making an edge.
 
     edges = (SCTableData*)mAdjacencyList->Get(fromKey);
+    if (delFrom)
+        delete fromKey;
     NS_ASSERTION(edges, "something wrong in adjacency list construction");
-    nsIAtom *vertex = NS_NewAtom(toStr);
+    const char *toCStr = toStr.GetBuffer();
+    nsIAtom *vertex = NS_NewAtom(toCStr); 
     if (!vertex) return NS_ERROR_OUT_OF_MEMORY;
     nsVoidArray *adjacencyList = (nsVoidArray*)edges->data;
     adjacencyList->AppendElement(vertex);
@@ -208,7 +273,8 @@ nsStreamConverterService::ParseFromTo(const char *aProgID, nsString2 &aFromRes, 
 }
 
 // nsHashtable enumerator functions.
-// Initializes the color table.
+
+// Initializes the BFS state table.
 PRBool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
     nsHashtable *BFSTable = (nsHashtable*)closure;
     if (!BFSTable) return PR_FALSE;
@@ -226,12 +292,25 @@ PRBool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
 
     SCTableData *origData = (SCTableData*)aData;
     NS_ASSERTION(origData, "no data in the table enumeration");
-    data->keyString = new nsString2(*origData->keyString);
+    data->keyString = new nsString2(*origData->keyString, eOneByte);
     data->data = state;
 
     BFSTable->Put(aKey, data);
     return PR_TRUE;   
 };
+
+// cleans up the BFS state table
+PRBool DeleteBFSEntry(nsHashKey *aKey, void *aData, void *closure) {
+    SCTableData *data = (SCTableData*)aData;
+    delete data->key;
+    delete data->keyString;
+    BFSState *state = (BFSState*)data->data;
+    if (state->predecessor) // there might not be a predecessor depending on the graph
+        delete state->predecessor;
+    delete state;
+    delete data;
+    return PR_TRUE;
+}
 
 // walks the graph using a breadth-first-search algorithm which generates a discovered
 // verticies tree. This tree is then walked up (from destination vertex, to origin vertex)
@@ -256,7 +335,11 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
     NS_ASSERTION(lBFSTable.Count() == vertexCount, "strmconv BFS table init problem");
 
     // This is our source vertex; our starting point.
-    nsStringKey *source = new nsStringKey(aProgID);
+    nsString2 from(eOneByte), to(eOneByte);
+    rv = ParseFromTo(aProgID, from, to);
+    if (NS_FAILED(rv)) return rv;
+
+    nsStringKey *source = new nsStringKey(from.GetBuffer());
     if (!source) return NS_ERROR_OUT_OF_MEMORY;
 
     SCTableData *data = (SCTableData*)lBFSTable.Get(source);
@@ -272,7 +355,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
     // Now generate the shortest path tree.
     grayQ->Push(source);
     while (0 < grayQ->GetSize()) {
-        nsHashKey *currentHead = (nsHashKey*)grayQ->Pop();
+        nsHashKey *currentHead = (nsHashKey*)grayQ->Peek();
         SCTableData *data = (SCTableData*)mAdjacencyList->Get(currentHead);
         nsVoidArray *edges = (nsVoidArray*)data->data;
         NS_ASSERTION(edges, "something went wrong with BFS strmconv algorithm");
@@ -287,7 +370,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
         for (int i = 0; i < edgeCount; i++) {
             
             nsIAtom *curVertexAtom = (nsIAtom*)edges->ElementAt(i);
-            nsString2 curVertexStr;
+            nsString2 curVertexStr(eOneByte);
             curVertexAtom->ToString(curVertexStr);
             char * curVertexCString = curVertexStr.ToNewCString();
             nsStringKey *curVertex = new nsStringKey(curVertexCString);
@@ -304,7 +387,9 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
             }
         }
         headVertexState->color = black;
-        grayQ->Pop();
+        nsStringKey *cur = (nsStringKey*)grayQ->PopFront();
+        delete cur;
+        cur = nsnull;
     }
     delete grayQ;
     // The shortest path (if any) has been generated and is represetned by the chain of 
@@ -317,11 +402,18 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
     if (NS_FAILED(rv)) return rv;
 
     // get the root PROGID
-    nsString2 ProgIDPrefix(NS_ISTREAMCONVERTER_KEY);
+    nsString2 ProgIDPrefix(NS_ISTREAMCONVERTER_KEY, eOneByte);
     nsVoidArray *shortestPath = new nsVoidArray();
     nsStringKey *toMIMEType = new nsStringKey(toStr);
     data = (SCTableData*)lBFSTable.Get(toMIMEType);
-    NS_ASSERTION(data, "problem w/ strmconv BFS algorithm");
+    delete toMIMEType;
+
+    if (!data) {
+        // If this vertex isn't in the BFSTable, then no-one has registered for it,
+        // therefore we can't do the conversion.
+        *aEdgeList = nsnull;
+        return NS_ERROR_FAILURE;
+    }
 
     while (data) {
         BFSState *curState = (BFSState*)data->data;
@@ -329,6 +421,8 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
         if (data->keyString->Equals(fromStr)) {
             // found it. We're done here.
             *aEdgeList = shortestPath;
+            lBFSTable.Enumerate(DeleteBFSEntry, nsnull);
+            lBFSTable.Reset();
             return NS_OK;
         }
 
@@ -338,7 +432,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
         if (!predecessorData) break; // no predecessor, chain doesn't exist.
 
         // build out the PROGID.
-        nsString2 *newProgID = new nsString2(ProgIDPrefix);
+        nsString2 *newProgID = new nsString2(ProgIDPrefix, eOneByte);
         newProgID->Append("from=");
 
         char *from = predecessorData->keyString->ToNewCString();
@@ -357,6 +451,8 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
         data = predecessorData;
     }
 
+    lBFSTable.Enumerate(DeleteBFSEntry, nsnull);
+    lBFSTable.Reset();
     *aEdgeList = nsnull;
     return NS_ERROR_FAILURE; // couldn't find a stream converter or chain.
 
@@ -417,9 +513,11 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         for (int i = 0; i < edgeCount; i++) {
             nsString2 *progIDStr = (nsString2*)converterChain->ElementAt(i);
             char * lProgID = progIDStr->ToNewCString();
+
             if (!lProgID) return NS_ERROR_OUT_OF_MEMORY;
             rv = nsServiceManager::GetService(lProgID, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), &converter);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "graph construction problem, built a progid that wasn't registered");
+            //NS_ASSERTION(NS_SUCCEEDED(rv), "registration problem. someone registered a progid w/ the registry, but didn/'t register it with the component manager");
+            if (NS_FAILED(rv)) return rv;
 
             nsString2 fromStr(eOneByte), toStr(eOneByte);
             rv = ParseFromTo(lProgID, fromStr, toStr);
@@ -430,12 +528,20 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
             rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
             NS_RELEASE(converter);
             if (NS_FAILED(rv)) return rv;
-            rv = conv->Convert(dataToConvert, fromStr.GetUnicode(), toStr.GetUnicode(), &convertedData);
+            rv = conv->Convert(dataToConvert, fromStr.GetUnicode(), toStr.GetUnicode(), nsnull, &convertedData);
             NS_RELEASE(conv);
             NS_RELEASE(dataToConvert);
             dataToConvert = convertedData;
             if (NS_FAILED(rv)) return rv;
         }
+
+        // clean up the array.
+        nsString2 *progID;
+        while ( (progID = (nsString2*)converterChain->ElementAt(0)) ) {
+            delete progID;
+            converterChain->RemoveElementAt(0);
+        }
+        delete converterChain;
         *_retval = convertedData;
 
     } else {
@@ -444,7 +550,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
         NS_RELEASE(converter);
         if (NS_FAILED(rv)) return rv;
-        rv = conv->Convert(aFromStream, aFromType, aToType, _retval);
+        rv = conv->Convert(aFromStream, aFromType, aToType, nsnull, _retval);
         NS_RELEASE(conv);
     }
     
@@ -518,7 +624,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
             rv = converter->QueryInterface(nsCOMTypeInfo<nsIStreamConverter>::GetIID(), (void**)&conv);
             NS_RELEASE(converter);
             if (NS_FAILED(rv)) return rv;
-            rv = conv->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(), forwardListener);
+            rv = conv->AsyncConvertData(fromStr.GetUnicode(), toStr.GetUnicode(), nsnull, forwardListener);
 
             nsIStreamListener *listener = nsnull;
             rv = conv->QueryInterface(nsCOMTypeInfo<nsIStreamListener>::GetIID(), (void**)&listener);
@@ -549,7 +655,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
         NS_RELEASE(converter);
         if (NS_FAILED(rv)) return rv;
 
-        rv = conv->AsyncConvertData(aFromType, aToType, aListener);
+        rv = conv->AsyncConvertData(aFromType, aToType, nsnull, aListener);
         NS_RELEASE(conv);
     }
     
