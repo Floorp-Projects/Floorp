@@ -48,6 +48,8 @@
 #include "CContextMenuAttachment.h"
 #include "CTargetFramer.h"
 #include "UMailFolderMenus.h"
+#include "CToolTipAttachment.h"
+#include "CApplicationEventAttachment.h"
 
 #include "macutil.h"
 #include "resgui.h"
@@ -162,13 +164,14 @@ protected:
 	virtual			~CClickTimer();
 
 public:
-	void			NoteDoubleClick();
-	void			NoteSingleClick();
+	static void		NoteDoubleClick(CStandardFlexTable* inTable);
+	static void		NoteSingleClick(CStandardFlexTable* inTable);
 	TableIndexT		GetClickedRow() { return mCell.row; }
 
 protected:	
 	void			ReverseTheHilite();
 	virtual void	SpendTime(const EventRecord& inMacEvent);
+	void			NoteSingleClick();
 
 // Data:
 protected:
@@ -211,12 +214,25 @@ void CClickTimer::SpendTime(const EventRecord& inMacEvent)
 } // CClickTimer::SpendTime()
 
 //----------------------------------------------------------------------------------------
-void CClickTimer::NoteDoubleClick()
+void CClickTimer::NoteDoubleClick(CStandardFlexTable* inTable)
 //----------------------------------------------------------------------------------------
 {
-	ReverseTheHilite(); // Show the selection again
-	delete this;
+	CClickTimer* t = inTable->mClickTimer;
+	if (t)
+	{
+		t->ReverseTheHilite(); // Show the selection again
+		delete t;
+	}
 } // CClickTimer::NoteDoubleClick()
+
+//----------------------------------------------------------------------------------------
+void CClickTimer::NoteSingleClick(CStandardFlexTable* inTable)
+//----------------------------------------------------------------------------------------
+{
+	CClickTimer* t = inTable->mClickTimer;
+	if (t)
+		t->NoteSingleClick();
+}
 
 //----------------------------------------------------------------------------------------
 void CClickTimer::NoteSingleClick()
@@ -294,12 +310,14 @@ CStandardFlexTable::CStandardFlexTable(LStream *inStream)
 ,	mIsInternalDrop(false)
 ,	mIsDropBetweenRows(false)
 ,	mAllowDropAfterLastRow(true)
+,	mAllowAutoExpand(false)
+,	mTimeToExpandForDrop(ULONG_MAX)
 ,	mNameEditor(NULL)
 ,	mRowBeingEdited(0)
 ,	mInlineListener(this)
 {
 	*inStream >> mTableHeaderPaneID;
-	*inStream >> mTextTraitsID;
+	*inStream >> mTextDrawingStuff.mTextTraitsID;
 	*inStream >> mClickCountToOpen;
 	
 	SetRefreshAllWhenResized(true);
@@ -309,8 +327,7 @@ CStandardFlexTable::CStandardFlexTable(LStream *inStream)
 CStandardFlexTable::~CStandardFlexTable()
 //----------------------------------------------------------------------------------------
 {
-	if (mClickTimer)
-		mClickTimer->NoteSingleClick();
+	CClickTimer::NoteSingleClick(this);
 } // CStandardFlexTable::~CStandardFlexTable
 
 //----------------------------------------------------------------------------------------
@@ -335,7 +352,7 @@ void CStandardFlexTable::FinishCreateSelf()
 	
 	SynchronizeColumnsWithHeader();
 
-	SetTextTraits(mTextTraitsID);
+	SetTextTraits(mTextDrawingStuff.mTextTraitsID);
 
 	SetRefreshAllWhenResized(true);
 	
@@ -351,7 +368,29 @@ void CStandardFlexTable::FinishCreateSelf()
 } // CStandardFlexTable::FinishCreateSelf
 
 //----------------------------------------------------------------------------------------
-void CStandardFlexTable::SetTextTraits(ResIDT inmTextTraitsID)
+CStandardFlexTable::TextDrawingStuff&
+CStandardFlexTable::GetTextStyle(const STableCell& inCell)
+// This is called by ApplyTextStyle(), which is called byDrawCell() before calling
+// DrawCellContents().  It is also called by CalcToolTipText(), so that the tooltip
+// looks the same as the cell contents.
+//----------------------------------------------------------------------------------------
+{
+	if (inCell.row != mTextDrawingStuff.lastCell.row)
+	{
+		mTextDrawingStuff.encoding =  TextDrawingStuff::eDefault;
+		mTextDrawingStuff.style = normal;
+		mTextDrawingStuff.mode = srcOr;
+		// Initialize text color to black
+		UInt16* ip = &mTextDrawingStuff.color.red;
+		for (int i = 0; i < 3; i++)
+			*ip++ = 0x0000;
+		mTextDrawingStuff.lastCell = inCell;
+	}
+	return mTextDrawingStuff;
+} // CThreadView::GetTextStyle
+
+//----------------------------------------------------------------------------------------
+void CStandardFlexTable::SetTextTraits(ResIDT inTextTraitsID)
 //----------------------------------------------------------------------------------------
 {
 	// load the text traits and pre-measure them
@@ -359,11 +398,12 @@ void CStandardFlexTable::SetTextTraits(ResIDT inmTextTraitsID)
 	
 	SInt16		rowHeight;
 	
-	mTextTraitsID = inmTextTraitsID;
-	UTextTraits::SetPortTextTraits(mTextTraitsID);
-	::GetFontInfo(&mTextFontInfo);
+	mTextDrawingStuff.mTextTraitsID = inTextTraitsID;
+	UTextTraits::SetPortTextTraits(mTextDrawingStuff.mTextTraitsID);
+	::GetFontInfo(&mTextDrawingStuff.mTextFontInfo);
 	
-	rowHeight = mTextFontInfo.ascent + mTextFontInfo.descent + 1;
+	rowHeight = mTextDrawingStuff.mTextFontInfo.ascent
+				+ mTextDrawingStuff.mTextFontInfo.descent + 1;
 	if (rowHeight < kMinRowHeight) { 
 		rowHeight = kMinRowHeight;
 	}
@@ -492,9 +532,9 @@ void CStandardFlexTable::RefreshCellRange(
 void CStandardFlexTable::DrawSelf()
 //----------------------------------------------------------------------------------------
 {
-	StTextState	textState;
-			
-	UTextTraits::SetPortTextTraits(mTextTraitsID);
+	mTextDrawingStuff.Invalidate();
+	StTextState	textState;			
+	UTextTraits::SetPortTextTraits(mTextDrawingStuff.mTextTraitsID);
 	ApplyForeAndBackColors();
 	LTableView::DrawSelf();
 	ExecuteAttachments(CTargetFramer::msg_DrawSelfDone, this);
@@ -508,10 +548,16 @@ TableIndexT CStandardFlexTable::CountExtraRowsControlledByCell(const STableCell&
 } // CStandardFlexTable::CountExtraRowsControlledByCell
 
 //----------------------------------------------------------------------------------------
-void CStandardFlexTable::ApplyTextStyle(TableIndexT /* inrow */) const
+void CStandardFlexTable::ApplyTextStyle(const STableCell& inCell) const
+// This is called by DrawCell() before calling DrawCellContents()
 //----------------------------------------------------------------------------------------
 {
-} // CStandardFlexTable::ApplyTextStyle
+	TextDrawingStuff& stuff
+		= const_cast<CStandardFlexTable*>(this)->GetTextStyle(inCell);
+	::TextFace(stuff.style);
+	::TextMode(stuff.mode);
+	::RGBForeColor(&stuff.color);
+} // CMessageFolderView::ApplyTextStyle
 
 //----------------------------------------------------------------------------------------
 void CStandardFlexTable::GetMainRowText(
@@ -531,6 +577,7 @@ Boolean CStandardFlexTable::GetHiliteText(
 	TableIndexT			inRow,
 	char*				outText,
 	UInt16				inMaxTextLength,
+	Boolean				okIfRowHidden,
 	Rect*				ioRect) const
 // Calculate the text and (if ioRect is not passed in as null) a rectangle that fits it.
 // Caller must initialize the rectangle
@@ -545,25 +592,36 @@ Boolean CStandardFlexTable::GetHiliteText(
 	ioRect->left += kDistanceFromIconToText;
 	ioRect->top += 2;
 	ioRect->bottom -= 2;
+	TableIndexT		hiliteCol = GetHiliteColumn();
+	
 	StColorState penState;
-	UTextTraits::SetPortTextTraits(mTextTraitsID);
-	ApplyTextStyle(inRow);
+	UTextTraits::SetPortTextTraits(mTextDrawingStuff.mTextTraitsID);
+	ApplyTextStyle(STableCell(inRow, hiliteCol));
 	ioRect->right = ioRect->left + ::TextWidth(outText, 0, ::strlen(outText));
+	
 	Rect cellRect;
-	GetLocalCellRect(STableCell(inRow, GetHiliteColumn()), cellRect);
-	if (ioRect->left < cellRect.right)
+	
+	if (okIfRowHidden)
 	{
-		if (ioRect->right > cellRect.right)
-			ioRect->right = cellRect.right;
+		GetLocalCellRectAnywhere(STableCell(inRow, hiliteCol), cellRect);
 	}
 	else
-		return false;
+	{
+		if ( !GetLocalCellRect(STableCell(inRow, hiliteCol), cellRect) ||
+				(ioRect->left >= cellRect.right) )
+			return false;
+	}
+	
+	if (ioRect->right > cellRect.right)
+		ioRect->right = cellRect.right;
+	
 	return true;
 } // CStandardFlexTable::GetHiliteText
 
 //----------------------------------------------------------------------------------------
 Boolean CStandardFlexTable::GetHiliteTextRect(
 	const TableIndexT	inRow,
+	Boolean				okIfRowHidden,
 	Rect&				outRect) const
 //----------------------------------------------------------------------------------------
 {
@@ -621,7 +679,7 @@ void CStandardFlexTable::HiliteRow(
 			GetLocalCellRect(cell, r);
 			DrawIcons(cell, r);
     	}
-        if (!IsActive())
+        if (!IsActive() || !IsOnDuty())
         {
         	// Make a frame.  Do it this way so we get the "Invert" color trickery
         	// from the toolbox.  The previous code (srcXOR/FrameRgn) did not work
@@ -723,8 +781,7 @@ Boolean CStandardFlexTable::HandleFancyDoubleClick(
 		if (GetClickCount() == 1)
 		{
 			// Single-click. First cancel any previous double-click in progress.
-			if (mClickTimer)
-				mClickTimer->NoteSingleClick();
+			CClickTimer::NoteSingleClick(this);
 			// Set a timer.  If the timer times out, it will set the hilite
 			// back and call ClickSelect again with fancy double-click set to false.
 			mClickTimer = new CClickTimer(this, inCell, inMouseDown);
@@ -732,8 +789,7 @@ Boolean CStandardFlexTable::HandleFancyDoubleClick(
 		else
 		{
 			// Double-click.  Get rid of the timer.
-			if (mClickTimer)
-				mClickTimer->NoteDoubleClick();
+			CClickTimer::NoteDoubleClick(this);
 			OpenRow(inCell.row);
 		}
 		return true;
@@ -754,7 +810,7 @@ Boolean	CStandardFlexTable::ClickSelect(
 	
 	// Compute the text and icon rectangles and if the click is in them
 	Rect textRect, iconRect;
-	GetHiliteTextRect(inCell.row, textRect);
+	GetHiliteTextRect(inCell.row, false, textRect);
 	GetIconRect(inCell, cellRect, iconRect);
 	Boolean clickIsInIcon = ::PtInRect(inMouseDown.whereLocal, &iconRect);
 	Boolean clickIsInTitle = ::PtInRect(inMouseDown.whereLocal, &textRect);
@@ -802,22 +858,19 @@ Boolean	CStandardFlexTable::ClickSelect(
 		//		DRAG before DOUBLE-CLICK DETECTION before SELECTION before CONTEXT MENUS.
 		
 		// Preflight to determine drag/click/contextmenu.
-		CContextMenuAttachment::EClickState mouseResult
-			= CContextMenuAttachment::WaitMouseAction(
-				inMouseDown.whereLocal,
-				inMouseDown.macEvent.when);
+		EClickState mouseResult = CContextMenuAttachment::WaitMouseAction( inMouseDown.whereLocal,
+																			inMouseDown.macEvent.when);
 
-		if (! CellInitiatesDrag(inCell) && mouseResult == CContextMenuAttachment::eMouseDragging)
-			mouseResult = CContextMenuAttachment::eMouseTimeout;
+		if (! CellInitiatesDrag(inCell) && mouseResult == eMouseDragging)
+			mouseResult = eMouseTimeout;
 		switch (mouseResult)
 		{
-			case CContextMenuAttachment::eMouseDragging:
+			case eMouseDragging:
 				// We are dragging, and may be dragging a non-selected item, which is
 				// permissible now.
 				// First cancel any previous double-click in progress.  This will select
 				// the cell previously clicked, by the way.
-				if (mClickTimer)
-					mClickTimer->NoteSingleClick();
+				CClickTimer::NoteSingleClick(this);
 				if (!mFancyDoubleClick)
 				{
 					// Normal case
@@ -841,12 +894,13 @@ Boolean	CStandardFlexTable::ClickSelect(
 				}
 				goto cmd_status; // because we changed the selection.
 				
-			case CContextMenuAttachment::eMouseTimeout:
+			case eMouseTimeout:
+				if (!IsTarget())
+					break; // no context menus when not the active window.
 				// We are showing the context menu
 				// First cancel any previous double-click in progress.  This will select
 				// the cell previously clicked, by the way.
-				if (mClickTimer)
-					mClickTimer->NoteSingleClick();
+				CClickTimer::NoteSingleClick(this);
 
 				CContextMenuAttachment::SExecuteParams params;
 				params.inMouseDown = &inMouseDown;
@@ -865,17 +919,19 @@ Boolean	CStandardFlexTable::ClickSelect(
 					break;
 				}
 				// else fall through and handle the click
-			
-			case CContextMenuAttachment::eMouseUpEarly:
-			
+			case eMouseUpEarly:
+			case eMouseWasCommandClick:		
 				// CLICK!
+				if (!IsTarget())
+				{
+					// Become target.  Don't do other click processing.
+					SwitchTarget(this);
+					break;
+				}
 				if (HandleFancyDoubleClick(inCell, inMouseDown))
 					return false;
 				if (!LTableView::ClickSelect(inCell, inMouseDown))
 					return false;
-				// become target
-				if (!IsTarget())
-					SwitchTarget(this);
 
 				// Check if the click is in the title of the icon. If so, and an editor is
 				// present and we're not doing a shift-selection extension and it's not a 
@@ -886,6 +942,7 @@ Boolean	CStandardFlexTable::ClickSelect(
 				// user to double-click anywhere on the item to open it, like in the Finder.
 				// Doing a double-click to edit an item doesn't make sense and the user
 				// would get confused.
+				// open selection if we've got the right click count
 				if (clickIsInTitle
 					&& mNameEditor
 					&& !(inMouseDown.macEvent.modifiers & shiftKey)
@@ -898,7 +955,7 @@ Boolean	CStandardFlexTable::ClickSelect(
 					// Cancel inline editing.  Probably redundant.
 					if (mNameEditor)
 						mNameEditor->UpdateEdit(nil, nil, nil);
-					OpenSelection();
+					OpenClick( inCell );
 				}
 				result = true;
 						
@@ -941,7 +998,7 @@ Boolean	CStandardFlexTable::ClickSelect(
 					{				
 						// open selection if we've got the right click count
 						if (GetClickCount() == ClickCountToOpen())
-							OpenSelection();
+							OpenClick ( inCell );
 					}
 				}
 				result = true;
@@ -951,14 +1008,18 @@ Boolean	CStandardFlexTable::ClickSelect(
 	} // if click in icon or text
 	else
 	{
+		CClickTimer::NoteSingleClick(this);
+
+		// this is the case where you've clicked in a valid row, but
+		// outside the contents of the cell
+		if (! LWindow::FetchWindowObject(GetMacPort())->IsOnDuty())
+			return result;
+
 		// since the click is not in the icon and not in the text, the selection should be
 		// cleared before we try to show any context menus. This is faster than using
 		// UnselectAllCells() because it only iterates over the current selection.
 		Rect empty = { 0, 0, 0, 0 };
 		UnselectCellsNotInSelectionOutline(empty);
-		
-		if (mClickTimer)
-			mClickTimer->NoteSingleClick();
 		CContextMenuAttachment::SExecuteParams params;
 		params.inMouseDown = &inMouseDown;
 		if (ExecuteAttachments(CContextMenuAttachment::msg_ContextMenu, (void*)&params))
@@ -1007,6 +1068,10 @@ void CStandardFlexTable::ClickSelf(const SMouseDownEvent &inMouseDown)
 	}
 	else
 	{
+		// if this window is not foremost, don't do anything
+		if (! LWindow::FetchWindowObject(GetMacPort())->IsOnDuty())
+			return;
+
 		// since the click is not in any cell, the selection should be cleared before
 		// we try to show the context menus. This is faster than using
 		// UnselectAllCells() because it only iterates over the current selection.
@@ -1028,7 +1093,7 @@ void CStandardFlexTable::DoInlineEditing( const STableCell &inCell )
 //----------------------------------------------------------------------------------------
 {
 	Rect textRect;
-	GetHiliteTextRect( inCell.row, textRect );
+	GetHiliteTextRect( inCell.row, false, textRect );
 	DoInlineEditing( inCell, textRect );	
 } // DoInlineEditing
 
@@ -1040,6 +1105,7 @@ void CStandardFlexTable::DoInlineEditing(const STableCell &inCell, Rect& inTextR
 //----------------------------------------------------------------------------------------
 {
 	mRowBeingEdited = inCell.row; // do this first so derived classes can check it.
+	ExecuteAttachments(msg_HideTooltip, nil);
 	if (!CanDoInlineEditing())	// bail if inline editing is temporarily turned off
 	{
 		mRowBeingEdited = LArray::index_Bad;
@@ -1077,7 +1143,7 @@ void CStandardFlexTable::DoInlineEditing(const STableCell &inCell, Rect& inTextR
 	// Need 512 bytes for the text result, because of the &*(&^% way GetHiliteText
 	// works now.
 	char nameString[512];
-	GetHiliteText(mRowBeingEdited, nameString, sizeof(nameString), &inTextRect);
+	GetHiliteText(mRowBeingEdited, nameString, sizeof(nameString), false, &inTextRect);
 	InsetRect(&inTextRect, -2, -2);
 	inTextRect.bottom += 2;
 	mNameEditor->ResizeFrameTo(inTextRect.right - inTextRect.left,
@@ -1100,9 +1166,10 @@ void CStandardFlexTable::HandleSelectionTracking ( const SMouseDownEvent & inMou
 // Set up everything to start tracking a selection marquee
 //----------------------------------------------------------------------------------------
 {
-	if (mClickTimer)
-		mClickTimer->NoteSingleClick();
-		
+	CClickTimer::NoteSingleClick(this);
+	
+	if (!IsTarget())
+		SwitchTarget(this);
 	// bail if the table specifically doesn't want the tracking.
 	if ( !TableDesiresSelectionTracking() )
 		return;
@@ -1140,7 +1207,8 @@ void CStandardFlexTable::TrackSelection( const SMouseDownEvent & inMouseDown )
 	StRegion			previousSelection;
 	
 	if (theSelector != nil)
-		theSelector->MakeSelectionRegion(previousSelection, GetHiliteColumn());		//LTableRowSelector inherits from LArray, so can call copy constructor
+		//LTableRowSelector inherits from LArray, so we can call copy constructor
+		theSelector->MakeSelectionRegion(previousSelection, GetHiliteColumn());
 	
 	StColorPenState 	oldPenState;
 	
@@ -1192,8 +1260,8 @@ void CStandardFlexTable::TrackSelection( const SMouseDownEvent & inMouseDown )
 		
 			STableCell theCell(0, GetHiliteColumn());
 			
-			//Do this inline now, because we need to get at some more local variables
-			//UnselectCellsNotInSelectionOutline(selectionRect);
+			// Do this inline now, because we need to get at some more local variables
+			// UnselectCellsNotInSelectionOutline(selectionRect);
 			
 			if (!shiftKeyDown && !cmdKeyDown)
 			{
@@ -1378,12 +1446,11 @@ void CStandardFlexTable::GetLocalCellRectAnywhere( const STableCell	&inCell, Rec
 Boolean CStandardFlexTable::HitCellHotSpot( const STableCell &inCell, const Rect &inTotalSelectionRect )
 //----------------------------------------------------------------------------------------
 {
-	Boolean result = false;
 	TableIndexT hiliteCol = GetHiliteColumn();
 	
 	//FocusDraw();	//to be on the safe side, but it's too slow
 	
-	if ( hiliteCol )
+	if ( hiliteCol != LArray::index_Bad )
 	{
 		if ( hiliteCol == inCell.col ) {
 			Rect cellRect;
@@ -1391,11 +1458,10 @@ Boolean CStandardFlexTable::HitCellHotSpot( const STableCell &inCell, const Rect
 			GetLocalCellRectAnywhere(inCell, cellRect);
 		
 			Rect textRect, iconRect;
-			GetHiliteTextRect( inCell.row, textRect );
+			GetHiliteTextRect( inCell.row, true, textRect );
 			GetIconRect( inCell, cellRect, iconRect );
-	 		if ( ::SectRect(&textRect, &inTotalSelectionRect, &textRect) ||
-	 				::SectRect(&iconRect, &inTotalSelectionRect, &iconRect) )
-				result = true;
+			UnionRect(&textRect, &iconRect, &textRect);
+	 		return ::SectRect(&textRect, &inTotalSelectionRect, &textRect);
 		}
 	}
 	else			// check for any overlap with the row
@@ -1407,11 +1473,10 @@ Boolean CStandardFlexTable::HitCellHotSpot( const STableCell &inCell, const Rect
 		GetLocalCellRectAnywhere( leftCell, leftCellRect );
 		GetLocalCellRectAnywhere( rightCell, rightCellRect );
 		leftCellRect.right = rightCellRect.right;
-		result = ::SectRect( &leftCellRect, &inTotalSelectionRect, &leftCellRect );		
+		return ::SectRect( &leftCellRect, &inTotalSelectionRect, &leftCellRect );		
 	}
 	
-	return result;
-
+	return false;
 } // HitCellHotSpot
 
 
@@ -1428,8 +1493,7 @@ void CStandardFlexTable::BeTarget()
 void CStandardFlexTable::DontBeTarget() 
 //----------------------------------------------------------------------------------------
 {
-	if (mClickTimer)
-		mClickTimer->NoteSingleClick();
+	CClickTimer::NoteSingleClick(this);
 	ExecuteAttachments(CTargetFramer::msg_ResigningTarget, this);
 	Deactivate();
 	LCommander::DontBeTarget();
@@ -1554,23 +1618,20 @@ Boolean CStandardFlexTable::ObeyCommand(
 	{
 		case cmd_OpenSelectionNewWindow:
 		case cmd_OpenSelection:
+			CClickTimer::NoteSingleClick(this);
 			OpenSelection();
 			return true;
 		case cmd_GetInfo:
+			CClickTimer::NoteSingleClick(this);
 			GetInfo();
 			return true;
 		case cmd_SelectAll:
 			SelectAllCells();
 			return true;
 		case cmd_Clear:
-			DeleteSelection();
+			CClickTimer::NoteSingleClick(this);
+			DeleteSelection(CApplicationEventAttachment::GetCurrentEvent());
 			return true;
-			
-		case msg_TabSelect:
-			// accept tab-in's from an LTabGroup (Pro2 and later)
-			return true;
-			break;
-
 		default:
 			result = LCommander::ObeyCommand(inCommand, ioParam);
 			break;
@@ -1589,36 +1650,46 @@ Boolean CStandardFlexTable::HandleKeyPress(	const EventRecord& inKeyEvent)
 	Char16	c = inKeyEvent.message & charCodeMask;
 	switch (c)
 	{
-	case char_Return:
-	case char_Enter:
-		OpenSelection();
-		return true;
-	case char_Backspace:
-	case char_FwdDelete:
-		DeleteSelection();
-		return true;
-	case char_LeftArrow:
-	case char_RightArrow:
-		if (GetSelectedRowCount() == 1)
-		{
-			STableCell cell = mTableSelector->GetFirstSelectedCell();
-			Boolean isCellExpanded;
-			// selected cell will be in column 1, but dropflag may not be.
-			for (; IsValidCell(cell); cell.col++)
+		case char_Return:
+		case char_Enter:
+			CClickTimer::NoteSingleClick(this);
+			OpenSelection();
+			return true;
+		case char_Backspace:
+		case char_FwdDelete:
+			CClickTimer::NoteSingleClick(this);
+			DeleteSelection(inKeyEvent);
+			return true;
+		case char_LeftArrow:
+		case char_RightArrow:
+			CClickTimer::NoteSingleClick(this);
+			if (GetSelectedRowCount() == 1)
 			{
-				if (CellHasDropFlag(cell, isCellExpanded))
+				STableCell cell = mTableSelector->GetFirstSelectedCell();
+				Boolean isCellExpanded;
+				// selected cell will be in column 1, but dropflag may not be.
+				for (; IsValidCell(cell); cell.col++)
 				{
-					SetCellExpansion(cell, c == char_RightArrow);
-					break;
+					if (CellHasDropFlag(cell, isCellExpanded))
+					{
+						SetCellExpansion(cell, c == char_RightArrow);
+						break;
+					}
 				}
 			}
-		}
-	default:
-		LCommander::HandleKeyPress(inKeyEvent);
-		return true;
+		default:
+			LCommander::HandleKeyPress(inKeyEvent);
+			return true;
 	} // switch
 	return false;
 } // CStandardFlexTable::HandleKeyPress
+
+//----------------------------------------------------------------------------------------
+void CStandardFlexTable::OpenClick( const STableCell& /* inCell */  )
+//----------------------------------------------------------------------------------------
+{
+	OpenSelection();
+}
 
 //----------------------------------------------------------------------------------------
 void CStandardFlexTable::OpenSelection()
@@ -1815,16 +1886,42 @@ void CStandardFlexTable::InsideDropArea(DragReference inDragRef)
 		
 		if (newDropRow != LArray::index_Bad && mAllowDropAfterLastRow)
 		{
+			const Uint16 kLingerTickCount = 50;		// seems like a good time
+			
 			mDropRow = newDropRow; // so that we'll hilite
 			HiliteDropRow(newDropRow, mIsDropBetweenRows);
+			// Set a timer so that if the user lingers over this cell for long enough,
+			// we'll auto-expand the container.
+			mTimeToExpandForDrop = kLingerTickCount + ::TickCount();
 		}
 		else
 		{
-			if ( mDropRow > mRows )
-				mDropRow = LArray::index_Bad;
+			mDropRow = LArray::index_Bad;
+			mTimeToExpandForDrop = ULONG_MAX;
 		}
 	}
-	
+	else if (mAllowAutoExpand
+		&& mDropRow != LArray::index_Bad 			// it's (still) a container we can drop on
+		&& !mIsDropBetweenRows) 					// and we're (still) right on it
+	{
+		if (::TickCount() >= mTimeToExpandForDrop)
+		{
+			// the user's holding the mouse down on this row, & we just noticed
+			STableCell cell(mDropRow, GetHiliteColumn());
+			Boolean expanded;
+			if (CellHasDropFlag(cell, expanded) && !expanded)
+			{
+				SetCellExpansion(cell, true);
+				// The revealed rows should be there now, just draw them.
+				// We have to draw immediately, of course, because we're not doing
+				// event processing while the mouse is down.
+				RefreshRowRange(mDropRow, mRows);
+				UpdatePort();
+				HiliteDropRow ( mDropRow, false );		// redraw updated drop feedback 
+			}
+			mTimeToExpandForDrop = ULONG_MAX;
+		}
+	}
 	if (! mAllowDropAfterLastRow)
 		mCanAcceptCurrentDrag = (mDropRow != LArray::index_Bad);
 	
@@ -1982,7 +2079,7 @@ Boolean CStandardFlexTable::GetRowHiliteRgn(TableIndexT inRow, RgnHandle ioHilit
 {
 	::SetEmptyRgn(ioHiliteRgn);
 	Rect cellRect;
-	if (!GetHiliteTextRect(inRow, cellRect))
+	if (!GetHiliteTextRect(inRow, false, cellRect))
 		return false;
 	::RectRgn(ioHiliteRgn, &cellRect);
 	return true;
@@ -2045,6 +2142,7 @@ void CStandardFlexTable::LeaveDropArea(DragReference inDragRef)
 //	HiliteSelection( IsActive(), true); // Finder does not do this.
 	mIsDropBetweenRows = false;
 	mIsInternalDrop = false;
+	mTimeToExpandForDrop = ULONG_MAX;
 	
 	LDragAndDrop::LeaveDropArea(inDragRef);
 	
@@ -2068,34 +2166,63 @@ Boolean CStandardFlexTable::PointInDropArea(Point inGlobalPt)
 } // CStandardFlexTable::PointInDropArea
 
 //----------------------------------------------------------------------------------------
+void CStandardFlexTable::StartAutoScroll()
+//----------------------------------------------------------------------------------------
+{
+	// Turn off any tooltips
+	ExecuteAttachments(msg_HideTooltip, nil);
+
+#if 0
+	// This will fix bug #123615, but perhaps it redraws too often.
+	// If there is a pending update, as from a tooltip that was just hidden, then the
+	// view won't refresh properly after we change
+	// the image coordinates.  We probably need to refresh the whole frame.  Oh well...
+	StRegion updateRegion;
+	GetWindowUpdateRgn(GetMacPort(), updateRegion);
+	if (!EmptyRgn(updateRegion))
+		Refresh();
+#endif // 0
+
+	// Notify the CTargetFramer (if any) to erase the frame hilite
+	if (IsTarget())
+		ExecuteAttachments(CTargetFramer::msg_ResigningTarget, this);
+		// invalidates the border, and stops the refresh from drawing a new one
+
+	// If we are about to autoscroll and we are calling scrollbits, unhilite
+	// the drop row as well
+	TableIndexT currentDropRow = mDropRow;
+	mDropRow = -mDropRow; // So that we'll unhilite (Why it's SInt32 - use that sign bit!)
+	HiliteDropRow(currentDropRow, mIsDropBetweenRows);
+} // CStandardFlexTable::StartAutoScroll
+
+//----------------------------------------------------------------------------------------
+void CStandardFlexTable::EndAutoScroll()
+//----------------------------------------------------------------------------------------
+{
+	// Turn hiliting back on
+	mDropRow = -mDropRow; // so that we'll hilite
+	HiliteDropRow(mDropRow, mIsDropBetweenRows);
+	// Notify the CTargetFramer to draw the border now.
+	if (IsTarget())
+		ExecuteAttachments(CTargetFramer::msg_BecomingTarget, this); // invert
+} // CStandardFlexTable::EndAutoScroll
+
+//----------------------------------------------------------------------------------------
 void CStandardFlexTable::ScrollImageBy(
 	Int32				inLeftDelta,
 	Int32				inTopDelta,
 	Boolean				inRefresh)
+// Called by ScrollPinnedImageBy, ScrollImageTo, etc in PP.  This is a bottleneck function,
+// so a good place to fix these visual problems when scrolling.
 //----------------------------------------------------------------------------------------
-{
-	Boolean mayAutoScrollLeavingTurds = inRefresh && IsTarget(); //&& mDropRow;
-		// Turds will be left if we call scrollbits in ScrollImageBy
-	if (mayAutoScrollLeavingTurds)
-	{
-		// Notify the CTargetFramer (if any) to erase the frame hilite
-		ExecuteAttachments(CTargetFramer::msg_ResigningTarget, this);
-			// invalidates the border, and stops the refresh from drawing a new one
-		// If we are about to autoscroll and we are calling scrollbits, unhilite
-		// the drop row as well
-		TableIndexT dropRow = mDropRow;
-		mDropRow = LArray::index_Bad; // So that we'll unhilite
-		HiliteDropRow(dropRow, mIsDropBetweenRows);
-		mDropRow = dropRow; // so that we'll hilite
-	}
+{	
+	// Turds will be left if we call scrollbits and then refresh in the inherited
+	// ScrollImageBy().
+	if (inRefresh)
+		StartAutoScroll();
 	Inherited::ScrollImageBy(inLeftDelta, inTopDelta, inRefresh);
-	if (mayAutoScrollLeavingTurds && FocusDraw())
-	{
-		// Turn hiliting back on
-		HiliteDropRow(mDropRow, mIsDropBetweenRows);
-		// Notify the CTargetFramer to draw the border now.
-		ExecuteAttachments(CTargetFramer::msg_BecomingTarget, this); // invert
-	}
+	if (inRefresh && FocusDraw())
+		EndAutoScroll();
 } // CStandardFlexTable::ScrollImageBy
 
 //----------------------------------------------------------------------------------------
@@ -2448,6 +2575,20 @@ void CStandardFlexTable::SetRightmostVisibleColumn(UInt16 inLastDesiredColumn)
 } // CStandardFlexTable::SetRightmostVisibleColumn
 
 //----------------------------------------------------------------------------------------
+void CStandardFlexTable::CalcToolTipText(
+	const STableCell& /*inCell*/,
+	StringPtr outText,
+	TextDrawingStuff& outStuff,
+	Boolean& outTruncationOnly)
+//----------------------------------------------------------------------------------------
+{
+	outText[0] = 0;
+//	outStuff.encoding = TextDrawingStuff::eDefault;
+//	outStuff.style = normal;
+//	outStuff.mode = srcOr;
+} // CStandardFlexTable::CalcTipText
+
+//----------------------------------------------------------------------------------------
 Boolean CStandardFlexTable::TableSupportsNaturalOrderSort() const
 // Describes whether or not the table currently supports dropping things in the middle
 // (natural order). This will not be the case, for example, when the table is sorted.
@@ -2495,14 +2636,13 @@ void CStandardFlexTable::QapGetListInfo(PQAPLISTINFO pInfo)
 	LScroller *myScroller = dynamic_cast<LScroller *>(GetSuperView());
 	if (myScroller != NULL)
 	{
-		LStdControl* vScrollPane = dynamic_cast<LStdControl*>
-										(myScroller->FindPaneByID(PaneIDT_VerticalScrollBar));
-		if (vScrollPane)
-			macVScroll = vScrollPane->GetMacControl();
+		if (myScroller->GetVScrollbar() != NULL)
+			macVScroll = myScroller->GetVScrollbar()->GetMacControl();
 	}
 
 	pInfo->itemCount	= (short)outRows;
 	pInfo->topIndex 	= topLeftCell.row - 1;	// must start at 0 even though in QAP-script, Select("#1") selects the first line
+	pInfo->topOffset	= 0;
 	pInfo->itemHeight 	= GetRowHeight(0);
 	pInfo->visibleCount = botRightCell.row - topLeftCell.row + 1;
 	pInfo->vScroll 		= macVScroll;

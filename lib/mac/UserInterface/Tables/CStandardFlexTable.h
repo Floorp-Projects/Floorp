@@ -80,10 +80,38 @@ private:
 	friend class CClickTimer;
 	friend class CInlineEditorListener;
 	friend class CDeferredInlineEditTask;
+	friend class CTableToolTipPane;
 public:
 	enum {
 		class_ID = 'sfTb',
 		msg_SelectionChanged = 'selC'
+	};
+	struct TextDrawingStuff
+	{
+		TextDrawingStuff ( )
+			: mTextTraitsID(0), style(0), mode(0), encoding(eDefault)
+		{
+			color.red = color.green = color.blue = 0;
+			Invalidate();
+		}
+		
+		// Information is gathered in this struct for use by the table (and its
+		// derived classes) in drawing text within cells.  It is also used by
+		// CTableTooltipPane, to make the font in the tooltips match that in the
+		// table cells.
+		// -------
+		// Tablewide stuff that does not get invalidated.  Before 98/06/29 (Nova)
+		// these two fields were direct members of CStandardFlexTable.
+		ResIDT				mTextTraitsID;
+		FontInfo			mTextFontInfo;
+		// -------
+		// Cell-by-cell stuff that gets invalidated
+		enum { eDefault, eUTF8 } encoding;
+		char style;
+		int mode;
+		RGBColor color;
+		STableCell lastCell; // for caching
+		void Invalidate() { lastCell.row = lastCell.col = LArray::index_Bad; }
 	};
 	
 	PaneIDT				GetSortedColumn() const;
@@ -254,9 +282,11 @@ protected:
 							TableIndexT			inRow,
 							char*				outText,
 							UInt16				inMaxBufferLength,
+							Boolean				okIfRowHidden,
 							Rect*				ioRect) const;
 	virtual Boolean		GetHiliteTextRect(
 							const TableIndexT	inRow,
+							Boolean				okIfRowHidden,
 							Rect&				outRect) const;
 	virtual void		GetHiliteRgn(
 							RgnHandle			ioHiliteRgn);
@@ -275,7 +305,9 @@ protected:
 							Rect&				outRect) const;
 	virtual Boolean		GetRowHiliteRgn(TableIndexT inRow, RgnHandle ioHiliteRgn) const;
 	virtual Boolean		GetRowDragRgn(TableIndexT inRow, RgnHandle ioHiliteRgn) const;
-	virtual void		ApplyTextStyle(TableIndexT inRow) const;
+	virtual TextDrawingStuff& GetTextStyle(
+							const STableCell& inCell);
+	virtual void		ApplyTextStyle(const STableCell& inCell) const;
 	
 // ------------------------------------------------------------
 // Row Expansion/Collapsing
@@ -313,11 +345,19 @@ protected:
 	virtual void		EnterDropArea(DragReference inDragRef, Boolean inDragHasLeftSender);
 	virtual void		LeaveDropArea(DragReference	inDragRef);
 	virtual Boolean		PointInDropArea(Point inGlobalPt); // add slop for autoscroll
+
+	// Autoscroll support --------------------------------------
 	virtual void		ScrollImageBy(
 								Int32				inLeftDelta,
 								Int32				inTopDelta,
 								Boolean				inRefresh);
 								// unhilite before and after.
+	
+	// Utility routines for supporting autoscroll routines ------
+	void					StartAutoScroll();
+	void					EndAutoScroll();
+	
+	
 	// Specials
 	virtual void		HiliteDropRow(TableIndexT inRow, Boolean inDrawBarAbove);
 	virtual TableIndexT	GetHiliteColumn() const;
@@ -337,6 +377,15 @@ protected:
 							const Rect & inLocalCellRect,
 							Rect& outTop,
 							Rect& outBottom );
+
+// ------------------------------------------------------------
+// Tooltip support
+// ------------------------------------------------------------
+	virtual void			CalcToolTipText(
+								const STableCell& inCell,
+								StringPtr outText,
+								TextDrawingStuff& outStuff,
+								Boolean& outTruncationOnly);	
 
 // ------------------------------------------------------------
 // Miscellany
@@ -361,11 +410,12 @@ protected:
 							CommandT	inCommand,
 							void		*ioParam);
 
-	virtual void		DeleteSelection() = 0;
+	virtual void		DeleteSelection(const EventRecord& inMacEvent) = 0;
 	virtual	void		OpenRow(TableIndexT /* inRow */) {}
 	virtual void		GetInfo();
 
 public:
+	virtual void		OpenClick( const STableCell& inCell  );
 	virtual	void		OpenSelection();
 
 	// stuff that should go away, moved into a utility class
@@ -399,8 +449,6 @@ public:
 //-----------------------------------
 protected:
 	CTableHeaderListener mTableHeaderListener;
-	ResIDT				mTextTraitsID;
-	FontInfo			mTextFontInfo;
 	PaneIDT				mTableHeaderPaneID;																			
 	LTableViewHeader*	mTableHeader;
 	Int16				mClickCountToOpen;	
@@ -417,8 +465,11 @@ protected:
 	Boolean				mAllowDropAfterLastRow;	// true to allow drops in the whitespace after the table
 	Boolean				mInlineFeedbackOn;		// do we draw the inline feedback or frame entire area?
 
+	Boolean				mAllowAutoExpand;
+	UInt32				mTimeToExpandForDrop;
 	CInlineEditField*	mNameEditor;			// used for inline editing
 	TableIndexT			mRowBeingEdited;
 	CInlineEditorListener mInlineListener;		// listens to the editor and tells us things
+	TextDrawingStuff	mTextDrawingStuff;
 	
 }; // class CStandardFlexTable
