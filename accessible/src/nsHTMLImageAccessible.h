@@ -40,6 +40,7 @@ class nsHTMLImageAccessible : public nsLinkableAccessible
 public:
   nsHTMLImageAccessible(nsIDOMNode* aDomNode, nsIImageFrame *imageFrame, nsIWeakReference* aShell);
   NS_IMETHOD GetAccName(nsAWritableString& _retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
