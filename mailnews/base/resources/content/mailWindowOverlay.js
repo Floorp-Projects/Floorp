@@ -222,6 +222,9 @@ function InitViewSortByMenu()
 
     setSortByMenuItemCheckState("sortAscending", (sortOrder == nsMsgViewSortOrder.ascending));
     setSortByMenuItemCheckState("sortDescending", (sortOrder == nsMsgViewSortOrder.descending));
+
+    var threadMenuItem = document.getElementById("sortByThreadMenuitem");
+    threadMenuItem.setAttribute("disabled", !gDBView.supportsThreading);
 }
 
 function InitViewMessagesMenu()
