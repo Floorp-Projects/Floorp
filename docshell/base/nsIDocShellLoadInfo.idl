@@ -37,44 +37,44 @@ typedef long nsDocShellInfoLoadType;
 [scriptable, uuid(33636F98-0635-11d4-9877-00C04FA0D27A)]
 interface nsIDocShellLoadInfo : nsISupports
 {
-	/*
-		This is the referrer for the load.
-	*/
-	attribute nsIURI referrer;
+    /** This is the referrer for the load. */
+    attribute nsIURI referrer;
 
-    /*
-      The owner of the load, that is, the entity responsible for 
-      causing the load to occur. This should be a nsIPrincipal typically.
-    */
+    /** The owner of the load, that is, the entity responsible for 
+     *  causing the load to occur. This should be a nsIPrincipal typically.
+     */
     attribute nsISupports owner;
 
-    /*
-      If this attribute is true and no owner is specified, copy the owner from
-      the referring document. 
-    */
+    /** If this attribute is true and no owner is specified, copy
+     *  the owner from the referring document.
+     */
     attribute boolean inheritOwner;
 
     /* these are load type enums... */
-   const long loadNormal = 0;					// Normal Load
-   const long loadNormalReplace = 1;			// Normal Load but replaces current history slot
-   const long loadHistory = 2;					// Load from history
-   const long loadReloadNormal = 3;				// Reload
-   const long loadReloadBypassCache = 4;
-   const long loadReloadBypassProxy = 5;
-   const long loadReloadBypassProxyAndCache = 6;
-   const long loadLink = 7;
-   const long loadRefresh = 8;
-   const long loadReloadCharsetChange = 9;
-   const long loadBypassHistory = 10;
+    const long loadNormal = 0;                     // Normal Load
+    const long loadNormalReplace = 1;              // Normal Load but replaces current history slot
+    const long loadHistory = 2;                    // Load from history
+    const long loadReloadNormal = 3;               // Reload
+    const long loadReloadBypassCache = 4;
+    const long loadReloadBypassProxy = 5;
+    const long loadReloadBypassProxyAndCache = 6;
+    const long loadLink = 7;
+    const long loadRefresh = 8;
+    const long loadReloadCharsetChange = 9;
+    const long loadBypassHistory = 10;
 
-   attribute nsDocShellInfoLoadType loadType;
+    /** Contains a load type as specified by the load* constants */
+    attribute nsDocShellInfoLoadType loadType;
 
-	/*
-	   SHEntry for this page
-	 */
-	 attribute nsISHEntry SHEntry;
+    /** SHEntry for this page */
+    attribute nsISHEntry SHEntry;
 
-  attribute wstring target; // like _content, _blank etc
+    /** Target for load, like _content, _blank etc. */
+    attribute wstring target;
 
+    /** Post data */
     attribute nsIInputStream postDataStream;
+
+    /** Additional headers */
+    attribute nsIInputStream headersStream;
 };

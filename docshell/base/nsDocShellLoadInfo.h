@@ -53,6 +53,7 @@ protected:
    nsCOMPtr<nsISHEntry>             mSHEntry;
    nsString                         mTarget;
    nsCOMPtr<nsIInputStream>         mPostDataStream;
+   nsCOMPtr<nsIInputStream>         mHeadersStream;
 };
 
 #endif /* nsDocShellLoadInfo_h__ */

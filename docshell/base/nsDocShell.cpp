@@ -546,6 +546,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
     nsresult rv;
     nsCOMPtr<nsIURI> referrer;
     nsCOMPtr<nsIInputStream> postStream;
+    nsCOMPtr<nsIInputStream> headersStream;
     nsCOMPtr<nsISupports> owner;
     PRBool inheritOwner = PR_FALSE;
     nsCOMPtr<nsISHEntry> shEntry;
@@ -568,6 +569,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
         aLoadInfo->GetSHEntry(getter_AddRefs(shEntry));
         aLoadInfo->GetTarget(getter_Copies(target));
         aLoadInfo->GetPostDataStream(getter_AddRefs(postStream));
+        aLoadInfo->GetHeadersStream(getter_AddRefs(headersStream));
     }
 
 #ifdef PR_LOGGING
@@ -717,7 +719,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
                           inheritOwner,
                           target.get(),
                           postStream,
-                          nsnull,         // No headers stream
+                          headersStream,
                           loadType,
                           nsnull,         // No SHEntry
                           firstParty,
@@ -2444,8 +2446,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
     loadInfo->SetLoadType(ConvertLoadTypeToDocShellLoadInfo(loadType));
     loadInfo->SetPostDataStream(aPostStream);
     loadInfo->SetReferrer(aReferingURI);
-
-    // XXX: Need to pass in the extra headers stream too...
+    loadInfo->SetHeadersStream(aHeaderStream);
 
     rv = LoadURI(uri, loadInfo, 0, PR_TRUE);
     
@@ -5336,7 +5337,7 @@ AHTC_WriteFunc(nsIInputStream * in,
     // pointer to where we should start copying bytes from rawSegment
     char *pHeadersBuf = nsnull;
     PRUint32 headersBufLen;
-    PRUint32 rawSegmentLen = strlen(fromRawSegment);
+    PRUint32 rawSegmentLen = count;
 
     // if the buffer has no data yet
     if (!headersBuf) {
