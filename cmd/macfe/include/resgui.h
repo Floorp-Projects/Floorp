@@ -422,6 +422,11 @@
 #define cmd_Format_Row						1318
 // #define cmd_DisplayTableBoundaries			1315
 #define cmd_Select_Table					1319
+#define cmd_Select_Row                      1320
+#define cmd_Select_Col                      1321
+#define cmd_Select_Cell                     1322
+#define cmd_Select_All_Cells                1323
+
 #define cmd_DisplayTables					1324
 
 
