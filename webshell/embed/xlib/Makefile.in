@@ -23,15 +23,16 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_ENABLE_GTK
-DIRS += gtk
+DIRS		+= gtk
 endif
 
 ifdef MOZ_ENABLE_MOTIF
-DIRS += motif xt
+DIRS		+= motif xt
 endif
 
 ifdef MOZ_ENABLE_QT
-DIRS += qt
+DIRS		+= qt
 endif
 
 include $(topsrcdir)/config/rules.mk
+

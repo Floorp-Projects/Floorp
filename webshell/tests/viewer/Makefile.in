@@ -26,8 +26,6 @@ DIRS			= public
 
 PROGRAM			= viewer
 
-RUN_VIEWER_SCRIPT	= $(srcdir)/mozilla-viewer.sh
-
 CPPSRCS			= \
 			$(TOOLKIT_CPPSRCS) \
 			nsBaseDialog.cpp \
@@ -96,13 +94,13 @@ XP_DIST_LIBS		= \
 			$(JSJ_LIB) \
 			$(NULL)
 
-XP_NS_UNDERBAR_CRAP = \
+XP_NS_UNDERBAR_CRAP	= \
 			$(MOZ_NECKO_UTIL_LIBS) \
 			$(MOZ_TIMER_LIBS) \
 			$(MOZ_WIDGET_SUPPORT_LIBS) \
 			$(NULL)
 
-XP_LIBS		= \
+XP_LIBS			= \
 			$(XP_NS_UNDERBAR_CRAP) \
 			$(XP_DIST_LIBS) \
 			$(NSPR_LIBS) \
@@ -123,23 +121,21 @@ QT_LIBS			= -lviewer_qt_s $(XP_LIBS) $(MOZ_QT_LDFLAGS)
 XLIB_LIBS		= -lviewer_xlib_s $(XP_LIBS) $(MOZ_XLIB_LDFLAGS)
 GTK_LIBS		= -lviewer_gtk_s $(XP_LIBS) $(MOZ_GTK_LDFLAGS)
 
-# cls/shaver are responsible for this amazingness
 EXTRA_DEPS		= \
 			$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%.$(DLL_SUFFIX),$(XP_DIST_LIBS:-l%_s=lib/lib%_s.a))) \
 			$(UNIX_VIEWER_TK_LIBS) \
+			$(XP_NS_UNDERBAR_CRAP) \
 			$(NULL)
-
-EXTRA_DEPS += $(XP_NS_UNDERBAR_CRAP)
 
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
-install:: $(PROGRAM) $(RUN_VIEWER_SCRIPT)
+install:: $(PROGRAM) $(srcdir)/mozilla-viewer.sh
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
 	$(INSTALL) $(srcdir)/resources/viewer.properties $(DIST)/bin/res
-	$(INSTALL) $(RUN_VIEWER_SCRIPT) $(DIST)/bin
+	$(INSTALL) $(srcdir)/mozilla-viewer.sh $(DIST)/bin
 
 $(PROGRAM)_gtk: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_gtk_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(GTK_LIBS) $(OS_LIBS)
@@ -173,5 +169,3 @@ install:: $(PROGRAM)_xlib
 	$(INSTALL) -m 555 $< $(DIST)/bin
 endif
 
-caca:
-	@echo $(EXTRA_DEPS)
