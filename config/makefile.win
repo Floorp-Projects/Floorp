@@ -101,14 +101,16 @@ bin2rc.exe:: bin2rc.c
 makedep.exe:: makedep.cpp
     $(CC) -MT /O2 /GB $**
 
+!ifdef MOZ_COVERAGE 
 trace.dll:: trace.obj pldhash.obj
-    link /nologo /debug /libpath:$(DIST)/lib /dll /out:$@ $** nspr4.lib imagehlp.lib
+    $(LD) /nologo /debug /libpath:$(DIST)/lib /dll /out:$@ $** nspr4.lib imagehlp.lib
 
 pldhash.obj:: $(DEPTH)/xpcom/ds/pldhash.c
-    $(CC) /c /nologo /Od /Z7 /I$(DEPTH)/xpcom/ds /I$(DIST)/include $**
+    $(CC) /c /nologo /Od /Z7 /I$(DEPTH)/xpcom/ds /I$(DEPTH)/dist/include $**
  
 trace.obj:: trace.cpp
-    $(CC) /c /nologo /Od /Z7 /DMOZ_SRC=\"$(MOZ_SRC)\" /I$(DEPTH)/xpcom/ds /I$(DIST)/include $**
+    $(CC) /c /nologo /Od /Z7 /DMOZ_SRC=\"$(MOZ_SRC)\" /I$(DEPTH)/xpcom/ds /I$(DEPTH)/dist/include $**
+!endif
 
 export:: \
         makecopy.exe  \
@@ -126,6 +128,8 @@ export:: \
 !ifdef MOZ_COVERAGE
        $(MAKE_INSTALL) trace.dll $(DIST)/bin
        $(MAKE_INSTALL) trace.lib $(DIST)/lib
+       $(MAKE_INSTALL) trace.dll $(DIST)/install
+       $(MAKE_INSTALL) $(DIST)/bin/nspr4.dll $(DIST)/install
 !endif
 
 !ifdef MOZ_FULLCIRCLE
