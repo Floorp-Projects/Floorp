@@ -57,6 +57,10 @@
 					sortResource="http://home.netscape.com/NC-rdf#Name" sortDirection="ascending"
 					onchange="return setDefaultSearchEngine(this)" >
 
+					<html:option value="" selected="true">
+						&defaultengine.label;
+					</html:option>
+
 					<template>
 						<html:option uri="..." value="..." >
 							<text value="rdf:http://home.netscape.com/NC-rdf#Name" />

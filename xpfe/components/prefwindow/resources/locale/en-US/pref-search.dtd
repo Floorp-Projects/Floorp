@@ -11,3 +11,6 @@
 <!ENTITY  browserSearchButtonText.label "Search using:">
 <!ENTITY  enablePowerSearch.label "Open the Search window (search multiple engines)">
 <!ENTITY  openSidebarSearchPanel.label "Automatically open the 'Search Results' panel in the Sidebar">
+
+<!--LOCALIZATION NOTE (defaultengine.label): Keep parenthesis so it sorts to the first position in the list -->
+<!ENTITY  defaultengine.label "(Default)">

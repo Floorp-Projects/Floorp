@@ -76,8 +76,8 @@ function InitSingleEngineList()
 
 function setDefaultSearchEngine(object)
 {
-	var	defaultEngineURI = object.options[object.selectedIndex].getAttribute("id");
-	dump("Default Engine: " + defaultEngineURI + "\n");
+	var	defaultEngineURI = object.options[object.selectedIndex].getAttribute("value");
+	dump("Default Engine: '" + defaultEngineURI + "'\n");
 
 	try
 	{
