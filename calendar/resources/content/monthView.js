@@ -342,7 +342,6 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
       else
       {
          //if there is not a box to hold the little dots for this day...
-         var eventDayInView = this.dayNumberItemArray[ DisplayDate.getDate( ) ];
          if ( !document.getElementById( "dotboxholder"+eventDayInView ) )
          {
             //make one
