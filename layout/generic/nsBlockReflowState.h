@@ -3562,20 +3562,21 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     *aKeepReflowGoing = brc.PlaceBlock(isAdjacentWithTop, computedOffsets,
                                        &collapsedBottomMargin,
                                        aLine->mBounds, combinedArea);
+
     if (aState.mShrinkWrapWidth) {
       // Mark the line as block so once we known the final shrink wrap width
       // we can reflow the block to the correct size
       // XXX We don't always need to do this...
       aLine->MarkDirty();
       aState.mNeedResizeReflow = PR_TRUE;
-
+    }
+    if (aState.mUnconstrainedWidth || aState.mShrinkWrapWidth) {
       // Add the right margin to the line's bounnds. That way it will be taken into
       // account when we compute our shrink wrap size
       nscoord marginRight = brc.GetMargin().right;
       if (marginRight != NS_UNCONSTRAINEDSIZE) {
         aLine->mBounds.width += marginRight;
       }
-
     }
     aLine->SetCombinedArea(combinedArea);
     if (*aKeepReflowGoing) {
