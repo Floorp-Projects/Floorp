@@ -33,12 +33,15 @@ EXPORTS=			\
 LIBRARY_NAME=msgmork_s
 
 CPP_OBJS=   .\$(OBJDIR)\orkinCell.obj				\
+			.\$(OBJDIR)\orkinCompare.obj			\
 			.\$(OBJDIR)\orkinEnv.obj				\
 			.\$(OBJDIR)\orkinFactory.obj			\
+			.\$(OBJDIR)\orkinFile.obj			\
 			.\$(OBJDIR)\orkinHeap.obj				\
 			.\$(OBJDIR)\orkinPortTableCursor.obj	\
 			.\$(OBJDIR)\orkinRow.obj				\
 			.\$(OBJDIR)\orkinRowCellCursor.obj		\
+			.\$(OBJDIR)\orkinSorting.obj			\
 			.\$(OBJDIR)\orkinStore.obj				\
 			.\$(OBJDIR)\orkinTable.obj				\
 			.\$(OBJDIR)\orkinTableRowCursor.obj		\
@@ -67,12 +70,16 @@ CPP_OBJS=   .\$(OBJDIR)\orkinCell.obj				\
 			.\$(OBJDIR)\morkParser.obj				\
 			.\$(OBJDIR)\morkPool.obj				\
 			.\$(OBJDIR)\morkPortTableCursor.obj		\
+			.\$(OBJDIR)\morkQuickSort.obj			\
+			.\$(OBJDIR)\morkSearchRowCursor.obj		\
 			.\$(OBJDIR)\morkRow.obj					\
 			.\$(OBJDIR)\morkRowCellCursor.obj		\
 			.\$(OBJDIR)\morkRowMap.obj				\
 			.\$(OBJDIR)\morkRowObject.obj			\
 			.\$(OBJDIR)\morkRowSpace.obj			\
 			.\$(OBJDIR)\morkSink.obj				\
+			.\$(OBJDIR)\morkSorting.obj				\
+			.\$(OBJDIR)\morkSortingRowCursor.obj	\
 			.\$(OBJDIR)\morkSpace.obj				\
 			.\$(OBJDIR)\morkStore.obj				\
 			.\$(OBJDIR)\morkStream.obj				\
