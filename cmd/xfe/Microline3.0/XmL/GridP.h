@@ -168,7 +168,8 @@ typedef int (*XmLGridCellActionProc)();
 #define XmLGridCellType              (1L<<23)
 #define XmLGridCellUserData          (1L<<24)
 
-#define XmLICON_SPACING 4
+/* This is now a resource */
+/* #define XmLICON_SPACING 4 */
 
 enum { DrawAll, DrawHScroll, DrawVScroll, DrawRow, DrawCol, DrawCell };
 enum { SelectRow, SelectCol, SelectCell };
@@ -323,13 +324,15 @@ typedef struct _XmLGridPart
 	XtCallbackList resizeCallback, scrollCallback;
 
         /* XFE Additions */
-        Widget hideButton;
-        Boolean showHideButton;
-        XtTranslations hideButtonTrans;
-        int realColCount;
-        Boolean inResize;
+      Widget hideButton;
+      Boolean showHideButton;
+      XtTranslations hideButtonTrans;
+      int realColCount;
+      Boolean inResize;
 
-        Boolean useTextWidget;
+      Boolean useTextWidget;
+
+      Dimension iconSpacing;
 
 	/* private data */
 	GC gc;

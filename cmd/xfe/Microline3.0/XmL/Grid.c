@@ -293,8 +293,8 @@ static int _XmLGridCellBeginTextEdit(XmLGridCell cell, Widget w,
 	XRectangle *clipRect);
 static void _XmLGridCellCompleteTextEdit(XmLGridCell cell, Widget w);
 static void _XmLGridCellInsertText(XmLGridCell cell, Widget w);
-static int _XmLGridCellGetHeight(XmLGridCell cell, XmLGridRow row);
-static int _XmLGridCellGetWidth(XmLGridCell cell, XmLGridColumn col);
+static int _XmLGridCellGetHeight(XmLGridCell cell, Widget w,XmLGridRow row);
+static int _XmLGridCellGetWidth(XmLGridCell cell, Widget w,XmLGridColumn col);
 static void _XmLGridCellFreeValue(XmLGridCell cell);
 
 static XtActionsRec actions[] =
@@ -1124,7 +1124,12 @@ static XtResource resources[] =
 		XtOffset(XmLGridWidget, grid.useTextWidget),
 		XmRImmediate, (XtPointer)True,
 		},
-
+		{
+          XmNiconSpacing, XmCIconSpacing,
+		  XmRHorizontalDimension, sizeof(Dimension),
+		  XtOffset(XmLGridWidget, grid.iconSpacing),
+		  XmRImmediate, (XtPointer) 4,
+		},
     };
 
 XmLGridClassRec xmlGridClassRec =
@@ -8255,10 +8260,10 @@ _GridCellAction(XmLGridCell cell,
 			_XmLGridCellFreeValue(cell);
 			break;
 		case XmCR_PREF_HEIGHT:
-			ret = _XmLGridCellGetHeight(cell, (XmLGridRow)cbs->object);
+			ret = _XmLGridCellGetHeight(cell, w,(XmLGridRow)cbs->object);
 			break;
 		case XmCR_PREF_WIDTH:
-			ret = _XmLGridCellGetWidth(cell, (XmLGridColumn)cbs->object);
+			ret = _XmLGridCellGetWidth(cell, w,(XmLGridColumn)cbs->object);
 			break;
 		}
 	return ret;
@@ -8742,7 +8747,7 @@ _XmLGridCellDrawValue(XmLGridCell cell,
 			XmLPixmapDraw(w, icon->pix.pixmap, icon->pix.pixmask,
 				icon->pix.width, icon->pix.height, ds->alignment,
 				ds->gc, &cellRect, clipRect);
-			xoff = icon->pix.width + XmLICON_SPACING;
+			xoff = icon->pix.width + g->grid.iconSpacing;
 			cellRect.x += xoff;
 			if (xoff < (int)cellRect.width)
 				cellRect.width -= xoff;
@@ -8873,7 +8878,8 @@ _XmLGridCellInsertText(XmLGridCell cell,
 /* Only to be called by XmLGridCellAction() */
 static int
 _XmLGridCellGetHeight(XmLGridCell cell,
-		      XmLGridRow row)
+					  Widget w,
+					  XmLGridRow row)
 	{
 	XmLGridCellPixmap *pix;
 	XmLGridCellIcon *icon;
@@ -8923,8 +8929,10 @@ _XmLGridCellGetHeight(XmLGridCell cell,
 /* Only to be called by XmLGridCellAction() */
 static int
 _XmLGridCellGetWidth(XmLGridCell cell,
-		     XmLGridColumn col)
+					 Widget w,
+					 XmLGridColumn col)
 	{
+	XmLGridWidget g = (XmLGridWidget)w;
 	XmLGridCellPixmap *pix;
 	XmLGridCellIcon *icon;
 	XmLGridCellRefValues *cellValues;
@@ -8950,7 +8958,7 @@ _XmLGridCellGetWidth(XmLGridCell cell,
 			{
 			icon = (XmLGridCellIcon *)cell->cell.value;
 			if (icon->pix.pixmap != XmUNSPECIFIED_PIXMAP && icon->pix.width)
-				width += icon->pix.width + XmLICON_SPACING;
+				width += icon->pix.width + g->grid.iconSpacing;
 			}
 		}
 	else if (cellValues->type == XmTOGGLE_CELL)

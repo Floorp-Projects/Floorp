@@ -237,6 +237,9 @@ typedef struct
 #define XmCVisibleRows "VisibleRows"
 #define XmNvsbDisplayPolicy "vsbDisplayPolicy"
 #define XmCVsbDisplayPolicy "VsbDisplayPolicy"
+#define XmNiconSpacing "iconSpacing"
+#define XmCIconSpacing "IconSpacing"
+
 
 /* XFE Additions */
 #define XmNshowHideButton "showHideButton"
@@ -495,6 +498,8 @@ typedef struct _XmLGridCallbackStruct
 #define XmCRowIsExpanded "RowIsExpanded"
 #define XmNrowLevel "rowLevel"
 #define XmCRowLevel "RowLevel"
+#define XmNignorePixmaps "ignorePixmaps"
+#define XmCIgnorePixmaps "IgnorePixmaps"
 
 /* Tree callbacks */
 
