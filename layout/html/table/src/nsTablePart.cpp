@@ -41,6 +41,7 @@ static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -1053,6 +1054,13 @@ void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
     nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    nsHTMLValue val;
+    if (ParseTableAlignParam(aValue, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+    }
+    return;
+  }
 }
 
 void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
@@ -1082,6 +1090,23 @@ void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
   }
   // border
   GetTableBorder(this, aContext, aPresContext, PR_FALSE);
+
+  // align
+  GetAttribute(nsHTMLAtoms::align, value);
+  if (value.GetUnit() != eHTMLUnit_Null) {
+    NS_ASSERTION(value.GetUnit() == eHTMLUnit_Enumerated, "unexpected unit");
+    nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetData(kStyleDisplaySID);
+
+    switch (value.GetIntValue()) {
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+      display->mFloats = NS_STYLE_FLOAT_LEFT;
+      break;
+
+    case NS_STYLE_TEXT_ALIGN_RIGHT:
+      display->mFloats = NS_STYLE_FLOAT_RIGHT;
+      break;
+    }
+  }
 }
 
 void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,

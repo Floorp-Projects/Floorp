@@ -170,6 +170,11 @@ public:
   static PRBool DivAlignParamToString(const nsHTMLValue& aValue,
                                    nsString& aResult);
 
+  static PRBool ParseTableAlignParam(const nsString& aString, nsHTMLValue& aRes);
+
+  static PRBool TableAlignParamToString(const nsHTMLValue& aValue,
+                                        nsString& aResult);
+
 protected:
   nsHTMLTagContent();
 
