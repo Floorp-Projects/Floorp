@@ -113,6 +113,7 @@ nsHttpHandler::nsHttpHandler()
     , mIdleConnections(0)
     , mTransactionQ(0)
     , mUserAgentIsDirty(PR_TRUE)
+    , mUseCache(PR_TRUE)
 {
     NS_INIT_ISUPPORTS();
 
@@ -132,8 +133,10 @@ nsHttpHandler::~nsHttpHandler()
 
     nsHttp::DestroyAtomTable();
 
-    if (mPrefs) {
-        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefs);
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    GetPrefBranch(getter_AddRefs(prefBranch));
+    if (prefBranch) {
+        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
         if (pbi) {
             pbi->RemoveObserver(HTTP_PREF_PREFIX, this);
             pbi->RemoveObserver(UA_PREF_PREFIX, this);
@@ -207,28 +210,19 @@ nsHttpHandler::Init()
 
     InitUserAgentComponents();
 
-    // get a root prefs branch
-    {
-        nsCOMPtr<nsIPrefService> prefService =
-            do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = prefService->GetBranch(nsnull, getter_AddRefs(mPrefs));
-        if (NS_FAILED(rv)) return rv;
-    }
-
     // monitor some preference changes
-    {
-        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(mPrefs, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        pbi->AddObserver(HTTP_PREF_PREFIX, this);
-        pbi->AddObserver(UA_PREF_PREFIX, this);
-        pbi->AddObserver(INTL_ACCEPT_LANGUAGES, this); 
-        pbi->AddObserver(INTL_ACCEPT_CHARSET, this);
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    GetPrefBranch(getter_AddRefs(prefBranch));
+    if (prefBranch) {
+        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
+        if (pbi) {
+            pbi->AddObserver(HTTP_PREF_PREFIX, this);
+            pbi->AddObserver(UA_PREF_PREFIX, this);
+            pbi->AddObserver(INTL_ACCEPT_LANGUAGES, this); 
+            pbi->AddObserver(INTL_ACCEPT_CHARSET, this);
+        }
+        PrefsChanged(prefBranch);
     }
-
-    PrefsChanged();
 
 #if DEBUG
     // dump user agent prefs
@@ -353,18 +347,10 @@ nsresult
 nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
                                nsICacheSession **result)
 {
-    static PRBool checkedPref = PR_FALSE;
-    static PRBool useCache = PR_TRUE;
     nsresult rv;
 
-    if (!checkedPref) {
-        // XXX should register a prefs changed callback for this
-        mPrefs->GetBoolPref("browser.cache.enable", &useCache);
-        checkedPref = PR_TRUE;
-    }
-
     // Skip cache if disabled in preferences
-    if (!useCache)
+    if (!mUseCache)
         return NS_ERROR_NOT_AVAILABLE;
 
     if (!mCacheSession_ANY) {
@@ -1047,13 +1033,8 @@ nsHttpHandler::InitUserAgentComponents()
 }
 
 void
-nsHttpHandler::PrefsChanged(const char *pref)
+nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 {
-    if (!mPrefs) {
-        NS_ERROR("not initialized");
-        return;
-    }
-
     nsresult rv = NS_OK;
     PRInt32 val;
 
@@ -1067,48 +1048,48 @@ nsHttpHandler::PrefsChanged(const char *pref)
 
     // Gather vendor values.
     if (PREF_CHANGED(UA_PREF("vendor"))) {
-        mPrefs->GetCharPref(UA_PREF("vendor"),
+        prefs->GetCharPref(UA_PREF("vendor"),
             getter_Copies(mVendor));
         mUserAgentIsDirty = PR_TRUE;
     }
     if (PREF_CHANGED(UA_PREF("vendorSub"))) {
-        mPrefs->GetCharPref(UA_PREF("vendorSub"),
+        prefs->GetCharPref(UA_PREF("vendorSub"),
             getter_Copies(mVendorSub));
         mUserAgentIsDirty = PR_TRUE;
     }
     if (PREF_CHANGED(UA_PREF("vendorComment"))) {
-        mPrefs->GetCharPref(UA_PREF("vendorComment"),
+        prefs->GetCharPref(UA_PREF("vendorComment"),
             getter_Copies(mVendorComment));
         mUserAgentIsDirty = PR_TRUE;
     }
 
     // Gather product values.
     if (PREF_CHANGED(UA_PREF("product"))) {
-        mPrefs->GetCharPref(UA_PREF_PREFIX "product",
+        prefs->GetCharPref(UA_PREF_PREFIX "product",
             getter_Copies(mProduct));
         mUserAgentIsDirty = PR_TRUE;
     }
     if (PREF_CHANGED(UA_PREF("productSub"))) {
-        mPrefs->GetCharPref(UA_PREF("productSub"),
+        prefs->GetCharPref(UA_PREF("productSub"),
             getter_Copies(mProductSub));
         mUserAgentIsDirty = PR_TRUE;
     }
     if (PREF_CHANGED(UA_PREF("productComment"))) {
-        mPrefs->GetCharPref(UA_PREF("productComment"),
+        prefs->GetCharPref(UA_PREF("productComment"),
             getter_Copies(mProductComment));
         mUserAgentIsDirty = PR_TRUE;
     }
 
     // Gather misc value.
     if (PREF_CHANGED(UA_PREF("misc"))) {
-        mPrefs->GetCharPref(UA_PREF("misc"),
+        prefs->GetCharPref(UA_PREF("misc"),
             getter_Copies(mMisc));
         mUserAgentIsDirty = PR_TRUE;
     }
 
     // Get Security level supported
     if (PREF_CHANGED(UA_PREF("security"))) {
-        mPrefs->GetCharPref(UA_PREF("security"), getter_Copies(mSecurity));
+        prefs->GetCharPref(UA_PREF("security"), getter_Copies(mSecurity));
         if (!mSecurity)
             mSecurity.Adopt(nsCRT::strdup(UA_APPSECURITY_FALLBACK));
         mUserAgentIsDirty = PR_TRUE;
@@ -1117,7 +1098,7 @@ nsHttpHandler::PrefsChanged(const char *pref)
     // Gather locale.
     if (PREF_CHANGED(UA_PREF("locale"))) {
         nsCOMPtr<nsIPrefLocalizedString> pls;
-        mPrefs->GetComplexValue(UA_PREF("locale"),
+        prefs->GetComplexValue(UA_PREF("locale"),
                                 NS_GET_IID(nsIPrefLocalizedString),
                                 getter_AddRefs(pls));
         if (pls) {
@@ -1131,14 +1112,14 @@ nsHttpHandler::PrefsChanged(const char *pref)
 
     // general.useragent.override
     if (PREF_CHANGED(UA_PREF("override"))) {
-        mPrefs->GetCharPref(UA_PREF("override"),
+        prefs->GetCharPref(UA_PREF("override"),
                             getter_Copies(mUserAgentOverride));
         mUserAgentIsDirty = PR_TRUE;
     }
 
     // general.useragent.misc
     if (PREF_CHANGED(UA_PREF("misc"))) {
-        mPrefs->GetCharPref(UA_PREF("misc"), getter_Copies(mMisc));
+        prefs->GetCharPref(UA_PREF("misc"), getter_Copies(mMisc));
         mUserAgentIsDirty = PR_TRUE;
     }
 
@@ -1147,50 +1128,50 @@ nsHttpHandler::PrefsChanged(const char *pref)
     //
 
     if (PREF_CHANGED(HTTP_PREF("keep-alive.timeout"))) {
-        rv = mPrefs->GetIntPref(HTTP_PREF("keep-alive.timeout"), &val);
+        rv = prefs->GetIntPref(HTTP_PREF("keep-alive.timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mIdleTimeout = (PRUint16) CLAMP(val, 1, 0xffff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("request.max-attempts"))) {
-        rv = mPrefs->GetIntPref(HTTP_PREF("request.max-attempts"), &val);
+        rv = prefs->GetIntPref(HTTP_PREF("request.max-attempts"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxRequestAttempts = (PRUint16) CLAMP(val, 1, 0xffff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("request.max-start-delay"))) {
-        rv = mPrefs->GetIntPref(HTTP_PREF("request.max-start-delay"), &val);
+        rv = prefs->GetIntPref(HTTP_PREF("request.max-start-delay"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxRequestDelay = (PRUint16) CLAMP(val, 0, 0xffff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-connections"))) {
-        rv = mPrefs->GetIntPref(HTTP_PREF("max-connections"), &val);
+        rv = prefs->GetIntPref(HTTP_PREF("max-connections"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxConnections = (PRUint16) CLAMP(val, 1, 0xffff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-connections-per-server"))) {
-        rv = mPrefs->GetIntPref(HTTP_PREF("max-connections-per-server"), &val);
+        rv = prefs->GetIntPref(HTTP_PREF("max-connections-per-server"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-persistent-connections-per-server"))) {
-        rv = mPrefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-server"), &val);
+        rv = prefs->GetIntPref(HTTP_PREF("max-persistent-connections-per-server"), &val);
         if (NS_SUCCEEDED(rv))
             mMaxPersistentConnectionsPerServer = (PRUint8) CLAMP(val, 1, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("sendRefererHeader"))) {
-        rv = mPrefs->GetIntPref(HTTP_PREF("sendRefererHeader"), (PRInt32 *) &val);
+        rv = prefs->GetIntPref(HTTP_PREF("sendRefererHeader"), (PRInt32 *) &val);
         if (NS_SUCCEEDED(rv))
             mReferrerLevel = (PRUint8) CLAMP(val, 0, 0xff);
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {
         nsXPIDLCString httpVersion;
-        mPrefs->GetCharPref(HTTP_PREF("version"), getter_Copies(httpVersion));
+        prefs->GetCharPref(HTTP_PREF("version"), getter_Copies(httpVersion));
 	
         if (httpVersion) {
             if (!PL_strcmp(httpVersion, "1.1"))
@@ -1214,7 +1195,7 @@ nsHttpHandler::PrefsChanged(const char *pref)
     PRBool cVar = PR_FALSE;
 
     if (PREF_CHANGED(HTTP_PREF("keep-alive"))) {
-        rv = mPrefs->GetBoolPref(HTTP_PREF("keep-alive"), &cVar);
+        rv = prefs->GetBoolPref(HTTP_PREF("keep-alive"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
                 mCapabilities |= NS_HTTP_ALLOW_KEEPALIVE;
@@ -1224,7 +1205,7 @@ nsHttpHandler::PrefsChanged(const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("proxy.keep-alive"))) {
-        rv = mPrefs->GetBoolPref(HTTP_PREF("proxy.keep-alive"), &cVar);
+        rv = prefs->GetBoolPref(HTTP_PREF("proxy.keep-alive"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
                 mProxyCapabilities |= NS_HTTP_ALLOW_KEEPALIVE;
@@ -1234,7 +1215,7 @@ nsHttpHandler::PrefsChanged(const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("pipelining"))) {
-        rv = mPrefs->GetBoolPref(HTTP_PREF("pipelining"), &cVar);
+        rv = prefs->GetBoolPref(HTTP_PREF("pipelining"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
                 mCapabilities |=  NS_HTTP_ALLOW_PIPELINING;
@@ -1245,11 +1226,11 @@ nsHttpHandler::PrefsChanged(const char *pref)
 
     /*
     mPipelineMaxRequests  = DEFAULT_PIPELINE_MAX_REQUESTS;
-    rv = mPrefs->GetIntPref("network.http.pipelining.maxrequests", &mPipelineMaxRequests );
+    rv = prefs->GetIntPref("network.http.pipelining.maxrequests", &mPipelineMaxRequests );
     */
 
     if (PREF_CHANGED(HTTP_PREF("proxy.pipelining"))) {
-        rv = mPrefs->GetBoolPref(HTTP_PREF("proxy.pipelining"), &cVar);
+        rv = prefs->GetBoolPref(HTTP_PREF("proxy.pipelining"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             if (cVar)
                 mProxyCapabilities |=  NS_HTTP_ALLOW_PIPELINING;
@@ -1260,15 +1241,15 @@ nsHttpHandler::PrefsChanged(const char *pref)
 
     /*
     if (bChangedAll || PL_strcmp(pref, "network.http.connect.timeout") == 0)
-        mPrefs->GetIntPref("network.http.connect.timeout", &mConnectTimeout);
+        prefs->GetIntPref("network.http.connect.timeout", &mConnectTimeout);
 
     if (bChangedAll || PL_strcmp(pref, "network.http.request.timeout") == 0)
-        mPrefs->GetIntPref("network.http.request.timeout", &mRequestTimeout);
+        prefs->GetIntPref("network.http.request.timeout", &mRequestTimeout);
     */
 
     if (PREF_CHANGED(HTTP_PREF("accept.default"))) {
         nsXPIDLCString accept;
-        rv = mPrefs->GetCharPref(HTTP_PREF("accept.default"),
+        rv = prefs->GetCharPref(HTTP_PREF("accept.default"),
                                   getter_Copies(accept));
         if (NS_SUCCEEDED(rv))
             SetAccept(accept);
@@ -1276,10 +1257,22 @@ nsHttpHandler::PrefsChanged(const char *pref)
     
     if (PREF_CHANGED(HTTP_PREF("accept-encoding"))) {
         nsXPIDLCString acceptEncodings;
-        rv = mPrefs->GetCharPref(HTTP_PREF("accept-encoding"),
+        rv = prefs->GetCharPref(HTTP_PREF("accept-encoding"),
                                   getter_Copies(acceptEncodings));
         if (NS_SUCCEEDED(rv))
             SetAcceptEncodings(acceptEncodings);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("use-cache"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("use-cache"), &cVar);
+        if (NS_SUCCEEDED(rv)) {
+            mUseCache = cVar;
+            if (!mUseCache) {
+                // release our references to the cache
+                mCacheSession_ANY = 0;
+                mCacheSession_MEM = 0;
+            }
+        }
     }
 
     //
@@ -1288,7 +1281,7 @@ nsHttpHandler::PrefsChanged(const char *pref)
 
     if (PREF_CHANGED(INTL_ACCEPT_LANGUAGES)) {
         nsCOMPtr<nsIPrefLocalizedString> pls;
-        mPrefs->GetComplexValue(INTL_ACCEPT_LANGUAGES,
+        prefs->GetComplexValue(INTL_ACCEPT_LANGUAGES,
                                 NS_GET_IID(nsIPrefLocalizedString),
                                 getter_AddRefs(pls));
         if (pls) {
@@ -1301,7 +1294,7 @@ nsHttpHandler::PrefsChanged(const char *pref)
 
     if (PREF_CHANGED(INTL_ACCEPT_CHARSET)) {
         nsCOMPtr<nsIPrefLocalizedString> pls;
-        mPrefs->GetComplexValue(INTL_ACCEPT_CHARSET,
+        prefs->GetComplexValue(INTL_ACCEPT_CHARSET,
                                 NS_GET_IID(nsIPrefLocalizedString),
                                 getter_AddRefs(pls));
         if (pls) {
@@ -1313,6 +1306,16 @@ nsHttpHandler::PrefsChanged(const char *pref)
     }
 
 #undef PREF_CHANGED
+}
+
+void
+nsHttpHandler::GetPrefBranch(nsIPrefBranch **result)
+{
+    *result = nsnull;
+    nsCOMPtr<nsIPrefService> prefService =
+        do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefService)
+        prefService->GetBranch(nsnull, result);
 }
 
 /**
@@ -1815,8 +1818,11 @@ nsHttpHandler::Observe(nsISupports *subject,
         // depend on this value.
         mSessionStartTime = NowInSeconds();
     }
-    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("nsPref:changed").get()))
-        PrefsChanged(NS_ConvertUCS2toUTF8(data).get());
+    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("nsPref:changed").get())) {
+        nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
+        if (prefBranch)
+            PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
+    }
     return NS_OK;
 }
 
