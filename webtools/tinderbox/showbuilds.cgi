@@ -588,9 +588,11 @@ $script_str .= "</script>\n";
 
 
 sub do_express {
-    local($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile);
-    local($buildrec);
-    local(%build);
+    my($mailtime, $buildtime, $buildname, $errorparser, $buildstatus,
+       $logfile);
+    my $buildrec;
+    my %build;
+    my %times;
 
     open(BUILDLOG, "<$form{'tree'}/build.dat" ) || die ;
     while( <BUILDLOG> ){
@@ -599,6 +601,7 @@ sub do_express {
             split( /\|/ );
         if( $buildstatus eq 'success' || $buildstatus eq 'busted'){
             $build{$buildname} = $buildstatus;
+	    $times{$buildname} = $buildtime;
         }
     }
     close( BUILDLOG );
@@ -612,7 +615,18 @@ sub do_express {
     print "&nocrap=1" if $form{'nocrap'};
     print ">$tree as of $tm</a></tr>"
           ."<tr>\n";
+    my $maxtime = 0;
+    for $buildname (@keys) {
+	if ($maxtime < $times{$buildname}) {
+	    $maxtime = $times{$buildname};
+	}
+    }
+
     for $buildname (@keys ){
+	if ($times{$buildname} < $maxtime - 12*60*60) {
+	    # This build is more than 12 hours old.  Ignore it.
+	    next;
+	}
         if( $build{$buildname} eq 'success' ){
             print "<td bgcolor=00ff00>";
         }
