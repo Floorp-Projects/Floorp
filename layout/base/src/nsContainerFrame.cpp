@@ -893,7 +893,7 @@ NS_METHOD nsContainerFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFil
   }
 
   // Output the children
-  if (mChildCount > 0) {
+  if (nsnull != mFirstChild) {
     if (PR_TRUE==outputMe)
     {
       if (0 != mState) {
@@ -1199,7 +1199,7 @@ void nsContainerFrame::PostReflowCheck(nsReflowStatus aStatus)
  */
 PRBool nsContainerFrame::IsEmpty()
 {
-  if (0 == mChildCount) {
+  if (nsnull == mFirstChild) {
     return PR_TRUE;
   }
   if (mChildCount > 1) {
