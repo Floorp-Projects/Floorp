@@ -35,25 +35,87 @@
 //*****************************************************************************
 
 // Windows
-const PP_PowerPlant::ResIDT	wind_BrowserWindow = 129;
-const PP_PowerPlant::ResIDT	wind_PlainBrowserWindow = 130;
+enum {
+    wind_BrowserWindow = 129
+};
 
 // Dialogs
-const PP_PowerPlant::ResIDT	dlog_FindDialog = 1281;
+enum {
+    dlog_FindDialog = 1281
+};
 
 // nsIPrompt
-const PP_PowerPlant::ResIDT dlog_Alert = 1282;
-const PP_PowerPlant::ResIDT dlog_Confirm = 1283;
-const PP_PowerPlant::ResIDT dlog_ConfirmCheck = 1284;
-const PP_PowerPlant::ResIDT dlog_Prompt = 1285;
-const PP_PowerPlant::ResIDT dlog_PromptNameAndPass = 1286;
-const PP_PowerPlant::ResIDT dlog_PromptPassword = 1287;
+enum {
+    dlog_Alert = 1282,
+    dlog_Confirm = 1283,
+    dlog_ConfirmCheck = 1284,
+    dlog_Prompt = 1285,
+    dlog_PromptNameAndPass = 1286,
+    dlog_PromptPassword = 1287,
+    dlog_Universal = 1288
+};
+
+// Profile Mgmt
+enum {
+    dlog_ManageProfiles = 1300,
+    dlog_NewProfile = 1301
+};
+
+// Alerts
+enum {
+    alrt_ConfirmProfileSwitch = 1500
+};
+
+// MENUs
+enum {
+    menu_Buzzwords              = 1000
+};
+
+// Mcmds
+enum {
+    mcmd_ContextLinkCmds        = 1200,
+    mcmd_ContextImageCmds       = 1201,
+    mcmd_ContextDocumentCmds    = 1202,
+    mcmd_ContextTextCmds        = 1203
+};
+
 
 //*****************************************************************************
 //***    Message IDs
 //*****************************************************************************
 
-const MessageT    msg_OnStartLoadDocument 	= 1000;
-const MessageT    msg_OnEndLoadDocument 		= 1001;
+enum {
+    msg_OnStartLoadDocument 	= 1000,
+    msg_OnEndLoadDocument 	    = 1001
+};
+
+//*****************************************************************************
+//***    Command IDs
+//*****************************************************************************
+
+enum {
+    cmd_OpenDirectory           = 'ODir',
+    cmd_OpenLinkInNewWindow     = 'OLnN',
+
+	cmd_Back                    = 'Back',
+	cmd_Forward                 = 'Forw',
+	cmd_Reload                  = 'Rlod',
+	cmd_Stop                    = 'Stop',
+
+	cmd_Find                    = 'Find',
+	cmd_FindNext                = 'FNxt',
+
+	cmd_ViewPageSource          = 'VSrc',
+	cmd_ViewImage               = 'VImg',
+
+	cmd_CopyLinkLocation        = 'CLnk',
+	cmd_CopyImageLocation       = 'CImg',
+
+    cmd_SaveFormData            = 'SFrm',
+    cmd_PrefillForm             = 'PFFm',
+    
+    
+    cmd_ManageProfiles          = 'MPrf'
+};
 
 #endif // __ApplIDs__
