@@ -428,6 +428,9 @@ PluginViewerImpl::Show()
   if (nsnull != mWindow) {
     mWindow->Show(PR_TRUE);
   }
+
+  // XXX should we call SetWindow here?
+
   return NS_OK;
 }
 
@@ -438,11 +441,16 @@ PluginViewerImpl::Hide()
   if (nsnull != mWindow) {
     mWindow->Show(PR_FALSE);
   }
+
+  // should we call SetWindow(nsnull) here?
+
   return NS_OK;
 }
 
 NS_IMETHODIMP PluginViewerImpl :: Print(void)
 {
+  // need to call the plugin from here somehow
+
   return NS_OK;
 }
 
@@ -463,6 +471,7 @@ nsresult PluginViewerImpl::GetURL(nsIURL *&aURL)
 
 PluginListener::PluginListener(PluginViewerImpl* aViewer)
 {
+  NS_INIT_REFCNT();
   mViewer = aViewer;
   NS_ADDREF(aViewer);
   mRefCnt = 1;
@@ -538,6 +547,8 @@ PluginListener::OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
 
 pluginInstanceOwner :: pluginInstanceOwner()
 {
+  NS_INIT_REFCNT();
+
   memset(&mPluginWindow, 0, sizeof(mPluginWindow));
   mInstance = nsnull;
   mWindow = nsnull;
@@ -557,7 +568,7 @@ pluginInstanceOwner :: ~pluginInstanceOwner()
   mViewer = nsnull;
 }
 
-NS_IMPL_ISUPPORTS(pluginInstanceOwner, kIPluginInstanceOwnerIID)
+NS_IMPL_ISUPPORTS(pluginInstanceOwner, kIPluginInstanceOwnerIID);
 
 NS_IMETHODIMP pluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
 {
