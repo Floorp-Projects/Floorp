@@ -16,6 +16,15 @@
  * Reserved.
  */
 
+/*
+
+  A set of "empty cursors" (nsIRDFAssertionCursor,
+  nsIRDFArcsOutCursor, nsIRDFArcsInCursor) that can be used to ensure
+  that the data source methods which return a cursor always return
+  *something*.
+
+ */
+
 #include "nscore.h"
 #include "nsIRDFCursor.h"
 
