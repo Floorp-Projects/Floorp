@@ -1305,10 +1305,17 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",			"$global_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:components:xfer:resources:locale:MANIFEST",	"$global_chrome_dir:locale");
 	# the WALLET
-	_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",			"$samples_dir");
-	_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",			"$samples_dir");
-	_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST",			"$samples_dir");
-	_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST",					"$samples_dir");
+	 my($wallet_chrome_dir) = "$chrome_dir" . "Wallet";
+	_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST",			"$wallet_chrome_dir:content:default", 0);
+	_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST",			"$wallet_chrome_dir:content:default", 0);
+	_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST",			"$wallet_chrome_dir:content:default", 0);
+	_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST",				"$wallet_chrome_dir:content:default", 0);
+
+	_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST_PROPERTIES",	"$wallet_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST_PROPERTIES",		"$wallet_chrome_dir:locale:en-US:", 0);
+
 	{
 		my($pref_chrome_dir) = "$chrome_dir" . "Pref";
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",	"$pref_chrome_dir:content:default:", 0);
