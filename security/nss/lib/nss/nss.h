@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.1 2000/03/31 20:01:55 relyea%netscape.com Exp $
+ * $Id: nss.h,v 1.2 2000/09/22 17:34:28 relyea%netscape.com Exp $
  */
 
 #ifndef __nss_h_
@@ -48,6 +48,11 @@ SEC_BEGIN_PROTOS
  * Default policy settings disallow all ciphers.
  */
 extern SECStatus NSS_Init(const char *configdir);
+
+/*
+ * initialize NSS without a creating cert db's, key db's, or secmod db's.
+ */
+SECStatus NSS_NoDB_Init(const char *configdir);
 
 /* 
  * Close the Cert, Key databases.
