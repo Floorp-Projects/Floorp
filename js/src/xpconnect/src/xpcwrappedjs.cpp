@@ -189,25 +189,28 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSObject* aJSObj,
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
     NS_ADDREF(aClass);
+    NS_ASSERTION(mClass->GetXPCContext(),"bad context when making wrapper");
     JS_AddRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
 }
 
 nsXPCWrappedJS::~nsXPCWrappedJS()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
-    if(mRoot == this && GetClass())
+    if(mClass)
     {
-        XPCContext* xpcc = GetClass()->GetXPCContext();
-        if(xpcc)
+        XPCContext* xpcc;
+        if(NULL != (xpcc = mClass->GetXPCContext()))
         {
-            JSObject2WrappedJSMap* map;
-            map = xpcc->GetWrappedJSMap();
-            if(map)
-                map->Remove(this);
+            if(mRoot == this)
+            {
+                JSObject2WrappedJSMap* map;
+                if(NULL != (map = xpcc->GetWrappedJSMap()))
+                    map->Remove(this);
+            }
+            JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
         }
+        NS_RELEASE(mClass);
     }
-    JS_RemoveRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
-    NS_RELEASE(mClass);
     if(mMethods)
         NS_RELEASE(mMethods);
     if(mNext)

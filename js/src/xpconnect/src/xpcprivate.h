@@ -86,6 +86,8 @@ class nsXPConnect : public nsIXPConnect
     NS_IMETHOD DebugDump(int depth);
     NS_IMETHOD DebugDumpObject(nsISupports* p, int depth);
 
+    NS_IMETHOD AbandonJSContext(JSContext* aJSContext);
+
     // non-interface implementation
 public:
     static nsXPConnect* GetXPConnect();
@@ -122,11 +124,11 @@ class XPCContext
 {
 public:
     static XPCContext* newXPCContext(JSContext* aJSContext,
-                                   JSObject* aGlobalObj,
-                                   int WrappedJSMapSize,
-                                   int WrappedNativeMapSize,
-                                   int WrappedJSClassMapSize,
-                                   int WrappedNativeClassMapSize);
+                                     JSObject* aGlobalObj,
+                                     int WrappedJSMapSize,
+                                     int WrappedNativeMapSize,
+                                     int WrappedJSClassMapSize,
+                                     int WrappedNativeClassMapSize);
 
     JSContext*      GetJSContext()      const {return mJSContext;}
     JSObject*       GetGlobalObject()   const {return mGlobalObj;}
@@ -167,15 +169,15 @@ public:
     JSBool Init(JSObject* aGlobalObj = NULL);
     void DebugDump(int depth);
 
-    virtual ~XPCContext();
+    ~XPCContext();
 private:
     XPCContext();    // no implementation
     XPCContext(JSContext* aJSContext,
-              JSObject* aGlobalObj,
-              int WrappedJSMapSize,
-              int WrappedNativeMapSize,
-              int WrappedJSClassMapSize,
-              int WrappedNativeClassMapSize);
+               JSObject* aGlobalObj,
+               int WrappedJSMapSize,
+               int WrappedNativeMapSize,
+               int WrappedJSClassMapSize,
+               int WrappedNativeClassMapSize);
 private:
     static const char* mStrings[IDX_TOTAL_COUNT];
     nsXPConnect* mXPConnect;
@@ -288,13 +290,16 @@ public:
                         const nsXPTMethodInfo* info,
                         nsXPTCMiniVariant* params);
 
+    void XPCContextBeingDestroyed() {mXPCContext = NULL;}
+
     virtual ~nsXPCWrappedJSClass();
 private:
     nsXPCWrappedJSClass();   // not implemented
     nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
                         nsIInterfaceInfo* aInfo);
 
-    JSContext* GetJSContext() const {return mXPCContext->GetJSContext();}
+    JSContext* GetJSContext() const 
+        {return mXPCContext ? mXPCContext->GetJSContext() : NULL;}
     JSObject*  CreateIIDJSObject(REFNSIID aIID);
     JSObject*  NewOutObject();
 
@@ -437,16 +442,19 @@ class nsXPCWrappedNativeClass : public nsIXPCWrappedNativeClass
     NS_IMETHOD DebugDump(int depth);
 public:
     static nsXPCWrappedNativeClass* GetNewOrUsedClass(XPCContext* xpcc,
-                                                     REFNSIID aIID);
+                                                      REFNSIID aIID);
 
     REFNSIID GetIID() const {return mIID;}
     const char* GetInterfaceName();
     const char* GetMemberName(const XPCNativeMemberDescriptor* desc) const;
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     XPCContext*  GetXPCContext() const {return mXPCContext;}
-    JSContext* GetJSContext() const {return mXPCContext->GetJSContext();}
+    JSContext* GetJSContext() const 
+        {return mXPCContext ? mXPCContext->GetJSContext() : NULL;}
     nsIXPCScriptable* GetArbitraryScriptable() const
-        {return GetXPCContext()->GetXPConnect()->GetArbitraryScriptable();}
+        {return mXPCContext ? 
+                    mXPCContext->GetXPConnect()->GetArbitraryScriptable() :
+                    NULL;}
 
     static JSBool InitForContext(XPCContext* xpcc);
     static JSBool OneTimeInit();
@@ -495,6 +503,7 @@ public:
 
     JSBool DynamicEnumerate(nsXPCWrappedNative* wrapper,
                             nsIXPCScriptable* ds,
+                            nsIXPCScriptable* as,
                             JSContext *cx, JSObject *obj,
                             JSIterateOp enum_op,
                             jsval *statep, jsid *idp);
@@ -503,11 +512,13 @@ public:
                            JSIterateOp enum_op,
                            jsval *statep, jsid *idp);
 
+    void XPCContextBeingDestroyed() {mXPCContext = NULL;}
+
     virtual ~nsXPCWrappedNativeClass();
 private:
     nsXPCWrappedNativeClass();   // not implemented
     nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID,
-                           nsIInterfaceInfo* aInfo);
+                            nsIInterfaceInfo* aInfo);
 
     void ThrowBadResultException(JSContext* cx,
                                  const XPCNativeMemberDescriptor* desc,
@@ -558,8 +569,8 @@ class nsXPCWrappedNative : public nsIXPConnectWrappedNative
 
 public:
     static nsXPCWrappedNative* GetNewOrUsedWrapper(XPCContext* xpcc,
-                                                  nsISupports* aObj,
-                                                  REFNSIID aIID);
+                                                   nsISupports* aObj,
+                                                   REFNSIID aIID);
     nsISupports* GetNative() const {return mObj;}
     JSObject* GetJSObject() const {return mJSObj;}
     nsXPCWrappedNativeClass* GetClass() const {return mClass;}

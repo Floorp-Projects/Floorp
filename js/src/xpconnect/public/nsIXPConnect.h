@@ -159,9 +159,6 @@ public:
     // Creates a new Components object (with no wrapper)
     NS_IMETHOD CreateComponentsObject(nsIXPCComponents** aComponentsObj) = 0;
 
-
-    // XXX add 'AbandonJSContext' method and all that implies?
-
     NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,
@@ -178,6 +175,9 @@ public:
 
     NS_IMETHOD DebugDump(int depth) = 0;
     NS_IMETHOD DebugDumpObject(nsISupports* p, int depth) = 0;
+
+    NS_IMETHOD AbandonJSContext(JSContext* aJSContext) = 0;
+
     // XXX other methods?
 };
 

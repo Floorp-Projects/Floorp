@@ -32,6 +32,7 @@ IS_COMPONENT =  1
 
 CPPSRCS=		\
 	xpctest_echo.cpp		\
+	xpctest_child.cpp		\
 	xpctest_module.cpp	\
 	$(NULL)
 

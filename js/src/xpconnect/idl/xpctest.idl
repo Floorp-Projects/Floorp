@@ -9,6 +9,8 @@ interface nsITestXPCFoo : nsISupports {
     long Test(in long p1, in long p2);
     void Test2();
 
+    attribute string Foo;
+
     const short one = 1;
     const short five = 5;
     const short six = 6;
@@ -75,5 +77,23 @@ interface nsIEcho : nsISupports {
     void ReturnCode_NS_ERROR_NULL_POINTER();
     void ReturnCode_NS_ERROR_UNEXPECTED();
     void ReturnCode_NS_ERROR_OUT_OF_MEMORY();
+};
+
+/***************************************************************************/
+
+[scriptable, uuid(83849a30-0d6e-11d3-bab8-00805f8a5dd7)]
+interface nsIXPCTestParent : nsISupports {
+    void method1(in short i);
+    void method1a(in nsIXPCTestParent foo);
+};
+
+[scriptable, uuid(9ddf0f00-0d6e-11d3-bab8-00805f8a5dd7)]
+interface nsIXPCTestChild : nsIXPCTestParent {
+    void method2(in short i, in short j);
+};
+
+[scriptable, uuid(7bca65e0-0d73-11d3-bab8-00805f8a5dd7)]
+interface nsIXPCTestOther : nsISupports {
+    void method3(in short i, in short j, in short k);
 };
 

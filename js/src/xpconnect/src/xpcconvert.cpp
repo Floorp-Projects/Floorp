@@ -525,8 +525,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             }
 
             // only wrap JSObjects
-            if(!JSVAL_IS_OBJECT(s) ||
-               (!(obj = JSVAL_TO_OBJECT(s))))
+            if(!JSVAL_IS_OBJECT(s) || !(obj = JSVAL_TO_OBJECT(s)))
             {
                 return JS_FALSE;
             }

@@ -398,6 +398,25 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext* aJSContext,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPConnect::AbandonJSContext(JSContext* aJSContext)
+{
+    NS_PRECONDITION(aJSContext,"bad param");
+    NS_PRECONDITION(mContextMap,"bad state");
+
+    XPCContext* xpcc = mContextMap->Find(aJSContext);
+    if(!xpcc)
+    {
+        NS_ASSERTION(0,"called AbandonJSContext for context that's not init'd");
+        return NS_OK;
+    }
+
+    mContextMap->Remove(xpcc);
+    // XPCContext notifies 'users' of its destruction.
+    delete xpcc;
+    return NS_OK;
+}
+
 // has to go somewhere...
 nsXPCArbitraryScriptable::nsXPCArbitraryScriptable()
 {
