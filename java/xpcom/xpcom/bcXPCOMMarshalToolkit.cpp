@@ -25,6 +25,7 @@
 #include "nsIServiceManager.h"
 #include "bcORB.h"
 #include "bcXPCOMStubsAndProxies.h"
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kORBCIID,BC_ORB_CID);
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
@@ -246,10 +247,21 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
             m->WriteSimple(data, XPTType2bcXPType(type));
             break;
         case nsXPTType::T_CHAR_STR  :
-        case nsXPTType::T_WCHAR_STR :      
-            data = *(char **)data;
-            m->WriteString(data,strlen((char*)data)+1);
-            break;
+        case nsXPTType::T_WCHAR_STR : 
+            {     
+                data = *(char **)data;
+                size_t length = 0;
+                if (type == nsXPTType::T_WCHAR_STR) {
+                    length = nsCRT::strlen((const PRUnichar*)data);
+                    length *= sizeof(PRUnichar);
+                    length +=2;
+                } else {
+                    length = nsCRT::strlen((const char*)data);                
+                    length+=1;
+                }
+                m->WriteString(data,length);
+                break;
+            }
         case nsXPTType::T_INTERFACE :      	    
         case nsXPTType::T_INTERFACE_IS :
             {
@@ -320,7 +332,13 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
                         MarshalElement(m,current,param,datumType.TagPart(),0);
                     }
                 } else {
-                    m->WriteString(data, arraySize);
+                    size_t length = 0;
+                    if (type == nsXPTType::T_PWSTRING_SIZE_IS) {
+                        length = arraySize * sizeof(PRUnichar);
+                    } else {
+                        length = arraySize;
+                    }
+                    m->WriteString(data, length);
                 }
                 break;
             }

@@ -26,6 +26,7 @@
 #include "bcIIDJava.h"
 #include "bcJavaStubsAndProxies.h"
 #include "nsIServiceManager.h"
+#include "bcJavaGlobal.h"
 
 jclass bcJavaMarshalToolkit::objectClass = NULL;
 jclass bcJavaMarshalToolkit::objectArrayClass = NULL;
@@ -137,6 +138,7 @@ nsresult bcJavaMarshalToolkit::Marshal(bcIMarshaler *m) {
             r = MarshalElement(m, retV, PR_FALSE, &param, XPTType2bcXPType(param.GetType().TagPart()), i);
         } else {
             jobject object = env->GetObjectArrayElement(args,i);
+            EXCEPTION_CHECKING(env);
             r = MarshalElement(m, object, param.IsOut(), &param, XPTType2bcXPType(param.GetType().TagPart()), i);
         }
     }
@@ -171,6 +173,7 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
                 && isOut) { //we need to allocate memory for out parametr
                 UnMarshalElement(&value, i, NULL, 1, &param, XPTType2bcXPType(type.TagPart()),allocator);
                 env->SetObjectArrayElement(args,i,value);
+                EXCEPTION_CHECKING(env);
             }
             continue;
         }
@@ -180,9 +183,11 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
         } else {
             if (isOut) {
                 value = env->GetObjectArrayElement(args,i);
+                EXCEPTION_CHECKING(env);
             }
             UnMarshalElement(&value, i, um, isOut, &param, XPTType2bcXPType(type.TagPart()),allocator);
             env->SetObjectArrayElement(args,i,value);
+            EXCEPTION_CHECKING(env);
         }
     }
     delete allocator;
@@ -196,12 +201,14 @@ nsresult bcJavaMarshalToolkit::UnMarshal(bcIUnMarshaler *um) {
         if (! isOut                                                                                 \
             && (modifier == none)) {                                                                \
             data = env->Call##_Type_##Method(value,_type_##ValueMID);                               \
+            EXCEPTION_CHECKING(env);                                                                \
         } else if (isOut && (modifier == array)) {                                                  \
             /* could not happend. We take care about it in T_ARRAY case */                          \
         } else if (modifier == arrayElement                                                         \
                    || (isOut && (modifier == none))) {                                              \
             indexInArray = (modifier == arrayElement) ? ind : 0;                                    \
             env->Get##_Type_##ArrayRegion((j##_type_##Array)value, indexInArray, 1, &data);         \
+            EXCEPTION_CHECKING(env);                                                                \
         }                                                                                           \
         m->WriteSimple(&data,type);                                                                 \
     } while (0)
@@ -270,12 +277,28 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                            || (isOut && (modifier == none))) {                                              
                     indexInArray = (modifier == arrayElement) ? ind : 0;                                    
                     data = (jstring)env->GetObjectArrayElement((jobjectArray)value,indexInArray);
+                    EXCEPTION_CHECKING(env);
                 }                                                                                           
                 char * str = NULL;
                 if (data) {
-                    str = (char*)env->GetStringUTFChars((jstring)data,NULL);
-                    m->WriteString(str,strlen(str)+1);
-                    env->ReleaseStringUTFChars(data,str);
+                    size_t length = 0;
+                    if (type == bc_T_CHAR_STR) {
+                        str = (char*)env->GetStringUTFChars((jstring)data,NULL);
+                        length = strlen(str)+1;
+                    } else {
+                        str = (char*)env->GetStringChars((jstring)data,NULL);
+                        length = env->GetStringLength((jstring)data);
+                        length *= sizeof(jchar);
+                        length += 2;
+                    }
+                    EXCEPTION_CHECKING(env);
+                    m->WriteString(str,length);
+                    if (type == bc_T_CHAR_STR) {
+                        env->ReleaseStringUTFChars(data,str);
+                    } else {
+                        env->ReleaseStringChars(data,(const jchar*)str);
+                    }
+                    EXCEPTION_CHECKING(env);
                 } else {
                     m->WriteString(str,0);
                 }
@@ -292,6 +315,7 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                            || (isOut && (modifier == none))) {                                              
                     indexInArray = (modifier == arrayElement) ? ind : 0;                                    
                     data = (jstring)env->GetObjectArrayElement((jobjectArray)value,indexInArray);
+                    EXCEPTION_CHECKING(env);
                 }
                 nsIID iid = bcIIDJava::GetIID(data);
                 m->WriteSimple(&iid, type);
@@ -312,6 +336,7 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                            || (isOut && (modifier == none))) {
                     indexInArray = (modifier == arrayElement) ? ind : 0;                                    
                     data = env->GetObjectArrayElement((jobjectArray)value,indexInArray);
+                    EXCEPTION_CHECKING(env);
                 }
                 if (data != NULL) {
                     NS_WITH_SERVICE(bcJavaStubsAndProxies, javaStubsAndProxies, kJavaStubsAndProxies, &r);
@@ -337,6 +362,7 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                     }
                     const nsXPTParamInfo& arg_param = info->GetParam(argnum);
                     jobject object = env->GetObjectArrayElement(args,argnum);
+                    EXCEPTION_CHECKING(env);
                     r = MarshalElement(m, object, arg_param.IsOut(),(nsXPTParamInfo*)&arg_param, 
                                        XPTType2bcXPType(arg_param.GetType().TagPart()), (uint8)0);
                 }
@@ -352,9 +378,11 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                 jobject arrayValue = value;
                 if (isOut) {
                     arrayValue = env->GetObjectArrayElement((jobjectArray)value,0);
+                    EXCEPTION_CHECKING(env);
                 } 
                 if (m != NULL) {
                     PRUint32 arraySize = (arrayValue == NULL) ? 0 : env->GetArrayLength((jarray)arrayValue);
+                    EXCEPTION_CHECKING(env);
                     m->WriteSimple(&arraySize,bc_T_U32);
                     for (PRUint32 i = 0; i < arraySize; i++) {
                         MarshalElement(m,arrayValue,PR_FALSE,param,type,i,arrayElement);
@@ -380,19 +408,22 @@ bcJavaMarshalToolkit::MarshalElement(bcIMarshaler *m, jobject value,  PRBool isO
                 if ( ! isOut                    \
                      && (modifier == none) ) {  \
                     *value = env->NewObject(_type_##Class,_type_##InitMID,data);   \
-                } else if (isOut && (modifier == array)) {                   \
-                      *value = env->NewObjectArray(1, _type_##ArrayClass, NULL);  \
-                } else if ( (isOut && callSide == onServer)                         \
-                           || (modifier == array)) {                       \
+                    EXCEPTION_CHECKING(env);                                       \
+                } else if (isOut && (modifier == array)) {                         \
+                      *value = env->NewObjectArray(1, _type_##ArrayClass, NULL);   \
+                } else if ( (isOut && callSide == onServer)                        \
+                           || (modifier == array)) {                               \
                                int arraySize;                                         \
                                arraySize = (modifier == array) ? ind : 1;             \
                                *value = env->New##_Type_##Array(arraySize);                 \
+                               EXCEPTION_CHECKING(env);                            \
                 }                                                          \
                 if (modifier == arrayElement                               \
                     || (isOut && (modifier == none))                       \
                    ) {                                                     \
                      indexInArray = (modifier == arrayElement) ? ind : 0;  \
                      env->Set##_Type_##ArrayRegion((j##_type_##Array)*value, indexInArray, 1, &data); \
+                     EXCEPTION_CHECKING(env);                                                         \
                 }                                                                                     \
             } while(0)
 
@@ -454,24 +485,32 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                 jstring data = NULL;
                 if (um) {
                     um->ReadString(&data,&size,allocator);
-                    data = env->NewStringUTF((const char*)data);
+                    if (type == bc_T_CHAR_STR) {
+                        data = env->NewStringUTF((const char*)data);
+                    } else {
+                        data = env->NewString((const jchar*)data,size);
+                    }
+                    EXCEPTION_CHECKING(env);
                 }
                 if ( ! isOut
                      && (modifier == none) ) {
                     *value = data;
                 } else if (isOut && (modifier == array)) {
                     *value = env->NewObjectArray(1, stringArrayClass, NULL);
+                    EXCEPTION_CHECKING(env);
                 } else if ( (isOut && callSide == onServer)
                            || (modifier == array)) {
                     int arraySize;
                     arraySize = (modifier == array) ? ind : 1;
                     *value = env->NewObjectArray(arraySize,stringClass,NULL);
+                    EXCEPTION_CHECKING(env);
                 }
                 if (modifier == arrayElement
                     || (isOut && (modifier == none))
                     ) {
                     indexInArray = (modifier == arrayElement) ? ind : 0;
                     env->SetObjectArrayElement((jobjectArray)*value, indexInArray, data);
+                    EXCEPTION_CHECKING(env);
                 }
                 break;
             }
@@ -489,17 +528,20 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                     *value = data;
                 } else if (isOut && (modifier == array)) {
                     *value = env->NewObjectArray(1, iidArrayClass, NULL);
+                    EXCEPTION_CHECKING(env);
                 } else if ( (isOut && callSide == onServer)
                            || (modifier == array)) {
                     int arraySize;
                     arraySize = (modifier == array) ? ind : 1;
                     *value = env->NewObjectArray(arraySize,iidClass,NULL);
+                    EXCEPTION_CHECKING(env);
                 }
                 if (modifier == arrayElement
                     || (isOut && (modifier == none))
                     ) {
                     indexInArray = (modifier == arrayElement) ? ind : 0;
                     env->SetObjectArrayElement((jobjectArray)*value, indexInArray, data);
+                    EXCEPTION_CHECKING(env);
                 }
                 break;
             }
@@ -534,19 +576,24 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                 } else if ( isOut && (modifier == array)) { //we are  creating type[][]
                     jobject arrayObject;
                     arrayObject = env->NewObjectArray(1,clazz,NULL);
+                    EXCEPTION_CHECKING(env);
                     jclass arrayClass = (jclass) env->CallObjectMethod(arrayObject,getClassMID); //nb how to to it better ?
+                    EXCEPTION_CHECKING(env);
                     *value = env->NewObjectArray(1, arrayClass, NULL);
+                    EXCEPTION_CHECKING(env);
                 } else if ( (isOut && callSide == onServer)
                            || (modifier == array)) {
                     int arraySize;
                     arraySize = (modifier == array) ? ind : 1;
                     *value = env->NewObjectArray(arraySize,clazz,NULL);
+                    EXCEPTION_CHECKING(env);
                 }
                 if (modifier == arrayElement
                     || (isOut && (modifier == none))
                     ) {
                     indexInArray = (modifier == arrayElement) ? ind : 0;
                     env->SetObjectArrayElement((jobjectArray)*value, indexInArray, data);
+                    EXCEPTION_CHECKING(env);
                 }
                     
                 break;
@@ -568,6 +615,7 @@ bcJavaMarshalToolkit::UnMarshalElement(jobject *value, uint8 ind, bcIUnMarshaler
                     UnMarshalElement(&arrayValue,arraySize,NULL,0,param,type,allocator,array);
                     if (isOut) {
                         env->SetObjectArrayElement((jobjectArray)*value,0,arrayValue);
+                        EXCEPTION_CHECKING(env);
                     } else {
                         *value = arrayValue;
                     }

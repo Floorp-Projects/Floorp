@@ -24,6 +24,13 @@
 #include "nscore.h"
 #include "jni.h"
 
+#define EXCEPTION_CHECKING(env) \
+    do {                                     \
+        if ((env)->ExceptionOccurred()) {    \
+            (env)->ExceptionDescribe();      \
+	}                                    \
+    } while (0);
+   
 class bcJavaGlobal {
  public:
     static JNIEnv * GetJNIEnv(void);
