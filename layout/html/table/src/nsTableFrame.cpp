@@ -3427,7 +3427,9 @@ nsTableFrame::CalcDesiredHeight(const nsHTMLReflowState& aReflowState)
     // tables can be used as rectangular items without content
     nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
     if ((NS_UNCONSTRAINEDSIZE != tableSpecifiedHeight) &&
-        (tableSpecifiedHeight > 0))
+        (tableSpecifiedHeight > 0) &&
+        eCompatibility_NavQuirks != GetPresContext()->CompatibilityMode())
+        // empty tables should not have a size in quirks mode
       return tableSpecifiedHeight;
     return 0;
   }
