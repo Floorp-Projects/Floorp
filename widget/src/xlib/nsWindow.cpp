@@ -678,7 +678,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   //--------
   // Scroll the children
   for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-    childWindow = NS_STATIC_CAST(nsWindow*, kid);
+    nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
     nsRect bounds;
     childWindow->GetRequestedBounds(bounds);
     childWindow->Move(bounds.x + aDx, bounds.y + aDy);
