@@ -651,10 +651,11 @@ public:
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame);
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **aOutCaret);
-  NS_IMETHOD SetCaretEnabled(PRBool aaInEnable);
+  NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
+  NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
 
-  NS_IMETHOD SetDisplayNonTextSelection(PRBool aaInEnable);
+  NS_IMETHOD SetDisplayNonTextSelection(PRBool aInEnable);
   NS_IMETHOD GetDisplayNonTextSelection(PRBool *aOutEnable);
 
   // nsISelectionController
@@ -1772,15 +1773,28 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 	if (mCaret && (mCaretEnabled != oldEnabled))
 	{
     // Update the document's content and frame models.
-    if (mDocument) mDocument->FlushPendingNotifications();
+    if (mDocument)
+      mDocument->FlushPendingNotifications();
 
-		if (mCaretEnabled)
-			result = mCaret->SetCaretVisible(PR_TRUE);
-		else
-			result = mCaret->SetCaretVisible(PR_FALSE);
+    nsCOMPtr<nsIDOMSelection> sel;
+    if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel))) && sel)
+    {
+      result = mCaret->SetCaretVisible(mCaretEnabled, sel);
+    }
 	}
 	
 	return result;
+}
+
+
+NS_IMETHODIMP PresShell::SetCaretReadOnly(PRBool aReadOnly)
+{
+  nsCOMPtr<nsIDOMSelection> domSel;
+  if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))) && domSel)
+  {
+    return mCaret->SetCaretReadOnly(aReadOnly, domSel);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP PresShell::GetCaretEnabled(PRBool *aOutEnabled)

@@ -161,8 +161,9 @@ NS_IMETHODIMP nsCaret::QueryInterface(const nsIID& aIID,
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible)
+NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible, nsIDOMSelection *aDOMSel)
 {
+  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
 	mVisible = inMakeVisible;
 	nsresult	err = NS_OK;
 	if (mVisible)
@@ -175,8 +176,10 @@ NS_IMETHODIMP nsCaret::SetCaretVisible(PRBool inMakeVisible)
 
 
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly)
+NS_IMETHODIMP nsCaret::SetCaretReadOnly(PRBool inMakeReadonly, nsIDOMSelection *aDOMSel)
 {
+  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
+
 	mReadOnly = inMakeReadonly;
 	return NS_OK;
 }
@@ -187,6 +190,8 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
 {
 	if (!mPresShell)
 		return NS_ERROR_NOT_INITIALIZED;
+
+  mDomSelectionWeak = getter_AddRefs( NS_GetWeakReference(aDOMSel) );   // weak reference to pres shell
 		
 	nsCOMPtr<nsIDOMSelection> domSelection = aDOMSel;
   nsresult err;
@@ -501,8 +506,6 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 	
 	do {
 		theView->GetPosition(&x, &y);
-		viewOffset.x += x;
-		viewOffset.y += y;
 
 		if (!returnView)
 		{
@@ -516,6 +519,8 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 				if (coordType == eViewCoordinates)
 					break;
 			}
+	    viewOffset.x += x;
+	    viewOffset.y += y;
 		}		
 		
 		theView->GetParent(theView);

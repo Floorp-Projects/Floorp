@@ -1027,7 +1027,7 @@ DrawSelectionIterator::CurrentForeGroundColor()
 
 PRBool
 DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
-{
+{ 
   //Find color based on mTypes[mCurrentIdx];
   if (!mTypes)
   {
@@ -1750,12 +1750,13 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
   if (NS_FAILED(rv) || !shell)
     return;
   nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(shell, &rv);
+  rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
   if (NS_FAILED(rv) || !selCon)
     return;
 
-  PRInt16 displaySelection;
-  selCon->GetDisplaySelection(&displaySelection);
+  PRInt16 selectionValue;
+  selCon->GetDisplaySelection(&selectionValue);
+  PRBool displaySelection = selectionValue > nsISelectionController::SELECTION_HIDDEN;
 
   // Make enough space to transform
   nsAutoTextBuffer paintBuffer;
@@ -1838,7 +1839,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       }
       //while we have substrings...
       PRBool drawn = PR_FALSE;
-      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, displaySelection);
+      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, selectionValue);
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -2275,12 +2276,13 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
   if (NS_FAILED(rv) || !shell)
     return;
   nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(shell, &rv);
+  rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
   if (NS_FAILED(rv) || !selCon)
     return;
 
-  PRInt16 displaySelection;
-  selCon->GetDisplaySelection(&displaySelection);
+  PRInt16 selectionValue;
+  selCon->GetDisplaySelection(&selectionValue);
+  PRBool displaySelection = selectionValue > nsISelectionController::SELECTION_HIDDEN;
 
 
   // Make enough space to transform
@@ -2356,7 +2358,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
 
-      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, displaySelection);
+      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, selectionValue);
       if (!iter.IsDone() && iter.First())
       {
 	      nscoord currentX = dx;
@@ -2421,13 +2423,14 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
   if (NS_FAILED(rv) || !shell)
     return;
   nsCOMPtr<nsISelectionController> selCon;
-  selCon = do_QueryInterface(shell, &rv);
+  rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
   if (NS_FAILED(rv) || !selCon)
     return;
 
-  PRInt16 displaySelection;
+  PRInt16 selectionValue;
   PRBool isSelected;
-  selCon->GetDisplaySelection(&displaySelection);
+  selCon->GetDisplaySelection(&selectionValue);
+  PRBool displaySelection = selectionValue > nsISelectionController::SELECTION_HIDDEN;
 
   isSelected = (mState & NS_FRAME_SELECTED_CONTENT) == NS_FRAME_SELECTED_CONTENT;
 
@@ -2562,7 +2565,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle, displaySelection);//ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
+      DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle, selectionValue);//ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -3420,9 +3423,10 @@ nsTextFrame::HandleMultiplePress(nsIPresContext* aPresContext,
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
-  if (NS_FAILED(rv) || !shell || !selCon)
-    return rv ?rv:NS_ERROR_FAILURE;
+  nsCOMPtr<nsISelectionController> selCon;
+  rv = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+  if (NS_FAILED(rv) || !selCon)
+    return rv?rv:NS_ERROR_FAILURE;
   if (me->clickCount > 2)//triple clicking
   {
     nsCOMPtr<nsIPref>     mPrefs;

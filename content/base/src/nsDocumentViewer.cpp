@@ -1831,7 +1831,7 @@ nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
   selCon->GetDisplaySelection( &selectionStatus);
 
   //if selection was nsISelectionController::SELECTION_OFF, do nothing
-  //otherwise re-enable it.
+  //otherwise re-enable it. 
   if(selectionStatus == nsISelectionController::SELECTION_DISABLED)
   {
     selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
@@ -1839,12 +1839,12 @@ nsDocViewerFocusListener::Focus(nsIDOMEvent* aEvent)
   }
   return result;
 }
-
+ 
 nsresult
 nsDocViewerFocusListener::Blur(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIPresShell> shell;
-  if(!mDocViewer)
+  if(!mDocViewer) 
     return NS_ERROR_FAILURE;
 
   nsresult result = mDocViewer->GetPresShell(*getter_AddRefs(shell));//deref once cause it take a ptr ref

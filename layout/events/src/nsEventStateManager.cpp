@@ -737,7 +737,9 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
               (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) {
             currFrame->GetContent(getter_AddRefs(newFocus));
-            break;
+            nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
+            if (domElement)
+              break;
           }
           currFrame->GetParent(&currFrame);
         }
