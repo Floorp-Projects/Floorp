@@ -57,6 +57,8 @@ protected:
 	PRBool				mMouseInWidgetHit;
 	nsWindow*			mLastWidgetPointed;
 	RgnHandle			mUpdateRgn;
+  static PRBool	mInBackground;
+
 };
 
 #endif // MacMacEventHandler_h__
