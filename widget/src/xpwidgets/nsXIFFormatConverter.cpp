@@ -50,7 +50,8 @@ static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
 NS_IMPL_ADDREF(nsXIFFormatConverter)
 NS_IMPL_RELEASE(nsXIFFormatConverter)
-NS_IMPL_QUERY_INTERFACE(nsXIFFormatConverter, NS_GET_IID(nsIFormatConverter))
+NS_IMPL_QUERY_INTERFACE1(nsXIFFormatConverter, nsIFormatConverter)
+
 
 //-------------------------------------------------------------------------
 //

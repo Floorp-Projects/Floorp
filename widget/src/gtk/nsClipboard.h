@@ -38,9 +38,6 @@ public:
   nsClipboard();
   virtual ~nsClipboard();
 
-  //nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIClipboard  
   NS_IMETHOD ForceDataToClipboard();
 

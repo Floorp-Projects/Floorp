@@ -42,11 +42,6 @@
 #include <Scrap.h>
 
 
-NS_IMPL_ADDREF_INHERITED(nsClipboard, nsBaseClipboard)
-NS_IMPL_RELEASE_INHERITED(nsClipboard, nsBaseClipboard)
-//NS_IMPL_QUERY_INTERFACE1(nsClipboard, nsIClipboard)
-
-
 //
 // nsClipboard constructor
 //
@@ -59,33 +54,6 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 //
 nsClipboard::~nsClipboard()
 {
-}
-
-
-
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsresult rv = NS_NOINTERFACE;
-
-  static NS_DEFINE_IID(kIClipboard, NS_ICLIPBOARD_IID);
-  if (aIID.Equals(kIClipboard)) {
-    *aInstancePtr = (void*) ((nsIClipboard*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return rv;
 }
 
 

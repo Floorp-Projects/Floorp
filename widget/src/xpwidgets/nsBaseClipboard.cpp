@@ -29,6 +29,8 @@
 
 NS_IMPL_ADDREF(nsBaseClipboard)
 NS_IMPL_RELEASE(nsBaseClipboard)
+NS_IMPL_QUERY_INTERFACE1(nsBaseClipboard, nsIClipboard);
+
 
 //-------------------------------------------------------------------------
 //
@@ -52,30 +54,6 @@ nsBaseClipboard::nsBaseClipboard()
 nsBaseClipboard::~nsBaseClipboard()
 {
   EmptyClipboard();
-}
-
-/**
- * @param aIID The name of the class implementing the method
- * @param _classiiddef The name of the #define symbol that defines the IID
- * for the class (e.g. NS_ISUPPORTS_IID)
- * 
-*/ 
-nsresult nsBaseClipboard::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsresult rv = NS_NOINTERFACE;
-
-  if (aIID.Equals(nsCOMTypeInfo<nsIClipboard>::GetIID())) {
-    *aInstancePtr = (void*) ((nsIClipboard*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  return rv;
 }
 
 
