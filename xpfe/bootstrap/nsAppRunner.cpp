@@ -223,6 +223,7 @@ int main(int argc, char* argv[])
 	PRBool profileDirSet = PR_FALSE;
 	nsIProfile *profileService = nsnull;
 	char *profstr = nsnull;
+	int numProfiles = 0;
 #endif // defined(NS_USING_PROFILES)
 
   char* cmdResult = nsnull;
@@ -265,7 +266,7 @@ int main(int argc, char* argv[])
     goto done;			// don't use goto in C++!
   }
   profileService->Startup(nsnull);
-
+  profileService->GetProfileCount(&numProfiles); 
 #endif // defined(NS_USING_PROFILES)
 
 
@@ -406,9 +407,18 @@ int main(int argc, char* argv[])
     {		
 		if (cmdResult) {
 #ifdef XP_PC
-			profileService->MigrateProfileInfo(); 
+			profileService->MigrateProfileInfo();
+
+			int num4xProfiles = 0;
+			profileService->Get4xProfileCount(&num4xProfiles); 
+
+			if (num4xProfiles == 0 && numProfiles == 0) {
+				profstr = "resource:/res/profile/cpw.xul"; 
+			}
+			else if (num4xProfiles >= 1) {
+				profstr = "resource:/res/profile/pm.xul";
+			}
 #endif
-			profstr = "resource:/res/profile/pm.xul";
 		}
     }
 
@@ -590,7 +600,6 @@ int main(int argc, char* argv[])
 	 */ 
 	if (!profileDirSet)
 	{
-		int numProfiles = 0; 
 		nsIURI* profURL = nsnull;
 
 		PRInt32 profWinWidth  = 615;
@@ -606,8 +615,6 @@ int main(int argc, char* argv[])
                                     (nsISupports**)&profAppShell);
 		if (NS_FAILED(rv))
 			goto done;
-
-		profileService->GetProfileCount(&numProfiles); 
 
 		char *isPregInfoSet = nsnull;
 		profileService->IsPregCookieSet(&isPregInfoSet); 
