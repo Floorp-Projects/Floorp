@@ -62,6 +62,7 @@ typedef PRUint32 nsresult;
 #define NS_ERROR_MODULE_LAYOUT     8
 #define NS_ERROR_MODULE_HTMLPARSER 9
 #define NS_ERROR_MODULE_RDF        10
+#define NS_ERROR_MODULE_UCONV      11
 
 /**
  * @name Standard Error Handling Macros
