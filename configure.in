@@ -429,6 +429,7 @@ AS_DASH_C_FLAG='-c'
 DLL_SUFFIX=.so
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
+ASM_SUFFIX=s
 TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 
@@ -870,6 +871,7 @@ case "$target" in
     OBJ_SUFFIX=obj
     LIB_SUFFIX=lib
     DLL_SUFFIX=.dll
+    ASM_SUFFIX=asm
     DLLTOOL=''
     LD='$(CC)'
     DSO_CFLAGS=''
@@ -903,6 +905,9 @@ case "$target" in
         AR_LIST='/L'
         AR_EXTRACT='-*'
         AR_DELETE='-'
+        AS=alp
+        ASFLAGS='-Mb'
+        AS_DASH_C_FLAG=''
         LD='-ilink'
         TARGET_MD_ARCH=os2
         CFLAGS="/Q /qlibansi /Gd /Gm /Su4 /Mp /Tl-"
@@ -4489,6 +4494,7 @@ AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, "$DLL_SUFFIX")
 AC_SUBST(LIB_SUFFIX)
 AC_SUBST(OBJ_SUFFIX)
 AC_SUBST(BIN_SUFFIX)
+AC_SUBST(ASM_SUFFIX)
 AC_SUBST(USE_N32)
 AC_SUBST(MOZ_NSS_AUTOCONF)
 
