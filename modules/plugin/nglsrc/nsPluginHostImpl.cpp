@@ -2264,7 +2264,7 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
         
         token = nsCRT::strtok( noProxyCopy, comma, &newStr );   
         while( token != NULL ) {
-          if (PL_strstr((const char *) token, (const char *) proxyHost)) {
+          if (PL_strstr((const char *) proxyHost, (const char *) token)) {
             useDirect = PR_TRUE;
             break;
           }
