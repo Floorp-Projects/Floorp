@@ -284,6 +284,11 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
 
    if(aIID.Equals(NS_GET_IID(nsILinkHandler)))
       {
+      // Note: If we ever allow for registering other link handlers,
+      // we need to make sure that link handler implementations take
+      // the necessary precautions to prevent the security compromise
+      // that is blocked by nsWebSell::OnLinkClickSync().
+
       *aInstancePtr = NS_STATIC_CAST(nsILinkHandler*, this);
       NS_ADDREF((nsISupports*)*aInstancePtr);
       return NS_OK;
@@ -540,14 +545,13 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
                         nsIInputStream* aHeadersDataStream)
 {
   OnLinkClickEvent* ev;
-  nsresult rv = NS_OK;
 
   ev = new OnLinkClickEvent(this, aContent, aVerb, aURI,
                             aTargetSpec, aPostDataStream, aHeadersDataStream);
-  if (nsnull == ev) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
+  if (!ev) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -572,6 +576,59 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
                             nsIDocShell** aDocShell,
                             nsIRequest** aRequest)
 {
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
+  NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
+
+  PRBool isJS = PR_FALSE;
+  PRBool isData = PR_FALSE;
+
+  aURI->SchemeIs("javascript", &isJS);
+  aURI->SchemeIs("data", &isData);
+
+  if (isJS || isData) {
+    nsCOMPtr<nsIDocument> sourceDoc;
+    aContent->GetDocument(*getter_AddRefs(sourceDoc));
+
+    if (!sourceDoc) {
+      // The source is in a 'zombie' document, or not part of a
+      // document any more. Don't let it execute any javascript in the
+      // new document.
+
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIPresShell> presShell;
+    GetPresShell(getter_AddRefs(presShell));
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocument> currentDoc;
+    presShell->GetDocument(getter_AddRefs(currentDoc));
+
+    if (currentDoc != sourceDoc) {
+      // The source is not in the current document, don't let it
+      // execute any javascript in the current document.
+
+      return NS_OK;
+    }
+  }
+
+  // Get the owner document of the link that was clicked, this will be
+  // the document that the link is in, or the last document that the
+  // link was in. From that document, we'll get the URI to use as the
+  // referer, since the current URI in this webshell/docshell may be a
+  // new document that we're in the process of loading.
+  nsCOMPtr<nsIDOMDocument> refererOwnerDoc;
+  node->GetOwnerDocument(getter_AddRefs(refererOwnerDoc));
+
+  nsCOMPtr<nsIDocument> refererDoc(do_QueryInterface(refererOwnerDoc));
+  NS_ENSURE_TRUE(refererDoc, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIURI> referer;
+  refererDoc->GetDocumentURL(getter_AddRefs(referer));
+
+  // referer could be null here in some odd cases, but that's ok,
+  // we'll just load the link w/o sending a referer in those cases.
+
   nsAutoString target(aTargetSpec);
 
   // Initialize the DocShell / Request
@@ -591,7 +648,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
     case eLinkVerb_Replace:
       {
         return InternalLoad(aURI,               // New URI
-                            mCurrentURI,        // Referer URI
+                            referer,            // Referer URI
                             nsnull,             // No onwer
                             PR_TRUE,            // Inherit owner from document
                             target.get(),       // Window target
