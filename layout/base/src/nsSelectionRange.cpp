@@ -32,6 +32,11 @@ nsSelectionRange::nsSelectionRange(nsIContent * aStartContent,
   mEnd   = new nsSelectionPoint(aEndContent,   aEndOffset,   aEndIsAnchor);
 } 
 
+nsSelectionRange::~nsSelectionRange() {
+  delete mStart;
+  delete mEnd;
+}
+
 void nsSelectionRange::SetRange(nsIContent * aStartContent,
                                 PRInt32     aStartOffset,
                                 PRBool       aStartIsAnchor,

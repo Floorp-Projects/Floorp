@@ -38,6 +38,10 @@ nsSelection::nsSelection() {
   mRange = new nsSelectionRange();
 } 
 
+nsSelection::~nsSelection() {
+  delete mRange;
+} 
+
 NS_IMPL_ADDREF(nsSelection)
 NS_IMPL_RELEASE(nsSelection)
 

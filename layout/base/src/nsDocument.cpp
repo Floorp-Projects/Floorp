@@ -25,6 +25,8 @@
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
 
+#include "nsSelection.h"
+
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 #include "nsIDOMElement.h"
@@ -47,6 +49,10 @@ nsDocument::nsDocument()
   mParentDocument = nsnull;
   mRootContent = nsnull;
   mScriptObject = nsnull;
+ 
+  if (NS_OK != NS_NewSelection(&mSelection)) {
+    printf("*************** Error: nsDocument::nsDocument - Creation of Selection failed!\n");
+  }
 
   Init();/* XXX */
 }
@@ -77,6 +83,7 @@ nsDocument::~nsDocument()
   }
 
   NS_IF_RELEASE(mArena);
+  NS_IF_RELEASE(mSelection);
 }
 
 nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -628,3 +635,17 @@ nsresult nsDocument::GetElementsByTagName(nsString &aTagname, nsIDOMNodeIterator
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/**
+  * Returns the Selection Object
+ */
+nsISelection * nsDocument::GetSelection() {
+  return mSelection;
+} 
+
+NS_LAYOUT nsresult
+NS_NewSelection(nsISelection** aInstancePtrResult)
+{
+  static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
+  nsSelection * sel = new nsSelection();
+  return sel->QueryInterface(kISelectionIID, (void**) aInstancePtrResult);
+}

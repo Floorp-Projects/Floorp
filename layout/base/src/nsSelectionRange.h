@@ -35,6 +35,8 @@ class nsSelectionRange {
                 PRInt32      aEndOffset,
                 PRBool       aEndIsAnchor);
 
+    virtual ~nsSelectionRange();
+
     void SetRange(nsIContent * aStartContent,
                   PRInt32      aStartOffset,
                   PRBool       aStartIsAnchor,

@@ -22,6 +22,7 @@
 #include "nsVoidArray.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsISelection.h"
 
 // Base class for our document implementations
 class nsDocument : public nsIDocument, public nsIDOMDocument, public nsIScriptObjectOwner {
@@ -127,6 +128,11 @@ public:
                                      nsIContent* aChild,
                                      PRInt32 aIndexInContainer);
 
+  /**
+    * Returns the Selection Object
+   */
+  virtual nsISelection * GetSelection();
+
 public:
   
   virtual nsresult            GetScriptObject(JSContext *aContext, void** aScriptObject);
@@ -169,8 +175,10 @@ protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);  // subclass hook
 
   nsDocument();
-  virtual ~nsDocument();
+  virtual ~nsDocument(); 
   nsresult Init();
+
+  nsISelection * mSelection;
 
   nsIArena* mArena;
   nsString* mDocumentTitle;

@@ -19,16 +19,21 @@
 
 nsSelectionPoint::nsSelectionPoint(nsIContent * aContent,
                                    PRInt32      aOffset,
-                                   PRBool       aIsAnchor) {
+                                   PRBool       aIsAnchor) 
+{
   fContent  = aContent;
   fOffset   = aOffset;
   fIsAnchor = aIsAnchor; 
-};
+}
 
+nsSelectionPoint::~nsSelectionPoint() 
+{
+}
 
 void nsSelectionPoint::SetPoint(nsIContent * aContent,
                                 PRInt32      aOffset,
-                                PRBool       aIsAnchor) {
+                                PRBool       aIsAnchor) 
+{
   fContent  = aContent;
   fOffset   = aOffset;
   fIsAnchor = aIsAnchor;

@@ -27,6 +27,7 @@ class nsIDocumentContainer;
 class nsIDocumentObserver;
 class nsIPresContext;
 class nsIPresShell;
+class nsISelection;
 class nsISubContent;
 class nsIStyleSet;
 class nsIStyleSheet;
@@ -151,6 +152,10 @@ public:
   virtual void ContentHasBeenRemoved(nsIContent* aContainer,
                                      nsIContent* aChild,
                                      PRInt32 aIndexInContainer) = 0;
+  /**
+    * Returns the Selection Object
+   */
+  virtual nsISelection * GetSelection() = 0;
 };
 
 // XXX Belongs somewhere else
