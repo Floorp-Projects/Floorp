@@ -454,13 +454,16 @@ for download. */
 /* static */
 void nsPop3Protocol::MarkMsgInHashTable(PLHashTable *hashTable, const Pop3UidlEntry *uidlE, PRBool *changed)
 {
-  Pop3UidlEntry *uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(hashTable, uidlE->uidl);
-  if (uidlEntry)
+  if (uidlE->uidl)
   {
-    if (uidlEntry->status != uidlE->status)
+    Pop3UidlEntry *uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(hashTable, uidlE->uidl);
+    if (uidlEntry)
     {
-      uidlEntry->status = uidlE->status;
-      *changed = PR_TRUE;
+      if (uidlEntry->status != uidlE->status)
+      {
+        uidlEntry->status = uidlE->status;
+        *changed = PR_TRUE;
+      }
     }
   }
 }
@@ -3076,7 +3079,7 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
             Pop3MsgInfo* info = m_pop3ConData->msg_info + m_pop3ConData->last_accessed_msg; 
 
             /* Check for filter actions - FETCH or DELETE */
-            if (m_pop3ConData->newuidl)
+            if ((m_pop3ConData->newuidl) && (info->uidl))
               uidlEntry = (Pop3UidlEntry *)PL_HashTableLookup(m_pop3ConData->newuidl, info->uidl);
 
             if (uidlEntry && uidlEntry->status == FETCH_BODY &&
@@ -3838,12 +3841,15 @@ NS_IMETHODIMP nsPop3Protocol::MarkMessages(nsVoidArray *aUIDLArray)
 NS_IMETHODIMP nsPop3Protocol::CheckMessage(const char *aUidl, PRBool *aBool)
 {
   Pop3UidlEntry *uidlEntry = nsnull;
-  
-  if (m_pop3ConData->newuidl)
-    uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(m_pop3ConData->newuidl, aUidl);
-  else if (m_pop3ConData->uidlinfo)
-    uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, aUidl);
-  
+
+  if (aUidl)
+  {
+    if (m_pop3ConData->newuidl)
+      uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(m_pop3ConData->newuidl, aUidl);
+    else if (m_pop3ConData->uidlinfo)
+      uidlEntry = (Pop3UidlEntry *) PL_HashTableLookup(m_pop3ConData->uidlinfo->hash, aUidl);
+  }
+
   *aBool = uidlEntry ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
