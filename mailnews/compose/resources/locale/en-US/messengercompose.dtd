@@ -14,7 +14,7 @@
 	<!ENTITY saveCmd.key "S">
 <!ENTITY saveAsCmd.label "Save As">
 	<!ENTITY saveAsCmd.accesskey "s">
-<!ENTITY saveAsFileCmd.label ".File...">
+<!ENTITY saveAsFileCmd.label "File...">
 	<!ENTITY saveAsFileCmd.accesskey "F">
 <!ENTITY saveAsDraftCmd.label "Draft">
 	<!ENTITY saveAsDraftCmd.accesskey "D">
