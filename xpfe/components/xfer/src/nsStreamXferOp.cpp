@@ -82,9 +82,9 @@ nsStreamXferOp::OpenDialog( nsIDOMWindow *parent ) {
                 void *stackPtr;
                 jsval *argv = JS_PushArguments( jsContext,
                                                 &stackPtr,
-                                                "svs%ip",
+                                                "sss%ip",
                                                 "chrome://global/content/downloadProgress.xul",
-                                                JSVAL_NULL,
+                                                "_blank",
                                                 "chrome",
                                                 (const nsIID*)(&nsCOMTypeInfo<nsIStreamTransferOperation>::GetIID()),
                                                 (nsISupports*)(nsIStreamTransferOperation*)this );
@@ -94,6 +94,8 @@ nsStreamXferOp::OpenDialog( nsIDOMWindow *parent ) {
                     if ( NS_SUCCEEDED( rv ) ) {
                         newWindow->Release();
                     } else {
+                        DEBUG_PRINTF( PR_STDOUT, "%s %d: nsIDOMWindow::OpenDialog failed, rv=0x%08X\n",
+                                      (char*)__FILE__, (int)__LINE__, (int)rv );
                     }
                     JS_PopArguments( jsContext, stackPtr );
                 } else {
