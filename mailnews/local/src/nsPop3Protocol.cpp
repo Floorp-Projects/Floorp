@@ -1252,6 +1252,38 @@ PRInt32 nsPop3Protocol::CapaResponse(nsIInputStream* inputStream,
         SetCapFlag(POP3_HAS_AUTH_RESP_CODE);
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
+    else
+    // see RFC 2449, chapter 6.3
+    if (!PL_strncasecmp(line, "SASL", 4))
+    {
+        nsCAutoString responseLine;
+        responseLine.Assign(line + 5);
+
+        if (responseLine.Find("PLAIN", PR_TRUE) >= 0)  
+            SetCapFlag(POP3_HAS_AUTH_PLAIN);
+
+        if (responseLine.Find("LOGIN", PR_TRUE) >= 0)  
+            SetCapFlag(POP3_HAS_AUTH_LOGIN);
+
+        nsresult rv;
+        nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+        // this checks if psm is installed...
+        if (NS_SUCCEEDED(rv))
+        {
+            if (responseLine.Find("CRAM-MD5", PR_TRUE) >= 0)
+                SetCapFlag(POP3_HAS_AUTH_CRAM_MD5);
+
+            if (responseLine.Find("NTLM", PR_TRUE) >= 0)  
+                SetCapFlag(POP3_HAS_AUTH_NTLM);
+
+            if (responseLine.Find("MSN", PR_TRUE) >= 0)
+                SetCapFlag(POP3_HAS_AUTH_NTLM|POP3_HAS_AUTH_MSN);
+        }
+
+        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+        // for use after mechs disabled fallbacks when login failed
+        BackupAuthFlags();
+    }
 
     PR_Free(line);
     return 0;
