@@ -138,6 +138,23 @@ struct _MDFileDesc {
 ** Interrupts Related definitions
 */
 
+#define _MD_GET_INTSOFF()               (_pr_intsOff)
+
+#define _MD_INTSOFF(_is)                                  \
+    PR_BEGIN_MACRO                                        \
+        ENTER_CRITICAL_REGION();                          \
+        (_is) = _PR_MD_GET_INTSOFF();                     \
+        _PR_MD_SET_INTSOFF(1);                            \
+        LEAVE_CRITICAL_REGION();                          \
+    PR_END_MACRO
+
+#if TARGET_CARBON
+extern void _MD_SetIntsOff(PRInt32 ints);
+#define _MD_SET_INTSOFF(_val)           _MD_SetIntsOff(_val)
+#else /* not TARGET_CARBON */
+#define _MD_SET_INTSOFF(_val)           (_pr_intsOff = _val)
+#endif /* TARGET_CARBON */
+
 #define _MD_START_INTERRUPTS			_MD_StartInterrupts
 #define _MD_STOP_INTERRUPTS	    		_MD_StopInterrupts
 #define _MD_BLOCK_CLOCK_INTERRUPTS()
@@ -238,6 +255,8 @@ extern PRStatus _MD_InitThread(PRThread *thread);
 
 /*
 ** Initialize the thread context preparing it to execute _main.
+** *sp = 0 zeros out the sp for the first stack frame so that
+** stack walking code can find the top of the stack.
 */
 #if defined(powerc) || defined(__powerc)
 #define _MD_INIT_CONTEXT(_thread, _sp, _main, _status)	\
@@ -248,6 +267,7 @@ extern PRStatus _MD_InitThread(PRThread *thread);
     *((PRBool *)_status) = PR_TRUE;              		\
 	(void) setjmp(jb);			      					\
     sp = INIT_STACKPTR(_sp);							\
+    *sp = 0;                                            \
     (_MD_GET_SP(_thread)) = (long) sp;   				\
 	tvect = (unsigned long *)_main;						\
     (_MD_GET_PC(_thread)) = (int) *tvect;   			\
@@ -626,5 +646,37 @@ extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 
 extern void SetLogFileTypeCreator(const char *logFile);
 extern int _MD_mac_get_nonblocking_connect_error(PRInt32 osfd);
+
+
+/*
+ * Critical section support
+ */
+
+#define MAC_CRITICAL_REGIONS  TARGET_CARBON
+
+#if MAC_CRITICAL_REGIONS
+
+extern void InitCriticalRegion();
+extern void TermCriticalRegion();
+
+extern void EnterCritialRegion();
+extern void LeaveCritialRegion();
+
+#define INIT_CRITICAL_REGION()     InitCriticalRegion()
+#define TERM_CRITICAL_REGION()     TermCriticalRegion()
+
+#define ENTER_CRITICAL_REGION()     EnterCritialRegion()
+#define LEAVE_CRITICAL_REGION()     LeaveCritialRegion()
+
+#else
+
+#define INIT_CRITICAL_REGION()
+#define TERM_CRITICAL_REGION()
+
+#define ENTER_CRITICAL_REGION()
+#define LEAVE_CRITICAL_REGION()
+
+#endif
+
 
 #endif /* prmacos_h___ */

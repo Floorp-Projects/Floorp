@@ -75,20 +75,21 @@ typedef struct ExtendedParamBlock ExtendedParamBlock;
 static void AsyncIOCompletion (ExtendedParamBlock *pbAsyncPtr)
 {
     _PRCPU *cpu = _PR_MD_CURRENT_CPU();
-	PRThread *thread = pbAsyncPtr->thread;
-
+    PRThread *thread = pbAsyncPtr->thread;    
+    PRIntn is;
+    
     if (_PR_MD_GET_INTSOFF()) {
-        cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
         thread->md.missedIONotify = PR_TRUE;
-		return;
+        cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
+        return;
     }
-    _PR_MD_SET_INTSOFF(1);
 
-	thread->md.osErrCode = noErr;
-	DoneWaitingOnThisThread(thread);
+    _PR_INTSOFF(is);
 
-    _PR_MD_SET_INTSOFF(0);
+    thread->md.osErrCode = noErr;
+    DoneWaitingOnThisThread(thread);
 
+    _PR_FAST_INTSON(is);
 }
 
 void  _MD_SetError(OSErr oserror)

@@ -288,6 +288,8 @@ void _MD_EarlyInit()
 {
 	Handle				environmentVariables;
 
+	INIT_CRITICAL_REGION();
+
 #if !defined(MAC_NSPR_STANDALONE)
 	// MacintoshInitializeMemory();  Moved to mdmacmem.c: AllocateRawMemory(Size blockSize)
 #else
@@ -374,6 +376,7 @@ void CleanupTermProc(void)
 	_MD_StopInterrupts();	// deactive Time Manager task
 
 	CLOSE_OPEN_TRANSPORT();
+	TERM_CRITICAL_REGION();
 	
 	__NSTerminate();
 }
