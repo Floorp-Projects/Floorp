@@ -295,7 +295,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
       nsString nameString(name);
       createNode(nameString, target);
       delete[] name;
-      return rv;
+      return NS_OK;
     }
 	else if (peq(kNC_SpecialFolder, property)) {
 		PRUint32 flags;
@@ -314,13 +314,15 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
 			specialFolderString = "none";
 
 		createNode(specialFolderString, target);
+        return NS_OK;
 	}
 #if 1
     else if (peq(kNC_Child, property)) {
 
       nsIEnumerator* subFolders;
       rv = folder->GetSubFolders(&subFolders);
-      if (NS_FAILED(rv)) return rv;
+      if (NS_FAILED(rv))
+        return NS_RDF_NO_VALUE;
 
       rv = subFolders->First();
       if (NS_SUCCEEDED(rv)) {
@@ -332,13 +334,13 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
         NS_RELEASE(firstFolder);
       }
       NS_RELEASE(subFolders);
-      return rv;
+      return NS_FAILED(rv) ? NS_RDF_NO_VALUE : rv;
     }
     
     else if (peq(kNC_MessageChild, property)){
       nsIEnumerator* messages;
       rv = folder->GetMessages(&messages);
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(rv) && rv != NS_RDF_CURSOR_EMPTY) {
         if (NS_SUCCEEDED(messages->First())) {
           nsISupports *firstMessage;
           rv = messages->CurrentItem(&firstMessage);
@@ -348,10 +350,10 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
         }
         NS_RELEASE(messages);
       }
-      return rv;
+      return rv == NS_OK ? NS_OK : NS_RDF_NO_VALUE;
     }
 #endif
-    return rv;
+    return NS_RDF_NO_VALUE;
   }
 
   nsCOMPtr<nsIMessage> message(do_QueryInterface(source, &rv));
@@ -609,9 +611,9 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
 	arcs->AppendElement(kNC_SpecialFolder);
 #if 1
     nsIEnumerator* subFolders;
-    if(NS_SUCCEEDED(folder->GetSubFolders(&subFolders)))
+    if (NS_SUCCEEDED(folder->GetSubFolders(&subFolders)))
 	{
-	    if(NS_SUCCEEDED(subFolders->First()))
+	    if(NS_OK == subFolders->First())
 		  arcs->AppendElement(kNC_Child);
 		NS_RELEASE(subFolders);
 	}
@@ -619,7 +621,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
     nsIEnumerator* messages;
     if(NS_SUCCEEDED(folder->GetMessages(&messages)))
 	{
-		if(NS_SUCCEEDED(messages->First()))
+		if(NS_OK == messages->First())
 		  arcs->AppendElement(kNC_MessageChild);
 		NS_RELEASE(messages);
 	}
