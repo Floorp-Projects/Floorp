@@ -28,8 +28,8 @@
 
 function debug(msg)
 {
-  // uncomment for noise
-  //dump(msg);
+	// uncomment for noise
+	// dump(msg);
 }
 
 // The content window that we're supposed to be observing.
@@ -59,6 +59,67 @@ var Observer = {
 
 
 
+function
+skipRelatedLinksDomain(newDomain)
+{
+	var skipDomainFlag = false;
+	
+	if (newDomain[newDomain.length - 1] == '/')
+	{
+		newDomain = newDomain.substring(0, newDomain.length - 1);
+	}
+
+	try
+	{
+		var pref = Components.classes["component://netscape/preferences"];
+		if (pref)	pref = pref.getService();
+		if (pref)	pref = pref.QueryInterface(Components.interfaces.nsIPref);
+		if (pref)
+		{
+			var domainList = pref.CopyCharPref("browser.related.disabledForDomains");
+			if ((domainList) && (domainList != ""))
+			{
+				debug("\nProposed New Domain: '" + newDomain + "'\n");
+				debug("Skip Domain List: '" + domainList + "'\n");
+
+				var domains = domainList.split(",");		// split on commas
+				for (var x=0; x < domains.length; x++)
+				{
+					var aDomain = newDomain;
+
+					var domain = domains[x];
+					debug("Skip Domain #" + x + ": " + domain + "\n");
+
+					if (domain[0] == '*')			// wildcard match
+					{
+						debug("    Wildcard domain.\n");
+
+						domain = domain.substring(1);	// strip off the asterisk
+						if (aDomain.length > domain.length)
+						{
+							aDomain = aDomain.substring(newDomain.length-domain.length);
+						}
+					}
+
+					if (aDomain.lastIndexOf(domain) == 0)
+					{
+						debug("    Skip this domain '" + aDomain + "'\n");
+
+						skipDomainFlag = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+	catch(ex)
+	{
+	}
+	return(skipDomainFlag);
+}
+
+
+
 function refetchRelatedLinks(Handler, data)
 {
 	var newSite = "" + data;
@@ -79,7 +140,7 @@ function refetchRelatedLinks(Handler, data)
 	// we can only get related links data on HTTP URLs
 	if (newSite.indexOf("http://") != 0)
 	{
-		dump("Unable to fetch related links data on non-HTTP URL.\n");
+		debug("Unable to fetch related links data on non-HTTP URL.\n");
 		return(false);
 	}
 	newSite = newSite.substr(7);			// strip off "http://" prefix
@@ -112,7 +173,10 @@ function refetchRelatedLinks(Handler, data)
 			theSite = theSite.substr(0, questionOffset);
 		}
 
-		Handler.URL = theSite;
+		if (skipRelatedLinksDomain(newSite) != true)
+		{
+			Handler.URL = theSite;
+		}
 	}
 }
 
@@ -202,7 +266,6 @@ function openURL(treeitem, root)
 				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
 				if (target)	target = target.Value;
 				if (target)	id = target;
-				
 			}
 		}
 	}
