@@ -162,12 +162,14 @@ nsTableFrame::nsTableFrame()
   : nsHTMLContainerFrame(),
     mCellMap(nsnull),
     mTableLayoutStrategy(nsnull),
-    mPercentBasisForRows(0)
+    mPercentBasisForRows(0),
+    mPreferredWidth(0)
 {
   mBits.mColumnWidthsSet = PR_FALSE;
   mBits.mColumnWidthsValid = PR_FALSE;
   mBits.mFirstPassValid = PR_FALSE;
   mBits.mIsInvariantWidth = PR_FALSE;
+  mBits.mMaximumWidthValid = PR_FALSE;
   // XXX We really shouldn't do this, but if we don't then we'll have a
   // problem with the tree control...
 #if 0
@@ -1646,40 +1648,43 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     
     // See if the pass1 maximum width is no longer valid because one of the
     // cell maximum widths changed
-    if (isAutoOrPctWidth && !IsMaximumWidthValid()) {
-      // Initialize the strategy and have it compute the natural size of
-      // the table
-      mTableLayoutStrategy->Initialize(aPresContext, nsnull, NS_UNCONSTRAINEDSIZE, aReflowState);
-
-      // Now the maximum width is valid
-      mBits.mMaximumWidthValid = PR_TRUE;
-
-      // Initializing the table layout strategy assigns preliminary column
-      // widths. We can't leave the column widths this way, and so we need to
-      // balance the column widths to get them back to what we had previously.
-      // XXX It would be nice to have a cleaner way to calculate the updated
-      // maximum width
-      BalanceColumnWidths(aPresContext, aReflowState,
-                          nsSize(aReflowState.availableWidth, aReflowState.availableHeight), 
-                          aDesiredSize.maxElementSize);
-    }
-
     if (isAutoOrPctWidth) {
-      // Ask the strategy for the natural width of the content area 
-      aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxWidth();
+      if (!IsMaximumWidthValid()) {
+        // Initialize the strategy and have it compute the natural size of
+        // the table
+        mTableLayoutStrategy->Initialize(aPresContext, nsnull, NS_UNCONSTRAINEDSIZE, aReflowState);
+
+        // Ask the strategy for the natural width of the content area 
+        aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxWidth();
      
-      // Add in space for border
-      nsMargin border;
-      GetTableBorder (border); // this gets the max border value at every edge
-      aDesiredSize.mMaximumWidth += border.left + border.right;
+        // Add in space for border
+        nsMargin border;
+        GetTableBorder (border); // this gets the max border value at every edge
+        aDesiredSize.mMaximumWidth += border.left + border.right;
 
-      // Add in space for padding
-      aDesiredSize.mMaximumWidth += aReflowState.mComputedPadding.left +
-                                    aReflowState.mComputedPadding.right;
+        // Add in space for padding
+        aDesiredSize.mMaximumWidth += aReflowState.mComputedPadding.left +
+                                      aReflowState.mComputedPadding.right;
 
+        SetPreferredWidth(aDesiredSize.mMaximumWidth); // cache the value
+
+        // Initializing the table layout strategy assigns preliminary column
+        // widths. We can't leave the column widths this way, and so we need to
+        // balance the column widths to get them back to what we had previously.
+        // XXX It would be nice to have a cleaner way to calculate the updated
+        // maximum width
+        BalanceColumnWidths(aPresContext, aReflowState,
+                            nsSize(aReflowState.availableWidth, aReflowState.availableHeight), 
+                            aDesiredSize.maxElementSize);
+        // Now the maximum width is valid
+        mBits.mMaximumWidthValid = PR_TRUE;
+      } else {
+        aDesiredSize.mMaximumWidth = GetPreferredWidth();
+      }
     } else {
       // We're not auto width so the natural width is the same as the desired width
       aDesiredSize.mMaximumWidth = aDesiredSize.width;
+      SetPreferredWidth(aDesiredSize.mMaximumWidth); // cache the value
     }
   }
 

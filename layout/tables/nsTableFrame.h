@@ -817,6 +817,9 @@ public: /* ----- Cell Map public methods ----- */
 
   nscoord GetPercentBasisForRows();
 
+  nscoord GetPreferredWidth() const;
+  void    SetPreferredWidth(nscoord aWidth); 
+  
   /*---------------- nsITableLayout methods ------------------------*/
   
   /** Get the cell and associated data for a table cell from the frame's cellmap */
@@ -862,13 +865,14 @@ protected:
     int : 26;                          // unused
   } mBits;
 
-  nsTableCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
-  nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
-  nsFrameList  mColGroups;          // the list of colgroup frames
+  nsTableCellMap*         mCellMap;            // maintains the relationships between rows, cols, and cells
+  nsITableLayoutStrategy* mTableLayoutStrategy;// the layout strategy for this frame
+  nsFrameList             mColGroups;          // the list of colgroup frames
 
-  nsTableBorderCollapser* mBorderCollapser;      // one list of border segments for each side of the table frame
-                                    // used only for the collapsing border model
-  nscoord      mPercentBasisForRows;
+  nsTableBorderCollapser* mBorderCollapser;    // one list of border segments for each side of the table frame
+                                               // used only for the collapsing border model
+  nscoord                 mPercentBasisForRows;
+  nscoord                 mPreferredWidth;
 };
 
 
@@ -904,6 +908,17 @@ inline nsVoidArray& nsTableFrame::GetColCache()
   return mColFrames;
 }
 
+inline nscoord nsTableFrame::GetPreferredWidth() const
+{
+  return mPreferredWidth;
+}
+
+inline void nsTableFrame::SetPreferredWidth(nscoord aWidth)
+{
+  mPreferredWidth = aWidth;
+}
+
+                                                            
 enum nsTableIteration {
   eTableLTR = 0,
   eTableRTL = 1,
