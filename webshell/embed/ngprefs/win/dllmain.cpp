@@ -21,6 +21,8 @@
 #include <olectl.h>
 #include <tchar.h>
 #include "factory.h"
+#include "plstr.h"
+#include "prmem.h"
 
 #pragma data_seg(".text")
 #define INITGUID
@@ -41,9 +43,30 @@ extern "C" BOOL WINAPI DllMain(  HINSTANCE hInstance,
 {
     switch(dwReason)
     {
-    case DLL_PROCESS_ATTACH:
-      g_hInst = hInstance;
-      break;
+    case DLL_PROCESS_ATTACH: {
+        g_hInst = hInstance;
+        // Get dll directory
+        char binpath[_MAX_PATH];
+        ::GetModuleFileName(g_hInst, binpath, _MAX_PATH);
+        char *lastslash = PL_strrchr(binpath, '\\');
+        if (lastslash) *lastslash = '\0';
+        
+        // Get existing search path
+        int len = GetEnvironmentVariable("PATH", NULL, 0);
+        char *newpath = (char *) PR_Malloc(sizeof(char) * (len +
+                                                           PL_strlen(binpath) +
+                                                           2)); // ';' + '\0'
+        GetEnvironmentVariable("PATH", newpath, len + 1);
+        PL_strcat(newpath, ";");
+        PL_strcat(newpath, binpath);
+        
+        // Set new search path
+        SetEnvironmentVariable("PATH", newpath);
+        
+        // Clean up
+        PR_Free(newpath);
+    }
+    break;
       
     case DLL_PROCESS_DETACH:
       break;
