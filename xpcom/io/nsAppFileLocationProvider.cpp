@@ -641,6 +641,8 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
     LPSTR pBuffer = NULL;
     LPITEMIDLIST pItemIDList = NULL;
     int len;
+    char *outDirectory = NULL;
+    nsCOMPtr<nsILocalFile> newFile;
  
     // Get the shell's allocator. 
     if (!SUCCEEDED(SHGetMalloc(&pMalloc))) 
@@ -663,8 +665,7 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
     pBuffer[len + 1] = '\0';
 
     // Assign the directory
-    char* outDirectory = MakeUpperCase(pBuffer);
-    nsCOMPtr<nsILocalFile> newFile;
+    outDirectory = MakeUpperCase(pBuffer);
     rv = NS_NewLocalFile(outDirectory, TRUE, getter_AddRefs(newFile));
     if (NS_FAILED(rv))
         goto Clean;
