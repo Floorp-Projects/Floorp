@@ -30,6 +30,8 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNSHTMLSelectElement.h"
 #include "nsIDOMHTMLCollection.h"
 
 
@@ -39,11 +41,15 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
+static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kINSHTMLSelectElementIID, NS_IDOMNSHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 
 NS_DEF_PTR(nsIDOMHTMLSelectElement);
 NS_DEF_PTR(nsIDOMHTMLElement);
 NS_DEF_PTR(nsIDOMHTMLFormElement);
+NS_DEF_PTR(nsIDOMNode);
+NS_DEF_PTR(nsIDOMNSHTMLSelectElement);
 NS_DEF_PTR(nsIDOMHTMLCollection);
 
 //
@@ -264,9 +270,26 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
+      {
+        nsIDOMNode* prop;
+        nsIDOMNSHTMLSelectElement* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLSelectElementIID, (void **)&b)) {
+          if (NS_OK == b->Item(JSVAL_TO_INT(id), &prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLSelectElement");
+          return JS_FALSE;
+        }
+      }
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -679,6 +702,67 @@ HTMLSelectElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 }
 
 
+//
+// Native method Item
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLSelectElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLSelectElement *privateThis = (nsIDOMHTMLSelectElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMNSHTMLSelectElement *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLSelectElementIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSHTMLSelectElement");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+  PRUint32 b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlselectelement.item", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->Item(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function item requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for HTMLSelectElement
@@ -726,6 +810,7 @@ static JSFunctionSpec HTMLSelectElementMethods[] =
   {"remove",          HTMLSelectElementRemove,     1},
   {"blur",          HTMLSelectElementBlur,     0},
   {"focus",          HTMLSelectElementFocus,     0},
+  {"item",          NSHTMLSelectElementItem,     1},
   {0}
 };
 
