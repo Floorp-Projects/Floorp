@@ -88,12 +88,7 @@ private:
     static nsIAtom *sInternetSearchDirectory;
     static nsIAtom *sHomeDirectory;
     static nsIAtom *sDefaultDownloadDirectory;
-#elif defined (XP_OS2)
-    static nsIAtom *sSystemDirectory;
-    static nsIAtom *sOS2Directory;
-    static nsIAtom *sHomeDirectory;
-    static nsIAtom *sDesktopDirectory;
-#elif defined (XP_PC) 
+#elif defined (XP_WIN) 
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sWindowsDirectory;
     static nsIAtom *sHomeDirectory;
@@ -124,6 +119,11 @@ private:
     static nsIAtom *sLocalDirectory;
     static nsIAtom *sLibDirectory;
     static nsIAtom *sHomeDirectory;
+#elif defined (XP_OS2)
+    static nsIAtom *sSystemDirectory;
+    static nsIAtom *sOS2Directory;
+    static nsIAtom *sHomeDirectory;
+    static nsIAtom *sDesktopDirectory;
 #elif defined (XP_BEOS)
     static nsIAtom *sSettingsDirectory;
     static nsIAtom *sHomeDirectory;

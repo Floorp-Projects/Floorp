@@ -26,7 +26,7 @@
 #include "nsCRT.h"
 
 
-#if defined(XP_PC) && defined(_MSC_VER) && (_MSC_VER <= 1100)
+#if defined(XP_WIN) && defined(_MSC_VER) && (_MSC_VER <= 1100)
 #define LOSER_CHAR_CAST(t)       (char *)(t)
 #define LOSER_UNICHAR_CAST(t)    (PRUnichar *)(t)
 #else

@@ -33,9 +33,7 @@
 #include <Files.h>
 #include <Memory.h>
 #include <Processes.h>
-#elif defined(XP_OS2)
-#define MAX_PATH _MAX_PATH
-#elif defined(XP_PC)
+#elif defined(XP_WIN)
 #include <windows.h>
 #include <shlobj.h>
 #include <stdlib.h>
@@ -45,6 +43,8 @@
 #include <stdlib.h>
 #include <sys/param.h>
 #include "prenv.h"
+#elif defined(XP_OS2)
+#define MAX_PATH _MAX_PATH
 #elif defined(XP_BEOS)
 #include <FindDirectory.h>
 #include <Path.h>
@@ -68,7 +68,7 @@
 
 #ifdef XP_MAC
 #define APP_REGISTRY_NAME "Application Registry"
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
 #define APP_REGISTRY_NAME "registry.dat"
 #else
 #define APP_REGISTRY_NAME "appreg"
@@ -76,20 +76,20 @@
 
 // define home directory
 // For Windows platform, We are choosing Appdata folder as HOME
-#ifdef XP_OS2
-#define HOME_DIR NS_OS2_HOME_DIR
-#elif defined (XP_PC)
+#if defined (XP_WIN)
 #define HOME_DIR NS_WIN_APPDATA_DIR
 #elif defined (XP_MAC)
 #define HOME_DIR NS_MAC_HOME_DIR
 #elif defined (XP_UNIX)
 #define HOME_DIR NS_UNIX_HOME_DIR
+#elif defined (XP_OS2)
+#define HOME_DIR NS_OS2_HOME_DIR
 #elif defined (XP_BEOS)
 #define HOME_DIR NS_BEOS_HOME_DIR
 #endif
 
 // define default product directory
-#if defined(XP_PC) || defined(XP_MAC) || defined(XP_BEOS)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
 #define DEFAULT_PRODUCT_DIR "Mozilla"
 #elif defined (XP_UNIX)
 #define DEFAULT_PRODUCT_DIR ".mozilla"
@@ -131,18 +131,7 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
 
 
 
-#ifdef XP_PC
-#ifdef XP_OS2
-    PPIB ppib;
-    PTIB ptib;
-    char buffer[CCHMAXPATH];
-    DosGetInfoBlocks( &ptib, &ppib);
-    DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
-    *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
-    localFile->InitWithPath(buffer);
-    *aFile = localFile;
-    return NS_OK;
-#else
+#ifdef XP_WIN
     char buf[MAX_PATH];
     if ( ::GetModuleFileName(0, buf, sizeof(buf)) ) {
         // chop of the executable name by finding the rightmost backslash
@@ -154,7 +143,6 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
         *aFile = localFile;
         return NS_OK;
     }
-#endif
 
 #elif defined(XP_MAC)
     // get info for the the current process to determine the directory
@@ -241,6 +229,17 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
         }
     }
 
+#elif defined(XP_OS2)
+    PPIB ppib;
+    PTIB ptib;
+    char buffer[CCHMAXPATH];
+    DosGetInfoBlocks( &ptib, &ppib);
+    DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
+    *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
+    localFile->InitWithPath(buffer);
+    *aFile = localFile;
+    return NS_OK;
+
 #elif defined(XP_BEOS)
 
     char *moz5 = getenv("MOZILLA_FIVE_HOME");
@@ -305,12 +304,7 @@ nsIAtom*  nsDirectoryService::sDocumentsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sInternetSearchDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sDefaultDownloadDirectory = nsnull;
-#elif defined (XP_OS2)
-nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
-nsIAtom*  nsDirectoryService::sOS2Directory = nsnull;
-nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
-nsIAtom*  nsDirectoryService::sDesktopDirectory = nsnull;
-#elif defined (XP_PC) 
+#elif defined (XP_WIN) 
 nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sWindowsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
@@ -341,6 +335,11 @@ nsIAtom*  nsDirectoryService::sPrinthood = nsnull;
 nsIAtom*  nsDirectoryService::sLocalDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sLibDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
+#elif defined (XP_OS2)
+nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sOS2Directory = nsnull;
+nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sDesktopDirectory = nsnull;
 #elif defined (XP_BEOS)
 nsIAtom*  nsDirectoryService::sSettingsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
@@ -407,12 +406,7 @@ nsDirectoryService::Init(const char *productName)
     nsDirectoryService::sInternetSearchDirectory    = NS_NewAtom(NS_MAC_INTERNET_SEARCH_DIR);
     nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_MAC_HOME_DIR);
     nsDirectoryService::sDefaultDownloadDirectory   = NS_NewAtom(NS_MAC_DEFAULT_DOWNLOAD_DIR);
-#elif defined (XP_OS2)
-    nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
-    nsDirectoryService::sOS2Directory               = NS_NewAtom(NS_OS2_DIR);  
-    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_OS2_HOME_DIR);
-    nsDirectoryService::sDesktopDirectory           = NS_NewAtom(NS_OS2_DESKTOP_DIR);
-#elif defined (XP_PC) 
+#elif defined (XP_WIN) 
     nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
     nsDirectoryService::sWindowsDirectory           = NS_NewAtom(NS_WIN_WINDOWS_DIR);
     nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_WIN_HOME_DIR);
@@ -443,6 +437,11 @@ nsDirectoryService::Init(const char *productName)
     nsDirectoryService::sLocalDirectory             = NS_NewAtom(NS_UNIX_LOCAL_DIR);
     nsDirectoryService::sLibDirectory               = NS_NewAtom(NS_UNIX_LIB_DIR);
     nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_UNIX_HOME_DIR);
+#elif defined (XP_OS2)
+    nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
+    nsDirectoryService::sOS2Directory               = NS_NewAtom(NS_OS2_DIR);  
+    nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_OS2_HOME_DIR);
+    nsDirectoryService::sDesktopDirectory           = NS_NewAtom(NS_OS2_DESKTOP_DIR);
 #elif defined (XP_BEOS)
     nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
     nsDirectoryService::sSettingsDirectory          = NS_NewAtom(NS_BEOS_SETTINGS_DIR);
@@ -488,12 +487,7 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sDocumentsDirectory);
      NS_IF_RELEASE(nsDirectoryService::sInternetSearchDirectory);
      NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
-#elif defined (XP_OS2)
-     NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sOS2Directory);
-     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
-     NS_IF_RELEASE(nsDirectoryService::sDesktopDirectory);
-#elif defined (XP_PC)
+#elif defined (XP_WIN)
      NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
      NS_IF_RELEASE(nsDirectoryService::sWindowsDirectory);
      NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
@@ -524,6 +518,11 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sLocalDirectory);
      NS_IF_RELEASE(nsDirectoryService::sLibDirectory);
      NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
+#elif defined (XP_OS2)
+     NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
+     NS_IF_RELEASE(nsDirectoryService::sOS2Directory);
+     NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
+     NS_IF_RELEASE(nsDirectoryService::sDesktopDirectory);
 #elif defined (XP_BEOS)
      NS_IF_RELEASE(nsDirectoryService::sSettingsDirectory);
      NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
@@ -728,7 +727,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         nsCOMPtr<nsIFile> homeDir;
         GetFile(HOME_DIR, persistent, getter_AddRefs(homeDir));
         
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
         PRBool dirExists = PR_FALSE;
         PRBool invalidHome = PR_FALSE;
         if (homeDir)
@@ -895,28 +894,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DefaultDownloadDirectory); 
         rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
     }   
-#elif defined (XP_OS2)
-    else if (inAtom == nsDirectoryService::sSystemDirectory)
-    {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_SystemDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
-    }
-    else if (inAtom == nsDirectoryService::sOS2Directory)
-    {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_OS2Directory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
-    }
-    else if (inAtom == nsDirectoryService::sHomeDirectory)
-    {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_HomeDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
-    }
-    else if (inAtom == nsDirectoryService::sDesktopDirectory)
-    {
-        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_DesktopDirectory); 
-        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
-    }
-#elif defined (XP_PC)
+#elif defined (XP_WIN)
     else if (inAtom == nsDirectoryService::sSystemDirectory)
     {
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Win_SystemDirectory); 
@@ -1062,6 +1040,27 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sHomeDirectory)
     {
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Unix_HomeDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+    }
+#elif defined (XP_OS2)
+    else if (inAtom == nsDirectoryService::sSystemDirectory)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_SystemDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+    }
+    else if (inAtom == nsDirectoryService::sOS2Directory)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_OS2Directory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+    }
+    else if (inAtom == nsDirectoryService::sHomeDirectory)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_HomeDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+    }
+    else if (inAtom == nsDirectoryService::sDesktopDirectory)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::OS2_DesktopDirectory); 
         rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
     }
 #elif defined (XP_BEOS)

@@ -418,7 +418,7 @@ nsSaveViaTempStream::~nsSaveViaTempStream()
 nsOutputStream& nsEndl(nsOutputStream& os)
 //----------------------------------------------------------------------------------------
 {
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     os.write("\r\n", 2);
 #elif defined (XP_MAC)
     os.put('\r');

@@ -2117,7 +2117,7 @@ NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
     char* ePath = (char*) nsMemory::Clone((char*)mWorkingPath, strlen(mWorkingPath)+1);
     if (ePath == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-#if defined (XP_PC)
+#if defined (XP_WIN) || defined(XP_OS2)
     // Replace \ with / to convert to an url
     char* s = ePath;
     while (*s)

@@ -38,23 +38,16 @@
 // so here we will export it.  Other users should not depend
 // on this.
 
-#ifdef XP_OS2
+#ifdef XP_WIN
+#include "nsLocalFileWin.h"
+#elif defined(XP_UNIX) || defined(XP_BEOS)
+#include "nsLocalFileUnix.h"
+#elif defined(XP_MAC)
+#include "nsLocalFileMac.h"
+#elif defined(XP_OS2)
 #include "nsLocalFileOS2.h"
 #else
-#ifdef XP_PC
-#include "nsLocalFileWin.h"
-#else
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#include "nsLocalFileUnix.h"
-#else
-#ifdef XP_MAC
-#include "nsLocalFileMac.h"
-#else
 #error NOT_IMPLEMENTED
-#endif /* XP_MAC */
-#endif /* XP_UNIX */
-#endif /* XP_PC */
-#endif /* XP_OS2 */
 #endif
 
-
+#endif

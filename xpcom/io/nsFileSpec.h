@@ -137,7 +137,7 @@
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
-#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || (defined(XP_PC) && !defined(XP_OS2)))
+#if !defined(NS_USING_NAMESPACE) && (defined(__MWERKS__) || defined(XP_WIN))
 #define NS_USING_NAMESPACE
 #endif
 
@@ -174,7 +174,7 @@
 #include "prio.h"
 #endif
 #include <dirent.h>
-#elif defined(XP_PC)
+#elif defined(XP_WIN)
 
 // This clashes with some of the Win32 system headers (specifically,
 // winbase.h). Hopefully they'll have been included first; else we may
@@ -777,13 +777,13 @@ class NS_COM nsDirectoryIterator
 	    PRBool                  mExists;
         PRBool                  mResoveSymLinks;
 
-#if defined(XP_UNIX) || defined(XP_BEOS) || defined (XP_PC)
+#if defined(XP_UNIX) || defined(XP_BEOS) || defined (XP_WIN) || defined(XP_OS2)
 	    nsFileSpec		        mStarting;
 #endif
         
 #if defined(XP_UNIX) || defined(XP_BEOS)
 	    DIR*                    mDir;
-#elif defined(XP_PC)
+#elif defined(XP_WIN) || defined(XP_OS2)
         PRDir*                  mDir; // XXX why not use PRDir for Unix too?
 #elif defined(XP_MAC)
 	    short					mVRefNum;
@@ -823,7 +823,7 @@ public:
 private:
 
     nsFilePath                   mFilePath;
-    char*                        modifiedNSPRPath; // Currently used only on XP_PC                           
+    char*                        modifiedNSPRPath; // Currently used only on XP_WIN,XP_OS2
 }; // class nsNSPRPath
 
 

@@ -122,7 +122,7 @@ private:
     // this will be the resolve path which will *NEVER* be return to the user
     nsCString mResolvedPath;
 
-#if defined(XP_PC) && !defined(XP_OS2)    
+#if defined(XP_WIN)
     IPersistFile* mPersistFile; 
     IShellLink*   mShellLink;
 #endif
