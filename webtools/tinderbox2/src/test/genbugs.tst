@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.1 $ 
-# $Date: 2000/09/22 15:08:09 $ 
+# $Revision: 1.2 $ 
+# $Date: 2000/10/17 23:56:31 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 
@@ -76,8 +76,13 @@ $TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
 	      'PERFORMANCE problems building the subscribe datasource',
 	      'assertions caused my multi-part news messages', 
 
+	      'Time shown ought to be UTC',
+	      'Make distclean failes: too many args on command line',
+	      'Connection fails; no error message',
+
 	      ('Clicking on &quot;Twisty&quot; in &lt;Subscribe dialog&gt;'.
 	       ' crashes.'),
+
 
 	      # Single quotes seem to always break the popup window,
 	      # even if they are escaped.  I wonder if this is a bug
