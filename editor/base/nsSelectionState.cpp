@@ -139,8 +139,8 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
   
   for (i=0; i<myCount; i++)
   {
-    myItem = (nsRangeStore*)mArray.ElementAt(1);
-    itsItem = (nsRangeStore*)(aSelState->mArray.ElementAt(1));
+    myItem = (nsRangeStore*)mArray.ElementAt(i);
+    itsItem = (nsRangeStore*)(aSelState->mArray.ElementAt(i));
     if (!myItem || !itsItem) return PR_FALSE;
     
     nsCOMPtr<nsIDOMRange> myRange, itsRange;
