@@ -285,63 +285,6 @@ nsresult nsPref::useDefaultPrefFile()
     if (Exists(prefsFile))
         return ReadUserPrefsFrom(prefsFile);
 
-#define SPITZER
-#ifdef SPITZER
-    // sspitzer:  eventually this code should be moved into the profile manager
-    // that code should be setting up the prefs based on the what the user enters.
-    NS_WITH_SERVICE(nsIProfile, profileService, kProfileCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    char* currProfileName = nsnull;
-    rv = profileService->GetCurrentProfile(&currProfileName);
-    if (NS_FAILED(rv))
-        return rv;
-
-    char* emailStr = PR_smprintf("%s@netscape.com",currProfileName);
-#ifdef XP_UNIX
-    char* imapDirStr = PR_smprintf("/u/%s/ImapMail", currProfileName);
-    char* newsDirStr = PR_smprintf("/u/%s", currProfileName);
-#elif defined(XP_MAC)
-    char* imapDirStr = PR_smprintf("HD:System Folder:Preferences:Netscape Users:%s:ImapMail", currProfileName);
-    char* newsDirStr = PR_smprintf("HD:System Folder:Preferences:Netscape Users:%s:News", currProfileName);
-#elif defined(XP_WIN)
-    char* imapDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\ImapMail",currProfileName);
-    char* newsDirStr = PR_smprintf("c:\\program files\\netscape\\users\\%s\\News",currProfileName);
-#elif defined(XP_BEOS)
-    char* imapDirStr = PR_smprintf("/boot/home/config/settings/mozilla/%s/ImapMail", currProfileName);
-    char* newsDirStr = PR_smprintf("/boot/home/config/settings/mozilla/%s/News", currProfileName);
-#else
-#error you_need_to_edit_this_file_for_your_freak_os
-#endif /* XP_FOO */
-    SetCharPref("mail.accountmanager.accounts", "account0,account1");
-    SetCharPref("mail.account.account0.identities", "id1");
-    SetCharPref("mail.account.account0.server", "server0");
-    SetCharPref("mail.account.account1.identities", "id1");
-    SetCharPref("mail.account.account1.server", "server1");
-    SetCharPref("mail.identity.id1.fullName", currProfileName);
-    SetCharPref("mail.identity.id1.organization", "mozilla.org");
-    SetCharPref("mail.identity.id1.smtp_name", currProfileName);
-    SetCharPref("mail.identity.id1.smtp_server", "nsmail-2");
-    SetCharPref("mail.identity.id1.useremail", emailStr);
-    SetBoolPref("mail.identity.id1.compose_html", PR_TRUE);
-    SetCharPref("mail.server.server0.directory", imapDirStr);
-    SetCharPref("mail.server.server0.hostname", "nsmail-2");
-    SetCharPref("mail.server.server0.password", "clear text password");
-    SetCharPref("mail.server.server0.type", "imap");
-    SetCharPref("mail.server.server0.userName", currProfileName);
-    SetCharPref("mail.server.server1.directory", newsDirStr);
-    SetCharPref("mail.server.server1.hostname", "news.mozilla.org");
-    SetCharPref("mail.server.server1.type", "nntp");
-    PR_FREEIF(imapDirStr);
-    PR_FREEIF(newsDirStr);
-    PR_FREEIF(emailStr);
-    
-    // need to save the prefs now
-    mFileSpec = prefsFile; // Already addreffed when retrieved.
-    rv = SavePrefFile();
-    PR_FREEIF(currProfileName);
-#endif // SPITZER    
     return rv;
 } // nsPref::useDefaultPrefFile
 
