@@ -58,7 +58,8 @@ interface nsIChromeRegistry : nsISupports
 	string convertChromeURL(in nsIURI aChromeURL);
 
 	nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
-		
+	nsISupportsArray getStyleSheets(in nsIURI aChromeURL);
+
   /* Should be called when locales change to reload all chrome (including XUL). */
 	void reloadChrome();
 
