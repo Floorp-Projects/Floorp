@@ -18,7 +18,11 @@
 #define __SSL_ERR_H_
 
 
+#ifdef XP_MAC
+#define SSL_ERROR_BASE				(-3000)
+#else
 #define SSL_ERROR_BASE				(-0x3000)
+#endif
 #define SSL_ERROR_LIMIT				(SSL_ERROR_BASE + 1000)
 
 #ifndef NO_SECURITY_ERROR_ENUM

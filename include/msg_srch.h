@@ -49,6 +49,7 @@ typedef enum
     SearchError_InvalidOperator,      /* specified op not in enum            */
 	
     SearchError_InvalidSearchTerm,    /* cookie for search term is bogus     */
+    SearchError_InvalidSearchType,    /* search type is bogus                */
     SearchError_InvalidScopeTerm,     /* cookie for scope term is bogus      */
     SearchError_InvalidResultElement, /* cookie for result element is bogus  */
     SearchError_InvalidPane,          /* context probably bogus              */
@@ -59,10 +60,12 @@ typedef enum
     SearchError_HostNotFound,         /* couldn't connect to server          */
     SearchError_Timeout,              /* network didn't respond              */
     SearchError_DBOpenFailed,         /* couldn't open off-line msg db       */
+	SearchError_Busy,                 /* operation can not be performed now  */
 
     SearchError_NotAMatch,            /* used internally for term eval       */
     SearchError_ScopeDone,            /* used internally for scope list eval */
 
+	SearchError_ValueRequired,        /* string to search for not provided   */
 	SearchError_Unknown,              /* some random error                   */
 
     SearchError_Last      /* no functions return this; just for bookkeeping  */
@@ -77,13 +80,10 @@ typedef enum
 	scopeAllSearchableGroups
 } MSG_ScopeAttribute;
 
-/* NB: If you add elements to this enum, add only to the end, since 
- *     RULES.DAT stores enum values persistently
- */
 typedef enum
 {
-    attribSender = 0,   /* mail and news */
-    attribSubject,	
+    attribSubject = 0,	/* mail and news */
+    attribSender,   
     attribBody,	
     attribDate,	
 
@@ -165,9 +165,18 @@ typedef enum
     widgetText,
     widgetDate,
     widgetMenu,
-	widgetInt,        /* added to account for age in days which requires an integer field */
+	widgetInt,          /* added to account for age in days which requires an integer field */
     widgetNone
 } MSG_SearchValueWidget;
+
+/* Used to specify type of search to be performed */
+typedef enum
+{
+	searchNone,
+	searchRootDSE,
+	searchNormal,
+	searchLdapVLV
+} MSG_SearchType;
 
 /* Use this to specify the value of a search term */
 typedef struct MSG_SearchValue
@@ -279,6 +288,18 @@ MSG_SearchError MSG_AddAllScopes (
 /* begin execution of the search */
 MSG_SearchError MSG_Search (
     MSG_Pane *searchPane);        /* So we know how to work async            */
+MSG_SearchError MSG_InterruptSearchViaPane (
+	MSG_Pane *searchPane);        /* ptr to pane with search to interrupt    */
+void *MSG_GetSearchParam (
+	MSG_Pane *pane);              /* ptr to pane to retrieve param from      */
+MSG_SearchType MSG_GetSearchType (
+	MSG_Pane *pane);              /* ptr to pane to retrieve search type from*/
+MSG_SearchError MSG_SetSearchParam (
+	MSG_Pane *searchPane,         /* ptr to pane to add search param         */
+	MSG_SearchType type,          /* type of specialized search to perform   */
+	void *param);                 /* extended search parameter               */
+uint32 MSG_GetNumResults (        /* ptr to pane to retrieve get # results   */
+	MSG_Pane *pane);
 
 /* manage elements in list of search hits */
 MSG_SearchError MSG_GetResultElement (
@@ -440,7 +461,6 @@ extern char *MSG_UnEscapeSearchUrl (const char *value);
 /* This is how "search:" of different mail/news folder types works */
 extern int MSG_ProcessSearch (MWContext *context);
 extern int MSG_InterruptSearch (MWContext *context);
-
 
 XP_END_PROTOS
 

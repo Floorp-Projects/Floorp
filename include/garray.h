@@ -37,6 +37,7 @@
 #define TEMPLATE_SUPPORT    1
 #endif
 
+#include "prtypes.h"
 
 class CXP_GrowableArray {
 protected:
@@ -107,7 +108,7 @@ public:
 
         if( nIndex < m_iSize )
         {
-            iLowerLimit = max(1, nIndex);
+            iLowerLimit = PR_MAX(1, nIndex);
             /* Shuffle pointers at and above insert index up */
             for( int i = m_iSize; i >= iLowerLimit; i-- )
             {

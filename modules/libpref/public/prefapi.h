@@ -342,6 +342,19 @@ PR_EXTERN(int) PREF_CreateChildList(const char* parent_node, char **child_list);
 PR_EXTERN(char*) PREF_NextChild(char *child_list, int *index);
 
 /*
+ * Copies parts of the hierarchy from one root to another.
+ 	For example, PREF_CopyPrefsTree("mail","newmail") copies all
+ 	the "mail." prefs to "newmail." prefs. It does not delete the
+ 	source tree; you should do that yourself.
+ 	
+ 	Either srcRoot or destRoot can be empty strings, to denote 
+ 	the root of the entire tree, but cannot be NULL.
+ *
+ *
+*/
+PR_EXTERN(int) PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot);
+
+/*
 // <font color=blue>
 // The callback function will get passed the pref_node which triggered the call
 // and the void * instance_data which was passed to the register callback function.

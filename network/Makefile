@@ -35,3 +35,5 @@ endif
 
 include $(DEPTH)/config/rules.mk
 
+INCLUDE += $(PUBLIC)\ldap $(PUBLIC)\security
+

@@ -55,10 +55,24 @@ typedef enum {
 	kPersonalNamespace = 0,
 	kOtherUsersNamespace,
 	kPublicNamespace,
-	kDefaultNamespace,
 	kUnknownNamespace
 } EIMAPNamespaceType;
 
+typedef enum {
+	kCapabilityUndefined = 0x00000000,
+	kCapabilityDefined = 0x00000001,
+	kHasAuthLoginCapability = 0x00000002,
+	kHasXNetscapeCapability = 0x00000004,
+	kHasXSenderCapability = 0x00000008,
+	kIMAP4Capability = 0x00000010,		/* RFC1734 */
+	kIMAP4rev1Capability = 0x00000020,	/* RFC2060 */
+	kIMAP4other = 0x00000040,			/* future rev?? */
+	kNoHierarchyRename = 0x00000080,			/* no hierarchy rename */
+	kACLCapability = 0x00000100,	/* ACL extension */
+	kNamespaceCapability = 0x00000200,	/* IMAP4 Namespace Extension */
+	kMailboxDataCapability = 0x00000400,	/* MAILBOXDATA SMTP posting extension */
+	kXServerInfoCapability = 0x00000800	/* XSERVERINFO extension for admin urls */
+} eIMAPCapabilityFlag;
 
 typedef int32 imap_uid;
 
@@ -101,6 +115,7 @@ struct mailbox_spec {
 	XP_Bool			discoveredFromLsub;
 
 	const char		*smtpPostAddress;
+	XP_Bool			onlineVerified;
 };
 
 typedef struct mailbox_spec mailbox_spec;
@@ -118,10 +133,12 @@ enum ImapOnlineCopyState {
 	kSuccessfulDelete,
 	kFailedDelete,
 	kReadyForAppendData,
-	kFailedAppend
+	kFailedAppend,
+	kInterruptedState
 };
 
 struct folder_rename_struct {
+	char		*fHostName;
 	char 		*fOldName;
 	char		*fNewName;
 };
@@ -342,9 +359,23 @@ char *CreateIMAPRefreshACLForAllFoldersURL(const char *imapHost);
 /* Run the auto-upgrade to IMAP Subscription */
 char *CreateIMAPUpgradeToSubscriptionURL(const char *imapHost, XP_Bool subscribeToAll);
 
-NET_StreamClass *CreateIMAPDownloadMessageStream(ImapActiveEntry *ce, uint32 msgSize);
+/* do a status command for the folder */
+char *CreateIMAPStatusFolderURL(const char *imapHost, const char *mailboxName, char  hierarchySeparator);
+
+/* refresh the imap folder urls for the folder */
+char *CreateIMAPRefreshFolderURLs(const char *imapHost, const char *mailboxName);
+
+/* create a URL to force an all-parts reload of the fetch URL given in url. */
+char *IMAP_CreateReloadAllPartsUrl(const char *url);
+
+/* Explicitly LIST a given mailbox, and refresh its flags in the folder list */
+char *CreateIMAPListFolderURL(const char *imapHost, const char *mailboxName);
+
+NET_StreamClass *CreateIMAPDownloadMessageStream(ImapActiveEntry *ce, uint32 size,
+												 const char *content_type, XP_Bool content_modified);
 
 void UpdateIMAPMailboxInfo(mailbox_spec *adoptedBoxSpec, MWContext *currentContext);
+void UpdateIMAPMailboxStatus(mailbox_spec *adoptedBoxSpec, MWContext *currentContext);
 
 #define kUidUnknown -1
 int32 GetUIDValidityForSpecifiedImapFolder(const char *hostName, const char *canonicalimapName, MWContext *currentContext);
@@ -356,10 +387,11 @@ enum EMailboxDiscoverStatus {
     	eNewServerDirectory,
     	eCancelled };
 
-enum EMailboxDiscoverStatus DiscoverIMAPMailbox(mailbox_spec *adoptedBoxSpec, MSG_Master *master, MWContext *currentContext);
+enum EMailboxDiscoverStatus DiscoverIMAPMailbox(mailbox_spec *adoptedBoxSpec, MSG_Master *master,
+												MWContext *currentContext, XP_Bool broadcastDiscovery);
 
 void ReportSuccessOfOnlineCopy(MWContext *currentContext, enum ImapOnlineCopyState copyState);
-void ReportSuccessOfOnlineDelete(MWContext *currentContext, const char *mailboxName);
+void ReportSuccessOfOnlineDelete(MWContext *currentContext, const char *hostName, const char *mailboxName);
 void ReportFailureOfOnlineCreate(MWContext *currentContext, const char *mailboxName);
 void ReportSuccessOfOnlineRename(MWContext *currentContext, folder_rename_struct *names);
 void ReportMailboxDiscoveryDone(MWContext *currentContext, URL_Struct *URL_s);
@@ -385,7 +417,7 @@ void IMAP_DownLoadMessageBodieForMailboxSelect(TNavigatorImapConnection *connect
 
 void IMAP_BodyIdMonitor(TNavigatorImapConnection *connection, XP_Bool enter);
 
-const char *IMAP_GetCurrentConnectionUrl(TNavigatorImapConnection *connection);
+char *IMAP_GetCurrentConnectionUrl(TNavigatorImapConnection *connection);
 
 void IMAP_UploadAppendMessageSize(TNavigatorImapConnection *connection, uint32 msgSize, imapMessageFlagsType flags);
 void IMAP_ResetAnyCachedConnectionInfo();
@@ -409,7 +441,7 @@ void				 IMAP_FreeBoxSpec(mailbox_spec *victim);
 
 const char			*IMAP_GetPassword();
 void				 IMAP_SetPassword(const char *password);
-
+void				IMAP_SetPasswordForHost(const char *host, const char *password);
 /* called once only by MSG_InitMsgLib */
 void 				IMAP_StartupImap();
 
@@ -425,7 +457,7 @@ XP_Bool IMAP_HaveWeBeenAuthenticated();
 /* used by libmsg when creating an imap message display stream */
 int IMAP_InitializeImapFeData (ImapActiveEntry * ce);
 MSG_Pane *IMAP_GetActiveEntryPane(ImapActiveEntry * ce);
-NET_StreamClass *IMAP_CreateDisplayStream(ImapActiveEntry * ce, XP_Bool clearCacheBit, uint32 msgSize);
+NET_StreamClass *IMAP_CreateDisplayStream(ImapActiveEntry * ce, XP_Bool clearCacheBit, uint32 size, const char *content_type);
 
 /* used by libmsg when a new message is loaded to interrupt the load of the previous message */
 void				IMAP_PseudoInterruptFetch(MWContext *context);
@@ -474,6 +506,19 @@ extern XP_Bool MSG_IsFolderACLInitialized(MSG_Master *master, const char *folder
 
 extern char *IMAP_SerializeNamespaces(char **prefixes, int len);
 extern int IMAP_UnserializeNamespaces(const char *str, char **prefixes, int len);
+
+extern XP_Bool IMAP_SetHostIsUsingSubscription(const char *hostname, XP_Bool using_subscription);
+
+/* Returns the runtime capabilities of the given host, or 0 if the host doesn't exist or if 
+   they are uninitialized so far */
+extern uint32	IMAP_GetCapabilityForHost(const char *hostName);
+
+/* Causes a libmsg MSG_IMAPHost to refresh its capabilities based on new runtime info */
+extern void MSG_CommitCapabilityForHost(const char *hostName, MSG_Master *master);
+
+/* Returns TRUE if the given folder is \Noselect.  Returns FALSE if it's not or if we don't
+   know about it. */
+extern XP_Bool MSG_IsFolderNoSelect(MSG_Master *master, const char *folderName, const char *hostName);
 
 XP_END_PROTOS
 

@@ -90,9 +90,9 @@
 	
 	Conversion:		XP_FILE_NATIVE_PATH -> XP_FILE_URL_PATH
 	Call:			XP_PlatformFileToURL(name)
-	Example:		Windows:	XP_PlatformFileToURL("C:\tmp\myName")	-> "C|/tmp/myName"
-					Unix: 		XP_PlatformFileToURL(/u/tmp/myName")	-> "/u/tmp/myName"
-					Mac:	XP_PlatformFileToURL("Mac HD:Temporary folder:myName")	-> "Mac%20HD/Temporary%20folder/myName"
+	Example:		Windows:	XP_PlatformFileToURL("C:\tmp\myName")	-> "file:///C|/tmp/myName"
+					Unix: 		XP_PlatformFileToURL(/u/tmp/myName")	-> "file:///u/tmp/myName"
+					Mac:	XP_PlatformFileToURL("Mac HD:Temporary folder:myName")	-> "file:///Mac%20HD/Temporary%20folder/myName"
 	
 	You cannot convert anything into arbitrary TheXP_FileSpec, but you can use the XP_FILE_URL_PATH 
 	in combination with xpURL enum.
@@ -257,7 +257,8 @@ typedef enum XP_FileType {
 	xpHTTPSingleSignon,
 #endif
     xpLIClientDB,
-	xpLIPrefs
+	xpLIPrefs,
+	xpJSConfig                  /* Javascript 'jsc' config cache file */
 } XP_FileType;
 
 

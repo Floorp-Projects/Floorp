@@ -101,6 +101,7 @@ XP_BEGIN_PROTOS
 */
 MSG_FilterError MSG_OpenFilterList(MSG_Master *master, MSG_FilterType type, MSG_FilterList **filterList);
 MSG_FilterError MSG_OpenFolderFilterList(MSG_Pane *pane, MSG_FolderInfo *folder, MSG_FilterType type, MSG_FilterList **filterList);
+MSG_FilterError MSG_OpenFolderFilterListFromMaster(MSG_Master *master, MSG_FolderInfo *folder, MSG_FilterType type, MSG_FilterList **filterList);
 MSG_FilterError MSG_CloseFilterList(MSG_FilterList *filterList);
 MSG_FilterError	MSG_SaveFilterList(MSG_FilterList *filterList);	/* save without deleting */
 MSG_FilterError MSG_CancelFilterList(MSG_FilterList *filterList);

@@ -16,6 +16,19 @@
  * Reserved.
  */
 
+  /** USAGE NOTE: 
+     <font color=red>
+
+     This file (prefapi.c) is being obsoleted, and functions previously declared
+     here are migrating to preffunc.cpp in this module.  If you make changes
+     in this file, please be sure to check preffunc.cpp to ensure that similar
+     changes are made in that file.
+     
+     Currently Windows uses preffunc.cpp and the other platforms use prefapi.c.
+
+     </font>
+  **/
+
 #include "jsapi.h"
 #include "xp_core.h"
 #include "xp_mcom.h"
@@ -159,7 +172,7 @@ void pref_Alert(char* msg);
 int pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
 
 /* -- Platform specific function extern */
-#if !defined(XP_OS2)
+#if !defined(XP_WIN) && !defined(XP_OS2)
 extern JSBool pref_InitInitialObjects(void);
 #endif
 
@@ -217,7 +230,7 @@ int pref_OpenFile(const char* filename, XP_Bool is_error_fatal, XP_Bool verifyHa
 	long fileLength;
 
 	stats.st_size = 0;
-	if ( stat(filename, &stats) == -1 )
+	if ( stat(filename, (struct stat *) &stats) == -1 )
 		return PREF_ERROR;
 
 	fileLength = stats.st_size;
@@ -1793,6 +1806,131 @@ PREF_NextChild(char *child_list, int *index)
 	return child;
 }
 
+/*----------------------------------------------------------------------------------------
+*	pref_copyTree
+*
+*	A recursive function that copies all the prefs in some subtree to
+*	another subtree. Either srcPrefix or dstPrefix can be empty strings,
+*	but not NULL pointers. Preferences in the destination are created if 
+*	they do not already exist; otherwise the old values are replaced.
+*
+*	Example calls:
+*
+*		Copy all the prefs to another tree:			pref_copyTree("", "temp", "")
+*
+*		Copy all the prefs under mail. to newmail.:	pref_copyTree("mail", "newmail", "mail")
+*
+--------------------------------------------------------------------------------------*/ 
+int pref_copyTree(const char *srcPrefix, const char *destPrefix, const char *curSrcBranch)
+{
+	int		result = PREF_NOERROR;
+
+	char* 	children = NULL;
+	
+	if ( PREF_CreateChildList(curSrcBranch, &children) == PREF_NOERROR )
+	{	
+		int 	index = 0;
+		int		srcPrefixLen = XP_STRLEN(srcPrefix);
+		char* 	child = NULL;
+		
+		while ( (child = PREF_NextChild(children, &index)) != NULL)
+		{
+			int		prefType;
+			char	*destPrefName = NULL;
+			char	*childStart = (srcPrefixLen > 0) ? (child + srcPrefixLen + 1) : child;
+			
+			XP_ASSERT( XP_STRNCMP(child, curSrcBranch, srcPrefixLen) == 0 );
+							
+			if (*destPrefix > 0)
+				destPrefName = PR_smprintf("%s.%s", destPrefix, childStart);
+			else
+				destPrefName = PR_smprintf("%s", childStart);
+			
+			if (!destPrefName)
+			{
+				result = PREF_OUT_OF_MEMORY;
+				break;
+			}
+			
+			if ( ! PREF_PrefIsLocked(destPrefName) )		/* returns true if the prefs exists, and is locked */
+			{
+				/*	PREF_GetPrefType masks out the other bits of the pref flag, so we only
+					every get the values in the switch.
+				*/
+				prefType = PREF_GetPrefType(child);
+				
+				switch (prefType)
+				{
+					case PREF_STRING:
+						{
+							char	*prefVal = NULL;
+							
+							result = PREF_CopyCharPref(child, &prefVal);
+							if (result == PREF_NOERROR)
+								result = PREF_SetCharPref(destPrefName, prefVal);
+								
+							XP_FREEIF(prefVal);
+						}
+						break;
+					
+					case PREF_INT:
+							{
+							int32 	prefValInt;
+							
+							result = PREF_GetIntPref(child, &prefValInt);
+							if (result == PREF_NOERROR)
+								result = PREF_SetIntPref(destPrefName, prefValInt);
+						}
+						break;
+						
+					case PREF_BOOL:
+						{
+							XP_Bool	prefBool;
+							
+							result = PREF_GetBoolPref(child, &prefBool);
+							if (result == PREF_NOERROR)
+								result = PREF_SetBoolPref(destPrefName, prefBool);
+						}
+						break;
+					
+					case PREF_ERROR:
+						/*	this is probably just a branch. Since we can have both
+							 a.b and a.b.c as valid prefs, this is OK.
+						*/
+						break;
+						
+					default:
+						/* we should never get here */
+						XP_ASSERT(FALSE);
+						break;
+				}
+				
+			}	/* is not locked */
+			
+			XP_FREEIF(destPrefName);
+			
+			/* Recurse */
+			if (result == PREF_NOERROR || result == PREF_VALUECHANGED)
+				result = pref_copyTree(srcPrefix, destPrefix, child);
+		}
+		
+		XP_FREE(children);
+	}
+	
+	return result;
+}
+
+
+PR_IMPLEMENT(int)
+PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot)
+{
+	XP_ASSERT(srcRoot != NULL);
+	XP_ASSERT(destRoot != NULL);
+	
+	return pref_copyTree(srcRoot, destRoot, srcRoot);
+}
+
+
 /* Adds a node to the beginning of the callback list. */
 PR_IMPLEMENT(void)
 PREF_RegisterCallback(const char *pref_node,
@@ -2042,7 +2180,6 @@ pref_ErrorReporter(JSContext *cx, const char *message,
 {
 	char *last;
 
-	int i, j, k, n;
 	const char *s, *t;
 
 	last = PR_sprintf_append(0, "An error occurred reading the startup configuration file.  "

@@ -62,7 +62,7 @@ char * AB_MAPI_GetFullName(AB_ContainerInfo * ctr, ABID id);
 
 char * AB_MAPI_ConvertToDescription(AB_ContainerInfo * ctr);
 
-AB_ContainerInfo * AB_MAPI_ConvertToContainer(char * description);
+AB_ContainerInfo * AB_MAPI_ConvertToContainer(MWContext * context, char * description);
 
 int AB_MAPI_CreatePropertySheetPane(
 	MWContext * context,

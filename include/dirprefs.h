@@ -48,8 +48,36 @@ typedef enum
 	custom5
 } DIR_AttributeId;
 
+typedef enum
+{
+	capLdapV3,           /* LDAP v3.0 protocol      */
+	capVirtualListView,  /* Virtual list view       */
 
-typedef struct _DIR_ReplicationInfo DIR_ReplicationInfo;
+	kNumCaps             /* must be last capability */
+} DIR_ServerCaps;
+
+/* The values in this enum control the kind of LDAP filter expression
+ * we send to the LDAP server to do name completion 
+ */
+typedef enum 
+{
+	acsGivenAndSurname, /* do auto-complete using givenname and sn attributes */
+	acsCnForwards,      /* do auto-complete assuming cn in F L order          */
+	acsCnBackwards      /* do auto-complete assuming cn in L, F order         */
+} DIR_AutoCompleteStyle;
+
+
+typedef struct _DIR_ReplicationInfo
+{
+	char *description;					/* human readable description of replica */
+	char *fileName;                     /* file name of replication database */
+	char *filter;						/* LDAP filter string which constrains the repl search */
+	int32 lastChangeNumber;				/* Last change we saw -- start replicating here */
+	char *dataVersion;					/* LDAP server's scoping of the lastChangeNumber */
+										/* this changes when the server's DB gets reloaded from LDIF */
+	char **excludedAttributes;			/* list of attributes we shouldn't replicate */
+	int excludedAttributesCount;		/* duh */
+} DIR_ReplicationInfo;
 
 
 typedef struct DIR_Server
@@ -67,6 +95,7 @@ typedef struct DIR_Server
 	char *lastSearchString;	    /* required if saving results             */
 	DirectoryType dirType;	
 	uint32 flags;               
+	uint32 refCount;            /* Use count for server                   */
 
 	/* site-configurable attributes and filters */
 	XP_List *customFilters;
@@ -96,28 +125,43 @@ typedef struct DIR_Server
 	char *authDn;			/* DN to give to authenticate as			*/
 	char *password;			/* Password for the DN						*/
 
-	/* replication fields */
+	/* Ldap fields */
 	DIR_ReplicationInfo *replInfo;
+	char *searchPairList;
+
+	/* auto-complete fields */
+	DIR_AutoCompleteStyle autoCompleteStyle;
 
 } DIR_Server;
 
 
 XP_BEGIN_PROTOS
 
-/* Return the list of directory servers
- * each front end hangs on to the list
- */
+/* We are developing a new model for managing DIR_Servers. In the 4.0x world, the FEs managed each list. 
+	Calls to FE_GetDirServer caused the FEs to manage and return the DIR_Server list. In our new view of the
+	world, the back end does most of the list management so we are going to have the back end create and 
+	manage the list. Replace calls to FE_GetDirServers() with DIR_GetDirServers(). */
+
+XP_List * DIR_GetDirServers(void);
+int		DIR_ShutDown(void);  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
+
+int		DIR_DecrementServerRefCount (DIR_Server *);
+int		DIR_IncrementServerRefCount (DIR_Server *);
+
+/* We are trying to phase out use of FE_GetDirServers. The back end is now managing the dir server list. So you should
+	be calling DIR_GetDirServers instead. */
+
 XP_List * FE_GetDirServers(void);
 
 /* Since the strings in DIR_Server are allocated, we have bottleneck
  * routines to help with memory mgmt
  */
-int		DIR_CopyServer (DIR_Server *in, DIR_Server **out);
-int		DIR_DeleteServer (DIR_Server *);
 int		DIR_InitServer (DIR_Server *);
-
 int		DIR_ValidateServer (DIR_Server *);
+int		DIR_CopyServer (DIR_Server *in, DIR_Server **out);
 XP_Bool	DIR_AreServersSame (DIR_Server *first, DIR_Server *second);
+
+int		DIR_DeleteServer (DIR_Server *);
 int		DIR_DeleteServerList(XP_List *wholeList);
 
 int		DIR_GetLdapServers (XP_List *wholeList, XP_List *subList);
@@ -139,14 +183,13 @@ int		DIR_CleanUpServerPreferences(XP_List *deletedList);
 int		DIR_GetPersonalAddressBook (XP_List *wholeList, DIR_Server **pab);
 int		DIR_GetComposeNameCompletionAddressBook (XP_List *wholeList, DIR_Server **cab);
 
-#else
-
 /* Returns an allocated list of all personal address books, excluding
  * LDAP directories, replicated directories, and CABs
  */
-XP_List *DIR_GetPersonalAddressBooks (XP_List *wholeList);
-XP_List *DIR_GetAddressBooksForCompletion (XP_List *wholeList);
+int DIR_GetPersonalAddressBooks (XP_List *wholeList, XP_List * subList);
 
+#else
+XP_List *DIR_GetAddressBooksForCompletion (XP_List *wholeList);
 #endif
 
 void	DIR_GetServerFileName(char** filename, const char* leafName);
@@ -161,6 +204,7 @@ const char  *DIR_GetAttributeName (DIR_Server *server, DIR_AttributeId id);
 const char **DIR_GetAttributeStrings (DIR_Server *server, DIR_AttributeId id);
 const char  *DIR_GetFirstAttributeString (DIR_Server *server, DIR_AttributeId id);
 const char  *DIR_GetFilterString (DIR_Server *server);
+const char  *DIR_GetReplicationFilter (DIR_Server *server);
 const char  *DIR_GetTokenSeparators (DIR_Server *server);
 XP_Bool	     DIR_RepeatFilterForTokens (DIR_Server *server, const char *filter);
 XP_Bool	     DIR_SubstStarsForSpaces (DIR_Server *server, const char *filter);
@@ -179,27 +223,26 @@ void		DIR_SetPassword (DIR_Server *s, const char *password);
 char   *DIR_Unescape (const char *src, XP_Bool makeHtml);
 XP_Bool DIR_IsEscapedAttribute (DIR_Server *s, const char *attrib);
 
-/* APIs for replication */
-int DIR_ValidateRootDSE (DIR_Server *s, int32 gen, int32 first, int32 last);
-
 /* API for building a URL */
 char *DIR_BuildUrl (DIR_Server *s, const char *dn, XP_Bool forAddToAB);
 
+/* Walks the list enforcing the rule that only one LDAP server can be configured for autocomplete */
+void DIR_SetAutoCompleteEnabled (XP_List *list, DIR_Server *server, XP_Bool enabled);
+
 /* Flags manipulation */
 
-#define DIR_AUTO_COMPLETE_ENABLED          0x00000001
-#define DIR_ENABLE_AUTH                    0x00000002
+#define DIR_AUTO_COMPLETE_ENABLED          0x00000001  /* Directory is configured for autocomplete addressing */
+#define DIR_ENABLE_AUTH                    0x00000002  /* Directory is configured for LDAP simple authentication */
 #define DIR_SAVE_PASSWORD                  0x00000004
 #define DIR_UTF8_DISABLED                  0x00000008  /* not used by the FEs */
 #define DIR_IS_SECURE                      0x00000010
 #define DIR_SAVE_RESULTS                   0x00000020  /* not used by the FEs */
 #define DIR_EFFICIENT_WILDCARDS            0x00000040  /* not used by the FEs */
-#define DIR_LDAPV3_SUPPORTED               0x00000080  /* not used by the FEs */
-#define DIR_LDAPV3_NOT_SUPPORTED           0x00000100  /* not used by the FEs */
-#define DIR_VIRTUAL_LISTBOX_SUPPORTED      0x00000200  /* not used by the FEs */
-#define DIR_VIRTUAL_LISTBOX_NOT_SUPPORTED  0x00000400  /* not used by the FEs */
-
-void DIR_SetAutoCompleteEnabled (XP_List *list, DIR_Server *server, XP_Bool onOrOff);
+#define DIR_REPLICATION_ENABLED            0x00000080  /* Directory is configured for offline use */
+#define DIR_LDAP_PUBLIC_DIRECTORY          0x00000100  /* not used by the FEs */
+#define DIR_LDAP_VERSION3                  0x00000200  /* not used by the FEs */
+#define DIR_LDAP_VIRTUALLISTVIEW           0x00000400  /* not used by the FEs */
+#define DIR_LDAP_ROOTDSE_PARSED            0x00000800  /* not used by the FEs */
 
 XP_Bool DIR_TestFlag  (DIR_Server *server, uint32 flag);
 void    DIR_SetFlag   (DIR_Server *server, uint32 flag);
@@ -213,7 +256,12 @@ char *DIR_ConvertFromServerCharSet (DIR_Server *s, char *src, int16 dstCsid);
 
 /* Does the LDAP client lib work for SSL */
 #include "ldap.h"
-int DIR_SetupSecureConnection (LDAP *ld);
+
+int DIR_SetupSecureConnection (LDAP *l);
+
+/* APIs for replication */
+int DIR_ValidateRootDSE (DIR_Server *s, char *version, int32 first, int32 last);
+int DIR_ParseRootDSE (DIR_Server *s, LDAP *ld, LDAPMessage *message);
 
 #endif /* MOZ_LDAP */
 

@@ -40,3 +40,6 @@ DIRS= \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
+
+INCLUDE = $(INCLUDE) $(PUBLIC)\ldap $(PUBLIC)\security
+

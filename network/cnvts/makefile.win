@@ -80,7 +80,7 @@ INCLUDES = $(LOCAL_INCLUDES)
 
 EXTRA_LIBS=
 
-REQUIRES= network 
+REQUIRES= network ldap
 EXPORTS= \
 	cvactive.h	\
 	cvchunk.h 	\
@@ -109,6 +109,7 @@ LINCS= \
     -I$(PUBLIC)\softupdt	\
     -I$(PUBLIC)\network \
     -I$(PUBLIC)\mimetype \
+    -I$(PUBLIC)\ldap \
     $(NULL)
 #!endif
 

@@ -97,7 +97,7 @@ LIBRARY_NAME=network
 
 EXTRA_LIBS=
 
-REQUIRES= foo parse jtools java zlib nspr dbm util network js security mimetype
+REQUIRES= foo parse jtools java zlib nspr dbm util network js security mimetype ldap net
 EXPORTS= mkstream.h \
 	 mkparse.h \
 	 mkfsort.h \
@@ -137,6 +137,8 @@ LINCS=-I$(PUBLIC)\jtools	\
     -I$(PUBLIC)\cnetinit	\
     -I$(PUBLIC)\mimetype	\
     -I$(PUBLIC)\network		\
+    -I$(PUBLIC)\ldap		\
+    -I$(PUBLIC)\net		\
     -I$(PUBLIC)\security 
 #!endif
 

@@ -42,8 +42,11 @@
 
 #ifndef _RESBUND
 #define _RESBUND
-  
+
+#if 0  
 #include <iostream.h>
+#endif
+
 #include "ptypes.h"
 #include "unistring.h"
 #include "locid.h"

@@ -57,7 +57,7 @@ EXPORTS= mkstream.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
 
 REQUIRES	= jtools nspr2 dbm util js parse lay style pref htmldlgs java \
 	libfont netcache httpurl cnetinit security img layer netcnvts network \
-	mimetype
+	mimetype ldap net
 
 include $(DEPTH)/config/rules.mk
 

@@ -18,7 +18,11 @@
 #define __SEC_ERR_H_
 
 
+#ifdef XP_MAC
+#define SEC_ERROR_BASE				(-2000)
+#else
 #define SEC_ERROR_BASE				(-0x2000)
+#endif
 #define SEC_ERROR_LIMIT				(SEC_ERROR_BASE + 1000)
 
 #define IS_SEC_ERROR(code) \
