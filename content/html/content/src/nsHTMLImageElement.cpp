@@ -118,6 +118,16 @@ public:
   NS_IMETHOD    GetLowsrc(nsString& aLowsrc);
   NS_IMETHOD    SetLowsrc(const nsString& aLowsrc);
   NS_IMETHOD    GetComplete(PRBool* aComplete);
+  NS_IMETHOD    GetBorder(PRInt32* aBorder);
+  NS_IMETHOD    SetBorder(PRInt32 aBorder);
+  NS_IMETHOD    GetHeight(PRInt32* aHeight);
+  NS_IMETHOD    SetHeight(PRInt32 aHeight);
+  NS_IMETHOD    GetHspace(PRInt32* aHspace);
+  NS_IMETHOD    SetHspace(PRInt32 aHspace);
+  NS_IMETHOD    GetVspace(PRInt32* aVspace);
+  NS_IMETHOD    SetVspace(PRInt32 aVspace);
+  NS_IMETHOD    GetWidth(PRInt32* aWidth);
+  NS_IMETHOD    SetWidth(PRInt32 aWidth);
 
 
   // nsIContent
@@ -252,12 +262,15 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Alt, alt)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Border, border)
+NS_IMPL_INT_ATTR(nsHTMLImageElement, Border, border)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Hspace, hspace)
+NS_IMPL_INT_ATTR(nsHTMLImageElement, Hspace, hspace)
 NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Lowsrc, lowsrc)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Vspace, vspace)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Lowsrc, lowsrc)
+NS_IMPL_INT_ATTR(nsHTMLImageElement, Vspace, vspace)
 
 nsresult
 nsHTMLImageElement::GetImageFrame(nsImageFrame** aImageFrame)
@@ -327,16 +340,18 @@ nsHTMLImageElement::GetComplete(PRBool* aComplete)
 NS_IMETHODIMP
 nsHTMLImageElement::GetHeight(nsString& aValue)
 {
-  nsresult result;
+  nsresult rv = mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height,
+                                    aValue);
 
-  if (NS_CONTENT_ATTR_NOT_THERE ==  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, aValue)) {
-    nsImageFrame* imageFrame;
-    
-    result = GetImageFrame(&imageFrame);
-    if (NS_SUCCEEDED(result)) {
-      nsSize size;
-      imageFrame->GetIntrinsicImageSize(size);
-      aValue.AppendInt(size.height);
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    PRInt32 height = 0;
+
+    aValue.Truncate(); 
+
+    // A zero height most likely means that the image is not loaded yet.
+    if (NS_SUCCEEDED(GetHeight(&height)) && height) {
+      aValue.AppendInt(height);
+      aValue.AppendWithConversion("px");
     }
   }
 
@@ -346,22 +361,64 @@ nsHTMLImageElement::GetHeight(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLImageElement::SetHeight(const nsString& aValue)
 {
-  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, aValue, PR_TRUE);
+  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, aValue,
+                             PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::GetHeight(PRInt32* aHeight)
+{
+  NS_ENSURE_ARG_POINTER(aHeight);
+  *aHeight = 0;
+
+  nsImageFrame* imageFrame;
+
+  nsresult rv = GetImageFrame(&imageFrame);
+
+  if (NS_SUCCEEDED(rv) && imageFrame) {
+    nsSize size;
+    imageFrame->GetSize(size);
+
+    nsCOMPtr<nsIPresContext> context;
+    rv = nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(context));
+
+    if (NS_SUCCEEDED(rv) && context) {
+      float t2p;
+      context->GetTwipsToPixels(&t2p);
+
+      *aHeight = NSTwipsToIntPixels(size.height, t2p);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::SetHeight(PRInt32 aHeight)
+{
+  nsAutoString val;
+
+  val.AppendInt(aHeight);
+
+  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::height,
+                             val, PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsHTMLImageElement::GetWidth(nsString& aValue)
 {
-  nsresult result;
+  nsresult rv = mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width,
+                                    aValue);
 
-  if (NS_CONTENT_ATTR_NOT_THERE ==  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, aValue)) {
-    nsImageFrame* imageFrame;
-    
-    result = GetImageFrame(&imageFrame);
-    if (NS_SUCCEEDED(result)) {
-      nsSize size;
-      imageFrame->GetIntrinsicImageSize(size);
-      aValue.AppendInt(size.width);
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    PRInt32 width = 0;
+
+    aValue.Truncate(); 
+
+    // A zero width most likely means that the image is not loaded yet.
+    if (NS_SUCCEEDED(GetWidth(&width)) && width) {
+      aValue.AppendInt(width);
+      aValue.AppendWithConversion("px");
     }
   }
 
@@ -371,9 +428,48 @@ nsHTMLImageElement::GetWidth(nsString& aValue)
 NS_IMETHODIMP
 nsHTMLImageElement::SetWidth(const nsString& aValue)
 {
-  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, aValue, PR_TRUE);
+  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, aValue,
+                             PR_TRUE);
 }
 
+NS_IMETHODIMP
+nsHTMLImageElement::GetWidth(PRInt32* aWidth)
+{
+  NS_ENSURE_ARG_POINTER(aWidth);
+  *aWidth = 0;
+
+  nsImageFrame* imageFrame;
+
+  nsresult rv = GetImageFrame(&imageFrame);
+
+  if (NS_SUCCEEDED(rv) && imageFrame) {
+    nsSize size;
+    imageFrame->GetSize(size);
+
+    nsCOMPtr<nsIPresContext> context;
+    rv = nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(context));
+
+    if (NS_SUCCEEDED(rv) && context) {
+      float t2p;
+      context->GetTwipsToPixels(&t2p);
+
+      *aWidth = NSTwipsToIntPixels(size.width, t2p);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLImageElement::SetWidth(PRInt32 aWidth)
+{
+  nsAutoString val;
+
+  val.AppendInt(aWidth);
+
+  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width,
+                             val, PR_TRUE);
+}
 
 NS_IMETHODIMP
 nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,

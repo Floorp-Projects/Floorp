@@ -56,16 +56,16 @@ enum HTMLImageElement_slots {
   HTMLIMAGEELEMENT_NAME = -2,
   HTMLIMAGEELEMENT_ALIGN = -3,
   HTMLIMAGEELEMENT_ALT = -4,
-  HTMLIMAGEELEMENT_BORDER = -5,
-  HTMLIMAGEELEMENT_HEIGHT = -6,
-  HTMLIMAGEELEMENT_HSPACE = -7,
-  HTMLIMAGEELEMENT_ISMAP = -8,
-  HTMLIMAGEELEMENT_LONGDESC = -9,
-  HTMLIMAGEELEMENT_USEMAP = -10,
-  HTMLIMAGEELEMENT_VSPACE = -11,
-  HTMLIMAGEELEMENT_WIDTH = -12,
-  IMAGE_LOWSRC = -13,
-  IMAGE_COMPLETE = -14
+  HTMLIMAGEELEMENT_ISMAP = -5,
+  HTMLIMAGEELEMENT_LONGDESC = -6,
+  HTMLIMAGEELEMENT_USEMAP = -7,
+  IMAGE_LOWSRC = -8,
+  IMAGE_COMPLETE = -9,
+  IMAGE_BORDER = -10,
+  IMAGE_HEIGHT = -11,
+  IMAGE_HSPACE = -12,
+  IMAGE_VSPACE = -13,
+  IMAGE_WIDTH = -14
 };
 
 /***********************************************************************/
@@ -136,42 +136,6 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case HTMLIMAGEELEMENT_BORDER:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_BORDER, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetBorder(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
-      case HTMLIMAGEELEMENT_HEIGHT:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_HEIGHT, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetHeight(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
-      case HTMLIMAGEELEMENT_HSPACE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_HSPACE, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetHspace(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
       case HTMLIMAGEELEMENT_ISMAP:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_ISMAP, PR_FALSE);
@@ -208,30 +172,6 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case HTMLIMAGEELEMENT_VSPACE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_VSPACE, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetVspace(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
-      case HTMLIMAGEELEMENT_WIDTH:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_WIDTH, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          rv = a->GetWidth(prop);
-          if (NS_SUCCEEDED(rv)) {
-            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-          }
-        }
-        break;
-      }
       case IMAGE_LOWSRC:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_LOWSRC, PR_FALSE);
@@ -261,6 +201,101 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             rv = b->GetComplete(&prop);
             if(NS_SUCCEEDED(rv)) {
             *vp = BOOLEAN_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case IMAGE_BORDER:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_BORDER, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMImage* b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            rv = b->GetBorder(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case IMAGE_HEIGHT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_HEIGHT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMImage* b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            rv = b->GetHeight(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case IMAGE_HSPACE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_HSPACE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMImage* b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            rv = b->GetHspace(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case IMAGE_VSPACE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_VSPACE, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMImage* b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            rv = b->GetVspace(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case IMAGE_WIDTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_WIDTH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMImage* b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            rv = b->GetWidth(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
             }
             NS_RELEASE(b);
           }
@@ -351,42 +386,6 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case HTMLIMAGEELEMENT_BORDER:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_BORDER, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetBorder(prop);
-          
-        }
-        break;
-      }
-      case HTMLIMAGEELEMENT_HEIGHT:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_HEIGHT, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetHeight(prop);
-          
-        }
-        break;
-      }
-      case HTMLIMAGEELEMENT_HSPACE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_HSPACE, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetHspace(prop);
-          
-        }
-        break;
-      }
       case HTMLIMAGEELEMENT_ISMAP:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_ISMAP, PR_TRUE);
@@ -426,30 +425,6 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case HTMLIMAGEELEMENT_VSPACE:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_VSPACE, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetVspace(prop);
-          
-        }
-        break;
-      }
-      case HTMLIMAGEELEMENT_WIDTH:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_WIDTH, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          nsAutoString prop;
-          nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-          rv = a->SetWidth(prop);
-          
-        }
-        break;
-      }
       case IMAGE_LOWSRC:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_LOWSRC, PR_TRUE);
@@ -460,6 +435,141 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsIDOMImage *b;
           if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
             b->SetLowsrc(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case IMAGE_BORDER:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_BORDER, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
+          }
+      
+          nsIDOMImage *b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            b->SetBorder(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case IMAGE_HEIGHT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_HEIGHT, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
+          }
+      
+          nsIDOMImage *b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            b->SetHeight(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case IMAGE_HSPACE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_HSPACE, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
+          }
+      
+          nsIDOMImage *b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            b->SetHspace(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case IMAGE_VSPACE:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_VSPACE, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
+          }
+      
+          nsIDOMImage *b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            b->SetVspace(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case IMAGE_WIDTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_WIDTH, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
+          }
+      
+          nsIDOMImage *b;
+          if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+            b->SetWidth(prop);
             NS_RELEASE(b);
           }
           else {
@@ -543,16 +653,16 @@ static JSPropertySpec HTMLImageElementProperties[] =
   {"name",    HTMLIMAGEELEMENT_NAME,    JSPROP_ENUMERATE},
   {"align",    HTMLIMAGEELEMENT_ALIGN,    JSPROP_ENUMERATE},
   {"alt",    HTMLIMAGEELEMENT_ALT,    JSPROP_ENUMERATE},
-  {"border",    HTMLIMAGEELEMENT_BORDER,    JSPROP_ENUMERATE},
-  {"height",    HTMLIMAGEELEMENT_HEIGHT,    JSPROP_ENUMERATE},
-  {"hspace",    HTMLIMAGEELEMENT_HSPACE,    JSPROP_ENUMERATE},
   {"isMap",    HTMLIMAGEELEMENT_ISMAP,    JSPROP_ENUMERATE},
   {"longDesc",    HTMLIMAGEELEMENT_LONGDESC,    JSPROP_ENUMERATE},
   {"useMap",    HTMLIMAGEELEMENT_USEMAP,    JSPROP_ENUMERATE},
-  {"vspace",    HTMLIMAGEELEMENT_VSPACE,    JSPROP_ENUMERATE},
-  {"width",    HTMLIMAGEELEMENT_WIDTH,    JSPROP_ENUMERATE},
   {"lowsrc",    IMAGE_LOWSRC,    JSPROP_ENUMERATE},
   {"complete",    IMAGE_COMPLETE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"border",    IMAGE_BORDER,    JSPROP_ENUMERATE},
+  {"height",    IMAGE_HEIGHT,    JSPROP_ENUMERATE},
+  {"hspace",    IMAGE_HSPACE,    JSPROP_ENUMERATE},
+  {"vspace",    IMAGE_VSPACE,    JSPROP_ENUMERATE},
+  {"width",    IMAGE_WIDTH,    JSPROP_ENUMERATE},
   {0}
 };
 

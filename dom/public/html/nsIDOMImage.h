@@ -41,6 +41,21 @@ public:
   NS_IMETHOD    SetLowsrc(const nsString& aLowsrc)=0;
 
   NS_IMETHOD    GetComplete(PRBool* aComplete)=0;
+
+  NS_IMETHOD    GetBorder(PRInt32* aBorder)=0;
+  NS_IMETHOD    SetBorder(PRInt32 aBorder)=0;
+
+  NS_IMETHOD    GetHeight(PRInt32* aHeight)=0;
+  NS_IMETHOD    SetHeight(PRInt32 aHeight)=0;
+
+  NS_IMETHOD    GetHspace(PRInt32* aHspace)=0;
+  NS_IMETHOD    SetHspace(PRInt32 aHspace)=0;
+
+  NS_IMETHOD    GetVspace(PRInt32* aVspace)=0;
+  NS_IMETHOD    SetVspace(PRInt32 aVspace)=0;
+
+  NS_IMETHOD    GetWidth(PRInt32* aWidth)=0;
+  NS_IMETHOD    SetWidth(PRInt32 aWidth)=0;
 };
 
 
@@ -48,6 +63,16 @@ public:
   NS_IMETHOD    GetLowsrc(nsString& aLowsrc);  \
   NS_IMETHOD    SetLowsrc(const nsString& aLowsrc);  \
   NS_IMETHOD    GetComplete(PRBool* aComplete);  \
+  NS_IMETHOD    GetBorder(PRInt32* aBorder);  \
+  NS_IMETHOD    SetBorder(PRInt32 aBorder);  \
+  NS_IMETHOD    GetHeight(PRInt32* aHeight);  \
+  NS_IMETHOD    SetHeight(PRInt32 aHeight);  \
+  NS_IMETHOD    GetHspace(PRInt32* aHspace);  \
+  NS_IMETHOD    SetHspace(PRInt32 aHspace);  \
+  NS_IMETHOD    GetVspace(PRInt32* aVspace);  \
+  NS_IMETHOD    SetVspace(PRInt32 aVspace);  \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth);  \
+  NS_IMETHOD    SetWidth(PRInt32 aWidth);  \
 
 
 
@@ -55,6 +80,16 @@ public:
   NS_IMETHOD    GetLowsrc(nsString& aLowsrc) { return _to GetLowsrc(aLowsrc); } \
   NS_IMETHOD    SetLowsrc(const nsString& aLowsrc) { return _to SetLowsrc(aLowsrc); } \
   NS_IMETHOD    GetComplete(PRBool* aComplete) { return _to GetComplete(aComplete); } \
+  NS_IMETHOD    GetBorder(PRInt32* aBorder) { return _to GetBorder(aBorder); } \
+  NS_IMETHOD    SetBorder(PRInt32 aBorder) { return _to SetBorder(aBorder); } \
+  NS_IMETHOD    GetHeight(PRInt32* aHeight) { return _to GetHeight(aHeight); } \
+  NS_IMETHOD    SetHeight(PRInt32 aHeight) { return _to SetHeight(aHeight); } \
+  NS_IMETHOD    GetHspace(PRInt32* aHspace) { return _to GetHspace(aHspace); } \
+  NS_IMETHOD    SetHspace(PRInt32 aHspace) { return _to SetHspace(aHspace); } \
+  NS_IMETHOD    GetVspace(PRInt32* aVspace) { return _to GetVspace(aVspace); } \
+  NS_IMETHOD    SetVspace(PRInt32 aVspace) { return _to SetVspace(aVspace); } \
+  NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(PRInt32 aWidth) { return _to SetWidth(aWidth); } \
 
 
 #endif // nsIDOMImage_h__

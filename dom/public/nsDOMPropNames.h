@@ -445,17 +445,12 @@
     "htmliframeelement.width", \
     "htmlimageelement.align", \
     "htmlimageelement.alt", \
-    "htmlimageelement.border", \
-    "htmlimageelement.height", \
-    "htmlimageelement.hspace", \
     "htmlimageelement.ismap", \
     "htmlimageelement.longdesc", \
     "htmlimageelement.lowsrc", \
     "htmlimageelement.name", \
     "htmlimageelement.src", \
     "htmlimageelement.usemap", \
-    "htmlimageelement.vspace", \
-    "htmlimageelement.width", \
     "htmlinputelement.accept", \
     "htmlinputelement.accesskey", \
     "htmlinputelement.align", \
@@ -658,8 +653,13 @@
     "htmltitleelement.text", \
     "htmlulistelement.compact", \
     "htmlulistelement.type", \
+    "image.border", \
     "image.complete", \
+    "image.height", \
+    "image.hspace", \
     "image.lowsrc", \
+    "image.vspace", \
+    "image.width", \
     "javascript.enabled", \
     "keyevent.altkey", \
     "keyevent.charcode", \
