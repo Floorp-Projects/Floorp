@@ -105,6 +105,14 @@ COMPONENT_LIBS += \
 	htmlpars \
 	imglib2 \
 	gkplugin \
+	gklayout \
+	docshell \
+	embedcomponents \
+	webbrwsr \
+	editor \
+	nsappshell \
+	txmgr \
+	composer \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
@@ -204,6 +212,15 @@ ifdef MOZ_ENABLE_XREMOTE
 COMPONENT_LIBS += xremote_client
 endif
 
+ifdef MOZ_OJI
+STATIC_LIBS += jsj
+COMPONENT_LIBS += oji
+endif
+
+ifdef ACCESSIBILITY
+COMPONENT_LIBS += accessibility
+endif
+
 SHARED_LIBRARY_LIBS = \
 	$(foreach lib,$(STATIC_LIBS),$(DIST)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
 	$(foreach component,$(COMPONENT_LIBS),$(DIST)/lib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
@@ -277,6 +294,18 @@ ifdef GNU_CXX
 DSO_LDOPTS += -Wl,--export-all-symbols
 endif
 endif # WINNT
+
+ifdef MOZ_SVG_RENDERER_GDIPLUS
+OS_LIBS += Gdiplus.lib
+endif
+
+ifdef MOZ_SVG_RENDERER_LIBART
+EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS)
+endif
+
+ifneq (,$(MOZ_ENABLE_CAIRO)$(MOZ_SVG_RENDERER_CAIRO))
+EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
+endif
 
 export:: dlldeps.cpp dlldeps-obs.cpp
 
