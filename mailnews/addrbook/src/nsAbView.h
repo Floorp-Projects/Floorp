@@ -55,8 +55,10 @@
 typedef struct AbCard
 {
   nsIAbCard *card;
-  PRUnichar *primaryCollationKey;
-  PRUnichar *secondaryCollationKey;
+  PRUint32 primaryCollationKeyLen;
+  PRUint32 secondaryCollationKeyLen;
+  PRUint8 *primaryCollationKey;
+  PRUint8 *secondaryCollationKey;
 } AbCard;
 
 
@@ -71,12 +73,14 @@ public:
   NS_DECL_NSIOUTLINERVIEW
   NS_DECL_NSIABLISTENER
   NS_DECL_NSIOBSERVER
+  
+  PRInt32 CompareCollationKeys(PRUint8 *key1, PRUint32 len1, PRUint8 *key2, PRUint32 len2);
 
 private:
   nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
   nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
-  nsresult CreateCollationKey(const PRUnichar *source, PRUnichar **result);
-  PRInt32 FindIndexForInsert(const PRUnichar *colID, AbCard *abcard);
+  nsresult CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, PRUint32 *aKenLen);
+  PRInt32 FindIndexForInsert(AbCard *abcard);
   PRInt32 FindIndexForCard(nsIAbCard *card);
   nsresult GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *abcard);
   nsresult InvalidateOutliner(PRInt32 row);

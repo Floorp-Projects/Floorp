@@ -125,8 +125,10 @@ nsresult nsAbView::RemoveCardAt(PRInt32 row)
   AbCard *abcard = (AbCard*) (mCards.ElementAt(row));
   NS_IF_RELEASE(abcard->card);
   mCards.RemoveElementAt(row);
-  PR_FREEIF(abcard->primaryCollationKey);
-  PR_FREEIF(abcard->secondaryCollationKey);
+  if (abcard->primaryCollationKey)
+    nsMemory::Free(abcard->primaryCollationKey);
+  if (abcard->secondaryCollationKey)
+    nsMemory::Free(abcard->secondaryCollationKey);
   PR_FREEIF(abcard);
 
   if (mAbViewListener && !mSuppressCountChange) {
@@ -495,10 +497,14 @@ NS_IMETHODIMP nsAbView::GetCardFromRow(PRInt32 row, nsIAbCard **aCard)
   return NS_OK;
 }
 
+#define DESCENDING_SORT_FACTOR -1
+#define ASCENDING_SORT_FACTOR 1
+
 typedef struct SortClosure
 {
   const PRUnichar *colID;
   PRInt32 factor;
+  nsAbView *abView;
 } SortClosure;
 
 static int PR_CALLBACK
@@ -506,29 +512,42 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 {
   AbCard *card1 = (AbCard *)data1;
   AbCard *card2 = (AbCard *)data2;
-
+  
   SortClosure *closure = (SortClosure *) privateData;
-
+  
   PRInt32 sortValue;
-
+  
   // if we are sorting the "PrimaryEmail", swap the collation keys, as the secondary is always the 
   // PrimaryEmail.  use the last primary key as the secondary key.
   //
   // "Pr" to distinguish "PrimaryEmail" from "PagerNumber"
   if (closure->colID[0] == 'P' && closure->colID[1] == 'r') {
-    sortValue = nsCRT::strcmp(card1->secondaryCollationKey, card2->secondaryCollationKey);
+    sortValue = closure->abView->CompareCollationKeys(card1->secondaryCollationKey,card1->secondaryCollationKeyLen,card2->secondaryCollationKey,card2->secondaryCollationKeyLen);
     if (sortValue)
       return sortValue * closure->factor;
     else
-      return nsCRT::strcmp(card1->primaryCollationKey, card2->primaryCollationKey) * (closure->factor);
+      return closure->abView->CompareCollationKeys(card1->primaryCollationKey,card1->primaryCollationKeyLen,card2->primaryCollationKey,card2->primaryCollationKeyLen) * (closure->factor);
   }
   else {
-    sortValue = nsCRT::strcmp(card1->primaryCollationKey, card2->primaryCollationKey);
+    sortValue = closure->abView->CompareCollationKeys(card1->primaryCollationKey,card1->primaryCollationKeyLen,card2->primaryCollationKey,card2->primaryCollationKeyLen);
     if (sortValue)
       return sortValue * (closure->factor);
     else
-      return nsCRT::strcmp(card1->secondaryCollationKey, card2->secondaryCollationKey) * (closure->factor);
+      return closure->abView->CompareCollationKeys(card1->secondaryCollationKey,card1->secondaryCollationKeyLen,card2->secondaryCollationKey,card2->secondaryCollationKeyLen) * (closure->factor);
   }
+}
+
+static void SetSortClosure(const PRUnichar *sortColumn, const PRUnichar *sortDirection, nsAbView *abView, SortClosure *closure)
+{
+  closure->colID = sortColumn;
+  
+  if (sortDirection && !nsCRT::strcmp(sortDirection, NS_LITERAL_STRING("descending").get()))
+    closure->factor = DESCENDING_SORT_FACTOR;
+  else 
+    closure->factor = ASCENDING_SORT_FACTOR;
+
+  closure->abView = abView;
+  return;
 }
 
 NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
@@ -571,20 +590,15 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
       NS_ENSURE_SUCCESS(rv,rv);
     }
 
-    SortClosure closure;
-    closure.colID = sortColumn.get();
-    closure.factor = 1;
-
     nsAutoString sortDirection;
     if (!sortDir)
-      sortDirection = NS_LITERAL_STRING("ascending");  // default direction
-    else {
+      sortDirection = NS_LITERAL_STRING("ascending").get();  // default direction
+    else
       sortDirection = sortDir;
-      if (nsCRT::strcmp(sortDirection.get(), NS_LITERAL_STRING("ascending").get())) {
-        closure.factor = -1;
-      }
-    }
 
+    SortClosure closure;
+    SetSortClosure(sortColumn.get(), sortDirection.get(), this, &closure);
+    
     mCards.Sort(inplaceSortCallback, (void *)(&closure));
     mSortColumn = sortColumn.get();
     mSortDirection = sortDirection.get();
@@ -593,6 +607,21 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
   rv = InvalidateOutliner(ALL_ROWS);
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
+}
+
+PRInt32 nsAbView::CompareCollationKeys(PRUint8 *key1, PRUint32 len1, PRUint8 *key2, PRUint32 len2)
+{
+  NS_ASSERTION(mCollationKeyGenerator, "no key generator");
+  if (!mCollationKeyGenerator)
+    return 0;
+
+  PRInt32 result;
+
+  nsresult rv = mCollationKeyGenerator->CompareRawSortKey(key1,len1,key2,len2,&result);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "key compare failed");
+  if (NS_FAILED(rv))
+    result = 0;
+  return result;
 }
 
 nsresult nsAbView::GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *abcard)
@@ -607,8 +636,9 @@ nsresult nsAbView::GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *
   NS_ENSURE_SUCCESS(rv,rv);
   
   // XXX be smarter about the allocation
-  PR_FREEIF(abcard->primaryCollationKey);
-  rv = CreateCollationKey(value, &(abcard->primaryCollationKey));
+  if (abcard->primaryCollationKey)
+    nsMemory::Free(abcard->primaryCollationKey);
+  rv = CreateCollationKey(value, &(abcard->primaryCollationKey), &(abcard->primaryCollationKeyLen));
   NS_ENSURE_SUCCESS(rv,rv);
   
   // XXX fix me, do this with const to avoid the strcpy
@@ -616,14 +646,18 @@ nsresult nsAbView::GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *
   NS_ENSURE_SUCCESS(rv,rv);
   
  // XXX be smarter about the allocation
-  PR_FREEIF(abcard->secondaryCollationKey);
-  rv = CreateCollationKey(value, &(abcard->secondaryCollationKey));
+  if (abcard->secondaryCollationKey)
+    nsMemory::Free(abcard->secondaryCollationKey);
+  rv = CreateCollationKey(value, &(abcard->secondaryCollationKey), &(abcard->secondaryCollationKeyLen));
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
 
-nsresult nsAbView::CreateCollationKey(const PRUnichar *source,  PRUnichar **result)
+nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, PRUint32 *aKeyLen)
 {
+  NS_ENSURE_ARG_POINTER(aKey);
+  NS_ENSURE_ARG_POINTER(aKeyLen);
+
 	nsresult rv;
 	if (!mCollationKeyGenerator)
 	{
@@ -641,31 +675,22 @@ nsresult nsAbView::CreateCollationKey(const PRUnichar *source,  PRUnichar **resu
 		NS_ENSURE_SUCCESS(rv, rv);
 	}
 
-	nsAutoString sourceString(source);
-	PRUint32 aLength;
-	rv = mCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, &aLength);
+  // XXX can we avoid this copy?
+	nsAutoString sourceString(aSource);
+	rv = mCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, aKeyLen);
 	NS_ENSURE_SUCCESS(rv, rv);
 
-	PRUint8* aKey = (PRUint8* ) nsMemory::Alloc (aLength + 3);    // plus three for null termination
+	*aKey = (PRUint8*) nsMemory::Alloc (*aKeyLen);
 	if (!aKey)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	rv = mCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive,
-			sourceString, aKey, &aLength);
+	rv = mCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, *aKey, aKeyLen);
 	if (NS_FAILED(rv))
 	{
-		nsMemory::Free (aKey);
+		nsMemory::Free(aKey);
 		return rv;
 	}
-
-	// Generate a null terminated unicode string.
-	// Note using PRUnichar* to store collation key is not recommented since the key may contains 0x0000.
-	aKey[aLength] = 0;
-	aKey[aLength+1] = 0;
-	aKey[aLength+2] = 0;
-
-	*result = (PRUnichar *) aKey;
-	return rv;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::OnItemAdded(nsISupports *parentDir, nsISupports *item)
@@ -739,7 +764,7 @@ nsresult nsAbView::AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32
   nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(abcard);
   
-  *index = FindIndexForInsert(mSortColumn.get(), abcard);
+  *index = FindIndexForInsert(abcard);
   rv = mCards.InsertElementAt((void *)abcard, *index);
   NS_ENSURE_SUCCESS(rv,rv);
     
@@ -759,17 +784,20 @@ nsresult nsAbView::AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32
   return rv;
 }
 
-PRInt32 nsAbView::FindIndexForInsert(const PRUnichar *colID, AbCard *abcard)
+PRInt32 nsAbView::FindIndexForInsert(AbCard *abcard)
 {
   PRInt32 count = mCards.Count();
   PRInt32 i;
 
   void *item = (void *)abcard;
   
+  SortClosure closure;
+  SetSortClosure(mSortColumn.get(), mSortDirection.get(), this, &closure);
+  
   // XXX todo, binary search
   for (i=0; i < count; i++) {
     void *current = mCards.ElementAt(i);
-    PRInt32 value = inplaceSortCallback(item, current, (void *)colID);
+    PRInt32 value = inplaceSortCallback(item, current, (void *)(&closure));
     // XXX not right, for ascending and descending
     if (value <= 0) 
       break;
@@ -860,14 +888,16 @@ NS_IMETHODIMP nsAbView::OnItemPropertyChanged(nsISupports *item, const char *pro
   rv = GenerateCollationKeysForCard(mSortColumn.get(), newCard);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  if (!nsCRT::strcmp(newCard->primaryCollationKey, oldCard->primaryCollationKey) &&
-    !nsCRT::strcmp(newCard->secondaryCollationKey, oldCard->secondaryCollationKey)) {
+  if (!CompareCollationKeys(newCard->primaryCollationKey,newCard->primaryCollationKeyLen,oldCard->primaryCollationKey,oldCard->primaryCollationKeyLen)
+    && CompareCollationKeys(newCard->secondaryCollationKey,newCard->secondaryCollationKeyLen,oldCard->secondaryCollationKey,oldCard->secondaryCollationKeyLen)) {
     // no need to remove and add, since the collation keys haven't change.
     // since they haven't chagned, the card will sort to the same place.
     // we just need to clean up what we allocated.
     NS_IF_RELEASE(newCard->card);
-    PR_FREEIF(newCard->primaryCollationKey);
-    PR_FREEIF(newCard->secondaryCollationKey);
+    if (newCard->primaryCollationKey)
+      nsMemory::Free(newCard->primaryCollationKey);
+    if (newCard->secondaryCollationKey)
+      nsMemory::Free(newCard->secondaryCollationKey);
     PR_FREEIF(newCard);
 
     // still need to invalidate, as the other columns may have changed
