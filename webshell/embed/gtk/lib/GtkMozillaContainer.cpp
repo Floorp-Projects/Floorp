@@ -455,7 +455,7 @@ GtkMozillaContainer::StartStream(const char *base_url,
   if (NS_FAILED(rv)) 
     goto error;
   
-  rv = NS_NewLoadGroup(nsnull, nsnull, nsnull, &mLoadGroup);
+  rv = NS_NewLoadGroup(nsnull, nsnull, &mLoadGroup);
   if (NS_FAILED(rv)) 
     goto error;
   
