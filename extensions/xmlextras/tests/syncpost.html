@@ -2,7 +2,7 @@
 <head><title>Synchronized POST test</title>
 <style type="text/css">
 .box {
-  display: box;
+  display: block;
   border: 1px solid black;
   margin-bottom: 0.5em;
 }
@@ -21,7 +21,7 @@ function execute()
   x.documentElement.appendChild(document.createTextNode("Foo"));
   x.documentElement.appendChild(x.createElementNS("http://www.w3.org/1999/xhtml","h1"));
   x.documentElement.lastChild.appendChild(document.createTextNode("My Document Header"));
-  x.documentElement.lastChild.setAttributeNS("http://www.w3.org/1999/xhtml","id","id1")
+  x.documentElement.lastChild.setAttribute("id","id1")
 
   var p = new XMLHttpRequest();
   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
@@ -30,10 +30,14 @@ function execute()
 
   document.getElementById("id1").firstChild.nodeValue = p.responseText;
   if (p.responseXML) {
+    try {
     var s = new XMLSerializer();
     var d = p.responseXML;
     var str = s.serializeToString(d);
     document.getElementById("id2").firstChild.nodeValue = str;
+    } catch (e) {
+      document.getElementById("id2").firstChild.nodeValue = e;
+    }
   }
   document.getElementById("id3").firstChild.nodeValue = p.getAllResponseHeaders();
   document.getElementById("id4").firstChild.nodeValue = p.status;
@@ -41,10 +45,9 @@ function execute()
   document.getElementById("id6").firstChild.nodeValue = p.readyState;
 }
 
-setTimeout(execute,0); // Enable the rest of this document to load before executing
 </script>
 </head>
-<body>
+<body onload="execute();">
 <h1>Synchronized POST test</h1>
 
 <div class="box"><span class="boxheader">responseText</span>

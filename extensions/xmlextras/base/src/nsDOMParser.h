@@ -44,19 +44,13 @@
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
-
-#define IMPLEMENT_SYNC_LOAD
-#ifdef IMPLEMENT_SYNC_LOAD
-#include "nsIWebBrowserChrome.h"
+#include "nsIEventQueueService.h"
 #include "nsIDOMLoadListener.h"
 #include "nsWeakReference.h"
-#endif
 
-class nsDOMParser : public nsIDOMParser
-#ifdef IMPLEMENT_SYNC_LOAD
-                    , public nsIDOMLoadListener
-                    , public nsSupportsWeakReference
-#endif
+class nsDOMParser : public nsIDOMParser,
+                    public nsIDOMLoadListener,
+                    public nsSupportsWeakReference
 {
 public: 
   nsDOMParser();
@@ -67,7 +61,6 @@ public:
   // nsIDOMParser
   NS_DECL_NSIDOMPARSER
 
-#ifdef IMPLEMENT_SYNC_LOAD
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
@@ -76,14 +69,11 @@ public:
   NS_IMETHOD Unload(nsIDOMEvent* aEvent);
   NS_IMETHOD Abort(nsIDOMEvent* aEvent);
   NS_IMETHOD Error(nsIDOMEvent* aEvent);
-#endif
 
 private:
   nsCOMPtr<nsIURI> mBaseURI;
-
-#ifdef IMPLEMENT_SYNC_LOAD
-  nsCOMPtr<nsIWebBrowserChrome> mChromeWindow;
-#endif
+  nsCOMPtr<nsIEventQueueService> mEventQService;
+  PRBool mLoopingForSyncLoad;
 };
 
 #endif
