@@ -49,6 +49,14 @@
 #endif
 #endif
 
+/* BSD-derived systems use sysctl() to get the number of processors */
+#if defined(BSDI) || defined(FREEBSD) || defined(NETBSD) \
+    || defined(OPENBSD) || defined(RHAPSODY)
+#define _PR_HAVE_SYSCTL
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#endif
+
 #if defined(HPUX)
 #include <sys/mp.h>
 #endif
@@ -159,7 +167,6 @@ PR_IMPLEMENT(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 bufle
 **   order of the if defined()s may be important,
 **     especially for unix variants. Do platform
 **     specific implementations before XP_UNIX.
-**     Watch order of RHAPSODY (first) and XP_MAC (after RHAPSODY).
 ** 
 */
 PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
@@ -170,7 +177,16 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
 
     GetSystemInfo( &info );
     numCpus = info.dwNumberOfProcessors;
-#elif defined(RHAPSODY)  /* "darwin" or Mac OS/X */
+#elif defined(XP_MAC)
+    numCpus = MPProcessors();
+#elif defined(BEOS)
+    system_info sysInfo;
+
+    get_system_info(&sysInfo);
+    numCpus = sysInfo.cpu_count;
+#elif defined(OS2)
+    DosQuerySysInfo( QSV_NUMPROCESSORS, QSV_NUMPROCESSORS, &numCpus, sizeof(numCpus));
+#elif defined(_PR_HAVE_SYSCTL)
     int mib[2];
     int rc;
     size_t len = sizeof(numCpus);
@@ -182,15 +198,6 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
         numCpus = -1; /* set to -1 for return value on error */
         PR_SetError( PR_UNKNOWN_ERROR, _MD_ERRNO());
     }
-#elif defined(XP_MAC)
-    numCpus = MPProcessors();
-#elif defined(BEOS)
-    system_info sysInfo;
-
-    get_system_info(&sysInfo);
-    numCpus = sysInfo.cpu_count;
-#elif defined(OS2)
-    DosQuerySysInfo( QSV_NUMPROCESSORS, QSV_NUMPROCESSORS, &numCpus, sizeof(numCpus));
 #elif defined(HPUX)
     numCpus = mpctl( MPC_GETNUMSPUS, 0, 0 );
     if ( numCpus < 1 )  {
