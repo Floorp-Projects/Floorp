@@ -69,6 +69,9 @@ static void getItemText(DialogPtr dialog, DialogItemIndex index, ResType textTag
 }
 
 static void miniEgg () {
+
+#if 0
+	
 	long count = 0;
 	OSErr myErr;
 	short myVRef;
@@ -76,12 +79,12 @@ static void miniEgg () {
 	FSSpec mySpec;
 	short refNum;
 	Str255 holder;
-	
+
 	myErr = FindFolder(kOnSystemDisk, kPreferencesFolderType, kDontCreateFolder, &myVRef, &myDirID);
 
 	if (myErr == noErr) {
 	
-		myErr = FSMakeFSSpec(myVRef, myDirID, "\pJessika Preferences", &mySpec);
+		myErr = FSMakeFSSpec(myVRef, myDirID, "\pFileName", &mySpec);
 		
 		if ((myErr != noErr) && (myErr != fnfErr)) {
 			return;
@@ -101,21 +104,25 @@ static void miniEgg () {
 			return;
 		}
 
-		sprintf((char *)holder, "jessika prefers to crush the life out of her husband and my best friend.\r");
+		sprintf((char *)holder, "egg line1\r");
 		count = strlen((char *)holder);
 		myErr = FSWrite(refNum, &count, holder);
 			        
-		sprintf((char *)holder, "her selfish psychotic monsterous juvenile actions have permanently damaged him as well as emptying my faith\r");
+		sprintf((char *)holder, "egg line2\r");
 		count = strlen((char *)holder);
 		myErr = FSWrite(refNum, &count, holder);
 
-		sprintf((char *)holder, "my admiration of justice remains, she's just forever in c-attle.\r");
+		sprintf((char *)holder, "egg line3\r");
 		count = strlen((char *)holder);
 		myErr = FSWrite(refNum, &count, holder);
+
+	    // ...
 
 		FlushVol("\p", refNum);
         myErr = FSClose(refNum);
 	}
+
+#endif
 
 }
 
