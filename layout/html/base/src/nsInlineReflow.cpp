@@ -651,8 +651,10 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
         mMaxElementSize.width = mw;
       }
 
-      // XXX take into account top/bottom margins
-      nscoord mh = aMetrics.maxElementSize->height;
+      // The max-element height is the sum of the interior max-element
+      // height plus the top and bottom margins.
+      nscoord mh = aMetrics.maxElementSize->height +
+        pfd->mMargin.top + pfd->mMargin.bottom;
       if (mh > mMaxElementSize.height) {
         mMaxElementSize.height = mh;
       }
