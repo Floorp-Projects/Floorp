@@ -31,9 +31,15 @@
 #include "nsIRenderingContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsIAtom.h"
+#include "nsIStyleContext.h"
+#include "nsHTMLAtoms.h"
+#include "nsStyleConsts.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -1006,6 +1012,121 @@ nsIFrame* nsTablePart::CreateFrame(nsIPresContext* aPresContext,
   nsresult status = nsTableOuterFrame::NewFrame(&rv, this, aIndexInParent,
                                                 aParentFrame);
   return rv;
+}
+
+void nsTablePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+{
+  nsHTMLValue val;
+
+  if (aAttribute == nsHTMLAtoms::width) {
+    ParseValueOrPercent(aValue, val);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+  }
+  else if (aAttribute == nsHTMLAtoms::border) {
+    nsHTMLValue val;
+    nsAutoString tmp(aValue);
+    tmp.StripWhitespace();
+    if (0 == tmp.Length()) {
+      // Just enable the border; same as border=1
+      val.Set(1, eHTMLUnit_Absolute);/* XXX pixels? */
+    }
+    else {
+      ParseValue(aValue, 1, val);
+    }
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+  }
+  // border, background, cellpadding, cellspacing, etc.
+}
+
+void nsTablePart::MapAttributesInto(nsIStyleContext* aContext,
+                                    nsIPresContext* aPresContext)
+{
+  float p2t;
+  nsHTMLValue value;
+
+  // width
+  GetAttribute(nsHTMLAtoms::width, value);
+  if (value.GetUnit() != eHTMLUnit_Null) {
+    nsStylePosition* position = (nsStylePosition*)
+      aContext->GetData(kStylePositionSID);
+    switch (value.GetUnit()) {
+    case eHTMLUnit_Percent:
+      position->mWidthFlags = NS_STYLE_POSITION_VALUE_PCT;
+      position->mWidth = 0;/* XXX need a float to store into */
+      break;
+
+    case eHTMLUnit_Absolute:
+      p2t = aPresContext->GetPixelsToTwips();
+      position->mWidthFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+      position->mWidth = nscoord(p2t * value.GetIntValue());
+      break;
+    }
+  }
+
+  // border
+  GetTableBorder(this, aContext, aPresContext, PR_FALSE);
+}
+
+void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
+                                 nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext,
+                                 PRBool aForCell)
+{
+  nsHTMLValue value;
+
+  aContent->GetAttribute(nsHTMLAtoms::border, value);
+  if (value.GetUnit() == eHTMLUnit_Absolute) {
+    nsStyleBorder* border = (nsStyleBorder*)
+      aContext->GetData(kStyleBorderSID);
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetData(kStyleSpacingSID);
+    float p2t = aPresContext->GetPixelsToTwips();
+    nscoord pixels = aForCell
+      ? nscoord(p2t * 1)
+      : nscoord(p2t * value.GetIntValue());
+    nscoord two = nscoord(p2t * 2);
+
+#if 0
+    // XXX do I need to do this or can I assert that it's zero?
+    spacing->mBorderPadding.top -= spacing->mBorder.top;
+    spacing->mBorderPadding.right -= spacing->mBorder.right;
+    spacing->mBorderPadding.bottom -= spacing->mBorder.bottom;
+    spacing->mBorderPadding.left -= spacing->mBorder.left;
+#endif
+
+    spacing->mBorder.top = pixels;
+    spacing->mBorder.right = pixels;
+    spacing->mBorder.bottom = pixels;
+    spacing->mBorder.left = pixels;
+
+    spacing->mPadding.top = two;
+    spacing->mPadding.right = two;
+    spacing->mPadding.bottom = two;
+    spacing->mPadding.left = two;
+
+    spacing->mBorderPadding.top += pixels + two;
+    spacing->mBorderPadding.right += pixels + two;
+    spacing->mBorderPadding.bottom += pixels + two;
+    spacing->mBorderPadding.left += pixels + two;
+
+    border->mSize.top = pixels;
+    border->mSize.right = pixels;
+    border->mSize.bottom = pixels;
+    border->mSize.left = pixels;
+
+    if (border->mStyle[0] == NS_STYLE_BORDER_STYLE_NONE) {
+      border->mStyle[0] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+    if (border->mStyle[1] == NS_STYLE_BORDER_STYLE_NONE) {
+      border->mStyle[1] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+    if (border->mStyle[2] == NS_STYLE_BORDER_STYLE_NONE) {
+      border->mStyle[2] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+    if (border->mStyle[3] == NS_STYLE_BORDER_STYLE_NONE) {
+      border->mStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
+    }
+  }
 }
 
 /* ---------- Global Functions ---------- */
