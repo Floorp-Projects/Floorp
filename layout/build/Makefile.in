@@ -110,5 +110,5 @@ $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
 $(BUILD_DATE):	FORCE
 	$(RM) $@
-	$(PERL) gbdate.pl > $@
+	$(PERL) $(srcdir)/gbdate.pl > $@
 
