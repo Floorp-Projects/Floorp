@@ -117,8 +117,8 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
     if(menubar)
     {
       mMenuBarParent = menubar;
-      NS_ADDREF(mMenuBarParent);
-      NS_RELEASE(menubar);
+      //NS_ADDREF(mMenuBarParent);
+      //NS_RELEASE(menubar);
     }
     else
     {
@@ -127,8 +127,8 @@ NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
       if(menu)
       {
         mMenuParent = menu;
-        NS_ADDREF(mMenuParent);
-        NS_RELEASE(menu);
+        //NS_ADDREF(mMenuParent);
+        //NS_RELEASE(menu);
       }
     }
   }
@@ -498,9 +498,9 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
 */
 NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
 {
-  NS_IF_RELEASE(mDOMNode);
+  //NS_IF_RELEASE(mDOMNode);
   mDOMNode = aMenuNode;
-  NS_IF_ADDREF(mDOMNode);
+  //NS_IF_ADDREF(mDOMNode);
   return NS_OK;
 }
 
@@ -511,9 +511,9 @@ NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * aMenuNode)
 */
 NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
 {
-  NS_IF_RELEASE(mDOMElement);
+  //NS_IF_RELEASE(mDOMElement);
   mDOMElement = aMenuElement;
-  NS_IF_ADDREF(mDOMElement);
+  //NS_IF_ADDREF(mDOMElement);
   return NS_OK;
 }
     
@@ -524,9 +524,9 @@ NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * aMenuElement)
 */
 NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 {
-  NS_IF_RELEASE(mWebShell);
+  //NS_IF_RELEASE(mWebShell);
   mWebShell = aWebShell;
-  NS_IF_ADDREF(mWebShell);
+  //NS_IF_ADDREF(mWebShell);
   return NS_OK;
 }
 
