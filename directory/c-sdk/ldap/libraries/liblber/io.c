@@ -734,7 +734,7 @@ ber_get_next( Sockbuf *sb, unsigned long *len, BerElement *ber )
 	if ( lber_debug ) {
 	  char msg[80];
 	  sprintf( msg, "ber_get_next: tag 0x%lx len %ld contents:\n",
-		   tag, ber->ber_len );
+		   ber->ber_tag_contents[0], ber->ber_len );
 	  ber_err_print( msg );
 	  if ( lber_debug > 1 )
 	    ber_dump( ber, 1 );
