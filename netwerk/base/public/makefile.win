@@ -23,6 +23,7 @@ EXPORTS =                         \
         nsICancelable.h           \
         nsIConnectionGroup.h      \
         nsIFileTransportService.h \
+        nsISocketTransportService.h \
         nsINetService.h           \
         nsIProtocolConnection.h   \
         nsIProtocolHandler.h      \

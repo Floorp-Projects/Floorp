@@ -23,32 +23,32 @@
 
 class nsITransport;
 
-// XXX regenerate:
 #define NS_ISOCKETTRANSPORTSERVICE_IID               \
-{ /* 2355dca0-ea35-11d2-931b-00104ba0fd40 */         \
-    0x2355dca0,                                      \
-    0xea35,                                          \
+{ /* 9610f120-ef12-11d2-92b6-00105a1b0d64 */         \
+    0x9610f120,                                      \
+    0xef12,                                          \
     0x11d2,                                          \
-    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+    {0x92, 0xb6, 0x00, 0x10, 0x5a, 0x1b, 0x0d, 0x64} \
 }
 
-// XXX regenerate:
 #define NS_SOCKETTRANSPORTSERVICE_CID                \
-{ /* 2bb2b250-ea35-11d2-931b-00104ba0fd40 */         \
-    0x2bb2b250,                                      \
-    0xea35,                                          \
+{ /* c07e81e0-ef12-11d2-92b6-00105a1b0d64 */         \
+    0xc07e81e0,                                      \
+    0xef12,                                          \
     0x11d2,                                          \
-    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+    {0x92, 0xb6, 0x00, 0x10, 0x5a, 0x1b, 0x0d, 0x64} \
 }
+
 
 class nsISocketTransportService : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOCKETTRANSPORTSERVICE_IID);
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOCKETTRANSPORTSERVICE_IID);
 
-    NS_IMETHOD CreateTransport(const char* host, PRInt32 port,
-                               nsITransport* *result) = 0;
+  NS_IMETHOD CreateTransport(const char* host, PRInt32 port,
+                             nsITransport* *result) = 0;
 
+  NS_IMETHOD Shutdown(void) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -25,6 +25,7 @@ EXPORTS =                        \
         nsConnectionGroup.h      \
         nsNetService.h           \
         nsFileTransportService.h \
+        nsSocketTransportService.h \
         nsUrl.h                  \
         $(NULL)
 
@@ -34,6 +35,8 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsSyncStreamListener.obj       \
         .\$(OBJDIR)\nsFileTransport.obj            \
         .\$(OBJDIR)\nsFileTransportService.obj     \
+        .\$(OBJDIR)\nsSocketTransport.obj          \
+        .\$(OBJDIR)\nsSocketTransportService.obj   \
         .\$(OBJDIR)\nsNetService.obj               \
         .\$(OBJDIR)\nsUrl.obj                      \
         $(NULL)
