@@ -1098,19 +1098,26 @@ function tov_issorted (index)
 TreeOView.prototype.canDropOn =
 function tov_dropon (index)
 {
-    return false;
+    var row = this.childData.locateChildByVisualRow (index);
+    //ASSERT(row, "bogus row " + index);
+    return (row && ("canDropOn" in row) && row.canDropOn());
 }
 
 TreeOView.prototype.canDropBeforeAfter =
 function tov_dropba (index, before)
 {
-    return false;
+    var row = this.childData.locateChildByVisualRow (index);
+    //ASSERT(row, "bogus row " + index);
+    return (row && ("canDropBeforeAfter" in row) &&
+            row.canDropBeforeAfter(before));
 }
 
 TreeOView.prototype.drop =
 function tov_drop (index, orientation)
 {
-    return false;
+    var row = this.childData.locateChildByVisualRow (index);
+    //ASSERT(row, "bogus row " + index);
+    return (row && ("drop" in row) && row.drop(orientation));
 }
 
 TreeOView.prototype.setOutliner =
