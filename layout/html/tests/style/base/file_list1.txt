@@ -1,1 +1,2 @@
-file:///s:/mozilla/layout/html/tests/style/base.html
+file:///s:/mozilla/layout/html/tests/style/base/base.html
+
