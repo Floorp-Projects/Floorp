@@ -22,7 +22,10 @@
 #include "nsIDocument.h"
 #include "nsXIFConverter.h"
 #include "nsSelectionRange.h"
+#if XP_NEW_SELECTION
+#else
 #include "nsISelection.h"
+#endif
 #include "nsCRT.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
@@ -422,7 +425,10 @@ nsGenericDOMDataNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
 
   if (aConverter.GetUseSelection() == PR_TRUE && mDocument->IsInSelection(content))
   {
+#if XP_NEW_SELECTION
+#else
     nsISelection* sel;
+#endif
     mDocument->GetSelection(sel);
     if (sel != nsnull)
     {
