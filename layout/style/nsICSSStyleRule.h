@@ -123,7 +123,8 @@ public:
 
   PRInt32 CalcWeight(void) const;
 
-  void ToString(nsAString& aString, nsICSSStyleSheet* aSheet) const;
+  void ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
+                PRBool aAppend = PR_FALSE) const;
 
 private:
 

@@ -536,8 +536,12 @@ void nsCSSSelector::AppendNegationToString(nsAString& aString)
 // StyleRule:selectorText
 //
 void
-nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet) const
+nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
+                        PRBool aAppend) const
 {
+  if (!aAppend)
+   aString.Truncate();
+   
   ToStringInternal(aString, aSheet, IsPseudoElement(mTag), 0);
 }
 
@@ -549,7 +553,7 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
   nsAutoString temp;
   PRBool aIsNegated = PRBool(0 < aNegatedIndex);
   PRBool isPseudoElement = IsPseudoElement(mTag);
-
+  
   // selectors are linked from right-to-left, so the next selector in the linked list
   // actually precedes this one in the resulting string
   if (mNext) {
@@ -777,9 +781,10 @@ void nsCSSSelectorList::AddSelector(const nsCSSSelector& aSelector)
 void
 nsCSSSelectorList::ToString(nsAString& aResult, nsICSSStyleSheet* aSheet)
 {
+  aResult.Truncate();
   nsCSSSelectorList *p = this;
   for (;;) {
-    p->mSelectors->ToString(aResult, aSheet);
+    p->mSelectors->ToString(aResult, aSheet, PR_TRUE);
     p = p->mNext;
     if (!p)
       break;
