@@ -47,7 +47,7 @@
 #include "nsIBoxLayout.h"
 #include "nsMonumentLayout.h"
 
-//#define MOZ_GRID2 1
+#define MOZ_GRID2 1
 
 #ifdef MOZ_GRID2
 #include "nsGrid.h"

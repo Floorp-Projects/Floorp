@@ -24,9 +24,7 @@ DEPTH=..\..\..\..
 LIBRARY_NAME=layoutxulbase_s 
 MODULE=layout_xul
 DIRS=outliner \
-!ifdef MOZ_GRID2
      grid
-!endif
 
 REQUIRES	= xpcom \
 		  string \
@@ -62,12 +60,6 @@ CPPSRCS=					\
         nsPopupBoxObject.cpp \
         nsMenuBoxObject.cpp \
         nsBoxObject.cpp \
-!ifndef MOZ_GRID2
-        nsGridLayout.cpp \
-        nsTempleLayout.cpp \
-        nsObeliskLayout.cpp \
-        nsMonumentLayout.cpp \
-!endif
         nsImageBoxFrame.cpp        \
         nsRootBoxFrame.cpp        \
         nsDocElementBoxFrame.cpp \
@@ -123,12 +115,6 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsPopupBoxObject.obj \
   .\$(OBJDIR)\nsMenuBoxObject.obj \
   .\$(OBJDIR)\nsBoxObject.obj \
-!ifndef MOZ_GRID2
-	.\$(OBJDIR)\nsGridLayout.obj		\
-	.\$(OBJDIR)\nsTempleLayout.obj		\
-	.\$(OBJDIR)\nsObeliskLayout.obj		\
-	.\$(OBJDIR)\nsMonumentLayout.obj		\
-!endif
 	.\$(OBJDIR)\nsImageBoxFrame.obj		\
 	.\$(OBJDIR)\nsRootBoxFrame.obj		\
   .\$(OBJDIR)\nsDocElementBoxFrame.obj \
