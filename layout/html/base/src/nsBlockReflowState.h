@@ -74,8 +74,6 @@ public:
 
   PRBool ClearPastFloaters(PRUint8 aBreakType);
 
-  PRBool IsLeftMostChild(nsIPresContext* aPresContext, nsIFrame* aFrame);
-
   PRBool IsAdjacentWithTop() const {
     return mY == mReflowState.mComputedBorderPadding.top;
   }

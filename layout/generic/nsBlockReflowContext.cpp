@@ -88,7 +88,8 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
         // try to collapse the top margin with.
 
         // XXX If the block is empty, we need to check its bottom margin
-        // and its sibling's top margin (etc.) too!
+        // and its sibling's top margin (etc.) too!  See XXXldb comment about
+        // emptyness below in PlaceBlock.
 
         nsIFrame* childFrame = bf->GetTopBlockChild();
         if (nsnull != childFrame) {
@@ -305,6 +306,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
    * It's possible this should be quirks-only.
    * All other blocks proceed normally.
    */
+  // XXXldb We should really fix this in nsHTMLReflowState::InitConstraints instead.
   const nsStylePosition* position;
   aFrame->GetStyleData(eStyleStruct_Position,
                            (const nsStyleStruct*&)position);
@@ -376,6 +378,8 @@ ComputeShrinkwrapMargins(const nsStyleMargin* aStyleMargin, nscoord aWidth, nsMa
   // Solving for "sww" gives us:
   //  sww = bw / (1 - mp)
   // Note that this is only well defined for "mp" less than 100%
+
+  // XXXldb  Um... percentage margins are based on the containing block width.
   float marginPct = leftPct + rightPct;
   if (marginPct >= 1.0) {
     // Ignore the right percentage and just use the left percentage
@@ -487,6 +491,7 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   mY = y;
 
   // If it's an auto-width table, then it doesn't behave like other blocks
+  // XXX why not for a floating table too?
   if (mIsTable && !aReflowState.mStyleDisplay->IsFloating()) {
     // If this isn't the table's initial reflow, then use its existing
     // width to determine where it will be placed horizontally
@@ -697,6 +702,12 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   nscoord y = mY;
   // When deciding whether it's empty we also need to take into
   // account the overflow area
+
+  // XXXldb What should really matter is whether there exist non-
+  // empty frames in the block (with appropriate whitespace munging).
+  // Consider the case where we clip off the overflow with
+  // 'overflow: hidden' (which doesn't currently affect mOverflowArea,
+  // but probably should.
   if ((0 == mMetrics.height) && (0 == mMetrics.mOverflowArea.height)) 
   {
     // Collapse the bottom margin with the top margin that was already
@@ -793,9 +804,11 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
           m->width += maxElemMargin.right;
         }
 
-#if XXX_fix_me
+#if 0 // XXX_fix_me
         // Margin height should affect the max-element height (since
         // auto top/bottom margins are always zero)
+
+        // XXXldb Should it?
         m->height += mTopMargin + mBottomMargin;
 #endif
       }

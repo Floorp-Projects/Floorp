@@ -212,8 +212,9 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   PRBool treatAsNotSplittable=PR_FALSE;
   nsCOMPtr<nsIAtom>frameType;
   aFrame->GetFrameType(getter_AddRefs(frameType));
-  if (frameType)
-  { // text controls are splittable, so make a special case here
+  if (frameType) {
+    // text controls are not splittable, so make a special case here
+    // XXXldb Why not just set the frame state bit?
     if (nsLayoutAtoms::textInputFrame == frameType.get())
       treatAsNotSplittable = PR_TRUE;
   }
@@ -378,6 +379,10 @@ nsBlockReflowState::ClearPastFloaters(PRUint8 aBreakType)
       // What this will do is cause the top-margin of the block
       // frame we are about to reflow to be collapsed with that
       // distance.
+      
+      // XXXldb This doesn't handle collapsing with negative margins
+      // correctly, although it's arguable what "correct" is.
+
       mPrevBottomMargin = deltaY;
       mY = saveY;
 
@@ -385,7 +390,7 @@ nsBlockReflowState::ClearPastFloaters(PRUint8 aBreakType)
       applyTopMargin = PR_TRUE;
     }
     else {
-      // Put aState.mY back to its original value since no clearing
+      // Put mY back to its original value since no clearing
       // happened. That way the previous blocks bottom margin will
       // be applied properly.
       mY = saveY - mPrevBottomMargin;
@@ -664,6 +669,11 @@ nsBlockReflowState::InitFloater(nsLineLayout& aLineLayout,
 // left-most child (it's x coordinate is at the line's left margin)
 // then the floater is place immediately, otherwise the floater
 // placement is deferred until the line has been reflowed.
+
+// XXXldb This behavior doesn't quite fit with CSS1 and CSS2 --
+// technically we're supposed let the current line flow around the
+// float as well unless it won't fit next to what we already have.
+// But nobody else implements it that way...
 void
 nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
                                nsPlaceholderFrame* aPlaceholder,
@@ -713,53 +723,6 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
     // below-current-line floater).
     mBelowCurrentLineFloaters.Append(fc);
   }
-}
-
-PRBool
-nsBlockReflowState::IsLeftMostChild(nsIPresContext* aPresContext, nsIFrame* aFrame)
-{
-  for (;;) {
-    nsIFrame* parent;
-    aFrame->GetParent(&parent);
-    if (parent == mBlock) {
-      nsIFrame* child = mCurrentLine->mFirstChild;
-      PRInt32 n = mCurrentLine->GetChildCount();
-      while ((nsnull != child) && (aFrame != child) && (--n >= 0)) {
-        nsSize  size;
-
-        // Is the child zero-sized?
-        child->GetSize(size);
-        if (size.width > 0) {
-          // We found a non-zero sized child frame that precedes aFrame
-          return PR_FALSE;
-        }
-        child->GetNextSibling(&child);
-      }
-      break;
-    }
-    else {
-      // See if there are any non-zero sized child frames that precede
-      // aFrame in the child list
-      nsIFrame* child;
-      parent->FirstChild(aPresContext, nsnull, &child);
-      while ((nsnull != child) && (aFrame != child)) {
-        nsSize  size;
-
-        // Is the child zero-sized?
-        child->GetSize(size);
-        if (size.width > 0) {
-          // We found a non-zero sized child frame that precedes aFrame
-          return PR_FALSE;
-        }
-        child->GetNextSibling(&child);
-      }
-    }
-  
-    // aFrame is the left-most non-zero sized frame in its geometric parent.
-    // Walk up one level and check that its parent is left-most as well
-    aFrame = parent;
-  }
-  return PR_TRUE;
 }
 
 void
@@ -845,11 +808,11 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
         const nsMargin& borderPadding = BorderPadding();
         nscoord ya = mY - borderPadding.top;
         if (ya < 0) {
-          // CSS2 spec, 9.5.1 rule [4]: A floating box's outer top may not
-          // be higher than the top of its containing block.
-
-          // XXX It's not clear if it means the higher than the outer edge
-          // or the border edge or the inner edge?
+          // CSS2 spec, 9.5.1 rule [4]: "A floating box's outer top may not
+          // be higher than the top of its containing block."  (Since the
+          // containing block is the content edge of the block box, this
+          // means the margin edge of the floater can't be higher than the
+          // content edge of the block that contains it.)
           ya = 0;
         }
         nscoord yb = ya + aFloaterRect.height;
@@ -927,6 +890,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   while (1) {
     // See if the floater should clear any preceeding floaters...
     if (NS_STYLE_CLEAR_NONE != floaterDisplay->mBreakType) {
+      // XXXldb Does this handle vertical margins correctly?
       ClearFloaters(mY, floaterDisplay->mBreakType);
     }
     else {
@@ -1004,11 +968,11 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   const nsMargin& borderPadding = BorderPadding();
   region.y = mY - borderPadding.top;
   if (region.y < 0) {
-    // CSS2 spec, 9.5.1 rule [4]: A floating box's outer top may not
-    // be higher than the top of its containing block.
-
-    // XXX It's not clear if it means the higher than the outer edge
-    // or the border edge or the inner edge?
+    // CSS2 spec, 9.5.1 rule [4]: "A floating box's outer top may not
+    // be higher than the top of its containing block."  (Since the
+    // containing block is the content edge of the block box, this
+    // means the margin edge of the floater can't be higher than the
+    // content edge of the block that contains it.)
     region.y = 0;
   }
 
@@ -1046,6 +1010,8 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   nscoord y = borderPadding.top + aFloaterCache->mMargins.top + region.y;
 
   // If floater is relatively positioned, factor that in as well
+  // XXXldb Should this be done after handling the combined area
+  // below?
   if (NS_STYLE_POSITION_RELATIVE == floaterDisplay->mPosition) {
     x += aFloaterCache->mOffsets.left;
     y += aFloaterCache->mOffsets.top;
