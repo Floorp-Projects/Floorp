@@ -926,17 +926,7 @@ nsComponentManagerImpl::FindFactory(const nsCID &aClass,
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("\t\tnot found in factory cache. Looking in registry"));
 
-        // bug# 7308 , bug# 8150
-        // Findfactory randomly fails if a ProgIDToCLSID() happenes
-        // at the same time from another thread.
-        // The registry seems to be locking properly. Until I figureout
-        // what the right problem is, I am putting this major locks on
-        // these two routines
-        //		PlatformFind() and PlatformProgIDToCLSID()
-        //to achieve mutual exclusion at a course level.
-        PR_EnterMonitor(mMon);
         nsresult rv = PlatformFind(aClass, &entry);
-        PR_ExitMonitor(mMon);
 
         // If we got one, cache it in our hashtable
         if (NS_SUCCEEDED(rv))
@@ -1017,19 +1007,7 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
     else {
         // This is the first time someone has asked for this
         // ProgID. Go to the registry to find the CID.
-
-        // bug# 7308 , bug# 8150
-        // Findfactory randomly fails if a ProgIDToCLSID() happenes
-        // at the same time from another thread.
-        // The registry seems to be locking properly. Until I figureout
-        // what the right problem is, I am putting this major locks on
-        // these two routines
-        //		PlatformFind() and PlatformProgIDToCLSID()
-        //to achieve mutual exclusion at a course level.
-        PR_EnterMonitor(mMon);
         res = PlatformProgIDToCLSID(aProgID, aClass);
-        PR_ExitMonitor(mMon);
-
 
         if (NS_SUCCEEDED(res)) {
             // Found it. So put it into the cache.
