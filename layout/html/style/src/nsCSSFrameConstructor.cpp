@@ -70,6 +70,11 @@
 #include "nsInlineFrame.h"
 #undef NOISY_FIRST_LETTER
 
+#ifdef INCLUDE_MATHML
+#include "nsMathMLAtoms.h"
+#include "nsMathMLParts.h"
+#endif
+
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
 #include "nsTreeFrame.h"
@@ -354,6 +359,10 @@ struct nsTableCreator {
   virtual nsresult CreateTableColGroupFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
+//MathML Mod - RBS
+#ifdef INCLUDE_MATHML
+  virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
+#endif
   virtual PRBool IsTreeCreator() { return PR_FALSE; };
 };
 
@@ -435,6 +444,26 @@ nsTreeCreator::CreateTableRowFrame(nsIFrame** aNewFrame) {
 }
 
 #endif // INCLUDE_XUL
+
+//MathML Mod - RBS
+#ifdef INCLUDE_MATHML
+nsresult
+nsTableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
+  return NS_NewTableCellInnerFrame(aNewFrame);
+}
+
+// Structure used when creating MathML mtable frames
+struct nsMathMLmtableCreator: public nsTableCreator {
+  nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
+};
+
+nsresult
+nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
+{
+  // only works if aNewFrame is an AreaFrame (to take care of the lineLayout logic)
+  return NS_NewMathMLmtdFrame(aNewFrame);
+}
+#endif // INCLUDE_MATHML
 
 // -----------------------------------------------------------
 
@@ -1702,7 +1731,12 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*          aPre
                       nsnull);
 
   // Create an area frame that will format the cell's content
+//MathML Mod - RBS
+#ifdef INCLUDE_MATHML
+  rv = aTableCreator.CreateTableCellInnerFrame(&aNewCellBodyFrame);
+#else
   rv = NS_NewTableCellInnerFrame(&aNewCellBodyFrame);
+#endif
   if (NS_FAILED(rv)) {
     aNewCellFrame->Destroy(*aPresContext);
     aNewCellFrame = nsnull;
@@ -1955,6 +1989,13 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::tabpage         == tag.get())  ||
         (nsXULAtoms::progressmeter   == tag.get())  ||
         (nsXULAtoms::window          == tag.get())) {
+    return PR_TRUE;
+  }
+#endif
+
+//MathML Mod - DJF
+#ifdef INCLUDE_MATHML
+  if (  (nsMathMLAtoms::math          == tag.get())  ) {
     return PR_TRUE;
   }
 #endif
@@ -2928,7 +2969,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
 
   return rv;
 }
-
 
 
 nsresult
@@ -4595,6 +4635,189 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIPresContext*   aPresContext,
   return rv;
 }
 
+// MathML Mod - RBS
+#ifdef INCLUDE_MATHML
+nsresult
+nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresContext*          aPresContext,
+                                            nsFrameConstructorState& aState,
+                                            nsIContent*              aContent,
+                                            nsIFrame*                aParentFrame,
+                                            nsIAtom*                 aTag,
+                                            nsIStyleContext*         aStyleContext,
+                                            nsFrameItems&            aFrameItems)
+{
+  PRBool    processChildren = PR_TRUE;  // Whether we should process child content.
+                                        // MathML frames are inline frames.
+                                        // processChildren = PR_TRUE for inline frames.
+                                        // see case NS_STYLE_DISPLAY_INLINE in
+                                        // ConstructFrameByDisplayType()
+  
+  nsresult  rv = NS_OK;
+  PRBool    isAbsolutelyPositioned = PR_FALSE;
+  PRBool    isFixedPositioned = PR_FALSE;
+  PRBool    isReplaced = PR_FALSE;
+
+  NS_ASSERTION(aTag != nsnull, "null MathML tag");
+  if (aTag == nsnull)
+    return NS_OK;
+
+  // Make sure that we remain confined in the MathML world
+  PRInt32 nameSpaceID;
+  rv = aContent->GetNameSpaceID(nameSpaceID);
+  if (NS_FAILED(rv) || nameSpaceID != nsMathMLAtoms::nameSpaceID)
+    return NS_OK;
+                
+  // Initialize the new frame
+  nsIFrame* newFrame = nsnull;
+  nsIFrame* ignore = nsnull;
+  nsMathMLmtableCreator mathTableCreator; // Used to make table views.
+ 
+  // See if the element is absolute or fixed positioned
+  const nsStylePosition* position = (const nsStylePosition*)
+    aStyleContext->GetStyleData(eStyleStruct_Position);
+  if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+    isAbsolutelyPositioned = PR_TRUE;
+  }
+  else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+    isFixedPositioned = PR_TRUE;
+  }
+
+       if (aTag == nsMathMLAtoms::mi)
+     rv = NS_NewMathMLmiFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mo)
+     rv = NS_NewMathMLmoFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mfrac)
+     rv = NS_NewMathMLmfracFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::msup)
+     rv = NS_NewMathMLmsupFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::msub)
+     rv = NS_NewMathMLmsubFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::msubsup)
+     rv = NS_NewMathMLmsubsupFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::munder)
+     rv = NS_NewMathMLmunderFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mover)
+     rv = NS_NewMathMLmoverFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::munderover)
+     rv = NS_NewMathMLmunderoverFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mphantom)
+     rv = NS_NewMathMLmphantomFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mpadded)
+     rv = NS_NewMathMLmpaddedFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mfenced)
+     rv = NS_NewMathMLmfencedFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mmultiscripts)
+     rv = NS_NewMathMLmmultiscriptsFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mstyle)
+     rv = NS_NewMathMLmstyleFrame(&newFrame);
+  else if (aTag == nsMathMLAtoms::mrow   ||
+           aTag == nsMathMLAtoms::mtext  ||
+           aTag == nsMathMLAtoms::merror ||
+           aTag == nsMathMLAtoms::ms     ||
+           aTag == nsMathMLAtoms::mn )
+     rv = NS_NewMathMLmrowFrame(&newFrame);
+  // CONSTRUCTION of MTABLE elements
+  else if (aTag == nsMathMLAtoms::mtable)  {
+  // <mtable> is an inline-table, for the moment, we just do what  
+  // <table> does, and wait until nsLineLayout::TreatFrameAsBlock
+  // can handle NS_STYLE_DISPLAY_INLINE_TABLE.
+      nsIFrame* geometricParent = aParentFrame;
+      if (isAbsolutelyPositioned) {
+        aParentFrame = aState.mAbsoluteItems.containingBlock;
+      }
+      else if (isFixedPositioned) {
+        aParentFrame = aState.mFixedItems.containingBlock;
+      }            
+      rv = ConstructTableFrame(aPresContext, aState, aContent, geometricParent, aStyleContext,
+                               newFrame, mathTableCreator);
+      // Note: table construction function takes care of initializing the frame,
+      // processing children, and setting the initial child list
+      if (isAbsolutelyPositioned || isFixedPositioned) {
+        nsIFrame* placeholderFrame;
+        CreatePlaceholderFrameFor(aPresContext, aState.mFrameManager, aContent, newFrame,
+                                  aStyleContext, aParentFrame, &placeholderFrame);
+        // Add the positioned frame to its containing block's list of child frames
+        if (isAbsolutelyPositioned) {
+          aState.mAbsoluteItems.AddChild(newFrame);
+        } else {
+          aState.mFixedItems.AddChild(newFrame);
+        }
+        // Add the placeholder frame to the flow
+        aFrameItems.AddChild(placeholderFrame);
+      } else {
+        // Add the table frame to the flow
+        aFrameItems.AddChild(newFrame);
+      }
+      return rv; 
+  }
+  else if (aTag == nsMathMLAtoms::mtd) {
+    nsIFrame* ignore2;
+    rv = ConstructTableCellFrame(aPresContext, aState, aContent, aParentFrame, aStyleContext, 
+                                 newFrame, ignore, ignore2, mathTableCreator);
+    aFrameItems.AddChild(newFrame);
+    return rv;
+  }
+  // End CONSTRUCTION of MTABLE elements 
+  
+  else {
+     return rv;
+  }
+ 
+  // If we succeeded in creating a frame then initialize it, process its
+  // children (if requested), and set the initial child list
+  if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
+    // If the frame is a replaced element, then set the frame state bit
+    if (isReplaced) {
+      nsFrameState  state;
+      newFrame->GetFrameState(&state);
+      newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
+    }
+
+    nsIFrame* geometricParent = isAbsolutelyPositioned
+                              ? aState.mAbsoluteItems.containingBlock
+                              : aParentFrame;
+    newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
+                   nsnull);
+
+    // See if we need to create a view, e.g. the frame is absolutely positioned
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                             aStyleContext, PR_FALSE);
+
+    // Add the new frame to our list of frame items.
+    aFrameItems.AddChild(newFrame);
+
+    // Process the child content if requested
+    nsFrameItems childItems;
+    if (processChildren) {
+      rv = ProcessChildren(aPresContext, aState, aContent, newFrame, PR_FALSE,
+                           childItems, PR_FALSE);
+    }
+
+    // Set the frame's initial child list
+    newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+  
+    // If the frame is absolutely positioned then create a placeholder frame
+    if (isAbsolutelyPositioned || isFixedPositioned) {
+      nsIFrame* placeholderFrame;
+
+      CreatePlaceholderFrameFor(aPresContext, aState.mFrameManager, aContent, newFrame, 
+                                aStyleContext, aParentFrame, &placeholderFrame);
+
+      // Add the positioned frame to its containing block's list of child frames
+      if (isAbsolutelyPositioned) {
+        aState.mAbsoluteItems.AddChild(newFrame);
+      } else {
+        aState.mFixedItems.AddChild(newFrame);
+      }
+
+      // Add the placeholder frame to the flow
+      aFrameItems.AddChild(placeholderFrame);
+    }
+  }
+  return rv;
+}
+#endif // INCLUDE_MATHML
+
 nsresult
 nsCSSFrameConstructor::ConstructFrame(nsIPresContext*          aPresContext,
                                       nsFrameConstructorState& aState,
@@ -4641,6 +4864,15 @@ nsCSSFrameConstructor::ConstructFrame(nsIPresContext*          aPresContext,
           return rv;
         }
       } 
+#endif
+
+// MathML Mod - RBS
+#ifdef INCLUDE_MATHML
+      if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
+                               (lastChild == aFrameItems.lastChild))) {
+        rv = ConstructMathMLFrame(aPresContext, aState, aContent, aParentFrame,
+                                  tag, styleContext, aFrameItems);
+      }
 #endif
 
       if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
