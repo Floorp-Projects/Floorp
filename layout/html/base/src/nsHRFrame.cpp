@@ -190,6 +190,7 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);  // get the rounding right
+  nscoord twoPixels= NSIntPixelsToTwips(2, p2t);  // get the rounding right
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
     aDesiredSize.width = aReflowState.mComputedWidth;
   }
@@ -209,34 +210,32 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) 
   {
     thickness = aReflowState.mComputedHeight;
+    // fix up thickness based on noshade and mode.  see bug 53568 and 54980
+    if (eCompatibility_NavQuirks == mode)
+    {
+      nscoord adjustment =  aReflowState.mComputedBorderPadding.top + 
+                            aReflowState.mComputedBorderPadding.bottom; 
+      thickness += adjustment;  // adjust for -moz-bg-inset 
+      PRBool noShadeAttribute = GetNoShade();
+      if (thickness != onePixel)
+      {
+        if (!noShadeAttribute) { // this makes us compatible with Nav4, and one pixel taller than IE5
+          thickness += onePixel;
+        }
+      }
+    }
   }
   else {
     thickness = NSIntPixelsToTwips(DEFAULT_THICKNESS, p2t);
   }
-  // fix up thickness based on noshade and mode.  see bug 53568
-  // XXX: we really should query for the border thickness, and use that
-  //      instead of the hardcoded "2"
-  if (eCompatibility_NavQuirks == mode)
-  {
-    nscoord adjustment =  aReflowState.mComputedBorderPadding.top +
-                          aReflowState.mComputedBorderPadding.bottom;
-    thickness += adjustment;  // adjust for -moz-bg-inset
-    PRBool noShadeAttribute = GetNoShade();
-    if (thickness != onePixel)
-    {
-      if (!noShadeAttribute) {
-        thickness += onePixel;
-      }
-    }
-      
-  }
+
   // remember the computed thickness
   mThickness = thickness;
   NS_ASSERTION(mThickness>=0, "negative height calculated for HR");
 
   // Compute height of "line" that hrule will layout within. Use the
   // font-size to do this.
-  nscoord minLineHeight = thickness + NSIntPixelsToTwips(2, p2t);
+  nscoord minLineHeight = thickness + twoPixels;
   const nsStyleFont* font;
   GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
   const nsFont& f = font->mFont;
