@@ -1,0 +1,67 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *  Jean-Francois Ducarroz 
+*/
+
+
+#include "nsISupports.idl"
+#include "nsIMsgIdentity.idl"
+#include "nsIMsgCompFields.idl"
+
+typedef long MSG_ComposeType;
+
+[scriptable, uuid(c7035852-7531-11d3-9a73-006008948010)]
+interface nsIMsgCompType {
+    const long New                      = 0;
+    const long Reply                    = 1;
+    const long ReplyAll                 = 2;
+    const long ForwardAsAttachment      = 3;
+    const long ForwardInline            = 4;
+    const long NewsPost		              = 5;
+    const long ReplyToGroup     		    = 6;
+    const long ReplyToSenderAndGroup    = 7;
+    const long Draft		                = 8;
+    const long Template		              = 9;
+    const long MailToUrl	              = 10;
+};
+
+
+typedef long MSG_ComposeFormat;
+
+[scriptable, uuid(a28325e8-7531-11d3-8f1c-006008948010)]
+interface nsIMsgCompFormat {
+    const long Default                  = 0;
+    const long HTML                     = 1;
+    const long PlainText                = 2;
+    const long OppositeOfDefault        = 3;
+};
+
+
+[scriptable, uuid(B8FE4400-BF05-11D4-9DAA-E1CD31C137FC)]
+interface nsIMsgComposeParams : nsISupports {
+  attribute MSG_ComposeType       type;
+  attribute MSG_ComposeFormat     format;
+  attribute wstring               originalMsgURI;
+  attribute nsIMsgIdentity        identity;
+
+  attribute nsIMsgCompFields      composeFields;
+  attribute boolean               bodyIsLink;
+};
