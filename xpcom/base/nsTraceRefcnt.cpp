@@ -51,8 +51,12 @@
 #include <dlfcn.h>
 #endif
 
+// Pref for reference counting.
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static const char* kRefcountPref = "nglayout.debug.enable_xpcom_refcnt_log";
+static PRBool gRefcountPrefEnabled = PR_FALSE;
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 #include "plhash.h"
@@ -80,8 +84,6 @@ static PRBool gLogging;
 static PRBool gLogToLeaky;
 static PRBool gLogLeaksOnly;
 static PRBool gEnableViaPref;
-static PRBool gRefcountPrefEnabled = PR_FALSE;
-static const char* kRefcountPref = "nglayout.debug.enable_xpcom_refcnt_log";
 
 static void (*leakyLogAddRef)(void* p, int oldrc, int newrc);
 static void (*leakyLogRelease)(void* p, int oldrc, int newrc);
@@ -91,8 +93,6 @@ static FILE *gBloatLog = nsnull;
 static FILE *gRefcntsLog = nsnull;
 static FILE *gAllocLog = nsnull;
 static FILE *gLeakyLog = nsnull;
-
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define XPCOM_REFCNT_TRACK_BLOAT  0x1
 #define XPCOM_REFCNT_LOG_ALL      0x2
