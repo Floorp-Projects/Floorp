@@ -1936,7 +1936,7 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // the focused element. So the ComboboxControlFrame tracks the focus
   // at a class level (Bug 32920)
   if ((nsEventStatus_eIgnore == *aEventStatus) && 
-      !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
+      !(aFlags & NS_EVENT_FLAG_CAPTURE) && !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
       (aEvent->message == NS_BLUR_CONTENT) && formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
   }

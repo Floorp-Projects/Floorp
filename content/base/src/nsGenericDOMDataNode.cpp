@@ -97,6 +97,11 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
                                     nsDOMEventRTTearoff::Create(this));
     NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);
   } else
+  if (aIID.Equals(NS_GET_IID(nsIDOM3EventTarget))) {
+    foundInterface = NS_STATIC_CAST(nsIDOM3EventTarget *,
+                                    nsDOMEventRTTearoff::Create(this));
+    NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);
+  } else
   NS_INTERFACE_MAP_ENTRY(nsIContent)
   // No nsITextContent since all subclasses might not want that.
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, nsNode3Tearoff(this))
@@ -788,21 +793,22 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
       externalDOMEvent = PR_TRUE;
     }
 
-    aEvent->flags = aFlags;
+    aEvent->flags |= aFlags;
     aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
+    aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
   }
 
   nsIContent *parent_weak = GetParentWeak();
 
   //Capturing stage evaluation
-  if (NS_EVENT_FLAG_BUBBLE != aFlags) {
+  if (NS_EVENT_FLAG_CAPTURE & aFlags) {
     //Initiate capturing phase.  Special case first call to document
     if (parent_weak) {
       parent_weak->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                  NS_EVENT_FLAG_CAPTURE, aEventStatus);
+                                  aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
     } else if (mDocument) {
       ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                      NS_EVENT_FLAG_CAPTURE, aEventStatus);
+                                      aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
     }
   }
 
@@ -810,10 +816,12 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
   LookupListenerManager(getter_AddRefs(listener_manager));
 
   //Local handling stage
-  if (listener_manager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
-      !(NS_EVENT_FLAG_BUBBLE & aFlags &&
-        NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags)
-      && !(aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH)) {
+  //Check for null ELM, check if we're a non-bubbling event in the bubbling state (bubbling state
+  //is indicated by the presence of the NS_EVENT_FLAG_BUBBLE flag and not the NS_EVENT_FLAG_INIT), and check 
+  //if we're a no content dispatch event
+  if (listener_manager &&
+       !(NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags && NS_EVENT_FLAG_BUBBLE & aFlags && !(NS_EVENT_FLAG_INIT & aFlags)) &&
+       !(aEvent->flags & NS_EVENT_FLAG_NO_CONTENT_DISPATCH)) {
     aEvent->flags |= aFlags;
     listener_manager->HandleEvent(aPresContext, aEvent, aDOMEvent, nsnull,
                                   aFlags, aEventStatus);
@@ -821,9 +829,9 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   //Bubbling stage
-  if (NS_EVENT_FLAG_CAPTURE != aFlags && parent_weak) {
+  if (NS_EVENT_FLAG_BUBBLE & aFlags && parent_weak) {
     ret = parent_weak->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                      NS_EVENT_FLAG_BUBBLE, aEventStatus);
+                                      aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
   }
 
   if (NS_EVENT_FLAG_INIT & aFlags) {

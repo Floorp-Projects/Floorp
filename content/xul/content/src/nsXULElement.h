@@ -58,6 +58,7 @@
 #include "nsICSSParser.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOM3EventTarget.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIEventListenerManager.h"
@@ -378,7 +379,6 @@ public:
 
 class nsXULElement : public nsIXULContent,
                      public nsIDOMXULElement,
-                     public nsIDOMEventReceiver,
                      public nsIScriptEventHandlerOwner,
                      public nsIChromeEventHandler
 {
@@ -464,6 +464,7 @@ public:
     NS_IMETHOD GetBindingParent(nsIContent** aContent);
     NS_IMETHOD SetBindingParent(nsIContent* aParent);
     NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
+    NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult);
 
     // nsIXMLContent
     NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
@@ -495,19 +496,6 @@ public:
 
     // nsIDOMXULElement
     NS_DECL_NSIDOMXULELEMENT
-
-    // nsIDOMEventTarget interface (from nsIDOMEventReceiver)
-    NS_IMETHOD AddEventListener(const nsAString& aType, nsIDOMEventListener* aListener, 
-                                PRBool aUseCapture);
-    NS_IMETHOD RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, 
-                                   PRBool aUseCapture);
-    NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval);
-
-    // nsIDOMEventReceiver
-    NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-    NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
-    NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
-    NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
     // nsIScriptEventHandlerOwner
     NS_IMETHOD CompileEventHandler(nsIScriptContext* aContext,

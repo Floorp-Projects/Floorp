@@ -50,6 +50,7 @@ class nsIDOMLoadListener;
 class nsIDOMDragListener;
 class nsIEventListenerManager;
 class nsIDOMEvent;
+class nsIDOMEventGroup;
 
 /*
  * DOM event source class.  Object that allow event registration and
@@ -72,5 +73,6 @@ public:
                                       const nsIID& aIID) = 0;
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) = 0;
+  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup) = 0;
 };
 #endif // nsIDOMEventReceiver_h__

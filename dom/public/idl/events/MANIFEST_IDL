@@ -8,3 +8,7 @@ nsIDOMMouseEvent.idl
 nsIDOMMutationEvent.idl
 nsIDOMUIEvent.idl
 nsIDOMNSUIEvent.idl
+nsIDOM3DocumentEvent.idl
+nsIDOM3EventTarget.idl
+nsIDOMEventGroup.idl
+nsIDOMCustomEvent.idl

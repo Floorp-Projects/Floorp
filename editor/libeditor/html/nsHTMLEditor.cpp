@@ -62,6 +62,7 @@
 #include "nsIDOMAttr.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h" 
+#include "nsIDOM3EventTarget.h" 
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
@@ -71,6 +72,8 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsISelectionController.h"
 #include "nsIDOMHTMLHtmlElement.h"
+#include "nsGUIEvent.h"
+#include "nsIDOMEventGroup.h"
 
 #include "TransactionFactory.h"
 
@@ -409,6 +412,13 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
   }
 
   // register the event listeners with the DOM event reveiver
+  nsCOMPtr<nsIDOM3EventTarget> dom3Targ(do_QueryInterface(erP));
+  nsCOMPtr<nsIDOMEventGroup> sysGroup;
+  if (NS_SUCCEEDED(erP->GetSystemEventGroup(getter_AddRefs(sysGroup)))) {
+    result = dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keypress"), mKeyListenerP, PR_FALSE, sysGroup);
+    NS_ASSERTION(NS_SUCCEEDED(result), "failed to register key listener in system group");
+  }
+
   result = erP->AddEventListenerByIID(mKeyListenerP, NS_GET_IID(nsIDOMKeyListener));
   NS_ASSERTION(NS_SUCCEEDED(result), "failed to register key listener");
   if (NS_SUCCEEDED(result))

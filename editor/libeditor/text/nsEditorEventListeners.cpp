@@ -55,6 +55,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIPrivateTextEvent.h"
 #include "nsIPrivateCompositionEvent.h"
 #include "nsIEditorMailSupport.h"
@@ -63,6 +64,7 @@
 #include "nsIPref.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresContext.h"
+#include "nsGUIEvent.h"
 // for repainting hack only
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -180,6 +182,22 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
       return NS_OK;
   }
 
+  // DOM event handling happens in two passes, the client pass and the system
+  // pass.  All system handlers need to move eventually to the system pass
+  // but due to inconsistencies that would create with XBL handlers they
+  // need to stay here for now and continue to process command keys.  Character
+  // generation, however, should be handled in the second system pass to allow
+  // proper cancellation of character generating events.
+  PRBool isSystemPass = PR_FALSE;
+  nsCOMPtr<nsIPrivateDOMEvent> privDOMEvent(do_QueryInterface(aKeyEvent));
+  if (privDOMEvent) {
+    nsEvent* innerEvent;
+    privDOMEvent->GetInternalNSEvent(&innerEvent);
+    if (innerEvent) {
+      isSystemPass = innerEvent->flags & NS_EVENT_FLAG_SYSTEM_EVENT;
+    }
+  }
+
   // we should check a flag here to see if we should be using built-in key bindings
   // mEditor->GetFlags(&flags);
   // if (flags & ...)
@@ -202,8 +220,9 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (!textEditor) return NS_ERROR_NO_INTERFACE;
 
   // if there is no charCode, then it's a key that doesn't map to a character,
-  // so look for special keys using keyCode
-  if (0 != keyCode)
+  // so look for special keys using keyCode.
+  // Also, process these keys only during the Client Pass of the event loop.
+  if (0 != keyCode && !isSystemPass)
   {
     PRBool isAnyModifierKeyButShift;
     nsresult rv;

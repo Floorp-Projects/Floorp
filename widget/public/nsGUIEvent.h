@@ -98,6 +98,9 @@ class nsIContent;
 #define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
 
+#define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_BUBBLE))
+#define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CAPTURE))
+
 #define NS_APP_EVENT_FLAG_NONE      0x0000
 #define NS_APP_EVENT_FLAG_HANDLED   0x0001 // Similar to NS_EVENT_FLAG_NO_DEFAULT, but it allows focus
 
@@ -394,6 +397,8 @@ enum nsDragDropEventStatus {
  * GUI MESSAGES
  */
  //@{
+#define NS_EVENT_NULL                   0
+
 
 #define NS_WINDOW_START                 100
 

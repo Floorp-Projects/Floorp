@@ -587,6 +587,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
     NS_INTERFACE_MAP_ENTRY(nsIDOMNSDocument)
     NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentEvent)
+    NS_INTERFACE_MAP_ENTRY(nsIDOM3DocumentEvent)
     NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentView)
     NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentXBL)
     NS_INTERFACE_MAP_ENTRY(nsIDOMDocumentStyle)
@@ -595,7 +596,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULDocument)
     NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
     NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
     NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMEventCapturer)
+    NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULDocument)
@@ -2597,25 +2598,26 @@ nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
     else {
       aDOMEvent = &domEvent;
     }
-    aEvent->flags = aFlags;
+    aEvent->flags |= aFlags;
     aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
+    aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
   }
 
   //Capturing stage
-  if (NS_EVENT_FLAG_BUBBLE != aFlags && mScriptGlobalObject) {
-    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+  if (NS_EVENT_FLAG_CAPTURE & aFlags && mScriptGlobalObject) {
+    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
   }
 
   //Local handling stage
-  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+  if (mListenerManager) {
     aEvent->flags |= aFlags;
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this, aFlags, aEventStatus);
     aEvent->flags &= ~aFlags;
   }
 
   //Bubbling stage
-  if (NS_EVENT_FLAG_CAPTURE != aFlags && mScriptGlobalObject) {
-    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_BUBBLE, aEventStatus);
+  if (NS_EVENT_FLAG_BUBBLE & aFlags && mScriptGlobalObject) {
+    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
   }
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
@@ -4796,7 +4798,7 @@ nsXULDocument::ParseTagString(const nsAString& aTagName, nsIAtom*& aName,
 }
 
 
-// nsIDOMEventCapturer and nsIDOMEventReceiver Interface Implementations
+// nsIDOMEventReceiver Interface Implementations
 
 NS_IMETHODIMP
 nsXULDocument::AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID)
@@ -4826,16 +4828,7 @@ nsXULDocument::AddEventListener(const nsAString& aType,
                                 nsIDOMEventListener* aListener,
                                 PRBool aUseCapture)
 {
-  nsIEventListenerManager *manager;
-
-  if (NS_OK == GetListenerManager(&manager)) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    manager->AddEventListenerByType(aListener, aType, flags);
-    NS_RELEASE(manager);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  return AddGroupedEventListener(aType, aListener, aUseCapture, nsnull);
 }
 
 NS_IMETHODIMP
@@ -4843,13 +4836,7 @@ nsXULDocument::RemoveEventListener(const nsAString& aType,
                                    nsIDOMEventListener* aListener,
                                    PRBool aUseCapture)
 {
-  if (mListenerManager) {
-    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
-
-    mListenerManager->RemoveEventListenerByType(aListener, aType, flags);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  return RemoveGroupedEventListener(aType, aListener, aUseCapture, nsnull);
 }
 
 NS_IMETHODIMP
@@ -4876,6 +4863,47 @@ nsXULDocument::DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval)
   }
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXULDocument::AddGroupedEventListener(const nsAString & aType, nsIDOMEventListener *aListener, 
+                                    PRBool aUseCapture, nsIDOMEventGroup *aEvtGrp)
+{
+  nsCOMPtr<nsIEventListenerManager> manager;
+
+  nsresult rv = GetListenerManager(getter_AddRefs(manager));
+  if (NS_SUCCEEDED(rv) && manager) {
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+    manager->AddEventListenerByType(aListener, aType, flags, aEvtGrp);
+    return NS_OK;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsXULDocument::RemoveGroupedEventListener(const nsAString & aType, nsIDOMEventListener *aListener, 
+                                       PRBool aUseCapture, nsIDOMEventGroup *aEvtGrp)
+{
+  if (mListenerManager) {
+    PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
+
+    mListenerManager->RemoveEventListenerByType(aListener, aType, flags, aEvtGrp);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXULDocument::CanTrigger(const nsAString & type, PRBool *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULDocument::IsRegisteredHere(const nsAString & type, PRBool *_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -4907,6 +4935,12 @@ nsXULDocument::CreateEvent(const nsAString& aEventType,
 }
 
 NS_IMETHODIMP
+nsXULDocument::CreateEventGroup(nsIDOMEventGroup **_retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsXULDocument::GetListenerManager(nsIEventListenerManager** aResult)
 {
     if (! mListenerManager) {
@@ -4932,25 +4966,12 @@ nsXULDocument::HandleEvent(nsIDOMEvent *aEvent)
   return DispatchEvent(aEvent, &noDefault);
 }
 
-nsresult
-nsXULDocument::CaptureEvent(const nsAString& aType)
+NS_IMETHODIMP
+nsXULDocument::GetSystemEventGroup(nsIDOMEventGroup **aGroup)
 {
-  nsIEventListenerManager *mManager;
-
-  if (NS_OK == GetListenerManager(&mManager)) {
-    //mManager->CaptureEvent(aListener);
-    NS_RELEASE(mManager);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsXULDocument::ReleaseEvent(const nsAString& aType)
-{
-  if (mListenerManager) {
-    //mListenerManager->ReleaseEvent(aListener);
-    return NS_OK;
+  nsCOMPtr<nsIEventListenerManager> manager;
+  if (NS_SUCCEEDED(GetListenerManager(getter_AddRefs(manager))) && manager) {
+    return manager->GetSystemEventGroupLM(aGroup);
   }
   return NS_ERROR_FAILURE;
 }
