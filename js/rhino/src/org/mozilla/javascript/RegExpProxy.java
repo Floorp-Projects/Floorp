@@ -48,21 +48,21 @@ public interface RegExpProxy {
     public boolean isRegExp(Object obj);
     
     public Object newRegExp(Context cx, Scriptable scope, String source, 
-                                            String global, boolean flat);
+                            String global, boolean flat);
     
-    public Object match(Context cx, Scriptable thisObj, Object[] args, 
-                        Function funObj)
+    public Object match(Context cx, Scriptable scope,
+                        Scriptable thisObj, Object[] args)
         throws JavaScriptException;
 
-    public Object search(Context cx, Scriptable thisObj,  Object[] args,
-                         Function funObj)
+    public Object search(Context cx, Scriptable scope, 
+                         Scriptable thisObj, Object[] args)
         throws JavaScriptException;
 
-    public Object replace(Context cx, Scriptable thisObj, Object[] args, 
-                          Function funObj)
+    public Object replace(Context cx, Scriptable scope, 
+                          Scriptable thisObj, Object[] args)
         throws JavaScriptException;
  
-    public int find_split(Function funObj, String target, String separator, 
+    public int find_split(Scriptable scope, String target, String separator, 
                           Object re, int[] ip, int[] matchlen, 
                           boolean[] matched, String[][] parensp);
 }

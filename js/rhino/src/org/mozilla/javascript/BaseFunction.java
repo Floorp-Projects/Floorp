@@ -174,10 +174,10 @@ public class BaseFunction extends IdScriptable implements Function {
                     return jsFunction_toString(cx, thisObj, args);
 
                 case Id_apply:
-                    return jsFunction_apply(cx, thisObj, args, f);
+                    return jsFunction_apply(cx, scope, thisObj, args);
 
                 case Id_call:
-                    return jsFunction_call(cx, thisObj, args, f);
+                    return jsFunction_call(cx, scope, thisObj, args);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
@@ -383,16 +383,16 @@ public class BaseFunction extends IdScriptable implements Function {
      *
      * A proposed ECMA extension for round 2.
      */
-    private static Object jsFunction_apply(Context cx, Scriptable thisObj,
-                                           Object[] args, Function funObj)
+    private static Object jsFunction_apply(Context cx, Scriptable scope,
+                                           Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
         if (args.length != 2)
-            return jsFunction_call(cx, thisObj, args, funObj);
+            return jsFunction_call(cx, scope, thisObj, args);
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         Scriptable newThis = args[0] == null
                              ? ScriptableObject.getTopLevelScope(thisObj)
-                             : ScriptRuntime.toObject(funObj, args[0]);
+                             : ScriptRuntime.toObject(scope, args[0]);
         Object[] newArgs;
         if (args.length > 1) {
             if ((args[1] instanceof NativeArray) 
@@ -411,20 +411,21 @@ public class BaseFunction extends IdScriptable implements Function {
      *
      * A proposed ECMA extension for round 2.
      */
-    private static Object jsFunction_call(Context cx, Scriptable thisObj,
-                                         Object[] args, Function funObj)
+    private static Object jsFunction_call(Context cx, Scriptable scope,
+                                          Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
         Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
         if (args.length == 0) {
-            Scriptable s = ScriptRuntime.toObject(funObj, val);
-            Scriptable scope = s.getParentScope();
-            return ScriptRuntime.call(cx, val, scope, ScriptRuntime.emptyArgs, 
-                                      scope);
+            Scriptable s = ScriptRuntime.toObject(scope, val);
+            Scriptable topScope = s.getParentScope();
+            return ScriptRuntime.call(cx, val, 
+                                      topScope, ScriptRuntime.emptyArgs, 
+                                      topScope);
         } else {
             Scriptable newThis = args[0] == null
                                  ? ScriptableObject.getTopLevelScope(thisObj)
-                                 : ScriptRuntime.toObject(funObj, args[0]);
+                                 : ScriptRuntime.toObject(scope, args[0]);
 
             Object[] newArgs = new Object[args.length - 1];
             System.arraycopy(args, 1, newArgs, 0, newArgs.length);

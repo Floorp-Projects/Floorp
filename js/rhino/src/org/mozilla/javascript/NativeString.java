@@ -175,7 +175,7 @@ public class NativeString extends IdScriptable {
 
                 case Id_split: 
                     return jsFunction_split
-                        (cx, ScriptRuntime.toString(thisObj), args, f);
+                        (cx, scope, ScriptRuntime.toString(thisObj), args);
 
                 case Id_substring:
                     return jsFunction_substring
@@ -202,47 +202,49 @@ public class NativeString extends IdScriptable {
                      (ScriptRuntime.toString(thisObj), args);
 
                 case Id_bold:
-                    return realThis(thisObj, f).jsFunction_bold();
+                    return realThis(thisObj, f).tagify("b", null, null);
 
                 case Id_italics:
-                    return realThis(thisObj, f).jsFunction_italics();
+                    return realThis(thisObj, f).tagify("i", null, null);
 
                 case Id_fixed:
-                    return realThis(thisObj, f).jsFunction_fixed();
+                    return realThis(thisObj, f).tagify("tt", null, null);
 
                 case Id_strike:
-                    return realThis(thisObj, f).jsFunction_strike();
+                    return realThis(thisObj, f).tagify("strike", null, null);
 
                 case Id_small:
-                    return realThis(thisObj, f).jsFunction_small();
+                    return realThis(thisObj, f).tagify("small", null, null);
 
                 case Id_big:
-                    return realThis(thisObj, f).jsFunction_big();
+                    return realThis(thisObj, f).tagify("big", null, null);
 
                 case Id_blink:
-                    return realThis(thisObj, f).jsFunction_blink();
+                    return realThis(thisObj, f).tagify("blink", null, null);
 
                 case Id_sup:
-                    return realThis(thisObj, f).jsFunction_sup();
+                    return realThis(thisObj, f).tagify("sup", null, null);
 
                 case Id_sub:
-                    return realThis(thisObj, f).jsFunction_sub();
+                    return realThis(thisObj, f).tagify("sub", null, null);
 
                 case Id_fontsize:
                     return realThis(thisObj, f).
-                        jsFunction_fontsize(ScriptRuntime.toString(args, 0));
+                        tagify("font size", "font", 
+                               ScriptRuntime.toString(args, 0));
 
                 case Id_fontcolor:
                     return realThis(thisObj, f).
-                        jsFunction_fontcolor(ScriptRuntime.toString(args, 0));
+                        tagify("font color", "font",
+                               ScriptRuntime.toString(args, 0));
 
                 case Id_link:
                     return realThis(thisObj, f).
-                        jsFunction_link(ScriptRuntime.toString(args, 0));
+                        tagify("a href", "a", ScriptRuntime.toString(args, 0));
 
                 case Id_anchor:
                     return realThis(thisObj, f).
-                        jsFunction_anchor(ScriptRuntime.toString(args, 0));
+                        tagify("a name", "a", ScriptRuntime.toString(args, 0));
 
                 case Id_equals:
                     return wrap_boolean(jsFunction_equals
@@ -255,13 +257,13 @@ public class NativeString extends IdScriptable {
                          ScriptRuntime.toString(args, 0)));
 
                 case Id_match:
-                    return jsFunction_match(cx, thisObj, args, f);
+                    return checkReProxy(cx).match(cx, scope, thisObj, args);
 
                 case Id_search:
-                    return jsFunction_search(cx, thisObj, args, f);
+                    return checkReProxy(cx).search(cx, scope, thisObj, args);
 
                 case Id_replace:
-                    return jsFunction_replace(cx, thisObj, args, f);
+                    return checkReProxy(cx).replace(cx, scope, thisObj, args);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
@@ -272,6 +274,34 @@ public class NativeString extends IdScriptable {
             thisObj = nextInstanceCheck(thisObj, f, true);
         }
         return (NativeString)thisObj;
+    }
+
+    private static RegExpProxy checkReProxy(Context cx) {
+        RegExpProxy result = cx.getRegExpProxy();
+        if (result == null) {
+            throw cx.reportRuntimeError0("msg.no.regexp");
+        }
+        return result;
+    }
+
+    /*
+     * HTML composition aids.
+     */
+    private String tagify(String begin, String end, String value) {
+        StringBuffer result = new StringBuffer();
+        result.append('<');
+        result.append(begin);
+        if (value != null) {
+            result.append("=\"");
+            result.append(value);
+            result.append('"');
+        }
+        result.append('>');
+        result.append(this.string);
+        result.append("</");
+        result.append((end == null) ? begin : end);
+        result.append('>');
+        return result.toString();
     }
 
     private static String jsStaticFunction_fromCharCode(Object[] args) {
@@ -399,7 +429,7 @@ public class NativeString extends IdScriptable {
      * separator occurrence if found, or the string length if no
      * separator is found.
      */
-    private static int find_split(Function funObj, String target,
+    private static int find_split(Scriptable scope, String target,
                                   String separator, Object re,
                                   int[] ip, int[] matchlen, boolean[] matched,
                                   String[][] parensp)
@@ -462,7 +492,7 @@ public class NativeString extends IdScriptable {
          * trying for a match, so we don't get stuck in a loop.
          */
         if (re != null) {
-            return cx.getRegExpProxy().find_split(funObj, target,
+            return cx.getRegExpProxy().find_split(scope, target,
                                                   separator, re,
                                                   ip, matchlen, matched,
                                                   parensp);
@@ -514,12 +544,12 @@ public class NativeString extends IdScriptable {
      * a limit argument and accepts a regular expression as the split
      * argument.
      */
-    private static Object jsFunction_split(Context cx, String target,
-                                           Object[] args, Function funObj)
+    private static Object jsFunction_split(Context cx, Scriptable scope,
+                                           String target, Object[] args)
     {
         // create an empty Array to return;
-        Scriptable scope = getTopLevelScope(funObj);
-        Scriptable result = ScriptRuntime.newObject(cx, scope, "Array", null);
+        Scriptable top = getTopLevelScope(scope);
+        Scriptable result = ScriptRuntime.newObject(cx, top, "Array", null);
 
         // return an array consisting of the target if no separator given
         // don't check against undefined, because we want
@@ -556,7 +586,7 @@ public class NativeString extends IdScriptable {
         int len = 0;
         boolean[] matched = { false };
         String[][] parens = { null };
-        while ((match = find_split(funObj, target, separator, re, ip,
+        while ((match = find_split(scope, target, separator, re, ip,
                                    matchlen, matched, parens)) >= 0)
         {
             if ((limited && len >= limit) || (match > target.length()))
@@ -737,78 +767,6 @@ public class NativeString extends IdScriptable {
         return target;
     }
 
-    /*
-     * HTML composition aids.
-     */
-    private String tagify(String begin, String end, String value) {
-        StringBuffer result = new StringBuffer();
-        result.append('<');
-        result.append(begin);
-        if (value != null) {
-            result.append("=\"");
-            result.append(value);
-            result.append('"');
-        }
-        result.append('>');
-        result.append(this.string);
-        result.append("</");
-        result.append((end == null) ? begin : end);
-        result.append('>');
-        return result.toString();
-    }
-
-    private String jsFunction_bold() {
-        return tagify("b", null, null);
-    }
-
-    private String jsFunction_italics() {
-        return tagify("i", null, null);
-    }
-
-    private String jsFunction_fixed() {
-        return tagify("tt", null, null);
-    }
-
-    private String jsFunction_strike() {
-        return tagify("strike", null, null);
-    }
-
-    private String jsFunction_small() {
-        return tagify("small", null, null);
-    }
-
-    private String jsFunction_big() {
-        return tagify("big", null, null);
-    }
-
-    private String jsFunction_blink() {
-        return tagify("blink", null, null);
-    }
-
-    private String jsFunction_sup() {
-        return tagify("sup", null, null);
-    }
-
-    private String jsFunction_sub() {
-        return tagify("sub", null, null);
-    }
-
-    private String jsFunction_fontsize(String value) {
-        return tagify("font size", "font", value);
-    }
-
-    private String jsFunction_fontcolor(String value) {
-        return tagify("font color", "font", value);
-    }
-
-    private String jsFunction_link(String value) {
-        return tagify("a href", "a", value);
-    }
-
-    private String jsFunction_anchor(String value) {
-        return tagify("a name", "a", value);
-    }
-
     private static boolean jsFunction_equals(String target, String strOther) {
         return target.equals(strOther);
     }
@@ -818,35 +776,6 @@ public class NativeString extends IdScriptable {
                                                        String strOther)
     {
         return target.equalsIgnoreCase(strOther);
-    }
-
-    private static Object jsFunction_match(Context cx, Scriptable thisObj,
-                                           Object[] args, Function funObj)
-        throws JavaScriptException
-    {
-        return checkReProxy(cx).match(cx, thisObj, args, funObj);
-    }
-
-    private static Object jsFunction_search(Context cx, Scriptable thisObj,
-                                            Object[] args, Function funObj)
-        throws JavaScriptException
-    {
-        return checkReProxy(cx).search(cx, thisObj, args, funObj);
-    }
-
-    private static Object jsFunction_replace(Context cx, Scriptable thisObj,
-                                             Object[] args, Function funObj)
-        throws JavaScriptException
-    {
-        return checkReProxy(cx).replace(cx, thisObj, args, funObj);
-    }
-
-    private static RegExpProxy checkReProxy(Context cx) {
-        RegExpProxy result = cx.getRegExpProxy();
-        if (result == null) {
-            throw cx.reportRuntimeError0("msg.no.regexp");
-        }
-        return result;
     }
 
     protected int maxInstanceId() { return MAX_INSTANCE_ID; }

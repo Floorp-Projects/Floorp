@@ -21,6 +21,7 @@
  * Contributor(s): 
  * Norris Boyd
  * Mike McCabe
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -161,7 +162,7 @@ public class NativeArray extends IdScriptable {
                     return jsFunction_reverse(cx, thisObj, args);
 
                 case Id_sort:
-                    return jsFunction_sort(cx, thisObj, args, f);
+                    return jsFunction_sort(cx, scope, thisObj, args);
 
                 case Id_push:
                     return jsFunction_push(cx, thisObj, args);
@@ -176,10 +177,10 @@ public class NativeArray extends IdScriptable {
                     return jsFunction_unshift(cx, thisObj, args);
 
                 case Id_splice:
-                    return jsFunction_splice(cx, thisObj, args, f);
+                    return jsFunction_splice(cx, scope, thisObj, args);
 
                 case Id_concat:
-                    return jsFunction_concat(cx, thisObj, args, f);
+                    return jsFunction_concat(cx, scope, thisObj, args);
 
                 case Id_slice:
                     return jsFunction_slice(cx, thisObj, args);
@@ -201,34 +202,35 @@ public class NativeArray extends IdScriptable {
     }
 
     public void put(String id, Scriptable start, Object value) {
-        // only set the array length if given an array index (ECMA 15.4.0)
+        if (start == this) {
+            // only set the array length if given an array index (ECMA 15.4.0)
 
-        // try to get an array index from id
-        double d = ScriptRuntime.toNumber(id);
+            // try to get an array index from id
+            double d = ScriptRuntime.toNumber(id);
 
-        if (ScriptRuntime.toUint32(d) == d &&
-            ScriptRuntime.numberToString(d, 10).equals(id) &&
-            this.length <= d && d != 4294967295.0)
-        {
-            this.length = (long)d + 1;
+            if (ScriptRuntime.toUint32(d) == d &&
+                ScriptRuntime.numberToString(d, 10).equals(id) &&
+                this.length <= d && d != 4294967295.0)
+            {
+                this.length = (long)d + 1;
+            }
         }
-
         super.put(id, start, value);
     }
 
     public void put(int index, Scriptable start, Object value) {
-        // only set the array length if given an array index (ECMA 15.4.0)
+        if (start == this) {
+            // only set the array length if given an array index (ECMA 15.4.0)
+            if (this.length <= index) {
+                // avoid overflowing index!
+                this.length = (long)index + 1;
+            }
 
-        if (this.length <= index) {
-            // avoid overflowing index!
-            this.length = (long)index + 1;
+            if (dense != null && 0 <= index && index < dense.length) {
+                dense[index] = value;
+                return;
+            }
         }
-
-        if (dense != null && 0 <= index && index < dense.length) {
-            dense[index] = value;
-            return;
-        }
-
         super.put(index, start, value);
     }
 
@@ -278,7 +280,7 @@ public class NativeArray extends IdScriptable {
      */
     private static Object jsConstructor(Context cx, Scriptable scope, 
                                         Object[] args, IdFunction ctorObj,
-                                         boolean inNewExpr)
+                                        boolean inNewExpr)
         throws JavaScriptException
     {
         if (!inNewExpr) {
@@ -567,8 +569,9 @@ public class NativeArray extends IdScriptable {
     /**
      * See ECMA 15.4.4.5
      */
-    private static Scriptable jsFunction_sort(Context cx, Scriptable thisObj,
-                                             Object[] args, Function funObj)
+    private static Scriptable jsFunction_sort(Context cx, Scriptable scope,
+                                              Scriptable thisObj, 
+                                              Object[] args)
         throws JavaScriptException
     {
         long length = (long)getLengthProperty(thisObj);
@@ -596,7 +599,7 @@ public class NativeArray extends IdScriptable {
                 working[i] = getElem(thisObj, i);
             }
 
-            qsort(cx, compare, working, 0, (int)length - 1, funObj);
+            qsort(cx, compare, working, 0, (int)length - 1, scope);
 
             // copy the working array back into thisObj
             for (int i=0; i<length; i++) {
@@ -841,11 +844,11 @@ public class NativeArray extends IdScriptable {
         return new Long((long)length);
     }
 
-    private static Object jsFunction_splice(Context cx, Scriptable thisObj, 
-                                            Object[] args, IdFunction funObj)
+    private static Object jsFunction_splice(Context cx, Scriptable scope,
+                                            Scriptable thisObj, Object[] args)
     {
         /* create an empty Array to return. */
-        Scriptable scope = getTopLevelScope(funObj);
+        scope = getTopLevelScope(scope);
         Object result = ScriptRuntime.newObject(cx, scope, "Array", null);
         int argc = args.length;
         if (argc == 0)
@@ -948,10 +951,9 @@ public class NativeArray extends IdScriptable {
     /*
      * Python-esque sequence operations.
      */
-    private static Scriptable jsFunction_concat(Context cx, 
+    private static Scriptable jsFunction_concat(Context cx, Scriptable scope, 
                                                 Scriptable thisObj,
-                                                Object[] args, 
-                                                IdFunction funObj)
+                                                Object[] args)
     {
         /* Concat tries to keep the definition of an array as general
          * as possible; if it finds that an object has a numeric
@@ -963,7 +965,7 @@ public class NativeArray extends IdScriptable {
          */
 
         // create an empty Array to return.
-        Scriptable scope = getTopLevelScope(funObj);
+        scope = getTopLevelScope(scope);
         Scriptable result = ScriptRuntime.newObject(cx, scope, "Array", null);
         double length;
         long slot = 0;
