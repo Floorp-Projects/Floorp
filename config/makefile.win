@@ -38,6 +38,12 @@ DEPTH = ..
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
+#// Rule to set the timebomb on official mozilla builds
+!ifdef MOZILLA_OFFICIAL
+export:: 
+    perl set-timebomb.pl
+!endif
+
 #//
 #// Rule to build makedir.exe
 #//
@@ -56,3 +62,4 @@ bin2rc.exe:: bin2rc.c
 export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe
 
 install:: export
+
