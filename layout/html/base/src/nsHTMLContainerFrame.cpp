@@ -30,7 +30,6 @@
 #include "nsIDocument.h"
 #include "nsIURL.h"
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 
@@ -136,16 +135,39 @@ NS_METHOD nsHTMLContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
                                             nsIFrame** aFrame,
                                             PRInt32& aCursor)
 {
-  nsStyleMolecule* mol = (nsStyleMolecule*)
-    mStyleContext->GetData(kStyleMoleculeSID);
-  if (mol->cursor != NS_STYLE_CURSOR_INHERIT) {
+  // Get my cursor
+  nsStyleColor* styleColor = (nsStyleColor*)
+    mStyleContext->GetData(kStyleColorSID);
+  PRInt32 myCursor = styleColor->mCursor;
+
+  // Get child's cursor, if any
+  nsresult rv = nsContainerFrame::GetCursorAt(aPresContext, aPoint, aFrame,
+                                              aCursor);
+  if (NS_OK != rv) return rv;
+  if (aCursor != NS_STYLE_CURSOR_INHERIT) {
+    nsIAtom* tag = mContent->GetTag();
+    if (nsHTMLAtoms::a == tag) {
+      // Anchor tags override their child cursors in some cases.
+      if ((NS_STYLE_CURSOR_IBEAM == aCursor) &&
+          (NS_STYLE_CURSOR_INHERIT != myCursor)) {
+        aCursor = myCursor;
+      }
+    }
+    NS_RELEASE(tag);
+    return rv;
+  }
+
+  if (NS_STYLE_CURSOR_INHERIT != myCursor) {
     // If this container has a particular cursor, use it, otherwise
     // let the child decide.
     *aFrame = this;
-    aCursor = (PRInt32)mol->cursor;
+    aCursor = myCursor;
     return NS_OK;
   }
-  return nsContainerFrame::GetCursorAt(aPresContext, aPoint, aFrame, aCursor);
+
+  // No specific cursor for us
+  aCursor = NS_STYLE_CURSOR_INHERIT;
+  return NS_OK;
 }
 
 #if 0
