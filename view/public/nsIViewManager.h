@@ -508,6 +508,14 @@ public:
    */
   NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer)=0;
 
+  /**
+   * Indicate whehter the viewmanager is currently painting
+   *
+   * @param aPainting PR_TRUE if the viewmanager is painting
+   *                  PR_FALSE otherwise
+   */
+  NS_IMETHOD IsPainting(PRBool& aIsPainting)=0;
+
 };
 
 //when the refresh happens, should it be double buffered?

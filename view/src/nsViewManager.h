@@ -160,6 +160,7 @@ public:
   NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching);
   NS_IMETHOD CacheWidgetChanges(PRBool aCache);
   NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer);
+  NS_IMETHOD IsPainting(PRBool& aIsPainting);
 protected:
   virtual ~nsViewManager();
 
