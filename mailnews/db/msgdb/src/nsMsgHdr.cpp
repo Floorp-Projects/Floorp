@@ -47,6 +47,7 @@ void nsMsgHdr::Init()
 	m_mdbRow = NULL;
 	m_numReferences = 0;
 	m_threadId = nsMsgKey_None;
+	m_threadParent = nsMsgKey_None;
 }
 
 nsresult nsMsgHdr::InitCachedValues()
@@ -71,6 +72,7 @@ nsresult nsMsgHdr::InitCachedValues()
 
 		err = GetUInt32Column(m_mdb->m_messageThreadIdColumnToken, &m_threadId);
 		err = GetUInt32Column(m_mdb->m_numReferencesColumnToken, &uint32Value);
+		err = GetUInt32Column(m_mdb->m_threadParentColumnToken, &m_threadParent);
 		if (NS_SUCCEEDED(err))
 			m_numReferences = (PRUint16) uint32Value;
 		
@@ -508,6 +510,21 @@ NS_IMETHODIMP nsMsgHdr::GetRecipientsCollationKey(nsString &resultRecipients)
 NS_IMETHODIMP nsMsgHdr::GetCharSet(nsString &result)
 {
 	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_messageCharSetColumnToken, result);
+}
+
+NS_IMETHODIMP nsMsgHdr::SetThreadParent(nsMsgKey inKey)
+{
+	m_threadParent = inKey;
+	SetUInt32Column(m_threadParent, m_mdb->m_threadParentColumnToken);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgHdr::GetThreadParent(nsMsgKey *result)
+{
+	nsresult res;
+    res = GetUInt32Column(m_mdb->m_threadParentColumnToken, &m_threadParent);
+    *result = m_threadParent;
+    return NS_OK;
 }
 
 nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)

@@ -89,6 +89,8 @@ public:
     NS_IMETHOD GetStatusOffset(PRUint32 *result); 
 	NS_IMETHOD GetCharSet(nsString &result);
 	NS_IMETHOD GetPriority(nsMsgPriority *msgPriority);
+    NS_IMETHOD GetThreadParent(nsMsgKey *result);
+    NS_IMETHOD SetThreadParent(nsMsgKey inKey);
     ////////////////////////////////////////////////////////////////////////////
     // nsMsgHdr methods:
     nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow);
@@ -111,6 +113,7 @@ protected:
 
     nsMsgKey	m_threadId; 
     nsMsgKey	m_messageKey; 	//news: article number, mail mbox offset, imap uid...
+	nsMsgKey	m_threadParent;	// message this is a reply to, in thread.
     PRTime  		m_date;                         
     PRUint32		m_messageSize;	// lines for news articles, bytes for mail messages
     PRUint32		m_statusOffset;	// offset in a local mail message of the mozilla status hdr

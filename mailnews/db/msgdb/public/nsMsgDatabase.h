@@ -235,9 +235,9 @@ protected:
 	// prefs stuff - in future, we might want to cache the prefs interface
 	nsresult GetBoolPref(const char *prefName, PRBool *result);
 	// retrieval methods
-	nsMsgThread *	GetThreadForReference(nsString2 &msgID);
-	nsMsgThread *	GetThreadForSubject(nsString2 &subject);
-	nsMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
+	nsIMsgThread *	GetThreadForReference(nsString2 &msgID, nsIMsgDBHdr **pMsgHdr);
+	nsIMsgThread *	GetThreadForSubject(nsString2 &subject);
+	nsIMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
 	nsMsgHdr	*	GetMsgHdrForReference(nsString2 &reference);
 	nsIMsgDBHdr	*	GetMsgHdrForMessageID(nsString2 &msgID);
 	nsIMsgDBHdr	*	GetMsgHdrForSubject(nsString2 &msgID);
@@ -247,7 +247,7 @@ protected:
 	virtual PRBool	ThreadBySubjectWithoutRe();
 	virtual nsresult ThreadNewHdr(nsMsgHdr* hdr, PRBool &newThread);
 	virtual nsresult AddNewThread(nsMsgHdr *msgHdr);
-	virtual nsresult AddToThread(nsMsgHdr *newHdr, nsMsgThread *thread, PRBool threadInThread);
+	virtual nsresult AddToThread(nsMsgHdr *newHdr, nsIMsgThread *thread, nsIMsgDBHdr *pMsgHdr, PRBool threadInThread);
 
 
 	// open db cache
@@ -318,6 +318,7 @@ protected:
 	mdb_token			m_threadSubjectColumnToken;
 	mdb_token			m_numReferencesColumnToken;
 	mdb_token			m_messageCharSetColumnToken;
+	mdb_token			m_threadParentColumnToken;
 	nsIMsgHeaderParser	*m_HeaderParser;
 };
 

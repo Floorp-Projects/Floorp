@@ -301,6 +301,7 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_threadSubjectColumnToken(0),
 	  m_numReferencesColumnToken(0),
 	  m_messageCharSetColumnToken(0),
+	  m_threadParentColumnToken(0),
 	  m_HeaderParser(nsnull)
 {
 	NS_INIT_REFCNT();
@@ -661,6 +662,8 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommitType commitType)
 	nsresult	err = NS_OK;
 	nsIMdbThumb	*commitThumb = NULL;
 
+	commitType = kCompressCommit;	// ### until incremental writing works.
+
 	if (m_mdbStore)
 	{
 		switch (commitType)
@@ -728,6 +731,7 @@ const char *kThreadChildrenColumnName = "children";
 const char *kThreadUnreadChildrenColumnName = "unreadChildren";
 const char *kThreadSubjectColumnName = "threadSubject";
 const char *kMessageCharSetColumnName = "msgCharSet";
+const char *kThreadParentColumnName = "threadParent";
 struct mdbOid gAllMsgHdrsTableOID;
 struct mdbOid gAllThreadsTableOID;
 
@@ -835,6 +839,7 @@ nsresult nsMsgDatabase::InitMDBInfo()
 				err = GetStore()->StringToToken(GetEnv(), kThreadTableKind, &m_threadTableKindToken);
 			err = GetStore()->StringToToken(GetEnv(), kAllThreadsTableKind, &m_allThreadsTableKindToken); 
 			err	= GetStore()->StringToToken(GetEnv(), kThreadHdrsScope, &m_threadRowScopeToken); 
+			err	= GetStore()->StringToToken(GetEnv(), kThreadParentColumnName, &m_threadParentColumnToken);
 			if (err == NS_OK)
 			{
 				// The table of all message hdrs will have table id 1.
@@ -2251,10 +2256,10 @@ nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, const char *subject, 
 }
 
 
-nsMsgThread *nsMsgDatabase::GetThreadForReference(nsString2 &msgID)
+nsIMsgThread *nsMsgDatabase::GetThreadForReference(nsString2 &msgID, nsIMsgDBHdr **pMsgHdr)
 {
 	nsIMsgDBHdr	*msgHdr = GetMsgHdrForMessageID(msgID);  
-	nsMsgThread *thread = NULL;
+	nsIMsgThread *thread = NULL;
 
 	if (msgHdr != NULL)
 	{
@@ -2264,15 +2269,18 @@ nsMsgThread *nsMsgDatabase::GetThreadForReference(nsString2 &msgID)
 			// find thread header for header whose message id we matched.
 			thread = GetThreadForThreadId(threadId);
 		}
-		msgHdr->Release();
+		if (pMsgHdr)
+			*pMsgHdr = msgHdr;
+		else
+			msgHdr->Release();
 	}
 	return thread;
 }
 
-nsMsgThread *	nsMsgDatabase::GetThreadForSubject(nsString2 &subject)
+nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsString2 &subject)
 {
 //	NS_ASSERTION(PR_FALSE, "not implemented yet.");
-	nsMsgThread *thread = NULL;
+	nsIMsgThread *thread = NULL;
 
 	nsIMsgDBHdr	*msgHdr = nsnull;
     nsresult rv = NS_OK;
@@ -2304,7 +2312,8 @@ nsMsgThread *	nsMsgDatabase::GetThreadForSubject(nsString2 &subject)
 nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 {
 	nsresult result=NS_ERROR_UNEXPECTED;
-	nsCOMPtr<nsMsgThread> thread;
+	nsCOMPtr <nsIMsgThread> thread;
+	nsCOMPtr <nsIMsgDBHdr> replyToHdr;
 	nsMsgKey threadId = nsMsgKey_None;
 
 	if (!newHdr)
@@ -2329,12 +2338,12 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 		if (reference.Length() == 0)
 			break;
 
-		thread = getter_AddRefs(GetThreadForReference(reference)) ;
+		thread = getter_AddRefs(GetThreadForReference(reference, getter_AddRefs(replyToHdr))) ;
 		if (thread)
 		{
 			thread->GetThreadKey(&threadId);
 			newHdr->SetThreadId(threadId);
-			result = AddToThread(newHdr, thread, TRUE);
+			result = AddToThread(newHdr, thread, replyToHdr, TRUE);
 			break;
 		}
 	}
@@ -2353,7 +2362,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 			//TRACE("threading based on subject %s\n", (const char *) msgHdr->m_subject);
 			// if we move this and do subject threading after, ref threading, 
 			// don't thread within children, since we know it won't work. But for now, pass TRUE.
-			result = AddToThread(newHdr, thread, TRUE);     
+			result = AddToThread(newHdr, thread, nsnull, TRUE);     
 		}
 	}
 #endif // SUBJ_THREADING
@@ -2371,10 +2380,10 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	return result;
 }
 
-nsresult nsMsgDatabase::AddToThread(nsMsgHdr *newHdr, nsMsgThread *thread, PRBool threadInThread)
+nsresult nsMsgDatabase::AddToThread(nsMsgHdr *newHdr, nsIMsgThread *thread, nsIMsgDBHdr *inReplyTo, PRBool threadInThread)
 {
 	// don't worry about real threading yet.
-	return thread->AddChild(newHdr, threadInThread);
+	return thread->AddChild(newHdr, inReplyTo, threadInThread);
 }
 
 nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(nsString2 &reference)
@@ -2475,7 +2484,7 @@ NS_IMETHODIMP nsMsgDatabase::GetThreadForMsgKey(nsMsgKey msgKey, nsIMsgThread **
 }
 
 // caller needs to unrefer.
-nsMsgThread *	nsMsgDatabase::GetThreadForThreadId(nsMsgKey threadId)
+nsIMsgThread *	nsMsgDatabase::GetThreadForThreadId(nsMsgKey threadId)
 {
 
 	nsMsgThread		*pThread = nsnull;
@@ -2523,7 +2532,7 @@ nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
 //		threadHdr->SetSubject(subject.GetBuffer());
 
 		// need to add the thread table to the db.
-		AddToThread(msgHdr, threadHdr, PR_FALSE);
+		AddToThread(msgHdr, threadHdr, nsnull, PR_FALSE);
 
 		threadHdr->Release();
 	}

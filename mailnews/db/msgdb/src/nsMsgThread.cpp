@@ -166,16 +166,20 @@ NS_IMETHODIMP nsMsgThread::GetNumUnreadChildren (PRUint32 *result)
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, PRBool threadInThread)
+NS_IMETHODIMP nsMsgThread::AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread)
 {
 	nsresult ret = NS_OK;
     nsMsgHdr* hdr = NS_STATIC_CAST(nsMsgHdr*, child);          // closed system, cast ok
-
+	PRUint32 newHdrFlags = 0;
+	
 	nsIMdbRow *hdrRow = hdr->GetMDBRow();
+	hdr->GetFlags(&newHdrFlags);
 	if (m_mdbTable)
 	{
 		m_mdbTable->AddRow(m_mdbDB->GetEnv(), hdrRow);
 		ChangeChildCount(1);
+		if (! (newHdrFlags & MSG_FLAG_READ))
+			ChangeUnreadChildCount(1);
 	}
 
 	return ret;

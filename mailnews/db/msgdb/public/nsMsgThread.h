@@ -44,7 +44,7 @@ public:
 	NS_IMETHOD		GetSubject(char **result);
 	NS_IMETHOD		GetNumChildren(PRUint32 *result);
 	NS_IMETHOD		GetNumUnreadChildren (PRUint32 *result);
-	NS_IMETHOD		AddChild(nsIMsgDBHdr *child, PRBool threadInThread);
+	NS_IMETHOD		AddChild(nsIMsgDBHdr *child, nsIMsgDBHdr *inReplyTo, PRBool threadInThread);
 	NS_IMETHOD		GetChildAt(PRInt32 index, nsIMsgDBHdr **result);
 	NS_IMETHOD		GetChild(nsMsgKey msgKey, nsIMsgDBHdr **result);
 	NS_IMETHOD		GetChildHdrAt(PRInt32 index, nsIMsgDBHdr **result);
