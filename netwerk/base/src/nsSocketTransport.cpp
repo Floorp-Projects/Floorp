@@ -119,6 +119,10 @@ static  PRUint32    sTotalTransportsCreated = 0;
 static  PRUint32    sTotalTransportsDeleted = 0;
 
 nsSocketTransport::nsSocketTransport():
+    mSocketTimeout        (PR_INTERVAL_NO_TIMEOUT),
+    mSocketConnectTimeout (PR_MillisecondsToInterval (DEFAULT_SOCKET_CONNECT_TIMEOUT_IN_MS)),
+    mOnStartWriteFired    (PR_FALSE),
+    mOnStartReadFired     (PR_FALSE),
     mCancelStatus(NS_OK),
     mCloseConnectionOnceDone(PR_FALSE),
     mCurrentState(eSocketState_Created),
@@ -146,12 +150,8 @@ nsSocketTransport::nsSocketTransport():
     mWriteBufferLength    (0),
     mBufferSegmentSize    (0),
     mBufferMaxSize        (0),
-    mSocketTimeout        (PR_INTERVAL_NO_TIMEOUT),
-    mSocketConnectTimeout (PR_MillisecondsToInterval (DEFAULT_SOCKET_CONNECT_TIMEOUT_IN_MS)),
-    mWasConnected (PR_FALSE) ,
     mIdleTimeoutInSeconds (0),
-    mOnStartWriteFired    (PR_FALSE),
-    mOnStartReadFired     (PR_FALSE)
+    mWasConnected (PR_FALSE)
 {
     NS_INIT_REFCNT();
     
@@ -1432,6 +1432,7 @@ nsSocketTransport::Cancel(nsresult status)
   // Wake up the transport on the socket transport thread so it can
   // be removed from the select list...  
   //
+  mLastActiveTime  = PR_IntervalNow ();
   rv = mService->AddToWorkQ(this);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
@@ -1457,6 +1458,7 @@ nsSocketTransport::Suspend(void)
   // Only do this the first time a transport is suspended...
   //
   if (1 == mSuspendCount) {
+    mLastActiveTime  = PR_IntervalNow ();
     rv = mService->AddToWorkQ(this);
   }
 
@@ -1484,6 +1486,7 @@ nsSocketTransport::Resume(void)
     // be resumed...
     //
     if (0 == mSuspendCount) {
+      mLastActiveTime  = PR_IntervalNow ();
       rv = mService->AddToWorkQ(this);
     }
   } else {
@@ -1568,6 +1571,7 @@ nsSocketTransport::OnWrite(nsIPipe* aPipe, PRUint32 aCount)
 
       // Start the crank.
       mOperation = eSocketOperation_ReadWrite;
+      mLastActiveTime  = PR_IntervalNow ();
       rv = mService->AddToWorkQ(this);
     }
   }
@@ -1598,6 +1602,7 @@ nsSocketTransport::OnEmpty(nsIPipe* aPipe)
     if (GetFlag(eSocketRead_Wait)) {
       ClearFlag(eSocketRead_Wait);
       mSelectFlags |= PR_POLL_READ;
+      mLastActiveTime  = PR_IntervalNow ();
       rv = mService->AddToWorkQ(this);
     }
   }
@@ -1693,6 +1698,7 @@ nsSocketTransport::OnStopLookup(nsISupports *aContext,
   // Start processing the transport again - if necessary...
   if (GetFlag(eSocketDNS_Wait)) {
     ClearFlag(eSocketDNS_Wait);
+    mLastActiveTime  = PR_IntervalNow ();
     mService->AddToWorkQ(this);
   }
 
@@ -1768,6 +1774,7 @@ nsSocketTransport::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     mOperation = eSocketOperation_Connect;
     SetReadType(eSocketRead_None);
 
+    mLastActiveTime  = PR_IntervalNow ();
     rv = mService->AddToWorkQ(this);
   }
 
@@ -1827,6 +1834,7 @@ nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
         mOperation = eSocketOperation_ReadWrite;
         SetReadType(eSocketRead_Async);
         
+        mLastActiveTime  = PR_IntervalNow ();
         rv = mService->AddToWorkQ(this);
     }
     
@@ -1900,6 +1908,7 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
         mOperation = eSocketOperation_ReadWrite;
         SetWriteType(eSocketWrite_Async);
         
+        mLastActiveTime  = PR_IntervalNow ();
         rv = mService->AddToWorkQ(this);
     }
     
@@ -1949,6 +1958,7 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
     mOperation = eSocketOperation_ReadWrite;
     SetReadType(eSocketRead_Sync);
 
+    mLastActiveTime  = PR_IntervalNow ();
     rv = mService->AddToWorkQ(this);
   }
 

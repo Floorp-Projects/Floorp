@@ -495,11 +495,11 @@ nsHTTPPipelinedRequest::nsHTTPPipelinedRequest (nsHTTPHandler* i_Handler, const 
         mBufferSegmentSize (0),
         mBufferMaxSize (0),
         mMustCommit (PR_FALSE),
-    	mHandler (i_Handler),
-        mTotalProcessed (0),
         mTotalWritten (0),
-        mListener (nsnull),
+        mTotalProcessed (0),
+    	mHandler (i_Handler),
         mPort (port),
+        mListener (nsnull),
         mOnStopDone (PR_TRUE)
 {   
     NS_INIT_REFCNT ();
@@ -795,7 +795,7 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
             nsCOMPtr<nsIStreamListener> consumer;
             req -> mConnection -> GetResponseDataListener (getter_AddRefs (consumer));
 
-            req -> mConnection -> ResponseCompleted (nsnull, rv, i_Msg);
+            req -> mConnection -> ResponseCompleted (consumer, rv, i_Msg);
 
             // Notify the HTTPChannel that the request has finished
 
