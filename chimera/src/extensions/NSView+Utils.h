@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *   Simon Fraser <sfraser@netscape.com>
- *   Calum Robinson <calumr@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,36 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "CHDownloadProgressDisplay.h"
+#import <AppKit/AppKit.h>
 
-// CHDownloader is a simple class that that the download UI can talk to
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-CHDownloader::CHDownloader()
-: mDisplayFactory(NULL)
-, mDownloadDisplay(nil)
-, mIsFileSave(PR_FALSE)
-{
-  NS_INIT_ISUPPORTS();
+// utility routine; returns YES if the sizes are equal, with the given slop
+BOOL CHCloseSizes(NSSize aSize, NSSize bSize, float slop);
+
+#ifdef __cplusplus
 }
+#endif
 
-CHDownloader::~CHDownloader()
-{
-  [mDisplayFactory release];
-}
+// category on NSView to add utilities for easy view resizing etc.
 
-NS_IMPL_ISUPPORTS1(CHDownloader, nsISupports);
+@interface NSView(CHViewUtils)
 
-void
-CHDownloader::SetDisplayFactory(id<CHDownloadDisplayFactory> inDownloadControllerFactory)
-{
-  mDisplayFactory = inDownloadControllerFactory;
-  [mDisplayFactory retain];
-}
+// move the recipient view from its superview to the destView, 
+// maintaining  the relative size and position of the view based
+// on its autoresize flags.
+- (void)moveToView:(NSView*)destView resize:(BOOL)resize;
 
-void
-CHDownloader::CreateDownloadDisplay()
-{
-  NS_ASSERTION(mDisplayFactory, "Should have a UI factory");
-  mDownloadDisplay = [mDisplayFactory createProgressDisplay];
-  [mDownloadDisplay setDownloadListener:this];
-}
+@end

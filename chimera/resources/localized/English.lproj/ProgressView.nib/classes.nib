@@ -1,0 +1,22 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {close = id; open = id; reveal = id; stop = id; toggleDisclosure = id; }; 
+            CLASS = ProgressViewController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mCompletedView = NSView; 
+                mCompletedViewCompact = NSView; 
+                mExpandedCancelButton = NSButton; 
+                mExpandedOpenButton = NSButton; 
+                mExpandedRevealButton = NSButton; 
+                mProgressBar = NSProgressIndicator; 
+                mProgressView = NSView; 
+                mProgressViewCompact = NSView; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }
+    ); 
+    IBVersion = 1; 
+}

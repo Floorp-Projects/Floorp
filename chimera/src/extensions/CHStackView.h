@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +11,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Chimera code.
  *
- * The Initial Developer of the Original Code is 
- * Netscape Communications Corporation.
+ * The Initial Developer of the Original Code is
+ * Calum Robinson.
  * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Simon Fraser <sfraser@netscape.com>
- *
+ *    Calum Robinson <calumr@mac.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -37,28 +35,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import <AppKit/AppKit.h>
 
-// Put UI constants (menu item tags etc) in this file to reduce the
-// chance of conflicts.
+// views contained in the stack should send this notification when they change size
+extern NSString* StackViewReloadNotificationName;
 
-// Go menu
+// the stack view sends this notification after it has adjusted to subview sizes
+extern NSString* StackViewResizedNotificationName;
 
-// the tag of the separator after which to insert history menu items
-const int kRendezvousRelatedItemTag = 3000;
-const int kDividerTag = 4000;
-
-
-// Bookmarks menu
-
-// the tag of the separator after which to insert bookmark items
-const int kBookmarksDividerTag = -1;
-
-// Save file dialog
-const int kSaveFormatPopupTag = 1000;
-
-enum
+@interface CHStackView : NSView
 {
-  eSaveFormatHTMLComplete = 0,
-  eSaveFormatHTMLSource,
-  eSaveFormatPlainText
-};
+  IBOutlet id mDataSource;
+}
+
+- (void)setDataSource:(id)aDataSource;
+- (void)reloadSubviews;
+
+@end
+
+@protocol CHStackViewDataSource
+
+- (int)subviewsForStackView:(CHStackView *)stackView;
+- (NSView *)viewForStackView:(CHStackView *)stackView atIndex:(int)index;
+
+@end

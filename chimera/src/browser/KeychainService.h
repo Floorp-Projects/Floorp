@@ -51,10 +51,16 @@
 
 class nsIPrefBranch;
 
+enum KeychainPromptResult { kSave, kDontRemember, kNeverRemember } ;
+
 @class CHBrowserView;
+
 
 @interface KeychainService : NSObject
 {
+  IBOutlet id confirmStorePasswordPanel;
+  IBOutlet id confirmChangePasswordPanel;
+
   BOOL mIsEnabled;
   BOOL mIsAutoFillEnabled;
 
@@ -63,6 +69,13 @@ class nsIPrefBranch;
 
 + (KeychainService*) instance;
 - (void) shutdown:(id)sender;
+
+- (IBAction)hitButtonOK:(id)sender;
+- (IBAction)hitButtonCancel:(id)sender;
+- (IBAction)hitButtonOther:(id)sender;
+
+- (KeychainPromptResult)confirmStorePassword:(NSWindow*)parent;
+- (BOOL)confirmChangedPassword:(NSWindow*)parent;
 
 - (BOOL) getUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort user:(NSMutableString*)username password:(NSMutableString*)pwd item:(KCItemRef*)outItem;
 - (BOOL) findUsernameAndPassword:(NSString*)realm port:(PRInt32)inPort;
@@ -75,13 +88,43 @@ class nsIPrefBranch;
 - (BOOL) isEnabled;
 - (BOOL) isAutoFillEnabled;
 
+// routines to manipulate the keychain deny list for which hosts we shouldn't
+// ask about
+- (void) addHostToDenyList:(NSString*)host;
+- (BOOL) isHostInDenyList:(NSString*)host;
+
 @end
+
+
+//
+// KeychainDenyList
+//
+// A singleton object that maintains a list of sites where we should
+// not prompt the user for saving in the keychain. This object also
+// handles archiving the list in the user's profile dir.
+//
+
+@interface KeychainDenyList : NSObject
+{
+  NSMutableArray* mDenyList;     // the list
+  BOOL mIsDirty;                 // do we need to write the list to disk?
+}
+
++ (KeychainDenyList*) instance;
+- (void) shutdown:(id)sender;
+
+- (BOOL) isHostPresent:(NSString*)host;
+- (void) addHost:(NSString*)host;
+- (void) removeHost:(NSString*)host;
+- (void) writeToDisk;
+
+@end
+
 
 class KeychainPrompt : public nsIAuthPromptWrapper
 {
 public:
   KeychainPrompt();
-  KeychainPrompt(KeychainService*);
   virtual ~KeychainPrompt();
 
   NS_DECL_ISUPPORTS
@@ -95,7 +138,6 @@ protected:
   static void ExtractHostAndPort(const PRUnichar* inRealm, NSString** outHost, PRInt32* outPort);
 
   nsCOMPtr<nsIPrompt>   mPrompt;
-  KeychainService*    mKeychain;
 };
 
 //
@@ -105,7 +147,7 @@ class KeychainFormSubmitObserver : public nsIObserver,
                                    public nsIFormSubmitObserver
 {
 public:
-  KeychainFormSubmitObserver(KeychainService*);
+  KeychainFormSubmitObserver();
   virtual ~KeychainFormSubmitObserver();
 
   NS_DECL_ISUPPORTS
@@ -116,12 +158,10 @@ public:
 
 private:
 
-  static BOOL CheckStorePasswordYN(nsIDOMWindowInternal*);
+  static KeychainPromptResult CheckStorePasswordYN(nsIDOMWindowInternal*);
   static BOOL CheckChangeDataYN(nsIDOMWindowInternal*);
   
   static NSWindow* GetNSWindow(nsIDOMWindowInternal* inWindow);
-
-  KeychainService* mKeychain;
 };
 
 //
@@ -129,11 +169,10 @@ private:
 //
 @interface KeychainBrowserListener : NSObject<CHBrowserListener>
 {
-  KeychainService* mKeychain;
   CHBrowserView* mBrowserView;
 }
 
-- (id)initWithBrowser:(KeychainService*)keychain browser:(CHBrowserView*)aBrowser;
+- (id)initWithBrowser:(CHBrowserView*)aBrowser;
 
 @end
 

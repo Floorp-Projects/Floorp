@@ -139,8 +139,7 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
     nsAutoString text;
     GeckoUtils::GatherTextUnder(content, text);
 
-    [mBrowserController saveURL: nil filterList: nil
-              url: hrefStr suggestedFilename: [NSString stringWith_nsAString: text]];
+    [mBrowserController saveURL:nil url:hrefStr suggestedFilename:[NSString stringWith_nsAString:text]];
   }
 
   return NS_OK;

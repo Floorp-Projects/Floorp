@@ -109,12 +109,12 @@ typedef enum
   IBOutlet NSTextField*       mLocationSheetURLField;
   IBOutlet NSView*            mStatusBar;     // contains the status text, progress bar, and lock
   IBOutlet PageProxyIcon*     mProxyIcon;
-  IBOutlet BrowserContentView* mContentView;
+  IBOutlet BrowserContentView*  mContentView;
   
   IBOutlet BookmarksDataSource* mSidebarBookmarksDataSource;
-  IBOutlet HistoryDataSource* mHistoryDataSource;
+  IBOutlet HistoryDataSource*   mHistoryDataSource;
 
-  IBOutlet BookmarksToolbar*  mPersonalToolbar;
+  IBOutlet BookmarksToolbar*    mPersonalToolbar;
 
   IBOutlet NSWindow*            mAddBookmarkSheetWindow;
   IBOutlet NSTextField*         mAddBookmarkTitleField;
@@ -191,6 +191,8 @@ typedef enum
 - (void)updateLocationFields:(NSString *)locationString;
 - (void)updateSiteIcons:(NSImage *)siteIconImage;
 - (void)updateToolbarItems;
+- (void)loadingStarted;
+- (void)loadingDone;
 - (void)focusURLBar;
 
     // call to update the image of the lock icon with a value from nsIWebProgressListener
@@ -211,9 +213,9 @@ typedef enum
 - (IBAction)viewSource:(id)aSender;			// focussed frame or page
 - (IBAction)viewPageSource:(id)aSender;	// top-level page
 
-- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList;
-- (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
-            url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename;
+- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView;
+- (void)saveURL:(NSView*)aFilterView url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename;
+
 - (IBAction)printDocument:(id)aSender;
 - (IBAction)pageSetup:(id)aSender;
 - (IBAction)performSearch:(id)aSender;
@@ -302,6 +304,7 @@ typedef enum
 - (IBAction)bookmarkLink: (id)aSender;
 
 - (IBAction)copyLinkLocation:(id)aSender;
+- (IBAction)copyImage:(id)sender;
 - (IBAction)copyImageLocation:(id)sender;
 
 - (BookmarksToolbar*) bookmarksToolbar;

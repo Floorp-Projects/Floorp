@@ -38,7 +38,6 @@
 #import "NSString+Utils.h"
 
 #import "CHBrowserService.h"
-#import "CHDownloadFactories.h"
 #import "CHBrowserView.h"
 
 #include "nsIWindowWatcher.h"
@@ -107,14 +106,6 @@ CHBrowserService::InitEmbedding()
   static NS_DEFINE_CID(kHelperDlgCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
   nsresult rv = cr->RegisterFactory(kHelperDlgCID, NS_IHELPERAPPLAUNCHERDLG_CLASSNAME, NS_IHELPERAPPLAUNCHERDLG_CONTRACTID,
                             sSingleton);
-  
-  // replace the downloader with our own which does not rely on the xpfe downlaod manager
-  nsCOMPtr<nsIFactory> downloadFactory;
-  rv = NewDownloadListenerFactory(getter_AddRefs(downloadFactory));
-  if (NS_FAILED(rv)) return rv;
-  
-  static NS_DEFINE_CID(kDownloadCID, NS_DOWNLOAD_CID);
-  rv = cr->RegisterFactory(kDownloadCID, "Download", NS_DOWNLOAD_CONTRACTID, downloadFactory);
 
   return rv;
 }

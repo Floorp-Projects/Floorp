@@ -816,6 +816,19 @@ static NSArray* sToolbarDefaults = nil;
   else
     return YES;
 }
+
+- (void)loadingStarted
+{
+  [self updateToolbarItems];
+  [self startThrobber];
+}
+
+- (void)loadingDone
+{
+  [self updateToolbarItems];
+  [self stopThrobber];
+  [mHistoryDataSource refresh];
+}
    
 - (void)updateToolbarItems
 {
@@ -960,16 +973,14 @@ static NSArray* sToolbarDefaults = nil;
   }
 }
 
-- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
+- (void)saveDocument:(BOOL)focusedFrame filterView:(NSView*)aFilterView
 {
-  [[mBrowserView getBrowserView] saveDocument:focusedFrame filterView:aFilterView filterList:aFilterList];
+  [[mBrowserView getBrowserView] saveDocument:focusedFrame filterView:aFilterView];
 }
 
-- (void)saveURL: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
-            url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename
+- (void)saveURL: (NSView*)aFilterView url: (NSString*)aURLSpec suggestedFilename: (NSString*)aFilename
 {
-  [[mBrowserView getBrowserView] saveURL: aFilterView filterList: aFilterList
-                                     url: aURLSpec suggestedFilename: aFilename];
+  [[mBrowserView getBrowserView] saveURL: aFilterView url: aURLSpec suggestedFilename: aFilename];
 }
 
 - (void)loadSourceOfURL:(NSString*)urlStr
@@ -1890,12 +1901,14 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)savePageAs:(id)aSender
 {
-  [self saveDocument:NO filterView:nil filterList: nil];
+  NSView* accessoryView = [[NSApp delegate] getSavePanelView];
+  [self saveDocument:NO filterView:accessoryView];
 }
 
 - (IBAction)saveFrameAs:(id)aSender
 {
-  [self saveDocument:YES filterView:nil filterList: nil];
+  NSView* accessoryView = [[NSApp delegate] getSavePanelView];
+  [self saveDocument:YES filterView:accessoryView];
 }
 
 - (IBAction)saveLinkAs:(id)aSender
@@ -1915,8 +1928,7 @@ static NSArray* sToolbarDefaults = nil;
   nsAutoString text;
   GeckoUtils::GatherTextUnder(mContextMenuNode, text);
 
-  [self saveURL: nil filterList: nil
-            url: hrefStr suggestedFilename: [NSString stringWith_nsAString: text]];
+  [self saveURL:nil url:hrefStr suggestedFilename:[NSString stringWith_nsAString:text]];
 }
 
 - (IBAction)saveImageAs:(id)aSender
@@ -1931,9 +1943,16 @@ static NSArray* sToolbarDefaults = nil;
 
       NSString* hrefStr = [NSString stringWith_nsAString: url];
 
-      [self saveURL: nil filterList: nil
-                url: hrefStr suggestedFilename: [NSString stringWith_nsAString: text]];
+      [self saveURL:nil url:hrefStr suggestedFilename: [NSString stringWith_nsAString: text]];
   }
+}
+
+- (IBAction)copyImage:(id)sender
+{
+  nsCOMPtr<nsIWebBrowser> webBrowser = getter_AddRefs([[[self getBrowserWrapper] getBrowserView] getWebBrowser]);
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(webBrowser));
+  if (clipboard)
+    clipboard->CopyImageContents();
 }
 
 - (IBAction)copyImageLocation:(id)sender
