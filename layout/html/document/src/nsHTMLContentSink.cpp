@@ -1304,6 +1304,7 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
       ProcessTEXTAREATag(&leaf, aNode);
       break;
     case eHTMLTag_embed:
+      FlushText();
       rv = ProcessEMBEDTag(&leaf, aNode);
       break;
     }
