@@ -95,6 +95,7 @@ public:
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto);
+  NS_IMETHOD Destroy(void);
   NS_IMETHOD GetBounds(nsRect& aResult);
   NS_IMETHOD SetBounds(const nsRect& aBounds);
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
@@ -455,15 +456,32 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     NS_RELEASE(mInnerWindow);
   }
   else {
-    // Get rid of extra reference count
-    mWindow->Release();
     mWindow->Create(aNativeParent, aBounds, nsWebShell::HandleEvent,
                     mDeviceContext, nsnull);
+    // Get rid of extra reference count
+    mWindow->Release();
   }
 
 done:
   return rv;
 }
+
+NS_IMETHODIMP
+nsWebShell::Destroy()
+{
+  nsresult rv = NS_OK;
+
+  // Stop any URLs that are currently being loaded...
+  mDocLoader->Stop();
+
+  SetContainer(nsnull);
+  SetObserver(nsnull);
+
+  NS_IF_RELEASE(mContentViewer);
+
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsWebShell::GetBounds(nsRect& aResult)
