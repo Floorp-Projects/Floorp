@@ -1330,6 +1330,24 @@ nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
     AddNullTerminator(*this);
 }
 
+PRUnichar* nsVoidableString::GetWritableFragment(nsWritableFragment<PRUnichar>& aFragment,nsFragmentRequest aRequest,PRUint32 aOffset) {
+  mIsVoid = PR_FALSE;
+
+  return nsAutoString::GetWritableFragment(aFragment, aRequest, aOffset);
+}
+
+PRBool nsVoidableString::IsVoid() const {
+  return mIsVoid;
+}
+
+void nsVoidableString::SetIsVoid(PRBool aVoid) {
+  if (aVoid && !mIsVoid) {
+    Truncate();
+  }
+
+  mIsVoid = aVoid;
+}
+
 void
 NS_ConvertASCIItoUTF16::Init( const char* aCString, PRUint32 aLength )
   {

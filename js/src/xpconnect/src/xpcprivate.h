@@ -2383,41 +2383,6 @@ protected:
     nsBufferHandle<PRUnichar> mBufferHandle;
 };
 
-// "voidable" nsAString implementation
-class XPCVoidableString : public nsAutoString
-{
-public:
-    XPCVoidableString() :
-        nsAutoString(), mIsVoid(PR_FALSE)
-    { }
-
-    char_type* GetWritableFragment(nsWritableFragment<char_type>& aFragment,
-                                   nsFragmentRequest aRequest,
-                                   PRUint32 aOffset)
-    {
-        mIsVoid = PR_FALSE;
-
-        return nsAutoString::GetWritableFragment(aFragment, aRequest, aOffset);
-    }
-
-    PRBool IsVoid() const
-    {
-        return mIsVoid;
-    }
-
-    void SetIsVoid(PRBool aVoid)
-    {
-        if(aVoid && !mIsVoid) {
-            Truncate();
-        }
-
-        mIsVoid = aVoid;
-    }
-
-protected:
-    PRBool mIsVoid;
-};
-
 // readable string conversions, static methods only
 class XPCStringConvert
 {
