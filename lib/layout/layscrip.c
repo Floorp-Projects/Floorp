@@ -78,6 +78,10 @@ lo_ParseScriptLanguage(MWContext * context, PA_Tag * tag, int8 * type,
             *type = SCRIPT_TYPE_MOCHA;
             *version = JSVERSION_1_3;
         } 
+        else if (XP_STRCASECMP(str, "JavaScript1.4") == 0) {
+            *type = SCRIPT_TYPE_MOCHA;
+            *version = JSVERSION_1_4;
+        }
 
         else {
             *type = SCRIPT_TYPE_UNKNOWN;
