@@ -5200,6 +5200,11 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 	switch(button)
 	{
 		case    XP_DIALOG_OK_BUTTON:
+		if (htmlElementList == NULL)
+		{
+			retVal = PR_FALSE;
+			break;
+		}
 		node = htmlElementList->node;
 
 		if (gMissionControlEnabled == true)
