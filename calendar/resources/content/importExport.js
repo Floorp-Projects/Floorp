@@ -78,7 +78,7 @@ const extensionCsv      = ".csv";
 const filterRdf         = gCalendarBundle.getString("filterRdf");
 const extensionRdf      = ".rdf";
 
-if( opener && opener.gICalLib )
+if( opener && "gICalLib" in opener && opener.gICalLib )
    gICalLib = opener.gICalLib;
 
 // convert to and from Unicode for file i/o
@@ -786,7 +786,10 @@ function saveEventsToFile( calendarEventArray )
 
 /**** eventArrayToICalString
  * Converts a array of events to iCalendar text
- * Option to add events needed in other applications
+ * If doPatchForExport is true:
+ * - If all events have same method, merges components into one VCALENDAR.
+ * - Patches TRIGGER syntax for Outlook compatibility. 
+ * - Converts line terminators to full \r\n as specified by RFC2445.
  */
 
 function eventArrayToICalString( calendarEventArray, doPatchForExport )
@@ -794,17 +797,25 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
    if( !calendarEventArray)
       calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
 
-   var sTextiCalendar = "";
+   var doMerge = doPatchForExport;
+   if (doPatchForExport && calendarEventArray.length > 0) 
+   {
+     // will merge into one VCALENDAR if all events have same method
+     var firstMethod = calendarEventArray[0].method;
+     for( var eventArrayIndex = 1;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
+     {
+       if (calendarEventArray[eventArrayIndex].method != firstMethod)
+       {
+         doMerge = false;
+         break;
+       }
+     }
+   }
+
+   var eventStrings = new Array(calendarEventArray.length);
    for( var eventArrayIndex = 0;  eventArrayIndex < calendarEventArray.length; ++eventArrayIndex )
    {
-      try
-      {
-         var calendarEvent = calendarEventArray[ eventArrayIndex ].clone();
-      }
-      catch( e )
-      {
-         alert( "Caught an exception in eventArrayToICalString, while trying to clone the event, it was: \n"+e );
-      }
+      var calendarEvent = calendarEventArray[ eventArrayIndex ].clone();
       
       // convert time to represent local to produce correct DTSTART and DTEND
       if(calendarEvent.allDay != true)
@@ -816,13 +827,34 @@ function eventArrayToICalString( calendarEventArray, doPatchForExport )
       if( calendarEvent.stamp.year ==  0 )
          calendarEvent.stamp.setTime( new Date() );
 
+      var eventString = calendarEvent.getIcalString();
       if ( doPatchForExport )
-        sTextiCalendar += patchICalStringForExport( calendarEvent.getIcalString() );
-      else
-        sTextiCalendar += calendarEvent.getIcalString() ;
+      { 
+        if (doMerge)
+        {
+          // include VCALENDAR version, prodid, method only on first component
+          var begin = (eventArrayIndex == 0
+                       ? 0
+                       : eventString.indexOf("BEGIN:", 15+eventString.indexOf("BEGIN:VCALENDAR")));
+          // include END:VCALENDAR only on last component
+          var end = (eventArrayIndex == calendarEventArray.length - 1
+                     ? eventString.length
+                     : eventString.lastIndexOf("END:VCALENDAR"));
+          // Include components between begin and end.
+          // (Since times are all Zulu times, no VTIMEZONEs are expected,
+          // so safe to assume no duplicate VTIMEZONES need to be removed.)
+          eventString = eventString.slice(begin, end);
+        }
+        // patch TRIGGER for Outlook compatibility (before \r\n fix)
+        eventString = patchICalStringForExport(eventString);
+        // make sure all line terminators are full \r\n as required by rfc2445
+        eventString = eventString.replace(/\r\n|\n|\r/g, "\r\n");
+      }
+      // collect result in array, will join at end
+      eventStrings[eventArrayIndex] = eventString;
    }
-   
-   return sTextiCalendar;
+   // concatenate all at once to avoid excess string copying on long calendars.
+   return eventStrings.join("");
 }
 
 
