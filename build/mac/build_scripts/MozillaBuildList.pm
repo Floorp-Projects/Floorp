@@ -1084,8 +1084,9 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:editor:idl:MANIFEST",                            "$distdirectory:idl:");
     InstallFromManifest(":mozilla:editor:txmgr:idl:MANIFEST",                      "$distdirectory:idl:");
     InstallFromManifest(":mozilla:editor:public:MANIFEST",                         "$distdirectory:editor:");
-    InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",                   "$distdirectory:editor:txmgr");
-    InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",                  "$distdirectory:editor:txtsvc");
+    InstallFromManifest(":mozilla:editor:txmgr:public:MANIFEST",                   "$distdirectory:editor:txmgr:");
+    InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST",                  "$distdirectory:editor:txtsvc:");
+    InstallFromManifest(":mozilla:editor:txtsvc:public:MANIFEST_IDL",              "$distdirectory:idl:");
     
     #SILENTDL
     #InstallFromManifest(":mozilla:silentdl:MANIFEST",                             "$distdirectory:silentdl:");
@@ -1451,6 +1452,7 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:widget:macbuild:widgetIDL.xml",                       "widget");
     BuildIDLProject(":mozilla:editor:macbuild:EditorIDL.xml",                       "editor");
     BuildIDLProject(":mozilla:editor:txmgr:macbuild:txmgrIDL.xml",                  "txmgr");
+    BuildIDLProject(":mozilla:editor:txtsvc:macbuild:txtsvcIDL.xml",                "txtsvc");
     BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.xml", "profileservices");
     BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.xml",  "prefm");
         
