@@ -1298,6 +1298,14 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 
   if (mThrobber) {
     mThrobber->Stop();
   }
+  if (nsnull != mStatus) {
+    nsAutoString msg(aURL);
+    PRUint32 size;
+
+    msg.Append(" done.");
+
+    mStatus->SetText(msg, size);
+  }
   return NS_OK;
 }
 
@@ -1425,9 +1433,6 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
                                PRInt32 status,
                                const nsString& aMsg)
 {
-  if (mThrobber) {
-    mThrobber->Stop();
-  }
   if (mStatus) {
     nsAutoString url;
     if (nsnull != aURL) {
