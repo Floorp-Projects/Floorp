@@ -51,6 +51,8 @@ static nsIWidget *gRollupWidget = nsnull;
 
 /* Enable this to queue widget damage, this should be ON by default */
 #define ENABLE_DAMAGE_QUEUE
+
+/* Enable this causing extra redraw when the RELEASE is called */
 #define ENABLE_DAMAGE_QUEUE_HOLDOFF
 
 /* Initialize Static nsWidget class members */
@@ -787,7 +789,7 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 
 NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 2 this=<%p> rect=(%ld,%ld,%ld,%ld) IsSync=<%d>\n", this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 2 this=<%p> dmg rect=(%ld,%ld,%ld,%ld) IsSync=<%d>\n", this, aRect.x, aRect.y, aRect.width, aRect.height, aIsSynchronous));
 
   if (!mWidget)
   {
@@ -798,6 +800,7 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   if (!PtWidgetIsRealized(mWidget))
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 2 - mWidget is not realized\n"));
+    return NS_OK;
 //    return NS_ERROR_FAILURE;
   }
   
@@ -809,11 +812,13 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
     if ( GetParentClippedArea(rect) == PR_TRUE )
     {
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 2  before Clipped rect=(%d,%d,%d,%d) mBounds=(%d,%d)\n", rect.x, rect.y, rect.width, rect.height, mBounds.x, mBounds.y));
+
       /* convert back widget coords */
       rect.x -= mBounds.x;
       rect.y -= mBounds.y;
 
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 2  Clipped rect=(%i,%i,%i,%i)\n", rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height  ));
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate 2  Clipped rect=(%i,%i,%i,%i)\n", rect.x, rect.y, rect.width, rect.height  ));
 
       mUpdateArea->Union(aRect.x, aRect.y, aRect.width, aRect.height);
 
@@ -2069,13 +2074,14 @@ void nsWidget::UpdateWidgetDamage()
 	
     RemoveDamagedWidget( mWidget );
 
-
+PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged 1 \n"));
     if (mUpdateArea->IsEmpty())
     {
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged skipping update because mUpdateArea IsEmpty() this=<%p>\n", this));
       return;
     }
 
+PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged 2 \n"));
 
   PhRect_t         extent;
   PhArea_t         area;
@@ -2085,16 +2091,24 @@ void nsWidget::UpdateWidgetDamage()
   nsRect           temp_rect;
 
     PtWidgetArea( mWidget, &area );
+PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged 3 \n"));
+
     if (PtWidgetIsClass(mWidget, PtWindow))
     {
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::UpdateWidgetDamaged mWidget=<%p> is a PtWindow, set x,y=0\n", mWidget));
 	  area.pos.x = area.pos.y = 0;  
     }
+
+PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged 4 \n"));
 
     if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
     {
 	  NS_ASSERTION(0,"nsWidget::UpdateWidgetDamaged Error mUpdateArea->GetRects returned NULL");
       return;
     }
+
+PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged 5 \n"));
+
 
 #if 0
     int Global_Widget_Hold_Count;
@@ -2103,10 +2117,17 @@ void nsWidget::UpdateWidgetDamage()
 #endif
 
     len = regionRectSet->mRectsLen;
+
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::UpdateWidgetDamaged %d rects to damage\n", len));
+
     for (i=0;i<len;++i)
     {
       nsRegionRect *r = &(regionRectSet->mRects[i]);
       temp_rect.SetRect(r->x, r->y, r->width, r->height);
+
+
+      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::UpdateWidgetDamaged temp_rect=(%d,%d,%d,%d)\n", r->x, r->y, r->width, r->height));
+
 	  
       if( GetParentClippedArea(temp_rect))
       {
@@ -2178,9 +2199,11 @@ void nsWidget::RemoveDamagedWidget(PtWidget_t *aWidget)
           Global_Widget_Hold_Count =  PtRelease();
           PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::RemoveDamagedWidget PtHold/PtRelease Global_Widget_Hold_Count=<%d> this=<%p>\n", Global_Widget_Hold_Count, this));
 #endif
- 
+
         if( mWorkProcID )
           PtAppRemoveWorkProc( nsnull, mWorkProcID );
+
+        PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::RemoveDamagedWidget finished removing last item\n"));
       }
     }
 }
