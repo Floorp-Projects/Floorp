@@ -360,8 +360,8 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
       PRUnichar *unichars = new PRUnichar [ unicharLength ];
   
       if (nsnull != unichars) {
-        res = decoder->Convert(unichars, 0, &unicharLength,
-                               aBuffer, 0, &srcLength);
+        res = decoder->Convert(aBuffer, &srcLength,
+                               unichars, &unicharLength);
         if (NS_SUCCEEDED(res)) {
           stringOut.SetString(unichars, unicharLength);
         }

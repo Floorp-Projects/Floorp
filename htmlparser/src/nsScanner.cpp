@@ -255,7 +255,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
 	  do {
 	    PRInt32 srcLength = aLen;
 		  PRInt32 unicharLength = unicharBufLen;
-		  res = mUnicodeDecoder->Convert(unichars, 0, &unicharLength,aBuffer, 0, &srcLength );
+		  res = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
       unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
 
 

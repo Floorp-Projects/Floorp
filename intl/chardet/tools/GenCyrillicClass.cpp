@@ -85,7 +85,7 @@ PRUint8 CyrillicClass(nsIUnicodeDecoder* decoder, PRUint8 byte)
 
    PRInt32 blen = 1;
    PRInt32 ulen = 1;
-   nsresult res = decoder->Convert(ubuf,0,&ulen, (char*)&byte, 0, &blen);
+   nsresult res = decoder->Convert((char*)&byte, &blen, ubuf, &ulen);
    if(NS_SUCCEEDED(res) && (1 == ulen ))
    {
      ubuf[0] = nsCRT::ToUpper(ubuf[0]);
