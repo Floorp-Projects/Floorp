@@ -17,7 +17,7 @@
  */
 
 #include "InsertTextTxn.h"
-#include "editor.h"
+#include "nsEditor.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMSelection.h"
 #include "nsIPresShell.h"
@@ -49,11 +49,8 @@ nsresult InsertTextTxn::Do(void)
   // advance caret: This requires the presentation shell to get the selection.
   nsCOMPtr<nsIDOMSelection> selection;
   res = mPresShell->GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(res))
-  {
-      res = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
-    // We know mOffset+Length should be there
-    // because we just added that many characters.
+  if (NS_SUCCEEDED(res)) {
+    res = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
   }
   return res;
 }
@@ -65,7 +62,11 @@ nsresult InsertTextTxn::Undo(void)
   result = mElement->DeleteData(mOffset, length);
   if (NS_SUCCEEDED(result))
   { // set the selection to the insertion point where the string was removed
-
+    nsCOMPtr<nsIDOMSelection> selection;
+    result = mPresShell->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(result)) {
+      result = selection->Collapse(mElement, mOffset);
+    }
   }
   return result;
 }

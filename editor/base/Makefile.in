@@ -25,9 +25,11 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = ender
 
 CPPSRCS =                       \
-    editor.cpp                  \
-    editorInterfaces.cpp        \
+    nsEditor.cpp                \
+    nsTextEditor.cpp            \
+    nsEditorEventListeners.cpp  \
     nsEditFactory.cpp           \
+    nsTextEditFactory.cpp       \
     ChangeAttributeTxn.cpp      \
     EditTxn.cpp                 \
     EditAggregateTxn.cpp        \
