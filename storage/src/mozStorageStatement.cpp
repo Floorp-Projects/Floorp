@@ -100,11 +100,19 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
     db = msc->GetNativeConnection();
     NS_ENSURE_TRUE(db != nsnull, NS_ERROR_NULL_POINTER);
 
-    srv = sqlite3_prepare (db, nsPromiseFlatCString(aSQLStatement).get(), aSQLStatement.Length(), &mDBStatement, NULL);
-    if (srv != SQLITE_OK) {
-        fprintf (stderr, "SQLITE ERROR: Statement: '%s'\n", nsPromiseFlatCString(aSQLStatement).get());
-        fprintf (stderr, "SQLITE ERROR: %d '%s'\n", srv, sqlite3_errmsg(db));
-        return NS_ERROR_FAILURE;
+    int nRetries = 0;
+
+    while (nRetries < 2) {
+        srv = sqlite3_prepare (db, nsPromiseFlatCString(aSQLStatement).get(), aSQLStatement.Length(), &mDBStatement, NULL);
+        if (srv != SQLITE_OK || (srv == SQLITE_SCHEMA && nRetries > 0)) {
+#ifdef PR_LOGGING
+            PR_LOG(gStorageLog, PR_LOG_ERROR, ("Sqlite statement prepare error: %d '%s'", srv, sqlite3_errmsg(db)));
+            PR_LOG(gStorageLog, PR_LOG_ERROR, ("Statement was: '%s'", nsPromiseFlatCString(aSQLStatement).get()));
+#endif
+            return NS_ERROR_FAILURE;
+        }
+
+        nRetries++;
     }
 
     mDBConnection = aDBConnection;
@@ -354,15 +362,24 @@ mozStorageStatement::Execute()
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
 
-    int srv = sqlite3_step (mDBStatement);
-    if (srv == SQLITE_MISUSE || srv == SQLITE_ERROR) {
+    int nRetries = 0;
+
+    while (nRetries < 2) {
+        int srv = sqlite3_step (mDBStatement);
+        if (srv == SQLITE_MISUSE || srv == SQLITE_ERROR) {
 #ifdef PR_LOGGING
-        nsCAutoString errStr;
-        mDBConnection->GetLastErrorString(errStr);
-        PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::Execute error: %s", errStr.get()));
+            nsCAutoString errStr;
+            mDBConnection->GetLastErrorString(errStr);
+            PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::Execute error: %s", errStr.get()));
 #endif
-        mExecuting = PR_FALSE;
-        return NS_ERROR_FAILURE; // XXX error code
+            mExecuting = PR_FALSE;
+            return NS_ERROR_FAILURE; // XXX error code
+        }
+
+        if (srv != SQLITE_SCHEMA)
+            break;
+
+        nRetries++;
     }
 
     return Reset();
@@ -383,42 +400,42 @@ mozStorageStatement::ExecuteStep(PRBool *_retval)
 {
     NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
 
-    int srv = sqlite3_step (mDBStatement);
+    int nRetries = 0;
+
+    while (nRetries < 2) {
+        int srv = sqlite3_step (mDBStatement);
 
 #ifdef PR_LOGGING
-    if (srv != SQLITE_ROW && srv != SQLITE_DONE) {
-        nsCAutoString errStr;
-        mDBConnection->GetLastErrorString(errStr);
-        PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::ExecuteStep error: %s", errStr.get()));
-    }
+        if ((srv != SQLITE_ROW && srv != SQLITE_DONE) || (srv == SQLITE_SCHEMA && nRetries > 0)) {
+            nsCAutoString errStr;
+            mDBConnection->GetLastErrorString(errStr);
+            PR_LOG(gStorageLog, PR_LOG_DEBUG, ("mozStorageStatement::ExecuteStep error: %s", errStr.get()));
+        }
 #endif
 
-    // SQLITE_ROW and SQLITE_DONE are non-errors
-    if (srv == SQLITE_ROW) {
-        // we got a row back
-        mExecuting = PR_TRUE;
-        *_retval = PR_TRUE;
-        return NS_OK;
-    } else if (srv == SQLITE_DONE) {
-        // statement is done (no row returned)
-        mExecuting = PR_FALSE;
-        *_retval = PR_FALSE;
-        return NS_OK;
-    } else if (srv == SQLITE_BUSY) {
-        // ??? what to do?
-        mExecuting = PR_FALSE;
-        return NS_ERROR_FAILURE;
-    } else if (srv == SQLITE_MISUSE) {
-        // bad stuff happened
-        mExecuting = PR_FALSE;
-        return NS_ERROR_FAILURE;
-    } else if (srv == SQLITE_ERROR) {
-        // even worse stuff happened
-        mExecuting = PR_FALSE;
-        return NS_ERROR_FAILURE;
-    } else {
-        // something that shouldn't happen happened
-        NS_ERROR ("sqlite3_step returned an error code we don't know about!");
+        // SQLITE_ROW and SQLITE_DONE are non-errors
+        if (srv == SQLITE_ROW) {
+            // we got a row back
+            mExecuting = PR_TRUE;
+            *_retval = PR_TRUE;
+            return NS_OK;
+        } else if (srv == SQLITE_DONE) {
+            // statement is done (no row returned)
+            mExecuting = PR_FALSE;
+            *_retval = PR_FALSE;
+            return NS_OK;
+        } else if (srv == SQLITE_BUSY ||
+                   srv == SQLITE_MISUSE ||
+                   srv == SQLITE_ERROR)
+        {
+            mExecuting = PR_FALSE;
+            return NS_ERROR_FAILURE;
+        } else if (srv != SQLITE_SCHEMA) {
+            // something that shouldn't happen happened
+            NS_ERROR ("sqlite3_step returned an error code we don't know about!");
+        }
+
+        nRetries++;
     }
 
     // shouldn't get here
