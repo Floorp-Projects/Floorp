@@ -37,7 +37,47 @@
 
 #import "NSString+Utils.h"
 
+#include "nsString.h"
+#include "nsPromiseFlatString.h"
+#include "nsCRT.h"
+
 @implementation NSString (ChimeraStringUtils)
+
++ (id)stringWith_nsString:(const nsAString *)inString
+{
+  if (inString)
+  {
+    nsPromiseFlatString flatString = PromiseFlatString(*inString);
+    return [NSString stringWithCharacters:flatString.get() length:flatString.Length()];
+  }
+  else
+    return [NSString string];
+}
+
+#define ASSIGN_STACK_BUFFER_CHARACTERS	256
+
+- (void)assignTo_nsString:(nsAString*)ioString
+{
+  if (!ioString) return;
+  
+  PRUnichar			stackBuffer[ASSIGN_STACK_BUFFER_CHARACTERS];
+  PRUnichar*		buffer = stackBuffer;
+  
+  unsigned int len = [self length];
+  
+  if (len + 1 > ASSIGN_STACK_BUFFER_CHARACTERS)
+  {
+    buffer = (PRUnichar *)malloc(sizeof(PRUnichar) * (len + 1));
+    if (!buffer)
+      return;
+  }
+
+  [self getCharacters: buffer];		// does not null terminate
+  ioString->Assign(buffer, len);
+  
+  if (buffer != stackBuffer)
+    free(buffer);
+}
 
 - (NSString *)stringByRemovingCharactersInSet:(NSCharacterSet*)characterSet
 {
