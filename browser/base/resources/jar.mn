@@ -18,8 +18,6 @@ browser.jar:
         content/browser/turboDialog.xul              (content/turboDialog.xul)
         content/browser/viewsource.js                (content/viewsource.js)
         content/browser/viewSource.xul               (content/viewSource.xul)
-        content/browser/openLocation.xul             (content/openLocation.xul)
-        content/browser/openLocation.js              (content/openLocation.js)
 en-US.jar:
         locale/en-US/browser/contents.rdf            (locale/contents.rdf)
         locale/en-US/browser/viewSource.dtd          (locale/viewSource.dtd)
@@ -31,6 +29,3 @@ en-US.jar:
         locale/en-US/browser/metadata.properties     (locale/metadata.properties)
         locale/en-US/browser/turboDialog.dtd         (locale/turboDialog.dtd)
         locale/en-US/browser/turboMenu.properties    (locale/turboMenu.properties)
-        locale/en-US/browser/openLocation.dtd        (locale/openLocation.dtd)
-        locale/en-US/browser/openLocation.properties (locale/openLocation.properties)
-
