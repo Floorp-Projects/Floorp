@@ -40,7 +40,7 @@
   <tree id="Tree"
     style="width: 100%; height: 100%"
     datasources="rdf:internetsearch"
-    ondblclick="return OnDblClick(event.target.parentNode.parentNode, 'Tree')">
+    onclick="if (event.clickCount == 2) return openURL(event.target.parentNode.parentNode, 'Tree')">
 
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
