@@ -39,11 +39,12 @@
 
 #define MIME_TYPES_HANDLED  "application/basic-plugin"
 #define PLUGIN_NAME         "Basic Example Plugin for Mozilla"
-#define PLUGIN_DESCRIPTION  "Basic Example Plugin for Mozilla"
+#define PLUGIN_DESCRIPTION  MIME_TYPES_HANDLED":bsc:"PLUGIN_NAME
+
 
 char* NPP_GetMIMEDescription(void)
 {
-    return(MIME_TYPES_HANDLED);
+    return(PLUGIN_DESCRIPTION);
 }
 
 /////////////////////////////////////
@@ -83,8 +84,10 @@ void NS_DestroyPluginInstance(nsPluginInstanceBase * aPlugin)
 //
 nsPluginInstance::nsPluginInstance(NPP aInstance) : nsPluginInstanceBase(),
   mInstance(aInstance),
+  mInitialized(FALSE),
   mWindow(0),
-  mInitialized(FALSE)
+  mXtwidget(0),
+  mFontInfo(0)
 {
 }
 
@@ -113,7 +116,11 @@ void nsPluginInstance::draw()
   unsigned int w = 3 * mWidth/4;
   int x = (mWidth - w)/2; // center
   int y = h/2;
-  XDrawRectangle(mDisplay, mWindow, mGC, x, y, w, h);
+  if (x >= 0 && y >= 0) {
+    GC gc = XCreateGC(mDisplay, mWindow, 0, NULL);
+    if (!gc) 
+      return;
+    XDrawRectangle(mDisplay, mWindow, gc, x, y, w, h);
   const char *string = getVersion();
   if (string && *string) {
     int l = strlen(string);
@@ -122,42 +129,21 @@ void nsPluginInstance::draw()
     int fh = fmba + fmbd;
     y += fh;
     x += 32;
-    XDrawString(mDisplay, mWindow, mGC, x, y, string, l); 
+      XDrawString(mDisplay, mWindow, gc, x, y, string, l); 
+    }
+    XFreeGC(mDisplay, gc);
   }
 }
 
 NPBool nsPluginInstance::init(NPWindow* aWindow)
 {
-
   if(aWindow == NULL)
     return FALSE;
   
-  NPSetWindowCallbackStruct *ws_info = (NPSetWindowCallbackStruct *)aWindow->ws_info;
-  mWindow = (Window) aWindow->window;
-  mX = aWindow->x;
-  mY = aWindow->y;
-  mWidth = aWindow->width;
-  mHeight = aWindow->height;
-  mDisplay = ws_info->display;
-  mVisual = ws_info->visual;
-  mDepth = ws_info->depth;
-  mColormap = ws_info->colormap;
-  mFontInfo = XLoadQueryFont(mDisplay, "9x15");
-  if (!mFontInfo) {
-    printf("Cannot open 9X15 font\n");
-    return FALSE;
-  }
-  mGC = XCreateGC(mDisplay, mWindow, 0, NULL);
-
-  // add xt event handler
-  Widget xtwidget = XtWindowToWidget(mDisplay, mWindow);
-  if (xtwidget) {
-    long event_mask = ExposureMask;
-    XSelectInput(mDisplay, mWindow, event_mask);
-    XtAddEventHandler(xtwidget, event_mask, False, (XtEventHandler)xt_event_handler, this);
-  }
+  if (SetWindow(aWindow))
   mInitialized = TRUE;
-  return TRUE;
+	
+  return mInitialized;
 }
 
 void nsPluginInstance::shut()
@@ -184,4 +170,42 @@ NPError nsPluginInstance::GetValue(NPPVariable aVariable, void *aValue)
       break;
   }
   return err;
+}
+
+NPError nsPluginInstance::SetWindow(NPWindow* aWindow)
+{
+  if(aWindow == NULL)
+    return FALSE;
+
+  mX = aWindow->x;
+  mY = aWindow->y;
+  mWidth = aWindow->width;
+  mHeight = aWindow->height;
+  if (mWindow == (Window) aWindow->window) {
+    // The page with the plugin is being resized.
+    // Save any UI information because the next time
+    // around expect a SetWindow with a new window id.
+  } else {
+    mWindow = (Window) aWindow->window;
+    NPSetWindowCallbackStruct *ws_info = (NPSetWindowCallbackStruct *)aWindow->ws_info;
+    mDisplay = ws_info->display;
+    mVisual = ws_info->visual;
+    mDepth = ws_info->depth;
+    mColormap = ws_info->colormap;
+
+    if (!mFontInfo) {
+      if (!(mFontInfo = XLoadQueryFont(mDisplay, "9x15")))
+        printf("Cannot open 9X15 font\n");
+    }
+    // add xt event handler
+    Widget xtwidget = XtWindowToWidget(mDisplay, mWindow);
+    if (xtwidget && mXtwidget != xtwidget) {
+      mXtwidget = xtwidget;
+      long event_mask = ExposureMask;
+      XSelectInput(mDisplay, mWindow, event_mask);
+      XtAddEventHandler(xtwidget, event_mask, False, (XtEventHandler)xt_event_handler, this);
+    }
+  }
+  draw();
+  return TRUE;
 }
