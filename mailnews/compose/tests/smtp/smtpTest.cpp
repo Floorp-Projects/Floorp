@@ -39,6 +39,7 @@
 
 #include "nsISmtpService.h"
 #include "nsISmtpUrl.h"
+#include "nsIUrlListener.h"
 
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
@@ -119,11 +120,17 @@ static void strip_nonprintable(char *string) {
 // would be asked to process it....right now it is just Smtp specific....
 ///////////////////////////////////////////////////////////////////////////////////
 
-class nsSmtpTestDriver
+class nsSmtpTestDriver : public nsIUrlListener
 {
 public:
 	nsSmtpTestDriver(nsINetService * pService, PLEventQueue *queue);
 	virtual ~nsSmtpTestDriver();
+
+	NS_DECL_ISUPPORTS;
+
+	// nsIUrlListener support
+	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
+	NS_IMETHOD OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode);
 
 	// run driver initializes the instance, lists the commands, runs the command and when
 	// the command is finished, it reads in the next command and continues...theoretically,
@@ -151,6 +158,7 @@ protected:
 	PRUint32	m_port;
 	char		m_host[200];		
 	PRBool		m_runningURL;
+	PRBool		m_runTestHarness;
 
 	nsINetService  * m_netService;
 	nsISmtpService * m_smtpService;
@@ -159,13 +167,42 @@ protected:
 	PRBool m_protocolInitialized; 
 };
 
+nsresult nsSmtpTestDriver::OnStartRunningUrl(nsIURL * aUrl)
+{
+	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
+	m_runningURL = PR_TRUE;
+	return NS_OK;
+}
+
+nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURL * aUrl, nsresult aExitCode)
+{
+	NS_PRECONDITION(aUrl, "just a sanity check since this is a test program");
+	nsresult rv = NS_OK;
+	m_runningURL = PR_FALSE;
+	if (aUrl)
+	{
+		// query it for a mailnews interface for now....
+		nsIMsgMailNewsUrl * mailUrl = nsnull;
+		rv = aUrl->QueryInterface(nsIMsgMailNewsUrl::IID(), (void **) &mailUrl);
+		if (NS_SUCCEEDED(rv))
+		{
+			mailUrl->UnRegisterListener(this);
+			NS_RELEASE(mailUrl);
+		}
+	}
+
+	return NS_OK;
+}
+
 nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
                                    PLEventQueue *queue)
 {
+	NS_INIT_REFCNT();
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
 	m_protocolInitialized = PR_FALSE;
-	m_runningURL = PR_TRUE;
+	m_runningURL = PR_FALSE;
+	m_runTestHarness = PR_TRUE;
     m_eventQueue = queue;
 	m_netService = pNetService;
 	m_smtpUrl = nsnull;
@@ -184,20 +221,15 @@ nsSmtpTestDriver::~nsSmtpTestDriver()
 	nsServiceManager::ReleaseService(kSmtpServiceCID, m_smtpService);
 }
 
+NS_IMPL_ISUPPORTS(nsSmtpTestDriver, nsIUrlListener::IID())
+
 nsresult nsSmtpTestDriver::RunDriver()
 {
 	nsresult status = NS_OK;
 
-	while (m_runningURL)
+	while (m_runTestHarness)
 	{
-		// if we haven't gotten started (and created a protocol) or
-		// if the protocol instance is currently not busy, then read in a new command
-		// and process it...
-		PRBool stillBusy = PR_FALSE;
-		if (m_smtpUrl)
-			m_smtpUrl->GetRunningUrlFlag(&stillBusy);
-
-		if (stillBusy == PR_FALSE) // can we run and dispatch another command?
+		if (m_runningURL == PR_FALSE) // can we run and dispatch another command?
 		{
 			NS_IF_RELEASE(m_smtpUrl); // release our old url..
 			m_smtpUrl = nsnull;
@@ -331,7 +363,7 @@ nsresult nsSmtpTestDriver::ListCommands()
 nsresult nsSmtpTestDriver::OnExit()
 {
 	printf("Terminating Smtp test harness....\n");
-	m_runningURL = PR_FALSE; // next time through the test driver loop, we'll kick out....
+	m_runTestHarness = PR_FALSE; // next time through the test driver loop, we'll kick out....
 	return NS_OK;
 }
 
@@ -373,7 +405,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 
 	nsFilePath filePath (fileName);
 	nsIURL * url = nsnull;
-	m_smtpService->SendMailMessage(filePath, m_host, userName, recipients, &url);
+	m_smtpService->SendMailMessage(filePath, m_host, userName, recipients, this, &url);
 	if (url)
 		url->QueryInterface(nsISmtpUrl::IID(), (void **) &m_smtpUrl);
 	NS_IF_RELEASE(url);
@@ -431,9 +463,10 @@ int main()
 	nsSmtpTestDriver * driver = new nsSmtpTestDriver(pNetService,queue);
 	if (driver)
 	{
+		NS_ADDREF(driver);
 		driver->RunDriver();
 		// when it kicks out...it is done....so delete it...
-		delete driver;
+		NS_RELEASE(driver);
 	}
 
 	// shut down:
