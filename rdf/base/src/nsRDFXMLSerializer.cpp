@@ -338,6 +338,7 @@ rdf_EscapeAmpersandsAndAngleBrackets(nsCString& s)
         case '<':
             w -= 3;
             nsCharTraits<char>::copy(w, lt, sizeof(lt) - 1);
+            break;
         case '>':
             w -= 3;
             nsCharTraits<char>::copy(w, gt, sizeof(gt) - 1);
