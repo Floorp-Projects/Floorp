@@ -350,6 +350,7 @@ pref("mailnews.plaintext_domains","");
 pref("mailnews.global_html_domains.version",1);
 
 pref("mail.biff.play_sound",true);
+pref("mail.biff.show_alert", true);
 
 pref("mail.content_disposition_type", 0);
 
