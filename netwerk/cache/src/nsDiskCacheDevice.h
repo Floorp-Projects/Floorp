@@ -28,6 +28,8 @@
 #include "nsILocalFile.h"
 #include "nsCacheEntry.h"
 
+class DiskCacheEntry;
+
 class nsDiskCacheDevice : public nsCacheDevice {
 public:
     nsDiskCacheDevice();
@@ -61,13 +63,18 @@ public:
     PRUint32                getCacheSize();
 
 private:
-    nsresult getFileForKey(const char* key, PRBool meta, nsIFile**);
+    nsresult getFileForKey(const char* key, PRBool meta, PRUint32 generation, nsIFile ** result);
+    nsresult getFileForDiskCacheEntry(DiskCacheEntry * diskEntry, PRBool meta, nsIFile ** result);
     static nsresult getTransportForFile(nsIFile* file, nsCacheAccessMode mode, nsITransport ** result);
 
     nsresult visitEntries(nsICacheVisitor * visitory);
-    nsresult updateDiskCacheEntry(nsCacheEntry* entry);
+    nsresult updateDiskCacheEntry(nsCacheEntry * entry);
     nsresult readDiskCacheEntry(nsCString * key, nsCacheEntry ** entry);
-    nsresult deleteDiskCacheEntry(nsCacheEntry* entry);
+
+    nsresult checkForCollision(nsCacheEntry * entry, nsCacheEntry ** collidingEntry);
+
+    nsresult deleteDiskCacheEntry(DiskCacheEntry * diskEntry);
+    nsresult scavengeDiskCacheEntries(DiskCacheEntry * diskEntry);
 
 private:
     nsCOMPtr<nsILocalFile>  mCacheDirectory;
