@@ -421,19 +421,11 @@ nsLookAndFeel::InitColors()
     GtkStyle *style;
 
     // tooltip foreground and background
-    GtkTooltips *tooltips = gtk_tooltips_new();
-    gtk_object_ref(GTK_OBJECT(tooltips));
-    gtk_object_sink(GTK_OBJECT(tooltips));
-    gtk_tooltips_force_window(tooltips);
-    GtkWidget *tip_window = tooltips->tip_window;
-    gtk_widget_set_rc_style(tip_window);
-
-    style = gtk_widget_get_style(tip_window);
+    style = gtk_rc_get_style_by_paths(gtk_settings_get_default(),
+                                      "gtk-tooltips", "GtkWindow",
+                                      GTK_TYPE_WINDOW);
     sInfoBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
     sInfoText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-
-    gtk_object_unref(GTK_OBJECT(tooltips));
-
 
     // menu foreground & menu background
     GtkWidget *accel_label = gtk_accel_label_new("M");
