@@ -66,8 +66,8 @@ sub system_capture {
     # Perl 5.6.1 filehandle duplication doesn't support the three-argument form
     # of open, so we can't just open(STDOUT, ">&", $outfile); instead we have to
     # create an alias OUTFILE and then do open(STDOUT, ">&OUTFILE").
-    *OUTFILE = *$outfile;
-    *ERRFILE = *$errfile;
+    local *OUTFILE = *$outfile;
+    local *ERRFILE = *$errfile;
     use vars qw( *OUTFILE *ERRFILE ); # suppress "used only once" warnings
     open(STDOUT, ">&OUTFILE") or open(STDOUT, ">&OLDOUT")
                                  and die "Can't dupe STDOUT to output file: $!";
