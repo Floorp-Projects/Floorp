@@ -153,7 +153,7 @@ void ICodeGenerator::endWhileExpression(Register condition)
 void ICodeGenerator::endWhileStatement()
 {
     // recover the while stream
-    WhileCodeState *ics = dynamic_cast<WhileCodeState *>(stitcher.top());
+    WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.top());
     stitcher.pop();
 
     // mark the start of the condition code

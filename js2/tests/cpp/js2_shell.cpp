@@ -329,13 +329,63 @@ ProcessArgs(char **argv, int argc)
 }
 #endif
 
+#include "icodegenerator.h"
+void testICG(World &world)
+{
+        //
+        // testing ICG 
+        //
+        SourcePosition pos = { 0, 0, 0 };
+        ICodeGenerator icg;
+
+        // var i,j; i = j + 2;
+        // i is bound to var #0, j to var #1
+
+        icg.beginStatement(pos);
+        Register r1 = icg.loadVariable(1);
+        Register r2 = icg.loadImmediate(2.0);
+        icg.saveVariable(0, icg.op(ADD, r1, r2));
+
+        // j = a.b
+        icg.beginStatement(pos);
+        Register r4 = icg.loadName(world.identifiers[widenCString("a")]);
+        Register r5 = icg.getProperty(world.identifiers[widenCString("b")], r4);
+        icg.saveVariable(1, r5);
+        
+        // while (i) i = i + j;
+        icg.beginWhileStatement(pos);
+        r1 = icg.loadVariable(0);
+        icg.endWhileExpression(r1);        
+        icg.saveVariable(0, icg.op(ADD, icg.loadVariable(0), icg.loadVariable(1)));
+        icg.endWhileStatement();
+
+        // if (i) if (j) i = 3; else j = 4;
+        r1 = icg.loadVariable(0);   
+        icg.beginIfStatement(pos, r1);
+            r2 = icg.loadVariable(1);
+            icg.beginIfStatement(pos, r2);
+            icg.saveVariable(0, icg.loadImmediate(3));
+            icg.beginElseStatement(true);
+            icg.saveVariable(1, icg.loadImmediate(4));
+            icg.endIfStatement();
+        icg.beginElseStatement(false);
+        icg.endIfStatement();
+
+        std::cout << icg;
+}
+
 int main(int argc, char **argv)
 {
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
 #endif
 	World world;
+#if 0
+        testICG(world);
+#else
 	readEvalPrint(std::cin, world);
-	return 0;
+#endif
+        return 0;
+
     //return ProcessArgs(argv + 1, argc - 1);
 }
