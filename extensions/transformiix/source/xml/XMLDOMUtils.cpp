@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.8 2001/01/12 20:06:16 axel%pike.org Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.9 2001/01/22 09:32:40 kvisco%ziplink.net Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2001/01/12 20:06:16 $
+ * @version $Revision: 1.9 $ $Date: 2001/01/22 09:32:40 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -175,4 +175,39 @@ void XMLDOMUtils::getNodeValue(Node* node, String* target) {
     } //-- switch
 
 } //-- getNodeValue
+
+/**
+ * Resolves the namespace for the given prefix. The namespace is put
+ * into the dest argument.
+ *
+ * @return true if the namespace was found
+**/
+MBool XMLDOMUtils::getNameSpace
+    (const String& prefix, Element* element, String& dest)
+{
+    String attName("xmlns");
+    if (prefix.length() > 0) {
+        attName.append(':');
+        attName.append(prefix);
+    }
+
+    dest.clear();
+
+    Element* elem = element;
+    while( elem ) {
+        NamedNodeMap* atts = elem->getAttributes();
+        if ( atts ) {
+            Node* attr = atts->getNamedItem(attName);
+            if (attr) {
+                dest.append(attr->getNodeValue());
+                return MB_TRUE;
+             }
+        }
+        Node* node = elem->getParentNode();
+        if ((!node) || (node->getNodeType() != Node::ELEMENT_NODE)) break;
+        elem = (Element*) node;
+    }
+    return MB_FALSE;
+
+} //-- getNameSpace
 

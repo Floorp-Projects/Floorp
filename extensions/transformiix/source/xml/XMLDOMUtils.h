@@ -21,12 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.h,v 1.7 2000/08/27 05:58:57 kvisco%ziplink.net Exp $
+ * $Id: XMLDOMUtils.h,v 1.8 2001/01/22 09:32:40 kvisco%ziplink.net Exp $
  */
 
 
 #include "dom.h"
 #include "NamespaceResolver.h"
+#include "baseutils.h"
 
 #ifndef TRANSFRMX_XMLDOMUTILS_H
 #define TRANSFRMX_XMLDOMUTILS_H
@@ -50,6 +51,10 @@ public:
     **/
    static void getNodeValue(Node* node, String* target);
 
+   /**
+    * Returns the Namespace associated with the given prefix
+   **/
+   static MBool getNameSpace(const String& prefix, Element* element, String& dest);
 
 }; //-- XMLDOMUtils
 
