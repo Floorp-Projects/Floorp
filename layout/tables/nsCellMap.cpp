@@ -50,7 +50,7 @@ MOZ_DECL_CTOR_COUNTER(nsCellMap)
 // nsTableCellMap
 
 nsTableCellMap::nsTableCellMap(nsIPresContext* aPresContext, nsTableFrame& aTableFrame)
-:mFirstMap(nsnull)
+:mTableFrame(aTableFrame), mFirstMap(nsnull)
 {
   MOZ_COUNT_CTOR(nsTableCellMap);
 
@@ -148,6 +148,8 @@ void nsTableCellMap::RemoveGroupCellMap(nsTableRowGroupFrame* aGroup)
   }
 }
 
+
+
 PRInt32 
 nsTableCellMap::GetEffectiveRowSpan(PRInt32 aRowIndex,
                                     PRInt32 aColIndex)
@@ -241,10 +243,32 @@ nsTableCellMap::GetCellAt(PRInt32 aRowIndex,
 void 
 nsTableCellMap::AddColsAtEnd(PRUint32 aNumCols)
 {
-  for (PRUint32 colX = 1; colX <= aNumCols; colX++) {
+  for (PRUint32 numX = 1; numX <= aNumCols; numX++) {
     nsColInfo* colInfo = new nsColInfo();
     if (colInfo) {
       mCols.AppendElement(colInfo);
+    }
+  }
+}
+
+void 
+nsTableCellMap::RemoveColsAtEnd()
+{
+  // Remove the cols at the end which don't have originating cells or cells spanning 
+  // into them. Only do this if the col was created as eColAnonymousCell  
+  PRInt32 numCols = GetColCount();
+  PRInt32 lastGoodColIndex = mTableFrame.GetIndexOfLastRealCol();
+  for (PRInt32 colX = numCols - 1; (colX >= 0) && (colX > lastGoodColIndex); colX--) {
+    nsColInfo* colInfo = (nsColInfo*)mCols.ElementAt(colX);
+    if (colInfo) {
+      if ((colInfo->mNumCellsOrig <= 0) && (colInfo->mNumCellsSpan <= 0))  {
+        mCols.RemoveElementAt(colX);
+      }
+      else break; // only remove until we encounter the 1st valid one
+    }
+    else {
+      NS_ASSERTION(0, "null entry in column info array");
+      mCols.RemoveElementAt(colX);
     }
   }
 }
@@ -1072,6 +1096,7 @@ void nsCellMap::ShrinkWithoutRows(nsTableCellMap& aMap,
     // Decrement our row and next available index counts.
     mRowCount--;
   }
+  aMap.RemoveColsAtEnd();
 }
 
 PRInt32 nsCellMap::GetColSpanForNewCell(nsTableCellFrame& aCellFrameToAdd, 
@@ -1199,10 +1224,6 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
     for (colX = endColIndex; colX >= aColIndex; colX--) {
       row->RemoveElementAt(colX);
     }
-    // put back null entries in the row to make it the right size
-    for (colX = 0; colX < colSpan; colX++) {
-      row->AppendElement(nsnull);
-    }
   }
 
   numCols = aMap.GetColCount();
@@ -1241,6 +1262,7 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
       }
     }
   }
+  aMap.RemoveColsAtEnd();
 }
 
 void
