@@ -49,24 +49,35 @@
 #include "nsIAppShell.h"
 #include "nsIJSContextStack.h"
 
+static JSBool
+jsds_GCCallbackProc (JSContext *cx, JSGCStatus status);
+    
+/*******************************************************************************
+ * global vars
+ *******************************************************************************/
+
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 const char jsdServiceContractID[] = "@mozilla.org/js/jsd/debugger-service;1";
 
-/*******************************************************************************
- * global service
- *******************************************************************************/
-
-static jsdIDebuggerService *jsds = 0;
+static jsdService   *gJsds       = 0;
+static JSGCCallback  gLastGCProc = jsds_GCCallbackProc;
+static JSGCStatus    gGCStatus   = JSGC_END;
 
 /*******************************************************************************
  * c callbacks
  *******************************************************************************/
 
-static void
-jsds_SetContextProc (JSDContext* jsdc, void* user)
+static JSBool
+jsds_GCCallbackProc (JSContext *cx, JSGCStatus status)
 {
-    printf ("jsds_SetContextProc: called.\n");
+    gGCStatus = status;
+    printf ("new gc status is %i\n", status);
+
+    if (gLastGCProc)
+        return gLastGCProc (cx, status);
+    
+    return JS_TRUE;
 }
 
 static PRUint32
@@ -76,7 +87,7 @@ jsds_BreakpointHookProc (JSDContext* jsdc, JSDThreadState* jsdthreadstate,
     NS_PRECONDITION (callerdata, "no callerdata for jsds_BreakpointHookProc.");
     
     nsCOMPtr<jsdIExecutionHook> hook;
-    jsds->GetBreakpointHook(getter_AddRefs(hook));
+    gJsds->GetBreakpointHook(getter_AddRefs(hook));
     if (!hook)
         return NS_OK;
     
@@ -131,9 +142,10 @@ jsds_ScriptHookProc (JSDContext* jsdc, JSDScript* jsdscript, JSBool creating,
         return;
     
     jsdIScriptHook *hook = NS_STATIC_CAST(jsdIScriptHook *, callerdata);
-    hook->OnScriptLoaded (jsdContext::FromPtr(jsdc),
-                          jsdScript::FromPtr(jsdc, jsdscript),
-                          creating ? PR_TRUE : PR_FALSE);
+    if (creating)
+        hook->OnScriptLoaded (jsdContext::FromPtr(jsdc),
+                              jsdScript::FromPtr(jsdc, jsdscript),
+                              creating ? PR_TRUE : PR_FALSE);
 }
 
 /*******************************************************************************
@@ -946,7 +958,6 @@ jsdService::jsdService() : mOn(PR_FALSE), mNestedLoopLevel(0), mCx(0),
                            mDebuggerHook(0), mInterruptHook(0), mScriptHook(0)
 {
     NS_INIT_ISUPPORTS();
-    jsds = this;
 }
 
 NS_IMETHODIMP
@@ -967,12 +978,11 @@ jsdService::On (void)
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     
     JSRuntime *rt = JS_GetRuntime (cx);
-    /*
-    JSD_UserCallbacks jsd_uc;
-    jsd_uc.size = sizeof(JSD_UserCallbacks);
-    jsd_uc.setContext = jsds_SetContextProc;
-    */
 
+    if (gLastGCProc == jsds_GCCallbackProc)
+        /* condition indicates that the callback proc has not been set yet */
+        gLastGCProc = JS_SetGCCallback (cx, jsds_GCCallbackProc);
+        
     mCx = JSD_DebuggerOnForUser (rt, NULL, NULL);
     if (!mCx)
         return NS_ERROR_FAILURE;
@@ -1183,12 +1193,20 @@ jsdService::GetScriptHook (jsdIScriptHook **aHook)
     return NS_OK;
 }
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(jsdService);
+jsdService *
+jsdService::GetService ()
+{
+    if (!gJsds)
+        gJsds = new jsdService();
+        
+    NS_IF_ADDREF(gJsds);
+    return gJsds;
+}
+
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(jsdService, jsdService::GetService);
 
 static nsModuleComponentInfo components[] = {
-    { "JSDService", JSDSERVICE_CID,
-      jsdServiceContractID,
-      jsdServiceConstructor},
+    {"JSDService", JSDSERVICE_CID, jsdServiceContractID, jsdServiceConstructor}
 };
 
 NS_IMPL_NSGETMODULE("JavaScript Debugger", components);
