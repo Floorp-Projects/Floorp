@@ -1818,22 +1818,19 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   if (!bodyElement) return NS_ERROR_NULL_POINTER;
 
   // Find where the <body> tag starts.
-  // If user mangled that, then abort
   nsReadingIterator<PRUnichar> beginbody;
   nsReadingIterator<PRUnichar> endbody;
   aSourceString.BeginReading(beginbody);
   aSourceString.EndReading(endbody);
-  if (!CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<body"),
-                                     beginbody, endbody))
-    return NS_ERROR_FAILURE;
+  PRBool foundbody = CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<body"),
+                                                   beginbody, endbody);
 
   nsReadingIterator<PRUnichar> beginhead;
   nsReadingIterator<PRUnichar> endhead;
   aSourceString.BeginReading(beginhead);
   aSourceString.EndReading(endhead);
-  if (!CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<head"),
-                                     beginhead, endhead))
-    return NS_ERROR_FAILURE;
+  PRBool foundhead = CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<head"),
+                                                   beginhead, endhead);
 
   nsReadingIterator<PRUnichar> beginclosehead;
   nsReadingIterator<PRUnichar> endclosehead;
@@ -1841,10 +1838,8 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   aSourceString.EndReading(endclosehead);
 
   // Find the index after "<head>"
-  if (!CaseInsensitiveFindInReadable(NS_LITERAL_STRING("</head"),
-                                     beginclosehead, endclosehead))
-    beginclosehead = beginbody;
-  // We'll be forgiving and assume head ends before body
+  PRBool foundclosehead = CaseInsensitiveFindInReadable(
+           NS_LITERAL_STRING("</head>"), beginclosehead, endclosehead);
   
   // Time to change the document
   nsAutoEditBatch beginBatching(this);
@@ -1856,11 +1851,48 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   nsReadingIterator<PRUnichar> endtotal;
   aSourceString.EndReading(endtotal);
 
-  res = LoadHTML(Substring(beginbody,endtotal));
+  if (foundhead) {
+    if (foundclosehead)
+      res = ReplaceHeadContentsWithHTML(Substring(beginhead, beginclosehead));
+    else if (foundbody)
+      res = ReplaceHeadContentsWithHTML(Substring(beginhead, beginbody));
+    else
+      // XXX Without recourse to some parser/content sink/docshell hackery
+      // we don't really know where the head ends and the body begins
+      // so we assume that there is no body
+      res = ReplaceHeadContentsWithHTML(Substring(beginhead, endtotal));
+  } else {
+    nsReadingIterator<PRUnichar> begintotal;
+    aSourceString.BeginReading(begintotal);
+    NS_NAMED_LITERAL_STRING(head, "<head>");
+    if (foundclosehead)
+      res = ReplaceHeadContentsWithHTML(head + Substring(begintotal, beginclosehead));
+    else if (foundbody)
+      res = ReplaceHeadContentsWithHTML(head + Substring(begintotal, beginbody));
+    else
+      // XXX Without recourse to some parser/content sink/docshell hackery
+      // we don't really know where the head ends and the body begins
+      // so we assume that there is no head
+      res = ReplaceHeadContentsWithHTML(head);
+  }
   if (NS_FAILED(res)) return res;
-  selection->Collapse(bodyElement, 0);
 
-  res = ReplaceHeadContentsWithHTML(Substring(beginhead,beginclosehead));
+  if (!foundbody) {
+    NS_NAMED_LITERAL_STRING(body, "<body>");
+    // XXX Without recourse to some parser/content sink/docshell hackery
+    // we don't really know where the head ends and the body begins
+    if (foundclosehead) // assume body starts after the head ends
+      res = LoadHTML(body + Substring(endclosehead, endtotal));
+    else if (foundhead) // assume there is no body
+      res = LoadHTML(body);
+    else // assume there is no head, the entire source is body
+      res = LoadHTML(body + aSourceString);
+    if (NS_FAILED(res)) return res;
+
+    return BeginningOfDocument();
+  }
+
+  res = LoadHTML(Substring(beginbody, endtotal));
   if (NS_FAILED(res)) return res;
 
   // Now we must copy attributes user might have edited on the <body> tag
