@@ -1128,60 +1128,42 @@ nsObjectFrame::Paint(nsIPresContext* aPresContext,
                      const nsRect& aDirtyRect,
                      nsFramePaintLayer aWhichLayer)
 {
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if ((disp != nsnull) && !disp->IsVisibleOrCollapsed()) 
-  {
-    return NS_OK;
-  }
+	const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+	if ((disp != nsnull) && !disp->IsVisibleOrCollapsed()) {
+		return NS_OK;
+	}
 
-  nsIFrame * child = mFrames.FirstChild();
-  if(child != NULL) //This is an image
-  {
-    nsObjectFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-    return NS_OK;
-  }
+	nsIFrame * child = mFrames.FirstChild();
+	if (child != NULL) {	// This is an image
+		nsObjectFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+		return NS_OK;
+	}
 
-  aRenderingContext.SetColor(NS_RGB(192, 192, 192));
-  aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
-
-#if !defined(XP_MAC)
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
-  {
-
-//~~~
-#ifdef XP_WIN
-    nsIPluginInstance * inst;
-    if(NS_OK == GetPluginInstance(inst))
-    {
-      NS_RELEASE(inst);
-      // Look if it's windowless
-      nsPluginWindow * window;
-      mInstanceOwner->GetWindow(window);
-      if(window->type == nsPluginWindowType_Drawable)
-      {
-        PRUint32 hdc;
-        aRenderingContext.RetrieveCurrentNativeGraphicData(&hdc);
-        mInstanceOwner->Paint(aDirtyRect, hdc);
-        return NS_OK;
-      }
-    }
-#endif
-
-    const nsStyleFont* font = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-
-    aRenderingContext.SetFont(font->mFont);
-    aRenderingContext.SetColor(NS_RGB(192, 192, 192));
-    aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
-    aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-    aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-  }
-#else
-  // delegate all painting to the plugin instance.
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && nsnull != mInstanceOwner) {
-    mInstanceOwner->Paint(aDirtyRect);
-  }
+#if defined (XP_MAC)
+	// delegate all painting to the plugin instance.
+	if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) && (nsnull != mInstanceOwner)) {
+		mInstanceOwner->Paint(aDirtyRect);
+	}
+#elif defined (XP_PC)
+	if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
+	{
+		nsIPluginInstance * inst;
+		if (NS_OK == GetPluginInstance(inst))
+		{
+			NS_RELEASE(inst);
+			// Look if it's windowless
+			nsPluginWindow * window;
+			mInstanceOwner->GetWindow(window);
+			if (window->type == nsPluginWindowType_Drawable)
+			{
+				PRUint32 hdc;
+				aRenderingContext.RetrieveCurrentNativeGraphicData(&hdc);
+				mInstanceOwner->Paint(aDirtyRect, hdc);
+			}
+		}
+	}
 #endif /* !XP_MAC */
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
