@@ -962,6 +962,7 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
   int   argcount = 0;
 
   nsresult rv;
+  PRInt32  result = NS_OK; // assume success
 
   cParams[0] = nsnull;
 
@@ -980,14 +981,30 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
   if (argcount >= 0)
   {
     rv = process->Init(mTarget);
-
     if (NS_SUCCEEDED(rv))
+    {
       rv = process->Run(mBlocking, (const char **)&cParams, argcount, nsnull);
+      if (NS_SUCCEEDED(rv))
+      {
+        if (mBlocking)
+        {
+          // check the return value for errors
+          PRInt32 value;
+          rv = process->GetExitValue(&value);
+          if (NS_FAILED(rv) || value != 0)
+            result = nsInstall::EXECUTION_ERROR;
+        }
+      }
+      else
+        result = nsInstall::EXECUTION_ERROR;
+    }
+    else
+      result = nsInstall::EXECUTION_ERROR;
   }
   else
-    rv = nsInstall::UNEXPECTED_ERROR;
+    result = nsInstall::UNEXPECTED_ERROR;
 
-  return rv;
+  return result;
 }
 
 PRInt32

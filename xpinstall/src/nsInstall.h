@@ -151,7 +151,7 @@ class nsInstall
             BAD_PACKAGE_NAME            = -200,
             UNEXPECTED_ERROR            = -201,
             ACCESS_DENIED               = -202,
-            TOO_MANY_CERTIFICATES       = -203,
+            EXECUTION_ERROR             = -203,
             NO_INSTALL_SCRIPT           = -204,
             NO_CERTIFICATE              = -205,
             NO_MATCHING_CERTIFICATE     = -206,
