@@ -737,7 +737,8 @@ nsMsgDatabase::GetDBCache()
 void
 nsMsgDatabase::CleanupCache()
 {
-  if (m_dbCache) // clean up memory leak
+  if (m_dbCache) // clean up memory leak (needed because some destructors
+                 // have user-visible effects, which they shouldn't)
   {
     for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
     {
@@ -745,21 +746,21 @@ nsMsgDatabase::CleanupCache()
       if (pMessageDB)
       {
         // hold onto the db until we're finished closing it.
-        nsCOMPtr <nsIMsgDatabase> kungFuGrip = pMessageDB;
+        pMessageDB->AddRef();
         // break cycle with folder -> parse msg state -> db
         pMessageDB->m_folder = nsnull;
         pMessageDB->ForceClosed();
-        kungFuGrip = nsnull;
-        // look for db in cache before deleting, 
-        // in case ForceClosed caused the db to go away
-        if (FindInCache(pMessageDB) != -1)
+        nsrefcnt refcount = pMessageDB->Release();
+
+        // ForceClosed may have caused the last reference (other than
+        // this function's) to go away by breaking a cycle
+        if (refcount != 0)
         {
-          PRInt32 saveRefCnt = pMessageDB->mRefCnt;
-          while (saveRefCnt-- >= 1)
-          {
-            nsMsgDatabase *saveDB = pMessageDB;
-            NS_RELEASE(saveDB);
-          }
+          // The destructor may cause the remaining references to be
+          // released, so stabilize the refcount and then manually
+          // delete.
+          ++pMessageDB->mRefCnt;
+          delete pMessageDB;
         }
         i--;	// back up array index, since closing removes db from cache.
       }
@@ -1301,7 +1302,6 @@ NS_IMETHODIMP nsMsgDatabase::ForceFolderDBClosed(nsIMsgFolder *aFolder)
 NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 {
   nsresult	err = NS_OK;
-  nsCOMPtr<nsIMsgDatabase> aDb(do_QueryInterface(this, &err));
   
   // make sure someone has a reference so object won't get deleted out from under us.
   AddRef();	
