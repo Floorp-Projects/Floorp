@@ -275,15 +275,28 @@ NS_IMETHODIMP nsRegionGTK::GetRects(nsRegionRectSet **aRects)
   
   gdk_region_get_rectangles(mRegion, &rects, &nrects);
 
-  if (!nrects)
+  // There are no rectangles in this region but we still need to
+  // return an empty structure.
+  if (!nrects) {
+    retval = (nsRegionRectSet *)nsMemory::Alloc(sizeof(nsRegionRectSet));
+    if (!retval)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    retval->mNumRects = 0;
+    retval->mRectsLen = 0;
+    retval->mArea = 0;
+
+    *aRects = retval;
+
     return NS_OK;
+  }
 
   // allocate space for our return values
   retval = (nsRegionRectSet *)
     nsMemory::Alloc(sizeof(nsRegionRectSet) +
                     (sizeof(nsRegionRect) * (nrects - 1)));
   if (!retval)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   regionrect = &retval->mRects[0];
   retval->mNumRects = nrects;
