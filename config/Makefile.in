@@ -40,17 +40,7 @@ endif
 TARGETS		= $(HOST_PROGRAM) $(PROGRAM) $(PLSRCS:.pl=)
 
 # Generate the build number on the fly.
-ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
-TARGETS		+= $(DEPTH)/build/build_number
-endif
-
-# Remove this on distclean regardless of "official" setting
-DIST_GARBAGE	+= $(DEPTH)/build/build_number
-
-# If this is an "official mozilla build" make them shortlived.
-ifdef MOZILLA_OFFICIAL
-export:: $(DEPTH)/modules/libpref/src/init/all.js
-endif 
+TARGETS		+= build_number nsBuildID.h
 
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the Perl scripts.
@@ -79,21 +69,29 @@ NSPR_CFLAGS	+= -DGETCWD_CANT_MALLOC
 endif
 
 export:: $(TARGETS)
+	$(INSTALL) -m 444 nsBuildID.h $(DIST)/include
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(INSTALL) -m 444 $(srcdir)/os2/dirent.h  $(DIST)/include
 	$(INSTALL) -m 444 $(srcdir)/os2/getopt.h  $(DIST)/include
 endif
 
-#update build number from within make script
-$(DEPTH)/build/build_number: FORCE
-	$(RM) $@
+# Make sure the build_number is 00000000000 unless MOZILLA_OFFICIAL is set 
+build_number: FORCE
+ifdef MOZILLA_OFFICIAL
 	$(PERL) $(srcdir)/bdate.pl > $@
-	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/locale/en-US/navigator.dtd $@
-	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/browser/resources/content/viewSource.xul $@
-	$(PERL) $(srcdir)/aboutime.pl $(topsrcdir)/xpfe/appshell/public/nsBuildID.h $@
+else
+	@if [ ! -e build_number ]; then \
+		echo 0000000000 > $@ ; \
+	else if [ `cat build_number` != "0000000000" ]; then \
+		echo 0000000000 > $@ ; \
+	     fi \
+	fi 
+endif
 
-$(DEPTH)/modules/libpref/src/init/all.js: FORCE
-	$(PERL) $(srcdir)/set-timebomb.pl 0 30
+nsBuildID.h: build_number
+	$(RM) $@
+	echo "#define NS_BUILD_ID 0000000000" > $@
+	$(PERL) $(srcdir)/aboutime.pl $@ build_number
 
 # clear record of installed chrome on complete rebuild
 install::

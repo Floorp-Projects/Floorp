@@ -511,15 +511,14 @@ int strncasecmp(const char *str1, const char *str2, int length)
 
 #include "NSReg.h"
 #include "VerReg.h"
+#include "nsBuildID.h"
 
 char *TheRegistry = "registry"; 
 char *Flist;
 
 /* WARNING: build hackery */
 #if defined(STANDALONE_REGISTRY) && !defined(XP_MAC)
-long BUILDNUM =
-#include "../../../build/build_number"
-;
+long BUILDNUM = NS_BUILD_ID;
 #endif
 
 

@@ -30,13 +30,22 @@ CHROME_DIR=locales/en-US
 CHROME_L10N_DIR=navigator/locale
 
 CHROME_L10N = \
-		navigator.dtd \
 		openLocation.dtd \
 		openLocation.properties \
 		viewSource.dtd \
 		NetSupportConfirmCheckYN.dtd \
 		navigator.properties \
 		$(NULL)
+#		navigator.dtd \
 
 include $(topsrcdir)/config/rules.mk
+
+GARBAGE	+= navigator.dtd.out
+
+navigator.dtd.out: navigator.dtd $(DEPTH)/config/build_number
+	cp $(srcdir)/navigator.dtd $@
+	$(PERL) $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number
+
+install:: navigator.dtd.out
+	cp navigator.dtd.out $(CHROME_DIST)/$(CHROME_L10N_DIR)/navigator.dtd
 
