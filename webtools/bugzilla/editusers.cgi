@@ -277,21 +277,13 @@ if ($action eq 'new') {
     }
     
 
-    sub x {
-	my $sc="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./";
-	return substr($sc, int (rand () * 100000) % (length ($sc) + 1), 1);
-    }
-
-    my $salt = x() . x();
-    my $cryptpassword = crypt($password, $salt);
-
     # Add the new user
     SendSQL("INSERT INTO profiles ( " .
           "login_name, password, cryptpassword, realname, groupset" .
           " ) VALUES ( " .
           SqlQuote($user) . "," .
           SqlQuote($password) . "," .
-          SqlQuote($cryptpassword) . "," .
+          "encrypt(" . SqlQuote($password) . ")," .
           SqlQuote($realname) . "," .
           $bits . ")" );
 

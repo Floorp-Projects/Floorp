@@ -604,7 +604,10 @@ sub confirm_login {
             exit;
         }
 
-	my $enteredcryptpwd = crypt($enteredpwd, substr($realcryptpwd, 0, 2));
+        SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) . ", " .
+                SqlQuote(substr($realcryptpwd, 0, 2)) . ")");
+        my $enteredcryptpwd = FetchOneColumn();
+
         if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
             print "Content-type: text/html\n\n";
 	    PutHeader("Login failed");

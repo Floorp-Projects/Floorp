@@ -102,11 +102,6 @@ The two passwords you entered did not match.  Please click <b>Back</b> and try a
 my $pwd = $::FORM{'pwd1'};
 
 
-sub x {
-    my $sc="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./";
-    return substr($sc, int (rand () * 100000) % (length ($sc) + 1), 1);
-}
-
 if ($pwd ne "") {
     if ($pwd !~ /^[a-zA-Z0-9-_]*$/ || length($pwd) < 3 || length($pwd) > 15) {
         print "<H1>Sorry; we're picky.</H1>
@@ -119,14 +114,13 @@ Please click <b>Back</b> and try again.\n";
     }
     
     
-# Generate a random salt.
-    
-    my $salt  = x() . x();
-    
-    my $encrypted = crypt($pwd, $salt);
-    
-    SendSQL("update profiles set password='$pwd',cryptpassword='$encrypted' where login_name=" .
+    my $qpwd = SqlQuote($pwd);
+    SendSQL("UPDATE profiles SET password=$qpwd,cryptpassword=encrypt($qpwd) 
+             WHERE login_name = " .
             SqlQuote($::COOKIE{'Bugzilla_login'}));
+    SendSQL("SELECT cryptpassword FROM profiles WHERE login_name = " .
+            SqlQuote($::COOKIE{'Bugzilla_login'}));
+    my $encrypted = FetchOneColumn();
     
     SendSQL("update logincookies set cryptpassword = '$encrypted' where cookie = $::COOKIE{'Bugzilla_logincookie'}");
 }
