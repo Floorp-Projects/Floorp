@@ -104,8 +104,10 @@ public:
 
   /**
    * Get and and set RenderingContext to this graphical state
+   * @return if PR_TRUE, indicates that the clipping region after
+   *         popping state is empty, else PR_FALSE
    */
-  virtual void PopState(void) = 0;
+  virtual PRBool PopState(void) = 0;
 
   /**
    * Tells if a given rectangle is visible within the rendering context

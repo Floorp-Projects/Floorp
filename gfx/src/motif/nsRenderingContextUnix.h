@@ -66,7 +66,7 @@ public:
   virtual nsresult SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
 
   virtual void PushState(void);
-  virtual void PopState(void);
+  virtual PRBool PopState(void);
 
   virtual PRBool IsVisibleRect(const nsRect& aRect);
 

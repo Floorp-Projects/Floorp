@@ -210,9 +210,8 @@ void nsRenderingContextUnix :: PushState(void)
 
 }
 
-void nsRenderingContextUnix :: PopState(void)
+PRBool nsRenderingContextUnix :: PopState(void)
 {
-
   PRUint32 cnt = mStateCache->Count();
   GraphicsState * state;
 
@@ -229,7 +228,8 @@ void nsRenderingContextUnix :: PopState(void)
     delete state;
   }
 
-
+  //XXX need to return if clip region is empty after pop. see nsirendering....h MMP
+  return PR_FALSE;
 }
 
 PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
@@ -486,8 +486,9 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
   // XXX - Could this be a GC? If so, store the type of surface in nsDrawingSurfaceUnix
   ::XFreePixmap(surface->display, surface->drawable);
 
-  //  if (mRenderingSurface == surface)
-  //    mRenderingSurface = nsnull;
+  //XXX greg, this seems bad. MMP
+  if (mRenderingSurface == surface)
+    mRenderingSurface = nsnull;
 
   delete aDS;
 }
