@@ -436,6 +436,7 @@ int obj_kind;
   }
 # endif  /* REDIRECT_MALLOC */
 
+#if defined(LINUX)
 /* fake __mmap() */
 
 __ptr_t
@@ -444,3 +445,4 @@ __mmap (__ptr_t addr, size_t len, int prot, int flags, int fd, off_t offset)
   raise(SIGINT);
   return NULL;
 }
+#endif
