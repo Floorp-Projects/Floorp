@@ -28,22 +28,29 @@
 
 //Interfaces Needed
 #include "nsIUrlbarHistory.h"
+#include "nsIAutoCompleteSession.h"
 #include "nsVoidArray.h"
 
-class nsUrlbarHistory: public nsIUrlbarHistory
+class nsUrlbarHistory: public nsIUrlbarHistory,
+                       public nsIAutoCompleteSession
 {
 public:
 	nsUrlbarHistory();
 
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSIURLBARHISTORY
+	NS_DECL_NSIAUTOCOMPLETESESSION
 
 protected:
    virtual ~nsUrlbarHistory();
 
-protected:
+   NS_IMETHOD SearchPreviousResults(const PRUnichar *, nsIAutoCompleteResults *);
+   NS_IMETHOD  SearchCache(const PRUnichar *, nsIAutoCompleteResults *);
+
+private:
     nsVoidArray   mArray;
 	PRInt32 mLength;
+	nsVoidArray  mIgnoreArray;
 };
 
 
