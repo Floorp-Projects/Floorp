@@ -608,21 +608,23 @@ NS_IMETHODIMP
 nsHTMLBodyElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                             nsChangeHint& aHint) const
 {
-  if ((aAttribute == nsHTMLAtoms::link) ||
-      (aAttribute == nsHTMLAtoms::vlink) ||
-      (aAttribute == nsHTMLAtoms::alink) ||
-      (aAttribute == nsHTMLAtoms::text)) {
-    aHint = NS_STYLE_HINT_VISUAL;
-  }
-  else if ((aAttribute == nsHTMLAtoms::marginwidth) ||
-           (aAttribute == nsHTMLAtoms::marginheight)) {
-    aHint = NS_STYLE_HINT_REFLOW;
-  }
-  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (!GetBackgroundAttributesImpact(aAttribute, aHint)) {
-      aHint = NS_STYLE_HINT_CONTENT;
-    }
-  }
+  static const AttributeImpactEntry attributes[] = {
+    { &nsHTMLAtoms::link,  NS_STYLE_HINT_VISUAL },
+    { &nsHTMLAtoms::vlink, NS_STYLE_HINT_VISUAL },
+    { &nsHTMLAtoms::alink, NS_STYLE_HINT_VISUAL },
+    { &nsHTMLAtoms::text,  NS_STYLE_HINT_VISUAL },
+    { &nsHTMLAtoms::marginwidth, NS_STYLE_HINT_REFLOW },
+    { &nsHTMLAtoms::marginheight, NS_STYLE_HINT_REFLOW },
+    { nsnull, NS_STYLE_HINT_NONE },
+  };
+
+  static const AttributeImpactEntry* const map[] = {
+    attributes,
+    sCommonAttributeMap,
+    sBackgroundAttributeMap,
+  };
+
+  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
 
   return NS_OK;
 }

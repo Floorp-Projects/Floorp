@@ -635,15 +635,19 @@ nsHTMLTextAreaElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt
   // rows and cols and why the AttributeChanged method in
   // nsTextControlFrame does take care of the entire problem, but
   // it doesn't and this makes things better
-  if (aAttribute == nsHTMLAtoms::align ||
-      aAttribute == nsHTMLAtoms::rows ||
-      aAttribute == nsHTMLAtoms::cols) {
-    aHint = NS_STYLE_HINT_REFLOW;
-  }
-  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
+  static const AttributeImpactEntry attributes[] = {
+    { &nsHTMLAtoms::align, NS_STYLE_HINT_REFLOW },
+    { &nsHTMLAtoms::rows, NS_STYLE_HINT_REFLOW },
+    { &nsHTMLAtoms::cols, NS_STYLE_HINT_REFLOW },
+    { nsnull, NS_STYLE_HINT_NONE }
+  };
 
+  static const AttributeImpactEntry* const map[] = {
+    attributes,
+    sCommonAttributeMap,
+  };
+
+  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
   return NS_OK;
 }
 

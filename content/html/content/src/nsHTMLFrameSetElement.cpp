@@ -383,13 +383,19 @@ NS_IMETHODIMP
 nsHTMLFrameSetElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                                 nsChangeHint& aHint) const
 {
-  if ((aAttribute == nsHTMLAtoms::rows) ||
-      (aAttribute == nsHTMLAtoms::cols)) {
-    aHint = mCurrentRowColHint;
-  }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
+  // can't be static const because it uses mCurrentRowColHint
+  AttributeImpactEntry attributes[] = {
+    { &nsHTMLAtoms::rows, mCurrentRowColHint },
+    { &nsHTMLAtoms::cols, mCurrentRowColHint },
+    { nsnull, NS_STYLE_HINT_NONE },
+  };
+
+  static const AttributeImpactEntry* const map[] = {
+    attributes,
+    sCommonAttributeMap
+  };
+  
+  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
 
   return NS_OK;
 }

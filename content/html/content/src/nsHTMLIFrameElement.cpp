@@ -494,19 +494,20 @@ nsHTMLIFrameElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32 aModType,
                                               nsChangeHint& aHint) const
 {
-  if ((aAttribute == nsHTMLAtoms::width) ||
-      (aAttribute == nsHTMLAtoms::height)) {
-    aHint = NS_STYLE_HINT_REFLOW;
-  }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    aHint = NS_STYLE_HINT_FRAMECHANGE;
-  }
-  else if (aAttribute == nsHTMLAtoms::frameborder) {
-    aHint = NS_STYLE_HINT_REFLOW;
-  }
-  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
+  static const AttributeImpactEntry attributes[] = {
+    { &nsHTMLAtoms::width, NS_STYLE_HINT_REFLOW },
+    { &nsHTMLAtoms::height, NS_STYLE_HINT_REFLOW },
+    { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
+    { &nsHTMLAtoms::frameborder, NS_STYLE_HINT_REFLOW },
+    { nsnull, NS_STYLE_HINT_NONE },
+  };
+
+  static const AttributeImpactEntry* const map[] = {
+    attributes,
+    sCommonAttributeMap,
+  };
+  
+  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
 
   return NS_OK;
 }
