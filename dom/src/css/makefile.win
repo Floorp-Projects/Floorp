@@ -2,7 +2,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
+
 
 LIBRARY_NAME=jsdomcss_s 
 MODULE=raptor 

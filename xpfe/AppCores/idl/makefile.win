@@ -25,7 +25,7 @@
 # run this makefile during development, only.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
+
 
 !ifndef IDLSRCS
 IDLSRCS= \
