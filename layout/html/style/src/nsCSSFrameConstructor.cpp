@@ -2233,7 +2233,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     nsIFrame* newScrollFrame = nsnull;
     nsCOMPtr<nsIDocument> document;
     aDocElement->GetDocument(*getter_AddRefs(document));
- 
+    nsCOMPtr<nsIStyleContext> newContext;
+
     BeginBuildingScrollFrame( aPresShell, aPresContext,
                               aState,
                               aDocElement,
@@ -2242,9 +2243,10 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                               nsLayoutAtoms::scrolledContentPseudo,
                               document,
                               scrollFrame,
-                              styleContext,
+                              newContext,
                               newScrollFrame);
 
+    styleContext = newContext;
     aParentFrame = newScrollFrame;
   }
 
@@ -2539,9 +2541,9 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       // resolve a context for the scrollframe
       nsCOMPtr<nsIStyleContext>  styleContext;
       aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                          nsLayoutAtoms::viewportScrollPseudo,
-                                          viewportPseudoStyle, PR_FALSE,
-                                          getter_AddRefs(styleContext));
+                                                 nsLayoutAtoms::viewportScrollPseudo,
+                                                 viewportPseudoStyle, PR_FALSE,
+                                                 getter_AddRefs(styleContext));
 
 
       nsIFrame* newScrollableFrame = nsnull;
@@ -4179,8 +4181,9 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
     aPresContext->ResolvePseudoStyleContextFor(aContent,
                                               nsLayoutAtoms::scrolledContentPseudo,
                                               contentStyle, PR_FALSE,
-                                              getter_AddRefs(contentStyle));
+                                              getter_AddRefs(scrollPseudoStyle));
 
+    contentStyle = scrollPseudoStyle;
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         parentFrame, contentStyle, nsnull, scrollFrame);
   } else {
