@@ -328,7 +328,7 @@ void
 nsSVGGDIPlusPathGeometry::GetGlobalTransform(Matrix *matrix)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  mSource->GetCTM(getter_AddRefs(ctm));
+  mSource->GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
   
   float m[6];
@@ -423,7 +423,7 @@ nsSVGGDIPlusPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_re
 
   const unsigned long fillmask = 
     pathmask |
-    nsISVGGeometrySource::UPDATEMASK_CTM;
+    nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
 
   const unsigned long strokemask =
     pathmask |
@@ -433,7 +433,7 @@ nsSVGGDIPlusPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_re
     nsISVGGeometrySource::UPDATEMASK_STROKE_MITERLIMIT  |
     nsISVGGeometrySource::UPDATEMASK_STROKE_DASH_ARRAY  |
     nsISVGGeometrySource::UPDATEMASK_STROKE_DASHOFFSET  |
-    nsISVGGeometrySource::UPDATEMASK_CTM;
+    nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
 
   const unsigned long hittestregionmask =
     fillmask                                            |

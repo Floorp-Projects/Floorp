@@ -226,7 +226,7 @@ nsSVGLibartGlyphGeometryFT::PaintFill(nsISVGLibartCanvas* canvas,
     mSource->GetY(&y);
     
     nsCOMPtr<nsIDOMSVGMatrix> ctm;
-    mSource->GetCTM(getter_AddRefs(ctm));
+    mSource->GetCanvasTM(getter_AddRefs(ctm));
     NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
 
     // negations of B,C,F are to transform matrix from y-down to y-up

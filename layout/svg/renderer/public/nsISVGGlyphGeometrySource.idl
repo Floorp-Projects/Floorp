@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Alex Fritze <alex@croczilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -81,7 +81,7 @@ interface nsISVGGlyphGeometrySource : nsISVGGlyphMetricsSource
    * @name Glyph start position
    * @{
    */
-  readonly attribute float x; // start position of glyph *before* applying CTM
+  readonly attribute float x; // start position of glyph *before* applying CanvasTM
   const unsigned long UPDATEMASK_X             = 0x00080000;
   readonly attribute float y;
   const unsigned long UPDATEMASK_Y             = 0x00100000;

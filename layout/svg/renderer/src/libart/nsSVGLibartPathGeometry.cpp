@@ -174,7 +174,7 @@ nsSVGLibartPathGeometry::GetPath()
   double matrix[6];
   {
     nsCOMPtr<nsIDOMSVGMatrix> ctm;
-    mSource->GetCTM(getter_AddRefs(ctm));
+    mSource->GetCanvasTM(getter_AddRefs(ctm));
     NS_ASSERTION(ctm, "graphic source didn't have a ctm");
     
     float val;
@@ -297,7 +297,7 @@ nsSVGLibartPathGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_ret
 
   const unsigned long pathmask =
     nsISVGPathGeometrySource::UPDATEMASK_PATH |
-    nsISVGGeometrySource::UPDATEMASK_CTM;
+    nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
 
   const unsigned long fillmask = 
     pathmask |

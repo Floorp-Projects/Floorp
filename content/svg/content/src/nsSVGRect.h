@@ -41,18 +41,18 @@
 
 #include "nsIDOMSVGRect.h"
 
+class nsIDOMSVGLength;
+
 nsresult
 NS_NewSVGRect(nsIDOMSVGRect** result,
               float x=0.0f, float y=0.0f,
               float width=0.0f, float height=0.0f);
 
-
-// create an SVGRect wrapper object that delegates all 'getter' calls
-// to the given prototype if the property hasn't been set on the
-// object directly
+// A 'viewbox' is a special kind of nsIDOMSVGRect that defaults to
+// (0,0,viewportWidth.value,viewportHeight.value) until set explicitly.
 nsresult
-NS_NewSVGRectPrototypeWrapper(nsIDOMSVGRect** result,
-                              nsIDOMSVGRect* prototype);
-
+NS_NewSVGViewBox(nsIDOMSVGRect** result,
+                 nsIDOMSVGLength *viewportWidth,
+                 nsIDOMSVGLength *viewportHeight);
 
 #endif //__NS_SVGRECT_H__

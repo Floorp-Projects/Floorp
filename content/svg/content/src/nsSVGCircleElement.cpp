@@ -43,8 +43,7 @@
 #include "nsIDOMSVGCircleElement.h"
 #include "nsCOMPtr.h"
 #include "nsISVGSVGElement.h"
-#include "nsISVGViewportAxis.h"
-#include "nsISVGViewportRect.h"
+#include "nsSVGCoordCtxProvider.h"
 
 typedef nsSVGGraphicElement nsSVGCircleElementBase;
 
@@ -200,8 +199,8 @@ void nsSVGCircleElement::ParentChainChanged()
   GetOwnerSVGElement(getter_AddRefs(dom_elem));
   if (!dom_elem) return;
 
-  nsCOMPtr<nsISVGSVGElement> svg_elem = do_QueryInterface(dom_elem);
-  NS_ASSERTION(svg_elem, "<svg> element missing interface");
+  nsCOMPtr<nsSVGCoordCtxProvider> ctx = do_QueryInterface(dom_elem);
+  NS_ASSERTION(ctx, "<svg> element missing interface");
 
   // cx:
   {
@@ -210,13 +209,7 @@ void nsSVGCircleElement::ParentChainChanged()
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
-    nsCOMPtr<nsIDOMSVGRect> vp_dom;
-    svg_elem->GetViewport(getter_AddRefs(vp_dom));
-    nsCOMPtr<nsISVGViewportRect> vp = do_QueryInterface(vp_dom);
-    nsCOMPtr<nsISVGViewportAxis> ctx;
-    vp->GetXAxis(getter_AddRefs(ctx));
-    
-    length->SetContext(ctx);
+    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextX()));
   }
 
   // cy:
@@ -226,13 +219,7 @@ void nsSVGCircleElement::ParentChainChanged()
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
-    nsCOMPtr<nsIDOMSVGRect> vp_dom;
-    svg_elem->GetViewport(getter_AddRefs(vp_dom));
-    nsCOMPtr<nsISVGViewportRect> vp = do_QueryInterface(vp_dom);
-    nsCOMPtr<nsISVGViewportAxis> ctx;
-    vp->GetYAxis(getter_AddRefs(ctx));
-    
-    length->SetContext(ctx);
+    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextY()));
   }
 
   // r:
@@ -242,13 +229,7 @@ void nsSVGCircleElement::ParentChainChanged()
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
-    nsCOMPtr<nsIDOMSVGRect> vp_dom;
-    svg_elem->GetViewport(getter_AddRefs(vp_dom));
-    nsCOMPtr<nsISVGViewportRect> vp = do_QueryInterface(vp_dom);
-    nsCOMPtr<nsISVGViewportAxis> ctx;
-    vp->GetUnspecifiedAxis(getter_AddRefs(ctx));
-    
-    length->SetContext(ctx);
+    length->SetContext(nsRefPtr<nsSVGCoordCtx>(ctx->GetContextUnspecified()));
   }
 
   // XXX call baseclass version to recurse into children?

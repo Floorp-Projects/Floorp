@@ -71,6 +71,7 @@ CPPSRCS		= \
 		nsSVGAnimatedTransformList.cpp \
 		nsSVGCircleElement.cpp \
 		nsSVGClassValue.cpp \
+		nsSVGCoordCtxProvider.cpp \
 		nsSVGElement.cpp \
 		nsSVGElementFactory.cpp \
 		nsSVGEllipseElement.cpp \
@@ -105,7 +106,6 @@ CPPSRCS		= \
 		nsSVGTransform.cpp \
 		nsSVGTransformList.cpp \
 		nsSVGValue.cpp \
-		nsSVGViewportRect.cpp \
 		nsSVGDefsElement.cpp \
 		$(NULL)
 
@@ -120,6 +120,9 @@ EXPORTS =  			\
 	nsISVGValueObserver.h      \
 	nsISVGValueUtils.h         \
 	nsSVGTypeCIDs.h            \
+	nsSVGCoordCtxProvider.h    \
+	nsSVGCoordCtx.h            \
+	nsSVGNumber.h              \
 	$(NULL)
 
 

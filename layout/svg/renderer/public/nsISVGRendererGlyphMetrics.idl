@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Alex Fritze <alex@croczilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -59,7 +59,7 @@ interface nsIDOMSVGRect;
  * assumed to store a reference to its associated source object and
  * provide metrics information about the (composite) glyph described
  * by nsISVGGlyphMetricsSource::characterData,
- * nsISVGGlyphMetricsSource::font, nsISVGGlyphMetricsSource::CTM, and
+ * nsISVGGlyphMetricsSource::font, nsISVGGlyphMetricsSource::canvasTM, and
  * other relevant style such as nsISVGGlyphMetricsSource::strokeWidth.
  */
 [scriptable, uuid(8665f6e9-6ed6-4ff8-b511-46c8068b3960)]

@@ -430,13 +430,13 @@ nsSVGGDIPlusGlyphGeometry::Update(PRUint32 updatemask, nsISVGRendererRegion **_r
     nsISVGGeometrySource::UPDATEMASK_STROKE_MITERLIMIT  |
     nsISVGGeometrySource::UPDATEMASK_STROKE_DASH_ARRAY  |
     nsISVGGeometrySource::UPDATEMASK_STROKE_DASHOFFSET  |
-    nsISVGGeometrySource::UPDATEMASK_CTM;
+    nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
   
   const unsigned long regionsmask =
     nsISVGGlyphGeometrySource::UPDATEMASK_METRICS |
     nsISVGGlyphGeometrySource::UPDATEMASK_X       |
     nsISVGGlyphGeometrySource::UPDATEMASK_Y       |
-    nsISVGGeometrySource::UPDATEMASK_CTM;
+    nsISVGGeometrySource::UPDATEMASK_CANVAS_TM;
 
   
   nsCOMPtr<nsISVGRendererRegion> regionBefore = mCoveredRegion;
@@ -526,7 +526,7 @@ void
 nsSVGGDIPlusGlyphGeometry::GetGlobalTransform(Matrix *matrix)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  mSource->GetCTM(getter_AddRefs(ctm));
+  mSource->GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
   
   float m[6];

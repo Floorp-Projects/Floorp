@@ -44,7 +44,7 @@
 #include "nsReadableUtils.h"
 #include "nsTextFormatter.h"
 #include "nsCRT.h"
-#include "nsISVGViewportAxis.h"
+#include "nsSVGCoordCtx.h"
 #include "nsIDOMSVGNumber.h"
 #include "nsISVGValueUtils.h"
 #include "nsWeakReference.h"
@@ -77,7 +77,7 @@ public:
   NS_DECL_NSIDOMSVGLENGTH
 
   // nsISVGLength interface:
-  NS_IMETHOD SetContext(nsISVGViewportAxis* context);
+  NS_IMETHOD SetContext(nsSVGCoordCtx* context);
   
   // nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString& aValue);
@@ -104,7 +104,7 @@ protected:
   
   float mValueInSpecifiedUnits;
   PRUint16 mSpecifiedUnitType;
-  nsCOMPtr<nsISVGViewportAxis> mContext;
+  nsRefPtr<nsSVGCoordCtx> mContext;
 };
 
 
@@ -438,11 +438,13 @@ nsSVGLength::GetTransformedValue(nsIDOMSVGMatrix *matrix,
 //----------------------------------------------------------------------
 // nsISVGLength methods:
 NS_IMETHODIMP
-nsSVGLength::SetContext(nsISVGViewportAxis* context)
+nsSVGLength::SetContext(nsSVGCoordCtx* context)
 {
   // XXX should we bracket this inbetween WillModify/DidModify pairs?
   MaybeRemoveAsObserver();
+  WillModify();
   mContext = context;
+  DidModify();
   MaybeAddAsObserver();
   return NS_OK;
 }
@@ -508,11 +510,7 @@ float nsSVGLength::mmPerPixel()
     return 1.0f;
   }
   
-  nsCOMPtr<nsIDOMSVGNumber> num;
-  mContext->GetMillimeterPerPixel(getter_AddRefs(num));
-  NS_ASSERTION(num, "null interface");
-  float mmPerPx;
-  num->GetValue(&mmPerPx);
+  float mmPerPx = mContext->GetMillimeterPerPixel();
   
   if (mmPerPx == 0.0f) {
     NS_ASSERTION(PR_FALSE, "invalid mm/pixels");
@@ -529,8 +527,7 @@ float nsSVGLength::AxisLength()
     return 1.0f;
   }
 
-  nsCOMPtr<nsIDOMSVGNumber> num;
-  mContext->GetLength(getter_AddRefs(num));
+  nsCOMPtr<nsIDOMSVGNumber> num = mContext->GetLength();
   NS_ASSERTION(num, "null interface");
   float d;
   num->GetValue(&d);
@@ -626,8 +623,7 @@ void nsSVGLength::MaybeAddAsObserver()
 {
   if ((mSpecifiedUnitType==SVG_LENGTHTYPE_PERCENTAGE) &&
       mContext) {
-    nsCOMPtr<nsIDOMSVGNumber> num;
-    mContext->GetLength(getter_AddRefs(num));
+    nsCOMPtr<nsIDOMSVGNumber> num = mContext->GetLength();
     NS_ADD_SVGVALUE_OBSERVER(num);
   }
 }
@@ -636,8 +632,7 @@ void nsSVGLength::MaybeRemoveAsObserver()
 {
   if ((mSpecifiedUnitType==SVG_LENGTHTYPE_PERCENTAGE) &&
       mContext) {
-    nsCOMPtr<nsIDOMSVGNumber> num;
-    mContext->GetLength(getter_AddRefs(num));
+    nsCOMPtr<nsIDOMSVGNumber> num = mContext->GetLength();
     NS_REMOVE_SVGVALUE_OBSERVER(num);
   }
 }

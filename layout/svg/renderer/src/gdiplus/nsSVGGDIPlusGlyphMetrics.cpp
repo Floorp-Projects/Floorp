@@ -574,7 +574,7 @@ void
 nsSVGGDIPlusGlyphMetrics::GetGlobalTransform(Matrix *matrix)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
-  mSource->GetCTM(getter_AddRefs(ctm));
+  mSource->GetCanvasTM(getter_AddRefs(ctm));
   NS_ASSERTION(ctm, "graphic source didn't specify a ctm");
   
   float m[6];

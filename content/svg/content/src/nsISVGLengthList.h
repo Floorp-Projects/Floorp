@@ -41,21 +41,22 @@
 
 #include "nsIDOMSVGLengthList.h"
 
-class nsISVGViewportAxis;
+class nsSVGCoordCtx;
 
 ////////////////////////////////////////////////////////////////////////
 // nsISVGLengthList: private interface for svg lengthlists
 
-// {3B57DE3C-A2C3-4C17-B47A-0791C2EE0BE1}
+// {0857CC15-896D-4E3B-A985-125B398C7867}
 #define NS_ISVGLENGTHLIST_IID \
-{ 0x3b57de3c, 0xa2c3, 0x4c17, { 0xb4, 0x7a, 0x07, 0x91, 0xc2, 0xee, 0x0b, 0xe1 } }
+{ 0x0857cc15, 0x896d, 0x4e3b, { 0xa9, 0x85, 0x12, 0x5b, 0x39, 0x8c, 0x78, 0x67 } }
+
 
 class nsISVGLengthList : public nsIDOMSVGLengthList
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ISVGLENGTHLIST_IID; return iid; }
 
-  NS_IMETHOD SetContext(nsISVGViewportAxis* axis)=0;
+  NS_IMETHOD SetContext(nsSVGCoordCtx* ctx)=0;
 };
 
 

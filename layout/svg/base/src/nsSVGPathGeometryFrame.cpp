@@ -42,6 +42,7 @@
 #include "nsISVGValueUtils.h"
 #include "nsIDOMSVGTransformable.h"
 #include "nsIDOMSVGAnimTransformList.h"
+#include "nsIDOMSVGTransformList.h"
 #include "nsISVGContainerFrame.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
@@ -191,9 +192,9 @@ nsSVGPathGeometryFrame::InitialUpdate()
 }
 
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::NotifyCTMChanged()
+nsSVGPathGeometryFrame::NotifyCanvasTMChanged()
 {
-  UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CTM);
+  UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
   
   return NS_OK;
 }
@@ -241,10 +242,10 @@ nsSVGPathGeometryFrame::WillModifySVGObservable(nsISVGValue* observable)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::DidModifySVGObservable (nsISVGValue* observable)
 {
-  // the observables we're listening in on affect the ctm by
+  // the observables we're listening in on affect the canvastm by
   // default. We can specialize in the subclasses when needed.
   
-  UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CTM);
+  UpdateGraphic(nsISVGGeometrySource::UPDATEMASK_CANVAS_TM);
   
   return NS_OK;
 }
@@ -262,16 +263,44 @@ nsSVGPathGeometryFrame::GetPresContext(nsPresContext * *aPresContext)
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMSVGMatrix CTM; */
+/* readonly attribute nsIDOMSVGMatrix canvasTM; */
 NS_IMETHODIMP
-nsSVGPathGeometryFrame::GetCTM(nsIDOMSVGMatrix * *aCTM)
+nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 {
   *aCTM = nsnull;
-  
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
-  NS_ASSERTION(transformable, "wrong content type");
-  
-  return transformable->GetCTM(aCTM);  
+
+  nsISVGContainerFrame *containerFrame;
+  mParent->QueryInterface(NS_GET_IID(nsISVGContainerFrame), (void**)&containerFrame);
+  if (!containerFrame) {
+    NS_ERROR("invalid container");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMSVGMatrix> parentTM = containerFrame->GetCanvasTM();
+  NS_ASSERTION(parentTM, "null TM");
+
+  // append our local transformations if we have any:
+  nsCOMPtr<nsIDOMSVGMatrix> localTM;
+  {
+    nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(mContent);
+    NS_ASSERTION(transformable, "wrong content element");
+    nsCOMPtr<nsIDOMSVGAnimatedTransformList> atl;
+    transformable->GetTransform(getter_AddRefs(atl));
+    NS_ASSERTION(atl, "null animated transform list");
+    nsCOMPtr<nsIDOMSVGTransformList> transforms;
+    atl->GetAnimVal(getter_AddRefs(transforms));
+    NS_ASSERTION(transforms, "null transform list");
+    PRUint32 numberOfItems;
+    transforms->GetNumberOfItems(&numberOfItems);
+    if (numberOfItems>0)
+      transforms->GetConsolidation(getter_AddRefs(localTM));
+  }  
+  if (localTM) {
+    return parentTM->Multiply(localTM, aCTM);
+  }
+  *aCTM = parentTM;
+  NS_ADDREF(*aCTM);
+  return NS_OK;
 }
 
 /* readonly attribute float strokeOpacity; */

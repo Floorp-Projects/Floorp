@@ -40,18 +40,23 @@
 #define __NS_ISVGCONTAINERFRAME_H__
 
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMSVGMatrix.h"
+#include "nsSVGCoordCtxProvider.h"
 
 class nsISVGOuterSVGFrame;
 
-// {41184B79-C47E-4FC1-8518-89AAB679B055}
+// {47460D8C-5D2C-482F-BA7F-3F61934BAB0E}
 #define NS_ISVGCONTAINERFRAME_IID \
-{ 0x41184b79, 0xc47e, 0x4fc1, { 0x85, 0x18, 0x89, 0xaa, 0xb6, 0x79, 0xb0, 0x55 } }
+{ 0x47460d8c, 0x5d2c, 0x482f, { 0xba, 0x7f, 0x3f, 0x61, 0x93, 0x4b, 0xab, 0x0e } }
 
 class nsISVGContainerFrame : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGCONTAINERFRAME_IID)
 
-  NS_IMETHOD_(nsISVGOuterSVGFrame *) GetOuterSVGFrame()=0;
+  virtual nsISVGOuterSVGFrame *GetOuterSVGFrame()=0;
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM()=0; // canvas transform matrix
+  virtual already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider()=0;
 };
 
 #endif // __NS_ISVGCONTAINERFRAME_H__

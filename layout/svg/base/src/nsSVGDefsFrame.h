@@ -105,15 +105,18 @@ public:
   NS_IMETHOD GetFrameForPoint(float x, float y, nsIFrame** hit);  
   NS_IMETHOD_(already_AddRefed<nsISVGRendererRegion>) GetCoveredRegion();
   NS_IMETHOD InitialUpdate();
-  NS_IMETHOD NotifyCTMChanged();
+  NS_IMETHOD NotifyCanvasTMChanged();
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGContainerFrame interface:
-  NS_IMETHOD_(nsISVGOuterSVGFrame *) GetOuterSVGFrame();
+  nsISVGOuterSVGFrame *GetOuterSVGFrame();
+  already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
+  already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider();
 
 protected:
+  nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
 };
 
 #endif
