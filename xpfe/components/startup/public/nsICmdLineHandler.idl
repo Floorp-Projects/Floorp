@@ -27,6 +27,7 @@
 %{C++
 
 #define COMMAND_LINE_ARGUMENT_HANDLERS "command-line-argument-handlers"
+#define PREF_STARTUP_PREFIX "general.startup."
 
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
