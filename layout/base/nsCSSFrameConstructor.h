@@ -308,14 +308,7 @@ protected:
                                      nsIFrame*        aFrame,
                                      nsIStyleContext* aStyleContext,
                                      nsIFrame*        aParentFrame,
-                                     nsIFrame*&       aPlaceholderFrame);
-
-  nsresult CreateFloaterPlaceholderFrameFor(nsIPresContext*  aPresContext,
-                                            nsIContent*      aContent,
-                                            nsIFrame*        aFrame,
-                                            nsIStyleContext* aStyleContext,
-                                            nsIFrame*        aParentFrame,
-                                            nsIFrame**      aPlaceholderFrame);
+                                     nsIFrame**       aPlaceholderFrame);
 
   nsresult ConstructAlternateImageFrame(nsIPresContext*  aPresContext,
                                         nsIContent*      aContent,

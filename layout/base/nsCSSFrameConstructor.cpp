@@ -1999,12 +1999,10 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
                                                  nsIFrame*        aFrame,
                                                  nsIStyleContext* aStyleContext,
                                                  nsIFrame*        aParentFrame,
-                                                 nsIFrame*&       aPlaceholderFrame)
+                                                 nsIFrame**       aPlaceholderFrame)
 {
-  nsIFrame* placeholderFrame;
-  nsresult  rv;
-
-  rv = NS_NewEmptyFrame(&placeholderFrame);
+  nsPlaceholderFrame* placeholderFrame;
+  nsresult            rv = NS_NewPlaceholderFrame((nsIFrame**)&placeholderFrame);
 
   if (NS_SUCCEEDED(rv)) {
     // The placeholder frame gets a pseudo style context
@@ -2020,41 +2018,11 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresContext*  aPresContext,
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
     presShell->SetPlaceholderFrameFor(aFrame, placeholderFrame);
-  
-    aPlaceholderFrame = placeholderFrame;
-  }
 
-  return rv;
-}
-
-nsresult
-nsCSSFrameConstructor::CreateFloaterPlaceholderFrameFor(nsIPresContext*  aPresContext,
-                                                        nsIContent*      aContent,
-                                                        nsIFrame*        aFrame,
-                                                        nsIStyleContext* aStyleContext,
-                                                        nsIFrame*        aParentFrame,
-                                                        nsIFrame**       aPlaceholderFrame)
-{
-  nsPlaceholderFrame* placeholder;
-  nsresult  rv = NS_NewPlaceholderFrame((nsIFrame**)&placeholder);
-  if (NS_SUCCEEDED(rv)) {
-    // The placeholder frame gets a pseudo style context
-    nsCOMPtr<nsIStyleContext>  sc;
-    aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                               nsHTMLAtoms::placeholderPseudo,
-                                               aStyleContext,
-                                               PR_FALSE,
-                                               getter_AddRefs(sc));
-    placeholder->Init(*aPresContext, aContent, aParentFrame, sc, nsnull);
+    // The placeholder frame has a pointer back to the out-of-flow frame
+    placeholderFrame->SetOutOfFlowFrame(aFrame);
   
-    // Add mapping from absolutely positioned frame to its placeholder frame
-    nsCOMPtr<nsIPresShell> presShell;
-    aPresContext->GetShell(getter_AddRefs(presShell));
-    presShell->SetPlaceholderFrameFor(aFrame, placeholder);
-  
-    placeholder->SetOutOfFlowFrame(aFrame);
-
-    *aPlaceholderFrame = NS_STATIC_CAST(nsIFrame*, placeholder);
+    *aPlaceholderFrame = NS_STATIC_CAST(nsIFrame*, placeholderFrame);
   }
 
   return rv;
@@ -2164,7 +2132,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
               // Create a place holder frame for the dropdown list
             nsIFrame* placeholderFrame = nsnull;
             CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
-                                      aParentFrame, placeholderFrame);
+                                      aParentFrame, &placeholderFrame);
             aFrameItems.AddChild(placeholderFrame);
 
             // Add the absolutely positioned frame to its containing block's list
@@ -2435,7 +2403,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       nsIFrame* placeholderFrame;
 
       CreatePlaceholderFrameFor(aPresContext, aContent, newFrame,
-                                aStyleContext, aParentFrame, placeholderFrame);
+                                aStyleContext, aParentFrame, &placeholderFrame);
 
       // Add the positioned frame to its containing block's list of
       // child frames
@@ -2450,9 +2418,8 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
     } else if (isFloating) {
       nsIFrame* placeholderFrame;
-      CreateFloaterPlaceholderFrameFor(aPresContext, aContent, newFrame,
-                                       aStyleContext, aParentFrame,
-                                       &placeholderFrame);
+      CreatePlaceholderFrameFor(aPresContext, aContent, newFrame,
+                                aStyleContext, aParentFrame, &placeholderFrame);
 
       // Add the floating frame to its containing block's list of child frames
       aFloatingItems.AddChild(newFrame);
@@ -2553,7 +2520,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
         nsIFrame* placeholderFrame;
 
         CreatePlaceholderFrameFor(aPresContext, aContent, newFrame, aStyleContext,
-                                  aParentFrame, placeholderFrame);
+                                  aParentFrame, &placeholderFrame);
 
         // Add the positioned frame to its containing block's list of child frames
         if (isAbsolutelyPositioned) {
@@ -2732,7 +2699,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
       nsIFrame* placeholderFrame;
 
       CreatePlaceholderFrameFor(aPresContext, aContent, newFrame, aStyleContext,
-                                aParentFrame, placeholderFrame);
+                                aParentFrame, &placeholderFrame);
 
       // Add the positioned frame to its containing block's list of child frames
       if (isAbsolutelyPositioned) {
@@ -3148,7 +3115,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     nsIFrame* placeholderFrame;
 
     CreatePlaceholderFrameFor(aPresContext, aContent, newFrame, aStyleContext,
-                              aParentFrame, placeholderFrame);
+                              aParentFrame, &placeholderFrame);
 
     // Add the positioned frame to its containing block's list of child frames
     if (isAbsolutelyPositioned) {
@@ -3162,9 +3129,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
 
   } else if (isFloating) {
     nsIFrame* placeholderFrame;
-    CreateFloaterPlaceholderFrameFor(aPresContext, aContent, newFrame,
-                                     aStyleContext, aParentFrame,
-                                     &placeholderFrame);
+    CreatePlaceholderFrameFor(aPresContext, aContent, newFrame,
+                              aStyleContext, aParentFrame, &placeholderFrame);
 
     // Add the floating frame to its containing block's list of child frames
     aFloatingItems.AddChild(newFrame);
@@ -4905,14 +4871,9 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
         // new frame
         presShell->SetPlaceholderFrameFor(newFrame, placeholderFrame);
 
-        if (nsLayoutAtoms::floaterList == listName) {
-          // Floaters have a special placeholder frame that points back to
-          // the anchored item
-          nsPlaceholderFrame* floaterPlaceholderFrame;
-           
-          floaterPlaceholderFrame = (nsPlaceholderFrame*)placeholderFrame;
-          floaterPlaceholderFrame->SetOutOfFlowFrame(newFrame);
-        }
+        // Placeholder frames have a pointer back to the out-of-flow frame.
+        // Make sure that's correct
+        ((nsPlaceholderFrame*)placeholderFrame)->SetOutOfFlowFrame(newFrame);
       }
       parentFrame->InsertFrames(*aPresContext, *presShell, listName, prevSibling, newFrame);
     }
