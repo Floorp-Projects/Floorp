@@ -35,14 +35,21 @@
 #include "nsFileLocations.h"
 #include "nsILocalFile.h"
 #include "nsMimeTypes.h"
-// Crap
+
 #include "nsIFileSpec.h"
 #include "nsFileSpec.h"
+#include "nsTextFormatter.h"
+#include <string.h>
+#include <stdio.h>
+#include "prlong.h"
 
 const char* kMIME="mime";
 const char* kMIMEType="mimetype";
 const char* kDescription="description";
 const char* kExtensions="extensions";
+const char* kMacCreator="maccreator";
+const char* kMacType="mactype";
+
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 // Hash table helper functions
@@ -87,7 +94,7 @@ nsXMLMIMEDataSource::Init() {
     rv = NS_NewISupportsArray(getter_AddRefs(mInfoArray));
     if (NS_FAILED(rv)) return rv;
 
-    return InitFromHack();
+    return  InitFromHack();
 }
 
  /* This bad boy needs to retrieve a url, and parse the data coming back, and
@@ -96,27 +103,6 @@ nsXMLMIMEDataSource::Init() {
 nsresult
 nsXMLMIMEDataSource::InitFromURI(nsIURI *aUri) {
     return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsXMLMIMEDataSource::InitFromFile( nsIFile* /* aFile */ )
-{
-#if 0
-	nsresult rv;
-	nsCOMPtr<nsIChannel> channel;
-  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
-  if(NS_FAILED(rv)) return rv ;
-  // Made second parameter 0 since I really don't know what it is used for
-  rv = fts->CreateTransport(aFile,0, "load", 0, 0, getter_AddRefs(channel)) ;
-  if(NS_FAILED(rv))
-    return rv ;
-  
-  // we don't need to worry about notification callbacks
-  nsCOMPtr<nsIInputStream> stream;
-  rv = channel->OpenInputStream(0, 0, getter_AddRefs( stream ) ) ;
-#endif	
-    
-   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
@@ -304,41 +290,20 @@ NS_IMETHODIMP
 nsXMLMIMEDataSource::Serialize() {
 
 	nsresult rv = NS_OK;
-	#if 0
-// Init mFile Hack
-	// Lovely hack until the filespec and nsIFile stuff is merged together
-   // nsFileSpec dirSpec;
-   // nsCOMPtr<nsIFileSpec> spec = NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50);
-   // if (!spec) return NS_ERROR_FAILURE;
-   // spec->GetFileSpec(&dirSpec);
-   nsCOMPtr<nsILocalFile> file;
-	//	char* path;
-//		spec->GetNativePath(& path );
-		const char* path = "development:";
-		rv = NS_NewLocalFile( path, getter_AddRefs(file));
-	
-		if ( NS_SUCCEEDED( rv ) )
-    {
-    	
-    	file->Append("mime.xml");
-			mFile = file;
-			file->SetLeafName("mime.temp");
-		}
-		mFile = file;
-//
 	
 	nsCOMPtr<nsIChannel> channel;
   NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
   if(NS_FAILED(rv)) return rv ;
  
-  rv = fts->CreateTransport( mFile,0, "load", 0, 0, getter_AddRefs(channel)) ;
+  rv = fts->CreateTransport( mFile,PR_WRONLY|PR_CREATE_FILE, PR_IRWXU, getter_AddRefs(channel)) ;
   if(NS_FAILED(rv))
     return rv ;
   
   // we don't need to worry about notification callbacks
   nsCOMPtr<nsIOutputStream> stream;
-  rv = channel->OpenOutputStream( 0, getter_AddRefs( stream ) ) ;
-	
+  rv = channel->OpenOutputStream(  getter_AddRefs( stream ) ) ;
+	if(NS_FAILED(rv))
+    return rv ;
 	nsCOMPtr<nsISimpleEnumerator> enumerator;	
 	rv = GetEnumerator( getter_AddRefs( enumerator ) );
   if ( NS_FAILED( rv ) )
@@ -381,7 +346,7 @@ nsXMLMIMEDataSource::Serialize() {
 		buffer+="\" ";
 		
 		char** extensions;
-		PRInt32 count;
+		PRUint32 count;
 		rv = info->GetFileExtensions(& count, &extensions );
 		if ( NS_FAILED ( rv ) )
 			return rv;
@@ -398,6 +363,27 @@ nsXMLMIMEDataSource::Serialize() {
 		nsAllocator::Free( extensions[count-1] );
 		nsAllocator::Free( extensions );
 			
+		PRUint32 macData;
+		char macBuffer[8];
+		rv = info->GetMacCreator( &macData );
+		if ( NS_FAILED ( rv ) )
+			return rv;
+		buffer+=kMacCreator;
+		buffer+="=\"";
+		sprintf( macBuffer,"%x" ,macData );
+		buffer+=macBuffer;
+		buffer+="\" ";
+		
+		rv = info->GetMacType( &macData );
+		if ( NS_FAILED ( rv ) )
+			return rv;
+		buffer+=kMacType;
+		buffer+="=\"";
+		sprintf( macBuffer,"%x" ,macData );
+		buffer+=macBuffer;
+		buffer+="\" ";
+		
+		
 		buffer+="/>\r";
 	
 		rv = stream->Write( buffer  , buffer.Length(), &bytesWritten );
@@ -406,10 +392,7 @@ nsXMLMIMEDataSource::Serialize() {
   		return rv;
   }
   rv = stream->Close();
- // Now delete the old file and rename the new one
-  mFile->Delete( PR_FALSE);
-  file->MoveTo( NULL, "mime.xml");
-#endif
+
   return rv;
 
 }
@@ -619,3 +602,198 @@ nsXMLMIMEDataSource::GetFromTypeCreator(PRUint32 aType, PRUint32 aCreator, const
 	 return NS_ERROR_FAILURE;
 }
 
+// Parser
+// unicode "%s" format string
+static const PRUnichar unicodeFormatter[] = {
+    (PRUnichar)'%',
+    (PRUnichar)'s',
+    (PRUnichar)0,
+};
+
+
+static nsresult convertUTF8ToUnicode(const char *utf8String, PRUnichar ** aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    // convert to PRUnichar using nsTextFormatter
+    *aResult = nsTextFormatter::smprintf(unicodeFormatter, utf8String);
+    if (! *aResult) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+static nsresult AddAttribute( nsIMIMEInfo* inElement, nsCString& inAttribute, nsCString& inValue )
+{
+	nsresult rv = NS_OK;
+	if ( inAttribute == kMIMEType )
+	{
+		rv = inElement->SetMIMEType( inValue );
+	}
+	else if ( inAttribute == kDescription  )
+	{
+		PRUnichar* unicode; 
+		convertUTF8ToUnicode( inValue, &unicode );
+		rv =inElement->SetDescription( unicode );
+		nsTextFormatter::smprintf_free(unicode);
+	}
+	else if ( inAttribute == kExtensions   )
+	{
+		rv = inElement->SetFileExtensions( inValue );
+	}
+	else if ( inAttribute == kMacType )
+	{
+		PRUint32 value;
+		sscanf ( inValue, "%x", &value);
+		rv = inElement->SetMacType( value );
+	}
+	else if ( inAttribute == kMacCreator )
+	{
+		PRUint32 value;
+		sscanf ( inValue, "%x", &value);
+		rv = inElement->SetMacCreator( value );
+	}
+	
+	return rv;
+}
+
+
+class StDeallocator 
+{ 
+public: 
+ StDeallocator( void* memory): mMemory( memory ){}; 
+ ~StDeallocator() 
+ { 
+  if (mMemory) 
+        nsAllocator::Free(mMemory); 
+  } 
+private: 
+ void* mMemory; 
+}; 
+
+nsresult
+nsXMLMIMEDataSource::InitFromFile( nsIFile*  aFile  )
+{
+
+	nsresult rv;
+	nsCOMPtr<nsIChannel> channel;
+	
+  NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv) ;
+  if(NS_FAILED(rv)) return rv ;
+  // Made second parameter 0 since I really don't know what it is used for
+  rv = fts->CreateTransport(aFile, PR_RDONLY, PR_IRWXU, getter_AddRefs(channel)) ;
+  if(NS_FAILED(rv))
+    return rv ;
+  
+  // we don't need to worry about notification callbacks
+ nsCOMPtr<nsIInputStream> stream;
+ rv = channel->OpenInputStream( getter_AddRefs( stream ) ) ;
+
+ PRUint32 streamLength;
+ PRInt64 fileLength;
+ aFile->GetFileSize( &fileLength );
+ LL_L2I( streamLength,fileLength  );
+ 
+ char* buffer = new char[streamLength ];
+ if ( !buffer )
+ 		return NS_ERROR_OUT_OF_MEMORY;
+
+ StDeallocator dealloc( buffer );
+ PRUint32 amtRead;
+ 
+ rv = stream->Read( buffer, streamLength , &amtRead );		
+ if ( NS_FAILED( rv ) ) return rv;	
+ 
+ char* curPos = buffer;
+ char* end = curPos + streamLength-1;
+ char tempBuffer[1024];
+ // Skip the <? ?>
+	PRBool prevCharRight = PR_FALSE;
+	while ( curPos < end )
+	{
+		if ( prevCharRight )
+		{
+			if (*curPos == '>' )
+			{
+			 curPos++;
+			 break;
+			}
+			else
+			{
+				prevCharRight =false;
+			}
+		}
+		else
+		{
+			if ( *curPos == '?' )
+				prevCharRight = PR_TRUE;
+		}
+		curPos++;
+	}
+	
+	while ( curPos < end )
+	{
+		// Find the next element
+		while ( *curPos != '<' )
+			curPos++;
+		curPos++;
+		
+		PRInt32 tempPos =0;
+		while (curPos < end && *curPos!=' ' )
+		{
+			tempBuffer[ tempPos++ ] = *curPos;
+			curPos++;
+		}
+		curPos++;
+		tempBuffer[tempPos] ='\n';
+		
+		if ( !nsCRT::strcmp( kMIMEType, tempBuffer ) )
+		{
+			rv = NS_ERROR_FAILURE;
+			return rv;
+		}
+		
+		nsCOMPtr<nsIMIMEInfo> info;
+		rv = nsComponentManager::CreateInstance(NS_MIMEINFO_PROGID, nsnull, nsIMIMEInfo::GetIID(),getter_AddRefs(info ));	  	
+		if ( NS_FAILED( rv ) ) return rv;
+		// Read in Attribute
+		nsCString attribute;
+		nsCString value;
+		
+		while ( curPos < end && !( *curPos=='\\' && *(curPos+1) !='>') )
+		{
+			if ( *curPos==' ' )
+			{	
+				 curPos++;
+				 continue;
+			}
+			// Read Attribute
+			tempPos =0;
+			while ( curPos < end && *curPos!='=' )
+			{
+				tempBuffer[ tempPos++ ] = *curPos ++;
+			}
+			curPos++;
+			tempBuffer[tempPos] ='\0';
+			attribute = tempBuffer;
+		// Read Value
+			while ( curPos < end && *curPos ++ !='"' )
+					;
+			// Read Value
+			tempPos =0;
+			while ( curPos < end && *curPos!='"' )
+			{
+				tempBuffer[ tempPos++ ] = *curPos ++;
+			}
+			curPos++;
+			tempBuffer[tempPos] ='\0';
+			value = tempBuffer;
+			AddAttribute( info, attribute, value );
+	}
+		curPos+=2;
+		//Close
+		rv = Add( info );
+		if ( NS_FAILED( rv ) ) return rv;
+	}
+	
+	mFile = aFile;
+
+	return rv;
+}
