@@ -120,8 +120,12 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 void nsListBox::GetSelectedItem(nsString& aItem)
 {
-  int index = ::SendMessage(mWnd, LB_GETCURSEL, (int)0, (LPARAM)0); 
-  GetItemAt(aItem, index); 
+  if (!mMultiSelect) { 
+    int index = ::SendMessage(mWnd, LB_GETCURSEL, (int)0, (LPARAM)0); 
+    GetItemAt(aItem, index); 
+  } else {
+    NS_ASSERTION(0, "Multi selection list box does not support GetSelectedItem()");
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -134,7 +138,7 @@ PRInt32 nsListBox::GetSelectedIndex()
   if (!mMultiSelect) { 
     return ::SendMessage(mWnd, LB_GETCURSEL, (int)0, (LPARAM)0);
   } else {
-    NS_ASSERTION(0, "Multi selection list box does not support GetSlectedIndex()");
+    NS_ASSERTION(0, "Multi selection list box does not support GetSelectedIndex()");
   }
   return 0;
 }
@@ -185,7 +189,9 @@ void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 //-------------------------------------------------------------------------
 void nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 {
-  //::SendMessage(mWnd, LB_SETSELITEMS, (int)aSize, (LPARAM)aIndices);
+  for (int i=0;i<aSize;i++) {
+    SelectItem(aIndices[i]);
+  }
 }
 
 //-------------------------------------------------------------------------
