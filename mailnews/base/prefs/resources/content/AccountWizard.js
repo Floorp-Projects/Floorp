@@ -176,7 +176,8 @@ function onCancel()
   return closeWizard;
 }
 
-function FinishAccount() {
+function FinishAccount() 
+{
   try {
     var pageData = GetPageData();
 
@@ -231,7 +232,8 @@ function FinishAccount() {
         top.okCallback(state);
     }
 }
-  catch(ex) { 
+  catch(ex) {
+    dump("FinishAccount failed, " + ex +"\n");
   }
 }
 
@@ -468,27 +470,29 @@ function finishAccount(account, accountData)
         else
           smtpServer = smtpService.defaultServer;
 
-        dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
-        //set the smtp server to be the default only if it is not a redirectorType
-        if (accountData.smtp.redirectorType == null) 
-        {
-          if ((smtpService.defaultServer.hostname == null) || (smtpService.defaultServer.redirectorType != null))
-            smtpService.defaultServer = smtpServer;
-        }
+        // may not have a smtp server, see bug #138076
+        if (smtpServer) {
+          dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
+          //set the smtp server to be the default only if it is not a redirectorType
+          if (accountData.smtp.redirectorType == null) 
+          {
+            if ((smtpService.defaultServer.hostname == null) || (smtpService.defaultServer.redirectorType != null))
+              smtpService.defaultServer = smtpServer;
+          }
 
-        copyObjectToInterface(smtpServer, accountData.smtp);
+          copyObjectToInterface(smtpServer, accountData.smtp);
 
-        // refer bug#141314
-        // since we clone the default smtpserver with the new account's username
-        // force every account to use the smtp server that was created or assigned to it in the
-        // case of isps using rdf files
-
-        try{
+          // refer bug#141314
+          // since we clone the default smtpserver with the new account's username
+          // force every account to use the smtp server that was created or assigned to it in the
+          // case of isps using rdf files
+          try{
             destIdentity.smtpServerKey = smtpServer.key;
-        }
-        catch(ex)
-        {
-          dump("There is no smtp server assigned to this account: Exception= "+ex+"\n");
+          }
+          catch(ex)
+          {
+            dump("There is no smtp server assigned to this account: Exception= "+ex+"\n");
+          }
         }
      }
 
@@ -520,9 +524,8 @@ function copyObjectToInterface(dest, src) {
 
 // check if there already is a "Local Folders"
 // if not, create it.
-function verifyLocalFoldersAccount(account) {
-    
-    dump("Looking for Local Folders.....\n");
+function verifyLocalFoldersAccount(account) 
+{
 	var localMailServer = null;
 	try {
 		localMailServer = am.localFoldersServer;
