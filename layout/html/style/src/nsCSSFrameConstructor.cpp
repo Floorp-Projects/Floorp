@@ -75,6 +75,9 @@
 
 #include "nsInlineFrame.h"
 #include "nsBlockFrame.h"
+
+#include "nsGfxTextControlFrame.h"
+
 #undef NOISY_FIRST_LETTER
 
 #ifdef MOZ_MATHML
@@ -2874,6 +2877,8 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*        aPresShell
     if (NS_FAILED(rv)) {
       aNewFrame = nsnull;
     }
+    if (aNewFrame)
+      ((nsGfxTextControlFrame*)aNewFrame)->SetFrameConstructor(this);
   }
   if (!aNewFrame)
   {

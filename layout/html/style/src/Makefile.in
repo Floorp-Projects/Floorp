@@ -89,6 +89,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../../base/src \
 		-I$(srcdir)/../../table/src \
+		-I$(srcdir)/../../forms/src \
 		-I$(srcdir)/../../content/src \
 		-I$(srcdir)/../../../xul/content/src \
 		-I$(srcdir)/. \

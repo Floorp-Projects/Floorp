@@ -102,6 +102,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
   -I..\..\..\mathml\content\src \
   -I..\..\..\mathml\base\src \
 !endif
+  -I..\..\forms\src \
   -I..\..\base\src -I..\..\table\src -I..\..\content\src -I$(PUBLIC)\js -I$(PUBLIC)\dom
 
 LCFLAGS = \

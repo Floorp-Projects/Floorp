@@ -89,6 +89,7 @@
 #include "nsIControllers.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
+#include "nsLayoutAtoms.h"
 
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -226,6 +227,7 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
   mFramePresContext(nsnull),
   mCachedState(nsnull),
   mWeakReferent(this),
+  mFrameConstructor(nsnull),
   mDisplayFrame(nsnull),
   mDidSetFocus(PR_FALSE)
 
@@ -236,6 +238,8 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
 {
   nsresult result;
   if (mDisplayFrame) {
+    mFrameConstructor->RemoveMappingsForFrameSubtree(mFramePresContext,
+                                                     mDisplayFrame, nsnull);
     mDisplayFrame->Destroy(mFramePresContext);
   }
   if (mTempObserver)
@@ -1799,6 +1803,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
 
           // create the pseudo frame for the anonymous content
           if (mDisplayFrame) {
+            mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
             rv = mDisplayFrame->Destroy(aPresContext);
             if (NS_FAILED(rv)) return rv;
           }
@@ -1856,6 +1861,7 @@ nsGfxTextControlFrame::Reflow(nsIPresContext* aPresContext,
     {
       if (mDisplayFrame) 
       {
+        mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
         mDisplayFrame->Destroy(mFramePresContext);
         mDisplayFrame = nsnull;
       }
@@ -2519,6 +2525,40 @@ void nsGfxTextControlFrame::RemoveNewlines(nsString &aString)
   // strip CR/LF
   static const char badChars[] = {10, 13, 0};
   aString.StripChars(badChars);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::GetAdditionalChildListName(PRInt32 aIndex,
+                                                  nsIAtom **aListName) const
+{
+  if (aIndex == 0) {
+    *aListName = nsLayoutAtoms::editorDisplayList;
+    NS_IF_ADDREF(*aListName);
+  }
+
+  return nsTextControlFrame::GetAdditionalChildListName(aIndex, aListName);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
+{
+  if (nsLayoutAtoms::editorDisplayList) {
+    *aFirstChild = mDisplayFrame;
+    return NS_OK;
+  }
+  
+  return nsTextControlFrame::FirstChild(aListName, aFirstChild);
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame::Destroy(nsIPresContext* aPresContext)
+{
+  if (mDisplayFrame) {
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mDisplayFrame, nsnull);
+    mDisplayFrame->Destroy(aPresContext);
+    mDisplayFrame=nsnull;
+  }
+  return nsTextControlFrame::Destroy(aPresContext);
 }
 
 #ifdef NS_DEBUG
