@@ -281,6 +281,10 @@ jsj_ConvertJavaValueToJSValue(JSContext *cx, JNIEnv *jEnv, JavaSignature *signat
 extern JSBool
 jsj_ConvertJavaObjectToJSValue(JSContext *cx, JNIEnv *jEnv,
                                jobject java_obj, jsval *vp);
+
+extern JSString *
+jsj_ConvertJavaStringToJSString(JSContext *cx, JNIEnv *jEnv, jstring java_str);
+
 extern JSBool
 jsj_ConvertJavaObjectToJSString(JSContext *cx, JNIEnv *jEnv,
                                 JavaClassDescriptor *class_descriptor,
