@@ -40,6 +40,12 @@
 #include "abhook.h"           // rhp - for Address Book API
 #endif 
 
+extern "C" {
+#include "layprobe.h"
+}
+
+#include "mozprobe.h"
+
 #ifdef _DEBUG
 #undef THIS_FILE
 static char BASED_CODE THIS_FILE[] = __FILE__;
@@ -103,9 +109,7 @@ BEGIN_MESSAGE_MAP(CHiddenFrame, CFrameWnd)
 #endif
     ON_WM_QUERYENDSESSION() //~~av
 
-#ifdef MOZ_MAIL_NEWS
     ON_MESSAGE(WM_COPYDATA, OnProcessIPCHook)    // rhp - for MAPI
-#endif
 
 END_MESSAGE_MAP()
 
@@ -729,15 +733,14 @@ void CHiddenFrame::OnEndSession(BOOL bEnding)
     }
 }
 
+static LONG ProcessNetscapeProbeHook( WPARAM, LPARAM );
+
 // rhp - 12/5/97
 // This will simply turn around and call the function
 // LONG ProcessNetscapeMAPIHook(WPARAM wParam, LPARAM lParam);
 // and return the result. This is all for MAPI support in 
 // Communicator
 //
-#ifdef MOZ_MAIL_NEWS    // No mail - no MAPI - for now, but this could live
-                    // for IPC reasons in the future without MAPI
-
 LONG CHiddenFrame::OnProcessIPCHook(WPARAM wParam, LPARAM lParam)
 {
   PCOPYDATASTRUCT	  pcds = (PCOPYDATASTRUCT) lParam;
@@ -745,6 +748,7 @@ LONG CHiddenFrame::OnProcessIPCHook(WPARAM wParam, LPARAM lParam)
   if (!pcds)
     return(-1);
 
+#ifdef MOZ_MAIL_NEWS
   // Now check for what type of IPC message this really is?
   if ((pcds->dwData > NSCP_MAPIStartRequestID) && (pcds->dwData < NSCP_MAPIEndRequestID))
   {
@@ -754,10 +758,18 @@ LONG CHiddenFrame::OnProcessIPCHook(WPARAM wParam, LPARAM lParam)
   {
     return ( ProcessNetscapeNABHook(wParam, lParam) );    // 3-17: Address book API
   }
+#endif
+
+  // Not MAPI/NAB, try layout probe API...
+  else if ((pcds->dwData > NSCP_Probe_StartRequestID) && (pcds->dwData < NSCP_Probe_EndRequestID))
+  {
+    return ( ProcessNetscapeProbeHook(wParam, lParam) );
+  }
 
   return(-1);
 }
 
+#ifdef MOZ_MAIL_NEWS
 // rhp - new stuff for Address call...
 void CHiddenFrame::AddressDialog(LPSTR winText, 
                                  MAPIAddressCallbackProc mapiCB,
@@ -766,6 +778,85 @@ void CHiddenFrame::AddressDialog(LPSTR winText,
     CAddrDialog AddressDialog(this, TRUE, winText, mapiCB, getProc);
     AddressDialog.DoModal();
 }
-
 #endif /* MOZ_MAIL_NEWS */
 
+
+/* Ordinal2Context
+ *
+ * Takes a simple ordinal (position in list) and returns the MWContext
+ * associated with that browser window.  This is required by the
+ * layout probe server proc.
+ */
+static MWContext *Ordinal2Context( long context ) {
+    MWContext *result = 0;
+	//	Loop through context list.
+	MWContext *pTraverseContext = NULL;
+	CAbstractCX *pTraverseCX = NULL;
+	XP_List *pTraverse = XP_GetGlobalContextList();
+	while (!result && ( pTraverseContext = (MWContext *)XP_ListNextObject(pTraverse) )) {
+		if(pTraverseContext != NULL && ABSTRACTCX(pTraverseContext) != NULL)	{
+			pTraverseCX = ABSTRACTCX(pTraverseContext);
+
+			if(pTraverseCX->GetContext()->type == MWContextBrowser &&
+				pTraverseCX->IsFrameContext() == TRUE &&
+				pTraverseCX->IsDestroyed() == FALSE)	{
+				CWinCX *pWinCX = (CWinCX *)pTraverseCX;
+				if(pWinCX->GetFrame()->GetFrameWnd() != NULL)	{
+                    // This is a context for a frame window.  Decrement count
+                    // and quit when it hits zero.
+                    if ( --context == 0 ) {
+                        // Result is the associated context.
+                        result = pWinCX->GetContext();
+                    }
+				}
+			}
+
+		}
+	}
+    return result;
+}
+
+static LONG ProcessNetscapeProbeHook( WPARAM wParam, LPARAM lParam ) {
+  static BOOL triedProbe = FALSE;
+  static HINSTANCE hProbe = 0;
+  static PROBESERVERPROC serverProc = 0;
+  static PROBEAPITABLE fnTbl = { LO_QA_CreateProbe,
+                                 LO_QA_DestroyProbe,
+                                 LO_QA_GotoFirstElement,
+                                 LO_QA_GotoNextElement,
+                                 LO_QA_GotoChildElement,
+                                 LO_QA_GotoParentElement,
+                                 LO_QA_GetElementType,
+                                 LO_QA_GetElementXPosition,
+                                 LO_QA_GetElementYPosition,
+                                 LO_QA_GetElementWidth,
+                                 LO_QA_GetElementHeight,
+                                 LO_QA_HasURL,
+                                 LO_QA_HasText,
+                                 LO_QA_HasColor,
+                                 LO_QA_HasChild,
+                                 LO_QA_HasParent,
+                                 LO_QA_GetText,
+                                 LO_QA_GetTextLength,
+                                 (BOOL(*)(long,long*,PROBECOLORTYPE))LO_QA_GetColor,
+                                 Ordinal2Context };
+  // Try one time to get the layout probe hook.
+  if ( !triedProbe ) {
+      triedProbe = TRUE;
+      // First, load the DLL.
+      hProbe = LoadLibrary( mozProbeDLLName );
+      if ( hProbe ) {
+          // Get the entry point for the server proc.
+          serverProc = (PROBESERVERPROC)GetProcAddress( hProbe, mozProbeServerProcName );
+          if ( !serverProc ) {
+              // Something wrong, free the DLL.
+              FreeLibrary( hProbe );
+          }
+      }
+  }
+  // If possible, process the layout probe hook.
+  if ( serverProc ) {
+    return ( serverProc(wParam, lParam, &fnTbl) );
+  }
+  return -1;
+}
