@@ -1518,6 +1518,7 @@ nsEventStateManager::UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent,
   nsCOMPtr<nsISupports> pcContainer;
   aPresContext->GetContainer(getter_AddRefs(pcContainer));    
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));    
+  if (!docShell) return;
   PRUint32 busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
   docShell->GetBusyFlags(&busyFlags);
 
