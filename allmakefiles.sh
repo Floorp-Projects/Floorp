@@ -389,6 +389,9 @@ editor/txmgr/Makefile
 editor/txmgr/public/Makefile
 editor/txmgr/src/Makefile
 editor/txmgr/tests/Makefile
+editor/txtsvc/Makefile
+editor/txtsvc/public/Makefile
+editor/txtsvc/src/Makefile
 editor/guimgr/Makefile
 editor/guimgr/src/Makefile
 editor/guimgr/public/Makefile
