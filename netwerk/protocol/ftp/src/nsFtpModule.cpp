@@ -23,11 +23,14 @@
 #include "nsIGenericFactory.h"
 #include "nsFtpProtocolHandler.h"
 
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init);
+
 static nsModuleComponentInfo gResComponents[] = {
     { "The FTP Protocol Handler", 
       NS_FTPPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "ftp",
-      nsFtpProtocolHandler::Create
+      nsFtpProtocolHandlerConstructor
     }
 };
 

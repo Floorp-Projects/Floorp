@@ -35,9 +35,9 @@
 #include "nsProxiedService.h"
 #include "nsCRT.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsFTPListener.h"
 #include "nsAsyncEvent.h"
 #include "nsIURL.h"
+#include "nsEscape.h"
 
 #include "nsAppShellCIDs.h" // TODO remove later
 #include "nsIAppShellService.h" // TODO remove later
@@ -1229,10 +1229,7 @@ nsFtpConnectionThread::S_list() {
                                              mListener, mURL, getter_AddRefs(converterListener));
     if (NS_FAILED(rv)) return rv;
     
-    nsFTPListener *FTPListener = new nsFTPListener(converterListener, mChannel);
-    if (!FTPListener) return rv;
-
-    nsFTPAsyncReadEvent *event = new nsFTPAsyncReadEvent(FTPListener,
+    nsFTPAsyncReadEvent *event = new nsFTPAsyncReadEvent(converterListener,
                                                          mDPipe,
                                                          mListenerContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
@@ -1261,10 +1258,7 @@ nsFtpConnectionThread::S_retr() {
 
     rv = mCOutStream->Write(retrStr.GetBuffer(), retrStr.Length(), &bytes);
 
-    nsFTPListener *FTPListener = new nsFTPListener(mListener, mChannel);
-    if (!FTPListener) return NS_ERROR_OUT_OF_MEMORY;
-
-    nsFTPAsyncReadEvent *event = new nsFTPAsyncReadEvent(FTPListener,
+    nsFTPAsyncReadEvent *event = new nsFTPAsyncReadEvent(mListener,
                                                          mDPipe,
                                                          mListenerContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
@@ -1294,16 +1288,10 @@ nsFtpConnectionThread::S_stor() {
 
     rv = mCOutStream->Write(retrStr.GetBuffer(), retrStr.Length(), &bytes);
 
-    nsFTPObserver *FTPObserver = nsnull;
-    if (mObserver) {
-        FTPObserver = new nsFTPObserver(mObserver, mChannel);
-        if (!FTPObserver) return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     NS_ASSERTION(mWriteStream, "we're trying to upload without any data");
     nsFTPAsyncWriteEvent *event = new nsFTPAsyncWriteEvent(mWriteStream,
                                                            mWriteCount,
-                                                           FTPObserver,
+                                                           mObserver,
                                                            mDPipe,
                                                            mObserverContext);
     if (!event) return NS_ERROR_OUT_OF_MEMORY;
@@ -1656,11 +1644,15 @@ nsFtpConnectionThread::Init(nsIProtocolHandler* aHandler,
     rv = aChannel->GetURI(getter_AddRefs(mURL));
     if (NS_FAILED(rv)) return rv;
 
-    rv = mURL->GetSpec(getter_Copies(mURLSpec));
+    char *spec = nsnull;
+    rv = mURL->GetSpec(&spec);
     if (NS_FAILED(rv)) return rv;
+    mURLSpec = nsUnescape(spec);
 
-    rv = mURL->GetPath(getter_Copies(mPath));
+    char *path = nsnull;
+    rv = mURL->GetPath(&path);
     if (NS_FAILED(rv)) return rv;
+    mPath = nsUnescape(path);
 
     // pull any username and/or password out of the uri
     nsXPIDLCString uname;
