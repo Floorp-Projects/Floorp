@@ -88,10 +88,10 @@ public:
 	// nsIPlugin Methods.
 	
 	/**
-	 * Creates a new plugin instance, based on the MIME type. This
-	 * allows different impelementations to be created depending on
-	 * the specified MIME type.
-	 */
+     * Creates a new plugin instance, based on the MIME type. This
+     * allows different impelementations to be created depending on
+     * the specified MIME type.
+     */
     NS_IMETHOD CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
                                     const char* aPluginMIMEType,
                                     void **aResult);
@@ -115,7 +115,7 @@ public:
      * @result - NS_OK if this operation was successful
      */
     NS_IMETHOD
-    Shutdown(void) { return NS_OK; }
+    Shutdown(void);
 
     /**
      * Returns the MIME description for the plugin. The MIME description 
