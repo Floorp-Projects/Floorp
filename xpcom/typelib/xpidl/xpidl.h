@@ -66,18 +66,19 @@ typedef struct ModeData {
 } ModeData;
 
 typedef struct IncludePathEntry {
-    char *directory;
+    char                    *directory;
     struct IncludePathEntry *next;
 } IncludePathEntry;
 
 struct TreeState {
-    FILE *file;
-    char *basename;
-    IDL_ns ns;
-    IDL_tree tree;
-    GHashTable *includes;
+    FILE             *file;
+    char             *basename;
+    IDL_ns           ns;
+    IDL_tree         tree;
+    GHashTable       *includes;
     IncludePathEntry *include_path;
-    nodeHandler *dispatch;
+    nodeHandler      *dispatch;
+    void             *priv;     /* mode-private data */
 };
 
 /*
@@ -99,9 +100,13 @@ xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data);
  * in case of fatal error.
  */
 
-void XPIDL_add_output_file(char *fn);
-void XPIDL_cleanup_on_error();
+void
+XPIDL_add_output_file(char *fn);
 
-gboolean process_node(TreeState *state);
+void
+XPIDL_cleanup_on_error();
+
+gboolean
+process_node(TreeState *state);
 
 #endif /* __xpidl_h */
