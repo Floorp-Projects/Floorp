@@ -172,47 +172,32 @@ nsProxyEventClass::~nsProxyEventClass()
     NS_RELEASE(mInfo);
 }
 
-nsProxyEventObject*
-nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID aIID)
+nsresult
+nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID aIID, nsProxyEventObject** aInstancePtr)
 {
 
-    nsISupports* aInstancePtr;
-    
+	*aInstancePtr = (nsProxyEventObject*)0xDEADBEEF;  // in case of error.
+
+	
     // The functions we will call: QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
-    nsXPTCMiniVariant *var = new nsXPTCMiniVariant[2];
-    if (var == nsnull) return nsnull;
-    
-    (&var[0])->val.p     = (void*)&aIID;
-    (&var[1])->val.p     = &aInstancePtr;
+    nsXPTCMiniVariant var[2];
+
+    var[0].val.p     = (void*)&aIID;
+    var[1].val.p     = (void*)aInstancePtr;
 
     nsIInterfaceInfoManager *iim = XPTI_GetInterfaceInfoManager();
-    nsIInterfaceInfo *nsISupportsInfo;
+    
+	if (iim == nsnull) 
+		return NS_NOINTERFACE;
+
+	nsIInterfaceInfo *nsISupportsInfo;
     const nsXPTMethodInfo *mi;
 
     iim->GetInfoForName("nsISupports", &nsISupportsInfo);
     nsISupportsInfo->GetMethodInfo(0, &mi); // 0 is QueryInterface
 
-    nsresult rv = self->CallMethod(0, mi, var);
-
-    aInstancePtr =  (nsISupports*) *((void**)var[1].val.p);
-    
-    delete [] var;
-
-    if (rv == NS_OK)
-    {
-        nsIEventQueue* aEventQueue = self->GetQueue();
-
-        if (aEventQueue != nsnull)
-        {
-            nsProxyEventObject* proxyObj = nsProxyEventObject::GetNewOrUsedProxy(aEventQueue, PROXY_SYNC, aInstancePtr, aIID);
-            if(proxyObj)
-            {
-                return proxyObj;
-            }
-        }    
-    }
-    return nsnull;
+    return self->CallMethod(0, mi, var);
 }
 
 
@@ -267,20 +252,14 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
     }
     
 
-    *aInstancePtr = CallQueryInterfaceOnProxy(self, aIID);
-    
-    if (*aInstancePtr == nsnull)
-        return NS_NOINTERFACE;
-
-    return NS_OK;
+    return CallQueryInterfaceOnProxy(self, aIID, (nsProxyEventObject**)aInstancePtr);
 }
 
 
 
-nsProxyEventObject*
-nsProxyEventClass::GetRootProxyObject(nsProxyEventObject* anObject)
+nsresult
+nsProxyEventClass::GetRootProxyObject(nsProxyEventObject* anObject, nsProxyEventObject** result)
 {
-    nsProxyEventObject* result = CallQueryInterfaceOnProxy(anObject, nsCOMTypeInfo<nsISupports>::GetIID());
-    return result ? result : anObject;
+	return CallQueryInterfaceOnProxy(anObject, nsCOMTypeInfo<nsISupports>::GetIID(), result);
 }
 
