@@ -1497,7 +1497,41 @@ nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
                           nsEventStatus&  anEventStatus)
 {
 	nsresult rv = NS_OK;
-	
+
+//~~~
+#ifdef XP_WIN
+  nsPluginWindow * window;
+  mInstanceOwner->GetWindow(window);
+  if(window->type == nsPluginWindowType_Drawable)
+  {
+	  switch (anEvent->message) 
+    {
+      case NS_PAINT:
+      case NS_MOUSE_LEFT_BUTTON_DOWN:
+      case NS_MOUSE_LEFT_BUTTON_UP:
+      case NS_MOUSE_LEFT_DOUBLECLICK:
+      case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      case NS_MOUSE_RIGHT_BUTTON_UP:
+      case NS_MOUSE_RIGHT_DOUBLECLICK:
+      case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      case NS_MOUSE_MIDDLE_BUTTON_UP:
+      case NS_MOUSE_MIDDLE_DOUBLECLICK:
+      case NS_MOUSE_MOVE:
+      case NS_KEY_UP:
+      case NS_KEY_DOWN:
+      //case set cursor must be here:
+      case NS_GOTFOCUS:
+      case NS_LOSTFOCUS:
+        anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
+        return rv;
+      default:
+        break;
+    }
+  }
+  rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
+  return rv;
+#endif
+
 	switch (anEvent->message) {
 	case NS_DESTROY:
 		mInstanceOwner->CancelTimer();
@@ -2366,6 +2400,49 @@ static void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
 }
 #endif
 
+//~~~
+#ifdef XP_WIN
+static void GUItoWinEvent(const nsGUIEvent& anEvent, nsPluginEvent& aWinEvent)
+{
+	switch (anEvent.message) 
+  {
+    case NS_PAINT:
+      break;
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+      break;
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      break;
+    case NS_MOUSE_LEFT_DOUBLECLICK:
+      break;
+    case NS_MOUSE_RIGHT_BUTTON_DOWN:
+      break;
+    case NS_MOUSE_RIGHT_BUTTON_UP:
+      break;
+    case NS_MOUSE_RIGHT_DOUBLECLICK:
+      break;
+    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+      break;
+    case NS_MOUSE_MIDDLE_BUTTON_UP:
+      break;
+    case NS_MOUSE_MIDDLE_DOUBLECLICK:
+      break;
+    case NS_MOUSE_MOVE:
+      break;
+    case NS_KEY_UP:
+      break;
+    case NS_KEY_DOWN:
+      break;
+    //case set cursor must be here:
+    case NS_GOTFOCUS:
+      break;
+    case NS_LOSTFOCUS:
+      break;
+    default:
+      break;
+  }
+}
+#endif // XP_WIN
+
 nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 {
 	nsEventStatus rv = nsEventStatus_eIgnore;
@@ -2385,7 +2462,18 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 			rv = nsEventStatus_eConsumeNoDefault;
 	}
 #endif
-	return rv;
+
+//~~~
+#ifdef XP_WIN
+		nsPluginEvent pluginEvent;
+    GUItoWinEvent(anEvent, pluginEvent);
+		PRBool eventHandled = PR_FALSE;
+		mInstance->HandleEvent(pluginEvent, &eventHandled);
+		if (eventHandled)
+			rv = nsEventStatus_eConsumeNoDefault;
+#endif
+
+  return rv;
 }
 
 // Paints are handled differently, so we just simulate an update event.
