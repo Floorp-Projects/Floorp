@@ -95,7 +95,7 @@ function CrossFolderNavigation (type, supportsFolderPane )
   if (type != nsMsgNavigationType.nextUnreadMessage) 
   {
       // only do cross folder navigation for "next unread message"
-      return nsnull;
+      return null;
   }
 
   var nextMode = pref.GetIntPref("mailnews.nav_crosses_folders");
@@ -104,7 +104,7 @@ function CrossFolderNavigation (type, supportsFolderPane )
   // 2: "next" does nothing when there are no unread messages
 
   // not crossing folders, don't find next
-  if (nextMode == 2) return;
+  if (nextMode == 2) return null;
 
   var originalFolderURI = gDBView.msgFolder.URI;
   var nextFolderURI = null;

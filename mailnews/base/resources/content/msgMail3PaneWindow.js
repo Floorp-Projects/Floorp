@@ -203,7 +203,6 @@ function HandleDeleteOrMoveMsgCompleted(folder)
         // as the last index we had selected, the outliner isn't generating a new
         // selectionChanged notification for the outliner view. So we aren't loading the 
         // next message. to fix this, force the selection changed update.
-        var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
         if (outlinerView)
           outlinerView.selectionChanged();
         EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
@@ -217,7 +216,6 @@ function HandleDeleteOrMoveMsgCompleted(folder)
     }
   }
 }
-
 
 function IsCurrentLoadedFolder(folder)
 {
