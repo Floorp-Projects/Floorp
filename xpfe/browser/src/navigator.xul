@@ -117,14 +117,31 @@
      }
         
      // Enable/Disable the Forward menu
-     
+     var fm = document.getElementById("menuitem-forward");
+     if (!fm) {
+       dump("Couldn't obtain menu item Forward\n");
+       return;
+     }
+     else
+	dump("Got a handle to forward menu item\n");
+
+     // Enable/Disable the Forward Menuitem
+     if (canForward == "true")  {
+	dump("Setting forward menu item disabled\n");
+        fm.setAttribute("disabled", "true");
+     }
+     else {
+	dump("Setting forward menu item enabled\n");
+        fm.setAttribute("disabled", "");
+     }
+    
   }
 
   function BrowserSetBack()
   {
      var backBElem = document.getElementById("canGoBack");
      if (!backBElem) {
-	dump("Couldn't obtain handle to back Broarcast element\n");
+	dump("Couldn't obtain handle to back Broadcast element\n");
 	return;
 	}
 
@@ -145,6 +162,24 @@
      }
         
      // Enable/Disable the Back menu
+     var bm = document.getElementById("menuitem-back");
+     if (!bm) {
+       dump("Couldn't obtain menu item Back\n");
+       return;
+     }
+     else
+	dump("Obtained MenuItem Back\n");
+
+     // Enable/Disable the Back Menuitem
+     if (canBack == "true")  {
+	dump("Setting Back menuitem to disabled\n");
+        bm.setAttribute("disabled", "true");
+     }
+     else {
+	dump("Setting Back menuitem to enabled\n");
+        bm.setAttribute("disabled", "");
+     }
+    
      
   }
 
@@ -623,8 +658,8 @@
       <menuitem name="Search On This Computer..." onclick="BrowserReload();"/>
     </menu>
     <menu name="Go">
-      <menuitem name="Back" onclick="BrowserBack();"/>
-      <menuitem name="Forward" onclick="BrowserForward();" />
+      <menuitem id="menuitem-back" name="Back" onclick="BrowserBack();"/>
+      <menuitem id="menuitem-forward" name="Forward" onclick="BrowserForward();" />
       <menuitem name="Home" onclick="BrowserHome();"/>
       <separator />
       <menuitem name="Previous Site 1" onclick="BrowserBack();"/>
