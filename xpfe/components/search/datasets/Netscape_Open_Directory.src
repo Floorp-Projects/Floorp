@@ -2,7 +2,7 @@
 # Copyright ©1999 Netscape Communications Corp.
 
 <search
-	name="Netscape Search"
+	name=".Netscape Search"
 	description = "Netscape Search"
 	method="GET"
 	action="http://search.netscape.com/cgi-bin/search"
