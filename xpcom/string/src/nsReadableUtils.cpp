@@ -27,6 +27,45 @@
 #include "nsCRT.h"
 
 
+template <class CharT> class CalculateLength
+  {
+    public:
+      typedef CharT value_type;
+
+      CalculateLength() : mDistance(0) { }
+      size_t GetDistance() const       { return mDistance; }
+
+      PRUint32 write( const CharT*, PRUint32 N )
+                                       { mDistance += N; return N; }
+    private:
+      size_t mDistance;
+  };
+
+template <class CharT>
+inline
+size_t
+Distance_Impl( const nsReadingIterator<CharT>& aStart,
+          const nsReadingIterator<CharT>& aEnd )
+  {
+    CalculateLength<CharT> sink;
+    nsReadingIterator<CharT> fromBegin(aStart);
+    copy_string(fromBegin, aEnd, sink);
+    return sink.GetDistance();
+  }
+
+NS_COM
+size_t
+Distance( const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
+  {
+    return Distance_Impl(aStart, aEnd);
+  }
+
+NS_COM
+size_t
+Distance( const nsReadingIterator<char>& aStart, const nsReadingIterator<char>& aEnd )
+  {
+    return Distance_Impl(aStart, aEnd);
+  }
 
 
 
