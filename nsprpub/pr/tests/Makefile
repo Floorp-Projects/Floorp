@@ -140,6 +140,7 @@ CSRCS =             \
 	sproc_p.c	    \
 	stack.c		    \
 	stdio.c		    \
+	str2addr.c		\
 	strod.c			\
 	suspend.c		\
 	switch.c		\
