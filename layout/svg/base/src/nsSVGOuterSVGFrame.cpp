@@ -890,7 +890,7 @@ nsSVGOuterSVGFrame::InvalidateRegion(nsISVGRendererRegion* region, PRBool bRedra
     if (sink)
       region->GetRectangleScans(sink);
   }
-  vm->EndUpdateViewBatch(bRedraw ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC);
+  vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   
   return NS_OK;
 }
@@ -981,11 +981,7 @@ nsSVGOuterSVGFrame::UnsuspendRedraw()
 
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_FAILURE);
 
-  // don't do an immediate refresh if painting is suppressed by the shell
-  PRBool suppressed = PR_FALSE;
-  mPresShell->IsPaintingSuppressed(&suppressed);
-  vm->EndUpdateViewBatch(suppressed ?
-                         NS_VMREFRESH_NO_SYNC : NS_VMREFRESH_IMMEDIATE);
+  vm->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
   return NS_OK;
 }
 
