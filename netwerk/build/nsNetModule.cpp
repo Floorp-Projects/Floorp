@@ -258,6 +258,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
 #include "nsUnknownDecoder.h"
 #include "nsTXTToHTMLConv.h"
 #include "nsIndexedToHTML.h"
+#ifndef XP_MAC
+#include "nsBinHexDecoder.h"
+#endif
 
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewGopherDirListingConv(nsGopherDirListingConv** result);
@@ -285,7 +288,15 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 #define DEFLATE_TO_UNCOMPRESSED      "?from=deflate&to=uncompressed"
 #define PLAIN_TO_HTML                "?from=text/plain&to=text/html"
 
+#ifndef XP_MAC
+#define BINHEX_TO_WILD               "?from=application/mac-binhex40&to=*/*"
+#endif
+
+#ifndef XP_MAC
+static PRUint32 g_StreamConverterCount = 16;
+#else
 static PRUint32 g_StreamConverterCount = 15;
+#endif
 
 static char *g_StreamConverterArray[] = {
         FTP_UNIX_TO_INDEX,
@@ -303,6 +314,9 @@ static char *g_StreamConverterArray[] = {
         COMPRESS_TO_UNCOMPRESSED,
         XCOMPRESS_TO_UNCOMPRESSED,
         DEFLATE_TO_UNCOMPRESSED,
+#ifndef XP_MAC
+        BINHEX_TO_WILD,
+#endif
         PLAIN_TO_HTML
     };
 
@@ -355,6 +369,9 @@ UnregisterStreamConverters(nsIComponentManager *aCompMgr, nsIFile *aPath,
     }
     return rv;
 }
+#ifndef XP_MAC
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBinHexDecoder);
+#endif
 
 static NS_IMETHODIMP                 
 CreateNewStreamConvServiceFactory(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
@@ -835,7 +852,13 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_NSTXTTOHTMLCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY PLAIN_TO_HTML,
       CreateNewNSTXTToHTMLConvFactory
-	},
+    },
+#ifndef XP_MAC
+    { "nsBinHexConverter", NS_BINHEXDECODER_CID,
+      NS_ISTREAMCONVERTER_KEY BINHEX_TO_WILD,
+      nsBinHexDecoderConstructor
+    },
+#endif
 	// This is not a real stream converter, it's just
 	// registering it's cid factory here.
 	{ "HACK-TXTToHTMLConverter", 
