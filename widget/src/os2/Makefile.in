@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
@@ -16,88 +15,78 @@
 # <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
 # Copyright (C) 1999 John Fairhurst. All Rights Reserved.
 #
-#
-# Makefile for widget/src/os2
 
-DEPTH = ../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = widget_photon
+LIBRARY_NAME	= widget_os2
 
-REQUIRES=util img xpcom raptor netlib
+REQUIRES	= util img xpcom raptor netlib
 
-DEFINES += -D_IMPL_NS_WIDGET 
-
-DEFINES += \
-		-I$(srcdir)/../xpwidgets \
-		-I$(srcdir)/.
-
-DIRS = res
+DIRS		= res
 
 ifdef ENABLE_TESTS
-DIRS += tests
+DIRS		+= tests
 endif
 
-CPPSRCS = \
-	nsAppShell.cpp          \
-	nsBaseList.cpp          \
-	nsCanvas.cpp            \
-	nsCheckbutton.cpp       \
-	nsClipboard.cpp         \
-	nsCombobox.cpp          \
-	nsContextMenu.cpp       \
-	nsDirPicker.cpp         \
-	nsDragService.cpp       \
-	nsEntryField.cpp        \
-	nsFSTree.cpp            \
-	nsFileDialog.cpp        \
-	nsFontServices.cpp      \
-	nsFrameWindow.cpp       \
-	nsLabel.cpp             \
-	nsListbox.cpp           \
-	nsLookAndFeel.cpp       \
-	nsMenu.cpp              \
-	nsMenuBase.cpp          \
-	nsMenuItem.cpp          \
-	nsMenubar.cpp           \
-	nsModule.cpp            \
-	nsPushbutton.cpp        \
-	nsRadiobutton.cpp       \
-	nsScrollbar.cpp         \
-	nsSound.cpp             \
-	nsTabWidget.cpp         \
-	nsTextArea.cpp          \
-	nsToolkit.cpp           \
-	nsTooltipManager.cpp    \
-	nsTooltipWidget.cpp     \
-	nsWidgetFactory.cpp     \
-	nsWindow.cpp            \
-	$(NULL)
+CSRCS		= tabctrl.c
 
-CSRCS = tabctrl.c
+CPPSRCS		= \
+		nsAppShell.cpp \
+		nsBaseList.cpp \
+		nsCanvas.cpp \
+		nsCheckbutton.cpp \
+		nsClipboard.cpp \
+		nsCombobox.cpp \
+		nsContextMenu.cpp \
+		nsDirPicker.cpp \
+		nsDragService.cpp \
+		nsEntryField.cpp \
+		nsFSTree.cpp \
+		nsFileDialog.cpp \
+		nsFontServices.cpp \
+		nsFrameWindow.cpp \
+		nsLabel.cpp \
+		nsListbox.cpp \
+		nsLookAndFeel.cpp \
+		nsMenu.cpp \
+		nsMenuBase.cpp \
+		nsMenuItem.cpp \
+		nsMenubar.cpp \
+		nsModule.cpp \
+		nsPushbutton.cpp \
+		nsRadiobutton.cpp \
+		nsScrollbar.cpp \
+		nsSound.cpp \
+		nsTabWidget.cpp \
+		nsTextArea.cpp \
+		nsToolkit.cpp \
+		nsTooltipManager.cpp \
+		nsTooltipWidget.cpp \
+		nsWidgetFactory.cpp \
+		nsWindow.cpp \
+		$(NULL)
 
-include $(topsrcdir)/config/config.mk
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
 
-CXXFLAGS += $(TK_CFLAGS)
-
-SHARED_LIBRARY_LIBS =			    \
-	$(DIST)/lib/libraptorbasewidget_s.a \
-	$(NULL)
-
-EXTRA_DSO_LDOPTS+=	       \
-	$(TOOLKIT_DSO_LDOPTS) \
-	$(MKSHLIB_FORCE_ALL)   \
-	$(SHARED_LIBRARY_LIBS) \
-	$(MKSHLIB_UNFORCE_ALL) \
-	-L$(DIST)/bin -lraptorhtmlpars \
-	$(NULL)
-
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
+EXTRA_DSO_LDOPTS = \
+		$(TOOLKIT_DSO_LDOPTS) \
+		$(MKSHLIB_FORCE_ALL) \
+		$(SHARED_LIBRARY_LIBS) \
+		$(MKSHLIB_UNFORCE_ALL) \
+		-L$(DIST)/bin -lraptorhtmlpars \
+		$(TK_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES		+= -D_IMPL_NS_WIDGET -I$(srcdir)/../xpwidgets -I$(srcdir)
+
+CXXFLAGS	+= $(TK_CFLAGS)
+
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
+

@@ -1,3 +1,4 @@
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
@@ -13,6 +14,7 @@
 # The Initial Developer of the Original Code is John Fairhurst,
 # <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
 # Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+#
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
@@ -27,8 +29,9 @@ SIMPLE_PROGRAMS = dirpicker$(BIN_SUFFIX)
 
 CPPSRCS		= dirpicker.cpp
 
-LIBS = $(DIST)/lib/libraptorwidget_s.lib
+LIBS		= $(DIST)/lib/libraptorwidget_s.lib
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir)/..
+INCLUDES	+= -I$(srcdir)/..
+
