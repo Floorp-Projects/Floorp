@@ -393,3 +393,16 @@ NS_IMETHODIMP nsExternalProtocolHandler::ExternalAppExistsForScheme(const nsACSt
   *_retval = PR_FALSE;
   return NS_OK;
 }
+
+nsBlockedExternalProtocolHandler::nsBlockedExternalProtocolHandler()
+{
+    m_schemeName = "default-blocked";
+}
+
+NS_IMETHODIMP
+nsBlockedExternalProtocolHandler::NewChannel(nsIURI *aURI,
+                                             nsIChannel **_retval)
+{
+    *_retval = nsnull;
+    return NS_ERROR_UNKNOWN_PROTOCOL;
+}
