@@ -88,6 +88,9 @@ interface nsIXMLHttpRequest : nsISupports
    * for the request.  NULL if the channel has not yet been
    * created.
    *
+   * In a multipart request case, this is the initial channel, not the
+   * different parts in the multipart request.
+   *
    * Mozilla only. Requires elevated privileges to access.
    */
   readonly attribute nsIChannel channel;
@@ -129,6 +132,9 @@ interface nsIXMLHttpRequest : nsISupports
    * Returns all of the response headers as a string for HTTP
    * requests.
    *
+   * Note that this will return all the headers from the *current*
+   * part of a multipart request, not from the original channel.
+   *
    * @returns A string containing all of the response headers.
    *          NULL if the response has not yet been received.
    */
@@ -163,6 +169,9 @@ interface nsIXMLHttpRequest : nsISupports
    *              is received or if it returns immediately after
    *              sending the request. In the latter case, notification
    *              of completion is sent through the event listeners.
+   *              This argument must be true if the multipart
+   *              attribute has been set to true, or an exception will
+   *              be thrown.
    * @param user A username for authentication if necessary.
    * @param password A password for authentication if necessary.
    */
@@ -192,6 +201,9 @@ interface nsIXMLHttpRequest : nsISupports
    *              sending the request. In the latter case, notification
    *              of completion is sent through the event listeners.
    *              The default value is true.
+   *              This argument must be true if the multipart
+   *              attribute has been set to true, or an exception will
+   *              be thrown.
    * @param user (optional) A username for authentication if necessary.
    *             The default value is the empty string
    * @param password (optional) A password for authentication if necessary.
@@ -237,7 +249,7 @@ interface nsIXMLHttpRequest : nsISupports
    *   3 INTERACTIVE   Downloading, responseText holds the partial data.
    *   4 COMPLETED     Finished with all operations.
    */
-   readonly attribute long readyState;
+  readonly attribute long readyState;
 
   /**
    * Override the mime type returned by the server (if any). This may
@@ -248,7 +260,22 @@ interface nsIXMLHttpRequest : nsISupports
    * @param mimetype The type used to override that returned by the server
    *                 (if any).
    */
-   void   overrideMimeType(in AUTF8String mimetype);
+  void   overrideMimeType(in AUTF8String mimetype);
+
+  /**
+   * Set to true if the response is expected to be a stream of
+   * possibly multiple (XML) documents. If set to true, the content
+   * type of the initial response must be multipart/x-mixed-replace or
+   * an error will be triggerd. All requests must be asynchronous.
+   *
+   * This enables server push. For each XML document that's written to
+   * this request, a new XML DOM document is created and the onload
+   * handler is called inbetween documents. Note that when this is
+   * set, the onload handler and other event handlers are not reset
+   * after the first XML document is loaded, and the onload handler
+   * will be called as each part of the response is received.
+   */
+  attribute boolean multipart;
 };
 
 

@@ -127,6 +127,7 @@ protected:
   void NotifyEventListeners(nsIDOMEventListener* aHandler,
                             nsISupportsArray* aListeners, nsIDOMEvent* aEvent);
   void ClearEventListeners();
+  already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIChannel> mChannel;
