@@ -129,6 +129,7 @@ NS_IMETHODIMP nsDragService::EndDragSession()
 {
   // a drag just ended.  reset everything.
   ResetDragState();
+  mDoingDrag = PR_FALSE;
   return NS_OK;
 }
 
@@ -474,8 +475,12 @@ static void invisibleDragEnd     (GtkWidget        *widget,
   // apparently, the drag is over.  make sure to tell the drag service
   // about it.
   nsCOMPtr<nsIDragService> dragService;
+
+  gdk_pointer_ungrab(GDK_CURRENT_TIME);
+  gdk_keyboard_ungrab(GDK_CURRENT_TIME);
+
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
+                                             NS_GET_IID(nsIDragService),
                                              (nsISupports **)&dragService);
   if (NS_FAILED(rv)) {
 #ifdef DEBUG_DD
