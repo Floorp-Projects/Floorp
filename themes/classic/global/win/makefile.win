@@ -44,7 +44,6 @@ install::
 	$(MAKE_INSTALL) scrollbars.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) splitter.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tabcontrol.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) colorpicker.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) textfield.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) toolbar.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tree.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin

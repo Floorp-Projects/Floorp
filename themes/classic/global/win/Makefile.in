@@ -46,7 +46,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	scrollbars.css \
 	splitter.css \
 	tabcontrol.css \
-	colorpicker.css \
 	textfield.css \
 	toolbar.css \
 	tree.css \
