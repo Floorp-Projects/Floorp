@@ -36,20 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMsgVCardService.h"
-#include "nsIDOMWindowInternal.h"
-
-#include "nsVCardObj.h"
-#include "nsISupportsPrimitives.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIAbCard.h"
-#include "nsIAddressBook.h"
-#include "nsAbBaseCID.h"
-
 #include "prmem.h"
 #include "plstr.h"
-    
-#define FOUR_K 4096
     
 NS_IMPL_ISUPPORTS1(nsMsgVCardService, nsIMsgVCardService)
 
@@ -117,104 +105,4 @@ NS_IMETHODIMP_(char *) nsMsgVCardService::VObjectAnyValue(VObject * o)
     if (retval)
         PL_strcpy(retval, (char *) vObjectAnyValue(o));
     return retval;
-}
-
-// helper class used to process a stream of vcard data
-
-NS_IMPL_ISUPPORTS1(nsMsgVCardStreamListener, nsIStreamListener)
-
-nsMsgVCardStreamListener::nsMsgVCardStreamListener()
-{
-  m_dataBuffer = nsnull;
-}
-
-nsMsgVCardStreamListener::~nsMsgVCardStreamListener()
-{
-  PR_Free(m_dataBuffer);
-}
-
-NS_IMETHODIMP
-nsMsgVCardStreamListener::OnStartRequest(nsIRequest* request, nsISupports* aSupport)
-{
-  if (!m_dataBuffer)
-    m_dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgVCardStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
-                                        nsresult status)
-{
-  NS_ENSURE_ARG_POINTER(aSupport);
-  NS_ENSURE_SUCCESS(status, status); // don't process the vcard if we got a status error
-  nsresult rv = NS_OK;
-
-  // take our vCard string and open up an address book window based on it
-  nsCOMPtr<nsIMsgVCardService> vCardService = do_GetService(NS_MSGVCARDSERVICE_CONTRACTID);
-  if (vCardService)
-  {
-    VObject * vObj = vCardService->Parse_MIME(mVCardData.get(), mVCardData.Length());
-    if (vObj)
-    {
-      nsCAutoString vCard;
-      int len = 0;
-
-      vCard.Adopt(vCardService->WriteMemoryVObjects(0, &len, vObj, PR_FALSE));
-      delete vObj;
-
-      nsCOMPtr<nsIDOMWindowInternal> parentWindow = do_GetInterface(aSupport);
-      NS_ENSURE_TRUE(parentWindow, NS_ERROR_FAILURE);
-            
-      nsCOMPtr<nsIAddressBook> addressbook = do_CreateInstance(NS_ADDRESSBOOK_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr <nsIAbCard> cardFromVCard;
-      rv = addressbook->EscapedVCardToAbCard(vCard.get(), getter_AddRefs(cardFromVCard));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-        
-      ifptr->SetData(cardFromVCard);
-      ifptr->SetDataIID(&NS_GET_IID(nsIAbCard));
-
-      nsCOMPtr<nsIDOMWindow> dialogWindow;
-
-      rv = parentWindow->OpenDialog(
-           NS_LITERAL_STRING("chrome://messenger/content/addressbook/abNewCardDialog.xul"),
-           EmptyString(),
-           NS_LITERAL_STRING("chrome,resizable=no,titlebar,modal,centerscreen"),
-           ifptr, getter_AddRefs(dialogWindow));      
-    }
-  }
-
-  PR_FREEIF(m_dataBuffer);
-
-  return rv;
-}
-
-NS_IMETHODIMP nsMsgVCardStreamListener::OnDataAvailable(nsIRequest* request, nsISupports* aSupport,
-                                                        nsIInputStream* inStream, 
-                                                        PRUint32 srcOffset,
-                                                        PRUint32 count)
-{
-  PRUint32 available, readCount, maxReadCount = FOUR_K;
-  PRUint32 writeCount;
-  nsresult rv = inStream->Available(&available);
-  while (NS_SUCCEEDED(rv) && available)
-  {
-    if (maxReadCount > available)
-      maxReadCount = available;
-    memset(m_dataBuffer, 0, FOUR_K+1);
-    rv = inStream->Read(m_dataBuffer, maxReadCount, &readCount);
-
-    if (NS_SUCCEEDED(rv))  
-    {
-      // m_dataBuffer is null terminated so we can safely just append it to our vcard string
-      mVCardData += m_dataBuffer;
-      available -= readCount;
-    }
-  }
-
-  return rv;
 }

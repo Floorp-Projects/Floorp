@@ -40,7 +40,6 @@
 
 #include "nsIMsgVCardService.h"
 #include "nsISupports.h"
-#include "nsIStreamListener.h"
 
 class nsMsgVCardService : public nsIMsgVCardService
 {
@@ -50,25 +49,6 @@ public:
 
   nsMsgVCardService();
   virtual ~nsMsgVCardService();
-};
-
-// a helper class for the vcard service which can process a vcard as an incoming
-// stream and open it.
-
-class nsMsgVCardStreamListener : public nsIStreamListener
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIREQUESTOBSERVER
-
-  nsMsgVCardStreamListener();
-  virtual ~nsMsgVCardStreamListener();
-
-protected:
-  char *m_dataBuffer;
-  nsCString mVCardData;
-
 };
 
 #endif /* nsMsgVCardService_h___ */

@@ -210,6 +210,11 @@ static const nsModuleComponentInfo components[] =
     NS_CONTENT_HANDLER_CONTRACTID_PREFIX"x-application-addvcard",
     nsAddressBookConstructor },
 
+  { "add vCard content handler",
+    NS_ADDRESSBOOK_CID,
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/x-vcard",
+    nsAddressBookConstructor },
+
   { "The directory factory service interface",
     NS_ABDIRFACTORYSERVICE_CID,
     NS_ABDIRFACTORYSERVICE_CONTRACTID,

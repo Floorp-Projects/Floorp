@@ -86,8 +86,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
-#include "nsNetCID.h"
-#include "nsIIOService.h"
+#include "nsAutoPtr.h"
+#include "nsIMsgVCardService.h"
 
 // according to RFC 2849
 // SEP = (CR LF / LF)
@@ -177,7 +177,7 @@ nsAddressBook::~nsAddressBook()
 
 NS_IMPL_THREADSAFE_ADDREF(nsAddressBook)
 NS_IMPL_THREADSAFE_RELEASE(nsAddressBook)
-NS_IMPL_QUERY_INTERFACE3(nsAddressBook, nsIAddressBook, nsICmdLineHandler, nsIContentHandler)
+NS_IMPL_QUERY_INTERFACE4(nsAddressBook, nsIAddressBook, nsICmdLineHandler, nsIContentHandler, nsIStreamLoaderObserver)
 
 //
 // nsIAddressBook
@@ -2081,22 +2081,49 @@ NS_IMETHODIMP nsAddressBook::HandleContent(const char * aContentType,
     rv = channel->GetURI(getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // create a stream listener to handle the v-card data
-    nsCOMPtr<nsIStreamListener> strListener = do_CreateInstance(NS_MSGVCARDSTREAMLISTENER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_WONT_HANDLE_CONTENT); // no registered v-card handler so just return that we won't handle the content
-
-    // create a new channel and run the url again
-    nsCOMPtr<nsIIOService> netService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
+    // create a stream loader to handle the v-card data
+    nsCOMPtr<nsIStreamLoader> streamLoader;
+    rv = NS_NewStreamLoader(getter_AddRefs(streamLoader), uri, this, aWindowContext);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = netService->NewChannelFromURI(uri, getter_AddRefs(channel));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = channel->AsyncOpen(strListener, aWindowContext);
 
   }
   else // The content-type was not x-application-addvcard...
     return NS_ERROR_WONT_HANDLE_CONTENT;
+
+  return rv;
+}
+
+NS_IMETHODIMP nsAddressBook::OnStreamComplete(nsIStreamLoader *aLoader, nsISupports *aContext, nsresult aStatus, PRUint32 datalen, const PRUint8 *data)
+{
+  NS_ENSURE_ARG_POINTER(aContext);
+  NS_ENSURE_SUCCESS(aStatus, aStatus); // don't process the vcard if we got a status error
+  nsresult rv = NS_OK;
+
+  // take our vCard string and open up an address book window based on it
+  nsCOMPtr<nsIMsgVCardService> vCardService = do_GetService(NS_MSGVCARDSERVICE_CONTRACTID);
+  if (vCardService)
+  {
+    nsAutoPtr<VObject> vObj(vCardService->Parse_MIME((const char *)data, datalen));
+    if (vObj)
+    {
+      PRInt32 len = 0;
+      nsAdoptingCString vCard(vCardService->WriteMemoryVObjects(0, &len, vObj, PR_FALSE));
+
+      nsCOMPtr <nsIAbCard> cardFromVCard;
+      rv = EscapedVCardToAbCard(vCard.get(), getter_AddRefs(cardFromVCard));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIDOMWindowInternal> parentWindow = do_GetInterface(aContext);
+      NS_ENSURE_TRUE(parentWindow, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIDOMWindow> dialogWindow;
+      rv = parentWindow->OpenDialog(
+           NS_LITERAL_STRING("chrome://messenger/content/addressbook/abNewCardDialog.xul"),
+           EmptyString(),
+           NS_LITERAL_STRING("chrome,resizable=no,titlebar,modal,centerscreen"),
+           cardFromVCard, getter_AddRefs(dialogWindow));      
+    }
+  }
 
   return rv;
 }
