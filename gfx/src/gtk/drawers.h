@@ -32,20 +32,55 @@ PR_BEGIN_EXTERN_C
 #ifdef HAVE_XIE
 PRBool 
 DrawScaledImageXIE(Display *display,
-		   GdkDrawable *aDest,
-		   GdkGC *aGC,
-		   GdkDrawable *aSrc,
-		   GdkDrawable *aSrcMask,
-		   PRInt32 aSrcWidth,
-		   PRInt32 aSrcHeight,
-		   PRInt32 aSX,
-		   PRInt32 aSY,
-		   PRInt32 aSWidth,
-		   PRInt32 aSHeight,
-		   PRInt32 aDX,
-		   PRInt32 aDY,
-		   PRInt32 aDWidth,
-		   PRInt32 aDHeight);
+                   GdkDrawable *aDest,
+                   GdkGC *aGC,
+                   GdkDrawable *aSrc,
+                   GdkDrawable *aSrcMask,
+                   PRInt32 aSrcWidth,
+                   PRInt32 aSrcHeight,
+                   PRInt32 aSX,
+                   PRInt32 aSY,
+                   PRInt32 aSWidth,
+                   PRInt32 aSHeight,
+                   PRInt32 aDX,
+                   PRInt32 aDY,
+                   PRInt32 aDWidth,
+                   PRInt32 aDHeight);
 #endif
+
+PRBool
+DrawScaledImageNN(Display *display,
+                  GdkDrawable *aDest,
+                  GdkGC *aGC,
+                  GdkDrawable *aSrc,
+                  GdkDrawable *aSrcMask,
+                  PRInt32 aSrcWidth,
+                  PRInt32 aSrcHeight,
+                  PRInt32 aSX,
+                  PRInt32 aSY,
+                  PRInt32 aSWidth,
+                  PRInt32 aSHeight,
+                  PRInt32 aDX,
+                  PRInt32 aDY,
+                  PRInt32 aDWidth,
+                  PRInt32 aDHeight);
+
+PRBool
+DrawScaledImageBitsNN(Display *display,
+                      GdkDrawable *aDest,
+                      GdkGC *aGC,
+                      const PRUint8 *aSrc,
+                      PRInt32 aBytesPerRow,
+                      const PRUint8 *aSrcMask,
+                      PRInt32 aSrcWidth,
+                      PRInt32 aSrcHeight,
+                      PRInt32 aSX,
+                      PRInt32 aSY,
+                      PRInt32 aSWidth,
+                      PRInt32 aSHeight,
+                      PRInt32 aDX,
+                      PRInt32 aDY,
+                      PRInt32 aDWidth,
+                      PRInt32 aDHeight);
 
 PR_END_EXTERN_C
