@@ -1223,15 +1223,15 @@ void nsTableFrame::ComputeCollapsingBorders(PRInt32 aStartRowIndex,
 void nsTableFrame::ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex)
 {
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
-  PRInt32 numSegments = mBorderEdges[NS_SIDE_LEFT].Count();
+  PRInt32 numSegments = mBorderEdges.mEdges[NS_SIDE_LEFT].Count();
   while (numSegments<=aRowIndex)
   {
     nsBorderEdge *borderToAdd = new nsBorderEdge();
-    mBorderEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
+    mBorderEdges.mEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
     numSegments++;
   }
   // "border" is the border segment we are going to set
-  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
+  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_LEFT].ElementAt(aRowIndex));
 
   // collect all the incident frames and compute the dominant border 
   nsVoidArray styles;
@@ -1267,42 +1267,39 @@ void nsTableFrame::ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColInd
     cellFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
   }
-  ComputeCollapsedBorderSegment(NS_SIDE_LEFT, &styles, *border);
-
-
+  ComputeCollapsedBorderSegment(NS_SIDE_LEFT, &styles, *border, PR_FALSE);
+  // now give half the computed border to the table segment, and half to the cell
+  // XXX give half to the cell
+  border->mWidth = (border->mWidth)/2;
+  mBorderEdges.mMaxBorderWidth.left = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.left);
 }
 
 void nsTableFrame::ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex)
 {
-#if 0
   // this method just uses mCellMap, because it can't get called unless nCellMap!=nsnull
   PRInt32 colCount = mCellMap->GetColCount();
-  PRInt32 numSegments = mBorderEdges[NS_SIDE_RIGHT].Count();
+  PRInt32 numSegments = mBorderEdges.mEdges[NS_SIDE_RIGHT].Count();
   while (numSegments<=aRowIndex)
   {
     nsBorderEdge *borderToAdd = new nsBorderEdge();
-    mBorderEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
+    mBorderEdges.mEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
     numSegments++;
   }
   // "border" is the border segment we are going to set
-  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
+  nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
 
   // collect all the incident frames and compute the dominant border 
   nsVoidArray styles;
   // styles are added to the array in the order least dominant -> most dominant
   //    1. table, only if this cell is in the right-most column and no rowspanning cell is
-  //       to it's right.
-  PRBool useTable=PR_FALSE;
-  nsTableCellFrame *rightNeighborFrame=nsnull;
-  if ((colCount-1)==aColIndex)
-    useTable=PR_TRUE;
-  else
+  //       to it's right.  Otherwise, we remember what cell is the right neighbor
+  nsTableCellFrame *rightNeighborFrame=nsnull;  
+  if ((colCount-1)!=aColIndex)
   {
     PRInt32 colIndex = aColIndex+1;
     for ( ; colIndex<colCount; colIndex++)
     {
-// XXX this is what I'm working on now
-		  CellData *cd = GetCellAt(aRowIndex, colIndex);
+		  CellData *cd = mCellMap->GetCellAt(aRowIndex, colIndex);
 		  if (cd != nsnull)
 		  { // there's really a cell at (aRowIndex, colIndex)
 			  if (nsnull==cd->mCell)
@@ -1312,19 +1309,24 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIn
 				  const PRInt32 realRowIndex = cell->GetRowIndex ();
 				  if (realRowIndex!=aRowIndex)
 				  { // the span is caused by a rowspan
-					  result = PR_TRUE;
+					  rightNeighborFrame = cd->mRealCell->mCell;
 					  break;
 				  }
 			  }
+        else
+        {
+          rightNeighborFrame = cd->mCell;
+          break;
+        }
 		  }
-
-
-      rightNeighborFrame = mCellMap->GetCellFrameAt(aRowIndex, colIndex);
     }
   }
   const nsStyleSpacing *spacing;
-  GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
-  styles.AppendElement((void*)spacing);
+  if (nsnull==rightNeighborFrame)
+  { // if rightNeighborFrame is null, our right neighbor is the table 
+    GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+    styles.AppendElement((void*)spacing);
+  }
   //    2. colgroup
   nsTableColFrame *colFrame = mCellMap->GetColumnFrame(aColIndex);
   nsIFrame *colGroupFrame;
@@ -1352,8 +1354,17 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIn
     cellFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
     styles.AppendElement((void*)spacing);
   }
-  ComputeCollapsedBorderSegment(NS_SIDE_RIGHT, &styles, *border);
-#endif
+  //    7. left edge of rightNeighborCell, if there is one
+  if (nsnull!=rightNeighborFrame)
+  {
+    rightNeighborFrame->GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)spacing));
+    styles.AppendElement((void*)spacing);
+  }
+  ComputeCollapsedBorderSegment(NS_SIDE_RIGHT, &styles, *border, PRBool(nsnull!=rightNeighborFrame));
+  // now give half the computed border to the table segment, and half to the cell
+  // XXX give half to the cell
+  border->mWidth = (border->mWidth)/2;  //XXX: rounding
+
 }
 
 void nsTableFrame::ComputeTopBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex)
@@ -1380,6 +1391,26 @@ nscoord nsTableFrame::GetWidthForSide(const nsMargin &aBorder, PRUint8 aSide)
   else if (NS_SIDE_RIGHT == aSide) return aBorder.right;
   else if (NS_SIDE_TOP == aSide) return aBorder.top;
   else return aBorder.bottom;
+}
+
+/* Given an Edge, find the opposing edge (top<-->bottom, left<-->right) */
+PRUint8 nsTableFrame::GetOpposingEdge(PRUint8 aEdge)
+{
+   PRUint8 result;
+   switch (aEdge)
+   {
+   case NS_SIDE_LEFT:
+        result = NS_SIDE_RIGHT;  break;
+   case NS_SIDE_RIGHT:
+        result = NS_SIDE_LEFT;   break;
+   case NS_SIDE_TOP:
+        result = NS_SIDE_BOTTOM; break;
+   case NS_SIDE_BOTTOM:
+        result = NS_SIDE_TOP;    break;
+   default:
+        result = NS_SIDE_TOP;
+   }
+  return result;
 }
 
 /* returns BORDER_PRECEDENT_LOWER if aStyle1 is lower precedent that aStyle2
@@ -1490,9 +1521,10 @@ PRUint8 nsTableFrame::CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2)
   earlier in the list if the tie-breaker gets down to #4.
   This method sets the out-param aBorder with the resolved border attributes
 */
-void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8      aSide, 
-                                                 nsVoidArray *aStyles, 
-                                                 nsBorderEdge &aBorder)
+void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8       aSide, 
+                                                 nsVoidArray  *aStyles, 
+                                                 nsBorderEdge &aBorder,
+                                                 PRBool        aFlipLastSide)
 {
   if (nsnull!=aStyles)
   {
@@ -1501,22 +1533,29 @@ void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8      aSide,
     {
       nsVoidArray sameWidthBorders;
       nsStyleSpacing * spacing;
+      nsStyleSpacing * lastSpacing=nsnull;
       nsMargin border;
       PRInt32 maxWidth=0;
       PRInt32 i;
+      PRUint8 side = aSide;
       for (i=0; i<styleCount; i++)
       {
         spacing = (nsStyleSpacing *)(aStyles->ElementAt(i));
-        if (spacing->GetBorderStyle(aSide)==NS_STYLE_BORDER_STYLE_HIDDEN)
+        if ((PR_TRUE==aFlipLastSide) && (i==styleCount-1))
+        {
+          side = GetOpposingEdge(aSide);
+          lastSpacing = spacing;
+        }
+        if (spacing->GetBorderStyle(side)==NS_STYLE_BORDER_STYLE_HIDDEN)
         {
           aBorder.mStyle=NS_STYLE_BORDER_STYLE_HIDDEN;
           aBorder.mWidth=0;
           return;
         }
-        else if (spacing->GetBorderStyle(aSide)!=NS_STYLE_BORDER_STYLE_NONE)
+        else if (spacing->GetBorderStyle(side)!=NS_STYLE_BORDER_STYLE_NONE)
         {
           spacing->GetBorder(border);
-          nscoord borderWidth = GetWidthForSide(border, aSide);
+          nscoord borderWidth = GetWidthForSide(border, side);
           if (borderWidth==maxWidth)
             sameWidthBorders.AppendElement(spacing);
           else if (borderWidth>maxWidth)
@@ -1541,8 +1580,11 @@ void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8      aSide,
       else if (1==styleCount)
       { // there was just one border of the largest width
         spacing = (nsStyleSpacing *)(sameWidthBorders.ElementAt(0));
-        aBorder.mColor=spacing->GetBorderColor(aSide);
-        aBorder.mStyle=spacing->GetBorderStyle(aSide);
+        side=aSide;
+        if (spacing==lastSpacing)
+          side=GetOpposingEdge(aSide);
+        aBorder.mColor=spacing->GetBorderColor(side);
+        aBorder.mStyle=spacing->GetBorderStyle(side);
         return;
       }
       else
@@ -1552,7 +1594,10 @@ void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8      aSide,
         for (i=0; i<styleCount; i++)
         {
           spacing = (nsStyleSpacing *)(aStyles->ElementAt(i));
-          PRUint8 thisStyle = spacing->GetBorderStyle(aSide);
+          side=aSide;
+          if (spacing==lastSpacing)
+            side=GetOpposingEdge(aSide);
+          PRUint8 thisStyle = spacing->GetBorderStyle(side);
           PRUint8 borderCompare = CompareBorderStyles(thisStyle, winningStyle);
           if (BORDER_PRECEDENT_HIGHER==borderCompare)
           {
@@ -1565,7 +1610,10 @@ void nsTableFrame::ComputeCollapsedBorderSegment(PRUint8      aSide,
           }          
         }
         aBorder.mStyle = winningStyle;
-        aBorder.mColor = winningStyleBorder->GetBorderColor(aSide);
+        side=aSide;
+        if (winningStyleBorder==lastSpacing)
+          side=GetOpposingEdge(aSide);
+        aBorder.mColor = winningStyleBorder->GetBorderColor(side);
       }
     }
   }
@@ -1810,13 +1858,21 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
     const nsStyleColor* color =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleTable* tableStyle =
+      (const nsStyleTable*)mStyleContext->GetStyleData(eStyleStruct_Table);
 
     nsRect  rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *color, 0, 0);
     PRIntn skipSides = GetSkipSides();
-    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *spacing, skipSides);
+    if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
+    {
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                  aDirtyRect, rect, *spacing, skipSides);
+    }
+    else
+    {
+    }
   }
 
   // for debug...

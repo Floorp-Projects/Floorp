@@ -20,10 +20,10 @@
 
 #include "nscore.h"
 #include "nsVoidArray.h"
-#include "nsBorder.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
+#include "nsIStyleContext.h"
 #include "nsIFrameReflow.h"   // for nsReflowReason enum
 
 
@@ -216,13 +216,16 @@ public:
   void    ComputeTopBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
   void    ComputeBottomBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
 
+  PRUint8 GetOpposingEdge(PRUint8 aEdge);
+
   nscoord GetWidthForSide(const nsMargin &aBorder, PRUint8 aSide);
 
   PRUint8 CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2);
 
   void    ComputeCollapsedBorderSegment(PRUint8       aSide, 
                                         nsVoidArray * aStyles, 
-                                        nsBorderEdge& aBorder);
+                                        nsBorderEdge& aBorder,
+                                        PRBool        aFlipLastSide);
 
 
   void    RecalcLayoutData();
@@ -655,7 +658,7 @@ private:
   nscoord      mDefaultCellSpacingY;// the default cell spacing X for this table
   nscoord      mDefaultCellPadding; // the default cell padding for this table
 
-  nsVoidArray  mBorderEdges[4];     // one list of border segments for each side of the table frame
+  nsBorderEdges mBorderEdges;       // one list of border segments for each side of the table frame
                                     // used only for the collapsing border model
 };
 
