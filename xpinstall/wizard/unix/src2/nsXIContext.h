@@ -108,7 +108,6 @@ public:
 /*-------------------------------------------------------------------*
  *   Utilities
  *-------------------------------------------------------------------*/
-    char    *itoa(int n);
     int     LoadResources();        /* load string resources */
     int     ReleaseResources();     /* release alloc'd resource strings */
     char    *Res(char *aKey);       /* get string resource for key; NULL==err */

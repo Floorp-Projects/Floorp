@@ -90,48 +90,6 @@ nsXIContext::~nsXIContext()
     XI_IF_DELETE(opt);
 }
 
-char *
-nsXIContext::itoa(int n)
-{
-	char *s;
-	int i, j, sign, tmp;
-	
-	/* check sign and convert to positive to stringify numbers */
-	if ( (sign = n) < 0)
-		n = -n;
-	i = 0;
-	s = (char*) malloc(sizeof(char));
-	
-	/* grow string as needed to add numbers from powers of 10 
-     * down till none left 
-     */
-	do
-	{
-		s = (char*) realloc(s, (i+1)*sizeof(char));
-		s[i++] = n % 10 + '0';  /* '0' or 30 is where ASCII numbers start */
-		s[i] = '\0';
-	}
-	while( (n /= 10) > 0);	
-	
-	/* tack on minus sign if we found earlier that this was negative */
-	if (sign < 0)
-	{
-		s = (char*) realloc(s, (i+1)*sizeof(char));
-		s[i++] = '-';
-	}
-	s[i] = '\0';
-	
-	/* pop numbers (and sign) off of string to push back into right direction */
-	for (i = 0, j = strlen(s) - 1; i < j; i++, j--)
-	{
-		tmp = s[i];
-		s[i] = s[j];
-		s[j] = tmp;
-	}
-	
-	return s;
-}
-
 #define MAX_KEY_SIZE 64
 #define FIRST_ERR -601
 #define LAST_ERR  -630
