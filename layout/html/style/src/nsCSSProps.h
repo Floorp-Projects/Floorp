@@ -64,6 +64,9 @@ public:
 
   static const PRInt32  kHintTable[];
 
+  static PRInt32 SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[]);
+  static const nsCString& SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[]);
+
   // Keyword/Enum value tables
   static const PRInt32 kAzimuthKTable[];
   static const PRInt32 kBackgroundAttachmentKTable[];
