@@ -143,6 +143,18 @@ enum RDFContentSinkParseMode {
 
 MOZ_DECL_CTOR_COUNTER(RDFContentSinkImpl::NameSpaceEntry)
 
+typedef
+NS_STDCALL_FUNCPROTO(nsresult,
+                     nsContainerTestFn,
+                     nsIRDFContainerUtils, IsAlt,
+                     (nsIRDFDataSource*, nsIRDFResource*, PRBool*));
+
+typedef
+NS_STDCALL_FUNCPROTO(nsresult,
+                     nsMakeContainerFn,
+                     nsIRDFContainerUtils, MakeAlt,
+                     (nsIRDFDataSource*, nsIRDFResource*, nsIRDFContainer**));
+
 class RDFContentSinkImpl : public nsIRDFContentSink,
                            public nsIExpatSink
 {
@@ -192,17 +204,6 @@ public:
     static nsIAtom* kXMLNSAtom;
     static nsIAtom* kParseTypeAtom;
 
-    typedef nsresult 
-    NS_STDCALL_FUNCPROTO(nsIRDFContainerUtils::*nsContainerTestFn,
-                         (nsIRDFDataSource* aDataSource,
-                          nsIRDFResource* aResource,
-                          PRBool* aResult));
-
-    typedef nsresult 
-    NS_STDCALL_FUNCPROTO(nsIRDFContainerUtils::*nsMakeContainerFn,
-                         (nsIRDFDataSource* aDataSource,
-                          nsIRDFResource* aContainer,
-                          nsIRDFContainer** aResult));
 
     typedef struct ContainerInfo {
         nsIRDFResource**  mType;

@@ -61,8 +61,17 @@ public:
     NS_DECL_NSIWINDOWSHOOKSSETTINGS
 
     // Typedef for nsIWindowsHooksSettings getter/setter member functions.
-    typedef nsresult NS_STDCALL_FUNCPROTO(nsIWindowsHooksSettings::*getter,( PRBool* ));
-    typedef nsresult NS_STDCALL_FUNCPROTO(nsIWindowsHooksSettings::*setter, ( PRBool ));
+    typedef
+    NS_STDCALL_FUNCPROTO(nsresult,
+                         getter,
+                         nsIWindowsHooksSettings, GetShowDialog, 
+                         (PRBool*));
+
+    typedef
+    NS_STDCALL_FUNCPROTO(nsresult,
+                         setter,
+                         nsIWindowsHooksSettings, SetShowDialog,
+                         (PRBool));
 
 protected:
     // General purpose getter.
