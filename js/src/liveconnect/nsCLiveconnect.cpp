@@ -44,7 +44,6 @@
 #include "prtypes.h"
 #include "prprf.h"
 #include "prlog.h"
-PR_BEGIN_EXTERN_C
 
 #include "jsj_private.h"
 #include "jsjava.h"
@@ -54,6 +53,8 @@ PR_BEGIN_EXTERN_C
 
 #include "netscape_javascript_JSObject.h"   /* javah-generated headers */
 #include "nsISecurityContext.h"
+
+PR_BEGIN_EXTERN_C
 
 /* A captured JavaScript error, created when JS_ReportError() is called while
    running JavaScript code that is itself called from Java. */
