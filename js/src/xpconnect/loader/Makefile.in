@@ -20,7 +20,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include $(DEPTH)/config/autoconk.mk
+include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jsloader
 LIBRARY_NAME	= jsloader
