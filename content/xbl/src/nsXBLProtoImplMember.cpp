@@ -41,9 +41,12 @@
 #include "jsapi.h"
 
 // statics get inited to 0 by default
-static nsIJSRuntimeService* nsXBLProtoImplMember::gJSRuntimeService;
-static JSRuntime* nsXBLProtoImplMember::gScriptRuntime;
-static PRInt32 nsXBLProtoImplMember::gScriptRuntimeRefcnt;
+/* static */
+nsIJSRuntimeService* nsXBLProtoImplMember::gJSRuntimeService;
+/* static */
+JSRuntime* nsXBLProtoImplMember::gScriptRuntime;
+/* static */
+PRInt32 nsXBLProtoImplMember::gScriptRuntimeRefcnt;
 
 /* static */
 nsresult
