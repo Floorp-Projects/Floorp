@@ -675,7 +675,7 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
     // any re-entrant calls don't trigger an infinite recursion.
     rv = aElement->SetAttribute(kNameSpaceID_None,
                                 kXULContentsGeneratedAtom,
-                                "true",
+                                nsAutoString("true"),
                                 PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set contents-generated attribute");
     if (NS_FAILED(rv)) return rv;
@@ -1870,7 +1870,7 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
 
         // Make it a lazy so that its contents get recursively
         // generated on-demand.
-        rv = element->SetAttribute(kNameSpaceID_None, kLazyContentAtom, "true", PR_FALSE);
+        rv = element->SetAttribute(kNameSpaceID_None, kLazyContentAtom, nsAutoString("true"), PR_FALSE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to make element lazy");
         if (NS_FAILED(rv)) return rv;
 
