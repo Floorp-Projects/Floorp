@@ -1059,11 +1059,21 @@ public:
     virtual ~RegExpInstance()             { }
 };
 
+
+// Instances of Arguments class:
+// The n arguments supplied to a function are also stored in a variable 'arguments' with properties [0] ..[n]
+// FrameVariable references from the ParameterFrame are directed to this array because the FrameParameter's
+// slot list points here instead.
+// When an element in arguments[] is deleted, that splits the alias. New values added afterwards are kept in a 
+// separate value list instead.
 class ArgumentsInstance : public SimpleInstance {
 public:
-    ArgumentsInstance(JS2Metadata *meta, js2val parent, JS2Class *type) : SimpleInstance(meta, parent, type), mSlots(NULL) { }
+    ArgumentsInstance(JS2Metadata *meta, js2val parent, JS2Class *type) 
+                        : SimpleInstance(meta, parent, type), mSlots(NULL), mSplit(NULL), mSplitValue(NULL) { }
 
     ValueList *mSlots;
+    bool *mSplit;
+    ValueList *mSplitValue;
 
     virtual void markChildren();
     virtual ~ArgumentsInstance();

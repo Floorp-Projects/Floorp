@@ -855,7 +855,10 @@ namespace MetaData {
                 && (multiname->nsList->back() == meta->publicNamespace) 
                 && isValidIndex(multiname->name, index)
                 && (index < args->mSlots->size())) {
-            *rval = (*args->mSlots)[index];
+            if (args->mSplit[index])
+                *rval = (*args->mSplitValue)[index];
+            else
+                *rval = (*args->mSlots)[index];
             return true;
         }
         else
@@ -873,7 +876,10 @@ namespace MetaData {
                 && (multiname->nsList->back() == meta->publicNamespace) 
                 && isValidIndex(multiname->name, index)
                 && (index < args->mSlots->size())) {
-            (*args->mSlots)[index] = newValue;
+            if (args->mSplit[index])
+                (*args->mSplitValue)[index] = newValue;
+            else
+                (*args->mSlots)[index] = newValue;
             return true;
         }
         else
@@ -882,7 +888,23 @@ namespace MetaData {
 
     bool JS2ArgumentsClass::Delete(JS2Metadata *meta, js2val base, Multiname *multiname, Environment *env, bool *result)
     {
-        return JS2Class::Delete(meta, base, multiname, env, result);
+        ASSERT(JS2VAL_IS_OBJECT(base));
+        JS2Object *obj = JS2VAL_TO_OBJECT(base);
+        ArgumentsInstance *args = checked_cast<ArgumentsInstance *>(obj);
+
+        uint32 index;
+        if ((multiname->nsList->size() == 1) 
+                && (multiname->nsList->back() == meta->publicNamespace) 
+                && isValidIndex(multiname->name, index)
+                && (index < args->mSlots->size())) {
+            if (!args->mSplitValue)
+                args->mSplitValue = new std::vector<js2val>(slotCount);
+            args->mSplit[index] = true;
+            (*args->mSplitValue)[index] = JS2VAL_VOID;
+            return true;
+        }
+        else
+            return JS2Class::Delete(meta, base, multiname, env, result);
     }
 
     bool JS2ArrayClass::BracketRead(JS2Metadata *meta, js2val *base, js2val indexVal, Phase phase, js2val *rval)

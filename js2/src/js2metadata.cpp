@@ -5066,12 +5066,20 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             for (uint32 i = 0; i < mSlots->size(); i++)
                 GCMARKVALUE((*mSlots)[i]);
         }
+        if (mSplitValue) {
+            for (uint32 i = 0; i < mSlots->size(); i++)
+                GCMARKVALUE((*mSplitValue)[i]);
+        }
     }
 
     ArgumentsInstance::~ArgumentsInstance()
     {
         if (mSlots)
             delete mSlots;
+        if (mSplit)
+            delete mSplit;
+        if (mSplitValue)
+            delete mSplitValue;
     }
 
 /************************************************************************************
@@ -5175,6 +5183,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // Pad out to 'length' args with undefined values if argCount is insufficient
     void ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 length)
     {
+        uint32 i;
         ASSERT(pluralFrame->kind == ParameterFrameKind);
         ParameterFrame *plural = checked_cast<ParameterFrame *>(pluralFrame);
         
@@ -5191,8 +5200,12 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             argsObj = new ArgumentsInstance(meta, meta->objectClass->prototype, meta->argumentsClass);
 			if (argCount > slotCount)
 				slotCount = argCount;
-			if (slotCount)
+            if (slotCount) {
                 argsObj->mSlots = new std::vector<js2val>(slotCount);
+                argsObj->mSplit = new bool[slotCount];
+                for (i = 0; (i < slotCount); i++)
+                    argsObj->mSplit[i] = false;
+            }
             frameSlots = argsObj->mSlots;
             // Add the 'arguments' property
             String name(widenCString("arguments"));
@@ -5203,7 +5216,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             localBindings.insert(name, lbe);
         }
 
-        uint32 i;
         for (i = 0; (i < argCount); i++) {
             if (i < slotCount) {
                 (*frameSlots)[i] = argBase[i];
