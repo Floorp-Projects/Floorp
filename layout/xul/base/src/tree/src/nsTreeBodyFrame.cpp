@@ -1707,17 +1707,13 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
   if (mUpdateBatchNest)
     return NS_OK;
 
-  PRInt32 count = PR_ABS(aCount);
   mRowCount += aCount;
-#ifdef DEBUG
-  PRInt32 rowCount = mRowCount;
-  mView->GetRowCount(&rowCount);
-  NS_ASSERTION(rowCount == mRowCount, "row count did not change by the amount suggested, check caller");
-#endif
-
   PRInt32 count = PR_ABS(aCount);
   PRInt32 rowCount;
   mView->GetRowCount(&rowCount);
+#ifdef DEBUG
+  NS_ASSERTION(rowCount == mRowCount, "row count did not change by the amount suggested, check caller");
+#endif
 
   PRInt32 last;
   GetLastVisibleRow(&last);
