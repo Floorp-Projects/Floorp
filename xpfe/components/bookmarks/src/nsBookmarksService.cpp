@@ -3862,9 +3862,57 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
         nsAutoString bookmarkName;
         currFile->GetLeafName(bookmarkName);
 
+        PRBool isSymlink = PR_FALSE;
         PRBool isDir = PR_FALSE;
+
+        currFile->IsSymlink(&isSymlink);
         currFile->IsDirectory(&isDir);
-        if (isDir)
+
+        if (isSymlink)
+        {
+            // It's a .lnk file.  Get the native path and check to see if it's
+            // a dir.  If so, create a bookmark for the dir.  If not, then
+            // simply do nothing and continue.
+
+            // Get the native path that the .lnk file is pointing to.
+            nsCAutoString path;
+            rv = currFile->GetNativeTarget(path);
+            if (NS_FAILED(rv)) 
+                continue;
+
+            nsCOMPtr<nsILocalFile> localFile;
+            rv = NS_NewNativeLocalFile(path, PR_TRUE, getter_AddRefs(localFile));
+            if (NS_FAILED(rv)) 
+                continue;
+
+            // Check for dir here.  If path is not a dir, just continue with
+            // next import.
+            rv = localFile->IsDirectory(&isDir);
+            NS_ENSURE_SUCCESS(rv, rv);
+            if (!isDir)
+                continue;
+
+            nsCAutoString spec;
+            nsCOMPtr<nsIFile> filePath(localFile);
+            // Get the file url format (file:///...) of the native file path.
+            rv = NS_GetURLSpecFromFile(filePath, spec);
+            if (NS_FAILED(rv)) 
+                continue;
+
+            // Look for and strip out the .lnk extension.
+            NS_NAMED_LITERAL_STRING(lnkExt, ".lnk");
+            PRInt32 lnkExtStart = bookmarkName.Length() - lnkExt.Length();
+            if (StringEndsWith(bookmarkName, lnkExt,
+                  nsCaseInsensitiveStringComparator()))
+                bookmarkName.Truncate(lnkExtStart);
+
+            nsCOMPtr<nsIRDFResource> bookmark;
+            CreateBookmarkInContainer(bookmarkName.get(), spec.get(), nsnull,
+                nsnull, nsnull, aParentResource, -1, getter_AddRefs(bookmark));
+            if (NS_FAILED(rv)) 
+                continue;
+        }
+        else if (isDir)
         {
             nsCOMPtr<nsIRDFResource> folder;
             rv = CreateFolderInContainer(bookmarkName.get(), aParentResource, -1, getter_AddRefs(folder));
@@ -3878,11 +3926,11 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
         else
         {
             nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-
             nsCAutoString extension;
+
             url->GetFileExtension(extension);
-            ToLowerCase(extension);
-            if (!extension.Equals(NS_LITERAL_CSTRING("url"))) 
+            if (!extension.Equals(NS_LITERAL_CSTRING("url"),
+                                  nsCaseInsensitiveCStringComparator()))
                 continue;
 
             nsAutoString name(Substring(bookmarkName, 0, 
