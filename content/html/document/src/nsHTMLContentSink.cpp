@@ -370,7 +370,6 @@ public:
   nsIWebShell* mWebShell;
   nsIParser* mParser;
 
-  PRBool mNotifyOnTimer;           // Do we notify based on time?
   PRInt32 mBackoffCount;           // back off timer notification after count
   PRInt32 mNotificationInterval;   // Notification interval in microseconds
   PRTime mLastNotificationTime;    // Time of last notification
@@ -385,8 +384,11 @@ public:
   nsString* mTitle;
   nsString  mUnicodeXferBuf;
 
+  PRPackedBool mNotifyOnTimer;           // Do we notify based on time?
   PRPackedBool mLayoutStarted;
   PRPackedBool mIsDemotingContainer;
+  PRPackedBool mScrolledToRefAlready;
+  PRPackedBool mNeedToBlockParser;
 
   PRInt32 mInScript;
   PRInt32 mInNotification;
@@ -398,7 +400,6 @@ public:
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
   nsSupportsArray mScriptElements;
-  PRBool mNeedToBlockParser;
   nsCOMPtr<nsIRequest> mDummyParserRequest;
 
   nsCString           mRef;
@@ -423,6 +424,7 @@ public:
   void StartLayout();
 
   void ScrollToRef();
+  void TryToScrollToRef();
 
   void AddBaseTagInfo(nsIHTMLContent* aContent);
 
@@ -2357,6 +2359,7 @@ HTMLContentSink::HTMLContentSink() {
   mNeedToBlockParser = PR_FALSE;
   mDummyParserRequest = nsnull;
   mBeginLoadTime = 0;
+  mScrolledToRefAlready = PR_FALSE;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -2536,7 +2539,9 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   mNotifyOnTimer = PR_TRUE;
   if (prefs) {
-    prefs->GetBoolPref("content.notify.ontimer", &mNotifyOnTimer);
+    PRBool result = mNotifyOnTimer;
+    prefs->GetBoolPref("content.notify.ontimer", &result);
+    mNotifyOnTimer = result;
   }
 
   mBackoffCount = -1; // never
@@ -2677,6 +2682,7 @@ HTMLContentSink::WillBuildModel(void)
     }
     mBeginLoadTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
+  mScrolledToRefAlready = PR_FALSE;
   // Notify document that the load is beginning
   mDocument->BeginLoad();
   return NS_OK;
@@ -2793,6 +2799,10 @@ HTMLContentSink::Notify(nsITimer *timer)
   if (mCurrentContext) {
     mCurrentContext->FlushTags(PR_TRUE);
   }
+
+  // Now try and scroll to the reference
+  TryToScrollToRef();
+  
   mNotificationTimer = 0;
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Notify()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -3997,6 +4007,20 @@ nsresult CharsetConvRef(const nsString& aDocCharset, const nsCString& aRefInDocC
 }
 
 void
+HTMLContentSink::TryToScrollToRef()
+{
+  if (mRef.IsEmpty()) {
+    return;
+  }
+
+  if (mScrolledToRefAlready) {
+    return;
+  }
+
+  ScrollToRef();
+}
+
+void
 HTMLContentSink::ScrollToRef()
 {
   // XXX Duplicate code in nsXMLContentSink.
@@ -4042,6 +4066,10 @@ HTMLContentSink::ScrollToRef()
             if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
               rv = shell->GoToAnchor(ref);
           }
+        }
+        
+        if (NS_SUCCEEDED(rv)) {
+          mScrolledToRefAlready = PR_TRUE;
         }
       }
     }
