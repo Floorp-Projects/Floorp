@@ -126,6 +126,18 @@ function downloadCompleted(aDownload)
     rdfc.Init(db, rdf.GetResource("NC:DownloadsRoot"));
 
     var id = aDownload.target.path;
+    
+    // Refresh the icon, so that executable icons are shown.
+    var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
+    var contentType = mimeService.getTypeFromFile(aDownload.target);
+    
+    var listItem = document.getElementById(id);
+    var oldImage = listItem.getAttribute("image");
+    // I tack on the content-type here as a hack to bypass the cache which seems
+    // to be interfering despite the fact the image has 'validate="always"' set
+    // on it. 
+    listItem.setAttribute("image", oldImage + "&contentType=" + contentType);
+    
     var dlRes = rdf.GetUnicodeResource(id);
   
     var insertIndex = gDownloadManager.activeDownloadCount + 1;

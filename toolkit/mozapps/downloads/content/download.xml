@@ -131,7 +131,7 @@
       <xul:hbox flex="1">
 #ifdef XP_WIN
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
@@ -151,7 +151,7 @@
       <xul:hbox flex="1" class="downloadContentBox" xbl:inherits="animated,animated-temp">
 #ifdef XP_WIN
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox flex="1">
@@ -292,7 +292,7 @@
       <xul:hbox flex="1">
 #ifdef XP_WIN
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox flex="1">
@@ -331,7 +331,7 @@
       <xul:hbox flex="1">
 #ifdef XP_WIN
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
@@ -362,7 +362,7 @@
       <xul:hbox flex="1">
 #ifdef XP_WIN
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
@@ -384,7 +384,7 @@
       <xul:hbox flex="1">
 #ifdef XP_WIN
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
@@ -405,7 +405,7 @@
     <content>
       <xul:hbox flex="1" class="downloadContentBox" xbl:inherits="animated,animated-temp">
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
         <xul:vbox flex="1">
           <xul:hbox flex="1">
@@ -427,7 +427,7 @@
     <content>
       <xul:hbox flex="1">
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
         <xul:vbox pack="start" flex="1">
           <xul:label xbl:inherits="value=target" crop="center"/>
@@ -441,7 +441,7 @@
     <content>
       <xul:hbox flex="1">
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
         </xul:vbox>
         <xul:vbox pack="start" flex="1">
           <xul:label xbl:inherits="value=target" crop="center"/>
