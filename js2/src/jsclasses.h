@@ -88,7 +88,8 @@ namespace JSClasses {
                 mSlotCount(superClass ? superClass->mSlotCount : 0)
         {
             // to "inherit" superClass methods.
-            mScope->setPrototype(superClass->mScope);
+            if (superClass)
+                mScope->setPrototype(superClass->mScope);
         }
         
         JSClass* getSuperClass()
