@@ -804,7 +804,7 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
       PRInt32 pos = args.FindChar('\n', offset);
       if (pos == -1) 
         pos = args.Length();
-      argArray[i] = ToNewUnicode(Substring(args, offset, pos));
+      argArray[i] = ToNewUnicode(Substring(args, offset, pos - offset));
       if (argArray[i] == nsnull) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         argCount = i - 1; // don't try to free uninitialized memory
