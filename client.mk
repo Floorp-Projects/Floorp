@@ -38,6 +38,7 @@
 #   MOZ_OBJDIR           - Destination object directory
 # also,
 #   MOZ_CO_BRANCH        - Branch tag to use for checkout (default: HEAD)
+#   MOZ_CO_DATE          - Date tag to use for checkout (default: none)
 #   MOZ_CO_MODULE        - Module to checkout (default: SeaMonkeyEditor)
 #   MOZ_CVS_FLAGS        - Flags to pass cvs (default: -q -z3)
 #   MOZ_CO_FLAGS         - Flags to pass after 'cvs co' (default: -P)
@@ -116,6 +117,10 @@ include $(TOPSRCDIR)/.client-defs.mk
 
 ifdef MOZ_CO_BRANCH
   CVSCO := $(CVSCO) -r $(MOZ_CO_BRANCH)
+endif
+
+ifdef MOZ_CO_DATE
+  CVSCO := $(CVSCO) -D "$(MOZ_CO_DATE)"
 endif
 
 ifndef MOZ_CO_MODULE
