@@ -27,6 +27,7 @@ $ENV{'LD_LIBRARY_PATH'}="/usr/lib:/lib:$apprunner_bin";
 
 # so it begins
 open (REPORT_FILE, '>report.html');
+REPORT_FILE->autoflush();
 print (REPORT_FILE "<HTML><HEAD><TITLE>Smoke Test Report File </TITLE></HEAD>\n");
 print (REPORT_FILE "<BODY>\n");
 print (REPORT_FILE "<H1><CENTER> Seamonkey Build Smoke Tests Report\n");
@@ -104,7 +105,8 @@ for ($i = 0; $i < $#url_list; $i ++)
     while (<APP_LOG_FILE>)
     {
         chop;
-        if (/@url_list[$i]/ and /loaded successfully/)
+        #if (/@url_list[$i]/ and /loaded successfully/)
+        if (/loaded successfully/)
         {
             $load_result = "";
         }
