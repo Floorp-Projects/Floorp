@@ -89,7 +89,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGElement)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISVGContent)
 // provided by nsGenericElement:
 //  NS_INTERFACE_MAP_ENTRY(nsIStyledContent)
 //  NS_INTERFACE_MAP_ENTRY(nsIContent)
@@ -277,6 +276,72 @@ nsSVGElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
 {
   return mStyle->GetStyleRule(this, aStyleRule);
 }
+
+// PresentationAttributes-FillStroke
+/* static */ const nsGenericElement::AttributeDependenceEntry
+nsSVGElement::sFillStrokeMap[] = {
+  { &nsSVGAtoms::fill },
+  { &nsSVGAtoms::fill_opacity },
+  { &nsSVGAtoms::fill_rule },
+  { &nsSVGAtoms::stroke },
+  { &nsSVGAtoms::stroke_dasharray },
+  { &nsSVGAtoms::stroke_dashoffset },
+  { &nsSVGAtoms::stroke_linecap },
+  { &nsSVGAtoms::stroke_linejoin },
+  { &nsSVGAtoms::stroke_miterlimit },
+  { &nsSVGAtoms::stroke_opacity },
+  { &nsSVGAtoms::stroke_width },
+  { nsnull }
+};
+
+// PresentationAttributes-Graphics
+/* static */ const nsGenericElement::AttributeDependenceEntry
+nsSVGElement::sGraphicsMap[] = {
+  { &nsSVGAtoms::clip_path },
+  { &nsSVGAtoms::clip_rule },
+  { &nsSVGAtoms::cursor },
+  { &nsSVGAtoms::display },
+  { &nsSVGAtoms::filter },
+  { &nsSVGAtoms::image_rendering },
+  { &nsSVGAtoms::mask },
+  { &nsSVGAtoms::opacity },
+  { &nsSVGAtoms::pointer_events },
+  { &nsSVGAtoms::shape_rendering },
+  { &nsSVGAtoms::text_rendering },
+  { &nsSVGAtoms::visibility },
+  { nsnull }
+};
+
+// PresentationAttributes-TextContentElements
+/* static */ const nsGenericElement::AttributeDependenceEntry
+nsSVGElement::sTextContentElementsMap[] = {
+  { &nsSVGAtoms::alignment_baseline },
+  { &nsSVGAtoms::baseline_shift },
+  { &nsSVGAtoms::direction },
+  { &nsSVGAtoms::dominant_baseline },
+  { &nsSVGAtoms::glyph_orientation_horizontal },
+  { &nsSVGAtoms::glyph_orientation_vertical },
+  { &nsSVGAtoms::kerning },
+  { &nsSVGAtoms::letter_spacing },
+  { &nsSVGAtoms::text_anchor },
+  { &nsSVGAtoms::text_decoration },
+  { &nsSVGAtoms::unicode_bidi },
+  { &nsSVGAtoms::word_spacing },
+  { nsnull }
+};
+
+// PresentationAttributes-FontSpecification
+/* static */ const nsGenericElement::AttributeDependenceEntry
+nsSVGElement::sFontSpecificationMap[] = {
+  { &nsSVGAtoms::font_family },
+  { &nsSVGAtoms::font_size },
+  { &nsSVGAtoms::font_size_adjust },
+  { &nsSVGAtoms::font_stretch },
+  { &nsSVGAtoms::font_style },
+  { &nsSVGAtoms::font_variant },
+  { &nsSVGAtoms::font_weight },  
+  { nsnull }
+};
 
 //----------------------------------------------------------------------
 // nsIDOMNode methods

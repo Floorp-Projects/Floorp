@@ -500,9 +500,6 @@ public:
 
   /*
    * Attribute Mapping Helpers
-   *
-   * All attributes that are mapped into style contexts must have a 
-   * matched set of mapping function and impact getter
    */
 
   /**
@@ -516,10 +513,6 @@ public:
    */
   static void MapCommonAttributesInto(const nsMappedAttributes* aAttributes, 
                                       nsRuleData* aRuleData);
-  struct AttributeDependenceEntry {
-    nsIAtom** attribute;
-  };
-
   static const AttributeDependenceEntry sCommonAttributeMap[];
   static const AttributeDependenceEntry sImageMarginSizeAttributeMap[];
   static const AttributeDependenceEntry sImageBorderAttributeMap[];
@@ -528,16 +521,6 @@ public:
   static const AttributeDependenceEntry sBackgroundAttributeMap[];
   static const AttributeDependenceEntry sScrollingAttributeMap[];
   
-  /**
-   * A common method where you can just pass in a list of maps to check
-   * for attribute dependence. Most implementations of
-   * HasAttributeDependentStyle should use this function as a default
-   * handler.
-   */
-  static PRBool
-  FindAttributeDependence(const nsIAtom* aAttribute,
-                          const AttributeDependenceEntry* const aMaps[],
-                          PRUint32 aMapCount);
   /**
    * Helper to map the align attribute into a style struct.
    *

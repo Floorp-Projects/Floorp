@@ -63,9 +63,8 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGGElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGGElementBase::)
 
-  // nsISVGContent interface
-  NS_IMETHOD IsPresentationAttribute(const nsIAtom* attribute, PRBool* retval);
-    
+  // nsIStyledContent
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
 protected:
 };
 
@@ -173,37 +172,16 @@ nsSVGGElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 //----------------------------------------------------------------------
-// nsISVGContent methods
+// nsIStyledContent methods
 
-NS_IMETHODIMP
-nsSVGGElement::IsPresentationAttribute(const nsIAtom* name, PRBool *retval)
+NS_IMETHODIMP_(PRBool)
+nsSVGGElement::HasAttributeDependentStyle(const nsIAtom* name) const
 {
-  if (
-      // PresentationAttributes-TextContentElements
-      name==nsSVGAtoms::alignment_baseline ||
-      name==nsSVGAtoms::baseline_shift    ||
-      name==nsSVGAtoms::direction         ||
-      name==nsSVGAtoms::dominant_baseline ||
-      name==nsSVGAtoms::glyph_orientation_horizontal ||
-      name==nsSVGAtoms::glyph_orientation_vertical ||
-      name==nsSVGAtoms::kerning           ||
-      name==nsSVGAtoms::letter_spacing    ||
-      name==nsSVGAtoms::text_anchor       ||
-      name==nsSVGAtoms::text_decoration   ||
-      name==nsSVGAtoms::unicode_bidi      ||
-      name==nsSVGAtoms::word_spacing      ||
-      // PresentationAttributes-FontSpecification
-      name==nsSVGAtoms::font_family       ||
-      name==nsSVGAtoms::font_size         ||
-      name==nsSVGAtoms::font_size_adjust  ||
-      name==nsSVGAtoms::font_stretch      ||
-      name==nsSVGAtoms::font_style        ||
-      name==nsSVGAtoms::font_variant      ||
-      name==nsSVGAtoms::font_weight      
-      ) {
-    *retval = PR_TRUE;
-    return NS_OK;
-  }
-  else
-    return nsSVGGElementBase::IsPresentationAttribute(name, retval);
+  static const AttributeDependenceEntry* const map[] = {
+    sTextContentElementsMap,
+    sFontSpecificationMap
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGGElementBase::HasAttributeDependentStyle(name);
 }

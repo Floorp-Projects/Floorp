@@ -79,9 +79,6 @@
 #include "nsLayoutUtils.h"
 #include "nsAutoPtr.h"
 
-#ifdef MOZ_SVG
-#include "nsISVGContent.h"
-#endif
 
   #ifdef DEBUG
     //#define NOISY_DEBUG
@@ -1933,16 +1930,6 @@ FrameManager::HasAttributeDependentStyle(nsIContent *aContent,
     *aResult = nsReStyleHint(*aResult | eReStyle_Self);
   }
 
-#ifdef MOZ_SVG
-  nsCOMPtr<nsISVGContent> svg(do_QueryInterface(aContent));
-  if (svg) {
-    PRBool isPresAttr;
-    svg->IsPresentationAttribute(aAttribute, &isPresAttr);
-    if (isPresAttr)
-      *aResult = nsReStyleHint(*aResult | eReStyle_Self);
-  }
-#endif
-  
   return NS_OK;
 }
 

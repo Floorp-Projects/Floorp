@@ -61,35 +61,6 @@ nsSVGDocument::~nsSVGDocument() {
 
 }
 
-nsresult
-nsSVGDocument::StartDocumentLoad(const char* aCommand,
-                                 nsIChannel* aChannel,
-                                 nsILoadGroup* aLoadGroup,
-                                 nsISupports* aContainer,
-                                 nsIStreamListener **aDocListener,
-                                 PRBool aReset,
-                                 nsIContentSink* aSink) {
-  nsresult rv = nsXMLDocument::StartDocumentLoad(aCommand,
-                                                 aChannel,
-                                                 aLoadGroup,
-                                                 aContainer,
-                                                 aDocListener,
-                                                 aReset,
-                                                 aSink);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    nsCAutoString referrer;
-    rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("referrer"), referrer);
-    if (NS_SUCCEEDED(rv)) {
-      CopyUTF8toUTF16(referrer, mReferrer);
-    }
-  }
-
-  return NS_OK;
-}
-
 // nsIDOMSVGDocument
 
 NS_IMETHODIMP
@@ -99,8 +70,7 @@ nsSVGDocument::GetTitle(nsAString& aTitle) {
 
 NS_IMETHODIMP
 nsSVGDocument::GetReferrer(nsAString& aReferrer) {
-  aReferrer.Assign(mReferrer);
-  return NS_OK;
+  return nsDocument::GetReferrer(aReferrer);
 }
 
 NS_IMETHODIMP

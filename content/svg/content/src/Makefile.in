@@ -96,7 +96,6 @@ EXPORTS =  			\
 	nsISVGValueObserver.h      \
 	nsISVGValueUtils.h         \
 	nsSVGTypeCIDs.h            \
-	nsISVGContent.h            \
 	$(NULL)
 
 

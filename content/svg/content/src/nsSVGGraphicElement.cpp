@@ -304,42 +304,17 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransform(nsIDOMSVGAnimatedTransformList *
 
 
 //----------------------------------------------------------------------
-// nsISVGContent methods
+// nsIStyledContent methods
 
-NS_IMETHODIMP
-nsSVGGraphicElement::IsPresentationAttribute(const nsIAtom* name, PRBool *retval)
+NS_IMETHODIMP_(PRBool)
+nsSVGGraphicElement::HasAttributeDependentStyle(const nsIAtom* name) const
 {
-  if (
-      // PresentationAttributes-FillStroke
-      name==nsSVGAtoms::fill              ||
-      name==nsSVGAtoms::fill_opacity      ||
-      name==nsSVGAtoms::fill_rule         ||
-      name==nsSVGAtoms::stroke            ||
-      name==nsSVGAtoms::stroke_dasharray  ||
-      name==nsSVGAtoms::stroke_dashoffset ||
-      name==nsSVGAtoms::stroke_linecap    ||
-      name==nsSVGAtoms::stroke_linejoin   ||
-      name==nsSVGAtoms::stroke_miterlimit ||
-      name==nsSVGAtoms::stroke_opacity    ||
-      name==nsSVGAtoms::stroke_width      ||
-      // PresentationAttributes-Graphics
-      name==nsSVGAtoms::clip_path         ||
-      name==nsSVGAtoms::clip_rule         ||
-      name==nsSVGAtoms::cursor            ||
-      name==nsSVGAtoms::display           ||
-      name==nsSVGAtoms::filter            ||
-      name==nsSVGAtoms::image_rendering   ||
-      name==nsSVGAtoms::mask              ||
-      name==nsSVGAtoms::opacity           ||
-      name==nsSVGAtoms::pointer_events    ||
-      name==nsSVGAtoms::shape_rendering   ||
-      name==nsSVGAtoms::text_rendering    ||
-      name==nsSVGAtoms::visibility        
-      ) {
-    *retval = PR_TRUE;
-    return NS_OK;
-  }
-  else
-    return nsSVGGraphicElementBase::IsPresentationAttribute(name, retval);
+  static const AttributeDependenceEntry* const map[] = {
+    sFillStrokeMap,
+    sGraphicsMap,
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGGraphicElementBase::HasAttributeDependentStyle(name);
 }
 

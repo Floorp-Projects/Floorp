@@ -77,8 +77,8 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGTextElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTextElementBase::)
 
-  // nsISVGContent interface
-  NS_IMETHOD IsPresentationAttribute(const nsIAtom* attribute, PRBool* retval);
+  // nsIStyledContent interface
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
   
 protected:
   virtual void ParentChainChanged();
@@ -350,39 +350,18 @@ NS_IMETHODIMP nsSVGTextElement::SelectSubString(PRUint32 charnum, PRUint32 nchar
 }
 
 //----------------------------------------------------------------------
-// nsISVGContent methods
+// nsIStyledContent methods
 
-NS_IMETHODIMP
-nsSVGTextElement::IsPresentationAttribute(const nsIAtom* name, PRBool *retval)
+NS_IMETHODIMP_(PRBool)
+nsSVGTextElement::HasAttributeDependentStyle(const nsIAtom* name) const
 {
-  if (
-      // PresentationAttributes-TextContentElements
-      name==nsSVGAtoms::alignment_baseline ||
-      name==nsSVGAtoms::baseline_shift    ||
-      name==nsSVGAtoms::direction         ||
-      name==nsSVGAtoms::dominant_baseline ||
-      name==nsSVGAtoms::glyph_orientation_horizontal ||
-      name==nsSVGAtoms::glyph_orientation_vertical ||
-      name==nsSVGAtoms::kerning           ||
-      name==nsSVGAtoms::letter_spacing    ||
-      name==nsSVGAtoms::text_anchor       ||
-      name==nsSVGAtoms::text_decoration   ||
-      name==nsSVGAtoms::unicode_bidi      ||
-      name==nsSVGAtoms::word_spacing      ||
-      // PresentationAttributes-FontSpecification
-      name==nsSVGAtoms::font_family       ||
-      name==nsSVGAtoms::font_size         ||
-      name==nsSVGAtoms::font_size_adjust  ||
-      name==nsSVGAtoms::font_stretch      ||
-      name==nsSVGAtoms::font_style        ||
-      name==nsSVGAtoms::font_variant      ||
-      name==nsSVGAtoms::font_weight      
-      ) {
-    *retval = PR_TRUE;
-    return NS_OK;
-  }
-  else
-    return nsSVGTextElementBase::IsPresentationAttribute(name, retval);
+  static const AttributeDependenceEntry* const map[] = {
+    sTextContentElementsMap,
+    sFontSpecificationMap
+  };
+
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGTextElementBase::HasAttributeDependentStyle(name);
 }
 
 //----------------------------------------------------------------------

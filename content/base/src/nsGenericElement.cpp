@@ -2078,6 +2078,23 @@ nsGenericElement::GetClassAttributeName() const
   return nsnull;
 }
 
+PRBool
+nsGenericElement::FindAttributeDependence(const nsIAtom* aAttribute,
+                                          const AttributeDependenceEntry* const aMaps[],
+                                          PRUint32 aMapCount)
+{
+  for (PRUint32 mapindex = 0; mapindex < aMapCount; ++mapindex) {
+    for (const AttributeDependenceEntry* map = aMaps[mapindex];
+         map->attribute; ++map) {
+      if (aAttribute == *map->attribute) {
+        return PR_TRUE;
+      }
+    }
+  }
+
+  return PR_FALSE;
+}
+
 already_AddRefed<nsINodeInfo>
 nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
 {

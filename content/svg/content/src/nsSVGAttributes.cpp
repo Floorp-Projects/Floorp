@@ -53,7 +53,6 @@
 #include "nsCSSDeclaration.h"
 #include "nsIURI.h"
 #include "nsSVGAtoms.h"
-#include "nsISVGContent.h"
 #include "nsDOMError.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -568,12 +567,10 @@ nsSVGAttributes::AffectsContentStyleRule(const nsIAtom* aAttribute)
 {
   NS_ASSERTION(mContent, "null owner");
 
-  nsCOMPtr<nsISVGContent> svgcontent = do_QueryInterface(mContent);
-  NS_ASSERTION(svgcontent, "could not get nsISVGContent interface");
+  nsCOMPtr<nsIStyledContent> styledContent = do_QueryInterface(mContent);
+  NS_ASSERTION(styledContent, "could not get nsIStyledContent interface");
 
-  PRBool retval;
-  svgcontent->IsPresentationAttribute(aAttribute, &retval); 
-  return retval;
+  return styledContent->HasAttributeDependentStyle(aAttribute);
 }
 
 void
