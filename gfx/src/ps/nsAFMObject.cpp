@@ -320,7 +320,7 @@ PRUint32    i;
     if(aFontName.style == NS_FONT_STYLE_NORMAL){
       ourfont = NS_IS_BOLD(aFontName.weight) ? 1 : 0;
     } else {
-      ourfont = NS_IS_BOLD(aFontName.weight) ? 3 : 4;
+      ourfont = NS_IS_BOLD(aFontName.weight) ? 2 : 3;
     }
   }
 
