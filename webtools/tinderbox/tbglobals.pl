@@ -325,20 +325,30 @@ sub load_bloat {
   my ($treedata) = @_;
   local $_;
   open(BLOATLOG, "<$treedata->{name}/bloat.dat");
-  my $leakMin = -1;
-  my $bloatMin = -1;
+  my $leaksList = [];
+  my $bloatList = [];
+  my $index = 0;
+  my $listMax = 5;      # only take the minimum over the last few entries
   while (<BLOATLOG>) {
     chomp;
     my ($logfile, $leaks, $bloat) = split /\|/;
     $bloat_by_log->{$logfile} = [ $leaks, $bloat ];
-    if ($leakMin == -1 || $leaks < $leakMin) {
-        $leakMin = $leaks;
-    }
-    if ($bloatMin == -1 || $bloat < $bloatMin) {
-        $bloatMin = $bloat;
-    }
+    $leaksList[$index] = $leaks;
+    $bloatList[$index] = $bloat;
+    $index = ($index + 1) % $listMax;
   }
-  return ($leakMin, $bloatMin);
+  my $leaksMin = 9999999999999;
+  my $bloatMin = 9999999999999;
+  for ($index = 0; $index < $listMax; $index++) {
+      print "min: $leaksList[$index] $bloatList[$index]\n";
+      if ($leaksList[$index] < $leaksMin) {
+          $leaksMin = $leaksList[$index];
+      }
+      if ($bloatList[$index] < $bloatMin) {
+          $bloatMin = $bloatList[$index];
+      }
+  }
+  return ($leaksMin, $bloatMin);
 }
     
 sub get_build_name_index {
