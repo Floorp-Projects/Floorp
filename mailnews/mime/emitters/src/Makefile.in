@@ -50,6 +50,7 @@ EXPORTS		= \
 		nsMimeRebuffer.h \
 		nsMimeHtmlEmitter.h \
 		nsMimeXmlEmitter.h \
+		nsMimePlainEmitter.h \
 		nsMimeRawEmitter.h \
 		nsMimeBaseEmitter.h \
 		$(NULL)
@@ -59,6 +60,7 @@ CPPSRCS		= \
 		nsEmitterUtils.cpp \
 		nsMimeRebuffer.cpp \
 		nsMimeRawEmitter.cpp \
+		nsMimePlainEmitter.cpp \
 		nsMimeXmlEmitter.cpp \
 		nsMimeHtmlEmitter.cpp \
 		$(NULL)
