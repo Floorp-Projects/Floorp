@@ -231,7 +231,7 @@ static nsresult NewImageChannel(nsIChannel **aResult,
     if (aLoadFlags & nsIRequest::LOAD_BACKGROUND)
       ++priority; // further reduce priority for background loads
 
-    p->BumpPriority(priority);
+    p->AdjustPriority(priority);
   }
 
   return NS_OK;

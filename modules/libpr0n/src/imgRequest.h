@@ -121,9 +121,9 @@ private:
   // PRIORITY_NORMAL if it doesn't support nsISupportsPriority.
   PRInt32 Priority() const;
 
-  // Bump the priority of the underlying network request by the given delta
+  // Adjust the priority of the underlying network request by the given delta
   // on behalf of the given proxy.
-  void BumpPriority(imgRequestProxy *aProxy, PRInt32 aDelta);
+  void AdjustPriority(imgRequestProxy *aProxy, PRInt32 aDelta);
 
 public:
   NS_DECL_IMGILOAD

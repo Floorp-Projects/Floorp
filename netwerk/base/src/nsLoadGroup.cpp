@@ -128,7 +128,7 @@ RescheduleRequest(nsIRequest *aRequest, PRInt32 delta)
 {
     nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(aRequest);
     if (p)
-        p->BumpPriority(delta);
+        p->AdjustPriority(delta);
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
@@ -837,11 +837,11 @@ nsLoadGroup::GetPriority(PRInt32 *aValue)
 NS_IMETHODIMP
 nsLoadGroup::SetPriority(PRInt32 aValue)
 {
-    return BumpPriority(aValue - mPriority);
+    return AdjustPriority(aValue - mPriority);
 }
 
 NS_IMETHODIMP
-nsLoadGroup::BumpPriority(PRInt32 aDelta)
+nsLoadGroup::AdjustPriority(PRInt32 aDelta)
 {
     // Update the priority for each request that supports nsISupportsPriority
     if (aDelta != 0) {
