@@ -195,7 +195,7 @@ calDavCalendar.prototype = {
         newItem.setProperty("locationURI", itemUri.spec);
         newItem.makeImmutable();
 
-        dump("icalString = " + newItem.icalString + "\n");
+        //dump("icalString = " + newItem.icalString + "\n");
         // XXX use if not exists
         // do WebDAV put
         var webSvc = Components.classes['@mozilla.org/webdav/service;1']
@@ -375,11 +375,11 @@ calDavCalendar.prototype = {
               </filter>
           </calendar-query>;
 
-        this.reportInternal(queryXml.toXMLString(), false, 1, aListener);
+        this.reportInternal(queryXml.toXMLString(), false, null, null, 1, aListener);
         return;
     },
 
-    reportInternal: function (aQuery, aOccurrences, aCount, aListener)
+    reportInternal: function (aQuery, aOccurrences, aRangeStart, aRangeEnd, aCount, aListener)
     {
         var reportListener = new WebDavListener();
         var count = 0;  // maximum number of hits to return
@@ -397,6 +397,8 @@ calDavCalendar.prototype = {
                 // XXX is this even valid?  what should we do here?
                 throw("XXX report result for calendar, not event\n");
             }
+
+            var items = null;
 
             // XXX need to do better than looking for just 200
             if (aStatusCode == 200) {
@@ -428,6 +430,7 @@ calDavCalendar.prototype = {
 
                 // cause returned data to be parsed into the event item
                 // XXX try-catch
+                dump ("ITEM RESULT: " + responseElement..C::["calendar-query-result"] + "\n");
                 item.icalString = 
                     responseElement..C::["calendar-query-result"]; 
 
@@ -438,7 +441,14 @@ calDavCalendar.prototype = {
                 var iid;
                 if(aOccurrences) {
                     iid = calIItemOccurrence;
-                    item = makeOccurrence(item, item.startDate, item.endDate);
+                    if (item.recurrenceInfo) {
+                        dump ("ITEM has recurrence: " + item + " (" + item.title + ")\n");
+                        dump ("rangestart: " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
+                        items = item.recurrenceInfo.getOccurrences (aRangeStart, aRangeEnd, 0, {});
+                    } else {
+                        item = makeOccurrence(item, item.startDate, item.endDate);
+                        items = [ item ];
+                    }
                 } else if (item.QueryInterface(calIEvent)) {
                     iid = calIEvent;
                     rv = Components.results.NS_OK
@@ -455,10 +465,13 @@ calDavCalendar.prototype = {
                 rv = Components.results.NS_ERROR_FAILURE;
             }
 
+            // XXX  handle aCount
             dump("errString = " + errString + "\n");
-            dump("item = " + item + "\n");
-            aListener.onGetResult(this, rv, iid, null, 1, 
-                                  errString ? errString : [item]);
+            dump("items = " + items + "\n");
+            if (items) {
+                aListener.onGetResult(this, rv, iid, null, items ? items.length : 0,
+                                      errString ? errString : items);
+            }
             return;
         };
 
@@ -546,7 +559,7 @@ calDavCalendar.prototype = {
         dump("queryString = " + queryString + "\n");
         var occurrences = (aItemFilter &
                            calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0; 
-        this.reportInternal(queryString, occurrences, aCount, aListener);
+        this.reportInternal(queryString, occurrences, aRangeStart, aRangeEnd, aCount, aListener);
     },
 
     //
