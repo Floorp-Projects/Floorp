@@ -42,6 +42,7 @@ public:
   void Stop();
 
   static nsRepeatService* GetInstance();
+  static void Shutdown();
 
   NS_DECL_ISUPPORTS
   virtual ~nsRepeatService();
@@ -52,7 +53,7 @@ protected:
 private:
   nsCOMPtr<nsITimerCallback> mCallback;
   nsCOMPtr<nsITimer>         mRepeatTimer;
-  static nsCOMPtr<nsITimerCallback> gInstance;
+  static nsRepeatService* gInstance;
 
 }; // class nsRepeatService
 

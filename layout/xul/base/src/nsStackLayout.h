@@ -39,6 +39,7 @@ class nsStackLayout : public nsBoxLayout
 public:
 
   friend nsresult NS_NewStackLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
+  static void Shutdown();
 
   nsStackLayout();
 
@@ -50,7 +51,7 @@ public:
   NS_IMETHOD GetAscent(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
 
 private:
-  static nsCOMPtr<nsIBoxLayout> gInstance;
+  static nsIBoxLayout* gInstance;
 
 }; // class nsStackLayout
 

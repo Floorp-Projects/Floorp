@@ -33,15 +33,25 @@
 #include "nsBoxLayoutState.h"
 #include "nsBox.h"
 
-nsCOMPtr<nsIBoxLayout> nsStackLayout::gInstance = new nsStackLayout();
+nsIBoxLayout* nsStackLayout::gInstance = nsnull;
 
 nsresult
 NS_NewStackLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
 {
+  if (!nsStackLayout::gInstance) {
+    nsStackLayout::gInstance = new nsStackLayout();
+    NS_IF_ADDREF(nsStackLayout::gInstance);
+  }
   // we have not instance variables so just return our static one.
   aNewLayout = nsStackLayout::gInstance;
   return NS_OK;
 } 
+
+/*static*/ void
+nsStackLayout::Shutdown()
+{
+  NS_IF_RELEASE(gInstance);
+}
 
 nsStackLayout::nsStackLayout()
 {

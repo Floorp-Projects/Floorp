@@ -63,8 +63,6 @@ NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout*
   
 } // NS_NewStackFrame
 
-nsCOMPtr<nsIBoxLayout> nsStackFrame::gLayout = nsnull;
-
 nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager):nsBoxFrame(aPresShell)
 {
     // if no layout manager specified us the stack layout

@@ -39,6 +39,7 @@ class nsBulletinBoardLayout : public nsBoxLayout
 public:
 
   friend nsresult NS_NewBulletinBoardLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
+  static void Shutdown();
 
   nsBulletinBoardLayout();
 
@@ -53,7 +54,7 @@ protected:
   virtual nsresult AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize);
 
 private:
-  static nsCOMPtr<nsIBoxLayout> gInstance;
+  static nsIBoxLayout* gInstance;
 
 }; // class nsBulletinBoardLayout
 

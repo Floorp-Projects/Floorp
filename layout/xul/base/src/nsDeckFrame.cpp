@@ -67,8 +67,6 @@ NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* 
 } // NS_NewDeckFrame
 
 
-nsCOMPtr<nsIBoxLayout> nsDeckFrame::gLayout = nsnull;
-
 nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager):nsBoxFrame(aPresShell),mIndex(0)
 {
      // if no layout manager specified us the static sprocket layout
