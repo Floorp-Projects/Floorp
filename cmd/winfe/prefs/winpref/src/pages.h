@@ -53,26 +53,5 @@ class CBasicWindowsPrefs : public CPropertyPageEx {
 
 };
 
-/////////////////////////////////////////////////////////////////////////////
-// CAdvancedWindowsPrefs
-
-class CAdvancedWindowsPrefs : public CPropertyPageEx {
-	public:
-		CAdvancedWindowsPrefs();
-
-	protected:
-		BOOL		 InitDialog();
- 		STDMETHODIMP Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal);
-		BOOL		 DoTransfer(BOOL bSaveAndValidate);
-		BOOL		 ApplyChanges();
-
-		// Event Processing
-		LRESULT	WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
-		BOOL	OnCommand(int id, HWND hwndCtl, UINT notifyCode);
-
-	private:
-
-};
-
 #endif /* __PAGES_H_ */
 

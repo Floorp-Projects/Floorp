@@ -66,99 +66,99 @@ END
 // Dialog
 //
 
-IDD_BASICWINPREFS DIALOG DISCARDABLE  0, 0, 256, 192
+IDD_BASICWINPREFS DIALOG DISCARDABLE  0, 0, 256, 190
 STYLE WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Files",IDC_STATIC,7,7,242,93
-    LTEXT           "Select the types of files you want Mozilla to handle.  The currently selected types may not all be handled by Mozilla if another application has registered to handle them.  Pressing ""OK"" will register Mozilla to handle all the selected types.",
-                    IDC_STATIC,14,15,232,32
-    CONTROL         "",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    48,10,10
-    LTEXT           "HTML documents",IDC_STATIC,28,48,62,8
-    LTEXT           ".htm, .html",IDC_STATIC,133,48,50,10
-    CONTROL         "",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    58,10,10
-    LTEXT           "JPEG images",IDC_STATIC,28,58,47,8
-    LTEXT           ".jpg, .jpeg, .jpe, .jfif, .pjpeg, .pjp",IDC_STATIC,133,
-                    58,102,8
-    CONTROL         "",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    68,10,10
-    LTEXT           "GIF images",IDC_STATIC,28,68,40,8
-    LTEXT           ".gif",IDC_STATIC,133,68,14,8
-    CONTROL         "",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    78,10,10
-    LTEXT           "JavaScript programs",IDC_STATIC,28,78,69,8
-    LTEXT           ".js, .mocha",IDC_STATIC,133,78,50,8
-    CONTROL         "",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    88,10,10
-    LTEXT           "X bitmap images",IDC_STATIC,28,88,56,8
-    LTEXT           ".xbm",IDC_STATIC,133,88,20,8
-    GROUPBOX        "Intenet Shortcuts",IDC_STATIC,7,105,242,84
-    LTEXT           "Select the types of Internet Shortcuts you want Mozilla to handle.  The currently selected types may not all be handled by Mozilla if another application has registered to handle them.  Pressing ""Ok"" will register Mozilla to handle all the selected types.",
-                    IDC_STATIC,14,113,232,33
-    CONTROL         "",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    148,10,10
-    LTEXT           "HTML documents",IDC_STATIC,28,148,62,8
-    LTEXT           "http:",IDC_STATIC,133,148,19,8
-    CONTROL         "",IDC_CHECK7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    158,10,10
-    LTEXT           "Secure HTML documents",IDC_STATIC,28,158,86,8
-    LTEXT           "https:",IDC_STATIC,133,158,22,8
-    CONTROL         "",IDC_CHECK10,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    168,10,10
-    LTEXT           "File transfers",IDC_STATIC,28,168,44,8
-    LTEXT           "ftp:",IDC_STATIC,133,168,15,8
-    CONTROL         "",IDC_CHECK11,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    178,10,10
-    LTEXT           "Old-fashioned Web relics",IDC_STATIC,28,178,84,8
-    LTEXT           "gopher:",IDC_STATIC,133,178,29,8
+    GROUPBOX        "Files",IDC_STATIC,7,7,242,40
+    CONTROL         "&Make Mozilla the default browser for viewing appropriate desktop files.",
+                    IDC_HANDLEFILES,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | 
+                    WS_TABSTOP,14,18,160,20
+    GROUPBOX        "Internet Shortcuts",IDC_STATIC,7,54,241,40
+    CONTROL         "M&ake Mozilla the default browser for viewing Internet Shortcuts.",
+                    IDC_HANDLESHORTCUTS,"Button",BS_AUTOCHECKBOX | 
+                    BS_MULTILINE | WS_TABSTOP,14,66,160,20
+    PUSHBUTTON      "&File types...",IDD_WINFILETYPES,184,21,57,14
+    PUSHBUTTON      "&Shortcut types...",IDD_WINSHORTCUTTYPES,184,68,57,14
+    CONTROL         "Check these settings each time Mozilla starts up.",
+                    IDC_CHECKONSTART,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    43,151,169,17
+    GROUPBOX        "Active Desktop",IDC_STATIC,7,101,241,40
+    CONTROL         "&Integrate the Mozilla browser into the Windows Active Desktop.",
+                    IDC_INTEGRATEWITHACTIVEDESKTOP,"Button",BS_AUTOCHECKBOX | 
+                    BS_MULTILINE | WS_TABSTOP,14,113,160,20
+    PUSHBUTTON      "&Details...",IDD_WINACTIVEDESKTOPSETTINGS,184,115,57,14
 END
 
-IDD_ADVANCEDWINPREFS DIALOG DISCARDABLE  0, 0, 256, 192
-STYLE WS_CHILD | WS_CLIPSIBLINGS
+IDD_WINACTIVEDESKTOPSETTINGS DIALOG DISCARDABLE  0, 0, 256, 191
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Active Desktop Integration Details"
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Find On the Internet...",IDC_STATIC,7,7,242,30
-    CONTROL         "",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    20,10,10
-    LTEXT           "Use Netscape's Netcenter search when you use the ""Find on the Internet..."" selection on your Start button.",
-                    IDC_STATIC,31,16,209,19
-    GROUPBOX        "Internet Keywords",IDC_STATIC,7,43,242,27
-    CONTROL         "",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
-                    54,10,10
-    LTEXT           "Use ""Internet Keywords"" lookup on entries typed into the Address Toolbar.",
-                    IDC_STATIC,31,51,209,15
-    GROUPBOX        "Quick Launch Toolbar",IDC_STATIC,7,74,242,59
-    LTEXT           "Select the items you would like to have on your Quick Launch Toolbar.",
-                    IDC_STATIC,14,83,224,8
-    CONTROL         "Mozilla Browser",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | 
-                    BS_ICON | WS_TABSTOP,14,98,10,10
-    ICON            "",IDC_STATIC,27,92,21,20
-    LTEXT           "Navigator",IDC_STATIC,49,98,32,8
-    CONTROL         "Mozilla Browser",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | 
-                    BS_ICON | WS_TABSTOP,13,116,10,10
-    ICON            "",IDC_STATIC,27,111,21,20
-    LTEXT           "Composer",IDC_STATIC,49,116,32,8
-    CONTROL         "Mozilla Browser",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | 
-                    BS_ICON | WS_TABSTOP,135,98,10,10
-    ICON            "",IDC_STATIC,148,93,21,20
-    LTEXT           "My Netscape",IDC_STATIC,170,98,43,8
-    GROUPBOX        "Links Toolbar",IDC_STATIC,7,137,242,52
-    CONTROL         "Mozilla Browser",IDC_CHECK6,"Button",BS_AUTOCHECKBOX | 
-                    BS_ICON | WS_TABSTOP,135,116,10,10
-    ICON            "",IDC_STATIC,148,110,21,20
-    LTEXT           "Netcenter",IDC_STATIC,170,116,32,8
-    LTEXT           "Select the items you would to have on your Links Toolbar.",
-                    IDC_STATIC,13,147,183,8
-    CONTROL         "Netcenter",IDC_CHECK7,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,14,159,47,10
-    CONTROL         "My Netscape",IDC_CHECK8,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,14,169,58,10
-    CONTROL         "Netcenter Search",IDC_CHECK9,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,93,159,72,10
-    CONTROL         "Warpzilla",IDC_CHECK10,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,93,169,45,10
+    GROUPBOX        "Find On the Internet...",IDC_STATIC,7,7,242,36
+    CONTROL         "&Use Netscape's Netcenter search when you use the ""Find on the Internet..."" selection on your Start button.",
+                    IDC_USENETCENTERSEARCH,"Button",BS_AUTOCHECKBOX | 
+                    BS_MULTILINE | WS_TABSTOP,14,18,228,20
+    GROUPBOX        "Internet Keywords",IDC_STATIC,7,50,242,36
+    CONTROL         "Use ""Internet &Keywords"" lookup for entries you type into the Address Toolbar.",
+                    IDC_USEINTERNETKEYWORDS,"Button",BS_AUTOCHECKBOX | 
+                    BS_MULTILINE | WS_TABSTOP,14,60,230,20
+    GROUPBOX        "Links Toolbar",IDC_STATIC,7,93,242,36
+    PUSHBUTTON      "Update &Now",IDC_UPDATELINKSTOOLBAR,15,106,50,14
+    LTEXT           "Copy links from you Personal Toolbar to your desktop's Links Toolbar.",
+                    IDC_STATIC,71,103,171,20
+    GROUPBOX        "Active Desktop",IDC_STATIC,7,136,242,36
+    CONTROL         "&Turn off Active Desktop.",IDC_DISABLEACTIVEDESKTOP,
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,14,
+                    147,230,20
+END
+
+IDD_WINFILETYPES DIALOGEX 0, 0, 256, 158
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "File types"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDOK,91,135,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,145,135,50,14
+    GROUPBOX        "",IDC_STATIC,7,3,242,122
+    LTEXT           "Select the types of files you want to view using the Mozilla browser.\n\nWindows will launch Mozilla when you open any files of the selected types.",
+                    IDC_STATIC,14,12,232,32
+    CONTROL         "&Hyper-Text Markup Language documents (*.htm, *.html)",
+                    IDC_HANDLEHTML,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,28,
+                    53,191,10
+    CONTROL         "&JPEG images (*.jpg, *.jpeg, *.jpe, *.jfif, *.pjpeg, *.pjp)",
+                    IDC_HANDLEJPEG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,28,
+                    63,177,10
+    CONTROL         "&GIF images (*.gif)",IDC_HANDLEGIF,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,28,73,69,10
+    CONTROL         "Java&Script programs (*.js, *.mocha)",IDC_HANDLEJS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,28,83,125,10
+    LTEXT           "",IDC_STATIC,160,83,50,8
+    CONTROL         "&X bitmap images (*.xbm)",IDC_HANDLEXBM,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,28,93,91,10
+    LTEXT           "",IDC_STATIC,160,93,8,8
+    CONTROL         "&Plain text files (*.txt)",IDC_HANDLETXT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,28,103,77,10
+    PUSHBUTTON      "&Help",IDHELP,199,135,50,14,0,0,IDHELP
+END
+
+IDD_WINSHORTCUTTYPES DIALOGEX 0, 0, 256, 153
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Shortcut types"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDOK,91,131,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,145,131,50,14
+    PUSHBUTTON      "&Help",IDHELP,199,130,50,14,0,0,IDHELP
+    GROUPBOX        "",IDC_STATIC,7,4,242,117
+    LTEXT           "Select the types of Internet Shortcuts you want the Mozilla browser to handle.\n\nWindows will launch Mozilla when you open any of the selected types of shortcuts.",
+                    IDC_STATIC,14,15,232,41
+    CONTROL         "&Hyper Text Transfer Protocol (http:)",IDC_HANDLEHTTP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,62,70,127,10
+    CONTROL         "&Secure HTTP (https:)",IDC_HANDLESHTTP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,62,80,83,10
+    CONTROL         "&File Transfer Protocol (ftp:)",IDC_HANDLEFTP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,62,90,99,10
 END
 
 /////////////////////////////////////////////////////////////////////////////
@@ -168,8 +168,7 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-	IDD_BASICWINPREFS "Desktop Integration\nTake back the Internet"
-	IDD_ADVANCEDWINPREFS "Advanced\nDeath to Internet Explorer"
+	IDD_BASICWINPREFS "Desktop\nIntegrate the browser with the Windows desktop"
 END
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////

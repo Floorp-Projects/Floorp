@@ -187,13 +187,12 @@ CWindowsCategory::CSpecifyWindowsPageObjects::GetPageObjects(CAPPAGE *pPages)
 	if (!pPages)
 		return ResultFromScode(E_POINTER);
 
-	pPages->cElems = 2;
+	pPages->cElems = 1;
 	pPages->pElems = (LPPROPERTYPAGE *)CoTaskMemAlloc(pPages->cElems * sizeof(LPPROPERTYPAGE));
 	if (!pPages->pElems)
 		return ResultFromScode(E_OUTOFMEMORY);
 
 	pPages->pElems[0] = new CBasicWindowsPrefs;
-	pPages->pElems[1] = new CAdvancedWindowsPrefs;
 
 	for (ULONG i = 0; i < pPages->cElems; i++)
 		pPages->pElems[i]->AddRef();

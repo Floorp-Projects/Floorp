@@ -16,22 +16,28 @@
  * Reserved.
  */
 
-//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by edpref.rc
-//
-#define IDD_BASICWINPREFS               100
-#define IDD_ADVANCEDWINPREFS            101
+#define IDD_BASICWINPREFS               101
+#define IDD_WINFILETYPES                102
+#define IDD_WINSHORTCUTTYPES            103
+#define IDD_WINACTIVEDESKTOPSETTINGS    104
 
-#define IDC_CHECK1                      1001
-#define IDC_CHECK2                      1002
-#define IDC_CHECK3                      1003
-#define IDC_CHECK4                      1004
-#define IDC_CHECK5                      1005
-#define IDC_CHECK6                      1006
-#define IDC_CHECK7                      1007
-#define IDC_CHECK8                      1008
-#define IDC_CHECK9                      1009
-#define IDC_CHECK10                     1010
-#define IDC_CHECK11                     1011
+#define IDC_CHECKONSTART                1001
 
+#define IDC_HANDLEHTML                  1010
+#define IDC_HANDLEHTTP                  1011
+#define IDC_HANDLEJPEG                  1012
+#define IDC_HANDLEGIF                   1013
+#define IDC_HANDLEJS                    1014
+#define IDC_HANDLEXBM                   1015
+#define IDC_HANDLESHTTP                 1016
+#define IDC_HANDLEFTP                   1017
+#define IDC_HANDLETXT                   1018
+
+#define IDC_HANDLEFILES                 1020
+#define IDC_HANDLESHORTCUTS             1021
+#define IDC_INTEGRATEWITHACTIVEDESKTOP  1022
+
+#define IDC_USEINTERNETKEYWORDS         1030
+#define IDC_USENETCENTERSEARCH          1031
+#define IDC_DISABLEACTIVEDESKTOP        1032
+#define IDC_UPDATELINKSTOOLBAR          1033

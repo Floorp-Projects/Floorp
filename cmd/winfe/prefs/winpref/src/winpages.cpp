@@ -64,50 +64,44 @@ LRESULT	CBasicWindowsPrefs::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return CPropertyPageEx::WindowProc(uMsg,wParam,lParam);
 }
 
+class CWinPrefDialog : public CDialog {
+	public:
+		CWinPrefDialog( int id );
+
+	protected:
+		BOOL	InitDialog() { return TRUE; }
+		BOOL	DoTransfer(BOOL bSaveAndValidate) { return TRUE; }
+		
+		// Event processing
+		void	OnOK() { return; }
+
+	private:
+};
+
+CWinPrefDialog::CWinPrefDialog( int id )
+    : CDialog( CComDll::m_hInstance, id ) {
+}
+
 BOOL CBasicWindowsPrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
 {
-	return CPropertyPageEx::OnCommand(id, hwndCtl, notifyCode);
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// CAdvancedWindowsPrefs implementation
-CAdvancedWindowsPrefs::CAdvancedWindowsPrefs()
-	: CPropertyPageEx(CComDll::m_hInstance, IDD_ADVANCEDWINPREFS, HELP_PREFS_ADVANCEDWINPREFS)
-{
-	// Set member data using XP preferences
-}
-
-BOOL CAdvancedWindowsPrefs::InitDialog()
-{
-	// Check for locked preferences
-
-	return CPropertyPageEx::InitDialog();
-}
-
-STDMETHODIMP CAdvancedWindowsPrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal)
-{
-	if (!m_bHasBeenActivated) {
-	} 
-
-	return CPropertyPageEx::Activate(hwndParent, lprc, bModal);
-}
-
-BOOL CAdvancedWindowsPrefs::DoTransfer(BOOL bSaveAndValidate)
-{
-	return TRUE;
-}
-
-BOOL CAdvancedWindowsPrefs::ApplyChanges()
-{
-	return TRUE;
-}
-
-LRESULT	CAdvancedWindowsPrefs::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	return CPropertyPageEx::WindowProc(uMsg,wParam,lParam);
-}
-
-BOOL CAdvancedWindowsPrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
-{
-	return CPropertyPageEx::OnCommand(id, hwndCtl, notifyCode);
+    BOOL result = TRUE;
+    if ( notifyCode == BN_CLICKED ) {
+        switch ( id ) {
+            case IDD_WINFILETYPES:
+            case IDD_WINSHORTCUTTYPES:
+            case IDD_WINACTIVEDESKTOPSETTINGS:
+                {
+                    CWinPrefDialog dialog( id );
+                    dialog.DoModal(GetParent(m_hwndDlg));
+                }
+                break;
+    
+            default:
+                result = CPropertyPageEx::OnCommand( id, hwndCtl, notifyCode );
+                break;
+        }
+    } else {
+        result = CPropertyPageEx::OnCommand( id, hwndCtl, notifyCode );
+    }
+	return result;
 }
