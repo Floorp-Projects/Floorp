@@ -121,7 +121,10 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
     // XXX useless convertion from nsString to char * again
     const char *cookieRaw = cookie.ToNewCString();
     if (!cookieRaw) return NS_ERROR_OUT_OF_MEMORY;
-    rv = pHTTPConnection->SetRequestHeader(mCookieHeader, cookieRaw);
+
+    // only set a cookie header if we have a value to send
+    if (*cookieRaw)
+        rv = pHTTPConnection->SetRequestHeader(mCookieHeader, cookieRaw);
     nsAllocator::Free((void *)cookieRaw);
 
     return rv;
