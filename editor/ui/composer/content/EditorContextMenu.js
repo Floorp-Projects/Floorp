@@ -27,15 +27,6 @@ function EditorFillContextMenu(event, contextMenuNode)
   if ( event.target != contextMenuNode )
     return;
 
-  goUpdateCommand("cmd_undo");
-  goUpdateCommand("cmd_redo");
-  goUpdateCommand("cmd_cut");
-  goUpdateCommand("cmd_copy");
-  goUpdateCommand("cmd_paste");
-  goUpdateCommand("cmd_pasteNoFormatting");
-  goUpdateCommand("cmd_delete");
-  goUpdateCommand("cmd_link");
-
   // Setup object property menuitem
   var objectName = InitObjectPropertiesMenuitem("objectProperties_cm");
   var isInLink = objectName == "href";
@@ -45,12 +36,6 @@ function EditorFillContextMenu(event, contextMenuNode)
   try {
     isInLink = GetCurrentEditor().getElementOrParentByTagName("href", GetObjectForProperties());
   } catch (e) {}
-
-  // Disable "Create Link" if in a link
-  SetElementEnabledById("createLink_cm", !isInLink);
-
-  // Enable "Edit link in new Composer" if in a link
-  SetElementEnabledById("editLink_cm", isInLink);
 
   InitRemoveStylesMenuitems("removeStylesMenuitem_cm", "removeLinksMenuitem_cm", "removeNamedAnchorsMenuitem_cm");
 
@@ -67,8 +52,15 @@ function EditorFillContextMenu(event, contextMenuNode)
   {
     var count = children.length;
     for (var i = 0; i < count; i++)
-      HideDisabledItem(children.item(i));
+      HideDisabledItem(children[i]);
   }
+
+  // The above loop will always show all separators and the next two items
+  // Hide "Create Link" if in a link
+  ShowMenuItem("createLink_cm", !isInLink);
+
+  // Hide "Edit link in new Composer" unless in a link
+  ShowMenuItem("editLink_cm", isInLink);
 
   // Remove separators if all items in immediate group above are hidden
   // A bit complicated to account if multiple groups are completely hidden!
@@ -112,61 +104,40 @@ function EditorFillContextMenu(event, contextMenuNode)
   ShowMenuItem("tableDeleteMenu_cm",  inCell);
 }
 
-function EditorCleanupContextMenu( event, contextMenuNode )
+function IsItemOrCommandEnabled( item )
 {
-  if ( event.target != contextMenuNode )
-    return;
-
-  var children = contextMenuNode.childNodes;
-  if (children)
-  {
-    var count = children.length;
-    for (var i = 0; i < count; i++)
-    ShowHiddenItemOnCleanup(children.item(i));
+  var command = item.getAttribute("command");
+  if (command) {
+    // If possible, query the command controller directly
+    var controller = document.commandDispatcher.getControllerForCommand(command);
+    if (controller)
+      return controller.isCommandEnabled(command);
   }
+
+  // Fall back on the inefficient observed disabled attribute
+  return item.getAttribute("disabled") != "true";
 }
 
 function HideDisabledItem( item )
 {
-  if (!item) return false;
-
-  var enabled = (item.getAttribute('disabled') !="true");
-  item.setAttribute("hidden", enabled ? "" : "true");
-  item.setAttribute("contexthidden", enabled ? "" : "true");
-  return enabled;
-}
-
-function ShowHiddenItemOnCleanup( item )
-{
-  if (!item) return false;
-
-  var isHidden = (item.getAttribute("contexthidden") == "true");
-  if (isHidden)
-  {
-    item.removeAttribute("hidden");
-    item.removeAttribute("contexthidden");
-    return true;
-  }
-  return false;
+  item.hidden = !IsItemOrCommandEnabled(item);
 }
 
 function ShowMenuItem(id, showItem)
 {
   var item = document.getElementById(id);
-  if (item)
+  if (item && !showItem)
   {
-    item.setAttribute("hidden", showItem ? "" : "true");
-    item.setAttribute("contexthidden", showItem ? "" : "true");
+    item.hidden = true;
   }
-  else
-    dump("ShowMenuItem: item id="+id+" not found\n");
+  // else HideDisabledItem showed the item anyway
 }
 
 function IsMenuItemShowing(menuID)
 {
   var item = document.getElementById(menuID);
-  if(item)
-    return(item.getAttribute("contexthidden") != "true");
+  if (item)
+    return !item.hidden;
 
   return false;
 }
