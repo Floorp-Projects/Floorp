@@ -78,6 +78,9 @@ public:
                                 nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
 
+  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
+                                     nsIContent*     aContent);
+
   // XXX style rule enumerations
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -242,6 +245,16 @@ HTMLCSSStyleSheetImpl::Init(nsIURL* aURL, nsIDocument* aDocument)
   NS_ADDREF(mURL);
   return NS_OK;
 }
+
+// Test if style is dependent on content state
+NS_IMETHODIMP
+HTMLCSSStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
+                                              nsIContent*     aContent)
+{
+  return NS_COMFALSE;
+}
+
+
 
 NS_IMETHODIMP 
 HTMLCSSStyleSheetImpl::Reset(nsIURL* aURL)

@@ -257,6 +257,10 @@ public:
                                 nsIStyleContext* aParentContext,
                                 nsISupportsArray* aResults);
 
+  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
+                                     nsIContent*     aContent);
+
+  // nsIHTMLStyleSheet api
   NS_IMETHOD Init(nsIURL* aURL, nsIDocument* aDocument);
   NS_IMETHOD Reset(nsIURL* aURL);
   NS_IMETHOD SetLinkColor(nscolor aColor);
@@ -515,6 +519,39 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   return matchCount;
 }
+
+// Test if style is dependent on content state
+NS_IMETHODIMP
+HTMLStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
+                                           nsIContent*     aContent)
+{
+  nsresult result = NS_COMFALSE;
+
+  if (mActiveRule || mLinkRule || mVisitedRule) { // do we have any rules dependent on state?
+    nsIStyledContent* styledContent;
+    if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
+      PRInt32 nameSpace;
+      styledContent->GetNameSpaceID(nameSpace);
+      if (kNameSpaceID_HTML == nameSpace) {
+        nsIAtom*  tag;
+        styledContent->GetTag(tag);
+        // if we have anchor colors, check if this is an anchor with an href
+        if (tag == nsHTMLAtoms::a) {
+          nsAutoString href;
+          nsresult attrState = styledContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
+          if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
+            result = NS_OK; // yes, style will depend on link state
+          }
+        }
+        NS_IF_RELEASE(tag);
+      }
+      NS_RELEASE(styledContent);
+    }
+  }
+  return result;
+}
+
+
 
 PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                           nsIContent* aParentContent,
