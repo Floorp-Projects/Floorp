@@ -255,6 +255,11 @@ public:
   NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
   /**
+   * Return the content language of this document.
+   */
+  NS_IMETHOD GetContentLanguage(nsAWritableString& aContentLanguage) const;
+
+  /**
    * Return the LoadGroup for the document. May return null.
    */
   NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup **aGroup) const;
@@ -589,6 +594,8 @@ protected:
 
   nsCOMPtr<nsICSSLoader> mCSSLoader;
   nsWeakPtr mFocusController;
+
+  nsString mContentLanguage;
 
 private:
   // These are not implemented and not supported.

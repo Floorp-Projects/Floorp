@@ -620,6 +620,13 @@ nsXULDocument::GetContentType(nsAWritableString& aContentType) const
 }
 
 NS_IMETHODIMP
+nsXULDocument::GetContentLanguage(nsAWritableString& aContentLanguage) const
+{
+    aContentLanguage.Truncate();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
 {
     nsresult rv;
@@ -6974,4 +6981,3 @@ XULElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
 {
     return nsXULElement::Create(aNodeInfo, aResult);
 }
-
