@@ -29,16 +29,16 @@ input[type="text"] {
   font-family: monospace;
 }
 
-#name:focus, #email:focus, #subject:focus, #comments:focus{
+#name:focus, #email:focus, #subject:focus, #comments:focus, #product:focus {
   background-color: #e4ecec;
 }
 
 #name, #email {
-  width: 25em;
+  width: 62.5%;
 }
 
 #subject, #comments {
-  width: 40em;
+  width: 100%;
 }
 
 #comments {
@@ -46,6 +46,7 @@ input[type="text"] {
 }
 
 #header-img {
+  margin-top: 37px;
   padding: 2px;
   border: 2px solid #455372;
   background: #e4ecec;  
@@ -69,3 +70,9 @@ p.error {
   color: red;
 }
 
+h1 { 
+  background-image: url("mozhead.gif");
+  background-repeat: no-repeat;
+  background-position: 2.5% 50%;
+  padding-left: 80px;
+}
