@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.65 $ ';
+$::UtilsVersion = '$Revision: 1.66 $ ';
 
 package TinderUtils;
 
@@ -827,7 +827,7 @@ sub run_all_tests {
 
 	  $test_result = AliveTest("LayoutPerformanceTest", $build_dir,
 							   $binary, 
-							   "\"http://jrgm.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0\"",
+							   "\"http://cowtools.mcom.com/page-loader/loader.pl?delay=1000&nocache=0&maxcycle=0\"",
 							   $Settings::LayoutPerformanceTestTimeout);
     }
 
