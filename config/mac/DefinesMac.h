@@ -53,7 +53,6 @@
 #ifndef NSPR20
 #define NSPR20 1
 #endif
-#define _NSPR 1
 
 /* Some other random defines */
 #define _NO_FAST_STRING_INLINES_ 1
