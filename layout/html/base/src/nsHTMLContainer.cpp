@@ -833,49 +833,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
         NS_RELEASE(htmlDoc);
       }
 
-      // XXX the following code needs to be moved elsewhere when Peter provides a hook.
-      // Right now it only gets called when there are attributes on the body tag and it
-      // gets called for each attribute on the body tag (but only needs to be called once).
-
-      // if marginwidth/marginheigth is set in our attribute zero out left,right/top,bottom padding
-      // nsBodyFrame::DidSetStyleContext will add the appropriate values to padding 
-      float p2t = aPresContext->GetPixelsToTwips();
-      nsStyleSpacing* spacing = (nsStyleSpacing*)
-        aContext->GetMutableStyleData(eStyleStruct_Spacing);
-
-      GetAttribute(nsHTMLAtoms::marginwidth, value);
-      if (eHTMLUnit_Pixel == value.GetUnit()) {
-        spacing->mPadding.SetLeft(0);
-        spacing->mPadding.SetRight(0);
-      }
-
-      GetAttribute(nsHTMLAtoms::marginheight, value);
-      if (eHTMLUnit_Pixel == value.GetUnit()) {
-        spacing->mPadding.SetTop(0);
-        spacing->mPadding.SetBottom(0);
-      }
-      // if marginwidth or marginheight is set in the web shell zero out left,right,top,bottom padding
-      // nsBodyFrame::DidSetStyleContext will add the appropriate values to padding 
-      nsISupports* container;
-      aPresContext->GetContainer(&container);
-      if (nsnull != container) {
-        nsIWebShell* webShell = nsnull;
-        container->QueryInterface(kIWebShellIID, (void**) &webShell);
-        if (nsnull != webShell) {
-          PRInt32 marginWidth, marginHeight;
-          webShell->GetMarginWidth(marginWidth);
-          webShell->GetMarginHeight(marginHeight);
-          if ((marginWidth >= 0) || (marginHeight >= 0)) { // nav quirk
-            spacing->mPadding.SetLeft(0);
-            spacing->mPadding.SetRight(0);
-            spacing->mPadding.SetTop(0);
-            spacing->mPadding.SetBottom(0);
-          }
-          NS_RELEASE(webShell);
-        }
-        NS_RELEASE(container);
-      }
-      // XXX end of code that needs to be moved
+      // marginwidth/height get set by a special style rule
 
       // set up the basefont (defaults to 3)
       nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
