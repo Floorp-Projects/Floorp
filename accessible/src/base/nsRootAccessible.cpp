@@ -74,7 +74,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIViewManager.h"
-#include "nsIWidget.h"
 #include "nsIScrollableView.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
@@ -244,13 +243,6 @@ NS_IMETHODIMP nsRootAccessible::GetAccValue(nsAString& aAccValue)
 
 void nsRootAccessible::Notify(nsITimer *timer)
 {
-  // Short timer is finished 
-  if (mBusy != eBusyStateDone) {
-    mBusy = eBusyStateDone;
-    if (mListener)
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this, nsnull);
-  }
-
   if (mScrollPositionChangedTicks) {
     if (++mScrollPositionChangedTicks > 2) {
       // Whenever scroll position changes, mScrollPositionChangeTicks gets reset to 1
@@ -390,18 +382,6 @@ NS_IMETHODIMP nsRootAccessible::ScrollPositionDidChange(nsIScrollableView *aScro
   return NS_OK;
 }
 
-void nsRootAccessible::StartDocReadyTimer()
-{
-  if (!mTimer) {
-    nsresult rv;
-    mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      const PRUint32 kUpdateTimerDelay = 1;
-      mTimer->Init(NS_STATIC_CAST(nsITimerCallback*, this), kUpdateTimerDelay);
-    }
-  }
-}
-
 /* void addAccessibleEventListener (in nsIAccessibleEventListener aListener); */
 NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventListener *aListener)
 {
@@ -448,11 +428,6 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
     rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
     
-    // Extremely short timer, after which we announce that page is finished loading
-    // By waiting until after this short time, we know that the 3rd party accessibility software 
-    // has received it's accessible, and can handle events on it.
-    StartDocReadyTimer(); 
-
     // Set up web progress listener - we need to know when page loading is finished
     // That way we can send the STATE_CHANGE events for the MSAA root "pane" object (ROLE_PANE),
     // and change the STATE_BUSY bit flag
@@ -815,6 +790,13 @@ NS_IMETHODIMP nsRootAccessible::OnStateChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
   if ((aStateFlags & STATE_IS_DOCUMENT) && (aStateFlags & STATE_STOP)) {
+    // Doc is ready!
+    if (mBusy != eBusyStateDone) {
+      mBusy = eBusyStateDone;
+      if (mListener)
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, this, nsnull);
+    }
+
     // Set up scroll position listener
     nsCOMPtr<nsIDOMWindow> domWin;
     aWebProgress->GetDOMWindow(getter_AddRefs(domWin));

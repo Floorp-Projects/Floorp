@@ -143,7 +143,6 @@ class nsRootAccessible : public nsAccessible,
     virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsIFrame* GetFrame();
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
-    void StartDocReadyTimer();
     void AddScrollListener(nsIPresShell *aPresShell);
     void RemoveScrollListener(nsIPresShell *aPresShell);
     friend PRBool PR_CALLBACK RemoveScrollListenerEnum(nsHashKey *aKey, void *aData, void* aClosure);
