@@ -225,6 +225,10 @@ nsHTMLFragmentContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
   FlushText();
 
+  // Drop our reference to the parser to get rid of a circular
+  // reference.
+  NS_IF_RELEASE(mParser);
+
   return NS_OK;
 }
 
