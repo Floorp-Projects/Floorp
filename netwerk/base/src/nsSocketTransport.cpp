@@ -1731,8 +1731,10 @@ nsSocketBS::Poll(PRInt16 event)
     switch (result) {
     case 0:
         rv = NS_ERROR_NET_TIMEOUT;
+        break;
     case 1:
         rv = NS_OK;
+        break;
     default:
         LOG(("nsSocketBS::Poll [this=%x] PR_Poll returned %d [error=%d]\n",
             this, result, PR_GetError()));
