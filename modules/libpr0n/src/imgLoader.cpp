@@ -80,7 +80,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 #if defined(PR_LOGGING)
   nsXPIDLCString spec;
   aURI->GetSpec(getter_Copies(spec));
-  LOG_SCOPE_STRING_PARAM("imgLoader::LoadImage", "aURI", spec.get());
+  LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::LoadImage", "aURI", spec.get());
 #endif
 
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
@@ -92,7 +92,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 #ifdef LOADER_THREADSAFE
     nsAutoLock lock(mLock); // lock when we are adding things to the cache
 #endif
-    LOG_SCOPE("imgLoader::LoadImage |cache miss|");
+    LOG_SCOPE(gImgLog, "imgLoader::LoadImage |cache miss|");
 
     nsCOMPtr<nsIIOService> ioserv(do_GetService("@mozilla.org/network/io-service;1"));
     if (!ioserv) return NS_ERROR_FAILURE;
