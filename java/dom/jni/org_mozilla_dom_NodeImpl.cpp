@@ -964,7 +964,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_supports
   }
 
   PRBool ret = PR_FALSE;
-  nsresult rv = node->Supports(*feature, *version, &ret);
+  nsresult rv = node->IsSupported(*feature, *version, &ret);
   nsString::Recycle(feature);
   nsString::Recycle(version);
 

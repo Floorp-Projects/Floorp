@@ -25,7 +25,7 @@
 #include "jni.h"
 #include "prclist.h"
 #include "nsError.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 // workaround for bug 30927
 #ifdef ERROR
