@@ -21,7 +21,7 @@
 #include "nsSocketTransport.h"
 
 
-#define MAX_OPEN_CONNECTIONS 10
+#define MAX_OPEN_CONNECTIONS 50
 
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);

@@ -110,6 +110,8 @@ nsSocketTransport::nsSocketTransport()
   mSocketFD     = nsnull;
   mLock         = nsnull;
 
+  mSuspendCount = 0;
+
   mCurrentState = eSocketState_Created;
   mOperation    = eSocketOperation_None;
   mSelectFlags  = 0;
@@ -214,6 +216,15 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
   // This lock protects access to socket transport member data...
   //
   Lock();
+
+  //
+  // If the transport has been suspended, then return NS_OK immediately...
+  // This removes the transport from the select list...
+  //
+  if (mSuspendCount) {
+    done = PR_TRUE;
+    rv = NS_OK;
+  }
 
   while (!done)
   {
@@ -714,13 +725,55 @@ nsSocketTransport::Cancel(void)
 NS_IMETHODIMP
 nsSocketTransport::Suspend(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+
+  // Enter the socket transport lock...
+  Lock();
+
+  mSuspendCount += 1;
+  //
+  // Wake up the transport on the socket transport thread so it can
+  // be removed from the select list...  
+  //
+  // Only do this the first time a transport is suspended...
+  //
+  if (1 == mSuspendCount) {
+    rv = mService->AddToWorkQ(this);
+  }
+
+  // Leave the socket transport lock...
+  Unlock();
+
+  return rv;
 }
+
 
 NS_IMETHODIMP
 nsSocketTransport::Resume(void)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+
+  // Enter the socket transport lock...
+  Lock();
+
+  if (mSuspendCount) {
+    mSuspendCount -= 1;
+    //
+    // Wake up the transport on the socket transport thread so it can
+    // be resumed...
+    //
+    if (0 == mSuspendCount) {
+      rv = mService->AddToWorkQ(this);
+    }
+  } else {
+    // Only a suspended transport can be resumed...
+    rv = NS_ERROR_FAILURE;
+  }
+
+  // Leave the socket transport lock...
+  Unlock();
+
+  return rv;
 }
 
 

@@ -109,6 +109,8 @@ protected:
   PRLock*           mLock;
   nsSocketState     mCurrentState;
   nsSocketOperation mOperation;
+  
+  PRInt32           mSuspendCount;
 
   PRFileDesc*   mSocketFD;
   PRNetAddr     mNetAddress;
