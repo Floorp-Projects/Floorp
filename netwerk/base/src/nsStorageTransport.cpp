@@ -676,6 +676,9 @@ nsStorageTransport::nsReadRequest::ReadSegments(nsWriteSegmentFun aWriter,
         rv = mTransport->GetReadSegment(mTransferOffset, &ptr, &count);
         if (NS_FAILED(rv)) return rv;
 
+        if (count == 0)
+            break;
+
         count = PR_MIN(count, aCount);
 
         while (count) {
