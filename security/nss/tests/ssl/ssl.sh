@@ -33,6 +33,43 @@ stress=0
 certs=1
 fileout=0
 
+Exit()
+{
+	echo $1
+	rm -f ${TEMPFILES}
+	if [ -f "${SERVERPID}" ]
+	then
+		${KILL} `cat ${SERVERPID}`
+	fi
+	exit 1
+}
+
+is_selfserv_alive()
+{
+	#echo "Testing if server is alive..."
+	if [ ! -f "${SERVERPID}" ]
+	then
+		echo "Error - selfserver pid file ${SERVERPID} does not exist"
+		sleep 5
+		if [ ! -f "${SERVERPID}" ]
+		then
+			Exit "Fatal Error - selfserver pid file ${SERVERPID} still does not exist - exiting"
+		fi
+	fi
+    PID=`cat ${SERVERPID}`
+	SERVER_OK="FALSE"
+    if [ `uname -s` = "SunOS" ]
+    then
+        /usr/5bin/ps -e | grep $PID  >/dev/null && SERVER_OK="TRUE"
+    else
+        ps -e | grep $PID  >/dev/null && SERVER_OK="TRUE"
+    fi
+	if [ "$SERVER_OK" = "FALSE" ]
+	then
+		Exit "Fatal Error - selfserver process not dedectable"
+	fi
+}
+
 for i in $*
 do
     case $i in
@@ -71,7 +108,7 @@ fi
 #
 # should also try to kill any running server
 #
-trap "rm -f ${TEMPFILES};  exit"  2 3
+trap "rm -f ${TEMPFILES};  Exit Signal_caught"  2 3
 
 CADIR=${HOSTDIR}/CA
 SERVERDIR=${HOSTDIR}/server
@@ -231,6 +268,7 @@ do
 		sparam='-c i'
 	fi
 
+	is_selfserv_alive
 	echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . redir from ${REQUEST_FILE}"
 	tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f -d . < ${REQUEST_FILE}
 	if [ $? -ne 0 ]; then
@@ -276,8 +314,8 @@ do
 		echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} redir from ${REQUEST_FILE}"
 		tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
 	fi
-	#sleep 20
 	pwd
+	is_selfserv_alive
 	echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} redir from ${REQUEST_FILE}"
 	tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} < ${REQUEST_FILE} 
 	ret=$?
@@ -332,7 +370,6 @@ do
 	else
 	    selfserv -p ${PORT} -d ${SERVERDIR} -n ${HOST}.${DOMSUF} -w nss ${sparam} -i ${SERVERPID} $verbose &
 	fi
-	#sleep 20
 	echo "tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE} started at `date`"
 	tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
 	if [ $? -ne 0 ]; then
@@ -341,6 +378,7 @@ do
 		tstclnt -p ${PORT} -h ${HOST} -q -d ${CLIENTDIR} < ${REQUEST_FILE}
 	fi
 
+	is_selfserv_alive
 	echo "strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF}  started at `date`"
 	strsclnt -p ${PORT} -d . -w nss $cparam $verbose ${HOST}.${DOMSUF} 
 	echo "strsclnt completed at `date`"
