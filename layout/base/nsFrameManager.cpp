@@ -1357,13 +1357,13 @@ VerifySameTree(nsIStyleContext* aContext1, nsIStyleContext* aContext2)
   nsCOMPtr<nsIStyleContext> top2 = aContext2;
   nsCOMPtr<nsIStyleContext> parent;
   for (;;) {
-    parent = dont_AddRef(top1->GetParent());
+    parent = top1->GetParent();
     if (!parent)
       break;
     top1 = parent;
   }
   for (;;) {
-    parent = dont_AddRef(top2->GetParent());
+    parent = top2->GetParent();
     if (!parent)
       break;
     top2 = parent;
@@ -1403,7 +1403,7 @@ VerifyContextParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
   }
 
   NS_ASSERTION(aContext, "Failure to get required contexts");
-  nsIStyleContext*  actualParentContext = aContext->GetParent();
+  nsCOMPtr<nsIStyleContext> actualParentContext = aContext->GetParent();
 
   if (aParentContext) {
     if (aParentContext != actualParentContext) {
@@ -1430,7 +1430,6 @@ VerifyContextParent(nsIPresContext* aPresContext, nsIFrame* aFrame,
     }
   }
 
-  NS_IF_RELEASE(actualParentContext);
   NS_IF_RELEASE(aParentContext);
   NS_IF_RELEASE(aContext);
 }
@@ -1503,12 +1502,10 @@ FrameManager::DebugVerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFram
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   if (aFrame) {
-    nsIStyleContext* context;
-    aFrame->GetStyleContext(&context);
-    nsIStyleContext* parentContext = context->GetParent();
+    nsCOMPtr<nsIStyleContext> context;
+    aFrame->GetStyleContext(getter_AddRefs(context));
+    nsCOMPtr<nsIStyleContext> parentContext = context->GetParent();
     VerifyStyleTree(aPresContext, aFrame, parentContext);
-    NS_IF_RELEASE(parentContext);
-    NS_RELEASE(context);
   }
   return NS_OK;
 }

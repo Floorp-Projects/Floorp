@@ -72,7 +72,7 @@ public:
 
   virtual PRBool    Equals(const nsIStyleContext* aOther) const = 0;
   
-  virtual nsIStyleContext*  GetParent(void) const = 0;
+  virtual already_AddRefed<nsIStyleContext> GetParent(void) const = 0;
   NS_IMETHOD GetFirstChild(nsIStyleContext** aContext)=0;
 
   NS_IMETHOD GetPseudoType(nsIAtom*& aPseudoTag) const = 0;

@@ -137,12 +137,11 @@ nsFirstLetterFrame::Init(nsIPresContext*  aPresContext,
     // Get proper style context for ourselves.  We're creating the frame
     // that represents everything *except* the first letter, so just create
     // a style context like we would for a text node.
-    nsIStyleContext* parentStyleContext = aContext->GetParent();
+    nsCOMPtr<nsIStyleContext> parentStyleContext = aContext->GetParent();
     if (parentStyleContext) {
       rv = aPresContext->ResolveStyleContextForNonElement(
                                                    parentStyleContext,
                                                    getter_AddRefs(newSC));
-      NS_RELEASE(parentStyleContext);
       if (NS_FAILED(rv))
         return rv;
 

@@ -397,7 +397,7 @@ static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleDa
 {
   nsStyleText* text = (nsStyleText*)aStyleStruct;
   if (text->mTextAlign == NS_STYLE_TEXT_ALIGN_DEFAULT) {
-    nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aRuleData->mStyleContext->GetParent());
+    nsCOMPtr<nsIStyleContext> parentContext = aRuleData->mStyleContext->GetParent();
 
     if (parentContext) {
       const nsStyleText* parentStyleText = 
@@ -430,9 +430,13 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
 {
   if (!aStyleStruct || !aRuleData || !aRuleData->mPresContext) return;
 
-  nsCOMPtr<nsIStyleContext> tableContext = getter_AddRefs(aRuleData->mStyleContext->GetParent()); if (!tableContext) return;
+  nsCOMPtr<nsIStyleContext> tableContext = aRuleData->mStyleContext->GetParent();
+  if (!tableContext)
+    return;
   if (!aGroup) {
-    tableContext = getter_AddRefs(tableContext->GetParent()); if (!tableContext) return;
+    tableContext = tableContext->GetParent();
+    if (!tableContext)
+      return;
   } 
   
   const nsStyleTable* tableData = 
@@ -441,10 +445,14 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
                     (aRulesArg2 == tableData->mRules) ||
                     (aRulesArg3 == tableData->mRules))) {
     const nsStyleBorder* tableBorderData = 
-      (const nsStyleBorder*)tableContext->GetStyleData(eStyleStruct_Border); if (!tableBorderData) return;
+      (const nsStyleBorder*)tableContext->GetStyleData(eStyleStruct_Border);
+    if (!tableBorderData)
+      return;
     PRUint8 tableBorderStyle = tableBorderData->GetBorderStyle(aSide);
 
-    nsStyleBorder* borderData = (nsStyleBorder*)aStyleStruct; if (!borderData) return;
+    nsStyleBorder* borderData = (nsStyleBorder*)aStyleStruct;
+    if (!borderData)
+      return;
     PRUint8 borderStyle = borderData->GetBorderStyle(aSide);
     // XXX It appears that the style system erronously applies the custom style rule after css style, 
     // consequently it does not properly fit into the casade. For now, assume that a border style of none

@@ -102,8 +102,6 @@ struct nsRuleNodeList
 
 // =====================================================
 
-static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
-
 class StyleSetImpl : public nsIStyleSet 
 #ifdef MOZ_PERF_METRICS
                    , public nsITimeRecorder
@@ -664,7 +662,7 @@ void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocumen
     }
 
     if (nsnull == mFrameConstructor) {
-      aSheet->QueryInterface(kIStyleFrameConstructionIID, (void **)&mFrameConstructor);
+      CallQueryInterface(aSheet, &mFrameConstructor);
     }
     ClearDocRuleProcessors();
   }
@@ -1412,7 +1410,7 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
   nsresult result = NS_ERROR_NULL_POINTER;
 
   if (aPresContext && aStyleContext && aNewStyleContext) {
-    nsIStyleContext* oldParent = aStyleContext->GetParent();
+    nsCOMPtr<nsIStyleContext> oldParent = aStyleContext->GetParent();
 
     if (oldParent == aNewParentContext) {
       result = NS_OK;
@@ -1421,8 +1419,8 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
     }
     else {  // really a new parent
       nsIStyleContext*  newChild = nsnull;
-      nsIAtom*  pseudoTag = nsnull;
-      aStyleContext->GetPseudoType(pseudoTag);
+      nsCOMPtr<nsIAtom>  pseudoTag;
+      aStyleContext->GetPseudoType(*getter_AddRefs(pseudoTag));
 
       nsRuleNode* ruleNode;
       aStyleContext->GetRuleNode(&ruleNode);
@@ -1436,11 +1434,7 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
         result = NS_NewStyleContext(aNewStyleContext, aNewParentContext, pseudoTag,
                                     ruleNode, aPresContext);
       }
-
-      NS_IF_RELEASE(pseudoTag);
     }
-
-    NS_IF_RELEASE(oldParent);
   }
   return result;
 }

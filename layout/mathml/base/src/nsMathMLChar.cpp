@@ -1468,7 +1468,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // mStyleContext is a leaf context used only when stretching happens.
   // For the base size, the default font should come from the parent context
   nsAutoString fontName;
-  nsCOMPtr<nsIStyleContext> parentContext(dont_AddRef(mStyleContext->GetParent()));
+  nsCOMPtr<nsIStyleContext> parentContext(mStyleContext->GetParent());
   const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
     parentContext->GetStyleData(eStyleStruct_Font));
   nsFont theFont(font->mFont);
@@ -1868,7 +1868,7 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
                     const nsRect*        aSelectedRect)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIStyleContext> parentContext(dont_AddRef(mStyleContext->GetParent()));
+  nsCOMPtr<nsIStyleContext> parentContext(mStyleContext->GetParent());
   nsIStyleContext* styleContext = mStyleContext;
 
   if (NS_STRETCH_DIRECTION_UNSUPPORTED == mDirection) {
