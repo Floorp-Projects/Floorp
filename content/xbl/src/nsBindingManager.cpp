@@ -68,7 +68,7 @@
 #include "nsIXBLBinding.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIXBLBindingAttachedHandler.h"
-#include "nsIXBLInsertionPoint.h"
+#include "nsXBLInsertionPoint.h"
 
 #include "nsIStyleSheet.h"
 #include "nsIHTMLStyleSheet.h"
@@ -96,57 +96,45 @@
 // = nsAnonymousContentList 
 // ==================================================================
 
-// {CC949466-626E-4e3b-88EE-967DC5CEF7BF}
-#define NS_IANONYMOUSCONTENTLIST_IID \
-{ 0xcc949466, 0x626e, 0x4e3b, { 0x88, 0xee, 0x96, 0x7d, 0xc5, 0xce, 0xf7, 0xbf } }
-
-class nsIAnonymousContentList : public nsISupports
+class nsAnonymousContentList : public nsGenericDOMNodeList
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IANONYMOUSCONTENTLIST_IID)
-
-   // nsIAnonymousContentList
-  NS_IMETHOD GetInsertionPointCount(PRUint32* aCount)=0;
-  NS_IMETHOD GetInsertionPointAt(PRUint32 i, nsIXBLInsertionPoint** aResult)=0;
-};
-
-class nsAnonymousContentList : public nsGenericDOMNodeList, public nsIAnonymousContentList
-{
-public:
-  nsAnonymousContentList(nsISupportsArray* aElements);
+  nsAnonymousContentList(nsVoidArray* aElements);
   virtual ~nsAnonymousContentList();
-
-  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNodeList interface
   NS_DECL_NSIDOMNODELIST
 
-  // nsIAnonymousContentList
-  NS_IMETHOD GetInsertionPointCount(PRUint32* aCount);
-  NS_IMETHOD GetInsertionPointAt(PRUint32 i, nsIXBLInsertionPoint** aResult);
-  
+  PRInt32 GetInsertionPointCount() { return mElements->Count(); }
+
+  nsXBLInsertionPoint* GetInsertionPointAt(PRInt32 i) { return NS_STATIC_CAST(nsXBLInsertionPoint*, mElements->ElementAt(i)); }
+
 private:
-  nsISupportsArray* mElements;
+  nsVoidArray* mElements;
 };
 
 MOZ_DECL_CTOR_COUNTER(nsAnonymousContentList)
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsAnonymousContentList, nsGenericDOMNodeList, nsIAnonymousContentList)
-
-nsAnonymousContentList::nsAnonymousContentList(nsISupportsArray* aElements)
+nsAnonymousContentList::nsAnonymousContentList(nsVoidArray* aElements)
+  : mElements(aElements)
 {
   MOZ_COUNT_CTOR(nsAnonymousContentList);
 
   // We don't reference count our Anonymous reference (to avoid circular
   // references). We'll be told when the Anonymous goes away.
-  mElements = aElements;
-  NS_IF_ADDREF(mElements);
 }
- 
+
+static PRBool PR_CALLBACK DeleteInsertionPoint(void* aElement, void* aData)
+{
+  delete NS_STATIC_CAST(nsXBLInsertionPoint*, aElement);
+  return PR_TRUE;
+}
+
 nsAnonymousContentList::~nsAnonymousContentList()
 {
   MOZ_COUNT_DTOR(nsAnonymousContentList);
-  NS_IF_RELEASE(mElements);
+  mElements->EnumerateForwards(DeleteInsertionPoint, nsnull);
+  delete mElements;
 }
 
 NS_IMETHODIMP
@@ -156,17 +144,11 @@ nsAnonymousContentList::GetLength(PRUint32* aLength)
   if (! aLength)
       return NS_ERROR_NULL_POINTER;
 
-  PRUint32 cnt;
-  mElements->Count(&cnt);
+  PRInt32 cnt = mElements->Count();
 
   *aLength = 0;
-  nsCOMPtr<nsIXBLInsertionPoint> point;
-  PRUint32 l;
-  for (PRUint32 i = 0; i < cnt; i++) {
-    point = getter_AddRefs((nsIXBLInsertionPoint*)(mElements->ElementAt(i)));
-    point->ChildCount(&l);
-    *aLength += l;
-  }
+  for (PRInt32 i = 0; i < cnt; i++)
+    *aLength += NS_STATIC_CAST(nsXBLInsertionPoint*, mElements->ElementAt(i))->ChildCount();
 
   return NS_OK;
 }
@@ -174,46 +156,24 @@ nsAnonymousContentList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP    
 nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  PRUint32 cnt;
-  nsresult rv = mElements->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-
+  PRInt32 cnt = mElements->Count();
   PRUint32 pointCount = 0;
-  nsCOMPtr<nsIXBLInsertionPoint> point;
-  for (PRUint32 i = 0; i < cnt; i++) {
+
+  for (PRInt32 i = 0; i < cnt; i++) {
     aIndex -= pointCount;
     
-    point = getter_AddRefs((nsIXBLInsertionPoint*)(mElements->ElementAt(i)));
-    point->ChildCount(&pointCount);
+    nsXBLInsertionPoint* point = NS_STATIC_CAST(nsXBLInsertionPoint*, mElements->ElementAt(i));
+    pointCount = point->ChildCount();
 
     if (aIndex < pointCount) {
-      nsCOMPtr<nsIContent> result;
-      rv = point->ChildAt(aIndex, getter_AddRefs(result));
-      if (result && NS_SUCCEEDED(rv))
+      nsCOMPtr<nsIContent> result = point->ChildAt(aIndex);
+      if (result)
         return CallQueryInterface(result, aReturn);
-      else return rv;
+      return NS_ERROR_FAILURE;
     }
   }
 
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsAnonymousContentList::GetInsertionPointCount(PRUint32* aCount)
-{
-  *aCount = 0;
-  if (mElements)
-    mElements->Count(aCount);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAnonymousContentList::GetInsertionPointAt(PRUint32 i, nsIXBLInsertionPoint** aResult)
-{
-  *aResult = nsnull;
-  if (mElements)
-    *aResult = (nsIXBLInsertionPoint*)mElements->ElementAt(i);
-  return NS_OK;
 }
 
 // nsDoubleHashtable stuff to create a generic string -> nsISupports
@@ -378,11 +338,11 @@ public:
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-  NS_IMETHOD SetContentListFor(nsIContent* aContent, nsISupportsArray* aList);
+  NS_IMETHOD SetContentListFor(nsIContent* aContent, nsVoidArray* aList);
   NS_IMETHOD HasContentListFor(nsIContent* aContent, PRBool* aResult);
 
   NS_IMETHOD GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
-  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList);
+  NS_IMETHOD SetAnonymousNodesFor(nsIContent* aContent, nsVoidArray* aList);
 
   NS_IMETHOD GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
 
@@ -427,6 +387,13 @@ public:
   NS_DECL_NSIDOCUMENTOBSERVER
 
 protected:
+  nsresult GetXBLChildNodesInternal(nsIContent* aContent,
+                                    nsIDOMNodeList** aResult,
+                                    PRBool* aIsAnonymousContentList);
+  nsresult GetAnonymousNodesInternal(nsIContent* aContent,
+                                     nsIDOMNodeList** aResult,
+                                     PRBool* aIsAnonymousContentList);
+
   void GetEnclosingScope(nsIContent* aContent, nsIContent** aParent);
   void GetOutermostStyleScope(nsIContent* aContent, nsIContent** aParent);
 
@@ -688,7 +655,7 @@ nsBindingManager::GetContentListFor(nsIContent* aContent, nsIDOMNodeList** aResu
 }
 
 NS_IMETHODIMP
-nsBindingManager::SetContentListFor(nsIContent* aContent, nsISupportsArray* aList)
+nsBindingManager::SetContentListFor(nsIContent* aContent, nsVoidArray* aList)
 {
   nsIDOMNodeList* contentList = nsnull;
   if (aList) {
@@ -711,8 +678,10 @@ nsBindingManager::HasContentListFor(nsIContent* aContent, PRBool* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult)
+nsresult
+nsBindingManager::GetAnonymousNodesInternal(nsIContent* aContent,
+                                            nsIDOMNodeList** aResult,
+                                            PRBool* aIsAnonymousContentList)
 { 
   // Locate the primary binding and get its node list of anonymous children.
   *aResult = nsnull;
@@ -723,17 +692,27 @@ nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aR
   }
 
   if (!*aResult) {
+    *aIsAnonymousContentList = PR_FALSE;
     nsCOMPtr<nsIXBLBinding> binding;
     GetBinding(aContent, getter_AddRefs(binding));
     if (binding)
       return binding->GetAnonymousNodes(aResult);
-  }
+  } else
+    *aIsAnonymousContentList = PR_TRUE;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* aList)
+nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent,
+                                       nsIDOMNodeList** aResult)
+{
+  PRBool dummy;
+  return GetAnonymousNodesInternal(aContent, aResult, &dummy);
+}
+
+NS_IMETHODIMP
+nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent, nsVoidArray* aList)
 {
   nsIDOMNodeList* contentList = nsnull;
   if (aList) {
@@ -744,15 +723,17 @@ nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent, nsISupportsArray* a
   return SetOrRemoveObject(mAnonymousNodesTable, aContent, contentList);
 }
 
-NS_IMETHODIMP
-nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult)
+nsresult
+nsBindingManager::GetXBLChildNodesInternal(nsIContent* aContent,
+                                           nsIDOMNodeList** aResult,
+                                           PRBool* aIsAnonymousContentList)
 {
   *aResult = nsnull;
 
   PRUint32 length;
 
   // Retrieve the anonymous content that we should build.
-  GetAnonymousNodesFor(aContent, aResult);
+  GetAnonymousNodesInternal(aContent, aResult, aIsAnonymousContentList);
   if (*aResult) {
     (*aResult)->GetLength(&length);
     if (length == 0)
@@ -767,9 +748,18 @@ nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aRe
       *aResult = NS_STATIC_CAST(nsIDOMNodeList*,
                                 LookupObject(mContentListTable, aContent));
       NS_IF_ADDREF(*aResult);
+      *aIsAnonymousContentList = PR_TRUE;
     }
   }
+
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult)
+{
+  PRBool dummy;
+  return GetXBLChildNodesInternal(aContent, aResult, &dummy);
 }
 
 NS_IMETHODIMP
@@ -1467,30 +1457,28 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
 
   if (ins) {
     nsCOMPtr<nsIDOMNodeList> nodeList;
-    GetXBLChildNodesFor(ins, getter_AddRefs(nodeList));
+    PRBool isAnonymousContentList;
+    GetXBLChildNodesInternal(ins, getter_AddRefs(nodeList),
+                             &isAnonymousContentList);
 
-    if (nodeList) {
-      nsCOMPtr<nsIAnonymousContentList> contentList(do_QueryInterface(nodeList));
-      if (contentList) {
-        // Find a non-pseudo-insertion point and just jam ourselves in.
-        // This is not 100% correct.  Hack city, baby.
-        PRUint32 count;
-        contentList->GetInsertionPointCount(&count);
-        for (PRUint32 i =0; i < count; i++) {
-          nsCOMPtr<nsIXBLInsertionPoint> point;
-          contentList->GetInsertionPointAt(i, getter_AddRefs(point));
-          PRInt32 index;
-          point->GetInsertionIndex(&index);
-          if (index != -1) {
-            // We're real. Jam all the kids in.
-            // XXX Check the filters to find the correct points.
-            for (PRInt32 j = aNewIndexInContainer; j < childCount; j++) {
-              aContainer->ChildAt(j, *getter_AddRefs(child));
-              point->AddChild(child);
-              SetInsertionParent(child, ins);
-            }
-            break;
+    if (nodeList && isAnonymousContentList) {
+      // Find a non-pseudo-insertion point and just jam ourselves in.
+      // This is not 100% correct.  Hack city, baby.
+      nsAnonymousContentList* contentList = NS_STATIC_CAST(nsAnonymousContentList*, NS_STATIC_CAST(nsIDOMNodeList*, nodeList.get()));
+
+      PRInt32 count = contentList->GetInsertionPointCount();
+      for (PRInt32 i = 0; i < count; i++) {
+        nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
+        PRInt32 index = point->GetInsertionIndex();
+        if (index != -1) {
+          // We're real. Jam all the kids in.
+          // XXX Check the filters to find the correct points.
+          for (PRInt32 j = aNewIndexInContainer; j < childCount; j++) {
+            aContainer->ChildAt(j, *getter_AddRefs(child));
+            point->AddChild(child);
+            SetInsertionParent(child, ins);
           }
+          break;
         }
       }
     }
@@ -1501,9 +1489,9 @@ nsBindingManager::ContentAppended(nsIDocument* aDocument,
 
 NS_IMETHODIMP
 nsBindingManager::ContentInserted(nsIDocument* aDocument,
-			                     nsIContent* aContainer,
-                           nsIContent* aChild,
-                           PRInt32 aIndexInContainer)
+                                  nsIContent* aContainer,
+                                  nsIContent* aChild,
+                                  PRInt32 aIndexInContainer)
 {
 // XXX This is hacked just to make menus work again.
   if (aIndexInContainer == -1 || !mContentListTable.ops)
@@ -1515,27 +1503,24 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
 
   if (ins) {
     nsCOMPtr<nsIDOMNodeList> nodeList;
-    GetXBLChildNodesFor(ins, getter_AddRefs(nodeList));
+    PRBool isAnonymousContentList;
+    GetXBLChildNodesInternal(ins, getter_AddRefs(nodeList),
+                             &isAnonymousContentList);
 
-    if (nodeList) {
-      nsCOMPtr<nsIAnonymousContentList> contentList(do_QueryInterface(nodeList));
-      if (contentList) {
-        // Find a non-pseudo-insertion point and just jam ourselves in.
-        // This is not 100% correct.  Hack city, baby.
-        PRUint32 count;
-        contentList->GetInsertionPointCount(&count);
-        for (PRUint32 i =0; i < count; i++) {
-          nsCOMPtr<nsIXBLInsertionPoint> point;
-          contentList->GetInsertionPointAt(i, getter_AddRefs(point));
-          PRInt32 index;
-          point->GetInsertionIndex(&index);
-          if (index != -1) {
-            // We're real. Jam the kid in.
-            // XXX Check the filters to find the correct points.
-            point->InsertChildAt(aIndexInContainer, aChild);
-            SetInsertionParent(aChild, ins);
-            break;
-          }
+    if (nodeList && isAnonymousContentList) {
+      // Find a non-pseudo-insertion point and just jam ourselves in.
+      // This is not 100% correct.  Hack city, baby.
+      nsAnonymousContentList* contentList = NS_STATIC_CAST(nsAnonymousContentList*, NS_STATIC_CAST(nsIDOMNodeList*, nodeList.get()));
+
+      PRInt32 count = contentList->GetInsertionPointCount();
+      for (PRInt32 i = 0; i < count; i++) {
+        nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
+        if (point->GetInsertionIndex() != -1) {
+          // We're real. Jam the kid in.
+          // XXX Check the filters to find the correct points.
+          point->InsertChildAt(aIndexInContainer, aChild);
+          SetInsertionParent(aChild, ins);
+          break;
         }
       }
     }
@@ -1570,22 +1555,18 @@ nsBindingManager::ContentRemoved(nsIDocument* aDocument,
 
   if (point) {
     nsCOMPtr<nsIDOMNodeList> nodeList;
-    GetXBLChildNodesFor(point, getter_AddRefs(nodeList));
+    PRBool isAnonymousContentList;
+    GetXBLChildNodesInternal(point, getter_AddRefs(nodeList),
+                             &isAnonymousContentList);
 
-    if (nodeList) {
-      nsCOMPtr<nsIAnonymousContentList> contentList(do_QueryInterface(nodeList));
-      if (contentList) {
-        // Find a non-pseudo-insertion point and remove ourselves.
-        PRUint32 count;
-        contentList->GetInsertionPointCount(&count);
-        for (PRUint32 i =0; i < count; i++) {
-          nsCOMPtr<nsIXBLInsertionPoint> point;
-          contentList->GetInsertionPointAt(i, getter_AddRefs(point));
-          PRInt32 index;
-          point->GetInsertionIndex(&index);
-          if (index != -1) {
-            point->RemoveChild(aChild);
-          }
+    if (nodeList && isAnonymousContentList) {
+      // Find a non-pseudo-insertion point and remove ourselves.
+      nsAnonymousContentList* contentList = NS_STATIC_CAST(nsAnonymousContentList*, NS_STATIC_CAST(nsIDOMNodeList*, nodeList));
+      PRInt32 count = contentList->GetInsertionPointCount();
+      for (PRInt32 i =0; i < count; i++) {
+        nsXBLInsertionPoint* point = contentList->GetInsertionPointAt(i);
+        if (point->GetInsertionIndex() != -1) {
+          point->RemoveChild(aChild);
         }
       }
     }

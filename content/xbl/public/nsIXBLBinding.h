@@ -55,6 +55,7 @@ class nsIDocument;
 class nsIDOMNodeList;
 class nsIScriptContext;
 class nsXBLPrototypeBinding;
+class nsVoidArray;
 
 // {DDDBAD20-C8DF-11d3-97FB-00400553EEF0}
 #define NS_IXBLBINDING_IID \
@@ -103,7 +104,9 @@ public:
   NS_IMETHOD GetDocURI(nsCString& aResult) = 0;
   NS_IMETHOD GetID(nsCString& aResult) = 0;
 
-  NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsISupportsArray** aResult)=0;
+  // Get the list of insertion points for aParent.  The nsVoidArray is owned
+  // by the binding, you should not delete it.
+  NS_IMETHOD GetInsertionPointsFor(nsIContent* aParent, nsVoidArray** aResult)=0;
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult, PRUint32* aIndex,
                                nsIContent** aDefaultContent) = 0;

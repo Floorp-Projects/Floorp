@@ -40,49 +40,42 @@
 #ifndef nsXBLInsertionPoint_h__
 #define nsXBLInsertionPoint_h__
 
-#include "nsIXBLInsertionPoint.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsIContent.h"
+#include "nsCOMPtr.h"
 
-class nsXBLInsertionPoint : public nsIXBLInsertionPoint
+class nsXBLInsertionPoint
 {
 public:
   nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefContent);
-  virtual ~nsXBLInsertionPoint();
+  ~nsXBLInsertionPoint();
   
-  NS_DECL_ISUPPORTS
+  already_AddRefed<nsIContent> GetInsertionParent();
+  PRInt32 GetInsertionIndex() { return mIndex; }
 
-  NS_IMETHOD GetInsertionParent(nsIContent** aParentElement);
-  NS_IMETHOD GetInsertionIndex(PRInt32* aIndex);
+  void SetDefaultContent(nsIContent* aDefaultContent) { mDefaultContent = aDefaultContent; }
+  already_AddRefed<nsIContent> GetDefaultContent();
 
-  NS_IMETHOD SetDefaultContent(nsIContent* aDefaultContent);
-  NS_IMETHOD GetDefaultContent(nsIContent** aDefaultContent);
+  void SetDefaultContentTemplate(nsIContent* aDefaultContent) { mDefaultContentTemplate = aDefaultContent; }
+  already_AddRefed<nsIContent> GetDefaultContentTemplate();
 
-  NS_IMETHOD SetDefaultContentTemplate(nsIContent* aDefaultContent);
-  NS_IMETHOD GetDefaultContentTemplate(nsIContent** aDefaultContent);
-
-  NS_IMETHOD AddChild(nsIContent* aChildElement);
-  NS_IMETHOD InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement);
-  NS_IMETHOD RemoveChild(nsIContent* aChildElement);
+  void AddChild(nsIContent* aChildElement) { mElements.AppendObject(aChildElement); }
+  void InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement) { mElements.InsertObjectAt(aChildElement, aIndex); }
+  void RemoveChild(nsIContent* aChildElement) { mElements.RemoveObject(aChildElement); }
   
-  NS_IMETHOD ChildCount(PRUint32* aResult);
+  PRInt32 ChildCount() { return mElements.Count(); }
 
-  NS_IMETHOD ChildAt(PRUint32 aIndex, nsIContent** aResult);
+  already_AddRefed<nsIContent> ChildAt(PRUint32 aIndex);
 
-  NS_IMETHOD Matches(nsIContent* aContent, PRUint32 aIndex, PRBool* aResult);
+  PRBool Matches(nsIContent* aContent, PRUint32 aIndex);
 
 protected:
   nsIContent* mParentElement;            // This ref is weak.  The parent of the <children> element.
   PRInt32 mIndex;                        // The index of this insertion point. -1 is a pseudo-point.
-  nsCOMPtr<nsISupportsArray> mElements;  // An array of elements present at the insertion point.
+  nsCOMArray<nsIContent> mElements;      // An array of elements present at the insertion point.
   nsCOMPtr<nsIContent> mDefaultContentTemplate ;           // The template default content that will be cloned if
                                                            // the insertion point is empty.
   nsCOMPtr<nsIContent> mDefaultContent;  // The cloned default content obtained by cloning mDefaultContentTemplate.
 };
-
-nsresult
-NS_NewXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex,
-                        nsIContent* aDefContent,
-                        nsIXBLInsertionPoint** aResult);
 
 #endif
