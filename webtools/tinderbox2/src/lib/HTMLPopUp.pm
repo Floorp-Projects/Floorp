@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.24 $ 
-# $Date: 2003/04/20 20:23:12 $ 
+# $Revision: 1.25 $ 
+# $Date: 2003/05/26 13:39:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -113,8 +113,8 @@ $DEFAULT_POPUP_TITLE = '';
 # these varaibles are a hack, I need them to make the popup window
 # auto size correctly.  I wish there was a javascript way to autosize.
 
-$DEFAULT_POPUP_HEIGHT = 225;
-$DEFAULT_POPUP_WIDTH = 425;
+$DEFAULT_POPUP_HEIGHT = 160;
+$DEFAULT_POPUP_WIDTH = 225;
 
 if (defined($TinderConfig::ADD_TEXT_BROWSER_STRINGS)) {
     $ADD_TEXT_BROWSER_STRINGS = $TinderConfig::ADD_TEXT_BROWSER_STRINGS;
