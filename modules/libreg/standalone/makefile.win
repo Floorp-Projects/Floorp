@@ -82,31 +82,22 @@ LINCS= $(LINCS) -I$(PUBLIC)/libreg   \
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-reg.c:
-    $(RM) $(DEPTH)\modules\libreg\standalone\reg.h
-    $(RM) $(DEPTH)\modules\libreg\standalone\reg.c
-    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.h
-    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.c
-    $(RM) $(DEPTH)\modules\libreg\standalone\VerReg.c
-    copy $(DEPTH)\modules\libreg\src\reg.h $(DEPTH)\modules\libreg\standalone\reg.h
-    copy $(DEPTH)\modules\libreg\src\reg.c $(DEPTH)\modules\libreg\standalone\reg.c
-    copy $(DEPTH)\modules\libreg\src\vr_stubs.h $(DEPTH)\modules\libreg\standalone\vr_stubs.h
-    copy $(DEPTH)\modules\libreg\src\vr_stubs.c $(DEPTH)\modules\libreg\standalone\vr_stubs.c
-    copy $(DEPTH)\modules\libreg\src\VerReg.c $(DEPTH)\modules\libreg\standalone\VerReg.c
+docopy:
+    $(MAKE_INSTALL) ..\src\*.h .
+    $(MAKE_INSTALL) ..\src\*.c .
 
-export:: $(DLL)	
+
+export:: docopy $(DLL)	
     
-    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+    $(MAKE_INSTALL) $(DLL)                    $(DIST)\bin
+    $(MAKE_INSTALL) $(OBJDIR)\$(LIBNAME).lib  $(DIST)\lib
+    $(RM) *.[hc]
      
-    $(RM) $(DEPTH)\modules\libreg\standalone\reg.h
-    $(RM) $(DEPTH)\modules\libreg\standalone\reg.c
-    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.h
-    $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.c
-    $(RM) $(DEPTH)\modules\libreg\standalone\VerReg.c
 
 clobber::
     
-    $(RM) $(DIST)\bin\$(DLL)
+    $(RM) $(DIST)\bin\$(LIBNAME).dll
+    $(RM) $(DIST)\lib\$(LIBNAME).lib
     $(RM) $(DEPTH)\modules\libreg\standalone\reg.h
     $(RM) $(DEPTH)\modules\libreg\standalone\reg.c
     $(RM) $(DEPTH)\modules\libreg\standalone\vr_stubs.h
