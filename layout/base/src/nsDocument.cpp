@@ -55,7 +55,14 @@
 
 #include "nsITextContent.h"
 #include "nsXIFConverter.h"
-
+#include "nsIHTMLContentSink.h"
+#include "nsHTMLContentSinkStream.h"
+#include "nsHTMLToTXTSinkStream.h"
+#include "nsXIFDTD.h"
+#include "nsIParser.h"
+#include "nsParserCIID.h"
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOMComment.h"
@@ -631,7 +638,8 @@ nsDocument::nsDocument()
   mEpilog = nsnull;
   mChildNodes = nsnull;
   mWordBreaker = nsnull;
-
+  mModCount = 0;
+  mFileSpec = nsnull;
   Init();/* XXX */
 }
 
@@ -709,6 +717,15 @@ nsDocument::~nsDocument()
   }
   NS_IF_RELEASE(mLineBreaker);
   NS_IF_RELEASE(mWordBreaker);
+  
+#ifdef DEBUG
+  if (mModCount > 0)
+  {
+  	NS_WARNING("Disposing an unsaved modified document");
+  }
+#endif
+	delete mFileSpec;
+	
 }
 
 nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -766,6 +783,12 @@ nsresult nsDocument::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDOMNodeIID)) {
     nsIDOMNode* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsIDiskDocument::GetIID())) {
+    nsIDiskDocument* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -2634,9 +2657,6 @@ void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
   converter.AddEndTag("section_head");
   converter.AddStartTag("section_body");
 
-
-
-
   nsIDOMElement* root = nsnull;
   if (NS_OK == GetDocumentElement(&root)) 
   {  
@@ -2651,6 +2671,184 @@ void nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
   
 }
 
+static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+
+nsresult
+nsDocument::OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selection, EOutputFormat aOutputFormat, const nsString& aCharset)
+{
+  nsresult  rv = NS_OK;
+  
+  nsAutoString charsetStr = aCharset;
+  if (charsetStr.Length() == 0)
+  {
+	  rv = GetDocumentCharacterSet(charsetStr);
+	  if(NS_FAILED(rv)) {
+	     charsetStr = "ISO-8859-1"; 
+	  }
+  }
+
+  nsCOMPtr<nsIParser>  parser;
+  rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                             nsnull, 
+                                             kCParserIID, 
+                                             getter_AddRefs(parser));
+  if (NS_SUCCEEDED(rv))
+  {
+ 	  nsString buffer;
+	  CreateXIF(buffer, selection);			// if selection is null, ignores the selection
+
+    nsCOMPtr<nsIHTMLContentSink> sink;
+
+    switch (aOutputFormat)
+    {
+    case eOutputText:
+      rv = NS_New_HTMLToTXT_SinkStream(getter_AddRefs(sink), aStream, &charsetStr);
+      break;
+    case eOutputHTML:
+      rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), aStream, &charsetStr);
+      break;
+    default:
+      rv = NS_ERROR_INVALID_ARG;
+    }
+
+    if (NS_SUCCEEDED(rv) && sink)
+    {
+      parser->SetContentSink(sink);
+      parser->SetDocumentCharset(charsetStr, kCharsetFromPreviousLoading);
+      nsCOMPtr<nsIDTD>  dtd;
+      rv = NS_NewXIFDTD(getter_AddRefs(dtd));
+      if (NS_SUCCEEDED(rv) && dtd)
+      {
+        parser->RegisterDTD(dtd);
+        parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);           
+      }
+    }
+  }
+
+  return rv;
+}
+
+nsresult
+nsDocument::OutputDocumentAsHTML(nsIOutputStream* aStream, nsIDOMSelection* selection, const nsString& aCharset)
+{
+ return OutputDocumentAs(aStream, selection, eOutputHTML, aCharset);
+}
+
+nsresult
+nsDocument::OutputDocumentAsText(nsIOutputStream* aStream, nsIDOMSelection* selection, const nsString& aCharset)
+{
+ return OutputDocumentAs(aStream, selection, eOutputText, aCharset);
+}
+
+
+NS_IMETHODIMP
+nsDocument::InitDiskDocument(nsFileSpec* aFileSpec)
+{
+  mFileSpec = nsnull;
+ 
+  if (aFileSpec)
+  {
+    mFileSpec = new nsFileSpec(*aFileSpec);
+    if (!mFileSpec)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  mModCount = 0;
+	return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsDocument::SaveFile(     nsFileSpec*     aFileSpec,
+                          PRBool          aReplaceExisting,
+                          PRBool          aSaveCopy,
+                          ESaveFileType   aSaveFileType,
+                          const nsString& aSaveCharset)
+{
+
+  if (!aFileSpec)
+    return NS_ERROR_NULL_POINTER;
+    
+  nsresult  rv = NS_OK;
+
+  // if we're not replacing an existing file but the file
+  // exists, somethine is wrong
+  if (!aReplaceExisting && aFileSpec->Exists())
+    return NS_ERROR_FAILURE;				// where are the file I/O errors?
+  
+  nsOutputFileStream		stream(*aFileSpec);
+  // if the stream didn't open, something went wrong
+  if (!stream.is_open())
+    return NS_BASE_STREAM_CLOSED;
+  
+  // convert to our internal enum. Shame we have to do this.
+  EOutputFormat  outputFormat = eOutputHTML;
+  switch (aSaveFileType)
+  {
+    case eSaveFileText:    outputFormat = eOutputText;  break;
+    case eSaveFileHTML:    outputFormat = eOutputHTML;  break;
+  }
+  
+  rv = OutputDocumentAs(stream.GetIStream(), nsnull, outputFormat, aSaveCharset);
+  if (NS_SUCCEEDED(rv))
+  {
+    // if everything went OK and we're not just saving off a copy,
+    // store the new fileSpec in the doc
+    if (!aSaveCopy)
+    {
+      delete mFileSpec;
+      mFileSpec = new nsFileSpec(*aFileSpec);
+      if (!mFileSpec)
+        return NS_ERROR_OUT_OF_MEMORY;
+      
+      // and mark the document as clean
+      ResetModCount();
+    }
+  }
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDocument::GetFileSpec(nsFileSpec& aFileSpec)
+{
+  if (mFileSpec)
+  {
+    aFileSpec = *mFileSpec;
+    return NS_OK;
+  }
+  
+  return NS_ERROR_NOT_INITIALIZED;
+}
+
+
+NS_IMETHODIMP
+nsDocument::GetModCount(PRInt32 *outModCount)
+{
+  if (!outModCount)
+  	return NS_ERROR_NULL_POINTER;
+  	
+ *outModCount = mModCount;
+ return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsDocument::ResetModCount()
+{
+  mModCount = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::IncrementModCount()
+{
+  mModCount++;
+  return NS_OK;
+}
 
 nsIContent* nsDocument::FindContent(const nsIContent* aStartNode,
                                     const nsIContent* aTest1, 
