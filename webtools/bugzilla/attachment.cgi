@@ -257,6 +257,8 @@ sub validateStatuses
       || DisplayError("One of the statuses you entered is not a valid status
                        for this attachment.")
         && exit;
+    # We have tested that the status is valid, so it can be detainted
+    detaint_natural($status);
   }
 }
 
