@@ -278,9 +278,22 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   }
 
   // Now call the method
+
+  nsCOMPtr<nsIJSContextStack> cxstack = 
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = cxstack->Push(cx);
+  if (NS_FAILED(rv))
+    return rv;
+
   jsval retval;
-  if (!::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),
-                              0 /* argc */, nsnull /* argv */, &retval)) {
+  JSBool ok = ::JS_CallFunctionValue(cx, thisObject, OBJECT_TO_JSVAL(method),
+                              0 /* argc */, nsnull /* argv */, &retval);
+  cxstack->Pop(&cx);
+
+  if (!ok) {
     return NS_ERROR_FAILURE;
   }
 
