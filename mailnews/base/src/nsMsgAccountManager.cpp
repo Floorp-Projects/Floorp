@@ -1492,14 +1492,28 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 	inputStream.close();
 
 #else
+    char *news_directory_value = nsnull;
+	nsFileSpec dirWithTheNewsrcFiles;
     
+	rv = m_prefs->CopyCharPref("news.directory", &news_directory_value);
+	if (NS_SUCCEEDED(rv)) {
+      dirWithTheNewsrcFiles = news_directory_value;
+      PR_FREEIF(news_directory_value);
+      news_directory_value = nsnull;
+	}
+    else {
+      // if that fails, use the home directory
+      
 #ifdef XP_UNIX
-    nsSpecialSystemDirectory dirWithTheNewsrcFiles(nsSpecialSystemDirectory::Unix_HomeDirectory);
+      nsSpecialSystemDirectory homeDir(nsSpecialSystemDirectory::Unix_HomeDirectory);
 #elif XP_BEOS
-    nsSpecialSystemDirectory dirWithTheNewsrcFiles(nsSpecialSystemDirectory::BeOS_HomeDirectory);
+      nsSpecialSystemDirectory homeDir(nsSpecialSystemDirectory::BeOS_HomeDirectory);
 #else
 #error where_are_your_newsrc_files
 #endif /* XP_UNIX, XP_BEOS */
+
+      dirWithTheNewsrcFiles = homeDir;
+    }
 
     for (nsDirectoryIterator i(dirWithTheNewsrcFiles); i.Exists(); i++) {
       nsFileSpec possibleRcFile = i.Spec();
