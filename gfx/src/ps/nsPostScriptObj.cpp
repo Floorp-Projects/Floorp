@@ -203,7 +203,7 @@ nsPostScriptObj::~nsPostScriptObj()
         mPrintSetup->print_cmd, mPrintSetup->filename);
       // FixMe: Check for error and return one of NS_ERROR_GFX_PRINTER_* on demand  
       system(VMSPrintCommand);
-      free(mPrintSetup->filename);
+      free((void *)mPrintSetup->filename);
     }
 #endif
   }
