@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.25 $ 
-# $Date: 2002/04/27 04:57:03 $ 
+# $Revision: 1.26 $ 
+# $Date: 2002/04/27 04:59:46 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -311,7 +311,7 @@ sub HTML_status_page {
   ($ignore_builds) &&
     ($html_ignore_builds .= (
                              "Unmonitored Builds: ".
-                             join(", ", split (/\s+/, 
+                             join(", ", split (/,/, 
                                                $ignore_builds
                                         )).
                              "<br>\n"));
