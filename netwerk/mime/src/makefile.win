@@ -21,7 +21,7 @@ include <$(DEPTH)/config/config.mak>
 PUBLIC = $(DEPTH)\netwerk\dist\include
 !endif
 
-MODULE = mime
+MODULE = necko
 
 IS_COMPONENT=1
 MAKE_OBJ_TYPE=DLL
@@ -35,9 +35,9 @@ LLIBS= $(LLIBS) \
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 CPP_OBJS =                                         \
-        nsMIMEInfoImpl.obj          \
-        nsMIMEService.obj           \
-        nsMIMEServiceFactory.obj    \
+        .\$(OBJDIR)\nsMIMEInfoImpl.obj          \
+        .\$(OBJDIR)\nsMIMEService.obj           \
+        .\$(OBJDIR)\nsMIMEServiceFactory.obj    \
         $(NULL)
 
 LOCAL_INCLUDES=-I.
@@ -51,7 +51,7 @@ INCS = $(INCS)                  \
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
+    $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 
 clobber::
         rv -f $(DLL) $(DIST)\bin\components
