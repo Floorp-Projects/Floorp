@@ -40,7 +40,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsPluginsDirWinLog, 0)
+NS_IMPL_LOG(nsPluginsDirWinLog)
 #define PRINTF NS_LOG_PRINTF(nsPluginsDirWinLog)
 #define FLUSH  NS_LOG_FLUSH(nsPluginsDirWinLog)
 

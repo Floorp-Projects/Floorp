@@ -69,7 +69,7 @@
 
 #include "nslog.h"
 
-NS_IMPL_LOG(nsDnsAsyncLookupLog, 0)
+NS_IMPL_LOG(nsDnsAsyncLookupLog)
 #define PRINTF NS_LOG_PRINTF(nsDnsAsyncLookupLog)
 #define FLUSH  NS_LOG_FLUSH(nsDnsAsyncLookupLog)
 

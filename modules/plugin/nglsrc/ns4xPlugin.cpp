@@ -39,7 +39,7 @@
 #include "nsIPref.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(ns4xPluginLog, 0)
+NS_IMPL_LOG(ns4xPluginLog)
 #define PRINTF NS_LOG_PRINTF(ns4xPluginLog)
 #define FLUSH  NS_LOG_FLUSH(ns4xPluginLog)
 

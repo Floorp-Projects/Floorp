@@ -63,7 +63,7 @@
 #include "nsMimeStringResources.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(mimefiltLog, 0)
+NS_IMPL_LOG(mimefiltLog)
 #define PRINTF NS_LOG_PRINTF(mimefiltLog)
 #define FLUSH  NS_LOG_FLUSH(mimefiltLog)
 

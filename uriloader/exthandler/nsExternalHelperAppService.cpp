@@ -61,7 +61,7 @@
 #endif // XP_MAC
 #include "nslog.h"
 
-NS_IMPL_LOG(nsExternalHelperAppServiceLog, 0)
+NS_IMPL_LOG(nsExternalHelperAppServiceLog)
 #define PRINTF NS_LOG_PRINTF(nsExternalHelperAppServiceLog)
 #define FLUSH  NS_LOG_FLUSH(nsExternalHelperAppServiceLog)
 
