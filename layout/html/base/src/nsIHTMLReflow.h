@@ -298,7 +298,13 @@ protected:
                                nscoord aContainingBlockWidth,
                                nscoord aContainingBlockHeight);
 
-  void ComputeRelativeOffsets(const nsHTMLReflowState* cbrs);
+  void ComputeContainingBlockRectangle(const nsHTMLReflowState* aContainingBlockRS,
+                                       nscoord& aContainingBlockWidth,
+                                       nscoord& aContainingBlockHeight);
+
+  void ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
+                              nscoord aContainingBlockWidth,
+                              nscoord aContainingBlockHeight);
 
   void ComputeBlockBoxData(nsIPresContext& aPresContext,
                            const nsHTMLReflowState* cbrs,

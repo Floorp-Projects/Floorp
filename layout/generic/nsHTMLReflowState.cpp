@@ -276,33 +276,11 @@ nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame,
 }
 
 void
-nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs)
+nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
+                                          nscoord aContainingBlockWidth,
+                                          nscoord aContainingBlockHeight)
 {
-  nsStyleCoord              coord;
-  const nsHTMLReflowState*  pcbrs = nsnull;
-
-  // If any of the offsets are 'inherit' we need to find the positioned
-  // containing block 
-  if ((eStyleUnit_Inherit == mStylePosition->mOffset.GetLeftUnit()) ||
-      (eStyleUnit_Inherit == mStylePosition->mOffset.GetTopUnit()) ||
-      (eStyleUnit_Inherit == mStylePosition->mOffset.GetRightUnit()) ||
-      (eStyleUnit_Inherit == mStylePosition->mOffset.GetBottomUnit())) {
-
-    pcbrs = cbrs;
-
-    while (nsnull != pcbrs) {
-      const nsStylePosition* pcbrsPosition;
-      pcbrs->frame->GetStyleData(eStyleStruct_Position,
-                                 (const nsStyleStruct*&)pcbrsPosition);
-
-      if ((NS_STYLE_POSITION_ABSOLUTE == pcbrsPosition->mPosition) ||
-          (NS_STYLE_POSITION_RELATIVE == pcbrsPosition->mPosition)) {
-        break;
-      }
-
-      pcbrs = (const nsHTMLReflowState*)pcbrs->parentReflowState;  // XXX cast
-    }
-  }
+  nsStyleCoord  coord;
 
   // Compute the 'left' and 'right' values. 'Left' moves the boxes to the right,
   // and 'right' moves the boxes to the left. The computed values are always:
@@ -312,7 +290,7 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs)
 
   // Check for percentage based values and an unconstrained containing
   // block width. Treat them like 'auto'
-  if (NS_UNCONSTRAINEDSIZE == cbrs->computedWidth) {
+  if (NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) {
     if (eStyleUnit_Percent == mStylePosition->mOffset.GetLeftUnit()) {
       leftIsAuto = PR_TRUE;
     }
@@ -341,9 +319,9 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs)
     } else {
       // 'Right' isn't 'auto' so compute its value
       if (eStyleUnit_Inherit == mStylePosition->mOffset.GetRightUnit()) {
-        computedOffsets.right = pcbrs ? pcbrs->computedOffsets.right : 0;
+        computedOffsets.right = cbrs->computedOffsets.right;
       } else {
-        ComputeHorizontalValue(cbrs->computedWidth, mStylePosition->mOffset.GetRightUnit(),
+        ComputeHorizontalValue(aContainingBlockWidth, mStylePosition->mOffset.GetRightUnit(),
                                mStylePosition->mOffset.GetRight(coord),
                                computedOffsets.right);
       }
@@ -357,9 +335,9 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs)
     
     // 'Left' isn't 'auto' so compute its value
     if (eStyleUnit_Inherit == mStylePosition->mOffset.GetLeftUnit()) {
-      computedOffsets.left = pcbrs ? pcbrs->computedOffsets.left : 0;
+      computedOffsets.left = cbrs->computedOffsets.left;
     } else {
-      ComputeHorizontalValue(cbrs->computedWidth, mStylePosition->mOffset.GetLeftUnit(),
+      ComputeHorizontalValue(aContainingBlockWidth, mStylePosition->mOffset.GetLeftUnit(),
                              mStylePosition->mOffset.GetLeft(coord),
                              computedOffsets.left);
     }
@@ -376,7 +354,7 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs)
 
   // Check for percentage based values and a containing block height that
   // depends on the content height. Treat them like 'auto'
-  if (NS_AUTOHEIGHT == cbrs->computedHeight) {
+  if (NS_AUTOHEIGHT == aContainingBlockHeight) {
     if (eStyleUnit_Percent == mStylePosition->mOffset.GetTopUnit()) {
       topIsAuto = PR_TRUE;
     }
@@ -397,9 +375,9 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs)
     } else {
       // 'Bottom' isn't 'auto' so compute its value
       if (eStyleUnit_Inherit == mStylePosition->mOffset.GetBottomUnit()) {
-        computedOffsets.bottom = pcbrs ? pcbrs->computedOffsets.bottom : 0;
+        computedOffsets.bottom = cbrs->computedOffsets.bottom;
       } else {
-        ComputeVerticalValue(cbrs->computedHeight, mStylePosition->mOffset.GetBottomUnit(),
+        ComputeVerticalValue(aContainingBlockHeight, mStylePosition->mOffset.GetBottomUnit(),
                                mStylePosition->mOffset.GetBottom(coord),
                                computedOffsets.bottom);
       }
@@ -413,9 +391,9 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs)
     
     // 'Top' isn't 'auto' so compute its value
     if (eStyleUnit_Inherit == mStylePosition->mOffset.GetTopUnit()) {
-      computedOffsets.top = pcbrs ? pcbrs->computedOffsets.top : 0;
+      computedOffsets.top = cbrs->computedOffsets.top;
     } else {
-      ComputeVerticalValue(cbrs->computedHeight, mStylePosition->mOffset.GetTopUnit(),
+      ComputeVerticalValue(aContainingBlockHeight, mStylePosition->mOffset.GetTopUnit(),
                              mStylePosition->mOffset.GetTop(coord),
                              computedOffsets.top);
     }
@@ -698,13 +676,70 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
   }
 }
 
+// Called by InitConstraints() to compute the containing block rectangle for
+// the element. Handles the special logic for absolutely positioned elements
+void
+nsHTMLReflowState::ComputeContainingBlockRectangle(const nsHTMLReflowState* aContainingBlockRS,
+                                                   nscoord& aContainingBlockWidth,
+                                                   nscoord& aContainingBlockHeight)
+{
+  // Unless the element is absolutely positioned, the containing block is
+  // formed by the content edge of the nearest block-level ancestor
+  aContainingBlockWidth = aContainingBlockRS->computedWidth;
+  aContainingBlockHeight = aContainingBlockRS->computedHeight;
+  
+  if (NS_FRAME_GET_TYPE(frameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
+    // See if the ancestor is block-level or inline-level
+    if (NS_FRAME_GET_TYPE(aContainingBlockRS->frameType) == NS_CSS_FRAME_TYPE_INLINE) {
+      // The CSS2 spec says that if the ancestor is inline-level, the containing
+      // block depends on the 'direction' property of the ancestor. For direction
+      // 'ltr', it's the top and left of the content edges of the first box and
+      // the bottom and right content edges of the last box
+      //
+      // XXX This is a pain because it isn't top-down and it requires that we've
+      // completely reflowed the ancestor. It also isn't clear what happens when
+      // a relatively positioned ancestor is split across pages. So instead use
+      // the computed width and height of the nearest block-level ancestor
+      const nsHTMLReflowState*  cbrs = aContainingBlockRS;
+      while (cbrs) {
+        nsCSSFrameType  type = NS_FRAME_GET_TYPE(cbrs->frameType);
+        if ((NS_CSS_FRAME_TYPE_BLOCK == type) ||
+            (NS_CSS_FRAME_TYPE_FLOATING == type) ||
+            (NS_CSS_FRAME_TYPE_ABSOLUTE == type)) {
+
+          aContainingBlockWidth = cbrs->computedWidth;
+          aContainingBlockHeight = cbrs->computedHeight;
+
+          if (NS_CSS_FRAME_TYPE_ABSOLUTE == type) {
+            aContainingBlockWidth += cbrs->mComputedPadding.left +
+                                     cbrs->mComputedPadding.right;
+            aContainingBlockHeight += cbrs->mComputedPadding.top +
+                                      cbrs->mComputedPadding.bottom;
+          }
+          break;
+        }
+
+        cbrs = (const nsHTMLReflowState*)cbrs->parentReflowState;   // XXX cast
+      }
+
+    } else {
+      // If the ancestor is block-level, the containing block is formed by the
+      // padding edge of the ancestor
+      aContainingBlockWidth += aContainingBlockRS->mComputedPadding.left +
+                               aContainingBlockRS->mComputedPadding.right;
+      aContainingBlockHeight += aContainingBlockRS->mComputedPadding.top +
+                                aContainingBlockRS->mComputedPadding.bottom;
+    }
+  }
+}
+
 // XXX refactor this code to have methods for each set of properties
 // we are computing: width,height,line-height; margin; offsets
 
 void
 nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 {
-  // If this is the root frame then set the computed width and
+  // If this is the root frame, then set the computed width and
   // height equal to the available space
   if (nsnull == parentReflowState) {
     computedWidth = availableWidth;
@@ -721,27 +756,19 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       GetContainingBlockReflowState(parentReflowState);
     NS_ASSERTION(nsnull != cbrs, "no containing block");
 
+    // Compute the containing block rectangle for the element
+    nscoord containingBlockWidth;
+    nscoord containingBlockHeight;
+    ComputeContainingBlockRectangle(cbrs, containingBlockWidth, containingBlockHeight);
+
     // See if the element is relatively positioned
     if (NS_STYLE_POSITION_RELATIVE == mStylePosition->mPosition) {
-      ComputeRelativeOffsets(cbrs);
+      ComputeRelativeOffsets(cbrs, containingBlockWidth, containingBlockHeight);
     } else {
       // Initialize offsets to 0
       computedOffsets.SizeTo(0, 0, 0, 0);
     }
 
-    // Get the containing block width and height. We'll need them when
-    // calculating the computed width and height. For all elements other
-    // than absolutely positioned elements, the containing block is formed
-    // by the content edge
-    nscoord containingBlockWidth = cbrs->computedWidth;
-    nscoord containingBlockHeight = cbrs->computedHeight;
-    if (NS_FRAME_GET_TYPE(frameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
-      // Containing block is formed by the padding edge and not the padding edge
-      containingBlockWidth += cbrs->mComputedPadding.left +
-                              cbrs->mComputedPadding.right;
-      containingBlockHeight += cbrs->mComputedPadding.top +
-                               cbrs->mComputedPadding.bottom;
-    }
 #if 0
     nsFrame::ListTag(stdout, frame); printf(": cb=");
     nsFrame::ListTag(stdout, cbrs->frame); printf(" size=%d,%d\n", containingBlockWidth, containingBlockHeight);
