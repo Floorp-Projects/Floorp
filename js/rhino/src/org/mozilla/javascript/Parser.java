@@ -107,35 +107,40 @@ class Parser {
 
         this.ok = true;
 
-        int tt;          // last token from getToken();
         int baseLineno = ts.getLineno();  // line number where source starts
 
         /* so we have something to add nodes to until
          * we've collected all the source */
         Object pn = nf.createLeaf(Token.BLOCK);
 
-        while (true) {
-            ts.flags |= TokenStream.TSF_REGEXP;
-            tt = ts.getToken();
-            ts.flags &= ~TokenStream.TSF_REGEXP;
+        try {
+            for (;;) {
+                ts.flags |= TokenStream.TSF_REGEXP;
+                int tt = ts.getToken();
+                ts.flags &= ~TokenStream.TSF_REGEXP;
 
-            if (tt <= Token.EOF) {
-                break;
-            }
-
-            Object n;
-            if (tt == Token.FUNCTION) {
-                try {
-                    n = function(ts, FunctionNode.FUNCTION_STATEMENT);
-                } catch (ParserException e) {
-                    this.ok = false;
+                if (tt <= Token.EOF) {
                     break;
                 }
-            } else {
-                ts.ungetToken(tt);
-                n = statement(ts);
+
+                Object n;
+                if (tt == Token.FUNCTION) {
+                    try {
+                        n = function(ts, FunctionNode.FUNCTION_STATEMENT);
+                    } catch (ParserException e) {
+                        this.ok = false;
+                        break;
+                    }
+                } else {
+                    ts.ungetToken(tt);
+                    n = statement(ts);
+                }
+                nf.addChildToBack(pn, n);
             }
-            nf.addChildToBack(pn, n);
+        } catch (StackOverflowError ex) {
+            String msg = Context.getMessage0("mag.too.deep.parser.recursion");
+            throw Context.reportRuntimeError(msg, ts.getSourceName(),
+                                             ts.getLineno(), null, 0);
         }
 
         if (!this.ok) {
