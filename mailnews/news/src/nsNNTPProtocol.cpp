@@ -716,7 +716,8 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
 	if (host)
 		hostAndPort = PL_strdup(host);
 
-	// mscott: I took out default code to generate host and port if the url didn't have any...add this later...
+	// mscott: I took out default code to generate host and port
+    // if the url didn't have any...add this later...
 	if (!hostAndPort)
 	{
 	   status = MK_NO_NEWS_SERVER;
@@ -837,11 +838,19 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
   PR_ASSERT (!message_id || message_id != group);
   if (status >= 0)
   {
-	  *aHostAndPort = hostAndPort;
+      if (aHostAndPort)
+          *aHostAndPort = hostAndPort;
+      
+      if (aGroup) *aGroup = group;
+      else PR_FREEIF(group);
+      
+      if (aMessageID) *aMessageID = message_id;
+      else PR_FREEIF(message_id);
+      
+	  if (aCommandSpecificData) *aCommandSpecificData = command_specific_data;
+      else PR_FREEIF(command_specific_data);
+      
 	  HG45873
-	  *aGroup = group;
-	  *aMessageID = message_id;
-	  *aCommandSpecificData = command_specific_data;
   }
   else
   {
@@ -1718,10 +1727,11 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
          */
         char * slash;
         char * group_name;
-        nsresult rv;
+        nsresult rv=NS_ERROR_NULL_POINTER;
 
         StrAllocCopy(command, "GROUP ");
-        rv = m_newsgroup->GetName(&group_name);
+        if (m_newsgroup)
+            rv = m_newsgroup->GetName(&group_name);
         slash = PL_strchr(group_name, '/');
         m_firstArticle = 0;
         m_lastArticle = 0;
