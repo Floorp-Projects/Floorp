@@ -1308,6 +1308,7 @@ nsBrowserWindow::DoDebugSave()
 void
 nsBrowserWindow::DoCopy()
 {
+#ifdef WIN32
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIDocument* doc = shell->GetDocument();
@@ -1342,7 +1343,7 @@ nsBrowserWindow::DoCopy()
           NS_IF_RELEASE(sink);
           char* str = data.str();
 
-#if defined(WIN32)
+//#if defined(WIN32)
           HGLOBAL     hGlobalMemory;
           PSTR        pGlobalMemory;
 
@@ -1368,7 +1369,7 @@ nsBrowserWindow::DoCopy()
           }
           // in ostrstreams if you cal the str() function
           // then you are responsible for deleting the string
-#endif
+//#endif
           if (str) delete str;
 
         }
@@ -1376,6 +1377,7 @@ nsBrowserWindow::DoCopy()
       }
     }
   }
+#endif
 }
 
 
