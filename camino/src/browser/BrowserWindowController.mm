@@ -98,11 +98,6 @@
 
 #include "nsAppDirectoryServiceDefs.h"
 
-#define USE_DRAWER_FOR_BOOKMARKS 0
-#if USE_DRAWER_FOR_BOOKMARKS
-#import "ImageAndTextCell.h"
-#endif
-
 static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
 static NSString *BackToolbarItemIdentifier	= @"Back Toolbar Item";
 static NSString *ForwardToolbarItemIdentifier	= @"Forward Toolbar Item";
@@ -778,61 +773,12 @@ enum BWCOpenDest {
 	return proposedFrameSize;
 }
 
-
-#if 0
-- (void)drawerWillOpen: (NSNotification*)aNotification
-{
-  [mBookmarkViewController ensureBookmarks];
-
-  if ([[[mSidebarTabView selectedTabViewItem] identifier] isEqual:@"historySidebarCHIconTabViewItem"]) {
-    [mHistoryDataSource loadLazily];
-    [mHistoryDataSource enableObserver];
-  }
-
-  // we used to resize the window here, but we can't if we want any chance of it
-  // being allowed to open on the left side. it's too late once we get here.
-}
-
-- (void)drawerDidOpen:(NSNotification *)aNotification
-{
-  // Toggle the sidebar icon.
-  if (mSidebarToolbarItem)
-    [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarOpened"]];
-}
-
-- (void)drawerDidClose:(NSNotification *)aNotification
-{
-  if ([[[mSidebarTabView selectedTabViewItem] identifier] isEqual:@"historySidebarCHIconTabViewItem"])
-    [mHistoryDataSource disableObserver];
-
-  // Unload the Gecko web page in "My Panels" to save memory.
-  if(mSidebarToolbarItem)
-    [mSidebarToolbarItem setImage:[NSImage imageNamed:@"sidebarClosed"]];
-
-  // restore the frame we cached in |toggleSidebar:|
-  if (mDrawerCachedFrame) {
-    mDrawerCachedFrame = NO;
-    NSRect frame = [[self window] frame];
-    if (frame.origin.x == mCachedFrameAfterDrawerOpen.origin.x &&
-        frame.origin.y == mCachedFrameAfterDrawerOpen.origin.y &&
-        frame.size.width == mCachedFrameAfterDrawerOpen.size.width &&
-        frame.size.height == mCachedFrameAfterDrawerOpen.size.height) {
-
-      // Restore the original frame.
-      [[self window] setFrame: mCachedFrameBeforeDrawerOpen display: YES animate:NO];	// animation would be nice
-    }
-  }
-}
-#endif
-
 #pragma mark -
 
-//
 // -createToolbarPopupButton:
 //
 // Create a new instance of one of our special click-hold popup buttons that knows
 // how to display a menu on click-hold. Associate it with the toolbar item |inItem|.
-//
 - (NSButton*)createToolbarPopupButton:(NSToolbarItem*)inItem
 {
   NSRect frame = NSMakeRect(0.,0.,32.,32.);
@@ -864,14 +810,11 @@ enum BWCOpenDest {
   }
 }
 
-
-//
 // toolbarWillAddItem: (toolbar delegate method)
 //
 // Called when a button is about to be added to a toolbar. This is where we should
 // cache items we may need later. For instance, we want to hold onto the sidebar
 // toolbar item so we can change it when the drawer opens and closes.
-//
 - (void)toolbarWillAddItem:(NSNotification *)notification
 {
   NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
@@ -941,15 +884,12 @@ enum BWCOpenDest {
                                         nil];
 }
 
-
-//
 // + toolbarDefaults
 //
 // Parse a plist called "ToolbarDefaults.plist" in our Resources subfolder. This
 // allows anyone to easily customize the default set w/out having to recompile. We
 // hold onto the list for the duration of the app to avoid reparsing it every
 // time.
-//
 + (NSArray*) toolbarDefaults
 {
   if ( !sToolbarDefaults ) {
@@ -983,8 +923,7 @@ enum BWCOpenDest {
   willBeInsertedIntoToolbar:(BOOL)willBeInserted
 {
   NSToolbarItem *toolbarItem = [[[NSToolbarItem alloc] initWithItemIdentifier:itemIdent] autorelease];
-  if ( [itemIdent isEqual:BackToolbarItemIdentifier] && willBeInserted )
-  {
+  if ( [itemIdent isEqual:BackToolbarItemIdentifier] && willBeInserted ) {
     // create a new toolbar item that knows how to do validation
     toolbarItem = [[[ToolbarViewItem alloc] initWithItemIdentifier:itemIdent] autorelease];
     
@@ -1022,8 +961,7 @@ enum BWCOpenDest {
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Back", @"Go Back")];
     [toolbarItem setImage:[NSImage imageNamed:@"back"]];
   }
-  else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] && willBeInserted )
-  {
+  else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] && willBeInserted ) {
     // create a new toolbar item that knows how to do validation
     toolbarItem = [[[ToolbarViewItem alloc] initWithItemIdentifier:itemIdent] autorelease];
     
@@ -1054,15 +992,14 @@ enum BWCOpenDest {
 
     [toolbarItem setMenuFormRepresentation:menuFormRep];
   }
-  else if ( [itemIdent isEqual:ForwardToolbarItemIdentifier] ) {
+  else if ([itemIdent isEqual:ForwardToolbarItemIdentifier]) {
     // not going onto the toolbar, don't need to go through the gynmastics above
     // and create a separate view
     [toolbarItem setLabel:NSLocalizedString(@"Forward", @"Forward")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Forward", @"Go Forward")];
     [toolbarItem setImage:[NSImage imageNamed:@"forward"]];
   }
-  else if ( [itemIdent isEqual:ReloadToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:ReloadToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"Reload", @"Reload")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Reload Page", @"Reload Page")];
     [toolbarItem setToolTip:NSLocalizedString(@"ReloadToolTip", @"Reload current page")];
@@ -1070,8 +1007,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(reload:)];
   }
-  else if ( [itemIdent isEqual:StopToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:StopToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"Stop", @"Stop")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Stop Loading", @"Stop Loading")];
     [toolbarItem setToolTip:NSLocalizedString(@"StopToolTip", @"Stop loading this page")];
@@ -1079,8 +1015,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(stop:)];
   }
-  else if ( [itemIdent isEqual:HomeToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:HomeToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"Home", @"Home")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Go Home", @"Go Home")];
     [toolbarItem setToolTip:NSLocalizedString(@"HomeToolTip", @"Go to home page")];
@@ -1088,8 +1023,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(home:)];
   }
-  else if ( [itemIdent isEqual:SidebarToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:SidebarToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"ToggleBookmarks", @"Manage Bookmarks label")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", @"Manage Bookmarks palette")];
     [toolbarItem setToolTip:NSLocalizedString(@"BookmarkMgrToolTip", @"Show or hide all bookmarks")];
@@ -1097,8 +1031,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(toggleSidebar:)];
   }
-  else if ( [itemIdent isEqual:SearchToolbarItemIdentifier] )
-  {
+  else if ( [itemIdent isEqual:SearchToolbarItemIdentifier] ) {
     NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
 
     [toolbarItem setLabel:NSLocalizedString(@"Search", @"Search")];
@@ -1116,8 +1049,7 @@ enum BWCOpenDest {
 
     [toolbarItem setMenuFormRepresentation:menuFormRep];
   }
-  else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:ThrobberToolbarItemIdentifier]) {
     [toolbarItem setLabel:@""];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Progress", @"Progress")];
     [toolbarItem setToolTip:NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil)];
@@ -1126,8 +1058,7 @@ enum BWCOpenDest {
     [toolbarItem setTag:'Thrb'];
     [toolbarItem setAction:@selector(clickThrobber:)];
   }
-  else if ( [itemIdent isEqual:LocationToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:LocationToolbarItemIdentifier]) {
     NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
 
     [toolbarItem setLabel:NSLocalizedString(@"Location", @"Location")];
@@ -1142,8 +1073,7 @@ enum BWCOpenDest {
 
     [toolbarItem setMenuFormRepresentation:menuFormRep];
   }
-  else if ( [itemIdent isEqual:PrintToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:PrintToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"Print", @"Print")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Print", @"Print")];
     [toolbarItem setToolTip:NSLocalizedString(@"PrintToolTip", @"Print this page")];
@@ -1151,8 +1081,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(printDocument:)];
   }
-  else if ( [itemIdent isEqual:ViewSourceToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:ViewSourceToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"View Source", @"View Source")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"View Page Source", @"View Page Source")];
     [toolbarItem setToolTip:NSLocalizedString(@"ViewSourceToolTip", @"Display the HTML source of this page")];
@@ -1160,8 +1089,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(viewSource:)];
   }
-  else if ( [itemIdent isEqual:BookmarkToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:BookmarkToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"Bookmark", @"Bookmark")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Bookmark Page", @"Bookmark Page")];
     [toolbarItem setToolTip:NSLocalizedString(@"BookmarkToolTip", @"Add this page to your bookmarks")];
@@ -1169,8 +1097,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(bookmarkPage:)];
   }
-  else if ( [itemIdent isEqual:TextBiggerToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:TextBiggerToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
     [toolbarItem setToolTip:NSLocalizedString(@"BigTextToolTip", @"Enlarge the text on this page")];
@@ -1178,8 +1105,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(biggerTextSize:)];
   }
-  else if ( [itemIdent isEqual:TextSmallerToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:TextSmallerToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"SmallText", @"Shrink Text")];
     [toolbarItem setToolTip:NSLocalizedString(@"SmallTextToolTip", @"Shrink the text on this page")];
@@ -1187,8 +1113,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(smallerTextSize:)];
   }
-  else if ( [itemIdent isEqual:NewTabToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:NewTabToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"NewTab", @"New Tab")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"NewTab", @"New Tab")];
     [toolbarItem setToolTip:NSLocalizedString(@"NewTabToolTip", @"Create a new tab")];
@@ -1196,8 +1121,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(newTab:)];
   }
-  else if ( [itemIdent isEqual:CloseTabToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:CloseTabToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"CloseTab", @"Close Tab")];
     [toolbarItem setToolTip:NSLocalizedString(@"CloseTabToolTip", @"Close the current tab")];
@@ -1205,8 +1129,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(closeCurrentTab:)];
   }
-  else if ( [itemIdent isEqual:SendURLToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:SendURLToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"SendLink", @"Send Link")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"SendLink", @"Send Link")];
     [toolbarItem setToolTip:NSLocalizedString(@"SendLinkToolTip", @"Send current URL")];
@@ -1214,8 +1137,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(sendURL:)];
   }
-  else if ( [itemIdent isEqual:DLManagerToolbarItemIdentifier] )
-  {
+  else if ([itemIdent isEqual:DLManagerToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"Downloads", @"Downloads")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Downloads", @"Downloads")];
     [toolbarItem setToolTip:NSLocalizedString(@"DownloadsToolTip", @"Show the download manager")];
@@ -1223,8 +1145,7 @@ enum BWCOpenDest {
     [toolbarItem setTarget:[ProgressDlgController sharedDownloadController]];
     [toolbarItem setAction:@selector(showWindow:)];
   }
-  else
-  {
+  else {
     toolbarItem = nil;
   }
 
@@ -1491,8 +1412,7 @@ enum BWCOpenDest {
   // global history needs to know the user typed this url so it can present it
   // in autocomplete. We use the URI fixup service to strip whitespace and remove
   // invalid protocols, etc. Don't save keyword-expanded urls.
-  if (resolvedURL && [theURL isEqualToString:resolvedURL] && mGlobalHistory && mURIFixer && [theURL length] > 0)
-  {
+  if (resolvedURL && [theURL isEqualToString:resolvedURL] && mGlobalHistory && mURIFixer && [theURL length] > 0) {
     nsAutoString url;
     [theURL assignTo_nsAString:url];
     NS_ConvertUCS2toUTF8 utf8URL(url);
@@ -2034,44 +1954,7 @@ enum BWCOpenDest {
 
 - (IBAction)toggleSidebar:(id)aSender
 {
-#if USE_DRAWER_FOR_BOOKMARKS
-  // Force the window to shrink and move if necessary in order to accommodate the sidebar. We check
-  // if it will fit on either the left or on the right, and if it won't, shrink the window. We 
-  // used to do this in |drawerWillOpen:| but the problem is that as soon as wel tell cocoa to 
-  // toggle, it makes up its mind about what side it's going to open on. On multiple monitors, 
-  // if the window was on the secondary this could end up having the sidebar across the fold of
-  // the monitors. By placing the code here, we guarantee that if we are going to resize the
-  // window, we leave space for the drawer on the right BEFORE it starts, and cocoa will put it there.
-  
-  NSRect screenFrame = [[[self window] screen] visibleFrame];
-  NSRect windowFrame = [[self window] frame];
-  NSSize drawerSize = [mSidebarDrawer contentSize];
-  int fudgeFactor = 12; // Not sure how to get the drawer's border info, so we fudge it for now.
-  drawerSize.width += fudgeFactor;
-
-  // check that opening on the right won't flow off the edge of the screen on the right AND
-  // opening on the left won't flow off the edge of the screen on the left. If both are true,
-  // we have to resize the window.
-  if (windowFrame.origin.x + windowFrame.size.width + drawerSize.width > screenFrame.origin.x + screenFrame.size.width &&
-        windowFrame.origin.x - drawerSize.width < screenFrame.origin.x) {
-    // We need to adjust the window so that it can fit.
-    float shrinkDelta = (windowFrame.size.width + drawerSize.width) - screenFrame.size.width;
-    if (shrinkDelta < 0) shrinkDelta = 0;
-    float newWidth = (windowFrame.size.width - shrinkDelta);
-    float newPosition = screenFrame.size.width - newWidth - drawerSize.width + screenFrame.origin.x;
-    if (newPosition < screenFrame.origin.x) newPosition = screenFrame.origin.x;
-    mCachedFrameBeforeDrawerOpen = windowFrame;
-    windowFrame.origin.x = newPosition;
-    windowFrame.size.width = newWidth;
-    mCachedFrameAfterDrawerOpen = windowFrame;
-    [[self window] setFrame: windowFrame display: YES animate:NO];		// animation  would be nice, but is too slow
-    mDrawerCachedFrame = YES;
-  }
-
-  [mSidebarDrawer toggle:aSender];
-#else
   [self toggleBookmarkManager:self];
-#endif
 }
 
 // map command-left arrow to 'back'
@@ -2548,63 +2431,6 @@ enum BWCOpenDest {
   return newTab;
 }
 
-#if USE_DRAWER_FOR_BOOKMARKS
-
--(void)setupSidebarTabs
-{
-    IconTabViewItem   *bookItem = [[[IconTabViewItem alloc] initWithIdentifier:@"bookmarkSidebarCHIconTabViewItem"
-                                  withTabIcon:[NSImage imageNamed:@"bookicon"]] autorelease];
-    IconTabViewItem   *histItem = [[[IconTabViewItem alloc] initWithIdentifier:@"historySidebarCHIconTabViewItem"
-                                  withTabIcon:[NSImage imageNamed:@"historyicon"]] autorelease];
-#if USE_SEARCH_ITEM
-    IconTabViewItem *searchItem = [[[IconTabViewItem alloc] initWithIdentifier:@"searchSidebarCHIconTabViewItem"
-                                  withTabIcon:[NSImage imageNamed:@"searchicon"]] autorelease];
-#endif
-#if USE_PANELS_ITEM
-    IconTabViewItem *panelsItem = [[[IconTabViewItem alloc] initWithIdentifier:@"myPanelsCHIconTabViewItem"
-                                  withTabIcon:[NSImage imageNamed:@"panel_icon"]] autorelease];
-#endif
-    
-    [bookItem   setView:[[mSidebarSourceTabView tabViewItemAtIndex:0] view]];
-    [histItem   setView:[[mSidebarSourceTabView tabViewItemAtIndex:1] view]];
-#if USE_SEARCH_ITEM
-    [searchItem setView:[[mSidebarSourceTabView tabViewItemAtIndex:2] view]];
-#endif
-#if USE_PANELS_ITEM
-    [panelsItem setView:[[mSidebarSourceTabView tabViewItemAtIndex:3] view]];
-#endif
-
-    // remove default tab from nib
-    [mSidebarTabView removeTabViewItem:[mSidebarTabView tabViewItemAtIndex:0]];
-    
-    // insert the tabs we want
-    [mSidebarTabView insertTabViewItem:bookItem   atIndex:0];
-    [mSidebarTabView insertTabViewItem:histItem   atIndex:1];
-#if USE_SEARCH_ITEM
-    [mSidebarTabView insertTabViewItem:searchItem atIndex:2];
-#endif
-#if USE_PANELS_ITEM
-    [mSidebarTabView insertTabViewItem:panelsItem atIndex:3];
-#endif
-    
-#if USE_PREF_FOR_HISTORY_PANEL
-    BOOL showHistory = NO;
-    nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-    if (pref) {
-      PRBool historyPref = PR_FALSE;
-      if (NS_SUCCEEDED(pref->GetBoolPref("chimera.show_history", &historyPref)))
-        showHistory = historyPref ? YES : NO;
-    }    
-    if (!showHistory)
-      [mSidebarTabView removeTabViewItem:[mSidebarTabView tabViewItemAtIndex:1]];
-#endif
-    
-    [mSidebarTabView setDelegate:self];
-    [mSidebarTabView selectFirstTabViewItem:self];
-}
-
-#endif
-
 -(void)setChromeMask:(unsigned int)aMask
 {
   mChromeMask = aMask;
@@ -2678,24 +2504,20 @@ enum BWCOpenDest {
   BOOL showFrameItems = NO;
   
   NSMenu* menuPrototype = nil;
-  if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0)
-  {
+  if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_LINK) != 0) {
     if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0)
       menuPrototype = mImageLinkMenu;
     else
       menuPrototype = mLinkMenu;
   }
   else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_INPUT) != 0 ||
-           (mContextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0)
-  {
+           (mContextMenuFlags & nsIContextMenuListener::CONTEXT_TEXT) != 0) {
     menuPrototype = mInputMenu;
   }
-  else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0)
-  {
+  else if ((mContextMenuFlags & nsIContextMenuListener::CONTEXT_IMAGE) != 0) {
     menuPrototype = mImageMenu;
   }
-  else if (!mContextMenuFlags || (mContextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0)
-  {
+  else if (!mContextMenuFlags || (mContextMenuFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) != 0) {
     // if there aren't any flags or we're in the background of a page,
     // show the document menu. This prevents us from failing to find a case
     // and not showing the context menu.
@@ -2705,8 +2527,7 @@ enum BWCOpenDest {
     [mCopyItem		setEnabled: [[mBrowserView getBrowserView] canCopy]];
   }
   
-  if (mContextMenuNode)
-  {
+  if (mContextMenuNode) {
     nsCOMPtr<nsIDOMDocument> ownerDoc;
     mContextMenuNode->GetOwnerDocument(getter_AddRefs(ownerDoc));
   
@@ -2726,14 +2547,12 @@ enum BWCOpenDest {
   const int kFrameRelatedItemsTag 			= 100;
   const int kFrameInapplicableItemsTag 	= 101;
   
-  if (showFrameItems)
-  {
+  if (showFrameItems) {
     NSMenuItem* frameItem;
     while ((frameItem = [result itemWithTag:kFrameInapplicableItemsTag]) != nil)
       [result removeItem:frameItem];
   }
-  else
-  {
+  else {
     NSMenuItem* frameItem;
     while ((frameItem = [result itemWithTag:kFrameRelatedItemsTag]) != nil)
       [result removeItem:frameItem];
@@ -2816,8 +2635,7 @@ enum BWCOpenDest {
 - (IBAction)saveImageAs:(id)aSender
 {
   nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(mContextMenuNode));
-  if (imgElement)
-  {
+  if (imgElement) {
       nsAutoString text;
       imgElement->GetAttribute(NS_LITERAL_STRING("src"), text);
       nsAutoString url;
@@ -2895,10 +2713,10 @@ enum BWCOpenDest {
 //
 - (void)showPopupBlocked:(BOOL)inBlocked
 {
-  if ( inBlocked && ![mPopupBlocked window] ) {       // told to show, currently hidden
+  if (inBlocked && ![mPopupBlocked window]) {       // told to show, currently hidden
     [mPopupBlockSuperview addSubview:mPopupBlocked];
   }
-  else if ( !inBlocked && [mPopupBlocked window] ) {  // told to hide, currently visible                               
+  else if (!inBlocked && [mPopupBlocked window]) {  // told to hide, currently visible                               
     [mPopupBlocked removeFromSuperview];
   }
 }
@@ -3001,24 +2819,20 @@ enum BWCOpenDest {
   }
 }
 
-//
 // -configurePopupBlocking
 //
 // Show the web features pref panel where the user can do things to configure
 // popup blocking
-//
 - (IBAction)configurePopupBlocking:(id)sender
 {
   [[NSApp delegate] displayPreferencesWindow:self];
   [[[NSApp delegate] preferencesController] selectPreferencePaneByIdentifier:@"org.mozilla.chimera.preference.webfeatures"];
 }
 
-//
 // updateLock:
 //
 // Sets the lock icon in the status bar to the appropriate image and updates
 // the url bar display of security state appropriately.
-//
 - (void)updateLock:(unsigned int)inSecurityState
 {
   unsigned char securityState = inSecurityState & 0x000000FF;
@@ -3039,7 +2853,7 @@ enum BWCOpenDest {
 + (NSImage*) insecureIcon
 {
   static NSImage* sInsecureIcon = nil;
-  if ( !sInsecureIcon )
+  if (!sInsecureIcon)
     sInsecureIcon = [[NSImage imageNamed:@"globe_ico"] retain];
   return sInsecureIcon;
 }
@@ -3047,7 +2861,7 @@ enum BWCOpenDest {
 + (NSImage*) secureIcon;
 {
   static NSImage* sSecureIcon = nil;
-  if ( !sSecureIcon )
+  if (!sSecureIcon)
     sSecureIcon = [[NSImage imageNamed:@"security_lock"] retain];
   return sSecureIcon;
 }
@@ -3055,7 +2869,7 @@ enum BWCOpenDest {
 + (NSImage*) brokenIcon;
 {
   static NSImage* sBrokenIcon = nil;
-  if ( !sBrokenIcon )
+  if (!sBrokenIcon)
     sBrokenIcon = [[NSImage imageNamed:@"security_broken"] retain];
   return sBrokenIcon;
 }
