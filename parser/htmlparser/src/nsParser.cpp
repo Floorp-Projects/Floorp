@@ -48,6 +48,7 @@
 #include "nsCRT.h" 
 #include "nsScanner.h"
 #include "plstr.h"
+#include "nsViewSourceHTML.h" 
 #include "nsIStringStream.h"
 #include "nsIChannel.h"
 #include "nsICachingChannel.h"
@@ -65,10 +66,6 @@
 #include "nsExpatDriver.h"
 #include "nsIServiceManager.h"
 //#define rickgdebug 
-
-#ifdef MOZ_VIEW_SOURCE
-#include "nsViewSourceHTML.h" 
-#endif
 
 #define NS_PARSER_FLAG_DTD_VERIFICATION       0x00000001
 #define NS_PARSER_FLAG_PARSER_ENABLED         0x00000002
@@ -1157,7 +1154,6 @@ FindSuitableDTD(CParserContext& aParserContext,
         sharedObjects->mDTDDeque.Push(theDTD);
         sharedObjects->mHasXMLDTD = PR_TRUE;
       }
-#ifdef MOZ_VIEW_SOURCE
       else if (!sharedObjects->mHasViewSourceDTD) {
         rv = NS_NewViewSourceHTML(&theDTD);  //do this so all non-html files can be viewed...
         NS_ENSURE_SUCCESS(rv, rv);
@@ -1165,7 +1161,6 @@ FindSuitableDTD(CParserContext& aParserContext,
         sharedObjects->mDTDDeque.Push(theDTD);
         sharedObjects->mHasViewSourceDTD = PR_TRUE;
       }
-#endif
     }
   }
 
