@@ -443,10 +443,13 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext&      aPresContext,
         nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
         mFirstChild->SetRect(rect);
 
-        // For initial reflow and resize reflow repaint the entire visible area
-        if ((eReflowReason_Initial == reflowReason) ||
-            (eReflowReason_Resize == aReflowState.reason)) {
+        // Do the necessary repainting
+        if (eReflowReason_Initial == reflowReason) {
+          // Repaint the visible area
           Invalidate(nsRect(0, 0, aReflowState.maxSize.width, aReflowState.maxSize.height));
+        } else if (eReflowReason_Resize == aReflowState.reason) {
+          // Repaint the entire frame
+          Invalidate(nsRect(0, 0, aReflowState.maxSize.width, aDesiredSize.height));
         }
       }
     }
