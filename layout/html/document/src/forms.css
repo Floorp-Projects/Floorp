@@ -150,9 +150,8 @@ select {
   -moz-user-select: none;
   -moz-user-focus: normal;
   -moz-appearance: menulist;
-  border-width: 2px !important;
-  border-style: inset !important;
-  -moz-border-radius: 0 !important;
+  border-width: 2px;
+  border-style: inset;
   text-indent: 0;
 }
 
