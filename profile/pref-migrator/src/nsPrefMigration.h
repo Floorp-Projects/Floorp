@@ -35,6 +35,9 @@ class nsPrefMigration: public nsIPrefMigration
                         PRBool readSubdirs,
                         PRUint32* sizeTotal);
 
+      nsresult GetDriveName(nsFileSpec inputPath,
+                            char* driveName);
+
       nsresult CheckForSpace(nsFileSpec newProfilePath, 
                              PRFloat64 requiredSpace);
 
