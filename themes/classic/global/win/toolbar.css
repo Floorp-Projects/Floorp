@@ -8,10 +8,13 @@ toolbox
 
 toolbar
   {
-     background-color      : ThreeDFace;
-    // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
-    // Talk to evaughan@netscape.com for details.
-    min-width			  : 1px;      
+    background-color      : ThreeDFace;
+    /*
+     * DON'T DELETE.  Removes disappearance of scrollbars in content
+     * pane when window is made smaller.
+     * Talk to evaughan@netscape.com for details.
+     */
+    min-width             : 1px;      
   }
   
 .toolbar-holder

@@ -108,14 +108,15 @@
     {
       background-color    : ThreeDFace;
       overflow            : hidden;
-      min-width           : 1px;
       border-left         : 1px solid ThreeDShadow;
       border-right        : 1px solid ThreeDHighlight;
       border-bottom       : 1px solid ThreeDHighlight;
       min-height          : 16px;
-      min-width			  : 1px;      // DON'T DELETE.  Removes disappearance of scrollbars in content pane when window is made smaller.
-									  // Talk to evaughan@netscape.com for details.
-
+      /* DON'T DELETE.  Removes disappearance of scrollbars
+       * in content pane when window is made smaller.
+       * Talk to evaughan@netscape.com for details.
+       */
+      min-width           : 1px;
     }
   
   statusbarpanel 
