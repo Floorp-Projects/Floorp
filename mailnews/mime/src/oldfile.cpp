@@ -167,7 +167,7 @@ NET_I_XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
 
     rv = fileMgr->OpenFile( (aName ? aName : name), mode, &nsFp);
     if (aName)
-        delete aName;
+        delete [] aName;
     if (NS_OK != rv) {
         return NULL;
     }
