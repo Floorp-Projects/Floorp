@@ -284,6 +284,9 @@ ULONG nsWidgetModuleData::ConvertToUcs( const char *szText,
    }
    else
    {
+      // ucsLen is the number of unused Unichars in the output buffer,
+      // but we want the number of converted unicode characters
+      ucsLen = ulSize - ucsLen - 1;
       *(pBuffer + ucsLen) = (PRUnichar)0;
    }
 
