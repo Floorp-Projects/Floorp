@@ -880,6 +880,8 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 		NS_RELEASE(mPrefs);
 	}
 	
+	mWebBrowser = nsnull;
+
 	return S_OK;
 }
 
