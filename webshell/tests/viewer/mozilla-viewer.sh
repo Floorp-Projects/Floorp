@@ -28,18 +28,18 @@
 ## the viewer work.
 ##
 
-depth=""
+tools=""
 
 # Running from dist/bin
 if [ -d components -a -d res ]
 then
-	depth="../.."
+	tools="../../build"
 else
 	# Running from source dir
 	if [ -f Makefile.in ]
 	then
-		depth=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`
+		tools=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`/build
 	fi
 fi
 
-$depth/build/run-mozilla.sh viewer ${1+"$@"}
+$tools/run-mozilla.sh viewer ${1+"$@"}
