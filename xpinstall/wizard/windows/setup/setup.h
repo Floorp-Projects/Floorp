@@ -570,6 +570,7 @@ typedef struct dlgInstall
     char szProgramFolder_[MAX_BUF];
     char szExistingFolder_[MAX_BUF];
     char szSetupMessage[MAX_BUF];
+    char szRestart[MAX_BUF];
     char szYesRestart[MAX_BUF];
     char szNoRestart[MAX_BUF];
     char szAdditionalComponents_[MAX_BUF];

@@ -490,6 +490,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
               if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
+                char szEMessageTitle[MAX_BUF];
 
                 lstrcpy(szBufTemp, "\n\n");
                 lstrcat(szBufTemp, sgProduct.szPath);
@@ -499,7 +500,9 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                 if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
                   wsprintf(szBuf, szECreateDirectory, szBufTemp);
 
-                MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
+                GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
+
+                MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
                 break;
               }
 
@@ -858,6 +861,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
               if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
+                char szEMessageTitle[MAX_BUF];
 
                 lstrcpy(szBufTemp, "\n\n");
                 lstrcat(szBufTemp, sgProduct.szPath);
@@ -867,7 +871,9 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
                 if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
                   wsprintf(szBuf, szECreateDirectory, szBufTemp);
 
-                MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
+                GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
+
+                MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
                 break;
               }
 
@@ -2422,6 +2428,7 @@ LRESULT CALLBACK DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 
       RepositionWindow(hDlg, NO_BANNER_IMAGE);
 
+      SetWindowText(hDlg, sgInstallGui.szRestart);
       SetDlgItemText(hDlg, 202, sgInstallGui.szSetupMessage);
       SetDlgItemText(hDlg, IDC_RADIO_YES, sgInstallGui.szYesRestart);
       SetDlgItemText(hDlg, IDC_RADIO_NO, sgInstallGui.szNoRestart);
