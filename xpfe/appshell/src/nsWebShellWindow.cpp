@@ -102,12 +102,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #include "nsIWindowMediator.h"
 
-// This is to bring up a MsgCompose window when a mailto link is clicked.
-// This is a temporary hack for M8 until NECKO lands when I can use their
-// Protocol registry
-#include "nsIDOMToolkitCore.h"
-#include "nsAppCoresCIDs.h"
-
 #include "nsIPopupSetFrame.h"
 
 /* Define Class IDs */
@@ -124,7 +118,6 @@ static NS_DEFINE_IID(kContextMenuCID,      NS_CONTEXTMENU_CID);
 
 static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kToolkitCoreCID, NS_TOOLKITCORE_CID);
 
 
 
@@ -2916,9 +2909,6 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand,
      * protocol registries in NECKO
      */
 
-	NS_WITH_SERVICE(nsIDOMToolkitCore, toolkitCore, kToolkitCoreCID, &rv)
-	if (NS_FAILED(rv))
-		return rv;
     /* Messenger doesn't understand to:xyz@domain.com,subject="xyz" yet.
      * So, just pass the type and mode info
      */
@@ -2931,9 +2921,31 @@ nsWebShellWindow::HandleUrl(const PRUnichar * aCommand,
 	 urlcstr.Right(tailpiece, urllen-7); 
 	 args += "to=";
 	 args += tailpiece;
-	 rv = toolkitCore->ShowWindowWithArgs("chrome://messengercompose/content",
-		                                    nsnull,
-		                                    args);
+     NS_WITH_SERVICE(nsIAppShellService, appShellService, kAppShellServiceCID, &rv)
+     if ( NS_SUCCEEDED( rv ) ) {
+         nsCOMPtr<nsIDOMWindow> hiddenWindow;
+         JSContext *jsContext;
+         rv = appShellService->GetHiddenWindowAndJSContext( getter_AddRefs( hiddenWindow ),
+                                                            &jsContext );
+         if ( NS_SUCCEEDED( rv ) ) {
+             void *stackPtr;
+             jsval *argv = JS_PushArguments( jsContext,
+                                             &stackPtr,
+                                             "sssW",
+                                             "chrome://messengercompose/content",
+                                             "_blank",
+                                             "chrome,dialog=no,all",
+                                             (const PRUnichar*)args.GetUnicode() );
+             if( argv ) {
+                 nsCOMPtr<nsIDOMWindow> newWindow;
+                 rv = hiddenWindow->OpenDialog( jsContext,
+                                                argv,
+                                                4,
+                                                getter_AddRefs( newWindow ) );
+                 JS_PopArguments( jsContext, stackPtr );
+             }
+         }
+     }
 	if (NS_FAILED(rv))
 		return rv;
   }
