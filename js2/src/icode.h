@@ -18,6 +18,7 @@
         COMPARE_LT, /* dest, source1, source2 */
         COMPARE_NE, /* dest, source1, source2 */
         DEBUGGER, /* drop to the debugger */
+        DELETE_PROP, /* dest, object, prop name */
         DIVIDE, /* dest, source1, source2 */
         ELEM_XCR, /* dest, base, index, value */
         GET_ELEMENT, /* dest, base, index */
@@ -229,6 +230,22 @@
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
+            return f;
+        }
+    };
+
+    class DeleteProp : public Instruction_3<TypedRegister, TypedRegister, const StringAtom*> {
+    public:
+        /* dest, object, prop name */
+        DeleteProp (TypedRegister aOp1, TypedRegister aOp2, const StringAtom* aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, const StringAtom*>
+            (DELETE_PROP, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[DELETE_PROP] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
@@ -992,6 +1009,7 @@
         "COMPARE_LT    ",
         "COMPARE_NE    ",
         "DEBUGGER      ",
+        "DELETE_PROP   ",
         "DIVIDE        ",
         "ELEM_XCR      ",
         "GET_ELEMENT   ",
@@ -1047,3 +1065,4 @@
     };
 
 #endif
+
