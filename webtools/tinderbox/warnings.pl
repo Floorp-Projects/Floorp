@@ -184,7 +184,9 @@ for $br (last_successful_builds($tree)) {
 
   # Make the new warnings live.
   unlink("$tree/warnings.html");
-  symlink($warn_file, "$tree/warnings.html");
+  my $file_to_link = $warn_file;
+  $file_to_link =~ s|^$tree/||;
+  symlink($file_to_link, "$tree/warnings.html");
 
   # Add an entry to the warning log
   #
