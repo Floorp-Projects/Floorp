@@ -43,6 +43,7 @@ install::
 	$(MAKE_INSTALL) aw-login.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-accname.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-done.xul			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-done.js			$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.xul
