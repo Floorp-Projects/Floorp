@@ -41,10 +41,6 @@
     -Gagan Saksena 03/29/99
 */
 
-typedef enum    {
-        HTTP_CONNECTION_TOKEN_UNKNOWN, HTTP_CONNECTION_TOKEN_NONE, HTTP_CONNECTION_TOKEN_CLOSE, HTTP_CONNECTION_TOKEN_KEEPALIVE
-    }   HTTPConnectionToken;
-
 class nsHTTPResponse : public nsISupports
 {
 
@@ -83,8 +79,6 @@ public:
     nsresult            EmitHeaders(nsCString& aResult);
      
     PRBool              IsStale(PRBool aUseHeuristicExpiration);
-    PRBool              isChunkedResponse ();
-    HTTPConnectionToken GetHttpConnectionToken ();
 
     nsresult            UpdateHeaders(nsISimpleEnumerator *aEnumerator);        
  
@@ -102,9 +96,6 @@ protected:
     PRUint32            mStatus;
     PRInt32             mContentLength;
     nsHTTPHeaderArray   mHeaders;
-private:
-    PRBool              mChunkedResponse;
-    HTTPConnectionToken mConnectionToken;
 };
 
 #endif /* _nsHTTPResponse_h_ */
