@@ -328,4 +328,3 @@ interface nsITableEditor : nsISupports
   void GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange);
 };
 
-#endif // nsITableEditor_h__

@@ -75,5 +75,3 @@ interface nsIEditorIMESupport : nsISupports
   [noscript] void  GetReconversionString(in nsReconversionEventReplyPtr aReply);
 };
 
-
-#endif // nsIEditorIMESupport_h__
