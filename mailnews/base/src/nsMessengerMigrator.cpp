@@ -665,6 +665,7 @@ nsMessengerMigrator::UpgradePrefs()
     if (NS_FAILED(rv)) return rv;
 
 	// remove the temporary identity we used for migration purposes
+    identity->ClearAllValues();
     rv = accountManager->RemoveIdentity(identity);
     return rv;
 }
