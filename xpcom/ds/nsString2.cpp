@@ -800,8 +800,14 @@ nsString2& nsString2::Assign(PRUnichar aChar) {
  * @param 
  * @return
  */
+#ifdef AIX
+nsString2& nsString2::operator=(const nsSubsumeStr& aSubsumeString) {
+  nsSubsumeStr temp(aSubsumeString);  // a temp is needed for the AIX compiler
+  Subsume(*this,temp);
+#else
 nsString2& nsString2::operator=(nsSubsumeStr& aSubsumeString) {
   Subsume(*this,aSubsumeString);
+#endif // AIX
   return *this;
 }
 
@@ -1906,9 +1912,16 @@ nsAutoString2::nsAutoString2(PRUnichar aChar,eCharSize aCharSize) : nsString2(aC
  * @update	gess 1/4/99
  * @param   reference to a subsumeString
  */
+#ifdef AIX
+nsAutoString2::nsAutoString2(const nsSubsumeStr& aSubsumeStr) :nsString2(aSubsumeStr.mCharSize) {
+  mAgent=0;
+  nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX compiler
+  Subsume(*this,temp);
+#else
 nsAutoString2::nsAutoString2( nsSubsumeStr& aSubsumeStr) :nsString2(aSubsumeStr.mCharSize) {
   mAgent=0;
   Subsume(*this,aSubsumeStr);
+#endif // AIX
 }
 
 /**
