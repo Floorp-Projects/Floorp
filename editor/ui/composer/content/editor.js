@@ -1583,10 +1583,6 @@ function SetEditMode(mode)
         if (gEditor.document.title != title)
           SetDocumentTitle(title);
 
-        // reset selection to top of doc (wish we could preserve it!)
-        if (bodyNode)
-          gEditor.selection.collapse(bodyNode, 0);
-
       } catch (ex) {
         dump(ex);
       }
