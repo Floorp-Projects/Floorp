@@ -79,23 +79,31 @@
         {
             uint16 argCount = BytecodeContainer::getShort(pc);
             pc += sizeof(uint16);
-            js2val tgt = top(argCount);
-            if (JS2VAL_IS_PRIMITIVE(tgt))
+            js2val thisVal = top(argCount + 1);
+            js2val fVal = top(argCount);
+            if (JS2VAL_IS_PRIMITIVE(fVal))
                 meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
-            JS2Object *obj = JS2VAL_TO_OBJECT(tgt);
-            if (obj->kind == FixedInstanceKind) {
-                FixedInstance *fInst = checked_cast<FixedInstance *>(obj);
-                js2val compileThis = fInst->fWrap->compileThis;
+            JS2Object *fObj = JS2VAL_TO_OBJECT(fVal);
+            if (fObj->kind == FixedInstanceKind) {
+                FixedInstance *fInst = checked_cast<FixedInstance *>(fObj);
+                FunctionWrapper *fWrap = fInst->fWrap;
+                js2val compileThis = fWrap->compileThis;
                 js2val runtimeThis;
                 if (JS2VAL_IS_VOID(compileThis))
                     runtimeThis = JS2VAL_VOID;
                 else {
                     if (JS2VAL_IS_INACCESSIBLE(compileThis)) {
-                        //runtimeThis = ;
+                        runtimeThis = thisVal;
                         Frame *g = meta->env.getPackageOrGlobalFrame();
-                        
+                        if (fWrap->compileFrame->prototype && (JS2VAL_IS_NULL(runtimeThis) || JS2VAL_IS_VOID(runtimeThis)) && (g->kind == GlobalObjectKind))
+                            runtimeThis = OBJECT_TO_JS2VAL(g);
                     }
                 }
+                Frame *runtimeFrame = new ParameterFrame();
+                meta->env.addFrame(runtimeFrame);
+//                instantiateFrame(fWrap->compileFrame, runtimeFrame, meta->env);
+//                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+
 
 /*
 proc call(this: OBJECT, args: ARGUMENTLIST, runtimeEnv: ENVIRONMENT, phase: PHASE): OBJECT

@@ -431,12 +431,6 @@ public:
     js2val value;                // This fixed property's current value; uninitialised if the fixed property is an uninitialised constant
 };
 
-class FunctionWrapper {
-public:
-    BytecodeContainer   *bCon;
-    js2val              compileThis;    // The value of 'this' established at Validate time
-};
-
 // Instances of non-dynamic classes are represented as FIXEDINSTANCE records. These instances can contain only fixed properties.
 class FixedInstance : public JS2Object {
 public:
@@ -598,11 +592,9 @@ public:
     ParameterFrame() : Frame(ParameterKind) { }
 
     Plurality plurality;
-    js2val thisObject;               // The value of this; none if this function doesn't define this;
+    js2val thisObject;              // The value of this; none if this function doesn't define this;
                                     // inaccessible if this function defines this but the value is not 
                                     // available because this function hasn't been called yet.
-
-                                    // Here we use NULL as no this and VOID as inaccessible
 
     bool prototype;                 // true if this function is not an instance method but defines this anyway
 };
@@ -648,6 +640,17 @@ public:
 private:
     Frame *firstFrame;
 };
+
+
+class FunctionWrapper {
+public:
+    BytecodeContainer   *bCon;
+    js2val              compileThis;    // The value of 'this' established at Validate time
+    bool                unchecked;      // true if the function is untyped, non-method, normal
+    ParameterFrame      *compileFrame;
+};
+
+
 
 typedef std::vector<Namespace *> NamespaceList;
 typedef NamespaceList::iterator NamespaceListIterator;

@@ -143,8 +143,8 @@ namespace MetaData {
                     }
                     vb = vb->next;
                 }
-                bool unchecked = !cxt->strict && (env->getTopFrame()->kind == ClassKind)
-                                    && (f->function.prefix != FunctionName::normal) && untyped;
+                bool unchecked = !cxt->strict && (env->getTopFrame()->kind != ClassKind)
+                                    && (f->function.prefix == FunctionName::normal) && untyped;
                 bool prototype = unchecked || a->prototype;
                 Attribute::MemberModifier memberMod = a->memberMod;
                 if (env->getTopFrame()->kind == ClassKind) {
@@ -184,6 +184,7 @@ namespace MetaData {
                             FixedInstance *fInst = new FixedInstance(functionClass);
                             fInst->fWrap = new FunctionWrapper();
                             fInst->fWrap->compileThis = compileThis;
+                            fInst->fWrap->unchecked = unchecked;
                             Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
                             defineStaticMember(env, *f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                         }
