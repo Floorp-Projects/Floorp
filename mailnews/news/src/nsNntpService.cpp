@@ -357,6 +357,13 @@ nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *news
         // set theRest to what's after news://
         str.Right(theRest, str.Length() - kNewsRootURILen /* for news:/ */ - 1 /* for the slash */);
       }
+      else if (str.Find(":/") != -1) {
+#ifdef DEBUG_seth
+	printf("we have x:/y where x != news. this is bad, return failure\n");
+#endif
+        PR_FREEIF(list);
+        return NS_ERROR_FAILURE;
+      }
       else {
         theRest = str;
       }
@@ -460,6 +467,13 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
         // we have news://group or news://host/group
         // set theRest to what's after news://
         str.Right(theRest, str.Length() - kNewsRootURILen /* for news:/ */ - 1 /* for the slash */);
+      }
+      else if (str.Find(":/") != -1) {
+#ifdef DEBUG_seth
+	printf("we have x:/y where x != news. this is bad, return failure\n");
+#endif
+        PR_FREEIF(list);
+        return NS_ERROR_FAILURE;
       }
       else {
         theRest = str;
