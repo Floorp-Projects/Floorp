@@ -252,7 +252,7 @@ nsLocaleService::nsLocaleService(void)
             else {
                 char* lang = getenv("LANG");
                 if ( lang == nsnull ) {
-                    nsCAutoString langcstr = "en-US";
+                    nsCAutoString langcstr("en-US");
 	            lang = nsCRT::strdup( langcstr.GetBuffer() );
                     result = posixConverter->GetXPLocale(lang,&xpLocale);
                     nsCRT::free(lang); 
