@@ -32,6 +32,15 @@
 #include "nsTextWidget.h"
 #include "nsFileWidget.h"
 #include "nsScrollbar.h"
+#include "nsMenuBar.h"
+#include "nsMenu.h"
+#include "nsMenuItem.h"
+#include "nsImageButton.h"
+#include "nsMenuButton.h"
+#include "nsToolbar.h"
+#include "nsToolbarManager.h"
+#include "nsToolbarItemHolder.h"
+
 
 //#include "nsTextAreaWidget.h"
 //#include "nsListBox.h"
@@ -42,29 +51,33 @@
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
-static NS_DEFINE_IID(kCAppShellCID,      NS_APPSHELL_CID);
-static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
-static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCTextWidgetCID, NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kCTextAreaWidgetCID, NS_TEXTAREA_CID);
-static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kCButtonCID,     NS_BUTTON_CID);
-static NS_DEFINE_IID(kCListBoxCID,    NS_LISTBOX_CID);
-static NS_DEFINE_IID(kCComboBoxCID,    NS_COMBOBOX_CID);
+static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
+static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
+static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
+static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
+static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
+static NS_DEFINE_IID(kCRadioGroup,    NS_RADIOGROUP_CID);
+static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
+static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
+static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
+static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kCTabWidget,     NS_TABWIDGET_CID);
+static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
+static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
-static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
-
-
-static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIWindow,        NS_IWINDOW_IID);	//¥¥¥
-static NS_DEFINE_IID(kIAppShellIID,   NS_IAPPSHELL_IID);
-static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
-static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
-static NS_DEFINE_IID(kIScrollbar,     NS_ISCROLLBAR_IID);
-//static NS_DEFINE_IID(kIFileWidget,    NS_IFILEWIDGET_IID);
-//static NS_DEFINE_IID(kIListBox,       NS_ILISTBOX_IID);
+static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kCDialog,        NS_DIALOG_CID);
+static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
+static NS_DEFINE_IID(kCMenuBar,       NS_MENUBAR_CID);
+static NS_DEFINE_IID(kCMenu,          NS_MENU_CID);
+static NS_DEFINE_IID(kCMenuItem,      NS_MENUITEM_CID);
+static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
+static NS_DEFINE_IID(kCToolBar,       NS_TOOLBAR_CID);
+static NS_DEFINE_IID(kCToolBarManager,  NS_TOOLBARMANAGER_CID);
+static NS_DEFINE_IID(kCToolBarItemHolder,  NS_TOOLBARITEMHOLDER_CID);
+static NS_DEFINE_IID(kCPopUpMenu,     NS_POPUPMENU_CID);
+static NS_DEFINE_IID(kCMenuButton,     NS_MENUBUTTON_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -133,126 +146,112 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     if (aResult == NULL) {  
         return NS_ERROR_NULL_POINTER;  
     }  
-
     *aResult = NULL;  
-  
-    if (nsnull != aOuter && !aIID.Equals(kISupportsIID)) {
-        // aggregation with IID != nsISupports
-        return NS_ERROR_ILLEGAL_VALUE;
+    if (nsnull != aOuter) {
+        return NS_ERROR_NO_AGGREGATION;
     }
 
-    nsWindow *inst = nsnull;
-    if (aIID.Equals(kCWindow)) 
-    	{
-      inst = new nsMacWindow();
-    	}
-	 	else if (aIID.Equals(kIWindow)) 
-    	{
-     	inst = new nsMacWindow();
-    	}
-	 	else if (aIID.Equals(kIWidget)) 
-    	{
-     	//¥¥¥inst = new nsWindow();
-     	inst = new ChildWindow();
-    	}
-    else if (mClassID.Equals(kCAppShellCID)) 
-			{
-			nsAppShell *appInst = new nsAppShell();
-			if (appInst == NULL) 
-				{  
-				return NS_ERROR_OUT_OF_MEMORY;  
-				}  
-			nsresult res = appInst->QueryInterface(aIID, aResult);
-			if (res != NS_OK) 
-				{
-				delete appInst;
-				}
-			return res;
-			}
-    else if (mClassID.Equals(kCToolkit)) {
-        inst = (nsWindow*)new nsToolkit();
-    }
-    else if ( mClassID.Equals(kCButtonCID)) {
-        inst = new nsButton();
+    nsISupports *inst = nsnull;
+    if (mClassID.Equals(kCWindow)) {
+        inst = (nsISupports*)new nsMacWindow();
     }
     else if (mClassID.Equals(kCChild)) {
-        inst = new ChildWindow();
+        inst = (nsISupports*)new ChildWindow();
     }
-    else if ( mClassID.Equals(kCRadioButtonCID )) {
-        inst = new nsRadioButton();
+    else if (mClassID.Equals(kCButton)) {
+        inst = (nsISupports*)(nsWindow*)new nsButton();
     }
-    else if ( mClassID.Equals(kCCheckButtonCID)) {
-        inst = new nsCheckButton();
+    else if (mClassID.Equals(kCCheckButton)) {
+        inst = (nsISupports*)(nsWindow*)new nsCheckButton();
     }
-    else if (mClassID.Equals(kCTextWidgetCID)) {
-        inst = new nsTextWidget();
+    else if (mClassID.Equals(kCCombobox)) {
+//        inst = (nsISupports*)(nsWindow*)new nsComboBox();
     }
-    else if (mClassID.Equals(kCFileWidgetCID)) {
-        inst = new nsFileWidget();
+    else if (mClassID.Equals(kCRadioButton)) {
+        inst = (nsISupports*)(nsWindow*)new nsRadioButton();
     }
-    else if (mClassID.Equals(kCVertScrollbarCID)) {
-        inst = new nsScrollbar(PR_TRUE);
+    //else if (mClassID.Equals(kCRadioGroup)) {
+    //    inst = (nsISupports*)(nsObject*)new nsRadioGroup();
+    //}
+    else if (mClassID.Equals(kCFileOpen)) {
+//       inst = (nsISupports*)new nsFileWidget();
     }
-    else if (mClassID.Equals(kCHorzScrollbarCID)) {
-        inst = new nsScrollbar(PR_FALSE);
+    else if (mClassID.Equals(kCListbox)) {
+//        inst = (nsISupports*)(nsWindow*)new nsListBox();
     }
-    else if (mClassID.Equals(kCLookAndFeelCID)) {
-        nsLookAndFeel *laf = new nsLookAndFeel();
-        if (laf == NULL) {  
-            return NS_ERROR_OUT_OF_MEMORY;  
-        }  
-        nsresult res = laf->QueryInterface(aIID, aResult);
-        if (res != NS_OK) {
-            delete laf;
-        }
-        return res;
+    else if (mClassID.Equals(kCHorzScrollbar)) {
+        inst = (nsISupports*)(nsWindow*)new nsScrollbar(PR_FALSE);
     }
-   
-    
-    
-#ifdef NOTNOW
-    else if (mClassID.Equals(kCVertScrollbarCID)) {
-        inst = new nsScrollbar(, PR_TRUE);
+    else if (mClassID.Equals(kCVertScrollbar)) {
+        inst = (nsISupports*)(nsWindow*)new nsScrollbar(PR_TRUE);
     }
-    else if (mClassID.Equals(kCHorzScrollbarCID)) {
-        inst = new nsScrollbar(, PR_FALSE);
+    else if (mClassID.Equals(kCTextArea)) {
+//        inst = (nsISupports*)(nsWindow*)new nsTextAreaWidget();
     }
-    else if (aIID.Equals(kIScrollbar)) {
-        inst = nsnull;
-        fprintf(stderr, "------ NOT CreatingkIScrollbar Scrollbar\n");
+    else if (mClassID.Equals(kCTextField)) {
+        inst = (nsISupports*)(nsWindow*)new nsTextWidget();
     }
-    else if (mClassID.Equals(kCTextAreaWidgetCID)) {
-        inst = new nsTextAreaWidget();
+    else if (mClassID.Equals(kCTabWidget)) {
+//        inst = (nsISupports*)(nsWindow*)new nsTabWidget();
     }
-    else if (mClassID.Equals(kCListBoxCID)) {
-        inst = new nsListBox();
+    else if (mClassID.Equals(kCTooltipWidget)) {
+ //       inst = (nsISupports*)(nsWindow*)new nsTooltipWidget();
     }
-    else if (mClassID.Equals(kCComboBoxCID)) {
-        inst = new nsComboBox();
+    else if (mClassID.Equals(kCAppShell)) {
+        inst = (nsISupports*)new nsAppShell();
     }
-    else if (mClassID.Equals(kCAppShellCID)) {
-        nsAppShell *appInst = new nsAppShell();
-        if (appInst == NULL) {  
-            return NS_ERROR_OUT_OF_MEMORY;  
-        }  
-        nsresult res = appInst->QueryInterface(aIID, aResult);
-        if (res != NS_OK) {
-            delete appInst;
-        }
-        return res;
+    else if (mClassID.Equals(kCToolkit)) {
+        inst = (nsISupports*)new nsToolkit();
     }
-#endif
-
-    if (inst == NULL) {
+    else if (mClassID.Equals(kCLookAndFeel)) {
+        inst = (nsISupports*)new nsLookAndFeel();
+    }
+    else if (mClassID.Equals(kCDialog)) {
+//        inst = (nsISupports*)(nsWindow*)new nsDialog();
+    }
+    else if (mClassID.Equals(kCLabel)) {
+//        inst = (nsISupports*)(nsWindow*)new nsLabel();
+    }
+    else if (mClassID.Equals(kCMenuBar)) {
+        inst = (nsISupports*)new nsMenuBar();
+    }
+    else if (mClassID.Equals(kCMenu)) {
+        inst = (nsISupports*)new nsMenu();
+    }
+    else if (mClassID.Equals(kCMenuItem)) {
+        inst = (nsISupports*)new nsMenuItem();
+    }
+    else if (mClassID.Equals(kCImageButton)) {
+        inst = (nsISupports*)(nsWindow*)new nsImageButton();
+    }
+    else if (mClassID.Equals(kCMenuButton)) {
+        inst = (nsISupports*)(nsWindow*)new nsMenuButton();
+    }
+    else if (mClassID.Equals(kCToolBar)) {
+        inst = (nsISupports*)(nsWindow*)new nsToolbar();
+    }
+    else if (mClassID.Equals(kCToolBarManager)) {
+        inst = (nsISupports*)(nsWindow*)new nsToolbarManager();
+    }
+    else if (mClassID.Equals(kCToolBarItemHolder)) {
+        inst = (nsISupports*)(nsIToolbarItemHolder *) new nsToolbarItemHolder();
+    }
+    else if (mClassID.Equals(kCPopUpMenu)) {
+ //       inst = (nsISupports*)new nsPopUpMenu();
+    }/* */
+  
+    if (inst == NULL) {  
         return NS_ERROR_OUT_OF_MEMORY;  
-    }
-        
+    }  
+
     nsresult res = inst->QueryInterface(aIID, aResult);
 
-    if (res != NS_OK) {
-        delete inst;         
+    if (res != NS_OK) {  
+        // We didn't get the right interface, so clean up  
+        delete inst;  
     }
-    return res;
+
+    return res;  
 }  
 
 nsresult nsWidgetFactory::LockFactory(PRBool aLock)  
