@@ -763,7 +763,11 @@ PRFileDesc * SSM_OpenPort(void)
     status = PR_Bind(datasocket, &servaddr);
     if (status != PR_SUCCESS)
         goto loser;
+#if defined(XP_MAC)
+    status = PR_Listen(datasocket, 1);
+#else
     status = PR_Listen(datasocket, MAX_CONNECTIONS);
+#endif
     if (status != PR_SUCCESS)
         goto loser;
   

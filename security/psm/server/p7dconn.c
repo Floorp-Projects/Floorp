@@ -302,6 +302,11 @@ void SSMP7DecodeConnection_ServiceThread(void * arg)
 				conn->m_error = PR_GetError();
 				goto finish;
 			}
+#ifdef XP_MAC
+			if (read < LINESIZE) {
+				break;
+			}
+#endif						
         } else {
             /* either EOF or an error condition */
 		    /* If we have a decoder in progress, stop it. */
