@@ -1,2 +1,3 @@
 <!--LOCALIZATION NOTE MsgAttachPage.dtd UI for attaching a page to a mail/news message -->
 <!ENTITY windowTitle.label "Please Specify a Location to Attach">
+<!ENTITY webpage.label "Web Page (URL):">
