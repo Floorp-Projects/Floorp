@@ -837,7 +837,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
       switch(theTag) {
         case eHTMLTag_html:
-        case eHTMLTag_iframe:
         case eHTMLTag_noframes:
         case eHTMLTag_noscript:
         case eHTMLTag_script:
