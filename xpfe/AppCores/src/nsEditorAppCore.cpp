@@ -85,17 +85,11 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
-#include "nsIGenericTransferable.h"
-#include "nsIDataFlavor.h"
 #include "nsISupportsArray.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
-static NS_DEFINE_IID(kIDataFlavorIID,   NS_IDATAFLAVOR_IID);
-static NS_DEFINE_IID(kCDataFlavorCID,   NS_DATAFLAVOR_CID);
 static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
-static NS_DEFINE_CID(kIGenericTransferableIID,  NS_IGENERICTRANSFERABLE_IID);
-static NS_DEFINE_CID(kCGenericTransferableCID,  NS_GENERICTRANSFERABLE_CID);
 
 
 /* Define Class IDs */
