@@ -1456,11 +1456,13 @@ void CWizardMachineApp::HelpWiz()
 {
 	CString helpvalue = (CurrentNode->localVars->wizbut->help);
 	CString helpvar = helpvalue.Left(6);
+	CString htmlfile ="";
 	if (helpvar.CompareNoCase("Online")== 0)
 	{
 		helpvalue.Delete(0,7);
 //		AfxMessageBox("online",MB_OK);
-		theInterpreter->OpenBrowser((char*)(LPCTSTR)helpvalue);
+		htmlfile = theInterpreter->replaceVars((char*)(LPCTSTR)helpvalue, NULL);
+		theInterpreter->OpenBrowser((char*)(LPCTSTR)htmlfile);
 	}
 	else 
 	{
