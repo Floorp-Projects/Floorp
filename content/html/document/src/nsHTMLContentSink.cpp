@@ -63,6 +63,7 @@
 #include "nsIFrame.h"
 
 #include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsIHTMLDocument.h"
@@ -3236,15 +3237,16 @@ nsresult
 HTMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
 {
   if (vm) {
-    nsIContentViewer* contentViewer = nsnull;
-    nsresult rv = mWebShell->GetContentViewer(&contentViewer);
-    if (NS_SUCCEEDED(rv) && (contentViewer != nsnull)) {
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+    nsresult rv = docShell->GetContentViewer(getter_AddRefs(contentViewer));
+    if (NS_SUCCEEDED(rv) && (contentViewer)) {
       PRBool enabled;
       contentViewer->GetEnableRendering(&enabled);
       if (enabled) {
         vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
       }
-      NS_RELEASE(contentViewer); 
     }
   }
   return NS_OK;
