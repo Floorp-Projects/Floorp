@@ -92,6 +92,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 
+#include "nsIBaseWindow.h"
+
 // HACK for M4, should be removed by M5
 #ifdef XP_MAC
 #include <Menus.h>
@@ -247,7 +249,8 @@ nsWebShellWindow::nsWebShellWindow()
 nsWebShellWindow::~nsWebShellWindow()
 {
   if (nsnull != mWebShell) {
-    mWebShell->Destroy();
+    nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mWebShell));
+    shellAsWin->Destroy();
     NS_RELEASE(mWebShell);
   }
 
@@ -431,7 +434,8 @@ nsWebShellWindow::Close()
 
   ExitModalLoop();
   if (mWebShell) {
-    mWebShell->Destroy();
+    nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mWebShell));
+    shellAsWin->Destroy();
     NS_RELEASE(mWebShell);
   }
 
@@ -474,8 +478,10 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
        * client area of the window...
        */
       case NS_SIZE: {
-        nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;  
-        webShell->SetBounds(0, 0, sizeEvent->windowSize->width, sizeEvent->windowSize->height);
+        nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;
+        nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(webShell));
+        shellAsWin->SetPositionAndSize(0, 0, sizeEvent->windowSize->width, 
+          sizeEvent->windowSize->height, PR_FALSE);  
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
@@ -1694,7 +1700,8 @@ nsWebShellWindow::Show(PRBool aShow)
   if (mDebuting)
     return NS_OK;
   mDebuting = PR_TRUE; // (Show/Focus is recursive)
-  mWebShell->Show(); // crimminy -- it doesn't take a parameter!
+  nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(mWebShell));
+  shellAsWin->SetVisibility(aShow);
   mWindow->Show(aShow);
   
   // this may cause problems, focusing the content webshell on every show.
@@ -2674,10 +2681,11 @@ NS_IMETHODIMP nsWebShellWindow::SizeContentTo(PRInt32 aWidth, PRInt32 aHeight)
 {
    nsCOMPtr<nsIWebShell> content;
    GetContentWebShell(getter_AddRefs(content));
-   if (content) {
+   nsCOMPtr<nsIBaseWindow> contentAsWin(do_QueryInterface(content));
+   if (contentAsWin) {
      PRInt32 x, y, width, height,
              widthDelta, heightDelta;
-     content->GetBounds(x,y,width,height);
+     contentAsWin->GetPositionAndSize(&x, & y, &width, &height);
      widthDelta = aWidth - width;
      heightDelta = aHeight - height;
    
@@ -2695,13 +2703,14 @@ NS_IMETHODIMP nsWebShellWindow::GetContentBounds(nsRect& aResult)
   // Should return the size of the content webshell.
   nsCOMPtr<nsIWebShell> contentShell;
   GetContentWebShell(getter_AddRefs(contentShell));
-  if (!contentShell) {
+  nsCOMPtr<nsIBaseWindow> contentShellAsWin(do_QueryInterface(contentShell));
+  if (!contentShellAsWin) {
     NS_ERROR("Attempt to retrieve the content bounds for a window with no content.");
     return NS_ERROR_FAILURE;
   }
 
   PRInt32 x,y,width,height;
-  contentShell->GetBounds(x,y,width,height);
+  contentShellAsWin->GetPositionAndSize(&x, &y, &width, &height);
   aResult.x = x;
   aResult.y = y;
   aResult.width = width;
