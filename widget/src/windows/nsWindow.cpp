@@ -20,7 +20,10 @@
  * Contributor(s): 
  */
 
-//#define KE_DEBUG
+#if defined(DEBUG_ftang)
+#define KE_DEBUG
+#define DEBUG_IME
+#endif
 
 #include "nsWindow.h"
 #include "nsIAppShell.h"
@@ -99,8 +102,8 @@ extern HINSTANCE g_hinst;
 //
 // input method offsets
 //
-#define IME_X_OFFSET	35
-#define IME_Y_OFFSET	35
+#define IME_X_OFFSET	0
+#define IME_Y_OFFSET	0
 
 
 #ifdef IME_FROM_ON_CHAR
@@ -2857,206 +2860,53 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             result = PR_TRUE;
             break;
 
-		case WM_INPUTLANGCHANGEREQUEST:
-			*aRetValue = TRUE;
-			result = PR_FALSE;
-			break;
+				case WM_INPUTLANGCHANGEREQUEST:
+					*aRetValue = TRUE;
+					result = PR_FALSE;
+					break;
 
-		case WM_INPUTLANGCHANGE: {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-			printf("input language changed\n");
+				case WM_INPUTLANGCHANGE: 
+					result = OnInputLangChange( 
+								(WORD)(lParam&0x0FFFF), 
+								aRetValue);
+					break;
+
+				case WM_IME_STARTCOMPOSITION: 
+					result = OnIMEStartComposition();
+					break;
+
+				case WM_IME_COMPOSITION: 
+					result = OnIMEComposition(lParam);
+					break;
+
+				case WM_IME_ENDCOMPOSITION: 
+					result = OnIMEEndComposition();
+					break;
+
+				case WM_IME_CHAR: 
+					result = OnIMEChar((BYTE)(wParam>>8), 
+						(BYTE) (wParam & 0x00FF), 
+						lParam);
+					break;
+
+				case WM_IME_NOTIFY: 
+					result = OnIMENotify(wParam, lParam, aRetValue);
+					break;
+
+#if 0
+				// This is a Window 98/2000 only message
+				case WM_IME_REQUEST: 
+					result = OnIMERequest(wParam, lParam, aRetValue);
+					break;
 #endif
 
-			result = PR_FALSE;  // always pass to child window
-                        *aRetValue = LangIDToCP((WORD)(lParam&0x0FFFF),mCurrentKeyboardCP);
-#ifdef IME_FROM_ON_CHAR
-                        mHaveDBCSLeadByte=PR_FALSE; // reset this when we change keyboard layout
-#endif
-   
-			break;
-		}
-		case WM_IME_STARTCOMPOSITION: {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-			printf("IME: Recieved WM_IME_STARTCOMPOSITION\n");
-#endif
-			HIMC hIMEContext;
+				case WM_IME_SELECT: 
+					result = OnIMESelect(wParam, (WORD)(lParam & 0x0FFFF));
+					break;
 
-			if ((mIMEProperty & IME_PROP_SPECIAL_UI) || (mIMEProperty & IME_PROP_AT_CARET)) {
-				return PR_FALSE;
-			}
-
-			hIMEContext = ::ImmGetContext(mWnd);
-			if (hIMEContext==NULL) {
-				return PR_TRUE;
-			}
-			HandleStartComposition(hIMEContext);
-			result = PR_TRUE;
-			::ImmReleaseContext(mWnd,hIMEContext);
-			}
-			break;
-
-		case WM_IME_COMPOSITION: {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-			printf("IME: Recieved WM_IME_COMPOSITION\n");
-#endif
-                        PRBool bSendEvent = PR_FALSE;
-			HIMC hIMEContext;
-
-			result = PR_FALSE;					// will change this if an IME message we handle
-
-			hIMEContext = ::ImmGetContext(mWnd);
-			if (hIMEContext==NULL) {
-				return PR_TRUE;
-			}
-
-			//
-			// This provides us with the attribute string necessary for doing hiliting
-			//
-			if (lParam & GCS_COMPATTR) {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPATTR\n");
-#endif
-				long attrStrLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPATTR,NULL,0);
-				if (attrStrLen+1>mIMEAttributeStringSize) {
-					if (mIMEAttributeString!=NULL) delete [] mIMEAttributeString;
-					mIMEAttributeString = new char[attrStrLen+32];
-					mIMEAttributeStringSize = attrStrLen+32;
-				}
-
-				::ImmGetCompositionString(hIMEContext,GCS_COMPATTR,mIMEAttributeString,mIMEAttributeStringSize);
-				mIMEAttributeStringLength = attrStrLen;
-				mIMEAttributeString[attrStrLen]='\0';
-			}
-
-			if (lParam & GCS_COMPCLAUSE) {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPCLAUSE\n");
-#endif
-				long compClauseLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPCLAUSE,NULL,0);
-				if (compClauseLen+1>mIMECompClauseStringSize) {
-					if (mIMECompClauseString!=NULL) delete [] mIMECompClauseString;
-					mIMECompClauseString = new char [compClauseLen+32];
-					mIMECompClauseStringSize = compClauseLen+32;
-				}
-
-				::ImmGetCompositionString(hIMEContext,GCS_COMPCLAUSE,mIMECompClauseString,mIMECompClauseStringSize);
-				mIMECompClauseStringLength = compClauseLen;
-				mIMECompClauseString[compClauseLen]='\0';
-			} else {
-				mIMECompClauseStringLength = 0;
-			}
-
-			if (lParam & GCS_CURSORPOS) {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_CURSORPOS\n");
-#endif
-				mIMECursorPosition = ::ImmGetCompositionString(hIMEContext,GCS_CURSORPOS,NULL,0);
-			}
-
-			//
-			// This catches a fixed result
-			//
-			if (lParam & GCS_RESULTSTR) {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_RESULTSTR\n");
-#endif
-				if(! mIMEIsComposing) {
-					HandleStartComposition(hIMEContext);
-				}
-
-				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,NULL,0);
-				if (compStrLen+1>mIMECompositionStringSize) {
-					delete [] mIMECompositionString;
-					mIMECompositionString = new char[compStrLen+32];
-					mIMECompositionStringSize = compStrLen+32;
-				}
-				
-				::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,mIMECompositionString,mIMECompositionStringSize);
-				mIMECompositionStringLength = compStrLen;
-				mIMECompositionString[compStrLen]='\0';
-#if defined(DEBUG_ftang)
-				fprintf(stderr,"nsWindow::GCS_RESULTSTR compStrLen = %d\n", compStrLen);
-#endif
-				result = PR_TRUE;
-				HandleTextEvent(hIMEContext, PR_FALSE);
-				HandleEndComposition();
-                bSendEvent = PR_TRUE;
-			}
-			//
-			// This provides us with a composition string
-			//
-			if (lParam & GCS_COMPSTR) {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPSTR\n");
-#endif
-				if(! mIMEIsComposing) {
-					HandleStartComposition(hIMEContext);
-				}
-				long compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,NULL,0);
-				if (compStrLen+1>mIMECompositionStringSize) {
-					if (mIMECompositionString!=NULL) delete [] mIMECompositionString;
-					mIMECompositionString = new char[compStrLen+32];
-					mIMECompositionStringSize = compStrLen+32;
-				}
-				
-				::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,mIMECompositionString,mIMECompositionStringSize);
-				mIMECompositionStringLength = compStrLen;
-#if defined(DEBUG_ftang)
-				fprintf(stderr,"nsWindow::GCS_COMPSTR compStrLen = %d\n", compStrLen);
-#endif
-				mIMECompositionString[compStrLen]='\0';
-				HandleTextEvent(hIMEContext);
-				result = PR_TRUE;
-                                bSendEvent = PR_TRUE;
-			}
-                        if(! bSendEvent)
-                        {
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: haandle 0 length TextEvent. \n");
-#endif
-				if(! mIMEIsComposing) {
-					HandleStartComposition(hIMEContext);
-				}
-				mIMECompositionStringLength = 0;
-				HandleTextEvent(hIMEContext,PR_FALSE);
-                                bSendEvent = PR_TRUE;
-                        }
-			
-			::ImmReleaseContext(mWnd,hIMEContext);
-
-			}
-			break;
-
-		case WM_IME_ENDCOMPOSITION: 
-
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
-			printf("IME: Received WM_IME_ENDCOMPOSITION\n");
-#endif
-			if(mIMEIsComposing)
-			{
-				HIMC hIMEContext;
-
-				if ((mIMEProperty & IME_PROP_SPECIAL_UI) || (mIMEProperty & IME_PROP_AT_CARET)) {
-					return PR_FALSE;
-				}
-
-				hIMEContext = ::ImmGetContext(mWnd);
-				if (hIMEContext==NULL) {
-					return PR_TRUE;
-				}
-				// IME on Korean NT somehow send WM_IME_ENDCOMPOSITION
-							// first when we hit space in composition mode
-							// we need to clear out the current composition string 
-							// in that case. 
-				mIMECompositionStringLength = 0;
-				mIMECompositionString[0]='\0';
-				HandleTextEvent(hIMEContext, PR_FALSE);
-
-				HandleEndComposition();
-				::ImmReleaseContext(mWnd,hIMEContext);
-			}
-			result = PR_TRUE;
-			break;
+				case WM_IME_SETCONTEXT: 
+					result = OnIMESetContext(wParam, lParam);
+					break;
 
         case WM_DROPFILES: {
           /*HDROP hDropInfo = (HDROP) wParam;
@@ -3881,7 +3731,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 	candForm.dwStyle = CFS_CANDIDATEPOS;
 	candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
 	candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET;
-#if defined(DEBUG_tague) || defined(DEBUG_ftang)
+#ifdef DEBUG_IME
 	printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 #endif
 	::ImmSetCandidateWindow(hIMEContext,&candForm);
@@ -4002,4 +3852,285 @@ nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthRes
 	}
 
 
+}
+
+
+
+
+//==========================================================================
+BOOL nsWindow::OnInputLangChange(WORD aLangID, LRESULT *oRetValue)			
+{
+#ifdef DEBUG_IME
+	printf("OnInputLanguageChange\n");
+#endif
+
+
+	*oRetValue = LangIDToCP(aLangID,mCurrentKeyboardCP);
+
+#ifdef IME_FROM_ON_CHAR
+	// reset this when we change keyboard layout
+	mHaveDBCSLeadByte=PR_FALSE; 
+#endif
+
+	return PR_FALSE;   // always pass to child window
+}
+//==========================================================================
+BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
+{
+#ifdef DEBUG_IME
+	printf("OnIMEChar\n");
+#endif
+
+	// not implement yet
+	return PR_FALSE;
+}
+//==========================================================================
+BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)			
+{
+#ifdef DEBUG_IME
+	printf("OnIMEComposition\n");
+#endif
+
+	HIMC hIMEContext;
+
+	BOOL result = PR_FALSE;					// will change this if an IME message we handle
+
+	hIMEContext = ::ImmGetContext(mWnd);
+	if (hIMEContext==NULL) 
+		return PR_TRUE;
+
+	//
+	// This provides us with the attribute string necessary for doing hiliting
+	//
+	if (aGCS & GCS_COMPATTR) {
+#ifdef DEBUG_IME
+		fprintf(stderr,"Handling GCS_COMPATTR\n");
+#endif
+		long attrStrLen = ::ImmGetCompositionString(hIMEContext,
+								GCS_COMPATTR,NULL,0);
+		if (attrStrLen+1>mIMEAttributeStringSize) {
+			if (mIMEAttributeString!=NULL) 
+				delete [] mIMEAttributeString;
+			mIMEAttributeString = new char[attrStrLen+32];
+			mIMEAttributeStringSize = attrStrLen+32;
+		}
+
+		::ImmGetCompositionString(hIMEContext,
+				GCS_COMPATTR,
+				mIMEAttributeString,
+				mIMEAttributeStringSize);
+		mIMEAttributeStringLength = attrStrLen;
+		mIMEAttributeString[attrStrLen]='\0';
+	}
+
+	if (aGCS & GCS_COMPCLAUSE) {
+#ifdef DEBUG_IME
+		fprintf(stderr,"Handling GCS_COMPCLAUSE\n");
+#endif
+		long compClauseLen = ::ImmGetCompositionString(hIMEContext,
+				GCS_COMPCLAUSE,NULL,0);
+		if (compClauseLen+1>mIMECompClauseStringSize) {
+			if (mIMECompClauseString!=NULL) 
+				delete [] mIMECompClauseString;
+			mIMECompClauseString = new char [compClauseLen+32];
+			mIMECompClauseStringSize = compClauseLen+32;
+		}
+
+		::ImmGetCompositionString(hIMEContext,
+				GCS_COMPCLAUSE,
+				mIMECompClauseString,
+				mIMECompClauseStringSize);
+		mIMECompClauseStringLength = compClauseLen;
+		mIMECompClauseString[compClauseLen]='\0';
+	} else {
+		mIMECompClauseStringLength = 0;
+	}
+
+	if (aGCS & GCS_CURSORPOS) {
+#ifdef DEBUG_IME
+		fprintf(stderr,"Handling GCS_CURSORPOS\n");
+#endif
+		mIMECursorPosition = ::ImmGetCompositionString(hIMEContext,
+				GCS_CURSORPOS,NULL,0);
+	}
+
+	//
+	// This catches a fixed result
+	//
+	if (aGCS & GCS_RESULTSTR) {
+#ifdef DEBUG_IME
+		fprintf(stderr,"Handling GCS_RESULTSTR\n");
+#endif
+		if(! mIMEIsComposing) 
+			HandleStartComposition(hIMEContext);
+
+		long compStrLen = ::ImmGetCompositionString(hIMEContext,
+			GCS_RESULTSTR,NULL,0);
+		if (compStrLen+1>mIMECompositionStringSize) {
+			delete [] mIMECompositionString;
+			mIMECompositionString = new char[compStrLen+32];
+			mIMECompositionStringSize = compStrLen+32;
+		}
+		
+		::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,	
+			mIMECompositionString,
+			mIMECompositionStringSize);
+		mIMECompositionStringLength = compStrLen;
+		mIMECompositionString[compStrLen]='\0';
+
+#ifdef DEBUG_IME
+		fprintf(stderr,"GCS_RESULTSTR compStrLen = %d\n", compStrLen);
+#endif
+		result = PR_TRUE;
+		HandleTextEvent(hIMEContext, PR_FALSE);
+		HandleEndComposition();
+	}
+	//
+	// This provides us with a composition string
+	//
+	if (aGCS & GCS_COMPSTR) {
+#ifdef DEBUG_IME
+		fprintf(stderr,"Handling GCS_COMPSTR\n");
+#endif
+		if(! mIMEIsComposing) 
+			HandleStartComposition(hIMEContext);
+
+		long compStrLen = ::ImmGetCompositionString(hIMEContext,
+					GCS_COMPSTR,NULL,0);
+		if (compStrLen+1>mIMECompositionStringSize) {
+			if (mIMECompositionString!=NULL) 
+				delete [] mIMECompositionString;
+			mIMECompositionString = new char[compStrLen+32];
+			mIMECompositionStringSize = compStrLen+32;
+		}
+		
+		::ImmGetCompositionString(hIMEContext,
+			GCS_COMPSTR,
+			mIMECompositionString,
+			mIMECompositionStringSize);
+		mIMECompositionStringLength = compStrLen;
+
+#ifdef DEBUG_IME
+		fprintf(stderr,"GCS_COMPSTR compStrLen = %d\n", compStrLen);
+#endif
+		mIMECompositionString[compStrLen]='\0';
+		HandleTextEvent(hIMEContext);
+		result = PR_TRUE;
+	}
+	if(! result)
+	{
+#ifdef DEBUG_IME
+		fprintf(stderr,"Haandle 0 length TextEvent. \n");
+#endif
+		if(! mIMEIsComposing) 
+			HandleStartComposition(hIMEContext);
+
+		mIMECompositionStringLength = 0;
+		HandleTextEvent(hIMEContext,PR_FALSE);
+		result = PR_TRUE;
+	}
+	
+	::ImmReleaseContext(mWnd,hIMEContext);
+	return result;
+}
+//==========================================================================
+BOOL nsWindow::OnIMECompositionFull()			
+{
+#ifdef DEBUG_IME
+	printf("OnIMECompositionFull\n");
+#endif
+
+	// not implement yet
+	return PR_FALSE;
+}
+//==========================================================================
+BOOL nsWindow::OnIMEEndComposition()			
+{
+#ifdef DEBUG_IME
+	printf("OnIMEEndComposition\n");
+#endif
+	if(mIMEIsComposing)
+	{
+		HIMC hIMEContext;
+
+		if ((mIMEProperty & IME_PROP_SPECIAL_UI) || 
+			  (mIMEProperty & IME_PROP_AT_CARET)) 
+			return PR_FALSE;
+
+		hIMEContext = ::ImmGetContext(mWnd);
+		if (hIMEContext==NULL) 
+			return PR_TRUE;
+
+		// IME on Korean NT somehow send WM_IME_ENDCOMPOSITION
+		// first when we hit space in composition mode
+		// we need to clear out the current composition string 
+		// in that case. 
+		mIMECompositionStringLength = 0;
+		mIMECompositionString[0]='\0';
+		HandleTextEvent(hIMEContext, PR_FALSE);
+
+		HandleEndComposition();
+		::ImmReleaseContext(mWnd,hIMEContext);
+	}
+	return PR_TRUE;
+}
+//==========================================================================
+BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)	
+{
+#ifdef DEBUG_IME
+	printf("OnIMENotify\n");
+#endif
+
+	// not implement yet
+	return PR_FALSE;
+}
+//==========================================================================
+BOOL nsWindow::OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult)
+{
+#ifdef DEBUG_IME
+	printf("OnIMERequest\n");
+#endif
+
+	// not implement yet
+	return PR_FALSE;
+}
+//==========================================================================
+BOOL nsWindow::OnIMESelect(BOOL  aSelected, WORD aLangID)			
+{
+#ifdef DEBUG_IME
+	printf("OnIMESelect\n");
+#endif
+
+	// not implement yet
+	return PR_FALSE;
+}
+//==========================================================================
+BOOL nsWindow::OnIMESetContext(BOOL aActive, LPARAM aISC)			
+{
+#ifdef DEBUG_IME
+	printf("OnIMESetContext\n");
+#endif
+
+	// not implement yet
+	return PR_FALSE;
+}
+//==========================================================================
+BOOL nsWindow::OnIMEStartComposition()
+{
+#ifdef DEBUG_IME
+	printf("OnIMEStartComposition\n");
+#endif
+	HIMC hIMEContext;
+
+	if ((mIMEProperty & IME_PROP_SPECIAL_UI) || 
+      (mIMEProperty & IME_PROP_AT_CARET)) 
+		return PR_FALSE;
+
+	hIMEContext = ::ImmGetContext(mWnd);
+	if (hIMEContext==NULL) 
+		return PR_TRUE;
+
+	HandleStartComposition(hIMEContext);
+	::ImmReleaseContext(mWnd,hIMEContext);
+	return PR_TRUE;
 }
