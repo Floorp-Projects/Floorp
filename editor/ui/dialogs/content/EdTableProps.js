@@ -907,7 +907,7 @@ function ValidateCellData()
   if (gDialog.TextWrapCheckbox.checked)
   {
     if (gDialog.TextWrapList.selectedIndex == 1)
-      globalCellElement.setAttribute("nowrap","true");
+      globalCellElement.setAttribute("nowrap","nowrap");
     else
       globalCellElement.removeAttribute("nowrap");
   }
