@@ -106,7 +106,6 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
 #endif
 {
     int i;
-    int nfds;
     int npds;
     void *pollset;
     PRPollDesc *pd;
@@ -140,8 +139,7 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
 		
 #ifndef _PR_LOCAL_THREADS_ONLY
     if (_PR_IS_NATIVE_THREAD(_PR_MD_CURRENT_THREAD())) {
-	nfds = _MD_SELECT(width, rd, wr, ex, tv);	
-	return(nfds);
+        return _MD_SELECT(width, rd, wr, ex, tv);	
     }
 #endif
 
