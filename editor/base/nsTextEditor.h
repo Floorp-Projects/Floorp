@@ -23,7 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsEditor.h"
-#include "nsIEditRules.h"
+#include "nsTextEditRules.h"
 
 class nsIStyleContext;
 class nsIDOMRange;
@@ -121,7 +121,7 @@ protected:
 
 // Data members
 protected:
-  nsCOMPtr<nsIEditRules> mRules;
+  nsTextEditRules* mRules;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
 

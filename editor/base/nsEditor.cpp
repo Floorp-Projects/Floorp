@@ -752,7 +752,7 @@ NS_IMETHODIMP nsEditor::SelectAll()
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList>nodeList;
-    nsString bodyTag = "body";
+    nsAutoString bodyTag = "body";
     nsresult result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
     if ((NS_SUCCEEDED(result)) && nodeList)
     {
@@ -846,9 +846,9 @@ nsString & nsIEditor::GetTextNodeTag()
 
 
 NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
-                              nsIDOMNode *    aParent,
-                              PRInt32         aPosition,
-                              nsIDOMNode **   aNewNode)
+                                   nsIDOMNode *    aParent,
+                                   PRInt32         aPosition,
+                                   nsIDOMNode **   aNewNode)
 {
   CreateElementTxn *txn;
   nsresult result = CreateTxnForCreateElement(aTag, aParent, aPosition, &txn);
@@ -1075,7 +1075,7 @@ NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
   BeginTransaction();
 
   nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsString bodyTag = "body";
+  nsAutoString bodyTag = "body";
   nsresult result = mDoc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
   if ((NS_SUCCEEDED(result)) && nodeList)
   {
