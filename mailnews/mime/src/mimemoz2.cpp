@@ -34,10 +34,6 @@
 #include "mimemalt.h"
 #include "mimebuf.h"
 #include "mimemapl.h"
-#if 0
-#include "edt.h"
-#include "proto.h"
-#endif
 #include "prprf.h"
 #include "intl_csi.h"
 #include "mimei.h"      /* for moved MimeDisplayData struct */
@@ -75,12 +71,6 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
-#ifdef MOZ_SECURITY
-#include HG01944
-#include HG04488
-#include HG01999
-#endif /* MOZ_SECURITY */
 
 #ifdef HAVE_MIME_DATA_SLOT
 #define LOCK_LAST_CACHED_MESSAGE
@@ -1208,10 +1198,6 @@ MimeGetAttachmentCount(MWContext* context)
 }
 #endif
 
-#ifdef MOZ_SECURITY
-HG56025
-#endif
-
 PRBool MimeObjectChildIsMessageBody(MimeObject *obj, 
 									 PRBool *isAlternativeOrRelated)
 {
@@ -1271,10 +1257,6 @@ PRBool MimeObjectChildIsMessageBody(MimeObject *obj,
 	PR_FREEIF(disp);
 	return bRet;
 }
-
-#ifdef MOZ_SECURITY
-HG99007
-#endif
 
 #if 0
 extern int MIME_HasAttachments(MWContext *context)
