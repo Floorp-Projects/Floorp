@@ -2058,14 +2058,15 @@ XULDocumentImpl::EndLoad()
 
         // Add the local store to the composite datasource. It's first
         // so that any local annotations will over-ride default values
-        // from the document.
+        // from the document. Note that we may not be able to get a
+        // local store if we don't yet have a profile.
         rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(mLocalStore));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create local data source");
-        if (NS_FAILED(rv)) return rv;
 
-        rv = db->AddDataSource(mLocalStore);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't add local data source to db");
-        if (NS_FAILED(rv)) return rv;
+        if (NS_SUCCEEDED(rv)) {
+            rv = db->AddDataSource(mLocalStore);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't add local data source to db");
+            if (NS_FAILED(rv)) return rv;
+        }
 
         // Add the main document datasource to the content model builder
         rv = db->AddDataSource(mDocumentDataSource);
@@ -3160,6 +3161,12 @@ XULDocumentImpl::Persist(const nsString& aID, const nsString& aAttr)
 nsresult
 XULDocumentImpl::Persist(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aAttribute)
 {
+    // First make sure we _have_ a local store to stuff the persited
+    // information into. (We might not have one if profile information
+    // hasn't been loaded yet...)
+    if (! mLocalStore)
+        return NS_OK;
+
     nsresult rv;
 
     nsCOMPtr<nsIRDFResource> source;

@@ -1397,13 +1397,12 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
         return rv;
     }
 
-    // Add the local store as the first data source in the db.
-    {
-        nsCOMPtr<nsIRDFDataSource> localstore;
-        rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get local store");
-        if (NS_FAILED(rv)) return rv;
-
+    // Add the local store as the first data source in the db. Note
+    // that we _might_ not be able to get a local store if we haven't
+    // got a profile to read from yet.
+    nsCOMPtr<nsIRDFDataSource> localstore;
+    rv = gRDFService->GetDataSource("rdf:local-store", getter_AddRefs(localstore));
+    if (NS_SUCCEEDED(rv)) {
         rv = db->AddDataSource(localstore);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add local store to db");
         if (NS_FAILED(rv)) return rv;
