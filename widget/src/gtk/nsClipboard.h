@@ -52,6 +52,11 @@ protected:
   PRBool            mIgnoreEmptyNotification;
 
   gint GetFormat(const nsString & aMimeStr);
+  void RegisterFormat(gint format);
+
+
+  PRBool DoRealConvert(GdkAtom type);
+  PRBool DoConvert(gint format);
 
   void Init(void);
 
