@@ -25,6 +25,9 @@
 #include "nsCharsetAliasFactory.h"
 #include "pratom.h"
 
+// for NS_IMPL_IDS only
+#include "nsIPlatformCharset.h"
+
 #include "nsUConvDll.h"
 
 

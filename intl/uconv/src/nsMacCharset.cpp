@@ -17,9 +17,6 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-
-#define NS_IMPL_IDS
-
 #include "nsIPlatformCharset.h"
 #include "nsPlatformCharsetFactory.h"
 #include "pratom.h"
