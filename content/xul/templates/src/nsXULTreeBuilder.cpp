@@ -1112,7 +1112,7 @@ nsXULTreeBuilder::ReplaceMatch(nsIRDFResource* aMember,
             // Remove the rows from the view
             PRInt32 row = iter.GetRowIndex();
             PRInt32 delta = mRows.GetSubtreeSizeFor(iter);
-            if (mRows.RemoveRowAt(iter) == 0) {
+            if (mRows.RemoveRowAt(iter) == 0 && iter.GetRowIndex() >= 0) {
               // In this case iter now points to its parent
               // Invalidate the row's cached fill state
               iter->mContainerFill = nsTreeRows::eContainerFill_Unknown;
