@@ -86,7 +86,9 @@ printStatus(summary);
  * "out of memory" is not a catchable error: it cannot be
  * trapped with try...catch.
  */
-if (inRhino())
+var IN_RHINO = inRhino();
+
+if (IN_RHINO)
   expectExitCode(1);
 else
   expectExitCode(3);
@@ -96,7 +98,7 @@ else
  * Rhino can't seem to handle the largest array: it hangs...
  * So we'll skip this case in Rhino -
  */
-if (!(inRhino()))
+if (!IN_RHINO)
 {
   var a1=Array(0xFFFFFFFF);
   a1.sort();
