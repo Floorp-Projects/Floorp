@@ -44,6 +44,8 @@ PR_BEGIN_EXTERN_C
 typedef struct tmreader     tmreader;
 typedef struct tmevent      tmevent;
 typedef struct tmcounts     tmcounts;
+typedef struct tmallcounts  tmallcounts;
+typedef struct tmgraphlink  tmgraphlink;
 typedef struct tmgraphedge  tmgraphedge;
 typedef struct tmgraphnode  tmgraphnode;
 typedef struct tmcallsite   tmcallsite;
@@ -75,20 +77,25 @@ struct tmevent {
 };
 
 struct tmcounts {
-    int32           direct;     /* things allocated by this node's code */
-    int32           total;      /* direct + things from all descendents */
+    uint32          direct;     /* things allocated by this node's code */
+    uint32          total;      /* direct + things from all descendents */
+};
+
+struct tmallcounts {
+    tmcounts        bytes;
+    tmcounts        calls;
 };
 
 struct tmgraphnode {
     PLHashEntry     entry;      /* key is serial or name, value must be name */
-    tmgraphedge     *in;
-    tmgraphedge     *out;
+    tmgraphlink     *in;
+    tmgraphlink     *out;
     tmgraphnode     *up;        /* parent in supergraph, e.g., JS for JS_*() */
     tmgraphnode     *down;      /* subgraph kids, declining bytes.total order */
     tmgraphnode     *next;      /* next kid in supergraph node's down list */
     int             low;        /* 0 or lowest current tree walk level */
-    tmcounts        bytes;      /* bytes (direct and total) allocated */
-    tmcounts        allocs;     /* number of allocations */
+    tmallcounts     allocs;
+    tmallcounts     frees;
     double          sqsum;      /* sum of squared bytes.direct */
     int             sort;       /* sorted index in node table, -1 if no table */
 };
@@ -98,21 +105,39 @@ struct tmgraphnode {
 #define tmlibrary_serial(lib)   ((uint32) (lib)->entry.key)
 #define tmcomponent_name(comp)  ((const char*) (comp)->entry.key)
 
-struct tmgraphedge {
-    tmgraphedge     *next;
-    tmgraphnode     *node;
-    tmcounts        bytes;
+/* Half a graphedge, not including per-edge allocation stats. */
+struct tmgraphlink {
+    tmgraphlink     *next;      /* next fanning out from or into a node */
+    tmgraphnode     *node;      /* the other node (to if OUT, from if IN) */
 };
 
+/*
+ * It's safe to downcast a "from" tmgraphlink (one linked from a node's out
+ * pointer) to tmgraphedge.  To go from an "out" (linked via tmgraphedge.from)
+ * or "in" (linked via tmgraphedge.to) list link to its containing edge, use
+ * TM_LINK_TO_EDGE(link, which).
+ */
+struct tmgraphedge {
+    tmgraphlink     links[2];
+    tmallcounts     allocs;
+    tmallcounts     frees;
+};
+
+/* Indices into tmgraphedge.links -- out must come first. */
+#define TM_EDGE_OUT_LINK        0
+#define TM_EDGE_IN_LINK         1
+
+#define TM_LINK_TO_EDGE(link,which) ((tmgraphedge*) &(link)[-(which)])
+
 struct tmcallsite {
-    PLHashEntry     entry;
-    tmcallsite      *parent;
-    tmcallsite      *siblings;
-    tmcallsite      *kids;
-    tmgraphnode     *method;
-    uint32          offset;
-    tmcounts        bytes;
-    tmcounts        allocs;
+    PLHashEntry     entry;      /* key is site serial number */
+    tmcallsite      *parent;    /* calling site */
+    tmcallsite      *siblings;  /* other sites reached from parent */
+    tmcallsite      *kids;      /* sites reached from here */
+    tmgraphnode     *method;    /* method node in tmr->methods graph */
+    uint32          offset;     /* pc offset from start of method */
+    tmallcounts     allocs;
+    tmallcounts     frees;
 };
 
 struct tmreader {
