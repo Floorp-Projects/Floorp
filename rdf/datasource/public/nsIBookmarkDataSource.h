@@ -44,5 +44,5 @@ public:
     NS_IMETHOD FindBookmarkShortcut (const char *userInput, char **shortcutURL /* out */) = 0;
 };
 
-#endif nsIRDFBookmarkDataSource_h__
+#endif /* nsIRDFBookmarkDataSource_h__ */
 
