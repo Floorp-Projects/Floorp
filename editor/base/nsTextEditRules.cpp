@@ -361,8 +361,13 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
           if (PR_TRUE==aTypeInState.GetBold()) {
             res = InsertStyleNode(newTextNode, nsIEditProperty::b, aSelection, getter_AddRefs(newStyleNode));
           }
-          else {
-            printf("not yet implemented, make not bold in a bold context\n");
+          else 
+          {
+            nsCOMPtr<nsIDOMNode>parent;
+            res = newTextNode->GetParentNode(getter_AddRefs(parent));
+	          if (NS_FAILED(res)) return res;
+	          if (!parent) return NS_ERROR_NULL_POINTER;
+            res = mEditor->RemoveTextPropertiesForNode (newTextNode, parent, 0, 0, nsIEditProperty::b, nsnull);
           }
         }
         if (aTypeInState.IsSet(NS_TYPEINSTATE_ITALIC))
@@ -372,7 +377,11 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
           }
           else
           {
-            printf("not yet implemented, make not italic in a italic context\n");
+            nsCOMPtr<nsIDOMNode>parent;
+            res = newTextNode->GetParentNode(getter_AddRefs(parent));
+	          if (NS_FAILED(res)) return res;
+	          if (!parent) return NS_ERROR_NULL_POINTER;
+            res = mEditor->RemoveTextPropertiesForNode (newTextNode, parent, 0, 0, nsIEditProperty::i, nsnull);
           }
         }
         if (aTypeInState.IsSet(NS_TYPEINSTATE_UNDERLINE))
@@ -380,9 +389,13 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
           if (PR_TRUE==aTypeInState.GetUnderline()) {
             res = InsertStyleNode(newTextNode, nsIEditProperty::u, aSelection, getter_AddRefs(newStyleNode));
           }
-          else
+          else 
           {
-            printf("not yet implemented, make not underline in an underline context\n");
+            nsCOMPtr<nsIDOMNode>parent;
+            res = newTextNode->GetParentNode(getter_AddRefs(parent));
+	          if (NS_FAILED(res)) return res;
+	          if (!parent) return NS_ERROR_NULL_POINTER;
+            res = mEditor->RemoveTextPropertiesForNode (newTextNode, parent, 0, 0, nsIEditProperty::u, nsnull);
           }
         }
         if (aTypeInState.IsSet(NS_TYPEINSTATE_FONTCOLOR))
@@ -485,7 +498,7 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode,
 
   nsresult res;
   nsCOMPtr<nsIDOMNode>parent;
-  aNode->GetParentNode(getter_AddRefs(parent));
+  res = aNode->GetParentNode(getter_AddRefs(parent));
 	if (NS_FAILED(res)) return res;
 	if (!parent) return NS_ERROR_NULL_POINTER;
 
