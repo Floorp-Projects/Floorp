@@ -251,7 +251,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     if ((PR_FALSE==altKey) && (PR_FALSE==ctrlKey))
     {
       // XXX: this must change.  vk_tab must be handled here, not in keyDown
-      if (nsIDOMUIEvent::VK_TAB==character) 
+      if (nsIDOMUIEvent::VK_TAB==keyCode) 
       {
         return NS_OK; // ignore tabs here, they're handled in keyDown if at all
       }
