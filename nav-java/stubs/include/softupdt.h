@@ -15,26 +15,4 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "structs.h"
-
-/* Public */
-typedef void (*SoftUpdateCompletionFunction) (int result, void * closure);
-
-XP_BEGIN_PROTOS
-
-/* Flags for start software update */
-/* See trigger.java for docs */
-#define FORCE_INSTALL 1
-#define SILENT_INSTALL 2
-
-extern XP_Bool SU_StartSoftwareUpdate(MWContext * context, 
-				      const char * url, 
-				      const char * name, 
-				      SoftUpdateCompletionFunction f,
-				      void * completionClosure,
-                                      int32 flags); /* FORCE_INSTALL, SILENT_INSTALL */
-
-NET_StreamClass * SU_NewStream (int format_out, void * registration,
-				URL_Struct * request, MWContext *context);
-
-XP_END_PROTOS
+// this file is not longer used.
