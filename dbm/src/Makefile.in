@@ -25,7 +25,7 @@ CSRCS = db.c	   \
 	nsres.c	   \
 	$(NULL)
 
-LIBRARY_NAME = mozdbm
+LIBRARY_NAME = $(MOZ_LIB_DBM_PREFIX)dbm
 
 LOCAL_INCLUDES = -I$(srcdir)/../include
 

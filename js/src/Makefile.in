@@ -29,7 +29,7 @@ endif
 
 DIRS	+=	fdlibm
 
-LIBRARY_NAME	= js
+LIBRARY_NAME	= $(MOZ_LIB_JS_PREFIX)js
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2)
 ifndef XCFLAGS

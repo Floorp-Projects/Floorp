@@ -35,12 +35,12 @@ CFLAGS += -DJS_THREADSAFE -DJSFILE
 
 LDFLAGS		= 		\
 	-L$(DIST)/bin \
-	-ljs \
+	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxpcom       \
 	-lxpconnect \
 	-lxpcmd \
 	-lreg       \
-	-lmozutil    \
+	-l$(MOZ_LIB_UTIL_PREFIX)util    \
 	$(NSPR_LIBS) 	\
 	$(NULL)
 

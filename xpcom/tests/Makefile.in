@@ -46,13 +46,13 @@ NETLIB_LIBS =	      \
 	-lnetwork     \
 	-lxp	      \
 	-ljsurl	      \
-	-lmozdbm      \
+	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
 	-lpwcac	      \
 	$(NULL)
 
 LIBS		= \
 	-lpref \
-	-ljs \
+	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lsecfree \
 	-lxp \
 	-labouturl    \
@@ -73,14 +73,14 @@ LIBS		= \
 	-lxpcom       \
 	-lreg       \
 	-ljsurl	      \
-	-lmozdbm      \
+	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
 	-lpwcac	      \
 	-lgmbase$(MOZ_TOOLKIT) \
 	$(TK_LIBS) \
 	-limg	     \
 	$(JPEG_LIBS) \
 	$(PNG_LIBS)  \
-	-lmozutil    \
+	-l$(MOZ_LIB_UTIL_PREFIX)util    \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)

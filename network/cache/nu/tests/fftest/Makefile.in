@@ -30,7 +30,7 @@ LOCAL_INCLUDES	+= -I../../include
 
 LIBS		= \
 	-lcache \
-	-lmozdbm \
+	-l$(MOZ_LIB_DBM_PREFIX)dbm \
 	-lnetlib \
 	-lraptorbase \
 	-lnetcache \
@@ -49,7 +49,7 @@ LIBS		= \
 	-lgmbase$(MOZ_TOOLKIT) \
 	$(TK_LIBS) \
 	-lpref \
-	-ljs \
+	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lsecfree \
 	-lxpcom \
 	-lxp \
