@@ -78,64 +78,65 @@ public class Interpreter
         Icode_PUSH_PARENT               = -14,
 
     // Create closure object for nested functions
-        Icode_CLOSURE                   = -15,
+        Icode_CLOSURE_EXPR              = -15,
+        Icode_CLOSURE_STMT              = -16,
 
     // Special calls
-        Icode_CALLSPECIAL               = -16,
+        Icode_CALLSPECIAL               = -17,
 
     // To return undefined value
-        Icode_RETUNDEF                  = -17,
+        Icode_RETUNDEF                  = -18,
 
     // Exception handling implementation
-        Icode_CATCH                     = -18,
-        Icode_GOSUB                     = -19,
-        Icode_RETSUB                    = -20,
+        Icode_CATCH                     = -19,
+        Icode_GOSUB                     = -20,
+        Icode_RETSUB                    = -21,
 
     // To indicating a line number change in icodes.
-        Icode_LINE                      = -21,
+        Icode_LINE                      = -22,
 
     // To store shorts and ints inline
-        Icode_SHORTNUMBER               = -22,
-        Icode_INTNUMBER                 = -23,
+        Icode_SHORTNUMBER               = -23,
+        Icode_INTNUMBER                 = -24,
 
     // To create and populate array to hold values for [] and {} literals
-        Icode_LITERAL_NEW               = -24,
-        Icode_LITERAL_SET               = -25,
+        Icode_LITERAL_NEW               = -25,
+        Icode_LITERAL_SET               = -26,
 
     // Array literal with skipped index like [1,,2]
-        Icode_SPARE_ARRAYLIT            = -26,
+        Icode_SPARE_ARRAYLIT            = -27,
 
     // Load index register to prepare for the following index operation
-        Icode_REG_IND_C0                = -27,
-        Icode_REG_IND_C1                = -28,
-        Icode_REG_IND_C2                = -29,
-        Icode_REG_IND_C3                = -30,
-        Icode_REG_IND_C4                = -31,
-        Icode_REG_IND_C5                = -32,
-        Icode_REG_IND1                  = -33,
-        Icode_REG_IND2                  = -34,
-        Icode_REG_IND4                  = -35,
+        Icode_REG_IND_C0                = -28,
+        Icode_REG_IND_C1                = -29,
+        Icode_REG_IND_C2                = -30,
+        Icode_REG_IND_C3                = -31,
+        Icode_REG_IND_C4                = -32,
+        Icode_REG_IND_C5                = -33,
+        Icode_REG_IND1                  = -34,
+        Icode_REG_IND2                  = -35,
+        Icode_REG_IND4                  = -36,
 
     // Load string register to prepare for the following string operation
-        Icode_REG_STR_C0                = -36,
-        Icode_REG_STR_C1                = -37,
-        Icode_REG_STR_C2                = -38,
-        Icode_REG_STR_C3                = -39,
-        Icode_REG_STR1                  = -40,
-        Icode_REG_STR2                  = -41,
-        Icode_REG_STR4                  = -42,
+        Icode_REG_STR_C0                = -37,
+        Icode_REG_STR_C1                = -38,
+        Icode_REG_STR_C2                = -39,
+        Icode_REG_STR_C3                = -40,
+        Icode_REG_STR1                  = -41,
+        Icode_REG_STR2                  = -42,
+        Icode_REG_STR4                  = -43,
 
     // Version of getvar/setvar that read var index directly from bytecode
-        Icode_GETVAR1                   = -43,
-        Icode_SETVAR1                   = -44,
+        Icode_GETVAR1                   = -44,
+        Icode_SETVAR1                   = -45,
 
-        Icode_UNDEF                     = -45,
+        Icode_UNDEF                     = -46,
 
-        Icode_POP                       = -46,
-        Icode_POP_RESULT                = -47,
+        Icode_POP                       = -47,
+        Icode_POP_RESULT                = -48,
 
     // Last icode
-        MIN_ICODE                       = -47;
+        MIN_ICODE                       = -48;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -181,7 +182,8 @@ public class Interpreter
           case Icode_NAME_FAST_THIS:   return "NAME_FAST_THIS";
           case Icode_NAME_SLOW_THIS:   return "NAME_SLOW_THIS";
           case Icode_PUSH_PARENT:      return "PUSH_PARENT";
-          case Icode_CLOSURE:          return "CLOSURE";
+          case Icode_CLOSURE_EXPR:     return "CLOSURE_EXPR";
+          case Icode_CLOSURE_STMT:     return "CLOSURE_STMT";
           case Icode_CALLSPECIAL:      return "CALLSPECIAL";
           case Icode_RETUNDEF:         return "RETUNDEF";
           case Icode_CATCH:            return "CATCH";
@@ -462,27 +464,28 @@ public class Interpreter
 
           case Token.FUNCTION: {
             int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
-            FunctionNode fn = scriptOrFn.getFunctionNode(fnIndex);
-            if (fn.getFunctionType() != FunctionNode.FUNCTION_STATEMENT) {
-                // See comments in visitExpression
-                throw Kit.codeBug();
+            int fnType = scriptOrFn.getFunctionNode(fnIndex).getFunctionType();
+            // Only function expressions or function expression
+            // statements needs closure code creating new function
+            // object on stack as function statements are initialized
+            // at script/function start
+            // In addition function expression can not present here
+            // at statement level, they must only present as expressions.
+            if (fnType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
+                iCodeTop = addIndexOp(Icode_CLOSURE_STMT, fnIndex, iCodeTop);
+            } else {
+                if (fnType != FunctionNode.FUNCTION_STATEMENT) {
+                    throw Kit.codeBug();
+                }
             }
             break;
           }
-
-          case Token.SCRIPT:
-            iCodeTop = updateLineNumber(node, iCodeTop);
-            while (child != null) {
-                if (child.getType() != Token.FUNCTION)
-                    iCodeTop = visitStatement(child, iCodeTop);
-                child = child.getNext();
-            }
-            break;
 
           case Token.CASE:
             // Skip case condition
             child = child.getNext();
             // fallthrough
+          case Token.SCRIPT:
           case Token.LABEL:
           case Token.LOOP:
           case Token.DEFAULT:
@@ -716,14 +719,11 @@ public class Interpreter
           case Token.FUNCTION: {
             int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
             FunctionNode fn = scriptOrFn.getFunctionNode(fnIndex);
-            // Only function expressions or function expression
-            // statements needs closure code creating new function
-            // object on stack as function statements are initialized
-            // at script/function start
-            if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
+            // See comments in visitStatement for Token.FUNCTION case
+            if (fn.getFunctionType() != FunctionNode.FUNCTION_EXPRESSION) {
                 throw Kit.codeBug();
             }
-            iCodeTop = addIndexOp(Icode_CLOSURE, fnIndex, iCodeTop);
+            iCodeTop = addIndexOp(Icode_CLOSURE_EXPR, fnIndex, iCodeTop);
             stackChange(1);
             break;
           }
@@ -1674,7 +1674,8 @@ public class Interpreter
               case Icode_SPARE_ARRAYLIT :
                 out.println(tname+" "+idata.literalIds[indexReg]);
                 break;
-              case Icode_CLOSURE :
+              case Icode_CLOSURE_EXPR :
+              case Icode_CLOSURE_STMT :
                 out.println(tname+" "+idata.itsNestedFunctions[indexReg]);
                 break;
               case Token.CALL :
@@ -2797,10 +2798,15 @@ switch (op) {
     case Icode_SCOPE :
         stack[++stackTop] = scope;
         continue Loop;
-    case Icode_CLOSURE : {
+    case Icode_CLOSURE_EXPR : {
         InterpreterData closureData = idata.itsNestedFunctions[indexReg];
         stack[++stackTop] = createFunction(cx, scope, closureData,
                                            idata.itsFromEvalCode);
+        continue Loop;
+    }
+    case Icode_CLOSURE_STMT : {
+        InterpreterData closureData = idata.itsNestedFunctions[indexReg];
+        createFunction(cx, scope, closureData, idata.itsFromEvalCode);
         continue Loop;
     }
     case Token.REGEXP : {

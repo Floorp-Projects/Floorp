@@ -1394,17 +1394,19 @@ class BodyCodegen
               case Token.USE_STACK:
                 break;
 
-              case Token.FUNCTION:
-                if (fnCurrent != null || parent.getType() != Token.SCRIPT) {
-                    int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
-                    OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn,
-                                                             fnIndex);
-                    int t = ofn.fnode.getFunctionType();
+              case Token.FUNCTION: {
+                int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
+                OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn, fnIndex);
+                int t = ofn.fnode.getFunctionType();
+                if (t == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
+                    visitFunction(ofn, t);
+                } else {
                     if (t != FunctionNode.FUNCTION_STATEMENT) {
                         throw Codegen.badTree();
                     }
                 }
                 break;
+              }
 
               case Token.TRY:
                 visitTryCatchFinally((Node.Jump)node, child);
@@ -1514,7 +1516,7 @@ class BodyCodegen
                     OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn,
                                                              fnIndex);
                     int t = ofn.fnode.getFunctionType();
-                    if (t == FunctionNode.FUNCTION_STATEMENT) {
+                    if (t != FunctionNode.FUNCTION_EXPRESSION) {
                         throw Codegen.badTree();
                     }
                     visitFunction(ofn, t);
@@ -1976,7 +1978,7 @@ class BodyCodegen
 
         // Dup function reference for function expressions to have it
         // on top of the stack when initFunction returns
-        if (functionType != FunctionNode.FUNCTION_STATEMENT) {
+        if (functionType == FunctionNode.FUNCTION_EXPRESSION) {
             cfw.add(ByteCode.DUP);
         }
         cfw.addPush(functionType);

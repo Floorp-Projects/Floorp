@@ -377,12 +377,6 @@ public class Parser
         Node pn;
         if (memberExprNode == null) {
             pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
-            if (functionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
-                // The following can be removed but then code generators should
-                // be modified not to push on the stack function expression
-                // statements
-                pn = nf.createExprStatementNoReturn(pn, baseLineno);
-            }
         } else {
             pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
             pn = nf.createAssignment(memberExprNode, pn);
