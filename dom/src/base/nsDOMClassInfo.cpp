@@ -31,6 +31,7 @@
 
 // JavaScript includes
 #include "jsapi.h"
+#include "jsnum.h"
 
 // General helper includes
 #include "nsIContent.h"
@@ -688,6 +689,33 @@ nsDOMClassInfo::Init()
   sIsInitialized = PR_TRUE;
 
   return NS_OK;
+}
+
+// static
+PRInt32
+nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, jsval id, PRBool *aIsNumber)
+{
+  jsdouble array_index;
+
+  if (aIsNumber) {
+    *aIsNumber = PR_FALSE;
+  }
+
+  if (!::JS_ValueToNumber(cx, id, &array_index)) {
+    return -1;
+  }
+
+  jsint i;
+
+  if (!JSDOUBLE_IS_INT(array_index, i)) {
+    return -1;
+  }
+
+  if (aIsNumber) {
+    *aIsNumber = PR_TRUE;
+  }
+
+  return i;
 }
 
 NS_IMETHODIMP
@@ -2103,10 +2131,10 @@ NS_IMETHODIMP
 nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
-  int32 n = -1;
+  PRBool is_number = PR_FALSE;
+  int32 n = GetArrayIndexFromId(cx, id, &is_number);
 
-  if ((JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) &&
-      ::JS_ValueToECMAInt32(cx, id, &n)) {
+  if (is_number) {
     if (n < 0) {
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
@@ -2495,9 +2523,9 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     return NS_OK; // Don't fall through
   }
 
-  int32 n = -1;
+  PRInt32 n = GetArrayIndexFromId(cx, id);
 
-  if (JSVAL_IS_NUMBER(id) && ::JS_ValueToECMAInt32(cx, id, &n) && n >= 0) {
+  if (n >= 0) {
     nsCOMPtr<nsIFormControl> control;
     form->GetElementAt(n, getter_AddRefs(control));
 
@@ -2518,10 +2546,9 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                                    JSContext *cx, JSObject *obj, jsval id,
                                    jsval *vp, PRBool *_retval)
 {
-  int32 n = -1;
+  PRInt32 n = GetArrayIndexFromId(cx, id);
 
-  if ((JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) &&
-      ::JS_ValueToECMAInt32(cx, id, &n) && n >= 0) {
+  if (n >= 0) {
     nsCOMPtr<nsISupports> native;
 
     wrapper->GetNative(getter_AddRefs(native));
@@ -2587,10 +2614,9 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                                    JSContext *cx, JSObject *obj, jsval id,
                                    jsval *vp, PRBool *_retval)
 {
-  int32 n = -1;
+  int32 n = GetArrayIndexFromId(cx, id);
 
-  if (!(JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) ||
-      !::JS_ValueToECMAInt32(cx, id, &n) || n < 0) {
+  if (n < 0) {
     return NS_OK;
   }
 
@@ -3019,10 +3045,9 @@ nsHTMLOptionCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                                       JSContext *cx, JSObject *obj, jsval id,
                                       jsval *vp, PRBool *_retval)
 {
-  int32 n = -1;
+  int32 n = GetArrayIndexFromId(cx, id);
 
-  if (!(JSVAL_IS_NUMBER(id) || JSVAL_IS_STRING(id)) ||
-      !::JS_ValueToECMAInt32(cx, id, &n) || n < 0) {
+  if (n < 0) {
     return NS_OK;
   }
 
@@ -3145,24 +3170,29 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, jsval id, jsval *vp,
                              PRBool *_retval)
 {
-  if (JSVAL_IS_NUMBER(id)) {
-    nsCOMPtr<nsISupports> native;
-    wrapper->GetNative(getter_AddRefs(native));
+  PRBool is_number = PR_FALSE;
+  PRInt32 n = GetArrayIndexFromId(cx, id, &is_number);
 
-    nsAutoString val;
-
-    nsresult rv = GetStringAt(native, JSVAL_TO_INT(id), val);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // XXX: Null strings?
-
-    JSString *str =
-      ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *, val.get()),
-                            val.Length());
-    NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
-
-    *vp = STRING_TO_JSVAL(str);
+  if (!is_number) {
+    return NS_OK;
   }
+
+  nsCOMPtr<nsISupports> native;
+  wrapper->GetNative(getter_AddRefs(native));
+
+  nsAutoString val;
+
+  nsresult rv = GetStringAt(native, n, val);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // XXX: Null strings?
+
+  JSString *str =
+    ::JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar *, val.get()),
+                          val.Length());
+  NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
+
+  *vp = STRING_TO_JSVAL(str);
 
   return NS_OK;
 }
