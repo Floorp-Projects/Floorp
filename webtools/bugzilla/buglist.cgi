@@ -503,11 +503,9 @@ sub GenerateSQL {
          },
 
          "^cc," => sub {
-            push(@supptables, "cc cc_$chartid");
-            push(@wherepart, "bugs.bug_id = cc_$chartid.bug_id");
+            push(@supptables, "LEFT JOIN cc cc_$chartid ON bugs.bug_id = cc_$chartid.bug_id");
 
-            push(@supptables, "profiles map_cc_$chartid");
-            push(@wherepart, "cc_$chartid.who = map_cc_$chartid.userid");
+            push(@supptables, "LEFT JOIN profiles map_cc_$chartid ON cc_$chartid.who = map_cc_$chartid.userid");
             $f = "map_cc_$chartid.login_name";
          },
 
