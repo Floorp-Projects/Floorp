@@ -135,7 +135,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   }
   my %all_fields;
   foreach my $field (qw (dependson product bug_status priority cc version 
-      bug_id rep_platform short_desc assigned_to resolution
+      bug_id rep_platform short_desc assigned_to bug_file_loc resolution
       delta_ts component reporter urlbase target_milestone bug_severity 
       creation_ts qa_contact keyword status_whiteboard op_sys blocks)) {
     $all_fields{$field} = "x"; 
@@ -229,6 +229,11 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
         $values .= SqlQuote($bug_fields{$field}) . ",\n";
       }
   }
+
+  if ( (defined $bug_fields{'bug_file_loc'}) && ($bug_fields{'bug_file_loc'}) ){
+        $query .= "bug_file_loc,\n";
+      $values .= SqlQuote(UnQuoteXMLChars($bug_fields{'bug_file_loc'})) . ",\n";
+      }
 
   if ( (defined $bug_fields{'short_desc'}) && ($bug_fields{'short_desc'}) ){
         $query .= "short_desc,\n";
@@ -349,6 +354,23 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     $err .= ". Setting to default severity \"normal\".\n";
   }
 
+  my $reporterid = DBname_to_id($bug_fields{'reporter'});
+  if ( ($bug_fields{'reporter'}) && ( $reporterid ) ) {
+    $values .= "'$reporterid',\n";
+    $query .= "reporter,\n";
+  } else {
+    $values .= "'$exporterid',\n";
+    $query .= "reporter,\n";
+    $err .= "The original reporter of this bug does not have\n";
+    $err .= "   an account here. Reassigning to the person who moved\n";
+    $err .= "   it here, $exporter.\n";
+    if ( $bug_fields{'reporter'} ) {
+      $err .= "   Previous reporter was $bug_fields{'reporter'}.\n";
+    } else {
+      $err .= "   Previous reporter is unknown.\n";
+    }
+  }
+
   my $changed_owner = 0;
   if ( ($bug_fields{'assigned_to'}) && 
        ( DBname_to_id($bug_fields{'assigned_to'})) ) {
@@ -360,7 +382,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     $changed_owner = 1;
     $err .= "The original owner of this bug does not have\n";
     $err .= "   an account here. Reassigning to the person who moved\n";
-    $err .= "   it here, $bug_fields{'exporter'}\n";
+    $err .= "   it here, $exporter.\n";
     if ( $bug_fields{'assigned_to'} ) {
       $err .= "   Previous owner was $bug_fields{'assigned_to'}.\n";
     } else {
