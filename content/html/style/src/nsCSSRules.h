@@ -73,7 +73,7 @@ protected:
 
   // to help implement nsIStyleRule
 #ifdef DEBUG
-  nsresult List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
 public:
