@@ -124,6 +124,7 @@
 <!--
   datasources="rdf:null" makes the tree able to get it's contents from an
   rdf datasource, but delays saying which one until runtime.
+-->
   containment="http://www.mozilla.org/NC-xpcom#component" says that
     <tree id="component-list" container="true" datasources="rdf:null" flex="1"
       containment="http://www.mozilla.org/NC-xpcom#component">
