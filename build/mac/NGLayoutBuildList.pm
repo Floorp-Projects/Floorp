@@ -392,6 +392,7 @@ sub MakeResourceAliases()
 	_MakeAlias(":mozilla:intl:uconv:src:charsetData.properties",						"$resource_dir");
 	_MakeAlias(":mozilla:intl:uconv:src:charsetTitles.properties",						"$resource_dir");
    	_MakeAlias(":mozilla:intl:uconv:src:acceptlanguage.properties",						"$resource_dir");
+	_MakeAlias(":mozilla:intl:locale:src:langGroups.properties",						"$resource_dir");
 	_InstallResources(":mozilla:gfx:src:MANIFEST",										"$resource_dir"."gfx:");
 
 	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST",						"$resource_dir");
