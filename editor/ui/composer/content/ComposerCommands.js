@@ -593,7 +593,8 @@ var nsDummyHTMLCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -662,8 +663,9 @@ var nsSaveCommand =
     //  when you first open a remote file.
     try {
       var docUrl = GetDocumentUrl();
-      return window.editorShell && window.editorShell.documentEditable &&
-        (window.editorShell.documentModified || window.gHTMLSourceChanged ||
+      var editor = GetCurrentEditor();
+      return editor && editor.isDocumentEditable &&
+        (editor.documentModified || window.gHTMLSourceChanged ||
          IsUrlAboutBlank(docUrl) || GetScheme(docUrl) != "file");
     } catch (e) {return false;}
   },
@@ -688,7 +690,8 @@ var nsSaveAsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable);
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -711,7 +714,8 @@ var nsExportToTextCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable);
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -734,7 +738,8 @@ var nsSaveAsCharsetCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable);
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -772,14 +777,16 @@ var nsPublishCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    if (window.editorShell && window.editorShell.documentEditable)
+    var editor = GetCurrentEditor();
+    if (editor && editor.isDocumentEditable);
     {
       // Always allow publishing when editing a local document,
       //  otherwise the document modified state would prevent that
       //  when you first open any local file.
       try {
         var docUrl = GetDocumentUrl();
-        return window.editorShell.documentModified || window.gHTMLSourceChanged
+        var editor = GetCurrentEditor();
+        return editor.documentModified || window.gHTMLSourceChanged
                || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file";
       } catch (e) {return false;}
     }
@@ -844,7 +851,8 @@ var nsPublishAsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable);
   },
   
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2138,7 +2146,8 @@ var nsPublishSettingsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable);
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2163,8 +2172,9 @@ var nsRevertCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            window.editorShell.documentModified &&
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable &&
+            editor.documentModified &&
             !IsUrlAboutBlank(GetDocumentUrl()));
   },
 
@@ -2256,9 +2266,10 @@ var nsPreviewCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && 
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable && 
             isHTMLEditor() && 
-            (DocumentHasBeenSaved() || window.editorShell.documentModified));
+            (DocumentHasBeenSaved() || editor.documentModified));
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2313,8 +2324,9 @@ var nsSendPageCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell != null && window.editorShell.documentEditable &&
-            (DocumentHasBeenSaved() || window.editorShell.documentModified));
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable &&
+            (DocumentHasBeenSaved() || editor.documentModified));
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2467,7 +2479,8 @@ var nsSpellingCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && 
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable && 
             !IsInHTMLSourceMode() && IsSpellCheckerInstalled());
   },
 
@@ -2502,7 +2515,7 @@ var nsValidateCommand =
   {
     // If the document hasn't been modified,
     // then just validate the current url.
-    if (editorShell.documentModified || gHTMLSourceChanged)
+    if (GetCurrentEditor().documentModified || gHTMLSourceChanged)
     {
       if (!CheckAndSaveDocument("cmd_validate", false))
         return;
@@ -2547,7 +2560,8 @@ var nsCheckLinksCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable);
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2565,7 +2579,8 @@ var nsFormCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2583,7 +2598,8 @@ var nsInputTagCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2601,7 +2617,8 @@ var nsInputImageCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2619,7 +2636,8 @@ var nsTextAreaCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2637,7 +2655,8 @@ var nsSelectCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2674,7 +2693,8 @@ var nsLabelCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    var editor = GetCurrentEditor();
+    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
