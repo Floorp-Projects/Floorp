@@ -1,6 +1,7 @@
 Makefile
 TestSocketIO
 TestSocketInput
+TestSocketTransport
 TestProtocols
 TestFileInput
 nettest
