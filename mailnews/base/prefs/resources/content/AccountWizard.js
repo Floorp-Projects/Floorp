@@ -158,7 +158,7 @@ function onCancel()
 
 		// set the email if it doesn't exist
 		if (!pageData.identity.email || !pageData.identity.email.value) {
-    		setPageData(pageData, "identity", "email", "nospam@nospam");
+    		setPageData(pageData, "identity", "email", "user@domain.invalid");
 		}
 	
 		// call FinishAccount() and not onFinish(), since the "finish"
