@@ -67,6 +67,9 @@
 #include "nsMetaCharsetCID.h"
 #include "nsIMetaCharsetService.h"
 
+// cookie
+#include "nsICookieService.h"
+
 #define DIALOG_FONT      "Helvetica"
 #define DIALOG_FONT_SIZE 10
 
@@ -94,6 +97,7 @@ static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
+static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
@@ -281,6 +285,13 @@ nsViewerApp::SetupRegistry()
   nsComponentManager::RegisterFactory(kXPBaseWindowCID, 0, 0, bwf, PR_FALSE);
   NS_RELEASE(bwf);
 
+  // register the cookie manager
+  NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+  if (NS_FAILED(rv) || (nsnull == cookieService)) {
+#ifdef DEBUG
+    printf("Unable to instantiate Cookie Manager\n");
+#endif
+  }
 
    // Register a form processor. The form processor has the opportunity to
    // modify the value's passed during form submission.
