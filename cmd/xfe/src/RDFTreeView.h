@@ -98,6 +98,9 @@ private:
 	// Is this a stand alone view ?
 	XP_Bool					_standAloneState;
 
+    // Are the cells editable?
+    XP_Bool                 _isCellEditable;
+
   // icons for use in the bookmark window.
   static fe_icon bookmark;
   static fe_icon openedFolder;

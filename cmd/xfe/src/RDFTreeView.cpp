@@ -166,7 +166,8 @@ XFE_RDFTreeView::XFE_RDFTreeView(XFE_Component *	toplevel,
 	XFE_View(toplevel, parent_view, context),
 	_ht_rdfView(NULL),
 	_popup(NULL),
-	_standAloneState(False)
+	_standAloneState(False),
+    _isCellEditable(False)
 {
 	if (!my_commands)
 	{
@@ -581,9 +582,9 @@ XFE_RDFTreeView::setHTView(HT_View htview)
 	{
 		return;
 	}
-    setHTTreeViewProperties(_ht_rdfView);	
-	fill_tree();
 
+	fill_tree();
+    setHTTreeViewProperties(_ht_rdfView);	
 }
 //////////////////////////////////////////////////////////////////////
 HT_View
@@ -599,8 +600,14 @@ XFE_RDFTreeView::fill_tree()
   if (!_ht_rdfView || !m_widget)
       return;
   
-  int 
-item_count =  HT_GetItemListCount(_ht_rdfView);
+  int item_count =  HT_GetItemListCount(_ht_rdfView);
+  void * data=NULL;
+
+    /* This s'd eventually be replaced by the HT property useInlineEditing */
+  if (getStandAloneState())
+    _isCellEditable = True;
+  else
+    _isCellEditable = False;
 
   XtVaSetValues(m_widget,
                 XmNlayoutFrozen, True,
@@ -721,10 +728,12 @@ XFE_RDFTreeView::add_row
                       XmNcolumnPtr, column,
                       XmNcolumnUserData, &column_data,
                       NULL);
-
+/*
         Boolean is_editable = HT_IsNodeDataEditable(node,
                                                      column_data->token,
                                                     column_data->token_type);
+*/
+        Boolean is_editable = _isCellEditable;
         XtVaSetValues(m_widget,
                       XmNrow,          row,
                       XmNcolumn,       ii,
@@ -1087,38 +1096,49 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
    }
 
 
-   /*  showColumnHeaders */
+   /*  showColumnHeaders */ 
+   /* This doesn't work now. showColumnHeaders returns False in docked as well
+    * as in standalone mode. So we'll use the FE method to figure this, until
+    * the BE is fixed 
+    */
+/*
    HT_GetTemplateData(HT_TopNode(view),  gNavCenter->showColumnHeaders, HT_COLUMN_STRING, &data);
    if (data)
    {
        char * answer = (char *) data;
        if ((!XP_STRCASECMP(answer, "yes")) || (!XP_STRCASECMP(answer, "1")))
-       {
+       {  }
+    else if ((!XP_STRCASECMP(answer, "No")) || (!XP_STRCASECMP(answer, "0")))
+    {  }
+*/
+    if (_standAloneState)
+    {
+         /* Management mode */
          XtSetArg(av[ac], XmNheadingRows, 1);      
          ac ++;
          XtSetArg(av[ac], XmNhideUnhideButtons, True);
          ac++;
-       }
-       else if ((!XP_STRCASECMP(answer, "No")) || (!XP_STRCASECMP(answer, "0")))
-       {
+    }
+    else
+    {
+         /* Navigation mode */
          XtSetArg(av[ac], XmNheadingRows, 0);      
          ac ++;
          XtSetArg(av[ac], XmNhideUnhideButtons, False);
          ac++;
          XtSetArg(av[ac], XmNvisibleColumns, 1);
          ac++;
-
-       }
-
-   }
+    }
 
 
-   /* useInlineEditing */ 
-   HT_GetTemplateData(HT_TopNode(view),  gNavCenter->useInlineEditing, HT_COLUMN_STRING, &data);
+
+   /* useInlineEditing. This doesn't work now for teh same reason as above */ 
+   HT_GetTemplateData(HT_TopNode(_ht_rdfView),  gNavCenter->useInlineEditing, HT_COLUMN_STRING, &data);
    if (data)
    {
-       /* This s'd probably go to fill_tree(); */
+       /* Decide if cells are editable */
    }
+
 
    Widget  tree = getBaseWidget();
    XtSetValues(tree, av, ac);
