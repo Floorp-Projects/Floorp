@@ -96,7 +96,7 @@ nsMsgSendPart::~nsMsgSendPart()
 
 	delete [] m_children;
     delete [] m_buffer;
-    delete [] m_other;
+	PR_FREEIF(m_other);
 	if (m_filename)
 		delete [] m_filename;
 	PR_FREEIF(m_type);
@@ -176,7 +176,7 @@ int nsMsgSendPart::AppendOtherHeaders(const char* more)
 
 	PL_strcpy(tmp, m_other);
 	PL_strcat(tmp, more);
-	delete [] m_other;
+	PR_FREEIF(m_other);
 	m_other = tmp;
 
 	return 0;
