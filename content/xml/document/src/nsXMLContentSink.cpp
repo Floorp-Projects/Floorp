@@ -109,7 +109,6 @@ static char kStyleSheetPI[] = "xml-stylesheet";
 #define kXSLType "text/xsl"
 
 static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsINameSpaceManager* nsXMLContentSink::gNameSpaceManager = nsnull;
 PRUint32 nsXMLContentSink::gRefCnt = 0;
