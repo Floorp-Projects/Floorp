@@ -19,6 +19,9 @@
 #include "nsComboBox.h"
 #include "nsMenu.h"
 #include <StringCompare.h>
+#if TARGET_CARBON
+#include <ControlDefinitions.h>
+#endif
 
 NS_IMPL_ADDREF(nsComboBox);
 NS_IMPL_RELEASE(nsComboBox);
@@ -79,12 +82,17 @@ NS_IMETHODIMP nsComboBox::Create(nsIWidget *aParent,
   			::InsertMenu(mMenuHandle, hierMenu);
 //			::SetControlData(mControl, kControlNoPart, kControlPopupButtonMenuHandleTag, sizeof(mMenuHandle), (Ptr)&mMenuHandle);
 //			::SetControlData(mControl, kControlNoPart, kControlPopupButtonMenuIDTag, sizeof(mMenuID), (Ptr)&mMenuID);
+#if TARGET_CARBON
+			::SetControlPopupMenuHandle ( mControl, mMenuHandle );
+			::SetControlPopupMenuID ( mControl, mMenuID );
+#else
 			PopupPrivateData* popupData = (PopupPrivateData*)*((*mControl)->contrlData);
 			if (popupData)
 			{
 				popupData->mHandle = mMenuHandle;
 				popupData->mID = mMenuID;
 			}
+#endif
 			EndDraw();
   		}
   		else
