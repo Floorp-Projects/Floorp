@@ -49,6 +49,7 @@
 #include "ProxyClassLoader.h"
 
 #include "ProxyJNI.h"
+#include "nsDataHashtable.h"
 
 #ifdef DEBUG
 #include "nsDebug.h"
@@ -222,6 +223,41 @@ jvalue* JNIMethod::marshallArgs(va_list args)
     return jargs;
 }
 
+struct JavaClassMember {
+    jclass clazz;
+    void*  memberID;
+
+    JavaClassMember(jclass cl, void* mID)
+        { clazz = cl; memberID = mID;}
+};
+
+class JavaClassMemberKey : public PLDHashEntryHdr
+{
+public:
+  typedef const JavaClassMember& KeyType;
+  typedef const JavaClassMember* KeyTypePointer;
+  
+  JavaClassMemberKey(KeyTypePointer aKey) : mValue(*aKey) { }
+  JavaClassMemberKey(const JavaClassMemberKey& toCopy) : mValue(toCopy.mValue) { }
+  ~JavaClassMemberKey() { }
+
+  KeyType GetKey() const { return mValue; }
+  KeyTypePointer GetKeyPointer() const { return &mValue; }
+  PRBool KeyEquals(KeyTypePointer aKey) const { return aKey->clazz == mValue.clazz && aKey->memberID == mValue.memberID; }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) 
+  { 
+    PRUint32 v1 = NS_PTR_TO_INT32(aKey->clazz);
+    PRUint32 v2 = NS_PTR_TO_INT32(aKey->memberID);
+    return v1 ^ v2;
+  }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+private:
+  const JavaClassMember mValue;
+};
+
 /**
  * Marshalls a va_list into a jvalue array, and destructor automatically
  * deletes when the args go out of scope.
@@ -242,7 +278,7 @@ static jvalue kErrorValue;
 class ProxyJNIEnv : public JNIEnv {
 private:
     static JNINativeInterface_ theFuncs;
-    static nsHashtable* theIDTable;
+    static nsDataHashtable<JavaClassMemberKey, void*>* theIDTable;
     nsISecureEnv* mSecureEnv;
     nsISecurityContext* mContext;
     jbool mInProxyFindClass;
@@ -509,11 +545,13 @@ private:
         jmethodID outMethodID = NULL;
         nsresult result = secureEnv->GetMethodID(clazz, name, sig, &outMethodID);
         if (result == NS_OK && outMethodID != NULL) {
-            nsVoidKey key(outMethodID);
-            JNIMethod* method = (JNIMethod*) theIDTable->Get(&key);
-            if (method == NULL) {
+            JavaClassMember key(clazz, outMethodID);
+            JNIMethod* method;
+            PRBool bFound = theIDTable && theIDTable->Get(key, (void **)&method);
+            if (!bFound) {
                 method = new JNIMethod(name, sig, outMethodID);
-                theIDTable->Put(&key, method);
+                if (theIDTable)
+                    theIDTable->Put(key, method);
             }
             outMethodID = jmethodID(method);
         }
@@ -725,11 +763,13 @@ private:
         jfieldID outFieldID = NULL;
         nsresult result = secureEnv->GetFieldID(clazz, name, sig, &outFieldID);
         if (result == NS_OK && outFieldID != NULL) {
-            nsVoidKey key(outFieldID);
-            JNIField* field = (JNIField*) theIDTable->Get(&key);
-            if (field == NULL) {
+            JavaClassMember key(clazz, outFieldID);
+            JNIField* field;
+            PRBool bFound = theIDTable && theIDTable->Get(key, (void **)&field);
+            if (!bFound) {
                 field = new JNIField(name, sig, outFieldID);
-                theIDTable->Put(&key, field);
+                if (theIDTable)
+                    theIDTable->Put(key, field);
             }
             outFieldID = jfieldID(field);
         }
@@ -803,11 +843,13 @@ private:
         jmethodID outMethodID = NULL;
         nsresult result = secureEnv->GetStaticMethodID(clazz, name, sig, &outMethodID);
         if (result == NS_OK && outMethodID != NULL) {
-            nsVoidKey key(outMethodID);
-            JNIMethod* method = (JNIMethod*) theIDTable->Get(&key);
-            if (method == NULL) {
+            JavaClassMember key(clazz, outMethodID);
+            JNIMethod* method;
+            PRBool bFound = theIDTable && theIDTable->Get(key, (void **)&method);
+            if (!bFound) {
                 method = new JNIMethod(name, sig, outMethodID);
-                theIDTable->Put(&key, method);
+                if (theIDTable)
+                    theIDTable->Put(key, method);
             }
             outMethodID = jmethodID(method);
         }
@@ -910,11 +952,13 @@ private:
         jfieldID outFieldID = NULL;
         nsresult result = secureEnv->GetStaticFieldID(clazz, name, sig, &outFieldID);
         if (result == NS_OK && outFieldID != NULL) {
-            nsVoidKey key(outFieldID);
-            JNIField* field = (JNIField*) theIDTable->Get(&key);
-            if (field == NULL) {
+            JavaClassMember key(clazz, outFieldID);
+            JNIField* field;
+            PRBool bFound = theIDTable && theIDTable->Get(key, (void **)field);
+            if (!bFound) {
                 field = new JNIField(name, sig, outFieldID);
-                theIDTable->Put(&key, field);
+                if (theIDTable)
+                    theIDTable->Put(key, field);
             }
             outFieldID = jfieldID(field);
         }
@@ -1657,14 +1701,25 @@ JNINativeInterface_ ProxyJNIEnv::theFuncs = {
     &GetJavaVM
 };
 
-nsHashtable* ProxyJNIEnv::theIDTable = NULL;
+nsDataHashtable<JavaClassMemberKey, void*>* ProxyJNIEnv::theIDTable = NULL;
 
 ProxyJNIEnv::ProxyJNIEnv(nsIJVMPlugin* jvmPlugin, nsISecureEnv* secureEnv)
     :   mSecureEnv(secureEnv), mContext(NULL), mInProxyFindClass(JNI_FALSE)
 {
     this->functions = &theFuncs;
-    if (theIDTable == NULL)
-        theIDTable = new nsHashtable();
+    if (theIDTable == NULL) {
+        theIDTable = new nsDataHashtable<JavaClassMemberKey, void*>;
+        if (theIDTable) {
+            if (!theIDTable->Init(16)) {
+                delete theIDTable;
+                theIDTable = NULL;
+                NS_WARNING("theIDTable initialization FAILED");
+            }
+        }
+        else {
+            NS_WARNING("theIDTable allocation FAILED");
+        }
+    }
     
     // Ask the JVM for a new nsISecureEnv, if none provided.
     if (secureEnv == NULL) {
