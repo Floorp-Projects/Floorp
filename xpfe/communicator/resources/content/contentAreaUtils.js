@@ -186,7 +186,7 @@ function foundHeaderInfo(aSniffer, aData)
 
   const prefSvcContractID = "@mozilla.org/preferences-service;1";
   const prefSvcIID = Components.interfaces.nsIPrefService;                              
-  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch("browser.download");
+  var prefs = Components.classes[prefSvcContractID].getService(prefSvcIID).getBranch("browser.download.");
   
   const nsILocalFile = Components.interfaces.nsILocalFile;
   try {
