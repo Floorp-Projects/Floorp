@@ -57,25 +57,16 @@ class nsIDOMNodeList;
 
 extern PRLogModuleInfo *gDAVLog;
 
+nsresult
+NS_WD_NewOperationStreamListener(nsIWebDAVResource *resource,
+                                 nsIWebDAVOperationListener *listener,
+                                 PRUint32 operation,
+                                 nsIStreamListener **streamListener);
+
 nsIStreamListener *
 NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
                                 nsIWebDAVOperationListener *listener,
                                 PRBool isPropname);
-
-nsresult
-NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
-                                    nsIWebDAVOperationListener *listener,
-                                    nsIStreamListener **streamListener);
-
-nsresult
-NS_WD_NewDeleteOperationStreamListener(nsIWebDAVResource *resource,
-                                       nsIWebDAVOperationListener *listener,
-                                       nsIStreamListener **streamListener);
-
-nsresult
-NS_WD_NewMkcolOperationStreamListener(nsIWebDAVResource *resource,
-                                      nsIWebDAVOperationListener *listener,
-                                      nsIStreamListener **streamListener);
 
 nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,

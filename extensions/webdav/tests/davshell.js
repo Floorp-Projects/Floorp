@@ -42,9 +42,8 @@ Resource.prototype = {
    }
 };
 
-function ResourceWithFileData(url, filename)
+function InputStreamForFile(filename)
 {
-    this.urlSpec = url;
     var file = makeFile(filename);
     var instream = createInstance("@mozilla.org/network/file-input-stream;1",
                                   "nsIFileInputStream");
@@ -53,19 +52,8 @@ function ResourceWithFileData(url, filename)
     var buffered = createInstance("@mozilla.org/network/buffered-input-stream;1",
                                   "nsIBufferedInputStream");
     buffered.init(instream, 64 * 1024);
-    this.data = buffered;
+    return buffered;
 }
-
-ResourceWithFileData.prototype = {
-    QueryInterface: function(outer, iid) {
-        if (iid.equals(CI.nsIWebDAVResourceWithData))
-            return this;
-
-        return Resource.prototype.QueryInterface.call(this, outer, iid);
-    },
-
-    __proto__: Resource.prototype,
-};
 
 function propertiesToKeyArray(props)
 {
@@ -214,7 +202,7 @@ function GET(url, filename)
 
 function PUT(filename, url, contentType)
 {
-    var resource = new ResourceWithFileData(url, filename);
-    davSvc.put(resource, contentType, new OperationListener());
+    var stream = InputStreamForFile(filename);
+    davSvc.put(new Resource(url), contentType, stream, new OperationListener());
     runEventPump();
 }

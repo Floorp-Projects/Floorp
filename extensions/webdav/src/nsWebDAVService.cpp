@@ -81,10 +81,6 @@ protected:
                                  nsIHttpChannel** channel,
                                  nsIURI ** resourceURI = 0);
 
-    nsresult ChannelWithStreamFromResource(nsIWebDAVResource *resource,
-                                           nsIHttpChannel **channel,
-                                           nsIInputStream **stream);
-
     nsresult CreatePropfindDocument(nsIURI *resourceURI,
                                     nsIDOMDocument **requestDoc,
                                     nsIDOMElement **propfindElt);
@@ -233,7 +229,8 @@ nsWebDAVService::CreatePropfindDocument(nsIURI *resourceURI,
     baseDoc->SetDocumentURI(resourceURI);
 
     nsCOMPtr<nsIDOMElement> elt;
-    rv = NS_WD_AppendElementWithNS(doc, doc, mDAVNSString, NS_LITERAL_STRING("propfind"),
+    rv = NS_WD_AppendElementWithNS(doc, doc, mDAVNSString,
+                                   NS_LITERAL_STRING("propfind"),
                                    getter_AddRefs(elt));
     elt->SetPrefix(NS_LITERAL_STRING("D"));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -244,21 +241,6 @@ nsWebDAVService::CreatePropfindDocument(nsIURI *resourceURI,
     NS_ADDREF(*propfindElt);
 
     return NS_OK;
-}
-
-nsresult
-nsWebDAVService::ChannelWithStreamFromResource(nsIWebDAVResource *resource,
-                                               nsIHttpChannel **channel,
-                                               nsIInputStream **stream)
-{
-    nsresult rv = ChannelFromResource(resource, channel);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIWebDAVResourceWithData> resWithData =
-        do_QueryInterface(resource, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return resWithData->GetData(stream);
 }
 
 nsresult
@@ -474,26 +456,25 @@ nsWebDAVService::GetToOutputStream(nsIWebDAVResource *resource,
 }
 
 NS_IMETHODIMP
-nsWebDAVService::Put(nsIWebDAVResourceWithData *resource,
-                     const nsACString& contentType,
+nsWebDAVService::Put(nsIWebDAVResource *resource,
+                     const nsACString& contentType, nsIInputStream *data,
                      nsIWebDAVOperationListener *listener)
 {
     nsCOMPtr<nsIHttpChannel> channel;
-    nsCOMPtr<nsIInputStream> stream;
-    nsresult rv = ChannelWithStreamFromResource(resource,
-                                                getter_AddRefs(channel),
-                                                getter_AddRefs(stream));
+
+    nsresult rv = ChannelFromResource(resource, getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(channel, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = uploadChannel->SetUploadStream(stream, contentType, -1);
+    rv = uploadChannel->SetUploadStream(data, contentType, -1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStreamListener> streamListener;
-    rv = NS_WD_NewPutOperationStreamListener(resource, listener,
-                                             getter_AddRefs(streamListener));
+    rv = NS_WD_NewOperationStreamListener(resource, listener,
+                                          nsIWebDAVOperationListener::PUT,
+                                          getter_AddRefs(streamListener));
     NS_ENSURE_SUCCESS(rv, rv);
 
     channel->SetRequestMethod(NS_LITERAL_CSTRING("PUT"));
@@ -518,8 +499,9 @@ nsWebDAVService::Remove(nsIWebDAVResource *resource,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStreamListener> streamListener;
-    rv = NS_WD_NewDeleteOperationStreamListener(resource, listener,
-                                                getter_AddRefs(streamListener));
+    rv = NS_WD_NewOperationStreamListener(resource, listener,
+                                          nsIWebDAVOperationListener::REMOVE,
+                                          getter_AddRefs(streamListener));
     NS_ENSURE_SUCCESS(rv, rv);
 
     channel->SetRequestMethod(NS_LITERAL_CSTRING("DELETE"));
@@ -544,8 +526,9 @@ nsWebDAVService::MakeCollection(nsIWebDAVResource *resource,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStreamListener> streamListener;
-    rv = NS_WD_NewMkcolOperationStreamListener(resource, listener,
-                                               getter_AddRefs(streamListener));
+    rv = NS_WD_NewOperationStreamListener(resource, listener,
+                                          nsIWebDAVOperationListener::MAKE_COLLECTION,
+                                          getter_AddRefs(streamListener));
     NS_ENSURE_SUCCESS(rv, rv);
 
     channel->SetRequestMethod(NS_LITERAL_CSTRING("MKCOL"));
@@ -562,15 +545,18 @@ nsWebDAVService::MakeCollection(nsIWebDAVResource *resource,
 }
 
 NS_IMETHODIMP
-nsWebDAVService::MoveTo(nsIWebDAVResourceWithTarget *resource,
+nsWebDAVService::MoveTo(nsIWebDAVResource *resource,
+                        const nsACString &destination,
                         nsIWebDAVOperationListener *listener)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsWebDAVService::CopyTo(nsIWebDAVResourceWithTarget *resource,
-                        nsIWebDAVOperationListener *listener, PRBool recursive)
+nsWebDAVService::CopyTo(nsIWebDAVResource *resource,
+                        const nsACString &destination,
+                        nsIWebDAVOperationListener *listener, PRBool recursive,
+                        PRBool overwrite)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

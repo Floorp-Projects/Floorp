@@ -40,6 +40,7 @@
 
 interface nsIStreamListener;
 interface nsIOutputStream;
+interface nsIInputStream;
 
 [scriptable,uuid(173ef52e-2a2f-45ca-8f9f-abc7429163c2)]
 interface nsIWebDAVService : nsISupports
@@ -80,18 +81,21 @@ interface nsIWebDAVService : nsISupports
                            in nsIOutputStream stream,
                            in nsIWebDAVOperationListener listener);
 
-    void put(in nsIWebDAVResourceWithData resource, in ACString contentType,
-             in nsIWebDAVOperationListener listener);
+    void put(in nsIWebDAVResource resource, in ACString contentType,
+             in nsIInputStream data, in nsIWebDAVOperationListener listener);
 
     void remove(in nsIWebDAVResource resource,
                 in nsIWebDAVOperationListener listener);
 
-    void moveTo(in nsIWebDAVResourceWithTarget resource,
+    void moveTo(in nsIWebDAVResource resource,
+                in ACString destination,
                 in nsIWebDAVOperationListener listener);
 
-    void copyTo(in nsIWebDAVResourceWithTarget resource,
+    void copyTo(in nsIWebDAVResource resource,
+                in ACString destination,
                 in nsIWebDAVOperationListener listener,
-                in boolean recursive);
+                in boolean recursive,
+                in boolean overwrite);
 
     void makeCollection(in nsIWebDAVResource resource,
                         in nsIWebDAVOperationListener listener);

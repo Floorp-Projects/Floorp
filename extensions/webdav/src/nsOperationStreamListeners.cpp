@@ -414,39 +414,14 @@ NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
 }
 
 nsresult
-NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
-                                    nsIWebDAVOperationListener *listener,
-                                    nsIStreamListener **streamListener)
+NS_WD_NewOperationStreamListener(nsIWebDAVResource *resource,
+                                 PRUint32 operation,
+                                 nsIWebDAVOperationListener *listener,
+                                 nsIStreamListener **streamListener)
 {
     nsCOMPtr<nsIRequestObserver> osl = 
         new OperationStreamListener(resource, listener, nsnull,
-                                    nsIWebDAVOperationListener::PUT);
-    if (!osl)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return CallQueryInterface(osl, streamListener);
-}
-
-nsresult
-NS_WD_NewDeleteOperationStreamListener(nsIWebDAVResource *resource,
-                                       nsIWebDAVOperationListener *listener,
-                                       nsIStreamListener **streamListener)
-{
-    nsCOMPtr<nsIRequestObserver> osl = 
-        new OperationStreamListener(resource, listener, nsnull,
-                                    nsIWebDAVOperationListener::REMOVE);
-    if (!osl)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return CallQueryInterface(osl, streamListener);
-}
-
-nsresult
-NS_WD_NewMkcolOperationStreamListener(nsIWebDAVResource *resource,
-                                      nsIWebDAVOperationListener *listener,
-                                      nsIStreamListener **streamListener)
-{
-    nsCOMPtr<nsIRequestObserver> osl = 
-        new OperationStreamListener(resource, listener, nsnull,
-                                    nsIWebDAVOperationListener::MAKE_COLLECTION);
+                                    operation);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
     return CallQueryInterface(osl, streamListener);

@@ -36,29 +36,15 @@
 
 #include "nsISupports.idl"
 
-interface nsIInputStream;
-interface nsIProperties;
-
 [scriptable,uuid(9ec5321f-e3ea-4812-a4c7-5366a01b609e)]
 interface nsIWebDAVResource : nsISupports
 {
     readonly attribute AUTF8String urlSpec;
 };
 
-[scriptable,uuid(20f74394-0e19-4bd9-9435-dd29f1644de9)]
-interface nsIWebDAVResourceWithData : nsIWebDAVResource
-{
-    readonly attribute nsIInputStream data;
-};
-
 [scriptable,uuid(8956be34-abad-4c1a-88eb-cbc1851547ea)]
-interface nsIWebDAVResourceWithProperties : nsIWebDAVResource
+interface nsIWebDAVResourceWithLock : nsIWebDAVResource
 {
-    readonly attribute nsIProperties properties;
+    readonly attribute AUTF8String lockToken;
 };
 
-[scriptable,uuid(82e289d9-ba6f-4eab-b325-a6bdaf58be62)]
-interface nsIWebDAVResourceWithTarget : nsIWebDAVResource
-{
-    readonly attribute AUTF8String target;
-};
