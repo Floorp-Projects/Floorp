@@ -76,9 +76,8 @@ static SECStatus jar_list_cert_callback
 
   ugly_list = (char **) data;
 
-  if (cert && cert->dbEntry)
+  if (cert)
     {
-    /* name = cert->dbEntry->nickname; */
     name = cert->nickname;
 
     trusted = cert->trust->objectSigningFlags & CERTDB_USER;

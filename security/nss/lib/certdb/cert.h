@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.14 2001/12/07 01:35:47 relyea%netscape.com Exp $
+ * $Id: cert.h,v 1.15 2002/03/14 04:12:11 wtc%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -574,6 +574,9 @@ extern CERTCertificate *CERT_DecodeCertFromPackage(char *certbuf, int certlen);
 
 extern SECStatus
 CERT_ImportCAChain (SECItem *certs, int numcerts, SECCertUsage certUsage);
+
+extern SECStatus
+CERT_ImportCAChainTrusted(SECItem *certs, int numcerts, SECCertUsage certUsage);
 
 /*
 ** Read a certificate chain in some foreign format, and pass it to a 

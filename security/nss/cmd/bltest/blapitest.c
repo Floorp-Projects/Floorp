@@ -35,6 +35,7 @@
 #include <stdlib.h>
 
 #include "blapi.h"
+#include "secrng.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "prtime.h"

@@ -46,12 +46,26 @@ typedef enum {
 
 typedef struct PBEBitGenContextStr PBEBitGenContext;
 
+SEC_BEGIN_PROTOS
+
 SECAlgorithmID *
 SEC_PKCS5CreateAlgorithmID(SECOidTag algorithm, SECItem *salt, int iteration);
+
+/* Get the initialization vector.  The password is passed in, hashing
+ * is performed, and the initialization vector is returned.
+ *  algid is a pointer to a PBE algorithm ID
+ *  pwitem is the password
+ * If an error occurs or the algorithm id is not a PBE algrithm,
+ * NULL is returned.  Otherwise, the iv is returned in a secitem.
+ */
+SECItem *
+SEC_PKCS5GetIV(SECAlgorithmID *algid, SECItem *pwitem, PRBool faulty3DES);
 
 SECOidTag SEC_PKCS5GetCryptoAlgorithm(SECAlgorithmID *algid);
 PRBool SEC_PKCS5IsAlgorithmPBEAlg(SECAlgorithmID *algid);
 SECOidTag SEC_PKCS5GetPBEAlgorithm(SECOidTag algTag, int keyLen);
 int SEC_PKCS5GetKeyLength(SECAlgorithmID *algid);
+
+SEC_END_PROTOS
 
 #endif /* _SECPKS5_H_ */

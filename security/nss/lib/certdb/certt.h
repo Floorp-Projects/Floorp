@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.14 2002/01/11 17:31:09 relyea%netscape.com Exp $
+ * $Id: certt.h,v 1.15 2002/03/14 04:12:11 wtc%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -49,10 +49,9 @@
 #include "prio.h"
 #include "prmon.h"
 
-#ifndef NSS_3_4_CODE
-#define NSS_3_4_CODE
-#endif /* NSS_3_4_CODE */
-#include "nsspkit.h"
+/* Stan data types */
+struct NSSCertificateStr;
+struct NSSTrustDomainStr;
 
 /* Non-opaque objects */
 typedef struct CERTAVAStr                        CERTAVA;
@@ -63,7 +62,7 @@ typedef struct CERTBasicConstraintsStr           CERTBasicConstraints;
 #ifdef NSS_CLASSIC
 typedef struct CERTCertDBHandleStr               CERTCertDBHandle;
 #else
-typedef NSSTrustDomain                           CERTCertDBHandle;
+typedef struct NSSTrustDomainStr                 CERTCertDBHandle;
 #endif
 typedef struct CERTCertExtensionStr              CERTCertExtension;
 typedef struct CERTCertKeyStr                    CERTCertKey;
@@ -272,7 +271,7 @@ struct CERTCertificateStr {
     PRBool istemp;
     char *nickname;
     char *dbnickname;
-    void *dbEntry;		 /* database entry struct */
+    struct NSSCertificateStr *nssCertificate;	/* This is Stan stuff. */
     CERTCertTrust *trust;
 
     /* the reference count is modified whenever someone looks up, dups
@@ -300,9 +299,6 @@ struct CERTCertificateStr {
     PK11SlotInfo *slot;		/*if this cert came of a token, which is it*/
     CK_OBJECT_HANDLE pkcs11ID;	/*and which object on that token is it */
     PRBool ownSlot;		/*true if the cert owns the slot reference */
-
-    /* This is Stan stuff. */
-    NSSCertificate *nssCertificate;
 };
 #define SEC_CERTIFICATE_VERSION_1		0	/* default created */
 #define SEC_CERTIFICATE_VERSION_2		1	/* v2 */
@@ -401,17 +397,16 @@ struct CERTCrlKeyStr {
 struct CERTSignedCrlStr {
     PRArenaPool *arena;
     CERTCrl crl;
-    /*certDBEntryRevocation *dbEntry;	 database entry struct */
     SECItem *derCrl;
-    PK11SlotInfo *slot;
-    /* PRBool keep;		 keep this crl in the cache for the  session*/
-    CK_OBJECT_HANDLE pkcs11ID;
+    PRBool reserved;
     PRBool isperm;
     PRBool istemp;
     int referenceCount;
     CERTCertDBHandle *dbhandle;
     CERTSignedData signatureWrap;	/* XXX */
     char *url;
+    PK11SlotInfo *slot;
+    CK_OBJECT_HANDLE pkcs11ID;
 };
 
 

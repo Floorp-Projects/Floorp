@@ -35,8 +35,12 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.7 $ $Date: 2002/02/28 22:55:30 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.8 $ $Date: 2002/03/14 04:12:25 $ $Name:  $";
 #endif /* DEBUG */
+
+#ifndef NSSDEVT_H
+#include "nssdevt.h"
+#endif /* NSSDEVT_H */
 
 #ifndef NSSPKIT_H
 #include "nsspkit.h"
