@@ -75,8 +75,6 @@ p:first-child { padding-top: 0; margin-top: 0; }
 
 .separate > li { margin-bottom: 0.5em; }
 
-.ui { background-color: #B7F5C7 }
-
 .contentsBox {
 	margin-top: 12px;
 	background-color: #cccccc;
