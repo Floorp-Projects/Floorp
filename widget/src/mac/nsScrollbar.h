@@ -72,7 +72,7 @@ public:
     virtual PRBool    OnPaint(nsPaintEvent & aEvent);
     virtual PRBool    OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
     virtual PRBool    OnResize(nsSizeEvent &aEvent);
-    virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
+    virtual PRBool 		DispatchMouseEvent(nsMouseEvent &aEvent);
 
 
 private:
