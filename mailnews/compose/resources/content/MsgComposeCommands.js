@@ -234,7 +234,7 @@ function ComposeStartup()
 			    document.getElementById("FormatToolbar").setAttribute("hidden", true);
 			    document.getElementById("formatMenu").setAttribute("hidden", true);
 
-				window.editorShell.SetEditorType("text");
+				window.editorShell.SetEditorType("textmail");
 				dump("editor initialized in PLAIN TEXT mode\n");
 			}
 
