@@ -70,8 +70,8 @@ typedef PRUint8 uint8;
  * So we don't define these four types here to avoid conflicts in case
  * the code also includes sys/types.h.
  */
-#if defined(AIX4_3)
-#include <sys/inttypes.h>
+#if defined(_PR_AIX_HAVE_BSD_INT_TYPES)
+/* <sys/types.h> is already included */
 #else
 typedef PRInt64 int64;
 
@@ -89,7 +89,7 @@ typedef long int32;
 typedef PRInt16 int16;
 typedef PRInt8 int8;
 #endif /* HPUX */
-#endif /* AIX4_3 */
+#endif /* _PR_AIX_HAVE_BSD_INT_TYPES */
 
 #endif /* XP_BEOS VMS */
 
