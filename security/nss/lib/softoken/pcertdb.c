@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.16 2002/04/08 23:37:48 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.17 2002/04/26 01:09:21 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3016,12 +3016,23 @@ nsslowcert_AddPermNickname(NSSLOWCERTCertDBHandle *dbhandle,
     if (entry == NULL) goto loser;
 
     if ( entry->nickname == NULL ) {
+        certDBEntryNickname *nicknameEntry = NULL;
+
 	/* no nickname for subject */
 	rv = AddNicknameToSubject(dbhandle, cert, nickname);
 	if ( rv != SECSuccess ) {
 	    goto loser;
 	}
 	rv = AddNicknameToPermCert(dbhandle, cert, nickname);
+	if ( rv != SECSuccess ) {
+	    goto loser;
+	}
+	nicknameEntry = NewDBNicknameEntry(nickname, &cert->derSubject, 0);
+	if ( nicknameEntry == NULL ) {
+	    goto loser;
+	}
+    
+	rv = WriteDBNicknameEntry(dbhandle, nicknameEntry);
 	if ( rv != SECSuccess ) {
 	    goto loser;
 	}
