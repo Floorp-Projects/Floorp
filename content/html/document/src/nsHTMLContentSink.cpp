@@ -1310,7 +1310,58 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
       break;
     case eHTMLTag_img:
       FlushText();
+#ifndef XXX
+      {
+        /* HACK - Jim Dunn 8/6
+         * Check to see if this is an ART image type
+         * If so then process it using the ART plugin
+         * Otherwise treat it like a normal image
+         */
+
+        PRBool bArt = PR_FALSE;
+        nsAutoString v;
+        PRInt32 ac = aNode.GetAttributeCount();
+        for (PRInt32 i = 0; i < ac; i++)    /* Go through all of this tag's attributes */
+        {
+            const nsString& key = aNode.GetKeyAt(i);
+
+            if (!key.Compare("SRC", PR_TRUE))   /* Find the SRC (source) tag */
+            {
+                const nsString& key2 = aNode.GetValueAt(i);
+
+                v.Truncate();
+                v.Append(key2);
+                v.ToLowerCase();
+                if (-1 != v.Find(".art"))   /* See if it has an ART extension */
+                {
+                    bArt = PR_TRUE;    /* Treat this like an embed */
+                    break;
+                }
+            }
+            if (!key.Compare("TYPE", PR_TRUE))  /* Find the TYPE (mimetype) tag */
+            {
+                const nsString& key2 = aNode.GetValueAt(i);
+
+                v.Truncate();
+                v.Append(key2);
+                v.ToLowerCase();
+                if ((-1 != v.Find("image/x-art"))   /* See if it has an ART Mimetype */
+                 || (-1 != v.Find("image/art"))
+                 || (-1 != v.Find("image/x-jg")))
+                {
+                    bArt = PR_TRUE;    /* Treat this like an embed */
+                    break;
+                }
+            }
+        }
+        if (bArt)
+            rv = ProcessEMBEDTag(&leaf, aNode);
+        else
+            rv = ProcessIMGTag(&leaf, aNode);
+      }
+#else
       rv = ProcessIMGTag(&leaf, aNode);
+#endif /* XXX */
       break;
     case eHTMLTag_spacer:
       FlushText();
