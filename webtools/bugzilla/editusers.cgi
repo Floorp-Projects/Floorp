@@ -343,7 +343,7 @@ if ($action eq 'list') {
             $s = "<STRIKE>";
             $e = "</STRIKE>";
         }
-        $realname ||= "<FONT COLOR=\"red\">missing</FONT>";
+        $realname = ($realname ? html_quote($realname) : "<FONT COLOR=\"red\">missing</FONT>");
         print "<TR>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$s$user$e</B></A></TD>\n";
         print "  <TD VALIGN=\"top\">$s$realname$e</TD>\n";
@@ -542,7 +542,7 @@ if ($action eq 'del') {
              WHERE login_name=" . SqlQuote($user));
     my ($realname, $groupset) = 
       FetchSQLData();
-    $realname ||= "<FONT COLOR=\"red\">missing</FONT>";
+    $realname = ($realname ? html_quote($realname) : "<FONT COLOR=\"red\">missing</FONT>");
     
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
     print "<TR BGCOLOR=\"#6666FF\">\n";
