@@ -991,7 +991,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener, nsIStreamList
                                     &lastModifiedHeaderIsPresent);
 
     // Check for corrupted, missing or malformed 'LastModified:' header
-    if (NS_SUCCEEDED(rv) && lastModifiedHeaderIsPresent && lastModified) {
+    if (NS_SUCCEEDED(rv) && lastModifiedHeaderIsPresent && !LL_IS_ZERO(lastModified)) {
 
         // Store value of 'Last-Modified:' header into cache entry, used for cache
         // replacement policy decisions
@@ -1008,7 +1008,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener, nsIStreamList
 
     // If there is an 'Expires:' header, tell the cache entry since it uses
     // that information for replacement policy decisions
-    if (expiresHeaderIsPresent && expires) {
+    if (expiresHeaderIsPresent && !LL_IS_ZERO(expires)) {
         mCacheEntry->SetExpirationTime(expires);
     } else {
         
@@ -1023,7 +1023,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener, nsIStreamList
         PRTime date;
         PRBool dateHeaderIsPresent;
         rv = mResponse->ParseDateHeader(nsHTTPAtoms::Date, &date, &dateHeaderIsPresent);
-        if (NS_FAILED(rv) || !dateHeaderIsPresent || !date)
+        if (NS_FAILED(rv) || !dateHeaderIsPresent || !!LL_IS_ZERO(date))
             return NS_ERROR_FAILURE;
         
         // Before proceeding, ensure that we don't have a bizarre last-modified time
@@ -1654,10 +1654,12 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
     
     mRawResponseListener->Abort();
 
-    nsCOMPtr<nsIChannel> cacheChannel;
+    // Fake it so that HTTP headers come from cached versions
+    SetResponse(mCachedResponse);
 
     // We don't set a load group for the cache channel because the HTTP
     // channel is handling the load group interactions
+    nsCOMPtr<nsIChannel> cacheChannel;
     rv = mCacheEntry->NewChannel(mLoadGroup, this, getter_AddRefs(cacheChannel));
     if (NS_FAILED(rv)) return rv;
 
