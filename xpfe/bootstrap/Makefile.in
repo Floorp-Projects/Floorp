@@ -132,6 +132,10 @@ XP_LIBS		+= \
 endif
 endif
 
+ifdef MOZ_SVG
+XP_LIBS		+= $(MOZ_LIBART_LIBS)
+endif
+
 ifdef MOZ_ENABLE_GTK
 XP_LIBS		+= $(XLDFLAGS) -lXt
 endif
