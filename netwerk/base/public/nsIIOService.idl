@@ -25,6 +25,8 @@
 interface nsIProtocolHandler;
 interface nsIChannel;
 interface nsIURI;
+interface nsIURLParser;
+interface nsIFile;
 
 [scriptable, uuid(ab7c3a84-d488-11d3-8cda-0060b0fc14a3)]
 interface nsIIOService : nsISupports
@@ -48,6 +50,14 @@ interface nsIIOService : nsISupports
 	 * @return	reference to a new nsIURI object
      */
     nsIURI newURI(in string aSpec, in nsIURI aBaseURI);
+
+    /**
+     * This method constructs a new file URI 
+     *
+	 * @param aSpec	nsIFile
+	 * @return	reference to a new nsIURI object
+     */
+    nsIURI newFileURI(in nsIFile aSpec);
 
     /**
      * Creates a channel for a given URI. The notificationCallbacks argument
@@ -119,10 +129,18 @@ interface nsIIOService : nsISupports
      * @return NS_OK - if successful
      * @return NS_ERROR_MALFORMED_URI - if the urlString is not of the right form
      */
-    void extractScheme(in string urlString,
-                       out unsigned long schemeStartPos,
-                       out unsigned long schemeEndPos,
-                       out string scheme);
+    string extractScheme(in string urlString,
+                         out unsigned long schemeStartPos,
+                         out unsigned long schemeEndPos);
+
+
+    nsIURLParser getParserForScheme(in string scheme);
+
+   string extractUrlPart(in string urlString,
+                         in short flag,
+                         out unsigned long startPos,
+                         out unsigned long endPos);
+
 
     /**
      * Constants for the mask in the call to Escape

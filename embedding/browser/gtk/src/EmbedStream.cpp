@@ -106,12 +106,9 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
 
   // create a new uri object
   nsCOMPtr<nsIURI> uri;
-  uri = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
-
   nsCAutoString spec(aBaseURI);
-  rv = uri->SetSpec(spec.get());
+  rv = NS_NewURI(getter_AddRefs(uri), spec.get());
+  
   if (NS_FAILED(rv))
     return rv;
 

@@ -104,19 +104,14 @@ nsMsgServiceProviderService::Init()
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIFile> dirEntry;
-    nsCOMPtr<nsIFileURL> dirEntryURL(do_CreateInstance("@mozilla.org/network/standard-url;1"));
 
     while ((rv = dirIterator->HasMoreElements(&hasMore)) == NS_OK && hasMore) {
       rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
       if (NS_FAILED(rv))
         continue;
-         
-      rv = dirEntryURL->SetFile(dirEntry);
-      if (NS_FAILED(rv))
-         continue;
 
       nsXPIDLCString urlSpec;
-      rv = dirEntryURL->GetSpec(getter_Copies(urlSpec));
+      rv = dirEntry->GetURL(getter_Copies(urlSpec));
       rv = LoadDataSource(urlSpec);
       NS_ASSERTION(NS_SUCCEEDED(rv), "Failed reading in the datasource\n");
     }

@@ -40,6 +40,7 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID,    NS_WINDOWMEDIATOR_CID);
@@ -100,6 +101,7 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 {
 	// See nsMsgStatusFeedback
 	nsresult rv;
+    nsCOMPtr<nsIURI> uri;
 
     // if we got new mail, attempt to play a sound.
     // if we fail along the way, don't return.
@@ -112,8 +114,6 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
         if (NS_SUCCEEDED(rv) && playSoundOnBiff) {
           nsCOMPtr<nsISound> sound = do_CreateInstance("@mozilla.org/sound;1");
           if (sound) {
-            nsCOMPtr<nsIFileURL> soundURL = do_CreateInstance("@mozilla.org/network/standard-url;1");
-            if (soundURL) {
               PRBool playDefaultSound = PR_TRUE;
               rv = pref->GetBoolPref(PREF_PLAY_DEFAULT_SOUND, &playDefaultSound);
               if (NS_SUCCEEDED(rv) && !playDefaultSound) {
@@ -122,7 +122,9 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
                 if (NS_SUCCEEDED(rv) && soundFile) {
                   nsCOMPtr <nsIFile> file = do_QueryInterface(soundFile);
                   if (file) {
-                    rv = soundURL->SetFile(file);
+                    rv = NS_NewFileURI(getter_AddRefs(uri), file);
+                    if (NS_FAILED(rv))
+                        return rv;
                   }
                   else {
                     rv = NS_ERROR_FAILURE;
@@ -131,17 +133,18 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
               }
 
               if ((NS_FAILED(rv) || playDefaultSound) && nsCRT::strlen(mDefaultSoundURL.get())) {
-                rv = soundURL->SetSpec(mDefaultSoundURL.get());
+                rv = NS_NewURI(getter_AddRefs(uri), mDefaultSoundURL.get());
               }
             }
 
             nsXPIDLCString soundURLSpec;
-            if (soundURL)
-              rv = soundURL->GetSpec(getter_Copies(soundURLSpec));
+            if (uri)
+              rv = uri->GetSpec(getter_Copies(soundURLSpec));
             else
               rv = NS_ERROR_FAILURE;
 
-            if (NS_SUCCEEDED(rv) && nsCRT::strlen(soundURLSpec.get())) {
+            nsCOMPtr<nsIURL> soundURL(do_QueryInterface(uri));
+            if (NS_SUCCEEDED(rv) && soundURL && nsCRT::strlen(soundURLSpec.get())) {
               sound->Play(soundURL);
             }
             else {
@@ -150,8 +153,7 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
           } 
         }
       }
-    }
-
+    
 	NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
 	nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 

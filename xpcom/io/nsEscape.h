@@ -27,6 +27,8 @@
 
 #include "prtypes.h"
 #include "nscore.h"
+#include "nsError.h"
+#include "nsString.h"
 
 /* valid mask values for NET_Escape() and NET_EscapedSize(). */
 typedef enum {
@@ -66,6 +68,29 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer,
  /*
   * Escape problem char's for HTML display 
   */
+
+
+  /**
+     * Constants for the mask in the call to nsStdEscape
+     */
+
+enum EscapeMask {
+  esc_Scheme        = 1,
+  esc_Username      = 2,
+  esc_Password      = 4,
+  esc_Host          = 8,
+  esc_Directory     = 16,
+  esc_FileBaseName  = 32,
+  esc_FileExtension = 64,
+  esc_Param         = 128,
+  esc_Query         = 256,
+  esc_Ref           = 512,
+  esc_Forced        = 1024
+};
+
+NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result);
+NS_COM nsresult nsStdUnescape(char* str, char **result);
+
 
 #ifdef __cplusplus
 }

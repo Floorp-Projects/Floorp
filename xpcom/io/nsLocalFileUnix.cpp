@@ -52,6 +52,8 @@
 #include "nsMemory.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
+#include "nsEscape.h"
+#include "nsString.h"
 #include "nsLocalFileUnix.h"
 #include "nsIComponentManager.h"
 #include "nsXPIDLString.h"
@@ -1299,12 +1301,73 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator **entries)
 
 NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG_POINTER(aURL);
+    *aURL = nsnull;
+    
+    nsresult rv;
+    char* ePath = nsnull;
+    nsCAutoString escPath;
+
+    rv = GetPath(&ePath);
+    if (NS_SUCCEEDED(rv)) {
+        
+        // Escape the path with the directory mask
+        rv = nsStdEscape(ePath, esc_Directory+esc_Forced, escPath);
+        if (NS_SUCCEEDED(rv)) {
+        
+            escPath.Insert("file://", 0);
+
+            PRBool dir;
+            rv = IsDirectory(&dir);
+            NS_ASSERTION(NS_SUCCEEDED(rv), "Cannot tell if this is a directory");
+            if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
+                // make sure we have a trailing slash
+                escPath += "/";
+            }
+            *aURL = nsCRT::strdup((const char *)escPath);
+            rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+    CRTFREEIF(ePath);
+    return rv;
 }
 
 NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG(aURL);
+    nsresult rv;
+    
+    nsXPIDLCString host, directory, fileBaseName, fileExtension;
+    
+    rv = ParseURL(aURL, getter_Copies(host), getter_Copies(directory),
+                  getter_Copies(fileBaseName), getter_Copies(fileExtension));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString path;
+    nsCAutoString component;
+
+    if (directory)
+    {
+        nsStdEscape(directory, esc_Directory, component);
+        path += component;
+    }    
+    if (fileBaseName)
+    {
+        nsStdEscape(fileBaseName, esc_FileBaseName, component);
+        path += component;
+    }
+    if (fileExtension)
+    {
+        nsStdEscape(fileExtension, esc_FileExtension, component);
+        path += '.';
+        path += component;
+    }
+    
+    nsUnescape((char*)path.get());
+
+    rv = InitWithPath(path);
+    
+    return rv;
 }
 
 NS_IMETHODIMP

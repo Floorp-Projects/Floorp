@@ -435,10 +435,7 @@ nsHelperAppDialog.prototype = {
         var fileLocator = Components.classes[ "@mozilla.org/file/directory_service;1" ]
                             .getService( Components.interfaces.nsIProperties );
         var file        = fileLocator.get( "UMimTyp", Components.interfaces.nsIFile );
-        var file_url    = Components.classes[ "@mozilla.org/network/standard-url;1" ]
-                            .createInstance( Components.interfaces.nsIFileURL );
-        file_url.file = file;
-
+        
         // We must try creating a fresh remote DS in order to avoid accidentally
         // having GetDataSource trigger an asych load.
         var ds = Components.classes[ "@mozilla.org/rdf/datasource;1?name=xml-datasource" ].createInstance( Components.interfaces.nsIRDFDataSource );
@@ -446,11 +443,11 @@ nsHelperAppDialog.prototype = {
             // Initialize it.  This will fail if the uriloader (or anybody else)
             // has already loaded/registered this data source.
             var remoteDS = ds.QueryInterface( Components.interfaces.nsIRDFRemoteDataSource );
-            remoteDS.Init( file_url.spec );
+            remoteDS.Init( file.URL );
             remoteDS.Refresh( true );
         } catch ( all ) {
             // OK then, presume it was already registered; get it.
-            ds = rdf.GetDataSource( file_url.spec );
+            ds = rdf.GetDataSource( file.URL );
         }
 
         // Now check if this mimetype is really in there;

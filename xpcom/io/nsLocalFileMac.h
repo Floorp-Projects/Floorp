@@ -78,6 +78,9 @@ public:
 
 	NS_IMETHOD LaunchAppWithDoc(nsILocalFile* aDocToLoad, PRBool aLaunchInBackground);
 	NS_IMETHOD OpenDocWithApp(nsILocalFile* aAppToOpenWith, PRBool aLaunchInBackground);
+    static nsresult ParseURL(const char* inURL, char **outHost, char **outDirectory,
+                             char **outFileBaseName, char **outFileExtension);
+
 
 protected:
 

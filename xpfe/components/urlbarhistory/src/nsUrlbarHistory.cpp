@@ -38,12 +38,11 @@
 #include "nsIRDFContainerUtils.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
-
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFCUtilsCID, NS_RDFCONTAINERUTILS_CID);
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 static char * ignoreArray[] = {
 		"http://",
@@ -548,10 +547,14 @@ nsUrlbarHistory::GetHostIndex(const PRUnichar * aPath, PRInt32 * aReturn)
 
     PRInt32 slashIndex=-1;    
     nsresult rv;
+    nsCOMPtr<nsIURI> uri;
     
-    nsCOMPtr<nsIURL> pathURL=do_CreateInstance(kStandardURLCID, &rv);
+    rv = NS_NewURI(getter_AddRefs(uri), NS_ConvertUCS2toUTF8(aPath).get());
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr<nsIURL> pathURL(do_QueryInterface(uri));
+
     if (pathURL) {
-       pathURL->SetSpec(NS_ConvertUCS2toUTF8(aPath).get());
        char *  host=nsnull, *preHost = nsnull, * filePath = nsnull;
        pathURL->GetHost(&host);
        pathURL->GetFilePath(&filePath);
@@ -632,23 +635,20 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
     if (aSearchItem)
         searchStrLen = nsCRT::strlen(aSearchItem);
     nsresult rv;
-    nsCOMPtr<nsIURL>  searchURL = do_CreateInstance(kStandardURLCID, &rv);
-    if (searchURL) {
-        searchURL->SetSpec(NS_ConvertUCS2toUTF8(aSearchItem).get());
-        nsXPIDLCString filePath;
-        searchURL->GetFilePath(getter_Copies(filePath));
+
+    nsXPIDLCString filePath;
+    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+    if (!ioService) return NS_ERROR_FAILURE;
+    ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aSearchItem).get(), nsIIOService::url_Directory, 0, 0, getter_Copies(filePath));
+        
         // Don't bother checking for hostname if the search string
         // already has a filepath;
         if (filePath && (nsCRT::strlen(filePath) > 1)) {
             return NS_OK;
         }
-    }
           
-    nsCOMPtr<nsIURL> matchURL = do_CreateInstance(kStandardURLCID, &rv);
-    if (matchURL) {
-        matchURL->SetSpec(NS_ConvertUCS2toUTF8(aMatchStr).get());
-        nsXPIDLCString filePath;
-        matchURL->GetFilePath(getter_Copies(filePath));
+   ioService->ExtractUrlPart(NS_ConvertUCS2toUTF8(aMatchStr).get(), nsIIOService::url_Directory, 0, 0, getter_Copies(filePath));
+
         // If the match string doesn't have a filepath
         // we need to do nothing here,  return.
         if (!filePath || (filePath && (nsCRT::strlen(filePath) <=1)))
@@ -678,7 +678,6 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, PRUnichar *
                 array->InsertElementAt(newItem, 0);
             }
         }       
-    }
     return NS_OK;
 }
 

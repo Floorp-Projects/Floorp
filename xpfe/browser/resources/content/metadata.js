@@ -395,8 +395,6 @@ function getAbsoluteURL(url, node)
     if (!url || !node)
         return "";
 
-    var URL = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces["nsIURL"]);
-
     var urlArr = new Array(url);
     var doc = node.ownerDocument;
 
@@ -417,7 +415,9 @@ function getAbsoluteURL(url, node)
     }
 
     // resolve everything from bottom up, starting with document location
-    URL.spec = doc.location.href;
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                  .getService(Components.interfaces.nsIIOService);
+    var URL = ioService.newURI(doc.location.href, null);
     for (var i=0; i<urlArr.length; i++) {
         URL.spec = URL.resolve(urlArr[i]);
     }

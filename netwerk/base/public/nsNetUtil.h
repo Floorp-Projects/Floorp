@@ -94,6 +94,24 @@ NS_NewURI(nsIURI* *result,
     return rv;
 }
 
+
+inline nsresult
+NS_NewFileURI(nsIURI* *result, 
+              nsIFile* spec, 
+              nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIIOService> serv;
+    if (ioService == nsnull) {
+        serv = do_GetIOService(&rv);
+        if (NS_FAILED(rv)) return rv;
+        ioService = serv.get();
+    }
+
+    return ioService->NewFileURI(spec, result);
+}
+
 inline nsresult
 NS_OpenURI(nsIChannel* *result, 
            nsIURI* uri,

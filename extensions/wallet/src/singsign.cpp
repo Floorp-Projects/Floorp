@@ -25,6 +25,7 @@
 
 #include "singsign.h"
 #include "wallet.h"
+#include "nsNetUtil.h"
 
 #ifdef XP_MAC
 #include "prpriv.h"             /* for NewNamedMonitor */
@@ -2040,20 +2041,12 @@ SINGSIGN_RememberSignonData
     (nsIPrompt* dialog, const char* passwordRealm, nsVoidArray * signonData,
      nsIDOMWindowInternal* window)
 {
-  nsresult rv;
-  NS_WITH_SERVICE(nsIURL, uri, "@mozilla.org/network/standard-url;1", &rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  rv = uri->SetSpec(passwordRealm);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+    
   char * strippedRealm;
-  rv = uri->GetHost(&strippedRealm);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+  if (!ioService) return;
+  ioService->ExtractUrlPart(passwordRealm, nsIIOService::url_Host, 0, 0, &strippedRealm);
+
   si_RememberSignonData(dialog, strippedRealm, signonData, window);
   PR_Free(strippedRealm);
 }
@@ -2164,20 +2157,11 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
 
 PUBLIC void
 SINGSIGN_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
-  nsresult rv;
-  NS_WITH_SERVICE(nsIURL, uri, "@mozilla.org/network/standard-url;1", &rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  rv = uri->SetSpec(passwordRealm);
-  if (NS_FAILED(rv)) {
-    return;
-  }
   char * strippedRealm;
-  rv = uri->GetHost(&strippedRealm);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+  if (!ioService) return;
+  ioService->ExtractUrlPart(passwordRealm, nsIIOService::url_Host, 0, 0, &strippedRealm);
+
   si_RestoreSignonData(dialog, strippedRealm, name, value, elementNumber);
   PR_Free(strippedRealm);
 }

@@ -127,28 +127,20 @@ nsresult nsMsgCompFields::CleanUpTempFiles()
     // Only deal with temp files (ie, starting with "file://")
 	if (!url.IsEmpty() && url.CompareWithConversion(kFileURLPrefix, PR_TRUE, 7) == 0)
 	{
-      nsCOMPtr<nsIFileURL> tempFileURL(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
-	  if (NS_FAILED(rv))
+      nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
+      if (NS_FAILED(rv))
 	  {
 		  NS_ASSERTION(0, "Can't creat nsIFileURL interface");
 		  continue;
 	  }
-   
-      rv = tempFileURL->SetSpec(url);
+
+      rv = urlFile->SetURL(url);
       if (NS_FAILED(rv))
 	  {
-		  NS_ASSERTION(0, "Can't set file spec in nsIFileURL interface");
+		  NS_ASSERTION(0, "Can't set file spec in nsILocalFile interface");
 		  continue;
 	  }
    
-      nsCOMPtr<nsIFile> urlFile;
-      rv = tempFileURL->GetFile(getter_AddRefs(urlFile));
-      if (NS_FAILED(rv)) 
-      {
-	      NS_ASSERTION(0, "Can't get nsIFile interface from nsIFileURL interface");
-		  continue;
-	  }
-
 	  PRBool isDir;
 	  rv = urlFile->IsDirectory(&isDir);
 	  if (NS_FAILED(rv)) 

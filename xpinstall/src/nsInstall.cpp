@@ -129,8 +129,6 @@ nsInstallInfo::~nsInstallInfo()
   MOZ_COUNT_DTOR(nsInstallInfo);
 }
 
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-  
 static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 
@@ -1168,7 +1166,6 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     }
     nsresult ret;
     nsCOMPtr<nsIFile> resFile;
-    nsCOMPtr<nsIFileURL> resFileURL = nsnull;
     nsIURI *url = nsnull;
     nsIStringBundleService* service = nsnull;
     nsIEventQueueService* pEventQueueService = nsnull;
@@ -1208,33 +1205,17 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     if (NS_FAILED(ret)) 
         goto cleanup;
 
-    // construct properties file URL as required by StringBundle interface
-    
-    //nsCOMPtr<nsIFileURL> url;
-    ret = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                             NS_GET_IID(nsIFileURL),
-                                             getter_AddRefs(resFileURL));
-
-    if (NS_FAILED(ret)) goto cleanup;
-
-    ret = resFileURL->SetFile(resFile);
-
-    if (NS_FAILED(ret)) goto cleanup;
-
-
     // get the string bundle using the extracted properties file
 #if 1
     {
-      char* spec = nsnull;
-      ret = resFileURL->GetSpec(&spec);
+      nsXPIDLCString spec;
+      ret = resFile->GetURL(getter_Copies(spec));
       if (NS_FAILED(ret)) {
         printf("cannot get url spec\n");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
-        nsCRT::free(spec);
         return ret;
       }
       ret = service->CreateBundle(spec, &bundle);
-      nsCRT::free(spec);
     }
 #else
     ret = service->CreateBundle(url, &bundle);

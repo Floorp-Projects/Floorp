@@ -115,6 +115,63 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+
+static NS_METHOD
+RegisterBuiltInURLParsers(nsIComponentManager *aCompMgr, 
+                          nsIFile *aPath,
+                          const char *registryLocation, 
+                          const char *componentType,
+                          const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString previous;
+
+    catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
+                             "file", 
+                             NS_NOAUTHORITYURLPARSER_CONTRACT_ID,
+                             PR_TRUE, 
+                             PR_TRUE, 
+                             getter_Copies(previous));
+
+    catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
+                             "ftp", 
+                             NS_AUTHORITYURLPARSER_CONTRACT_ID,
+                             PR_TRUE, 
+                             PR_TRUE, 
+                             getter_Copies(previous));
+
+    catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
+                             "http", 
+                             NS_AUTHORITYURLPARSER_CONTRACT_ID,
+                             PR_TRUE, 
+                             PR_TRUE, 
+                             getter_Copies(previous));
+    return NS_OK;
+}
+
+static NS_METHOD
+UnregisterBuiltInURLParsers(nsIComponentManager *aCompMgr, 
+                            nsIFile *aPath,
+                            const char *registryLocation,
+                            const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "file", PR_TRUE);
+    catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "ftp", PR_TRUE);
+    catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "http", PR_TRUE);
+
+    return NS_OK;
+}
+
+
 #if 0
 #include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPHandler.h"
@@ -628,18 +685,25 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_LOCALFILEOUTPUTSTREAM_CID,
       NS_LOCALFILEOUTPUTSTREAM_CONTRACTID,
       nsFileOutputStream::Create },
+    
+    // The register functions for the build in 
+    // parsers just need to be called once.
     { "StdURLParser", 
       NS_STANDARDURLPARSER_CID,
-      "@mozilla.org/network/standard-urlparser;1",
-      nsStdURLParser::Create },
+      NS_STANDARDURLPARSER_CONTRACT_ID,
+      nsStdURLParser::Create,
+      RegisterBuiltInURLParsers,  
+      UnregisterBuiltInURLParsers 
+    },
     { "AuthURLParser", 
       NS_AUTHORITYURLPARSER_CID,
-      "@mozilla.org/network/authority-urlparser;1",
+      NS_AUTHORITYURLPARSER_CONTRACT_ID,
       nsAuthURLParser::Create },
     { "NoAuthURLParser", 
       NS_NOAUTHORITYURLPARSER_CID,
-      "@mozilla.org/network/no-authority-urlparser;1",
+      NS_NOAUTHORITYURLPARSER_CONTRACT_ID,
       nsNoAuthURLParser::Create },
+
     { NS_BUFFEREDINPUTSTREAM_CLASSNAME, 
       NS_BUFFEREDINPUTSTREAM_CID,
       NS_BUFFEREDINPUTSTREAM_CONTRACTID,

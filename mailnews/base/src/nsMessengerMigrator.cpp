@@ -25,6 +25,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
+#include "nsIIOService.h"
 
 #include "prmem.h"
 #include "plstr.h"
@@ -79,7 +80,6 @@
 #endif
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);   
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
@@ -903,22 +903,19 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 #endif /* DEBUG_MIGRATOR */
 
   if (PL_strncasecmp(IMAP_SCHEMA,old_uri,IMAP_SCHEMA_LENGTH) == 0) {
-	nsCOMPtr <nsIURL> url;
 	nsXPIDLCString hostname;
 	nsXPIDLCString username;
 
-	rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), getter_AddRefs(url));
-        if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+    if (!ioService) return NS_ERROR_FAILURE;
+    
+    rv = ioService->ExtractUrlPart(old_uri, nsIIOService::url_Host, 0, 0, getter_Copies(hostname));
+    if (NS_FAILED(rv)) return rv;
 
-        rv = url->SetSpec(old_uri);
-        if (NS_FAILED(rv)) return rv;
+    rv = ioService->ExtractUrlPart(old_uri, nsIIOService::url_Username, 0, 0, getter_Copies(username));
+    if (NS_FAILED(rv)) return rv;
 
-        rv = url->GetHost(getter_Copies(hostname));
-        if (NS_FAILED(rv)) return rv;
-        rv = url->GetPreHost(getter_Copies(username));  
-	if (NS_FAILED(rv)) return rv;
-
-	// in 4.x, mac and windows stored the URI as IMAP://<hostname> 
+    // in 4.x, mac and windows stored the URI as IMAP://<hostname> 
 	// if the URI was the default folder on the server.
 	// If it wasn't the default folder, they would have stored it as
 	if (!username || (PL_strlen((const char *)username) == 0)) {

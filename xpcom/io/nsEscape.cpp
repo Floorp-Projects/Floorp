@@ -271,4 +271,167 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
   return resultBuffer;
 }
 
+//----------------------------------------------------------------------------------------
+
+const int EscapeChars[256] =
+/*      0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F */
+{
+        0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,       /* 0x */
+        0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  	    /* 1x */
+        0,1023,   0, 512,1023,   0,1023,   0,1023,1023,1023,1023,1023,1023, 959, 912,       /* 2x   !"#$%&'()*+,-./	 */
+     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 912, 896,   0,1008,   0, 768,       /* 3x  0123456789:;<=>?	 */
+      992,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 4x  @ABCDEFGHIJKLMNO  */
+     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 896, 896, 896, 896,1023,       /* 5x  PQRSTUVWXYZ[\]^_	 */
+        0,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 6x  `abcdefghijklmno	 */
+     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 896,1012, 896,1008,   0,       /* 7x  pqrstuvwxyz{|}~	 */
+        0    /* 8x  DEL               */
+};
+
+#define NO_NEED_ESC(C) (EscapeChars[((unsigned int) (C))] & (mask))
+
+//----------------------------------------------------------------------------------------
+
+/* returns an escaped string */
+
+/* use the following masks to specify which 
+   part of an URL you want to escape: 
+
+   esc_Scheme        =     1
+   esc_Username      =     2
+   esc_Password      =     4
+   esc_Host          =     8
+   esc_Directory     =    16
+   esc_FileBaseName  =    32
+   esc_FileExtension =    64
+   esc_Param         =   128
+   esc_Query         =   256
+   esc_Ref           =   512
+*/
+
+/* by default this function will not escape parts of a string
+   that already look escaped, which means it already includes 
+   a valid hexcode. This is done to avoid multiple escapes of
+   a string. Use the following mask to force escaping of a 
+   string:
+ 
+   esc_Forced        =  1024
+*/
+
+NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result)
+{
+    result.Truncate(0);
+    if (!str)
+        return NS_OK;
+
+    int i = 0;
+    char* hexChars = "0123456789ABCDEF";
+    static const char CheckHexChars[] = "0123456789ABCDEFabcdef";
+    int len = PL_strlen(str);
+    PRBool forced = PR_FALSE;
+
+    if (mask & esc_Forced)
+        forced = PR_TRUE;
+
+    register const unsigned char* src = (const unsigned char *) str;
+
+    src = (const unsigned char *) str;
+
+    char tempBuffer[100];
+    unsigned int tempBufferPos = 0;
+
+    char c1[] = " ";
+    char c2[] = " ";
+    char* const pc1 = c1;
+    char* const pc2 = c2;
+
+    for (i = 0; i < len; i++)
+    {
+      c1[0] = *(src+1);
+      if (*(src+1) == '\0') 
+          c2[0] = '\0';
+      else
+          c2[0] = *(src+2);
+      unsigned char c = *src++;
+
+      /* if the char has not to be escaped or whatever follows % is 
+         a valid escaped string, just copy the char */
+      if (NO_NEED_ESC(c) || (c == HEX_ESCAPE && !(forced) && (pc1) && (pc2) &&
+         PL_strpbrk(pc1, CheckHexChars) != 0 &&  
+         PL_strpbrk(pc2, CheckHexChars) != 0)) {
+		  tempBuffer[tempBufferPos++]=c;
+      }
+      else 
+          /* do the escape magic */
+      {
+          tempBuffer[tempBufferPos++] = HEX_ESCAPE;
+          tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
+          tempBuffer[tempBufferPos++] = hexChars[c & 0x0f]; /* low nibble */
+      }
+ 	  
+      if(tempBufferPos >= sizeof(tempBuffer) - 4)
+ 	  {
+          tempBuffer[tempBufferPos] = '\0';
+          result += tempBuffer;
+          tempBufferPos = 0;
+ 	  }
+	}
+ 	
+    tempBuffer[tempBufferPos] = '\0';
+    result += tempBuffer;
+    return NS_OK;
+}
+
+
+NS_COM nsresult nsStdUnescape(char* str, char **result)
+{
+    if (!str) {
+        *result = nsnull;
+        return NS_OK;
+    }
+    register char *src = str;
+    static const char hexChars[] = "0123456789ABCDEFabcdef";
+    int len = PL_strlen(str);
+
+    *result = (char *)nsMemory::Alloc(len + 1);
+    if (!*result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    register unsigned char* dst = (unsigned char *) *result;
+
+    char c1[] = " ";
+    char c2[] = " ";
+    char* const pc1 = c1;
+    char* const pc2 = c2;
+
+    while (*src) {
+
+        c1[0] = *(src+1);
+        if (*(src+1) == '\0') 
+            c2[0] = '\0';
+        else
+            c2[0] = *(src+2);
+
+        /* check for valid escaped sequence */
+        if (*src != HEX_ESCAPE || PL_strpbrk(pc1, hexChars) == 0 || 
+                                  PL_strpbrk(pc2, hexChars) == 0 )
+            *dst++ = *src++;
+        else 	
+		{
+            src++; /* walk over escape */
+            if (*src)
+            {
+                *dst = UNHEX(*src) << 4;
+                src++;
+            }
+            if (*src)
+            {
+                *dst = (*dst + UNHEX(*src));
+                src++;
+            }
+            dst++;
+        }
+    }
+    *dst = '\0';
+    return NS_OK;
+}
 

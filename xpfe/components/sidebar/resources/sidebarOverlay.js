@@ -651,9 +651,7 @@ function sidebar_revert_to_default_panels() {
 function get_sidebar_datasource_uri() {
   try {
     var sidebar_file = sidebar_get_panels_file();
-    var file_url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIFileURL);
-    file_url.file = sidebar_file;
-    return file_url.spec;
+    return sidebar_file.URL;
   } catch (ex) {
     // This should not happen
     debug("Error: Unable to load panels file.\n");

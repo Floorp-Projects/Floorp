@@ -1216,11 +1216,7 @@ InternetSearchDataSource::GetCategoryList()
 
   rv = NS_GetSpecialDirectory(NS_APP_SEARCH_50_FILE, getter_AddRefs(searchFile));
   if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIFileURL> searchFileURL(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
-  if (NS_FAILED(rv)) return rv;
-  rv = searchFileURL->SetFile(searchFile);
-  if (NS_FAILED(rv)) return rv;
-  rv = searchFileURL->GetSpec(getter_Copies(searchFileURLSpec));
+  searchFile->GetURL(getter_Copies(searchFileURLSpec));
   if (NS_FAILED(rv)) return rv;
 	rv = remoteCategoryDataSource->Init(searchFileURLSpec);
   if (NS_FAILED(rv)) return rv;

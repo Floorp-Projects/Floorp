@@ -22,6 +22,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsNetUtil.h"
 #include "nsIServiceManager.h"
 #define NS_IMPL_IDS
 #include "nsIPlatformCharset.h"
@@ -233,10 +234,11 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
   file->InitWithPath(mFile);
 
-  nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance("@mozilla.org/network/standard-url;1"));
+  nsCOMPtr<nsIURI> uri;
+  NS_NewFileURI(getter_AddRefs(uri), file);
+  nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
   NS_ENSURE_TRUE(fileURL, NS_ERROR_FAILURE);
-  fileURL->SetFile(file);
-
+  
   NS_ADDREF(*aFileURL = fileURL);
 
   return NS_OK;

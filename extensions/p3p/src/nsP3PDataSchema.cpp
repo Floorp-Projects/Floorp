@@ -133,13 +133,8 @@ nsP3PDataSchema::PostInit( nsString&  aURISpec ) {
     if (NS_SUCCEEDED( rv )) {
                                           
       // Create a URL of the components directory
-      nsCOMPtr<nsIFileURL> compsDirURI(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
+      rv = compsDir->GetURL( getter_Copies( xcsPath ) );
       if (NS_SUCCEEDED( rv )) {
-        rv = compsDirURI->SetFile(compsDir);
-        if (NS_SUCCEEDED( rv )) {
-          rv = compsDirURI->GetSpec( getter_Copies( xcsPath ) );
-
-          if (NS_SUCCEEDED( rv )) {
             // Make the local path the URI to be read
             mUseDOMParser = PR_TRUE;
             mReadURISpec.AssignWithConversion((const char *)xcsPath );
@@ -156,12 +151,6 @@ nsP3PDataSchema::PostInit( nsString&  aURISpec ) {
           }
         }
         else {
-          PR_LOG( gP3PLogModule,
-                  PR_LOG_ERROR,
-                  ("P3PDataSchema:  %s PostInit, compsDirURI->SetFile failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );
-        }
-      }
-      else {
         PR_LOG( gP3PLogModule,
                 PR_LOG_ERROR,
                 ("P3PDataSchema:  %s PostInit, Creation of nsIFileURL failed - %X, using remote base DataSchema.\n", (const char *)mcsURISpec, rv) );

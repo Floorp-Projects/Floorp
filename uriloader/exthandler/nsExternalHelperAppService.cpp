@@ -172,17 +172,9 @@ nsresult nsExternalHelperAppService::InitDataSource()
   rv = NS_GetSpecialDirectory(NS_APP_USER_MIMETYPES_50_FILE, getter_AddRefs(mimeTypesFile));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  // Now construct a standard (file) url.
-  nsCOMPtr<nsIFileURL> fileURL = do_CreateInstance( "@mozilla.org/network/standard-url;1", &rv );
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Set to point at same file as the 'special directory."
-  rv = fileURL->SetFile( mimeTypesFile );
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Get file url spec to be used to initialize the DS.
   nsXPIDLCString urlSpec;
-  rv = fileURL->GetSpec(getter_Copies(urlSpec));
+  rv = mimeTypesFile->GetURL(getter_Copies(urlSpec));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = remoteDS->Init(urlSpec);

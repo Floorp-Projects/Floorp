@@ -27,8 +27,6 @@
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 const nsIDirectoryServiceProvider = Components.interfaces.nsIDirectoryServiceProvider;
 const nsIDirectoryServiceProvider_CONTRACTID = "@mozilla.org/file/directory_service;1";
-const nsStdURL_CONTRACTID     = "@mozilla.org/network/standard-url;1";
-const nsIFileURL          = Components.interfaces.nsIFileURL;
 const nsIOutlinerBoxObject = Components.interfaces.nsIOutlinerBoxObject;
 
 var sfile = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);

@@ -87,8 +87,9 @@ nsFilePicker.prototype = {
   set fileURL(a) { throw "readonly property"; },
   get fileURL()  { 
     if (this.mFile) {
-      var url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(nsIFileURL);
-      url.file = this.mFile;
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                    .getService(Components.interfaces.nsIIOService);
+      var url       = ioService.newFileURI(this.mFile);
       return url;
     }
     return null;

@@ -25,6 +25,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsNetUtil.h"
 #include "nsXBLService.h"
 #include "nsIXBLPrototypeHandler.h"
 #include "nsXBLWindowKeyHandler.h"
@@ -1096,7 +1097,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
                                       const nsCString& aURLStr, const nsCString& aRef,
                                       PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   *aResult = nsnull;
 
@@ -1151,12 +1152,10 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
     if (!info) {
       // Finally, if all lines of defense fail, we go and fetch the binding
       // document.
-      nsCOMPtr<nsIURL> uri;
-      nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
-                                         nsnull,
-                                         NS_GET_IID(nsIURL),
-                                         getter_AddRefs(uri));
-      uri->SetSpec(aURLStr);
+      nsCOMPtr<nsIURI> uri;
+      rv = NS_NewURI(getter_AddRefs(uri), aURLStr);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a url");
+
       nsCOMPtr<nsIDocument> document;
       FetchBindingDocument(aBoundElement, aBoundDocument, uri, aRef, aForceSyncLoad, getter_AddRefs(document));
    

@@ -896,6 +896,9 @@ nsStdURL::SetSpec(const char* i_Spec)
     CRTFREEIF(mRef);
     rv = Parse(fwdPtr);
     CRTFREEIF(eSpec);
+
+    NS_ASSERTION(mScheme, "no scheme? You shouldn't be calling this function without scheme!");
+
     return rv;
 }
 

@@ -162,12 +162,16 @@ function LoadSignons()
 
     if (user == "") {
       /* no username passed in, parse it out of url */
-      var uri =
-        Components.classes["@mozilla.org/network/standard-url;1"]
-          .createInstance(Components.interfaces.nsIURI); 
-      uri.spec = host; 
-      if (uri.username) {
-        user = uri.username;
+      var unused = { };
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                    .getService(Components.interfaces.nsIIOService);
+      try {
+        username = ioService.extractUrlPart(host, ioService.url_Username, unused, unused);
+      } catch(e) {
+        username = "";
+      }
+      if (username != "") {
+        user = username;
       } else {
         user = "<>";
       }

@@ -36,6 +36,7 @@
 #include "prtypes.h"
 #include "prprf.h"
 #include "nsCRT.h"
+#include "nsNetUtil.h"
 
 #include "nsIPresContext.h"
 #include "nsIImgManager.h"
@@ -1749,8 +1750,10 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
 
     /* convert image_url to an nsIURL so we can extract host and scheme */
     nsresult rv;
-    NS_WITH_SERVICE(nsIURL, uri, "@mozilla.org/network/standard-url;1", &rv);
-    if (NS_FAILED(rv) || NS_FAILED(uri->SetSpec(image_url))) {
+    
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), image_url);
+    if (NS_FAILED(rv)) {
         return PR_TRUE;
     }
 

@@ -27,6 +27,7 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
+#include "nsIURLParser.h"
 #endif /* XPCOM_STANDALONE */
 
 #include "nsFileSpec.h"  // evil ftang hack
@@ -35,6 +36,12 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
+
+#ifndef XPCOM_STANDALONE
+static NS_DEFINE_CID(kStdURLParserCID, NS_STANDARDURLPARSER_CID);
+#endif
+
 
 class nsFSStringConversion {
 public:
@@ -379,15 +386,87 @@ nsLocalFile::CreateUnique(const char* suggestedName, PRUint32 type, PRUint32 att
     return NS_ERROR_FILE_TOO_BIG;
 }
 
+nsresult nsLocalFile::ParseURL(const char* inURL, char **outHost, char **outDirectory,
+                               char **outFileBaseName, char **outFileExtension)
+{
+    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
 
+#ifndef XPCOM_STANDALONE
+    NS_ENSURE_ARG(inURL);
+    NS_ENSURE_ARG_POINTER(outHost);
+    *outHost = nsnull;
+    NS_ENSURE_ARG_POINTER(outDirectory);
+    *outDirectory = nsnull;
+    NS_ENSURE_ARG_POINTER(outFileBaseName);
+    *outFileBaseName = nsnull;
+    NS_ENSURE_ARG_POINTER(outFileExtension);
+    *outFileExtension = nsnull;
+    
+    rv = NS_OK;    
+    char* eSpec = nsnull;
+    eSpec = nsCRT::strdup(inURL);
+    if (!eSpec)
+        return NS_ERROR_OUT_OF_MEMORY;
 
+    // Skip leading spaces and control-characters
+    char* fwdPtr= (char*) eSpec;
+    while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
+        fwdPtr++;
+    // Remove trailing spaces and control-characters
+    if (fwdPtr) {
+        char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
+        if (*bckPtr > '\0' && *bckPtr <= ' ') {
+            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr <= ' ')) {
+                bckPtr--;
+            }
+            *(bckPtr+1) = '\0';
+        }
+    }
 
+    NS_WITH_SERVICE(nsIURLParser, parser, kStdURLParserCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
+    nsXPIDLCString ePath;
+    nsXPIDLCString scheme, username, password, host;
+    PRInt32 mPort;
+    
+    // Parse the spec
+    rv = parser->ParseAtScheme(eSpec, getter_Copies(scheme), getter_Copies(username), 
+                               getter_Copies(password), outHost, &mPort,
+                               getter_Copies(ePath));
 
+    // if this isn't a file: URL, then we can't deal                                            
+    if (NS_FAILED(rv) || nsCRT::strcasecmp(scheme, "file") != 0) {
+        CRTFREEIF(*outHost);
+        return NS_ERROR_FAILURE;
+    }
+    
+    nsXPIDLCString param, query, ref;
 
+    // Now parse the path
+    rv = parser->ParseAtDirectory(ePath, outDirectory, outFileBaseName, outFileExtension,
+                                  getter_Copies(param), getter_Copies(query), getter_Copies(ref));
+    if (NS_FAILED(rv)) {
+        CRTFREEIF(*outDirectory);
+        CRTFREEIF(*outFileBaseName);
+        CRTFREEIF(*outFileExtension);
+        return rv;
+    }
 
-
-
+    // If any of the components are non-NULL but empty, free them
+    if (*outHost && !nsCRT::strlen(*outHost))
+        CRTFREEIF(*outHost);  
+    if (*outDirectory && !nsCRT::strlen(*outDirectory))
+        CRTFREEIF(*outDirectory);  
+    if (*outFileBaseName && !nsCRT::strlen(*outFileBaseName))
+        CRTFREEIF(*outFileBaseName);  
+    if (*outFileExtension && !nsCRT::strlen(*outFileExtension))
+        CRTFREEIF(*outFileExtension);  
+#endif /* XPCOM_STANDALONE */
+                                      
+    return NS_OK;
+}
+ 
 
 // E_V_I_L Below! E_V_I_L Below! E_V_I_L Below! E_V_I_L Below!
 
