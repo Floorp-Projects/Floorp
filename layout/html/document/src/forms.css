@@ -39,7 +39,7 @@ form {
 
 label {
   /* our <label> support is badly broken. (b=47149) */
-  vertical-align: bottom;
+  vertical-align: text-bottom;
   padding-left: 3px;
   padding-right: 3px;
 }
@@ -66,7 +66,7 @@ input {
   cursor: text;
   font: field;
   text-align: start;
-  vertical-align: bottom;
+  vertical-align: text-bottom;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#inputFields");
@@ -81,7 +81,7 @@ textarea {
   font: field;
   margin: 1px 0 1px 0;
   text-align: start;
-  vertical-align: bottom;
+  vertical-align: text-bottom;
   -moz-box-sizing: border-box;
   -moz-user-focus: normal;
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
@@ -103,7 +103,7 @@ select {
   background-color: -moz-Field;
   border: 2px inset ThreeDFace;
   margin: 0;
-  vertical-align: bottom;
+  vertical-align: text-bottom;
   color: -moz-FieldText;
   white-space: nowrap;
   text-align: start; 
@@ -276,7 +276,7 @@ input[type="checkbox"] {
   width: 13px;
   height: 13px;
   cursor: default;
-  vertical-align: bottom;
+  vertical-align: text-bottom;
   -moz-binding: none;
   margin: 3px 4px 3px 4px;
   padding: 0;
