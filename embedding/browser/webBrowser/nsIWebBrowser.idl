@@ -76,8 +76,8 @@ interface nsIWebBrowser : nsISupports
 	will be QI'd and used for setting positioning, chrome elements, etc of the
 	containing window.  This interface is implemented by the embedding app.
 	The topLevelWindow object will be QId for nsIInterfaceRequestor, if it 
-	is found, it is considered and implicit addition to the webBrowserListener
-	list and will be queried first.  Implementations of this interface should
+	is found, it will be quiried first before querying the objects in the 
+	webBrowserListener list.  Implementations of this interface should
 	not refcount the topLevelWindow as it is considered the owner of the browser
 	window.  That therefore means that when the topLevelWindow goes away, it 
 	must set topLevelWindow to nsnull.
