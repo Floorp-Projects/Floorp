@@ -99,6 +99,13 @@ public:
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*&       aContinuingFrame);
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::tableRowFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   
   /** set mTallestCell to 0 in anticipation of recalculating it */

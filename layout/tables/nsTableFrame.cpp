@@ -264,6 +264,14 @@ void ColumnInfoCache::GetColumnsByType(const nsStyleUnit aType,
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("CIC GetColumnsByType: found %d of type %d\n", aOutNumColumns, aType);
 }
 
+NS_IMETHODIMP
+nsTableFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::tableFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 
 
 /* --------------------- nsTableFrame -------------------- */

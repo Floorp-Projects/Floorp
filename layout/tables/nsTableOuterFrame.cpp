@@ -28,6 +28,7 @@
 #include "nsIPtr.h"
 #include "prinrval.h"
 #include "nsHTMLIIDs.h"
+#include "nsLayoutAtoms.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -1187,6 +1188,14 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsI
 #endif
 }
 
+NS_IMETHODIMP
+nsTableOuterFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::tableOuterFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 
 /* ----- global methods ----- */
 

@@ -35,6 +35,7 @@
 #include "nsIPtr.h"
 #include "nsIView.h"
 #include "nsStyleUtil.h"
+#include "nsLayoutAtoms.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -1070,6 +1071,15 @@ void nsTableCellFrame::RecalcLayoutData(nsTableFrame* aTableFrame,
   CalculateBorders(aTableFrame, aBoundaryCells);
   CalculateMargins(aTableFrame, aBoundaryCells);
   mCalculated = NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableCellFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::tableCellFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

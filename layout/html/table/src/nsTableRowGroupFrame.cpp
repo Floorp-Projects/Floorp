@@ -33,6 +33,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIStyleSet.h"
 #include "nsIPresShell.h"
+#include "nsLayoutAtoms.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -1312,6 +1313,16 @@ nsTableRowGroupFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   aContinuingFrame = cf;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTableRowGroupFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::tableRowGroupFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
 
 /* ----- global methods ----- */
 
