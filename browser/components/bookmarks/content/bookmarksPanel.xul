@@ -18,53 +18,39 @@
 # 
 # Contributor(s): 
 #   Ben Goodger <ben@netscape.com> (Original Author, v2.0)
+#   Pierre Chanial <p_ch@verizon.net>
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css" type="text/css"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd">
+<!DOCTYPE page SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd">
 
 <page id="bookmarksPanel"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="Startup();" elementtofocus="bookmarks-view">
+        onload="Startup();">
 
-  <!-- Shared libraries XXX - would like to cut this dependency out -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-
-  <!-- Shared Bookmarks Utility Library -->
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
-  <!-- Bookmarks Panel -->
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksPanel.js"/>
-
-  <!-- Bookmarks Panel Drag & Drop -->
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksPanel.js"/>
 
   <!-- bookmarks & edit commands -->
-  <commands id="commands">
-    <commandset id="bookmarksItems">
-      <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
-      <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
-      <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
-      <command id="cmd_bm_expandfolder"              oncommand="goDoCommand('cmd_bm_expandfolder');"/>
-      <command id="cmd_bm_openfolder"                oncommand="goDoCommand('cmd_bm_openfolder');"/>
-      <command id="cmd_bm_managefolder"              oncommand="goDoCommand('cmd_bm_managefolder');"/>
-      <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
-      <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
-      <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
-      <command id="cmd_bm_find"                      oncommand="goDoCommand('cmd_bm_find');"/>
-      <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
-      <command id="cmd_bm_cut"                       oncommand="goDoCommand('cmd_bm_cut');"/>
-      <command id="cmd_bm_copy"                      oncommand="goDoCommand('cmd_bm_copy');"/>
-      <command id="cmd_bm_paste"                     oncommand="goDoCommand('cmd_bm_paste');"/>
-      <command id="cmd_bm_delete"                    oncommand="goDoCommand('cmd_bm_delete');"/>
-      <command id="cmd_bm_selectAll"                 oncommand="goDoCommand('cmd_bm_selectAll');"/>
-    </commandset>
-  </commands>
+  <commandset id="editMenuCommands"/>
+  <command id="cmd_bm_open"            oncommand="goDoCommand('cmd_bm_open');"/>
+  <command id="cmd_bm_openinnewwindow" oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
+  <command id="cmd_bm_openinnewtab"    oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
+  <command id="cmd_bm_expandfolder"    oncommand="goDoCommand('cmd_bm_expandfolder');"/>
+  <command id="cmd_bm_openfolder"      oncommand="goDoCommand('cmd_bm_openfolder');"/>
+  <command id="cmd_bm_managefolder"    oncommand="goDoCommand('cmd_bm_managefolder');"/>
+  <command id="cmd_bm_newfolder"       oncommand="goDoCommand('cmd_bm_newfolder');"/>
+  <command id="cmd_bm_newbookmark"     oncommand="goDoCommand('cmd_bm_newbookmark');"/>
+  <command id="cmd_bm_newseparator"    oncommand="goDoCommand('cmd_bm_newseparator');"/>
+  <command id="cmd_bm_find"            oncommand="goDoCommand('cmd_bm_find');"/>
+  <command id="cmd_bm_properties"      oncommand="goDoCommand('cmd_bm_properties');"/>
   
   <hbox align="center">
     <label value="&search.label;" accesskey="&search.accesskey;" control="search-box"/>

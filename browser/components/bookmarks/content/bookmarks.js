@@ -267,50 +267,50 @@ var BookmarksCommand = {
     // ---------------------
     // bm_newfolder
     // ---------------------
-    // bm_cut
-    // bm_copy
-    // bm_paste
+    // cut
+    // copy
+    // paste
     // ---------------------
-    // bm_delete
+    // delete
     // ---------------------
     // bm_properties
     switch (type) {
     case "BookmarkSeparator":
       commands = ["bm_newfolder", "bm_separator", 
-                  "bm_cut", "bm_copy", "bm_paste", "bm_separator",
-                  "bm_delete", "bm_separator",
+                  "cut", "copy", "paste", "bm_separator",
+                  "delete", "bm_separator",
                   "bm_properties"];
       break;
     case "Bookmark":
       commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_separator",
                   "bm_newfolder", "bm_separator",
-                  "bm_cut", "bm_copy", "bm_paste", "bm_separator",
-                  "bm_delete", "bm_separator",
+                  "cut", "copy", "paste", "bm_separator",
+                  "delete", "bm_separator",
                   "bm_properties"];
       break;
     case "Folder":
       commands = ["bm_expandfolder", "bm_openfolder", "bm_managefolder", "bm_separator", 
                   "bm_newfolder", "bm_separator",
-                  "bm_cut", "bm_copy", "bm_paste", "bm_separator",
-                  "bm_delete", "bm_separator",
+                  "cut", "copy", "paste", "bm_separator",
+                  "delete", "bm_separator",
                   "bm_properties"];
       break;
     case "PersonalToolbarFolder":
       commands = ["bm_newfolder", "bm_separator",
-                  "bm_cut", "bm_copy", "bm_paste", "bm_separator",
-                  "bm_delete", "bm_separator",
+                  "cut", "copy", "paste", "bm_separator",
+                  "delete", "bm_separator",
                   "bm_properties"];
       break;
     case "IEFavoriteFolder":
-      commands = ["bm_expandfolder", "bm_separator", "bm_delete"];
+      commands = ["bm_expandfolder", "bm_separator", "delete"];
       break;
     case "IEFavorite":
       commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_separator",
-                  "bm_copy"];
+                  "copy"];
       break;
     case "FileSystemObject":
       commands = ["bm_open", "bm_openinnewwindow", "bm_openinnewtab", "bm_separator",
-                  "bm_copy"];
+                  "copy"];
       break;
     default: 
       commands = [];
@@ -761,11 +761,11 @@ var BookmarksController = {
     case "cmd_redo":
     case "cmd_bm_undo":
     case "cmd_bm_redo":
-    case "cmd_bm_cut":
-    case "cmd_bm_copy":
-    case "cmd_bm_paste":
-    case "cmd_bm_delete":
-    case "cmd_bm_selectAll":
+    case "cmd_cut":
+    case "cmd_copy":
+    case "cmd_paste":
+    case "cmd_delete":
+    case "cmd_selectAll":
     case "cmd_bm_open":
     case "cmd_bm_openinnewwindow":
     case "cmd_bm_openinnewtab":
@@ -810,7 +810,7 @@ var BookmarksController = {
     case "cmd_redo":
     case "cmd_bm_redo":
       return BMSVC.transactionManager.numberOfRedoItems > 0;
-    case "cmd_bm_paste":
+    case "cmd_paste":
       if (!BookmarksUtils.isValidTargetContainer(aTarget.parent))
         return false;
       const kClipboardContractID = "@mozilla.org/widget/clipboard;1";
@@ -830,12 +830,12 @@ var BookmarksController = {
       }
       var hasFlavours = clipboard.hasDataMatchingFlavors(flavourArray, kClipboardIID.kGlobalClipboard);
       return hasFlavours;
-    case "cmd_bm_copy":
+    case "cmd_copy":
       return length > 0;
-    case "cmd_bm_cut":
-    case "cmd_bm_delete":
+    case "cmd_cut":
+    case "cmd_delete":
       return length > 0 && !aSelection.containsImmutable && !aSelection.containsPTF;
-    case "cmd_bm_selectAll":
+    case "cmd_selectAll":
       return true;
     case "cmd_bm_open":
     case "cmd_bm_expandfolder":
@@ -915,16 +915,16 @@ var BookmarksController = {
     case "cmd_bm_properties":
       BookmarksCommand.openBookmarkProperties(aSelection);
       break;
-    case "cmd_bm_cut":
+    case "cmd_cut":
       BookmarksCommand.cutBookmark(aSelection);
       break;
-    case "cmd_bm_copy":
+    case "cmd_copy":
       BookmarksCommand.copyBookmark(aSelection);
       break;
-    case "cmd_bm_paste":
+    case "cmd_paste":
       BookmarksCommand.pasteBookmark(aTarget);
       break;
-    case "cmd_bm_delete":
+    case "cmd_delete":
       BookmarksCommand.deleteBookmark(aSelection);
       break;
     case "cmd_bm_movebookmark":
@@ -955,7 +955,7 @@ var BookmarksController = {
   {
     var commands = ["cmd_bm_newbookmark", "cmd_bm_newfolder", "cmd_bm_newseparator",
                     "cmd_undo", "cmd_redo", "cmd_bm_properties", "cmd_bm_rename", 
-                    "cmd_bm_copy", "cmd_bm_paste", "cmd_bm_cut", "cmd_bm_delete",
+                    "cmd_copy", "cmd_paste", "cmd_cut", "cmd_delete",
                     "cmd_bm_setpersonaltoolbarfolder", "cmd_bm_movebookmark", 
                     "cmd_bm_openfolder", "cmd_bm_managefolder"];
     for (var i = 0; i < commands.length; ++i) {

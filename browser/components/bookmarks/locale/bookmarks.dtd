@@ -19,7 +19,15 @@
 #   Stephen Lamm <slamm@netscape.com>
 #   Blake Ross <blaker@netscape.com>
 
-<!-- extracted from bookmarksManager.xul -->
+<!ENTITY fileMenu.label                 "File">
+<!ENTITY fileMenu.accesskey             "F">
+<!ENTITY viewMenu.label                 "View">
+<!ENTITY viewMenu.accesskey             "V">
+
+<!ENTITY closeCmd.label "Close">
+<!ENTITY closeCmd.accesskey "C">
+<!ENTITY closeCmd.commandkey "W">
+                                                                                             
 <!ENTITY menuitem.newBookmark.label    "New Bookmark...">
 <!ENTITY menuitem.newBookmark.accesskey "B">
 <!ENTITY menuitem.newFolder.label        "New Folder...">
@@ -79,8 +87,6 @@
 
 <!ENTITY search.label                   "Search:">
 <!ENTITY search.accesskey               "S">
-<!ENTITY fileMenu.label                 "File">
-<!ENTITY fileMenu.accesskey             "F">
 
 <!-- bookmarksToolbar.xml -->
 <!ENTITY emptyItem.label "(Empty)">
