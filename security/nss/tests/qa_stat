@@ -385,7 +385,7 @@ html_line()
           echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
       fi
       if [ "$BCL_RESULT" != "0" -a "$BCL_LOG" != "0" ] ; then
-          echo '<td><a href="'$BCL_RESULT'">result</a><a href="'$BCL_LOG'"> log</td>'
+          echo '<td><a href="'$BCL_RESULT'">result</a>, <a href="'$BCL_LOG'"> log</td>'
       elif [ "$BCL_RESULT" = "0" -a "$BCL_LOG" != "0" ] ; then
           echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCL_LOG'">log</a></td>'
       elif [ "$BCL_RESULT" != "0" -a "$BCL_LOG" = "0" ] ; then
@@ -394,7 +394,7 @@ html_line()
           echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
       fi
       if [ "$BCB_RESULT" != "0" -a "$BCB_LOG" != "0" ] ; then
-          echo '<td><a href="'$BCB_RESULT'">result</a><a href="'$BCB_LOG'"> log</td>'
+          echo '<td><a href="'$BCB_RESULT'">result</a>, <a href="'$BCB_LOG'"> log</td>'
       elif [ "$BCB_RESULT" = "0" -a "$BCB_LOG" != "0" ] ; then
           echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCB_LOG'">log</a></td>'
       elif [ "$BCB_RESULT" != "0" -a "$BCB_LOG" = "0" ] ; then
