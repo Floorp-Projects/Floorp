@@ -259,6 +259,8 @@ function BeginDragFolderTree(event)
     var treeItem = event.target.parentNode.parentNode;
     if (!treeItem)	return(false);
 
+    if (treeItem.getAttribute('IsServer') == "true")
+      return false;
     gSrcCanRename = treeItem.getAttribute('CanRename');  //used in DragOverTree
 
     var serverType = treeItem.getAttribute('ServerType') // do not allow the drag when news is the source
