@@ -744,11 +744,11 @@ void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags
   // Position the scrolled view
   nsIView *scrolledView;
   GetScrolledView(scrolledView);
-  scrolledView->SetPosition(-mOffsetX, -mOffsetY);
-
-  Scroll(scrolledView, dx, dy, t2p, 0);
-
-  NotifyScrollPositionDidChange(offsetX, offsetY);
+  if(scrolledView) {
+    scrolledView->SetPosition(-mOffsetX, -mOffsetY);
+    Scroll(scrolledView, dx, dy, t2p, 0);
+    NotifyScrollPositionDidChange(offsetX, offsetY);
+  }
 }
 
 NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
