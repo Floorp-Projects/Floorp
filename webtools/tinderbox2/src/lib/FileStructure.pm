@@ -6,8 +6,8 @@
 # partitions and this will require making get_filename() less regular
 # then we have defined it here.
 
-# $Revision: 1.7 $ 
-# $Date: 2000/10/18 20:26:57 $ 
+# $Revision: 1.8 $ 
+# $Date: 2000/11/09 19:38:34 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/FileStructure.pm,v $ 
 # $Name:  $ 
@@ -89,11 +89,17 @@ $URL_HTML = ($TinderConfig::URL_HTML ||
 # the full path name tinderbox will use to access the tinderbox
 # servers root data directory
 
-$TINDERBOX_DIR = ($TinderConfig::TINDERBOX_DIR || 
+$TINDERBOX_HTML_DIR = ($TinderConfig::TINDERBOX_HTML_DIR || 
+                  "/usr/apache/cgibin/webtools/tinderbox");
+
+$TINDERBOX_DATA_DIR = ($TinderConfig::TINDERBOX_DATA_DIR || 
                   "/usr/apache/cgibin/webtools/tinderbox");
 
 $GLOBAL_INDEX_FILE = ($TinderConfig::GLOBAL_INDEX_FILE ||
 		      "index.html");
+
+$LOCK_FILE = ($TinderConfig::LOCK_FILE ||
+              "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock");
 
 # the default page for a tree
 $DEFAULT_HTML_PAGE = $TinderConfig::DEFAULT_HTML_PAGE || 'index.html';
@@ -109,7 +115,8 @@ sub get_filename {
   (TreeData::tree_exists($tree)) ||
     die("tree: $tree does not exist\n");    
 
-  my ($tree_dir) = "$TINDERBOX_DIR/$tree";
+  my ($html_tree_dir) = "$TINDERBOX_HTML_DIR/$tree";
+  my ($data_tree_dir) = "$TINDERBOX_DATA_DIR/$tree";
 
   # all the file names this program uses appear below
 
@@ -122,59 +129,58 @@ sub get_filename {
      # may want this outside the webservers document root, so that the
      # raw data can not be seen.
 
-     'TinderDB_Dir'=> "$tree_dir/db",
+     'TinderDB_Dir'=> "$data_tree_dir/db",
 
      # header data files are placed in this directory.  Same issues
      # with document root as above.
 
-     'TinderHeader_Dir'=> "$tree_dir/h",
+     'TinderHeader_Dir'=> "$data_tree_dir/h",
      
+     # setting it like this lets you have each tree have a different
+     # set of administrators.
+
+     'passwd' => "$data_tree_dir/h/passwd.DBdat",
+
+     # setting it like this lets you have one set of adminstrators for
+     # all trees.
+
+     #'passwd' => "$TINDERBOX_DATA_DIR/passwd.DBdat",
+
      # The build log files will be turned into html and stored
      # here.  Lets have just one big full/brief directory for
      # all the trees this will make cleanup easier and no one
      # goes browsing through the tree specific log dir anyway.
      
-     'full-log' => "$TINDERBOX_DIR/full",
+     'full-log' => "$TINDERBOX_HTML_DIR/full",
      
-     'brief-log' => "$TINDERBOX_DIR/brief",
+     'brief-log' => "$TINDERBOX_HTML_DIR/brief",
      
      # where the binary files mailed inside the build log files will
      # be placed.
      
-     'build_bin_dir' => "$tree_dir/bin",
+     'build_bin_dir' => "$html_tree_dir/bin",
      
      # the per tree time stamp file to ensure all updates are at least 
      # $TinderDB::TABLE_SPACING apart
      
-     'update_time_stamp'  => "$tree_dir/db/Mail.Build.time.stamp",
+     'update_time_stamp'  => "$data_tree_dir/db/Mail.Build.time.stamp",
      
      # where the tree specific generated html pages are placed
      # in this directory
      
-     'tree_HTML' => $tree_dir,
+     'tree_HTML' => $html_tree_dir,
      
      'tree_URL' => "$URL_HTML/$tree",
 
-     # the index file for this tree
+     # the index file to all summary pages and the status page for
+     # this tree.
+
+     'index'=> "$html_tree_dir/index.html",
      
-     'index'=> "$tree_dir/index.html",
-     
-     # access to the administration page
-
-     # setting it like this lets you have each tree have a different
-     # set of administrators.
-
-     'passwd' => "$tree_dir/h/passwd.DBdat",
-
-     # setting it like this lets you have one set of adminstrators for
-     # all trees.
-
-     #'passwd' => "$TINDERBOX_DIR/passwd.DBdat",
-
      # there are automated bots who need the header data, they extract
      # it from this file.
 
-     'alltree_headers' => "$tree_dir/alltree_headers.html",
+     'alltree_headers' => "$html_tree_dir/alltree_headers.html",
 
     );
 
