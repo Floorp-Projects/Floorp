@@ -69,6 +69,7 @@ int err;
 		/*
 		 * XXX: readdir() is not MT-safe
 		 */
+		_MD_ERRNO() = 0;
 		de = readdir(md->d);
 
 		if (!de) {

@@ -177,6 +177,7 @@ int err;
           * XXX: readdir() is not MT-safe. There is an MT-safe version
           * readdir_r() on some systems.
           */
+        _MD_ERRNO() = 0;
         de = readdir(d->d);
         if (!de) {
             err = _MD_ERRNO();
