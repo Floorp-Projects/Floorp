@@ -44,7 +44,6 @@
 #include "nsStrShared.h"
 
 struct nsStr;
-enum eCharSize;
 
 // there are only static methods here!
 class nsStrPrivate {
