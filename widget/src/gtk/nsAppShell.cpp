@@ -18,7 +18,12 @@
 
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
+#include "plevent.h"
 #include <stdlib.h>
+
+// XXX -- This is a HACK
+
+PLEventQueue*  gUnixMainEventQueue = nsnull;
 
 //-------------------------------------------------------------------------
 //
@@ -61,12 +66,42 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 
 //-------------------------------------------------------------------------
 //
+// PLEventQueue Processor
+//
+//-------------------------------------------------------------------------
+
+static void nsUnixEventProcessorCallback(gpointer data,
+                                         gint source,
+                                         GdkInputCondition condition)
+{
+  NS_ASSERTION(source==PR_GetEventQueueSelectFD(gUnixMainEventQueue),
+               "Error in nsUnixMain.cpp:nsUnixEventProcessCallback");
+  PR_ProcessPendingEvents(gUnixMainEventQueue);
+}
+
+//-------------------------------------------------------------------------
+//
 // Enter a message handler loop
 //
 //-------------------------------------------------------------------------
 
+
+//  XXX This comes from nsWebShell.  If we don't link against nsWebShell
+//      this will break.  FIX ME FIX ME Please!
+
+extern void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue);
+
 NS_METHOD nsAppShell::Run()
 {
+  gUnixMainEventQueue = PR_CreateEventQueue("viewer-event-queue", PR_GetCurrentThread());
+
+  // XXX Setup webshell's event queue. This must be changed
+  nsWebShell_SetUnixEventQueue(gUnixMainEventQueue);
+
+  gdk_input_add(PR_GetEventQueueSelectFD(gUnixMainEventQueue),
+                GDK_INPUT_READ,
+                nsUnixEventProcessorCallback,
+                NULL);
 
   gtk_main();
 
@@ -84,7 +119,7 @@ NS_METHOD nsAppShell::Exit()
 //  gtk_widget_destroy (mTopLevel);
   gtk_main_quit ();
   gtk_exit(0);
- 
+
   return NS_OK;
 }
 
@@ -94,7 +129,7 @@ NS_METHOD nsAppShell::Exit()
 //
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()
-{ 
+{
   mRefCnt = 0;
   mDispatchListener = 0;
 }
@@ -120,5 +155,3 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   }
   return nsnull;
 }
-
-
