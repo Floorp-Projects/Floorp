@@ -114,20 +114,20 @@ TARGETS = $(PROGS)
 
 include $(DEPTH)/config/rules.mk
 
-nsDocLoader.o::	nsDocLoader.cpp
-	$(CCC) -c $(CFLAGS) nsDocLoader.cpp $(LDFLAGS) 
+$(OBJDIR)/nsDocLoader.o::	nsDocLoader.cpp
+	$(CCC) -o $@ -c $(CFLAGS) nsDocLoader.cpp $(LDFLAGS) 
 
-nsViewer.o::	nsViewer.cpp
-	$(CCC) -c $(CFLAGS) nsViewer.cpp $(LDFLAGS) 
+$(OBJDIR)/nsViewer.o::	nsViewer.cpp
+	$(CCC) -o $@ -c $(CFLAGS) nsViewer.cpp $(LDFLAGS) 
 
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
 
-$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o nsViewer.o nsDocLoader.o 
+$(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsDocLoader.o 
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $@.o nsViewer.o nsDocLoader.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(MOTIFLIBS)
+	$(CCC) -o $@ $@.o $(OBJDIR)/nsViewer.o $(OBJDIR)/nsDocLoader.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(MOTIFLIBS)
 
 
 export::
