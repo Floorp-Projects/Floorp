@@ -385,9 +385,9 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    var eventDescriptionElement = document.createElement( "label" );
    eventDescriptionElement.setAttribute( "value", eventText );
    eventDescriptionElement.setAttribute( "flex", "1" );
-   var DescriptionText = document.createTextNode( "This is my new text" );
+   var DescriptionText = document.createTextNode( " " );
    eventDescriptionElement.appendChild( DescriptionText );
-   eventDescriptionElement.setAttribute( "style", "border: 1px solid red; height: "+Height+";" );
+   eventDescriptionElement.setAttribute( "style", "height: "+Height+";" );
    eventDescriptionElement.setAttribute( "crop", "end" );
    eventBox.appendChild( eventDescriptionElement );
    

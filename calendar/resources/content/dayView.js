@@ -142,19 +142,14 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( )
    document.getElementById( "day-view-content-box" ).removeAttribute( "allday" );
 
    //make the text node that will contain the text for the all day box.
+   var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
    
-   //var TextNode = document.getElementById( "all-day-content-box-text" );
-   //if ( TextNode == null ) 
-   //{
-      HtmlNode = document.createElement( "description" );
-      HtmlNode.setAttribute( "class", "all-day-content-box-text-title" );
-      TextNode = document.createTextNode( "All-Day Events" );
-      HtmlNode.appendChild( TextNode );
-      document.getElementById( "all-day-content-box" ).appendChild( HtmlNode );
+   HtmlNode = document.createElement( "description" );
+   HtmlNode.setAttribute( "class", "all-day-content-box-text-title" );
+   TextNode = document.createTextNode( calendarStringBundle.GetStringFromName( "AllDayEvents" ) );
+   HtmlNode.appendChild( TextNode );
+   document.getElementById( "all-day-content-box" ).appendChild( HtmlNode );
       
-   //}
-   //TextNode.setAttribute( "value", "All-Day Events: " );
-   
    // get the events for the day and loop through them
    
    var dayEventList = this.calendarWindow.eventSource.getEventsForDay( this.calendarWindow.getSelectedDate() );
