@@ -28,9 +28,11 @@
 #include "nsHTMLIIDs.h"
 #include "nsStyleConsts.h"
 
-// XXX We could support "arbitrary" negative margins if we detected
-// frames falling outside the parent frame and wrap them in a view
-// when it happens.
+#ifdef NS_DEBUG
+#undef NOISY_VERTICAL_ALIGN
+#else
+#undef NOISY_VERTICAL_ALIGN
+#endif
 
 // XXX handle DIR=right-to-left
 
@@ -223,7 +225,6 @@ nsInlineReflow::SetFrame(nsIFrame* aFrame)
   mSpacing = nsnull;
   mPosition = nsnull;
   mTreatFrameAsBlock = TreatFrameAsBlockFrame();
-  mIsInlineAware = PR_FALSE;
 
   return NS_OK;
 }
@@ -458,10 +459,10 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   nsHTMLReflowState reflowState(mPresContext, frame, mOuterReflowState,
                                 mFrameAvailSize);
   if (!mTreatFrameAsBlock) {
-    mIsInlineAware = PR_TRUE;
     reflowState.lineLayout = &mLineLayout;
   }
   reflowState.reason = reason;
+  mLineLayout.SetUnderstandsWhiteSpace(PR_FALSE);
 
   // Let frame know that are reflowing it
   nscoord x = pfd->mBounds.x;
@@ -528,8 +529,9 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   }
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-     ("nsInlineReflow::ReflowFrame: frame=%p reflowStatus=%x %saware",
-      frame, aStatus, mIsInlineAware ? "" :"not "));
+     ("nsInlineReflow::ReflowFrame: frame=%p reflowStatus=%x %s",
+      frame, aStatus,
+      mLineLayout.GetUnderstandsWhiteSpace() ? "UWS" : "!UWS"));
 
   return !NS_INLINE_IS_BREAK_BEFORE(aStatus);
 }
@@ -654,11 +656,11 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
   // Advance to next X coordinate
   mX = pfd->mBounds.XMost() + mRightMargin;
 
-  // If the frame is a not inline aware and it takes up some area
-  // disable leading white-space compression for the next frame to
-  // be reflowed.
-  if (!mIsInlineAware && !emptyFrame) {
-    mLineLayout.SetSkipLeadingWhiteSpace(PR_FALSE);
+  // If the frame is a not aware of white-space and it takes up some
+  // area, disable leading white-space compression for the next frame
+  // to be reflowed.
+  if (!mLineLayout.GetUnderstandsWhiteSpace() && !emptyFrame) {
+    mLineLayout.SetEndsInWhiteSpace(PR_FALSE);
   }
 
   // Compute the bottom margin to apply. Note that the margin only
@@ -712,6 +714,12 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   mOuterFrame->GetStyleData(eStyleStruct_Font,
                             (const nsStyleStruct*&)font);
   nsIFontMetrics* fm = mPresContext.GetMetricsFor(font->mFont);
+
+#ifdef NOISY_VERTICAL_ALIGN
+  mOuterFrame->ListTag(stdout);
+  printf(": valign frames (count=%d, line#%d)\n",
+         mFrameNum, mLineLayout.GetLineNumber());
+#endif
 
   // Examine each and determine the minYTop, the maxYBottom and the
   // maximum height. We will use these values to determine the final
@@ -803,6 +811,14 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
       break;
     }
     pfd->mBounds.y = yTop;
+
+#ifdef NOISY_VERTICAL_ALIGN
+    printf("  ");
+    pfd->mFrame->ListTag(stdout);
+    printf(": yTop=%d minYTop=%d yBottom=%d maxYBottom=%d\n",
+           yTop, minYTop, yTop + height, maxYBottom);
+#endif
+
     if (yTop < minYTop) {
       minYTop = yTop;
     }
@@ -820,11 +836,17 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   // (minYTop) and the lowermost box bottom (maxYBottom)."
   nscoord lineHeight = maxYBottom - minYTop;
   nscoord maxAscent = -minYTop;
+#ifdef NOISY_VERTICAL_ALIGN
+  printf("  lineHeight=%d maxAscent=%d\n", lineHeight, maxAscent);
+#endif
   if (lineHeight < maxTopHeight) {
     // If the line height ends up shorter than the tallest top aligned
     // box then the line height must grow but the line's ascent need
     // not be changed.
     lineHeight = maxTopHeight;
+#ifdef NOISY_VERTICAL_ALIGN
+    printf("  *lineHeight=maxTopHeight=%d\n", lineHeight);
+#endif
   }
   if (lineHeight < maxBottomHeight) {
     // If the line height ends up shorter than the tallest bottom
@@ -834,6 +856,9 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
     nscoord dy = maxBottomHeight - lineHeight;
     lineHeight = maxBottomHeight;
     maxAscent += dy;
+#ifdef NOISY_VERTICAL_ALIGN
+    printf("  *lineHeight=maxBottomHeight=%d dy=%d\n", lineHeight, dy);
+#endif
   }
 
   nscoord topEdge = mTopEdge;
@@ -848,6 +873,10 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
     if ((newLineHeight > lineHeight) || !mOuterIsBlock) {
       topEdge += (newLineHeight - lineHeight) / 2;
       lineHeight = newLineHeight;
+#ifdef NOISY_VERTICAL_ALIGN
+      printf("  *lineHeight=newLineHeight=%d topEdgeDelta=%d\n",
+             lineHeight, topEdge - mTopEdge);
+#endif
     }
     }
   }
@@ -1037,6 +1066,9 @@ nsInlineReflow::CalcLineHeightFor(nsIPresContext& aPresContext,
         sc->GetStyleData(eStyleStruct_Text);
       if (nsnull != text) {
         nsStyleUnit unit = text->mLineHeight.GetUnit();
+#ifdef NOISY_VERTICAL_ALIGN
+        printf("  styleUnit=%d\n", unit);
+#endif
         if (eStyleUnit_Enumerated == unit) {
           // Normal value; we use 1.0 for normal
           // XXX could come from somewhere else
