@@ -113,9 +113,6 @@ si_3ButtonConfirm(PRUnichar * szMessage) {
 
 // This will go away once select is passed a prompter interface
 #include "nsAppShellCIDs.h" // TODO remove later
-#include "nsIAppShellService.h" // TODO remove later
-#include "nsIXULWindow.h" // TODO remove later
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
 PRIVATE PRBool
 si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) {
@@ -124,19 +121,15 @@ si_SelectDialog(const PRUnichar* szMessage, PRUnichar** pList, PRInt32* pCount) 
     *pCount = 0; /* last user selected is now at head of list */
     return PR_TRUE;
   }
-
   nsresult rv;
-  NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
-  if(NS_FAILED(rv)) {
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+  if (NS_FAILED(rv)) {
     return PR_FALSE;
   }
-  nsCOMPtr<nsIXULWindow> xulWindow;
-  appshellservice->GetHiddenWindow(getter_AddRefs(xulWindow));
-  nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(xulWindow));
   PRInt32 selectedIndex;
   PRBool rtnValue;
   PRUnichar * title_string = Wallet_Localize("SelectUserTitleLine");
-  rv = prompter->Select( title_string, szMessage, *pCount, NS_CONST_CAST(const PRUnichar**, pList), &selectedIndex, &rtnValue );
+  rv = dialog->Select( title_string, szMessage, *pCount, NS_CONST_CAST(const PRUnichar**, pList), &selectedIndex, &rtnValue );
   Recycle(title_string);
   *pCount = selectedIndex;
   si_UserHasBeenSelected = PR_TRUE;
