@@ -43,6 +43,8 @@
 #include "nsLeafFrame.h"
 #include "nsColor.h"
 #include "nsCOMPtr.h"
+#include "nsIStyleContext.h"
+#include "nsIPresContext.h"
 
 class nsIPresContext;
 class nsIStyleContext;
