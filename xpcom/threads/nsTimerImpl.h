@@ -79,14 +79,8 @@ enum {
 // Maximum possible delay (XXX rework to use ms rather than interval ticks).
 #define DELAY_INTERVAL_MAX      (DELAY_INTERVAL_LIMIT - 1)
 
-// Is interval-time t1 less than t2, even if t1 has wrapped PRIntervalTime?
-static inline PRBool
-TIMER_LESS_THAN(PRIntervalTime t, PRIntervalTime u)
-{
-    return (t < u)
-           ? u - t < DELAY_INTERVAL_LIMIT
-           : t - u > DELAY_INTERVAL_LIMIT;
-}
+// Is interval-time t less than u, even if t has wrapped PRIntervalTime?
+#define TIMER_LESS_THAN(t, u)   ((t) - (u) > DELAY_INTERVAL_LIMIT)
 
 class nsTimerImpl : public nsITimer, public nsIScriptableTimer
 {
