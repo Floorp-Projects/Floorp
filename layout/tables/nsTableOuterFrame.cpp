@@ -174,7 +174,22 @@ struct OuterTableReflowState {
 
 /* ----------- nsTableOuterFrame ---------- */
 
-NS_IMPL_ISUPPORTS_INHERITED(nsTableOuterFrame, nsHTMLContainerFrame, nsITableLayout)
+NS_IMPL_ADDREF_INHERITED(nsTableOuterFrame, nsHTMLContainerFrame)
+NS_IMPL_RELEASE_INHERITED(nsTableOuterFrame, nsHTMLContainerFrame)
+
+nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(nsITableLayout::GetIID())) 
+  { // note there is no addref here, frames are not addref'd
+    *aInstancePtr = (void*)(nsITableLayout*)this;
+    return NS_OK;
+  } else {
+    return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+  }
+}
 
 NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                                      nsIAtom*        aListName,
