@@ -253,7 +253,6 @@ test(FILE *in, FILE *out,
 
   opt->fancy_headers_p = fancy_headers_p;
   opt->headers = MimeHeadersSome;
-  opt->no_inline_p = PR_FALSE;
   opt->rot13_p = PR_FALSE;
 
   status = mime_parse_url_options(url, opt);

@@ -74,8 +74,8 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
 	  char* s;
 	  strs[0] = "<PRE>";
 	  strs[1] = "<PRE style=\"font-family: serif;\">";
-	  strs[2] = "<PRE>";
-	  strs[3] = "<PRE style=\"font-family: serif;\">";
+	  strs[2] = "<PRE WRAP>";
+	  strs[3] = "<PRE WRAP style=\"font-family: serif;\">";
 
     // For quoting, keep it simple...
     if ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||

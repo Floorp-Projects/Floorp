@@ -169,8 +169,6 @@ struct MimeDisplayOptions
 
   PRBool rot13_p;			/* Whether text/plain parts should be rotated
 							   Set by "?rot13=true" */
-  PRBool no_inline_p;		/* Whether inline display of attachments should
-							   be suppressed.  Set by "?inline=false" */
   char *part_to_load;		/* The particular part of the multipart which
 							   we are extracting.  Set by "?part=3.2.4" */
 

@@ -86,7 +86,6 @@ extern "C" char     *MIME_DecodeMimePartIIStr(const char *header,
                                               PRBool eatContinuations);
 
 static MimeHeadersState MIME_HeaderType;
-static PRBool MIME_NoInlineAttachments;
 static PRBool MIME_WrapLongLines;
 static PRBool MIME_VariableWidthPlaintext;
 
@@ -1231,13 +1230,6 @@ mime_bridge_create_display_stream(
   // Now, get the libmime prefs...
   ////////////////////////////////////////////////////////////
   
-  MIME_NoInlineAttachments = PR_TRUE;   // false - display as links 
-                                        // true - display attachment
-
-  if (msd->options->prefs)
-    msd->options->prefs->GetBoolPref("mail.inline_attachments", &MIME_NoInlineAttachments);
-  MIME_NoInlineAttachments = !MIME_NoInlineAttachments;
-
   /* This pref is written down in with the
   opposite sense of what we like to use... */
   MIME_WrapLongLines = PR_TRUE;
@@ -1249,7 +1241,6 @@ mime_bridge_create_display_stream(
     msd->options->prefs->GetBoolPref("mail.fixed_width_messages", &MIME_VariableWidthPlaintext);
   MIME_VariableWidthPlaintext = !MIME_VariableWidthPlaintext;
 
-  msd->options->no_inline_p = MIME_NoInlineAttachments;
   msd->options->wrap_long_lines_p = MIME_WrapLongLines;
   msd->options->headers = MIME_HeaderType;
   
