@@ -22,7 +22,8 @@
 	<!-- NOT IMPLEMENTED, so temporarily disabled -->
 	<broadcaster id="cmd_newEditorTemplate"   disabled="true"  oncommand="NewEditorFromTemplate();"/>
 	<broadcaster id="cmd_newEditorDraft"      disabled="true"  oncommand="NewEditorFromDraft();"/>
-
+  <broadcaster id="cmd_pageSetup" value="&pageSetupCmd.label;" disabled="true" oncommand="goPageSetup();"/>
+  
 	<menuitem id="menu_newEditor"         value="&newBlankPageCmd.label;"         accesskey="&newBlankPageCmd.accesskey;" key="key_newBlankPage" observes="cmd_newEditor"/>
 	<menuitem id="menu_newEditorTemplate" value="&newPageFromTemplateCmd.label;"  accesskey="&newPageFromTemplateCmd.accesskey;"                 observes="cmd_newEditorTemplate"/>
 	<menuitem id="menu_newEditorDraft"    value="&newPageFromDraftCmd.label;"     accesskey="&newPageFromDraftCmd.accesskey;"                    observes="cmd_newEditorDraft"/>
@@ -38,9 +39,6 @@
 	<key id="key_newNavigator"  xulkey="true" shift="false" key="&newNavigatorCmd.key;" observes="cmd_newNavigator"/>
 	<key id="key_newMessage"    xulkey="true" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
 
-	<!-- Page Setup menu item -->
-	<menuitem id="menu_pageSetup" value="&pageSetupCmd.label;" disabled="true" oncommand="goPageSetup()"/>
-	
 	<!-- Edit Menu -->
 	<menu id="menu_Edit" value="&editMenu.label;" accesskey="&editMenu.accesskey;"/>
 	<menuitem id="menu_undo" value="&undoCmd.label;" key="key_undo" accesskey="&undoCmd.accesskey;" observes="cmd_undo"/>
@@ -58,7 +56,7 @@
 	<key id="key_paste" xulkey="true" key="&pasteCmd.key;" observes="cmd_paste"/>
 	<key id="key_selectAll" xulkey="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
 	<key id="key_preferences" observes="cmd_preferences"/>
-
+  
 	<commandset id="globalEditMenuItems"
 					commandupdater="true"
 					events="focus"
@@ -147,10 +145,10 @@
 		<box id="status-bar-rightcap"/>
 	</box>
 	
-<popupset id="aTooltipSet">
-  <popup id="aTooltip" class="tooltip" oncreate="return FillInTooltip(document.tooltipNode);" > 
-    <text id="TOOLTIP_tooltipText"/>
-  </popup>
-</popupset>
+  <popupset id="aTooltipSet">
+    <popup id="aTooltip" class="tooltip" oncreate="return FillInTooltip(document.tooltipNode);" > 
+      <text id="TOOLTIP_tooltipText"/>
+    </popup>
+  </popupset>
 
 </overlay>		
