@@ -1,0 +1,18 @@
+<?xml version="1.0"?> 
+<!-- windows version of platformInputBindings.xul -->
+
+<keybinding id="platformInputBindings"
+	 xmlns:html="http://www.w3.org/TR/REC-html40"
+	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<!-- xul key for Windows -->
+<keyset id="editorKeySet" xulkey="ctrl">
+
+<!-- No windows-specific input bindings known at this time -->
+
+</keyset>
+
+<!-- End Unix-specific keybindings -->
+
+</keybinding>
+
