@@ -581,7 +581,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresContext*  aPresContext,
                     (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == styleDisplay->mDisplay)
                   : (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == styleDisplay->mDisplay);
 
-  nsCOMPtr<nsIStyleContext> styleContext(aStyleContext);
+  nsCOMPtr<nsIStyleContext> styleContext( dont_QueryInterface(aStyleContext) );
   nsCOMPtr<nsIStyleContext> parentStyleContext;
   aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
   const nsStyleDisplay* parentDisplay = 
@@ -720,7 +720,7 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*  aPresContext,
 
   // if groupStyleContext gets set, both it and styleContext need to be released
   nsCOMPtr<nsIStyleContext> groupStyleContext;
-  nsCOMPtr<nsIStyleContext> styleContext(aStyleContext);
+  nsCOMPtr<nsIStyleContext> styleContext( dont_QueryInterface(aStyleContext) );
 
   const nsStyleDisplay* parentDisplay = GetDisplay(aParentFrame);
   if ((NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == parentDisplay->mDisplay) ||
@@ -875,7 +875,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresContext*  aPresContext,
   const nsStyleDisplay* parentDisplay = (const nsStyleDisplay*)
     parentStyleContext->GetStyleData(eStyleStruct_Display);
 
-  nsCOMPtr<nsIStyleContext> styleContext(aStyleContext);
+  nsCOMPtr<nsIStyleContext> styleContext( dont_QueryInterface(aStyleContext) );
   PRBool wrapContent = PR_FALSE;
 
   if (NS_STYLE_DISPLAY_TABLE_ROW == parentDisplay->mDisplay) {

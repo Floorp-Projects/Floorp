@@ -2042,10 +2042,10 @@ void
 HTMLContentSink::ScrollToRef()
 {
   if (mNotAtRef && (nsnull != mRef) && (nsnull != mRefContent)) {
-    // See if the ref content has been reflowed by finding it's frame
+    // See if the ref content has been reflowed by finding its frame
     PRInt32 i, ns = mDocument->GetNumberOfShells();
     for (i = 0; i < ns; i++) {
-      nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
+      nsCOMPtr<nsIPresShell> shell( dont_AddRef(mDocument->GetShellAt(i)) );
       if (shell) {
         nsIFrame* frame;
         shell->GetPrimaryFrameFor(mRefContent, &frame);

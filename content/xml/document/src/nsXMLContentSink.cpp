@@ -230,7 +230,7 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // XXX this is silly; who cares?
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
-    nsCOMPtr<nsIPresShell> shell(mDocument->GetShellAt(i));
+    nsCOMPtr<nsIPresShell> shell( dont_AddRef(mDocument->GetShellAt(i)) );
     if (shell) {
       nsCOMPtr<nsIViewManager> vm;
       shell->GetViewManager(getter_AddRefs(vm));

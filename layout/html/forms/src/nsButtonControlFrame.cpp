@@ -328,8 +328,8 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aDesiredLayoutSize.descent = 0;
   } else {
 #ifdef NS_GFX_RENDER_FORM_ELEMENTS
-	nsCOMPtr<nsIStyleContext> outlineStyle(mStyleContext);
-	nsCOMPtr<nsIAtom> sbAtom (NS_NewAtom(":button-outline"));
+	nsCOMPtr<nsIStyleContext> outlineStyle( dont_QueryInterface(mStyleContext) );
+	nsCOMPtr<nsIAtom> sbAtom ( dont_QueryInterface(NS_NewAtom(":button-outline")) );
   aPresContext->ProbePseudoStyleContextFor(mContent, sbAtom, mStyleContext, PR_FALSE, getter_AddRefs(outlineStyle));
 
 	const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
@@ -433,14 +433,14 @@ nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
 
   //nsIStyleContext* kidSC;
 
-  nsCOMPtr<nsIStyleContext> outlineStyle(mStyleContext);
-  nsCOMPtr<nsIAtom> outlineAtom (NS_NewAtom(":button-outline"));
+  nsCOMPtr<nsIStyleContext> outlineStyle( dont_QueryInterface(mStyleContext) );
+  nsCOMPtr<nsIAtom> outlineAtom ( dont_QueryInterface(NS_NewAtom(":button-outline")) );
   aPresContext.ProbePseudoStyleContextFor(mContent, outlineAtom, mStyleContext,
                                           PR_FALSE,
                                           getter_AddRefs(outlineStyle));
 
-  nsCOMPtr<nsIStyleContext> focusStyle(mStyleContext);
-  nsCOMPtr<nsIAtom> focusAtom (NS_NewAtom(":button-focus"));
+  nsCOMPtr<nsIStyleContext> focusStyle( dont_QueryInterface(mStyleContext) );
+  nsCOMPtr<nsIAtom> focusAtom ( dont_QueryInterface(NS_NewAtom(":button-focus")) );
   aPresContext.ProbePseudoStyleContextFor(mContent, focusAtom, mStyleContext,
                                           PR_FALSE,
                                           getter_AddRefs(focusStyle));
