@@ -417,6 +417,24 @@ class nsCOMPtr
     public:
       typedef T element_type;
 
+				/*
+					Note: the following constructor is only |explicit| because of a bug in egcs 1.0.
+					This bug prevents egcs from compiling statements like
+					
+					  nsCOMPtr<Y> y;
+					  // ...
+					  nsCOMPtr<X> x = y;
+					
+					Using the parenthesis form of the constructor works fine.  In an effort to
+					help other people not break the linux build, I am making this constructor
+					|explicit|.  That prevents _any_ platform (that supports |explicit|) from compiling
+					the thing that egcs can't compile.
+					
+					When egcs fixes this bug, and we have reasonable agreement that interested parties
+					have or will upgrade, the |explicit| will go away.
+				*/
+
+			explicit
       nsCOMPtr( nsISupports* aRawPtr = 0 )
       		: mRawPtr(0),
       			mIsAwaitingAddRef(0)
