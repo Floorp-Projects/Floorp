@@ -1341,7 +1341,10 @@ void ModifyHelpMenu(CString inputFile, CString outputFile)
 
 	while (!srcf.eof()) 
 	{
-		srcf.getline(tempbuf,MAX_SIZE);
+		if (curPlatform == "Mac OS")
+			srcf.getline(tempbuf,MAX_SIZE,'\r');
+		else
+			srcf.getline(tempbuf,MAX_SIZE);
 		dstf << tempbuf << "\n";
 		if ((CString(tempbuf).Find(searchstr)) != -1)
 		{
