@@ -38,6 +38,11 @@
   <script src="deletecert.js"/>
   <script type="application/x-javascript" src="chrome://help/content/help.js" />
 
+  <keyset id="keys">
+    <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
+    <key id="return-key" keycode="VK_RETURN" oncommand="doOK();"/>
+    <key id="esc-key"    keycode="VK_ESCAPE" oncommand="window.close();"/>
+  </keyset>
 
   <vbox flex="1">
     <html>&certmgr.deletecert.beforename;</html>
