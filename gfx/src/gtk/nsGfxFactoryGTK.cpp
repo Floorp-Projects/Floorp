@@ -62,6 +62,7 @@
 #ifdef NATIVE_THEME_SUPPORT
 #include "nsNativeThemeGTK.h"
 #endif
+#include "nsPrintSession.h"
 
 // objects that just require generic constructors
 
@@ -81,6 +82,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorGTK)
 #ifdef NATIVE_THEME_SUPPORT
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeGTK)
 #endif
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 
 // our custom constructors
 
@@ -195,7 +197,11 @@ static const nsModuleComponentInfo components[] =
     NS_PRINTER_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/printer_enumerator/gtk;1",
     "@mozilla.org/gfx/printerenumerator;1",
-    nsPrinterEnumeratorGTKConstructor }
+    nsPrinterEnumeratorGTKConstructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor }
 #ifdef NATIVE_THEME_SUPPORT
   ,{ "Native Theme Renderer",
     NS_THEMERENDERER_CID,

@@ -54,6 +54,7 @@
 #include "nsFontList.h"
 #include "nsIGenericFactory.h"
 #include "nsNativeThemeWin.h"
+#include "nsPrintSession.h"
 
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextWin)
@@ -71,6 +72,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 
 PRBool
 UseAFunctions()
@@ -223,7 +225,11 @@ static const nsModuleComponentInfo components[] =
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1", 
     NS_NewNativeTheme
-  }
+  },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsGfxModule, components)

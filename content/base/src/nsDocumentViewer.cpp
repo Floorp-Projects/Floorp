@@ -125,6 +125,7 @@
 #include "nsIPrintSettings.h"
 #include "nsIPrintSettingsService.h"
 #include "nsIPrintOptions.h"
+#include "nsIPrintSession.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h" // XXX until atoms get factored into nsLayoutAtoms
@@ -459,6 +460,7 @@ public:
   float                       mOrigTextZoom;
   float                       mOrigZoom;
 
+  nsCOMPtr<nsIPrintSession>   mPrintSession;
   nsCOMPtr<nsIPrintSettings>  mPrintSettings;
   nsCOMPtr<nsIPrintOptions>   mPrintOptions;
   nsPrintPreviewListener*     mPPEventListeners;
@@ -6964,12 +6966,20 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     NS_ASSERTION(mPrt->mPrintSettings, "You can't Print without a PrintSettings!");
     rv = NS_ERROR_FAILURE;
   }
+
+  // Create a print session and let the print settings know about it.
+  // The print settings hold an nsWeakPtr to the session so it does not
+  // need to be cleared from the settings at the end of the job.
+  mPrt->mPrintSession = do_CreateInstance("@mozilla.org/gfx/printsession;1", &rv);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  mPrt->mPrintSettings->SetPrintSession(mPrt->mPrintSession);
+
   if (NS_FAILED(rv)) {
     delete mPrt;
     PR_PL(("NS_ERROR_FAILURE - CheckForPrinters for Printers failed"));
     mPrt = nsnull;
     return NS_ERROR_FAILURE;
-  }
+  }  
   mPrt->mPrintSettings->SetIsCancelled(PR_FALSE);
   mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
 

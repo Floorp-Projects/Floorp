@@ -158,22 +158,30 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
     if (!printSettingsX)
         return NS_ERROR_NO_INTERFACE;
     
-    PMPageFormat    localPageFormat = kPMNoPageFormat;
-    rv = printSettingsX->GetPMPageFormat(&localPageFormat);
+    PMPrintSession  printSession;
+    rv = printSettingsX->GetNativePrintSession(&printSession);
+    if (NS_FAILED(rv))
+        return rv;
+    
+    PMPageFormat    pageFormat = kPMNoPageFormat;
+    rv = printSettingsX->GetPMPageFormat(&pageFormat);
     if (NS_FAILED(rv))
         return rv;
 
-    PMPrintSettings localPrintSettings = kPMNoPrintSettings;
-    rv = printSettingsX->GetPMPrintSettings(&localPrintSettings);
+    PMPrintSettings nativePrintSettings = kPMNoPrintSettings;
+    rv = printSettingsX->GetPMPrintSettings(&nativePrintSettings);
     if (NS_FAILED(rv))
         return rv;
-
-    status = ::PMBegin();
+    
+    status = ::PMSessionValidatePageFormat(printSession, pageFormat, kPMDontWantBoolean);
     if (status != noErr)
         return NS_ERROR_FAILURE;
-    
-    Boolean validated;
-    status = ::PMValidatePageFormat(localPageFormat, &validated);
+        
+    // Reset the print settings to their defaults each time. We don't want to remember
+    // the last printed page range or whatever. This is expected Mac behavior.
+    status = ::PMSessionDefaultPrintSettings(printSession, nativePrintSettings);
+    if (status != noErr)
+        return NS_ERROR_FAILURE;
         
     ::InitCursor();
 
@@ -197,17 +205,17 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
     printData.mShrinkToFit = isOn;    
 
     CFPlugInRef pdePlugIn = ::LoadPDEPlugIn();
-    status = ::PMSetPrintSettingsExtendedData(localPrintSettings, kPDE_Creator, sizeof(printData),&printData);
+    status = ::PMSetPrintSettingsExtendedData(nativePrintSettings, kPDE_Creator, sizeof(printData),&printData);
 
     Boolean accepted;
-    status = ::PMPrintDialog(localPrintSettings, localPageFormat, &accepted);
+    status = ::PMSessionPrintDialog(printSession, nativePrintSettings, pageFormat, &accepted);
     if (status == noErr && accepted) {
 
         UInt32 bytesNeeded;
         int pageRange = -1;
-        status = ::PMGetPrintSettingsExtendedData(localPrintSettings, kPDE_Creator, &bytesNeeded, NULL);
+        status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kPDE_Creator, &bytesNeeded, NULL);
         if (status == noErr && bytesNeeded == sizeof(printData)) {
-            status = ::PMGetPrintSettingsExtendedData(localPrintSettings, kPDE_Creator,&bytesNeeded, &printData);        
+            status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kPDE_Creator,&bytesNeeded, &printData);        
 
             // set the correct data fields
             if (printData.mPrintSelection) {
@@ -235,9 +243,9 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
         }
         if (pageRange != nsIPrintSettings::kRangeSelection) {
             UInt32 firstPage, lastPage;
-            status = ::PMGetFirstPage(localPrintSettings, &firstPage);
+            status = ::PMGetFirstPage(nativePrintSettings, &firstPage);
             if (status == noErr) {
-                status = ::PMGetLastPage(localPrintSettings, &lastPage);
+                status = ::PMGetLastPage(nativePrintSettings, &lastPage);
                 if (status == noErr && lastPage != LONG_MAX) {
                     printSettings->SetPrintRange(nsIPrintSettings::kRangeSpecifiedPageRange);
                     printSettings->SetStartPageRange(firstPage);
@@ -245,13 +253,8 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
                 }
             }
         }
-        printSettingsX->SetPMPrintSettings(localPrintSettings);
     }
-    
-    ::PMDisposePageFormat(localPageFormat);
-    ::PMDisposePrintSettings(localPrintSettings);
-    ::PMEnd();
-    
+        
     if (!accepted)
         return NS_ERROR_ABORT;
 
@@ -317,30 +320,32 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
   nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(printSettings));
   if (!printSettingsX)
     return NS_ERROR_NO_INTERFACE;
+  
+  OSStatus status;
+    
+  PMPrintSession printSession;
+  status = ::PMCreateSession(&printSession);
+  if (status != noErr)
+    return NS_ERROR_FAILURE;
     
   PMPageFormat pageFormat;
   printSettingsX->GetPMPageFormat(&pageFormat);
-  if (pageFormat == kPMNoPageFormat)
+  if (pageFormat == kPMNoPageFormat) {
+    ::PMRelease(printSession);
     return NS_ERROR_FAILURE;
-  
-  OSStatus status = ::PMBegin();
-  if (status != noErr)
-    return NS_ERROR_FAILURE;
-  
+  }
+    
   Boolean validated;
-  ::PMValidatePageFormat(pageFormat, &validated);
+  ::PMSessionValidatePageFormat(printSession, pageFormat, &validated);
 
   ::InitCursor();
 
   Boolean   accepted = false;
-  status = ::PMPageSetupDialog(pageFormat, &accepted);
-  
-  if (accepted)
-    printSettingsX->SetPMPageFormat(pageFormat);
+  status = ::PMSessionPageSetupDialog(printSession, pageFormat, &accepted);
+  OSStatus tempStatus = ::PMRelease(printSession);
+  if (status == noErr)
+    status = tempStatus;
     
-  ::PMDisposePageFormat(pageFormat);
-  ::PMEnd();
-  
   if (status != noErr)
     return NS_ERROR_FAILURE;    
   if (!accepted)

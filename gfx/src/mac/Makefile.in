@@ -67,6 +67,7 @@ CPPSRCS = \
         nsScreenManagerMac.cpp \
         nsPrintOptionsX.cpp \
         nsPrintSettingsX.cpp \
+        nsPrintSessionX.cpp \
         nsFontUtils.cpp \
         nsNativeThemeMac.cpp \
         $(NULL)
@@ -84,7 +85,6 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES      += -DPM_USE_SESSION_APIS=0
         
 CXXFLAGS    += $(TK_CFLAGS)
 CFLAGS      += $(TK_CFLAGS)

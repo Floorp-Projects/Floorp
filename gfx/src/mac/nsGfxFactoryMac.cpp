@@ -52,9 +52,11 @@
 #if TARGET_CARBON
 #include "nsDeviceContextSpecX.h"
 #include "nsPrintOptionsX.h"
+#include "nsPrintSessionX.h"
 #else
 #include "nsDeviceContextSpecMac.h"
 #include "nsPrintOptionsMac.h"
+#include "nsPrintSession.h"
 #endif
 #include "nsDeviceContextSpecFactoryM.h"
 #include "nsScreenManagerMac.h"
@@ -76,9 +78,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceMac)
 #if TARGET_CARBON
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsX)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSessionX, Init)
 #else
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsMac)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorMac)
@@ -153,11 +157,19 @@ static const nsModuleComponentInfo components[] =
     NS_PRINTSETTINGSSERVICE_CID,
     "@mozilla.org/gfx/printsettings-service;1",
     nsPrintOptionsXConstructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionXConstructor },
 #else
   { "PrintSettings Service",
     NS_PRINTSETTINGSSERVICE_CID,
     "@mozilla.org/gfx/printsettings-service;1",
     nsPrintOptionsMacConstructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor },
 #endif
   { "nsFontEnumerator",
     NS_FONT_ENUMERATOR_CID,

@@ -52,6 +52,7 @@
 #include "nsDeviceContextQT.h"
 #include "nsImageQT.h"
 #include "nsFontList.h"
+#include "nsPrintSession.h"
 
 // objects that just require generic constructors
 
@@ -66,6 +67,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryQT)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorQT)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerQT)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 
 // our custom constructors
 static nsresult nsScriptableRegionConstructor(nsISupports *aOuter,REFNSIID aIID,void **aResult)
@@ -151,7 +153,11 @@ static const nsModuleComponentInfo components[] =
   { "Qt Screen Manager",
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
-    nsScreenManagerQTConstructor }
+    nsScreenManagerQTConstructor },
+  { "Print Session",
+    NS_PRINTSESSION_CID,
+    "@mozilla.org/gfx/printsession;1",
+    nsPrintSessionConstructor }
 };
 
 NS_IMPL_NSGETMODULE(nsGfxQTModule, components)
