@@ -1640,46 +1640,54 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
                                     PRBool allowUndo)
 {
   nsresult rv = NS_OK;
-	nsFileSpec path;
-	nsCOMPtr<nsIFileSpec> pathSpec;
-
+  nsFileSpec path;
+  nsCOMPtr<nsIFileSpec> pathSpec;
+  
   NS_ASSERTION(!mCopyState, "already copying a msg into this folder");
   if (mCopyState) 
     return NS_ERROR_FAILURE; // already has a  copy in progress
-
-	PRBool isLocked;
-
-	GetLocked(&isLocked);
-	if(!isLocked)
-		AcquireSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
-	else
-		return NS_MSG_FOLDER_BUSY;
-
-	rv = GetPath(getter_AddRefs(pathSpec));
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	rv = pathSpec->GetFileSpec(&path);
+  
+  // get mDatabase set, so we can use it to add new hdrs to this db.
+  // calling GetDatabaseWOReparse will set mDatabase - we use the comptr
+  // here to avoid doubling the refcnt on mDatabase. We don't care if this
+  // fails - we just want to give it a chance. It will definitely fail in
+  // nsLocalMailFolder::EndCopy because we will have written data to the folder
+  // and changed its size.
+  nsCOMPtr <nsIMsgDatabase> msgDB;
+  GetDatabaseWOReparse(getter_AddRefs(msgDB));
+  PRBool isLocked;
+  
+  GetLocked(&isLocked);
+  if(!isLocked)
+    AcquireSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+  else
+    return NS_MSG_FOLDER_BUSY;
+  
+  rv = GetPath(getter_AddRefs(pathSpec));
   NS_ENSURE_SUCCESS(rv, rv);
-
-	mCopyState = new nsLocalMailCopyState();
-	if(!mCopyState)
+  
+  rv = pathSpec->GetFileSpec(&path);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  mCopyState = new nsLocalMailCopyState();
+  if(!mCopyState)
     return NS_ERROR_OUT_OF_MEMORY;
-
+  
   mCopyState->m_dataBuffer = (char*) PR_CALLOC(COPY_BUFFER_SIZE+1);
   if (!mCopyState->m_dataBuffer)
     return NS_ERROR_OUT_OF_MEMORY;
-
+  
   mCopyState->m_dataBufferSize = COPY_BUFFER_SIZE;
-
-	//Before we continue we should verify that there is enough diskspace.
-	//XXX How do we do this?
-	mCopyState->m_fileStream = new nsOutputFileStream(path, PR_WRONLY |
-                                                  PR_CREATE_FILE);
-	if(!mCopyState->m_fileStream)
-     return NS_ERROR_OUT_OF_MEMORY;
-
-	//The new key is the end of the file
-	mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
+  
+  //Before we continue we should verify that there is enough diskspace.
+  //XXX How do we do this?
+  mCopyState->m_fileStream = new nsOutputFileStream(path, PR_WRONLY |
+    PR_CREATE_FILE);
+  if(!mCopyState->m_fileStream)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  //The new key is the end of the file
+  mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
   mCopyState->m_srcSupport = do_QueryInterface(aSupport, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   mCopyState->m_messages = do_QueryInterface(messages, &rv);
@@ -2331,6 +2339,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMsgDBHdr *message)
 {
   if (!mCopyState) 
     return NS_ERROR_NULL_POINTER;
+
   nsresult rv = NS_OK;
   mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
  
@@ -2535,10 +2544,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     
     if(!mCopyState->m_parseMsgState)
     {
-      nsCOMPtr<nsIMsgDatabase> msgDatabase;
-      GetDatabaseWOReparse(getter_AddRefs(msgDatabase));
-      
-      if(msgDatabase)
+      if(mDatabase)
       {
         rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->m_curDstKey,
                                                mCopyState->m_message, PR_TRUE,
