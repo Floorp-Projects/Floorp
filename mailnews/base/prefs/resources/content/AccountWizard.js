@@ -121,7 +121,7 @@ function onFinish() {
         return;
     var pageData = GetPageData();
 
-    //    dump(parent.wizardManager.WSM);
+    dump(parent.wizardManager.WSM);
 
     var accountData= gCurrentAccountData;
     
@@ -261,7 +261,8 @@ function PageDataToAccountData(pageData, accountData)
         dump("pageData.server = " + pageData.server + "\n");
         if (pageData.server) {
             dump("pageData.server.smtphostname.value = " + pageData.server.smtphostname + "\n");
-            if (pageData.server.smtphostname.value)
+            if (pageData.server.smtphostname &&
+                pageData.server.smtphostname.value)
                 smtp.hostname = pageData.server.smtphostname.value;
         }
     }
@@ -553,6 +554,7 @@ function setPageData(pageData, tag, slot, value) {
     } else {
         // pre-fill this slot
         if (!pageData[tag][slot]) pageData[tag][slot] = [];
+        pageData[tag][slot].id = slot;
         pageData[tag][slot].value = value;
     }
 }
@@ -590,7 +592,8 @@ function UpdateWizardMap() {
 function updateMap(pageData, wizardMap) {
     dump("Updating wizard map..\n");
     if (pageData.accounttype) {
-        dump("Accounttype is mail: " + pageData.accounttype.mailaccount + "\n");
+        var ismailaccount = pageData.accounttype.mailaccount
+        dump("Accounttype is mail: " + (ismailaccount && ismailaccount.value) + "\n");
         // set up default account stuff
         wizardMap.identity.next = "server";
         wizardMap.done.previous = "accname";
