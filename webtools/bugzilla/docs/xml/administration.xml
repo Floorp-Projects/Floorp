@@ -5,10 +5,12 @@
   <section id="parameters">
     <title>Bugzilla Configuration</title>
 
-    <para>Bugzilla is configured by changing various parameters, accessed
-    from the "Edit parameters" link in the page footer. Here are
-    some of the key parameters on that page. You should run down this
-    list and set them appropriately after installing Bugzilla.</para>
+    <para>
+      Bugzilla is configured by changing various parameters, accessed
+      from the "Edit parameters" link in the page footer. Here are
+      some of the key parameters on that page. You should run down this
+      list and set them appropriately after installing Bugzilla.
+    </para>
 
     <indexterm>
       <primary>checklist</primary>
@@ -17,188 +19,227 @@
     <procedure>
       <step>
         <para> 
-        <command>maintainer</command>:
-        The maintainer parameter is the email address of the person 
-        responsible for maintaining this
-        Bugzilla installation. The address need not be that of a valid Bugzilla
-        account.</para>
-      </step>
+          <command>maintainer</command>:
 
-      <step>
-        <para>
-        <command>urlbase</command>:
-        This parameter defines the fully qualified domain name and web 
-        server path to your Bugzilla installation.</para>
-
-        <para>For example, if your Bugzilla query page is
-        <filename>http://www.foo.com/bugzilla/query.cgi</filename>, 
-        set your <quote>urlbase</quote>
-        to <filename>http://www.foo.com/bugzilla/</filename>.</para>
-      </step>
-
-      <step>
-        <para>
-        <command>makeproductgroups</command>:
-        This dictates whether or not to automatically create groups
-        when new products are created.
+          The maintainer parameter is the email address of the person 
+          responsible for maintaining this Bugzilla installation.
+          The address need not be that of a valid Bugzilla account.
         </para>
       </step>
 
       <step>
         <para>
-        <command>useentrygroupdefault</command>:
-        Bugzilla products can have a group associated with them, so that
-        certain users can only see bugs in certain products. When this 
-        parameter is set to <quote>on</quote>, this 
-        causes the initial group controls on newly created products 
-        to place all newly-created bugs in the group 
-        having the same name as the product immediately.
-        After a product is initially created, the group controls
-        can be further adjusted without interference by 
-        this mechanism.</para>
+          <command>urlbase</command>:
+
+          This parameter defines the fully qualified domain name and web 
+          server path to your Bugzilla installation.
+        </para>
+
+        <para>
+          For example, if your Bugzilla query page is
+          <filename>http://www.foo.com/bugzilla/query.cgi</filename>, 
+          set your <quote>urlbase</quote>
+          to <filename>http://www.foo.com/bugzilla/</filename>.
+        </para>
       </step>
 
       <step>
         <para>
-        <command>shadowdb</command>:
-        You run into an interesting problem when Bugzilla reaches a
-        high level of continuous activity. MySQL supports only table-level
-        write locking. What this means is that if someone needs to make a
-        change to a bug, they will lock the entire table until the operation
-        is complete. Locking for write also blocks reads until the write is
-        complete. Note that more recent versions of mysql support row level
-        locking using different table types. These types are slower than the
-        standard type, and Bugzilla does not yet take advantage of features
-        such as transactions which would justify this speed decrease. The
-        Bugzilla team are, however, happy to hear about any experiences with
-        row level locking and Bugzilla.</para>
+          <command>makeproductgroups</command>:
 
-        <para>The <quote>shadowdb</quote>
-        parameter was designed to get around this limitation. While only a
-        single user is allowed to write to a table at a time, reads can
-        continue unimpeded on a read-only shadow copy of the database.
-        Although your database size will double, a shadow database can cause
-        an enormous performance improvement when implemented on extremely
-        high-traffic Bugzilla databases.</para>
+          This dictates whether or not to automatically create groups
+          when new products are created.
+        </para>
+      </step>
+
+      <step>
+        <para>
+          <command>useentrygroupdefault</command>:
+
+          Bugzilla products can have a group associated with them, so that
+          certain users can only see bugs in certain products. When this 
+          parameter is set to <quote>on</quote>, this 
+          causes the initial group controls on newly created products 
+          to place all newly-created bugs in the group 
+          having the same name as the product immediately.
+          After a product is initially created, the group controls
+          can be further adjusted without interference by 
+          this mechanism.
+        </para>
+      </step>
+
+      <step>
+        <para>
+          <command>shadowdb</command>:
+
+          You run into an interesting problem when Bugzilla reaches a
+          high level of continuous activity. MySQL supports only table-level
+          write locking. What this means is that if someone needs to make a
+          change to a bug, they will lock the entire table until the operation
+          is complete. Locking for write also blocks reads until the write is
+          complete. Note that more recent versions of mysql support row level
+          locking using different table types. These types are slower than the
+          standard type, and Bugzilla does not yet take advantage of features
+          such as transactions which would justify this speed decrease. The
+          Bugzilla team are, however, happy to hear about any experiences with
+          row level locking and Bugzilla.
+        </para>
+
+        <para>
+          The <quote>shadowdb</quote> parameter was designed to get around
+          this limitation. While only a single user is allowed to write to
+          a table at a time, reads can continue unimpeded on a read-only
+          shadow copy of the database. Although your database size will
+          double, a shadow database can cause an enormous performance
+          improvement when implemented on extremely high-traffic Bugzilla
+          databases.
+        </para>
         
         <para>
-        As a guide, on reasonably old hardware, mozilla.org began needing 
-        <quote>shadowdb</quote>
-        when they reached around 40,000 Bugzilla users with several hundred
-        Bugzilla bug changes and comments per day.</para>
+          As a guide, on reasonably old hardware, mozilla.org began needing 
+          <quote>shadowdb</quote> when they reached around 40,000 Bugzilla
+          users with several hundred Bugzilla bug changes and comments per day.
+        </para>
 
-        <para>The value of the parameter defines the name of the 
-        shadow bug database. You will need to set the host and port settings
-        from the params page, and set up replication in your database server
-        so that updates reach this readonly mirror. Consult your database
-        documentation for more detail.</para>
-      </step>
-
-      <step>
         <para>
-        <command>shutdownhtml</command>:
-
-        If you need to shut down Bugzilla to perform administration, enter
-        some descriptive HTML here and anyone who tries to use Bugzilla will
-        receive a page to that effect. Obviously, editparams.cgi will
-        still be accessible so you can remove the HTML and re-enable Bugzilla.
-        :-)
+          The value of the parameter defines the name of the shadow bug
+          database. You will need to set the host and port settings from
+          the params page, and set up replication in your database server
+          so that updates reach this readonly mirror. Consult your database
+          documentation for more detail.
         </para>
       </step>
 
       <step>
         <para>
-        <command>passwordmail</command>:
+          <command>shutdownhtml</command>:
 
-        Every time a user creates an account, the text of
-        this parameter (with substitutions) is sent to the new user along with
-        their password message.</para>
-
-        <para>Add any text you wish to the "passwordmail" parameter box. For
-        instance, many people choose to use this box to give a quick training
-        blurb about how to use Bugzilla at your site.</para>
-      </step>
-
-
-      <step>
-        <para>
-	<command>movebugs</command>:
-
-	This option is an undocumented feature to allow moving bugs
-	between separate Bugzilla installations.  You will need to understand
-	the source code in order to use this feature.  Please consult
-	<filename>movebugs.pl</filename> in your Bugzilla source tree for
-	further documentation, such as it is.
-	</para>
-      </step>
-
-      <step>
-        <para>
-        <command>useqacontact</command>:
-
-        This allows you to define an email address for each component, in
-        addition
-        to that of the default owner, who will be sent carbon copies of
-        incoming bugs.</para>
-      </step>
-      <step>
-        <para>
-        <command>usestatuswhiteboard</command>:
-        This defines whether you wish to have a free-form, overwritable field
-        associated with each bug. The advantage of the Status Whiteboard is
-        that it can be deleted or modified with ease, and provides an
-        easily-searchable field for indexing some bugs that have some trait
-        in common.         
+          If you need to shut down Bugzilla to perform administration, enter
+          some descriptive text (with embedded HTML codes, if you'd like)
+          into this box. Anyone who tries to use Bugzilla (including admins)
+          will receive a page displaying this text. Users can neither log in
+          nor log out while shutdownhtml is enabled.
         </para>
-      </step>
 
-      <step>
-        <para>
-        <command>whinedays</command>:
-        Set this to the number of days you want to let bugs go
-        in the NEW or REOPENED state before notifying people they have
-        untouched new bugs. If you do not plan to use this feature, simply do
-        not set up the whining cron job described in the installation
-        instructions, or set this value to "0" (never whine).</para>
-      </step>
-
-      <step>
-        <para>
-        <command>commenton*</command>:
-        All these
-        fields allow you to dictate what changes can pass without comment,
-        and which must have a comment from the person who changed them.
-        Often, administrators will allow users to add themselves to the CC
-        list, accept bugs, or change the Status Whiteboard without adding a
-        comment as to their reasons for the change, yet require that most
-        other changes come with an explanation.</para>
-
-        <para>Set the "commenton" options according to your site policy. It
-        is a wise idea to require comments when users resolve, reassign, or
-        reopen bugs at the very least. 
         <note>
-          <para>It is generally far better to require a developer comment
-          when resolving bugs than not. Few things are more annoying to bug
-          database users than having a developer mark a bug "fixed" without
-          any comment as to what the fix was (or even that it was truly
-          fixed!)</para>
+          <para>
+            Although regular log-in capability is disabled while 'shutdownhtml'
+            is enabled, safeguards are in place to protect the unfortunate 
+            admin who loses connection to Bugzilla. Should this happen to you,
+            go directly to the <filename>editparams.cgi</filename> (by typing
+            the URL in manually, if necessary). Doing this will prompt you to
+            log in, and your name/password will be accepted here (but nowhere
+            else). 
+          </para>
         </note>
+      </step>
+
+      <step>
+        <para>
+          <command>passwordmail</command>:
+
+          Every time a user creates an account, the text of this parameter
+          (with substitutions) is sent to the new user along with their
+          password message.
+        </para>
+
+        <para>
+          Add any text you wish to the "passwordmail" parameter box. For
+          instance, many people choose to use this box to give a quick 
+          training blurb about how to use Bugzilla at your site.
+        </para>
+      </step>
+
+
+      <step>
+        <para>
+          <command>movebugs</command>:
+
+          This option is an undocumented feature to allow moving bugs
+          between separate Bugzilla installations.  You will need to understand
+          the source code in order to use this feature.  Please consult
+          <filename>movebugs.pl</filename> in your Bugzilla source tree for
+          further documentation, such as it is.
         </para>
       </step>
 
       <step>
         <para>
-        <command>supportwatchers</command>:
+          <command>useqacontact</command>:
 
-        Turning on this option allows users to ask to receive copies of 
-        all a particular other user's bug email. This is, of
-        course, subject to the groupset restrictions on the bug; if the 
-        <quote>watcher</quote>
-        would not normally be allowed to view a bug, the watcher cannot get
-        around the system by setting herself up to watch the bugs of someone
-        with bugs outside her privileges. They would still only receive email
-        updates for those bugs she could normally view.</para>        
+          This allows you to define an email address for each component, 
+          in addition to that of the default owner, who will be sent
+          carbon copies of incoming bugs.
+        </para>
       </step>
+
+      <step>
+        <para>
+          <command>usestatuswhiteboard</command>:
+
+          This defines whether you wish to have a free-form, overwritable field
+          associated with each bug. The advantage of the Status Whiteboard is
+          that it can be deleted or modified with ease, and provides an
+          easily-searchable field for indexing some bugs that have some trait
+          in common.         
+        </para>
+      </step>
+
+      <step>
+        <para>
+          <command>whinedays</command>:
+
+          Set this to the number of days you want to let bugs go
+          in the NEW or REOPENED state before notifying people they have
+          untouched new bugs. If you do not plan to use this feature, simply 
+          do not set up the whining cron job described in the installation
+          instructions, or set this value to "0" (never whine).
+        </para>
+      </step>
+
+      <step>
+        <para>
+          <command>commenton*</command>:
+
+          All these fields allow you to dictate what changes can pass
+          without comment, and which must have a comment from the
+          person who changed them.  Often, administrators will allow
+          users to add themselves to the CC list, accept bugs, or
+          change the Status Whiteboard without adding a comment as to
+          their reasons for the change, yet require that most other
+          changes come with an explanation.
+        </para>
+
+        <para>
+          Set the "commenton" options according to your site policy. It
+          is a wise idea to require comments when users resolve, reassign, or
+          reopen bugs at the very least. 
+        </para>
+
+        <note>
+          <para>
+            It is generally far better to require a developer comment
+            when resolving bugs than not. Few things are more annoying to bug
+            database users than having a developer mark a bug "fixed" without
+            any comment as to what the fix was (or even that it was truly
+            fixed!)
+          </para>
+        </note>
+      </step>
+
+      <step>
+        <para>
+          <command>supportwatchers</command>:
+
+          Turning on this option allows users to ask to receive copies 
+          of bug mail sent to another user.  Watching a user with
+          different group permissions is not a way to 'get around' the
+          system; copied emails are still subject to the normal groupset
+          permissions of a bug, and <quote>watchers</quote> will only be 
+          copied on emails from bugs they would normally be allowed to view. 
+        </para> 
+      </step>
+
 
       <step>
         <para>
@@ -209,7 +250,6 @@
           is affected. Users will be still able to resolve bugs to
           resolutions other than FIXED if they have unresolved dependent
           bugs.
-
         </para>
       </step>
 
