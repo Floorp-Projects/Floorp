@@ -32,7 +32,7 @@ BeginTest(int testNumber, nsIShutdownListener* listener)
 {
     nsresult err;
     NS_ASSERTION(myServ == NULL, "myServ not reset");
-    err = NSServiceManager::GetService(kIMyServiceCID, kIMyServiceIID,
+    err = nsServiceManager::GetService(kIMyServiceCID, kIMyServiceIID,
                                        (nsISupports**)&myServ, listener);
     return err;
 }
@@ -46,7 +46,7 @@ EndTest(int testNumber, nsIShutdownListener* listener)
         err = myServ->Doit();
         if (err != NS_OK) return err;
 
-        err = NSServiceManager::ReleaseService(kIMyServiceCID, myServ, listener);
+        err = nsServiceManager::ReleaseService(kIMyServiceCID, myServ, listener);
         if (err != NS_OK) return err;
         myServ = NULL;
     }
@@ -103,7 +103,7 @@ AsyncShutdown(int testNumber)
     // thread, we'd have to protect all accesses to myServ throughout this
     // code with a monitor.
 
-    err = NSServiceManager::ShutdownService(kIMyServiceCID);
+    err = nsServiceManager::ShutdownService(kIMyServiceCID);
     if (err == NS_ERROR_SERVICE_IN_USE) {
         printf("async shutdown -- service still in use\n");
         return NS_OK;
@@ -158,7 +158,7 @@ AsyncNoShutdownTest(int testNumber)
     // Create some other user of kIMyServiceCID, preventing it from
     // really going away:
     IMyService* otherClient;
-    err = NSServiceManager::GetService(kIMyServiceCID, kIMyServiceIID,
+    err = nsServiceManager::GetService(kIMyServiceCID, kIMyServiceIID,
                                        (nsISupports**)&otherClient);
     if (err != NS_OK) return err;
 
@@ -167,7 +167,7 @@ AsyncNoShutdownTest(int testNumber)
     err = EndTest(testNumber, listener);
 
     // Finally, release the other client.
-    err = NSServiceManager::ReleaseService(kIMyServiceCID, otherClient);
+    err = nsServiceManager::ReleaseService(kIMyServiceCID, otherClient);
     if (err != NS_OK) return err;
 
     nsrefcnt cnt = listener->Release();
@@ -182,7 +182,7 @@ SetupFactories(void)
 {
     nsresult err;
     // seed the repository (hack)
-    err = NSRepository::RegisterFactory(kIMyServiceCID, "MyService.dll",
+    err = nsRepository::RegisterFactory(kIMyServiceCID, "MyService.dll",
                                         PR_TRUE, PR_FALSE);
     NS_ASSERTION(err == NS_OK, "failed to register my factory");
 }

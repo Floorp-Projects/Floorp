@@ -133,7 +133,7 @@ nsServiceEntry::NotifyListeners(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsServiceManager : public nsIServiceManager {
+class nsServiceManagerImpl : public nsIServiceManager {
 public:
 
     NS_IMETHOD
@@ -148,18 +148,18 @@ public:
     NS_IMETHOD
     ShutdownService(const nsCID& aClass);
 
-    nsServiceManager(void);
+    nsServiceManagerImpl(void);
     
     NS_DECL_ISUPPORTS
 
 protected:
 
-    virtual ~nsServiceManager(void);
+    virtual ~nsServiceManagerImpl(void);
 
     nsHashtable* mServices;         // nsHashtable<nsServiceEntry>
 };
 
-nsServiceManager::nsServiceManager(void)
+nsServiceManagerImpl::nsServiceManagerImpl(void)
 {
     NS_INIT_REFCNT();
     mServices = new nsHashtable();
@@ -167,7 +167,7 @@ nsServiceManager::nsServiceManager(void)
 }
 
 static PRBool
-DeleteEntry(nsHashKey *aKey, void *aData)
+DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 {
     nsServiceEntry* entry = (nsServiceEntry*)aData;
     entry->mService->Release();
@@ -175,7 +175,7 @@ DeleteEntry(nsHashKey *aKey, void *aData)
     return PR_TRUE;
 }
 
-nsServiceManager::~nsServiceManager(void)
+nsServiceManagerImpl::~nsServiceManagerImpl(void)
 {
     mServices->Enumerate(DeleteEntry);
     delete mServices;
@@ -184,11 +184,11 @@ nsServiceManager::~nsServiceManager(void)
 static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-NS_IMPL_ADDREF(nsServiceManager);
-NS_IMPL_RELEASE(nsServiceManager);
+NS_IMPL_ADDREF(nsServiceManagerImpl);
+NS_IMPL_RELEASE(nsServiceManagerImpl);
 
 nsresult
-nsServiceManager::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
+nsServiceManagerImpl::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
 {
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER; 
@@ -204,7 +204,7 @@ nsServiceManager::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
 }
 
 nsresult
-nsServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
+nsServiceManagerImpl::GetService(const nsCID& aClass, const nsIID& aIID,
                              nsISupports* *result,
                              nsIShutdownListener* shutdownListener)
 {
@@ -226,7 +226,7 @@ nsServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
     }
     else {
         nsISupports* service;
-        err = NSRepository::CreateInstance(aClass, NULL, aIID, (void**)&service);
+        err = nsRepository::CreateInstance(aClass, NULL, aIID, (void**)&service);
         if (err == NS_OK) {
             entry = new nsServiceEntry(aClass, service);
             if (entry == NULL) {
@@ -252,7 +252,7 @@ nsServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
 }
 
 nsresult
-nsServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
+nsServiceManagerImpl::ReleaseService(const nsCID& aClass, nsISupports* service,
                                  nsIShutdownListener* shutdownListener)
 {
     nsresult err = NS_OK;
@@ -281,7 +281,7 @@ nsServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
 }
 
 nsresult
-nsServiceManager::ShutdownService(const nsCID& aClass)
+nsServiceManagerImpl::ShutdownService(const nsCID& aClass)
 {
     nsresult err = NS_OK;
     PR_CEnterMonitor(this);
@@ -298,7 +298,7 @@ nsServiceManager::ShutdownService(const nsCID& aClass)
         nsrefcnt cnt = entry->mService->Release();
         if (err == NS_OK && cnt == 0) {
             mServices->Remove(&key);
-            err = NSRepository::FreeLibraries();
+            err = nsRepository::FreeLibraries();
         }
         else
             err = NS_ERROR_SERVICE_IN_USE;
@@ -311,13 +311,13 @@ nsServiceManager::ShutdownService(const nsCID& aClass)
 ////////////////////////////////////////////////////////////////////////////////
 // Global service manager interface (see nsIServiceManager.h)
 
-nsIServiceManager* NSServiceManager::globalServiceManager = NULL;
+nsIServiceManager* nsServiceManager::globalServiceManager = NULL;
 
 nsresult
-NSServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
+nsServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
 {
     if (globalServiceManager == NULL) {
-        globalServiceManager = new nsServiceManager();
+        globalServiceManager = new nsServiceManagerImpl();
         if (globalServiceManager == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
         globalServiceManager->AddRef();
@@ -327,7 +327,7 @@ NSServiceManager::GetGlobalServiceManager(nsIServiceManager* *result)
 }
 
 nsresult
-NSServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
+nsServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
                              nsISupports* *result,
                              nsIShutdownListener* shutdownListener)
 {
@@ -338,7 +338,7 @@ NSServiceManager::GetService(const nsCID& aClass, const nsIID& aIID,
 }
 
 nsresult
-NSServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
+nsServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
                                  nsIShutdownListener* shutdownListener)
 {
     nsIServiceManager* mgr;
@@ -348,7 +348,7 @@ NSServiceManager::ReleaseService(const nsCID& aClass, nsISupports* service,
 }
 
 nsresult
-NSServiceManager::ShutdownService(const nsCID& aClass)
+nsServiceManager::ShutdownService(const nsCID& aClass)
 {
     nsIServiceManager* mgr;
     nsresult rslt = GetGlobalServiceManager(&mgr);
