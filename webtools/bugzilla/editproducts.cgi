@@ -378,18 +378,18 @@ if ($action eq 'new') {
         # one by one if they match.  Furthermore, I need to do it with two
         # separate loops, since opening a new SQL statement to do the update
         # seems to clobber the previous one.
-        SendSQL("SELECT login_name FROM profiles");
-        my @login_list = ();
-        my $this_login;
-        while($this_login = FetchOneColumn()) {
-            push @login_list, $this_login;
-        }
-        foreach $this_login (@login_list) {
-            if($this_login =~ /$userregexp/i) {
-                SendSQL("UPDATE profiles " .
-                        "SET groupset = groupset | " . $bit . " " .
-                        "WHERE login_name = " . SqlQuote($this_login));
-            }
+
+        # Modified, 7/17/00, Joe Robins
+        # If the userregexp is left empty, then no users should be added to
+        # the bug group.  As is, it was adding all users, since they all
+        # matched the empty pattern.
+        # In addition, I've replaced the rigamarole I was going through to
+        # find matching users with a much simpler statement that lets the
+        # mySQL database do the work.
+        unless($userregexp eq "") {
+            SendSQL("UPDATE profiles ".
+                    "SET groupset = groupset | " . $bit . " " .
+                    "WHERE LOWER(login_name) REGEXP LOWER(" . SqlQuote($userregexp) . ")");
         }
     }
 
