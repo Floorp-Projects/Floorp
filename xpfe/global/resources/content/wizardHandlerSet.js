@@ -100,29 +100,29 @@ function DEF_DoEnabling( nextButton, backButton, finishButton )
 	if( !this.currentPageTag ) 
     return;
   // "next" button enabling
-	nextTag = this.wizardMap[this.currentPageTag].next;
-  if( nextTag && oParent.nextButton.getAttribute("disabled") ||
-    ( arguments.length && nextButton ) )
+  nextTag = this.wizardMap[this.currentPageTag].next;
+  if( nextTag && oParent.nextButton.getAttribute("disabled") ) {
     oParent.nextButton.removeAttribute( "disabled" );
-  else if( !nextTag && !oParent.nextButton.getAttribute("disabled") ||
-    ( arguments.length && !nextButton ) )
+  }
+  else if( !nextTag && !oParent.nextButton.getAttribute("disabled") ) {
     oParent.nextButton.setAttribute( "disabled", "true" );
+  }
   // "finish" button enabling
   finishTag = this.wizardMap[this.currentPageTag].finish;
-  if( finishTag && oParent.finishButton.getAttribute("disabled") ||
-    ( arguments.length && finishButton ) )
+  if( finishTag && oParent.finishButton.getAttribute("disabled") ) {
     oParent.finishButton.removeAttribute( "disabled" );
-  else if(!finishTag && !oParent.finishButton.getAttribute("disabled") ||
-    ( arguments.length && !finishButton ) )
+  }
+  else if( !finishTag && !oParent.finishButton.getAttribute("disabled") ) {
     oParent.finishButton.setAttribute( "disabled", "true" );
+  }
   // "back" button enabling
- prevTag = this.wizardMap[this.currentPageTag].previous;
-	if( prevTag && oParent.backButton.getAttribute("disabled") ||
-    ( arguments.length && backButton ) )
- 	oParent.backButton.removeAttribute("disabled");
-	else if( !prevTag && !oParent.backButton.getAttribute("disabled") ||
-    ( arguments.length && !backButton ) )
- 	oParent.backButton.setAttribute("disabled", "true"); 
+  prevTag = this.wizardMap[this.currentPageTag].previous;
+	if( prevTag && oParent.backButton.getAttribute("disabled") ) {
+ 	  oParent.backButton.removeAttribute("disabled");
+  }
+	else if( !prevTag && !oParent.backButton.getAttribute("disabled") ) {
+   	oParent.backButton.setAttribute("disabled", "true"); 
+  }
 }
 
 /** void PageLoaded( string tag, string frame_id ) ;
