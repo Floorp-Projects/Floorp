@@ -274,7 +274,7 @@
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = "../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
+				HEADER_SEARCH_PATHS = "../dist/include/exthandler ../dist/include/helperAppDlg ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util ../modules/zlib/src";
 				OPTIMIZATION_CFLAGS = "-O2";
@@ -309,6 +309,9 @@
 			<array>
 				<string>html</string>
 				<string>htm</string>
+				<string>shtml</string>
+				<string>xml</string>
+				<string>xhtml</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>fileHtml.icns</string>
@@ -325,6 +328,7 @@
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>txt</string>
+				<string>text</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>fileBookmark.icns</string>
@@ -333,6 +337,29 @@
 			<key>CFBundleTypeOSTypes</key>
 			<array>
 				<string>TEXT</string>
+				<string>utxt</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>jpeg</string>
+				<string>jpg</string>
+				<string>png</string>
+				<string>gif</string>
+				<string>mng</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>fileBookmark.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Image Document</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>GIFf</string>
+				<string>JPEG</string>
+				<string>PNGf</string>
 			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
@@ -4312,7 +4339,7 @@
 			buildSettings = {
 				DEBUGGING_SYMBOLS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = "../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
+				HEADER_SEARCH_PATHS = "../dist/include/helperAppDlg ../dist/include/exthandler ../dist/include/intl ../dist/include/pipboot ../dist/include/pipnss ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/commandhandler ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/chrome ../dist/include/xpcom \"$(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon\"";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../dist/lib/components ../intl/unicharutil/src ../security/nss/lib/crmf/Darwin5.5_OPT.OBJ ../gfx/src ../js/src/liveconnect ../intl/unicharutil/util";
 				OPTIMIZATION_CFLAGS = "-O2";
@@ -4346,6 +4373,9 @@
 			<array>
 				<string>html</string>
 				<string>htm</string>
+				<string>shtml</string>
+				<string>xml</string>
+				<string>xhtml</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>fileHtml.icns</string>
@@ -4362,6 +4392,7 @@
 			<key>CFBundleTypeExtensions</key>
 			<array>
 				<string>txt</string>
+				<string>text</string>
 			</array>
 			<key>CFBundleTypeIconFile</key>
 			<string>fileBookmark.icns</string>
@@ -4370,6 +4401,29 @@
 			<key>CFBundleTypeOSTypes</key>
 			<array>
 				<string>TEXT</string>
+				<string>utxt</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>jpeg</string>
+				<string>jpg</string>
+				<string>png</string>
+				<string>gif</string>
+				<string>mng</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>fileBookmark.icns</string>
+			<key>CFBundleTypeName</key>
+			<string>Image Document</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>GIFf</string>
+				<string>JPEG</string>
+				<string>PNGf</string>
 			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
