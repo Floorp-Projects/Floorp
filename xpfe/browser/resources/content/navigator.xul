@@ -349,11 +349,20 @@
     <statusbarpanel class="statusbarpanel-progress" id="progress-panel" hidden="true">
       <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
     </statusbarpanel>
-    <statusbarpanel id="popupIcon" class="statusbarpanel-iconic" hidden="true" oncommand="StatusbarViewPopupManager()" tooltiptext="&popupIcon.tooltiptext;"/>
+    <statusbarpanel id="popupIcon" class="statusbarpanel-iconic" hidden="true"
+                    oncommand="StatusbarViewPopupManager()"
+                    tooltiptext="&popupIcon.tooltiptext;"
+                    context="popupBlockerMenu"/>
     <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
     <statusbarpanel class="statusbarpanel-iconic" id="security-button"
                     onclick="BrowserPageInfo(null, 'securityTab')"/>
   </statusbar> 
+  <popupset>
+    <menupopup id="popupBlockerMenu"
+               oncommand="popupBlockerMenuCommand(event.target);"
+               onpopupshowing="return popupBlockerMenuShowing(event)"/>
+    <!-- Items are generated, see popupBlockerMenuShowing() -->
+  </popupset>
   <popupset>
     <popup id="networkProperties"/>
   </popupset>
