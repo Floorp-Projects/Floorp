@@ -1,0 +1,56 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+#include "domstubs.idl"
+
+[scriptable, uuid(a6cf910a-15b3-11d2-932e-00805f8add32)]
+interface DOMException : nsISupports
+{
+
+     const unsigned short      INDEX_SIZE_ERR                 = 1;
+     const unsigned short      DOMSTRING_SIZE_ERR             = 2;
+     const unsigned short      HIERARCHY_REQUEST_ERR          = 3;
+     const unsigned short      WRONG_DOCUMENT_ERR             = 4;
+     const unsigned short      INVALID_CHARACTER_ERR          = 5;
+     const unsigned short      NO_DATA_ALLOWED_ERR            = 6;
+     const unsigned short      NO_MODIFICATION_ALLOWED_ERR    = 7;
+     const unsigned short      NOT_FOUND_ERR                  = 8;
+     const unsigned short      NOT_SUPPORTED_ERR              = 9;
+     const unsigned short      INUSE_ATTRIBUTE_ERR            = 10;
+     // Introduced in DOM Level 2:
+     const unsigned short      INVALID_STATE_ERR              = 11;
+     // Introduced in DOM Level 2:
+     const unsigned short      SYNTAX_ERR                     = 12;
+     // Introduced in DOM Level 2:
+     const unsigned short      INVALID_MODIFICATION_ERR       = 13;
+     // Introduced in DOM Level 2:
+     const unsigned short      NAMESPACE_ERR                  = 14;
+     // Introduced in DOM Level 2:
+     const unsigned short      INVALID_ACCESS_ERR             = 15;
+
+     readonly attribute unsigned long   code;
+     readonly attribute unsigned long   result;
+     readonly attribute DOMString       message;
+     readonly attribute DOMString       name;
+
+     DOMString toString();
+};
+
