@@ -1347,41 +1347,6 @@ NS_IMETHODIMP nsImapUrl::SetMsgLoadingFromCache(PRBool loadingFromCache)
 {
   nsresult rv = NS_OK;
   m_msgLoadingFromCache = loadingFromCache;
-  if (loadingFromCache)
-  {
-    nsCOMPtr<nsIMsgFolder> folder;
-    nsMsgKey key;
-
-    nsCAutoString folderURI;
-    rv = nsParseImapMessageURI(mURI.get(), folderURI, &key, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (m_imapAction != nsImapMsgFetch) // only do this on msg fetch, i.e., if user is reading msg.
-      return rv;
-    rv = GetMsgFolder(getter_AddRefs(folder));
-
-    nsCOMPtr <nsIMsgDatabase> database;
-    if (folder && NS_SUCCEEDED(folder->GetMsgDatabase(nsnull, getter_AddRefs(database))) && database)
-    {
-      PRBool msgRead = PR_TRUE;
-      database->IsRead(key, &msgRead);
-      if (!msgRead)
-      {
-        nsCOMPtr<nsISupportsArray> messages;
-        rv = NS_NewISupportsArray(getter_AddRefs(messages));
-        if (NS_FAILED(rv)) 
-          return rv;
-        nsCOMPtr<nsIMsgDBHdr> message;
-        GetMsgDBHdrFromURI(mURI.get(), getter_AddRefs(message));
-        nsCOMPtr<nsISupports> msgSupport(do_QueryInterface(message, &rv));
-        if (msgSupport)
-        {
-          messages->AppendElement(msgSupport);
-          folder->MarkMessagesRead(messages, PR_TRUE);
-        }
-      }
-    }
-  }
   return rv;
 }
 

@@ -3786,17 +3786,6 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   m_curMsgUid = uidOfMessage;
   res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
-
-  if (msgHdr && markRead)
-  {
-    PRBool isRead;
-    msgHdr->GetIsRead(&isRead);
-    if (!isRead)
-    {
-      msgHdr->MarkRead(PR_TRUE);
-      commit = PR_TRUE;
-    }
-  }
   
   if (commit && mDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);

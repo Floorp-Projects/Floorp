@@ -410,7 +410,6 @@ private:
 	void SetProgressBarPercent(PRUint32 aProgress, PRUint32 aProgressMax);
 	nsresult SetProgressStatus(const PRUnichar *aMessage);
   nsresult SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total);
-  nsresult MarkCurrentMsgRead(); // marks the message corresponding to the currently running url read.
 	nsresult InitializeNewsFolderFromUri(const char *uri);
 	void TimerCallback();
 	nsCOMPtr <nsIInputStream> mInputStream;

@@ -404,32 +404,6 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
   if (m_mailboxAction == nsIMailboxUrl::ActionSaveMessageToDisk && m_tempMessageFile)
     rv = m_tempMessageFile->CloseStream();
   
-  nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(m_runningUrl, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  nsCAutoString queryStr;
-  rv = msgUrl->GetQuery(queryStr);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // check if this is a filter plugin requesting the message.
-  // in that case, don't mark it as read, 
-  // since the user didn't actually read it.
-  // the spec for msgUrl is of the form:
-  // mailbox:///<path to mbox file on disk>/Inbox?number=3287862&header=filter"
-  if ((queryStr.Find("header=filter") == kNotFound) && m_mailboxAction == nsIMailboxUrl::ActionFetchMessage)
-  {
-    // now mark the message as read
-    nsCOMPtr<nsIMsgDBHdr> msgHdr;
-    if (m_runningUrl)
-      rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
-    NS_ASSERTION(msgHdr, "no msg hdr!");
-    if (!msgHdr) return NS_ERROR_UNEXPECTED;
-    PRBool isRead;
-    msgHdr->GetIsRead(&isRead);
-    if (NS_SUCCEEDED(rv) && !isRead)
-      msgHdr->MarkRead(PR_TRUE);
-  }
-  
   return rv;
 }
 

@@ -40,6 +40,7 @@ var gWindowManagerInterface;
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 var gPrintSettings = null;
 var gWindowReuse  = 0;
+var gMarkViewedMessageAsReadTimer = null; // if the user has configured the app to mark a message as read if it is viewed for more than n seconds
 
 var gTimelineService = null;
 var gTimelineEnabled = ("@mozilla.org;timeline-service;1" in Components.classes);
@@ -2031,6 +2032,20 @@ function SetUpJunkBar(aMsgHdr)
   goUpdateCommand('button_junk');
 }
 
+function MarkCurrentMessageAsRead()
+{
+  gDBView.doCommand(nsMsgViewCommandType.markMessagesRead);
+}
+
+function ClearPendingReadTimer()
+{
+  if (gMarkViewedMessageAsReadTimer)
+  {
+    clearTimeout(gMarkViewedMessageAsReadTimer);
+    gMarkViewedMessageAsReadTimer = null;
+  }
+}
+
 function OnMsgLoaded(aUrl)
 {
     if (!aUrl)
@@ -2038,6 +2053,8 @@ function OnMsgLoaded(aUrl)
 
     var folder = aUrl.folder;
     var msgURI = GetLoadedMessage();
+    var msgHdr = null;
+
     if (!folder || !msgURI)
       return;
 
@@ -2045,10 +2062,22 @@ function OnMsgLoaded(aUrl)
       SetUpJunkBar(null);
     else
     {
-      var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+      msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
       SetUpJunkBar(msgHdr);
     }
     
+    // we just finished loading a message. set a timer to actually mark the message as read after n seconds
+    // where n can be configured by the user.
+    var markReadOnADelay = gPrefs.getBoolPref("mailnews.mark_message_read.delay");
+    if (msgHdr && !msgHdr.isRead)
+    {
+      var wintype = document.firstChild.getAttribute('windowtype');
+      if (markReadOnADelay && wintype == "mail:3pane") // only use the timer if viewing using the 3-pane preview pane and the user has set the pref
+        gMarkViewedMessageAsReadTimer = setTimeout(MarkCurrentMessageAsRead, gPrefs.getIntPref("mailnews.mark_message_read.delay.interval") * 1000);
+      else
+        MarkCurrentMessageAsRead();
+     }
+        
     // See if MDN was requested but has not been sent.
     HandleMDNResponse(aUrl);
     

@@ -555,7 +555,13 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
       if (hasMsgOffline)
         msgurl->SetMsgIsInLocalCache(PR_TRUE);
       
-      rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+      PRBool forcePeek = PR_FALSE; // should the message fetch force a peak or a traditional fetch? 
+
+      if (NS_SUCCEEDED(rv) && prefBranch) 
+         prefBranch->GetBoolPref("mailnews.mark_message_read.delay", &forcePeek);
+      
+      rv = FetchMessage(imapUrl, forcePeek ? nsIImapUrl::nsImapMsgFetchPeek : nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
         aMsgWindow, aDisplayConsumer, msgKey, PR_FALSE, (mPrintingOperation) ? "print" : nsnull, aURL);
     }
   }
