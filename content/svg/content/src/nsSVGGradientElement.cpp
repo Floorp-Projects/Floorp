@@ -364,7 +364,7 @@ nsSVGLinearGradientElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_SVG_DOM_CLONENODE(LinearGradient)
+NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGLinearGradientElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGLinearGradientElement methods
@@ -549,7 +549,7 @@ nsSVGRadialGradientElement::Init()
 //----------------------------------------------------------------------
 // nsIDOMNode methods
 
-NS_IMPL_SVG_DOM_CLONENODE(RadialGradient)
+NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGRadialGradientElement)
 
 //----------------------------------------------------------------------
 // nsIDOMSVGRadialGradientElement methods

@@ -146,7 +146,6 @@ protected:
                             PRBool aFireMutation,
                             PRBool aNotify);
 
-  nsresult CopyNode(nsSVGElement* dest, PRBool deep);
   void UpdateContentStyleRule();
   nsISVGValue* GetMappedAttribute(PRInt32 aNamespaceID, nsIAtom* aName);
   nsresult AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
@@ -181,35 +180,6 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
   }                                                                          \
                                                                              \
   *aResult = it;                                                             \
-                                                                             \
-  return rv;                                                                 \
-}
-
-/**
- * A macro to implement the nsSVGXXXElement::CloneNode().
- */
-#define NS_IMPL_SVG_DOM_CLONENODE(_elementName)                              \
-NS_IMETHODIMP                                                                \
-nsSVG##_elementName##Element::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)  \
-{                                                                            \
-  *aReturn = nsnull;                                                         \
-                                                                             \
-  nsSVG##_elementName##Element* it =                                         \
-    new nsSVG##_elementName##Element(mNodeInfo);                             \
-  if (!it) {                                                                 \
-    return NS_ERROR_OUT_OF_MEMORY;                                           \
-  }                                                                          \
-                                                                             \
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);                                  \
-                                                                             \
-  nsresult rv = it->Init();                                                  \
-                                                                             \
-  rv |= CopyNode(it, aDeep);                                                 \
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Error copying SVG node!");                 \
-                                                                             \
-  if (NS_SUCCEEDED(rv)) {                                                    \
-    kungFuDeathGrip.swap(*aReturn);                                          \
-  }                                                                          \
                                                                              \
   return rv;                                                                 \
 }

@@ -80,22 +80,7 @@ nsXMLEventsElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPref
                                    aNotify);
 }
 
-NS_IMETHODIMP
-nsXMLEventsElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-
-  nsXMLEventsElement* it = new nsXMLEventsElement(mNodeInfo);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  CopyInnerTo(it, aDeep);
-  kungFuDeathGrip.swap(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_DOM_CLONENODE(nsXMLEventsElement)
 
 nsresult
 NS_NewXMLEventsElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)

@@ -336,7 +336,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-NS_IMPL_HTML_DOM_CLONENODE(Table)
+NS_IMPL_DOM_CLONENODE(nsHTMLTableElement)
 
 
 // the DOM spec says border, cellpadding, cellSpacing are all "wstring"

@@ -118,25 +118,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedListElement,
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-nsresult
-nsHTMLSharedListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-
-  nsHTMLSharedListElement *it = new nsHTMLSharedListElement(mNodeInfo);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip =
-    NS_STATIC_CAST(nsIDOMHTMLOListElement *, it);
-
-  CopyInnerTo(it, aDeep);
-
-  kungFuDeathGrip.swap(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_DOM_CLONENODE_AMBIGUOUS(nsHTMLSharedListElement,
+                                nsIDOMHTMLOListElement)
 
 
 NS_IMPL_BOOL_ATTR(nsHTMLSharedListElement, Compact, compact)

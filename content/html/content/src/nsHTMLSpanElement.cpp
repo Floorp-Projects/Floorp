@@ -92,7 +92,7 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLSpanElement, nsGenericHTMLElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
-NS_IMPL_HTML_DOM_CLONENODE(Span)
+NS_IMPL_DOM_CLONENODE(nsHTMLSpanElement)
 
 
 static void
@@ -166,4 +166,4 @@ nsHTMLUnknownElement::nsHTMLUnknownElement(nsINodeInfo *aNodeInfo)
 NS_IMPL_NS_NEW_HTML_ELEMENT(Unknown)
 
 
-NS_IMPL_HTML_DOM_CLONENODE(Unknown)
+NS_IMPL_DOM_CLONENODE(nsHTMLUnknownElement)

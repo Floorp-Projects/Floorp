@@ -987,30 +987,6 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   return new nsHTML##_elementName##Element(aNodeInfo, aFromParser);          \
 }
 
-/**
- * A macro to implement the nsHTMLXXXElement::CloneNode().
- */
-#define NS_IMPL_HTML_DOM_CLONENODE(_elementName)                             \
-nsresult                                                                     \
-nsHTML##_elementName##Element::CloneNode(PRBool aDeep, nsIDOMNode** aReturn) \
-{                                                                            \
-  *aReturn = nsnull;                                                         \
-                                                                             \
-  nsHTML##_elementName##Element* it =                                        \
-    new nsHTML##_elementName##Element(mNodeInfo);                            \
-  if (!it) {                                                                 \
-    return NS_ERROR_OUT_OF_MEMORY;                                           \
-  }                                                                          \
-                                                                             \
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);                                  \
-                                                                             \
-  CopyInnerTo(it, aDeep);                                                    \
-                                                                             \
-  kungFuDeathGrip.swap(*aReturn);                                            \
-                                                                             \
-  return NS_OK;                                                              \
-}
-
 
 /**
  * A macro to implement the getter and setter for a given string

@@ -435,24 +435,7 @@ nsXMLElement::IsFocusable(PRInt32 *aTabIndex)
 }
 
 
-NS_IMETHODIMP
-nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
-{
-  *aReturn = nsnull;
-
-  nsXMLElement* it = new nsXMLElement(mNodeInfo);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-
-  CopyInnerTo(it, aDeep);
-
-  kungFuDeathGrip.swap(*aReturn);
-
-  return NS_OK;
-}
+NS_IMPL_DOM_CLONENODE(nsXMLElement)
 
 // nsIStyledContent implementation
 
