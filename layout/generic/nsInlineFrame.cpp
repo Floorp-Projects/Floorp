@@ -66,6 +66,7 @@ public:
                                    nsIFrame* aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*& aContinuingFrame);
+  NS_IMETHOD ListTag(FILE* out) const;
 
   // nsIHTMLReflow
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
@@ -1034,4 +1035,19 @@ nsInlineFrame::DrainOverflowLists()
     }
     mOverflowList = nsnull;
   }
+}
+
+NS_IMETHODIMP
+nsInlineFrame::ListTag(FILE* out) const
+{
+  fprintf(out, "Inline<");
+  nsIAtom* atom;
+  mContent->GetTag(atom);
+  if (nsnull != atom) {
+    nsAutoString tmp;
+    atom->ToString(tmp);
+    fputs(tmp, out);
+  }
+  fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
+  return NS_OK;
 }
