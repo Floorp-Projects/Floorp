@@ -21,3 +21,4 @@
 <!ENTITY return.label "Return Receipts">
 <!ENTITY disk.label "Disk Space">
 <!ENTITY labels.label "Labels">
+<!ENTITY offline.label "Offline &amp; Disk Space">

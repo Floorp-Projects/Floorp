@@ -118,6 +118,11 @@
             <treecell url="chrome://messenger/content/pref-receipts.xul" label="&return.label;"/>
           </treerow>
         </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://messenger/content/pref-offline.xul" label="&offline.label;"/> 
+          </treerow>
+        </treeitem>
       </treechildren>
     </treeitem>
   </treechildren>
