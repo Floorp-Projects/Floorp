@@ -31,29 +31,48 @@
 #             - which is a .ini template
 #        version
 #             - version to display on the blue background
+#
 #        Path to staging area
 #             - path on where the seamonkey built bits are staged to
+#
 #        xpi path
 #             - path on where xpi files will be located at
-#        URL path
-#             - path to where the .xpi files are staged.  can be
-#               either ftp:// or http://
 #
-#   ie: perl makecfgini.pl config.it 5.0.0.1999120608 z:\exposed\windows\32bit\en\5.0 d:\builds\mozilla\dist\win32_0.obj\install\xpi ftp://sweetlou/products/client/seamonkey/windows/32bit/x86/1999-09-13-10-M10
+#        redirect file url
+#             - url to where the redirect.ini file will be staged at.
+#               Either ftp:// or http:// can be used
+#               ie: ftp://ftp.netscape.com/pub/seamonkey
+#
+#        xpi url
+#             - url to where the .xpi files will be staged at.
+#               Either ftp:// or http:// can be used
+#               ie: ftp://ftp.netscape.com/pub/seamonkey/xpi
+#
+#   ie: perl makecfgini.pl config.it 5.0.0.1999120608 k:\windows\32bit\5.0 d:\builds\mozilla\dist\win32_o.obj\install\xpi ftp://ftp.netscape.com/pub/seamonkey/windows/32bit/x86/1999-09-13-10-M10 ftp://ftp.netscape.com/pub/seamonkey/windows/32bit/x86/1999-09-13-10-M10/xpi
+#
 #
 
 # Make sure there are at least two arguments
-if($#ARGV < 4)
+if($#ARGV < 5)
 {
-  die "usage: $0 <.it file> <version> <staging path> <.xpi path> <URL path>
+  die "usage: $0 <.it file> <version> <staging path> <.xpi path> <redirect file url> <xpi url>
 
-       .it file     : input ini template file
-       version      : version to be shown in setup.  Typically the same version
-                      as show in mozilla.exe.
-       staging path : path to where the components are staged at
-       .xpi path    : path to where the .xpi files have been built to
-       URL path     : URL path to where the .xpi files will be staged at.
-                      Either ftp:// or http:// can be used
+       .it file      : input ini template file
+
+       version       : version to be shown in setup.  Typically the same version
+                       as show in mozilla.exe.
+
+       staging path  : path to where the components are staged at
+
+       .xpi path     : path to where the .xpi files have been built to
+                       ie: d:\\builds\\mozilla\\dist\\win32_o.obj\\install\\xpi
+
+       redirect file : url to where the redirect.ini file will be staged at.
+       url             Either ftp:// or http:// can be used
+                       ie: ftp://ftp.netscape.com/pub/seamonkey
+       xpi url       : url to where the .xpi files will be staged at.
+                       Either ftp:// or http:// can be used
+                       ie: ftp://ftp.netscape.com/pub/seamonkey/xpi
        \n";
 }
 
@@ -61,7 +80,13 @@ $inItFile         = $ARGV[0];
 $inVersion        = $ARGV[1];
 $inStagePath      = $ARGV[2];
 $inXpiPath        = $ARGV[3];
-$inURLPath        = $ARGV[4];
+$inRedirIniUrl    = $ARGV[4];
+$inUrl            = $ARGV[5];
+
+$inDomain;
+$inServerPath;
+
+($inDomain, $inServerPath) = ParseDomainAndPath($inUrl);
 
 # Get the name of the file replacing the .it extension with a .ini extension
 @inItFileSplit    = split(/\./,$inItFile);
@@ -132,16 +157,13 @@ while($line = <fpInIt>)
 
     print fpOutIni "Install Size Archive=$installSizeArchive\n";
   }
-  elsif($line =~ /\$Version\$/i)
+  else
   {
     # For each line read, search and replace $Version$ with the version passed in
     $line =~ s/\$Version\$/$inVersion/i;
-    print fpOutIni $line;
-  }
-  else
-  {
-    # For each line read, search and replace $InstallSizeSystem$ with the calculated size
-    $line =~ s/\$URLPath\$/$inURLPath/i;
+    $line =~ s/\$Domain\$/$inDomain/i;
+    $line =~ s/\$ServerPath\$/$inServerPath/i;
+    $line =~ s/\$RedirIniUrl\$/$inRedirIniUrl/i;
     print fpOutIni $line;
   }
 }
@@ -150,6 +172,44 @@ print " done!\n";
 
 # end of script
 exit(0);
+
+sub ParseDomainAndPath()
+{
+  my($aUrl) = @_;
+  my($aDomain, $aServerPath);
+
+  @slashSplit = split(/\//, $aUrl);
+  if($#slashSplit >= 0)
+  {
+    for($i = 0; $i <= $#slashSplit; $i++)
+    {
+      if($i <= 2)
+      {
+        if($aDomain eq "")
+        {
+          $aDomain = "$slashSplit[$i]";
+        }
+        else
+        {
+          $aDomain = "$aDomain/$slashSplit[$i]";
+        }
+      }
+      else
+      {
+        if($aServerPath eq "")
+        {
+          $aServerPath = "/$slashSplit[$i]";
+        }
+        else
+        {
+          $aServerPath = "$aServerPath/$slashSplit[$i]";
+        }
+      }
+    }
+  }
+
+  return($aDomain, $aServerPath);
+}
 
 sub OutputInstallSize()
 {

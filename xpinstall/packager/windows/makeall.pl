@@ -27,27 +27,27 @@
 #
 
 # Make sure there are at least four arguments
-if($#ARGV < 3)
+if($#ARGV < 2)
 {
-  die "usage: $0 <default version> <URL path> <staging path> <dist install path>
+  die "usage: $0 <default version> <staging path> <dist install path>
 
-       default version   : julian based date version
-                           ie: 5.0.0.99257
-
-       URL path          : URL path to where the .xpi files will be staged at.
-                           Either ftp:// or http:// can be used.  Nothing will be
-                           copied to there by this script.  It is used for config.ini.
+       default version   : y2k compliant based date version.
+                           ie: 5.0.0.2000040413
 
        staging path      : full path to where the components are staged at
 
-       dist install path : full path to where the mozilla/dist/win32_o.obj/install is at.
+       dist install path : full path to where the dist install dir is at.
+                           ie: d:\\builds\\mozilla\\dist\\win32_o.obj\\install
        \n";
 }
 
 $inDefaultVersion     = $ARGV[0];
-$inURLPath            = $ARGV[1];
-$inStagePath          = $ARGV[2];
-$inDistPath           = $ARGV[3];
+$inStagePath          = $ARGV[1];
+$inDistPath           = $ARGV[2];
+
+$inRedirIniUrl        = "ftp://not.needed.com/because/the/xpi/files/will/be/located/in/the/same/dir/as/the/installer";
+$inXpiUrl             = "ftp://not.needed.com/because/the/xpi/files/will/be/located/in/the/same/dir/as/the/installer";
+
 $seiFileNameGeneric   = "nsinstall.exe";
 $seiFileNameSpecific  = "mozilla-win32-installer.exe";
 $userAgent            = "5.0b1 (en)";
@@ -104,7 +104,7 @@ exit(0);
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inDefaultVersion $inStagePath $inDistPath\\xpi $inURLPath") != 0)
+  if(system("perl makecfgini.pl config.it $inDefaultVersion $inStagePath $inDistPath\\xpi $inRedirIniUrl $inXpiUrl") != 0)
   {
     exit(1);
   }
