@@ -64,6 +64,11 @@ DOM_MSG_DEF(NS_ERROR_DOM_SYNTAX_ERR, "An invalid or illegal string was specified
 DOM_MSG_DEF(NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR, "The boundary-points of a range does not meet specific requirements.")
 DOM_MSG_DEF(NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR, "The container of an boundary-point of a range is being set to either a node of an invalid type or a node with an ancestor of an invalid type.")
 
+/* DOM error codes from http://www.w3.org/TR/DOM-Level-3/ */
+
+DOM_MSG_DEF(NS_ERROR_DOM_VALIDATION_ERR, "A call to a method would make the Node invalid with respect to \"partial validity\", so the operation was not done")
+DOM_MSG_DEF(NS_ERROR_DOM_TYPE_MISMATCH_ERR, "The type of an object is incompatible with the expected type of the parameter associated to the object")
+
 /* DOM error codes defined by us */
 
 /* XXX string should be specified by norris */

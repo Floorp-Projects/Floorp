@@ -40,15 +40,15 @@
 #include "domstubs.idl"
 
 /**
- * In general, DOM methods return specific error values in ordinary 
+ * In general, DOM methods return specific error values in ordinary
  * processing situations, such as out-of-bound errors.
- * However, DOM operations can raise exceptions in "exceptional" 
- * circumstances, i.e., when an operation is impossible to perform 
- * (either for logical reasons, because data is lost, or because the 
+ * However, DOM operations can raise exceptions in "exceptional"
+ * circumstances, i.e., when an operation is impossible to perform
+ * (either for logical reasons, because data is lost, or because the
  * implementation has become unstable)
  *
- * For more information on this interface please see 
- * http://www.w3.org/TR/DOM-Level-2-Core/
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-3-Core/
  *
  * @status FROZEN
  */
@@ -76,6 +76,10 @@ interface nsIDOMDOMException : nsISupports
   const unsigned short      NAMESPACE_ERR                  = 14;
   // Introduced in DOM Level 2:
   const unsigned short      INVALID_ACCESS_ERR             = 15;
+  // Introduced in DOM Level 3:
+  const unsigned short      VALIDATION_ERR                 = 16;
+  // Introduced in DOM Level 3:
+  const unsigned short      TYPE_MISMATCH_ERR              = 17;
 
   readonly attribute unsigned long   code;
 };

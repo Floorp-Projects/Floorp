@@ -41,7 +41,7 @@
 #include "nsError.h"
 
 // XXX If you add a new error code, also add an error string to
-// dom/base/src/domerr.msg
+// dom/src/base/domerr.msg
 
 /* DOM error codes from http://www.w3.org/TR/REC-DOM-Level-1/ */
 
@@ -68,6 +68,11 @@
 
 #define NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM_RANGE, 1)
 #define NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM_RANGE, 2)
+
+/* DOM error codes from http://www.w3.org/TR/DOM-Level-3/ */
+
+#define NS_ERROR_DOM_VALIDATION_ERR              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,16)
+#define NS_ERROR_DOM_TYPE_MISMATCH_ERR           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_DOM,17)
 
 
 /* DOM error codes defined by us */
