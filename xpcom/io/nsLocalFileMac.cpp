@@ -36,7 +36,11 @@
 #include "nsIMIMEInfo.h"
 #include "prtypes.h"
 #include "prerror.h"
+#include "nsEscape.h"
+
 #ifdef MACOSX
+#include "nsXPIDLString.h"
+
 #include "private/pprio.h"
 #else
 #include "pprio.h" // Include this rather than prio.h so we get def of PR_ImportFile
@@ -418,6 +422,19 @@ static nsresult ConvertMillisecondsToMacTime(PRInt64 aTime, PRUint32 *aOutMacTim
 
 	return NS_OK;
 }
+
+static void SwapSlashColon(char * s)
+{
+	while (*s)
+	{
+		if (*s == '/')
+			*s++ = ':';
+		else if (*s == ':')
+			*s++ = '/';
+		else
+			*s++;
+	}
+} 
 
 
 #pragma mark -
@@ -2182,12 +2199,93 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 
 NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+     NS_ENSURE_ARG_POINTER(aURL);
+     *aURL = nsnull;
+     
+     nsresult rv;
+     char* ePath = nsnull;
+     nsCAutoString escPath;
+ 
+     rv = GetPath(&ePath);
+     if (NS_SUCCEEDED(rv)) {
+ 
+         SwapSlashColon(ePath);
+         
+         // Escape the path with the directory mask
+         rv = nsStdEscape(ePath, esc_Directory+esc_Forced, escPath);
+         if (NS_SUCCEEDED(rv)) {
+         
+             escPath.Insert("file:///", 0);
+ 
+             PRBool dir;
+             rv = IsDirectory(&dir);
+             NS_ASSERTION(NS_SUCCEEDED(rv), "Cannot tell if this is a directory");
+             if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
+                 // make sure we have a trailing slash
+                 escPath += "/";
+             }
+             *aURL = nsCRT::strdup((const char *)escPath);
+             rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+         }
+     }
+     CRTFREEIF(ePath);
+     return rv;
 }
 
 NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+     NS_ENSURE_ARG(aURL);
+     nsresult rv;
+     
+     nsXPIDLCString host, directory, fileBaseName, fileExtension;
+     
+     rv = ParseURL(aURL, getter_Copies(host), getter_Copies(directory),
+                   getter_Copies(fileBaseName), getter_Copies(fileExtension));
+     if (NS_FAILED(rv)) return rv;
+                   
+     nsCAutoString path;
+     nsCAutoString component;
+ 
+     if (host)
+     {
+         // We can end up with a host when given: file:// instead of file:///
+         // Check to see if the host is a volume name - If so prepend it
+         Str255 volName;
+         FSSpec volSpec;
+         
+         myPLstrcpy(volName, host);
+         volName[++volName[0]] = ':';
+         if (::FSMakeFSSpec(0, 0, volName, &volSpec) == noErr)
+             path += host;
+     }
+     if (directory)
+     {
+         nsStdEscape(directory, esc_Directory, component);
+         path += component;
+         SwapSlashColon((char*)path.get());
+     }
+     if (fileBaseName)
+     {
+         nsStdEscape(fileBaseName, esc_FileBaseName, component);
+         path += component;
+     }
+     if (fileExtension)
+     {
+         nsStdEscape(fileExtension, esc_FileExtension, component);
+         path += '.';
+         path += component;
+     }
+     
+     nsUnescape((char*)path.get());
+ 
+     // wack off leading :'s
+     if (path.CharAt(0) == ':')
+         path.Cut(0, 1);
+ 
+     rv = InitWithPath(path);
+          
+     return rv;
+
 }
 
 NS_IMETHODIMP

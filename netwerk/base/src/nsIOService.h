@@ -34,6 +34,8 @@
 #include "nsURLHelper.h"
 #include "nsWeakPtr.h"
 #include "nsIEventQueueService.h"
+#include "nsIURLParser.h"
+#include "nsSupportsArray.h"
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
@@ -64,6 +66,12 @@ protected:
     NS_METHOD CacheProtocolHandler(const char *scheme,
                                    nsIProtocolHandler* hdlr);
 
+    NS_METHOD GetCachedURLParser(const char *scheme,
+                                 nsIURLParser* *hdlrResult);
+
+    NS_METHOD CacheURLParser(const char *scheme,
+                             nsIURLParser* hdlr);
+
 protected:
     PRBool      mOffline;
     nsCOMPtr<nsISocketTransportService> mSocketTransportService;
@@ -75,6 +83,9 @@ protected:
     // Cached protocol handlers
     nsWeakPtr                  mWeakHandler[NS_N(gScheme)];
 
+    // Cached url handlers
+    nsCOMPtr<nsIURLParser>              mDefaultURLParser;
+    nsSupportsArray                     mURLParsers;
     nsVoidArray                         mRestrictedPortList;
 };
 

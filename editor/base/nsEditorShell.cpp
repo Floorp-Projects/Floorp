@@ -144,7 +144,6 @@ static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
 static NS_DEFINE_CID(kChromeRegistryCID,        NS_CHROMEREGISTRY_CID);
-static NS_DEFINE_CID(kStandardURLCID,           NS_STANDARDURL_CID);
 
 #define APP_DEBUG 0 
 
@@ -1710,14 +1709,13 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
   
   // make a temp URL for testing against
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIFileURL> tempFileURL(do_CreateInstance(kStandardURLCID, &rv));
+  
+  nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
   
-  rv = tempFileURL->SetSpec(fileURL.get());
+  rv = urlFile->SetURL(fileURL.get());
   if (NS_FAILED(rv)) return rv;
   
-  nsCOMPtr<nsIFile> urlFile;
-  rv = tempFileURL->GetFile(getter_AddRefs(urlFile));
   // We fail if inFileURL isn't a "file:" URL, but that's ok.
   //TODO: When publishing is done, we should support checking remote URL as well
   if (NS_FAILED(rv)) return NS_OK;
@@ -2033,16 +2031,8 @@ nsEditorShell::SaveDocument(PRBool aSaveAs, PRBool aSaveCopy, const PRUnichar* a
             nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
             if (webShell)
             {
-              // would like to use nsIFile::GetURL here, but it is not implemented
-              // on all platforms
-              nsCOMPtr<nsIFileURL> fileURL(do_CreateInstance(kStandardURLCID, &res));
-              if (NS_FAILED(res)) return res;
-            
-              res = fileURL->SetFile(docFile);
-              if (NS_FAILED(res)) return res;
-            
               nsXPIDLCString docURLSpec;
-              res = fileURL->GetSpec(getter_Copies(docURLSpec));
+              res = docFile->GetURL(getter_Copies(docURLSpec));
               if (NS_FAILED(res)) return res;
             
               nsAutoString  fileURLUnicode; fileURLUnicode.AssignWithConversion(docURLSpec);      

@@ -657,24 +657,18 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
     else {
       // we have a normal file, use some Necko objects to get our file path
 	    nsCOMPtr<nsILocalFile> file;
-      if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) ) {
-        nsCOMPtr<nsIFileURL> url ( do_CreateInstance("@mozilla.org/network/standard-url;1") );
-        if ( url ) {
-          // get the file:// url from our native path
-          url->SetFile ( file );
-          char* urlSpec = nsnull;
-          url->GetSpec ( &urlSpec );
+        if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) ) {
+        nsXPIDLCString urlSpec; 
+        file->GetURL( getter_Copies(urlSpec) );
 
           // convert it to unicode and pass it out
           nsMemory::Free(*outData);
           nsAutoString urlSpecUnicode;
           urlSpecUnicode.AssignWithConversion( urlSpec );
           *outData = urlSpecUnicode.ToNewUnicode();
-          *outDataLen = strlen(urlSpec) * sizeof(PRUnichar);
-          nsMemory::Free(urlSpec);
-
+          *outDataLen = strlen(urlSpec.get()) * sizeof(PRUnichar);
           dataFound = PR_TRUE;
-        }
+        
       }
     } // else regular file
   }

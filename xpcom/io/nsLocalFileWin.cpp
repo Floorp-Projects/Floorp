@@ -33,6 +33,9 @@
 #include "prtypes.h"
 #include "prio.h"
 
+#include "nsEscape.h"
+#include "nsXPIDLString.h"
+
 #include <direct.h>
 #include <windows.h>
 
@@ -1864,51 +1867,107 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 
 NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
 {
-    nsresult rv;
-    char* ePath = (char*) nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
-    if (ePath == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-#if defined (XP_WIN)
-    // Replace \ with / to convert to an url
-    char* s = ePath;
-    while (*s)
-    {
-        // We need to call IsDBCSLeadByte because
-        // Japanese windows can have 0x5C in the sencond byte 
-        // of a Japanese character, for example 0x8F 0x5C is
-        // one Japanese character
-        if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
-            s++;
-        } else 
-            if (*s == '\\')
-                *s = '/';
-        s++;
-    }
-#endif
-    // Escape the path with the directory mask
-    nsCAutoString tmp(ePath);
-    tmp.ReplaceChar(":", '|');
-    nsCAutoString escPath("file://");
-	escPath += tmp;
-//    rv = nsURLEscape(ePath,nsIIOService::url_Directory + nsIIOService::url_Forced, escPath);
-//    if (NS_SUCCEEDED(rv)) {
-        PRBool dir;
-        rv = IsDirectory(&dir);
-        if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
-            // make sure we have a trailing slash
-            escPath += "/";
-        }
-        *aURL = escPath.ToNewCString();
-        if (*aURL == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-//    }
+    NS_ENSURE_ARG_POINTER(aURL);
+    *aURL = nsnull;
 
-    return rv;
+      nsresult rv;
+    char* ePath = nsnull;
+    nsCAutoString escPath;
+
+    rv = GetPath(&ePath);
+    if (NS_SUCCEEDED(rv)) {
+
+        // Replace \ with / to convert to an url
+        char* s = ePath;
+	    while (*s)
+	    {
+            // We need to call IsDBCSLeadByte because
+            // Japanese windows can have 0x5C in the sencond byte 
+            // of a Japanese character, for example 0x8F 0x5C is
+            // one Japanese character
+            if(::IsDBCSLeadByte(*s) && *(s+1) != nsnull) {
+                s++;
+		    }
+		    else if (*s == '\\')
+                  *s = '/';
+		    
+		    s++;
+	    }
+
+        // Escape the path with the directory mask
+        rv = nsStdEscape(ePath, esc_Directory+esc_Forced, escPath);
+        if (NS_SUCCEEDED(rv)) {
+        
+            escPath.Insert("file:///", 0);
+
+            PRBool dir;
+            rv = IsDirectory(&dir);
+			NS_ASSERTION(NS_SUCCEEDED(rv), "Cannot tell if this is a directory");
+            if (NS_SUCCEEDED(rv) && dir && escPath[escPath.Length() - 1] != '/') {
+                // make sure we have a trailing slash
+                escPath += "/";
+            }
+            *aURL = nsCRT::strdup((const char *)escPath);
+            rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+        }    
+      }
+    CRTFREEIF(ePath);
+      return rv;
+
 }
 
 NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG(aURL);
+    nsresult rv;
+    
+    nsXPIDLCString host, directory, fileBaseName, fileExtension;
+    
+    rv = ParseURL(aURL, getter_Copies(host), getter_Copies(directory),
+                  getter_Copies(fileBaseName), getter_Copies(fileExtension));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString path;
+    nsCAutoString component;
+
+    if (host)
+    {
+        // We can end up with a host when given: file://C|/ instead of file:///
+        if (strlen((const char *)host) == 2 && ((const char *)host)[1] == '|')
+        {
+            path += host;
+            path.SetCharAt(':', 1);
+        }
+    }
+    if (directory)
+    {
+        nsStdEscape(directory, esc_Directory, component);
+		if (!host && component.Length() > 2 && component.CharAt(2) == '|')
+			component.SetCharAt(':', 2);
+		component.ReplaceChar('/', '\\');
+        path += component;
+    }    
+    if (fileBaseName)
+    {
+        nsStdEscape(fileBaseName, esc_FileBaseName, component);
+        path += component;
+    }
+    if (fileExtension)
+    {
+        nsStdEscape(fileExtension, esc_FileExtension, component);
+        path += '.';
+        path += component;
+    }
+    
+    nsUnescape((char*)path.get());
+
+    // remove leading '\'
+    if (path.CharAt(0) == '\\')
+        path.Cut(0, 1);
+
+    rv = InitWithPath(path);
+    
+    return rv;
 }
 
 NS_IMETHODIMP

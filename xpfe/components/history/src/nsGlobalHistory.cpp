@@ -35,7 +35,7 @@
   1) Hook up Assert() etc. so that we can delete stuff.
 
 */
-
+#include "nsNetUtil.h"
 #include "nsGlobalHistory.h"
 #include "nsIFileSpec.h"
 #include "nsCRT.h"
@@ -55,6 +55,7 @@
 #include "prtime.h"
 #include "rdf.h"
 #include "nsQuickSort.h"
+#include "nsIIOService.h"
 
 #include "nsIURL.h"
 #include "nsNetCID.h"
@@ -102,7 +103,6 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
-static NS_DEFINE_CID(kStandardUrlCID,       NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 // closure structures for RemoveMatchingRows
@@ -115,7 +115,7 @@ struct matchHost_t {
   const char *host;
   PRBool entireDomain;          // should we delete the entire domain?
   nsGlobalHistory *history;
-  nsIURL* cachedUrl;
+  nsIURI* cachedUrl;
 };
 
 struct matchSearchTerm_t {
@@ -652,7 +652,6 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
                                       PRInt64 aDate,
                                       nsIMdbRow **aResult)
 {
-  nsresult rv;
   mdb_err err;
   
   // Create a new row
@@ -675,15 +674,10 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
   SetRowValue(row, kToken_LastVisitDateColumn, aDate);
   SetRowValue(row, kToken_FirstVisitDateColumn, aDate);
 
-  nsCOMPtr<nsIURL> urlObj(do_CreateInstance(kStandardUrlCID, &rv));
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = urlObj->SetSpec(aURL);
-  if (NS_FAILED(rv)) return rv;
-  
   nsXPIDLCString hostname;
-  rv = urlObj->GetHost(getter_Copies(hostname));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+  if (!ioService) return NS_ERROR_FAILURE;
+  ioService->ExtractUrlPart(aURL, nsIIOService::url_Host, 0, 0, getter_Copies(hostname));
 
   SetRowValue(row, kToken_HostnameColumn, hostname);
 
@@ -934,18 +928,12 @@ nsGlobalHistory::RemovePage(const char *aURL)
 NS_IMETHODIMP
 nsGlobalHistory::RemovePagesFromHost(const char *aHost, PRBool aEntireDomain)
 {
-  nsresult rv;
-  
-  nsCOMPtr<nsIURL> url =
-    do_CreateInstance(kStandardUrlCID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
   matchHost_t hostInfo;
   hostInfo.history = this;
   hostInfo.entireDomain = aEntireDomain;
   hostInfo.host = aHost;
   
-  hostInfo.cachedUrl = url;
+  hostInfo.cachedUrl = nsnull; // todo: leak?
   return RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
 }
 
@@ -962,7 +950,7 @@ nsGlobalHistory::MatchHost(nsIMdbRow *aRow,
 
   // do smart zero-termination
   nsDependentCString url((const char *)yarn.mYarn_Buf, yarn.mYarn_Fill);
-  rv = hostInfo->cachedUrl->SetSpec(nsCAutoString(url).get());
+  rv = NS_NewURI(&hostInfo->cachedUrl, nsCAutoString(url).get());
   if (NS_FAILED(rv)) return PR_FALSE;
 
   nsXPIDLCString urlHost;
@@ -1492,11 +1480,12 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       rv = GetRowValue(row, kToken_NameColumn, title);
       if (NS_FAILED(rv) || title.IsEmpty()) {
         // yank out the filename from the url, use that
-        nsCOMPtr<nsIURL> urlObj(do_CreateInstance(kStandardUrlCID, &rv));
+        nsCOMPtr<nsIURI> aUri;
+        rv = NS_NewURI(getter_AddRefs(aUri), uri);
         if (NS_FAILED(rv)) return rv;
-        
-        rv = urlObj->SetSpec(uri);
-        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIURL> urlObj(do_QueryInterface(aUri));
+        if (!urlObj)
+            return NS_ERROR_FAILURE;
 
         nsXPIDLCString filename;
         rv = urlObj->GetFileName(getter_Copies(filename));
@@ -2357,20 +2346,17 @@ nsGlobalHistory::CheckHostnameEntries()
   // cached variables used in the loop
   nsCAutoString url;
   nsXPIDLCString hostname;
-  nsCOMPtr<nsIURL> urlObj(do_CreateInstance(kStandardUrlCID, &rv));
-  if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsIIOService> ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
+  if (!ioService) return NS_ERROR_FAILURE;
+  
 
   while (row) {
 #if 0
     rv = GetRowValue(row, kToken_URLColumn, url);
     if (NS_FAILED(rv)) break;
 
-    rv = urlObj->SetSpec(url.get());
-    if (NS_FAILED(rv)) break;
-
-    rv = urlObj->GetHost(getter_Copies(hostname));
-    if (NS_FAILED(rv)) break;
+    ioService->ExtractUrlPart(url, nsIIOService::url_Host, 0, 0, getter_Copies(hostname));
 
     SetRowValue(row, kToken_HostnameColumn, hostname);
     

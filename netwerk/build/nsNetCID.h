@@ -65,6 +65,8 @@
      {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+// DO NOT USE THIS INTERFACE DIRECTLY UNLESS YOU KNOW
+// WHAT YOU ARE DOING! - dougt@netscape.com
 #define NS_STANDARDURL_CLASSNAME \
     "Standard URL"
 #define NS_STANDARDURL_CONTRACTID \

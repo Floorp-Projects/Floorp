@@ -352,7 +352,9 @@ NS_NET nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos,
 {
     // search for something up to a colon, and call it the scheme
     NS_ENSURE_ARG_POINTER(inURI);
-
+    if (scheme)
+       *scheme = nsnull;
+    
     const char* uri = inURI;
 
     // skip leading white space

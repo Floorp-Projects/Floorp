@@ -14,7 +14,6 @@ var pref;
 //////////// global constants ////////////////////
 
 const kDirServiceCID       = "@mozilla.org/file/directory_service;1"
-const kStandardURLCID      = "@mozilla.org/network/standard-url;1"
 const kNCURI               = "http://home.netscape.com/NC-rdf#";
 const kSidebarPanelId      = "UPnls"; // directory services property to find panels.rdf
 const kSidebarURNPanelList = "urn:sidebar:current-panel-list";
@@ -103,10 +102,7 @@ SidebarPrefs.prototype =
       var file = dirService.get(aFileId, Components.interfaces.nsIFile);
       if (!file.exists())
         return null;
-
-      var fileURL = XPCU.createInstance(kStandardURLCID, "nsIFileURL");
-      fileURL.file = file;
-      return fileURL.spec;
+      return file.URL;
     } catch (ex) {
       return null;
     }

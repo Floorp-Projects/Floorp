@@ -22,6 +22,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsNetUtil.h"
 #include "nsIComponentManager.h"
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"

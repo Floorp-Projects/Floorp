@@ -30,8 +30,6 @@
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
 
-static NS_DEFINE_CID(kStandardURICID, NS_STANDARDURL_CID);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIconProtocolHandler::nsIconProtocolHandler() 

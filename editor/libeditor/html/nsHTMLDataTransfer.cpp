@@ -611,18 +611,15 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       nsCOMPtr<nsIFile> fileObj ( do_QueryInterface(genericDataObj) );
       if (fileObj && len > 0)
       {
-        nsCOMPtr<nsIFileURL> fileURL;
-        rv = nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1", nsnull, 
-                                     NS_GET_IID(nsIURL), getter_AddRefs(fileURL));
+        
+        nsCOMPtr<nsIURI> uri;
+        rv = NS_NewFileURI(getter_AddRefs(uri), fileObj);
         if (NS_FAILED(rv))
           return rv;
         
+        nsCOMPtr<nsIURL> fileURL(do_QueryInterface(uri));
         if ( fileURL )
         {
-          rv = fileURL->SetFile( fileObj );
-          if (NS_FAILED(rv))
-            return rv;
-          
           PRBool insertAsImage = PR_FALSE;
           char *fileextension = nsnull;
           rv = fileURL->GetFileExtension( &fileextension );

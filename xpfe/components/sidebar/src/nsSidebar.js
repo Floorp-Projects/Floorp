@@ -41,7 +41,6 @@ const SIDEBAR_CONTRACTID   = "@mozilla.org/sidebar;1";
 const SIDEBAR_CID      = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
 const CONTAINER_CONTRACTID = "@mozilla.org/rdf/container;1";
 const DIR_SERV_CONTRACTID  = "@mozilla.org/file/directory_service;1"
-const STD_URL_CONTRACTID   = "@mozilla.org/network/standard-url;1"
 const NETSEARCH_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=internetsearch"
 const nsISupports      = Components.interfaces.nsISupports;
 const nsIFactory       = Components.interfaces.nsIFactory;
@@ -382,11 +381,8 @@ function getSidebarDatasourceURI(panels_file_id)
             return null;
         }
 
-        var file_url = Components.classes[STD_URL_CONTRACTID].createInstance(Components.interfaces.nsIFileURL);
-        file_url.file = sidebar_file;
-
-        debug("sidebar uri is " + file_url.spec);
-        return file_url.spec;
+        debug("sidebar uri is " + sidebar_file.URL);
+        return sidebar_file.URL;
     }
     catch (ex)
     {

@@ -208,20 +208,13 @@ NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIURL> url;
-  
-  rv = nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
-                                          nsnull,
-                                          NS_GET_IID(nsIURL),
-                                          getter_AddRefs(url));
+  nsCOMPtr<nsIURI> url;
+  nsCAutoString str; str.AssignWithConversion(valueStr);
+  rv = NS_NewURI(getter_AddRefs(url), str);
 
   if (NS_FAILED(rv))
     return NS_OK;
 
-  nsCAutoString str; str.AssignWithConversion(valueStr);
-  rv = url->SetSpec(str);
-  if (NS_FAILED(rv)) return rv;
-  
   nsCOMPtr<nsISupports> sup;
   sup = do_QueryInterface(url, &rv);
   if (NS_FAILED(rv))
@@ -1317,21 +1310,13 @@ NS_IMETHODIMP nsChromeRegistry::WriteInfoToDataSource(const char *aDocURI,
                                                       PRBool aRemove)
 {
   nsresult rv;
-  nsCOMPtr<nsIURL> url;
-  
-  rv = nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
-                                          nsnull,
-                                          NS_GET_IID(nsIURL),
-                                          getter_AddRefs(url));
-
-  if (NS_FAILED(rv))
-    return NS_OK;
-
+  nsCOMPtr<nsIURI> uri;
   nsCAutoString str(aDocURI);
-  rv = url->SetSpec(str);
+  rv = NS_NewURI(getter_AddRefs(uri), str);
   if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIRDFDataSource> dataSource;
-  rv = GetDynamicDataSource(url, aIsOverlay, aUseProfile, getter_AddRefs(dataSource));
+  rv = GetDynamicDataSource(uri, aIsOverlay, aUseProfile, getter_AddRefs(dataSource));
   if (NS_FAILED(rv)) return rv;
 
   if (!dataSource)
@@ -2511,14 +2496,8 @@ nsChromeRegistry::GetProfileRoot(nsCString& aFileURL)
    if (NS_FAILED(rv))
      return rv;
    
-   nsXPIDLCString urlSpec;   
-   nsCOMPtr<nsIFileURL> url = do_CreateInstance("@mozilla.org/network/standard-url;1", &rv);
-   if (NS_FAILED(rv))
-     return rv;
-   rv = url->SetFile(userChromeDir);
-   if (NS_FAILED(rv))
-     return rv;
-   rv = url->GetSpec(getter_Copies(urlSpec));
+   nsXPIDLCString urlSpec;
+   rv = userChromeDir->GetURL(getter_Copies(urlSpec));
    if (NS_FAILED(rv))
      return rv;
    aFileURL = urlSpec;
@@ -2538,14 +2517,8 @@ nsChromeRegistry::GetInstallRoot(nsCString& aFileURL)
   if (NS_FAILED(rv) || !appChromeDir)
     return NS_ERROR_FAILURE;
 
-  nsXPIDLCString urlSpec;   
-  nsCOMPtr<nsIFileURL> url = do_CreateInstance("@mozilla.org/network/standard-url;1", &rv);
-  if (NS_FAILED(rv))
-    return rv;
-  rv = url->SetFile(appChromeDir);
-  if (NS_FAILED(rv))
-    return rv;
-  rv = url->GetSpec(getter_Copies(urlSpec));
+  nsXPIDLCString urlSpec;  
+  rv = appChromeDir->GetURL(getter_Copies(urlSpec));
   if (NS_FAILED(rv))
     return rv;
   aFileURL = urlSpec;
@@ -2835,16 +2808,11 @@ nsChromeRegistry::GetUserSheets(PRBool aIsChrome, nsISupportsArray **aResult)
                                     
 nsresult nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString& aURL)
 {
-  nsCOMPtr<nsIURL> url;
-  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
-                                                   nsnull,
-                                                   NS_GET_IID(nsIURL),
-                                                   getter_AddRefs(url));
-  if (NS_FAILED(rv)) return rv;
-  rv = url->SetSpec(aURL);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
   if (NS_FAILED(rv)) return rv;
 
-  rv = LoadStyleSheetWithURL(url, aSheet);
+  rv = LoadStyleSheetWithURL(uri, aSheet);
   return rv;
 }
 
@@ -3133,18 +3101,12 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
       rv = chromeFile->InitWithPath(chromeLocation);
       if (NS_FAILED(rv))
         return rv;
-      nsCOMPtr<nsIFileURL> chromeFileURL(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
-      if (NS_FAILED(rv))
-        return rv;
-      rv = chromeFileURL->SetFile(chromeFile);
-      if (NS_FAILED(rv))
-        return rv;
 
       /* xpidl strings aren't unified with strings, so this fu is necessary.
-       * all we want here is the canonical url, found using GetSpec.
+       * all we want here is the canonical url
        */
       nsXPIDLCString chromeURLfoopy;
-      rv = chromeFileURL->GetSpec(getter_Copies(chromeURLfoopy));
+      rv = chromeFile->GetURL(getter_Copies(chromeURLfoopy));
       if (NS_FAILED(rv))
         return rv;
       chromeURL = chromeURLfoopy;
