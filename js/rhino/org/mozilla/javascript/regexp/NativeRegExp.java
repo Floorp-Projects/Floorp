@@ -631,6 +631,8 @@ public class NativeRegExp extends ScriptableObject implements Function {
           case REOP_OPT:
           case REOP_LPAREN:
           case REOP_LPARENNON:
+          case REOP_ASSERT:
+          case REOP_ASSERT_NOT:
             fixNext(state, (RENode) ren1.kid, ren2, oldnext);
             break;
           default:;
