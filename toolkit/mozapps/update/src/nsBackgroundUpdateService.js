@@ -111,7 +111,7 @@ nsBackgroundUpdateService.prototype = {
     case nsIUpdateService.SOURCE_EVENT_MISMATCH:
     case nsIUpdateService.SOURCE_EVENT_USER:
       var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                        .getService(Components.interfaces.nsIWindowWatcher);
+                         .getService(Components.interfaces.nsIWindowWatcher);
       var ary = Components.classes["@mozilla.org/supports-array;1"]
                           .createInstance(Components.interfaces.nsISupportsArray);
       var updateTypes = Components.classes["@mozilla.org/supports-PRUint8;1"]
