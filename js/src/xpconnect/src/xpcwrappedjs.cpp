@@ -94,7 +94,24 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-// do chained ref counting
+// Refcounting is now similar to that used in the chained (pre-flattening)
+// wrappednative system. 
+//
+// We are now holding an extra refcount for nsISupportsWeakReference support.
+//
+// Non-root wrappers remove themselves from the chain in their destructors. 
+// We root the JSObject as the refcount transitions from 1->2. And we unroot 
+// the JSObject when the refcount transitions from 2->1.
+// 
+// When the transition from 2->1 is made and no one holds a weak ref to the 
+// (aggregated) object then we decrement the refcount again to 0 (and 
+// destruct) . However, if a weak ref is held at the 2->1 transition, then we 
+// leave the refcount at 1 to indicate that state. This leaves the JSObject 
+// no longer rooted by us and (as far as we know) subject to possible 
+// collection. Code in XPCJSRuntime watches for JS gc to happen and will do 
+// the final release on wrappers whose JSObjects get finalized. Note that 
+// even after tranistioning to this refcount-of-one state callers might do 
+// an addref and cause us to re-root the JSObject and continue on more normally.
 
 nsrefcnt
 nsXPCWrappedJS::AddRef(void)
@@ -102,8 +119,15 @@ nsXPCWrappedJS::AddRef(void)
     NS_PRECONDITION(mRoot, "bad root");
     nsrefcnt cnt = (nsrefcnt) PR_AtomicIncrement((PRInt32*)&mRefCnt);
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
-    if(1 == cnt && mRoot && mRoot != this)
-        NS_ADDREF(mRoot);
+    
+    if(2 == cnt && IsValid())
+    {
+        AutoPushCompatibleJSContext 
+                autoContext(mClass->GetRuntime()->GetJSRuntime());
+        JSContext* cx = autoContext.GetJSContext();
+        if(cx)
+            JS_AddNamedRoot(cx, &mJSObj, "nsXPCWrappedJS::mJSObj");
+    }
 
     return cnt;
 }
@@ -118,19 +142,29 @@ nsXPCWrappedJS::Release(void)
     NS_ASSERTION(IsValid(), "post xpconnect shutdown call of nsXPCWrappedJS::Release");
 #endif
 
+do_decrement:
+
     nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
     NS_LOG_RELEASE(this, cnt, "nsXPCWrappedJS");
+
     if(0 == cnt)
     {
-        if(mRoot == this)
-        {
-            NS_DELETEXPCOM(this);   // cascaded delete
-        }
-        else
-        {
-            mRoot->Release();
-        }
+        NS_DELETEXPCOM(this);   // also unlinks us from chain
         return 0;
+    }
+    if(1 == cnt)
+    {
+        if(IsValid())
+        {
+            XPCJSRuntime* rt = mClass->GetRuntime();
+            if(rt)
+                JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
+        }
+
+        // If we are not being used from a weak reference, then this extra
+        // ref is not needed and we can let ourself be deleted.
+        if(!mRoot->HasWeakReferences())
+            goto do_decrement;
     }
     return cnt;
 }
@@ -275,41 +309,60 @@ nsXPCWrappedJS::nsXPCWrappedJS(XPCContext* xpcc,
 #endif
 
     NS_INIT_REFCNT();
+    // intensionally do double addref - see Release().
+    NS_ADDREF_THIS();
     NS_ADDREF_THIS();
     NS_ADDREF(aClass);
     NS_IF_ADDREF(mOuter);
-    NS_ASSERTION(xpcc && xpcc->GetJSContext(), "bad context");
-    JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj,
-                    "nsXPCWrappedJS::mJSObj");
+
+    if(mRoot != this)
+        NS_ADDREF(mRoot);
+
 }
 
 nsXPCWrappedJS::~nsXPCWrappedJS()
 {
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
-    // Any destructors called after shutdown are just going to leak stuff.
-    if(IsValid())
+
+    if(mRoot != this)
     {
+        // unlink this wrapper
+        nsXPCWrappedJS* cur = mRoot;
+        while(1)
+        {
+            if(cur->mNext == this)
+            {
+                cur->mNext = mNext;
+                break;
+            }
+            cur = cur->mNext;
+            NS_ASSERTION(cur, "failed to find wrapper in its own chain");
+        }
+        // let the root go
+        NS_RELEASE(mRoot);
+    }
+    else
+    {
+        NS_ASSERTION(!mNext, "root wrapper with non-empty chain being deleted");
+    
+        // Let the nsWeakReference object (if present) know of our demise.    
+        ClearWeakReferences();
+
+        // remove this root wrapper from the map
         XPCJSRuntime* rt = nsXPConnect::GetRuntime();
         if(rt)
         {
-            if(mRoot == this)
+            JSObject2WrappedJSMap* map = rt->GetWrappedJSMap();
+            if(map)
             {
-                JSObject2WrappedJSMap* map = rt->GetWrappedJSMap();
-                if(map)
-                {
-                    nsAutoLock lock(rt->GetMapLock());  
-                    map->Remove(this);
-                }
+                nsAutoLock lock(rt->GetMapLock());  
+                map->Remove(this);
             }
-            JS_RemoveRootRT(rt->GetJSRuntime(), &mJSObj);
         }
-        NS_IF_RELEASE(mClass);
-        // XXX Should this moved out of the 'if' block? 
-        // XXX   OR... Should this called in SystemIsBeingShutDown?
-        NS_IF_RELEASE(mOuter);
     }
-    if(mNext)
-        NS_DELETEXPCOM(mNext);  // cascaded delete
+
+    NS_IF_RELEASE(mClass);
+    NS_IF_RELEASE(mOuter);
 }
 
 nsXPCWrappedJS*

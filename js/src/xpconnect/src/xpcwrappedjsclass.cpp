@@ -291,6 +291,26 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_OK;
     }
 
+    // We support nsISupportsWeakReference iff the root wrapped JSObject
+    // claims to support it in its QueryInterface implementation.
+    if(aIID.Equals(NS_GET_IID(nsISupportsWeakReference)))
+    {
+        // We only want to expose one implementation from our aggregate.
+        nsXPCWrappedJS* root = self->GetRootWrapper();
+        
+        // Fail if JSObject doesn't claim support for nsISupportsWeakReference
+        if(!root->IsValid() ||
+           !CallQueryInterfaceOnJSObject(root->GetJSObject(), aIID))
+        {
+            *aInstancePtr = nsnull;
+            return NS_NOINTERFACE;
+        }
+
+        NS_ADDREF(root);
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsISupportsWeakReference*,root);
+        return NS_OK;
+    }
+
     nsXPCWrappedJS* sibling;
 
     // Checks for any existing wrapper explicitly constructed for this iid.

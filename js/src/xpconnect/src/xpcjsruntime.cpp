@@ -55,6 +55,84 @@ const char* XPCJSRuntime::mStrings[] = {
 
 /***************************************************************************/
 
+// GCCallback calls are chained
+static JSGCCallback gOldJSGCCallback;
+
+// data holder class for the enumerator callback below
+struct JSDyingJSObjectData
+{
+    JSContext* cx;
+    nsVoidArray* array;
+};
+
+JS_STATIC_DLL_CALLBACK(intN)
+WrappedJSDyingJSObjectFinder(JSHashEntry *he, intN i, void *arg)
+{
+    JSDyingJSObjectData* data = (JSDyingJSObjectData*) arg;
+    nsXPCWrappedJS* wrapper = (nsXPCWrappedJS*)he->value;
+    NS_ASSERTION(wrapper, "found a null JS wrapper!");
+
+    // walk the wrapper chain and find any whose JSObject is to be finalized
+    while(wrapper)
+    {
+        if(wrapper->IsSubjectToFinalization())
+        {
+            if(JS_IsAboutToBeFinalized(data->cx, wrapper->GetJSObject()))
+                data->array->AppendElement(wrapper);
+        }    
+        wrapper = wrapper->GetNextWrapper();
+    }
+    return HT_ENUMERATE_NEXT;
+}
+
+
+// static 
+JSBool XPCJSRuntime::GCCallback(JSContext *cx, JSGCStatus status)
+{
+    if(status == JSGC_MARK_END || status == JSGC_END)
+    {
+        XPCJSRuntime* self = nsXPConnect::GetRuntime();
+        if(self)
+        {
+            nsVoidArray* array = &self->mWrappedJSToReleaseArray;
+
+            if(status == JSGC_MARK_END)
+            {
+                nsAutoLock lock(self->mMapLock); // lock the wrapper map
+                JSDyingJSObjectData data = {cx, array};
+
+                // Add any wrappers whose JSObjects are to be finalized to
+                // this array. Note that this is a nsVoidArray because
+                // we do not want to be changing the refcount of these wrappers.
+                // We add them to the array now and Release the array members
+                // later to avoid the posibility of doing any JS GCThing 
+                // allocations during the gc cycle.
+                self->mWrappedJSMap->Enumerate(WrappedJSDyingJSObjectFinder, 
+                                               &data);
+            }    
+            else // status == JSGC_END
+            {
+                // Release all the members whose JSObjects are now known
+                // to be dead.
+                for(PRInt32 i = array->Count() - 1; i >= 0; i--)
+                {
+                    nsXPCWrappedJS* wrapper = 
+                        NS_REINTERPRET_CAST(nsXPCWrappedJS*, 
+                                            array->ElementAt(i));
+                    
+                    NS_RELEASE(wrapper);
+                }
+                array->Clear();                        
+            }        
+        }
+    }
+
+    // always chain to old GCCallback if non-null.
+    return gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
+}
+
+/***************************************************************************/
+
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
 JS_STATIC_DLL_CALLBACK(JSHashNumber)
 hash_root(const void *key)
@@ -158,7 +236,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
    mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_SIZE)),
    mWrappedJSClassMap(IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_SIZE)),
    mWrappedNativeClassMap(IID2WrappedNativeClassMap::newMap(XPC_NATIVE_CLASS_MAP_SIZE)),
-   mMapLock(PR_NewLock())
+   mMapLock(PR_NewLock()),
+   mWrappedJSToReleaseArray()
 {
 
 #ifdef XPC_CHECK_WRAPPERS_AT_SHUTDOWN
@@ -176,6 +255,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect,
         NS_ADDREF(mJSRuntimeService);
         mJSRuntimeService->GetRuntime(&mJSRuntime);
     }
+
+    NS_ASSERTION(!gOldJSGCCallback, "XPCJSRuntime created more than once");
+    if(mJSRuntime)
+        gOldJSGCCallback = JS_SetGCCallbackRT(mJSRuntime, GCCallback);
 
     // Install a JavaScript 'debugger' keyword handler in debug builds only
 #ifdef DEBUG
