@@ -49,7 +49,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 static PRTime gElapsedTime;
-static int gKeepRunning = 1;
+static int gKeepRunning = 0;
 static nsIEventQueue* gEventQ = nsnull;
 
 class TestHTTPEventSink : public nsIHTTPEventSink
@@ -228,7 +228,7 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
                                  nsresult aStatus,
                                  const PRUnichar* aMsg)
 {
-  gKeepRunning = 0;
+  gKeepRunning -= 1;
   printf("\n+++ InputTestConsumer::OnStopBinding (status = %x) +++\n", aStatus);
   return NS_OK;
 }
@@ -372,6 +372,7 @@ main(int argc, char* argv[])
     for (i=1; i<argc; i++) {
         rv = StartLoadingURL(argv[i]);
         if (NS_FAILED(rv)) return rv;
+        gKeepRunning += 1;
     }
 
   // Enter the message pump to allow the URL load to proceed.
@@ -383,7 +384,7 @@ main(int argc, char* argv[])
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         } else {
-            gKeepRunning = FALSE;
+            gKeepRunning = 0;
     }
 #else
 #ifdef XP_MAC
