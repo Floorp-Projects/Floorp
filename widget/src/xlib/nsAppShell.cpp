@@ -682,6 +682,7 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
   mevent.isMeta = mMetaDown;
   PRUint32 eventType = 0;
   PRBool currentlyDragging = mDragging;
+  nsMouseScrollEvent scrollEvent;
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Button event for window 0x%lx button %d type %s\n",
                                        event->xany.window,
@@ -700,6 +701,25 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
     case 3:
       eventType = NS_MOUSE_RIGHT_BUTTON_DOWN;
       break;
+    case 4:
+    case 5:
+      scrollEvent.deltaLines = (event->xbutton.button == 4) ? -3 : 3;
+      scrollEvent.message = NS_MOUSE_SCROLL;
+      scrollEvent.widget = aWidget;
+      scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+
+      scrollEvent.point.x = event->xbutton.x;
+      scrollEvent.point.y = event->xbutton.y;
+
+      scrollEvent.isShift = mShiftDown;
+      scrollEvent.isControl = mCtrlDown;
+      scrollEvent.isAlt = mAltDown;
+      scrollEvent.isMeta = mMetaDown;
+      scrollEvent.time = PR_Now();
+      NS_IF_ADDREF(aWidget);
+      aWidget->DispatchWindowEvent(scrollEvent);
+      NS_IF_RELEASE(aWidget);
+      return;
     }
     break;
   case ButtonRelease:
@@ -714,6 +734,9 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
     case 3:
       eventType = NS_MOUSE_RIGHT_BUTTON_UP;
       break;
+    case 4:
+    case 5:
+      return;
     }
     break;
   }
