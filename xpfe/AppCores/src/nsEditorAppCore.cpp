@@ -327,7 +327,7 @@ nsEditorAppCore::SetContentWindow(nsIDOMWindow* aWin)
   mContentWindow = aWin;
   NS_ADDREF(aWin);
   mContentScriptContext = GetScriptContext(aWin);
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( mContentWindow );
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
   if (!globalObj) {
     return NS_ERROR_FAILURE;
   }
@@ -349,7 +349,7 @@ nsEditorAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
   if (!mContentWindow) {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( aWin );
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) {
     return NS_ERROR_FAILURE;
   }
