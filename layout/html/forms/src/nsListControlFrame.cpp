@@ -661,9 +661,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
   nsCOMPtr<nsIDOMNode> node;
   if (NS_SUCCEEDED(selectNSElement->Item(focusedIndex, getter_AddRefs(node)))) {
     nsCOMPtr<nsIDOMHTMLOptionElement> domOpt(do_QueryInterface(node));
-    if (domOpt) {
-      selectElement->IsOptionSelected(domOpt, &lastItemIsSelected);
-    }
+    domOpt->GetSelected(&lastItemIsSelected);
   }
 
   // set up back stop colors and then ask L&F service for the real colors

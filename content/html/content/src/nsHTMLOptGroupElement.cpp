@@ -50,6 +50,9 @@
 #include "nsIDOMHTMLSelectElement.h"
 
 
+/**
+ * The implementation of &lt;optgroup&gt;
+ */
 class nsHTMLOptGroupElement : public nsGenericHTMLContainerElement,
                               public nsIDOMHTMLOptGroupElement
 {
@@ -90,7 +93,11 @@ public:
 
 protected:
 
-  nsresult GetSelect(nsISelectElement **aSelectElement);
+  /**
+   * Get the select content element that contains this option
+   * @param aSelectElement the select element [OUT]
+   */
+  void GetSelect(nsISelectElement **aSelectElement);
 };
 
 nsresult
@@ -222,8 +229,7 @@ nsHTMLOptGroupElement::SizeOf(nsISizeOfHandler* aSizer,
 #endif
 
 
-// Get the select content element that contains this option
-nsresult
+void
 nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
 {
   *aSelectElement = nsnull;
@@ -239,8 +245,6 @@ nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
     prevParent = parent;
     prevParent->GetParent(*getter_AddRefs(parent));
   }
-
-  return NS_OK;
 }
 
 // nsIContent

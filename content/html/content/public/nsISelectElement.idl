@@ -56,31 +56,29 @@ interface nsISelectElement : nsISupports
 {
 
   /**
-   * To be called when stuff is added under a child of
-   * the select--but *before* they are actually added.
+   * To be called when stuff is added under a child of the select--but *before*
+   * they are actually added.
+   *
+   * @param aOptions the content that was added (usually just an option, but
+   *        could be an optgroup node with many child options)
+   * @param aParent the parent the options were added to (could be an optgroup)
+   * @param aContentIndex the index where the options are being added within the
+   *        parent (if the parent is an optgroup, the index within the optgroup)
    */
   [noscript] void willAddOptions(in nsIContent aOptions,
                                  in nsIContent aParent,
                                  in long aContentIndex);
 
   /**
-   * To be called when stuff is removed under a child of
-   * the select--but *before* they are actually removed.
+   * To be called when stuff is removed under a child of the select--but
+   * *before* they are actually removed.
+   *
+   * @param aParent the parent the option(s) are being removed from
+   * @param aContentIndex the index of the option(s) within the parent (if the
+   *        parent is an optgroup, the index within the optgroup)
    */
   [noscript] void willRemoveOptions(in nsIContent aParent,
                                     in long aContentIndex);
-
-  /**
-   * An OPTION element has been added to the SELECT's
-   * subtree.
-   */
-  [noscript] void addOption(in nsIContent aContent);
-
-  /**
-   * An OPTION element has been deleted from the SELECT's
-   * subtree.
-   */
-  [noscript] void removeOption(in nsIContent aContent);
 
   /**
    * Called when the parser is done adding child content
@@ -97,23 +95,29 @@ interface nsISelectElement : nsISupports
   boolean isDoneAddingChildren();
 
   /**
-   * Returns whether we're the option is selected
-   */
-  boolean isOptionSelected(in nsIDOMHTMLOptionElement aOption);
-
-  /**
-   * Sets an option selected or delselected
-   */
-  void setOptionSelected(in nsIDOMHTMLOptionElement aOption,
-                         in boolean aIsSelected);
-
-  /**
    * Checks whether an option is disabled (even if it's part of an optgroup)
+   *
+   * @param aIndex the index of the option to check
+   * @return whether the option is disabled
    */
   boolean isOptionDisabled(in long aIndex);
 
   /**
    * Sets multiple options (or just sets startIndex if select is single)
+   * and handles notifications and cleanup and everything under the sun.
+   * When this method exits, the select will be in a consistent state.  i.e.
+   * if you set the last option to false, it will select an option anyway.
+   *
+   * @param aStartIndex the first index to set
+   * @param aEndIndex the last index to set (set same as first index for one
+   *        option)
+   * @param aIsSelected whether to set the option(s) to true or false
+   * @param aClearAll whether to clear all other options (for example, if you
+   *        are normal-clicking on the current option)
+   * @param aSetDisabled whether it is permissible to set disabled options
+   *        (for JavaScript)
+   * @param aNotify whether to notify frames and such
+   * @return whether any options were actually changed
    */
   boolean setOptionsSelectedByIndex(in long aStartIndex,
                                     in long aEndIndex,
@@ -123,21 +127,16 @@ interface nsISelectElement : nsISupports
                                     in boolean aNotify);
 
   /**
-   * Called when an option is disabled
-   */
-  void onOptionDisabled(in nsIDOMHTMLOptionElement aOption);
-
-  /**
-   * Called to save/restore to/from pres. state
-   */
-  [noscript] void saveState();
-  [noscript] void restoreState(in nsIPresState aState);
-
-  /**
    * Finds the index of a given option element
+   *
+   * @param aOption the option to get the index of
+   * @param aStartIndex the index to start looking at
+   * @param aForward TRUE to look forward, FALSE to look backward
+   * @return the option index
    */
   long getOptionIndex(in nsIDOMHTMLOptionElement aOption,
                       in long aStartIndex, in boolean aForward);
 
+  /** Whether or not there are optgroups in this select */
   readonly attribute boolean hasOptGroups;
 };
