@@ -110,24 +110,24 @@ interface nsICacheEntryInfo : nsISupports
     readonly attribute long  fetchCount;
 
     /**
-     * Get the last time the cache entry was opened.
+     * Get the last time the cache entry was opened (in seconds since the Epoch).
      */
-    readonly attribute PRTime  lastFetched;
+    readonly attribute PRUint32  lastFetched;
 
     /**
-     * Get the last time the cache entry was modified.
+     * Get the last time the cache entry was modified (in seconds since the Epoch).
      */
-    readonly attribute PRTime  lastModified;
+    readonly attribute PRUint32  lastModified;
 
     /**
-     * Get the last time the cache entry was marked valid.
+     * Get the last time the cache entry was marked valid (in seconds since the Epoch).
      */
-    readonly attribute PRTime  lastValidated;
+    readonly attribute PRUint32  lastValidated;
 
     /**
-     * Get the expiration time of the cache entry.
+     * Get the expiration time of the cache entry (in seconds since the Epoch).
      */
-    readonly attribute PRTime  expirationTime;
+    readonly attribute PRUint32  expirationTime;
 
     /**
      * Get the cache entry data size.

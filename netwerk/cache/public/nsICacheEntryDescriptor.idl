@@ -36,9 +36,10 @@ interface nsIFile;
 interface nsICacheEntryDescriptor : nsICacheEntryInfo
 {
     /**
-     * Set the time at which the cache entry should be considered invalid.
+     * Set the time at which the cache entry should be considered invalid (in
+     * seconds since the Epoch).
      */
-    void setExpirationTime(in PRTime expirationTime);
+    void setExpirationTime(in PRUint32 expirationTime);
 
     /**
      * Set the cache entry data size.  This will fail if the cache entry

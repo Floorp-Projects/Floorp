@@ -570,27 +570,27 @@ NS_IMETHODIMP nsCacheEntryInfo::GetFetchCount(PRInt32 *aFetchCount)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryInfo::GetLastFetched(PRTime *aLastFetched)
+NS_IMETHODIMP nsCacheEntryInfo::GetLastFetched(PRUint32 *aLastFetched)
 {
-    *aLastFetched = ConvertSecondsToPRTime(mMetaDataFile.mLastFetched);
+    *aLastFetched = mMetaDataFile.mLastFetched;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryInfo::GetLastModified(PRTime *aLastModified)
+NS_IMETHODIMP nsCacheEntryInfo::GetLastModified(PRUint32 *aLastModified)
 {
-    *aLastModified = ConvertSecondsToPRTime(mMetaDataFile.mLastModified);
+    *aLastModified = mMetaDataFile.mLastModified;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryInfo::GetLastValidated(PRTime *aLastValidated)
+NS_IMETHODIMP nsCacheEntryInfo::GetLastValidated(PRUint32 *aLastValidated)
 {
-    *aLastValidated = ConvertSecondsToPRTime(mMetaDataFile.mLastValidated);
+    *aLastValidated = mMetaDataFile.mLastValidated;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsCacheEntryInfo::GetExpirationTime(PRTime *aExpirationTime)
+NS_IMETHODIMP nsCacheEntryInfo::GetExpirationTime(PRUint32 *aExpirationTime)
 {
-    *aExpirationTime = ConvertSecondsToPRTime(mMetaDataFile.mExpirationTime);
+    *aExpirationTime = mMetaDataFile.mExpirationTime;
     return NS_OK;
 }
 
@@ -1371,7 +1371,7 @@ nsresult nsDiskCacheDevice::scanDiskCacheEntries(nsISupportsArray ** result)
             newCacheSize += dataSize;
             
             // initially, just sort them by file modification time.
-            PRTime modTime, modTime1;
+            PRUint32 modTime, modTime1;
             entryInfo->GetLastModified(&modTime);
             PRUint32 count;
             entries->Count(&count);
@@ -1388,16 +1388,16 @@ nsresult nsDiskCacheDevice::scanDiskCacheEntries(nsISupportsArray ** result)
                 if (NS_FAILED(rv)) return rv;
                 info->GetLastModified(&modTime1);
                 if (low >= high) {
-                    if (LL_CMP(modTime, <=, modTime1))
+                    if (modTime <= modTime1)
                         rv = entries->InsertElementAt(entryInfo, middle);
                     else
                         rv = entries->InsertElementAt(entryInfo, middle + 1);
                     if (NS_FAILED(rv)) return rv;
                     break;
                 } else {
-                    if (LL_CMP(modTime, <, modTime1)) {
+                    if (modTime < modTime1) {
                         high = middle - 1;
-                    } else if (LL_CMP(modTime, >, modTime1)) {
+                    } else if (modTime > modTime1) {
                         low = middle + 1;
                     } else {
                         rv = entries->InsertElementAt(entryInfo, middle);
