@@ -2010,6 +2010,9 @@ nsHTMLEditRules::IsFirstNode(nsIDOMNode *aNode)
   // ok, so there are earlier children.  But are they editable???
   nsCOMPtr<nsIDOMNodeList>childList;
   nsCOMPtr<nsIDOMNode> child;
+
+  if (!parent) return PR_TRUE;
+
   parent->GetChildNodes(getter_AddRefs(childList));
   while (j < offset)
   {
