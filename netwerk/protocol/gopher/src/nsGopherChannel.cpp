@@ -36,9 +36,14 @@
 #include "nsITXTToHTMLConv.h"
 #include "nsIProgressEventSink.h"
 #include "nsNetUtil.h"
+#include "prlog.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gGopherLog;
+#endif
 
 #define BUFFER_SEG_SIZE (4*1024)
 #define BUFFER_MAX_SIZE (64*1024)
@@ -48,19 +53,28 @@ nsGopherChannel::nsGopherChannel()
     : mContentLength(-1),
       mActAsObserver(PR_TRUE),
       mType(-1),
-      mStatus(NS_OK)
+      mStatus(NS_OK),
+      mProxyPort(-1),
+      mProxyTransparent(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
 
-nsGopherChannel::~nsGopherChannel() {
+nsGopherChannel::~nsGopherChannel()
+{
+#ifdef PR_LOGGING
+    nsXPIDLCString spec;
+    mUrl->GetSpec(getter_Copies(spec));
+    PR_LOG(gGopherLog, PR_LOG_ALWAYS, ("~nsGopherChannel() for %s", spec.get()));
+#endif
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsGopherChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsGopherChannel,
                               nsIChannel,
                               nsIRequest,
                               nsIStreamListener,
-                              nsIStreamObserver);
+                              nsIStreamObserver,
+                              nsIProxy);
 
 nsresult
 nsGopherChannel::Init(nsIURI* uri)
@@ -103,22 +117,92 @@ nsGopherChannel::Init(nsIURI* uri)
         mSelector = nsUnescape(NS_CONST_CAST(char*,&buffer[2]));
     }
 
-    //printf("Host: mHost = %s, mPort = %d\n", mHost.get(), mPort);
-    //printf("Status: mType = %c, mSelector = %s\n", mType, mSelector.get());
+    PR_LOG(gGopherLog,
+           PR_LOG_DEBUG,
+           ("Host: mHost = %s, mPort = %d\n", mHost.get(), mPort));
+    PR_LOG(gGopherLog,
+           PR_LOG_DEBUG,
+           ("Status: mType = %c, mSelector = %s\n", mType, mSelector.get()));
 
+    return NS_OK;
+}
+
+nsresult
+nsGopherChannel::SetProxyChannel(nsIChannel *aChannel)
+{
+    mProxyChannel = aChannel;
     return NS_OK;
 }
 
 NS_METHOD
 nsGopherChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 {
-    nsGopherChannel* fc = new nsGopherChannel();
-    if (!fc)
+    nsGopherChannel* gc = new nsGopherChannel();
+    if (!gc)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(fc);
-    nsresult rv = fc->QueryInterface(aIID, aResult);
-    NS_RELEASE(fc);
+    NS_ADDREF(gc);
+    nsresult rv = gc->QueryInterface(aIID, aResult);
+    NS_RELEASE(gc);
     return rv;
+}
+
+// nsIProxy methods:
+NS_IMETHODIMP
+nsGopherChannel::GetProxyHost(char **aProxyHost)
+{
+    *aProxyHost = mProxyHost.ToNewCString();
+    if (!*aProxyHost) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGopherChannel::SetProxyHost(const char * aProxyHost)
+{
+    mProxyHost = aProxyHost;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGopherChannel::GetProxyPort(PRInt32 *aProxyPort)
+{
+    *aProxyPort = mProxyPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGopherChannel::SetProxyPort(PRInt32 aProxyPort)
+{
+    mProxyPort = aProxyPort;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGopherChannel::GetProxyType(char **aProxyType)
+{
+    *aProxyType = mProxyType.ToNewCString();
+    if (!*aProxyType) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGopherChannel::SetProxyType(const char * aProxyType)
+{
+    if (!nsCRT::strcasecmp(aProxyType, "socks")) {
+        mProxyTransparent = PR_TRUE;
+    } else {
+        mProxyTransparent = PR_FALSE;
+    }
+    mProxyType = aProxyType;
+    return NS_OK;
+}
+
+nsresult
+nsGopherChannel::GetUsingProxy(PRBool *aUsingProxy)
+{
+    if (!aUsingProxy)
+        return NS_ERROR_NULL_POINTER;
+    *aUsingProxy = (!mProxyHost.IsEmpty() && !mProxyTransparent);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,6 +211,8 @@ nsGopherChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 NS_IMETHODIMP
 nsGopherChannel::GetName(PRUnichar* *result)
 {
+    if (mProxyChannel)
+        return mProxyChannel->GetName(result);
     nsString name;
     name.AppendWithConversion(mHost);
     name.AppendWithConversion(":");
@@ -138,6 +224,8 @@ nsGopherChannel::GetName(PRUnichar* *result)
 NS_IMETHODIMP
 nsGopherChannel::IsPending(PRBool *result)
 {
+    if (mProxyChannel)
+        return mProxyChannel->IsPending(result);
     NS_NOTREACHED("nsGopherChannel::IsPending");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -152,19 +240,28 @@ nsGopherChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsGopherChannel::Cancel(nsresult status)
 {
+    PR_LOG(gGopherLog,
+           PR_LOG_DEBUG,
+           ("nsGopherChannel::Cancel() called [this=%x, status=%x]\n",
+            this,status));
+    
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
-    nsresult rv = NS_ERROR_FAILURE;
-
+ 
     mStatus = status;
-    if (mTransportRequest) {
-        rv = mTransportRequest->Cancel(status);
+    if (mProxyChannel)
+        return mProxyChannel->Cancel(status);
+    else if (mTransportRequest) {
+        return mTransportRequest->Cancel(status);
     }
-    return rv;
+
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsGopherChannel::Suspend(void)
 {
+    if (mProxyChannel)
+        return mProxyChannel->Suspend();   
     NS_NOTREACHED("nsGopherChannel::Suspend");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -172,6 +269,8 @@ nsGopherChannel::Suspend(void)
 NS_IMETHODIMP
 nsGopherChannel::Resume(void)
 {
+    if (mProxyChannel)
+        return mProxyChannel->Resume();  
     NS_NOTREACHED("nsGopherChannel::Resume");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -214,6 +313,9 @@ nsGopherChannel::Open(nsIInputStream **_retval)
 {
     nsresult rv = NS_OK;
 
+    if (mProxyChannel)
+        return mProxyChannel->Open(_retval);
+
     NS_WITH_SERVICE(nsISocketTransportService,
                     socketService,
                     kSocketTransportServiceCID,
@@ -239,7 +341,21 @@ nsGopherChannel::Open(nsIInputStream **_retval)
 NS_IMETHODIMP
 nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
-    nsresult rv = NS_OK;
+    PR_LOG(gGopherLog, PR_LOG_DEBUG, ("nsGopherChannel::AsyncOpen() called [this=%x]\n",
+                                      this));
+
+    mListener = aListener;
+    mResponseContext = ctxt;
+
+    nsresult rv;
+    
+    if (mLoadGroup) {
+        rv = mLoadGroup->AddRequest(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (mProxyChannel)
+        return mProxyChannel->AsyncOpen(this, ctxt);
 
     NS_WITH_SERVICE(nsISocketTransportService,
                     socketService,
@@ -259,15 +375,14 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     mTransport->SetNotificationCallbacks(mCallbacks,
                                          (mLoadAttributes & LOAD_BACKGROUND));    
     
-    mListener = aListener;
-    mResponseContext = ctxt;
-    
     return SendRequest(mTransport);
 }
 
 NS_IMETHODIMP
 nsGopherChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
 {
+    if (mProxyChannel)
+        mProxyChannel->GetLoadAttributes(aLoadAttributes);
     *aLoadAttributes = mLoadAttributes;
     return NS_OK;
 }
@@ -275,12 +390,18 @@ nsGopherChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
 NS_IMETHODIMP
 nsGopherChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
 {
+    if (mProxyChannel)
+        mProxyChannel->SetLoadAttributes(aLoadAttributes);
     mLoadAttributes = aLoadAttributes;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherChannel::GetContentType(char* *aContentType) {
+nsGopherChannel::GetContentType(char* *aContentType)
+{
+    if (mProxyChannel)
+        return mProxyChannel->GetContentType(aContentType);  
+
     if (!aContentType) return NS_ERROR_NULL_POINTER;
 
     switch(mType) {
@@ -306,7 +427,7 @@ nsGopherChannel::GetContentType(char* *aContentType) {
     case '6':
         *aContentType = nsCRT::strdup(APPLICATION_UUENCODE);
         break;
-    case '7': // search - unhandled yet
+    case '7': // search - returns a directory listing, not handled yet
         *aContentType = nsCRT::strdup(TEXT_HTML);
         break;
     case '8': // telnet - type doesn't make sense
@@ -412,8 +533,14 @@ nsGopherChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 
 // nsIStreamObserver methods
 NS_IMETHODIMP
-nsGopherChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) {
-    if (!mActAsObserver) {
+nsGopherChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
+{
+    PR_LOG(gGopherLog,
+           PR_LOG_DEBUG,
+           ("nsGopherChannel::OnStartRequest called [this=%x, aRequest=%x]\n",
+            this, aRequest));
+
+    if (!mActAsObserver || mProxyChannel) {
         // acting as a listener
         return mListener->OnStartRequest(this, aContext);
     } else {
@@ -427,25 +554,33 @@ NS_IMETHODIMP
 nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                                nsresult aStatus, const PRUnichar* aStatusArg)
 {
+    PR_LOG(gGopherLog,
+           PR_LOG_DEBUG,
+           ("nsGopherChannel::OnStopRequest called [this=%x, aRequest=%x, aStatus=%x]\n",
+            this,aRequest,aStatus));
+
     nsresult rv = NS_OK;
 
-    if (NS_FAILED(aStatus) || !mActAsObserver) {
-        if (NS_SUCCEEDED(rv) && mLoadGroup) {
-            rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
-        }
-        if (NS_FAILED(aStatus)) // let the original caller know
+    if (NS_FAILED(aStatus) || !mActAsObserver || mProxyChannel) {
+        if (NS_FAILED(aStatus) || mProxyChannel) // let the original caller know
             aContext=mResponseContext;
 
-        rv = mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
-        mListener = 0;
+        if (mListener) {
+            rv = mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        if (mLoadGroup) {
+            rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
+        }
+        
         mTransport = 0;
         return rv;
     } else {
         // at this point we know the request has been sent.
         // we're no longer acting as an observer.
-        
         mActAsObserver = PR_FALSE;
-        
+
         nsCOMPtr<nsIStreamListener> converterListener;
         
         NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService,
@@ -491,14 +626,16 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
 NS_IMETHODIMP
 nsGopherChannel::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                                  nsIInputStream *aInputStream,
-                                 PRUint32 aSourceOffset, PRUint32 aLength) {
+                                 PRUint32 aSourceOffset, PRUint32 aLength)
+{
     mContentLength = aLength;
     return mListener->OnDataAvailable(this, aContext, aInputStream,
                                       aSourceOffset, aLength);
 }
 
 nsresult
-nsGopherChannel::SendRequest(nsITransport* aTransport) {
+nsGopherChannel::SendRequest(nsITransport* aTransport)
+{
     nsresult rv = NS_OK;
     nsCOMPtr<nsISupports> result;
     nsCOMPtr<nsIInputStream> charstream;
@@ -517,7 +654,8 @@ nsGopherChannel::SendRequest(nsITransport* aTransport) {
     charstream = do_QueryInterface(result, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    //printf("Sending: %s\n", requestBuffer.GetBuffer());
+    PR_LOG(gGopherLog,PR_LOG_DEBUG,
+           ("Sending: %s\n", requestBuffer.get()));
 
     rv = NS_AsyncWriteFromStream(getter_AddRefs(mTransportRequest),
                                  aTransport, charstream,
