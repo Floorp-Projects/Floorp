@@ -1596,8 +1596,8 @@ char*
 PREF_NextChild(char *child_list, int *indx)
 {
 #if HAVE_STRTOK_R
-	char *nextstr;
-    char* child = strtok_r(&child_list[*indx], ";", nextstr);
+    char *nextstr;
+    char* child = strtok_r(&child_list[*indx], ";", &nextstr);
 #else
     char* child = strtok(&child_list[*indx], ";");
 #endif
@@ -1968,7 +1968,7 @@ pref_ErrorReporter(JSContext *cx, const char *message,
         "Please contact your administrator.");
 
 #if defined(XP_MAC)
-    // StandardAlert doesn't handle linefeeds. Use spaces to avoid garbage characters.
+    /* StandardAlert doesn't handle linefeeds. Use spaces to avoid garbage characters. */
     last = PR_sprintf_append(last, "  ");
 #else
     last = PR_sprintf_append(last, LINEBREAK LINEBREAK);
