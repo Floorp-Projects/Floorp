@@ -418,7 +418,7 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 
         // What if !pJSCX? 
 
-        nsCOMPtr<nsISecurityContext> jscontext = dont_AddRef(new nsCSecurityContext(principal));
+        nsCOMPtr<nsISecurityContext> jscontext = new nsCSecurityContext(principal);
         nsISecurityContext* jvcontext = NS_STATIC_CAST(nsISecurityContext*,pNSISecurityContext);
                                         // Should be NS_DYNAMIC_CAST, but no such define exists.
                                         // So for the sake of portability, we'll live 
