@@ -786,8 +786,6 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
         view->GetWidget(*getter_AddRefs(win));
         if (win)
           win->SetBackgroundColor(color->mBackgroundColor);
-        else 
-          NS_ASSERTION(win, "failed to get widget to set background color on");
         break;
       }
     }
@@ -1400,7 +1398,7 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
   return rv;
 }
 
-nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, nsPoint * aOrigin)
+nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, PRBool aWindowless, nsPoint * aOrigin)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
   NS_ENSURE_ARG_POINTER(aOrigin);
@@ -1410,6 +1408,29 @@ nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, n
   nsPoint origin(0,0);
 
   GetOffsetFromView(aPresContext, origin, &parentWithView);
+
+  // if it's windowless, let's make sure we have our origin set right
+  // it may need to be corrected, like after scrolling
+  if (aWindowless && parentWithView) {
+    nsPoint correction(0,0);
+    nsCOMPtr<nsIViewManager> parentVM;
+    parentWithView->GetViewManager(*getter_AddRefs(parentVM));
+
+    // Walk up all the views and add up their positions. This will give us our
+    // absolute position which is what we want to give the plugin
+    nsIView* theView = parentWithView;
+    while (theView) {
+      nsCOMPtr<nsIViewManager> vm;
+      theView->GetViewManager(*getter_AddRefs(vm));
+      if (vm != parentVM)
+        break;
+
+      theView->GetPosition(&correction.x, &correction.y);
+      origin += correction;
+      
+      theView->GetParent(theView);
+    }  
+  }
 
   float t2p;
   aPresContext->GetTwipsToPixels(&t2p);
@@ -1466,7 +1487,7 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
     return rv;
 
   nsPoint origin;
-  GetWindowOriginInPixels(aPresContext, &origin);
+  GetWindowOriginInPixels(aPresContext, windowless, &origin);
 
   window->x = origin.x;
   window->y = origin.y;
@@ -1688,6 +1709,15 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
           doupdatewindow = PR_TRUE;
         }
 
+        /*
+         * Layout now has an optimized way of painting. Now we always get
+         * a new drawing surface, sized to be just what's needed. Windowsless
+         * plugins need a transform applied to their origin so they paint
+         * in the right place. Since |SetWindow| is no longer being used
+         * to tell the plugin where it is, we dispatch a NPWindow through
+         * |HandleEvent| to tell the plugin when its window moved
+         */
+
         // Get the offset of the DC
         nsTransform2D* rcTransform;
         aRenderingContext.GetCurrentTransform(rcTransform);
@@ -1700,8 +1730,62 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
           doupdatewindow = PR_TRUE;
         }
 
-        if(doupdatewindow)
-          inst->SetWindow(window);
+        // if our location or visible area has changed, we need to tell the plugin
+        if(doupdatewindow) {
+#ifdef XP_WIN    // Windowless plugins on windows need a special event to update their location, see bug 135737
+
+          // first, lets find out how big the window is, in pixels
+          nsCOMPtr<nsIPresShell> shell;
+          nsCOMPtr<nsIViewManager> vm;
+          aPresContext->GetShell(getter_AddRefs(shell));
+          if (shell) {
+            shell->GetViewManager(getter_AddRefs(vm));
+            if (vm) {  
+              nsIView* view;
+              vm->GetRootView(view);
+              if (view) {
+                nsCOMPtr<nsIWidget> win;
+                view->GetWidget(*getter_AddRefs(win));
+                if (win) {
+                  nsRect visibleRect;
+                  win->GetBounds(visibleRect);         
+                    
+                  // next, get our plugin's rect so we can intersect it with the visible rect so we
+                  // can tell the plugin where and how much to paint
+                  GetWindowOriginInPixels(aPresContext, window->type, &origin);
+                  nsRect winlessRect = nsRect(origin, nsSize(window->width, window->height));
+                  winlessRect.IntersectRect(winlessRect, visibleRect);
+
+                  // now check our cached window and only update plugin if something has changed
+                  if (mWindowlessRect != winlessRect) {
+                    mWindowlessRect = winlessRect;
+
+                    WINDOWPOS winpos;
+                    memset(&winpos, 0, sizeof(winpos));
+                    winpos.x = mWindowlessRect.x;
+                    winpos.y = mWindowlessRect.y;
+                    winpos.cx = mWindowlessRect.width;
+                    winpos.cy = mWindowlessRect.height;
+
+                    // finally, update the plugin by sending it a WM_WINDOWPOSCHANGED event
+                    nsPluginEvent pluginEvent;
+                    pluginEvent.event = 0x0047;
+                    pluginEvent.wParam = 0;
+                    pluginEvent.lParam = (uint32)&winpos;
+                    PRBool eventHandled = PR_FALSE;
+
+                    inst->HandleEvent(&pluginEvent, &eventHandled);
+                    
+                    mInstanceOwner->ReleasePluginPort((nsPluginPort *)winpos.hwnd);
+                  }
+                }
+              }
+            }
+          }
+#endif
+
+          inst->SetWindow(window);        
+        }
 
         mInstanceOwner->Paint(aDirtyRect, hdc);
       }
