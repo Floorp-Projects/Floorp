@@ -117,7 +117,7 @@ struct JSRuntime {
 #endif
 };
 
-#ifdef va_start
+#ifdef JS_ARGUMENT_FORMATTER_DEFINED
 /*
  * Linked list mapping format strings for JS_{Convert,Push}Arguments{,VA} to
  * formatter functions.  Elements are sorted in non-increasing format string
