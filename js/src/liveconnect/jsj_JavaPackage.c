@@ -118,16 +118,12 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     const char *path;
     JNIEnv *jEnv;
 
-    /* Painful hack for pre_define_java_packages() */
-    if (quiet_resolve_failure)
-        return JS_FALSE;
-                
     package = (JavaPackage_Private *)JS_GetPrivate(cx, obj);
     if (!package)
         return JS_TRUE;
 
     if (!JSVAL_IS_STRING(id))
-    return JS_TRUE;
+        return JS_TRUE;
     subPath = JS_GetStringBytes(JSVAL_TO_STRING(id));
 
     /*
@@ -191,6 +187,11 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
            the exception type and make sure that it's NoClassDefFoundError */
         (*jEnv)->ExceptionClear(jEnv);
 
+        /* beard: this has to be done here, so built-in classes will be defined. */
+        /* Painful hack for pre_define_java_packages() */
+        if (quiet_resolve_failure)
+            return JS_FALSE;
+
         /*
          * If there's no class of the given name, then we must be referring to
          * a package.  However, don't allow bogus sub-packages of pre-defined
@@ -202,12 +203,6 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
             package = JS_GetPrivate(cx, obj);
             if (package->flags & PKG_SYSTEM) {
                 char *msg, *cp;
-
-#if 0
-                /* Painful hack for pre_define_java_packages() */
-                if (quiet_resolve_failure)
-                    return JS_FALSE;
-#endif
 
                 msg = PR_smprintf("No Java system package with name \"%s\" was identified "
                                   "and no Java class with that name exists either",
@@ -226,12 +221,6 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
                 return JS_FALSE;
             }
         }
-
-#if 0
-        /* Painful hack for pre_define_java_packages() */
-        if (quiet_resolve_failure)
-            return JS_FALSE;
-#endif
 
         if (!define_JavaPackage(cx, obj, subPath, newPath, 0)) {
             ok = JS_FALSE;
