@@ -59,6 +59,7 @@ Details\
 	\'a5	The bookmark sidebar has been replaced by an in-window bookmark organizer, allowing many more features and better management\
 	\'a5	Site "favicons" (small images specified by the web page that display in the bookmarks bar and menu) are removed when Camino crashes because Gecko invalidates the disk cache.\
 	\'a5	Activate type-ahead find by typing a "/" when the content area has focus. As you type, the nearest text matching the current find string will be highlighted. To find the next occurrence, use "Edit:Find again". To cancel type-ahead find, press Escape.\
+	\'a5	Even though there is a user interface for automatic bookmark checking, the backend code has been disabled. It may return once we get the kinks worked out.\
 \
 
 \f2\i Migrating from Camino 0.7\
@@ -88,6 +89,7 @@ Java\
 \f2\i Known issues
 \f1\i0 \
 \
+	\'a5	Images on some webpages (such as the rating stars on Amazon.com) render incorrectly when your display is set to thousands of colors. The workaround is to set your display to millions of colors (bug 239701).\
 	\'a5	Shockwave Director content displays at the wrong location in the window, if hardware rendering is enabled.\
 	\'a5	The Windows Media Player plugin is not compatible with Camino.\
 	\'a5	If you try to open Camino AppleScript dictionary, say from Script Editor, you\'d5ll get an error. To work around this, open the application package, and remove the \'d2Localized.rsrc\'d3 file in Contents/Resources/English.lproj. This will, however, prevent Shockwave Director content from loading so we recommend you do this on a copy of the application.\
