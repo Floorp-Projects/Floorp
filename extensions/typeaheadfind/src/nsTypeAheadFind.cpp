@@ -548,6 +548,40 @@ nsTypeAheadFind::HandleEvent(nsIDOMEvent* aEvent)
   else if (eventType.Equals(NS_LITERAL_STRING("popuphidden"))) {
     mIsMenuPopupActive = PR_FALSE;
   }
+  else if (eventType.Equals(NS_LITERAL_STRING("unload"))) {
+    // When document is unloaded, check to see if it's the 
+    // current typeahead doc. If it is, cancel find
+    // and reset member variables so we don't leak
+    nsCOMPtr<nsIDOMNSEvent> event(do_QueryInterface(aEvent));
+    NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMEventTarget> eventTarget;
+    event->GetOriginalTarget(getter_AddRefs(eventTarget));
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(eventTarget));
+    nsCOMPtr<nsIPresShell> focusedShell(do_QueryReferent(mFocusedWeakShell));
+    NS_ENSURE_TRUE(focusedShell && doc, NS_ERROR_FAILURE);
+
+    PRInt32 numShells = doc->GetNumberOfShells();
+    nsCOMPtr<nsIPresShell> shellToBeDestroyed;
+    PRBool cancelFind = PR_FALSE;
+
+    for (PRInt32 count = 0; count < numShells; count ++) {
+      doc->GetShellAt(count, getter_AddRefs(shellToBeDestroyed));
+      if (shellToBeDestroyed == focusedShell) {
+        cancelFind = PR_TRUE;
+        break;
+      }
+    }
+
+    if (cancelFind) {
+      RemoveDocListeners();
+      mSearchRange = do_CreateInstance(kRangeCID);
+      mStartPointRange = do_CreateInstance(kRangeCID);
+      mEndPointRange = do_CreateInstance(kRangeCID);
+      mFocusedWindow = nsnull;
+      CancelFind();
+    }
+  }
 
   return NS_OK;
 }
@@ -2296,6 +2330,10 @@ nsTypeAheadFind::RemoveWindowListeners(nsIDOMWindow *aDOMWin)
                                           genericEventListener, 
                                           PR_TRUE);
 
+  chromeEventHandler->RemoveEventListener(NS_LITERAL_STRING("unload"), 
+                                          genericEventListener, 
+                                          PR_TRUE);
+
   // Remove DOM Text listener for IME text events
   nsCOMPtr<nsIDOMEventReceiver> chromeEventReceiver = 
     do_QueryInterface(chromeEventHandler);
@@ -2342,6 +2380,10 @@ nsTypeAheadFind::AttachWindowListeners(nsIDOMWindow *aDOMWin)
                                        PR_TRUE);
   
   chromeEventHandler->AddEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), 
+                                       genericEventListener, 
+                                       PR_TRUE);
+
+  chromeEventHandler->AddEventListener(NS_LITERAL_STRING("unload"), 
                                        genericEventListener, 
                                        PR_TRUE);
 
