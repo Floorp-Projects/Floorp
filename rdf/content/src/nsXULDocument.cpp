@@ -2046,6 +2046,14 @@ nsXULDocument::SetDefaultStylesheets(nsIURI* aUrl)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsXULDocument::SetTitle(const PRUnichar *aTitle)
+{
+    NS_ASSERTION(0,"not implemented");
+    NS_NOTREACHED("nsXULDocument::SetTitle");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //----------------------------------------------------------------------
 //
 // nsIXULDocument interface

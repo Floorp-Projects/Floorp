@@ -24,10 +24,7 @@
 #define nsIXMLDocument_h___
 
 #include "nsISupports.h"
-#include "nsString.h"
-
-class nsIAtom;
-class nsICSSLoader;
+class nsIURI;
 
 #define NS_IXMLDOCUMENT_IID \
  { 0xa6cf90ca, 0x15b3, 0x11d2, \
@@ -41,6 +38,8 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IXMLDOCUMENT_IID; return iid; }
 
   NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl)=0;
+
+  NS_IMETHOD SetTitle(const PRUnichar *aTitle)=0;
 };
 
 #endif // nsIXMLDocument_h___

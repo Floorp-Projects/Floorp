@@ -33,6 +33,7 @@
 #include "nsIStreamLoader.h"
 #include "nsISupportsArray.h"
 #include "nsINodeInfo.h"
+#include "nsIDOMHTMLTextAreaElement.h"
 
 class nsIDocument;
 class nsIScriptObjectOwner;
@@ -178,6 +179,7 @@ protected:
   // XXX Special processing for HTML SCRIPT tags. We may need
   // something similar for STYLE.
   PRPackedBool mInScript;
+  PRPackedBool mInTitle;
   nsString mScriptText;
   PRUint32 mScriptLineNo;
 
@@ -187,7 +189,10 @@ protected:
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
   nsCOMPtr<nsITransformMediator> mXSLTransformMediator;
 
-  nsString           mRef; // ScrollTo #ref
+  nsString mRef; // ScrollTo #ref
+  nsString mTitleText; 
+  nsString mTextareaText; 
+  nsCOMPtr<nsIDOMHTMLTextAreaElement> mTextAreaElement;
 };
 
 #endif // nsXMLContentSink_h__

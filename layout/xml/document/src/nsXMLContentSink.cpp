@@ -149,6 +149,7 @@ nsXMLContentSink::nsXMLContentSink()
   mTextSize = 0;
   mConstrainSize = PR_TRUE;
   mInScript = PR_FALSE;
+  mInTitle = PR_FALSE;
   mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
   mXSLTransformMediator = nsnull;
@@ -573,7 +574,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   tag.Assign(aNode.GetText());
   nameSpacePrefix = getter_AddRefs(CutNameSpacePrefix(tag));
-  nsCOMPtr<nsIAtom> tagAtom = dont_AddRef(NS_NewAtom(tag));
+  nsCOMPtr<nsIAtom> tagAtom(dont_AddRef(NS_NewAtom(tag)));
 
   // We must register namespace declarations found in the attribute list
   // of an element before creating the element. This is because the
@@ -591,13 +592,20 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   isHTML = IsHTMLNameSpace(nameSpaceID);
 
   if (isHTML) {
-    if (nsHTMLAtoms::script == tagAtom.get()) {
+    if (tagAtom.get() == nsHTMLAtoms::script) {
       result = ProcessStartSCRIPTTag(aNode);
+    } else if (tagAtom.get() == nsHTMLAtoms::title) {
+      if (mTitleText.IsEmpty())
+        mInTitle = PR_TRUE; // The first title wins
     }
 
     nsCOMPtr<nsIHTMLContent> htmlContent;
     result = NS_CreateHTMLElement(getter_AddRefs(htmlContent), nodeInfo);
     content = do_QueryInterface(htmlContent);
+
+    if (tagAtom.get() == nsHTMLAtoms::textarea) {
+      mTextAreaElement = do_QueryInterface(htmlContent);
+    }
   }
   else {
     // The first step here is to see if someone has provided their
@@ -683,11 +691,26 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   FlushText();
 
   if (isHTML) {
-    nsIAtom* tagAtom = NS_NewAtom(tag);
-    if (nsHTMLAtoms::script == tagAtom) {
+    nsCOMPtr<nsIAtom> tagAtom(dont_AddRef(NS_NewAtom(tag)));
+
+    if (tagAtom.get() == nsHTMLAtoms::script) {
       result = ProcessEndSCRIPTTag(aNode);
+    } else if (tagAtom.get() == nsHTMLAtoms::title) {
+      if (mInTitle) { // The first title wins
+        nsCOMPtr<nsIXMLDocument> xmlDoc(do_QueryInterface(mDocument));
+        if (xmlDoc) {
+          mTitleText.CompressWhitespace();
+          xmlDoc->SetTitle(mTitleText.GetUnicode());
+        }        
+        mInTitle = PR_FALSE;
+      }
+    } else if (tagAtom.get() == nsHTMLAtoms::textarea) {
+      if (mTextAreaElement) {
+        mTextAreaElement->SetDefaultValue(mTextareaText);
+        mTextAreaElement = nsnull;
+        mTextareaText.Truncate();
+      }
     }
-    NS_RELEASE(tagAtom);
   }
 
   nsCOMPtr<nsIContent> content;
@@ -1306,6 +1329,10 @@ nsXMLContentSink::AddText(const nsAReadableString& aString)
 
   if (mInScript) {
     mScriptText.Append(aString);
+  } else if (mInTitle) {
+    mTitleText.Append(aString);
+  } else if (mTextAreaElement) {
+    mTextareaText.Append(aString);
   }
 
   // Create buffer when we first need it

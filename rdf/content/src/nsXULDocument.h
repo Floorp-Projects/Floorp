@@ -284,6 +284,7 @@ public:
 
     // nsIXMLDocument interface
     NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
+    NS_IMETHOD SetTitle(const PRUnichar *aTitle);
 
     // nsIXULDocument interface
     NS_IMETHOD AddElementForID(const nsAReadableString& aID, nsIContent* aElement);
