@@ -32,11 +32,11 @@ function go( msg )
 		var theFile = parent.parent.globals.getAcctSetupFilename( self );
 		var intlFlag = parent.parent.globals.GetNameValuePair( theFile, "Mode Selection", "IntlMode" );
 		intlFlag = intlFlag.toLowerCase();
-		var theRegFile = parent.parent.globals.GetNameValuePair( theFile, "New Acct Mode", "RegServer" );
+		var theRegFile = parent.parent.globals.GetNameValuePair( theFile, "New Acct Mode", "CompServer" );
 		
 		if ( theRegFile != null && theRegFile != "" )
 		{
-			parent.parent.globals.document.vars.regServer.value = theRegFile;
+			parent.parent.globals.document.vars.compServer.value = theRegFile;
 		}
 		else
 		{
@@ -48,7 +48,7 @@ function go( msg )
 			{
 				if ( theList.length > 1 )
 				{
-					if ( document.forms[ 0 ].regServerList.selectedIndex < 0 )
+					if ( document.forms[ 0 ].compServerList.selectedIndex < 0 )
 					{
 						alert( "Please select an Internet account server." );
 						return false;
@@ -59,14 +59,14 @@ function go( msg )
 						var file = parent.parent.globals.getConfigFolder( self ) + theList[ x ];
 						var name = parent.parent.globals.document.setupPlugin.GetNameValuePair( file, "Dial-In Configuration", "SiteName" );
 	
-						if ( name == document.forms[ 0 ].regServerList.options[ document.forms[ 0 ].regServerList.selectedIndex ].text )
+						if ( name == document.forms[ 0 ].compServerList.options[ document.forms[ 0 ].compServerList.selectedIndex ].text )
 						{
-							parent.parent.globals.document.vars.regServer.value = theList[ x ];
+							parent.parent.globals.document.vars.compServer.value = theList[ x ];
 							break;
 						}
 					}
 					
-					if ( parent.parent.globals.document.vars.regServer.value == "" )
+					if ( parent.parent.globals.document.vars.compServer.value == "" )
 					{
 						alert( "Internal problem locating appropriate registration server file." );
 						return false;
@@ -74,7 +74,7 @@ function go( msg )
 				}
 				else if ( theList.length == 1 )
 				{
-					parent.parent.globals.document.vars.regServer.value = theList[ 0 ];
+					parent.parent.globals.document.vars.compServer.value = theList[ 0 ];
 				}
 				else
 				{
@@ -136,7 +136,7 @@ function generateRegServerList()
 		{
 			if ( theList.length > 1 )	
 			{
-				document.writeln( "<TABLE CELLPADDING=2 CELLSPACING=0 ID='minspace'><TR><TD ALIGN=LEFT VALIGN=TOP HEIGHT=25><spacer type=vertical size=2><B>Select an Internet account server:</B></TD><TD ALIGN=LEFT VALIGN=TOP><FORM><SELECT NAME='regServerList'>");
+				document.writeln( "<TABLE CELLPADDING=2 CELLSPACING=0 ID='minspace'><TR><TD ALIGN=LEFT VALIGN=TOP HEIGHT=25><spacer type=vertical size=2><B>Select an Internet account server:</B></TD><TD ALIGN=LEFT VALIGN=TOP><FORM><SELECT NAME='compServerList'>");
 				for ( var x = 0; x < theList.length; x++ )
 				{
 					var file = parent.parent.globals.getConfigFolder( self ) + theList[ x ];
