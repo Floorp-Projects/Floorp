@@ -5878,8 +5878,10 @@ PresShell::WillCauseReflow()
 
 nsresult
 PresShell::DidCauseReflow()
-{    
-  mViewManager->CacheWidgetChanges(PR_FALSE);
+{
+  if (mViewManager) {
+    mViewManager->CacheWidgetChanges(PR_FALSE);
+  }
 
   if (!gAsyncReflowDuringDocLoad && mDocumentLoading) {
     FlushPendingNotifications(PR_FALSE);
