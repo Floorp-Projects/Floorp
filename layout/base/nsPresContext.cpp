@@ -41,7 +41,6 @@
 #include "nsILinkHandler.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsStyleSet.h"
-#include "nsIFrameManager.h"
 #include "nsImageLoader.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"

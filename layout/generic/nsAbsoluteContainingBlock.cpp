@@ -43,7 +43,6 @@
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
 #include "nsIPresContext.h"
-#include "nsIFrameManager.h"
 
 #ifdef DEBUG
 #include "nsBlockFrame.h"

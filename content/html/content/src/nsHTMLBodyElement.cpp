@@ -57,7 +57,6 @@
 #include "nsISupportsArray.h"
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
-#include "nsIFrameManager.h"
 #include "nsCOMPtr.h"
 #include "nsIView.h"
 #include "nsLayoutAtoms.h"

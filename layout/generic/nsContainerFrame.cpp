@@ -50,7 +50,7 @@
 #include "nsVoidArray.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
@@ -1120,26 +1120,14 @@ nsIFrame*
 nsContainerFrame::GetOverflowFrames(nsIPresContext* aPresContext,
                                     PRBool          aRemoveProperty) const
 {
-  nsIPresShell *presShell = aPresContext->GetPresShell();
+  PRUint32  options = 0;
 
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      PRUint32  options = 0;
-      void*     value;
-  
-      if (aRemoveProperty) {
-        options |= NS_IFRAME_MGR_REMOVE_PROP;
-      }
-      frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowProperty,
-                                     options, &value);
-      return (nsIFrame*)value;
-    }
+  if (aRemoveProperty) {
+    options |= NS_IFRAME_MGR_REMOVE_PROP;
   }
 
-  return nsnull;
+  return (nsIFrame*) aPresContext->FrameManager()->
+    GetFrameProperty(this, nsLayoutAtoms::overflowProperty, options);
 }
 
 // Destructor function for the overflow frame property
@@ -1160,22 +1148,12 @@ nsresult
 nsContainerFrame::SetOverflowFrames(nsIPresContext* aPresContext,
                                     nsIFrame*       aOverflowFrames)
 {
-  nsresult                   rv = NS_ERROR_FAILURE;
+  nsresult rv = aPresContext->FrameManager()->
+    SetFrameProperty(this, nsLayoutAtoms::overflowProperty,
+                     aOverflowFrames, DestroyOverflowFrames);
 
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      rv = frameManager->SetFrameProperty(this, nsLayoutAtoms::overflowProperty,
-                                          aOverflowFrames, DestroyOverflowFrames);
-
-      // Verify that we didn't overwrite an existing overflow list
-      NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN,
-                   "existing overflow list");
-    }
-  }
+  // Verify that we didn't overwrite an existing overflow list
+  NS_ASSERTION(rv != NS_IFRAME_MGR_PROP_OVERWRITTEN, "existing overflow list");
 
   return rv;
 }

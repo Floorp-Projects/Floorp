@@ -57,7 +57,7 @@
 #include "prlog.h"
 #include "prprf.h"
 #include <stdarg.h>
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsCSSRendering.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessible.h"
@@ -2287,10 +2287,10 @@ nsIFrame::GetView() const
     return nsnull;
 
   // Check for a property on the frame
-  void* value;
-  nsresult rv = GetPresContext()->GetFrameManager()->
-    GetFrameProperty(NS_CONST_CAST(nsIFrame*, this),
-                     nsLayoutAtoms::viewProperty, 0, &value);
+  nsresult rv;
+  void* value = GetPresContext()->FrameManager()->
+    GetFrameProperty(this, nsLayoutAtoms::viewProperty, 0, &rv);
+
   NS_ENSURE_SUCCESS(rv, nsnull);
   NS_ASSERTION(value, "frame state bit was set but frame has no view");
   return NS_STATIC_CAST(nsIView*, value);
@@ -2309,7 +2309,7 @@ nsIFrame::SetView(nsIView* aView)
     aView->SetClientData(this);
 
     // Set a property on the frame
-    nsresult rv = GetPresContext()->GetFrameManager()->
+    nsresult rv = GetPresContext()->FrameManager()->
       SetFrameProperty(this, nsLayoutAtoms::viewProperty, aView, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3694,22 +3694,11 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         {
           //if we are searching for a frame that is not in flow we will not find it. 
           //we must instead look for its placeholder
-          nsIPresShell *presShell = aPresContext->GetPresShell();
-  
-          if (presShell) 
-          {
-            nsCOMPtr<nsIFrameManager>  frameManager;
-            presShell->GetFrameManager(getter_AddRefs(frameManager));
-    
-            if (frameManager) 
-            {
-              result = frameManager->GetPlaceholderFrameFor(thisBlock, &thisBlock);
-              if (!thisBlock)
-                return NS_ERROR_FAILURE;
-              if (NS_FAILED(result))
-                return result;
-            }
-          }
+          thisBlock =
+            aPresContext->FrameManager()->GetPlaceholderFrameFor(thisBlock);
+
+          if (!thisBlock)
+            return NS_ERROR_FAILURE;
         }
 
         result = iter->FindLineContaining(thisBlock, &thisLine);
@@ -4249,30 +4238,23 @@ nsFrame::GetOverflowAreaProperty(nsIPresContext* aPresContext,
   if (!((GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) || aCreateIfNecessary)) {
     return nsnull;
   }
-  nsIPresShell *presShell = aPresContext->GetPresShell();
 
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      void* value;
-  
-      frameManager->GetFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowAreaProperty,
-                                     0, &value);
-      if (value) {
-        return (nsRect*)value;  // the property already exists
+  nsFrameManager *frameManager = aPresContext->FrameManager();
 
-      } else if (aCreateIfNecessary) {
-        // The property isn't set yet, so allocate a new rect, set the property,
-        // and return the newly allocated rect
-        nsRect*  overflow = new nsRect(0, 0, 0, 0);
+  void *value =
+    frameManager->GetFrameProperty(this, nsLayoutAtoms::overflowAreaProperty,
+                                   0);
 
-        frameManager->SetFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowAreaProperty,
-                                       overflow, DestroyRectFunc);
-        return overflow;
-      }
-    }
+  if (value) {
+    return (nsRect*)value;  // the property already exists
+  } else if (aCreateIfNecessary) {
+    // The property isn't set yet, so allocate a new rect, set the property,
+    // and return the newly allocated rect
+    nsRect*  overflow = new nsRect(0, 0, 0, 0);
+
+    frameManager->SetFrameProperty(this, nsLayoutAtoms::overflowAreaProperty,
+                                   overflow, DestroyRectFunc);
+    return overflow;
   }
 
   return nsnull;
@@ -4296,14 +4278,8 @@ nsFrame::StoreOverflow(nsIPresContext*      aPresContext,
   else {
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
       // remove the previously stored overflow area 
-      nsIPresShell *presShell = aPresContext->GetPresShell();
-      if (presShell) {
-        nsCOMPtr<nsIFrameManager>  frameManager;
-        presShell->GetFrameManager(getter_AddRefs(frameManager));
-        if (frameManager) {
-          frameManager->RemoveFrameProperty((nsIFrame*)this, nsLayoutAtoms::overflowAreaProperty);
-        }
-      }
+      aPresContext->FrameManager()->
+        RemoveFrameProperty(this, nsLayoutAtoms::overflowAreaProperty);
     }
     mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
   }   
@@ -4363,13 +4339,11 @@ GetIBSpecialSibling(nsIPresContext* aPresContext,
    * property, which is only set on the anonymous block frames we're
    * interested in.
    */
-  nsCOMPtr<nsIFrameManager> frameManager;
-  aPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
-  nsIFrame *specialSibling;
-  nsresult rv =
-    frameManager->GetFrameProperty(aFrame,
-                                   nsLayoutAtoms::IBSplitSpecialPrevSibling,
-                                   0, (void**)&specialSibling);
+  nsresult rv;
+  nsIFrame *specialSibling = NS_STATIC_CAST(nsIFrame*,
+    aPresContext->FrameManager()->GetFrameProperty(aFrame,
+                            nsLayoutAtoms::IBSplitSpecialPrevSibling, 0, &rv));
+
   if (NS_OK == rv) {
     NS_ASSERTION(specialSibling, "null special sibling");
     *aSpecialSibling = specialSibling;
@@ -4467,10 +4441,8 @@ nsFrame::DoGetParentStyleContextFrame(nsIPresContext* aPresContext,
 
   // For out-of-flow frames, we must resolve underneath the
   // placeholder's parent.
-  nsCOMPtr<nsIFrameManager> frameManager;
-  aPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
-  nsIFrame *placeholder;
-  frameManager->GetPlaceholderFrameFor(this, &placeholder);
+  nsIFrame *placeholder =
+    aPresContext->FrameManager()->GetPlaceholderFrameFor(this);
   if (!placeholder) {
     NS_NOTREACHED("no placeholder frame for out-of-flow frame");
     GetCorrectedParent(aPresContext, this, aProviderFrame);
@@ -4594,18 +4566,9 @@ nsFrame::SetProperty(nsIPresContext*         aPresContext,
                      void*                   aPropValue,
                      NSFramePropertyDtorFunc aPropDtorFunc)
 {
-  nsresult               rv = NS_ERROR_FAILURE;
-
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      rv = frameManager->SetFrameProperty(this, aPropName, aPropValue, aPropDtorFunc);
-    }
-  }
-  return rv;
+  return aPresContext->FrameManager()->SetFrameProperty(this, aPropName,
+                                                        aPropValue,
+                                                        aPropDtorFunc);
 }
 
 void* 
@@ -4613,25 +4576,15 @@ nsFrame::GetProperty(nsIPresContext* aPresContext,
                      nsIAtom*        aPropName,
                      PRBool          aRemoveProp) const
 {
-  void* value = nsnull;
+  PRUint32 options = 0;
 
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager> frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      PRUint32 options = 0;
-  
-      if (aRemoveProp) {
-        options |= NS_IFRAME_MGR_REMOVE_PROP;
-      }
-      frameManager->GetFrameProperty((nsIFrame*)this, aPropName, options, &value);
-    }
+  if (aRemoveProp) {
+    options |= NS_IFRAME_MGR_REMOVE_PROP;
   }
 
-  return value;
+  
+  return aPresContext->FrameManager()->GetFrameProperty(this, aPropName,
+                                                        options);
 }
 
 /* virtual */ const nsStyleStruct*
@@ -4660,26 +4613,18 @@ NS_IMETHODIMP nsFrame::GetBidiProperty(nsIPresContext* aPresContext,
   }
 
   memset(aPropertyValue, 0, aSize);
-  void* val = nsnull;
+  void* val = aPresContext->FrameManager()->GetFrameProperty(this,
+                                                             aPropertyName, 0);
 
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager> frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager) );
-
-    if (frameManager) {
-      frameManager->GetFrameProperty( (nsIFrame*)this, aPropertyName, 0, &val);
-      if (val) {
-        // to fix bidi on big endian. We need to copy the right bytes from the void*, not the first aSize bytes.
+  if (val) {
+    // to fix bidi on big endian. We need to copy the right bytes from the void*, not the first aSize bytes.
 #if IS_BIG_ENDIAN
-        memcpy(aPropertyValue, ((char*)&val)+sizeof(void*) - aSize, aSize);
+    memcpy(aPropertyValue, ((char*)&val)+sizeof(void*) - aSize, aSize);
 #else
-        memcpy(aPropertyValue, &val, aSize);
+    memcpy(aPropertyValue, &val, aSize);
 #endif
-      }
-    }
   }
+
   return NS_OK;
 }
 
@@ -4687,17 +4632,9 @@ NS_IMETHODIMP nsFrame::SetBidiProperty(nsIPresContext* aPresContext,
                                   nsIAtom*        aPropertyName,
                                   void*           aPropertyValue) 
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  nsIPresShell *shell = aPresContext->GetPresShell();
-  if (shell) {
-    nsCOMPtr<nsIFrameManager> frameManager;
-    shell->GetFrameManager(getter_AddRefs(frameManager) );
-    if (frameManager) {
-      rv = frameManager->SetFrameProperty( (nsIFrame*) this, aPropertyName, aPropertyValue, nsnull);
-    }
-  }
-  return rv;
+  return aPresContext->FrameManager()->SetFrameProperty(this, aPropertyName,
+                                                        aPropertyValue,
+                                                        nsnull);
 }
 #endif // IBMBIDI
 

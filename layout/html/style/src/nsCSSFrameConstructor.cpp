@@ -90,7 +90,7 @@
 #include "nsTextFragment.h"
 #include "nsISupportsArray.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsLegendFrame.h"
@@ -368,19 +368,21 @@ IsFrameSpecial(nsIFrame* aFrame)
 }
 
 static void
-GetSpecialSibling(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** aResult)
+GetSpecialSibling(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** aResult)
 {
   // We only store the "special sibling" annotation with the first
   // frame in the flow. Walk back to find that frame now.
   aFrame = aFrame->GetFirstInFlow();
 
-  void* value;
-  aFrameManager->GetFrameProperty(aFrame, nsLayoutAtoms::IBSplitSpecialSibling, 0, &value);
+  void* value =
+    aFrameManager->GetFrameProperty(aFrame,
+                                    nsLayoutAtoms::IBSplitSpecialSibling, 0);
+
   *aResult = NS_STATIC_CAST(nsIFrame*, value);
 }
 
 static nsIFrame*
-GetLastSpecialSibling(nsIFrameManager* aFrameManager, nsIFrame* aFrame)
+GetLastSpecialSibling(nsFrameManager* aFrameManager, nsIFrame* aFrame)
 {
   for (nsIFrame *frame = aFrame, *next; ; frame = next) {
     GetSpecialSibling(aFrameManager, frame, &next);
@@ -394,7 +396,7 @@ GetLastSpecialSibling(nsIFrameManager* aFrameManager, nsIFrame* aFrame)
 // Get the frame's next-in-flow, or, if it doesn't have one,
 // its special sibling.
 static nsIFrame*
-GetNifOrSpecialSibling(nsIFrameManager *aFrameManager, nsIFrame *aFrame)
+GetNifOrSpecialSibling(nsFrameManager *aFrameManager, nsIFrame *aFrame)
 {
   nsIFrame *result;
   aFrame->GetNextInFlow(&result);
@@ -407,7 +409,7 @@ GetNifOrSpecialSibling(nsIFrameManager *aFrameManager, nsIFrame *aFrame)
 }
 
 static void
-SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aSpecialSibling)
+SetFrameIsSpecial(nsFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aSpecialSibling)
 {
   NS_PRECONDITION(aFrameManager && aFrame, "bad args!");
 
@@ -555,7 +557,7 @@ FindLastBlock(nsIPresContext* aPresContext, nsIFrame* aKid)
  */
 inline void
 MarkIBSpecialPrevSibling(nsIPresContext* aPresContext,
-                         nsIFrameManager *aFrameManager,
+                         nsFrameManager *aFrameManager,
                          nsIFrame *aAnonymousFrame,
                          nsIFrame *aSpecialParent)
 {
@@ -737,7 +739,7 @@ private:
 class nsFrameConstructorState {
 public:
   nsCOMPtr<nsIPresShell>    mPresShell;
-  nsCOMPtr<nsIFrameManager> mFrameManager;
+  nsFrameManager           *mFrameManager;
 
   // Containing block information for out-of-flow frammes
   nsAbsoluteItems           mFixedItems;
@@ -789,7 +791,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresCon
     mPseudoFrames()
 {
   mPresShell = aPresContext->PresShell();
-  mPresShell->GetFrameManager(getter_AddRefs(mFrameManager));
+  mFrameManager = mPresShell->FrameManager();
 }
 
 nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresContext,
@@ -804,7 +806,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresContext*        aPresCon
     mPseudoFrames()
 {
   mPresShell = aPresContext->PresShell();
-  mPresShell->GetFrameManager(getter_AddRefs(mFrameManager));
+  mFrameManager = mPresShell->FrameManager();
   nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
   if (docShell) 
@@ -1038,8 +1040,8 @@ MoveChildrenTo(nsIPresContext*          aPresContext,
     // anonymous block frame, but oddly they aren't -- need to
     // investigate that...)
     if (aNewParentSC)
-      aPresContext->GetFrameManager()->ReParentStyleContext(aFrameList,
-                                                            aNewParentSC);
+      aPresContext->FrameManager()->ReParentStyleContext(aFrameList,
+                                                         aNewParentSC);
 #endif
 
     aFrameList = aFrameList->GetNextSibling();
@@ -2758,7 +2760,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShel
   InitAndRestoreFrame(aPresContext, aState, aContent, parentFrame, aStyleContext, nsnull, aNewFrame);
   // if the parent frame was anonymous then reparent the style context
   if (aIsPseudoParent) {
-    aPresContext->GetFrameManager()->
+    aPresContext->FrameManager()->
       ReParentStyleContext(aNewFrame, parentFrame->GetStyleContext());
   }
 
@@ -3901,7 +3903,7 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell,
 nsresult
 nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell, 
                                                  nsIPresContext*  aPresContext,
-                                                 nsIFrameManager* aFrameManager,
+                                                 nsFrameManager*  aFrameManager,
                                                  nsIContent*      aContent,
                                                  nsIFrame*        aFrame,
                                                  nsStyleContext*  aStyleContext,
@@ -5519,8 +5521,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::defaultz, defaultTooltip);
           if (defaultTooltip.EqualsIgnoreCase("true")) {
             // Locate the root frame and tell it about the tooltip.
-            nsIFrame* rootFrame = nsnull;
-            aState.mFrameManager->GetRootFrame(&rootFrame);
+            nsIFrame* rootFrame = aState.mFrameManager->GetRootFrame();
             if (rootFrame)
               rootFrame = rootFrame->GetFirstChild(nsnull);
             nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
@@ -5629,8 +5630,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       else if (isPopup) {
         // Locate the root popup set and add ourselves to the popup set's list
         // of popup frames.
-        nsIFrame* rootFrame;
-        aState.mFrameManager->GetRootFrame(&rootFrame);
+        nsIFrame* rootFrame = aState.mFrameManager->GetRootFrame();
         if (rootFrame)
           rootFrame = rootFrame->GetFirstChild(nsnull);
         nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
@@ -5666,8 +5666,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltip, value) !=
         NS_CONTENT_ATTR_NOT_THERE)
   {
-    nsIFrame* rootFrame = nsnull;
-    aState.mFrameManager->GetRootFrame(&rootFrame);
+    nsIFrame* rootFrame = aState.mFrameManager->GetRootFrame();
     if (rootFrame)
       rootFrame = rootFrame->GetFirstChild(nsnull);
     nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
@@ -7141,11 +7140,11 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
 
       nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                     nsnull, nsnull, mTempFrameTreeState);
-      nsIFrame* docElementFrame;
-        
-      // Get the frame that corresponds to the document element
-      state.mFrameManager->GetPrimaryFrameFor(rootContent, &docElementFrame);
 
+      // Get the frame that corresponds to the document element
+      nsIFrame* docElementFrame =
+        state.mFrameManager->GetPrimaryFrameFor(rootContent);
+        
       // Clear the hash tables that map from content to frame and out-of-flow
       // frame to placeholder frame
       state.mFrameManager->ClearPrimaryFrameMap();
@@ -7406,7 +7405,7 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsIPresContext* aPresContext,
 nsresult
 nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
                                     nsIPresShell*    aPresShell,
-                                    nsIFrameManager* aFrameManager,
+                                    nsFrameManager*  aFrameManager,
                                     nsIContent*      aContainer,
                                     nsIFrame*        aParentFrame,
                                     nsIFrame*        aFrameList)
@@ -7534,9 +7533,8 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
       // The frame may be a special frame (a split inline frame that
       // contains a block).  Get the last part of that split.
       if (IsFrameSpecial(prevSibling)) {
-        nsCOMPtr<nsIFrameManager> fm;
-        aPresShell->GetFrameManager(getter_AddRefs(fm));
-        prevSibling = GetLastSpecialSibling(fm, prevSibling);
+        prevSibling = GetLastSpecialSibling(aPresShell->FrameManager(),
+                                            prevSibling);
       }
 
       // The frame may have a continuation. If so, we want the
@@ -7548,7 +7546,7 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
       const nsStyleDisplay* display = prevSibling->GetStyleDisplay();
 
       if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
-        nsIFrame* placeholderFrame;
+        nsIFrame *placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
         prevSibling = placeholderFrame;
@@ -7731,9 +7729,8 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIPresShell*     aPresShell,
       // The frame may be a special frame (a split inline frame that
       // contains a block).  Get the last part of that split.
       if (IsFrameSpecial(prevSibling)) {
-        nsCOMPtr<nsIFrameManager> fm;
-        aPresShell->GetFrameManager(getter_AddRefs(fm));
-        prevSibling = GetLastSpecialSibling(fm, prevSibling);
+        prevSibling = GetLastSpecialSibling(aPresShell->FrameManager(),
+                                            prevSibling);
       }
 
       // The frame may have a continuation. Get the last-in-flow
@@ -8116,8 +8113,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 
     // Since we're appending, we'll walk to the last anonymous frame
     // that was created for the broken inline frame.
-    nsCOMPtr<nsIFrameManager> frameManager;
-    shell->GetFrameManager(getter_AddRefs(frameManager));
+    nsFrameManager *frameManager = shell->FrameManager();
 
     while (1) {
       nsIFrame* sibling;
@@ -8364,11 +8360,8 @@ nsCSSFrameConstructor::AddDummyFrameToSelect(nsIPresContext*  aPresContext,
           if (aChildItems) {
             aChildItems->AddChild(generatedFrame);
           } else {
-            nsCOMPtr<nsIFrameManager> frameManager;
-            aPresShell->GetFrameManager(getter_AddRefs(frameManager));
-            if (frameManager) {
-              frameManager->AppendFrames(aParentFrame, nsnull, generatedFrame);
-            }
+            aPresShell->FrameManager()->AppendFrames(aParentFrame, nsnull,
+                                                     generatedFrame);
           }
 
           listFrame->SetDummyFrame(generatedFrame);
@@ -8385,7 +8378,7 @@ nsCSSFrameConstructor::AddDummyFrameToSelect(nsIPresContext*  aPresContext,
 static nsresult
 DeletingFrameSubtree(nsIPresContext*  aPresContext,
                      nsIPresShell*    aPresShell,
-                     nsIFrameManager* aFrameManager,
+                     nsFrameManager*  aFrameManager,
                      nsIFrame*        aFrame);
 
 nsresult
@@ -8416,8 +8409,7 @@ nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
           // get the child's parent frame (which ought to be the list frame)
           nsIFrame* parentFrame = dummyFrame->GetParent();
 
-          nsCOMPtr<nsIFrameManager> frameManager;
-          aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+          nsFrameManager *frameManager = aPresShell->FrameManager();
           DeletingFrameSubtree(aPresContext, aPresShell, frameManager,
                                dummyFrame);
           frameManager->RemoveFrame(parentFrame, nsnull, dummyFrame);
@@ -9021,7 +9013,7 @@ nsCSSFrameConstructor::ContentReplaced(nsIPresContext* aPresContext,
 static nsresult
 DoDeletingFrameSubtree(nsIPresContext*  aPresContext,
                        nsIPresShell*    aPresShell,
-                       nsIFrameManager* aFrameManager,
+                       nsFrameManager*  aFrameManager,
                        nsVoidArray&     aDestroyQueue,
                        nsIFrame*        aRemovedFrame,
                        nsIFrame*        aFrame)
@@ -9095,7 +9087,7 @@ DoDeletingFrameSubtree(nsIPresContext*  aPresContext,
 static nsresult
 DeletingFrameSubtree(nsIPresContext*  aPresContext,
                      nsIPresShell*    aPresShell,
-                     nsIFrameManager* aFrameManager,
+                     nsFrameManager*  aFrameManager,
                      nsIFrame*        aFrame)
 {
   // If there's no frame manager it's probably because the pres shell is
@@ -9137,8 +9129,7 @@ DeletingFrameSubtree(nsIPresContext*  aPresContext,
       if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
         // Locate the root popup set and remove ourselves from the popup set's list
         // of popup frames.
-        nsIFrame* rootFrame;
-        aFrameManager->GetRootFrame(&rootFrame);
+        nsIFrame* rootFrame = aFrameManager->GetRootFrame();
         if (rootFrame)
           rootFrame = rootFrame->GetFirstChild(nsnull);
         nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
@@ -9181,13 +9172,12 @@ nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIPresContext* aPresContex
                                                      nsILayoutHistoryState* aFrameState)
 {
   nsIPresShell *presShell = aPresContext->PresShell();
-  nsCOMPtr<nsIFrameManager> frameManager;
-  presShell->GetFrameManager(getter_AddRefs(frameManager));
   
   // Save the frame tree's state before deleting it
   CaptureStateFor(aPresContext, aRemovedFrame, mTempFrameTreeState);
 
-  return DeletingFrameSubtree(aPresContext, presShell, frameManager, aRemovedFrame);
+  return DeletingFrameSubtree(aPresContext, presShell,
+                              presShell->FrameManager(), aRemovedFrame);
 }
 
 nsresult
@@ -9213,8 +9203,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 #endif
 
   nsIPresShell *shell = aPresContext->PresShell();
-  nsCOMPtr<nsIFrameManager> frameManager;
-  shell->GetFrameManager(getter_AddRefs(frameManager));
+  nsFrameManager *frameManager = shell->FrameManager();
   nsresult                  rv = NS_OK;
 
   // Find the child frame that maps the content
@@ -9360,130 +9349,128 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     nsPlaceholderFrame* placeholderFrame = nsnull;
     if (display->mDisplay == NS_STYLE_DISPLAY_POPUP)
       // Get the placeholder frame
-      frameManager->GetPlaceholderFrameFor(childFrame,
-                                           (nsIFrame**)&placeholderFrame);
-    if (placeholderFrame) {
-      // Remove the mapping from the frame to its placeholder
-      frameManager->UnregisterPlaceholderFrame(placeholderFrame);
+      placeholderFrame = frameManager->GetPlaceholderFrameFor(childFrame);
+      if (placeholderFrame) {
+        // Remove the mapping from the frame to its placeholder
+        frameManager->UnregisterPlaceholderFrame(placeholderFrame);
     
-      // Locate the root popup set and remove ourselves from the popup set's list
-      // of popup frames.
-      nsIFrame* rootFrame;
-      frameManager->GetRootFrame(&rootFrame);
-      if (rootFrame)
-        rootFrame = rootFrame->GetFirstChild(nsnull);
+        // Locate the root popup set and remove ourselves from the popup set's list
+        // of popup frames.
+        nsIFrame* rootFrame = frameManager->GetRootFrame();
+        if (rootFrame)
+          rootFrame = rootFrame->GetFirstChild(nsnull);
 #ifdef MOZ_XUL
-      nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
-      if (rootBox) {
-        nsIFrame* popupSetFrame;
-        rootBox->GetPopupSetFrame(&popupSetFrame);
-        if (popupSetFrame) {
-          nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
-          if (popupSet)
-            popupSet->RemovePopupFrame(childFrame);
+        nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
+        if (rootBox) {
+          nsIFrame* popupSetFrame;
+          rootBox->GetPopupSetFrame(&popupSetFrame);
+          if (popupSetFrame) {
+            nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
+            if (popupSet)
+              popupSet->RemovePopupFrame(childFrame);
+          }
+        }
+#endif
+
+        // Remove the placeholder frame first (XXX second for now) (so
+        // that it doesn't retain a dangling pointer to memory)
+        if (placeholderFrame) {
+          parentFrame = placeholderFrame->GetParent();
+          DeletingFrameSubtree(aPresContext, shell, frameManager, placeholderFrame);
+          frameManager->RemoveFrame(parentFrame, nsnull, placeholderFrame);
+          return NS_OK;
         }
       }
-#endif
-
-      // Remove the placeholder frame first (XXX second for now) (so
-      // that it doesn't retain a dangling pointer to memory)
-      if (placeholderFrame) {
-        parentFrame = placeholderFrame->GetParent();
-        DeletingFrameSubtree(aPresContext, shell, frameManager, placeholderFrame);
-        frameManager->RemoveFrame(parentFrame, nsnull, placeholderFrame);
-        return NS_OK;
-      }
-    }
-    else if (display->IsFloating()) {
+      else if (display->IsFloating()) {
 #ifdef NOISY_FIRST_LETTER
-      printf("  ==> child display is still floating!\n");
+        printf("  ==> child display is still floating!\n");
 #endif
-      // Get the placeholder frame
-      nsPlaceholderFrame* placeholderFrame;
-      frameManager->GetPlaceholderFrameFor(childFrame,
-                                           (nsIFrame**)&placeholderFrame);
+        // Get the placeholder frame
+        nsPlaceholderFrame* placeholderFrame =
+          frameManager->GetPlaceholderFrameFor(childFrame);
 
-      // Remove the mapping from the frame to its placeholder
-      if (placeholderFrame)
-        frameManager->UnregisterPlaceholderFrame(placeholderFrame);
+        // Remove the mapping from the frame to its placeholder
+        if (placeholderFrame)
+          frameManager->UnregisterPlaceholderFrame(placeholderFrame);
 
-      // Now we remove the floating frame
+        // Now we remove the floating frame
 
-      // XXX has to be done first for now: the blocks line list
-      // contains an array of pointers to the placeholder - we have to
-      // remove the float first (which gets rid of the lines
-      // reference to the placeholder and float) and then remove the
-      // placeholder
-      rv = frameManager->RemoveFrame(parentFrame,
-                                     nsLayoutAtoms::floatList, childFrame);
-
-      // Remove the placeholder frame first (XXX second for now) (so
-      // that it doesn't retain a dangling pointer to memory)
-      if (placeholderFrame) {
-        parentFrame = placeholderFrame->GetParent();
-        DeletingFrameSubtree(aPresContext, shell, frameManager, placeholderFrame);
+        // XXX has to be done first for now: the blocks line list
+        // contains an array of pointers to the placeholder - we have to
+        // remove the float first (which gets rid of the lines
+        // reference to the placeholder and float) and then remove the
+        // placeholder
         rv = frameManager->RemoveFrame(parentFrame,
-                                       nsnull, placeholderFrame);
+                                       nsLayoutAtoms::floatList, childFrame);
+
+        // Remove the placeholder frame first (XXX second for now) (so
+        // that it doesn't retain a dangling pointer to memory)
+        if (placeholderFrame) {
+          parentFrame = placeholderFrame->GetParent();
+          DeletingFrameSubtree(aPresContext, shell, frameManager, placeholderFrame);
+          rv = frameManager->RemoveFrame(parentFrame,
+                                         nsnull, placeholderFrame);
+        }
       }
-    }
-    // See if it's absolutely or fixed positioned
-    else if (display->IsAbsolutelyPositioned()) {
-      // Get the placeholder frame
-      nsPlaceholderFrame* placeholderFrame;
-      frameManager->GetPlaceholderFrameFor(childFrame,
-                                           (nsIFrame**)&placeholderFrame);
+      // See if it's absolutely or fixed positioned
+      else if (display->IsAbsolutelyPositioned()) {
+        // Get the placeholder frame
+        nsPlaceholderFrame* placeholderFrame =
+          frameManager->GetPlaceholderFrameFor(childFrame);
 
-      // Remove the mapping from the frame to its placeholder
-      if (placeholderFrame)
-        frameManager->UnregisterPlaceholderFrame(placeholderFrame);
+        // Remove the mapping from the frame to its placeholder
+        if (placeholderFrame)
+          frameManager->UnregisterPlaceholderFrame(placeholderFrame);
 
-      // Generate two notifications. First for the absolutely positioned
-      // frame
-      rv = frameManager->RemoveFrame(parentFrame,
-        (NS_STYLE_POSITION_FIXED == display->mPosition) ?
-        nsLayoutAtoms::fixedList : nsLayoutAtoms::absoluteList, childFrame);
+        // Generate two notifications. First for the absolutely positioned
+        // frame
+        rv = frameManager->RemoveFrame(parentFrame,
+           (NS_STYLE_POSITION_FIXED == display->mPosition) ?
+           nsLayoutAtoms::fixedList : nsLayoutAtoms::absoluteList, childFrame);
 
-      // Now the placeholder frame
-      if (placeholderFrame) {
-        parentFrame = placeholderFrame->GetParent();
-        rv = frameManager->RemoveFrame(parentFrame, nsnull, placeholderFrame);
+        // Now the placeholder frame
+        if (placeholderFrame) {
+          parentFrame = placeholderFrame->GetParent();
+          rv = frameManager->RemoveFrame(parentFrame, nsnull,
+                                         placeholderFrame);
+        }
+
+      } else {
+        // Notify the parent frame that it should delete the frame
+        // check for a table caption which goes on an additional child list with a different parent
+        nsIFrame* outerTableFrame; 
+        if (GetCaptionAdjustedParent(parentFrame, childFrame, &outerTableFrame)) {
+          rv = frameManager->RemoveFrame(outerTableFrame,
+                                         nsLayoutAtoms::captionList,
+                                         childFrame);
+        }
+        else {
+          rv = frameManager->RemoveFrame(insertionPoint, nsnull, childFrame);
+        }
       }
 
-    } else {
-      // Notify the parent frame that it should delete the frame
-      // check for a table caption which goes on an additional child list with a different parent
-      nsIFrame* outerTableFrame; 
-      if (GetCaptionAdjustedParent(parentFrame, childFrame, &outerTableFrame)) {
-        rv = frameManager->RemoveFrame(outerTableFrame,
-                                       nsLayoutAtoms::captionList, childFrame);
+      if (mInitialContainingBlock == childFrame) {
+        mInitialContainingBlock = nsnull;
       }
-      else {
-        rv = frameManager->RemoveFrame(insertionPoint, nsnull, childFrame);
+
+      if (haveFLS && mInitialContainingBlock) {
+        nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
+                                      GetAbsoluteContainingBlock(aPresContext,
+                                                                 parentFrame),
+                                      GetFloatContainingBlock(aPresContext,
+                                                              parentFrame));
+        RecoverLetterFrames(shell, aPresContext, state, containingBlock);
       }
-    }
-
-    if (mInitialContainingBlock == childFrame) {
-      mInitialContainingBlock = nsnull;
-    }
-
-    if (haveFLS && mInitialContainingBlock) {
-      nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
-                                    GetAbsoluteContainingBlock(aPresContext,
-                                                               parentFrame),
-                                    GetFloatContainingBlock(aPresContext,
-                                                            parentFrame));
-      RecoverLetterFrames(shell, aPresContext, state, containingBlock);
-    }
 
 #ifdef DEBUG
-    if (gReallyNoisyContentUpdates && parentFrame) {
-      nsIFrameDebug* fdbg = nsnull;
-      CallQueryInterface(parentFrame, &fdbg);
-      if (fdbg) {
-        printf("nsCSSFrameConstructor::ContentRemoved: resulting frame model:\n");
-        fdbg->List(aPresContext, stdout, 0);
+      if (gReallyNoisyContentUpdates && parentFrame) {
+        nsIFrameDebug* fdbg = nsnull;
+        CallQueryInterface(parentFrame, &fdbg);
+        if (fdbg) {
+          printf("nsCSSFrameConstructor::ContentRemoved: resulting frame model:\n");
+          fdbg->List(aPresContext, stdout, 0);
+        }
       }
-    }
 #endif
   }
 
@@ -9500,12 +9487,12 @@ static void
 DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
                              nsIViewManager* aViewManager,
-                             nsIFrameManager* aFrameManager,
+                             nsFrameManager* aFrameManager,
                              nsChangeHint aChange);
 
 static void
 UpdateViewsForTree(nsIPresContext* aPresContext, nsIFrame* aFrame, 
-                   nsIViewManager* aViewManager, nsIFrameManager* aFrameManager,
+                   nsIViewManager* aViewManager, nsFrameManager* aFrameManager,
                    nsRect& aBoundsRect, nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
@@ -9561,7 +9548,7 @@ static void
 DoApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
                              nsIViewManager* aViewManager,
-                             nsIFrameManager* aFrameManager,
+                             nsFrameManager* aFrameManager,
                              nsChangeHint aChange)
 {
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
@@ -9643,14 +9630,11 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
 
   viewManager->BeginUpdateViewBatch();
 
-  nsCOMPtr<nsIFrameManager> frameManager;
-  shell->GetFrameManager(getter_AddRefs(frameManager));
-  
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = PR_TRUE;
 #endif
   DoApplyRenderingChangeToTree(aPresContext, aFrame, viewManager,
-                               frameManager, aChange);
+                               shell->FrameManager(), aChange);
 #ifdef DEBUG
   gInApplyRenderingChangeToTree = PR_FALSE;
 #endif
@@ -9782,8 +9766,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   if (!count)
     return NS_OK;
 
-  nsCOMPtr<nsIFrameManager> frameManager;
-  aPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
+  nsFrameManager *frameManager = aPresContext->FrameManager();
 
   // Mark frames so that we skip frames that die along the way, bug 123049.
   // A frame can be in the list multiple times with different hints. Further
@@ -9807,9 +9790,13 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
 
     // skip any frame that has been destroyed due to a ripple effect
     if (frame) {
-      void* dummy;
-      nsresult res = frameManager->GetFrameProperty(frame,
-        nsLayoutAtoms::changeListProperty, 0, &dummy);            
+      nsresult res;
+
+      void* dummy =
+        frameManager->GetFrameProperty(frame,
+                                       nsLayoutAtoms::changeListProperty, 0,
+                                       &res);
+
       if (NS_IFRAME_MGR_PROP_NOT_THERE == res)
         continue;
     }
@@ -9832,9 +9819,7 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
       nsIPresShell *shell = aPresContext->PresShell();
       shell->GetPrimaryFrameFor(content, &frame);
       if (frame) {
-        nsCOMPtr<nsIFrameManager> frameManager;
-        shell->GetFrameManager(getter_AddRefs(frameManager));
-        frameManager->DebugVerifyStyleTree(frame);
+        shell->FrameManager()->DebugVerifyStyleTree(frame);
       }
     } else {
       NS_WARNING("Unable to test style tree integrity -- no content node");
@@ -9864,10 +9849,8 @@ nsCSSFrameConstructor::RestyleElement(nsIPresContext *aPresContext,
 {
   if (aPrimaryFrame) {
     nsStyleChangeList changeList;
-    nsChangeHint frameChange = NS_STYLE_HINT_NONE;
-    aPresContext->GetPresShell()->GetFrameManager()->
-      ComputeStyleChangeFor(aPrimaryFrame, changeList,
-                            NS_STYLE_HINT_NONE, frameChange);
+    nsChangeHint frameChange = aPresContext->GetPresShell()->FrameManager()->
+      ComputeStyleChangeFor(aPrimaryFrame, &changeList, NS_STYLE_HINT_NONE);
 
     if (frameChange & nsChangeHint_ReconstructFrame) {
       RecreateFramesForContent(aPresContext, aContent);
@@ -10037,10 +10020,11 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     }
   }
 
-  nsIFrameManager *frameManager = shell->GetFrameManager();
-  nsReStyleHint rshint = nsReStyleHint(0);
-  frameManager->HasAttributeDependentStyle(aContent,
-                                           aAttribute, aModType, &rshint);
+  nsFrameManager *frameManager = shell->FrameManager();
+  nsReStyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
+                                                                  aAttribute,
+                                                                  aModType);
+
   if (reframe) {
     result = RecreateFramesForContent(aPresContext, aContent);
   } else if (primaryFrame) {
@@ -10050,8 +10034,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
     // there is an effect, so compute it
     if (rshint & eReStyle_Self) {
-      frameManager->ComputeStyleChangeFor(primaryFrame, 
-                                          changeList, hint, hint);
+      hint = frameManager->ComputeStyleChangeFor(primaryFrame, &changeList,
+                                                 hint);
     }
 
     // hint is for primary only
@@ -10263,7 +10247,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
   nsPlaceholderFrame* placeholderFrame = nsnull;
   nsIPresShell *presShell = aPresContext->PresShell();
   if (listName) {
-    presShell->GetPlaceholderFrameFor(aFrame, (nsIFrame**)&placeholderFrame);
+    presShell->GetPlaceholderFrameFor(aFrame, (nsIFrame**) &placeholderFrame);
   }
 
   // Get the previous sibling frame
@@ -10281,8 +10265,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
                                  parentFrame, nsnull, newFrame);
 
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIFrameManager> frameManager;
-      presShell->GetFrameManager(getter_AddRefs(frameManager));
+      nsFrameManager *frameManager = presShell->FrameManager();
 
       // Replace the old frame with the new frame
 
@@ -10745,10 +10728,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     if (!oofContFrame) 
       return NS_ERROR_NULL_POINTER;
     // create a continuing placeholder frame
-    nsCOMPtr<nsIFrameManager> frameManager;
-    shell->GetFrameManager(getter_AddRefs(frameManager));
-    NS_ASSERTION(frameManager, "no frame manager");
-    CreatePlaceholderFrameFor(shell, aPresContext, frameManager, content, 
+    CreatePlaceholderFrameFor(shell, aPresContext,
+                              shell->FrameManager(), content, 
                               oofContFrame, styleContext, aParentFrame, &newFrame);
     if (!newFrame) 
       return NS_ERROR_NULL_POINTER;
@@ -10850,7 +10831,7 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
 // for a frame that maps the specified content object
 nsIFrame*
 nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
-                                            nsIFrameManager* aFrameManager,
+                                            nsFrameManager*  aFrameManager,
                                             nsIFrame*        aParentFrame,
                                             nsIContent*      aParentContent,
                                             nsIContent*      aContent,
@@ -10884,7 +10865,7 @@ nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
         kidFrame = aHint->mPrimaryFrameForPrevSibling;
         // But if it's out of flow, start from its placeholder.
         if (kidFrame && (kidFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-          aFrameManager->GetPlaceholderFrameFor(kidFrame, &kidFrame);
+          kidFrame = aFrameManager->GetPlaceholderFrameFor(kidFrame);
         }
 
         if (kidFrame) {
@@ -10999,7 +10980,7 @@ nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
 // the pres shell hash table
 nsresult
 nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
-                                           nsIFrameManager* aFrameManager,
+                                           nsFrameManager*  aFrameManager,
                                            nsIContent*      aContent,
                                            nsIFrame**       aFrame,
                                            nsFindFrameHint* aHint)
@@ -11024,7 +11005,7 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
   // call us back if there is no mapping in the hash table
   nsCOMPtr<nsIContent> parentContent = aContent->GetParent(); // Get this once
   if (parentContent) {
-    aFrameManager->GetPrimaryFrameFor(parentContent, &parentFrame);
+    parentFrame = aFrameManager->GetPrimaryFrameFor(parentContent);
     while (parentFrame) {
       // Search the child frames for a match
       *aFrame = FindFrameWithContent(aPresContext, aFrameManager, parentFrame,
@@ -11189,19 +11170,13 @@ nsCSSFrameConstructor::CaptureStateFor(nsIPresContext* aPresContext,
                                        nsIFrame* aFrame,
                                        nsILayoutHistoryState* aHistoryState)
 {
-  nsresult rv = NS_OK;
-
   if (aFrame && aPresContext && aHistoryState) {
     nsIPresShell *presShell = aPresContext->GetPresShell();
     if (presShell) {
-      nsCOMPtr<nsIFrameManager> frameManager;
-      rv = presShell->GetFrameManager(getter_AddRefs(frameManager));
-      if (NS_SUCCEEDED(rv) && frameManager) {
-        rv = frameManager->CaptureFrameState(aFrame, aHistoryState);
-      }
+      presShell->FrameManager()->CaptureFrameState(aFrame, aHistoryState);
     }
   }
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -11210,7 +11185,7 @@ nsCSSFrameConstructor::MaybeRecreateFramesForContent(nsIPresContext* aPresContex
 {
   nsresult result = NS_OK;
   nsIPresShell *shell = aPresContext->PresShell();
-  nsIFrameManager *frameManager = shell->GetFrameManager();
+  nsFrameManager *frameManager = shell->FrameManager();
 
   nsStyleContext *oldContext = frameManager->GetUndisplayedContent(aContent);
   if (oldContext) {
@@ -11478,8 +11453,8 @@ ReparentFrame(nsIPresContext* aPresContext,
               nsIFrame* aFrame)
 {
   aFrame->SetParent(aNewParentFrame);
-  aPresContext->GetFrameManager()->ReParentStyleContext(aFrame,
-                                                        aParentStyleContext);
+  aPresContext->FrameManager()->ReParentStyleContext(aFrame,
+                                                     aParentStyleContext);
 }
 
 // Special routine to handle placing a list of frames into a block
@@ -12130,7 +12105,7 @@ nsresult
 nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   nsIPresContext* aPresContext,
   nsIPresShell* aPresShell,
-  nsIFrameManager* aFrameManager,
+  nsFrameManager* aFrameManager,
   nsIFrame* aBlockFrame,
   PRBool* aStopLooking)
 {
@@ -12157,9 +12132,9 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 
   // Discover the placeholder frame for the letter frame
   nsIFrame* parentFrame;
-  nsPlaceholderFrame* placeholderFrame;
-  aFrameManager->GetPlaceholderFrameFor(floatFrame,
-                                        (nsIFrame**)&placeholderFrame);
+  nsPlaceholderFrame* placeholderFrame = 
+    aFrameManager->GetPlaceholderFrameFor(floatFrame);
+
   if (!placeholderFrame) {
     // Somethings really wrong
     return NS_OK;
@@ -12244,7 +12219,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 nsresult
 nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresContext* aPresContext,
                                                nsIPresShell* aPresShell,
-                                               nsIFrameManager* aFrameManager,
+                                               nsFrameManager* aFrameManager,
                                                nsIFrame* aFrame,
                                                PRBool* aStopLooking)
 {
@@ -12278,7 +12253,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresContext* aPresContext,
       textFrame->Init(aPresContext, textContent, aFrame, newSC, nsnull);
 
       // Next rip out the kid and replace it with the text frame
-      nsIFrameManager* frameManager = aFrameManager;
+      nsFrameManager* frameManager = aFrameManager;
       DeletingFrameSubtree(aPresContext, aPresShell, frameManager, kid);
       frameManager->RemoveFrame(aFrame, nsnull, kid);
 
@@ -12308,7 +12283,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsIPresContext* aPresContext,
 nsresult
 nsCSSFrameConstructor::RemoveLetterFrames(nsIPresContext* aPresContext,
                                           nsIPresShell* aPresShell,
-                                          nsIFrameManager* aFrameManager,
+                                          nsFrameManager* aFrameManager,
                                           nsIFrame* aBlockFrame)
 {
   PRBool stopLooking = PR_FALSE;
@@ -12822,7 +12797,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
 // added to the frame hierarchy
 static void
 DoCleanupFrameReferences(nsIPresContext*  aPresContext,
-                         nsIFrameManager* aFrameManager,
+                         nsFrameManager*  aFrameManager,
                          nsIFrame*        aFrameIn)
 {
   nsIContent* content = aFrameIn->GetContent();
@@ -12853,7 +12828,7 @@ DoCleanupFrameReferences(nsIPresContext*  aPresContext,
 // Helper function that walks a frame list and calls DoCleanupFrameReference()
 static void
 CleanupFrameReferences(nsIPresContext*  aPresContext,
-                       nsIFrameManager* aFrameManager,
+                       nsFrameManager*  aFrameManager,
                        nsIFrame*        aFrameList)
 {
   while (aFrameList) {
@@ -12888,10 +12863,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
         return PR_FALSE;
 
       // Ok, reverse tracks: wipe out the frames we just created
-      nsCOMPtr<nsIPresShell>    presShell;
-      nsCOMPtr<nsIFrameManager> frameManager;
-
-      aPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
+      nsFrameManager *frameManager = aPresContext->FrameManager();
 
       // Destroy the frames. As we do make sure any content to frame mappings
       // or entries in the undisplayed content map are removed
@@ -13260,9 +13232,9 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIF
   return ReconstructDocElementHierarchy(aPresContext);
 }
 
-nsresult nsCSSFrameConstructor::RemoveFixedItems(nsIPresContext*  aPresContext,
-                                                 nsIPresShell*    aPresShell,
-                                                 nsIFrameManager* aFrameManager)
+nsresult nsCSSFrameConstructor::RemoveFixedItems(nsIPresContext* aPresContext,
+                                                 nsIPresShell*   aPresShell,
+                                                 nsFrameManager* aFrameManager)
 {
   nsresult rv=NS_OK;
 

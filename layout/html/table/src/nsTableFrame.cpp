@@ -71,7 +71,7 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIScrollableFrame.h"
 #include "nsHTMLReflowCommand.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutErrors.h"
 #include "nsAutoPtr.h"
@@ -7278,42 +7278,32 @@ nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
                           nsIAtom*             aPropertyName,
                           PRBool               aCreateIfNecessary)
 {
-  nsIPresShell *presShell = aPresContext->GetPresShell();
+  nsFrameManager *frameManager = aPresContext->FrameManager();
 
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager>  frameManager;
-    presShell->GetFrameManager(getter_AddRefs(frameManager));
-  
-    if (frameManager) {
-      void* value;
-  
-      frameManager->GetFrameProperty(aFrame, aPropertyName, 0, &value);
-      if (value) {
-        return (nsPoint*)value;  // the property already exists
-
-      } else if (aCreateIfNecessary) {
-        // The property isn't set yet, so allocate a new value, set the property,
-        // and return the newly allocated value
-        void* value = nsnull;
-        NSFramePropertyDtorFunc dtorFunc = nsnull;
-        if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
-          value = new nsPoint(0, 0);
-          dtorFunc = DestroyPointFunc;
-        }
-        else if (aPropertyName == nsLayoutAtoms::rowUnpaginatedHeightProperty) {
-          value = new nscoord;
-          dtorFunc = DestroyCoordFunc;
-        }
-        else if (aPropertyName == nsLayoutAtoms::tableBCProperty) {
-          value = new BCPropertyData;
-          dtorFunc = DestroyBCPropertyDataFunc;
-        }
-        if (!value) return nsnull;
-
-        frameManager->SetFrameProperty(aFrame, aPropertyName, value, dtorFunc);
-        return value;
-      }
+  void *value = frameManager->GetFrameProperty(aFrame, aPropertyName, 0);
+  if (value) {
+    return (nsPoint*)value;  // the property already exists
+  } else if (aCreateIfNecessary) {
+    // The property isn't set yet, so allocate a new value, set the property,
+    // and return the newly allocated value
+    void* value = nsnull;
+    NSFramePropertyDtorFunc dtorFunc = nsnull;
+    if (aPropertyName == nsLayoutAtoms::collapseOffsetProperty) {
+      value = new nsPoint(0, 0);
+      dtorFunc = DestroyPointFunc;
     }
+    else if (aPropertyName == nsLayoutAtoms::rowUnpaginatedHeightProperty) {
+      value = new nscoord;
+      dtorFunc = DestroyCoordFunc;
+    }
+    else if (aPropertyName == nsLayoutAtoms::tableBCProperty) {
+      value = new BCPropertyData;
+      dtorFunc = DestroyBCPropertyDataFunc;
+    }
+    if (!value) return nsnull;
+
+    frameManager->SetFrameProperty(aFrame, aPropertyName, value, dtorFunc);
+    return value;
   }
 
   return nsnull;

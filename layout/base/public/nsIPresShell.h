@@ -63,7 +63,7 @@ class nsStringArray;
 class nsICaret;
 class nsStyleContext;
 class nsIFrameSelection;
-class nsIFrameManager;
+class nsFrameManager;
 class nsILayoutHistoryState;
 class nsIReflowCallback;
 class nsISupportsArray;
@@ -163,10 +163,10 @@ public:
   {
     return mFrameConstructor;
   }
-#endif
 
-  NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const = 0;
-  nsIFrameManager* GetFrameManager() { return mFrameManager; }
+  nsFrameManager* FrameManager() { return mFrameManager; }
+
+#endif
 
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle) = 0;
 
@@ -658,7 +658,7 @@ protected:
   nsStyleSet*               mStyleSet;      // [OWNS]
   nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
-  nsIFrameManager*          mFrameManager;  // [STRONG]
+  nsFrameManager*           mFrameManager;  // [OWNS]
 };
 
 /**

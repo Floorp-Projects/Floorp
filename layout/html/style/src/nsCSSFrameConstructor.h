@@ -51,7 +51,7 @@ struct nsStyleContent;
 struct nsStyleDisplay;
 class nsIPresShell;
 class nsVoidArray;
-class nsIFrameManager;
+class nsFrameManager;
 class nsFrameConstructorState;
 class nsIDOMHTMLSelectElement;
 class nsIPresContext;
@@ -148,7 +148,7 @@ public:
   // This is typically called by the pres shell when there is no mapping in
   // the pres shell hash table
   nsresult FindPrimaryFrameFor(nsIPresContext*  aPresContext,
-                               nsIFrameManager* aFrameManager,
+                               nsFrameManager*  aFrameManager,
                                nsIContent*      aContent,
                                nsIFrame**       aFrame,
                                nsFindFrameHint* aHint);
@@ -248,7 +248,7 @@ protected:
 
   nsresult AppendFrames(nsIPresContext*  aPresContext,
                         nsIPresShell*    aPresShell,
-                        nsIFrameManager* aFrameManager,
+                        nsFrameManager*  aFrameManager,
                         nsIContent*      aContainer,
                         nsIFrame*        aParentFrame,
                         nsIFrame*        aFrameList);
@@ -453,7 +453,7 @@ protected:
 
   nsresult CreatePlaceholderFrameFor(nsIPresShell*    aPresShell, 
                                      nsIPresContext*  aPresContext,
-                                     nsIFrameManager* aFrameManager,
+                                     nsFrameManager*  aFrameManager,
                                      nsIContent*      aContent,
                                      nsIFrame*        aFrame,
                                      nsStyleContext*  aStyleContext,
@@ -657,7 +657,7 @@ protected:
 
   PRBool IsScrollable(nsIPresContext* aPresContext, const nsStyleDisplay* aDisplay);
 
-  nsIFrame* GetFrameFor(nsIPresShell*   aFrameManager,
+  nsIFrame* GetFrameFor(nsIPresShell*   aPresShell,
                         nsIPresContext* aPresContext,
                         nsIContent*     aContent);
 
@@ -876,7 +876,7 @@ protected:
     * @param aHint          an optional hint used to make the search for aFrame faster
     */
   nsIFrame* FindFrameWithContent(nsIPresContext*  aPresContext,
-                                 nsIFrameManager* aFrameManager,
+                                 nsFrameManager*  aFrameManager,
                                  nsIFrame*        aParentFrame,
                                  nsIContent*      aParentContent,
                                  nsIContent*      aContent,
@@ -933,20 +933,20 @@ protected:
   // 
   nsresult RemoveLetterFrames(nsIPresContext*  aPresContext,
                               nsIPresShell*    aPresShell,
-                              nsIFrameManager* aFrameManager,
+                              nsFrameManager*  aFrameManager,
                               nsIFrame*        aBlockFrame);
 
   // Recursive helper for RemoveLetterFrames
   nsresult RemoveFirstLetterFrames(nsIPresContext*  aPresContext,
                                    nsIPresShell*    aPresShell,
-                                   nsIFrameManager* aFrameManager,
+                                   nsFrameManager*  aFrameManager,
                                    nsIFrame*        aFrame,
                                    PRBool*          aStopLooking);
 
   // Special remove method for those pesky floating first-letter frames
   nsresult RemoveFloatingFirstLetterFrames(nsIPresContext*  aPresContext,
                                            nsIPresShell*    aPresShell,
-                                           nsIFrameManager* aFrameManager,
+                                           nsFrameManager*  aFrameManager,
                                            nsIFrame*        aBlockFrame,
                                            PRBool*          aStopLooking);
 
@@ -989,7 +989,7 @@ protected:
 
   nsresult RemoveFixedItems(nsIPresContext*  aPresContext,
                             nsIPresShell*    aPresShell,
-                            nsIFrameManager* aFrameManager);
+                            nsFrameManager*  aFrameManager);
 
   // Find the ``rightmost'' frame for the content immediately preceding
   // aIndexInContainer, following continuations if necessary. If aChild is

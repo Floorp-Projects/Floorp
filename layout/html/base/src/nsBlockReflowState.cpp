@@ -46,7 +46,7 @@
 #include "nsIPresContext.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFrame.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
@@ -494,9 +494,11 @@ nsBlockReflowState::RecoverFloats(nsLineList::iterator aLine,
       // accordingly so that we consider relatively positioned frames
       // at their original position.
       if (NS_STYLE_POSITION_RELATIVE == kid->GetStyleDisplay()->mPosition) {
-        nsPoint *offsets;
-        if (NS_OK == mPresContext->GetFrameManager()->GetFrameProperty(kid,
-               nsLayoutAtoms::computedOffsetProperty, 0, (void**)&offsets)) {
+        nsPoint *offsets = NS_STATIC_CAST(nsPoint*,
+          mPresContext->FrameManager()->GetFrameProperty(kid,
+                                    nsLayoutAtoms::computedOffsetProperty, 0));
+
+        if (offsets) {
           tx -= offsets->x;
           ty -= offsets->y;
         }
@@ -953,15 +955,14 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache* aFloatCache,
   if (prevInFlow) {
     prevRect = prevInFlow->GetRect();
 
-    nsCOMPtr<nsIFrameManager> frameManager;
-    mPresContext->PresShell()->GetFrameManager(getter_AddRefs(frameManager));
-
     nsIFrame *placeParentPrev, *prevPlace;
     // If prevInFlow's placeholder is in a block that wasn't continued, we need to adjust 
     // prevRect.x to account for the missing frame offsets.
     nsIFrame* placeParent = placeholder->GetParent();
     placeParent->GetPrevInFlow(&placeParentPrev);
-    frameManager->GetPlaceholderFrameFor(prevInFlow, &prevPlace);
+    prevPlace =
+      mPresContext->FrameManager()->GetPlaceholderFrameFor(prevInFlow);
+
     nsIFrame* prevPlaceParent = prevPlace->GetParent();
 
     for (nsIFrame* ancestor = prevPlaceParent; 

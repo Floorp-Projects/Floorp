@@ -65,7 +65,7 @@
 #include "nsIDocument.h"
 #include "nsButtonFrameRenderer.h"
 #include "nsFormControlFrame.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsReflowPath.h"
 #include "nsIServiceManager.h"
@@ -219,7 +219,7 @@ nsHTMLButtonControlFrame::GetValue(nsAString* aResult)
 }
 
 void
-nsHTMLButtonControlFrame::ReParentFrameList(nsIFrameManager* aFrameManager,
+nsHTMLButtonControlFrame::ReParentFrameList(nsFrameManager* aFrameManager,
                                             nsIFrame* aFrameList)
 {
   // get the new parent context from the first child: that is the
@@ -333,7 +333,7 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                               nsIFrame*       aChildList)
 {
   // NOTE: the whole reparenting should not need to happen: see bugzilla bug 51767
-  ReParentFrameList(aPresContext->GetFrameManager(), aChildList);
+  ReParentFrameList(aPresContext->FrameManager(), aChildList);
   
   return mFrames.FirstChild()->SetInitialChildList(aPresContext, nsnull, aChildList);
 }
@@ -719,7 +719,7 @@ nsHTMLButtonControlFrame::AppendFrames(nsIPresContext* aPresContext,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aFrameList)
 {
-  ReParentFrameList(aPresContext->GetFrameManager(), aFrameList);
+  ReParentFrameList(aPresContext->FrameManager(), aFrameList);
   return mFrames.FirstChild()->AppendFrames(aPresContext,
                                             aPresShell,
                                             aListName,
@@ -733,7 +733,7 @@ nsHTMLButtonControlFrame::InsertFrames(nsIPresContext* aPresContext,
                                        nsIFrame*       aPrevFrame,
                                        nsIFrame*       aFrameList)
 {
-  ReParentFrameList(aPresContext->GetFrameManager(), aFrameList);
+  ReParentFrameList(aPresContext->FrameManager(), aFrameList);
   return mFrames.FirstChild()->InsertFrames(aPresContext,
                                             aPresShell,
                                             aListName,
@@ -760,7 +760,7 @@ nsHTMLButtonControlFrame::ReplaceFrame(nsIPresContext* aPresContext,
                                        nsIFrame*       aOldFrame,
                                        nsIFrame*       aNewFrame)
 {
-  ReParentFrameList(aPresContext->GetFrameManager(), aNewFrame);
+  ReParentFrameList(aPresContext->FrameManager(), aNewFrame);
   return mFrames.FirstChild()->ReplaceFrame(aPresContext,
                                             aPresShell,
                                             aListName,

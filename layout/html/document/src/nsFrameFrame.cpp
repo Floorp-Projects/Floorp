@@ -50,7 +50,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIComponentManager.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -243,23 +243,14 @@ nsSubDocumentFrame::Init(nsIPresContext* aPresContext,
     nsCOMPtr<nsIAtom> contentParentAtom = do_GetAtom("contentParent");
     nsIFrame* contentParent = nsnull;
 
-    nsIPresShell *presShell = aPresContext->GetPresShell();
-    if (presShell) {
-      nsCOMPtr<nsIFrameManager> frameManager;
-      presShell->GetFrameManager(getter_AddRefs(frameManager));
-
-      if (frameManager) {
-        void* value;
-        rv = frameManager->GetFrameProperty(this,
-                                           contentParentAtom, 
-                                           NS_IFRAME_MGR_REMOVE_PROP,
-                                           &value);
-        if (NS_SUCCEEDED(rv)) {
+    void *value =
+      aPresContext->FrameManager()->GetFrameProperty(this, contentParentAtom,
+                                                     NS_IFRAME_MGR_REMOVE_PROP,
+                                                     &rv);
+    if (NS_SUCCEEDED(rv)) {
           contentParent = (nsIFrame*)value;
-        }
-      }
     }
-  
+
     nsHTMLContainerFrame::CreateViewForFrame(this, contentParent, PR_TRUE);
   }
   nsIView* view = GetView();

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -33,7 +34,7 @@
 #include "nsICSSRule.h"
 #include "nsICSSStyleRule.h"
 #include "nsStyleChangeList.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
 #include "nsContentCID.h"
@@ -693,21 +694,14 @@ nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
     return 0;
 
   // now, re-resolve the style contexts in our subtree
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager> fm;
-    presShell->GetFrameManager(getter_AddRefs(fm));
-    if (fm) {
-      nsChangeHint maxChange = NS_STYLE_HINT_NONE, minChange = NS_STYLE_HINT_NONE;
-      nsStyleChangeList changeList;
-      fm->ComputeStyleChangeFor(aFrame, changeList, minChange, maxChange);
+  nsFrameManager *fm = aPresContext->FrameManager();
+  nsStyleChangeList changeList;
+  fm->ComputeStyleChangeFor(aFrame, &changeList, NS_STYLE_HINT_NONE);
 #ifdef DEBUG
-      // Use the parent frame to make sure we catch in-flows and such
-      nsIFrame* parentFrame = aFrame->GetParent();
-      fm->DebugVerifyStyleTree(parentFrame ? parentFrame : aFrame);
+  // Use the parent frame to make sure we catch in-flows and such
+  nsIFrame* parentFrame = aFrame->GetParent();
+  fm->DebugVerifyStyleTree(parentFrame ? parentFrame : aFrame);
 #endif
-    }
-  }
 
   return ruleCount;
 }

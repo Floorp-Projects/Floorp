@@ -43,6 +43,7 @@ nsCSSKeywords.h \
 nsCSSPropList.h \
 nsCSSProperty.h \
 nsCSSProps.h \
+nsFrameManager.h \
 nsHTMLAtomList.h \
 nsHTMLAtoms.h \
 nsHTMLValue.h \

@@ -49,7 +49,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsReflowPath.h"
 #include "nsAutoPtr.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #ifdef ACCESSIBILITY
 #include "nsIServiceManager.h"
 #include "nsIAccessibilityService.h"
@@ -910,7 +910,7 @@ ReParentChildListStyle(nsIPresContext* aPresContext,
                        nsStyleContext* aParentStyleContext,
                        nsFrameList& aFrameList)
 {
-  nsIFrameManager *frameManager = aPresContext->GetFrameManager();
+  nsFrameManager *frameManager = aPresContext->FrameManager();
 
   for (nsIFrame* kid = aFrameList.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
@@ -970,8 +970,7 @@ nsFirstLineFrame::PullOneFrame(nsIPresContext* aPresContext, InlineReflowState& 
   if (frame && !mPrevInFlow) {
     // We are a first-line frame. Fixup the child frames
     // style-context that we just pulled.
-    aPresContext->GetFrameManager()->ReParentStyleContext(frame,
-                                                          mStyleContext);
+    aPresContext->FrameManager()->ReParentStyleContext(frame, mStyleContext);
   }
   return frame;
 }

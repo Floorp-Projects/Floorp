@@ -44,7 +44,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 
 #define nsFirstLetterFrameSuper nsHTMLContainerFrame
 
@@ -161,7 +161,7 @@ nsFirstLetterFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                         nsIFrame*       aChildList)
 {
   mFrames.SetFrames(aChildList);
-  nsIFrameManager *frameManager = aPresContext->GetFrameManager();
+  nsFrameManager *frameManager = aPresContext->FrameManager();
 
   for (nsIFrame* frame = aChildList; frame; frame = frame->GetNextSibling()) {
     frameManager->ReParentStyleContext(frame, mStyleContext);

@@ -39,7 +39,7 @@
 #include "nsReadableUtils.h"
 #include "nsComboboxControlFrame.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsFormControlFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
@@ -2038,13 +2038,8 @@ nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDisplayContent));
   mTextFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
   mTextFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-  if (!presShell) { return NS_ERROR_NULL_POINTER; }
-  nsCOMPtr<nsIFrameManager> frameManager;
-  rv = presShell->GetFrameManager(getter_AddRefs(frameManager));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!frameManager) { return NS_ERROR_NULL_POINTER; }
-  frameManager->SetPrimaryFrameFor(content, mTextFrame);
+
+  aPresContext->FrameManager()->SetPrimaryFrameFor(content, mTextFrame);
 
   rv = mDisplayFrame->Init(aPresContext, mContent, this, styleContext, nsnull);
   if (NS_FAILED(rv)) { return rv; }

@@ -85,7 +85,7 @@
 
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsIScriptSecurityManager.h"
 
@@ -170,9 +170,9 @@ public:
       shell->GetPrimaryFrameFor(mBoundElement, &childFrame);
       if (!childFrame) {
         // Check to see if it's in the undisplayed content map.
-        nsCOMPtr<nsIFrameManager> frameManager;
-        shell->GetFrameManager(getter_AddRefs(frameManager));
-        nsStyleContext* sc = frameManager->GetUndisplayedContent(mBoundElement);
+        nsStyleContext* sc =
+          shell->FrameManager()->GetUndisplayedContent(mBoundElement);
+
         if (!sc) {
           nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
           obs->ContentInserted(doc, parent, mBoundElement, index);

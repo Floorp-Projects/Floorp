@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -30,7 +31,7 @@
 
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
-#include "nsIFrameManager.h"
+#include "nsFrameManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsStyleChangeList.h"
 #include "nsINameSpaceManager.h"
@@ -322,21 +323,14 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
     mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontstyle, fontstyle, PR_FALSE);
 
   // then, re-resolve the style contexts in our subtree
-  nsIPresShell *presShell = aPresContext->GetPresShell();
-  if (presShell) {
-    nsCOMPtr<nsIFrameManager> fm;
-    presShell->GetFrameManager(getter_AddRefs(fm));
-    if (fm) {
-      nsChangeHint maxChange, minChange = NS_STYLE_HINT_NONE;
-      nsStyleChangeList changeList;
-      fm->ComputeStyleChangeFor(this, changeList, minChange, maxChange);
+  nsFrameManager *fm = aPresContext->FrameManager();
+  nsStyleChangeList changeList;
+  fm->ComputeStyleChangeFor(this, &changeList, NS_STYLE_HINT_NONE);
 #ifdef DEBUG
-      // Use the parent frame to make sure we catch in-flows and such
-      nsIFrame* parentFrame = GetParent();
-      fm->DebugVerifyStyleTree(parentFrame ? parentFrame : this);
+  // Use the parent frame to make sure we catch in-flows and such
+  nsIFrame* parentFrame = GetParent();
+  fm->DebugVerifyStyleTree(parentFrame ? parentFrame : this);
 #endif
-    }
-  }
 }
 
 ///////////////////////////////////////////////////////////////////////////

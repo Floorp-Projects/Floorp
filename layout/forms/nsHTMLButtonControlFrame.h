@@ -171,7 +171,7 @@ public:
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
 protected:
-  void ReParentFrameList(nsIFrameManager* aFrameManager, nsIFrame* aFrameList);
+  void ReParentFrameList(nsFrameManager* aFrameManager, nsIFrame* aFrameList);
   virtual PRBool IsReset(PRInt32 type);
   virtual PRBool IsSubmit(PRInt32 type);
   void ReflowButtonContents(nsIPresContext* aPresContext,
