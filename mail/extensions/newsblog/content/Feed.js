@@ -226,6 +226,8 @@ Feed.prototype.parseAsRSS2 = function() {
     var item = new FeedItem();
     item.feed = this;
 
+    item.characterSet = this.request.responseXML.characterSet ? this.request.responseXML.characterSet : "UTF-8";
+
     var link = getNodeValue(itemNode.getElementsByTagName("link")[0]);
 
     var guidNode = itemNode.getElementsByTagName("guid")[0];
@@ -249,6 +251,10 @@ Feed.prototype.parseAsRSS2 = function() {
     item.date = getNodeValue(itemNode.getElementsByTagName("pubDate")[0]
                              || itemNode.getElementsByTagName("date")[0])
                 || item.date;
+
+    var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
+    if (content)
+      item.content = content;
 
     var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
     if (content)
@@ -296,6 +302,8 @@ Feed.prototype.parseAsRSS1 = function() {
     var itemResource = items.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
     var item = new FeedItem();
     item.feed = this;
+
+    item.characterSet = this.request.responseXML.characterSet ? this.request.responseXML.characterSet : "UTF-8";
 
     // Prefer the value of the link tag to the item URI since the URI could be
     // a relative URN.
@@ -348,6 +356,8 @@ Feed.prototype.parseAsAtom = function() {
     var itemNode = items[i];
     var item = new FeedItem();
     item.feed = this;
+
+    item.characterSet = this.request.responseXML.characterSet ? this.request.responseXML.characterSet : "UTF-8";
 
     var url;
     var links = itemNode.getElementsByTagName("link");

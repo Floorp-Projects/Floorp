@@ -286,6 +286,27 @@ FeedItem.prototype.toUtf8 = function(str) {
   return FeedItem.unicodeConverter.ConvertFromUnicode(str);
 }
 
+function mimeEncodeSubject(aSubject, charset)
+{  
+  // get the mime header encoder service
+  var mimeEncoder = Components
+    .classes["@mozilla.org/messenger/mimeconverter;1"]
+    .getService(Components.interfaces.nsIMimeConverter);
+
+  // this routine sometimes throws exceptions for mis encoded data so wrap it 
+  // with a try catch for now..
+  var newSubject;
+
+  try {
+    newSubject = mimeEncoder.encodeMimePartIIStr(aSubject, false, charset, 9, 72);
+  }
+  catch (ex) { 
+    newSubject = aSubject; 
+  }
+
+  return newSubject;
+}
+
 FeedItem.prototype.writeToFolder = function() {
   debug(this.identity + " writing to message folder" + this.feed.name + "\n");
   
@@ -301,6 +322,7 @@ FeedItem.prototype.writeToFolder = function() {
 
   // Compress white space in the subject to make it look better.
   this.title = this.title.replace(/[\t\r\n]+/g, " ");
+  this.title = mimeEncodeSubject(this.title, this.characterSet);
 
   // If the date looks like it's in W3C-DTF format, convert it into
   // an IETF standard date.  Otherwise assume it's in IETF format.
@@ -329,7 +351,7 @@ FeedItem.prototype.writeToFolder = function() {
     'From: ' + this.author + '\n' +
     'MIME-Version: 1.0\n' +
     'Subject: ' + this.title + '\n' +
-    'Content-Type: text/html; charset=UTF-8\n' +
+    'Content-Type: text/html; charset=' + this.characterSet + '\n' +
     'Content-Transfer-Encoding: 8bit\n' +
     'Content-Base: ' + this.url + '\n' +
     '\n' +
