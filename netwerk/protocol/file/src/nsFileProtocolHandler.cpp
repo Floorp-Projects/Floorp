@@ -42,28 +42,18 @@
 #include "nsURLHelper.h"
 #include "nsNetCID.h"
 
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsIDirectoryListing.h"
 
 //-----------------------------------------------------------------------------
 
 nsFileProtocolHandler::nsFileProtocolHandler()
-    : mGenerateHTMLDirs(PR_FALSE)
 {
 }
 
 nsresult
 nsFileProtocolHandler::Init()
 {
-    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-        PRInt32 sFormat;
-        nsresult rv = prefs->GetIntPref("network.dir.format", &sFormat);
-        if (NS_SUCCEEDED(rv) && sFormat == nsIDirectoryListing::FORMAT_HTML)
-            mGenerateHTMLDirs = PR_TRUE;
-    }
     return NS_OK;
 }
 
@@ -121,7 +111,7 @@ nsFileProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(chan);
 
-    nsresult rv = chan->Init(uri, mGenerateHTMLDirs);
+    nsresult rv = chan->Init(uri);
     if (NS_FAILED(rv)) {
         NS_RELEASE(chan);
         return rv;

@@ -48,6 +48,7 @@
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsITransport.h"
+#include "nsIDirectoryListing.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -55,6 +56,7 @@ class nsFileChannel : public nsIFileChannel
                     , public nsIUploadChannel
                     , public nsIStreamListener
                     , public nsITransportEventSink
+                    , public nsIDirectoryListing
 {
 public: 
     NS_DECL_ISUPPORTS
@@ -65,11 +67,12 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSITRANSPORTEVENTSINK
+    NS_DECL_NSIDIRECTORYLISTING
 
     nsFileChannel();
     virtual ~nsFileChannel() {}
 
-    nsresult Init(nsIURI *uri, PRBool htmlDirs);
+    nsresult Init(nsIURI *uri);
 
 private:
 
@@ -93,7 +96,7 @@ private:
 
     nsCOMPtr<nsIRequest>            mRequest;
     nsCOMPtr<nsIInputStream>        mStream;
-    PRBool                          mConvertToHTML; // applies only if is directory
+    PRUint32                        mListFormat;
     PRBool                          mIsDir;
     PRBool                          mUploading;
 };

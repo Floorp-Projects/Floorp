@@ -53,9 +53,6 @@ public:
     virtual ~nsFileProtocolHandler() {}
 
     nsresult Init();
-
-protected:
-    PRBool mGenerateHTMLDirs;
 };
 
 #endif // !nsFileProtocolHandler_h__
