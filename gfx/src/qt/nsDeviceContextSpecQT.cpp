@@ -65,8 +65,8 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
     mPrData.toPrinter = PR_TRUE;
     mPrData.fpf = PR_TRUE;
     mPrData.grayscale = PR_FALSE;
-    mPrData.size = SizeLetter;
-    mPrData.stream = (FILE *) NULL;
+//     mPrData.size = SizeLetter;
+//     mPrData.stream = (FILE *) NULL;
     sprintf(mPrData.command, "lpr");
 
     // PWD, HOME, or fail 
