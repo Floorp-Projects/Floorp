@@ -39,8 +39,9 @@
 #include "nsILocalFile.h"
 #include "nsReadableUtils.h"
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Processes.h>
+#include <CFBundle.h>
 #endif
 
 #ifdef XP_UNIX
@@ -1546,9 +1547,84 @@ nsresult ProfileStruct::EnsureDirPathExists(nsILocalFile *aDir, PRBool *wasCreat
 // class nsProfileLock
 // **********************************************************************
 
+#if defined (XP_MAC) && TARGET_CARBON
+
+// The following functions and definitions are used in order to allow
+// a CFM build to use the same locking scheme as a Mach-0 build.
+
+static CFBundleRef getBundle(CFStringRef frameworkPath)
+{
+   CFBundleRef bundle = NULL;
+    
+   //  Make a CFURLRef from the CFString representation of the bundle's path.
+   //  See the Core Foundation URL Services chapter for details.
+   CFURLRef bundleURL = CFURLCreateWithFileSystemPath(NULL, frameworkPath, kCFURLPOSIXPathStyle, true);
+   if (bundleURL != NULL) {
+        bundle = CFBundleCreate(NULL, bundleURL);
+        if (bundle != NULL)
+           CFBundleLoadExecutable(bundle);
+        CFRelease(bundleURL);
+   }
+   
+   return bundle;
+}
+
+static void* getSystemFunction(CFStringRef functionName)
+{
+  static CFBundleRef systemBundle = getBundle(CFSTR("/System/Library/Frameworks/System.framework"));
+  if (systemBundle) return CFBundleGetFunctionPointerForName(systemBundle, functionName);
+  return NULL;
+}
+
+// From <sys/types.h>
+typedef    int64_t     off_t;      /* file offset */
+typedef    int32_t     pid_t;      /* process id */
+
+// From <sys/errno.h>
+#define    EAGAIN      35          /* Resource temporarily unavailable */
+#define    EACCES      13          /* Permission denied */
+
+// From <sys/fcntl.h>
+#define    O_RDONLY    0x0000      /* open for reading only */
+#define    O_WRONLY    0x0001      /* open for writing only */
+#define    O_RDWR      0x0002      /* open for reading and writing */
+
+#define    O_CREAT     0x0200      /* create if nonexistant */
+#define    O_TRUNC     0x0400      /* truncate to zero length */
+#define    O_EXCL      0x0800      /* error if already exists */
+
+#define    F_RDLCK     1       /* shared or read lock */
+#define    F_UNLCK     2       /* unlock */
+#define    F_WRLCK     3       /* exclusive or write lock */
+
+#define    F_SETLK     8       /* set record locking information */
+
+struct flock {
+   off_t   l_start;    /* starting offset */
+   off_t   l_len;      /* len = 0 means until end of file */
+   pid_t   l_pid;      /* lock owner */
+   short   l_type;     /* lock type: read/write, etc. */
+   short   l_whence;   /* type of l_start */
+};
+
+// Proc ptr types of the procs we import from System framework
+typedef int (*open_proc_ptr) (const char *, int, ...);
+typedef int (*close_proc_ptr) (int);
+typedef int (*fcntl_proc_ptr) (int, int, ...);
+typedef int* (*error_proc_ptr) ();
+
+static open_proc_ptr bsd_open = (open_proc_ptr) getSystemFunction(CFSTR("open"));
+static close_proc_ptr bsd_close = (close_proc_ptr) getSystemFunction(CFSTR("close"));
+static fcntl_proc_ptr bsd_fcntl = (fcntl_proc_ptr) getSystemFunction(CFSTR("fcntl"));
+static error_proc_ptr bsd_error = (error_proc_ptr) getSystemFunction(CFSTR("__error"));
+
+#endif /* XP_MAC && TARGET_CARBON */
+
 nsProfileLock::nsProfileLock() :
     mHaveLock(PR_FALSE)
-#if defined (XP_WIN)
+#if defined (XP_MAC) && TARGET_CARBON
+    ,mLockFileDesc(-1)    
+#elif defined (XP_WIN)
     ,mLockFileHandle(INVALID_HANDLE_VALUE)
 #elif defined (XP_OS2)
     ,mLockFileHandle(-1)
@@ -1579,6 +1655,10 @@ nsProfileLock& nsProfileLock::operator=(nsProfileLock& rhs)
 #if defined (XP_MAC)
     mLockFile = rhs.mLockFile;
     rhs.mLockFile = nsnull;
+  #if TARGET_CARBON
+    mLockFileDesc = rhs.mLockFileDesc;
+    rhs.mLockFileDesc = -1;
+  #endif
 #elif defined (XP_WIN)
     mLockFileHandle = rhs.mLockFileHandle;
     rhs.mLockFileHandle = INVALID_HANDLE_VALUE;
@@ -1704,10 +1784,12 @@ void nsProfileLock::FatalSignalHandler(int signo)
 
 #endif /* XP_UNIX */
 
-
 nsresult nsProfileLock::Lock(nsILocalFile* aFile)
 {
-#if defined (XP_UNIX)
+#if defined (XP_MAC) || defined (XP_MACOSX)
+    NS_NAMED_LITERAL_STRING(LOCKFILE_NAME, ".parentlock");
+    NS_NAMED_LITERAL_STRING(OLD_LOCKFILE_NAME, "parent.lock");
+#elif defined (XP_UNIX)
     NS_NAMED_LITERAL_STRING(OLD_LOCKFILE_NAME, "lock");
     NS_NAMED_LITERAL_STRING(LOCKFILE_NAME, ".parentlock");
 #else
@@ -1733,7 +1815,75 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
     if (NS_FAILED(rv))
         return rv;
 
-#if defined(XP_MAC)
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  #if defined(XP_MACOSX)
+    nsCAutoString filePath;
+    rv = lockFile->GetNativePath(filePath);
+    if (NS_FAILED(rv))
+        return rv;
+
+    mLockFileDesc = open(filePath.get(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    if (mLockFileDesc == -1)
+    {
+        NS_ERROR("Failed to open lock file.");
+        return NS_ERROR_FAILURE;
+    }
+    struct flock lock;
+    lock.l_start = 0;
+    lock.l_len = 0; // len = 0 means entire file
+    lock.l_type = F_WRLCK;
+    lock.l_whence = SEEK_SET;
+    if (fcntl(mLockFileDesc, F_SETLK, &lock) == -1)
+    {
+        if (errno == EAGAIN || errno == EACCES)
+            return NS_ERROR_FILE_ACCESS_DENIED;
+        return NS_ERROR_FAILURE;
+    }
+    mHaveLock = PR_TRUE;
+  #elif TARGET_CARBON
+    if (bsd_open && bsd_close && bsd_fcntl && bsd_error) // FALSE for TARGET_CARBON on OS9
+    {
+        // We need a UTF-8 Posix path to pass to open.
+        CFURLRef lockFileCFURL;
+        nsCOMPtr<nsILocalFileMac> lockMacFile(do_QueryInterface(lockFile));
+        if (!lockMacFile)
+            return NS_ERROR_FAILURE;
+        rv = lockMacFile->GetCFURL(&lockFileCFURL);       
+        if (NS_FAILED(rv))
+            return rv;
+
+        // On OSX, even if we're a CFM app, this will return a UTF-8 Posix path.
+        Boolean gotPath;    
+        UInt8 pathBuf[1024];        
+        gotPath = ::CFURLGetFileSystemRepresentation(lockFileCFURL, false, pathBuf, sizeof(pathBuf));
+        ::CFRelease(lockFileCFURL);
+        if (!gotPath)
+            return NS_ERROR_FAILURE;
+
+        mLockFileDesc = bsd_open((char *)pathBuf, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        if (mLockFileDesc == -1)
+        {
+            NS_ERROR("Failed to open lock file.");
+            return NS_ERROR_FAILURE;
+        }
+        struct flock lock;
+        lock.l_start = 0;
+        lock.l_len = 0; // len = 0 means entire file
+        lock.l_type = F_WRLCK;
+        lock.l_whence = SEEK_SET;  
+
+        if (bsd_fcntl(mLockFileDesc, F_SETLK, &lock) == -1)
+        {
+            int *errno_ptr = bsd_error();
+            if (*errno_ptr == EAGAIN || *errno_ptr == EACCES)
+                return NS_ERROR_FILE_ACCESS_DENIED;
+            return NS_ERROR_FAILURE;
+        }
+        mHaveLock = PR_TRUE;
+    }
+  #endif /* TARGET_CARBON */
+  
+    // Even if we're using fcntl locking, check for the old-style lock.
     struct LockProcessInfo
     {
         ProcessSerialNumber psn;
@@ -1745,6 +1895,9 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
     ProcessInfoRec processInfo;
     LockProcessInfo lockProcessInfo;
 
+    rv = lockFile->SetLeafName(OLD_LOCKFILE_NAME);
+    if (NS_FAILED(rv))
+        return rv;
     rv = lockFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
     if (NS_SUCCEEDED(rv))
     {
@@ -1767,7 +1920,9 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
             NS_WARNING("Could not read lock file - ignoring lock");
         }
     }
+    rv = NS_OK; // Don't propagate error from OpenNSPRFileDesc.
 
+  #if !TARGET_CARBON
     rv = lockFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0, &fd);
     if (NS_FAILED(rv))
         return rv;
@@ -1802,7 +1957,7 @@ nsresult nsProfileLock::Lock(nsILocalFile* aFile)
     if (ioBytes != sizeof(LockProcessInfo))
         return NS_ERROR_FAILURE;
     mLockFile = lockFile;
-
+  #endif /* !TARGET_CARBON */
 #elif defined(XP_WIN)
     nsCAutoString filePath;
     rv = lockFile->GetNativePath(filePath);
@@ -2067,6 +2222,13 @@ nsresult nsProfileLock::Unlock()
 #if defined (XP_MAC)
         if (mLockFile)
             rv = mLockFile->Remove(PR_FALSE);
+  #if TARGET_CARBON
+        if (mLockFileDesc != -1)
+        {
+            bsd_close(mLockFileDesc);
+            mLockFileDesc = -1;        
+        }
+  #endif
 #elif defined (XP_WIN)
         if (mLockFileHandle != INVALID_HANDLE_VALUE)
         {
