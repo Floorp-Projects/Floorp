@@ -32,6 +32,11 @@
 static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
 static NS_DEFINE_IID(kDeleteElementTxnIID,  DELETE_ELEMENT_TXN_IID);
 
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_FALSE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
 
 // note that aEditor is not refcounted
 DeleteRangeTxn::DeleteRangeTxn()
@@ -80,9 +85,9 @@ nsresult DeleteRangeTxn::Init(nsIDOMRange *aRange)
       children->GetLength(&count);
     }
     NS_ASSERTION(mEndOffset<count, "bad end offset");
-
-    printf ("DeleteRange: %d of %p to %d of %p\n", 
-             mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);
+    if (gNoisy)
+      printf ("DeleteRange: %d of %p to %d of %p\n", 
+               mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);
 #endif
     return result;
   }
@@ -377,8 +382,9 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
         p = parentElementTag.ToNewCString();
         if (c&&p)
         {
-          printf("DeleteRangeTxn (1):  building txn to delete child %s (pointer address %p) from parent %s\n", 
-                 c, childAsISupports, p); 
+          if (gNoisy)
+            printf("DeleteRangeTxn (1):  building txn to delete child %s (pointer address %p) from parent %s\n", 
+                   c, childAsISupports, p); 
           delete [] c;
           delete [] p;
         }
@@ -439,7 +445,8 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
           p = parentElementTag.ToNewCString();
           if (c&&p)
           {
-            printf("DeleteRangeTxn (2):  building txn to delete child %s from parent %s\n", c, p); 
+            if (gNoisy)
+              printf("DeleteRangeTxn (2):  building txn to delete child %s from parent %s\n", c, p); 
             delete [] c;
             delete [] p;
           }
@@ -489,7 +496,8 @@ nsresult DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *
         p = parentElementTag.ToNewCString();
         if (p)
         {
-          printf("BuildAncestorList:  adding parent %s (pointer address %p)\n", p, parentAsISupports); 
+          if (gNoisy)
+            printf("BuildAncestorList:  adding parent %s (pointer address %p)\n", p, parentAsISupports); 
           delete [] p;
         }
         // end debug output

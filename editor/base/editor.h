@@ -34,6 +34,12 @@
 class nsIDOMCharacterData;
 class nsIPresShell;
 class nsIViewManager;
+class ChangeAttributeTxn;
+class CreateElementTxn;
+class DeleteElementTxn;
+class InsertTextTxn;
+class DeleteTextTxn;
+class EditAggregateTxn;
 
 //This is the monitor for the editor.
 PRMonitor *getEditorMonitor();
@@ -181,6 +187,37 @@ public:
   virtual nsresult Commit(PRBool aCtrlKey);
 
 /*END private methods of nsEditor*/
+
+protected:
+  nsresult CreateTxnForSetAttribute(nsIDOMElement *aElement, 
+                                    const nsString& aAttribute, 
+                                    const nsString& aValue,
+                                    ChangeAttributeTxn ** aTxn);
+
+  nsresult CreateTxnForRemoveAttribute(nsIDOMElement *aElement, 
+                                       const nsString& aAttribute,
+                                       ChangeAttributeTxn ** aTxn);
+
+  nsresult CreateTxnForCreateElement(const nsString& aTag,
+                                     nsIDOMNode     *aParent,
+                                     PRInt32         aPosition,
+                                     CreateElementTxn ** aTxn);
+
+  nsresult CreateTxnForDeleteElement(nsIDOMNode * aParent,
+                                     nsIDOMNode * aElement,
+                                     DeleteElementTxn ** aTxn);
+
+  nsresult CreateTxnForInsertText(const nsString & aStringToInsert,
+                                  InsertTextTxn ** aTxn);
+
+  nsresult CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
+                                  PRUint32             aOffset,
+                                  PRUint32             aLength,
+                                  DeleteTextTxn      **aTxn);
+
+  nsresult CreateTxnForDeleteSelection(EditAggregateTxn ** aTxn);
+
+
 };
 
 
