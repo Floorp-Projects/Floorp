@@ -1234,6 +1234,34 @@ nsEditorShell::GetListItemState(PRBool *aMixed, PRUnichar **_retval)
 }
 
 NS_IMETHODIMP 
+nsEditorShell::GetAlignment(PRBool *aMixed, PRUnichar **_retval)
+{
+  if (!aMixed || !_retval) return NS_ERROR_NULL_POINTER;
+  *_retval = nsnull;
+  *aMixed = PR_FALSE;
+
+  nsresult  err = NS_NOINTERFACE;
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+  if (htmlEditor)
+  {
+    nsIHTMLEditor::EAlignment firstAlign;
+    err = htmlEditor->GetAlignment(*aMixed, firstAlign);
+    if (NS_SUCCEEDED(err))
+    {
+      nsAutoString tagStr;
+      if (firstAlign == nsIHTMLEditor::eLeft)        
+        tagStr.AssignWithConversion("left");
+      else if (firstAlign == nsIHTMLEditor::eCenter) 
+        tagStr.AssignWithConversion("center");
+      else if (firstAlign == nsIHTMLEditor::eRight)  
+        tagStr.AssignWithConversion("right");
+      *_retval = tagStr.ToNewUnicode();
+    }  
+  }
+  return err;
+}
+
+NS_IMETHODIMP 
 nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 {
   nsresult result = NS_NOINTERFACE;

@@ -455,6 +455,11 @@ nsHTMLEditRules::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBo
   return res;
 }
 
+NS_IMETHODIMP 
+nsHTMLEditRules::GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP 
 nsHTMLEditRules::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)

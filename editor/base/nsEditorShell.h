@@ -80,7 +80,7 @@ class nsEditorShell :   public nsIEditorShell,
 {
   public:
 
-  	// These must map onto the button-order for nsICommonDialog::Confirm results
+    // These must map onto the button-order for nsICommonDialog::Confirm results
     //  which are rather ugly right now (Cancel in the middle!)
     typedef enum {eYes = 0, eCancel = 1, eNo = 2 } EConfirmResult;
 
@@ -100,30 +100,30 @@ class nsEditorShell :   public nsIEditorShell,
 
   protected:
 
-  	typedef enum {
-  	  eUninitializedEditorType = 0,
-  		ePlainTextEditorType = 1,
-  		eHTMLTextEditorType = 2
-  	} EEditorType;
+    typedef enum {
+      eUninitializedEditorType = 0,
+      ePlainTextEditorType = 1,
+      eHTMLTextEditorType = 2
+    } EEditorType;
 
 
-  	typedef enum {
+    typedef enum {
       eCantEditNoReason = 0,
       eCantEditFramesets = 1,
       eCantEditMimeType = 2,
       eCantEditOther = 3
-  	} ECantEditReason;
-  	
-    nsresult   			DoEditorMode(nsIDocShell *aDocShell);
+    } ECantEditReason;
+    
+    nsresult        DoEditorMode(nsIDocShell *aDocShell);
     // nuke any existing editor in the editorShell, thus preparing it to edit
     // a(nother) document.
     nsresult        ResetEditingState();
-    nsresult  			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
-		nsresult    	  PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl);
-    nsresult  			ScrollSelectionIntoView();
+    nsresult        InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
+    nsresult        PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl);
+    nsresult        ScrollSelectionIntoView();
     nsresult        TransferDocumentStateListeners();
-    nsresult  			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
-		nsresult        DoFind(PRBool aFindNext);
+    nsresult        RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
+    nsresult        DoFind(PRBool aFindNext);
     // To allow executing JavaScript commands from C++ via nsIEditorControler interface
     nsresult        DoControllerCommand(nsString& aCommand);
 
@@ -136,8 +136,8 @@ class nsEditorShell :   public nsIEditorShell,
     EConfirmResult  ConfirmWithCancel(const nsString& aTitle, const nsString& aQuestion,
                                      const nsString *aYesString, const nsString *aNoString);
 
-		// this returns an AddReffed nsIScriptContext. You must relase it.
-		nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);
+    // this returns an AddReffed nsIScriptContext. You must relase it.
+    nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);
 
     // Get a string from the string bundle file
     void            GetBundleString(const nsString& name, nsString &outString);
@@ -161,7 +161,7 @@ class nsEditorShell :   public nsIEditorShell,
     //  fix rowspan, colspan, and missing cells problems
     nsresult CheckPrefAndNormalizeTable();
 
-    nsCOMPtr<nsIHTMLEditor>	 	    mEditor;         // this can be either an HTML or plain text (or other?) editor
+    nsCOMPtr<nsIHTMLEditor>         mEditor;         // this can be either an HTML or plain text (or other?) editor
     nsCOMPtr<nsISupports>         mSearchContext;  // context used for search and replace. Owned by the appshell.
     nsCOMPtr<nsISpellChecker>     mSpellChecker;
 
@@ -176,7 +176,7 @@ class nsEditorShell :   public nsIEditorShell,
     // These doc listeners are registered with the editor when that gets
     // created. We also keep them in this list so we can register if we have
     // to blow away the editor (e.g. URL reload)
-    nsCOMPtr<nsISupportsArray>  mDocStateListeners;		// contents are nsISupports
+    nsCOMPtr<nsISupportsArray>  mDocStateListeners;    // contents are nsISupports
 
     // Pointer to localized strings used for UI
     nsCOMPtr<nsIStringBundle>   mStringBundle;
@@ -197,26 +197,26 @@ class nsEditorShell :   public nsIEditorShell,
     //  so we need to track it separately
     PRBool  mHTMLSourceMode;
     
-    nsIDOMWindow            *mWebShellWindow;				// weak reference
-    //nsIDOMWindow            *mContentWindow;				// weak reference
+    nsIDOMWindow            *mWebShellWindow;        // weak reference
+    //nsIDOMWindow            *mContentWindow;        // weak reference
     nsWeakPtr                mContentWindow;        // weak reference
 
     nsEditorParserObserver  *mParserObserver;       // we hold the owning ref to this.
     nsInterfaceState        *mStateMaintainer;      // we hold the owning ref to this.
 
     nsIEditorController     *mEditorController;     // temporary weak ref to the editor controller
-    nsIDocShell             *mDocShell;						  // weak reference
+    nsIDocShell             *mDocShell;              // weak reference
 
     // The webshell that contains the document being edited.
     // Don't assume that webshell directly contains the document being edited;
     // if we are in a frameset, this assumption is false.
-    nsIDocShell         *mContentAreaDocShell;	// weak reference
+    nsIDocShell         *mContentAreaDocShell;  // weak reference
 
     PRPackedBool        mCloseWindowWhenLoaded; // error on load. Close window when loaded
     ECantEditReason     mCantEditReason;
     
-		EEditorType					mEditorType;
-		nsString						mEditorTypeString;	    // string which describes which editor type will be instantiated (lowercased)
+    EEditorType          mEditorType;
+    nsString            mEditorTypeString;      // string which describes which editor type will be instantiated (lowercased)
     PRInt32             mWrapColumn;            // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
 
     nsStringArray       mSuggestedWordList;

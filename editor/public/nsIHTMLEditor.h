@@ -83,6 +83,13 @@ public:
     eTypedBreak  // user typed enter
   };
   
+  // used by GetAlignment()
+  typedef enum {
+    eLeft,
+    eCenter,
+    eRight
+  } EAlignment;
+  
   /* ------------ Document info methods -------------- */
 
   /** get the length of the document in characters */
@@ -333,6 +340,14 @@ public:
    * @param aDD       true if "dd" list items are selected.
    */
   NS_IMETHOD GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD)=0;
+  
+  /** 
+   * GetAlignment     returns what alignment is in the selection.
+   * @param aMixed    True if there is more than one type of list item, or
+   *                  if there is some list and non-list
+   * @param aAlign    enum value for first encountered alignment (left/center/right)
+   */
+  NS_IMETHOD GetAlignment(PRBool &aMixed, EAlignment &aAlign)=0;
   
   /**
    * Document me!

@@ -36,6 +36,7 @@ public:
   NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL)=0;
   NS_IMETHOD GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD)=0;
   NS_IMETHOD GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)=0;
+  NS_IMETHOD GetAlignment(PRBool &aMixed, nsIHTMLEditor::EAlignment &aAlign)=0;
   NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outFormat)=0;
 };
 
