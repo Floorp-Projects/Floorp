@@ -28,9 +28,11 @@
 <!ENTITY command.newBookmark.accesskey "B">
 <!ENTITY menuitem.newFolder.label      "Folder">
 <!ENTITY button.newFolder.label        "New Folder">
+<!ENTITY button.newFolder.accesskey    "N">
 <!ENTITY command.newFolder.accesskey   "F">
 <!ENTITY menuitem.newSeparator.label   "Separator">
 <!ENTITY button.newSeparator.label     "New Separator">
+<!ENTITY button.newSeparator.accesskey  "o">
 <!ENTITY command.newSeparator.accesskey "S">
 <!ENTITY menuitem.import.label         "Import...">
 <!ENTITY menuitem.import.accesskey     "i">
@@ -41,11 +43,15 @@
 <!ENTITY menuitem.find.accesskey       "S">
 <!ENTITY edit.find.keybinding          "f">
 <!ENTITY command.properties.label      "Properties...">
+<!ENTITY button.properties.accesskey  "P">
 <!ENTITY command.properties.accesskey  "r">
 <!ENTITY edit.properties.keybinding    "i">
 <!ENTITY command.rename.label          "Rename...">
+<!ENTITY button.rename.accesskey      "R">
 <!ENTITY command.delete.label          "Delete">
+<!ENTITY button.delete.accesskey      "D">
 <!ENTITY command.fileBookmark.label    "File Bookmark(s)...">
+<!ENTITY button.fileBookmark.accesskey "B">
 <!ENTITY command.fileBookmark.accesskey "l">
 <!ENTITY command.addBookmark.label     "Add...">
 <!ENTITY command.manageBookmarks.label "Manage">
