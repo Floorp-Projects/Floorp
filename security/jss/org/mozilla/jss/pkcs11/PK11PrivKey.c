@@ -500,6 +500,7 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_fromPrivateKeyInfo
     jobject keyObj = NULL;
     SECKEYPrivateKey* privk = NULL;
     PK11SlotInfo *slot = NULL;
+    unsigned int keyUsage;
 
     /*
      * initialize so we can goto finish
@@ -541,9 +542,15 @@ Java_org_mozilla_jss_pkcs11_PK11PrivKey_fromPrivateKeyInfo
     nickname.len = 0;
     nickname.data = NULL;
 
+    /*
+     * enable the key for as many operations as possible
+     */
+    keyUsage =  KU_KEY_ENCIPHERMENT | KU_DATA_ENCIPHERMENT |
+                KU_DIGITAL_SIGNATURE | KU_DIGITAL_SIGNATURE;
+
     status = PK11_ImportDERPrivateKeyInfoAndReturnKey(slot, &derPK, &nickname,
                 NULL /*public value*/, PR_FALSE /*isPerm*/,
-                PR_TRUE /*isPrivate*/, 0 /*keyUsage*/, &privk, NULL /*wincx*/);
+                PR_TRUE /*isPrivate*/, keyUsage, &privk, NULL /*wincx*/);
     if(status != SECSuccess) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to import private key info");
         goto finish;

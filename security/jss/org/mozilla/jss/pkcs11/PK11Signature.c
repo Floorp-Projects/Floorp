@@ -232,6 +232,7 @@ Java_org_mozilla_jss_pkcs11_PK11Signature_engineSignNative
 
     PR_ASSERT(env!=NULL && this!=NULL);
 
+
     /*
      * Extract the signature context from the Java wrapper
      */
