@@ -355,6 +355,7 @@ void nsCSSValue::AppendToString(nsString& aBuffer, nsCSSProperty aPropID) const
     case eCSSUnit_EN:           aBuffer.Append("en");   break;
     case eCSSUnit_XHeight:      aBuffer.Append("ex");   break;
     case eCSSUnit_CapHeight:    aBuffer.Append("cap");  break;
+    case eCSSUnit_Char:         aBuffer.Append("ch");   break;
     case eCSSUnit_Pixel:        aBuffer.Append("px");   break;
     case eCSSUnit_Degree:       aBuffer.Append("deg");  break;
     case eCSSUnit_Grad:         aBuffer.Append("grad"); break;
