@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<bindings id="tabBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="tabbox" extends="chrome://global/content/tabBindings.xml#tabbox">
+    <content>
+	    <children includes="xul:tab"/>
+	    <xul:spring class="tabbox-spring" flex="1"/>
+    </content>
+  </binding>
+
+  <binding id="tabpanel" extends="chrome://global/content/tabBindings.xml#tabpanel">
+    <content>
+  	  <xul:box class="tabpanel-inner-box" flex="1">
+        <children/> 
+      </xul:box>
+    </content>
+  </binding>
+
+</bindings>
+

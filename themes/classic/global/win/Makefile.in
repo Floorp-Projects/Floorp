@@ -46,6 +46,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	scrollbars.css \
 	splitter.css \
 	tabcontrol.css \
+	colorpicker.css \
 	textfield.css \
 	toolbar.css \
 	tree.css \
@@ -53,6 +54,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	buttonBindings.xml \
 	classicBindings.xml \
 	menulistBindings.xml \
+	tabBindings.xml \
 	treeBindings.xml \
 	scrollbar-slider-bg.gif \
 	error-icon.gif \

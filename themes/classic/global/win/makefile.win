@@ -44,10 +44,12 @@ install::
 	$(MAKE_INSTALL) scrollbars.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) splitter.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tabcontrol.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) colorpicker.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) textfield.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) toolbar.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tree.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) wizardOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) tabBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) buttonBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) classicBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) menulistBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin

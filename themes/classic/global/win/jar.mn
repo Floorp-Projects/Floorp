@@ -21,6 +21,7 @@ skins\classic.jar:
     global\skin\buttonBindings.xml
     global\skin\classicBindings.xml
     global\skin\menulistBindings.xml
+    global\skin\tabBindings.xml
     global\skin\treeBindings.xml
     global\skin\scrollbar-slider-bg.gif
     global\skin\error-icon.gif

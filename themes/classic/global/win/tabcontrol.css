@@ -1,75 +1,38 @@
-/********** Tab widget *********/
-tab { 
-  border-top: 1px solid white;
-  border-bottom: 1px solid #666666;
-  border-left: 1px solid white;
-  border-right: 1px solid #666666;
-  color: black; 
-  padding: 3px 5px 3px 5px;
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); 
+
+/*============ tabpanel widget =============*/
+
+tabpanel {
+  /*behavior: url("chrome://global/skin/tabBindings.xml#tabpanel"); */
+  padding: 5px;
 }
 
-/* when a tab is selected this is how it should look */
-tab[selected="true"] {
-	font-weight: bold;
+/* top tabs */
+tabcontrol[orient="vertical"] > tabbox + tabpanel {
+  border-top: none !important;
+  border-bottom: 1px solid threedshadow !important;
 }
 
-tab:hover { 
-  color: #003366;
-  text-decoration: underline;
-}
-
-tab:hover:active { 
-  border-top: 1px solid #666666;
-  border-bottom: 1px solid white;
-  border-left: 1px solid #666666;
-  border-right: 1px solid white;
-  text-decoration: none;
-}
-
-tabbox {
-  padding: 0px 2px 0px 2px;
-}
-
-    /* top tabs */
-tabcontrol[align="vertical"] tabbox[align="horizontal"] tab { 
+/* bottom tabs */
+tabcontrol[orient="vertical"] > tabpanel {
+  border-top: 1px solid threedhighlight;
   border-bottom: none;
-  -moz-border-radius: 8px 8px 0px 0px;
-  padding-bottom: 1px;
-  margin: 1px 2px 1px 2px;
+  border-left: 1px solid threedhighlight;
+  border-right: 1px solid threedshadow;
 }
 
-	/* bottom tabs */
-tabcontrol[align="vertical"] tabpanel + tabbox[align="horizontal"] tab { 
-  border-top: none;
-  border-bottom: 1px solid #666666;
-  border-left: 1px solid white;
-  border-right: 1px solid #666666;
-  -moz-border-radius: 0px 0px 8px 8px;
-  padding: 1px 5px 3px 5px;
-  margin: 1px 2px 1px 2px;
+/* left tabs */
+tabcontrol[orient="horizontal"] > tabbox + tabpanel {
+  border-left: none !important;
+  border-right: 1px solid threedshadow !important;
 }
 
-	/* left tabs */
-tabcontrol[align="horizontal"] tabbox[align="vertical"] tab { 
+/* right tabs */
+tabcontrol[orient="horizontal"] > tabpanel {
+  border-top: 1px solid threedhighlight;
+  border-bottom: 1px solid threedshadow;
   border-right: none;
-  -moz-border-radius: 8px 0px 0px 8px;
-  padding-right: 1px;
-  margin: 2px 1px 2px 1px;
-}
-
-	/* right tabs */
-tabcontrol[align="horizontal"] tabpanel + tabbox[align="vertical"]  tab { 
-  border-top: 1px solid white;
-  border-bottom: 1px solid #666666;
-  border-left: none;
-  border-right: 1px solid #666666;
-  -moz-border-radius: 0px 8px 8px 0px;
-  padding: 3px 5px 1px 5px;
-  margin: 2px 1px 2px 1px;
-}
-
-tabcontrol { 
-  border: none; 
+  border-left: 1px solid threedhighlight;
 }
 
 /* border on bottom only, no padding (used in search) */
@@ -79,11 +42,237 @@ tabpanel.light {
   padding: 0px;
 }
 
-tabpanel {
-  border-top: 1px solid white;
-  border-bottom: 1px solid #666666;
-  border-left: 1px solid white;
-  border-right: 1px solid #666666;
-  padding: 5px;
+.tabpanel-inner-box {
+  border-right: 1px solid threedshadow;
+  border-bottom: 1px solid threedshadow;
 }
 
+/*============ tabbox widget ============*/
+
+tabbox {
+  behavior: url("chrome://global/skin/tabBindings.xml#tabbox");
+}
+
+/* tabbox-spring ========================== */
+
+/* top tabs */
+tabcontrol[orient="vertical"] > tabbox > .tabbox-spring {
+  border-bottom: 1px solid threedhighlight;
+}
+
+/* bottom tabs */
+tabcontrol[orient="vertical"] > tabpanel + tabbox > .tabbox-spring {
+  border-top: 1px solid threedshadow !important;
+  border-bottom: none;
+}
+
+/* left tabs */
+tabcontrol[orient="horizontal"] > tabbox > .tabbox-spring {
+  border-right: 1px solid threedhighlight;
+}
+
+/* right tabs */
+tabcontrol[orient="horizontal"] > tabpanel + tabbox > .tabbox-spring {
+  border-left: 1px solid threedshadow !important;
+  border-right: none;
+}
+
+/*============ tab widget ============*/
+/* NOTE: there should be code in here for indenting the first tab
+   by two pixels, however, this needs to be done with a spring to
+   fill in the border, but current attempts to use said spring 
+   result in said spring not rendering.  Will revisit.  - JRH */
+   
+tab {
+  border: none;
+  font: small-caption;
+  color: buttontext;
+  user-focus: normal !important;
+}
+
+tab > .tab-box > .tab-text {
+  border: 1px solid threedface;
+  padding: 0px 1px 0px 1px;
+}
+
+tab:focus > .tab-box > .tab-text {
+  border: 1px dotted buttontext;
+}
+
+.tab-box {
+  margin: 0px;
+  padding: 1px 3px 1px 3px !important;
+}
+
+/* top tabs */
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab[first-tab="true"]  { 
+  margin-left: 2px;
+}
+
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab  { 
+  margin-top: 2px;
+  border-right: 1px solid threeddarkshadow;
+  -moz-border-radius: 4px 4px 0px 0px;
+}
+
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] tab > .tab-box { 
+  border-left: 1px solid threedhighlight;
+  border-top: 1px solid threedhighlight;
+  border-right: 1px solid threedshadow;
+  border-bottom: 1px solid threedhighlight;
+  -moz-border-radius: 4px 4px 0px 0px;
+}
+
+/* bottom tabs */
+tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab { 
+  margin-top: 0px;
+  margin-bottom: 2px;
+  border-right: 1px solid threeddarkshadow;
+  -moz-border-radius: 0px 0px 4px 4px;
+}
+
+tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab > .tab-box { 
+  border-top: 1px solid threedshadow;
+  border-right: 1px solid threedshadow;
+  -moz-border-radius: 0px 0px 4px 4px;
+}
+
+/* left tabs */
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab[first-tab="true"]  { 
+  margin-top: 2px;
+}
+
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab  { 
+  margin-left: 2px;
+  border-bottom: 1px solid threeddarkshadow;
+  -moz-border-radius: 4px 0px 0px 4px;
+}
+
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] tab > .tab-box  { 
+  border-left: 1px solid threedhighlight;
+  border-top: 1px solid threedhighlight;
+  border-right: 1px solid threedhighlight;
+  border-bottom: 1px solid threedshadow;
+  -moz-border-radius: 4px 0px 0px 4px;
+}
+
+/* right tabs */
+tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab { 
+  margin-right: 2px;
+  margin-left: 0px;
+  border-bottom: 1px solid threeddarkshadow;
+  border-right: 1px solid threeddarkshadow;
+  -moz-border-radius: 0px 4px 4px 0px !important;
+}
+
+tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab > .tab-box { 
+  border-left: 1px solid threedshadow !important;
+  border-right: 1px solid threedshadow;
+  border-bottom: 1px solid threedshadow !important;
+  -moz-border-radius: 0px 4px 4px 0px !important;
+}
+
+/* selected tabs ============================= */
+/* EXPLANATION (using top tabs as scenario):
+  When a tab is selected, it must appear to raise up and overlap the tabs to the left and right of it.
+  To do this, the adjacent borders of the before and after tabs are removed, and the selected tab
+  adds some padding to expand into the area once occupied by the adjacent borders.  It must do this
+  without shifting tabs or text around.  The leftmost tab grows into the margin to it's left since 
+  there is no tab there to overlap.
+*/
+
+/* top tabs */
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true"]  {
+  margin-left: 0px;
+  margin-top: 0px;
+}
+
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true"] > .tab-box {
+  border-bottom: 1px solid threedface;
+  padding-left: 5px !important;
+  padding-right: 4px !important;
+}
+
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[selected="true"][first-tab="true"] > .tab-box {
+  border-bottom: 1px solid threedface;
+  padding-left: 5px !important;
+  padding-right: 4px !important;
+}
+
+/* bottom tabs */
+tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab[selected="true"] {
+  margin-bottom: 0px;
+}
+
+tabcontrol[orient="vertical"] > tabpanel + tabbox[orient="horizontal"] > tab[selected="true"] > .tab-box {
+  border-top: 1px solid threedface;
+  border-bottom: 1px solid threedhighlight !important;
+}
+
+/* left tabs */
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[selected="true"]  {
+  margin-left: 0px;
+  margin-top: 0px;
+}
+
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[selected="true"] > .tab-box {
+  border-right: 1px solid threedface;
+  padding-top: 3px !important;
+  padding-bottom: 2px !important;
+}
+
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[selected="true"][first-tab="true"] > .tab-box {
+  border-right: 1px solid threedface;
+  padding-top: 3px !important;
+  padding-bottom: 2px !important;
+}
+
+/* right tabs */
+tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab[selected="true"] {
+  margin-right: 0px;
+}
+
+tabcontrol[orient="horizontal"] > tabpanel + tabbox[orient="vertical"] > tab[selected="true"] > .tab-box {
+  border-left: 1px solid threedface !important;
+  border-right: 1px solid threedshadow !important;
+}
+
+/* before selected tabs ====================== */
+
+/* top & bottom tabs */
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[beforeselected="true"] {
+  border-right: none !important;
+}
+
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[beforeselected="true"] > .tab-box {
+  border-right: none !important;
+}
+
+/* left & right tabs */
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[beforeselected="true"]  {
+  border-bottom: none !important;
+}
+
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[beforeselected="true"] > .tab-box {
+  border-bottom: none !important;
+}
+
+/* after selected tabs ====================== */
+
+/* top & bottom tabs */
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[afterselected="true"]  {
+  border-left: none !important;
+}
+
+tabcontrol[orient="vertical"] > tabbox[orient="horizontal"] > tab[afterselected="true"] > .tab-box {
+  border-left: none !important;
+}
+
+/* left & right tabs */
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[afterselected="true"]  {
+  border-top: none !important;
+}
+
+tabcontrol[orient="horizontal"] > tabbox[orient="vertical"] > tab[afterselected="true"] > .tab-box {
+  border-top: none !important;
+}
