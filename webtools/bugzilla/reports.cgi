@@ -171,7 +171,6 @@ sub choose_product {
     print <<FIN;
 <center>
 <h1>Welcome to the Bugzilla Query Kitchen</h1>
-</center>
 <form method=get action=reports.cgi>
 <table border=1 cellpadding=5>
 <tr>
@@ -253,6 +252,7 @@ FIN
 </td>
 </tr>
 </table>
+</center>
 </form>
 <p>
 FIN
