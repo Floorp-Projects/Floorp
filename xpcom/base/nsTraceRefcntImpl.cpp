@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   L. David Baron (dbaron@fas.harvard.edu)
+ *   L. David Baron <dbaron@fas.harvard.edu>
  */
 
 #include "nsISupports.h"
@@ -114,6 +114,7 @@ static FILE *gRefcntsLog = nsnull;
 static FILE *gAllocLog = nsnull;
 static FILE *gLeakyLog = nsnull;
 static FILE *gCOMPtrLog = nsnull;
+static PRBool gActivityIsLegal = PR_FALSE;
 
 #define XPCOM_REFCNT_TRACK_BLOAT  0x1
 #define XPCOM_REFCNT_LOG_ALL      0x2
@@ -1520,6 +1521,58 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
 
 //----------------------------------------------------------------------
 
+NS_COM void
+nsTraceRefcnt::Startup()
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+  SetActivityIsLegal(PR_TRUE);
+#endif
+}
+
+NS_COM void
+nsTraceRefcnt::Shutdown()
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+
+  if (gBloatView) {
+    PL_HashTableDestroy(gBloatView);
+    gBloatView = nsnull;
+  }
+  if (gTypesToLog) {
+    PL_HashTableDestroy(gTypesToLog);
+    gTypesToLog = nsnull;
+  }
+  if (gObjectsToLog) {
+    PL_HashTableDestroy(gObjectsToLog);
+    gObjectsToLog = nsnull;
+  }
+  if (gSerialNumbers) {
+    PL_HashTableDestroy(gSerialNumbers);
+    gSerialNumbers = nsnull;
+  }
+
+  SetActivityIsLegal(PR_FALSE);
+
+#endif
+}
+
+NS_COM void
+nsTraceRefcnt::SetActivityIsLegal(PRBool aLegal)
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+  gActivityIsLegal = aLegal;
+#endif
+}
+
+#ifdef DEBUG_dbaron
+  // I hope to turn this on for everybody once we hit it a little less.
+#define ASSERT_ACTIVITY_IS_LEGAL                                                \
+  NS_WARN_IF_FALSE(gActivityIsLegal,                                         \
+                   "XPCOM objects created/destroyed from static ctor/dtor")
+#else
+#define ASSERT_ACTIVITY_IS_LEGAL
+#endif
+
 /*
  For consistency, and ease of munging the output, the following record format will be used:
  
@@ -1533,6 +1586,7 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
                          PRUint32 classSize)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
+  ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized)
     InitTraceLog();
   if (gLogging) {
@@ -1595,6 +1649,7 @@ nsTraceRefcnt::LogRelease(void* aPtr,
                           const char* aClazz)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
+  ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized)
     InitTraceLog();
   if (gLogging) {
@@ -1663,6 +1718,7 @@ nsTraceRefcnt::LogAddRefCall(void* aPtr,
                              int aLine)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
+  ASSERT_ACTIVITY_IS_LEGAL;
 #ifdef NS_LOSING_ARCHITECTURE
   if (!gInitialized)
     InitTraceLog();
@@ -1687,6 +1743,7 @@ nsTraceRefcnt::LogReleaseCall(void* aPtr,
                               int aLine)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
+  ASSERT_ACTIVITY_IS_LEGAL;
 #ifdef NS_LOSING_ARCHITECTURE
   if (!gInitialized)
     InitTraceLog();
@@ -1713,6 +1770,7 @@ nsTraceRefcnt::LogNewXPCOM(void* aPtr,
                            int aLine)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
+  ASSERT_ACTIVITY_IS_LEGAL;
 #ifdef NS_LOSING_ARCHITECTURE
   if (!gInitialized)
     InitTraceLog();
@@ -1736,6 +1794,7 @@ nsTraceRefcnt::LogDeleteXPCOM(void* aPtr,
                               int aLine)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
+  ASSERT_ACTIVITY_IS_LEGAL;
 #ifdef NS_LOSING_ARCHITECTURE
   if (!gInitialized)
     InitTraceLog();
@@ -1759,6 +1818,7 @@ nsTraceRefcnt::LogCtor(void* aPtr,
                        PRUint32 aInstanceSize)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
+  ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized)
     InitTraceLog();
 
@@ -1799,6 +1859,7 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
                        PRUint32 aInstanceSize)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
+  ASSERT_ACTIVITY_IS_LEGAL;
   if (!gInitialized)
     InitTraceLog();
 
@@ -1838,16 +1899,19 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
 
 NS_COM void
 nsTraceRefcnt::LogAddCOMPtr(void* aCOMPtr,
-                            void* aObject)
+                            nsISupports* aObject)
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
+#if defined(NS_BUILD_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+  // Get the most-derived object.
+  void *object = dynamic_cast<void *>(aObject);
+
   // This is a very indirect way of finding out what the class is
   // of the object being logged.  If we're logging a specific type,
   // then 
   if (!gTypesToLog || !gSerialNumbers) {
     return;
   }
-  PRInt32 serialno = GetSerialNumber(aObject, PR_FALSE);
+  PRInt32 serialno = GetSerialNumber(object, PR_FALSE);
   if (serialno == 0) {
     return;
   }
@@ -1857,7 +1921,7 @@ nsTraceRefcnt::LogAddCOMPtr(void* aCOMPtr,
   if (gLogging) {
     LOCK_TRACELOG();
 
-    PRInt32* count = GetCOMPtrCount(aObject);
+    PRInt32* count = GetCOMPtrCount(object);
     if(count)
       (*count)++;
 
@@ -1866,7 +1930,7 @@ nsTraceRefcnt::LogAddCOMPtr(void* aCOMPtr,
 
     if (gCOMPtrLog && loggingThisObject) {
       fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrAddRef %d 0x%08X\n",
-              PRInt32(aObject), serialno, count?(*count):-1, PRInt32(aCOMPtr));
+              PRInt32(object), serialno, count?(*count):-1, PRInt32(aCOMPtr));
       WalkTheStack(gCOMPtrLog);
     }
 #endif
@@ -1878,16 +1942,19 @@ nsTraceRefcnt::LogAddCOMPtr(void* aCOMPtr,
 
 NS_COM void
 nsTraceRefcnt::LogReleaseCOMPtr(void* aCOMPtr,
-                                void* aObject)
+                                nsISupports* aObject)
 {
-#ifdef NS_BUILD_REFCNT_LOGGING
+#if defined(NS_BUILD_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+  // Get the most-derived object.
+  void *object = dynamic_cast<void *>(aObject);
+
   // This is a very indirect way of finding out what the class is
   // of the object being logged.  If we're logging a specific type,
   // then 
   if (!gTypesToLog || !gSerialNumbers) {
     return;
   }
-  PRInt32 serialno = GetSerialNumber(aObject, PR_FALSE);
+  PRInt32 serialno = GetSerialNumber(object, PR_FALSE);
   if (serialno == 0) {
     return;
   }
@@ -1897,7 +1964,7 @@ nsTraceRefcnt::LogReleaseCOMPtr(void* aCOMPtr,
   if (gLogging) {
     LOCK_TRACELOG();
 
-    PRInt32* count = GetCOMPtrCount(aObject);
+    PRInt32* count = GetCOMPtrCount(object);
     if(count)
       (*count)--;
 
@@ -1906,7 +1973,7 @@ nsTraceRefcnt::LogReleaseCOMPtr(void* aCOMPtr,
 
     if (gCOMPtrLog && loggingThisObject) {
       fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrRelease %d 0x%08X\n",
-              PRInt32(aObject), serialno, count?(*count):-1, PRInt32(aCOMPtr));
+              PRInt32(object), serialno, count?(*count):-1, PRInt32(aCOMPtr));
       WalkTheStack(gCOMPtrLog);
     }
 #endif

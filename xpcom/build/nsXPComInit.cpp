@@ -210,6 +210,10 @@ nsresult NS_COM NS_InitXPCOM2(const char* productName,
 {
     nsresult rv = NS_OK;
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcnt::Startup();
+#endif 
+
     // Establish the main thread here.
     rv = nsIThread::SetMainThread();
     if (NS_FAILED(rv)) return rv;
@@ -695,9 +699,10 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     nsThread::Shutdown();
     NS_PurgeAtomTable();
 
-#if (defined(DEBUG) || defined(NS_BUILD_REFCNT_LOGGING))
+#ifdef NS_BUILD_REFCNT_LOGGING
     nsTraceRefcnt::DumpStatistics();
     nsTraceRefcnt::ResetStatistics();
+    nsTraceRefcnt::Shutdown();
 #endif
 
 #ifdef GC_LEAK_DETECTOR
