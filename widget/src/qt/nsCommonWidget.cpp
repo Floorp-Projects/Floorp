@@ -47,6 +47,8 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
+#include "mozqwidget.h"
+
 #include <qapplication.h>
 #include <qdesktopwidget.h>
 #include <qwidget.h>
@@ -249,7 +251,10 @@ keyEventToContextMenuEvent(const nsKeyEvent* aKeyEvent,
 nsCommonWidget::nsCommonWidget()
     : mContainer(0),
       mWidget(0),
-      mListenForResizes(PR_FALSE)
+      mListenForResizes(PR_FALSE),
+      mNeedsResize(PR_FALSE),
+      mNeedsShow(PR_FALSE),
+      mIsShown(PR_FALSE)
 {
 }
 
@@ -273,17 +278,29 @@ nsCommonWidget::Initialize(QWidget *widget)
 NS_IMETHODIMP
 nsCommonWidget::Show(PRBool aState)
 {
-    if (!mWidget) {
-        //XXX: apperently can be null during the printing, check whether
-        //     that's true
-        qDebug("nsCommon::Show : widget empty");
+    mIsShown = aState;
+
+    // Ok, someone called show on a window that isn't sized to a sane
+    // value.  Mark this window as needing to have Show() called on it
+    // and return.
+    if ((aState && !AreBoundsSane()) || !mWidget) {
+        qDebug("XX Bounds are insane or window hasn't been created yet");
+        mNeedsShow = PR_TRUE;
         return NS_OK;
     }
 
-    if (mContainer)
-        mContainer->setShown(aState);
-    else
-        mWidget->setShown(aState);
+    // If someone is hiding this widget, clear any needing show flag.
+    if (!aState)
+        mNeedsShow = PR_FALSE;
+
+    // If someone is showing this window and it needs a resize then
+    // resize the widget.
+    if (aState && mNeedsResize) {
+        NativeResize(mBounds.width, mBounds.height,
+                     PR_FALSE);
+    }
+
+    NativeShow(aState);
 
     return NS_OK;
 }
@@ -299,7 +316,7 @@ nsCommonWidget::IsVisible(PRBool &visible)
 }
 
 NS_IMETHODIMP
-nsCommonWidget::ConstrainPosition(int aAllowSlop, PRInt32 *aX, PRInt32 *aY)
+nsCommonWidget::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
     if (mContainer) {
         PRInt32 screenWidth  = QApplication::desktop()->width();
@@ -361,28 +378,51 @@ nsCommonWidget::Resize(PRInt32 aWidth,
     if (!mWidget || (mWidget->width() == aWidth &&
                      mWidget->height() == aHeight))
         return NS_OK;
-    qDebug("Resize: mWidget=%p, aWidth=%d,aHeight=%d", (void*)mWidget, aWidth, aHeight);
 
-    if (mWidget) {
+    // There are several cases here that we need to handle, based on a
+    // matrix of the visibility of the widget, the sanity of this resize
+    // and whether or not the widget was previously sane.
 
+    // Has this widget been set to visible?
+    if (mIsShown) {
+        // Are the bounds sane?
         if (AreBoundsSane()) {
-            //if (mContainer) {
-            //mContainer->setGeometry( mBounds.x, mBounds.y,
-            //mBounds.width, mBounds.height);
-            //}
+            // Yep?  Resize the window
+            //Maybe, the toplevel has moved
+            if (mContainer || mNeedsShow)
+                NativeResize(mBounds.x, mBounds.y,
+                             mBounds.width, mBounds.height, aRepaint);
+            else
+                NativeResize(mBounds.width, mBounds.height, aRepaint);
 
-            mWidget->resize(mBounds.width, mBounds.height);
-
-            if (aRepaint) {
-                if (mWidget->isVisible())
-                    mWidget->repaint(false);
+            // Does it need to be shown because it was previously insane?
+            if (mNeedsShow)
+                NativeShow(PR_TRUE);
+        }
+        else {
+            // If someone has set this so that the needs show flag is false
+            // and it needs to be hidden, update the flag and hide the
+            // window.  This flag will be cleared the next time someone
+            // hides the window or shows it.  It also prevents us from
+            // calling NativeShow(PR_FALSE) excessively on the window which
+            // causes unneeded X traffic.
+            if (!mNeedsShow) {
+                mNeedsShow = PR_TRUE;
+                NativeShow(PR_FALSE);
             }
         }
-    } else if (mWidget) {
+    }
+    // If the widget hasn't been shown, mark the widget as needing to be
+    // resized before it is shown.
+    else {
         if (AreBoundsSane() && mListenForResizes) {
-            //if (mContainer)
-            //  mContainer->resize(mBounds.width, mBounds.height);
-            mWidget->resize(mBounds.width, mBounds.height);
+            // For widgets that we listen for resizes for (widgets created
+            // with native parents) we apparently _always_ have to resize.  I
+            // dunno why, but apparently we're lame like that.
+            NativeResize(aWidth, aHeight, aRepaint);
+        }
+        else {
+            mNeedsResize = PR_TRUE;
         }
     }
 
@@ -415,19 +455,45 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                      mWidget->width() == aWidth))
         return NS_OK;
 
-    qDebug("2 Resize: mWidget=%p, aWidth=%d, aHeight=%d, aX = %d, aY = %d", (void*)mWidget, aWidth, aHeight, aX, aY);
+    // There are several cases here that we need to handle, based on a
+    // matrix of the visibility of the widget, the sanity of this resize
+    // and whether or not the widget was previously sane.
 
-    if (AreBoundsSane()) {
-        //if (mContainer)
-        //mContainer->setGeometry(mBounds.x, mBounds.y,
-        //mBounds.width, mBounds.height);
+    // Has this widget been set to visible?
+    if (mIsShown) {
+        // Are the bounds sane?
+        if (AreBoundsSane()) {
+            // Yep?  Resize the window
+            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
 
-        mWidget->setGeometry( mBounds.x, mBounds.y,
-                              mBounds.width, mBounds.height);
-
-        if (aRepaint) {
-            if (mWidget->isVisible())
-                mWidget->repaint(false);
+            // Does it need to be shown because it was previously insane?
+            if (mNeedsShow)
+                NativeShow(PR_TRUE);
+        }
+        else {
+            // If someone has set this so that the needs show flag is false
+            // and it needs to be hidden, update the flag and hide the
+            // window.  This flag will be cleared the next time someone
+            // hides the window or shows it.  It also prevents us from
+            // calling NativeShow(PR_FALSE) excessively on the window which
+            // causes unneeded X traffic.
+            if (!mNeedsShow) {
+                mNeedsShow = PR_TRUE;
+                NativeShow(PR_FALSE);
+            }
+        }
+    }
+    // If the widget hasn't been shown, mark the widget as needing to be
+    // resized before it is shown
+    else {
+        if (AreBoundsSane() && mListenForResizes){
+            // For widgets that we listen for resizes for (widgets created
+            // with native parents) we apparently _always_ have to resize.  I
+            // dunno why, but apparently we're lame like that.
+            NativeResize(aX, aY, aWidth, aHeight, aRepaint);
+        }
+        else {
+            mNeedsResize = PR_TRUE;
         }
     }
 
@@ -1386,25 +1452,14 @@ bool nsCommonWidget::ignoreEvent(nsEventStatus aStatus) const
     return(PR_FALSE);
 }
 
-
 NS_METHOD nsCommonWidget::SetModal(PRBool aModal)
 {
     qDebug("------------> SetModal mWidget=%p",(void*) mWidget);
-    //mWidget->setModal(aModal);
-    return NS_OK;
-}
 
-// generic xp assumption is that events should be processed
-NS_METHOD nsCommonWidget::ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow)
-{
-    qDebug("ModalEventFilter mWidget=%p", (void*)mWidget);
+    MozQWidget *mozWidget = dynamic_cast<MozQWidget*>(mWidget);
+    if (mozWidget)
+        mozWidget->setModal(aModal);
 
-    if (!aRealEvent) {
-        *aForWindow = PR_FALSE;
-        return NS_OK;
-    }
-
-    *aForWindow = PR_TRUE;
     return NS_OK;
 }
 
@@ -1413,4 +1468,46 @@ NS_IMETHODIMP nsCommonWidget::GetScreenBounds(nsRect &aRect)
 	nsRect origin(0,0,mBounds.width,mBounds.height);
 	WidgetToScreen(origin, aRect);
 	return NS_OK;
+}
+
+void
+nsCommonWidget::NativeShow(PRBool aState)
+{
+    mNeedsShow = PR_FALSE;
+
+    if (!mWidget) {
+         //XXX: apperently can be null during the printing, check whether
+         //     that's true
+         qDebug("nsCommon::Show : widget empty");
+         return;
+    }
+
+    mWidget->setShown(aState);
+}
+
+void
+nsCommonWidget::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+{
+    mNeedsResize = PR_FALSE;
+
+    mWidget->resize( aWidth, aHeight);
+
+    if (aRepaint) {
+        if (mWidget->isVisible())
+            mWidget->repaint(false);
+    }
+}
+
+void
+nsCommonWidget::NativeResize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
+                             PRBool aRepaint)
+{
+    mNeedsResize = PR_FALSE;
+
+    mWidget->setGeometry( aX, aY, aWidth, aHeight);
+
+    if (aRepaint) {
+        if (mWidget->isVisible())
+            mWidget->repaint(false);
+    }
 }

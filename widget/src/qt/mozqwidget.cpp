@@ -178,3 +178,11 @@ bool MozQWidget::event(QEvent *e)
 
     return !ignore;
 }
+
+void MozQWidget::setModal(bool modal)
+{
+    if (modal)
+        setWFlags(Qt::WShowModal);
+    else
+        clearWFlags(Qt::WShowModal);
+}
