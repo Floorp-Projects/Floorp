@@ -93,6 +93,7 @@ public:
 
     virtual guint GetNSAccessibleUniqueID();
     MaiInterface *GetMaiInterface(MaiInterfaceType aInterfacefaceType);
+    AtkRole GetAtkRole();
     static MaiWidget *CreateAndCache(nsIAccessible *aAcc);
     void ChildrenChange(AtkChildrenChange *event);
 public:
@@ -106,6 +107,7 @@ public:
     virtual gint GetIndexInParent();
     /* new ones */
     virtual PRUint32 RefStateSet();
+    virtual PRUint32 GetRole();
 
 private:
     /* Interfaces */
