@@ -59,7 +59,7 @@
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
 #include "nsWeakReference.h"
-#include "nsIUnicharStreamLoader.h"
+#include "nsIStreamLoader.h"
 
 class nsIAtom;
 class nsIElementFactory;
@@ -67,7 +67,6 @@ class nsILoadGroup;
 class nsIRDFResource;
 class nsIRDFService;
 class nsITimer;
-class nsIUnicharStreamLoader;
 class nsIXULContentUtils;
 class nsIXULPrototypeCache;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
@@ -91,7 +90,7 @@ class nsXULDocument : public nsIDocument,
                       public nsIJSScriptObject,
                       public nsIScriptObjectOwner,
                       public nsIHTMLContentContainer,
-                      public nsIUnicharStreamLoaderObserver,
+                      public nsIStreamLoaderObserver,
                       public nsSupportsWeakReference
 {
 public:
@@ -100,7 +99,7 @@ public:
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
+    NS_DECL_NSISTREAMLOADEROBSERVER
 
     // nsIDocument interface
     virtual nsIArena* GetArena();

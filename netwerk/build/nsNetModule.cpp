@@ -35,7 +35,7 @@
 #include "nsDnsService.h"
 #include "nsLoadGroup.h"
 #include "nsInputStreamChannel.h"
-#include "nsUnicharStreamLoader.h"
+#include "nsStreamLoader.h"
 #include "nsAsyncStreamListener.h"
 #include "nsSyncStreamListener.h"
 #include "nsFileStreams.h"
@@ -81,9 +81,9 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       "component://netscape/network/input-stream-channel", 
       nsInputStreamChannel::Create },
     { "Unichar Stream Loader", 
-      NS_UNICHARSTREAMLOADER_CID,
-      "component://netscape/network/unichar-stream-loader",
-      nsUnicharStreamLoader::Create },
+      NS_STREAMLOADER_CID,
+      "component://netscape/network/stream-loader",
+      nsStreamLoader::Create },
     { "Async Stream Observer",
       NS_ASYNCSTREAMOBSERVER_CID,
       "component://netscape/network/async-stream-observer",

@@ -30,7 +30,7 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
-#include "nsIUnicharStreamLoader.h"
+#include "nsIStreamLoader.h"
 #include "nsIUnicharInputStream.h"
 
 #include "nsHashtable.h"
@@ -153,7 +153,7 @@ public:
   nsISupports*  mSupports;
 };
 
-class SheetLoadData : public nsIUnicharStreamLoaderObserver
+class SheetLoadData : public nsIStreamLoaderObserver
 {
 public:
   virtual ~SheetLoadData(void);
@@ -170,7 +170,7 @@ public:
                 nsICSSLoaderObserver* aObserver);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
+  NS_DECL_NSISTREAMLOADEROBSERVER
 
   CSSLoaderImpl*  mLoader;
   nsIURI*         mURL;
@@ -197,7 +197,7 @@ public:
   nsICSSLoaderObserver* mObserver;
 };
 
-NS_IMPL_ISUPPORTS1(SheetLoadData, nsIUnicharStreamLoaderObserver);
+NS_IMPL_ISUPPORTS1(SheetLoadData, nsIStreamLoaderObserver);
 
 MOZ_DECL_CTOR_COUNTER(PendingSheetData);
 
@@ -287,7 +287,7 @@ public:
   nsresult ParseSheet(nsIUnicharInputStream* aIn, SheetLoadData* aLoadData,
                       PRBool& aCompleted, nsICSSStyleSheet*& aSheet);
 
-  void DidLoadStyle(nsIUnicharStreamLoader* aLoader,
+  void DidLoadStyle(nsIStreamLoader* aLoader,
                     nsString& aStyleData,
                     SheetLoadData* aLoadData,
                     nsresult aStatus);
@@ -599,10 +599,11 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
 }
 
 NS_IMETHODIMP
-SheetLoadData::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
-                                       nsresult aStatus,
-                                       PRUint32 stringLen,
-                                       const PRUnichar* string)
+SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
+                                nsISupports* context,
+                                nsresult aStatus,
+                                PRUint32 stringLen,
+                                const char* string)
 {
   nsString aStyleData(string, stringLen);
   mLoader->DidLoadStyle(aLoader, aStyleData, this, aStatus);
@@ -791,7 +792,7 @@ CSSLoaderImpl::ParseSheet(nsIUnicharInputStream* aIn,
 }
 
 void
-CSSLoaderImpl::DidLoadStyle(nsIUnicharStreamLoader* aLoader,
+CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
                             nsString& aStyleData,
                             SheetLoadData* aLoadData,
                             nsresult aStatus)
@@ -1105,7 +1106,7 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
       }
     }
     else if (mDocument || aData->mIsAgent) {  // we're still live, start an async load
-      nsIUnicharStreamLoader* loader;
+      nsIStreamLoader* loader;
       nsIURI* urlClone;
       result = aKey.mURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
       if (NS_SUCCEEDED(result)) {
@@ -1115,7 +1116,7 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         nsCOMPtr<nsILoadGroup> loadGroup;
         mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
-        result = NS_NewUnicharStreamLoader(&loader, urlClone, aData, loadGroup);
+        result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull, loadGroup);
 #ifdef NS_DEBUG
         mSyncCallback = PR_FALSE;
 #endif

@@ -266,7 +266,7 @@ NS_INTERFACE_MAP_BEGIN(nsXMLContentSink)
 	NS_INTERFACE_MAP_ENTRY(nsIObserver)
 	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 #endif
-	NS_INTERFACE_MAP_ENTRY(nsIUnicharStreamLoaderObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIStreamLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXMLContentSink)
 NS_INTERFACE_MAP_END
 
@@ -1737,10 +1737,11 @@ IsJavaScriptLanguage(const nsString& aName, const char* *aVersion)
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
-                                          nsresult aStatus,
-                                          PRUint32 stringLen,
-                                          const PRUnichar* string)
+nsXMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
+                                   nsISupports* context,
+                                   nsresult aStatus,
+                                   PRUint32 stringLen,
+                                   const char* string)
 {
   nsresult rv = NS_OK;
   nsString aData(string, stringLen);
@@ -1835,11 +1836,11 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
       if (NS_FAILED(rv)) 
           return rv;
 
-      nsIUnicharStreamLoader* loader;
+      nsIStreamLoader* loader;
       nsCOMPtr<nsILoadGroup> loadGroup;
 
       mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      rv = NS_NewUnicharStreamLoader(&loader, url, this, loadGroup);
+      rv = NS_NewStreamLoader(&loader, url, this, nsnull, loadGroup);
       NS_RELEASE(url);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;

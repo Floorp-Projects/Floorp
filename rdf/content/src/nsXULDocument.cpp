@@ -573,8 +573,8 @@ nsXULDocument::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsISupportsWeakReference))) {
         *result = NS_STATIC_CAST(nsISupportsWeakReference*, this);
     }
-    else if (iid.Equals(NS_GET_IID(nsIUnicharStreamLoaderObserver))) {
-        *result = NS_STATIC_CAST(nsIUnicharStreamLoaderObserver*, this);
+    else if (iid.Equals(NS_GET_IID(nsIStreamLoaderObserver))) {
+        *result = NS_STATIC_CAST(nsIStreamLoaderObserver*, this);
     }
     else {
         *result = nsnull;
@@ -4859,8 +4859,8 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
             nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
 
             // N.B., the loader will be released in OnUnicharStreamComplete
-            nsIUnicharStreamLoader* loader;
-            rv = NS_NewUnicharStreamLoader(&loader, aScriptProto->mSrcURI, this, group);
+            nsIStreamLoader* loader;
+            rv = NS_NewStreamLoader(&loader, aScriptProto->mSrcURI, this, nsnull, group);
             if (NS_FAILED(rv)) return rv;
 
             aScriptProto->mSrcLoading = PR_TRUE;
@@ -4874,10 +4874,11 @@ nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
 
 
 NS_IMETHODIMP
-nsXULDocument::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
-                                       nsresult aStatus,
-                                       PRUint32 stringLen,
-                                       const PRUnichar* string)
+nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
+                                nsISupports* context,
+                                nsresult aStatus,
+                                PRUint32 stringLen,
+                                const char* string)
 {
     // This is the completion routine that will be called when a
     // transcluded script completes. Compile and execute the script
@@ -4900,7 +4901,8 @@ nsXULDocument::OnUnicharStreamComplete(nsIUnicharStreamLoader* aLoader,
     scriptProto->mSrcLoading = PR_FALSE;
 
     if (NS_SUCCEEDED(aStatus)) {
-        rv = scriptProto->Compile(string, stringLen,
+        nsString stringStr(string, stringLen);
+        rv = scriptProto->Compile(stringStr.GetUnicode(), stringLen,
                                   scriptProto->mSrcURI, 1,
                                   this, mMasterPrototype);
         aStatus = rv;

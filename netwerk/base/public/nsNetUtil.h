@@ -36,7 +36,7 @@
 #include "nsIAllocator.h"
 #include "nsCOMPtr.h"
 #include "nsIHTTPProtocolHandler.h"
-#include "nsIUnicharStreamLoader.h"
+#include "nsIStreamLoader.h"
 
 inline nsresult
 NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI = nsnull)
@@ -86,6 +86,12 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
     return rv;
 }
 
+// Use this function with CAUTION. And do not use it on 
+// the UI thread. It creates a stream that blocks when
+// you Read() from it and blocking the UI thread is
+// illegal. If you don't want to implement a full
+// blown asyncrhonous consumer (via nsIStreamListener)
+// look at nsIStreamLoader instead.
 inline nsresult
 NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
 {
@@ -229,24 +235,25 @@ NS_NewLoadGroup(nsIStreamObserver* obs, nsILoadGroup* *result)
 
 
 inline nsresult
-NS_NewUnicharStreamLoader(nsIUnicharStreamLoader* *result,
-                          nsIURI* uri,
-                          nsIUnicharStreamLoaderObserver* observer,
-                          nsILoadGroup* loadGroup = nsnull,
-                          nsIInterfaceRequestor* notificationCallbacks = nsnull,
-                          nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
-                          PRUint32 bufferSegmentSize = 0, 
-                          PRUint32 bufferMaxSize = 0)
+NS_NewStreamLoader(nsIStreamLoader* *result,
+                   nsIURI* uri,
+                   nsIStreamLoaderObserver* observer,
+                   nsISupports* context = nsnull,
+                   nsILoadGroup* loadGroup = nsnull,
+                   nsIInterfaceRequestor* notificationCallbacks = nsnull,
+                   nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL,
+                   PRUint32 bufferSegmentSize = 0, 
+                   PRUint32 bufferMaxSize = 0)
 {
     nsresult rv;
-    nsCOMPtr<nsIUnicharStreamLoader> loader;
-    static NS_DEFINE_CID(kUnicharStreamLoaderCID, NS_UNICHARSTREAMLOADER_CID);
-    rv = nsComponentManager::CreateInstance(kUnicharStreamLoaderCID,
+    nsCOMPtr<nsIStreamLoader> loader;
+    static NS_DEFINE_CID(kStreamLoaderCID, NS_STREAMLOADER_CID);
+    rv = nsComponentManager::CreateInstance(kStreamLoaderCID,
                                             nsnull,
-                                            NS_GET_IID(nsIUnicharStreamLoader),
+                                            NS_GET_IID(nsIStreamLoader),
                                             getter_AddRefs(loader));
     if (NS_FAILED(rv)) return rv;
-    rv = loader->Init(uri, observer, loadGroup, notificationCallbacks, loadAttributes,
+    rv = loader->Init(uri, observer, context, loadGroup, notificationCallbacks, loadAttributes,
                       bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) return rv;
     *result = loader;

@@ -32,7 +32,7 @@
 #include "nsITransformMediator.h"
 #endif
 #include "nsIUnicharInputStream.h"
-#include "nsIUnicharStreamLoader.h"
+#include "nsIStreamLoader.h"
 #include "nsISupportsArray.h"
 
 class nsIDocument;
@@ -62,7 +62,7 @@ class nsXMLContentSink : public nsIXMLContentSink,
                          public nsIObserver,
                          public nsSupportsWeakReference,
 #endif
-                         public nsIUnicharStreamLoaderObserver
+                         public nsIStreamLoaderObserver
 {
 public:
   nsXMLContentSink();
@@ -74,7 +74,7 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIUNICHARSTREAMLOADEROBSERVER
+  NS_DECL_NSISTREAMLOADEROBSERVER
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void);
