@@ -24,6 +24,7 @@
 #include "nsISupportsArray.h"
 #include "nsIClipboardOwner.h"
 #include "nsIDataFlavor.h"
+#include "nsIFormatConverter.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
@@ -156,7 +157,8 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   // for getting the data out of it
   mDataObj->SetTransferable(mTransferable);
 
-  // Walk through flavors and register them on the native clipboard,
+  // Walk through flavors that contain data and register them
+  // into the DataObj as supported flavors
   PRUint32 i;
   for (i=0;i<dfList->Count();i++) {
     nsIDataFlavor * df;
@@ -176,6 +178,41 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
     }
     NS_RELEASE(supports);
   }
+  // Delete the data flavors list
+  NS_RELEASE(dfList);
+
+  // Now check to see if there is a converter for the transferable
+  // and then register any of it's output formats
+  // Get the transferable list of data flavors
+  nsIFormatConverter * converter;
+  mTransferable->GetConverter(&converter);
+  if (nsnull != converter) {
+    // Get list of output flavors
+    converter->GetOutputDataFlavors(&dfList);
+    if (nsnull != dfList) {
+      for (i=0;i<dfList->Count();i++) {
+        nsIDataFlavor * df;
+        nsISupports * supports = dfList->ElementAt(i);
+        if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
+          nsString mime;
+          df->GetMimeType(mime);
+          UINT format = GetFormat(mime);
+
+          FORMATETC fe;
+          SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, 0, TYMED_HGLOBAL);
+
+          // Now tell the native IDataObject about both the DataFlavor and 
+          // the native data format
+          mDataObj->AddDataFlavor(df, &fe);
+          NS_RELEASE(df);
+        }
+        NS_RELEASE(supports);
+      }
+      NS_RELEASE(dfList);
+    }
+    NS_RELEASE(converter);
+  }
+
 
   // cast our native DataObject to its IDataObject pointer
   // and put it on the clipboard
