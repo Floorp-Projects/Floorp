@@ -40,7 +40,30 @@ TOOLKIT_CFLAGS := \
        -DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
        $(TK_CFLAGS)
 
-LIBS = \
+ifndef NECKO
+LIBS = 		\
+	-labouturl	\
+	-lhttpurl	\
+	-lsockstuburl 	\
+	-lfileurl	\
+	-lgophurl	\
+	-lftpurl	\
+	-lremoturl	\
+	-lxp		\
+	-lnetcache	\
+	-lnetcnvts	\
+	-lmimetype	\
+	-lnetwork	\
+	-lnetlib	\
+	-lpwcac		\
+	$(NULL)
+else
+LIBS = 		\
+	-lneckoutil_s	\
+	$(NULL)
+endif
+
+LIBS += \
 	-L$(DIST)/bin	\
 	-lnsappshell	\
 	-lxpcom		\
@@ -67,28 +90,6 @@ LIBS = \
 	$(TK_LIBS)	\
 	$(NULL)
 
-ifndef NECKO
-LIBS += 		\
-	-labouturl	\
-	-lhttpurl	\
-	-lsockstuburl 	\
-	-lfileurl	\
-	-lgophurl	\
-	-lftpurl	\
-	-lremoturl	\
-	-lxp		\
-	-lnetcache	\
-	-lnetcnvts	\
-	-lmimetype	\
-	-lnetwork	\
-	-lnetlib	\
-	-lpwcac		\
-	$(NULL)
-else
-LIBS += 		\
-	-lneckoutil_s	\
-	$(NULL)
-endif
 
 
 CPPSRCS = \
