@@ -44,6 +44,11 @@ DOM_MSG_DEF(NS_ERROR_DOM_INVALID_STATE_ERR, "An attempt was made to use an objec
 DOM_MSG_DEF(NS_ERROR_DOM_NAMESPACE_ERR, "An attempt was made to create or change an object in a way which is incorrect with regard to namespaces")
 DOM_MSG_DEF(NS_ERROR_DOM_SYNTAX_ERR, "An invalid or illegal string was specified")
 
+/* DOM error codes from http://www.w3.org/TR/DOM-Level-2/range.html */
+
+DOM_MSG_DEF(NS_ERROR_DOM_RANGE_BAD_BOUNDARYPOINTS_ERR, "The boundary-points of a range does not meet specific requirements.")
+DOM_MSG_DEF(NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR, "The container of an boundary-point of a range is being set to either a node of an invalid type or a node with an ancestor of an invalid type.")
+
 /* DOM error codes defined by us */
 
 /* XXX string should be specified by norris */
