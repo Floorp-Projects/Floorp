@@ -68,20 +68,20 @@
 _XFUNCPROTOBEGIN
 
 int XpuCheckExtension( Display *pdpy );
-char *XpuGetXpServerList( void );
-int XpuGetPrinter( char *printername, Display **pdpyptr, XPContext *pcontextptr );
+const char *XpuGetXpServerList( void );
+int XpuGetPrinter( const char *printername, Display **pdpyptr, XPContext *pcontextptr );
 void XpuSetOneAttribute( Display *pdpy, XPContext pcontext, 
-                         XPAttributes type, char *attribute_name, char *value, XPAttrReplacement replacement_rule );
+                         XPAttributes type, const char *attribute_name, const char *value, XPAttrReplacement replacement_rule );
 char *XpuEmumerateXpAttributeValue( char *value, void **context );
-int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, char *attribute_name, char *query );
-int XpuSetJobTitle( Display *pdpy, XPContext pcontext, char *title );
-int XpuSetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes type, char *orientation );
-int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type, char *attribute_name, long *result );
-double XpuGetXDPI( Screen *pscreen );
-double XpuGetYDPI( Screen *pscreen );
+int XpuCheckSupported( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name, const char *query );
+int XpuSetJobTitle( Display *pdpy, XPContext pcontext, const char *title );
+int XpuSetContentOrientation( Display *pdpy, XPContext pcontext, XPAttributes type, const char *orientation );
+int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type, const char *attribute_name, long *result );
 void dumpXpAttributes( Display *pdpy, XPContext pcontext );
 void XpuSetContext( Display *pdpy, XPContext pcontext );
 void XpuWaitForPrintNotify( Display *pdpy, int detail );
+Bool XpuSetResolution( Display *pdpy, XPContext pcontext, long dpi );
+Bool XpuGetResolution( Display *pdpy, XPContext pcontext, long *dpi );
 
 #define XpuGetJobAttributes( pdpy, pcontext )     XpGetAttributes( (pdpy), (pcontext), XPJobAttr )
 #define XpuGetDocAttributes( pdpy, pcontext )     XpGetAttributes( (pdpy), (pcontext), XPDocAttr )
@@ -89,7 +89,7 @@ void XpuWaitForPrintNotify( Display *pdpy, int detail );
 #define XpuGetPrinterAttributes( pdpy, pcontext ) XpGetAttributes( (pdpy), (pcontext), XPPrinterAttr )
 #define XpuGetServerAttributes( pdpy, pcontext )  XpGetAttributes( (pdpy), (pcontext), XPServerAttr )
 
-void *XpuPrintToFile( Display *pdpy, XPContext pcontext, char *filename );
+void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename );
 XPGetDocStatus XpuWaitForPrintFileChild( void *handle );
 
 _XFUNCPROTOEND

@@ -22,6 +22,7 @@
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
+ *   Tim Copperfield <timecop@network.email.ne.jp>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de> 
  */
 
@@ -53,7 +54,9 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 #define XLIB_DEFAULT_FONT1 "-*-helvetica-medium-r-*-*-*-140-*-*-*-*-iso8859-1"
 #define XLIB_DEFAULT_FONT2 "-*-fixed-medium-r-*-*-*-120-*-*-*-*-*-*"
 
+#ifdef PR_LOGGING 
 static PRLogModuleInfo *DeviceContextXlibLM = PR_NewLogModule("DeviceContextXlib");
+#endif /* PR_LOGGING */ 
 
 /* global default font handle */
 static XFontStruct *mDefaultFont = nsnull;

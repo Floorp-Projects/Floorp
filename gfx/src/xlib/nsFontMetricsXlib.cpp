@@ -23,7 +23,7 @@
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Quy Tonthat <quy@igelaus.com.au>
  *   Tony Tsui <tony@igelaus.com.au>
- *   pocemit <timecop@network.email.ne.jp>
+ *   Tim Copperfield <timecop@network.email.ne.jp>
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
@@ -1766,7 +1766,7 @@ public:
 #endif
 
 #ifdef USE_XPRINT
-  virtual int DrawString(nsRenderingContextXp* aContext,
+  virtual int DrawString(nsRenderingContextXlib* aContext,
                          nsXPrintContext* aSurface,
                          nscoord aX, nscoord aY, 
                          const PRUnichar* aString, PRUint32 aLength);
@@ -1879,7 +1879,7 @@ nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
 
 #ifdef USE_XPRINT
 int
-nsFontXlibNormal::DrawString(nsRenderingContextXp* aContext,
+nsFontXlibNormal::DrawString(nsRenderingContextXlib* aContext,
                              nsXPrintContext* aSurface,
                              nscoord aX, nscoord aY,
                              const PRUnichar* aString, PRUint32 aLength)
@@ -2003,7 +2003,7 @@ public:
                          const PRUnichar* aString, PRUint32 aLength);
 #endif
 #ifdef USE_XPRINT
-  virtual int DrawString(nsRenderingContextXp* aContext,
+  virtual int DrawString(nsRenderingContextXlib* aContext,
                          nsXPrintContext* aSurface,
                          nscoord aX, nscoord aY, 
                          const PRUnichar* aString, PRUint32 aLength);
@@ -2143,7 +2143,7 @@ nsFontXlibSubstitute::DrawString(nsRenderingContextXlib* aContext,
 
 #ifdef USE_XPRINT
 int
-nsFontXlibSubstitute::DrawString(nsRenderingContextXp* aContext, 
+nsFontXlibSubstitute::DrawString(nsRenderingContextXlib* aContext, 
                                  nsXPrintContext* aSurface,
                                  nscoord aX, nscoord aY,
                                  const PRUnichar* aString, PRUint32 aLength)
@@ -2216,7 +2216,7 @@ public:
                          PRUint32 aLength);
 #endif
 #ifdef USE_XPRINT
-  virtual int DrawString(nsRenderingContextXp* aContext,
+  virtual int DrawString(nsRenderingContextXlib* aContext,
                          nsXPrintContext* aSurface,
                          nscoord aX, nscoord aY, 
                          const PRUnichar* aString, PRUint32 aLength);
@@ -2317,7 +2317,7 @@ nsFontXlibUserDefined::DrawString(nsRenderingContextXlib* aContext,
 
 #ifdef USE_XPRINT
 int
-nsFontXlibUserDefined::DrawString(nsRenderingContextXp* aContext,
+nsFontXlibUserDefined::DrawString(nsRenderingContextXlib* aContext,
                                   nsXPrintContext* aSurface,
                                   nscoord aX, nscoord aY,
                                   const PRUnichar* aString, PRUint32 aLength)

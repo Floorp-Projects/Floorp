@@ -50,9 +50,6 @@
 static PRLogModuleInfo *nsXPrintContextLM = PR_NewLogModule("nsXPrintContext");
 #endif /* PR_LOGGING */
 
-#ifdef __SUNPRO_C
-extern "C" /* Make Sun Workshop and other conformant compilers happy... :-) */
-#endif
 static 
 int xerror_handler( Display *display, XErrorEvent *ev )
 {
@@ -90,16 +87,18 @@ nsXPrintContext::~nsXPrintContext()
   // end the document
   if( mPDisplay != nsnull )
   {
-    XpDestroyContext(mPDisplay, mPContext);
+    XPU_TRACE(XpDestroyContext(mPDisplay, mPContext));
 
     // Cleanup things allocated along the way
-    xlib_rgb_detach();
+    XPU_TRACE(xlib_rgb_detach());
     
-    XCloseDisplay(mPDisplay);
+    XPU_TRACE(XCloseDisplay(mPDisplay));
     
     mPContext = nsnull;
     mPDisplay = nsnull;
   }
+  
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::~nsXPrintContext() done.\n"));
 }
 
 NS_IMETHODIMP 
@@ -266,7 +265,16 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    */
   if( XpuGetPrinter(buf, &mPDisplay, &mPContext) != 1 )
     return NS_ERROR_FAILURE;
+    
+#ifdef XPRINT_DEBUG_SOMETIMES_USEFULL
+  dumpXpAttributes(mPDisplay, mPContext);
+#endif /* DEBUG */
 
+  // Set the Document Attributes
+  // XpSetAttributes(mPDisplay,mPContext, XPDocAttr,(char *)"*content-orientation: landscape",XPAttrMerge);
+  // or
+  // XpuSetContentOrientation(mPDisplay,mPContext, XPDocAttr, "landscape");
+  
   /* set printer context
    * WARNING: after this point it is no longer allows to change job attributes
    * only after the XpSetContext() call the alllication is allowed to make 
@@ -275,22 +283,16 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
    */
   XPU_TRACE(XpSetContext(mPDisplay, mPContext));
 
-  /* get default printer reolution
-   * (note: if's AFAIK a Xprt configuration error when "default-printer-resolution" 
-   * cannot be obtained - return with an error to avoid the case that we#re working 
-   * with a faulty printer config...
+  /* get default printer resolution. May fail if Xprt is misconfigured.
    * ToDo: Report error to user (dialog)
    */
-  if( XpuGetOneLongAttribute(mPDisplay, mPContext, XPDocAttr, "default-printer-resolution", &mPrintResolution) != 1 )
+  if( XpuGetResolution(mPDisplay, mPContext, &mPrintResolution) == False )
     return NS_ERROR_FAILURE;
 
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("print resolution %ld\n", (long)mPrintResolution));
   
   /* We want to get events when Xp(Start|End)(Job|Page) requests are processed... */  
   XpSelectInput(mPDisplay, mPContext, XPPrintMask);  
-
-  // Set the Document Attributes
-  // XpSetAttributes(mPDisplay,mPContext, XPDocAttr,(char *)"*content-orientation: landscape",XPAttrMerge);
 
   return NS_OK;
 }  
@@ -781,6 +783,8 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
   Pixmap alpha_pixmap  = None;
   GC     image_gc;
 
+/* this does not work yet... */
+#ifdef XPRINT_NOT_NOW
   // Create gc clip-mask on demand
   if( alphaBits != nsnull )
   {
@@ -829,6 +833,7 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
     x_image->data = nsnull; /* Don't free the IL_Pixmap's bits. */
     XDestroyImage(x_image);
   }
+#endif /* XPRINT_NOT_NOW */  
   
   if( alpha_pixmap != None )
   {

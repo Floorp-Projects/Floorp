@@ -20,6 +20,8 @@
  *
  * Contributor(s): 
  * Tony Tsui <tony@igelaus.com.au>
+ * Tim Copperfield <timecop@network.email.ne.jp>
+ * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de> 
  */
 
 #ifndef nsFontMetricsXlib_h__
@@ -37,7 +39,6 @@
 #ifdef USE_XPRINT
 #include "nsDeviceContextXP.h"
 #include "nsXPrintContext.h"
-#include "nsRenderingContextXP.h"
 #endif /* USE_XPRINT */
 #include "nsFont.h"
 #include "nsRenderingContextXlib.h"
@@ -89,7 +90,7 @@ public:
                          const PRUnichar* aString, PRUint32 aLength) = 0;
 #endif
 #ifdef USE_XPRINT
-   virtual int DrawString(nsRenderingContextXp* aContext,
+   virtual int DrawString(nsRenderingContextXlib* aContext,
                           nsXPrintContext* aSurface,
                           nscoord aX,
                           nscoord aY, const PRUnichar* aString,
