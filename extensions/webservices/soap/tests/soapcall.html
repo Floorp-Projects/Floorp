@@ -30,7 +30,7 @@ function showCall(syncCall, faultCall) {
 
   var s = new SOAPCall();
   s.encode(soapversion, method, object, headers.length, headers, params.length, params);
-  var r = new XMLSerializer().serializeToString(s.message);
+  var r = (new XMLSerializer()).serializeToString(s.message);
   document.getElementById("P").firstChild.nodeValue = r;
 }
 </SCRIPT>
