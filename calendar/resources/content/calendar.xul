@@ -395,43 +395,43 @@
             <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false" ondblclick="modifyToDoCommand( event )">
                <treecols id="unifinder-todo-tree-cols">
                   <treecol id="unifinder-todo-tree-col-completed"
-                     persist="hidden ordinal width" width="18" cycler="true"
+                     persist="hidden ordinal width sortDirection sortActive" width="18" cycler="true"
                      label="&calendar.unifinder.tree.done.label;">
                      <image id="checkboximg" contextmenu="taskitem-context-menu"/>
                   </treecol>
                   <splitter class="tree-splitter"/>
                    <treecol id="unifinder-todo-tree-col-priority" 
-                      persist="hidden ordinal width" width="18" 
+                      persist="hidden ordinal width sortDirection sortActive" width="18" 
                       label="&calendar.unifinder.tree.priority.label;">
                            <image id="priorityimg" contextmenu="taskitem-context-menu"/>
                       </treecol>
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-todo-tree-col-title"
-                      persist="hidden ordinal width" flex="1" 
+                      persist="hidden ordinal width sortDirection sortActive" flex="1" 
                       label="&calendar.unifinder.tree.title.label;" />
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-todo-tree-col-startdate"
-                      persist="hidden ordinal width" 
+                      persist="hidden ordinal width sortDirection sortActive" 
                       hidden="true"
                       flex="1" label="&calendar.unifinder.tree.startdate.label;"/>
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-todo-tree-col-duedate"
-                      persist="hidden ordinal width" 
+                      persist="hidden ordinal width sortDirection sortActive" 
                       hidden="true"
                       flex="1" label="&calendar.unifinder.tree.duedate.label;"/>
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-todo-tree-col-completeddate"
-                      persist="hidden ordinal width" 
+                      persist="hidden ordinal width sortDirection sortActive" 
                       hidden="true"
                       flex="1" label="&calendar.unifinder.tree.completeddate.label;"/>
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-todo-tree-col-percentcomplete"
-                      persist="hidden ordinal width" 
+                      persist="hidden ordinal width sortDirection sortActive" 
                       hidden="true"
                       flex="1" label="&calendar.unifinder.tree.percentcomplete.label;"/>
                    <splitter class="tree-splitter"/>
                    <treecol id="unifinder-todo-tree-col-categories"
-                      persist="hidden ordinal width" 
+                      persist="hidden ordinal width sortDirection sortActive" 
                       hidden="true"
                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
                   </treecols>

@@ -509,7 +509,7 @@ function refreshToDoTree( taskArray )
 
    toDoTreeView.rowCount = gTaskArray.length;
    
-   var ArrayOfTreeCols = document.getElementById( UnifinderTreeName ).getElementsByTagName( "treecol" );
+   var ArrayOfTreeCols = document.getElementById( ToDoUnifinderTreeName ).getElementsByTagName( "treecol" );
    
    for( var i = 0; i < ArrayOfTreeCols.length; i++ )
    {
