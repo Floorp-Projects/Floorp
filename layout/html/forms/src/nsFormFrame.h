@@ -37,6 +37,7 @@ class nsIDocument;
 class nsIPresContext;
 class nsFormFrame;
 class nsIUnicodeEncoder;
+class nsRadioControlGroup;
 
 class nsFormFrame : public nsBlockFrame, 
                     public nsIFormManager
@@ -59,6 +60,8 @@ public:
     
   void AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame);
   static void AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aFrame);
+  void RemoveRadioControlFrame(nsIFormControlFrame * aFrame);
+  nsresult GetRadioInfo(nsIFormControlFrame* aFrame, nsString& aName, nsRadioControlGroup *& aGroup);
 
   PRBool CanSubmit(nsFormControlFrame& aFrame);
 
