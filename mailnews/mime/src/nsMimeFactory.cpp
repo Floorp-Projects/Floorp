@@ -21,6 +21,7 @@
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsMsgMimeCID.h"
 #include "nsCOMPtr.h"
 #include "nsStreamConverter.h"
 
@@ -40,7 +41,7 @@ static   NS_DEFINE_CID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCE
 static   NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 // These are necessary for the new stream converter/plugin interface...
-static   NS_DEFINE_CID(kIStreamConverterCID, NS_STREAM_CONVERTER_CID);
+static   NS_DEFINE_CID(kCStreamConverterCID, NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
 
 #include "nsMsgHeaderParser.h"
 static NS_DEFINE_CID(kCMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -152,7 +153,7 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
     if (res != NS_OK)  // was there a problem creating the object ?
 		    return res;
   }
-  else if (mClassID.Equals(kIStreamConverterCID))
+  else if (mClassID.Equals(kCStreamConverterCID))
   {
     return res = NS_NewStreamConverter(aIID, aResult);
   }
@@ -240,9 +241,12 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
-  // Stream converter interface for use in quoting.
-  rv = compMgr->RegisterComponent(kIStreamConverterCID, NULL, NULL, path, 
-                                  PR_TRUE, PR_TRUE);
+  // Register our mime stream converter with the registry (this
+  // notifies the mime converter service provided by necko)
+  rv = compMgr->RegisterComponent(kCStreamConverterCID,
+                                    "Mailnews Mime Stream Converter",
+                                    NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID,
+                                    path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
   return finalResult;
@@ -264,7 +268,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->UnregisterComponent(kCIMimeURLUtilsCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
-  rv = compMgr->UnregisterComponent(kIStreamConverterCID, path);
+  rv = compMgr->UnregisterComponent(kCStreamConverterCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
 
   return finalResult;
