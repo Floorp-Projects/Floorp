@@ -2223,7 +2223,8 @@ GetFontNames(char* aPattern)
       continue;
     }
 
-    nsAutoString familyName2(NS_ConvertASCIItoUCS2(familyName));
+    nsAutoString familyName2;
+    familyName2.AssignWithConversion(familyName);
     family =
       (nsFontFamily*) PL_HashTableLookup(gFamilies, (nsString*) &familyName2);
     if (!family) {
