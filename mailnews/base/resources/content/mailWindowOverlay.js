@@ -1667,7 +1667,7 @@ function MsgSearchMessages()
     var preselectedFolder = null;
     if ("GetFirstSelectedMsgFolder" in window)
       preselectedFolder = GetFirstSelectedMsgFolder();
-    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
     var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
     var searchWindow = windowManagerInterface.getMostRecentWindow("mailnews:search");
 
@@ -1680,7 +1680,7 @@ function MsgSearchMessages()
 
 function MsgSearchAddresses()
 {
-    var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+    var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
     var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
     var abSearchWindow = windowManagerInterface.getMostRecentWindow("mailnews:absearch");
 
