@@ -1,0 +1,17 @@
+.cvsignore
+browser.js
+browser.template
+chatzilla.js
+chatzilla.template
+config.ini
+deflenus.js
+deflenus.template
+langende.js
+langende.template
+langenus.js
+langenus.template
+mail.js
+mail.template
+uninstall.ini
+xpcom.js
+xpcom.template
