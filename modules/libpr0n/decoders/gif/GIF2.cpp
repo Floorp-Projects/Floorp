@@ -625,108 +625,6 @@ gif_write_ready(const gif_struct* gs)
         return PR_FALSE;        /* No more data yet expires */
 }
 
-//******************************************************************************
-/*
- * For the first images in the sequence clear the logical
- * screen to the background color, unless the first image
- * completely covers the logical screen, in which case
- * it's unnecessary.  XXX - This can be optimized.
- */
-
-static PRStatus
-gif_clear_screen(gif_struct *gs)
-{
-    PRUintn erase_width=0, erase_height=0, erase_x_offset=0, erase_y_offset=0;
-    PRBool erase;
-
-    erase = PR_FALSE;
-    if (gs->images_decoded == 0)
-    {
-        if ((gs->width  != gs->screen_width) ||
-            (gs->height != gs->screen_height) ||
-             gs->is_transparent)
-        {
-            erase = PR_TRUE;
-            erase_width  = gs->screen_width;
-            erase_height = gs->screen_height;
-            erase_x_offset = erase_y_offset = 0;
-        }
-    }
-    else
-    {
-        if (gs->last_disposal_method == DISPOSE_OVERWRITE_BGCOLOR)
-        {
-            erase = PR_TRUE;
-            erase_width    = gs->last_width;
-            erase_height   = gs->last_height;
-            erase_x_offset = gs->last_x_offset;
-            erase_y_offset = gs->last_y_offset;
-        }
-    }
-
-    gs->last_disposal_method = gs->disposal_method;
-    gs->last_width = gs->width;
-    gs->last_height = gs->height;
-    gs->last_x_offset = gs->x_offset;
-    gs->last_y_offset = gs->y_offset;
-            
-    if (erase)
-    {
-        PRUintn i;
-        int src_trans_pixel_index;
-        PRUint8 *rowbuf = gs->rowbuf;
-        //GIF_IRGB *saved_src_trans_pixel, *saved_img_trans_pixel;
-
-        /* Catch images that fall outside the logical screen. */
-        if ((erase_x_offset + erase_width) > gs->screen_width)
-            erase_width = gs->screen_width - erase_x_offset;
-
-        /* We have to temporarily pretend the image is transparent
-           so we can clear using the context's background color. */
-        //saved_img_trans_pixel = ic->image->header.transparent_pixel;
-        //saved_src_trans_pixel = src_header->transparent_pixel;
-        //src_header->transparent_pixel = NULL;
-        //ic->image->header.transparent_pixel = NULL;
-
-        /* Pick an index for the source image's temporary transparent pixel.
-           The actual choice is immaterial since it will only be used for
-           the clear screen operation. */
-
-        GIF_IRGB * saved_gs_trans_pixel = gs->transparent_pixel;
-        gs->transparent_pixel = NULL;
-
-        src_trans_pixel_index = 0;
-        if (!gif_init_transparency(gs, src_trans_pixel_index)) {
-            gs->transparent_pixel = saved_gs_trans_pixel;
-            return PR_FAILURE; // out of mem
-        }
-        
-        /* Now fill in the row buffer. */
-        for (i = 0; i < erase_width; i++)
-            rowbuf[i] = src_trans_pixel_index;
-                    
-        /* Note: We deliberately lie about the interlace
-           pass number so that calls to il_flush_image_data()
-           are done using a timer. */
-
-// XXX pav this code doesn't actually get called does it ?
-
-        if (erase_width > 0) {
-            // XXX: make fake row callback to draw into the 
-            //if (gs->ic->imgdcb)
-            //  gs->ic->imgdcb->ImgDCBHaveRow(gs->rowbuf, gs->rgbrow,
-            //          erase_x_offset, erase_width,
-            //          erase_y_offset,erase_height, ilErase, 2);
-           
-            /* Reset the source image's transparent pixel to its former state. */
-            gif_destroy_transparency(gs);
-            //src_header->transparent_pixel = saved_src_trans_pixel;
-            gs->transparent_pixel = saved_gs_trans_pixel;
-        }
-    }
-    return PR_SUCCESS;
-}
-
 /******************************************************************************/
 /*
  * process data arriving from the stream for the gif decoder
@@ -782,10 +680,6 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
                 //    return MK_IMAGE_LOSSAGE;
                 //}
             }
-
-            PRStatus status = gif_clear_screen(gs);             
-            if (status != PR_SUCCESS)
-               return PR_FAILURE;
 
             /* Initialize LZW parser/decoder */
             gs->datasize = *q;
