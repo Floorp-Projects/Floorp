@@ -136,8 +136,8 @@ sub check_required_vars {
     if( $tbx{'status'} eq ''){
         $err_string .= "Variable 'tinderbox:status' not set.\n";
     }
-    elsif( ! $tbx{'status'} =~ /success|busted|building/ ){
-        $err_string .= "Variable 'tinderbox:status' must be 'success', 'busted' or 'building'\n";
+    elsif( ! $tbx{'status'} =~ /success|busted|building|testfailed/ ){
+        $err_string .= "Variable 'tinderbox:status' must be 'success', 'busted', 'testfailed', or 'building'\n";
     }
 
     #
@@ -173,7 +173,7 @@ sub compress_log_file {
         $done = ($line eq '');
     }
 
-    $logfile = "$$.gz";
+    $logfile = "$builddate.$$.gz";
 
     open( ZIPLOG, "| $gzip -c > $tbx{'tree'}/$logfile" ) || die "can't open $! for writing";
     $inBinary = 0;
