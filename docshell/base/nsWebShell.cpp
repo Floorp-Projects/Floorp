@@ -23,6 +23,7 @@
 #include "nsIDeviceContext.h"
 #include "nsILinkHandler.h"
 #include "nsIStreamListener.h"
+#include "nsINetSupport.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIDocumentLoaderObserver.h"
@@ -101,6 +102,7 @@ class nsWebShell : public nsIWebShell,
                    public nsIScriptContextOwner,
                    public nsIDocumentLoaderObserver,
                    public nsIRefreshUrl,
+                   public nsINetSupport,
                    public nsIStreamObserver
 {
 public:
@@ -219,6 +221,18 @@ public:
   NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
   NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg);
 
+	// nsINetSupport interface methods
+  NS_IMETHOD_(void) Alert(const nsString &aText);
+  NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
+  NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
+                             const nsString &aDefault,
+                             nsString &aResult);
+  NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
+                                            nsString &aUser,
+                                            nsString &aPassword);
+  NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
+                                     nsString &aPassword);
+
   // Selection methods
   NS_IMETHOD IsSelection(PRBool & aIsSelection);
   NS_IMETHOD IsSelectionCutable(PRBool & aIsSelection);
@@ -257,6 +271,7 @@ protected:
   nsIWidget* mWindow;
   nsIDocumentLoader* mDocLoader;
   nsIStreamObserver* mObserver;
+  nsINetSupport* mNetSupport;
 
   nsIWebShell* mParent;
   nsVoidArray mChildren;
@@ -300,6 +315,7 @@ static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
@@ -396,6 +412,7 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
+  NS_IF_RELEASE(mNetSupport);
 
   if (nsnull != mScriptGlobal) {
     mScriptGlobal->SetWebShell(nsnull);
@@ -476,6 +493,11 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kRefreshURLIID)) {
     *aInstancePtr = (void*)(nsIRefreshUrl*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kINetSupportIID)) {
+    *aInstancePtr = (void*) ((nsINetSupport*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -822,8 +844,13 @@ NS_IMETHODIMP
 nsWebShell::SetObserver(nsIStreamObserver* anObserver)
 {
   NS_IF_RELEASE(mObserver);
+  NS_IF_RELEASE(mNetSupport);
+
   mObserver = anObserver;
-  NS_IF_ADDREF(mObserver);
+  if (nsnull != mObserver) {
+    mObserver->QueryInterface(kINetSupportIID, (void **) &mNetSupport);
+    NS_ADDREF(mObserver);
+  }
   return NS_OK;
 }
 
@@ -1899,6 +1926,65 @@ nsWebShell::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
     rv = mObserver->OnStopBinding(aURL, aStatus, aMsg);
   }
   return rv;
+}
+
+//----------------------------------------------------------------------
+
+NS_IMETHODIMP_(void)
+nsWebShell::Alert(const nsString &aText)
+{
+  if (nsnull != mNetSupport) {
+    mNetSupport->Alert(aText);
+  }
+}
+
+NS_IMETHODIMP_(PRBool)
+nsWebShell::Confirm(const nsString &aText)
+{
+  PRBool bResult = PR_FALSE;
+
+  if (nsnull != mNetSupport) {
+    bResult = mNetSupport->Confirm(aText);
+  }
+  return bResult;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsWebShell::Prompt(const nsString &aText,
+                   const nsString &aDefault,
+                   nsString &aResult)
+{
+  PRBool bResult = PR_FALSE;
+
+  if (nsnull != mNetSupport) {
+    bResult = mNetSupport->Prompt(aText, aDefault, aResult);
+  }
+  return bResult;
+}
+
+NS_IMETHODIMP_(PRBool) 
+nsWebShell::PromptUserAndPassword(const nsString &aText,
+                                  nsString &aUser,
+                                  nsString &aPassword)
+{
+  PRBool bResult = PR_FALSE;
+
+  if (nsnull != mNetSupport) {
+    bResult = mNetSupport->PromptUserAndPassword(aText, aUser, aPassword);
+  }
+  return bResult;
+}
+
+NS_IMETHODIMP_(PRBool) 
+nsWebShell::PromptPassword(const nsString &aText,
+                           nsString &aPassword)
+{
+  PRBool bResult = PR_FALSE;
+
+  if (nsnull != mNetSupport) {
+    bResult = mNetSupport->PromptPassword(aText, aPassword);
+  }
+  return bResult;
 }
 
 //----------------------------------------------------
