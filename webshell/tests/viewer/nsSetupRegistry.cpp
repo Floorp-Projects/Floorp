@@ -120,6 +120,7 @@ static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_IID(kCDOMNativeObjectRegistry, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
@@ -135,9 +136,13 @@ static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
 static NS_DEFINE_CID(kRDFSimpleDataBaseCID,     NS_RDFSIMPLEDATABASE_CID);
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFRegistryCID,           NS_RDFREGISTRY_CID);
-static NS_DEFINE_CID(kRDFDocumentCID,           NS_RDFDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
 
 static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
+static NS_DEFINE_CID(kPresShellCID,             NS_PRESSHELL_CID);
+static NS_DEFINE_CID(kHTMLStyleSheetCID,        NS_HTMLSTYLESHEET_CID);
+static NS_DEFINE_CID(kTextNodeCID,              NS_TEXTNODE_CID);
+static NS_DEFINE_CID(kSelectionCID,             NS_SELECTION_CID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -177,6 +182,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kWellFormedDTDCID, PARSER_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCDOMScriptObjectFactory, DOM_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCDOMNativeObjectRegistry, DOM_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCHTMLDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
@@ -188,12 +194,16 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
 #endif	//XP_MAC
 
-  nsRepository::RegisterFactory(kRDFDocumentCID,           RDF_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kRDFHTMLDocumentCID,       RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFMemoryDataSourceCID,   RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFResourceManagerCID,    RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFSimpleDataBaseCID,     RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFRegistryCID,           RDF_DLL, PR_FALSE, PR_FALSE);
 
-  nsRepository::RegisterFactory(kCSSParserCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCSSParserCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kPresShellCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kHTMLStyleSheetCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kTextNodeCID,       LAYOUT_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kSelectionCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
 }

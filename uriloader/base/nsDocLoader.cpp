@@ -87,7 +87,7 @@ NS_DEFINE_IID(kINetServiceIID,            NS_INETSERVICE_IID);
 /* Define CIDs... */
 NS_DEFINE_IID(kCHTMLDocumentCID,          NS_HTMLDOCUMENT_CID);
 NS_DEFINE_IID(kCXMLDocumentCID,           NS_XMLDOCUMENT_CID);
-NS_DEFINE_IID(kCRDFDocumentCID,           NS_RDFDOCUMENT_CID);
+NS_DEFINE_IID(kCRDFHTMLDocumentCID,       NS_RDFHTMLDOCUMENT_CID);
 NS_DEFINE_IID(kCImageDocumentCID,         NS_IMAGEDOCUMENT_CID);
 NS_DEFINE_IID(kNetServiceCID,             NS_NETSERVICE_CID);
 
@@ -461,7 +461,7 @@ nsDocFactoryImpl::CreateRDFDocument(nsIURL* aURL,
     /*
      * Create the image document...
      */
-    rv = nsRepository::CreateInstance(kCRDFDocumentCID,
+    rv = nsRepository::CreateInstance(kCRDFHTMLDocumentCID,
                                       nsnull,
                                       kIDocumentIID,
                                       (void **)&doc);
