@@ -584,6 +584,7 @@ CDISTINCLUDES1= \
 !if defined(MOZ_OJI)
     /I$(XPDIST)\public\oji \
     /I$(XPDIST)\public\npj \
+    /I$(XPDIST)\public\softupdt \
 !elseif defined(MOZ_JAVA)
     /I$(XPDIST)\public\applet \
     /I$(XPDIST)\public\softupdt \
