@@ -334,8 +334,8 @@ sub load_bloat {
     if ($leakMin == -1 || $leaks < $leakMin) {
         $leakMin = $leaks;
     }
-    if ($bloatMin == -1 || $bloats < $bloatMin) {
-        $bloatMin = $bloats;
+    if ($bloatMin == -1 || $bloat < $bloatMin) {
+        $bloatMin = $bloat;
     }
   }
   return ($leakMin, $bloatMin);
