@@ -25,7 +25,7 @@
 extern "C" {
 	char * NET_SACopy (char **destination, const char *source);
 	char * NET_SACat (char **destination, const char *source);
-};
+}
 
 nsresult NS_NewSmtpUrl(const nsIID &aIID, void ** aInstancePtrResult)
 {
