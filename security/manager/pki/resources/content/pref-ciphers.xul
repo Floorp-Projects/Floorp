@@ -55,6 +55,10 @@
         } catch(e) { /* Put debug output here */ }
 
         element.setAttribute("checked", prefValue);
+        // disable xul element if the pref is locked.
+        if (prefs.PrefIsLocked(prefString)) {
+          element.disabled=true;
+        }
       }
     }
 

@@ -69,7 +69,10 @@
     </html>
     <hbox halign="left" autostretch="never">
       <button class="dialog" label="&managecerts.button;" disabled="false"
-        oncommand="openCertManager();" />
+        oncommand="openCertManager();" 
+        id="openCertManagerButton"
+        pref="true" preftype="bool" prefattribute="disabled"
+        prefstring="security.disable_button.openCertManager" />
     </hbox>
   </groupbox>
 
@@ -81,7 +84,10 @@
     </html>
     <hbox halign="left" autostretch="never">
       <button class="dialog" label="&managedevices.button;" disabled="false"
-        oncommand="openDeviceManager();" />
+        oncommand="openDeviceManager();"
+        id="openDeviceManagerButton"
+        pref="true" preftype="bool" prefattribute="disabled"
+        prefstring="security.disable_button.openDeviceManager" />
     </hbox>
   </groupbox>
 
