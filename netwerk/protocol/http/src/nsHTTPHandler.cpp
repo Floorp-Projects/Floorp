@@ -1183,7 +1183,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         i_Channel->GetLoadAttributes(&loadFlags);
 
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        i_Channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+        
+        callbacks = do_QueryInterface(NS_STATIC_CAST(nsIHTTPChannel*, i_Channel));
         trans->SetNotificationCallbacks(callbacks,
                                         (loadFlags & nsIChannel::LOAD_BACKGROUND));
 
