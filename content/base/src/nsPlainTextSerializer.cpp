@@ -610,6 +610,15 @@ nsPlainTextSerializer::IsEnabled(PRInt32 aTag, PRBool* aReturn)
 nsresult
 nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
 {
+  if (mFlags & nsIDocumentEncoder::OutputRaw) {
+    // Raw means raw.  Don't even think about doing anything fancy
+    // here like indenting, adding line breaks or any other
+    // characters such as list item bullets, quote characters
+    // around <q>, etc.  I mean it!  Don't make me smack you!
+
+    return NS_OK;
+  }
+
   eHTMLTags type = (eHTMLTags)aTag;
 
   if (mTagStackIndex < TagStackSize) {
@@ -913,12 +922,20 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
   }
 
   return NS_OK;
-
 }
 
 nsresult
 nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
 {
+  if (mFlags & nsIDocumentEncoder::OutputRaw) {
+    // Raw means raw.  Don't even think about doing anything fancy
+    // here like indenting, adding line breaks or any other
+    // characters such as list item bullets, quote characters
+    // around <q>, etc.  I mean it!  Don't make me smack you!
+
+    return NS_OK;
+  }
+
   if (mTagStackIndex > 0) {
     --mTagStackIndex;
   }
