@@ -2233,7 +2233,7 @@ PRInt16       borderRadii[4],i;
 
       // rounded version of the border
       for(i=0;i<4;i++){
-        if (borderRadii[0] > 0){
+        if (borderRadii[i] > 0){
           PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aColor,aSpacing,aDX,aDY,borderRadii);
           return;
         }
