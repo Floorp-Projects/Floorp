@@ -8,7 +8,7 @@
 ; ; file comment
 ;
 
-[install]
+[xpcom]
 bin/libjsdom.so
 bin/libmozjs.so
 bin/libnspr4.so
