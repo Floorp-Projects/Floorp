@@ -352,18 +352,21 @@ function finishAccount(account, accountData) {
         destIdentity.valid=true;
     }
 
-    var smtpServer = smtpService.defaultServer;
+    // don't try to create an smtp server if we already have one.
+    if (!destIdentity.smtpServerKey)
+    {
+      var smtpServer = smtpService.defaultServer;
         
-    if (accountData.smtpCreateNewServer)
-        smtpServer = smtpService.createSmtpServer();
+      if (accountData.smtpCreateNewServer)
+          smtpServer = smtpService.createSmtpServer();
 
-    dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
-    copyObjectToInterface(smtpServer, accountData.smtp);
+      dump("Copying smtpServer (" + smtpServer + ") to accountData\n");
+      copyObjectToInterface(smtpServer, accountData.smtp);
 
-    // some identities have 'preferred' 
-    if (accountData.smtpUsePreferredServer && destIdentity)
-        destIdentity.smtpServerKey = smtpServer.key;
-
+      // some identities have 'preferred' 
+      if (accountData.smtpUsePreferredServer && destIdentity)
+          destIdentity.smtpServerKey = smtpServer.key;
+     }
 }
 
 
