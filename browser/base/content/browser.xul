@@ -465,7 +465,7 @@
   <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons" iconsize="small">
     <!-- Menu -->
       <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
-               defaultset=" " mode="icons" iconsize="small">
+               defaultset="menubar-items" mode="icons" iconsize="small">
         <toolbaritem id="menubar-items" align="center">
           <menubar id="main-menubar" style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
             <menu label="&fileMenu.label;"
@@ -899,7 +899,7 @@
              toolbarname="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;"
              fullscreentoolbar="true" mode="icons" iconsize="small"
              customizable="true"
-             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,search-container"
+             defaultset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,search-container,window-controls"
              context="toolbar-context-menu">
       <hbox id="window-controls" hidden="true" fullscreencontrol="true">
         <toolbarbutton id="minimize-button" class="toolbarbutton-1"
