@@ -36,16 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const BMARKS_CONTRACTID        = "@mozilla.org/browser/bookmarks-service;1";
-const nsIBookmarksService      = Components.interfaces.nsIBookmarksService;
-
 var gOKButton;
 var gSearchField;
 function Startup()
 {
-  var bundle = document.getElementById("bookmarksBundle");
+  initServices();
+  initBMService();
   gOKButton = document.documentElement.getButton("accept");
-  gOKButton.label = bundle.getString("search_button_label");
+  gOKButton.label = BookmarksUtils.getLocaleString("search_button_label");
   gOKButton.disabled = true;
   gSearchField = document.getElementById("searchField");
   gSearchField.focus();
@@ -61,7 +59,7 @@ function find()
   searchURI += "&match=" + match.selectedItem.value;
   searchURI += "&method=" + method.selectedItem.value;
   searchURI += "&text=" + escape(gSearchField.value);
-  var bmWindow = findMostRecentWindow("bookmarks:searchresults", "chrome://communicator/content/bookmarks/bookmarks.xul", searchURI);
+  var bmWindow = findMostRecentWindow("bookmarks:searchresults", "chrome://communicator/content/bookmarks/bookmarksManager.xul", searchURI);
   
   // Update the root of the tree if we're using an existing search window. 
   if (!gCreatingNewWindow) 
@@ -72,10 +70,8 @@ function find()
   if (document.getElementById("saveQuery").checked == true)
   {
     var bundle = document.getElementById("bookmarksBundle");
-    var findTitle = bundle.stringBundle.formatStringFromName(
-                      "ShortFindTitle", [gSearchField.value], 1);
-    var bmks = Components.classes[BMARKS_CONTRACTID].getService(nsIBookmarksService);
-    bmks.addBookmarkImmediately(searchURI, findTitle, bmks.BOOKMARK_FIND_TYPE, null);
+    var findTitle = BookmarksUtils.getLocaleString("ShortFindTitle", [gSearchField.value]);
+    BMSVC.addBookmarkImmediately(searchURI, findTitle, BMSVC.BOOKMARK_FIND_TYPE, null);
   }
 
   return true;
@@ -83,11 +79,9 @@ function find()
 
 function findMostRecentWindow(aType, aURI, aParam)
 {
-  var WM = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
-  WM = WM.QueryInterface(Components.interfaces.nsIWindowMediator);
-  var topWindow = WM.getMostRecentWindow(aType);
+  var topWindow = WINDOWSVC.getMostRecentWindow(aType);
   if (!topWindow) gCreatingNewWindow = true;
-  return topWindow || openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", 
+  return topWindow || openDialog("chrome://communicator/content/bookmarks/bookmarksManager.xul", 
                                  "", "chrome,all,dialog=no", aParam);
 }
 
