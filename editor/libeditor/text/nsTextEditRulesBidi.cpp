@@ -139,7 +139,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
   {
     levelAfter = levelBefore;
   }
-  res = shell->GetCursorBidiLevel(&currentCursorLevel);
+  res = shell->GetCaretBidiLevel(&currentCursorLevel);
   if (NS_FAILED(res))
     return res;
   levelOfDeletion = (nsIEditor::eNext==aAction) ? levelAfter : levelBefore;
@@ -156,7 +156,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
 
     // Set the bidi level of the caret to that of the
     // character that will be (or would have been) deleted
-    res = shell->SetCursorBidiLevel(levelOfDeletion);
+    res = shell->SetCaretBidiLevel(levelOfDeletion);
     if (NS_FAILED(res))
       return res;
   }

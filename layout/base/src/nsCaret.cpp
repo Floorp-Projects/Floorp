@@ -556,7 +556,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 
   if (bidiEnabled)
   {
-    presShell->GetCursorBidiLevel(&bidiLevel);
+    presShell->GetCaretBidiLevel(&bidiLevel);
     if (bidiLevel & BIDI_LEVEL_UNDEFINED)
     {
       PRUint8 newBidiLevel;
@@ -568,7 +568,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
       {
         theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
                                   (void**)&newBidiLevel, sizeof(newBidiLevel) );
-        presShell->SetCursorBidiLevel(newBidiLevel);
+        presShell->SetCaretBidiLevel(newBidiLevel);
         bidiLevel = newBidiLevel;
       }
     }

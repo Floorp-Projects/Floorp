@@ -95,7 +95,7 @@ class nsIDOMNode;
 #define VERIFY_REFLOW_INCLUDE_SPACE_MANAGER 0x40
 #define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x80
 
-#ifdef IBMBIDI // Constant for Set/Get CursorBidiLevel
+#ifdef IBMBIDI // Constant for Set/Get CaretBidiLevel
 #define BIDI_LEVEL_UNDEFINED 0x80
 #endif
 
@@ -567,19 +567,19 @@ public:
 
 #ifdef IBMBIDI
   /**
-   * SetCursorBidiLevel will set the Bidi embedding level for the cursor. 0-63
+   * SetCaretBidiLevel will set the Bidi embedding level for the cursor. 0-63
    */
-  NS_IMETHOD SetCursorBidiLevel(PRUint8 aLevel) = 0;
+  NS_IMETHOD SetCaretBidiLevel(PRUint8 aLevel) = 0;
 
   /**
-   * GetCursorBidiLevel will get the Bidi embedding level for the cursor. 0-63
+   * GetCaretBidiLevel will get the Bidi embedding level for the cursor. 0-63
    */
-  NS_IMETHOD GetCursorBidiLevel(PRUint8 *aOutLevel) = 0;
+  NS_IMETHOD GetCaretBidiLevel(PRUint8 *aOutLevel) = 0;
 
   /**
-   * UndefineCursorBidiLevel will set the Bidi embedding level for the cursor to an out-of-range value
+   * UndefineCaretBidiLevel will set the Bidi embedding level for the cursor to an out-of-range value
    */
-  NS_IMETHOD UndefineCursorBidiLevel(void) = 0;
+  NS_IMETHOD UndefineCaretBidiLevel(void) = 0;
 
   /**
    * Reconstruct and reflow frame model 
