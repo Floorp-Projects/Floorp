@@ -218,6 +218,12 @@ public:
     return mState.mIs2b ? m2b[aIndex] : PRUnichar(m1b[aIndex]);
   }
 
+  struct FragmentBits {
+    PRBool mInHeap : 1;
+    PRBool mIs2b : 1;
+    PRUint32 mLength : 30;
+  };
+
 protected:
   void ReleaseText();
 
@@ -228,11 +234,7 @@ protected:
 
   union {
     PRUint32 mAllBits;
-    struct {
-      PRBool mInHeap : 1;
-      PRBool mIs2b : 1;
-      PRUint32 mLength : 30;
-    } mState;
+    FragmentBits mState;
   };
 };
 
