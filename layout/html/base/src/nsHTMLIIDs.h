@@ -20,11 +20,11 @@
 
 #include "nsISupports.h"
 
-extern const nsIID kIAbsoluteItemsIID;
+// Alphabetically ordered list of externally defined IID's
 extern const nsIID kIHTMLContentIID;
-extern const nsIID kIStyledContentIID;
-extern const nsIID kIRunaroundIID;
 extern const nsIID kIHTMLReflowIID;
 extern const nsIID kIPageSequenceFrameIID;
+extern const nsIID kIStyledContentIID;
+extern const nsIID kITextContentIID;
 
 #endif /* nsHTMLIIDs_h___ */

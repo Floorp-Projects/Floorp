@@ -95,6 +95,7 @@ nsLineLayout::nsLineLayout(nsIPresContext& aPresContext,
   : mPresContext(aPresContext),
     mSpaceManager(aSpaceManager),
     mBlockReflowState(aOuterReflowState),
+    mBlockRS(nsnull),/* XXX temporary */
     mComputeMaxElementSize(aComputeMaxElementSize)
 {
   // Stash away some style data that we need
