@@ -42,6 +42,7 @@
 #include "nsDST.h"
 #include "nsPlaceholderFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsHTMLAtoms.h"
 #ifdef NS_DEBUG
 #include "nsISupportsArray.h"
 #include "nsIStyleRule.h"
@@ -1392,6 +1393,10 @@ NS_IMETHODIMP
 FrameManager::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
                                     PRBool &aAffects)
 {
+  if (aAttribute == nsHTMLAtoms::style) {
+    aAffects = PR_TRUE;
+    return NS_OK;
+  }
   return mStyleSet->AttributeAffectsStyle(aAttribute, aContent, aAffects);
 }
 
