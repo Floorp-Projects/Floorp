@@ -1213,7 +1213,8 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass.ToString();
-        PR_LogPrint("nsComponentManager: RegisterFactory(%s, factory), replace = %d.", buf, (int)aReplace);
+        PR_LogPrint("nsComponentManager: RegisterFactory(%s, %s, %s), replace = %d.",
+                    buf, aClassName, aProgID, (int)aReplace);
         delete [] buf;
     }
 #endif
