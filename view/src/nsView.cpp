@@ -875,6 +875,7 @@ NS_IMETHODIMP nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
 {
   mBounds.SizeTo(width, height);
 
+#if 0
   if (nsnull != mParent)
   {
     nsIScrollableView *scroller;
@@ -892,6 +893,7 @@ NS_IMETHODIMP nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
       scroller->ComputeContainerSize();
     }
   }
+#endif
 
   if (nsnull != mWindow)
   {

@@ -26,6 +26,7 @@
 #include "nsIRegion.h"
 #include "nsView.h"
 #include "nsIScrollbar.h"
+#include "nsIBlender.h"
 
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
@@ -36,6 +37,8 @@ static const PRBool gsDebug = PR_FALSE;
 
 //#define NO_DOUBLE_BUFFER
 //#define NEW_COMPOSITOR
+
+#define FLATVIEW_INC  3
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
@@ -81,11 +84,15 @@ nsViewManager :: ~nsViewManager()
 
   NS_IF_RELEASE(mRootWindow);
 
+  mRootScrollable = nsnull;
+
   --mVMCount;
 
   NS_ASSERTION(!(mVMCount < 0), "underflow of viewmanagers");
 
-  if ((0 == mVMCount) && (nsnull != mDrawingSurface))
+  if ((0 == mVMCount) &&
+      ((nsnull != mDrawingSurface) || (nsnull != gOffScreen) ||
+      (nsnull != gRed) || (nsnull != gBlue)))
   {
     nsIRenderingContext *rc;
 
@@ -99,11 +106,25 @@ nsViewManager :: ~nsViewManager()
 
     if (NS_OK == rv)
     {
-      rc->DestroyDrawingSurface(mDrawingSurface);
+      if (nsnull != mDrawingSurface)
+        rc->DestroyDrawingSurface(mDrawingSurface);
+
+      if (nsnull != gOffScreen)
+        rc->DestroyDrawingSurface(gOffScreen);
+
+      if (nsnull != gRed)
+        rc->DestroyDrawingSurface(gRed);
+
+      if (nsnull != gBlue)
+        rc->DestroyDrawingSurface(gBlue);
+
       NS_RELEASE(rc);
     }
     
     mDrawingSurface = nsnull;
+    gOffScreen = nsnull;
+    gRed = nsnull;
+    gBlue = nsnull;
   }
 
   mObserver = nsnull;
@@ -113,7 +134,7 @@ nsViewManager :: ~nsViewManager()
   {
     PRInt32 cnt = mFlatViews->Count(), idx;
 
-    for (idx = 1; idx < cnt; idx += 2)
+    for (idx = 1; idx < cnt; idx += FLATVIEW_INC)
     {
       nsRect *rect = (nsRect *)mFlatViews->ElementAt(idx);
 
@@ -452,19 +473,51 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   mPainting = PR_FALSE;
 }
 
+//states
+#define FRONT_TO_BACK_RENDER      1
+#define FRONT_TO_BACK_ACCUMULATE  2
+#define BACK_TO_FRONT_TRANS       3
+#define BACK_TO_FRONT_OPACITY     4
+#define COMPOSITION_DONE          5
+
+//bit shifts
+#define TRANS_PROPERTY_TRANS      0
+#define TRANS_PROPERTY_OPACITY    1
+
+//flat view flags
+#define VIEW_INCLUDED             0x0001
+
 void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
 {
 #ifdef NEW_COMPOSITOR
 
-  PRInt32 flatlen = 0, cnt;
+  PRInt32           flatlen = 0, cnt;
+  PRInt32           state = FRONT_TO_BACK_RENDER;
+  PRInt32           transprop;
+  nsRect            backfrontrect;
+  nsRect            accumrect;
+  PRInt32           increment = FLATVIEW_INC;
+  PRInt32           loopstart = 0;
+  PRInt32           loopend;
+  PRInt32           accumstart;
+  float             t2p;
+  nsDrawingSurface  origsurf;
+  nsIRegion         *transrgn = nsnull;
+  nsIRegion         *temprgn = nsnull;
+  nsIRegion         *rcrgn = nsnull;
 
   if (nsnull != aRootView)
-    FlattenViewTree(aRootView, &flatlen);
+    FlattenViewTree(aRootView, &flatlen, &aRect);
+
+  loopend = flatlen;
+
+  mContext->GetAppUnitsToDevUnits(t2p);
+  aRC.GetDrawingSurface(&origsurf);
 
 #if 0
 printf("flatlen %d\n", flatlen);
 
-for (cnt = 0; cnt < flatlen; cnt += 2)
+for (cnt = 0; cnt < flatlen; cnt += FLATVIEW_INC)
 {
   nsRect *rect;
   printf("view: %x\n", mFlatViews->ElementAt(cnt));
@@ -478,57 +531,229 @@ for (cnt = 0; cnt < flatlen; cnt += 2)
 }
 #endif
 
-  for (cnt = 0; cnt < flatlen; cnt += 2)
+  while (state != COMPOSITION_DONE)
   {
-    nsIView *curview = (nsIView *)mFlatViews->ElementAt(cnt);
-    nsRect  *currect = (nsRect *)mFlatViews->ElementAt(cnt + 1);
-    
-    if ((nsnull != curview) && (nsnull != currect))
+    for (cnt = loopstart; (increment > 0) ? (cnt < loopend) : (cnt > loopend); cnt += increment)
     {
-      nsIWidget *widget;
-      PRBool    hasWidget = PR_FALSE;
-
-      curview->GetWidget(widget);
-
-      if (nsnull != widget)
+      nsIView   *curview = (nsIView *)mFlatViews->ElementAt(cnt);
+      nsRect    *currect = (nsRect *)mFlatViews->ElementAt(cnt + 1);
+      PRUint32  curflags = (PRUint32)mFlatViews->ElementAt(cnt + 2);
+    
+      if ((nsnull != curview) && (nsnull != currect))
       {
-        void  *nativewidget;
+        PRBool  hasWidget = DoesViewHaveNativeWidget(*curview);
 
-        nativewidget = widget->GetNativeData(NS_NATIVE_WIDGET);
+        if ((PR_FALSE == hasWidget) || ((PR_TRUE == hasWidget) && (cnt == (flatlen - FLATVIEW_INC))))
+        {
+          PRBool  trans;
+          float   opacity;
 
-        NS_RELEASE(widget);
+          curview->HasTransparency(trans);
+          curview->GetOpacity(opacity);
 
-        if (nsnull != nativewidget)
-          hasWidget = PR_TRUE;
+          switch (state)
+          {
+            default:
+            case FRONT_TO_BACK_RENDER:
+              if ((PR_TRUE == trans) || (opacity < 1.0f))
+              {
+                //need to finish using back to front till this point
+                transprop = (trans << TRANS_PROPERTY_TRANS) | ((opacity < 1.0f) << TRANS_PROPERTY_OPACITY);
+                backfrontrect = accumrect = *currect;
+                state = FRONT_TO_BACK_ACCUMULATE;
+                accumstart = cnt;
+                mFlatViews->ReplaceElementAt((void *)VIEW_INCLUDED, cnt + 2);
+
+                //get a snapshot of the current clip so that we can exclude areas
+                //already excluded in it from the transparency region
+                aRC.GetClipRegion(&rcrgn);
+
+                
+              }
+              else
+              {
+                RenderView(curview, aRC, aRect, *currect, aResult);
+
+                if (aResult == PR_FALSE)
+                  aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
+              }
+
+              break;
+
+            case FRONT_TO_BACK_ACCUMULATE:
+              if ((PR_TRUE == backfrontrect.Intersects(*currect)) &&
+                  ((PR_TRUE == trans) || (opacity < 1.0f)))
+              {
+                transprop |= (trans << TRANS_PROPERTY_TRANS) | ((opacity < 1.0f) << TRANS_PROPERTY_OPACITY);
+                accumrect.UnionRect(*currect, accumrect);
+                mFlatViews->ReplaceElementAt((void *)VIEW_INCLUDED, cnt + 2);
+              }
+  
+              break;
+
+            case BACK_TO_FRONT_TRANS:
+              if (PR_TRUE == accumrect.Intersects(*currect))
+              {
+                PRBool clipstate;
+
+                RenderView(curview, aRC, aRect, *currect, clipstate);
+
+                //if this view is transparent, it has been accounted
+                //for, so we never have to look at it again.
+                if ((PR_TRUE == trans) && (curflags & VIEW_INCLUDED))
+                {
+                  mFlatViews->ReplaceElementAt(nsnull, cnt);
+                  mFlatViews->ReplaceElementAt(nsnull, cnt + 2);
+                }
+              }
+
+              break;
+
+            case BACK_TO_FRONT_OPACITY:
+              if (PR_TRUE == accumrect.Intersects(*currect))
+              {
+                PRBool clipstate;
+
+                if (opacity == 1.0f)
+                  RenderView(curview, aRC, aRect, *currect, clipstate);
+                else
+                {
+                  aRC.SelectOffScreenDrawingSurface(gRed);
+
+                  RenderView(curview, aRC, aRect, *currect, clipstate);
+
+                  nsRect brect;
+
+                  brect.x = brect.y = 0;
+                  brect.width = accumrect.width;
+                  brect.height = accumrect.height;
+
+                  static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
+                  static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
+
+                  nsIBlender  *blender = nsnull;
+                  nsresult rv;
+
+                  rv = nsRepository::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&blender);
+
+                  if (NS_OK == rv)
+                  {
+                    nscoord width, height;
+
+                    width = NSToCoordRound(currect->width * t2p);
+                    height = NSToCoordRound(currect->height * t2p);
+
+                    blender->Init(mContext);
+                    blender->Blend(0, 0, width, height, gRed, gOffScreen, 0, 0, opacity);
+
+                    NS_RELEASE(blender);
+                  }
+
+                  aRC.SelectOffScreenDrawingSurface(gOffScreen);
+                }
+
+                //if this view is transparent or non-opaque, it has
+                //been accounted for, so we never have to look at it again.
+                if (((PR_TRUE == trans) || (opacity < 1.0f)) && (curflags & VIEW_INCLUDED))
+                {
+                  mFlatViews->ReplaceElementAt(nsnull, cnt);
+                  mFlatViews->ReplaceElementAt(nsnull, cnt + 2);
+                }
+              }
+
+              break;
+          }
+        }
+        else
+          aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
+
+        if (aResult == PR_TRUE)
+        {
+          state = COMPOSITION_DONE;
+          break;
+        }
       }
+    }
 
-      if ((PR_FALSE == hasWidget) || ((PR_TRUE == hasWidget) && (cnt == (flatlen - 2))))
-      {
-        nsRect  lrect, drect, grect;
+    switch (state)
+    {
+      case FRONT_TO_BACK_ACCUMULATE:
+        loopstart = cnt - FLATVIEW_INC;
+        loopend = accumstart - FLATVIEW_INC;
+        increment = -FLATVIEW_INC;
+        state = (transprop & (1 << TRANS_PROPERTY_OPACITY)) ? BACK_TO_FRONT_OPACITY : BACK_TO_FRONT_TRANS;
 
-        grect = *currect;
-        curview->GetBounds(lrect);
+        if (state == BACK_TO_FRONT_OPACITY)
+        {
+          PRInt32 w, h;
+          nsRect  bitrect;
 
-        aRC.PushState();
+          //prepare offscreen buffers
 
-        aRC.Translate(grect.x, grect.y);
+          w = NSToCoordRound(accumrect.width * t2p);
+          h = NSToCoordRound(accumrect.height * t2p);
 
-        drect.IntersectRect(aRect, grect);
+          if ((w > gBlendWidth) || (h > gBlendHeight))
+          {
+            bitrect.x = bitrect.y = 0;
+            bitrect.width = w;
+            bitrect.height = h;
 
-        drect.x -= grect.x;
-        drect.y -= grect.y;
+            if (nsnull != gOffScreen)
+            {
+              aRC.DestroyDrawingSurface(gOffScreen);
+              gOffScreen = nsnull;
+            }
 
-        curview->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, aResult);
+            aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gOffScreen);
 
-        aRC.PopState(aResult);
+            if (nsnull != gRed)
+            {
+              aRC.DestroyDrawingSurface(gRed);
+              gRed = nsnull;
+            }
 
-        if (aResult == PR_FALSE)
-          aRC.SetClipRect(grect, nsClipCombine_kSubtract, aResult);
-      }
-      else
-        aRC.SetClipRect(*currect, nsClipCombine_kSubtract, aResult);
+            aRC.CreateDrawingSurface(&bitrect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS, gRed);
 
-      if (aResult == PR_TRUE)
+            gBlendWidth = w;
+            gBlendHeight = h;
+printf("offscr: %d, %d (%d, %d)\n", w, h, accumrect.width, accumrect.height);
+          }
+
+          if ((nsnull == gOffScreen) || (nsnull == gRed))
+            state = BACK_TO_FRONT_TRANS;
+          else
+          {
+            aRC.Translate(-accumrect.x, -accumrect.y);
+            aRC.SelectOffScreenDrawingSurface(gOffScreen);
+          }
+        }
+
+        break;
+
+      case BACK_TO_FRONT_OPACITY:
+        aRC.SelectOffScreenDrawingSurface(origsurf);
+        aRC.Translate(accumrect.x, accumrect.y);
+        aRC.CopyOffScreenBits(gOffScreen, 0, 0, accumrect, NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_TO_BACK_BUFFER);
+        //falls through
+
+      case BACK_TO_FRONT_TRANS:
+        loopstart = accumstart + FLATVIEW_INC;
+        loopend = flatlen;
+        increment = FLATVIEW_INC;
+        state = FRONT_TO_BACK_RENDER;
+
+        //clip out what we just rendered
+        aRC.SetClipRect(accumrect, nsClipCombine_kSubtract, aResult);
+
+        //did that finish everything?
+        if (aResult == PR_TRUE)
+          state = COMPOSITION_DONE;
+
+        break;
+
+      case FRONT_TO_BACK_RENDER:
+        state = COMPOSITION_DONE;
         break;
     }
   }
@@ -539,6 +764,26 @@ for (cnt = 0; cnt < flatlen; cnt += 2)
   aRootView->Paint(aRC, aRect, NS_VIEW_FLAG_CLIP_SET, aResult);
 
 #endif
+}
+
+void nsViewManager :: RenderView(nsIView *aView, nsIRenderingContext &aRC, const nsRect &aDamageRect, nsRect &aGlobalRect, PRBool &aResult)
+{
+  nsRect  drect;
+
+  NS_ASSERTION(!(nsnull == aView), "no view");
+
+  aRC.PushState();
+
+  aRC.Translate(aGlobalRect.x, aGlobalRect.y);
+
+  drect.IntersectRect(aDamageRect, aGlobalRect);
+
+  drect.x -= aGlobalRect.x;
+  drect.y -= aGlobalRect.y;
+
+  aView->Paint(aRC, drect, NS_VIEW_FLAG_JUST_PAINT, aResult);
+
+  aRC.PopState(aResult);
 }
 
 void nsViewManager :: UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const
@@ -776,18 +1021,19 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
     // Convert damage rect to coordinate space of containing view with
     // a widget
     // XXX Consolidate this code with the code above...
-    if (aView != widgetView)
-    {
+//    if (aView != widgetView)
+//    {
       do
       {
         par->GetPosition(&x, &y);
         trect.x += x;
         trect.y += y;
 
-        par->GetParent(par);
+        if (par != widgetView)
+          par->GetParent(par);
       }
       while ((nsnull != par) && (par != widgetView));
-    }
+//    }
 
     // Add this rect to the widgetView's dirty region.
 
@@ -1447,11 +1693,21 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
 NS_IMETHODIMP nsViewManager :: ShowQuality(PRBool aShow)
 {
   nsIScrollableView *scroller;
-  nsresult           retval;
+  nsresult          retval = NS_ERROR_FAILURE;
 
-  retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
-  if (NS_SUCCEEDED(retval)) {
-    scroller->ShowQuality(aShow);
+  if (nsnull != mRootView)
+  {
+    nsIView *child;
+
+    mRootView->GetChild(0, child);
+
+    if (nsnull != child)
+    {
+      retval = child->QueryInterface(kIScrollableViewIID, (void **)&scroller);
+
+      if (NS_SUCCEEDED(retval))
+        scroller->ShowQuality(aShow);
+    }
   }
 
   return retval;
@@ -1460,11 +1716,21 @@ NS_IMETHODIMP nsViewManager :: ShowQuality(PRBool aShow)
 NS_IMETHODIMP nsViewManager :: GetShowQuality(PRBool &aResult)
 {
   nsIScrollableView *scroller;
-  nsresult           retval;
+  nsresult          retval = NS_ERROR_FAILURE;
 
-  retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
-  if (NS_SUCCEEDED(retval)) {
-    scroller->GetShowQuality(aResult);
+  if (nsnull != mRootView)
+  {
+    nsIView *child;
+
+    mRootView->GetChild(0, child);
+
+    if (nsnull != child)
+    {
+      retval = child->QueryInterface(kIScrollableViewIID, (void **)&scroller);
+
+      if (NS_SUCCEEDED(retval))
+        scroller->GetShowQuality(aResult);
+    }
   }
 
   return retval;
@@ -1473,12 +1739,21 @@ NS_IMETHODIMP nsViewManager :: GetShowQuality(PRBool &aResult)
 NS_IMETHODIMP nsViewManager :: SetQuality(nsContentQuality aQuality)
 {
   nsIScrollableView *scroller;
-  nsresult           retval;
+  nsresult          retval = NS_ERROR_FAILURE;
 
-  retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
-  if (NS_SUCCEEDED(retval))
+  if (nsnull != mRootView)
   {
-    scroller->SetQuality(aQuality);
+    nsIView *child;
+
+    mRootView->GetChild(0, child);
+
+    if (nsnull != child)
+    {
+      retval = child->QueryInterface(kIScrollableViewIID, (void **)&scroller);
+
+      if (NS_SUCCEEDED(retval))
+        scroller->SetQuality(aQuality);
+    }
   }
 
   return retval;
@@ -1611,6 +1886,18 @@ NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsViewManager :: SetRootScrollableView(nsIScrollableView *aScrollable)
+{
+  mRootScrollable = aScrollable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager :: GetRootScrollableView(nsIScrollableView **aScrollable)
+{
+  *aScrollable = mRootScrollable;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
 {
   nsRect              wrect;
@@ -1658,7 +1945,7 @@ NS_IMETHODIMP nsViewManager :: Display(nsIView* aView)
   return NS_OK;
 }
 
-void nsViewManager :: FlattenViewTree(nsIView *aView, PRInt32 *aIndex, nsIView *aTopView, nsVoidArray *aArray, nscoord aX, nscoord aY)
+void nsViewManager :: FlattenViewTree(nsIView *aView, PRInt32 *aIndex, const nsRect *aDamageRect, nsIView *aTopView, nsVoidArray *aArray, nscoord aX, nscoord aY)
 {
   PRInt32 numkids, cnt;
 
@@ -1696,22 +1983,7 @@ void nsViewManager :: FlattenViewTree(nsIView *aView, PRInt32 *aIndex, nsIView *
 
   if (numkids > 0)
   {
-    nsIWidget *widget;
-    PRBool    hasWidget = PR_FALSE;
-
-    aView->GetWidget(widget);
-
-    if (nsnull != widget)
-    {
-      void  *nativewidget;
-
-      nativewidget = widget->GetNativeData(NS_NATIVE_WIDGET);
-
-      NS_RELEASE(widget);
-
-      if (nsnull != nativewidget)
-        hasWidget = PR_TRUE;
-    }
+    PRBool hasWidget = DoesViewHaveNativeWidget(*aView);
 
     if ((PR_FALSE == hasWidget) || ((PR_TRUE == hasWidget) && (aView == aTopView)))
     {
@@ -1720,29 +1992,68 @@ void nsViewManager :: FlattenViewTree(nsIView *aView, PRInt32 *aIndex, nsIView *
         nsIView *child;
 
         aView->GetChild(cnt, child);
-        FlattenViewTree(child, aIndex, aTopView, aArray, lrect.x, lrect.y);
+        FlattenViewTree(child, aIndex, aDamageRect, aTopView, aArray, lrect.x, lrect.y);
       }
     }
   }
 
-  aArray->ReplaceElementAt(aView, (*aIndex)++);
+  nsViewVisibility  vis;
+  float             opacity;
+  PRBool            overlap;
 
-  nsRect *grect = (nsRect *)aArray->ElementAt(*aIndex);
+  aView->GetVisibility(vis);
+  aView->GetOpacity(opacity);
 
-  if (nsnull == grect)
+  if (nsnull != aDamageRect)
+    overlap = lrect.Intersects(*aDamageRect);
+  else
+    overlap = PR_TRUE;
+
+  if ((nsViewVisibility_kShow == vis) && (opacity > 0.0f) && (PR_TRUE == overlap))
   {
-    grect = new nsRect(lrect.x, lrect.y, lrect.width, lrect.height);
+    aArray->ReplaceElementAt(aView, (*aIndex)++);
+
+    nsRect *grect = (nsRect *)aArray->ElementAt(*aIndex);
 
     if (nsnull == grect)
     {
-      (*aIndex)--;
-      return;
+      grect = new nsRect(lrect.x, lrect.y, lrect.width, lrect.height);
+
+      if (nsnull == grect)
+      {
+        (*aIndex)--;
+        return;
+      }
+
+      aArray->ReplaceElementAt(grect, *aIndex);
     }
+    else
+      *grect = lrect;
 
-    aArray->ReplaceElementAt(grect, *aIndex);
+    (*aIndex)++;
+
+    aArray->ReplaceElementAt(nsnull, (*aIndex)++);
   }
-  else
-    *grect = lrect;
+}
 
-  (*aIndex)++;
+PRBool nsViewManager :: DoesViewHaveNativeWidget(nsIView &aView)
+{
+  nsIWidget *widget;
+  PRBool    retval = PR_FALSE;
+
+  aView.GetWidget(widget);
+
+  if (nsnull != widget)
+  {
+    void  *nativewidget;
+
+    nativewidget = widget->GetNativeData(NS_NATIVE_WIDGET);
+
+    NS_RELEASE(widget);
+
+    if (nsnull != nativewidget)
+      retval = PR_TRUE;
+  }
+
+  return retval;
 }
