@@ -3758,6 +3758,7 @@ NS_IMETHODIMP
 CSSRuleProcessor::ClearRuleCascades(void)
 {
   RuleCascadeData *data = mRuleCascades;
+  mRuleCascades = nsnull;
   while (data) {
     RuleCascadeData *next = data->mNext;
     delete data;
@@ -3960,6 +3961,7 @@ CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
   while ((cascade = *cascadep)) {
     if (cascade->mMedium == aMedium)
       return cascade;
+    cascadep = &cascade->mNext;
   }
 
   if (mSheets) {
