@@ -23,6 +23,8 @@
 /* Interface Headers */
 #include "nsIFactory.h"
 #include "nsISupports.h"
+
+#if 0
 #include "nsIButton.h"
 #include "nsILabel.h"
 #include "nsICheckButton.h"
@@ -30,9 +32,11 @@
 #include "nsITextWidget.h"
 #include "nsITextAreaWidget.h"
 #include "nsIListBox.h"
+#include "nsIComboBox.h"
+#endif
+
 #include "nsIFileWidget.h"
 #include "nsFileSpecWithUIImpl.h"
-#include "nsIComboBox.h"
 #include "nsISound.h"
 #include "nsFontRetrieverService.h"
 
@@ -43,16 +47,19 @@
 #include "nsWindow.h"
 #include "nsAppShell.h"
 #include "nsLookAndFeel.h"
+#if 0
 #include "nsButton.h"
 #include "nsCheckButton.h"
 #include "nsRadioButton.h"
 #include "nsTextWidget.h"
 #include "nsTextAreaWidget.h"
-#include "nsScrollbar.h"
 #include "nsListBox.h"
-#include "nsFileWidget.h"
 #include "nsComboBox.h"
 #include "nsLabel.h"
+#endif
+
+#include "nsScrollbar.h"
+#include "nsFileWidget.h"
 #include "nsClipboard.h"
 #include "nsTransferable.h"
 #include "nsXIFFormatConverter.h"
@@ -64,20 +71,23 @@ struct PRLogModuleInfo  *PhWidLog =  nsnull;
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
+#if 0
 static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
 static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
-static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
 static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
-static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
+static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
+#endif
+
+static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
+static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
 static NS_DEFINE_IID(kCFontRetrieverService,    NS_FONTRETRIEVERSERVICE_CID);
 static NS_DEFINE_IID(kCImageButton,   NS_IMAGEBUTTON_CID);
 
@@ -180,6 +190,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
       return NS_ERROR_NO_AGGREGATION;
   
     nsISupports *inst = nsnull;
+
     if (mClassID.Equals(kCWindow)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of nsWindow\n"));
       inst = (nsISupports *)(nsBaseWidget*)new nsWindow();
@@ -187,14 +198,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
     else if (mClassID.Equals(kCChild)) {
       PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of nsChildWindow\n"));
       inst = (nsISupports *)(nsBaseWidget*)new ChildWindow();
-    }
-    else if (mClassID.Equals(kCButton)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsButton\n" ));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsButton();
-    }
-    else if (mClassID.Equals(kCTextField)) {
-    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of TextField\n"));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextWidget();
     }
     else if (mClassID.Equals(kCHorzScrollbar)) {
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of HorzScrollBar\n" ));
@@ -204,29 +207,9 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of VertScrollBar\n" ));
       inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsScrollbar( PR_TRUE );
     }
-    else if (mClassID.Equals(kCCheckButton)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsCheckButton\n" ));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsCheckButton();
-    }
-    else if (mClassID.Equals(kCRadioButton)) {
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsRadioButton\n" ));
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsRadioButton();
-    }
-    else if (mClassID.Equals(kCTextArea)) {
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextAreaWidget();
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of TextArea\n" ));
-    }
-    else if (mClassID.Equals(kCListbox)) {
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsListBox();
-	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsListBox\n" ));
-	}
     else if (mClassID.Equals(kCFileOpen)) {
       inst = (nsISupports *) new nsFileWidget();
 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsFileWidget\n" ));
-    }
-    else if (mClassID.Equals(kCCombobox)) {
-      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsComboBox();
- 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsComboBox\n" ));
     }
     else if (mClassID.Equals(kCSound)) {
     	nsISound* aSound = nsnull;
@@ -235,7 +218,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
  	    PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsSound\n" ));
 
     }
-	
     else if (mClassID.Equals(kCAppShell)) {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsAppShell\n" ));
         inst = (nsISupports*)(nsIAppShell*)new nsAppShell();
@@ -247,10 +229,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
     else if (mClassID.Equals(kCLookAndFeel)) {
     PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLookAndFeel\n" ));
         inst = (nsISupports*)new nsLookAndFeel();
-    }
-    else if (mClassID.Equals(kCLabel)) {
-      PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLabel\n" ));
-      inst = (nsISupports*)(nsILabel *)new nsLabel();
     }
     else if (mClassID.Equals(kCClipboard)) {
         PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of nsClipboard\n"));
@@ -277,6 +255,40 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
         PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsTransferable\n" ));
         inst = (nsISupports*)new nsTransferable();
     }
+#if 0
+    else if (mClassID.Equals(kCCheckButton)) {
+	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsCheckButton\n" ));
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsCheckButton();
+    }
+    else if (mClassID.Equals(kCRadioButton)) {
+	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsRadioButton\n" ));
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsRadioButton();
+    }
+    else if (mClassID.Equals(kCTextArea)) {
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextAreaWidget();
+	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of TextArea\n" ));
+    }
+    else if (mClassID.Equals(kCListbox)) {
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsListBox();
+	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsListBox\n" ));
+	}
+    else if (mClassID.Equals(kCCombobox)) {
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsComboBox();
+ 	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsComboBox\n" ));
+    }
+    else if (mClassID.Equals(kCButton)) {
+	  PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsButton\n" ));
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *)new nsButton();
+    }
+    else if (mClassID.Equals(kCTextField)) {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidgetFactory::CreateInstance of TextField\n"));
+      inst = (nsISupports *)(nsBaseWidget*)(nsWidget *) new nsTextWidget();
+    }
+    else if (mClassID.Equals(kCLabel)) {
+      PR_LOG(PhWidLog, PR_LOG_DEBUG,( "nsWidgetFactory::CreateInstance of nsLabel\n" ));
+      inst = (nsISupports*)(nsILabel *)new nsLabel();
+    }
+#endif
 												
     if (inst == NULL) {  
         PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance Failed to create widget.\n" ));
