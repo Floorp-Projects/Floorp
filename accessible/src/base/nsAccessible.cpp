@@ -212,6 +212,7 @@ NS_IMETHODIMP nsAccessible::SetAccNextSibling(nsIAccessible *aNextSibling)
 
 NS_IMETHODIMP nsAccessible::Shutdown()
 {
+  mNextSibling = nsnull;
   // Make sure none of it's children point to this parent
   if (mFirstChild) {
     nsCOMPtr<nsIAccessible> current(mFirstChild), next;
@@ -223,6 +224,11 @@ NS_IMETHODIMP nsAccessible::Shutdown()
   }
   // Now invalidate the child count and pointers to other accessibles
   InvalidateChildren();
+  if (mParent) {
+    mParent->InvalidateChildren();
+    mParent = nsnull;
+  }
+
   return nsAccessNodeWrap::Shutdown();
 }
 
@@ -230,7 +236,7 @@ NS_IMETHODIMP nsAccessible::InvalidateChildren()
 {
   // Document has transformed, reset our invalid children and child count
   mAccChildCount = -1;
-  mFirstChild = mNextSibling = mParent = nsnull;
+  mFirstChild = nsnull;
   return NS_OK;
 }
 

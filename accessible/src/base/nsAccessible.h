@@ -102,7 +102,8 @@ protected:
   void CacheChildren(PRBool aWalkNormalDOM);
 
   // Data Members
-  nsIAccessible *mParent, *mFirstChild, *mNextSibling;
+  nsCOMPtr<nsIAccessible> mParent;
+  nsIAccessible *mFirstChild, *mNextSibling;
 };
 
 #endif  
