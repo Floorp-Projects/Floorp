@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>thunderbird-bin</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Thunderbird APP_VERSION, © 2003 The Mozilla Organization</string>
+	<string>Thunderbird APP_VERSION, © 2004 The Mozilla Organization</string>
 	<key>CFBundleIconFile</key>
 	<string>thunderbird</string>
 	<key>CFBundleIdentifier</key>
