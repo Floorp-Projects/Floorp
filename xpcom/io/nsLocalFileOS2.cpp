@@ -562,6 +562,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 #ifdef XP_OS2
     else
     {
+        mResolvedPath.Assign(workingFilePath);
         return(NS_ERROR_FILE_NOT_FOUND);
     } 
 #else
