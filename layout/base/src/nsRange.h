@@ -96,10 +96,10 @@ private:
   nsIDOMNode   *mEndParent;
   PRInt32      mStartOffset;
   PRInt32      mEndOffset;
-  nsVoidArray  *mStartAncestors;       // just keeping these around to avoid reallocing the arrays.
-  nsVoidArray  *mEndAncestors;         // the contents of these arrays are discarded across calls.
-  nsVoidArray  *mStartAncestorOffsets; //
-  nsVoidArray  *mEndAncestorOffsets;   //
+  static nsVoidArray  *mStartAncestors;       // just keeping these around to avoid reallocing the arrays.
+  static nsVoidArray  *mEndAncestors;         // the contents of these arrays are discarded across calls.
+  static nsVoidArray  *mStartAncestorOffsets; //
+  static nsVoidArray  *mEndAncestorOffsets;   //
 
   // no copy's or assigns
   nsRange(const nsRange&);
@@ -111,7 +111,8 @@ private:
   static PRInt32       IndexOf(nsIDOMNode* aNode);
   static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
   static nsIDOMNode*   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
-  static nsresult      GetDOMNodeFromContent(nsIContent* aParentNode, nsIDOMNode** domNode);
+  static nsresult      GetDOMNodeFromContent(nsIContent* inContentNode, nsIDOMNode** outDomNode);
+  static nsresult      GetContentFromDOMNode(nsIDOMNode* inDomNode, nsIContent** outContentNode);
   static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);
   
   static nsresult CloneSibsAndParents(nsIDOMNode* parentNode,
