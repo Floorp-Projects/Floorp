@@ -388,7 +388,7 @@ ADDON_PATH=${MOZ_DIST_BIN}${ADDON_PATH+":$ADDON_PATH"}
 if [ "$XSUNTRANSPORT" = "" ]
 then 
         XSUNTRANSPORT="shmem" 
-        XSUNSMESIZE="64"
+        XSUNSMESIZE="512"
         export XSUNTRANSPORT XSUNSMESIZE
 fi
 # Font path for Xft
