@@ -28,12 +28,12 @@
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
-#include "nsConnectionCacheObj.h"
 #include "prlog.h"
-#include "nsIProtocolProxyService.h"
+#include "nsNetUtil.h"
+
+// For proxification of FTP URLs
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIHTTPChannel.h"
-#include "nsNetUtil.h"
 
 
 #if defined(PR_LOGGING)
@@ -128,9 +128,7 @@ NS_IMETHODIMP
 nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                              nsIURI **result)
 {
-    nsresult rv;
-    PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("FTP attempt at %s ", aSpec));
-
+    nsresult rv = NS_OK;
     nsCOMPtr<nsIURI> url;
     nsCOMPtr<nsIURLParser> urlparser;
     if (aBaseURI) {
@@ -153,14 +151,10 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
         rv = url->SetSpec((char*)aSpec);
     }
-    if (NS_FAILED(rv)) {
-        PR_LOG(gFTPLog, PR_LOG_DEBUG, ("FAILED\n"));
-        return rv;
-    }
+    if (NS_FAILED(rv)) return rv;
 
     *result = url.get();
     NS_ADDREF(*result);
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("SUCCEEDED\n"));
     return rv;
 }
 

@@ -27,7 +27,7 @@
 
 #include "nsPIFTPChannel.h"
 #include "nsIURI.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsIProtocolHandler.h"
@@ -85,7 +85,6 @@ protected:
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
     PRBool                          mConnected;
-    PRBool                          mAsyncOpen; // was AsyncOpen called
     PRUint32                        mLoadAttributes;
 
     PRUint32                        mSourceOffset;
@@ -100,12 +99,13 @@ protected:
 
     nsCOMPtr<nsIProtocolHandler>    mHandler;
     nsCOMPtr<nsIThreadPool>         mPool; // the thread pool we want to use to fire off connections.
-    nsFtpConnectionThread           *mConnThread; // the raw pointer to the thread object.
+    nsCOMPtr<nsIRequest>            mConnThread;
     PRUint32                        mBufferSegmentSize;
     PRUint32                        mBufferMaxSize;
     nsCOMPtr<nsIChannel>            mProxyChannel; // a proxy channel
     nsXPIDLCString                  mHost;
     PRLock*                         mLock;
+    nsCOMPtr<nsISupports>           mUserContext;
 };
 
 #endif /* nsFTPChannel_h___ */

@@ -21,6 +21,10 @@
  */
 
 #include "nsAsyncEvent.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+
+static NS_DEFINE_CID(eventQCID, NS_EVENTQUEUESERVICE_CID);
 
 nsAsyncEvent::nsAsyncEvent(nsIChannel* channel, nsISupports* context)
     : mChannel(channel), mContext(context), mEvent(nsnull)
@@ -54,10 +58,16 @@ void PR_CALLBACK nsAsyncEvent::DestroyPLEvent(PLEvent* aEvent)
 }
 
 nsresult
-nsAsyncEvent::Fire(nsIEventQueue* aEventQueue) 
+nsAsyncEvent::Fire() 
 {
-    NS_PRECONDITION(nsnull != aEventQueue, "nsIEventQueue for thread is null");
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIEventQueueService> eqServ = do_GetService(eventQCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
+    nsCOMPtr<nsIEventQueue> eventQ;
+
+    rv = eqServ->GetThreadEventQueue(NS_UI_THREAD, getter_AddRefs(eventQ));
+    if (NS_FAILED(rv)) return rv;
     NS_PRECONDITION(nsnull == mEvent, "Init plevent only once.");
     
     mEvent = new PLEvent;
@@ -67,7 +77,7 @@ nsAsyncEvent::Fire(nsIEventQueue* aEventQueue)
                  (PLHandleEventProc)  nsAsyncEvent::HandlePLEvent,
                  (PLDestroyEventProc) nsAsyncEvent::DestroyPLEvent);
 
-    PRStatus status = aEventQueue->PostEvent(mEvent);
+    PRStatus status = eventQ->PostEvent(mEvent);
     return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 }
 

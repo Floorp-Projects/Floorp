@@ -31,7 +31,6 @@ interface nsIEventQueue;
 interface nsPIFTPChannel : nsIChannel
 {
 	void SetContentLength(in long aLength);
-    void Stopped(in nsresult aStatus, in wstring aMsg);
 };
 
 
