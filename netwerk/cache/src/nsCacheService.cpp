@@ -514,23 +514,9 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
     if (!listener)  return NS_OK;  // we're sync, we're done.
 
     // get the nsIEventQueue for the request's thread
-    nsresult  rv;
-    rv = mEventQService->ResolveEventQueue(NS_CURRENT_EVENTQ,
-                                          getter_AddRefs((*request)->mEventQ));
-    if (NS_FAILED(rv))  goto error;
+    (*request)->mThread = PR_GetCurrentThread();
     
-    
-    if (!(*request)->mEventQ) {
-        rv = NS_ERROR_NOT_AVAILABLE;
-        goto error;
-    }
-
     return NS_OK;
-
- error:
-    delete *request;
-    *request = nsnull;
-    return rv;
 }
 
 
@@ -543,8 +529,11 @@ nsCacheService::NotifyListener(nsCacheRequest *          request,
     nsresult rv;
 
     nsCOMPtr<nsICacheListener> listenerProxy;
-    NS_ASSERTION(request->mEventQ, "no event queue for async request!");
-    rv = mProxyObjectManager->GetProxyForObject(request->mEventQ,
+    NS_ASSERTION(request->mThread, "no thread set in async request!");
+    nsCOMPtr<nsIEventQueue> eventQ;
+    mEventQService->GetThreadEventQueue(request->mThread,
+                                        getter_AddRefs(eventQ));
+    rv = mProxyObjectManager->GetProxyForObject(eventQ,
                                                 NS_GET_IID(nsICacheListener),
                                                 request->mListener,
                                                 PROXY_ASYNC|PROXY_ALWAYS,
@@ -859,6 +848,45 @@ nsCacheService::DoomEntry_Locked(nsCacheEntry * entry)
 }
 
 
+static void* PR_CALLBACK
+EventHandler(PLEvent *self)
+{
+    nsISupports * object = (nsISupports *)PL_GetEventOwner(self);
+    NS_RELEASE(object);
+    return 0;
+}
+
+
+static void PR_CALLBACK
+DestroyHandler(PLEvent *self)
+{
+    delete self;
+}
+
+
+void
+nsCacheService::ProxyObjectRelease(nsISupports * object, PRThread * thread)
+{
+    NS_ASSERTION(gService, "nsCacheService not initialized");
+    NS_ASSERTION(thread, "no thread");
+    // XXX if thread == current thread, we could avoid posting an event,
+    // XXX by add this object to a queue and release it when the cache service is unlocked.
+    
+    nsCOMPtr<nsIEventQueue> eventQ;
+    gService->mEventQService->GetThreadEventQueue(thread, getter_AddRefs(eventQ));
+    NS_ASSERTION(eventQ, "no event queue for thread");
+    if (!eventQ)  return;
+    
+    PLEvent * event = new PLEvent;
+    if (!event) {
+        // XXX warning
+        return;
+    }
+    PL_InitEvent(event, object, EventHandler, DestroyHandler);
+    eventQ->PostEvent(event);
+}
+
+
 void
 nsCacheService::SetCacheDevicesEnabled(PRBool  enableDisk, PRBool  enableMemory)
 {
@@ -882,12 +910,7 @@ nsCacheService::SetCacheDevicesEnabled(PRBool  enableDisk, PRBool  enableMemory)
 nsresult
 nsCacheService::SetCacheElement(nsCacheEntry * entry, nsISupports * element)
 {
-    nsresult rv;
-    nsIEventQueue *  eventQ;
-    rv = mEventQService->ResolveEventQueue(NS_CURRENT_EVENTQ, &eventQ);
-    if (NS_FAILED(rv))  return rv;
-
-    entry->SetEventQ(eventQ);
+    entry->SetThread(PR_GetCurrentThread());
     entry->SetData(element);
     entry->TouchData();
     return NS_OK;

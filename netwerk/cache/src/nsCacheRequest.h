@@ -46,7 +46,7 @@ private:
         : mKey(key),
           mInfo(0),
           mListener(listener),
-          mEventQ(nsnull),
+          mThread(nsnull),
           mLock(nsnull),
           mCondVar(nsnull)
     {
@@ -170,7 +170,7 @@ private:
     nsCString *                mKey;
     PRUint32                   mInfo;
     nsCOMPtr<nsICacheListener> mListener;
-    nsCOMPtr<nsIEventQueue>    mEventQ;
+    PRThread *                 mThread;
     PRLock *                   mLock;
     PRCondVar *                mCondVar;
 };

@@ -34,8 +34,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsAReadableString.h"
-#include "nsIEventQueue.h"
-
 
 class nsCacheDevice;
 class nsCacheMetaData;
@@ -93,8 +91,7 @@ public:
 
     void     TouchData();
     
-    nsIEventQueue * GetEventQ()                         { return mEventQ;}
-    void            SetEventQ(nsIEventQueue * eventQ)   { mEventQ = dont_AddRef(eventQ);}
+    void     SetThread(PRThread *aThread)         { mThread = aThread; }
 
     /**
      * Meta data accessors
@@ -230,7 +227,7 @@ private:
     nsCacheDevice *         mCacheDevice;    // 4
     nsCOMPtr<nsISupports>   mSecurityInfo;   // 
     nsCOMPtr<nsISupports>   mData;           // 
-    nsCOMPtr<nsIEventQueue> mEventQ;         // event queue for mData (for mem object cache)
+    PRThread *              mThread;
     nsCacheMetaData *       mMetaData;       // 4
     PRCList                 mRequestQ;       // 8
     PRCList                 mDescriptorQ;    // 8
