@@ -54,6 +54,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
@@ -77,6 +78,7 @@
 #include "nsNeckoUtil.h"
 #include "nsRDFCID.h"
 #include "nsDOMPropEnums.h"
+#include "nsXPIDLString.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #if defined(OJI)
@@ -819,15 +821,14 @@ GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
     }
   }
   else {
-    // We are in an (i)frame.  Use webshell bounds.    
-    if (mWebShell) {
-      PRInt32 x,y,w,h;
-      mWebShell->GetBounds(x, y, w, h);
-      *aInnerWidth = w;
-    }
-    else {
-      *aInnerWidth = 0;
-    }    
+    // We are in an (i)frame.  Use webshell bounds.
+    nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+    *aInnerWidth = 0;
+    if(webShellWin)
+      {
+      PRInt32 cy;
+      webShellWin->GetSize(aInnerWidth, &cy);
+      }    
   }
   
   NS_RELEASE(parent);
@@ -851,11 +852,13 @@ GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
     }
   } else {
     rv = NS_ERROR_NULL_POINTER;
-    if (mWebShell) {
-      PRInt32 x,y,w,h;
-      mWebShell->GetBounds(x, y, w, h);
-      rv = mWebShell->SetBounds(x, y, aInnerWidth, h);
-    }
+    nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+    if(webShellWin)
+      {
+      PRInt32 cx = 0, cy = 0;
+      webShellWin->GetSize(&cx, &cy);
+      rv = webShellWin->SetSize(aInnerWidth, cy, PR_FALSE);
+      }
   }
   return rv;
 }
@@ -880,15 +883,14 @@ GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
     }
   }
   else {
-    // We are in an (i)frame.  Use webshell bounds.    
-    if (mWebShell) {
-      PRInt32 x,y,w,h;
-      mWebShell->GetBounds(x, y, w, h);
-      *aInnerHeight = h;
-    }
-    else {
-      *aInnerHeight = 0;
-    }    
+    // We are in an (i)frame.  Use webshell bounds.
+    nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+    *aInnerHeight = 0;
+    if(webShellWin)
+      {
+      PRInt32 cx;
+      webShellWin->GetSize(&cx, aInnerHeight);
+      }    
   }
 
   NS_RELEASE(parent);
@@ -912,11 +914,13 @@ GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
     }
   } else {
     rv = NS_ERROR_NULL_POINTER;
-    if (mWebShell) {
-      PRInt32 x,y,w,h;
-      mWebShell->GetBounds(x, y, w, h);
-      rv = mWebShell->SetBounds(x, y, w, aInnerHeight);
-    }
+    nsCOMPtr<nsIBaseWindow> webShellWin(do_QueryInterface(mWebShell));
+    if(webShellWin)
+      {
+      PRInt32 cx = 0, cy = 0;
+      webShellWin->GetSize(&cx, &cy);
+      webShellWin->SetSize(cx, aInnerHeight, PR_FALSE);
+      }
   }
   return rv;
 }
@@ -2778,8 +2782,8 @@ GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           nsCOMPtr<nsIBrowserWindow> browser;
           if (NS_OK == GetBrowserWindowInterface(*getter_AddRefs(browser)) && browser) {
             // We got a browser window interface
-            const PRUnichar* title;
-            browser->GetTitle(&title);
+            nsXPIDLString title;
+            browser->GetTitle(getter_Copies(title));
 
             JSString* jsString = JS_NewUCStringCopyZ(aContext, (const jschar*)title);
             if (!jsString)
