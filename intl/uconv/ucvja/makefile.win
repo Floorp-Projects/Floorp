@@ -27,20 +27,18 @@ DLLNAME = ucvja
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
+	nsSJIS2Unicode.cpp		\
+	nsUnicodeToSJIS.cpp		\
+	nsUCvJaSupport.cpp		\
 	nsUCVJADll.cpp			\
-	nsSJIS2Unicode.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
-	.\$(OBJDIR)\nsUCVJADll.obj 			\
 	.\$(OBJDIR)\nsSJIS2Unicode.obj 			\
+	.\$(OBJDIR)\nsUnicodeToSJIS.obj			\
+	.\$(OBJDIR)\nsUCvJaSupport.obj			\
+	.\$(OBJDIR)\nsUCVJADll.obj 			\
 	$(NULL)
-
-CSRCS =				\
-	$(NULL)
-
-OBJS = \
-        $(NULL)
 
 EXPORTS= nsUCVJACID.h			\
 	$(NULL)
