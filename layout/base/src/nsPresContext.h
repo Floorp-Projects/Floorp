@@ -31,9 +31,12 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIPresContext methods
-  virtual nsresult Init(nsIDeviceContext* aDeviceContext);
+  virtual nsresult Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs);
   virtual void SetShell(nsIPresShell* aShell);
   virtual nsIPresShell* GetShell();
+  NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
+  NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode);
+  NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
   virtual nsIStyleContext* ResolveStyleContextFor(nsIContent* aContent,
                                                   nsIFrame* aParentFrame,
                                                   PRBool aForceUnique = PR_FALSE);
@@ -53,11 +56,11 @@ public:
   NS_IMETHOD SetDefaultColor(const nscolor& aColor);
   NS_IMETHOD SetDefaultBackgroundColor(const nscolor& aColor);
   NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult);
-  NS_IMETHOD LoadImage(const nsString& aURL,
-                       const nscolor* aBackgroundColor,
-                       nsIFrame* aTargetFrame,
-                       PRBool aNeedSizeUpdate,
-                       nsIFrameImageLoader*& aLoader);
+  NS_IMETHOD StartLoadImage(const nsString& aURL,
+                            const nscolor* aBackgroundColor,
+                            nsIFrame* aTargetFrame,
+                            PRBool aNeedSizeUpdate,
+                            nsIFrameImageLoader*& aLoader);
   NS_IMETHOD StopLoadImage(nsIFrame* aForFrame);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aResult);
@@ -75,6 +78,7 @@ protected:
   virtual ~nsPresContext();
 
   nsIPresShell*         mShell;
+  nsIPref*              mPrefs;
   nsRect                mVisibleArea;
   nsIDeviceContext*     mDeviceContext;
   nsIImageGroup*        mImageGroup;
@@ -87,6 +91,7 @@ protected:
   nscolor               mDefaultBackgroundColor;
   nsVoidArray           mImageLoaders;
   nsIEventStateManager* mEventManager;
+  nsCompatibility       mCompatibilityMode;
 
 #ifdef DEBUG
   PRBool                mInitialized;

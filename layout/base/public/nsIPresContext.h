@@ -33,6 +33,7 @@ class nsIFrameImageLoader;
 class nsIImageGroup;
 class nsILinkHandler;
 class nsIPresShell;
+class nsIPref;
 class nsIStyleContext;
 class nsIAtom;
 class nsString;
@@ -42,6 +43,10 @@ class nsIEventStateManager;
 { 0x0a5d12e0, 0x944e, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
+enum nsCompatibility {
+  eCompatibility_Standard   = 1,
+  eCompatibility_NavQuirks  = 2
+};
 
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
@@ -50,7 +55,7 @@ public:
   /**
    * Initialize the presentation context from a particular device.
    */
-  virtual nsresult Init(nsIDeviceContext* aDeviceContext) = 0;
+  virtual nsresult Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs) = 0;
 
   /**
    * Set the presentation shell that this context is bound to.
@@ -62,6 +67,17 @@ public:
    * Get the PresentationShell that this context is bound to.
    */
   virtual nsIPresShell* GetShell() = 0;
+
+  /**
+   * Get a reference to the prefs API for this context
+   */
+  NS_IMETHOD GetPrefs(nsIPref*& aPrefs) = 0;
+
+  /**
+   * Access compatibility mode for this context
+   */
+  NS_IMETHOD GetCompatibilityMode(nsCompatibility& aMode) = 0;
+  NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode) = 0;
 
   /**
    * Resolve style for the given piece of content that will be a child
@@ -89,6 +105,7 @@ public:
   virtual nsIStyleContext* ProbePseudoStyleContextFor(nsIAtom* aPseudoTag,
                                                       nsIFrame* aParentFrame,
                                                       PRBool aForceUnique = PR_FALSE) = 0;
+
   /**
    * Get the font metrics for a given font.
    */
@@ -135,11 +152,11 @@ public:
    *      color is non-NULL, it indicates the RGB value to be folded
    *      into the transparent areas of the image and no mask is created.
    */
-  NS_IMETHOD LoadImage(const nsString& aURL,
-                       const nscolor* aBackgroundColor,
-                       nsIFrame* aTargetFrame,
-                       PRBool aNeedSizeUpdate,
-                       nsIFrameImageLoader*& aLoader) = 0;
+  NS_IMETHOD StartLoadImage(const nsString& aURL,
+                            const nscolor* aBackgroundColor,
+                            nsIFrame* aTargetFrame,
+                            PRBool aNeedSizeUpdate,
+                            nsIFrameImageLoader*& aLoader) = 0;
 
   /**
    * Stop any image loading being done on behalf of the argument frame.
@@ -193,7 +210,7 @@ public:
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager) = 0;
 };
 
-// Bit values for LoadImage's aImageStatus
+// Bit values for StartLoadImage's aImageStatus
 #define NS_LOAD_IMAGE_STATUS_ERROR      0x1
 #define NS_LOAD_IMAGE_STATUS_SIZE       0x2
 #define NS_LOAD_IMAGE_STATUS_BITS       0x4

@@ -17,6 +17,7 @@
  */
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIPref.h"
 #include "nsILinkHandler.h"
 #include "nsIStyleSet.h"
 #include "nsFrameImageLoader.h"
@@ -45,12 +46,15 @@ nsPresContext::nsPresContext()
   NS_INIT_REFCNT();
   mShell = nsnull;
   mDeviceContext = nsnull;
+  mPrefs = nsnull;
   mImageGroup = nsnull;
   mLinkHandler = nsnull;
   mContainer = nsnull;
   mEventManager = nsnull;
 
-  mFontScaler = 0;  // XXX this should come from: prefs"browser.base_font_scaler"
+  mFontScaler = 0;  
+
+  mCompatibilityMode = eCompatibility_NavQuirks;
 
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
@@ -87,6 +91,7 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mEventManager);
   NS_IF_RELEASE(mDeviceContext);
+  NS_IF_RELEASE(mPrefs);
 }
 
 nsrefcnt
@@ -109,12 +114,39 @@ nsPresContext::Release(void)
 NS_IMPL_QUERY_INTERFACE(nsPresContext, kIPresContextIID);
 
 nsresult
-nsPresContext::Init(nsIDeviceContext* aDeviceContext)
+nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
 {
   NS_ASSERTION(!(mInitialized == PR_TRUE), "attempt to reinit pres context");
 
   mDeviceContext = aDeviceContext;
   NS_IF_ADDREF(mDeviceContext);
+
+  mPrefs = aPrefs;
+  NS_IF_ADDREF(mPrefs);
+
+  if (nsnull != mPrefs) { // initialize pres context state from preferences
+    int32 prefInt;
+    char  prefChar[512];
+    int   charSize = sizeof(prefChar);
+
+    if (NS_OK == mPrefs->GetIntPref("browser.base_font_scaler", &prefInt)) {
+      mFontScaler = prefInt;
+    }
+
+    // XXX these font prefs strings don't take font encoding into account
+    if (NS_OK == mPrefs->GetCharPref("intl.font2.win.prop_font", &(prefChar[0]), &charSize)) {
+      mDefaultFont.name = prefChar;
+    }
+    if (NS_OK == mPrefs->GetIntPref("intl.font2.win.prop_size", &prefInt)) {
+      mDefaultFont.size = NS_POINTS_TO_TWIPS_INT(prefInt);
+    }
+    if (NS_OK == mPrefs->GetCharPref("intl.font2.win.fixed_font", &(prefChar[0]), &charSize)) {
+      mDefaultFixedFont.name = prefChar;
+    }
+    if (NS_OK == mPrefs->GetIntPref("intl.font2.win.fixed_size", &prefInt)) {
+      mDefaultFixedFont.size = NS_POINTS_TO_TWIPS_INT(prefInt);
+    }
+  }
 
 #ifdef DEBUG
   mInitialized = PR_TRUE;
@@ -136,6 +168,28 @@ nsPresContext::GetShell()
 {
   NS_IF_ADDREF(mShell);
   return mShell;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetPrefs(nsIPref*& aPrefs)
+{
+  aPrefs = mPrefs;
+  NS_IF_ADDREF(aPrefs);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::GetCompatibilityMode(nsCompatibility& aMode)
+{
+  aMode = mCompatibilityMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
+{
+  mCompatibilityMode = aMode;
+  return NS_OK;
 }
 
 nsIStyleContext*
@@ -218,27 +272,29 @@ nsPresContext::SetFontScaler(PRInt32 aScaler)
   mFontScaler = aScaler;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsPresContext::GetDefaultColor(nscolor& aColor)
 {
   aColor = mDefaultColor;
   return NS_OK;
 }
 
-NS_METHOD 
+NS_IMETHODIMP 
 nsPresContext::GetDefaultBackgroundColor(nscolor& aColor)
 {
   aColor = mDefaultBackgroundColor;
   return NS_OK;
 }
 
-NS_METHOD nsPresContext::SetDefaultColor(const nscolor& aColor)
+NS_IMETHODIMP
+nsPresContext::SetDefaultColor(const nscolor& aColor)
 {
   mDefaultColor = aColor;
   return NS_OK;
 }
 
-NS_METHOD nsPresContext::SetDefaultBackgroundColor(const nscolor& aColor)
+NS_IMETHODIMP
+nsPresContext::SetDefaultBackgroundColor(const nscolor& aColor)
 {
   mDefaultBackgroundColor = aColor;
   return NS_OK;
@@ -281,7 +337,7 @@ nsPresContext::GetDeviceContext() const
   return mDeviceContext;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
 {
   if (nsnull == mImageGroup) {
@@ -311,15 +367,15 @@ nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
   return NS_OK;
 }
 
-NS_METHOD
-nsPresContext::LoadImage(const nsString& aURL,
-                         const nscolor* aBackgroundColor,
-                         nsIFrame* aTargetFrame,
-                         PRBool aNeedSizeUpdate,
-                         nsIFrameImageLoader*& aLoaderResult)
+NS_IMETHODIMP
+nsPresContext::StartLoadImage(const nsString& aURL,
+                              const nscolor* aBackgroundColor,
+                              nsIFrame* aTargetFrame,
+                              PRBool aNeedSizeUpdate,
+                              nsIFrameImageLoader*& aLoaderResult)
 {
   aLoaderResult = nsnull;
-
+ 
   // Lookup image request in our loaders array. Note that we need
   // to get a loader that is observing the same image and that has
   // the same value for aNeedSizeUpdate.
@@ -379,7 +435,7 @@ nsPresContext::LoadImage(const nsString& aURL,
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsPresContext::StopLoadImage(nsIFrame* aForFrame)
 {
   nsIFrameImageLoader* loader;
@@ -442,7 +498,7 @@ nsPresContext::GetContainer(nsISupports** aResult)
   return NS_OK;
 }
 
-NS_METHOD
+NS_IMETHODIMP
 nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
 {
   NS_PRECONDITION(nsnull != aManager, "null ptr");

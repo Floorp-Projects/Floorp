@@ -50,7 +50,7 @@ EXPORTS = \
 	nsXIFConverter.h \
 	$(NULL)
 
-REQUIRES = xpcom raptor dom netlib js
+REQUIRES = xpcom raptor dom netlib js pref
 
 TARGETS = $(LIBRARY)
 
