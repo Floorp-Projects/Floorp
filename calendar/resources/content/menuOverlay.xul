@@ -104,6 +104,8 @@
          <menuitem id="unifinder-modify-menu"   key="modify_event_key" label="&event.edit.event;" observes="modify_command"/>
          <menuseparator/>
          <menuitem id="calendar-mail-event" observes="send_event_command" label="&event.mail.event;"/>
+         <menuseparator/>
+         <menuitem id="calendar-close" observes="close_calendar_command" label="&calendar.menu.options.close;"/>
       </menupopup>
    </menu>
 

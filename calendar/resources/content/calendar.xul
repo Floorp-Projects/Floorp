@@ -82,7 +82,6 @@
  
 <commandset id="calendar_commands">
    <command id="new_command" oncommand="newEventCommand()"/>
-   <command id="new_todo_command" oncommand="newToDoCommand()"/>
    <command id="delete_command" oncommand="unifinderDeleteCommand( true )" disabled="true"/>
    <command id="modify_command" oncommand="unifinderEditCommand()" disabled="true"/>
    <command id="send_event_command" oncommand="sendEvent()" disabled="true"/>
@@ -91,6 +90,9 @@
    <command id="paste_command" oncommand="pasteFromClipboard()"/>
    <command id="select_all_command" oncommand="selectAllEvents()"/>
    
+   <command id="new_todo_command" oncommand="newToDoCommand()"/>
+   <command id="delete_todo_command" oncommand="deleteToDoCommand( event )"/>
+
    <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
    <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
    <command id="go_today_command" oncommand="gCalendarWindow.goToToday()"/>
@@ -101,6 +103,8 @@
    
    <command id="import_command" oncommand="loadEventsFromFile()"/>
    <command id="export_command" oncommand="saveEventsToFile()"/>
+   
+   <command id="close_calendar_command" oncommand="closeCalendar()"/>
 </commandset>
 
 <keyset>
@@ -237,8 +241,8 @@
             </box>
             <listbox id="unifinder-search-results-listbox" seltype="multiple" onselect="unifinderClickEvent( this )" 
                class="unifinder-tree-class" flex="1" ondragover="return( false );"/>
-         <splitter collapse="after" persist="state hidden collapsed left"
-          class="chromeclass-extrachrome" orient="vertical">
+            <splitter collapse="after" persist="state hidden collapsed left"
+               class="chromeclass-extrachrome" orient="vertical">
                <grippy/>
             </splitter>
             <vbox flex="1">

@@ -679,3 +679,15 @@ function selectAllEvents()
 {
    gCalendarWindow.EventSelection.setArrayToSelection( gCalendarWindow.eventSource.getCurrentEvents() );
 }
+
+
+function deleteToDoCommand( event )
+{
+   alert( event.originalTarget.getAttribute( "id" ) );
+}
+
+
+function closeCalendar()
+{
+   self.close();
+}
