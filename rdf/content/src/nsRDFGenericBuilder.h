@@ -30,6 +30,7 @@
 #include "nsIDOMElementObserver.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nsIXULSortService.h"
 
 class nsIRDFDocument;
 class nsIRDFCompositeDataSource;
@@ -187,4 +188,6 @@ protected:
     static nsIRDFResource* kNC_Column;
     static nsIRDFResource* kNC_Folder;
     static nsIRDFResource* kRDF_child;
+
+    static nsIXULSortService	*XULSortService;
 };
