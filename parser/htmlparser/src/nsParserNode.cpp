@@ -86,6 +86,13 @@ nsCParserNode::~nsCParserNode() {
 
     if(mRecycler) {
       RecycleTokens(mRecycler,*mAttributes);
+    } 
+    else {
+      CToken* theToken=(CToken*)mAttributes->Pop();
+      while(theToken){
+        delete theToken;
+        theToken=(CToken*)mAttributes->Pop();
+      }
     }
     delete mAttributes;
     mAttributes=0;
@@ -343,3 +350,5 @@ CToken* nsCParserNode::PopAttributeToken() {
   }
   return result;
 }
+
+

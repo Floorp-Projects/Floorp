@@ -329,9 +329,10 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
     //now let's automatically open the root container...
     CToken theToken("viewsource");
     nsCParserNode theNode(&theToken,0);
-    CAttributeToken theAttr("xmlns","http://www.mozilla.org/viewsource");
 
-    theNode.AddAttribute(&theAttr);
+    CAttributeToken *theAttr=new CAttributeToken("xmlns","http://www.mozilla.org/viewsource");
+    if(theAttr)
+      theNode.AddAttribute(theAttr);
     mSink->OpenContainer(theNode);
   }
 
@@ -341,7 +342,7 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
   else mDocType=aParserContext.mDocType;
 
   mLineNumber=0;
-  result = mSink->WillBuildModel();
+  result = mSink->WillBuildModel(); 
 
   START_TIMER();
   return result;
