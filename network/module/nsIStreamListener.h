@@ -25,6 +25,7 @@
 /* forward declaration */
 class nsIInputStream;
 class nsString;
+class nsIURL;
 
 
 /* 97566110-ff60-11d1-beb9-00805f8a66dc */
@@ -42,12 +43,12 @@ public:
      * @return The return value is currently ignored.  In the future it may be
      * used to cancel the URL load..
      */
-    NS_IMETHOD OnStartBinding(const char *aContentType) = 0;
+    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType) = 0;
 
     /**
      * Notify the client that progress as occurred for the URL load.<BR>
      */
-    NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax, 
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax, 
                           const nsString &aMsg) = 0;
 
     /**
@@ -61,7 +62,7 @@ public:
      * @param msg   A text string describing the error.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnStopBinding(PRInt32 aStatus, const nsString &aMsg) = 0;
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg) = 0;
 };
 
 /* Generic status codes for OnStopBinding */
@@ -97,7 +98,7 @@ public:
      * 
      * This method is currently not called.  
      */
-    NS_IMETHOD GetBindInfo(void) = 0;
+    NS_IMETHOD GetBindInfo(nsIURL* aURL) = 0;
 
     /**
      * Notify the client that data is available in the input stream.  This
@@ -109,7 +110,7 @@ public:
      * @param length    The amount of data that was just pushed into the stream.
      * @return The return value is currently ignored.
      */
-    NS_IMETHOD OnDataAvailable(nsIInputStream *aIStream, 
+    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
                                PRInt32 aLength)   = 0;
 };
 

@@ -124,12 +124,12 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg) { return NS_OK; }
-  NS_IMETHOD OnStartBinding(const char *aContentType) { return NS_OK; }
-  NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg) { return NS_OK; }
+  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType) { return NS_OK; }
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
 };
 
-NS_IMETHODIMP CStreamListener::OnStopBinding(PRInt32 status, const nsString& aMsg)
+NS_IMETHODIMP CStreamListener::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
    fputs("done.\n",stdout);
    g_bReadyForNextUrl = PR_TRUE;

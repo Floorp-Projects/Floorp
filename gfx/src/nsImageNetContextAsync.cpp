@@ -79,13 +79,15 @@ public:
   
   ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext);
   
-  NS_IMETHOD GetBindInfo(void);
-  NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg);
-  NS_IMETHOD OnStartBinding(const char *aContentType);
-  NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
-  NS_IMETHOD OnStopBinding(PRInt32 status, const nsString& aMsg);
+  NS_IMETHOD GetBindInfo(nsIURL* aURL);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg);
+  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg);
   
   void Interrupt();
+
+  static void KeepPumpingStream(nsITimer *aTimer, void *aClosure);
 
 protected:
   ~ImageConsumer();
@@ -118,19 +120,19 @@ NS_DEFINE_IID(kIStreamNotificationIID, NS_ISTREAMLISTENER_IID);
 NS_IMPL_ISUPPORTS(ImageConsumer,kIStreamNotificationIID);
 
 NS_IMETHODIMP
-ImageConsumer::GetBindInfo(void)
+ImageConsumer::GetBindInfo(nsIURL* aURL)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg)
+ImageConsumer::OnProgress(nsIURL* aURL, PRInt32 Progress, PRInt32 ProgressMax, const nsString& aMsg)
 {
   return 0;
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnStartBinding(const char *aContentType)
+ImageConsumer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   if (mInterrupted) {
     mStatus = MK_INTERRUPTED;
@@ -158,7 +160,7 @@ ImageConsumer::OnStartBinding(const char *aContentType)
 
 
 NS_IMETHODIMP
-ImageConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
+ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt32 length)
 {
   PRInt32 max_read;
   PRInt32 bytes_read = 0;
@@ -232,17 +234,23 @@ ImageConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
   return NS_OK;
 }
 
-static void
-KeepPumpingStream(nsITimer *aTimer, void *aClosure)
+void
+ImageConsumer::KeepPumpingStream(nsITimer *aTimer, void *aClosure)
 {
+  nsIURL* url = nsnull;
   ImageConsumer *consumer = (ImageConsumer *)aClosure;
   nsAutoString status;
 
-  consumer->OnStopBinding(NS_BINDING_SUCCEEDED, status);
+  if (consumer->mURL) {
+    consumer->mURL->QueryInterface(kIURLIID, (void**)&url);
+  }
+  consumer->OnStopBinding(url, NS_BINDING_SUCCEEDED, status);
+
+  NS_IF_RELEASE(url);
 }
 
 NS_IMETHODIMP
-ImageConsumer::OnStopBinding(PRInt32 status, const nsString& aMsg)
+ImageConsumer::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
   if (mTimer != nsnull) {
     NS_RELEASE(mTimer);
@@ -251,12 +259,12 @@ ImageConsumer::OnStopBinding(PRInt32 status, const nsString& aMsg)
   // Since we're still holding on to the stream, there's still data
   // that needs to be read. So, pump the stream ourselves.
   if((mStream != nsnull) && (status == NS_BINDING_SUCCEEDED)) {
-    nsresult err = OnDataAvailable(mStream, mStream->GetLength());
+    nsresult err = OnDataAvailable(aURL, mStream, mStream->GetLength());
     // If we still have the stream, there's still data to be 
     // pumped, so we set a timer to call us back again.
     if (mStream != nsnull) {
       if ((NS_OK != NS_NewTimer(&mTimer)) ||
-          (NS_OK != mTimer->Init(KeepPumpingStream, this, 0))) {
+          (NS_OK != mTimer->Init(ImageConsumer::KeepPumpingStream, this, 0))) {
         mStatus = MK_IMAGE_LOSSAGE;
         NS_RELEASE(mStream);
       }

@@ -60,12 +60,12 @@ public:
     nsresult Bind(const nsString& aURLSpec, nsIPostData* aPostData);
 
     /* nsIStreamListener interface methods... */
-    NS_IMETHOD GetBindInfo(void);
-    NS_IMETHOD OnProgress(PRInt32 aProgress, PRInt32 aProgressMax, 
+    NS_IMETHOD GetBindInfo(nsIURL* aURL);
+    NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax, 
                           const nsString& aMsg);
-    NS_IMETHOD OnStartBinding(const char *aContentType);
-    NS_IMETHOD OnDataAvailable(nsIInputStream *aStream, PRInt32 aLength);
-    NS_IMETHOD OnStopBinding(PRInt32 aStatus, const nsString& aMsg);
+    NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+    NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aStream, PRInt32 aLength);
+    NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString& aMsg);
 
 protected:
     virtual ~nsDocumentBindInfo();
@@ -365,41 +365,42 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
 }
 
 
-NS_METHOD nsDocumentBindInfo::GetBindInfo(void)
+NS_METHOD nsDocumentBindInfo::GetBindInfo(nsIURL* aURL)
 {
     nsresult rv = NS_OK;
 
     NS_PRECONDITION(nsnull !=m_NextStream, "DocLoader: No stream for document");
 
     if (nsnull != m_NextStream) {
-        rv = m_NextStream->GetBindInfo();
+        rv = m_NextStream->GetBindInfo(aURL);
     }
 
     return rv;
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax, 
+NS_METHOD nsDocumentBindInfo::OnProgress(nsIURL* aURL, PRInt32 aProgress, 
+                                         PRInt32 aProgressMax, 
                                          const nsString& aMsg)
 {
     nsresult rv = NS_OK;
 
     /* Pass the notification out to the next stream listener... */
     if (nsnull != m_NextStream) {
-        rv = m_NextStream->OnProgress(aProgress, aProgressMax, aMsg);
+        rv = m_NextStream->OnProgress(aURL, aProgress, aProgressMax, aMsg);
     }
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
         /* XXX: Should we ignore the return value? */
-        (void) m_Observer->OnProgress(aProgress, aProgressMax, aMsg);
+        (void) m_Observer->OnProgress(aURL, aProgress, aProgressMax, aMsg);
     }
 
     return rv;
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnStartBinding(const char *aContentType)
+NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
     nsresult rv = NS_OK;
     nsIDocumentWidget* viewer = nsnull;
@@ -437,13 +438,13 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(const char *aContentType)
     NS_ASSERTION((nsnull != m_NextStream), "No stream was created!");
 
     if (nsnull != m_NextStream) {
-        rv = m_NextStream->OnStartBinding(aContentType);
+        rv = m_NextStream->OnStartBinding(aURL, aContentType);
     }
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
         /* XXX: Should we ignore the return value? */
-        (void) m_Observer->OnStartBinding(aContentType);
+        (void) m_Observer->OnStartBinding(aURL, aContentType);
     }
 
 done:
@@ -453,32 +454,34 @@ done:
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIInputStream *aStream, PRInt32 aLength)
+NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURL* aURL, 
+                                              nsIInputStream *aStream, PRInt32 aLength)
 {
     nsresult rv = NS_OK;
 
     NS_PRECONDITION(nsnull !=m_NextStream, "DocLoader: No stream for document");
 
     if (nsnull != m_NextStream) {
-        rv = m_NextStream->OnDataAvailable(aStream, aLength);
+        rv = m_NextStream->OnDataAvailable(aURL, aStream, aLength);
     }
 
     return rv;
 }
 
 
-NS_METHOD nsDocumentBindInfo::OnStopBinding(PRInt32 aStatus, const nsString& aMsg)
+NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, 
+                                            const nsString& aMsg)
 {
     nsresult rv = NS_OK;
 
     if (nsnull != m_NextStream) {
-        rv = m_NextStream->OnStopBinding(aStatus, aMsg);
+        rv = m_NextStream->OnStopBinding(aURL, aStatus, aMsg);
     }
 
     /* Pass the notification out to the Observer... */
     if (nsnull != m_Observer) {
         /* XXX: Should we ignore the return value? */
-        (void) m_Observer->OnStopBinding(aStatus, aMsg);
+        (void) m_Observer->OnStopBinding(aURL, aStatus, aMsg);
     }
 
     /*
