@@ -365,6 +365,7 @@ skins/classic.jar:
     messenger/skin/less.gif                                      (messenger/less.gif)
     messenger/skin/local-mailhost.gif                            (messenger/local-mailhost.gif)
     messenger/skin/mailfolder.gif                                (messenger/mailfolder.gif)
+    messenger/skin/mailheader.css                                (messenger/mailheader.css)
     messenger/skin/message-mail-attach.gif                       (messenger/message-mail-attach.gif)
     messenger/skin/message-mail-imapdelete.gif                   (messenger/message-mail-imapdelete.gif)
     messenger/skin/message-mail-new.gif                          (messenger/message-mail-new.gif)
