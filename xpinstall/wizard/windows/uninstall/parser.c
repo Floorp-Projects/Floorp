@@ -29,14 +29,59 @@
 #include "ifuncns.h"
 #include "dialogs.h"
 
-void RemoveUninstaller(LPSTR szUninstallFilename)
+#define KEY_SHARED_DLLS "Software\\Microsoft\\Windows\\CurrentVersion\\SharedDlls"
+
+BOOL DeleteOrDelayUntilReboot(LPSTR szFile)
 {
   FILE      *ofp;
+  char      szWinDir[MAX_BUF];
+  char      szWininitFile[MAX_BUF];
+  BOOL      bDelayDelete = FALSE;
+  BOOL      bWriteRenameSection;
+
+  FileDelete(szFile);
+  if(FileExists(szFile))
+  {
+    bDelayDelete = TRUE;
+    if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
+      return(FALSE);
+
+    if(ulOSType & OS_NT)
+    {
+      MoveFileEx(szFile, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+    }
+    else
+    {
+      lstrcpy(szWininitFile, szWinDir);
+      AppendBackSlash(szWininitFile, sizeof(szWininitFile));
+      lstrcat(szWininitFile, "wininit.ini");
+
+      if(FileExists(szWininitFile) == FALSE)
+        bWriteRenameSection = TRUE;
+      else
+        bWriteRenameSection = FALSE;
+
+      if((ofp = fopen(szWininitFile, "a+")) == NULL)
+        return(FALSE);
+
+      if(bWriteRenameSection == TRUE)
+        fprintf(ofp, "[RENAME]\n");
+
+      fprintf(ofp, "NUL=%s\n", szFile);
+      fclose(ofp);
+    }
+  }
+  else
+    bDelayDelete = FALSE;
+
+  return(bDelayDelete);
+}
+
+void RemoveUninstaller(LPSTR szUninstallFilename)
+{
   char      szBuf[MAX_BUF];
   char      szWinDir[MAX_BUF];
   char      szUninstallFile[MAX_BUF];
-  char      szWininitFile[MAX_BUF];
-  BOOL      bWriteRenameSection;
 
   if(GetWindowsDirectory(szWinDir, sizeof(szWinDir)) == 0)
     return;
@@ -45,31 +90,7 @@ void RemoveUninstaller(LPSTR szUninstallFilename)
   AppendBackSlash(szBuf, sizeof(szBuf));
   lstrcat(szBuf, szUninstallFilename);
   GetShortPathName(szBuf, szUninstallFile, sizeof(szUninstallFile));
-
-  if(ulOSType & OS_NT)
-  {
-    MoveFileEx(szUninstallFile, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-  }
-  else
-  {
-    lstrcpy(szWininitFile, szWinDir);
-    AppendBackSlash(szWininitFile, sizeof(szUninstallFile));
-    lstrcat(szWininitFile, "wininit.ini");
-
-    if(FileExists(szWininitFile) == FALSE)
-      bWriteRenameSection = TRUE;
-    else
-      bWriteRenameSection = FALSE;
-
-    if((ofp = fopen(szWininitFile, "a+")) == NULL)
-      return;
-
-    if(bWriteRenameSection == TRUE)
-      fprintf(ofp, "[RENAME]\n");
-
-    fprintf(ofp, "NUL=%s\n", szUninstallFile);
-    fclose(ofp);
-  }
+  DeleteOrDelayUntilReboot(szUninstallFile);
 }
 
 sil *InitSilNodes(char *szInFile)
@@ -174,7 +195,7 @@ void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
   }
 }
 
-void ParseForFile(LPSTR szString, LPSTR szKeyStr, LPSTR szShortFilename, DWORD dwShortFilenameBufSize)
+void ParseForFile(LPSTR szString, LPSTR szKeyStr, LPSTR szFile, DWORD dwShortFilenameBufSize)
 {
   int     iLen;
   LPSTR   szFirstNonSpace;
@@ -193,11 +214,11 @@ void ParseForFile(LPSTR szString, LPSTR szKeyStr, LPSTR szShortFilename, DWORD d
       szFirstNonSpace = szBuf;
     }
 
-    GetShortPathName(szFirstNonSpace, szShortFilename, dwShortFilenameBufSize);
+    lstrcpy(szFile, szFirstNonSpace);
   }
 }
 
-void ParseForCopyFile(LPSTR szString, LPSTR szKeyStr, LPSTR szShortFilename, DWORD dwShortFilenameBufSize)
+void ParseForCopyFile(LPSTR szString, LPSTR szKeyStr, LPSTR szFile, DWORD dwShortFilenameBufSize)
 {
   int     iLen;
   LPSTR   szFirstNonSpace;
@@ -219,7 +240,7 @@ void ParseForCopyFile(LPSTR szString, LPSTR szKeyStr, LPSTR szShortFilename, DWO
         szFirstNonSpace = szBuf;
       }
 
-      GetShortPathName(szFirstNonSpace, szShortFilename, dwShortFilenameBufSize);
+    lstrcpy(szFile, szFirstNonSpace);
     }
   }
 }
@@ -295,91 +316,294 @@ void ParseForWinRegInfo(LPSTR szString, LPSTR szKeyStr, LPSTR szRootKey, DWORD d
   }
 }
 
-void Uninstall(sil* silFile)
+DWORD DecrementSharedFileCounter(char *file)
 {
-  sil   *silTemp;
+  HKEY     keyHandle = 0;
+  LONG     result;
+  DWORD    type      = REG_DWORD;
+  DWORD    valbuf    = 0;
+  DWORD    valbufsize;
+  DWORD    rv        = 0;
+
+  valbufsize = sizeof(DWORD);
+  result     = RegOpenKeyEx(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, 0, KEY_READ | KEY_WRITE, &keyHandle);
+  if(ERROR_SUCCESS == result)
+  {
+    result = RegQueryValueEx(keyHandle, file, NULL, &type, (LPBYTE)&valbuf, (LPDWORD)&valbufsize);
+    if((ERROR_SUCCESS == result) && (type == REG_DWORD))
+    {
+      rv = --valbuf;
+    }
+
+    RegSetValueEx(keyHandle, file, 0, REG_DWORD, (LPBYTE)&valbuf, valbufsize);
+    RegCloseKey(keyHandle);
+  }
+
+  return(rv);
+}
+
+int GetSharedFileCount(char *file)
+{
+  HKEY     keyHandle = 0;
+  LONG     result;
+  DWORD    type      = REG_DWORD;
+  DWORD    valbuf    = 0;
+  DWORD    valbufsize;
+  int      rv        = -1;
+
+  valbufsize = sizeof(DWORD);
+  result     = RegOpenKeyEx(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, 0, KEY_READ, &keyHandle);
+  if(ERROR_SUCCESS == result)
+  {
+    result = RegQueryValueEx(keyHandle, file, NULL, &type, (LPBYTE)&valbuf, (LPDWORD)&valbufsize);
+    if((ERROR_SUCCESS == result) && (type == REG_DWORD))
+      rv = valbuf;
+
+    RegCloseKey(keyHandle);
+  }
+
+  return(rv);
+}
+
+BOOL UnregisterServer(char *file)
+{
+  FARPROC   DllUnReg;
+  HINSTANCE hLib;
+  BOOL      bFailed = FALSE;
+
+  if(file != NULL)
+  {
+    if((hLib = LoadLibraryEx(file, NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) != NULL)
+    {
+      if((DllUnReg = GetProcAddress(hLib, "DllUnregisterServer")) != NULL)
+        DllUnReg();
+      else
+        bFailed = TRUE;
+
+      FreeLibrary(hLib);
+    }
+    else
+      bFailed = TRUE;
+  }
+  else
+    bFailed = TRUE;
+
+  return(bFailed);
+}
+
+BOOL DetermineUnRegisterServer(sil *silInstallLogHead, LPSTR szFile)
+{
+  sil   *silInstallLogTemp;
+  int   iSharedFileCount = -1;
+  char  szLCLine[MAX_BUF];
+  char  szLCFile[MAX_BUF];
+  BOOL  bRv;
+
+  bRv = FALSE;
+  if(silInstallLogHead != NULL)
+  {
+    silInstallLogTemp = silInstallLogHead;
+    iSharedFileCount  = GetSharedFileCount(szFile);
+    lstrcpy(szLCFile, szFile);
+    _strlwr(szLCFile);
+
+    do
+    {
+      silInstallLogTemp = silInstallLogTemp->Prev;
+      lstrcpy(szLCLine, silInstallLogTemp->szLine);
+      _strlwr(szLCLine);
+
+      if((strstr(szLCLine, szLCFile) != NULL) &&
+         (strstr(szLCLine, KEY_INSTALLING_SHARED_FILE) != NULL) &&
+         (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
+      {
+        --iSharedFileCount;
+      }
+      else if((strstr(szLCLine, szLCFile) != NULL) &&
+              (strstr(szLCLine, KEY_INSTALLING) != NULL) &&
+              (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
+      {
+        bRv = TRUE;
+        break;
+      }
+      else if((strstr(szLCLine, szLCFile) != NULL) &&
+              (strstr(szLCLine, KEY_REPLACING_SHARED_FILE) != NULL) &&
+              (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
+      {
+        --iSharedFileCount;
+      }
+      else if((strstr(szLCLine, szLCFile) != NULL) &&
+              (strstr(szLCLine, KEY_REPLACING) != NULL) &&
+              (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
+      {
+        bRv = TRUE;
+        break;
+      }
+      else if((strstr(szLCLine, szLCFile) != NULL) &&
+              (strstr(szLCLine, KEY_COPY_FILE) != NULL) &&
+              (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
+      {
+        bRv = TRUE;
+        break;
+      }
+
+      ProcessWindowsMessages();
+    } while(silInstallLogTemp != silInstallLogHead);
+  }
+
+  if(iSharedFileCount <= 0)
+    bRv = TRUE;
+
+  return(bRv);
+}
+
+DWORD AskWhatToDo()
+{
+  MSG     msg;
+  HWND    hDlg = NULL;
+
+  if((hDlg = InstantiateDialog(hDlgUninstall, DLG_WHAT_TO_DO, "Que?", DlgProcWhatToDo)) != NULL)
+  {
+    while(GetMessage(&msg, NULL, 0, 0))
+    {
+      if((!IsDialogMessage(hDlg, &msg)) && (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)))
+      {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
+    }
+  }
+
+  return(gdwWhatToDo);
+}
+
+DWORD Uninstall(sil* silInstallLogHead)
+{
+  sil   *silInstallLogTemp;
   LPSTR szSubStr;
   char  szLCLine[MAX_BUF];
   char  szKey[MAX_BUF];
   char  szRootKey[MAX_BUF];
   char  szName[MAX_BUF];
-  char  szShortFilename[MAX_BUF];
+  char  szFile[MAX_BUF];
   HKEY  hkRootKey;
 
-  if(silFile != NULL)
+  if(silInstallLogHead != NULL)
   {
-    silTemp = silFile;
+    silInstallLogTemp = silInstallLogHead;
     do
     {
-      silTemp = silTemp->Prev;
-      lstrcpy(szLCLine, silTemp->szLine);
+      silInstallLogTemp = silInstallLogTemp->Prev;
+      lstrcpy(szLCLine, silInstallLogTemp->szLine);
       _strlwr(szLCLine);
-      if((szSubStr = strstr(szLCLine, KEY_INSTALLING)) != NULL)
+
+      if(((szSubStr = strstr(szLCLine, KEY_WINDOWS_REGISTER_SERVER)) != NULL) &&
+          (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
+      {
+        ParseForFile(szSubStr, KEY_WINDOWS_REGISTER_SERVER, szFile, sizeof(szFile));
+        if(DetermineUnRegisterServer(silInstallLogHead, szFile) == TRUE)
+          UnregisterServer(szFile);
+      }
+      else if(((szSubStr = strstr(szLCLine, KEY_INSTALLING_SHARED_FILE)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
+      {
+        /* check for "Installing Shared File: " string and delete the file */
+        ParseForFile(szSubStr, KEY_INSTALLING_SHARED_FILE, szFile, sizeof(szFile));
+        if(DecrementSharedFileCounter(szFile) == 0)
+        {
+          if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
+            gdwWhatToDo = AskWhatToDo();
+
+          if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
+          {
+            DeleteWinRegValue(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, szFile);
+            DeleteOrDelayUntilReboot(szFile);
+          }
+          else if(gdwWhatToDo == WTD_CANCEL)
+            return(WTD_CANCEL);
+        }
+      }
+      else if(((szSubStr = strstr(szLCLine, KEY_INSTALLING)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
         /* check for "Installing: " string and delete the file */
-        ParseForFile(szSubStr, KEY_INSTALLING, szShortFilename, sizeof(szShortFilename));
-        printf("%I64u: %s\n", silTemp->ullLineNumber, szShortFilename);
-        FileDelete(szShortFilename);
+        ParseForFile(szSubStr, KEY_INSTALLING, szFile, sizeof(szFile));
+        DeleteOrDelayUntilReboot(szFile);
       }
-      else if((szSubStr = strstr(szLCLine, KEY_REPLACING)) != NULL)
+      else if(((szSubStr = strstr(szLCLine, KEY_REPLACING_SHARED_FILE)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
+      {
+        /* check for "Replacing Shared File: " string and delete the file */
+        ParseForFile(szSubStr, KEY_REPLACING_SHARED_FILE, szFile, sizeof(szFile));
+        if(DecrementSharedFileCounter(szFile) == 0)
+        {
+          if((gdwWhatToDo != WTD_NO_TO_ALL) && (gdwWhatToDo != WTD_YES_TO_ALL))
+            gdwWhatToDo = AskWhatToDo();
+
+          if((gdwWhatToDo == WTD_YES) || (gdwWhatToDo == WTD_YES_TO_ALL))
+          {
+            DeleteWinRegValue(HKEY_LOCAL_MACHINE, KEY_SHARED_DLLS, szFile);
+            DeleteOrDelayUntilReboot(szFile);
+          }
+          else if(gdwWhatToDo == WTD_CANCEL)
+            return(WTD_CANCEL);
+        }
+      }
+      else if(((szSubStr = strstr(szLCLine, KEY_REPLACING)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
         /* check for "Replacing: " string and delete the file */
-        ParseForFile(szSubStr, KEY_REPLACING, szShortFilename, sizeof(szShortFilename));
-        printf("%I64u: %s\n", silTemp->ullLineNumber, szShortFilename);
-        FileDelete(szShortFilename);
+        ParseForFile(szSubStr, KEY_REPLACING, szFile, sizeof(szFile));
+        DeleteOrDelayUntilReboot(szFile);
       }
-      else if((szSubStr = strstr(szLCLine, KEY_STORE_REG_STRING)) != NULL)
+      else if(((szSubStr = strstr(szLCLine, KEY_STORE_REG_STRING)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
         /* check for "Store Registry Value String: " string and remove the key */
         ParseForWinRegInfo(szSubStr, KEY_STORE_REG_STRING, szRootKey, sizeof(szRootKey), szKey, sizeof(szKey), szName, sizeof(szName));
-        printf("%I64u: Root: %s\n", silTemp->ullLineNumber, szRootKey);
-        printf("%I64u: Key : %s\n", silTemp->ullLineNumber, szKey);
-        printf("%I64u: Name: %s\n", silTemp->ullLineNumber, szName);
         hkRootKey = ParseRootKey(szRootKey);
         DeleteWinRegValue(hkRootKey, szKey, szName);
       }
-      else if((szSubStr = strstr(szLCLine, KEY_STORE_REG_NUMBER)) != NULL)
+      else if(((szSubStr = strstr(szLCLine, KEY_STORE_REG_NUMBER)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
         /* check for "Store Registry Value Number: " string and remove the key */
         ParseForWinRegInfo(szSubStr, KEY_STORE_REG_NUMBER, szRootKey, sizeof(szRootKey), szKey, sizeof(szKey), szName, sizeof(szName));
-        printf("%I64u: Root: %s\n", silTemp->ullLineNumber, szRootKey);
-        printf("%I64u: Key : %s\n", silTemp->ullLineNumber, szKey);
-        printf("%I64u: Name: %s\n", silTemp->ullLineNumber, szName);
         hkRootKey = ParseRootKey(szRootKey);
         DeleteWinRegValue(hkRootKey, szKey, szName);
       }
-      else if((szSubStr = strstr(szLCLine, KEY_CREATE_REG_KEY)) != NULL)
+      else if(((szSubStr = strstr(szLCLine, KEY_CREATE_REG_KEY)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
         ParseForWinRegInfo(szSubStr, KEY_CREATE_REG_KEY, szRootKey, sizeof(szRootKey), szKey, sizeof(szKey), szName, sizeof(szName));
-        printf("%I64u: Root: %s\n", silTemp->ullLineNumber, szRootKey);
-        printf("%I64u: Key : %s\n", silTemp->ullLineNumber, szKey);
-        printf("%I64u: Name: %s\n", silTemp->ullLineNumber, szName);
         hkRootKey = ParseRootKey(szRootKey);
         DeleteWinRegKey(hkRootKey, szKey);
       }
-      else if((szSubStr = strstr(szLCLine, KEY_CREATE_FOLDER)) != NULL)
+      else if(((szSubStr = strstr(szLCLine, KEY_CREATE_FOLDER)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
-        ParseForFile(szSubStr, KEY_CREATE_FOLDER, szShortFilename, sizeof(szShortFilename));
-        printf("%I64u: %s\n", silTemp->ullLineNumber, szShortFilename);
-        DirectoryRemove(szShortFilename, FALSE);
+        ParseForFile(szSubStr, KEY_CREATE_FOLDER, szFile, sizeof(szFile));
+        DirectoryRemove(szFile, FALSE);
       }
-      else if((szSubStr = strstr(szLCLine, KEY_WINDOWS_SHORTCUT)) != NULL)
+      else if(((szSubStr = strstr(szLCLine, KEY_WINDOWS_SHORTCUT)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
-        ParseForFile(szSubStr, KEY_WINDOWS_SHORTCUT, szShortFilename, sizeof(szShortFilename));
-        printf("%I64u: %s\n", silTemp->ullLineNumber, szShortFilename);
-        FileDelete(szShortFilename);
+        ParseForFile(szSubStr, KEY_WINDOWS_SHORTCUT, szFile, sizeof(szFile));
+        DeleteOrDelayUntilReboot(szFile);
       }
-      else if((szSubStr = strstr(szLCLine, KEY_COPY_FILE)) != NULL)
+      else if(((szSubStr = strstr(szLCLine, KEY_COPY_FILE)) != NULL) &&
+               (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))
       {
         /* check for "copy file: " string and delete the file */
-        ParseForCopyFile(szSubStr, KEY_COPY_FILE, szShortFilename, sizeof(szShortFilename));
-        printf("%I64u: %s\n", silTemp->ullLineNumber, szShortFilename);
-        FileDelete(szShortFilename);
+        ParseForCopyFile(szSubStr, KEY_COPY_FILE, szFile, sizeof(szFile));
+        DeleteOrDelayUntilReboot(szFile);
       }
 
       ProcessWindowsMessages();
-    }while(silTemp != silFile);
+    } while(silInstallLogTemp != silInstallLogHead);
   }
+
+  return(0);
 }
 
 DWORD GetLogFile(LPSTR szTargetPath, LPSTR szInFilename, LPSTR szOutBuf, DWORD dwOutBufSize)

@@ -31,7 +31,7 @@
 extern HINSTANCE        hInst;
 extern HANDLE           hAccelTable;
 
-extern HWND             hDlg;
+extern HWND             hDlgUninstall;
 extern HWND             hDlgMessage;
 extern HWND             hWndMain;
 
@@ -50,6 +50,8 @@ extern LPSTR            szFileIniUninstall;
 extern ULONG            ulOSType;
 extern DWORD            dwScreenX;
 extern DWORD            dwScreenY;
+
+extern DWORD            gdwWhatToDo;
 
 extern uninstallGen     ugUninstall;
 extern diU              diUninstall;

@@ -124,6 +124,20 @@ BEGIN
     CTEXT           "",IDC_MESSAGE,0,0,236,34,SS_CENTERIMAGE
 END
 
+DLG_WHAT_TO_DO DIALOG DISCARDABLE  51, 56, 343, 79
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CLASS "Uninstall"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "&No",ID_NO,19,55,53,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,271,55,53,14
+    LTEXT           "",IDC_MESSAGE0,17,11,308,32,NOT WS_GROUP
+    DEFPUSHBUTTON   "N&o to all",ID_NO_TO_ALL,82,55,53,14
+    DEFPUSHBUTTON   "&Yes",ID_YES,145,55,53,14
+    DEFPUSHBUTTON   "Y&es to all",ID_YES_TO_ALL,208,55,53,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

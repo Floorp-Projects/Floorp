@@ -687,7 +687,7 @@ void UpdateInstallLog(LPSTR szKey, LPSTR szDir)
 
   if((fInstallLog = fopen(szFileInstallLog, "a+t")) != NULL)
   {
-    lstrcpy(szBuf, "      ** ");
+    lstrcpy(szBuf, "     ** ");
     lstrcat(szBuf, szKey);
     lstrcat(szBuf, szDir);
     lstrcat(szBuf, "\n");
