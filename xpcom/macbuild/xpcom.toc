@@ -10,3 +10,5 @@ mozilla/xpcom/src/nsServiceManager.cpp
 mozilla/xpcom/src/nsSupportsArray.cpp
 mozilla/xpcom/src/nsTraceRefcnt.cpp
 mozilla/xpcom/src/plvector.c
+mozilla/xpcom/src/xcDll.cpp
+mozilla/xpcom/src/xcDllStore.cpp

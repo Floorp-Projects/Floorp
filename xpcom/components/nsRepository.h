@@ -47,9 +47,9 @@ class nsIServiceManager;
 extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
                                            nsISupports* serviceMgr,
                                            nsIFactory **aFactory);
-extern "C" NS_EXPORT PRBool   NSCanUnload(void);
-extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path);
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path);
+extern "C" NS_EXPORT PRBool   NSCanUnload();
+extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *fullpath);
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *fullpath);
 
 /*
  * Dynamic library export function types
@@ -67,6 +67,7 @@ typedef nsresult (*nsUnregisterProc)(const char *path);
  */
 
 class FactoryEntry;
+class DllStore;
 
 /*
  * nsRepository class
@@ -79,8 +80,10 @@ private:
 
   static nsresult checkInitialized(void);
   static nsresult loadFactory(FactoryEntry *aEntry, nsIFactory **aFactory);
-
+  
 public:
+  static DllStore *dllStore;
+
   static nsresult Initialize(void);
   // Finds a factory for a specific class ID
   static nsresult FindFactory(const nsCID &aClass,
