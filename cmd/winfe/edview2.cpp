@@ -4397,7 +4397,7 @@ void CNetscapeEditView::BuildEditHistoryMenu(HMENU hMenu, int iStartItem)
 		        pMenuItem = PR_smprintf(" &%d %s", i+1, csMenuString);
 	        else if (i == 9)
                 // Use "0" as accelerator for tenth file            
-		        pMenuItem = PR_smprintf("1&%d %s", 10, csMenuString);
+		        pMenuItem = PR_smprintf("&%d %s", 10, csMenuString);
             else
                 // This isn't used with our current maximum of 10 files,
                 //   but keep in case we increase MAX_EDIT_HISTORY_LOCATIONS
