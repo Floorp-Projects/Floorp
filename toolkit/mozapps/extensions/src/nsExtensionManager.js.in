@@ -170,7 +170,7 @@ nsExtensionManager.prototype = {
   
   checkForMismatches: function () 
   {
-    var rv = nsIExtensionManager.MISMATCH_RESULT_OK;
+    var rv = false;
     
     // Check to see if the version of the application that is being started
     // now is the same one that was started last time. 
@@ -200,7 +200,7 @@ nsExtensionManager.prototype = {
                                 nsIUpdateService.SOURCE_EVENT_MISMATCH,
                                 null);
         
-        rv = nsIExtensionManager.MISMATCH_RESULT_RESTART;
+        rv = true;
       }
     }
     
