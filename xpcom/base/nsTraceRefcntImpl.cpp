@@ -1064,6 +1064,242 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
     bp = nextbp;
   }
 }
+#elif defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386))
+
+/*
+ * Stack walking code for Solaris courtesy of Bart Smaalder's "memtrak".
+ */
+
+#include <synch.h>
+#include <ucontext.h>
+#include <sys/frame.h>
+#include <sys/regset.h>
+#include <sys/stack.h>
+
+static int    load_address ( void * pc, void * arg, FILE * aStream );
+static int    write_address_file ( void * pc );
+static struct bucket * newbucket ( void * pc );
+static struct frame * cs_getmyframeptr ( void );
+static void   cs_walk_stack ( void * (*read_func)(char * address),
+                              struct frame * fp,
+                              int (*operate_func)(void *, void *),
+                              void * usrarg, FILE * aStream );
+static void   cs_operate ( void (*operate_func)(void *, void *),
+                           void * usrarg, FILE * aStream );
+
+#ifndef STACK_BIAS
+#define STACK_BIAS 0
+#endif /*STACK_BIAS*/
+
+#define LOGSIZE 4096
+
+/* type of demangling function */
+typedef int demf_t(const char *, char *, size_t);
+
+static demf_t *demf;
+
+static int initialized = 0;
+
+#if defined(sparc) || defined(__sparc)
+#define FRAME_PTR_REGISTER REG_SP
+#endif
+
+#if defined(i386) || defined(__i386)
+#define FRAME_PTR_REGISTER EBP
+#endif
+
+struct bucket {
+    void * pc;
+    int index;
+    struct bucket * next;
+};
+
+struct mybuf {
+    char * buffer;
+    int chars_left;
+};
+
+
+#pragma init (myinit)
+
+static int
+myinit()
+{
+
+    if (! initialized) {
+#ifndef __GNUC__
+        void *handle;
+        const char *libdem = "libdemangle.so.1";
+
+        /* load libdemangle if we can and need to (only try this once) */
+        if ((handle = dlopen(libdem, RTLD_LAZY)) != NULL) {
+            demf = (demf_t *)dlsym(handle,
+                           "cplus_demangle"); /*lint !e611 */
+                /*
+                 * lint override above is to prevent lint from
+                 * complaining about "suspicious cast".
+                 */
+        }
+#endif /*__GNUC__*/
+    }    
+    initialized = 1;
+    return(1);
+}
+
+
+static int
+write_address_file(void * pc, FILE* aStream)
+{
+    static struct bucket table[2048];
+    static mutex_t lock;
+    struct bucket * ptr;
+
+    unsigned int val = (unsigned int)pc;
+
+    ptr = table + ((val >> 2)&2047);
+
+    mutex_lock(&lock);
+    while (ptr->next) {
+        if (ptr->next->pc == pc)
+            break;
+        ptr = ptr->next;
+    }
+
+    if (ptr->next) {
+        mutex_unlock(&lock);
+        return (ptr->next->index);
+    } else {
+        char buffer[4096], dembuff[4096];
+        Dl_info info;
+        char *func, *lib;
+
+        ptr->next = newbucket(pc);
+        mutex_unlock(&lock);
+ 
+        if (dladdr(pc, & info) == 0) {
+            func = "??";
+            lib  = "??";
+        } else {
+            lib =   (char *) info.dli_fname;
+            func =  (char *) info.dli_sname;
+        }
+ 
+#ifdef __GNUC__
+        nsTraceRefcnt::DemangleSymbol(func, dembuff, sizeof(dembuff));
+        if (strlen(dembuff)) {
+            func = dembuff;
+        }
+#else
+        if (demf) {
+            if (demf(func, dembuff, sizeof (dembuff)) == 0)
+                func = dembuff;
+		}
+#endif /*__GNUC__*/
+ 
+        fprintf(aStream, "%u %s:%s+0x%x\n",
+            ptr->next->index,
+			lib,
+            func,
+            (unsigned int)pc - (unsigned int)info.dli_saddr);
+ 
+        return (ptr->next->index);
+    }
+}
+
+
+static int
+load_address(void * pc, void * arg, FILE * aStream)
+{
+    struct mybuf * buf = (struct mybuf *) arg;
+
+    char name[80];
+    int len;
+
+    sprintf(name, " %u", write_address_file(pc, aStream));
+
+    len = strlen(name);
+
+    if (len >= buf->chars_left)
+        return (1);
+
+    strcat(buf->buffer, name);
+
+    buf->chars_left -= len;
+
+    return (0);
+}
+
+
+static struct bucket *
+newbucket(void * pc)
+{
+    struct bucket * ptr = (struct bucket *) malloc(sizeof (*ptr));
+    static int index; /* protected by lock in caller */
+                     
+    ptr->index = index++;
+    ptr->next = NULL;
+    ptr->pc = pc;    
+    return (ptr);    
+}
+
+
+static struct frame *
+csgetframeptr()
+{
+    ucontext_t u;
+    struct frame *fp;
+
+    (void) getcontext(&u);
+
+    fp = (struct frame *)
+        ((char *)u.uc_mcontext.gregs[FRAME_PTR_REGISTER] +
+        STACK_BIAS);
+
+    /* make sure to return parents frame pointer.... */
+
+    return ((struct frame *)((ulong_t)fp->fr_savfp + STACK_BIAS));
+}
+
+
+static void
+cswalkstack(struct frame *fp, int (*operate_func)(void *, void *, FILE *),
+    void *usrarg, FILE * aStream)
+{
+
+    while (fp != 0 && fp->fr_savpc != 0) {
+
+        if (operate_func((void *)fp->fr_savpc, usrarg, aStream) != 0)
+            break;
+        /*
+         * watch out - libthread stacks look funny at the top
+         * so they may not have their STACK_BIAS set
+         */
+
+        fp = (struct frame *)((ulong_t)fp->fr_savfp +
+            (fp->fr_savfp?(ulong_t)STACK_BIAS:0));
+    }
+}
+
+
+static void
+cs_operate(int (*operate_func)(void *, void *, FILE *), void * usrarg, FILE *aStream)
+{
+    cswalkstack(csgetframeptr(), operate_func, usrarg, aStream);
+}
+
+void
+nsTraceRefcnt::WalkTheStack(FILE* aStream)
+{
+    char buffer[LOGSIZE];
+    struct mybuf mybuf;
+
+    if (!initialized)
+        myinit();
+
+    mybuf.chars_left = LOGSIZE - strlen(buffer)-1;
+    mybuf.buffer = buffer;
+    cs_operate(load_address, &mybuf, aStream);
+}
 #elif defined(XP_MAC)
 
 /**
@@ -1176,7 +1412,8 @@ extern "C" char * cplus_demangle(const char *,int);
 #include <stdlib.h> // for free()
 #endif // MOZ_DEMANGLE_SYMBOLS
 
-#ifdef __linux__
+#if (defined(__linux__) || defined(__sun)) && defined(__GNUC__)
+
 NS_COM void 
 nsTraceRefcnt::DemangleSymbol(const char * aSymbol, 
                               char * aBuffer,
@@ -1201,7 +1438,7 @@ nsTraceRefcnt::DemangleSymbol(const char * aSymbol,
 #endif // MOZ_DEMANGLE_SYMBOLS
 }
 
-#else // __linux__
+#else // ( __linux__ || __sun) && __GNUC__
 
 NS_COM void 
 nsTraceRefcnt::DemangleSymbol(const char * aSymbol, 
@@ -1214,7 +1451,7 @@ nsTraceRefcnt::DemangleSymbol(const char * aSymbol,
   // lose
   aBuffer[0] = '\0';
 }
-#endif // __linux__
+#endif // (__linux__ || __sun) && __GNUC__
 
 //----------------------------------------------------------------------
 
