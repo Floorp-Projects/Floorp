@@ -38,8 +38,6 @@ classic.jar:
         skin/classic/browser/o3-imap-dropmarker.png  (skin/o3-imap-dropmarker.png)
         skin/classic/browser/o3-imap-close-v2.png    (skin/o3-imap-close-v2.png)
         skin/classic/browser/o3-imap-newtab.png      (skin/o3-imap-newtab.png)
-        skin/classic/browser/trash-open.gif          (skin/trash-open.gif)
-        skin/classic/browser/trash-closed.gif        (skin/trash-closed.gif)
         skin/classic/browser/customizeToolbar.css    (skin/customizeToolbar.css)
 
 en-US.jar:
