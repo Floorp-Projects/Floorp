@@ -22,13 +22,20 @@ topsrcdir	= $(DEPTH)
 srcdir		= $(topsrcdir)/java/webclient/src_moz
 VPATH		= $(topsrcdir)/java/webclient/src_moz
 
+# We don't need to build the stubs in the BAL case.
+ifeq ($(BAL_INTERFACE),)
 DIRS = motif
+endif
 
 JAVAHOME        = $(JDKHOME)
 
 include $(DEPTH)/config/autoconf.mk
 
+ifneq ($(BAL_INTERFACE),)
+LIBRARY_NAME	= webclient_bal
+else
 LIBRARY_NAME	= webclient
+endif
 
 CPPSRCS = \
 	ns_util.cpp \
@@ -66,7 +73,17 @@ EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt
 endif
 endif
 
-EXTRA_DSO_LDOPTS += -L$(DEPTH)/dist/bin/components -lwidget_gtk -lwc_share
+ifneq ($(BAL_INTERFACE),)
+CXXFLAGS += -DBAL_INTERFACE
+endif
+
+EXTRA_DSO_LDOPTS += -L$(DEPTH)/dist/bin/components -lwidget_gtk
+
+ifneq ($(BAL_INTERFACE),)
+EXTRA_DSO_LDOPTS += -lwc_share_bal
+else
+EXTRA_DSO_LDOPTS += -lwc_share
+endif
 
 INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES) \
 	-I$(DEPTH)/widget/src/gtk -I../src_share
