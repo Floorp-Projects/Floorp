@@ -167,7 +167,7 @@ openWindow(nsIMsgWindow *aMsgWindow, const char *chromeURL,
     nsCOMPtr<nsIDOMWindow> dialogWindow;
     rv = parentWindow->OpenDialog(NS_ConvertASCIItoUCS2(chromeURL),
                                   NS_LITERAL_STRING("_blank"),
-                                  NS_LITERAL_STRING("chrome,modal,titlebar"),
+                                  NS_LITERAL_STRING("centerscreen,chrome,modal,titlebar"),
                                   ifptr, getter_AddRefs(dialogWindow));
 
     return rv;
