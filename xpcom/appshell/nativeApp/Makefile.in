@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
+XPIDL_MODULE	= xpcom_nativeapp
 LIBRARY_NAME	= nativeapp
 IS_COMPONENT	= 1
 

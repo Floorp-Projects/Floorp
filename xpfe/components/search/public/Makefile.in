@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
+XPIDL_MODULE	= search
 
 XPIDLSRCS	= nsISearchService.idl
 

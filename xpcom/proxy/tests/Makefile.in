@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
+XPIDL_MODULE	= proxytest
 
 CPPSRCS		= proxytests.cpp
 XPIDLSRCS	= nsITestProxy.idl

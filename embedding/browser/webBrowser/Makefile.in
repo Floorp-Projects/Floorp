@@ -24,6 +24,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 MODULE		= webbrwsr
+XPIDL_MODULE	= webBrowser_core
 LIBRARY_NAME	= nsWebBrowser_s
 REQUIRES	= xpcom docshell widget layout dom js locale necko uriloader shistory webshell htmlparser view rdf
 
