@@ -95,9 +95,10 @@ NS_IMETHODIMP
 nsLocale::GetCategory(const PRUnichar *category, const PRUnichar **result)
 {
 
+	nsString aCategory(category);
 	const nsString*	value;
 
-	value = (const nsString*)PL_HashTableLookup(fHashtable,category);
+	value = (const nsString*)PL_HashTableLookup(fHashtable,&aCategory);
 	if (value!=NULL)
 	{
 		(*result)=value->GetUnicode();
