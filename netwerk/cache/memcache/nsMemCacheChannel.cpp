@@ -401,10 +401,8 @@ NS_IMETHODIMP
 nsMemCacheChannel::GetContentType(char* *aContentType)
 {
     // Not required to be implemented, since it is implemented by cache manager
-    // NS_ASSERTION(0, "nsMemCacheChannel method unexpectedly called");
-    // FIXME - lying for the purpose of testing
-    *aContentType = strdup("text/html");
-    return NS_OK;
+    NS_ASSERTION(0, "nsMemCacheChannel method unexpectedly called");
+    return NS_ERROR_NOT_IMPLEMENTED
 }
 
 NS_IMETHODIMP
