@@ -75,8 +75,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.27 $ 
-# $Date: 2004/06/15 01:16:55 $ 
+# $Revision: 1.28 $ 
+# $Date: 2004/07/18 16:45:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
 # $Name:  $ 
@@ -156,7 +156,7 @@ use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.27 $ )[1];
+$VERSION = ( qw $Revision: 1.28 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -552,6 +552,16 @@ sub render_authors {
 
             $link_choices .= "<br>\n";
 
+            foreach $bug_number (@bug_numbers) {
+                my $href = BTData::bug_id2bug_url($bug_number);
+                $link_choices .= 
+                    HTMLPopUp::Link(
+                                    "href" => $href,
+                                    "linktxt" => "\t\tBug: $bug_number",
+                                    );
+                $link_choices .= "<br>";
+            }
+
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
@@ -604,16 +614,6 @@ sub render_authors {
 
             $link_choices .= "<br>";
 
-
-            foreach $bug_number (@bug_numbers) {
-                my $href = BTData::bug_id2bug_url($bug_number);
-                $link_choices .= 
-                    HTMLPopUp::Link(
-                                    "href" => $href,
-                                    "linktxt" => "\t\tBug: $bug_number",
-                                    );
-                $link_choices .= "<br>";
-            }
 
             # we display the list of names in 'teletype font' so that the
             # names do not bunch together. It seems to make a difference if
