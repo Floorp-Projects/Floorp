@@ -50,6 +50,11 @@ CHROME_CONTENT = \
 	.\sb-FileWidgetFileHandler.js \
 	.\editorOverlay.xul \
 	.\editorOverlay.js \
+	.\pref-editing.xul \
+	.\pref-publish.xul \
+	.\pref-composer.js \
+	.\pref-composer.xul \
+	.\editorPrefsOverlay.xul \
 	$(NULL)
 
 CHROME_MISC = \

@@ -46,6 +46,11 @@ sb-file-contextMenu.js
 sb-file-panel.js
 sb-file-panel.xul
 sb-FileWidgetFileHandler.js
+pref-composer.js
+pref-composer.xul
+pref-publish.xul
+pref-editing.xul
+editorPrefsOverlay.xul
 images:tag-anchor.gif
 images:tag-abr.gif
 images:tag-acr.gif
