@@ -579,7 +579,8 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
 
 #ifdef DEBUG_bzbarsky
   if (! aCharset.IsEmpty()) {
-    fprintf(stderr, "Setting from HTTP to: %s\n", aCharset.get());
+    fprintf(stderr, "Setting from HTTP to: %s\n",
+            PromiseFlatCString(aCharset).get());
   }
 #endif
 
@@ -591,7 +592,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
 #ifdef DEBUG_bzbarsky
     if (NS_SUCCEEDED(result)) {
       fprintf(stderr, "Setting from @charset rule: %s\n",
-              aCharset.get());
+              PromiseFlatCString(aCharset).get());
     }
 #endif
   }
@@ -606,7 +607,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
 #ifdef DEBUG_bzbarsky
       if (! aCharset.IsEmpty()) {
         fprintf(stderr, "Setting from property on element: %s\n",
-                aCharset.get());
+                PromiseFlatCString(aCharset).get());
       }
 #endif
     }
@@ -618,7 +619,7 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
     mLoader->mDocument->GetDocumentCharacterSet(aCharset);
 #ifdef DEBUG_bzbarsky
     fprintf(stderr, "Set from document: %s\n",
-            aCharset.get());
+            PromiseFlatCString(aCharset).get());
 #endif
   }      
 
