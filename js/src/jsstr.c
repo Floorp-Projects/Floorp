@@ -1002,7 +1002,8 @@ str_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     j = 0;
     while (i >= 0) {
-        if (text[i + j] == pat[j]) {
+        /* Don't assume that text is NUL-terminated: it could be dependent. */
+        if (i + j < textlen && text[i + j] == pat[j]) {
             if (++j == patlen)
                 break;
         } else {
