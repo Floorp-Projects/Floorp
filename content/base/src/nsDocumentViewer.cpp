@@ -4681,8 +4681,6 @@ DocumentViewerImpl::PrintPreview()
 
 #ifdef NS_PRINT_PREVIEW
 
-#if defined(XP_WIN) || defined(XP_UNIX) // for now
-
   // if we are printing another URL, then exit
   // the reason we check here is because this method can be called while 
   // another is still in here (the printing dialog is a good example).
@@ -4865,7 +4863,6 @@ DocumentViewerImpl::PrintPreview()
   mPrtPreview = mPrt;
   mPrt        = nsnull;
 
-#endif // XP_WIN || XP_UNIX
 #endif // NS_PRINT_PREVIEW
 
   return NS_OK;
