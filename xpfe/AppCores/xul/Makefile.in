@@ -26,6 +26,7 @@ include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/EditorAppShell.xul \
+	$(srcdir)/EditorCommands.js \
 	$(srcdir)/EditorInitPage.html \
 	$(srcdir)/EditorInitPagePlain.html \
 	$(srcdir)/MailAppShell.html \
