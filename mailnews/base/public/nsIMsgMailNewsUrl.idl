@@ -63,6 +63,7 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	// the load group is computed from the msgWindow
 	readonly attribute nsILoadGroup loadGroup;
 	attribute boolean updatingFolder;
+	attribute boolean addToMemoryCache; 
 };
 
 //////////////////////////////////////////////////////////////////////////////////
