@@ -16,14 +16,11 @@
  * Reserved.
  */
 
-
 #include <qwidget.h>
-
 #include "nsBrowserWindow.h"
 #include "nsQtMenu.h"
 #include "resources.h"
 #include "nscore.h"
-
 #include "stdio.h"
 
 nsMenuEventHandler::nsMenuEventHandler(nsBrowserWindow * window)
@@ -36,10 +33,8 @@ void nsMenuEventHandler::MenuItemActivated(int id)
     mWindow->DispatchMenuItem(id);
 }
 
-void CreateViewerMenus(QWidget *aParent, void * data) 
+void CreateViewerMenus(QWidget *aParent, void * data, PRInt32 * aMenuBarHeight)
 {
-    debug("CreateViewerMenus under (%p)", aParent);
-    
     nsBrowserWindow * window = (nsBrowserWindow *) data;
 
     nsMenuEventHandler * eventHandler = new nsMenuEventHandler(window);
@@ -134,40 +129,40 @@ void CreateViewerMenus(QWidget *aParent, void * data)
     InsertMenuItem(edit, "Cut", eventHandler, VIEWER_EDIT_CUT);
     InsertMenuItem(edit, "Copy", eventHandler, VIEWER_EDIT_COPY);
     InsertMenuItem(edit, "Paste", eventHandler, VIEWER_EDIT_PASTE);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(edit, nsnull, nsnull, 0);
     InsertMenuItem(edit, "Select All", eventHandler, VIEWER_EDIT_SELECTALL);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(edit, nsnull, nsnull, 0);
     InsertMenuItem(edit, "Find in Page", eventHandler, VIEWER_EDIT_FINDINPAGE);
 
     InsertMenuItem(debug, "Visual Debugging", eventHandler, VIEWER_VISUAL_DEBUGGING);
     InsertMenuItem(debug, "Reflow Test", eventHandler, VIEWER_REFLOW_TEST);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(debug, nsnull, nsnull, 0);
     InsertMenuItem(debug, "Dump Content", eventHandler, VIEWER_DUMP_CONTENT);
     InsertMenuItem(debug, "Dump Frames", eventHandler, VIEWER_DUMP_FRAMES);
     InsertMenuItem(debug, "Dump Views", eventHandler, VIEWER_DUMP_VIEWS);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(debug, nsnull, nsnull, 0);
     InsertMenuItem(debug, "Dump Style Sheets", eventHandler, VIEWER_DUMP_STYLE_SHEETS);
     InsertMenuItem(debug, "Dump Style Contexts", eventHandler, VIEWER_DUMP_STYLE_CONTEXTS);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(debug, nsnull, nsnull, 0);
     InsertMenuItem(debug, "Show Content Size", eventHandler, VIEWER_SHOW_CONTENT_SIZE);
     InsertMenuItem(debug, "Show Frame Size", eventHandler, VIEWER_SHOW_FRAME_SIZE);
     InsertMenuItem(debug, "Show Style Size", eventHandler, VIEWER_SHOW_STYLE_SIZE);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(debug, nsnull, nsnull, 0);
     InsertMenuItem(debug, "Debug Save", eventHandler, VIEWER_DEBUGSAVE);
     InsertMenuItem(debug, "Debug Output Text", eventHandler, VIEWER_DISPLAYTEXT);
     InsertMenuItem(debug, "Debug Output HTML", eventHandler, VIEWER_DISPLAYHTML);
     InsertMenuItem(debug, "Debug Toggle Selection", eventHandler, VIEWER_TOGGLE_SELECTION);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(debug, nsnull, nsnull, 0);
     InsertMenuItem(debug, "Debug Robot", eventHandler, VIEWER_DEBUGROBOT);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(debug, nsnull, nsnull, 0);
     InsertMenuItem(debug, "Show Content Quality", eventHandler, VIEWER_SHOW_CONTENT_QUALITY);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(debug, nsnull, nsnull, 0);
     debug->insertItem("Style", style);
 
     InsertMenuItem(select, "List Available Sheets", eventHandler, VIEWER_SELECT_STYLE_LIST);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(select, nsnull, nsnull, 0);
     InsertMenuItem(select, "Select Default", eventHandler, VIEWER_SELECT_STYLE_DEFAULT);
-    InsertMenuItem(file, nsnull, nsnull, 0);
+    InsertMenuItem(select, nsnull, nsnull, 0);
     InsertMenuItem(select, "Select Alternative 1", eventHandler, VIEWER_SELECT_STYLE_ONE);
     InsertMenuItem(select, "Select Alternative 2", eventHandler, VIEWER_SELECT_STYLE_TWO);
     InsertMenuItem(select, "Select Alternative 3", eventHandler, VIEWER_SELECT_STYLE_THREE);
@@ -194,6 +189,8 @@ void CreateViewerMenus(QWidget *aParent, void * data)
     menuBar->insertItem("&Tools", tools);
 
     menuBar->show();
+
+    *aMenuBarHeight = menuBar->height();
 }
 
 
