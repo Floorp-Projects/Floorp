@@ -1136,8 +1136,8 @@ GetTitleSuffix(void)
   nsILocale* locale = nsnull;
   nsIStringBundle* bundle = nsnull;
   ret = service->CreateBundle(url, locale, &bundle);
+  NS_RELEASE(url);
   if (NS_FAILED(ret)) {
-    NS_RELEASE(url);
     NS_RELEASE(service);
     return suffix;
   }
