@@ -231,6 +231,9 @@ js/src/xpconnect/tests/Makefile
 js/src/xpconnect/tests/components/Makefile
 js/src/xpconnect/tests/idl/Makefile
 js/src/xpconnect/shell/Makefile
+js/src/xpconnect/tools/Makefile
+js/src/xpconnect/tools/idl/Makefile
+js/src/xpconnect/tools/idl/Makefile
 "
 
 MAKEFILES_layout="
