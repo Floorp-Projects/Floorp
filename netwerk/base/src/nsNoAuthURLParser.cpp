@@ -113,12 +113,36 @@ nsresult
 nsNoAuthURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
                      PRInt32 *o_Port, char* *o_Path)
 {
+    // Usually there is no Host, but who knows ...
     nsresult rv = NS_OK;
-    // There is no Host, but take care of a localhost
-    if ((nsCRT::strcasecmp(i_Spec,"localhost")==0) || 
-        (PL_strcasestr(i_Spec,"localhost/")==i_Spec))
-        return ParseAtPath(i_Spec+9,o_Path);
-    rv = ParseAtPath(i_Spec, o_Path);
+
+    PRInt32 len = PL_strlen(i_Spec);
+    if ((*i_Spec == '/') 
+#ifdef XP_PC
+        // special case for XP_PC: look for a drive
+       || (len > 1 && (*(i_Spec+1) == ':' || *(i_Spec+1) == '|')) 
+#endif
+       ){
+        // No host, okay ...
+        rv = ParseAtPath(i_Spec, o_Path);
+    } else {
+        // There seems be a host, drop it
+        char* brk = PL_strchr(i_Spec, '/');
+        if (!brk) {
+            // everything is the host
+            rv = DupString(o_Host, i_Spec);
+            if (NS_FAILED(rv)) return rv;
+            ToLowerCase(*o_Host);
+            // parse after the host
+            rv = ParseAtPath(i_Spec+len, o_Path);
+        } else {
+            rv = ExtractString((char*)i_Spec, o_Host, (brk - i_Spec));
+            if (NS_FAILED(rv)) return rv;
+            ToLowerCase(*o_Host);
+            // parse after the host
+            rv = ParseAtPath(brk, o_Path);
+        }
+    }
     return rv;
 }
 
