@@ -1,3 +1,4 @@
+
 #!nmake
 #
 # The contents of this file are subject to the Netscape Public
@@ -86,6 +87,7 @@ OBJS =                                          \
        .\$(OBJDIR)\nsInstallFileOpItem.obj      \
        .\$(OBJDIR)\nsWinShortcut.obj            \
 	   .\$(OBJDIR)\nsJSFileSpecObj.obj          \
+#     .\$(OBJDIR)\nsUpdateNotification.obj     \
        $(NULL)
 
 WIN_LIBS=                                       \

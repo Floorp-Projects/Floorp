@@ -22,6 +22,11 @@ class nsInstallInfo;
 #include "nsPIXPIStubHook.h"
 #include "nsTopProgressNotifier.h"
 
+#if NOTIFICATION_ENABLE
+#include "nsIUpdateNotification.h"
+#endif
+
+
 #define XPI_ROOT_KEY    "software/mozilla/xpinstall"
 #define XPI_AUTOREG_VAL "Autoreg"
 #define XPCOM_KEY       "software/mozilla/XPCOM"
@@ -73,6 +78,10 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         static   nsSoftwareUpdate* mInstance;
         static   nsIFileSpec*      mProgramDir;
 
+#if NOTIFICATION_ENABLE
+        static   nsIUpdateNotification *mUpdateNotifier;
+#endif
+        
         nsresult RunNextInstall();
         nsresult RegisterNameset();
         
@@ -83,6 +92,9 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         nsTopProgressNotifier   mMasterNotifier;
 
         HREG              mReg;
+        
+        
+
 };
 
 
