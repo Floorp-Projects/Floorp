@@ -22,6 +22,7 @@
 
 #include "utilities.h"
 #include "hash.h"
+#include "parser.h"
 
 namespace JavaScript {
 
@@ -35,7 +36,9 @@ namespace JavaScript {
 
 	class StringAtom: public String {
 	  public:
-		explicit StringAtom(const String &s): String(s) {}
+		Token::Kind tokenKind;			// Token::Kind if this is a keyword; Token::Id if not
+
+		explicit StringAtom(const String &s): String(s), tokenKind(Token::Id) {}
 	  private:
 	    StringAtom(const StringAtom&);		// No copy constructor
 	    void operator=(const StringAtom&);	// No assignment operator
@@ -55,7 +58,10 @@ namespace JavaScript {
 
 
 	class World {
+	  public:
 		StringAtomTable identifiers;
+		
+		World();
 	};
 }
 #endif
