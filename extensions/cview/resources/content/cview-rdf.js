@@ -35,7 +35,7 @@
  * RDFHelper.prototype.Assert() to RDFHelper.prototype.dAssert().)
  */
 
-const RES_PFX = "http://home.netscape.com/NC-xpcom#";
+const RES_PFX = "http://www.mozilla.org/NC-xpcom#";
 
 const nsIRDFResource = Components.interfaces.nsIRDFResource;
 const nsIRDFNode = Components.interfaces.nsIRDFNode;

@@ -36,7 +36,7 @@
 <window id="main-window"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns:xpcom="http://home.netscape.com/NC-xpcom#"
+        xmlns:xpcom="http://www.mozilla.org/NC-xpcom#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical" onload="onLoad();" onunload="onUnload();"
         persist="width height" title="XPCOM Component Viewer">
@@ -47,17 +47,28 @@
   localstore.rdf when the window closes.  The next time this window is
   opened, persisted properties will be automatically restored.
 -->
+
+<!--
+  debug needs to be set before loading the utility library in order for
+  it to take effect.
+
+  files loaded are:
+    cview-utils.js     generic utility functions.
+    cview-rdf.js       RDF utility class (RDFHelper).
+    cview-static.js    Non event-handler functions core to cview.
+    cview-handlers.js  Event-handlers core to cview.
+-->
   <html:script>
     var DEBUG = true;
   </html:script>
-<!--
-  debug needs to be set before loading the utility library.
--->
   <html:script src="chrome://cview/content/cview-utils.js"/>
   <html:script src="chrome://cview/content/cview-rdf.js"/>
   <html:script src="chrome://cview/content/cview-static.js"/>
   <html:script src="chrome://cview/content/cview-handlers.js"/>
 
+<!--
+  This popup is the context menu for elements in the interfaces list.
+-->
   <popupset>
     <popup id="interfacePopup">
 	  <menuitem value="LXR filename lookup"
@@ -66,9 +77,6 @@
         oncommand="onLXRIFCLookup(event, 'search?string=');"/>
     </popup>
   </popupset>
-<!--
-  This popup is the context menu for elements in the interfaces list.
--->
 
   <toolbox>
     <menubar id="main-menubar">
@@ -113,26 +121,30 @@
   <box id="outer-box" flex="1">
     <box id="component-box" align="vertical" flex="1">
     <text id="component-label" value="Components..."/>
+<!--
+  datasources="rdf:null" makes the tree able to get it's contents from an
+  rdf datasource, but delays saying which one until runtime.
+  containment="http://www.mozilla.org/NC-xpcom#component" says that
     <tree id="component-list" container="true" datasources="rdf:null" flex="1"
-      containment="http://home.netscape.com/NC-xpcom#component">
+      containment="http://www.mozilla.org/NC-xpcom#component">
 
       <template>
-        <rule xpcom:show="false"/>
 <!--
   xpcom: here refers to the namespace declared in the <window> tag.  If the
-  resource has a http://home.netscape.com/NC-xpcom#show arc pointing the
+  resource has a http://www.mozilla.org/NC-xpcom#show arc pointing the
   literal value "false", no content will be created for that resource
 -->
-        <rule xpcom:show="true">
+        <rule xpcom:show="false"/>
 <!--
   If, on the otherhand, the resource has a
-  http://home.netscape.com/NC-xpcom#show arc pointing the literal value
+  http://www.mozilla.org/NC-xpcom#show arc pointing the literal value
   "true", the following content will be created.
 -->
+        <rule xpcom:show="true">
         <treechildren>
           <treeitem uri="...">
             <treerow onclick="onComponentClick(event);"
-              progid="rdf:http://home.netscape.com/NC-xpcom#progid">
+              progid="rdf:http://www.mozilla.org/NC-xpcom#progid">
 <!--
   Even though we specified the onClick handler as an attribute of the
   <treerow> tag, the event's target will be the <treecell>.  We compensate
@@ -140,10 +152,10 @@
   cview-handlers.js:onComponentClick().
 -->
                 <treecell>
-                  <text value="rdf:http://home.netscape.com/NC-xpcom#progid"/>
+                  <text value="rdf:http://www.mozilla.org/NC-xpcom#progid"/>
                 </treecell>
                 <treecell>
-                  <text value="rdf:http://home.netscape.com/NC-xpcom#clsid"/>
+                  <text value="rdf:http://www.mozilla.org/NC-xpcom#clsid"/>
                 </treecell>
             </treerow>
           </treeitem>
@@ -153,19 +165,19 @@
 
       <treecolgroup>
         <treecol
-          rdf:resource="http://home.netscape.com/NC-xpcom#progid"/>
+          rdf:resource="http://www.mozilla.org/NC-xpcom#progid"/>
         <treecol
-          rdf:resource="http://home.netscape.com/NC-xpcom#clsid"/>
+          rdf:resource="http://www.mozilla.org/NC-xpcom#clsid"/>
       </treecolgroup>
 
       <treehead>
         <treerow>
           <treecell id="componentcol-progid"
-            rdf:resource="http://home.netscape.com/NC-xpcom#progid"
+            rdf:resource="http://www.mozilla.org/NC-xpcom#progid"
             class="treecell-header sortDirectionIndicator" value="ProgID"
             onclick="return onSortCol('componentcol-progid');"/>
           <treecell id="componentcol-clsid"
-            rdf:resource="http://home.netscape.com/NC-xpcom#clsid"
+            rdf:resource="http://www.mozilla.org/NC-xpcom#clsid"
             class="treecell-header sortDirectionIndicator" value="CLSID"
             onclick="return onSortCol('componentcol-clsid');"/>
         </treerow>
@@ -178,7 +190,7 @@
     <box id="interface-box" align="vertical" flex="1">
     <text id="interface-label" value="Interfaces..."/>
     <tree id="interface-list" container="true" datasources="rdf:null" flex="1"
-      containment="http://home.netscape.com/NC-xpcom#interface">
+      containment="http://www.mozilla.org/NC-xpcom#interface">
 
       <template>
         <rule xpcom:show="false"/>
@@ -186,13 +198,13 @@
         <treechildren>
           <treeitem uri="...">
             <treerow onclick="onInterfaceClick(event);"
-              iname="rdf:http://home.netscape.com/NC-xpcom#iname"
+              iname="rdf:http://www.mozilla.org/NC-xpcom#iname"
               context="interfacePopup">
                 <treecell>
-                  <text value="rdf:http://home.netscape.com/NC-xpcom#iname"/>
+                  <text value="rdf:http://www.mozilla.org/NC-xpcom#iname"/>
                 </treecell>
                 <treecell>
-                  <text value="rdf:http://home.netscape.com/NC-xpcom#iid"/>
+                  <text value="rdf:http://www.mozilla.org/NC-xpcom#iid"/>
                 </treecell>
             </treerow>
           </treeitem>
@@ -202,19 +214,19 @@
 
       <treecolgroup>
         <treecol
-          rdf:resource="http://home.netscape.com/NC-xpcom#iname"/>
+          rdf:resource="http://www.mozilla.org/NC-xpcom#iname"/>
         <treecol
-          rdf:resource="http://home.netscape.com/NC-xpcom#iid"/>
+          rdf:resource="http://www.mozilla.org/NC-xpcom#iid"/>
       </treecolgroup>
 
       <treehead>
         <treerow>
           <treecell id="interfacecol-iname"
-            rdf:resource="http://home.netscape.com/NC-xpcom#iname"
+            rdf:resource="http://www.mozilla.org/NC-xpcom#iname"
             class="treecell-header sortDirectionIndicator" value="Interface"
             onclick="return onSortCol('interfacecol-iname');"/>
           <treecell id="interfacecol-iid"
-            rdf:resource="http://home.netscape.com/NC-xpcom#iid"
+            rdf:resource="http://www.mozilla.org/NC-xpcom#iid"
             class="treecell-header sortDirectionIndicator" value="IID"
             onclick="return onSortCol('interfacecol-iid');"/>
         </treerow>
