@@ -641,17 +641,17 @@ Bool LAPIFrameGetStringProperty(
 		return FALSE;
 	}
 
-	if (!stricmp(PropertyName, "title"))
+	if (!XP_STRCASECMP(PropertyName, "title"))
 	{
 		*lpszPropVal = FrameID->title;
 		return TRUE;
 	}
-	else if (!stricmp(PropertyName, "name"))
+	else if (!XP_STRCASECMP(PropertyName, "name"))
 	{
 		*lpszPropVal = FrameID->name;
 		return TRUE;
 	}
-	else if (!stricmp(PropertyName, "url"))
+	else if (!XP_STRCASECMP(PropertyName, "url"))
 	{
 		*lpszPropVal = FrameID->url;
 		return TRUE;
@@ -689,12 +689,12 @@ Bool LAPIFrameGetNumProperty(
 		return FALSE;
 	}
 
-	if (!stricmp(PropertyName, "width"))
+	if (!XP_STRCASECMP(PropertyName, "width"))
 	{
 		*lpPropVal = (ps->doc_state)->win_width;
 		return TRUE;
 	}
-	else if (!stricmp(PropertyName, "height"))
+	else if (!XP_STRCASECMP(PropertyName, "height"))
 	{
 		*lpPropVal = (ps->doc_state)->win_height;
 		return TRUE;
@@ -1126,12 +1126,13 @@ Bool LAPIElementGetStringProperty(
 	switch (ElementID->type)
 	{
 	case LO_TEXT:
-		if (!stricmp(PropertyName, "text") || !stricmp(PropertyName, "name"))
+		if (!XP_STRCASECMP(PropertyName, "text") || !XP_STRCASECMP(PropertyName, "name"))
 		{
-			*lpszPropVal = (ElementID->lo_text).pText;
+			/* beard: I detest platform-specific fields in the LO_TextStruct_struct. */
+			*lpszPropVal = (const char *)(ElementID->lo_text).text;
 			return TRUE;
 		}
-		if (!stricmp(PropertyName, "href"))
+		if (!XP_STRCASECMP(PropertyName, "href"))
 		{
 			LO_AnchorData* pAnchorData = (ElementID->lo_text).anchor_href;
 			if (pAnchorData && pAnchorData->anchor &&
@@ -1145,17 +1146,17 @@ Bool LAPIElementGetStringProperty(
 	case LO_HRULE:
 	break;
 	case LO_IMAGE:
-		if (!stricmp(PropertyName, "alt"))
+		if (!XP_STRCASECMP(PropertyName, "alt"))
 		{
 			*lpszPropVal = (char*)((ElementID->lo_image).alt);
 			return TRUE;
 		}
-		else if (!stricmp(PropertyName, "url"))
+		else if (!XP_STRCASECMP(PropertyName, "url"))
 		{
 			*lpszPropVal = (char*)((ElementID->lo_image).image_url);
 			return TRUE;
 		}
-		if (!stricmp(PropertyName, "href"))
+		if (!XP_STRCASECMP(PropertyName, "href"))
 		{
 			LO_AnchorData* pAnchorData = (ElementID->lo_image).anchor_href;
 			if (pAnchorData && pAnchorData->anchor &&
@@ -1173,17 +1174,17 @@ Bool LAPIElementGetStringProperty(
 		case FORM_TYPE_TEXT:
 		case FORM_TYPE_PASSWORD:
 		case FORM_TYPE_READONLY:
-			if (!stricmp(PropertyName, "name"))
+			if (!XP_STRCASECMP(PropertyName, "name"))
 			{
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_text).name);
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "defaulttext"))
+			else if (!XP_STRCASECMP(PropertyName, "defaulttext"))
 			{
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_text).default_text);
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "currenttext"))
+			else if (!XP_STRCASECMP(PropertyName, "currenttext"))
 			{
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_text).current_text);
 				return TRUE;
@@ -1193,7 +1194,7 @@ Bool LAPIElementGetStringProperty(
 		case FORM_TYPE_SUBMIT:
 		case FORM_TYPE_RESET:
 		case FORM_TYPE_BUTTON:
-			if (!stricmp(PropertyName, "name"))
+			if (!XP_STRCASECMP(PropertyName, "name"))
 			{
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_minimal).name);
 				return TRUE;
@@ -1202,7 +1203,7 @@ Bool LAPIElementGetStringProperty(
 
 		case FORM_TYPE_RADIO:
 		case FORM_TYPE_CHECKBOX:
-			if (!stricmp(PropertyName, "name"))
+			if (!XP_STRCASECMP(PropertyName, "name"))
 			{
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_toggle).name);
 				return TRUE;
@@ -1211,29 +1212,29 @@ Bool LAPIElementGetStringProperty(
 
 		case FORM_TYPE_SELECT_ONE:
 		case FORM_TYPE_SELECT_MULT:
-			if (!stricmp(PropertyName, "name"))
+			if (!XP_STRCASECMP(PropertyName, "name"))
 			{
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_select).name);
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "options"))
+			else if (!XP_STRCASECMP(PropertyName, "options"))
 			{	/* actually returns a pointer to the option list */
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_select).options);
 				return TRUE;
 			}
 
 		case FORM_TYPE_TEXTAREA:
-			if (!stricmp(PropertyName, "name"))
+			if (!XP_STRCASECMP(PropertyName, "name"))
 			{
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_textarea).name);
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "defaulttext"))
+			else if (!XP_STRCASECMP(PropertyName, "defaulttext"))
 			{
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_textarea).default_text);
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "currenttext"))
+			else if (!XP_STRCASECMP(PropertyName, "currenttext"))
 			{
 				*lpszPropVal = (char*)((((ElementID->lo_form).element_data)->ele_textarea).current_text);
 				return TRUE;
@@ -1296,27 +1297,27 @@ Bool LAPIElementGetNumProperty(
 
 	/* TODO Add bullet type */
 	
-	if (!stricmp(PropertyName, "type"))
+	if (!XP_STRCASECMP(PropertyName, "type"))
 	{
 		*lpPropVal = GetElementLAPIType(ElementID);
 		return TRUE;
 	}
-	else if (!stricmp(PropertyName, "xpos"))
+	else if (!XP_STRCASECMP(PropertyName, "xpos"))
 	{
 		*lpPropVal = (ElementID->lo_any).x + (ElementID->lo_any).x_offset;
 		return TRUE;
 	}
-	else if (!stricmp(PropertyName, "ypos"))
+	else if (!XP_STRCASECMP(PropertyName, "ypos"))
 	{
 		*lpPropVal = (ElementID->lo_any).y + (ElementID->lo_any).y_offset;
 		return TRUE;
 	}
-	else if (!stricmp(PropertyName, "width"))
+	else if (!XP_STRCASECMP(PropertyName, "width"))
 	{
 		*lpPropVal = (ElementID->lo_any).width;
 		return TRUE;
 	}
-	else if (!stricmp(PropertyName, "height"))
+	else if (!XP_STRCASECMP(PropertyName, "height"))
 	{
 		*lpPropVal = (ElementID->lo_any).height;
 		return TRUE;
@@ -1329,22 +1330,22 @@ Bool LAPIElementGetNumProperty(
 		case FORM_TYPE_TEXT:
 		case FORM_TYPE_PASSWORD:
 		case FORM_TYPE_READONLY:
-			if (!stricmp(PropertyName, "disabled"))
+			if (!XP_STRCASECMP(PropertyName, "disabled"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_text).disabled;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "readonly"))
+			else if (!XP_STRCASECMP(PropertyName, "readonly"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_text).read_only;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "size"))
+			else if (!XP_STRCASECMP(PropertyName, "size"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_text).size;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "maxsize"))
+			else if (!XP_STRCASECMP(PropertyName, "maxsize"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_text).max_size;
 				return TRUE;
@@ -1354,7 +1355,7 @@ Bool LAPIElementGetNumProperty(
 		case FORM_TYPE_SUBMIT:
 		case FORM_TYPE_RESET:
 		case FORM_TYPE_BUTTON:
-			if (!stricmp(PropertyName, "disabled"))
+			if (!XP_STRCASECMP(PropertyName, "disabled"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_minimal).disabled;
 				return TRUE;
@@ -1363,17 +1364,17 @@ Bool LAPIElementGetNumProperty(
 
 		case FORM_TYPE_RADIO:
 		case FORM_TYPE_CHECKBOX:
-			if (!stricmp(PropertyName, "disabled"))
+			if (!XP_STRCASECMP(PropertyName, "disabled"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_toggle).disabled;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "toggled"))
+			else if (!XP_STRCASECMP(PropertyName, "toggled"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_toggle).toggled;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "default_toggle"))
+			else if (!XP_STRCASECMP(PropertyName, "default_toggle"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_toggle).default_toggle;
 				return TRUE;
@@ -1382,49 +1383,49 @@ Bool LAPIElementGetNumProperty(
 
 		case FORM_TYPE_SELECT_ONE:
 		case FORM_TYPE_SELECT_MULT:
-			if (!stricmp(PropertyName, "disabled"))
+			if (!XP_STRCASECMP(PropertyName, "disabled"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_select).disabled;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "multiple"))
+			else if (!XP_STRCASECMP(PropertyName, "multiple"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_select).multiple;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "multiple"))
+			else if (!XP_STRCASECMP(PropertyName, "multiple"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_select).multiple;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "option_cnt"))
+			else if (!XP_STRCASECMP(PropertyName, "option_cnt"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_select).option_cnt;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "options"))
+			else if (!XP_STRCASECMP(PropertyName, "options"))
 			{	/* actually returns a pointer to the option list */
 				*lpPropVal = (int32)((((ElementID->lo_form).element_data)->ele_select).options);
 				return TRUE;
 			}
 
 		case FORM_TYPE_TEXTAREA:
-			if (!stricmp(PropertyName, "disabled"))
+			if (!XP_STRCASECMP(PropertyName, "disabled"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_textarea).disabled;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "readonly"))
+			else if (!XP_STRCASECMP(PropertyName, "readonly"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_textarea).read_only;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "rows"))
+			else if (!XP_STRCASECMP(PropertyName, "rows"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_textarea).rows;
 				return TRUE;
 			}
-			else if (!stricmp(PropertyName, "cols"))
+			else if (!XP_STRCASECMP(PropertyName, "cols"))
 			{
 				*lpPropVal = (((ElementID->lo_form).element_data)->ele_textarea).cols;
 				return TRUE;
