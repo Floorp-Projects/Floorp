@@ -26,14 +26,10 @@ sub main {
 
   # Report some kind of status to parent script.
   #
-  #  if ($status != 0) {
-  #	   $TinderUtils::build_status = 'busted';
-  #  } elsif (not TinderUtils::BinaryExists("/u/mcafee/gnome/galeon/src/galeon-bin")) {
-  #	   TinderUtils::print_log "Error: binary not found: /u/mcafee/gnome/galeon/src/galeon-bin\n";
-  #	   $TinderUtils::build_status = 'busted';
-  #  } else {
-  #    $TinderUtils::build_status = 'success';
-  #  }
+  #	 $TinderUtils::build_status = 'busted';
+  #  $TinderUtils::build_status = 'testfailed';
+  #  $TinderUtils::build_status = 'success';
+  #  
 
   # Report a fake success, for example's sake.
   $TinderUtils::build_status = 'success';
