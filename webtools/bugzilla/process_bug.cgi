@@ -254,8 +254,8 @@ foreach id $idlist {
         unset ccids(zz)
         foreach person [split $FORM(cc) " ,"] {
             if {![cequal $person ""]} {
-                set id [DBNameToIdAndCheck $person]
-                set ccids($id) 1
+                set cid [DBNameToIdAndCheck $person]
+                set ccids($cid) 1
             }
         }
         
