@@ -61,10 +61,13 @@ interface nsIDNSRecord : nsISupports
      * this function copies the value of the next IP address into the
      * given PRNetAddr struct and increments the internal address iterator.
      *
+     * @param aPort
+     *        A port number to initialize the PRNetAddr with.
+     *
      * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
      * the record.
      */
-    [noscript] PRNetAddr getNextAddr(in PRUint16 port);
+    [noscript] PRNetAddr getNextAddr(in PRUint16 aPort);
 
     /**
      * this function returns the value of the next IP address as a
