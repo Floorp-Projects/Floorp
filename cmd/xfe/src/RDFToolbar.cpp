@@ -57,8 +57,6 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
                    m_widget,
                    XmNusePreferredWidth,         False,
                    XmNusePreferredHeight,        True,
-                   XmNchildUsePreferredWidth,    True,
-                   XmNchildUsePreferredHeight,   True,
                    NULL);
 
 	// Create the logo

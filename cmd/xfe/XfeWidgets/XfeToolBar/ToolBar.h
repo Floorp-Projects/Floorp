@@ -40,10 +40,6 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 #define XmNactiveButton						"activeButton"
 #define XmNallowWrap						"allowWrap"
-/* #define XmNchildForceHeight					"childForceHeight" */
-/* #define XmNchildForceWidth					"childForceWidth" */
-#define XmNchildUsePreferredHeight			"childUsePreferredHeight"
-#define XmNchildUsePreferredWidth			"childUsePreferredWidth"
 #define XmNdynamicIndicator					"dynamicIndicator"
 #define XmNforceHeightToMax					"forceHeightToMax"
 #define XmNforceWidthToMax					"forceWidthToMax"
@@ -58,10 +54,6 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmNtoolBar							"toolBar"
 
 #define XmCActiveButton						"ActiveButton"
-/* #define XmCChildForceHeight					"ChildForceHeight" */
-/* #define XmCChildForceWidth					"ChildForceWidth" */
-#define XmCChildUsePreferredHeight			"ChildUsePreferredHeight"
-#define XmCChildUsePreferredWidth			"ChildUsePreferredWidth"
 #define XmCDynamicIndicator					"DynamicIndicator"
 #define XmCForceHeightToMax					"ForceHeightToMax"
 #define XmCForceWidthToMax					"ForceWidthToMax"

@@ -102,10 +102,6 @@ typedef struct _XfeToolBarPart
 	Cardinal			indicator_threshold;	/* Indicator Threshold	*/
 	Boolean				dynamic_indicator;		/* Dynamic indicator ?	*/
 
-	/* Geometry resources */
-	Boolean				child_use_pref_width;	/* Child use pref width	*/
-	Boolean				child_use_pref_height;	/* Child use pref height*/
-
 	/* Wrapping resources */
 	Boolean				allow_wrap;				/* Allow wrap			*/
 	Cardinal			max_num_columns;		/* Max num columns		*/

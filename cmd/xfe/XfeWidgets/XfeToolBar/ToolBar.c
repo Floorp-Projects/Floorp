@@ -148,8 +148,6 @@ static void		InvokeCallbacks		(Widget,XtCallbackList,Widget,int,XEvent *);
 /*																		*/
 /*----------------------------------------------------------------------*/
 static void		ApplyButtonLayout		(Widget,Widget,XtPointer);
-static void		ApplyChildUsePrefWidth	(Widget,Widget,XtPointer);
-static void		ApplyChildUsePrefHeight	(Widget,Widget,XtPointer);
 static void		ApplySelectionModifiers	(Widget,Widget,XtPointer);
 static void		ApplyActiveEnabled		(Widget,Widget,XtPointer);
 static void		ApplySelectedEnabled	(Widget,Widget,XtPointer);
@@ -283,24 +281,6 @@ static const XtResource resources[] =
 		XmRImmediate, 
 		(XtPointer) 0
     },
-	{
-		XmNchildUsePreferredHeight,
-		XmCChildUsePreferredHeight,
-		XmRBoolean,
-		sizeof(Boolean),
-		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . child_use_pref_height),
-		XmRImmediate, 
-		(XtPointer) True
-	},
-	{
-		XmNchildUsePreferredWidth,
-		XmCChildUsePreferredWidth,
-		XmRBoolean,
-		sizeof(Boolean),
-		XtOffsetOf(XfeToolBarRec , xfe_tool_bar . child_use_pref_width),
-		XmRImmediate, 
-		(XtPointer) True
-	},
 
 	/* Radio resources */
     { 
@@ -786,24 +766,6 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
     XfeToolBarPart *		op = _XfeToolBarPart(ow);
 	Boolean					layout_indicator = False;
 
-#if 0
-	/* max_child_height */
-	if (np->max_child_height != op->max_child_height)
-	{
-		np->max_child_height = op->max_child_height;
-      
-		_XfeWarning(nw,MESSAGE3);
-	}
-
-	/* max_child_width */
-	if (np->max_child_width != op->max_child_width)
-	{
-		np->max_child_width = op->max_child_width;
-      
-		_XfeWarning(nw,MESSAGE4);
-	}
-#endif
-    
     /* button_layout */
     if (np->button_layout != op->button_layout)
     {
@@ -813,36 +775,6 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 							  ApplyButtonLayout,
 							  (XtPointer) nw,
 							  True);
-
-		_XfemConfigFlags(nw) |= XfeConfigGLE;
-
-		_XfemPrepareFlags(nw) |= _XFE_PREPARE_MAX_CHILD_DIMENSIONS;
-    }
-
-    /* child_use_pref_width */
-    if (np->child_use_pref_width != op->child_use_pref_width)
-    {
-      XfeManagerApplyLinked(nw,
-                            XmMANAGER_DYNAMIC_CHILD,
-                            XfeCHILDREN_INFO_ANY,
-                            ApplyChildUsePrefWidth,
-                            (XtPointer) nw,
-                            True);
-
-		_XfemConfigFlags(nw) |= XfeConfigGLE;
-
-		_XfemPrepareFlags(nw) |= _XFE_PREPARE_MAX_CHILD_DIMENSIONS;
-    }
-
-    /* child_use_pref_height */
-    if (np->child_use_pref_height != op->child_use_pref_height)
-    {
-      XfeManagerApplyLinked(nw,
-                            XmMANAGER_DYNAMIC_CHILD,
-                            XfeCHILDREN_INFO_ANY,
-                            ApplyChildUsePrefHeight,
-                            (XtPointer) nw,
-                            True);
 
 		_XfemConfigFlags(nw) |= XfeConfigGLE;
 
@@ -1244,9 +1176,7 @@ InsertDynamicChild(Widget child)
 		Cardinal	n = 0;
 		
 		XtSetArg(xargs[n],XmNbuttonLayout,tp->button_layout); n++;
-		XtSetArg(xargs[n],XmNusePreferredWidth,tp->child_use_pref_width); n++;
-		XtSetArg(xargs[n],XmNusePreferredHeight,tp->child_use_pref_height); n++;
-		
+
 		if (tp->radio_behavior)
 		{
 			XtSetArg(xargs[n],XmNbuttonType,XmBUTTON_TOGGLE); n++;
@@ -2180,34 +2110,6 @@ ApplyButtonLayout(Widget w,Widget child,XtPointer client_data)
 		XtSetArg(xargs[n],XmNbuttonLayout,tp->button_layout); n++;
 
 		XtSetValues(child,xargs,n);
-	}
-}
-/*----------------------------------------------------------------------*/
-static void
-ApplyChildUsePrefWidth(Widget w,Widget child,XtPointer client_data)
-{
-    XfeToolBarPart *	tp = _XfeToolBarPart((Widget) client_data);
-	Arg					xargs[1];
-
-	XtSetArg(xargs[0],XmNusePreferredWidth,tp->child_use_pref_width);
-
-	if (XfeIsPrimitive(child))
-	{
-		XtSetValues(child,xargs,1);
-	}
-}
-/*----------------------------------------------------------------------*/
-static void
-ApplyChildUsePrefHeight(Widget w,Widget child,XtPointer client_data)
-{
-    XfeToolBarPart *	tp = _XfeToolBarPart((Widget) client_data);
-	Arg					xargs[1];
-
-	XtSetArg(xargs[0],XmNusePreferredHeight,tp->child_use_pref_height);
-
-	if (XfeIsPrimitive(child))
-	{
-		XtSetValues(child,xargs,1);
 	}
 }
 /*----------------------------------------------------------------------*/

@@ -111,8 +111,6 @@ XFE_RDFChromeTreeView::createControlToolbar()
 								XmNorientation,				XmHORIZONTAL,
 								XmNusePreferredWidth,		True,
 								XmNusePreferredHeight,		True,
-								XmNchildUsePreferredWidth,	True,
-								XmNchildUsePreferredHeight,	False,
 								NULL);
 
 	// Add Bookmark
