@@ -1389,3 +1389,8 @@ NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& a
 	EndDraw();
 	return result;
 }
+
+NS_IMETHODIMP nsRenderingContextMac::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
+{
+  return NS_OK;
+}
