@@ -1,10 +1,8 @@
 #!dest messenger:skin
-AccountManager.css
 addtoab.gif
 attach.gif
 check.gif
 dot.gif
-fieldMapImport.css
 file-disabled.gif
 file-hover-active.gif
 file-hover.gif
@@ -49,7 +47,6 @@ folder-trash-open.gif
 folder-trash-share-open.gif
 folder-trash-share.gif
 folder-trash.gif
-folderPane.css
 forward-disabled.gif
 forward-hover-active.gif
 forward-hover.gif
@@ -63,16 +60,13 @@ inbox.gif
 less.gif
 local-mailhost.gif
 mailfolder.gif
-mailheader.css
 message-mail-attach.gif
 message-mail-imapdelete.gif
 message-mail-new.gif
 message-mail.gif
 message-news-new.gif
 message-news.gif
-messenger.css
 more.gif
-msgHdrViewOverlay.css
 newmsg-disabled.gif
 newmsg-hover-active.gif
 newmsg-hover.gif
@@ -84,7 +78,6 @@ next-hover.gif
 next.gif
 open-mailfolder.gif
 outbox.gif
-pref-mailnews.css
 readcol.gif
 readmail.gif
 reply-disabled.gif
@@ -106,8 +99,6 @@ server-remote-lock.gif
 server-remote.gif
 sick.gif
 smile.gif
-subscribe.css
-threadPane.css
 threadcol.gif
 trash.gif
 trash-disabled.gif
@@ -118,5 +109,4 @@ unthreadcol.gif
 winclassic.gif
 wink.gif
 winwide.gif
-wizard.css
-importDialog.css
+abcard.gif

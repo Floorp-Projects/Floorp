@@ -22,7 +22,7 @@
 DEPTH		= ..\..\..
 THEME_ROOT_DEPTH = ..
 
-DIRS= addressbook messengercompose
+DIRS= addressbook messengercompose win
 
 include <$(DEPTH)\config\rules.mak>
 include <$(THEME_ROOT_DEPTH)\theme.mk>
@@ -31,12 +31,10 @@ clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\messenger\skin\*.*
 
 install:: 
-	$(MAKE_INSTALL) AccountManager.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) addtoab.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) attach.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) check.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) dot.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) fieldMapImport.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) file-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) file-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) file-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
@@ -81,7 +79,6 @@ install::
 	$(MAKE_INSTALL) folder-trash-share-open.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) folder-trash-share.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) folder-trash.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) folderPane.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) forward-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) forward-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) forward-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
@@ -95,16 +92,13 @@ install::
 	$(MAKE_INSTALL) less.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) local-mailhost.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) mailfolder.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) mailheader.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) message-mail-attach.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) message-mail-imapdelete.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) message-mail-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) message-mail.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) message-news-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) message-news.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) messenger.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) more.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) msgHdrViewOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) newmsg-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) newmsg-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) newmsg-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
@@ -116,7 +110,6 @@ install::
 	$(MAKE_INSTALL) next.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) open-mailfolder.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) outbox.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) pref-mailnews.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) readcol.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) readmail.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) reply-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
@@ -138,8 +131,6 @@ install::
 	$(MAKE_INSTALL) server-remote.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) sick.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) smile.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) subscribe.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) threadPane.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) threadcol.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) trash.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) trash-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
@@ -150,5 +141,4 @@ install::
 	$(MAKE_INSTALL) winclassic.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) wink.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) winwide.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) wizard.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) importDialog.css $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) abcard.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
