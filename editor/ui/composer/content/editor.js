@@ -987,7 +987,6 @@ function GetBackgroundElementWithColor()
   {
     var prefs = GetPrefs();
     var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
-    var element;
     if (IsCSSPrefChecked && editorShell.editorType == "html")
     {
       var selection = window.editorShell.editorSelection;
