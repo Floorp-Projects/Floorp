@@ -3160,7 +3160,7 @@ if (GetFieldDef("products", "product")) {
     $dbh->do("ALTER TABLE components ADD INDEX (name)");
 }
 
-# 2002-08-XX - bbaetz@student.usyd.edu.au - bug 153578
+# 2002-08-14 - bbaetz@student.usyd.edu.au - bug 153578
 # attachments creation time needs to be a datetime, not a timestamp
 my $fielddef;
 if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
