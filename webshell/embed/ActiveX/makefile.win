@@ -133,7 +133,7 @@ install:: $(DLL)
 	regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
 
 $(DEFFILE) : mkctldef.bat
-	mkctldef.bat > $(DEFFILE)
+	mkctldef.bat $(DEFFILE)
 
 MozillaControl_i.c MozillaControl.h: MozillaControl.idl
 	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
