@@ -61,7 +61,6 @@ inBitmapURI::GetBitmapName(PRUnichar** aBitmapName)
 nsresult
 inBitmapURI::FormatSpec(char* *result)
 {
-  nsresult rv = NS_OK;
   nsCString spec(NS_BITMAP_SCHEME);
 
   spec += "//";

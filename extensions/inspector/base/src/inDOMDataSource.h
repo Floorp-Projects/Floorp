@@ -102,7 +102,6 @@ public:
 
 
 protected:
-
   nsCOMPtr<nsIRDFResource> kINS_DOMRoot;
   nsCOMPtr<nsIRDFResource> kINS_Child;
   nsCOMPtr<nsIRDFResource> kINS_Attribute;

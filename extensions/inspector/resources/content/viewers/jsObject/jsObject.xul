@@ -14,7 +14,6 @@
 
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/jsObject/jsObject.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/ClipboardUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
   

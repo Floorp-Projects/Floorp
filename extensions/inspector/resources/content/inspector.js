@@ -459,7 +459,7 @@ InspectorApp.prototype =
     var js, fn, item;
     for (var i = 0; i < items.length; i++) {
       item = items[i];
-      fn = item.isDisabled;
+      fn = "isDisabled" in item ? item.isDisabled : null;
       if (!fn) {
         js = item.getAttribute("isDisabled");
         if (js) {

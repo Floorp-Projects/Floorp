@@ -32,7 +32,7 @@ public:
   NS_DECL_INIBITMAP
 
   inBitmap();
-  ~inBitmap();
+  virtual ~inBitmap();
 
 protected:
   PRUint32 mWidth;

@@ -30,17 +30,16 @@ class inSearchLoop
 {
 public:
   inSearchLoop(inISearchProcess* aSearchProcess);
-  ~inSearchLoop();
+  virtual ~inSearchLoop();
 
-protected:
-  nsCOMPtr<nsITimer> mTimer;
-  nsCOMPtr<inISearchProcess> mSearchProcess;
-  
-public:
   nsresult Start();
   nsresult Step();
   nsresult Stop();
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
+
+protected:
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<inISearchProcess> mSearchProcess;
 };
 
 #endif
