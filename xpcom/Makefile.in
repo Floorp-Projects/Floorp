@@ -21,7 +21,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= public src idl libxpt
+DIRS	= public src idl
 
 ifdef ENABLE_TESTS
 DIRS += tests
