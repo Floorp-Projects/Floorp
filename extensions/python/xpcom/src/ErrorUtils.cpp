@@ -139,7 +139,7 @@ nsresult PyXPCOM_SetCOMErrorFromPyException()
 
 char *PyTraceback_AsString(PyObject *exc_tb)
 {
-	char *errMsg = NULL; /* a static that hold a local error message */
+	char *errMsg = NULL; /* holds a local error message */
 	char *result = NULL; /* a valid, allocated result. */
 	PyObject *modStringIO = NULL;
 	PyObject *modTB = NULL;
@@ -197,7 +197,7 @@ char *PyTraceback_AsString(PyObject *exc_tb)
 	char *tempResult = PyString_AsString(obResult);
 	result = (char *)PyMem_Malloc(strlen(tempResult)+1);
 	if (result==NULL)
-		TRACEBACK_FETCH_ERROR("memory error duplicating the traceback string");
+		TRACEBACK_FETCH_ERROR("memory error duplicating the traceback string\n");
 
 	strcpy(result, tempResult);
 	} // end of temp scope.
