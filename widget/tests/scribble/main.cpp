@@ -27,13 +27,24 @@ int WINAPI WinMain(HINSTANCE hInstance,
                      LPSTR lpszCmdLine, 
                      int nCmdShow) 
 {
-    return(CreateApplication());
+  int     argC = 0;
+  char ** argv = NULL;
+  return(CreateApplication(&argc, argv));
 }
 
 void main(int argc, char **argv)
 {
-    WinMain(GetModuleHandle(NULL), NULL, 0, SW_SHOW);
+  WinMain(GetModuleHandle(NULL), NULL, 0, SW_SHOW);
 }
 
+#endif
+
+#ifdef XP_UNIX
+void main(int argc, char **argv)
+{
+  int argC = argc;
+  return(CreateApplication(&argC, argv));
+
+}
 #endif
 

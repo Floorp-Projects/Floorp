@@ -40,6 +40,19 @@
 
 ScribbleApp scribbleData;
 
+#ifdef XP_PC
+#define WIDGET_DLL "raptorwidget.dll"
+#define GFX_DLL "raptorgfxwin.dll"
+#define TEXT_HEIGHT 25
+#endif
+
+#ifdef XP_UNIX
+#define WIDGET_DLL "libwidgetunix.so"
+#define GFX_DLL "libgfxunix.so"
+#define TEXT_HEIGHT 30
+#endif
+
+
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -56,7 +69,7 @@ static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
 { 
     
-    printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
+    //printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
 
     nsEventStatus result = nsEventStatus_eConsumeNoDefault;
     switch(aEvent->message) {
@@ -114,7 +127,7 @@ nsEventStatus PR_CALLBACK HandleEventMain(nsGUIEvent *aEvent)
 //
 nsEventStatus PR_CALLBACK HandleEventControlPane(nsGUIEvent *aEvent)
 {
-    printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
+    //printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
 
     nsEventStatus result = nsEventStatus_eConsumeNoDefault;
     switch(aEvent->message) {
@@ -139,17 +152,21 @@ nsEventStatus PR_CALLBACK HandleEventControlPane(nsGUIEvent *aEvent)
                          12);
             drawCtx->SetFont(font);
 
+            int y = 351;
             nsString red("Red");
             drawCtx->SetColor(NS_RGB(255, 0, 0));
-            drawCtx->DrawString(red, 50, 351, 50);
+            drawCtx->DrawString(red, 50, y, 200);
+            y += TEXT_HEIGHT+2;
 
             nsString green("Green");
             drawCtx->SetColor(NS_RGB(0, 255, 0));
-            drawCtx->DrawString(green, 50, 372, 50);
+            drawCtx->DrawString(green, 50, y, 100);
+            y += TEXT_HEIGHT+2;
 
             nsString blue("Blue");
             drawCtx->SetColor(NS_RGB(0, 0, 255));
-            drawCtx->DrawString(blue, 50, 393, 50);
+            drawCtx->DrawString(blue, 50, y, 100);
+            y += TEXT_HEIGHT+2;
 
             return nsEventStatus_eConsumeNoDefault;
         }
@@ -164,7 +181,7 @@ nsEventStatus PR_CALLBACK HandleEventControlPane(nsGUIEvent *aEvent)
 //
 nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
 {
-    printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
+    //printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
 
     nsEventStatus result = nsEventStatus_eConsumeNoDefault;
     switch(aEvent->message) {
@@ -219,7 +236,7 @@ nsEventStatus PR_CALLBACK HandleEventGraphicPane(nsGUIEvent *aEvent)
 //
 nsEventStatus PR_CALLBACK HandleEventButton(nsGUIEvent *aEvent)
 {
-    printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
+    //printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
 
     switch(aEvent->message) {
         case NS_MOUSE_LEFT_BUTTON_UP:
@@ -234,7 +251,7 @@ nsEventStatus PR_CALLBACK HandleEventButton(nsGUIEvent *aEvent)
 //
 nsEventStatus PR_CALLBACK HandleEventRadioButton(nsGUIEvent *aEvent)
 {
-    printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
+    //printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
 
     switch(aEvent->message) {
         case NS_MOUSE_LEFT_BUTTON_UP: {
@@ -261,8 +278,8 @@ nsEventStatus PR_CALLBACK HandleEventRadioButton(nsGUIEvent *aEvent)
 //
 nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
 {
-    printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
-    printf("aEvent->message %d == %d on 0x%X\n", aEvent->message, NS_MOUSE_LEFT_BUTTON_UP, aEvent->widget);
+    //printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
+    //printf("aEvent->message %d == %d on 0x%X\n", aEvent->message, NS_MOUSE_LEFT_BUTTON_UP, aEvent->widget);
 
     switch(aEvent->message) {
         case NS_MOUSE_LEFT_BUTTON_UP: 
@@ -330,7 +347,8 @@ nsEventStatus PR_CALLBACK HandleEventCheck(nsGUIEvent *aEvent)
 //
 nsEventStatus PR_CALLBACK HandleEventText(nsGUIEvent *aEvent)
 {
-    printf("aEvent->message %d on 0x%X\n", aEvent->message, aEvent->widget);
+    //if (aEvent->message != 300)
+      //printf("HandleEventText message %d on 0x%X\n", aEvent->message, aEvent->widget);
 
     switch(aEvent->message) {
         case NS_LOSTFOCUS: 
@@ -371,13 +389,11 @@ nsEventStatus PR_CALLBACK HandleEventText(nsGUIEvent *aEvent)
     return nsEventStatus_eIgnore;
 }
 
-#define WIDGET_DLL "raptorwidget.dll"
-#define GFXWIN_DLL "raptorgfxwin.dll"
 
 //
 // Main application entry function
 //
-nsresult CreateApplication()
+nsresult CreateApplication(int * argc, char ** argv)
 {
     scribbleData.isDrawing = PR_FALSE;
 
@@ -387,10 +403,10 @@ nsresult CreateApplication()
     static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID);
     static NS_DEFINE_IID(kCImageIID, NS_IMAGE_CID);
 
-    NSRepository::RegisterFactory(kCRenderingContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCDeviceContextIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCFontMetricsIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
-    NSRepository::RegisterFactory(kCImageIID, GFXWIN_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCRenderingContextIID, GFX_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE);
 
     // register widget classes
     static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
@@ -406,7 +422,7 @@ nsresult CreateApplication()
     static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
     static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 
-    NSRepository::RegisterFactory(kCAppShellCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -436,16 +452,26 @@ nsresult CreateApplication()
      // Create an application shell
     nsIAppShell *appShell;
     NSRepository::CreateInstance(kCAppShellCID, nsnull, kIAppShellIID, (void**)&appShell);
-    int     argc;
-    char ** argv = nsnull;
-    appShell->Create(&argc, argv);
+    appShell->Create(argc, argv);
    
     //
     // create the main window
     //
     NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void **)&(scribbleData.mainWindow));
-    nsRect rect(100, 100, 600, 600);
+    //nsRect rect(100, 100, 600, 600);
+    //scribbleData.mainWindow->Create((nsIWidget*)NULL, rect, HandleEventMain, NULL);
+#ifdef XP_PC
+    nsRect rect(100, 100, 600, 700);
     scribbleData.mainWindow->Create((nsIWidget*)NULL, rect, HandleEventMain, NULL);
+#endif
+#ifdef XP_UNIX
+    nsRect rect(100, 100, 400, 580);
+    scribbleData.mainWindow->Create((nsNativeWidget)NULL, rect, HandleEventMain,
+                   (nsIDeviceContext *)nsnull,
+                   (nsIToolkit *)nsnull,
+                   (nsWidgetInitData*)appShell->GetNativeData(NS_NATIVE_SHELL));
+#endif
+    scribbleData.mainWindow->SetBackgroundColor(NS_RGB(255, 255, 255));
 
     //
     // create the control pane
@@ -454,6 +480,7 @@ nsresult CreateApplication()
     rect.SetRect(0, 0, 200, 580);  
     NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void **)&controlPane);
     controlPane->Create(scribbleData.mainWindow, rect, HandleEventControlPane, NULL);
+    controlPane->SetBackgroundColor(NS_RGB(255, 255, 255));
 
     //
     // Add the scribble/lines section
@@ -511,8 +538,9 @@ nsresult CreateApplication()
     // Add the color section
     //
 
+    int y = 350;
     // create the "red" text widget
-    rect.SetRect(100, 350, 50, 22);  
+    rect.SetRect(100, y, 50, TEXT_HEIGHT);  
 
     NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void **)&(scribbleData.red));
     scribbleData.red->Create(controlPane, rect, HandleEventText, NULL);
@@ -520,24 +548,27 @@ nsresult CreateApplication()
     scribbleData.red->SetText(initText);
     scribbleData.red->SetBackgroundColor(NS_RGB(0, 0, 255));
     scribbleData.red->Show(PR_TRUE);
+    y += rect.height +2;
 
     // create the "green" text widget
-    rect.SetRect(100, 371, 50, 22);  
+    rect.SetRect(100, y, 50, TEXT_HEIGHT);  
 
     NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void **)&(scribbleData.green));
     scribbleData.green->Create(controlPane, rect, HandleEventText, NULL);
     scribbleData.green->SetText(initText);
     scribbleData.green->SetBackgroundColor(NS_RGB(255, 0, 0));
     scribbleData.green->Show(PR_TRUE);
+    y += rect.height +2;
 
     // create the "blue" text widget
-    rect.SetRect(100, 392, 50, 22);  
+    rect.SetRect(100, y, 50, TEXT_HEIGHT);  
 
     NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void **)&(scribbleData.blue));
     scribbleData.blue->Create(controlPane, rect, HandleEventText, NULL);
     scribbleData.blue->SetText(initText);
     scribbleData.blue->SetBackgroundColor(NS_RGB(0, 255, 0));
     scribbleData.blue->Show(PR_TRUE);
+    y += rect.height +2;
 
     //
     // create a button  
@@ -559,6 +590,7 @@ nsresult CreateApplication()
     rect.SetRect(200, 0, 400, 580);  
     NSRepository::CreateInstance(kCChildCID, nsnull, kIWidgetIID, (void **)&scribbleData.drawPane);
     scribbleData.drawPane->Create(scribbleData.mainWindow, rect, HandleEventGraphicPane, NULL);
+    scribbleData.drawPane->SetBackgroundColor(NS_RGB(255, 255, 255));
 
     //
     // show. We are in business...
