@@ -21,6 +21,7 @@
 #include "nsIAtom.h"
 #include "nsIURL.h"
 #include "nsISupportsArray.h"
+#include "nsHashtable.h"
 #include "nsICSSStyleRule.h"
 #include "nsIHTMLContent.h"
 #include "nsIDocument.h"
@@ -32,6 +33,7 @@
 #include "nsIPtr.h"
 
 //#define DEBUG_REFS
+//#define DEBUG_RULES
 
 static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -46,6 +48,190 @@ NS_DEF_PTR(nsIURL);
 NS_DEF_PTR(nsISupportsArray);
 NS_DEF_PTR(nsICSSStyleSheet);
 
+// ----------------------
+// Rule hash key
+//
+class RuleKey: public nsHashKey {
+public:
+  RuleKey(nsIAtom* aAtom);
+  RuleKey(const RuleKey& aKey);
+  virtual ~RuleKey(void);
+  virtual PRUint32 HashValue(void) const;
+  virtual PRBool Equals(const nsHashKey *aKey) const;
+  virtual nsHashKey *Clone(void) const;
+  nsIAtom*  mAtom;
+};
+
+RuleKey::RuleKey(nsIAtom* aAtom)
+{
+  mAtom = aAtom;
+  NS_ADDREF(mAtom);
+}
+
+RuleKey::RuleKey(const RuleKey& aKey)
+{
+  mAtom = aKey.mAtom;
+  NS_ADDREF(mAtom);
+}
+
+RuleKey::~RuleKey(void)
+{
+  NS_RELEASE(mAtom);
+}
+
+PRUint32 RuleKey::HashValue(void) const
+{
+  return (PRUint32)mAtom;
+}
+
+PRBool RuleKey::Equals(const nsHashKey* aKey) const
+{
+  return PRBool (((RuleKey*)aKey)->mAtom == mAtom);
+}
+
+nsHashKey* RuleKey::Clone(void) const
+{
+  return new RuleKey(*this);
+}
+
+struct RuleValue {
+  RuleValue(nsICSSStyleRule* aRule, PRInt32 aIndex)
+  {
+    mRule = aRule;
+    mIndex = aIndex;
+    mNext = nsnull;
+  }
+  ~RuleValue(void)
+  {
+    if (nsnull != mNext) {
+      delete mNext;
+    }
+  }
+
+  nsICSSStyleRule*  mRule;
+  PRInt32           mIndex;
+  RuleValue*        mNext;
+};
+
+// ------------------------------
+// Rule hash table
+//
+
+// Enumerator callback function.
+typedef void (*RuleEnumFunc)(nsICSSStyleRule* aRule, void *aData);
+
+class RuleHash {
+public:
+  RuleHash(void);
+  ~RuleHash(void);
+  void AppendRule(nsICSSStyleRule* aRule);
+  void EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, nsIAtom* aClass, 
+                         RuleEnumFunc aFunc, void* aData);
+  void EnumerateTagRules(nsIAtom* aTag,
+                         RuleEnumFunc aFunc, void* aData);
+protected:
+  void AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule);
+
+  PRInt32     mRuleCount;
+  nsHashtable mTagTable;
+  nsHashtable mIdTable;
+  nsHashtable mClassTable;
+};
+
+RuleHash::RuleHash(void)
+  : mRuleCount(0),
+    mTagTable(), mIdTable(), mClassTable()
+{
+}
+
+static PRBool DeleteValue(nsHashKey* aKey, void* aValue)
+{
+  delete ((RuleValue*)aValue);
+  return PR_TRUE;
+}
+
+RuleHash::~RuleHash(void)
+{
+  mTagTable.Enumerate(DeleteValue);
+  mIdTable.Enumerate(DeleteValue);
+  mClassTable.Enumerate(DeleteValue);
+}
+
+void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule)
+{
+  RuleKey key(aAtom);
+  RuleValue*  value = (RuleValue*)aTable.Get(&key);
+
+  if (nsnull == value) {
+    value = new RuleValue(aRule, mRuleCount++);
+    aTable.Put(&key, value);
+  }
+  else {
+    while (nsnull != value->mNext) {
+      value = value->mNext;
+    }
+    value->mNext = new RuleValue(aRule, mRuleCount++);
+  }
+}
+
+void RuleHash::AppendRule(nsICSSStyleRule* aRule)
+{
+  nsCSSSelector*  selector = aRule->FirstSelector();
+  if (nsnull != selector->mID) {
+    AppendRuleToTable(mIdTable, selector->mID, aRule);
+  }
+  else if (nsnull != selector->mClass) {
+    AppendRuleToTable(mClassTable, selector->mClass, aRule);
+  }
+  else if (nsnull != selector->mTag) {
+    AppendRuleToTable(mTagTable, selector->mTag, aRule);
+  }
+}
+
+void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, nsIAtom* aClass, 
+                                 RuleEnumFunc aFunc, void* aData)
+{
+  RuleValue*  tagValue = ((nsnull != aTag) ? (RuleValue*)mTagTable.Get(&RuleKey(aTag)) : nsnull);
+  RuleValue*  idValue = ((nsnull != aID) ? (RuleValue*)mIdTable.Get(&RuleKey(aID)) : nsnull);
+  RuleValue*  classValue = ((nsnull != aClass) ? (RuleValue*)mClassTable.Get(&RuleKey(aClass)) : nsnull);
+
+  PRInt32 tagIndex    = ((nsnull != tagValue)   ? tagValue->mIndex    : mRuleCount);
+  PRInt32 idIndex     = ((nsnull != idValue)    ? idValue->mIndex     : mRuleCount);
+  PRInt32 classIndex  = ((nsnull != classValue) ? classValue->mIndex  : mRuleCount);
+
+  while ((nsnull != tagValue) || (nsnull != idValue) || (nsnull != classValue)) {
+    if ((tagIndex < idIndex) && (tagIndex < classIndex)) {
+      (*aFunc)(tagValue->mRule, aData);
+      tagValue = tagValue->mNext;
+      tagIndex = ((nsnull != tagValue) ? tagValue->mIndex : mRuleCount);
+    }
+    else if (idIndex < classIndex) {
+      (*aFunc)(idValue->mRule, aData);
+      idValue = idValue->mNext;
+      idIndex = ((nsnull != idValue) ? idValue->mIndex : mRuleCount);
+    }
+    else {
+      (*aFunc)(classValue->mRule, aData);
+      classValue = classValue->mNext;
+      classIndex = ((nsnull != classValue) ? classValue->mIndex : mRuleCount);
+    }
+  }
+}
+
+void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
+{
+  RuleValue*  value = (RuleValue*)mTagTable.Get(&RuleKey(aTag));
+
+  while (nsnull != value) {
+    (*aFunc)(value->mRule, aData);
+    value = value->mNext;
+  }
+}
+
+
+// -------------------------------
+// CSS Style Sheet
+//
 class CSSStyleSheetImpl : public nsICSSStyleSheet {
 public:
   void* operator new(size_t size);
@@ -58,9 +244,6 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
-  virtual PRBool SelectorMatches(nsIPresContext* aPresContext,
-                                 nsCSSSelector* aSelector, 
-                                 nsIContent* aContent);
   virtual PRInt32 RulesMatching(nsIPresContext* aPresContext,
                                 nsIContent* aContent,
                                 nsIFrame* aParentFrame,
@@ -93,6 +276,9 @@ private:
 protected:
   virtual ~CSSStyleSheetImpl();
 
+  void ClearHash(void);
+  void BuildHash(void);
+
 protected:
   PRUint32 mInHeap : 1;
   PRUint32 mRefCnt : 31;
@@ -101,6 +287,7 @@ protected:
   nsICSSStyleSheetPtr   mFirstChild;
   nsISupportsArrayPtr   mRules;
   nsICSSStyleSheetPtr   mNext;
+  RuleHash*             mRuleHash;
 };
 
 
@@ -144,7 +331,8 @@ static PRInt32 gInstanceCount;
 
 CSSStyleSheetImpl::CSSStyleSheetImpl(nsIURL* aURL)
   : nsICSSStyleSheet(),
-    mURL(nsnull), mFirstChild(nsnull), mRules(nsnull), mNext(nsnull)
+    mURL(nsnull), mFirstChild(nsnull), mRules(nsnull), mNext(nsnull),
+    mRuleHash(nsnull)
 {
   NS_INIT_REFCNT();
   mURL.SetAddRef(aURL);
@@ -160,6 +348,7 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
   --gInstanceCount;
   fprintf(stdout, "%d - CSSStyleSheet\n", gInstanceCount);
 #endif
+  ClearHash();
 }
 
 NS_IMPL_ADDREF(CSSStyleSheetImpl)
@@ -191,8 +380,8 @@ nsresult CSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-PRBool CSSStyleSheetImpl::SelectorMatches(nsIPresContext* aPresContext,
-                                          nsCSSSelector* aSelector, nsIContent* aContent)
+static PRBool SelectorMatches(nsIPresContext* aPresContext,
+                              nsCSSSelector* aSelector, nsIContent* aContent)
 {
   PRBool  result = PR_FALSE;
   nsIAtom*  contentTag = aContent->GetTag();
@@ -200,10 +389,12 @@ PRBool CSSStyleSheetImpl::SelectorMatches(nsIPresContext* aPresContext,
   if ((nsnull == aSelector->mTag) || (aSelector->mTag == contentTag)) {
     if ((nsnull != aSelector->mClass) || (nsnull != aSelector->mID) || 
         (nsnull != aSelector->mPseudoClass)) {
-      nsIHTMLContentPtr htmlContent;
-      if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, htmlContent.Query())) {
-        if ((nsnull == aSelector->mClass) || (aSelector->mClass == htmlContent->GetClass())) {
-          if ((nsnull == aSelector->mID) || (aSelector->mID == htmlContent->GetID())) {
+      nsIHTMLContent* htmlContent;
+      if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+        nsIAtom* contentClass = htmlContent->GetClass();
+        nsIAtom* contentID = htmlContent->GetID();
+        if ((nsnull == aSelector->mClass) || (aSelector->mClass == contentClass)) {
+          if ((nsnull == aSelector->mID) || (aSelector->mID == contentID)) {
             if ((contentTag == nsHTMLAtoms::a) && (nsnull != aSelector->mPseudoClass)) {
               // test link state
               nsILinkHandler* linkHandler;
@@ -251,14 +442,76 @@ PRBool CSSStyleSheetImpl::SelectorMatches(nsIPresContext* aPresContext,
             }
           }
         }
+        NS_RELEASE(htmlContent);
+        NS_IF_RELEASE(contentClass);
+        NS_IF_RELEASE(contentID);
       }
     }
     else {
       result = PR_TRUE;
     }
   }
+  NS_IF_RELEASE(contentTag);
   return result;
 }
+
+struct ContentEnumData {
+  ContentEnumData(nsIPresContext* aPresContext, nsIContent* aContent, 
+                  nsIFrame* aParentFrame, nsISupportsArray* aResults)
+  {
+    mPresContext = aPresContext;
+    mContent = aContent;
+    mParentFrame = aParentFrame;
+    mResults = aResults;
+    mCount = 0;
+  }
+
+  nsIPresContext*   mPresContext;
+  nsIContent*       mContent;
+  nsIFrame*         mParentFrame;
+  nsISupportsArray* mResults;
+  PRInt32           mCount;
+};
+
+void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
+{
+  ContentEnumData* data = (ContentEnumData*)aData;
+
+  nsCSSSelector* selector = aRule->FirstSelector();
+  if (SelectorMatches(data->mPresContext, selector, data->mContent)) {
+    selector = selector->mNext;
+    nsIFrame* frame = data->mParentFrame;
+    nsIContent* lastContent = nsnull;
+    while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
+      nsIContent* content;
+      frame->GetContent(content);
+      if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
+          SelectorMatches(data->mPresContext, selector, content)) {
+        selector = selector->mNext;
+      }
+      frame->GetGeometricParent(frame);
+      NS_IF_RELEASE(lastContent);
+      lastContent = content;
+    }
+    NS_IF_RELEASE(lastContent);
+    if (nsnull == selector) { // ran out, it matched
+      nsIStyleRule* iRule;
+      if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
+        data->mResults->AppendElement(iRule);
+        data->mCount++;
+        NS_RELEASE(iRule);
+      }
+    }
+  }
+}
+
+#ifdef DEBUG_RULES
+static PRBool ContentEnumWrap(nsISupports* aRule, void* aData)
+{
+  ContentEnumFunc((nsICSSStyleRule*)aRule, aData);
+  return PR_TRUE;
+}
+#endif
 
 PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                          nsIContent* aContent,
@@ -271,9 +524,9 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
-  nsIContentPtr parentContent;
+  nsIContent* parentContent = nsnull;
   if (nsnull != aParentFrame) {
-    aParentFrame->GetContent(parentContent.AssignRef());
+    aParentFrame->GetContent(parentContent);
   }
 
   if (aContent != parentContent) {  // if not a pseudo frame...
@@ -283,38 +536,106 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       child = ((CSSStyleSheetImpl*)child)->mNext;
     }
 
-    PRInt32 count = (mRules.IsNotNull() ? mRules->Count() : 0);
+    if (mRules.IsNotNull()) {
+      if (nsnull == mRuleHash) {
+        BuildHash();
+      }
+      ContentEnumData data(aPresContext, aContent, aParentFrame, aResults);
+      nsIAtom* tagAtom = aContent->GetTag();
+      nsIAtom* idAtom = nsnull;
+      nsIAtom* classAtom = nsnull;
 
-    for (PRInt32 index = 0; index < count; index++) {
-      nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+      nsIHTMLContent* htmlContent;
+      if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+        idAtom = htmlContent->GetID();
+        classAtom = htmlContent->GetClass();
+        NS_RELEASE(htmlContent);
+      }
 
-      nsCSSSelector* selector = rule->FirstSelector();
-      if (SelectorMatches(aPresContext, selector, aContent)) {
+      mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
+      matchCount += data.mCount;
+
+#ifdef DEBUG_RULES
+      nsISupportsArray* list1;
+      nsISupportsArray* list2;
+      NS_NewISupportsArray(&list1);
+      NS_NewISupportsArray(&list2);
+
+      data.mResults = list1;
+      mRuleHash->EnumerateAllRules(tagAtom, idAtom, classAtom, ContentEnumFunc, &data);
+      data.mResults = list2;
+      mRules->EnumerateForwards(ContentEnumWrap, &data);
+      NS_ASSERTION(list1->Equals(list2), "lists not equal");
+      NS_RELEASE(list1);
+      NS_RELEASE(list2);
+#endif
+
+      NS_IF_RELEASE(tagAtom);
+      NS_IF_RELEASE(idAtom);
+      NS_IF_RELEASE(classAtom);
+    }
+  }
+  NS_IF_RELEASE(parentContent);
+  return matchCount;
+}
+
+struct PseudoEnumData {
+  PseudoEnumData(nsIPresContext* aPresContext, nsIAtom* aPseudoTag, 
+                 nsIFrame* aParentFrame, nsISupportsArray* aResults)
+  {
+    mPresContext = aPresContext;
+    mPseudoTag = aPseudoTag;
+    mParentFrame = aParentFrame;
+    mResults = aResults;
+    mCount = 0;
+  }
+
+  nsIPresContext*   mPresContext;
+  nsIAtom*          mPseudoTag;
+  nsIFrame*         mParentFrame;
+  nsISupportsArray* mResults;
+  PRInt32           mCount;
+};
+
+void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
+{
+  PseudoEnumData* data = (PseudoEnumData*)aData;
+
+  nsCSSSelector* selector = aRule->FirstSelector();
+  if (selector->mTag == data->mPseudoTag) {
+    selector = selector->mNext;
+    nsIFrame* frame = data->mParentFrame;
+    nsIContent* lastContent = nsnull;
+    while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
+      nsIContent* content;
+      frame->GetContent(content);
+      if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
+          SelectorMatches(data->mPresContext, selector, content)) {
         selector = selector->mNext;
-        nsIFrame* frame = aParentFrame;
-        nsIContentPtr lastContent;
-        while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
-          nsIContentPtr content;
-          frame->GetContent(content.AssignRef());
-          if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
-              SelectorMatches(aPresContext, selector, content)) {
-            selector = selector->mNext;
-          }
-          frame->GetGeometricParent(frame);
-          lastContent = content;
-        }
-        if (nsnull == selector) { // ran out, it matched
-          nsIStyleRulePtr iRule;
-          if (NS_OK == rule->QueryInterface(kIStyleRuleIID, iRule.Query())) {
-            aResults->AppendElement(iRule);
-            matchCount++;
-          }
-        }
+      }
+      frame->GetGeometricParent(frame);
+      NS_IF_RELEASE(lastContent);
+      lastContent = content;
+    }
+    NS_IF_RELEASE(lastContent);
+    if (nsnull == selector) { // ran out, it matched
+      nsIStyleRule* iRule;
+      if (NS_OK == aRule->QueryInterface(kIStyleRuleIID, (void**)&iRule)) {
+        data->mResults->AppendElement(iRule);
+        data->mCount++;
+        NS_RELEASE(iRule);
       }
     }
   }
-  return matchCount;
 }
+
+#ifdef DEBUG_RULES
+static PRBool PseudoEnumWrap(nsISupports* aRule, void* aData)
+{
+  PseudoEnumFunc((nsICSSStyleRule*)aRule, aData);
+  return PR_TRUE;
+}
+#endif
 
 PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                          nsIAtom* aPseudoTag,
@@ -333,34 +654,27 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     child = ((CSSStyleSheetImpl*)child)->mNext;
   }
 
-  PRInt32 count = (mRules.IsNotNull() ? mRules->Count() : 0);
-
-  for (PRInt32 index = 0; index < count; index++) {
-    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
-
-    nsCSSSelector* selector = rule->FirstSelector();
-    if (selector->mTag == aPseudoTag) {
-      selector = selector->mNext;
-      nsIFrame* frame = aParentFrame;
-      nsIContentPtr lastContent;
-      while ((nsnull != selector) && (nsnull != frame)) { // check compound selectors
-        nsIContentPtr content;
-        frame->GetContent(content.AssignRef());
-        if ((content != lastContent) && // skip pseudo frames (actually we're skipping pseudo's parent, but same result)
-            SelectorMatches(aPresContext, selector, content)) {
-          selector = selector->mNext;
-        }
-        frame->GetGeometricParent(frame);
-        lastContent = content;
-      }
-      if (nsnull == selector) { // ran out, it matched
-        nsIStyleRulePtr iRule;
-        if (NS_OK == rule->QueryInterface(kIStyleRuleIID, iRule.Query())) {
-          aResults->AppendElement(iRule);
-          matchCount++;
-        }
-      }
+  if (mRules.IsNotNull()) {
+    if (nsnull == mRuleHash) {
+      BuildHash();
     }
+    PseudoEnumData data(aPresContext, aPseudoTag, aParentFrame, aResults);
+    mRuleHash->EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
+    matchCount += data.mCount;
+
+#ifdef DEBUG_RULES
+    nsISupportsArray* list1;
+    nsISupportsArray* list2;
+    NS_NewISupportsArray(&list1);
+    NS_NewISupportsArray(&list2);
+    data.mResults = list1;
+    mRuleHash->EnumerateTagRules(aPseudoTag, PseudoEnumFunc, &data);
+    data.mResults = list2;
+    mRules->EnumerateForwards(PseudoEnumWrap, &data);
+    NS_ASSERTION(list1->Equals(list2), "lists not equal");
+    NS_RELEASE(list1);
+    NS_RELEASE(list2);
+#endif
   }
   return matchCount;
 }
@@ -403,6 +717,8 @@ void CSSStyleSheetImpl::AppendStyleSheet(nsICSSStyleSheet* aSheet)
 void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
+
+  ClearHash();
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();
   if (mRules.IsNull()) {
@@ -411,10 +727,12 @@ void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
   }
   PRInt32 index = mRules->Count();
   while (0 <= --index) {
-    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+    nsICSSStyleRule* rule = (nsICSSStyleRule*)mRules->ElementAt(index);
     if (rule->GetWeight() > weight) { // insert before rules with equal or lesser weight
+      NS_RELEASE(rule);
       break;
     }
+    NS_RELEASE(rule);
   }
   mRules->InsertElementAt(aRule, index + 1);
 }
@@ -423,6 +741,7 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
 
+  ClearHash();
   //XXX replace this with a binary search?
   PRInt32 weight = aRule->GetWeight();
   if (mRules.IsNull()) {
@@ -432,10 +751,12 @@ void CSSStyleSheetImpl::AppendStyleRule(nsICSSStyleRule* aRule)
   PRInt32 count = mRules->Count();
   PRInt32 index = -1;
   while (++index < count) {
-    nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
+    nsICSSStyleRule* rule = (nsICSSStyleRule*)mRules->ElementAt(index);
     if (rule->GetWeight() < weight) { // insert after rules with equal or greater weight (before lower weight)
+      NS_RELEASE(rule);
       break;
     }
+    NS_RELEASE(rule);
   }
   mRules->InsertElementAt(aRule, index);
 }
@@ -464,6 +785,32 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   for (index = 0; index < count; index++) {
     nsICSSStyleRulePtr rule = (nsICSSStyleRule*)mRules->ElementAt(index);
     rule->List(out, aIndent);
+  }
+}
+
+void CSSStyleSheetImpl::ClearHash(void)
+{
+  if (nsnull != mRuleHash) {
+    delete mRuleHash;
+    mRuleHash = nsnull;
+  }
+}
+
+PRBool BuildHashEnum(nsISupports* aRule, void* aHash)
+{
+  nsICSSStyleRule* rule = (nsICSSStyleRule*)aRule;
+  RuleHash* hash = (RuleHash*)aHash;
+  hash->AppendRule(rule);
+  return PR_TRUE;
+}
+
+void CSSStyleSheetImpl::BuildHash(void)
+{
+  NS_ASSERTION(nsnull == mRuleHash, "clear rule hash first");
+
+  mRuleHash = new RuleHash();
+  if ((nsnull != mRuleHash) && mRules.IsNotNull()) {
+    mRules->EnumerateForwards(BuildHashEnum, mRuleHash);
   }
 }
 
