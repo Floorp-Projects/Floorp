@@ -29,6 +29,12 @@ typedef struct DIMENSION
 	int height;
 }DIMENSION;
 
+typedef struct FIELDLEN
+{
+	int length;
+	int max_len;
+	int min_len;
+}FIELDLEN;
 typedef struct OPTIONS
 {
 	char* name[25];
@@ -46,6 +52,7 @@ typedef struct WIDGET
 	CString description;
 	POINT location;
 	DIMENSION size;
+	FIELDLEN fieldlen;
 	ACTIONSET action;
 	int numOfOptions;
 	OPTIONS options;

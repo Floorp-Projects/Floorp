@@ -844,7 +844,7 @@ void CWizardUI::CreateControls()
 													curWidget->size.height,
 													m_hWnd, 0, 0 );
 			//Set maximum number of characters allowed per line - limit set to 200
-			((CEdit*)curWidget->control)->SetLimitText(200);
+			((CEdit*)curWidget->control)->SetLimitText(int(curWidget->fieldlen.length));
 			((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
 		}
 		else if (widgetType == "Button") {

@@ -1147,8 +1147,6 @@ BOOL CWizardMachineApp::GoToNextNode()
 			if (!CurrentNode)
 				0; /* ??? */
 
-			if (!interpret(CurrentNode->navControls->onEnter, NULL))
-					return FALSE;
 
 			BOOL isAContainerNode;	
 			BOOL haveChildNodes = TRUE;
@@ -1192,6 +1190,10 @@ BOOL CWizardMachineApp::GoToNextNode()
 		fprintf(out, "------------** TERMINATED - Can't go past the last page **----------------\n");
 		exit(10);
 	}
+
+	if (!interpret(CurrentNode->navControls->onEnter, NULL))
+		return FALSE;
+
 	return TRUE;
 }
 
@@ -1601,13 +1603,26 @@ void CWizardMachineApp::BuildWidget(WIDGET* aWidget, CString iniSection, CString
 
 	GetPrivateProfileString(iniSection, "Start_y", "", buffer, MAX_SIZE, iniFile);
 	aWidget->location.y = atoi(buffer);
-			
+
 	//aWidget->size = new DIMENSION;
 	GetPrivateProfileString(iniSection, "Width", "", buffer, MAX_SIZE, iniFile);
 	aWidget->size.width = atoi(buffer);
 	GetPrivateProfileString(iniSection, "Height", "", buffer, MAX_SIZE, iniFile);
 	aWidget->size.height = atoi(buffer);
 
+	//Fieldlen is of struct FIELDLEN - containing min,max,and length.
+	GetPrivateProfileString(iniSection, "MaxLen", "", buffer, MAX_SIZE, iniFile);
+	aWidget->fieldlen.max_len = atoi(buffer);
+	GetPrivateProfileString(iniSection, "MinLen", "", buffer, MAX_SIZE, iniFile);
+	aWidget->fieldlen.min_len = atoi(buffer);
+	
+	if (aWidget->fieldlen.max_len)
+		aWidget->fieldlen.length = aWidget->fieldlen.max_len;
+	else if (aWidget->fieldlen.min_len)
+		aWidget->fieldlen.length = aWidget->fieldlen.min_len;
+	else 
+		aWidget->fieldlen.length = MAX_SIZE;
+	
 	GetPrivateProfileString(iniSection, "dll", "", buffer, MAX_SIZE, iniFile);
 	aWidget->action.dll = buffer;
 	GetPrivateProfileString(iniSection, "function", "", buffer, MAX_SIZE, iniFile);
