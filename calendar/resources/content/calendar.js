@@ -428,8 +428,6 @@ function createEvent ()
 
 
 
-
-
 /** 
 * Helper function to launch the event composer to create a new event.
 * When the user clicks OK "addEventDialogResponse" is called
@@ -437,17 +435,10 @@ function createEvent ()
 
 function newEvent( startDate, endDate )
 {
-   // set up a bunch of args to pass to the dialog
+   // create a new event to be edited and added
+   var calendarEvent = createEvent();
    
-   var args = new Object();
-   
-   args.mode = "new";
-   
-   args.onOk =  self.addEventDialogResponse; 
-   
-   args.calendarEvent = createEvent();
-   
-   args.calendarEvent.start.setTime( startDate );
+   calendarEvent.start.setTime( startDate );
    
    if( !endDate )
    {
@@ -455,14 +446,34 @@ function newEvent( startDate, endDate )
    
       var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
    
-      args.calendarEvent.end.setTime( endDateTime );
+      calendarEvent.end.setTime( endDateTime );
    }
    else
    {
-      args.calendarEvent.end.setTime( endDate.getTime() );
+      calendarEvent.end.setTime( endDate.getTime() );
    }
    // open the dialog non modally
-   openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome,modal", args );
+   //openDialog( "chrome://calendar/content/calendarEventDialog.xul", "caNewEvent", "chrome,modal", args );
+   editNewEvent( calendarEvent );
+}
+
+
+/**
+* Helper function to launch the event composer to edit a new event.
+* When the user clicks OK "addEventDialogResponse" is called
+*/
+
+function editNewEvent( calendarEvent )
+{
+   // set up a bunch of args to pass to the dialog
+
+   var args = new Object();
+   args.mode = "new";
+   args.onOk =  self.addEventDialogResponse;
+   args.calendarEvent = calendarEvent;
+
+   // open the dialog modally
+   openDialog("chrome://calendar/content/calendarEventDialog.xul", "caEditEvent", "chrome", args );
 }
 
 

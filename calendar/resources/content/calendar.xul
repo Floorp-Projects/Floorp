@@ -86,6 +86,7 @@
   <broadcaster id="delete_command" disabled="true"/>
   <broadcaster id="modify_command" disabled="true"/>
   <broadcaster id="send_event_command" disabled="true"/>
+  <broadcaster id="copy_command" disabled="true"/>
 </broadcasterset>
 
 
@@ -100,6 +101,9 @@
 </script>
 
 <!-- Javascript includes -->
+
+<!-- NEEDED FOR CLIPBOARD SUPPORT -->
+<script type="application/x-javascript" src="chrome://calendar/content/calendarClipboard.js"/>
 
 <!-- NEEDED FOR MAIL SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarMail.js"/>
