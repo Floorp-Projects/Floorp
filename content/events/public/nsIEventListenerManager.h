@@ -38,6 +38,7 @@ class nsIScriptObjectOwner;
 class nsIEventListenerManager : public nsISupports {
 
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IEVENTLISTENERMANAGER_IID; return iid; }
 
  /**
   * Retrieves events listeners of all types. 
