@@ -53,81 +53,9 @@
 
   <stringbundle id="bundle_prefutilities" src="chrome://browser/locale/pref/prefutilities.properties"/>
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
+  <stringbundle id="bundle_shell" src="chrome://browser/locale/shellservice.properties"/>
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-navigator.js"/>
 
-  <script type="application/x-javascript">
-  <![CDATA[
-    var _elementIDs = ["browserStartupHomepage"];
-    
-#ifdef XP_WIN
-     // "Install" the SetFields function.  This will be
-     // called whenever the Navigator pane is shown.
-     window.SetFields = function( pageData ) {
-     // Determine if we have been selected as the default browser
-     // already, and enable/disable the "Set As Default" button
-     // accordingly.
-
-     // We store our state info in the same place as the code in
-     // pref-winhooks.js uses so that this panel and the 
-     // Advanced/System panel are kept in synch.
-     if (!("winHooks" in parent)) {
-       // Neither the Advanced/System panel nor this panel has
-       // appeared.  Initialize the state information.
-       parent.winHooks = new Object;
-
-       // Get winhooks service.
-       parent.winHooks.winhooks = Components.classes[ "@mozilla.org/winhooks;1" ]
-                                            .getService( Components.interfaces.nsIWindowsHooks );
-     
-       // Extract current settings (these are what the user has checked on
-       // the Advanced/System panel).
-       parent.winHooks.prefs = parent.winHooks.winhooks.settings;
-     }
-
-     // Start by checking http/https/ftp and html/xhtml/xml.
-     var prefs = parent.winHooks.prefs;
-     if (prefs.isHandlingHTTP  &&
-         prefs.isHandlingHTTPS &&
-         prefs.isHandlingHTML  &&
-         prefs.isHandlingXHTML) {
-       // The user *wants* us to be the default, apparently.
-       // We test the registry settings using a scratch copy of the
-       // settings because we don't care about some of them, but we
-       // don't want to mess up the user's choices from the
-       // Advanced/System panel.
-       var testSettings = parent.winHooks.winhooks.settings;
-       // Test that these are set.
-       testSettings.isHandlingHTTP  = true;
-       testSettings.isHandlingHTTPS = true;
-       testSettings.isHandlingHTML  = true;
-       testSettings.isHandlingXHTML = true;
-     }
-     // Return true to tell caller to process the standard pref fields.
-     return true;
-   }
-   // "Install" the makeDefault function;
-   window.makeDefault = function() {
-     // Extract current settings (these are what the
-     // user has checked on the Advanced/System panel).
-     var settings = parent.winHooks.prefs;
-
-     // Turn on all "default browser" settings.
-     settings.isHandlingHTTP  = true;
-     settings.isHandlingHTTPS = true;
-     settings.isHandlingHTML  = true;
-     settings.isHandlingXHTML = true;
-
-     // Register callback that will be called when and if the
-     // user presses the OK button.
-     parent.hPrefWindow.registerOKCallbackFunc( function () {
-       // Apply the settings.
-       parent.winHooks.winhooks.settings = parent.winHooks.prefs;
-     } );
-    }
-#endif
-  ]]>
-  </script>
-  
   <!-- homepage specification -->
   <groupbox>
     <caption label="&header2.label;"/>
@@ -170,10 +98,11 @@
   <groupbox orient="horizontal">
     <caption label="&defaultBrowserGroup.label;"/>
       <hbox align="center" flex="1">      
-        <description>&makeDefaultText;</description>
-        <spacer flex="1"/>
-        <button label="&defaultBrowserButton.label;"
-                oncommand="makeDefault()"/>
+        <checkbox id="checkForDefault" prefstring="browser.shell.checkDefaultBrowser"
+                  label="&checkForDefault.label;" accesskey="&checkForDefault.accesskey;"
+                  flex="1"/>
+        <button label="&checkNow.label;" accesskey="&checkNow.accesskey;"
+                oncommand="checkNow()"/>
       </hbox>
    </groupbox>
 #endif

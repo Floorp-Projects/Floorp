@@ -512,16 +512,31 @@ function delayedStartup()
 
   clearObsoletePrefs();
 
-#ifdef XP_WIN
   // Perform default browser checking (after window opens).
-  try {
-    var dialogShown = Components.classes["@mozilla.org/winhooks;1"]
-                    .getService(Components.interfaces.nsIWindowsHooks)
-                    .checkSettings(window);
-  } catch(e) {
+  var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
+                        .getService(Components.interfaces.nsIShellService);
+  var shouldCheck = shell.shouldCheckDefaultBrowser;
+  if (shouldCheck && !shell.isDefaultBrowser(true)) {
+    var brandBundle = document.getElementById("bundle_brand");
+    var shellBundle = document.getElementById("bundle_shell");
+    
+    var brandShortName = brandBundle.getString("brandShortName");
+    var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
+    var promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage", 
+                                                        [brandShortName]);
+    var checkboxLabel = shellBundle.getString("setDefaultBrowserDontAsk");
+    const IPS = Components.interfaces.nsIPromptService;
+    var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                       .getService(IPS);
+    var checkEveryTime = { value: shouldCheck };
+    var rv = ps.confirmEx(window, promptTitle, promptMessage, 
+                         (IPS.BUTTON_TITLE_YES * IPS.BUTTON_POS_0) + 
+                         (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
+                         null, null, null, checkboxLabel, checkEveryTime);
+    if (rv == 0)
+      shell.setDefaultBrowser(true);
+    shell.shouldCheckDefaultBrowser = checkEveryTime.value;
   }
-#endif
-
 }
 
 function Shutdown()
@@ -4327,20 +4342,23 @@ var MailIntegration = {
   
   readMail: function ()
   {
-    var whs = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
-    whs.openDefaultClient("Mail");
+    const ss = Components.interfaces.nsIShellService;
+    var shell = Components.classes["@mozilla.org/browser/shell-service;1"].getService(ss);
+    shell.openPreferredApplication(ss.APPLICATION_MAIL);
   },
   
   readNews: function ()
   {
-    var whs = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
-    whs.openDefaultClient("News");
+    const ss = Components.interfaces.nsIShellService;
+    var shell = Components.classes["@mozilla.org/browser/shell-service;1"].getService(Components.interfaces.nsIShellService);
+    shell.openPreferredApplication(ss.APPLICATION_NEWS);
   },
   
   updateUnreadCount: function ()
   {
-    var whs = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
-    var unreadCount = whs.unreadMailCount;
+    var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
+                          .getService(Components.interfaces.nsIWindowsShellService);
+    var unreadCount = shell.unreadMailCount;
     var message = gNavigatorBundle.getFormattedString("mailUnreadTooltip", [unreadCount]);
     var element = document.getElementById("mail-button");
     element.setAttribute("tooltiptext", message);
