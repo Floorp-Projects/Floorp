@@ -39,7 +39,7 @@
 
 // Loading includes
 #include "nsIURI.h"
-#include "nsIXMLHTTPRequest.h"
+#include "nsIXMLHttpRequest.h"
 #include "nsIDOMEventListener.h"
 
 // schema includes
