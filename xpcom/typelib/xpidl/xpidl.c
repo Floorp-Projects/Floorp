@@ -36,7 +36,7 @@ FindMode(char *mode)
     int i;
     for (i = 0; modes[i].mode; i++) {
         if (!strcmp(modes[i].mode, mode))
-	    return &modes[i];
+            return &modes[i];
     }
     return NULL;
 }
@@ -71,8 +71,8 @@ xpidl_malloc(size_t nbytes)
 {
     void *p = malloc(nbytes);
     if (!p) {
-	fputs(OOM, stderr);
-	exit(1);
+        fputs(OOM, stderr);
+        exit(1);
     }
     return p;
 }
@@ -82,8 +82,8 @@ xpidl_strdup(const char *s)
 {
     char *ns = strdup(s);
     if (!ns) {
-	fputs(OOM, stderr);
-	exit(1);
+        fputs(OOM, stderr);
+        exit(1);
     }
     return ns;
 }
@@ -129,7 +129,7 @@ main(int argc, char *argv[])
 #endif
             inc->next = NULL;
             *inc_tail = inc;
-	    inc_tail = &inc->next;
+            inc_tail = &inc->next;
             break;
           case 'o':
             if (i == argc) {
@@ -183,7 +183,7 @@ main(int argc, char *argv[])
     }
 
     for (idlfiles = 0; i < argc; i++)
-	idlfiles += xpidl_process_idl(argv[i], inc_head, basename, mode);
+        idlfiles += xpidl_process_idl(argv[i], inc_head, basename, mode);
 
     if (!idlfiles)
         return 1;
