@@ -1030,8 +1030,34 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
     {
       nsUnixMozillaHomePath = PR_GetEnv(MOZILLA_HOME);
     }
+    if (nsnull == nsUnixMozillaHomePath)
+    {
+      static char homepath[MAXPATHLEN];
+      FILE* pp;
+      if (!(pp = popen("pwd", "r"))) {
+#ifdef DEBUG
+        printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 1\n");
+#endif
+        return(nsnull);
+      }
+      if (fgets(homepath, MAXPATHLEN, pp)) {
+        homepath[PL_strlen(homepath)-1] = 0;
+      }
+      else {
+#ifdef DEBUG
+        printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 2\n");
+#endif
+        pclose(pp);
+        return(nsnull);
+      }
+      pclose(pp);
+      nsUnixMozillaHomePath = homepath;
+    }
 
 	resourceBase = XP_STRDUP(nsUnixMozillaHomePath);
+#ifdef DEBUG
+    printf("Using '%s' as the resource: base\n", resourceBase);
+#endif
 
 #endif /* XP_UNIX */
 
