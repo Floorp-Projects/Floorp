@@ -25,10 +25,13 @@ bin/mozilla
 bin/mozilla-bin
 bin/libdocshell.so
 bin/icons/*
+bin/libcmt.so
 bin/libgtksuperwin.so
+bin/libgtkxtbin.so
 bin/libjpeg.so
 bin/libjsj.so
 bin/libmsgbaseutil.so
+bin/libprotocol.so
 bin/libraptorgfx.so
 bin/libraptorplugin.so
 bin/libraptorwebwidget.so
