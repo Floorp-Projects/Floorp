@@ -1730,6 +1730,12 @@ extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
   if (*header != '\0' && intlmime_is_mime_part2_header(header)) {
      result = MIME_StripContinuations(intl_decode_mime_part2_str(header, charset));
   }
+  else if (*charset == '\0') {
+    // no charset name is specified then assume it's us-ascii and dup the input
+    // later change the caller to avoid the duplication
+    PL_strcpy(charset, "us-ascii");
+    return PL_strdup(header); 
+  }
 
   return result;
 }
