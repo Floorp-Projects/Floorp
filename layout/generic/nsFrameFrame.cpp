@@ -106,7 +106,8 @@ static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 // Bug 8065: Limit content frame depth to some reasonable level.
 //           This does not count chrome frames when determining depth,
 //           nor does it prevent chrome recursion.
-#define MAX_DEPTH_CONTENT_FRAMES 25
+//           Also see bug 126466.
+#define MAX_DEPTH_CONTENT_FRAMES 8
 
 /*******************************************************************************
  * FrameLoadingInfo 
@@ -977,8 +978,10 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext)
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsSupports));
     while (parentAsItem) {
       depth++;
-      if (MAX_DEPTH_CONTENT_FRAMES < depth)
+      if (MAX_DEPTH_CONTENT_FRAMES < depth) {
+        NS_WARNING("Too many nested content frames so giving up");
         return NS_ERROR_UNEXPECTED; // Too deep, give up!  (silently?)
+      }
 
       // Only count depth on content, not chrome.
       // If we wanted to limit total depth, skip the following check:
