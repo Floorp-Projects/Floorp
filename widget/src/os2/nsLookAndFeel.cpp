@@ -128,10 +128,10 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_MENUDISABLEDTEXT;
       break;
     case eColor_highlight:
-      idx = SYSCLR_HILITEFOREGROUND;
+      idx = SYSCLR_HILITEBACKGROUND;
       break;
     case eColor_highlighttext:
-      idx = SYSCLR_WINDOWTEXT;
+      idx = SYSCLR_HILITEFOREGROUND;
       break;
     case eColor_inactiveborder:
       idx = SYSCLR_INACTIVEBORDER;
@@ -143,8 +143,10 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
       idx = SYSCLR_INACTIVETITLE;
       break;
     case eColor_infobackground:
-      idx = SYSCLR_INACTIVETITLE;
-      break;
+      aColor = NS_RGB( 255, 255, 228);
+      return res;
+//      idx = SYSCLR_ENTRYFIELD;
+//      break;
     case eColor_infotext:
       idx = SYSCLR_WINDOWTEXT;
       break;
@@ -192,7 +194,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   int iGreen = (lColor & RGB_GREEN) >> 8;
   int iBlue = (lColor & RGB_BLUE);
 
-  aColor = NS_RGB( iRed, iGreen, iBlue);   
+  aColor = NS_RGB( iRed, iGreen, iBlue);
 
   return res;
 }
