@@ -166,19 +166,20 @@ protected:
     nsIHTMLContentSink* mSink;
 
     nsDTDContext*       mBodyContext;
-    PRBool              mHasOpenForm;
-    PRBool              mHasOpenMap;
     PRInt32             mHasOpenHead;
-    PRBool              mHasOpenBody;
-    PRBool              mHadFrameset;
-    PRBool              mHadBody;
+    PRPackedBool        mHasOpenForm;
+    PRPackedBool        mHasOpenMap;
+    PRPackedBool        mHasOpenBody;
+    PRPackedBool        mHadFrameset;
+    PRPackedBool        mHadBody;
+    PRPackedBool        mHasOpenScript;
+    PRPackedBool        mEnableStrict;
     nsString            mFilename;
     PRInt32             mLineNumber;
     nsParser*           mParser;
     nsITokenizer*       mTokenizer; // weak
     nsTokenAllocator*   mTokenAllocator;
     nsNodeAllocator*    mNodeAllocator;
-    PRBool              mHasOpenScript;
     eHTMLTags           mSkipTarget;
     nsresult            mDTDState;
     nsDTDMode           mDTDMode;
@@ -188,7 +189,6 @@ protected:
     PRUint32            mExpectedCRC32;
     nsString            mScratch;  //used for various purposes; non-persistent
     eParserDocType      mDocType;
-    PRBool              mEnableStrict;
 
 };
 

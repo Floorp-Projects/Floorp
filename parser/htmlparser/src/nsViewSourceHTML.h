@@ -97,8 +97,10 @@ protected:
     PRInt32             mValue;
     PRInt32             mPopupTag;
     PRInt32             mSummaryTag;
-    PRBool              mSyntaxHighlight;
-    PRBool              mWrapLongLines;
+    PRPackedBool        mSyntaxHighlight;
+    PRPackedBool        mWrapLongLines;
+    PRPackedBool        mHasOpenRoot;
+    PRPackedBool        mHasOpenBody;
 
     nsDTDMode           mDTDMode;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
@@ -110,8 +112,6 @@ protected:
     nsString            mFilename;
     nsString            mTags;
     nsString            mErrors;
-    PRPackedBool        mHasOpenRoot;
-    PRPackedBool        mHasOpenBody;
 
     PRUint32            mTokenCount;
 };

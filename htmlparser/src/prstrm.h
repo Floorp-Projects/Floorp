@@ -113,8 +113,8 @@ public:
 
 private:
     PRFileDesc * _fd;
-    PRBool _opened;
-	PRBool _allocated;
+    PRPackedBool _opened;
+    PRPackedBool _allocated;
 };
 
 

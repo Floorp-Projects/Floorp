@@ -99,8 +99,8 @@ public:
     eAutoDetectResult    mAutoDetectStatus;
     eParserCommands      mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
 
-    PRBool               mMultipart;
-    PRBool               mCopyUnused;
+    PRPackedBool         mMultipart;
+    PRPackedBool         mCopyUnused;
     PRUint32             mTransferBufferSize;
 };
 

@@ -100,10 +100,10 @@ protected:
 
   nsDeque            mTokenDeque;
   PRInt32            mFlags;
-  PRBool             mRecordTrailingContent;
+  PRPackedBool       mRecordTrailingContent;
+  PRPackedBool       mIsFinalChunk;
   nsTokenAllocator*  mTokenAllocator;
   PRInt32            mTokenScanPos;
-  PRBool             mIsFinalChunk;
 };
 
 extern nsresult NS_NewHTMLTokenizer(  nsITokenizer** aInstancePtrResult,
