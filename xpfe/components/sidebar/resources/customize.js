@@ -169,7 +169,6 @@ function MoveUp() {
     }
   }
   enable_buttons_for_current_panels();
-  enable_save();
 }
    
 // Move the selected item down the the current panels list.
@@ -188,7 +187,6 @@ function MoveDown() {
     }
   }
   enable_buttons_for_current_panels();
-  enable_save();
 }
 
 function PreviewPanel() 
@@ -251,7 +249,6 @@ function AddPanel()
 
   enable_buttons_for_current_panels();
   enable_buttons_for_other_panels();
-  enable_save();
 }
 
 // Copy a panel node into a database such as the current panel list.
@@ -319,7 +316,6 @@ function RemovePanel()
     tree.selectItem(nextNode)
   }
   enable_buttons_for_current_panels();
-  enable_save();
 }
 
 // Bring up a new window with the customize url 
@@ -337,9 +333,10 @@ function CustomizePanel()
 
     if (!customize_url) return;
 
-    window.open(customize_url, "_blank", "resizable,width=690,height=600");
+    window.openDialog('chrome://sidebar/content/customize-panel.xul',
+                      '_blank','chrome,resizable,width=690,height=600',
+                      customize_url);
   }
-  enable_save();
 }
 
 // Serialize the new list of panels.
@@ -347,6 +344,20 @@ function Save()
 {
   var all_panels = document.getElementById('other-panels');
   var current_panels = document.getElementById('current-panels');
+
+  // See if list membership has changed
+  var root = document.getElementById('current-panels-root');
+  var panels = root.childNodes;  
+  var list_unchanged = (panels.length == original_panels.length);
+  for (var ii = 0; ii < panels.length && list_unchanged; ii++) {
+    if (original_panels[ii] != panels.item(ii).getAttribute('id')) {
+      list_unchanged = false;
+    }
+  }
+  if (list_unchanged) {
+    window.close();
+    return;
+  }
 
   // Iterate through the 'current-panels' tree to collect the panels
   // that the user has chosen. We need to do this _before_ we remove
@@ -533,26 +544,6 @@ function enable_buttons_for_current_panels() {
     remove.setAttribute('disabled','true');
   } else {
     remove.removeAttribute('disabled');
-  }
-}
-
-// Check to see if the "current" panel list has changed.
-// If so, enable the save button.
-function enable_save() {
-  var root = document.getElementById('current-panels-root');
-  var panels = root.childNodes;  
-  var list_unchanged = (panels.length == original_panels.length);
-
-  for (var ii = 0; ii < panels.length && list_unchanged; ii++) {
-    if (original_panels[ii] != panels.item(ii).getAttribute('id')) {
-      list_unchanged = false;
-    }
-  }
-  var save_button = document.getElementById('save_button');
-  if (list_unchanged) {
-    save_button.setAttribute('disabled','true');  
-  } else {
-    save_button.removeAttribute('disabled');
   }
 }
 
