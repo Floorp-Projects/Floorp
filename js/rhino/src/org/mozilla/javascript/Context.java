@@ -1601,15 +1601,7 @@ public class Context
         if (e instanceof EcmaError) {
             throw (EcmaError)e;
         }
-        String sourceName = null;
-        int lineNumber = 0;
-        Context cx = Context.getCurrentContext();
-        if (cx != null) {
-            int[] linep = { 0 };
-            sourceName = cx.getSourcePositionFromStack(linep);
-            lineNumber = linep[0];
-        }
-        throw new WrappedException(e, sourceName, lineNumber);
+        throw new WrappedException(e);
     }
 
     /**

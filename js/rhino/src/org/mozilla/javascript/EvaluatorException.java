@@ -42,10 +42,12 @@ package org.mozilla.javascript;
 public class EvaluatorException extends RuntimeException
 {
     /**
-     * @deprecated Use
-     * {@link #EvaluatorException(String detail, String sourceName,
-int lineNumber)}
-     * to construct detailed error messages.
+     * Create an exception with the specified detail message.
+     *
+     * Errors internal to the JavaScript engine will simply throw a
+     * RuntimeException.
+     *
+     * @param detail the error message
      */
     public EvaluatorException(String detail)
     {
@@ -91,11 +93,17 @@ int lineNumber)}
     public EvaluatorException(String detail, String sourceName, int lineNumber,
                               String lineSource, int columnNumber)
     {
-        super(generateErrorMessage(detail, sourceName, lineNumber));
+        super(detail);
         this.sourceName = sourceName;
         this.lineNumber = lineNumber;
         this.lineSource = lineSource;
         this.columnNumber = columnNumber;
+    }
+
+    public String getMessage()
+    {
+        return generateErrorMessage(
+            super.getMessage(), sourceName, lineNumber);
     }
 
     /**

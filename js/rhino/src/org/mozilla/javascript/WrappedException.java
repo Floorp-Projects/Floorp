@@ -68,14 +68,9 @@ public class WrappedException extends EvaluatorException
         }
     }
 
-    /**
-     * Create a new exception wrapped around an existing exception.
-     *
-     * @param exception the exception to wrap
-     */
-    WrappedException(Throwable exception, String sourceName, int lineNumber)
+    public WrappedException(Throwable exception)
     {
-        super("Wrapped "+exception.toString(), sourceName, lineNumber);
+        super("Wrapped "+exception.toString());
         this.exception = exception;
         if (initCauseMethod != null) {
             try {
