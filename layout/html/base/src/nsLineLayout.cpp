@@ -823,10 +823,12 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand,
   }
 #endif
 
-  // For non-aware children they act like words which means that space
-  // immediately following them must not be skipped over.
+  // Non-aware children that take up space act like words; which means
+  // that space immediately following them must not be skipped over.
   if (NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE == mReflowResult) {
-    mState.mSkipLeadingWhiteSpace = PR_FALSE;
+    if ((kidRect.width != 0) && (kidRect.height != 0)) {
+      mState.mSkipLeadingWhiteSpace = PR_FALSE;
+    }
   }
 
   // Now place the child
@@ -1433,6 +1435,7 @@ nsLineLayout::ReflowUnmapped()
     }
     if (0 == mLine->mChildCount) {
       mLine->mFirstChild = mState.mKidFrame;
+      mBlock->SetFirstChild(mState.mKidFrame);
     }
     mLine->mChildCount++;
 
