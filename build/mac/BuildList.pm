@@ -290,6 +290,7 @@ sub DistMozilla()
 		InstallFromManifest(":mozilla:network:protocol:pop3:MANIFEST",					":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:remote:MANIFEST",				":mozilla:dist:network:");
 		InstallFromManifest(":mozilla:network:protocol:smtp:MANIFEST",					":mozilla:dist:network:");
+		InstallFromManifest(":mozilla:network:protocol:sockstub:MANIFEST",				":mozilla:dist:network:");
 		
 		#HTML_DIALOGS
 		InstallFromManifest(":mozilla:lib:htmldlgs:MANIFEST",							":mozilla:dist:htmldlgs:");
