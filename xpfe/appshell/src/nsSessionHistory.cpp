@@ -541,7 +541,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
             prev->GetChildCount(pcount);
             ccount = cur->GetChildCnt();
             nsCOMPtr<nsISupports>  historyObject;
-	          GetHistoryState(getter_AddRefs(historyObject));
+            GetHistoryState(getter_AddRefs(historyObject));
             nsLoadType   loadType = (nsLoadType)nsIChannel::LOAD_NORMAL;
             if (!aIsReload)
               loadType = (nsLoadType) nsISessionHistory::LOAD_HISTORY;
@@ -1010,6 +1010,8 @@ nsSessionHistory::UpdateStatus(nsIWebShell * aWebShell, PRInt32 aStatus) {
     nsresult res = (nsresult) aStatus;
 	if (!mIsLoadingDoc) {
 	  if (!NS_SUCCEEDED(res)) {
+		  /* Disabling this feature for  now */
+#if 0
 		 /* if this was a fresh page load and if it failed,
 	      * remove the entry for in in Session History  
 	      */
@@ -1019,6 +1021,7 @@ nsSessionHistory::UpdateStatus(nsIWebShell * aWebShell, PRInt32 aStatus) {
 	     mHistoryCurrentIndex--;
 		 mHistoryLength--;
 	     return NS_OK;
+#endif /* 0 */
 	  }
 	}  // (!mIsLoadingDoc)
 	else {
