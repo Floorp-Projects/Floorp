@@ -24,8 +24,11 @@
 // DiffDOM(node1,node2)
 // ----------------------
 
-function DiffDOM(node1,node2)
+var isHTML = false;
+
+function DiffDOM(node1, node2, aIsHTML)
 {
+  isHTML = aIsHTML;
   return DiffNodeAndChildren(node1, node2);
 }
 
@@ -68,12 +71,19 @@ function DiffNodeAndChildren(node1, node2)
     return ErrorUp("Different number of attributes", node1, node2);
   }
 
-  if (node1.nodeName!=node2.nodeName)
-    return ErrorUp("Different node names", node1, node2);
+  if (isHTML) {
+    if (node1.nodeName.toLowerCase()!=node2.nodeName.toLowerCase())
+      return ErrorUp("Different node names", node1, node2);
+  }
+  else {
+    if (node1.nodeName!=node2.nodeName)
+      return ErrorUp("Different node names", node1, node2);
+  }
   if (node1.nodeValue!=node2.nodeValue)
     return ErrorUp("Different node values", node1, node2);
-  if (node1.namespaceURI!=node2.namespaceURI)
-    return ErrorUp("Different namespace", node1, node2);
+  if (!isHTML)
+    if (node1.namespaceURI!=node2.namespaceURI)
+      return ErrorUp("Different namespace", node1, node2);
   if (node1.hasChildNodes() != node2.hasChildNodes())
     return ErrorUp("Different children", node1, node2);
   if (node1.childNodes) {
@@ -97,14 +107,14 @@ function ErrorUp(errMsg, node1, node2)
       if (node1.nodeType == Node.TEXT_NODE)
           dump("nodeValue: "+node1.nodeValue+"\n");
       else
-          dump("nodeName: "+node1.nodeName+"\n");
+          dump("nodeName: "+node1.namespaceURI+":"+node1.nodeName+"\n");
   }
   if (node2) {
       dump("Node 2: "+node2+", ");
       if (node2.nodeType == Node.TEXT_NODE)
           dump("nodeValue: "+node2.nodeValue+"\n");
       else
-          dump("nodeName: "+node2.nodeName+"\n");
+          dump("nodeName: "+node2.namespaceURI+":"+node2.nodeName+"\n");
   }
   return false;
 }

@@ -13,36 +13,26 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is Axel Hecht.
- * Portions created by Axel Hecht are Copyright (C) 2001 Axel Hecht.
+ * Portions created by Axel Hecht are Copyright (C) 2002 Axel Hecht.
  * All Rights Reserved.
  *
  * Contributor(s):
  *   Axel Hecht <axel@pike.org> (Original Author)
  */
 
-text.head {
+
+label.head {
   padding:     5px;
   font-size:   medium;
   font-weight: bold;
 }
 
-treechildren:-moz-tree-row(success)
+treechildren:-moz-tree-cell(success yes)
 {
-  background-color: green;
+  background-color: green ;
 }
 
-treechildren:-moz-tree-row(fail)
+treechildren:-moz-tree-cell(success no)
 {
-  background-color: red;
-}
-
-treechildren:-moz-tree-row(selected)
-{
-  border: 1px solid blue;
-  background-color: white ;
-}
-
-treechildren:-moz-tree-cell-text(selected)
-{
-  color: black;  
+  background-color: red ;
 }
