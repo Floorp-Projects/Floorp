@@ -236,6 +236,33 @@ void nsNetFile::GenerateGlobalRandomBytes(void *aDest, size_t aLen) {
 
 #define MAX_PATH_LEN 512
 
+#ifdef XP_UNIX
+
+// Checked this in to fix the build. I have no idea where this lives
+// on Unix. I have no idea if this implementation does the right thing
+// or even works.
+static void
+_strrev(char* s)
+{
+    // Find the end of the string.
+    char* p = s;
+    while (*p)
+        ++p;
+
+    --p; // back to the last character
+
+    // Now reverse the string: s and p will eventually meet in the middle.
+    while (s < p) {
+        char c = *p;
+        *p = *s;
+        *s = c;
+
+        ++s;
+        --p;
+    }
+}
+#endif
+
 nsresult nsNetFile::GetCacheFileName(char *aDirTok, char **aRes) {
     char *file_buf = nsnull;
     char *ext = ".MOZ";
