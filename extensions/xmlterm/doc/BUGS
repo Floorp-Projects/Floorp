@@ -1,7 +1,7 @@
 Known bugs
 ----------
 
-12 Mar 2000
+25 May 2000
 
 1. Mozilla bug (Solaris only): The cursor has disappeared! (also in Composer)
 
@@ -31,3 +31,11 @@ Known bugs
    results in LTERM exiting abnormally when user exits emacs. An interrupt
    error seems to occur while polling for output in ltermRead.
 
+8. "Here document" input positions cursor incorrectly in the previous line.
+
+9. "yes" command causes xmlterm to hang!
+
+10. F1 key sometimes blanks out whole screen and makes it unresponsive.
+
+11. Style changes have become fickle, e.g., prompt underlining doesn't seem
+    to work properly.
