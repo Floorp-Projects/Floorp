@@ -207,8 +207,8 @@ public:
  */
 CViewSourceHTML::CViewSourceHTML() : nsIDTD(), 
   mStartTag("start"), mEndTag("end"), mCommentTag("comment"), 
-  mDocTypeTag("doctype"), mPITag("pi"), mEntityTag("entity"), 
-  mText("txt"), mKey("key"), mValue("val"), mCDATATag("cdata")
+  mCDATATag("cdata"), mDocTypeTag("doctype"), mPITag("pi"), 
+  mEntityTag("entity"), mText("txt"), mKey("key"), mValue("val")
 {
   NS_INIT_REFCNT();
   mParser=0;
@@ -221,8 +221,9 @@ CViewSourceHTML::CViewSourceHTML() : nsIDTD(),
   gDumpFile = new fstream("c:/temp/viewsource.xml",ios::trunc);
 #endif
 
-
 }
+
+
 
 /**
  *  Default destructor

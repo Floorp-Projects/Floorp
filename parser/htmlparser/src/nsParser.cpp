@@ -1303,6 +1303,16 @@ nsresult nsParser::OnDataAvailable(nsIChannel* channel, nsISupports* aContext,
       if(mParserFilter)
          mParserFilter->RawBuffer(mParserContext->mTransferBuffer, &theNumRead);
 
+#ifdef NS_DEBUG
+      unsigned int index=0;
+      for(index=0;index<theNumRead;index++) {
+        if(0==mParserContext->mTransferBuffer[index]){
+          printf("\nNull found at buffer[%i] provided by netlib...\n",index);
+          break;
+        }
+      }
+#endif
+
       mParserContext->mScanner->Append(mParserContext->mTransferBuffer,theNumRead);
 
 #ifdef rickgdebug

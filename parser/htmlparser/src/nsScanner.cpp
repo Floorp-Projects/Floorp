@@ -240,8 +240,17 @@ PRUint32 nsScanner::Mark(PRInt32 anIndex){
  * @return  error code 
  */
 PRBool nsScanner::Append(const nsString& aBuffer) {
+
+  PRInt32 theLen=mBuffer.Length();
+
   mBuffer.Append(aBuffer);
   mTotalRead+=aBuffer.Length();
+  if(theLen<mBuffer.Length()) {
+
+    //Now yank any nulls that were embedded in this given buffer
+    mBuffer.StripChar(0,theLen);
+  }
+
   return PR_TRUE;
 }
 
@@ -253,7 +262,9 @@ PRBool nsScanner::Append(const nsString& aBuffer) {
  *  @return  
  */
 PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
- 
+
+  PRInt32 theLen=mBuffer.Length();
+  
   if(mUnicodeDecoder) {
     PRInt32 unicharBufLen = 0;
     mUnicodeDecoder->GetMaxLength(aBuffer, aLen, &unicharBufLen);
@@ -267,16 +278,6 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
 		  PRInt32 unicharLength = unicharBufLen;
 		  res = mUnicodeDecoder->Convert(aBuffer, &srcLength, unichars, &unicharLength);
       unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
-
-
-                  // Move the nsParser.cpp 00 -> space hack to here so
-                  // it won't break UCS2 file
-                  // Hack Start
-                  for(PRInt32 i=0;i<unicharLength;i++)
-                    NS_WARN_IF_FALSE(0x0000 != unichars[i], "found a null character");
-                     //if(0x0000 == unichars[i])
-                        //unichars[i] = 0x0020;
-                  // Hack End
 
 		  mBuffer.Append(unichars, unicharLength);
 		  mTotalRead += unicharLength;
@@ -302,15 +303,41 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
   else {
     mBuffer.Append(aBuffer,aLen);
     mTotalRead+=aLen;
+
+  }
+
+  if(theLen<mBuffer.Length()) {
+    //Now yank any nulls that were embedded in this given buffer
+    mBuffer.StripChar(0,theLen);
   }
 
   return PR_TRUE;
 }
 
 
+/** 
+ * Append PRUNichar* data to the internal buffer of the scanner
+ *
+ * @update  gess4/3/98
+ * @return  error code (it's always true)
+ */
 PRBool nsScanner::Append(const PRUnichar* aBuffer, PRUint32 aLen){
-  mBuffer.Append(aBuffer,aLen);
+
+  if(-1==aLen)
+    aLen=nsCRT::strlen(aBuffer);
+
+  CBufDescriptor theDesc(aBuffer,PR_TRUE, aLen+1,aLen);
+  nsAutoString theBuffer(theDesc);  
+
+  PRInt32 theLen=mBuffer.Length();  
+  mBuffer.Append(theBuffer);
   mTotalRead+=aLen;
+
+  if(theLen<mBuffer.Length()) {
+    //Now yank any nulls that were embedded in this given buffer
+    mBuffer.StripChar(0,theLen);
+  }
+
   return PR_TRUE;
 }
 
@@ -346,8 +373,10 @@ nsresult nsScanner::FillBuffer(void) {
       }
     }
     mOffset=mBuffer.Length();
-    if((0<numread) && (0==result))
+    if((0<numread) && (0==result)) {
       mBuffer.Append((const char*)buf,numread);
+      mBuffer.StripChar(0);  //yank the nulls that come in from the net.
+    }
     mTotalRead+=mBuffer.Length();
   }
 
@@ -390,7 +419,7 @@ nsresult nsScanner::GetChar(PRUnichar& aChar) {
   if(mOffset>=(PRUint32)mBuffer.Length()) 
     result=Eof();
 
-  if(NS_OK == result) {
+  if(NS_OK == result){
     aChar=GetCharAt(mBuffer,mOffset++);
   }
   return result;
@@ -411,9 +440,10 @@ nsresult nsScanner::Peek(PRUnichar& aChar) {
   if(mOffset>=(PRUint32)mBuffer.Length()) 
     result=Eof();
 
-  if(NS_OK == result) {
+  if(NS_OK == result){
     aChar=GetCharAt(mBuffer,mOffset);
   }
+
   return result;
 }
 
@@ -450,7 +480,6 @@ nsresult nsScanner::SkipWhitespace(void) {
 
   mNewlinesSkipped = 0;
 
-#if 1
   while(NS_OK==result) {
  
     theChar=theBuf[mOffset++];
@@ -472,7 +501,7 @@ nsresult nsScanner::SkipWhitespace(void) {
         break;
       }
     }
-    else {
+    else if ((PRUint32)mBuffer.Length()<=mOffset) {
       mOffset-=1;
       result=Peek(theChar);
       theBuf=mBuffer.GetUnicode();
@@ -483,17 +512,6 @@ nsresult nsScanner::SkipWhitespace(void) {
   //DoErrTest(aString);
 
   return result;
-
-#endif
-
-#if 0
-  static const char* gSpaces=" \n\r\t\b";
-  
-  int len=strlen(gSpaces);
-  CBufDescriptor buf(gSpaces,PR_TRUE,len+1,len);
-  nsAutoString theWS(buf);
-  return SkipOver(theWS);
-#endif
 
 }
 
@@ -652,7 +670,7 @@ nsresult nsScanner::ReadIdentifier(nsString& aString) {
         break;
       }
     }
-    else {
+    else if ((PRUint32)mBuffer.Length()<=mOffset) {
       mOffset -= 1;
       aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
@@ -699,7 +717,7 @@ nsresult nsScanner::ReadNumber(nsString& aString) {
         break;
       }
     }
-    else {
+    else if ((PRUint32)mBuffer.Length()<=mOffset) {
       mOffset -= 1;
       aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
@@ -749,7 +767,7 @@ nsresult nsScanner::ReadWhitespace(nsString& aString) {
         break;
       }
     }
-    else {
+    else if ((PRUint32)mBuffer.Length()<=mOffset) {
       mOffset -= 1;
       aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
@@ -797,7 +815,7 @@ nsresult nsScanner::ReadWhile(nsString& aString,
         break;
       }
     }
-    else {
+    else if ((PRUint32)mBuffer.Length()<=mOffset) {
       mOffset -= 1;
       aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
@@ -846,7 +864,7 @@ nsresult nsScanner::ReadWhile(nsString& aString,
         break;
       }
     }
-    else {
+    else if ((PRUint32)mBuffer.Length()<=mOffset) {
       mOffset -= 1;
       aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
@@ -926,7 +944,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
         break;
       }
     }
-    else {
+    else if ((PRUint32)mBuffer.Length()<=mOffset) {
       mOffset -= 1;
       aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
@@ -976,7 +994,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
         break;
       }
     }
-    else {
+    else if ((PRUint32)mBuffer.Length()<=mOffset) {
       mOffset -= 1;
       aString.Append(&theBuf[theOrigin],mOffset-theOrigin);
       result=Peek(theChar);
@@ -1049,7 +1067,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
         break;
       }
     }
-    else {
+    else if ((PRUint32)mBuffer.Length()<=mOffset) {
       mOffset -= 1;
       aString.Append(&theBuf[theOrigin],theLen-theOrigin);
       mOffset=theLen;
@@ -1062,6 +1080,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
   return result;
 
 }
+
 
 /**
  *  

@@ -336,13 +336,17 @@ void nsCString::ToUpperCase(nsCString& aString) const {
  *  This method is used to remove all occurances of the
  *  characters found in aSet from this string.
  *  
- *  @update gess 01/04/99
+ *  @update gess 11/02/99
  *  @param  aChar -- char to be stripped
  *  @return *this 
  */
-nsCString& nsCString::StripChar(char aChar){
-  char aSet[2]={aChar,0};
-  nsStr::StripChars(*this,aSet);
+nsCString& nsCString::StripChar(PRUnichar aChar,PRInt32 anOffset){
+  
+  anOffset=nsStr::FindChar(*this,aChar,PR_FALSE,anOffset);
+  while(kNotFound<anOffset) {
+    nsStr::Delete(*this,anOffset,1);
+    anOffset=nsStr::FindChar(*this,aChar,PR_FALSE,anOffset);
+  }
   return *this;
 }
 
