@@ -21,13 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Names.h,v 1.2 1999/11/15 07:13:07 nisheeth%netscape.com Exp $
+ * $Id: Names.h,v 1.3 1999/11/18 04:39:56 kvisco%ziplink.net Exp $
  */
 
 #include "String.h"
 
-#ifndef MITREXSL_NAMES_H
-#define MITREXSL_NAMES_H
+#ifndef TRANSFRMX_NAMES_H
+#define TRANSFRMX_NAMES_H
 
 //-- Global Strings
 extern const String HTML;
@@ -56,6 +56,7 @@ extern const String INCLUDE;
 extern const String MESSAGE;
 extern const String NUMBER;
 extern const String OTHERWISE;
+extern const String OUTPUT;
 extern const String PARAM;
 extern const String PI;
 extern const String PRESERVE_SPACE;
@@ -69,23 +70,33 @@ extern const String WITH_PARAM;
 
 
 //-- Attributes
+extern const String CDATA_ELEMENTS;
 extern const String COUNT_ATTR;
 extern const String DEFAULT_SPACE_ATTR;
+extern const String DOCTYPE_PUBLIC_ATTR;
+extern const String DOCTYPE_SYSTEM_ATTR;
 extern const String ELEMENTS_ATTR;
+extern const String ENCODING_ATTR;
 extern const String EXPR_ATTR;
 extern const String FORMAT_ATTR;
 extern const String FROM_ATTR;
 extern const String HREF_ATTR;
+extern const String INDENT_ATTR;
 extern const String LEVEL_ATTR;
 extern const String MATCH_ATTR;
+extern const String MEDIA_TYPE_ATTR;
+extern const String METHOD_ATTR;
 extern const String MODE_ATTR;
 extern const String NAME_ATTR;
 extern const String NAMESPACE_ATTR;
+extern const String OMIT_XMLDECL_ATTR;
 extern const String PRIORITY_ATTR;
 extern const String SELECT_ATTR;
+extern const String STANDALONE;
 extern const String TEST_ATTR;
 extern const String USE_ATTRIBUTE_SETS_ATTR;
 extern const String VALUE_ATTR;
+extern const String VERSION_ATTR;
 
 //-- Attribute Values
 extern const String ANY_VALUE;

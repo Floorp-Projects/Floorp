@@ -11,12 +11,12 @@ INCLUDE_PATH = -I. -I$(EXPAT_PARSER_PATH) -I$(EXPAT_TOKEN_PATH) -I-
 
 FLAGS = -DXML_UNICODE
 
-CC := cc -g $(FLAGS) $(INCLUDE_PATH)
+CC := $(CC) -g $(FLAGS) $(INCLUDE_PATH)
 
 target: $(EXPAT_OBJS)
 
 
-xmltok.o xmlrole.o: 
+xmltok.o xmlrole.o:
 	cd $(EXPAT_TOKEN_PATH); \
 	$(CC) -c xmltok.c xmlrole.c
 

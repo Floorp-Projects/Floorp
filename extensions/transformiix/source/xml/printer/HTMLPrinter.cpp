@@ -19,7 +19,9 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author
  *
- * $Id: HTMLPrinter.cpp,v 1.2 1999/11/15 07:13:00 nisheeth%netscape.com Exp $
+ * Michel Casabianca, casa@sdv.fr
+ *    -- added additional empty elements to the HTML tag list
+ * $Id: HTMLPrinter.cpp,v 1.3 1999/11/18 04:39:54 kvisco%ziplink.net Exp $
  */
 
 #include "printers.h"
@@ -32,7 +34,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:13:00 $
+ * @version $Revision: 1.3 $ $Date: 1999/11/18 04:39:54 $
 **/
   //---------------/
  //- Contructors -/
@@ -69,13 +71,21 @@ void HTMLPrinter::initialize(ostream& os, int indentSize) {
     setUseFormat(MB_TRUE);
 
     MITREObject* nonNull = &htmlEmptyTags;
+    htmlEmptyTags.put("AREA",       nonNull);
+    htmlEmptyTags.put("BASE",       nonNull);
+    htmlEmptyTags.put("BASEFONT",   nonNull);
     htmlEmptyTags.put("BR",         nonNull);
-    htmlEmptyTags.put("HR",         nonNull);
+    htmlEmptyTags.put("FRAME",      nonNull);
+    htmlEmptyTags.put("HR",         nonNull);    
     htmlEmptyTags.put("IMAGE",      nonNull);
+    htmlEmptyTags.put("IMG",        nonNull);
     htmlEmptyTags.put("INPUT",      nonNull);
+    htmlEmptyTags.put("ISINDEX",    nonNull);
     htmlEmptyTags.put("LI",         nonNull);
+    htmlEmptyTags.put("LINK",       nonNull);
     htmlEmptyTags.put("META",       nonNull);
     htmlEmptyTags.put("P",          nonNull);
+    htmlEmptyTags.put("PARAM",      nonNull);
 
 } //-- initialize
 
@@ -132,8 +142,70 @@ MBool HTMLPrinter::print(Node* node, String& currentIndent) {
             String nodeName = node->getNodeName();
             nodeName.toUpperCase();
 
+            //-- ALL THIS CODE WILL BE CHANGING I AM CURRENTLY
+            //-- WRITING THE SAX-LIKE PRINTER, WHICH WILL BE USED
+            //-- BY THIS PRINTER
+            if (nodeName.isEqual("SCRIPT")) {
+	       Element* element = (Element*)node;
+	       out << L_ANGLE_BRACKET;
+               out << nodeName;
+                NamedNodeMap* attList = element->getAttributes();
+                int size = 0;
+                if (attList) size = attList->getLength();
+                Attr* att = 0;
+                int i = 0;
+                for ( ; i < size; i++) {
+                    att = (Attr*) attList->item(i);
+                    out << SPACE;
+                    out << att->getName();
+                    const DOMString& data = att->getValue();
+                    if (&data != &NULL_STRING) {
+                        out << EQUALS << DOUBLE_QUOTE;
+                        out << data;
+                        out << DOUBLE_QUOTE;
+                    }
+                }
+                out << R_ANGLE_BRACKET;
+                NodeList* nl = element->getChildNodes();
+                if (useFormat) out<<endl;
+                for (i = 0; i < nl->getLength(); i++) {
+		  Node* child = nl->item(i);
+		  switch(child->getNodeType()) {
+		      case Node::COMMENT_NODE:
+		      {
+                          out << COMMENT_START;
+                          out << ((CharacterData*)child)->getData();
+                          out << COMMENT_END;
+                          break;
+		      }
+		      case Node::TEXT_NODE:
+                      case Node::CDATA_SECTION_NODE:
+                      {
+			  out << ((Text*)child)->getData();
+                          break;
+                      }
+		      default:
+			  break;
+		  }
+                }
+                out << flush;
+                if (useFormat) {
+		    out << endl << currentIndent;                    
+		}
+                out << L_ANGLE_BRACKET << FORWARD_SLASH;
+                out << nodeName;
+                out << R_ANGLE_BRACKET;
+		if (useFormat) {
+                    out << endl;
+                    return MB_TRUE;
+		}
+                return MB_FALSE;
+
+	    }
             //-- handle special elements
-            if (node->hasChildNodes() || ( !htmlEmptyTags.get(nodeName) ))  {
+            else if (node->hasChildNodes() || 
+		     ( !htmlEmptyTags.get(nodeName)))  
+            {
                 return XMLPrinter::print(node, currentIndent);
             }
             else {

@@ -1,33 +1,38 @@
 <?xml version="1.0"?>
 <!--
 /*
- * (C) Copyright The MITRE Corporation 1999  All rights reserved.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is XSL:P XSLT processor.
+ * 
+ * The Initial Developer of the Original Code is Keith Visco.
+ * Portions created by Keith Visco (C) 1999 Keith Visco.
+ * All Rights Reserved..
  *
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+ * Contributor(s): 
+ * Keith Visco, kvisco@ziplink.net
+ *    - original author.
  *
- * The program provided "as is" without any warranty express or
- * implied, including the warranty of non-infringement and the implied
- * warranties of merchantibility and fitness for a particular purpose.
- * The Copyright owner will not be liable for any damages suffered by
- * you as a result of using the Program. In no event will the Copyright
- * owner be liable for any special, indirect or consequential damages or
- * lost profits even if the Copyright owner has been advised of the
- * possibility of their occurrence.
- *
- * Please see release.txt distributed with this file for more information.
- *
+ * $Id: test.xsl,v 1.3 1999/11/18 04:39:51 kvisco%ziplink.net Exp $
  */
-
-/**
- * This is a test stylesheet used for testing MITRE's XSL processor
-**/
 -->
-<xsl:stylesheet
-        xmlns:xsl="http://www.w3.org/XSL/Transform/1.0"
-        result-ns="http://www.w3.org/TR/REC-html40">
+
+<!--
+  This is a test stylesheet used for testing the XSL processor
+-->
+
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/XSL/Transform/1.0">
+
+<!-- set the output properties -->
+<xsl:output method="html"/>
 
 <!-- AttributeSet -->
 <xsl:attribute-set name="style1">
@@ -45,7 +50,7 @@
    <xsl:processing-instruction name="foo">
       this is a test processing instruction
    </xsl:processing-instruction>
-   <xsl:comment>MITRE TransforMiiX Test cases, written by Keith Visco.</xsl:comment>
+   <xsl:comment>TransforMiiX Test cases, written by Keith Visco.</xsl:comment>
    <xsl:apply-templates/>
 </xsl:template>
 
@@ -73,12 +78,28 @@
 <xsl:template match="document">
 <HTML>
   <HEAD>
-    <TITLE>MII TransforMiiX Test Cases</TITLE>
+    <TITLE>TransforMiiX Test Cases</TITLE>
+    <SCRIPT Language="JavaScript">
+     <xsl:text>
+      // This is a test for properly printing SCRIPT elements
+      // currently there is a bug, so use xsl:text as a wrapper as I
+      // have done here
+      function foo() {
+          var x = 1;
+          var y = 2;
+          return (x &lt; y);
+      }
+     //
+     </xsl:text>
+    </SCRIPT>
   </HEAD>
-  <BODY>
+  <BODY BGColor="#FFFFFF" Text="#000000">
   <CENTER>
-      <FONT COLOR="BLUE" FACE="Arial"><B>MITRE</B></FONT><BR/>
-      <B>MII Transfor<FONT COLOR="blue">Mii</FONT>X Test Cases</B>
+      <FONT COLOR="BLUE" FACE="Arial" SIZE="+1">
+         <B>Mozilla XSLT</B>
+      </FONT>
+      <BR/>
+      <B>Transfor<FONT COLOR="blue">Mii</FONT>X Test Cases</B>
  </CENTER>
  <P>
   This document serves to test basic XSL expressions.

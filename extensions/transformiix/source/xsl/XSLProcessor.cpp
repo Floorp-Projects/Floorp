@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLProcessor.cpp,v 1.3 1999/11/15 07:48:36 nisheeth%netscape.com Exp $
+ * $Id: XSLProcessor.cpp,v 1.4 1999/11/18 04:39:58 kvisco%ziplink.net Exp $
  */
 
 #include "XSLProcessor.h"
@@ -34,7 +34,7 @@
 /**
  * XSLProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 1999/11/15 07:48:36 $
+ * @version $Revision: 1.4 $ $Date: 1999/11/18 04:39:58 $
 **/
 
 /**
@@ -75,6 +75,7 @@ XSLProcessor::XSLProcessor() {
     xslTypes.put(MESSAGE,         new XSLType(XSLType::MESSAGE));
     xslTypes.put(NUMBER,          new XSLType(XSLType::NUMBER));
     xslTypes.put(OTHERWISE,       new XSLType(XSLType::OTHERWISE));
+    xslTypes.put(OUTPUT,          new XSLType(XSLType::OUTPUT));
     xslTypes.put(PARAM,           new XSLType(XSLType::PARAM));
     xslTypes.put(PI,              new XSLType(XSLType::PI));
     xslTypes.put(PRESERVE_SPACE,  new XSLType(XSLType::PRESERVE_SPACE));
@@ -134,36 +135,43 @@ void XSLProcessor::addErrorObserver(ErrorObserver& errorObserver) {
 } //-- addErrorObserver
 
 #ifndef MOZILLA
-XMLPrinter* XSLProcessor::createPrinter(Document& xslDocument, ostream& out) {
+void XSLProcessor::print
+    (Document& document, OutputFormat* format, ostream& out) 
+{
 
-    //-- check result-ns of stylesheet element
-    Element* stylesheet = xslDocument.getDocumentElement();
     XMLPrinter* xmlPrinter = 0;
-
     ostream* target = 0;
     if ( !out ) target = &cout;
     else target = &out;
 
-    if ( stylesheet ) {
-        String result_ns     = stylesheet->getAttribute(RESULT_NS_ATTR);
-        Attr* indentResult   = stylesheet->getAttributeNode(INDENT_RESULT_ATTR);
-
-        //-- create appropriate printer
-        if ( result_ns.indexOf(HTML_NS) == 0) {
-            xmlPrinter = new HTMLPrinter(*target);
-        }
+    MBool indent = MB_FALSE;
+    if (format->isMethodExplicit()) {
+        if (format->isHTMLOutput()) xmlPrinter = new HTMLPrinter(*target);
         else xmlPrinter = new XMLPrinter(*target);
-
-        //-- set use formatting
-        if ( indentResult ) {
-            MBool useFormat = (MBool) YES_VALUE.isEqual(indentResult->getValue());
-            xmlPrinter->setUseFormat(useFormat);
-        }
-
+        indent = format->getIndent();
     }
-    else xmlPrinter = new XMLPrinter(*target);
-    return xmlPrinter;
-} //-- createPrinter
+    else {
+        //-- try to determine output method
+        Element* element = document.getDocumentElement();        
+        String name;
+        if (element) name = element->getNodeName();
+        name.toUpperCase();
+        if (name.isEqual("HTML")) {
+            xmlPrinter = new HTMLPrinter(*target);
+            if (format->isIndentExplicit()) indent = format->getIndent();
+            else indent = MB_TRUE;
+        }
+        else {
+            xmlPrinter = new XMLPrinter(*target);
+            indent = format->getIndent();
+        }
+    }
+
+    xmlPrinter->setUseFormat(indent);
+    xmlPrinter->print(&document);
+    delete xmlPrinter;
+
+} //-- print
 #endif
 
 String& XSLProcessor::getAppName() {
@@ -206,8 +214,6 @@ void XSLProcessor::getHrefFromStylesheetPI(Document& xmlDocument, String& href) 
     }
 
 } //-- getHrefFromStylesheetPI
-
-
 
 /**
  * Parses the contents of data, and returns the type and href psuedo attributes
@@ -354,8 +360,7 @@ Document* XSLProcessor::process(istream& xmlInput, String& documentBase) {
     delete xslDoc;
     return result;
 } //-- process
-#endif  // #ifndef MOZILLA
-
+#endif
 
 /**
  * Processes the Top level elements for an XSL stylesheet
@@ -364,11 +369,16 @@ void XSLProcessor::processTopLevel
    (Document* xslDocument, ProcessorState* ps) 
 {
 
+    if (!xslDocument) return;
+
       //-------------------------------------------------------/
      //- index templates and process top level xsl elements -/
     //-------------------------------------------------------/
 
     Element* stylesheet = xslDocument->getDocumentElement();
+
+    if (!stylesheet) return;
+
     NodeList* nl = stylesheet->getChildNodes();
     for (int i = 0; i < nl->getLength(); i++) {
         Node* node = nl->item(i);
@@ -443,6 +453,35 @@ void XSLProcessor::processTopLevel
                     break;
 
 	          }
+	        case XSLType::OUTPUT :
+		{
+                    OutputFormat* format = ps->getOutputFormat();
+
+		    String attValue = element->getAttribute(METHOD_ATTR);
+                    if (attValue.length() > 0) format->setMethod(attValue);
+
+                    attValue = element->getAttribute(VERSION_ATTR);
+                    if (attValue.length() > 0) format->setVersion(attValue);
+                    
+                    attValue = element->getAttribute(ENCODING_ATTR);
+                    if (attValue.length() > 0) format->setEncoding(attValue);
+
+                    attValue = element->getAttribute(INDENT_ATTR);
+                    if (attValue.length() > 0) {
+		       MBool allowIndent = attValue.isEqual(YES_VALUE);
+                       format->setIndent(allowIndent);
+		    }
+
+                    attValue = element->getAttribute(DOCTYPE_PUBLIC_ATTR);
+                    if (attValue.length() > 0) 
+		        format->setDoctypePublic(attValue);
+
+                    attValue = element->getAttribute(DOCTYPE_SYSTEM_ATTR);
+                    if (attValue.length() > 0) 
+		        format->setDoctypeSystem(attValue);
+
+		    break;
+		}
                 case XSLType::TEMPLATE :
                     ps->addTemplate(element);
                     break;
@@ -526,8 +565,7 @@ Document* XSLProcessor::process
     return result;
 } //-- process
 
-
-#ifndef MOZILLA  
+#ifndef MOZILLA
 /**
  * Processes the given XML Document using the given XSL document
  * and prints the results to the given ostream argument
@@ -538,11 +576,35 @@ void XSLProcessor::process
       ostream& out, 
       String& documentBase  ) 
 {
-    Document* resultDoc = process(xmlDocument, xslDocument, documentBase);
-    XMLPrinter* xmlPrinter = createPrinter(xslDocument, out);
-    xmlPrinter->print(resultDoc);
-    delete xmlPrinter;
-    delete resultDoc;
+
+
+    Document* result = new Document();
+
+    //-- create a new ProcessorState
+    ProcessorState ps(xslDocument, *result);
+    ps.setDocumentBase(documentBase);
+
+    //-- add error observers
+    ListIterator* iter = errorObservers.iterator();
+    while ( iter->hasNext()) {
+        ps.addErrorObserver(*((ErrorObserver*)iter->next()));
+    }
+    delete iter;
+
+      //-------------------------------------------------------/
+     //- index templates and process top level xsl elements -/
+    //-------------------------------------------------------/
+    
+    processTopLevel(&xslDocument, &ps);
+
+      //----------------------------------------/
+     //- Process root of XML source document -/
+    //--------------------------------------/
+    process(&xmlDocument, &xmlDocument, &ps);
+
+    print(*result, ps.getOutputFormat(), out);
+
+    delete result;
 } //-- process
 
 
@@ -583,13 +645,9 @@ void XSLProcessor::process
             delete xmlDoc;
             return;
     }
-    Document* result = process(*xmlDoc, *xslDoc, documentBase);
-    XMLPrinter* xmlPrinter = createPrinter(*xslDoc, out);
-    xmlPrinter->print(result);
-    delete xmlPrinter;
+    process(*xmlDoc, *xslDoc, out, documentBase);
     delete xmlDoc;
     delete xslDoc;
-    delete result;
 } //-- process
 
 /**
@@ -620,15 +678,12 @@ void XSLProcessor::process
             delete xmlDoc;
             return;
     }
-    Document* result = process(*xmlDoc, *xslDoc, documentBase);
-    XMLPrinter* xmlPrinter = createPrinter(*xslDoc, out);
-    xmlPrinter->print(result);
-    delete xmlPrinter;
+    process(*xmlDoc, *xslDoc, out, documentBase);
     delete xmlDoc;
     delete xslDoc;
-    delete result;
 } //-- process
-#endif  // #ifndef MOZILLA
+
+#endif // ifndef MOZILLA
 
   //-------------------/
  //- Private Methods -/
