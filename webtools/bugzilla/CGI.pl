@@ -1208,22 +1208,22 @@ sub PutFooter {
 # done the header.
 ###############################################################################
 
-# DisplayError is deprecated. Use CodeError, UserError or TemplateError 
-# instead.
+# DisplayError is deprecated. Use ThrowCodeError, ThrowUserError or 
+# ThrowTemplateError instead.
 sub DisplayError {
   ($vars->{'error'}, $vars->{'title'}) = (@_);
   $vars->{'title'} ||= "Error";
 
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/user-error.html.tmpl", $vars)
-    || TemplateError($template->error());   
+    || ThrowTemplateError($template->error());   
 
   return 1;
 }
 
 # For "this shouldn't happen"-type places in the code.
 # $vars->{'variables'} is a reference to a hash of useful debugging info.
-sub CodeError {
+sub ThrowCodeError {
   ($vars->{'error'}, $vars->{'variables'}) = (@_);
   $vars->{'title'} = "Code Error";
 
@@ -1231,13 +1231,13 @@ sub CodeError {
   
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/code-error.html.tmpl", $vars)
-    || TemplateError($template->error());
+    || ThrowTemplateError($template->error());
     
   exit;
 }
 
 # For errors made by the user.
-sub UserError {
+sub ThrowUserError {
   ($vars->{'error'}, $vars->{'title'}, my $unlock_tables) = (@_);
   $vars->{'title'} ||= "Error";
 
@@ -1245,24 +1245,33 @@ sub UserError {
   
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/user-error.html.tmpl", $vars)
-    || TemplateError($template->error());
+    || ThrowTemplateError($template->error());
     
   exit;
 }
 
-# If the template system isn't working, we can't use a template :-)
+# If the template system isn't working, we can't use a template.
+# This should only be called if a template->process() fails.
 # The Content-Type will already have been printed.
-sub TemplateError {
+sub ThrowTemplateError {
     my ($error) = html_quote((@_));
+    my $maintainer = Param('maintainer');
     
-    print "<tt><p>
-      Bugzilla has suffered an internal error. Please save this page, and its 
-      URL, and send it to ";
-    print Param("maintainer");
-    print ", with details of what you were doing at the time this message
-      appeared.</p>
-      <p>Template->process() failed: $error.</p></tt>";
-    
+    print <<END;
+    <tt>
+      <p>
+        Bugzilla has suffered an internal error. Please save this page and send
+        it to $maintainer with details of what you were doing at the time this
+        message appeared.
+      </p>
+      <script> <!--
+        document.write("<p>URL: " + document.location + "</p>");
+      // -->
+      </script>
+      <p>Template->process() failed: $error</p>
+    </tt>
+END
+
     exit;  
 }
 
@@ -1274,7 +1283,7 @@ sub PuntTryAgain ($) {
 
     $vars->{'header_done'} = "true";
     $template->process("global/user-error.html.tmpl", $vars)
-      || TemplateError($template->error());
+      || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -1410,7 +1419,7 @@ Actions:
 };
     if ($loggedin) {
         if ($::anyvotesallowed) {
-            $html .= " | <A HREF=\"votes.cgi?action=show_user\">My votes</A>\n";
+            $html .= " | <A HREF=\"showvotes.cgi\">My votes</A>\n";
         }
     }
     if ($loggedin) {

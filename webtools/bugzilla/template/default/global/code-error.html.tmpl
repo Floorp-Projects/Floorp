@@ -23,13 +23,17 @@
   [% INCLUDE global/header %]
 [% END %]
 
- <p>
-   <tt>
-     Bugzilla has suffered an internal error. Please save this page and send
-     it, and its URL, to [% Param("maintainer") %], with details of what you
-     were doing at the time this message appeared.
-   </tt>
- </p>
+<tt>
+  <p>
+    Bugzilla has suffered an internal error. Please save this page and send
+    it to [% Param("maintainer") %] with details of what you were doing at 
+    the time this message appeared.
+  </p>
+  <script> <!--
+    document.write("<p>URL: " + document.location + "</p>");
+  // -->
+  </script>
+</tt>
 
 <table cellpadding="20">
   <tr>
@@ -41,11 +45,13 @@
   </tr>
 </table>
 
-<pre>
+[% IF variables %]
+  <pre>
 Variables:
   [% FOREACH key = variables.keys %]
     [%+ key %]: [%+ variables.$key %]
   [% END %]
-</pre>
+  </pre>
+[% END %]
 
 [% INCLUDE global/footer %]
