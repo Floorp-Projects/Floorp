@@ -4949,9 +4949,7 @@ nsFontSubset::Load(HDC aDC, nsFontMetricsWinA* aFontMetricsWinA, nsFontWinA* aFo
   LOGFONT* logFont = &aFont->mLogFont;
   logFont->lfCharSet = mCharset;
   // create a font handle without filling & overwriting what is in logFont
-  const nsFont* font;
-  aFontMetricsWinA->GetFont(font);
-  HFONT hfont = (font->sizeAdjust <= 0) 
+  HFONT hfont = (aFontMetricsWinA->Font().sizeAdjust <= 0) 
     ? ::CreateFontIndirect(logFont)
     : aFontMetricsWinA->CreateFontAdjustHandle(aDC, logFont);
   if (hfont) {
