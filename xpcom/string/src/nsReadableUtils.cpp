@@ -148,7 +148,7 @@ class LossyConvertEncoding
 
 NS_COM
 void
-CopyUTF16toASCII( const nsAString& aSource, nsACString& aDest )
+LossyCopyUTF16toASCII( const nsAString& aSource, nsACString& aDest )
   {
       // right now, this won't work on multi-fragment destinations
     aDest.SetLength(aSource.Length());
