@@ -215,7 +215,7 @@ private:
     gint        RawGetWidth      (const PRUnichar* aString,
                                   PRUint32         aLength);
     nsresult    SetupMiniFont    (void);
-    nsresult    DrawUnknownGlyph (PRUnichar  aChar,
+    nsresult    DrawUnknownGlyph (PRUint32   aChar,
                                   nscoord    aX,
                                   nscoord    aY,
                                   XftColor  *aColor,
