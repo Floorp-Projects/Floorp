@@ -750,7 +750,7 @@ Wallet_SetKey(PRBool isNewkey) {
     newkey = wallet_GetString(password);
   }
   if (newkey == NULL) { /* user hit cancel button */
-    if (wallet_KeySize() == 0) { /* no password file existed before */
+    if (wallet_KeySize() < 0) { /* no password file existed before */
       newkey  = PL_strdup(""); /* use zero-length password */
     } else {
       return PR_FALSE; /* user could not supply the correct password */
