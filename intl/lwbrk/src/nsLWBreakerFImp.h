@@ -35,7 +35,7 @@ class nsLWBreakerFImp : public nsILineBreakerFactory , nsIWordBreakerFactory
 public:
   
   nsLWBreakerFImp();
-  ~nsLWBreakerFImp();
+  virtual ~nsLWBreakerFImp();
   
   NS_IMETHOD GetBreaker(nsString& aParam, nsILineBreaker** breaker);
   NS_IMETHOD GetBreaker(nsString& aParam, nsIWordBreaker** breaker);

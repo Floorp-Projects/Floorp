@@ -28,7 +28,7 @@ class nsJISx4501LineBreaker : public nsILineBreaker
 public:
   nsJISx4501LineBreaker(const PRUnichar *aNoBegin, PRInt32 aNoBeginLen, 
                         const PRUnichar* aNoEnd, PRInt32 aNoEndLen);
-  ~nsJISx4501LineBreaker();
+  virtual ~nsJISx4501LineBreaker();
 
   NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
                             const PRUnichar* aText2 , PRUint32 aTextLen2,

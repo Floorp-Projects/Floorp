@@ -27,7 +27,7 @@ class nsSampleWordBreaker : public nsIWordBreaker
 public:
 
   nsSampleWordBreaker() ;
-  ~nsSampleWordBreaker() ;
+  virtual ~nsSampleWordBreaker() ;
 
   NS_IMETHOD BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
                             const PRUnichar* aText2 , PRUint32 aTextLen2,
