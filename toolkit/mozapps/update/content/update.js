@@ -275,8 +275,10 @@ var gVersionPage = {
     // doing version compatibility updates first. 
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
-    if (!pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED))
+    if (!pref.getBoolPref(PREF_UPDATE_EXTENSIONS_ENABLED)) {
       document.documentElement.advance();
+      return;
+    }
 
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
