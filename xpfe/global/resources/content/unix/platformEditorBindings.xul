@@ -78,6 +78,19 @@
     var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
     controller.doCommand('cmd_redo');"/>
 
+<key id="winAlternateCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
+    controller.doCommand('cmd_cut');"/>
+<key id="winAlternateCopyKey" keycode="VK_INSERT" control="true" shift="false" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
+    controller.doCommand('cmd_copy');"/>
+<key id="winAlternatePasteKey" keycode="VK_INSERT" shift="true" control="false" alt="false"
+  onkeypress="
+    var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
+    controller.doCommand('cmd_paste');"/>
+
 </keyset>
 <!-- End Unix-specific keybindings -->
 
