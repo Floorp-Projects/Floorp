@@ -1067,6 +1067,7 @@ sub MakeResourceAliases()
 
 		_InstallResources(":mozilla:editor:ui:dialogs:content:MANIFEST",				"$editor_chrome_dir:dialogs:content:default:", 0);
 		_InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",				"$editor_chrome_dir:dialogs:skin:default:", 0);
+		_InstallResources(":mozilla:editor:ui:dialogs:locale:en-US:MANIFEST",		"$editor_chrome_dir:dialogs:locale:en-US:", 0);
 	}
 
 	# if ($main::build{mailnews})
