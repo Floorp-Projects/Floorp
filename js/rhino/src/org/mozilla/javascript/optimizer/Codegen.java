@@ -296,14 +296,14 @@ public class Codegen extends Interpreter {
             superClassName = SCRIPT_SUPER_CLASS_NAME;
         }
 
-        itsSourceFile = null;
+        String sourceFile = null;
         // default is to generate debug info
         if (!cx.isGeneratingDebugChanged() || cx.isGeneratingDebug()) {
-            itsSourceFile = scriptOrFn.getSourceName();
+            sourceFile = scriptOrFn.getSourceName();
         }
 
         cfw = new ClassFileWriter(generatedClassName, superClassName,
-                                  itsSourceFile);
+                                  sourceFile);
         generatedClassSignature = cfw.classNameToSignature(generatedClassName);
 
         // Generate nested function code
@@ -366,7 +366,15 @@ public class Codegen extends Interpreter {
             generateExecute(cx);
         }
 
-        generateBodyCode(cx);
+        BodyCodegen bodygen = new BodyCodegen();
+        bodygen.cfw = cfw;
+        bodygen.mainCodegen = mainCodegen;
+        bodygen.currentCodegen = this;
+        bodygen.scriptOrFn = scriptOrFn;
+        bodygen.fnCurrent = fnCurrent;
+        bodygen.itsSourceFile = sourceFile;
+
+        bodygen.generateBodyCode(cx);
 
         emitConstantDudeInitializers();
 
@@ -729,7 +737,7 @@ public class Codegen extends Interpreter {
         cfw.stopMethod((short)0, null);
     }
 
-    private void pushNumberAsObject(double num)
+    void pushNumberAsObject(double num)
     {
         if (num != num) {
             // Add NaN object
@@ -814,7 +822,56 @@ public class Codegen extends Interpreter {
         }
     }
 
-    private void generateBodyCode(Context cx)
+    static void pushUndefined(ClassFileWriter cfw)
+    {
+        cfw.add(ByteCode.GETSTATIC, "org/mozilla/javascript/Undefined",
+                "instance", "Lorg/mozilla/javascript/Scriptable;");
+    }
+
+    static String getRegexpFieldName(int i)
+    {
+        return "_re" + i;
+    }
+
+    static String getDirectTargetFieldName(int i)
+    {
+        return "_dt" + i;
+    }
+
+    static RuntimeException badTree()
+    {
+        throw new RuntimeException("Bad tree in codegen");
+    }
+
+    private static final String FUNCTION_SUPER_CLASS_NAME =
+                          "org.mozilla.javascript.NativeFunction";
+    private static final String SCRIPT_SUPER_CLASS_NAME =
+                          "org.mozilla.javascript.NativeScript";
+
+    static final String MAIN_SCRIPT_FIELD = "masterScript";
+
+    private Codegen mainCodegen;
+    private boolean isMainCodegen;
+    private ScriptOrFnNode scriptOrFn;
+    private OptFunctionNode fnCurrent;
+    private OptClassNameHelper nameHelper;
+    private ObjToIntMap classNames;
+    private ObjArray directCallTargets;
+
+    String generatedClassName;
+    String generatedClassSignature;
+    private ClassFileWriter cfw;
+
+    private String encodedSource;
+
+    private double[] itsConstantList;
+    private int itsConstantListSize;
+}
+
+
+class BodyCodegen
+{
+    void generateBodyCode(Context cx)
     {
         initBodyGeneration(cx);
 
@@ -995,7 +1052,7 @@ public class Codegen extends Interpreter {
                 } else {
                     lVar.assignJRegister(getNewWordLocal());
                     if (firstUndefVar == -1) {
-                        pushUndefined(cfw);
+                        Codegen.pushUndefined(cfw);
                         firstUndefVar = lVar.getJRegister();
                     } else {
                         cfw.addALoad(firstUndefVar);
@@ -1087,7 +1144,7 @@ public class Codegen extends Interpreter {
         if (fnCurrent == null) {
             // OPT: use dataflow to prove that this assignment is dead
             scriptResultLocal = getNewWordLocal();
-            pushUndefined(cfw);
+            Codegen.pushUndefined(cfw);
             cfw.addAStore(scriptResultLocal);
 
             int linenum = scriptOrFn.getEndLineno();
@@ -1209,7 +1266,7 @@ public class Codegen extends Interpreter {
                 break;
 
               case Token.UNDEFINED:
-                pushUndefined(cfw);
+                Codegen.pushUndefined(cfw);
                 break;
 
               case Token.REGEXP:
@@ -1340,7 +1397,7 @@ public class Codegen extends Interpreter {
               case Token.VOID:
                 generateCodeFromNode(child, node);
                 cfw.add(ByteCode.POP);
-                pushUndefined(cfw);
+                Codegen.pushUndefined(cfw);
                 break;
 
               case Token.TYPEOF:
@@ -1681,23 +1738,27 @@ public class Codegen extends Interpreter {
         // Init mainScript field;
         cfw.add(ByteCode.DUP);
         cfw.add(ByteCode.ALOAD_0);
-        cfw.add(ByteCode.GETFIELD, generatedClassName,
-                MAIN_SCRIPT_FIELD,
+        cfw.add(ByteCode.GETFIELD,
+                currentCodegen.generatedClassName,
+                Codegen.MAIN_SCRIPT_FIELD,
                 mainCodegen.generatedClassSignature);
-        cfw.add(ByteCode.PUTFIELD, fnClassName,
-                MAIN_SCRIPT_FIELD,
+        cfw.add(ByteCode.PUTFIELD,
+                fnClassName,
+                Codegen.MAIN_SCRIPT_FIELD,
                 mainCodegen.generatedClassSignature);
 
         int directTargetIndex = fn.getDirectTargetIndex();
         if (directTargetIndex >= 0) {
             cfw.add(ByteCode.DUP);
             cfw.add(ByteCode.ALOAD_0);
-            cfw.add(ByteCode.GETFIELD, generatedClassName,
-                    MAIN_SCRIPT_FIELD,
+            cfw.add(ByteCode.GETFIELD,
+                    currentCodegen.generatedClassName,
+                    Codegen.MAIN_SCRIPT_FIELD,
                     mainCodegen.generatedClassSignature);
             cfw.add(ByteCode.SWAP);
-            cfw.add(ByteCode.PUTFIELD, mainCodegen.generatedClassName,
-                    getDirectTargetFieldName(directTargetIndex),
+            cfw.add(ByteCode.PUTFIELD,
+                    mainCodegen.generatedClassName,
+                    Codegen.getDirectTargetFieldName(directTargetIndex),
                     cfw.classNameToSignature(fn.getClassName()));
         }
 
@@ -1859,11 +1920,11 @@ public class Codegen extends Interpreter {
 
             int directTargetIndex = target.getDirectTargetIndex();
             cfw.add(ByteCode.ALOAD_0);
-            cfw.add(ByteCode.GETFIELD, generatedClassName,
-                    MAIN_SCRIPT_FIELD,
+            cfw.add(ByteCode.GETFIELD, currentCodegen.generatedClassName,
+                    Codegen.MAIN_SCRIPT_FIELD,
                     mainCodegen.generatedClassSignature);
             cfw.add(ByteCode.GETFIELD, mainCodegen.generatedClassName,
-                    getDirectTargetFieldName(directTargetIndex),
+                    Codegen.getDirectTargetFieldName(directTargetIndex),
                     cfw.classNameToSignature(target.getClassName()));
 
             short stackHeight = cfw.getStackTop();
@@ -2388,7 +2449,7 @@ public class Codegen extends Interpreter {
                 child = child.getNext();
             } while (child != null);
         } else if (fnCurrent != null) {
-            pushUndefined(cfw);
+            Codegen.pushUndefined(cfw);
         } else {
             cfw.addALoad(scriptResultLocal);
         }
@@ -2618,7 +2679,7 @@ public class Codegen extends Interpreter {
             cfw.add(ByteCode.ISHL);
             break;
           default:
-            badTree();
+            Codegen.badTree();
         }
         cfw.add(ByteCode.I2D);
         if (childNumberFlag == -1) {
@@ -2660,7 +2721,7 @@ public class Codegen extends Interpreter {
                 cfw.add(ByteCode.IFGT, trueGOTO);
                 break;
             default :
-                badTree();
+                Codegen.badTree();
 
         }
         if (falseGOTO != -1)
@@ -2911,7 +2972,7 @@ public class Codegen extends Interpreter {
             } else {
                 cfw.add(ByteCode.DUP);
                 cfw.add(ByteCode.IFNULL, 15);
-                pushUndefined(cfw);
+                Codegen.pushUndefined(cfw);
                 cfw.add(ByteCode.IF_ACMPEQ, 10);
             }
             if ((type == Token.EQ) || (type == Token.SHEQ))
@@ -2958,7 +3019,7 @@ public class Codegen extends Interpreter {
 
           default:
             name = null;
-            badTree();
+            Codegen.badTree();
         }
         addScriptRuntimeInvoke(name,
                                "(Ljava/lang/Object;"
@@ -3003,7 +3064,7 @@ public class Codegen extends Interpreter {
                             (simpleChild) ? trueGOTO : popGOTO);
             short popStack = cfw.getStackTop();
             if (simpleChild) generateCodeFromNode(child, node);
-            pushUndefined(cfw);
+            Codegen.pushUndefined(cfw);
             cfw.add(ByteCode.IF_ACMPEQ, trueGOTO);
             cfw.add(ByteCode.GOTO, falseGOTO);
             if (!simpleChild) {
@@ -3080,7 +3141,7 @@ public class Codegen extends Interpreter {
 
           default:
             name = null;
-            badTree();
+            Codegen.badTree();
         }
         cfw.add(ByteCode.IFNE, trueGOTO);
         cfw.add(ByteCode.GOTO, falseGOTO);
@@ -3096,7 +3157,7 @@ public class Codegen extends Interpreter {
             if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
                 cfw.addPush(num);
             } else {
-                pushNumberAsObject(num);
+                currentCodegen.pushNumberAsObject(num);
             }
         }
     }
@@ -3104,9 +3165,9 @@ public class Codegen extends Interpreter {
     private void visitRegexp(Node node)
     {
         int i = node.getExistingIntProp(Node.REGEXP_PROP);
-        String fieldName = getRegexpFieldName(i);
+        String fieldName = Codegen.getRegexpFieldName(i);
         cfw.addALoad(funObjLocal);
-        cfw.add(ByteCode.GETFIELD, generatedClassName,
+        cfw.add(ByteCode.GETFIELD, currentCodegen.generatedClassName,
                 fieldName, "Lorg/mozilla/javascript/regexp/NativeRegExp;");
     }
 
@@ -3293,7 +3354,7 @@ public class Codegen extends Interpreter {
             } else if (s.equals("__parent__")) {
                 runtimeMethod = "getParent";
             } else {
-                badTree();
+                Codegen.badTree();
             }
             addScriptRuntimeInvoke(
                 runtimeMethod,
@@ -3359,7 +3420,7 @@ public class Codegen extends Interpreter {
             } else if (s.equals("__parent__")) {
                 runtimeMethod = "setParent";
             } else {
-                badTree();
+                Codegen.badTree();
             }
             addScriptRuntimeInvoke(
                 runtimeMethod,
@@ -3574,52 +3635,11 @@ public class Codegen extends Interpreter {
         locals[local] = false;
     }
 
-    private static void pushUndefined(ClassFileWriter cfw)
-    {
-        cfw.add(ByteCode.GETSTATIC, "org/mozilla/javascript/Undefined",
-                "instance", "Lorg/mozilla/javascript/Scriptable;");
-    }
-
-    private static String getRegexpFieldName(int i)
-    {
-        return "_re" + i;
-    }
-
-    private static String getDirectTargetFieldName(int i)
-    {
-        return "_dt" + i;
-    }
-
-    private static void badTree()
-    {
-        throw new RuntimeException("Bad tree in codegen");
-    }
-
-    private static final String FUNCTION_SUPER_CLASS_NAME =
-                          "org.mozilla.javascript.NativeFunction";
-    private static final String SCRIPT_SUPER_CLASS_NAME =
-                          "org.mozilla.javascript.NativeScript";
-
-    private static final String MAIN_SCRIPT_FIELD = "masterScript";
-
-    private Codegen mainCodegen;
-    private boolean isMainCodegen;
-    private ScriptOrFnNode scriptOrFn;
-    private OptFunctionNode fnCurrent;
-    private OptClassNameHelper nameHelper;
-    private ObjToIntMap classNames;
-    private ObjArray directCallTargets;
-
-    private String generatedClassName;
-    private String generatedClassSignature;
-    private ClassFileWriter cfw;
-
-    private String itsSourceFile;
-
-    private String encodedSource;
-
-    private double[] itsConstantList;
-    private int itsConstantListSize;
+    ClassFileWriter cfw;
+    Codegen mainCodegen;
+    Codegen currentCodegen;
+    ScriptOrFnNode scriptOrFn;
+    OptFunctionNode fnCurrent;
 
     private static final int MAX_LOCALS = 256;
     private boolean[] locals;
@@ -3627,6 +3647,7 @@ public class Codegen extends Interpreter {
     private short localsMax;
 
     private OptLocalVariable[] debugVars;
+    String itsSourceFile;
     private int itsLineNumber;
 
     private boolean itsUseDynamicScope;
@@ -3647,4 +3668,3 @@ public class Codegen extends Interpreter {
     private short itsZeroArgArray;
     private short itsOneArgArray;
 }
-
