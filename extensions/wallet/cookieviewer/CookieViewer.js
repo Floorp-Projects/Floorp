@@ -187,8 +187,14 @@ function DeleteCookieSelected() {
     var row = document.getElementById(rows[k]);
     row.setAttribute("value","");
   }
+  if( !document.getElementById("cookietree").selectedItems.length ) {
+    if( !document.getElementById("removeCookies").disabled ) {
+      document.getElementById("removeCookies").setAttribute("disabled", "true")
+    }
+  }
 }
 
+// keypress pass-thru
 function HandleKeyPress( e )
 {
   switch ( e.which )
@@ -203,6 +209,12 @@ function HandleKeyPress( e )
   default:
     break;
   }
+}
+
+// will restore deleted cookies when I get around to filling it in.
+function RestoreCookies()
+{
+  // todo  
 }
 
 /*** =================== PERMISSIONS CODE =================== ***/
@@ -261,6 +273,16 @@ function ViewPermissionSelected()
     document.getElementById("removePermissions").removeAttribute("disabled","true");
 }
 
+function DeletePermissionSelected()
+{
+  gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');
+  if( !document.getElementById("permissionstree").selectedItems.length ) {
+    if( !document.getElementById("removePermissions").disabled ) {
+      document.getElementById("removePermissions").setAttribute("disabled", "true")
+    }
+  }
+}
+
 /*** =================== GENERAL CODE =================== ***/
 
 // function : <CookieViewer.js>::doOKButton();
@@ -283,7 +305,7 @@ function AddItem(children,cells,prefix,idfier)
   for(var i = 0; i < cells.length; i++)
   {
     var cell  = document.createElement("treecell");
-    cell.setAttribute("value", cells[i]);
+    cell.setAttribute("value", cells[i])
     row.appendChild(cell);
   }
   item.appendChild(row);
