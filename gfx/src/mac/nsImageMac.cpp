@@ -344,6 +344,59 @@ NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext,
 	return Draw(aContext,aSurface,0,0,mWidth,mHeight,aX,aY,aWidth,aHeight);
 }
  
+ #ifdef USE_IMG2
+/** ---------------------------------------------------
+ *	See documentation in nsImageMac.h
+ *	@update 
+ */
+NS_IMETHODIMP nsImageMac :: DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+{
+  Rect srcRect, dstRect, maskRect;
+
+  if (!mImageBitsHandle)
+    return NS_ERROR_FAILURE;
+
+  // lock and set up bits handles
+  this->LockImagePixels(PR_FALSE);
+  this->LockImagePixels(PR_TRUE);
+
+  ::SetRect(&srcRect, 0, 0, mWidth, mHeight);
+  maskRect = srcRect;
+  ::SetRect(&dstRect, aDX, aDY, aDX + aDWidth, aDY + aDHeight);
+
+  ::ForeColor(blackColor);
+  ::BackColor(whiteColor);
+	
+  // get the destination pix map
+  aDstImage->LockImagePixels(PR_FALSE);
+  aDstImage->LockImagePixels(PR_TRUE);
+  //nsImageMac* dstMacImage = static_cast<nsImageMac*>(aDstImage);
+  nsCOMPtr<nsIImageMac> dstMacImage( do_QueryInterface(aDstImage));
+	
+  PixMap* destPixels;
+  dstMacImage->GetPixMap(&destPixels);
+  NS_ASSERTION(destPixels, "No dest pixels!");
+          
+  if (!mMaskBitsHandle)
+  {
+    ::CopyBits((BitMap*)&mImagePixmap, (BitMap*)destPixels, &srcRect, &dstRect, srcCopy, nsnull);
+  }
+  else
+  {
+    if (mAlphaDepth > 1)
+      ::CopyDeepMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)destPixels, &srcRect, &maskRect, &dstRect, srcCopy, nsnull);
+    else
+      ::CopyMask((BitMap*)&mImagePixmap, (BitMap*)&mMaskPixmap, (BitMap*)destPixels, &srcRect, &maskRect, &dstRect);
+  }
+  aDstImage->UnlockImagePixels(PR_FALSE);
+  aDstImage->UnlockImagePixels(PR_TRUE);
+  this->UnlockImagePixels(PR_FALSE);
+  this->UnlockImagePixels(PR_TRUE);
+  
+  return NS_OK;
+}
+#endif // USE_IMG2
+  
 /** ---------------------------------------------------
  *	See documentation in nsImageMac.h
  *	@update 
@@ -390,9 +443,15 @@ nsImageMac::LockImagePixels(PRBool aMaskPixels)
   if (aMaskPixels && !mMaskBitsHandle)
   	return NS_ERROR_NOT_INITIALIZED;
   	
-	Handle		thePixelsHandle = (aMaskPixels ? mMaskBitsHandle : mImageBitsHandle);
-	::HLock(thePixelsHandle);
-	return NS_OK;
+  Handle thePixelsHandle = (aMaskPixels ? mMaskBitsHandle : mImageBitsHandle);
+  ::HLock(thePixelsHandle);
+
+  if(aMaskPixels)
+    mMaskPixmap.baseAddr = *thePixelsHandle;
+  else
+    mImagePixmap.baseAddr = *thePixelsHandle;
+    
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -409,6 +468,12 @@ nsImageMac::UnlockImagePixels(PRBool aMaskPixels)
   	
 	Handle		thePixelsHandle = (aMaskPixels ? mMaskBitsHandle : mImageBitsHandle);
 	::HUnlock(thePixelsHandle);
+	
+  if(aMaskPixels)
+    mMaskPixmap.baseAddr = 0;
+  else
+    mImagePixmap.baseAddr = 0;
+    
 	return NS_OK;
 }
 
@@ -741,11 +806,11 @@ nsImageMac :: ConvertFromPICT ( PicHandle inPicture )
  
 } // ConvertFromPICT
 
-
-#ifdef USE_IMG2
-NS_IMETHODIMP nsImageMac::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
+NS_IMETHODIMP
+nsImageMac::GetPixMap ( PixMap** aPixMap )
 {
+  *aPixMap = &mImagePixmap;
   return NS_OK;
 }
-#endif
+
 

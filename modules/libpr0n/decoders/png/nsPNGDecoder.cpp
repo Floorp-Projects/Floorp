@@ -437,10 +437,26 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     decoder->mFrame->GetFormat(&format);
     PRUint8 *aptr, *cptr;
 
+// The mac specific ifdefs in the code below are there to make sure we
+// always fill in 4 byte pixels right now, which is what the mac always
+// allocates for its pixel buffers in true color mode. This will change
+// when we start storing images with color palettes when they don't need
+// true color support (GIFs).
     switch (format) {
     case gfxIFormats::RGB:
     case gfxIFormats::BGR:
-      decoder->mFrame->SetImageData((PRUint8*)line, bpr, row_num*bpr);
+#ifdef XP_MAC
+        cptr = decoder->colorLine;
+        for (PRUint32 x=0; x<iwidth; x++) {
+          *cptr++ = 0;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+        }
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+#else
+        decoder->mFrame->SetImageData((PRUint8*)line, bpr, row_num*bpr);
+#endif
       break;
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
@@ -449,6 +465,9 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         aptr = decoder->alphaLine;
         memset(aptr, 0, abpr);
         for (PRUint32 x=0; x<iwidth; x++) {
+#ifdef XP_MAC
+          *cptr++ = 0;
+#endif
           *cptr++ = *line++;
           *cptr++ = *line++;
           *cptr++ = *line++;
@@ -466,6 +485,9 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         cptr = decoder->colorLine;
         aptr = decoder->alphaLine;
         for (PRUint32 x=0; x<iwidth; x++) {
+#ifdef XP_MAC
+          *cptr++ = 0;
+#endif
           *cptr++ = *line++;
           *cptr++ = *line++;
           *cptr++ = *line++;
@@ -477,7 +499,23 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
       break;
     case gfxIFormats::RGBA:
     case gfxIFormats::BGRA:
+#ifdef XP_MAC
+      {
+        cptr = decoder->colorLine;
+        aptr = decoder->alphaLine;
+        for (PRUint32 x=0; x<iwidth; x++) {
+          *cptr++ = 0;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *cptr++ = *line++;
+          *aptr++ = *line++;
+        }
+        decoder->mFrame->SetImageData(decoder->colorLine, bpr, row_num*bpr);
+        decoder->mFrame->SetAlphaData(decoder->alphaLine, abpr, row_num*abpr);
+      }
+#else
       decoder->mFrame->SetImageData(line, bpr, row_num*bpr);
+#endif
       break;
     }
 
