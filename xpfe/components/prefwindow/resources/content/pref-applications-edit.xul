@@ -334,7 +334,7 @@
           dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
           var replace = promptService.confirm(window, titleMsg, dialogMsg);
           if (!replace)
-            window.close();
+            return true;
           
           // delete mimetype we're overwriting
           if (gMIMEField.value)
