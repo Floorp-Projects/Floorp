@@ -155,6 +155,22 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                          nsIDBChangeListener * aInstigator)
 {
+	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
+	nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
+	if(NS_SUCCEEDED(rv))
+	{
+		nsCOMPtr<nsIMessage> message;
+		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
+		if(NS_SUCCEEDED(rv))
+		{
+			nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message, &rv));
+			if(NS_SUCCEEDED(rv))
+			{
+				NotifyPropertyFlagChanged(msgSupports, "Status", aOldFlags, aNewFlags);
+			}
+			UpdateSummaryTotals();
+		}
+	}
 	return NS_OK;
 }
 

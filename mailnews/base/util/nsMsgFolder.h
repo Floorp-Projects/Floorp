@@ -260,6 +260,8 @@ public:
 
 protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
+	nsresult NotifyPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
+												PRUint32 newValue);
 	nsresult NotifyItemAdded(nsISupports *item);
 	nsresult NotifyItemDeleted(nsISupports *item);
 

@@ -31,8 +31,10 @@
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsIMsgMailSession.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
 
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -45,7 +47,6 @@ nsMsgFolder::nsMsgFolder(void)
     mName(""),
     mFlags(0),
     mNumUnreadMessages(0),	mNumTotalMessages(0),
-		mListeners(nsnull),
     mCsid(0),
     mDepth(0), 
     mPrefFlags(0),
@@ -65,23 +66,8 @@ nsMsgFolder::nsMsgFolder(void)
 
 	mIsCachable = TRUE;
 
-	//The rdf:mailnewsfolders datasource is going to be a listener to all nsIMsgFolders, so add
-	//it as a listener
-    nsresult rv; 
-    NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv); 
-    if (NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIRDFDataSource> datasource;
-		rv = rdfService->GetDataSource("rdf:mailnewsfolders", getter_AddRefs(datasource));
-		if(NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsIFolderListener> folderListener(do_QueryInterface(datasource, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				AddFolderListener(folderListener);
-			}
-		}
-	}
+	mListeners = new nsVoidArray();
+
 }
 
 nsMsgFolder::~nsMsgFolder(void)
@@ -96,12 +82,7 @@ nsMsgFolder::~nsMsgFolder(void)
 			mSubFolders->RemoveElementAt(i);
 	}
 
-  if (mListeners) {
-    for (PRInt32 i = mListeners->Count() - 1; i >= 0; --i) {
-      mListeners->RemoveElementAt(i);
-    }
     delete mListeners;
-  }
 
 }
 
@@ -193,21 +174,14 @@ nsMsgFolder::GetHasSubFolders(PRBool *_retval)
 
 NS_IMETHODIMP nsMsgFolder::AddFolderListener(nsIFolderListener * listener)
 {
-  if (! mListeners)
-	{
-		mListeners = new nsVoidArray();
-		if(!mListeners)
-			return NS_ERROR_OUT_OF_MEMORY;
-  }
-  mListeners->AppendElement(listener);
-  return NS_OK;
+	mListeners->AppendElement(listener);
+	return NS_OK;
 
 }
 
 NS_IMETHODIMP nsMsgFolder::RemoveFolderListener(nsIFolderListener * listener)
 {
-  if (! mListeners)
-    return NS_OK;
+
   mListeners->RemoveElement(listener);
   return NS_OK;
 
@@ -1202,10 +1176,37 @@ nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char
 			nsIFolderListener* listener =(nsIFolderListener*)mListeners->ElementAt(i);
 			listener->OnItemPropertyChanged(supports, property, oldValue, newValue);
 		}
+
+		//Notify listeners who listen to every folder
+		nsresult rv;
+		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+		if(NS_SUCCEEDED(rv))
+			mailSession->NotifyFolderItemPropertyChanged(supports, property, oldValue, newValue);
+
 	}
 
 	return NS_OK;
 
+}
+
+nsresult nsMsgFolder::NotifyPropertyFlagChanged(nsISupports *item, char *property, PRUint32 oldValue,
+												PRUint32 newValue)
+{
+	PRInt32 i;
+	for(i = 0; i < mListeners->Count(); i++)
+	{
+		//Folderlistener's aren't refcounted.
+		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
+		listener->OnItemPropertyFlagChanged(item, property, oldValue, newValue);
+	}
+
+	//Notify listeners who listen to every folder
+	nsresult rv;
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->NotifyFolderItemPropertyFlagChanged(item, property, oldValue, newValue);
+
+	return NS_OK;
 }
 
 nsresult nsMsgFolder::NotifyItemAdded(nsISupports *item)
@@ -1218,6 +1219,12 @@ nsresult nsMsgFolder::NotifyItemAdded(nsISupports *item)
 		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
 		listener->OnItemAdded(this, item);
 	}
+
+	//Notify listeners who listen to every folder
+	nsresult rv;
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->NotifyFolderItemAdded(this, item);
 
 	return NS_OK;
 
@@ -1233,6 +1240,11 @@ nsresult nsMsgFolder::NotifyItemDeleted(nsISupports *item)
 		nsIFolderListener *listener = (nsIFolderListener*)mListeners->ElementAt(i);
 		listener->OnItemRemoved(this, item);
 	}
+	//Notify listeners who listen to every folder
+	nsresult rv;
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->NotifyFolderItemDeleted(this, item);
 
 	return NS_OK;
 
