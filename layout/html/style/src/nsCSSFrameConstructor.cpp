@@ -9455,6 +9455,10 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
   nsIFrame* frame;
   shell->GetRootFrame(&frame);
 
+  if (!frame) {
+    return NS_OK;
+  }
+
   PRBool reframe  = PR_FALSE;
   PRBool reflow   = PR_FALSE;
   PRBool render   = PR_FALSE;
