@@ -234,8 +234,10 @@ nsProxyEventObject::Release(void)
         NS_DELETEXPCOM(this);
         return 0;
     }
+#if 0 // removed on dougt's suggestion
     else if(1 == mRefCnt)
-        mRoot->Release();    // do NOT zero out the ptr (weak ref)
+            mRoot->Release();    // do NOT zero out the ptr (weak ref)
+#endif
     return mRefCnt;
 }
 
