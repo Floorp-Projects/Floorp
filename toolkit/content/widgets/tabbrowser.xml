@@ -633,10 +633,11 @@
             function setFocus(element) {
               document.commandDispatcher.suppressFocusScroll = true;
               Components.lookupMethod(element, "focus").call(element);
-              document.commandDispatcher.suppressFocusScroll = false;    
+              document.commandDispatcher.suppressFocusScroll = false;
             }
 
-            setTimeout(setFocus, 0, window.content);
+            // Use setTimeout to avoid focus outline ghosting.
+            setTimeout(setFocus, 0, whatToFocus);
           ]]>
         </body>
       </method>
