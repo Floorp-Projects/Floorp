@@ -35,6 +35,7 @@ typedef PRUint32 nsOperatorFlags;
 #define NS_MATHML_OPERATOR_EMBELLISH_ANCESTOR     0x40000000 // the second bit
 
 // define the bits used in the operator dictionary
+// XXX replace with the PR_BIT(n) macro
 
 #define NS_MATHML_OPERATOR_FORM  0x3 // the very last two bits tell us the form
 #define     NS_MATHML_OPERATOR_FORM_INFIX   1
