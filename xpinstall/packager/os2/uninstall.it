@@ -16,11 +16,9 @@ Product Name=$ProductName$
 
 ; This provides information on where in the OS/2 INI to locate the Uninstall log files
 ;
-Main Root Key=HKEY_LOCAL_MACHINE
-Main Key=[Product WinRegKey]
-Decrypt Main Key=TRUE
+Main App=[Product OS2INIKey]
+Decrypt Main App=TRUE
 
-Root Key=HKEY_LOCAL_MACHINE
 Key=[Product CurrentVersion]\Uninstall
 Decrypt Key=TRUE
 
@@ -35,9 +33,6 @@ Message=$ProductName$ is detected to be currently running.  Please quit $Product
 
 ; These keys are not normally necessary for checking instances.  They are
 ; set here because Mozilla requires a way to shut down it's turbo mode.
-Extra Cmd Reg Key Root=HKEY_LOCAL_MACHINE
-Extra Cmd Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
-Extra Cmd Reg Name=
 Extra Cmd Parameter=-kill
 
 
