@@ -1979,7 +1979,8 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
                 if(isArray)
                 {
-                    if(!XPCConvert::JSArray2Native(ccx, (void**)&dp->val, src,
+                    if(array_count &&
+                       !XPCConvert::JSArray2Native(ccx, (void**)&dp->val, src,
                                                    array_count, array_capacity,
                                                    datum_type,
                                                    useAllocator,

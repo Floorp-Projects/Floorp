@@ -1497,7 +1497,8 @@ pre_call_clean_up:
 
             if(isArray)
             {
-                if(!XPCConvert::JSArray2Native(ccx, (void**)&pv->val, val,
+                if(array_count &&
+                   !XPCConvert::JSArray2Native(ccx, (void**)&pv->val, val,
                                                array_count, array_count,
                                                datum_type,
                                                useAllocator, &param_iid,
