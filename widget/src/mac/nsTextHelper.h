@@ -20,23 +20,23 @@
 
 #include "nsITextWidget.h"
 #include "nsWindow.h"
-#include <Xm/Xm.h>
+#include "WASTE.h"
 
 /**
  * Base class for nsTextAreaWidget and nsTextWidget
  */
 
-class nsTextHelper 
+class nsTextHelper :  public nsITextWidget
 {
 
 public:
-    nsTextHelper(Widget aWidget);
+    nsTextHelper(nsISupports *aOuter);
     virtual ~nsTextHelper();
 
     virtual void      SelectAll();
     virtual void      SetMaxTextLength(PRUint32 aChars);
     virtual PRUint32  GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
-    virtual PRUint32  SetText(const nsString& aText);
+    virtual PRUint32  SetText(const nsString &aText);
     virtual PRUint32  InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
     virtual void      RemoveText();
     virtual void      SetPassword(PRBool aIsPassword);
@@ -45,13 +45,14 @@ public:
     virtual void      GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
     virtual void      SetCaretPosition(PRUint32 aPosition);
     virtual PRUint32  GetCaretPosition();
-    //virtual void      PreCreateWidget(nsWidgetInitData *aInitData);
     virtual PRBool    AutoErase();
 
 protected:
-    Widget  mWidget;
-    PRBool  mIsPassword;
-    PRBool  mIsReadOnly;
+
+    PRBool  		mIsPassword;
+    PRBool  		mIsReadOnly;
+   	WEReference	mTE_Data;
+
 
 };
 

@@ -21,7 +21,6 @@
 
 #include "nsWindow.h"
 #include "nsTextHelper.h"
-
 #include "nsITextWidget.h"
 
 typedef struct _PasswordData {
@@ -30,7 +29,7 @@ typedef struct _PasswordData {
 } PasswordData;
 
 /**
- * Native Motif single line edit control wrapper. 
+ * Native Mac single line edit control wrapper. 
  */
 
 class nsTextWidget : public nsWindow
@@ -77,13 +76,16 @@ public:
   virtual PRUint32  GetCaretPosition();
   virtual PRBool    AutoErase();
 
+  void							PrimitiveKeyDown(PRInt16	aKey,PRInt16 aModifiers);
+
 protected:
     PRBool        mIsPasswordCallBacksInstalled;
-    nsTextHelper *mHelper;
 
 private:
-  PRBool mMakeReadOnly;
-  PRBool mMakePassword;
+  PRBool 			mMakeReadOnly;
+  PRBool 			mMakePassword;
+  WEReference	mTE_Data;
+
 
   // this should not be public
   static PRInt32 GetOuterOffset() {

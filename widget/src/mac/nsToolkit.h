@@ -21,6 +21,8 @@
 
 #include "nsIToolkit.h"
 
+class nsWindow;
+
 struct MethodInfo;
 
 /**
@@ -41,9 +43,12 @@ public:
     virtual void            Init(PRThread *aThread);
   
 public:
+	void 			SetFocus(nsWindow *aFocusWidget); //{ mFocusedWidget =  aFocusWidget;}
+	nsWindow *GetFocus() {return(mFocusedWidget);}
 
 private:
 	static PRBool		  mInit;
+	static nsWindow  *mFocusedWidget;
 
 };
 
