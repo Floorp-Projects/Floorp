@@ -432,7 +432,7 @@ NS_IMETHODIMP mozLineTerm::Close(const PRUnichar* aCookie)
 {
   XMLT_LOG(mozLineTerm::Close,20, ("\n"));
 
-  if (!mCookie.EqualsWithConversion(aCookie)) {
+  if (!mCookie.Equals(aCookie)) {
     XMLT_ERROR("mozLineTerm::Close: Error - Cookie mismatch\n");
     return NS_ERROR_FAILURE;
   }
@@ -502,7 +502,7 @@ NS_IMETHODIMP mozLineTerm::ResizeAux(PRInt32 nRows, PRInt32 nCols)
 NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
                                  const PRUnichar* aCookie)
 {
-  if (!mCookie.EqualsWithConversion(aCookie)) {
+  if (!mCookie.Equals(aCookie)) {
     XMLT_ERROR("mozLineTerm::Write: Error - Cookie mismatch\n");
     return NS_ERROR_FAILURE;
   }
@@ -571,7 +571,7 @@ NS_IMETHODIMP mozLineTerm::Read(PRInt32 *opcodes, PRInt32 *opvals,
                                 const PRUnichar* aCookie,
                                 PRUnichar **_retval)
 {
-  if (!mCookie.EqualsWithConversion(aCookie)) {
+  if (!mCookie.Equals(aCookie)) {
     XMLT_ERROR("mozLineTerm::Read: Error - Cookie mismatch\n");
     return NS_ERROR_FAILURE;
   }
