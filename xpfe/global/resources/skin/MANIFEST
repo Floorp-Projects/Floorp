@@ -2,6 +2,7 @@ tasksOverlay.css
 globalBindings.xml
 global.css
 commonDialog.css
+dialogOverlay.css
 lessCols.gif
 lessCols_mo.gif
 lessCols_dis.gif

@@ -1,0 +1,99 @@
+/**  
+ * Small Dialog Header (without icon)
+ **/
+box[type="smallheader"] {
+  behavior: url(chrome://global/content/dialogBindings.xml#smallheader);
+  border: 1px inset #CCCCCC;
+  margin-bottom: 5px;
+}
+
+box[type="smallheader"] > toolbar.decorated > .left {
+  font-size: larger;
+  font-weight: bold;
+  color: #FFFFFF;
+  padding-left: 6px;
+}
+
+box[type="smallheader"] > toolbar.decorated > .right {
+  color: #FFFFFF;
+  padding-right: 6px;
+}
+
+box[type="smallheader"] {
+
+}
+
+box[type="smallheader"] > toolbar.decorated {
+  border: 1px solid #000000;
+  vertical-align: middle;
+  padding-top: 3px;
+}
+
+/** 
+ * Large Dialog Header (with icon) 
+ **/
+box[type="largeheader"] {
+  behavior: url(chrome://global/content/dialogBindings.xml#largeheader);
+}
+
+box[type="largeheader"] > .header {
+  padding: 0px 0px 4px 5px;
+  min-height: 34px;
+}
+
+box[type="largeheader"] > .header > .headertext-box {
+  vertical-align: middle;
+}
+
+box[type="largeheader"] > .header > .headertext-box > .headertext {
+  color: white;
+  font-size: large;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+box[type="largeheader"] > .header > .circle {
+	background-image: url("chrome://global/skin/button28-bg.gif");
+	background-repeat: no-repeat;
+	background-position: 50% 4px;
+	background-color: transparent;
+	min-width: 28px;
+	margin: 1px 7px 1px 1px;
+  height: 28px;
+  width: 28px;
+}  
+
+/**
+ * Dialog status line (blue) including progress area
+ **/
+box[type="status"] {
+  behavior: url(chrome://global/content/dialogBindings.xml#status);
+}
+
+box[type="status"] > .title { 
+  padding: 1px 5px 1px 5px;
+  min-height: 0px ! important;
+}
+
+box[type="status"] > .title > .statustext {
+  color: #99cccc ! important;
+}
+
+/** 
+ * Utility classes for use when combined headers/footers are used
+ **/
+/* display area framed container */
+box#contentarea {
+  border-top: 2px groove #CCCCCC;
+  border-bottom: 2px groove #CCCCCC;
+  padding: 7px;
+}
+
+/* top border on status area */
+box#wizardButtons {
+  border-bottom: 1px solid threedshadow;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+
