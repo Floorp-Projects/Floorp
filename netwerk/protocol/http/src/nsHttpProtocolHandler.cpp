@@ -104,7 +104,13 @@ nsHttpProtocolHandler::NewUrl(const char* aSpec,
 
     rv = url->Init(aSpec, aBaseUrl);
 
-    *result = NS_STATIC_CAST(nsIUrl*, url);
+    nsIUrl* realUrl = NS_STATIC_CAST(nsIUrl*, url);
+
+    // XXX this is the default port for http. we need to strip out the actual
+    // XXX requested port.
+    realUrl->SetPort(80);
+
+    *result = realUrl;
     NS_ADDREF(*result);
 
     return rv;
