@@ -430,12 +430,13 @@ stub_interface(TreeState *state)
 {
     IDL_tree iface = state->tree;
     const char *className;
-    const char *parentClassName;
+    const char *parentClassName = NULL;
     struct stub_private *priv, *save_priv;
     gboolean ok;
 
     className       = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
-    parentClassName = IDL_IDENT(IDL_LIST(IDL_INTERFACE(iface).inheritance_spec).data).str;
+    if(IDL_INTERFACE(iface).inheritance_spec)
+        parentClassName = IDL_IDENT(IDL_LIST(IDL_INTERFACE(iface).inheritance_spec).data).str;
         /* XXX Assumes single inheritance */
 
     priv = xpidl_malloc(sizeof *priv);
