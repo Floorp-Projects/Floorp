@@ -4,7 +4,6 @@ packages/core.jar:
 	editor/content/editor.js                                 (ui/composer/content/editor.js) 
 	editor/content/ComposerCommands.js                       (ui/composer/content/ComposerCommands.js) 
 	editor/content/EditorCommandsDebug.js                    (ui/composer/content/EditorCommandsDebug.js) 
-	editor/content/EditorCommandsOverlay.xul                 (ui/composer/content/EditorCommandsOverlay.xul) 
 	editor/content/EditorContextMenu.js                      (ui/composer/content/EditorContextMenu.js) 
 	editor/content/EditorContextMenuOverlay.xul              (ui/composer/content/EditorContextMenuOverlay.xul) 
 	editor/content/EditorInitPage.html                       (ui/composer/content/EditorInitPage.html) 
