@@ -23,7 +23,7 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsIXBLService.h"
+#include "nsXBLService.h"
 #include "nsIInputStream.h"
 #include "nsINameSpaceManager.h"
 #include "nsHashtable.h"
@@ -110,68 +110,6 @@ public:
 
 NS_IMPL_ISUPPORTS(nsProxyStream, NS_GET_IID(nsIInputStream));
 
-//////////////////////////////////////////////////////////////////////////////////////////
-
-class nsXBLService: public nsIXBLService
-{
-  NS_DECL_ISUPPORTS
-
-  // This function loads a particular XBL file and installs all of the bindings
-  // onto the element.
-  NS_IMETHOD LoadBindings(nsIContent* aContent, const nsString& aURL);
-
-  // This function clears out the bindings on a given content node.
-  NS_IMETHOD FlushBindings(nsIContent* aContent);
-
-  // This function clears out the binding doucments in our cache.
-  NS_IMETHOD FlushBindingDocuments();
-
-  // For a given element, returns a flat list of all the anonymous children that need
-  // frames built.
-  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement, 
-                            PRBool* aMultipleInsertionPoints);
-
-  // Gets the object's base class type.  
-  NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
-
-  NS_IMETHOD AllowScripts(nsIContent* aContent, PRBool* aAllowScripts);
-
-public:
-  nsXBLService();
-  virtual ~nsXBLService();
-
-  // This method loads a binding doc and then builds the specific binding required.
-  NS_IMETHOD GetBinding(const nsCString& aURLStr, nsIXBLBinding** aResult);
-
-  // This method checks the hashtable and then calls FetchBindingDocument on a miss.
-  NS_IMETHOD GetBindingDocument(const nsCString& aURI, nsIDocument** aResult);
-
-  // This method synchronously loads and parses an XBL file.
-  NS_IMETHOD FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult);
-
-  // This method walks a binding document and removes any text nodes
-  // that contain only whitespace.
-  NS_IMETHOD StripWhitespaceNodes(nsIContent* aContent);
-
-// MEMBER VARIABLES
-protected: 
-  static nsSupportsHashtable* mBindingTable; // This is a table of all the bindings files 
-                                             // we have loaded
-                                             // during this session.
-  static nsSupportsHashtable* mScriptAccessTable;   // Can the doc's bindings access scripts
-  static nsINameSpaceManager* gNameSpaceManager; // Used to register the XBL namespace
-  static PRInt32  kNameSpaceID_XBL;          // Convenient cached XBL namespace.
-
-  static PRUint32 gRefCnt;                   // A count of XBLservice instances.
-
-  static PRBool gDisableChromeCache;
-
-  // XBL Atoms
-  static nsIAtom* kExtendsAtom; 
-  static nsIAtom* kHasChildrenAtom;
-  static nsIAtom* kURIAtom;
-};
-
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -181,6 +119,8 @@ nsSupportsHashtable* nsXBLService::mBindingTable = nsnull;
 nsSupportsHashtable* nsXBLService::mScriptAccessTable = nsnull;
 
 nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
+ 
+nsHashtable* nsXBLService::gClassTable = nsnull;
 
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
 nsIAtom* nsXBLService::kHasChildrenAtom = nsnull;
@@ -230,7 +170,17 @@ nsXBLService::nsXBLService(void)
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     if (NS_SUCCEEDED(rv))
       prefs->GetBoolPref(kDisableChromeCachePref, &gDisableChromeCache);
+
+    gClassTable = new nsHashtable();
   }
+}
+
+static PRBool PR_CALLBACK DeleteClasses(nsHashKey* aKey, void* aValue, void* closure)
+{
+  JSClass* c = (JSClass*)aValue;
+  nsAllocator::Free(c->name);
+  delete c;
+  return PR_TRUE;
 }
 
 nsXBLService::~nsXBLService(void)
@@ -246,6 +196,11 @@ nsXBLService::~nsXBLService(void)
     NS_RELEASE(kExtendsAtom);
     NS_RELEASE(kHasChildrenAtom);
     NS_RELEASE(kURIAtom);
+
+    // Walk the hashtable and delete the JSClasses
+    if (gClassTable)
+      gClassTable->Enumerate(DeleteClasses);
+    delete gClassTable;
   }
 }
 
