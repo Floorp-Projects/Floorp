@@ -417,7 +417,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
         tag.get() == nsXULAtoms::xpmenuitem) {
       // Get the shortcut attribute.
       nsString shortcutKey = "";
-      current->GetAttribute(kNameSpaceID_None, nsXULAtoms::shortcut, shortcutKey);
+      current->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
       shortcutKey.ToUpperCase();
       if (shortcutKey.Length() > 0) {
         // We've got something.
