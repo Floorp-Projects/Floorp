@@ -250,7 +250,7 @@
     var bestState;
 
     function stateFoundInFormsArray(formsArray, captureOrPrefill, threshhold) {
-      state =
+      var state =
         getStateFromFormsArray(formsArray, captureOrPrefill, threshhold);
       if (state == enable) {
         if (elementCount > threshhold) {
