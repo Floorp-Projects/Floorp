@@ -501,6 +501,8 @@ tbx_dirs()
             mkdir -p $TESTDIR
         fi
     fi
+    Debug "Making QAstatus file"
+    echo "QA running" >${TESTDIR}/QAstatus
     export TESTDIR
     Debug "RESULTDIR $RESULTDIR TESTDIR $TESTDIR"
 
