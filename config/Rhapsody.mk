@@ -57,7 +57,11 @@ PDJAVA_FLAGS		=
 # Also, common symbols are not allowed with Rhapsody dynamic libraries.
 DSO_FLAGS		= -fno-common
 
+ifdef USE_AUTOCONF
+OS_CFLAGS		= $(DSO_FLAGS)
+else
 OS_CFLAGS		= $(PLATFORM_FLAGS) $(DSO_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
+endif
 
 ######################################################################
 # Version-specific stuff

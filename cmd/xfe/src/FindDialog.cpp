@@ -331,6 +331,8 @@ fe_replace_cb(Widget w, XtPointer closure, XtPointer )
   else
       findData->replace_all = FALSE;
 
+/* This should be replaced by something that doesn't require the editor -cls */
+#ifdef EDITOR
   EDT_ReplaceText(ctxt,
                   findData->replace_string,
                   findData->replace_all,
@@ -338,6 +340,7 @@ fe_replace_cb(Widget w, XtPointer closure, XtPointer )
                   findData->case_sensitive_p,
                   findData->backward_p,
                   FALSE /*bDoWrap*/); 
+#endif
 
   /* Continue to search for next string unless we replaced all 
   if( bReplaceAll && find_data && find_data->shell)

@@ -22,9 +22,12 @@
 # appropriate platform-specific .mk file, then defines all (most?)
 # of the generic macros.
 #
+ifndef topsrcdir
+topsrcdir = $(DEPTH)
+endif
 
 # This wastes time.
-include $(DEPTH)/config/common.mk
+include $(topsrcdir)/config/common.mk
 
 #
 # Important internal static macros
@@ -106,7 +109,7 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 # Relative pathname from top-of-tree to current source directory
 #
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-REVDEPTH	:= $(DEPTH)/config/revdepth
+REVDEPTH	:= $(topsrcdir)/config/revdepth
 SRCDIR		= $(shell $(PERL) $(REVDEPTH).pl $(DEPTH))
 endif
 
@@ -213,6 +216,12 @@ WHOAMI		= /usr/bin/whoami
 endif
 endif
 
+ifdef USE_AUTOCONF
+OPTIMIZER	= $(ACCFLAGS)
+DEFINES		=  -UDEBUG -DNDEBUG -DTRIMMED
+XBCFLAGS	=
+else
+
 #
 # Debug by default.
 #
@@ -260,6 +269,14 @@ DEFINES		= -UDEBUG -DNDEBUG -DTRIMMED
 endif
 endif
 endif
+endif # !USE_AUTOCONF
+
+ifdef MOZ_DEBUG
+OPTIMIZER	= -g
+JAVA_OPTIMIZER	= -g
+DEFINES		= -DDEBUG -UNDEBUG -DDEBUG_$(shell $(WHOAMI)) -DTRACING
+XBCFLAGS	= -FR$*
+endif
 
 #
 # XXX For now, we're including $(DEPTH)/include directly instead of
@@ -267,7 +284,7 @@ endif
 # be put in the library directories where it belongs so that it can
 # get exported to dist properly.
 #
-INCLUDES	= $(LOCAL_PREINCLUDES) $(MODULE_PREINCLUDES) -I$(DEPTH)/include $(LOCAL_INCLUDES) $(OS_INCLUDES)
+INCLUDES	= $(LOCAL_PREINCLUDES) $(MODULE_PREINCLUDES) -I$(topsrcdir)/include $(LOCAL_INCLUDES) $(OS_INCLUDES)
 
 LIBNT		= $(DIST)/lib/libnt.$(LIB_SUFFIX)
 LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
@@ -318,7 +335,7 @@ NOMD_CFLAGS	= $(XP_DEFINE) $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XC
 # Include the binary distrib stuff, if necessary.
 #
 ifdef NS_BUILD_CORE
-include $(DEPTH)/config/coreconf.mk
+include $(topsrcdir)/config/coreconf.mk
 endif
 
 #
@@ -329,7 +346,7 @@ endif
 ifneq (,$(filter Linux,$(OS_ARCH)))
 MOZILLA_DETECT			= 1
 MOZILLA_DETECT_DIR		= $(DEPTH)/config/mkdetect
-MOZILLA_DETECT_IDENT	= $(shell $(MOZILLA_DETECT_DIR)/detect_hostident.sh)
+MOZILLA_DETECT_IDENT	= $(shell $(topsrcdir)/config/mkdetect/detect_hostident.sh)
 MOZILLA_DETECT_NAME		= detect_$(MOZILLA_DETECT_IDENT)_gen.mk
 MOZILLA_DETECT_GEN		= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
 endif
@@ -337,7 +354,7 @@ endif
 #
 # Now include the platform-specific stuff.
 #
-include $(DEPTH)/config/$(OS_ARCH).mk
+include $(topsrcdir)/config/$(OS_ARCH).mk
 
 #
 # Some platforms (Solaris) might require builds using either
@@ -350,10 +367,22 @@ endif
 #
 # Name of the binary code directories
 #
+ifndef USE_AUTOCONF
 ifeq ($(OS_ARCH)_$(PROCESSOR_ARCHITECTURE),WINNT_x86)
 OBJDIR_NAME	= $(OS_CONFIG)$(OS_VERSION)$(OBJDIR_TAG).OBJ
 else
 OBJDIR_NAME	= $(OS_CONFIG)$(OS_VERSION)$(PROCESSOR_ARCHITECTURE)$(COMPILER)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
+endif
+
+else
+# We're autoconf freaks here
+# Override defaults
+EMACS			= $(ACEMACS)
+PERL			= $(ACPERL)
+RANLIB			= $(ACRANLIB)
+UNZIP_PROG		= $(ACUNZIP)
+WHOAMI			= $(ACWHOAMI)
+ZIP_PROG		= $(ACZIP)
 endif
 
 # Figure out where the binary code lives. It either lives in the src
@@ -373,8 +402,10 @@ endif
 # all public include files go in subdirectories of PUBLIC:
 PUBLIC		= $(XPDIST)/public
 
+ifndef USE_AUTOCONF
 VPATH		= $(OBJDIR)
 DEPENDENCIES	= $(OBJDIR)/.md
+endif
 
 ifneq ($(OS_ARCH),WINNT)
 MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
@@ -413,8 +444,11 @@ MOZ_JSD		= 1
 MOZ_NAV_BUILD_PREFIX = 1
 endif
 ifdef MOZ_MEDIUM
-DEFINES		+= -DEDITOR -DMOZ_COMMUNICATOR_IIDS
+DEFINES		+= -DMOZ_COMMUNICATOR_IIDS
+ifndef NO_EDITOR
+DEFINES		+= -DEDITOR 
 EDITOR		= 1
+endif
 MOZ_JSD		= 1
 MOZ_COMMUNICATOR_IIDS	= 1
 MOZ_COMMUNICATOR_CONFIG_JS	= 1
@@ -428,10 +462,13 @@ NO_SECURITY	= 1
 endif
 endif
 ifdef MOZ_DARK
-DEFINES += -DEDITOR -DMOZ_COMMUNICATOR_IIDS -DMOZ_MAIL_NEWS -DMOZ_OFFLINE \
+DEFINES += -DMOZ_COMMUNICATOR_IIDS -DMOZ_MAIL_NEWS -DMOZ_OFFLINE \
                    -DMOZ_TASKBAR -DMOZ_LDAP -DMOZ_NEO 
 #-DMOZ_CALENDAR
+ifndef NO_EDITOR
+DEFINES	+= -DEDITOR 
 EDITOR		= 1
+endif
 MOZ_JSD		= 1
 MOZ_COMMUNICATOR_IIDS	= 1
 MOZ_COMMUNICATOR_CONFIG_JS	= 1
@@ -579,6 +616,16 @@ endif
 ifdef MODULAR_NETLIB
 DEFINES 	+= -DMODULAR_NETLIB
 endif
+
+ifndef MOZ_FE
+MOZ_FE = x
+endif
+
+ifndef MOZ_USER_DIR
+MOZ_USER_DIR = \".netscape\"
+endif
+
+DEFINES 	+= -DMOZ_USER_DIR=$(MOZ_USER_DIR)
 
 ######################################################################
 

@@ -45,7 +45,11 @@ CPU_ARCH		= ppc
 # definitions so that the linker can catch multiply-defined symbols.
 # Also, common symbols are not allowed with Rhapsody dynamic libraries.
 
+ifdef USE_AUTOCONF
+OS_CFLAGS		= $(DSO_CFLAGS)
+else
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fno-common -pipe -DRHAPSODY -DHAVE_STRERROR -DHAVE_BSD_FLOCK
+endif
 
 DEFINES			+= -D_PR_LOCAL_THREADS_ONLY -D_PR_NEED_FAKE_POLL
 

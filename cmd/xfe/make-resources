@@ -19,9 +19,14 @@
 DEST=$1; shift
 NAME=$1; shift
 CLASS=$1; shift
+VERSIONN=$1; shift
+STRS=$1; shift
+RESOURCES=$1; shift
+MOZ_USER_DIR=$1; shift
 VSUFFIX=$1; shift
 SS=$1; shift
 LOCALE_MAP=$1
+
 
 if test $# -eq 2
 then
@@ -37,7 +42,7 @@ PROGNAME="mozilla"
 
 echo "Generating ${DEST} from resources..."
 
-VN=`sed -n 's/^#define VERSION_NUMBER *\(.*\)$/\1/p' versionn.h`
+VN=`sed -n 's/^#define VERSION_NUMBER *\(.*\)$/\1/p' ${VERSIONN}`
 VERS=`echo ${VN}${VSUFFIX}`
 
 SGIP=`echo ${DEST} | sed -n 's/.*IRIX.*/TRUE/p'`
@@ -66,7 +71,7 @@ else
 fi
 
 rm -f ${DEST}
-cat resources ${LOCALE_MAP} strs | sed \
+cat ${RESOURCES} ${LOCALE_MAP} ${STRS} | sed \
 	"s/@NAME@/${NAME}/g;
 	 s/@CLASS@/${CLASS}/g;
 	 s/@PROGNAME@/${PROGNAME}/g;
@@ -81,5 +86,6 @@ cat resources ${LOCALE_MAP} strs | sed \
 	 s:@LIBDIR@:${LOC_LIB_DIR}:g;
 	 s/@MAIL_IM_HACK@/${MAIL_IM_HACK}/g;
 	 s/@NEWS_IM_HACK@/${NEWS_IM_HACK}/g;
-	 s/@URLVERSION@/${VERS}/g" > ${DEST}
+	 s/@URLVERSION@/${VERS}/g;
+	 s/@MOZ_USER_DIR@/${MOZ_USER_DIR}/g" > ${DEST}
 

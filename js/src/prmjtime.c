@@ -57,10 +57,6 @@
 
 #ifdef XP_UNIX
 
-#ifdef SOLARIS
-extern int gettimeofday(struct timeval *tv);
-#endif
-
 #include <sys/time.h>
 
 #endif /* XP_UNIX */
@@ -240,11 +236,7 @@ PRMJ_Now(void)
 #endif
 
 #ifdef XP_UNIX
-#if defined(SOLARIS)
-    gettimeofday(&tv);
-#else
     gettimeofday(&tv, 0);
-#endif /* SOLARIS */
     LL_UI2L(s2us, PRMJ_USEC_PER_SEC);
     LL_UI2L(s, tv.tv_sec);
     LL_UI2L(us, tv.tv_usec);

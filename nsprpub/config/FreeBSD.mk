@@ -28,7 +28,11 @@ RANLIB			= ranlib
 OS_REL_CFLAGS		= -mno-486 -Di386
 CPU_ARCH		= x86
 
+ifdef USE_AUTOCONF
+OS_CFLAGS		= $(DSO_CFLAGS)
+else
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DFREEBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK -D_PR_NEED_POLL
+endif
 
 ifeq ($(USE_PTHREADS),1)
 OS_LIBS			= -lc_r

@@ -11,7 +11,7 @@
 !      on the Preferences dialogs under the Options menu first.
 !      Most things are customizable from there.  Things which are
 !      settable via the Preferences dialog boxes are stored in
-!      the ~/.netscape/preferences file, and not in X resources.
+!      the ~/@MOZ_USER_DIR@/preferences file, and not in X resources.
 !      ==========================================================
 !
 ! This file lists the default resources built in to @NAME@.
@@ -216,7 +216,7 @@
 
 
 ! By default, the geometries of components (browsers, mail, address book, etc)
-! are saved in ~/.netscape/preferences.js.  If this pisses you off, uncomment
+! are saved in ~/@MOZ_USER_DIR@/preferences.js.  If this pisses you off, uncomment
 ! the following line and Mozilla will not remember component geometries.
 !
 ! Equivalent to using the '-dont-save-geometry-prefs' startup flag.

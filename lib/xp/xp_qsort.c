@@ -36,14 +36,14 @@
 /* We need this because Solaris' version of qsort is broken and
  * causes array bounds reads.
  */
-#if defined(SOLARIS) || defined(XP_MAC)
+#if !defined(HAVE_QSORT) || defined(BROKEN_QSORT)
 
 #if defined(LIBC_SCCS) && !defined(lint)
 #if 0
 static char sccsid[] = "@(#)qsort.c	8.1 (Berkeley) 6/4/93";
 #endif
 static const char rcsid[] =
-	"$Id: xp_qsort.c,v 3.2 1998/04/07 23:30:24 slamm Exp $";
+	"$Id: xp_qsort.c,v 3.3 1998/08/19 20:38:57 cls%seawood.org Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdlib.h>
@@ -192,4 +192,4 @@ loop:	SWAPINIT(a, es);
 	}
 /*		qsort(pn - r, r / es, es, cmp);*/
 }
-#endif /* SOLARIS or XP_MAC */
+#endif /* !HAVE_QSORT || BROKEN_QSORT */

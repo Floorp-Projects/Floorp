@@ -67,6 +67,10 @@ CPU_ARCH	= rs6000
 
 RANLIB		= ranlib
 
+ifdef USE_AUTOCONF
+OS_CFLAGS	=
+else
+
 OS_CFLAGS 	= -qro -qroconst -DAIX -DSYSV
 ifeq ($(CC),xlC_r)
 OS_CFLAGS 	+= -qarch=com
@@ -81,6 +85,8 @@ ifeq ($(OS_RELEASE),4.3)
 OS_CFLAGS	+= -DAIX4_3
 endif
 endif
+
+endif # USE_AUTOCONF
 
 #
 # Special link info for constructing AIX programs. On AIX we have to

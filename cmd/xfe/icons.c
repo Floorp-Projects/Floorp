@@ -2709,15 +2709,15 @@ FE_AboutData (const char *which,
 	      a = strdup (
 #ifdef JAVA
 #ifndef MOZ_COMMUNICATOR_ABOUT
-#		          include "../../l10n/us/xp/about-java-lite.h"
+#		          include "xp/about-java-lite.h"
 #else
-#		          include "../../l10n/us/xp/about-java.h"
+#		          include "xp/about-java.h"
 #endif
 #else
 #ifndef MOZ_COMMUNICATOR_ABOUT
-#		          include "../../l10n/us/xp/about-lite.h"
+#		          include "xp/about-lite.h"
 #else
-#		          include "../../l10n/us/xp/about.h"
+#		          include "xp/about.h"
 #endif
 #endif
 		         );
@@ -2737,15 +2737,15 @@ FE_AboutData (const char *which,
 	      a = strdup (
 #ifdef JAVA
 #ifndef MOZ_COMMUNICATOR_ABOUT
-#		          include "../../l10n/us/xp/splash-java-lite.h"
+#		          include "xp/splash-java-lite.h"
 #else
-#		          include "../../l10n/us/xp/splash-java.h"
+#		          include "xp/splash-java.h"
 #endif
 #else
 #ifndef MOZ_COMMUNICATOR_ABOUT
-#		          include "../../l10n/us/xp/splash-lite.h"
+#		          include "xp/splash-lite.h"
 #else
-#		          include "../../l10n/us/xp/splash.h"
+#		          include "xp/splash.h"
 #endif
 #endif
 		         );
@@ -2755,7 +2755,7 @@ FE_AboutData (const char *which,
 	{
 	  ever_loaded_map = TRUE;
 	  a = strdup (
-#		      include "../../l10n/us/xp/authors2.h"
+#		      include "xp/authors2.h"
 		     );
 	}
       else if (!strcmp (which,"license"))
@@ -2776,7 +2776,7 @@ FE_AboutData (const char *which,
       else if (!strcmp (which,"mozilla"))
 	{
 	  a = strdup (
-#		      include "../../l10n/us/xp/mozilla.h"
+#		      include "xp/mozilla.h"
 		      );
 	}
       else if (!strcmp (which,
@@ -2792,7 +2792,7 @@ FE_AboutData (const char *which,
      else
      {
 		  a = strdup (
-#		      include "../../l10n/us/xp/mail.h"
+#		      include "xp/mail.h"
 		      );
      }
 	}
@@ -2817,7 +2817,7 @@ FE_AboutData (const char *which,
 	  else
 	    {
 	      a = strdup (
-#		          include "../../l10n/us/xp/aboutplg.h"
+#		          include "xp/aboutplg.h"
 		         );
 	    }
 	}

@@ -44,3 +44,7 @@ EXPORTS         = bool.h               \
 		  typedefs_md.h        \
 		  zip.h                \
 		  $(NULL)
+ifdef USE_AUTOCONF
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+endif
+

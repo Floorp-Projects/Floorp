@@ -16,14 +16,18 @@
 # Reserved.
 #
 
+ifndef topsrcdir
+topsrcdir = $(MOD_DEPTH)
+endif
+
 # Configuration information for building in the NSPR source module
 
 # Define an include-at-most-once-flag
 NSPR_CONFIG_MK	= 1
 
-include $(MOD_DEPTH)/config/module.df
+include $(topsrcdir)/config/module.df
 
-include $(MOD_DEPTH)/config/arch.mk
+include $(topsrcdir)/config/arch.mk
 
 ifndef NSDEPTH
 NSDEPTH = $(MOD_DEPTH)/..
@@ -48,7 +52,19 @@ CFLAGS		= $(OPTIMIZER) $(OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
 NOMD_CFLAGS	= $(OPTIMIZER) $(NOMD_OS_CFLAGS) $(XP_DEFINE) $(DEFINES) $(INCLUDES) \
 				$(XCFLAGS)
 
-include $(MOD_DEPTH)/config/$(OS_TARGET).mk
+ifdef USE_AUTOCONF
+OPTIMIZER	= $(ACCFLAGS)
+DEFINES		+=  -UDEBUG -DNDEBUG -DTRIMMED
+endif
+
+ifdef MOZ_DEBUG
+OPTIMIZER	= -g
+JAVA_OPTIMIZER	= -g
+DEFINES		= -DDEBUG -UNDEBUG -DDEBUG_$(shell $(WHOAMI)) -DTRACING
+XBCFLAGS	= -FR$*
+endif
+
+include $(topsrcdir)/config/$(OS_TARGET).mk
 
 # Figure out where the binary code lives.
 BUILD		= $(OBJDIR_NAME)
@@ -59,8 +75,17 @@ MOZ_INCL	= $(NSDEPTH)/dist/public/win16
 MOZ_DIST	= $(NSDEPTH)/dist/WIN16D_D.OBJ
 endif
 
+ifdef USE_AUTOCONF
+EMACS			= $(ACEMACS)
+PERL			= $(ACPERL)
+RANLIB			= $(ACRANLIB)
+UNZIP_PROG		= $(ACUNZIP)
+WHOAMI			= $(ACWHOAMI)
+ZIP_PROG		= $(ACZIP)
+else
 VPATH		= $(OBJDIR)
 DEPENDENCIES	= $(OBJDIR)/.md
+endif
 
 ifdef BUILD_DEBUG_GC
 DEFINES		+= -DDEBUG_GC

@@ -173,3 +173,7 @@ DSO_CFLAGS		= +Z
 endif
 
 HAVE_PURIFY		= 1
+
+ifdef USE_AUTOCONF
+OS_CFLAGS		=
+endif

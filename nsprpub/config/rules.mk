@@ -47,9 +47,12 @@
 #			($OBJDIR automatically prepended to it)
 #
 ################################################################################
+ifndef topsrcdir
+topsrcdir = $(MOD_DEPTH)
+endif
 
 ifndef NSPR_CONFIG_MK
-include $(MOD_DEPTH)/config/config.mk
+include $(topsrcdir)/config/config.mk
 endif
 
 #
@@ -148,6 +151,10 @@ ALL_TRASH		= $(TARGETS) $(OBJS) $(OBJDIR) LOGS TAGS $(GARBAGE) \
 			  $(NOSUCHFILE) \
 			  so_locations
 
+ifdef USE_AUTOCONF
+ALL_TRASH		:= $(filter-out $(OBJDIR), $(ALL_TRASH))
+endif
+
 ifdef DIRS
 LOOP_OVER_DIRS		=					\
 	@for d in $(DIRS); do					\
@@ -180,7 +187,11 @@ clean::
 	+$(LOOP_OVER_DIRS)
 
 clobber::
+ifdef USE_AUTOCONF
+	rm -rf $(OBJS) $(TARGETS) $(GARBAGE) so_locations $(NOSUCHFILE)
+else
 	rm -rf $(OBJS) $(TARGETS) $(OBJDIR) $(GARBAGE) so_locations $(NOSUCHFILE)
+endif
 	+$(LOOP_OVER_DIRS)
 
 realclean clobber_all::
@@ -335,18 +346,18 @@ else
 	$(CC) -Fo$@ -c $(CFLAGS) $*.c
 endif
 else
-	$(CC) -o $@ -c $(CFLAGS) $*.c
+	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
 $(OBJDIR)/%.$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
-	$(AS) -o $@ $(ASFLAGS) -c $*.s
+	$(AS) -o $@ $(ASFLAGS) -c $<
 
 %.i: %.c
 	$(CC) -C -E $(CFLAGS) $< > $*.i
 
 %: %.pl
-	rm -f $@; cp $*.pl $@; chmod +x $@
+	rm -f $@; cp $< $@; chmod +x $@
 
 ################################################################################
 # Special gmake rules.

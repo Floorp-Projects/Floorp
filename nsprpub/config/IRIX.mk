@@ -111,3 +111,7 @@ DSO_LDOPTS		= -elf -shared -all
 ifdef DSO_BACKEND
 DSO_LDOPTS		+= -soname $(DSO_NAME)
 endif
+
+ifdef USE_AUTOCONF
+OS_CFLAGS		=
+endif

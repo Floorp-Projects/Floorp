@@ -584,7 +584,8 @@ endif
 
 INCLUDES	+= -Isrc -I. -I$(DEPTH)/dist/public/nls -I$(DEPTH)/dist/public/security \
 		-I$(DEPTH)/lib/libmsg -I$(DEPTH)/dist/public/ldap \
-		-I$(DEPTH)/modules/libimg/public
+		-I$(DEPTH)/modules/libimg/public \
+		-I$(DEPTH)/l10n/us
 
 
 #######################################################################
@@ -1057,7 +1058,7 @@ e_kit_resources.h: e_kit.ad
 	@echo ';' >> $@
 
 $(OBJDIR)/Netscape-nis-export.ad $(OBJDIR)/Netscape-export.ad: Makefile resources versionn.h strs make-resources $(LOCALE_MAP)
-	@./make-resources $@ Netscape Netscape "" export $(LOCALES)
+	@./make-resources $@ Netscape Netscape versionn.h strs resources $(MOZ_USER_DIR) "" export $(LOCALES)
 
 #######################################################################
 # The "-export" targets

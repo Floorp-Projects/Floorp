@@ -49,7 +49,7 @@
 #define BIG_ENDIAN      4321
 #define LITTLE_ENDIAN   1234            /* LSB first: i386, vax, all NT risc */
 
-#ifndef SVR4
+#if !defined(SVR4) && !defined(__svr4__)
 /* compat.h is only in 4.1.3 machines. - dp */
 #include <compat.h>
 #endif
