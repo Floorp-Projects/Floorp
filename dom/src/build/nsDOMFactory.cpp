@@ -453,6 +453,7 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
       return NS_NewScriptHTMLParamElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_pre:
       return NS_NewScriptHTMLPreElement(aContext, aElement, aParent, aReturn);
+    case DOMHTMLTag_blockquote:
     case DOMHTMLTag_q:
       return NS_NewScriptHTMLQuoteElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_script:
@@ -483,7 +484,6 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
       return NS_NewScriptHTMLTitleElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_ul:
       return NS_NewScriptHTMLUListElement(aContext, aElement, aParent, aReturn);
-    case DOMHTMLTag_blockquote:
     case DOMHTMLTag_fieldset:
     case DOMHTMLTag_ilayer:
     case DOMHTMLTag_layer:
