@@ -28,6 +28,8 @@
 #include "nsIDOMMouseListener.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIStatefulFrame.h"
+#include "nsCOMPtr.h"
+#include "nsIHTMLContent.h"
 
 #ifndef ENDER_LITE
 #include "nsGfxTextControlFrame.h"
@@ -41,7 +43,6 @@ typedef   nsGfxTextControlFrame2 nsNewFrame;
 class nsIPresState;
 class nsFormFrame;
 class nsISupportsArray;
-class nsIHTMLContent;
 
 class nsFileControlFrame : public nsAreaFrame,
                            public nsIFormControlFrame,
@@ -189,6 +190,7 @@ protected:
   nsNewFrame* mTextFrame;
   nsFormFrame*        mFormFrame;
   nsIHTMLContent*     mTextContent;
+  nsCOMPtr<nsIHTMLContent> mBrowse;
   nsString*           mCachedState;
   // XXX Hack: pres context needed by function MouseClick()
   nsIPresContext*     mPresContext;  // weak reference

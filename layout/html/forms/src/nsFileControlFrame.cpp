@@ -90,6 +90,13 @@ nsFileControlFrame::nsFileControlFrame():
 nsFileControlFrame::~nsFileControlFrame()
 {
   NS_IF_RELEASE(mTextContent);
+
+  // remove ourself as a listener of the button (bug 40533)
+  if (mBrowse) {
+    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mBrowse));
+    reciever->RemoveEventListenerByIID(this, kIDOMMouseListenerIID);
+  }
+
   if (mCachedState) {
     delete mCachedState;
     mCachedState = nsnull;
@@ -129,22 +136,16 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   }
 
   // create browse button
-  nsIHTMLContent* browse = nsnull;
-  if (NS_OK == NS_NewHTMLInputElement(&browse, nodeInfo)) {
-    browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
+  if (NS_OK == NS_NewHTMLInputElement(getter_AddRefs(mBrowse), nodeInfo)) {
+    mBrowse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
     //browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
 
-    aChildList.AppendElement(browse);
+    aChildList.AppendElement(mBrowse);
 
-    // get the reciever interface from the browser button's content node
-    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(browse));
-
-    // we shouldn't have to unregister this listener because when
-    // our frame goes away all these content node go away as well
-    // because our frame is the only one who references them.
+    // register as an event listener of the button to open file dialog on mouse click
+    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mBrowse));
     reciever->AddEventListenerByIID(this, kIDOMMouseListenerIID);
   }
-  NS_IF_RELEASE(browse);
 
   nsString value;
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
