@@ -87,6 +87,8 @@
 #include "nsWebBrowserPersist.h"
 
 
+#define NS_SUCCESS_DONT_FIXUP NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 1)
+
 // Information about a DOM document
 struct DocData
 {
@@ -105,6 +107,7 @@ struct URIData
     PRPackedBool mSaved;
     PRPackedBool mIsSubFrame;
     PRPackedBool mDataPathIsRelative;
+    PRPackedBool mNeedsFixup;
     nsString mFilename;
     nsString mSubFrameExt;
     nsCOMPtr<nsIURI> mFile;
@@ -349,7 +352,10 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(
     rv = GetValidURIFromObject(aFile, getter_AddRefs(fileAsURI));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_INVALID_ARG);
 
-    return SaveURIInternal(aURI, aCacheKey, aReferrer, aPostData, aExtraHeaders, fileAsURI, PR_FALSE);
+    // SaveURI doesn't like broken uris.
+    mPersistFlags |= PERSIST_FLAGS_FAIL_ON_BROKEN_LINKS;
+    rv = SaveURIInternal(aURI, aCacheKey, aReferrer, aPostData, aExtraHeaders, fileAsURI, PR_FALSE);
+    return NS_FAILED(rv) ? rv : NS_OK;
 }
 
 /* void saveDocument (in nsIDOMDocument aDocument, in nsIURI aFileURI,
@@ -1209,22 +1215,30 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
         }
     }
 
-    // Add the output transport to the output map with the channel as the key
-    nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(inputChannel);
-    nsISupportsKey key(keyPtr);
-    mOutputMap.Put(&key, new OutputData(aFile, aURI, aCalcFileExt));
-
     // Read from the input channel
     rv = inputChannel->AsyncOpen(this, nsnull);
     if (rv == NS_ERROR_NO_CONTENT)
     {
         // Assume this is a protocol such as mailto: which does not feed out
         // data and just ignore it.
+        return NS_SUCCESS_DONT_FIXUP;
     }
     else if (NS_FAILED(rv))
     {
-        EndDownload(NS_ERROR_FAILURE);
-        return NS_ERROR_FAILURE;
+        // Opening failed, but do we care?
+        if (mPersistFlags & PERSIST_FLAGS_FAIL_ON_BROKEN_LINKS)
+        {
+            EndDownload(NS_ERROR_FAILURE);
+            return NS_ERROR_FAILURE;
+        }
+        return NS_SUCCESS_DONT_FIXUP;
+    }
+    else
+    {
+        // Add the output transport to the output map with the channel as the key
+        nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(inputChannel);
+        nsISupportsKey key(keyPtr);
+        mOutputMap.Put(&key, new OutputData(aFile, aURI, aCalcFileExt));
     }
 
     return NS_OK;
@@ -2202,14 +2216,22 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
     rv = pthis->SaveURIInternal(uri, nsnull, nsnull, nsnull, nsnull, fileAsURI, PR_TRUE);
-
-    // Store the actual object because once it's persisted this
-    // will be fixed up with the right file extension.
-
-    data->mFile = fileAsURI;
-    data->mSaved = PR_TRUE;
-
+    // if SaveURIInternal fails, then it will have called EndDownload,
+    // which means that |aData| is no longer valid memory.  we MUST bail.
     NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+    if (rv == NS_OK)
+    {
+        // Store the actual object because once it's persisted this
+        // will be fixed up with the right file extension.
+
+        data->mFile = fileAsURI;
+        data->mSaved = PR_TRUE;
+    }
+    else
+    {
+        data->mNeedsFixup = PR_FALSE;
+    }
 
     if (pthis->mSerializingOutput)
         return PR_FALSE;
@@ -2900,6 +2922,10 @@ nsWebBrowserPersist::FixupURI(nsAString &aURI)
         return NS_ERROR_FAILURE;
     }
     URIData *data = (URIData *) mURIMap.Get(&key);
+    if (!data->mNeedsFixup)
+    {
+        return NS_OK;
+    }
     nsCOMPtr<nsIURI> fileAsURI;
     if (data->mFile)
     {
@@ -3227,6 +3253,7 @@ nsWebBrowserPersist::MakeAndStoreLocalFilenameInURIMap(
     NS_ENSURE_TRUE(data, NS_ERROR_OUT_OF_MEMORY);
 
     data->mNeedsPersisting = aNeedsPersisting;
+    data->mNeedsFixup = PR_TRUE;
     data->mFilename = filename;
     data->mSaved = PR_FALSE;
     data->mIsSubFrame = PR_FALSE;
