@@ -27,7 +27,6 @@ var rowElement = null;
 var cellElement = null;
 var maxRows = 10000;
 var maxColumns = 10000;
-var percentChar = "";
 var maxPixels = 10000;
 var rows;
 var columns;
@@ -47,20 +46,25 @@ function Startup()
     dump("Failed to create a new table!\n");
     window.close();
   }
+  dump("Rows editbox:"+document.getElementById("rows")+"\n");
+  dump("Columns editbox:"+document.getElementById("columns")+"\n");
+  dump("width editbox:"+document.getElementById("width")+"\n");
+  dump("pixelOrPercentSelect:"+document.getElementById("pixelOrPercentSelect")+"\n");
+  dump("borderInput editbox:"+document.getElementById("borderInput")+"\n");
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
   dialog.rowsInput = document.getElementById("rows");
   dialog.columnsInput = document.getElementById("columns");
   dialog.widthInput = document.getElementById("width");
-  dialog.borderInput = document.getElementById("border");
+  dialog.borderInput = document.getElementById("borderInput");
+  dialog.pixelOrPercentSelect = document.getElementById("pixelOrPercentSelect");
 
   // Make a copy to use for AdvancedEdit
   globalElement = tableElement.cloneNode(false);
   
   // Initialize all widgets with image attributes
   InitDialog();
-
 
   // Set initial number to 1 row, 2 columns:
   // Note, these are not attributes on the table,
@@ -80,9 +84,12 @@ function InitDialog()
 {  
   // Get default attributes set on the created table:
   // Get the width attribute of the element, stripping out "%"
-  // This sets contents of button text and "percentChar" variable
-  dialog.widthInput.value = InitPixelOrPercentPopupButton(globalElement, "width", "pixelOrPercentButton");
+  // This sets contents of select combobox list
+  dialog.widthInput.value = InitPixelOrPercentCombobox(globalElement,"width","pixelOrPercentSelect");
   dialog.borderInput.value = globalElement.getAttribute("border");
+
+  // Resize window after filling combobox
+  window.sizeToContent();
 }
 
 // Get and validate data from widgets.
@@ -103,7 +110,7 @@ function ValidateData()
     return false;
   }
 
-  // Set attributes: these may be empty strings
+  // Set attributes: NOTE: These may be empty strings
   borderText = TrimString(dialog.borderInput.value);
   if (borderText) {
     // Set the other attributes on the table
@@ -111,10 +118,11 @@ function ValidateData()
       globalElement.setAttribute("border", borderText);
   }
 
+  var isPercent = (dialog.pixelOrPercentSelect.selectedIndex == 1);
   widthText = TrimString(dialog.widthInput.value);
   if (widthText) {
     var maxLimit;
-    if (percentChar == "%") {
+    if (isPercent) {
       maxLimit = 100;
     } else {
       // Upper limit when using pixels
@@ -122,9 +130,9 @@ function ValidateData()
     }
 
     widthText = ValidateNumberString(dialog.widthInput.value, 1, maxLimit);
-    if (widthText != "") {
-      widthText += percentChar;
-      dump("Table Width="+widthText+"\n");
+    if (widthText) {
+      if (isPercent)
+        widthText += "%";
       globalElement.setAttribute("width", widthText);
     }
   }
@@ -138,26 +146,36 @@ function onOK()
   {
     editorShell.CloneAttributes(tableElement, globalElement);
 
-    // Create necessary rows and cells for the table
-    dump("Rows = "+rows+"  Columns = "+columns+"\n");
-    for (i = 0; i < rows; i++)
+    var tableBody = editorShell.CreateElementWithDefaults("tbody");
+    if (tableBody)
     {
-      newRow = editorShell.CreateElementWithDefaults("tr");
-      if (newRow)
+      tableElement.appendChild(tableBody);
+
+      // Create necessary rows and cells for the table
+      dump("Rows = "+rows+"  Columns = "+columns+"\n");
+      for (i = 0; i < rows; i++)
       {
-        tableElement.appendChild(newRow);
-        for (j = 0; j < columns; j++)
+        var newRow = editorShell.CreateElementWithDefaults("tr");
+        if (newRow)
         {
-          newCell = editorShell.CreateElementWithDefaults("td");
-          if (newCell)
+          tableBody.appendChild(newRow);
+          for (j = 0; j < columns; j++)
           {
-            newRow.appendChild(newCell);
+            newCell = editorShell.CreateElementWithDefaults("td");
+            if (newCell)
+            {
+              newRow.appendChild(newCell);
+            }
           }
         }
       }
     }
-    // Don't delete selected text when inserting
-    editorShell.InsertElement(tableElement, false);
+    try {
+      // Don't delete selected text when inserting
+      editorShell.InsertElementAtSelection(tableElement, false);
+    } catch (e) {
+      dump("Exception occured in InsertElementAtSelection\n");
+    }
     return true;
   }
   return false;

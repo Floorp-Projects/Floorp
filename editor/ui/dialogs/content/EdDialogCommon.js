@@ -25,10 +25,10 @@
 // Each editor window must include this file
 // Variables  shared by all dialogs:
 var editorShell;
-var SelectionOnly        = 1; 
-var FormatedWithDoctype        = 2; 
-var FormatedWithoutDoctype      = 6; 
-var maxPixels           = 10000;
+var SelectionOnly = 1; 
+var FormatedWithDoctype  = 2; 
+var FormatedWithoutDoctype = 6; 
+var maxPixels  = 10000;
 // The element being edited - so AdvancedEdit can have access to it
 var globalElement;
 
@@ -63,40 +63,41 @@ function StringExists(string)
 
 function ClearList(list)
 {
-  list.selectedIndex = -1;
-  for( i = (list.length-1); i >= 0; i-- ) {
-    list.remove(i);
+  if (list) {
+    list.selectedIndex = -1;
+    for( i=list.length-1; i >= 0; i--)
+      list.remove(i);
   }
 }
 
 function ReplaceStringInList(list, index, string)
 {
+  if (index < list.options.length)
+  {
   //Hmmm... We should be able to simply set the "text" and "value"
   //  properties of the option element, but setting "text" doesn't work.
   //  Replace with a new node instead:
-  if (index < list.options.length)
-  {
 /*
-    node           = list.options[index];
+    node = list.options[index];
     dump("BEFORE Option node text: "+node.text+" Value: "+node.value+"\n");
-    node.text           = string;
-    node.value           = string;
+    node.text = string;
+    node.value = string;
     dump("AFTER Option node text: "+node.text+" Value: "+node.value+"\n");
 */
     // Save and remove selection else we have trouble below!
     //  (This must be a bug!)
-    selIndex           = list.selectedIndex;
-    list.selectedIndex         = -1;
+    selIndex = list.selectedIndex;
+    list.selectedIndex = -1;
 
-    optionNode           = new Option(string, string);
+    optionNode = new Option(string, string);
     // Remove existing option node
     //list.remove(index);
-    list.options[index]       = null;
+    list.options[index] = null;
     // Insert the new node
-    list.options[index]       = optionNode;
+    list.options[index] = optionNode;
     // NOTE: If we insert, then remove, we crash!
     // Reset the selected item
-    list.selectedIndex         = selIndex;
+    list.selectedIndex = selIndex;
   }
 }
 
@@ -107,16 +108,11 @@ function AppendStringToListByID(list, stringID)
 
 function AppendStringToList(list, string)
 {
-  dump("**** Append String = "+string+"\n");
-  
   // THIS DOESN'T WORK! Result is a XULElement -- namespace problem
-  //optionNode1         = document.createElement("option");
-  // "Unsanctioned method from Vidur:
-  // createElementWithNamespace("http://... [the HTML4 URL], "option);
-
+  // optionNode1 = document.createElement("option");
   // This works - Thanks to Vidur! Params = name, value
+  optionNode = new Option(string, string);
 
-  optionNode           = new Option(string, string);
   if (optionNode) {
     list.add(optionNode, null);    
   } else {
@@ -135,8 +131,8 @@ function ValidateNumberString(value, minValue, maxValue)
 {
   // Get the number version (strip out non-numbers)
 
-  value           = value.replace(/\D+/g, "");
-  number           = value - 0;
+  value = value.replace(/\D+/g, "");
+  number = value - 0;
   if ((value+"") != "") {
     if (number && number >= minValue && number <= maxValue ){
 
@@ -220,6 +216,12 @@ function ReplaceWhitespace(string, charReplace) {
   return string.replace(/(^\s+)|(\s+$)/g,'').replace(/\s+/g,charReplace)
 }
 
+// Replace whitespace with "_" and allow only "word" characters (a-z,A-Z,0-9 and _)
+function PrepareStringForURL(string)
+{
+  return ReplaceWhitespace(string,"_").replace(/\W+/g,'')
+}
+
 // this function takes an elementID and a flag
 // if the element can be found by ID, then it is either enabled (by removing "disabled" attr)
 // or disabled (setAttribute) as specified in the "doEnable" parameter
@@ -247,7 +249,7 @@ function SetElementEnabledByID( elementID, doEnable )
 
 function SetClassEnabledByID( elementID, doEnable )
 {
-  element           = document.getElementById(elementID);
+  element = document.getElementById(elementID);
   if ( element )
   {
     if ( doEnable )
@@ -265,29 +267,66 @@ function SetClassEnabledByID( elementID, doEnable )
   }
 }
 
+// Get the text appropriate to parent container
+//  that may be a cell or window
+function GetAppropriatePercentString()
+{
+  var selection = window.editorShell.editorSelection;
+  if (selection) {
+    if (editorShell.GetElementOrParentByTagName("td",selection.focusNode));
+      return GetString("PercentOfCell");
+  }
+  return GetString("PercentOfWindow");
+}
+
+// Returns the value for the "size" input element ("%" is stripped)
+// Appends option elements with the correct strings to the select widget
+function InitPixelOrPercentCombobox(element, attribute, selectID)
+{
+  size   = element.getAttribute(attribute);
+  select = document.getElementById(selectID);
+
+  if (select) {
+    ClearList(select);
+    AppendStringToList(select,GetString("Pixels"));
+    AppendStringToList(select,GetAppropriatePercentString());
+  }
+
+  // Search for a "%" character
+  percentIndex = size.search(/%/);
+  if (percentIndex > 0) {
+    // Strip out the %
+    size = size.substr(0, percentIndex);
+    if (select)
+      select.selectedIndex = 1;
+  } else {
+    if (select)
+      select.selectedIndex = 0;
+  }
+  return size;
+}
+
 // Next two methods assume caller has a "percentChar" variable 
-//  to hold an empty string (no % used) or "%" (percent is used)
+//  to hold an empty string (pixels are used) or "%" (percent is used)
 
 function InitPixelOrPercentPopupButton(element, attribute, buttonID)
 {
-  size             = element.getAttribute(attribute);
-  btn             = document.getElementById(buttonID);
+  size = element.getAttribute(attribute);
+  btn  = document.getElementById(buttonID);
 
   // Search for a "%" character
 
-  percentIndex           = size.search(/%/);
+  percentIndex = size.search(/%/);
   if (percentIndex > 0) {
-    percentChar         = "%";
+    percentChar = "%";
     // Strip out the %
-    size           = size.substr(0, percentIndex);
-
-    // TODO: USE ENTITIES FOR TEXT VALUES
+    size = size.substr(0, percentIndex);
 
     if (btn)
-      btn.setAttribute("value","percent");
+      btn.setAttribute("value",GetAppropriatePercentString());
   } else {
     if (btn)
-      btn.setAttribute("value","pixels");
+      btn.setAttribute("value",GetString("Pixels"));
   }
   return size;
 }
@@ -296,10 +335,10 @@ function InitPixelOrPercentPopupButton(element, attribute, buttonID)
 
 function SetPixelOrPercentByID(elementID, percentString)
 {
-  percentChar           = percentString;
+  percentChar = percentString;
   dump("SetPixelOrPercent. PercentChar="+percentChar+"\n");
 
-  btn             = document.getElementById( elementID );
+  btn = document.getElementById( elementID );
   if ( btn )
   {
     if ( percentChar == "%" )
@@ -309,15 +348,15 @@ function SetPixelOrPercentByID(elementID, percentString)
       {
         dump("Containing Element = " + containing + "\n");
         if (containing.nodeName == "TD")
-          btn.setAttribute( "value", "% of cell" );
+          btn.setAttribute("value", GetString("PercentOfCell"));
         else
-          btn.setAttribute( "value", "% of window" );
+          btn.setAttribute("value", GetString("PercentOfWindow"));
       }
     // need error handling
     }
     else
     {
-      btn.setAttribute( "value", "pixels" );
+      btn.setAttribute("value", GetString("Pixels"));
     }
   }
 }
@@ -325,8 +364,8 @@ function SetPixelOrPercentByID(elementID, percentString)
 // USE onkeyup!
 // forceInteger by petejc (pete@postpagan.com)
 
-var sysBeep           = Components.classes["component://netscape/sound"].createInstance();
-sysBeep               = sysBeep.QueryInterface(Components.interfaces.nsISound);
+var sysBeep = Components.classes["component://netscape/sound"].createInstance();
+sysBeep     = sysBeep.QueryInterface(Components.interfaces.nsISound);
 
 function forceInteger(elementID)
 {
@@ -409,7 +448,7 @@ function getContainer ()
     dump("Trying for caret selection\n");
     var selection = window.editorShell.editorSelection;
     if (selection)
-      {
+    {
         dump("Got selection\n");
         //dump("Selection is " + selection.nodeName + "\n");
         var focusN = selection.focusNode;
@@ -421,11 +460,12 @@ function getContainer ()
           oneup = focusN.parentNode;
           dump("PARENT is " + oneup.nodeName + "\n");
           return oneup;
-                }  
-        }
+         }  
+    }
     else
       return null;
-     }
+   }
    else
      return null;
 }
+

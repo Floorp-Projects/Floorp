@@ -36,11 +36,9 @@
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdInsertTable.js">
-  </script>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <script language="JavaScript" src="chrome://editor/content/EdInsertTable.js"/>
+  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
 
   <xul:broadcaster id="args" value=""/>
   <xul:keyset id="keyset"/>
@@ -50,7 +48,7 @@
       <td align="right">
         <label for="rows"> &numRowsEditField.label; </label>
       </td>
-      <td cellspan="2">
+      <td collspan="2">
         <input type="text" id="rows" maxlength="4" size="4"
             onkeyup="forceInteger('rows')" />
       </td>
@@ -59,22 +57,22 @@
       <td align="right">
         <label for="columns"> &numColumnsEditField.label; </label>
       </td>
-      <td cellspan="2">
+      <td collspan="2">
         <input type="text" id="columns" maxlength="4" size="4"
             onkeyup="forceInteger('columns')" />
       </td>
     </tr>
     <tr class="vcenter">
-      <td align="right" valign="middle">
+      <td align="right">
         <label for="width" > &widthEditField.label; </label>
       </td>
       <td>
         <input type="text" id="width" size="4" maxlength="4"
             onkeyup="forceInteger('width')" />
-       </td>
-       <td>
-        <xul:titledbutton class="popup" id="pixelOrPercentButton" 
-        		value="&percentPopup.value;" align="right" popup="PixelOrPercentMenu" popupanchor="bottomleft"/>
+      </td>
+      <td>
+        <select id="pixelOrPercentSelect" size="1"/>
+        <!-- option elements are appended by JS -->
       </td>
     </tr>
     <tr class="vcenter">
@@ -82,12 +80,12 @@
         <label for="border"> &borderEditField.label; </label>
       </td>
       <td>
-        <!-- THIS IS DUMB Can't figure out how to put "pixels" after the 
-             input box and make them center vertically. Used another TD instead -->
-        <input type="text" id="border" size="4" onkeyup="forceInteger('border')"/>
+        <input type="text" id="borderInput" size="4" onkeyup="forceInteger('border')"/>
       </td>
+      <!-- THIS IS DUMB Can't figure out how to put "pixels" after the 
+           input box and make them center vertically. Used another TD instead -->
       <td>
-        <label for="border"> &pixelsPopup.value; </label>
+        <div>&pixelsPopup.value;</div>
       </td>
     </tr>
   </table>

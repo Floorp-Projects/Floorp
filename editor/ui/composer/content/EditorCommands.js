@@ -221,12 +221,6 @@ function EditorShutdown()
 
 // --------------------------- File menu ---------------------------
 
-function EditorNew()
-{
-  dump("In EditorNew..\n");
-  editorShell.NewWindow();
-}
-
 function EditorOpen()
 {
   dump("In EditorOpen..\n");
@@ -565,6 +559,8 @@ function EditorInsertHLine()
   hLine = editorShell.GetSelectedElement(tagName);
 
   if (hLine) {
+    dump("HLine was found -- opening dialog...!\n");
+
     // We only open the dialog for an existing HRule
     window.openDialog("chrome://editor/content/EdHLineProps.xul", "_blank", "chrome,close,titlebar,modal");
   } else {
@@ -622,7 +618,11 @@ function EditorInsertHLine()
           dump("failed to get HLine prefs\n");
         }
       }
-      editorShell.InsertElement(hLine, true);
+      try {
+        editorShell.InsertElementAtSelection(hLine, true);
+      } catch (e) {
+        dump("Exception occured in InsertElementAtSelection\n");
+      }
     }
   }
   contentWindow.focus();

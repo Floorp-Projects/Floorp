@@ -21,17 +21,22 @@
    - Contributor(s):
   -->
 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
 <overlay id="editorOverlay"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<html:script language="JavaScript" src="chrome://editor/content/editorOverlay.js"/>
 
   <keyset id="defaultKeySet">
-    <!-- key id="newmessagekb" disabled="false" command="true" key="m" onkeypress="NewMessage()" / -->
+    <!-- defined in globalOverlay -->
+	  <key id="key_newNavigator"/>
+	  <key id="key_newMessage"/>
+    <key id="key_newBlankPage"/>
 
-    <key id="neweditorkb"   disabled="false" command="true" key="n" observes="Editor:NewEditor" />
     <key id="openeditorkb"  disabled="false" command="true" key="o" observes="Editor:Open" />
     <key id="savekb"        disabled="false" command="true" key="s" observes="Editor:Save"/>
     <key id="closekb"       disabled="false" command="true" key="w" observes="Editor:Close" />
@@ -108,61 +113,80 @@
     <key id="nextparaextendkb" disabled="false" keycode="VK_DOWN" shift="true" alt="true" onkeypress="EditorEndOfParagraph( true )" />
   </keyset>
 
+  <broadcasterset id="broadcasterset">
+    <!-- Complete broadcasters located in globalOverlay.xul -->
+	  <broadcaster id="cmd_newNavigator"/>
+	  <broadcaster id="cmd_newMessage"/>
+    <broadcaster id="cmd_newCard"/>
+    <broadcaster id="cmd_newEditor"/>
+    <broadcaster id="cmd_newEditorTemplate"/>
+    <broadcaster id="cmd_newEditorDraft"/>
+
     <!-- Formatting-related commands -->
-    <broadcasterset id="broadcasterset">
-      <broadcaster id="Editor:Bold"         bold="false"      disabled="false"  oncommand="EditorToggleStyle('bold')"/>
-      <broadcaster id="Editor:Italic"       italic="false"    disabled="false"  oncommand="EditorToggleStyle('italic')"/>
-      <broadcaster id="Editor:Underline"    underline="false" disabled="false"  oncommand="EditorToggleStyle('underline')"/>
-    
-      <broadcaster id="Editor:Paragraph:Format" format=""/>
-      <broadcaster id="Editor:Paragraph:ListType" format=""/>
-      <broadcaster id="Editor:Font:Face" font=""/>
-      <broadcaster id="Editor:Font:Size" size=""/>
-
-
-      <!-- Broadcaster nodes -->
-      <broadcaster id="Editor:NewEditor"    value="&newCmd.label;"                            oncommand="EditorNew()"/>
-      <broadcaster id="Editor:Open"         value="&openCmd.label;"                           oncommand="EditorOpen()"/>
-      <broadcaster id="Editor:Save"         value="&saveCmd.label;"         disabled="true"   oncommand="EditorSave()"/>
-      <broadcaster id="Editor:SaveAs"       value="&saveAsCmd.label;"       disabled="false"  oncommand="EditorSaveAs()"/>
-      <broadcaster id="Editor:Close"        value="&closeCmd.label;"        disabled="false"  oncommand="EditorClose()"/>
-      <broadcaster id="Editor:PrintSetup"   value="&printSetupCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
-      <broadcaster id="Editor:PrintPreview" value="&printPreviewCmd.label;" disabled="false"  oncommand="EditorPrintPreview()"/>
-      <broadcaster id="Editor:Print"        value="&printCmd.label;"        disabled="false"  oncommand="EditorPrint()"/>
-      <broadcaster id="Editor:Exit"         value="&exitCmd.label;"         disabled="false"  oncommand="EditorExit()"/>
-    
-      <broadcaster id="Editor:Undo"         value="&undoCmd.label;"         disabled="false"  oncommand="EditorUndo()"/>
-      <broadcaster id="Editor:Redo"         value="&redoCmd.label;"         disabled="false"  oncommand="EditorRedo()"/>
-      <broadcaster id="Editor:Cut"          value="&cutCmd.label;"          disabled="false"  oncommand="EditorCut()"/>
-      <broadcaster id="Editor:Copy"         value="&copyCmd.label;"         disabled="false"  oncommand="EditorCopy()"/>
-      <broadcaster id="Editor:Paste"        value="&pasteCmd.label;"        disabled="false"  oncommand="EditorPaste()"/>
-      <broadcaster id="Editor:PasteQuote"   value="&pasteAsQuotationCmd.label;" disabled="false"  oncommand="EditorPasteAsQuotation()"/>
-      <broadcaster id="Editor:Clear"        value="&clearCmd.label;"        disabled="false"  oncommand="_EditorNotImplemented()"/>
-      <broadcaster id="Editor:SelectAll"    value="&selectAllCmd.label;"    disabled="false"  oncommand="EditorSelectAll()"/>
-      <broadcaster id="Editor:Find"         value="&findCmd.label;"                           oncommand="EditorFind()"/>
-      <broadcaster id="Editor:FindNext"     value="&findAgainCmd.label;"    disabled="false"  oncommand="EditorFindNext()"/>
-      <broadcaster id="Editor:CheckSpelling" value="&checkSpellingCmd.label;" disabled="false"  oncommand="CheckSpelling()"/>
-    
-      <!-- need to toggle the menu item text through style -->
-      <broadcaster id="Editor:ToggleCompositionToolbar" value="&hideCompositionToolbarCmd.label;" showing="true" oncommand="_EditorNotImplemented()"/>
-      <broadcaster id="Editor:ToggleFormattingToolbar"  value="&hideFormattingToolbarCmd.label;"  showing="true" oncommand="_EditorNotImplemented()"/>
-    
-      <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"   disabled="false"  oncommand="EditorInsertLink()"/>
-      <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;" disabled="false"  oncommand="EditorInsertNamedAnchor()"/>
-      <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"  disabled="false"  oncommand="EditorInsertImage()"/>
-      <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"  disabled="false"  oncommand="EditorInsertHLine()"/>
-      <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"  disabled="false"  oncommand="EditorInsertTable()"/>
-      <broadcaster id="Editor:InsertHTML"   value="&insertHTMLSourceCmd.label;"  disabled="false"  oncommand="EditorInsertHTML()"/>
-      <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
-      <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:Bold"         bold="false"      disabled="false"  oncommand="EditorToggleStyle('bold')"/>
+    <broadcaster id="Editor:Italic"       italic="false"    disabled="false"  oncommand="EditorToggleStyle('italic')"/>
+    <broadcaster id="Editor:Underline"    underline="false" disabled="false"  oncommand="EditorToggleStyle('underline')"/>
   
-	</broadcasterset>
+    <broadcaster id="Editor:Paragraph:Format" format=""/>
+    <broadcaster id="Editor:Paragraph:ListType" format=""/>
+    <broadcaster id="Editor:Font:Face" font=""/>
+    <broadcaster id="Editor:Font:Size" size=""/>
+
+
+    <!-- Broadcaster nodes -->
+    <!-- Note: NewEditor items are now in globalOverlay.xul -->
+    <broadcaster id="Editor:Open"         value="&openCmd.label;"                           oncommand="EditorOpen()"/>
+    <broadcaster id="Editor:Save"         value="&saveCmd.label;"         disabled="true"   oncommand="EditorSave()"/>
+    <broadcaster id="Editor:SaveAs"       value="&saveAsCmd.label;"       disabled="false"  oncommand="EditorSaveAs()"/>
+    <broadcaster id="Editor:Close"        value="&closeCmd.label;"        disabled="false"  oncommand="EditorClose()"/>
+    <broadcaster id="Editor:PrintSetup"   value="&printSetupCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:PrintPreview" value="&printPreviewCmd.label;" disabled="false"  oncommand="EditorPrintPreview()"/>
+    <broadcaster id="Editor:Print"        value="&printCmd.label;"        disabled="false"  oncommand="EditorPrint()"/>
+    <broadcaster id="Editor:Exit"         value="&exitCmd.label;"         disabled="false"  oncommand="EditorExit()"/>
+  
+    <broadcaster id="Editor:Undo"         value="&undoCmd.label;"         disabled="false"  oncommand="EditorUndo()"/>
+    <broadcaster id="Editor:Redo"         value="&redoCmd.label;"         disabled="false"  oncommand="EditorRedo()"/>
+    <broadcaster id="Editor:Cut"          value="&cutCmd.label;"          disabled="false"  oncommand="EditorCut()"/>
+    <broadcaster id="Editor:Copy"         value="&copyCmd.label;"         disabled="false"  oncommand="EditorCopy()"/>
+    <broadcaster id="Editor:Paste"        value="&pasteCmd.label;"        disabled="false"  oncommand="EditorPaste()"/>
+    <broadcaster id="Editor:PasteQuote"   value="&pasteAsQuotationCmd.label;" disabled="false"  oncommand="EditorPasteAsQuotation()"/>
+    <broadcaster id="Editor:Clear"        value="&clearCmd.label;"        disabled="false"  oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:SelectAll"    value="&selectAllCmd.label;"    disabled="false"  oncommand="EditorSelectAll()"/>
+    <broadcaster id="Editor:Find"         value="&findCmd.label;"                           oncommand="EditorFind()"/>
+    <broadcaster id="Editor:FindNext"     value="&findAgainCmd.label;"    disabled="false"  oncommand="EditorFindNext()"/>
+    <broadcaster id="Editor:CheckSpelling" value="&checkSpellingCmd.label;" disabled="false"  oncommand="CheckSpelling()"/>
+  
+    <!-- need to toggle the menu item text through style -->
+    <broadcaster id="Editor:ToggleCompositionToolbar" value="&hideCompositionToolbarCmd.label;" showing="true" oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:ToggleFormattingToolbar"  value="&hideFormattingToolbarCmd.label;"  showing="true" oncommand="_EditorNotImplemented()"/>
+  
+    <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"   disabled="false"  oncommand="EditorInsertLink()"/>
+    <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;" disabled="false"  oncommand="EditorInsertNamedAnchor()"/>
+    <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"  disabled="false"  oncommand="EditorInsertImage()"/>
+    <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"  disabled="false"  oncommand="EditorInsertHLine()"/>
+    <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"  disabled="false"  oncommand="EditorInsertTable()"/>
+    <broadcaster id="Editor:InsertHTML"   value="&insertHTMLSourceCmd.label;"  disabled="false"  oncommand="EditorInsertHTML()"/>
+    <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
+    <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"   disabled="false"  oncommand="_EditorNotImplemented()"/>
+  </broadcasterset>
 
     <!-- Editor menu items -->
-
     <menu id="fileMenu" value="&fileMenu.label;" accesskey="&filemenu.accesskey;">
     <menupopup>
-      <menuitem accesskey="&filenew.accesskey;"             key="neweditorkb"    observes="Editor:NewEditor"/>
+  	  <!-- From globalOverlay.xul -->
+      <!-- Note slightly different menu item text (value) used here DOESN'T WORK IN MENUS! -->
+  		<menuitem id="menu_newEditor" observes="cmd_newEditor" value="&newBlankPage.label;"/>
+			<menu id="menu_New" value="&newMenu.label;" accesskey="&newMenu.accesskey;">
+				<menupopup>
+	        <!-- From globalOverlay.xul -->
+					<menuitem id="menu_newEditorTemplate"  observes="cmd_newEditorTemplate"/>
+					<menuitem id="menu_newEditorDraft"     observes="cmd_newEditorDraft"/>
+					<menuseparator/>
+					<menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
+					<menuitem id="menu_newMessage"   observes="cmd_newMessage"/>
+					<menuitem id="menu_newCard"      observes="cmd_newCard"/>
+				</menupopup>
+			</menu>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="Editor:Open"/>
       <menuseparator />
       <menuitem accesskey="&filesave.accesskey;"            key="savekb"         observes="Editor:Save"/>
@@ -201,7 +225,6 @@
       <menuitem id="compToolbarMenuitem" accesskey="&viewcompositiontb.accesskey;" observes="Editor:ToggleCompositionToolbar"/>
       <menuitem id="formatToolbarMenuitem" accesskey="&viewformattingtb.accesskey;"  observes="Editor:ToggleFormattingToolbar"/>
       <menuitem id="viewSourceMenuitem" value="&viewPageSource.label;" accesskey="&viewpagesource.accesskey;" oncommand="EditorViewSource();" />
-
 
     <menu id="charsetMenu" value="&dcharMenu.label;" accesskey="&viewcharsetmenu.accesskey;">
       <menupopup>
@@ -603,7 +626,8 @@
      </menupopup>
      
     <!-- Editor toolbar items -->
-    <titledbutton id="newButton"   src="&newEditorIcon.url;"     observes="Editor:NewEditor"/>
+    <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
+    <titledbutton id="newButton"   src="&newEditorIcon.url;"     observes="cmd_newEditor" value="&newMenu.label;" />
     <titledbutton id="openButton"  src="&openEditorIcon.url;"    observes="Editor:Open"/>
     <titledbutton id="saveButton"  src="&saveIcon.url;"          observes="Editor:Save"/>
     <titledbutton id="printButton" src="&printIcon.url;"         observes="Editor:Print"/>

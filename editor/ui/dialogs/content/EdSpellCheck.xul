@@ -65,9 +65,6 @@
         <select class="SpellCheckList" id="SuggestedList" size="8" onchange="SelectSuggestedWord()">
         </select>
       </td>
-      <!-- THIS IS A BOGUS HACK TO COMPENSATE FOR A DISPLAY BUG -->
-      <td colspan="2">
-      </td>
     </tr>
     <tr>
       <td>

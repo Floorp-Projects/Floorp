@@ -82,7 +82,7 @@ public:
   NS_IMETHOD InsertList(const nsString& aListType);
   NS_IMETHOD Indent(const nsString& aIndent);
   NS_IMETHOD Align(const nsString& aAlign);
-  NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection);
+  NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
 
   NS_IMETHOD StartLogging(nsIFileSpec *aLogFile);

@@ -35,7 +35,11 @@ function EditorAutoInsertImage(url)
     // TODO: collect width and height attributes and insert those
     //       also.
     // insert the image
-    top.editorShell.InsertElement(imageElement,true);
+    try {
+      top.editorShell.InsertElementAtSelection(imageElement,true);
+    } catch (e) {
+      dump("Exception occured in InsertElementAtSelection\n");
+    }
 }
 
 function EditorInsertBackgroundImage(url)
@@ -51,7 +55,11 @@ function EditorInsertJSFile(url)
     //       must utilize document dirty flag.
     scriptElement.setAttribute("src",url);
     scriptElement.setAttribute("language","JavaScript");    
-    top.editorShell.InsertElement(scriptElement,true);
+    try {
+      top.editorShell.InsertElementAtSelection(scriptElement,true);
+    } catch (e) {
+      dump("Exception occured in InsertElementAtSelection\n");
+    }
 }
 
 function EditorInsertCSSFile(url)
@@ -63,5 +71,9 @@ function EditorInsertCSSFile(url)
     cssElement.setAttribute("href",url);
     cssElement.setAttribute("type","text/css");    
     cssElement.setAttribute("rel","stylesheet");    
-    top.editorShell.InsertElement(cssElement,true);
+    try {
+      top.editorShell.InsertElementAtSelection(cssElement,true);
+    } catch (e) {
+      dump("Exception occured in InsertElementAtSelection\n");
+    }
 }

@@ -72,7 +72,11 @@ function onOK()
 // Set attribute example:
 //  imageElement.setAttribute("src",dialog.srcInput.value);
   if (insertNew) {
-    editorShell.InsertElement(element, false);
+    try {
+      editorShell.InsertElementAtSelection(element, false);
+    } catch (e) {
+      dump("Exception occured in InsertElementAtSelection\n");
+    }
   }
  return true; // do close the window
 }
