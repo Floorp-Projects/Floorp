@@ -423,7 +423,7 @@ int HaveDecodedRow(
 
     // initalize the frame and append it to the container
     decoder->mImageFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-    if (NS_FAILED(decoder->mImageFrame->Init(
+    if (!decoder->mImageFrame || NS_FAILED(decoder->mImageFrame->Init(
           decoder->mGIFStruct->x_offset, decoder->mGIFStruct->y_offset, 
           decoder->mGIFStruct->width, decoder->mGIFStruct->height, format, 24))) {
       decoder->mImageFrame = 0;
