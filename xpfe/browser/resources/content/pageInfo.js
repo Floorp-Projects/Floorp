@@ -38,24 +38,151 @@
  * ***** END LICENSE BLOCK *****
 */
 
+//******** define a js object to implement nsITreeView
+function pageInfoTreeView(columnids, copycol)
+{
+  // columnids is an array of strings indicating the names of the columns, in order
+  this.columnids = columnids;
+  this.colcount = columnids.length
+
+  // copycol is the index number for the column that we want to add to 
+  // the copy-n-paste buffer when the user hits accel-c
+  this.copycol = copycol;
+  this.rows = 0;
+  this.tree = null;
+  this.data = new Array;
+  this.selection = null;
+  this.sortcol = null;
+  this.sortdir = 0;
+  this.initialized = 0; // set this to one once we fill in all the rows
+}
+
+pageInfoTreeView.prototype = {
+  set rowCount(c) { throw "rowCount is a readonly property"; },
+  get rowCount() { return this.rows; },
+
+  setTree: function(tree) 
+  {
+    this.tree = tree;
+  },
+
+  getCellText: function(row, column)
+  {
+    var colidx = 0;
+    // loop through the list of column names to find the index to the column 
+    // we should be worrying about. very much a hack, but what can you do?
+    while(colidx < this.colcount && column != this.columnids[colidx])
+      colidx++;
+
+    // row can be null, but js arrays are 0-indexed.
+    // colidx cannot be null, but can be larger than the number
+    // of columns in the array (when column is a string not in 
+    // this.columnids.) In this case it's the fault of
+    // whoever typoed while calling this function.
+    return this.data[row][colidx] || "";
+  },
+
+  setCellText: function(row, column, value) 
+  {
+    var colidx = 0;
+    // loop through the list of column names to find the index 
+    // to the column the should be worrying about. very much a hack, but
+    // what can you do? 
+    // XXX: I think there's a better way to do this now...
+    while(colidx < this.colcount && column != this.columnids[colidx])
+      colidx++;
+    this.data[row][colidx] = value;
+  },
+
+  addRow: function(row)
+  {
+    this.rows = this.data.push(row);
+  },
+
+  addRows: function(rows)
+  {
+    var length = rows.length;
+    for(var i = 0; i < length; i++)
+      this.rows = this.data.push(rows[i]);
+  },
+
+  rowCountChanged: function(index, count)
+  {
+    this.tree.rowCountChanged(index, count);
+  },
+
+  invalidate: function()
+  {
+    this.tree.invalidate();
+  },
+
+  clear: function()
+  {
+    this.data = new Array;
+    this.rows = 0;
+  },
+
+  handleCopy: function(row)
+  {
+    return (row < 0 || copycol < 0) ? "" : (this.data[row][this.copycol] || "");
+  },
+
+  performActionOnRow: function(action, row)
+  {
+    if (action == "copy")
+    {
+      var data = this.handleCopy(row)
+      this.tree.treeBody.parentNode.setAttribute("copybuffer", data);
+    }
+  },
+
+  getRowProperties: function(row, column, prop) { },
+  getCellProperties: function(row, prop) { },
+  getColumnProperties: function(column, elem, prop) { },
+  isContainer: function(index) { return false; },
+  isContainerOpen: function(index) { return false; },
+  isSeparator: function(index) { return false; },
+  isSorted: function() { },
+  canDropOn: function(index) { return false; },
+  canDropBeforeAfter: function(index, before) { return false; },
+  drop: function(row, orientation) { return false; },
+  getParentIndex: function(index) { return 0; },
+  hasNextSibling: function(index, after) { return false; },
+  getLevel: function(index) { return 0; },
+  getImageSrc: function(row, column) { },
+  getProgressMode: function(row, column) { },
+  getCellValue: function(row, column) { },
+  toggleOpenState: function(index) { },
+  cycleHeader: function(col, elem) { },
+  selectionChanged: function() { },
+  cycleCell: function(row, column) { },
+  isEditable: function(row, column) { return false; },
+  performAction: function(action) { },
+  performActionOnCell: function(action, row, column) { }
+};
+
 // mmm, yummy. global variables.
 var theWindow = null;
 var theDocument = null;
 
-var linkList = new Array();
-var formList = new Array();
-var imageList = new Array();
-
-var linkIndex = 0;
-var formIndex = 0;
-var imageIndex = 0;
-var frameCount = 0;
-
+// column number to copy from, second argument to pageInfoTreeView's constructor
 const COPYCOL_NONE = -1;
 const COPYCOL_META_CONTENT = 1;
-const COPYCOL_FORM_ACTION = 3;
-const COPYCOL_LINK_ADDRESS = 2;
-const COPYCOL_IMAGE_ADDRESS = 1;
+const COPYCOL_FORM_ACTION = 2;
+const COPYCOL_LINK_ADDRESS = 1;
+const COPYCOL_IMAGE_ADDRESS = 0;
+
+// one nsITreeView for each tree in the window
+var metaView = new pageInfoTreeView(["meta-name","meta-content"], COPYCOL_META_CONTENT);
+var formView = new pageInfoTreeView(["form-name","form-method","form-action","form-node"], COPYCOL_FORM_ACTION);
+var fieldView = new pageInfoTreeView(["field-label","field-field","field-type","field-value"], COPYCOL_NONE);
+var linkView = new pageInfoTreeView(["link-name","link-address","link-type"], COPYCOL_LINK_ADDRESS);
+var imageView = new pageInfoTreeView(["image-address","image-type","image-alt","image-node"], COPYCOL_IMAGE_ADDRESS);
+
+// localized strings (will be filled in when the document is loaded)
+// this isn't all of them, these are just the ones that would otherwise have been loaded inside a loop
+var gStrings = {}
+var theBundle;
 
 const DRAGSERVICE_CONTRACTID    = "@mozilla.org/widget/dragservice;1";
 const TRANSFERABLE_CONTRACTID   = "@mozilla.org/widget/transferable;1";
@@ -105,8 +232,25 @@ var onLoadRegistry = [ ];
 function onLoadPageInfo()
 {
   //dump("===============================================================================\n");
-  var theBundle = document.getElementById("pageinfobundle");
-  var unknown = theBundle.getString("unknown");
+
+  theBundle = document.getElementById("pageinfobundle");
+  gStrings.unknown = theBundle.getString("unknown");
+  gStrings.notSet = theBundle.getString("notset");
+  gStrings.emptyString = theBundle.getString("emptystring");
+  gStrings.linkAnchor = theBundle.getString("linkAnchor");
+  gStrings.linkArea = theBundle.getString("linkArea");
+  gStrings.linkSubmit = theBundle.getString("linkSubmit");
+  gStrings.linkSubmission = theBundle.getString("linkSubmission");
+  gStrings.linkRel = theBundle.getString("linkRel");
+  gStrings.linkStylesheet = theBundle.getString("linkStylesheet");
+  gStrings.linkRev = theBundle.getString("linkRev");
+  gStrings.linkX = theBundle.getString("linkX");
+  gStrings.mediaImg = theBundle.getString("mediaImg");
+  gStrings.mediaApplet = theBundle.getString("mediaApplet");
+  gStrings.mediaObject = theBundle.getString("mediaObject");
+  gStrings.mediaEmbed = theBundle.getString("mediaEmbed");
+  gStrings.mediaLink = theBundle.getString("mediaLink");
+  gStrings.mediaInput = theBundle.getString("mediaInput");
 
   var docTitle = "";
   if("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
@@ -182,14 +326,9 @@ function doHelpButton() {
   }
   openHelp(helpdoc);  
 }
-
  
 function makeGeneralTab()
 {
-  var theBundle = document.getElementById("pageinfobundle");
-  var unknown = theBundle.getString("unknown");
-  var notSet = theBundle.getString("notset");
-  
   var title = (theDocument.title) ? theBundle.getFormattedString("pageTitle", [theDocument.title]) : theBundle.getString("noPageTitle");
   document.getElementById("titletext").value = title;
 
@@ -203,21 +342,19 @@ function makeGeneralTab()
   document.getElementById('refertext').value = referrer;
 
   // find out the mime type
-  var mimeType = theDocument.contentType || unknown;
+  var mimeType = theDocument.contentType || gStrings.unknown;
   document.getElementById("typetext").value = mimeType;
   
   // get the meta tags
   var metaNodes = theDocument.getElementsByTagName("meta");
   var metaTree = document.getElementById("metatree");
-  var metaView = new pageInfoTreeView(["meta-name","meta-content"], COPYCOL_META_CONTENT);
 
   metaTree.treeBoxObject.view = metaView;
 
   var length = metaNodes.length;
   for (var i = 0; i < length; i++)
-  {    
     metaView.addRow([metaNodes[i].name || metaNodes[i].httpEquiv, metaNodes[i].content]);
-  }
+
   metaView.rowCountChanged(0, length);
   
   // get the document characterset
@@ -225,13 +362,13 @@ function makeGeneralTab()
   document.getElementById("encodingtext").value = encoding;
 
   // get the date of last modification
-  var modifiedText = formatDate(theDocument.lastModified, notSet);
+  var modifiedText = formatDate(theDocument.lastModified, gStrings.notSet);
   document.getElementById("modifiedtext").value = modifiedText;
   
   // get cache info
   var sourceText = theBundle.getString("generalNotCached");
   var expirationText = theBundle.getString("generalNoExpiration");
-  var sizeText = unknown;
+  var sizeText = gStrings.unknown;
 
   var pageSize = 0; 
   var kbSize = 0;
@@ -259,7 +396,7 @@ function makeGeneralTab()
       kbSize = pageSize / 1024;
       sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
-      expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, notSet);
+      expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, gStrings.notSet);
     }
   }
   catch(ex)
@@ -286,7 +423,7 @@ function makeGeneralTab()
         kbSize = pageSize / 1024;
         sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
-        expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, notSet);
+        expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, gStrings.notSet);
       }
     }
     catch(ex2)
@@ -299,66 +436,134 @@ function makeGeneralTab()
   document.getElementById("sizetext").value = sizeText;
 }
 
-//******** Form Stuff
-function makeFormTab()
+//******** Generic Build-a-tab
+function makeTabs(aDocument, aWindow)
 {
-  var formTree = document.getElementById("formtree");
-  var formPreview = document.getElementById("formpreview");
-  
-  var formView = new pageInfoTreeView(["form-number","form-name","form-method","form-action"], COPYCOL_FORM_ACTION);
-  var fieldView = new pageInfoTreeView(["field-number","field-label","field-field","field-type","field-value"], COPYCOL_NONE);
-  formTree.treeBoxObject.view = formView;
-  formPreview.treeBoxObject.view = fieldView;
-  formList = grabAllForms(theWindow, theDocument);
-  formIndex = 0;
-
-  var length = formList.length;
-  for (var i = 0; i < length; i++)
-  {
-    var elem = formList[i];
-    formView.addRow([++formIndex, elem.name, elem.method, elem.getAttribute("action")]);  // use getAttribute() because of bug 122128
-  }
-  formView.rowCountChanged(0, length);
-
-  formView.selection.select(0);
-}
-
-function grabAllForms(aWindow, aDocument)
-{
-  var theList = [];
+  if (formView.initialized || linkView.initialized || imageView.initialized)
+    return;
 
   if (aWindow && aWindow.frames.length > 0)
   {
-    var length = aWindow.frames.length;
-    for (var i = 0; i < length; i++)
-    {
-      var frame = aWindow.frames[i];
-      theList = theList.concat(grabAllForms(frame, frame.document));
-    }
+    var num = aWindow.frames.length;
+    for (var i = 0; i < num; i++)
+      makeTab(aWindow.frames[i].document, aWindow.frames[i]);  // recurse through the frames
   }
 
-  if ("forms" in aDocument)
-    return theList.concat(aDocument.forms);
-  else
-    return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "form"));
+  var formTree = document.getElementById("formtree");
+  var linkTree = document.getElementById("linktree");
+  var imageTree = document.getElementById("imagetree");
+
+  formTree.treeBoxObject.view = formView;
+  linkTree.treeBoxObject.view = linkView;
+  imageTree.treeBoxObject.view = imageView;
+  
+  var iterator = aDocument.createTreeWalker(aDocument, NodeFilter.SHOW_ELEMENT, grabAll, true);
+  
+  while (iterator.nextNode())
+    ; // it'll never be executed anyway, since grabAll never 
+      // accepts any nodes
+
+  formView.rowCountChanged(0, formView.rowCount);
+  formView.selection.select(0);
+  formView.initialized = 1;
+
+  linkView.rowCountChanged(0, linkView.rowCount);
+  linkView.selection.select(0);
+  linkView.initialized = 1;
+
+  imageView.rowCountChanged(0, imageView.rowCount);
+  imageView.selection.select(0);
+  imageView.initialized = 1;
 }
 
+function grabAll(elem)
+{
+  // one switch to rule them all
+  var linktext;
+  switch (elem.nodeName.toLowerCase())
+  {
+    // form tab
+    case "form":
+      formView.addRow([elem.name, elem.method, elem.getAttribute("action"), elem]);  // use getAttribute() because of bug 122128
+      break;
+
+    // link tab
+    case "a":
+      linktext = getValueText(elem);
+      linkView.addRow([linktext, elem.href, gStrings.linkAnchor, elem.target]);
+      break;
+    case "area":
+      linkView.addRow([elem.alt, elem.href, gStrings.linkArea, elem.target]);
+      break;
+    case "input":
+      linkView.addRow([elem.value || gStrings.linkSubmit, elem.form.getAttribute("action"), gStrings.linkSubmission, elem.form.getAttribute("target")]); // use getAttribute() due to bug 122128
+      break;
+    case "link":
+      if (elem.rel)
+      {
+        // should this test use regexes to be a little more lenient wrt whitespace?
+        if (elem.rel.toLowerCase() == "stylesheet" || elem.rel.toLowerCase() == "alternate stylesheet")
+          linktext = gStrings.linkStylesheet;
+        else
+          linktext = gStrings.linkRel;
+      }
+      else
+        linktext = gStrings.linkRev;
+      linkView.addRow([elem.rel || elem.rev, elem.href, linktext, elem.target]);
+      break;
+
+    // media tab
+    case "img":
+      imageView.addRow([elem.src, gStrings.mediaImg, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem]);
+      break;
+    case "input":
+      if (elem.type == "image")
+        imageView.addRow([elem.src, gStrings.mediaInput, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem]);
+      break;
+    case "applet":
+      //XXX When Java is enabled, the DOM model for <APPLET> is broken. Bug #59686.
+      // Also, some reports of a crash with Java in Media tab (bug 136535), and mixed
+      // content from two hosts (bug 136539) so just drop applets from Page Info when
+      // Java is on. For the 1.0.1 branch; get a real fix on the trunk.
+      if (!navigator.javaEnabled())
+        imageView.addRow([elem.code || elem.object, gStrings.mediaApplet, "",elem]);
+      break;
+    case "object":
+      imageView.addRow([elem.data, gStrings.mediaObject, getValueText(elem), elem]);
+      break;
+    case "embed":
+      imageView.addRow([elem.src, gStrings.mediaEmbed, "", elem]);
+      break;
+    case "link":
+      if (elem.rel == "icon")
+        imageView.addRow([elem.href, gStrings.mediaLink, "", elem]);
+      break;
+    default:
+      if (elem.hasAttributeNS(XLinkNS, "href"))
+      {
+        linktext = getValueText(elem);
+        linkView.addRow([linktext, elem.href, gStrings.linkX, ""]);
+      }
+      break;
+  }
+  return NodeFilter.FILTER_SKIP;
+}
+
+//******** Form Stuff
 function onFormSelect()
 {
-  var theBundle = document.getElementById("pageinfobundle");
   var formTree = document.getElementById("formtree");
-  var formView = formTree.treeBoxObject.view;
   if (!formView.rowCount) return;
 
   if (formView.selection.count == 1)
   {
     var formPreview = document.getElementById("formpreview");
-    var fieldView = new pageInfoTreeView(["field-number","field-label","field-field","field-type","field-value"], COPYCOL_NONE);
+    fieldView.clear();
     formPreview.treeBoxObject.view = fieldView;
 
     var clickedRow = formView.selection.currentIndex;
-    var formnum = formView.getCellText(clickedRow, "form-number");
-    var form = formList[formnum-1];
+    var form = formView.getCellText(clickedRow, "form-node");
+
     var ft = null;
     if (form.name)
       ft = theBundle.getFormattedString("formTitle", [form.name]);
@@ -382,11 +587,11 @@ function onFormSelect()
       var elem = formfields[i];
 
       if(elem.nodeName.toLowerCase() == "button")
-        fieldView.addRow([i+1, "", elem.name, elem.type, getValueText(elem)]);
+        fieldView.addRow(["", elem.name, elem.type, getValueText(elem)]);
       else
       {
         var val = (elem.type == "password") ? theBundle.getString("formPassword") : elem.value;
-        fieldView.addRow([i+1, "", elem.name, elem.type, val]);
+        fieldView.addRow(["", elem.name, elem.type, val]);
       }
     }
 
@@ -415,23 +620,17 @@ function findFirstControl(node)
 {
   function FormControlFilter() 
   {
-    this.acceptNode = function(node)
+    switch (node.nodeName.toLowerCase())
     {
-      switch (node.nodeName.toLowerCase())
-      {
-        case "input":
-        case "select":
-        case "button":
-        case "textarea":
-        case "object":
-          return NodeFilter.FILTER_ACCEPT;
-          break;
-        default:
-          return NodeFilter.FILTER_SKIP;
-          break;
-      }
-      return NodeFilter.FILTER_SKIP;   // placate the js compiler
-    }     
+      case "input":
+      case "select":
+      case "button":
+      case "textarea":
+      case "object":
+        return NodeFilter.FILTER_ACCEPT;
+      default:
+        return NodeFilter.FILTER_SKIP;
+    }
   }
 
   var iterator = theDocument.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, FormControlFilter, true);
@@ -440,129 +639,6 @@ function findFirstControl(node)
 }
 
 //******** Link Stuff
-function makeLinkTab()
-{
-  //var start = new Date();
-  var theBundle = document.getElementById("pageinfobundle");
-  var linkTree = document.getElementById("linktree");
-
-  var linkView = new pageInfoTreeView(["link-number","link-name","link-address","link-type"], COPYCOL_LINK_ADDRESS);
-  linkTree.treeBoxObject.view = linkView;
-
-  linkList = grabAllLinks(theWindow, theDocument);
-
-  var linkAnchor = theBundle.getString("linkAnchor");
-  var linkArea = theBundle.getString("linkArea");
-  var linkSubmit = theBundle.getString("linkSubmit");
-  var linkSubmission = theBundle.getString("linkSubmission");
-  var linkRel = theBundle.getString("linkRel");
-  var linkStylesheet = theBundle.getString("linkStylesheet");
-  var linkRev = theBundle.getString("linkRev");
-  var linkX = theBundle.getString("linkX");
-
-  var linktext = null;
-  linkIndex = 0;
-
-  var length = linkList.length;
-  for (var i = 0; i < length; i++)
-  {
-    var elem = linkList[i];
-    switch (elem.nodeName.toLowerCase())
-    {
-      case "a":
-        linktext = getValueText(elem);
-        linkView.addRow([++linkIndex, linktext, elem.href, linkAnchor, elem.target]);
-        break;
-      case "area":
-        linkView.addRow([++linkIndex, elem.alt, elem.href, linkArea, elem.target]);
-        break;
-      case "input":
-        linkView.addRow([++linkIndex, elem.value || linkSubmit, elem.form.getAttribute("action"), linkSubmission, elem.form.getAttribute("target")]); // use getAttribute() due to bug 122128
-        break;
-      case "link":
-        if (elem.rel)
-        {
-          // should this test use regexes to be a little more lenient wrt whitespace?
-          if (elem.rel.toLowerCase() == "stylesheet" || elem.rel.toLowerCase() == "alternate stylesheet")
-            linktext = linkStylesheet;
-          else
-            linktext = linkRel;
-        }
-        else
-          linktext = linkRev;
-        linkView.addRow([++linkIndex, elem.rel || elem.rev, elem.href, linktext, elem.target]);
-        break;
-      default:
-        if (elem.hasAttributeNS(XLinkNS, "href"))
-        {
-          linktext = getValueText(elem);
-          linkView.addRow([++linkIndex, linktext, elem.href, linkX, ""]);
-        }
-        else
-          dump("Page Info - makeLinkTab(): Hey, that's an odd one! ("+elem+")");
-        break;
-    }
-  }
-  linkView.rowCountChanged(0, length);
-
-  //var end = new Date();
-  //dump("links tab took "+(end-start)+"ms to build.\n");
-}
-
-function grabAllLinks(aWindow,aDocument)
-{
-  var theList = [];
-
-  if (aWindow && aWindow.frames.length > 0)
-  {
-    var num = aWindow.frames.length;
-    for (var i = 0; i < num; i++)
-    {
-      var frame = aWindow.frames[i];
-      theList = theList.concat(grabAllLinks(frame, frame.document));
-    }
-  }
-
-  theList = theList.concat(aDocument.getElementsByTagName("link"));
-
-  var inputList = aDocument.getElementsByTagName("input");
-  var length = inputList.length;
-  for (i = 0; i < length; i++)
-    if (inputList[i].type.toLowerCase() == "submit")
-      theList = theList.concat(inputList[i]);
-
-  theList = theList.concat(grabAllXLinks(aDocument));
-
-  if ("links" in aDocument)
-    return theList.concat(aDocument.links);
-  else
-    return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "a"));
-}
-
-function grabAllXLinks(aDocument)
-{
-  function XLinkFilter() 
-  {
-    this.acceptNode = function(aNode)
-    {
-      return (aNode.hasAttributeNS(XLinkNS, "href")) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-    }     
-  }
-
-  var nodeFilter = new XLinkFilter;
-  var iterator = aDocument.createTreeWalker(aDocument, NodeFilter.SHOW_ELEMENT, nodeFilter, true);
-// why doesn't this work? the same thing works in findFirstControl() :P
-//  var iterator = aDocument.createTreeWalker(aDocument, NodeFilter.SHOW_ELEMENT, XLinkFilter, true);
-
-  var theList = new Array();
-
-  while(iterator.nextNode())
-    theList = theList.concat(iterator.currentNode);
-
-  return theList;
-}
-
-
 function openURL(target)
 {
   var url = target.parentNode.childNodes[2].value;
@@ -573,9 +649,11 @@ function onBeginLinkDrag(event,urlField,descField)
 {
   if (event.originalTarget.localName != "treechildren")
     return;
+
   var tree = event.target;
   if (!("treeBoxObject" in tree))
     tree = tree.parentNode;
+
   var row = {};
   var col = {};
   var elt = {};
@@ -605,123 +683,23 @@ function onBeginLinkDrag(event,urlField,descField)
 }
 
 //******** Image Stuff
-function makeMediaTab()
-{
-  var theBundle = document.getElementById("pageinfobundle");
-  var imageTree = document.getElementById("imagetree");
-
-  var imageView = new pageInfoTreeView(["image-number","image-address","image-type","image-alt"], COPYCOL_IMAGE_ADDRESS);
-  imageTree.treeBoxObject.view = imageView;
-
-  imageList = grabAllMedia(theWindow, theDocument);
-
-  var mediaImg = theBundle.getString("mediaImg");
-  var mediaApplet = theBundle.getString("mediaApplet");
-  var mediaObject = theBundle.getString("mediaObject");
-  var mediaEmbed = theBundle.getString("mediaEmbed");
-  var mediaLink = theBundle.getString("mediaLink");
-  var mediaInput = theBundle.getString("mediaInput");
-  var notSet = theBundle.getString("notset");
-
-  var row = null;
-  var length = imageList.length;
-  imageIndex = 0;
-
-  for (var i = 0; i < length; i++)
-  {
-    var elem = imageList[i];
-    switch (elem.nodeName.toLowerCase())
-    {
-      case "img":
-        imageView.addRow([++imageIndex, elem.src, mediaImg, (elem.hasAttribute("alt")) ? elem.alt : notSet ]);
-        break;
-      case "input":
-        imageView.addRow([++imageIndex, elem.src, mediaInput, (elem.hasAttribute("alt")) ? elem.alt : notSet ]);
-        break;
-      case "applet":
-        imageView.addRow([++imageIndex, elem.code || elem.object, mediaApplet]);
-        break;
-      case "object":
-        imageView.addRow([++imageIndex, elem.data, mediaObject]);
-        break;
-      case "embed":
-        imageView.addRow([++imageIndex, elem.src, mediaEmbed]);
-        break;
-      case "link":
-        imageView.addRow([++imageIndex, elem.href, mediaLink]);
-        break;
-      default:
-        dump("Page Info - makeMediaTab(): hey, that's an odd one! ("+elem+")");;
-        break;
-    }
-  }
-  imageView.rowCountChanged(0, length);
-  
-  imageView.selection.select(0);
-}
-
-function grabAllMedia(aWindow, aDocument)
-{
-  var theList = [];
-
-  if (aWindow && aWindow.frames.length > 0)
-  {
-    var num = aWindow.frames.length;
-    for (var i = 0; i < num; i++)
-    {
-      var frame = aWindow.frames[i];
-      theList = theList.concat(grabAllMedia(frame, frame.document));
-    }
-  }
-
-  theList = theList.concat(aDocument.getElementsByTagName("embed"));
-  theList = theList.concat(aDocument.getElementsByTagName("object"));
-
-  //XXX When Java is enabled, the DOM model for <APPLET> is broken. Bug #59686.
-  // Also, some reports of a crash with Java in Media tab (bug 136535), and mixed
-  // content from two hosts (bug 136539) so just drop applets from Page Info when
-  // Java is on. For the 1.0.1 branch; get a real fix on the trunk.
-  if (!navigator.javaEnabled())
-    theList = theList.concat(aDocument.applets);
-
-  var inputList = aDocument.getElementsByTagName("input");
-  var length = inputList.length
-  for (i = 0; i < length; i++)
-    if(inputList[i].type.toLowerCase() == "image")
-      theList = theList.concat(inputList[i]);
-
-  var linkList = aDocument.getElementsByTagName("link");
-  length = linkList.length;
-  for (i = 0; i < length; i++)
-    if(linkList[i].rel.match(/\bicon\b/i))
-      theList = theList.concat(linkList[i]);
-
-  if ("images" in aDocument)
-    return theList.concat(aDocument.images);
-  else
-    return theList.concat(aDocument.getElementsByTagNameNS(XHTMLNS, "img"));
-}  
-
-function getSource( item )
+function getSource(item)
 {
   // Return the correct source without strict warnings
-  if (item.href != null) {
+  if (item.href != null)
     return item.href;
-  } else if (item.src != null) {
+  if (item.src != null)
     return item.src;
-  }
   return null;
 }
 
-function getSelectedItem(tree)
+function getSelectedImage(tree)
 {
-  var view = tree.treeBoxObject.view;
-  if (!view.rowCount) return null;
+  if (!imageView.rowCount) return null;
 
   // Only works if only one item is selected
   var clickedRow = tree.treeBoxObject.selection.currentIndex;
-  var lineNum = view.getCellText(clickedRow, "image-number");
-  return imageList[lineNum - 1];
+  return imageView.getCellText(clickedRow, "image-node");
 }
 
 function saveMedia()
@@ -730,9 +708,8 @@ function saveMedia()
   var item = getSelectedItem(tree);
   var url = getAbsoluteURL(getSource(item), item);
 
-  if (url) {
+  if (url)
     saveURL(url, null, 'SaveImageTitle', false );
-  }
 }
 
 function onImageSelect()
@@ -742,23 +719,20 @@ function onImageSelect()
 
   if (tree.treeBoxObject.selection.count == 1)
   {
-    makePreview(getSelectedItem(tree));
+    makePreview(getSelectedImage(tree));
     saveAsButton.setAttribute("disabled", "false");
-  } else {
-    saveAsButton.setAttribute("disabled", "true");
   }
+  else
+    saveAsButton.setAttribute("disabled", "true");
 }
 
 function makePreview(item)
 {
-  var theBundle = document.getElementById("pageinfobundle");
-  var unknown = theBundle.getString("unknown");
-  var notSet = theBundle.getString("notset");
-  var emptyString = theBundle.getString("emptystring");
-
-  var url = ("src" in item && item.src) || ("code" in item && item.code) || ("data" in item && item.data) || ("href" in item && item.href) || unknown;  // it better have at least one of those...
+  var url = ("src" in item && item.src) || ("code" in item && item.code)
+            || ("data" in item && item.data) || ("href" in item && item.href) 
+            || gStrings.unknown;  // it better have at least one of those...
   document.getElementById("imageurltext").value = url;
-  document.getElementById("imagetitletext").value = item.title || notSet;
+  document.getElementById("imagetitletext").value = item.title || gStrings.notSet;
 
   var altText = null;
   if (item.hasAttribute("alt") && ("alt" in item))
@@ -766,30 +740,32 @@ function makePreview(item)
   else if (item.hasChildNodes())
     altText = getValueText(item);
   if (altText == null)
-    altText = notSet;
+    altText = gStrings.notSet;
   var textbox=document.getElementById("imagealttext");
+  
   // IMO all text that is not really the value text should go in italics
   // What if somebody has <img alt="Not specified">? =)
   // We can't use textbox.style because of bug 7639
   if (altText=="") {
-      textbox.value = emptyString;
+      textbox.value = gStrings.emptyString;
       textbox.setAttribute("style","font-style:italic");
   } else {
       textbox.value = altText;
       textbox.setAttribute("style","font-style:inherit");
   }
-  document.getElementById("imagelongdesctext").value = ("longDesc" in item && item.longDesc) || notSet;
+  document.getElementById("imagelongdesctext").value = ("longDesc" in item && item.longDesc) || gStrings.notSet;
 
   // find out the mime type
-  var mimeType = unknown;
+  var mimeType = gStrings.unknown;
   if (item.nodeName.toLowerCase() != "input")
-    mimeType = ("type" in item && item.type) || ("codeType" in item && item.codeType) || ("contentType" in item && item.contentType) || unknown;
+    mimeType = ("type" in item && item.type) || ("codeType" in item && item.codeType) 
+               || ("contentType" in item && item.contentType) || gStrings.unknown;
   document.getElementById("imagetypetext").value = mimeType;
 
   // get cache info
   var sourceText = theBundle.getString("generalNotCached");
-  var expirationText = theBundle.getString("unknown");
-  var sizeText = theBundle.getString("unknown");
+  var expirationText = gStrings.unknown;
+  var sizeText = gStrings.unknown;
 
   var pageSize = 0; 
   var kbSize = 0;
@@ -818,7 +794,7 @@ function makePreview(item)
       kbSize = pageSize / 1024;
       sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
-      expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, notSet);
+      expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, gStrings.notSet);
     }
   }
   catch(ex)
@@ -845,7 +821,7 @@ function makePreview(item)
         kbSize = pageSize / 1024;
         sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
-        expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, notSet);
+        expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, gStrings.notSet);
       }
     }
     catch(ex2)
@@ -1018,114 +994,3 @@ function doCopy(event)
   if (text) 
     gClipboardHelper.copyString(text);
 }
-
-//******** define a js object to implement nsITreeView
-function pageInfoTreeView(columnids, copycol)
-{
-  // columnids is an array of strings indicating the names of the columns, in order
-  this.columnids = columnids;
-  this.colcount = columnids.length
-  this.copycol = copycol;
-  this.rows = 0;
-  this.tree = null;
-  this.data = new Array;
-  this.selection = null;
-  this.sortcol = null;
-  this.sortdir = 0;
-}
-
-pageInfoTreeView.prototype = {
-  set rowCount(c) { throw "rowCount is a readonly property"; },
-  get rowCount() { return this.rows; },
-
-  setTree: function(tree) 
-  {
-    this.tree = tree;
-  },
-
-  getCellText: function(row, column)
-  {
-    var colidx = 0;
-    // loop through the list of column names to find the index to the column the should be worrying about. very much a hack, but what can you do?
-    while(colidx < this.colcount && column != this.columnids[colidx])
-      colidx++;
-    return this.data[row][colidx] || "";
-  },
-
-  setCellText: function(row, column, value) 
-  {
-    var colidx = 0;
-    // loop through the list of column names to find the index to the column the should be worrying about. very much a hack, but what can you do?
-    while(colidx < this.colcount && column != this.columnids[colidx])
-      colidx++;
-    this.data[row][colidx] = value;
-  },
-
-  addRow: function(row)
-  {
-    var oldrowcount = this.rows;
-    this.rows = this.data.push(row);
-  },
-
-  addRows: function(rows)
-  {
-    var oldrowcount = this.rowCount;
-
-    var length = rows.length;
-    for(var i = 0; i < length; i++)
-      this.rows = this.data.push(rows[i]);
-  },
-
-  rowCountChanged: function(index, count)
-  {
-    this.tree.rowCountChanged(index, count);
-  },
-
-  invalidate: function()
-  {
-    this.tree.invalidate();
-  },
-
-  clear: function()
-  {
-    this.data = null;
-  },
-
-  handleCopy: function(row)
-  {
-    return (row < 0) ? "" : (this.data[row][this.copycol] || "");
-  },
-
-  performActionOnRow: function(action, row)
-  {
-    if (action == "copy")
-      var data = this.handleCopy(row)
-    this.tree.treeBody.parentNode.setAttribute("copybuffer", data);
-  },
-
-  getRowProperties: function(row, column, prop) { },
-  getCellProperties: function(row, prop) { },
-  getColumnProperties: function(column, elem, prop) { },
-  isContainer: function(index) { return false; },
-  isContainerOpen: function(index) { return false; },
-  isSeparator: function(index) { return false; },
-  isSorted: function() { },
-  canDropOn: function(index) { return false; },
-  canDropBeforeAfter: function(index, before) { return false; },
-  drop: function(row, orientation) { return false; },
-  getParentIndex: function(index) { return 0; },
-  hasNextSibling: function(index, after) { return false; },
-  getLevel: function(index) { return 0; },
-  getImageSrc: function(row, column) { },
-  getProgressMode: function(row, column) { },
-  getCellValue: function(row, column) { },
-  toggleOpenState: function(index) { },
-  cycleHeader: function(col, elem) { },
-  selectionChanged: function() { },
-  cycleCell: function(row, column) { },
-  isEditable: function(row, column) { return false; },
-  performAction: function(action) { },
-  performActionOnCell: function(action, row, column) { }
-};
-
-
