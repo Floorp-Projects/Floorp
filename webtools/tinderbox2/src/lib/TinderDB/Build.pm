@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.58 $ 
-# $Date: 2003/04/13 20:45:45 $ 
+# $Revision: 1.59 $ 
+# $Date: 2003/04/20 00:32:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -155,6 +155,8 @@ use VCDisplay;
 use Utils;
 use TinderConfig;
 use TinderDB::Notice;
+use TinderHeader;
+
 
 $VERSION = '#tinder_version#';
 

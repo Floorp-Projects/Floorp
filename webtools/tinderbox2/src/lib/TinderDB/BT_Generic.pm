@@ -37,8 +37,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.19 $ 
-# $Date: 2002/05/10 21:46:25 $ 
+# $Revision: 1.20 $ 
+# $Date: 2003/04/20 00:32:03 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Generic.pm,v $ 
 # $Name:  $ 
@@ -70,6 +70,7 @@ use Time::Local;
 use lib '#tinder_libdir#';
 
 use TinderDB::BasicTxtDB;
+use BTData;
 use Utils;
 use HTMLPopUp;
 use TreeData;
@@ -77,7 +78,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.19 $ )[1];
+$VERSION = ( qw $Revision: 1.20 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
