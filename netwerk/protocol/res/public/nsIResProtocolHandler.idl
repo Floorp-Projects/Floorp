@@ -71,4 +71,9 @@ interface nsIResProtocolHandler : nsIProtocolHandler
      * thread-safety concerns.
      */
     nsISupportsArray getSubstitutions(in string root);
+
+    /**
+     * Returns true if substitutions are already defined for the specified root.
+     */
+    boolean hasSubstitutions(in string root);
 };
