@@ -66,6 +66,8 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsCURILoader.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIDOMHTMLFormElement.h"
 
 static const char kPMPropertiesURL[] = "chrome://passwordmgr/locale/passwordmgr.properties";
 static PRBool sRememberPasswords = PR_FALSE;
@@ -90,6 +92,19 @@ public:
 
   SignonDataEntry() : next(nsnull) { }
   ~SignonDataEntry() { delete next; }
+};
+
+class nsPasswordManager::SignonHashEntry
+{
+  // Wraps a pointer to the linked list of SignonDataEntry objects.
+  // This allows us to adjust the head of the linked list without a
+  // hashtable operation.
+
+public:
+  SignonDataEntry* head;
+
+  SignonHashEntry(SignonDataEntry* aEntry) : head(aEntry) { }
+  ~SignonHashEntry() { delete head; }
 };
 
 class nsPasswordManager::PasswordEntry : public nsIPassword
@@ -164,6 +179,8 @@ NS_INTERFACE_MAP_BEGIN(nsPasswordManager)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIFormSubmitObserver)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPasswordManager)
 NS_INTERFACE_MAP_END
@@ -316,30 +333,27 @@ NS_IMETHODIMP
 nsPasswordManager::RemoveUser(const nsACString& aHost, const nsAString& aUser)
 {
   SignonDataEntry* entry, *prevEntry = nsnull;
+  SignonHashEntry* hashEnt;
 
-  if (!mSignonTable.Get(aHost, &entry) || !entry)
+  if (!mSignonTable.Get(aHost, &hashEnt))
     return NS_ERROR_FAILURE;
 
-  for (; entry; prevEntry = entry, entry = entry->next) {
+  for (entry = hashEnt->head; entry; prevEntry = entry, entry = entry->next) {
 
     nsAutoString ptUser;
     DecryptData(entry->userValue, ptUser);
 
     if (ptUser.Equals(aUser)) {
-      if (prevEntry) {
+      if (prevEntry)
         prevEntry->next = entry->next;
-        entry->next = nsnull;
-        delete entry;
-      } else {
-        // the hashtable will delete the entry
-        SignonDataEntry* next;
-        if ((next = entry->next)) {
-          entry->next = nsnull;
-          mSignonTable.Put(aHost, next);
-        } else {
-          mSignonTable.Remove(aHost);
-        }
-      }
+      else
+        hashEnt->head = entry->next;
+
+      entry->next = nsnull;
+      delete entry;
+
+      if (!hashEnt->head)
+        mSignonTable.Remove(aHost);  // deletes hashEnt
 
       WriteSignonFile();
 
@@ -368,13 +382,13 @@ nsPasswordManager::RemoveReject(const nsACString& aHost)
 
 /* static */ PLDHashOperator PR_CALLBACK
 nsPasswordManager::BuildArrayEnumerator(const nsACString& aKey,
-                                        SignonDataEntry* aEntry,
+                                        SignonHashEntry* aEntry,
                                         void* aUserData)
 {
   nsIMutableArray* array = NS_STATIC_CAST(nsIMutableArray*, aUserData);
 
-  nsCOMPtr<nsIPassword> passwordEntry = new PasswordEntry(aKey, aEntry);
-  array->AppendElement(passwordEntry, PR_FALSE);
+  for (SignonDataEntry* e = aEntry->head; e; e = e->next)
+    array->AppendElement(new PasswordEntry(aKey, e), PR_FALSE);
 
   return PL_DHASH_NEXT;
 }
@@ -443,22 +457,25 @@ struct findEntryContext {
 
 /* static */ PLDHashOperator PR_CALLBACK
 nsPasswordManager::FindEntryEnumerator(const nsACString& aKey,
-                                       SignonDataEntry* aEntry,
+                                       SignonHashEntry* aEntry,
                                        void* aUserData)
 {
   findEntryContext* context = NS_STATIC_CAST(findEntryContext*, aUserData);
   nsPasswordManager* manager = context->manager;
   nsresult rv;
 
-  rv = manager->FindPasswordEntryFromSignonData(aEntry,
-                                                context->hostURI,
-                                                context->username,
-                                                context->password,
-                                                context->hostURIFound,
-                                                context->usernameFound,
-                                                context->passwordFound);
-  if (NS_SUCCEEDED(rv)) {
+  SignonDataEntry* entry = nsnull;
+  rv = manager->FindPasswordEntryInternal(aEntry->head,
+                                          context->username,
+                                          context->password,
+                                          nsString(),
+                                          &entry);
+
+  if (NS_SUCCEEDED(rv) && entry) {
     context->matched = PR_TRUE;
+    context->hostURIFound.Assign(context->hostURI);
+    DecryptData(entry->userValue, context->usernameFound);
+    DecryptData(entry->passValue, context->passwordFound);
     return PL_DHASH_STOP;
   }
 
@@ -474,11 +491,22 @@ nsPasswordManager::FindPasswordEntry(const nsACString& aHostURI,
                                      nsAString&  aPasswordFound)
 {
   if (!aHostURI.IsEmpty()) {
-    SignonDataEntry* entry;
-    if (mSignonTable.Get(aHostURI, &entry) && entry) {
-      return FindPasswordEntryFromSignonData(entry, aHostURI, aUsername,
-                                             aPassword, aHostURIFound,
-                                             aUsernameFound, aPasswordFound);
+    SignonHashEntry* hashEnt;
+    if (mSignonTable.Get(aHostURI, &hashEnt)) {
+      SignonDataEntry* entry;
+      nsresult rv = FindPasswordEntryInternal(hashEnt->head,
+                                              aUsername,
+                                              aPassword,
+                                              nsString(),
+                                              &entry);
+
+      if (NS_SUCCEEDED(rv) && entry) {
+        aHostURIFound.Assign(aHostURI);
+        DecryptData(entry->userValue, aUsernameFound);
+        DecryptData(entry->passValue, aPasswordFound);
+      }
+
+      return rv;
     }
 
     return NS_ERROR_FAILURE;
@@ -549,48 +577,64 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
   if (uri)
     uri->GetPrePath(realm);
 
-  // Only prefill if there is exactly one username saved for this
-  // realm.  Otherwise, we'll wait to prefill the password when the user
-  // autocompletes the username.
-
-  SignonDataEntry* entry;
-  if (!mSignonTable.Get(realm, &entry) || !entry ||
-      (entry && entry->next))
+  SignonHashEntry* hashEnt;
+  if (!mSignonTable.Get(realm, &hashEnt))
     return NS_OK;
-
-  // Locate the username field by searching each form on the page
 
   PRUint32 formCount;
   forms->GetLength(&formCount);
+
+  // We can auto-prefill the username and password if there is only
+  // one stored login that matches the username and password field names
+  // on the form in question.
 
   for (PRUint32 i = 0; i < formCount; ++i) {
     nsCOMPtr<nsIDOMNode> formNode;
     forms->Item(i, getter_AddRefs(formNode));
 
     nsCOMPtr<nsIForm> form = do_QueryInterface(formNode);
-    nsCOMPtr<nsISupports> foundNode;
-    form->ResolveName(entry->userField, getter_AddRefs(foundNode));
+    SignonDataEntry* firstMatch = nsnull;
+    nsCOMPtr<nsIDOMHTMLInputElement> userField, passField;
 
-    nsCOMPtr<nsIDOMHTMLInputElement> userField = do_QueryInterface(foundNode);
+    for (SignonDataEntry* e = hashEnt->head; e; e = e->next) {
+      
+      nsCOMPtr<nsISupports> foundNode;
+      form->ResolveName(e->userField, getter_AddRefs(foundNode));
+      userField = do_QueryInterface(foundNode);
 
-    if (!foundNode && !userField)
-      continue;
+      if (!userField)
+        continue;
 
-    // Ensure that the password field is also present, otherwise
-    // this is not a login form.
+      form->ResolveName(e->passField, getter_AddRefs(foundNode));
+      passField = do_QueryInterface(foundNode);
 
-    form->ResolveName(entry->passField, getter_AddRefs(foundNode));
-    nsCOMPtr<nsIDOMHTMLInputElement> passField = do_QueryInterface(foundNode);
-    if (!foundNode || !passField)
-      continue;
+      if (!passField)
+        continue;
 
-    nsAutoString buffer;
+      if (firstMatch) {
+        // We've found more than one possible signon for this form.
+        // Attach an onchange handler to the username field so that we can
+        // attempt to prefill the password after the user has
+        // entered the username.
 
-    DecryptData(entry->userValue, buffer);
-    userField->SetValue(buffer);
+        nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(userField);
+        targ->AddEventListener(NS_LITERAL_STRING("change"), this, PR_FALSE);
+        firstMatch = nsnull;
+        break;   // on to the next form
+      } else {
+        firstMatch = e;
+      }
+    }
 
-    DecryptData(entry->passValue, buffer);
-    passField->SetValue(buffer);
+    if (firstMatch) {
+      nsAutoString buffer;
+
+      DecryptData(firstMatch->userValue, buffer);
+      userField->SetValue(buffer);
+
+      DecryptData(firstMatch->passValue, buffer);
+      passField->SetValue(buffer);
+    }
   }
 
   return NS_OK;
@@ -662,7 +706,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
   nsCOMPtr<nsIDOMHTMLInputElement> userField;
   nsCOMArray<nsIDOMHTMLInputElement> passFields;
 
-  PRUint32 i;
+  PRUint32 i, firstPasswordIndex = numControls;
 
   for (i = 0; i < numControls; ++i) {
 
@@ -672,6 +716,8 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
     if (control->GetType() == NS_FORM_INPUT_PASSWORD) {
       nsCOMPtr<nsIDOMHTMLInputElement> elem = do_QueryInterface(control);
       passFields.AppendObject(elem);
+      if (firstPasswordIndex == numControls)
+        firstPasswordIndex = i;
     }
   }
 
@@ -682,7 +728,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
   case 1:  // normal login
     {
       // Search backwards from the password field to find a username field.
-      for (PRUint32 j = i - 1; j >= 0; --j) {
+      for (PRUint32 j = firstPasswordIndex - 1; j >= 0; --j) {
         nsCOMPtr<nsIFormControl> control;
         formElement->GetElementAt(j, getter_AddRefs(control));
 
@@ -726,13 +772,14 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
       passFields.ObjectAt(0)->GetValue(passValue);
       passFields.ObjectAt(0)->GetName(passFieldName);
 
-      SignonDataEntry* entry;
+      SignonHashEntry* hashEnt;
 
-      if (mSignonTable.Get(realm, &entry)) {
+      if (mSignonTable.Get(realm, &hashEnt)) {
 
+        SignonDataEntry* entry;
         nsAutoString buffer;
 
-        for (; entry; entry = entry->next) {
+        for (entry = hashEnt->head; entry; entry = entry->next) {
           if (entry->userField.Equals(userFieldName) &&
               entry->passField.Equals(passFieldName)) {
 
@@ -772,7 +819,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                         &selection);
 
       if (selection == 0) {
-        entry = new SignonDataEntry();
+        SignonDataEntry* entry = new SignonDataEntry();
         entry->userField.Assign(userFieldName);
         entry->passField.Assign(passFieldName);
         EncryptDataUCS2(userValue, entry->userValue);
@@ -804,9 +851,12 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
         passFields.ObjectAt(k)->GetValue(valueN);
         if (!value0.Equals(valueN)) {
 
-          SignonDataEntry* entry = nsnull;
+          SignonHashEntry* hashEnt;
 
-          if (mSignonTable.Get(realm, &entry) && entry) {
+          if (mSignonTable.Get(realm, &hashEnt)) {
+
+            SignonDataEntry* entry = hashEnt->head;
+
             if (entry->next) {
 
               // Multiple stored logons, prompt for which username is
@@ -892,6 +942,98 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
   return NS_OK;
 }
 
+// nsIDOMFormListener implementation
+
+NS_IMETHODIMP
+nsPasswordManager::Submit(nsIDOMEvent* aEvent)
+{
+  // Note, form submission is not handled here (to do so would mean
+  // hooking up an event listener to each form as it's created).
+  // See ::Notify().
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPasswordManager::Reset(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPasswordManager::Change(nsIDOMEvent* aEvent)
+{
+  // Try to prefill the password for the just-changed username.
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+
+  nsCOMPtr<nsIDOMHTMLInputElement> userField = do_QueryInterface(target);
+  if (!userField)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> fieldContent = do_QueryInterface(userField);
+  nsIDocument* doc = fieldContent->GetDocument();
+
+  nsCOMPtr<nsIURI> documentURL;
+  doc->GetDocumentURL(getter_AddRefs(documentURL));
+
+  nsCAutoString realm;
+  documentURL->GetPrePath(realm);
+
+  nsAutoString userValue;
+  userField->GetValue(userValue);
+
+  nsAutoString fieldName;
+  userField->GetName(fieldName);
+
+  SignonHashEntry* hashEnt;
+  if (!mSignonTable.Get(realm, &hashEnt))
+    return NS_OK;
+
+  SignonDataEntry* foundEntry;
+  FindPasswordEntryInternal(hashEnt->head, userValue, nsString(),
+                            fieldName, &foundEntry);
+
+  if (!foundEntry)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMHTMLFormElement> formEl;
+  userField->GetForm(getter_AddRefs(formEl));
+  if (!formEl)
+    return NS_OK;
+
+  nsCOMPtr<nsIForm> form = do_QueryInterface(formEl);
+  nsCOMPtr<nsISupports> foundNode;
+  form->ResolveName(foundEntry->passField, getter_AddRefs(foundNode));
+  nsCOMPtr<nsIDOMHTMLInputElement> passField = do_QueryInterface(foundNode);
+  if (!passField)
+    return NS_OK;
+
+  nsAutoString passValue;
+  DecryptData(foundEntry->passValue, passValue);
+  passField->SetValue(passValue);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPasswordManager::Select(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPasswordManager::Input(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPasswordManager::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+
 // internal methods
 
 /*
@@ -907,6 +1049,8 @@ Format of the single signon file:
 <Encrypted Saved URL #1 username field value>
 *<Saved URL #1 password field name>
 <Encrypted Saved URL #1 password field value>
+<Saved URL #1 username #2 field name>
+<.....>
 .
 <Saved URL #2 realm>
 .....
@@ -1028,7 +1172,7 @@ nsPasswordManager::WriteRejectEntryEnumerator(const nsACString& aKey,
 
 /* static */ PLDHashOperator PR_CALLBACK
 nsPasswordManager::WriteSignonEntryEnumerator(const nsACString& aKey,
-                                              SignonDataEntry* aEntry,
+                                              SignonHashEntry* aEntry,
                                               void* aUserData)
 {
   nsIOutputStream* stream = NS_STATIC_CAST(nsIOutputStream*, aUserData);
@@ -1038,22 +1182,24 @@ nsPasswordManager::WriteSignonEntryEnumerator(const nsACString& aKey,
   buffer.Append(NS_LINEBREAK);
   stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
-  NS_ConvertUCS2toUTF8 userField(aEntry->userField);
-  userField.Append(NS_LINEBREAK);
-  stream->Write(userField.get(), userField.Length(), &bytesWritten);
+  for (SignonDataEntry* e = aEntry->head; e; e = e->next) {
+    NS_ConvertUCS2toUTF8 userField(e->userField);
+    userField.Append(NS_LINEBREAK);
+    stream->Write(userField.get(), userField.Length(), &bytesWritten);
 
-  buffer.Assign(NS_ConvertUCS2toUTF8(aEntry->userValue));
-  buffer.Append(NS_LINEBREAK);
-  stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
+    buffer.Assign(NS_ConvertUCS2toUTF8(e->userValue));
+    buffer.Append(NS_LINEBREAK);
+    stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
-  buffer.Assign("*");
-  buffer.Append(NS_ConvertUCS2toUTF8(aEntry->passField));
-  buffer.Append(NS_LINEBREAK);
-  stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
+    buffer.Assign("*");
+    buffer.Append(NS_ConvertUCS2toUTF8(e->passField));
+    buffer.Append(NS_LINEBREAK);
+    stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
 
-  buffer.Assign(NS_ConvertUCS2toUTF8(aEntry->passValue));
-  buffer.Append(NS_LINEBREAK);
-  stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
+    buffer.Assign(NS_ConvertUCS2toUTF8(e->passValue));
+    buffer.Append(NS_LINEBREAK);
+    stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
+  }
 
   buffer.Assign("." NS_LINEBREAK);
   stream->Write(buffer.get(), buffer.Length(), &bytesWritten);
@@ -1090,13 +1236,14 @@ nsPasswordManager::AddSignonData(const nsACString& aRealm,
                                  SignonDataEntry* aEntry)
 {
   // See if there is already an entry for this URL
-  SignonDataEntry* oldEntry;
-  if (mSignonTable.Get(aRealm, &oldEntry) && oldEntry) {
+  SignonHashEntry* hashEnt;
+  if (mSignonTable.Get(aRealm, &hashEnt)) {
     // Add this one at the front of the linked list
-    aEntry->next = oldEntry;
+    aEntry->next = hashEnt->head;
+    hashEnt->head = aEntry;
+  } else {
+    mSignonTable.Put(aRealm, new SignonHashEntry(aEntry));
   }
-
-  mSignonTable.Put(aRealm, aEntry);
 }
 
 /* static */ nsresult
@@ -1176,16 +1323,14 @@ nsPasswordManager::EnsureDecoderRing()
 }
 
 nsresult
-nsPasswordManager::FindPasswordEntryFromSignonData(SignonDataEntry* aEntry,
-                                                   const nsACString& aHost,
-                                                   const nsAString&  aUser,
-                                                   const nsAString&  aPassword,
-                                                   nsACString& aHostFound,
-                                                   nsAString&  aUserFound,
-                                                   nsAString&  aPasswordFound)
+nsPasswordManager::FindPasswordEntryInternal(const SignonDataEntry* aEntry,
+                                             const nsAString&  aUser,
+                                             const nsAString&  aPassword,
+                                             const nsAString&  aUserField,
+                                             SignonDataEntry** aResult)
 {
   // host has already been checked, so just look for user/password match.
-  SignonDataEntry* entry = aEntry;
+  const SignonDataEntry* entry = aEntry;
   nsAutoString buffer;
 
   for (; entry; entry = entry->next) {
@@ -1199,26 +1344,34 @@ nsPasswordManager::FindPasswordEntryFromSignonData(SignonDataEntry* aEntry,
       matched = aUser.Equals(buffer);
     }
 
-    if (matched) {
-      if (aPassword.IsEmpty()) {
-        matched = PR_TRUE;
-      } else {
-        DecryptData(entry->passValue, buffer);
-        matched = aPassword.Equals(buffer);
-      }
+    if (!matched)
+      continue;
 
-      if (matched)
-        break;
+    if (aPassword.IsEmpty()) {
+      matched = PR_TRUE;
+    } else {
+      DecryptData(entry->passValue, buffer);
+      matched = aPassword.Equals(buffer);
     }
+
+    if (!matched)
+      continue;
+
+    if (aUserField.IsEmpty())
+      matched = PR_TRUE;
+    else
+      matched = entry->userField.Equals(aUserField);
+
+    if (matched)
+      break;
   }
 
   if (entry) {
-    aHostFound.Assign(aHost);
-    DecryptData(entry->userValue, aUserFound);
-    DecryptData(entry->passValue, aPasswordFound);
+    *aResult = NS_CONST_CAST(SignonDataEntry*, entry);
     return NS_OK;
   }
 
+  *aResult = nsnull;
   return NS_ERROR_FAILURE;
 }
 

@@ -46,6 +46,7 @@
 #include "nsIPrompt.h"
 #include "nsIFormSubmitObserver.h"
 #include "nsIWebProgressListener.h"
+#include "nsIDOMFormListener.h"
 
 /* 360565c4-2ef3-4f6a-bab9-94cca891b2a7 */
 #define NS_PASSWORDMANAGER_CID \
@@ -70,23 +71,13 @@ class nsPasswordManager : public nsIPasswordManager,
                           public nsIObserver,
                           public nsIFormSubmitObserver,
                           public nsIWebProgressListener,
+                          public nsIDOMFormListener,
                           public nsSupportsWeakReference
 {
 public:
   class SignonDataEntry;
+  class SignonHashEntry;
   class PasswordEntry;
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPASSWORDMANAGER
-  NS_DECL_NSIPASSWORDMANAGERINTERNAL
-  NS_DECL_NSIOBSERVER
-  NS_DECL_NSIWEBPROGRESSLISTENER
-
-  // nsIFormSubmitObserver
-  NS_IMETHOD Notify(nsIContent* aFormNode,
-                    nsIDOMWindowInternal* aWindow,
-                    nsIURI* aActionURL,
-                    PRBool* aCancelSubmit);
 
   nsPasswordManager();
   virtual ~nsPasswordManager();
@@ -115,22 +106,43 @@ public:
                                   nsAString& aEncrypted);
 
 
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPASSWORDMANAGER
+  NS_DECL_NSIPASSWORDMANAGERINTERNAL
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIWEBPROGRESSLISTENER
+
+  // nsIFormSubmitObserver
+  NS_IMETHOD Notify(nsIContent* aFormNode,
+                    nsIDOMWindowInternal* aWindow,
+                    nsIURI* aActionURL,
+                    PRBool* aCancelSubmit);
+
+  // nsIDOMFormListener
+  NS_IMETHOD Submit(nsIDOMEvent* aEvent);
+  NS_IMETHOD Reset(nsIDOMEvent* aEvent);
+  NS_IMETHOD Change(nsIDOMEvent* aEvent);
+  NS_IMETHOD Select(nsIDOMEvent* aEvent);
+  NS_IMETHOD Input(nsIDOMEvent* aEvent);
+
+  // nsIDOMEventListener
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+
+
 protected:
   void ReadSignonFile();
   void WriteSignonFile();
   void AddSignonData(const nsACString& aRealm, SignonDataEntry* aEntry);
 
-  nsresult FindPasswordEntryFromSignonData(SignonDataEntry* aEntry,
-                                           const nsACString& aHost,
-                                           const nsAString&  aUser,
-                                           const nsAString&  aPassword,
-                                           nsACString& aHostFound,
-                                           nsAString&  aUserFound,
-                                           nsAString&  aPasswordFound);
+  nsresult FindPasswordEntryInternal(const SignonDataEntry* aEntry,
+                                     const nsAString&  aUser,
+                                     const nsAString&  aPassword,
+                                     const nsAString&  aUserField,
+                                     SignonDataEntry** aResult);
 
 
   static PLDHashOperator PR_CALLBACK FindEntryEnumerator(const nsACString& aKey,
-                                                         SignonDataEntry* aEntry,
+                                                         SignonHashEntry* aEntry,
                                                          void* aUserData);
 
   static PLDHashOperator PR_CALLBACK WriteRejectEntryEnumerator(const nsACString& aKey,
@@ -138,11 +150,11 @@ protected:
                                                                 void* aUserData);
 
   static PLDHashOperator PR_CALLBACK WriteSignonEntryEnumerator(const nsACString& aKey,
-                                                                SignonDataEntry* aEntry,
+                                                                SignonHashEntry* aEntry,
                                                                 void* aUserData);
 
   static PLDHashOperator PR_CALLBACK BuildArrayEnumerator(const nsACString& aKey,
-                                                          SignonDataEntry* aEntry,
+                                                          SignonHashEntry* aEntry,
                                                           void* aUserData);
 
   static PLDHashOperator PR_CALLBACK BuildRejectArrayEnumerator(const nsACString& aKey,
@@ -151,7 +163,7 @@ protected:
 
   static void EnsureDecoderRing();
 
-  nsClassHashtable<nsCStringHashKey,SignonDataEntry> mSignonTable;
+  nsClassHashtable<nsCStringHashKey,SignonHashEntry> mSignonTable;
   nsDataHashtable<nsCStringHashKey,PRInt32> mRejectTable;
 
   nsCOMPtr<nsIFile> mSignonFile;
