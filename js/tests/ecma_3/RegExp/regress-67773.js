@@ -83,7 +83,7 @@ pattern = /^(A+1)+$/;
 pattern = /^(\w+\-)+$/;
     string = '';
     actualmatch = string.match(pattern);
-    expectedmatch = Array(string, string);  
+    expectedmatch = null;  
     addThis(); 
 
     string = 'bla-';
