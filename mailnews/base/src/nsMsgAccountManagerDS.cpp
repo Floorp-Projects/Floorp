@@ -826,15 +826,10 @@ nsMsgAccountManagerDataSource::isDefaultServer(nsIMsgIncomingServer *aServer)
 PRBool
 nsMsgAccountManagerDataSource::supportsFilters(nsIMsgIncomingServer *aServer)
 {
-    nsresult rv;
-    
-    nsCOMPtr<nsIMsgFilterList> filterList;
-    rv = aServer->GetFilterList(getter_AddRefs(filterList));
-    if (NS_SUCCEEDED(rv) && filterList)
-        return PR_TRUE;
-    
-    return PR_FALSE;
+    PRBool supportsFilters;
+    aServer->GetCanHaveFilters(&supportsFilters);
 
+    return supportsFilters;
 }
 
 PRBool
