@@ -11,6 +11,10 @@ box#EditorStatusBar {
   min-width: 50px;
 }
 
+box#EditorProgessBox {
+  min-width:30px;
+}
+
 window.popup {
   border: 2px outset;
 }
