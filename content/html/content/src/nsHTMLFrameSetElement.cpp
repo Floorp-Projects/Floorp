@@ -43,10 +43,13 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-
+#include "nsIFrameSetElement.h"
+#include "nsIHTMLDocument.h"
+#include "nsIDocument.h"
 
 class nsHTMLFrameSetElement : public nsGenericHTMLContainerElement,
-                              public nsIDOMHTMLFrameSetElement
+                              public nsIDOMHTMLFrameSetElement,
+                              public nsIFrameSetElement
 {
 public:
   nsHTMLFrameSetElement();
@@ -67,6 +70,18 @@ public:
   // nsIDOMHTMLFrameSetElement
   NS_DECL_NSIDOMHTMLFRAMESETELEMENT
 
+  // These override the SetAttr methods in nsGenericHTMLElement (need
+  // both here to silence compiler warnings).
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                     const nsAString& aValue, PRBool aNotify);
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAString& aValue,
+                     PRBool aNotify);
+
+  // nsIFramesetElement
+  NS_IMETHOD GetRowSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
+  NS_IMETHOD GetColSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
+
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
@@ -78,7 +93,40 @@ public:
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
+private:
+  nsresult ParseRowCol(const nsAString& aValue,
+                       PRInt32&         aNumSpecs,
+                       nsFramesetSpec** aSpecs);
+  PRInt32 ParseRowColSpec(nsString&       aSpec, 
+                          PRInt32         aMaxNumValues,
+                          nsFramesetSpec* aSpecs);
+
+  /**
+   * The number of size specs in our "rows" attr
+   */
+  PRInt32          mNumRows;
+  /**
+   * The number of size specs in our "cols" attr
+   */
+  PRInt32          mNumCols;
+  /**
+   * The style hint to return for the rows/cols attrs in
+   * GetMappedAttributeImpact
+   */
+  PRInt32          mCurrentRowColHint;
+  /**
+   * The parsed representation of the "rows" attribute
+   */
+  nsFramesetSpec*  mRowSpecs;  // parsed, non-computed dimensions
+  /**
+   * The parsed representation of the "cols" attribute
+   */
+  nsFramesetSpec*  mColSpecs;  // parsed, non-computed dimensions
+
+  static PRInt32 gMaxNumRowColSpecs;
 };
+
+PRInt32 nsHTMLFrameSetElement::gMaxNumRowColSpecs = 25;
 
 nsresult
 NS_NewHTMLFrameSetElement(nsIHTMLContent** aInstancePtrResult,
@@ -108,11 +156,16 @@ NS_NewHTMLFrameSetElement(nsIHTMLContent** aInstancePtrResult,
 
 
 nsHTMLFrameSetElement::nsHTMLFrameSetElement()
+  : mNumRows(0), mNumCols(0), mCurrentRowColHint(NS_STYLE_HINT_REFLOW),
+    mRowSpecs(nsnull), mColSpecs(nsnull)
 {
 }
 
 nsHTMLFrameSetElement::~nsHTMLFrameSetElement()
 {
+  delete [] mRowSpecs;
+  delete [] mColSpecs;
+  mRowSpecs = mColSpecs = nsnull;
 }
 
 
@@ -124,6 +177,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFrameSetElement, nsGenericElement)
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameSetElement,
                                     nsGenericHTMLContainerElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameSetElement)
+  NS_INTERFACE_MAP_ENTRY(nsIFrameSetElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFrameSetElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -156,9 +210,142 @@ nsHTMLFrameSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-
 NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Cols, cols)
 NS_IMPL_STRING_ATTR(nsHTMLFrameSetElement, Rows, rows)
+
+NS_IMETHODIMP
+nsHTMLFrameSetElement::SetAttr(PRInt32 aNameSpaceID,
+                               nsIAtom* aAttribute,
+                               const nsAString& aValue,
+                               PRBool aNotify)
+{
+  nsresult rv;
+  /* The main goal here is to see whether the _number_ of rows or
+   *  columns has changed.  If it has, we need to reframe; otherwise
+   *  we want to reflow.  So we set mCurrentRowColHint here, then call
+   *  nsGenericHTMLContainerElement::SetAttr, which will end up
+   *  calling GetMappedAttributeImpact and notifying layout with that
+   *  hint.  Once nsGenericHTMLContainerElement::SetAttr returns, we
+   *  want to go back to our normal hint, which is
+   *  NS_STYLE_HINT_REFLOW.
+   */
+  if (aAttribute == nsHTMLAtoms::rows && aNameSpaceID == kNameSpaceID_None) {
+    PRInt32 oldRows = mNumRows;
+    delete [] mRowSpecs;
+    mRowSpecs = nsnull;
+    mNumRows = 0;
+
+    ParseRowCol(aValue, mNumRows, &mRowSpecs);
+    
+    if (mNumRows != oldRows) {
+      mCurrentRowColHint = NS_STYLE_HINT_FRAMECHANGE;
+    }
+  } else if (aAttribute == nsHTMLAtoms::cols &&
+             aNameSpaceID == kNameSpaceID_None) {
+    PRInt32 oldCols = mNumCols;
+    delete [] mColSpecs;
+    mColSpecs = nsnull;
+    mNumCols = 0;
+
+    ParseRowCol(aValue, mNumCols, &mColSpecs);
+
+    if (mNumCols != oldCols) {
+      mCurrentRowColHint = NS_STYLE_HINT_FRAMECHANGE;
+    }
+  }
+  
+  rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID,
+                                              aAttribute,
+                                              aValue,
+                                              aNotify);
+  mCurrentRowColHint = NS_STYLE_HINT_REFLOW;
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameSetElement::SetAttr(nsINodeInfo* aNodeInfo,
+                               const nsAString& aValue,
+                               PRBool aNotify)
+{
+  return nsGenericHTMLContainerElement::SetAttr(aNodeInfo,
+                                                aValue,
+                                                aNotify);
+}
+
+
+NS_IMETHODIMP
+nsHTMLFrameSetElement::GetRowSpec(PRInt32 *aNumValues,
+                                  const nsFramesetSpec** aSpecs)
+{
+  NS_PRECONDITION(aNumValues, "Must have a pointer to an integer here!");
+  NS_PRECONDITION(aSpecs, "Must have a pointer to an array of nsFramesetSpecs");
+  *aNumValues = 0;
+  *aSpecs = nsnull;
+  
+  if (!mRowSpecs) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetHTMLAttribute(nsHTMLAtoms::rows, value) &&
+        eHTMLUnit_String == value.GetUnit()) {
+      nsAutoString rows;
+      value.GetStringValue(rows);
+      nsresult rv = ParseRowCol(rows, mNumRows, &mRowSpecs);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (!mRowSpecs) {  // we may not have had an attr or had an empty attr
+      mRowSpecs = new nsFramesetSpec[1];
+      if (!mRowSpecs) {
+        mNumRows = 0;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mNumRows = 1;
+      mRowSpecs[0].mUnit  = eFramesetUnit_Relative;
+      mRowSpecs[0].mValue = 1;
+    }
+  }
+
+  *aSpecs = mRowSpecs;
+  *aNumValues = mNumRows;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLFrameSetElement::GetColSpec(PRInt32 *aNumValues,
+                                  const nsFramesetSpec** aSpecs)
+{
+  NS_PRECONDITION(aNumValues, "Must have a pointer to an integer here!");
+  NS_PRECONDITION(aSpecs, "Must have a pointer to an array of nsFramesetSpecs");
+  *aNumValues = 0;
+  *aSpecs = nsnull;
+
+  if (!mColSpecs) {
+    nsHTMLValue value;
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetHTMLAttribute(nsHTMLAtoms::cols, value) &&
+        eHTMLUnit_String == value.GetUnit()) {
+      nsAutoString cols;
+      value.GetStringValue(cols);
+      nsresult rv = ParseRowCol(cols, mNumCols, &mColSpecs);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    if (!mColSpecs) {  // we may not have had an attr or had an empty attr
+      mColSpecs = new nsFramesetSpec[1];
+      if (!mColSpecs) {
+        mNumCols = 0;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mNumCols = 1;
+      mColSpecs[0].mUnit  = eFramesetUnit_Relative;
+      mColSpecs[0].mValue = 1;
+    }
+  }
+
+  *aSpecs = mColSpecs;
+  *aNumValues = mNumCols;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
@@ -202,7 +389,7 @@ nsHTMLFrameSetElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt
 {
   if ((aAttribute == nsHTMLAtoms::rows) ||
       (aAttribute == nsHTMLAtoms::cols)) {
-    aHint = NS_STYLE_HINT_FRAMECHANGE;
+    aHint = mCurrentRowColHint;
   }
   else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
@@ -221,3 +408,158 @@ nsHTMLFrameSetElement::SizeOf(nsISizeOfHandler* aSizer,
   return NS_OK;
 }
 #endif
+
+nsresult
+nsHTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
+                                   PRInt32& aNumSpecs,
+                                   nsFramesetSpec** aSpecs) 
+{
+  NS_ASSERTION(!*aSpecs, "Someone called us with a pointer to an already allocated array of specs!");
+  
+  if (!aValue.IsEmpty()) {
+    nsAutoString rowsCols(aValue);
+    nsFramesetSpec* specs = new nsFramesetSpec[gMaxNumRowColSpecs];
+    if (!specs) {
+      *aSpecs = nsnull;
+      aNumSpecs = 0;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    aNumSpecs = ParseRowColSpec(rowsCols, gMaxNumRowColSpecs, specs);
+    *aSpecs = new nsFramesetSpec[aNumSpecs];
+    if (!*aSpecs) {
+      aNumSpecs = 0;
+      delete [] specs;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    for (PRInt32 i = 0; i < aNumSpecs; ++i) {
+      (*aSpecs)[i] = specs[i];
+    }
+    delete [] specs;
+  }
+
+  return NS_OK;
+}
+
+/**
+ * Translate a "rows" or "cols" spec into an array of nsFramesetSpecs
+ */
+PRInt32 
+nsHTMLFrameSetElement::ParseRowColSpec(nsString&       aSpec, 
+                                       PRInt32         aMaxNumValues, 
+                                       nsFramesetSpec* aSpecs) 
+{
+  static const PRUnichar sAster('*');
+  static const PRUnichar sPercent('%');
+  static const PRUnichar sComma(',');
+
+  // remove whitespace (Bug 33699)
+  // also remove leading/trailing commas (bug 31482)
+  aSpec.StripChars(" \n\r\t");
+  aSpec.Trim(",");
+  
+  // Count the commas 
+  PRInt32 commaX = aSpec.FindChar(sComma);
+  PRInt32 count = 1;
+  while (commaX >= 0) {
+    count++;
+    commaX = aSpec.FindChar(sComma, commaX + 1);
+  }
+
+  if (count > aMaxNumValues) {
+    NS_ASSERTION(0, "Not enough space for values");
+    count = aMaxNumValues;
+  }
+
+  // Parse each comma separated token
+
+  PRInt32 start = 0;
+  PRInt32 specLen = aSpec.Length();
+
+  for (PRInt32 i = 0; i < count; i++) {
+    // Find our comma
+    commaX = aSpec.FindChar(sComma, start);
+    PRInt32 end = (commaX < 0) ? specLen : commaX;
+
+    // Note: If end == start then it means that the token has no
+    // data in it other than a terminating comma (or the end of the spec)
+    aSpecs[i].mUnit = eFramesetUnit_Fixed;
+    if (end > start) {
+      PRInt32 numberEnd = end;
+      PRUnichar ch = aSpec.CharAt(numberEnd - 1);
+      if (sAster == ch) {
+        aSpecs[i].mUnit = eFramesetUnit_Relative;
+        numberEnd--;
+      } else if (sPercent == ch) {
+        aSpecs[i].mUnit = eFramesetUnit_Percent;
+        numberEnd--;
+        // check for "*%"
+        if (numberEnd > start) {
+          ch = aSpec.CharAt(numberEnd - 1);
+          if (sAster == ch) {
+            aSpecs[i].mUnit = eFramesetUnit_Relative;
+            numberEnd--;
+          }
+        }
+      }
+
+      // Translate value to an integer
+      nsString token;
+      aSpec.Mid(token, start, numberEnd - start);
+
+      // Treat * as 1*
+      if ((eFramesetUnit_Relative == aSpecs[i].mUnit) &&
+        (0 == token.Length())) {
+        aSpecs[i].mValue = 1;
+      }
+      else {
+        // Otherwise just convert to integer.
+        PRInt32 err;
+        aSpecs[i].mValue = token.ToInteger(&err);
+        if (err) {
+          aSpecs[i].mValue = 0;
+        }
+      }
+
+      // Treat 0* as 1* in quirks mode (bug 40383)
+      nsCompatibility mode = eCompatibility_FullStandards;
+      nsCOMPtr<nsIHTMLDocument> htmlDocument;
+      if (mDocument) {
+        htmlDocument = do_QueryInterface(mDocument);
+      } else {
+        nsCOMPtr<nsIDocument> doc;
+        mNodeInfo->GetDocument(*getter_AddRefs(doc));
+        htmlDocument = do_QueryInterface(doc);
+      }
+      if (htmlDocument) {
+        htmlDocument->GetCompatibilityMode(mode);
+      }
+      
+      if (eCompatibility_NavQuirks == mode) {
+        if ((eFramesetUnit_Relative == aSpecs[i].mUnit) &&
+          (0 == aSpecs[i].mValue)) {
+          aSpecs[i].mValue = 1;
+        }
+      }
+        
+      // Catch zero and negative frame sizes for Nav compatability
+      // Nav resized absolute and relative frames to "1" and
+      // percent frames to an even percentage of the width
+      //
+      //if ((eCompatibility_NavQuirks == aMode) && (aSpecs[i].mValue <= 0)) {
+      //  if (eFramesetUnit_Percent == aSpecs[i].mUnit) {
+      //    aSpecs[i].mValue = 100 / count;
+      //  } else {
+      //    aSpecs[i].mValue = 1;
+      //  }
+      //} else {
+
+      // In standards mode, just set negative sizes to zero
+      if (aSpecs[i].mValue < 0) {
+        aSpecs[i].mValue = 0;
+      }
+      start = end + 1;
+    }
+  }
+  return count;
+}
+

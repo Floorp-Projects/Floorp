@@ -42,6 +42,7 @@
 #include "nsColor.h"
 #include "nsIObserver.h"
 #include "nsWeakPtr.h"
+#include "nsIFrameSetElement.h"
 
 class  nsIContent;
 class  nsIFrame;
@@ -74,21 +75,10 @@ struct nsBorderColor
   void Set(nscolor aColor) { mLeft = mRight = mTop = mBottom = aColor; }
 };
 
-enum nsFramesetUnit {
-  eFramesetUnit_Fixed = 0,
-  eFramesetUnit_Percent,
-  eFramesetUnit_Relative
-};
-
 enum nsFrameborder {
   eFrameborder_Yes = 0,
   eFrameborder_No,
   eFrameborder_Notset
-};
-
-struct nsFramesetSpec {
-  nsFramesetUnit mUnit;
-  nscoord        mValue;
 };
 
 struct nsFramesetDrag {
@@ -134,8 +124,6 @@ public:
                   nsIFrame*        aPrevInFlow);
 
   static PRBool  gDragInProgress;
-
-  static PRInt32 gMaxNumRowColSpecs;
 
   void GetSizeOfChild(nsIFrame* aChild, nsSize& aSize);
 
@@ -195,17 +183,18 @@ protected:
              PRInt32  aNumItems,
              PRInt32* aItems);
 
-  void CalculateRowCol(nsIPresContext* aPresContext, 
-                       nscoord         aSize, 
-                       PRInt32         aNumSpecs, 
-                       nsFramesetSpec* aSpecs, 
-                       nscoord*        aValues);
+  void CalculateRowCol(nsIPresContext*       aPresContext, 
+                       nscoord               aSize, 
+                       PRInt32               aNumSpecs, 
+                       const nsFramesetSpec* aSpecs, 
+                       nscoord*              aValues);
 
-  void GenerateRowCol(nsIPresContext* aPresContext,
-                       nscoord         aSize,
-                       PRInt32         aNumSpecs,
-                       nsFramesetSpec* aSpecs,
-                       nscoord*        aValues);
+  void GenerateRowCol(nsIPresContext*       aPresContext,
+                      nscoord               aSize,
+                      PRInt32               aNumSpecs,
+                      const nsFramesetSpec* aSpecs,
+                      nscoord*              aValues,
+                      nsString&             aNewAttr);
 
   virtual void GetDesiredSize(nsIPresContext*          aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -234,13 +223,6 @@ protected:
   
   virtual PRIntn GetSkipSides() const;
 
-  void ParseRowCol(nsIPresContext* aPresContext, nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs); 
-
-  PRInt32 ParseRowColSpec(nsIPresContext* aPresContext,
-                          nsString&       aSpec, 
-                          PRInt32         aMaxNumValues,
-                          nsFramesetSpec* aSpecs);
-
   void ReflowPlaceChild(nsIFrame*                aChild,
                         nsIPresContext*          aPresContext,
                         const nsHTMLReflowState& aReflowState,
@@ -262,10 +244,8 @@ protected:
   PRBool ChildIsFrameset(nsIFrame* aChild); 
 
   PRInt32          mNumRows;
-  nsFramesetSpec*  mRowSpecs;  // parsed, non-computed dimensions
   nscoord*         mRowSizes;  // currently computed row sizes 
   PRInt32          mNumCols;
-  nsFramesetSpec*  mColSpecs;  // parsed, non-computed dimensions
   nscoord*         mColSizes;  // currently computed col sizes 
   PRInt32          mNonBorderChildCount; 
   PRInt32          mNonBlankChildCount; 
