@@ -3746,7 +3746,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
   if (ui->mBehavior != "") {
     // Get the XBL loader.
     nsresult rv;
-    NS_WITH_SERVICE(nsIXBLService, xblService, "components://netscape/xbl", &rv);
+    NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
     if (!xblService)
       return rv;
 
