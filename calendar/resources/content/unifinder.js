@@ -48,7 +48,6 @@ const UnifinderTreeName = "unifinder-search-results-listbox";
 
 var gCalendarEventTreeClicked = false; //set this to true when the calendar event tree is clicked
                                        //to allow for multiple selection
-
 function calendarUnifinderInit( )
 {
    var unifinderEventSelectionObserver = 
@@ -233,7 +232,7 @@ function getCalendarEventFromEvent( event )
 *  This is attached to the onclik attribute of the events shown in the unifinder
 */
 
-function unifinderClickEvent( event )
+function unifinderOnSelect( event )
 {
    var ArrayOfEvents = new Array( );
    
@@ -565,17 +564,13 @@ treeView.prototype.getRowProperties = function()
 treeView.prototype.isSorted = function()
 {return false;}
 treeView.prototype.isEditable = function()
-{return false;}
+{return true;}
 treeView.prototype.isSeparator = function()
 {return false;}
 treeView.prototype.getImageSrc = function()
 {return false;}
 treeView.prototype.cycleHeader = function()
 {return false;}
-treeView.prototype.selectionChanged = function()
-{
-   alert( 'selection changed' );
-}
 treeView.prototype.setTree = function( tree )
 {
    this.tree = tree;
