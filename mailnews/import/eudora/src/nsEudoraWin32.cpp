@@ -104,7 +104,7 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 			// Command line is Eudora mailfolder eudora.ini
 			int	idx = -1;
 			if (str.CharAt( 0) == '"') {
-				idx = str.FindChar( '"', PR_FALSE, 1);
+				idx = str.FindChar( '"', 1);
 				if (idx != -1)
 					idx++;
 			}
@@ -117,10 +117,10 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 				while (str.CharAt( idx) == ' ') idx++;
 				int eIdx = -1;
 				if (str.CharAt( idx) == '"') {
-					eIdx = str.FindChar( '"', PR_FALSE, idx);
+					eIdx = str.FindChar( '"', idx);
 				}
 				else {
-					eIdx = str.FindChar( ' ', PR_FALSE, idx);
+					eIdx = str.FindChar( ' ', idx);
 				}
 				idx = eIdx;
 			}
@@ -130,10 +130,10 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 				while (str.CharAt( idx) == ' ') idx++;
 				int endIdx = -1;
 				if (str.CharAt( idx) == '"') {
-					endIdx = str.FindChar( '"', PR_FALSE, idx);
+					endIdx = str.FindChar( '"', idx);
 				}
 				else {
-					endIdx = str.FindChar( ' ', PR_FALSE, idx);
+					endIdx = str.FindChar( ' ', idx);
 				}
 				if (endIdx != -1) {
 					nsCString	path;
@@ -1419,11 +1419,11 @@ void nsEudoraWin32::ConvertPath( nsCString& str)
 	PRInt32		start = 0;
 	nsCString	search;
 
-	idx = str.FindChar( '\\', PR_FALSE, idx);
+	idx = str.FindChar( '\\', idx);
 	if ((idx == 2) && (str.CharAt( 1) == ':')) {
 		str.Left( path, 3);
 		idx++;
-		idx = str.FindChar( '\\', PR_FALSE, idx);
+		idx = str.FindChar( '\\', idx);
 		start = 3;
 		if ((idx == -1) && (str.Length() > 3)) {
 			str.Right( temp, str.Length() - start);
@@ -1442,7 +1442,7 @@ void nsEudoraWin32::ConvertPath( nsCString& str)
 		path.Append( findFileData.cFileName);
 		idx++;
 		start = idx;
-		idx = str.FindChar( '\\', PR_FALSE, idx);
+		idx = str.FindChar( '\\', idx);
 		FindClose( h);
 		if (idx != -1)
 			path.Append( '\\');

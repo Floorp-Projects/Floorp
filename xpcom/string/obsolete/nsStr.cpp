@@ -776,9 +776,9 @@ PRInt32 nsStr::FindSubstr2in2(const nsStr& aDest,const nsStr& aTarget, PRBool aI
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
 
-PRInt32 nsStr::FindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsStr::FindChar1(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount) {
   NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 byte");
-  return ::FindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
+  return ::FindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,PR_FALSE,aCount);
 }
 
 PRInt32 nsStr::FindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount) {
@@ -1027,9 +1027,9 @@ PRInt32 nsStr::RFindSubstr2in2(const nsStr& aDest,const nsStr& aTarget,PRBool aI
  *  @param   aCount tell us how many iterations to perform from offset; -1 means use full length.
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsStr::RFindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsStr::RFindChar1(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount) {
   NS_ASSERTION(aDest.GetCharSize() == eOneByte, "Must be 1 bytes");
-  return ::RFindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
+  return ::RFindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aCount);
 }
 PRInt32 nsStr::RFindChar2(const nsStr& aDest,PRUnichar aChar, PRInt32 anOffset,PRInt32 aCount) {
   NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 bytes");

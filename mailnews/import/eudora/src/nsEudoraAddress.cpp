@@ -654,7 +654,7 @@ void nsEudoraAddress::ExtractNoteField( nsCString& note, nsCString& value, const
 	PRInt32 idx = note.Find( field);
 	if (idx != -1) {
 		idx += field.Length();
-		PRInt32 endIdx = note.FindChar( '>', PR_FALSE, idx);
+		PRInt32 endIdx = note.FindChar( '>', idx);
 		if (endIdx == -1)
 			endIdx = note.Length() - 1;
 		note.Mid( value, idx, endIdx - idx);

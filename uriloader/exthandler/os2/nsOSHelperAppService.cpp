@@ -154,7 +154,7 @@ nsresult GetExtensionFrom4xRegistryInfo(const char * aMimeType, nsCString& aFile
         // this may be a comma separate list of extensions...just take the first one
         // for now...
 
-        PRInt32 pos = aFileExtension.FindChar(',', PR_TRUE);
+        PRInt32 pos = aFileExtension.FindChar(',');
         if (pos > 0) // we have a comma separated list of languages...
           aFileExtension.Truncate(pos); // truncate everything after the first comma (including the comma)
       }

@@ -603,7 +603,7 @@ struct nsDomainEntry
         int thisLen = mOrigin.Length();
         if (len < thisLen)
             return PR_FALSE;
-        if (mOrigin.RFindChar(':', PR_FALSE, thisLen-1, 1) != -1)
+        if (mOrigin.RFindChar(':', thisLen-1, 1) != -1)
         //-- Policy applies to all URLs of this scheme, compare scheme only
             return mOrigin.EqualsWithConversion(anOrigin, PR_TRUE, thisLen);
 

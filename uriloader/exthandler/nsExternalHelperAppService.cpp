@@ -793,7 +793,7 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
                                              (pos + nsCRT::strlen("filename=")));
         if (!dispFileName.IsEmpty()) // if we got a file name back..
         {
-          pos = dispFileName.FindChar(';', PR_TRUE);
+          pos = dispFileName.FindChar(';');
           if (pos > 0)
             dispFileName.Truncate(pos);
 

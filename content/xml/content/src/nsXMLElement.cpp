@@ -195,8 +195,8 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
     rv = content->GetAttr(kNameSpaceID_XML,kBaseAtom,value);
     PRInt32 value_len;
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      PRInt32 colon = value.FindChar(':',PR_FALSE);
-      PRInt32 slash = value.FindChar('/',PR_FALSE);
+      PRInt32 colon = value.FindChar(':');
+      PRInt32 slash = value.FindChar('/');
       if (colon > 0 && !( slash >= 0 && slash < colon)) {
         // Yay, we have absolute path!
         // The complex looking if above is to make sure that we do not erroneously

@@ -217,7 +217,7 @@ nsresult nsMsgOfflineImapOperation::GetCopiesFromDB()
     while (nextCopyDestPos != -1)
     {
       nsCString curDest;
-      nextCopyDestPos = copyDestsCString.FindChar(FOLDER_SEP_CHAR, PR_FALSE, curCopyDestStart);
+      nextCopyDestPos = copyDestsCString.FindChar(FOLDER_SEP_CHAR, curCopyDestStart);
       if (nextCopyDestPos > 0)
         copyDestsCString.Mid(curDest, curCopyDestStart, nextCopyDestPos - curCopyDestStart);
       else

@@ -776,7 +776,7 @@ void Tokenizer_HandleDefault(void *userData, const XML_Char *s, int len) {
     PRInt32 offset = -1;
     CToken* newLine = 0;
     
-    while ((offset = str.FindChar('\n', PR_FALSE, offset + 1)) != -1) {
+    while ((offset = str.FindChar('\n', offset + 1)) != -1) {
       newLine = state->tokenAllocator->CreateTokenOfType(eToken_newline, eHTMLTag_unknown);
       nsExpatTokenizer::AddToken(newLine, NS_OK, state->tokenDeque, state->tokenAllocator);
     }

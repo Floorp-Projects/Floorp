@@ -2290,7 +2290,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
     // Locate pure filename, with possible type suffix
     PRInt32 nameBegin;
     if (wordEnd > wordBegin) {
-      nameBegin = aString.RFindChar(U_SLASH, PR_FALSE, wordEnd-1);
+      nameBegin = aString.RFindChar(U_SLASH, wordEnd-1);
       if (nameBegin >= wordBegin) {
         nameBegin++;
       } else {

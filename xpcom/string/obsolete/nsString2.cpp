@@ -728,7 +728,7 @@ void nsString::AppendWithConversion(const char* aCString,PRInt32 aCount) {
       //   the passed-in string.  File a bug on the caller.
 
 #ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar1(temp,0,PR_FALSE,0,temp.mLength);
+      PRInt32 len=nsStr::FindChar1(temp,0,0,temp.mLength);
       if(kNotFound<len) {
         NS_WARNING(kPossibleNull);
       }
@@ -837,7 +837,7 @@ void nsString::InsertWithConversion(const char* aCString,PRUint32 anOffset,PRInt
       // If this assertion fires, the caller is probably lying about the length of
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar1(temp,0,PR_FALSE,0,temp.mLength);
+      PRInt32 len=nsStr::FindChar1(temp,0,0,temp.mLength);
       if(kNotFound<len) {
         NS_WARNING(kPossibleNull);
       }

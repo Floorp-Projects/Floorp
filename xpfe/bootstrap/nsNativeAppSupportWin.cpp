@@ -1273,10 +1273,10 @@ nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
         // (which may not be accurate, but makes life so much easier).
         const char *p = temp.get();
         // Skip index commas.
-        PRInt32 offset = index ? temp.FindChar( ',', PR_FALSE, 0, index ) : 0;
+        PRInt32 offset = index ? temp.FindChar( ',', 0, index ) : 0;
         if ( offset != -1 ) {
             // Desired argument starts there and ends at next comma.
-            PRInt32 end = temp.FindChar( ',', PR_FALSE, offset+1 );
+            PRInt32 end = temp.FindChar( ',', offset+1 );
             if ( end == -1 ) {
                 // Rest of string.
                 end = temp.Length();

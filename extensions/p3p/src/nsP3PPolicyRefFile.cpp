@@ -1179,7 +1179,7 @@ nsP3PPolicyRefFile::UnEscapeURILegalCharacters( nsString&  aString ) {
 
 
   do {
-    iPercentOffset = aString.FindChar( '%', PR_FALSE, iPercentOffset + 1 );
+    iPercentOffset = aString.FindChar( '%', iPercentOffset + 1 );
 
     if (iPercentOffset > 0) {
       // Found an escaped character

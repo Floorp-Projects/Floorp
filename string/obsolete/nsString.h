@@ -319,7 +319,7 @@ public:
    *  @param   aCount tells us how many iterations to make starting at the given offset
    *  @return  find pos in string, or -1 (kNotFound)
    */
-  PRInt32 FindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
+  PRInt32 FindChar(PRUnichar aChar,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
 
   /**
    * This method searches this string for the first character
@@ -355,7 +355,7 @@ public:
    *  @param   aIgnoreCase selects case sensitivity
    *  @return  find pos in string, or -1 (kNotFound)
    */
-  PRInt32 RFindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+  PRInt32 RFindChar(PRUnichar aChar,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
   /**
    * This method searches this string for the last character

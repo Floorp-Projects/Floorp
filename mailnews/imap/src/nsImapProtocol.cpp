@@ -4388,7 +4388,7 @@ void nsImapProtocol::Language()
     {
       nsCAutoString extractedLanguage;
       extractedLanguage.AssignWithConversion(mAcceptLanguages.get());
-      PRInt32 pos = extractedLanguage.FindChar(',', PR_TRUE);
+      PRInt32 pos = extractedLanguage.FindChar(',');
       if (pos > 0) // we have a comma separated list of languages...
         extractedLanguage.Truncate(pos); // truncate everything after the first comma (including the comma)
       

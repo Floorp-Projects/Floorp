@@ -300,10 +300,10 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
   nsUnicodeMappingUtil* Self = (nsUnicodeMappingUtil*)aClosure;
   nsCAutoString curPrefName(aName);
   
-  PRInt32 p1 = curPrefName.RFindChar('.', PR_TRUE);
+  PRInt32 p1 = curPrefName.RFindChar('.');
   if(-1==p1)
   	return;
-  PRInt32 p2 = curPrefName.RFindChar('.', PR_TRUE, p1-1);
+  PRInt32 p2 = curPrefName.RFindChar('.', p1-1);
   if(-1==p1)
   	return;
   
