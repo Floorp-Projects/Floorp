@@ -1,0 +1,136 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+ * DOM Element implementation.
+ */
+
+#include "dom_priv.h"
+
+DOM_Element *
+DOM_NewElement(void)
+{
+    DOM_Element *element = XP_NEW_ZAP(DOM_Element);
+    if (!element)
+        return NULL;
+    element->node.type = NODE_TYPE_ELEMENT;
+    return element;
+}    
+
+static JSPropertySpec element_props[] = {
+    {"tagName",		DOM_ELEMENT_TAGNAME,	JSPROP_READONLY,	0, 0},
+    {0}
+};
+
+static JSBool
+element_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    intN slot;
+    DOM_Element *element;
+
+    if (!JSVAL_IS_INT(id))
+        return JS_TRUE;
+
+    slot = JSVAL_TO_INT(id);
+
+    /* 
+     * Look, ma!  Inheritance!
+     * We handle .attributes ourselves because we return something other
+     * than null, unlike every other Node subclass.
+     */
+    if (slot != DOM_NODE_ATTRIBUTES &&
+        slot <= DOM_NODE_NODENAME &&
+        slot >= DOM_NODE_HASCHILDNODES) {
+        return dom_node_getter(cx, obj, id, vp);
+    }
+
+    element = (DOM_Element *)JS_GetPrivate(cx, obj);
+    if (!element)
+        return JS_TRUE;
+
+    if (slot == DOM_ELEMENT_TAGNAME) {
+        JSString *tagName =
+            JS_InternString(cx, element->tagName ? element->tagName : "#tag");
+        if (!tagName)
+            return JS_FALSE;
+        *vp = STRING_TO_JSVAL(tagName);
+    }
+
+    return JS_TRUE;
+}
+
+static JSBool
+element_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    return JS_TRUE;
+}
+
+static void
+element_finalize(JSContext *cx, JSObject *obj)
+{
+    return;
+}
+
+static JSClass DOM_ElementClass = {
+    "Element", JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub,  JS_PropertyStub,  element_getter, element_setter,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub, element_finalize
+};
+
+JSObject *
+DOM_NewElementObject(JSContext *cx, DOM_Element *element)
+{
+    JSObject *obj;
+    
+    obj = JS_ConstructObject(cx, &DOM_ElementClass, NULL, NULL);
+    if (!obj)
+        return NULL;
+    if (!JS_SetPrivate(cx, obj, element))
+        return NULL;
+    element->node.mocha_object = obj;
+    return obj;
+}
+
+JSObject *
+DOM_ObjectForElement(JSContext *cx, DOM_Element *element)
+{
+    if (!element)
+        return NULL;
+    if (element->node.mocha_object)
+        return element->node.mocha_object;
+    return DOM_NewElementObject(cx, element);
+}
+
+static JSBool
+Element(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+	jsval *vp)
+{
+    return JS_TRUE;
+}
+
+JSObject *
+dom_ElementInit(JSContext *cx, JSObject *scope, JSObject *node_proto)
+{
+    JSObject *proto = JS_InitClass(cx, scope, node_proto, &DOM_ElementClass,
+				   Element, 0,
+				   element_props, NULL,
+				   NULL, NULL);
+    if (!JS_DefineProperties(cx, proto, dom_node_props))
+        return NULL;
+    return proto;
+}
