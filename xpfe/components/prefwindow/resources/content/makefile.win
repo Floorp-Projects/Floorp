@@ -32,6 +32,8 @@ install::
 	$(MAKE_INSTALL) pref-colors.js  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-colors.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-themes.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-charset.js  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) pref-charset.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-composer.js  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-composer.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-cookies.xul  $(DIST)\bin\chrome\pref\content\default

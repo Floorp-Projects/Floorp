@@ -1,6 +1,8 @@
 pref-advanced.xul
 pref-appearance.xul
 pref-applications.xul
+pref-charset.js
+pref-charset.xul
 pref-cache.js
 pref-cache.xul
 pref-colors.js
