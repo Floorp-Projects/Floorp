@@ -89,7 +89,7 @@ protected:
 };
 
 nsresult
-NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aStateFlags )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
@@ -99,6 +99,10 @@ NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  // set the state flags (if any are provided)
+  it->SetFrameState( aStateFlags );
+  
   *aNewFrame = it;
   return NS_OK;
 }
@@ -163,7 +167,12 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext* aPresContext,
   const nsStyleDisplay* styleDisplay;
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) styleDisplay);
   
-  PRUint8 flags = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay) ? NS_BLOCK_SHRINK_WRAP : 0;
+  PRUint32 flags = (NS_STYLE_DISPLAY_BLOCK != styleDisplay->mDisplay) ? NS_BLOCK_SHRINK_WRAP : 0;
+
+  // add in the parent state (we need it to be inherited)
+  PRUint32 parentState;
+  GetFrameState( &parentState );
+  flags |= parentState;
 
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
