@@ -122,10 +122,10 @@ function onChooseFile()
     if (dialog.openAppList.data == "2")
       fp.setFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | nsIFilePicker.filterAll);
     else
-      fp.setFilters(nsIFilePicker.filterAll);
+      fp.setFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
+			nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
 
-    fp.show();
-    if (fp.fileURL.spec && fp.fileURL.spec.length > 0)
+    if (fp.show() == nsIFilePicker.returnOK && fp.fileURL.spec && fp.fileURL.spec.length > 0)
     {
       dialog.input.value = fp.fileURL.spec;
     }
