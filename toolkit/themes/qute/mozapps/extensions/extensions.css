@@ -17,6 +17,17 @@
   padding: 0px 10px 5px 10px;
 }
 
+#installButton {
+  margin: 0px;
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(0px, 80px, 16px, 64px) !important;
+}
+
+#installButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(16px, 80px, 32px, 64px) !important;
+}
+
 #uninstallButton {
   margin: 0px;
   list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
@@ -39,6 +50,17 @@
   -moz-image-region: rect(16px, 32px, 32px, 16px) !important;
 }
 
+#optionsButton {
+  margin: 0px;
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(0px, 64px, 16px, 48px) !important;
+}
+
+#optionsButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(16px, 64px, 32px, 48px) !important;
+}
+
 #useThemeButton {
   margin: 0px;
   list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
@@ -54,6 +76,7 @@
   margin: 0px 5px 0px 0px !important;
 }
 
+#installButton .button-icon,
 #uninstallButton .button-icon, 
 #updateButton .button-icon,
 #optionsButton .button-icon,
