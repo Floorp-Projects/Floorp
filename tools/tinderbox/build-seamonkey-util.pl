@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.90 $ ';
+$::UtilsVersion = '$Revision: 1.91 $ ';
 
 package TinderUtils;
 
@@ -968,7 +968,8 @@ sub run_all_tests {
 		# print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
 		
 		my $min_startuptime_string = sprintf "%.2f", $min_startuptime/1000;
-		my $print_string = "\n\nTinderboxPrint:Ts:" . $min_startuptime_string . "s\n\n";
+		my $print_string = "\n\nTinderboxPrint:<a href=\"http://tegu.mozilla.org/graph/startup/query.cgi?tbox=" 
+		  . ::hostname() . "\">Ts:" . $min_startuptime_string . "s</a>\n\n";
 		print_log "$print_string";
 
 		# Report data back to server
