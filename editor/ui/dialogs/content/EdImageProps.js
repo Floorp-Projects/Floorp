@@ -138,6 +138,8 @@ function initDialog() {
   // force wasEnableAll to be different so everything gets updated
   wasEnableAll = !(dialog.srcInput.value.length > 0);
   doOverallEnabling();
+
+  checkForImage( "image.srcInput" );
 }
 
 function chooseFile()
@@ -146,6 +148,7 @@ function chooseFile()
   fileName = editorShell.GetLocalFileURL(window, "img");
   if (fileName && fileName != "") {
     dialog.srcInput.value = fileName;
+    checkForImage( "image.srcInput" );
     doValueChanged();
   }
   // Put focus into the input field
@@ -154,13 +157,14 @@ function chooseFile()
 
 function onMoreFewer()
 {
-  if (doSeeAll) {
+  if (doSeeAll)
+  {
     void(null);    
     doSeeAll = false;
     dialog.MoreRow.style.visibility = "hidden"; // collapse is a little funky
-    // BUG: This works to hide the row, but
-    //   setting visibility to "show" doesn't bring it back 
-  } else {
+  }
+  else
+  {
     doSeeAll = true;
     dialog.MoreRow.style.visibility = "inherit"; // was visible; show doesn't seem to work
   }
@@ -168,6 +172,11 @@ function onMoreFewer()
 
 function doValueChanged()
 {
+
+  if ( !imageType )
+  return;
+
+
   if ( !hasAnyChanged )
   {
     hasAnyChanged = true;
@@ -193,10 +202,18 @@ function OnChangeSrc()
 
 function doDimensionEnabling( doEnable )
 {
+
   SetLabelEnabledByID( "originalsizeLabel", doEnable );
   SetLabelEnabledByID( "customsizeLabel", doEnable );
 
+  SetLegendEnabledByID( "dimensionsLegend", doEnable );
+  SetLegendEnabledByID( "spacingLegend", doEnable );
+
+  SetButtonEnabledByID( "AdvancedButton", doEnable );
+  SetButtonEnabledByID( "MoreFewerButton", doEnable );
+
 	customradio = document.getElementById( "customsizeRadio" );
+
   if ( customradio )
   {
       // disable or enable custom setting controls
@@ -210,10 +227,12 @@ function doDimensionEnabling( doEnable )
     SetLabelEnabledByID( "imageheightLabel", doEnable && customradio.checked );
     SetLabelEnabledByID( "constrainLabel", doEnable && customradio.checked );
   }
+
 }
 
 function doOverallEnabling()
 {
+
   var canEnableAll;
   canEnableAll = (dialog.srcInput.value.length > 0);
 
@@ -228,6 +247,7 @@ function doOverallEnabling()
     btn.disabled = (!canEnableAll && hasAnyChanged);
   }
   
+  
 	fieldset = document.getElementById("imagedimensionsFieldset");
 	if ( fieldset )
   {
@@ -241,7 +261,7 @@ function doOverallEnabling()
   SetElementEnabledByID("MoreFewerButton", canEnableAll );
   SetElementEnabledByID("AdvancedButton", canEnableAll );
 
-    // commented out since it asserts right now
+  // alignment
   SetLabelEnabledByID( "imagealignmentLabel", canEnableAll );
   SetElementEnabledByID("image.alignType", canEnableAll );
 
@@ -252,7 +272,6 @@ function doOverallEnabling()
   SetElementEnabledByID("imageborderInput", canEnableAll );
 
     // do spacing labels
-    // commented out since they all assert right now
   SetLabelEnabledByID( "leftrightLabel", canEnableAll );
   SetLabelEnabledByID( "leftrighttypeLabel", canEnableAll );
   SetLabelEnabledByID( "topbottomLabel", canEnableAll );
@@ -267,6 +286,76 @@ function SetImageAlignment(align)
 
 //  contentWindow.focus();
 }
+
+// an API to validate and image by sniffing out the extension
+
+var imageType			= false;
+
+function checkForImage( elementID ){
+
+	image 			= document.getElementById( elementID ).value;
+
+	if ( !image )
+	return;
+  
+	var length     		= image.length;
+
+	var tail       		= image.length - 4; 
+	var type       		= image.substring(tail,length);
+
+	if ( tail == 0 )	{ 
+	dump("Sorry wrong image type\n\n");
+	return; 
+				}
+	else	{
+
+	switch( type )	{
+
+	  case ".gif":
+	  imageType		= type;
+	  break;
+		
+	  case ".GIF":
+	  imageType		= type;
+	  break;
+		
+	  case ".jpg":
+	  imageType		= type;
+	  break;
+		
+	  case ".JPG":
+	  imageType		= type;
+	  break;
+				
+	  case "JPEG":
+	  imageType		= type;
+	  break;
+
+	  case "jpeg":
+	  imageType		= type;
+	  break;
+		
+	  case ".png":
+	  imageType		= type;
+	  break;
+		
+	  case ".PNG":
+	  imageType		= type;
+	  break;
+		
+	  default : imageType   = false;	
+
+
+			}
+
+		}
+
+	if( imageType ){ dump("Image is of type "+imageType+"\n\n"); }
+	else{ dump("Sorry wrong image type\n\n"); }
+
+return(imageType);
+}
+
 
 // constrainProportions contribution by pete@postpagan.com
 // needs to handle pixels/percent
@@ -302,6 +391,13 @@ function constrainProportions( srcID, destID )
 
 function onOK()
 {
+  if ( !imageType ) 	{
+  dump("alert *** please choose an image of typ gif, jpg or png.\n\n");
+  return;
+		    	}
+
+  else	{
+
   imageElement.setAttribute("src",dialog.srcInput.value);
   // We must convert to "file:///" format else image doesn't load!
   
@@ -359,4 +455,6 @@ function onOK()
 
   // dismiss dialog
   window.close();
+
+	}
 }
