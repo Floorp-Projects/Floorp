@@ -97,6 +97,8 @@
   // had to retain it to keep it around outside the view hierarchy.
   if ([self isBookmarkManagerVisible])
     [mBrowserContainerView release];
+  
+  [super dealloc];
 }
 
 - (void)awakeFromNib
