@@ -325,7 +325,7 @@ sub XML_Header {
   my ($urlbase, $version, $maintainer, $exporter) = (@_);
 
   my $xml;
-  $xml = "<?xml version=\"1.0\" standalone=\"no\"?>\n";
+  $xml = "<?xml version=\"1.0\" standalone=\"yes\"?>\n";
   $xml .= "<!DOCTYPE bugzilla SYSTEM \"$urlbase";
   if (! ($urlbase =~ /.+\/$/)) {
     $xml .= "/";
