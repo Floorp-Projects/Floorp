@@ -172,8 +172,8 @@ NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRec
 
   nsRect sr = aSrcRect;
   mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
-  sr.x = aSrcRect->x;
-  sr.y = aSrcRect->y;
+  sr.x = aSrcRect.x;
+  sr.y = aSrcRect.y;
   mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
   UpdateGC();
