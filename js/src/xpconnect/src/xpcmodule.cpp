@@ -45,7 +45,7 @@ Construct_nsXPConnect(nsISupports *aOuter, REFNSIID aIID, void **aResult)
         rv = NS_ERROR_NULL_POINTER;
         goto done;
     }
-    *aResult = NULL;
+    *aResult = nsnull;
     if(aOuter)
     {
         rv = NS_ERROR_NO_AGGREGATION;
@@ -78,7 +78,7 @@ Construct_nsXPCThreadJSContextStack(nsISupports *aOuter, REFNSIID aIID, void **a
         rv = NS_ERROR_NULL_POINTER;
         goto done;
     }
-    *aResult = NULL;
+    *aResult = nsnull;
     if(aOuter)
     {
         rv = NS_ERROR_NO_AGGREGATION;

@@ -31,7 +31,7 @@ NS_IMPL_ISUPPORTS(nsXPConnect, kXPConnectIID)
 
 const char XPC_COMPONENTS_STR[] = "Components";
 
-nsXPConnect* nsXPConnect::mSelf = NULL;
+nsXPConnect* nsXPConnect::mSelf = nsnull;
 
 /***************************************************************************/
 
@@ -95,20 +95,20 @@ GetPerThreadData()
         if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_ThreadDataDtorCB))
         {
             NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
-            return NULL;
+            return nsnull;
         }
     }
 
     data = (xpcPerThreadData*) PR_GetThreadPrivate(index);
     if(!data)
     {
-        if(NULL != (data = new xpcPerThreadData()))
+        if(nsnull != (data = new xpcPerThreadData()))
         {
             if(PR_FAILURE == PR_SetThreadPrivate(index, data))
             {
                 NS_ASSERTION(0, "PR_SetThreadPrivate failed!");
                 delete data;
-                data = NULL;
+                data = nsnull;
             }
         }
         else
@@ -145,14 +145,14 @@ nsXPConnect::GetXPConnect()
 
 // static
 nsIInterfaceInfoManager*
-nsXPConnect::GetInterfaceInfoManager(nsXPConnect* xpc /*= NULL*/)
+nsXPConnect::GetInterfaceInfoManager(nsXPConnect* xpc /*= nsnull*/)
 {
     nsIInterfaceInfoManager* iim;
     nsXPConnect* xpcl = xpc;
 
     if(!xpcl && !(xpcl = GetXPConnect()))
-        return NULL;
-    if(NULL != (iim = xpcl->mInterfaceInfoManager))
+        return nsnull;
+    if(nsnull != (iim = xpcl->mInterfaceInfoManager))
         NS_ADDREF(iim);
     if(!xpc)
         NS_RELEASE(xpcl);
@@ -161,14 +161,14 @@ nsXPConnect::GetInterfaceInfoManager(nsXPConnect* xpc /*= NULL*/)
 
 // static
 nsIJSContextStack*
-nsXPConnect::GetContextStack(nsXPConnect* xpc /*= NULL*/)
+nsXPConnect::GetContextStack(nsXPConnect* xpc /*= nsnull*/)
 {
     nsIJSContextStack* cs;
     nsXPConnect* xpcl = xpc;
 
     if(!xpcl && !(xpcl = GetXPConnect()))
-        return NULL;
-    if(NULL != (cs = xpcl->mContextStack))
+        return nsnull;
+    if(nsnull != (cs = xpcl->mContextStack))
         NS_ADDREF(cs);
     if(!xpc)
         NS_RELEASE(xpcl);
@@ -177,7 +177,7 @@ nsXPConnect::GetContextStack(nsXPConnect* xpc /*= NULL*/)
 
 // static
 XPCContext*
-nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= NULL*/)
+nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= nsnull*/)
 {
     NS_PRECONDITION(cx,"bad param");
 
@@ -185,7 +185,7 @@ nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= NULL*/)
     nsXPConnect* xpcl = xpc;
 
     if(!xpcl && !(xpcl = GetXPConnect()))
-        return NULL;
+        return nsnull;
     xpcc = xpcl->mContextMap->Find(cx);
     if(!xpcc)
         xpcc = xpcl->NewContext(cx, JS_GetGlobalObject(cx));
@@ -196,13 +196,13 @@ nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= NULL*/)
 
 // static
 XPCJSThrower*
-nsXPConnect::GetJSThrower(nsXPConnect* xpc /*= NULL */)
+nsXPConnect::GetJSThrower(nsXPConnect* xpc /*= nsnull */)
 {
     XPCJSThrower* thrower;
     nsXPConnect* xpcl = xpc;
 
     if(!xpcl && !(xpcl = GetXPConnect()))
-        return NULL;
+        return nsnull;
     thrower = xpcl->mThrower;
     if(!xpc)
         NS_RELEASE(xpcl);
@@ -238,11 +238,11 @@ nsXPConnect::IsISupportsDescendent(nsIInterfaceInfo* info)
 }
 
 nsXPConnect::nsXPConnect()
-    :   mContextMap(NULL),
-        mArbitraryScriptable(NULL),
-        mInterfaceInfoManager(NULL),
-        mThrower(NULL),
-        mContextStack(NULL)
+    :   mContextMap(nsnull),
+        mArbitraryScriptable(nsnull),
+        mInterfaceInfoManager(nsnull),
+        mThrower(nsnull),
+        mContextStack(nsnull)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -273,7 +273,7 @@ nsXPConnect::~nsXPConnect()
         delete mThrower;
     if(mContextStack)
         nsServiceManager::ReleaseService("nsThreadJSContextStack", mContextStack);
-    mSelf = NULL;
+    mSelf = nsnull;
 }
 
 NS_IMETHODIMP
@@ -310,10 +310,10 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
                           nsIXPConnectWrappedNative** aWrapper)
 {
     AUTO_PUSH_JSCONTEXT2(aJSContext, this);
-    nsXPCWrappedNative* wrapper = NULL;
-    XPCContext* xpcc = NULL;
+    nsXPCWrappedNative* wrapper = nsnull;
+    XPCContext* xpcc = nsnull;
     if(!mContextMap->Find(aJSContext) &&
-       NULL != (xpcc = NewContext(aJSContext, NULL, JS_FALSE)))
+       nsnull != (xpcc = NewContext(aJSContext, nsnull, JS_FALSE)))
     {
         wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, aIID);
         if(wrapper)
@@ -321,7 +321,7 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
             if(JS_InitStandardClasses(aJSContext, wrapper->GetJSObject()) &&
                xpcc->Init(wrapper->GetJSObject()) &&
                (!AddComponentsObject ||
-                NS_SUCCEEDED(AddNewComponentsObject(aJSContext, NULL))))
+                NS_SUCCEEDED(AddNewComponentsObject(aJSContext, nsnull))))
             {
                 *aWrapper = wrapper;
                 return NS_OK;
@@ -336,7 +336,7 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
         delete xpcc;
     }
     XPC_LOG_ERROR(("nsXPConnect::InitJSContextWithNewWrappedGlobal failed"));
-    *aWrapper = NULL;
+    *aWrapper = nsnull;
     return NS_ERROR_FAILURE;
 }
 
@@ -415,7 +415,7 @@ nsXPConnect::NewContext(JSContext* cx, JSObject* global,
     {
         XPC_LOG_ERROR(("nsXPConnect::NewContext failed"));
         delete xpcc;
-        xpcc = NULL;
+        xpcc = nsnull;
     }
     if(xpcc)
         mContextMap->Add(xpcc);
@@ -445,7 +445,7 @@ nsXPConnect::WrapNative(JSContext* aJSContext,
         }
     }
     XPC_LOG_ERROR(("nsXPConnect::WrapNative failed"));
-    *aWrapper = NULL;
+    *aWrapper = nsnull;
     return NS_ERROR_FAILURE;
 }
 
@@ -472,7 +472,7 @@ nsXPConnect::WrapJS(JSContext* aJSContext,
         }
     }
     XPC_LOG_ERROR(("nsXPConnect::WrapJS failed"));
-    *aWrapper = NULL;
+    *aWrapper = nsnull;
     return NS_ERROR_FAILURE;
 }
 
@@ -558,7 +558,7 @@ nsXPConnect::GetSecurityManagerForJSContext(JSContext* aJSContext,
         return NS_ERROR_INVALID_ARG;
     }
 
-    if(NULL != (*aManager = xpcc->GetSecurityManager()))
+    if(nsnull != (*aManager = xpcc->GetSecurityManager()))
         NS_ADDREF(*aManager);
     *flags = xpcc->GetSecurityManagerFlags();
     return NS_OK;

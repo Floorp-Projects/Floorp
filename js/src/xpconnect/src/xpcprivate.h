@@ -142,11 +142,11 @@ class nsXPConnect : public nsIXPConnect
     // non-interface implementation
 public:
     static nsXPConnect* GetXPConnect();
-    static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = NULL);
-    static XPCContext*  GetContext(JSContext* cx, nsXPConnect* xpc = NULL);
-    static XPCJSThrower* GetJSThrower(nsXPConnect* xpc = NULL);
+    static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = nsnull);
+    static XPCContext*  GetContext(JSContext* cx, nsXPConnect* xpc = nsnull);
+    static XPCJSThrower* GetJSThrower(nsXPConnect* xpc = nsnull);
     static JSBool IsISupportsDescendent(nsIInterfaceInfo* info);
-    static nsIJSContextStack* GetContextStack(nsXPConnect* xpc = NULL);
+    static nsIJSContextStack* GetContextStack(nsXPConnect* xpc = nsnull);
 
     JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
     nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
@@ -239,7 +239,7 @@ public:
     void SetSecurityManagerFlags(PRUint16 f)
         {mSecurityManagerFlags = f;}
 
-    JSBool Init(JSObject* aGlobalObj = NULL);
+    JSBool Init(JSObject* aGlobalObj = nsnull);
     void DebugDump(int depth);
 
     ~XPCContext();
@@ -359,7 +359,7 @@ private:
                         nsIInterfaceInfo* aInfo);
 
     JSContext* GetJSContext() const
-        {return mXPCContext ? mXPCContext->GetJSContext() : NULL;}
+        {return mXPCContext ? mXPCContext->GetJSContext() : nsnull;}
     JSObject*  CreateIIDJSObject(REFNSIID aIID);
     JSObject*  NewOutObject();
 
@@ -512,11 +512,11 @@ public:
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
     XPCContext*  GetXPCContext() const {return mXPCContext;}
     JSContext* GetJSContext() const
-        {return mXPCContext ? mXPCContext->GetJSContext() : NULL;}
+        {return mXPCContext ? mXPCContext->GetJSContext() : nsnull;}
     nsIXPCScriptable* GetArbitraryScriptable() const
         {return mXPCContext ?
                     mXPCContext->GetXPConnect()->GetArbitraryScriptable() :
-                    NULL;}
+                    nsnull;}
 
     static JSBool InitForContext(XPCContext* xpcc);
     static JSBool OneTimeInit();
@@ -529,7 +529,7 @@ public:
     const XPCNativeMemberDescriptor* GetMemberDescriptor(uint16 i) const
     {
         NS_PRECONDITION(i < mMemberCount,"bad index");
-        return mDescriptors ? &mDescriptors[i] : NULL;
+        return mDescriptors ? &mDescriptors[i] : nsnull;
     }
 
     const XPCNativeMemberDescriptor* LookupMemberByID(jsid id) const;
@@ -552,7 +552,7 @@ public:
                                const XPCNativeMemberDescriptor* desc,
                                jsval* vp)
     {
-        return CallWrappedMethod(cx, wrapper, desc, CALL_GETTER, 0, NULL, vp);
+        return CallWrappedMethod(cx, wrapper, desc, CALL_GETTER, 0, nsnull, vp);
     }
 
     JSBool SetAttributeFromJSVal(JSContext* cx,
@@ -560,7 +560,7 @@ public:
                                  const XPCNativeMemberDescriptor* desc,
                                  jsval* vp)
     {
-        return CallWrappedMethod(cx, wrapper, desc, CALL_SETTER, 1, vp, NULL);
+        return CallWrappedMethod(cx, wrapper, desc, CALL_SETTER, 1, vp, nsnull);
     }
 
     JSObject* GetInvokeFunObj(const XPCNativeMemberDescriptor* desc);

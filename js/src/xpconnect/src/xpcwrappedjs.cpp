@@ -25,7 +25,7 @@
 NS_IMETHODIMP
 nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-    if(NULL == aInstancePtr)
+    if(nsnull == aInstancePtr)
     {
         NS_PRECONDITION(0, "null pointer");
         return NS_ERROR_NULL_POINTER;
@@ -35,7 +35,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     {
         if(!mMethods && !(mMethods = new nsXPCWrappedJSMethods(this)))
         {
-            *aInstancePtr = NULL;
+            *aInstancePtr = nsnull;
             return NS_ERROR_OUT_OF_MEMORY;
         }
         // intentional second addref
@@ -92,8 +92,8 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
     JSObject2WrappedJSMap* map;
     JSObject* rootJSObj;
     nsXPCWrappedJS* root;
-    nsXPCWrappedJS* wrapper = NULL;
-    nsXPCWrappedJSClass* clazz = NULL;
+    nsXPCWrappedJS* wrapper = nsnull;
+    nsXPCWrappedJSClass* clazz = nsnull;
 
     NS_PRECONDITION(xpcc, "bad param");
     NS_PRECONDITION(aJSObj, "bad param");
@@ -102,12 +102,12 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
     if(!map)
     {
         NS_ASSERTION(map,"bad map");
-        return NULL;
+        return nsnull;
     }
 
     clazz = nsXPCWrappedJSClass::GetNewOrUsedClass(xpcc, aIID);
     if(!clazz)
-        return NULL;
+        return nsnull;
     // from here on we need to return through 'return_wrapper'
 
     // always find the root JSObject
@@ -132,7 +132,7 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
         if(rootJSObj == aJSObj)
         {
             // the root will do double duty as the interface wrapper
-            wrapper = root = new nsXPCWrappedJS(aJSObj, clazz, NULL);
+            wrapper = root = new nsXPCWrappedJS(aJSObj, clazz, nsnull);
             if(root)
                 map->Add(root);
             goto return_wrapper;
@@ -146,7 +146,7 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
             if(!rootClazz)
                 goto return_wrapper;
 
-            root = new nsXPCWrappedJS(rootJSObj, rootClazz, NULL);
+            root = new nsXPCWrappedJS(rootJSObj, rootClazz, nsnull);
             NS_RELEASE(rootClazz);
 
             if(!root)
@@ -184,9 +184,9 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSObject* aJSObj,
                                nsXPCWrappedJS* root)
     : mJSObj(aJSObj),
       mClass(aClass),
-      mMethods(NULL),
+      mMethods(nsnull),
       mRoot(root ? root : this),
-      mNext(NULL)
+      mNext(nsnull)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -202,9 +202,9 @@ nsXPCWrappedJS::XPCContextBeingDestroyed()
     if(mJSObj)
     {
         XPCContext* xpcc;
-        if(mClass && NULL != (xpcc = mClass->GetXPCContext()))
+        if(mClass && nsnull != (xpcc = mClass->GetXPCContext()))
             JS_RemoveRoot(xpcc->GetJSContext(), &mJSObj);
-        mJSObj = NULL;
+        mJSObj = nsnull;
     }
 }
 
@@ -214,12 +214,12 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
     if(mClass)
     {
         XPCContext* xpcc;
-        if(NULL != (xpcc = mClass->GetXPCContext()))
+        if(nsnull != (xpcc = mClass->GetXPCContext()))
         {
             if(mRoot == this)
             {
                 JSObject2WrappedJSMap* map;
-                if(NULL != (map = xpcc->GetWrappedJSMap()))
+                if(nsnull != (map = xpcc->GetWrappedJSMap()))
                     map->Remove(this);
             }
             if(mJSObj)
@@ -245,9 +245,9 @@ nsXPCWrappedJS::Find(REFNSIID aIID)
         if(aIID.Equals(cur->GetIID()))
             return cur;
 
-    } while(NULL != (cur = cur->mNext));
+    } while(nsnull != (cur = cur->mNext));
 
-    return NULL;
+    return nsnull;
 }
 
 NS_IMETHODIMP

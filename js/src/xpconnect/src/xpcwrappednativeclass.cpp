@@ -22,7 +22,7 @@
 
 /***************************************************************************/
 XPCNativeMemberDescriptor::XPCNativeMemberDescriptor()
-    : invokeFuncObj(NULL), id(0), index(0), index2(0), flags(0) {}
+    : invokeFuncObj(nsnull), id(0), index(0), index2(0), flags(0) {}
 /***************************************************************************/
 
 const char XPC_VAL_STR[] = "value";
@@ -38,7 +38,7 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
                                            REFNSIID aIID)
 {
     IID2WrappedNativeClassMap* map;
-    nsXPCWrappedNativeClass* clazz = NULL;
+    nsXPCWrappedNativeClass* clazz = nsnull;
 
     NS_PRECONDITION(xpcc, "bad param");
 
@@ -53,7 +53,7 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
     else
     {
         nsIInterfaceInfoManager* iimgr;
-        if(NULL != (iimgr = nsXPConnect::GetInterfaceInfoManager()))
+        if(nsnull != (iimgr = nsXPConnect::GetInterfaceInfoManager()))
         {
             nsIInterfaceInfo* info;
             if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
@@ -65,7 +65,7 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
                 {
                     clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
                     if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
-                        NS_RELEASE(clazz);  // NULLs out 'clazz'
+                        NS_RELEASE(clazz);  // nsnulls out 'clazz'
                 }
                 NS_RELEASE(info);
             }
@@ -79,10 +79,10 @@ nsXPCWrappedNativeClass::nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID
                                                  nsIInterfaceInfo* aInfo)
     : mXPCContext(xpcc),
       mIID(aIID),
-      mName(NULL),
+      mName(nsnull),
       mInfo(aInfo),
       mMemberCount(-1),
-      mDescriptors(NULL)
+      mDescriptors(nsnull)
 {
     NS_ADDREF(mInfo);
 
@@ -210,7 +210,7 @@ void
 nsXPCWrappedNativeClass::XPCContextBeingDestroyed()
 {
     DestroyMemberDescriptors();
-    mXPCContext = NULL;
+    mXPCContext = nsnull;
 }
 
 void
@@ -219,12 +219,12 @@ nsXPCWrappedNativeClass::DestroyMemberDescriptors()
     if(!mDescriptors)
         return;
     JSContext* cx;
-    if(NULL != (cx = GetJSContext()))
+    if(nsnull != (cx = GetJSContext()))
         for(int i = 0; i < mMemberCount; i++)
             if(mDescriptors[i].invokeFuncObj)
                 JS_RemoveRoot(cx, &mDescriptors[i].invokeFuncObj);
     delete [] mDescriptors;
-    mDescriptors = NULL;
+    mDescriptors = nsnull;
 }
 
 const XPCNativeMemberDescriptor*
@@ -237,7 +237,7 @@ nsXPCWrappedNativeClass::LookupMemberByID(jsid id) const
         if(desc->id == id)
             return desc;
     }
-    return NULL;
+    return nsnull;
 }
 
 const char*
@@ -255,7 +255,7 @@ nsXPCWrappedNativeClass::GetMemberName(const XPCNativeMemberDescriptor* desc) co
         if(NS_SUCCEEDED(mInfo->GetMethodInfo(desc->index, &info)))
             return info->GetName();
     }
-    return NULL;
+    return nsnull;
 }
 
 const char*
@@ -289,8 +289,8 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(JSContext *cx,
     v.type = constant->GetType();
     memcpy(&v.val, &mv.val, sizeof(mv.val));
 
-    // XXX if iid consts are supported, then coditionally fill it in here
-    return XPCConvert::NativeData2JS(cx, vp, &v.val, v.type, NULL, NULL);
+    // XXX if iid consts are supported, then conditionally fill it in here
+    return XPCConvert::NativeData2JS(cx, vp, &v.val, v.type, nsnull, nsnull);
 }
 
 JSBool
@@ -305,7 +305,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     nsXPTCVariant paramBuffer[PARAM_BUFFER_COUNT];
     JSBool retval = JS_FALSE;
 
-    nsXPTCVariant* dispatchParams = NULL;
+    nsXPTCVariant* dispatchParams = nsnull;
     uint8 i;
     const nsXPTMethodInfo* info;
     uint8 requiredArgs;
@@ -314,7 +314,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     jsval src;
     uint8 vtblIndex;
     nsresult invokeResult;
-    nsID* conditional_iid = NULL;
+    nsID* conditional_iid = nsnull;
     uintN err;
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
     nsIXPCSecurityManager* securityManager;
@@ -424,7 +424,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         nsXPTCVariant* dp = &dispatchParams[i];
         dp->type = type;
         dp->flags = 0;
-        dp->val.p = NULL;
+        dp->val.p = nsnull;
         dispatchParamsInitedCount++;
 
         if(type.TagPart() == nsXPTType::T_INTERFACE ||
@@ -486,7 +486,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             const nsXPTType& type = param.GetType();
             if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
                !XPCConvert::JSData2Native(cx, &conditional_iid, argv[arg_num],
-                                          type, JS_TRUE, NULL, NULL))
+                                          type, JS_TRUE, nsnull, nsnull))
             {
                 ThrowBadParamException(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO,
                                        cx, desc, i);
@@ -503,7 +503,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         if(conditional_iid)
         {
             nsAllocator::Free((void*)conditional_iid);
-            conditional_iid = NULL;
+            conditional_iid = nsnull;
         }
     }
 
@@ -580,7 +580,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
             if(conditional_iid)
             {
                 nsAllocator::Free((void*)conditional_iid);
-                conditional_iid = NULL;
+                conditional_iid = nsnull;
             }
         }
     }
@@ -621,7 +621,7 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
         JSContext* cx = GetJSContext();
 
         if(!cx)
-            return NULL;
+            return nsnull;
 
         const nsXPTMethodInfo* info;
         uint8 requiredArgs = 0;
@@ -636,14 +636,14 @@ nsXPCWrappedNativeClass::GetInvokeFunObj(const XPCNativeMemberDescriptor* desc)
 
         JSFunction *fun = JS_NewFunction(cx, WrappedNative_CallMethod,
                                          (uintN) requiredArgs,
-                                         JSFUN_BOUND_METHOD, NULL, name);
+                                         JSFUN_BOUND_METHOD, nsnull, name);
         if(!fun)
-            return NULL;
+            return nsnull;
 
         XPCNativeMemberDescriptor* descRW =
             NS_CONST_CAST(XPCNativeMemberDescriptor*,desc);
 
-        if(NULL != (descRW->invokeFuncObj = JS_GetFunctionObject(fun)))
+        if(nsnull != (descRW->invokeFuncObj = JS_GetFunctionObject(fun)))
             JS_AddNamedRoot(cx, &descRW->invokeFuncObj,
                             "XPCNativeMemberDescriptor::invokeFuncObj");
     }
@@ -669,7 +669,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
     switch(enum_op) {
     case JSENUMERATE_INIT:
     {
-        if(NULL != (holder = new EnumStateHolder()))
+        if(nsnull != (holder = new EnumStateHolder()))
         {
             jsid  did;
             jsid  sid;
@@ -698,7 +698,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
         return JS_TRUE;
     }
     case JSENUMERATE_NEXT:
-        if(NULL != (holder = (EnumStateHolder*) JSVAL_TO_PRIVATE(*statep)))
+        if(nsnull != (holder = (EnumStateHolder*) JSVAL_TO_PRIVATE(*statep)))
         {
             if(holder->dstate != JSVAL_NULL)
             {
@@ -720,7 +720,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
         /* Fall through ... */
 
     case JSENUMERATE_DESTROY:
-        if(NULL != (holder = (EnumStateHolder*) JSVAL_TO_PRIVATE(*statep)))
+        if(nsnull != (holder = (EnumStateHolder*) JSVAL_TO_PRIVATE(*statep)))
         {
             JSBool retval;
             if(holder->dstate != JSVAL_NULL)
@@ -799,13 +799,13 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(nsXPCWrappedNative* self)
 {
     JSContext* cx = GetJSContext();
     if(!cx)
-        return NULL;
+        return nsnull;
     JSClass* jsclazz = self->GetDynamicScriptable() ?
                             &WrappedNativeWithCall_class :
                             &WrappedNative_class;
-    JSObject* jsobj = JS_NewObject(cx, jsclazz, NULL, JS_GetGlobalObject(cx));
+    JSObject* jsobj = JS_NewObject(cx, jsclazz, nsnull, JS_GetGlobalObject(cx));
     if(!jsobj || !JS_SetPrivate(cx, jsobj, self))
-        return NULL;
+        return nsnull;
     // wrapper is responsible for calling DynamicScriptable->Create
     return jsobj;
 }
@@ -816,10 +816,10 @@ nsXPCWrappedNativeClass::GetWrappedNativeOfJSObject(JSContext* cx,
                                                     JSObject* jsobj)
 {
     NS_PRECONDITION(jsobj, "bad param");
-    if(jsobj && (JS_InstanceOf(cx, jsobj, &WrappedNative_class, NULL) ||
-                 JS_InstanceOf(cx, jsobj, &WrappedNativeWithCall_class, NULL)))
+    if(jsobj && (JS_InstanceOf(cx, jsobj, &WrappedNative_class, nsnull) ||
+                 JS_InstanceOf(cx, jsobj, &WrappedNativeWithCall_class, nsnull)))
         return (nsXPCWrappedNative*) JS_GetPrivate(cx, jsobj);
-    return NULL;
+    return nsnull;
 }
 
 
@@ -879,7 +879,7 @@ nsXPCWrappedNativeClass::DebugDump(int depth)
                         if (JS_IdToValue(GetJSContext(), desc.id, &idval) &&
                             JSVAL_IS_STRING(idval) &&
                            (name = JS_GetStringBytes(
-                                    JSVAL_TO_STRING(idval))) != NULL)
+                                    JSVAL_TO_STRING(idval))) != nsnull)
                         {
                             XPC_LOG_ALWAYS(("property name is %s", name));
                         }

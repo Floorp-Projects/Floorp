@@ -98,16 +98,16 @@ nsIJSStackFrameLocation*
 XPCJSStack::CreateStack(JSContext* cx)
 {
     if(!cx)
-        return NULL;
+        return nsnull;
     if(!cx->fp)
-        return NULL;
+        return nsnull;
 
     XPCJSStack* self = new XPCJSStack();
     if(!self)
-        return NULL;
+        return nsnull;
 
     if(!(self->mTopFrame = XPCJSStackFrame::CreateStack(cx, self, cx->fp)))
-        return NULL;
+        return nsnull;
 
     NS_ADDREF(self->mTopFrame);
     self->mRefCount = 1;
