@@ -38,3 +38,8 @@
 
 function onInit() {
 }
+
+function onPreInit(account, accountValues)
+{
+  gServer = account.incomingServer;
+}
