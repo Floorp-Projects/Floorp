@@ -1,0 +1,103 @@
+ <style type="text/css">
+<!--a:active {  text-decoration: none}
+    A:link {text-decoration: none; color:#006699;}
+    a:visited {  text-decoration: none; color:#cc0000;}
+    a:hover {text-decoration:underline; color:#bb0000;}-->
+</style>
+
+<html>
+<head>
+<title>MedSun - Add User</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+<script>
+function checks()
+{
+	if (document.form1.name.value.length == 0)
+	{
+		alert("Please enter the user's login name.");
+		return false;
+	}
+	if (document.form1.pass.value.length == 0)
+	{
+		alert("Please enter the user's password.");
+		return false;
+	}
+}
+
+function access_change()
+{
+	if (document.getElementById("access").value != "1")
+	{
+		document.getElementById("clinicrow").style.display =
+"none";
+		document.getElementById("clinic").value = 0;
+	}
+	else
+	{
+		document.getElementById("clinicrow").style.display =
+"block";
+		document.getElementById("clinic").options[0].selected =
+true;
+	}
+	alert(document.getElementById("clinicrow").style.display);
+}
+</script>
+<body bgcolor="#ffffff" topmargin="5" leftmargin="0">
+<table width="737" border="0" cellspacing="0" cellpadding="0">
+<tr><td valign="top" colspan="2">
+<form
+method="POST" action="adduser.asp" id="form1" name="form1" onsubmit="return
+checks();">
+<div style="background:url('images/cback02655.jpg') repeat-y;width:655;">
+<table border="0" width="665">
+<tr><td colspan="2" align="center"><img
+src="dont_find.jpg" WIDTH="280" HEIGHT="40"></td></tr>
+<tr><td colspan="2">&nbsp;</td></tr> <tr><td width=230>User
+Name</td><td><input type="text" id="name" name="name"></td></tr>
+<tr><td>Password</td><td><input
+type="password" id="pass" name="pass"></td></tr>
+<tr><td>Access&nbsp;&nbsp;</td>
+<td>
+<select id="access" name="access" onchange="return access_change();">
+<!--HARDCODING THIS-->
+<option value="1">Clinical User</option>
+<option value="2">CODA Analyst</option>
+<option value="4">CODA Administrator</option>
+</select>
+</td>
+</tr>
+
+<tr><td>Name</td><td><input
+type="text" id="realname" name="realname"></td></tr>
+<tr><td>E-mail</td><td><input
+type="text" id="email" name="email"></td></tr> <tr><td>Phone
+Number</td><td><input type="text" id="phone" name="phone"></td></tr> <tr
+id="clinicrow"><td width=230>User's Clinic</td>
+<td>
+<select id="clinic" name="clinic">
+<option value=23>EDBABO</option><option value=9>Hello2</option><option
+value=24>HENRYHOUSE</option><option value=35>Local
+hospital</option><option value=22>SUNPOWER</option><option value=27>Test
+Clinic 1</option><option value=29>Test Clinic 2</option><option
+value=30>Test Clinic 3</option><option value=31>Test Clinic
+4</option><option value=32>Test Clinic 5</option>
+</select>
+</td>
+</tr>
+</span>
+<tr><td colspan="2">&nbsp;</td></tr> <tr><td
+colspan="2" align="center"><input
+type="image" src="dont_find.jpg" WIDTH="110" HEIGHT="34" border=0></td></tr>
+</table>
+</div>
+</td></tr><tr><td colspan="2">
+<img SRC="dont_find.jpg" border="0" WIDTH="665" HEIGHT="14">
+</form>
+</td></tr>
+</table>
+</body>
+<script>access_change()</script>
+</html>
+
+
