@@ -50,7 +50,7 @@ private:
 
 
 #define LOG_SCOPE(s) \
-  LogScope LOG_SCOPE_TMP_VAR(this, NS_LITERAL_CSTRING(s))
+  LogScope LOG_SCOPE_TMP_VAR##__LINE__(this, NS_LITERAL_CSTRING(s))
 
 #else
 #define LOG_SCOPE(s)
