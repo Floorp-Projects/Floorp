@@ -1128,6 +1128,24 @@ nsImapMailFolder::MarkAllMessagesRead(void)
   return rv;
 }
 
+NS_IMETHODIMP nsImapMailFolder::MarkThreadRead(nsIMsgThread *thread)
+{
+
+	nsresult rv = GetDatabase(nsnull);
+	if(NS_SUCCEEDED(rv))
+  {
+    nsMsgKeyArray thoseMarked;
+		rv = mDatabase->MarkThreadRead(thread, nsnull, &thoseMarked);
+    if (NS_SUCCEEDED(rv))
+    {
+      rv = StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, thoseMarked);
+      mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+    }
+  }
+	return rv;
+}
+
+
 NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *element)
 {
   nsresult rv = nsMsgDBFolder::ReadFromFolderCacheElem(element);
@@ -1901,7 +1919,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
       }
     }
     // here we need to tweak flags from uid state..
-    if (!m_msgMovedByFilter || !DeleteIsMoveToTrash())
+    if (!m_msgMovedByFilter || ShowDeletedMessages())
       mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
     // I don't think we want to do this - it does bad things like set the size incorrectly.
 //    m_msgParser->FinishHeader();
@@ -2166,6 +2184,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 
           keysToFlag.Add(msgKey);
           StoreImapFlags(kImapMsgSeenFlag | kImapMsgDeletedFlag, PR_TRUE, keysToFlag);
+          m_msgMovedByFilter = PR_TRUE;
 //          if (!showDeletedMessages)
 //            msgMoved = PR_TRUE; // this will prevent us from adding the header to the db.
 
