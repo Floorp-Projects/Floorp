@@ -673,6 +673,9 @@ static PRBool pt_recv_cont(pt_Continuation *op, PRInt16 revents)
 static PRBool pt_send_cont(pt_Continuation *op, PRInt16 revents)
 {
     PRIntn bytes;
+#if defined(SOLARIS)
+    PRInt32 tmp_amount = op->arg3.amount;
+#endif
     /*
      * We want to write the entire amount out, no matter how many
      * tries it takes. Keep advancing the buffer and the decrementing
@@ -681,12 +684,29 @@ static PRBool pt_send_cont(pt_Continuation *op, PRInt16 revents)
      * error).
      */
 #if defined(SOLARIS)
-    bytes = write(op->arg1.osfd, op->arg2.buffer, op->arg3.amount);
+retry:
+    bytes = write(op->arg1.osfd, op->arg2.buffer, tmp_amount);
 #else
     bytes = send(
         op->arg1.osfd, op->arg2.buffer, op->arg3.amount, op->arg4.flags);
 #endif
     op->syserrno = errno;
+
+#if defined(SOLARIS)
+    /*
+     * The write system call has been reported to return the ERANGE error
+     * on occasion. Try to write in smaller chunks to workaround this bug.
+     */
+    if ((bytes == -1) && (op->syserrno == ERANGE))
+    {
+        if (tmp_amount > 1)
+        {
+            tmp_amount = tmp_amount/2;  /* half the bytes */
+            goto retry;
+        }
+    }
+#endif
+
     if (bytes >= 0)  /* this is progress */
     {
         char *bp = (char*)op->arg2.buffer;
@@ -1575,13 +1595,28 @@ static PRInt32 pt_Send(
      * write() are fairly equivalent in performance.
      */
 #if defined(SOLARIS)
-retry:
     PR_ASSERT(0 == flags);
+retry:
     bytes = write(fd->secret->md.osfd, PT_SENDBUF_CAST buf, tmp_amount);
 #else
     bytes = send(fd->secret->md.osfd, PT_SENDBUF_CAST buf, amount, flags);
 #endif
     syserrno = errno;
+
+#if defined(SOLARIS)
+    /*
+     * The write system call has been reported to return the ERANGE error
+     * on occasion. Try to write in smaller chunks to workaround this bug.
+     */
+    if ((bytes == -1) && (syserrno == ERANGE))
+    {
+        if (tmp_amount > 1)
+        {
+            tmp_amount = tmp_amount/2;  /* half the bytes */
+            goto retry;
+        }
+    }
+#endif
 
     if ( (bytes >= 0) && (bytes < amount) && (!fd->secret->nonblocking) )
     {
@@ -1607,18 +1642,6 @@ retry:
             fNeedContinue = PR_TRUE;
         }
     }
-#if defined(SOLARIS)
-	/*
-	 * The write system call has been reported to return the ERANGE error
-	 * on occasion. Try to write in smaller chunks to workaround this bug.
-	 */
-    if ((bytes == -1) && (syserrno == ERANGE)) {
-		if (tmp_amount > 1) {
-			tmp_amount = tmp_amount/2;	/* half the bytes */
-			goto retry;
-		}
-	}
-#endif
 
     if (fNeedContinue == PR_TRUE)
     {
