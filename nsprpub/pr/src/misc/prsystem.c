@@ -20,6 +20,20 @@
 #include "prsystem.h"
 #include "prprf.h"
 
+#if defined(BEOS)
+#include <kernel/OS.h>
+#endif
+
+#if defined(OS2)
+#define INCL_DOS
+#include os2.h
+#endif
+
+#if defined(HPUX)
+#include <sys/scall_define.h>
+#include <sys/mp.h>
+#endif
+
 #if defined(XP_UNIX)
 #include <unistd.h>
 #include <sys/utsname.h>
@@ -113,3 +127,63 @@ PR_IMPLEMENT(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 bufle
     }
     return PR_SUCCESS;
 }
+
+/*
+** PR_GetNumberOfProcessors()
+** 
+** Implementation notes:
+**   Every platform does it a bit different.
+**     numCpus is the returned value.
+**   for each platform's "if defined" section
+**     declare your local variable
+**     do your thing, assign to numCpus
+**   order of the if defined()s may be important,
+**     especially for unix variants. Do platform
+**     specific implementations before XP_UNIX.
+**     Watch order of RHAPSODY (first) and XP_MAC (after RHAPSODY).
+** 
+*/
+PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
+{
+    PRInt32     numCpus;
+#if defined(WIN32)
+    SYSTEM_INFO     info;
+
+    GetSystemInfo( &info );
+    numCpus = info.dwNumberOfProcessors;
+#elif defined(RHAPSODY)  /* "darwin" or Mac OS/X */
+    int mib[2];
+    int rc;
+    size_t len = sizeof(numCpus);
+
+    mib[0] = CTL_HW;
+    mib[1] = HW_NCPU;
+    rc = sysctl( mib, 2, &numCpus, &len, NULL, 0 );
+    if ( -1 == rc )  {
+        numCpus = -1; /* set to -1 for return value on error */
+        PR_SetError( PR_UNKNOWN_ERROR, _MD_ERRNO());
+    }
+#elif defined(XP_MAC)
+    numCpus = MPProcessors();
+#elif defined(BEOS)
+    system_info sysInfo;
+
+    get_system_info(&sysInfo);
+    numCpus = sysInfo.cpu_count;
+#elif defined(OS2)
+    DosQuerySysInfo( QSV_NUMPROCESSORS, QSV_NUMPROCESSORS, &numCpus, sizeof(numCpus));
+#elif defined(HPUX11)
+    numCpus = mpctl( MPC_GETNUMSPUS, 0, 0 );
+    if ( numCpus < 1 )  {
+        numCpus = -1; /* set to -1 for return value on error */
+        PR_SetError( PR_UNKNOWN_ERROR, _MD_ERRNO());
+    }
+#elif defined(IRIX)
+    numCpus = sysconf( _SC_NPROC_CONF );
+#elif defined(XP_UNIX)
+    numCpus = sysconf( _SC_NPROCESSORS_ONLN );
+#else
+#error "An implementation is required"
+#endif
+    return(numCpus);
+} /* end PR_GetNumberOfProcessors() */
