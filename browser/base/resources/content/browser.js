@@ -343,7 +343,7 @@ function Startup()
   gBrandBundle = document.getElementById("bundle_brand");
   gNavigatorRegionBundle = document.getElementById("bundle_navigator_region");
   gBrandRegionBundle = document.getElementById("bundle_brand_region");
-
+  registerZoomManager();
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
   
