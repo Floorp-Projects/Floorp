@@ -36,19 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMText.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIContent.h"
-#include "nsITextContent.h"
 #include "nsGenericDOMDataNode.h"
-#include "nsIDocument.h"
-#include "nsCRT.h"
+#include "nsIDOMText.h"
 #include "nsLayoutAtoms.h"
-#include "nsString.h"
 #include "nsContentUtils.h"
 
 
-class nsTextNode : public nsITextContent,
+class nsTextNode : public nsGenericDOMDataNode,
                    public nsIDOMText
 {
 public:
@@ -56,85 +50,66 @@ public:
   virtual ~nsTextNode();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA(mInner)
+  NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA
 
   // nsIDOMCharacterData
-  NS_IMPL_NSIDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(mInner)
+  NS_FORWARD_NSIDOMCHARACTERDATA(nsGenericDOMDataNode::)
 
   // nsIDOMText
-  NS_IMPL_NSIDOMTEXT_USING_GENERIC_DOM_DATA(mInner)
+  NS_FORWARD_NSIDOMTEXT(nsGenericDOMDataNode::)
 
   // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
-
+  NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+  NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 #ifdef DEBUG
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
-    return mInner.SizeOf(aSizer, aResult, sizeof(*this));
-  }
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const;
 #endif
 
   // nsITextContent
-  NS_IMPL_ITEXTCONTENT_USING_GENERIC_DOM_DATA(mInner)
-
-protected:
-  nsGenericDOMDataNode mInner;
-  PRUint32 mContentID;
+  NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone);
 };
 
 nsresult
 NS_NewTextNode(nsIContent** aInstancePtrResult)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTextNode* it;
-  NS_NEWXPCOM(it, nsTextNode);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(NS_GET_IID(nsIContent), (void **) aInstancePtrResult);
+  *aInstancePtrResult = new nsTextNode();
+  NS_ENSURE_TRUE(*aInstancePtrResult, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 nsTextNode::nsTextNode()
 {
-  NS_INIT_REFCNT();
-  mContentID = 0;
 }
 
 nsTextNode::~nsTextNode()
 {
 }
 
-NS_IMPL_ADDREF(nsTextNode)
-NS_IMPL_RELEASE(nsTextNode)
+NS_IMPL_ADDREF_INHERITED(nsTextNode, nsGenericDOMDataNode)
+NS_IMPL_RELEASE_INHERITED(nsTextNode, nsGenericDOMDataNode)
 
 
 // QueryInterface implementation for nsTextNode
 NS_INTERFACE_MAP_BEGIN(nsTextNode)
-  NS_INTERFACE_MAP_ENTRY_DOM_DATA()
   NS_INTERFACE_MAP_ENTRY(nsITextContent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMText)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCharacterData)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(Text)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsGenericDOMDataNode)
 
-
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsTextNode::GetTag(nsIAtom*& aResult) const
 {
   aResult = nsLayoutAtoms::textTagName;
   NS_ADDREF(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsTextNode::GetNodeInfo(nsINodeInfo*& aResult) const
-{
-  aResult = nsnull;
   return NS_OK;
 }
 
@@ -155,122 +130,28 @@ nsTextNode::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsTextNode::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsresult result = NS_OK;
-  nsTextNode* it;
-  NS_NEWXPCOM(it, nsTextNode);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  // XXX Increment the ref count before calling any
-  // methods. If they do a QI and then a Release()
-  // the instance will be deleted.
-  result = it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-  nsAutoString data;
-  result = GetData(data);
-  if (NS_FAILED(result)) {
-    NS_RELEASE(*aReturn);
-    return result;
-  }
-  result = it->SetData(data);
-  if (NS_FAILED(result)) {
-    NS_RELEASE(*aReturn);
-    return result;
-  }
-  return result;
+  nsCOMPtr<nsITextContent> textContent;
+  nsresult rv = CloneContent(PR_TRUE, getter_AddRefs(textContent));
+  NS_ENSURE_TRUE(rv, rv);
+
+  return CallQueryInterface(textContent, aReturn);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsTextNode::CloneContent(PRBool aCloneText, nsITextContent** aReturn)
 {
-  nsresult result = NS_OK;
-  nsTextNode* it;
-  NS_NEWXPCOM(it, nsTextNode);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsTextNode* it = new nsTextNode();
+  NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
+
+  nsCOMPtr<nsIContent> kungFuDeathGrip(it);
+
+  if (aCloneText) {
+    it->mText = mText;
   }
-  result = it->QueryInterface(NS_GET_IID(nsITextContent), (void**) aReturn);
-  if (NS_FAILED(result) || !aCloneText) {
-    return result;
-  }
-  nsAutoString data;
-  result = GetData(data);
-  if (NS_FAILED(result)) {
-    NS_RELEASE(*aReturn);
-    return result;
-  }
-  result = it->SetData(data);
-  if (NS_FAILED(result)) {
-    NS_RELEASE(*aReturn);
-    return result;
-  }
-  return result;
-}
 
-#ifdef DEBUG
-NS_IMETHODIMP
-nsTextNode::List(FILE* out, PRInt32 aIndent) const
-{
-  NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
+  *aReturn = it;
+  NS_ADDREF(*aReturn);
 
-  PRInt32 index;
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  fprintf(out, "Text@%p refcount=%d<", this, mRefCnt);
-
-  nsAutoString tmp;
-  mInner.ToCString(tmp, 0, mInner.mText.GetLength());
-  fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
-
-  fputs(">\n", out);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextNode::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
-{
-  NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
-
-  if(aDumpAll) {
-    PRInt32 index;
-    for (index = aIndent; --index >= 0; ) fputs("  ", out);
-
-    nsAutoString tmp;
-    mInner.ToCString(tmp, 0, mInner.mText.GetLength());
-    
-    if(!tmp.EqualsWithConversion("\\n")) {
-      fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
-      if(aIndent) fputs("\n", out);
-    }
-  }
-  return NS_OK;
-}
-#endif
-
-NS_IMETHODIMP
-nsTextNode::HandleDOMEvent(nsIPresContext* aPresContext,
-                           nsEvent* aEvent,
-                           nsIDOMEvent** aDOMEvent,
-                           PRUint32 aFlags,
-                           nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-NS_IMETHODIMP
-nsTextNode::GetContentID(PRUint32* aID)
-{
-  *aID = mContentID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextNode::SetContentID(PRUint32 aID) 
-{
-  mContentID = aID;
   return NS_OK;
 }
 
@@ -279,3 +160,43 @@ nsTextNode::IsContentOfType(PRUint32 aFlags)
 {
   return !(aFlags & ~eTEXT);
 }
+
+#ifdef DEBUG
+NS_IMETHODIMP
+nsTextNode::List(FILE* out, PRInt32 aIndent) const
+{
+  NS_PRECONDITION(mDocument, "bad content");
+
+  PRInt32 index;
+  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+
+  fprintf(out, "Text@%p refcount=%d<", this, mRefCnt);
+
+  nsAutoString tmp;
+  ToCString(tmp, 0, mText.GetLength());
+  fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+
+  fputs(">\n", out);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextNode::DumpContent(FILE* out, PRInt32 aIndent, PRBool aDumpAll) const
+{
+  NS_PRECONDITION(mDocument, "bad content");
+
+  if(aDumpAll) {
+    PRInt32 index;
+    for (index = aIndent; --index >= 0; ) fputs("  ", out);
+
+    nsAutoString tmp;
+    ToCString(tmp, 0, mText.GetLength());
+
+    if(!tmp.EqualsWithConversion("\\n")) {
+      fputs(NS_LossyConvertUCS2toASCII(tmp).get(), out);
+      if(aIndent) fputs("\n", out);
+    }
+  }
+  return NS_OK;
+}
+#endif

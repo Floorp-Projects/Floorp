@@ -173,13 +173,6 @@ nsDOMDocumentType::GetTag(nsIAtom*& aResult) const
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsDOMDocumentType::GetNodeInfo(nsINodeInfo*& aResult) const
-{
-  aResult = nsnull;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDOMDocumentType::GetNodeName(nsAWritableString& aNodeName)
 {
@@ -213,60 +206,12 @@ nsDOMDocumentType::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsDOMDocumentType::List(FILE* out, PRInt32 aIndent) const
-{
-  NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
-
-  PRInt32 index;
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  fprintf(out, "Document type refcount: %d\n", mRefCnt);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDocumentType::DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const {
-  return NS_OK;
-}
-#endif
-
-NS_IMETHODIMP
-nsDOMDocumentType::HandleDOMEvent(nsIPresContext* aPresContext,
-                                           nsEvent* aEvent,
-                                           nsIDOMEvent** aDOMEvent,
-                                           PRUint32 aFlags,
-                                           nsEventStatus* aEventStatus)
-{
-  // We should never be getting events
-  NS_ASSERTION(0, "event handler called for document type");
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-NS_IMETHODIMP
-nsDOMDocumentType::GetContentID(PRUint32* aID) 
-{
-  NS_ENSURE_ARG_POINTER(aID);
-
-  *aID = 0;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDOMDocumentType::SetContentID(PRUint32 aID) 
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-#ifdef DEBUG
-NS_IMETHODIMP
 nsDOMDocumentType::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
   PRUint32 sum;
-  mInner.SizeOf(aSizer, &sum, sizeof(*this));
+  nsGenericDOMDataNode::SizeOf(aSizer, &sum);
   PRUint32 ssize;
   mName.SizeOf(aSizer, &ssize);
   sum = sum - sizeof(mName) + ssize;
@@ -292,8 +237,3 @@ nsDOMDocumentType::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 }
 #endif
 
-NS_IMETHODIMP_(PRBool)
-nsDOMDocumentType::IsContentOfType(PRUint32 aFlags)
-{
-  return !(aFlags & ~eTEXT);
-}
