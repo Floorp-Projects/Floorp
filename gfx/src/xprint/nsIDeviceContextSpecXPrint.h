@@ -147,6 +147,15 @@ public:
    NS_IMETHOD GetPaperName ( const char **aPaperName ) = 0;   
 
   /*
+   * Plex name e.g., "simplex", "duplex", "tumble" or any 
+   * driver/printer-specific custom value
+   * @update 
+   * @param aPlexName --
+   * @return 
+   **/
+   NS_IMETHOD GetPlexName ( const char **aPlexName ) = 0;   
+   
+  /*
    * Return number of copies to print
    * @update 
    * @param aCopies

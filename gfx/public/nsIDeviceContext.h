@@ -147,7 +147,10 @@ typedef void * nsNativeDeviceContext;
 /* Xprint module specific: No Xprint servers found */
 #define NS_ERROR_GFX_PRINTER_XPRINT_NO_XPRINT_SERVERS_FOUND \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+30)
-
+/* requested plex mode not supported by printer */
+#define NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+31)
+  
 /**
  * Conts need for Print Preview
  */
