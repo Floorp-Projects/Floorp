@@ -512,7 +512,7 @@ XFE_CALLBACK_DEFN(XFE_TaskBar,doCommandNotice)
 {
 	XP_ASSERT( m_parentFrame != NULL );
 
-	// This code is identical to that in XFE_Toolbar::doCommand_cb()
+	// This code is identical to that in XFE_ObsoleteToolbar::doCommand_cb()
 	XFE_DoCommandArgs *	cmdArgs = (XFE_DoCommandArgs *)callData;
 
 	if (m_parentFrame->handlesCommand(cmdArgs->cmd,
@@ -548,7 +548,7 @@ XFE_TaskBar::updateFloatingAppearance()
     int32 toolbar_style;
     PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
 
-	button_layout = XFE_Toolbar::styleToLayout(toolbar_style);
+	button_layout = XFE_ObsoleteToolbar::styleToLayout(toolbar_style);
 
 	XtVaSetValues(m_widget,XmNbuttonLayout,button_layout,NULL);
 }

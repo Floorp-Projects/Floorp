@@ -41,7 +41,7 @@ class XFE_Toolbox;
 //
 // The toolbar is used by many (almost all) of the Frame classes.
 //
-class XFE_Toolbar : public XFE_ToolboxItem
+class XFE_ObsoleteToolbar : public XFE_ToolboxItem
 {
 	XFE_Frame *getFrame();
 
@@ -66,11 +66,11 @@ class XFE_Toolbar : public XFE_ToolboxItem
 
 public:  
 
-	XFE_Toolbar(XFE_Frame *			parent_frame,
+	XFE_ObsoleteToolbar(XFE_Frame *			parent_frame,
 				XFE_Toolbox *		parent_toolbox,
 				ToolbarSpec *		spec);
 
-	virtual ~XFE_Toolbar();
+	virtual ~XFE_ObsoleteToolbar();
 	void hideButton(const char *name, EChromeTag tag);
 	void showButton(const char *name, EChromeTag tag);
 	// method version of the callback below.  Used by the frame to force the toolbar

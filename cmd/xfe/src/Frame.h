@@ -293,7 +293,7 @@ protected:
   Widget m_chrome; 
 
   XFE_MenuBar *			m_menubar;
-  XFE_Toolbar *			m_toolbar;
+  XFE_ObsoleteToolbar *			m_toolbar;
   XFE_Toolbox *			m_toolbox;
   XFE_Component *		m_aboveview;
   XFE_View *			m_view;

@@ -1969,7 +1969,7 @@ XFE_Frame::setToolbar(ToolbarSpec *toolbar_spec)
     }
 
     // Create the toolbar 
-    m_toolbar = new XFE_Toolbar(this, m_toolbox, (ToolbarSpec *)NULL);
+    m_toolbar = new XFE_ObsoleteToolbar(this, m_toolbox, (ToolbarSpec *)NULL);
 	m_toolbar->setToolbarSpec(toolbar_spec);
 
     m_toolbar->registerInterest(Command::doCommandCallback,

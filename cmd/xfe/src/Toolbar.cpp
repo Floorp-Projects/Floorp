@@ -57,14 +57,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 /* static */ XtResource
-XFE_Toolbar::m_user_commandResources[] = 
+XFE_ObsoleteToolbar::m_user_commandResources[] = 
 {
 	{
 		"commandName",
 		"CommandName",
 		XmRString,
 		sizeof(String),
-		XtOffset(XFE_Toolbar *, m_user_commandName),
+		XtOffset(XFE_ObsoleteToolbar *, m_user_commandName),
 		XmRString,
 		"Error"
 	},
@@ -73,7 +73,7 @@ XFE_Toolbar::m_user_commandResources[] =
 		"CommandData",
 		XmRString,
 		sizeof(String),
-		XtOffset(XFE_Toolbar *, m_user_commandData),
+		XtOffset(XFE_ObsoleteToolbar *, m_user_commandData),
 		XmRImmediate,
 		(XtPointer) NULL
 	},
@@ -82,7 +82,7 @@ XFE_Toolbar::m_user_commandResources[] =
 		"CommandIcon",
 		XmRString,
 		sizeof(String),
-		XtOffset(XFE_Toolbar *, m_user_commandIcon),
+		XtOffset(XFE_ObsoleteToolbar *, m_user_commandIcon),
 		XmRImmediate,
 		(XtPointer) NULL
 	},
@@ -91,7 +91,7 @@ XFE_Toolbar::m_user_commandResources[] =
 		"CommandSubMenu",
 		XmRString,
 		sizeof(String),
-		XtOffset(XFE_Toolbar *, m_user_commandSubMenu),
+		XtOffset(XFE_ObsoleteToolbar *, m_user_commandSubMenu),
 		XmRImmediate,
 		(XtPointer) NULL
 	},
@@ -99,10 +99,10 @@ XFE_Toolbar::m_user_commandResources[] =
 //////////////////////////////////////////////////////////////////////////
 
 //
-// XFE_Toolbar class
+// XFE_ObsoleteToolbar class
 //
 //////////////////////////////////////////////////////////////////////////
-XFE_Toolbar::XFE_Toolbar(XFE_Frame *		parent_frame,
+XFE_ObsoleteToolbar::XFE_ObsoleteToolbar(XFE_Frame *		parent_frame,
 						 XFE_Toolbox *		parent_toolbox,
 						 ToolbarSpec *		spec) :
 	XFE_ToolboxItem(parent_frame,parent_toolbox)
@@ -139,7 +139,7 @@ XFE_Toolbar::XFE_Toolbar(XFE_Frame *		parent_frame,
                                                (XFE_FunctionNotification)updateToolbarAppearance_cb);
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_Toolbar::~XFE_Toolbar()
+XFE_ObsoleteToolbar::~XFE_ObsoleteToolbar()
 {
 	m_parentFrame->unregisterInterest(XFE_View::chromeNeedsUpdating,
 									  this,
@@ -159,7 +159,7 @@ XFE_Toolbar::~XFE_Toolbar()
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::updateButton(Widget w)
+XFE_ObsoleteToolbar::updateButton(Widget w)
 {
 	XP_ASSERT( XfeIsAlive(w) );
 	XP_ASSERT( XfeIsButton(w) );
@@ -265,11 +265,11 @@ XFE_Toolbar::updateButton(Widget w)
 	}
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_CALLBACK_DEFN(XFE_Toolbar, updateCommand)(XFE_NotificationCenter */*obj*/, 
+XFE_CALLBACK_DEFN(XFE_ObsoleteToolbar, updateCommand)(XFE_NotificationCenter */*obj*/, 
 					      void */*clientData*/, 
 					      void *callData)
 {
-	D(printf("In XFE_Toolbar::updateCommand(%s)\n",Command::getString(cmd));)  
+	D(printf("In XFE_ObsoleteToolbar::updateCommand(%s)\n",Command::getString(cmd));)  
 
 	// Make sure the toolbar is alive
     if (!XfeIsAlive(m_toolBar))
@@ -300,7 +300,7 @@ XFE_CALLBACK_DEFN(XFE_Toolbar, updateCommand)(XFE_NotificationCenter */*obj*/,
 	}
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_CALLBACK_DEFN(XFE_Toolbar, update)(XFE_NotificationCenter */*obj*/, 
+XFE_CALLBACK_DEFN(XFE_ObsoleteToolbar, update)(XFE_NotificationCenter */*obj*/, 
 									   void */*clientData*/, 
 									   void */*callData*/)
 {
@@ -308,9 +308,9 @@ XFE_CALLBACK_DEFN(XFE_Toolbar, update)(XFE_NotificationCenter */*obj*/,
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::update()
+XFE_ObsoleteToolbar::update()
 {
-	D(	printf ("In XFE_Toolbar::update()\n");)
+	D(	printf ("In XFE_ObsoleteToolbar::update()\n");)
 
 	// Make sure the toolbar is alive
     if (!XfeIsAlive(m_toolBar))
@@ -333,10 +333,10 @@ XFE_Toolbar::update()
         }
     }
 	
-	D(	printf ("Leaving XFE_Toolbar::update()\n");)
+	D(	printf ("Leaving XFE_ObsoleteToolbar::update()\n");)
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_CALLBACK_DEFN(XFE_Toolbar, updateToolbarAppearance)(XFE_NotificationCenter */*obj*/, 
+XFE_CALLBACK_DEFN(XFE_ObsoleteToolbar, updateToolbarAppearance)(XFE_NotificationCenter */*obj*/, 
 									   void */*clientData*/, 
 									   void */*callData*/)
 {
@@ -344,14 +344,14 @@ XFE_CALLBACK_DEFN(XFE_Toolbar, updateToolbarAppearance)(XFE_NotificationCenter *
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::updateAppearance() 
+XFE_ObsoleteToolbar::updateAppearance() 
 {
 	unsigned char	button_layout;
 
     int32 toolbar_style;
     PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
 
-	button_layout = XFE_Toolbar::styleToLayout(toolbar_style);
+	button_layout = XFE_ObsoleteToolbar::styleToLayout(toolbar_style);
 
 	XtVaSetValues(m_toolBar,XmNbuttonLayout,button_layout,NULL);
 
@@ -369,7 +369,7 @@ XFE_Toolbar::updateAppearance()
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::setToolbarSpec(ToolbarSpec *spec)
+XFE_ObsoleteToolbar::setToolbarSpec(ToolbarSpec *spec)
 {
 	XP_ASSERT( spec != NULL );
 	XP_ASSERT( m_spec == NULL );
@@ -382,13 +382,13 @@ XFE_Toolbar::setToolbarSpec(ToolbarSpec *spec)
 }
 //////////////////////////////////////////////////////////////////////////
 XFE_Frame *
-XFE_Toolbar::getFrame()
+XFE_ObsoleteToolbar::getFrame()
 {
 	return m_parentFrame;
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::addButton(const char */*name*/,
+XFE_ObsoleteToolbar::addButton(const char */*name*/,
 					   EChromeTag /*tag*/,
 					   CommandType /*command*/,
 					   fe_icon */*icon*/)
@@ -396,7 +396,7 @@ XFE_Toolbar::addButton(const char */*name*/,
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
-XFE_Toolbar::findButton(const char *name,
+XFE_ObsoleteToolbar::findButton(const char *name,
 						EChromeTag /*tag*/)
 {
 	WidgetList	children;
@@ -430,7 +430,7 @@ XFE_Toolbar::findButton(const char *name,
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::hideButton(const char *name,
+XFE_ObsoleteToolbar::hideButton(const char *name,
 						EChromeTag tag)
 {
 	Widget kid = findButton(name, tag);
@@ -440,7 +440,7 @@ XFE_Toolbar::hideButton(const char *name,
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::showButton(const char *name,
+XFE_ObsoleteToolbar::showButton(const char *name,
 						EChromeTag tag)
 {
 	Widget kid = findButton(name, tag);
@@ -449,7 +449,7 @@ XFE_Toolbar::showButton(const char *name,
 		XtManageChild(kid);
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_CALLBACK_DEFN(XFE_Toolbar, doCommand)
+XFE_CALLBACK_DEFN(XFE_ObsoleteToolbar, doCommand)
 	(XFE_NotificationCenter *	/* obj */,
 	 void *						/* clientData */,
 	 void *						callData)
@@ -472,13 +472,13 @@ XFE_CALLBACK_DEFN(XFE_Toolbar, doCommand)
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
-XFE_Toolbar::getToolBar()
+XFE_ObsoleteToolbar::getToolBar()
 {
     return m_toolBar;
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
-XFE_Toolbar::getToolBarForm()
+XFE_ObsoleteToolbar::getToolBarForm()
 {
 	XP_ASSERT( XfeIsAlive(m_toolBar) );
 
@@ -486,7 +486,7 @@ XFE_Toolbar::getToolBarForm()
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::createMain(Widget parent)
+XFE_ObsoleteToolbar::createMain(Widget parent)
 {
 	XP_ASSERT( XfeIsAlive(parent) );
 
@@ -524,7 +524,7 @@ XFE_Toolbar::createMain(Widget parent)
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
-XFE_Toolbar::createItem(ToolbarSpec *	spec)
+XFE_ObsoleteToolbar::createItem(ToolbarSpec *	spec)
 {
 	XP_ASSERT( spec != NULL );
 	
@@ -563,7 +563,7 @@ XFE_Toolbar::createItem(ToolbarSpec *	spec)
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::createItems()
+XFE_ObsoleteToolbar::createItems()
 {
 	ToolbarSpec *	cur_spec;
 
@@ -596,7 +596,7 @@ XFE_Toolbar::createItems()
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
-XFE_Toolbar::createPush(ToolbarSpec * spec)
+XFE_ObsoleteToolbar::createPush(ToolbarSpec * spec)
 {
 	XP_ASSERT( spec != NULL );
 	XP_ASSERT( spec->tag == PUSHBUTTON );
@@ -629,7 +629,7 @@ XFE_Toolbar::createPush(ToolbarSpec * spec)
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
-XFE_Toolbar::createDynamicCascade(ToolbarSpec * spec)
+XFE_ObsoleteToolbar::createDynamicCascade(ToolbarSpec * spec)
 {
 	XP_ASSERT( spec != NULL );
 	XP_ASSERT( spec->tag == DYNA_CASCADEBUTTON );
@@ -658,7 +658,7 @@ XFE_Toolbar::createDynamicCascade(ToolbarSpec * spec)
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
-XFE_Toolbar::createCascade(ToolbarSpec * spec)
+XFE_ObsoleteToolbar::createCascade(ToolbarSpec * spec)
 {
 	XP_ASSERT( spec != NULL );
 	XP_ASSERT( spec->tag == CASCADEBUTTON );
@@ -686,7 +686,7 @@ XFE_Toolbar::createCascade(ToolbarSpec * spec)
 }
 //////////////////////////////////////////////////////////////////////////
 Widget
-XFE_Toolbar::createSeparator(ToolbarSpec * spec)
+XFE_ObsoleteToolbar::createSeparator(ToolbarSpec * spec)
 {
 	XP_ASSERT( spec != NULL );
 	XP_ASSERT( spec->tag == SEPARATOR );
@@ -702,7 +702,7 @@ XFE_Toolbar::createSeparator(ToolbarSpec * spec)
 }
 //////////////////////////////////////////////////////////////////////////
 int
-XFE_Toolbar::verifyPopupDelay(int delay)
+XFE_ObsoleteToolbar::verifyPopupDelay(int delay)
 {
 	int result = delay;
 
@@ -719,7 +719,7 @@ XFE_Toolbar::verifyPopupDelay(int delay)
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ unsigned char
-XFE_Toolbar::styleToLayout(int32 style)
+XFE_ObsoleteToolbar::styleToLayout(int32 style)
 {
 	unsigned char button_layout = XmBUTTON_LABEL_ON_BOTTOM;
 
@@ -760,7 +760,7 @@ XFE_Toolbar::styleToLayout(int32 style)
 //
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::user_createItems()
+XFE_ObsoleteToolbar::user_createItems()
 {
 	XP_ASSERT( XfeIsAlive(m_toolBar) );
 
@@ -896,7 +896,7 @@ XFE_Toolbar::user_createItems()
 }
 //////////////////////////////////////////////////////////////////////////
 CommandType
-XFE_Toolbar::user_verifyCommand(String					commandName,
+XFE_ObsoleteToolbar::user_verifyCommand(String					commandName,
 								dynamenuCreateProc &	generateProcOut,
 								void * &				generateArgOut)
 {
@@ -940,7 +940,7 @@ XFE_Toolbar::user_verifyCommand(String					commandName,
 }
 //////////////////////////////////////////////////////////////////////////
 void *		
-XFE_Toolbar::user_verifyCommandData(CommandType 	cmd,
+XFE_ObsoleteToolbar::user_verifyCommandData(CommandType 	cmd,
 									String			commandData,
 									XP_Bool &		needToFreeOut)
 {
@@ -972,7 +972,7 @@ XFE_Toolbar::user_verifyCommandData(CommandType 	cmd,
 }
 //////////////////////////////////////////////////////////////////////////
 IconGroup *
-XFE_Toolbar::user_verifyCommandIcon(CommandType cmd,String commandIcon)
+XFE_ObsoleteToolbar::user_verifyCommandIcon(CommandType cmd,String commandIcon)
 {
 	String iconName = commandIcon;
 
@@ -991,7 +991,7 @@ XFE_Toolbar::user_verifyCommandIcon(CommandType cmd,String commandIcon)
 }
 //////////////////////////////////////////////////////////////////////////
 MenuSpec *	
-XFE_Toolbar::user_verifySubMenu(String commandSubMenu)
+XFE_ObsoleteToolbar::user_verifySubMenu(String commandSubMenu)
 {
 	if (commandSubMenu == NULL)
 	{
@@ -1091,7 +1091,7 @@ XFE_Toolbar::user_verifySubMenu(String commandSubMenu)
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_Toolbar::user_addItem(String				widgetName,
+XFE_ObsoleteToolbar::user_addItem(String				widgetName,
 						  CommandType			cmd,
 						  EChromeTag			tag,
 						  void *				data,
@@ -1170,7 +1170,7 @@ XFE_Toolbar::user_addItem(String				widgetName,
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ void 
-XFE_Toolbar::user_commandDestroyCB(Widget		/* w */,
+XFE_ObsoleteToolbar::user_commandDestroyCB(Widget		/* w */,
 								   XtPointer	clientData,
 								   XtPointer	/* callData */)
 {
@@ -1186,7 +1186,7 @@ XFE_Toolbar::user_commandDestroyCB(Widget		/* w */,
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ void 
-XFE_Toolbar::user_freeCallDataCB(Widget			/* w */,
+XFE_ObsoleteToolbar::user_freeCallDataCB(Widget			/* w */,
 								 XtPointer		clientData,
 								 XtPointer		/* callData */)
 {
