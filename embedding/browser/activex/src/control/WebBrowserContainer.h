@@ -27,7 +27,7 @@
 
 #include "nsIContextMenuListener.h"
 #include "nsICommandHandler.h"
-#include "nsIWebBrowserSiteWindow.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsWeakReference.h"
 
 
@@ -35,7 +35,7 @@
 // interfaces into the web shell and so forth.
 
 class CWebBrowserContainer :
-		public nsIWebBrowserSiteWindow,
+		public nsIEmbeddingSiteWindow,
 		public nsIWebBrowserChrome,
 		public nsIWebProgressListener,
 		public nsIStreamObserver,
@@ -67,7 +67,7 @@ protected:
 
 public:
 	NS_DECL_ISUPPORTS
-	NS_DECL_NSIWEBBROWSERSITEWINDOW
+	NS_DECL_NSIEMBEDDINGSITEWINDOW
 	NS_DECL_NSIWEBBROWSERCHROME
 	NS_DECL_NSIDOCSHELLTREEOWNER
 	NS_DECL_NSIURICONTENTLISTENER

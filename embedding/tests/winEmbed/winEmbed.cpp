@@ -233,7 +233,7 @@ HWND GetBrowserFromChrome(nsIWebBrowserChrome *aChrome)
     {
         return NULL;
     }
-	nsCOMPtr<nsIWebBrowserSiteWindow> baseWindow = do_QueryInterface(aChrome);
+	nsCOMPtr<nsIEmbeddingSiteWindow> baseWindow = do_QueryInterface(aChrome);
     HWND hwnd = NULL;
 	baseWindow->GetSiteWindow((void **) & hwnd);
     return hwnd;
@@ -341,9 +341,9 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
     if (!chrome)
         return NS_ERROR_FAILURE;
     
-    nsCOMPtr<nsIWebBrowserSiteWindow> baseWindow = do_QueryInterface(chrome);
+    nsCOMPtr<nsIEmbeddingSiteWindow> embeddingSite = do_QueryInterface(chrome);
     HWND hWnd;
-	baseWindow->GetSiteWindow((void **) & hWnd);
+	embeddingSite->GetSiteWindow((void **) & hWnd);
     
     if (!hWnd)
         return NS_ERROR_NULL_POINTER;
@@ -357,18 +357,17 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
         rect.top += gDumbBannerSize;
     }
 
-    baseWindow->SetPositionAndSize(rect.left, 
+	// Make sure the browser is visible and sized
+	nsCOMPtr<nsIWebBrowser> webBrowser;
+	chrome->GetWebBrowser(getter_AddRefs(webBrowser));
+    nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(webBrowser);
+	if (webBrowserAsWin)
+	{
+        webBrowserAsWin->SetPositionAndSize(rect.left, 
                                    rect.top, 
                                    rect.right - rect.left, 
                                    rect.bottom - rect.top,
                                    PR_TRUE);
-
-	// Make sure the browser is visible
-	nsCOMPtr<nsIWebBrowser> webBrowser;
-	chrome->GetWebBrowser(getter_AddRefs(webBrowser));
-	nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(webBrowser);
-	if (webBrowserAsWin)
-	{
 		webBrowserAsWin->SetVisibility(PR_TRUE);
 	}
 

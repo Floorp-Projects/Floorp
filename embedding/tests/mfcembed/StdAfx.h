@@ -80,7 +80,7 @@
 #include "nsError.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsIWebBrowserSiteWindow.h"
+#include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebBrowserFind.h"
 
 //{{AFX_INSERT_LOCATION}}

@@ -41,8 +41,8 @@
 //	nsIWebBrowserChrome	- This is a required interface to be implemented
 //						  by embeddors
 //
-//	nsIWebBrowserSiteWindow - This is a required interface to be implemented
-//						 by embeddors			
+//	nsIEmbeddingSiteWindow - This is a required interface to be implemented
+//						 by embedders			
 //					   - SetTitle() gets called after a document
 //						 load giving us the chance to update our
 //						 titlebar
@@ -104,7 +104,7 @@ NS_INTERFACE_MAP_BEGIN(CBrowserImpl)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
-   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
@@ -224,6 +224,18 @@ NS_IMETHODIMP CBrowserImpl::CreateBrowserWindow(PRUint32 chromeMask, PRInt32 aX,
 	    return NS_ERROR_FAILURE;
 }
 
+// Will get called in response to JavaScript window.close()
+//
+NS_IMETHODIMP CBrowserImpl::DestroyBrowserWindow()
+{
+	if(! m_pBrowserFrameGlue)
+		return NS_ERROR_FAILURE;
+
+	m_pBrowserFrameGlue->DestroyBrowserFrame();
+
+	return NS_OK;
+}
+
 // Gets called in response to set the size of a window
 // Ex: In response to a JavaScript Window.Open() call of
 // the form 
@@ -261,85 +273,53 @@ NS_IMETHODIMP CBrowserImpl::ExitModalEventLoop(nsresult aStatus)
   return NS_OK;
 }
 
-
 //*****************************************************************************
-// CBrowserImpl::nsIWebBrowserSiteWindow
+// CBrowserImpl::nsIEmbeddingSiteWindow
 //*****************************************************************************   
 
-// Will get called in response to JavaScript window.close()
-//
-NS_IMETHODIMP CBrowserImpl::Destroy()
+NS_IMETHODIMP CBrowserImpl::SetDimensions(PRUint32 aFlags, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)
 {
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
 
-	m_pBrowserFrameGlue->DestroyBrowserFrame();
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
+        (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER || 
+         aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER))
+    {
+    	m_pBrowserFrameGlue->SetBrowserFramePositionAndSize(x, y, cx, cy, PR_TRUE);
+    }
+    else
+    {
+        if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION)
+        {
+    	    m_pBrowserFrameGlue->SetBrowserFramePosition(x, y);
+        }
+        if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER || 
+            aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)
+        {
+    	    m_pBrowserFrameGlue->SetBrowserFrameSize(cx, cy);
+        }
+    }
 
-	return NS_OK;
+    return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserImpl::SetPosition(PRInt32 x, PRInt32 y)
+NS_IMETHODIMP CBrowserImpl::GetDimensions(PRUint32 aFlags, PRInt32 *x, PRInt32 *y, PRInt32 *cx, PRInt32 *cy)
 {
 	if(! m_pBrowserFrameGlue)
 		return NS_ERROR_FAILURE;
+    
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION)
+    {
+    	m_pBrowserFrameGlue->GetBrowserFramePosition(x, y);
+    }
+    if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER || 
+        aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)
+    {
+    	m_pBrowserFrameGlue->GetBrowserFrameSize(cx, cy);
+    }
 
-	m_pBrowserFrameGlue->SetBrowserFramePosition(x, y);
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP CBrowserImpl::GetPosition(PRInt32* x, PRInt32* y)
-{
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-
-	m_pBrowserFrameGlue->GetBrowserFramePosition(x, y);
-
-	return NS_OK;
-}
-
-// Gets called when using JavaScript ResizeTo()/ResizeBy() methods
-//
-NS_IMETHODIMP CBrowserImpl::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
-{
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-
-	m_pBrowserFrameGlue->SetBrowserFrameSize(cx, cy);
-
-	return NS_OK;
-}
-
-// Gets called when using JavaScript ResizeTo()/ResizeBy() methods
-//
-NS_IMETHODIMP CBrowserImpl::GetSize(PRInt32* cx, PRInt32* cy)
-{
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-
-	m_pBrowserFrameGlue->GetBrowserFrameSize(cx, cy);
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP CBrowserImpl::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint)
-{
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-
-	m_pBrowserFrameGlue->SetBrowserFramePositionAndSize(x, y, cx, cy, fRepaint);
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP CBrowserImpl::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx, PRInt32* cy)
-{
-	if(! m_pBrowserFrameGlue)
-		return NS_ERROR_FAILURE;
-
-	m_pBrowserFrameGlue->GetBrowserFramePositionAndSize(x, y, cx, cy);
-
-	return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::GetSiteWindow(void** aSiteWindow)
@@ -375,4 +355,14 @@ NS_IMETHODIMP CBrowserImpl::SetTitle(const PRUnichar* aTitle)
 	m_pBrowserFrameGlue->SetBrowserFrameTitle(aTitle);
 	
 	return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserImpl::GetVisibility(PRBool *aVisibility)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
