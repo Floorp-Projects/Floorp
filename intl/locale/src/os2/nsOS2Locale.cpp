@@ -64,12 +64,12 @@ nsOS2Locale::GetPlatformLocale(PRUnichar* os2Locale, size_t length)
   LocaleObject locObj = NULL;
   UniChar      *localeName = NULL;
  
-  int  res = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
-  if (res != ULS_SUCCESS)
-      return NS_ERROR_FAILURE;
+  int  ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
+  if (ret != ULS_SUCCESS)
+    UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"C", &locObj);
 
-  res = UniQueryLocaleItem(locObj, LOCI_sName, &localeName);
-  if (res != ULS_SUCCESS)
+  ret = UniQueryLocaleItem(locObj, LOCI_sName, &localeName);
+  if (ret != ULS_SUCCESS)
     return NS_ERROR_FAILURE;
     
   UniStrncpy((UniChar*)os2Locale, localeName, length);

@@ -53,9 +53,9 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
   UniChar uFmtT[NSDATETIME_FORMAT_BUFFER_LEN] = { 0 };
   UniChar *pString = NULL;
   LocaleObject locObj = NULL;
-  int res = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
-  if (res != ULS_SUCCESS)
-    return rc;  
+  int ret = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
+  if (ret != ULS_SUCCESS)
+    UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"C", &locObj);
 
   PRBool f24Hour = PR_FALSE;
 
@@ -63,7 +63,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
 
   if (pString[0] == '1') {
     f24Hour = PR_TRUE;
-  } /* endif */
+  }
 
   // set date format
   switch (dateFormatSelector) {
@@ -142,7 +142,7 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
   PRUnichar buffer[NSDATETIME_FORMAT_BUFFER_LEN] = {0};
   if ((dateFormatSelector != kDateFormatNone) && (timeFormatSelector != kTimeFormatNone)) {
     UniStrcat( uFmtD, (UniChar*)L" ");
-  } /* endif */
+  }
   UniStrcat( uFmtD, uFmtT);
   int length = UniStrftime(locObj, NS_REINTERPRET_CAST(UniChar *, buffer),
                            NSDATETIME_FORMAT_BUFFER_LEN, uFmtD, tmTime);
