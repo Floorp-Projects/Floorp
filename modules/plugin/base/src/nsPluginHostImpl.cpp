@@ -1695,6 +1695,12 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
         result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
         NS_RELEASE(plugin);
       }
+      if (NS_FAILED(result)) {
+          NS_WITH_SERVICE(nsIPlugin, plugin, "component://netscape/blackwood/pluglet-engine",&result);
+	  if (NS_SUCCEEDED(result)) {
+	      result = plugin->CreatePluginInstance(NULL, kIPluginInstanceIID, aMimeType,(void **)&instance);
+	  }
+      }
     }
 
     // neither an XPCOM or legacy plugin could be instantiated, so return the failure
