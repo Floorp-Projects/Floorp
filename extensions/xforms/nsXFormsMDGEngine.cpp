@@ -483,7 +483,7 @@ nsXFormsMDGEngine::ComputeMIPWithInheritance(PRUint16 aStateFlag, PRUint16 aDisp
   
   if (didChange) {
     PRUint16 flag = GetFlag(aNode->mContextNode);
-    PRBool state = (flag & aStateFlag != 0) ? PR_TRUE : PR_FALSE;
+    PRBool state = ((flag & aStateFlag) != 0) ? PR_TRUE : PR_FALSE;
     if (   (aStateFlag == MDG_FLAG_READONLY && (flag & aInheritanceFlag) == 0)
         || (aStateFlag == MDG_FLAG_RELEVANT && (flag & aInheritanceFlag) > 0)  )
     {

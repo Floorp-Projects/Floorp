@@ -107,11 +107,6 @@ static const EventData sModelEvents[] = {
 
 static nsIAtom* sModelPropsList[eModel__count];
 
-struct nsXFormsModelElement::ModelItemProperties
-{
-  nsCOMPtr<nsIDOMXPathExpression> properties[eModel__count];
-};
-
 nsXFormsModelElement::nsXFormsModelElement()
   : mElement(nsnull),
     mSchemaCount(0),

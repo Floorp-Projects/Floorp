@@ -119,8 +119,6 @@ public:
   static NS_HIDDEN_(void) Startup();
 
 private:
-  class ModelItemProperties;
-
   NS_HIDDEN_(nsresult) FinishConstruction();
   NS_HIDDEN_(PRBool)   ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
                                    nsIDOMNode           *aContextNode,
