@@ -26,9 +26,10 @@ ecma/TypeConversion/9.5-2.js
 js1_5/Regress/regress-96526.js
 #Bug 123437
 ecma_3/RegExp/regress-123437.js
-#Bug 346032
+#Bug 346032 (Bugsplat). Also see Bugzilla 124339.
 ecma_2/RegExp/properties-002.js
-#
+# Bug 125562
+ecma_3/RegExp/regress-85721.js
 # Unfixable bugs:
 #
 # fails due to bad java implementation of number formatting on 
