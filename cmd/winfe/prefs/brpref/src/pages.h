@@ -241,6 +241,24 @@ class CApplicationsPrefs : public CBrowserPropertyPage {
 };
 
 /////////////////////////////////////////////////////////////////////////////
+// CSmartBrowsingPrefs
+
+class CSmartBrowsingPrefs : public CBrowserPropertyPage {
+	public:
+		CSmartBrowsingPrefs();
+
+	protected:
+		STDMETHODIMP Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal);
+		BOOL		 DoTransfer(BOOL bSaveAndValidate);
+		BOOL		 ApplyChanges();
+		BOOL		 InitDialog();
+
+	private:
+		BOOL	m_bEnableKeywords;
+		CString	m_strExcludedDomains;
+};
+
+/////////////////////////////////////////////////////////////////////////////
 // CAdvancedPrefs
 
 class CAdvancedPrefs : public CBrowserPropertyPage {

@@ -1919,3 +1919,48 @@ CApplicationsPrefs::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return CBrowserPropertyPage::WindowProc(uMsg, wParam, lParam);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// CSmartBrowsingPrefs implementation
+
+CSmartBrowsingPrefs::CSmartBrowsingPrefs()
+	: CBrowserPropertyPage(IDD_SMARTBROWSING, HELP_PREFS_BROWSER)
+{
+}
+
+// Initialize member data using XP preferences
+STDMETHODIMP
+CSmartBrowsingPrefs::Activate(HWND hwndParent, LPCRECT lprc, BOOL bModal)
+{
+	if (!m_bHasBeenActivated) {
+		PREF_GetStringPref("browser.related.disabledForDomains", m_strExcludedDomains);
+		PREF_GetBoolPref("browser.goBrowsing.enabled", &m_bEnableKeywords);
+	}
+
+	return CBrowserPropertyPage::Activate(hwndParent, lprc, bModal);
+}
+
+BOOL
+CSmartBrowsingPrefs::DoTransfer(BOOL bSaveAndValidate)
+{
+	CheckBoxTransfer(IDC_CHECK2, m_bEnableKeywords, bSaveAndValidate);
+	EditFieldTransfer(IDC_EDIT1, m_strExcludedDomains, bSaveAndValidate);
+	return TRUE;
+}
+
+// Apply changes using XP preferences
+BOOL
+CSmartBrowsingPrefs::ApplyChanges()
+{
+	PREF_SetBoolPref("browser.goBrowsing.enabled", m_bEnableKeywords);
+	PREF_SetCharPref("browser.related.disabledForDomains", (LPCSTR)m_strExcludedDomains);
+	return TRUE;
+}
+
+BOOL
+CSmartBrowsingPrefs::InitDialog()
+{
+	CheckIfLockedPref("browser.related.disabledForDomains", IDC_EDIT1);
+	CheckIfLockedPref("browser.goBrowsing.enabled", IDC_CHECK2);
+
+	return CBrowserPropertyPage::InitDialog();
+}

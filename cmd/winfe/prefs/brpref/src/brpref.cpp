@@ -281,7 +281,7 @@ CBrowserCategory::CSpecifyBrowserPageObjects::GetPageObjects(CAPPAGE *pPages)
 	if (!pPages)
 		return ResultFromScode(E_POINTER);
 
-	pPages->cElems = 3;
+	pPages->cElems = 4;
 	pPages->pElems = (LPPROPERTYPAGE *)CoTaskMemAlloc(pPages->cElems * sizeof(LPPROPERTYPAGE));
 	if (!pPages->pElems)
 		return ResultFromScode(E_OUTOFMEMORY);
@@ -289,6 +289,7 @@ CBrowserCategory::CSpecifyBrowserPageObjects::GetPageObjects(CAPPAGE *pPages)
 	pPages->pElems[0] = new CBrowserPrefs;
 	pPages->pElems[1] = new CLanguagesPrefs;
 	pPages->pElems[2] = new CApplicationsPrefs;
+	pPages->pElems[3] = new CSmartBrowsingPrefs;
 	
 	for (ULONG i = 0; i < pPages->cElems; i++)
 		pPages->pElems[i]->AddRef();

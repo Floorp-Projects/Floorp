@@ -1,21 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
- */
-
+//Microsoft Developer Studio generated resource script.
+//
 #include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -54,19 +38,8 @@ BEGIN
                     WS_TABSTOP
     CONTROL         "&Navigator",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,17,18,47,10
-#ifndef MOZ_MAIL_NEWS
-#if !defined(WIN16)
     CONTROL         "N&etcaster",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,17,31,77,10
-#endif
-#else
-    CONTROL         "&Messenger Mailbox",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,17,31,77,10
-    CONTROL         "Collabra &Discussions",IDC_CHECK3,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,17,44,81,10
-    CONTROL         "Page &Composer",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,17,57,66,10
-#endif /* MOZ_MAIL_NEWS */
     GROUPBOX        "Show toolbar as",IDC_STATIC,7,93,242,54
     CONTROL         "&Pictures and Text",IDC_RADIO1,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,17,104,71,10
@@ -74,10 +47,6 @@ BEGIN
                     17,117,57,10
     CONTROL         "&Text Only",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,17,
                     130,46,10
-#ifdef MOZ_MAIL_NEWS
-    CONTROL         "N&etcaster",IDC_CHECK5,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,17,70,66,10
-#endif /* MOZ_MAIL_NEWS */
 END
 
 IDD_BROWSER DIALOG DISCARDABLE  0, 0, 256, 190
@@ -464,6 +433,19 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,159,101,50,14
 END
 
+IDD_SMARTBROWSING DIALOG DISCARDABLE  0, 0, 256, 211
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "What's Related",IDC_STATIC,7,7,242,84,WS_GROUP
+    LTEXT           "Do not request ""What's Related"" information for the following &domains (a comma-separated list)",
+                    IDC_STATIC,17,18,225,18
+    EDITTEXT        IDC_EDIT1,17,38,224,47,ES_MULTILINE
+    GROUPBOX        "Internet Keywords",IDC_STATIC,7,98,242,29
+    CONTROL         "Enable Internet &Keywords",IDC_CHECK2,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,17,109,97,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -591,6 +573,14 @@ BEGIN
         RIGHTMARGIN, 210
         TOPMARGIN, 7
         BOTTOMMARGIN, 119
+    END
+
+    IDD_SMARTBROWSING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 183
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -771,6 +761,7 @@ BEGIN
     IDS_DISK_SPACE          "Disk Space"
     IDS_NUMERIC_ONLY        "Please enter numeric digits only."
     IDS_MORE_DISK_SPACE     "More disk space"
+    IDD_SMARTBROWSING       "Smart Browsing\nConfigure browsing aids"
 END
 
 #endif    // English (U.S.) resources
