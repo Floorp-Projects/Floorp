@@ -2398,13 +2398,12 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
                 urlSpec.Append(cStrFolderName);
             }
             char *escapedNewName = nsEscape(utfNewName, url_Path);
-            if (!escapedNewName) return NS_ERROR_NULL_POINTER;
-            char* escapedSlashName = nsnull;
-            rv = nsImapUrl::EscapeSlashes((const char *) escapedNewName, &escapedSlashName);
-            if (!escapedSlashName) return NS_ERROR_NULL_POINTER;
-            urlSpec.Append(escapedSlashName);
-            PR_FREEIF(escapedNewName);
-            PR_FREEIF(escapedSlashName);
+            if (!escapedNewName) return NS_ERROR_OUT_OF_MEMORY;
+            nsXPIDLCString escapedSlashName;
+            rv = nsImapUrl::EscapeSlashes((const char *) escapedNewName, getter_Copies(escapedSlashName));
+            if (!escapedSlashName) return NS_ERROR_OUT_OF_MEMORY;
+            urlSpec.Append(escapedSlashName.get());
+            nsCRT::free(escapedNewName);
 			nsCRT::free(utfNewName);
 
             rv = uri->SetSpec(urlSpec.get());
