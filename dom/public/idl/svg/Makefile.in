@@ -93,6 +93,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGStopElement.idl \
 		nsIDOMSVGStylable.idl \
 		nsIDOMSVGStyleElement.idl \
+		nsIDOMSVGSymbolElement.idl \
 		nsIDOMSVGTextContentElement.idl \
 		nsIDOMSVGTextElement.idl \
 		nsIDOMSVGTextPositionElem.idl \
@@ -101,6 +102,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGTransformable.idl \
 		nsIDOMSVGTSpanElement.idl \
 		nsIDOMSVGURIReference.idl \
+		nsIDOMSVGUseElement.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

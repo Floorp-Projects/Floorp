@@ -199,6 +199,8 @@ nsresult
 NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
 nsresult
 NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+nsresult
+NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 PRBool 
 NS_SVG_TestFeatures (const nsAString& value);
 extern nsresult
@@ -5358,6 +5360,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
       aTag != nsHTMLAtoms::combobox &&
       aTag != nsHTMLAtoms::isindex &&
       aTag != nsXULAtoms::scrollbar
+#ifdef MOZ_SVG
+      && aTag != nsSVGAtoms::use
+#endif
       )
     return NS_OK;
 
@@ -5448,6 +5453,15 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
 #endif
 #ifdef MOZ_XTF
       if (aForceBindingParent)
+        rv = content->SetBindingParent(aParent);
+      else
+#endif
+#ifdef MOZ_SVG
+      // least-surprise CSS binding until we do the SVG specified
+      // cascading rules for <svg:use> - bug 265894
+      if (aParent &&
+          aParent->GetNodeInfo() &&
+          aParent->GetNodeInfo()->Equals(nsSVGAtoms::use, kNameSpaceID_SVG))
         rv = content->SetBindingParent(aParent);
       else
 #endif
@@ -7291,6 +7305,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   }
   else if (aTag == nsSVGAtoms::stop) {
     rv = NS_NewSVGStopFrame(aPresShell, aContent, aParentFrame, &newFrame);
+  }
+  else if (aTag == nsSVGAtoms::use) {
+    processChildren = PR_TRUE;
+    rv = NS_NewSVGUseFrame(aPresShell, aContent, &newFrame);
   }
   
   if (newFrame == nsnull) {

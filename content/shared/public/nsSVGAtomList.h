@@ -73,9 +73,11 @@ SVG_ATOM(script, "script")
 SVG_ATOM(stop, "stop")
 SVG_ATOM(svg, "svg")
 SVG_ATOM(svgSwitch, "switch") // switch is a C++ keyword, hence svgSwitch
+SVG_ATOM(symbol, "symbol")
 SVG_ATOM(text, "text")
 SVG_ATOM(tref, "tref")
 SVG_ATOM(tspan, "tspan")
+SVG_ATOM(use, "use")
 
   
 // properties and attributes
