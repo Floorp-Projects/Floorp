@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.21 2003/04/26 02:15:50 nelsonb%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.22 2003/04/26 03:41:24 nelsonb%netscape.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -715,6 +715,22 @@ sec_asn1d_init_state_based_on_template (sec_asn1d_state *state)
     return state;
 }
 
+PRBool
+sec_asn1d_parent_is_indefinite(sec_asn1d_state *state)
+{
+    for (state = state->parent; state; state = state->parent) {
+	sec_asn1d_parse_place place = state->place;
+	if (place != afterImplicit      &&
+	    place != afterPointer       &&
+	    place != afterInline        &&
+	    place != afterSaveEncoding  &&
+	    place != duringSaveEncoding &&
+	    place != duringChoice) {
+	    return state->indefinite ? PR_TRUE : PR_FALSE;
+	}
+    }
+    return PR_FALSE;
+}
 
 static unsigned long
 sec_asn1d_parse_identifier (sec_asn1d_state *state,
@@ -750,15 +766,7 @@ sec_asn1d_parse_identifier (sec_asn1d_state *state,
 	 */
 	state->pending = 1;
     } else {
-	if (byte == 0 && state->parent != NULL &&
-		    (state->parent->indefinite ||
-			(
-			    (state->parent->place == afterImplicit ||
-			     state->parent->place == afterPointer)
-			    && state->parent->parent != NULL && state->parent->parent->indefinite
-			)
-		    )
-	    ) {
+	if (byte == 0 && sec_asn1d_parent_is_indefinite(state)) {
 	    /*
 	     * Our parent has indefinite-length encoding, and the
 	     * entire tag found is 0, so it seems that we have hit the
@@ -2309,6 +2317,26 @@ sec_asn1d_during_choice (sec_asn1d_state *state)
 	unsigned char child_found_tag_modifiers = 0;
 	unsigned long child_found_tag_number = 0;
 
+	state->consumed += child->consumed;
+
+	if (child->endofcontents) {
+	    /* This choice is probably the first item in a GROUP
+	    ** (e.g. SET_OF) that was indefinite-length encoded.
+	    ** We're actually at the end of that GROUP.
+	    ** We should look up the stack to be sure that we find
+	    ** a state with indefinite length encoding before we
+	    ** find a state (like a SEQUENCE) that is definite.
+	    */
+	    child->place = notInUse;
+	    state->place = afterChoice;
+	    state->endofcontents = PR_TRUE;  /* propagate this up */
+	    if (sec_asn1d_parent_is_indefinite(state))
+		return state;
+	    PORT_SetError(SEC_ERROR_BAD_DER);
+	    state->top->status = decodeError;
+	    return NULL;
+	}
+
 	child->theTemplate++;
 
 	if (0 == child->theTemplate->kind) {
@@ -2317,8 +2345,6 @@ sec_asn1d_during_choice (sec_asn1d_state *state)
 	    state->top->status = decodeError;
 	    return (sec_asn1d_state *)NULL;
 	}
-
-	state->consumed += child->consumed;
 
 	/* cargo'd from next_in_sequence innards */
 	if (state->pending) {
