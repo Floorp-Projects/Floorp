@@ -385,21 +385,33 @@ nsInstallTrigger::AllowInstall(nsIURI* aLaunchURI)
 
 
 NS_IMETHODIMP
-nsInstallTrigger::UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool* aReturn)
+nsInstallTrigger::UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool aUseWhitelist, PRBool* aReturn)
 {
+    // disallow unless we successfully find otherwise
     *aReturn = PR_FALSE;
-    NS_ENSURE_ARG_POINTER(aGlobalObject);
 
-    // find the current site
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(aGlobalObject));
-    if ( window )
+    if (!aUseWhitelist)
     {
-        window->GetDocument(getter_AddRefs(domdoc));
-        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
-        if ( doc )
+        // simple global pref check
+        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+        if (prefBranch)
+            prefBranch->GetBoolPref( XPINSTALL_ENABLE_PREF, aReturn);
+    }
+    else
+    {
+        NS_ENSURE_ARG_POINTER(aGlobalObject);
+
+        // find the current site
+        nsCOMPtr<nsIDOMDocument> domdoc;
+        nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(aGlobalObject));
+        if ( window )
         {
-            *aReturn = AllowInstall( doc->GetDocumentURI() );
+            window->GetDocument(getter_AddRefs(domdoc));
+            nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
+            if ( doc )
+            {
+                *aReturn = AllowInstall( doc->GetDocumentURI() );
+            }
         }
     }
 
