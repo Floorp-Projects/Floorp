@@ -596,3 +596,4 @@ nsXULCommandDispatcher::SetActive(PRBool aActive)
   mActive = aActive;
   return NS_OK;
 }
+
