@@ -6,3 +6,4 @@ nsIFontEnumerator.idl
 nsIScriptableRegion.idl
 nsIScreen.idl
 nsIScreenManager.idl
+nsIPrintOptions.idl
