@@ -57,9 +57,10 @@ namespace LexUtils {
             ++p1; ++p2;
         }
 
-        return (s1.size() == s2_size) ? 0 : (s1.size() < s2_size) ? -1 : 1;
+        int diff = s1.size() - s2_size;
+        return (diff == 0) ? 0 : (diff < 0) ? -1 : 1;
     }
-        
+    
     TokenLocation
     seekTokenStart (string8_citer begin, string8_citer end)
     {
