@@ -2488,7 +2488,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					{
 						changedFlag = PR_TRUE;
 					}
-					contentLenStr = contentLengthValue;
+					contentLenStr.AssignWithConversion(contentLengthValue);
 					nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
 					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLenStr.GetUnicode(),
 						getter_AddRefs(newContentLengthLiteral))))
@@ -2500,7 +2500,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 			}
 			else
 			{
-				contentLenStr = contentLengthValue;
+				contentLenStr.AssignWithConversion(contentLengthValue);
 				nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
 				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLenStr.GetUnicode(),
 					getter_AddRefs(newContentLengthLiteral))))

@@ -1689,7 +1689,8 @@ void nsChromeRegistry::LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString
 
 void nsChromeRegistry::GetUserSheetURL(nsCString & aURL)
 {
-  aURL = mProfileRoot + "user.css";
+  aURL = mProfileRoot;
+  aURL.Append("user.css");
 }
 
 //////////////////////////////////////////////////////////////////////

@@ -290,7 +290,7 @@ void CStartToken::GetSource(nsString& anOutputString){
       anOutputString=mTextValue;
     else
      anOutputString.AssignWithConversion(GetTagName(mTypeID));
-    anOutputString+='>';
+    anOutputString.AppendWithConversion('>');
   }
 }
 
@@ -313,7 +313,7 @@ void CStartToken::AppendSource(nsString& anOutputString){
       anOutputString+=mTextValue;
     else
      anOutputString.AppendWithConversion(GetTagName(mTypeID));
-    anOutputString+='>';
+    anOutputString.AppendWithConversion('>');
   }
 }
 

@@ -68,7 +68,7 @@ nsCodebasePrincipal::ToStreamableForm(char** aName, char** aData)
 {
     if (!mPrefName) {
         nsCAutoString s("security.principal.codebase");
-        s += mCapabilitiesOrdinal++;
+        s.AppendInt(mCapabilitiesOrdinal++);
         mPrefName = s.ToNewCString();
     }
     *aName = nsCRT::strdup(mPrefName);

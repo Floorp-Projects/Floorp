@@ -4301,19 +4301,19 @@ NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand,
   if ( NS_FAILED (rv ) )
   	return rv;
   	
-  if (PR_TRUE== nsCAutoString(sCopyString).Equals(aCommand))
+  if (PR_TRUE== nsCAutoString(sCopyString).EqualsWithConversion(aCommand))
   { 
     rv = editInterface->GetCopyable( aResult );
   }
-  else if (PR_TRUE==nsCAutoString(sCutString).Equals(aCommand))    
+  else if (PR_TRUE==nsCAutoString(sCutString).EqualsWithConversion(aCommand))    
   { 
     rv =  editInterface->GetCutable( aResult);
   }
-  else if (PR_TRUE==nsCAutoString(sPasteString).Equals(aCommand))    
+  else if (PR_TRUE==nsCAutoString(sPasteString).EqualsWithConversion(aCommand))    
   { 
     rv = editInterface->GetPasteable( aResult );
   }
-  else if (PR_TRUE==nsCAutoString(sSelectAllString).Equals(aCommand))    
+  else if (PR_TRUE==nsCAutoString(sSelectAllString).EqualsWithConversion(aCommand))    
   { 
     *aResult = PR_TRUE;
     rv = NS_OK;
@@ -4329,40 +4329,40 @@ NS_IMETHODIMP nsDOMWindowController::SupportsCommand(const PRUnichar *aCommand, 
   
   *aResult = PR_FALSE;
   if (
-  	(PR_TRUE== nsCAutoString(sCopyString).Equals(aCommand)) ||
-  	  (PR_TRUE== nsCAutoString(sSelectAllString).Equals(aCommand)) ||
-  	  (PR_TRUE== nsCAutoString(sCutString).Equals(aCommand)) ||
-  	  (PR_TRUE== nsCAutoString(sPasteString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sBeginLineString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sEndLineString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectBeginLineString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectEndLineString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sScrollTopString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sScrollBottomString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sMoveTopString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sMoveBottomString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectMoveTopString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectMoveBottomString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sDownString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sUpString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sLeftString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sRightString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectDownString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectUpString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectLeftString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectRightString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sWordLeftString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sWordRightString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectWordLeftString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectWordRightString).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sScrollPageUp).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sScrollPageDown).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sScrollLineUp).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sScrollLineDown).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sMovePageUp).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sMovePageDown).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectMovePageUp).Equals(aCommand)) ||
-      (PR_TRUE== nsCAutoString(sSelectMovePageDown).Equals(aCommand))
+  	(PR_TRUE== nsCAutoString(sCopyString).EqualsWithConversion(aCommand)) ||
+  	  (PR_TRUE== nsCAutoString(sSelectAllString).EqualsWithConversion(aCommand)) ||
+  	  (PR_TRUE== nsCAutoString(sCutString).EqualsWithConversion(aCommand)) ||
+  	  (PR_TRUE== nsCAutoString(sPasteString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sBeginLineString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sEndLineString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectBeginLineString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectEndLineString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sScrollTopString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sScrollBottomString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sMoveTopString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sMoveBottomString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectMoveTopString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectMoveBottomString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sDownString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sUpString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sLeftString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sRightString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectDownString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectUpString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectLeftString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectRightString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sWordLeftString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sWordRightString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectWordLeftString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectWordRightString).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sScrollPageUp).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sScrollPageDown).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sScrollLineUp).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sScrollLineDown).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sMovePageUp).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sMovePageDown).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectMovePageUp).EqualsWithConversion(aCommand)) ||
+      (PR_TRUE== nsCAutoString(sSelectMovePageDown).EqualsWithConversion(aCommand))
       )
   {
     *aResult = PR_TRUE;
@@ -4382,38 +4382,38 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
   if ( NS_FAILED ( rv ) )
   	return rv;
   	
-  if (PR_TRUE== nsCAutoString(sCopyString).Equals(aCommand))
+  if (PR_TRUE== nsCAutoString(sCopyString).EqualsWithConversion(aCommand))
   { 
     rv = editInterface->CopySelection();
   }
-  else if (PR_TRUE== nsCAutoString(sCutString).Equals(aCommand))    
+  else if (PR_TRUE== nsCAutoString(sCutString).EqualsWithConversion(aCommand))    
   { 
     rv = editInterface->CutSelection();
   }
-  else if (PR_TRUE== nsCAutoString(sPasteString).Equals(aCommand))    
+  else if (PR_TRUE== nsCAutoString(sPasteString).EqualsWithConversion(aCommand))    
   { 
     rv = editInterface->Paste();
   }
-  else if (PR_TRUE== nsCAutoString(sSelectAllString).Equals(aCommand))    
+  else if (PR_TRUE== nsCAutoString(sSelectAllString).EqualsWithConversion(aCommand))    
   { 
     rv = editInterface->SelectAll();
   }
-  else if (PR_TRUE==nsCAutoString(sScrollPageUp).Equals(aCommand))  //ScrollPageUp
+  else if (PR_TRUE==nsCAutoString(sScrollPageUp).EqualsWithConversion(aCommand))  //ScrollPageUp
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollPage(PR_FALSE);
   }
-  else if (PR_TRUE==nsCAutoString(sScrollPageDown).Equals(aCommand))  //ScrollPageDown
+  else if (PR_TRUE==nsCAutoString(sScrollPageDown).EqualsWithConversion(aCommand))  //ScrollPageDown
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollPage(PR_TRUE);
   }
-  else if (PR_TRUE==nsCAutoString(sScrollLineUp).Equals(aCommand))  //ScrollLineUp
+  else if (PR_TRUE==nsCAutoString(sScrollLineUp).EqualsWithConversion(aCommand))  //ScrollLineUp
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollLine(PR_FALSE);
   }
-  else if (PR_TRUE==nsCAutoString(sScrollLineDown).Equals(aCommand))  //ScrollLineDown
+  else if (PR_TRUE==nsCAutoString(sScrollLineDown).EqualsWithConversion(aCommand))  //ScrollLineDown
   { 
     NS_ENSURE_SUCCESS(GetSelectionController(getter_AddRefs(selCont)),NS_ERROR_FAILURE);
     return selCont->ScrollLine(PR_TRUE);

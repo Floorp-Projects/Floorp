@@ -105,7 +105,7 @@ nsCertificatePrincipal::ToStreamableForm(char** aName, char** aData)
 {
     if (!mPrefName) {
         nsCAutoString s("security.principal.certificate");
-        s += mCapabilitiesOrdinal++;
+        s.AppendInt(mCapabilitiesOrdinal++);
         mPrefName = s.ToNewCString();
     }
     *aName = nsCRT::strdup(mPrefName);
