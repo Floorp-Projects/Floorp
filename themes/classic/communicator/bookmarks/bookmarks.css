@@ -89,7 +89,21 @@
     {
       margin-right        : 4px;
     }
-    
+
+  .bookmarkfolder.button-toolbar:hover
+    {
+      color               : #0000FF;
+      text-decoration     : underline;
+      cursor              : pointer;
+      border              : none;      
+    }
+
+  .bookmarkfolder.button-toolbar:hover:active
+    {
+      color               : #FF0000;
+      text-decoration     : underline;
+      border              : none;
+    }    
   .bookmarkitem.button-toolbar:hover
     {
       color               : #0000FF;
