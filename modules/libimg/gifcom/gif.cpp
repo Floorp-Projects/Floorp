@@ -475,15 +475,18 @@ do_lzw(gif_struct *gs, const PRUint8 *q)
                 code = oldcode;
             }
 
-
+            int code2=0;
             while(code > clear_code)
-            {       
+            {     
+                code2 = code;
                 if(code == prefix[code])
                     return -1;
 
                 *stackp++ = suffix[code];
                 code = prefix[code];
                 
+                if(code2 == prefix[code])
+                    return -1;
             }
 
             /* Define a new codeword in the dictionary. */
