@@ -17,6 +17,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <new.h>			// for placement new
 
@@ -162,6 +163,7 @@ void nsHeapZoneHeader::DisposeZonePtr(Ptr thePtr, Boolean &outWasLastChunk)
 const SInt32	nsAllocatorManager::kNumMasterPointerBlocks = 30;
 const SInt32	nsAllocatorManager::kApplicationStackSizeIncrease = (32 * 1024);
 const SInt32	nsAllocatorManager::kHeapZoneHeapPercentage = 60;
+const SInt32	nsAllocatorManager::kSmallHeapByteRange = 16;
 
 nsAllocatorManager* 	nsAllocatorManager::sAllocatorManager = nil;
 
@@ -174,11 +176,11 @@ nsAllocatorManager::nsAllocatorManager()
 ,	mLastHeapZone(nil)
 //--------------------------------------------------------------------
 {
-	mMinSmallBlockSize = 44;			// some magic numbers for now
-	mMinLargeBlockSize = 256;
+	mMinSmallBlockSize = 129;		//128;		//44;			// some magic numbers for now
+	mMinLargeBlockSize = 256;		//512;		//256;
 	
 	mNumFixedSizeAllocators = mMinSmallBlockSize / 4;
-	mNumSmallBlockAllocators = 1 + (mMinLargeBlockSize - mMinSmallBlockSize) / 4;
+	mNumSmallBlockAllocators = 1 + (mMinLargeBlockSize - mMinSmallBlockSize) / kSmallHeapByteRange;
 
 	//can't use new yet!
 	mFixedSizeAllocators = (nsMemAllocator **)NewPtrClear(mNumFixedSizeAllocators * sizeof(nsMemAllocator*));
@@ -194,7 +196,7 @@ nsAllocatorManager::nsAllocatorManager()
 		mFixedSizeAllocators[i] = (nsMemAllocator *)NewPtr(sizeof(nsFixedSizeAllocator));
 		if (mFixedSizeAllocators[i] == nil)
 			throw((OSErr)memFullErr);
-		new (mFixedSizeAllocators[i]) nsFixedSizeAllocator((i + 1) * 4);
+		new (mFixedSizeAllocators[i]) nsFixedSizeAllocator(i * 4 + (i > 0) * 1, (i + 1) * 4);
 	}
 
 	for (SInt32 i = 0; i < mNumSmallBlockAllocators; i ++)
@@ -202,14 +204,15 @@ nsAllocatorManager::nsAllocatorManager()
 		mSmallBlockAllocators[i] = (nsMemAllocator *)NewPtr(sizeof(nsSmallHeapAllocator));
 		if (mSmallBlockAllocators[i] == nil)
 			throw((OSErr)memFullErr);
-		new (mSmallBlockAllocators[i]) nsSmallHeapAllocator();
+		SInt32		minBytes = mMinSmallBlockSize + i * kSmallHeapByteRange;		// lower bound of block size
+		new (mSmallBlockAllocators[i]) nsSmallHeapAllocator(minBytes, minBytes + kSmallHeapByteRange - 1);
 	}
 	
 	mLargeAllocator = (nsMemAllocator *)NewPtr(sizeof(nsLargeHeapAllocator));
 	if (mLargeAllocator == nil)
 		throw((OSErr)memFullErr);
-	new (mLargeAllocator) nsLargeHeapAllocator();
-	
+	new (mLargeAllocator) nsLargeHeapAllocator(mMinLargeBlockSize, 0x7FFFFFFF);
+
 	// make the heap zone for our subheaps
 	UInt32		heapZoneSize;
 	
@@ -258,7 +261,8 @@ nsMemAllocator* nsAllocatorManager::GetAllocatorForBlockSize(size_t blockSize)
 		return mFixedSizeAllocators[ (blockSize == 0) ? 0 : ((blockSize + 3) >> 2) - 1 ];
 	
 	if (blockSize < mMinLargeBlockSize)
-		return mSmallBlockAllocators[ ((blockSize + 3) >> 2) - mNumFixedSizeAllocators ];
+		return mSmallBlockAllocators[ ((blockSize - mMinSmallBlockSize + kSmallHeapByteRange) / kSmallHeapByteRange) - 1 ];
+		//return mSmallBlockAllocators[ ((blockSize + (kSmallHeapByteRange - 1)) / kSmallHeapByteRange) - mNumFixedSizeAllocators ];
 	
 	return mLargeAllocator;
 }
@@ -304,7 +308,8 @@ nsHeapZoneHeader* nsAllocatorManager::MakeNewHeapZone(Size zoneSize, Size minZon
 // block size multiple. All blocks should be multiples of this size,
 // to reduce heap fragmentation
 const Size nsAllocatorManager::kChunkSizeMultiple 	= 2 * 1024;
-const Size nsAllocatorManager::kMacMemoryPtrOvehead	= 16;							// this overhead is documented in IM:Memory 2-22
+const Size nsAllocatorManager::kMaxChunkSize		= 48 * 1024;
+const Size nsAllocatorManager::kMacMemoryPtrOvehead	= 16;				// this overhead is documented in IM:Memory 2-22
 const Size nsAllocatorManager::kTempMemHeapZoneSize	= 1024 * 1024;		// 1MB temp handles
 const Size nsAllocatorManager::kTempMemHeapMinZoneSize	= 256 * 1024;	// min 256K handle
 
@@ -318,7 +323,7 @@ Ptr nsAllocatorManager::AllocateSubheap(Size preferredSize, Size &outActualSize)
 	// calculate an ideal chunk size by rounding up
 	preferredSize = kChunkSizeMultiple * ((preferredSize + (kChunkSizeMultiple - 1)) / kChunkSizeMultiple);
 	
-	// take into accound the memory manager's pointer overhead (16 btyes), to avoid fragmentation
+	// take into account the memory manager's pointer overhead (16 btyes), to avoid fragmentation
 	preferredSize += ((preferredSize / kChunkSizeMultiple) - 1) * kMacMemoryPtrOvehead;
 	outActualSize = preferredSize;
 
@@ -332,7 +337,10 @@ Ptr nsAllocatorManager::AllocateSubheap(Size preferredSize, Size &outActualSize)
 	}
 
 	// we failed to allocate. Let's make a new heap zone
-	thisHeapZone = MakeNewHeapZone(kTempMemHeapZoneSize, kTempMemHeapMinZoneSize);
+	UInt32		prefZoneSize = preferredSize + sizeof(nsHeapZoneHeader) + 512;	// for zone overhead
+	UInt32		zoneSize = (kTempMemHeapZoneSize > prefZoneSize) ? kTempMemHeapZoneSize : prefZoneSize;
+	UInt32		minZoneSize = (kTempMemHeapMinZoneSize > prefZoneSize) ? kTempMemHeapMinZoneSize : prefZoneSize;
+	thisHeapZone = MakeNewHeapZone(zoneSize, minZoneSize);
 	if (thisHeapZone)
 		return thisHeapZone->AllocateZonePtr(preferredSize);
 		
@@ -450,7 +458,6 @@ void nsAllocatorManager::DumpMemoryStats()
 //--------------------------------------------------------------------
 {
 	UInt32			i;
-	char			outString[ 1024 ];
 	PRFileDesc		*outFile;
 	
 	// Enter a valid, UNIX-style full path on your system to get this
@@ -460,6 +467,31 @@ void nsAllocatorManager::DumpMemoryStats()
 	{
 		return;
 	}
+
+	WriteString(outFile, "\n\n--------------------------------------------------------------------------------\n");
+	WriteString(outFile, "Max heap usage chart (* = 1024 bytes)\n");
+	WriteString(outFile, "--------------------------------------------------------------------------------\n\n");
+
+	UInt32			totHeapUsed = 0;
+
+	for (i = 0; i < mNumFixedSizeAllocators; i ++)
+	{
+		mFixedSizeAllocators[i]->DumpHeapUsage(outFile);
+		totHeapUsed += mFixedSizeAllocators[i]->GetMaxHeapUsage();
+	}
+
+	for (i = 0; i < mNumSmallBlockAllocators; i ++)
+	{
+		mSmallBlockAllocators[i]->DumpHeapUsage(outFile);
+		totHeapUsed += mSmallBlockAllocators[i]->GetMaxHeapUsage();
+	}
+
+	char	outString[256];
+	sprintf(outString, "Total heap space used by allocators: %ldk\n", totHeapUsed / 1024);
+
+	WriteString(outFile, "--------------------------------------------------------------------------------\n");
+	WriteString(outFile, outString);
+	WriteString(outFile, "--------------------------------------------------------------------------------\n\n");
 
 	for (i = 0; i < mNumFixedSizeAllocators; i ++)
 	{
@@ -491,7 +523,6 @@ void WriteString(PRFileDesc *file, const char * string)
 
 
 #endif
-
 
 #pragma mark -
 

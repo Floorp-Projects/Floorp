@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All Rights    
  * Reserved. */
 
+#include <string.h>
 
 class nsMemAllocator;
 class nsLargeHeapChunk;
@@ -66,6 +67,8 @@ struct LargeBlockHeader
 															}
 	UInt32					GetPaddingBytes()				{ return paddingBytes; }
 
+	void					ZapBlockContents(UInt8 pattern)	{ memset(&memory, pattern, GetBlockSize()); }
+	
 	// inline, so won't crash if this is a bad block
 	Boolean					HasHeaderTag(MemoryBlockTag inHeaderTag)
 											{ return header.headerTag == inHeaderTag; }
@@ -108,7 +111,7 @@ class nsLargeHeapAllocator : public nsMemAllocator
 	
 	
 	public:
-								nsLargeHeapAllocator();
+								nsLargeHeapAllocator(size_t minBlockSize, size_t maxBlockSize);
 								~nsLargeHeapAllocator();
 
 

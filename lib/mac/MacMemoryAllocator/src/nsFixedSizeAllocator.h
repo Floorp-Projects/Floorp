@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All Rights    
  * Reserved. */
 
+#include <string.h>
 
 class nsMemAllocator;
 class nsFixedSizeHeapChunk;
@@ -67,6 +68,12 @@ struct FixedMemoryBlock
 																}
 	UInt32					GetPaddingBytes()					{ return blockHeader.blockPadding; }
 
+	void					ZapBlockContents(UInt32 blockSize, UInt8 pattern)
+																{
+																	memset(&memory, pattern, blockSize);
+																}
+	
+	
 	// inline, so won't crash if this is a bad block
 	Boolean					HasHeaderTag(MemoryBlockTag inHeaderTag)
 											{ return blockHeader.header.headerTag == inHeaderTag; }
@@ -106,7 +113,7 @@ class nsFixedSizeAllocator : public nsMemAllocator
 	
 	public:
 
-								nsFixedSizeAllocator(size_t blockSize);
+								nsFixedSizeAllocator(size_t minBlockSize, size_t maxBlockSize);
 								~nsFixedSizeAllocator();
 
 		virtual void *			AllocatorMakeBlock(size_t blockSize);
@@ -119,7 +126,7 @@ class nsFixedSizeAllocator : public nsMemAllocator
 
 		virtual nsHeapChunk*	FindChunkWithSpace(size_t blockSize) const;
 		
-		UInt32					GetAllocatorBlockSize() { return mBlockSize; }
+		UInt32					GetAllocatorBlockSize() { return mMaxBlockSize; }
 		
 	protected:
 
@@ -127,9 +134,6 @@ class nsFixedSizeAllocator : public nsMemAllocator
 			kMaxBlockResizeSlop		= 16
 		}; 
 		
-		UInt32			mBlockSize;		// upper bound for blocks allocated in this heap
-										// does not include block overhead
-
 		nsFixedSizeHeapChunk	*mChunkWithSpace;	// cheap optimization
 		
 		

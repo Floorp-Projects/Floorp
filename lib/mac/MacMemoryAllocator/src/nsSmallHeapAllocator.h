@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All Rights    
  * Reserved. */
 
+#include <string.h>
 
 class nsMemAllocator;
 class nsSmallHeapChunk;
@@ -66,13 +67,17 @@ struct SmallHeapBlock
 																	*lastLong &= ~mask;
 																	*lastLong |= (mask & kBlockPaddingBytes);
 																}
+
 	Boolean						CheckPaddingBytes()				{
 																	UInt32	padding 	= blockFlags & kBlockPaddingMask;
 																	long	*lastLong 	= (long *)((char *)&memory + blockSize - sizeof(long));
 																	UInt32	mask 		= (1 << (8 * padding)) - 1;
 																	return (*lastLong & mask) == (mask & kBlockPaddingBytes);
 																}
+
 	UInt32						GetPaddingBytes()				{ return (blockFlags & kBlockPaddingMask); }
+
+	void						ZapBlockContents(UInt8 pattern) { memset(&memory, pattern, blockSize); }
 
 	// inline, so won't crash if this is a bad block
 	Boolean						HasHeaderTag(MemoryBlockTag inHeaderTag)
@@ -130,7 +135,7 @@ class nsSmallHeapAllocator : public nsMemAllocator
 
 	public:
 			
-								nsSmallHeapAllocator();
+								nsSmallHeapAllocator(size_t minBlockSize, size_t maxBlockSize);
 								~nsSmallHeapAllocator();
 
 		virtual void *			AllocatorMakeBlock(size_t blockSize);
@@ -144,7 +149,7 @@ class nsSmallHeapAllocator : public nsMemAllocator
 
 	protected:
 
-
+		nsSmallHeapChunk*		mChunkWithSpace;		// cheap optimization
 };
 
 
@@ -167,20 +172,30 @@ class nsSmallHeapChunk : public nsHeapChunk
 	
 		enum {
 			kDefaultSmallHeadMinSize	= 4L,
-			kDefaultSmallHeapBins 		= 64L,
+			kDefaultSmallHeapBins 		= 128L,
 			kMaximumBinBlockSize		= kDefaultSmallHeadMinSize + 4L * kDefaultSmallHeapBins - 1,
 			kMaximumBlockSize			= 0xFFFF
 		};
 
-		SmallHeapBlock**		GetBins(UInt32 binIndex) { return mBins + binIndex; }
+		SmallHeapBlock**		GetBins(UInt32 binIndex)
+												{
+													MEM_ASSERT(binIndex < kDefaultSmallHeapBins, "Bad bin index!");
+													return mBins + binIndex;
+												}
+
 		SmallHeapBlock*			GetOverflow()	{ return mOverflow;	}
 
 		void					RemoveBlockFromFreeList(SmallHeapBlock *removeBlock);
 		void					AddBlockToFreeList(SmallHeapBlock *addBlock);
 
-		SmallHeapBlock			*mOverflow;
-		SmallHeapBlock			*mBins[kDefaultSmallHeapBins];
+		UInt32					mTotalFree;
+#if DEBUG
+		UInt32					mInitialFree;
+#endif
+		SmallHeapBlock*			mOverflow;
+		SmallHeapBlock*			mBins[kDefaultSmallHeapBins];
 		SmallHeapBlock			mMemory[];
+
 };
 
 

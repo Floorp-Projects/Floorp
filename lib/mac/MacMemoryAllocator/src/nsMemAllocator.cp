@@ -47,9 +47,12 @@ nsHeapChunk::~nsHeapChunk()
 #pragma mark -
 
 //--------------------------------------------------------------------
-nsMemAllocator::nsMemAllocator()
+nsMemAllocator::nsMemAllocator(size_t minBlockSize, size_t maxBlockSize)
 :	mFirstChunk(nil)
 ,	mLastChunk(nil)
+,	mNumChunks(0)
+,	mMinBlockSize(minBlockSize)
+,	mMaxBlockSize(maxBlockSize)
 #if DEBUG_HEAP_INTEGRITY	
 ,	mSignature(kMemAllocatorSignature)
 #endif
@@ -115,6 +118,8 @@ void nsMemAllocator::AddToChunkList(nsHeapChunk *inNewChunk)
 
 	mLastChunk = inNewChunk;
 
+	mNumChunks ++;
+	
 #if STATS_MAC_MEMORY
 	mCurSubheapCount ++;
 	if (mCurSubheapCount > mMaxSubheapCount)
@@ -157,6 +162,8 @@ void nsMemAllocator::RemoveFromChunkList(nsHeapChunk *inChunk)
 		if (mLastChunk == thisChunk)
 			mLastChunk = prevChunk;
 	}
+	
+	mNumChunks --;
 	
 #if STATS_MAC_MEMORY
 	mCurSubheapCount --;
@@ -206,6 +213,31 @@ void nsMemAllocator::AccountForFreedBlock(size_t logicalSize)
 	mCurBlockSpaceUsed -= logicalSize;
 }
 
+//--------------------------------------------------------------------
+void nsMemAllocator::DumpHeapUsage(PRFileDesc *outFile)
+//--------------------------------------------------------------------
+{
+	char			outString[ 1024 ];
+	
+	sprintf(outString, "%04ld ", mMaxBlockSize);
+	
+	WriteString(outFile, outString);
+
+	char	*p = outString;
+	SInt32	numStars = mMaxHeapSpaceUsed / 1024;
+	if (numStars > 1021)
+		numStars = 1021;
+	
+	for (SInt32 i = 0; i < numStars; i ++)
+		*p++ = '*';
+	
+	if (numStars == 1021)
+		*p++ = 'É';
+	*p++ = '\n';
+	*p = '\0';
+	
+	WriteString(outFile, outString);
+}
 
 //--------------------------------------------------------------------
 void nsMemAllocator::DumpMemoryStats(PRFileDesc *outFile)
@@ -213,8 +245,10 @@ void nsMemAllocator::DumpMemoryStats(PRFileDesc *outFile)
 {
 	char			outString[ 1024 ];
 	
+	sprintf(outString, "Stats for heap of blocks %ld - %ld bytes\n", mMinBlockSize, mMaxBlockSize);
+	
 	WriteString ( outFile, "\n\n--------------------------------------------------------------------------------\n" );
-	WriteString(outFile, "Stats for heap\n");
+	WriteString(outFile, outString);
 	WriteString ( outFile, "--------------------------------------------------------------------------------\n" );
 	WriteString ( outFile, "                     Current         Max\n" );
 	WriteString ( outFile, "                  ----------     -------\n" );

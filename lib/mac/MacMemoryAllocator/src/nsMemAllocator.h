@@ -33,8 +33,8 @@ enum {
 	kUsedBlockTrailerTag	= 'used',
 	kRefdBlockHeaderTag		= 'REFD',
 	kRefdBlockTrailerTag	= 'refd',
-	kFreeMemoryFillPattern 	= 0xEF,
-	kUsedMemoryFillPattern	= 0xDB
+	kUsedMemoryFillPattern	= 0xDB,
+	kFreeMemoryFillPattern 	= 0xEF		//if you don't want to crash hard, change to 0x04 or 0x05,
 };
 
 
@@ -131,7 +131,7 @@ class nsMemAllocator
 {
 	public:
 
-								nsMemAllocator();
+								nsMemAllocator(size_t minBlockSize, size_t maxBlockSize);
 		virtual 				~nsMemAllocator() = 0;
 		
 		static size_t			GetBlockSize(void *thisBlock);
@@ -171,8 +171,14 @@ class nsMemAllocator
 		nsHeapChunk				*mFirstChunk;			// pointer to first subheap managed by this allocator
 		nsHeapChunk				*mLastChunk;			// pointer to last subheap managed by this allocator
 
+		UInt32					mMinBlockSize;			// smallest block normally handled by this allocator (inclusive)
+		UInt32					mMaxBlockSize;			// largest block handled by this allocator (inclusive)
+		
+		UInt32					mNumChunks;				// number of chunks in list
+
 		UInt32					mBaseChunkSize;			// size of subheap allocated at startup
 		UInt32					mTempChunkSize;			// size of additional subheaps
+
 
 #if STATS_MAC_MEMORY
 		
@@ -183,6 +189,9 @@ class nsMemAllocator
 		void					AccountForResizedBlock(size_t oldLogicalSize, size_t newLogicalSize);
 		
 		void					DumpMemoryStats(PRFileDesc *statsFile);
+		void					DumpHeapUsage(PRFileDesc *statsFile);
+		
+		UInt32					GetMaxHeapUsage() { return mMaxHeapSpaceUsed; }
 		
 	private:
 	

@@ -26,9 +26,8 @@
 const UInt32 FixedMemoryBlock::kFixedSizeBlockOverhead = sizeof(FixedMemoryBlockHeader) + MEMORY_BLOCK_TAILER_SIZE;
 
 //--------------------------------------------------------------------
-nsFixedSizeAllocator::nsFixedSizeAllocator(size_t blockSize)
-:	nsMemAllocator()
-,	mBlockSize(blockSize)
+nsFixedSizeAllocator::nsFixedSizeAllocator(size_t minBlockSize, size_t maxBlockSize)
+:	nsMemAllocator(minBlockSize, maxBlockSize)
 ,	mChunkWithSpace(nil)
 //--------------------------------------------------------------------
 {
@@ -46,11 +45,11 @@ nsFixedSizeAllocator::~nsFixedSizeAllocator()
 nsHeapChunk* nsFixedSizeAllocator::FindChunkWithSpace(size_t blockSize) const
 //--------------------------------------------------------------------
 {
-	nsFixedSizeHeapChunk*	chunk = (nsFixedSizeHeapChunk *)mFirstChunk;
-
 	if (mChunkWithSpace && mChunkWithSpace->GetFreeList())
 		return mChunkWithSpace;
 	
+	nsFixedSizeHeapChunk*	chunk = (nsFixedSizeHeapChunk *)mFirstChunk;
+
 	//	Try to find an existing chunk with a free block.
 	while (chunk != nil)
 	{
@@ -84,9 +83,11 @@ void *nsFixedSizeAllocator::AllocatorMakeBlock(size_t blockSize)
 	blockHeader->SetHeaderTag(kUsedBlockHeaderTag);
 	blockHeader->SetTrailerTag(GetAllocatorBlockSize(), kUsedBlockTrailerTag);
 	
+	blockHeader->ZapBlockContents(blockSize, kUsedMemoryFillPattern);
+	
 	UInt32		paddedSize = (blockSize + 3) & ~3;
 	blockHeader->SetPaddingBytes(paddedSize - blockSize);
-	blockHeader->FillPaddingBytes(mBlockSize);
+	blockHeader->FillPaddingBytes(mMaxBlockSize);
 #endif
 
 #if STATS_MAC_MEMORY
@@ -107,7 +108,9 @@ void nsFixedSizeAllocator::AllocatorFreeBlock(void *freeBlock)
 #if DEBUG_HEAP_INTEGRITY
 	MEM_ASSERT(blockHeader->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header");
 	MEM_ASSERT(blockHeader->GetTrailerTag(GetAllocatorBlockSize()) == kUsedBlockTrailerTag, "Bad block trailer");
-	MEM_ASSERT(blockHeader->CheckPaddingBytes(mBlockSize), "Block bounds have been overwritten");
+	MEM_ASSERT(blockHeader->CheckPaddingBytes(GetAllocatorBlockSize()), "Block bounds have been overwritten");
+
+	blockHeader->ZapBlockContents(GetAllocatorBlockSize(), kFreeMemoryFillPattern);
 #endif
 	
 #if STATS_MAC_MEMORY
@@ -128,6 +131,7 @@ void nsFixedSizeAllocator::AllocatorFreeBlock(void *freeBlock)
 	{
 		if (chunk == mChunkWithSpace)
 			mChunkWithSpace = nil;
+			
 		FreeChunk(chunk);
 	}
 	else
@@ -142,7 +146,7 @@ void *nsFixedSizeAllocator::AllocatorResizeBlock(void *block, size_t newSize)
 //--------------------------------------------------------------------
 {
 	// let blocks shrink to at most 16 bytes below this allocator's block size
-	if (newSize > mBlockSize || newSize <= mBlockSize - kMaxBlockResizeSlop)
+	if (newSize > mMaxBlockSize || newSize <= mMaxBlockSize - kMaxBlockResizeSlop)
 		return nil;
 	
 	FixedMemoryBlock*	blockHeader = FixedMemoryBlock::GetBlockHeader(block);
@@ -150,14 +154,14 @@ void *nsFixedSizeAllocator::AllocatorResizeBlock(void *block, size_t newSize)
 #if DEBUG_HEAP_INTEGRITY
 	MEM_ASSERT(blockHeader->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header");
 	MEM_ASSERT(blockHeader->GetTrailerTag(GetAllocatorBlockSize()) == kUsedBlockTrailerTag, "Bad block trailer");
-	MEM_ASSERT(blockHeader->CheckPaddingBytes(mBlockSize), "Block bounds have been overwritten");
+	MEM_ASSERT(blockHeader->CheckPaddingBytes(mMaxBlockSize), "Block bounds have been overwritten");
 	
 	// if we shrunk the block to below this allocator's normal size range, then these
 	// padding bytes won't be any use. But they are tested using mBlockSize, so we
 	// have to udpate them anyway.
 	UInt32		paddedSize = (newSize + 3) & ~3;
 	blockHeader->SetPaddingBytes(paddedSize - newSize);
-	blockHeader->FillPaddingBytes(mBlockSize);
+	blockHeader->FillPaddingBytes(mMaxBlockSize);
 #endif
 
 #if STATS_MAC_MEMORY
@@ -173,7 +177,7 @@ void *nsFixedSizeAllocator::AllocatorResizeBlock(void *block, size_t newSize)
 size_t nsFixedSizeAllocator::AllocatorGetBlockSize(void *thisBlock)
 //--------------------------------------------------------------------
 {
-	return mBlockSize;
+	return mMaxBlockSize;
 }
 
 
@@ -183,7 +187,13 @@ nsHeapChunk *nsFixedSizeAllocator::AllocateChunk(size_t requestedBlockSize)
 //--------------------------------------------------------------------
 {
 	Size	actualChunkSize;
+	
+	// adapt the chunk size if we have already allocated a number of chunks, and it's not above a max size
+	if (mNumChunks > 4 && mBaseChunkSize < nsAllocatorManager::kMaxChunkSize)
+		mBaseChunkSize *= 2;
+	
 	Ptr		chunkMemory = nsAllocatorManager::GetAllocatorManager()->AllocateSubheap(mBaseChunkSize, actualChunkSize);
+	if (!chunkMemory) return nil;
 	
 	// use placement new to initialize the chunk in the memory block
 	nsHeapChunk		*newHeapChunk = new (chunkMemory) nsFixedSizeHeapChunk(this, actualChunkSize);

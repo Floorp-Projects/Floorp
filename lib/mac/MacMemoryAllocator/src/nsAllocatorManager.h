@@ -103,7 +103,10 @@ class nsAllocatorManager
 		static const SInt32			kTempMemHeapMinZoneSize;
 		
 		static const Size			kChunkSizeMultiple;
-
+		static const Size			kMaxChunkSize;
+		
+		static const SInt32			kSmallHeapByteRange;
+		
 		static nsAllocatorManager*	GetAllocatorManager()	{ return sAllocatorManager ? sAllocatorManager : CreateAllocatorManager(); }
 
 									nsAllocatorManager();

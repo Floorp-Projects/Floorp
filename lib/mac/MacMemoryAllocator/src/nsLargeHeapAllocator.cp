@@ -26,8 +26,8 @@
  const UInt32 LargeBlockHeader::kLargeBlockOverhead = sizeof(LargeBlockHeader) + MEMORY_BLOCK_TAILER_SIZE;
  
 //--------------------------------------------------------------------
-nsLargeHeapAllocator::nsLargeHeapAllocator()
-:	nsMemAllocator()
+nsLargeHeapAllocator::nsLargeHeapAllocator(size_t minBlockSize, size_t maxBlockSize)
+:	nsMemAllocator(minBlockSize, maxBlockSize)
 //--------------------------------------------------------------------
 {
 	mBaseChunkSize = mTempChunkSize = (64 * 1024);
@@ -127,6 +127,8 @@ void nsLargeHeapAllocator::AllocatorFreeBlock(void *freeBlock)
 	MEM_ASSERT(blockHeader->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header on free");
 	MEM_ASSERT(blockHeader->HasTrailerTag(blockHeader->GetBlockSize(), kUsedBlockTrailerTag), "Bad block trailer on free");
 	MEM_ASSERT(blockHeader->CheckPaddingBytes(), "Block overwrote bounds");
+
+	blockHeader->ZapBlockContents(kFreeMemoryFillPattern);
 #endif
 
 #if STATS_MAC_MEMORY
@@ -168,6 +170,7 @@ nsHeapChunk *nsLargeHeapAllocator::AllocateChunk(size_t requestedBlockSize)
 		chunkSize = paddedBlockSize;
 
 	Ptr		chunkMemory = nsAllocatorManager::GetAllocatorManager()->AllocateSubheap(chunkSize, actualChunkSize);
+	if (!chunkMemory) return nil;
 	
 	// use placement new to initialize the chunk in the memory block
 	nsHeapChunk		*newHeapChunk = new (chunkMemory) nsLargeHeapChunk(this, actualChunkSize);
@@ -238,6 +241,7 @@ LargeBlockHeader* nsLargeHeapChunk::GetSpaceForBlock(UInt32 blockSize)
 	UInt32				allocSize = ((blockSize + 3) & ~3) + LargeBlockHeader::kLargeBlockOverhead;
 
 	if (allocSize > mTotalFree) return nil;
+	//Boolean				expectFailure = (allocSize > mTotalFree);
 	
 	/* scan through the blocks in this chunk looking for a big enough free block */
 	/* we never allocate the head block */
@@ -280,12 +284,14 @@ LargeBlockHeader* nsLargeHeapChunk::GetSpaceForBlock(UInt32 blockSize)
 	blockHeader->SetHeaderTag(kUsedBlockHeaderTag);
 	blockHeader->SetTrailerTag(blockHeader->GetBlockSize(), kUsedBlockTrailerTag);
 	blockHeader->SetPaddingBytes(((blockSize + 3) & ~3) - blockSize);
+	blockHeader->ZapBlockContents(kUsedMemoryFillPattern);
 	blockHeader->FillPaddingBytes();
 #endif
 	
 	mTotalFree -= blockHeader->GetBlockHeapUsageSize();
 	IncrementUsedBlocks();
 	
+	//MEM_ASSERT(!expectFailure, "I though this would fail!");
 	return blockHeader;
 
 }

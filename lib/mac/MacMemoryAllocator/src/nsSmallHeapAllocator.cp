@@ -27,11 +27,13 @@ const UInt32 SmallHeapBlock::kBlockOverhead = sizeof(SmallHeapBlock) + MEMORY_BL
 
 
 //--------------------------------------------------------------------
-nsSmallHeapAllocator::nsSmallHeapAllocator()
-:	nsMemAllocator()
+nsSmallHeapAllocator::nsSmallHeapAllocator(size_t minBlockSize, size_t maxBlockSize)
+:	nsMemAllocator(minBlockSize, maxBlockSize)
+,	mChunkWithSpace(nil)
 //--------------------------------------------------------------------
 {
-	mBaseChunkSize = mTempChunkSize = (nsAllocatorManager::kChunkSizeMultiple);
+	// this gets rounded up when we allocate chunks
+	mBaseChunkSize = mTempChunkSize = 64 * (mMaxBlockSize + SmallHeapBlock::kBlockOverhead); //(nsAllocatorManager::kChunkSizeMultiple);
 }
 
 //--------------------------------------------------------------------
@@ -45,6 +47,13 @@ nsSmallHeapAllocator::~nsSmallHeapAllocator()
 void *nsSmallHeapAllocator::AllocatorMakeBlock(size_t blockSize)
 //--------------------------------------------------------------------
 {
+	// try the cheap way first
+	if (mChunkWithSpace)
+	{
+		void	*foundBlock = mChunkWithSpace->GetSpaceForBlock(blockSize);
+		if (foundBlock) return foundBlock;
+	}
+	
 	nsSmallHeapChunk		*chunk = (nsSmallHeapChunk *)mFirstChunk;
 	
 	// walk through all of our chunks, trying to allocate memory from somewhere
@@ -61,6 +70,7 @@ void *nsSmallHeapAllocator::AllocatorMakeBlock(size_t blockSize)
 	chunk = (nsSmallHeapChunk *)AllocateChunk(blockSize);
 	if (!chunk) return nil;
 	
+	mChunkWithSpace = chunk;
 	return chunk->GetSpaceForBlock(blockSize);
 }
 
@@ -75,6 +85,8 @@ void nsSmallHeapAllocator::AllocatorFreeBlock(void *freeBlock)
 	MEM_ASSERT(deadBlock->HasHeaderTag(kUsedBlockHeaderTag), "Bad block header on free");
 	MEM_ASSERT(deadBlock->HasTrailerTag(deadBlock->GetBlockSize(), kUsedBlockTrailerTag), "Bad block trailer on free");
 	MEM_ASSERT(deadBlock->CheckPaddingBytes(), "Block has overwritten its bounds");
+
+	deadBlock->ZapBlockContents(kFreeMemoryFillPattern);
 #endif
 	
 	nsSmallHeapChunk	*chunk = deadBlock->GetOwningChunk();
@@ -88,7 +100,16 @@ void nsSmallHeapAllocator::AllocatorFreeBlock(void *freeBlock)
 	
 	// if this chunk is completely empty and it's not the first chunk then free it
 	if (chunk->IsEmpty() && chunk!= mFirstChunk)
+	{
+		if (chunk == mChunkWithSpace)
+			mChunkWithSpace = nil;
+		
 		FreeChunk(chunk);
+	}
+	else
+	{
+		mChunkWithSpace = chunk;		// we know is has some space now, probably
+	}
 }
 
 
@@ -148,6 +169,7 @@ nsHeapChunk *nsSmallHeapAllocator::AllocateChunk(size_t blockSize)
 		
 	Size	actualChunkSize;
 	Ptr		chunkMemory = nsAllocatorManager::GetAllocatorManager()->AllocateSubheap(mBaseChunkSize, actualChunkSize);
+	if (!chunkMemory) return nil;
 	
 	// use placement new to initialize the chunk in the memory block
 	nsHeapChunk		*newHeapChunk = new (chunkMemory) nsSmallHeapChunk(this, actualChunkSize);
@@ -176,9 +198,10 @@ void nsSmallHeapAllocator::FreeChunk(nsHeapChunk *chunkToFree)
 //--------------------------------------------------------------------
 nsSmallHeapChunk::nsSmallHeapChunk(
 			nsMemAllocator 	*inOwningAllocator,
-			Size 			heapSize) :
-	nsHeapChunk(inOwningAllocator, heapSize),
-	mOverflow(nil)
+			Size 			heapSize)
+:	nsHeapChunk(inOwningAllocator, heapSize)
+,	mOverflow(nil)
+,	mTotalFree(0)
 //--------------------------------------------------------------------
 {
 	// init the bin ptrs
@@ -215,6 +238,9 @@ nsSmallHeapChunk::nsSmallHeapChunk(
 	newRawBlockTrailer->SetOwningChunk(nil);
 	
 	AddBlockToFreeList(newFreeOverflowBlock);
+#if DEBUG_HEAP_INTEGRITY
+	mInitialFree = mTotalFree;
+#endif
 }
 
 
@@ -222,6 +248,7 @@ nsSmallHeapChunk::nsSmallHeapChunk(
 nsSmallHeapChunk::~nsSmallHeapChunk()
 //--------------------------------------------------------------------
 {
+	MEM_ASSERT(mUsedBlocks != 0 || mTotalFree == mInitialFree, "Bad free measure");
 }
 
 
@@ -232,6 +259,9 @@ void *nsSmallHeapChunk::GetSpaceForBlock(size_t blockSize)
 	//	Round up allocation to nearest 4 bytes.
 	UInt32 roundedBlockSize = (blockSize + 3) & ~3;
 	MEM_ASSERT(roundedBlockSize <= nsSmallHeapChunk::kMaximumBlockSize, "Block is too big for this allocator!");
+
+	if (mTotalFree < roundedBlockSize) return nil;
+	//Boolean	expectFailure = (mTotalFree < roundedBlockSize);
 
 	//	Try to find the best fit in one of the bins.
 	UInt32	startingBinNum = (roundedBlockSize - kDefaultSmallHeadMinSize) >> 2;
@@ -341,6 +371,7 @@ done:
 #if DEBUG_HEAP_INTEGRITY
 	allocatedBlock->SetHeaderTag(kUsedBlockHeaderTag);
 	allocatedBlock->SetTrailerTag(allocatedBlock->GetBlockSize(), kUsedBlockTrailerTag);
+	allocatedBlock->ZapBlockContents(kUsedMemoryFillPattern);
 	allocatedBlock->SetPaddingBytes(roundedBlockSize - blockSize);
 	allocatedBlock->FillPaddingBytes();
 #endif
@@ -349,6 +380,8 @@ done:
 	allocatedBlock->SetLogicalBlockSize(blockSize);
 	GetOwningAllocator()->AccountForNewBlock(blockSize);
 #endif
+
+	//MEM_ASSERT(!expectFailure, "I though this would fail!");
 
 	IncrementUsedBlocks();
 	return &allocatedBlock->memory;
@@ -574,17 +607,16 @@ void nsSmallHeapChunk::RemoveBlockFromFreeList(SmallHeapBlock *removeBlock)
 		else
 		{
 			UInt32	nextBlockBin = (blockSize - kDefaultSmallHeadMinSize) >> 2;
-#if DEBUG_HEAP_INTEGRITY
-			if (blockSize < kDefaultSmallHeadMinSize)
-				DebugStr("\pBad block size");
-			if (nextBlockBin >= kDefaultSmallHeapBins)
-				DebugStr("\pBad bin index");
-#endif
+
+			MEM_ASSERT(blockSize >= kDefaultSmallHeadMinSize, "Bad block size");
+			MEM_ASSERT(nextBlockBin < kDefaultSmallHeapBins, "Bad bin index");
+
 			mBins[nextBlockBin] = nextFree;
 		}
 	}
 	
 	removeBlock->SetBlockUsed();
+	mTotalFree -= removeBlock->GetBlockHeapUsage();
 }
 
 
@@ -593,6 +625,8 @@ void nsSmallHeapChunk::RemoveBlockFromFreeList(SmallHeapBlock *removeBlock)
 void nsSmallHeapChunk::AddBlockToFreeList(SmallHeapBlock *addBlock)
 //--------------------------------------------------------------------
 {
+	mTotalFree += addBlock->GetBlockHeapUsage();
+
 	addBlock->SetBlockUnused();
 
 	UInt32	blockSize = addBlock->GetBlockSize();
@@ -609,12 +643,10 @@ void nsSmallHeapChunk::AddBlockToFreeList(SmallHeapBlock *addBlock)
 	else
 	{
 		UInt32	nextBlockBin = (blockSize - kDefaultSmallHeadMinSize) >> 2;
-#if DEBUG_HEAP_INTEGRITY
-		if (blockSize < kDefaultSmallHeadMinSize)
-			DebugStr("\pBad block size");
-		if (nextBlockBin >= kDefaultSmallHeapBins)
-			DebugStr("\pBad bin index");
-#endif
+		
+		MEM_ASSERT(blockSize >= kDefaultSmallHeadMinSize, "Bad block size");
+		MEM_ASSERT(nextBlockBin < kDefaultSmallHeapBins, "Bad bin index");
+
 		SmallHeapBlock	*tempBlock = mBins[nextBlockBin];
 		addBlock->SetNextFree(tempBlock);
 		if (tempBlock) tempBlock->SetPrevFree(addBlock);
