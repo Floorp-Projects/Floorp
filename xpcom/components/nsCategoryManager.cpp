@@ -75,7 +75,8 @@ ExtractKeyString( nsHashKey* key, void*, void*, nsISupports** _retval )
   nsCOMPtr<nsISupportsCString> obj = new nsSupportsCStringImpl();
   if ( obj ) {
     nsCStringKey* strkey = NS_STATIC_CAST(nsCStringKey*, key);
-    status = obj->SetDataWithLength(strkey->GetStringLength(), strkey->GetString());
+    status = obj->SetData(nsDependentCString(strkey->GetString(),
+                                             strkey->GetStringLength()));
   }
 
   *_retval = obj;
@@ -476,14 +477,14 @@ NS_CreateServicesFromCategory(const char *category,
             nFailed++;
             continue;
         }
-        nsXPIDLCString entryString;
-        rv = catEntry->GetData(getter_Copies(entryString));
+        nsCAutoString entryString;
+        rv = catEntry->GetData(entryString);
         if (NS_FAILED(rv)) {
             nFailed++;
             continue;
         }
         nsXPIDLCString contractID;
-        rv = categoryManager->GetCategoryEntry(category,(const char *)entryString, getter_Copies(contractID));
+        rv = categoryManager->GetCategoryEntry(category,entryString.get(), getter_Copies(contractID));
         if (NS_FAILED(rv)) {
             nFailed++;
             continue;

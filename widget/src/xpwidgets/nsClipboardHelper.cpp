@@ -94,7 +94,7 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_TRUE(data, NS_ERROR_FAILURE);
 
   // populate the string
-  rv = data->AdoptData(ToNewUnicode(aString));
+  rv = data->SetData(aString);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // qi the data object an |nsISupports| so that when the transferable holds

@@ -43,7 +43,6 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
-#include "nsISupportsPrimitives.h"
 #include "nsProxiedService.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"

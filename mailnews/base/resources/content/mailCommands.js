@@ -221,7 +221,7 @@ function NewMessageToSelectedAddresses(type, format, identity) {
     if (composeFields) {
       var addressList = "";
       for (var i = 0; i < addresses.Count(); i++) {
-        addressList = addressList + (i > 0 ? ",":"") + addresses.GetElementAt(i).QueryInterface(Components.interfaces.nsISupportsCString).data;
+        addressList = addressList + (i > 0 ? ",":"") + addresses.QueryElementAt(i,Components.interfaces.nsISupportsString).data;
       }
       composeFields.to = addressList;
       params.composeFields = composeFields;

@@ -3321,8 +3321,7 @@ nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
     if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("gzip"),
                                       start,
                                       end)) {
-        str->SetDataWithLength(sizeof(APPLICATION_GZIP) - 1,
-                               APPLICATION_GZIP);
+        str->SetData(NS_LITERAL_CSTRING(APPLICATION_GZIP));
         haveType = PR_TRUE;
     }
 
@@ -3331,8 +3330,8 @@ nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
         if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("compress"),
                                           start,
                                           end)) {
-            str->SetDataWithLength(sizeof(APPLICATION_COMPRESS) - 1,
-                                   APPLICATION_COMPRESS);
+            str->SetData(NS_LITERAL_CSTRING(APPLICATION_COMPRESS));
+                                           
             haveType = PR_TRUE;
         }
     }
@@ -3342,8 +3341,7 @@ nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
         if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("deflate"),
                                           start,
                                           end)) {
-            str->SetDataWithLength(sizeof(APPLICATION_ZIP) - 1,
-                                   APPLICATION_ZIP);
+            str->SetData(NS_LITERAL_CSTRING(APPLICATION_ZIP));
             haveType = PR_TRUE;
         }
     }

@@ -327,7 +327,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
         NS_WARNING("nsAbLDAPAutoCompFormatter::FormatException(): "
                    "could not create nsISupportsString");
     } else {
-        rv = alert->SetData(alertMsg.get());
+        rv = alert->SetData(alertMsg);
         if (NS_FAILED(rv)) {
             NS_WARNING("nsAbLDAPAutoCompFormatter::FormatException(): "
                      "alert.Set() failed");

@@ -516,13 +516,13 @@ nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
         if (NS_FAILED(rv)) break;
 
         // get the entry string
-        nsXPIDLCString entryString;
-        rv = entry->GetData(getter_Copies(entryString));
+        nsCAutoString entryString;
+        rv = entry->GetData(entryString);
         if (NS_FAILED(rv)) break;
 
-        if (strcmp(entryString, scheme) == 0) {
+        if (entryString.Equals(scheme)) {
             nsXPIDLCString contractID;
-            rv = catmgr->GetCategoryEntry(NS_IURLPARSER_KEY,(const char *)entryString, getter_Copies(contractID));
+            rv = catmgr->GetCategoryEntry(NS_IURLPARSER_KEY, entryString.get(), getter_Copies(contractID));
             if (NS_FAILED(rv)) break;
 
             rv = nsServiceManager::GetService(contractID, NS_GET_IID(nsIURLParser), (nsISupports **)_retval);

@@ -160,7 +160,7 @@ nsHTMLFormatConverter :: AddFlavorToList ( nsISupportsArray* inList, const char*
   nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
                                                     NS_GET_IID(nsISupportsCString), getter_AddRefs(dataFlavor));
   if ( dataFlavor ) {
-    dataFlavor->SetData ( NS_CONST_CAST(char*, inFlavor) );
+    dataFlavor->SetData ( nsDependentCString(inFlavor) );
     // add to list as an nsISupports so the correct interface gets the addref
     // in AppendElement()
     nsCOMPtr<nsISupports> genericFlavor ( do_QueryInterface(dataFlavor) );
@@ -234,11 +234,9 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
     // length represents the length in 1-byte chars, so we need to divide by two.
     nsCOMPtr<nsISupportsString> dataWrapper0 ( do_QueryInterface(aFromData) );
     if ( dataWrapper0 ) {
-      nsXPIDLString data;
-      dataWrapper0->ToString ( getter_Copies(data) );  //еее COPY #1
-      if ( data ) {
-        PRUnichar* castedData = NS_CONST_CAST(PRUnichar*, NS_STATIC_CAST(const PRUnichar*, data));
-        nsAutoString dataStr ( CBufDescriptor(castedData, PR_TRUE, aDataLen) );  //еее try not to copy the data
+      nsAutoString dataStr;
+      dataWrapper0->GetData ( dataStr );  //еее COPY #1
+      if ( !dataStr.IsEmpty() ) {
 
         // note: conversion to text/plain is done inside the clipboard. we do not need to worry 
         // about it here.

@@ -116,13 +116,13 @@ nsStreamConverterService::BuildGraph() {
     while (NS_SUCCEEDED(rv)) {
 
         // get the entry string
-        nsXPIDLCString entryString;
-        rv = entry->GetData(getter_Copies(entryString));
+        nsCAutoString entryString;
+        rv = entry->GetData(entryString);
         if (NS_FAILED(rv)) return rv;
         
         // cobble the entry string w/ the converter key to produce a full contractID.
         nsCAutoString contractID(NS_ISTREAMCONVERTER_KEY);
-        contractID.Append((const char *)entryString);
+        contractID.Append(entryString);
 
         // now we've got the CONTRACTID, let's parse it up.
         rv = AddAdjacency(contractID.get());

@@ -115,7 +115,7 @@ NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windo
     nsCOMPtr<nsISupportsCString> scriptableFolderURI (do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
     NS_ENSURE_TRUE(scriptableFolderURI, NS_ERROR_FAILURE);
 
-    scriptableFolderURI->SetData(aFolderURI);
+    scriptableFolderURI->SetData(nsDependentCString(aFolderURI));
     argsArray->AppendElement(scriptableFolderURI);
 
     nsCOMPtr<nsISupportsPRUint32> scriptableMessageKey (do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID));

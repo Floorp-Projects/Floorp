@@ -269,7 +269,7 @@ NS_IMETHODIMP nsOEImport::GetImportInterface( const char *pImportType, nsISuppor
 					nsOEStringBundle::GetStringByID( OEIMPORT_NAME, name);
 					nsCOMPtr<nsISupportsString> nameString (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
 					if (NS_SUCCEEDED(rv)) {
-						nameString->SetData(name.get());
+						nameString->SetData(name);
 						pGeneric->SetData( "name", nameString);
 						rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
 					}

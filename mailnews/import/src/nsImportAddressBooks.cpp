@@ -313,7 +313,7 @@ NS_IMETHODIMP nsImportGenericAddressBooks::GetData(const char *dataId, nsISuppor
 			if (NS_FAILED( rv))
 				return( rv);
 			if (found) {
-				data->SetData( pData);
+				data->SetData(nsDependentString(pData));
 				*_retval = data;
 				NS_ADDREF( *_retval);
 			}
@@ -543,32 +543,16 @@ NS_IMETHODIMP nsImportGenericAddressBooks::WantsProgress(PRBool *_retval)
 
 void nsImportGenericAddressBooks::SetLogs( nsString& success, nsString& error, nsISupportsString *pSuccess, nsISupportsString *pError)
 {
-	nsString	str;
-	PRUnichar *	pStr = nsnull;
+	nsAutoString str;
 	if (pSuccess) {
-		pSuccess->GetData( &pStr);
-		if (pStr) {
-			str = pStr;
-			nsCRT::free( pStr);
-			pStr = nsnull;
-			str.Append( success);
-			pSuccess->SetData( str.get());
-		}
-		else {
-			pSuccess->SetData( success.get());			
-		}
+		pSuccess->GetData(str);
+        str.Append(success);
+        pSuccess->SetData(success);
 	}
 	if (pError) {
-		pError->GetData( &pStr);
-		if (pStr) {
-			str = pStr;
-			nsCRT::free( pStr);
-			str.Append( error);
-			pError->SetData( str.get());
-		}
-		else {
-			pError->SetData( error.get());			
-		}
+		pError->GetData(str);
+        str.Append(error);
+        pError->SetData(error);
 	}	
 }
 

@@ -1740,11 +1740,12 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
       nsCOMPtr<nsISupportsCString> p(do_QueryInterface(argPrimitive));
       NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
 
-      char *data;
+      nsCAutoString data;
 
-      p->GetData(&data);
+      p->GetData(data);
 
-      JSString *str = ::JS_NewString(cx, data, strlen(data));
+      
+      JSString *str = ::JS_NewStringCopyN(cx, data.get(), data.Length());
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
       *aArgv = STRING_TO_JSVAL(str);
@@ -1755,14 +1756,16 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
       nsCOMPtr<nsISupportsString> p(do_QueryInterface(argPrimitive));
       NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
 
-      PRUnichar *data;
+      nsAutoString data;
 
-      p->GetData(&data);
+      p->GetData(data);
 
       // cast is probably safe since wchar_t and jschar are expected
       // to be equivalent; both unsigned 16-bit entities
-      JSString *str = ::JS_NewUCString(cx, NS_REINTERPRET_CAST(jschar *, data),
-                          nsCRT::strlen(data));
+      JSString *str =
+        ::JS_NewUCStringCopyN(cx,
+                              NS_REINTERPRET_CAST(const jschar *,data.get()),
+                              data.Length());
       NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
       *aArgv = STRING_TO_JSVAL(str);

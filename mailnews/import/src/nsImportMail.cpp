@@ -130,7 +130,7 @@ public:
 	static void ReportError( PRInt32 id, const PRUnichar *pName, nsString *pStream);
 
 private:
-	PRUnichar *			m_pName;	// module name that created this interface
+	nsString			m_pName;	// module name that created this interface
 	nsIMsgFolder *		m_pDestFolder;
 	PRBool				m_deleteDestFolder;
 	PRBool				m_createdFolder;
@@ -207,7 +207,6 @@ nsImportGenericMail::nsImportGenericMail()
 	m_pDestFolder = nsnull;
 	m_deleteDestFolder = PR_FALSE;
 	m_createdFolder = PR_FALSE;
-	m_pName = nsnull;
 
 }
 
@@ -219,9 +218,6 @@ nsImportGenericMail::~nsImportGenericMail()
 		m_pThreadData = nsnull;
 	}
 	
-	if (m_pName)
-		nsCRT::free( m_pName);
-
 	NS_IF_RELEASE( m_pDestFolder);
 	NS_IF_RELEASE( m_pSrcLocation);
 	NS_IF_RELEASE( m_pInterface);
@@ -320,13 +316,10 @@ NS_IMETHODIMP nsImportGenericMail::SetData( const char *dataId, nsISupports *ite
 	}
 	
 	if (!nsCRT::strcasecmp( dataId, "name")) {
-		if (m_pName)
-			nsCRT::free( m_pName);
-		m_pName = nsnull;
 		nsCOMPtr<nsISupportsString> nameString;
 		if (item) {
 			item->QueryInterface( NS_GET_IID(nsISupportsString), getter_AddRefs(nameString));
-			rv = nameString->GetData(&m_pName);
+			rv = nameString->GetData(m_pName);
 		}
 	}
 
@@ -471,12 +464,11 @@ void nsImportGenericMail::GetMailboxName( PRUint32 index, nsISupportsString *pSt
 			nsCOMPtr<nsISupports> iFace( dont_AddRef( pSupports));
 			nsCOMPtr<nsIImportMailboxDescriptor> box( do_QueryInterface( pSupports));
 			if (box) {
-				PRUnichar *pName = nsnull;
-				box->GetDisplayName( &pName);
-				if (pName) {
-					pStr->SetData( pName);
-					nsCRT::free( pName);
-				}
+                nsXPIDLString name;
+                box->GetDisplayName(getter_Copies(name));
+                if (!name.IsEmpty()) {
+                    pStr->SetData(name);
+                }
 			}
 		}
 	}		
@@ -641,33 +633,17 @@ void nsImportGenericMail::ReportError( PRInt32 id, const PRUnichar *pName, nsStr
 
 void nsImportGenericMail::SetLogs( nsString& success, nsString& error, nsISupportsString *pSuccess, nsISupportsString *pError)
 {
-	nsString	str;
-	PRUnichar *	pStr = nsnull;
-	if (pSuccess) {
-		pSuccess->GetData( &pStr);
-		if (pStr) {
-			str = pStr;
-			nsCRT::free( pStr);
-			pStr = nsnull;
-			str.Append( success);
-			pSuccess->SetData( str.get());
-		}
-		else {
-			pSuccess->SetData( success.get());			
-		}
-	}
-	if (pError) {
-		pError->GetData( &pStr);
-		if (pStr) {
-			str = pStr;
-			nsCRT::free( pStr);
-			str.Append( error);
-			pError->SetData( str.get());
-		}
-		else {
-			pError->SetData( error.get());			
-		}
-	}	
+    nsAutoString str;
+    if (pSuccess) {
+        pSuccess->GetData(str);
+        str.Append(success);
+        pSuccess->SetData(str);
+    }
+    if (pError) {
+        pError->GetData(str);
+        str.Append(error);
+        pError->SetData(str);
+    }
 }
 
 NS_IMETHODIMP nsImportGenericMail::CancelImport(void)
@@ -976,8 +952,8 @@ PRBool nsImportGenericMail::CreateFolder( nsIMsgFolder **ppFolder)
   if (NS_FAILED(rv)) 
       return PR_FALSE;
   nsXPIDLString folderName;
-  if (m_pName) {
-    const PRUnichar *moduleName[] = { m_pName };
+  if (!m_pName.IsEmpty()) {
+    const PRUnichar *moduleName[] = { m_pName.get() };
     rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ModuleFolderName").get(),
                                       moduleName, 1,
                                       getter_Copies(folderName));

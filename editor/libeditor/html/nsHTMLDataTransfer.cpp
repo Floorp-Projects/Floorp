@@ -808,15 +808,14 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
       {
-        PRUnichar* text = nsnull;
+        nsAutoString text;
 
-        textDataObj->ToString ( &text );
-        nsAutoString debugDump (text);
-        stuffToPaste.Assign ( text, len / 2 );
+        textDataObj->GetData ( text );
+
+        NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
+        stuffToPaste.Assign ( text.get(), len / 2 );
         nsAutoEditBatch beginBatching(this);
         rv = InsertHTMLWithContext(stuffToPaste, aContextStr, aInfoStr);
-        if (text)
-          nsMemory::Free(text);
       }
     }
     else if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
@@ -824,15 +823,14 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
       nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
       {
-        PRUnichar* text = nsnull;
-        textDataObj->ToString ( &text );
-        stuffToPaste.Assign ( text, len / 2 );
+        nsAutoString text;
+        textDataObj->GetData ( text );
+        NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
+        stuffToPaste.Assign ( text.get(), len / 2 );
         nsAutoEditBatch beginBatching(this);
         // pasting does not inherit local inline styles
         RemoveAllInlineProperties();
         rv = InsertText(stuffToPaste);
-        if (text)
-          nsMemory::Free(text);
       }
     }
     else if (flavor.Equals(NS_LITERAL_STRING(kFileMime)))
@@ -959,22 +957,20 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     
     if (contextDataObj)
     {
-      PRUnichar* text = nsnull;
+      nsAutoString text;
       textDataObj = do_QueryInterface(contextDataObj);
-      textDataObj->ToString ( &text );
-      contextStr.Assign ( text, contextLen / 2 );
-      if (text)
-        nsMemory::Free(text);
+      textDataObj->GetData ( text );
+      NS_ASSERTION(text.Length() <= (contextLen/2), "Invalid length!");
+      contextStr.Assign ( text.get(), contextLen / 2 );
     }
     
     if (infoDataObj)
     {
-      PRUnichar* text = nsnull;
+      nsAutoString text;
       textDataObj = do_QueryInterface(infoDataObj);
-      textDataObj->ToString ( &text );
-      infoStr.Assign ( text, infoLen / 2 );
-      if (text)
-        nsMemory::Free(text);
+      textDataObj->GetData ( text );
+      NS_ASSERTION(text.Length() <= (infoLen/2), "Invalid length!");
+      infoStr.Assign ( text.get(), infoLen / 2 );
     }
 
     if ( doPlaceCaret )
@@ -1268,7 +1264,7 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
 
       dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
       NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
-      rv = dataWrapper->SetData( NS_CONST_CAST(PRUnichar*, buffer.get()) );
+      rv = dataWrapper->SetData(buffer);
       if (NS_FAILED(rv)) return rv;
 
       if (bIsPlainTextControl)
@@ -1290,8 +1286,8 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
         infoWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
         NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
 
-        contextWrapper->SetData ( NS_CONST_CAST(PRUnichar*,parents.get()) );
-        infoWrapper->SetData ( NS_CONST_CAST(PRUnichar*,info.get()) );
+        contextWrapper->SetData ( parents );
+        infoWrapper->SetData ( info );
 
         rv = trans->AddDataFlavor(kHTMLMime);
         if (NS_FAILED(rv)) return rv;
@@ -1383,22 +1379,20 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
       
       if (contextDataObj)
       {
-        PRUnichar* text = nsnull;
+        nsAutoString text;
         textDataObj = do_QueryInterface(contextDataObj);
-        textDataObj->ToString ( &text );
-        contextStr.Assign ( text, contextLen / 2 );
-        if (text)
-          nsMemory::Free(text);
+        textDataObj->GetData ( text );
+        NS_ASSERTION(text.Length() <= (contextLen/2), "Invalid length!");
+        contextStr.Assign ( text.get(), contextLen / 2 );
       }
       
       if (infoDataObj)
       {
-        PRUnichar* text = nsnull;
+        nsAutoString text;
         textDataObj = do_QueryInterface(infoDataObj);
-        textDataObj->ToString ( &text );
-        infoStr.Assign ( text, infoLen / 2 );
-        if (text)
-          nsMemory::Free(text);
+        textDataObj->GetData ( text );
+        NS_ASSERTION(text.Length() <= (infoLen/2), "Invalid length!");
+        infoStr.Assign ( text.get(), infoLen / 2 );
       }
       rv = InsertFromTransferable(trans, contextStr, infoStr);
     }
@@ -1442,7 +1436,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
          NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorString));
     if (flavorString)
     {
-      flavorString->SetData(*flavor);
+      flavorString->SetData(nsDependentCString(*flavor));
       flavorsList->AppendElement(flavorString);
     }
   }
@@ -1459,7 +1453,7 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
            NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorString));
       if (flavorString)
       {
-        flavorString->SetData(*htmlFlavor);
+        flavorString->SetData(nsDependentCString(*htmlFlavor));
         flavorsList->AppendElement(flavorString);
       }
     }
@@ -1581,13 +1575,12 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
       nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
       {
-        PRUnichar* text = nsnull;
-        textDataObj->ToString ( &text );
-        stuffToPaste.Assign ( text, len / 2 );
+        nsAutoString text;
+        textDataObj->GetData ( text );
+        NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
+        stuffToPaste.Assign ( text.get(), len / 2 );
         nsAutoEditBatch beginBatching(this);
         rv = InsertAsPlaintextQuotation(stuffToPaste, 0);
-        if (text)
-          nsMemory::Free(text);
       }
     }
     nsCRT::free(flav);

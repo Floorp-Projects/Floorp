@@ -377,7 +377,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsISupportsString> theString(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
 
     if (NS_SUCCEEDED(rv)) {
-      rv = theString->SetData(NS_ConvertUTF8toUCS2(utf8String).get());
+      rv = theString->SetData(NS_ConvertUTF8toUCS2(utf8String));
       if (NS_SUCCEEDED(rv)) {
         nsISupportsString *temp = theString;
 
@@ -466,9 +466,9 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsISupportsString> theString = do_QueryInterface(aValue);
 
     if (theString) {
-      nsXPIDLString wideString;
+      nsAutoString wideString;
 
-      rv = theString->GetData(getter_Copies(wideString));
+      rv = theString->GetData(wideString);
       if (NS_SUCCEEDED(rv)) {
         rv = SetCharPref(aPrefName, NS_ConvertUCS2toUTF8(wideString).get());
       }
@@ -996,6 +996,35 @@ nsresult nsPrefLocalizedString::Init()
   mUnicodeString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsPrefLocalizedString::GetData(PRUnichar** _retval)
+{
+  nsAutoString data;
+
+  nsresult rv = GetData(data);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  *_retval = ToNewUnicode(data);
+  if (!*_retval)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPrefLocalizedString::SetData(const PRUnichar *aData)
+{
+  return SetData(nsDependentString(aData));
+}
+
+NS_IMETHODIMP
+nsPrefLocalizedString::SetDataWithLength(PRUint32 aLength,
+                                         const PRUnichar* aData)
+{
+  return SetData(Substring(aData, aData + aLength));
 }
 
 //----------------------------------------------------------------------------

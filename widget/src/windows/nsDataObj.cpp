@@ -602,9 +602,9 @@ nsDataObj :: IsInternetShortcut ( )
     flavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
     nsCOMPtr<nsISupportsCString> currentFlavor (do_QueryInterface(genericFlavor));
     if (currentFlavor) {
-      nsXPIDLCString flavorStr;
-      currentFlavor->ToString(getter_Copies(flavorStr));
-      if ( strcmp(flavorStr, kURLMime) == 0 ) {
+      nsCAutoString flavorStr;
+      currentFlavor->GetData(flavorStr);
+      if ( flavorStr.Equals(kURLMime) ) {
         retval = PR_TRUE;         // found it!
         break;
       }
@@ -816,8 +816,8 @@ nsDataObj :: ExtractShortcutURL ( nsString & outURL )
   if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL), &len)) ) {
     nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
     if ( urlObject ) {
-      nsXPIDLString url;
-      urlObject->GetData ( getter_Copies(url) );
+      nsAutoString url;
+      urlObject->GetData ( url );
       outURL = url;
 
       // find the first linefeed in the data, that's where the url ends. trunc the 
@@ -856,17 +856,15 @@ nsDataObj :: ExtractShortcutTitle ( nsString & outTitle )
   if ( NS_SUCCEEDED(mTransferable->GetTransferData(kURLMime, getter_AddRefs(genericURL), &len)) ) {
     nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
     if ( urlObject ) {
-      nsXPIDLString url;
-      nsAutoString holder;
-      urlObject->GetData ( getter_Copies(url) );
-      holder = url;
+      nsAutoString url;
+      urlObject->GetData ( url );
 
       // find the first linefeed in the data, that's where the url ends. we want
       // everything after that linefeed. FindChar() returns -1 if we can't find
-      PRInt32 lineIndex = holder.FindChar ( '\n' );
+      PRInt32 lineIndex = url.FindChar ( '\n' );
       NS_ASSERTION ( lineIndex != -1, "Format for url flavor is <url> <linefeed> <page title>" );
       if ( lineIndex != -1 ) {
-        holder.Mid ( outTitle, lineIndex + 1, (len/2) - (lineIndex + 1) );
+        url.Mid ( outTitle, lineIndex + 1, (len/2) - (lineIndex + 1) );
         rv = NS_OK;    
       }
     }

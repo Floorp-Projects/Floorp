@@ -2520,7 +2520,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
             if (NS_FAILED(rv)) return rv;
             nsCOMPtr<nsISupportsCString> suppString(do_CreateInstance("@mozilla.org/supports-cstring;1", &rv));
             if (!suppString) return rv;
-            rv = suppString->SetData(uri);
+            rv = suppString->SetData(nsDependentCString(uri));
             if (NS_FAILED(rv)) return rv;
             suppArray->AppendElement(suppString);
             wwatch->OpenWindow(0, NAVIGATOR_CHROME_URL, "_blank", "chrome,dialog=no,all", 

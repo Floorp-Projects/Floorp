@@ -162,7 +162,7 @@ NS_IMETHODIMP nsComm4xMailImport::GetImportInterface(const char *pImportType, ns
 
                     nsCOMPtr<nsISupportsString> nameString (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
                     NS_ENSURE_SUCCESS(rv,rv);
-                    nameString->SetData(name.get());
+                    nameString->SetData(name);
                     pGeneric->SetData("name", nameString);
                     rv = pGeneric->QueryInterface(kISupportsIID, (void **)ppInterface);
                 }

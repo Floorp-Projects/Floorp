@@ -330,7 +330,7 @@ nsTransferable :: GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
       rv = nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
                                                NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorWrapper));
       if ( flavorWrapper ) {
-        flavorWrapper->SetData ( NS_CONST_CAST(char*, data->GetFlavor().get()) );
+        flavorWrapper->SetData ( data->GetFlavor() );
         nsCOMPtr<nsISupports> genericWrapper ( do_QueryInterface(flavorWrapper) );
         (*aDataFlavorList)->AppendElement( genericWrapper );
       }
@@ -578,8 +578,8 @@ nsTransferable :: FlavorsTransferableCanImport(nsISupportsArray **_retval)
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
 
         nsCOMPtr<nsISupportsCString> flavorWrapper ( do_QueryInterface (genericFlavor) );
-        nsXPIDLCString flavorStr;
-        flavorWrapper->ToString( getter_Copies(flavorStr) );
+        nsCAutoString flavorStr;
+        flavorWrapper->GetData( flavorStr );
 
         if (!GetDataForFlavor (mDataArray, flavorStr.get()))    // Don't append if already in intrinsic list
           (*_retval)->AppendElement (genericFlavor);
@@ -622,8 +622,8 @@ nsTransferable :: FlavorsTransferableCanExport(nsISupportsArray **_retval)
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
 
         nsCOMPtr<nsISupportsCString> flavorWrapper ( do_QueryInterface (genericFlavor) );
-        nsXPIDLCString flavorStr;
-        flavorWrapper->ToString( getter_Copies(flavorStr) );
+        nsCAutoString flavorStr;
+        flavorWrapper->GetData( flavorStr );
 
         if (!GetDataForFlavor (mDataArray, flavorStr.get()))    // Don't append if already in intrinsic list
           (*_retval)->AppendElement (genericFlavor);

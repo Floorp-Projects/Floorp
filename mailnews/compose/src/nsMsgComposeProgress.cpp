@@ -85,7 +85,7 @@ nsMsgComposeProgress::OpenProgress(nsIDOMWindowInternal *parent,
       do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    strptr->SetData(subject);
+    strptr->SetData(nsDependentString(subject));
 
     array->AppendElement(strptr);
 

@@ -269,7 +269,7 @@ NS_IMETHODIMP nsOutlookImport::GetImportInterface( const char *pImportType, nsIS
 					nsOutlookStringBundle::GetStringByID( OUTLOOKIMPORT_NAME, name);
 					nsCOMPtr<nsISupportsString> nameString (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
 					if (NS_SUCCEEDED(rv)) {
-						nameString->SetData(name.get());
+						nameString->SetData(name);
 						pGeneric->SetData( "name", nameString);
 						rv = pGeneric->QueryInterface( kISupportsIID, (void **)ppInterface);
 					}

@@ -42,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIWindowWatcher.h"
+#include "nsDependentString.h"
 
 #define ALERT_CHROME_URL "chrome://communicator/content/alerts/alert.xul"
 
@@ -78,19 +79,19 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, con
   nsCOMPtr<nsISupportsCString> scriptableImageUrl (do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableImageUrl, NS_ERROR_FAILURE);
 
-  scriptableImageUrl->SetData(aImageUrl);
+  scriptableImageUrl->SetData(nsDependentCString(aImageUrl));
   argsArray->AppendElement(scriptableImageUrl);
 
   nsCOMPtr<nsISupportsString> scriptableAlertTitle (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertTitle, NS_ERROR_FAILURE);
 
-  scriptableAlertTitle->SetData(aAlertTitle);
+  scriptableAlertTitle->SetData(nsDependentString(aAlertTitle));
   argsArray->AppendElement(scriptableAlertTitle);
 
   nsCOMPtr<nsISupportsString> scriptableAlertText (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertText, NS_ERROR_FAILURE);
 
-  scriptableAlertText->SetData(aAlertText);
+  scriptableAlertText->SetData(nsDependentString(aAlertText));
   argsArray->AppendElement(scriptableAlertText);
 
   nsCOMPtr<nsISupportsPRBool> scriptableIsClickable (do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID));
@@ -102,7 +103,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const char * aImageUrl, con
   nsCOMPtr<nsISupportsString> scriptableAlertCookie (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   NS_ENSURE_TRUE(scriptableAlertCookie, NS_ERROR_FAILURE);
 
-  scriptableAlertCookie->SetData(aAlertCookie);
+  scriptableAlertCookie->SetData(nsDependentString(aAlertCookie));
   argsArray->AppendElement(scriptableAlertCookie);
 
   if (aAlertListener)

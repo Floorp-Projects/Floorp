@@ -293,9 +293,7 @@ nsContentAreaDragDrop::ExtractURLFromData(const nsACString & inFlavor, nsISuppor
     // may not be. *shrug*
     nsCOMPtr<nsISupportsString> stringData(do_QueryInterface(inDataWrapper));
     if ( stringData ) {
-      nsXPIDLString data;
-      stringData->GetData(getter_Copies(data));
-      outURL = data;
+      stringData->GetData(outURL);
     }
   }
   else if ( inFlavor.Equals(kURLMime) ) {
@@ -303,8 +301,8 @@ nsContentAreaDragDrop::ExtractURLFromData(const nsACString & inFlavor, nsISuppor
     // out the url piece and return that.
     nsCOMPtr<nsISupportsString> stringData(do_QueryInterface(inDataWrapper));
     if ( stringData ) {
-      nsXPIDLString data;
-      stringData->GetData(getter_Copies(data));
+      nsAutoString data;
+      stringData->GetData(data);
       PRInt32 separator = data.FindChar('\n');
       if ( separator >= 0 )
         outURL = Substring(data, 0, separator);
@@ -914,7 +912,7 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
     nsCOMPtr<nsISupportsString> urlPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
     if ( !urlPrimitive )
       return NS_ERROR_FAILURE;
-    urlPrimitive->SetData(dragData.get());
+    urlPrimitive->SetData(dragData);
     trans->SetTransferData(kURLMime, urlPrimitive, dragData.Length() * 2);
   }
   
@@ -922,7 +920,7 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
   nsCOMPtr<nsISupportsString> htmlPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   if ( !htmlPrimitive )
     return NS_ERROR_FAILURE;
-  htmlPrimitive->SetData(PromiseFlatString(inHTMLString).get());
+  htmlPrimitive->SetData(inHTMLString);
   trans->SetTransferData(kHTMLMime, htmlPrimitive, inHTMLString.Length() * 2);
 
   // add the plain (unicode) text. we use the url for text/unicode data if an anchor
@@ -931,7 +929,7 @@ nsContentAreaDragDrop::CreateTransferable(const nsAString & inURLString, const n
   nsCOMPtr<nsISupportsString> textPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
   if ( !textPrimitive )
     return NS_ERROR_FAILURE;
-  textPrimitive->SetData(PromiseFlatString(inIsAnchor ? inURLString : inTitleString).get());
+  textPrimitive->SetData(inIsAnchor ? inURLString : inTitleString);
   trans->SetTransferData(kUnicodeMime, textPrimitive, (inIsAnchor ? inURLString.Length() : inTitleString.Length()) * 2);  
   
   // add image data, if present. For now, all we're going to do with this is turn it

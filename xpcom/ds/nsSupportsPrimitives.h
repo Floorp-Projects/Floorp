@@ -41,6 +41,7 @@
 
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 class nsSupportsIDImpl : public nsISupportsID
 {
@@ -65,12 +66,12 @@ public:
     NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSCSTRING
 
-    nsSupportsCStringImpl();
-    virtual ~nsSupportsCStringImpl();
+    nsSupportsCStringImpl() { NS_INIT_ISUPPORTS(); }
+    virtual ~nsSupportsCStringImpl() {}
 
 private:
-    char *mData;
-    PRUint32 mLength;
+    
+    nsCString mData;
 };
 
 /***************************************************************************/
@@ -82,12 +83,12 @@ public:
     NS_DECL_NSISUPPORTSPRIMITIVE
     NS_DECL_NSISUPPORTSSTRING
 
-    nsSupportsStringImpl();
-    virtual ~nsSupportsStringImpl();
+    nsSupportsStringImpl() { NS_INIT_ISUPPORTS(); }
+    virtual ~nsSupportsStringImpl() {}
 
 private:
-    PRUnichar *mData;
-    PRUint32 mLength;
+    
+    nsString mData;
 };
 
 /***************************************************************************/

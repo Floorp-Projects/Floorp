@@ -43,7 +43,6 @@
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsIObserverService.h"
-#include "nsISupportsPrimitives.h"
 #include "nsINetModRegEntry.h"
 #include "nsICacheService.h"
 #include "nsIPrefService.h"

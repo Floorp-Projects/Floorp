@@ -665,7 +665,7 @@ ConvertContractIDKeyToString(PLDHashTable *table,
     const nsContractIDTableEntry *entry = 
         NS_REINTERPRET_CAST(const nsContractIDTableEntry *, hdr);
 
-    wrapper->SetData(entry->mContractID);
+    wrapper->SetData(nsDependentCString(entry->mContractID));
     *retval = wrapper;
     NS_ADDREF(*retval);
     return NS_OK;
@@ -1321,11 +1321,11 @@ nsComponentManagerImpl::WriteCategoryManagerToRegistry(PRFileDesc* fd)
         if (!supStr)
             continue;
         
-        nsXPIDLCString categoryType;
-        if (NS_FAILED(supStr->GetData(getter_Copies(categoryType))))
+        nsCAutoString categoryType;
+        if (NS_FAILED(supStr->GetData(categoryType)))
             continue;
 
-        rv = mCategoryManager->EnumerateCategory(categoryType, getter_AddRefs(innerEnum));
+        rv = mCategoryManager->EnumerateCategory(categoryType.get(), getter_AddRefs(innerEnum));
         if (NS_FAILED(rv)) 
             continue;
         
@@ -1338,13 +1338,13 @@ nsComponentManagerImpl::WriteCategoryManagerToRegistry(PRFileDesc* fd)
             if (!supStr)
                 continue;
         
-            nsXPIDLCString category;
-            if (NS_FAILED(supStr->GetData(getter_Copies(category))))
+            nsCAutoString category;
+            if (NS_FAILED(supStr->GetData(category)))
                 continue;
         
             nsXPIDLCString value;
-            rv = mCategoryManager->GetCategoryEntry(categoryType, 
-                                                    category,
+            rv = mCategoryManager->GetCategoryEntry(categoryType.get(), 
+                                                    category.get(),
                                                     getter_Copies(value));
             
             if (NS_FAILED(rv)) continue;
@@ -3067,14 +3067,14 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
         if (!supStr)
             continue;
         
-        nsXPIDLCString loaderType;
-        if (NS_FAILED(supStr->GetData(getter_Copies(loaderType))))
+        nsCAutoString loaderType;
+        if (NS_FAILED(supStr->GetData(loaderType)))
             continue;
         
         // We depend on the loader being created. Add the loader type and
         // create the loader object too.
         nsCOMPtr<nsIComponentLoader> loader;
-        GetLoaderForType(AddLoaderType(loaderType), getter_AddRefs(loader));
+        GetLoaderForType(AddLoaderType(loaderType.get()), getter_AddRefs(loader));
     }
 
     /* iterate over all known loaders and ask them to autoregister. */

@@ -79,53 +79,15 @@ interface nsISupportsID : nsISupportsPrimitive
 [scriptable, uuid(d65ff270-4a1c-11d3-9890-006008962422)]
 interface nsISupportsCString : nsISupportsPrimitive
 {
-    attribute string data;
+    attribute ACString data;
     string toString();
-
-    /**
-     * Note: setting |data| and using |setDataWithLength| make a copy of
-     * the data string argument. Using |adoptData| and |adoptDataWithLength|,
-     * which are not scriptable, subsumes the data string as the internal
-     * buffer.
-     *
-     * Also note that the |length| param should not include space for a null
-     * terminator, nor should it account for the size of a char. It should
-     * only be the number of characters for which there is space in the string.
-     */
-
-    void setDataWithLength(in unsigned long length,
-                           [size_is(length)] in string data);
-
-    [noscript] void adoptData(in charPtr data);
-
-    [noscript] void adoptDataWithLength(in unsigned long length,
-                                        [size_is(length)] in charPtr data);
 };
 
 [scriptable, uuid(d79dc970-4a1c-11d3-9890-006008962422)]
 interface nsISupportsString : nsISupportsPrimitive
 {
-    attribute wstring data;
+    attribute AString data;
     wstring toString();
-
-    /**
-     * Note: setting |data| and using |setDataWithLength| make a copy of
-     * the data string argument. Using |adoptData| and |adoptDataWithLength|,
-     * which are not scriptable, subsumes the data string as the internal
-     * buffer.
-     *
-     * Also note that the |length| param should not include space for a null
-     * terminator, nor should it account for the size of a char. It should
-     * only be the number of characters for which there is space in the string.
-     */
-
-    void setDataWithLength(in unsigned long length,
-                           [size_is(length)] in wstring data);
-
-    [noscript] void adoptData(in unicharPtr data);
-
-    [noscript] void adoptDataWithLength(in unsigned long length,
-                                        [size_is(length)] in unicharPtr data);
 };
 
 /**

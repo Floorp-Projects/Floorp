@@ -660,8 +660,8 @@ nsMsgAccountManagerDataSource::appendGenericSettingsResources(nsIMsgIncomingServ
       if (NS_FAILED(rv) || !catEntry) 
         break;
 
-      nsXPIDLCString entryString;
-      rv = catEntry->GetData(getter_Copies(entryString));
+      nsCAutoString entryString;
+      rv = catEntry->GetData(entryString);
       if (NS_FAILED(rv))
          break;
 

@@ -61,7 +61,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIStringBundle.h"
-#include "nsISupportsPrimitives.h"
 #include "nsProxiedService.h"
 
 #include "nsNetUtil.h"

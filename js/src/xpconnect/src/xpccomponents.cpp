@@ -392,11 +392,10 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
                 nsCOMPtr<nsISupportsCString> holder(do_QueryInterface(isup));
                 if(holder)
                 {
-                    char* name;
-                    if(NS_SUCCEEDED(holder->GetData(&name)) && name)
+                    nsCAutoString name;
+                    if(NS_SUCCEEDED(holder->GetData(name)))
                     {
-                        JSString* idstr = JS_NewStringCopyZ(cx, name);
-                        nsMemory::Free(name);
+                        JSString* idstr = JS_NewStringCopyN(cx, name.get(), name.Length());
                         if(idstr &&
                            JS_ValueToId(cx, STRING_TO_JSVAL(idstr), idp))
                         {

@@ -77,7 +77,6 @@
 #include "nsIChromeRegistry.h" // chromeReg
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
-#include "nsISupportsPrimitives.h"
 #include "nsHashtable.h"
 #include "nsIAtom.h"
 
@@ -611,10 +610,10 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
                rv = enumItem->GetNext(getter_AddRefs(contractid));
                if (NS_FAILED(rv) || !contractid) break;
 
-               nsXPIDLCString contractidString;
-               contractid->ToString (getter_Copies(contractidString));
+               nsCAutoString contractidString;
+               contractid->GetData(contractidString);
         
-               nsCOMPtr <nsIProfileStartupListener> listener = do_CreateInstance(contractidString, &rv);
+               nsCOMPtr <nsIProfileStartupListener> listener = do_CreateInstance(contractidString.get(), &rv);
         
                if (listener) 
                    listener->OnProfileStartup(currentProfileStr);
