@@ -74,6 +74,92 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     case eColor_TextSelectForeground:
         idx = COLOR_HIGHLIGHTTEXT;
         break;
+
+    // New CSS 2 Color definitions
+    case eColor_activeborder:
+      idx = COLOR_ACTIVEBORDER;
+      break;
+    case eColor_activecaption:
+      idx = COLOR_ACTIVECAPTION;
+      break;
+    case eColor_appworkspace:
+      idx = COLOR_DESKTOP;
+      break;
+    case eColor_background:
+      idx = COLOR_BACKGROUND; 
+      break;
+    case eColor_buttonface:
+      idx = COLOR_BTNFACE;
+      break;
+    case eColor_buttonhighlight:
+      idx = COLOR_BTNHIGHLIGHT;
+      break;
+    case eColor_buttonshadow:
+      idx = COLOR_BTNSHADOW;
+      break;
+    case eColor_buttontext:
+      idx = COLOR_BTNTEXT;
+      break;
+    case eColor_captiontext:
+      idx = COLOR_CAPTIONTEXT;
+      break;
+    case eColor_graytext:
+      idx = COLOR_GRAYTEXT;
+      break;
+    case eColor_highlight:
+      idx = COLOR_HIGHLIGHT;
+      break;
+    case eColor_highlighttext:
+      idx = COLOR_HIGHLIGHTTEXT;
+      break;
+    case eColor_inactiveborder:
+      idx = COLOR_INACTIVEBORDER;
+      break;
+    case eColor_inactivecaption:
+      idx = COLOR_INACTIVECAPTION;
+      break;
+    case eColor_inactivecaptiontext:
+      idx = COLOR_INACTIVECAPTIONTEXT;
+      break;
+    case eColor_infobackground:
+      idx = COLOR_INFOBK;
+      break;
+    case eColor_infotext:
+      idx = COLOR_INFOTEXT;
+      break;
+    case eColor_menu:
+      idx = COLOR_MENU;
+      break;
+    case eColor_menutext:
+      idx = COLOR_MENUTEXT;
+      break;
+    case eColor_scrollbar:
+      idx = COLOR_SCROLLBAR;
+      break;
+    case eColor_threeddarkshadow:
+      idx = COLOR_3DDKSHADOW;
+      break;
+    case eColor_threedface:
+      idx = COLOR_3DFACE;
+      break;
+    case eColor_threedhighlight:
+      idx = COLOR_3DHIGHLIGHT;
+      break;
+    case eColor_threedlightshadow:
+      idx = COLOR_3DLIGHT;
+      break;
+    case eColor_threedshadow:
+      idx = COLOR_3DSHADOW;
+      break;
+    case eColor_window:
+      idx = COLOR_WINDOW;
+      break;
+    case eColor_windowframe:
+      idx = COLOR_WINDOWFRAME;
+      break;
+    case eColor_windowtext:
+      idx = COLOR_WINDOWTEXT;
+      break;
     default:
         idx = COLOR_WINDOW;    
         break;

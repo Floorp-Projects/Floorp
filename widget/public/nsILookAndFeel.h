@@ -44,7 +44,38 @@ public:
     eColor_TextBackground,
     eColor_TextForeground,
     eColor_TextSelectBackground,
-    eColor_TextSelectForeground
+    eColor_TextSelectForeground,
+
+    // New CSS 2 color definitions
+    eColor_activeborder,
+    eColor_activecaption,
+    eColor_appworkspace,
+    eColor_background,
+    eColor_buttonface,
+    eColor_buttonhighlight,
+    eColor_buttonshadow,
+    eColor_buttontext,
+    eColor_captiontext,
+    eColor_graytext,
+    eColor_highlight,
+    eColor_highlighttext,
+    eColor_inactiveborder,
+    eColor_inactivecaption,
+    eColor_inactivecaptiontext,
+    eColor_infobackground,
+    eColor_infotext,
+    eColor_menu,
+    eColor_menutext,
+    eColor_scrollbar,
+    eColor_threeddarkshadow,
+    eColor_threedface,
+    eColor_threedhighlight,
+    eColor_threedlightshadow,
+    eColor_threedshadow,
+    eColor_window,
+    eColor_windowframe,
+    eColor_windowtext
+
   } nsColorID;
 
   typedef enum {
