@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.83 $ ';
+$::Version = '$Revision: 1.84 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -321,6 +321,11 @@ sub run_tests {
     my $test_result = 'success';
 
     # Mozilla alive test
+	#
+	# Note: Bloat & MailNews tests depend this on working.
+	# Only disable this test if you know it passes and are
+	# debugging another part of the test sequence.  -mcafee
+	#
     if ($Settings::AliveTest and $test_result eq 'success') {
 	    print_log "Running AliveTest ...\n";
         $test_result = AliveTest($build_dir, $binary, 45);
