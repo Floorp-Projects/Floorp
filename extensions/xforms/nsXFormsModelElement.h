@@ -145,8 +145,14 @@ private:
   /** The MDG for this model */
   nsXFormsMDGEngine mMDG;
 
-  /** List of changed nodes, ie. nodes that have not been informed about changes yet */
+  /**
+   * List of changed nodes, ie. nodes that have not been informed about
+   * changes yet
+   */
   nsXFormsMDGSet    mChangedNodes;
+
+  /* Controls that need to a Refresh() */
+  nsVoidArray       mControlsNeedingRefresh;
 
   // This flag indicates whether or not the document fired DOMContentLoaded
   PRBool mDocumentLoaded;
