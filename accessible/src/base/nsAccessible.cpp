@@ -426,7 +426,7 @@ PRBool nsAccessibleTreeWalker::GetAccessible()
  * Class nsAccessible
  */
 
-//-------------------------`----------------------------
+//-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
 nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): mDOMNode(aNode), mPresShell(aShell), mSiblingIndex(eSiblingsUninitialized)
