@@ -124,7 +124,7 @@
           path = mod.getResultPropertyAt(idx, "path");
           file = inSearchUtils.createLocalFile(path);
           if (file) {
-            file["delete"](false);
+            file.remove(false);
           }
         }
       ]]></body>
