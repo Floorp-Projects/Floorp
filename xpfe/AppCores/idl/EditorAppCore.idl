@@ -39,8 +39,6 @@ interface EditorAppCore : BaseAppCore
 	void beginBatchChanges();
 	void endBatchChanges();
 	
-	void showClipboard();
-	
 	void insertText(in DOMString textToInsert);
 
   void insertLink();

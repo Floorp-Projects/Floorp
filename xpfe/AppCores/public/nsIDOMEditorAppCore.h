@@ -82,8 +82,6 @@ public:
 
   NS_IMETHOD    EndBatchChanges()=0;
 
-  NS_IMETHOD    ShowClipboard()=0;
-
   NS_IMETHOD    InsertText(const nsString& aTextToInsert)=0;
 
   NS_IMETHOD    InsertLink()=0;
@@ -169,7 +167,6 @@ public:
   NS_IMETHOD    Find(const nsString& aSearchTerm, PRBool aMatchCase, PRBool aSearchDown) { return _to Find(aSearchTerm, aMatchCase, aSearchDown); }  \
   NS_IMETHOD    BeginBatchChanges() { return _to BeginBatchChanges(); }  \
   NS_IMETHOD    EndBatchChanges() { return _to EndBatchChanges(); }  \
-  NS_IMETHOD    ShowClipboard() { return _to ShowClipboard(); }  \
   NS_IMETHOD    InsertText(const nsString& aTextToInsert) { return _to InsertText(aTextToInsert); }  \
   NS_IMETHOD    InsertLink() { return _to InsertLink(); }  \
   NS_IMETHOD    InsertImage() { return _to InsertImage(); }  \
