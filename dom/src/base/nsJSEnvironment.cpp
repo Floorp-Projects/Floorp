@@ -350,7 +350,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   return 0;
 }
 
-nsJSContext::nsJSContext(JSRuntime *aRuntime)
+nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 {
   NS_INIT_REFCNT();
 
@@ -420,7 +420,7 @@ nsJSContext::~nsJSContext()
   // Let xpconnect destroy the JSContext when it thinks the time is right.
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
   if (xpc) {
-    xpc->ReleaseJSContext(mContext, PR_FALSE);
+    xpc->ReleaseJSContext(mContext, !mGCOnDestruction);
   } else {
     ::JS_DestroyContext(mContext);
   }
@@ -1493,6 +1493,14 @@ NS_IMETHODIMP
 nsJSContext::SetProcessingScriptTag(PRBool aFlag) 
 {
   mProcessingScriptTag = aFlag;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::SetGCOnDestruction(PRBool aGCOnDestruction)
+{
+  mGCOnDestruction = aGCOnDestruction;
+
   return NS_OK;
 }
 

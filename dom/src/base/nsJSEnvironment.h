@@ -124,6 +124,8 @@ public:
   NS_IMETHOD GetProcessingScriptTag(PRBool * aResult);
   NS_IMETHOD SetProcessingScriptTag(PRBool  aResult);
 
+  NS_IMETHOD SetGCOnDestruction(PRBool aGCOnDestruction);
+
   NS_DECL_NSIXPCSCRIPTNOTIFY
 protected:
   nsresult InitClasses();
@@ -142,6 +144,7 @@ private:
 
   PRPackedBool mIsInitialized;
   PRPackedBool mScriptsEnabled;
+  PRPackedBool mGCOnDestruction;
 
   PRUint32 mBranchCallbackCount;
   PRUint32 mDefaultJSOptions;
