@@ -35,7 +35,7 @@ NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI)
 }
 
 nsresult
-NS_NewURI(nsIURI* *result, nsString2& spec, nsIURI* baseURI)
+NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 {
     char* specStr = spec.ToNewCString();
     nsresult rv = NS_NewURI(result, specStr, baseURI);
@@ -92,7 +92,7 @@ NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result)
 }
 
 nsresult
-NS_MakeAbsoluteURI(nsString2& spec, nsIURI* baseURI, nsString2& result)
+NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
 {
     char* specStr = spec.ToNewCString();
     char* resultStr;

@@ -24,7 +24,7 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIEventSinkGetter.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 // Warning: These functions should NOT be defined with NS_NET because
 // the intention is that they'll be linked with the library/DLL that 
@@ -34,7 +34,7 @@ extern nsresult
 NS_NewURI(nsIURI* *result, const char* spec, nsIURI* baseURI = nsnull);
 
 extern nsresult
-NS_NewURI(nsIURI* *result, nsString2& spec, nsIURI* baseURI = nsnull);
+NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull);
 
 extern nsresult
 NS_OpenURI(nsIURI* uri, nsIInputStream* *result);
@@ -46,6 +46,6 @@ extern nsresult
 NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result);
 
 extern nsresult
-NS_MakeAbsoluteURI(nsString2& spec, nsIURI* baseURI, nsString2& result);
+NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result);
 
 #endif // nsNeckoUtil_h__
