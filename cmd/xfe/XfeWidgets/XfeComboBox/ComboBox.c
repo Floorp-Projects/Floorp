@@ -1828,9 +1828,9 @@ XfeComboBoxSetTextString(Widget w,String string)
 
 	if (cp->combo_box_type != XmCOMBO_BOX_EDITABLE)
 	{
-		return NULL;
+		return;
 	}
 
-	return InvokeSetTextProc(cp->title,string);
+	InvokeSetTextProc(cp->title,string);
 }
 /*----------------------------------------------------------------------*/
