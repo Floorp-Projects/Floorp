@@ -57,7 +57,7 @@ public:
   // create an external app handler and binds it with a mime info object which represents
   // how we want to dispose of this content
   // aFileExtension --> the extension we need to append to our temp file INCLUDING the ".". i.e. .mp3
-  nsExternalAppHandler * CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension);
+  nsExternalAppHandler * CreateNewExternalHandler(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension, nsISupports * aWindowContext);
  
   // GetMIMEInfoForMimeType --> this will eventually be part of an interface but for now
   // it's only used internally. Given a content type, look up the user override information to 
@@ -116,13 +116,14 @@ public:
   nsExternalAppHandler();
   virtual ~nsExternalAppHandler();
 
-  virtual nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension);
+  virtual nsresult Init(nsIMIMEInfo * aMIMEInfo, const char * aFileExtension, nsISupports * aWindowContext);
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
   nsCString mTempFileExtension;
   nsCOMPtr<nsIMIMEInfo> mMimeInfo;
   nsCOMPtr<nsIOutputStream> mOutStream; // output stream to the temp file...
+  nsCOMPtr<nsISupports> mWindowContext; 
 
   // the canceled flag is set if the user canceled the launching of this application before we finished
   // saving the data to a temp file...
