@@ -60,6 +60,7 @@ PRStatus mmio_FileSeek(MmioFile *mmio, PRInt32 offset, PRSeekWhence whence)
 PRInt32  mmio_FileRead(MmioFile *mmio, char *dest, PRInt32 count)
 {
     static PRFileMapProtect prot = PR_PROT_READONLY;
+    static PRInt64 fsize_l;
 
     /* First see if we are going to try and read past the end of the file
      * and shorten count if we are.
@@ -82,13 +83,14 @@ PRInt32  mmio_FileRead(MmioFile *mmio, char *dest, PRInt32 count)
 	    mmio->msize = 0;
 	}
 
-	mmio->fileMap = PR_CreateFileMap(mmio->fd, mmio->fsize, prot);
+	LL_UI2L(fsize_l, mmio->fsize);
+	mmio->fileMap = PR_CreateFileMap(mmio->fd, fsize_l, prot);
 
 	if(!mmio->fileMap) {
 	    return -1;
 	}
 
-	mmio->addr = PR_MemMap(mmio->fileMap, 0, mmio->fsize);
+	mmio->addr = PR_MemMap(mmio->fileMap, 0, fsize_l);
 
 	if(!mmio->addr) {
 	    return -1;
