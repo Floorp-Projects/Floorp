@@ -337,6 +337,12 @@
     list-style-image      : url("chrome://messenger/skin/server-remote-lock.gif");
   }
 
+/* POP3 folders */
+.folderMenuItem[IsServer="true"][ServerType="pop3"][IsSecure="true"]
+  {
+    list-style-image      : url("chrome://messenger/skin/server-remote-lock.gif");
+  }
+
 /* Local Servers */
 .folderMenuItem[IsServer="true"][ServerType="none"]
   {
