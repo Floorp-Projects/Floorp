@@ -119,6 +119,16 @@ interface jsdIDebuggerService : nsISupports
     attribute jsdICallHook functionHook;
 
     /**
+     * Link native frames in call stacks.
+     */
+    const unsigned long ENABLE_NATIVE_FRAMES = 0x01;
+    
+    /**
+     * Debugger service flags.
+     */
+    attribute unsigned long flags;
+    
+    /**
      * |true| if the debugger should register an app-start observer in order
      * to begin collecting debug information when mozilla is launched.
      */
@@ -619,6 +629,20 @@ interface jsdIStackFrame : jsdIEphemeral
     [noscript] readonly attribute JSDStackFrameInfo JSDStackFrameInfo;
    
     /**
+     * True if stack frame represents a native frame.
+     */
+    readonly attribute boolean isNative;
+    /**
+     * True if stack frame represents a frame created as a result of a debugger
+     * evaluation.
+     */
+    readonly attribute boolean isDebugger;
+    /**
+     * True if stack frame is constructing a new object.
+     */
+    readonly attribute boolean isConstructing;
+
+    /**
      * Link to the caller's stack frame.
      */
     readonly attribute jsdIStackFrame callingFrame;
@@ -627,7 +651,11 @@ interface jsdIStackFrame : jsdIEphemeral
      */
     readonly attribute jsdIContext    executionContext;
     /**
-     * Script running in this stack frame.
+     * Function name executing in this stack frame.
+     */
+    readonly attribute string         functionName;
+    /**
+     * Script running in this stack frame, null for native frames.
      */
     readonly attribute jsdIScript     script;
     /**

@@ -89,7 +89,7 @@ _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSStackFrame *fp,
         buf = JS_smprintf("%sentering %s %s this: %0x\n",
                 _indentSpaces(indent++),
                 funName,
-                JS_IsContructorFrame(cx, fp) ? "constructing":"",
+                JS_IsConstructorFrame(cx, fp) ? "constructing":"",
                 (int)JS_GetFrameThis(cx, fp));
     }
     else
@@ -119,7 +119,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSStackFrame *fp, JSBool before,
     if (!jsdc || !jsdc->inited)
         return JS_FALSE;
     
-    if (before && JS_IsContructorFrame(cx, fp))
+    if (before && JS_IsConstructorFrame(cx, fp))
         jsd_Constructing(jsdc, cx, JS_GetFrameThis(cx, fp), fp);
 
     if (hook)
