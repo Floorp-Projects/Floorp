@@ -54,7 +54,9 @@ MIDL_GENERATED_FILES = \
 		dlldata.c \
 		$(NULL)
 
-GARBAGE += $(MIDL_GENERATED_FILES) done_gen $(CSRCS)
+SRCDIR_CSRCS	= $(addprefix $(srcdir)/,$(CSRCS))
+
+GARBAGE += $(MIDL_GENERATED_FILES) done_gen $(CSRCS) $(SRCDIR_CSRCS)
 
 FORCE_SHARED_LIB = 1
 
@@ -63,15 +65,22 @@ include $(topsrcdir)/config/rules.mk
 $(MIDL_GENERATED_FILES): done_gen
 
 done_gen: ISimpleDOMNode.idl
+	$(RM) $(SRCDIR_CSRCS)
 	$(MIDL) $(srcdir)/ISimpleDOMNode.idl
 	cp ISimpleDOMNode.h ../..
 	cp ISimpleDOMNode_i.c ../../ISimpleDOMNode_iid.h
 	touch $@
 
-$(addprefix $(srcdir)/,$(CSRCS)): %.c: done_gen
-	@if cmp -s $(@F) $@; then cp $(@F) $@; fi
+copy_csrcs: done_gen
+	@for f in $(CSRCS); do \
+	    if test ! -f $(srcdir)/$$f; then \
+		cp $$f $(srcdir)/$$f; \
+	    fi ; \
+	done
 
-export:: done_gen $(addprefix $(srcdir)/,$(CSRCS))
+$(SRCDIR_CSRCS): copy_csrcs
+
+export:: done_gen copy_csrcs
 
 libs::
 	regsvr32 /s $(DIST)/bin/$(SHARED_LIBRARY)
