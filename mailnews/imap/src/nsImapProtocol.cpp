@@ -4687,7 +4687,10 @@ void nsImapProtocol::Capability()
     {
       PRUint32 capabilityFlag = GetServerStateParser().GetCapabilityFlag();
       if (capabilityFlag & kLiteralPlusCapability)
+      {
         GetServerStateParser().SetCapabilityFlag(capabilityFlag & ~kLiteralPlusCapability);
+        m_hostSessionList->SetCapabilityForHost(GetImapServerKey(), capabilityFlag & ~kLiteralPlusCapability);
+      }
     }
 }
 
