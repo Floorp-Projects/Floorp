@@ -36,7 +36,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.5 2001/09/25 23:29:30 nelsonb%netscape.com Exp $
+ * $Id: secoidt.h,v 1.6 2001/11/06 02:46:37 nelsonb%netscape.com Exp $
  */
 
 #include "secitem.h"
@@ -307,10 +307,10 @@ typedef enum {
 } SECSupportExtenTag;
 
 struct SECOidDataStr {
-    SECItem oid;
-    SECOidTag offset;
-    char *desc;
-    unsigned long mechanism;
+    SECItem            oid;
+    SECOidTag          offset;
+    const char *       desc;
+    unsigned long      mechanism;
     SECSupportExtenTag supportedExtension;	
     				/* only used for x.509 v3 extensions, so
 				   that we can print the names of those
