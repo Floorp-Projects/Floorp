@@ -361,7 +361,7 @@ nsListCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagName)
   if (inList)
     rv = aEditorShell->RemoveList(listType.get());    
   else
-    rv = aEditorShell->MakeOrChangeList(listType.get(), PR_FALSE);
+    rv = aEditorShell->MakeOrChangeList(listType.get(), PR_FALSE, nsnull);
     
   return rv;
 }

@@ -202,13 +202,9 @@ function SetElementEnabled(element, doEnable)
   if ( element )
   {
     if ( doEnable )
-    {
-      element.removeAttribute( "disabled" );
-    }
+      element.removeAttribute("disabled");
     else
-    {
-      element.setAttribute( "disabled", "true" );
-    }
+      element.setAttribute("disabled", "true");
   }
   else
   {
@@ -234,8 +230,9 @@ function GetIOService()
   if (gIOService)
     return gIOService;
 
-  var CID = Components.classes["@mozilla.org/network/io-service;1"];
-  gIOService = CID.getService(Components.interfaces.nsIIOService);
+  gIOService = Components.classes["@mozilla.org/network/io-service;1"]
+               .getService(Components.interfaces.nsIIOService);
+
   return gIOService;
 }
 
@@ -353,6 +350,7 @@ function MakeRelativeUrl(url)
   var urlHost = GetHost(inputUrl);
   if (docHost != urlHost)
     return inputUrl;
+
 
   // Get just the file path part of the urls
   var docPath = IOService.extractUrlPart(docUrl, IOService.url_Path, {start:0}, {end:0}); 

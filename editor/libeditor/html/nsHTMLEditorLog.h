@@ -103,7 +103,7 @@ public:
 
   NS_IMETHOD SetBackgroundColor(const nsAReadableString& aColor);
   NS_IMETHOD SetBodyAttribute(const nsAReadableString& aAttr, const nsAReadableString& aValue);
-  NS_IMETHOD MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList);
+  NS_IMETHOD MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList, const nsAReadableString& aBulletType);
   NS_IMETHOD Indent(const nsAReadableString& aIndent);
   NS_IMETHOD Align(const nsAReadableString& aAlign);
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection);

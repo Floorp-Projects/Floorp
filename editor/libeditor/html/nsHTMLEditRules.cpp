@@ -490,7 +490,7 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction, aCancel, aHandled);
     case kMakeList:
-      return WillMakeList(aSelection, info->blockType, info->entireList, aCancel, aHandled);
+      return WillMakeList(aSelection, info->blockType, info->entireList, info->bulletType, aCancel, aHandled);
     case kIndent:
       return WillIndent(aSelection, aCancel, aHandled);
     case kOutdent:
@@ -2349,6 +2349,7 @@ nsresult
 nsHTMLEditRules::WillMakeList(nsISelection *aSelection, 
                               const nsAReadableString *aListType, 
                               PRBool aEntireList,
+                              const nsAReadableString *aBulletType,
                               PRBool *aCancel,
                               PRBool *aHandled,
                               const nsAReadableString *aItemType)
@@ -2572,6 +2573,14 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
           if (NS_FAILED(res)) return res;
         }
       }
+      nsCOMPtr<nsIDOMElement> curElement = do_QueryInterface(curNode);
+      if (aBulletType && !aBulletType->IsEmpty()) {
+        res = mHTMLEditor->SetAttribute(curElement, NS_ConvertASCIItoUCS2("type"), *aBulletType);
+      }
+      else {
+        res = mHTMLEditor->RemoveAttribute(curElement, NS_LITERAL_STRING("type"));
+      }
+      if (NS_FAILED(res)) return res;
       continue;
     }
     
@@ -2711,7 +2720,7 @@ nsHTMLEditRules::WillMakeDefListItem(nsISelection *aSelection,
 {
   // for now we let WillMakeList handle this
   nsAutoString listType(NS_LITERAL_STRING("dl"));
-  return WillMakeList(aSelection, &listType, aEntireList, aCancel, aHandled, aItemType);
+  return WillMakeList(aSelection, &listType, aEntireList, nsnull, aCancel, aHandled, aItemType);
 }
 
 nsresult

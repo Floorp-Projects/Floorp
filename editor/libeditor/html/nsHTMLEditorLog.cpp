@@ -660,7 +660,7 @@ nsHTMLEditorLog::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMEle
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList)
+nsHTMLEditorLog::MakeOrChangeList(const nsAReadableString& aListType, PRBool entireList, const nsAReadableString& aBulletType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
@@ -674,7 +674,7 @@ nsHTMLEditorLog::MakeOrChangeList(const nsAReadableString& aListType, PRBool ent
     Flush();
   }
 
-  return nsHTMLEditor::MakeOrChangeList(aListType, entireList);
+  return nsHTMLEditor::MakeOrChangeList(aListType, entireList, aBulletType);
 }
 
 NS_IMETHODIMP
