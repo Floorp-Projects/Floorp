@@ -510,7 +510,11 @@ void StylePositionImpl::ResetFrom(const nsStylePosition* aParent, nsIPresContext
   mLeftOffset.SetAutoValue();
   mTopOffset.SetAutoValue();
   mWidth.SetAutoValue();
+  mMinWidth.SetCoordValue(0);
+  mMaxWidth.Reset();
   mHeight.SetAutoValue();
+  mMinHeight.SetCoordValue(0);
+  mMaxHeight.Reset();
   mZIndex.SetAutoValue();
 }
 
@@ -1115,22 +1119,27 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
   if (-1 == mDataCode) {
     mDataCode = 0;
   }
-  if ((mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE) || 
-      (mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)) {
-    // time to emulate a sub-document
-    // This is ugly, but we need to map style once to determine display type
-    // then reset and map it again so that all local style is preserved
-    mFont.ResetFrom(nsnull, aPresContext);
-    mColor.ResetFrom(nsnull, aPresContext);
-    mSpacing.ResetFrom(nsnull, aPresContext);
-    mList.ResetFrom(nsnull, aPresContext);
-    mText.ResetFrom(nsnull, aPresContext);
-    mPosition.ResetFrom(nsnull, aPresContext);
-    mDisplay.ResetFrom(nsnull, aPresContext);
 
-    if ((nsnull != mRules) && (0 < mRules->Count())) {
-      MapStyleData  data(this, aPresContext);
-      mRules->EnumerateForwards(MapStyleRule, &data);
+  nsCompatibility quirkMode = eCompatibility_Standard;
+  aPresContext->GetCompatibilityMode(quirkMode);
+  if (eCompatibility_NavQuirks == quirkMode) {
+    if ((mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE) || 
+        (mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)) {
+      // time to emulate a sub-document
+      // This is ugly, but we need to map style once to determine display type
+      // then reset and map it again so that all local style is preserved
+      mFont.ResetFrom(nsnull, aPresContext);
+      mColor.ResetFrom(nsnull, aPresContext);
+      mSpacing.ResetFrom(nsnull, aPresContext);
+      mList.ResetFrom(nsnull, aPresContext);
+      mText.ResetFrom(nsnull, aPresContext);
+      mPosition.ResetFrom(nsnull, aPresContext);
+      mDisplay.ResetFrom(nsnull, aPresContext);
+
+      if ((nsnull != mRules) && (0 < mRules->Count())) {
+        MapStyleData  data(this, aPresContext);
+        mRules->EnumerateForwards(MapStyleRule, &data);
+      }
     }
   }
 
