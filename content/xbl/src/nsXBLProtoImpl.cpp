@@ -187,6 +187,12 @@ nsXBLProtoImpl::DestroyMembers(nsXBLProtoImplMember* aBrokenMember)
     }
     curr->Destroy(compiled);
   }
+
+  // Now clear out mMembers so we don't try to call Destroy() on them again
+  delete mMembers;
+  mMembers = nsnull;
+  mConstructor = nsnull;
+  mDestructor = nsnull;
 }
 
 nsresult
