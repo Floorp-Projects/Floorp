@@ -1180,15 +1180,19 @@ nsHTMLInputElement::Select()
     // If the DOM event was not canceled (e.g. by a JS event handler
     // returning false)
     if (status == nsEventStatus_eIgnore) {
-      nsCOMPtr<nsIEventStateManager> esm;
-      if (NS_OK == presContext->GetEventStateManager(getter_AddRefs(esm))) {
-        PRInt32 currentState;
-        //XXX Fix for bug 135345 - ESM currently does not check to see if we have
-        //focus before attempting to set focus again and may cause infinite recursion.
-        //For now check if we have focus and do not set focus again if already focused.
-        esm->GetContentState(this, currentState);
-        if (!(currentState & NS_EVENT_STATE_FOCUS)) {
-          esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+      if (presContext) {
+        nsCOMPtr<nsIEventStateManager> esm;
+        presContext->GetEventStateManager(getter_AddRefs(esm));
+        if (esm) {
+          // XXX Fix for bug 135345 - ESM currently does not check to see if we
+          // have focus before attempting to set focus again and may cause
+          // infinite recursion.  For now check if we have focus and do not set
+          // focus again if already focused.
+          PRInt32 currentState;
+          esm->GetContentState(this, currentState);
+          if (!(currentState & NS_EVENT_STATE_FOCUS)) {
+            esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+          }
         }
       }
 
