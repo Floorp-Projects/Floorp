@@ -108,6 +108,8 @@ sub _getDistDirectory()
 
 sub Checkout()
 {
+	unless ( $main::pull{all} || $main::pull{runtime} ) { return;}
+
 	# give application activation a chance to happen
 	WaitNextEvent();
 	WaitNextEvent();
@@ -131,6 +133,15 @@ sub Checkout()
 		#// beard:  additional libraries needed to make shared libraries link.
 		#//$session->checkout("mozilla/lib/mac/PowerPlant")	|| die "checkout failure";
 		#//$session->checkout("mozilla/lib/xlate")				|| die "checkout failure";
+	} elsif ($main::pull{runtime}) {
+		$session->checkout("mozilla/build")							|| die "checkout failure";
+		$session->checkout("mozilla/cmd/macfe/projects/interfaceLib")	|| die "checkout failure";
+		$session->checkout("mozilla/config")						|| die "checkout failure";
+		$session->checkout("mozilla/lib/mac/NSStdLib")				|| die "checkout failure";
+		$session->checkout("mozilla/lib/mac/NSRuntime")				|| die "checkout failure";
+		$session->checkout("mozilla/lib/mac/MoreFiles")				|| die "checkout failure";
+		$session->checkout("mozilla/lib/mac/MacMemoryAllocator")	|| die "checkout failure";
+		$session->checkout("mozilla/nsprpub")						|| die "checkout failure";  
 	}
 }
 
@@ -170,54 +181,54 @@ sub EmptyTree($)
     closedir(DIR);
 }
 
+
 #//--------------------------------------------------------------------------------------------------
-#// Build the 'dist' directory
+#// Build the runtime 'dist' directories
 #//--------------------------------------------------------------------------------------------------
 
-sub BuildDist()
+sub BuildRuntimeDist()
 {
-	unless ( $main::build{dist} ) { return;}
+	unless ( $main::build{dist} || $main::build{dist_runtime} ) { return;}
 	_assertRightDirectory();
 	
-	# activate MacPerl
-	ActivateApplication('McPL');
-
 	my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
-	my $dist_dir = _getDistDirectory(); # the subdirectory with the libs and executable.
-	if ($main::CLOBBER_DIST_ALL)
-	{
-		print "Clobbering ALL files inside :mozilla:dist:\n";
-		EmptyTree($distdirectory.":");
-	}
-	else
-	{
-		if ($main::CLOBBER_DIST_LIBS)
-		{
-			print "Clobbering library aliases and executables inside ".$dist_dir."\n";
-			EmptyTree($dist_dir);
-		}
-	}
 
-	# we really do not need all these paths, but many client projects include them
-	mkpath([ ":mozilla:dist:", ":mozilla:dist:client:", ":mozilla:dist:client_debug:", ":mozilla:dist:client_stubs:" ]);
-	mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
-
-	if ($main::MOZ_FULLCIRCLE)
-	{
-		mkpath([ $dist_dir."TalkBack"]);
-	}
-	
 	#MAC_COMMON
 	InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
 	InstallFromManifest(":mozilla:lib:mac:NSRuntime:include:MANIFEST",				"$distdirectory:mac:common:");
 	InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:");
 	InstallFromManifest(":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST",		"$distdirectory:mac:common:");
-	InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
 	InstallFromManifest(":mozilla:lib:mac:MoreFiles:MANIFEST",						"$distdirectory:mac:common:morefiles:");
 
 	#INCLUDE
 	InstallFromManifest(":mozilla:config:mac:MANIFEST",								"$distdirectory:config:");
 	InstallFromManifest(":mozilla:config:mac:MANIFEST_config",						"$distdirectory:config:");
+	
+	#NSPR	
+    InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",						"$distdirectory:nspr:");		
+    InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:");		
+    InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",							"$distdirectory:nspr:");		
+    InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:");		
+    InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:");
+
+	print("--- Runtime Dist export complete ----\n")
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Build the client 'dist' directories
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildClientDist()
+{
+	unless ( $main::build{dist} ) { return;}
+	_assertRightDirectory();
+	
+	my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
+
+	InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
+
+	#INCLUDE
 
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
 	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
@@ -225,13 +236,6 @@ sub BuildDist()
 	InstallFromManifest(":mozilla:include:MANIFEST",								"$distdirectory:include:");		
 	InstallFromManifest(":mozilla:cmd:macfe:pch:MANIFEST",							"$distdirectory:include:");
 	InstallFromManifest(":mozilla:cmd:macfe:utility:MANIFEST",						"$distdirectory:include:");
-
-	#NSPR	
-    InstallFromManifest(":mozilla:nsprpub:pr:include:MANIFEST",						"$distdirectory:nspr:");		
-    InstallFromManifest(":mozilla:nsprpub:pr:src:md:mac:MANIFEST",					"$distdirectory:nspr:mac:");		
-    InstallFromManifest(":mozilla:nsprpub:lib:ds:MANIFEST",							"$distdirectory:nspr:");		
-    InstallFromManifest(":mozilla:nsprpub:lib:libc:include:MANIFEST",				"$distdirectory:nspr:");		
-    InstallFromManifest(":mozilla:nsprpub:lib:msgc:include:MANIFEST",				"$distdirectory:nspr:");
 
 	#INTL
 	#CHARDET
@@ -504,6 +508,50 @@ sub BuildDist()
    InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
    InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST",				"$distdirectory:mailnews:");
 
+	print("--- Client Dist export complete ----\n")
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Build the 'dist' directory
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildDist()
+{
+	unless ( $main::build{dist} || $main::build{dist_runtime} ) { return;}
+	_assertRightDirectory();
+	
+	# activate MacPerl
+	ActivateApplication('McPL');
+
+	my $distdirectory = ":mozilla:dist"; # the parent directory in dist, including all the headers
+	my $dist_dir = _getDistDirectory(); # the subdirectory with the libs and executable.
+	if ($main::CLOBBER_DIST_ALL)
+	{
+		print "Clobbering ALL files inside :mozilla:dist:\n";
+		EmptyTree($distdirectory.":");
+	}
+	else
+	{
+		if ($main::CLOBBER_DIST_LIBS)
+		{
+			print "Clobbering library aliases and executables inside ".$dist_dir."\n";
+			EmptyTree($dist_dir);
+		}
+	}
+
+	# we really do not need all these paths, but many client projects include them
+	mkpath([ ":mozilla:dist:", ":mozilla:dist:client:", ":mozilla:dist:client_debug:", ":mozilla:dist:client_stubs:" ]);
+	mkpath([ ":mozilla:dist:viewer:", ":mozilla:dist:viewer_debug:" ]);
+
+	if ($main::MOZ_FULLCIRCLE)
+	{
+		mkpath([ $dist_dir."TalkBack"]);
+	}
+
+	BuildRuntimeDist();
+	BuildClientDist();
+	
 	print("--- Dist export complete ----\n")
 }
 
@@ -522,7 +570,6 @@ sub BuildStubs()
 	#// Clean projects
 	#//
 	BuildProjectClean(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",              	"Stubs");
-	BuildProjectClean(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",				"Stubs");
 
 	print("--- Stubs projects complete ----\n")
 }
@@ -569,21 +616,16 @@ sub BuildOneProject($$$$$$)
 
 
 #//--------------------------------------------------------------------------------------------------
-#// Build common projects
+#// Build runtime projects
 #//--------------------------------------------------------------------------------------------------
 
-sub BuildCommonProjects()
+sub BuildRuntimeProjects()
 {
-	unless( $main::build{common} ) { return; }
+	unless( $main::build{runtime} ) { return; }
 	_assertRightDirectory();
 
 	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
 	my($D) = $main::DEBUG ? "Debug" : "";
-
-	#//
-	#// Stub libraries
-	#//
-	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 
 	#//
 	#// Shared libraries
@@ -640,7 +682,33 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",					"NSPR20$D.shlb", "NSPR20.toc", 1, $main::ALIAS_SYM_FILES, 0);
+
+	print("--- Runtime projects complete ----\n")
+}
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Build common projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildCommonProjects()
+{
+	unless( $main::build{common} ) { return; }
+	_assertRightDirectory();
+
+	# $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+	my($D) = $main::DEBUG ? "Debug" : "";
+
+	#//
+	#// Stub libraries
+	#//
+
+	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 	
+	#//
+	#// Shared libraries
+	#//
+
 	BuildOneProject(":mozilla:jpeg:macbuild:JPEG.mcp",							"JPEG$D.shlb", "JPEG.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:modules:libreg:macbuild:libreg.mcp",				"libreg$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
@@ -1083,6 +1151,7 @@ sub BuildProjects()
 	MakeResourceAliases();
 	MakeLibAliases();
 	BuildStubs();
+	BuildRuntimeProjects();
 	BuildCommonProjects();
 	BuildInternationalProjects();
 	BuildLayoutProjects();
