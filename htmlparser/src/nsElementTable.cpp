@@ -147,7 +147,7 @@ TagList  gHeadingTags={6,{eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLT
 TagList  gTableCloseTags={6,{eHTMLTag_td,eHTMLTag_tr,eHTMLTag_th,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot}};
 TagList  gTRCloseTags={3,{eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th}};
 TagList  gTDCloseTags={2,{eHTMLTag_td,eHTMLTag_th}};
-TagList  gDTCloseTags={3,{eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p}};
+TagList  gDTCloseTags={1,{eHTMLTag_p}};
 TagList  gULCloseTags={1,{eHTMLTag_li}};
 TagList  gULAutoClose={2,{eHTMLTag_p,eHTMLTag_ul}}; //fix bug 50261..
 
@@ -454,7 +454,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
       /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-      /*parent,incl,exclgroups*/          kDLChild, kFlowEntity, kNone,	
+      /*parent,incl,exclgroups*/          kDLChild|kInlineEntity, kFlowEntity|kDLChild, kNone,	// added kDLChild to the inclusion bit - Refer bug 102370
       /*special props, prop-range*/       kNoPropagate|kMustCloseSelf|kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
 
@@ -498,7 +498,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_dl,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gDLRootTags,&gRootTags,	//fix bug 57634
-      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*autoclose starttags and endtags*/ 0,0,0,&gDLKids,           // DT/DD should not contain DL - bug 100466
       /*parent,incl,exclgroups*/          kBlock, kSelf|kFlowEntity, kNone,	
       /*special props, prop-range*/       kOmitWS, kNoPropRange,
       /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown);
@@ -508,8 +508,8 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
       /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-      /*parent,incl,exclgroups*/          kDLChild|kInlineEntity, kFlowEntity-kHeading, kNone,	// dt's parent group is inline - bug 65467
-      /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,
+      /*parent,incl,exclgroups*/          kDLChild|kInlineEntity, (kFlowEntity-kHeading)|kDLChild, kNone,	// dt's parent group is inline - bug 65467
+      /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,                // // added kDLChild to the inclusion bit - Refer bug 102370
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1940,13 +1940,15 @@ PRBool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
     case eHTMLTag_bdo:     
     case eHTMLTag_big:       
     case eHTMLTag_blink:
-    case eHTMLTag_del:     
+    case eHTMLTag_del:
+    case eHTMLTag_em:
     case eHTMLTag_font:    
     case eHTMLTag_i:         
     case eHTMLTag_ins:
     case eHTMLTag_q:
     case eHTMLTag_s:       
     case eHTMLTag_small:
+    case eHTMLTag_strong:
     case eHTMLTag_strike:    
     case eHTMLTag_sub:     
     case eHTMLTag_sup:       
@@ -1961,11 +1963,9 @@ PRBool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
     case eHTMLTag_cite:      
     case eHTMLTag_code:
     case eHTMLTag_dfn:       
-    case eHTMLTag_em:
     case eHTMLTag_kbd:     
     case eHTMLTag_samp:      
     case eHTMLTag_span:    
-    case eHTMLTag_strong:
     case eHTMLTag_var:
       result=PR_FALSE;
     default:

@@ -265,43 +265,6 @@ static CSharedParserObjects* gSharedParserObjects=0;
 
 //-------------------------------------------------------------------------
 
-/**********************************************************************************
-  This class is used as an interface between an external agent (like the DOM) and
-  the parser. It will contain a stack full of tagnames, which is used in our
-  parser/paste API's.
- **********************************************************************************/
-
-class nsTagStack : public nsITagStack {
-public:
-  nsTagStack() : nsITagStack(), mTags(0) {
-  }
-
-  virtual ~nsTagStack() {
-  }
-
-  virtual void Push(PRUnichar* aTag){
-    mTags.Push(aTag);
-  }
-  
-  virtual PRUnichar*  Pop(void){
-    PRUnichar* result=(PRUnichar*)mTags.Pop();
-    return result;
-  }
-  
-  virtual PRUnichar*  TagAt(PRUint32 anIndex){
-    PRUnichar* result=0;
-    if(anIndex<(PRUint32)mTags.GetSize())
-      result=(PRUnichar*)mTags.ObjectAt(anIndex);
-    return result;
-  }
-
-  virtual PRUint32    GetSize(void){
-    return mTags.GetSize();
-  }
-
-  nsDeque mTags;  //will hold a deque of prunichars...
-};
-
 CSharedParserObjects& GetSharedObjects() {
   if (!gSharedParserObjects) {
     gSharedParserObjects = new CSharedParserObjects();
@@ -1418,6 +1381,7 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
         result = mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
       }
       //Ref. to bug 61462.
+      mParserContext->mRequest = 0;
     }//if
   }
 
@@ -1778,55 +1742,31 @@ nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer, void* aKey,
  *  @param   
  *  @return  
  */
-nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,nsDTDMode aMode){
+nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,
+                                 void* aKey,
+                                 nsVoidArray& aTagStack,
+                                 PRUint32 anInsertPos,
+                                 const nsString& aMimeType,
+                                 nsDTDMode aMode){
 
-  nsresult result=NS_OK;
+  nsresult result = NS_OK;
   nsAutoString  theContext;
-  PRUint32 theCount=aStack.GetSize();
-  PRUint32 theIndex=0;
-  while(theIndex++<theCount){
+  PRUint32 theCount = aTagStack.Count();
+  PRUint32 theIndex = 0;
+  
+  while (theIndex++ < theCount){
     theContext.AppendWithConversion("<");
-    theContext.Append(aStack.TagAt(theCount-theIndex));
+    theContext.Append((PRUnichar*)aTagStack.ElementAt(theCount - theIndex));
     theContext.AppendWithConversion(">");
   }
+  
   theContext.AppendWithConversion("<endnote>");       //XXXHack! I'll make this better later.
-  nsAutoString theBuffer(theContext);
+    
+  //now it's time to try to build the model from this fragment
 
-#if 0
-      //use this to force a buffer-full of content as part of a paste operation...
-    theBuffer.Append("<title>title</title><a href=\"one\">link</a>");
-#else
-
-//#define USEFILE
-#ifdef USEFILE
-
-  const char* theFile="c:/temp/rhp.html";
-  fstream input(theFile,ios::in);
-  char buffer[1024];
-  int count=1;
-  while(count) {
-    input.getline(buffer,sizeof(buffer));
-    count=input.gcount();
-    if(0<count) {
-      buffer[count-1]=0;
-      theBuffer.Append(buffer,count-1);
-    }
-  }
-
-#else
-      //this is the normal code path for paste...
-    theBuffer.Append(aSourceBuffer); 
-#endif
-
-#endif
-
-  if(theBuffer.Length()){
-    //now it's time to try to build the model from this fragment
-
-    mObserversEnabled=PR_FALSE; //disable observers for fragments
-    result=Parse(theBuffer,(void*)&theBuffer,aMimeType,PR_FALSE,PR_TRUE);
-    mObserversEnabled=PR_TRUE; //now reenable.
-  }
+  mObserversEnabled = PR_FALSE; //disable observers for fragments
+  result = Parse(theContext + aSourceBuffer,(void*)&theContext,aMimeType,PR_FALSE,PR_TRUE);
+  mObserversEnabled = PR_TRUE; //now reenable.
 
   return result;
 }
@@ -2108,10 +2048,11 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
   if (nsnull != mObserver) {
     mObserver->OnStartRequest(request, aContext);
   }
-  mParserContext->mStreamListenerState=eOnStart;
-  mParserContext->mAutoDetectStatus=eUnknownDetect;
-  mParserContext->mRequest=request;
-  mParserContext->mDTD=0;
+  mParserContext->mStreamListenerState = eOnStart;
+  mParserContext->mAutoDetectStatus = eUnknownDetect;
+  mParserContext->mDTD = 0;
+  mParserContext->mRequest = request;
+
   nsresult rv;
   char* contentType = nsnull;
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -2723,20 +2664,6 @@ void nsParser::DebugDumpSource(nsOutputStream& aStream) {
   }
 }
 #endif
-
-
-/**
- * Call this to get a newly constructed tagstack
- * @update	gess 5/05/99
- * @param   aTagStack is an out parm that will contain your result
- * @return  NS_OK if successful, or NS_HTMLPARSER_MEMORY_ERROR on error
- */
-nsresult nsParser::CreateTagStack(nsITagStack** aTagStack){
-  *aTagStack=new nsTagStack();
-  if(*aTagStack)
-    return NS_OK;
-  return NS_ERROR_OUT_OF_MEMORY;
-}
 
 /** 
  * Get the channel associated with this parser

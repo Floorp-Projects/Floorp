@@ -460,7 +460,10 @@ nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
 }
 
 nsresult nsHTMLTokenizer::DidTokenize(PRBool aFinalChunk) {
-  return ScanDocStructure(aFinalChunk);
+  // Bug 100397 
+  // In quirks mode we want residual style, in NavDTD, to  kick  
+  // in regardless of whether the document is wellformed or not.
+  return (mFlags & NS_IPARSER_FLAG_STRICT_MODE)? ScanDocStructure(aFinalChunk):NS_OK;
 }
 
 /**

@@ -3133,7 +3133,7 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
   mContextStack.AppendElement(mCurrentContext);
   mCurrentContext = mHeadContext;
 
-  if (nsnull != mHead) {
+  if (mHead && aNode.GetNodeType() == eHTMLTag_head) {
     rv = AddAttributes(aNode, mHead);
   }
 
