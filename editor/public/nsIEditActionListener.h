@@ -28,6 +28,7 @@
 class nsIDOMNode;
 class nsString;
 class nsIDOMCharacterData;
+class nsIDOMSelection;
 
 /*
 Editor Action Listener interface to outside world
@@ -209,6 +210,17 @@ public:
                            PRInt32               aLength,
                            nsresult              aResult)=0;
 
+  /** 
+   * Called before the editor deletes the selection.
+   * @param aSelection   The selection to be deleted
+   */
+  NS_IMETHOD WillDeleteSelection(nsIDOMSelection *aSelection)=0;
+
+  /** 
+   * Called after the editor deletes the selection.
+   * @param aSelection   The selection, after deletion
+   */
+  NS_IMETHOD DidDeleteSelection(nsIDOMSelection *aSelection)=0;
 };
 
 #endif //nsIEditActionListener_h__

@@ -267,35 +267,6 @@ public:
    */
   NS_IMETHOD GetListTags(nsStringArray *aTagList)=0;
 
-  /** Add a block parent node around the selected content.
-    * Only legal nestings are allowed.
-    * An example of use is for indenting using blockquote nodes.
-    *
-    * @param aParentTag  The tag from which the new parent is created.
-    */
-  NS_IMETHOD AddBlockParent(nsString& aParentTag)=0;
-
-  /** Replace the block parent node around the selected content with a new block
-    * parent node of type aParentTag.
-    * Only legal replacements are allowed.
-    * An example of use are is transforming H1 to LI ("paragraph type transformations").
-    * For containing block transformations (transforming UL to OL, for example),
-    * the caller should RemoveParent("UL"), set the selection appropriately,
-    * and call AddBlockParent("OL").
-    *
-    * @param aParentTag  The tag from which the new parent is created.
-    */
-  NS_IMETHOD ReplaceBlockParent(nsString& aParentTag)=0;
-
-  /** remove the paragraph style from the selection */
-  NS_IMETHOD RemoveParagraphStyle()=0;
-
-  /** remove block parent of type aTagToRemove from the selection.
-    * if aTagToRemove is null, the nearest enclosing block that 
-    * is <B>not</B> a root is removed.
-    */
-  NS_IMETHOD RemoveParent(const nsString &aParentTag)=0;
-
   /**
    * Document me!
    * 
@@ -391,6 +362,42 @@ public:
    * 
    */
   NS_IMETHOD SetBodyAttribute(const nsString& aAttr, const nsString& aValue)=0;
+  
+  // ------------------------------------------------
+  // THE FOLLOWING ARE IF'D OUT SINCE THEY ARE UNUSED
+#if 0
+  /** Add a block parent node around the selected content.
+    * Only legal nestings are allowed.
+    * An example of use is for indenting using blockquote nodes.
+    *
+    * @param aParentTag  The tag from which the new parent is created.
+    */
+  NS_IMETHOD AddBlockParent(nsString& aParentTag)=0;
+
+  /** Replace the block parent node around the selected content with a new block
+    * parent node of type aParentTag.
+    * Only legal replacements are allowed.
+    * An example of use are is transforming H1 to LI ("paragraph type transformations").
+    * For containing block transformations (transforming UL to OL, for example),
+    * the caller should RemoveParent("UL"), set the selection appropriately,
+    * and call AddBlockParent("OL").
+    *
+    * @param aParentTag  The tag from which the new parent is created.
+    */
+  NS_IMETHOD ReplaceBlockParent(nsString& aParentTag)=0;
+
+  /** remove the paragraph style from the selection */
+  NS_IMETHOD RemoveParagraphStyle()=0;
+
+  /** remove block parent of type aTagToRemove from the selection.
+    * if aTagToRemove is null, the nearest enclosing block that 
+    * is <B>not</B> a root is removed.
+    */
+  NS_IMETHOD RemoveParent(const nsString &aParentTag)=0;
+#endif
+  // END OF UNUSED API POINTS
+  // ------------------------------------------------
+
 };
 
 #endif // nsIHTMLEditor_h__

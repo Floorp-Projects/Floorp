@@ -104,7 +104,7 @@ nsresult TextEditorTest::InitDoc()
 {
   nsresult result = mEditor->SelectAll();
   TEST_RESULT(result);
-  result = mEditor->DeleteSelection(nsIEditor::eDeleteNext);
+  result = mEditor->DeleteSelection(nsIEditor::eNext);
   TEST_RESULT(result);
   return result;
 }

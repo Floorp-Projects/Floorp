@@ -86,6 +86,25 @@ public:
     kIterBackward
   };
 
+  enum OperationID
+  {
+    kOpIgnore = -1,
+    kOpNone = 0,
+    kOpUndo,
+    kOpRedo,
+    kOpSetTextProperty,
+    kOpRemoveTextProperty,
+    kOpInsertNode,
+    kOpCreateNode,
+    kOpDeleteNode,
+    kOpSplitNode,
+    kOpJoinNode,
+    kOpDeleteText,
+    kOpInsertText,
+    kOpInsertIMEText,
+    kOpDeleteSelection
+  };
+
   static const char* kMOZEditorBogusNodeAttr;
   static const char* kMOZEditorBogusNodeValue;
 
@@ -110,7 +129,6 @@ public:
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
   NS_IMETHOD GetPresShell(nsIPresShell **aPS);
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);
-  NS_IMETHOD GetBodyElement(nsIDOMElement **aElement);
   
   NS_IMETHOD EnableUndo(PRBool aEnable);
   NS_IMETHOD Do(nsITransaction *aTxn);
@@ -216,7 +234,7 @@ public:
 
   
   NS_IMETHOD InsertTextImpl(const nsString& aStringToInsert);
-  NS_IMETHOD DeleteSelectionImpl(ESelectionCollapseDirection aAction);
+  NS_IMETHOD DeleteSelectionImpl(EDirection aAction);
 
 
 protected:
@@ -264,22 +282,11 @@ protected:
                                        DeleteElementTxn ** aTxn);
 
 
-  /** Create an aggregate transaction for deleting current selection
-   *  Used by all methods that need to delete current selection,
-   *    then insert something new to replace it
-   *  @param nsString& aTxnName is the name of the aggregated transaction
-   *  @param EditTxn **aAggTxn is the return location of the aggregate TXN,
-   *    with the DeleteSelectionTxn as the first child ONLY
-   *    if there was a selection to delete.
-   */
-  NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, EditAggregateTxn **aAggTxn);
-
-
-  NS_IMETHOD CreateTxnForDeleteSelection(ESelectionCollapseDirection aAction,
+  NS_IMETHOD CreateTxnForDeleteSelection(EDirection aAction,
                                               EditAggregateTxn  ** aTxn);
 
   NS_IMETHOD CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange, 
-                                              ESelectionCollapseDirection aAction, 
+                                              EDirection aAction, 
                                               EditAggregateTxn    *aTxn);
 
 
@@ -302,10 +309,6 @@ protected:
     */
   NS_IMETHOD CreateTxnForRemoveStyleSheet(nsICSSStyleSheet* aSheet, RemoveStyleSheetTxn* *aTxn);
   
-  /** insert aStringToInsert as the first text in the document
-    */
-  NS_IMETHOD DoInitialInsert(const nsString & aStringToInsert);
-
   NS_IMETHOD PrepareToInsertText(nsCOMPtr<nsIDOMCharacterData> *aOutTextNode, PRInt32 *aOutOffset);
 
   NS_IMETHOD DeleteText(nsIDOMCharacterData *aElement,
@@ -369,6 +372,18 @@ protected:
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
 
 public:
+
+  /** return the body element */
+  /** It would make more sense for this to be in nsHTMLEditor, no? */
+  NS_IMETHOD GetBodyElement(nsIDOMElement **aElement);
+
+  /** All editor operations which alter the doc should be prefaced
+   *  with a call to StartOperation, naming the action and direction */
+  NS_IMETHOD StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
+
+  /** All editor operations which alter the doc should be followed
+   *  with a call to EndOperation, naming the action and direction */
+  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
 
   /** return the string that represents text nodes in the content tree */
   static nsresult GetTextNodeTag(nsString& aOutString);

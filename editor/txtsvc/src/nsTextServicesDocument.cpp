@@ -1871,7 +1871,7 @@ nsTextServicesDocument::DeleteSelection()
 
   // Now delete the actual content!
 
-  result = mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
+  result = mEditor->DeleteSelection(nsIEditor::ePrevious);
 
   if (NS_FAILED(result))
   {

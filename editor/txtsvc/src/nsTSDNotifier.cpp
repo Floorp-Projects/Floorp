@@ -208,3 +208,17 @@ nsTSDNotifier::DidDeleteText(nsIDOMCharacterData *aTextNode, PRInt32 aOffset, PR
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTSDNotifier::WillDeleteSelection(nsIDOMSelection *aSelection)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTSDNotifier::DidDeleteSelection(nsIDOMSelection *aSelection)
+{
+  return NS_OK;
+}
+
+
+

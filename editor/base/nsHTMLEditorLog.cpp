@@ -142,7 +142,7 @@ nsHTMLEditorLog::RemoveInlineProperty(nsIAtom *aProperty, const nsString *aAttri
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::DeleteSelection(nsIEditor::ESelectionCollapseDirection aAction)
+nsHTMLEditorLog::DeleteSelection(nsIEditor::EDirection aAction)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 

@@ -36,8 +36,10 @@
 #include "nsIEnumerator.h"
 #include "nsLayoutCID.h"
 #include "nsIEditProperty.h"
+#include "nsEditorUtils.h"
 
 static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
+
 
 #define CANCEL_OPERATION_IF_READONLY_OR_DISABLED \
   if ((mFlags & nsIHTMLEditor::eEditorReadonlyMask) || (mFlags & nsIHTMLEditor::eEditorDisabledMask)) \
@@ -53,6 +55,8 @@ static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
 nsTextEditRules::nsTextEditRules()
 : mEditor(nsnull)
 , mFlags(0) // initialized to 0 ("no flags set").  Real initial value is given in Init()
+, mActionNesting(0)
+, mLockRulesSniffing(PR_FALSE)
 {
 }
 
@@ -109,19 +113,53 @@ nsTextEditRules::SetFlags(PRUint32 aFlags)
     {
       // we are converting TO a plaintext editor
       // put a "white-space: pre" style on the body
-		  nsCOMPtr<nsIDOMElement> bodyElement;
-		  nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
-			if (NS_FAILED(res)) return res;
-			if (!bodyElement) return NS_ERROR_NULL_POINTER;
+      nsCOMPtr<nsIDOMElement> bodyElement;
+      nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));
+      if (NS_FAILED(res)) return res;
+      if (!bodyElement) return NS_ERROR_NULL_POINTER;
       // not going through the editor to do this.
       // XXX This is not the right way to do this; we need an editor style
       // system so that we can add & replace style attrs.
-	    bodyElement->SetAttribute("style", PlaintextInitalStyle);
+      bodyElement->SetAttribute("style", PlaintextInitalStyle);
     }
   }
   mFlags = aFlags;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsTextEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
+{
+  if (mLockRulesSniffing) return NS_OK;
+  
+  nsAutoLockRulesSniffing lockIt(this);
+  
+  mActionNesting++;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
+{
+  if (mLockRulesSniffing) return NS_OK;
+  
+  nsAutoLockRulesSniffing lockIt(this);
+  
+  NS_PRECONDITION(mActionNesting>0, "bad action nesting!");
+  nsresult res = NS_OK;
+  if (!--mActionNesting)
+  {
+    nsCOMPtr<nsIDOMSelection>selection;
+    res = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+  
+    // detect empty doc
+    res = CreateBogusNodeIfNeeded(selection);
+  }
+  return res;
+}
+
 
 NS_IMETHODIMP 
 nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection, 
@@ -336,7 +374,7 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
     if (NS_FAILED(res)) return res;
     if (!bCollapsed)
     {
-      res = mEditor->DeleteSelection(nsIEditor::eDoNothing);
+      res = mEditor->DeleteSelection(nsIEditor::eNone);
       if (NS_FAILED(res)) return res;
     }
 
@@ -378,6 +416,11 @@ nsTextEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
 nsresult
 nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
 {
+  // we only need to execute the stuff below if we are a plaintext editor.
+  // html editors have a different mechanism for putting in mozBR's
+  // (because there are a bunch more placesyou have to worry about it in html) 
+  if (!nsIHTMLEditor::eEditorPlaintextMask & mFlags) return NS_OK;
+
   // if we are at the end of the document, we need to insert 
   // a special mozBR following the normal br, and then set the
   // selection to after the mozBR.
@@ -412,16 +455,16 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
       // with a mozBR already exiting after it.  In this case we have to
       // move the selection to after the mozBR so it will show up on the
       // empty line.
-	  nsCOMPtr<nsIDOMNode> nextNode;
-	  res = GetNextHTMLNode(nearNode, &nextNode);
-	  if (NS_FAILED(res)) return res;
-	  if (IsMozBR(nextNode))
-	  {
-		res = nsEditor::GetNodeLocation(nextNode, &selNode, &selOffset);
-		if (NS_FAILED(res)) return res;
-		res = aSelection->Collapse(selNode,selOffset+1);
-		if (NS_FAILED(res)) return res;
-	  }
+      nsCOMPtr<nsIDOMNode> nextNode;
+      res = GetNextHTMLNode(nearNode, &nextNode);
+      if (NS_FAILED(res)) return res;
+      if (IsMozBR(nextNode))
+      {
+        res = nsEditor::GetNodeLocation(nextNode, &selNode, &selOffset);
+        if (NS_FAILED(res)) return res;
+        res = aSelection->Collapse(selNode,selOffset+1);
+        if (NS_FAILED(res)) return res;
+      }
     }
   }
   return res;
@@ -465,7 +508,7 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   if (NS_FAILED(res)) return res;
   if (!bCollapsed)
   {
-    res = mEditor->DeleteSelection(nsIEditor::eDoNothing);
+    res = mEditor->DeleteSelection(nsIEditor::eNone);
     if (NS_FAILED(res)) return res;
   }
 
@@ -533,9 +576,9 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
           // splitting anchor twice sets newTextNode as an empty text node between 
           // two halves of the original text node
           res = mEditor->SplitNode(anchorAsText, offset, getter_AddRefs(newTextNode));
-					if (NS_SUCCEEDED(res)) {
-						res = mEditor->SplitNode(anchorAsText, 0, getter_AddRefs(newTextNode));
-					}
+          if (NS_SUCCEEDED(res)) {
+            res = mEditor->SplitNode(anchorAsText, 0, getter_AddRefs(newTextNode));
+          }
         }
       }
       // now we have the new text node we are going to insert into.  
@@ -552,8 +595,8 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
           {
             nsCOMPtr<nsIDOMNode>parent;
             res = newTextNode->GetParentNode(getter_AddRefs(parent));
-	          if (NS_FAILED(res)) return res;
-	          if (!parent) return NS_ERROR_NULL_POINTER;
+            if (NS_FAILED(res)) return res;
+            if (!parent) return NS_ERROR_NULL_POINTER;
             res = mEditor->RemoveTextPropertiesForNode (newTextNode, parent, 0, 0, nsIEditProperty::b, nsnull);
           }
         }
@@ -566,8 +609,8 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
           {
             nsCOMPtr<nsIDOMNode>parent;
             res = newTextNode->GetParentNode(getter_AddRefs(parent));
-	          if (NS_FAILED(res)) return res;
-	          if (!parent) return NS_ERROR_NULL_POINTER;
+            if (NS_FAILED(res)) return res;
+            if (!parent) return NS_ERROR_NULL_POINTER;
             res = mEditor->RemoveTextPropertiesForNode (newTextNode, parent, 0, 0, nsIEditProperty::i, nsnull);
           }
         }
@@ -580,8 +623,8 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
           {
             nsCOMPtr<nsIDOMNode>parent;
             res = newTextNode->GetParentNode(getter_AddRefs(parent));
-	          if (NS_FAILED(res)) return res;
-	          if (!parent) return NS_ERROR_NULL_POINTER;
+            if (NS_FAILED(res)) return res;
+            if (!parent) return NS_ERROR_NULL_POINTER;
             res = mEditor->RemoveTextPropertiesForNode (newTextNode, parent, 0, 0, nsIEditProperty::u, nsnull);
           }
         }
@@ -633,7 +676,7 @@ nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInSta
       if (!bodyElement) return NS_ERROR_NULL_POINTER;
       parent = do_QueryInterface(bodyElement);
       // offset already set to 0
-    }		
+    }    
     if (!parent) { return NS_ERROR_NULL_POINTER; }
 
     nsAutoString attr, value;
@@ -719,8 +762,8 @@ nsTextEditRules::CreateFontStyleForInsertText(nsIDOMNode      *aNewTextNode,
   {
     nsCOMPtr<nsIDOMNode>parent;
     res = aNewTextNode->GetParentNode(getter_AddRefs(parent));
-	  if (NS_FAILED(res)) return res;
-	  if (!parent) return NS_ERROR_NULL_POINTER;
+    if (NS_FAILED(res)) return res;
+    if (!parent) return NS_ERROR_NULL_POINTER;
     res = mEditor->RemoveTextPropertiesForNode (aNewTextNode, parent, 0, 0, nsIEditProperty::font, &aAttr);
   }
   return res;
@@ -738,8 +781,8 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode,
   nsresult res;
   nsCOMPtr<nsIDOMNode>parent;
   res = aNode->GetParentNode(getter_AddRefs(parent));
-	if (NS_FAILED(res)) return res;
-	if (!parent) return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(res)) return res;
+  if (!parent) return NS_ERROR_NULL_POINTER;
 
   nsAutoString tag;
   aTag->ToString(tag);
@@ -754,8 +797,8 @@ nsTextEditRules::InsertStyleNode(nsIDOMNode      *aNode,
   if (NS_FAILED(res)) return res;
 
   res = mEditor->CreateNode(tag, parent, offsetInParent, aNewNode);
-	if (NS_FAILED(res)) return res;
-	if (!aNewNode) return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(res)) return res;
+  if (!aNewNode) return NS_ERROR_NULL_POINTER;
 
   res = mEditor->DeleteNode(aNode);
   if (NS_SUCCEEDED(res))
@@ -849,8 +892,8 @@ nsTextEditRules::InsertStyleAndNewTextNode(nsIDOMNode *aParentNode,
   if (NS_FAILED(res)) { return res; }
 
   res = mEditor->CreateNode(textNodeTag, newStyleNode, 0, getter_AddRefs(newTextNode));
-	if (NS_FAILED(res)) return res;
-	if (!newTextNode) return NS_ERROR_NULL_POINTER;
+  if (NS_FAILED(res)) return res;
+  if (!newTextNode) return NS_ERROR_NULL_POINTER;
 
   // if we have a selection collapse the selection to the beginning of the new text node
   if (aInOutSelection) {
@@ -901,7 +944,7 @@ nsTextEditRules::DidRemoveTextProperty(nsIDOMSelection *aSelection, nsresult aRe
 
 nsresult
 nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, 
-                                     nsIEditor::ESelectionCollapseDirection aCollapsedAction, 
+                                     nsIEditor::EDirection aCollapsedAction, 
                                      PRBool *aCancel,
                                      PRBool *aHandled)
 {
@@ -924,10 +967,10 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
     mEditor->GetTextSelectionOffsets(aSelection, start, end);
     if (end==start)
     { // collapsed selection
-      if (nsIEditor::eDeletePrevious==aCollapsedAction && 0<start) { // del back
+      if (nsIEditor::ePrevious==aCollapsedAction && 0<start) { // del back
         mPasswordText.Cut(start-1, 1);
       }
-      else if (nsIEditor::eDeleteNext==aCollapsedAction) {      // del forward
+      else if (nsIEditor::eNext==aCollapsedAction) {      // del forward
         mPasswordText.Cut(start, 1);
       }
       // otherwise nothing to do for this collapsed selection
@@ -949,7 +992,7 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
 // if we ended up with consecutive text nodes, merge them
 nsresult
 nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, 
-                                    nsIEditor::ESelectionCollapseDirection aCollapsedAction, 
+                                    nsIEditor::EDirection aCollapsedAction, 
                                     nsresult aResult)
 {
   nsresult res = aResult;  // if aResult is an error, we just return it
@@ -961,14 +1004,13 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
   // insert a special bogus text node with a &nbsp; character in it.
   if (NS_SUCCEEDED(res)) // only do this work if DeleteSelection completed successfully
   {
-    res = CreateBogusNodeIfNeeded(aSelection);
     // if we don't have an empty document, check the selection to see if any collapsing is necessary
     if (!mBogusNode)
     {
       // get the node that contains the selection point
       nsCOMPtr<nsIDOMNode>anchor;
       PRInt32 offset;
-		  res = aSelection->GetAnchorNode(getter_AddRefs(anchor));
+      res = aSelection->GetAnchorNode(getter_AddRefs(anchor));
       if (NS_FAILED(res)) return res;
       if (!anchor) return NS_ERROR_NULL_POINTER;
       res = aSelection->GetAnchorOffset(&offset);
@@ -1005,8 +1047,8 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
               siblingNodeAsText->GetLength(&siblingLength);
               nsCOMPtr<nsIDOMNode> parentNode;
               res = selectedNode->GetParentNode(getter_AddRefs(parentNode));
-							if (NS_FAILED(res)) return res;
-							if (!parentNode) return NS_ERROR_NULL_POINTER;
+              if (NS_FAILED(res)) return res;
+              if (!parentNode) return NS_ERROR_NULL_POINTER;
               res = mEditor->JoinNodes(siblingNode, selectedNode, parentNode);
               // selectedNode will remain after the join, siblingNode is removed
             }
@@ -1022,11 +1064,11 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
               selectedNodeAsText->GetLength(&selectedNodeLength);
               nsCOMPtr<nsIDOMNode> parentNode;
               res = selectedNode->GetParentNode(getter_AddRefs(parentNode));
-							if (NS_FAILED(res)) return res;
-							if (!parentNode) return NS_ERROR_NULL_POINTER;
+              if (NS_FAILED(res)) return res;
+              if (!parentNode) return NS_ERROR_NULL_POINTER;
 
               res = mEditor->JoinNodes(selectedNode, siblingNode, parentNode);
-        			if (NS_FAILED(res)) return res;
+              if (NS_FAILED(res)) return res;
               // selectedNode will remain after the join, siblingNode is removed
               // set selection
               res = aSelection->Collapse(siblingNode, selectedNodeLength);
@@ -1206,12 +1248,16 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   if (!mEditor) { return NS_ERROR_NULL_POINTER; }
   if (mBogusNode) return NS_OK;  // let's not create more than one, ok?
+
+  // tell rules system to not do any post-processing
+  nsAutoRules beginRulesSniffing(mEditor, nsEditor::kOpIgnore, nsIEditor::eNone);
   
-	nsCOMPtr<nsIDOMElement> bodyElement;
-	nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));  
-	if (NS_FAILED(res)) return res;
-	if (!bodyElement) return NS_ERROR_NULL_POINTER;
-	nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  
+  nsresult res = mEditor->GetBodyElement(getter_AddRefs(bodyElement));  
+  if (NS_FAILED(res)) return res;
+  if (!bodyElement) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
 
   // now we've got the body tag.
   // iterate the body tag, looking for editable content
@@ -1270,14 +1316,14 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsIDOMSelection *aSelection,
   {
     // Get the current text length.
     // Get the length of inString.
-		// Get the length of the selection.
-		//   If selection is collapsed, it is length 0.
-		//   Subtract the length of the selection from the len(doc) 
-		//   since we'll delete the selection on insert.
-		//   This is resultingDocLength.
+    // Get the length of the selection.
+    //   If selection is collapsed, it is length 0.
+    //   Subtract the length of the selection from the len(doc) 
+    //   since we'll delete the selection on insert.
+    //   This is resultingDocLength.
     // If (resultingDocLength) is at or over max, cancel the insert
     // If (resultingDocLength) + (length of input) > max, 
-		//    set aOutString to subset of inString so length = max
+    //    set aOutString to subset of inString so length = max
     PRInt32 docLength;
     res = mEditor->GetDocumentLength(&docLength);
     if (NS_FAILED(res)) { return res; }

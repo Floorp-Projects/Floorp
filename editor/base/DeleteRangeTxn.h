@@ -87,7 +87,7 @@ protected:
 
   NS_IMETHOD CreateTxnsToDeleteContent(nsIDOMNode *aParent, 
                                              PRUint32 aOffset, 
-                                             nsIEditor::ESelectionCollapseDirection aAction);
+                                             nsIEditor::EDirection aAction);
   
 protected:
   
