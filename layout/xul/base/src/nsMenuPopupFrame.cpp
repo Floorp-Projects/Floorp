@@ -483,3 +483,23 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
     aHandledFlag = PR_TRUE;
   }
 }
+
+NS_IMETHODIMP
+nsMenuPopupFrame::DismissChain()
+{
+  // Get our menu parent.
+  nsIFrame* frame;
+  GetParent(&frame);
+  if (frame) {
+    nsMenuFrame* menuFrame = (nsMenuFrame*)frame;
+    menuFrame->OpenMenu(PR_FALSE);
+
+    // Get the parent.
+    nsCOMPtr<nsIMenuParent> menuParent;
+    menuFrame->GetMenuParent(getter_AddRefs(menuParent));
+    if (menuParent)
+      menuParent->DismissChain();
+  }
+
+  return NS_OK;
+}

@@ -407,3 +407,31 @@ nsMenuBarFrame::Escape()
   // Clear our current menu item if we've got one.
   SetCurrentMenuItem(nsnull);
 }
+
+void 
+nsMenuBarFrame::Enter()
+{
+  if (!mCurrentMenu)
+    return;
+
+  // See if our menu is open.
+  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+  if (menuFrame->IsOpen()) {
+    // Let the child menu handle this.
+//    menuFrame->Enter();
+    return;
+  }
+
+  // It's us. Open the current menu.
+  menuFrame->OpenMenu(PR_TRUE);
+  menuFrame->SelectFirstItem();
+}
+
+
+NS_IMETHODIMP
+nsMenuBarFrame::DismissChain()
+{
+  SetCurrentMenuItem(nsnull);
+  SetActive(PR_FALSE);
+  return NS_OK;
+}

@@ -39,6 +39,8 @@ public:
   NS_IMETHOD GetIsActive(PRBool& isActive) = 0;
   
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) = 0;
+
+  NS_IMETHOD DismissChain() = 0;
 };
 
 #endif
