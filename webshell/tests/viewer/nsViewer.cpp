@@ -113,7 +113,7 @@ static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIChildWidgetIID, NS_IWIDGET_IID);
 
 #define VIEWER_UI
-#define VIEWER_UI
+#undef  VIEWER_UI
 #undef INSET_WEBWIDGET
 
 #ifdef VIEWER_UI
@@ -507,6 +507,7 @@ DocObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
   fputs(mURL, stdout);
   fputs(": stop\n", stdout);
 
+#ifdef VIEWER_UI
   //stop the throbber...
   if (nsnull != mViewer)
   {
@@ -516,6 +517,7 @@ DocObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
     mViewer->mThrobber->GetBounds(trect);
     mViewer->mThrobber->Invalidate(PR_FALSE);
   }
+#endif
 
   return NS_OK;
 }
