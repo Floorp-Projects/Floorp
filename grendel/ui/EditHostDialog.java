@@ -101,9 +101,14 @@ public class EditHostDialog extends GeneralDialog {
     setModal(true);
     model = new EditHostModel(aURL);
 
+    XMLPageBuilder builder = new XMLPageBuilder("id", "editHost", model);
     URL url = getClass().getResource("dialogs.xml");
 
-    fPanel = new PageUI(url, "id", "editHost", model);
+    try {
+      fPanel = (PageUI)builder.buildFrom(url.openStream());
+    } catch (Exception e) {
+      return;
+    }
 
     JOptionPane actionPanel = new JOptionPane(fPanel,
                                               JOptionPane.PLAIN_MESSAGE,
