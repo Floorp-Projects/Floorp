@@ -426,7 +426,7 @@ RTestURLList.prototype = {
            base_data.QueryInterface(nsILocalFile).persistentDescriptor + "\n");
       var filesDiffer =
         this.mRegressionTester.compareFrameModels(base_data, data,
-          nsILayoutRegressionTester.COMPARE_FLAGS_BRIEF)
+          nsILayoutRegressionTester.COMPARE_FLAGS_VERBOSE)
       dump("Comparison for " + this.mCurrentURL.url + " " +
            (filesDiffer ? "failed" : "passed") + ".");
     }
