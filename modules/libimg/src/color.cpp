@@ -21,7 +21,7 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.1 1998/07/27 16:09:19 hardts%netscape.com Exp $
+   $Id: color.cpp,v 3.2 1998/09/25 00:30:06 cyeh%netscape.com Exp $
 */
 
 
@@ -32,11 +32,6 @@
 #include "xp_qsort.h"
 #endif
 
-#ifndef NSPR20
-#if defined(__sun)
-# include "sunos4.h"
-#endif /* __sun */
-#endif /* NSPR20 */
 
 #ifdef PROFILE
 #pragma profile on
