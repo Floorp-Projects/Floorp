@@ -108,15 +108,16 @@
     </td>
 
   </tr>
-  <tr>
 
-    <th><label for="target_milestone">Target Milestone:</label></th>
-    <td colspan="3">
-      [% PROCESS selectmenu menuname = "target_milestone"
-                            menuitems = targetmilestones %]
-    </td>
-
-  </tr>
+  [% IF Param("usetargetmilestone") %]
+    <tr>
+      <th><label for="target_milestone">Target Milestone:</label></th>
+      <td colspan="3">
+        [% PROCESS selectmenu menuname = "target_milestone"
+                              menuitems = targetmilestones %]
+      </td>
+    </tr>
+  [% END %]
 
   [% IF UserInGroup(Param("timetrackinggroup")) %]
     <tr>
