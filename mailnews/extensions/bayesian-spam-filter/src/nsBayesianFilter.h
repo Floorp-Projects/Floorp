@@ -91,91 +91,15 @@ public:
     void classifyMessage(Tokenizer& messageTokens, const char* messageURL, nsIJunkMailClassificationListener* listener);
     void observeMessage(Tokenizer& messageTokens, const char* messageURL, PRInt32 oldClassification, PRInt32 newClassification, nsIJunkMailClassificationListener* listener);
 
+    void writeTrainingData();
+    void readTrainingData();
+    
 protected:
     Tokenizer mGoodTokens, mBadTokens;
     PRUint32 mGoodCount, mBadCount;
     nsACString* mServerPrefsKey;
     PRPackedBool mBatchUpdate;
+    PRPackedBool mTrainingDataDirty;
 };
-
-#if 0
-
-#include "nsIMsgMdnGenerator.h"
-#include "nsIMimeConverter.h"
-#include "nsIUrlListener.h"
-#include "nsXPIDLString.h"
-#include "nsIMsgIncomingServer.h"
-#include "nsFileStream.h"
-#include "nsIOutputStream.h"
-#include "nsIFileSpec.h"
-#include "nsIMsgIdentity.h"
-#include "nsIMsgWindow.h"
-#include "nsIMimeHeaders.h"
-
-#define eNeverSendOp ((PRInt32) 0)
-#define eAutoSendOp ((PRInt32) 1)
-#define eAskMeOp ((PRInt32) 2)
-#define eDeniedOp ((PRInt32) 3)
-
-class nsMsgMdnGenerator : public nsIMsgMdnGenerator, public nsIUrlListener
-{
-public:
-    NS_DECL_ISUPPORTS 
-    NS_DECL_NSIMSGMDNGENERATOR
-    NS_DECL_NSIURLLISTENER
-    
-    nsMsgMdnGenerator();
-    virtual ~nsMsgMdnGenerator();
-    
-private:
-    // Sanity Check methods
-    PRBool ProcessSendMode(); // must called prior ValidateReturnPath
-    PRBool ValidateReturnPath();
-    PRBool NotInToOrCc();
-    PRBool MailAddrMatch(const char *addr1, const char *addr2);
-    
-    nsresult StoreMDNSentFlag(nsIMsgFolder *folder, nsMsgKey key);
-    
-    nsresult CreateMdnMsg();
-    nsresult CreateFirstPart(); 
-    nsresult CreateSecondPart();
-    nsresult CreateThirdPart();
-    nsresult SendMdnMsg();
-
-    // string bundle helper methods
-    nsresult GetStringFromName(const PRUnichar *aName, PRUnichar **aResultString);
-    nsresult FormatStringFromName(const PRUnichar *aName, 
-                                                 const PRUnichar *aString, 
-                                                 PRUnichar **aResultString);
-    
-    // other helper methods
-    nsresult InitAndProcess();
-    nsresult OutputAllHeaders();
-    nsresult WriteString(const char *str);
-  
-private:
-    EDisposeType m_disposeType;
-    nsCOMPtr<nsIMsgWindow> m_window;
-    nsCOMPtr<nsIOutputStream> m_outputStream;
-    nsCOMPtr<nsIFileSpec> m_fileSpec;
-    nsCOMPtr<nsIMsgIdentity> m_identity;
-    nsXPIDLString m_charset;
-    nsXPIDLCString m_email;
-    nsXPIDLCString m_mimeSeparator;
-    nsXPIDLCString m_messageId;
-    nsCOMPtr<nsIMsgFolder> m_folder;
-    nsCOMPtr<nsIMsgIncomingServer> m_server;
-    nsCOMPtr<nsIMimeHeaders> m_headers;
-    nsXPIDLCString m_dntRrt;
-    PRInt32 m_notInToCcOp;
-    PRInt32 m_outsideDomainOp;
-    PRInt32 m_otherOp;
-    PRPackedBool m_reallySendMdn;
-    PRPackedBool m_autoSend;
-    PRPackedBool m_autoAction;
-    PRPackedBool m_mdnEnabled;
-};
-
-#endif
 
 #endif // _nsBayesianFilter_h__

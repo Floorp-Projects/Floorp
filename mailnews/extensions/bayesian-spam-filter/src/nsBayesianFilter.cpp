@@ -45,6 +45,7 @@
 #include "nsIByteBuffer.h"
 #include "nsNetUtil.h"
 #include "nsQuickSort.h"
+#include "nsIProfileInternal.h"
 
 static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>?@[\\]^_`{|}~";
 
@@ -306,9 +307,13 @@ NS_IMETHODIMP TokenStreamListener::OnStopRequest(nsIRequest *aRequest, nsISuppor
 NS_IMPL_ISUPPORTS2(nsBayesianFilter, nsIMsgFilterPlugin, nsIJunkMailPlugin)
 
 nsBayesianFilter::nsBayesianFilter()
-    :   mServerPrefsKey(NULL), mBatchUpdate(PR_FALSE), mGoodCount(0), mBadCount(0)
+    :   mGoodCount(0), mBadCount(0),
+        mServerPrefsKey(NULL), mBatchUpdate(PR_FALSE), mTrainingDataDirty(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
+    
+    // should probably wait until Init() is called to do this.
+    readTrainingData();
 }
 
 nsBayesianFilter::~nsBayesianFilter()
@@ -454,6 +459,10 @@ NS_IMETHODIMP nsBayesianFilter::GetBatchUpdate(PRBool *aBatchUpdate)
 NS_IMETHODIMP nsBayesianFilter::SetBatchUpdate(PRBool aBatchUpdate)
 {
     mBatchUpdate = aBatchUpdate;
+    
+    if (mBatchUpdate && mTrainingDataDirty)
+        writeTrainingData();
+        
     return NS_OK;
 }
 
@@ -520,6 +529,7 @@ void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* mess
         if (mBadCount > 0) {
             --mBadCount;
             forgetTokens(mBadTokens, tokens, count);
+            mTrainingDataDirty = PR_TRUE;
         }
         break;
     case nsIJunkMailPlugin::GOOD:
@@ -527,6 +537,7 @@ void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* mess
         if (mGoodCount > 0) {
             --mGoodCount;
             forgetTokens(mGoodTokens, tokens, count);
+            mTrainingDataDirty = PR_TRUE;
         }
         break;
     }
@@ -535,11 +546,13 @@ void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* mess
         // put tokens into junk corpus.
         ++mBadCount;
         rememberTokens(mBadTokens, tokens, count);
+        mTrainingDataDirty = PR_TRUE;
         break;
     case nsIJunkMailPlugin::GOOD:
         // put tokens into good corpus.
         ++mGoodCount;
         rememberTokens(mGoodTokens, tokens, count);
+        mTrainingDataDirty = PR_TRUE;
         break;
     }
     
@@ -547,6 +560,137 @@ void nsBayesianFilter::observeMessage(Tokenizer& messageTokens, const char* mess
     
     if (listener)
         listener->OnMessageClassified(messageURL, newClassification);
+        
+    if (mTrainingDataDirty && !mBatchUpdate)
+        writeTrainingData();
+}
+
+/*
+        var profileMgr = do_GetService(PROFILEMGR_CTRID, nsIProfileInternal);
+        var outFile = profileMgr.getProfileDir(profileMgr.currentProfile);
+        outFile.append("spam.db");
+        var fileTransportService = do_GetService(FILETPTSVC_CTRID, nsIFileTransportService);
+        const ioFlags = NS_WRONLY | NS_CREATE_FILE | NS_TRUNCATE;
+        var trans = fileTransportService.createTransport(outFile, ioFlags, 'w', true);
+        var out = trans.openOutputStream(0, -1, 0);
+
+        var totals = this.mHamCount.toString() + "\t" +
+                     this.mSpamCount.toString() + "\n";
+        out.write(totals, totals.length);
+        for (token in this.mHash) {
+            var record = this.mHash[token];
+            var tokenString = token + "\t" + record[kHamCount].toString() +
+                              "\t" + record[kSpamCount].toString() +
+                              "\n";
+//                              "\t" + record[kTime].toString() + "\n";
+            out.write(tokenString, tokenString.length);
+        }
+
+        out.close();
+*/
+
+static nsresult getTrainingFile(nsCOMPtr<nsIFile>& file)
+{
+    // should we cache the profile manager's directory?
+    nsresult rv;
+    nsCOMPtr<nsIProfileInternal> profileManager = do_GetService("@mozilla.org/profile/manager;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsXPIDLString currentProfile;
+    rv = profileManager->GetCurrentProfile(getter_Copies(currentProfile));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = profileManager->GetProfileDir(currentProfile.get(), getter_AddRefs(file));
+    if (NS_FAILED(rv)) return rv;
+    
+    return file->Append(NS_LITERAL_STRING("training.txt"));
+}
+
+static void writeTokens(FILE* stream, Tokenizer& tokenizer)
+{
+    PRUint32 i, count = tokenizer.countTokens();
+    Token ** tokens = tokenizer.getTokens();
+    if (!tokens) return;
+
+    // compute the maximum word length, so we can use a fixed buffer size when reading back in.
+    PRUint32 maxWordLength = 0;
+    for (i = 0; i < count; ++i) {
+        PRUint32 wordLength = tokens[i]->mWord.Length();
+        if (wordLength > maxWordLength)
+            maxWordLength = wordLength;
+    }
+
+    fprintf(stream, "count = %lu, maxWordLength = %lu\n", count, maxWordLength);
+    
+    for (PRUint32 i = 0; i < count; ++i) {
+        Token* token = tokens[i];
+        fprintf(stream, "%s : %lu\n", token->mWord.get(), token->mCount);
+    }
+    
+    delete[] tokens;
+}
+
+static void readTokens(FILE* stream, Tokenizer& tokenizer)
+{
+    PRUint32 count, maxWordLength;
+    fscanf(stream, "count = %lu, maxWordLength = %lu\n", &count, &maxWordLength);
+
+    char* wordBuffer = new char[maxWordLength + 1];
+    if (!wordBuffer) return;
+
+    PRUint32 wordCount;
+    
+    for (PRUint32 i = 0; i < count; ++i) {
+        if (fscanf(stream, "%s : %lu\n", wordBuffer, &wordCount) > 0)
+            tokenizer.add(wordBuffer, wordCount);
+    }
+    
+    delete[] wordBuffer;
+}
+
+void nsBayesianFilter::writeTrainingData()
+{
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = getTrainingFile(file);
+    if (NS_FAILED(rv)) return;
+ 
+    // open the file, and write out training data using fprintf for now.
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+    if (NS_FAILED(rv)) return;
+    
+    FILE* stream;
+    rv = localFile->OpenANSIFileDesc("w", &stream);
+    if (NS_FAILED(rv)) return;
+
+    fprintf(stream, "ngood = %lu, nbad = %lu\n", mGoodCount, mBadCount);
+    writeTokens(stream, mGoodTokens);
+    writeTokens(stream, mBadTokens);
+    
+    fclose(stream);
+    
+    mTrainingDataDirty = PR_FALSE;
+}
+
+void nsBayesianFilter::readTrainingData()
+{
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = getTrainingFile(file);
+    if (NS_FAILED(rv)) return;
+
+    // open the file, and write out training data using fprintf for now.
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
+    if (NS_FAILED(rv)) return;
+    
+    FILE* stream;
+    rv = localFile->OpenANSIFileDesc("r", &stream);
+    if (NS_FAILED(rv)) return;
+
+    // FIXME:  should make sure that the tokenizers are empty.
+    fscanf(stream, "ngood = %lu, nbad = %lu\n", &mGoodCount, &mBadCount);
+    readTokens(stream, mGoodTokens);
+    readTokens(stream, mBadTokens);
+    
+    fclose(stream);
 }
 
 /* void setMessageClassification (in string aMsgURL, in long aOldClassification, in long aNewClassification); */
