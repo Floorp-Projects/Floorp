@@ -28,10 +28,10 @@
 #include "nsISupportsPrimitives.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "prefapi.h"
-#include "prmem.h"
-#include "nsScriptSecurityManager.h"
+#include "nsScriptSecurityManager.h" // Danger -- this includes nsIPref.h
 #include "nsIStringBundle.h"
+#include "prefapi.h"                 // Must be included after nsScriptSecurityManager
+#include "prmem.h"
 
 #include "nsIFileSpec.h"  // this should be removed eventually
 #include "prefapi_private_data.h"
@@ -115,7 +115,8 @@ nsPrefBranch::~nsPrefBranch()
         pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
         if (pCallback) {
           mObserverDomains.CStringAt(i, domain);
-          PREF_UnregisterCallback(domain, NotifyObserver, pCallback->pObserver);
+          PREF_UnregisterCallback(domain, NotifyObserver, pCallback);
+          NS_RELEASE(pCallback->pObserver);
         }
         nsMemory::Free(pCallback);
       }
@@ -249,15 +250,53 @@ NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, PRInt32 aValue)
 
 NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID & aType, void * *_retval)
 {
-  const char     *pref = getPrefName(aPrefName);
   nsresult       rv;
   nsXPIDLCString utf8String;
 
-  // if we can't get the pref, there's no point in being here
-  rv = QueryObserver(pref);
-  if (NS_SUCCEEDED(rv)) {
-    rv = GetCharPref(pref, getter_Copies(utf8String));
+  // we have to do this one first because it's different than all the rest
+  if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
+    nsCOMPtr<nsIPrefLocalizedString> theString(do_CreateInstance(NS_PREFLOCALIZEDSTRING_CONTRACTID, &rv));
+
+    if (NS_SUCCEEDED(rv)) {
+      const char *pref = getPrefName(aPrefName);
+      PRBool  bNeedDefault = PR_FALSE;
+
+      if (mIsDefault) {
+        bNeedDefault = PR_TRUE;
+      } else {
+        // if there is no user (or locked) value
+        if (!PREF_HasUserPref(pref) && !PREF_PrefIsLocked(pref)) {
+          bNeedDefault = PR_TRUE;
+        }
+      }
+
+      // if we need to fetch the default value, do that instead, otherwise use the
+      // value we pulled in at the top of this function
+      if (bNeedDefault) {
+        nsXPIDLString utf16String;
+        rv = GetDefaultFromPropertiesFile(pref, getter_Copies(utf16String));
+        if (NS_SUCCEEDED(rv)) {
+          rv = theString->SetData(utf16String.get());
+        }
+      } else {
+        rv = GetCharPref(aPrefName, getter_Copies(utf8String));
+        if (NS_SUCCEEDED(rv)) {
+          rv = theString->SetData(NS_ConvertASCIItoUCS2(utf8String).get());
+        }
+      }
+      if (NS_SUCCEEDED(rv)) {
+        nsIPrefLocalizedString *temp = theString;
+
+        NS_ADDREF(temp);
+        *_retval = (void *)temp;
+      }
+    }
+
+    return rv;
   }
+
+  // if we can't get the pref, there's no point in being here
+  rv = GetCharPref(aPrefName, getter_Copies(utf8String));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -294,42 +333,6 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     return rv;
   }
 
-  if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
-    PRBool  bNeedDefault;
-    nsCOMPtr<nsIPrefLocalizedString> theString(do_CreateInstance(NS_PREFLOCALIZEDSTRING_CONTRACTID, &rv));
-
-    if (mIsDefault) {
-      bNeedDefault = PR_TRUE;
-    } else {
-      // if there is no user (or locked) value
-      if (!PREF_HasUserPref(pref) && !PREF_PrefIsLocked(pref)) {
-        bNeedDefault = PR_TRUE;
-      }
-    }
-
-    // if we need to fetch the default value, do that instead, otherwise use the
-    // value we pulled in at the top of this function
-    if (bNeedDefault) {
-      nsXPIDLString utf16String;
-      rv = GetDefaultFromPropertiesFile(pref, getter_Copies(utf16String));
-      if (NS_SUCCEEDED(rv)) {
-        rv = theString->SetData(utf16String.get());
-      }
-    } else {
-      if (NS_SUCCEEDED(rv)) {
-        rv = theString->SetData(NS_ConvertASCIItoUCS2(utf8String).get());
-      }
-    }
-
-    if (NS_SUCCEEDED(rv)) {
-      nsIPrefLocalizedString *temp = theString;
-
-      NS_ADDREF(temp);
-      *_retval = (void *)temp;
-    }
-    return rv;
-  }
-
   // This is depricated and you should not be using it
   if (aType.Equals(NS_GET_IID(nsIFileSpec))) {
     nsCOMPtr<nsIFileSpec> file(do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv));
@@ -357,14 +360,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
 
 NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID & aType, nsISupports *aValue)
 {
-  const char *pref = getPrefName(aPrefName);
   nsresult   rv;
-
-  // if we can't get the pref, there's no point in being here
-  rv = QueryObserver(pref);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   if (aType.Equals(NS_GET_IID(nsILocalFile))) {
     nsCOMPtr<nsILocalFile> file = do_QueryInterface(aValue);
@@ -372,7 +368,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
     rv = file->GetPersistentDescriptor(getter_Copies(descriptorString));
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPref(pref, descriptorString);
+      rv = SetCharPref(aPrefName, descriptorString);
     }
     return rv;
   }
@@ -385,7 +381,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
       rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
-        rv = SetCharPref(pref, NS_ConvertUCS2toUTF8(wideString).get());
+        rv = SetCharPref(aPrefName, NS_ConvertUCS2toUTF8(wideString).get());
       }
     }
     return rv;
@@ -399,7 +395,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
       rv = theString->GetData(getter_Copies(wideString));
       if (NS_SUCCEEDED(rv)) {
-        rv = SetCharPref(pref, NS_ConvertUCS2toUTF8(wideString).get());
+        rv = SetCharPref(aPrefName, NS_ConvertUCS2toUTF8(wideString).get());
       }
     }
     return rv;
@@ -412,7 +408,7 @@ NS_IMETHODIMP nsPrefBranch::SetComplexValue(const char *aPrefName, const nsIID &
 
     rv = file->GetPersistentDescriptorString(getter_Copies(descriptorString));
     if (NS_SUCCEEDED(rv)) {
-      rv = SetCharPref(pref, descriptorString);
+      rv = SetCharPref(aPrefName, descriptorString);
     }
     return rv;
   }
@@ -546,8 +542,9 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
     return NS_ERROR_OUT_OF_MEMORY;
 
   pCallback->pBranch = NS_STATIC_CAST(nsIPrefBranch *, this);
+  NS_ADDREF(aObserver);
   pCallback->pObserver = aObserver;
-  
+
   mObservers->AppendElement(pCallback);
   mObserverDomains.AppendCString(nsCString(aDomain));
 
@@ -586,8 +583,9 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
   if (i == count)             // not found, just return
     return NS_OK;
     
-  rv = _convertRes(PREF_UnregisterCallback(aDomain, NotifyObserver, pCallback->pObserver));
+  rv = _convertRes(PREF_UnregisterCallback(aDomain, NotifyObserver, pCallback));
   if (NS_SUCCEEDED(rv)) {
+    NS_RELEASE(pCallback->pObserver);
     nsMemory::Free(pCallback);
     mObservers->RemoveElementAt(i);
     mObserverDomains.RemoveCStringAt(i);
