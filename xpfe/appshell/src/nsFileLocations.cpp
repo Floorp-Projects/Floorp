@@ -23,7 +23,9 @@
  */
 
 #include "nsFileLocations.h"
+#include "nsIFileLocator.h"
 
+#include "nsIComponentManager.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsDebug.h"
 
@@ -43,6 +45,8 @@
 
 #include "plstr.h"
 
+static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
+
 #if XP_PC
 //----------------------------------------------------------------------------------------
 static char* MakeUpperCase(char* aPath)
@@ -59,7 +63,7 @@ static char* MakeUpperCase(char* aPath)
 #endif
 
 //----------------------------------------------------------------------------------------
-nsSpecialFileSpec::nsSpecialFileSpec(LocationType aType)
+nsSpecialFileSpec::nsSpecialFileSpec(Type aType)
 //----------------------------------------------------------------------------------------
 :    nsFileSpec((const char*)nsnull)
 {
@@ -73,25 +77,39 @@ nsSpecialFileSpec::~nsSpecialFileSpec()
 }
 
 //----------------------------------------------------------------------------------------
-void nsSpecialFileSpec::operator = (LocationType aType)
+void nsSpecialFileSpec::operator = (Type aType)
 //----------------------------------------------------------------------------------------
 {
     *this = (const char*)nsnull;
     switch (aType)
     {
         
+	#ifdef XP_MAC
         case App_PrefsDirectory30:
-	        #ifdef XP_MAC
+        case App_PrefsDirectory40:
+        case App_PrefsDirectory50:
 	        {
 	            *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
 	            *this += "Netscape \xC4";
 	            break;
 	        }
-	        #endif
+    #elif defined(XP_PC)
+        case App_PrefsDirectory30:
+        case App_PrefsDirectory40:
+            NS_NOTYETIMPLEMENTED("Write me!");
+            break;    
+        case App_PrefsDirectory50:
+	        {
+	            *this = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+	            break;
+	        }
+	#else
+        case App_PrefsDirectory30:
         case App_PrefsDirectory40:
         case App_PrefsDirectory50:
             NS_NOTYETIMPLEMENTED("Write me!");
             break;    
+	#endif
         
         case App_UserProfileDirectory30:
         case App_UserProfileDirectory40:
@@ -104,14 +122,31 @@ void nsSpecialFileSpec::operator = (LocationType aType)
 	            *this = nsSpecialFileSpec(App_PrefsDirectory30);
 	        #ifdef XP_MAC
 	            *this += "Netscape Preferences";
+	        #elif defined(XP_UNIX)
+	            *this += "preferences.js";
 	        #else
 	            *this += "prefs.js";
 	        #endif
+	        }
+	        break;
+        case App_PreferencesFile40:
+	        {
+	            *this = nsSpecialFileSpec(App_PrefsDirectory40);
+	        #ifdef XP_MAC
+	            *this += "Netscape Preferences";
+	        #elif defined(XP_UNIX)
+	            *this += "preferences.js";
+	        #else
+	            *this += "prefs.js";
+	        #endif
+	        }
+            break;    
+        case App_PreferencesFile50:
+	        {
+	            *this = nsSpecialFileSpec(App_PrefsDirectory50);
+	            *this += "prefs50.js";
 	            break;
 	        }
-        case App_PreferencesFile40:
-        case App_PreferencesFile50:
-            NS_NOTYETIMPLEMENTED("Write me!");
             break;    
         
         case App_BookmarksFile30:
@@ -163,3 +198,151 @@ void nsSpecialFileSpec::operator = (LocationType aType)
             break;    
     }
 } // nsSpecialFileSpec::operator =
+
+static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
+
+//========================================================================================
+class nsFileLocator : public nsIFileLocator
+//========================================================================================
+{
+public:
+  nsFileLocator();
+  
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetFileLocation(
+      PRUint32 aType, // NOTE: actually nsSpecialFileSpec:Type, see nsFileLocations.h
+      nsFileSpec* outSpec);
+
+protected:
+  virtual ~nsFileLocator();
+
+};
+
+
+//----------------------------------------------------------------------------------------
+nsFileLocator::nsFileLocator()
+//----------------------------------------------------------------------------------------
+{
+  NS_INIT_REFCNT();
+}
+
+//----------------------------------------------------------------------------------------
+nsFileLocator::~nsFileLocator()
+//----------------------------------------------------------------------------------------
+{
+}
+
+NS_IMPL_ISUPPORTS(nsFileLocator, kIFileLocatorIID);
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileLocator::GetFileLocation(
+      PRUint32 aType,
+      nsFileSpec* outSpec)
+//----------------------------------------------------------------------------------------
+{
+  if (nsnull == outSpec)
+    return NS_ERROR_NULL_POINTER;
+
+   *(nsSpecialFileSpec*)outSpec = (nsSpecialFileSpec::Type)aType;
+   return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_EXPORT nsresult NS_NewFileLocator(nsIFileLocator** aResult)
+//----------------------------------------------------------------------------------------
+{
+  if (nsnull == aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  *aResult = new nsFileLocator();
+  if (nsnull == *aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+//========================================================================================
+class nsFileLocatorFactory : public nsIFactory
+//========================================================================================
+{
+public:
+  nsFileLocatorFactory();
+  NS_DECL_ISUPPORTS
+
+  // nsIFactory methods
+  NS_IMETHOD CreateInstance(nsISupports *aOuter,
+                            const nsIID &aIID,
+                            void **aResult);
+  
+  NS_IMETHOD LockFactory(PRBool aLock);  
+protected:
+  virtual ~nsFileLocatorFactory();
+};
+
+//----------------------------------------------------------------------------------------
+nsFileLocatorFactory::nsFileLocatorFactory()
+//----------------------------------------------------------------------------------------
+{
+  NS_INIT_REFCNT();
+}
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileLocatorFactory::LockFactory(PRBool /*lock*/)
+//----------------------------------------------------------------------------------------
+{
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+nsFileLocatorFactory::~nsFileLocatorFactory()
+//----------------------------------------------------------------------------------------
+{
+  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
+}
+
+NS_IMPL_ISUPPORTS(nsFileLocatorFactory, kIFactoryIID);
+
+//----------------------------------------------------------------------------------------
+nsresult nsFileLocatorFactory::CreateInstance(nsISupports *aOuter,
+                                  const nsIID &aIID,
+                                  void **aResult)
+//----------------------------------------------------------------------------------------
+{
+    nsresult rv;
+    nsFileLocator* inst;
+
+    if (!aResult)
+        return NS_ERROR_NULL_POINTER;
+
+    *aResult = NULL;
+    if (aOuter)
+        return NS_ERROR_NO_AGGREGATION;
+
+    NS_NEWXPCOM(inst, nsFileLocator);
+    if (!inst)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(inst);
+    rv = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
+
+    return rv;
+}
+
+
+//----------------------------------------------------------------------------------------
+extern "C" NS_APPSHELL nsresult NS_NewFileLocatorFactory(nsIFactory** aFactory)
+//----------------------------------------------------------------------------------------
+{
+    nsresult rv = NS_OK;
+    nsIFactory* inst = new nsFileLocatorFactory();
+    if (!inst)
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    else
+        NS_ADDREF(inst);
+
+    *aFactory = inst;
+    return rv;
+}
