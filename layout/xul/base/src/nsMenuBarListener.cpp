@@ -248,6 +248,11 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
     if (active) 
       mMenuBarFrame->KeyboardNavigation(theChar);
   }
+  else if (theChar == NS_VK_ESCAPE) {
+    // Close one level.
+    if (active)
+      mMenuBarFrame->Escape();
+  }
   else {
     // Get the character code.
     nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aKeyEvent);

@@ -348,6 +348,13 @@ nsMenuFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 }
 
 void
+nsMenuFrame::Escape()
+{
+
+
+}
+
+void
 nsMenuFrame::SelectFirstItem()
 {
   //XXX Fill in!

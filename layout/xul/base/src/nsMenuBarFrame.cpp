@@ -373,3 +373,20 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIFrame* aMenuItem)
 
   return NS_OK;
 }
+
+void 
+nsMenuBarFrame::Escape()
+{
+  if (!mCurrentMenu)
+    return;
+
+  // See if our menu is open.
+  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+  if (menuFrame->IsOpen()) {
+    // Let the child menu handle this.
+    menuFrame->Escape();
+  }
+
+  // It's us. Just set our active flag to false.
+  mIsActive = PR_FALSE;
+}

@@ -370,10 +370,48 @@ nsMenuPopupFrame::CaptureMouseEvents(PRBool aGrabMouseEvents)
   return NS_OK;
 }
 
+void
+nsMenuPopupFrame::Escape()
+{
+
+}
+
+nsIFrame*
+nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
+{
+  // Enumerate over our list of frames.
+  nsIFrame* currFrame = mFrames.FirstChild();
+  while (currFrame) {
+    nsCOMPtr<nsIContent> current;
+    currFrame->GetContent(getter_AddRefs(current));
+    
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu ||
+        tag.get() == nsXULAtoms::xpmenuitem) {
+      // Get the shortcut attribute.
+      nsString shortcutKey = "";
+      current->GetAttribute(kNameSpaceID_None, nsXULAtoms::shortcut, shortcutKey);
+      shortcutKey.ToUpperCase();
+      if (shortcutKey.Length() > 0) {
+        // We've got something.
+        PRUnichar shortcutChar = shortcutKey.CharAt(0);
+        if (shortcutChar == aLetter) {
+          // We match!
+          return currFrame;
+        }
+      }
+    }
+    currFrame->GetNextSibling(&currFrame);
+  }
+  return nsnull;
+}
+
 void 
 nsMenuPopupFrame::ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag)
 {
-
+  
 }
 
 void

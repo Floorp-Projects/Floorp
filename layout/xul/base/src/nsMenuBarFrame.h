@@ -56,10 +56,19 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 // Non-interface helpers
+
+  // Called when a menu on the menu bar is clicked on.
   void ToggleMenuActiveState();
+  
+  // Used to move up, down, left, and right in menus.
   void KeyboardNavigation(PRUint32 aDirection);
+  
+  // Used to handle ALT+key combos
   void ShortcutNavigation(PRUint32 aLetter, PRBool& aHandledFlag);
   nsIFrame* FindMenuWithShortcut(PRUint32 aLetter);
+
+  // Called when the ESC key is held down to close levels of menus.
+  void Escape();
 
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
