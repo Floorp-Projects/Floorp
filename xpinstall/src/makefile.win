@@ -87,6 +87,11 @@ OBJS =                                          \
        .\$(OBJDIR)\nsXPITriggerInfo.obj         \
        .\$(OBJDIR)\nsXPInstallManager.obj       \
        .\$(OBJDIR)\nsInstallFileOpItem.obj      \
+       .\$(OBJDIR)\nsWinShortcut.obj            \
+       $(NULL)
+
+WIN_LIBS=                                       \
+       ole32.lib                                \
        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

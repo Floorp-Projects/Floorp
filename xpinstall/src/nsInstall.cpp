@@ -1696,19 +1696,46 @@ nsInstall::FileOpFileRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aRetur
 }
 
 PRInt32
-nsInstall::FileOpFileWinShortcutCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
+nsInstall::FileOpFileWindowsShortcut(nsFileSpec& aTarget, nsFileSpec& aShortcutPath, nsString& aDescription, nsFileSpec& aWorkingPath, nsString& aParams, nsFileSpec& aIcon, PRInt32 aIconId, PRInt32* aReturn)
+{
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_WIN_SHORTCUT, aTarget, aShortcutPath, aDescription, aWorkingPath, aParams, aIcon, aIconId, aReturn);
+
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
+
+  if (ifop == nsnull)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+
+  return NS_OK;
+}
+
+PRInt32
+nsInstall::FileOpFileMacAlias(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
 {
   return NS_OK;
 }
 
 PRInt32
-nsInstall::FileOpFileMacAliasCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
-{
-  return NS_OK;
-}
-
-PRInt32
-nsInstall::FileOpFileUnixLinkCreate(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
+nsInstall::FileOpFileUnixLink(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
 {
   return NS_OK;
 }

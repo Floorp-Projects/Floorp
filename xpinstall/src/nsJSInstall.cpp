@@ -2104,15 +2104,24 @@ InstallFileOpFileRename(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 }
 
 //
-// Native method FileWinShortcutCreate
+// Native method FileWindowsShortcut
 //
 PR_STATIC_CALLBACK(JSBool)
-InstallFileOpFileWinShortcutCreate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+InstallFileOpFileWindowsShortcut(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
   nsAutoString b0;
-  PRInt32      b1;
+  nsAutoString b1;
+  nsAutoString b2;
+  nsAutoString b3;
+  nsAutoString b4;
+  nsAutoString b5;
+  nsFileSpec   nsfsB0;
+  nsFileSpec   nsfsB1;
+  nsFileSpec   nsfsB3;
+  nsFileSpec   nsfsB5;
+  PRInt32      b6;
 
   *rval = JSVAL_NULL;
 
@@ -2122,16 +2131,37 @@ InstallFileOpFileWinShortcutCreate(JSContext *cx, JSObject *obj, uintN argc, jsv
     return JS_TRUE;
   }
 
-  if(argc >= 2)
+  if(argc >= 7)
   {
-    //  public int FileWinShortcutCreate (String aSourceFolder,
-    //                                    Number aFlags);
+    //  public int FileWindowsShortcut(String aTarget,
+    //                                 String aShortcutPath,
+    //                                 String aDescription,
+    //                                 String aWorkingPath,
+    //                                 String aParams,
+    //                                 String aIcon,
+    //                                 Number aIconId);
 
     ConvertJSValToStr(b0, cx, argv[0]);
-    b1 = JSVAL_TO_INT(argv[1]);
-    nsFileSpec fsB0(b0);
+    nsfsB0 = b0;
+    ConvertJSValToStr(b1, cx, argv[1]);
+    nsfsB1 = b1;
+    ConvertJSValToStr(b2, cx, argv[2]);
+    ConvertJSValToStr(b3, cx, argv[3]);
+    nsfsB3 = b3;
+    ConvertJSValToStr(b4, cx, argv[4]);
+    ConvertJSValToStr(b5, cx, argv[5]);
+    nsfsB5 = b5;
 
-    if(NS_OK != nativeThis->FileOpFileWinShortcutCreate(fsB0, b1, &nativeRet))
+    if(JSVAL_IS_NULL(argv[6]))
+    {
+      b6 = 0;
+    }
+    else
+    {
+      b6 = JSVAL_TO_INT(argv[6]);
+    }
+
+    if(NS_OK != nativeThis->FileOpFileWindowsShortcut(nsfsB0, nsfsB1, b2, nsfsB3, b4, nsfsB5, b6, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -2140,7 +2170,7 @@ InstallFileOpFileWinShortcutCreate(JSContext *cx, JSObject *obj, uintN argc, jsv
   }
   else
   {
-    JS_ReportError(cx, "Function FileWinShortcutCreate requires 2 parameters");
+    JS_ReportError(cx, "Function FileWindowsShortcut requires 7 parameters");
     return JS_FALSE;
   }
 
@@ -2151,7 +2181,7 @@ InstallFileOpFileWinShortcutCreate(JSContext *cx, JSObject *obj, uintN argc, jsv
 // Native method FileMacAliasCreate
 //
 PR_STATIC_CALLBACK(JSBool)
-InstallFileOpFileMacAliasCreate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+InstallFileOpFileMacAlias(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
@@ -2175,7 +2205,7 @@ InstallFileOpFileMacAliasCreate(JSContext *cx, JSObject *obj, uintN argc, jsval 
     b1 = JSVAL_TO_INT(argv[1]);
     nsFileSpec fsB0(b0);
 
-    if(NS_OK != nativeThis->FileOpFileMacAliasCreate(fsB0, b1, &nativeRet))
+    if(NS_OK != nativeThis->FileOpFileMacAlias(fsB0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -2184,7 +2214,7 @@ InstallFileOpFileMacAliasCreate(JSContext *cx, JSObject *obj, uintN argc, jsval 
   }
   else
   {
-    JS_ReportError(cx, "Function FileMacAliasCreate requires 2 parameters");
+    JS_ReportError(cx, "Function FileMacAlias requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -2195,7 +2225,7 @@ InstallFileOpFileMacAliasCreate(JSContext *cx, JSObject *obj, uintN argc, jsval 
 // Native method FileUnixLinkCreate
 //
 PR_STATIC_CALLBACK(JSBool)
-InstallFileOpFileUnixLinkCreate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+InstallFileOpFileUnixLink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
   PRInt32 nativeRet;
@@ -2219,7 +2249,7 @@ InstallFileOpFileUnixLinkCreate(JSContext *cx, JSObject *obj, uintN argc, jsval 
     b1 = JSVAL_TO_INT(argv[1]);
     nsFileSpec fsB0(b0);
 
-    if(NS_OK != nativeThis->FileOpFileUnixLinkCreate(fsB0, b1, &nativeRet))
+    if(NS_OK != nativeThis->FileOpFileUnixLink(fsB0, b1, &nativeRet))
     {
       return JS_FALSE;
     }
@@ -2228,7 +2258,7 @@ InstallFileOpFileUnixLinkCreate(JSContext *cx, JSObject *obj, uintN argc, jsval 
   }
   else
   {
-    JS_ReportError(cx, "Function FileUnixLinkCreate requires 2 parameters");
+    JS_ReportError(cx, "Function FileUnixLink requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -2461,9 +2491,9 @@ static JSFunctionSpec InstallMethods[] =
   {"FileModDateChanged",        InstallFileOpFileModDateChanged,       2},
   {"FileMove",                  InstallFileOpFileMove,                 2},
   {"FileRename",                InstallFileOpFileRename,               2},
-  {"FileWinShortcutCreate",     InstallFileOpFileWinShortcutCreate,    2},
-  {"FileMacAliasCreate",        InstallFileOpFileMacAliasCreate,       2},
-  {"FileUnixLinkCreate",        InstallFileOpFileUnixLinkCreate,       2},
+  {"FileWindowsShortcut",       InstallFileOpFileWindowsShortcut,      7},
+  {"FileMacAlias",              InstallFileOpFileMacAlias,             2},
+  {"FileUnixLink",              InstallFileOpFileUnixLink,             2},
   {"LogComment",                InstallLogComment,                     1},
   {"Alert",                     InstallAlert,                          1},
   {"Confirm",                   InstallConfirm,                        2},

@@ -67,6 +67,19 @@ class nsInstallFileOpItem : public nsInstallObject
                         nsString&     a2,
                         PRInt32*      aReturn);
 
+    // used by:
+    //   WindowsShortcut()
+    nsInstallFileOpItem(nsInstall*     aInstallObj,
+                        PRInt32        aCommand,
+                        nsFileSpec&    aTarget,
+                        nsFileSpec&    aShortcutPath,
+                        nsString&      aDescription,
+                        nsFileSpec&    aWorkingPath,
+                        nsString&      aParams,
+                        nsFileSpec&    aIcon,
+                        PRInt32        aIconId,
+                        PRInt32*       aReturn);
+
     virtual ~nsInstallFileOpItem();
 
     PRInt32       Prepare(void);
@@ -85,10 +98,15 @@ class nsInstallFileOpItem : public nsInstallObject
     nsInstall*    mIObj;        // initiating Install object
     nsFileSpec*   mSrc;
     nsFileSpec*   mTarget;
+    nsFileSpec*   mShortcutPath;
+    nsFileSpec*   mWorkingPath;
+    nsFileSpec*   mIcon;
+    nsString*     mDescription;
     nsString*     mStrTarget;
     nsString*     mParams;
     long          mFStat;
     PRInt32       mFlags;
+    PRInt32       mIconId;
     PRInt32       mCommand;
     
     /* Private Methods */
@@ -101,9 +119,9 @@ class nsInstallFileOpItem : public nsInstallObject
     PRInt32       NativeFileOpFileExecute(nsFileSpec* aTarget, nsString* aParams);
     PRInt32       NativeFileOpFileMove(nsFileSpec* aSrc, nsFileSpec* aTarget);
     PRInt32       NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget);
-    PRInt32       NativeFileOpWinShortcutCreate();
-    PRInt32       NativeFileOpMacAliasCreate();
-    PRInt32       NativeFileOpUnixLinkCreate();
+    PRInt32       NativeFileOpWindowsShortcut(nsFileSpec* mTarget, nsFileSpec* mShortcutPath, nsString* mDescription, nsFileSpec* mWorkingPath, nsString* mParams, nsFileSpec* mIcon, PRInt32 mIconId);
+    PRInt32       NativeFileOpMacAlias();
+    PRInt32       NativeFileOpUnixLink();
 
 };
 
