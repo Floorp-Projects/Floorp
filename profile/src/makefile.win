@@ -26,7 +26,7 @@ IGNORE_MANIFEST=1
 #//
 #//------------------------------------------------------------------------
 DEPTH = ..\..
-
+include <$(DEPTH)\config\config.mak>
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
