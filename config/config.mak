@@ -98,22 +98,6 @@ LCFLAGS=$(LCFLAGS) -DMOZ_TRACE_XPCOM_REFCNT
 LCFLAGS=$(LCFLAGS) -DSMOOTH_PROGRESS
 !endif
 
-
-## Include support for MOZ_LITE/MOZ_MEDIUM
-#include <$(DEPTH)/config/liteness.mak>
-
-!if "$(MOZ_BITS)" == "16"
-
-!if "$(MAKE_OBJ_TYPE)" == "DLL"
-OBJTYPE=D
-!else
-OBJTYPE=E
-!endif
-
-!else
-OBJTYPE=
-!endif
-
 XPDIST=$(DEPTH)\dist
 PUBLIC=$(XPDIST)\public
 
@@ -216,10 +200,10 @@ CFLAGS=$(CFLAGS) -DMOZ_FULLCIRCLE
 !endif
 
 !ifdef MODULAR_NETLIB
-CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE -DCookieManagement -DSingleSignon -DClientWallet -DPrivacySiteInfo
+CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FILE -DCookieManagement -DSingleSignon -DPrivacySiteInfo
 !else
 # Defines for new cookie management...
-CFLAGS=$(CFLAGS) -DCookieManagement -DSingleSignon -DClientWallet -DPrivacySiteInfo
+CFLAGS=$(CFLAGS) -DCookieManagement -DSingleSignon -DPrivacySiteInfo
 
 !endif
 
