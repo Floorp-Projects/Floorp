@@ -30,6 +30,7 @@ EXPORTS =                         \
         nsIXULWindowCallbacks.h   \
         nsIDOMXPConnectFactory.h  \
         nsFileLocations.h         \
+        nsIFileLocator.h          \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
