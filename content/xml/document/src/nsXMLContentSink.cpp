@@ -26,6 +26,9 @@
 #include "nsIParser.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentType.h"
+#include "nsIDOMDOMImplementation.h"
 #include "nsIXMLDocument.h"
 #include "nsIXMLContent.h"
 #include "nsIScriptObjectOwner.h"
@@ -43,6 +46,7 @@
 #include "nsIViewManager.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMCDATASection.h"
+#include "nsDOMDocumentType.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLEntities.h"
 #include "nsHTMLParts.h"
@@ -66,7 +70,6 @@
 #include "prmem.h"
 #ifdef MOZ_XSL
 #include "nsXSLContentSink.h"
-#include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsISupports.h"
 #include "nsParserCIID.h"
@@ -93,7 +96,6 @@ static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMCDATASectionIID, NS_IDOMCDATASECTION_IID);
 #ifdef MOZ_XSL
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
@@ -1311,11 +1313,95 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
   return result;
 }
 
+static const char* kWhitespace = "\b\t\r\n ";
+static const char* kDelimiter = "\b\t\r\n >";
+static const char* kDoubleQuote = "\"";
+static const char* kSingleQuote = "'";
+
+static PRBool
+GetDocTypeToken(nsString& aStr,
+                nsString& aToken,
+                PRBool aStripQuotes)
+{
+  aStr.Trim(kWhitespace, PR_TRUE, PR_FALSE);
+  PRInt32 tokenEnd = aStr.FindCharInSet(kDelimiter);
+  if (tokenEnd > 0) {
+    aStr.Left(aToken, tokenEnd);
+    aStr.Cut(0, tokenEnd);
+    aToken.CompressWhitespace();
+    if (aStripQuotes) {
+      if (0 == aToken.Find(kDoubleQuote)) {
+        aToken.Trim(kDoubleQuote);
+      }
+      else {
+        aToken.Trim(kSingleQuote);
+      }
+    }
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 
 NS_IMETHODIMP
 nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
 {
-  printf("nsXMLContentSink::AddDocTypeDecl\n");
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mDocument));
+  if (!doc)
+    return NS_OK;
+
+  const nsString& docTypeStr = aNode.GetText(); 
+  nsAutoString str, name, publicId, systemId;
+
+  if (docTypeStr.EqualsWithConversion("<!DOCTYPE", PR_TRUE, 9)) {
+    docTypeStr.Right(str, docTypeStr.Length()-9);
+  }
+
+  if (GetDocTypeToken(str, name, PR_FALSE)) {
+    nsAutoString token;
+
+    GetDocTypeToken(str, token, PR_FALSE);
+    if (token.EqualsWithConversion("PUBLIC")) {
+      GetDocTypeToken(str, publicId, PR_TRUE);
+      GetDocTypeToken(str, systemId, PR_TRUE);    
+    }
+    else if (token.EqualsWithConversion("SYSTEM")) {
+      GetDocTypeToken(str, systemId, PR_TRUE);    
+    }
+
+    // The rest is the internal subset (minus the trailing >)
+    str.Trim(">");
+  }
+
+  nsCOMPtr<nsIDOMDocumentType> oldDocType;
+  nsCOMPtr<nsIDOMDocumentType> docType;
+  
+  // Create a new doctype node
+  rv = NS_NewDOMDocumentType(getter_AddRefs(docType),
+                             name, nsnull, nsnull,
+                             publicId, systemId, str);
+  if (NS_FAILED(rv) || !docType) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIDOMNode> tmpNode;
+  
+  doc->GetDoctype(getter_AddRefs(oldDocType)); 
+  if (oldDocType) {
+    /*
+     * If we already have a doctype we replace the old one.
+     */
+    rv = doc->ReplaceChild(oldDocType, docType, getter_AddRefs(tmpNode));
+  } else {
+    /*
+     * If we don't already have one, append it.
+     */    
+    rv = doc->AppendChild(docType, getter_AddRefs(tmpNode));
+  }
+  
   return NS_OK;
 }
 
