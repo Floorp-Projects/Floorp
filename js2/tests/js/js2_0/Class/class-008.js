@@ -44,25 +44,35 @@ var expectedvalues = [];
 class A
 {
   function m(){}
-  var M = m;
+  var M:Function = m;
 }
 
 class B
 {
+  var M:Function;
   function m(){}
-  var M = this.m;
+
+  constructor function B()
+  {
+    M = this.m;
+  }
 }
 
 class C
 {
   function m(){return 'Output defined in class C method "m"';}
-  var M = m;
+  var M:Function = m;
 }
 
 class D
 {
+  var M:Function;
   function m(){return 'Output defined in class D method "m"';}
-  var M = this.m;
+
+  constructor function D()
+  {
+    M = this.m;
+  }
 }
 
 
