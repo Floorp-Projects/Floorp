@@ -2371,8 +2371,8 @@ void nsImapProtocol::ProcessSelectedStateURL()
         else
          HandleMemoryFailure();
       }
-      
-      default:
+      break;
+    default:
         if (GetServerStateParser().LastCommandSuccessful() && !uidValidityOk)
               ProcessMailboxUpdate(PR_FALSE); // handle uidvalidity change
         break;
