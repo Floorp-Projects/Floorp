@@ -1951,7 +1951,7 @@ case $target in
 	AC_CHECK_LIB(c_r, gethostbyname_r)
 	;;
 esac
-AC_CHECK_LIB(m, atan)
+dnl AC_CHECK_LIB(m, atan)
 AC_CHECK_LIB(dl, dlopen)
 if test ! "$GNU_CXX"; then
 
@@ -1972,14 +1972,14 @@ if test ! "$GNU_CXX"; then
 	;;
      esac
 fi
-AC_CHECK_LIB(resolv, res_gethostbyaddr)
-AC_CHECK_LIB(socket, getnetbyaddr)
-AC_CHECK_LIB(util, login)
-AC_CHECK_LIB(nsl, xdr_string)
-AC_CHECK_LIB(elf, elf_rawdata)
-AC_CHECK_LIB(intl, textdomain)
+dnl AC_CHECK_LIB(resolv, res_gethostbyaddr)
+AC_CHECK_LIB(socket, socket)
+dnl AC_CHECK_LIB(util, login)
+dnl AC_CHECK_LIB(nsl, xdr_string)
+dnl AC_CHECK_LIB(elf, elf_rawdata)
+dnl AC_CHECK_LIB(intl, textdomain)
 AC_CHECK_LIB(posix4, shm_open)
-AC_CHECK_LIB(w, iswupper)
+dnl AC_CHECK_LIB(w, iswupper)
 
 dnl ========================================================
 dnl =
