@@ -16,7 +16,7 @@
  * Netscape.  All Rights Reserved. 
  */
 
-#include <X11/Xlibint.h>
+#include <X11/Xlib.h>
 #ifdef HAVE_X11_XKBLIB_H
 #include <X11/XKBlib.h>
 #endif
