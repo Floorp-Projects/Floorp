@@ -64,8 +64,8 @@ public:
   typedef const char* KeyType;
   typedef const char* KeyTypePointer;
 
-  inline nsHostEntry(const char* aHost);
-  inline nsHostEntry(const nsHostEntry& toCopy);
+  nsHostEntry(const char* aHost);
+  nsHostEntry(const nsHostEntry& toCopy);
 
   ~nsHostEntry()
   {
