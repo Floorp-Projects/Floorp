@@ -34,7 +34,7 @@ RANLIB			= /bin/true
 
 CPU_ARCH_TAG		= _$(CPU_ARCH)
 
-OS_CFLAGS		= -DVMS
+OS_CFLAGS		= -DVMS -DGENERIC_PTHREAD_REDEFINES
 
 # The command to build a shared library in POSIX on OpenVMS.
 MKSHLIB = vmsld $(OPTIMIZER)
