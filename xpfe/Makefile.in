@@ -46,7 +46,7 @@ MODULE       = browser
 PACKAGE_FILE = xpfe.pkg
 PACKAGE_VARS = USE_SHORT_LIBNAME
 
-ifdef MOZ_PHOENIX
+ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
 DIRS += \
         browser/public \
         browser/src \

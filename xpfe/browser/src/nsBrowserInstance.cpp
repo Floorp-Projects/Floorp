@@ -102,7 +102,7 @@
 // Stuff to implement file download dialog.
 #include "nsIProxyObjectManager.h" 
 
-#ifdef MOZ_PHOENIX
+#if defined(MOZ_PHOENIX) || defined(MOZ_XULRUNNER)
 #include "nsToolkitCompsCID.h"
 #endif
 

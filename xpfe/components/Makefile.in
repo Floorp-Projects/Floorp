@@ -52,10 +52,10 @@ endif
 ifdef MOZ_SUNBIRD
 MOZ_HAVE_BROWSER=
 endif
-ifdef MOZ_PHOENIX
-# Firefox uses this flag to stop the automatic processing of the jar.mn file
-# that lives parallel to this Makefile. The jar.mn is responsible for the 
-# packaging of a large number of chrome files Firefox does not need. 
+ifneq (,$(MOZ_PHOENIX)$(MOZ_XULRUNNER))
+# Firefox and XULRunner use this flag to stop the automatic processing of the
+# jar.mn file that lives parallel to this Makefile. The jar.mn is responsible
+# for the packaging of a large number of chrome files these apps don't need. 
 NO_DIST_INSTALL=1
 NO_INSTALL=1
 endif
@@ -74,6 +74,7 @@ DIRS	= \
 			$(NULL)
 
 ifndef MOZ_PHOENIX
+ifndef MOZ_XULRUNNER
 DIRS += \
 		related \
 		prefwindow \
@@ -86,10 +87,19 @@ DIRS += \
 		sidebar \
 		$(NULL)
 endif
+endif
+
+# XXX because 'search' depends on nsIBookmarksService
+# XXX we need to clean up the set of xulrunner dependencies
+ifdef MOZ_XULRUNNER
+DIRS += bookmarks/public
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef MOZ_PHOENIX
+ifndef MOZ_XULRUNNER
 DIRS    += urlwidget winhooks alerts
+endif
 endif
 endif
 

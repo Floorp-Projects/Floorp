@@ -350,6 +350,10 @@ tier_99_dirs  += other-licenses/branding/firefox/content
 endif
 endif
 
+ifdef MOZ_XULRUNNER
+tier_99_dirs	+= xulrunner
+endif
+
 ifdef MOZ_THUNDERBIRD
 tier_99_dirs	+= mail xpfe/bootstrap/init.d
 ifdef MOZ_USE_OFFICIAL_BRANDING

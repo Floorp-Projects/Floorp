@@ -487,7 +487,7 @@ ifdef TOOLKIT_CO_TAG
   TOOLKIT_CO_FLAGS := $(TOOLKIT_CO_FLAGS) -r $(TOOLKIT_CO_TAG)
 endif
 
-CVSCO_MOZTOOLKIT := $(CVS) $(CVS_FLAGS) co $(TOOLKIT_CO_FLAGS) $(CVS_CO_DATE_FLAGS)  mozilla/toolkit mozilla/chrome
+CVSCO_MOZTOOLKIT := $(CVS) $(CVS_FLAGS) co $(TOOLKIT_CO_FLAGS) $(CVS_CO_DATE_FLAGS)  mozilla/toolkit mozilla/chrome mozilla/xulrunner
 FASTUPDATE_MOZTOOLKIT := fast_update $(CVSCO_MOZTOOLKIT)
 CHECKOUT_MOZTOOLKIT := cvs_co $(CVSCO_MOZTOOLKIT)
 LOCALE_DIRS += mozilla/toolkit/locales
