@@ -191,13 +191,6 @@ case "$target" in
     MDCPUCFG_H=_linux.cfg
     PR_MD_CSRCS=linux.c
     PR_MD_ARCH_DIR=unix
-    case "${target_cpu}" in
-    alpha*)
-	AC_DEFINE(XP_UNIX)
-	AC_DEFINE(_POSIX_SOURCE)
-	AC_DEFINE(_BSD_SOURCE)
-	;;
-    esac
     ;;
 
 *-irix*)
