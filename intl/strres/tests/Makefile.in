@@ -65,3 +65,10 @@ OS_LIBS		+= /usr/lib/libdl.so
 endif
 endif
 
+EXPORT_RESOURCE = \
+	$(srcdir)/strres.properties \
+	$(NULL)
+
+install::
+	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
+
