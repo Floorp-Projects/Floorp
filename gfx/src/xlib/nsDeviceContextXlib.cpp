@@ -331,6 +331,7 @@ NS_IMETHODIMP nsDeviceContextXlib::GetSystemAttribute(nsSystemAttrID anID, Syste
           {
             fontName = XGetAtomName(mDisplay, pr);
             aInfo->mFont->name.AssignWithConversion(fontName);
+            aInfo->mFont->name.ToLowerCase();
             ::XFree(fontName);
           }
   

@@ -34,8 +34,9 @@
 typedef PRBool (*nsFontFamilyEnumFunc)(const nsString& aFamily, PRBool aGeneric, void *aData);
 
 // Font structure.
-struct NS_GFX nsFont {
-  // The family name of the font
+class nsFont {
+public:
+  // The family name of the font -- MUST be in lowercase!
   nsString name;
 
   // The style of font (normal, italic, oblique)
@@ -65,7 +66,12 @@ struct NS_GFX nsFont {
   // Make a copy of the given font
   nsFont(const nsFont& aFont);
 
+#ifdef DEBUG
+// so we can set breakpoints on creation/deletion
+  nsFont();
+
   ~nsFont();
+#endif
 
   PRBool operator==(const nsFont& aOther) const {
     return Equals(aOther);

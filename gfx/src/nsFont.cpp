@@ -27,6 +27,7 @@ nsFont::nsFont(const char* aName, PRUint8 aStyle, PRUint8 aVariant,
                PRUint16 aWeight, PRUint8 aDecoration, nscoord aSize)
 {
   name.AssignWithConversion(aName);
+  name.ToLowerCase();
   style = aStyle;
   variant = aVariant;
   weight = aWeight;
@@ -38,6 +39,7 @@ nsFont::nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
                PRUint16 aWeight, PRUint8 aDecoration, nscoord aSize)
   : name(aName)
 {
+  name.ToLowerCase();
   style = aStyle;
   variant = aVariant;
   weight = aWeight;
@@ -48,6 +50,11 @@ nsFont::nsFont(const nsString& aName, PRUint8 aStyle, PRUint8 aVariant,
 nsFont::nsFont(const nsFont& aOther)
   : name(aOther.name)
 {
+  // name should be lowercase already
+#ifdef DEBUG
+  name.ToLowerCase();
+  NS_ASSERTION(name.Equals(aOther.name),"nsFont name wasn't lowercase");
+#endif
   style = aOther.style;
   variant = aOther.variant;
   weight = aOther.weight;
@@ -55,9 +62,16 @@ nsFont::nsFont(const nsFont& aOther)
   size = aOther.size;
 }
 
+#ifdef DEBUG
+// so we can set breakpoints on creation/deletion
+nsFont::nsFont()
+{
+}
+
 nsFont::~nsFont()
 {
 }
+#endif
 
 PRBool nsFont::Equals(const nsFont& aOther) const
 {
@@ -66,7 +80,7 @@ PRBool nsFont::Equals(const nsFont& aOther) const
       (weight == aOther.weight) &&
       (decorations == aOther.decorations) &&
       (size == aOther.size) &&
-      name.EqualsIgnoreCase(aOther.name)) {
+      name.Equals(aOther.name)) {
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -74,7 +88,12 @@ PRBool nsFont::Equals(const nsFont& aOther) const
 
 nsFont& nsFont::operator=(const nsFont& aOther)
 {
+  // name should be lowercase
   name = aOther.name;
+#ifdef DEBUG
+  name.ToLowerCase();
+  NS_ASSERTION(name.Equals(aOther.name),"nsFont name wasn't lowercase");
+#endif
   style = aOther.style;
   variant = aOther.variant;
   weight = aOther.weight;

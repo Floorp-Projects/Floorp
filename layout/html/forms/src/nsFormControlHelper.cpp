@@ -628,13 +628,13 @@ nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
         aFont.weight = NS_FONT_WEIGHT_NORMAL;  // always normal weight
         aFont.size = styleFont->mFont.size;    // normal font size
         if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
-          aFont.name = "Arial";  // XXX windows specific font
+          aFont.name = "arial";  // XXX windows specific font
         }
       } else {
         // use arial, scaled down one HTML size
         // italics, decoration & variant(?) get used
         aFont = styleFont->mFont;
-        aFont.name = "Arial";  // XXX windows specific font
+        aFont.name = "arial";  // XXX windows specific font
         aFont.weight = NS_FONT_WEIGHT_NORMAL; 
         const nsFont& normal = aPresContext->GetDefaultFontDeprecated();
         PRInt32 scaler;

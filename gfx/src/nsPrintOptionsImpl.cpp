@@ -152,6 +152,7 @@ nsPrintOptions::SetFontNamePointSize(nsString& aFontName, PRInt32 aPointSize)
 {
   if (mDefaultFont != nsnull && aFontName.Length() > 0 && aPointSize > 0) {
     mDefaultFont->name = aFontName;
+    mDefaultFont->name.ToLowerCase();
     mDefaultFont->size = NSIntPointsToTwips(aPointSize);
   }
   return NS_OK;
