@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= smime
-LIBRARY_NAME	= smimestub
+LIBRARY_NAME	= smimestb
 META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
