@@ -44,8 +44,8 @@ X2JRETServerTestComponent.jar.comp: manifest iX2JRETServerTestComponent.class X2
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JDKHOME)\bin\javac -classpath $(CLASSPATH) -d $(DEPTH)\dist\classes iX2JRETServerTestComponent.java
-	$(JDKHOME)\bin\javac -classpath $(CLASSPATH) X2JRETServerTestComponent.java
+	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes iX2JRETServerTestComponent.java
+	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes X2JRETServerTestComponent.java
 
 install-component: X2JRETServerTestComponent.jar.comp X2JRETServerTestComponent.jar.info $(DLL)
 	copy X2JRETServerTestComponent.jar* $(DIST)\bin\components

@@ -48,12 +48,13 @@ LLIBS=	$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
 
 JDIRS = . 
 JAVAC_PROG=$(JDKHOME)\bin\javac
-JAVAC_FLAGS=-classpath $(CLASSPATH);$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
+JAVAC_FLAGS=-classpath $(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
 
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\javarules.mak>
-
-install:: $(DLL)
+iJ2XINServerTestComponent.class : iJ2XINServerTestComponent.java
+	$(JAVAC_PROG) $(JAVAC_FLAGS) iJ2XINServerTestComponent.java
+install:: $(DLL) iJ2XINServerTestComponent.class
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 clobber::
 	del /f $(DIST)\bin\components\$(DLLNAME).dll

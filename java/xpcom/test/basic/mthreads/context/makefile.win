@@ -50,8 +50,8 @@ LLIBS		=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
 include <$(topsrcdir)\config\rules.mak>
 
 javai:
-	echo $(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes:$(CLASSPATH) -d $(DEPTH)\dist\classes $(JAVAI) $(JAVA_SRC)
-	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes:$(CLASSPATH) -d $(DEPTH)\dist\classes $(JAVAI) $(JAVA_SRC)
+	echo $(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes $(JAVAI) $(JAVA_SRC)
+	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes $(JAVAI) $(JAVA_SRC)
 
 install:: $(DLL) javai
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components

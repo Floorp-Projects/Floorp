@@ -43,8 +43,8 @@ X2JINServerTestComponent.jar.comp: manifest iX2JINServerTestComponent.class X2JI
 .SUFFIXES: .java .class
 
 .java.class:
-  	$(JDKHOME)\bin\javac -classpath $(CLASSPATH) -d $(DEPTH)\dist\classes iX2JINServerTestComponent.java
-	$(JDKHOME)\bin\javac -classpath $(CLASSPATH) X2JINServerTestComponent.java
+  	$(JDKHOME)\bin\javac -classpath  $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes iX2JINServerTestComponent.java
+	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes X2JINServerTestComponent.java
 
 install-component: X2JINServerTestComponent.jar.comp X2JINServerTestComponent.jar.info $(DLL)
 	copy X2JINServerTestComponent.jar* $(DIST)\bin\components

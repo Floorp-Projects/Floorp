@@ -57,8 +57,8 @@ LINCS=\
 include <$(DEPTH)\config\rules.mak>
 
 javai:
-	echo $(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes:$(CLASSPATH) -d $(DEPTH)\dist\classes $(JAVAI) $(COMMON_JAVA)
-	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes:$(CLASSPATH) -d $(DEPTH)\dist\classes $(JAVAI) $(COMMON_JAVA)
+	echo $(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes; -d $(DEPTH)\dist\classes $(JAVAI) $(COMMON_JAVA)
+	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes $(JAVAI) $(COMMON_JAVA)
 
 #A little temporary hack with messenger
 install:: $(DLL) javai

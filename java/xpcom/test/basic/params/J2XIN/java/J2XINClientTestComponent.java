@@ -27,7 +27,8 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.util.Hashtable;
 
-public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iClientTestComponent, iJClientTestComponent, iExclusionSupport {
+public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iClientTestComponent, iJClientTestComponent, 
+                                                 iExclusionSupport {
     private iJ2XINServerTestComponent server = null;
     private VarContainer varContainer = null;
     private String testLocation = null;

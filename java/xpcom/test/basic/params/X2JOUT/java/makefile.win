@@ -42,8 +42,8 @@ X2JOUTServerTestComponent.jar.comp: manifest iX2JOUTServerTestComponent.class X2
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JDKHOME)\bin\javac -classpath $(CLASSPATH) -d $(DEPTH)\dist\classes iX2JOUTServerTestComponent.java
-	$(JDKHOME)\bin\javac -classpath $(CLASSPATH) X2JOUTServerTestComponent.java
+	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes iX2JOUTServerTestComponent.java
+	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes  X2JOUTServerTestComponent.java
 
 install-component: X2JOUTServerTestComponent.jar.comp X2JOUTServerTestComponent.jar.info $(DLL)
 	copy X2JOUTServerTestComponent.jar* $(DIST)\bin\components
