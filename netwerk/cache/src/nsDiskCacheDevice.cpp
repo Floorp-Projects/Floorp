@@ -671,8 +671,6 @@ nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 nsresult
 nsDiskCacheDevice::BindEntry(nsCacheEntry * newEntry)
 {
-    printf(">>>> binding entry to DISK cache device\n");
-
     nsresult rv;
 
     // Make sure this entry has its associated nsDiskCacheEntry data attached.
