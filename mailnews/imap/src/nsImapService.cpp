@@ -235,23 +235,23 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
     nsCOMPtr<nsIMsgFolder> folder;
     nsXPIDLCString msgKey;
     rv = DecomposeImapURI(aSrcMailboxURI, getter_AddRefs(folder), getter_Copies(msgKey));
-	if (NS_SUCCEEDED(rv))
-	{
+	  if (NS_SUCCEEDED(rv))
+	  {
     	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
-		if (NS_SUCCEEDED(rv))
-		{
+		  if (NS_SUCCEEDED(rv))
+		  {
             nsCOMPtr<nsIImapUrl> imapUrl;
             nsCAutoString urlSpec;
             rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec);
 
             // now try to display the message
-			rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
+			      rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
                               aURL, streamSupport, msgKey, PR_TRUE);
            if (NS_SUCCEEDED(rv) && moveMessage)
            {
                nsCOMPtr<nsIEventQueue> queue;	
                // get the Event Queue for this thread...
-	           NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+	             NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
 
                if (NS_FAILED(rv)) return rv;
 
@@ -341,7 +341,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIURI ** aURL,
-							nsISupports * aDisplayConsumer, 
+							              nsISupports * aDisplayConsumer, 
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID)
 {
@@ -356,52 +356,71 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
     nsresult rv = aImapUrl->SetImapAction(aImapAction /* nsIImapUrl::nsImapMsgFetch */);
     rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
 
-	rv = aImapUrl->SetImapMessageSink(aImapMessage);
-	if (NS_SUCCEEDED(rv))
-	{
-        nsXPIDLCString currentSpec;
-        nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
-        url->GetSpec(getter_Copies(currentSpec));
-        urlSpec = currentSpec;
+	  rv = aImapUrl->SetImapMessageSink(aImapMessage);
+	  if (NS_SUCCEEDED(rv))
+	  {
+      nsXPIDLCString currentSpec;
+      nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
+      url->GetSpec(getter_Copies(currentSpec));
+      urlSpec = currentSpec;
 
 	    char hierarchySeparator = '/'; // ### fixme - should get from folder
-		urlSpec.Append("fetch>");
-		urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
-		urlSpec.Append(">");
-		urlSpec.Append(hierarchySeparator);
+		  urlSpec.Append("fetch>");
+		  urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
+		  urlSpec.Append(">");
+		  urlSpec.Append(hierarchySeparator);
 
-        nsCString folderName;
-        GetFolderName(aImapMailFolder, folderName);
-		urlSpec.Append(folderName.GetBuffer());
-		urlSpec.Append(">");
-		urlSpec.Append(messageIdentifierList);
+      nsCString folderName;
+      GetFolderName(aImapMailFolder, folderName);
+		  urlSpec.Append(folderName.GetBuffer());
+		  urlSpec.Append(">");
+		  urlSpec.Append(messageIdentifierList);
 
 
-		// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-		// compiler that is preventing in string parameters from showing up as
-		// const char *. hopefully they will fix it soon.
-		rv = url->SetSpec((char *) urlSpec.GetBuffer());
+		  // mscott - this cast to a char * is okay...there's a bug in the XPIDL
+		  // compiler that is preventing in string parameters from showing up as
+		  // const char *. hopefully they will fix it soon.
+		  rv = url->SetSpec((char *) urlSpec.GetBuffer());
 
-        // if the display consumer is a webshell, then we should run the url in the webshell.
-        // otherwise, we'll run it normally....
+      // if the display consumer is a webshell, then we should run the url in the webshell.
+      // otherwise, it should be a stream listener....so open a channel using AsyncRead
+      // and the provided stream listener....
 
-        nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(aDisplayConsumer, &rv);
-        if (NS_SUCCEEDED(rv) && webShell)
-            rv = webShell->LoadURI(url, "view", nsnull, PR_TRUE);
-        else
+      nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(aDisplayConsumer, &rv);
+      if (NS_SUCCEEDED(rv) && webShell)
+         rv = webShell->LoadURI(url, "view", nsnull, PR_TRUE);
+      else
+      {
+        nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
+        if (NS_SUCCEEDED(rv) && aStreamListener)
         {
-            nsCOMPtr<nsIEventQueue> queue;	
-            // get the Event Queue for this thread...
+          nsCOMPtr<nsIChannel> aChannel;
+          rv = NewChannel(nsnull, url, nsnull, nsnull, getter_AddRefs(aChannel));
+          if (NS_FAILED(rv)) return rv;
+
+          nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
+          //  now try to open the channel passing in our display consumer as the listener 
+          rv = aChannel->AsyncRead(0, -1, aCtxt, aStreamListener);
+        }
+        else // do what we used to do before
+        {
+          // I'd like to get rid of this code as I believe that we always get a webshell
+          // or stream listener passed into us in this method but i'm not sure yet...
+          // I'm going to use an assert for now to figure out if this is ever getting called
+#ifdef DEBUG_mscott
+          NS_ASSERTION(0, "oops...someone still is reaching this part of the code");
+#endif
+          nsCOMPtr<nsIEventQueue> queue;	
+          // get the Event Queue for this thread...
 	        NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
 
-            if (NS_FAILED(rv)) return rv;
+          if (NS_FAILED(rv)) return rv;
 
-            rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
-            if (NS_FAILED(rv)) return rv;
-            rv = GetImapConnectionAndLoadUrl(queue, aImapUrl,
-                                             aDisplayConsumer, aURL);
-
+          rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
+          if (NS_FAILED(rv)) return rv;
+          rv = GetImapConnectionAndLoadUrl(queue, aImapUrl, aDisplayConsumer, aURL);
         }
+      }
 	}
 	return rv;
 }
@@ -1291,7 +1310,7 @@ nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
-	nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
+  	nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
     rv = msgUrl->GetServer(getter_AddRefs(aMsgIncomingServer));
     
     if (aURL)
