@@ -62,6 +62,10 @@ static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 class nsStringBundle : public nsIStringBundle
 {
 public:
+
+  nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult);
+
+  // deprecated
   nsStringBundle(nsIURL* aURL, nsILocale* aLocale, nsresult* aResult);
   virtual ~nsStringBundle();
 
@@ -72,8 +76,46 @@ public:
   NS_IMETHOD GetEnumeration(nsIBidirectionalEnumerator** elements);
 
   nsIPersistentProperties* mProps;
-};
 
+protected:
+  //
+  // functional decomposition of the funitions repeatively called 
+  //
+  nsresult GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in);
+  nsresult OpenInputStream(const nsString2 aURLStr, nsIInputStream*& in);
+  nsresult GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& country);
+ };
+ 
+nsStringBundle::nsStringBundle(const char* aURLSpec, nsILocale* aLocale, nsresult* aResult)
+{  NS_INIT_REFCNT();
+
+  mProps = nsnull;
+
+  nsIInputStream *in = nsnull;
+  *aResult = GetInputStream(aURLSpec,aLocale, in);
+   
+  if (!in) {
+#ifdef NS_DEBUG
+    if ( NS_OK == *aResult)
+      printf("OpenBlockingStream returned success value, but pointer is NULL\n");
+#endif
+    *aResult = NS_ERROR_UNEXPECTED;
+    return;
+  }
+
+  *aResult = nsComponentManager::CreateInstance(kPersistentPropertiesCID, NULL,
+                                                kIPersistentPropertiesIID, (void**) &mProps);
+  if (NS_FAILED(*aResult)) {
+#ifdef NS_DEBUG
+    printf("create nsIPersistentProperties failed\n");
+#endif
+    return;
+  }
+  *aResult = mProps->Load(in);
+  NS_RELEASE(in);
+}
+
+// deprecated
 nsStringBundle::nsStringBundle(nsIURL* aURL, nsILocale* aLocale,
   nsresult* aResult)
 {
@@ -200,6 +242,162 @@ nsStringBundle::GetEnumeration(nsIBidirectionalEnumerator** elements)
 	return ret;
 }
 
+nsresult
+nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInputStream*& in) 
+{
+  in = nsnull;
+
+  nsresult ret = NS_OK;
+
+  /* locale binding */
+  nsString2  strFile2;
+  nsString   lc_lang;
+  nsString   lc_country;
+
+  if (NS_OK == (ret = GetLangCountry(aLocale, lc_lang, lc_country))) {
+    
+    /* find the place to concatenate locale name 
+     */
+    PRInt32   count = 0;
+    nsString2 strFile(aURLSpec);
+    PRInt32   mylen = strFile.Length();
+    nsString2 fileLeft;
+ 
+    /* assume the name always ends with this
+     */
+    PRInt32 dot = strFile.RFindCharInSet(".");
+    count = strFile.Left(fileLeft, (dot>0)?dot:mylen);
+    strFile2 += fileLeft;
+
+    /* insert lang-country code
+     */
+    strFile2 += "_";
+    strFile2 += lc_lang;
+    if (lc_country.Length() > 0) {
+      strFile2 += "_";
+      strFile2 += lc_country;;
+    }
+ 
+    /* insert it
+     */   
+    nsString2 fileRight;
+    if (dot > 0) {
+      count = strFile.Right(fileRight, mylen-dot);
+      strFile2 += fileRight;
+    }
+    ret = OpenInputStream(strFile2, in);
+    if ((NS_FAILED(ret) || !in) && lc_country.Length() && lc_lang.Length()) {
+      /* plan A: fallback to lang only
+       */
+      strFile2 = fileLeft + "_" + lc_lang + fileRight;
+      ret = OpenInputStream(strFile2, in);
+    }/* plan A */   
+  }/* locale */
+
+  if (NS_FAILED(ret) || !in) {
+    /* plan B: fallback to aURLSpec
+     */
+    strFile2 = aURLSpec;
+    ret = OpenInputStream(strFile2, in);
+  }
+  return ret;
+}
+
+nsresult
+nsStringBundle::OpenInputStream(const nsString2 aURLStr, nsIInputStream*& in) 
+{
+#ifndef NECKO
+  nsINetService* pNetService = nsnull;
+
+  nsresult ret = nsServiceManager::GetService(kNetServiceCID,
+                                              kINetServiceIID, (nsISupports**) &pNetService);
+  /* get the url
+   */
+  nsIURL    *url = nsnull;
+
+  ret = pNetService->CreateURL(&url, aURLStr, nsnull, nsnull,
+                               nsnull);
+  if (NS_FAILED(ret)) {
+#ifdef NS_DEBUG
+    char *s = aURLStr.ToNewCString();
+    printf("\n** cannot create URL for %s\n", s?s:"null");
+    delete s;
+#endif
+    return ret;
+  }
+  //
+  ret = pNetService->OpenBlockingStream(url, nsnull, &in);
+  delete url;
+#ifdef NS_DEBUG
+  if (NS_FAILED(ret) || !in) {
+    char *s = aURLStr.ToNewCString();
+    printf("\n** cannot open stream: %s\n", s?s:"null");
+    delete s;
+  }
+#endif
+
+#else // NECKO
+  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
+  if (NS_FAILED(ret)) return ret;
+
+  nsIURI *uri = nsnull;
+  const char *uriStr = aURLStr.GetBuffer();
+  ret = service->NewURI(uriStr, nsnull, &uri);
+  if (NS_FAILED(ret)) 
+    return ret;
+
+  // XXX NECKO what verb? sinkGetter?
+  nsIChannel *channel = nsnull;
+  ret = pNetService->NewChannelFromURI("load", uri, nsnull, &channel);
+  NS_RELEASE(uri);
+  if (NS_FAILED(ret)) {
+#ifdef NS_DEBUG
+    printf("cannot get channel\n");
+#endif
+    return ret;
+  }
+
+  ret = channel->OpenInputStream(0, -1, &in);
+  NS_RELEASE(channel);
+  if (NS_FAILED(ret)) {
+#ifdef NS_DEBUG
+    printf("cannot get input stream\n");
+#endif
+  }
+#endif // NECKO
+  return ret;
+}
+
+nsresult 
+nsStringBundle::GetLangCountry(nsILocale* aLocale, nsString2& lang, nsString2& country)
+{
+  if (!aLocale) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsString	  lc_name;
+  nsString  	catagory("NSILOCALE_MESSAGES");
+  nsresult	  result	 = aLocale->GetCategory(&catagory, &lc_name);
+
+  NS_ASSERTION(result==NS_OK,"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
+  NS_ASSERTION(lc_name.Length()>0,"nsStringBundle::GetLangCountry: locale.GetCatagory failed");
+
+  PRInt32   dash = lc_name.FindCharInSet("-");
+  if (dash > 0) {
+    /* 
+     */
+    PRInt32 count = 0;
+    count = lc_name.Left(lang, dash);
+    count = lc_name.Right(country, (lc_name.Length()-dash-1));
+  }
+  else
+    lang = lc_name;
+
+  return NS_OK;
+}
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
 class nsStringBundleService : public nsIStringBundleService
 {
 public:
@@ -208,9 +406,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
-    nsIStringBundle** aResult);
   NS_IMETHOD CreateBundle(const char* aURLSpec, nsILocale* aLocale,
+    nsIStringBundle** aResult);
+
+  // deprecate
+  NS_IMETHOD CreateBundle(nsIURL* aURL, nsILocale* aLocale,
     nsIStringBundle** aResult);
 };
 
@@ -224,6 +424,28 @@ nsStringBundleService::~nsStringBundleService()
 }
 
 NS_IMPL_ISUPPORTS(nsStringBundleService, kIStringBundleServiceIID)
+
+NS_IMETHODIMP
+nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
+  nsIStringBundle** aResult)
+{
+
+  nsresult ret = NS_OK;
+  nsStringBundle* bundle = new nsStringBundle(aURLSpec, aLocale, &ret);
+  if (!bundle) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  if (NS_FAILED(ret)) {
+    delete bundle;
+    return ret;
+  }
+  ret = bundle->QueryInterface(kIStringBundleIID, (void**) aResult);
+  if (NS_FAILED(ret)) {
+    delete bundle;
+  }
+
+  return ret;
+}
 
 /* deprecated */
 NS_IMETHODIMP
@@ -244,120 +466,6 @@ nsStringBundleService::CreateBundle(nsIURL* aURL, nsILocale* aLocale,
     delete bundle;
   }
 
-  return ret;
-}
-
-NS_IMETHODIMP
-nsStringBundleService::CreateBundle(const char* aURLSpec, nsILocale* aLocale,
-  nsIStringBundle** aResult)
-{
-
-  /* locale binding */
-  nsString2 strFile2;
-  if (aLocale) {
-    nsString	  lc_name;
-    nsString  	catagory("NSILOCALE_MESSAGES");
-    nsresult	  result	 = aLocale->GetCategory(&catagory, &lc_name);
-
-    NS_ASSERTION(result==NS_OK,"nsStringBundleService::CreateBundle: locale.GetCatagory failed");
-    NS_ASSERTION(lc_name.Length()>0,"nsStringBundleService::CreateBundle: locale.GetCatagory failed");
-
-    /* find the place to concatenate locale name 
-     */
-    PRInt32 count = 0;
-    nsString2 strFile(aURLSpec);
-    PRInt32   mylen = strFile.Length();
-
-    /* assume the name always end with this
-     */
-    PRInt32 dot = strFile.RFindCharInSet(".");
-    count = strFile.Left(strFile2, (dot>0)?dot:mylen);
-
-    /* get lang-country code
-     */
-    PRInt32 dash = lc_name.FindCharInSet("-");
-    if (dash > 0) {
-      /* 
-       */
-      nsString lc_name2;
-      nsString right;
-      count = lc_name.Left(lc_name2, dash);
-      count = lc_name.Right(right, (lc_name.Length()-dash-1));
-      lc_name2 += "_";
-      lc_name2 += right;
-      strFile2 += "_";
-      strFile2 += lc_name2;
-    }
-    else {
-      strFile2 += "_";
-      strFile2 += lc_name;
-    }
- 
-    /* insert it
-     */   
-    if (dot > 0) {
-      nsString2 fileRight;
-      count = strFile.Right(fileRight, mylen-dot);
-      strFile2 += fileRight;
-    }
-#ifdef NS_DEBUG
-    {
-      char *s = strFile2.ToNewCString();
-      printf("\n--NEW URL--%s\n", s?s:"null");
-      delete s;
-    }
-#endif
-  }
-  /* locale binding */
-
-  nsresult ret = NS_OK;
-
-  /* get the url
-   */
-  nsIURL *url = nsnull;
-#ifndef NECKO
-  nsINetService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
-    (nsISupports**) &pNetService);
-  if (NS_FAILED(ret)) {
-    printf("cannot get net service\n");
-    return 1;
-  }
-  ret = pNetService->CreateURL(&url, strFile2, nsnull, nsnull,
-                               nsnull);
-  if (NS_FAILED(ret)) {
-    printf("cannot create URL\n");
-    return 1;
-  }
-#else
-  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &ret);
-  if (NS_FAILED(ret)) return ret;
-
-  nsIURI *uri = nsnull;
-  const char *uriStr = strFile2.GetBuffer();
-  ret = service->NewURI(uriStr, nsnull, &uri);
-  if (NS_FAILED(ret)) return ret;
-
-  ret = uri->QueryInterface(nsIURL::GetIID(), (void**)&url);
-  NS_RELEASE(uri);
-  if (NS_FAILED(ret)) return ret;
-#endif // NECKO
-
-  /* do it
-   */
-  nsStringBundle* bundle = new nsStringBundle(url, aLocale, &ret);
-  if (!bundle) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (NS_FAILED(ret)) {
-    delete bundle;
-    return ret;
-  }
-  ret = bundle->QueryInterface(kIStringBundleIID, (void**) aResult);
-  if (NS_FAILED(ret)) {
-    delete bundle;
-  }
-  delete url;
   return ret;
 }
 
