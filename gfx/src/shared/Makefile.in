@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = gfx
 LIBRARY_NAME = gfxshared_s
 FORCE_STATIC_LIB=1
+EXPORT_LIBRARY=1
 
 REQUIRES= \
 		  xpcom \
