@@ -29,10 +29,6 @@ interface nsISocketProviderService : nsISupports
 
 %{C++
 
-#define NS_DECL_ISOCKETPROVIDERSERVICE \
-  NS_IMETHOD GetSocketProvider( const char *, nsISocketProvider * * );
-
-
 #define NS_SOCKETPROVIDERSERVICE_CID                 \
 { /* ed394ba0-5472-11d3-bbc8-0000861d1237 */         \
   0xed394ba0,                                        \
