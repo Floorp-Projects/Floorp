@@ -2553,6 +2553,16 @@ main(int argc, char **argv)
     }
     /*  Check cert validity against current time (-V)  */
     if (certutil.commands[cmd_CheckCertValidity].activated) {
+	/* XXX temporary hack for fips - must log in to get priv key */
+	if (certutil.options[opt_VerifySig].activated) {
+	    secuPWData pwdata = { PW_NONE, 0 };
+	    if (certutil.options[opt_PasswordFile].arg) {
+		pwdata.source = PW_FROMFILE;
+		pwdata.data = certutil.options[opt_PasswordFile].arg;
+	    }
+	    if (PK11_NeedLogin(slot))
+		PK11_Authenticate(slot, PR_TRUE, &pwdata);
+	}
 	rv = ValidateCert(certHandle, name, 
 	                  certutil.options[opt_ValidityTime].arg,
 			  certutil.options[opt_Usage].arg,
