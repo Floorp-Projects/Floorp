@@ -19,9 +19,8 @@
 //	First checked in on 98/12/03 by John R. McMullen, derived from net.h/mkparse.c.
 
 #include "nsEscape.h"
-
-#include "plstr.h"
-#include "prmem.h"
+#include "nsIAllocator.h"
+#include "nsCRT.h"
 
 const int netCharType[256] =
 /*	Bit 0		xalpha		-- the alphas
@@ -59,7 +58,7 @@ NS_COM char* nsEscape(const char * str, nsEscapeMask mask)
 {
     if(!str)
         return NULL;
-    return nsEscapeCount(str, (PRInt32)PL_strlen(str), mask, NULL);
+    return nsEscapeCount(str, (PRInt32)nsCRT::strlen(str), mask, NULL);
 }
 
 //----------------------------------------------------------------------------------------
@@ -83,7 +82,7 @@ NS_COM char* nsEscapeCount(
             extra += 2; /* the escape, plus an extra byte for each nibble */
 	}
 
-	char* result = new char[len + extra + 1];
+	char* result = (char *)nsAllocator::Alloc(len + extra + 1);
     if (!result)
         return 0;
 
@@ -101,7 +100,7 @@ NS_COM char* nsEscapeCount(
 			else 
 			{
 				*dst++ = HEX_ESCAPE;
-				*dst++ = hexChars[c >> 4];		/* high nibble */
+				*dst++ = hexChars[c >> 4];	/* high nibble */
 				*dst++ = hexChars[c & 0x0f];	/* low nibble */
 			}
 		}
@@ -116,7 +115,7 @@ NS_COM char* nsEscapeCount(
 			else 
 			{
 				*dst++ = HEX_ESCAPE;
-				*dst++ = hexChars[c >> 4];		/* high nibble */
+				*dst++ = hexChars[c >> 4];	/* high nibble */
 				*dst++ = hexChars[c & 0x0f];	/* low nibble */
 			}
 		}
@@ -171,9 +170,7 @@ NS_COM PRInt32 nsUnescapeCount(char * str)
 NS_COM char *
 nsEscapeHTML(const char * string)
 {
-  char *rv = (char *) PR_Malloc(PL_strlen(string)*4 + 1); /* The +1 is for
-															  the trailing
-															  null! */
+  char *rv = (char *) nsAllocator::Alloc(nsCRT::strlen(string)*4 + 1); /* The +1 is for the trailing null! */
 	char *ptr = rv;
 
 	if(rv)
