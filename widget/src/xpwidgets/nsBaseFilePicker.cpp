@@ -57,46 +57,45 @@ NS_IMETHODIMP nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw, nsIWidget **
     
     if (docShell) {
 
-          nsCOMPtr<nsIPresShell> presShell;
-          rv = docShell->GetPresShell(getter_AddRefs(presShell));
+      nsCOMPtr<nsIPresShell> presShell;
+      rv = docShell->GetPresShell(getter_AddRefs(presShell));
 
-          if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIViewManager> viewManager;
-            rv = presShell->GetViewManager(getter_AddRefs(viewManager));
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIViewManager> viewManager;
+        rv = presShell->GetViewManager(getter_AddRefs(viewManager));
             
-            if (NS_SUCCEEDED(rv)) {
-              nsIView *view;
-              rv = viewManager->GetRootView(view);
+        if (NS_SUCCEEDED(rv)) {
+          nsIView *view;
+          rv = viewManager->GetRootView(view);
               
-              if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsIWidget> widget;
-                rv = view->GetWidget(*getter_AddRefs(widget));
+          if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIWidget> widget;
+            rv = view->GetWidget(*getter_AddRefs(widget));
 
-		if (NS_SUCCEEDED(rv)) {
-		  *aResult = widget;
-		  NS_ADDREF(*aResult);
-		  return NS_OK;
-		}
-		
-              }
+            if (NS_SUCCEEDED(rv)) {
+              *aResult = widget;
+              NS_ADDREF(*aResult);
+              return NS_OK;
             }
+		
           }
+        }
+      }
     }
   }
   return rv;
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseFilePicker::Create(nsIDOMWindow *aParent,
-				       const PRUnichar *aTitle,
-				       PRInt16 aMode)
+NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
+                                     const PRUnichar *aTitle,
+                                     PRInt16 aMode)
 {
   nsCOMPtr<nsIWidget> widget;
   nsresult rv = DOMWindowToWidget(aParent, getter_AddRefs(widget));
 
-  if (NS_SUCCEEDED(rv))
-  {
-    return CreateNative(widget, aTitle, aMode);
+  if (NS_SUCCEEDED(rv)) {
+    return InitNative(widget, aTitle, aMode);
   }
 
   return rv;

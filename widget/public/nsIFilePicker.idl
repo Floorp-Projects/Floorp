@@ -45,14 +45,14 @@ interface nsIFilePicker : nsISupports
   const long filterXUL        = 0x20;           // *.xul
 
  /**
-  * Create the file widget.
+  * Initialize the file widget.
   *
   * @param      parent   nsIDOMWindow parent.  This dialog should be dependant on this parent.
   * @param      title    The title for the file widget
   * @param      mode     load, save, or get folder
   *
   */
-  void create(in nsIDOMWindow parent, in wstring title, in short mode);
+  void init(in nsIDOMWindow parent, in wstring title, in short mode);
 
  /**
   * Set filter list to something in the predefined list
