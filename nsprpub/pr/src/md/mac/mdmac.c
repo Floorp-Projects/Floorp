@@ -70,6 +70,7 @@
 unsigned char GarbageCollectorCacheFlusher(PRUint32 size);
 
 extern PRThread *gPrimaryThread;
+extern ProcessSerialNumber gApplicationProcess;     // in macthr.c
 
 
 //##############################################################################
@@ -287,6 +288,8 @@ void _MD_GetRegisters(PRUint32 *to)
 void _MD_EarlyInit()
 {
 	Handle				environmentVariables;
+
+	GetCurrentProcess(&gApplicationProcess);
 
 	INIT_CRITICAL_REGION();
 	InitIdleSemaphore();
