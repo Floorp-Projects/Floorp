@@ -4,7 +4,6 @@ en-US.jar:
 +  locale/en-US/global/accept2locale.properties         (accept2locale.properties)
 +  locale/en-US/global/brand.dtd                        (brand.dtd)
 *+ locale/en-US/global/brand.properties                 (brand.properties)
-+  locale/en-US/global/build.dtd                        (build.dtd)
 +  locale/en-US/global/charsetOverlay.dtd               (charsetOverlay.dtd)
 +  locale/en-US/global/commonDialog.dtd                 (commonDialog.dtd)
 +  locale/en-US/global/commonDialogs.properties         (commonDialogs.properties)
