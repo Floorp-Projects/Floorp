@@ -484,15 +484,6 @@ int nsGIFDecoder2::HaveDecodedRow(
     case gfxIFormats::RGB_A1:
     case gfxIFormats::BGR_A1:
       {
-        gfx_color transColor = 0;
-        if (cmap && // cmap could have null value if the global color table flag is 0
-            decoder->mGIFStruct->is_transparent &&
-            (decoder->mGIFStruct->tpixel < cmapsize)) {
-          transColor |= cmap[decoder->mGIFStruct->tpixel].red;
-          transColor |= cmap[decoder->mGIFStruct->tpixel].green << 8;
-          transColor |= cmap[decoder->mGIFStruct->tpixel].blue << 16;
-        }
-        decoder->mImageFrame->SetTransparentColor(transColor);
         memset(decoder->mRGBLine, 0, bpr);
         memset(decoder->mAlphaLine, 0, abpr);
         PRUint32 iwidth = (PRUint32)width;

@@ -61,14 +61,12 @@ private:
   PRPackedBool mInitalized;
   PRPackedBool mMutable;
   PRPackedBool mHasBackgroundColor;
-  PRPackedBool mHasTransparentColor;
   gfx_format   mFormat;
 
   PRInt32 mTimeout; // -1 means display forever
   nsPoint mOffset;
 
   gfx_color mBackgroundColor;
-  gfx_color mTransparentColor;
 
   PRInt32   mDisposalMethod;
 };
