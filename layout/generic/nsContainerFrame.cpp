@@ -344,10 +344,13 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
       if (NS_OK == kid->GetFrameForPoint(tmp, aFrame)) {
         return NS_OK;
       }
+      else {
+        *aFrame = this;
+      }
     }
     kid->GetNextSibling(&kid);
   }
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 /////////////////////////////////////////////////////////////////////////////

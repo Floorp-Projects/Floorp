@@ -298,6 +298,7 @@ nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
   nsIFrame* kid;
   nsRect kidRect;
   nsPoint tmp;
+  *aFrame = this;
 
   FirstChild(nsnull, &kid);
   while (nsnull != kid) {
@@ -312,7 +313,6 @@ nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
     }
     kid->GetNextSibling(&kid);
   }
-  *aFrame = this;
   return NS_ERROR_FAILURE;
 }
 

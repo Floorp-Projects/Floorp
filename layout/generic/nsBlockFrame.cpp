@@ -5020,7 +5020,7 @@ nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
       return NS_OK;
     }
   }
-  return NS_OK;
+  return rv;
 }
 
 //////////////////////////////////////////////////////////////////////
