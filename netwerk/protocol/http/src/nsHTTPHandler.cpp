@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Christopher Blizzard <blizzard@mozilla.org>
  */
 
 #include "nspr.h"
@@ -769,6 +770,8 @@ nsHTTPHandler::Init()
                 HTTPPrefsCallback, (void*)this);
     mPrefs->RegisterCallback(UA_PREF_PREFIX "locale", 
                 HTTPPrefsCallback, (void*)this);
+    mPrefs->RegisterCallback(UA_PREF_PREFIX "misc",
+                HTTPPrefsCallback, (void *)this);
     PrefsChanged();
 
     rv = InitUserAgentComponents();
@@ -835,6 +838,8 @@ nsHTTPHandler::~nsHTTPHandler()
                 HTTPPrefsCallback, (void*)this);
         mPrefs->UnregisterCallback(UA_PREF_PREFIX "locale", 
                 HTTPPrefsCallback, (void*)this);
+        mPrefs->UnregisterCallback(UA_PREF_PREFIX "misc",
+                HTTPPrefsCallback, (void *)this);
     }
 
     CRTFREEIF (mAcceptLanguages);
@@ -1467,6 +1472,19 @@ nsHTTPHandler::PrefsChanged(const char* pref)
             printf("\n--> nsHTTPHandler::PrefsChanged:general.useragent.locale=%s\n",
                    (const char*) NS_ConvertUCS2toUTF8(uval));
 #endif
+            BuildUserAgent();
+        }
+    }
+
+    // general.useragent.misc
+    if ((bChangedAll) || !PL_strcmp(pref, UA_PREF_PREFIX "misc")) {
+        nsXPIDLCString uval;
+        nsresult rv = NS_OK;
+        rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "misc",
+                                  getter_Copies(uval));
+        if (NS_SUCCEEDED(rv)) {
+            mAppMisc.Assign(uval);
+            // rebuild the user agent
             BuildUserAgent();
         }
     }
