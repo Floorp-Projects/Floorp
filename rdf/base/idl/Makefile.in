@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 IDLSRCS = \
-	rdf.idl				\
+	nsRDFInterfaces.idl		\
 #	nsIRDFArcsInCursor.idl		\
 #	nsIRDFArcsOutCursor.idl		\
 #	nsIRDFAssertionCursor.idl	\
