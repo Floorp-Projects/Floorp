@@ -3,49 +3,80 @@
 <!ENTITY tasksMenu.accesskey                           "t"> 
 <!-- LOCALIZATION NOTE (navigatorCmd.label): DONT_TRANSLATE -->  
 <!ENTITY navigatorCmd.label					"Navigator">  
+<!ENTITY navigatorCmd.accesskey                         "n">
 <!-- LOCALIZATION NOTE (editorCmd.label): DONT_TRANSLATE -->
 <!ENTITY editorCmd.label					  "Composer">
+<!ENTITY editorCmd.accesskey				"c">
 <!ENTITY addressBookCmd.label				"Address Book">  
+<!ENTITY addressBookCmd.accesskey				"a">
 
-<!ENTITY newsgroupsCmd.label				".Newsgroups">  
 <!ENTITY toolsMenu.label					"Tools"> 
+<!ENTITY toolsMenu.accesskey				"t">
 <!ENTITY historyCmd.label						"History">  
+<!ENTITY historyCmd.accesskey				"h">
 <!ENTITY securityInfoCmd.label					".Security Info">  
+<!ENTITY securityInfoCmd.accesskey				"s">
 <!ENTITY importUtilCmd.label					"Import Utility">  
+<!ENTITY importUtilCmd.accesskey				"i">
 <!ENTITY javaConsoleCmd.label					"Java Console">
+<!ENTITY javaConsoleCmd.accesskey				"j">
 
 <!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.accesskey				"s">
 
 
 <!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
 <!ENTITY walletMenu.label "Privacy and Security">
+<!ENTITY walletMenu.accesskey "p">
 <!ENTITY walletFormManager.label "Form Manager">
+<!ENTITY walletFormManager.accesskey "f">
 <!ENTITY walletPasswordManager.label "Password Manager">
+<!ENTITY walletPasswordManager.accesskey "p">
 <!ENTITY walletSafeFillCmd.label "Prefill Form with Captured Data">
+<!ENTITY walletSafeFillCmd.accesskey "P">
 <!ENTITY walletQuickFillCmd.label "Prefill Form Quickly">
+<!ENTITY walletQuickFillCmd.accesskey "q">
 <!ENTITY walletRequestToCaptureCmd.label "Capture Data found on Form">
+<!ENTITY walletRequestToCaptureCmd.accesskey "c">
 <!-- LOCALIZATION NOTE (walletContentsCmd.label): Do NOT translate "Wallet"-->
 <!ENTITY walletContentsCmd.label "View Captured Form Data">
+<!ENTITY walletContentsCmd.accesskey "v">
 <!ENTITY walletDisplaySignonsCmd.label "View Stored Passwords">
+<!ENTITY walletDisplaySignonsCmd.accesskey "v">
 <!ENTITY walletDisplayCookiesCmd.label "View Stored Cookies">
+<!ENTITY walletDisplayCookiesCmd.accesskey "v">
 <!ENTITY walletAllowCookiesCmd.label "Allow this Site to Set Cookies">
+<!ENTITY walletAllowCookiesCmd.accesskey "a">
 <!ENTITY walletAllowCookiesMsg.label "Cookies from this site will always be accepted">
 <!ENTITY walletBlockCookiesCmd.label "Block this Site from Setting Cookies">
+<!ENTITY walletBlockCookiesCmd.accesskey "b">
 <!ENTITY walletBlockCookiesMsg.label "Cookies from this site will always be rejected">
 <!ENTITY walletDisplayImagesCmd.label "View Sites that can/cannot Display Images">
+<!ENTITY walletDisplayImagesCmd.accesskey "v">
 <!ENTITY walletAllowImagesCmd.label "Allow this Site to Display Images">
+<!ENTITY walletAllowImagesCmd.accesskey "a">
 <!ENTITY walletAllowImagesMsg.label "Images from this site will always be downloaded">
 <!ENTITY walletBlockImagesCmd.label "Block this Site from Displaying Images">
+<!ENTITY walletBlockImagesCmd.accesskey "b">
 <!ENTITY walletBlockImagesMsg.label "Images from this site will never be downloaded">
 <!ENTITY walletInterviewCmd.label "Interview">
+<!ENTITY walletInterviewCmd.accesskey "i">
 <!ENTITY walletSamplesCmd.label "Demonstration">
+<!ENTITY walletSamplesCmd.accesskey "d">
 <!ENTITY walletChangePasswordCmd.label "Change Master Password...">
+<!ENTITY walletChangePasswordCmd.accesskey "c">
 <!ENTITY walletExpirePasswordCmd.label "Log Out">
+<!ENTITY walletExpirePasswordCmd.accesskey "l">
 <!ENTITY walletEncryptCmd.label "Encrypt Stored Data">
+<!ENTITY walletEncryptCmd.accesskey "e">
 <!ENTITY walletObscureCmd.label "Obscure Stored Data">
+<!ENTITY walletObscureCmd.accesskey "o">
 <!ENTITY walletClearCmd.label "Clear Stored Data">
+<!ENTITY walletClearCmd.accesskey "d">
 <!ENTITY walletCookieManager.label "Cookie Manager">
+<!ENTITY walletCookieManager.accesskey "c">
 <!ENTITY walletImageManager.label "Image Manager">
+<!ENTITY walletImageManager.accesskey "i">
 
 <!ENTITY taskNavigator.tooltip  "Navigator">
 <!ENTITY taskComposer.tooltip  "Composer">
