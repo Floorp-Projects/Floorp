@@ -61,7 +61,11 @@ static const char LINEBREAK_START = '\012';
 static const char LINEBREAK_START = '\015';
 #endif
 
-#define PROTOCOL_DEBUG
+#define PROTOCOL_DEBUG 
+
+#ifdef DEBUG_sspitzer_
+#define DEBUG_NEWS 1
+#endif
 
 class nsNNTPHost : public nsINNTPHost {
 public:
@@ -562,10 +566,6 @@ nsNNTPHost::CleanUp() {
 void
 nsNNTPHost::OpenGroupFile(const PRIntn permissions)
 {
-#ifdef PROTOCOL_DEBUG
-
-
-#endif
 #ifdef UNREADY_CODE
 	PR_ASSERT(permissions);
 	if (!permissions) return;
@@ -652,7 +652,7 @@ msg_GrowBuffer (PRUint32 desired_size, PRUint32 element_size, PRUint32 quantum,
 		  PR_ASSERT(0);
 		  return -1;
 		}
-#endif /* DEBUG */
+#endif /* TESTFORWIN16 */
 
 	  new_buf = (*buffer
 				 ? (char *) PR_Realloc (*buffer, (*size + increment)
@@ -727,7 +727,7 @@ msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 									  void *closure),
 				void *closure)
 {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
   printf("msg_LineBuffer()\n");
 #endif
 
@@ -841,7 +841,7 @@ nsNNTPHost::LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile)
       break;
     }
     else {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
       printf("%d: %s\n", numread, buffer);
 #endif
       status = msg_LineBuffer(buffer, numread,
@@ -871,7 +871,7 @@ nsNNTPHost::LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile)
 nsresult
 nsNNTPHost::ProcessLine_s(char* line, PRUint32 line_size, void* closure)
 {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
   printf("nsNNTPHost::ProcessLine_s()\n");
 #endif
   return ((nsNNTPHost*) closure)->ProcessLine(line, line_size);
@@ -1047,7 +1047,7 @@ nsNNTPHost::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileS
 	char is_newsgroup[512];
   PRBool rv;
 
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
   printf("MapHostToNewsrcFile(%s,%s,%s,??)\n",newshostname,(const char *)fatFile, newshostname);
 #endif
   lookingFor = PR_smprintf("newsrc-%s",newshostname);
@@ -1066,7 +1066,7 @@ nsNNTPHost::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileS
 
   /* we expect the first line to be NEWSRC_MAP_FILE_COOKIE */
 	rv = inputStream.readline(buffer, sizeof(buffer));
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
   printf("buffer = %s\n", buffer);
 #endif
   if ((!rv) || (PL_strncmp(buffer, NEWSRC_MAP_FILE_COOKIE, PL_strlen(NEWSRC_MAP_FILE_COOKIE)))) {
@@ -1088,7 +1088,7 @@ nsNNTPHost::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileS
       return NS_ERROR_FAILURE;
     }  
 
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
     printf("buffer = %s\n", buffer);    
 #endif
     
@@ -1117,21 +1117,21 @@ nsNNTPHost::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, nsFileS
       }
 
 		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
       printf("is_newsgroups_file = TRUE\n");
 #endif
     }
     else {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
       printf("is_newsgroups_file = FALSE\n");
 #endif
     }
     
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
     printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
 #endif
     if (!PL_strncmp(psuedo_name,lookingFor,PL_strlen(lookingFor))) {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
       printf("found a match for %s\n",lookingFor);
 #endif
       newsrcFile = filename;
@@ -1185,7 +1185,7 @@ nsNNTPHost::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec &news
 
 nsresult nsNNTPHost::LoadNewsrc(const char *uri /* , nsIMsgFolder* hostinfo*/)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("nsNNTPHost::LoadNewsrc(%s)\n", uri);
 #endif
 
@@ -1223,7 +1223,7 @@ nsresult nsNNTPHost::LoadNewsrc(const char *uri /* , nsIMsgFolder* hostinfo*/)
 			return rv;
 		}
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("newsrc file = %s\n",(const char *)newsrcFile);
 #endif	
 		rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFile);
@@ -2007,7 +2007,7 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *retval)
 	if (name == nsnull) {
 		return NS_ERROR_NULL_POINTER;
 	}
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("FindGroup(%s)\n",name);
 #endif
 			
@@ -2023,7 +2023,7 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *retval)
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) (*m_groups)[i];
         rv = info->GetName(&groupname);
        
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("%d = %s\n",i,groupname?groupname:"null");
 #endif
 
@@ -2048,7 +2048,7 @@ nsNNTPHost::AddGroup(const char *name,
                      nsMsgGroupRecord *inGroupRecord,
                      nsINNTPNewsgroup **retval)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("nsNNTPHost::AddGroup(%s)\n",name);
 #endif
 	nsINNTPNewsgroup *newsInfo = NULL;
@@ -3137,7 +3137,7 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* name,
 	OpenGroupFile();
 	if (!m_groupFile) return NULL;
 
-#ifdef DEBUG
+#ifdef DEBUG_NEWS
 	if (parent != m_groupTree) {
 		char* pname = parent->GetFullName();
 		if (pname) {
@@ -3146,7 +3146,7 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* name,
 			pname = NULL;
 		}
 	}
-#endif
+#endif /* DEBUG_NEWS */
 
 	if (min < m_fileStart) min = m_fileStart;
 	if (max < m_fileStart || max > m_fileSize) max = m_fileSize;
@@ -3179,7 +3179,7 @@ nsNNTPHost::LoadSingleEntry(nsMsgGroupRecord* parent, char* name,
 	return result;
 #else
 	return 0;
-#endif
+#endif /* UNREADY_CODE */
 }
 
 
@@ -3504,7 +3504,7 @@ nsNNTPHost::GetNewsgroupList(const char* name, nsINNTPNewsgroupList **retval)
 	if (name == nsnull) {
 		return NS_ERROR_NULL_POINTER;
 	}
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("GetNewsgroupList(%s)\n",name);	
 #endif
 			
@@ -3518,7 +3518,7 @@ nsNNTPHost::GetNewsgroupList(const char* name, nsINNTPNewsgroupList **retval)
 		nsINNTPNewsgroupList* list = (nsINNTPNewsgroupList*) (*m_newsgrouplists)[i];
         rv = list->GetGroupName(&newsgroupname);
        
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 		printf("%d = %s\n",i,newsgroupname?newsgroupname:"null");
 #endif
 
@@ -3572,7 +3572,7 @@ nsNNTPHost::AddNewNewsgroup(const char *name,
     nsMsgGroupRecord     *groupRecord = NULL;
     nsresult rv;
     
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("nsNNTPHost::AddNewNewsgroup(%s,...)\n",name);
 #endif
 

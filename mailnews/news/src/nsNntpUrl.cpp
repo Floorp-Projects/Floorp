@@ -724,7 +724,7 @@ nsresult nsNntpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         }
     }
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("protocol='%s' host='%s' file='%s'\n", m_protocol, m_host, m_file);
 #endif
     delete [] cSpec;
@@ -845,7 +845,7 @@ nsresult nsNntpUrl::GetSpec(const char* *result) const
 
 nsresult nsNntpUrl::SetSpec(const char *aNewSpec)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     if (aNewSpec) {
 	printf("nsNntpUrl::SetSpec(%s)\n", aNewSpec);
     }

@@ -254,14 +254,14 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
         rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &newsDBFactory);
         if (NS_SUCCEEDED(rv) && newsDBFactory) {
                 newsDBOpen = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) db, PR_FALSE);
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
                 if (NS_SUCCEEDED(newsDBOpen)) {
                     printf ("newsDBFactory->Open() succeeded\n");
                 }
                 else {
                     printf ("newsDBFactory->Open() failed\n");
                 }
-#endif
+#endif /* DEBUG_NEWS */
                 NS_RELEASE(newsDBFactory);
                 newsDBFactory = nsnull;
                 return rv;

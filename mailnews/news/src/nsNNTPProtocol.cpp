@@ -67,6 +67,10 @@
 
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
+#ifdef DEBUG_sspitzer_
+#define DEBUG_NEWS
+#endif
+
 /* #define UNREADY_CODE	*/  /* mscott: generic flag for hiding access to url struct and active entry which are now gone */
 
 /*#define CACHE_NEWSGRP_PASSWORD*/
@@ -341,7 +345,7 @@ char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 				scratchBuf[1] = (char) *commandSpecificData++;
 				scratchBuf[2] = '\0';
 				int accum = 0;
-				sscanf (scratchBuf, "%X", &accum);
+				PR_sscanf(scratchBuf, "%X", &accum);
 				*resultPtr++ = (char) accum;
 			}
 			else
@@ -883,7 +887,7 @@ PRInt32 nsNNTPProtocol::ParseURL(nsIURL * aURL, char ** aHostAndPort, PRBool * b
 	   it wasn't specified.
 	*/
   	s = PL_strchr (hostAndPort, ':');
-	if (s && sscanf (s+1, " %u ", &port) == 1 && HG05998)
+	if (s && PR_sscanf(s+1, " %u ", &port) == 1 && HG05998)
 		*s = 0;
 
 	// I think the path part is just the file part of the nsIURL interface...
@@ -1119,7 +1123,9 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-	NNTP_LOG_READ(line);
+#ifdef DEBUG_NEWS
+	printf("read: %s\n",line);
+#endif
 
     if(pauseForMoreData)
 	{
@@ -1143,6 +1149,9 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
     /* almost correct */
     if(status > 1)
 	{
+#ifdef DEBUG_NEWS
+	printf("received %d bytes\n", status);
+#endif
 #ifdef UNREADY_CODE
         ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
@@ -1153,7 +1162,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 
 	m_previousResponseCode = m_responseCode;
 
-    sscanf(line, "%d", &m_responseCode);
+    PR_sscanf(line, "%d", &m_responseCode);
 
 	/* authentication required can come at any time
 	 */
@@ -1748,7 +1757,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
         if (slash)
 		{
             *slash = '\0';
-            (void) sscanf(slash+1, "%d-%d", &m_firstArticle, &m_lastArticle);
+            (void) PR_sscanf(slash+1, "%d-%d", &m_firstArticle, &m_lastArticle);
 		}
 
         NET_SACopy (&m_currentGroup, group_name);
@@ -2024,15 +2033,16 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
-    
-    if(pauseForMoreData)
+	if(pauseForMoreData)
 	{
 		SetFlag(NNTP_PAUSE_FOR_READ);
 		return 0;
 	}
-	
 	if(status > 1)
-	{
+	{		
+#ifdef DEBUG_NEWS
+		printf("received %d bytes\n", status);
+#endif
 #ifdef UNREADY_CODE
 		ce->bytes_received += status;
 #endif
@@ -2067,7 +2077,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 			nsFileURL  fileURL(filePath);
 			char * article_path_url = PL_strdup(fileURL.GetAsString());
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 			printf("load this url to display the message: %s\n", article_path_url);
 #endif
 
@@ -2547,7 +2557,7 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
                 rv = m_newsHost->FindGroup(groupName, &m_newsgroup);
                 PR_ASSERT(NS_SUCCEEDED(rv));
 				m_nextState = NNTP_LIST_XACTIVE;
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 				printf("listing xactive for %s\n", groupName);
 #endif
 				PR_FREEIF(line);
@@ -2577,6 +2587,9 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
      */
     if(status > 1)
     {
+#ifdef DEBUG_NEWS
+	printf("received %d bytes\n", status);
+#endif
 #ifdef UNREADY_CODE
         ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
@@ -2691,6 +2704,9 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
      */
     if(status > 1)
     {
+#ifdef DEBUG_NEWS
+	printf("received %d bytes\n", status);
+#endif
 #ifdef UNREADY_CODE
     	ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
@@ -2778,7 +2794,7 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
       if (NS_SUCCEEDED(rv))
           rv = m_newsHost->GetNewsgroupList(groupName, &m_newsgroupList);
       
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	  printf("add to known articles:  %d - %d\n", m_firstArticle, m_lastArticle);
 #endif
 
@@ -2833,7 +2849,7 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	  return 0;
 	}
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("Chunk will be (%d-%d)\n", m_firstArticle, m_lastArticle);
 #endif
     
@@ -2870,7 +2886,7 @@ PRInt32 nsNNTPProtocol::XoverSend()
 				m_firstArticle, 
 				m_lastArticle);
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("XOVER %d-%d\n", m_firstArticle, m_lastArticle);
 #endif
 
@@ -2968,6 +2984,9 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
      */
     if(status > 1)
     {
+#ifdef DEBUG_NEWS
+	printf("received %d bytes\n", status);
+#endif
 #ifdef UNREADY_CODE
         ce->bytes_received += status;
         FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status,
@@ -3117,9 +3136,9 @@ PRInt32 nsNNTPProtocol::PostMessageInFile(const nsFilePath &filePath)
 {
 	if (filePath && *filePath)
 	{
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
         printf("post this file: %s\n",(const char *)nsFileSpec(filePath));
-#endif /* DEBUG_sspitzer */
+#endif /* DEBUG_NEWS */
         
 		nsInputFileStream * fileStream = new nsInputFileStream(nsFileSpec(filePath), PR_RDONLY, 00700);
 		if (fileStream)
@@ -3231,7 +3250,7 @@ PRInt32 nsNNTPProtocol::PostData()
     /* returns 0 on done and negative on error
      * positive if it needs to continue.
      */
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("nsNNTPProtocol::PostData()\n");
 #endif
     nsresult rv = NS_OK;
@@ -3806,7 +3825,7 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 		if (line[0] != '.')
 		{
 			long articleNumber;
-			sscanf(line, "%ld", &articleNumber);
+			PR_sscanf(line, "%ld", &articleNumber);
 #ifdef UNREADY_CODE
 			MSG_AddNewsXpatHit (ce->window_id, (PRUint32) articleNumber);
 #endif
@@ -3847,7 +3866,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNames()
             NS_SUCCEEDED(rv) ? group_name : "");
     
 	status = SendData(outputBuffer);
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf(outputBuffer);
 #endif
 	m_nextState = NNTP_RESPONSE;
@@ -3898,7 +3917,7 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 			line[i] = 0; /* terminate group name */
 			if (i > 0)
               m_newsHost->SetPrettyName(line,prettyName);
-#ifdef DEBUG_sspitzer 
+#ifdef DEBUG_NEWS 
 			printf("adding pretty name %s\n", prettyName);
 #endif
 		}
@@ -3953,18 +3972,21 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-	NNTP_LOG_READ(line);
-
+#ifdef DEBUG_NEWS
+	printf("NNTPLOG: %s\n", line);
+#endif
 	if(pauseForMoreData)
 	{
 		SetFlag(NNTP_PAUSE_FOR_READ);
 		return 0;
 	}
 
-	 /* almost correct
-	*/
+	 /* almost correct */
 	if(status > 1)
 	{
+#ifdef DEBUG_NEWS
+		printf("received %d bytes\n", status);
+#endif
 #ifdef UNREADY_CODE
 		ce->bytes_received += status;
 		FE_GraphProgress(ce->window_id, ce->URL_s, ce->bytes_received, status, ce->URL_s->content_length);
@@ -3984,7 +4006,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 			{
 				char flags[32];	/* ought to be big enough */
 				*s = 0;
-				sscanf(s + 1,
+				PR_sscanf(s + 1,
 					   "%d %d %31s", 
 					   &m_firstPossibleArticle, 
 					   &m_lastPossibleArticle,
@@ -3996,7 +4018,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 				/* we're either going to list prettynames first, or list
                    all prettynames every time, so we won't care so much
                    if it gets interrupted. */
-#ifdef DEBUG_sspitzer 
+#ifdef DEBUG_NEWS 
 				printf("got xactive for %s of %s\n", line, flags);
 #endif
 				/*	This isn't required, because the extra info is
@@ -4026,7 +4048,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
                 /* make sure we're not stuck on the same group */
                 {
                     NS_RELEASE(old_newsgroup);
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 					printf("listing xactive for %s\n", groupName);
 #endif
 					m_nextState = NNTP_LIST_XACTIVE;
@@ -4109,7 +4131,7 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 		{
 			long found_id = nsMsgKey_None;
             nsresult rv;
-			sscanf(line, "%ld", &found_id);
+			PR_sscanf(line, "%ld", &found_id);
             
             rv = m_articleList->AddArticleKey(found_id);
 		}
@@ -4248,8 +4270,8 @@ PRInt32 nsNNTPProtocol::ProcessNewsState(nsIURL * url, nsIInputStream * inputStr
     while(!TestFlag(NNTP_PAUSE_FOR_READ))
 	{
 
-#if DEBUG
-        NNTP_LOG_NOTE(("Next state: %s",stateLabels[m_nextState])); 
+#if DEBUG_NEWS
+        printf("Next state: %s",stateLabels[m_nextState]); 
 #endif
 		// examine our current state and call an appropriate handler for that state.....
         switch(m_nextState)

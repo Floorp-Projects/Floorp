@@ -50,7 +50,7 @@ nsGetNewsRoot(const char *hostname, nsFileSpec &result)
   // use enumeration function to find the first nntp server
   nsISupports *serverSupports = hosts->ElementAt(0);
 
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
   if (hosts->Count() <= 0)
     fprintf(stderr, "Augh, no nntp server named %s?\n", hostname);
   if (!serverSupports)
@@ -163,7 +163,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
   if (NS_FAILED(rv)) {
     pathResult = nsnull;
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("nsGetNewsRoot failed!\n");
 #endif
     return rv;
@@ -193,7 +193,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     pathResult += newsgroup;
   }
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   printf("nsGetNewsRoot(%s) = %s\n\tnewsgroup = %s\n",
          (const char *)nsAutoCString(hostname), (const char*)pathResult,
          (const char *)nsAutoCString(newsgroup));

@@ -44,7 +44,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsI
   nsNewsSummarySpec	        summarySpec(newsgroupName);
   nsresult                  err = NS_OK;
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
            (const char*)newsgroupName, create ? "TRUE":"FALSE",
            pMessageDB, upgrading ? "TRUE":"FALSE", (const char *)summarySpec);
@@ -65,7 +65,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsI
   newsDB = new nsNewsDatabase();
   
   if (!newsDB) {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
     printf("NS_ERROR_OUT_OF_MEMORY\n");
 #endif
     return NS_ERROR_OUT_OF_MEMORY;
@@ -76,7 +76,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsI
 
   err = newsDB->OpenMDB((const char *) summarySpec, create);
   if (NS_SUCCEEDED(err)) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("newsDB->OpenMDB succeeded!\n");
 #endif
 	*pMessageDB = newsDB;
@@ -85,7 +85,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsI
 	}
   }
   else {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("newsDB->OpenMDB failed!\n");
 #endif
     *pMessageDB = nsnull;
@@ -289,7 +289,7 @@ nsresult
 nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsMsgKey key, nsIMsgDBHdr* *result)
 {
   nsresult rv;
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NEWS
   printf("nsNewsDatabase::CreateMsgHdr()\n");
 #endif
 

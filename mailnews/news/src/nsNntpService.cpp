@@ -111,7 +111,7 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
     return NS_ERROR_NULL_POINTER;
   }
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   printf("nsNntpService::DisplayMessage(%s,...)\n",aMessageURI);
 #endif
 
@@ -157,7 +157,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
     hostname.Truncate(hostEnd);
   }
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   printf("ConvertNewsMessageURI2NewsURI(%s,??) -> %s %u\n", messageURI, (const char *)nsAutoCString(folder), key);
 #endif
 
@@ -192,7 +192,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   nsString messageId;
   rv = msgHdr->GetMessageId(messageId);
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   PRUint32 bytes;
   PRUint32 lines;
   rv = msgHdr->GetMessageSize(&bytes);
@@ -212,7 +212,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   newsURI += "/";
   newsURI += messageId;
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   printf("newsURI = %s\n", (const char *)nsAutoCString(newsURI));
 #endif
 
@@ -232,7 +232,7 @@ nsresult nsNntpService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListen
 ////////////////////////////////////////////////////////////////////////////////////////
 nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject, const char *newsgroupName, nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 	printf("nsNntpService::PostMessage(%s,%s,%s,??,??)\n",(const char *)pathToFile,subject,newsgroupName);
 #endif
 	
@@ -285,7 +285,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
             }
             
 			// okay now create a transport to run the url in...
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
             printf("nsNntpService::RunNewsUrl(): hostname = %s port = %d\n", hostname, port);
 #endif
 			pNetService->CreateSocketTransport(getter_AddRefs(transport), port, hostname);
@@ -309,7 +309,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 							identity->GetEmail(&from);
 							identity->GetOrganization(&org);
 							
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
 							printf("post message as: %s,%s,%s\n",fullname,from,org);
 #endif
 							
@@ -323,7 +323,7 @@ nsresult nsNntpService::PostMessage(nsFilePath &pathToFile, const char *subject,
 								post->SetSubject((char *)subject);
 								post->SetFrom((char *)from);
 								post->SetOrganization((char *)org);
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
                                 printf("set file to post to %s\n",(const char *)pathToFile);
 #endif
                                 rv = post->SetPostMessageFile(pathToFile);
@@ -369,7 +369,7 @@ nsresult
 nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer, 
 										nsIUrlListener *aUrlListener, nsIURL ** aURL)
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
     printf("nsNntpService::RunNewsUrl(%s,...)\n", (const char *)nsAutoCString(urlString));
 #endif
 	// for now, assume the url is a news url and load it....
@@ -417,7 +417,7 @@ nsNntpService::RunNewsUrl(const nsString& urlString, nsISupports * aConsumer,
 			nntpUrl->GetHost(&hostname);
 			// okay now create a transport to run the url in...
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
             printf("nsNntpService::RunNewsUrl(): hostname = %s port = %d\n", hostname, port);
 #endif
 			pNetService->CreateSocketTransport(getter_AddRefs(transport), port, hostname);
@@ -450,7 +450,7 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
 	return NS_ERROR_NULL_POINTER;
   }
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   printf("nsNntpService::GetNewNews(%s)\n", uri);
 #endif
   
@@ -469,13 +469,13 @@ nsresult nsNntpService::GetNewNews(nsIUrlListener * aUrlListener,
     // load up required server information
     server->GetHostName(&nntpHostName);
   }
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   else {
 	  printf("server == nsnull\n");
   }
 #endif
   
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NEWS
   if (nntpHostName) {
     printf("get news from news://%s\n", nntpHostName);
   }
