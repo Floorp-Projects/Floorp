@@ -108,7 +108,8 @@ nsSharedPageData::nsSharedPageData() :
   mReflowMargin(0,0,0,0),
   mShadowSize(0,0),
   mDeadSpaceMargin(0,0,0,0),
-  mExtraMargin(0,0,0,0)
+  mExtraMargin(0,0,0,0),
+  mHeadFooterGap(0)
 {
 }
 
