@@ -192,7 +192,7 @@ pref("javascript.error.alerts",             false);
 
 // advanced prefs
 pref("advanced.always_load_images",         true);
-pref("advanced.java.allow",                 true);
+pref("security.enable_java",                 true);
 pref("css.allow",                           true);
 pref("advanced.mailftp",                    true);
 
