@@ -714,7 +714,7 @@ static void _PR_Resume(PRThread *thread)
  
         _PR_LOCK_LOCK(wLock);
         if (thread->wait.lock->owner == 0) {
-            _PR_UnblockWaiters(thread->wait.lock);
+            _PR_UnblockLockWaiter(thread->wait.lock);
         }
         _PR_LOCK_UNLOCK(wLock);
         break;
