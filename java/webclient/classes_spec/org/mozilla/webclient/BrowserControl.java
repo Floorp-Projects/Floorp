@@ -35,7 +35,7 @@ package org.mozilla.webclient;
 
 
  *
- * @version $Id: BrowserControl.java,v 1.1 2000/03/04 01:10:51 edburns%acm.org Exp $
+ * @version $Id: BrowserControl.java,v 1.2 2001/05/24 21:13:30 ashuk%eng.sun.com Exp $
  * 
  * @see org.mozilla.webclient.BrowserControlFactory
  * */
@@ -54,7 +54,7 @@ public static String CACHE_MANAGER_NAME = "webclient.cache.NetDataCacheManager";
 public static String PREFERENCES_NAME = "webclient.Preferences";
 public static String PRINT_NAME = "webclient.Print";
 public static String WINDOW_CONTROL_NAME = "webclient.WindowControl";
-
+public static String PROFILE_MANAGER_NAME = "webclient.ProfileManager";
 
 
     /**

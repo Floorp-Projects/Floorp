@@ -57,7 +57,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.30 2001/05/23 22:26:51 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.31 2001/05/24 21:13:45 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -110,6 +110,8 @@ private UniversalDialog           uniDialog = null;
     private MenuItem popup_ViewSource, popup_SelectAll;
     private PopupActionListener contextListener;
 
+    private ProfileManager profileManager = null;
+    private String myBinDir;
 
   public static void main(String [] arg)
     {
@@ -123,6 +125,7 @@ private UniversalDialog           uniDialog = null;
 	creator = Creator;
     currentURL = url;
 	winNum = winnum;
+    myBinDir = binDir;
         System.out.println("constructed with binDir: " + binDir + " url: " + 
                            url);
 		setSize(defaultWidth, defaultHeight);
@@ -134,6 +137,7 @@ private UniversalDialog           uniDialog = null;
 		Menu viewMenu = new Menu("View");
        		Menu searchMenu = new Menu("Search");
 		Menu editMenu = new Menu("Edit");
+        Menu profileMenu = new Menu("Profile");
        		MenuItem newItem = new MenuItem("New Window");
        		MenuItem closeItem = new MenuItem("Close");
        		MenuItem findItem = new MenuItem("Find");
@@ -142,10 +146,19 @@ private UniversalDialog           uniDialog = null;
 		MenuItem pageInfoItem = new MenuItem("View Page Info");
 		MenuItem selectAllItem = new MenuItem("Select All");
         MenuItem copyItem = new MenuItem("Copy");
+        MenuItem createProfileItem = new MenuItem("Create Profile");
+        MenuItem deleteProfileItem = new MenuItem("Delete Profile");
        		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
        		menuBar.add(searchMenu);
+
 		menuBar.add(editMenu);
+        menuBar.add(profileMenu);
+        profileMenu.add(createProfileItem);
+        createProfileItem.addActionListener(this);
+        profileMenu.add(deleteProfileItem);
+        deleteProfileItem.addActionListener(this);
+
        		fileMenu.add(newItem);
        		newItem.addActionListener(this);
        		fileMenu.add(closeItem);
@@ -310,6 +323,7 @@ private UniversalDialog           uniDialog = null;
                                               "network.cookie.warnAboutCookies",
                                               "This IS the Closure!");
             prefs.setPref("network.cookie.warnAboutCookies", "true");
+            prefs.setPref("browser.cache.disk_cache_size", "0");
      
             // pull out the proxies, and make java aware of them
             Properties prefsProps = prefs.getPrefs();
@@ -417,11 +431,6 @@ public void delete()
     currentDocument = null;
 }
 
-public BrowserControl getBrowserControl()
-{
-    return browserControl;
-}
-
 
 public void actionPerformed (ActionEvent evt) 
 {
@@ -466,6 +475,20 @@ public void actionPerformed (ActionEvent evt)
         }
         else if (command.equals("Copy")) {
             currentPage.copyCurrentSelectionToSystemClipboard();
+        }
+        else if (command.equals("Create Profile")) {
+            if (profileManager == null) {
+                profileManager = (ProfileManager)
+                    browserControl.queryInterface(BrowserControl.PROFILE_MANAGER_NAME);
+            }
+            profileManager.CreateNewProfile("Tester", myBinDir, null, true); 
+        }
+        else if (command.equals("Delete Profile")) {
+            if (profileManager == null) {
+                profileManager = (ProfileManager)
+                    browserControl.queryInterface(BrowserControl.PROFILE_MANAGER_NAME);
+            }
+            profileManager.DeleteProfile("Tester", true);  
         }
 	    else if(command.equals("Stop")) {
             navigation.stop();

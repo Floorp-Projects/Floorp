@@ -71,6 +71,7 @@ private Navigation navigation = null;
 private History history = null;
 private static Bookmarks bookmarks = null;
 private static Preferences prefs = null;
+private static ProfileManager profileManager = null;
 
 //
 // Constructors and Initializers    
@@ -156,6 +157,10 @@ static void appTerminate() throws Exception
     if (null != prefs) {
         ((ImplObject)prefs).delete();
         prefs = null;
+    }
+    if (null != profileManager) {
+        ((ImplObject)profileManager).delete();
+        profileManager = null;
     }
 
     wrapperFactory.terminate();
@@ -281,6 +286,13 @@ public Object queryInterface(String interfaceName) throws ClassNotFoundException
         }
         return prefs;
     }
+    if (PROFILE_MANAGER_NAME.equals(interfaceName)) {
+        if (null == profileManager) {
+            profileManager = (ProfileManager)
+                wrapperFactory.newImpl(PROFILE_MANAGER_NAME, this);
+        }
+        return profileManager;
+    }
     // extensibility mechanism: just see if wrapperFactory can make one!
     return wrapperFactory.newImpl(interfaceName, this);
 }
@@ -296,7 +308,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.4 2001/04/02 21:13:43 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.5 2001/05/24 21:13:30 ashuk%eng.sun.com Exp $");
     
 }
 

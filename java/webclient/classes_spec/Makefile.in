@@ -32,6 +32,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= webclient
 
 JMODS			 = org/mozilla/webclient \
+		org/mozilla/webclient/stubs \
 		org/mozilla/webclient/wrapper_native \
 		org/mozilla/webclient/wrapper_native/motif \
 		org/mozilla/webclient/test 
