@@ -3022,7 +3022,8 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
             Pop3MsgInfo* info = m_pop3ConData->msg_info + m_pop3ConData->last_accessed_msg; 
 
             /* Check for filter actions - FETCH or DELETE */
-            uidlEntry = (Pop3UidlEntry *)PL_HashTableLookup(m_pop3ConData->newuidl, info->uidl);
+            if (m_pop3ConData->newuidl)
+              uidlEntry = (Pop3UidlEntry *)PL_HashTableLookup(m_pop3ConData->newuidl, info->uidl);
 
             if (uidlEntry && uidlEntry->status == FETCH_BODY &&
             	m_pop3ConData->truncating_cur_msg)
