@@ -79,7 +79,10 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventReceiver.h"
-
+#include "nsIDOMCharacterData.h" //for selection setting helper func
+#include "nsIDOMNodeList.h" //for selection settting helper func
+#include "nsIDOMRange.h" //for selection settting helper func
+#include "nsRange.h" //for selection settting helper func (i cant believe this is exported!?)
 
 #define DEFAULT_COLUMN_WIDTH 20
 
@@ -1877,29 +1880,242 @@ nsGfxTextControlFrame2::GetTextLength(PRInt32* aTextLength)
 
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::SetSelectionStart(PRInt32 aSelectionStart)
+nsGfxTextControlFrame2::GetFirstTextNode(nsIDOMCharacterData* *aFirstTextNode)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mEditor)
+    return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMElement> rootElement;
+  mEditor->GetRootElement(getter_AddRefs(rootElement));
+  *aFirstTextNode = nsnull;
+  
+  nsCOMPtr<nsIDOMNode> rootNode = do_QueryInterface(rootElement);
+  if (!rootNode) return NS_ERROR_FAILURE;
+  
+  // for a text widget, the text of the document is in a single
+  // text node under the body. Let's make sure that's true.
+  nsCOMPtr<nsIDOMNodeList> childNodesList;
+  rootNode->GetChildNodes(getter_AddRefs(childNodesList));
+  if (!childNodesList)
+  {
+    NS_WARNING("rootNode has no text node list");
+    return NS_ERROR_FAILURE;
+  }
+
+  PRUint32 numChildNodes = 0;
+  childNodesList->GetLength(&numChildNodes);
+
+  nsCOMPtr<nsIDOMNode> firstChild;
+  nsresult rv = rootNode->GetFirstChild(getter_AddRefs(firstChild));
+  if (NS_FAILED(rv)) return rv;
+  if (!firstChild) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMCharacterData> charDataNode = do_QueryInterface(firstChild, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  NS_ADDREF(*aFirstTextNode = charDataNode);
+  return NS_OK;
 }
 
 
+nsresult
+nsGfxTextControlFrame2::SelectAllContents()
+{
+  nsresult rv;
+  
+  if (IsSingleLineTextControl())
+  {
+    rv = SetSelectionRange(0, eSelectToEnd);
+  }
+  else
+  {
+    // we have to select all
+    if (!mEditor)
+      return NS_ERROR_NOT_INITIALIZED;
+    NS_ASSERTION(mEditor, "Should have an editor here");    
+    rv = mEditor->SelectAll();
+  }
+
+  return rv;
+}
+
+
+nsresult
+nsGfxTextControlFrame2::SetSelectionEndPoints(PRInt32 aSelStart, PRInt32 aSelEnd)
+{
+  NS_ASSERTION(IsSingleLineTextControl(), "Should only call this on a single line input");
+  NS_ASSERTION(mEditor, "Should have an editor here");
+  NS_ASSERTION(mTextSelImpl,"selection not found!");
+
+  nsCOMPtr<nsIDOMCharacterData> firstTextNode;
+  nsresult rv = GetFirstTextNode(getter_AddRefs(firstTextNode));
+  if (NS_FAILED(rv) || !firstTextNode)
+  {
+    // probably an empty document. not an error
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIDOMNode> firstNode = do_QueryInterface(firstTextNode, &rv);
+  if (!firstNode) return rv;
+  
+  // constrain the selection to this node
+  PRUint32 nodeLengthU;
+  firstTextNode->GetLength(&nodeLengthU);
+  PRInt32 nodeLength = (PRInt32)nodeLengthU;
+    
+  nsCOMPtr<nsIDOMSelection> selection;
+  mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL,getter_AddRefs(selection));  
+  if (!selection) return NS_ERROR_FAILURE;
+
+  // are we setting both start and end?
+  if (aSelStart != eIgnoreSelect && aSelEnd != eIgnoreSelect)
+  {
+    if (aSelStart == eSelectToEnd || aSelStart > nodeLength)
+      aSelStart = nodeLength;
+    if (aSelStart < 0)
+      aSelStart = 0;
+
+    if (aSelEnd == eSelectToEnd || aSelEnd > nodeLength)
+      aSelEnd = nodeLength;
+    if (aSelEnd < 0)
+      aSelEnd = 0;
+
+    // remove existing ranges
+    selection->ClearSelection();  
+
+    nsCOMPtr<nsIDOMRange> selectionRange;
+    NS_NewRange(getter_AddRefs(selectionRange));
+    if (!selectionRange) return NS_ERROR_OUT_OF_MEMORY;
+    
+    selectionRange->SetStart(firstTextNode, aSelStart);
+    selectionRange->SetEnd(firstTextNode, aSelEnd);
+    
+    selection->AddRange(selectionRange);
+  }
+  else    // we're setting either start or end but not both
+  {
+    // does a range exist?
+    nsCOMPtr<nsIDOMRange> firstRange;
+    selection->GetRangeAt(0, getter_AddRefs(firstRange));
+    PRBool mustAdd = PR_FALSE;
+    PRInt32 selStart = 0, selEnd = 0;
+
+    if (firstRange)
+    {
+     firstRange->GetStartOffset(&selStart);
+     firstRange->GetEndOffset(&selEnd);
+    }
+    else
+    {
+      // no range. Make a new one.
+      NS_NewRange(getter_AddRefs(firstRange));
+      if (!firstRange) return NS_ERROR_OUT_OF_MEMORY;
+      mustAdd = PR_TRUE;
+    }
+    
+    if (aSelStart == eSelectToEnd)
+      selStart = nodeLength;
+    else if (aSelStart != eIgnoreSelect)
+      selStart = aSelStart;
+
+    if (aSelEnd == eSelectToEnd)
+      selEnd = nodeLength;
+    else if (aSelEnd != eIgnoreSelect)
+      selEnd = aSelEnd;
+    
+    // swap them
+    if (selEnd < selStart)
+    {
+      PRInt32 temp = selStart;
+      selStart = selEnd;
+      selEnd = temp;
+    }
+    
+    firstRange->SetStart(firstTextNode, selStart);
+    firstRange->SetEnd(firstTextNode, selEnd);
+    if (mustAdd)  
+      selection->AddRange(firstRange);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::SetSelectionRange(PRInt32 aSelStart, PRInt32 aSelEnd)
+{
+  if (!IsSingleLineTextControl()) return NS_ERROR_NOT_IMPLEMENTED;
+  
+  // make sure we have an editor
+  if (!mEditor) 
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  return SetSelectionEndPoints(aSelStart, aSelEnd);
+}
+
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::SetSelectionStart(PRInt32 aSelectionStart)
+{
+  if (!IsSingleLineTextControl()) return NS_ERROR_NOT_IMPLEMENTED;
+
+  // make sure we have an editor
+  if (!mEditor) 
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  return SetSelectionEndPoints(aSelectionStart, eIgnoreSelect);
+}
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::SetSelectionEnd(PRInt32 aSelectionEnd)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!IsSingleLineTextControl()) return NS_ERROR_NOT_IMPLEMENTED;
+
+  // make sure we have an editor
+  if (!mEditor) 
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  return SetSelectionEndPoints(eIgnoreSelect, aSelectionEnd);
 }
 
-NS_IMETHODIMP
-nsGfxTextControlFrame2::SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!IsSingleLineTextControl()) return NS_ERROR_NOT_IMPLEMENTED;
+
+  NS_ENSURE_ARG_POINTER((aSelectionStart && aSelectionEnd));
+
+  // make sure we have an editor
+  if (!mEditor) 
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  nsCOMPtr<nsIDOMSelection> selection;
+  mTextSelImpl->GetSelection(nsISelectionController::SELECTION_NORMAL,getter_AddRefs(selection));  
+  if (!selection) return NS_ERROR_FAILURE;
+
+  // we should have only zero or one range
+  PRInt32 numRanges = 0;
+  selection->GetRangeCount(&numRanges);
+  if (numRanges > 1)
+  {
+    NS_ASSERTION(0, "Found more than on range in GetSelectionRange");
+  }
+  
+  if (numRanges == 0)
+  {
+    *aSelectionStart = 0;
+    *aSelectionEnd = 0;
+  }
+  else
+  {
+    nsCOMPtr<nsIDOMRange> firstRange;
+    selection->GetRangeAt(0, getter_AddRefs(firstRange));
+    if (!firstRange) 
+      return NS_ERROR_FAILURE;
+    firstRange->GetStartOffset(aSelectionStart);
+    firstRange->GetEndOffset(aSelectionEnd);
+  }
+  
+  return NS_OK;
 }
 
 
