@@ -326,7 +326,10 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 				}
 				else
 				{
-					mCount = PR_ntohl(mHeader.rlen);	/* it should in host byte order */
+          // we aren't processing the resurce Fork. uncomment this line if we make this converter
+          // smart enough to do this in the future.
+					// mCount = PR_ntohl(mHeader.rlen);	/* it should in host byte order */
+          mCount = 0; 
 				}
 				
 				if (mCount) 
@@ -547,7 +550,10 @@ nsresult nsBinHexDecoder::SetContentType(nsIRequest * aRequest, const char * fil
     }
   } // if the content type is empty
 
-  if (mContentType.IsEmpty()) // if we STILL don't have a content type....say the content type is unknown...
+  // if we STILL don't have a content type....say the content type is unknown...
+  // AND to avoid a recursive loop, if after extracting the data fork, we didn't get a valid
+  // content type and still think it's mac binhex, then reset to unknown.
+  if (mContentType.IsEmpty() || mContentType.Equals("application/mac-binhex40")) 
   {
     mContentType = UNKNOWN_CONTENT_TYPE;
   }
