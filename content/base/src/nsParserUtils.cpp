@@ -42,61 +42,78 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
+#define SKIP_WHITESPACE(iter, end_iter)                          \
+  while ((iter) != (end_iter) && nsCRT::IsAsciiSpace(*(iter))) { \
+    ++(iter);                                                    \
+  }                                                              \
+  if ((iter) == (end_iter))                                      \
+    break
+
+#define SKIP_ATTR_NAME(iter, end_iter)                            \
+  while ((iter) != (end_iter) && !nsCRT::IsAsciiSpace(*(iter)) && \
+         *(iter) != '=') {                                        \
+    ++(iter);                                                     \
+  }                                                               \
+  if ((iter) == (end_iter))                                       \
+    break
+
 PRBool
 nsParserUtils::GetQuotedAttributeValue(const nsAString& aSource,
                                        const nsAString& aAttribute,
                                        nsAString& aValue)
-{  
+{
+  NS_ASSERTION(!aAttribute.IsEmpty(), "Empty attribute name cannot be searched for usefully");
   aValue.Truncate();
   nsAString::const_iterator start, end;
   aSource.BeginReading(start);
   aSource.EndReading(end);
-  nsAString::const_iterator iter(end);
-
+  nsAString::const_iterator iter;
+  
   while (start != end) {
-    if (FindInReadable(aAttribute, start, iter)) {
-      // walk past any whitespace
-      while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
-        ++iter;
-      }
+    SKIP_WHITESPACE(start, end);
+    iter = start;
+    SKIP_ATTR_NAME(iter, end);
 
-      if (iter == end)
-        break;
-      
-      // valid name="value" pair?
-      if (*iter != '=') {
-        start = iter;
-        iter = end;
-        continue;
-      }
-      // move past the =
-      ++iter;
+    // Remember the attr name.
+    const nsAString & attrName = Substring(start, iter);
 
-      while (iter != end && nsCRT::IsAsciiSpace(*iter)) {
-        ++iter;
-      }
-      
-      if (iter == end)
-        break;
-
-      PRUnichar q = *iter;
-      if (q != '"' && q != '\'') {
-        start = iter;
-        iter = end;
-        continue;
-      }
-
-      // point to the first char of the value
-      ++iter;
-      start = iter;
-      if (FindCharInReadable(q, iter, end)) {
-        aValue = Substring(start, iter);
-        return PR_TRUE;
-      }
-
-      // we've run out of string.  Just return...
+    // Now check whether this is a valid name="value" pair.
+    start = iter;
+    SKIP_WHITESPACE(start, end);
+    if (*start != '=') {
+      // No '=', so this is not a name="value" pair.  We don't know
+      // what it is, and we have no way to handle it.
       break;
     }
+    
+    // Have to skip the value.
+    ++start;
+    SKIP_WHITESPACE(start, end);
+    PRUnichar q = *start;
+    if (q != kQuote && q != kApostrophe) {
+      // Not a valid quoted value, so bail.
+      break;
+    }
+    
+    ++start;  // Point to the first char of the value.
+    iter = start;
+    if (!FindCharInReadable(q, iter, end)) {
+      // Oops, unterminated quoted string.
+      break;
+    }
+    
+    // At this point attrName holds the name of the "attribute" and
+    // the value is between start and iter.
+    
+    if (!attrName.Equals(aAttribute)) {
+      // Resume scanning after the end of the attribute value.
+      start = iter;
+      ++start;  // To move past the quote char.
+      continue;
+    }
+
+    aValue = Substring(start, iter);
+    return PR_TRUE;
   }
 
   return PR_FALSE;
