@@ -433,10 +433,10 @@ sub usage {
        "(-s|--shellpath) <path>   Location of JavaScript shell.\n" .
        "(-t|--trace)              Trace script execution.\n" .
        "(-u|--lxrurl) <url>       Complete URL to tests subdirectory on lxr.\n" .
-       "                          (default is $opt_lxr_url)\n"
-       "(-x|--noexitmunge) <url>  Don't do exit code munging (try this if it\n" .
+       "                          (default is $opt_lxr_url)\n" .
+       "(-x|--noexitmunge)        Don't do exit code munging (try this if it\n" .
        "                          seems like your exit codes are turning up\n" .
-       "                          as exit signals.\n");
+       "                          as exit signals.)\n");
     exit (1);
     
 }
