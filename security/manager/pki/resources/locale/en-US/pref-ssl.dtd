@@ -31,6 +31,7 @@
 
 <!ENTITY edit.sslciphers "Edit SSL Ciphers...">
 
+<!ENTITY warn.description "&brandShortName can alert you to the security status of the web page you are viewing. Set &brandShortName to show a warning and ask permission before:">
 <!ENTITY warn.enteringsecure "Entering a site that supports encryption">
 <!ENTITY warn.enteringweak "Entering a site that uses weak encryption">
 <!ENTITY warn.insecurepost
@@ -42,6 +43,6 @@
  "Redirection from a secure site to an insecure site">
 <!ENTITY warn.viewmixed "Viewing a page with an encrypted/unencrypted mix">
 
+<!ENTITY certselect.description "Decide how &brandShortName selects a security certificate to">
 <!ENTITY certselect.auto "Select Automatically">
 <!ENTITY certselect.ask "Ask Every Time">
-
