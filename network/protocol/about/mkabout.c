@@ -631,6 +631,21 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 			content_type = PL_strdup(TEXT_HTML);
 		}
 	}
+    else if (PL_strncasecmp(which, "blank", 5) == 0) {
+		static const char *d =
+		  ("<HTML>"
+           "<HEAD>"
+           "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html\">"
+           "<TITLE>blank</TITLE>"
+           "</HEAD>"
+		   "<BODY BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\">"
+		   "</BODY>"
+           "</HTML>");
+	    data = PL_strdup(d);
+		length = (d ? PL_strlen(d) : 0);
+	    content_type = PL_strdup(TEXT_HTML);
+	    uses_fe_data = FALSE;
+    }
     else
       {
         if (net_DoRegisteredAbout(which, cur_entry)) {
