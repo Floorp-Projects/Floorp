@@ -81,6 +81,7 @@ BM_CVS_NS_necko		= $(BM_CVS_NS_xpcom) intl/locale/idl intl/strres/public modules
 # tranformiix
 #
 BM_DIRS_transformiix	= extensions/transformiix
+BM_CVS_transformiix     = extensions/transformiix
 
 #
 # psm

@@ -286,7 +286,7 @@ LOOP_OVER_MOZ_DIRS = \
 
 endif
 
-ifdef EXPORT_DIRS
+ifneq ($(EXPORT_DIRS),)
 LOOP_OVER_EXPORT_DIRS = \
     @$(EXIT_ON_ERROR) \
     for d in $(EXPORT_DIRS); do \
