@@ -6,6 +6,12 @@ to be correctly resized before calling MoveAndClipJavaControl().
 2. Fixed LiveConnect method that was causing stale plugin instance references to be retained
 in the active plugin list.
 
+3. Changed TimedMessage handling so it uses the system memory allocators. This fixes some issues
+that we were seeing when Carbon event handlers were being fired during event processing.
+
+4. Added versioning strings to the mimetype list to improve compatibility with websites that
+insist on declaring their applets using the "x-java-applet;version=x.x.x" format.
+
 Changes since 1.0b1:
 
 1. Repaired Security Context code that was broken by the checkin for bug 124042. This code now
