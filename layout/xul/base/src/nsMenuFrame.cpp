@@ -335,6 +335,16 @@ nsMenuFrame::DestroyPopupFrames(nsPresContext* aPresContext)
 NS_IMETHODIMP
 nsMenuFrame::Destroy(nsPresContext* aPresContext)
 {
+  // are we our menu parent's current menu item?
+  if (mMenuParent) {
+    nsIMenuFrame *curItem = nsnull;
+    mMenuParent->GetCurrentMenuItem(&curItem);
+    if (curItem == this) {
+      // yes; tell it that we're going away
+      mMenuParent->SetCurrentMenuItem(nsnull);
+    }
+  }
+
   DestroyPopupFrames(aPresContext);
   return nsBoxFrame::Destroy(aPresContext);
 }
