@@ -2468,40 +2468,22 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 	
 	inputStream.close();
 #else /* USE_NEWSRC_MAP_FILE */
-    rv = m_prefs->GetFilePref(PREF_PREMIGRATION_NEWS_DIRECTORY, getter_AddRefs(newsDir));
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG_ACCOUNTMANAGER
-      printf("%s was not set, attempting to use %s instead.\n",PREF_PREMIGRATION_NEWS_DIRECTORY,PREF_NEWS_DIRECTORY);
-#endif
-      rv = m_prefs->GetFilePref(PREF_NEWS_DIRECTORY, getter_AddRefs(newsDir));
-    }
+    rv = m_prefs->GetFilePref(PREF_NEWS_DIRECTORY, getter_AddRefs(newsDir));
+    if (NS_FAILED(rv)) return rv;
     
-    if (NS_SUCCEEDED(rv)) {
-      rv = newsDir->GetFileSpec(&newsrcDir);
-      if (NS_FAILED(rv)) return rv;
-    }
-    else {
-      // "news.directory" and "premigration.news.directory" fail, use the home directory.
-#ifdef XP_UNIX
-      nsSpecialSystemDirectory homeDir(nsSpecialSystemDirectory::Unix_HomeDirectory);
-#elif XP_BEOS
-      nsSpecialSystemDirectory homeDir(nsSpecialSystemDirectory::BeOS_HomeDirectory);
-#else
-#error where_are_your_newsrc_files
-#endif /* XP_UNIX, XP_BEOS */
-      newsrcDir = homeDir;
-	}
+    rv = newsDir->GetFileSpec(&newsrcDir);
+    if (NS_FAILED(rv)) return rv;
 
     for (nsDirectoryIterator i(newsrcDir, PR_FALSE); i.Exists(); i++) {
       nsFileSpec possibleRcFile = i.Spec();
 
       char *filename = possibleRcFile.GetLeafName();
       
-      if ((PL_strncmp(NEWSRC_FILE_PREFIX, filename, PL_strlen(NEWSRC_FILE_PREFIX)) == 0) && (PL_strlen(filename) > PL_strlen(NEWSRC_FILE_PREFIX))) {
+      if ((PL_strncmp(NEWSRC_FILE_PREFIX_5x, filename, PL_strlen(NEWSRC_FILE_PREFIX_5x)) == 0) && (PL_strlen(filename) > PL_strlen(NEWSRC_FILE_PREFIX_5x))) {
 #ifdef DEBUG_ACCOUNTMANAGER
         printf("found a newsrc file: %s\n", filename);
 #endif
-        char *hostname = filename + PL_strlen(NEWSRC_FILE_PREFIX);
+        char *hostname = filename + PL_strlen(NEWSRC_FILE_PREFIX_5x);
         rv = MigrateNewsAccount(identity, hostname, possibleRcFile, newsHostsDir);
         if (NS_FAILED(rv)) {
           // failed to migrate.  bail out

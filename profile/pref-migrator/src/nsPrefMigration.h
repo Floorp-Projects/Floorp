@@ -43,6 +43,10 @@
 #define IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x "%s Rules" 
 #endif
 
+#ifdef XP_UNIX
+#define NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
+#endif
+
 class nsPrefMigration: public nsIPrefMigration
 {
     public:
@@ -100,6 +104,10 @@ class nsPrefMigration: public nsIPrefMigration
                               const char *oldName,
                               const char *newName); 
 
+#ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
+      nsresult CopyAndRenameNewsrcFiles(nsIFileSpec *newPath);
+#endif /* NEED_TO_COPY_AND_RENAME_NEWSRC_FILES */
+
       nsresult DoSpecialUpdates(nsIFileSpec * profilePath);
       nsresult Rename4xFileAfterMigration(nsIFileSpec *profilePath, const char *oldFileName, const char *newFileName);
 #ifdef IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x
@@ -109,6 +117,9 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult RenameAndMove4xPopFilterFile(nsIFileSpec *profilePath);
   
       nsresult SetPremigratedFilePref(const char *pref_name, nsIFileSpec *filePath);
+#ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
+      nsresult GetPremigratedFilePref(const char *pref_name, nsIFileSpec **filePath);
+#endif /* NEED_TO_COPY_AND_RENAME_NEWSRC_FILES */
       
       
       nsIPref* m_prefs;

@@ -35,8 +35,10 @@
  * file name length limitations.
  */
 #if defined(XP_UNIX) || defined(XP_BEOS)
-// if you don't use the fat file, then you need to specify the newsrc file prefix you use
-#define NEWSRC_FILE_PREFIX ".newsrc-"
+/* in 4.x, the prefix was ".newsrc-", in 5.0, the profile migrator code copies the newsrc files from
+ * ~/.newsrc-* to ~/.mozilla/<profile>/News/newsrc-*
+ */
+#define NEWSRC_FILE_PREFIX_5x "newsrc-"
 #else
 #define USE_NEWSRC_MAP_FILE
 

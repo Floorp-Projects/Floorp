@@ -59,6 +59,8 @@
 
 #define PREF_FILE_HEADER_STRING "# Mozilla User Preferences    " 
 
+#define MAX_PREF_LEN 1024
+
 #if defined(XP_UNIX)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "mailrule"
@@ -66,6 +68,7 @@
 #define COOKIES_FILE_NAME_IN_4x "cookies"
 #define BOOKMARKS_FILE_NAME_IN_4x "bookmarks.html"
 #define HISTORY_FILE_NAME_IN_4x "history.dat"
+#define NEWSRC_PREFIX_IN_4x ".newsrc-"
 #elif defined(XP_MAC)
 #define IMAP_MAIL_FILTER_FILE_NAME_IN_4x "<hostname> Rules"
 #define POP_MAIL_FILTER_FILE_NAME_IN_4x "Filter Rules"
@@ -95,7 +98,7 @@
 #define HAVE_MOVEMAIL 1
 #endif /* XP_UNIX */
 
-#define PREMIGRATION_PREFIX "premigration"
+#define PREMIGRATION_PREFIX "premigration."
 #define PREF_MAIL_DIRECTORY "mail.directory"
 #define PREF_NEWS_DIRECTORY "news.directory"
 #define PREF_MAIL_IMAP_ROOT_DIR "mail.imap.root_dir"
@@ -342,7 +345,8 @@ extern "C" void ProfileMigrationController(void *data)
                                             migratorInterface, 
                                             PROXY_SYNC,
                                             getter_AddRefs(prefProxy));
-  
+  if (NS_FAILED(rv)) return;
+
   prefProxy->WindowCloseCallback(); 
 }
 
@@ -909,11 +913,16 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
   rv = DoTheCopy(oldNewsPath, newNewsPath, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
-#ifdef DEBUG_seth
-#ifdef XP_UNIX
-  printf("TODO: do we need to copy/move/rename the .newsrc files?\n");
-#endif /* XP_UNIX */
-#endif
+
+#ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
+  /* in 4.x, the newsrc files were in $HOME.  Now that we can have multiple
+   * profiles in 5.x, with the same user, this won't fly.
+   * when they migrate, we need to copy from $HOME/.newsrc-<host> to
+   * ~/.mozilla/<profile>/News/newsrc-<host>
+   */
+  rv = CopyAndRenameNewsrcFiles(newNewsPath);
+  if (NS_FAILED(rv)) return rv;
+#endif /* NEED_TO_COPY_AND_RENAME_NEWSRC_FILES */
   if(serverType == IMAP_4X_MAIL_TYPE) {
     rv = DoTheCopyAndRename(oldIMAPMailPath, newIMAPMailPath, PR_TRUE, needToRenameFilterFiles, IMAP_MAIL_FILTER_FILE_NAME_IN_4x, IMAP_MAIL_FILTER_FILE_NAME_IN_5x);
     if (NS_FAILED(rv)) return rv;
@@ -1137,7 +1146,24 @@ nsStringEndsWith(nsString& name, const char *ending)
   else {
         return PR_FALSE;
   }
-} 
+}
+
+static PRBool
+nsStringStartsWith(nsString& name, const char *starting)
+{
+	if (!starting) return PR_FALSE;
+	PRInt32	len = name.Length();
+	if (len == 0) return PR_FALSE;
+	
+	PRInt32 startingLen = PL_strlen(starting);
+	if (len > startingLen && name.RFind(starting, PR_TRUE) == 0) {
+		return PR_TRUE;
+	}
+	else {
+		return PR_FALSE;
+	}
+}
+ 
 /*---------------------------------------------------------------------------------
  * GetSizes reads the 4.x files in the profile tree and accumulates their sizes
  *
@@ -1267,6 +1293,47 @@ nsPrefMigration::CheckForSpace(nsFileSpec newProfilePath, PRFloat64 requiredSpac
     return NS_ERROR_FAILURE;
   return NS_OK;
 }
+
+#ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
+nsresult 
+nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
+{
+  nsresult rv;
+  nsCOMPtr <nsIFileSpec>oldPathSpec;
+  nsFileSpec oldPath;
+  nsFileSpec newPath;
+  char* folderName = nsnull;
+  nsAutoString fileOrDirNameStr;
+
+  rv = GetPremigratedFilePref(PREF_NEWS_DIRECTORY, getter_AddRefs(oldPathSpec));
+  if (NS_FAILED(rv)) return rv;
+  rv = oldPathSpec->GetFileSpec(&oldPath);
+  if (NS_FAILED(rv)) return rv;
+  rv = newPathSpec->GetFileSpec(&newPath);
+  if (NS_FAILED(rv)) return rv;
+
+  for (nsDirectoryIterator dir(oldPath, PR_FALSE); dir.Exists(); dir++)
+  {
+    nsFileSpec fileOrDirName = (nsFileSpec&)dir; //set first file or dir to a nsFileSpec
+    folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
+    fileOrDirNameStr = folderName;
+
+    if (nsStringStartsWith(fileOrDirNameStr, NEWSRC_PREFIX_IN_4x)) {
+#ifdef DEBUG_seth
+	printf("rc file == %s\n",folderName);
+#endif /* DEBUG_seth */
+
+	fileOrDirName.CopyToDir(newPath);
+
+        nsFileSpec newFile = newPath;
+        newFile += fileOrDirNameStr;
+        newFile.Rename(folderName + 1); /* rename .newsrc-news to newsrc-news, no need to keep it hidden anymore */
+    }
+  }
+
+  return NS_OK;
+}
+#endif /* NEED_TO_COPY_AND_RENAME_NEWSRC_FILES */
 
 /*-------------------------------------------------------------------------
  * DoTheCopyAndRename copies the files listed in oldPath to newPath
@@ -1689,23 +1756,40 @@ nsPrefMigration::Rename4xFileAfterMigration(nsIFileSpec * profilePath, const cha
   return rv;
 }
 
+nsresult
+nsPrefMigration::GetPremigratedFilePref(const char *pref_name, nsIFileSpec **path)
+{
+        nsresult rv;
+
+        if (!pref_name) return NS_ERROR_FAILURE;
+
+        char premigration_pref[MAX_PREF_LEN];
+        PR_snprintf(premigration_pref,MAX_PREF_LEN,"%s%s",PREMIGRATION_PREFIX,pref_name);
+#ifdef DEBUG_seth
+        printf("getting %s (into a nsFileSpec)\n", premigration_pref);
+#endif
+        rv = m_prefs->GetFilePref((const char *)premigration_pref, path);
+        return rv;
+}
+
 nsresult 
 nsPrefMigration::SetPremigratedFilePref(const char *pref_name, nsIFileSpec *path)
 {
 	nsresult rv;
+
+	if (!pref_name) return NS_ERROR_FAILURE;
+
 	// save off the old pref, prefixed with "premigration"
 	// for example, we need the old "mail.directory" pref when
 	// migrating the copies and folder prefs in nsMsgAccountManager.cpp
 	//
 	// note we do this for all platforms.
-	char *premigration_pref = nsnull;
-	premigration_pref = PR_smprintf("%s.%s", PREMIGRATION_PREFIX,pref_name);
-	if (!premigration_pref) return NS_ERROR_FAILURE;
+	char premigration_pref[MAX_PREF_LEN];
+	PR_snprintf(premigration_pref,MAX_PREF_LEN,"%s%s",PREMIGRATION_PREFIX,pref_name);
 #ifdef DEBUG_seth
 	printf("setting %s (from a nsFileSpec) for later...\n", premigration_pref);
 #endif
-	rv = m_prefs->SetFilePref(premigration_pref, path, PR_FALSE /* set default */);
-	PR_FREEIF(premigration_pref);   
+	rv = m_prefs->SetFilePref((const char *)premigration_pref, path, PR_FALSE /* set default */);
 	return rv;
 }
 
