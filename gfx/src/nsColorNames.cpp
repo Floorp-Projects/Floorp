@@ -64,7 +64,7 @@ public:
   virtual PRInt32 operator()(void* anItem1,void* anItem2) {
     ColorNode* one = (ColorNode*)anItem1;
     ColorNode* two = (ColorNode*)anItem2;
-    return one->mStr.Compare(two->mStr, PR_TRUE);
+    return one->mStr.CompareWithConversion(two->mStr, PR_TRUE);
   }
 }; 
 
