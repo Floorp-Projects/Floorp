@@ -86,7 +86,7 @@
 // Header strings...
 //
 #define HEADER_NNTP_POSTING_HOST      "NNTP-Posting-Host"
-#define MIME_HEADER_TABLE             "<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0>"
+#define MIME_HEADER_TABLE             "<TABLE CELLPADDING=0 CELLSPACING=0 BORDER=0 class=\"moz-email-headers-table\">"
 #define HEADER_START_JUNK             "<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>"
 #define HEADER_MIDDLE_JUNK            ": </TH><TD>"
 #define HEADER_END_JUNK               "</TD></TR>"
