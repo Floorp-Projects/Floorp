@@ -378,6 +378,21 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         }
       }
       break;
+    case eMetric_TreeOpenDelay:
+      aMetric = 1000;
+      break;
+    case eMetric_TreeCloseDelay:
+      aMetric = 1000;
+      break;
+    case eMetric_TreeLazyScrollDelay:
+      aMetric = 150;
+      break;
+    case eMetric_TreeScrollDelay:
+      aMetric = 100;
+      break;
+    case eMetric_TreeScrollLinesMax:
+      aMetric = 3;
+      break;
     default:
         aMetric = -1;
         res = NS_ERROR_FAILURE;
