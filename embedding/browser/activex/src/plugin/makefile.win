@@ -187,6 +187,16 @@ $(DEFFILE) : mkctldef.bat
     $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Object
     $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Object
 
+.\_gen\java_lang_Error.h \
+.\_stubs\java_lang_Error.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Error
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Error
+
+.\_gen\java_lang_Throwable.h \
+.\_stubs\java_lang_Throwable.c : $(JAVACLASSES)
+    $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.Throwable
+    $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs java.lang.Throwable
+
 .\_gen\java_lang_String.h \
 .\_stubs\java_lang_String.c : $(JAVACLASSES)
     $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen java.lang.String
@@ -257,10 +267,10 @@ MozActiveX.cpp: StdAfx.h
 
 javastubs.c : \
     .\MozAxPlugin.class             \
-    .\_gen\netscape_plugin_Plugin.h \
-    .\_gen\java_lang_Object.h       \
     .\_stubs\netscape_plugin_Plugin.c \
     .\_stubs\java_lang_Object.c     \
+    .\_stubs\java_lang_Throwable.c  \
+    .\_stubs\java_lang_Error.c      \
     .\_stubs\java_lang_String.c     \
     .\_stubs\java_lang_Boolean.c    \
     .\_stubs\java_lang_Number.c     \
@@ -280,6 +290,8 @@ LegacyPlugin.cpp: StdAfx.h \
     .\MozAxPlugin.class             \
     .\_gen\netscape_plugin_Plugin.h \
     .\_gen\java_lang_Object.h       \
+    .\_gen\java_lang_Throwable.h    \
+    .\_gen\java_lang_Error.h        \
     .\_gen\java_lang_String.h       \
     .\_gen\java_lang_Boolean.h      \
     .\_gen\java_lang_Number.h       \
