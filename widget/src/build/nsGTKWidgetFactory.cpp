@@ -90,7 +90,7 @@ public:
     NS_IMETHOD LockFactory(PRBool aLock);   
 
     nsWidgetFactory(const nsCID &aClass);   
-    ~nsWidgetFactory();   
+    virtual ~nsWidgetFactory();   
 private:
   nsCID mClassID;
 
