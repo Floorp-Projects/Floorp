@@ -1,0 +1,98 @@
+<?xml version="1.0"?> 
+
+
+
+<!--
+
+   - The contents of this file are subject to the Netscape Public
+
+   - License Version 1.1 (the "License"); you may not use this file
+
+   - except in compliance with the License. You may obtain a copy of
+
+   - the License at http://www.mozilla.org/NPL/
+
+   -  
+
+   - Software distributed under the License is distributed on an "AS
+
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+
+   - implied. See the License for the specific language governing
+
+   - rights and limitations under the License.
+
+   -  
+
+   - The Original Code is Mozilla Communicator client code, released
+
+   - March 31, 1998.
+
+   - 
+
+   - The Initial Developer of the Original Code is Netscape
+
+   - Communications Corporation. Portions created by Netscape are
+
+   - Copyright (C) 1999 Netscape Communications Corporation. All
+
+   - Rights Reserved.
+
+   - 
+
+   - Contributor(s): 
+
+   -    Ben Goodger
+
+  -->
+
+
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
+<?xml-stylesheet href="chrome://navigator/skin/contentframe.css" type="text/css"?> 
+
+
+
+<!DOCTYPE window> 
+
+
+
+<window style="height:100%;width:100%"
+
+   xmlns:html="http://www.w3.org/TR/REC-html40"
+
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+
+   onload="init_sidebar('editor',
+
+                        'chrome://editor/content/sidebar-editor.xul',
+
+                        170);" align="horizontal"> 
+
+
+
+<!-- use navigator's contentframe.js... ideally we only 
+
+     need one... not many -->
+
+<html:script src="chrome://navigator/content/contentframe.js" />
+
+
+
+  <html:iframe id="sidebarframe" class="sidebarframe" src="chrome://editor/content/sidebar-editor.xul" />
+
+  <titledbutton id="grippy" class="grippy" onclick="toggle_open_close();"/>
+
+  <!-- type attribute is used by frame construction to locate iframes
+
+       intended to hold (html) content -->
+
+  <!-- id's use is a mystery -->
+
+  <html:iframe type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
+
+
+
+</window>
+
