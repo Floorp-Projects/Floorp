@@ -810,13 +810,15 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
         printf ("TR %p for cell %p Initial Reflow: desired=%d, MES=%d\n", 
                this, kidFrame, kidSize.width, kidMaxElementSize.width);
 
-      // XXX the following alerts bugs in the content frames.  
+      // the following signals bugs in the content frames.  
       if (kidMaxElementSize.width > kidSize.width) {
-        printf("BUG - table cell content max element width greater than desired width \n");
+        printf("WARNING - table cell content max element width %d greater than desired width %d\n",
+          kidMaxElementSize.width, kidSize.width);
         kidSize.width = kidMaxElementSize.width;
       }
       if (kidMaxElementSize.height > kidSize.height) {
-        printf("BUG - table cell content max element height greater than desired height \n");
+        printf("Warning - table cell content max element height %d greater than desired height %d\n",
+          kidMaxElementSize.height, kidSize.height);
         kidSize.height = kidMaxElementSize.height;
       }
 
@@ -1289,7 +1291,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
                                      aReflowState.reflowState,
                                      aNextFrame, kidAvailSize);
 
-    // XXX Unfortunately we need to reflow the child several times.
+    // Unfortunately we need to reflow the child several times.
     // The first time is for the incremental reflow command. We can't pass in
     // a max width of NS_UNCONSTRAINEDSIZE, because the max width must match
     // the width of the previous reflow...
