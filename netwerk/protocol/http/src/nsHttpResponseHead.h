@@ -55,7 +55,7 @@ public:
     void     ClearHeaders()                         { mHeaders.Clear(); }
 
     void     SetContentType(const char *s) { mContentType.Adopt(s ? nsCRT::strdup(s) : 0); }
-    void     SetContentLength(PRInt32 len) { mContentLength = len; }
+    void     SetContentLength(PRInt32);
 
     // write out the response status line and headers as a single text block,
     // optionally pruning out transient headers (ie. headers that only make
