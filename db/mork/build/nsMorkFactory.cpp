@@ -17,41 +17,12 @@
  */
 
 #include "nsIServiceManager.h"
-#include "nsIFactory.h"
-#include "nsISupports.h"
+#include "nsCOMPtr.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 #include "nsMorkCID.h"
 #include "nsIMdbFactoryFactory.h"
-#include "pratom.h"
 #include "mdb.h"
-
-// include files for components this factory creates...
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
-////////////////////////////////////////////////////////////
-//
-////////////////////////////////////////////////////////////
-static PRInt32 g_InstanceCount = 0;
-static PRInt32 g_LockCount = 0;
-
-class nsMorkFactory : public nsIFactory
-{   
-public:
-	// nsISupports methods
-	NS_DECL_ISUPPORTS 
-
-  nsMorkFactory(const nsCID &aClass, const char* aClassName, const char* aProgID); 
-
-  // nsIFactory methods   
-  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
-  NS_IMETHOD LockFactory(PRBool aLock);   
-
-protected:
-  virtual ~nsMorkFactory();   
-
-  nsCID mClassID;
-  char* mClassName;
-  char* mProgID;
-};   
 
 class nsMorkFactoryFactory : public nsIMdbFactoryFactory
 {
@@ -64,133 +35,191 @@ public:
 
 };
 
-nsMorkFactory::nsMorkFactory(const nsCID &aClass, const char* aClassName, const char* aProgID)
-  : mClassID(aClass), mClassName(nsCRT::strdup(aClassName)), mProgID(nsCRT::strdup(aProgID))
+
+// include files for components this factory creates...
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMorkFactoryFactory)
+
+////////////////////////////////////////////////////////////
+//
+class nsMorkModule : public nsIModule
+{   
+public:
+
+	nsMorkModule(); 
+	virtual ~nsMorkModule();
+
+	// nsISupports methods
+	NS_DECL_ISUPPORTS 
+
+    NS_DECL_NSIMODULE
+
+protected:
+    nsresult Initialize();
+
+    void Shutdown();
+
+    PRBool mInitialized;
+	nsCOMPtr<nsIGenericFactory> mMorkFactory;
+};   
+
+nsMorkModule::nsMorkModule()
+    : mInitialized(PR_FALSE)
 {   
 	NS_INIT_REFCNT();
 }   
 
-nsMorkFactory::~nsMorkFactory()   
+
+NS_IMPL_ISUPPORTS(nsMorkModule, NS_GET_IID(nsIModule))
+
+nsMorkModule::~nsMorkModule()
 {
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-  PL_strfree(mClassName);
-  PL_strfree(mProgID);
-}   
-
-nsresult nsMorkFactory::QueryInterface(const nsIID &aIID, void **aResult)   
-{   
-  if (aResult == NULL)  
-    return NS_ERROR_NULL_POINTER;  
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
-    *aResult = (void *)(nsISupports*)this;   
-  else if (aIID.Equals(nsIFactory::GetIID()))   
-    *aResult = (void *)(nsIFactory*)this;   
-
-  if (*aResult == NULL)
-    return NS_NOINTERFACE;
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsMorkFactory)
-NS_IMPL_RELEASE(nsMorkFactory)
-
-// OK, we're cheating here, since Mork doesn't support XPCOM, i.e., nsIMDBFactory
-// doesn't inherit from nsISupports. I could create a wrapper interface for an nsIMDBFactory
-// object that returns a real nsISupports object, and msgdb could use this object
-// to get hold of the actual nsIMDBFactory interface object.
-nsresult nsMorkFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult)  
-{  
-	nsresult rv = NS_OK;
-
-	if (aResult == NULL)  
-		return NS_ERROR_NULL_POINTER;  
-
-	*aResult = NULL;  
-  
-	// ClassID check happens here
-	// Whenever you add a new class that supports an interface, plug it in here!!!
-	
-	// do they want a mork factory  ?
-	if (mClassID.Equals(kCMorkFactory)) 
-	{
-		*aResult = MakeMdbFactory();
-	}
-	return rv;
-}  
-
-nsresult nsMorkFactory::LockFactory(PRBool aLock)  
-{  
-	if (aLock) { 
-		PR_AtomicIncrement(&g_LockCount); 
-	} else { 
-		PR_AtomicDecrement(&g_LockCount); 
-	} 
-
-  return NS_OK;
-}  
-
-// return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
-                                           const nsCID &aClass,
-                                           const char *aClassName,
-                                           const char *aProgID,
-                                           nsIFactory **aFactory)
-{
-	if (nsnull == aFactory)
-		return NS_ERROR_NULL_POINTER;
-
-	// If we decide to implement multiple factories in the msg.dll, then we need to check the class
-	// type here and create the appropriate factory instead of always creating a nsMsgFactory...
-	*aFactory = new nsMorkFactory(aClass, aClassName, aProgID);
-
-	if (aFactory)
-		return (*aFactory)->QueryInterface(nsIFactory::GetIID(), (void**)aFactory); // they want a Factory Interface so give it to them
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
+    Shutdown();
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
+// Perform our one-time intialization for this module
+nsresult nsMorkModule::Initialize()
 {
-    return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+    if (mInitialized)
+        return NS_OK;
+
+    mInitialized = PR_TRUE;
+    return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* aServMgr, const char* path)
+// Shutdown this module, releasing all of the module resources
+void nsMorkModule::Shutdown()
 {
-  nsresult rv = NS_OK;
-  nsresult finalResult = NS_OK;
-
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kCMorkFactory, nsnull, nsnull,
-                                  path, PR_TRUE, PR_TRUE);
-  if (NS_FAILED(rv))finalResult = rv;
-
-  return finalResult;
+    // Release the factory objects
+    mMorkFactory = null_nsCOMPtr();
 }
 
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* aServMgr, const char* path)
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP nsMorkModule::GetClassObject(nsIComponentManager *aCompMgr,
+                               const nsCID& aClass,
+                               const nsIID& aIID,
+                               void** r_classObj)
 {
-  nsresult rv = NS_OK;
-  nsresult finalResult = NS_OK;
+    nsresult rv;
 
-  NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-  if (NS_FAILED(rv)) return rv;
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj)
+        return NS_ERROR_INVALID_POINTER;
 
-  rv = compMgr->UnregisterComponent(kCMorkFactory, path);
-  if (NS_FAILED(rv)) finalResult = rv;
+    *r_classObj = NULL;
 
-  return finalResult;
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) 
+    {
+        rv = Initialize();
+        if (NS_FAILED(rv)) // Initialization failed! yikes!
+            return rv;
+    }
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+
+    if (aClass.Equals(kCMorkFactory))
+    {
+        if (!mMorkFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mMorkFactory), &nsMorkFactoryFactoryConstructor);
+        fact = mMorkFactory;
+    }
+    if (fact)
+        rv = fact->QueryInterface(aIID, r_classObj);
+
+    return rv;
+}
+
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+static Components gComponents[] = {
+    { "Mork Factory", &kCMorkFactory,
+      nsnull },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP nsMorkModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                          nsIFileSpec* aPath,
+                          const char* registryLocation,
+                          const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) 
+    {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) 
+            break;
+        cp++;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP nsMorkModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                            nsIFileSpec* aPath,
+                            const char* registryLocation)
+{
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) 
+    {
+        aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        cp++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMorkModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload)
+        return NS_ERROR_INVALID_POINTER;
+
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+static nsMorkModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(return_cobj, "Null argument");
+    NS_ASSERTION(gModule == NULL, "nsMorkModule: Module already created.");
+
+    // Create an initialize the imap module instance
+    nsMorkModule *module = new nsMorkModule();
+    if (!module)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = module->QueryInterface(nsIModule::GetIID(), (void**)return_cobj);
+    if (NS_FAILED(rv)) 
+    {
+        delete module;
+        module = nsnull;
+    }
+    gModule = module;                  // WARNING: Weak Reference
+    return rv;
 }
 
 static nsIMdbFactory *gMDBFactory = nsnull;
