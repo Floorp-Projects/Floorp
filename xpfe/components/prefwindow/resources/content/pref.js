@@ -127,6 +127,7 @@ function PREF_ParsePref( elementID, elementObject )
             var prefvalue = elementObject.value;
           }
           else {
+            // element object has prefindex attribute
             var prefvalue = elementObject.prefindex;
           }
           whp.SetIntPref( elementObject.prefstring, prefvalue );  // integer pref
@@ -137,18 +138,6 @@ function PREF_ParsePref( elementID, elementObject )
         //XXX there's some kind of bug here with this such that this throws an UNEXPECTED
         //XXX exception. look into this later.
         whp.SetCharPref( elementObject.prefstring, elementObject.value );  // string pref
-        break;
-      case "color":
-        var r, g, b, color = elementObject.value; 
-        if( color.indexOf("#") != -1 ) {
-          color = color.substring( color.indexOf("#"), color.length );
-          r = "0x" + color.substring( 0, 2 );
-          g = "0x" + color.substring( 2, 4 );
-          b = "0x" + color.substring( 4, 6 );
-          var value = r + "," + g + "," + b;
-          dump("*** COLOR VALUE: " + value + "\n");
-        }
-        whp.SetColorPref( elementObject.prefstring, r, g, b );
         break;
       default:
         // TODO: insert implementation for other pref types;
@@ -258,33 +247,11 @@ function PREF_onpageload( tag )
             }
           }
           break;
-        case "color":
-          var r = g = b = [];
-          try {
-            this.pref.GetColorPref( prefstring, r, g, b );
-          }
-          catch(e) {
-            try {
-              this.pref.GetDefaultColorPref( prefstring, r, g, b );
-            }
-            catch(e) {
-              dump("*** NO DEFAULT PREF for " + prefstring + ", AND ONE *IS* NEEDED! GO MAKE ONE, FOOL!\n");
-              continue;
-              return false;
-            }
-          }
-          dump("*** MEEP : " + r.value + "," + g.value + "," + b.value + "\n");
-          var prefvalue = "#" + r.value.toString(16) + g.value.toString(16) + b.value.toString(16);
-          //for( var foo in r )
-          //  dump("r[" + foo + "] = " + r[foo] + "\n");
-          dump("*** color pref value: " + prefvalue + "\n");
-          break;
-          //  function hex(decimal) { return "" + hexdigits[Math.floor((decimal%256)/16)] + hexdigits[decimal % 16]; }
         default:
-          // TODO: define cases for other pref types.
+          // TODO: define cases for other pref types if required
           break;
       }
-      dump("*** elementvalue: " + prefvalue + "\n");
+      //dump("*** elementvalue: " + prefvalue + "\n");
       this.wsm.PageData[tag][prefid]  = [];   // otherwise jseng complains
       var root                        = this.wsm.PageData[tag][prefid];
       root["id"]                      = prefid;
@@ -296,9 +263,12 @@ function PREF_onpageload( tag )
         // play. We compare this with the value read from nsIPref, and if it matches,
         // that is the radioelement that needs to be checked.
         var prefindex = prefElements[i].getAttribute("prefindex");
-        if( prefindex == prefvalue )
+        if( prefElements[i].getAttribute("preftype").toLowerCase() == "bool" )
+          prefvalue = prefvalue.toString(); // need to explicitly type convert on bool prefs.
+
+        if( prefindex == prefvalue ) 
           prefvalue = true;     // match! this element is checked!
-        else
+        else if( prefElements[i].getAttribute("preftype").toLowerCase() != "bool" ) 
           prefvalue = false;    // no match. This element.checked = false;
       }
       root["value"]     = prefvalue;
