@@ -150,6 +150,7 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveTop");
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveBottom");
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectTop");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectBottom");
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_lineNext");
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_linePrevious");
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectLineNext");
