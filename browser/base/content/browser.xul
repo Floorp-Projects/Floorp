@@ -638,8 +638,15 @@
 #ifndef XP_MACOSX
                 <menuseparator/>
 #endif
-                <menuitem label="&quitApplicationCmd.label;" id="menu_FileQuitItem"
-                          accesskey="&quitApplicationCmd.accesskey;" oncommand="goQuitApplication();"/>
+                <menuitem id="menu_FileQuitItem" 
+#ifdef XP_WIN
+			  label="&quitApplicationCmdWin.label;"
+			  accesskey="&quitApplicationCmdWin.accesskey;"
+#else
+			  label="&quitApplicationCmd.label;" 
+			  accesskey="&quitApplicationCmd.accesskey;" 
+#endif
+			  oncommand="goQuitApplication();"/>
               </menupopup>
             </menu>
   

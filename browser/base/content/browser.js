@@ -2724,7 +2724,7 @@ function onViewToolbarCommand(aEvent)
   var toolbox = document.getElementById("navigator-toolbox");
   var index = aEvent.originalTarget.getAttribute("toolbarindex");
   var toolbar = toolbox.childNodes[index];
-  
+
   toolbar.collapsed = aEvent.originalTarget.getAttribute("checked") != "true";
   document.persist(toolbar.id, "collapsed");
 }
