@@ -201,32 +201,6 @@ function HandleBookmarkIcon(iconURL, addFlag)
   }
 }
 
-function UpdateInternetSearchResults(event)
-{
-  var url = getWebNavigation().currentURI.spec;
-  if (url) {
-    try {
-      var autoOpenSearchPanel = 
-        pref.getBoolPref("browser.search.opensidebarsearchpanel");
-
-      if (autoOpenSearchPanel || isSearchPanelOpen())
-      {
-        if (!gSearchService)
-          gSearchService = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                         .getService(Components.interfaces.nsIInternetSearchService);
-
-        var searchInProgressFlag = gSearchService.FindInternetSearchResults(url);
-
-        if (searchInProgressFlag) {
-          if (autoOpenSearchPanel)
-            RevealSearchPanel();
-        }
-      }
-    } catch (ex) {
-    }
-  }
-}
-
 function getBrowser()
 {
   if (!gBrowser)
@@ -764,7 +738,6 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
 {
   //This function needs to be split up someday.
 
-  var autoOpenSearchPanel = false;
   var defaultSearchURL = null;
   var fallbackDefaultSearchURL = gNavigatorRegionBundle.getString("fallbackDefaultSearchURL");
   ensureSearchPref()
@@ -775,7 +748,6 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
   var forceAsURL = urlmatch.test(searchStr);
 
   try {
-    autoOpenSearchPanel = pref.getBoolPref("browser.search.opensidebarsearchpanel");
     defaultSearchURL = pref.getComplexValue("browser.search.defaulturl",
                                             Components.interfaces.nsIPrefLocalizedString).data;
   } catch (ex) {
@@ -847,28 +819,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
       }
     }
   }
-
-  // should we try and open up the sidebar to show the "Search Results" panel?
-  if (autoOpenSearchPanel)
-    RevealSearchPanel();
 }
-
-function RevealSearchPanel()
-{
-  var searchPanel = document.getElementById("urn:sidebar:panel:search");
-  if (searchPanel)
-    SidebarSelectPanel(searchPanel, true, true); // lives in sidebarOverlay.js
-}
-
-function isSearchPanelOpen()
-{
-  return ( !sidebar_is_hidden()    && 
-           !sidebar_is_collapsed() && 
-           SidebarGetLastSelectedPanel() == "urn:sidebar:panel:search"
-         );
-}
-
-//Note: BrowserNewEditorWindow() was moved to globalOverlay.xul and renamed to NewEditorWindow()
 
 function BrowserOpenWindow()
 {
@@ -1120,7 +1071,7 @@ function hiddenWindowStartup()
   window.focus();
 
   // Disable menus which are not appropriate
-  var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:EditPage', 'Browser:PrintSetup', /*'Browser:PrintPreview',*/
+  var disabledItems = ['cmd_close', 'Browser:SendPage', 'Browser:PrintSetup', 'Browser:PrintPreview',
                        'Browser:Print', 'canGoBack', 'canGoForward', 'Browser:Home', 'Browser:AddBookmark', 'cmd_undo',
                        'cmd_redo', 'cmd_cut', 'cmd_copy','cmd_paste', 'cmd_delete', 'cmd_selectAll', 'menu_textZoom'];
   for (var id in disabledItems) {
@@ -1406,18 +1357,9 @@ function applyTheme(themeName)
     return;
   }
 
- // XXX XXX BAD BAD BAD BAD !! XXX XXX                                         
- // we STILL haven't fixed editor skin switch problems                         
- // hacking around it yet again                                                
-
- str.data = themeName.getAttribute("name");
- pref.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
- if (promptService) {                                                          
-   var dialogTitle = gNavigatorBundle.getString("switchskinstitle");           
-   var brandName = gBrandBundle.getString("brandShortName");                   
-   var msg = gNavigatorBundle.getFormattedString("switchskins", [brandName]);  
-   promptService.alert(window, dialogTitle, msg);                              
- }                                                                             
+  chromeRegistry.selectSkin(name, true);                                        
+  chromeRegistry.refreshSkins(); 
+ 
 }
 
 function getNewThemes()
@@ -1461,13 +1403,6 @@ function checkForDefaultBrowser()
                       .getService(Components.interfaces.nsIWindowsHooks)
                       .checkSettings(window);
     } catch(e) {
-    }
-
-    if (dialogShown)  
-    {
-      // Force the sidebar to build since the windows 
-      // integration dialog may have come up.
-      SidebarRebuild();
     }
   }
 }
