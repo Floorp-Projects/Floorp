@@ -243,7 +243,7 @@ protected:
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
   nsresult CheckSecurityIsChromeCaller(PRBool *isChrome);
-  void MakeScriptDialogTitle(nsAReadableString &aInTitle, nsAWritableString &aOutTitle);
+  void MakeScriptDialogTitle(const nsAString &aInTitle, nsAString &aOutTitle);
 
   // Helper for window.find()
   nsresult FindInternal(const nsAString& aStr, PRBool caseSensitive,
