@@ -53,6 +53,8 @@
 #include "nsIBrowserWindow.h"
 #include "nsIContent.h"
 #include "prlog.h"
+#include "nsCOMPtr.h"
+#include "nsIPresShell.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -1323,6 +1325,40 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     mHistory.ReplaceElementAt(url, mHistoryIndex);
   }
   ShowHistory();
+
+  // If it's a normal reload that uses the cache, look at the destination anchor
+  // and see if it's an element within the current document
+  if ((aType == nsURLReload) && (nsnull != mContentViewer)) {
+    nsCOMPtr<nsIDocumentViewer> docViewer;
+    if (NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID,
+                                                    getter_AddRefs(docViewer)))) {
+      // Get the document object
+      nsCOMPtr<nsIDocument> doc;
+      docViewer->GetDocument(*getter_AddRefs(doc));
+
+      // Get the URL for the document
+      nsCOMPtr<nsIURL>  docURL = nsDontAddRef<nsIURL>(doc->GetDocumentURL());
+
+      // See if they're the same
+      nsCOMPtr<nsIURL>  url;
+      NS_NewURL(getter_AddRefs(url), urlSpec);
+
+      if ((PRBool)docURL->Equals(url)) {
+        // See if there's a destination anchor
+        const char* ref;
+        url->GetRef(&ref);
+
+        if (nsnull != ref) {
+          // Get the pres shell object
+          nsCOMPtr<nsIPresShell> presShell;
+          docViewer->GetPresShell(*getter_AddRefs(presShell));
+
+          presShell->GoToAnchor(nsAutoString(ref));
+          return NS_OK;
+        }
+      }
+    }
+  }
 
   // Stop loading the current document (if any...).  This call may result in
   // firing an EndLoadURL notification for the old document...
