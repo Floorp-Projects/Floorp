@@ -221,25 +221,26 @@ nsIOService::SetOffline(PRBool offline)
     nsresult rv1 = NS_OK;
     nsresult rv2 = NS_OK;
     if (offline) {
+    	mOffline = PR_TRUE;		// indicate we're trying to shutdown
         // be sure to try and shutdown both (even if the first fails)
-        if (mSocketTransportService)
-            rv1 = mSocketTransportService->Shutdown();
         if (mDNSService)
-            rv2 = mDNSService->Shutdown();
+            rv1 = mDNSService->Shutdown();  // shutdown dns service first, because it has callbacks for socket transport
+        if (mSocketTransportService)
+            rv2 = mSocketTransportService->Shutdown();
         if (NS_FAILED(rv1)) return rv1;
         if (NS_FAILED(rv2)) return rv2;
     }
     else if (!offline && mOffline) {
         // go online
-        if (mSocketTransportService)
-            rv1 = mSocketTransportService->Init();
-        if (NS_FAILED(rv1)) return rv1;
-        
         if (mDNSService)
-            rv2 = mDNSService->Init();
-        if (NS_FAILED(rv2)) return rv2;		//XXX should we shutdown the socket transport service?
+            rv1 = mDNSService->Init();
+        if (NS_FAILED(rv2)) return rv1;
+
+        if (mSocketTransportService)
+            rv2 = mSocketTransportService->Init();		//XXX should we shutdown the dns service?
+        if (NS_FAILED(rv2)) return rv1;        
+        mOffline = PR_FALSE;	// indicate success only AFTER we've brought up the services
     }
-    mOffline = offline;
     return NS_OK;
 }
 
