@@ -1824,14 +1824,6 @@ public class ScriptRuntime {
         return firstXMLObject;
     }
 
-    public static Scriptable getThis(Scriptable base) {
-        while (base instanceof NativeWith)
-            base = base.getPrototype();
-        if (base instanceof NativeCall)
-            base = ScriptableObject.getTopLevelScope(base);
-        return base;
-    }
-
     public static Object setName(Scriptable bound, Object value,
                                  Context cx, Scriptable scope, String id)
     {
@@ -2094,6 +2086,15 @@ public class ScriptRuntime {
 
         Function f = (Function)value;
         Scriptable thisObj = f.getParentScope();
+        if (thisObj.getParentScope() != null) {
+            if (thisObj instanceof NativeWith) {
+                // functions defined inside with should have with target
+                // as their thisObj
+            } else if (thisObj instanceof NativeCall) {
+                // nested functions should have top scope as their thisObj
+                thisObj = ScriptableObject.getTopLevelScope(thisObj);
+            }
+        }
         storeScriptable(cx, thisObj);
         return f;
     }

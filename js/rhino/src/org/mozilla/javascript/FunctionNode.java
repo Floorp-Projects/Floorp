@@ -57,14 +57,6 @@ public class FunctionNode extends ScriptOrFnNode {
         itsNeedsActivation = true;
     }
 
-    public boolean getCheckThis() {
-        return itsCheckThis;
-    }
-
-    void setCheckThis() {
-        itsCheckThis = true;
-    }
-
     public boolean getIgnoreDynamicScope() {
         return itsIgnoreDynamicScope;
     }
@@ -102,7 +94,6 @@ public class FunctionNode extends ScriptOrFnNode {
 
     private String functionName;
     private boolean itsNeedsActivation;
-    private boolean itsCheckThis;
     private int itsFunctionType;
     private boolean itsIgnoreDynamicScope;
 }

@@ -480,7 +480,6 @@ public class Interpreter
             jsi.compilerEnv = compilerEnv;
             jsi.scriptOrFn = def;
             jsi.itsData = new InterpreterData(itsData);
-            jsi.itsData.itsCheckThis = def.getCheckThis();
             jsi.generateFunctionICode();
             array[i] = jsi.itsData;
         }
@@ -3112,7 +3111,7 @@ switch (op) {
     }
 
     private static void initState(Context cx, Scriptable callerScope,
-                                  Scriptable origThisObj,
+                                  Scriptable thisObj,
                                   Object[] args, double[] argsDbl,
                                   int argShift, int argCount,
                                   InterpretedFunction fnOrScript,
@@ -3159,16 +3158,11 @@ switch (op) {
         }
 
         Scriptable scope;
-        Scriptable thisObj = origThisObj;
         if (idata.itsFunctionType != 0) {
             if (!idata.useDynamicScope) {
                 scope = fnOrScript.getParentScope();
             } else {
                 scope = callerScope;
-            }
-
-            if (idata.itsCheckThis) {
-                thisObj = ScriptRuntime.getThis(thisObj);
             }
 
             if (state.useActivation) {

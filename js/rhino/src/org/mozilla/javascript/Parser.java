@@ -462,11 +462,6 @@ public class Parser
         boolean nested = insideFunction();
 
         FunctionNode fnNode = nf.createFunction(name);
-        if (nested) {
-            // Nested functions must check their 'this' value to insure
-            // it is not an activation object: see 10.1.6 Activation Object
-            fnNode.setCheckThis();
-        }
         if (nested || nestingOfWith > 0) {
             // 1. Nested functions are not affected by the dynamic scope flag
             // as dynamic scope is already a parent of their scope.

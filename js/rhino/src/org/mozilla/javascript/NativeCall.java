@@ -107,11 +107,6 @@ public final class NativeCall extends IdScriptableObject
         return originalArgs;
     }
 
-    Scriptable getThisObj()
-    {
-        return thisObj;
-    }
-
     protected int findPrototypeId(String s)
     {
         return s.equals("constructor") ? Id_constructor : 0;

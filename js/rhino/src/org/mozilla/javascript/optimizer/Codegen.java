@@ -1201,17 +1201,6 @@ class BodyCodegen
             }
         }
 
-        if (fnCurrent != null && fnCurrent.fnode.getCheckThis()) {
-            // Nested functions must check their 'this' value to
-            //  insure it is not an activation object:
-            //  see 10.1.6 Activation Object
-            cfw.addALoad(thisObjLocal);
-            addScriptRuntimeInvoke("getThis",
-                                   "(Lorg/mozilla/javascript/Scriptable;"
-                                   +")Lorg/mozilla/javascript/Scriptable;");
-            cfw.addAStore(thisObjLocal);
-        }
-
         if (hasVarsInRegs) {
             // No need to create activation. Pad arguments if need be.
             int parmCount = scriptOrFn.getParamCount();
