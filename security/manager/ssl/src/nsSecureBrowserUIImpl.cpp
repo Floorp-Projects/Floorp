@@ -41,7 +41,6 @@
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIObserverService.h"
-#include "nsObserverService.h"
 #include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
 #include "nsIDocShell.h"
@@ -99,7 +98,7 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
 {
   nsresult rv;
   // remove self from form post notifications:
-  nsCOMPtr<nsIObserverService> svc(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIObserverService> svc(do_GetService("@mozilla.org/observer-service;1", &rv));
   if (NS_SUCCEEDED(rv)) {
     svc->RemoveObserver(this, NS_FORMSUBMIT_SUBJECT);
   }
@@ -130,7 +129,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window,
   if (NS_FAILED(rv)) return rv;
   
   // hook up to the form post notifications:
-  nsCOMPtr<nsIObserverService> svc(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIObserverService> svc(do_GetService("@mozilla.org/observer-service;1", &rv));
   if (NS_SUCCEEDED(rv)) {
     rv = svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
   }
