@@ -400,8 +400,7 @@ NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 			case keyDown:
 			case keyUp:
 			case autoKey:
-				if ( inWindow )
-					*aForWindow = PR_TRUE;
+				*aForWindow = PR_TRUE;
 				break;
 
 			case diskEvt:
