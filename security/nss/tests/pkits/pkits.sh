@@ -951,6 +951,738 @@ pkits_KeyUsage()
   delete keyUsageNotCriticalcRLSignFalseCACert
 }
 
+pkits_CertificatePolicies()
+{
+  break_table "NIST PKITS Section 4.8: Certificate Policies"
+
+  VFY_ACTION="All Certificates Same Policy Test1"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
+  pkits $certs/ValidCertificatePathTest1EE.crt \
+      $certs/GoodCACert.crt
+  delete GoodCACert
+
+  VFY_ACTION="All Certificates No Policies Test2"; log_banner
+  certImport NoPoliciesCACert
+  crlImport NoPoliciesCACRL.crl
+  pkits $certs/AllCertificatesNoPoliciesTest2EE.crt \
+      $certs/NoPoliciesCACert.crt
+  delete NoPoliciesCACert
+
+  VFY_ACTION="Different Policies Test3"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
+  certImport PoliciesP2subCACert
+  crlImport PoliciesP2subCACRL.crl
+  pkits $certs/DifferentPoliciesTest3EE.crt \
+      $certs/PoliciesP2subCACert.crt \
+      $certs/GoodCACert.crt
+  delete GoodCACert
+  delete PoliciesP2subCACert
+
+  VFY_ACTION="Different Policies Test4"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
+  certImport GoodsubCACert
+  crlImport GoodsubCACRL.crl
+  pkits $certs/DifferentPoliciesTest4EE.crt \
+      $certs/GoodsubCACert.crt \
+      $certs/GoodCACert.crt
+  delete GoodCACert
+  delete GoodsubCACert
+
+  VFY_ACTION="Different Policies Test5"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
+  certImport PoliciesP2subCA2Cert
+  crlImport PoliciesP2subCA2CRL.crl
+  pkits $certs/DifferentPoliciesTest5EE.crt \
+      $certs/PoliciesP2subCA2Cert.crt \
+      $certs/GoodCACert.crt
+  delete PoliciesP2subCA2Cert
+  delete GoodCACert
+
+  VFY_ACTION="Overlapping Policies Test6"; log_banner
+  certImport PoliciesP1234CACert
+  crlImport PoliciesP1234CACRL.crl
+  certImport PoliciesP1234subCAP123Cert
+  crlImport PoliciesP1234subCAP123CRL.crl
+  certImport PoliciesP1234subsubCAP123P12Cert
+  crlImport PoliciesP1234subsubCAP123P12CRL.crl
+  pkits $certs/OverlappingPoliciesTest6EE.crt \
+      $certs/PoliciesP1234subsubCAP123P12Cert.crt \
+      $certs/PoliciesP1234subCAP123Cert.crt \
+      $certs/PoliciesP1234CACert.crt
+  delete PoliciesP1234CACert
+  delete PoliciesP1234subCAP123Cert
+  delete PoliciesP1234subsubCAP123P12Cert
+
+  VFY_ACTION="Different Policies Test7"; log_banner
+  certImport PoliciesP123CACert
+  crlImport PoliciesP123CACRL.crl
+  certImport PoliciesP123subCAP12Cert
+  crlImport PoliciesP123subCAP12CRL.crl
+  certImport PoliciesP123subsubCAP12P1Cert
+  crlImport PoliciesP123subsubCAP12P1CRL.crl
+  pkits $certs/DifferentPoliciesTest7EE.crt \
+      $certs/PoliciesP123subsubCAP12P1Cert.crt \
+      $certs/PoliciesP123subCAP12Cert.crt \
+      $certs/PoliciesP123CACert.crt
+  delete PoliciesP123CACert
+  delete PoliciesP123subCAP12Cert
+  delete PoliciesP123subsubCAP12P1Cert
+
+  VFY_ACTION="Different Policies Test8"; log_banner
+  certImport PoliciesP12CACert
+  crlImport PoliciesP12CACRL.crl
+  certImport PoliciesP12subCAP1Cert
+  crlImport PoliciesP12subCAP1CRL.crl
+  certImport PoliciesP12subsubCAP1P2Cert
+  crlImport PoliciesP12subsubCAP1P2CRL.crl
+  pkits $certs/DifferentPoliciesTest8EE.crt \
+      $certs/PoliciesP123subsubCAP12P1Cert.crt \
+      $certs/PoliciesP12subCAP1Cert.crt \
+      $certs/PoliciesP12CACert.crt
+  delete PoliciesP12CACert
+  delete PoliciesP12subCAP1Cert
+  delete PoliciesP12subsubCAP1P2Cert
+
+  VFY_ACTION="Different Policies Test9"; log_banner
+  certImport PoliciesP123CACert
+  crlImport PoliciesP123CACRL.crl
+  certImport PoliciesP123subCAP12Cert
+  crlImport PoliciesP123subCAP12CRL.crl
+  certImport PoliciesP123subsubCAP12P2Cert
+  crlImport PoliciesP123subsubCAP2P2CRL.crl
+  certImport PoliciesP123subsubsubCAP12P2P1Cert
+  crlImport PoliciesP123subsubsubCAP12P2P1CRL.crl
+  pkits $certs/DifferentPoliciesTest9EE.crt \
+      $certs/PoliciesP123subsubsubCAP12P2P1Cert.crt \
+      $certs/PoliciesP123subsubCAP12P1Cert.crt \
+      $certs/PoliciesP12subCAP1Cert.crt \
+      $certs/PoliciesP12CACert.crt
+  delete PoliciesP123CACert
+  delete PoliciesP123subCAP12Cert
+  delete PoliciesP123subsubCAP12P2Cert
+  delete PoliciesP123subsubsubCAP12P2P1Cert
+
+  VFY_ACTION="All Certificates Same Policies Test10"; log_banner
+  certImport PoliciesP12CACert
+  crlImport PoliciesP12CACRL.crl
+  pkits $certs/AllCertificatesSamePoliciesTest10EE.crt \
+      $certs/NoPoliciesCACert.crt
+  delete PoliciesP12CACert
+
+  VFY_ACTION="All Certificates AnyPolicy Test11"; log_banner
+  certImport anyPolicyCACert
+  crlImport anyPolicyCACRL.crl
+  pkits $certs/AllCertificatesanyPolicyTest11EE.crt \
+      $certs/anyPolicyCACert.crt
+  delete anyPolicyCACert
+
+  VFY_ACTION="Different Policies Test12"; log_banner
+  certImport PoliciesP3CACert
+  crlImport PoliciesP3CACRL.crl
+  pkits $certs/DifferentPoliciesTest12EE.crt \
+      $certs/PoliciesP3CACert.crt
+  delete PoliciesP3CACert
+
+  VFY_ACTION="All Certificates Same Policies Test13"; log_banner
+  certImport PoliciesP123CACert
+  crlImport PoliciesP123CACRL.crl
+  pkits $certs/AllCertificatesSamePoliciesTest13EE.crt \
+      $certs/PoliciesP123CACert.crt
+  delete PoliciesP123CACert
+
+  VFY_ACTION="AnyPolicy Test14"; log_banner
+  certImport anyPolicyCACert
+  crlImport anyPolicyCACRL.crl
+  pkits $certs/AnyPolicyTest14EE.crt \
+      $certs/anyPolicyCACert.crt
+  delete anyPolicyCACert
+
+  VFY_ACTION="User Notice Qualifier Test15"; log_banner
+  pkits $certs/UserNoticeQualifierTest15EE.crt
+
+  VFY_ACTION="User Notice Qualifier Test16"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
+  pkits $certs/UserNoticeQualifierTest16EE.crt \
+      $certs/GoodCACert.crt
+
+  VFY_ACTION="User Notice Qualifier Test17"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
+  pkits $certs/UserNoticeQualifierTest17EE.crt \
+      $certs/GoodCACert.crt
+  delete GoodCACert
+
+  VFY_ACTION="User Notice Qualifier Test18"; log_banner
+  certImport PoliciesP12CACert
+  crlImport PoliciesP12CACRL.crl
+  pkits $certs/UserNoticeQualifierTest18EE.crt \
+      $certs/PoliciesP12CACert.crt
+  delete PoliciesP12CACert
+
+  VFY_ACTION="User Notice Qualifier Test19"; log_banner
+  pkits $certs/UserNoticeQualifierTest19EE.crt
+
+  VFY_ACTION="CPS Pointer Qualifier Test20"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
+  pkits $certs/CPSPointerQualifierTest20EE.crt \
+      $certs/GoodCACert.crt
+  delete GoodCACert
+}
+
+pkits_RequireExplicitPolicy()
+{
+  break_table "NIST PKITS Section 4.9: Require Explicit Policy"
+
+  VFY_ACTION="Valid RequireExplicitPolicy Test1"; log_banner
+  certImport requireExplicitPolicy10CACert
+  crlImportn requireExplicitPolicy10CACRL.crl
+  certImport requireExplicitPolicy10subCACert
+  crlImport requireExplicitPolicy10subCACRL.crl
+  certImport requireExplicitPolicy10subsubCACert
+  crlImport requireExplicitPolicy10subsubCACRL.crl
+  certImport requireExplicitPolicy10subsubsubCACert
+  crlImport requireExplicitPolicy10subsubsubCACRL.crl
+  pkits $certs/ValidrequireExplicitPolicyTest1EE.crt \
+      $certs/requireExplicitPolicy10subsubsubCACert.crt \
+      $certs/requireExplicitPolicy10subsubCACert.crt \
+      $certs/requireExplicitPolicy10subCACert.crt \
+      $certs/requireExplicitPolicy10CACert.crt
+  delete requireExplicitPolicy10CACert
+  delete requireExplicitPolicy10subCACert
+  delete requireExplicitPolicy10subsubCACert
+  delete requireExplicitPolicy10subsubsubCACert
+
+  VFY_ACTION="Valid RequireExplicitPolicy Test2"; log_banner
+  certImport requireExplicitPolicy5CACert
+  crlImportn requireExplicitPolicy5CACRL.crl
+  certImport requireExplicitPolicy5subCACert
+  crlImport requireExplicitPolicy5subCACRL.crl
+  certImport requireExplicitPolicy5subsubCACert
+  crlImport requireExplicitPolicy5subsubCACRL.crl
+  certImport requireExplicitPolicy5subsubsubCACert
+  crlImport requireExplicitPolicy5subsubsubCACRL.crl
+  pkits $certs/ValidrequireExplicitPolicyTest2EE.crt \
+      $certs/requireExplicitPolicy5subsubsubCACert.crt \
+      $certs/requireExplicitPolicy5subsubCACert.crt \
+      $certs/requireExplicitPolicy5subCACert.crt \
+      $certs/requireExplicitPolicy5CACert.crt
+  delete requireExplicitPolicy5CACert
+  delete requireExplicitPolicy5subCACert
+  delete requireExplicitPolicy5subsubCACert
+  delete requireExplicitPolicy5subsubsubCACert
+
+  VFY_ACTION="Invalid RequireExplicitPolicy Test3"; log_banner
+  certImport requireExplicitPolicy4CACert
+  crlImportn requireExplicitPolicy4CACRL.crl
+  certImport requireExplicitPolicy4subCACert
+  crlImport requireExplicitPolicy4subCACRL.crl
+  certImport requireExplicitPolicy4subsubCACert
+  crlImport requireExplicitPolicy4subsubCACRL.crl
+  certImport requireExplicitPolicy4subsubsubCACert
+  crlImport requireExplicitPolicy4subsubsubCACRL.crl
+  pkitsn $certs/InvalidrequireExplicitPolicyTest3EE.crt \
+      $certs/requireExplicitPolicy4subsubsubCACert.crt \
+      $certs/requireExplicitPolicy4subsubCACert.crt \
+      $certs/requireExplicitPolicy4subCACert.crt \
+      $certs/requireExplicitPolicy4CACert.crt
+  delete requireExplicitPolicy4CACert
+  delete requireExplicitPolicy4subCACert
+  delete requireExplicitPolicy4subsubCACert
+  delete requireExplicitPolicy4subsubsubCACert
+
+  VFY_ACTION="Valid RequireExplicitPolicy Test4"; log_banner
+  certImport requireExplicitPolicy0CACert
+  crlImportn requireExplicitPolicy0CACRL.crl
+  certImport requireExplicitPolicy0subCACert
+  crlImport requireExplicitPolicy0subCACRL.crl
+  certImport requireExplicitPolicy0subsubCACert
+  crlImport requireExplicitPolicy0subsubCACRL.crl
+  certImport requireExplicitPolicy0subsubsubCACert
+  crlImport requireExplicitPolicy0subsubsubCACRL.crl
+  pkits $certs/ValidrequireExplicitPolicyTest4EE.crt \
+      $certs/requireExplicitPolicy0subsubsubCACert.crt \
+      $certs/requireExplicitPolicy0subsubCACert.crt \
+      $certs/requireExplicitPolicy0subCACert.crt \
+      $certs/requireExplicitPolicy0CACert.crt
+  delete requireExplicitPolicy0CACert
+  delete requireExplicitPolicy0subCACert
+  delete requireExplicitPolicy0subsubCACert
+  delete requireExplicitPolicy0subsubsubCACert
+
+  VFY_ACTION="Invalid RequireExplicitPolicy Test5"; log_banner
+  certImport requireExplicitPolicy7CACert
+  crlImportn requireExplicitPolicy7CACRL.crl
+  certImport requireExplicitPolicy7subCARE2Cert
+  crlImportn requireExplicitPolicy7subCARE2CRL.crl
+  certImport requireExplicitPolicy7subsubCARE2RE4Cert
+  crlImportn requireExplicitPolicy7subsubCARE2RE4CRL.crl
+  certImport requireExplicitPolicy7subsubsubCARE2RE4Cert
+  crlImport requireExplicitPolicy7subsubsubCARE2RE4CRL.crl
+  pkitsn $certs/InvalidrequireExplicitPolicyTest5EE.crt \
+      $certs/requireExplicitPolicy7subsubsubCARE2RE4Cert.crt \
+      $certs/requireExplicitPolicy7subsubCARE2RE4Cert.crt \
+      $certs/requireExplicitPolicy7subCARE2Cert.crt \
+      $certs/requireExplicitPolicy7CACert.crt
+  delete requireExplicitPolicy7CACert
+  delete requireExplicitPolicy7subCARE2Cert
+  delete requireExplicitPolicy7subsubCARE2RE4Cert
+  delete requireExplicitPolicy7subsubsubCARE2RE4Cert
+
+  VFY_ACTION="Valid Self-Issued RequireExplicitPolicy Test6"; log_banner
+  certImport requireExplicitPolicy2CACert
+  crlImportn requireExplicitPolicy2CACRL.crl
+  pkits $certs/ValidSelfIssuedrequireExplicitPolicyTest6EE.crt \
+      $certs/requireExplicitPolicy2SelfIssuedCACert.crt \
+      $certs/requireExplicitPolicy2CACert.crt
+  delete requireExplicitPolicy2CACert
+
+  VFY_ACTION="Invalid Self-Issued RequireExplicitPolicy Test7"; log_banner
+  certImport requireExplicitPolicy2CACert
+  crlImportn requireExplicitPolicy2CACRL.crl
+  certImport requireExplicitPolicy2subCACert
+  crlImport requireExplicitPolicy2subCACRL.crl
+  pkitsn $certs/InvalidSelfIssuedrequireExplicitPolicyTest7EE.crt \
+      $certs/requireExplicitPolicy2subCACert.crt \
+      $certs/requireExplicitPolicy2SelfIssuedCACert.crt \
+      $certs/requireExplicitPolicy2CACert.crt
+  delete requireExplicitPolicy2CACert
+  delete requireExplicitPolicy2subCACert
+
+  VFY_ACTION="Invalid Self-Issued RequireExplicitPolicy Test8"; log_banner
+  certImport requireExplicitPolicy2CACert
+  crlImportn requireExplicitPolicy2CACRL.crl
+  certImport requireExplicitPolicy2subCACert
+  crlImport requireExplicitPolicy2subCACRL.crl
+  pkitsn $certs/InvalidSelfIssuedrequireExplicitPolicyTest8EE.crt \
+      $certs/requireExplicitPolicy2SelfIssuedsubCACert.crt \
+      $certs/requireExplicitPolicy2subCACert.crt \
+      $certs/requireExplicitPolicy2SelfIssuedCACert.crt \
+      $certs/requireExplicitPolicy2CACert.crt
+  delete requireExplicitPolicy2CACert
+  delete requireExplicitPolicy2subCACert
+}
+
+pkits_PolicyMappings()
+{
+  break_table "NIST PKITS Section 4.10: Policy Mappings"
+
+  VFY_ACTION="Valid Policy Mapping Test1"; log_banner
+  certImport Mapping1to2CACert
+  crlImportn Mapping1to2CACRL.crl
+  pkits $certs/ValidPolicyMappingTest1EE.crt \
+      $certs/Mapping1to2CACert.crt
+  delete Mapping1to2CACert.crt
+
+  VFY_ACTION="Invalid Policy Mapping Test2"; log_banner
+  certImport Mapping1to2CACert
+  crlImportn Mapping1to2CACRL.crl
+  pkitsn $certs/InvalidPolicyMappingTest2EE.crt \
+      $certs/Mapping1to2CACert.crt
+  delete Mapping1to2CACert.crt
+
+  VFY_ACTION="Valid Policy Mapping Test3"; log_banner
+  certImport P12Mapping1to3CACert
+  crlImportn P12Mapping1to3CACRL.crl
+  certImport P12Mapping1to3subCACert
+  crlImportn P12Mapping1to3subCACRL.crl
+  certImport P12Mapping1to3subsubCACert
+  crlImportn P12Mapping1to3subsubCACRL.crl
+  pkits $certs/ValidPolicyMappingTest3EE.crt \
+      $certs/P12Mapping1to3subsubCACert.crt \
+      $certs/P12Mapping1to3subCACert.crt \
+      $certs/P12Mapping1to3CA.crt
+  delete P12Mapping1to3CACert
+  delete P12Mapping1to3subCACert
+  delete P12Mapping1to3subsubCACert
+
+  VFY_ACTION="Invalid Policy Mapping Test4"; log_banner
+  certImport P12Mapping1to3CACert
+  crlImportn P12Mapping1to3CACRL.crl
+  certImport P12Mapping1to3subCACert
+  crlImportn P12Mapping1to3subCACRL.crl
+  certImport P12Mapping1to3subsubCACert
+  crlImportn P12Mapping1to3subsubCACRL.crl
+  pkitsn $certs/InvalidPolicyMappingTest4EE.crt \
+      $certs/P12Mapping1to3subsubCACert.crt \
+      $certs/P12Mapping1to3subCACert.crt \
+      $certs/P12Mapping1to3CA.crt
+  delete P12Mapping1to3CACert
+  delete P12Mapping1to3subCACert
+  delete P12Mapping1to3subsubCACert
+
+  VFY_ACTION="Valid Policy Mapping Test5"; log_banner
+  certImport P1Mapping1to234CACert
+  crlImportn P1Mapping1to234CACRL.crl
+  certImport P1Mapping1to234subCACert
+  crlImportn P1Mapping1to234subCACRL.crl
+  pkits $certs/ValidPolicyMappingTest5EE.crt \
+      $certs/P1Mapping1to234subCACert.crt \
+      $certs/P1Mapping1to234CA.crt
+  delete P1Mapping1to234CACert
+  delete P1Mapping1to234subCACert
+
+  VFY_ACTION="Valid Policy Mapping Test6"; log_banner
+  certImport P1Mapping1to234CACert
+  crlImportn P1Mapping1to234CACRL.crl
+  certImport P1Mapping1to234subCACert
+  crlImportn P1Mapping1to234subCACRL.crl
+  pkits $certs/ValidPolicyMappingTest6EE.crt \
+      $certs/P1Mapping1to234subCACert.crt \
+      $certs/P1Mapping1to234CA.crt
+  delete P1Mapping1to234CACert
+  delete P1Mapping1to234subCACert
+
+  VFY_ACTION="Invalid Mapping from anyPolicy Test7"; log_banner
+  certImport MappingFromanyPolicyCACert
+  crlImportn MappingFromanyPolicyCACRL.crl
+  pkitsn $certs/InvalidMappingFromanyPolicyTest7EE.crt \
+      $certs/MappingFromanyPolicyCACert.crt
+  delete MappingFromanyPolicyCACert
+
+  VFY_ACTION="Invalid Mapping to anyPolicy Test8"; log_banner
+  certImport MappingToanyPolicyCACert
+  crlImportn MappingToanyPolicyCACRL.crl
+  pkitsn $certs/InvalidMappingToanyPolicyTest8EE.crt \
+      $certs/MappingToanyPolicyCACert.crt
+  delete MappingToanyPolicyCACert
+
+  VFY_ACTION="Valid Policy Mapping Test9"; log_banner
+  certImport PanyPolicyMapping1to2CACert
+  crlImport PanyPolicyMapping1to2CACRL.crl
+  pkits $certs/ValidPolicyMappingTest9EE.crt \
+      $certs/PanyPolicyMapping1to2CACert.crt
+  delete PanyPolicyMapping1to2CACert
+
+  VFY_ACTION="Invalid Policy Mapping Test10"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
+  certImport GoodsubCAPanyPolicyMapping1to2CACert
+  crlImportn GoodsubCAPanyPolicyMapping1to2CACRL.crl
+  pkitsn $certs/InvalidPolicyMappingTest10EE.crt \
+      $certs/GoodsubCAPanyPolicyMapping1to2CACert.crt \
+      $certs/GoodCACert.crt
+  delete GoodCACert
+  delete GoodsubCAPanyPolicyMapping1to2CACert
+
+  VFY_ACTION="Valid Policy Mapping Test11"; log_banner
+  certImport GoodCACert
+  crlImport GoodCACRL.crl
+  certImport GoodsubCAPanyPolicyMapping1to2CACert
+  crlImportn GoodsubCAPanyPolicyMapping1to2CACRL.crl
+  pkits $certs/ValidPolicyMappingTest11EE.crt \
+      $certs/GoodsubCAPanyPolicyMapping1to2CACert.crt \
+      $certs/GoodCACert.crt
+  delete GoodCACert
+  delete GoodsubCAPanyPolicyMapping1to2CACert
+
+  VFY_ACTION="Valid Policy Mapping Test12"; log_banner
+  certImport P12Mapping1to3CACert
+  crlImportn P12Mapping1to3CACRL.crl
+  pkits $certs/ValidPolicyMappingTest12EE.crt \
+      $certs/P12Mapping1to3CACert.crt
+  delete P12Mapping1to3CACert
+
+  VFY_ACTION="Valid Policy Mapping Test13"; log_banner
+  certImport P1anyPolicyMapping1to2CACert
+  crlImportn P1anyPolicyMapping1to2CACRL.crl
+  pkits $certs/ValidPolicyMappingTest13EE.crt \
+      $certs/P1anyPolicyMapping1to2CACert.crt
+  delete P1anyPolicyMapping1to2CA
+
+  VFY_ACTION="Valid Policy Mapping Test14"; log_banner
+  certImport P1anyPolicyMapping1to2CACert
+  crlImportn P1anyPolicyMapping1to2CACRL.crl
+  pkits $certs/ValidPolicyMappingTest14EE.crt \
+      $certs/P1anyPolicyMapping1to2CACert.crt
+  delete P1anyPolicyMapping1to2CA
+}
+
+
+pkits_InhibitPolicyMapping()
+{
+  break_table "NIST PKITS Section 4.11: Inhibit Policy Mapping"
+
+  VFY_ACTION="Invalid inhibitPolicyMapping Test1"; log_banner
+  certImport inhibitPolicyMapping0CACert
+  crlImportn inhibitPolicyMapping0CACRL.crl
+  certImport inhibitPolicyMapping0subCACert
+  crlImportn inhibitPolicyMapping0subCACRL.crl
+  pkitsn $certs/InvalidinhibitPolicyMappingTest1EE.crt \
+      $certs/inhibitPolicyMapping0CACert.crt \
+      $certs/inhibitPolicyMapping0subCACert.crt
+  delete inhibitPolicyMapping0CACert
+  delete inhibitPolicyMapping0subCACert
+
+  VFY_ACTION="Valid inhibitPolicyMapping Test2"; log_banner
+  certImport inhibitPolicyMapping1P12CACert
+  crlImportn inhibitPolicyMapping1P12CACRL.crl
+  certImport inhibitPolicyMapping1P12subCACert
+  crlImportn inhibitPolicyMapping1P12subCACRL.crl
+  pkits $certs/ValidinhibitPolicyMappingTest2EE.crt \
+      $certs/inhibitPolicyMapping1P12CACert.crt \
+      $certs/inhibitPolicyMapping1P12subCACert.crt
+  delete inhibitPolicyMapping1P12CACert
+  delete inhibitPolicyMapping1P12subCACert
+
+  VFY_ACTION="Invalid inhibitPolicyMapping Test3"; log_banner
+  certImport inhibitPolicyMapping1P12CACert
+  crlImportn inhibitPolicyMapping1P12CACRL.crl
+  certImport inhibitPolicyMapping1P12subCACert
+  crlImportn inhibitPolicyMapping1P12subCACRL.crl
+  certImport inhibitPolicyMapping1P12subsubCACert
+  crlImportn inhibitPolicyMapping1P12subsubCACRL.crl
+  pkitsn $certs/InvalidinhibitPolicyMappingTest3EE.crt \
+      $certs/inhibitPolicyMapping1P12subsubCACert.crt \
+      $certs/inhibitPolicyMapping1P12subCACert.crt \
+      $certs/inhibitPolicyMapping1P12CACert.crt
+  delete inhibitPolicyMapping1P12CACert
+  delete inhibitPolicyMapping1P12subCACert
+  delete inhibitPolicyMapping1P12subsubCACert
+
+  VFY_ACTION="Valid inhibitPolicyMapping Test4"; log_banner
+  certImport inhibitPolicyMapping1P12CACert
+  crlImportn inhibitPolicyMapping1P12CACRL.crl
+  certImport inhibitPolicyMapping1P12subCACert
+  crlImportn inhibitPolicyMapping1P12subCACRL.crl
+  certImport inhibitPolicyMapping1P12subsubCACert
+  crlImportn inhibitPolicyMapping1P12subsubCACRL.crl
+  pkits $certs/ValidinhibitPolicyMappingTest4EE.crt \
+      $certs/inhibitPolicyMapping1P12CACert.crt \
+      $certs/inhibitPolicyMapping1P12subCACert.crt
+  delete inhibitPolicyMapping1P12CACert
+  delete inhibitPolicyMapping1P12subCACert
+  delete inhibitPolicyMapping1P12subsubCACert
+
+  VFY_ACTION="Invalid inhibitPolicyMapping Test5"; log_banner
+  certImport inhibitPolicyMapping5CACert
+  crlImportn inhibitPolicyMapping5CACRL.crl
+  certImport inhibitPolicyMapping5subCACert
+  crlImportn inhibitPolicyMapping5subCACRL.crl
+  certImport inhibitPolicyMapping5subsubCACert
+  crlImport inhibitPolicyMapping5subsubCACRL.crl
+  pkitsn $certs/InvalidinhibitPolicyMappingTest5EE.crt \
+      $certs/inhibitPolicyMapping5subsubCACert.crt \
+      $certs/inhibitPolicyMapping5subCACert.crt \
+      $certs/inhibitPolicyMapping5CACert.crt
+  delete inhibitPolicyMapping5CACert
+  delete inhibitPolicyMapping5subCACert
+  delete inhibitPolicyMapping5subsubCACert
+
+  VFY_ACTION="Invalid inhibitPolicyMapping Test6"; log_banner
+  certImport inhibitPolicyMapping1P12CACert
+  crlImportn inhibitPolicyMapping1P12CACRL.crl
+  certImport inhibitPolicyMapping1P12subCAIPM5Cert
+  crlImportn inhibitPolicyMapping1P12subCAIPM5CRL.crl
+  certImport inhibitPolicyMapping1P12subsubCAIPM5Cert
+  crlImportn inhibitPolicyMapping1P12subsubCAIPM5CRL.crl
+  pkitsn $certs/InvalidinhibitPolicyMappingTest6EE.crt \
+      $certs/inhibitPolicyMapping1P12subsubCAIPM5Cert.crt \
+      $certs/inhibitPolicyMapping1P12subCAIPM5Cert.crt \
+      $certs/inhibitPolicyMapping1P12CACert.crt
+  delete inhibitPolicyMapping5CACert
+  delete inhibitPolicyMapping5subCAIPM5Cert
+  delete inhibitPolicyMapping5subsubCAIPM5Cert
+
+  VFY_ACTION="Valid Self-Issued inhibitPolicyMapping Test7"; log_banner
+  certImport inhibitPolicyMapping1P1CACert
+  crlImportn inhibitPolicyMapping1P1CACRL.crl
+  certImport inhibitPolicyMapping1P1subCACert
+  crlImportn inhibitPolicyMapping1P1subCACRL.crl
+  pkits $certs/ValidSelfIssuedinhibitPolicyMappingTest7EE.crt \
+      $certs/inhibitPolicyMapping1P1subCACert.crt \
+      $certs/inhibitPolicyMapping1P1SelfIssuedCACert.crt \
+      $certs/inhibitPolicyMapping1P1CACert.crt
+  delete inhibitPolicyMapping1P1CACert
+  delete inhibitPolicyMapping1P1subCACert
+
+  VFY_ACTION="Invalid Self-Issued inhibitPolicyMapping Test8"; log_banner
+  certImport inhibitPolicyMapping1P1CACert
+  crlImportn inhibitPolicyMapping1P1CACRL.crl
+  certImport inhibitPolicyMapping1P1subCACert
+  crlImportn inhibitPolicyMapping1P1subCACRL.crl
+  certImport inhibitPolicyMapping1P1subsubCACert
+  crlImportn inhibitPolicyMapping1P1subsubCACRL.crl
+  pkitsn $certs/InvalidSelfIssuedinhibitPolicyMappingTest8EE.crt \
+      $certs/inhibitPolicyMapping1P1subsubCACert.crt \
+      $certs/inhibitPolicyMapping1P1subCACert.crt \
+      $certs/inhibitPolicyMapping1P1SelfIssuedCACert.crt \
+      $certs/inhibitPolicyMapping1P1CACert.crt
+  delete inhibitPolicyMapping1P1CACert
+  delete inhibitPolicyMapping1P1subCACert
+  delete inhibitPolicyMapping1P1subsubCACert
+
+  VFY_ACTION="Invalid Self-Issued inhibitPolicyMapping Test9"; log_banner
+  certImport inhibitPolicyMapping1P1CACert
+  crlImportn inhibitPolicyMapping1P1CACRL.crl
+  certImport inhibitPolicyMapping1P1subCACert
+  crlImportn inhibitPolicyMapping1P1subCACRL.crl
+  certImport inhibitPolicyMapping1P1subsubCACert
+  crlImportn inhibitPolicyMapping1P1subsubCACRL.crl
+  pkitsn $certs/InvalidSelfIssuedinhibitPolicyMappingTest9EE.crt \
+      $certs/inhibitPolicyMapping1P1subsubCACert.crt \
+      $certs/inhibitPolicyMapping1P1subCACert.crt \
+      $certs/inhibitPolicyMapping1P1SelfIssuedCACert.crt \
+      $certs/inhibitPolicyMapping1P1CACert.crt
+  delete inhibitPolicyMapping1P1CACert
+  delete inhibitPolicyMapping1P1subCACert
+  delete inhibitPolicyMapping1P1subsubCACert
+
+  VFY_ACTION="Invalid Self-Issued inhibitPolicyMapping Test10"; log_banner
+  certImport inhibitPolicyMapping1P1CACert
+  crlImportn inhibitPolicyMapping1P1CACRL.crl
+  certImport inhibitPolicyMapping1P1subCACert
+  crlImportn inhibitPolicyMapping1P1subCACRL.crl
+  pkitsn $certs/InvalidSelfIssuedinhibitPolicyMappingTest10EE.crt \
+      $certs/inhibitPolicyMapping1P1SelfIssuedsubCACert.crt \
+      $certs/inhibitPolicyMapping1P1subCACert.crt \
+      $certs/inhibitPolicyMapping1P1SelfIssuedCACert.crt \
+      $certs/inhibitPolicyMapping1P1CACert.crt
+  delete inhibitPolicyMapping1P1CACert
+  delete inhibitPolicyMapping1P1subCACert
+
+  VFY_ACTION="Invalid Self-Issued inhibitPolicyMapping Test11"; log_banner
+  certImport inhibitPolicyMapping1P1CACert
+  crlImportn inhibitPolicyMapping1P1CACRL.crl
+  certImport inhibitPolicyMapping1P1subCACert
+  crlImportn inhibitPolicyMapping1P1subCACRL.crl
+  pkitsn $certs/InvalidSelfIssuedinhibitPolicyMappingTest11EE.crt \
+      $certs/inhibitPolicyMapping1P1SelfIssuedsubCACert.crt \
+      $certs/inhibitPolicyMapping1P1subCACert.crt \
+      $certs/inhibitPolicyMapping1P1SelfIssuedCACert.crt \
+      $certs/inhibitPolicyMapping1P1CACert.crt
+  delete inhibitPolicyMapping1P1CACert
+  delete inhibitPolicyMapping1P1subCACert
+}
+
+
+pkits_InhibitAnyPolicy()
+{
+  break_table "NIST PKITS Section 4.12: Inhibit Any Policy"
+
+  VFY_ACTION="Invalid inhibitAnyPolicy Test1"; log_banner
+  certImport inhibitAnyPolicy0CACert
+  crlImportn inhibitAnyPolicy0CACRL.crl
+  pkitsn $certs/InvalidinhibitAnyPolicyTest1EE.crt \
+      $certs/inhibitAnyPolicy0CACert.crt
+  delete inhibitAnyPolicy0CACert
+
+  VFY_ACTION="Valid inhibitAnyPolicy Test2"; log_banner
+  certImport inhibitAnyPolicy0CACert
+  crlImportn inhibitAnyPolicy0CACRL.crl
+  pkits $certs/ValidinhibitAnyPolicyTest2EE.crt \
+      $certs/inhibitAnyPolicy0CACert.crt
+  delete inhibitAnyPolicy0CACert
+
+  VFY_ACTION="inhibitAnyPolicy Test3"; log_banner
+  certImport inhibitAnyPolicy1CACert
+  crlImportn inhibitAnyPolicy1CACRL.crl
+  certImport inhibitAnyPolicy1subCA1Cert
+  crlImport inhibitAnyPolicy1subCA1CRL.crl
+  pkits $certs/inhibitAnyPolicyTest3EE.crt \
+      $certs/inhibitAnyPolicy1CACert.crt \
+      $certs/inhibitAnyPolicy1subCA1Cert.crt
+  delete inhibitAnyPolicy1CACert
+  delete inhibitAnyPolicy1subCA1Cert
+
+  VFY_ACTION="Invalid inhibitAnyPolicy Test4"; log_banner
+  certImport inhibitAnyPolicy1CACert
+  crlImportn inhibitAnyPolicy1CACRL.crl
+  certImport inhibitAnyPolicy1subCA1Cert
+  crlImport inhibitAnyPolicy1subCA1CRL.crl
+  pkitsn $certs/InvalidinhibitAnyPolicyTest4EE.crt \
+      $certs/inhibitAnyPolicy1CACert.crt \
+      $certs/inhibitAnyPolicy1subCA1Cert.crt
+  delete inhibitAnyPolicy1CACert
+  delete inhibitAnyPolicy1subCA1Cert
+
+  VFY_ACTION="Invalid inhibitAnyPolicy Test5"; log_banner
+  certImport inhibitAnyPolicy5CACert
+  crlImportn inhibitAnyPolicy5CACRL.crl
+  certImport inhibitAnyPolicy5subCACert
+  crlImportn inhibitAnyPolicy5subCACRL.crl
+  certImport inhibitAnyPolicy5subsubCACert
+  crlImport inhibitAnyPolicy5subsubCACRL.crl
+  pkitsn $certs/InvalidinhibitAnyPolicyTest5EE.crt \
+      $certs/inhibitAnyPolicy5CACert.crt \
+      $certs/inhibitAnyPolicy5subCACert.crt \
+      $certs/inhibitAnyPolicy5subsubCACert.crt
+  delete inhibitAnyPolicy5CACert
+  delete inhibitAnyPolicy5subCACert
+  delete inhibitAnyPolicy5subsubCACert
+
+  VFY_ACTION="Invalid inhibitAnyPolicy Test6"; log_banner
+  certImport inhibitAnyPolicy1CACert
+  crlImportn inhibitAnyPolicy1CACRL.crl
+  certImport inhibitAnyPolicy1subCAIAP5Cert
+  crlImportn inhibitAnyPolicy1subCAIAP5CRL.crl
+  pkitsn $certs/InvalidinhibitAnyPolicyTest5EE.crt \
+      $certs/inhibitAnyPolicy1CACert.crt \
+      $certs/inhibitAnyPolicy5subCACert.crt \
+      $certs/inhibitAnyPolicy5subsubCACert.crt
+  delete inhibitAnyPolicy1CACert
+  delete inhibitAnyPolicy1subCAIAP5Cert
+
+  VFY_ACTION="Valid Self-Issued inhibitAnyPolicy Test7"; log_banner
+  certImport inhibitAnyPolicy1CACert
+  crlImportn inhibitAnyPolicy1CACRL.crl
+  certImport inhibitAnyPolicy1subCA2Cert
+  crlImport inhibitAnyPolicy1subCA2CRL.crl
+  pkits $certs/ValidSelfIssuedinhibitAnyPolicyTest7EE.crt \
+      $certs/inhibitAnyPolicy1CACert.crt \
+      $certs/inhibitAnyPolicy1SelfIssuedCACert.crt \
+      $certs/inhibitAnyPolicy1subCA2Cert.crt
+  delete inhibitAnyPolicy1CACert
+  delete inhibitAnyPolicy1subCA2Cert
+
+  VFY_ACTION="Invalid Self-Issued inhibitAnyPolicy Test8"; log_banner
+  certImport inhibitAnyPolicy1CACert
+  crlImportn inhibitAnyPolicy1CACRL.crl
+  certImport inhibitAnyPolicy1subCA2Cert
+  crlImport inhibitAnyPolicy1subCA2CRL.crl
+  certImport inhibitAnyPolicy1subsubCA2Cert
+  crlImport inhibitAnyPolicy1subsubCA2CRL.crl
+  pkitsn $certs/InvalidSelfIssuedinhibitAnyPolicyTest8EE.crt \
+      $certs/inhibitAnyPolicy1CACert.crt \
+      $certs/inhibitAnyPolicy1SelfIssuedCACert.crt \
+      $certs/inhibitAnyPolicy1subCA2Cert.crt \
+      $certs/inhibitAnyPolicy1subsubCA2Cert.crt
+  delete inhibitAnyPolicy1CACert
+  delete inhibitAnyPolicy1subCA2Cert
+  delete inhibitAnyPolicy1subsubCA2Cert
+
+  VFY_ACTION="Valid Self-Issued inhibitAnyPolicy Test9"; log_banner
+  certImport inhibitAnyPolicy1CACert
+  crlImportn inhibitAnyPolicy1CACRL.crl
+  certImport inhibitAnyPolicy1subCA2Cert
+  crlImport inhibitAnyPolicy1subCA2CRL.crl
+  pkits $certs/ValidSelfIssuedinhibitAnyPolicyTest9EE.crt \
+      $certs/inhibitAnyPolicy1CACert.crt \
+      $certs/inhibitAnyPolicy1SelfIssuedCACert.crt \
+      $certs/inhibitAnyPolicy1subCA2Cert.crt \
+      $certs/inhibitAnyPolicy1SelfIssuedsubCA2Cert.crt
+  delete inhibitAnyPolicy1CACert
+  delete inhibitAnyPolicy1subCA2Cert
+
+  VFY_ACTION="Invalid Self-Issued inhibitAnyPolicy Test10"; log_banner
+  certImport inhibitAnyPolicy1CACert
+  crlImportn inhibitAnyPolicy1CACRL.crl
+  certImport inhibitAnyPolicy1subCA2Cert
+  crlImport inhibitAnyPolicy1subCA2CRL.crl
+  pkitsn $certs/InvalidSelfIssuedinhibitAnyPolicyTest10EE.crt \
+      $certs/inhibitAnyPolicy1CACert.crt \
+      $certs/inhibitAnyPolicy1SelfIssuedCACert.crt \
+      $certs/inhibitAnyPolicy1subCA2Cert.crt
+  delete inhibitAnyPolicy1CACert
+  delete inhibitAnyPolicy1subCA2Cert
+}
+
+
 pkits_NameConstraints()
 {
   break_table "NIST PKITS Section 4.13: Name Constraints"
@@ -1295,6 +2027,13 @@ pkits_BasicCertRevocation | tee -a $PKITS_LOG
 pkits_PathVerificWithSelfIssuedCerts | tee -a $PKITS_LOG
 pkits_BasicConstraints | tee -a $PKITS_LOG
 pkits_KeyUsage | tee -a $PKITS_LOG
+if [ "$NSS_NO_PKITS_POLICIES" -ne 1 ]; then
+  pkits_CertificatePolicies | tee -a $PKITS_LOG
+  pkits_RequireExplicitPolicy | tee -a $PKITS_LOG
+  pkits_PolicyMappings | tee -a $PKITS_LOG
+  pkits_InhibitPolicyMapping | tee -a $PKITS_LOG
+  pkits_InhibitAnyPolicy | tee -a $PKITS_LOG
+fi
 pkits_NameConstraints | tee -a $PKITS_LOG
 pkits_PvtCertExtensions | tee -a $PKITS_LOG
 pkits_cleanup
