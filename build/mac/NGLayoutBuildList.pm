@@ -430,6 +430,7 @@ sub BuildClientDist()
 
 	#DOM
    InstallFromManifest(":mozilla:dom:public:MANIFEST",								"$distdirectory:dom:");
+   InstallFromManifest(":mozilla:dom:public:MANIFEST_IDL",							"$distdirectory:idl:");
    InstallFromManifest(":mozilla:dom:public:base:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:coreDom:MANIFEST",						"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:public:coreEvents:MANIFEST",					"$distdirectory:dom:");
@@ -439,6 +440,8 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:dom:public:css:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:src:jsurl:MANIFEST",							"$distdirectory:dom:");
    InstallFromManifest(":mozilla:dom:src:base:MANIFEST",							"$distdirectory:dom:");
+   BuildOneProject(":mozilla:dom:macbuild:domIDL.mcp", 								"headers", "", 0, 0, 0);
+   BuildOneProject(":mozilla:dom:macbuild:domIDL.mcp", 								"dom.xpt", "", 1, 0, 1);
 
 	#HTMLPARSER
    InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
