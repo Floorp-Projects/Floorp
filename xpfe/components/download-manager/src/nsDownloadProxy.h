@@ -50,7 +50,6 @@ public:
   virtual ~nsDownloadProxy() { };
 
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSIWEBPROGRESSLISTENER(mInner->)
 
   NS_IMETHODIMP Init(nsIURI* aSource,
                      nsILocalFile* aTarget,
@@ -141,7 +140,7 @@ private:
   nsCOMPtr<nsIDownload> mInner;
 };
 
-NS_IMPL_ISUPPORTS2(nsDownloadProxy, nsIDownload, nsIWebProgressListener)  
+NS_IMPL_ISUPPORTS1(nsDownloadProxy, nsIDownload)  
 
 #endif
   
