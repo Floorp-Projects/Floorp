@@ -178,6 +178,11 @@ protected:
                            nsReflowStatus&      aStatus,
                            nsTableCellFrame *   aDeletedFrame);
 
+  NS_IMETHOD IR_StyleChanged(nsIPresContext&      aPresContext,
+                             nsHTMLReflowMetrics& aDesiredSize,
+                             RowReflowState&      aReflowState,
+                             nsReflowStatus&      aStatus);
+
   // row-specific methods
 
   void GetMinRowSpan(nsTableFrame *aTableFrame);

@@ -687,14 +687,18 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
       // Get the child's margins
       nsMargin  margin;
       nscoord   topMargin = 0;
-
       if (aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame, margin) == NS_OK)
       {
         topMargin = margin.top;
       }
-   
       maxTopMargin = PR_MAX(margin.top, maxTopMargin);
       maxBottomMargin = PR_MAX(margin.bottom, maxBottomMargin);
+
+      // get border padding values
+      nsMargin borderPadding;
+      const nsStyleSpacing* cellSpacing;
+      kidFrame->GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)cellSpacing));
+      cellSpacing->CalcBorderPaddingFor(kidFrame, borderPadding);
 
       // Because we're not splittable always allow the child to be as high as
       // it wants. The default available width is also unconstrained so we can
@@ -727,6 +731,9 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
         kidSize.width = kidMaxElementSize.width;
       if (kidMaxElementSize.height>kidSize.height)
         kidSize.height = kidMaxElementSize.height;
+      kidSize.width += borderPadding.left+borderPadding.right;
+      kidSize.height += borderPadding.top+borderPadding.bottom;
+      kidMaxElementSize.SizeBy(borderPadding.left+borderPadding.right, borderPadding.top+borderPadding.bottom);
       ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
       ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "unexpected child reflow status");
@@ -900,12 +907,15 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   aReflowState.reflowState.reflowCommand->GetType(type);
   nsIFrame *objectFrame;
   aReflowState.reflowState.reflowCommand->GetChildFrame(objectFrame); 
-  const nsStyleDisplay *childDisplay;
-  objectFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+  const nsStyleDisplay *childDisplay=nsnull;
+  if (nsnull!=objectFrame)
+    objectFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
   if (PR_TRUE==gsDebugIR) printf("TRF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type)
   {
   case nsIReflowCommand::FrameInserted :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
     {
       rv = IR_CellInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -918,6 +928,8 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     break;
   
   case nsIReflowCommand::FrameAppended :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
     {
       rv = IR_CellAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -935,6 +947,8 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   */
 
   case nsIReflowCommand::FrameRemoved :
+    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
     {
       rv = IR_CellRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -947,9 +961,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     break;
 
   case nsIReflowCommand::StyleChanged :
-    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-    if (PR_TRUE==gsDebugIR) printf("TRF IR: StyleChanged not implemented.\n");
+    rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
   case nsIReflowCommand::ContentChanged :
@@ -1119,6 +1131,39 @@ NS_METHOD nsTableRowFrame::IR_CellRemoved(nsIPresContext&      aPresContext,
     tableFrame->InvalidateColumnWidths();
   }
 
+  return rv;
+}
+
+NS_METHOD nsTableRowFrame::IR_StyleChanged(nsIPresContext&      aPresContext,
+                                           nsHTMLReflowMetrics& aDesiredSize,
+                                           RowReflowState&      aReflowState,
+                                           nsReflowStatus&      aStatus)
+{
+  if (PR_TRUE==gsDebugIR) printf("Row: IR_StyleChanged for frame %p\n", this);
+  nsresult rv = NS_OK;
+  // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
+  // XXX: we can optimize this when we know which style attribute changed
+  nsTableFrame* tableFrame=nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
+  {
+    tableFrame->InvalidateFirstPassCache();
+  }
+
+  /*
+  // we are obligated to pass along the reflow command to our children before doing anything else
+  nsIFrame *childFrame = mFirstChild;
+  while (nsnull!=childFrame)
+  {
+    nsHTMLReflowState childReflowState(aPresContext, childFrame, aReflowState.reflowState,
+                                       aReflowState.availSize, eReflowReason_Incremental);
+    rv = ReflowChild(childFrame, aPresContext, aDesiredSize, childReflowState, aStatus);
+    if (NS_FAILED(rv))
+      break;
+    // the returned desired size is irrelevant, because we'll do a resize reflow in a moment
+    childFrame->GetNextSibling(childFrame);
+  }
+  */
   return rv;
 }
 

@@ -345,7 +345,9 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
   nsHTMLReflowState   captionReflowState(aPresContext, mCaptionFrame,
                                          aReflowState.reflowState,
                                          nsSize(mRect.width, 
-                                                aReflowState.reflowState.maxSize.height));
+                                                aReflowState.reflowState.maxSize.height),
+                                         aReflowState.reflowState.reason);
+  captionReflowState.reflowCommand=aReflowState.reflowState.reflowCommand;
   rv = ReflowChild(mCaptionFrame, aPresContext, captionSize, captionReflowState, aStatus);
   if (PR_TRUE==gsDebugIR) printf("TOF IR: caption reflow returned %d with width=%d height=%d, minCaptionWidth=%d\n", 
                                  rv, captionSize.width, captionSize.height, captionMES.width);
@@ -485,9 +487,8 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     break;
 
   case nsIReflowCommand::StyleChanged :
-    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-    if (PR_TRUE==gsDebugIR) printf("TOF IR: StyleChanged not implemented.\n");
+    if (PR_TRUE==gsDebugIR) printf("TOF IR: calling inner table reflow.\n");
+    rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
   case nsIReflowCommand::ContentChanged :

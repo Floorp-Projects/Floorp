@@ -315,9 +315,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
     break;
 
   case nsIReflowCommand::StyleChanged :
-    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
-    rv = NS_ERROR_NOT_IMPLEMENTED;
-    if (PR_TRUE==gsDebugIR) printf("TCGF IR: StyleChanged not implemented.\n");
+    rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
   case nsIReflowCommand::ContentChanged :
@@ -454,6 +452,40 @@ NS_METHOD nsTableColGroupFrame::IR_ColRemoved(nsIPresContext&          aPresCont
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
     tableFrame->InvalidateColumnCache();
+  return rv;
+}
+
+NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsIPresContext&          aPresContext,
+                                                nsHTMLReflowMetrics&     aDesiredSize,
+                                                const nsHTMLReflowState& aReflowState,
+                                                nsReflowStatus&          aStatus)
+{
+  if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_StyleChanged for frame %p\n", this);
+  nsresult rv = NS_OK;
+  // we presume that all the easy optimizations were done in the nsHTMLStyleSheet before we were called here
+  // XXX: we can optimize this when we know which style attribute changed
+  nsTableFrame* tableFrame=nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
+  {
+    tableFrame->InvalidateColumnCache();
+    tableFrame->InvalidateFirstPassCache();
+  }
+
+  /*
+  // we are obligated to pass along the reflow command to our children before doing anything else
+  nsIFrame *childFrame = mFirstChild;
+  while (nsnull!=childFrame)
+  {
+    nsHTMLReflowState childReflowState(aPresContext, childFrame, aReflowState,
+                                       aReflowState.maxSize, eReflowReason_Incremental);
+    rv = ReflowChild(childFrame, aPresContext, aDesiredSize, childReflowState, aStatus);
+    if (NS_FAILED(rv))
+      break;
+    // the returned desired size is irrelevant, because we'll do a resize reflow in a moment
+    childFrame->GetNextSibling(childFrame);
+  }
+*/
   return rv;
 }
 

@@ -199,6 +199,11 @@ protected:
   void      MapHTMLBorderStyle(nsIPresContext* aPresContext,nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
+  NS_IMETHOD IR_StyleChanged(nsIPresContext&          aPresContext,
+                             nsHTMLReflowMetrics&     aDesiredSize,
+                             const nsHTMLReflowState& aReflowState,
+                             nsReflowStatus&          aStatus);
+
 protected:
 
   /** the starting column for this cell */

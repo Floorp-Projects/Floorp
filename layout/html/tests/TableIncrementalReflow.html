@@ -17,12 +17,25 @@ function deleteCaption() {
   table.removeChild(caption);
 }
 
+function changeCaptionStyle() {
+  var caption = document.getElementsByTagName("CAPTION")[0];
+  caption.align="bottom";
+  dump("SCRIPT: changed caption align to bottom\n");
+}
+
+
+function changeTableStyle() {
+  var table = document.getElementsByTagName("TABLE")[0];
+  table.width="600";
+  dump("SCRIPT: changed table width to 600\n");
+}
+
 
 function insertColGroup() {
   var table = document.getElementsByTagName("TABLE")[0];
   var refColGroup = document.getElementsByTagName("COLGROUP")[0];
   var colGroup = document.createElement("COLGROUP", null);
-  colGroup.width=200;
+  colGroup.width=100;
   colGroup.span=1;
   table.insertBefore(colGroup, refColGroup);
   dump("SCRIPT: inserted COLGROUP with span=1 width=200 as first colgroup in table\n");
@@ -44,6 +57,11 @@ function deleteColGroup() {
   dump("SCRIPT: deleted first COLGROUP\n");
 }
 
+function changeColGroupStyle() {
+  var colGroup = document.getElementsByTagName("COLGROUP")[0];
+  colGroup.width="200";
+  dump("SCRIPT: changed default width for first COLGROUP to 200\n");
+}
 
 function insertCol() {
   var table = document.getElementsByTagName("TABLE")[0];
@@ -67,6 +85,12 @@ function deleteCol() {
   var col = document.getElementsByTagName("COL")[0];
   table.removeChild(col);
   dump("SCRIPT: deleted first COL in first COLGROUP\n");
+}
+
+function changeColStyle() {
+  var col = document.getElementsByTagName("COL")[0];
+  col.width="200";
+  dump("SCRIPT: changed default width for first COL to 200\n");
 }
 
 
@@ -106,6 +130,13 @@ function deleteRowGroup() {
   dump("SCRIPT: deleted first ROWGROUP\n");
 }
 
+function changeRowGroupStyle() {
+  var rowGroup = document.getElementsByTagName("TBODY")[0];
+  rowGroup.align="right";
+  dump("SCRIPT: changed default align for first ROWGROUP to right\n");
+}
+
+
 
 function insertRow() {
   var rg = document.getElementsByTagName("TBODY")[0];
@@ -141,7 +172,11 @@ function deleteRow() {
   dump("SCRIPT: deleted first ROW in first ROWGROUP\n");
 }
 
-
+function changeRowStyle() {
+  var row = document.getElementsByTagName("TR")[0];
+  row.align="right";
+  dump("SCRIPT: changed default align for first ROW to right\n");
+}
 
 
 function insertCell() {
@@ -169,6 +204,12 @@ function deleteCell() {
   var cell = document.getElementsByTagName("TD")[0];
   row.removeChild(cell);
   dump("SCRIPT: deleted first CELL in first ROW\n");
+}
+
+function changeCellStyle() {
+  var cell = document.getElementsByTagName("TD")[0];
+  cell.width="right";
+  dump("SCRIPT: changed align for first CELL to right\n");
 }
 
 function AddALot() {
@@ -203,8 +244,8 @@ function AddALot() {
 </SCRIPT>
 </HEAD>
 <BODY>
-delete removes the first object of <type> 
-<table border>
+delete removes the first object of [type].
+<table width=150 border>
 	<tbody>
 		<tr>
 			<td>cell content</td>
@@ -241,10 +282,18 @@ delete removes the first object of <type>
 <INPUT TYPE="button" NAME="Del Cell" VALUE="DeleteCell" onClick="deleteCell()" width=100>
 <br>
 <INPUT TYPE="button" NAME="Add a lot" VALUE="AddALot" onClick="AddALot()" width=100>
-
+<br>
+<INPUT TYPE="button" NAME="Change Table Style" VALUE="ChangeTableStyle" onClick="changeTableStyle()" width=100>
+<INPUT TYPE="button" NAME="Change Caption Style" VALUE="ChangeCaptionStyle" onClick="changeCaptionStyle()" width=100>
+<INPUT TYPE="button" NAME="Change ColGroup Style" VALUE="ChangeColGroupStyle" onClick="changeColGroupStyle()" width=100>
+<INPUT TYPE="button" NAME="Change Col Style" VALUE="ChangeColStyle" onClick="changeColStyle()" width=100>
+<INPUT TYPE="button" NAME="Change RowGroup Style" VALUE="ChangeRowGroupStyle" onClick="changeRowGroupStyle()" width=100>
+<INPUT TYPE="button" NAME="Change Row Style" VALUE="ChangeRowStyle" onClick="changeRowStyle()" width=100>
+<INPUT TYPE="button" NAME="Change Cell Style" VALUE="ChangeCellStyle" onClick="changeCellStyle()" width=100>
 </form>
 
 </BODY></HTML>
+
 
 
 

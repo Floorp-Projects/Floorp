@@ -168,6 +168,11 @@ protected:
                            nsReflowStatus&      aStatus,
                            nsTableRowFrame *    aDeletedFrame);
 
+  NS_IMETHOD IR_StyleChanged(nsIPresContext&      aPresContext,
+                             nsHTMLReflowMetrics& aDesiredSize,
+                             RowGroupReflowState& aReflowState,
+                             nsReflowStatus&      aStatus);
+
   NS_IMETHOD DidAppendRow(nsTableRowFrame *aRowFrame);
 
   PRBool NoRowsFollow();

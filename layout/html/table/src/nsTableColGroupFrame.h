@@ -140,6 +140,12 @@ protected:
                            nsReflowStatus&          aStatus,
                            nsTableColFrame *        aDeletedFrame);
 
+  NS_IMETHOD IR_StyleChanged(nsIPresContext&          aPresContext,
+                             nsHTMLReflowMetrics&     aDesiredSize,
+                             const nsHTMLReflowState& aReflowState,
+                             nsReflowStatus&          aStatus);
+
+
   NS_IMETHOD IR_TargetIsChild(nsIPresContext&          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
