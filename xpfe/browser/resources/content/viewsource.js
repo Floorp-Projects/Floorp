@@ -25,7 +25,7 @@ var appCore = null;
 var gPrefs = null;
 
 try {
-  var prefsService = Components.classes["@mozilla.org/preferences-service;1"]
+  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefService);
   gPrefs = prefService.getBranch(null);
 } catch (ex) {
