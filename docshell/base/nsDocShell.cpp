@@ -149,7 +149,7 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
-#if defined(DEBUG_rods) || defined(DEBUG_bryner)
+#if defined(DEBUG_bryner)
 //#define DEBUG_DOCSHELL_FOCUS
 #endif
 
@@ -163,6 +163,11 @@ static PRInt32 gNumberOfDocumentsLoading = 0;
 // native event dispatch priorites over performance
 #define NS_EVENT_STARVATION_DELAY_HINT 2000
 
+// This is needed for displaying an error message 
+// when navigation is attempted on a document when printing
+// The value arbitrary as long as it doesn't conflict with
+// any of the other values in the errors in DisplayLoadError
+#define NS_ERROR_DOCUMENT_IS_PRINTMODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL,2001)
 //
 // Local function prototypes
 //
@@ -237,7 +242,8 @@ nsDocShell::nsDocShell():
     mIsBeingDestroyed(PR_FALSE),
     mParent(nsnull),
     mTreeOwner(nsnull),
-    mChromeEventHandler(nsnull)
+    mChromeEventHandler(nsnull),
+    mIsPrintingOrPP(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 #ifdef PR_LOGGING
@@ -405,6 +411,14 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         if (NS_FAILED(rv)) return rv;
 
         *aSink = mFind;
+        NS_ADDREF((nsISupports*)*aSink);
+        return NS_OK;
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIWebBrowserSpellCheck))) {
+        nsresult rv = EnsureSpellCheck();
+        if (NS_FAILED(rv)) return rv;
+
+        *aSink = mSpellCheck;
         NS_ADDREF((nsISupports*)*aSink);
         return NS_OK;
     }
@@ -2286,6 +2300,19 @@ nsDocShell::GetGlobalHistory(nsIGlobalHistory ** aGlobalHistory)
     return NS_OK;
 }
 
+//-------------------------------------
+//-- Helper Method for Print discovery
+//-------------------------------------
+PRBool 
+nsDocShell::IsPrintingOrPP(PRBool aDisplayErrorDialog)
+{
+  if (mIsPrintingOrPP && aDisplayErrorDialog) {
+    DisplayLoadError(NS_ERROR_DOCUMENT_IS_PRINTMODE, nsnull, nsnull);
+  }
+
+  return mIsPrintingOrPP;
+}
+
 //*****************************************************************************
 // nsDocShell::nsIWebNavigation
 //*****************************************************************************   
@@ -2293,6 +2320,10 @@ nsDocShell::GetGlobalHistory(nsIGlobalHistory ** aGlobalHistory)
 NS_IMETHODIMP
 nsDocShell::GetCanGoBack(PRBool * aCanGoBack)
 {
+    if (IsPrintingOrPP(PR_FALSE)) {
+      *aCanGoBack = PR_FALSE;
+      return NS_OK; // JS may not handle returning of an error code
+    }
     nsresult rv;
     nsCOMPtr<nsISHistory> rootSH;
     rv = GetRootSessionHistory(getter_AddRefs(rootSH));
@@ -2306,6 +2337,10 @@ nsDocShell::GetCanGoBack(PRBool * aCanGoBack)
 NS_IMETHODIMP
 nsDocShell::GetCanGoForward(PRBool * aCanGoForward)
 {
+    if (IsPrintingOrPP(PR_FALSE)) {
+      *aCanGoForward = PR_FALSE;
+      return NS_OK; // JS may not handle returning of an error code
+    }
     nsresult rv;
     nsCOMPtr<nsISHistory> rootSH;
     rv = GetRootSessionHistory(getter_AddRefs(rootSH)); 
@@ -2319,6 +2354,9 @@ nsDocShell::GetCanGoForward(PRBool * aCanGoForward)
 NS_IMETHODIMP
 nsDocShell::GoBack()
 {
+    if (IsPrintingOrPP()) {
+      return NS_OK; // JS may not handle returning of an error code
+    }
     nsresult rv;
     nsCOMPtr<nsISHistory> rootSH;
     rv = GetRootSessionHistory(getter_AddRefs(rootSH));
@@ -2332,6 +2370,9 @@ nsDocShell::GoBack()
 NS_IMETHODIMP
 nsDocShell::GoForward()
 {
+    if (IsPrintingOrPP()) {
+      return NS_OK; // JS may not handle returning of an error code
+    }
     nsresult rv;
     nsCOMPtr<nsISHistory> rootSH;
     rv = GetRootSessionHistory(getter_AddRefs(rootSH));
@@ -2344,6 +2385,9 @@ nsDocShell::GoForward()
 
 NS_IMETHODIMP nsDocShell::GotoIndex(PRInt32 aIndex)
 {
+    if (IsPrintingOrPP()) {
+      return NS_OK; // JS may not handle returning of an error code
+    }
     nsresult rv;
     nsCOMPtr<nsISHistory> rootSH;
     rv = GetRootSessionHistory(getter_AddRefs(rootSH));
@@ -2362,6 +2406,9 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
                     nsIInputStream * aPostStream,
                     nsIInputStream * aHeaderStream)
 {
+    if (IsPrintingOrPP()) {
+      return NS_OK; // JS may not handle returning of an error code
+    }
     nsCOMPtr<nsIURI> uri;
     nsresult rv;
     // Create the fixup object if necessary
@@ -2499,6 +2546,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aUR
             // contain a copy of the document.
             error.Assign(NS_LITERAL_STRING("netOffline"));
             break;
+        case NS_ERROR_DOCUMENT_IS_PRINTMODE:
+            // Doc navigation attempted while Printing or Print Preview
+            error.Assign(NS_LITERAL_STRING("isprinting"));
+            break;
         }
     }
 
@@ -2598,6 +2649,9 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *
 NS_IMETHODIMP
 nsDocShell::Reload(PRUint32 aReloadFlags)
 {
+    if (IsPrintingOrPP()) {
+      return NS_OK; // JS may not handle returning of an error code
+    }
     nsresult rv;
     NS_ASSERTION(((aReloadFlags & 0xf) == 0),
                  "Reload command not updated to use load flags!");
@@ -4002,6 +4056,14 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
             }
         }
     }
+    return NS_OK;
+}
+
+/* void setIsPrinting (in boolean aIsPrinting); */
+NS_IMETHODIMP 
+nsDocShell::SetIsPrinting(PRBool aIsPrinting)
+{
+    mIsPrintingOrPP = aIsPrinting;
     return NS_OK;
 }
 
@@ -6547,6 +6609,50 @@ NS_IMETHODIMP nsDocShell::EnsureFind()
     rv = findInFrames->SetRootSearchFrame(rootWindow);
     if (NS_FAILED(rv)) return rv;
     rv = findInFrames->SetCurrentSearchFrame(windowToSearch);
+    if (NS_FAILED(rv)) return rv;
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::EnsureSpellCheck()
+{
+    nsresult rv;
+    if (!mSpellCheck)
+    {
+        mSpellCheck = do_CreateInstance("@mozilla.org/embedcomp/spellcheck;1", &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+    
+    // we promise that the nsIWebBrowserFind that we return has been set
+    // up to point to the focussed, or content window, so we have to
+    // set that up each time.
+    nsCOMPtr<nsIScriptGlobalObject> scriptGO;
+    rv = GetScriptGlobalObject(getter_AddRefs(scriptGO));
+    if (NS_FAILED(rv)) return rv;
+
+    // default to our window
+    nsCOMPtr<nsIDOMWindow> rootWindow = do_QueryInterface(scriptGO);
+    nsCOMPtr<nsIDOMWindow> windowToSearch = rootWindow;
+
+    // if we can, search the focussed window
+    nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(scriptGO);
+    nsCOMPtr<nsIFocusController> focusController;
+    if (ourWindow)
+        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+    if (focusController)
+    {
+        nsCOMPtr<nsIDOMWindowInternal> focussedWindow;
+        focusController->GetFocusedWindow(getter_AddRefs(focussedWindow));
+        if (focussedWindow)
+            windowToSearch = focussedWindow;
+    }
+
+    nsCOMPtr<nsIWebBrowserSpellCheckInFrames> spellCheckInFrames = do_QueryInterface(mSpellCheck);
+    if (!spellCheckInFrames) return NS_ERROR_NO_INTERFACE;
+    
+    rv = spellCheckInFrames->SetRootSearchFrame(rootWindow);
+    if (NS_FAILED(rv)) return rv;
+    rv = spellCheckInFrames->SetCurrentSearchFrame(windowToSearch);
     if (NS_FAILED(rv)) return rv;
     
     return NS_OK;

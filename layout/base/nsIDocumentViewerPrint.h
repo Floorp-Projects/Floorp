@@ -55,8 +55,9 @@ class nsIWebShell;
  { 0xd0b7f354, 0xd575, 0x43fd, { 0x90, 0x3d, 0x5a, 0xa3, 0x5a, 0x19, 0x3e, 0xda } }
 
 /**
- * A document viewer is a kind of content viewer that uses NGLayout
- * to manage the presentation of the content.
+ * A DocumentViewerPrint is an INTERNAL Interface mainly used for interaction
+ * between the DocumentViewer and the PrintEngine, although other objects may 
+ * use to find out if printing or print preview is currently underway
  */
 class nsIDocumentViewerPrint : public nsISupports
 {
@@ -64,10 +65,12 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_PRINT_IID)
 
   virtual void SetIsPrinting(PRBool aIsPrinting) = 0;
+  virtual PRBool GetIsPrinting() = 0;
 
   virtual void SetIsPrintPreview(PRBool aIsPrintPreview) = 0;
+  virtual PRBool GetIsPrintPreview() = 0;
 
-  virtual void SetIsCreatingPrintPreview(PRBool aIsCreatingPrintPreview) = 0;
+  virtual PRBool GetIsCreatingPrintPreview() = 0;
 
   virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet) = 0;
 
@@ -86,5 +89,21 @@ public:
 
   virtual void GetPresShellAndRootContent(nsIWebShell * aWebShell, nsIPresShell** aPresShell, nsIContent** aContent) = 0;
 };
+
+/* Use this macro when declaring classes that implement this interface. */
+#define NS_DECL_NSIDOCUMENTVIEWERPRINT \
+  virtual void     SetIsPrinting(PRBool aIsPrinting); \
+  virtual PRBool   GetIsPrinting(); \
+  virtual void     SetIsPrintPreview(PRBool aIsPrintPreview); \
+  virtual PRBool   GetIsPrintPreview(); \
+  virtual PRBool   GetIsCreatingPrintPreview(); \
+  virtual nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet); \
+  virtual nsresult GetDocumentSelection(nsISelection **aSelection, nsIPresShell * aPresShell = nsnull); \
+  virtual void     IncrementDestroyRefCount(); \
+  virtual void     ReturnToGalleyPresentation(); \
+  virtual void     InstallNewPresentation(); \
+  virtual void     OnDonePrinting(); \
+  virtual nsresult FindFrameSetWithIID(nsIContent * aParentContent, const nsIID& aIID); \
+  virtual void     GetPresShellAndRootContent(nsIWebShell * aWebShell, nsIPresShell** aPresShell, nsIContent** aContent);
 
 #endif /* nsIDocumentViewerPrint_h___ */

@@ -78,6 +78,7 @@
 #include "nsIDocShellHistory.h"
 #include "nsIURIFixup.h"
 #include "nsIWebBrowserFind.h"
+#include "nsIWebBrowserSpellCheck.h"
 #include "nsIHttpChannel.h"
 
 
@@ -247,9 +248,11 @@ protected:
     NS_IMETHOD EnsureScriptEnvironment();
     NS_IMETHOD EnsureEditorData();
     NS_IMETHOD EnsureFind();
+    NS_IMETHOD EnsureSpellCheck();
     NS_IMETHOD RefreshURIFromQueue();
     NS_IMETHOD DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aURL);
     NS_IMETHOD LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *aPage, const PRUnichar *aDescription);
+    PRBool IsPrintingOrPP(PRBool aDisplayErrorDialog = PR_TRUE);
 
     nsresult SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer);
 
@@ -301,6 +304,7 @@ protected:
     nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
     nsCOMPtr<nsIURIFixup>      mURIFixup;
     nsCOMPtr<nsIWebBrowserFind> mFind;
+    nsCOMPtr<nsIWebBrowserSpellCheck> mSpellCheck;
     PRInt32                    mMarginWidth;
     PRInt32                    mMarginHeight;
     PRInt32                    mItemType;
@@ -362,6 +366,9 @@ protected:
     nsIDocShellTreeItem *      mParent;  // Weak Reference
     nsIDocShellTreeOwner *     mTreeOwner; // Weak Reference
     nsIChromeEventHandler *    mChromeEventHandler; //Weak Reference
+
+    // Indivates that a DocShell in this "docshell tree" is printing
+    PRBool mIsPrintingOrPP;
 
 public:
     class InterfaceRequestorProxy : public nsIInterfaceRequestor {
