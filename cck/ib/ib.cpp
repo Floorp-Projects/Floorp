@@ -4,6 +4,7 @@
 #include "globals.h"
 #include "comp.h"
 #include "ib.h"
+#include <afxtempl.h>
 
 #define MAX_SIZE 1024
 
@@ -21,6 +22,8 @@ CString iniSrcPath;
 CString scriptPath;
 CString nscpxpiPath;
 
+WIDGET *tempWidget;
+int selCount;
 char buffer[50000];
 XPI	xpiList[100];
 int xpiLen = -1;
@@ -272,23 +275,119 @@ void init_components()
 
 void invisible()
 {
-	WIDGET *tempWidget;
 	tempWidget = findWidget("SelectedComponents");
-	CString cdConfigPath = cdPath + "\\config.ini";
 	CString component;
 	{
-		int count = (((CCheckListBox *)tempWidget->control))->GetCount();
+		selCount = (((CCheckListBox *)tempWidget->control))->GetCount();
 			
-		for (int i=0; i < count; i++)
+		for (int i=0; i < selCount; i++)
 		{
 			if (((CCheckListBox *)tempWidget->control)->GetCheck(i) != 1)
 			{
 			component = Components[i].compname;	
-			WritePrivateProfileString(Components[i].compname, "Attributes", "INVISIBLE", cdConfigPath);
+			WritePrivateProfileString(Components[i].compname, "Attributes", "INVISIBLE", iniDstPath);
 				
 			}
 		}
 	}
+}
+void AddThirdParty()
+{
+	CString tpCompPath1 = GetGlobal("CustomComponent1");
+	CString tpCompPath2 = GetGlobal("CustomComponent137");
+	CString tpComp1		= GetGlobal("CustomComponent2");
+	CString tpComp2		= GetGlobal("CustomComponent23");
+	CString tpCompSize1	= GetGlobal("ComponentSize");
+	CString tpCompSize2	= GetGlobal("ModuleSize");
+	CString componentName;
+	CString cName;
+	CString compSDesc	= "Description Short=";
+	CString compLDesc	= "Description Long=";
+	CString compArchive = "Archive=";
+	CString compISize	= "Install Size=";
+	CString compAttrib	= "Attributes=SELECTED|LAUNCHAPP";
+	int archiveLen		= tpCompPath1.GetLength();
+	int findLen			= tpCompPath1.ReverseFind('\\');
+	CString Archive1	= tpCompPath1.Right(archiveLen - findLen -1);
+	archiveLen			= tpCompPath2.GetLength();
+	findLen				= tpCompPath2.ReverseFind('\\');
+	CString Archive2	= tpCompPath2.Right(archiveLen - findLen -1);
+	CString tempstr;
+	char *cBuffer1 = new char [MAX_SIZE];
+	char *p = cBuffer1;
+	strcpy(p,LPCTSTR(compSDesc + tpComp1));
+	tempstr = compSDesc + tpComp1;
+	p += (tempstr.GetLength() +1);
+	strcpy(p,LPCTSTR(compLDesc + tpComp1));
+	tempstr = compLDesc + tpComp1;
+	p += (tempstr.GetLength() +1);
+	strcpy(p,LPCTSTR(compArchive + Archive1));
+	tempstr = compArchive + Archive1;
+	p += (tempstr.GetLength() +1);
+	strcpy(p,LPCTSTR(compISize + tpCompSize1));
+	tempstr = compISize + tpCompSize1;
+	p += (tempstr.GetLength() +1);
+	strcpy(p,LPCTSTR(compAttrib));
+	p += (compAttrib.GetLength() +1);
+	*p = 0;
+	char *cBuffer2 = new char [MAX_SIZE];
+	char *q = cBuffer2;
+	strcpy(q,LPCTSTR(compSDesc + tpComp2));
+	tempstr = compSDesc + tpComp2;
+	q += (tempstr.GetLength() +1);
+	strcpy(q,LPCTSTR(compLDesc + tpComp2));
+	tempstr = compLDesc + tpComp2;
+	q += (tempstr.GetLength() +1);
+	strcpy(q,LPCTSTR(compArchive + Archive2));
+	tempstr = compArchive + Archive2;
+	q += (tempstr.GetLength() +1);
+	strcpy(q,LPCTSTR(compISize + tpCompSize2));
+	tempstr = compISize + tpCompSize2;
+	q += (tempstr.GetLength() +1);
+	strcpy(q,LPCTSTR(compAttrib));
+	q += (compAttrib.GetLength() +1);
+	*q = 0;
+
+
+/*
+	char cBuffer1[MAX_SIZE][MAX_SIZE]={LPCTSTR(compSDesc + tpComp1),LPCTSTR(compLDesc + tpComp1),
+					 LPCTSTR(compArchive + Archive1),LPCTSTR(compISize + tpCompSize1),
+					 LPCTSTR(compAttrib)};
+	char *cBuffer2[]={LPCTSTR(compSDesc + tpComp2),LPCTSTR(compLDesc + tpComp2),
+					 LPCTSTR(compArchive + Archive2),LPCTSTR(compISize + tpCompSize2),
+					 LPCTSTR(compAttrib)};
+*/
+
+	if (!tpCompPath1.IsEmpty())
+	{
+		componentName.Format("Component%d", (selCount));
+		cName.Format("C%d", (selCount -1));
+
+		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
+		WritePrivateProfileString("Setup Type1", cName, componentName, iniDstPath);
+		WritePrivateProfileString("Setup Type2", cName, componentName, iniDstPath);
+		WritePrivateProfileString("Setup Type3", cName, componentName, iniDstPath);
+		WritePrivateProfileSection(componentName, cBuffer1, iniDstPath);
+		selCount++;
+		CopyFile(tpCompPath1, cdPath + "\\" + Archive1, FALSE);
+		DWORD e1 = GetLastError();
+
+	}
+	if (!tpCompPath2.IsEmpty())
+	{
+		componentName.Format("Component%d", (selCount));
+		cName.Format("C%d", (selCount -1));
+
+		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
+		WritePrivateProfileString("Setup Type1", cName, componentName, iniDstPath);
+		WritePrivateProfileString("Setup Type2", cName, componentName, iniDstPath);
+		WritePrivateProfileString("Setup Type3", cName, componentName, iniDstPath);
+		WritePrivateProfileSection(componentName, cBuffer2, iniDstPath);
+		CopyFile(tpCompPath2, cdPath + "\\" + Archive2, FALSE);
+		DWORD e2 = GetLastError();
+	}
+	delete [] cBuffer1;
+	delete [] cBuffer2;
 }
 extern "C" __declspec(dllexport)
 int StartIB(CString parms, WIDGET *curWidget)
@@ -398,6 +497,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CopyDir(shellPath, cdPath, NULL, FALSE);
 
 	invisible();
+
+	AddThirdParty();
 
 	ReplaceINIFile();
 
