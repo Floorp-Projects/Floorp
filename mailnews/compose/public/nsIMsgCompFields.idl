@@ -108,5 +108,11 @@ interface nsIMsgCompFields : nsISupports {
 
 	long SetBody(in string value);
 	string GetBody();
+
+	long SetUUEncodeAttachments(in boolean value);
+	boolean GetUUEncodeAttachments();
+
+	long SetTheForcePlainText(in boolean value);
+	boolean GetTheForcePlainText();
 };
 

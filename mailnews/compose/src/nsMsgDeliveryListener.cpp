@@ -29,6 +29,12 @@ nsMsgDeliveryListener::OnStartRunningUrl(nsIURI * aUrl)
 #ifdef NS_DEBUG
   printf("Starting to run the delivery operation\n");
 #endif
+
+  if (mMsgSendObj)
+    mMsgSendObj->NotifyListenersOnStartSending(nsnull, nsnull);
+
+  if (mMsgSendLaterObj)
+    mMsgSendLaterObj->NotifyListenersOnStartSending(nsnull);
   
 	return NS_OK;
 }
@@ -50,6 +56,19 @@ nsMsgDeliveryListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 			mailUrl->UnRegisterListener(this);
 	}
 
+  if (mMsgSendObj)
+    mMsgSendObj->NotifyListenersOnStopSending(
+                                  nsnull,     // const char *aMsgID, 
+                                  aExitCode,  // nsresult aStatus, 
+                                  nsnull,     // const PRUnichar *aMsg, 
+                                  nsnull);    // nsIFileSpec *returnFileSpec);
+
+  if (mMsgSendLaterObj)
+    mMsgSendLaterObj->NotifyListenersOnStopSending(aExitCode,
+                            nsnull,  // const PRUnichar *aMsg, 
+                            nsnull,  // PRUint32 aTotalTried, 
+                            nsnull); // PRUint32 aSuccessful);
+
   // 
   // Now, important, if there was a callback registered, call the 
   // creators exit routine.
@@ -67,6 +86,8 @@ nsMsgDeliveryListener::nsMsgDeliveryListener(nsMsgDeliveryCompletionCallback cal
   mDeliveryType = delivType;
   mTagData = tagData;
   mCompletionCallback = callback;
+  mMsgSendObj = nsnull;
+  mMsgSendLaterObj = nsnull;
 }
 
 nsMsgDeliveryListener::~nsMsgDeliveryListener()
@@ -74,3 +95,16 @@ nsMsgDeliveryListener::~nsMsgDeliveryListener()
   delete mTempFileSpec;
 }
 
+nsresult 
+nsMsgDeliveryListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
+{
+  mMsgSendObj = obj;
+  return NS_OK;
+}
+
+nsresult 
+nsMsgDeliveryListener::SetMsgSendLaterObject(nsMsgSendLater *obj)
+{
+  mMsgSendLaterObj = obj;
+  return NS_OK;
+}

@@ -468,6 +468,33 @@ nsresult nsMsgCompFields::GetAttachVCard(PRBool *_retval)
 	return GetBoolHeader(MSG_ATTACH_VCARD_BOOL_HEADER_MASK, _retval);
 }
 
+nsresult   
+nsMsgCompFields::SetUUEncodeAttachments(PRBool value, PRInt32 *_retval)
+{
+	return GetBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK, _retval);
+}
+
+nsresult   
+nsMsgCompFields::GetUUEncodeAttachments(PRBool *_retval)
+{
+	return GetBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK, _retval);
+}
+
+nsresult   
+nsMsgCompFields::SetTheForcePlainText(PRBool value, PRInt32 *_retval)
+{
+  m_force_plain_text = value;
+  return NS_OK;  
+}
+
+nsresult   
+nsMsgCompFields::GetTheForcePlainText(PRBool *_retval)
+{
+  *_retval = m_force_plain_text;
+  return NS_OK;    
+}
+
+
 HJ36954
 {
 	/* Here's where we allow URLs in the newsgroups: header */

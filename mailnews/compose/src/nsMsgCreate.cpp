@@ -38,10 +38,8 @@ msg_delete_attached_files(struct nsMsgAttachedFile *attachments)
 		PR_FREEIF(tmp->description);
 		PR_FREEIF(tmp->x_mac_type);
 		PR_FREEIF(tmp->x_mac_creator);
-		if (tmp->file_name) {
-			PR_Delete(tmp->file_name);
-			PR_Free(tmp->file_name);
-		}
+		if (tmp->file_spec) 
+			delete tmp->file_spec;
 	}
 	PR_FREEIF(attachments);
 }

@@ -20,6 +20,7 @@
 #define _nsMsgComposeBE_H_
 
 #include "rosetta.h"
+#include "nsIURL.h"
 #include "nsFileSpec.h"
 
 //
@@ -50,7 +51,7 @@ typedef enum
 // Attachment file/URL structures
 struct nsMsgAttachmentData
 {
-  char *url;			        // The URL to attach. This should be 0 to signify "end of list".
+  nsIURI  *url;			        // The URL to attach. This should be 0 to signify "end of list".
 
   char *desired_type;	    // The type to which this document should be
 						              // converted.  Legal values are NULL, TEXT_PLAIN
@@ -83,32 +84,32 @@ struct nsMsgAttachmentData
 //
 typedef struct nsMsgAttachedFile
 {
-  char *orig_url;		  // Where it came from on the network (or even elsewhere on the local disk.)
+  nsIURI      *orig_url;		// Where it came from on the network (or even elsewhere on the local disk.)
 
-  char *file_name;		// The tmp file in which the (possibly converted) data now resides.
+  nsFileSpec  *file_spec;		// The tmp file in which the (possibly converted) data now resides.
   
-  char *type;			    // The type of the data in file_name (not necessarily the same as the type of orig_url.)
+  char        *type;			  // The type of the data in file_name (not necessarily the same as the type of orig_url.)
 
-  char *encoding;		  // Likewise, the encoding of the tmp file. This will be set only if the original 
-                      // document had an encoding already; we don't do base64 encoding and so forth until 
-                      // it's time to assemble a full MIME message of all parts.
+  char        *encoding;		// Likewise, the encoding of the tmp file. This will be set only if the original 
+                            // document had an encoding already; we don't do base64 encoding and so forth until 
+                            // it's time to assemble a full MIME message of all parts.
 
 
-  char *description;	// For Content-Description header 
-  char *x_mac_type;   // mac-specific info 
-  char *x_mac_creator;// mac-specific info 
-  char *real_name;		// The real name of the file. 
+  char        *description;	  // For Content-Description header 
+  char        *x_mac_type;    // mac-specific info 
+  char        *x_mac_creator; // mac-specific info 
+  char        *real_name;		  // The real name of the file. 
 
   // Some statistics about the data that was written to the file, so that when
 	// it comes time to compose a MIME message, we can make an informed decision
 	// about what Content-Transfer-Encoding would be best for this attachment.
   // (If it's encoded already, we ignore this information and ship it as-is.)
-  PRUint32  size;
-  PRUint32  unprintable_count;
-  PRUint32  highbit_count;
-  PRUint32  ctl_count;
-  PRUint32  null_count;
-  PRUint32  max_line_length;
+  PRUint32    size;
+  PRUint32    unprintable_count;
+  PRUint32    highbit_count;
+  PRUint32    ctl_count;
+  PRUint32    null_count;
+  PRUint32    max_line_length;
   
   HG68452
 

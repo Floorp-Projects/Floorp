@@ -45,6 +45,7 @@ EXPORTS = \
 	nsMsgPrompts.h \
 	nsMsgTransition.h \
 	nsMsgQuote.h \
+	nsURLFetcher.h \
 	$(NULL)
 
 CPPSRCS = \
@@ -70,6 +71,7 @@ CPPSRCS = \
 	nsMsgComposeService.cpp \
 	nsMsgCompose.cpp \
 	nsMsgQuote.cpp \
+	nsURLFetcher.cpp \
 	$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

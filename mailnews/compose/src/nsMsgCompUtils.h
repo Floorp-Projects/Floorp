@@ -101,6 +101,14 @@ void        msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *
 void        nsMsgMIMESetConformToStandard (PRBool conform_p);
 PRBool      nsMsgMIMEGetConformToStandard (void);
 
+//
+// network service type calls...
+//
+nsresult    nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec);
+PRBool      nsMsgIsLocalFile(const char *url);
+char        *nsMsgGetLocalFileFromURL(char *url);
+char        *nsMsgPlatformFileToURL (const char *name);
+
 
 NS_END_EXTERN_C
 

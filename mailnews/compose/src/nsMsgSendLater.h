@@ -25,6 +25,42 @@
 #include "nsIMsgFolder.h"
 #include "nsIMessage.h"
 #include "nsIFileSpec.h"
+#include "nsFileStream.h"
+#include "nsIMsgSendListener.h"
+#include "nsIMsgSendLaterListener.h"
+#include "nsIMsgSendLater.h"
+
+////////////////////////////////////////////////////////////////////////////////////
+// This is the listener class for the send operation. We have to create this class 
+// to listen for message send completion and eventually notify the caller
+////////////////////////////////////////////////////////////////////////////////////
+class nsMsgSendLater;
+class SendOperationListener : public nsIMsgSendListener
+{
+public:
+  SendOperationListener(void);
+  virtual ~SendOperationListener(void);
+
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  /* void OnStartSending (in string aMsgID, in PRUint32 aMsgSize); */
+  NS_IMETHOD OnStartSending(const char *aMsgID, PRUint32 aMsgSize);
+  
+  /* void OnProgress (in string aMsgID, in PRUint32 aProgress, in PRUint32 aProgressMax); */
+  NS_IMETHOD OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
+  
+  /* void OnStatus (in string aMsgID, in wstring aMsg); */
+  NS_IMETHOD OnStatus(const char *aMsgID, const PRUnichar *aMsg);
+  
+  /* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
+  NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+                           nsIFileSpec *returnFileSpec);
+  
+  NS_IMETHOD SetSendLaterObject(nsMsgSendLater *obj);
+private:
+  nsMsgSendLater    *mSendLater;
+};
 
 class nsMsgSendLater: public nsIMsgSendLater
 {
@@ -34,9 +70,16 @@ public:
 
 	NS_DECL_ISUPPORTS
 
-	// nsIMsgSendLater support
+  //  nsIBaseStream interface
+  NS_IMETHOD Close(void);
+
+  // nsIOutputStream interface
+  NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount);
+  NS_IMETHOD Flush(void);
+
+  // nsIMsgSendLater support
   NS_IMETHOD                SendUnsentMessages(nsIMsgIdentity *identity,
-                                               nsMsgSendUnsentMessagesCallback msgCallback,
+                                               nsIMsgSendLaterListener          **listenerArray, // SHERRY nsMsgSendUnsentMessagesCallback  msgCallback,
                                                void *tagData);
 
   // Methods needed for implementing interface...
@@ -46,21 +89,78 @@ public:
 
   nsresult                  DeleteCurrentMessage();
 
+  // Necessary for creating a valid list of recipients
+  nsresult                  BuildHeaders();
+  nsresult                  DeliverQueuedLine(char *line, PRInt32 length);
+  nsresult                  RebufferLeftovers(char *startBuf,  PRUint32 aLen);
+  nsresult                  BuildNewBuffer(const char* aBuf, PRUint32 aCount, PRUint32 *totalBufSize);
+
+  // RICHIE
+  // This will go away when we get a stream from netlib...
+  //
+  nsresult                  DriveFakeStream(nsIOutputStream *stream);
+
   // counters
   PRUint32                  mTotalSentSuccessfully;
   PRUint32                  mTotalSendCount;
 
+  // methods for listener array processing...
+  NS_IMETHOD  SetListenerArray(nsIMsgSendLaterListener **aListener);
+  NS_IMETHOD  AddListener(nsIMsgSendLaterListener *aListener);
+  NS_IMETHOD  RemoveListener(nsIMsgSendLaterListener *aListener);
+  NS_IMETHOD  DeleteListeners();
+  NS_IMETHOD  NotifyListenersOnStartSending(PRUint32 aTotalMessageCount);
+  NS_IMETHOD  NotifyListenersOnProgress(PRUint32 aCurrentMessage, PRUint32 aTotalMessage);
+  NS_IMETHOD  NotifyListenersOnStatus(const PRUnichar *aMsg);
+  NS_IMETHOD  NotifyListenersOnStopSending(nsresult aStatus, const PRUnichar *aMsg, 
+                                           PRUint32 aTotalTried, PRUint32 aSuccessful);
+
   // Private Information
 private:
+  nsIMsgSendLaterListener   **mListenerArray;
+  PRInt32                   mListenerArrayCount;
+
+  nsMsgSendUnsentMessagesCallback  mCompleteCallback;
+  SendOperationListener     *mSendListener;
+
   nsIMsgIdentity            *mIdentity;
   nsCOMPtr<nsIMsgFolder>    mMessageFolder;
   nsCOMPtr<nsIMessage>      mMessage;
+
+  // RICHIE 
+  // Theses are here for the hack temp file we need
+  // to do...this will go away!!!
+  nsFileSpec                *mHackTempFileSpec;
+  nsIFileSpec               *mHackTempIFileSpec;
+
+  //
+  // File output stuff...
+  //
   nsFileSpec                *mTempFileSpec;
   nsIFileSpec               *mTempIFileSpec;
+  nsOutputFileStream        *mOutFile;
+
   nsIEnumerator             *mEnumerator;
   PRBool                    mFirstTime;
-  nsMsgSendUnsentMessagesCallback  mCompleteCallback;
+ 
   void                      *mTagData;
+
+  // For building headers and stream parsing...
+  char                      *m_to;
+  char                      *m_bcc;
+  char                      *m_fcc;
+  char                      *m_newsgroups;
+  char                      *m_newshost;
+  char                      *m_headers;
+  PRInt32                   m_flags;
+  PRInt32                   m_headersFP;
+  PRBool                    m_inhead;
+  PRInt32                   m_headersPosition;
+  PRInt32                   m_bytesRead;
+  PRInt32                   m_position;
+  PRInt32                   m_flagsPosition;
+  PRInt32                   m_headersSize;
+  char                      *mLeftoverBuffer;
 };
 
 

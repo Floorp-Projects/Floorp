@@ -35,6 +35,7 @@ EXPORTS=    nsSmtpUrl.h             \
 			nsMsgCompose.h \
 			nsMsgCompFields.h \
 			nsMsgQuote.h \
+			nsURLFetcher.h \
             $(NULL)
 
 ################################################################################
@@ -64,6 +65,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj             \
                         .\$(OBJDIR)\nsMsgAttachmentHandler.obj \
                         .\$(OBJDIR)\nsMsgPrompts.obj \
                         .\$(OBJDIR)\nsMsgQuote.obj \
+                        .\$(OBJDIR)\nsURLFetcher.obj \
             $(NULL)
 
 

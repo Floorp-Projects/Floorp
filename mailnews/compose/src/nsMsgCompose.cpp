@@ -394,8 +394,7 @@ nsresult nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode, const PRUnichar *a
 					nsnull,             				// const struct nsMsgAttachmentData   *attachments,
 					nsnull,             				// const struct nsMsgAttachedFile     *preloaded_attachments,
 					nsnull,             				// nsMsgSendPart                     *relatedPart,
-	          		nsnull,                   			// callback function defined in nsMsgComposeBE.h
-	          		nsnull);                  			// tagged FE data that will be passed to the FE
+          nsnull);                   			// listener array
 	    }
 	}
 /*TODO, don't close the window but just hide it, we will close it later when we receive a call back from the BE

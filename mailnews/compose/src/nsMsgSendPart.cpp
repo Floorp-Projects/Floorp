@@ -60,7 +60,7 @@ nsMsgSendPart::nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charse
   SetMimeDeliveryState(state);
   
   m_parent = NULL;
-  m_filename = NULL;
+  m_filespec = NULL;
   m_filetype = (XP_FileType)0;
   m_buffer = NULL;
   m_type = NULL;
@@ -89,7 +89,8 @@ nsMsgSendPart::~nsMsgSendPart()
 	delete [] m_children;
     PR_FREEIF(m_buffer);
 	PR_FREEIF(m_other);
-	PR_FREEIF(m_filename);
+	if (m_filespec)
+    delete m_filespec;
 	PR_FREEIF(m_type);
 }
 
@@ -107,14 +108,12 @@ int nsMsgSendPart::CopyString(char** dest, const char* src)
 }
 
 
-int nsMsgSendPart::SetFile(const char* filename, XP_FileType type)
+int nsMsgSendPart::SetFile(nsFileSpec *filename)
 {
-  NS_ASSERTION(m_filename == NULL, "not-null m_filename");
-  int status = CopyString(&m_filename, filename);
-  if (status < 0)
-    return status;
-  m_filetype = type;
-  return status;
+  m_filespec = new nsFileSpec(*filename);
+  if (!m_filespec)
+    return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 
@@ -515,42 +514,41 @@ int nsMsgSendPart::Write()
 #define PUSH(str) PUSHLEN(str, PL_strlen(str))
   
   if (m_mainpart && m_type && PL_strcmp(m_type, TEXT_HTML) == 0) {		  
-    if (m_filename) {
+    if (m_filespec) 
+    {
       // The "insert HTML links" code requires a memory buffer,
       // so read the file into memory.
       NS_ASSERTION(m_buffer == NULL, "not-null buffer");
       PRInt32           length = 0;
-      nsFileSpec        mySpec(m_filename);
-
-      if (mySpec.Valid())
-        length = mySpec.GetFileSize();
-
+      
+      if (m_filespec->Valid())
+        length = m_filespec->GetFileSize();
+      
       m_buffer = (char *) PR_Malloc(sizeof(char) * (length + 1));
       if (m_buffer) 
-	  {
-		nsInputFileStream file(mySpec);
+      {
+        nsInputFileStream file(*m_filespec);
         if (file.is_open()) 
-		{
-			length = file.read(m_buffer, length);
-			file.close();
-			m_buffer[length] = '\0';
-			PR_FREEIF(m_filename);
+        {
+          length = file.read(m_buffer, length);
+          file.close();
+          m_buffer[length] = '\0';
         }
         else 
-		  PR_Free(m_buffer);
+          PR_Free(m_buffer);
       }
     }
     if (m_buffer) 
     {
       nsCOMPtr<nsIMimeURLUtils> myURLUtil;
       char                      *tmp = NULL;
-
+      
       int res = nsComponentManager::CreateInstance(kCMimeURLUtilsCID, 
-                                                   NULL, nsIMimeURLUtils::GetIID(), 
-                                                   (void **) getter_AddRefs(myURLUtil)); 
+        NULL, nsIMimeURLUtils::GetIID(), 
+        (void **) getter_AddRefs(myURLUtil)); 
       if (!NS_SUCCEEDED(res))
         goto FAIL;
-    
+      
       myURLUtil->ScanHTMLForURLs(m_buffer, &tmp);
       if (tmp) {
         SetBuffer(tmp);
@@ -679,15 +677,14 @@ int nsMsgSendPart::Write()
   m_intlDocToMailConverter = NULL;
   
   
-  if (m_buffer) {
-    NS_ASSERTION(!m_filename, "not-null m_filename");
+  if (m_buffer) 
+  {
     status = PushBody(m_buffer, PL_strlen(m_buffer));
     if (status < 0)
       goto FAIL;
   }
-  else if (m_filename) {
-    nsFileSpec      mySpec(m_filename);
-    nsIOFileStream  myStream(mySpec);
+  else if (m_filespec) {
+    nsIOFileStream  myStream(*m_filespec);
 
     if (!myStream.is_open())
     {

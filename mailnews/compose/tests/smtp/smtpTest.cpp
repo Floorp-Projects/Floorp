@@ -447,6 +447,12 @@ int main()
     if (NS_FAILED(result) || (prefs == nsnull)) {
         exit(result);
     }
+   
+    if (NS_FAILED(prefs->ReadUserPrefs()))
+    {
+      printf("Failed on reading user prefs!\n");
+      exit(-1);
+    }
 
 	// Create the Event Queue for this thread...
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result); 

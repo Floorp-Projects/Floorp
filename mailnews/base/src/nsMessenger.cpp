@@ -71,7 +71,7 @@
 
 #include "nsIMsgSendLater.h" 
 #include "nsMsgCompCID.h"
-
+#include "nsIMsgSendLaterListener.h"
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
@@ -910,14 +910,79 @@ nsMessenger::GetTransactionManager(nsITransactionManager* *aTxnMgr)
   return NS_OK;
 }
 
-static nsresult 
-SendUnsentMessagesCallback(nsresult aExitCode, PRUint32 totalSentCount,
-                           PRUint32 totalSentSuccessfully, void *tagData)
+NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
+{
+	// Set a default charset of the webshell. 
+	if (nsnull != mWebShell) {
+		mWebShell->SetDefaultCharacterSet(characterSet);
+	}
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+// This is the listener class for the send operation. 
+////////////////////////////////////////////////////////////////////////////////////
+class SendLaterListener: public nsIMsgSendLaterListener
+{
+public:
+  SendLaterListener(void);
+  virtual ~SendLaterListener(void);
+
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+
+  /* void OnStartSending (in PRUint32 aTotalMessageCount); */
+  NS_IMETHOD OnStartSending(PRUint32 aTotalMessageCount);
+
+  /* void OnProgress (in PRUint32 aCurrentMessage, in PRUint32 aTotalMessage); */
+  NS_IMETHOD OnProgress(PRUint32 aCurrentMessage, PRUint32 aTotalMessage);
+
+  /* void OnStatus (in wstring aMsg); */
+  NS_IMETHOD OnStatus(const PRUnichar *aMsg);
+
+  /* void OnStopSending (in nsresult aStatus, in wstring aMsg, in PRUint32 aTotalTried, in PRUint32 aSuccessful); */
+  NS_IMETHOD OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint32 aTotalTried, PRUint32 aSuccessful);
+};
+
+NS_IMPL_ISUPPORTS(SendLaterListener, nsIMsgSendLaterListener::GetIID());
+
+SendLaterListener::SendLaterListener()
+{
+  NS_INIT_REFCNT();
+}
+
+SendLaterListener::~SendLaterListener()
+{
+}
+
+nsresult
+SendLaterListener::OnStartSending(PRUint32 aTotalMessageCount)
+{
+  return NS_OK;
+}
+
+nsresult
+SendLaterListener::OnProgress(PRUint32 aCurrentMessage, PRUint32 aTotalMessage)
+{
+  return NS_OK;
+}
+
+nsresult
+SendLaterListener::OnStatus(const PRUnichar *aMsg)
+{
+  return NS_OK;
+}
+
+nsresult
+SendLaterListener::OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint32 aTotalTried, 
+                                 PRUint32 aSuccessful) 
 {
 #ifdef NS_DEBUG
-  printf("SendUnsentMessagesCallback: Tried to send %d messages. %d successful.\n",
-          totalSentCount, totalSentSuccessfully);
+  if (NS_SUCCEEDED(aStatus))
+    printf("SendLaterListener::OnStopSending: Tried to send %d messages. %d successful.\n",
+            aTotalTried, aSuccessful);
 #endif
+
   return NS_OK;
 }
 
@@ -931,16 +996,13 @@ nsMessenger::SendUnsentMessages()
 	if (NS_SUCCEEDED(rv) && pMsgSendLater) 
 	{ 
 		printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
-		pMsgSendLater->SendUnsentMessages(nsnull, SendUnsentMessagesCallback, nsnull); 
+
+    SendLaterListener *sendLaterListener = new SendLaterListener();
+    if (!sendLaterListener)
+        return NS_ERROR_FAILURE;
+      
+    pMsgSendLater->AddListener(sendLaterListener);
+		pMsgSendLater->SendUnsentMessages(nsnull, nsnull, nsnull); 
 	} 
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
-{
-	// Set a default charset of the webshell. 
-	if (nsnull != mWebShell) {
-		mWebShell->SetDefaultCharacterSet(characterSet);
-	}
-    return NS_OK;
 }

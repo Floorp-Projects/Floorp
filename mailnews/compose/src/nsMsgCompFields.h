@@ -154,6 +154,11 @@ public:
 	NS_IMETHOD GetAttachVCard(PRBool *_retval);
 	PRBool GetAttachVCard() {return GetBoolHeader(MSG_RETURN_RECEIPT_BOOL_HEADER_MASK);}
 
+  NS_IMETHOD SetUUEncodeAttachments(PRBool value, PRInt32 *_retval);
+	NS_IMETHOD GetUUEncodeAttachments(PRBool *_retval);
+	PRBool GetUUEncodeAttachments() {return GetBoolHeader(MSG_UUENCODE_BINARY_BOOL_HEADER_MASK);}
+
+
 	NS_IMETHOD SetBody(const char *value, PRInt32 *_retval);
 	NS_IMETHOD GetBody(char **_retval);
 	const char* GetBody();
@@ -177,9 +182,11 @@ public:
 
 	MSG_Pane * GetOwner() { return m_owner; }
 
+  NS_IMETHOD  SetTheForcePlainText(PRBool value, PRInt32 *_retval);
+	NS_IMETHOD  GetTheForcePlainText(PRBool *_retval);
+  void        SetForcePlainText(PRBool value) {m_force_plain_text = value;}
+	PRBool      GetForcePlainText() {return m_force_plain_text;}
 
-	void SetForcePlainText(PRBool value) {m_force_plain_text = value;}
-	PRBool GetForcePlainText() {return m_force_plain_text;}
 	void SetUseMultipartAlternative(PRBool value) {m_multipart_alt = value;}
 	PRBool GetUseMultipartAlternative() {return m_multipart_alt;}
 

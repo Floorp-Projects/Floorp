@@ -19,81 +19,94 @@
 #ifndef _nsMsgAttachment_H_
 #define _nsMsgAttachment_H_
 
-#include "net.h"
+#include "nsIURL.h"
+#include "nsURLFetcher.h"
 #include "nsIMimeConverter.h"
+#include "nsMsgCompFields.h"
 
+// Forward declarations...
+class    nsMsgComposeAndSend;
 
-class     nsMsgComposeAndSend;
-
+//
+// This is a class that deals with processing remote attachments. It implements
+// an nsIStreamListener interface to deal with incoming data
+//
 class nsMsgAttachmentHandler
 {
 public:
-
   nsMsgAttachmentHandler();
   ~nsMsgAttachmentHandler();
 
-  void	UrlExit(URL_Struct *url, int status, MWContext *context);
-  PRInt32	SnarfAttachment ();
-  void  AnalyzeDataChunk (const char *chunk, PRInt32 chunkSize);
-  void  AnalyzeSnarfedFile ();      /* Analyze a previously-snarfed file.
-  									   (Currently only used for plaintext
-  									   converted from HTML.) */
-  int	PickEncoding (const char *charset);
-  
-  PRBool UseUUEncode_p(void);
+  //////////////////////////////////////////////////////////////////////
+  // Object methods...
+  //////////////////////////////////////////////////////////////////////
+  //
+  nsresult              SnarfAttachment(nsMsgCompFields *compFields);
+  nsresult              UrlExit(nsresult status, const PRUnichar* aMsg);
 
-  char *m_url_string;
-  URL_Struct *m_url;
-  PRBool m_done;
+  PRBool                UseUUEncode_p(void);
+  int	                  PickEncoding (const char *charset);
+  void                  AnalyzeDataChunk (const char *chunk, PRInt32 chunkSize);
+  void                  AnalyzeSnarfedFile ();      // Analyze a previously-snarfed file.
+  									                                // (Currently only used for plaintext
+  									                                // converted from HTML.) 
 
-  nsMsgComposeAndSend		*m_mime_delivery_state;
-
-  char *m_charset;             /* charset name */
-  char *m_type;						/* The real type, once we know it. */
-  char *m_override_type;			/* The type we should assume it to be
-									   or 0, if we should get it from the
-									   URL_Struct (from the server) */
-  char *m_override_encoding;		/* Goes along with override_type */
-
-  char *m_desired_type;				/* The type it should be converted to. */
-  char *m_description;				/* For Content-Description header */
-  char *m_x_mac_type, *m_x_mac_creator; /* Mac file type/creator. */
-  char *m_real_name;				/* The name for the headers, if different
-									   from the URL. */
-  char *m_encoding;					/* The encoding, once we've decided. */
-  PRBool m_already_encoded_p;		/* If we attach a document that is already
-									   encoded, we just pass it through. */
-
-  char *m_file_name;					/* The temp file to which we save it */
-  PRFileDesc *m_file;
+  //////////////////////////////////////////////////////////////////////
+  // Member vars...
+  //////////////////////////////////////////////////////////////////////
+  //
+  nsIURI                *mURL;
+  nsFileSpec            *mFileSpec;					// The temp file to which we save it 
+  nsOutputFileStream    *mOutFile;          // The temp file stream pointer
+  nsURLFetcher          *mFetcher;          // The URL Fetcher
+  nsMsgCompFields       *mCompFields;       // Message composition fields for the sender
 
 #ifdef XP_MAC
-  char *m_ap_filename;				/* The temp file holds the appledouble
-									   encoding of the file we want to post. */
+  nsFileSpec            *mAppleFileSpec;    // The temp file holds the appledouble
+									                          // encoding of the file we want to send.
 #endif
+  char                  *m_x_mac_type;      // Mac file type
+  char                  *m_x_mac_creator;   // Mac file creator
+  
+  PRBool                m_done;
+  nsMsgComposeAndSend		*m_mime_delivery_state;
+  char                  *m_charset;         // charset name 
+  char                  *m_type;            // The real type, once we know it.
+  char                  *m_override_type;   // The type we should assume it to be
+									                          // or 0, if we should get it from the
+									                          // server)
+  char                  *m_override_encoding; // Goes along with override_type 
 
-  PRBool m_decrypted_p;	/* S/MIME -- when attaching a message that was
-							   encrypted, it's necessary to decrypt it first
-							   (since nobody but the original recipient can
-							   read it -- if you forward it to someone in the
-							   raw, it will be useless to them.)  This flag
-							   indicates whether decryption occurred, so that
-							   libmsg can issue appropriate warnings about
-							   doing a cleartext forward of a message that was
-							   originally encrypted.
-							 */
-  PRUint32 m_size;					/* Some state used while filtering it */
-  PRUint32 m_unprintable_count;
-  PRUint32 m_highbit_count;
-  PRUint32 m_ctl_count;
-  PRUint32 m_null_count;
-  PRUint32 m_current_column;
-  PRUint32 m_max_column;
-  PRUint32 m_lines;
+  char                  *m_desired_type;		// The type it should be converted to. 
+  char                  *m_description;     // For Content-Description header
+  char                  *m_real_name;				// The name for the headers, if different
+									                          // from the URL. 
+  char                  *m_encoding;				// The encoding, once we've decided. */
+  PRBool                m_already_encoded_p; // If we attach a document that is already
+									                           // encoded, we just pass it through.
+
+  PRBool                m_decrypted_p;	/* S/MIME -- when attaching a message that was
+							                             encrypted, it's necessary to decrypt it first
+							                             (since nobody but the original recipient can
+							                             read it -- if you forward it to someone in the
+							                             raw, it will be useless to them.)  This flag
+							                             indicates whether decryption occurred, so that
+							                             libmsg can issue appropriate warnings about
+							                             doing a cleartext forward of a message that was
+							                             originally encrypted. */
+  //
+  // Vars for analyzing file data...
+  //
+  PRUint32              m_size;					/* Some state used while filtering it */
+  PRUint32              m_unprintable_count;
+  PRUint32              m_highbit_count;
+  PRUint32              m_ctl_count;
+  PRUint32              m_null_count;
+  PRUint32              m_current_column;
+  PRUint32              m_max_column;
+  PRUint32              m_lines;
 
   MimeEncoderData *m_encoder_data;  /* Opaque state for base64/qp encoder. */
-
-  PRBool m_graph_progress_started;
 };
 
 

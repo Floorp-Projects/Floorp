@@ -175,24 +175,6 @@ NS_IMPL_ISUPPORTS(FileInputStreamImpl, nsIInputStream::GetIID());
 
 ////////////////////////////////////////////////////////////////////////
 
-// Utility to create a nsIURI object...
-nsresult 
-NewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
-{  
-  if (nsnull == aInstancePtrResult) 
-    return NS_ERROR_NULL_POINTER;
-  
-  nsINetService *inet = nsnull;
-  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(),
-                                             (nsISupports **)&inet);
-  if (rv != NS_OK) 
-    return rv;
-
-  rv = inet->CreateURL(aInstancePtrResult, aSpec, nsnull, nsnull, nsnull);
-  nsServiceManager::ReleaseService(kNetServiceCID, inet);
-  return rv;
-}
-
 nsresult
 SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData)
 {

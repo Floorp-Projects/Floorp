@@ -130,6 +130,7 @@
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgCompFields.h"
 #include "nsMsgComposeBE.h"
+#include "nsIMsgSendListener.h"
 
 #include "net.h" /* should be defined into msgCore.h? */
 // RICHIE   #include "intl_csi.h"
@@ -261,8 +262,6 @@ public:
 	// The multipart/related save object for HTML text.
   nsMsgSendPart *m_related_part;
 
-  // File where we stored our HTML so that we could make the plaintext form.
-  char* m_html_filename;
 
   /* Subsequent attachments, if any.
    */
@@ -271,10 +270,15 @@ public:
   nsMsgAttachmentHandler *m_attachments;
   PRInt32 m_status; /* in case some attachments fail but not all */
 
-  /* The exit method used when downloading attachments only. */
+  //
+  // The exit method used when downloading attachments only.
+  // This still may be useful because of the fact that it is an
+  // internal callback only. This way, no thread boundry issues and
+  // we can get away without all of the listener array code.
+  //
   void (*m_attachments_done_callback) (
-									   void * fe_data, int status,
-									   const char * error_msg,
+									   nsresult                 status,
+									   const char               *error_msg,
 									   struct nsMsgAttachedFile *attachments);
 
 
@@ -326,8 +330,7 @@ public:
 			             PRUint32         attachment1_body_length,
 			             const struct nsMsgAttachmentData   *attachments,
 			             const struct nsMsgAttachedFile     *preloaded_attachments,
-			             nsMsgSendPart    *relatedPart,
-                   void             *fe_data);
+			             nsMsgSendPart    *relatedPart);
 
   //
   // Setup the composition fields
@@ -362,8 +365,9 @@ public:
 						              const struct nsMsgAttachmentData  *attachments,
 						              const struct nsMsgAttachedFile    *preloaded_attachments,
 						              void                              *relatedPart,
-                          nsMsgSendCompletionCallback       completionCallback,
-                          void                              *tagData);
+                          // This is an array of nsIMsgSendListener objects...there must
+                          // be N+1 entries in the array with the final entry set to nsnull
+                          nsIMsgSendListener                **aListenerArray);
 
   NS_IMETHOD  SendMessageFile(
  						              nsIMsgCompFields                  *fields,
@@ -371,9 +375,24 @@ public:
                           PRBool                            deleteSendFileOnCompletion,
 						              PRBool                            digest_p,
 						              nsMsgDeliverMode                  mode,
-                          nsMsgSendCompletionCallback       completionCallback,
-                          void                              *tagData);
+                          nsIMsgSendListener                **aListenerArray);
 
+  NS_IMETHOD  SendWebPage(
+ 						              nsIMsgCompFields                  *fields,
+                          nsIURI                            *url,
+                          nsMsgDeliverMode                  mode,
+                          nsIMsgSendListener                **aListenerArray);
+
+  // methods for listener array processing...
+  NS_IMETHOD  SetListenerArray(nsIMsgSendListener **aListener);
+  NS_IMETHOD  AddListener(nsIMsgSendListener *aListener);
+  NS_IMETHOD  RemoveListener(nsIMsgSendListener *aListener);
+  NS_IMETHOD  DeleteListeners();
+  NS_IMETHOD  NotifyListenersOnStartSending(const char *aMsgID, PRUint32 aMsgSize);
+  NS_IMETHOD  NotifyListenersOnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
+  NS_IMETHOD  NotifyListenersOnStatus(const char *aMsgID, const PRUnichar *aMsg);
+  NS_IMETHOD  NotifyListenersOnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+                                           nsIFileSpec *returnFileSpec);
   //
   // All vars necessary for this implementation
   //
@@ -388,9 +407,14 @@ public:
                                                 // nsMsgSaveAsTemplate
 
   // These are needed for callbacks to the FE...  
-  nsMsgSendCompletionCallback   mSendCompleteCallback;  // Used for completion of actual send operations
-  void                    *m_fe_data;			      // passed in and passed to callback 
-  nsFileSpec              *mReturnFileSpec;     // a holder for file spec's to be returned to caller
+  nsIMsgSendListener      **mListenerArray;
+  PRInt32                 mListenerArrayCount;
+
+  nsIFileSpec             *mReturnFileSpec;     // a holder for file spec's to be returned to caller
+
+  // File where we stored our HTML so that we could make the plaintext form.
+  nsFileSpec              *mHTMLFileSpec;
+
 };
 
 // 

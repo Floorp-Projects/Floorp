@@ -7,6 +7,7 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgCompFields.h" /* interface nsIMsgCompFields */
+#include "nsIMsgSendListener.h"
 #include "nsMsgComposeBE.h"
 
 #ifdef XPIDL_JS_STUBS
@@ -36,9 +37,7 @@ class nsIMsgSend : public nsISupports {
 						            const struct nsMsgAttachmentData  *attachments,
 						            const struct nsMsgAttachedFile    *preloaded_attachments,
 						            void                              *relatedPart /* nsMsgSendPart  */,
-                        nsMsgSendCompletionCallback       completionCallback,
-                        void                              *tagData) = 0;
-
+                        nsIMsgSendListener                **aListenerArray) = 0;
   
   NS_IMETHOD  SendMessageFile(
  						              nsIMsgCompFields                  *fields,
@@ -46,8 +45,16 @@ class nsIMsgSend : public nsISupports {
                           PRBool                            deleteSendFileOnCompletion,
 						              PRBool                            digest_p,
 						              nsMsgDeliverMode                  mode,
-                          nsMsgSendCompletionCallback       completionCallback,
-                          void                              *tagData) = 0;
+                          nsIMsgSendListener                **aListenerArray) = 0;
+
+  NS_IMETHOD  SendWebPage(
+ 						              nsIMsgCompFields                  *fields,
+                          nsIURI                            *url,
+                          nsMsgDeliverMode                  mode,
+                          nsIMsgSendListener                **aListenerArray) = 0;
+
+  NS_IMETHOD  AddListener(nsIMsgSendListener *aListener) = 0;
+  NS_IMETHOD  RemoveListener(nsIMsgSendListener *aListener) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

@@ -46,8 +46,6 @@ void				MSG_MailCompositionAllConnectionsComplete (MSG_Pane* /*pane*/) {return;}
 char        *MimeGuessURLContentName(MWContext *context, const char *url) {return NULL;}
 void				MIME_GetMessageCryptoState(MWContext *,PRBool *,PRBool *,PRBool *,PRBool *) {return;}
 
-XP_Bool			isMacFile(char* filename) {return PR_FALSE;}
-
 HJ10196
 History_entry *		SHIST_GetCurrent(History *) {return NULL;}
 int					MISC_ValidateReturnAddress (MWContext *,const char *) {return nsnull;}

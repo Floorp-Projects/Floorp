@@ -40,8 +40,8 @@ public:
 
     virtual int Write();
 
-    virtual int SetFile(const char* filename, XP_FileType filetype);
-    const char* GetFilename() {return m_filename;}
+    virtual int SetFile(nsFileSpec *filename);
+    const nsFileSpec * GetFileSpec() {return m_filespec;}
 	XP_FileType GetFiletype() {return m_filetype;}
 
     virtual int SetBuffer(const char* buffer);
@@ -87,7 +87,7 @@ protected:
 
 	nsMsgComposeAndSend* m_state;
 	nsMsgSendPart* m_parent;
-    char* m_filename;
+    nsFileSpec *m_filespec;
 	XP_FileType m_filetype;
 	char* m_buffer;
     char* m_type;

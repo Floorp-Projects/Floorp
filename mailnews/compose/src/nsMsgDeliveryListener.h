@@ -21,6 +21,8 @@
 
 #include "nsIUrlListener.h"
 #include "nsFileSpec.h"
+#include "nsMsgSend.h"
+#include "nsMsgSendLater.h"
 
 // For various delivery types
 enum nsMsgDeliveryType
@@ -52,12 +54,16 @@ public:
 	// nsIUrlListener support
 	NS_IMETHOD          OnStartRunningUrl(nsIURI * aUrl);
 	NS_IMETHOD          OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
+  NS_IMETHOD          SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj);
+  NS_IMETHOD          SetMsgSendLaterObject(nsMsgSendLater *obj);
 
 private:
   // Private Information
   void                *mTagData;
   nsFileSpec          *mTempFileSpec;
   nsMsgDeliveryType   mDeliveryType;
+  nsMsgComposeAndSend *mMsgSendObj;
+  nsMsgSendLater      *mMsgSendLaterObj;
   nsMsgDeliveryCompletionCallback mCompletionCallback;
 };
 

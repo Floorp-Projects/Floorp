@@ -1755,12 +1755,12 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   const char *s, *s2;
   char *s3;
-  char *url;
+  const char *url;
 
   if (attachment->m_real_name)
   	return;
 
-  url = attachment->m_url_string;
+  attachment->mURL->GetSpec(&url);
 
   /* Perhaps the MIME parser knows a better name than the URL itself?
 	 This can happen when one attaches a MIME part from one message
@@ -1771,7 +1771,9 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
   MWContext *x = NULL;
   attachment->m_real_name =	MimeGuessURLContentName(x, url);
   if (attachment->m_real_name)
-	return;
+  {
+  	return;
+  }
 
   /* Otherwise, extract a name from the URL. */
 
@@ -1784,7 +1786,9 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
 	  !PL_strncasecmp (url, "snews:", 6) ||
 	  !PL_strncasecmp (url, "IMAP:", 5) ||
 	  !PL_strncasecmp (url, "mailbox:", 8))
-	return;
+  {
+  	return;
+  }
 
   /* Take the part of the file name after the last / or \ */
   s2 = PL_strrchr (s, '/');
@@ -1908,3 +1912,63 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
 		}
 	}
 }
+
+// Utility to create a nsIURI object...
+nsresult 
+nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
+{  
+  if (nsnull == aInstancePtrResult) 
+    return NS_ERROR_NULL_POINTER;
+  
+  nsINetService *inet = nsnull;
+  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(),
+                                             (nsISupports **)&inet);
+  if (rv != NS_OK) 
+    return rv;
+
+  rv = inet->CreateURL(aInstancePtrResult, aSpec, nsnull, nsnull, nsnull);
+  nsServiceManager::ReleaseService(kNetServiceCID, inet);
+  return rv;
+}
+
+PRBool
+nsMsgIsLocalFile(const char *url)
+{
+  if (PL_strncasecmp(url, "file:", 5) == 0) 
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+}
+
+char
+*nsMsgGetLocalFileFromURL(char *url)
+{
+	char * finalPath;
+	NS_ASSERTION(PL_strncasecmp(url, "file://", 7) == 0, "invalid url");
+	finalPath = (char*)PR_Malloc(strlen(url));
+	if (finalPath == NULL)
+		return NULL;
+	strcpy(finalPath, url+6+1);
+	return finalPath;
+}
+
+char * 
+nsMsgPlatformFileToURL (const char *name)
+{
+	char *prefix = "file://";
+	char *retVal = (char *)PR_Malloc(PL_strlen(name) + PL_strlen(prefix) + 1);
+	if (retVal)
+	{
+		PL_strcpy(retVal, "file://");
+		PL_strcat(retVal, name);
+	}
+
+  char *ptr = retVal;
+  while (*ptr)
+  {
+    if (*ptr == '\\') *ptr = '/';
+    ++ptr;
+  }
+	return retVal;
+}
+

@@ -1,3 +1,4 @@
+#include "nsCOMPtr.h" 
 #include "msgCore.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
@@ -22,7 +23,8 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
-#include "nsIWebShellWindow.h"
+#include "nsIAllocator.h"
+#include "nsIGenericFactory.h"
 
 #include "nsINetService.h"
 #include "nsIComponentManager.h"
@@ -40,6 +42,7 @@
 #include "prmem.h"
 
 #include "nsIMimeURLUtils.h"
+#include "nsICharsetConverterManager.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -47,6 +50,7 @@
 #define PREF_DLL   "xppref32.dll"
 #define APPSHELL_DLL "nsappshell.dll"
 #define MIME_DLL "mime.dll"
+#define UNICHAR_DLL  "uconv.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -60,6 +64,9 @@
 #endif
 #endif
 
+// {588595CB-2012-11d3-8EF0-00A024A7D144}
+#define CONV_CID  { 0x1e3f79f1, 0x6b6b, 0x11d2, { 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 } };
+#define CONV_IID  { 0x1e3f79f0, 0x6b6b, 0x11d2, {  0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 } }
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
@@ -82,6 +89,13 @@ static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
+static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
+
+// I18N
+static NS_DEFINE_CID(charsetCID,  CONV_CID);
+NS_DEFINE_IID(kConvMeIID,             CONV_IID);
+
+nsICharsetConverterManager *ccMan = nsnull;
 
 nsresult OnIdentityCheck()
 {
@@ -116,28 +130,89 @@ nsresult OnIdentityCheck()
 	return result;
 }
 
+// Utility to create a nsIURL object...
+nsresult 
+nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
+{  
+  if (nsnull == aInstancePtrResult) 
+    return NS_ERROR_NULL_POINTER;
+  
+  nsINetService *inet = nsnull;
+  nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(),
+                                             (nsISupports **)&inet);
+  if (rv != NS_OK) 
+    return rv;
+
+  rv = inet->CreateURL(aInstancePtrResult, aSpec, nsnull, nsnull, nsnull);
+  nsServiceManager::ReleaseService(kNetServiceCID, inet);
+  return rv;
+}
+
 //nsMsgAttachmentData *
 nsMsgAttachedFile *
 GetAttachments(void)
 {  
-  int attachCount = 3;
+  int attachCount = 2;
+  nsIURI      *url;
   nsMsgAttachedFile *attachments = (nsMsgAttachedFile *) PR_Malloc(sizeof(nsMsgAttachedFile) * attachCount);
 
   if (!attachments)
     return NULL;
   
-  nsCRT::memset(attachments, 0, sizeof(MSG_AttachedFile) * attachCount);
-  attachments[0].orig_url = PL_strdup("file://C:/boxster.jpg");
-  attachments[0].file_name = PL_strdup("C:\\boxster.jpg");
+  nsMsgNewURL(&url, nsString("file://C:/boxster.jpg"));
+
+  nsCRT::memset(attachments, 0, sizeof(nsMsgAttachedFile) * attachCount);
+  attachments[0].orig_url = url;
+  attachments[0].file_spec = new nsFileSpec("C:\\boxster.jpg");
   attachments[0].type = PL_strdup("image/jpeg");
   attachments[0].encoding = PL_strdup(ENCODING_BINARY);
   attachments[0].description = PL_strdup("Boxster Image");
+  return attachments;
+}
 
-  attachments[1].orig_url = PL_strdup("file://C:/boxster.jpg");
-  attachments[1].file_name = PL_strdup("C:\\boxster.jpg");
-  attachments[1].type = PL_strdup("image/jpeg");
-  attachments[1].encoding = PL_strdup(ENCODING_BINARY);
-  attachments[1].description = PL_strdup("Boxster Image");
+nsMsgAttachmentData *
+GetRemoteAttachments()
+{
+  int   attachCount = 4;
+  nsMsgAttachmentData *attachments = (nsMsgAttachmentData *) PR_Malloc(sizeof(nsMsgAttachmentData) * attachCount);
+  nsIURI    *url;
+
+  if (!attachments)
+    return NULL;
+
+  nsCRT::memset(attachments, 0, sizeof(nsMsgAttachmentData) * attachCount);
+
+  nsMsgNewURL(&url, nsString("http://www.netscape.com"));
+  NS_ADDREF(url);
+  attachments[0].url = url; // The URL to attach. This should be 0 to signify "end of list".
+
+  attachments[0].desired_type;	    // The type to which this document should be
+						                        // converted.  Legal values are NULL, TEXT_PLAIN
+						                        // and APPLICATION_POSTSCRIPT (which are macros
+                                    // defined in net.h); other values are ignored.
+
+  attachments[0].real_type;		    // The type of the URL if known, otherwise NULL. For example, if 
+                                  // you were attaching a temp file which was known to contain HTML data, 
+                                  // you would pass in TEXT_HTML as the real_type, to override whatever type 
+                                  // the name of the tmp file might otherwise indicate.
+
+  attachments[0].real_encoding;	  // Goes along with real_type 
+
+  attachments[0].real_name;		    // The original name of this document, which will eventually show up in the 
+                                  // Content-Disposition header. For example, if you had copied a document to a 
+                                  // tmp file, this would be the original, human-readable name of the document.
+
+  attachments[0].description;	    // If you put a string here, it will show up as the Content-Description header.  
+                                  // This can be any explanatory text; it's not a file name.						 
+
+  nsMsgNewURL(&url, nsString("http://www.pennatech.com"));
+  NS_ADDREF(url);
+  attachments[1].url = url; // The URL to attach. This should be 0 to signify "end of list".
+
+  nsMsgNewURL(&url, nsString("file:///C|/boxster.jpg"));
+  NS_ADDREF(url);
+  attachments[2].url = url; // The URL to attach. This should be 0 to signify "end of list".
+
   return attachments;
 }
 
@@ -173,27 +248,89 @@ CallMe(nsresult aExitCode, void *tagData, nsFileSpec *fs)
   return NS_OK;
 }
 
+static nsresult
+SetupRegistry(void)
+{
+  // i18n
+  nsComponentManager::RegisterComponent(charsetCID, NULL, NULL, UNICHAR_DLL,  PR_FALSE, PR_FALSE);
+  nsresult res = nsServiceManager::GetService(charsetCID, kConvMeIID, (nsISupports **)&ccMan);
+  if (NS_FAILED(res)) 
+  {
+    printf("ERROR at GetService() code=0x%x.\n",res);
+    return NS_ERROR_FAILURE;
+  }
+
+  // netlib
+  nsComponentManager::RegisterComponent(kNetServiceCID,     NULL, NULL, NETLIB_DLL,  PR_FALSE, PR_FALSE);
+  
+  // xpcom
+  static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
+  static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
+  nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kEventQueueCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kGenericFactoryCID,    NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kAllocatorCID,         NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+
+  // prefs
+  nsComponentManager::RegisterComponent(kPrefCID,              NULL, NULL, PREF_DLL,  PR_FALSE, PR_FALSE);
+
+  return NS_OK;
+}
+
+nsIMsgIdentity *
+GetHackIdentity()
+{
+nsresult rv;
+
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure on Mail Session Init!\n");
+    return nsnull;
+  }  
+
+  nsCOMPtr<nsIMsgIdentity>        identity = nsnull;
+  nsCOMPtr<nsIMsgAccountManager>  accountManager;
+
+  rv = mailSession->GetAccountManager(getter_AddRefs(accountManager));
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure getting account Manager!\n");
+    return nsnull;
+  }  
+
+  rv = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
+  if (NS_FAILED(rv)) 
+  {
+    printf("Failure getting Identity!\n");
+    return nsnull;
+  }  
+
+  return identity;
+}
+
 /* 
  * This is a test stub for mail composition. This will be enhanced as the
  * development continues for message send functions. 
  */
 int main(int argc, char *argv[]) 
 { 
-  nsIMsgCompose *pMsgCompose; 
   nsIMsgCompFields *pMsgCompFields;
   nsIMsgSend *pMsgSend;
   nsresult rv = NS_OK;
   nsIAppShellService* appShell = nsnull;
 
+
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
-	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_TRUE, PR_TRUE);
 	nsComponentManager::RegisterComponent(kMimeURLUtilsCID,  NULL, NULL, MIME_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kNetSupportDialogCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kAppShellServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
+  SetupRegistry();
   /*
    * Create the Application Shell instance...
    */
@@ -221,16 +358,25 @@ int main(int argc, char *argv[])
     return rv;
   }
 
-
-
 	// make sure prefs get initialized and loaded..
 	// mscott - this is just a bad bad bad hack right now until prefs
 	// has the ability to take nsnull as a parameter. Once that happens,
 	// prefs will do the work of figuring out which prefs file to load...
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || (prefs == nsnull)) {
-        exit(rv);
-    }
+  if (NS_FAILED(rv) || (prefs == nsnull)) {
+    exit(rv);
+  }
+
+  if (NS_FAILED(prefs->StartUp()))
+  {
+    printf("Failed to start up prefs!\n");
+    exit(rv);
+  }
+  if (NS_FAILED(prefs->ReadUserPrefs()))
+  {
+    printf("Failed on reading user prefs!\n");
+    exit(rv);
+  }
 
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
   if (NS_FAILED(rv)) 
@@ -239,6 +385,7 @@ int main(int argc, char *argv[])
     return rv;
   }  
 
+  nsIMsgIdentity *identity = GetHackIdentity();
   OnIdentityCheck();
 
   rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
@@ -249,15 +396,6 @@ int main(int argc, char *argv[])
     pMsgCompFields->Release(); 
   } 
   
-  rv = nsComponentManager::CreateInstance(kMsgComposeCID, NULL, 
-                                           nsIMsgCompose::GetIID(), (void **) &pMsgCompose);
-  if (rv == NS_OK && pMsgCompose)
-  {
-    printf("We succesfully obtained a nsIMsgCompose interface....\n");
-    printf("Releasing the interface now...\n");
-    pMsgCompose->Release(); 
-  } 
-
   rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, kIMsgSendIID, (void **) &pMsgSend); 
   if (rv == NS_OK && pMsgSend) 
   { 
@@ -266,12 +404,13 @@ int main(int argc, char *argv[])
                                              (void **) &pMsgCompFields); 
     if (rv == NS_OK && pMsgCompFields)
     { 
+      PRInt32 rv;
       pMsgCompFields->SetFrom(", rhp@netscape.com, ", NULL);
       pMsgCompFields->SetTo("rhp@netscape.com", NULL);
       pMsgCompFields->SetSubject("[spam] test", NULL);
-      //pMsgCompFields->SetBody("Sample message sent with Mozilla\n\nPlease do not reply, thanks\n\nRich Pizzarro\n", NULL);
+      // pMsgCompFields->SetTheForcePlainText(PR_TRUE, &rv);
       pMsgCompFields->SetBody(email, NULL);
-      // pMsgCompFields->SetAttachments("c:\\boxster.jpg", NULL);
+      pMsgCompFields->SetCharacterSet("us-ascii", NULL);
 
       PRInt32 nBodyLength;
       char    *pBody;
@@ -283,7 +422,11 @@ int main(int argc, char *argv[])
 		    nBodyLength = 0;
 
       nsMsgAttachedFile *ptr = NULL;
-      //nsMsgAttachedFile *ptr = GetAttachments();
+      nsMsgAttachmentData *newPtr = NULL;
+
+      
+      newPtr = GetRemoteAttachments();      
+      //ptr = GetAttachments();
 
       char *tagBuf = (char *)PR_Malloc(256);
       if (tagBuf)
@@ -296,11 +439,10 @@ int main(int argc, char *argv[])
 						    TEXT_HTML, //TEXT_PLAIN,       // const char                        *attachment1_type,
 						    pBody,            // const char                        *attachment1_body,
 						    nBodyLength,      // PRUint32                          attachment1_body_length,
-						    NULL,             // const struct nsMsgAttachmentData   *attachments,
+						    newPtr,           // const struct nsMsgAttachmentData   *attachments,
 						    ptr,              // const struct nsMsgAttachedFile     *preloaded_attachments,
 						    NULL,             // nsMsgSendPart                     *relatedPart,
-						    CallMe,
-						    tagBuf);
+						    nsnull);          // listener array
 
       PR_FREEIF(ptr);
     }    

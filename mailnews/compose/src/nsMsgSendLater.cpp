@@ -38,6 +38,10 @@
 #include "nsIMessage.h"
 #include "nsIRDFResource.h"
 #include "nsISupportsArray.h"
+#include "nsMailHeaders.h"
+#include "nsMsgPrompts.h"
+#include "nsIMsgSendListener.h"
+#include "nsIMsgSendLaterListener.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -74,15 +78,36 @@ nsMsgSendLater::nsMsgSendLater()
   mIdentity = nsnull;  
   mTempIFileSpec = nsnull;
   mTempFileSpec = nsnull;
+  mHackTempIFileSpec = nsnull;
+  mHackTempFileSpec = nsnull;
+  mOutFile = nsnull;
   mEnumerator = nsnull;
   mFirstTime = PR_TRUE;
   mTotalSentSuccessfully = 0;
   mTotalSendCount = 0;
-  mCompleteCallback = nsnull;
   mTagData = nsnull;
   mMessageFolder = nsnull;
   mMessage = nsnull;
+  mLeftoverBuffer = nsnull;
 
+  mSendListener = nsnull;
+  mListenerArray = nsnull;
+
+  m_to = nsnull;
+  m_bcc = nsnull;
+  m_fcc = nsnull;
+  m_newsgroups = nsnull;
+  m_newshost = nsnull;
+  m_headers = nsnull;
+  m_flags = 0;
+  m_headersFP = 0;
+  m_inhead = PR_TRUE;
+  m_headersPosition = 0;
+
+  m_bytesRead = 0;
+  m_position = 0;
+  m_flagsPosition = 0;
+  m_headersSize = 0;
   NS_INIT_REFCNT();
 }
 
@@ -92,6 +117,140 @@ nsMsgSendLater::~nsMsgSendLater()
     NS_RELEASE(mEnumerator);
   if (mTempIFileSpec)
     NS_RELEASE(mTempIFileSpec);
+
+  PR_FREEIF(m_to);
+  PR_FREEIF(m_fcc);
+  PR_FREEIF(m_bcc);
+  PR_FREEIF(m_newsgroups);
+  PR_FREEIF(m_newshost);
+  PR_FREEIF(m_headers);
+  PR_FREEIF(mLeftoverBuffer);
+
+  NS_RELEASE(mSendListener);
+}
+
+// Stream is done...drive on!
+nsresult
+nsMsgSendLater::Close(void) 
+{
+  // First, this shouldn't happen, but if
+  // it does, flush the buffer and move on.
+  if (mLeftoverBuffer)
+  {
+    DeliverQueuedLine(mLeftoverBuffer, PL_strlen(mLeftoverBuffer));
+  }
+
+  if (mOutFile)
+    mOutFile->close();
+
+  // Message is done...send it!
+  return CompleteMailFileSend();
+}
+
+char *
+FindEOL(char *inBuf, char *buf_end)
+{
+  char *buf = inBuf;
+  while (*buf != 0 && *buf != LF)
+    buf++;
+
+  if (*buf == '\0')
+    return buf;
+  else if (buf+1 > buf_end)
+    return nsnull;
+  else
+    return (++buf);
+}
+
+nsresult
+nsMsgSendLater::RebufferLeftovers(char *startBuf, PRUint32 aLen)
+{
+  PR_FREEIF(mLeftoverBuffer);
+  mLeftoverBuffer = (char *)PR_Malloc(aLen + 1);
+  if (!mLeftoverBuffer)
+    return NS_ERROR_FAILURE;
+
+  nsCRT::memcpy(mLeftoverBuffer, startBuf, aLen);
+  mLeftoverBuffer[aLen] = '\0';
+  return NS_OK;
+}
+
+nsresult
+nsMsgSendLater::BuildNewBuffer(const char* aBuf, PRUint32 aCount, PRUint32 *totalBufSize)
+{
+  // Only build a buffer when there are leftovers...
+  if (!mLeftoverBuffer)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 leftoverSize = PL_strlen(mLeftoverBuffer);
+  mLeftoverBuffer = (char *)PR_Realloc(mLeftoverBuffer, aCount + leftoverSize);
+  if (!mLeftoverBuffer)
+    return NS_ERROR_FAILURE;
+
+  nsCRT::memcpy(mLeftoverBuffer + leftoverSize, aBuf, aCount);
+  return NS_OK;
+}
+
+// Got data?
+nsresult
+nsMsgSendLater::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) 
+{
+  // This is a little bit tricky since we have to chop random 
+  // buffers into lines and deliver the lines...plus keeping the
+  // leftovers for next time...some fun, eh?
+  //
+  nsresult    rv = NS_OK;
+  char        *startBuf; 
+  char        *endBuf;
+  char        *lineEnd;
+  char        *newbuf = nsnull;
+  PRUint32     size;
+
+  // First, create a new work buffer that will 
+  if (NS_FAILED(BuildNewBuffer(aBuf, aCount, &size))) // no leftovers...
+  {
+    startBuf = (char *)aBuf;
+    endBuf = (char *)(aBuf + aCount - 1);
+  }
+  else  // yum, leftovers...new buffer created...sitting in mLeftoverBuffer
+  {
+    newbuf = startBuf = mLeftoverBuffer;
+    endBuf = startBuf + size - 1;
+    mLeftoverBuffer = nsnull; // null out this 
+  }
+
+  while (startBuf < endBuf)
+  {
+    lineEnd = FindEOL(startBuf, endBuf);
+    if (!lineEnd)
+    {
+      rv = RebufferLeftovers(startBuf, (endBuf - startBuf) + 1);           
+      break;
+    }
+
+    rv = DeliverQueuedLine(startBuf, (lineEnd - startBuf));
+    if (NS_FAILED(rv))
+      break;
+
+    char c = *lineEnd;
+    *lineEnd = 0;
+    printf("LINE: [%s]\n", startBuf);
+    *lineEnd = c;
+
+    startBuf = lineEnd;
+  }
+
+  if (newbuf)
+    PR_FREEIF(newbuf);
+
+  *aWriteCount = aCount;
+  return rv;
+}
+
+nsresult
+nsMsgSendLater::Flush(void) 
+{
+  return NS_OK;
 }
 
 nsresult
@@ -107,7 +266,9 @@ SaveMessageCompleteCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 #ifdef NS_DEBUG
       printf("nsMsgSendLater: Success on the message save...\n");
 #endif
-      rv = ptr->CompleteMailFileSend();
+      // RICHIE 
+      // Drive the file IO to the stream..which is us :-)
+      rv = ptr->DriveFakeStream(ptr);
 
       // If the send operation failed..try the next one...
       if (NS_FAILED(rv))
@@ -115,20 +276,80 @@ SaveMessageCompleteCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 
       NS_RELEASE(ptr);
     }
+    else
+    {
+      // RICHIE - do we do the messages here?
+      nsMsgDisplayMessageByString("Failed to get message from unsent folder.");
+
+      // Save failed, but we will still keep trying to send the rest...
+      rv = ptr->StartNextMailFileSend();
+      NS_RELEASE(ptr);
+    }
   }
 
   return rv;
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+// This is the listener class for the send operation. We have to create this class 
+// to listen for message send completion and eventually notify the caller
+////////////////////////////////////////////////////////////////////////////////////
+NS_IMPL_ISUPPORTS(SendOperationListener, nsIMsgSendListener::GetIID());
+
+SendOperationListener::SendOperationListener(void) 
+{ 
+  mSendLater = nsnull;
+  NS_INIT_REFCNT(); 
+}
+
+SendOperationListener::~SendOperationListener(void) 
+{
+}
+
 nsresult
-SendMessageCompleteCallback(nsresult aExitCode, void *tagData, nsFileSpec *returnFileSpec)
+SendOperationListener::SetSendLaterObject(nsMsgSendLater *obj)
+{
+  mSendLater = obj;
+  return NS_OK;
+}
+
+nsresult
+SendOperationListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
+{
+#ifdef NS_DEBUG
+  printf("SendOperationListener::OnStartSending()\n");
+#endif
+  return NS_OK;
+}
+  
+nsresult
+SendOperationListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
+{
+#ifdef NS_DEBUG
+  printf("SendOperationListener::OnProgress()\n");
+#endif
+  return NS_OK;
+}
+
+nsresult
+SendOperationListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
+{
+#ifdef NS_DEBUG
+  printf("SendOperationListener::OnStatus()\n");
+#endif
+
+  return NS_OK;
+}
+  
+nsresult
+SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+                                     nsIFileSpec *returnFileSpec)
 {
   nsresult                    rv = NS_OK;
 
-  if (tagData)
+  if (mSendLater)
   {
-    nsMsgSendLater *ptr = (nsMsgSendLater *) tagData;
-    if (NS_SUCCEEDED(aExitCode))
+    if (NS_SUCCEEDED(aStatus))
     {
 #ifdef NS_DEBUG
       printf("nsMsgSendLater: Success on the message send operation!\n");
@@ -144,15 +365,36 @@ SendMessageCompleteCallback(nsresult aExitCode, void *tagData, nsFileSpec *retur
     		prefs->GetBoolPref("mail.really_delete_unsent_messages", &deleteMsgs);
 
       if (deleteMsgs)
-        ptr->DeleteCurrentMessage();
+        mSendLater->DeleteCurrentMessage();
 
-      ++(ptr->mTotalSentSuccessfully);
-      rv = ptr->StartNextMailFileSend();
-      NS_RELEASE(ptr);
+      ++(mSendLater->mTotalSentSuccessfully);
     }
+    else
+    {
+      // RICHIE - do we do the messages here?
+      nsMsgDisplayMessageByString("Sending of message failed.");
+    }
+
+    // Regardless, we will still keep trying to send the rest...
+    rv = mSendLater->StartNextMailFileSend();
+    NS_RELEASE(mSendLater);
   }
 
   return rv;
+}
+
+nsIMsgSendListener **
+CreateListenerArray(nsIMsgSendListener *listener)
+{
+  if (!listener)
+    return nsnull;
+
+  nsIMsgSendListener **tArray = (nsIMsgSendListener **)PR_Malloc(sizeof(nsIMsgSendListener *) * 2);
+  if (!tArray)
+    return nsnull;
+  nsCRT::memset(tArray, 0, sizeof(nsIMsgSendListener *) * 2);
+  tArray[0] = listener;
+  return tArray;
 }
 
 nsresult
@@ -169,6 +411,14 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   mTempIFileSpec->exists(&created);
   if (!created)
     return NS_ERROR_FAILURE;
+
+  //
+  // Now we have to build the "real" list of recipients since we can't rely
+  // on what is in the database. We do this by actually parsing the message
+  // headers and building a new list.
+  rv = BuildHeaders();
+  if (NS_FAILED(rv))
+    return rv;
 
   // Get the recipients...
   if (NS_FAILED(mMessage->GetRecipients(recips)))
@@ -192,21 +442,44 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
     return NS_ERROR_FAILURE;
   }
 
-  char    *recipients = recips.ToNewCString();
-  char    *cc = ccList.ToNewCString();
+  if (m_to)
+  	compFields->SetTo(m_to, NULL);
 
-  compFields->SetTo(recipients, NULL);
-  compFields->SetCc(cc, NULL);
+  if (m_bcc)
+  	compFields->SetBcc(m_bcc, NULL);
+
+  if (m_fcc)
+  	compFields->SetFcc(m_fcc, NULL);
+
+  if (m_newsgroups)
+    compFields->SetNewsgroups(m_newsgroups, NULL);
+
+  // Need to set this before calling SendMessageFile????
+  // m_newshost
+
+  // Create the listener for the send operation...
+  mSendListener = new SendOperationListener();
+  if (!mSendListener)
+  {
+    return NS_ERROR_FAILURE;
+  }
+  
+  // set this object for use on completion...
+  mSendListener->SetSendLaterObject(this);
+  nsIMsgSendListener **tArray = CreateListenerArray(mSendListener);
+  if (!tArray)
+  {
+    NS_RELEASE(mSendListener);
+    return NS_ERROR_FAILURE;
+  }
+
   NS_ADDREF(this);  
-  PR_FREEIF(recipients);
-  PR_FREEIF(cc);
   rv = pMsgSend->SendMessageFile(compFields, // nsIMsgCompFields                  *fields,
                             mTempFileSpec,   // nsFileSpec                        *sendFileSpec,
                             PR_TRUE,         // PRBool                            deleteSendFileOnCompletion,
                             PR_FALSE,        // PRBool                            digest_p,
                             nsMsgDeliverNow, // nsMsgDeliverMode                  mode,
-                            SendMessageCompleteCallback, // nsMsgSendCompletionCallback       completionCallback,
-                            this);           // void                              *tagData);
+                            tArray); 
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
@@ -234,12 +507,11 @@ nsMsgSendLater::StartNextMailFileSend()
 
   if (mEnumerator->IsDone() == NS_OK)
   {
-    // Call any caller based callbacks and then exit cleanly
+    // Call any listeners on this operation and then exit cleanly
 #ifdef NS_DEBUG
-    printf("nsMsgSendLater: Finished all \"Send Later\" operations successfully!\n");
+    printf("nsMsgSendLater: Finished \"Send Later\" operation.\n");
 #endif
-    if (mCompleteCallback)
-      mCompleteCallback(NS_OK, mTotalSendCount, mTotalSentSuccessfully, mTagData);
+    NotifyListenersOnStopSending(NS_OK, nsnull, mTotalSendCount, mTotalSentSuccessfully);
     return NS_OK;
   }
 
@@ -273,12 +545,20 @@ nsMsgSendLater::StartNextMailFileSend()
   printf("Sending message: [%s]\n", tString);
   PR_FREEIF(tString);
 
-  mTempFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp"); 
+  mTempFileSpec = nsMsgCreateTempFileSpec("nsqmail.tmp"); 
 	if (!mTempFileSpec)
     return NS_ERROR_FAILURE;
 
   NS_NewFileSpecWithSpec(*mTempFileSpec, &mTempIFileSpec);
 	if (!mTempIFileSpec)
+    return NS_ERROR_FAILURE;
+
+  mHackTempFileSpec = nsMsgCreateTempFileSpec("hack.tmp"); 
+	if (!mHackTempFileSpec)
+    return NS_ERROR_FAILURE;
+
+  NS_NewFileSpecWithSpec(*mHackTempFileSpec, &mHackTempIFileSpec);
+	if (!mHackTempIFileSpec)
     return NS_ERROR_FAILURE;
 
   nsIMsgMessageService * messageService = nsnull;
@@ -288,6 +568,22 @@ nsMsgSendLater::StartNextMailFileSend()
 
   ++mTotalSendCount;
 
+  // Setup what we need to parse the data stream correctly
+  m_inhead = PR_TRUE;
+  m_headersFP = 0;
+  m_headersPosition = 0;
+  m_bytesRead = 0;
+  m_position = 0;
+  m_flagsPosition = 0;
+  m_headersSize = 0;
+  PR_FREEIF(mLeftoverBuffer);
+
+  //
+  // RICHIE
+  // For now, we save as a file, but in the future, we will get a 
+  // stream of data from netlib and make ourselves the consumer of this
+  // stream
+  //
   NS_ADDREF(this);
   nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(SaveMessageCompleteCallback, 
                                                                   nsFileSaveDelivery, this);
@@ -297,7 +593,8 @@ nsMsgSendLater::StartNextMailFileSend()
     return NS_ERROR_FAILURE;
   }
 
-  rv = messageService->SaveMessageToDisk(aMessageURI, mTempIFileSpec, PR_FALSE, sendListener, nsnull);
+  sendListener->SetMsgSendLaterObject(this);
+  rv = messageService->SaveMessageToDisk(aMessageURI, mHackTempIFileSpec, PR_FALSE, sendListener, nsnull);
   ReleaseMessageServiceFromURI(aMessageURI, messageService);
 
 	if (NS_FAILED(rv))
@@ -353,9 +650,32 @@ nsMsgSendLater::GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity)
   return msgFolder;
 }
 
+//
+// To really finalize this capability, we need to have the ability to get
+// the message from the mail store in a stream for processing. The flow 
+// would be something like this:
+//
+//      foreach (message in Outbox folder)
+//         get stream of Nth message
+//         if (not done with headers)
+//            Tack on to current buffer of headers
+//         when done with headers
+//            BuildHeaders()
+//            Write Headers to Temp File
+//         after done with headers
+//            write rest of message body to temp file
+//
+//          when done with the message
+//            do send operation
+//
+//          when send is complete
+//            Copy from Outbox to FCC folder
+//            Delete from Outbox folder
+//
+//
 nsresult 
 nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
-                                   nsMsgSendUnsentMessagesCallback  msgCallback,
+                                   nsIMsgSendLaterListener          **listenerArray,
                                    void                             *tagData)
 {
  // RICHIE - for now hack it mIdentity = identity;
@@ -366,7 +686,9 @@ nsIMsgIdentity *GetHackIdentity();
   if (!mIdentity)
     return NS_ERROR_FAILURE;
 
-  mCompleteCallback = msgCallback;
+  // Set the listener array 
+  SetListenerArray(listenerArray);
+
   mTagData = tagData;
 
   mMessageFolder = GetUnsentMessagesFolder(mIdentity);
@@ -433,3 +755,515 @@ nsMsgSendLater::DeleteCurrentMessage()
 
   return NS_OK;
 }
+
+//
+// This function parses the headers, and also deletes from the header block
+// any headers which should not be delivered in mail, regardless of whether
+// they were present in the queue file.  Such headers include: BCC, FCC,
+// Sender, X-Mozilla-Status, X-Mozilla-News-Host, and Content-Length.
+// (Content-Length is for the disk file only, and must not be allowed to
+// escape onto the network, since it depends on the local linebreak
+// representation.  Arguably, we could allow Lines to escape, but it's not
+// required by NNTP.)
+//
+#define UNHEX(C) \
+  ((C >= '0' && C <= '9') ? C - '0' : \
+  ((C >= 'A' && C <= 'F') ? C - 'A' + 10 : \
+        ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : 0)))
+nsresult
+nsMsgSendLater::BuildHeaders()
+{
+	char *buf = m_headers;
+	char *buf_end = buf + m_headersFP;
+
+	PR_FREEIF(m_to);
+	PR_FREEIF(m_bcc);
+	PR_FREEIF(m_newsgroups);
+	PR_FREEIF(m_newshost);
+	m_flags = 0;
+
+	while (buf < buf_end)
+	{
+		PRBool prune_p = PR_FALSE;
+		PRBool  do_flags_p = PR_FALSE;
+		PRBool  do_return_receipt_p = PR_FALSE;
+		char *colon = PL_strchr(buf, ':');
+		char *end;
+		char *value = 0;
+		char **header = 0;
+		char *header_start = buf;
+
+		if (! colon)
+			break;
+
+		end = colon;
+		while (end > buf && (*end == ' ' || *end == '\t'))
+			end--;
+
+		switch (buf [0])
+		{
+		case 'B': case 'b':
+		  if (!PL_strncasecmp ("BCC", buf, end - buf))
+			{
+			  header = &m_bcc;
+			  prune_p = TRUE;
+			}
+		  break;
+		case 'C': case 'c':
+		  if (!PL_strncasecmp ("CC", buf, end - buf))
+			header = &m_to;
+		  else if (!PL_strncasecmp (HEADER_CONTENT_LENGTH, buf, end - buf))
+			prune_p = TRUE;
+		  break;
+		case 'F': case 'f':
+		  if (!PL_strncasecmp ("FCC", buf, end - buf))
+			{
+			  header = &m_fcc;
+			  prune_p = TRUE;
+			}
+		  break;
+		case 'L': case 'l':
+		  if (!PL_strncasecmp ("Lines", buf, end - buf))
+			prune_p = TRUE;
+		  break;
+		case 'N': case 'n':
+		  if (!PL_strncasecmp ("Newsgroups", buf, end - buf))
+			header = &m_newsgroups;
+		  break;
+		case 'S': case 's':
+		  if (!PL_strncasecmp ("Sender", buf, end - buf))
+			prune_p = TRUE;
+		  break;
+		case 'T': case 't':
+		  if (!PL_strncasecmp ("To", buf, end - buf))
+			header = &m_to;
+		  break;
+		case 'X': case 'x':
+      {
+        PRInt32 headLen = PL_strlen(HEADER_X_MOZILLA_STATUS2);
+        if (headLen == end - buf &&
+          !PL_strncasecmp(HEADER_X_MOZILLA_STATUS2, buf, end - buf))
+          prune_p = TRUE;
+        else if (headLen == end - buf &&
+          !PL_strncasecmp(HEADER_X_MOZILLA_STATUS, buf, end - buf))
+          prune_p = do_flags_p = TRUE;
+        else if (!PL_strncasecmp(HEADER_X_MOZILLA_DRAFT_INFO, buf, end - buf))
+          prune_p = do_return_receipt_p = TRUE;
+        else if (!PL_strncasecmp(HEADER_X_MOZILLA_NEWSHOST, buf, end - buf))
+        {
+          prune_p = TRUE;
+          header = &m_newshost;
+        }
+        break;
+      }
+		}
+
+	  buf = colon + 1;
+	  while (*buf == ' ' || *buf == '\t')
+		buf++;
+
+	  value = buf;
+
+SEARCH_NEWLINE:
+	  while (*buf != 0 && *buf != CR && *buf != LF)
+		buf++;
+
+	  if (buf+1 >= buf_end)
+		;
+	  // If "\r\n " or "\r\n\t" is next, that doesn't terminate the header.
+	  else if (buf+2 < buf_end &&
+			   (buf[0] == CR  && buf[1] == LF) &&
+			   (buf[2] == ' ' || buf[2] == '\t'))
+		{
+		  buf += 3;
+		  goto SEARCH_NEWLINE;
+		}
+	  // If "\r " or "\r\t" or "\n " or "\n\t" is next, that doesn't terminate
+		// the header either. 
+	  else if ((buf[0] == CR  || buf[0] == LF) &&
+			   (buf[1] == ' ' || buf[1] == '\t'))
+		{
+		  buf += 2;
+		  goto SEARCH_NEWLINE;
+		}
+
+	  if (header)
+		{
+		  int L = buf - value;
+		  if (*header)
+			{
+			  char *newh = (char*) PR_Realloc ((*header),
+											   PL_strlen(*header) + L + 10);
+			  if (!newh) return MK_OUT_OF_MEMORY;
+			  *header = newh;
+			  newh = (*header) + PL_strlen (*header);
+			  *newh++ = ',';
+			  *newh++ = ' ';
+        nsCRT::memcpy(newh, value, L);
+			  newh [L] = 0;
+			}
+		  else
+			{
+			  *header = (char *) PR_Malloc(L+1);
+			  if (!*header) return MK_OUT_OF_MEMORY;
+        nsCRT::memcpy((*header), value, L);
+			  (*header)[L] = 0;
+			}
+		}
+	  else if (do_flags_p)
+		{
+		  int i;
+		  char *s = value;
+		  PR_ASSERT(*s != ' ' && *s != '\t');
+		  m_flags = 0;
+		  for (i=0 ; i<4 ; i++) {
+			m_flags = (m_flags << 4) | UNHEX(*s);
+			s++;
+		  }
+		}
+	  else if (do_return_receipt_p)
+		{
+		  int L = buf - value;
+		  char *draftInfo = (char*) PR_Malloc(L+1);
+		  char *receipt = NULL;
+		  if (!draftInfo) return MK_OUT_OF_MEMORY;
+      nsCRT::memcpy(draftInfo, value, L);
+		  *(draftInfo+L)=0;
+		  receipt = PL_strstr(draftInfo, "receipt=");
+		  if (receipt) 
+			{
+			  char *s = receipt+8;
+			  int requestForReturnReceipt = 0;
+			  sscanf(s, "%d", &requestForReturnReceipt);
+          // RICHIE - return recipients are an issue! We should probably
+          // add these to the CompFields for tracking instead of tying this
+          // stuff to the MessagePane like in the old days.
+			  // if ((requestForReturnReceipt == 2 || requestForReturnReceipt == 3))
+  			//   m_pane->SetRequestForReturnReceipt(TRUE);
+			}
+		  PR_FREEIF(draftInfo);
+		}
+
+	  if (*buf == CR || *buf == LF)
+		{
+		  if (*buf == CR && buf[1] == LF)
+			buf++;
+		  buf++;
+		}
+
+	  if (prune_p)
+		{
+		  char *to = header_start;
+		  char *from = buf;
+		  while (from < buf_end)
+			*to++ = *from++;
+		  buf = header_start;
+		  buf_end = to;
+		  m_headersFP = buf_end - m_headers;
+		}
+	}
+
+  m_headers[m_headersFP++] = CR;
+  m_headers[m_headersFP++] = LF;
+
+  // Now we have parsed out all of the headers we need and we 
+  // can proceed.
+  return NS_OK;
+}
+
+// 
+// This is a temporary method...in the future, we will build this
+// buffer as we receive the data from the mail store.
+//
+nsresult
+nsMsgSendLater::DriveFakeStream(nsIOutputStream *stream)
+{
+  nsIOFileStream  *inFile = nsnull;
+  PRInt32         totSize = 0;
+  char            buf[8192];
+  PRUint32        aWriteCount;
+  
+  inFile = new nsIOFileStream(*mHackTempFileSpec);
+  if (!inFile)
+    return NS_ERROR_FAILURE;
+
+  m_headersFP = 0;
+  inFile->seek(0);
+  while (!inFile->eof())
+  {
+    buf[0] = '\0';
+    totSize = inFile->read(buf, sizeof(buf));
+    if (totSize > 0)
+      stream->Write(buf, totSize, &aWriteCount);
+  }
+
+  inFile->close();  
+  delete inFile;
+  mHackTempFileSpec->Delete(PR_FALSE);
+  return stream->Close();
+}
+
+int
+DoGrowBuffer(PRInt32 desired_size, PRInt32 element_size, PRInt32 quantum,
+    				char **buffer, PRInt32 *size)
+{
+  if (*size <= desired_size)
+  {
+    char *new_buf;
+    PRInt32 increment = desired_size - *size;
+    if (increment < quantum) // always grow by a minimum of N bytes 
+      increment = quantum;
+    
+    new_buf = (*buffer
+                ? (char *) PR_Realloc (*buffer, (*size + increment)
+                * (element_size / sizeof(char)))
+                : (char *) PR_Malloc ((*size + increment)
+                * (element_size / sizeof(char))));
+    if (! new_buf)
+      return MK_OUT_OF_MEMORY;
+    *buffer = new_buf;
+    *size += increment;
+  }
+  return 0;
+}
+
+#define do_grow_headers(desired_size) \
+  (((desired_size) >= m_headersSize) ? \
+   DoGrowBuffer ((desired_size), sizeof(char), 1024, \
+				   &m_headers, &m_headersSize) \
+   : 0)
+
+nsresult
+nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
+{
+  PRInt32 flength = length;
+  
+  m_bytesRead += length;
+  
+  // convert existing newline to CRLF 
+  if (length > 0 &&
+    (line[length-1] == CR ||
+	   (line[length-1] == LF &&
+     (length < 2 || line[length-2] != CR))))
+  {
+    line[length-1] = CR;
+    line[length++] = LF;
+  }
+  
+  if (m_inhead)
+  {
+    if (m_headersPosition == 0)
+    {
+		  // This line is the first line in a header block.
+      // Remember its position.
+      m_headersPosition = m_position;
+      
+      // Also, since we're now processing the headers, clear out the
+      // slots which we will parse data into, so that the values that
+      // were used the last time around do not persist.
+      
+      // We must do that here, and not in the previous clause of this
+      // `else' (the "I've just seen a `From ' line clause") because
+      // that clause happens before delivery of the previous message is
+      // complete, whereas this clause happens after the previous msg
+      // has been delivered.  If we did this up there, then only the
+      // last message in the folder would ever be able to be both
+      // mailed and posted (or fcc'ed.)
+      PR_FREEIF(m_to);
+      PR_FREEIF(m_bcc);
+      PR_FREEIF(m_newsgroups);
+      PR_FREEIF(m_newshost);
+      PR_FREEIF(m_fcc);
+    }
+    
+    if (line[0] == CR || line[0] == LF || line[0] == 0)
+    {
+		  // End of headers.  Now parse them; open the temp file;
+      // and write the appropriate subset of the headers out. 
+      m_inhead = PR_FALSE;
+
+			mOutFile = new nsOutputFileStream(*mTempFileSpec, PR_WRONLY | PR_CREATE_FILE);
+      if ( (!mOutFile) || (!mOutFile->is_open()) )
+        return MK_MIME_ERROR_WRITING_FILE;
+
+      nsresult status = BuildHeaders();
+      if (NS_FAILED(status))
+        return status;
+
+      if (mOutFile->write(m_headers, m_headersFP) != m_headersFP)
+        return MK_MIME_ERROR_WRITING_FILE;
+    }
+    else
+    {
+		  // Otherwise, this line belongs to a header.  So append it to the
+      // header data.
+      
+      if (!PL_strncasecmp (line, HEADER_X_MOZILLA_STATUS, PL_strlen(HEADER_X_MOZILLA_STATUS)))
+        // Notice the position of the flags.
+        m_flagsPosition = m_position;
+      else if (m_headersFP == 0)
+        m_flagsPosition = 0;
+      
+      nsresult status = do_grow_headers (length + m_headersFP + 10);
+      if (NS_FAILED(status)) 
+        return status;
+      
+      nsCRT::memcpy(m_headers + m_headersFP, line, length);
+      m_headersFP += length;
+    }
+  }
+  else
+  {
+    // This is a body line.  Write it to the file.
+    PR_ASSERT(mOutFile);
+    if (mOutFile)
+    {
+      PRInt32 wrote = mOutFile->write(line, length);
+      if (wrote < (PRInt32) length) 
+        return MK_MIME_ERROR_WRITING_FILE;
+    }
+  }
+  
+  m_position += flength;
+  return NS_OK;
+}
+
+nsresult
+nsMsgSendLater::SetListenerArray(nsIMsgSendLaterListener **aListenerArray)
+{
+  nsIMsgSendLaterListener **ptr = aListenerArray;
+  if ( (!aListenerArray) || (!*aListenerArray) )
+    return NS_OK;
+
+  // First, count the listeners passed in...
+  mListenerArrayCount = 0;
+  while (*ptr != nsnull)
+  {
+    mListenerArrayCount++;
+    ++ptr;
+  }
+
+  // now allocate an array to hold the number of entries.
+  mListenerArray = (nsIMsgSendLaterListener **) PR_Malloc(sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount);
+  if (!mListenerArray)
+    return NS_ERROR_FAILURE;
+
+  nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount));
+  
+  // Now assign the listeners...
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+  {
+    mListenerArray[i] = aListenerArray[i];
+    NS_ADDREF(mListenerArray[i]);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsMsgSendLater::AddListener(nsIMsgSendLaterListener *aListener)
+{
+  if ( (mListenerArrayCount > 0) || mListenerArray )
+  {
+    mListenerArrayCount = 1;
+    mListenerArray = (nsIMsgSendLaterListener **) 
+                  PR_Realloc(*mListenerArray, sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount);
+    if (!mListenerArray)
+      return NS_ERROR_FAILURE;
+    else
+      return NS_OK;
+  }
+  else
+  {
+    mListenerArrayCount = 1;
+    mListenerArray = (nsIMsgSendLaterListener **) PR_Malloc(sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount);
+    if (!mListenerArray)
+      return NS_ERROR_FAILURE;
+
+    nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount));
+  
+    mListenerArray[0] = aListener;
+    NS_ADDREF(mListenerArray[0]);
+    return NS_OK;
+  }
+}
+
+nsresult
+nsMsgSendLater::RemoveListener(nsIMsgSendLaterListener *aListener)
+{
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] == aListener)
+    {
+      NS_RELEASE(mListenerArray[i]);
+      mListenerArray[i] = nsnull;
+      return NS_OK;
+    }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
+nsMsgSendLater::DeleteListeners()
+{
+  if ( (mListenerArray) && (*mListenerArray) )
+  {
+    PRInt32 i;
+    for (i=0; i<mListenerArrayCount; i++)
+    {
+      NS_RELEASE(mListenerArray[i]);
+    }
+    
+    PR_FREEIF(mListenerArray);
+  }
+
+  mListenerArrayCount = 0;
+  return NS_OK;
+}
+
+nsresult
+nsMsgSendLater::NotifyListenersOnStartSending(PRUint32 aTotalMessageCount)
+{
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] != nsnull)
+      mListenerArray[i]->OnStartSending(aTotalMessageCount);
+
+  return NS_OK;
+}
+
+nsresult
+nsMsgSendLater::NotifyListenersOnProgress(PRUint32 aCurrentMessage, PRUint32 aTotalMessage)
+{
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] != nsnull)
+      mListenerArray[i]->OnProgress(aCurrentMessage, aTotalMessage);
+
+  return NS_OK;
+}
+
+nsresult
+nsMsgSendLater::NotifyListenersOnStatus(const PRUnichar *aMsg)
+{
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] != nsnull)
+      mListenerArray[i]->OnStatus(aMsg);
+
+  return NS_OK;
+}
+
+nsresult
+nsMsgSendLater::NotifyListenersOnStopSending(nsresult aStatus, const PRUnichar *aMsg, 
+                                             PRUint32 aTotalTried, PRUint32 aSuccessful)
+{
+  PRInt32 i;
+  for (i=0; i<mListenerArrayCount; i++)
+    if (mListenerArray[i] != nsnull)
+      mListenerArray[i]->OnStopSending(aStatus, aMsg, aTotalTried, aSuccessful);
+
+  return NS_OK;
+}
+

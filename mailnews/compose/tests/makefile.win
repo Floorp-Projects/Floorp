@@ -17,6 +17,6 @@
 
 DEPTH=..\..\..
 
-DIRS=compose smtp
+DIRS=compose smtp sendpage
 
 include <$(DEPTH)\config\rules.mak>

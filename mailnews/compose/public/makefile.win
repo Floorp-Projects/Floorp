@@ -23,6 +23,8 @@ XPIDLSRCS =										\
 				.\nsIMsgCompose.idl				\
 				.\nsIMsgCompFields.idl			\
 				.\nsIMsgQuote.idl			\
+				.\nsIMsgSendListener.idl		\
+				.\nsIMsgSendLaterListener.idl		\
 				$(NULL)
 
 ################################################################################
