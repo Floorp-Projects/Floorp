@@ -80,7 +80,7 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
     nsCOMPtr<nsIContent> cont(do_QueryInterface(mMozObject));
     NS_ASSERTION(cont, "Element doesn't implement nsIContent");
     if (!cont || !cont->HasAttr(aNSID, aLocalName)) {
-        aValue.clear();
+        aValue.Truncate();
         return MB_FALSE;
     }
     nsresult rv;

@@ -704,7 +704,7 @@ txMozillaXMLOutput::createResultDocument(const String& aName, PRInt32 aNsID,
     }
 
     // Add a doc-type if requested
-    if (!mOutputFormat.mSystemId.isEmpty()) {
+    if (!mOutputFormat.mSystemId.IsEmpty()) {
         nsCOMPtr<nsIDOMDOMImplementation> implementation;
         rv = aSourceDocument->GetImplementation(getter_AddRefs(implementation));
         NS_ENSURE_SUCCESS(rv, rv);

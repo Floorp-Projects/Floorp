@@ -40,18 +40,9 @@ StringResult::StringResult() {
  * Creates a new StringResult with the value of the given String parameter
  * @param str the String to use for initialization of this StringResult's value
 **/
-StringResult::StringResult(const String& str) {
+StringResult::StringResult(const nsAString& str) {
     //-- copy str
-    this->value = str;
-} //-- StringResult
-
-/**
- * Creates a new StringResult with the value of the given String parameter
- * @param str the String to use for initialization of this StringResult's value
-**/
-StringResult::StringResult(const char* str) {
-    //-- copy str
-    this->value.append(str);
+    this->value.Append(str);
 } //-- StringResult
 
 /*
@@ -68,11 +59,11 @@ short StringResult::getResultType() {
 } //-- getResultType
 
 void StringResult::stringValue(String& str)  {
-    str.append(this->value);
+    str.Append(this->value);
 } //-- stringValue
 
 MBool StringResult::booleanValue() {
-   return !value.isEmpty();
+   return !value.IsEmpty();
 } //-- booleanValue
 
 double StringResult::numberValue() {

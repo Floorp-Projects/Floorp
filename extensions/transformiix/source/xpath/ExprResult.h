@@ -129,8 +129,7 @@ class StringResult : public ExprResult {
 public:
 
     StringResult();
-    StringResult(const String& str);
-    StringResult(const char* str);
+    StringResult(const nsAString& str);
 
     virtual ExprResult* clone();
     virtual short  getResultType();

@@ -55,8 +55,6 @@
 typedef 0 NULL;
 #endif
 
-typedef UNICODE_CHAR DOM_CHAR;
-
 #define kTxNsNodeIndexOffset 0x00000000;
 #define kTxAttrIndexOffset 0x40000000;
 #define kTxChildIndexOffset 0x80000000;

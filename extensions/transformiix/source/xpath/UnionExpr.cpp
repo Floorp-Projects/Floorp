@@ -84,7 +84,7 @@ ExprResult* UnionExpr::evaluate(txIEvalContext* aContext)
             exprResult->getResultType() != ExprResult::NODESET) {
             delete exprResult;
             delete nodes;
-            return new StringResult("error");
+            return new StringResult(NS_LITERAL_STRING("error"));
         }
         nodes->add((NodeSet*)exprResult);
         delete exprResult;
@@ -108,7 +108,7 @@ void UnionExpr::toString(String& dest) {
     while (iter.hasNext()) {
         //-- set operator
         if (count > 0)
-            dest.append(" | ");
+            dest.Append(NS_LITERAL_STRING(" | "));
         ((Expr*)iter.next())->toString(dest);
         ++count;
     }

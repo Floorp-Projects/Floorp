@@ -29,9 +29,9 @@
  *
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *    -- UNICODE fix in method startElement, changed  casting of 
- *       char* to DOM_CHAR* to use the proper String constructor, 
+ *       char* to PRUnichar* to use the proper String constructor, 
  *       see method startElement
- *    -- Removed a number of castings of XML_Char to DOM_CHAR since they
+ *    -- Removed a number of castings of XML_Char to PRUnichar since they
  *       were not working on Windows properly
  *
  */
@@ -91,9 +91,9 @@ Document* XMLParser::getDocumentFromURI(const String& href,
     NS_ENSURE_SUCCESS(rv, 0);
     rv = loader->LoadDocument(channel, loaderUri, getter_AddRefs(theDocument));
     if (NS_FAILED(rv) || !theDocument) {
-        errMsg.append("Document load of ");
-        errMsg.append(href);
-        errMsg.append(" failed.");
+        errMsg.Append(NS_LITERAL_STRING("Document load of "));
+        errMsg.Append(href);
+        errMsg.Append(NS_LITERAL_STRING(" failed."));
         return NULL;
     }
 
@@ -107,7 +107,7 @@ Document* XMLParser::getDocumentFromURI(const String& href,
         delete xslInput;
     }
     if (!resultDoc) {
-        errMsg.append(getErrorString());
+        errMsg.Append(getErrorString());
     }
     return resultDoc;
 #endif
@@ -136,9 +136,9 @@ Document* XMLParser::parse(istream& inputStream, const String& uri)
 
   char buf[bufferSize];
   int done;
-  errorString.clear();
+  errorString.Truncate();
   if ( !inputStream ) {
-    errorString.append("unable to parse xml: invalid or unopen stream encountered.");
+    errorString.Append(NS_LITERAL_STRING("unable to parse xml: invalid or unopen stream encountered."));
     return NULL;
   }
   XML_Parser parser = XML_ParserCreate(NULL);
@@ -159,9 +159,9 @@ Document* XMLParser::parse(istream& inputStream, const String& uri)
 
       if (!XML_Parse(parser, buf, inputStream.gcount(), done))
         {
-          errorString.append(XML_ErrorString(XML_GetErrorCode(parser)));
-          errorString.append(" at line ");
-          errorString.append(XML_GetCurrentLineNumber(parser));
+          errorString.getNSString().AppendWithConversion(XML_ErrorString(XML_GetErrorCode(parser)));
+          errorString.Append(NS_LITERAL_STRING(" at line "));
+          errorString.getNSString().AppendInt(XML_GetCurrentLineNumber(parser));
           done = MB_TRUE;
           delete ps.document;
           ps.document = NULL;
@@ -190,13 +190,13 @@ int startElement(void *userData, const XML_Char *name, const XML_Char **atts)
   Element* newElement;
   XML_Char** theAtts = (XML_Char**)atts;
 
-  String nodeName((UNICODE_CHAR *)name);
+  String nodeName((PRUnichar *)name);
   newElement = ps->document->createElement(nodeName);
 
   while (*theAtts)
     {
-      String attName((UNICODE_CHAR *)*theAtts++);
-      String attValue((UNICODE_CHAR *)*theAtts++);
+      String attName((PRUnichar *)*theAtts++);
+      String attValue((PRUnichar *)*theAtts++);
       newElement->setAttribute(attName, attValue);
     }
 
@@ -217,7 +217,7 @@ int endElement(void *userData, const XML_Char* name)
 void charData(void* userData, const XML_Char* s, int len)
 {
     ParserState* ps = (ParserState*)userData;
-    String data((UNICODE_CHAR*)s, len);
+    String data((PRUnichar*)s, len);
     Node* prevSib = ps->currentNode->getLastChild();
     if (prevSib && prevSib->getNodeType()==Node::TEXT_NODE){
       ((CharacterData*)prevSib)->appendData(data);
@@ -229,7 +229,7 @@ void charData(void* userData, const XML_Char* s, int len)
 void commentHandler(void* userData, const XML_Char* s)
 {
     ParserState* ps = (ParserState*)userData;
-    String data((UNICODE_CHAR*)s);
+    String data((PRUnichar*)s);
     ps->currentNode->appendChild(ps->document->createComment(data));
 } //-- commentHandler
 
@@ -238,8 +238,8 @@ void commentHandler(void* userData, const XML_Char* s)
 **/
 int piHandler(void *userData, const XML_Char *target, const XML_Char *data) {
     ParserState* ps = (ParserState*)userData;
-    String targetStr((UNICODE_CHAR *)target);
-    String dataStr((UNICODE_CHAR *)data);
+    String targetStr((PRUnichar *)target);
+    String dataStr((PRUnichar *)data);
 
     ps->currentNode->appendChild(
         ps->document->createProcessingInstruction(targetStr, dataStr));

@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-String::String(const UNICODE_CHAR* aSource, PRUint32 aLength)
+String::String(const PRUnichar* aSource, PRUint32 aLength)
 {
   if (aLength) {
     mString = Substring(aSource, aSource + aLength);
@@ -45,7 +45,7 @@ txCaseInsensitiveStringComparator::operator()(const char_type* lhs,
                                               const char_type* rhs,
                                               PRUint32 aLength ) const
 {
-  UNICODE_CHAR thisChar, otherChar;
+  PRUnichar thisChar, otherChar;
   PRUint32 compLoop = 0;
   while (compLoop < aLength) {
     thisChar = lhs[compLoop];

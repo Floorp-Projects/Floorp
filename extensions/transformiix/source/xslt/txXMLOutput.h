@@ -183,7 +183,7 @@ public:
 
 protected:
     virtual void closeStartTag(MBool aUseEmptyElementShorthand);
-    void printUTF8Char(DOM_CHAR& ch);
+    void printUTF8Char(PRUnichar& ch);
     void printUTF8Chars(const String& aData);
     void printWithXMLEntities(const String& aData, MBool aAttribute = MB_FALSE);
 
@@ -199,7 +199,7 @@ protected:
     Stack mCDATASections;
 
 private:
-    DOM_CHAR mBuffer[4];
+    PRUnichar mBuffer[4];
 };
 
 #endif

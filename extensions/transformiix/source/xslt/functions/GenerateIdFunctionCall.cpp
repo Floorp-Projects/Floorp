@@ -73,8 +73,7 @@ ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
             return 0;
 
         if (exprResult->getResultType() != ExprResult::NODESET) {
-            String err("Invalid argument passed to generate-id(), "
-                       "expecting NodeSet");
+            String err(NS_LITERAL_STRING("Invalid argument passed to generate-id(), expecting NodeSet"));
             aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
             delete exprResult;
             return new StringResult(err);
@@ -99,7 +98,7 @@ ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
 #else
     PR_snprintf(buf, 21, printfFmt, node);
 #endif
-    return new StringResult(buf);
+    return new StringResult(NS_ConvertASCIItoUCS2(buf));
 }
 
 nsresult GenerateIdFunctionCall::getNameAtom(txAtom** aAtom)

@@ -64,12 +64,12 @@ txTokenizer::txTokenizer(const String& aSource)
 {
     mCurrentPos = 0;
     mSource = aSource;
-    mSize = mSource.length();
+    mSize = mSource.Length();
 
     // Advance to start pos
     while (mCurrentPos < mSize) {
         // If character is not a whitespace, we are at start of first token
-        if (!XMLUtils::isWhitespace(mSource.charAt(mCurrentPos)))
+        if (!XMLUtils::isWhitespace(mSource.CharAt(mCurrentPos)))
             break;
         ++mCurrentPos;
     }
@@ -82,19 +82,19 @@ MBool txTokenizer::hasMoreTokens()
 
 void txTokenizer::nextToken(String& aBuffer)
 {
-    aBuffer.clear();
+    aBuffer.Truncate();
     while (mCurrentPos < mSize) {
-        UNICODE_CHAR ch = mSource.charAt(mCurrentPos++);
+        PRUnichar ch = mSource.CharAt(mCurrentPos++);
         // If character is not a delimiter we append it
         if (XMLUtils::isWhitespace(ch))
             break;
-        aBuffer.append(ch);
+        aBuffer.Append(ch);
     }
 
     // Advance to next start pos
     while (mCurrentPos < mSize) {
         // If character is not a whitespace, we are at start of next token
-        if (!XMLUtils::isWhitespace(mSource.charAt(mCurrentPos)))
+        if (!XMLUtils::isWhitespace(mSource.CharAt(mCurrentPos)))
             break;
         ++mCurrentPos;
     }

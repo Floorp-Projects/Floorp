@@ -98,7 +98,7 @@ NodeListDefinition::ListItem*
 
   while (pSearchItem)
     {
-      if (name.isEqual(pSearchItem->node->getNodeName()))
+      if (name.Equals(pSearchItem->node->getNodeName()))
         return pSearchItem;
 
       pSearchItem = pSearchItem->next;

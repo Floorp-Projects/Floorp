@@ -208,7 +208,7 @@ void NamedMap::put(const String& key, TxObject* obj) {
         //-- advance to next spot
         while ( bktItem ) {
             //-- if current key equals desired key, break
-            if ( bktItem->key.isEqual(key) ) {
+            if ( bktItem->key.Equals(key) ) {
                 break;
             }
             prevItem = bktItem;
@@ -243,7 +243,7 @@ TxObject* NamedMap::remove(const String& key) {
 
     BucketItem* bktItem = elements[idx];
 
-    while ( bktItem && !(key.isEqual(bktItem->key))) {
+    while ( bktItem && !(key.Equals(bktItem->key))) {
         bktItem = bktItem->next;
     }
 
@@ -306,7 +306,7 @@ NamedMap::BucketItem* NamedMap::getBucketItem(const String& key) {
     BucketItem* bktItem = elements[idx];
 
     while ( bktItem ) {
-        if ( bktItem->key.isEqual(key) ) return bktItem;
+        if ( bktItem->key.Equals(key) ) return bktItem;
         bktItem = bktItem->next;
     }
 
@@ -318,11 +318,11 @@ NamedMap::BucketItem* NamedMap::getBucketItem(const String& key) {
 **/
 unsigned long NamedMap::hashKey(const String& key)
 {
-    PRUint32 len = key.length();
+    PRUint32 len = key.Length();
 
     unsigned long hashCode = 0;
     for (PRUint32 i = 0; i < len; ++i) {
-        hashCode += ((PRInt32)key.charAt(i)) << 3;
+        hashCode += ((PRInt32)key.CharAt(i)) << 3;
     }
     return hashCode;
 } //-- hashKey

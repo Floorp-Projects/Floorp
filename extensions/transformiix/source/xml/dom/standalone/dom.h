@@ -46,8 +46,6 @@
 typedef 0 NULL;
 #endif
 
-typedef UNICODE_CHAR DOM_CHAR;
-
 #define kTxNsNodeIndexOffset 0x00000000;
 #define kTxAttrIndexOffset 0x40000000;
 #define kTxChildIndexOffset 0x80000000;
@@ -711,7 +709,7 @@ public:
         while (nameIter.hasNext()) {
             uri = (String*)nameIter.next();
             id++;
-            if (uri->isEqual(aURI))
+            if (uri->Equals(aURI))
                 return id;
         }
         uri = new String(aURI);
@@ -752,21 +750,21 @@ public:
          * xmlns prefix is 1, mapped to http://www.w3.org/2000/xmlns/
          * xml prefix is 2, mapped to http://www.w3.org/XML/1998/namespace
          */
-        String* XMLNSUri = new String("http://www.w3.org/2000/xmlns/");
+        String* XMLNSUri = new String(NS_LITERAL_STRING("http://www.w3.org/2000/xmlns/"));
         if (!XMLNSUri) {
             delete mNamespaces;
             mNamespaces = 0;
             return MB_FALSE;
         }
         mNamespaces->add(XMLNSUri);
-        String* XMLUri = new String("http://www.w3.org/XML/1998/namespace");
+        String* XMLUri = new String(NS_LITERAL_STRING("http://www.w3.org/XML/1998/namespace"));
         if (!XMLUri) {
             delete mNamespaces;
             mNamespaces = 0;
             return MB_FALSE;
         }
         mNamespaces->add(XMLUri);
-        String* XSLTUri = new String("http://www.w3.org/1999/XSL/Transform");
+        String* XSLTUri = new String(NS_LITERAL_STRING("http://www.w3.org/1999/XSL/Transform"));
         if (!XSLTUri) {
             delete mNamespaces;
             mNamespaces = 0;

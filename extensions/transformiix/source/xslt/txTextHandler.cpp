@@ -58,7 +58,7 @@ void txTextHandler::attribute(const String& aName,
 void txTextHandler::characters(const String& aData)
 {
     if (mLevel == 0)
-        mValue.append(aData);
+        mValue.Append(aData);
 }
 
 void txTextHandler::comment(const String& aData)

@@ -33,7 +33,6 @@
 #include "TxObject.h"
 #include <iostream.h>
 #include "nsString.h"
-typedef PRUnichar UNICODE_CHAR;
 
 #ifdef TX_EXE
 class txCaseInsensitiveStringComparator
@@ -64,7 +63,7 @@ public:
      * Constructor, allocates a buffer and copies the supplied string buffer.
      * If aLength is zero it computes the length from the supplied string.
      */
-    explicit String(const UNICODE_CHAR* aSource, PRUint32 aLength = 0);
+    explicit String(const PRUnichar* aSource, PRUint32 aLength = 0);
 #endif
     explicit String(const nsAString& aSource);
     ~String();
@@ -72,56 +71,51 @@ public:
     /*
      * Append aSource to this string.
      */
-    void append(UNICODE_CHAR aSource);
-    void append(const String& aSource);
-    void append(const UNICODE_CHAR* aSource, PRUint32 aLength);
-    void append(const nsAString& aSource);
+    void Append(PRUnichar aSource);
+    void Append(const String& aSource);
+    void Append(const PRUnichar* aSource, PRUint32 aLength);
+    void Append(const nsAString& aSource);
 
     /*
      * Insert aSource at aOffset in this string.
      */
-    void insert(PRUint32 aOffset, UNICODE_CHAR aSource);
+    void insert(PRUint32 aOffset, PRUnichar aSource);
     void insert(PRUint32 aOffset, const String& aSource);
 
     /*
      * Replace characters starting at aOffset with aSource.
      */
-    void replace(PRUint32 aOffset, UNICODE_CHAR aSource);
+    void replace(PRUint32 aOffset, PRUnichar aSource);
     void replace(PRUint32 aOffset, const String& aSource);
 
     /*
      * Delete aCount characters starting at aOffset.
      */
-    void deleteChars(PRUint32 aOffset, PRUint32 aCount);
+    void Cut(PRUint32 aOffset, PRUint32 aCount);
 
     /*
      * Returns the character at aIndex. Caller needs to check the
      * index for out-of-bounds errors.
      */
-    UNICODE_CHAR charAt(PRUint32 aIndex) const;
-
-    /*
-     * Clear the string.
-     */
-    void clear();
+    PRUnichar CharAt(PRUint32 aIndex) const;
 
     /*
      * Returns index of first occurrence of aData.
      */
-    PRInt32 indexOf(UNICODE_CHAR aData,
+    PRInt32 indexOf(PRUnichar aData,
                     PRInt32 aOffset = 0) const;
     PRInt32 indexOf(const String& aData, PRInt32 aOffset = 0) const;
 
     /*
      * Returns index of last occurrence of aData.
      */
-    PRInt32 lastIndexOf(UNICODE_CHAR aData,
+    PRInt32 RFindChar(PRUnichar aData,
                         PRInt32 aOffset = -1) const;
 
     /*
      * Check equality between strings.
      */
-    MBool isEqual(const String& aData) const;
+    MBool Equals(const String& aData) const;
 
     /*
      * Check equality (ignoring case) between strings.
@@ -131,12 +125,12 @@ public:
     /*
      * Check whether the string is empty.
      */
-    MBool isEmpty() const;
+    MBool IsEmpty() const;
 
     /*
      * Return the length of the string.
      */
-    PRUint32 length() const;
+    PRUint32 Length() const;
 
     /*
      * Returns a substring starting at start
@@ -164,7 +158,7 @@ public:
     /*
      * Shorten the string to aLength.
      */
-    void truncate(PRUint32 aLength);
+    void Truncate(PRUint32 aLength = 0);
 
     /*
      * Return a reference to this string's nsString.
@@ -181,19 +175,25 @@ private:
 
     friend ostream& operator << (ostream& aOutput, const String& aSource);
 
+// XXX NOT IMPLEMENTED
+    explicit String(PRUint32 aSize);
+    explicit String(char* aSource);
+    explicit String(char aSource);
+    void Append(char* aSource);
+    void Append(char aSource);
+    MBool Equals(char* aSource);
+    MBool Equals(char aSource);
+// XXX NOT IMPLEMENTED
+
 // XXX DEPRECATED
 public:
-    explicit String(PRUint32 aSize);
-    explicit String(const char* aSource); // XXX Used for literal strings
-    void append(const char* aSource);
-    MBool isEqual(const char* aData) const;
     nsString& getNSString();
     const nsString& getConstNSString() const;
 // XXX DEPRECATED
 };
 
 /*
- * Translate UNICODE_CHARs to Chars and output to the provided stream.
+ * Translate PRUnichars to Chars and output to the provided stream.
  */
 ostream& operator << (ostream& aOutput, const String& aSource);
 

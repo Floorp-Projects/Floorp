@@ -35,7 +35,7 @@
 **/
 StringExpr::StringExpr(const String& value) {
     //-- copy value
-    this->value.append(value);
+    this->value.Append(value);
 } //-- StringExpr
 
 /**
@@ -59,11 +59,11 @@ ExprResult* StringExpr::evaluate(txIEvalContext* aContext)
  * @return the String representation of this Expr.
 **/
 void StringExpr::toString(String& str) {
-    UNICODE_CHAR ch = '\'';
+    PRUnichar ch = '\'';
     if (value.indexOf(ch) != kNotFound)
         ch = '\"';
-    str.append(ch);
-    str.append(value);
-    str.append(ch);
+    str.Append(ch);
+    str.Append(value);
+    str.Append(ch);
 } //-- toString
 

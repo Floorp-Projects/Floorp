@@ -81,7 +81,7 @@ void XMLUtils::getPrefix(const String& src, String& dest)
     NS_ASSERTION(idx > 0, "This QName looks invalid.");
     String tmp;
     src.subString(0, (PRUint32)idx, tmp);
-    dest.append(tmp);
+    dest.Append(tmp);
 }
 
 void XMLUtils::getLocalPart(const String& src, String& dest)
@@ -89,7 +89,7 @@ void XMLUtils::getLocalPart(const String& src, String& dest)
     // Anything after ':' is the local part of the name
     PRInt32 idx = src.indexOf(':');
     if (idx == kNotFound) {
-        dest.append(src);
+        dest.Append(src);
         return;
     }
     // Use a temporary String to prevent any chars in dest
@@ -97,24 +97,24 @@ void XMLUtils::getLocalPart(const String& src, String& dest)
     NS_ASSERTION(idx > 0, "This QName looks invalid.");
     String tmp;
     src.subString((PRUint32)idx + 1, tmp);
-    dest.append(tmp);
+    dest.Append(tmp);
 }
 
 MBool XMLUtils::isValidQName(const String& aName)
 {
-    if (aName.isEmpty()) {
+    if (aName.IsEmpty()) {
         return MB_FALSE;
     }
 
-    if (!isLetter(aName.charAt(0))) {
+    if (!isLetter(aName.CharAt(0))) {
         return MB_FALSE;
     }
 
-    PRUint32 size = aName.length();
+    PRUint32 size = aName.Length();
     PRUint32 i;
     MBool foundColon = MB_FALSE;
     for (i = 1; i < size; ++i) {
-        UNICODE_CHAR character = aName.charAt(i);
+        PRUnichar character = aName.CharAt(i);
         if (character == ':') {
             foundColon = MB_TRUE;
             ++i;
@@ -129,11 +129,11 @@ MBool XMLUtils::isValidQName(const String& aName)
         // a valid QName.
         return !foundColon;
     }
-    if (!isLetter(aName.charAt(i))) {
+    if (!isLetter(aName.CharAt(i))) {
         return MB_FALSE;
     }
     for (++i; i < size; ++i) {
-        if (!isNCNameChar(aName.charAt(i))) {
+        if (!isNCNameChar(aName.CharAt(i))) {
             return MB_FALSE;
         }
     }
@@ -163,18 +163,18 @@ MBool XMLUtils::isWhitespace(const String& aText)
 void XMLUtils::normalizePIValue(String& piValue)
 {
     String origValue(piValue);
-    PRUint32 origLength = origValue.length();
+    PRUint32 origLength = origValue.Length();
     PRUint32 conversionLoop = 0;
-    UNICODE_CHAR prevCh = 0;
-    piValue.clear();
+    PRUnichar prevCh = 0;
+    piValue.Truncate();
 
     while (conversionLoop < origLength) {
-        UNICODE_CHAR ch = origValue.charAt(conversionLoop);
+        PRUnichar ch = origValue.CharAt(conversionLoop);
         switch (ch) {
             case '>':
             {
                 if (prevCh == '?') {
-                    piValue.append(' ');
+                    piValue.Append(PRUnichar(' '));
                 }
                 break;
             }
@@ -183,7 +183,7 @@ void XMLUtils::normalizePIValue(String& piValue)
                 break;
             }
         }
-        piValue.append(ch);
+        piValue.Append(ch);
         prevCh = ch;
         ++conversionLoop;
     }
@@ -226,7 +226,7 @@ MBool XMLUtils::getXMLSpacePreserve(Node* aNode)
 #define TX_MATCH_CHAR(ch, a) if (ch < a) return MB_FALSE; \
     if (ch == a) return MB_TRUE
 
-MBool XMLUtils::isDigit(UNICODE_CHAR ch)
+MBool XMLUtils::isDigit(PRUnichar ch)
 {
     TX_CHAR_RANGE(ch, 0x0030, 0x0039);  /* '0'-'9' */
     TX_CHAR_RANGE(ch, 0x0660, 0x0669);
@@ -246,7 +246,7 @@ MBool XMLUtils::isDigit(UNICODE_CHAR ch)
     return MB_FALSE;
 }
 
-MBool XMLUtils::isLetter(UNICODE_CHAR ch)
+MBool XMLUtils::isLetter(PRUnichar ch)
 {
 /* Letter = BaseChar | Ideographic; and _ */
     TX_CHAR_RANGE(ch, 0x0041, 0x005A);
@@ -458,7 +458,7 @@ MBool XMLUtils::isLetter(UNICODE_CHAR ch)
     return MB_FALSE;
 }
 
-MBool XMLUtils::isNCNameChar(UNICODE_CHAR ch)
+MBool XMLUtils::isNCNameChar(PRUnichar ch)
 {
 /* NCNameChar = Letter | Digit | '.' | '-' | '_'  | 
    CombiningChar | Extender */

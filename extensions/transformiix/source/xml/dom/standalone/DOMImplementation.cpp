@@ -30,8 +30,8 @@
 
 #include "dom.h"
 
-DOMImplementation::DOMImplementation() : implFeature("XML"),
-                                         implVersion("1.0")
+DOMImplementation::DOMImplementation() : implFeature(NS_LITERAL_STRING("XML")),
+                                         implVersion(NS_LITERAL_STRING("1.0"))
 {
 }
 
@@ -48,7 +48,7 @@ MBool DOMImplementation::hasFeature(String feature,
 {
   feature.toUpperCase();
 
-  if (feature.isEqual(implFeature) && version.isEqual(implVersion))
+  if (feature.Equals(implFeature) && version.Equals(implVersion))
     return MB_TRUE;
   else
     return MB_FALSE;

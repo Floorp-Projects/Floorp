@@ -97,18 +97,18 @@ ExprResult* AdditiveExpr::evaluate(txIEvalContext* aContext)
 void AdditiveExpr::toString(String& str) {
 
     if ( leftExpr ) leftExpr->toString(str);
-    else str.append("null");
+    else str.Append(NS_LITERAL_STRING("null"));
 
     switch ( op ) {
         case SUBTRACTION:
-            str.append(" - ");
+            str.Append(NS_LITERAL_STRING(" - "));
             break;
         default:
-            str.append(" + ");
+            str.Append(NS_LITERAL_STRING(" + "));
             break;
     }
     if ( rightExpr ) rightExpr->toString(str);
-    else str.append("null");
+    else str.Append(NS_LITERAL_STRING("null"));
 
 } //-- toString
 

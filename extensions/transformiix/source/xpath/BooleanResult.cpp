@@ -58,8 +58,8 @@ short BooleanResult::getResultType() {
 } //-- getResultType
 
 void BooleanResult::stringValue(String& str)  {
-    if ( value ) str.append("true");
-    else str.append("false");
+    if ( value ) str.Append(NS_LITERAL_STRING("true"));
+    else str.Append(NS_LITERAL_STRING("false"));
 } //-- toString
 
 MBool BooleanResult::booleanValue() {

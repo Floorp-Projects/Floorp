@@ -128,7 +128,7 @@ void ProcessorState::addAttributeSet(Element* aAttributeSet,
     aAttributeSet->getAttr(txXSLTAtoms::name, kNameSpaceID_None, nameStr);
     nsresult rv = name.init(nameStr, aAttributeSet, MB_FALSE);
     if (NS_FAILED(rv)) {
-        String err("missing or malformed name for xsl:attribute-set");
+        String err(NS_LITERAL_STRING("missing or malformed name for xsl:attribute-set"));
         receiveError(err);
         return;
     }
@@ -181,18 +181,18 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
         txExpandedName name;
         rv = name.init(nameStr, aXslTemplate, MB_FALSE);
         if (NS_FAILED(rv)) {
-            String err("missing or malformed template name: '");
-            err.append(nameStr);
-            err.append('\'');
+            String err(NS_LITERAL_STRING("missing or malformed template name: '"));
+            err.Append(nameStr);
+            err.Append(PRUnichar('\''));
             receiveError(err, NS_ERROR_FAILURE);
             return;
         }
 
         rv = aImportFrame->mNamedTemplates.add(name, aXslTemplate);
         if (NS_FAILED(rv)) {
-            String err("Unable to add template named '");
-            err.append(nameStr);
-            err.append("'. Does that name already exist?");
+            String err(NS_LITERAL_STRING("Unable to add template named '"));
+            err.Append(nameStr);
+            err.Append(NS_LITERAL_STRING("'. Does that name already exist?"));
             receiveError(err, NS_ERROR_FAILURE);
             return;
         }
@@ -210,9 +210,9 @@ void ProcessorState::addTemplate(Element* aXslTemplate,
     if (aXslTemplate->getAttr(txXSLTAtoms::mode, kNameSpaceID_None, modeStr)) {
         rv = mode.init(modeStr, aXslTemplate, MB_FALSE);
         if (NS_FAILED(rv)) {
-            String err("malformed template-mode name: '");
-            err.append(modeStr);
-            err.append('\'');
+            String err(NS_LITERAL_STRING("malformed template-mode name: '"));
+            err.Append(modeStr);
+            err.Append(PRUnichar('\''));
             receiveError(err, NS_ERROR_FAILURE);
             return;
         }
@@ -376,10 +376,10 @@ Node* ProcessorState::retrieveDocument(const String& uri, const String& baseUri)
         xmlDoc = xmlParser.getDocumentFromURI(docUrl, xslDocument, errMsg);
 
         if (!xmlDoc) {
-            String err("Couldn't load document '");
-            err.append(docUrl);
-            err.append("': ");
-            err.append(errMsg);
+            String err(NS_LITERAL_STRING("Couldn't load document '"));
+            err.Append(docUrl);
+            err.Append(NS_LITERAL_STRING("': "));
+            err.Append(errMsg);
             receiveError(err, NS_ERROR_XSLT_INVALID_URL);
             return NULL;
         }
@@ -388,7 +388,7 @@ Node* ProcessorState::retrieveDocument(const String& uri, const String& baseUri)
     }
 
     // return element with supplied id if supplied
-    if (!frag.isEmpty())
+    if (!frag.IsEmpty())
         return xmlDoc->getElementById(frag);
 
     return xmlDoc;
@@ -575,8 +575,8 @@ Expr* ProcessorState::getExpr(Element* aElem, ExprAttr aAttr)
     expr = ExprParser::createExpr(attr, &pContext);
 
     if (!expr) {
-        String err("Error in parsing XPath expression: ");
-        err.append(attr);
+        String err(NS_LITERAL_STRING("Error in parsing XPath expression: "));
+        err.Append(attr);
         receiveError(err, NS_ERROR_XPATH_PARSE_FAILED);
     }
     else {
@@ -614,8 +614,8 @@ txPattern* ProcessorState::getPattern(Element* aElem, PatternAttr aAttr)
     pattern = txPatternParser::createPattern(attr, &pContext, this);
 
     if (!pattern) {
-        String err("Error in parsing pattern: ");
-        err.append(attr);
+        String err(NS_LITERAL_STRING("Error in parsing pattern: "));
+        err.Append(attr);
         receiveError(err, NS_ERROR_XPATH_PARSE_FAILED);
     }
     else {
@@ -710,14 +710,14 @@ void ProcessorState::processAttrValueTemplate(const String& aAttValue,
                                               Element* aContext,
                                               String& aResult)
 {
-    aResult.clear();
+    aResult.Truncate();
     txPSParseContext pContext(this, aContext);
     AttributeValueTemplate* avt =
         ExprParser::createAttributeValueTemplate(aAttValue, &pContext);
 
     if (!avt) {
         // fallback, just copy the attribute
-        aResult.append(aAttValue);
+        aResult.Append(aAttValue);
         return;
     }
 
@@ -750,7 +750,7 @@ void ProcessorState::shouldStripSpace(String& aNames, Element* aElement,
         PRInt32 aNSID = kNameSpaceID_None;
         txAtom* prefixAtom = 0;
         XMLUtils::getPrefix(name, prefix);
-        if (!prefix.isEmpty()) {
+        if (!prefix.IsEmpty()) {
             prefixAtom = TX_GET_ATOM(prefix);
             aNSID = aElement->lookupNamespaceID(prefixAtom);
         }
@@ -806,7 +806,7 @@ MBool ProcessorState::addKey(Element* aKeyElem)
         match = txPatternParser::createPattern(attrVal, &pContext, this);
     }
     Expr* use = 0;
-    attrVal.clear();
+    attrVal.Truncate();
     if (aKeyElem->getAttr(txXSLTAtoms::use, kNameSpaceID_None, attrVal)) {
         use = ExprParser::createExpr(attrVal, &pContext);
     }
@@ -851,16 +851,16 @@ MBool ProcessorState::addDecimalFormat(Element* element)
 
     if (element->getAttr(txXSLTAtoms::decimalSeparator,
                          kNameSpaceID_None, attValue)) {
-        if (attValue.length() == 1)
-            format->mDecimalSeparator = attValue.charAt(0);
+        if (attValue.Length() == 1)
+            format->mDecimalSeparator = attValue.CharAt(0);
         else
             success = MB_FALSE;
     }
 
     if (element->getAttr(txXSLTAtoms::groupingSeparator,
                          kNameSpaceID_None, attValue)) {
-        if (attValue.length() == 1)
-            format->mGroupingSeparator = attValue.charAt(0);
+        if (attValue.Length() == 1)
+            format->mGroupingSeparator = attValue.CharAt(0);
         else
             success = MB_FALSE;
     }
@@ -871,8 +871,8 @@ MBool ProcessorState::addDecimalFormat(Element* element)
 
     if (element->getAttr(txXSLTAtoms::minusSign,
                          kNameSpaceID_None, attValue)) {
-        if (attValue.length() == 1)
-            format->mMinusSign = attValue.charAt(0);
+        if (attValue.Length() == 1)
+            format->mMinusSign = attValue.CharAt(0);
         else
             success = MB_FALSE;
     }
@@ -883,40 +883,40 @@ MBool ProcessorState::addDecimalFormat(Element* element)
         
     if (element->getAttr(txXSLTAtoms::percent, kNameSpaceID_None,
                          attValue)) {
-        if (attValue.length() == 1)
-            format->mPercent = attValue.charAt(0);
+        if (attValue.Length() == 1)
+            format->mPercent = attValue.CharAt(0);
         else
             success = MB_FALSE;
     }
 
     if (element->getAttr(txXSLTAtoms::perMille,
                          kNameSpaceID_None, attValue)) {
-        if (attValue.length() == 1)
-            format->mPerMille = attValue.charAt(0);
-        else if (!attValue.isEmpty())
+        if (attValue.Length() == 1)
+            format->mPerMille = attValue.CharAt(0);
+        else if (!attValue.IsEmpty())
             success = MB_FALSE;
     }
 
     if (element->getAttr(txXSLTAtoms::zeroDigit,
                          kNameSpaceID_None, attValue)) {
-        if (attValue.length() == 1)
-            format->mZeroDigit = attValue.charAt(0);
-        else if (!attValue.isEmpty())
+        if (attValue.Length() == 1)
+            format->mZeroDigit = attValue.CharAt(0);
+        else if (!attValue.IsEmpty())
             success = MB_FALSE;
     }
 
     if (element->getAttr(txXSLTAtoms::digit, kNameSpaceID_None,
                          attValue)) {
-        if (attValue.length() == 1)
-            format->mDigit = attValue.charAt(0);
+        if (attValue.Length() == 1)
+            format->mDigit = attValue.CharAt(0);
         else
             success = MB_FALSE;
     }
 
     if (element->getAttr(txXSLTAtoms::patternSeparator,
                          kNameSpaceID_None, attValue)) {
-        if (attValue.length() == 1)
-            format->mPatternSeparator = attValue.charAt(0);
+        if (attValue.Length() == 1)
+            format->mPatternSeparator = attValue.CharAt(0);
         else
             success = MB_FALSE;
     }
@@ -984,7 +984,7 @@ nsresult ProcessorState::getVariable(PRInt32 aNamespace, txAtom* aLName,
     globVar = (GlobalVariableValue*)mGlobalVariableValues.get(varName);
     if (globVar) {
         if (globVar->mFlags == GlobalVariableValue::evaluating) {
-            String err("Cyclic variable-value detected");
+            String err(NS_LITERAL_STRING("Cyclic variable-value detected"));
             receiveError(err, NS_ERROR_FAILURE);
             return NS_ERROR_FAILURE;
         }

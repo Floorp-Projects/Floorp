@@ -72,6 +72,6 @@ void UnaryExpr::toString(String& str)
 {
     if (!expr)
         return;
-    str.append('-');
+    str.Append(PRUnichar('-'));
     expr->toString(str);
 }
