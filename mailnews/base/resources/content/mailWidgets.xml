@@ -666,6 +666,13 @@
           <xul:menuitem value="5" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
+      <xul:menulist flex="1" class="search-value-menulist">
+        <xul:menupopup class="search-value-popup">
+          <xul:menuitem value="0" stringTag="unknown" class="search-value-menuitem"/>
+          <xul:menuitem value="1" stringTag="notjunk" class="search-value-menuitem"/>
+          <xul:menuitem value="2" stringTag="junk" class="search-value-menuitem"/>
+        </xul:menupopup>
+      </xul:menulist>
     </content>
     <implementation>
 
@@ -704,8 +711,13 @@
                 children[5].selectedItem = abs[0];                 
               this.setAttribute("selectedIndex", "5");
             }
-            else
+            else if (val == Components.interfaces.nsMsgSearchAttrib.JunkStatus) {
+              this.setAttribute("selectedIndex", "6");
+            }
+            else {
+              // a normal text field
               this.setAttribute("selectedIndex", "0");
+            }
             return val;
           ]]>
         </setter>
@@ -747,8 +759,12 @@
             if (labelVal.length > 0)
               children[5].selectedItem = labelVal[0];
           }
-          else            
-            children[0].value = val.str;
+          else if (attrib == nsMsgSearchAttrib.JunkStatus) {
+            var junkStatus =
+              children[6].getElementsByAttribute("value", val.junkStatus);
+            if (junkStatus.length > 0) 
+              children[6].selectedItem = junkStatus[0];
+          }
           return val;
           ]]>
         </setter>
@@ -775,6 +791,10 @@
               searchValue.str = children[4].selectedItem.value;
             else if (searchAttribute == nsMsgSearchAttrib.Label)
               searchValue.label = children[5].selectedItem.value;
+            else if (searchAttribute == nsMsgSearchAttrib.JunkStatus)
+               searchValue.junkStatus = children[6].value;
+            else if (searchAttribute == nsMsgSearchAttrib.Size)
+               searchValue.size = children[0].value;
             else
                searchValue.str = children[0].value;
           ]]>
@@ -832,6 +852,17 @@
         // initialize the status picker
         this.initialize(document.getAnonymousNodes(this)[2], bundle);
 
+        // initialize the date picker
+        var datePicker = document.getAnonymousNodes(this)[3];
+        var searchAttribute = this.searchAttribute;
+        var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+        var time;
+        if (searchAttribute == nsMsgSearchAttrib.Date)
+         time = datePicker.value;
+        else
+         time = new Date();
+        datePicker.setAttribute("value",convertDateToString(time));
+
         // initialize the address book picker
         this.initialize(document.getAnonymousNodes(this)[4], bundle);
 
@@ -842,15 +873,8 @@
         for (var index = 0; index < 6; index++)
           children[index].setAttribute('label', labelStrings[index]);
 
-        var datePicker = document.getAnonymousNodes(this)[3];
-        var searchAttribute = this.searchAttribute;
-        var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
-        var time;
-        if (searchAttribute == nsMsgSearchAttrib.Date)
-         time = datePicker.value;
-        else
-         time = new Date();
-        datePicker.setAttribute("value",convertDateToString(time));
+        // initialize the junk status picker
+        this.initialize(document.getAnonymousNodes(this)[6], bundle);
       ]]>
       </constructor>
     </implementation>
