@@ -102,7 +102,7 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 															long						aMenuResult)
 {
 	// get the focused widget
-	nsCOMPtr<nsWindow> focusedWidget;
+	nsWindow* focusedWidget;
 	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
@@ -228,7 +228,7 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 {
 	// get the focused widget
-	nsCOMPtr<nsWindow> focusedWidget;
+	nsWindow* focusedWidget;
 	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
 	if (toolkit)
 		focusedWidget = toolkit->GetFocus();
@@ -356,7 +356,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 		{
 			nsMouseEvent mouseEvent;
 			ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_LEFT_BUTTON_DOWN);
-			nsCOMPtr<nsWindow> widgetHit ( mouseEvent.widget );
+			nsWindow* widgetHit = (nsWindow*)mouseEvent.widget;
 			if (widgetHit)
 			{
 				// set the focus on the widget hit
@@ -388,7 +388,7 @@ PRBool nsMacEventHandler::HandleMouseUpEvent(
 	nsMouseEvent mouseEvent;
 	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_LEFT_BUTTON_UP);
 
-	nsCOMPtr<nsWindow> widgetReleased ( mouseEvent.widget );
+	nsWindow* widgetReleased = (nsWindow*)mouseEvent.widget;
 	if ((widgetReleased != nsnull) && (widgetReleased != mLastWidgetHit))
 		retVal |= widgetReleased->DispatchMouseEvent(mouseEvent);
 
@@ -415,7 +415,7 @@ PRBool nsMacEventHandler::HandleMouseMoveEvent(
 	nsMouseEvent mouseEvent;
 	ConvertOSEventToMouseEvent(aOSEvent, mouseEvent, NS_MOUSE_MOVE);
 
-	nsCOMPtr<nsWindow> widgetPointed ( mouseEvent.widget );
+	nsWindow* widgetPointed = (nsWindow*)mouseEvent.widget;
 	if (widgetPointed != mLastWidgetPointed)
 	{
 		if (mLastWidgetPointed != nsnull)
@@ -485,7 +485,7 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 	::GlobalToLocal(&hitPoint);
 	nsPoint widgetHitPoint(hitPoint.h, hitPoint.v);
 
-	nsCOMPtr<nsWindow> widgetHit ( mTopLevelWidget->FindWidgetHit(hitPoint) );
+	nsWindow* widgetHit = mTopLevelWidget->FindWidgetHit(hitPoint);
 	if (widgetHit)
 	{
 		nsRect bounds;

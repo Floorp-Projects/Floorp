@@ -69,7 +69,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 nsWindow::~nsWindow()
 {
 	//Destroy();
-	// beard:  moved from Destroy down below to fix a ref counting bug.
+
 	mEventCallback = nsnull;	 // prevent the widget from causing additional events
 
 	if (mWindowRegion != nsnull)
@@ -174,10 +174,18 @@ NS_IMETHODIMP nsWindow::Destroy()
 		return NS_OK;
 	mDestroyCalled = PR_TRUE;
 	
+#if 0
 	// if the window being destroyed has the focus, lose it so that there isn't a dangling reference
 	if (mToolkit && ((nsToolkit*)mToolkit)->GetFocus() == this )
+#else
+	//¥¥¥TEMPORARY¥¥¥
+	// We clear the focus when destroying a top level window. If we check whether
+	// this window has the focus (as we should - see above), the focus isn't cleared
+	// and we crash in the following case: open window A, open window B, select A, close A => crash
+	if (mToolkit && (mParent == nsnull))
+#endif
 	{
-		((nsToolkit*)mToolkit)->SetFocus( nil );
+		((nsToolkit*)mToolkit)->SetFocus(nsnull);
 	}
 	
 	nsBaseWidget::OnDestroy();
@@ -782,13 +790,9 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 					{
 						intersection.MoveBy(-childBounds.x, -childBounds.y);
 						
-						// this is an ugly ugly hack, but it appears that we are making
-						// an assumption about the implementation of this nsIWidget to 
-						// be a nsWindow. Don't blame me for this, I'm just the messenger.
-						// (pinkerton).
-						nsWindow* weHopeThisIsAWindow = dynamic_cast<nsWindow*> ( childWidget.get() );
-						if ( weHopeThisIsAWindow )
-							weHopeThisIsAWindow->UpdateWidget(intersection, aContext);
+						nsWindow* window = dynamic_cast<nsWindow*> ( childWidget.get() );
+						if ( window )
+							window->UpdateWidget(intersection, aContext);
 					}
 	          	}
 			}
@@ -839,18 +843,14 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) ) {
 				nsCOMPtr<nsIWidget> childWidget ( child );
 				if ( childWidget ) {	
-					// this is an ugly ugly hack, but it appears that we are making
-					// an assumption about the implementation of this nsIWidget to 
-					// be a nsWindow. Don't blame me for this, I'm just the messenger.
-					// (pinkerton).
-					nsWindow* weHopeThisIsAWindow = dynamic_cast<nsWindow*> ( childWidget.get() );
-					if ( weHopeThisIsAWindow ) {
+					nsWindow* window = dynamic_cast<nsWindow*> ( childWidget.get() );
+					if ( window ) {
 						nsRect bounds;
-						weHopeThisIsAWindow->GetBounds(bounds);
+						window->GetBounds(bounds);
 						bounds.x += aDx;
 						bounds.y += aDy;
-						weHopeThisIsAWindow->SetBounds(bounds);
-						weHopeThisIsAWindow->Scroll(aDx, aDy, &bounds);
+						window->SetBounds(bounds);
+						window->Scroll(aDx, aDy, &bounds);
 					}
 				}
           	}
@@ -1138,13 +1138,9 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 				{
 					nsCOMPtr<nsIWidget> childWidget ( child );
 					if ( childWidget ) {	
-						// this is an ugly ugly hack, but it appears that we are making
-						// an assumption about the implementation of this nsIWidget to 
-						// be a nsWindow. Don't blame me for this, I'm just the messenger.
-						// (pinkerton).
-						nsWindow* weHopeThisIsAWindow = dynamic_cast<nsWindow*> ( childWidget.get() );
-						if ( weHopeThisIsAWindow ) {
-							nsWindow* deeperHit = weHopeThisIsAWindow->FindWidgetHit(aThePoint);
+						nsWindow* window = dynamic_cast<nsWindow*> ( childWidget.get() );
+						if ( window ) {
+							nsWindow* deeperHit = window->FindWidgetHit(aThePoint);
 							if (deeperHit)
 							{
 								widgetHit = deeperHit;
