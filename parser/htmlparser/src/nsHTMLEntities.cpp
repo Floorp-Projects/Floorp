@@ -42,41 +42,85 @@
 
 #include "nsString.h"
 #include "nsCRT.h"
-#include "nsAVLTree.h"
-
-MOZ_DECL_CTOR_COUNTER(EntityNode)
+#include "prtypes.h"
+#include "pldhash.h"
 
 struct EntityNode {
   const char* mStr; // never owns buffer
   PRInt32       mUnicode;
 };
 
-class EntityNameComparator: public nsAVLNodeComparator {
-public:
-  virtual ~EntityNameComparator(void) {}
-  virtual PRInt32 operator()(const void* anItem1, const void* anItem2) {
-    EntityNode* one = (EntityNode*)anItem1;
-    EntityNode* two = (EntityNode*)anItem2;
-    return nsCRT::strcmp(one->mStr, two->mStr);
-  }
+struct EntityNodeEntry : public PLDHashEntryHdr
+{
+  const EntityNode* node;
 }; 
 
-class EntityCodeComparator: public nsAVLNodeComparator {
-public:
-  virtual ~EntityCodeComparator(void) {}
-  virtual PRInt32 operator()(const void* anItem1, const void* anItem2) {
-    EntityNode* one = (EntityNode*)anItem1;
-    EntityNode* two = (EntityNode*)anItem2;
-    return (one->mUnicode - two->mUnicode);
+PR_STATIC_CALLBACK(const void*)
+  getStringKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
+{
+  const EntityNodeEntry* entry = NS_STATIC_CAST(const EntityNodeEntry*, aHdr);
+  return entry->node->mStr;
+}
+
+PR_STATIC_CALLBACK(const void*)
+  getUnicodeKey(PLDHashTable*, PLDHashEntryHdr* aHdr)
+{
+  const EntityNodeEntry* entry = NS_STATIC_CAST(const EntityNodeEntry*, aHdr);
+  return NS_INT32_TO_PTR(entry->node->mUnicode);
+}
+
+PR_STATIC_CALLBACK(PRBool)
+  matchNodeString(PLDHashTable*, const PLDHashEntryHdr* aHdr,
+                  const void* key)
+{
+  const EntityNodeEntry* entry = NS_STATIC_CAST(const EntityNodeEntry*, aHdr);
+  const char* str = NS_STATIC_CAST(const char*, key);
+  return (nsCRT::strcmp(entry->node->mStr, str) == 0);
+}
+
+PR_STATIC_CALLBACK(PRBool)
+  matchNodeUnicode(PLDHashTable*, const PLDHashEntryHdr* aHdr,
+                   const void* key)
+{
+  const EntityNodeEntry* entry = NS_STATIC_CAST(const EntityNodeEntry*, aHdr);
+  const PRInt32 ucode = NS_PTR_TO_INT32(key);
+  return (entry->node->mUnicode == ucode);
+}
+
+PR_STATIC_CALLBACK(PLDHashNumber)
+  hashUnicodeValue(PLDHashTable*, const void* key)
+{
+  // key is actually the unicode value
+  return PLDHashNumber(key);
   }
+
+
+static const PLDHashTableOps EntityToUnicodeOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  getStringKey,
+  PL_DHashStringKey,
+  matchNodeString,
+  PL_DHashMoveEntryStub,
+  PL_DHashClearEntryStub,
+  PL_DHashFinalizeStub,
+  nsnull,
 }; 
 
+static const PLDHashTableOps UnicodeToEntityOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  getUnicodeKey,
+  hashUnicodeValue,
+  matchNodeUnicode,
+  PL_DHashMoveEntryStub,
+  PL_DHashClearEntryStub,
+  PL_DHashFinalizeStub,
+  nsnull,
+};
 
-static PRInt32        gTableRefCount;
-static nsAVLTree*     gEntityToCodeTree;
-static nsAVLTree*     gCodeToEntityTree;
-static EntityNameComparator* gNameComparator;
-static EntityCodeComparator* gCodeComparator;
+PLDHashTable gEntityToUnicode = { 0 };
+PLDHashTable gUnicodeToEntity = { 0 };
 
 #define HTML_ENTITY(_name, _value) { #_name, _value },
 static const EntityNode gEntityArray[] = {
@@ -89,53 +133,58 @@ static const EntityNode gEntityArray[] = {
 void
 nsHTMLEntities::AddRefTable(void) 
 {
-  if (0 == gTableRefCount++) {
-    if (! gNameComparator) {
-      gNameComparator = new EntityNameComparator();
-      gCodeComparator = new EntityCodeComparator();
-      if (gNameComparator && gCodeComparator) {
-        gEntityToCodeTree = new nsAVLTree(*gNameComparator, nsnull);
-        gCodeToEntityTree = new nsAVLTree(*gCodeComparator, nsnull);
-      }
-      if (gEntityToCodeTree && gCodeToEntityTree) {
-        PRInt32 index = -1;
-        while (++index < NS_HTML_ENTITY_COUNT) {
-          gEntityToCodeTree->AddItem(&(gEntityArray[index]));
-          gCodeToEntityTree->AddItem(&(gEntityArray[index]));
-        }
-      }
-    }
+  if (!gEntityToUnicode.ops)
+    PL_DHashTableInit(&gEntityToUnicode, &EntityToUnicodeOps,
+                      nsnull, sizeof(EntityNodeEntry), NS_HTML_ENTITY_COUNT);
+                         
+  if (!gUnicodeToEntity.ops)
+    PL_DHashTableInit(&gUnicodeToEntity, &UnicodeToEntityOps,
+                      nsnull, sizeof(EntityNodeEntry), NS_HTML_ENTITY_COUNT);
+
+  PRUint32 i;
+  for (i=0; i<NS_HTML_ENTITY_COUNT; i++) {
+    EntityNodeEntry* entry;
+
+    // add to Entity->Unicode table
+    entry = NS_STATIC_CAST(EntityNodeEntry*,
+                           PL_DHashTableOperate(&gEntityToUnicode,
+                                                gEntityArray[i].mStr,
+                                                PL_DHASH_ADD));
+    NS_ASSERTION(entry, "Error adding an entry");
+    entry->node = &gEntityArray[i];
+
+    // add to Unicode->Entity table
+    entry = NS_STATIC_CAST(EntityNodeEntry*,
+                           PL_DHashTableOperate(&gUnicodeToEntity,
+                                                NS_INT32_TO_PTR(gEntityArray[i].mUnicode),
+                                                PL_DHASH_ADD));
+    NS_ASSERTION(entry, "Error adding an entry");
+    entry->node = &gEntityArray[i];
+
   }
+    
 }
 
 void
 nsHTMLEntities::ReleaseTable(void) 
 {
-  if (0 == --gTableRefCount) {
-    if (gEntityToCodeTree) {
-      delete gEntityToCodeTree;
-      gEntityToCodeTree = nsnull;
-    }
-    if (gCodeToEntityTree) {
-      delete gCodeToEntityTree;
-      gCodeToEntityTree = nsnull;
-    }
-    if (gNameComparator) {
-      delete gNameComparator;
-      gNameComparator = nsnull;
-    }
-    if (gCodeComparator) {
-      delete gCodeComparator;
-      gCodeComparator = nsnull;
-    }
+  if (gEntityToUnicode.ops) {
+    PL_DHashTableFinish(&gEntityToUnicode);
+    gEntityToUnicode.ops = nsnull;
   }
+  if (gUnicodeToEntity.ops) {
+    PL_DHashTableFinish(&gUnicodeToEntity);
+    gUnicodeToEntity.ops = nsnull;
+  }
+
 }
 
 PRInt32 
 nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 {
-  NS_ASSERTION(gEntityToCodeTree, "no lookup table, needs addref");
-  if (gEntityToCodeTree) {
+  NS_ASSERTION(gEntityToUnicode.ops, "no lookup table, needs addref");
+  if (!gEntityToUnicode.ops)
+    return -1;
 
     //this little piece of code exists because entities may or may not have the terminating ';'.
     //if we see it, strip if off for this test...
@@ -146,15 +195,14 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
       return EntityToUnicode(temp);
     }
       
+  EntityNodeEntry* entry = 
+    NS_STATIC_CAST(EntityNodeEntry*,
+                   PL_DHashTableOperate(&gEntityToUnicode, aEntity.get(), PL_DHASH_LOOKUP));
 
-    EntityNode node = {aEntity.get(), -1};
-    EntityNode*  found = (EntityNode*)gEntityToCodeTree->FindItem(&node);
-    if (found) {
-      NS_ASSERTION(!nsCRT::strcmp(found->mStr, aEntity.get()), "bad tree");
-      return found->mUnicode;
-    }
-  }
+  if (!entry || PL_DHASH_ENTRY_IS_FREE(entry))
   return -1;
+        
+  return entry->node->mUnicode;
 }
 
 
@@ -172,16 +220,15 @@ nsHTMLEntities::EntityToUnicode(const nsAString& aEntity) {
 const char*
 nsHTMLEntities::UnicodeToEntity(PRInt32 aUnicode)
 {
-  NS_ASSERTION(gCodeToEntityTree, "no lookup table, needs addref");
-  if (gCodeToEntityTree) {
-    EntityNode node = { "", -1 };
-    EntityNode*  found = (EntityNode*)gCodeToEntityTree->FindItem(&node);
-    if (found) {
-      NS_ASSERTION(found->mUnicode == aUnicode, "bad tree");
-      return found->mStr;
-    }
-  }
+  NS_ASSERTION(gUnicodeToEntity.ops, "no lookup table, needs addref");
+  EntityNodeEntry* entry =
+    NS_STATIC_CAST(EntityNodeEntry*,
+                   PL_DHashTableOperate(&gUnicodeToEntity, NS_INT32_TO_PTR(aUnicode), PL_DHASH_LOOKUP));
+                   
+  if (!entry || PL_DHASH_ENTRY_IS_FREE(entry))
   return nsnull;
+    
+  return entry->node->mStr;
 }
 
 #ifdef NS_DEBUG
