@@ -29,9 +29,11 @@ include $(DEPTH)/config/autoconf.mk
 DIRS = \
   base \
   html \
-  xul \
   $(null)
 
+ifdef MOZ_XUL
+DIRS +=   xul
+endif
 
 include $(topsrcdir)/config/rules.mk
 

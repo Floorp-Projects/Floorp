@@ -826,6 +826,9 @@ fi
        accessible/Makefile
        accessible/public/Makefile
        accessible/src/Makefile
+       accessible/src/base/Makefile
+       accessible/src/html/Makefile
+       accessible/src/xul/Makefile
        accessible/build/Makefile
 "
 if [ ! "$SYSTEM_JPEG" ]; then
