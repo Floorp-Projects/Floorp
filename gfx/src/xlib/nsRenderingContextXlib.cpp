@@ -589,7 +589,7 @@ void nsRenderingContextXlib::UpdateGC()
    XGCValues     values;
    unsigned long valuesMask = 0;
 
-   Drawable drawable; mSurface->GetDrawable(drawable);
+   Drawable drawable; mOffscreenSurface->GetDrawable(drawable);
  
    if (mGC)
      mGC->Release();
