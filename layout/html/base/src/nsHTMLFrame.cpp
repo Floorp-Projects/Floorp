@@ -17,6 +17,7 @@
  */
 #include "nsHTMLParts.h"
 #include "nsContainerFrame.h"
+#include "nsCSSRendering.h"
 #include "nsIDocument.h"
 #include "nsIReflowCommand.h"
 #include "nsIPresContext.h"
@@ -41,12 +42,10 @@ public:
   RootFrame(nsIContent* aContent);
 
   NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
-
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
-
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
@@ -61,14 +60,14 @@ public:
                     nsReflowMetrics&     aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
-
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect);
-
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
+
+  void ComputeChildMargins(nsMargin& aMargin);
 };
 
 //----------------------------------------------------------------------
@@ -254,6 +253,32 @@ RootContentFrame::RootContentFrame(nsIContent* aContent, nsIFrame* aParent)
   }
 }
 
+// Determine the margins to place around the child frame. Note that
+// this applies to the frame in the page-frame when paginating, not
+// to the page-frame.
+void
+RootContentFrame::ComputeChildMargins(nsMargin& aMargin)
+{
+  const nsStyleSpacing* spacing = nsnull;
+  mFirstChild->GetStyleData(eStyleStruct_Spacing,
+                            (const nsStyleStruct*&) spacing);
+  if (nsnull != spacing) {
+    spacing->CalcMarginFor(mFirstChild, aMargin);
+
+    // We cannot allow negative margins
+    if (aMargin.top < 0) aMargin.top = 0;
+    if (aMargin.right < 0) aMargin.right = 0;
+    if (aMargin.bottom < 0) aMargin.bottom = 0;
+    if (aMargin.left < 0) aMargin.left = 0;
+  }
+  else {
+    aMargin.left = 0;
+    aMargin.right = 0;
+    aMargin.top = 0;
+    aMargin.bottom = 0;
+  }
+}
+
 // XXX Hack
 #define PAGE_SPACING_TWIPS 100
 
@@ -266,6 +291,49 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
   NS_FRAME_TRACE_REFLOW_IN("RootContentFrame::Reflow");
 
   aStatus = NS_FRAME_COMPLETE;
+
+  // XXX Need a copy of this margin and border handling code in nsPageFrame
+
+  // Calculate margin around our child
+  nsMargin margin;
+  ComputeChildMargins(margin);
+
+  // Calculate our border and padding. Note that we use our parents
+  // style context since we have a pseudo-style.
+  nsMargin borderPadding(0, 0, 0, 0);
+  const nsStyleSpacing* spacing;
+  mGeometricParent->GetStyleData(eStyleStruct_Spacing,
+                                 (const nsStyleStruct*&) spacing);
+  if (nsnull != spacing) {
+    spacing->CalcBorderPaddingFor(this, borderPadding);
+  }
+
+  // Calculate the inner area available for reflowing the child
+  nscoord top = margin.top + borderPadding.top;
+  nscoord right = margin.right + borderPadding.right;
+  nscoord bottom = margin.bottom + borderPadding.bottom;
+  nscoord left = margin.left + borderPadding.left;
+  nscoord availWidth = aReflowState.maxSize.width - left - right;
+
+  // If this is not a paginated view then (maybe) subtract out space
+  // reserved for the scroll bar. We check our child and see if it
+  // wants to be scrolled (overflow: auto/scroll) and if so then we
+  // reserve some space for the scrollbar.
+  nscoord sbarWidth = 0;
+  if (!aPresContext.IsPaginated()) {
+    const nsStyleDisplay* display;
+    mFirstChild->GetStyleData(eStyleStruct_Display,
+                              (const nsStyleStruct*&) display);
+    if ((NS_STYLE_OVERFLOW_AUTO == display->mOverflow) ||
+        (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow)) {
+      nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+      float sbWidth, sbHeight;
+      dc->GetScrollBarDimensions(sbWidth, sbHeight);
+      sbarWidth = NSToCoordRound(sbWidth);
+      availWidth -= sbarWidth;
+      NS_RELEASE(dc);
+    }
+  }
 
   // XXX Incremental reflow code doesn't handle page mode at all...
   if (eReflowReason_Incremental == aReflowState.reason) {
@@ -282,7 +350,7 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
     aReflowState.reflowCommand->GetNext(next);
     NS_ASSERTION(next == mFirstChild, "unexpected next reflow command frame");
 
-    nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
+    nsSize maxSize(availWidth, NS_UNCONSTRAINEDSIZE);
     nsReflowState kidReflowState(next, aReflowState, maxSize);
   
     // Dispatch the reflow command to our child frame. Allow it to be as high
@@ -290,15 +358,16 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
     mFirstChild->WillReflow(aPresContext);
     aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
   
-    // Place and size the child. Make sure the child is at least as
-    // tall as our max size (the containing window)
+    // Place and size the child
+    nsRect  rect(left, top, aDesiredSize.width, aDesiredSize.height);
+    mFirstChild->SetRect(rect);
+
+    // Compute our desired size
+    aDesiredSize.width += left + right + sbarWidth;
+    aDesiredSize.height += top + bottom;
     if (aDesiredSize.height < aReflowState.maxSize.height) {
       aDesiredSize.height = aReflowState.maxSize.height;
     }
-  
-    nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-    mFirstChild->SetRect(rect);
-
   } else {
     nsReflowReason  reflowReason = aReflowState.reason;
 
@@ -387,10 +456,9 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
         }
   
       } else {
-        // Allow the frame to be as wide as our max width, and as high
-        // as it wants to be.
-        nsSize        maxSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE);
-        nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize, reflowReason);
+        nsSize maxSize(availWidth, NS_UNCONSTRAINEDSIZE);
+        nsReflowState kidReflowState(mFirstChild, aReflowState, maxSize,
+                                     reflowReason);
   
         // Get the child's desired size. Our child's desired height is our
         // desired size
@@ -398,15 +466,16 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
         aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
         NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
-        // Place and size the child. Make sure the child is at least as
-        // tall as our max size (the containing window)
+        // Place and size the child
+        nsRect  rect(left, top, aDesiredSize.width, aDesiredSize.height);
+        mFirstChild->SetRect(rect);
+
+        // Compute our desired size
+        aDesiredSize.width += left + right + sbarWidth;
+        aDesiredSize.height += top + bottom;
         if (aDesiredSize.height < aReflowState.maxSize.height) {
           aDesiredSize.height = aReflowState.maxSize.height;
         }
-  
-        // Place and size the child
-        nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-        mFirstChild->SetRect(rect);
 
         // Do the necessary repainting
         if (eReflowReason_Initial == reflowReason) {
@@ -449,9 +518,138 @@ RootContentFrame::Paint(nsIPresContext&      aPresContext,
     aRenderingContext.SetColor(NS_RGB(255,255,255));
     aRenderingContext.FillRect(aDirtyRect);
   }
+  else {
+    // Get our parents color from the style sheet; our parent can't
+    // paint (special hackery because it's the root frame), but we
+    // can. If our parent's color is transparent then use our first
+    // child's color instead. This is done so that you override the
+    // HTML background using css but still allow for the BODY
+    // background/bgcolor attribute to affect the HTML element when
+    // css is not involved.
+    PRBool renderAll = PR_TRUE;
+    const nsStyleColor* color = nsnull;
+    mGeometricParent->GetStyleData(eStyleStruct_Color,
+                                   (const nsStyleStruct*&) color);
+    if (nsnull != color) {
+      // If we have no bg color and we have no bg image then...
+      if ((NS_STYLE_BG_COLOR_TRANSPARENT|NS_STYLE_BG_IMAGE_NONE) ==
+          ((NS_STYLE_BG_COLOR_TRANSPARENT|NS_STYLE_BG_IMAGE_NONE) &
+           color->mBackgroundFlags)) {
+        // Use the color from our child to render just the margins and
+        // padding area.
+        mFirstChild->GetStyleData(eStyleStruct_Color,
+                                  (const nsStyleStruct*&) color);
+        if (NS_STYLE_BG_IMAGE_NONE & color->mBackgroundFlags) {
+          renderAll = PR_FALSE;
+        }
+        else {
+          // If our child has an image background then rendering the
+          // various pieces will not work so don't do it.
 
-  nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
-  return NS_OK;
+          // XXX background-position will be computed wrong here!
+          // Change PaintBackground to take in an x,y that provides
+          // the "origin" for the rendering operation.
+        }
+      }
+    }
+
+    const nsStyleSpacing* spacing = nsnull;
+    mGeometricParent->GetStyleData(eStyleStruct_Spacing,
+                                   (const nsStyleStruct*&) spacing);
+    nsMargin borderPadding(0, 0, 0, 0);
+    nsMargin border(0, 0, 0, 0);
+    if (nsnull != spacing) {
+      // Paint border
+      nsRect r(0, 0, mRect.width, mRect.height);
+      spacing->CalcBorderFor(this, border);
+      spacing->CalcBorderPaddingFor(this, borderPadding);
+      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext,
+                                  this, aDirtyRect,
+                                  r, *spacing, 0);
+    }
+    if (nsnull != color) {
+      if (renderAll) {
+        // Paint the entire background
+        nscoord w = mRect.width - border.left - border.right;
+        nscoord h = mRect.height - border.top - border.bottom;
+        nsRect r(border.left, border.top, w, h);
+        if ((w > 0) && (h > 0)) {
+          nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
+                                          this, aDirtyRect, r, *color);
+        }
+      }
+      else {
+        // Paint our padding area and our childs margin area
+        nsMargin padding(0, 0, 0, 0);
+        if (nsnull != spacing) {
+          spacing->CalcPaddingFor(this, padding);
+        }
+
+        nsMargin margin;
+        ComputeChildMargins(margin);
+
+        // If this is not a paginated view then (maybe) subtract out space
+        // reserved for the scroll bar. We check our child and see if it
+        // wants to be scrolled (overflow: auto/scroll) and if so then we
+        // reserve some space for the scrollbar.
+        nscoord sbarWidth = 0;
+        {
+          const nsStyleDisplay* display;
+          mFirstChild->GetStyleData(eStyleStruct_Display,
+                                    (const nsStyleStruct*&) display);
+          if ((NS_STYLE_OVERFLOW_AUTO == display->mOverflow) ||
+              (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow)) {
+            nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+            float sbWidth, sbHeight;
+            dc->GetScrollBarDimensions(sbWidth, sbHeight);
+            sbarWidth = NSToCoordRound(sbWidth);
+            NS_RELEASE(dc);
+          }
+        }
+
+        nsRect childBounds;
+        mFirstChild->GetRect(childBounds);
+
+        // Compute left/right padding+margin width
+        nscoord lpmw = padding.left + margin.left;
+        nscoord rpmw = padding.right + margin.right;
+
+        // Paint the top padding+margin area
+        nsRect r(border.left, border.top,
+                 mRect.width - border.left - border.right,
+                 padding.top + margin.top);
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
+                                        this, aDirtyRect, r, *color);
+
+        // Paint the left padding+margin area
+        r.y = childBounds.y;
+        r.width = padding.left + margin.left;
+        r.height = childBounds.YMost() - padding.top - margin.top;
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
+                                        this, aDirtyRect, r, *color);
+
+        // Paint the right padding+margin area
+        r.x = mRect.width - border.right - padding.right - margin.right -
+          sbarWidth;
+        r.width = padding.right + margin.right + sbarWidth;
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
+                                        this, aDirtyRect, r, *color);
+
+        // Paint the bottom padding+margin+extra area
+        r.x = border.left;
+        r.y = childBounds.YMost();
+        if (r.y < mRect.height) {
+          r.width = mRect.width - border.left - border.right;
+          r.height = mRect.height - r.y;
+          nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
+                                          this, aDirtyRect, r, *color);
+        }
+      }
+    }
+  }
+
+  // Now paint our children
+  return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 }
 
 NS_IMETHODIMP
