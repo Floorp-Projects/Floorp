@@ -30,6 +30,7 @@
  * Date             Modified by     Description of modification
  * 03/23/2000       IBM Corp.      Fixed InvertRect.
  * 05/08/2000       IBM Corp.      Fix for trying to us an already freed mGammaTable.
+ * 05/31/2000       IBM Corp.      Fix background color on PS printers.
  *
  */
 
@@ -212,7 +213,7 @@ nsRenderingContextOS2::QueryInterface( REFNSIID aIID, void **aInstancePtr)
 nsRenderingContextOS2::nsRenderingContextOS2()
 {
    NS_INIT_REFCNT();
- 
+
    mContext = nsnull;
    mPalette = nsnull;
    mSurface = nsnull;
@@ -600,7 +601,7 @@ nsresult nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine 
          else
             lrc = GpiExcludeClipRectangle( mSurface->mPS, &rcl);
          break;
-         
+
       case nsClipCombine_kUnion:
       case nsClipCombine_kReplace:
       {
@@ -613,7 +614,7 @@ nsresult nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine 
             lrc = GpiCombineClipRegion( mSurface->mPS, hrgn, CRGN_OR);
          break;
       }
-      default: 
+      default:
          // compiler informational...
          NS_ASSERTION( 0, "illegal clip combination");
          break;
@@ -671,7 +672,7 @@ nsresult nsRenderingContextOS2::SetClipRegion( const nsIRegion &aRegion, nsClipC
       case nsClipCombine_kReplace:
          cmode = CRGN_COPY;
          break;
-      default: 
+      default:
          // Compiler informational...
          NS_ASSERTION( 0, "illegal clip combination");
          break;
@@ -826,9 +827,40 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
 {
    if( bForce || mColor != mCurrDrawingColor)
    {
+
+      AREABUNDLE areaBundle;
+      LINEBUNDLE lineBundle;
+
+
       long lColor = mPalette->GetGPIColor( mContext, mSurface->mPS, mColor);
-      GpiSetAttrs( mSurface->mPS, PRIM_LINE, LBB_COLOR, 0, &lColor);
-      GpiSetAttrs( mSurface->mPS, PRIM_AREA, ABB_COLOR, 0, &lColor);
+
+      long lLineFlags = LBB_COLOR;
+      long lAreaFlags = ABB_COLOR;
+
+      areaBundle.lColor = lColor;
+      lineBundle.lColor = lColor;
+
+
+      if ( (((nsDeviceContextOS2 *) mContext)->isPrintDC() ) == 1)
+      {
+
+         areaBundle.lBackColor = 0x00FFFFFF;   //OS2TODO
+         lineBundle.lBackColor = 0x00FFFFFF;
+
+         areaBundle.usMixMode     = FM_LEAVEALONE;
+         areaBundle.usBackMixMode = BM_LEAVEALONE;
+
+
+         lLineFlags = lLineFlags | LBB_BACK_COLOR ;
+         lAreaFlags = lAreaFlags | ABB_BACK_COLOR | ABB_MIX_MODE | ABB_BACK_MIX_MODE;
+
+      }
+
+      GpiSetAttrs( mSurface->mPS, PRIM_LINE,lLineFlags, 0, (PBUNDLE)&lineBundle);
+
+      GpiSetAttrs( mSurface->mPS, PRIM_AREA,lAreaFlags, 0, (PBUNDLE)&areaBundle);
+
+
       mCurrDrawingColor = mColor;
    }
 
@@ -841,7 +873,7 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
          case nsLineStyle_kSolid:  ltype = LINETYPE_SOLID; break;
          case nsLineStyle_kDashed: ltype = LINETYPE_SHORTDASH; break;
          case nsLineStyle_kDotted: ltype = LINETYPE_DOT; break;
-         default: 
+         default:
             NS_ASSERTION(0, "Unexpected line style");
             break;
       }
@@ -862,8 +894,21 @@ void nsRenderingContextOS2::SetupFontAndColor( BOOL bForce)
 
    if( bForce || mColor != mCurrTextColor)
    {
-      long lColor = mPalette->GetGPIColor( mContext, mSurface->mPS, mColor);
-      GpiSetAttrs( mSurface->mPS, PRIM_CHAR, CBB_COLOR, 0, &lColor);
+
+      CHARBUNDLE cBundle;
+
+      cBundle.lColor = mPalette->GetGPIColor( mContext, mSurface->mPS, mColor);
+
+      cBundle.usMixMode = FM_OVERPAINT;
+
+      cBundle.usBackMixMode = BM_LEAVEALONE;
+
+      GpiSetAttrs( mSurface->mPS,
+                   PRIM_CHAR,
+                   CBB_COLOR | CBB_MIX_MODE | CBB_BACK_MIX_MODE,
+                   0,
+                   &cBundle);
+
       mCurrTextColor = mColor;
    }
 }
@@ -909,25 +954,25 @@ void nsRenderingContextOS2::PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoi
       // Xform coords
       POINTL  aptls[ 20];
       PPOINTL pts = aptls;
-   
+
       if( aNumPoints > 20)
          pts = new POINTL [ aNumPoints];
 
       PPOINTL pp = pts;
       const nsPoint *np = &aPoints[0];
-   
+
       for( PRInt32 i = 0; i < aNumPoints; i++, pp++, np++)
       {
          pp->x = np->x;
          pp->y = np->y;
          mTMatrix.TransformCoord( (int*)&pp->x, (int*)&pp->y);
       }
-   
+
       // go to os2
       NS2PM( pts, aNumPoints);
-   
+
       SetupDrawingColor();
-   
+
       // We draw closed pgons using polyline to avoid filling it.  This works
       // because the API to this class specifies that the last point must
       // be the same as the first one...
@@ -978,13 +1023,13 @@ nsresult nsRenderingContextOS2::FillRect( nscoord aX, nscoord aY, nscoord aWidth
    return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsRenderingContextOS2 :: InvertRect(const nsRect& aRect)
 {
   return InvertRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsRenderingContextOS2 :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
 //  mTMatrix.TransformCoord(&aX, &aY, &aWidth, &aHeight);
@@ -1293,7 +1338,7 @@ nsresult nsRenderingContextOS2::DrawImage( nsIImage *aImage, nscoord aX, nscoord
 }
 
 nsresult nsRenderingContextOS2::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY,
-                                           nscoord aWidth, nscoord aHeight) 
+                                           nscoord aWidth, nscoord aHeight)
 {
    nsRect  tr;
 
@@ -1330,7 +1375,7 @@ nsresult nsRenderingContextOS2::DrawImage( nsIImage *aImage, const nsRect& aRect
  *  See documentation in nsIRenderingContext.h
  *	@update 3/16/00 dwc
  */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsRenderingContextOS2::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                                                     nscoord aWidth,nscoord aHeight)
 {
@@ -1428,7 +1473,7 @@ LONG GpiCombineClipRegion( HPS hps, HRGN hrgnCombine, LONG lOp)
    if( GpiQueryClipRegion( hps))
    {
       GpiSetClipRegion( hps, 0, &hrgnClip);
-   
+
       if( hrgnClip && hrgnClip != HRGN_ERROR)
       {
          /* There is a clip region; combine it with new one if necessary */
@@ -1455,7 +1500,7 @@ HRGN GpiCopyClipRegion( HPS hps)
       HRGN hrgnClip = 0;
       GpiSetClipRegion( hps, 0, &hrgnClip);
       if( hrgnClip != HRGN_ERROR)
-      {                                                                         
+      {
          hrgn = GpiCreateRegion( hps, 0, 0);
          GpiCombineRegion( hps, hrgn, hrgnClip, 0, CRGN_COPY);
          /* put the current clip back */

@@ -15,7 +15,7 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * This Original Code has been modified by IBM Corporation.
  * Modifications made by IBM described herein are
  * Copyright (c) International Business Machines
@@ -26,6 +26,7 @@
  *
  * Date           Modified by     Description of modification
  * 03/28/2000   IBM Corp.        Changes to make os2.h file similar to windows.h file
+ * 05/31/2000   IBM Corp.        Print changes.
  */
 
 #ifndef _nsDeviceContextOS2_h
@@ -36,7 +37,7 @@
 
 // Device contexts are either for windows or for printers.
 // If the former, the DeviceContextImpl member mWidget is set.
-// If the latter, the mDC member here is set.
+// If the latter, the mPrintDC member here is set.
 // (yes, I know: eventually want to split these guys up)
 
 class nsIPaletteOS2;
@@ -107,6 +108,7 @@ public:
    // Needed by the fontmetrics - can't rely on having a widget.
    HPS  GetRepresentativePS() const;
    void ReleaseRepresentativePS( HPS aPS);
+   BOOL isPrintDC();
 
  protected:
    virtual ~nsDeviceContextOS2();
@@ -125,7 +127,7 @@ public:
    nsRect                mClientRect;
    PRBool                mClientRectConverted;
    nsIDeviceContextSpec *mSpec;
-   HDC                   mDC;         // PrintDC.  Owned by libprint.
+   HDC                   mPrintDC;         // PrintDC.  Owned by libprint.
    HPS                   mPS;         // PrintPS.
 
    enum nsPrintState
