@@ -1194,7 +1194,7 @@ if(cur_entry->status < 0)												\
                        "<li>Format In: %s<br>\n"
                        "Encoding In: %s<br>\n"
                        "Present Type: %d<br>\n"
-                       "%s<br><ol>%d Converters:\n",
+                       "%s<br><ol>%d Converter%s:\n",
                        (csp->format_in != (char *)0) ? csp->format_in : "(null)",
                        (csp->encoding_in != (char *)0) ? csp->encoding_in : "(null)",
                        csp->format_out,

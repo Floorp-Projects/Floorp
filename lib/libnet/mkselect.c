@@ -59,8 +59,8 @@ net_add_select(SelectType stType, PRFileDesc *prFD)
 	unsigned int index = fd_set_size;
 	unsigned int count;
 
-#define CONNECT_FLAGS PR_POLL_READ | PR_POLL_EXCEPT | PR_POLL_WRITE
-#define READ_FLAGS    PR_POLL_READ | PR_POLL_EXCEPT
+#define CONNECT_FLAGS (PR_POLL_READ | PR_POLL_EXCEPT | PR_POLL_WRITE)
+#define READ_FLAGS    (PR_POLL_READ | PR_POLL_EXCEPT)
 
     /*  Go through the list, make sure that there is not already an entry for fd. */
 	for(count=0; count < fd_set_size; count++)
