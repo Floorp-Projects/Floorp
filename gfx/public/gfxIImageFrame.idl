@@ -30,7 +30,6 @@
 #include "nsRect.h"
 %}
 
-interface gfxIImageFrame;
 native nsRectRef(nsRect &);
 
 /**
