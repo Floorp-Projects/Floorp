@@ -39,7 +39,7 @@ HAVE_BRANCH=0
 !endif
 
 !if "$(MOZ_DATE)" != ""
-CVS_BRANCH=-D "$(MOZ_DATE)"
+CVS_BRANCH=-D "\"$(MOZ_DATE)\""
 HAVE_DATE=1
 !else
 HAVE_DATE=0
@@ -80,12 +80,6 @@ CVSCO_LIBPREF = $(CVSCO) -A
 CVSCO_PLUGIN = $(CVSCO) -A
 !endif
 
-CVSCO_XPCOM = $(CVSCO)
-CVSCO_IMGLIB = $(CVSCO)
-CVSCO_RAPTOR = $(CVSCO)
-CVSCO_LIZARD = $(CVSCO)
-CVSCO_NETWORK = $(CVSCO)
-
 ## The master target
 ############################################################
 
@@ -104,9 +98,16 @@ pull_layout:
 	cd $(MOZ_SRC)\.
 	$(CVSCO) RaptorWin
 
+####################################
+# CVS checkout Seamonkey
+# (cvsco.pl checks for conflicts during the checkout. 
+#  cvsco.pl also logs the checkout to a file, cvslog.txt.)
 pull_seamonkey:
 	cd $(MOZ_SRC)\.
-	$(CVSCO) SeaMonkeyAll
+!if !exist($(MOZ_SRC)\mozilla\config\cvsco.pl)
+	$(CVSCO) mozilla\config\cvsco.pl
+!endif
+	@perl mozilla\config\cvsco.pl $(CVSCO) SeaMonkeyAll
 
 ############################################################
 
