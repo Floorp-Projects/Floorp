@@ -310,18 +310,6 @@ struct NS_COM nsStr {
   */
   static void StrInsert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
 
-#ifndef NEW_STRING_APIS
-  static void Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount) {
-    StrAppend(aDest, aSource, anOffset, aCount);
-  }
-  static void Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount) {
-    StrAssign(aDest, aSource, anOffset, aCount);
-  }
-  static void Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount) {
-    StrInsert(aDest, aDestOffset, aSource, aSrcOffset, aCount);
-  }
-#endif
-
  /**
   * This method deletes chars from the given str. 
   * The given allocator may choose to resize the str as well.
@@ -402,7 +390,7 @@ struct NS_COM nsStr {
    * @param   aIgnorecase tells us whether to use a case-sensitive comparison
    * @return  -1,0,1 depending on <,==,>
    */
-  static PRInt32  Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase);
+  static PRInt32  StrCompare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase);
 
  /**
   * These methods scan the given string for 1 or more chars in a given direction
@@ -430,6 +418,22 @@ struct NS_COM nsStr {
    * Returns a hash code for the string for use in a PLHashTable.
    */
   static PRUint32 HashCode(const nsStr& aDest);
+
+
+#ifndef NEW_STRING_APIS
+  static void Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount) {
+    StrAppend(aDest, aSource, anOffset, aCount);
+  }
+  static void Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount) {
+    StrAssign(aDest, aSource, anOffset, aCount);
+  }
+  static void Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount) {
+    StrInsert(aDest, aDestOffset, aSource, aSrcOffset, aCount);
+  }
+  static PRInt32  Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
+    return StrCompare(aDest, aSource, aCount, aIgnoreCase);
+  }
+#endif
 
 #ifdef NS_STR_STATS
   /**

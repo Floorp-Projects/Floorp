@@ -655,11 +655,52 @@ public:
    * @param   aCount tells us how many chars to compare
    * @return  -1,0,1
    */
-  virtual PRInt32 Compare(const nsStr &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  PRInt32 CompareWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  PRInt32 CompareWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+
+  PRBool  EqualsWithConversion(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  PRBool  EqualsWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  PRBool  EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+
+  PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
+  PRBool  EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aCount=-1) const;
 
 #ifndef NEW_STRING_APIS
+  virtual PRInt32 Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+    return CompareWithConversion(aString,aIgnoreCase,aCount);
+  }
+  virtual PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+    return CompareWithConversion(aString,aIgnoreCase,aCount);
+  }
+
+  virtual PRInt32 Compare(const nsStr &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+
+  /**
+   * Compare this to given string; note that we compare full strings here.
+   * The optional length argument just lets us know how long the given string is.
+   * If you provide a length, it is compared to length of this string as an
+   * optimization.
+   * 
+   * @param  aString -- the string to compare to this
+   * @param  aCount  -- number of chars in given string you want to compare
+   * @return TRUE if equal
+   */
+  PRBool  Equals(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+    return EqualsWithConversion(aString,aIgnoreCase,aCount);
+  }
+
+  PRBool  Equals(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+    return EqualsWithConversion(aString,aIgnoreCase,aCount);
+  }
+
+  PRBool  Equals(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const {
+    return EqualsWithConversion(aString,aIgnoreCase,aCount);
+  }
+
+  PRBool  Equals(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+
+  PRBool  EqualsIgnoreCase(const nsStr& aString) const;
+
   /**
    * These methods compare a given string type to this one
    * @param aString is the string to be compared to this
@@ -714,25 +755,6 @@ public:
   PRBool  operator>=(const char* aString) const;
   PRBool  operator>=(const PRUnichar* aString) const;
 #endif // !defined(NEW_STRING_APIS)
-
-  /**
-   * Compare this to given string; note that we compare full strings here.
-   * The optional length argument just lets us know how long the given string is.
-   * If you provide a length, it is compared to length of this string as an
-   * optimization.
-   * 
-   * @param  aString -- the string to compare to this
-   * @param  aCount  -- number of chars in given string you want to compare
-   * @return TRUE if equal
-   */
-  PRBool  Equals(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  PRBool  Equals(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  PRBool  Equals(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  PRBool  Equals(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-
-  PRBool  EqualsIgnoreCase(const nsStr& aString) const;
-  PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
-  PRBool  EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aCount=-1) const;
 
   void    DebugDump(void) const;
 

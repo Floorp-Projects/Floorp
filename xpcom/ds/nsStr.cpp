@@ -592,7 +592,7 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
  * @param   aIgnorecase tells us whether to search with case sensitivity
  * @return  aDest<aSource=-1;aDest==aSource==0;aDest>aSource=1
  */
-PRInt32 nsStr::Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
+PRInt32 nsStr::StrCompare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
   PRInt32 result=0;
 
   if(aCount) {
@@ -850,7 +850,7 @@ nsStr_Compare(const void *v1, const void *v2)
 {
   nsStr* str1 = (nsStr*)v1;
   nsStr* str2 = (nsStr*)v2;
-  return nsStr::Compare(*str1, *str2, -1, PR_FALSE) == 0;
+  return nsStr::StrCompare(*str1, *str2, -1, PR_FALSE) == 0;
 }
 
 nsStringInfo*
