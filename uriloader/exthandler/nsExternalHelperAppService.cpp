@@ -45,7 +45,8 @@
 #include "nsHelperAppRDF.h"
 #include "nsIMIMEInfo.h"
 #include "nsDirectoryServiceDefs.h"
-
+#include "nsIRefreshURI.h"
+#include "nsIDocumentLoader.h"
 #include "nsIHelperAppLauncherDialog.h"
 
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
@@ -614,6 +615,19 @@ nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIChannel * aChannel)
   uriLoader->GetLoadGroupForContext(NS_STATIC_CAST(nsIURIContentListener*, this), getter_AddRefs(newLoadGroup));
   aChannel->GetLoadGroup(getter_AddRefs(oldLoadGroup));
 
+  // we need to store off the original (pre redirect!) channel that initiated the load. We do
+  // this so later on, we can pass any refresh urls associated with the original channel back to the 
+  // window context which started the whole process. More comments about that are listed below....
+  // HACK ALERT: it's pretty bogus that we are getting the document channel from the doc loader. 
+  // ideally we should be able to just use mChannel (the channel we are extracting content from) or
+  // the default load channel associated with the original load group. Unfortunately because
+  // a redirect may have occurred, the doc loader is the only one with a ptr to the original channel 
+  // which is what we really want....
+  nsCOMPtr<nsIDocumentLoader> origContextLoader;
+  uriLoader->GetDocumentLoaderForContext(mWindowContext, getter_AddRefs(origContextLoader));
+  if (origContextLoader)
+    origContextLoader->GetDocumentChannel(getter_AddRefs(mOriginalChannel));
+
   if(oldLoadGroup)
      oldLoadGroup->RemoveChannel(aChannel, nsnull, NS_OK, nsnull);
       
@@ -621,7 +635,6 @@ nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIChannel * aChannel)
    nsCOMPtr<nsIInterfaceRequestor> req (do_QueryInterface(mLoadCookie));
    aChannel->SetNotificationCallbacks(req);
    rv = newLoadGroup->AddChannel(aChannel, nsnull);
-
    return rv;
 }
 
@@ -872,6 +885,12 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
     if (NS_FAILED(rv)) 
       return Cancel();
     mFinalFileDestination = do_QueryInterface(fileToUse);
+
+    // now that the user has chosen the file location to save to, it's okay to fire the refresh tag
+    // if there is one. We don't want to do this before the save as dialog goes away because this dialog
+    // is modal and we do bad things if you try to load a web page in the underlying window while a modal
+    // dialog is still up. 
+    ProcessAnyRefreshTags();
   }
   else
    fileToUse = do_QueryInterface(aNewFileLocation);
@@ -915,6 +934,9 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   if (mCanceled)
     return NS_OK;
 
+  // user has chosen to launch using an application, fire any refresh tags now...
+  ProcessAnyRefreshTags(); 
+
   mReceivedDispostionInfo = PR_TRUE; 
   if (mMimeInfo && aApplication)
     mMimeInfo->SetPreferredApplicationHandler(aApplication);
@@ -957,6 +979,23 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
   return NS_OK;
 }
 
+void nsExternalAppHandler::ProcessAnyRefreshTags()
+{
+   // one last thing, try to see if the original window context supports a refresh interface...
+   // Sometimes, when you download content that requires an external handler, there is
+   // a refresh header associated with the download. This refresh header points to a page
+   // the content provider wants the user to see after they download the content. How do we
+   // pass this refresh information back to the caller? For now, try to get the refresh URI 
+   // interface. If the window context where the request originated came from supports this
+   // then we can force it to process the refresh information (if there is any) from this channel.
+   if (mWindowContext && mOriginalChannel)
+   {
+     nsCOMPtr<nsIRefreshURI> refreshHandler (do_GetInterface(mWindowContext));
+     if (refreshHandler)
+        refreshHandler->SetupRefreshURI(mOriginalChannel);
+     mOriginalChannel = nsnull;
+   }
+}
 
 // nsIURIContentListener implementation
 NS_IMETHODIMP nsExternalAppHandler::OnStartURIOpen(nsIURI* aURI, const char* aWindowTarget, PRBool* aAbortOpen)

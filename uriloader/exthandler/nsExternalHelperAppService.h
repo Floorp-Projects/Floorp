@@ -185,9 +185,15 @@ protected:
   // if the passed in channel is an nsIHTTPChannel, we'll attempt to extract a suggested file name
   // from the content disposition header...
   void ExtractSuggestedFileNameFromChannel(nsIChannel * aChannel);
+  // after we're done prompting the user for any information, if the original channel had a refresh url associated
+  // with it (which might point to a "thank you for downloading" kind of page, then process that....It is safe
+  // to invoke this method multiple times. We'll clear mOriginalChannel after it's called and this ensures we won't
+  // call it again....
+  void ProcessAnyRefreshTags();
   
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
+  nsCOMPtr<nsIChannel> mOriginalChannel; // in the case of a redirect, this will be the pre-redirect channel.
 };
 
 #endif // nsExternalHelperAppService_h__
