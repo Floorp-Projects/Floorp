@@ -399,33 +399,6 @@ function AppendStringToTreelist(tree, string)
   return null;
 }
 
-function ReplaceStringInTreeList(tree, index, string)
-{
-  if (tree)
-  {
-    var treecols = tree.firstChild;
-    if (!treecols)
-    {
-      dump("Bad XUL: Must have <treecolgroup> as first child\n");
-      return;
-    }
-    var treechildren = treecols.nextSibling;
-    if (!treechildren)
-      return;
-
-    // Each list item is a <treeitem><treerow><treecell> under <treechildren> node
-    var childNodes = treechildren.childNodes;
-    if (!childNodes || index >= childNodes.length)
-      return;
-
-    var row = childNodes.item(index).firstChild;
-    if (row && row.firstChild)
-    {
-      row.firstChild.setAttribute("label", string);
-    }
-  }
-}
-
 function ClearTreelist(tree)
 {
   if (tree)

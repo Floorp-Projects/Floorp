@@ -130,7 +130,7 @@
           return this.selectedItems.length > 0 ? this.selectedItems[0] : null;
         ]]></getter>
         <setter><![CDATA[
-          this.selectItem(item);
+          this.selectItem(val);
         ]]></setter>
       </property>
 
@@ -384,10 +384,13 @@
       <method name="clearSelection">
         <body>
         <![CDATA[
-          for (var i = this.selectedItems.length-1; i >= 0; --i)
-            this.selectedItems[i].selected = false;
+          if (this.selectedItems)
+          {
+            for (var i = this.selectedItems.length-1; i >= 0; --i)
+              this.selectedItems[i].selected = false;
           
-          this.selectedItems.splice(0, this.selectedItems.length);
+            this.selectedItems.splice(0, this.selectedItems.length);
+          }
           this._selectionStart = null;
           this._fireOnSelect();
         ]]>
@@ -768,6 +771,8 @@
                 
       <property name="value" onget="return this.getAttribute('value');"
                              onset="this.setAttribute('value', val); return val;"/>
+      <property name="label" onget="return this.getAttribute('label');"
+                             onset="this.setAttribute('label', val); return val;"/>
       
       <property name="selected" onget="return this.getAttribute('selected') == 'true';">
         <setter><![CDATA[
