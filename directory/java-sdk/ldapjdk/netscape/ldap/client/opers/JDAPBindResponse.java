@@ -25,7 +25,6 @@ import java.util.*;
 import netscape.ldap.client.*;
 import netscape.ldap.ber.stream.*;
 import java.io.*;
-import java.net.*;
 
 /**
  * This class implements the bind response. This object
@@ -47,7 +46,7 @@ public class JDAPBindResponse extends JDAPResult implements JDAPProtocolOp {
     /**
      * Internal variables
      */
-    protected String m_credentials = null;
+    protected byte[] m_credentials = null;
 
     /**
      * Constructs bind response.
@@ -57,19 +56,19 @@ public class JDAPBindResponse extends JDAPResult implements JDAPProtocolOp {
         super(((BERTag)element).getValue());
         /* LDAPv3 Sasl Credentials support */
         BERSequence s = (BERSequence)((BERTag)element).getValue();
-        if (s.size() <= 3)
+        if (s.size() <= 3) {
             return;
+        }
         BERElement e = s.elementAt(3);
         if (e.getType() == BERElement.TAG) {
 			BERElement el = ((BERTag)e).getValue();
-			if (el instanceof BERSequence)
-			{
+			if (el instanceof BERSequence) {
 				el = ((BERSequence)el).elementAt(0);
 			}
             BEROctetString str = (BEROctetString)el;
             try{
-                m_credentials = new String(str.getValue(),"UTF8");
-            } catch(Throwable x)
+                m_credentials = str.getValue();
+            } catch(Exception ex)
             {}
         }
     }
@@ -78,7 +77,7 @@ public class JDAPBindResponse extends JDAPResult implements JDAPProtocolOp {
      * Retrieves Sasl Credentials. LDAPv3 support.
      * @return credentials
      */
-    public String getCredentials() {
+    public byte[] getCredentials() {
         return m_credentials;
     }
 
