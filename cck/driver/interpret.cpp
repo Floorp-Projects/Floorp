@@ -26,6 +26,7 @@ extern HBITMAP hBitmap;
 extern CString Path;
 extern char iniFilePath[MAX_SIZE];
 extern BOOL Validate;
+extern CString numericMessage;
 extern BOOL inNext;
 extern BOOL inPrev;
 extern NODE* WizardTree;
@@ -625,7 +626,8 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						}
 						if (pCount > 0)
 						{
-							AfxMessageBox("You Must Enter Only Numeric Values", MB_OK);
+							numericMessage = replaceVars(parms,NULL);
+							AfxMessageBox(numericMessage,MB_OK);
 							Validate = FALSE;
 						}
 						else
