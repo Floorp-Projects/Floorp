@@ -120,12 +120,11 @@ static char gShowCRC;
 #define NS_DTD_FLAG_HAD_BODY               0x00000010
 #define NS_DTD_FLAG_HAD_FRAMESET           0x00000020
 #define NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE  0x00000040
-#define NS_DTD_FLAG_REQUESTED_HEAD         0x00000100
-#define NS_DTD_FLAG_SCRIPT_ENABLED         0x00000200
-#define NS_DTD_FLAG_FRAMES_ENABLED         0x00000400
-#define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000800 // NOFRAMES, NOSCRIPT 
-#define NS_DTD_FLAG_MISPLACED_CONTENT      0x00001000
-#define NS_DTD_FLAG_STOP_PARSING           0x00002000
+#define NS_DTD_FLAG_SCRIPT_ENABLED         0x00000100
+#define NS_DTD_FLAG_FRAMES_ENABLED         0x00000200
+#define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000400 // NOFRAMES, NOSCRIPT 
+#define NS_DTD_FLAG_MISPLACED_CONTENT      0x00000800
+#define NS_DTD_FLAG_STOP_PARSING           0x00001000
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -1727,7 +1726,6 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
             if(mFlags & (NS_DTD_FLAG_HAD_BODY | NS_DTD_FLAG_HAD_FRAMESET)) {
               result=HandleOmittedTag(aToken,theChildTag,theParent,theNode);
               isTokenHandled=PR_TRUE;
-              mFlags |= NS_DTD_FLAG_REQUESTED_HEAD;
             }
             break;
           default:
@@ -1764,8 +1762,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_script:
-          theHeadIsParent=(!(mFlags & NS_DTD_FLAG_HAS_OPEN_BODY) ||
-                            (mFlags & NS_DTD_FLAG_REQUESTED_HEAD));
+          theHeadIsParent = !(mFlags & NS_DTD_FLAG_HAS_OPEN_BODY);
           mFlags |= NS_DTD_FLAG_HAS_OPEN_SCRIPT;
 
         default:
@@ -1967,7 +1964,6 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_head:
       StripWSFollowingTag(theChildTag,mTokenizer, mTokenAllocator, mLineNumber);
-      mFlags &= ~NS_DTD_FLAG_REQUESTED_HEAD;
       result = CloseContainer(eHTMLTag_head, theChildTag, PR_FALSE);
       break;
 
