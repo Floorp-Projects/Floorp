@@ -1718,9 +1718,9 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // NRA Dump stopwatch stop info here
 #ifdef RAPTOR_PERF_METRICS
   NS_STOP_STOPWATCH(mWatch)
-  printf("Content creation time: ");
+  RAPTOR_STOPWATCH_TRACE(("Content creation time: "));
   mWatch.Print();
-  printf("\n");
+  RAPTOR_STOPWATCH_TRACE(("\n"));
 #endif
 
   if (nsnull == mTitle) {

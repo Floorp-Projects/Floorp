@@ -940,9 +940,9 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
           // mTotalTime.Print();
           // printf("\n");
 
-          printf("Parse Time: ");
+          RAPTOR_STOPWATCH_TRACE(("Parse Time: "));
           mParseTime.Print();
-          printf("\n");
+          RAPTOR_STOPWATCH_TRACE(("\n"));
 
 #endif
           return mInternalState;

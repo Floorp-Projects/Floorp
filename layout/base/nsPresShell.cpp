@@ -1185,22 +1185,22 @@ PresShell::EndLoad(nsIDocument *aDocument)
 #ifdef RAPTOR_PERF_METRICS
   // Dump reflow, style resolution and frame construction times here.
   NS_STOP_STOPWATCH(mReflowWatch)
-  printf("Reflow time: ");
+  RAPTOR_STOPWATCH_TRACE(("Reflow time: "));
   mReflowWatch.Print();
-  printf("\n");
+  RAPTOR_STOPWATCH_TRACE(("\n"));
   NS_STOP_STOPWATCH(mFrameCreationWatch)
-  printf("Frame construction plus style resolution time: ");
+  RAPTOR_STOPWATCH_TRACE(("Frame construction plus style resolution time: "));
   mFrameCreationWatch.Print();
-  printf("\n");
+  RAPTOR_STOPWATCH_TRACE(("\n"));
 
   // Print style resolution stopwatch maintained by style set
   nsresult rv = NS_OK;
   nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(mStyleSet, &rv);
   if (NS_SUCCEEDED(rv) && watch) {
     watch->StopTimer(NS_TIMER_STYLE_RESOLUTION);
-    printf("Style resolution time: ");
+    RAPTOR_STOPWATCH_TRACE(("Style resolution time: "));
     watch->PrintTimer(NS_TIMER_STYLE_RESOLUTION);
-    printf("\n");
+    RAPTOR_STOPWATCH_TRACE(("\n"));
   }
 #endif
   return NS_OK;
