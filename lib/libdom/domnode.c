@@ -174,7 +174,7 @@ void
 DOM_DestroyNode(JSContext *cx, DOM_Node *node)
 {
     XP_ASSERT(!node->mocha_object);
-    if (node->ops->destroyNode)
+    if (node->ops && node->ops->destroyNode)
         node->ops->destroyNode(cx, node);
     if (node->name && node->type != NODE_TYPE_TEXT)
         JS_free(cx, node->name);

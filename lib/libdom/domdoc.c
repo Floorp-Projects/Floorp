@@ -203,9 +203,6 @@ static JSPropertySpec document_props[] = {
     {0}
 };
 
-/* XXXXXXXX should be decoder->document_prototype! */
-static JSObject *documentProto;
-
 static JSBool
 Document(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *vp)
 {

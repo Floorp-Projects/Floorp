@@ -58,6 +58,7 @@ typedef enum DOM_ExceptionCode {
 /* struct typedefs */
 typedef struct DOM_Node				DOM_Node;
 typedef struct DOM_NodeOps			DOM_NodeOps;
+typedef struct DOM_AttributeEntry   DOM_AttributeEntry;
 typedef struct DOM_Element			DOM_Element;
 typedef struct DOM_ElementOps		DOM_ElementOps;
 typedef struct DOM_AttributeList	DOM_AttributeList;
@@ -164,14 +165,6 @@ DOM_GetAttributeStub(JSContext *cx, DOM_Element *element, const char *name,
 intN
 DOM_GetNumAttrsStub(JSContext *cx, DOM_Element *element, JSBool *cacheable);
 
-/* convenience structure for stable attribute storage */
-
-struct DOM_AttributeList {
-    char **		attr_names;
-    char **		attr_values;
-    int32		nattrs;
-};
-
 JSBool
 DOM_SignalException(JSContext *cx, DOM_ExceptionCode exception);
 
@@ -210,15 +203,29 @@ DOM_PushNode(DOM_Node *node, DOM_Node *parent);
 DOM_Node *
 DOM_PopNode(DOM_Node *node);
 
-struct DOM_Element {
-    DOM_Node 		node;
-    DOM_ElementOps	*ops;
-    const char		*tagName;
-    JSObject		*attr_objs;      /* XXX needed? */
+struct DOM_AttributeEntry {
+    char *name;
+    char *value;
+    uint32 data;
+    JSBool dirty;
 };
 
+struct DOM_Element {
+    DOM_Node 		   node;
+    DOM_ElementOps	   *ops;
+    const char		   *tagName;
+    uintN			   nattrs;
+    DOM_AttributeEntry *attrs;
+};
+
+/*
+ * Create a new Element node.
+ * Caller hands off name and tagName; they're freed at destruction time.
+ */
+
 DOM_Element *
-DOM_NewElement(void);
+DOM_NewElement(const char *tagName, DOM_ElementOps *eleops, char *name,
+               DOM_NodeOps *nodeops, uintN nattrs);
 
 JSObject *
 DOM_NewElementObject(JSContext *cx, DOM_Element *element);

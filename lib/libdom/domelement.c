@@ -22,16 +22,6 @@
 
 #include "dom_priv.h"
 
-DOM_Element *
-DOM_NewElement(void)
-{
-    DOM_Element *element = XP_NEW_ZAP(DOM_Element);
-    if (!element)
-        return NULL;
-    element->node.type = NODE_TYPE_ELEMENT;
-    return element;
-}    
-
 static JSPropertySpec element_props[] = {
     {"tagName",		DOM_ELEMENT_TAGNAME,	JSPROP_READONLY,	0, 0},
     {0}
@@ -191,6 +181,26 @@ static JSFunctionSpec element_methods[] = {
     {"removeAttributeNode", element_removeAttributeNode, 1},
     {0}
 };
+
+DOM_Element *
+DOM_NewElement(const char *tagName, DOM_ElementOps *eleops, char *name,
+               DOM_NodeOps *nodeops, uintN nattrs)
+{
+    DOM_Node *node;
+    DOM_Element *element = XP_NEW_ZAP(DOM_Element);
+    if (!element)
+        return NULL;
+    
+    node = (DOM_Node *)element;
+    node->type = NODE_TYPE_ELEMENT;
+    node->name = name;
+    node->ops = nodeops;
+    
+    element->tagName = tagName;
+    element->ops = eleops;
+    element->nattrs = nattrs;
+    return element;
+}
 
 JSObject *
 DOM_NewElementObject(JSContext *cx, DOM_Element *element)
