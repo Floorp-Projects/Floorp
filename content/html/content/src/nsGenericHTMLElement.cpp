@@ -3175,7 +3175,7 @@ nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
-  aNode = nsnull;
+  *aNode = nsnull;
   return NS_OK;
 }
 
@@ -3188,7 +3188,7 @@ nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
     return res;
   }
-  aNode = nsnull;
+  *aNode = nsnull;
   return NS_OK;
 }
 
