@@ -166,7 +166,7 @@ nsDataChannel::ParseData() {
 
     PRUint32 dataLen = PL_strlen(comma+1);
     PRUint32 wrote;
-    writeData *dataToWrite = (writeData*)nsAllocator::Alloc(sizeof(dataToWrite));
+    writeData *dataToWrite = (writeData*)nsAllocator::Alloc(sizeof(writeData));
     if (!dataToWrite) return NS_ERROR_OUT_OF_MEMORY;
 
     if (lBase64) {
