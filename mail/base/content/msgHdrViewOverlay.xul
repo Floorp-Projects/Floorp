@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is Mozilla Communicator client code, released
+# March 31, 1998.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation. Portions created by Netscape are
+# Copyright (C) 1998-1999 Netscape Communications Corporation. All
+# Rights Reserved.
+
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd">
+
+<?xml-stylesheet href="chrome://messenger/skin/messageHeader.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/messageKeywords.css" type="text/css"?>
+
+<overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script src="chrome://messenger/content/msgHdrViewAddresses.js"/>
+<script src="chrome://messenger/content/msgHdrViewOverlay.js"/>
+
+<!-- drag and drop -->
+<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+<script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+</stringbundleset>
+
+<popup id="attachmentListContext" onpopupshowing="return onShowAttachmentContextMenu();">
+  <menuitem id="context-openAttachment" label="&openAttachmentCmd.label;" accesskey="&openAttachmentCmd.accesskey;"
+     oncommand="handleAttachmentSelection('openAttachment');"/>
+  <menuitem id="context-saveAttachment" label="&saveAsAttachmentCmd.label;" accesskey="&saveAsAttachmentCmd.accesskey;"
+     oncommand="handleAttachmentSelection('saveAttachment');"/>
+  <menuseparator/>
+  <menuitem id="context-saveAllAttachments" oncommand="SaveAllAttachments();" label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;"/>
+</popup>
+
+<popup id="attachmentMenuList">
+  <menuseparator/>
+  <menuitem label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="SaveAllAttachments();"/>
+</popup>
+
+<tooltip id="attachmentListTooltip"
+         onpopupshowing="return FillInAttachmentTooltip(document.tooltipNode);"/> 
+
+<hbox id="msgHeaderView" keywordrelated="true" originalclass="none" persist="state">
+
+<vbox flex="1">
+<!-- the message pane consists of 3 'boxes'. Box #1 is a grid, showing a brief view of the headers --> 
+<grid id="collapsedHeaderView" class="header-part1 headerContainer" keywordrelated="true" originalclass="header-part1 headerContainer" flex="1" collapsed="true">
+  <rows>
+    <row flex="1"/>
+  </rows>
+  <columns>
+    <column class="collapsedToggleHdrBox">
+      <hbox align="start">
+        <image id="toggleHeaderView" class="collapsedHeaderViewButton"
+          onclick="ToggleHeaderView();"/>
+      </hbox>
+    </column>
+      
+    <column id="collapsedsubjectBox" collapsed="true" flex="1">
+      <hbox>
+        <label class="collapsedHeaderDisplayName" value="&subjectField.label;"/>
+        <textbox id="collapsedsubjectValue" keywordrelated="true" class="collapsedHeaderValue plain" originalclass="collapsedHeaderValue plain" readonly="true" crop="right" appendoriginalclass="true" flex="1"/>
+      </hbox>
+    </column>
+
+    <column id="collapsedfromBox" collapsed="true">
+      <hbox align="start">
+        <label class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
+        <mail-emailaddress id="collapsedfromValue" flex="1"/>
+      </hbox>
+    </column>
+
+    <column id = "collapseddateBox" collapsed="true">
+      <hbox align="start">
+        <textbox id="collapseddateValue" keywordrelated="true" class="collapsedHeaderValue plain" originalclass="collapsedHeaderValue plain" appendoriginalclass="true" readonly="true"/>
+      </hbox>
+    </column>
+
+    <column id="collapsedKeywordBox">
+      <hbox align="start">
+      <image id="collapsedKeywordImage" keywordrelated="true" originalclass="none"/>  
+      </hbox>
+    </column>
+  </columns>
+</grid>
+
+<!-- the message pane consists of 3 'boxes'. Box #2 is the expanded headers view (the default view) --> 
+
+<hbox id="expandedHeaderView" flex="1" collapsed="true" class="header-part1 headerContainer" keywordrelated="true" originalclass="header-part1">
+
+  <vbox id="expandedHeaders" flex="1">
+    <mail-toggle-headerfield keywordrelated="true" id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
+ 
+    <mail-emailheaderfield id="expandedfromBox" label="&fromField.label;" collapsed="true"/>
+    <mail-headerfield id="expandedorganizationBox" label="&organizationField.label;" collapsed="true"/>
+    <mail-emailheaderfield id="expandedreply-toBox" label="&replyToField.label;" collapsed="true"/>
+
+    <mail-headerfield keywordrelated="true" id="expandeddateBox" label="&dateField.label;" collapsed="true"/>
+
+    <mail-multi-emailHeaderField id="expandedtoBox"  label="&toField.label;"  collapsed="true"/>
+    <mail-multi-emailHeaderField id="expandedccBox"  label="&ccField.label;"  collapsed="true"/>
+    <mail-multi-emailHeaderField id="expandedbccBox" label="&bccField.label;" collapsed="true"/>
+
+    <mail-headerfield keywordrelated="true" id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
+    <mail-headerfield keywordrelated="true" id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
+    <mail-headerfield keywordrelated="true" id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/> 
+  </vbox>
+
+  <vbox id="expandedKeywordBox">
+    <spacer flex="1"/>
+    <image id="expandedKeywordImage" keywordrelated="true" originalclass="none" />
+    <spacer flex="1"/>  
+  </vbox>
+ 
+  <vbox id="editMessageBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
+    <spacer flex="1"/>
+    <button id="editMessageButton" label="&editMessage.label;" oncommand="MsgComposeDraftMessage()"/>
+    <spacer flex="1"/>
+  </vbox> 
+
+  <vbox autostretch="never">
+    <spacer flex="1"/>
+    <image style="padding: 5px" id="fromBuddyIcon"/>
+    <spacer flex="1"/>
+  </vbox>
+</hbox>
+
+<!-- the message pane consists of 3 'boxes'. Box #3 is the attachment box which can be toggled into a slim or an expanded view -->   
+<vbox id="attachmentView" class="headerContainer" collapsed="true">
+  <hbox id="attachmentLabelContainer" autostretch="never" align="start">
+    <image id="toggleAttachmentView" open="true" persist="state" class="addresstwisty" onclick="ToggleAttachmentView();"/>
+    <label id="attachmentText" class="collapsedHeaderDisplayName" value="&attachmentsTree.label;"/>
+    <label id="numAttachmentsText" collapsed="true"/>
+  </hbox>
+  <description flex="1" id="attachmentList" selectable="true" seltype="multiple" onclick="attachmentListClick(event);">
+  </description>
+</vbox>
+
+</vbox>
+</hbox>
+</overlay>
+
