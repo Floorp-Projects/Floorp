@@ -80,6 +80,7 @@ calendar.jar:
     content/calendar/pref/publishPrefs.xul (content/pref/publishPrefs.xul)
     content/calendar/pref/rootCalendarPref.js (content/pref/rootCalendarPref.js)
 	 content/calendar/pref/viewPrefs.xul (content/pref/viewPrefs.xul)
+    content/calendar/pref/timezonePrefs.xul (content/pref/timezonePrefs.xul)
     content/calendar/timepicker/timepicker-overlay.xul (content/timepicker/timepicker-overlay.xul)
     content/calendar/timepicker/timepicker.js (content/timepicker/timepicker.js)
     locale/en-US/calendar/calendar.dtd (locale/en-US/calendar.dtd)
