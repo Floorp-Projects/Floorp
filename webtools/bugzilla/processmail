@@ -170,10 +170,11 @@ sub ProcessOneBug {
 
     my $resid = 
 
-    SendSQL("SELECT bugs_activity.bug_id, fielddefs.name, " .
+    SendSQL("SELECT bugs_activity.bug_id, bugs.short_desc, fielddefs.name, " .
             "       removed, added " .
-            "FROM bugs_activity, dependencies, fielddefs ".
+            "FROM bugs_activity, bugs, dependencies, fielddefs ".
             "WHERE bugs_activity.bug_id = dependencies.dependson " .
+            "  AND bugs.bug_id = bugs_activity.bug_id ".
             "  AND dependencies.blocked = $id " .
             "  AND fielddefs.fieldid = bugs_activity.fieldid" .
             "  AND (fielddefs.name = 'bug_status' " .
@@ -186,14 +187,16 @@ sub ProcessOneBug {
     my $lastbug = "";
     my $interestingchange = 0;
     while (MoreSQLData()) {
-        my ($bug, $what, $old, $new) = (FetchSQLData());
+        my ($bug, $summary, $what, $old, $new) = (FetchSQLData());
         if ($bug ne $lastbug) {
             if ($interestingchange) {
                 $deptext .= $thisdiff;
             }
             $lastbug = $bug;
             $thisdiff =
-                "\nThis bug depends on bug $bug, which changed state:\n\n";
+                "\nThis bug depends on bug $bug, which changed state.\n";
+            $thisdiff .=
+                "Bug $bug Summary: $summary\n\n";
             $thisdiff .= FormatTriple("What    ", "Old Value", "New Value");
             $thisdiff .= ('-' x 76) . "\n";
             $interestingchange = 0;
