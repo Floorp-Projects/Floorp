@@ -63,10 +63,26 @@
 #define NSIMAGEDOCUMENT_PROPERTIES_URI "chrome://communicator/locale/layout/ImageDocument.properties"
 #define AUTOMATIC_IMAGE_RESIZING_PREF "browser.enable_automatic_image_resizing"
 
+class nsImageDocument;
+
+class ImageListener: public nsIStreamListener
+{
+public:
+  ImageListener(nsImageDocument* aDocument);
+  virtual ~ImageListener();
+
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIREQUESTOBSERVER
+
+  NS_DECL_NSISTREAMLISTENER
+
+  nsImageDocument*              mDocument;
+  nsCOMPtr<nsIStreamListener>   mNextStream;
+};
 
 class nsImageDocument : public nsHTMLDocument,
                         public nsIImageDocument,
-                        public nsIStreamListener,
                         public imgIDecoderObserver,
                         public nsIDOMEventListener
 {
@@ -91,10 +107,6 @@ public:
 
   NS_DECL_NSIIMAGEDOCUMENT
 
-  NS_DECL_NSIREQUESTOBSERVER
-
-  NS_DECL_NSISTREAMLISTENER
-
   NS_DECL_IMGIDECODEROBSERVER
 
   NS_DECL_IMGICONTAINEROBSERVER
@@ -102,6 +114,7 @@ public:
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
+  friend class ImageListener;
 protected:
   nsresult CreateSyntheticDocument();
 
@@ -114,7 +127,6 @@ protected:
   nsCOMPtr<nsIStringBundle>     mStringBundle;
   nsCOMPtr<nsIDOMElement>       mImageElement;
   nsCOMPtr<imgIRequest>         mImageRequest;
-  nsCOMPtr<nsIStreamListener>   mNextStream;
 
   nscoord                       mVisibleWidth;
   nscoord                       mVisibleHeight;
@@ -126,6 +138,72 @@ protected:
   PRPackedBool                  mImageIsResized;
 };
 
+
+ImageListener::ImageListener(nsImageDocument* aDocument)
+{
+  NS_ADDREF(mDocument = aDocument);
+}
+
+ImageListener::~ImageListener()
+{
+  NS_RELEASE(mDocument);
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(ImageListener,
+                              nsIRequestObserver,
+                              nsIStreamListener)
+
+NS_IMETHODIMP
+ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
+{
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  if (!channel) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPresShell> shell;
+  nsCOMPtr<nsIPresContext> context;
+  mDocument->GetShellAt(0, getter_AddRefs(shell));
+  if (shell) {
+    shell->GetPresContext(getter_AddRefs(context));
+  }
+
+  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
+  il->LoadImageWithChannel(channel, mDocument, context, getter_AddRefs(mNextStream), 
+                           getter_AddRefs(mDocument->mImageRequest));
+
+  mDocument->StartLayout();
+
+  if (mNextStream) {
+    return mNextStream->OnStartRequest(request, ctxt);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
+                             nsresult status)
+{
+  mDocument->UpdateTitle();
+
+  if (mNextStream) {
+    return mNextStream->OnStopRequest(request, ctxt, status);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ImageListener::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
+                               nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+{
+  if (mNextStream) {
+    return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
+  }
+
+  return NS_OK;
+}
 
 nsImageDocument::nsImageDocument()
   : mVisibleWidth(0),
@@ -147,8 +225,6 @@ NS_IMPL_RELEASE_INHERITED(nsImageDocument, nsHTMLDocument)
 
 NS_INTERFACE_MAP_BEGIN(nsImageDocument)
   NS_INTERFACE_MAP_ENTRY(nsIImageDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
   NS_INTERFACE_MAP_ENTRY(imgIContainerObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
@@ -215,7 +291,10 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
   }
 
   NS_ASSERTION(aDocListener, "null aDocListener");
-  NS_ADDREF(*aDocListener = this);
+  *aDocListener = new ImageListener(this);
+  if (!*aDocListener)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aDocListener);
 
   return NS_OK;
 }
@@ -318,58 +397,6 @@ nsImageDocument::ToggleImageSize()
     else if (mImageIsOverflowing) {
       ShrinkToFit();
     }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
-{
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (!channel) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIPresShell> shell;
-  nsCOMPtr<nsIPresContext> context;
-  GetShellAt(0, getter_AddRefs(shell));
-  if (shell) {
-    shell->GetPresContext(getter_AddRefs(context));
-  }
-
-  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
-  il->LoadImageWithChannel(channel, this, context, getter_AddRefs(mNextStream), 
-                           getter_AddRefs(mImageRequest));
-
-  StartLayout();
-
-  if (mNextStream) {
-    return mNextStream->OnStartRequest(request, ctxt);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
-                             nsresult status)
-{
-  UpdateTitle();
-
-  if (mNextStream) {
-    return mNextStream->OnStopRequest(request, ctxt, status);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsImageDocument::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
-                                 nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
-{
-  if (mNextStream) {
-    return mNextStream->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
   }
 
   return NS_OK;
