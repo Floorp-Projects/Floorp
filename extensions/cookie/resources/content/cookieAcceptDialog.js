@@ -197,15 +197,22 @@ function cookieDeny()
 
 function GetExpiresString(secondsUntilExpires) {
   if (secondsUntilExpires) {
-    var expireDate = new Date(1000*secondsUntilExpires);
-    return gDateService.FormatDateTime("", gDateService.dateFormatLong,
-                                       gDateService.timeFormatSeconds, 
-                                       expireDate.getFullYear(),
-                                       expireDate.getMonth()+1, 
-                                       expireDate.getDate(), 
-                                       expireDate.getHours(),
-                                       expireDate.getMinutes(), 
-                                       expireDate.getSeconds());
+    var date = new Date(1000*secondsUntilExpires);
+
+    // if a server manages to set a really long-lived cookie, the dateservice
+    // can't cope with it properly, so we'll just return a blank string
+    // see bug 238045 for details
+    var expiry = "";
+    try {
+      expiry = gDateService.FormatDateTime("", gDateService.dateFormatLong,
+                                           gDateService.timeFormatSeconds, 
+                                           date.getFullYear(), date.getMonth()+1, 
+                                           date.getDate(), date.getHours(),
+                                           date.getMinutes(), date.getSeconds());
+    } catch(ex) {
+      // do nothing
+    }
+    return expiry;
   }
   return cookieBundle.getString("atEndOfSession");
 }
