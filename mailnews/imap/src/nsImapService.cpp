@@ -3990,6 +3990,9 @@ nsImapService::HandleContent(const char * aContentType, const char * aCommand, n
       rv = messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", uriStr.get(), nsMsgKey_None);
       NS_ENSURE_SUCCESS(rv, rv);
     }
+  } else {
+    // The content-type was not x-application-imapfolder
+    return NS_ERROR_WONT_HANDLE_CONTENT;
   }
 
   return rv;

@@ -1647,6 +1647,9 @@ nsNntpService::HandleContent(const char * aContentType, const char * aCommand, n
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
+  } else {
+    // The content-type was not x-application-newsgroup.
+    return NS_ERROR_WONT_HANDLE_CONTENT;
   }
 
   return rv;
