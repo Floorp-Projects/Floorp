@@ -38,7 +38,7 @@ public:
 typedef PRBool (*nsHashtableEnumFunc)(nsHashKey *aKey, void *aData, void* closure);
 
 class NS_COM nsHashtable {
-private:
+protected:
   // members  
   PLHashTable *hashtable;
   PRLock *mLock;
@@ -63,7 +63,7 @@ public:
 #include "nsISupports.h"
 
 class nsISupportsKey : public nsHashKey {
-private:
+protected:
   nsISupports* mKey;
   
 public:
@@ -93,7 +93,7 @@ public:
 // nsVoidKey: Where keys are void* objects that don't get refcounted.
 
 class nsVoidKey : public nsHashKey {
-private:
+protected:
   const void* mKey;
   
 public:
@@ -120,7 +120,7 @@ public:
 #include "nsID.h"
 
 class nsIDKey : public nsHashKey {
-private:
+protected:
   nsID mID;
   
 public:
@@ -148,7 +148,7 @@ public:
 #include "plstr.h"
 
 class NS_COM nsCStringKey : public nsHashKey {
-private:
+protected:
   char  mBuf[64];
   char* mStr;
 
