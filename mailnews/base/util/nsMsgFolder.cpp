@@ -277,6 +277,12 @@ nsMsgFolder::GetMessages(nsISimpleEnumerator* *result)
 }
 
 NS_IMETHODIMP
+nsMsgFolder::UpdateFolder()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMsgFolder::GetThreads(nsISimpleEnumerator ** threadEnumerator)
 {
   // XXX should this return an empty enumeration?

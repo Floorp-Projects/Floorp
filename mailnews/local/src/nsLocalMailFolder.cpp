@@ -501,6 +501,12 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 }
 
 NS_IMETHODIMP
+nsMsgLocalMailFolder::UpdateFolder()
+{
+	return GetDatabase(); // this will cause a reparse, if needed.
+}
+
+NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsISimpleEnumerator* *result)
 {
 	nsresult rv = GetDatabase();

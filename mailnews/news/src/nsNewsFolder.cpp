@@ -369,39 +369,22 @@ nsresult nsMsgNewsFolder::GetDatabase()
 	return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsMsgNewsFolder::UpdateFolder()
+{
+  return GetNewMessages();
+}
+
 NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsISimpleEnumerator* *result)
 {
 #ifdef DEBUG_NEWS
   printf("nsMsgNewsFolder::GetMessages(%s)\n",mURI);
 #endif
-  // number_to_show is a tempory hack to allow newsgroups
-  // with thousands of message to work.  the way it works is
-  // we return a cropped enumerator back to to the caller
-  // instead of the full one.  This gets around the problem
-  // where tree layout (and probably other things) don't scale
 
-  PRInt32 number_to_show;
   nsresult rv = NS_OK;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && prefs) {
-    rv = prefs->GetIntPref(PREF_NEWS_MAX_HEADERS_TO_SHOW, &number_to_show);
-    if (NS_FAILED(rv)) {
-      // failed to get the pref...show them all the headers
-      number_to_show = 0;
-    }
-  }
-  else {
-    // failed to get pref service...show them all headers
-    number_to_show = 0;
-  }
-
-  // if the user asks for a negative value, I'll just ignore them
-  if (number_to_show < 0) {
-  	number_to_show = 0;
-  }
-  
   rv = GetDatabase();
     *result = nsnull;
     

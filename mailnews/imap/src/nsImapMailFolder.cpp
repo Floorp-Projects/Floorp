@@ -411,12 +411,11 @@ nsresult nsImapMailFolder::GetDatabase()
 	return folderOpen;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetMessages(nsISimpleEnumerator* *result)
+NS_IMETHODIMP
+nsImapMailFolder::UpdateFolder()
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
 	PRBool selectFolder = PR_FALSE;
-	if (result)
-		*result = nsnull;
 
 	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv); 
 
@@ -455,7 +454,15 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsISimpleEnumerator* *result)
 		rv = imapService->SelectFolder(eventQ, this, this, nsnull, nsnull);
 		m_urlRunning = PR_TRUE;
 	}
+	return rv;
+}
 
+
+NS_IMETHODIMP nsImapMailFolder::GetMessages(nsISimpleEnumerator* *result)
+{
+	if (result)
+		*result = nsnull;
+	nsresult rv = UpdateFolder();
     if(NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsISimpleEnumerator> msgHdrEnumerator;
@@ -2904,7 +2911,6 @@ nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
 			return rv;
 
 		nsFileSpec tempPath(path.GetNativePathCString(), PR_TRUE);	// create incoming directories.
-//   need bienvenu to fix this for real - the intent of this line is a mystery to sfraser and I
 
 		//If that doesn't exist, then we have to create this directory
 		if(!path.IsDirectory())

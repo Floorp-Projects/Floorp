@@ -54,6 +54,7 @@ public:
   NS_IMETHOD AddUnique(nsISupports* element);
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetMessages(nsISimpleEnumerator* *result);
+	NS_IMETHOD UpdateFolder();
 
 	NS_IMETHOD CreateSubfolder(const char *folderName);
 

@@ -51,6 +51,8 @@ interface nsIMsgFolder : nsIFolder {
   
 	nsISimpleEnumerator GetMessages();
 	nsISimpleEnumerator GetThreads();
+	/* get new headers for db */
+	void UpdateFolder();
 	nsIMsgThread GetThreadForMessage(in nsIMessage message);
 	boolean HasMessage(in nsIMessage message);
   nsIEnumerator GetVisibleSubFolders();

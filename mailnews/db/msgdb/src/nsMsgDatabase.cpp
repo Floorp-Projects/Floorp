@@ -143,6 +143,9 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey p
 NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, nsMsgKey parentKey, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
+#ifdef DEBUG_bienvenu1
+	printf("notifying add of %ld parent %ld\n", keyAdded, parentKey);
+#endif
     if (m_ChangeListeners == nsnull) 
 		return NS_OK;
 	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
