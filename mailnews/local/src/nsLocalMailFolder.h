@@ -50,12 +50,12 @@ struct nsLocalMailCopyState
   nsCOMPtr<nsIMsgParseMailMsgState> m_parseMsgState;
   nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
   
-  nsIMsgMessageService* m_messageService;
-  PRBool m_isMove;
-  PRBool m_dummyEnvelopeNeeded;
   nsMsgKey m_curDstKey;
   PRUint32 m_curCopyIndex;
+  nsIMsgMessageService* m_messageService;
   PRUint32 m_totalMsgCount;
+  PRBool m_isMove;
+  PRBool m_dummyEnvelopeNeeded;
   char m_dataBuffer[FOUR_K];
 };
 
