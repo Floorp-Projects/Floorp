@@ -51,6 +51,10 @@ tabs {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#tabs");
 }
 
+.tabbrowser-tabs {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#tabs-closebutton");
+}
+
 /* ::::: root elements ::::: */
 
 window,

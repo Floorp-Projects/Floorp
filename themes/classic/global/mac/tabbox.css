@@ -9,29 +9,32 @@
 
 /*** TAB: TOP <tab> ***/
 
-tab { 
-  color				: #000000; 
-  padding			: 0px;
+tab {
+  -moz-box-align: stretch;
+  color				: #000000;
 }
 
 .tab-image-left {
   background		: url(chrome://global/skin/tabbox/tab-unselect-left.gif) no-repeat;
   width				: 11px;
-  height			: 24px;
+  height			: 25px;
 }
 
 .tab-image-middle {
-  background		: url(chrome://global/skin/tabbox/tab-unselect-middle.gif) repeat-x;
+  background-color  : #CECECE;
+  border-top        : 3px solid;
+  border-bottom     : 3px solid;
+  -moz-border-top-colors: #000000 #CECECE #DEDEDE;
+  -moz-border-bottom-colors: #FFFFFF #CECECE #000000;
 }
 
 .tab-image-right {
   background		: url(chrome://global/skin/tabbox/tab-unselect-right.gif) no-repeat;
   width				: 12px;
-  height			: 24px;
+  height			: 25px;
 }
 
 .tab-text {
-  padding			: 3px 0px 6px 0px;
   font				: menu;
 }
 
@@ -44,7 +47,9 @@ tab:hover:active > .tab-image-left {
 }
 
 tab:hover:active > .tab-image-middle { 
-  background		: url(chrome://global/skin/tabbox/tab-unselect-active-middle.gif) repeat-x;
+  background-color: #666666;
+  -moz-border-top-colors: #000000 #444444 #555555;
+  -moz-border-bottom-colors: #FFFFFF #CCCCCC #000000;
 }
 
 tab:hover:active > .tab-image-right { 
@@ -53,7 +58,7 @@ tab:hover:active > .tab-image-right {
 
 
 /* when a tab is selected this is how it should look */
-tab:hover:active[selected="true"],  tab:hover:active[selected="1"]{
+tab:hover:active[selected="true"] {
 	color			: #000000;
 }
 
@@ -64,7 +69,9 @@ tab:hover:active[selected="true"] > .tab-image-left {
 
 tab[selected="true"] > .tab-image-middle,
 tab:hover:active[selected="true"] > .tab-image-middle { 
-  background		: url(chrome://global/skin/tabbox/tab-select-middle.gif) repeat-x;
+  background-color: #EEEEEE;
+  -moz-border-top-colors: #000000 #CCCCCC #FFFFFF;
+  -moz-border-bottom-colors: #EEEEEE;
 }
 
 tab[selected="true"] > .tab-image-right,
@@ -73,22 +80,23 @@ tab:hover:active[selected="true"] > .tab-image-right {
 }
 
 .tab-border-top-left {
-  background		: url(chrome://global/skin/tabbox/tab-border-top.gif) repeat-x bottom;
-  width				: 2px;
-}
-
-.tab-border-top-left-cap {
-  background		: url(chrome://global/skin/tabbox/tab-border-top-left-cap.gif) no-repeat bottom;
-  width				: 2px;
+  background-color  : #DEDEDE;
+  border-bottom     : 3px solid;
+  -moz-border-bottom-colors: #FFFFFF #CECECE #000000;
+  width				: 3px;
 }
 
 .tab-border-top-right {
-  background		: url(chrome://global/skin/tabbox/tab-border-top.gif) repeat-x bottom;
+  background-color  : #DEDEDE;
+  border-bottom     : 3px solid;
+  -moz-border-bottom-colors: #FFFFFF #CECECE #000000;
 }
 
-.tab-border-top-right-cap {
-  background		: url(chrome://global/skin/tabbox/tab-border-top-right-cap.gif) no-repeat bottom;
-  width				: 2px;
+.tab-border-top-left-cap, .tab-border-top-right-cap {
+  background-color  : #DEDEDE;
+  border-bottom     : 3px solid;
+  -moz-border-bottom-colors: #000000;
+  width				: 1px;
 }
 
 tabs {
@@ -99,29 +107,28 @@ tabs {
 /* Found in editor.xul & editorOverlay.xul 
  * SMALL TABS FOR NOW */
 
-.tab-bottom > .tab-image-middle > .tab-text {
-	font			: message-box;
-	font-weight		: bold;
-}
-
 .tab-bottom > .tab-image-left {
   background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-left.gif) no-repeat;
   width				: 11px;
-  height			: 19px;
+  height			: 22px;
 }
 
 .tab-bottom > .tab-image-middle {
-  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-mid.gif) repeat-x;
+  -moz-border-top-colors: #FFFFFF #CECECE #000000;
+  -moz-border-bottom-colors: #000000 #CECECE #DEDEDE;
 }
 
 .tab-bottom > .tab-image-right {
   background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-right.gif) no-repeat;
   width				: 11px;
-  height			: 19px;
+  height			: 22px;
 }
 
 .tab-bottom > .tab-image-middle > .tab-text {
-  padding			: 4px 0px 1px 0px;
+  font			    : message-box;
+  font-weight		: bold;
+  padding           : 0px;
+  margin            : 0px !important;
 }
 
 .tab-bottom:hover:active > .tab-image-left { 
@@ -129,7 +136,9 @@ tabs {
 }
 
 .tab-bottom:hover:active > .tab-image-middle { 
-  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-acti-mid.gif) repeat-x;
+  background-color: #666666;
+  -moz-border-top-colors: #FFFFFF #CCCCCC #000000;
+  -moz-border-bottom-colors: #000000 #444444 #555555;
 }
 
 .tab-bottom:hover:active > .tab-image-right { 
@@ -145,7 +154,9 @@ tabs {
 
 .tab-bottom[selected="true"] > .tab-image-middle,
 .tab-bottom:hover:active[selected="true"] > .tab-image-middle { 
-  background		: url(chrome://global/skin/tabbox/tab-sm-bot-sel-mid.gif) repeat-x;
+  background-color: #EEEEEE;
+  -moz-border-top-colors: #EEEEEE;
+  -moz-border-bottom-colors: #000000 #CCCCCC #FFFFFF;
 }
 
 .tab-bottom[selected="true"] > .tab-image-right,
@@ -154,22 +165,26 @@ tabs {
 }
 
 .tabs-bottom > .tab-border-top-left {
-  background		: url(chrome://global/skin/tabbox/tab-border-bot.gif) repeat-x top;
-  width				: 2px;
+  background-color  : #DEDEDE;
+  border-bottom     : 0px;
+  border-top        : 3px solid;
+  -moz-border-top-colors: #FFFFFF #CECECE #000000;
+  width				: 3px;
 }
 
-.tabs-bottom > .tab-border-top-left-cap {
-  background		: url(chrome://global/skin/tabbox/tab-border-bot-left-cap.gif) no-repeat top;
-  width				: 2px;
+.tabs-bottom > stack > .tab-border-top-right {
+  background-color  : #DEDEDE;
+  border-bottom     : 0px;
+  border-top        : 3px solid;
+  -moz-border-top-colors: #FFFFFF #CECECE #000000;
 }
 
-.tabs-bottom > .tab-border-top-right {
-  background		: url(chrome://global/skin/tabbox/tab-border-bot.gif) repeat-x top;
-}
-
-.tabs-bottom > .tab-border-top-right-cap {
-  background		: url(chrome://global/skin/tabbox/tab-border-bot-right-cap.gif) no-repeat top;
-  width				: 2px;
+.tabs-bottom > .tab-border-top-left-cap, .tabs-bottom > .tab-border-top-right-cap {
+  background-color  : #DEDEDE;
+  border-bottom     : 0px;
+  border-top        : 3px solid;
+  -moz-border-top-colors: #000000;
+  width				: 1px;
 }
 
     /* top tabs */

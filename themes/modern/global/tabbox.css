@@ -71,14 +71,15 @@ tab {
   margin: 0px;
   border: 3px solid;
   border-bottom-width: 3px;
-  -moz-border-top-colors: #000000 #8190A5 #899AAC;
-  -moz-border-right-colors: #000000 #8190A5 #899AAC;
-  -moz-border-bottom-colors: #000000 #8C9DAF;
-  -moz-border-left-colors: #000000 #8190A5 #899AAC;
+  -moz-border-top-colors: #000000 #90A0B0 #98A7B5;
+  -moz-border-right-colors: #000000 #90A0B0 #98A7B5;
+  -moz-border-bottom-colors: #000000 #98A7B5;
+  -moz-border-left-colors: #000000 #90A0B0 #98A7B5;
   -moz-border-radius-topleft: 3px;
   -moz-border-radius-topright: 3px;
   padding: 1px 3px;
-  background-color: #8C9DAF;
+  /*background-color: #8C9DAF;*/
+  background-color: #9CABBA;
   color: #000000;
   font: menu;
 }
@@ -135,6 +136,11 @@ tab:hover:active[selected="true"] {
 .tab-bottom[selected="true"] {
   -moz-border-top-colors: transparent !important;
   -moz-border-bottom-colors: #000000 #DFE2E6 #D0D7DD transparent !important;
+}
+
+.tab-bottom > .tab-text {
+  font: message-box;
+  font-weight: bold;
 }
    
 /* ::::: tabs-bottom ::::: */

@@ -34,7 +34,6 @@
 }
 
 .tab-bottom[selected="true"] {
-  background-color: -moz-Field;
   color: -moz-FieldText;
   -moz-border-top-colors: -moz-Field;
   -moz-border-bottom-colors: ThreeDShadow -moz-Field;

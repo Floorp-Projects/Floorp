@@ -8,7 +8,7 @@
     <content>
       <xul:spacer class="tab-image-left" inherits="selected"/>
       <xul:hbox flex="1" class="tab-image-middle" align="center" inherits="selected">
-        <xul:image class="tab-left" inherits="src=image,validate"/>
+        <xul:image class="tab-icon" inherits="src=image,validate"/>
         <xul:label flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
       </xul:hbox>
       <xul:spacer class="tab-image-right" inherits="selected"/>
@@ -27,6 +27,22 @@
         </xul:hbox>
       </xul:stack>
       <xul:spacer class="tab-border-top-right-cap"/>
+    </content>
+  </binding>
+  
+    <binding id="tabs-closebutton" 
+           extends="chrome://global/content/bindings/tabbox.xml#tabs">
+    <content>
+      <xul:spacer class="tabs-left-cap"/>
+      <xul:spacer class="tabs-left"/>
+      <children/>
+      <xul:stack flex="1">
+        <xul:spacer class="tabs-right"/>
+        <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
+          <xul:toolbarbutton class="tabs-closebutton close-button" inherits="oncommand=onclosetab"/>
+        </xul:hbox>
+      </xul:stack>
+      <xul:spacer class="tabs-right-cap"/>
     </content>
   </binding>
 
