@@ -1477,6 +1477,7 @@ JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
     return js_NewNumberValue(cx, d, rval);
 }
 
+#undef JS_AddRoot
 JS_PUBLIC_API(JSBool)
 JS_AddRoot(JSContext *cx, void *rp)
 {
