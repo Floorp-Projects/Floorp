@@ -146,6 +146,26 @@ install:: $(TARGETS)
 	$(INSTALL) samples/gear1.gif $(DIST)/bin/res/samples
 	$(INSTALL) samples/rock_gra.gif $(DIST)/bin/res/samples
 	$(INSTALL) samples/bg.jpg $(DIST)/bin/res/samples
+	$(INSTALL) throbber/anims00.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims01.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims02.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims03.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims04.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims05.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims06.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims07.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims08.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims09.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims1.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims11.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims12.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims13.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims14.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims15.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims16.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims17.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims18.gif $(DIST)/bin/res/throbber
+	$(INSTALL) throbber/anims19.gif $(DIST)/bin/res/throbber
 
 clobber::
 	rm -f $(DIST)/bin/viewer.exe
@@ -168,5 +188,25 @@ clobber::
 	rm -f $(DIST)/bin/res/samples/gear1.gif
 	rm -f $(DIST)/bin/res/samples/rock_gra.gif
 	rm -f $(DIST)/bin/res/samples/bg.jpg
+	rm -f $(DIST)/bin/res/throbber/anims00.gif
+	rm -f $(DIST)/bin/res/throbber/anims01.gif
+	rm -f $(DIST)/bin/res/throbber/anims02.gif
+	rm -f $(DIST)/bin/res/throbber/anims03.gif
+	rm -f $(DIST)/bin/res/throbber/anims04.gif
+	rm -f $(DIST)/bin/res/throbber/anims05.gif
+	rm -f $(DIST)/bin/res/throbber/anims06.gif
+	rm -f $(DIST)/bin/res/throbber/anims07.gif
+	rm -f $(DIST)/bin/res/throbber/anims08.gif
+	rm -f $(DIST)/bin/res/throbber/anims09.gif
+	rm -f $(DIST)/bin/res/throbber/anims10.gif
+	rm -f $(DIST)/bin/res/throbber/anims11.gif
+	rm -f $(DIST)/bin/res/throbber/anims12.gif
+	rm -f $(DIST)/bin/res/throbber/anims13.gif
+	rm -f $(DIST)/bin/res/throbber/anims14.gif
+	rm -f $(DIST)/bin/res/throbber/anims15.gif
+	rm -f $(DIST)/bin/res/throbber/anims16.gif
+	rm -f $(DIST)/bin/res/throbber/anims17.gif
+	rm -f $(DIST)/bin/res/throbber/anims18.gif
+	rm -f $(DIST)/bin/res/throbber/anims19.gif
 
 

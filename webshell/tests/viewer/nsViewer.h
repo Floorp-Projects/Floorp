@@ -29,6 +29,7 @@
 #include "nsINetContainerApplication.h"
 #include "nsVoidArray.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIImageGroup.h"
 
 class nsITextWidget;
 class nsIScriptContext;
@@ -156,6 +157,17 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
     nsViewer() {
       mLocation = nsnull;
       mHistoryIndex = -1;
+
+      mThrobber = nsnull;
+      mThrobberImages = nsnull;
+      mThrobberIdx = 0;
+      mThrobberImageGroup = nsnull;
+      mThrobTimer = nsnull;
+      mUpdateThrobber = PR_FALSE;
+    }
+
+    ~nsViewer() {
+      DestroyThrobberImages();
     }
 
     // nsISupports
@@ -220,7 +232,16 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   void GoingTo(const nsString& aURL);
   void ShowHistory();
 
+  void LoadThrobberImages();
+  void DestroyThrobberImages();
+
   nsITextWidget* mLocation;
+  nsIWidget* mThrobber;
+  nsVoidArray* mThrobberImages;
+  PRInt32 mThrobberIdx;
+  nsIImageGroup* mThrobberImageGroup;
+  nsITimer* mThrobTimer;
+  PRBool mUpdateThrobber;
 
   // Cheesy history (just the urls are stored)
   WindowData* mWD;
