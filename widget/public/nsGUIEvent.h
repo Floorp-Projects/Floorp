@@ -289,6 +289,11 @@ enum nsDragDropEventStatus {
 #define NS_DRAGDROP_EXIT                (NS_DRAGDROP_EVENT_START + 2)
 #define NS_DRAGDROP_DROP                (NS_DRAGDROP_EVENT_START + 3)
 
+// Events for popups
+#define NS_POPUP_EVENT_START            1500
+#define NS_POPUP_CONSTRUCT              (NS_POPUP_EVENT_START)
+#define NS_POPUP_DESTRUCT               (NS_POPUP_EVENT_START+1)
+
 //@}
 
 
