@@ -878,7 +878,8 @@ nsDocLoaderImpl::OnStartRequest(nsIChannel *aChannel, nsISupports *aCtxt)
 
             // This channel is associated with the entire document...
             mDocumentChannel = aChannel;
-            mLoadGroup->SetDefaultLoadChannel(mDocumentChannel); 
+// omit next line until we can figure out why it causes a leak
+//            mLoadGroup->SetDefaultLoadChannel(mDocumentChannel); 
             FireOnStartDocumentLoad(this, uri);
         } 
         else {
