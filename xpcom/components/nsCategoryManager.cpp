@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define PL_ARENA_CONST_ALIGN_MASK 7
+
 #include "nsICategoryManager.h"
 #include "nsCategoryManager.h"
 
@@ -46,6 +48,7 @@
 #include "nsIObserver.h"
 #include "nsComponentManager.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 #include "nsHashtableEnumerator.h"
 #include "nsEnumeratorUtils.h"
@@ -64,6 +67,11 @@
 // this function is not public yet, hence it is externed here.
 extern nsresult NS_GetComponentLoaderManager(nsIComponentLoaderManager* *result);
 
+#define NS_CATEGORYMANAGER_ARENA_SIZE (1024 * 8)
+
+// pulled in from nsComponentManager.cpp
+char* ArenaStrndup(const char* s, PRUint32 len, PLArenaPool* aArena);
+char* ArenaStrdup(const char* s, PLArenaPool* aArena);
 
 static
 NS_IMETHODIMP
@@ -88,41 +96,25 @@ ExtractKeyString( nsHashKey* key, void*, void*, nsISupports** _retval )
 
 
 
-typedef nsCString LeafNode;
-
-  /*
-    Our interior nodes are hashtables whose elements are |LeafNode|s,
-    and we need a suitable destruction function to register with a
-    given (interior node) hashtable for destroying its (|LeafNode|) elements.
-  */
-static
-PRBool
-Destroy_LeafNode( nsHashKey*, void* aElement, void* )
-  {
-    delete NS_STATIC_CAST(LeafNode*, aElement);
-    return PR_TRUE;
-  }
-
-
 class CategoryNode
     : public nsObjectHashtable
   {
     public:
       CategoryNode()
           : nsObjectHashtable((nsHashtableCloneElementFunc) 0, 0,
-                                (nsHashtableEnumFunc) Destroy_LeafNode, 0 )
+                                (nsHashtableEnumFunc) 0, 0 )
         {
           // Nothing else to do here...
         }
 
-      LeafNode* find_leaf( const char* );
+      const char* find_leaf( const char* );
   };
 
-LeafNode*
+const char*
 CategoryNode::find_leaf( const char* aLeafName )
   {
     nsCStringKey leafNameKey(aLeafName);
-    return NS_STATIC_CAST(LeafNode*, Get(&leafNameKey));
+    return NS_STATIC_CAST(char*, Get(&leafNameKey));
   }
 
   /*
@@ -160,6 +152,8 @@ class nsCategoryManager
 
     private:
       CategoryNode* find_category( const char* );
+
+    PLArenaPool mArena;
   };
 
 NS_IMPL_ISUPPORTS1(nsCategoryManager, nsICategoryManager)
@@ -169,10 +163,13 @@ nsCategoryManager::nsCategoryManager()
                                 (nsHashtableEnumFunc) Destroy_CategoryNode, 0 )
 
   {
+    PL_INIT_ARENA_POOL(&mArena, "CategoryManagerArena",
+                       NS_CATEGORYMANAGER_ARENA_SIZE);
   }
 
 nsCategoryManager::~nsCategoryManager()
   {
+    PL_FinishArenaPool(&mArena);
   }
 
 CategoryNode*
@@ -196,9 +193,9 @@ nsCategoryManager::GetCategoryEntry( const char *aCategoryName,
     if (category) 
       {
         nsCStringKey entryKey(aEntryName);
-        LeafNode* entry = NS_STATIC_CAST(LeafNode*, category->Get(&entryKey));
+        const char* entry = NS_STATIC_CAST(char*, category->Get(&entryKey));
         if (entry)
-          status = (*_retval = ToNewCString(*entry)) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+          status = (*_retval = nsCRT::strdup(entry)) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
       }
 
     return status;
@@ -233,12 +230,15 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
       {
           // That category doesn't exist yet; let's make it.
         category = new CategoryNode;
-        nsCStringKey categoryNameKey(aCategoryName);
+        
+        PRUint32 len = strlen(aCategoryName);
+        char* categoryName = ArenaStrndup(aCategoryName, len, &mArena);
+        nsCStringKey categoryNameKey(categoryName, len, nsCStringKey::NEVER_OWN);
         Put(&categoryNameKey, category);
       }
 
       // See if this entry is already in this category
-    LeafNode* entry = category->find_leaf(aEntryName);
+    const char* entry = category->find_leaf(aEntryName);
 
     nsresult status = NS_OK;
     if ( entry )
@@ -250,7 +250,7 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
           {
               // return the value that we're replacing
             if ( _retval )
-              *_retval = ToNewCString(*entry);
+              *_retval = nsCRT::strdup(entry);
           }
         else
           status = NS_ERROR_INVALID_ARG; // ...stops us from putting the value in
@@ -263,13 +263,18 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
     if ( NS_SUCCEEDED(status) )
       { // it's OK to put a value in
 
-          // don't leak the entry we're replacing (if any)
-        delete entry;
+        // we can't delete the entry because we're
+        // arena-allocated.. just pretend we do this.
+        // delete entry;
 
-          // now put in the new vaentrylue
-        entry = new LeafNode(aValue);
-        nsCStringKey entryNameKey(aEntryName);
-        category->Put(&entryNameKey, entry);
+        // now put in the new value entry
+        entry = ArenaStrdup(aValue, &mArena);
+        
+        PRUint32 len = strlen(aEntryName);
+        char* entryName = ArenaStrndup(aEntryName, len, &mArena);
+        
+        nsCStringKey entryNameKey(entryName, len, nsCStringKey::NEVER_OWN);
+        category->Put(&entryNameKey, (void*)entry);
 
         nsCOMPtr<nsIComponentLoaderManager> mgr;
         NS_GetComponentLoaderManager(getter_AddRefs(mgr));
