@@ -17,7 +17,7 @@
  */
 function LoadDetectorsMenu()
   {
-    dump("run LoadDetectorsMenu");
+    dump("run LoadDetectorsMenu()\n");
     var Registry = Components.classes['component://netscape/registry-viewer'].createInstance();
     Registry = Registry.QueryInterface(Components.interfaces.nsIRegistryDataSource);
 
@@ -37,15 +37,17 @@ function SelectDetectors( event )
 
    // if all else fails, use trusty "about:blank" as the start page
    if (pref) {
+        dump("get pref\n");
         pref = pref.getService();
         pref = pref.QueryInterface(Components.interfaces.nsIPref);
    }
 
 
    if (pref) {
-       pref.SetChartPref("intl.charset.detector", "japsm");
+       dump("get pref 2\n");
+       pref.SetCharPref("intl.charset.detector", "japsm");
    }
   }
 
 /* this is really hacky, but waterson say it will work */
-setTimeout("LoadDetectorsMenu()", 30000);
+setTimeout("LoadDetectorsMenu()", 10000);

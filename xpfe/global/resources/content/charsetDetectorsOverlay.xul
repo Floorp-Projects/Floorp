@@ -26,9 +26,7 @@ Contributor(s): ______________________________________. -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 
-<!-- comment out
-<!DOCTYPE window SYSTEM "chrome://global/locale/charsetDetectors.dtd" >
--->
+<!DOCTYPE window SYSTEM "chrome://global/locale/charsetDetectorsOverlay.dtd" >
 
 <overlay id="charsetDetectorsOverlay"
          xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -38,7 +36,7 @@ Contributor(s): ______________________________________. -->
 <html:script src="chrome://global/content/charsetDetectorsOverlay.js" />
 
  
-      <menu value=". Charset Detector"
+      <menu value="&charsetDetectorsMenu.label;"
                            datasources="rdf:null" id="CharsetDetectorsMenu" 
                            containment="urn:mozilla-registry:subkeys"
                            >
