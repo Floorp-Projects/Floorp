@@ -73,7 +73,6 @@
 #include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
@@ -139,7 +138,6 @@
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
 static PRBool gInitDetector = PR_FALSE;
 static PRBool gPlugDetector = PR_FALSE;
-//static PRBool gBookmarkCharset = PR_TRUE;
 
 #include "prmem.h"
 #include "prtime.h"
@@ -504,14 +502,14 @@ nsHTMLDocument::TryUserForcedCharset(nsIMarkupDocumentViewer* aMarkupDV,
   if(kCharsetFromUserForced <= aCharsetSource)
     return PR_TRUE;
 
-  PRUnichar* forceCharsetFromWebShell = nsnull;
+  PRUnichar* forceCharsetFromDocShell = nsnull;
   if (aMarkupDV) {
-    rv = aMarkupDV->GetForceCharacterSet(&forceCharsetFromWebShell);
+    rv = aMarkupDV->GetForceCharacterSet(&forceCharsetFromDocShell);
   }
 
-  if(NS_SUCCEEDED(rv) && forceCharsetFromWebShell) {
-    aCharset = forceCharsetFromWebShell;
-    Recycle(forceCharsetFromWebShell);
+  if(NS_SUCCEEDED(rv) && forceCharsetFromDocShell) {
+    aCharset = forceCharsetFromDocShell;
+    Recycle(forceCharsetFromDocShell);
     //TODO: we should define appropriate constant for force charset
     aCharsetSource = kCharsetFromUserForced;
   } else if (aDocInfo) {
@@ -629,8 +627,7 @@ nsHTMLDocument::UseWeakDocTypeDefault(PRInt32& aCharsetSource,
 {
   if (kCharsetFromWeakDocTypeDefault <= aCharsetSource)
     return PR_TRUE;
-
-  // fallback value in case webShell return error
+  // fallback value in case docshell return error
   aCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
@@ -681,13 +678,13 @@ nsHTMLDocument::TryDefaultCharset( nsIMarkupDocumentViewer* aMarkupDV,
   if(kCharsetFromUserDefault <= aCharsetSource)
     return PR_TRUE;
 
-  PRUnichar* defaultCharsetFromWebShell = NULL;
+  PRUnichar* defaultCharsetFromDocShell = NULL;
   if (aMarkupDV) {
     nsresult rv =
-      aMarkupDV->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
+      aMarkupDV->GetDefaultCharacterSet(&defaultCharsetFromDocShell);
     if(NS_SUCCEEDED(rv)) {
-      aCharset = defaultCharsetFromWebShell;
-      Recycle(defaultCharsetFromWebShell);
+      aCharset = defaultCharsetFromDocShell;
+      Recycle(defaultCharsetFromDocShell);
       aCharsetSource = kCharsetFromUserDefault;
       return PR_TRUE;
     }
@@ -862,16 +859,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIHTMLContentSink> sink;
-#ifdef rickgdebug
-  // added out. Redirect to stdout if desired -- gpk 04/01/99
-  nsString outString;
-  rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink),&outString,0);
-  if (NS_FAILED(rv)) return rv;
-  NS_ASSERTION(sink, "null sink in debug code variant.");
-#else
-
   NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
+
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
 
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
@@ -973,7 +962,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if(kCharsetFromAutoDetection > charsetSource && !isPostPage) {
     StartAutodetection(docShell, charset, aCommand);
   }
-#endif // rickgdebug
 
   // ahmed
   // Check if 864 but in Implicit mode !
@@ -1010,13 +998,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #endif
     mParser->SetDocumentCharset( charset, charsetSource);
     mParser->SetCommand(aCommand);
-    // create the content sink
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
 
+    // create the content sink
+    nsCOMPtr<nsIHTMLContentSink> sink;
     if (aSink)
       sink = do_QueryInterface(aSink);
     else {
-      rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aURL, webShell,
+      rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aURL, aContainer,
                                  aChannel);
       if (NS_FAILED(rv)) {
         return rv;
@@ -2463,9 +2451,9 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIHTMLContentSink> sink;
-    nsCOMPtr<nsIWebShell> webShell;
+    nsCOMPtr<nsIDocShell> docShell;
 
-    // Get the webshell of our primary presentation shell
+    // Get the docshell of our primary presentation shell
     nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
     if (shell) {
       nsCOMPtr<nsIPresContext> cx;
@@ -2473,13 +2461,13 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
       nsCOMPtr<nsISupports> container;
       if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
         if (container) {
-          webShell = do_QueryInterface(container);
+          docShell = do_QueryInterface(container);
         }
       }
     }
 
     rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL,
-                               webShell, channel);
+                               docShell, channel);
 
     if (NS_OK == rv) {
       static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);

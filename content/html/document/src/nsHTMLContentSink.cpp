@@ -104,7 +104,6 @@
 #include "nsIHttpChannel.h"
 #include "nsCPrefetchService.h"
 
-#include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
 #include "nsIDocument.h"
@@ -237,7 +236,7 @@ public:
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  nsresult Init(nsIDocument* aDoc, nsIURI* aURL, nsIWebShell* aContainer,
+  nsresult Init(nsIDocument* aDoc, nsIURI* aURL, nsISupports* aContainer,
                 nsIChannel* aChannel);
 
   // nsISupports
@@ -311,7 +310,7 @@ public:
                          PRBool aNotify = PR_FALSE);
   nsresult CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType,
                                nsIDOMHTMLFormElement* aForm,
-                               nsIWebShell* aWebShell,
+                               nsIDocShell* aDocShell,
                                nsIHTMLContent** aResult);
 
   inline PRInt32 GetNotificationInterval()
@@ -345,7 +344,7 @@ public:
   nsCOMPtr<nsINodeInfoManager> mNodeInfoManager;
   nsIURI* mDocumentURI;
   nsIURI* mDocumentBaseURL;
-  nsIWebShell* mWebShell;
+  nsCOMPtr<nsIDocShell> mDocShell;
   nsIParser* mParser;
 
   // back off timer notification after count
@@ -900,7 +899,7 @@ SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
 
 static nsresult
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
-                  nsIDOMHTMLFormElement* aForm, nsIWebShell* aWebShell,
+                  nsIDOMHTMLFormElement* aForm, nsIDocShell* aDocShell,
                   nsIHTMLContent** aResult, PRBool aInsideNoXXXTag,
                   PRBool aFromParser);
 
@@ -911,7 +910,7 @@ nsresult
 HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
                                      nsHTMLTag aNodeType,
                                      nsIDOMHTMLFormElement* aForm,
-                                     nsIWebShell* aWebShell,
+                                     nsIDocShell* aDocShell,
                                      nsIHTMLContent** aResult)
 {
   nsresult rv = NS_OK;
@@ -954,7 +953,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   }
 
   // Make the content object
-  rv = MakeContentObject(aNodeType, nodeInfo, aForm, aWebShell, aResult,
+  rv = MakeContentObject(aNodeType, nodeInfo, aForm, aDocShell, aResult,
                          !!mInsideNoXXXTag, PR_TRUE);
 
   if (aNodeType == eHTMLTag_textarea && !mSkippedContent.IsEmpty()) {
@@ -1111,7 +1110,7 @@ nsHTMLElementFactory::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
 // XXX compare switch statement against nsHTMLTags.h's list
 nsresult
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
-                  nsIDOMHTMLFormElement* aForm, nsIWebShell* aWebShell,
+                  nsIDOMHTMLFormElement* aForm, nsIDocShell* aDocShell,
                   nsIHTMLContent** aResult, PRBool aInsideNoXXXTag,
                   PRBool aFromParser)
 {
@@ -1567,7 +1566,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   nsIHTMLContent* content;
   rv = mSink->CreateContentObject(aNode, nodeType, mSink->mCurrentForm,
-                                  mSink->mFrameset ? mSink->mWebShell : nsnull,
+                                  mSink->mFrameset ? mSink->mDocShell : nsnull,
                                   &content);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1804,7 +1803,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
       nsCOMPtr<nsIHTMLContent> content;
       rv = mSink->CreateContentObject(aNode, nodeType,
-                                      mSink->mCurrentForm, mSink->mWebShell,
+                                      mSink->mCurrentForm, mSink->mDocShell,
                                       getter_AddRefs(content));
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2257,7 +2256,7 @@ nsresult
 NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
                       nsIDocument* aDoc,
                       nsIURI* aURL,
-                      nsIWebShell* aWebShell,
+                      nsISupports* aContainer,
                       nsIChannel* aChannel)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -2269,7 +2268,7 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsresult rv = it->Init(aDoc, aURL, aWebShell, aChannel);
+  nsresult rv = it->Init(aDoc, aURL, aContainer, aChannel);
 
   if (NS_FAILED(rv)) {
     delete it;
@@ -2309,7 +2308,6 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mHTMLDocument);
   NS_IF_RELEASE(mDocumentURI);
   NS_IF_RELEASE(mDocumentBaseURL);
-  NS_IF_RELEASE(mWebShell);
   NS_IF_RELEASE(mParser);
   NS_IF_RELEASE(mCSSLoader);
 
@@ -2365,7 +2363,7 @@ NS_IMPL_ISUPPORTS6(HTMLContentSink,
 #endif
 
 static PRBool
-IsScriptEnabled(nsIDocument *aDoc, nsIWebShell *aContainer)
+IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
 {
   NS_ENSURE_TRUE(aDoc && aContainer, PR_TRUE);
 
@@ -2406,7 +2404,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIWebShell *aContainer)
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIURI* aURL,
-                      nsIWebShell* aContainer,
+                      nsISupports* aContainer,
                       nsIChannel* aChannel)
 {
   MOZ_TIMER_DEBUGLOG(("Reset and start: nsHTMLContentSink::Init(), this=%p\n",
@@ -2441,8 +2439,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   NS_ADDREF(aURL);
   mDocumentBaseURL = aURL;
   NS_ADDREF(aURL);
-  mWebShell = aContainer;
-  NS_ADDREF(aContainer);
+  mDocShell = do_QueryInterface(aContainer);
 
   mObservers = nsnull;
 
@@ -2459,18 +2456,19 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   NS_ENSURE_SUCCESS(rv, rv);
   loader->AddObserver(this);
 
-  PRBool enabled = PR_TRUE;
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  NS_ASSERTION(docShell, "oops no docshell!");
-  if (docShell) {
-    docShell->GetAllowSubframes(&enabled);
-    if (enabled) {
+  NS_WARN_IF_FALSE(mDocShell, "oops no docshell!");
+
+  // Find out if subframes are enabled
+  if (mDocShell) {
+    PRBool subFramesEnabled = PR_TRUE;
+    mDocShell->GetAllowSubframes(&subFramesEnabled);
+    if (subFramesEnabled) {
       mFlags |= NS_SINK_FLAG_FRAMES_ENABLED;
     }
   }
 
   // Find out if scripts are enabled, if not, show <noscript> content
-  if (IsScriptEnabled(aDoc, aContainer)) {
+  if (IsScriptEnabled(aDoc, mDocShell)) {
     mFlags |= NS_SINK_FLAG_SCRIPT_ENABLED;
   }
 
@@ -2716,15 +2714,12 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
                 "document"));
 
     // NOTE: only force the layout if we are NOT destroying the
-    // webshell. If we are destroying it, then starting layout will
+    // docshell. If we are destroying it, then starting layout will
     // likely cause us to crash, or at best waste a lot of time as we
     // are just going to tear it down anyway.
     PRBool bDestroying = PR_TRUE;
-    if (mWebShell) {
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-      if (docShell) {
-        docShell->IsBeingDestroyed(&bDestroying);
-      }
+    if (mDocShell) {
+      mDocShell->IsBeingDestroyed(&bDestroying);
     }
 
     if (!bDestroying) {
@@ -2732,14 +2727,11 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     }
   }
 
-  if (mWebShell) {
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-    if (docShell) {
-      PRUint32 LoadType;
-      docShell->GetLoadType(&LoadType);
+  if (mDocShell) {
+    PRUint32 LoadType = 0;
+    mDocShell->GetLoadType(&LoadType);
 
-      ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY));
-    }
+    ScrollToRef(!(LoadType & nsIDocShell::LOAD_CMD_HISTORY));
   }
 
   nsCOMPtr<nsIScriptLoader> loader;
@@ -4119,7 +4111,7 @@ HTMLContentSink::NotifyTagObservers(nsIParserNode* aNode)
     flag = nsIElementObserver::IS_DOCUMENT_WRITE;
   }
 
-  return mObservers->Notify(aNode, mParser, mWebShell, flag);
+  return mObservers->Notify(aNode, mParser, mDocShell, flag);
 }
 
 void
@@ -4137,7 +4129,7 @@ HTMLContentSink::StartLayout()
   // Else, reset scrolling to default settings for this shell.
   // This must happen before the initial reflow, when we create the root frame
   nsresult rv;
-  nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(mWebShell);
+  nsCOMPtr<nsIScrollable> scrollableContainer = do_QueryInterface(mDocShell);
   if (scrollableContainer) {
     if (mFrameset) {
       scrollableContainer->
@@ -4515,11 +4507,10 @@ HTMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContentViewer> contentViewer;
-  docShell->GetContentViewer(getter_AddRefs(contentViewer));
+  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
 
   if (contentViewer) {
     PRBool enabled;
@@ -4895,12 +4886,14 @@ HTMLContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
   // walk up the docshell tree to see if any containing
   // docshell are of type MAIL.
   //
-  nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(mWebShell));
-  if (!docshell)
+  if (!mDocShell)
     return;
+
+  nsCOMPtr<nsIDocShell> docshell = mDocShell;
+
   nsCOMPtr<nsIDocShellTreeItem> treeItem, parentItem;
   do {
-    PRUint32 appType;
+    PRUint32 appType = 0;
     nsresult rv = docshell->GetAppType(&appType);
     if (NS_FAILED(rv) || appType == nsIDocShell::APP_TYPE_MAIL)
       return; // do not prefetch from mailnews
@@ -5142,22 +5135,20 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
 
   mDocument->SetHeaderData(aHeader, aValue);
 
+  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
+
   // see if we have a refresh "header".
   if (aHeader == nsHTMLAtoms::refresh) {
     // first get our baseURI
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
 
     nsCOMPtr<nsIURI> baseURI;
-    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mDocShell);
     rv = webNav->GetCurrentURI(getter_AddRefs(baseURI));
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mWebShell);
+    nsCOMPtr<nsIRefreshURI> reefer = do_QueryInterface(mDocShell);
     if (reefer) {
       rv = reefer->SetupRefreshURIFromHeader(baseURI,
                                              NS_ConvertUCS2toUTF8(aValue));
@@ -5166,10 +5157,6 @@ HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
       }
     }
   } else if (aHeader == nsHTMLAtoms::setcookie) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(mWebShell, &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
 
     nsCOMPtr<nsICookieService> cookieServ =
       do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
@@ -5826,15 +5813,14 @@ HTMLContentSink::FlushPendingNotifications()
 NS_IMETHODIMP
 HTMLContentSink::SetDocumentCharset(nsAString& aCharset)
 {
-  if (mWebShell) {
+  if (mDocShell) {
     // the following logic to get muCV is copied from
     // nsHTMLDocument::StartDocumentLoad
     // We need to call muCV->SetPrevDocCharacterSet here in case
     // the charset is detected by parser DetectMetaTag
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
     nsCOMPtr<nsIMarkupDocumentViewer> muCV;
     nsCOMPtr<nsIContentViewer> cv;
-    docShell->GetContentViewer(getter_AddRefs(cv));
+    mDocShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) {
        muCV = do_QueryInterface(cv);
     } else {
@@ -5843,7 +5829,7 @@ HTMLContentSink::SetDocumentCharset(nsAString& aCharset)
       // parent and parentContentViewer
 
       nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-        do_QueryInterface(docShell);
+        do_QueryInterface(mDocShell);
       NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
