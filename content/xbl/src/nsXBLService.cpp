@@ -411,7 +411,7 @@ NS_IMETHODIMP nsXBLService::GetBinding(const nsCString& aURLStr, nsIXBLBinding**
     
     // If no ref is specified just use this.
     if ((bindingName.IsEmpty()) || (bindingName == value)) {
-      child->SetAttribute(kNameSpaceID_None, kURIAtom, aURLStr, PR_FALSE);
+      child->SetAttribute(kNameSpaceID_None, kURIAtom, NS_ConvertASCIItoUCS2(aURLStr.GetBuffer(), aURLStr.Length()), PR_FALSE);
 
       // Make a new binding
       NS_NewXBLBinding(aResult);
