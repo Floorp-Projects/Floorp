@@ -60,6 +60,8 @@ static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 
 static const char kURINC_FileSystemRoot[] = "NC:FilesRoot";
 
+
+
 class FileSystemDataSource : public nsIRDFFileSystemDataSource
 {
 private:
@@ -179,10 +181,10 @@ PRBool
 FileSystemDataSource::isFileURI(nsIRDFResource *r)
 {
 	PRBool		isFileURIFlag = PR_FALSE;
-	nsXPIDLCString uri;
+	const char	*uri = nsnull;
 	
-	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, kFileProtocol, sizeof(kFileProtocol) - 1))
+	r->GetValueConst(&uri);
+	if ((uri) && (!strncmp(uri, kFileProtocol, sizeof(kFileProtocol) - 1)))
 	{
 		// XXX HACK HACK HACK
 		if (!strchr(uri, '#'))
