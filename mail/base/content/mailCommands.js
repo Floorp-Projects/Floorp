@@ -673,33 +673,28 @@ function analyzeMessagesForJunk()
 
 function analyzeMessages(messages)
 {
-    function processNext()
+  function processNext()
+  {
+    if (counter < messages.length) 
     {
-        if (counter < messages.length) {
-            var messageUri = messages[counter];
-            var message = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
-            ++counter;
-            analyze(message, processNext);
-        }
-        else {
-            dump('[bayesian filter message analysis complete.]\n');
-            gJunkmailComponent.endBatch();
-            performActionOnJunkMsgs();
-        }
-    }
+      var messageUri = messages[counter];
+      var message = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+      ++counter;
+      analyze(message, processNext);
+     }
+     else 
+       performActionOnJunkMsgs();
+  }
 
-    getJunkmailComponent();
-    var counter = 0;
-    gJunkmailComponent.startBatch();
-    dump('[bayesian filter message analysis begins.]\n');
-    processNext();
+  getJunkmailComponent();
+  var counter = 0;
+  processNext();
 }
 
 function JunkSelectedMessages(setAsJunk)
 {
-    MsgJunkMailInfo(true);
-    gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
-                      : nsMsgViewCommandType.unjunk);
+  MsgJunkMailInfo(true);
+  gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk : nsMsgViewCommandType.unjunk);
 }
 
 function deleteJunkInFolder()
