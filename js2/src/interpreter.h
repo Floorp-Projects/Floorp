@@ -30,6 +30,7 @@ namespace JavaScript {
      */
     class JSObject;
     class JSArray;
+	class JSFunction;
     
     /**
      * All JavaScript data types.
@@ -47,12 +48,11 @@ namespace JavaScript {
         float64 f64;
         JSObject* object;
         JSArray* array;
-        ICodeModule *icm;
+        JSFunction *function;
 
         JSValue() : f64(0.0) {}
 
         explicit JSValue(float64 f64) : f64(f64) {}
-        explicit JSValue(ICodeModule *fn) : icm(fn) {}
     };
 	
     /**
@@ -63,7 +63,7 @@ namespace JavaScript {
     JSValue interpret(ICodeModule* iCode, const JSValues& args);
 
     JSValue& defineGlobalProperty(const String& name, const JSValue& value);
-
+	JSValue& defineFunction(const String& name, ICodeModule* iCode);
 }
 
 #endif /* interpreter_h */
