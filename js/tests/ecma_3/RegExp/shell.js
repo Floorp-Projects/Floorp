@@ -22,31 +22,39 @@
 * Functionality common to RegExp testing -
 */
 //-------------------------------------------------------------------------------------------------
-var statprefix = 'regexp = ';
-var statmiddle = ',  string = ';
-var statsuffix = ',  match $';
-var ERR_LENGTH = '\nERROR !!! Match arrays have different lengths:';
-var ERR_NO_MATCH = '\nregexp FAILED to match anything !!!\n';
-var ERR_UNEXP_MATCH = '\nregexp MATCHED when we expected it to fail !!!\n';
-var cnExpect = '\nExpect: ';
-var cnActual = '\nActual: ';
-var cnSingleQuote = "'";
-var cnBracketL =  '[';
-var cnBracketR =  ']';
-var cnNewLine = '\n';
+var MSG_PAT = '\nregexp = ';
+var MSG_STR = '\nstring = ';
+var MSG_EXPECT = '\nExpect: ';
+var MSG_ACTUAL = '\nActual: ';
+var ERR_LENGTH = '\nERROR !!! match arrays have different lengths:';
+var ERR_MATCH = '\nERROR !!! regexp failed to give expected match array:';
+var ERR_NO_MATCH = '\nERROR !!! regexp FAILED to match anything !!!';
+var ERR_UNEXP_MATCH = '\nERROR !!! regexp MATCHED when we expected it to fail !!!';
+var CHAR_QT = "'";
+var CHAR_NL = '\n';
 
 
-function testRegExp(patterns, strings, actualmatches, expectedmatches)
+function testRegExp(statuses, patterns, strings, actualmatches, expectedmatches)
 {
-  var expectedmatch = [];
-  var actualmatch = [];
-  var lExpect = -1;
+  var status = '';
+  var pattern = new RegExp();
+  var string = '';
+  var actualmatch = new Array();
+  var expectedmatch = new Array();
+  var state = '';
   var lActual = -1;
+  var lExpect = -1;
+
 
   for (var i=0; i != patterns.length; i++)
   {
+    status = statuses[i];
+    pattern = patterns[i];
+    string = strings[i];
     actualmatch=actualmatches[i];
     expectedmatch=expectedmatches[i];
+    state = getState(status, pattern, string);
+
 
     if(actualmatch)
     {
@@ -58,25 +66,37 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
  
         if (lActual != lExpect)
         {
-          reportFailure( 
-                        getStatus(i) + ERR_LENGTH +
-                        cnExpect + format(expectedmatch) +
-                        cnActual + format(actualmatch) + 
-                        cnNewLine
+          reportFailure(
+                        state + ERR_LENGTH +
+                        MSG_EXPECT + formatArray(expectedmatch) +
+                        MSG_ACTUAL + formatArray(actualmatch) +
+                        CHAR_NL
                        );
           continue;
         }
 
-        // OK, the arrays have same length. Compare them element-by-element -
-        for (var j=0; j != lActual; j++)
+        // OK, the arrays have same length -
+        if (formatArray(expectedmatch) != formatArray(actualmatch))
         {
-          reportCompare (expectedmatch[j],  actualmatch[j], getStatus(i, j));
+          reportFailure(
+                        state + ERR_MATCH +
+                        MSG_EXPECT + formatArray(expectedmatch) +
+                        MSG_ACTUAL + formatArray(actualmatch) +
+                        CHAR_NL
+                       );
+          continue;
         }
 
       }
       else //expectedmatch is null - that is, we did not expect a match -
       {
-        reportFailure(getStatus(i) + ERR_UNEXP_MATCH);
+        reportFailure(
+                      state + ERR_UNEXP_MATCH +
+                      MSG_EXPECT + expectedmatch +
+                      MSG_ACTUAL + formatArray(actualmatch) +
+                      CHAR_NL
+                     );
+        continue;
       }
 
     }
@@ -84,38 +104,39 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
     {
       if (expectedmatch)
       {
-        reportFailure(getStatus(i) + ERR_NO_MATCH);
+        reportFailure(
+                      state + ERR_NO_MATCH +
+                      MSG_EXPECT + formatArray(expectedmatch) +
+                      MSG_ACTUAL + actualmatch +
+                      CHAR_NL
+                     );
+        continue;
       }
       else // we did not expect a match
       {
-        // Being ultra-cautious here. Presumably expectedmatch===actualmatch===null
-        reportCompare (expectedmatch, actualmatch, getStatus(i));
+        // Being ultra-cautious. Presumably expectedmatch===actualmatch===null
+        reportCompare (expectedmatch, actualmatch, state);
+        continue;
       }
     }
   }
 }
 
 
-function getStatus(i,j)
+function getState(status, pattern, string)
 {
-  if (j != undefined)
-  {
-    return (statprefix + patterns[i] + statmiddle + quote(strings[i]) + statsuffix + j);
-  }
-  else
-  {
-    return (statprefix + patterns[i] + statmiddle + quote(strings[i]));
-  }
+  return (status + MSG_PAT + pattern + MSG_STR + quote(string));
+
 }
 
 
-function format(text)
+function formatArray(arr)
 {
-  return (cnBracketL + text + cnBracketR);
+  return arr.toSource();
 }
 
 
 function quote(text)
 {
-  return (cnSingleQuote + text + cnSingleQuote);
+  return (CHAR_QT + text + CHAR_QT);
 }
