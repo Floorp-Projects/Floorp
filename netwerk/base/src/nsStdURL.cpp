@@ -142,6 +142,16 @@ nsStdURL::nsStdURL(const char* i_Spec, nsISupports* outer)
     char* fwdPtr= (char*) i_Spec;
     while (fwdPtr && (*fwdPtr != '\0') && (*fwdPtr == ' '))
         fwdPtr++;
+    // Remove trailing spaces
+    if (fwdPtr) {
+        char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
+        if (*bckPtr == ' ') {
+            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr == ' ')) {
+                bckPtr--;
+            }
+            *(bckPtr+1) = '\0';
+        }
+    }
     mSpec = fwdPtr ? nsCRT::strdup(fwdPtr) : nsnull;
     NS_INIT_AGGREGATED(outer);
     if (fwdPtr)
@@ -765,6 +775,12 @@ nsStdURL::SetDirectory(const char* i_Directory)
     
     dir += i_Directory;
 
+    // if the last slash is missing then attach it
+    char* last = (char*)i_Directory+PL_strlen(i_Directory)-1;
+    if ('/' != *last) {
+        dir += "/";
+    }
+
     mDirectory = dir.ToNewCString();
     if (!mDirectory)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1063,6 +1079,7 @@ nsStdURL::ParsePath(void)
         ExtractString(mPath, &dirfile, dirfileLen);
         len -= dirfileLen;
         ExtractString(mPath + dirfileLen, &options, len);
+        brk = options;
     }
 
     /* now that we have broken up the path treat every part differently */
@@ -1187,6 +1204,16 @@ nsStdURL::SetSpec(const char* i_Spec)
     char* fwdPtr= (char*) i_Spec;
     while (fwdPtr && (*fwdPtr != '\0') && (*fwdPtr == ' '))
         fwdPtr++;
+    // Remove trailing spaces
+    if (fwdPtr) {
+        char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
+        if (*bckPtr == ' ') {
+            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr == ' ')) {
+                bckPtr--;
+            }
+            *(bckPtr+1) = '\0';
+        }
+    }
 
     CRTFREEIF(mSpec);
     nsresult status = DupString(&mSpec, fwdPtr);
