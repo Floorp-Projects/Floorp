@@ -87,7 +87,8 @@ gboolean node_is_error(TreeState *state);
  * appropriate.
  */
 int
-xpidl_process_idl(char *filename, IncludePathEntry *include_path);
+xpidl_process_idl(char *filename, IncludePathEntry *include_path,
+                  char *basename);
 
 /*
  * Iterate over an IDLN_LIST -- why is this not part of libIDL?

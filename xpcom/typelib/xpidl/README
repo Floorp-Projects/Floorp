@@ -1,7 +1,7 @@
 Wed Dec  2 14:35:41 EST 1998
 
 xpidl depends on Andrew Veliath and Elliot Lee's libIDL, a part of the
-GNOME ORBit C ORB.  We currently require libIDL >= 0.5.6, which in turn
+GNOME ORBit C ORB.  We currently require libIDL >= 0.5.7, which in turn
 requires glib >= 1.1.5.
 
 libIDL builds for Linux and Win32 can be found, along with source tarballs,

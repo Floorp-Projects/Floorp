@@ -31,14 +31,15 @@ gboolean generate_headers  = FALSE;
 gboolean generate_nothing  = FALSE;
 
 static char xpidl_usage_str[] = 
-"Usage: %s [-i] [-d] [-h] [-w] [-v] [-I path] [-n] filename.idl\n"
+"Usage: %s [-i] [-d] [-h] [-w] [-v] [-I path] [-n] [-o basename] filename.idl\n"
 "       -i generate InterfaceInfo data (filename.int) (NYI)\n"
 "       -d generate HTML documentation (filename.html) (NYI)\n"
 "       -h generate C++ headers	       (filename.h)\n"
 "       -w turn on warnings (recommended)\n"
 "       -v verbose mode (NYI)\n"
 "       -I add entry to start of include path for ``#include \"nsIThing.idl\"''\n"
-"       -n do not generate output files, just test IDL (NYI)\n";
+"       -n do not generate output files, just test IDL (NYI)\n"
+"       -o use basename (e.g. ``/tmp/nsIThing'') for output\n";
 
 static void 
 xpidl_usage(int argc, char *argv[])
@@ -52,6 +53,7 @@ main(int argc, char *argv[])
 {
     int i, idlfiles;
     IncludePathEntry *inc, *inc_head = NULL;
+    char *basename = NULL;
 
     inc_head = malloc(sizeof *inc);
     if (!inc_head)
@@ -91,13 +93,21 @@ main(int argc, char *argv[])
             if (!inc)
                 return 1;
             inc->directory = argv[i + 1];
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_includes
             fprintf(stderr, "adding %s to include path\n", inc->directory);
 #endif
             inc->next = inc_head;
             inc_head = inc;
             i++;
             break;
+          case 'o':
+            if (i == argc) {
+                fprintf(stderr, "ERROR: missing basename after -o\n", stderr);
+                xpidl_usage(argc, argv);
+                return 1;
+            }
+            basename = argv[i + 1];
+            i++;
           default:
             xpidl_usage(argc, argv);
             return 1;
@@ -105,19 +115,18 @@ main(int argc, char *argv[])
     }
     
     if (!(generate_docs || generate_invoke || generate_headers)) {
+        fprintf(stderr, "ERROR: must specify one of -i, -d, -h\n");
         xpidl_usage(argc, argv);
         return 1;
     }
 
     for (idlfiles = 0; i < argc; i++) {
         if (argv[i][0] && argv[i][0] != '-')
-            idlfiles += xpidl_process_idl(argv[i], inc_head);
+            idlfiles += xpidl_process_idl(argv[i], inc_head, basename);
     }
     
-    if (!idlfiles) {
-        xpidl_usage(argc, argv);
+    if (!idlfiles)
         return 1;
-    }
 
     return 0;
 }
