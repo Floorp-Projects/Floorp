@@ -641,7 +641,7 @@ PRBool nsCSSScanner::NextURL(nsresult& aErrorCode, nsCSSToken& aToken)
         } else if ((ch == '"') || (ch == '\'') || (ch == '(')) {
           // This is an invalid URL spec
           ok = PR_FALSE;
-        } else if ((256 >= ch) && ((gLexTable[ch] & IS_WHITESPACE) != 0)) {
+        } else if ((256 > ch) && ((gLexTable[ch] & IS_WHITESPACE) != 0)) {
           // Whitespace is allowed at the end of the URL
           (void) EatWhiteSpace(aErrorCode);
           if (LookAhead(aErrorCode, ')')) {
