@@ -5177,7 +5177,7 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
   }
   
   if (ourUserName && 
-    (!strcmp(ourUserName, myUserName.get()) || !strcmp(ourUserName, IMAP_ACL_ANYONE_STRING)))
+    (myUserName.Equals(ourUserName) || !strcmp(ourUserName, IMAP_ACL_ANYONE_STRING)))
   {
     // if this is setting an ACL for me, cache it in the folder pref flags
     UpdateACLCache();
@@ -5188,6 +5188,9 @@ PRBool nsMsgIMAPFolderACL::SetFolderRightsForUser(const char *userName, const ch
 
 const char *nsMsgIMAPFolderACL::GetRightsStringForUser(const char *inUserName)
 {
+  if (!inUserName)
+    return nsnull;
+
   nsXPIDLCString userName;
   userName.Assign(inUserName);
   if (!userName.Length())
