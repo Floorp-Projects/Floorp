@@ -1024,6 +1024,8 @@ nsRect	tr;
   
   if (aImage != nsnull) 
   	{
+		::SetPort(mRenderingSurface);
+		::SetClip(mMainRegion);
     ((nsImageMac*)aImage)->Draw(*this,mRenderingSurface,tr.x,tr.y,tr.width,tr.height);
   	} 
   else 
