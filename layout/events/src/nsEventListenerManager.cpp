@@ -260,7 +260,6 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
       break;
     }
     else if (sel) { 
-	  /*
       //Listener is an nsIScriptEventListener so we need to use its CheckIfEqual
       //method to verify equality.
       nsCOMPtr<nsIScriptEventListener> regSel = do_QueryInterface(ls->mListener, &rv);
@@ -273,7 +272,6 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
           }
         }
       }
-	  */
     }
   }
 
