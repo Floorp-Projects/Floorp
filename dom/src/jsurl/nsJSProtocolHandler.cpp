@@ -60,6 +60,7 @@
 #include "nsIByteArrayInputStream.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsIDOMDocument.h"
 #include "nsIJSConsoleService.h"
 #include "nsIConsoleService.h"
 #include "nsXPIDLString.h"
@@ -179,6 +180,19 @@ nsresult nsJSThunk::EvaluateScript()
         return NS_ERROR_FAILURE;
     }
 
+    // Now get the DOM Document.  Accessing the document will create one
+    // if necessary.  So, basically, this call ensures that a document gets
+    // created -- if necessary.
+    nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(global, &rv));
+    if (domWindow) {
+        nsCOMPtr<nsIDOMDocument> doc;
+
+        rv = domWindow->GetDocument(getter_AddRefs(doc));
+        NS_ASSERTION(doc, "No DOMDocument!");
+    }
+    if (NS_FAILED(rv)) {
+        return NS_ERROR_FAILURE;
+    }
 
     nsCOMPtr<nsIScriptContext> scriptContext;
     rv = global->GetContext(getter_AddRefs(scriptContext));
