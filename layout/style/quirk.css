@@ -167,28 +167,18 @@ hr:after {
 
 /* Quirk: DD not in DL has text-indent instead of margin (b=5119) */
 
-dd {
+:not(dl) > dd {
   display: inline;
   margin: 0;
 }
-dd:before {
+
+:not(dl) > dd:before {
   display: inline;
   white-space: pre;
   font-size: 1px;
   line-height: 0;
   content: "\A  ";
   margin-right: 40px;
-}
-dl > dd:before {
-  white-space: normal;
-  font-size: inherit;
-  line-height: inherit;
-  content: "";
-  margin: 0;
-}
-dl > dd {
-  display: block;
-  margin-left: 40px;
 }
 
 /* Quirk: MAP acts like an inline, not a block */
