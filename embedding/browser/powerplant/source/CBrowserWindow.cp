@@ -33,6 +33,8 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsIWindowCreator.h"
+#include "nsIWindowWatcher.h"
 
 #include "CBrowserWindow.h"
 #include "CBrowserShell.h"
@@ -531,6 +533,17 @@ NS_METHOD CBrowserWindow::GetWidget(nsIWidget** aWidget)
 }
 
 
+NS_METHOD CBrowserWindow::GetIWebBrowserChrome(nsIWebBrowserChrome **aChrome)
+{
+	NS_ENSURE_ARG_POINTER(aChrome);
+
+	*aChrome = static_cast<nsIWebBrowserChrome *> (mBrowserChrome);
+	NS_IF_ADDREF(*aChrome);
+
+	return NS_OK;
+}
+
+
 NS_METHOD CBrowserWindow::SizeToContent()
 {
   nsCOMPtr<nsIContentViewer> aContentViewer;
@@ -746,4 +759,74 @@ NS_METHOD CBrowserWindow::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent 
     }
 
     return NS_OK;
+}
+
+// ---------------------------------------------------------------------------
+//	Window Creator
+// ---------------------------------------------------------------------------
+
+class CWindowCreator : public nsIWindowCreator
+{
+  public:
+                         CWindowCreator();
+    virtual             ~CWindowCreator();
+    
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWINDOWCREATOR 
+};
+
+NS_IMPL_ISUPPORTS1(CWindowCreator, nsIWindowCreator);
+
+CWindowCreator::CWindowCreator()
+{
+    NS_INIT_ISUPPORTS();
+}
+
+CWindowCreator::~CWindowCreator()
+{
+}
+
+NS_IMETHODIMP CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
+                                              PRUint32 aChromeFlags,
+                                              nsIWebBrowserChrome **_retval)
+{
+	NS_ENSURE_ARG_POINTER(_retval);
+	*_retval = 0;
+
+	CBrowserWindow *theWindow;
+
+	// we're ignoring aParent,
+	// but since windows on the Mac don't have parents anyway...
+	try {
+		theWindow = CBrowserWindow::CreateWindow(aChromeFlags, -1, -1);
+		theWindow->SetSizeToContent(false);
+		theWindow->Show();
+		theWindow->GetIWebBrowserChrome(_retval);
+	} catch(...) {
+		return NS_ERROR_FAILURE;
+	}
+
+	return NS_OK;
+}
+
+
+/*
+   InitializeWindowCreator creates and hands off an object with a callback
+   to a window creation function. This will be used by Gecko C++ code
+   (never JS) to create new windows when no previous window is handy
+   to begin with. This is done in a few exceptional cases, like PSM code.
+   Failure to set this callback will only disable the ability to create
+   new windows under these circumstances.
+*/
+
+nsresult InitializeWindowCreator()
+{
+	// Create a CWindowCreator and give it to the WindowWatcher service
+	// The WindowWatcher service will own it so we don't keep a ref.
+	CWindowCreator *windowCreator = new CWindowCreator;
+	if (!windowCreator) return NS_ERROR_FAILURE;
+	
+	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+	if (!wwatch) return NS_ERROR_FAILURE;
+	return wwatch->SetWindowCreator(windowCreator);
 }

@@ -73,6 +73,7 @@ private:
     typedef LWindow Inherited;
 
     friend class CWebBrowserChrome;	
+    friend class CWindowCreator;
 
 public:
 	enum { class_ID = FOUR_CHAR_CODE('BroW') };
@@ -150,7 +151,9 @@ protected:
     NS_METHOD                   SetVisibility(PRBool aVisibility);
     
     NS_METHOD                   OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
-       
+
+    NS_METHOD                   GetIWebBrowserChrome(nsIWebBrowserChrome **aChrome);
+
 protected:
     nsCOMPtr<nsIWidget>         mWindow;
 
@@ -169,4 +172,10 @@ protected:
 	nsIDOMNode*                 mContextMenuDOMNode; // weak ref - only kept during call of OnShowContextMenu
 };
 
+// ---------------------------------------------------------------------------
+//	Global Functions
+// ---------------------------------------------------------------------------
+
+// Must be called at initialization time - after NS_InitEmbedding
+nsresult InitializeWindowCreator();
 

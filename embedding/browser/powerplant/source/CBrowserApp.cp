@@ -193,6 +193,7 @@ CBrowserApp::CBrowserApp()
 
    rv = NS_InitEmbedding(appDir, fileLocProvider);
 
+   InitializeWindowCreator();
 }
 
 
