@@ -753,7 +753,9 @@ nsWindowMediator::SetZPosition(
         return NS_ERROR_INVALID_ARG;
       else
         inPosition = nsIWindowMediator::zLevelTop;
-  } else /* zLevelTop or zLevelBottom */
+  }
+  if (inPosition == nsIWindowMediator::zLevelTop ||
+      inPosition == nsIWindowMediator::zLevelBottom)
     belowInfo = mTopmostWindow ? mTopmostWindow->mHigher : 0;
 
   if (inInfo != belowInfo) {
