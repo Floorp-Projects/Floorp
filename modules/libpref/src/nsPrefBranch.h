@@ -53,7 +53,7 @@ protected:
 
   nsresult   GetDefaultFromPropertiesFile(const char *aPrefName, PRUnichar **return_buf);
   const char *getPrefName(const char *aPrefName);
-  nsresult   QueryObserver(const char *aPrefName);
+  nsresult   getValidatedPrefName(const char *aPrefName, const char **_retval);
 
 private:
   PRInt32         mPrefRootLength;
