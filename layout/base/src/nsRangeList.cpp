@@ -1083,10 +1083,16 @@ nsRangeList::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
 {
   if (!aReturnFrame)
     return NS_ERROR_NULL_POINTER;
+  
+  nsresult	result = NS_OK;
+  
   nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(FetchFocusNode());
-  nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(node, &result);
+  if (NS_FAILED(result) || !content)
+    return result;
+  
   PRBool canContainChildren = PR_FALSE;
-  nsresult result = content->CanContainChildren(canContainChildren);
+  result = content->CanContainChildren(canContainChildren);
   if (NS_SUCCEEDED(result) && canContainChildren)
   {
     PRInt32 offset = FetchFocusOffset();
