@@ -16,8 +16,10 @@
 #previewImageContainer {
   overflow: hidden; 
   height: 92px; 
-  background-color: #000000; 
+  border: 1px solid black;
   padding: 2px;
+  max-width: 365px;
+  -moz-box-align: center;
 }
 
 #previewImage {
