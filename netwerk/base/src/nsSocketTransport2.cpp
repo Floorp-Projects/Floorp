@@ -1449,7 +1449,8 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
     // condition up to our consumers.  (e.g., STS is shutting down.)
     if (NS_SUCCEEDED(mCondition))
         mCondition = NS_ERROR_ABORT;
-    else if (RecoverFromError())
+
+    if (RecoverFromError())
         mCondition = NS_OK;
     else {
         mState = STATE_CLOSED;
