@@ -1248,11 +1248,11 @@ namespace MetaData {
             nameList = new const String *[lMap->size()];
             length = 0;
             for (LocalBindingIterator bi = lMap->begin(), bend = lMap->end(); (bi != bend); bi++) {
-                LocalBindingEntry *lbe = *bi;
-                for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+                LocalBindingEntry &lbe = *bi;
+                for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                     LocalBindingEntry::NamespaceBinding ns = *i;
                     if ((ns.first == meta->publicNamespace) && ns.second->enumerable)
-                        nameList[length++] = &lbe->name;
+                        nameList[length++] = &lbe.name;
                 }
             }
             if (length == 0) {

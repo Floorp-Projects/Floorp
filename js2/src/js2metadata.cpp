@@ -3175,12 +3175,24 @@ doUnary:
         singularFrame->localBindings.clear();
 
         for (LocalBindingIterator bi = pluralFrame->localBindings.begin(), bend = pluralFrame->localBindings.end(); (bi != bend); bi++) {
-            LocalBindingEntry *lbe = *bi;
-            lbe->clear();
+            LocalBindingEntry &lbe = *bi;
+            lbe.clear();
         }
         for (LocalBindingIterator bi2 = pluralFrame->localBindings.begin(), bend2 = pluralFrame->localBindings.end(); (bi2 != bend2); bi2++) {
-            LocalBindingEntry *lbe = *bi2;
-            singularFrame->localBindings.insert(lbe->name, lbe->clone());
+            LocalBindingEntry &lbe = *bi2;
+            LocalBindingEntry *new_lbe = &singularFrame->localBindings.insert(lbe.name);
+
+            for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceBinding &ns = *i;
+                LocalBinding *m = ns.second;
+                if (m->content->cloneContent == NULL) {
+                    m->content->cloneContent = m->content->clone();
+                }
+                LocalBinding *new_b = new LocalBinding(m->accesses, m->content->cloneContent, m->enumerable);
+                new_b->xplicit = m->xplicit;
+                new_lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(ns.first, new_b));
+            }
+
         }
         if (buildSlots && pluralFrame->frameSlots) {
             size_t count = pluralFrame->frameSlots->size();
@@ -3208,12 +3220,6 @@ doUnary:
  *  Context
  *
  ************************************************************************************/
-
-    // clone a context
-    Context::Context(Context *cxt) : strict(cxt->strict), E3compatibility(cxt->E3compatibility), openNamespaces(cxt->openNamespaces)
-    {
-        ASSERT(false);  // ?? used ??
-    }
 
 
 /************************************************************************************
@@ -3309,9 +3315,9 @@ doUnary:
             multiname->addNamespace(namespaces);
 
         // Search the local frame for an overlapping definition
-        LocalBindingEntry **lbeP = innerFrame->localBindings[id];
+        LocalBindingEntry *lbeP = innerFrame->localBindings[id];
         if (lbeP) {
-            for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+            for (LocalBindingEntry::NS_Iterator i = lbeP->begin(), end = lbeP->end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding &ns = *i;
                 if ((ns.second->accesses & access) && multiname->listContains(ns.first))
                     reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
@@ -3329,9 +3335,9 @@ doUnary:
             while (true) {
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
-                    LocalBindingEntry **rbeP = nwfr->localBindings[id];
+                    LocalBindingEntry *rbeP = nwfr->localBindings[id];
                     if (rbeP) {
-                        for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
+                        for (LocalBindingEntry::NS_Iterator i = rbeP->begin(), end = rbeP->end(); (i != end); i++) {
                             LocalBindingEntry::NamespaceBinding &ns = *i;
                             if ((ns.second->accesses & access) 
                                     && (ns.second->content->memberKind != LocalMember::ForbiddenMember)
@@ -3348,16 +3354,11 @@ doUnary:
         }
 
         // Now insert the id, via all it's namespaces into the local frame
-        LocalBindingEntry *lbe;
-        if (lbeP == NULL) {
-            lbe = new LocalBindingEntry(id);
-            innerFrame->localBindings.insert(id, lbe);
-        }
-        else
-            lbe = *lbeP;
+        if (lbeP == NULL)
+            lbeP = &innerFrame->localBindings.insert(id);
         for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
             LocalBinding *new_b = new LocalBinding(access, m, enumerable);
-            lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(*nli, new_b));
+            lbeP->bindingList.push_back(LocalBindingEntry::NamespaceBinding(*nli, new_b));
         }
         // Mark the bindings of multiname as Forbidden in all non-innermost frames in the current
         // region if they haven't been marked as such already.
@@ -3369,9 +3370,9 @@ doUnary:
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
                     for (NamespaceListIterator nli = multiname->nsList->begin(), nlend = multiname->nsList->end(); (nli != nlend); nli++) {
                         bool foundEntry = false;
-                        LocalBindingEntry **rbeP = nwfr->localBindings[id];
+                        LocalBindingEntry *rbeP = nwfr->localBindings[id];
                         if (rbeP) {
-                            for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
+                            for (LocalBindingEntry::NS_Iterator i = rbeP->begin(), end = rbeP->end(); (i != end); i++) {
                                 LocalBindingEntry::NamespaceBinding &ns = *i;
                                 if ((ns.second->accesses & access) && (ns.first == *nli)) {
                                     ASSERT(ns.second->content->memberKind == LocalMember::ForbiddenMember);
@@ -3381,8 +3382,7 @@ doUnary:
                             }
                         }
                         if (!foundEntry) {
-                            LocalBindingEntry *rbe = new LocalBindingEntry(id);
-                            nwfr->localBindings.insert(id, rbe);
+                            LocalBindingEntry *rbe = &nwfr->localBindings.insert(id);
                             LocalBinding *new_b = new LocalBinding(access, forbiddenMember, false);
                             rbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(*nli, new_b));
                         }
@@ -3563,9 +3563,9 @@ rescan:
         // run through all the existing bindings, to see if this variable already exists.
         LocalBinding *bindingResult = NULL;
         bool foundMultiple = false;
-        LocalBindingEntry **lbeP = regionalFrame->localBindings[id];
+        LocalBindingEntry *lbeP = regionalFrame->localBindings[id];
         if (lbeP) {
-            for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+            for (LocalBindingEntry::NS_Iterator i = lbeP->begin(), end = lbeP->end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding &ns = *i;
                 if (ns.first == publicNamespace) {
                     if (bindingResult) {
@@ -3586,17 +3586,12 @@ rescan:
         }
         
         if (bindingResult == NULL) {
-            LocalBindingEntry *lbe;
-            if (lbeP == NULL) {
-                lbe = new LocalBindingEntry(id);
-                regionalFrame->localBindings.insert(id, lbe);
-            }
-            else
-                lbe = *lbeP;
+            if (lbeP == NULL)
+                lbeP = &regionalFrame->localBindings.insert(id);
             result = makeFrameVariable(regionalFrame);
             (*regionalFrame->frameSlots)[checked_cast<FrameVariable *>(result)->frameSlot] = initVal;
             LocalBinding *sb = new LocalBinding(ReadWriteAccess, result, true);
-            lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));
+            lbeP->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, sb));
         }
         else {
             if (foundMultiple)
@@ -4384,9 +4379,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             lMap = &checked_cast<NonWithFrame *>(container)->localBindings;
         
         if (lMap->size()) {
-            LocalBindingEntry **lbeP = (*lMap)[multiname->name];
+            LocalBindingEntry *lbeP = (*lMap)[multiname->name];
             if (lbeP) {
-                for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+                for (LocalBindingEntry::NS_Iterator i = lbeP->begin(), end = lbeP->end(); (i != end); i++) {
                     LocalBindingEntry::NamespaceBinding &ns = *i;
                     if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
                         if (found && (ns.second->content != found))
@@ -4664,15 +4659,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     void JS2Metadata::addPublicVariableToLocalMap(LocalBindingMap *lMap, const StringAtom &name, LocalMember *v, Access access, bool enumerable)
     {
         LocalBinding *new_b = new LocalBinding(access, v, enumerable);
-        LocalBindingEntry **lbeP = (*lMap)[name];
-        LocalBindingEntry *lbe;
-        if (lbeP == NULL) {
-            lbe = new LocalBindingEntry(name);
-            lMap->insert(name, lbe);
-        }
-        else
-            lbe = *lbeP;
-        lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, new_b));
+        LocalBindingEntry *lbeP = (*lMap)[name];
+        if (lbeP == NULL)
+            lbeP = &lMap->insert(name);
+        lbeP->bindingList.push_back(LocalBindingEntry::NamespaceBinding(publicNamespace, new_b));
     }
 
     // The caller must make sure that the created property does not already exist and does not conflict with any other property.
@@ -5114,8 +5104,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
         }
         for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
-            LocalBindingEntry *lbe = *bi;
-            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+            LocalBindingEntry &lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
                 ns.second->content->mark();
             }
@@ -5125,12 +5115,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     SimpleInstance::~SimpleInstance()
     {
         for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
-            LocalBindingEntry *lbe = *bi;
-            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+            LocalBindingEntry &lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
                 delete ns.second;
             }
-            delete lbe;
         }
         delete [] fixedSlots;
     }
@@ -5253,12 +5242,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     NonWithFrame::~NonWithFrame()
     {
         for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
-            LocalBindingEntry *lbe = *bi;
-            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+            LocalBindingEntry &lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
                 delete ns.second;
             }
-            delete lbe;
         }
         if (frameSlots)
             delete frameSlots;
@@ -5269,8 +5257,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         GCMARKOBJECT(pluralFrame)
         for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
-            LocalBindingEntry *lbe = *bi;
-            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+            LocalBindingEntry &lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
                 ns.second->content->mark();
             }
@@ -5295,8 +5283,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         GCMARKVALUE(super);
         GCMARKOBJECT(internalNamespace)
         for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
-            LocalBindingEntry *lbe = *bi;
-            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+            LocalBindingEntry &lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
                 LocalBindingEntry::NamespaceBinding ns = *i;
                 ns.second->content->mark();
             }
@@ -5350,15 +5338,15 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             // Add the 'arguments' property
 
             const StringAtom &name = meta->world.identifiers["arguments"];
-            LocalBindingEntry **lbeP = localBindings[name];
+            LocalBindingEntry *lbeP = localBindings[name];
             if (lbeP == NULL) {
-                LocalBindingEntry *lbe = new LocalBindingEntry(name);
                 LocalBinding *sb = new LocalBinding(ReadWriteAccess, new Variable(meta->objectClass, OBJECT_TO_JS2VAL(argsObj), false), false);
+                LocalBindingEntry *lbe = &localBindings.insert(name);
                 lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
-                localBindings.insert(name, lbe);
+                
             }
             else {
-                LocalBindingEntry::NamespaceBinding &ns = *((*lbeP)->begin());
+                LocalBindingEntry::NamespaceBinding &ns = *(lbeP->begin());
                 ASSERT(ns.first == meta->publicNamespace);
                 ASSERT(ns.second->content->memberKind == Member::VariableMember);
                 (checked_cast<Variable *>(ns.second->content))->value = OBJECT_TO_JS2VAL(argsObj);

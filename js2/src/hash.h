@@ -291,8 +291,7 @@ namespace JavaScript {
                 return insert(r, key, value);
         }
 
-        template<class Value>
-        Data &HashTable<Data, Key, H>::insert(Data data)
+        template<class Value> Data &insert(Data data)
         {
             Key key = data.key();
             Value value = data.value();

@@ -656,12 +656,8 @@ public:
 
 // A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list
 // will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
-typedef HashTable<LocalBindingEntry *, const StringAtom &> LocalBindingMap;
-typedef TableIterator<LocalBindingEntry *, const StringAtom &> LocalBindingIterator;
-
-
-
-
+typedef HashTable<LocalBindingEntry, const StringAtom &> LocalBindingMap;
+typedef TableIterator<LocalBindingEntry, const StringAtom &> LocalBindingIterator;
 
 
 class InstanceBindingEntry {
@@ -1448,7 +1444,6 @@ typedef NamespaceList::iterator NamespaceListIterator;
 class Context {
 public:
     Context() : strict(false), E3compatibility(true) { }
-    Context(Context *cxt);
     bool strict;                    // true if strict mode is in effect
     bool E3compatibility;
     NamespaceList openNamespaces;   // The set of namespaces that are open at this point. 
@@ -1767,8 +1762,8 @@ public:
     
 }; // namespace MetaData
 
-inline bool operator==(MetaData::LocalBindingEntry *s1, const StringAtom &s2) { return s1->name == s2;}
-inline bool operator!=(MetaData::LocalBindingEntry *s1, const StringAtom &s2) { return s1->name != s2;}
+inline bool operator==(MetaData::LocalBindingEntry &s1, const StringAtom &s2) { return s1.name == s2;}
+inline bool operator!=(MetaData::LocalBindingEntry &s1, const StringAtom &s2) { return s1.name != s2;}
 
 inline bool operator==(MetaData::InstanceBindingEntry *s1, const StringAtom &s2) { return s1->name == s2;}
 inline bool operator!=(MetaData::InstanceBindingEntry *s1, const StringAtom &s2) { return s1->name != s2;}

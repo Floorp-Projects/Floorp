@@ -1059,14 +1059,14 @@ VariableMemberCommon:
                 else
                     lMap = &checked_cast<NonWithFrame *>(container)->localBindings;
 
-                LocalBindingEntry **lbeP = (*lMap)[multiname->name];
+                LocalBindingEntry *lbeP = (*lMap)[multiname->name];
                 if (lbeP) {
                     while (true) {
                         bool deletedOne = false;
-                        for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+                        for (LocalBindingEntry::NS_Iterator i = lbeP->begin(), end = lbeP->end(); (i != end); i++) {
                             LocalBindingEntry::NamespaceBinding &ns = *i;
                             if (multiname->listContains(ns.first)) {
-                                (*lbeP)->bindingList.erase(i);
+                                lbeP->bindingList.erase(i);
                                 deletedOne = true;
                                 if (ns.second->content->release())
                                     delete ns.second->content;

@@ -251,10 +251,10 @@ void printLocalBindings(LocalBindingMap *lMap, ValueList *frameSlots)
     stdOut << " Local Bindings:\n";   
 
     for (LocalBindingIterator bi = lMap->begin(), bend = lMap->end(); (bi != bend); bi++) {
-        LocalBindingEntry *lbe = *bi;
-        for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+        LocalBindingEntry &lbe = *bi;
+        for (LocalBindingEntry::NS_Iterator i = lbe.begin(), end = lbe.end(); (i != end); i++) {
             LocalBindingEntry::NamespaceBinding ns = *i;
-            stdOut << "\t" << ns.first->name << "::" << lbe->name;
+            stdOut << "\t" << ns.first->name << "::" << lbe.name;
             LocalMember *m = checked_cast<LocalMember *>(ns.second->content);
             switch (m->memberKind) {
             case Member::ForbiddenMember:
