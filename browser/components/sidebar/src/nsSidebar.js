@@ -102,23 +102,14 @@ function(aTitle, aContentURL, aCustomizeURL)
 nsSidebar.prototype.addPanelInternal =
 function (aTitle, aContentURL, aCustomizeURL, aPersist)
 {
+    var WINMEDSVC = Components.classes['@mozilla.org/appshell/window-mediator;1']
+                              .getService(Components.interfaces.nsIWindowMediator);
+    var win = WINMEDSVC.getMostRecentWindow( "navigator:browser" );
+                                                                                
     sidebarURLSecurityCheck(aContentURL);
-
-    // Avert your eyes children.  It may assume other forms.
-    var ir = this.window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var webNav = ir.getInterface(Components.interfaces.nsIWebNavigation);
-    var docTreeItem = webNav.QueryInterface(Components.interfaces.nsIDocShellTreeItem);
-    var chromeDocTreeItem = docTreeItem.parent;
-    
-    // You're still here?  I thought the previous four lines would have driven you away.
-    // Now for my next trick...
-    var chromeIR = chromeDocTreeItem.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-    var chromeWindow = chromeIR.getInterface(Components.interfaces.nsIDOMWindowInternal);
-
-    // The name.... is NEO.
-    chromeWindow.openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                            "centerscreen,chrome,dialog=yes,resizable=no,dependent",
-                            aTitle, aContentURL, null, null, null, null, true);
+    win.openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
+                   "centerscreen,chrome,dialog=yes,resizable=no,dependent",
+                   aTitle, aContentURL, null, null, null, null, true);
 }
 
 /* decorate prototype to provide ``class'' methods and property accessors */
