@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.2 2000/05/12 18:43:28 dougt%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.3 2000/05/24 03:35:23 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -222,6 +222,22 @@ typedef struct {
 
 #define ssl_V3_SUITES_IMPLEMENTED 13
 
+typedef struct sslOptionsStr {
+    unsigned int useSecurity		: 1;  /*  1 */
+    unsigned int useSocks		: 1;  /*  2 */
+    unsigned int requestCertificate	: 1;  /*  3 */
+    unsigned int requireCertificate	: 2;  /*  4-5 */
+    unsigned int handshakeAsClient	: 1;  /*  6 */
+    unsigned int handshakeAsServer	: 1;  /*  7 */
+    unsigned int enableSSL2		: 1;  /*  8 */
+    unsigned int enableSSL3		: 1;  /*  9 */
+    unsigned int enableTLS		: 1;  /* 10 */
+    unsigned int noCache		: 1;  /* 11 */
+    unsigned int fdx			: 1;  /* 12 */
+    unsigned int v2CompatibleHello	: 1;  /* 13 */
+    unsigned int detectRollBack  	: 1;  /* 14 */
+} sslOptions;
+
 /*
 ** SSL Socket struct
 **
@@ -249,11 +265,13 @@ struct sslSocketStr {
     unsigned int     noCache		: 1;
     unsigned int     fdx		: 1; /* simultaneous read/write threads */
     unsigned int     v2CompatibleHello	: 1; /* Send v3+ client hello in v2 format */
+    unsigned int     detectRollBack   	: 1; /* Detect rollback to SSL v3 */
     unsigned int     connected		: 1; /* initial handshake is complete. */
     unsigned int     recvdCloseNotify	: 1; /* received SSL EOF. */
 
     /* version of the protocol to use */
     SSL3ProtocolVersion version;
+    SSL3ProtocolVersion clientHelloVersion; /* version sent in client hello. */
 
     /* Non-zero if socks is enabled */
     sslSocksInfo *   socks;

@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.1 2000/03/31 19:37:07 relyea%netscape.com Exp $
+ * $Id: sslsock.c,v 1.2 2000/05/24 03:35:23 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -145,20 +145,7 @@ sslSocketOps ssl_secure_socks_ops = {	/* Both SSL and Socks. */
 /*
 ** default settings for socket enables
 */
-static struct {
-    unsigned int useSecurity		: 1;
-    unsigned int useSocks		: 1;
-    unsigned int requestCertificate	: 1;
-    unsigned int requireCertificate	: 2;
-    unsigned int handshakeAsClient	: 1;
-    unsigned int handshakeAsServer	: 1;
-    unsigned int enableSSL2		: 1;
-    unsigned int enableSSL3		: 1;
-    unsigned int enableTLS		: 1;
-    unsigned int noCache		: 1;
-    unsigned int fdx			: 1;
-    unsigned int v2CompatibleHello	: 1;
-} ssl_defaults = {
+static sslOptions ssl_defaults = {
     PR_TRUE, 	/* useSecurity        */
     PR_FALSE,	/* useSocks           */
     PR_FALSE,	/* requestCertificate */
@@ -167,10 +154,11 @@ static struct {
     PR_FALSE,	/* handshakeAsServer  */
     PR_TRUE,	/* enableSSL2         */
     PR_TRUE,	/* enableSSL3         */
-    PR_FALSE,	/* enableTLS          */
+    PR_TRUE, 	/* enableTLS          */ /* now defaults to on in NSS 3.0 */
     PR_FALSE,	/* noCache            */
     PR_FALSE,	/* fdx                */
     PR_TRUE,	/* v2CompatibleHello  */
+    PR_TRUE,	/* detectRollBack     */
 };
 
 sslSessionIDLookupFunc  ssl_sid_lookup;
@@ -260,6 +248,7 @@ ssl_DupSocket(sslSocket *os)
 	ss->noCache            = os->noCache;
 	ss->fdx                = os->fdx;
 	ss->v2CompatibleHello  = os->v2CompatibleHello;
+	ss->detectRollBack     = os->detectRollBack;
 	ss->peerID             = !os->peerID ? NULL : PORT_Strdup(os->peerID);
 	ss->url                = !os->url    ? NULL : PORT_Strdup(os->url);
 
@@ -596,6 +585,10 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 	}
 	break;
 
+      case SSL_ROLLBACK_DETECTION:  
+	ss->detectRollBack = on;
+        break;
+
       default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	rv = SECFailure;
@@ -641,6 +634,7 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
     case SSL_NO_CACHE:            on = ss->noCache;            break;
     case SSL_ENABLE_FDX:          on = ss->fdx;                break;
     case SSL_V2_COMPATIBLE_HELLO: on = ss->v2CompatibleHello;  break;
+    case SSL_ROLLBACK_DETECTION:  on = ss->detectRollBack;     break;
 
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -678,6 +672,7 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
     case SSL_NO_CACHE:            on = ssl_defaults.noCache;		break;
     case SSL_ENABLE_FDX:          on = ssl_defaults.fdx;                break;
     case SSL_V2_COMPATIBLE_HELLO: on = ssl_defaults.v2CompatibleHello;  break;
+    case SSL_ROLLBACK_DETECTION:  on = ssl_defaults.detectRollBack;     break;
 
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -758,6 +753,10 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 	if (!on) {
 	    ssl_defaults.enableSSL2    = on;
 	}
+	break;
+
+      case SSL_ROLLBACK_DETECTION:  
+	ssl_defaults.detectRollBack = on;
 	break;
 
       default:
@@ -1769,6 +1768,7 @@ ssl_NewSocket(void)
 	ss->enableTLS          = ssl_defaults.enableTLS ;
 	ss->fdx                = ssl_defaults.fdx;
 	ss->v2CompatibleHello  = ssl_defaults.v2CompatibleHello;
+	ss->detectRollBack     = ssl_defaults.detectRollBack;
 	ss->peer               = 0;
 	ss->port               = 0;
 	ss->noCache            = ssl_defaults.noCache;
