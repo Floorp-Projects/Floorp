@@ -212,7 +212,7 @@ nsXULTreeElement::AddItemToSelectionInternal(nsIDOMXULElement* aTreeItem)
 {
   // Without clearing the selection, perform the add.
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
-  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE);
+  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, nsAutoString("true"), PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -245,7 +245,7 @@ nsXULTreeElement::AddCellToSelectionInternal(nsIDOMXULElement* aTreeCell)
 {
   // Without clearing the selection, perform the add.
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeCell);
-  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE);
+  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, nsAutoString("true"), PR_TRUE);
 }
 
 NS_IMETHODIMP
