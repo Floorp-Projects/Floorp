@@ -214,6 +214,9 @@ UInt32		gTotalLargeHeapMaxUsed = 0;						// max space used
 #pragma mark -
 #pragma mark malloc AND free
 
+static void* LargeBlockGrow(LargeBlockHeader* blockHeader, size_t newSize, void* refcon); // forward
+static void* LargeBlockShrink(LargeBlockHeader* blockHeader, size_t newSize, void* refcon); // forward
+
 /*
  * These are kinda ugly as all the DEBUG code is ifdefed inside here, but I really
  * don't like the idea of having multiple implementations of the basic malloc
@@ -581,6 +584,96 @@ void memtotal ( size_t blockSize, FreeMemoryStats * stats )
 	whichAllocator->heapFreeSpaceRoutine ( blockSize, stats, whichAllocator->root );
 }
 
+//----------------------------------------------------------------------------------------
+static Boolean resize_block(void* block, size_t newSize)
+//      Returning false is a signal to the caller to use other means - it does not
+//      mean that mem is full, it may just mean that we "don't know".
+//----------------------------------------------------------------------------------------
+{
+#ifdef MALLOC_IS_NEWPTR
+
+        SetPtrSize(block);
+        return ::MemError() == noErr;
+
+#else
+
+        char                                            *blockBase = ((char *)block - sizeof(MemoryBlockHeader));
+        MemoryBlockHeader                       *blockHeader = (MemoryBlockHeader *)blockBase;
+#if DEBUG_HEAP_INTEGRITY        //|| STATS_MAC_MEMORY
+        size_t                                          oldBlockSize = blockHeader->blockSize;
+#endif
+        FreeMemoryBlockDescriptor       *descriptor     = blockHeader->blockFreeRoutine;
+
+        if (descriptor->freeRoutine == LargeBlockFree)
+        {
+                LargeBlockHeader *              largeBlockHeader
+                        = (LargeBlockHeader *) ((char *)block - sizeof(LargeBlockHeader));
+
+#if DEBUG_HEAP_INTEGRITY
+                if (blockHeader->headerTag == kFreeBlockHeaderTag)
+                {
+                        DebugStr("\pfastmem: attempt to grow a freed block");
+                        return false;
+                }
+                else
+                {
+                        MemoryBlockTrailer* blockTrailer = (MemoryBlockTrailer *)((char*)block + oldBlockSize);
+                        
+                        if ((blockHeader->headerTag != kUsedBlockHeaderTag) || (blockTrailer->trailerTag != kUsedBlockTrailerTag))
+                        {
+                                DebugStr("\pfastmem: attempt to grow illegal block");
+                                return false;
+                        }
+                }
+#endif
+
+                if (newSize > largeBlockHeader->logicalSize)
+                        block = LargeBlockGrow(largeBlockHeader, newSize, descriptor->refcon);
+                else if (newSize < largeBlockHeader->logicalSize)
+                        block = LargeBlockShrink(largeBlockHeader, newSize, descriptor->refcon);
+                else
+                        return true;
+        }
+        else if (descriptor->freeRoutine == FixedSizeFree)
+        {
+                /*      If the new size would require a "large block", give up */
+                if (newSize > kMaxTableAllocatedBlockSize)
+                        return false;
+                
+                /*      If the new size could not be allocated within the same block
+                        size, then give up */
+                if (((newSize + 3) >> 2) != ((memsize(block) + 3) >> 2))
+                        return false;
+                
+                /* Otherwise, we can reuse the same block! */
+        }
+        else
+        {
+                return false; // Don't do small heap yet
+        }
+                
+#if DEBUG_HEAP_INTEGRITY
+        if (block)
+        {
+                //      Fix the size in the block's header, and fill in the trailer.
+                MemoryBlockTrailer* newBlockTrailer = (MemoryBlockTrailer *)((char *)block + newSize);
+
+                blockHeader->blockSize = newSize;
+                newBlockTrailer->trailerTag = kUsedBlockTrailerTag;
+
+                //      Fill with the used memory pattern
+                if (gFillUsedBlocksWithPattern && newSize > oldBlockSize)
+                        memset(
+                                (char *)block + oldBlockSize,
+                                kUsedMemoryFillPattern,
+                                newSize - oldBlockSize);
+        }
+#endif
+        return (block != NULL);
+
+#endif /*MALLOC_IS_NEWPTR*/
+} /* resize_block */
+
 //##############################################################################
 //##############################################################################
 #pragma mark -
@@ -590,22 +683,33 @@ void* reallocSmaller(void* block, size_t newSize)
 {
 #pragma unused (newSize)
 
-	// This actually doesn't reclaim memory!
-	return block;
+        return realloc(block, newSize);
 }
 
 void* realloc(void* block, size_t newSize)
 {
-	void 		*newBlock = NULL;	
-	UInt8		tryAgain = true;
-	
-	newBlock = malloc(newSize);
-	
-	if (newBlock != NULL) {	
-		BlockMoveData(block, newBlock, newSize);
-		free(block);
-	}
+        void* newBlock = NULL;
+        
+        if (!block)
+                newBlock = malloc(newSize);
+        else if (resize_block(block, newSize))
+                newBlock = block;
+        else
+        {
+#ifdef MALLOC_IS_NEWPTR
+                size_t                          oldSize = GetPtrSize(block);
+#else
+                size_t                          oldSize = memsize(block);
+#endif
 
+                newBlock = malloc(newSize);
+                
+                if (newBlock)
+                {       
+					                        BlockMoveData(block, newBlock, newSize < oldSize ? newSize : oldSize);
+							free(block);
+	}
+        }
 	return newBlock;
 }
 
@@ -1105,7 +1209,7 @@ void *LargeBlockAlloc(size_t blockSize, void *refcon)
 			}
 		
 		/* allocate this block */
-		blockHeader->size = blockSize;
+                blockHeader->logicalSize = blockSize;
 		blockHeader->prev = prevBlock;
 		blockHeader->header.blockFreeRoutine = &chunk->header.freeDescriptor;
 		
@@ -1119,7 +1223,123 @@ void *LargeBlockAlloc(size_t blockSize, void *refcon)
 		}	
 }
 
+/* -------------------------------------------------------------------------------------*/
+static void* LargeBlockGrow(LargeBlockHeader* blockHeader, size_t newSize, void* refcon)
+{
+        LargeBlockAllocationChunk*      chunk = (LargeBlockAllocationChunk *) refcon;
+        LargeBlockAllocationRoot*       root = (LargeBlockAllocationRoot *) chunk->header.root;
+        LargeBlockHeader*                       freeBlock = blockHeader->next;
+        size_t                                          allocSize;
+        size_t                                          oldAllocSize;
+        size_t                                          freeBlockSize;
+        
+        /* is the block following this block a free block? */
+        if (!LARGE_BLOCK_FREE(freeBlock))
+                return NULL;
+        
+        /* round the block size up to a multiple of four and add space for the header and trailer */
+        allocSize = ( ( newSize + 3 ) & ~3 ) + LARGE_BLOCK_OVERHEAD;
+        oldAllocSize = LARGE_BLOCK_SIZE(blockHeader);
 
+        /* is it big enough? */
+        freeBlockSize = LARGE_BLOCK_SIZE(freeBlock);
+        if (freeBlockSize + oldAllocSize < allocSize)
+                return NULL;
+        
+        /* grow this block */
+        PR_ASSERT(blockHeader->logicalSize < newSize);
+        blockHeader->logicalSize = newSize;
+
+#if STATS_MAC_MEMORY
+        gTotalLargeHeapUsed += (allocSize - oldAllocSize);
+        if (gTotalLargeHeapUsed > gTotalLargeHeapMaxUsed)
+                gTotalLargeHeapMaxUsed = gTotalLargeHeapUsed;
+#endif
+
+        chunk->totalFree -= LARGE_BLOCK_SIZE(freeBlock);
+
+        /* is there still space at the end of this block for a free block? */
+        if ( freeBlockSize + oldAllocSize - allocSize > LARGE_BLOCK_OVERHEAD )
+        {
+                LargeBlockHeader* smallFree = (LargeBlockHeader *)((char*)blockHeader + allocSize);
+                smallFree->prev = NULL;
+                smallFree->next = freeBlock->next;
+                smallFree->next->prev = smallFree;
+#if DEBUG_HEAP_INTEGRITY
+                smallFree->header.headerTag = kFreeBlockHeaderTag;
+#endif
+                blockHeader->next = smallFree;
+                chunk->totalFree += LARGE_BLOCK_SIZE(smallFree);
+        }
+        else
+        {
+                blockHeader->next = freeBlock->next;
+                freeBlock->next->prev = blockHeader;
+        }
+        
+        return (void *)((char *)blockHeader + sizeof(LargeBlockHeader));
+}       /* LargeBlockGrow */
+
+
+/* -------------------------------------------------------------------------------------*/
+static void* LargeBlockShrink(LargeBlockHeader* blockHeader, size_t newSize, void* refcon)
+{
+        LargeBlockAllocationChunk*      chunk = (LargeBlockAllocationChunk *)refcon;
+        LargeBlockAllocationRoot*       root = (LargeBlockAllocationRoot *)chunk->header.root;
+
+        /* round the block size up to a multiple of four and add space for the header and trailer */
+        size_t                                          newAllocSize = ( ( newSize + 3 ) & ~3 ) + LARGE_BLOCK_OVERHEAD;
+        size_t                                          oldAllocSize = LARGE_BLOCK_SIZE(blockHeader);
+        LargeBlockHeader*                       nextBlock = blockHeader->next;
+        LargeBlockHeader*                       smallFree = NULL;                       /* Where the recovered freeblock will go */
+
+        /* shrink this block */
+        PR_ASSERT(blockHeader->logicalSize > newSize);
+        blockHeader->logicalSize = newSize;
+
+#if STATS_MAC_MEMORY
+        gTotalLargeHeapUsed -= (oldAllocSize - newAllocSize);
+#endif
+
+        /* is the block following this block a free block? */
+        if (LARGE_BLOCK_FREE(nextBlock))
+        {
+                /* coalesce the freed space with the following free block */
+                smallFree = (LargeBlockHeader *)((char *)blockHeader + newAllocSize);
+                chunk->totalFree -= LARGE_BLOCK_SIZE(nextBlock);
+                smallFree->next = nextBlock->next;
+        }
+        /* or is there enough space at the end of this block for a new free block? */
+        else if ( oldAllocSize - newAllocSize > LARGE_BLOCK_OVERHEAD )
+        {
+                smallFree = (LargeBlockHeader *)((char *)blockHeader + newAllocSize);
+                smallFree->next = nextBlock;
+        }
+
+        if (smallFree)
+        {
+                /* Common actions for both cases */
+                smallFree->prev = NULL;
+                smallFree->next->prev = smallFree;
+                blockHeader->next = smallFree;
+                chunk->totalFree += LARGE_BLOCK_SIZE(smallFree);
+#if DEBUG_HEAP_INTEGRITY
+                //      Fill recovered memory with the free memory pattern
+                if (gFillFreeBlocksWithPattern)
+                        memset(
+                                (char *)(smallFree) + sizeof(LargeBlockHeader),
+                                kFreeMemoryFillPattern,
+                                LARGE_BLOCK_SIZE(smallFree) - sizeof(LargeBlockHeader) - sizeof(MemoryBlockTrailer)
+                                );
+                smallFree->header.headerTag = kFreeBlockHeaderTag;
+#endif
+        }
+        
+        return (void *)((char *)blockHeader + sizeof(LargeBlockHeader));
+}       /* LargeBlockShrink */
+
+
+/* -------------------------------------------------------------------------------------*/
 void LargeBlockFree(void *block, void *refcon)
 {
 	LargeBlockAllocationChunk *	chunk = (LargeBlockAllocationChunk *) refcon;
@@ -1216,11 +1436,13 @@ SubHeapAllocationChunk * LargeBlockAllocChunk ( size_t blockSize, void * refcon 
 		 * chance this operation could fail. our heap should be very unfragmented at this point (we get called
 		 * very early in the boot sequence) so this should be safe.
 		 */
-		smallestHeapSize = bestHeapSize = ( root->baseChunkPercentage * FreeMem() ) / 100;
+                bestHeapSize = ( root->baseChunkPercentage * FreeMem() ) / 100;
+                bestHeapSize = ( ( bestHeapSize + 3 ) & ~3 );           // round up to a multiple of 4 bytes
+                smallestHeapSize = bestHeapSize;
 		}
 	
 	/* make sure that the heap will be big enough to accomodate our block (we have at least three block headers in a heap) */
-	blockSize += 3 * LARGE_BLOCK_OVERHEAD;
+        blockSize = ( ( blockSize + 3 ) & ~3 ) + 3 * LARGE_BLOCK_OVERHEAD;
 	if ( smallestHeapSize < blockSize )
 		{
 		smallestHeapSize = blockSize;
@@ -1301,16 +1523,18 @@ SubHeapAllocationChunk * LargeBlockAllocChunk ( size_t blockSize, void * refcon 
 	return &chunk->header;
 }
 
-size_t LargeBlockSize (void *block, void *refcon)
+
+/* -------------------------------------------------------------------------------------*/
+size_t LargeBlockSize(void *block, void *refcon)
 {
 #pragma unused(refcon)
-	LargeBlockHeader *			blockHeader;
-		
-	blockHeader = (LargeBlockHeader *) ((char *)block - sizeof(LargeBlockHeader));
+        LargeBlockHeader*       blockHeader = (LargeBlockHeader *)((char *)block - sizeof(LargeBlockHeader));
 
-	return blockHeader->size;
+        return blockHeader->logicalSize;
 }
 
+
+/* -------------------------------------------------------------------------------------*/
 void LargeBlockHeapFree(size_t blockSize, FreeMemoryStats * stats, void * refcon)
 {
 #pragma unused(blockSize, refcon)

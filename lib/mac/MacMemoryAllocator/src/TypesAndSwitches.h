@@ -173,7 +173,7 @@ typedef struct LargeBlockHeader LargeBlockHeader;
 struct LargeBlockHeader {
 	LargeBlockHeader *		next;
 	LargeBlockHeader *		prev;
-	size_t					size;
+	size_t					logicalSize;
 	MemoryBlockHeader		header;
 };
 
