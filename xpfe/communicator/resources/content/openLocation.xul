@@ -22,7 +22,6 @@
   Contributor(s): 
     Ben Goodger <ben@netscape.com>
     Michael Lowe <michael.lowe@bigfoot.com> 
-    Håkan Waara <hwaara@chello.se>
 
 -->
 
@@ -41,7 +40,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
         onload="onLoad()"
-        style="width: 30em;"
+        style="width: 40em;"
         class="dialog"
         orient="vertical"
         persist="screenX screenY"
@@ -56,39 +55,39 @@
   <keyset id="dialogKeys"/>
 
   <hbox>
+    <separator orient="vertical" class="thin"/>
     <vbox flex="1">
       <html>&enter.label;</html>
-
       <separator class="thin"/>
 
       <hbox align="center">
-        <text class="label" for="dialog.input" 
-              value="&address.label;" accesskey="&address.accesskey;"/>
         <textbox id="dialog.input" flex="1" type="autocomplete"
-                 searchSessions="history" timeout="50" maxrows="6" oninput="doEnabling();">
+                    searchSessions="history" timeout="50" maxrows="6"
+                    oninput="doEnabling();">
           <menupopup id="ubhist-popup" class="autocomplete-history-popup"
                      popupalign="topleft" popupanchor="bottomleft"
                      onpopupshowing="createUBHistoryMenu(event.target);"
                      oncommand="useUBHistoryItem(event.target)"/>
         </textbox>
-        <button label="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
-                oncommand="onChooseFile();"/>
+        <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
       </hbox>
-      <separator class="thin"/>
-      <hbox flex="1" autostretch="never">
-        <text class="label" accesskey="&openWhere.accesskey;" 
-              for="openAppList" value="&openWhere.label;"/>
-        <radiogroup orient="vertical" id="openAppList">
-            <radio value="0" group="openAppList" id="currentWindow" label="&topWindow.label;"/>
-            <radio value="1" group="openAppList" label="&newWindow.label;"/>
-            <radio value="2" group="openAppList" id="editWindow" label="&editNewWindow.label;"/>
-        </radiogroup>
+      <hbox align="center">
+        <text class="label" value="&openWhere.label;"/>
+        <menulist id="openAppList">
+          <menupopup>
+            <menuitem value="0" id="currentWindow" label="&topWindow.label;"/>
+            <menuitem value="1" label="&newWindow.label;"/>
+            <menuseparator/>
+            <menuitem value="2" id="editWindow" label="&editNewWindow.label;"/>
+          </menupopup>
+        </menulist>
+        <spring flex="1"/>
       </hbox>
     </vbox>
   </hbox> 
-  <separator class="thin"/>
-  <box valign="bottom" flex="1" autostretch="never">
-    <hbox flex="1" id="okCancelButtonsRight"/>
-  </box>
+
+  <separator/>
+
+  <hbox id="okCancelButtonsRight"/>
            
  </window>
