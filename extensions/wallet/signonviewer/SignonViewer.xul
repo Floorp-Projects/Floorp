@@ -56,7 +56,7 @@
         <spring style="height: 10px;"/>
           <tree id="signonstree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
-                onkeypress="HandleEvent(event,0)">
+                multiple="true" onkeypress="HandleEvent(event,0)">
             <treecol width="45%"/>
             <treecol width="55%"/>
             <treehead>
@@ -83,7 +83,7 @@
         <spring style="height: 10px;"/>
           <tree id="ignoretree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
-                onkeypress="HandleEvent(event,1)">
+                multiple="true" onkeypress="HandleEvent(event,1)">
             <treecol width="100%"/>
             <treehead>
               <treerow>
@@ -108,7 +108,7 @@
         <spring style="height: 10px;"/>
           <tree id="nopreviewtree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
-                onkeypress="HandleEvent(event,2)">
+                multiple="true" onkeypress="HandleEvent(event,2)">
             <treecol width="100%"/>
             <treehead>
               <treerow>
@@ -133,7 +133,7 @@
         <spring style="height: 10px;"/>
           <tree id="nocapturetree" class="inset" style="height: 280px; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
-                onkeypress="HandleEvent(event,3)">
+                multiple="true" onkeypress="HandleEvent(event,3)">
             <treecol width="100%"/>
             <treehead>
               <treerow>
