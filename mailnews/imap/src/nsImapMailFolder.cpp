@@ -2510,9 +2510,11 @@ NS_IMETHODIMP nsImapMailFolder::ParseMsgHdrs(nsIImapProtocol *aProtocol, nsIImap
     nsMsgKey msgKey;
     const char *msgHdrs;
     headerInfo->GetMsgSize(&msgSize);
+    headerInfo->GetMsgUid(&msgKey);
+    if (msgKey == nsMsgKey_None) // not a valid uid.
+      continue;
     nsresult rv = SetupHeaderParseStream(msgSize, nsnull, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
-    headerInfo->GetMsgUid(&msgKey);
     headerInfo->GetMsgHdrs(&msgHdrs);
     rv = ParseAdoptedHeaderLine(msgHdrs, msgKey);
     NS_ENSURE_SUCCESS(rv, rv);

@@ -214,7 +214,7 @@ nsMsgImapLineDownloadCache::nsMsgImapLineDownloadCache()
 {
   NS_INIT_ISUPPORTS();
     fLineInfo = (msg_line_info *) PR_CALLOC(sizeof( msg_line_info));
-    fLineInfo->uidOfMessage = 0;
+    fLineInfo->uidOfMessage = nsMsgKey_None;
     m_msgSize = 0;
 }
 
