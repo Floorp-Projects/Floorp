@@ -1044,6 +1044,7 @@ public:
    * view and the view has a window, then this frames window is
    * returned, otherwise this frame's geometric parent is checked
    * recursively upwards.
+   * XXX virtual because gfx callers use it! (themes)
    */
   virtual nsIWidget* GetWindow() const;
 
