@@ -51,6 +51,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIServiceManagerObsolete.h"
+#include "nsObsoleteModuleLoading.h"
 
 #include "nsIMemory.h"
 #include "nsIJVMManager.h"
