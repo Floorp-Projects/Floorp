@@ -181,6 +181,10 @@ const long kMinSearchPaneHeight = 80;
   [mSearchPane setAutosaveTableColumns:YES];
   [mContainerPane setAutosaveTableColumns:YES];
 
+  // if we're on 10.2+, set the search field to be rounded
+  if ([mSearchField respondsToSelector:@selector(setBezelStyle:)])
+    [mSearchField setBezelStyle:NSTextFieldRoundedBezel];
+
   mSetupComplete = YES;
 }
 
