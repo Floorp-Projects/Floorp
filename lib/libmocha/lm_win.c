@@ -3395,6 +3395,7 @@ lm_DefineWindowProps(JSContext *cx, MochaDecoder *decoder)
            lm_InitSpanClass(decoder) &&
            lm_InitTransclusionClass(decoder) &&
 #endif
+           lm_InitBuiltinClass(decoder) &&
            lm_InitInputClasses(decoder) &&
            lm_DefinePkcs11(decoder));
 }

@@ -76,6 +76,8 @@ extern char lm_spans_str[];				/* "spans" */
 extern char lm_transclusions_str[];		/* "transclusions" */
 #endif
 
+
+extern char lm_builtins_str[];
 extern char lm_location_str[];          /* "location" */
 extern char lm_navigator_str[];         /* "navigator" */
 extern char lm_netcaster_str[];         /* "netcaster" */
@@ -249,6 +251,8 @@ extern JSObject         *lm_GetImageArray(MochaDecoder *decoder,
 extern JSObject         *lm_GetDocumentLayerArray(MochaDecoder *decoder,
                                                   JSObject *document);
 
+extern JSBool		lm_InitBuiltinClass(MochaDecoder *decoder);
+extern JSObject		*lm_GetBuiltinsArray(MochaDecoder *decoder, JSObject *document);
 
 /*
  * dummy object for applets and embeds that can't be reflected
@@ -345,6 +349,7 @@ typedef struct JSDocument {
 	JSObject	        *transclusions;
     JSObject			*dom_documentElement;
 #endif
+    JSObject		*builtins;
 } JSDocument;
 
 #define URL_NOT_INDEXED ((uint32)-1)

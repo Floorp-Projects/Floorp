@@ -106,6 +106,7 @@ char lm_layers_str[]        = "layers";
 char lm_spans_str[]			= "spans";
 char lm_transclusions_str[] = "transclusions";
 #endif
+char lm_builtins_str[]     = "trees";
 char lm_location_str[]      = "location";
 char lm_navigator_str[]     = "navigator";
 char lm_netcaster_str[]     = "netcaster";

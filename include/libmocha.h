@@ -100,6 +100,9 @@ typedef struct MochaDecoder {
 	JSObject		*span_prototype;
 	JSObject		*transclusion_prototype;
 #endif
+    JSObject        *builtin_prototype;
+    JSObject        *builtin_element_prototype;
+    JSObject        *builtin_node_prototype;
 
     /*
      * Window sub-objects.  These must also follow the CLEAR/HOLD/DROP
@@ -428,6 +431,9 @@ LO_EnumerateApplets(MWContext *context, int32 layer_id);
 extern LO_EmbedStruct *
 LO_GetEmbedByIndex(MWContext *context, int32 layer_id, uint index);
 
+extern LO_BuiltinStruct *
+LO_GetBuiltinByIndex(MWContext *context, int32 layer_id, uint index);
+
 extern uint
 LO_EnumerateEmbeds(MWContext *context, int32 layer_id);
 
@@ -496,6 +502,10 @@ LM_ReflectApplet(MWContext *context, LO_JavaAppStruct *applet_data,
 extern JSObject *
 LM_ReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
                 PA_Tag * tag, int32 layer_id, uint index);
+
+extern JSObject *
+LM_ReflectBuiltin(MWContext *context, LO_BuiltinStruct *lo_embed,
+		PA_Tag * tag, int32 layer_id, uint index);
 
 struct lo_FormData_struct;
 struct lo_NameList_struct;

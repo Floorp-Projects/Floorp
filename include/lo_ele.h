@@ -1021,6 +1021,7 @@ struct LO_BuiltinStruct_struct {
 
 		PA_Tag *tag;
 		CL_Layer *layer;
+		void *htPane;
 
 		int32 percent_width; /* needed for relayout. */
 		int32 percent_height; /* needed for relayout. */

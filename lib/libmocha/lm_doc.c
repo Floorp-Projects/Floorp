@@ -73,7 +73,8 @@ enum doc_slot {
     DOC_VLINK_COLOR     = -20,
     DOC_ALINK_COLOR     = -21,
     DOC_WIDTH           = -22,
-    DOC_HEIGHT          = -23
+    DOC_HEIGHT          = -23,
+    DOC_BUILTINS	= -24
 };
 #else
 enum doc_slot {
@@ -103,7 +104,8 @@ enum doc_slot {
     DOC_VLINK_COLOR     = -23,
     DOC_ALINK_COLOR     = -24,
     DOC_WIDTH           = -25,
-    DOC_HEIGHT          = -26
+    DOC_HEIGHT          = -26,
+    DOC_BUILTINS	= -27
 };
 	
 #endif
@@ -139,6 +141,7 @@ static JSPropertySpec doc_props[] = {
     {"alinkColor",   DOC_ALINK_COLOR,   JSPROP_ENUMERATE},
     {"width",        DOC_WIDTH,         JSPROP_ENUMERATE},
     {"height",       DOC_HEIGHT,        JSPROP_ENUMERATE},
+    {lm_builtins_str,DOC_BUILTINS,	JSPROP_ENUMERATE|JSPROP_READONLY},
     {0}
 };
 
@@ -287,6 +290,15 @@ doc_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         LO_UnlockLayout();
         return JS_TRUE;
 
+      case DOC_BUILTINS:
+        *vp = OBJECT_TO_JSVAL(lm_GetBuiltinsArray(decoder, obj));
+        active_layer_id = LM_GetActiveLayer(context);
+        LM_SetActiveLayer(context, doc->layer_id);
+        (void) LO_EnumerateBuiltins(context,doc->layer_id);
+        LM_SetActiveLayer(context, active_layer_id);
+        LO_UnlockLayout();
+        return JS_TRUE;
+      
       case DOC_LAYERS:
         *vp = OBJECT_TO_JSVAL(lm_GetDocumentLayerArray(decoder, obj));
         LO_UnlockLayout();

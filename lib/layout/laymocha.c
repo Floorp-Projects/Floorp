@@ -694,6 +694,40 @@ LO_GetEmbedByIndex(MWContext *context, int32 layer_id, uint index)
     return NULL;
 }
 
+LO_BuiltinStruct *
+LO_GetBuiltinByIndex(MWContext *context, int32 layer_id, uint index)
+{
+    lo_TopState *top_state;
+    LO_BuiltinStruct *builtin;
+    int i, count;
+    lo_DocLists *doc_lists;
+
+    top_state = lo_GetTopState(context);
+    if (top_state == NULL)
+        return NULL;
+
+    doc_lists = lo_GetDocListsById(top_state->doc_state, layer_id);
+    if (!doc_lists)
+        return NULL;
+
+    /* count 'em */
+    count = 0;
+    builtin = doc_lists->builtin_list;
+    while (builtin) {
+        builtin = builtin->nextBuiltin;
+        count++;
+    }
+
+    /* reverse order... */
+    builtin = doc_lists->builtin_list;
+    for (i = count-1; i >= 0; i--) {
+        if ((uint)i == index)
+            return builtin;
+        builtin = builtin->nextBuiltin;
+    }
+    return NULL;
+}
+
 uint
 LO_EnumerateEmbeds(MWContext *context, int32 layer_id)
 {

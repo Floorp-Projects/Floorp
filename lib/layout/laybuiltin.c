@@ -25,6 +25,8 @@
 #include "np.h"
 #include "laystyle.h"
 #include "layers.h"
+#include "libevent.h"
+#include "libmocha.h"
 
 #define BUILTIN_DEF_DIM			50
 #define BUILTIN_DEF_BORDER		0
@@ -38,6 +40,41 @@ void lo_FillInBuiltinGeometry(lo_DocState *state, LO_BuiltinStruct *builtin,
 							  Bool relayout);
 void lo_UpdateStateAfterBuiltinLayout (lo_DocState *state, LO_BuiltinStruct *builtin,
 									   int32 line_inc, int32 baseline_inc);
+
+uint
+LO_EnumerateBuiltins(MWContext *context, int32 layer_id)
+{
+    lo_TopState *top_state;
+    int count, index;
+    LO_BuiltinStruct *builtin;
+    lo_DocLists *doc_lists;
+
+    top_state = lo_GetMochaTopState(context);
+    if (top_state == NULL)
+        return 0;
+
+    doc_lists = lo_GetDocListsById(top_state->doc_state, layer_id);
+    if (!doc_lists)
+        return 0;
+
+    /* count 'em */
+    count = 0;
+    builtin = doc_lists->builtin_list;
+    while (builtin) {
+        builtin = builtin->nextBuiltin;
+        count++;
+    }
+
+    /* reflect all builtins in reverse order */
+    builtin = doc_lists->builtin_list;
+    for (index = count-1; index >= 0; index--) {
+	if (builtin->mocha_object == NULL)
+        	LM_ReflectBuiltin(context, (void *) builtin, NULL, layer_id, index);
+        builtin = builtin->nextBuiltin;
+    }
+
+    return count;
+}
 
 void
 lo_FormatBuiltin (MWContext *context, lo_DocState *state, PA_Tag *tag)
@@ -467,6 +504,7 @@ lo_UpdateStateAfterBuiltinLayout (lo_DocState *state, LO_BuiltinStruct *builtin,
 {
 	int32 builtin_width;
 	int32 x, y;
+	lo_DocLists *doc_lists;
 
 #ifdef DEBUG_SPENCE
 	printf ("lo_UpdateStateAfterBuiltinLayout\n");
@@ -495,6 +533,11 @@ lo_UpdateStateAfterBuiltinLayout (lo_DocState *state, LO_BuiltinStruct *builtin,
     /* Move layer to new position */
     if (builtin->layer != NULL)
       CL_MoveLayer(builtin->layer, x, y);
+
+    doc_lists = lo_GetCurrentDocLists(state);
+    builtin->nextBuiltin = (LO_BuiltinStruct *)doc_lists->builtin_list;
+    doc_lists->builtin_list = builtin;
+    doc_lists->builtin_list_count++;
 }
 
 

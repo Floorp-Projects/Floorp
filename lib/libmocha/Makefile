@@ -24,7 +24,8 @@ LIBRARY_NAME	= mocha
 
 REQUIRES	= lay parse img js style layer applet dbm nspr security \
 		  htmldlgs util jtools pref caps java libreg softupdt jsdebug \
-		  netcache network httpurl plugin plugimpl mocha oji ojiimpl xpcom
+		  netcache network httpurl plugin plugimpl mocha oji ojiimpl xpcom \
+		  layout
 
 ifdef DOM
 EXPORTS		= lm_dom.h                        # required by layout
@@ -58,6 +59,7 @@ CSRCS		= et_mocha.c \
 		  lm_supdt.c \
 		  lm_taint.c \
                   lm_trans.c \
+                  lm_tree.c \
 		  lm_trggr.c \
 		  lm_url.c \
 		  lm_win.c \

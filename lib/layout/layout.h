@@ -349,6 +349,9 @@ typedef struct lo_DocLists_struct {
     LO_EmbedStruct *embed_list;     /* embeds linked in reverse order */
     int32 embed_list_count;         /* The number of embeds in the list */
     
+    LO_BuiltinStruct *builtin_list;	/* builtin/tree linked in reverse order */
+    int32 builtin_list_count;
+
     LO_JavaAppStruct *applet_list;  /* applets linked in reverse order */
     int32 applet_list_count;        /* The number of applets in the list */
 
