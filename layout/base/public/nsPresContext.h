@@ -176,13 +176,13 @@ public:
   /** Get the default font */
   NS_IMETHOD GetDefaultFont(nsFont& aResult) = 0;
   /** Set the default font */
-  NS_IMETHOD SetDefaultFont(nsFont& aFont) = 0;
+  NS_IMETHOD SetDefaultFont(const nsFont& aFont) = 0;
   virtual const nsFont& GetDefaultFontDeprecated() = 0;
 
   /** Get the default fixed pitch font */
   NS_IMETHOD GetDefaultFixedFont(nsFont& aResult) = 0;
   /** Set the default fixed pitch font */
-  NS_IMETHOD SetDefaultFixedFont(nsFont& aFont) = 0;
+  NS_IMETHOD SetDefaultFixedFont(const nsFont& aFont) = 0;
   virtual const nsFont& GetDefaultFixedFontDeprecated() = 0;
 
   /**
