@@ -122,11 +122,6 @@ nsImapSaveAsListener::nsImapSaveAsListener(nsIFileSpec *aFileSpec, PRBool addDum
 
 nsImapSaveAsListener::~nsImapSaveAsListener()
 {
-  if (m_outputStream)
-  {
-    m_outputStream->Flush();
-    m_outputStream->Close();
-  }
 }
 
 NS_IMETHODIMP nsImapSaveAsListener::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
@@ -137,6 +132,13 @@ NS_IMETHODIMP nsImapSaveAsListener::OnStartRequest(nsIRequest *request, nsISuppo
 NS_IMETHODIMP
 nsImapSaveAsListener::OnStopRequest(nsIRequest *request, nsISupports * aCtxt, nsresult aStatus)
 {
+  if (m_outputStream)
+  {
+    m_outputStream->Flush();
+    m_outputStream->Close();
+  }
+  if (m_outputFile)
+    m_outputFile->CloseStream();
   return NS_OK;
 } 
 
@@ -2178,6 +2180,8 @@ nsresult nsImapService::OfflineAppendFromFile(nsIFileSpec* aFileSpec,
             }
           }
           // tell the listener we're done.
+          inputStream = nsnull;
+          aFileSpec->CloseStream();
           aListener->OnStopRunningUrl(aUrl, NS_OK);
           delete inputStreamBuffer;
         }
