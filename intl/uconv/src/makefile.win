@@ -30,14 +30,12 @@ CPPSRCS =				\
 	nsCharsetConverterManager.cpp	\
 	nsUnicodeDecodeUtil.cpp		\
 	nsUConvDll.cpp			\
-	nsWinCharset.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsCharsetConverterManager.obj 	\
 	.\$(OBJDIR)\nsUnicodeDecodeUtil.obj 		\
 	.\$(OBJDIR)\nsUConvDll.obj 			\
-	.\$(OBJDIR)\nsWinCharset.obj 			\
 	$(NULL)
 
 CSRCS =		\
