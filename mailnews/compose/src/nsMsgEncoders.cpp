@@ -44,8 +44,6 @@
 #include "nsMsgMimeCID.h"
 #include "nsIMimeConverter.h"
 
-/* This is the next generation string retrieval call */
-
 extern "C" MimeEncoderData *
 MIME_B64EncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
 {

@@ -44,10 +44,6 @@
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
-#define COMPOSE_BE_URL       "chrome://messenger/locale/messengercompose/composeMsgs.properties"
-
 nsComposeStringService::nsComposeStringService()
 {
   NS_INIT_ISUPPORTS();
@@ -98,10 +94,10 @@ nsComposeStringService::GetBundle(nsIStringBundle **aResult)
 nsresult
 nsComposeStringService::InitializeStringBundle()
 {
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   NS_ENSURE_TRUE(stringService, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(stringService->CreateBundle(COMPOSE_BE_URL, getter_AddRefs(mComposeStringBundle)), 
+  NS_ENSURE_SUCCESS(stringService->CreateBundle("chrome://messenger/locale/messengercompose/composeMsgs.properties", getter_AddRefs(mComposeStringBundle)), 
                     NS_ERROR_FAILURE);
   return NS_OK;
 }
