@@ -324,7 +324,7 @@ nsHttpTransaction::HandleContent(char *buf,
             // so as not to block the socket transport thread too much.
             const char *val =
                     mResponseHead->PeekHeader(nsHttp::Transfer_Encoding);
-            if (val) {
+            if (PL_strcasestr(val, "chunked")) {
                 // we only support the "chunked" transfer encoding right now.
                 mChunkedDecoder = new nsHttpChunkedDecoder();
                 if (!mChunkedDecoder)

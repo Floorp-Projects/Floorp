@@ -707,14 +707,14 @@ nsHttpChannel::CheckCache()
     // must always be revalidated with the server, even if the user has
     // configured validation to be turned off (See RFC 2616, section 14.9.4).
     val = mCachedResponseHead->PeekHeader(nsHttp::Cache_Control);
-    if (val && PL_strstr(val, "must-revalidate")) {
+    if (val && PL_strcasestr(val, "must-revalidate")) {
         LOG(("Validating based on \"%s\" header\n", val));
         doValidation = PR_TRUE;
         goto end;
     }
     // The no-cache directive within the 'Cache-Control:' header indicates
     // that we must validate this cached response before reusing.
-    if (val && PL_strstr(val, "no-cache")) {
+    if (val && PL_strcasestr(val, "no-cache")) {
         LOG(("Validating based on \"%s\" header\n", val));
         doValidation = PR_TRUE;
         goto end;
@@ -727,7 +727,7 @@ nsHttpChannel::CheckCache()
     // a request header), caching is inhibited when this header is present so
     // as to match existing Navigator behavior.
     val = mCachedResponseHead->PeekHeader(nsHttp::Pragma);
-    if (val && PL_strstr(val, "no-cache")) {
+    if (val && PL_strcasestr(val, "no-cache")) {
         LOG(("Validating based on \"%s\" header\n", val));
         doValidation = PR_TRUE;
         goto end;
@@ -746,8 +746,8 @@ nsHttpChannel::CheckCache()
     // header (see bug 58040).
     val = mCachedResponseHead->PeekHeader(nsHttp::Vary);
     if (val && (PL_strstr(val, "*") ||
-                PL_strstr(val, "accept-charset") ||
-                PL_strstr(val, "accept-language"))) {
+                PL_strcasestr(val, "accept-charset") ||
+                PL_strcasestr(val, "accept-language"))) {
         LOG(("Validating based on \"%s\" header\n", val));
         doValidation = PR_TRUE;
         goto end;
@@ -905,7 +905,7 @@ nsHttpChannel::CacheReceivedResponse()
     // The no-store directive within the 'Cache-Control:' header indicates
     // that we should not store the response in a persistent cache
     val = mResponseHead->PeekHeader(nsHttp::Cache_Control);
-    if (val && PL_strstr(val, "no-store")) {
+    if (val && PL_strcasestr(val, "no-store")) {
         mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
         LOG(("Inhibiting persistent caching because of \"%s\"\n", val));
     }
@@ -1342,7 +1342,7 @@ nsHttpChannel::ParseRealm(const char *challenge, nsACString &realm)
     // but, we'll accept anything after the the "=" up to the first space, or
     // end-of-line, if the string is not quoted.
     //
-    const char *p = PL_strstr(challenge, "realm=");
+    const char *p = PL_strcasestr(challenge, "realm=");
     if (p) {
         p += 6;
         if (*p == '"')
