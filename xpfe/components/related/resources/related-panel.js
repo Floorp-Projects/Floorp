@@ -42,18 +42,14 @@ Handler = Handler.QueryInterface(Components.interfaces.nsIRelatedLinksHandler);
 // Our observer object
 var Observer = {
     Observe: function(subject, topic, data) {
-        // debug("Observer.Observe(" + subject + ", " + topic + ", " + data + ")\n");
+        debug("Observer.Observe(" + subject + ", " + topic + ", " + data + ")\n");
+
         if (subject != ContentWindow)
-            return;
-
-        // Okay, it's a hit. Before we go out and fetch RL data, make sure that
-        // the RelatedLinks folder is open.
-        var root = document.getElementById('NC:RelatedLinks');
-
-        if (root.getAttribute('open') == 'true')
         {
-        	refetchRelatedLinks(Handler, data);
+            debug("subject was not content window, ignoring\n");
+            return;
         }
+	refetchRelatedLinks(Handler, data);
     }
 }
 
@@ -184,65 +180,45 @@ function refetchRelatedLinks(Handler, data)
 
 function Init()
 {
-    // Initialize the Related Links panel
+	// Initialize the Related Links panel
 
-    // Create a Related Links handler, and install it in the tree
-    var Tree = document.getElementById("Tree");
-    Tree.database.AddDataSource(Handler.QueryInterface(Components.interfaces.nsIRDFDataSource));
+	// Create a Related Links handler, and install it in the tree
+	var Tree = document.getElementById("Tree");
+	Tree.database.AddDataSource(Handler.QueryInterface(Components.interfaces.nsIRDFDataSource));
 
-    // Install the observer so we'll be notified when new content is loaded.
-    var ObserverService = Components.classes["component://netscape/observer-service"].getService();
-    ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
-    debug("got observer service\n");
+	// Install the observer so we'll be notified when new content is loaded.
+	var ObserverService = Components.classes["component://netscape/observer-service"].getService();
+	ObserverService = ObserverService.QueryInterface(Components.interfaces.nsIObserverService);
+	if (ObserverService)
+	{
+		ObserverService.AddObserver(Observer, "StartDocumentLoad");
+		ObserverService.AddObserver(Observer, "EndDocumentLoad");
+		ObserverService.AddObserver(Observer, "FailDocumentLoad");
+		debug("added observer\n");
+	}
+	else
+	{
+		debug("FAILURE to get observer service\n");
+	}
 
-    ObserverService.AddObserver(Observer, "EndDocumentLoad");
-    debug("added observer\n");
-}
-
-function clicked(event, target) {
-  if (target.getAttribute('container') == 'true') {
-    if (target.getAttribute('open') == 'true') {
-	  target.removeAttribute('open');
-    } else {
-      target.setAttribute('open','true');
-      // First, see if they're opening the related links node. If so,
-      // we'll need to go out and fetch related links _now_.
-      if (target.getAttribute('id') == 'NC:RelatedLinks') {
-          refetchRelatedLinks(Handler, ContentWindow.location);
-          return;
-      }
-    }
-  } else {
-    if (event.clickCount == 2) {
-      openURL(target, 'Tree');
-    }
-  }
+	refetchRelatedLinks(Handler, ContentWindow.location);
 }
 
 
-function openURL(treeitem, root)
+
+function openURL(event, treeitem, root)
 {
+	if ((event.button != 1) || (event.clickCount != 2))
+		return(false);
 
-    // Next, check to see if it's a container. If so, then just let
-    // the tree do its open and close stuff.
-    if (treeitem.getAttribute('container') == 'true') {
+	if (treeitem.getAttribute('container') == 'true')
+		return(false);
 
-    //    if (treeitem.getAttribute('open') == 'true') {
-    //      treeitem.setAttribute('open','')
-    //    } else {
-    //      treeitem.setAttribute('open','true')
-    //    }
+	if (treeitem.getAttribute("type") == "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+		return(false);
 
-        return;
-    }
-
-    if (treeitem.getAttribute('type') == 'http://home.netscape.com/NC-rdf#BookmarkSeparator') {
-        return;
-    }
-
-    // Okay, it's not a container. See if it has a URL, and if so, open it.
-    var id = treeitem.getAttribute('id');
-    if (!id)	return(false);
+	var id = treeitem.getAttribute('id');
+	if (!id)	return(false);
 
 	// rjc: add support for anonymous resources; if the node has
 	// a "#URL" property, use it, otherwise default to using the id
@@ -272,5 +248,6 @@ function openURL(treeitem, root)
 	catch(ex)
 	{
 	}
-    ContentWindow.location = id;
+
+	ContentWindow.location = id;
 }

@@ -33,6 +33,12 @@
        </RDF:Description>
     </RDF:li>
     <RDF:li>
+       <RDF:Description about="urn:sidebar:panel:search">
+         <NC:title>&sidebar.search.label;</NC:title>
+         <NC:content>chrome://search/content/search-panel.xul</NC:content>
+       </RDF:Description>
+    </RDF:li>
+    <RDF:li>
        <RDF:Description about="urn:sidebar:panel:bookmarks">
          <NC:title>&sidebar.bookmarks.label;</NC:title>
          <NC:content>chrome://bookmarks/content/bm-panel.xul</NC:content>
