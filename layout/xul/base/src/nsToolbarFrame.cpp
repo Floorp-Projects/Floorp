@@ -199,11 +199,13 @@ nsToolbarFrame :: ~nsToolbarFrame ( )
 {
   nsCOMPtr<nsIContent> content;
   GetContent(getter_AddRefs(content));
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
 
   // NOTE: the last Remove will delete the drag listener
-  reciever->RemoveEventListener("dragover", mDragListener, PR_TRUE);
-  reciever->RemoveEventListener("dragexit", mDragListener, PR_TRUE);
+  if ( receiver ) {
+    receiver->RemoveEventListener("dragover", mDragListener, PR_TRUE);
+    receiver->RemoveEventListener("dragexit", mDragListener, PR_TRUE);
+  }
 }
 
 

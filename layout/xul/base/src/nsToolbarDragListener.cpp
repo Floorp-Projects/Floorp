@@ -373,7 +373,7 @@ nsToolbarDragListener::DragExit(nsIDOMEvent* aDragEvent)
     // care at all about "tb-droplocation", only the coordinate so there is no need to send the
     // AttributeChanged() about that attribute.
     char buffer[10];
-    sprintf(buffer, "%ld", -1);
+    sprintf(buffer, "%d", -1);
     myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, buffer, PR_TRUE );
     myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, buffer, PR_FALSE );
     myContent->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddTriggerRepaint, "1", PR_TRUE );

@@ -313,7 +313,7 @@ printf("***REAL EXIT EVENT\n");
   // care at all about "dd-droplocation", only the coordinate so there is no need to send the
   // AttributeChanged() about that attribute.
   char buffer[10];
-  sprintf(buffer, "%ld", -1);
+  sprintf(buffer, "%d", -1);
   content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocationCoord, buffer, PR_TRUE );
   content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropLocation, "false", PR_TRUE );
   content->SetAttribute ( kNameSpaceID_None, nsXULAtoms::ddDropOn, "false", PR_TRUE );
