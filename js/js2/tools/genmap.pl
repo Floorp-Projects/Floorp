@@ -134,7 +134,7 @@ sub get_map {
             my $p;
             @ot = ();
             for $p (@params) {
-                if ($p eq "ArgumentList") {
+                if ($p eq "ArgumentList*") {
                     push (@ot, "otArgumentList");
                 } elsif ($p eq "BinaryOperator::BinaryOp") {
                     push (@ot, "otBinaryOp");
