@@ -183,6 +183,11 @@ everything: checkout clobber_all build
 # CVS checkout
 #
 checkout:
+	@: Backup the last checkout log.
+	@if test -f $(CVSCO_LOGFILE) ; then \
+	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
+	else true; \
+	fi
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo $(CVSCO) mozilla/client.mk; \
         cd $(ROOTDIR); \
@@ -190,11 +195,6 @@ checkout:
 	$(MAKE) -f mozilla/client.mk real_checkout
 
 real_checkout:
-	@: Backup the last checkout log.
-	@if test -f $(CVSCO_LOGFILE) ; then \
-	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
-	else true; \
-	fi
 	@: Start the checkout. Pipe the output to the tty and a log file. \
 	 : If it fails, touch an error file because the pipe hides the    \
 	 : error. If the file is created, remove it and return an error.
@@ -215,10 +215,9 @@ real_checkout:
 	  echo "$(MAKE): *** Conflicts during checkout." ;\
 	  echo "$$conflicts" ;\
 	  echo "$(MAKE): Refer to $(CVSCO_LOGFILE) for full log." ;\
-	  false; \
 	else true; \
-	fi
-	@if test -f cvs-failed.tmp ; then \
+	fi; \
+	if test -f cvs-failed.tmp ; then \
 	  rm cvs-failed.tmp; \
 	  false; \
 	else true; \
