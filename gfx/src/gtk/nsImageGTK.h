@@ -41,8 +41,8 @@
 
 #include "nsIImage.h"
 
-#include "X11/Xlib.h"
-#include "X11/Xutil.h"
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <gdk/gdk.h>
 #include "nsRegion.h"
 

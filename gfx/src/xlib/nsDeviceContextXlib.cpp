@@ -53,7 +53,7 @@
 #include "nsFontMetricsXlib.h"
 
 #include "xlibrgb.h"
-#include "X11/Xatom.h"
+#include <X11/Xatom.h>
 
 #include "nsDeviceContextSpecXlib.h"
 

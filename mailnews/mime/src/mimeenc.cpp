@@ -34,7 +34,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "stdio.h"
+#include <stdio.h>
 #include "modmimee.h"
 #include "mimei.h"
 #include "nsCRT.h"

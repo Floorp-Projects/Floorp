@@ -46,7 +46,7 @@
 
 #ifdef DBG_JCG
 /* Required for x11EventFilter & _x_error debugging hooks */
-#include "X11/Xlib.h"
+#include <X11/Xlib.h>
 #include <assert.h>
 
 PRInt32 gQAppID = 0;

@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "stdio.h"
+#include <stdio.h>
 #include "mimecom.h"
 #include "modmimee.h"
 #include "nscore.h"

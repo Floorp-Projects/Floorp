@@ -48,7 +48,7 @@
 #include "nsGtkIMEHelper.h"
 
 
-#include "stdio.h"
+#include <stdio.h>
 
 #include "gtk/gtk.h"
 #include "nsGtkEventHandler.h"

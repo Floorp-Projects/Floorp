@@ -32,7 +32,7 @@
 #include "nsIPref.h"
 #include "nsICacheVisitor.h"
 #include "nsITransport.h"
-#include "signal.h"
+#include <signal.h>
 
 
 static NS_DEFINE_CID(kStorageTransportCID, NS_STORAGETRANSPORT_CID);

@@ -53,7 +53,7 @@
 #include "nsXPIDLString.h"
 
 #ifdef NS_DEBUG
-#include "stdio.h"
+#include <stdio.h>
 #endif
 
 #define NC_RDF_Name  NC_NAMESPACE_URI "Name"

@@ -39,7 +39,7 @@
 #include "nscore.h"
 #include "nsIMemory.h"
 #include "plstr.h"
-#include "stdio.h"
+#include <stdio.h>
 #include "nsICookieService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMWindowInternal.h"

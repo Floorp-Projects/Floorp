@@ -38,7 +38,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsICookieService.h"
-#include "stdio.h"
+#include <stdio.h>
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
 #include "nsIEventQueueService.h"

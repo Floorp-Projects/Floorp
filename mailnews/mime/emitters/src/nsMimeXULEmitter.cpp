@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "msgCore.h"
-#include "stdio.h"
+#include <stdio.h>
 #include "nsMimeXULEmitter.h"
 #include "plstr.h"
 #include "nsIMimeEmitter.h"

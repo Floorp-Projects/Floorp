@@ -33,7 +33,7 @@
 #include "ArrayList.h"
 #include "URIUtils.h"
 #include "txAtoms.h"
-#include "string.h"
+#include <string.h>
 
 NodeDefinition::NodeDefinition(NodeType type, const String& name,
                                const String& value, Document* owner)

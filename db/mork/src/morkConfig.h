@@ -108,7 +108,7 @@
 
 #ifdef MORK_OBSOLETE
 #include "xp_file.h" 
-#include "ctype.h" 
+#include <ctype.h> 
 #define MORK_ISPRINT(c) isprint(c) 
 
 #define MORK_FILETELL(file) XP_FileTell(file) 

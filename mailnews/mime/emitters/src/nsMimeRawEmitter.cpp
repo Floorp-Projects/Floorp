@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
-#include "stdio.h"
+#include <stdio.h>
 #include "nsMimeRebuffer.h"
 #include "nsMimeRawEmitter.h"
 #include "plstr.h"

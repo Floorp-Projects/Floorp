@@ -45,7 +45,7 @@
 */
 
 #ifdef MAPI_DEBUG
-#include "stdio.h"
+#include <stdio.h>
 
 #define MAPI_DUMP_STRING( x)		printf( "%s", (const char *)x)
 #define MAPI_TRACE0( x)				printf( x)

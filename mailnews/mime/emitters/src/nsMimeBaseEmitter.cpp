@@ -40,7 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
-#include "stdio.h"
+#include <stdio.h>
 #include "nsMimeBaseEmitter.h"
 #include "nsMailHeaders.h"
 #include "nscore.h"

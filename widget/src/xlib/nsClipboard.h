@@ -46,8 +46,8 @@
 #include <nsCOMPtr.h>
 #include "nsWidget.h"
 
-#include "X11/X.h"
-#include "X11/Xlib.h"
+#include <X11/X.h>
+#include <X11/Xlib.h>
 
 class nsITransferable;
 class nsIClipboardOwner;
