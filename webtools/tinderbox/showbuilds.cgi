@@ -279,10 +279,10 @@ sub display_build_table_row {
                     print "<a href='' onClick=\"return js_what_menu(event,$noteid,'$logfile','$errorparser','$buildname','$buildtime');\">";
                     print "<img src=star.gif border=0></a>\n";
                 }
-                print "<A HREF='showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&mainframe=1' " .
+                print "<A HREF='showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime' " .
                       "onClick=\"return log_popup(event,'$buildtree','$popupbuildname'," .
-                      "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&mainframe=1'," .
-                      "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&fulltext=1&mainframe=1'," .
+                      "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime'," .
+                      "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&fulltext=1'," .
                       "'addnote.cgi?tree=$buildtree&buildname=$buildname&buildtime=$buildtime&logfile=$logfile&errorparser=$errorparser');\">";
 
 
