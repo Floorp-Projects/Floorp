@@ -70,18 +70,6 @@ CPPSRCS		= \
     nsXBLWindowKeyHandler.cpp \
     nsXBLWindowDragHandler.cpp \
     nsXBLPrototypeHandler.cpp \
-    nsXBLFocusHandler.cpp \
-    nsXBLDragHandler.cpp \
-    nsXBLMouseHandler.cpp \
-    nsXBLMouseMotionHandler.cpp \
-    nsXBLMutationHandler.cpp \
-    nsXBLKeyHandler.cpp \
-    nsXBLLoadHandler.cpp \
-    nsXBLXULHandler.cpp \
-    nsXBLFormHandler.cpp \
-    nsXBLScrollHandler.cpp \
-    nsXBLContextMenuHandler.cpp \
-    nsXBLCustomHandler.cpp \
     nsXBLService.cpp \
     nsBindingManager.cpp \
     nsXBLInsertionPoint.cpp \
