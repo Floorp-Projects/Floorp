@@ -126,6 +126,10 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     if (!NS_SUCCEEDED(rv))
         return rv;
 
+    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+    if (!NS_SUCCEEDED(rv))
+        return rv;
+
 
     //--------------------------------------------------------------------
     // Get the SoftwareUpdate (XPInstall) service.
