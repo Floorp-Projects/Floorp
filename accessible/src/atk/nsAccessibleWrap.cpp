@@ -667,12 +667,21 @@ getRoleCB(AtkObject *aAtkObj)
         NS_ENSURE_SUCCESS(rv, ATK_ROLE_INVALID);
 
         //the cross-platform Accessible object returns the same value for
-        //both "ATK_ROLE_MENU_ITEM" and "ATK_ROLE_MENU"
-        if (accRole == ATK_ROLE_MENU_ITEM) {
+        //both "ROLE_MENUITEM" and "ROLE_MENUPOPUP"
+        if (accRole == nsIAccessible::ROLE_MENUITEM) {
             PRInt32 childCount = 0;
             accWrap->GetChildCount(&childCount);
             if (childCount > 0)
-                accRole = ATK_ROLE_MENU;
+                accRole = nsIAccessible::ROLE_MENUPOPUP;
+        }
+        else if (accRole == nsIAccessible::ROLE_LINK) {
+            //ATK doesn't have role-link now
+            //register it on runtime
+            static AtkRole linkRole = (AtkRole)0;
+            if (linkRole == 0) {
+                linkRole = atk_role_register("hyper link");
+            }
+            accRole = linkRole;
         }
         aAtkObj->role = NS_STATIC_CAST(AtkRole, accRole);
     }
