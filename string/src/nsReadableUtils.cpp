@@ -25,18 +25,34 @@
 
 #include "nsReadableUtils.h"
 
-char*
-ToNewCString( const nsAReadableString& aSourceString )
+template <class CharT>
+inline
+CharT*
+CopyStringToNewZeroTerminatedBuffer( const basic_nsAReadableString<CharT>& aSourceString )
   {
+    // no conversion needed, just allocate a buffer of the correct length and copy into it
+
+    CharT* result = NS_STATIC_CAST(CharT*, nsMemory::Alloc( (aSourceString.Length()+1) * sizeof(CharT) ));
+    *copy_string(aSourceString.BeginReading(), aSourceString.EndReading(), result) = CharT(0);
+    return result;
   }
 
 char*
 ToNewCString( const nsAReadableCString& aSourceCString )
   {
+    return CopyStringToNewZeroTerminatedBuffer(aSourceCString);
   }
 
 PRUnichar*
 ToNewUnicode( const nsAReadableString& aSourceString )
+  {
+    return CopyStringToNewZeroTerminatedBuffer(aSourceString);
+  }
+
+
+
+char*
+ToNewCString( const nsAReadableString& aSourceString )
   {
   }
 
@@ -44,6 +60,8 @@ PRUnichar*
 ToNewUnicode( const nsAReadableCString& aSourceCString )
   {
   }
+
+
 
 PRBool
 IsASCII( const nsAReadableString& aSourceString )
