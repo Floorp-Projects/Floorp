@@ -76,8 +76,7 @@ public:
     PRUint32 GetSize() { return GetSegmentCount() * mSegmentSize; }
 
     char* GetSegment(PRUint32 indx) {
-        NS_ASSERTION(0 <= indx && indx < GetSegmentCount(),
-                     "index out of bounds");
+        NS_ASSERTION(indx < GetSegmentCount(), "index out of bounds");
         PRInt32 i = ModSegArraySize(mFirstSegmentIndex + (PRInt32)indx);
         return mSegmentArray[i];
     }
