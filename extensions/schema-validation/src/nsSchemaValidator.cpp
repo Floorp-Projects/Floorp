@@ -255,7 +255,6 @@ nsresult nsSchemaValidator::GetType(const nsAString & aType,
                                     nsISchemaType ** aSchemaType)
 {
   nsresult rv;
-
   // get the nsISchemaCollection from the nsISchema
   nsCOMPtr<nsISchemaCollection> schemaCollection;
   mSchema->GetCollection(getter_AddRefs(schemaCollection));
@@ -279,23 +278,11 @@ nsresult nsSchemaValidator::GetType(const nsAString & aType,
   }
 
   if (!aSchemaType) {
-    // check if it is a built-in type
-    nsCOMPtr<nsISchemaBuiltinType> builtinType;
-    rv = schemaCollection->GetBaseType(aType, 
-           NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE), 
-           getter_AddRefs(builtinType));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (builtinType)
-      rv = CallQueryInterface(builtinType, aSchemaType);
-
-    if (!aSchemaType) {
-      // if its not a built-in type as well, its an unknown schema type.
+  // if its not a built-in type as well, its an unknown schema type.
 #ifdef DEBUG
-      printf("\n    Error: The Schema type was not found.\n");
+    printf("\n    Error: The Schema type was not found.\n");
 #endif
-      rv = NS_ERROR_SCHEMAVALIDATOR_TYPE_NOT_FOUND;
-    }
+    rv = NS_ERROR_SCHEMAVALIDATOR_TYPE_NOT_FOUND;
   }
 
   return rv;
@@ -720,7 +707,7 @@ nsresult nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
       isValid = IsValidSchemaDateTime(aNodeValue, nsnull);
       break;
     }
-                             
+
     case nsISchemaBuiltinType::BUILTIN_TYPE_INTEGER: {
       isValid = nsSchemaValidatorUtils::IsValidSchemaInteger(aNodeValue, nsnull);
       break;
