@@ -1582,12 +1582,15 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 #endif
 	}
 
-    NS_MsgSACopy(&m_responseText, line+4);
-
-	m_previousResponseCode = m_responseCode;
+    m_previousResponseCode = m_responseCode;
 
     PR_sscanf(line, "%d", &m_responseCode);
-	
+
+    if (m_responseCode && PL_strlen(line) > 3)
+        NS_MsgSACopy(&m_responseText, line + 4);
+    else
+        NS_MsgSACopy(&m_responseText, line);
+
 	if (m_responseCode == MK_NNTP_RESPONSE_AUTHINFO_DENIED) {
 		/* login failed */
 		AlertError(MK_NNTP_AUTH_FAILED, m_responseText);
