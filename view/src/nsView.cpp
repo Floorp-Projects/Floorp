@@ -744,6 +744,7 @@ nsresult nsView::LoadWidget(const nsCID &aClassIID)
   return rv;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
@@ -782,6 +783,7 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
   
   return NS_OK;
 }
+#endif // DEBUG
 
 NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget)
 {
