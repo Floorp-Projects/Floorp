@@ -133,7 +133,7 @@ public:
 
     nsresult SetTransparent(PRBool aTransparent);
 
-    nsresult NewNotifyStream(nsIPluginStreamListener** listener, void* notifyData);
+    nsresult NewNotifyStream(nsIPluginStreamListener** listener, void* notifyData, PRBool aCallNotify);
 
     /**
      * Construct a new 4.x plugin instance with the specified peer

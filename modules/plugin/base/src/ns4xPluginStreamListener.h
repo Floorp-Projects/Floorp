@@ -64,6 +64,8 @@ public:
   virtual ~ns4xPluginStreamListener();
   PRBool IsStarted();
   nsresult CleanUpStream(NPReason reason);
+  void CallURLNotify(NPReason reason);
+  void SetCallNotify(PRBool aCallNotify) { mCallNotify = aCallNotify; }
 
 protected:
   void* mNotifyData;
@@ -75,6 +77,7 @@ protected:
   nsPluginStreamType mStreamType;
   PRBool mStreamStarted;
   PRBool mStreamCleanedUp;
+  PRBool mCallNotify;
 
 public:
   nsIPluginStreamInfo * mStreamInfo;
