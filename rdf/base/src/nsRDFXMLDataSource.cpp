@@ -38,7 +38,7 @@
 
   1) Right now, the only kind of stream data sources that are _really_
      writable are "file:" URIs. (In fact, _all_ "file:" URIs are
-     writable, modulo flie system permissions; this may lead to some
+     writable, modulo file system permissions; this may lead to some
      surprising behavior.) Eventually, it'd be great if we could open
      an arbitrary nsIOutputStream on *any* URL, and Netlib could just
      do the magic.
