@@ -5,6 +5,7 @@ file:///s:/mozilla/layout/html/tests/table/bugs/bug10296-2.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug1055-1.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug1055-2.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug10036.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug10039.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug10633.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug1067-1.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug1067-2.html
@@ -58,6 +59,8 @@ file:///s:/mozilla/layout/html/tests/table/bugs/bug2763.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug2773.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug2886.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug2886-2.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug2947.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug2954.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug2962.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug2973.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug2981-1.html
@@ -74,6 +77,7 @@ file:///s:/mozilla/layout/html/tests/table/bugs/bug3309-2.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug3517.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug3718.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug3831.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug3977.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug4093.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug4284.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug4294.html
@@ -90,6 +94,7 @@ file:///s:/mozilla/layout/html/tests/table/bugs/bug4803.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug5188.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug5797.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug5798.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug5835.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug5838.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug625.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug6184.html
