@@ -268,7 +268,7 @@ bin/chrome/messenger.jar
 
 [chatzilla]
 bin/components/chatzilla-service.js
-bin/chrome/chatzilla/*
+bin/chrome/chatzilla.jar
 
 
 [talkback]
