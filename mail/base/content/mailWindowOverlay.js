@@ -1004,21 +1004,15 @@ function MsgEditMessageAsNew()
 
 function MsgCreateFilter()
 {
-  var emailAddressNode;
+  // retrieve Sender direct from selected message's headers
+  var msgHdr = gDBView.hdrForFirstSelectedMessage;
+  var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+  var emailAddress = headerParser.extractHeaderAddressMailboxes(null, msgHdr.author);
 
-  if (gCollapsedHeaderViewMode)
-    emailAddressNode = document.getElementById("collapsedfromValue");
-  else
-    emailAddressNode = document.getElementById("expandedfromBox").emailAddressNode;
-  
-  if (emailAddressNode)
-  {
-     var emailAddress = emailAddressNode.getTextAttribute("emailAddress");
-     if (emailAddress){
-         top.MsgFilters(emailAddress);
-     }
-  }
+  if (emailAddress)
+    top.MsgFilters(emailAddress);
 }
+
 
 function MsgHome(url)
 {

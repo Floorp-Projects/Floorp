@@ -259,17 +259,14 @@ var DefaultController =
           gDBView.getCommandStatus(nsMsgViewCommandType.toggleThreadWatched, enabled, checkStatus);
         return enabled.value;
       case "cmd_createFilterFromPopup":
+      case "cmd_createFilterFromMenu":
         var loadedFolder = GetLoadedMsgFolder();
         if (!(loadedFolder && loadedFolder.server.canHaveFilters))
-          return false;
-      case "cmd_createFilterFromMenu":
-        loadedFolder = GetLoadedMsgFolder();
-        if (!(loadedFolder && loadedFolder.server.canHaveFilters) || !(IsMessageDisplayedInMessagePane()))
-          return false;
+          return false;   // else fall thru
       case "cmd_saveAsFile":
       case "cmd_saveAsTemplate":
-	      if ( GetNumSelectedMessages() > 1)
-          return false;
+        if (GetNumSelectedMessages() > 1)
+          return false;   // else fall thru
       case "cmd_reply":
       case "button_reply":
       case "cmd_replySender":
@@ -286,12 +283,12 @@ var DefaultController =
       case "cmd_print":
       case "cmd_viewPageSource":
       case "cmd_reload":
-	      if ( GetNumSelectedMessages() > 0)
+        if (GetNumSelectedMessages() > 0)
         {
           if (gDBView)
           {
-             gDBView.getCommandStatus(nsMsgViewCommandType.cmdRequiringMsgBody, enabled, checkStatus);
-              return enabled.value;
+            gDBView.getCommandStatus(nsMsgViewCommandType.cmdRequiringMsgBody, enabled, checkStatus);
+            return enabled.value;
           }
         }
         return false;
