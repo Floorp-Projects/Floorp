@@ -563,12 +563,14 @@ public final class Context {
             if (scope.getPrototype() == null)
                 scope.setPrototype(objectProto);
 
-            String[] classes = { "NativeGlobal",        "NativeArray", 
+            String[] classes = { "NativeError",   // must precede NativeGlobal
+                                                  // since it's needed therein
+                                 "NativeGlobal",        "NativeArray", 
                                  "NativeString",        "NativeBoolean", 
                                  "NativeNumber",        "NativeDate", 
                                  "NativeMath",          "NativeCall", 
                                  "NativeClosure",       "NativeWith", 
-                                 "regexp.NativeRegExp", "NativeScript"
+                                 "regexp.NativeRegExp", "NativeScript"                                 
                                };
             for (int i=0; i < classes.length; i++) {
                 try {
@@ -1108,8 +1110,7 @@ public final class Context {
      * @return new JavaScript object
      */
     public static Scriptable toObject(Object value, Scriptable scope, 
-                                      Class staticType) 
-    {
+                                      Class staticType) {
         if (value == null && staticType != null)
             return null;
         return ScriptRuntime.toObject(scope, value, staticType);

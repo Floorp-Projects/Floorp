@@ -33,7 +33,9 @@ import java.io.IOException;
 public class NativeGlobal {
 
     public static void init(Scriptable scope)
-        throws PropertyException
+        throws PropertyException,
+               NotAFunctionException,
+               JavaScriptException
     {
 
         String names[] = { "eval",
@@ -57,6 +59,30 @@ public class NativeGlobal {
                               ScriptableObject.DONTENUM);
         global.defineProperty("undefined", Undefined.instance,
                               ScriptableObject.DONTENUM);
+
+        String[] errorMethods = { "ConversionError",
+                                  "EvalError",  
+                                  "RangeError",
+                                  "ReferenceError",
+                                  "SyntaxError",
+                                  "TypeError",
+                                  "URIError"
+                                };                                                   
+
+        global.defineFunctionProperties(errorMethods, NativeGlobal.class,
+                                            ScriptableObject.DONTENUM);
+        /*
+            Each error constructor gets it's own Error object as a prototype,
+            with the 'name' property set to the name of the error.
+        */
+        for (int i = 0; i < errorMethods.length; i++) {
+            FunctionObject errorConstructor 
+                        = (FunctionObject)(global.get(errorMethods[i], global));
+            Scriptable errorProto = Context.getContext().newObject(scope, "Error");
+            errorProto.put("name", errorProto, errorMethods[i]);
+            errorConstructor.put("prototype", errorConstructor, errorProto);
+        }
+    
     }
 
     /**
@@ -400,4 +426,118 @@ public class NativeGlobal {
         }
         
     }
+    
+    
+    /**
+     * The NativeError functions
+     *
+     * See ECMA 15.11.6
+     */
+     
+    public static EvaluatorException constructError(Context cx, 
+                                                    String error, 
+                                                    String message,
+                                                    Object scope)
+    {
+        Scriptable scopeObject;
+        try {
+            scopeObject = (Scriptable) scope;
+        }
+        catch (ClassCastException x) {
+            throw new RuntimeException(x.toString());
+        }
+            
+        Object args[] = { message };
+        try {
+            Object errorObject = cx.newObject(scopeObject, error, args);
+            return new EvaluatorException(errorObject);
+        }
+        catch (PropertyException x) {
+            throw new RuntimeException(x.toString());
+        }
+        catch (JavaScriptException x) {
+            throw new RuntimeException(x.toString());
+        }
+        catch (NotAFunctionException x) {
+            throw new RuntimeException(x.toString());
+        }
+    }
+    
+    public static Object ConversionError(Context cx, Object[] args, 
+                            Function ctorObj, boolean inNewExpr)
+    {
+        Scriptable newInstance = new NativeError();
+        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
+        newInstance.setParentScope(cx.ctorScope);
+        if (args.length > 0)
+            newInstance.put("message", newInstance, args[0]);
+        return newInstance;
+    }
+    
+    public static Object EvalError(Context cx, Object[] args, 
+                            Function ctorObj, boolean inNewExpr)
+    {
+        Scriptable newInstance = new NativeError();
+        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
+        newInstance.setParentScope(cx.ctorScope);
+        if (args.length > 0)
+            newInstance.put("message", newInstance, args[0]);
+        return newInstance;
+    }
+    
+    public static Object RangeError(Context cx, Object[] args, 
+                            Function ctorObj, boolean inNewExpr)
+    {
+        Scriptable newInstance = new NativeError();
+        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
+        newInstance.setParentScope(cx.ctorScope);
+        if (args.length > 0)
+            newInstance.put("message", newInstance, args[0]);
+        return newInstance;
+    }
+    
+    public static Object ReferenceError(Context cx, Object[] args, 
+                            Function ctorObj, boolean inNewExpr)
+    {
+        Scriptable newInstance = new NativeError();
+        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
+        newInstance.setParentScope(cx.ctorScope);
+        if (args.length > 0)
+            newInstance.put("message", newInstance, args[0]);
+        return newInstance;
+    }
+    
+    public static Object SyntaxError(Context cx, Object[] args, 
+                            Function ctorObj, boolean inNewExpr)
+    {
+        Scriptable newInstance = new NativeError();
+        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
+        newInstance.setParentScope(cx.ctorScope);
+        if (args.length > 0)
+            newInstance.put("message", newInstance, args[0]);
+        return newInstance;
+    }
+    
+    public static Object TypeError(Context cx, Object[] args, 
+                            Function ctorObj, boolean inNewExpr)
+    {
+        Scriptable newInstance = new NativeError();
+        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
+        newInstance.setParentScope(cx.ctorScope);
+        if (args.length > 0)
+            newInstance.put("message", newInstance, args[0]);
+        return newInstance;
+    }
+    
+    public static Object URIError(Context cx, Object[] args, 
+                            Function ctorObj, boolean inNewExpr)
+    {
+        Scriptable newInstance = new NativeError();
+        newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
+        newInstance.setParentScope(cx.ctorScope);
+        if (args.length > 0)
+            newInstance.put("message", newInstance, args[0]);
+        return newInstance;
+    }
+    
 }

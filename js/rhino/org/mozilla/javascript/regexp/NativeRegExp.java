@@ -87,14 +87,16 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     flags |= MULTILINE;
                 } else {
                     Object[] errArgs = { new Character(c) };
-                    throw Context.reportRuntimeError(ScriptRuntime.getMessage
-                                                     ("msg.invalid.re.flag",
-                                                      errArgs));
+                    throw NativeGlobal.constructError(
+                                 cx, "SyntaxError",
+                                 ScriptRuntime.getMessage(
+                                      "msg.invalid.re.flag", errArgs),
+                                 scope);
                 }
             }
         }
 
-        CompilerState state = new CompilerState(source, flags, cx);
+        CompilerState state = new CompilerState(source, flags, cx, scope);
         this.ren = parseRegExp(state);
         if (ren == null) return;
         RENode end = new RENode(state, REOP_END, null);
@@ -204,8 +206,11 @@ public class NativeRegExp extends ScriptableObject implements Function {
     {
         if (!(thisObj instanceof NativeRegExp)) {
             Object[] errArgs = { ((NativeFunction) funObj).jsGet_name() };
-            throw Context.reportRuntimeError(
-                ScriptRuntime.getMessage("msg.incompat.call", errArgs));
+            throw NativeGlobal.constructError(
+                         cx, "TypeError",
+                         ScriptRuntime.getMessage(
+                              "msg.incompat.call", errArgs),
+                         scopeObj);
         }
         NativeRegExp re = (NativeRegExp) thisObj;
         String str;
@@ -1113,7 +1118,8 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                 && source[index + 1] >= '0' 
                                     && source[index + 1] <= '9') {
                         if (c >= '0' && c <= '3') {
-                            if (c <= '7') { /* ZeroToThree OctalDigit */
+                            if (source[index + 1] <= '7') { 
+                                                /* ZeroToThree OctalDigit */
                                 if (index < (source.length - 2) 
                                             && source[index + 2] >= '0' 
                                                 && source[index + 2] <= '9') {
@@ -1143,11 +1149,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
             	                ren.flags = RENode.NONEMPTY;
             	                skipCommon = true;
                             }
-                            if (c > '7' || source[index + 1] > '7') {                                
-                                Context.reportError(
-                                    ScriptRuntime.getMessage(
-                                                "msg.invalid.backref", null));
-    	                        return null;
+                            if (c > '7' || source[index + 1] > '7') {
+                                throw NativeGlobal.constructError(
+                                             state.cx, "SyntaxError",
+                                             ScriptRuntime.getMessage(
+                                                  "msg.invalid.backref", null),
+                                             state.scope);
                             }
                             ren = new RENode(state, REOP_FLAT1, null);
                             c = (char)(8 * unDigit(c) + unDigit(source[++index]));
@@ -1549,7 +1556,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                             char[] source = (ren.s != null) 
                                                 ? ren.s 
                                                 : this.source.toCharArray();
-                            ren.buildBitmap(source, ((state.flags & FOLD) != 0));
+                            ren.buildBitmap(state, source, ((state.flags & FOLD) != 0));
                         }
                         char c = input[index];
                         int b = (c >>> 3);
@@ -1753,6 +1760,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
         MatchState state = new MatchState();
         state.anchoring = false;
         state.flags = re.flags;
+        state.scope = scopeObj;
 
         char[] charArray = str.toCharArray();
         int start = indexp[0];
@@ -1900,12 +1908,14 @@ public class NativeRegExp extends ScriptableObject implements Function {
 }
 
 class CompilerState {
-    CompilerState(String source, int flags, Context cx) {
+    CompilerState(String source, int flags, Context cx, Scriptable scope) {
         this.source = source.toCharArray();
+        this.scope = scope;
         this.flags = flags;
         this.cx = cx;
     }
     Context     cx;
+    Scriptable  scope;
     char[]      source;
     int         indexBegin;
     int         index;
@@ -1993,7 +2003,7 @@ class RENode {
         matchBit('-', fill);
     }
 
-    void buildBitmap(char[] s, boolean fold)
+    void buildBitmap(MatchState state, char[] s, boolean fold)
     {
         int index = ((Integer) kid).intValue();
         int end = kid2;
@@ -2160,9 +2170,11 @@ class RENode {
 
             if (inrange) {
                 if (lastc > c) {
-                    throw Context.reportRuntimeError
-                        (ScriptRuntime.getMessage("msg.bad.range",
-                                            null));
+                    throw NativeGlobal.constructError(
+                                 Context.getCurrentContext(), "RangeError",
+                                 ScriptRuntime.getMessage(
+                                      "msg.bad.range", null),
+                                 state.scope);
                 }
                 inrange = false;
             } else {
@@ -2222,5 +2234,6 @@ class MatchState {
     int         parenCount;             /* number of paren substring matches */
     SubString[] maybeParens;            /* possible paren substring pointers */
     SubString[] parens;                 /* certain paren substring matches */
+    Scriptable  scope;
 }
 

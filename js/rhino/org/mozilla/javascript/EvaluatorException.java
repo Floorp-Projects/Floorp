@@ -35,4 +35,12 @@ public class EvaluatorException extends RuntimeException {
     public EvaluatorException(String detail) {
         super(detail);
     }
+
+    public EvaluatorException(Object nativeError) {
+        super("NativeError");
+        errorObject = nativeError;
+    }
+    
+    Object errorObject;
+
 }

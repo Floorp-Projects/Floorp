@@ -1136,8 +1136,10 @@ public class ScriptRuntime {
             obj = obj.getParentScope();
         }
         Object[] args = { id.toString() };
-        throw Context.reportRuntimeError(getMessage
-                                         ("msg.is.not.defined", args));
+        throw NativeGlobal.constructError(
+                        Context.getContext(), "ReferenceError",
+                        ScriptRuntime.getMessage("msg.is.not.defined", args),
+                        scopeChain);
     }
 
     /**
