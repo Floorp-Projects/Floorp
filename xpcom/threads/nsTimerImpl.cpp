@@ -48,7 +48,7 @@ static TimerThread *gThread = nsnull;
 
 double nsTimerImpl::sDeltaSumSquared = 0;
 double nsTimerImpl::sDeltaSum = 0;
-double nsTimerImpl::sNum = 0;
+double nsTimerImpl::sDeltaNum = 0;
 
 static void
 myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
@@ -70,8 +70,63 @@ myNS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 }
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsTimerImpl, nsITimer, nsITimerScriptable)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsTimerImpl, nsITimer, nsIScriptableTimer)
+NS_IMPL_THREADSAFE_ADDREF(nsTimerImpl)
 
+NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
+{
+  nsrefcnt count;
+
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
+  NS_LOG_RELEASE(this, count, "nsTimerImpl");
+  if (count == 0) {
+    mRefCnt = 1; /* stabilize */
+
+    /* enable this to find non-threadsafe destructors: */
+    /* NS_ASSERT_OWNINGTHREAD(nsTimerImpl); */
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+
+  // If only one reference remains, and mArmed is set, then the ref must be
+  // from the TimerThread::mTimers array, so we Cancel this timer to remove
+  // the mTimers element, and return 0 if Cancel in fact disarmed the timer.
+  //
+  // We use an inlined version of nsTimerImpl::Cancel here to check for the
+  // NS_ERROR_NOT_AVAILABLE code returned by gThread->RemoveTimer when this
+  // timer is not found in the mTimers array -- i.e., when the timer was not
+  // in fact armed once we acquired TimerThread::mLock, in spite of mArmed
+  // being true here.  That can happen if the armed timer is being fired by
+  // TimerThread::Run as we race and test mArmed just before it is cleared by
+  // the timer thread.  If the RemoveTimer call below doesn't find this timer
+  // in the mTimers array, then the last ref to this timer is held manually
+  // and temporarily by the TimerThread, so we should fall through to the
+  // final return and return 1, not 0.
+  //
+  // The original version of this thread-based timer code kept weak refs from
+  // TimerThread::mTimers, removing this timer's weak ref in the destructor,
+  // but that leads to double-destructions in the race described above, and
+  // adding mArmed doesn't help, because destructors can't be deferred, once
+  // begun.  But by combining reference-counting and a specialized Release
+  // method with "is this timer still in the mTimers array once we acquire
+  // the TimerThread's lock" testing, we defer destruction until we're sure
+  // that only one thread has its hot little hands on this timer.
+  //
+  // Note that both approaches preclude a timer creator, and everyone else
+  // except the TimerThread who might have a strong ref, from dropping all
+  // their strong refs without implicitly canceling the timer.  Timers need
+  // non-mTimers-element strong refs to stay alive.
+
+  if (count == 1 && mArmed) {
+    mCanceled = PR_TRUE;
+
+    if (NS_SUCCEEDED(gThread->RemoveTimer(this)))
+      return 0;
+  }
+
+  return count;
+}
 
 PR_STATIC_CALLBACK(PRStatus) InitThread(void)
 {
@@ -94,7 +149,8 @@ nsTimerImpl::nsTimerImpl() :
   mClosure(nsnull),
   mCallbackType(CALLBACK_TYPE_UNKNOWN),
   mFiring(PR_FALSE),
-  mCancelled(PR_FALSE),
+  mArmed(PR_FALSE),
+  mCanceled(PR_FALSE),
   mTimeout(0)
 {
   NS_INIT_REFCNT();
@@ -117,9 +173,6 @@ nsTimerImpl::~nsTimerImpl()
     NS_RELEASE(mCallback.i);
   else if (mCallbackType == CALLBACK_TYPE_OBSERVER)
     NS_RELEASE(mCallback.o);
-
-  if (gThread)
-    gThread->RemoveTimer(this);
 }
 
 
@@ -128,9 +181,9 @@ void nsTimerImpl::Shutdown()
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
     double mean = 0, stddev = 0;
-    myNS_MeanAndStdDev(sNum, sDeltaSum, sDeltaSumSquared, &mean, &stddev);
+    myNS_MeanAndStdDev(sDeltaNum, sDeltaSum, sDeltaSumSquared, &mean, &stddev);
 
-    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("sNum = %f, sDeltaSum = %f, sDeltaSumSquared = %f\n", sNum, sDeltaSum, sDeltaSumSquared));
+    PR_LOG(gTimerLog, PR_LOG_DEBUG, ("sDeltaNum = %f, sDeltaSum = %f, sDeltaSumSquared = %f\n", sDeltaNum, sDeltaSum, sDeltaSumSquared));
     PR_LOG(gTimerLog, PR_LOG_DEBUG, ("mean: %fms, stddev: %fms\n", mean, stddev));
   }
 #endif
@@ -162,9 +215,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsTimerCallbackFunc aFunc,
 
   SetDelayInternal(aDelay);
 
-  gThread->AddTimer(this);
-
-  return NS_OK;
+  return gThread->AddTimer(this);
 }
 
 NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
@@ -184,9 +235,7 @@ NS_IMETHODIMP nsTimerImpl::Init(nsITimerCallback *aCallback,
 
   SetDelayInternal(aDelay);
 
-  gThread->AddTimer(this);
-
-  return NS_OK;
+  return gThread->AddTimer(this);
 }
 
 NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
@@ -194,6 +243,9 @@ NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
                                 PRUint32 aPriority,
                                 PRUint32 aType)
 {
+  if (!gThread)
+    return NS_ERROR_FAILURE;
+
   SetDelayInternal(aDelay);
 
   mCallback.o = aObserver;
@@ -203,18 +255,12 @@ NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
   mPriority = (PRUint8)aPriority;
   mType = (PRUint8)aType;
 
-  if (!gThread)
-    return NS_ERROR_FAILURE;
-
-  gThread->AddTimer(this);
-
-  return NS_OK;
+  return gThread->AddTimer(this);
 }
 
 NS_IMETHODIMP nsTimerImpl::Cancel()
 {
-  mCancelled = PR_TRUE;
-  mClosure = nsnull;
+  mCanceled = PR_TRUE;
 
   if (gThread)
     gThread->RemoveTimer(this);
@@ -245,7 +291,7 @@ NS_IMETHODIMP_(void) nsTimerImpl::SetType(PRUint32 aType)
 
 void nsTimerImpl::Process()
 {
-  if (mCancelled)
+  if (mCanceled)
     return;
 
   PRIntervalTime now = PR_IntervalNow();
@@ -256,7 +302,7 @@ void nsTimerImpl::Process()
     PRUint32       d = PR_IntervalToMilliseconds((a > b) ? a - b : b - a); // delta in ms
     sDeltaSum += d;
     sDeltaSumSquared += double(d) * double(d);
-    sNum++;
+    sDeltaNum++;
 
     PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] expected delay time %4dms\n", this, mDelay));
     PR_LOG(gTimerLog, PR_LOG_DEBUG, ("[this=%p] actual delay time   %4dms\n", this, PR_IntervalToMilliseconds(a)));
@@ -278,15 +324,19 @@ void nsTimerImpl::Process()
 
   mFiring = PR_TRUE;
 
-  if (mCallback.c) {
-    if (mCallbackType == CALLBACK_TYPE_FUNC)
-      (*mCallback.c)(this, mClosure);
-    else if (mCallbackType == CALLBACK_TYPE_INTERFACE)
+  switch (mCallbackType) {
+    case CALLBACK_TYPE_FUNC:
+      mCallback.c(this, mClosure);
+      break;
+    case CALLBACK_TYPE_INTERFACE:
       mCallback.i->Notify(this);
-    else if (mCallbackType == CALLBACK_TYPE_OBSERVER)
-      mCallback.o->Observe((nsITimerScriptable *) this, 
-        NS_TIMER_CALLBACK_TOPIC, nsnull);
-    /* else the timer has been canceled, and we shouldn't do anything */
+      break;
+    case CALLBACK_TYPE_OBSERVER:
+      mCallback.o->Observe(NS_STATIC_CAST(nsIScriptableTimer *, this),
+                           NS_TIMER_CALLBACK_TOPIC,
+                           nsnull);
+      break;
+    default:;
   }
 
   mFiring = PR_FALSE;
@@ -393,7 +443,7 @@ void nsTimerImpl::SetDelayInternal(PRUint32 aDelay)
   if (mTimeout < now) { // we overflowed
     mTimeout = PRIntervalTime(-1);
   }
-          
+
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(gTimerLog, PR_LOG_DEBUG)) {
     if (mStart == 0)

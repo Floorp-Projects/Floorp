@@ -47,7 +47,7 @@ XPIDLSRCS =                        \
         .\nsIThreadPool.idl        \
         .\nsIRunnable.idl          \
         .\nsIProcess.idl           \
-        .\nsITimerScriptable.idl   \
+        .\nsIScriptableTimer.idl   \
         $(NULL)
 
 ################################################################################

@@ -42,7 +42,7 @@
 
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
-#include "nsITimerScriptable.h"
+#include "nsIScriptableTimer.h"
 
 #include "nsIThread.h"
 
@@ -73,7 +73,7 @@ enum {
   CALLBACK_TYPE_OBSERVER  = 3
 };
 
-class nsTimerImpl : public nsITimer, public nsITimerScriptable
+class nsTimerImpl : public nsITimer, public nsIScriptableTimer
 {
 public:
 
@@ -100,12 +100,12 @@ public:
                   PRUint32 aType);
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSITIMERSCRIPTABLE
+  NS_DECL_NSISCRIPTABLETIMER
 
   NS_IMETHOD_(PRUint32) GetDelay() { return mDelay; }
   NS_IMETHOD_(void) SetDelay(PRUint32 aDelay);
 
-  NS_IMETHOD_(PRUint32) GetPriority() { return (PRUint32)mPriority; }
+  NS_IMETHOD_(PRUint32) GetPriority() { return mPriority; }
   NS_IMETHOD_(void) SetPriority(PRUint32 aPriority);
 
   NS_IMETHOD_(PRUint32) GetType() { return (PRUint32)mType; }
@@ -114,9 +114,9 @@ public:
   NS_IMETHOD_(void*) GetClosure() { return mClosure; }
 
 private:
-  nsCOMPtr<nsIThread>  mCallingThread;
+  nsCOMPtr<nsIThread>   mCallingThread;
 
-  void *               mClosure;
+  void *                mClosure;
 
   union {
     nsTimerCallbackFunc c;
@@ -124,21 +124,31 @@ private:
     nsIObserver *       o;
   } mCallback;
 
-  PRUint8              mCallbackType;
-  PRUint8              mPriority;
-  PRUint8              mType;
-  PRUint8              mFiring;
+  // These members are set by Init (called from NS_NewTimer) and never reset.
+  PRUint8               mCallbackType;
+  PRUint8               mPriority;
 
-  PRBool               mCancelled;
+  // These members are set by the initiating thread, when the timer's type is
+  // changed and during the period where it fires on that thread.
+  PRUint8               mType;
+  PRPackedBool          mFiring;
 
-  PRUint32             mDelay;
-  PRIntervalTime       mTimeout;
+
+  // Use a PRBool (int) here to isolate loads and stores of these two members
+  // done on various threads under the protection of TimerThread::mLock, from
+  // loads and stores done on the initiating/type-changing/timer-firing thread
+  // to the above PRUint8/PRPackedBool members.
+  PRBool                mArmed;
+  PRBool                mCanceled;
+
+  PRUint32              mDelay;
+  PRIntervalTime        mTimeout;
 
 #ifdef DEBUG_TIMERS
-  PRIntervalTime  mStart, mStart2;
-  static double   sDeltaSum;
-  static double   sDeltaSumSquared;
-  static double   sNum;
+  PRIntervalTime        mStart, mStart2;
+  static double         sDeltaSum;
+  static double         sDeltaSumSquared;
+  static double         sDeltaNum;
 #endif
 
 };

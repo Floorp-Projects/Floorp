@@ -943,7 +943,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsITimerScriptable.idl</PATH>
+                    <PATH>nsIScriptableTimer.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -1410,7 +1410,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsITimerScriptable.idl</PATH>
+                    <PATH>nsIScriptableTimer.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2550,7 +2550,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsITimerScriptable.idl</PATH>
+                    <PATH>nsIScriptableTimer.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -3017,7 +3017,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsITimerScriptable.idl</PATH>
+                    <PATH>nsIScriptableTimer.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -3590,7 +3590,7 @@
         <FILEREF>
             <TARGETNAME>headers</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsITimerScriptable.idl</PATH>
+            <PATH>nsIScriptableTimer.idl</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
         <FILEREF>
