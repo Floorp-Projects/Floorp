@@ -75,6 +75,7 @@ public:
 #ifdef NS_DEBUG
     mPlacedFrames.Clear();
 #endif
+    ForgetWordFrames();
   }
 
   // Add to the placed-frame count
@@ -116,8 +117,6 @@ public:
   void UpdateInlines(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                      PRBool aPlacedLeftFloater);
 
-  //  --------------------------------------------------
-
   // Reset the text-run information in preparation for a FindTextRuns
   void ResetTextRuns();
 
@@ -133,6 +132,30 @@ public:
   // FindTextRuns. The internal text-run state is reset.
   nsTextRun* TakeTextRuns();
 
+  void SetReflowTextRuns(nsTextRun* aTextRuns) {
+    mReflowTextRuns = aTextRuns;
+  }
+
+  nsIFrame* FindNextText(nsIFrame* aFrame);
+
+  void RecordWordFrame(nsIFrame* aWordFrame) {
+    mWordFrames.AppendElement(aWordFrame);
+  }
+
+  void ForgetWordFrames() {
+    mWordFrames.Clear();
+  }
+
+  PRBool IsNextWordFrame(nsIFrame* aFrame);
+
+  PRBool InNonBreakingUnit() {
+    return 0 != mWordFrames.Count();
+  }
+
+  PRBool IsLastWordFrame(nsIFrame* aFrame);
+
+  void ForgetWordFrame(nsIFrame* aFrame);
+
   PRInt32 GetColumn() {
     return mColumn;
   }
@@ -145,10 +168,12 @@ public:
     mLineNumber++;
   }
 
-  void AddFloater(nsPlaceholderFrame* aFrame);
-
   static PRBool TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
                                   const nsStylePosition* aPosition);
+
+  //  --------------------------------------------------
+
+  void AddFloater(nsPlaceholderFrame* aFrame);
 
   nsIPresContext& mPresContext;
   nsISpaceManager* mSpaceManager;
@@ -156,7 +181,6 @@ public:
 
   PRBool mListPositionOutside;
   PRInt32 mLineNumber;
-//  nscoord mLeftEdge;
   PRInt32 mColumn;
 
   //XXX temporary?
@@ -175,6 +199,8 @@ protected:
 #ifdef NS_DEBUG
   nsVoidArray mPlacedFrames;
 #endif
+
+  nsVoidArray mWordFrames;
 
   nsVoidArray mInlineStack;
 
