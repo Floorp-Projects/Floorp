@@ -315,6 +315,9 @@ main(int argc, char **argv)
 	    if ((owner || group) && chown(toname, uid, gid) < 0)
 		fail("cannot change owner of %s", toname);
 	} else if (dolink) {
+            if (access(name, R_OK) != 0) {
+                fail("cannot access %s", name);
+            }
 	    if (*name == '/') {
 		/* source is absolute pathname, link to it directly */
 		linkname = 0;

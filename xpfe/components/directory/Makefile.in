@@ -46,7 +46,7 @@ CHROME_CONTENT	= \
 
 CHROME_SKIN	= directory.css
 
-EXPORT_RESOURCE_LOCALE	= locale/en-US/directory.dtd
+EXPORT_RESOURCE_LOCALE	= ${srcdir}/locale/en-US/directory.dtd
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \

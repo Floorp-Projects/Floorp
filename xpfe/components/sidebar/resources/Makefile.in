@@ -64,6 +64,8 @@ EXPORT_RESOURCE_LOCALE = \
 	locale/en-US/sidebarOverlay.dtd \
 	$(NULL)
 
+EXPORT_RESOURCE_LOCALE := $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_LOCALE))
+
 include $(topsrcdir)/config/rules.mk
 
 install::
