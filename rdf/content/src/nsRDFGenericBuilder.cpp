@@ -1650,8 +1650,8 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
         char* tagCStr = tagStr.ToNewCString();
 
         PR_LOG(gLog, PR_LOG_DEBUG,
-               ("rdfgeneric build-content-fromt-template %s [%s]",
-                tagCStr, (const char*) resourceCStr));
+               ("rdfgeneric[%p] build-content-from-template %s [%s]",
+                this, tagCStr, (const char*) resourceCStr));
 
         nsCRT::free(tagCStr);
     }
@@ -2144,6 +2144,37 @@ RDFGenericBuilderImpl::RemoveWidgetItem(nsIContent* aElement,
 
         rv = parent->RemoveChildAt(pos, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
+
+#ifdef PR_LOGGING
+        if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+            nsCOMPtr<nsIAtom> parentTag;
+            rv = parent->GetTag(*getter_AddRefs(parentTag));
+            if (NS_FAILED(rv)) return rv;
+
+            nsAutoString parentTagStr;
+            rv = parentTag->ToString(parentTagStr);
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIAtom> childTag;
+            rv = child->GetTag(*getter_AddRefs(childTag));
+            if (NS_FAILED(rv)) return rv;
+
+            nsAutoString childTagStr;
+            rv = childTag->ToString(childTagStr);
+            if (NS_FAILED(rv)) return rv;
+
+            const char* resourceCStr;
+            rv = aValue->GetValueConst(&resourceCStr);
+            if (NS_FAILED(rv)) return rv;
+            
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+                   ("rdfgeneric[%p] remove-widget-item %s->%s [%s]",
+                    this,
+                    (const char*) nsCAutoString(parentTagStr),
+                    (const char*) nsCAutoString(childTagStr),
+                    resourceCStr));
+        }
+#endif
     }
 
     return NS_OK;
