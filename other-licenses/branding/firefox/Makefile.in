@@ -1,6 +1,7 @@
 # Branding Makefile
 #  - jars chrome artwork
-#  - copies winstaller artwork to objdir
+#  - copies artwork to appropriate places in objdir for bundling into app 
+#    resources
 
 DEPTH = ../../..
 topsrcdir = @top_srcdir@
@@ -11,11 +12,15 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-firefox.ico: firefox.ico.in
-  $(INSTALL) $^ $(topsrcdir)/$(OBJDIR)/browser/app/
+export::
+	cp $(srcdir)/firefox.ico $(DEPTH)/browser/app/firefox.ico
+	cp $(srcdir)/firefox.ico $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/browser.ico
+	if [ ! -d $(DEPTH)/browser/app/macbuild ] ; then \
+		mkdir $(DEPTH)/browser/app/macbuild; \
+	fi
+	cp $(srcdir)/firefox.icns $(DEPTH)/browser/app/macbuild/firefox.icns
+	cp $(srcdir)/document.icns $(DEPTH)/browser/app/macbuild/document.icns
+	cp $(srcdir)/document.ico $(DEPTH)/browser/app/document.ico
+	cp $(srcdir)/Header.bmp $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/Header.bmp
+	cp $(srcdir)/Watermrk.bmp $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/Watermrk.bmp
 
-browser.ico: firefox.ico.in
-  $(INSTALL) $^ $(topsrcdir)/$(OBJDIR)/toolkit/mozapps/installer/wizard/windows/setuprsc/
-
-firefox.icns: firefox.icns.in
-  $(INSTALL) $^ $(topsrcdir)/$(OBJDIR)/browser/app/macbuild/

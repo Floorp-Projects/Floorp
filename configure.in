@@ -3325,6 +3325,16 @@ MOZ_ARG_DISABLE_BOOL(ldap,
     MOZ_LDAP_XPCOM=1)
 
 dnl ========================================================
+dnl = Trademarked Branding 
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(official-branding,
+[  --enable-official-branding    Enable Official Branding],
+    MOZ_USE_OFFICIAL_BRANDING=1,
+    MOZ_USE_OFFICIAL_BRANDING= )
+
+AC_SUBST(MOZ_USE_OFFICIAL_BRANDING)
+
+dnl ========================================================
 dnl = Phoenix
 dnl ========================================================
 MOZ_XUL_APP=
