@@ -270,7 +270,6 @@ SEC_CheckCRL(CERTCertDBHandle *handle,CERTCertificate *cert,
     CERTSignedCrl *crl = NULL;
     SECStatus rv = SECSuccess;
     CERTCrlEntry **crlEntry;
-    SECCertTimeValidity validity;
 
     /* first look up the CRL */
     crl = SEC_FindCrlByName(handle,&caCert->derSubject, SEC_CRL_TYPE);
