@@ -313,37 +313,31 @@ secu_InitSlotPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
     FILE *input, *output;
     secuPWData *pwdata = arg;
 
-    if (pwdata->source == PW_NONE) {
-	/* open terminal */
-#ifdef _WINDOWS
-	input = stdin;
-#else
-	input = fopen(consoleName, "r");
-#endif
-	if (input == NULL) {
-	    PR_fprintf(PR_STDERR, "Error opening input terminal for read\n");
-	    return NULL;
-	}
-
-	/* we have no password, so initialize database with one */
-	PR_fprintf(PR_STDERR, 
-                   "In order to finish creating your database, you\n");
-	PR_fprintf(PR_STDERR, "must enter a password which will be used to\n");
-	PR_fprintf(PR_STDERR, "encrypt this key and any future keys.\n\n");
-	PR_fprintf(PR_STDERR, 
-	           "The password must be at least 8 characters long,\n");
-	PR_fprintf(PR_STDERR, "and must contain at least one non-alphabetic ");
-	PR_fprintf(PR_STDERR, "character.\n\n");
-    } else if (pwdata->source == PW_FROMFILE) {
-	input = fopen(pwdata->data, "r");
-	if (input == NULL) {
-	    PR_fprintf(PR_STDERR, "Error opening \"%s\" for read\n",
-	                           pwdata->data);
-	    return NULL;
-	}
-    } else {
-	p0 = PL_strdup(pwdata->data);
+    if (pwdata->source == PW_FROMFILE) {
+	return SECU_FilePasswd(slot, retry, pwdata->data);
+    } else if (pwdata->source == PW_PLAINTEXT) {
+	return PL_strdup(pwdata->data);
     }
+    
+    /* PW_NONE - get it from tty */
+    /* open terminal */
+#ifdef _WINDOWS
+    input = stdin;
+#else
+    input = fopen(consoleName, "r");
+#endif
+    if (input == NULL) {
+	PR_fprintf(PR_STDERR, "Error opening input terminal for read\n");
+	return NULL;
+    }
+
+    /* we have no password, so initialize database with one */
+    PR_fprintf(PR_STDERR, "In order to finish creating your database, you\n");
+    PR_fprintf(PR_STDERR, "must enter a password which will be used to\n");
+    PR_fprintf(PR_STDERR, "encrypt this key and any future keys.\n\n");
+    PR_fprintf(PR_STDERR, "The password must be at least 8 characters long,\n");
+    PR_fprintf(PR_STDERR, "and must contain at least one non-alphabetic ");
+    PR_fprintf(PR_STDERR, "character.\n\n");
 
     output = fopen(consoleName, "w");
     if (output == NULL) {
