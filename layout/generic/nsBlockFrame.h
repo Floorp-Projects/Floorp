@@ -34,6 +34,11 @@ class nsTextRun;
 #define NS_BLOCK_FRAME_BULLET_LIST_INDEX  1
 #define NS_BLOCK_FRAME_LAST_LIST_INDEX    NS_BLOCK_FRAME_BULLET_LIST_INDEX
 
+/**
+ * Additional frame-state bits
+ */
+#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x10000
+
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
 // Base class for block and inline frames
@@ -119,6 +124,10 @@ protected:
     mFlags = aFlags;
   }
 
+  PRBool HaveOutsideBullet() const {
+    return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET);
+  }
+
   void SlideFrames(nsIPresContext& aPresContext,
                    nsISpaceManager* aSpaceManager,
                    nsLineBox* aLine, nscoord aDY);
@@ -195,11 +204,6 @@ protected:
   void ComputeLineMaxElementSize(nsBlockReflowState& aState,
                                  nsLineBox* aLine,
                                  nsSize* aMaxElementSize);
-
-  virtual void DidPlaceLine(nsBlockReflowState& aState,
-                            nsLineBox* aLine,
-                            nscoord aTopMargin, nscoord aBottomMargin,
-                            PRBool aKeepReflowGoing);
 
   // XXX where to go
   PRBool ShouldJustifyLine(nsBlockReflowState& aState, nsLineBox* aLine);
@@ -282,11 +286,8 @@ protected:
 
   void RenumberLists(nsBlockReflowState& aState);
 
-  PRBool ShouldPlaceBullet(nsLineBox* aLine);
-
-  void PlaceBullet(nsBlockReflowState& aState,
-                   nscoord aMaxAscent,
-                   nscoord aTopMargin);
+  void ReflowBullet(nsBlockReflowState& aState,
+                    nsHTMLReflowMetrics& aMetrics);
 
   void RestoreStyleFor(nsIPresContext& aPresContext, nsIFrame* aFrame);
 
