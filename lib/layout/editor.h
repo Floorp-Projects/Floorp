@@ -4433,8 +4433,6 @@ void edt_AddTag( PA_Tag*& pStart, PA_Tag*& pEnd, TagType t, XP_Bool bIsEnd,
 
 void edt_CopyTableCellData( EDT_TableCellData *pDestData, EDT_TableCellData *pSourceData );
 
-void edt_ForceTableSelection(MWContext *pMWContext, LO_TableStruct *pLoTable);
-
 void edt_InitBitArrays();
 
 // Given an absolute URL, return the path portion of it, allocated with XP_STRDUP.
