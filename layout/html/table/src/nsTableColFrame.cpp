@@ -28,8 +28,8 @@
 
 nsTableColFrame::nsTableColFrame()
   : nsFrame(), 
-    mIsAnonymous(PR_FALSE), 
     mProportion(WIDTH_NOT_SET),
+    mIsAnonymous(PR_FALSE), 
     mNonPercentSpansPercent(PR_FALSE)
 {
   // note that all fields are initialized to 0 by nsFrame::operator new

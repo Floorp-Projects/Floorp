@@ -583,7 +583,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aMaxWidth
   // so that nested and/or overlaping col spans handle the inner ones first, 
   // ensuring more accurated calculations.
   for (colX = mNumCols - 1; colX >= 0; colX--) { 
-    for (PRInt32 rowX = 0; rowX < numRows; rowX++) {
+    for (rowX = 0; rowX < numRows; rowX++) {
       PRBool originates;
       PRInt32 colSpan;
       nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
@@ -983,7 +983,7 @@ PRBool BasicTableLayoutStrategy::RecomputeAdjMinIfNecessary()
     for (rowX = 0; rowX < numRows; rowX++) {
       PRBool originates;
       PRInt32 colSpan;
-      nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
+      mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
       if (!originates || (1 == colSpan)) {
         continue;
       }
@@ -1021,7 +1021,7 @@ PRBool BasicTableLayoutStrategy::RecomputeAdjMinIfNecessary()
         continue;
       }
       PRBool cellSpansPercent = PR_FALSE;
-      PRInt32 spanX;
+
       // see if any of the spanned cols are percent based
       for (spanX = 0; spanX < colSpan; spanX++) {
         nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
@@ -1036,7 +1036,7 @@ PRBool BasicTableLayoutStrategy::RecomputeAdjMinIfNecessary()
         nscoord spanTotal = 0;
         nscoord divisor   = 0;
         nscoord spanCellSpacing = 0;
-        PRInt32 spanX;
+
         for (spanX = 0; spanX < colSpan; spanX++) {
           nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
           nscoord colWidth = colFrame->GetWidth(MIN_CON);
