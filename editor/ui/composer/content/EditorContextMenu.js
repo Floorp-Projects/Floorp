@@ -34,6 +34,7 @@ function EditorFillContextMenu(event, contextMenuNode)
 
   // Setup object property menuitem
   var objectName = InitObjectPropertiesMenuitem("objectProperties_cm");
+
   InitRemoveStylesMenuitems("removeStylesMenuitem_cm", "removeLinksMenuitem_cm");
 
   var inCell = IsInTableCell();
@@ -70,16 +71,39 @@ function EditorFillContextMenu(event, contextMenuNode)
     IsMenuItemShowing("createLink_cm") ||
     IsMenuItemShowing("removeLinksMenuitem_cm");
 
-  var haveProps = IsMenuItemShowing("objectProperties_cm");
+  var haveProps =
+    IsMenuItemShowing("objectProperties_cm") ||
+    IsMenuItemShowing("menu_saveImage_cm")
 
   ShowMenuItem("undoredo-separator", haveUndo && haveEdit);
 
   ShowMenuItem("edit-separator", haveEdit || haveUndo);
 	             
+
+  //The following is for the 'save image (imagename)' contextmenuitem 
+  var isImage = (objectName=="img");
+  ShowMenuItem("menu_saveImage_cm", isImage);
+
+  if (isImage)   //we have an image
+  { 
+     var saveImageMenuItem= document.getElementById("menu_saveImage_cm");
+
+     var imagePtr = window.editorShell.GetSelectedElement(objectName);     
+     var imageName = extractFileNameFromUrl(imagePtr.getAttribute("src"));
+
+     var menutext = window.editorShell.GetString("SaveImageAs").replace(/%NAME%/,imageName);
+
+     saveImageMenuItem.setAttribute('value',menutext);
+
+     var onCommand = "savePage('"+ imagePtr.getAttribute("src") + "',true)";  
+     saveImageMenuItem.setAttribute('oncommand',onCommand);   
+  }
+
   // Note: Item "menu_selectAll_cm" and 
   // folowing separator are ALWAYS enabled,
   // so there will always be 1 separator here
 
+dump("haveStyle = "+haveStyle+", "+haveProps+", inCell"+inCell+"\n");
   ShowMenuItem("styles-separator", haveStyle && (haveProps || inCell));
 
   ShowMenuItem("property-separator", (haveProps && inCell) || !haveStyle);

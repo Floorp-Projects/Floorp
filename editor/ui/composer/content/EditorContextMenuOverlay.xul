@@ -55,9 +55,10 @@
     <menuitem id="removeLinksMenuitem_cm" observes="cmd_removeLinks"/>
 		<menuseparator id="styles-separator"/>
 
-		<!-- Value and accesskey are set in InitObjectProperties -->
+    <!-- Value and accesskey are set in InitObjectProperties -->
     <menuitem id="objectProperties_cm" observes="cmd_objectProperties"/>
-		<menuseparator id="property-separator"/>
+    <menuitem id="menu_saveImage_cm"/>
+    <menuseparator id="property-separator"/>
 
     <!-- Can't get submenus to load from a shared overlay -->
     <menu id="tableInsertMenu_cm" value="&tableInsertMenu2.label;" accesskey="&tableinsertmenu.accesskey;">
