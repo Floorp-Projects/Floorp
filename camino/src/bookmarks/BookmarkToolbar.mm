@@ -226,7 +226,7 @@ static const int kBMBarScanningStep = 5;
 #define kMinBookmarkButtonWidth          16.0
 #define kMaxBookmarkButtonWidth         150.0
 #define kBookmarkButtonHorizPadding       5.0
-#define kBookmarkToolbarTopPadding        2.0
+#define kBookmarkToolbarTopPadding        1.0
 #define kBookmarkButtonVerticalPadding    1.0
 #define kBookmarkToolbarBottomPadding     2.0
 
