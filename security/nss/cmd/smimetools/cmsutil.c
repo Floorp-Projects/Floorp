@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.47 2003/12/06 06:31:08 nelsonb%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.48 2003/12/12 23:55:06 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -270,13 +270,14 @@ decode(FILE *out, SECItem *input, const struct decodeOptionsStr *decodeOptions)
 		      != SECSuccess) {
 		    SECU_PrintError(progName, 
 		                    "problem computing message digest");
+		    PORT_FreeArena(poolp, PR_FALSE);
 		    goto loser;
 		}
 		if (NSS_CMSSignedData_SetDigests(sigd, digestalgs, digests) 
 		    != SECSuccess) {
-		    
 		    SECU_PrintError(progName, 
 		                    "problem setting message digests");
+		    PORT_FreeArena(poolp, PR_FALSE);
 		    goto loser;
 		}
 		PORT_FreeArena(poolp, PR_FALSE);

@@ -34,7 +34,7 @@
 /*
  * CMS digesting.
  *
- * $Id: cmsdigest.c,v 1.4 2003/12/04 00:32:18 nelsonb%netscape.com Exp $
+ * $Id: cmsdigest.c,v 1.5 2003/12/12 23:55:06 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -50,15 +50,22 @@
 /*  #define CMS_FIND_LEAK_MULTIPLE 1 */
 #ifdef CMS_FIND_LEAK_MULTIPLE
 static int stop_on_err = 1;
-static int num_digests = 0;
+static int global_num_digests = 0;
 #endif
+
+struct digestPairStr { 
+    const SECHashObject * digobj;
+    void *                digcx;
+};
+typedef struct digestPairStr digestPair;
 
 struct NSSCMSDigestContextStr {
     PRBool		saw_contents;
+    PLArenaPool *       pool;
     int			digcnt;
-    void **		digcxs;
-const SECHashObject **	digobjs;
+    digestPair  *       digPairs;
 };
+
 
 /*
  * NSS_CMSDigestContext_StartMultiple - start digest calculation using all the
@@ -67,31 +74,37 @@ const SECHashObject **	digobjs;
 NSSCMSDigestContext *
 NSS_CMSDigestContext_StartMultiple(SECAlgorithmID **digestalgs)
 {
+    PLArenaPool *        pool;
     NSSCMSDigestContext *cmsdigcx;
     int digcnt;
     int i;
+    int num_digests = 0;
 
 #ifdef CMS_FIND_LEAK_MULTIPLE
-    PORT_Assert(num_digests == 0 || !stop_on_err);
+    PORT_Assert(global_num_digests == 0 || !stop_on_err);
 #endif
 
     digcnt = (digestalgs == NULL) ? 0 : NSS_CMSArray_Count((void **)digestalgs);
-
-    cmsdigcx = PORT_New(NSSCMSDigestContext);
-    if (cmsdigcx == NULL)
+    if (digcnt <= 0) {
+    	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
-
-    if (digcnt > 0) {
-	cmsdigcx->digcxs  = PORT_NewArray(void *, digcnt);
-	cmsdigcx->digobjs = PORT_NewArray(const SECHashObject *, digcnt);
-	if (cmsdigcx->digcxs == NULL || cmsdigcx->digobjs == NULL)
-	    goto loser;
-    } else {
-	cmsdigcx->digcxs  = NULL;
-	cmsdigcx->digobjs = NULL;
     }
+    pool = PORT_NewArena(2048);
+    if (!pool)
+    	return NULL;
 
-    cmsdigcx->digcnt = 0;
+    cmsdigcx = PORT_ArenaNew(pool, NSSCMSDigestContext);
+    if (cmsdigcx == NULL)
+	goto loser;
+
+    cmsdigcx->saw_contents = PR_FALSE;
+    cmsdigcx->pool   = pool;
+    cmsdigcx->digcnt = digcnt;
+
+    cmsdigcx->digPairs = PORT_ArenaZNewArray(pool, digestPair, digcnt);
+    if (cmsdigcx->digPairs == NULL) {
+	goto loser;
+    }
 
     /*
      * Create a digest object context for each algorithm.
@@ -115,26 +128,21 @@ NSS_CMSDigestContext_StartMultiple(SECAlgorithmID **digestalgs)
 	digcx = (*digobj->create)();
 	if (digcx != NULL) {
 	    (*digobj->begin) (digcx);
-	    cmsdigcx->digobjs[cmsdigcx->digcnt] = digobj;
-	    cmsdigcx->digcxs[cmsdigcx->digcnt] = digcx;
-	    cmsdigcx->digcnt++;
-#ifdef CMS_FIND_LEAK_MULTIPLE
+	    cmsdigcx->digPairs[i].digobj = digobj;
+	    cmsdigcx->digPairs[i].digcx  = digcx;
 	    num_digests++;
+#ifdef CMS_FIND_LEAK_MULTIPLE
+	    global_num_digests++;
 #endif
 	}
     }
-
-    cmsdigcx->saw_contents = PR_FALSE;
-
-    return cmsdigcx;
+    if (num_digests > 0)
+	return cmsdigcx;
 
 loser:
-    if (cmsdigcx) {
-	if (cmsdigcx->digobjs)
-	    PORT_Free((void *)cmsdigcx->digobjs); /* cast away const */
-	if (cmsdigcx->digcxs)
-	    PORT_Free(cmsdigcx->digcxs);
-	PORT_Free(cmsdigcx);
+    /* no digest objects have been created, or need to be destroyed. */
+    if (pool) {
+    	PORT_FreeArena(pool, PR_FALSE);
     }
     return NULL;
 }
@@ -160,11 +168,15 @@ NSS_CMSDigestContext_Update(NSSCMSDigestContext *cmsdigcx,
                             const unsigned char *data, int len)
 {
     int i;
+    digestPair *pair = cmsdigcx->digPairs;
 
     cmsdigcx->saw_contents = PR_TRUE;
 
-    for (i = 0; i < cmsdigcx->digcnt; i++)
-	(*cmsdigcx->digobjs[i]->update)(cmsdigcx->digcxs[i], data, len);
+    for (i = 0; i < cmsdigcx->digcnt; i++, pair++) {
+	if (pair->digcx) {
+	    (*pair->digobj->update)(pair->digcx, data, len);
+    	}
+    }
 }
 
 /*
@@ -174,25 +186,20 @@ void
 NSS_CMSDigestContext_Cancel(NSSCMSDigestContext *cmsdigcx)
 {
     int i;
+    digestPair *pair = cmsdigcx->digPairs;
 
-    for (i = 0; i < cmsdigcx->digcnt; i++) {
-	(*cmsdigcx->digobjs[i]->destroy)(cmsdigcx->digcxs[i], PR_TRUE);
+    for (i = 0; i < cmsdigcx->digcnt; i++, pair++) {
+	if (pair->digcx) {
+	    (*pair->digobj->destroy)(pair->digcx, PR_TRUE);
 #ifdef CMS_FIND_LEAK_MULTIPLE
-	--num_digests;
+	    --global_num_digests;
 #endif
+    	}
     }
 #ifdef CMS_FIND_LEAK_MULTIPLE
-    PORT_Assert(num_digests == 0 || !stop_on_err);
+    PORT_Assert(global_num_digests == 0 || !stop_on_err);
 #endif
-    if (cmsdigcx->digobjs) {
-	PORT_Free((void *)cmsdigcx->digobjs); /* cast away const */
-	cmsdigcx->digobjs = NULL;
-    }
-    if (cmsdigcx->digcxs) {
-	PORT_Free(cmsdigcx->digcxs);
-	cmsdigcx->digcxs = NULL;
-    }
-    PORT_Free(cmsdigcx);
+    PORT_FreeArena(cmsdigcx->pool, PR_FALSE);
 }
 
 /*
@@ -204,21 +211,14 @@ NSS_CMSDigestContext_FinishMultiple(NSSCMSDigestContext *cmsdigcx,
                                     PLArenaPool *poolp,
 			            SECItem ***digestsp)
 {
-    const SECHashObject *digobj;
-    void *digcx;
-    SECItem **digests = NULL, *digest;
-    int i;
-    void *mark;
-    SECStatus rv = SECFailure;
+    SECItem **  digests = NULL;
+    digestPair *pair;
+    void *      mark;
+    int         i;
+    SECStatus   rv;
 
-    /* no contents? do not update digests */
+    /* no contents? do not finish digests */
     if (digestsp == NULL || !cmsdigcx->saw_contents) {
-	for (i = 0; i < cmsdigcx->digcnt; i++) {
-	    (*cmsdigcx->digobjs[i]->destroy)(cmsdigcx->digcxs[i], PR_TRUE);
-#ifdef CMS_FIND_LEAK_MULTIPLE
-	    --num_digests;
-#endif
-	}
 	rv = SECSuccess;
 	goto cleanup;
     }
@@ -227,51 +227,35 @@ NSS_CMSDigestContext_FinishMultiple(NSSCMSDigestContext *cmsdigcx,
 
     /* allocate digest array & SECItems on arena */
     digests = PORT_ArenaNewArray( poolp, SECItem *, cmsdigcx->digcnt + 1);
-    digest  = PORT_ArenaZNewArray(poolp, SECItem,   cmsdigcx->digcnt    );
-    if (digests == NULL || digest == NULL) {
-	rv = SECFailure;
-    } else {
-	rv = SECSuccess;
-    }
 
-    for (i = 0; i < cmsdigcx->digcnt; i++, digest++) {
-	digcx = cmsdigcx->digcxs[i];
-	digobj = cmsdigcx->digobjs[i];
+    rv = ((digests == NULL) ? SECFailure : SECSuccess);
+    pair = cmsdigcx->digPairs;
+    for (i = 0; rv == SECSuccess && i < cmsdigcx->digcnt; i++, pair++) {
+	SECItem digest;
+	unsigned char hash[HASH_LENGTH_MAX];
 
-	if (rv != SECSuccess) {
-	    /* skip it */
-	} else {
-	    digest->data = 
-	        (unsigned char*)PORT_ArenaAlloc(poolp, digobj->length);
-	    if (digest->data != NULL) {
-		digest->len = digobj->length;
-		(* digobj->end)(digcx, digest->data, &(digest->len), 
-		                       digest->len);
-		digests[i] = digest;
-	    } else {
-		rv = SECFailure;
-	    }
+	if (!pair->digcx) {
+	    digests[i] = NULL;
+	    continue;
 	}
-	(* digobj->destroy)(digcx, PR_TRUE);
-#ifdef CMS_FIND_LEAK_MULTIPLE
-	--num_digests;
-#endif
+
+	digest.type = siBuffer;
+	digest.data = hash;
+	digest.len  = pair->digobj->length;
+	(* pair->digobj->end)(pair->digcx, hash, &digest.len, digest.len);
+	digests[i] = SECITEM_ArenaDupItem(poolp, &digest);
+	if (!digests[i]) {
+	    rv = SECFailure;
+	}
     }
+    digests[i] = NULL;
     if (rv == SECSuccess) {
-	digests[i] = NULL;
 	PORT_ArenaUnmark(poolp, mark);
     } else
 	PORT_ArenaRelease(poolp, mark);
 
 cleanup:
-#ifdef CMS_FIND_LEAK_MULTIPLE
-    PORT_Assert( num_digests == 0 || !stop_on_err);
-#endif
-    if (cmsdigcx->digobjs)
-	PORT_Free((void *)cmsdigcx->digobjs); /* cast away const */
-    if (cmsdigcx->digcxs)
-	PORT_Free(cmsdigcx->digcxs);
-    PORT_Free(cmsdigcx);
+    NSS_CMSDigestContext_Cancel(cmsdigcx);
     if (rv == SECSuccess && digestsp) {
 	*digestsp = digests;
     }
