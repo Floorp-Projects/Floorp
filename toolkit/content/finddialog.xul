@@ -53,7 +53,7 @@
       <hbox flex="1">
         <vbox pack="center" flex="1">
           <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
-          <checkbox id="dialog.wrap" label="&wrapCheckbox.label;" accesskey="&wrapCheckbox.accesskey;"/>
+          <checkbox id="dialog.wrap" label="&wrapCheckbox.label;" accesskey="&wrapCheckbox.accesskey;" checked="true"/>
         </vbox>
         <groupbox orient="horizontal" flex="1">
           <caption label="&direction.label;"/>
