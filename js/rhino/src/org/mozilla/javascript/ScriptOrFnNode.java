@@ -174,6 +174,19 @@ public class ScriptOrFnNode extends Node {
         }
     }
 
+    public final Object getCompilerData()
+    {
+        return compilerData;
+    }
+
+    public final void setCompilerData(Object data)
+    {
+        if (data == null) Kit.argBug();
+        // Can only call once
+        if (compilerData != null) Kit.stateBug();
+        compilerData = data;
+    }
+
     private int encodedSourceStart;
     private int encodedSourceEnd;
     private String sourceName;
@@ -191,4 +204,6 @@ public class ScriptOrFnNode extends Node {
     private ObjToIntMap itsVariableNames = new ObjToIntMap(11);
 
     private int varStart;               // index in list of first variable
+
+    private Object compilerData;
 }

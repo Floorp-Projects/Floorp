@@ -65,7 +65,7 @@ class Optimizer
         //  run on one function at a time for now
         int functionCount = scriptOrFn.getFunctionCount();
         for (int i = 0; i != functionCount; ++i) {
-            OptFunctionNode f = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
+            OptFunctionNode f = OptFunctionNode.get(scriptOrFn, i);
             optimizeFunction(f);
         }
     }

@@ -153,7 +153,7 @@ class OptTransformer extends NodeTransformer {
             }
 
             if (argCount == 0) {
-                ((OptFunctionNode)tree).itsContainsCalls0 = true;
+                OptFunctionNode.get(tree).itsContainsCalls0 = true;
             }
 
             /*

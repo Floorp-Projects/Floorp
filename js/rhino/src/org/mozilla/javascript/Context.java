@@ -983,7 +983,7 @@ public class Context
         // going to throw away the result.
         TokenStream ts = new TokenStream(this, compiler, null, source, null, 1);
 
-        IRFactory irf = compiler.createIRFactory(this, ts);
+        IRFactory irf = new IRFactory(compiler, ts);
         Parser p = createParser();
         Decompiler decompiler = new Decompiler();
         try {
@@ -2037,7 +2037,7 @@ public class Context
                                          sourceName, lineno);
         Parser p = createParser();
 
-        IRFactory irf = compiler.createIRFactory(this, ts);
+        IRFactory irf = new IRFactory(compiler, ts);
         Decompiler decompiler = new Decompiler();
         ScriptOrFnNode tree = p.parse(ts, irf, decompiler);
         if (compiler.syntaxErrorCount == 0) {

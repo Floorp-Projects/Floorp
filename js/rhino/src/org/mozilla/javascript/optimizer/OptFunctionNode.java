@@ -45,6 +45,16 @@ final class OptFunctionNode extends FunctionNode {
         super(name);
     }
 
+    static OptFunctionNode get(ScriptOrFnNode scriptOrFn, int i)
+    {
+        return (OptFunctionNode)scriptOrFn.getFunctionNode(i);
+    }
+
+    static OptFunctionNode get(ScriptOrFnNode scriptOrFn)
+    {
+        return (OptFunctionNode)scriptOrFn;
+    }
+
     void init()
     {
         int N = getParamAndVarCount();

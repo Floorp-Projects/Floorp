@@ -58,18 +58,6 @@ public class Codegen extends Interpreter {
     {
     }
 
-    public IRFactory createIRFactory(Context cx, TokenStream ts)
-    {
-        if (nameHelper == null) {
-            nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
-            itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
-            generateDebugInfo = (!cx.isGeneratingDebugChanged()
-                                 || cx.isGeneratingDebug());
-            languageVersion = cx.getLanguageVersion();
-        }
-        return new IRFactory(this, ts);
-    }
-
     public FunctionNode createFunctionNode(String name)
     {
         return new OptFunctionNode(name);
@@ -77,8 +65,16 @@ public class Codegen extends Interpreter {
 
     public ScriptOrFnNode transform(Context cx, ScriptOrFnNode tree)
     {
+        nameHelper = (OptClassNameHelper)ClassNameHelper.get(cx);
+        itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
+        generateDebugInfo = (!cx.isGeneratingDebugChanged()
+                             || cx.isGeneratingDebug());
+        languageVersion = cx.getLanguageVersion();
+
         initOptFunctions_r(tree);
+
         int optLevel = cx.getOptimizationLevel();
+
         Hashtable possibleDirectCalls = null;
         if (optLevel > 0) {
            /*
@@ -89,17 +85,16 @@ public class Codegen extends Interpreter {
             if (tree.getType() == Token.SCRIPT) {
                 int functionCount = tree.getFunctionCount();
                 for (int i = 0; i != functionCount; ++i) {
-                    OptFunctionNode fn;
-                    fn = (OptFunctionNode)tree.getFunctionNode(i);
-                    if (fn.getFunctionType()
+                    OptFunctionNode ofn = OptFunctionNode.get(tree, i);
+                    if (ofn.getFunctionType()
                         == FunctionNode.FUNCTION_STATEMENT)
                     {
-                        String name = fn.getFunctionName();
+                        String name = ofn.getFunctionName();
                         if (name.length() != 0) {
                             if (possibleDirectCalls == null) {
                                 possibleDirectCalls = new Hashtable();
                             }
-                            possibleDirectCalls.put(name, fn);
+                            possibleDirectCalls.put(name, ofn);
                         }
                     }
                 }
@@ -124,9 +119,9 @@ public class Codegen extends Interpreter {
     private static void initOptFunctions_r(ScriptOrFnNode scriptOrFn)
     {
         for (int i = 0, N = scriptOrFn.getFunctionCount(); i != N; ++i) {
-            OptFunctionNode fn = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
-            fn.init();
-            initOptFunctions_r(fn);
+            OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn, i);
+            ofn.init();
+            initOptFunctions_r(ofn);
         }
     }
 
@@ -164,10 +159,10 @@ public class Codegen extends Interpreter {
                 int functionCount = scriptOrFn.getFunctionCount();
                 ObjToIntMap functionNames = new ObjToIntMap(functionCount);
                 for (int i = 0; i != functionCount; ++i) {
-                    FunctionNode fn = scriptOrFn.getFunctionNode(i);
-                    String name = fn.getFunctionName();
+                    FunctionNode ofn = scriptOrFn.getFunctionNode(i);
+                    String name = ofn.getFunctionName();
                     if (name != null && name.length() != 0) {
-                        functionNames.put(name, fn.getParamCount());
+                        functionNames.put(name, ofn.getParamCount());
                     }
                 }
                 if (superClass == null) {
@@ -223,7 +218,7 @@ public class Codegen extends Interpreter {
                 throw new RuntimeException
                     ("Unable to instantiate compiled class:"+ex.toString());
             }
-            int ftype = ((OptFunctionNode)scriptOrFn).getFunctionType();
+            int ftype = ((FunctionNode)scriptOrFn).getFunctionType();
             OptRuntime.initFunction(f, ftype, scope, cx);
             return f;
         } else {
@@ -319,10 +314,10 @@ public class Codegen extends Interpreter {
             bodygen.generateBodyCode();
 
             if (n.getType() == Token.FUNCTION) {
-                OptFunctionNode fn = (OptFunctionNode)n;
-                generateFunctionInit(cfw, fn);
-                if (fn.isTargetOfDirectCall()) {
-                    emitDirectConstructor(cfw, fn);
+                OptFunctionNode ofn = OptFunctionNode.get(n);
+                generateFunctionInit(cfw, ofn);
+                if (ofn.isTargetOfDirectCall()) {
+                    emitDirectConstructor(cfw, ofn);
                 }
             }
         }
@@ -330,8 +325,6 @@ public class Codegen extends Interpreter {
         if (directCallTargets != null) {
             int N = directCallTargets.size();
             for (int j = 0; j != N; ++j) {
-                OptFunctionNode
-                    fn = (OptFunctionNode)directCallTargets.get(j);
                 cfw.addField(getDirectTargetFieldName(j),
                              mainClassSignature,
                              ClassFileWriter.ACC_PRIVATE);
@@ -345,7 +338,7 @@ public class Codegen extends Interpreter {
     }
 
     private void emitDirectConstructor(ClassFileWriter cfw,
-                                       OptFunctionNode fn)
+                                       OptFunctionNode ofn)
     {
 /*
     we generate ..
@@ -358,12 +351,12 @@ public class Codegen extends Interpreter {
             return newInstance;
         }
 */
-        cfw.startMethod(getDirectCtorName(fn),
-                        getBodyMethodSignature(fn),
+        cfw.startMethod(getDirectCtorName(ofn),
+                        getBodyMethodSignature(ofn),
                         (short)(ClassFileWriter.ACC_STATIC
                                 | ClassFileWriter.ACC_PRIVATE));
 
-        int argCount = fn.getParamCount();
+        int argCount = ofn.getParamCount();
         int firstLocal = (4 + argCount * 3) + 1;
 
         cfw.addALoad(0); // this
@@ -388,8 +381,8 @@ public class Codegen extends Interpreter {
         cfw.addALoad(4 + argCount * 3);
         cfw.addInvoke(ByteCode.INVOKESTATIC,
                       mainClassName,
-                      getBodyMethodName(fn),
-                      getBodyMethodSignature(fn));
+                      getBodyMethodName(ofn),
+                      getBodyMethodSignature(ofn));
         int exitLabel = cfw.acquireLabel();
         cfw.add(ByteCode.DUP); // make a copy of direct call result
         cfw.add(ByteCode.INSTANCEOF, "org/mozilla/javascript/Scriptable");
@@ -450,9 +443,9 @@ public class Codegen extends Interpreter {
                 }
             }
             if (n.getType() == Token.FUNCTION) {
-                OptFunctionNode fn = (OptFunctionNode)n;
-                if (fn.isTargetOfDirectCall()) {
-                    int pcount = fn.getParamCount();
+                OptFunctionNode ofn = OptFunctionNode.get(n);
+                if (ofn.isTargetOfDirectCall()) {
+                    int pcount = ofn.getParamCount();
                     if (pcount != 0) {
                         // loop invariant:
                         // stack top == arguments array from addALoad4()
@@ -617,10 +610,10 @@ public class Codegen extends Interpreter {
                                             switchStackTop);
                 }
             }
-            OptFunctionNode fn = (OptFunctionNode)scriptOrFnNodes[i];
+            OptFunctionNode ofn = OptFunctionNode.get(scriptOrFnNodes[i]);
             cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
                           mainClassName,
-                          getFunctionInitMethodName(fn),
+                          getFunctionInitMethodName(ofn),
                           FUNCTION_INIT_SIGNATURE);
             cfw.add(ByteCode.RETURN);
         }
@@ -630,11 +623,11 @@ public class Codegen extends Interpreter {
     }
 
     private void generateFunctionInit(ClassFileWriter cfw,
-                                      OptFunctionNode fn)
+                                      OptFunctionNode ofn)
     {
         final int CONTEXT_ARG = 1;
         final int SCOPE_ARG = 2;
-        cfw.startMethod(getFunctionInitMethodName(fn),
+        cfw.startMethod(getFunctionInitMethodName(ofn),
                         FUNCTION_INIT_SIGNATURE,
                         (short)(ClassFileWriter.ACC_PRIVATE
                                 | ClassFileWriter.ACC_FINAL));
@@ -642,9 +635,9 @@ public class Codegen extends Interpreter {
         // Call NativeFunction.initScriptFunction
         cfw.addLoadThis();
         cfw.addPush(languageVersion);
-        cfw.addPush(fn.getFunctionName());
-        pushParamNamesArray(cfw, fn);
-        cfw.addPush(fn.getParamCount());
+        cfw.addPush(ofn.getFunctionName());
+        pushParamNamesArray(cfw, ofn);
+        cfw.addPush(ofn.getParamCount());
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
                       "org/mozilla/javascript/NativeFunction",
                       "initScriptFunction",
@@ -658,10 +651,10 @@ public class Codegen extends Interpreter {
                       "(Lorg/mozilla/javascript/Scriptable;)V");
 
         // precompile all regexp literals
-        int regexpCount = fn.getRegexpCount();
+        int regexpCount = ofn.getRegexpCount();
         if (regexpCount != 0) {
             cfw.addLoadThis();
-            pushRegExpArray(cfw, fn, CONTEXT_ARG, SCOPE_ARG);
+            pushRegExpArray(cfw, ofn, CONTEXT_ARG, SCOPE_ARG);
             cfw.add(ByteCode.PUTFIELD, mainClassName,
                     REGEXP_ARRAY_FIELD_NAME, REGEXP_ARRAY_FIELD_TYPE);
         }
@@ -1012,9 +1005,9 @@ public class Codegen extends Interpreter {
                   +"Lorg/mozilla/javascript/Scriptable;"
                   +"Lorg/mozilla/javascript/Scriptable;");
         if (n.getType() == Token.FUNCTION) {
-            OptFunctionNode fn = (OptFunctionNode)n;
-            if (fn.isTargetOfDirectCall()) {
-                int pCount = fn.getParamCount();
+            OptFunctionNode ofn = OptFunctionNode.get(n);
+            if (ofn.isTargetOfDirectCall()) {
+                int pCount = ofn.getParamCount();
                 for (int i = 0; i != pCount; i++) {
                     sb.append("Ljava/lang/Object;D");
                 }
@@ -1024,9 +1017,9 @@ public class Codegen extends Interpreter {
         return sb.toString();
     }
 
-    String getFunctionInitMethodName(OptFunctionNode fn)
+    String getFunctionInitMethodName(OptFunctionNode ofn)
     {
-        return "_i"+getIndex(fn);
+        return "_i"+getIndex(ofn);
     }
 
     String getCompiledRegexpName(ScriptOrFnNode n, int regexpIndex)
@@ -1111,7 +1104,7 @@ class BodyCodegen
     private void initBodyGeneration()
     {
         if (scriptOrFn.getType() == Token.FUNCTION) {
-            fnCurrent = (OptFunctionNode)scriptOrFn;
+            fnCurrent = OptFunctionNode.get(scriptOrFn);
         } else {
             fnCurrent = null;
         }
@@ -1333,9 +1326,9 @@ class BodyCodegen
 
         int functionCount = scriptOrFn.getFunctionCount();
         for (int i = 0; i != functionCount; i++) {
-            OptFunctionNode fn = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
-            if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
-                visitFunction(fn, FunctionNode.FUNCTION_STATEMENT);
+            OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn, i);
+            if (ofn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
+                visitFunction(ofn, FunctionNode.FUNCTION_STATEMENT);
             }
         }
 
@@ -1445,11 +1438,11 @@ class BodyCodegen
               case Token.FUNCTION:
                 if (fnCurrent != null || parent.getType() != Token.SCRIPT) {
                     int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
-                    OptFunctionNode fn;
-                    fn = (OptFunctionNode)scriptOrFn.getFunctionNode(fnIndex);
-                    int t = fn.getFunctionType();
+                    OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn,
+                                                             fnIndex);
+                    int t = ofn.getFunctionType();
                     if (t != FunctionNode.FUNCTION_STATEMENT) {
-                        visitFunction(fn, t);
+                        visitFunction(ofn, t);
                     }
                 }
                 break;
@@ -2034,9 +2027,9 @@ class BodyCodegen
         }
     }
 
-    private void visitFunction(OptFunctionNode fn, int functionType)
+    private void visitFunction(OptFunctionNode ofn, int functionType)
     {
-        int fnIndex = codegen.getIndex(fn);
+        int fnIndex = codegen.getIndex(ofn);
         cfw.add(ByteCode.NEW, codegen.mainClassName);
         // Call function constructor
         cfw.add(ByteCode.DUP);
@@ -2062,7 +2055,7 @@ class BodyCodegen
                 Codegen.DIRECT_CALL_PARENT_FIELD,
                 codegen.mainClassSignature);
 
-        int directTargetIndex = fn.getDirectTargetIndex();
+        int directTargetIndex = ofn.getDirectTargetIndex();
         if (directTargetIndex >= 0) {
             cfw.add(ByteCode.DUP);
             if (isTopLevel) {

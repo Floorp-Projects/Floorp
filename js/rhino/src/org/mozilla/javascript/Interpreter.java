@@ -141,11 +141,6 @@ public class Interpreter
         }
     }
 
-    public IRFactory createIRFactory(Context cx, TokenStream ts)
-    {
-        return new IRFactory(this, ts);
-    }
-
     public FunctionNode createFunctionNode(String name)
     {
         return new FunctionNode(name);
