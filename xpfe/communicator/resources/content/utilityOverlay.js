@@ -257,7 +257,7 @@ function goAboutDialog()
   if( defaultAboutState )
     window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
   else
-    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'chrome://global/locale/about.html' );
+    window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'about:' );
 }
 
 // update menu items that rely on focus
