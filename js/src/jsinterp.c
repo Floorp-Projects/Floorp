@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -565,12 +565,6 @@ ComputeThis(JSContext *cx, JSObject *thisp, JSStackFrame *fp)
     return JS_TRUE;
 }
 
-#ifdef DEBUG
-# define METER_INVOCATION(rt, which) JS_ATOMIC_INCREMENT(&(rt)->which)
-#else
-# define METER_INVOCATION(rt, which) /* nothing */
-#endif
-
 /*
  * Find a function reference and its 'this' object implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -788,7 +782,7 @@ have_fun:
         frame.varobj = fp->varobj;
         frame.scopeChain = fp->scopeChain;
         ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
-        METER_INVOCATION(cx->runtime, nativeCalls);
+        JS_RUNTIME_METER(cx->runtime, nativeCalls);
     } else if (script) {
         /* Use parent scope so js_GetCallObject can find the right "Call". */
         frame.scopeChain = parent;
@@ -2298,7 +2292,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 goto out;
             }
             obj = JSVAL_TO_OBJECT(rval);
-            METER_INVOCATION(rt, constructs);
+            JS_RUNTIME_METER(rt, constructs);
             break;
 
           case JSOP_DELNAME:
@@ -2601,7 +2595,7 @@ js_Interpret(JSContext *cx, jsval *result)
                 pc = script->code;
                 endpc = pc + script->length;
                 inlineCallCount++;
-                METER_INVOCATION(rt, inlineCalls);
+                JS_RUNTIME_METER(rt, inlineCalls);
                 continue;
 
               bad_inline_call:
@@ -2614,7 +2608,7 @@ js_Interpret(JSContext *cx, jsval *result)
             RESTORE_SP(fp);
             if (!ok)
                 goto out;
-            METER_INVOCATION(rt, nonInlineCalls);
+            JS_RUNTIME_METER(rt, nonInlineCalls);
 #if JS_HAS_LVALUE_RETURN
             if (cx->rval2set) {
                 /*

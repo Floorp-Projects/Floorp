@@ -799,9 +799,7 @@ JS_EndRequest(JSContext *cx)
                 scope->u.count = 0;     /* don't assume NULL puns as 0 */
                 scope->ownercx = NULL;  /* NB: set last, after lock init */
                 nshares++;
-#ifdef DEBUG
-                JS_ATOMIC_INCREMENT(&rt->sharedScopes);
-#endif
+                JS_RUNTIME_METER(rt, sharedScopes);
             }
         }
         if (nshares)
@@ -1968,6 +1966,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
     if (attrs & JSPROP_INDEX) {
 	id = INT_TO_JSVAL((jsint)name);
 	atom = NULL;
+        attrs &= ~JSPROP_INDEX;
     } else {
 	atom = js_Atomize(cx, name, strlen(name), 0);
 	if (!atom)
@@ -2054,7 +2053,12 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
 	if (prop) {
 	    if (OBJ_IS_NATIVE(obj)) {
 		sprop = (JSScopeProperty *)prop;
+#ifdef JS_DOUBLE_HASHING
+                sprop->attrs |= JSPROP_INDEX;
+                sprop->tinyid = ps->tinyid;
+#else
 		sprop->id = INT_TO_JSVAL(ps->tinyid);
+#endif
 	    }
 	    OBJ_DROP_PROPERTY(cx, obj, prop);
 	}
@@ -2085,7 +2089,12 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
     if (ok && prop) {
 	if (OBJ_IS_NATIVE(obj)) {
 	    sprop = (JSScopeProperty *)prop;
+#ifdef JS_DOUBLE_HASHING
+            sprop->attrs |= JSPROP_INDEX;
+            sprop->tinyid = tinyid;
+#else
 	    sprop->id = INT_TO_JSVAL(tinyid);
+#endif
 	}
 	OBJ_DROP_PROPERTY(cx, obj, prop);
     }
@@ -2358,7 +2367,12 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
     if (ok && prop) {
 	if (OBJ_IS_NATIVE(obj)) {
 	    sprop = (JSScopeProperty *)prop;
+#ifdef JS_DOUBLE_HASHING
+            sprop->attrs |= JSPROP_INDEX;
+            sprop->tinyid = tinyid;
+#else
 	    sprop->id = INT_TO_JSVAL(tinyid);
+#endif
 	}
 	OBJ_DROP_PROPERTY(cx, obj, prop);
     }

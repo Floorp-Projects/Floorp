@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -157,6 +157,7 @@ struct JSRuntime {
 
     /* Used to serialize cycle checks when setting __proto__ or __parent__. */
     PRLock              *setSlotLock;
+    JSScope             *setSlotScope;  /* deadlock avoidance, see jslock.c */
 
     /*
      * State for sharing single-threaded scopes, once a second thread tries to
@@ -196,8 +197,22 @@ struct JSRuntime {
     jsrefcount          liveScopes;
     jsrefcount          sharedScopes;
     jsrefcount          totalScopes;
+
+    /* String instrumentation. */
+    jsrefcount          liveStrings;
+    jsrefcount          totalStrings;
+    double              lengthSum;
+    double              lengthSquaredSum;
 #endif
 };
+
+#ifdef DEBUG
+# define JS_RUNTIME_METER(rt, which)    JS_ATOMIC_INCREMENT(&(rt)->which)
+# define JS_RUNTIME_UNMETER(rt, which)  JS_ATOMIC_DECREMENT(&(rt)->which)
+#else
+# define JS_RUNTIME_METER(rt, which)    /* nothing */
+# define JS_RUNTIME_UNMETER(rt, which)  /* nothing */
+#endif
 
 #define JS_ENABLE_GC(rt)    JS_ATOMIC_DECREMENT(&(rt)->gcDisabled);
 #define JS_DISABLE_GC(rt)   JS_ATOMIC_INCREMENT(&(rt)->gcDisabled);
