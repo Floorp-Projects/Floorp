@@ -307,6 +307,33 @@ nsTableRowFrame::RemoveFrame(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+nscoord 
+GetHeightOfRowsSpannedBelowFirst(nsTableCellFrame& aTableCellFrame,
+                                 nsTableFrame&     aTableFrame)
+{
+  nscoord height = 0;
+  nscoord cellSpacingY = aTableFrame.GetCellSpacingY();
+  PRInt32 rowSpan = aTableFrame.GetEffectiveRowSpan(aTableCellFrame);
+  // add in height of rows spanned beyond the 1st one
+  nsIFrame* nextRow = nsnull;
+  aTableCellFrame.GetParent((nsIFrame **)&nextRow);
+  nextRow->GetNextSibling(&nextRow);
+  for (PRInt32 rowX = 1; ((rowX < rowSpan) && nextRow);) {
+    nsCOMPtr<nsIAtom> frameType;
+    nextRow->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
+      nsRect rect;
+      nextRow->GetRect(rect);
+      height += rect.height;
+      rowX++;
+    }
+    height += cellSpacingY;
+    nextRow->GetNextSibling(&nextRow);
+  }
+  return height;
+}
+
+
 /**
  * Post-reflow hook. This is where the table row does its post-processing
  */
@@ -327,23 +354,7 @@ nsTableRowFrame::DidResize(nsIPresContext* aPresContext,
     const nsStyleDisplay *kidDisplay;
     cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
     if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
-      PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*cellFrame);
-      nscoord cellHeight = mRect.height;
-      // add in height of rows spanned beyond the 1st one
-      nsIFrame* nextRow = nsnull;
-      GetNextSibling(&nextRow);
-      for (int i = 1; ((i < rowSpan) && nextRow);) {
-        const nsStyleDisplay *nextDisplay;
-        nextRow->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)nextDisplay));
-        if (NS_STYLE_DISPLAY_TABLE_ROW == nextDisplay->mDisplay) { 
-          nsRect rect;
-          nextRow->GetRect(rect);
-          cellHeight += rect.height;
-          i++;
-        }
-        cellHeight += cellSpacingY;
-        nextRow->GetNextSibling(&nextRow);
-      }
+      nscoord cellHeight = mRect.height + GetHeightOfRowsSpannedBelowFirst((nsTableCellFrame&) *cellFrame, *tableFrame);
 
       // resize the cell's height
       nsSize  cellFrameSize;
@@ -1419,11 +1430,10 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     // if the cell's desired size didn't changed, our height is unchanged
     aDesiredSize.mNothingChanged = PR_FALSE;
     PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*aNextFrame);
-    if (initCellDesSize.width == oldCellDesSize.width) {
+    if ((initCellDesSize.width  == oldCellDesSize.width) &&
+        (initCellDesSize.height == oldCellDesSize.height)) {
       if (!hasVerticalAlignBaseline) { // only the cell's height matters
-        if (initCellDesSize.height == oldCellDesSize.height) {
-          aDesiredSize.mNothingChanged = PR_TRUE;
-        }
+        aDesiredSize.mNothingChanged = PR_TRUE;
       }
       else { // cell's ascent and cell's descent matter
         if (initCellDesAscent == oldCellDesAscent) {
@@ -1434,7 +1444,14 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
       }
     }
     aDesiredSize.height = (aDesiredSize.mNothingChanged) ? mRect.height : GetTallestCell();
-    cellMet.height = (rowSpan == 1) ? aDesiredSize.height : PR_MAX(aDesiredSize.height, cellMet.height);
+    if (1 == rowSpan) {
+      cellMet.height = aDesiredSize.height;
+    }
+    else {
+      nscoord heightOfRows = aDesiredSize.height + GetHeightOfRowsSpannedBelowFirst((nsTableCellFrame&)*aNextFrame, *aReflowState.tableFrame); 
+      cellMet.height = PR_MAX(cellMet.height, heightOfRows); 
+      // XXX need to check what happens when this height differs from height of the cell's previous mRect.height
+    }
 
     // Now place the child
     PlaceChild(aPresContext, aReflowState, aNextFrame, cellMet, aReflowState.x,
