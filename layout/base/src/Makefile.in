@@ -28,6 +28,7 @@ LIBRARY_NAME = raptorlayout_s
 DEFINES += -D_IMPL_NS_LAYOUT
 
 CPPSRCS =				\
+	nsGenericElement.cpp		\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\
@@ -57,7 +58,7 @@ EXPORTS = \
 	nsXIFConverter.h \
 	$(NULL)
 
-INCLUDES +=  -I$(srcdir)/../../html/base/src -I$(srcdir)/../../html/content/src
+INCLUDES +=  -I$(srcdir)/../../html/base/src -I$(srcdir)/../../html/style/src
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 

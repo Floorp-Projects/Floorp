@@ -154,6 +154,7 @@ typedef struct {
   void *mScriptObject;
   nsChildContentList *mChildNodes;
   nsDOMCSSDeclaration *mStyle;
+  PRBool mIsContainer;
 } nsDOMSlots;
 
 class nsGenericElement : public nsIJSScriptObject {

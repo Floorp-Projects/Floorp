@@ -31,7 +31,6 @@ DEFINES += -D_IMPL_NS_HTML
 INCLUDES += \
 	-I$(srcdir)/../../../html/base/src		\
 	-I$(srcdir)/../../../html/document/src    \
-	-I$(srcdir)/../../../html/content/src	\
 	-I$(srcdir)/../../../html/style/src	\
 	-I$(DIST)/public/raptor			\
 	$(NULL)

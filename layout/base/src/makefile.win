@@ -21,6 +21,7 @@ LIBRARY_NAME=raptorlayout_s
 DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =				\
+	nsGenericElement.cpp		\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
 	nsDocumentFragment.cpp		\
@@ -45,6 +46,7 @@ REQUIRES=xpcom raptor dom
 EXPORTS=nsSelectionRange.h nsSelectionPoint.h
 
 CPP_OBJS=					\
+	.\$(OBJDIR)\nsGenericElement.obj 	\
 	.\$(OBJDIR)\nsContentList.obj 	 	\
 	.\$(OBJDIR)\nsDocument.obj		\
 	.\$(OBJDIR)\nsDocumentFragment.obj	\
@@ -66,7 +68,7 @@ CPP_OBJS=					\
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
     -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib \
-    -I$(PUBLIC)\pref -I..\..\html\base\src -I..\..\html\content\src
+    -I$(PUBLIC)\pref -I..\..\html\base\src -I..\..\html\style\src
 
 LCFLAGS = \
         $(LCFLAGS) \

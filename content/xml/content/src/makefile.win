@@ -36,7 +36,7 @@ EXPORTS =					\
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
-  -I..\..\..\html\content\src -I..\..\..\html\document\src \
+   -I..\..\..\html\document\src \
   -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
 
 LCFLAGS = \
