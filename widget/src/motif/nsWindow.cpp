@@ -1011,6 +1011,16 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
 //-------------------------------------------------------------------------
 //
+// Force a synchronous repaint of the window
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Update()
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
 // Return some native data according to aDataType
 //
 //-------------------------------------------------------------------------

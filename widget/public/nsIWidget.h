@@ -374,7 +374,7 @@ class nsIWidget : public nsISupports {
      * Invalidate the widget and repaint it.
      *
      * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
-     *
+     * @see #Update()
      */
 
     NS_IMETHOD Invalidate(PRBool aIsSynchronous) = 0;
@@ -383,11 +383,18 @@ class nsIWidget : public nsISupports {
      * Invalidate a specified rect for a widget and repaints it.
      *
      * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
-     *
+     * @see #Update()
      */
 
     NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous) = 0;
 
+    /**
+     * Force a synchronous repaint of the window if there are dirty rects.
+     *
+     * @see Invalidate()
+     */
+
+     NS_IMETHOD Update() = 0;
 
     /**
      * Adds a mouse listener to this widget

@@ -104,6 +104,7 @@ public:
     NS_IMETHOD              SetCursor(nsCursor aCursor);
     NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
+    NS_IMETHOD              Update();
     virtual void*           GetNativeData(PRUint32 aDataType);
     NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
     NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
