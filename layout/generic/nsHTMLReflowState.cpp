@@ -446,6 +446,7 @@ GetNearestContainingBlock(nsIFrame* aFrame, nsMargin& aContentArea)
     if (isBlock) {
       break;
     }
+    aFrame->GetParent(&aFrame);
   }
 
   if (aFrame) {
