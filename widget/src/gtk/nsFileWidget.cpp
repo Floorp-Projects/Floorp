@@ -170,12 +170,12 @@ NS_METHOD  nsFileWidget::GetDisplayDirectory(nsString& aDirectory)
 
 //-------------------------------------------------------------------------
 NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
-                           nsString& aTitle,
-                           nsMode aMode,
-                           nsIDeviceContext *aContext,
-                           nsIAppShell *aAppShell,
-                           nsIToolkit *aToolkit,
-                           void *aInitData)
+                               nsString& aTitle,
+                               nsFileDlgMode aMode,
+                               nsIDeviceContext *aContext,
+                               nsIAppShell *aAppShell,
+                               nsIToolkit *aToolkit,
+                               void *aInitData)
 {
   mMode = aMode;
   mTitle.SetLength(0);

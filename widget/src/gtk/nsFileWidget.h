@@ -44,7 +44,7 @@ class nsFileWidget : public nsIFileWidget
   
     NS_IMETHOD		Create(nsIWidget *aParent,
                                nsString& aTitle,
-			       nsMode aMode,
+			       nsFileDlgMode aMode,
 			       nsIDeviceContext *aContext = nsnull,
 			       nsIAppShell *aAppShell = nsnull,
 			       nsIToolkit *aToolkit = nsnull,
@@ -77,8 +77,8 @@ class nsFileWidget : public nsIFileWidget
   protected:
     GtkWidget		*mWidget;
     nsString		mTitle;
-    nsMode		  mMode;
-    PRUint32		mNumberOfFilters;  
+    nsFileDlgMode   mMode;
+    PRUint32		    mNumberOfFilters;  
     const nsString*	mTitles;
     const nsString*	mFilters;
     nsString		mDefault;

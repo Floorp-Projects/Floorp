@@ -40,7 +40,7 @@ class nsFileWidget : public nsIFileWidget
   
   NS_IMETHOD            Create( nsIWidget *aParent,
 				nsString& aTitle,
-				nsMode aMode,
+				nsFileDlgMode aMode,
 				nsIDeviceContext *aContext = nsnull,
 				nsIAppShell *aAppShell = nsnull,
 				nsIToolkit *aToolkit = nsnull,

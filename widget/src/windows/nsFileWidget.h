@@ -41,7 +41,7 @@ class nsFileWidget : public nsIFileWidget
   
     NS_IMETHOD            Create( nsIWidget *aParent,
                                     nsString& aTitle,
-                                    nsMode aMode,
+                                    nsFileDlgMode aMode,
                                     nsIDeviceContext *aContext = nsnull,
                                     nsIAppShell *aAppShell = nsnull,
                                     nsIToolkit *aToolkit = nsnull,
@@ -75,7 +75,7 @@ class nsFileWidget : public nsIFileWidget
 
      HWND                   mWnd;
      nsString               mTitle;
-     nsMode                 mMode;
+     nsFileDlgMode          mMode;
      nsString               mFile;
      PRUint32               mNumberOfFilters;  
      const nsString*        mTitles;

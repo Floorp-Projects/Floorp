@@ -31,7 +31,7 @@
  * File selector mode 
  */
 
-enum nsMode {
+enum nsFileDlgMode {
         /// Load a file or directory
       eMode_load,
         /// Save a file or directory
@@ -70,7 +70,7 @@ public:
   */
   NS_IMETHOD Create(nsIWidget *aParent,
                       nsString& aTitle,
-                      nsMode aMode,
+                      nsFileDlgMode aMode,
                       nsIDeviceContext *aContext = nsnull,
                       nsIAppShell *aAppShell = nsnull,
                       nsIToolkit *aToolkit = nsnull,
