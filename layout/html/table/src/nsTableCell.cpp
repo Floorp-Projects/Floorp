@@ -85,17 +85,6 @@ nsTableCell::nsTableCell (nsIAtom* aTag, int aRowSpan, int aColSpan)
 
 void nsTableCell::Init()
 {
-  /* begin hack */
-  // temporary hack to get around style sheet optimization that folds all
-  // col style context into one, unless there is a unique HTML attribute set
-  char out[40];
-  PR_snprintf(out, 40, "%d", HACKcounter);
-  const nsAutoString value(out);
-  if (nsnull==HACKattribute)
-    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
-  SetAttribute(HACKattribute, value);
-  HACKcounter++;
-  /* end hack */
 }
 
 nsTableCell::~nsTableCell()
@@ -266,38 +255,6 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
     textStyle->mTextAlign = value.GetIntValue();
   }
-  // otherwise check the row for align and inherit it
-  else {
-    if (nsnull!=mRow)
-    {
-      // TODO: optimize by putting a flag on the row to say whether align attr is set
-      nsHTMLValue parentAlignValue;
-      mRow->GetAttribute(nsHTMLAtoms::align, parentAlignValue);
-      if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
-      {
-        PRUint8 rowAlign = parentAlignValue.GetIntValue();
-        if (nsnull==textStyle)
-          textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-        textStyle->mTextAlign = rowAlign;
-      }
-      else
-      { // we need to check the row group as well
-        nsTableRowGroup *rowGroup = mRow->GetRowGroup();
-        if (nsnull!=rowGroup)
-        {
-          rowGroup->GetAttribute(nsHTMLAtoms::align, parentAlignValue);
-          if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
-          {
-            PRUint8 rowGroupAlign = parentAlignValue.GetIntValue();
-            if (nsnull==textStyle)
-              textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-            textStyle->mTextAlign = rowGroupAlign;
-          }
-          NS_RELEASE(rowGroup);
-        }
-      }
-    }
-  }
   
   // valign: enum
   GetAttribute(nsHTMLAtoms::valign, value);
@@ -306,38 +263,6 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     if (nsnull==textStyle)
       textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
     textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
-  }
-  // otherwise check the row for valign and inherit it
-  else {
-    if (nsnull!=mRow)
-    {
-      // TODO: optimize by putting a flag on the row to say whether valign attr is set
-      nsHTMLValue parentAlignValue;
-      mRow->GetAttribute(nsHTMLAtoms::valign, parentAlignValue);
-      if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
-      {
-        PRUint8 rowVAlign = parentAlignValue.GetIntValue();
-        if (nsnull==textStyle)
-          textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-        textStyle->mVerticalAlign.SetIntValue(rowVAlign, eStyleUnit_Enumerated);
-      }
-      else
-      { // we need to check the row group as well
-        nsTableRowGroup *rowGroup = mRow->GetRowGroup();
-        if (nsnull!=rowGroup)
-        {
-          rowGroup->GetAttribute(nsHTMLAtoms::valign, parentAlignValue);
-          if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
-          {
-            PRUint8 rowGroupVAlign = parentAlignValue.GetIntValue();
-            if (nsnull==textStyle)
-              textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-            textStyle->mVerticalAlign.SetIntValue(rowGroupVAlign, eStyleUnit_Enumerated);
-          }
-          NS_RELEASE(rowGroup);
-        }
-      }
-    }
   }
 
   MapBackgroundAttributesInto(aContext, aPresContext);
@@ -390,40 +315,6 @@ nsTableCell::MapBackgroundAttributesInto(nsIStyleContext* aContext,
       SetBackgroundFromAttribute(color, &value);
     }
   }
-  // otherwise check the row for background and inherit it
-  else 
-  {
-    if (nsnull!=mRow)
-    {
-      // TODO: optimize by putting a flag on the row to say whether background attr is set
-      mRow->GetAttribute(nsHTMLAtoms::background, value);
-      if (value.GetUnit() == eHTMLUnit_String)
-      {
-        nsString rowBackground;
-        value.GetStringValue(rowBackground);
-        if (nsnull==color)
-          color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-        SetBackgroundFromAttribute(color, &value);
-      }
-      else
-      { // we need to check the row group as well
-        nsTableRowGroup *rowGroup = mRow->GetRowGroup();
-        if (nsnull!=rowGroup)
-        {
-          rowGroup->GetAttribute(nsHTMLAtoms::background, value);
-          if (value.GetUnit() == eHTMLUnit_String)
-          {
-            nsString rowBackground;
-            value.GetStringValue(rowBackground);
-            if (nsnull==color)
-              color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-            SetBackgroundFromAttribute(color, &value);
-          }
-          NS_RELEASE(rowGroup);
-        }
-      }
-    }
-  }
 
   // bgcolor
   if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::bgcolor, value)) {
@@ -443,60 +334,6 @@ nsTableCell::MapBackgroundAttributesInto(nsIStyleContext* aContext,
         color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
       NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
       color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    }
-  }
-  // otherwise check the row for background and inherit it
-  else 
-  {
-    if (nsnull!=mRow)
-    {
-      // TODO: optimize by putting a flag on the row to say whether bgcolor attr is set
-      if (eContentAttr_HasValue == mRow->GetAttribute(nsHTMLAtoms::bgcolor, value))
-      {
-        if (eHTMLUnit_Color == value.GetUnit()) {
-          if (nsnull==color)
-            color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-          color->mBackgroundColor = value.GetColorValue();
-          color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-        }
-        else if (eHTMLUnit_String == value.GetUnit()) {
-          nsAutoString buffer;
-          value.GetStringValue(buffer);
-          char cbuf[40];
-          buffer.ToCString(cbuf, sizeof(cbuf));
-          if (nsnull==color)
-            color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-          NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
-          color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-        }
-      }
-      else
-      { // we need to check the row group as well
-        nsTableRowGroup *rowGroup = mRow->GetRowGroup();
-        if (nsnull!=rowGroup)
-        {
-          if (eContentAttr_HasValue == rowGroup->GetAttribute(nsHTMLAtoms::bgcolor, value)) {
-            if (eHTMLUnit_Color == value.GetUnit()) {
-              if (nsnull==color)
-                color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-              color->mBackgroundColor = value.GetColorValue();
-              color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-            }
-            else if (eHTMLUnit_String == value.GetUnit()) {
-              nsAutoString buffer;
-              value.GetStringValue(buffer);
-              char cbuf[40];
-              buffer.ToCString(cbuf, sizeof(cbuf));
-
-              if (nsnull==color)
-                color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-              NS_ColorNameToRGB(cbuf, &(color->mBackgroundColor));
-              color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-            }
-          }
-          NS_RELEASE(rowGroup);
-        }
-      }
     }
   }
 }
