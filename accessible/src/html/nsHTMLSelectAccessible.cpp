@@ -462,7 +462,18 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccNextSibling(nsIAccessible **aA
   // Get next sibling and if found create and return an accessible for it
   // When getting the next sibling of an SelectOption we could be working with
   // either an optgroup or an option. We process this tree as flat.
+
   *aAccNextSibling = nsnull;
+  if (mNextSibling) {
+    if (mNextSibling != DEAD_END_ACCESSIBLE) {
+      NS_IF_ADDREF(*aAccNextSibling = mNextSibling);
+    }
+    return NS_OK;
+  }
+  if (!mParent) {
+    // Don't try the following algorithm without a parent select accessible
+    return NS_OK;
+  }
   nsCOMPtr<nsIDOMNode> next = mDOMNode, currentNode;
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
 
