@@ -629,6 +629,13 @@ nsXPINotifierImpl::OnEndLoad(nsIRDFXMLSink *aSink)
 }
 
 
+NS_IMETHODIMP
+nsXPINotifierImpl::OnError(nsIRDFXMLSink *aSink, nsresult aResult, const PRUnichar* aErrorMsg)
+{
+    return NS_OK;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 // nsISupports
 

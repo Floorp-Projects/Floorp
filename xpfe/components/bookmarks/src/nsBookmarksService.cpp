@@ -3473,7 +3473,12 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFRemoteDataSource
 
-
+NS_IMETHODIMP
+nsBookmarksService::GetLoaded(PRBool* _result)
+{
+    *_result = PR_TRUE;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsBookmarksService::Init(const char* aURI)
