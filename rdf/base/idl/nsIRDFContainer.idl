@@ -73,7 +73,8 @@ interface nsIRDFContainer : nsISupports {
 
     /**
      * Remove the first occurence of the specified element from the
-     * container. If aRenumber is 'true'
+     * container. If aRenumber is 'true', then the underlying RDF graph
+     * will be 're-numbered' to account for the removal.
      */
     void RemoveElement(in nsIRDFNode aElement, in boolean aRenumber);
 
@@ -86,8 +87,8 @@ interface nsIRDFContainer : nsISupports {
 
     /**
      * Remove the element at the specified index. If aRenumber is 'true', then
-     * the underlying RDF graph will be 're-numbered' to accomodate the new
-     * element.
+     * the underlying RDF graph will be 're-numbered' to account for the
+     * removal.
      *
      * @return the element that was removed.
      */
