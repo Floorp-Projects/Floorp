@@ -26,7 +26,7 @@
 #include "EmbedMozillaP.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(EmbedMozillaLog, 0)
+NS_IMPL_LOG(EmbedMozillaLog)
 #define PRINTF NS_LOG_PRINTF(EmbedMozillaLog)
 #define FLUSH  NS_LOG_FLUSH(EmbedMozillaLog)
 

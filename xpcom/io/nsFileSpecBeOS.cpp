@@ -39,7 +39,7 @@
 #include <Volume.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsFileSpecBeOSLog, 0)
+NS_IMPL_LOG(nsFileSpecBeOSLog)
 #define PRINTF NS_LOG_PRINTF(nsFileSpecBeOSLog)
 #define FLUSH  NS_LOG_FLUSH(nsFileSpecBeOSLog)
 

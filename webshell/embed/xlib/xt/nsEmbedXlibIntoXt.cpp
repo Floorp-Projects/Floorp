@@ -41,7 +41,7 @@
 #include "xlibrgb.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsEmbedXlibIntoXtLog, 0)
+NS_IMPL_LOG(nsEmbedXlibIntoXtLog)
 #define PRINTF NS_LOG_PRINTF(nsEmbedXlibIntoXtLog)
 #define FLUSH  NS_LOG_FLUSH(nsEmbedXlibIntoXtLog)
 
