@@ -44,7 +44,7 @@
 #include "WizardUI.h"
 #include "Interpret.h"
 
-#ifdef TIMEBOMBDATE
+#ifdef TIMEBOMB
 #include "timebomb.h"
 #endif
 
@@ -128,11 +128,11 @@ BOOL CWizardMachineApp::InitInstance()
 
 	CWnd myWnd;
 
-#ifdef TIMEBOMBDATE
+#ifdef TIMEBOMB
   // TIMEBOMBDATE is a string in mmddyyyy.
   // For example, for oct 1, 2002:  #define TIMEBOMBDATE "10012002" 
-  // Or put this in the wizardmachine (driver) makefile: CFLAGS=$(CFLAGS) -DTIMEBOMBDATE=\"10012002\"
   // The timebomb code lives in timebomb.h in the ns tree.
+#define TIMEBOMBDATE "10012002"
 
   CString strDate(TIMEBOMBDATE);
   CString strMonth = strDate.Left(2);
