@@ -2368,11 +2368,14 @@ AC_CACHE_CHECK(
         #endif
         ],
         [const char *glibc_version = gnu_get_libc_version();],
-        [ac_cv_func_gnu_get_libc_version=yes 
-            AC_DEFINE(HAVE_GNU_GET_LIBC_VERSION)],
+        [ac_cv_func_gnu_get_libc_version=yes],
         [ac_cv_func_gnu_get_libc_version=no] 
         )]
     )
+
+if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
+    AC_DEFINE(HAVE_GNU_GET_LIBC_VERSION)
+fi
 
 AC_MSG_CHECKING(how to call gettimeofday)
 AC_CACHE_VAL(ac_cv_gettimeofday_args,
