@@ -2163,7 +2163,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
       PRUint32 msgFlags;
 
       newMsgHdr->GetFlags(&msgFlags);
-      if (!(msgFlags & (MSG_FLAG_READ || MSG_FLAG_IMAP_DELETED))) // only fire on unread msgs that haven't been deleted
+      if (!(msgFlags & (MSG_FLAG_READ | MSG_FLAG_IMAP_DELETED))) // only fire on unread msgs that haven't been deleted
       {
         rv = m_msgParser->GetAllHeaders(&headers, &headersSize);
 
