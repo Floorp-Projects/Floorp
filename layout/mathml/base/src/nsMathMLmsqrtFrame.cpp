@@ -133,7 +133,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
   // Reflow Children
 
   nsRect rect;
-  aDesiredSize.width = 0;
+  aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (nsnull != childFrame) 
   {
@@ -183,30 +183,27 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
 
   // grab some metrics to help adjusting the placements
   nsCOMPtr<nsIFontMetrics> fm;
-  nscoord ascent, descent; 
+  nscoord fontAscent, fontDescent; 
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
-  fm->GetMaxAscent(ascent);
-  fm->GetMaxDescent(descent);
+  fm->GetMaxAscent(fontAscent);
+  fm->GetMaxDescent(fontDescent);
 
-  nsAutoString aData;
   nsBoundingMetrics bm, bmdata[2];
+  nscoord dx, dy;
 
   // radical symbol  
-  mSqrtChar.GetData(aData);
-  renderingContext.GetBoundingMetrics(aData.GetUnicode(), PRUint32(1), bm);
+  renderingContext.GetBoundingMetrics(mSqrtChar.GetUnicode(), PRUint32(1), bm);
   bmdata[0] = bm;
   nscoord charWidth = bm.width; // width of the radical symbol
-  nscoord charBearing = bm.rightBearing;
 
   // overline bar
-  mSqrtBar.GetData(aData);
-  renderingContext.GetBoundingMetrics(aData.GetUnicode(), PRUint32(1), bm);
+  renderingContext.GetBoundingMetrics(mSqrtBar.GetUnicode(), PRUint32(1), bm);
   bmdata[1] = bm;
   nscoord thickspace = bm.ascent - bm.descent; // height of the overline bar
 
   // Stretch the sqrt symbol to the appropriate height if it is not big enough.
   nsCharMetrics contSize(aDesiredSize);
-  nsCharMetrics desSize(descent, ascent, charWidth, ascent + descent);
+  nsCharMetrics desSize(fontDescent, fontAscent, charWidth, fontAscent + fontDescent);
   mSqrtChar.Stretch(aPresContext, renderingContext, mStyleContext,
                     NS_STRETCH_DIRECTION_VERTICAL, contSize, desSize);
   charWidth = desSize.width;
@@ -217,16 +214,24 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.descent = desSize.descent;
   }
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  nscoord dy = bmdata[0].ascent - ascent;
-  mSqrtChar.SetRect(nsRect(0, dy, charWidth, aDesiredSize.height));
+
+  dx = 0;
+  dy = bmdata[0].ascent - fontAscent;
+  mSqrtChar.SetRect(nsRect(dx, dy, desSize.width, aDesiredSize.height));
+  dx = bmdata[0].rightBearing;
 
   // Stretch the overline bar to the appropriate width if it is not big enough.
   contSize = nsCharMetrics(aDesiredSize);
-  desSize = nsCharMetrics(descent, ascent, bmdata[1].rightBearing-bmdata[1].leftBearing, ascent + descent);
+  desSize = nsCharMetrics(fontDescent, fontAscent, bmdata[1].rightBearing-bmdata[1].leftBearing, fontAscent + fontDescent);
+  nsCharMetrics oldSize = desSize;
   mSqrtBar.Stretch(aPresContext, renderingContext, mStyleContext,
                    NS_STRETCH_DIRECTION_HORIZONTAL, contSize, desSize);
-  dy = bmdata[1].ascent - ascent;
-  mSqrtBar.SetRect(nsRect(charBearing, dy, desSize.width, thickspace));
+
+  dy = bmdata[1].ascent - fontAscent;
+  if (oldSize == desSize) { // hasn't changed size! Char will be painted as a normal char
+    dx -= bmdata[1].leftBearing; // adjust so that it coincides with the sqrt char
+  } 
+  mSqrtBar.SetRect(nsRect(dx, dy, desSize.width, thickspace));
 
   // Update the size of the container
   aDesiredSize.width += charWidth;
@@ -235,16 +240,15 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
 
   //////////////////
   // Place Children now by setting the origin of each child.
-  nscoord chX = charWidth;
-  nscoord chY; // = thickspace;
+  dx = charWidth;
   childFrame = mFrames.FirstChild();
   while (nsnull != childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
       childFrame->GetRect(rect);
       // rect.y was storing the child's ascent, from earlier.
-      chY = aDesiredSize.ascent - rect.y;
-      childFrame->MoveTo(&aPresContext, chX, chY);
-      chX += rect.width;
+      dy = aDesiredSize.ascent - rect.y;
+      childFrame->MoveTo(&aPresContext, dx, dy);
+      dx += rect.width;
     }
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
