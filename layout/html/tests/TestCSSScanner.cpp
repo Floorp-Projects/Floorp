@@ -62,7 +62,7 @@ int main(int argc, char** argv)
   nsCSSToken tok;
   for (;;) {
     char buf[20];
-    if (!css->Next(&ec, &tok)) {
+    if (!css->Next(ec, tok)) {
       break;
     }
     printf("%02d: ", tok.mType);
