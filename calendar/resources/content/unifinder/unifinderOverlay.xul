@@ -44,7 +44,6 @@
 <!DOCTYPE window 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
-    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/unifinder.dtd" > %dtd2;
 	 <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd3;
 ]>
 
@@ -65,7 +64,7 @@
             <tabbox class="unifinder-tab-box" unifinder-tab-box="true" orient="vertical" flex="1" >
                 <tabs class="unifinder-tab">
                     <tab label="&calendar.main.tab.label;" />
-                    <tab label="&unifinder.tab.search.label;" />
+                    <tab label="&calendar.search.tab.label;" />
                 </tabs>
                 
                 <tabpanels orient="horizontal" flex="1">

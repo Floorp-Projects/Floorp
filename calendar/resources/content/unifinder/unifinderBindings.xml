@@ -37,7 +37,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE window [
-    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/unifinder.dtd" > %dtd1;
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd1;
 ]>
 
 <bindings id="unifinderBindings"
@@ -117,34 +117,14 @@
         </method>
       
     </implementation>
-  
-  
-  
   </binding>
-
 
   <binding id="unifinder-search-controls" extends="chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-base">
     <content orient="horizontal">
         <xul:hbox align="center" flex="1">
-            <xul:label for="unifinder-search-field" value="&unifinder.search.options.searchfor;" />
+            <xul:label for="unifinder-search-field" value="&calendar.search.options.searchfor;" />
             <xul:textbox id="unifinder-search-field" 
                      inherits="onkeypress=keypressfunction" flex="1"/>  
-        </xul:hbox>
-    </content>
-  </binding>
-
-  <binding id="unifinder-history-controls" extends="chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-base">
-    <content orient="horizontal">
-        <xul:hbox class="unifinder-sub-control-box-class" align="start" pack="center">
-            <xul:label for="unifinder-history-menu" value="&unifinder.history.options.documentsused;"/>
-            <xul:menulist  class="dialog-field"  label="&unifinder.history.menu.today;" data="day" >
-                <xul:menupopup >
-                    <xul:menuitem label="&unifinder.history.menu.today;"         value="day"/>
-                    <xul:menuitem label="&unifinder.history.menu.thisweek;"     value="week"/>
-                    <xul:menuitem label="&unifinder.history.menu.thismonth;"   value="month"/>
-                    <xul:menuitem label="&unifinder.history.menu.thisyear;"    value="year"/>
-                </xul:menupopup>
-            </xul:menulist>
         </xul:hbox>
     </content>
   </binding>

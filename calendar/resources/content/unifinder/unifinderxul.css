@@ -45,11 +45,6 @@ unifinder-search-controls {
   -moz-binding: url("chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-search-controls");
 }
   
-unifinder-history-controls { 
-  -moz-binding: url("chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-history-controls");
-}
-  
-
 unifinder-button{ 
   -moz-binding: url("chrome://calendar/content/unifinder/unifinderBindings.xml#unifinder-button-base");
 }
