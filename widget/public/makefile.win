@@ -23,6 +23,7 @@ MODULE=raptor
 XPIDL_MODULE=widget
 
 XPIDLSRCS =               \
+  .\nsIFileSpecWithUI.idl          \
   .\nsISound.idl          \
   $(NULL)
 
