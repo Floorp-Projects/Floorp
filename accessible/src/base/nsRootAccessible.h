@@ -107,9 +107,11 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     nsresult RemoveEventListeners();
     static void GetTargetNode(nsIDOMEvent *aEvent, nsIDOMNode **aTargetNode);
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible, nsIDOMNode *focusNode);
+    void FireDHTMLFocusRelatedEvents(nsIAccessible *aFocusAccessible, PRUint32 aRole);
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);
     nsCOMPtr<nsIAccessibilityService> mAccService;
     nsCOMPtr<nsIAccessibleCaret> mCaretAccessible;
+    nsCOMPtr<nsIAccessible> mMenuAccessible;
 };
 
 #endif  
