@@ -150,10 +150,6 @@ endif
 
 OBJS			:= $(addprefix $(OBJDIR)/, $(OBJS))
 
-ifdef REQUIRES
-MODULE_PREINCLUDES	= $(addprefix -I$(XPDIST)/public/, $(REQUIRES))
-endif
-
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 ifdef DLL
 DLL			:= $(addprefix $(OBJDIR)/, $(DLL))
@@ -493,6 +489,8 @@ $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE) $(JMCSRCDIR)::
 		echo Creating $@;	\
 		rm -rf $@;		\
 		$(NSINSTALL) -D $@;	\
+	else				\
+		true;			\
 	fi
 
 ################################################################################
@@ -719,15 +717,15 @@ endif
 # Copy each element of EXPORTS to $(XPDIST)/public/$(MODULE)/
 #
 ifneq ($(EXPORTS),)
-$(XPDIST)/public/$(MODULE)::
-	@if test ! -d $@; then	    \
-		echo Creating $@;   \
-		rm -rf $@;	    \
-		$(NSINSTALL) -D $@; \
-	fi
+$(XPDIST)/include$(INCL_SUBDIR)::
+	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
-export:: $(EXPORTS) $(XPDIST)/public/$(MODULE)
-	$(INSTALL) -m 444 $(EXPORTS) $(XPDIST)/public/$(MODULE)
+#
+# INCL_SUBDIR is used for special cases like XfeWidgets/* where the
+# headers are expected to live in subdirs.
+#
+export:: $(EXPORTS) $(XPDIST)/include$(INCL_SUBDIR)
+	$(INSTALL) -m 444 $^
 endif
 
 ################################################################################
