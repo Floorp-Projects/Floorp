@@ -494,7 +494,7 @@ protected:
 
     static 
     nsresult
-    RemoveElement(nsIContent* aParent, nsIContent* aChild, PRBool aNotify);
+    RemoveElement(nsIContent* aParent, nsIContent* aChild);
 
     /**
      * The current prototype that we are walking to construct the
