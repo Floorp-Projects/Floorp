@@ -379,7 +379,7 @@ all build checkout clean depend distclean export libs install realclean::
 ifdef _IS_FIRST_CHECKOUT
 all:: checkout build
 else
-all:: checkout depend build
+all:: checkout alldep
 endif
 
 # Windows equivalents
