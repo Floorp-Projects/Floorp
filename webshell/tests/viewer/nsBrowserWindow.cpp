@@ -77,7 +77,7 @@
 #if defined(WIN32)
 #include <strstrea.h>
 #else
-#include <strstream.h>
+#include <strstream>
 #endif
 
 #if defined(WIN32)
@@ -85,6 +85,8 @@
 #endif
 
 #if defined (XP_MAC)
+#include <sstream>
+#include <string>
 #include <Scrap.h>
 #include <TextEdit.h>
 #endif
@@ -2127,7 +2129,15 @@ nsBrowserWindow::DoCopy()
 	
 	rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
 
+// ifdef hell: ostrstream doesn't seem to work on mac (it's 
+// been deprecated too), but stringstream doesn't seem to 
+// work in VC 5, so for the moment we have ifdefs
+#if defined(XP_MAC)
+	stringstream  data;
+#else
 	ostrstream  data;
+#endif
+
 	((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
 
 	if (NS_OK == rv) {
@@ -2144,13 +2154,19 @@ nsBrowserWindow::DoCopy()
 	  }
 	  NS_IF_RELEASE(dtd);
 	  NS_IF_RELEASE(sink);
+#if defined(XP_MAC)
+	  string      theString = data.str();
+	  PRInt32     len = theString.length();
+	  const char* str = theString.data();
+#else
+	  PRInt32 len = data.pcount();
 	  char* str = (char*)data.str();
+#endif
 
 #if defined(WIN32)
 	  PRUint32 cf_aol = RegisterClipboardFormat(gsAOLFormat);
 	  PRUint32 cf_html = RegisterClipboardFormat(gsHTMLFormat);
 	 
-	  PRInt32     len = data.pcount();
 	  if (len)
 	  {   
 	    OpenClipboard(NULL);
@@ -2164,24 +2180,22 @@ nsBrowserWindow::DoCopy()
 	  }
 	  // in ostrstreams if you cal the str() function
 	  // then you are responsible for deleting the string
+	  if (str) delete str;
 #endif
 
 #if defined(XP_MAC)
-	  PRInt32     len = data.pcount();
-	  if (len)
-	  {
-		char * ptr = str;
-		for (PRInt32 plen = len; plen > 0; plen --, ptr ++)
-			if (*ptr == '\n')
-				*ptr = '\r';
+      if (len)
+      {
+        char * ptr = NS_CONST_CAST(char*,str);
+        for (PRInt32 plen = len; plen > 0; plen --, ptr ++)
+          if (*ptr == '\n')
+            *ptr = '\r';
 
-			OSErr err = ::ZeroScrap();
-			err = ::PutScrap(len, 'TEXT', str);
-			::TEFromScrap();
+        OSErr err = ::ZeroScrap();
+        err = ::PutScrap(len, 'TEXT', str);
+        ::TEFromScrap();
 	  }
 #endif
-
-	  if (str) delete str;
 
 	}
 	NS_RELEASE(parser);
