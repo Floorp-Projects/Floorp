@@ -73,9 +73,10 @@ function Recipients2CompFields(msgCompFields)
 		var ng_Sep = "";
 		var follow_Sep = "";
 
+    var inputField;
 	    while ((inputField = awGetInputElement(i)))
 	    {
-	    	fieldValue = inputField.value;
+	    	var fieldValue = inputField.value;
 	    	if (fieldValue == null)
 	    	  fieldValue = inputField.getAttribute("value");
 

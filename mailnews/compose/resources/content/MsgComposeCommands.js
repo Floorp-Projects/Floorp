@@ -944,11 +944,11 @@ function GenericSendMessage( msgType )
     			}
 
 				// Before sending the message, check what to do with HTML message, eventually abort.
-                var convert = DetermineConvertibility();
-				action = DetermineHTMLAction(convert);
+        var convert = DetermineConvertibility();
+				var action = DetermineHTMLAction(convert);
 				if (action == msgCompSendFormat.AskUser)
 				{
-                    recommAction = convert == msgCompConvertible.No
+                    var recommAction = convert == msgCompConvertible.No
                                    ? msgCompSendFormat.AskUser
                                    : msgCompSendFormat.PlainText;
                     var result2 = {action:recommAction,
@@ -1492,7 +1492,7 @@ function DetermineHTMLAction(convertible)
             {
                 //See if a preference has been set to tell us what to do. Note that we do not honor that
                 //preference for newsgroups. Only for e-mail addresses.
-                action = prefs.GetIntPref("mail.default_html_action");
+                var action = prefs.GetIntPref("mail.default_html_action");
                 switch (action)
                 {
                     case msgCompSendFormat.PlainText    :
