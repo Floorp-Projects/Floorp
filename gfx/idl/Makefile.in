@@ -37,7 +37,6 @@ XPIDLSRCS	= \
 		nsIScreen.idl \
 		nsIScreenManager.idl \
 		nsIPrintOptions.idl \
-		nsIPrintSettings.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
