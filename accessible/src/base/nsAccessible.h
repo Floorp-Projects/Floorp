@@ -100,7 +100,7 @@ protected:
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
-  PRBool IsPartiallyVisible(); 
+  PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
   NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAString& _retval);
   NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, const nsAString *aId, nsAString *aLabel);
   NS_IMETHOD GetHTMLAccName(nsAString& _retval);
