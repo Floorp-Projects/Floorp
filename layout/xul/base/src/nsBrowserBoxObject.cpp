@@ -38,7 +38,6 @@
 #include "nsCOMPtr.h"
 #include "nsIBrowserBoxObject.h"
 #include "nsBoxObject.h"
-#include "nsIFrame.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsXPIDLString.h"
@@ -89,29 +88,7 @@ nsBrowserBoxObject::~nsBrowserBoxObject()
 
 NS_IMETHODIMP nsBrowserBoxObject::GetDocShell(nsIDocShell** aResult)
 {
-  *aResult = nsnull;
-
-  if (!mPresShell) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocument> doc, sub_doc;
-  mPresShell->GetDocument(getter_AddRefs(doc));
-
-  doc->GetSubDocumentFor(mContent, getter_AddRefs(sub_doc));
-
-  if (!sub_doc) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsISupports> container;
-  sub_doc->GetContainer(getter_AddRefs(container));
-
-  if (!container) {
-    return NS_OK;
-  }
-
-  return CallQueryInterface(container, aResult);
+  return nsBoxObject::GetDocShell(aResult);
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

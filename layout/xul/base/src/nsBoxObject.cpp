@@ -45,6 +45,8 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsIFrameFrame.h"
+#include "nsIDocShell.h"
 #include "nsReadableUtils.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
@@ -626,6 +628,52 @@ nsBoxObject::GetChildByOrdinalAt(PRUint32 aIndex)
   
   return el;
 }
+
+nsresult
+nsBoxObject::GetDocShell(nsIDocShell** aResult)
+{
+  *aResult = nsnull;
+
+  if (!mPresShell) {
+    return NS_OK;
+  }
+
+  nsIFrame *frame = GetFrame();
+
+  if (frame) {
+    nsIFrameFrame *frame_frame = nsnull;
+    CallQueryInterface(frame, &frame_frame);
+
+    if (frame_frame) {
+      // Ok, the frame for mContent is a nsIFrameFrame, it knows how
+      // to reach the docshell, so ask it...
+
+      return frame_frame->GetDocShell(aResult);
+    }
+  }
+
+  // No nsIFrameFrame available for mContent, try if there's a mapping
+  // between mContent's document to mContent's subdocument.
+
+  nsCOMPtr<nsIDocument> doc, sub_doc;
+  mPresShell->GetDocument(getter_AddRefs(doc));
+
+  doc->GetSubDocumentFor(mContent, getter_AddRefs(sub_doc));
+
+  if (!sub_doc) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupports> container;
+  sub_doc->GetContainer(getter_AddRefs(container));
+
+  if (!container) {
+    return NS_OK;
+  }
+
+  return CallQueryInterface(container, aResult);
+}
+
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

@@ -41,3 +41,4 @@ nsITextFrame.h
 nsReflowType.h
 nsStyleChangeList.h
 nsStyleConsts.h
+nsIFrameFrame.h

@@ -67,6 +67,7 @@ nsIStyleSet.h \
 nsReflowType.h \
 nsStyleChangeList.h \
 nsStyleConsts.h \
+nsIFrameFrame.h \
 $(NULL)
 
 ifdef IBMBIDI

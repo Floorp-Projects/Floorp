@@ -1738,7 +1738,8 @@ SinkContext::DemoteForm(const nsIParserNode& aNode)
         nsCOMPtr<nsIPresContext> presContext;
         nsCOMPtr<nsIFrameManager> frameManager;
         nsCOMPtr<nsILayoutHistoryState> tempFrameState =
-            do_CreateInstance(kLayoutHistoryStateCID);
+          do_CreateInstance(kLayoutHistoryStateCID);
+
         if (mSink && mSink->mDocument) {
           PRInt32 ns = mSink->mDocument->GetNumberOfShells();
           if (ns > 0) {

@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,45 +34,22 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsCOMPtr.h"
-#include "nsIBoxObject.h"
-#include "nsPIBoxObject.h"
-#include "nsIPresState.h"
+#ifndef nsIFrameFrame_h___
+#define nsIFrameFrame_h___
 
-class nsIBoxLayoutManager;
-class nsIBoxPaintManager;
-class nsIFrame;
 class nsIDocShell;
-struct nsRect;
 
-class nsBoxObject : public nsPIBoxObject
+#define NS_IFRAMEFRAME_IID \
+{ 0xda876f25, 0x1cff, 0x4f0a, { \
+  0xbf, 0x7e, 0x83, 0xd7, 0x4f, 0xc5, 0x2a, 0x3b } }
+
+class nsIFrameFrame : public nsISupports
 {
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIBOXOBJECT
-
 public:
-  nsBoxObject();
-  virtual ~nsBoxObject();
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMEFRAME_IID)
 
-  // nsPIBoxObject
-  NS_IMETHOD Init(nsIContent* aContent, nsIPresShell* aPresShell);
-  NS_IMETHOD SetDocument(nsIDocument* aDocument);
-  NS_IMETHOD InvalidatePresentationStuff();
-
-  virtual nsIFrame* GetFrame();
-  nsresult GetOffsetRect(nsRect& aRect);
-  nsresult GetScreenRect(nsRect& aRect);
-  nsIDOMElement* GetChildByOrdinalAt(PRUint32 aIndex);
-
-protected:
-  // Helper for some of the subclasses of nsBoxObject
-  nsresult GetDocShell(nsIDocShell **aDocShell);
-
-// MEMBER VARIABLES
-  nsCOMPtr<nsIBoxLayoutManager> mLayoutManager; // [OWNER]
-  nsCOMPtr<nsIBoxPaintManager> mPaintManager; // [OWNER]
-  nsCOMPtr<nsIPresState> mPresState; // [OWNER]
-
-  nsIContent* mContent; // [WEAK]
-  nsIPresShell* mPresShell; // [WEAK]
+  NS_IMETHOD GetDocShell(nsIDocShell **aDocShell) = 0;
 };
+
+
+#endif
