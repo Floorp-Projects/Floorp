@@ -45,7 +45,7 @@ DIRS		+= softupdt
 endif # MOZ_SMARTUPDATE
 
 ifdef MOZ_OJI
-DIRS		+= modules/oji
+DIRS		+= oji
 endif
 
 ifdef EDITOR
