@@ -143,7 +143,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
           parentName.Right(leafName, parentName.Length() - dirEnd -1);
           parentName.Truncate(dirEnd);
           NS_MsgHashIfNecessary(parentName);
-          parentName.Append(sbdSep);
+          parentName.AppendWithConversion(sbdSep);
           pathResult += (const char *) parentName;
 		  // this fixes a strange purify warning.
           parentName = (const char *) leafName;
@@ -162,7 +162,7 @@ nsresult
 nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
                    char **name)
 {
-    nsAutoString uri = uriStr;
+    nsAutoString uri; uri.AssignWithConversion(uriStr);
     nsAutoString fullName;
     if (uri.Find(rootURI) != 0) return NS_ERROR_FAILURE;
     PRInt32 hostStart = uri.Find(hostname);
@@ -381,9 +381,9 @@ void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &retu
     }
     else if (curSequenceEnd > startSequence)
     {
-      returnString.Append(startSequence, 10);
+      returnString.AppendInt(startSequence, 10);
       returnString += ':';
-      returnString.Append(curSequenceEnd, 10);
+      returnString.AppendInt(curSequenceEnd, 10);
       if (!lastKey)
         returnString += ',';
 //      sprintf(currentidString, "%ld:%ld,", startSequence, curSequenceEnd);
@@ -394,7 +394,7 @@ void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &retu
     {
       startSequence = nextKey;
       curSequenceEnd = startSequence;
-      returnString.Append(msgUids[keyIndex], 10);
+      returnString.AppendInt(msgUids[keyIndex], 10);
       if (!lastKey)
         returnString += ',';
 //      sprintf(currentidString, "%ld,", msgUids[keyIndex]);
@@ -416,7 +416,7 @@ CreateUtf7ConvertedString(const char * aSourceString,
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsString aCharset("x-imap4-modified-utf7");
+    nsString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
     PRUnichar *unichars = nsnull;
     PRInt32 unicharLength;
 
@@ -452,9 +452,9 @@ CreateUtf7ConvertedString(const char * aSourceString,
     else
     {
       // convert from 8 bit ascii string to modified utf7
-      nsString unicodeStr(aSourceString);
+      nsString unicodeStr; unicodeStr.AssignWithConversion(aSourceString);
       nsIUnicodeEncoder* encoder = nsnull;
-      aCharset.Assign("x-imap4-modified-utf7");
+      aCharset.AssignWithConversion("x-imap4-modified-utf7");
       res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
       if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
       {
@@ -473,7 +473,7 @@ CreateUtf7ConvertedString(const char * aSourceString,
         }
       }
       NS_IF_RELEASE(encoder);
-      nsString unicodeStr2(dstPtr);
+      nsString unicodeStr2; unicodeStr2.AssignWithConversion(dstPtr);
       convertedString = (char *) PR_Malloc(dstLength + 1);
       if (convertedString)
         unicodeStr2.ToCString(convertedString, dstLength + 1, 0);
@@ -496,13 +496,13 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsString aCharset("x-imap4-modified-utf7");
+    nsString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
     PRInt32 unicharLength;
 
       // convert from 8 bit ascii string to modified utf7
       nsString unicodeStr(aSourceString);
       nsIUnicodeEncoder* encoder = nsnull;
-      aCharset.Assign("x-imap4-modified-utf7");
+      aCharset.AssignWithConversion("x-imap4-modified-utf7");
       res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
       if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
       {
@@ -544,7 +544,7 @@ nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **aUni
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsString aCharset("x-imap4-modified-utf7");
+    nsString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
     PRUnichar *unichars = nsnull;
     PRInt32 unicharLength;
 

@@ -66,26 +66,26 @@ nsImapMoveCopyMsgTxn::Init(
 	{
 		if (isMove)
 		{
-			m_undoString = "Undo Move Messages";
-			m_redoString = "Redo Move Messages";
+			m_undoString.AssignWithConversion("Undo Move Messages");
+			m_redoString.AssignWithConversion("Redo Move Messages");
 		}
 		else
 		{
-			m_undoString = "Undo Copy Messages";
-			m_redoString = "Redo Copy Messages";
+			m_undoString.AssignWithConversion("Undo Copy Messages");
+			m_redoString.AssignWithConversion("Redo Copy Messages");
 		}
 	}
 	else
 	{
 		if (isMove)
 		{
-			m_undoString = "Undo Move Message";
-			m_redoString = "Redo Move Message";
+			m_undoString.AssignWithConversion("Undo Move Message");
+			m_redoString.AssignWithConversion("Redo Move Message");
 		}
 		else
 		{
-			m_undoString = "Undo Copy Message";
-			m_redoString = "Redo Copy Message";
+			m_undoString.AssignWithConversion("Undo Copy Message");
+			m_redoString.AssignWithConversion("Redo Copy Message");
 		}
 	}
     char *uri = nsnull;
@@ -285,7 +285,7 @@ nsImapMoveCopyMsgTxn::AddDstKey(nsMsgKey aKey)
     m_dstKeyArray.Add(aKey);
     if (m_dstMsgIdString.Length() > 0)
         m_dstMsgIdString.Append(",");
-    m_dstMsgIdString.Append((PRInt32) aKey);
+    m_dstMsgIdString.AppendInt((PRInt32) aKey);
     return NS_OK;
 }
 

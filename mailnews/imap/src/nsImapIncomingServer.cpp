@@ -753,9 +753,9 @@ nsresult nsImapIncomingServer::GetFolder(const char* name, nsIMsgFolder** pFolde
         rv = rootFolder->GetURI(&uri);
         if (NS_SUCCEEDED(rv) && uri)
         {
-            nsAutoString uriAutoString = uri;
-            uriAutoString.Append('/');
-            uriAutoString.Append(name);
+            nsAutoString uriAutoString; uriAutoString.AssignWithConversion(uri);
+            uriAutoString.AppendWithConversion('/');
+            uriAutoString.AppendWithConversion(name);
             NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
             if (NS_FAILED(rv)) return rv;
             char* uriString = uriAutoString.ToNewCString();
@@ -1282,7 +1282,7 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString)
 		if (serverSaidPrefix)
 		{
 			nsAutoString message(serverSaidPrefix);
-			message += whereRealMessage ? whereRealMessage : serverSaid;
+			message.AppendWithConversion(whereRealMessage ? whereRealMessage : serverSaid);
 			rv = dialog->Alert(message.GetUnicode());
 
 			PR_Free(serverSaidPrefix);
@@ -1299,7 +1299,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar **aString)
 {
-	nsAutoString	resultString = "???";
+	nsAutoString	resultString; resultString.AssignWithConversion("???");
 	nsresult res = NS_OK;
 
 	if (!m_stringBundle)
@@ -1323,9 +1323,9 @@ NS_IMETHODIMP  nsImapIncomingServer::GetImapStringByID(PRInt32 aMsgId, PRUnichar
 
 		if (NS_FAILED(res)) 
 		{
-			resultString = "[StringID";
-			resultString.Append(aMsgId, 10);
-			resultString += "?]";
+			resultString.AssignWithConversion("[StringID");
+			resultString.AppendInt(aMsgId, 10);
+			resultString.AssignWithConversion("?]");
 			*aString = resultString.ToNewUnicode();
 		}
 		else

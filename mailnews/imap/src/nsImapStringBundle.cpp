@@ -39,7 +39,7 @@ IMAPGetStringByID(PRInt32 stringID)
 {
 	nsresult    res;
 	char*       propertyURL = NULL;
-	nsString	resultString = "???";
+	nsString	resultString; resultString.AssignWithConversion("???");
 
 	propertyURL = IMAP_MSGS_URL;
 
@@ -60,9 +60,9 @@ IMAPGetStringByID(PRInt32 stringID)
 
 			if (NS_FAILED(res)) 
 			{
-				resultString = "[StringID";
-				resultString.Append(stringID, 10);
-				resultString += "?]";
+				resultString.AssignWithConversion("[StringID");
+				resultString.AppendInt(stringID, 10);
+				resultString.AppendWithConversion("?]");
 				return resultString.ToNewUnicode();
 			}
 

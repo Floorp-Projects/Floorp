@@ -3013,7 +3013,7 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
     }
     else 
     {
-      fetchStr.Append(GetServerStateParser().HighestRecordedUID() + 1, 10);
+      fetchStr.AppendInt(GetServerStateParser().HighestRecordedUID() + 1, 10);
       fetchStr.Append(":*");
 
       // sprintf(fetchStr, "%ld:*", GetServerStateParser().HighestRecordedUID() + 1);
@@ -3247,7 +3247,7 @@ void nsImapProtocol::PeriodicBiff()
         id = 1;
 
       //sprintf(fetchStr, "%ld:%ld", id, id + GetServerStateParser().NumberOfMessages() - fFlagState->GetNumberOfMessages());
-      fetchStr.Append(id, 10);
+      fetchStr.AppendInt(id, 10);
       fetchStr.Append(":*"); 
       FetchMessage(fetchStr, kFlags, PR_TRUE);
 
@@ -3959,7 +3959,7 @@ nsImapProtocol::AlertUserEvent(const char * message)
 {
     if (m_imapServerSink)
   {
-    nsAutoString uniString(message);
+    nsAutoString uniString; uniString.AssignWithConversion(message);
         m_imapServerSink->FEAlert(uniString.GetUnicode());
   }
 }
@@ -3991,7 +3991,7 @@ nsImapProtocol::ShowProgress()
     if (m_progressString && m_progressStringId)
     {
       PRUnichar *progressString = NULL;
-      nsCString cProgressString(m_progressString);
+      nsCString cProgressString; cProgressString.AssignWithConversion(m_progressString);
       const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
 
 	  nsXPIDLString unicodeMailboxName;
@@ -4074,7 +4074,7 @@ PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceSt
 
   if(NS_SUCCEEDED(res) && (nsnull != ccm))
   {
-    nsString aCharset("x-imap4-modified-utf7");
+    nsString aCharset; aCharset.AssignWithConversion("x-imap4-modified-utf7");
     PRUnichar *unichars = nsnull;
     PRInt32 unicharLength;
 
@@ -4465,7 +4465,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
         if (NS_FAILED(rv)) goto done;
         rv = fileSpec->OpenStreamForReading();
         if (NS_FAILED(rv)) goto done;
-        command.Append((PRInt32)fileSize);
+        command.AppendInt((PRInt32)fileSize);
         if (hasLiteralPlus)
             command.Append("+}" CRLF);
         else
@@ -5758,7 +5758,7 @@ void nsImapProtocol::NthLevelChildList(const char* onlineMailboxPrefix,
         int count = 0;
         char separator = 0;
         m_runningUrl->GetOnlineSubDirSeparator(&separator);
-        suffix = separator;
+        suffix.Assign(separator);
         suffix += '%';
         
         while (count < depth)
@@ -6246,7 +6246,7 @@ nsImapProtocol::GetDeleteIsMoveToTrash()
 
 NS_IMETHODIMP nsImapProtocol::OverrideConnectionInfo(const PRUnichar *pHost, PRUint16 pPort, const char *pCookieData)
 {
-	m_logonHost = pHost;
+	m_logonHost.AssignWithConversion(pHost);
 	m_logonPort = pPort;
 	m_logonCookie = pCookieData;
 	m_overRideUrlConnectionInfo = PR_TRUE;

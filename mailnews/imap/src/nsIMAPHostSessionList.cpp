@@ -184,7 +184,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetPasswordForHost(const char *serverKey, n
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(serverKey);
 	if (host)
-		result = host->fCachedPassword;
+		result.AssignWithConversion(host->fCachedPassword);
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
@@ -230,7 +230,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetOnlineDirForHost(const char *serverKey,
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(serverKey);
 	if (host)
-        result = host->fOnlineDir;
+        result.AssignWithConversion(host->fOnlineDir);
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
@@ -321,7 +321,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetHierarchyDelimiterStringForHost(const ch
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(serverKey);
 	if (host)
-		result = host->fHierarchyDelimiters;
+		result.AssignWithConversion(host->fHierarchyDelimiters);
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
@@ -693,12 +693,12 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetOnlineInboxPathForHost(const char *serve
 		ns = host->fNamespaceList->GetDefaultNamespaceOfType(kPersonalNamespace);
 		if (ns)
 		{
-			result = PR_smprintf("%sINBOX",ns->GetPrefix());
+			result.AssignWithConversion(PR_smprintf("%sINBOX",ns->GetPrefix()));
 		}
 	}
 	else
 	{
-		result = "";
+		result.SetLength(0);
 	}
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;

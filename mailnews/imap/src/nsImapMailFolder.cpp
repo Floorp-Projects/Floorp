@@ -206,7 +206,7 @@ nsresult nsImapMailFolder::AddDirectorySeparator(nsFileSpec &path)
       // unfortunately we can't just say:
       //          path += sep;
       // here because of the way nsFileSpec concatenates
-      nsAutoString str((nsFilePath)path);
+      nsAutoString str; str.AssignWithConversion(NS_STATIC_CAST(nsFilePath, path));
       str += sep;
       path = nsFilePath(str);
     }
@@ -240,8 +240,8 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
 
     PRInt32 flags = 0;
   nsAutoString uri;
-  uri.Append(mURI);
-  uri.Append('/');
+  uri.AppendWithConversion(mURI);
+  uri.AppendWithConversion('/');
 
   uri.Append(*name);
   char* uriStr = uri.ToNewCString();
@@ -274,16 +274,16 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   if(NS_SUCCEEDED(rv) && isServer)
   {
 
-    if(name->Compare("Inbox", PR_TRUE) == 0)
+    if(name->CompareWithConversion("Inbox", PR_TRUE) == 0)
       flags |= MSG_FOLDER_FLAG_INBOX;
-    else if(name->Compare("Trash", PR_TRUE) == 0)
+    else if(name->CompareWithConversion("Trash", PR_TRUE) == 0)
       flags |= MSG_FOLDER_FLAG_TRASH;
 #if 0
-    else if(name->Compare("Sent", PR_TRUE) == 0)
+    else if(name->CompareWithConversion("Sent", PR_TRUE) == 0)
       folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name->Compare("Drafts", PR_TRUE) == 0)
+    else if(name->CompareWithConversion("Drafts", PR_TRUE) == 0)
       folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if (name->Compare("Templates", PR_TRUE) == 0)
+    else if (name->CompareWithConversion("Templates", PR_TRUE) == 0)
       folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 #endif 
   }
@@ -318,7 +318,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
   {
     nsFileSpec currentFolderPath = (nsFileSpec&)dir;
     folderName = currentFolderPath.GetLeafName();
-    currentFolderNameStr = folderName;
+    currentFolderNameStr.AssignWithConversion(folderName);
     if (nsShouldIgnoreFile(currentFolderNameStr))
     {
       PL_strfree(folderName);
@@ -364,7 +364,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
             currentFolderNameStr.Cut(0, leafPos + 1);
 
           // take the utf7 full online name, and determine the utf7 leaf name
-          utf7LeafName.Assign(onlineFullUtf7Name);
+          utf7LeafName.AssignWithConversion(onlineFullUtf7Name);
           leafPos = utf7LeafName.RFindChar('/');
           if (leafPos > 0)
             utf7LeafName.Cut(0, leafPos + 1);
@@ -593,7 +593,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
   if(NS_FAILED(rv))
     return rv;
 
-    nsAutoString leafName (folderName);
+    nsAutoString leafName; leafName.AssignWithConversion(folderName);
     nsAutoString folderNameStr;
     nsAutoString parentName = leafName;
     PRInt32 folderStart = leafName.FindChar('/');
@@ -609,7 +609,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         rv = CreateDirectoryForFolder(path);
         if (NS_FAILED(rv)) return rv;
         uri.Append('/');
-        uri.Append(parentName);
+        uri.AppendWithConversion(parentName);
         rv = rdf->GetResource(uri,
                               getter_AddRefs(res));
         if (NS_FAILED(rv)) return rv;
@@ -662,8 +662,8 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
       {
         nsCAutoString onlineName = m_onlineFolderName; 
         if (onlineName.Length() > 0)
-          onlineName += hierarchyDelimiter;
-        onlineName.Append(folderNameStr);
+          onlineName.AppendWithConversion(hierarchyDelimiter);
+        onlineName.AppendWithConversion(folderNameStr);
         imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
         imapFolder->SetOnlineName(onlineName.GetBuffer());
                 imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
@@ -1222,7 +1222,7 @@ NS_IMETHODIMP nsImapMailFolder::SetOnlineName(const char * aOnlineFolderName)
   rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
   if(NS_SUCCEEDED(rv))
   {
-    nsAutoString onlineName(aOnlineFolderName);
+    nsAutoString onlineName; onlineName.AssignWithConversion(aOnlineFolderName);
     rv = folderInfo->SetProperty("onlineName", &onlineName);
     // so, when are we going to commit this? Definitely not every time!
     // We could check if the online name has changed.
@@ -1289,7 +1289,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
           nsXPIDLCString name;
           rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
           m_onlineFolderName.Assign(name);
-          nsAutoString autoOnlineName(name);
+          nsAutoString autoOnlineName; autoOnlineName.AssignWithConversion(name);
           rv = (*folderInfo)->SetProperty("onlineName", &autoOnlineName);
           PR_FREEIF(uri);
           PR_FREEIF(hostname);
@@ -1359,9 +1359,9 @@ nsImapMailFolder::AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCStri
     }
     else if (curSequenceEnd > startSequence)
     {
-      msgIds.Append(startSequence, 10);
+      msgIds.AppendInt(startSequence, 10);
       msgIds += ':';
-      msgIds.Append(curSequenceEnd, 10);
+      msgIds.AppendInt(curSequenceEnd, 10);
       if (!lastKey)
         msgIds += ',';
       startSequence = nextKey;
@@ -1371,7 +1371,7 @@ nsImapMailFolder::AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCStri
     {
       startSequence = nextKey;
       curSequenceEnd = startSequence;
-      msgIds.Append(keyArray[keyIndex], 10);
+      msgIds.AppendInt(keyArray[keyIndex], 10);
       if (!lastKey)
         msgIds += ',';
     }
@@ -2204,7 +2204,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
             // so we use an nsString from above.
             PRUnichar *folderName = nsnull;
             rv = mailTrash->GetName(&folderName);
-            trashNameVal = nsCAutoString(folderName);
+            trashNameVal.AssignWithConversion(folderName);
             nsCRT::free(folderName);
             value = (void *) trashNameVal.GetBuffer();
           }
@@ -3862,7 +3862,7 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
     {
         rv = msgToReplace->GetMessageKey(&key);
         if (NS_SUCCEEDED(rv))
-            messageId.Append((PRInt32) key);
+            messageId.AppendInt((PRInt32) key);
     }
 
     rv = InitCopyState(srcSupport, messages, PR_FALSE, isDraftOrTemplate,
@@ -4024,7 +4024,7 @@ NS_IMETHODIMP nsImapMailFolder::MatchName(nsString *name, PRBool *matches)
   if (!matches)
     return NS_ERROR_NULL_POINTER;
     PRBool isInbox = mName.EqualsIgnoreCase("inbox");
-  *matches = mName.Equals(*name, isInbox);
+  *matches = mName.EqualsWithConversion(*name, isInbox);
   return NS_OK;
 }
 
