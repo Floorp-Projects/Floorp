@@ -79,14 +79,14 @@
 static char *oldWinReg="nsreg.dat";
 #endif
 
-static char gNewProfileData[_MAX_NUM_PROFILES][_MAX_LENGTH] = {'\0'};
+static char gNewProfileData[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_Count = 0;
 
-static char gProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {'\0'};
+static char gProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_numProfiles = 0;
 
-static char gOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {'\0'};
-static char gOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH] = {'\0'};
+static char gOldProfiles[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
+static char gOldProfLocations[_MAX_NUM_PROFILES][_MAX_LENGTH] = {{'\0'}};
 static int	g_numOldProfiles = 0;
 
 static PRBool renameCurrProfile = PR_FALSE;
@@ -94,7 +94,6 @@ static PRBool renameCurrProfile = PR_FALSE;
 // IID and CIDs of all the services needed
 static NS_DEFINE_IID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
-static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
@@ -579,8 +578,6 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
 								nsIRegistry::Key profKey;								
 
 					            // Get node name.
-					            *profileName = (char*) PR_Malloc(sizeof(char)*_MAX_LENGTH);		
-
 					            rv = node->GetName( profileName );	
 
 								// Profiles need to be migrated are not considered as valid profiles
@@ -963,8 +960,8 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 		// They didn't type a directory path...
 		nsIFileLocator* locator = nsnull;
 		
-		rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
-	
+		rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
+
 		if (NS_FAILED(rv) || !locator)
 			return NS_ERROR_FAILURE;
 
@@ -1257,10 +1254,6 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 									char *entryName;
 									char *entryValue;
 								
-									// XXX: These allocations shouldn't be necessary.
-									// entryName  = (char*) PR_Malloc(sizeof(char)*_MAX_LENGTH);
-									// entryValue = (char*) PR_Malloc(sizeof(char)*_MAX_LENGTH);
-
 									rv = value->GetName( &entryName );
 								
 									if (NS_SUCCEEDED(rv)) 
@@ -1356,7 +1349,7 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName)
 			#endif
 		}
 
-		// May need to deleet directories, but not so directly.
+		// May need to delete directories, but not so directly.
 		// DeleteUserDirectories(profileDirSpec);
 
 		// Take care of the current profile, if the profile 
@@ -1433,7 +1426,6 @@ void nsProfile::GetAllProfiles()
 
                 if (NS_SUCCEEDED(rv)) 
 				{
-                    int numKeys=0;
 
                     rv = enumKeys->First();
 
@@ -1580,7 +1572,7 @@ NS_IMETHODIMP nsProfile::StartCommunicator(const char* profileName)
 
 		nsIFileLocator* locator = nsnull;
     
-		rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+		rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
 			
 		if (locator)
 		{
@@ -1621,7 +1613,7 @@ NS_IMETHODIMP nsProfile::GetCurrProfile(nsString& currProfile)
 	return NS_OK;
 }
 
-// Migarte profile information from the 4x registry to 5x registry.
+// Migrate profile information from the 4x registry to 5x registry.
 NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 {
 	nsresult rv = NS_OK;
@@ -1647,7 +1639,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 		nsIFileLocator* locator = nsnull;
 		nsFileSpec oldAppRegistry;
 	
-		rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+		rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
 		if (NS_FAILED(rv) || !locator)
 		      return NS_ERROR_FAILURE;
 		// Get current profile, make the new one a sibling...
@@ -1682,7 +1674,6 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 
                 if (NS_SUCCEEDED(rv)) 
 				{
-                    int numKeys=0;
                 
 					rv = enumKeys->First();
                     
@@ -1898,7 +1889,7 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 	nsIFileLocator* locator = nsnull;
 	
 	// Get the new directory path the migrated profile to reside.
-	rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+	rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
 	
 	if (NS_FAILED(rv) || !locator)
 	{
@@ -2341,9 +2332,7 @@ class nsProfileFactory: public nsIFactory {
   };
 };
 
-static NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
-
-NS_IMPL_ISUPPORTS(nsProfileFactory, kFactoryIID);
+NS_IMPL_ISUPPORTS(nsProfileFactory, nsIFactory::GetIID());
 
 nsresult nsProfileFactory::CreateInstance(nsISupports *aDelegate,
                                             const nsIID &aIID,
@@ -2380,7 +2369,7 @@ NSGetFactory(nsISupports* serviceMgr,
   }
   if (aClass.Equals(kProfileCID)) {
     nsProfileFactory *factory = new nsProfileFactory();
-    nsresult res = factory->QueryInterface(kFactoryIID, (void **) aFactory);
+	nsresult res = factory->QueryInterface(nsIFactory::GetIID(), (void **) aFactory);
     if (NS_FAILED(res)) {
       *aFactory = nsnull;
       delete factory;
