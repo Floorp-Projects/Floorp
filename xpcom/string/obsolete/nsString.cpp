@@ -17,7 +17,6 @@
  * Reserved.
  */ 
 
-#include <iostream.h>
 #include <ctype.h>
 #include <string.h> 
 #include <stdio.h>
@@ -1689,7 +1688,7 @@ void nsCString::Recycle(nsCString* aString){
 #endif
 }
 
-
+#if 0
 /**
  * 
  * @update	gess 01/04/99
@@ -1731,7 +1730,7 @@ ostream& operator<<(ostream& aStream,const nsCString& aString){
   }    
 	return aStream;
 }
-
+#endif
 
 /**
  * 

@@ -36,7 +36,6 @@
 #include "nsString2.h"
 #include "prtypes.h"
 #include "nscore.h"
-#include <iostream.h>
 #include <stdio.h>
 #include "nsCRT.h"
 #include "nsStr.h"
@@ -725,14 +724,14 @@ static  PRBool IsDigit(PRUnichar ch);
 static  void        Recycle(nsCString* aString);
 static  nsCString*  CreateString(void);
 
-virtual void  DebugDump(ostream& aStream) const;
 
   nsIMemoryAgent* mAgent;
 
 };
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);
-ostream& operator<<(ostream& aStream,const nsCString& aString);
+//ostream& operator<<(ostream& aStream,const nsCString& aString);
+//virtual void  DebugDump(ostream& aStream) const;
 
 
 /**************************************************************
