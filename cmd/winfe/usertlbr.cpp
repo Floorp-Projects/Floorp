@@ -1369,7 +1369,8 @@ void CRDFToolbarButton::DrawButtonBitmap(HDC hDC, CRect rcImg)
  {
 	// XP_ASSERT(IsUTF8Text(lpString, nCount));
 	// In RDF, everything is UTF8
-	return ::DrawText(hDC, (char*)lpString, nCount, lpRect, uFormat );
+	// return ::DrawText(hDC, (char*)lpString, nCount, lpRect, uFormat );
+	return CIntlWin::DrawText(CS_UTF8, hDC, (char*)lpString, nCount, lpRect, uFormat );
  }
 
 BOOL CRDFToolbarButton::GetTextExtentPoint32(HDC hDC, LPCSTR lpString, int nCount, LPSIZE lpSize)
