@@ -22,7 +22,7 @@
 
 #include "xp_core.h"
 
-#ifdef XP_WIN32
+#ifdef HAVE_MMX_INTEL_MNEMONICS
 int MMXAvailable;
 int mmxsupport();
 #endif
@@ -37,7 +37,7 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
 {
   int i;
 
-#ifdef XP_WIN32
+#ifdef HAVE_MMX_INTEL_MNEMONICS
   static int cpuidDetected = 0;
 
   if(!cpuidDetected)
@@ -414,7 +414,7 @@ jpeg_finish_decompress (j_decompress_ptr cinfo)
 }
 
 
-#ifdef XP_WIN32
+#ifdef HAVE_MMX_INTEL_MNEMONICS
 
 
 int mmxsupport()
