@@ -122,7 +122,7 @@ Moz::StopForErrors();
 #Moz::DontStopForErrors();
 
 #OpenErrorLog("::NGLayoutBuildLog");
-OpenErrorLog("::::Mozilla.BuildLog");		# Tinderbox requires that name
+OpenErrorLog(":::Mozilla.BuildLog");		# Tinderbox requires that name
 Checkout();
 
 chdir($MOZ_SRC);
