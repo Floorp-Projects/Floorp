@@ -70,18 +70,18 @@ literal_string( const char* aPtr, PRUint32 aLength )
 
 #ifdef HAVE_CPP_2BYTE_WCHAR_T
   #define NS_L(s)                                 L##s
-  #define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(NS_REINTERPRET_CAST(const PRUnichar*, s), (sizeof(s)/sizeof(wchar_t))-1)
-  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  nsDependentString n(NS_REINTERPRET_CAST(const PRUnichar*, s), (sizeof(s)/sizeof(wchar_t))-1)
+  #define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(NS_REINTERPRET_CAST(const PRUnichar*, s), PRUint32((sizeof(s)/sizeof(wchar_t))-1))
+  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  nsDependentString n(NS_REINTERPRET_CAST(const PRUnichar*, s), PRUint32((sizeof(s)/sizeof(wchar_t))-1))
 #else
   #define NS_L(s)                                 s
-  #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, sizeof(s)-1)
-  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  NS_ConvertASCIItoUCS2 n(s, sizeof(s)-1)
+  #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, PRUint32(sizeof(s)-1))
+  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  NS_ConvertASCIItoUCS2 n(s, PRUint32(sizeof(s)-1))
 #endif
 
 #define NS_LITERAL_STRING(s)                      NS_MULTILINE_LITERAL_STRING(NS_L(s))
 #define NS_NAMED_LITERAL_STRING(n,s)              NS_NAMED_MULTILINE_LITERAL_STRING(n,NS_L(s))
 
-#define NS_LITERAL_CSTRING(s)                     nsDependentCString(s, sizeof(s)-1)
-#define NS_NAMED_LITERAL_CSTRING(n,s)             nsDependentCString n(s, sizeof(s)-1)
+#define NS_LITERAL_CSTRING(s)                     nsDependentCString(s, PRUint32(sizeof(s)-1))
+#define NS_NAMED_LITERAL_CSTRING(n,s)             nsDependentCString n(s, PRUint32(sizeof(s)-1))
 
 #endif /* !defined(nsLiteralString_h___) */
