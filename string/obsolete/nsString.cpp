@@ -468,7 +468,8 @@ float nsCString::ToFloat(PRInt32* aErrorCode) const {
   if (mLength > 0) {
     char *conv_stopped;
     const char *str = get();
-    res = (float)strtod(str, &conv_stopped);
+    // Use PR_strtod, not strtod, since we don't want locale involved.
+    res = (float)PR_strtod(str, &conv_stopped);
     if (conv_stopped == str+mLength) {
       *aErrorCode = (PRInt32) NS_OK;
     }
