@@ -1131,6 +1131,8 @@ morkWriter::StartDict(morkEnv* ev)
   
     stream->Putc(ev, '>');
     ++mWriter_LineSize;
+
+    mWriter_LineSize = stream->PutIndent(ev, morkWriter_kDictAliasDepth);
   }
   else
   {
@@ -1138,7 +1140,6 @@ morkWriter::StartDict(morkEnv* ev)
     stream->Putc(ev, ' ');
     mWriter_LineSize += 2;
   }
-  mWriter_LineSize = stream->PutIndent(ev, morkWriter_kDictAliasDepth);
 }
 
 void
@@ -1165,7 +1166,7 @@ morkWriter::StartTable(morkEnv* ev, morkTable* ioTable)
     if ( mWriter_LineSize )
       stream->PutLineBreak(ev);
     mWriter_LineSize = 0;
-    stream->PutLineBreak(ev);
+    // stream->PutLineBreak(ev);
 
     char buf[ 64 ]; // buffer for staging hex
     char* p = buf;
@@ -1199,7 +1200,9 @@ morkWriter::StartTable(morkEnv* ev, morkTable* ioTable)
     }
     
     stream->Putc(ev, '}'); // end meta
-    mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowCellDepth);
+    ++mWriter_LineSize;
+    
+    // mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowDepth);
   }
 }
 
@@ -1372,7 +1375,7 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
 
   if ( ioRow->IsRowDirty() )
   {
-    stream->PutIndent(ev, morkWriter_kRowDepth);
+    mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowDepth);
     
     ioRow->SetRowClean();
     mork_rid rid = roid->mOid_Id;
