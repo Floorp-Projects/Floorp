@@ -18,7 +18,7 @@ PRIVATE_EXPORTS = \
 MODULE = xpfc
 
 CPPSRCS = \
-	nsMenuContainerUnix.cpp \
+	nsXPFCMenuContainerUnix.cpp \
 	$(NULL)
 
 REQUIRES = xpcom raptor netlib

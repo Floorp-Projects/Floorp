@@ -13,7 +13,7 @@ DEPTH = ../../..
 EXPORTS = \
 	nsIXMLParserObject.h \
     nsIMenuManager.h \
-    nsIToolbarManager.h \
+    nsIXPFCToolbarManager.h \
     nsIXPFCXMLContentSink.h \
 	$(NULL)
 

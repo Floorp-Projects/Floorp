@@ -17,7 +17,7 @@
  */
 
 #include "nscore.h"
-#include "nsMenuContainer.h"
+#include "nsXPFCMenuContainer.h"
 #include "nsIXMLParserObject.h"
 #include "nspr.h"
 #include "plstr.h"
@@ -28,13 +28,13 @@
 #include "nsIWebViewerContainer.h"
 
 static NS_DEFINE_IID(kIXMLParserObjectIID, NS_IXML_PARSER_OBJECT_IID);
-static NS_DEFINE_IID(kCIMenuContainerIID, NS_IMENUCONTAINER_IID);
-static NS_DEFINE_IID(kCIMenuItemIID, NS_IMENUITEM_IID);
+static NS_DEFINE_IID(kCIXPFCMenuContainerIID, NS_IXPFCMENUCONTAINER_IID);
+static NS_DEFINE_IID(kCIXPFCMenuItemIID, NS_IXPFCMENUITEM_IID);
 static NS_DEFINE_IID(kFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kXPFCCommandReceiverIID, NS_IXPFC_COMMANDRECEIVER_IID);
 
-nsMenuContainer::nsMenuContainer() : nsMenuItem()
+nsXPFCMenuContainer::nsXPFCMenuContainer() : nsXPFCMenuItem()
 {
   NS_INIT_REFCNT();
   mChildMenus = nsnull;
@@ -42,24 +42,24 @@ nsMenuContainer::nsMenuContainer() : nsMenuItem()
   mWebViewerContainer = nsnull;
 }
 
-nsMenuContainer::~nsMenuContainer()
+nsXPFCMenuContainer::~nsXPFCMenuContainer()
 {
 }
 
-NS_DEFINE_IID(kIMenuContainerIID, NS_IMENUCONTAINER_IID);
+NS_DEFINE_IID(kIXPFCMenuContainerIID, NS_IXPFCMENUCONTAINER_IID);
 
-NS_IMPL_ADDREF(nsMenuContainer)
-NS_IMPL_RELEASE(nsMenuContainer)
+NS_IMPL_ADDREF(nsXPFCMenuContainer)
+NS_IMPL_RELEASE(nsXPFCMenuContainer)
 
-nsresult nsMenuContainer::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+nsresult nsXPFCMenuContainer::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
 
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
   }                                                                      
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kIMenuContainerIID);                         
-  static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
+  static NS_DEFINE_IID(kClassIID, kIXPFCMenuContainerIID);                         
+  static NS_DEFINE_IID(kIXPFCMenuBarIID, NS_IXPFCMENUBAR_IID);
 
   if (aIID.Equals(kClassIID)) {                                          
     *aInstancePtr = (void*) this;                                        
@@ -71,8 +71,8 @@ nsresult nsMenuContainer::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
-  if (aIID.Equals(kIMenuBarIID)) {                                      
-    *aInstancePtr = (nsIMenuBar*) (this);                        
+  if (aIID.Equals(kIXPFCMenuBarIID)) {                                      
+    *aInstancePtr = (nsIXPFCMenuBar*) (this);                        
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
@@ -87,11 +87,11 @@ nsresult nsMenuContainer::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;                                                        
   }                                                                      
 
-  return (nsMenuItem::QueryInterface(aIID,aInstancePtr));
+  return (nsXPFCMenuItem::QueryInterface(aIID,aInstancePtr));
 
 }
 
-nsresult nsMenuContainer::Init()
+nsresult nsXPFCMenuContainer::Init()
 {
   static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
   nsresult res = nsRepository::CreateInstance(kCVectorCID, 
@@ -107,22 +107,22 @@ nsresult nsMenuContainer::Init()
   return NS_OK;
 }
 
-void* nsMenuContainer::GetNativeHandle()
+void* nsXPFCMenuContainer::GetNativeHandle()
 {
   return (nsnull);
 }
 
-nsresult nsMenuContainer :: SetParameter(nsString& aKey, nsString& aValue)
+nsresult nsXPFCMenuContainer :: SetParameter(nsString& aKey, nsString& aValue)
 {
-  return (nsMenuItem::SetParameter(aKey,aValue));
+  return (nsXPFCMenuItem::SetParameter(aKey,aValue));
 }
 
-nsresult nsMenuContainer :: AddMenuItem(nsIMenuItem * aMenuItem)
+nsresult nsXPFCMenuContainer :: AddMenuItem(nsIXPFCMenuItem * aMenuItem)
 {
   return NS_OK;
 }
 
-nsresult nsMenuContainer :: AddChild(nsIMenuItem * aItem)
+nsresult nsXPFCMenuContainer :: AddChild(nsIXPFCMenuItem * aItem)
 {
   mChildMenus->Append(aItem);
 
@@ -132,12 +132,12 @@ nsresult nsMenuContainer :: AddChild(nsIMenuItem * aItem)
 }
 
 
-nsresult nsMenuContainer :: Update()
+nsresult nsXPFCMenuContainer :: Update()
 {
   return NS_OK;
 }
 
-nsresult nsMenuContainer :: SetShellContainer(nsIShellInstance * aShellInstance,
+nsresult nsXPFCMenuContainer :: SetShellContainer(nsIShellInstance * aShellInstance,
                                              nsIWebViewerContainer * aWebViewerContainer)
 {
   mShellInstance = aShellInstance;
@@ -152,13 +152,13 @@ nsresult nsMenuContainer :: SetShellContainer(nsIShellInstance * aShellInstance,
   return (NS_OK);
 }
 
-nsIMenuItem * nsMenuContainer :: MenuItemFromID(PRUint32 aID)
+nsIXPFCMenuItem * nsXPFCMenuContainer :: MenuItemFromID(PRUint32 aID)
 {
   nsresult res;
   nsIIterator * iterator = nsnull;
-  nsIMenuItem * item = nsnull;
-  nsIMenuItem * child = nsnull;
-  nsIMenuContainer * container = nsnull;
+  nsIXPFCMenuItem * item = nsnull;
+  nsIXPFCMenuItem * child = nsnull;
+  nsIXPFCMenuContainer * container = nsnull;
   PRBool bFoundItem = PR_FALSE;
 
   res = mChildMenus->CreateIterator(&iterator);
@@ -170,7 +170,7 @@ nsIMenuItem * nsMenuContainer :: MenuItemFromID(PRUint32 aID)
 
   while(!(iterator->IsDone()))
   {
-    item = (nsIMenuItem *) iterator->CurrentItem();    
+    item = (nsIXPFCMenuItem *) iterator->CurrentItem();    
 
     if (item->GetMenuID() == aID)
     {
@@ -189,9 +189,9 @@ nsIMenuItem * nsMenuContainer :: MenuItemFromID(PRUint32 aID)
 
     while(!(iterator->IsDone()))
     {
-      child = (nsIMenuItem *) iterator->CurrentItem();    
+      child = (nsIXPFCMenuItem *) iterator->CurrentItem();    
 
-      res = child->QueryInterface(kCIMenuContainerIID, (void**)&container);
+      res = child->QueryInterface(kCIXPFCMenuContainerIID, (void**)&container);
 
       if (NS_OK == res)
       {
@@ -214,7 +214,7 @@ nsIMenuItem * nsMenuContainer :: MenuItemFromID(PRUint32 aID)
   return item;
 }
 
-nsresult nsMenuContainer :: Action(nsIXPFCCommand * aCommand)
+nsresult nsXPFCMenuContainer :: Action(nsIXPFCCommand * aCommand)
 {
   
   /*
@@ -243,7 +243,7 @@ nsresult nsMenuContainer :: Action(nsIXPFCCommand * aCommand)
   return NS_OK;
 }
 
-nsresult nsMenuContainer::ProcessActionCommand(nsString& aAction)
+nsresult nsXPFCMenuContainer::ProcessActionCommand(nsString& aAction)
 {
   /*
    * Handle File Open...

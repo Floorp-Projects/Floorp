@@ -16,20 +16,20 @@
  * Reserved.
  */
 
-#ifndef __NS_MENU_CONTAINER
-#define __NS_MENU_CONTAINER
+#ifndef __NS_XPFCMENU_CONTAINER
+#define __NS_XPFCMENU_CONTAINER
 
-#include "nsIMenuContainer.h"
-#include "nsIMenuBar.h"
-#include "nsMenuItem.h"
+#include "nsIXPFCMenuContainer.h"
+#include "nsIXPFCMenuBar.h"
+#include "nsXPFCMenuItem.h"
 #include "nsIVector.h"
 #include "nsIIterator.h"
 #include "nsIXPFCCommandReceiver.h"
 
-class nsMenuContainer : public nsIMenuContainer,
-                        public nsIMenuBar,
+class nsXPFCMenuContainer : public nsIXPFCMenuContainer,
+                        public nsIXPFCMenuBar,
                         public nsIXPFCCommandReceiver,
-                        public nsMenuItem
+                        public nsXPFCMenuItem
 {
 
 public:
@@ -38,8 +38,8 @@ public:
    * Constructor and Destructor
    */
 
-  nsMenuContainer();
-  ~nsMenuContainer();
+  nsXPFCMenuContainer();
+  ~nsXPFCMenuContainer();
 
   /**
    * ISupports Interface
@@ -52,16 +52,16 @@ public:
    */
   NS_IMETHOD Init();
 
-  NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
+  NS_IMETHOD AddMenuItem(nsIXPFCMenuItem * aMenuItem);
   NS_IMETHOD_(void*) GetNativeHandle();
 
   // nsIXMLParserObject methods
   NS_IMETHOD SetParameter(nsString& aKey, nsString& aValue) ;
 
-  NS_IMETHOD AddChild(nsIMenuItem * aItem);
+  NS_IMETHOD AddChild(nsIXPFCMenuItem * aItem);
   NS_IMETHOD Update() ;
   NS_IMETHOD SetShellContainer(nsIShellInstance * aShellInstance,nsIWebViewerContainer * aWebViewerContainer)  ;
-  NS_IMETHOD_(nsIMenuItem *) MenuItemFromID(PRUint32 aID) ;
+  NS_IMETHOD_(nsIXPFCMenuItem *) MenuItemFromID(PRUint32 aID) ;
   NS_IMETHOD Action(nsIXPFCCommand * aCommand) ;
 
 private:

@@ -21,9 +21,9 @@
 #include "nsxpfcCIID.h"
 #include "nsIXMLParserObject.h"
 #include "nsXPFCXMLContentSink.h"
-#include "nsIMenuBar.h"
-#include "nsIMenuItem.h"
-#include "nsIMenuContainer.h"
+#include "nsIXPFCMenuBar.h"
+#include "nsIXPFCMenuItem.h"
+#include "nsIXPFCMenuContainer.h"
 #include "nsIXPFCCanvas.h"
 #include "nsIButton.h"
 #include "nsITextWidget.h"
@@ -36,12 +36,12 @@ static NS_DEFINE_IID(kIContentSinkIID,      NS_ICONTENT_SINK_IID);
 static NS_DEFINE_IID(kClassIID,             NS_XPFCXMLCONTENTSINK_IID); 
 static NS_DEFINE_IID(kIHTMLContentSinkIID,  NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIXMLParserObjectIID,  NS_IXML_PARSER_OBJECT_IID);
-static NS_DEFINE_IID(kCMenuBarCID,          NS_MENUBAR_CID);
-static NS_DEFINE_IID(kCMenuItemCID,         NS_MENUITEM_CID);
-static NS_DEFINE_IID(kCMenuContainerCID,    NS_MENUCONTAINER_CID);
-static NS_DEFINE_IID(kCIMenuBarIID,         NS_IMENUBAR_IID);
-static NS_DEFINE_IID(kCIMenuItemIID,        NS_IMENUITEM_IID);
-static NS_DEFINE_IID(kCIMenuContainerIID,   NS_IMENUCONTAINER_IID);
+static NS_DEFINE_IID(kCXPFCMenuBarCID,          NS_XPFCMENUBAR_CID);
+static NS_DEFINE_IID(kCXPFCMenuItemCID,         NS_XPFCMENUITEM_CID);
+static NS_DEFINE_IID(kCXPFCMenuContainerCID,    NS_XPFCMENUCONTAINER_CID);
+static NS_DEFINE_IID(kCIXPFCMenuBarIID,         NS_IXPFCMENUBAR_IID);
+static NS_DEFINE_IID(kCIXPFCMenuItemIID,        NS_IXPFCMENUITEM_IID);
+static NS_DEFINE_IID(kCIXPFCMenuContainerIID,   NS_IXPFCMENUCONTAINER_IID);
 static NS_DEFINE_IID(kCXPFCToolbarCID,      NS_XPFC_TOOLBAR_CID);
 static NS_DEFINE_IID(kCIXPFCToolbarIID,     NS_IXPFC_TOOLBAR_IID);
 static NS_DEFINE_IID(kCXPFCDialogCID,       NS_XPFC_DIALOG_CID);
@@ -262,8 +262,8 @@ NS_IMETHODIMP nsXPFCXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
   if (eXPFCXMLTag_menubar == tag)
   {
-    nsIMenuBar * menubar;
-    res = object->QueryInterface(kCIMenuBarIID,(void**)&menubar);
+    nsIXPFCMenuBar * menubar;
+    res = object->QueryInterface(kCIXPFCMenuBarIID,(void**)&menubar);
 
     if (NS_OK == res)
     {
@@ -532,12 +532,12 @@ NS_IMETHODIMP nsXPFCXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
        * item->object is the parent container
        * item->container is the name of the target child container
        *
-       * There should be a nsIMenuContainer in the free list with this
+       * There should be a nsIXPFCMenuContainer in the free list with this
        * name.  Let's find it, make it the child, and remove from free list
        */
 
         nsIIterator * iterator2 ;
-        nsIMenuContainer * menu_container;
+        nsIXPFCMenuContainer * menu_container;
         nsString child;
 
         nsresult res = mOrphanMenuList->CreateIterator(&iterator2);
@@ -549,12 +549,12 @@ NS_IMETHODIMP nsXPFCXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
         while(!(iterator2->IsDone()))
         {
-          menu_container = (nsIMenuContainer *) iterator2->CurrentItem();
+          menu_container = (nsIXPFCMenuContainer *) iterator2->CurrentItem();
 
 
-          nsIMenuItem * container_item = nsnull;
+          nsIXPFCMenuItem * container_item = nsnull;
 
-          res = menu_container->QueryInterface(kCIMenuItemIID,(void**)&container_item);
+          res = menu_container->QueryInterface(kCIXPFCMenuItemIID,(void**)&container_item);
 
           if (res == NS_OK)
           {
@@ -567,12 +567,12 @@ NS_IMETHODIMP nsXPFCXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
                * Set as child
                */
 
-              nsIMenuContainer * parent = nsnull;
-              res = item->object->QueryInterface(kCIMenuContainerIID, (void**)&parent);
+              nsIXPFCMenuContainer * parent = nsnull;
+              res = item->object->QueryInterface(kCIXPFCMenuContainerIID, (void**)&parent);
 
               if (res == NS_OK)
               {
-                parent->AddChild((nsIMenuItem *)container_item);
+                parent->AddChild((nsIXPFCMenuItem *)container_item);
               }
 
               mOrphanMenuList->Remove(child);
@@ -629,15 +629,15 @@ NS_IMETHODIMP nsXPFCXMLContentSink::CIDFromTag(eXPFCXMLTags tag, nsCID &aClass)
   switch(tag)
   {
     case eXPFCXMLTag_menuitem:
-      aClass = kCMenuItemCID;
+      aClass = kCXPFCMenuItemCID;
       break;
 
     case eXPFCXMLTag_menucontainer:
-      aClass = kCMenuContainerCID;
+      aClass = kCXPFCMenuContainerCID;
       break;
 
     case eXPFCXMLTag_menubar:
-      aClass = kCMenuBarCID;
+      aClass = kCXPFCMenuBarCID;
       break;
 
     case eXPFCXMLTag_toolbar:
@@ -795,12 +795,12 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
   } else if (mState == XPFC_PARSING_STATE_MENUBAR)
   {
 
-    nsIMenuContainer * container  = nsnull;
-    nsIMenuContainer * parent = nsnull;
+    nsIXPFCMenuContainer * container  = nsnull;
+    nsIXPFCMenuContainer * parent = nsnull;
 
-    nsresult res = aObject.QueryInterface(kCIMenuContainerIID,(void**)&container);
+    nsresult res = aObject.QueryInterface(kCIXPFCMenuContainerIID,(void**)&container);
 
-    parent = (nsIMenuContainer *) mXPFCStack->Top();
+    parent = (nsIXPFCMenuContainer *) mXPFCStack->Top();
 
     if (NS_OK != res)
     {
@@ -808,9 +808,9 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
       /*
        *  Must be a menu item.  Add as child to top of stack
        */
-      nsIMenuItem * item  = nsnull;
+      nsIXPFCMenuItem * item  = nsnull;
 
-      aObject.QueryInterface(kCIMenuItemIID,(void**)&item);
+      aObject.QueryInterface(kCIXPFCMenuItemIID,(void**)&item);
 
       parent->AddChild(item);
 
@@ -825,9 +825,9 @@ NS_IMETHODIMP nsXPFCXMLContentSink::AddToHierarchy(nsIXMLParserObject& aObject, 
 
     if (res == NS_OK && parent != nsnull)
     {
-      nsIMenuItem * item  = nsnull;
+      nsIXPFCMenuItem * item  = nsnull;
 
-      nsresult res = aObject.QueryInterface(kCIMenuItemIID,(void**)&item);
+      nsresult res = aObject.QueryInterface(kCIXPFCMenuItemIID,(void**)&item);
 
       parent->AddChild(item);
 

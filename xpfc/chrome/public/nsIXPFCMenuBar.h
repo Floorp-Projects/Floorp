@@ -16,30 +16,29 @@
  * Reserved.
  */
 
-#ifndef nsToolbarManager_h___
-#define nsToolbarManager_h___
+#ifndef nsIXPFCMenuBar_h___
+#define nsIXPFCMenuBar_h___
 
-#include "nsIToolbarManager.h"
-#include "nsIVector.h"
-#include "nsIIterator.h"
+#include "nsISupports.h"
+#include "nsIShellInstance.h"
+#include "nsIXPFCMenuItem.h"
+#include "nsIXPFCMenuContainer.h"
+#include "nsIWebViewerContainer.h"
 
-class nsToolbarManager : public nsIToolbarManager
+// 52fb95f0-2cbe-11d2-9246-00805f8a7ab6
+#define NS_IXPFCMENUBAR_IID      \
+ { 0x52fb95f0, 0x2cbe, 0x11d2, \
+   {0x92, 0x46, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xb6} }
+
+class nsIXPFCMenuBar : public nsISupports
 {
 
 public:
-  nsToolbarManager();
 
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD                 Init();
-  NS_IMETHOD                 AddToolbar(nsIXPFCToolbar * aToolbar);
-
-protected:
-  ~nsToolbarManager();
-
-private:
-  nsIVector * mToolbars;
-
+  NS_IMETHOD SetShellContainer(nsIShellInstance * aShellInstance,
+                               nsIWebViewerContainer * aWebViewerContainer) = 0 ;
+  NS_IMETHOD_(nsIXPFCMenuItem *) MenuItemFromID(PRUint32 aID) = 0;
 };
 
-#endif /* nsToolbarManager_h___ */
+#endif /* nsIXPFCMenuBar_h___ */
+

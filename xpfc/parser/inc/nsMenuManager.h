@@ -32,10 +32,10 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD                 Init();
-  NS_IMETHOD                 SetMenuBar(nsIMenuBar * aMenuBar);
-  NS_IMETHOD_(nsIMenuBar *)  GetMenuBar();
-  NS_IMETHOD                 AddMenuContainer(nsIMenuContainer * aMenuContainer) ;
-  NS_IMETHOD_(nsIMenuItem *) MenuItemFromID(PRUint32 aID) ;
+  NS_IMETHOD                 SetMenuBar(nsIXPFCMenuBar * aMenuBar);
+  NS_IMETHOD_(nsIXPFCMenuBar *)  GetMenuBar();
+  NS_IMETHOD                 AddMenuContainer(nsIXPFCMenuContainer * aMenuContainer) ;
+  NS_IMETHOD_(nsIXPFCMenuItem *) MenuItemFromID(PRUint32 aID) ;
   NS_IMETHOD_(PRUint32)      GetID();
   NS_IMETHOD_(nsIXPFCCommandReceiver*) GetDefaultReceiver() ;
   NS_IMETHOD SetDefaultReceiver(nsIXPFCCommandReceiver* aReceiver) ;
@@ -44,7 +44,7 @@ protected:
   ~nsMenuManager();
 
 private:
-  nsIMenuBar * mMenuBar;
+  nsIXPFCMenuBar * mMenuBar;
   nsIVector * mMenuContainers;
   PRUint32    mValidMenuID;
   nsIXPFCCommandReceiver * mDefaultReceiver;

@@ -11,9 +11,9 @@ GDEPTH = ../../..
 DEPTH = ../../../..
 
 EXPORTS = \
-	nsIMenuBar.h \
-	nsIMenuContainer.h \
-	nsIMenuItem.h \
+	nsIXPFCMenuBar.h \
+	nsIXPFCMenuContainer.h \
+	nsIXPFCMenuItem.h \
     nsIXPFCToolbar.h \
 	$(NULL)
 

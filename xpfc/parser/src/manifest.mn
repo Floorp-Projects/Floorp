@@ -21,7 +21,7 @@ CPPSRCS = \
 	nsXPFCXMLContentSink.cpp \
 	nsXPFCXMLDTD.cpp \
     nsMenuManager.cpp \
-    nsToolbarManager.cpp \
+    nsXPFCToolbarManager.cpp \
 	$(NULL)
 
 REQUIRES = xpcom raptor netlib xpfc

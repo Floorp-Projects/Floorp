@@ -16,22 +16,22 @@
  * Reserved.
  */
 
-#include "nsToolbarManager.h"
+#include "nsXPFCToolbarManager.h"
 #include "nsxpfcCIID.h"
 #include "nsxpfcutil.h"
 #include "nsIXPFCToolbar.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCToolbarManagerCID, NS_TOOLBAR_MANAGER_CID);
-static NS_DEFINE_IID(kIToolbarManagerIID, NS_ITOOLBAR_MANAGER_IID);
+static NS_DEFINE_IID(kCXPFCToolbarManagerCID, NS_XPFCTOOLBAR_MANAGER_CID);
+static NS_DEFINE_IID(kIXPFCToolbarManagerIID, NS_IXPFCTOOLBAR_MANAGER_IID);
 
-nsToolbarManager :: nsToolbarManager()
+nsXPFCToolbarManager :: nsXPFCToolbarManager()
 {
   NS_INIT_REFCNT();
   mToolbars = nsnull;
 }
 
-nsToolbarManager :: ~nsToolbarManager()
+nsXPFCToolbarManager :: ~nsXPFCToolbarManager()
 {
   if (mToolbars != nsnull) 
   {
@@ -41,11 +41,11 @@ nsToolbarManager :: ~nsToolbarManager()
 
 }
 
-NS_IMPL_QUERY_INTERFACE(nsToolbarManager, kIToolbarManagerIID)
-NS_IMPL_ADDREF(nsToolbarManager)
-NS_IMPL_RELEASE(nsToolbarManager)
+NS_IMPL_QUERY_INTERFACE(nsXPFCToolbarManager, kIXPFCToolbarManagerIID)
+NS_IMPL_ADDREF(nsXPFCToolbarManager)
+NS_IMPL_RELEASE(nsXPFCToolbarManager)
 
-nsresult nsToolbarManager :: Init()
+nsresult nsXPFCToolbarManager :: Init()
 {
   static NS_DEFINE_IID(kCVectorCID, NS_VECTOR_CID);
   nsresult res = nsRepository::CreateInstance(kCVectorCID, 
@@ -61,7 +61,7 @@ nsresult nsToolbarManager :: Init()
   return NS_OK ;
 }
 
-nsresult nsToolbarManager :: AddToolbar(nsIXPFCToolbar * aToolbar)
+nsresult nsXPFCToolbarManager :: AddToolbar(nsIXPFCToolbar * aToolbar)
 {
   mToolbars->Append(aToolbar);
   return NS_OK ;

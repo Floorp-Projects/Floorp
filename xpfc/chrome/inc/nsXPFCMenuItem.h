@@ -16,14 +16,14 @@
  * Reserved.
  */
 
-#ifndef __NS_MENU_ITEM
-#define __NS_MENU_ITEM
+#ifndef __NS_XPFCMENU_ITEM
+#define __NS_XPFCMENU_ITEM
 
-#include "nsIMenuItem.h"
+#include "nsIXPFCMenuItem.h"
 #include "nsIXMLParserObject.h"
 #include "nsIXPFCCommandReceiver.h"
 
-class nsMenuItem : public nsIMenuItem,
+class nsXPFCMenuItem : public nsIXPFCMenuItem,
                    public nsIXMLParserObject
 {
 
@@ -33,8 +33,8 @@ public:
    * Constructor and Destructor
    */
 
-  nsMenuItem();
-  ~nsMenuItem();
+  nsXPFCMenuItem();
+  ~nsXPFCMenuItem();
 
   /**
    * ISupports Interface
@@ -57,8 +57,8 @@ public:
   NS_IMETHOD SetCommand(nsString& aLabel);
   NS_IMETHOD_(nsString&) GetCommand();
 
-  NS_IMETHOD_(nsIMenuContainer *) GetParent();
-  NS_IMETHOD SetParent(nsIMenuContainer * aMenuContainer);
+  NS_IMETHOD_(nsIXPFCMenuContainer *) GetParent();
+  NS_IMETHOD SetParent(nsIXPFCMenuContainer * aMenuContainer);
 
   NS_IMETHOD_(PRBool) IsSeparator() ;
 
@@ -78,7 +78,7 @@ private:
   nsString mName;
   nsString mLabel;
   nsString mCommand;
-  nsIMenuContainer * mParent;
+  nsIXPFCMenuContainer * mParent;
   PRBool mSeparator;
   nsAlignmentStyle mAlignmentStyle;
   PRUint32 mID;

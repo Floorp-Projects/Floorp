@@ -38,7 +38,7 @@
 
 #include "nsIPref.h"
 #include "nsStreamManager.h"
-#include "nsToolbarManager.h"
+#include "nsXPFCToolbarManager.h"
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -65,8 +65,8 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCShellInstance, NS_XPFC_SHELL_INSTANCE_CID);
 static NS_DEFINE_IID(kCStreamManager, NS_STREAM_MANAGER_CID);
 static NS_DEFINE_IID(kIStreamManager, NS_ISTREAM_MANAGER_IID);
-static NS_DEFINE_IID(kCToolbarManager, NS_TOOLBAR_MANAGER_CID);
-static NS_DEFINE_IID(kIToolbarManager, NS_ITOOLBAR_MANAGER_IID);
+static NS_DEFINE_IID(kCXPFCToolbarManager, NS_XPFCTOOLBAR_MANAGER_CID);
+static NS_DEFINE_IID(kIXPFCToolbarManager, NS_IXPFCTOOLBAR_MANAGER_IID);
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
@@ -132,9 +132,9 @@ nsresult nsShellInstance::Init()
 
 
   // Create a Toolbar Manager
-  res = nsRepository::CreateInstance(kCToolbarManager, 
+  res = nsRepository::CreateInstance(kCXPFCToolbarManager, 
                                      NULL, 
-                                     kIToolbarManager,
+                                     kIXPFCToolbarManager,
                                      (void **) &mToolbarManager);
   if (NS_OK != res)
     return res;
@@ -206,7 +206,7 @@ nsIStreamManager * nsShellInstance::GetStreamManager()
   return (mStreamManager) ;
 }
 
-nsIToolbarManager * nsShellInstance::GetToolbarManager()
+nsIXPFCToolbarManager * nsShellInstance::GetToolbarManager()
 {
   return (mToolbarManager) ;
 }
@@ -481,7 +481,7 @@ nsEventStatus PR_CALLBACK HandleEventApplication(nsGUIEvent *aEvent)
 
       nsIMenuManager * menumgr = viewer->GetMenuManager();
 
-      nsIMenuItem * item = menumgr->MenuItemFromID(event->menuItem);
+      nsIXPFCMenuItem * item = menumgr->MenuItemFromID(event->menuItem);
 
       item->SendCommand();
 

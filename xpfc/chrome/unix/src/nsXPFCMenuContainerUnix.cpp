@@ -17,7 +17,7 @@
  */
 
 #include "nscore.h"
-#include "nsMenuContainerUnix.h"
+#include "nsXPFCMenuContainerUnix.h"
 
 #include <Xm/Xm.h>
 #include <Xm/CascadeBG.h>
@@ -26,35 +26,35 @@
 #include <Xm/RowColumn.h>
 #include <Xm/CascadeBG.h>
 
-static NS_DEFINE_IID(kCIMenuContainerIID, NS_IMENUCONTAINER_IID);
-static NS_DEFINE_IID(kCIMenuItemIID, NS_IMENUITEM_IID);
+static NS_DEFINE_IID(kCIXPFCMenuContainerIID, NS_IXPFCMENUCONTAINER_IID);
+static NS_DEFINE_IID(kCIXPFCMenuItemIID, NS_IXPFCMENUITEM_IID);
 
-nsMenuContainerUnix::nsMenuContainerUnix() : nsMenuContainer()
+nsXPFCMenuContainerUnix::nsXPFCMenuContainerUnix() : nsXPFCMenuContainer()
 {
   mMenuBar = nsnull;
 }
 
-nsMenuContainerUnix::~nsMenuContainerUnix()
+nsXPFCMenuContainerUnix::~nsXPFCMenuContainerUnix()
 {
 }
 
-void* nsMenuContainerUnix::GetNativeHandle()
+void* nsXPFCMenuContainerUnix::GetNativeHandle()
 {
   return nsnull;
 }
 
-nsresult nsMenuContainerUnix :: AddMenuItem(nsIMenuItem * aMenuItem)
+nsresult nsXPFCMenuContainerUnix :: AddMenuItem(nsIXPFCMenuItem * aMenuItem)
 {
   return NS_OK;
 }
 
 
-nsresult nsMenuContainerUnix :: Update()
+nsresult nsXPFCMenuContainerUnix :: Update()
 {
   return NS_OK;
 }
 
-nsresult nsMenuContainerUnix :: SetShellInstance(nsIShellInstance * aShellInstance)
+nsresult nsXPFCMenuContainerUnix :: SetShellInstance(nsIShellInstance * aShellInstance)
 {
   nsIWidget * window = aShellInstance->GetApplicationWidget();
 

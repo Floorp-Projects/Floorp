@@ -13,8 +13,8 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
-	nsMenuContainer.h \
-	nsMenuItem.h \
+	nsXPFCMenuContainer.h \
+	nsXPFCMenuItem.h \
     nsXPFCToolbar.h \
 	$(NULL)
 

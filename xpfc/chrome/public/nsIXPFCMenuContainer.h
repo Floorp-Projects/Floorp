@@ -16,36 +16,36 @@
  * Reserved.
  */
 
-#ifndef nsIMenuContainer_h___
-#define nsIMenuContainer_h___
+#ifndef nsIXPFCMenuContainer_h___
+#define nsIXPFCMenuContainer_h___
 
 #include "nsISupports.h"
 #include "nsIShellInstance.h"
-#include "nsIMenuItem.h"
+#include "nsIXPFCMenuItem.h"
 
 // 0b396820-2f54-11d2-bede-00805f8a8dbd
-#define NS_IMENUCONTAINER_IID      \
+#define NS_IXPFCMENUCONTAINER_IID      \
  { 0x0b396820, 0x2f54, 0x11d2, \
    {0xbe, 0xde, 0x00, 0x80, 0x5f, 0x8a, 0x8d, 0xbd} }
 
-class nsIMenuContainer : public nsISupports 
+class nsIXPFCMenuContainer : public nsISupports 
 {
 
 public:
 
   /**
-   * Initialize the MenuContainer
+   * Initialize the XPFCMenuContainer
    * @result The result of the initialization, NS_Ok if no errors
    */
   NS_IMETHOD Init() = 0;
 
-  NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem) = 0;
+  NS_IMETHOD AddMenuItem(nsIXPFCMenuItem * aMenuItem) = 0;
   NS_IMETHOD_(void*) GetNativeHandle() = 0;
-  NS_IMETHOD AddChild(nsIMenuItem * aItem) = 0;
+  NS_IMETHOD AddChild(nsIXPFCMenuItem * aItem) = 0;
   NS_IMETHOD Update() = 0;
-  NS_IMETHOD_(nsIMenuItem *) MenuItemFromID(PRUint32 aID) = 0;
+  NS_IMETHOD_(nsIXPFCMenuItem *) MenuItemFromID(PRUint32 aID) = 0;
 
 };
 
-#endif /* nsIMenuContainer_h___ */
+#endif /* nsIXPFCMenuContainer_h___ */
 
