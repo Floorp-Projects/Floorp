@@ -98,18 +98,18 @@ const char *xulExts[]  = { ".xul", 0 };
 const char *htmExts[]  = { ".htm", ".html", ".shtml", 0 };
 
 static FileTypeRegistryEntry
-    jpg(   jpgExts,  "MozillaJPEG",  "Mozilla Joint Photographic Experts Group Image File" ),
-    gif(   gifExts,  "MozillaGIF",   "Mozilla Graphics Interchange Format Image File" ),
-    png(   pngExts,  "MozillaPNG",   "Mozilla Portable Network Graphic Image File" ),
-    mng(   mngExts,  "MozillaMNG",   "Mozilla Multiple-Image Network Graphic Image File" ),
-    bmp(   bmpExts,  "MozillaBMP",   "Mozilla Bitmap Image File" ),
-    ico(   icoExts,  "MozillaICO",   "Mozilla Icon File" ),
-    xml(   xmlExts,  "MozillaXML",   "Mozilla XML File Document" ),
-    xhtml( xhtmExts, "MozillaXHTML", "Mozilla XHTML File Document" ),
-    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL File Document" );
+    jpg(   jpgExts,  "MozillaJPEG",  "JPEG Image",          "jpegfile" ),
+    gif(   gifExts,  "MozillaGIF",   "GIF Image",           "giffile" ),
+    png(   pngExts,  "MozillaPNG",   "PNG Image",           "pngfile" ),
+    mng(   mngExts,  "MozillaMNG",   "MNG Image",           ""),
+    bmp(   bmpExts,  "MozillaBMP",   "BMP Image",           "" ),
+    ico(   icoExts,  "MozillaICO",   "Icon",                "icofile" ),
+    xml(   xmlExts,  "MozillaXML",   "XML Document",        "xmlfile" ),
+    xhtml( xhtmExts, "MozillaXHTML", "XHTML Document",      "" ),
+    xul(   xulExts,  "MozillaXUL",   "Mozilla XUL Document", "" );
 
 static EditableFileTypeRegistryEntry
-    mozillaMarkup( htmExts, "MozillaHTML", "Mozilla HyperText Markup Language Document" );
+    mozillaMarkup( htmExts, "MozillaHTML", "HTML Document", "htmlfile" );
 
 // Implementation of the nsIWindowsHooksSettings interface.
 // Use standard implementation of nsISupports stuff.
@@ -329,8 +329,8 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
             settings->mHandleGIF    = PR_TRUE;
             settings->mHandlePNG    = PR_TRUE;
             settings->mHandleMNG    = PR_TRUE;
-            settings->mHandleBMP    = PR_TRUE;
-            settings->mHandleICO    = PR_TRUE;
+            settings->mHandleBMP    = PR_FALSE;
+            settings->mHandleICO    = PR_FALSE;
             settings->mHandleXML    = PR_TRUE;
             settings->mHandleXHTML  = PR_TRUE;
             settings->mHandleXUL    = PR_TRUE;

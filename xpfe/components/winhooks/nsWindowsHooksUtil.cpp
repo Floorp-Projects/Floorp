@@ -204,15 +204,20 @@ struct DDERegistryEntry : public SavedRegistryEntry {
 // For setting entries relating to a file extension (or extensions).
 // This object itself is for the "file type" associated with the extension.
 // Set/reset manage the mapping from extension to the file type, as well.
+// The description is taken from defDescKey if available. Otherwise desc 
+// is used.
 struct FileTypeRegistryEntry : public ProtocolRegistryEntry {
     nsCString fileType;
     const char **ext;
     nsCString desc;
-    FileTypeRegistryEntry ( const char **ext, const char *fileType, const char *desc )
+    nsCString defDescKey;
+    FileTypeRegistryEntry ( const char **ext, const char *fileType, 
+        const char *desc, const char *defDescKey )
         : ProtocolRegistryEntry( fileType ),
           fileType( fileType ),
           ext( ext ),
-          desc( desc ) {
+          desc( desc ),
+          defDescKey(defDescKey) {
     }
     nsresult set();
     nsresult reset();
@@ -222,8 +227,9 @@ struct FileTypeRegistryEntry : public ProtocolRegistryEntry {
 //
 // Extends FileTypeRegistryEntry by setting an additional handler for an "edit" command.
 struct EditableFileTypeRegistryEntry : public FileTypeRegistryEntry {
-    EditableFileTypeRegistryEntry( const char **ext, const char *fileType, const char *desc )
-        : FileTypeRegistryEntry( ext, fileType, desc ) {
+    EditableFileTypeRegistryEntry( const char **ext, const char *fileType, 
+        const char *desc, const char *defDescKey )
+        : FileTypeRegistryEntry( ext, fileType, desc, defDescKey ) {
     }
     nsresult set();
 };
@@ -559,8 +565,15 @@ nsresult FileTypeRegistryEntry::set() {
         if ( NS_SUCCEEDED( rv ) ) {
             nsCAutoString descKey( "Software\\Classes\\" );
             descKey += protocol;
-            RegistryEntry descEntry( HKEY_LOCAL_MACHINE, descKey.get(), NULL, desc.get() );
+            RegistryEntry descEntry( HKEY_LOCAL_MACHINE, descKey.get(), NULL, "" );
             if ( descEntry.currentSetting().IsEmpty() ) {
+                nsCAutoString defaultDescKey( "Software\\Classes\\" );
+                defaultDescKey += defDescKey;
+                RegistryEntry defaultDescEntry( HKEY_LOCAL_MACHINE, defaultDescKey.get(), NULL, "" );
+
+                descEntry.setting = defaultDescEntry.currentSetting();
+                if ( descEntry.setting.IsEmpty() )
+                    descEntry.setting = desc;
                 descEntry.set();
             }
             nsCAutoString iconKey( "Software\\Classes\\" );
