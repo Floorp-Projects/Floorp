@@ -874,6 +874,7 @@
           </menu>
     
 #ifdef XP_MACOSX
+<!-- XXXnoririty localize! -->
         <menu id="windowMenu" label="Window"
             datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
             onpopupshown="checkFocusedWindow();">
