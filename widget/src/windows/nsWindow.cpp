@@ -42,10 +42,12 @@
 #include "nsIMenuListener.h"
 #include "nsMenuItem.h"
 
-//#define DRAG_DROP 1
 
 #ifdef DRAG_DROP
-#include "nsDropTarget.h"
+//#include "nsDropTarget.h"
+#include "DragDrop.h"
+#include "DropTar.h"
+#include "DropSrc.h"
 #endif
 
 BOOL nsWindow::sIsRegistered = FALSE;
@@ -99,7 +101,9 @@ nsWindow::nsWindow() : nsBaseWidget()
     mVScrollbar         = nsnull;
 
 #ifdef DRAG_DROP
+    mDragDrop           = nsnull;
     mDropTarget         = nsnull;
+    mDropSource         = nsnull;
 #endif
 }
 
@@ -130,6 +134,10 @@ nsWindow::~nsWindow()
   NS_IF_RELEASE(mHitMenu); // this should always have already been freed by the deselect
 #ifdef DRAG_DROP
   NS_IF_RELEASE(mDropTarget); 
+  NS_IF_RELEASE(mDropSource); 
+  if (mDragDrop)
+    delete mDragDrop;
+  //NS_IF_RELEASE(mDragDrop); 
 #endif
 
   //XXX Temporary: Should not be caching the font
@@ -574,13 +582,23 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      gOLEInited = TRUE;
    }
 
-   mDropTarget = new nsDropTarget(this);
+   mDragDrop = new CfDragDrop();
+   //mDragDrop->AddRef();
+   mDragDrop->Initialize(this);
+
+   /*mDropTarget = new CfDropTarget(*mDragDrop);
+   mDropTarget->AddRef();
+
+   mDropSource = new CfDropSource(*mDragDrop);
+   mDropSource->AddRef();*/
+
+   /*mDropTarget = new nsDropTarget(this);
    mDropTarget->AddRef();
    if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mDropTarget,TRUE,FALSE)) {
      if (S_OK == ::RegisterDragDrop(mWnd, (LPDROPTARGET)mDropTarget)) {
 
      }
-   }
+   }*/
 #endif
 
     // call the event callback to notify about creation
@@ -1308,8 +1326,16 @@ BOOL nsWindow::CallMethod(MethodInfo *info)
 // OnKey
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
+
+PRBool nsWindow::OnKey(PRUint32 aEventType, UINT nChar, UINT nRepCnt, UINT nFlags)
 {
+  if (nChar == NS_VK_CAPS_LOCK ||
+      nChar == NS_VK_ALT ||
+      nChar == NS_VK_SHIFT ||
+      nChar == NS_VK_CONTROL) {
+    return FALSE;
+  }
+
   nsKeyEvent event;
   nsPoint point;
 
@@ -1317,7 +1343,16 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
   point.y = 0;
 
   InitEvent(event, aEventType, &point);
-  event.keyCode   = aKeyCode;
+
+  // Now let windows do the conversion to the ascii code
+  WORD asciiChar = 0;
+  BYTE kbstate[256];
+  ::GetKeyboardState(kbstate);
+  ToAscii(nChar, nFlags & 0xff, kbstate, &asciiChar, 0);
+
+  event.keyCode = nChar;
+  event.charCode = (char)asciiChar;
+
   event.isShift   = mIsShiftDown;
   event.isControl = mIsControlDown;
   event.isAlt     = mIsAltDown;
@@ -1720,8 +1755,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
             mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-
-            result = OnKey(NS_KEY_UP, wParam);
+            {
+            LONG data = (LONG)lParam;
+            LONG newdata = (data & 0x00FF00);
+            //LONG newdata2 = (data & 0xFFFF00F);
+            int x = 0;
+            }
+            result = OnKey(NS_KEY_UP, wParam, LOWORD(lParam), HIWORD(lParam));
             break;
 
         case WM_KEYDOWN:
@@ -1730,7 +1770,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
             mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
 
-            result = OnKey(NS_KEY_DOWN, wParam);
+            result = OnKey(NS_KEY_DOWN, wParam, LOWORD(lParam), HIWORD(lParam));
             break;
 
         // say we've dealt with erase background if widget does
