@@ -899,7 +899,7 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
           // The filename must be ASCII, see RFC 2183, section 2.3
           CopyASCIItoUCS2(Substring(start, iter), mSuggestedFileName);
 
-#ifndef XP_MAC
+#ifdef XP_WIN
           // Make sure extension is still correct.
           EnsureSuggestedFileName();
 #endif
@@ -1039,7 +1039,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
       NS_UnescapeURL(leafName);
       mSuggestedFileName = NS_ConvertUTF8toUCS2(leafName); // XXX leafName may not be UTF-8
 
-#ifndef XP_MAC
+#ifdef XP_WIN
       // Make sure extension is still correct.
       EnsureSuggestedFileName();
 #endif
