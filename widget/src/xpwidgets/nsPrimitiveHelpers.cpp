@@ -164,6 +164,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   if ( *outPlainTextLen ) {
     *outPlainTextData = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(*outPlainTextLen + sizeof(char)));
     if ( *outPlainTextData ) {
+      rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
       rv = encoder->Convert(inUnicode, &inUnicodeLen, *outPlainTextData, outPlainTextLen);
       (*outPlainTextData)[*outPlainTextLen] = '\0';          // null terminate. Convert() doesn't do it for us
     }
