@@ -56,8 +56,8 @@
           </rule>
         </template>
       </box>
-      <html:iframe id="sidebar-content" type="content" src="about:blank" 
-        class="panel-frame" flex='1*'/>
+      <html:iframe id="sidebar-content" type="xxx-content" src="about:blank" 
+        name="sidebar-content" class="panel-frame" flex='1*'/>
       <box id="sidebar-panels-bottom" align="vertical"
         datasources="chrome://sidebar/content/local-panels.rdf chrome://sidebar/content/remote-panels.rdf">
         <template>
