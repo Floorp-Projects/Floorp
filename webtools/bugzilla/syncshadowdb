@@ -32,6 +32,7 @@ require "defparams.pl";
 
 sub sillyness {
     my $zz;
+    open SAVEOUT,">/dev/null";
     $zz = $::db;
     $zz = $::dbwritesallowed;
 }
