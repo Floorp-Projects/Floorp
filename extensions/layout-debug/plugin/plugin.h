@@ -61,6 +61,7 @@ public:
 
   // locals
   void    getVersion(char* *aVersion);
+  void    CreateDirectory(const PRUnichar *aFilePath, PRUint32 aFlags, PRInt32 *aRetVal);
   void    OutPutLayoutFrames(nsISupports *aWindow,const PRUnichar *aFilePath, const PRUnichar *aFileName, PRUint32 aFlags, PRInt32 *aRetVal);
   void    CompareLayoutFrames(const PRUnichar *aBasePath, const PRUnichar *aVerPath, 
               const PRUnichar *aBaseFile, const PRUnichar *aVerFile, PRUint32 aFlags, PRInt32 *aRetVal);

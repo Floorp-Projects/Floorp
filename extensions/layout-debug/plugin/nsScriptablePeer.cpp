@@ -117,6 +117,20 @@ NS_IMETHODIMP nsScriptablePeer::GetVersion(char * *aVersion)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP nsScriptablePeer::CreateDirectory(const PRUnichar *aFilePath,PRUint32 aFlags, PRInt32 *aResult)
+{
+nsresult  rv = NS_OK;
+PRBool    retVal;
+
+  if ( mPlugin ) {
+    mPlugin->CreateDirectory(aFilePath,aFlags,&retVal);
+  }
+  return NS_OK;
+}
+
+
+
 NS_IMETHODIMP nsScriptablePeer::DumpLayout(nsISupports *aWindow, const PRUnichar *aFilePath, const PRUnichar *aFileName, 
                                            PRUint32 aFlags, PRInt32 *aResult)
 {
@@ -127,8 +141,10 @@ PRBool    retVal;
     mPlugin->OutPutLayoutFrames(aWindow,aFilePath,aFileName,aFlags,&retVal);
     if (retVal == NS_OK) {
       *aResult= 0;
+    } else if ( retVal == NS_ERROR_FILE_INVALID_PATH ) {
+      *aResult = 2;     // fatal error.. stop exection
     } else {
-      *aResult = 1;
+      *aResult = 1;     // did not load.. keep going
     }
   }
   return rv;

@@ -25,6 +25,7 @@
 [scriptable, uuid(482e1890-1fe5-11d5-9cf8-0060b0fbd8ac)]
 interface nsIDebugPlugin : nsISupports {
   readonly attribute string version;
+  void CreateDirectory(in wstring aDirPath,in unsigned long aFlags,[retval] out long aResult);
   void DumpLayout(in nsISupports aWindow,in wstring aFilePath,in wstring aFileName,in unsigned long aFlags,[retval] out long aResult );
   void StartDirectorySearch(in string aFilePath);
   void GetNextFileInDirectory([retval] out string aFileName);
