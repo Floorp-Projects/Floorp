@@ -200,22 +200,7 @@ sub init {
             }
         }
         if ($params->param("emaillongdesc$id")) {
-            if (my $list = $self->ListIDsForEmail($type, $email)) {
-                my $table = "longdescs_email_$id";
-                push(@supptables, "LEFT JOIN longdescs $table ON bugs.bug_id = $table.bug_id AND $table.who IN($list)");
-                push(@wherepart, "$table.who IS NOT NULL");
-                # push something into @clist so that we don't trigger
-                # the missing_email_type error below
-                push(@clist, 'noop');
-            } else {
-                my $table = "longdescs_email_$id";
-                push(@supptables, "longdescs $table");
-                push(@wherepart, "$table.bug_id = bugs.bug_id");
-                my $ptable = "longdescnames_email_$id";
-                push(@supptables, "profiles $ptable");
-                push(@wherepart, "$table.who = $ptable.userid");
-                push(@clist, "$ptable.login_name", $type, $email);
-            }
+                push(@clist, "commenter", $type, $email);
         }
         if (@clist) {
             push(@specialchart, \@clist);
@@ -455,6 +440,31 @@ sub init {
              }
              else {
                  push(@fields, $select_term);
+             }
+         },
+         "^commenter," => sub {    
+             my $chartseq;
+             my $list;
+             $list = $self->ListIDsForEmail($t, $v);
+             $chartseq = $chartid;
+             if ($chartid eq "") {
+                 $chartseq = "LD$sequence";
+                 $sequence++;
+             }
+             my $table = "longdescs_$chartseq";
+             my $extra = "";
+             if (Param("insidergroup") && !&::UserInGroup(Param("insidergroup"))) {
+                 $extra = "AND $table.isprivate < 1";
+             }
+             if ($list) {
+                 push(@supptables, "LEFT JOIN longdescs $table ON $table.bug_id = bugs.bug_id $extra AND $table.who IN ($list)");
+                 $term = "$table.who IS NOT NULL";
+             } else {
+                 push(@supptables, "LEFT JOIN longdescs $table ON $table.bug_id = bugs.bug_id $extra");
+                 push(@supptables, "LEFT JOIN profiles map_$table ON $table.who = map_$table.userid");
+                 $ff = $f = "map_$table.login_name";
+                 my $ref = $funcsbykey{",$t"};
+                 &$ref;
              }
          },
          "^long_?desc," => sub {
@@ -1100,7 +1110,7 @@ sub SqlifyDate {
 # ListIDsForEmail returns a string with a comma-joined list
 # of userids matching email addresses
 # according to the type specified.
-# Currently, this only supports anyexact and substring matches.
+# Currently, this only supports exact, anyexact, and substring matches.
 # Substring matches will return up to 50 matching userids
 # If a match type is unsupported or returns too many matches,
 # ListIDsForEmail returns an undef.
