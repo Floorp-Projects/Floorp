@@ -10111,7 +10111,7 @@ fi
 if test "${enable_optimize+set}" = set; then
   enableval="$enable_optimize"
    MOZ_OPTIMIZE=1
-	if test -n "$enableval" && test "$enableval" != "yes"; then
+	if test -n "$enableval" && test "$enableval" != "yes" && test "$enableval" != "no"; then
 	    MOZ_OPTIMIZE_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
 	fi 
 fi
