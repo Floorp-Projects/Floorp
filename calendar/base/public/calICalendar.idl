@@ -266,19 +266,20 @@ interface calICalendar : nsISupports
  * Used to allow multiple calendars (eg work and home) to be easily queried
  * and displayed as a single unit.
  */
-[scriptable, uuid(1f6dba37-8ce4-4c51-bc10-6892d3e6f5ed)]
+[scriptable, uuid(8285aa0b-594c-4f93-abe3-523df947e0ad)]
 interface calICompositeCalendar : calICalendar
 {
   /**
-   * Routines to manipulate calendars on a composite.
+   * Add an already created calendar to the composite
    * 
-   * @param aServer  URI of the server to be created 
-   * @param aType    used to parameterize the XPCOM contract-id of the
-   *                 calendar object to be created (eg "?type=caldav")
-   *
-   * @returns the newly added calICalendar
+   * @param aCalendar the calendar to be added
    */
-  calICalendar addCalendar( in nsIURI aServer, in string aType );
+  void addCalendar( in calICalendar aCalendar );
+  /**
+   * Remove a calendar from the composite
+   * 
+   * @param aServer  URI of the server to be removed
+   */
   void removeCalendar( in nsIURI aServer );
   calICalendar getCalendar( in nsIURI aServer );
 
