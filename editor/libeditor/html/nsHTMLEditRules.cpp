@@ -4661,7 +4661,7 @@ PRBool
 nsHTMLEditListener::IsDescendantOfBody(nsIDOMNode *inNode) 
 {
   if (!inNode) return PR_FALSE;
-  if (inNode == mBody) return PR_TRUE;
+  if (inNode == mBody.get()) return PR_TRUE;
   
   nsCOMPtr<nsIDOMNode> parent, node = do_QueryInterface(inNode);
   nsresult res;
