@@ -83,6 +83,9 @@ extern  SYMUNDNAME _SymUnDName;
 typedef DWORD ( __stdcall *SYMGETMODULEINFO)( HANDLE, DWORD, PIMAGEHLP_MODULE);
 extern  SYMGETMODULEINFO _SymGetModuleInfo;
 
+typedef BOOL ( __stdcall *ENUMLOADEDMODULES)( HANDLE, PENUMLOADED_MODULES_CALLBACK, PVOID);
+extern  ENUMLOADEDMODULES _EnumerateLoadedModules;
+
 PRBool EnsureSymInitialized();
 
 /*
