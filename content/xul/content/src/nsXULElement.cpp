@@ -2262,33 +2262,34 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify,
     // freak out.
     NS_ASSERTION(mChildren.IndexOf(aKid) < 0, "element is already a child");
 
-    PRBool insertOk = mChildren.InsertElementAt(aKid, aIndex);
-    if (insertOk) {
-        NS_ADDREF(aKid);
-        aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
-        //nsRange::OwnerChildInserted(this, aIndex);
+    if (!mChildren.InsertElementAt(aKid, aIndex))
+        return NS_ERROR_FAILURE;
 
-        aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
+    NS_ADDREF(aKid);
+    aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
+    //nsRange::OwnerChildInserted(this, aIndex);
 
-        if (mDocument && HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*,this),
-                                              NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-          nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
-          nsMutationEvent mutation;
-          mutation.eventStructType = NS_MUTATION_EVENT;
-          mutation.message = NS_MUTATION_NODEINSERTED;
-          mutation.mTarget = node;
+    aKid->SetDocument(mDocument, aDeepSetDocument, PR_TRUE);
 
-          nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*,this)));
-          mutation.mRelatedNode = relNode;
+    if (mDocument && HasMutationListeners(NS_STATIC_CAST(nsIStyledContent*,this),
+                                          NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aKid));
+      nsMutationEvent mutation;
+      mutation.eventStructType = NS_MUTATION_EVENT;
+      mutation.message = NS_MUTATION_NODEINSERTED;
+      mutation.mTarget = node;
 
-          nsEventStatus status = nsEventStatus_eIgnore;
-          aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
-        }
+      nsCOMPtr<nsIDOMNode> relNode(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*,this)));
+      mutation.mRelatedNode = relNode;
 
-        if (aNotify && mDocument) {
-          mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
-        }
+      nsEventStatus status = nsEventStatus_eIgnore;
+      aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
+
+    if (aNotify && mDocument) {
+      mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
+    }
+   
     return NS_OK;
 }
 

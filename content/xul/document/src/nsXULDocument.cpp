@@ -6938,9 +6938,11 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
             PRInt32 pos = posStr.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
             if (NS_SUCCEEDED(rv)) {
                 rv = aParent->InsertChildAt(aChild, pos - 1, PR_FALSE, PR_TRUE);
-                if (NS_FAILED(rv)) return rv;
-
-                wasInserted = PR_TRUE;
+                if (NS_SUCCEEDED(rv))
+                    wasInserted = PR_TRUE;
+                // If the insertion fails, then we should still attempt an append.
+                // Thus, rather than returning rv immediately, we fall through
+                // to the final "catch-all" case that just does an AppendChildTo.
             }
         }
     }
