@@ -2411,8 +2411,7 @@ DWORD InitDlgReboot(diR *diDialog)
   diDialog->dwShowDialog = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF_MEDIUM)) == NULL)
     return(1);
-  if(!GetPrivateProfileString("Messages", "DLG_REBOOT_TITLE", "", diDialog->szTitle, MAX_BUF, szFileIniInstall))
-    return(1);
+  GetPrivateProfileString("Messages", "DLG_REBOOT_TITLE", "", diDialog->szTitle, MAX_BUF_MEDIUM, szFileIniInstall);
 
   return(0);
 }
