@@ -46,6 +46,8 @@ public:
                   const nsString& aURL,
                   nsIFrame* aTargetFrame,
                   PRBool aNeedSizeUpdate);
+  NS_IMETHOD StopImageLoad();
+  NS_IMETHOD AbortImageLoad();
   NS_IMETHOD GetTargetFrame(nsIFrame*& aFrameResult) const;
   NS_IMETHOD GetURL(nsString& aResult) const;
   NS_IMETHOD GetImage(nsIImage*& aResult) const;
