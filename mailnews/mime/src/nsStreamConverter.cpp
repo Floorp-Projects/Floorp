@@ -124,13 +124,13 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
         nsXPIDLString uniCharset;
         i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
         nsAutoString charset(uniCharset);
-        if (!charset.IsEmpty())
+        if (!charset.IsEmpty() && msd->options)
           msd->options->default_charset = charset.ToNewCString();
 
         // check to see if we have a charset override...and if we do, set that field appropriately too...
         nsresult rv = i18nUrl->GetCharsetOverRide(getter_Copies(uniCharset));
         charset = uniCharset;
-        if (NS_SUCCEEDED(rv) && !charset.IsEmpty())
+        if (NS_SUCCEEDED(rv) && !charset.IsEmpty() && msd->options)
           msd->options->override_charset = charset.ToNewCString();
 
         // if the pref says always override and no manual override then set the folder charset to override
@@ -145,7 +145,7 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
             {
               i18nUrl->GetFolderCharset(getter_Copies(uniCharset));
               charset.Assign(uniCharset);
-              if (!charset.IsEmpty())
+              if (!charset.IsEmpty() && msd->options)
                 msd->options->override_charset = charset.ToNewCString();
             }
           }
