@@ -73,7 +73,11 @@ CPPSRCS		= \
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 	CPPSRCS += nsIOServiceOS2.cpp
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+	CPPSRCS += nsIOServiceWin.cpp
+else
 	CPPSRCS += nsIOServiceUnix.cpp
+endif
 endif
 
 JSFILES		= \
