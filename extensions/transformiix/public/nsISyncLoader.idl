@@ -26,7 +26,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIDocument;
+interface nsIDOMDocument;
 
 /**
  * The nsISyncLoader interface can be used to synchronously load
@@ -43,7 +43,7 @@ interface nsISyncLoader : nsISupports {
      *
      * @returns The document loaded from the URI.
      */
-    nsIDocument loadDocument(in nsIURI aDocumentURI);
+    nsIDOMDocument loadDocument(in nsIURI aDocumentURI);
 };
 
 %{ C++
