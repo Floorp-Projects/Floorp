@@ -71,6 +71,7 @@ ShowSetupTypeWin(void)
 		// populate popup button menus
 		HLock((Handle)gControls->stw->instType);
 		pvtDataHdl = (PopupPrivateData **) (*(gControls->stw->instType))->contrlData;
+		HLock((Handle)pvtDataHdl);
 		popupMenu = (MenuHandle) (**pvtDataHdl).mHandle;
 		for (i=0; i<gControls->cfg->numSetupTypes; i++)
 		{
@@ -79,6 +80,7 @@ ShowSetupTypeWin(void)
 			HUnlock(gControls->cfg->st[i].shortDesc);
 			InsertMenuItem( popupMenu, currMenuItem, i);
 		}
+		HUnlock((Handle)pvtDataHdl);
 		HUnlock((Handle)gControls->stw->instType);
 		SetControlMaximum(gControls->stw->instType, gControls->cfg->numSetupTypes);
 		SetControlValue(gControls->stw->instType, gControls->opt->instChoice);

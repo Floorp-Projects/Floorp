@@ -49,7 +49,7 @@ do {																\
  *   Inflation
  *-----------------------------------------------------------*/
 OSErr
-ExtractCoreFile(short tgtVRefNum, long tgtDirID)
+ExtractCoreFile(short srcVRefNum, long srcDirID, short tgtVRefNum, long tgtDirID)
 {
 	OSErr 			err = noErr;
 	StringPtr 		coreFile = 0;
@@ -75,7 +75,7 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 		return fnfErr;
 	HUnlock(gControls->cfg->coreFile);
 	
-	ERR_CHECK_RET(GetFullPath(tgtVRefNum, tgtDirID, coreFile, &fullPathLen, &fullPathH), err);
+	ERR_CHECK_RET(GetFullPath(srcVRefNum, srcDirID, coreFile, &fullPathLen, &fullPathH), err);
 	
 	
 	/* --- o p e n   a r c h i v e --- */
@@ -89,10 +89,11 @@ ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 	rv = ZIP_OpenArchive( fullPathStr, &hZip );
 	
 	HUnlock(fullPathH);
-	if (rv!=ZIP_OK) return rv;
+	if (rv!=ZIP_OK) 
+		goto cleanup;
 
 	/* initialize the search */
-	hFind = ZIP_FindInit( hZip, "core_" ); /* null to match all files in archive */
+	hFind = ZIP_FindInit( hZip, NULL ); /* null to match all files in archive */
 	
 	
 	/* --- i n f l a t e   a l l   f i l e s --- */
@@ -338,7 +339,7 @@ CleanupExtractedFiles(short tgtVRefNum, long tgtDirID)
 {
 	OSErr		err = noErr;
 	FSSpec		coreDirFSp;
-	StringPtr	pcoreDir;
+	StringPtr	pcoreDir = nil;
 	short		i = 0;
 	
 	HLock(gControls->cfg->coreDir);
@@ -354,7 +355,7 @@ CleanupExtractedFiles(short tgtVRefNum, long tgtDirID)
 		}
 	
 		HUnlock(gControls->cfg->coreDir);
-		return err;
+		goto exit;
 	}	
 		
 	HUnlock(gControls->cfg->coreDir);
@@ -365,6 +366,7 @@ CleanupExtractedFiles(short tgtVRefNum, long tgtDirID)
 		FSpDelete( &coreFileList[i] );
 	}
 
+exit:
 	if (pcoreDir)
 		DisposePtr((Ptr) pcoreDir);	
 	return err;

@@ -101,13 +101,13 @@ ReadConfigFile(char **text)
 	
 	/* open config.ini file */
 	GetIndString(fname, rStringList, sConfigFName);
-	if (err = FSMakeFSSpec(vRefNum, dirID, fname, &cfgFile) )
+	if ((err = FSMakeFSSpec(vRefNum, dirID, fname, &cfgFile)) != noErr )
 		return false;
-	if (err = FSpOpenDF( &cfgFile, fsRdPerm, &fileRefNum))
+	if ((err = FSpOpenDF( &cfgFile, fsRdPerm, &fileRefNum)) != noErr)
 		return false;
 		
 	/* read in entire text */
-	if (err = GetEOF(fileRefNum, &dataSize))
+	if ( (err = GetEOF(fileRefNum, &dataSize)) != noErr)
 		bSuccess = false;
 	if (dataSize > 0)
 	{
@@ -123,7 +123,7 @@ ReadConfigFile(char **text)
 	}
 	
 	/* close file */
-	if (!bSuccess || (err = FSClose(fileRefNum)))   
+	if (!bSuccess || ((err = FSClose(fileRefNum))!=noErr))   
 		return false;
 
 	return bSuccess;

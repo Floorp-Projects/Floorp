@@ -29,8 +29,8 @@
 
 pascal void* Install(void* unused)
 {	
-	short			vRefNum;
-	long			dirID;
+	short			vRefNum, srcVRefNum;
+	long			dirID, srcDirID;
 	OSErr 			err;
 	FSSpec			idiSpec, coreFileSpec, tmpSpec;
 	SDISTRUCT		sdistruct;
@@ -39,12 +39,6 @@ pascal void* Install(void* unused)
 	THz				ourHZ;
 	Boolean 		isDir = false;
 	GrafPtr			oldPort;
-
-#if PRE_BETA_HACKERY == 1	
-	/* download to user selected folder */
-	vRefNum = gControls->opt->vRefNum;
-	dirID = gControls->opt->dirID;
-#else /* PRE_BETA_HACKERY */
 
 #ifndef MIW_DEBUG
 	/* get "Temporary Items" folder path */
@@ -72,56 +66,71 @@ pascal void* Install(void* unused)
 		}
 	}	
 #endif /* MIW_DEBUG */
-#endif /* PRE_BETA_HACKERY */
 	
-	GetIndString(pIDIfname, rStringList, sTempIDIName);
-	
-	/* generate idi */
-	if (!GenerateIDIFromOpt(pIDIfname, dirID, vRefNum, &idiSpec))
+	err = GetCWD(&srcDirID, &srcVRefNum);
+	if (err != noErr)
 	{
 		ErrorHandler();
-		return (void*) nil;
-	}		
+		return (void*)nil;
+	}
 	
-	/* populate SDI struct */
-	sdistruct.dwStructSize 	= sizeof(SDISTRUCT);
-	sdistruct.fsIDIFile 	= idiSpec;
-	sdistruct.dlDirVRefNum 	= vRefNum;
-	sdistruct.dlDirID 		= dirID;
-	sdistruct.hwndOwner    	= NULL;
+	if (!ExistArchives(srcVRefNum, srcDirID))
+	{
+		/* download location is same as extraction location */
+		srcVRefNum = vRefNum;
+		srcDirID = dirID;
+		
+		GetIndString(pIDIfname, rStringList, sTempIDIName);
 	
-	/* call SDI_NetInstall */
-	gSDDlg = true;
-	ourHZ = GetZone();
-	GetPort(&oldPort);
+		/* generate idi */
+		if (!GenerateIDIFromOpt(pIDIfname, dirID, vRefNum, &idiSpec))
+		{
+			ErrorHandler();
+			return (void*) nil;
+		}		
+	
+		/* populate SDI struct */
+		sdistruct.dwStructSize 	= sizeof(SDISTRUCT);
+		sdistruct.fsIDIFile 	= idiSpec;
+		sdistruct.dlDirVRefNum 	= vRefNum;
+		sdistruct.dlDirID 		= dirID;
+		sdistruct.hwndOwner    	= NULL;
+	
+		/* call SDI_NetInstall */
+		gSDDlg = true;
+		ourHZ = GetZone();
+		GetPort(&oldPort);
 
 #if MOZILLA == 0
 #if SDINST_IS_DLL == 1
-	gInstFunc(&sdistruct);
+		gInstFunc(&sdistruct);
 #else
-	SDI_NetInstall(&sdistruct);
+		SDI_NetInstall(&sdistruct);
 #endif /* SDINST_IS_DLL */
 #endif /* MOZILLA */
 
-	SetPort(oldPort);
-	
-	if (gWPtr)
-	{
-		GetPort(&oldPort);
-
-		SetPort(gWPtr);
-		BeginUpdate(gWPtr);
-		DrawControls(gWPtr);
-		ShowLogo(true);
-		UpdateTerminalWin();
-		EndUpdate(gWPtr);
-		
 		SetPort(oldPort);
-	}
-	SetZone(ourHZ);
-	gSDDlg = false;
 	
-	FSpDelete(&idiSpec);
+		if (gWPtr)
+		{
+			GetPort(&oldPort);
+
+			SetPort(gWPtr);
+			BeginUpdate(gWPtr);
+			DrawControls(gWPtr);
+			ShowLogo(true);
+			UpdateTerminalWin();
+			EndUpdate(gWPtr);
+		
+			SetPort(oldPort);
+		}
+		SetZone(ourHZ);
+		gSDDlg = false;
+	
+		FSpDelete(&idiSpec);
+	}
+    /* otherwise core exists in cwd, different from extraction location */
+
 	
 	/* check if coreFile was downloaded */
 	HLock(gControls->cfg->coreFile);
@@ -135,13 +144,13 @@ pascal void* Install(void* unused)
 		
 	if (coreFile != NULL && *coreFile > 0) /* core file was specified */
 	{
-		err = FSMakeFSSpec(vRefNum, dirID, coreFile, &coreFileSpec);
-		if (err==noErr) /* core file was downloaded */
+		err = FSMakeFSSpec(srcVRefNum, srcDirID, coreFile, &coreFileSpec);
+		if (err==noErr) /* core file was downloaded or packaged with installer */
 		{
 			InitProgressBar();
 			
-			/* extract contents of downloaded core file */
-			err = ExtractCoreFile(vRefNum, dirID);
+			/* extract contents of downloaded or packaged core file */
+			err = ExtractCoreFile(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr) 
 			{
 				ErrorHandler();
@@ -149,15 +158,14 @@ pascal void* Install(void* unused)
 					DisposePtr((Ptr)coreFile);
 				return (void*) nil;
 			}
-			
-#if PRE_BETA_HACKERY == 0			
+						
 			/* run all .xpi's through XPInstall */
-			err = RunAllXPIs(vRefNum, dirID);
+			err = RunAllXPIs(srcVRefNum, srcDirID, vRefNum, dirID);
 			if (err!=noErr)
 				ErrorHandler();
 				
 			CleanupExtractedFiles(vRefNum, dirID);
-#endif
+			
 			err = FSpDelete(&coreFileSpec);
 #ifdef MIW_DEBUG
 			if (err!=noErr) SysBeep(10); 
@@ -383,6 +391,52 @@ AddKeyToIDI(short key, Handle val, char *ostream)
 		DisposePtr(keybuf);
 }
 
+Boolean
+ExistArchives(short vRefNum, long dirID)
+{
+	int 		compsDone = 0, i;
+	int 		instChoice = gControls->opt->instChoice - 1;
+	OSErr 		err = noErr;
+	StringPtr	pArchiveName;
+	FSSpec		fsCurr;
+	Boolean		bAllExist = true;
+	
+	// loop through 0 to kMaxComponents
+	for(i=0; i<kMaxComponents; i++)
+	{
+		// general test: if component in setup type
+		if ( (gControls->cfg->st[instChoice].comp[i] == kInSetupType) &&
+			 (compsDone < gControls->cfg->st[instChoice].numComps) )
+		{ 
+			// if custom and selected, or not custom setup type
+			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
+				  (gControls->cfg->comp[i].selected == true)) ||
+				 (instChoice < gControls->cfg->numSetupTypes-1) )
+			{
+				HLock(gControls->cfg->comp[i].archive);
+				pArchiveName = CToPascal(*gControls->cfg->comp[i].archive);
+				HUnlock(gControls->cfg->comp[i].archive);
+				
+				err = FSMakeFSSpec(vRefNum, dirID, pArchiveName, &fsCurr);
+				if (err != noErr)
+				{
+					bAllExist = false;
+					if (pArchiveName)
+						DisposePtr((Ptr)pArchiveName);
+					break;
+				}
+				
+				if (pArchiveName)
+					DisposePtr((Ptr)pArchiveName);
+			}
+		}
+		
+		compsDone++;
+	}
+	
+	return bAllExist;
+}
+
 void 
 LaunchApps(short vRefNum, long dirID)
 {
@@ -401,7 +455,6 @@ LaunchApps(short vRefNum, long dirID)
 			 (compsDone < gControls->cfg->st[instChoice].numComps) )
 		{ 
 			// if custom and selected, or not custom setup type
-			// add file to buffer
 			if ( ((instChoice == gControls->cfg->numSetupTypes-1) && 
 				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
@@ -436,6 +489,9 @@ LaunchApps(short vRefNum, long dirID)
 							
 						}
 					}
+					
+					if (pArchiveName)
+						DisposePtr((Ptr)pArchiveName);
 				}	
 			}
 		}

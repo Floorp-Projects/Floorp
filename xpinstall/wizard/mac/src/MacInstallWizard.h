@@ -52,10 +52,6 @@ typedef Boolean (*EventProc)(const EventRecord*);
  *-----------------------------------------------------------*/
 #define CFG_IS_REMOTE 		0	/* if on, download remote config.ini file */	
 #define SDINST_IS_DLL 		1	/* if on, load SDInstLib as code fragment */
-#define	MOZILLA				0	/* if on, draws the Mozilla logo, not NS, 
-                                          and doesn't use sdinst.dll */
-#define PRE_BETA_HACKERY	0	/* if on, extracts core to selected folder 
-										  instead of Temporary Items */
  
 /*-----------------------------------------------------------*
  *   defines 
@@ -137,11 +133,7 @@ if (err) 								\
 #define rRootWin 		128		/* widget rsrc ids */
 #define rBackBtn 		129
 #define rNextBtn		130
-#if MOZILLA == 1
-#define rNSLogo			141
-#else
 #define rNSLogo			140
-#endif
 #define rNSLogoBox		130
 
 #define	rLicBox			131
@@ -160,7 +152,8 @@ if (err) 								\
 #define rStartMsgBox	160
 #define rInstProgBar	161
 
-#define rMBar			128		/* menu rsrc ids */
+	
+#define rMBar			128		/* menu rsrc ids */	
 #define mApple			150
 #define   iAbout		1
 #define	mFile			151
@@ -180,11 +173,6 @@ if (err) 								\
 #define sNextBtn 		2
 #define sDeclineBtn 	3
 #define sAcceptBtn	 	4
-#if MOZILLA == 1
-#define sNSInstTitle	22
-#else
-#define sNSInstTitle 	5
-#endif
 #define sInstallBtn		6
 #define sLicenseFName	7
 #define sInstLocTitle	8
@@ -200,14 +188,14 @@ if (err) 								\
 #define sDiskSpcAvail	19
 #define sDiskSpcNeeded	20		
 #define sKilobytes		21 	
-#if PRE_BETA_HACKERY == 1
-#define sExtracting 	27
-#else	
 #define sExtracting		23		
-#endif
 #define sInstalling		24
 #define	sFileSp			25
-#define sSpOfSp			26		/* end i18n strings */
+#define sSpOfSp			26		
+#define sPrep2Inst      28 	
+
+#define rTitleStrList	170
+#define sNSInstTitle	1		/* end i18n strings */
 
 
 #define rParseKeys		141		/* parse keys in config.ini */
@@ -555,6 +543,7 @@ void		DisableTerminalWin(void);
 pascal void *Install(void*);
 Boolean 	GenerateIDIFromOpt(Str255, long, short, FSSpec *);
 void		AddKeyToIDI(short, Handle, char *);
+Boolean		ExistArchives(short, long);
 void		LaunchApps(short, long);
 void		InitProgressBar(void);
 Boolean		InitSDLib(void);
@@ -564,7 +553,7 @@ Boolean		UnloadSDLib(CFragConnectionID *);
 /*-----------------------------------------------------------*
  *   Inflation
  *-----------------------------------------------------------*/
-OSErr		ExtractCoreFile(short, long);
+OSErr		ExtractCoreFile(short, long, short, long);
 OSErr		InflateFiles(void*, void*, short, long);
 OSErr		AppleSingleDecode(FSSpecPtr, FSSpecPtr);
 void		ResolveDirs(char *, char*);
@@ -575,7 +564,7 @@ OSErr		CleanupExtractedFiles(short, long);
 /*-----------------------------------------------------------*
  *   XPInstallGlue
  *-----------------------------------------------------------*/
-OSErr		RunAllXPIs(short vRefNum, long dirID);
+OSErr		RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID);
 /* NB:
 ** See XPInstallGlue.c for rest of prototypes
 */
