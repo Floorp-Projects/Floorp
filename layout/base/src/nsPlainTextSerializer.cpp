@@ -745,6 +745,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   else if (IsBlockLevel(aTag)
            && type != eHTMLTag_blockquote
            && type != eHTMLTag_script
+           && type != eHTMLTag_doctypeDecl
            && type != eHTMLTag_markupDecl) {
     // All other blocks get 1 vertical space after them
     // in formatted mode, otherwise 0.

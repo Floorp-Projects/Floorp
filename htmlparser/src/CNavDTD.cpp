@@ -762,7 +762,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         case eHTMLTag_html:
         case eHTMLTag_noscript:
         case eHTMLTag_script:
-        case eHTMLTag_markupDecl:
+        case eHTMLTag_doctypeDecl:
           break;  // simply pass these through to token handler without further ado...
         case eHTMLTag_comment:
         case eHTMLTag_newline:
@@ -823,6 +823,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           
           case eToken_cdatasection:
           case eToken_comment:
+          case eToken_markupDecl:
             result=HandleCommentToken(theToken); break;
 
           case eToken_entity:

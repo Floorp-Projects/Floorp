@@ -531,6 +531,7 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       case eToken_whitespace: 
       case eToken_newline:
       case eToken_doctypeDecl:
+      case eToken_markupDecl:
         result=HandleStartToken(theToken); break;
 
       case eToken_entity:

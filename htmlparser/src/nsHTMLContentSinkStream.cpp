@@ -624,7 +624,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   mDirtyStack[mHTMLStackPos++] = isDirty;
   tagName = name;
 
-  if (tag == eHTMLTag_markupDecl)
+  if (tag == eHTMLTag_doctypeDecl || tag == eHTMLTag_markupDecl)
   {
     if (!(mFlags & nsIDocumentEncoder::OutputSelectionOnly))
     {
@@ -742,14 +742,14 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   {
     tagName.AssignWithConversion("--");
   }
-  else if (tag == eHTMLTag_markupDecl)
+  else if (tag == eHTMLTag_doctypeDecl || tag == eHTMLTag_markupDecl)
   {
     if (!(mFlags & nsIDocumentEncoder::OutputSelectionOnly))
     {
       Write(kGreaterThan);
       Write(mLineBreak);
     }
-    if ( mHTMLTagStack[mHTMLStackPos-1] == eHTMLTag_markupDecl)
+    if ( mHTMLTagStack[mHTMLStackPos-1] == eHTMLTag_doctypeDecl || mHTMLTagStack[mHTMLStackPos-1] == eHTMLTag_markupDecl)
     {
       mHTMLTagStack[--mHTMLStackPos] = eHTMLTag_unknown;
     }
@@ -853,7 +853,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   else if (type == eHTMLTag_text)
   {
     if ((mHTMLStackPos > 0)
-        && (mHTMLTagStack[mHTMLStackPos-1] == eHTMLTag_markupDecl)
+        && (mHTMLTagStack[mHTMLStackPos-1] == eHTMLTag_doctypeDecl || mHTMLTagStack[mHTMLStackPos-1] == eHTMLTag_markupDecl)
         && (mFlags & nsIDocumentEncoder::OutputSelectionOnly))
       return NS_OK;
 

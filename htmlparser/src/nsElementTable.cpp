@@ -1293,6 +1293,15 @@ void InitializeElementTable(void) {
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
+      /*tag*/                             eHTMLTag_doctypeDecl,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
+      /*special props, prop-range*/       kOmitEndTag,kNoPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
+
+    Initialize( 
       /*tag*/                             eHTMLTag_markupDecl,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	

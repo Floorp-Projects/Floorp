@@ -307,6 +307,9 @@ void CStartToken::AppendSource(nsString& anOutputString){
 CEndToken::CEndToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 }
 
+CEndToken::CEndToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
+  mTextValue.Assign(aName);
+}
 
 CEndToken::CEndToken(const nsAReadableString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
   mTextValue.Assign(aName);
@@ -840,6 +843,139 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
 }
 
 const nsAReadableString& CCDATASectionToken::GetStringValue(void)
+{
+  return mTextValue;
+}
+
+
+/*
+ *  default constructor
+ *  
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CMarkupDeclToken::CMarkupDeclToken() : CHTMLToken(eHTMLTag_markupDecl) {
+}
+
+
+/*
+ *  string based constructor
+ *  
+ *  @param   aName -- string to init token name with
+ *  @return  
+ */
+CMarkupDeclToken::CMarkupDeclToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_markupDecl) {
+  mTextValue.Rebind(aName);
+}
+
+/*
+ *  
+ *  
+ *  @param   
+ *  @return  
+ */
+const char*  CMarkupDeclToken::GetClassName(void) {
+  return "markupdeclaration";
+}
+
+/*
+ *  
+ *  @param   
+ *  @return  
+ */
+PRInt32 CMarkupDeclToken::GetTokenType(void) {
+  return eToken_markupDecl;
+}
+
+/*
+ *  Consume as much declaration from scanner as possible.
+ *  Declaration is a markup declaration of ELEMENT, ATTLIST, ENTITY or
+ *  NOTATION, which can span multiple lines and ends in >.
+ *
+ *  @param   aChar -- last char consumed from stream
+ *  @param   aScanner -- controller of underlying input source
+ *  @return  error result
+ */
+nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
+  static nsString theTerminals = NS_ConvertToString("\n\r'\">",5);
+  nsresult  result=NS_OK;
+  PRBool    done=PR_FALSE;
+  PRUnichar quote=0;
+
+  nsReadingIterator<PRUnichar> origin, start, end;
+  aScanner.CurrentPosition(origin);
+  start = origin;
+
+  while((NS_OK==result) && (!done)) {
+    aScanner.SetPosition(start);
+    result=aScanner.ReadUntil(start, end, theTerminals,PR_FALSE);
+    if(NS_OK==result) {
+      result=aScanner.Peek(aChar);
+
+      if(NS_OK==result) {
+        PRUnichar theNextChar=0;
+        if ((kCR==aChar) || (kNewLine==aChar)) {
+          result=aScanner.GetChar(aChar); //strip off the char
+          result=aScanner.Peek(theNextChar);    //then see what's next.
+        }
+        switch(aChar) {
+          case kCR:
+            // result=aScanner.GetChar(aChar);       
+            if(kLF==theNextChar) {
+              // If the "\r" is followed by a "\n", don't replace it and 
+              // let it be ignored by the layout system
+              end += 2;
+              result=aScanner.GetChar(theNextChar);
+            }
+            else {
+              // If it standalone, replace the "\r" with a "\n" so that 
+              // it will be considered by the layout system
+              aScanner.ReplaceCharacter(end, kLF);
+              end++;
+            }
+            mNewlineCount++;
+            break;
+          case kLF:
+            end++;
+            mNewlineCount++;
+            break;
+          case '\'':
+          case '"':
+            end++;
+            if (quote) {
+              if (quote == aChar) {
+                quote = 0;
+              }
+            } else {
+              quote = aChar;
+            }
+            break;
+          case kGreaterThan:
+            if (quote) {
+              end++;
+            } else {
+              start = end;
+              start++;  // Note that start is wrong after this, we just avoid temp var
+              aScanner.SetPosition(start); // Skip the >
+              done=PR_TRUE;
+            }
+            break;
+          default:
+            NS_ABORT_IF_FALSE(0,"should not happen, switch is missing cases?");
+            break;
+        } //switch
+        start = end;
+      }
+      else done=PR_TRUE;
+    } // if read until !ok
+  } // while
+  
+  aScanner.BindSubstring(mTextValue, origin, end);
+
+  return result;
+}
+
+const nsAReadableString& CMarkupDeclToken::GetStringValue(void)
 {
   return mTextValue;
 }

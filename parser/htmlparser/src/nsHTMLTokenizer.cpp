@@ -925,12 +925,19 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   
   if(theIndex==kNotFound) {
-    if('['==theBufCopy.CharAt(0)) 
+    if('['==theBufCopy.CharAt(0)) {
       aToken = theAllocator->CreateTokenOfType(eToken_cdatasection,eHTMLTag_comment);  
-    else aToken = theAllocator->CreateTokenOfType(eToken_comment,eHTMLTag_comment);
+    } else if (theBufCopy.EqualsWithConversion("ELEMENT",PR_FALSE,7) || 
+      theBufCopy.EqualsWithConversion("ATTLIST",PR_FALSE,7) || 
+      theBufCopy.EqualsWithConversion("ENTITY",PR_FALSE,6) || 
+      theBufCopy.EqualsWithConversion("NOTATION",PR_FALSE,8)) {
+      aToken = theAllocator->CreateTokenOfType(eToken_markupDecl,eHTMLTag_markupDecl);
+    } else {
+      aToken = theAllocator->CreateTokenOfType(eToken_comment,eHTMLTag_comment);
+    }
   }
   else
-    aToken = theAllocator->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_markupDecl);
+    aToken = theAllocator->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_doctypeDecl);
   
   if(aToken) {
     result=aToken->Consume(aChar,aScanner,mParseMode);
