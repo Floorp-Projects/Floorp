@@ -6198,17 +6198,11 @@ XP_Bool EDT_SetEncoding(MWContext* pContext, int16 csid){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
     ED_CharsetEncode result;
 
-    char* pMessage = XP_GetString(XP_EDT_I18N_HAS_CHARSET);
-    if ( pMessage ) {
-        result = FE_EncodingDialog(pContext);
-    }
-    else {
-        XP_ASSERT(0);
-    }
+    result = FE_EncodingDialog(pContext, (char*)INTL_CsidToCharsetNamePt(csid));
 
     switch (result)
     {
-        case ED_ENDCODE_CHANGE_CHARSET:
+        case ED_ENCODE_CHANGE_CHARSET:
             // Change encoding and translate document
             pEditBuffer->ChangeEncoding(csid);
             return TRUE;
