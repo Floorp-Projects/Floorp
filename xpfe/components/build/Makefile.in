@@ -76,9 +76,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 ifndef MOZ_PHOENIX
-ifndef MOZ_XULRUNNER
 REQUIRES += history downloadmanager
-endif
 endif
 
 CPPSRCS		= nsModule.cpp
@@ -101,7 +99,6 @@ SHARED_LIBRARY_LIBS = \
 	$(NULL)
 
 ifndef MOZ_PHOENIX
-ifndef MOZ_XULRUNNER
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
   $(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
@@ -119,7 +116,6 @@ SHARED_LIBRARY_LIBS += \
 endif
 
 endif
-endif
 
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../browser/src \
@@ -129,7 +125,6 @@ LOCAL_INCLUDES	= \
 	$(NULL)
 
 ifndef MOZ_PHOENIX
-ifndef MOZ_XULRUNNER
 LOCAL_INCLUDES += \
   -I$(srcdir)/../autocomplete/src  \
   -I$(srcdir)/../bookmarks/src     \
@@ -146,7 +141,6 @@ LOCAL_INCLUDES += \
   $(NULL)
 endif
 
-endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
