@@ -167,19 +167,17 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIDNService)
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsFileProtocolHandler.h"
+#include "nsJARProtocolHandler.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFileProtocolHandler, Init)
 
 #include "nsJARProtocolHandler.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsJARProtocolHandler, Init)
-
-#include "nsDataHandler.h"
 
 #include "nsAboutProtocolHandler.h"
 #include "nsAboutBlank.h"
 #include "nsAboutBloat.h"
 #include "nsAboutCache.h"
 #include "nsAboutRedirector.h"
-#include "nsKeywordProtocolHandler.h"
 
 #include "nsAboutCacheEntry.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
@@ -820,12 +818,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       nsFtpProtocolHandlerConstructor
     },
 
-    // from netwerk/protocol/data:
-    { NS_DATAPROTOCOLHANDLER_CLASSNAME,
-      NS_DATAPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", 
-      nsDataHandler::Create},
-
     // from netwerk/protocol/jar:
     { NS_JARPROTOCOLHANDLER_CLASSNAME,
       NS_JARPROTOCOLHANDLER_CID,
@@ -891,13 +883,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_CACHE_ENTRY_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache-entry",
       nsAboutCacheEntryConstructor
-    },
-
-    // from netwerk/protocol/keyword:
-    { "The Keyword Protocol Handler", 
-      NS_KEYWORDPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "keyword",
-      nsKeywordProtocolHandler::Create
     },
 
     {  NS_ISOCKSSOCKETPROVIDER_CLASSNAME,

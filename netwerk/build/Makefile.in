@@ -61,11 +61,9 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)nkhttp_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkfile_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkftp_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkdata_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkjar_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkres_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)nkkwd_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
 		$(NULL)
 
@@ -80,11 +78,9 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../protocol/http/src \
 		-I$(srcdir)/../protocol/file/src \
 		-I$(srcdir)/../protocol/ftp/src \
-		-I$(srcdir)/../protocol/data/src \
 		-I$(srcdir)/../protocol/jar/src \
 		-I$(srcdir)/../protocol/res/src \
 		-I$(srcdir)/../protocol/about/src \
-		-I$(srcdir)/../protocol/keyword/src \
 		$(NULL)
 
 ifdef MOZ_PERF_METRICS
