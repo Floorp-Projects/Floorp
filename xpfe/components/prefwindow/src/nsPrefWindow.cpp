@@ -121,7 +121,7 @@ NS_IMPL_ISUPPORTS( nsPrefWindow, nsIPrefWindow::GetIID())
 		nsPrefWindow* prefWindow = new nsPrefWindow();
 		nsresult rv;
 		if (prefWindow)
-			rv = prefWindow->QueryInterface(GetIID(), &sPrefWindow);
+			rv = prefWindow->QueryInterface(GetIID(), (void**)&sPrefWindow);
 		else
 			rv = NS_ERROR_OUT_OF_MEMORY;			
 		if (NS_FAILED(rv) && prefWindow)
