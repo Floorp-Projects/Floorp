@@ -52,7 +52,9 @@
 #include "netCore.h"
 #include "nsIObserverService.h"
 #include "nsIHttpProtocolHandler.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsICategoryManager.h"
 #include "nsIURLParser.h"
 #include "nsISupportsPrimitives.h"
@@ -61,13 +63,15 @@
 #include "nsITimelineService.h"
 #include "nsEscape.h"
 
+#define PORT_PREF_PREFIX     "network.security.ports."
+#define PORT_PREF(x)         PORT_PREF_PREFIX x
+
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kStdURLParserCID, NS_STANDARDURLPARSER_CID);
 
 // A general port blacklist.  Connections to these ports will not be avoided unless 
@@ -206,48 +210,21 @@ nsIOService::Init()
         mRestrictedPortList.AppendElement((void*)gBadPortList[i]);
     }
 
-    // Lets make it really easy to block extra ports:
-    nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
-    if (NS_FAILED(rv) && !prefService) {
-        NS_ASSERTION(0, "Prefs not found!");
-        return NS_ERROR_FAILURE;
+    // Further modifications to the port list come from prefs
+    nsCOMPtr<nsIPrefBranch> prefBranch;
+    GetPrefBranch(getter_AddRefs(prefBranch));
+    if (prefBranch) {
+        nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
+        if (pbi)
+            pbi->AddObserver(PORT_PREF_PREFIX, this);
+        PrefsChanged(prefBranch);
     }
-    
-    char* portList = nsnull;
-    prefService->CopyCharPref("network.security.ports.banned", &portList);
-    if (portList) {
-        char* tokp;
-        char* currentPos = portList;  
-        while ( (tokp = nsCRT::strtok(currentPos, ",", &currentPos)) != nsnull )
-        {
-            nsCAutoString tmp(tokp);
-            tmp.StripWhitespace();
 
-            PRInt32 aErrorCode;
-            PRInt32 value = tmp.ToInteger(&aErrorCode);
-            mRestrictedPortList.AppendElement((void*)value);
-        }
-
-        PL_strfree(portList);
-    }
-    
-    portList = nsnull;
-    prefService->CopyCharPref("network.security.ports.banned.override", &portList);
-    if (portList) {
-        char* tokp;
-        char* currentPos = portList;  
-        while ( (tokp = nsCRT::strtok(currentPos, ",", &currentPos)) != nsnull )
-        {
-            nsCAutoString tmp(tokp);
-            tmp.StripWhitespace();
-
-            PRInt32 aErrorCode;
-            PRInt32 value = tmp.ToInteger(&aErrorCode);
-            mRestrictedPortList.RemoveElement((void*)value);
-        }
-
-        PL_strfree(portList);
-    }
+    // Listen for xpcom-shutdown to break the reference cycle with prefs
+    nsCOMPtr<nsIObserverService> observerService =
+        do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    if (observerService)
+        observerService->AddObserver(this, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
 
     return NS_OK;
 }
@@ -308,7 +285,10 @@ nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     return rv;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsIOService, nsIIOService);
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsIOService,
+                              nsIIOService,
+                              nsIObserver,
+                              nsISupportsWeakReference);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -798,7 +778,7 @@ nsIOService::SetOffline(PRBool offline)
     if (offline) {
         // don't care if notification fails
         if (observerService)
-            (void)observerService->Notify(this,
+            (void)observerService->Notify(NS_STATIC_CAST(nsIIOService *, this),
                                           NS_LITERAL_STRING("network:offline-status-changed").get(),
                                           NS_LITERAL_STRING("offline").get());
     	mOffline = PR_TRUE;		// indicate we're trying to shutdown
@@ -824,7 +804,7 @@ nsIOService::SetOffline(PRBool offline)
                                 // brought up the services
         // don't care if notification fails
         if (observerService)
-            (void)observerService->Notify(this,
+            (void)observerService->Notify(NS_STATIC_CAST(nsIIOService *, this),
                                           NS_LITERAL_STRING("network:offline-status-changed").get(),
                                           NS_LITERAL_STRING("online").get());
     }
@@ -943,3 +923,75 @@ nsIOService::ResolveRelativePath(const char *relativePath, const char* basePath,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void
+nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
+{
+    if (!prefs) return;
+
+    // Look for extra ports to block
+    if (!pref || PL_strcmp(pref, PORT_PREF("banned")) == 0)
+        ParsePortList(prefs, PORT_PREF("banned"), PR_FALSE);
+
+    // ...as well as previous blocks to remove.
+    if (!pref || PL_strcmp(pref, PORT_PREF("banned.override")) == 0)
+        ParsePortList(prefs, PORT_PREF("banned.override"), PR_TRUE);
+}
+
+void
+nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove)
+{
+    nsXPIDLCString portList;
+
+    // Get a pref string and chop it up into a list of ports.
+    prefBranch->GetCharPref(pref, getter_Copies(portList));
+    if (portList) {
+        char* tokp;
+        char* currentPos = (char *)portList.get();
+        while ((tokp = nsCRT::strtok(currentPos, ",", &currentPos))) {
+            nsCAutoString tmp(tokp);
+            tmp.StripWhitespace();
+
+            PRInt32 aErrorCode;
+            PRInt32 value = tmp.ToInteger(&aErrorCode);
+            if (remove)
+                mRestrictedPortList.RemoveElement((void*)value);
+            else
+                mRestrictedPortList.AppendElement((void*)value);
+        }
+    }
+}
+
+void
+nsIOService::GetPrefBranch(nsIPrefBranch **result)
+{
+    *result = nsnull;
+    nsCOMPtr<nsIPrefService> prefService =
+        do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefService)
+        prefService->GetBranch(nsnull, result);
+}
+
+// nsIObserver interface
+NS_IMETHODIMP
+nsIOService::Observe(nsISupports *subject,
+                     const PRUnichar *topic,
+                     const PRUnichar *data)
+{
+    if (!nsCRT::strcmp(topic, NS_LITERAL_STRING("nsPref:changed").get())) {
+        nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
+        if (prefBranch)
+            PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
+    }
+    else if (!nsCRT::strcmp(topic, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get())) {
+        // Clean up the prefs observer to break the reference cycle
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        GetPrefBranch(getter_AddRefs(prefBranch));
+        if (prefBranch) {
+            nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch);
+            if (pbi)
+                pbi->RemoveObserver(PORT_PREF_PREFIX, this);
+        }
+    }
+    return NS_OK;
+}
