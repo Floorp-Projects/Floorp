@@ -1296,13 +1296,14 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
     if (element->mFlags & PUSH_FILTER) {
       NS_ASSERTION(aRCSurface,
                    "Cannot support translucent elements with doublebuffering disabled");
-
-      // Save current buffer on the stack and start rendering into a new
-      // offscreen buffer
-      filterStack.AppendElement(buffers);
-      buffers = CreateBlendingBuffers(&aRC, PR_FALSE, nsnull,
-                                      (element->mFlags & VIEW_TRANSPARENT) != 0,
-                                      element->mBounds);
+      if (aRCSurface) {
+        // Save current buffer on the stack and start rendering into a new
+        // offscreen buffer
+        filterStack.AppendElement(buffers);
+        buffers = CreateBlendingBuffers(&aRC, PR_FALSE, nsnull,
+                                        (element->mFlags & VIEW_TRANSPARENT) != 0,
+                                        element->mBounds);
+      }
     }
 
     if (element->mFlags & VIEW_RENDERED) {
@@ -1320,33 +1321,35 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
     }
 
     if (element->mFlags & POP_FILTER) {
-      // Pop the last buffer off the stack and composite the current buffer into
-      // the last buffer
-      BlendingBuffers* doneBuffers = buffers;
-      buffers = NS_STATIC_CAST(BlendingBuffers*,
-                               filterStack.ElementAt(filterStack.Count() - 1));
-      filterStack.RemoveElementAt(filterStack.Count() - 1);
-
-      // perform the blend itself.
-      nsRect damageRectInPixels = element->mBounds;
-      damageRectInPixels -= buffers->mOffset;
-      damageRectInPixels *= mTwipsToPixels;
-      if (damageRectInPixels.width > 0 && damageRectInPixels.height > 0) {
-        nsIRenderingContext* targets[2] = { buffers->mBlackCX, buffers->mWhiteCX };
-        for (int j = 0; j < 2; j++) {
-          if (targets[j]) {
-            mBlender->Blend(0, 0,
-                            damageRectInPixels.width, damageRectInPixels.height,
-                            doneBuffers->mBlackCX, targets[j],
-                            damageRectInPixels.x, damageRectInPixels.y,
-                            element->mView->GetOpacity(), doneBuffers->mWhiteCX,
-                            NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
+      if (aRCSurface) {
+        // Pop the last buffer off the stack and composite the current buffer into
+        // the last buffer
+        BlendingBuffers* doneBuffers = buffers;
+        buffers = NS_STATIC_CAST(BlendingBuffers*,
+                                 filterStack.ElementAt(filterStack.Count() - 1));
+        filterStack.RemoveElementAt(filterStack.Count() - 1);
+        
+        // perform the blend itself.
+        nsRect damageRectInPixels = element->mBounds;
+        damageRectInPixels -= buffers->mOffset;
+        damageRectInPixels *= mTwipsToPixels;
+        if (damageRectInPixels.width > 0 && damageRectInPixels.height > 0) {
+          nsIRenderingContext* targets[2] = { buffers->mBlackCX, buffers->mWhiteCX };
+          for (int j = 0; j < 2; j++) {
+            if (targets[j]) {
+              mBlender->Blend(0, 0,
+                              damageRectInPixels.width, damageRectInPixels.height,
+                              doneBuffers->mBlackCX, targets[j],
+                              damageRectInPixels.x, damageRectInPixels.y,
+                              element->mView->GetOpacity(), doneBuffers->mWhiteCX,
+                              NS_RGB(0, 0, 0), NS_RGB(255, 255, 255));
+            }
           }
         }
+        // probably should recycle these so we don't eat the cost of graphics memory
+        // allocation
+        delete doneBuffers;
       }
-      // probably should recycle these so we don't eat the cost of graphics memory
-      // allocation
-      delete doneBuffers;
     }
     if (element->mFlags & POP_CLIP) {
       PopState(RCs, 2);
