@@ -77,6 +77,9 @@ public:
   /** helper method for determining if this is a nested table or not */
   PRBool IsNested(const nsReflowState& aReflowState, nsStylePosition *& aPosition) const;
 
+  /** helper method to find the table parent of any table frame object */
+  static NS_METHOD GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aOutFrame);
+
   /** helper method for getting the width of the table's containing block */
   static nscoord GetTableContainerWidth(const nsReflowState& aState);
 

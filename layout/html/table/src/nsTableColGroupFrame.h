@@ -21,6 +21,8 @@
 #include "nscore.h"
 #include "nsContainerFrame.h"
 
+class nsTableColFrame;
+
 
 /**
  * nsTableColGroupFrame
@@ -65,6 +67,8 @@ public:
     * else, check my own span attribute.
     */
   virtual PRInt32 GetColumnCount ();
+
+  virtual nsTableColFrame * GetColumnAt (PRInt32 aColIndex);
 
   virtual PRInt32 GetStartColumnIndex ();
   

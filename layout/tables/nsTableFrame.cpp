@@ -1661,7 +1661,17 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
   if (NS_STYLE_TABLE_LAYOUT_FIXED!=tableStyle->mLayoutStrategy)
   {
-    for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
+    for (nsIFrame* kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) 
+    {
+      const nsStyleDisplay *childDisplay;
+      kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+      if ((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP != childDisplay->mDisplay) &&
+          (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP != childDisplay->mDisplay) &&
+          (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    != childDisplay->mDisplay) &&
+          (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP != childDisplay->mDisplay))
+      {
+        continue;
+      }
       nsSize maxKidElementSize(0,0);
       nsReflowState kidReflowState(kidFrame, aReflowState, availSize);
 
@@ -1904,9 +1914,7 @@ void nsTableFrame::PlaceChild(nsIPresContext*    aPresContext,
     const nsStyleSpacing* tableSpacing;
     // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
     nsIFrame * parent = nsnull;
-    GetGeometricParent(parent);
-    parent->GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)tableSpacing));
-    // end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+    GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)tableSpacing));
     tableSpacing->CalcBorderPaddingFor(this, borderPadding);
     nscoord cellSpacing = GetCellSpacing();
     nscoord kidWidth = aKidMaxElementSize.width + borderPadding.left + borderPadding.right + cellSpacing*2;
@@ -1948,7 +1956,8 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
   else
     reason = eReflowReason_Resize;
 
-  for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) {
+  for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) 
+  {
     nsSize            kidAvailSize(aState.availSize);
     nsReflowMetrics   desiredSize(pKidMaxElementSize);
     desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
@@ -1956,7 +1965,10 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
 
     const nsStyleDisplay *childDisplay;
     kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_CAPTION != childDisplay->mDisplay)
+    if ((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay) ||
+        (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay) ||
+        (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    == childDisplay->mDisplay) ||
+        (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay))
     { // for all colgroups and rowgroups...
       const nsStyleSpacing* kidSpacing;
       kidFrame->GetStyleData(eStyleStruct_Spacing, ((nsStyleStruct *&)kidSpacing));
@@ -2436,7 +2448,6 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
   if (nsnull!=cellMap)
   { // hooray, we get to do this the easy way because the info is cached
     aColFrame = cellMap->GetColumnFrame(aColIndex);
-    NS_ASSERTION(nsnull!=aColFrame, "bad col frame");
   }
   else
   { // ah shucks, we have to go hunt for the column frame brute-force style
@@ -2456,13 +2467,10 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
         PRInt32 colGroupStartingIndex = ((nsTableColGroupFrame *)childFrame)->GetStartColumnIndex();
         if (aColIndex >= colGroupStartingIndex)
         { // the cell's col might be in this col group
-          // XXX FIX ME...
-          nsIFrame* firstChild;
-          childFrame->FirstChild(firstChild);
-          PRInt32 childCount = LengthOf(firstChild);
-          if (aColIndex < colGroupStartingIndex + childCount)
-          { // yep, we've found it
-            aColFrame = (nsTableColFrame*)FrameAt(firstChild, aColIndex-colGroupStartingIndex);
+          PRInt32 colCount = ((nsTableColGroupFrame *)childFrame)->GetColumnCount();
+          if (aColIndex < colGroupStartingIndex + colCount)
+          { // yep, we've found it.  GetColumnAt gives us the column at the offset colCount, not the absolute colIndex for the whole table
+            aColFrame = ((nsTableColGroupFrame *)childFrame)->GetColumnAt(colCount);
             break;
           }
         }
@@ -2470,6 +2478,7 @@ NS_METHOD nsTableFrame::GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aCol
       childFrame->GetNextSibling(childFrame);
     }
   }
+  NS_POSTCONDITION(nsnull!=aColFrame, "no column frame could be found.");
   return NS_OK;
 }
 
@@ -2519,16 +2528,24 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
           childFrame->FirstChild(rowFrame);
           while (nsnull!=rowFrame)
           {
-            nsIFrame *cellFrame;
-            rowFrame->FirstChild(cellFrame);
-            while (nsnull!=cellFrame)
+            const nsStyleDisplay *rowDisplay;
+            rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)rowDisplay));
+            if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
             {
-              /* this is the first time we are guaranteed to have both the cell frames
-               * and the column frames, so it's a good time to 
-               * set the column style from the cell's width attribute (if this is the first row)
-               */
-              SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
-              cellFrame->GetNextSibling(cellFrame);
+              nsIFrame *cellFrame;
+              rowFrame->FirstChild(cellFrame);
+              while (nsnull!=cellFrame)
+              {
+                /* this is the first time we are guaranteed to have both the cell frames
+                 * and the column frames, so it's a good time to 
+                 * set the column style from the cell's width attribute (if this is the first row)
+                 */
+                const nsStyleDisplay *cellDisplay;
+                cellFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)cellDisplay));
+                if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
+                  SetColumnStyleFromCell(aPresContext, (nsTableCellFrame *)cellFrame, (nsTableRowFrame *)rowFrame);
+                cellFrame->GetNextSibling(cellFrame);
+              }
             }
             rowFrame->GetNextSibling(rowFrame);
           }
@@ -2551,9 +2568,14 @@ void nsTableFrame::BuildColumnCache( nsIPresContext*      aPresContext,
         while (nsnull!=colFrame)
         { // for every column, create an entry in the column cache
           // assumes that the col style has been twiddled to account for first cell width attribute
-          const nsStylePosition* colPosition;
-          colFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)colPosition));
-          mColCache->AddColumnInfo(colPosition->mWidth.GetUnit(), colFrame->GetColumnIndex());
+          const nsStyleDisplay *colDisplay;
+          colFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)colDisplay));
+          if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
+          {
+            const nsStylePosition* colPosition;
+            colFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)colPosition));
+            mColCache->AddColumnInfo(colPosition->mWidth.GetUnit(), colFrame->GetColumnIndex());
+          }
           colFrame->GetNextSibling((nsIFrame *&)colFrame);
         }
       }
@@ -2618,7 +2640,8 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
     rg->GetContent(content);                                              // content: REFCNT++
     NS_ASSERTION(nsnull!=content, "bad frame, returned null content.");
     const nsStyleDisplay* display;
-    GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+    //XXX: TROY:  this was just this->GetStyleData which can't be right
+    rg->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
     if ((display->mDisplay == NS_STYLE_DISPLAY_TABLE_HEADER_GROUP) || 
         (display->mDisplay == NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP)) 
     {
@@ -2670,9 +2693,6 @@ PRInt32 nsTableFrame::GetColumnWidth(PRInt32 aColIndex)
      result = mColumnWidths[aColIndex];
   }
 
-  //printf("GET_COL_WIDTH: %p, FIF=%p getting col %d and returning %d\n", this, firstInFlow, aColIndex, result);
-
-  // XXX hack
   return result;
 }
 
@@ -2886,6 +2906,29 @@ NS_NewTableFrame(nsIContent* aContent,
   return NS_OK;
 }
 
+NS_METHOD nsTableFrame::GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aOutFrame)
+{
+  nsresult result = NS_OK;
+  aOutFrame = nsnull;   // initialize out-param
+  if (nsnull!=aSourceFrame)
+  {
+    nsresult result = aSourceFrame->GetContentParent((nsIFrame *&)aOutFrame);
+    while ((NS_OK==result) && (nsnull!=aOutFrame))
+    {
+      const nsStyleDisplay *display;
+      aOutFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+      if (NS_STYLE_DISPLAY_TABLE == display->mDisplay)
+        break;
+      result = aOutFrame->GetContentParent((nsIFrame *&)aOutFrame);
+    }
+  }
+  else
+    result = NS_ERROR_UNEXPECTED; // bad source param
+  NS_POSTCONDITION(nsnull!=aOutFrame, "unable to find table parent. aOutFrame null.");
+  NS_POSTCONDITION(NS_OK==result, "unable to find table parent. result!=NS_OK");
+  return result;
+}
+
 /* helper method for determining if this is a nested table or not */
 PRBool nsTableFrame::IsNested(const nsReflowState& aReflowState, nsStylePosition *& aPosition) const
 {
@@ -2901,6 +2944,7 @@ PRBool nsTableFrame::IsNested(const nsReflowState& aReflowState, nsStylePosition
 #ifdef NS_DEBUG
     counter++;
     NS_ASSERTION(counter<100000, "infinite loop in IsNested");
+    break;
 #endif
     nsIFrame* parentTable = nsnull;
     rv = rs->frame->QueryInterface(kTableFrameCID, (void**) &parentTable);
@@ -3007,13 +3051,9 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
         cell->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)cellPosition));
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit())
         {
-          // first, get pointers to the table frame parents of the cell
-          nsIFrame *rowParent, *rowGroupParent;
           nsTableFrame *tableParent;
-          cell->GetGeometricParent(rowParent);
-          rowParent->GetGeometricParent(rowGroupParent);
-          rowGroupParent->GetGeometricParent((nsIFrame *&)tableParent);
-          if (nsnull != tableParent->mColumnWidths)
+          rv=GetTableFrame(cell, tableParent);
+          if ((NS_OK==rv) && (nsnull!=tableParent) && (nsnull!=tableParent->mColumnWidths))
           {
             parentWidth=0;
             PRInt32 colIndex = ((nsTableCellFrame *)cell)->GetColIndex();

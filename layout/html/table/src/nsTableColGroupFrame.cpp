@@ -287,26 +287,47 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
 int nsTableColGroupFrame::GetColumnCount ()
 {
   mColCount=0;
-  int count = LengthOf(mFirstChild);
-  if (0 < count)
+  nsIFrame *childFrame = mFirstChild;
+  while (nsnull!=childFrame)
   {
-    nsIFrame * child = mFirstChild;
-    NS_ASSERTION(nsnull!=child, "bad child");
-    while (nsnull!=child)
+    const nsStyleDisplay *childDisplay;
+    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
     {
-      nsTableColFrame *col = (nsTableColFrame *)child;
+      nsTableColFrame *col = (nsTableColFrame *)childFrame;
       col->SetColumnIndex (mStartColIndex + mColCount);
-      mColCount += col->GetRepeat ();
-      child->GetNextSibling(child);
+      mColCount += col->GetRepeat();
     }
+    childFrame->GetNextSibling(childFrame);
   }
-  else
-  {
+  if (0==mColCount)
+  { // there were no children of this colgroup that were columns.  So use my span attribute
     const nsStyleTable *tableStyle;
     GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
     mColCount = tableStyle->mSpan;
   }
   return mColCount;
+}
+
+nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
+{
+  nsTableColFrame *result = nsnull;
+  PRInt32 count=0;
+  nsIFrame *childFrame = mFirstChild;
+  while (nsnull!=childFrame)
+  {
+    const nsStyleDisplay *childDisplay;
+    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
+    {
+      nsTableColFrame *col = (nsTableColFrame *)childFrame;
+      count += col->GetRepeat();
+      if (aColIndex<=count)
+        result = col;
+    }
+    childFrame->GetNextSibling(childFrame);
+  }
+  return result;
 }
 
 PRInt32 nsTableColGroupFrame::GetSpan()
