@@ -1,6 +1,6 @@
 <!ENTITY  lang.version          "1.5a">
 <!ENTITY  brandShortName        "Mozilla Firebird">
-<!ENTITY  version               "0.6.1+">
+<!ENTITY  version               "0.7+">
 <!ENTITY  vendorShortName       "Mozilla Firebird">
 
 <!ENTITY  releaseURL            "http://www.mozilla.org/projects/firebird/release-notes.html">
