@@ -21,7 +21,7 @@ function go( msg )
 {
 	if ( parent.parent.globals.document.vars.editMode.value != "yes" )
 	{
-		if ( msg == parent.parent.globals.document.vars.path.value )
+		if ( msg == parent.parent.globals.document.vars.path.value  || (msg == "1step") || (msg == "2step"))
 		{
 			parent.parent.globals.document.vars.tryAgain.value = "yes";
 			return checkData();

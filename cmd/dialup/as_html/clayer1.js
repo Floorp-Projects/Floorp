@@ -148,15 +148,18 @@ pages[ 56 ][ 1 ] = new method( "2step.htm", "parent.content.go( '' )", true );
 
 pages[ 57 ] = new Array();
 pages[ 57 ][ 0 ] = new page( "2step.htm", null, null );
-pages[ 57 ][ 1 ] = new method( "register.htm", "parent.content.go( '' )", true );
+pages[ 57 ][ 1 ] = new method( "reg2stp.htm", "parent.content.go( '' )", true );
 
 pages[ 8 ] = new Array();
 pages[ 8 ][ 0 ] = new page( "connect1.htm", null, null );
 pages[ 8 ][ 1 ] = new method( "editfour.htm", "checkEditMode('')", true );
-pages[ 8 ][ 2 ] = new method( "register.htm", "parent.content.go('')", true );
+pages[ 8 ][ 2 ] = new method( "reg1stp.htm", "parent.content.go('')", true );
 
 pages[ 9 ] = new Array();
-pages[ 9 ][ 0 ] = new page( "register.htm", null, null );
+pages[ 9 ][ 0 ] = new page( "reg1stp.htm", null, null );
+
+pages[ 61 ] = new Array();
+pages[ 61 ][ 0 ] = new page( "reg2stp.htm", null, null );
 
 // Existing Account Path
 
@@ -220,8 +223,9 @@ pages[ 21 ][ 0 ] = new page( "okreboot.htm", null, null );
 
 pages[ 22 ] = new Array();
 pages[ 22 ][ 0 ] = new page( "error.htm", null, null );
-pages[ 22 ][ 1 ] = new method( "register.htm", "parent.content.go( 'New Path' )", true );
-pages[ 22 ][ 2 ] = new method( "connect2.htm", "parent.content.go( 'Existing Path' )", true );
+pages[ 22 ][ 1 ] = new method( "reg1stp.htm", "parent.content.go( '1step' )", true );
+pages[ 22 ][ 2 ] = new method( "reg2stp.htm", "parent.content.go( '2step' )", true );
+pages[ 22 ][ 3 ] = new method( "connect2.htm", "parent.content.go( 'Existing Path' )", true );
 
 pages[ 23 ] = new Array();
 pages[ 23 ][ 0 ] = new page( "later.htm", null, null );
@@ -367,7 +371,7 @@ pages[51][1]=new action("main.htm");
 
 pages[52]=new Array();
 pages[52][0]=new page("editfour.htm",null,null);
-pages[52][1]=new method("register.htm","parent.content.go('register.htm')",true);
+pages[52][1]=new method("reg1stp.htm","parent.content.go('register.htm')",true);
 pages[52][2]=new method("ok.htm","parent.content.go('ok.htm')",true);
 pages[52][3]=new method("okreboot.htm","parent.content.go('okreboot.htm')",true);
 pages[52][4]=new method("error.htm","parent.content.go('error.htm')",true);
@@ -675,8 +679,8 @@ function go( msg )
 					{
 						pageName = pageHistory.substring( x + 1, pageHistory.length );
 						globals.document.vars.pageHistory.value = pageHistory.substring( 0, x + 1 );
-						if ( ( pageName == "register.htm" ) || ( pageName == "error.htm" ) ||
-							( pageName == "error2.htm" ) )
+						if ( ( pageName == "reg1stp.htm" ) || ( pageName == "error.htm" ) ||
+							( pageName == "error2.htm" ) || ( pageName == "reg2stp.htm" ) )
 							historyCleanup = true;
 					}
 					else

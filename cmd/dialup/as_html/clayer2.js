@@ -267,7 +267,7 @@ function generateControls()
 			if ( editMode == true )
 				showScreenOptions = true;
 		}
-		else if ( formName == "register.htm" )
+		else if ( formName == "reg1stp.htm" || formName == "reg2stp.htm" )
 		{
 			showHelp = false;
 			showBack = false;
@@ -719,7 +719,7 @@ function generateToolBarControls()
 				showScreenOptions=true;
 		else if (formName == "connect2.htm")
 			;
-		else if (formName == "register.htm")
+		else if (formName == "reg1stp.htm" || formName == "reg2stp.htm" )
 			;
 		else if (formName == "ok.htm")
 			showScreenOptions=true;
