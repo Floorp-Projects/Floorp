@@ -141,8 +141,7 @@ if(!(-d "$inStagePath"))
                    "langenus",
                    "regus",
                    "venkman",
-                   "inspector",
-                   "typeaheadfind");
+                   "inspector");
 
 if(VerifyComponents()) # return value of 0 means no errors encountered
 {

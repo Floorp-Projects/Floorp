@@ -265,7 +265,7 @@ bin/components/t8iix.dll
 ;bin/ISimpleDOMDocumentMarshal.dll
 ;bin/components/nsSetDefaultBrowser.js
 bin/components/typeaheadfind.xpt
-bin/components/typeheadfind.dll
+bin/components/typahead.dll
 
 ; LDAP components need to be in the browser for AutoConfig
 bin/components/mozldap.dll
@@ -435,12 +435,6 @@ bin/chrome/icons/default/winInspectorMain.ico
 bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
-
-[typeaheadfind]
-bin/components/typahead.dll
-bin/components/typeaheadfind.xpt
-bin/chrome/typeaheadfind.jar
-bin/defaults/pref/typeaheadfind.js
 
 ;Things that aren't packaged and why (or not why)
 ;accproxy.dll - I don't know
