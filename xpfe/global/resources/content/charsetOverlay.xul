@@ -10,7 +10,7 @@
     <script language="JavaScript" src="chrome://global/content/charsetOverlay.js"/>
 
     <!-- Composer Charset Menu -->
-    <menu id="composerCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:ComposerCharsetMenuRoot" oncommand="ComposerMultiplexHandler(event)" oncreate="UpdateMenus()">
+    <menu id="composerCharsetMenu" value="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:ComposerCharsetMenuRoot" oncommand="ComposerMultiplexHandler(event)" oncreate="UpdateMenus()">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
                 <menupopup>
@@ -25,7 +25,7 @@
         </template>
 
         <menupopup id="composerCharsetMenuPopup">
-        <menu value="&charsetMenuAutodet.label;"  datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
+        <menu value="&charsetMenuAutodet.label;" accesskey="&charsetMenuAutodet.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserAutodetMenuRoot">
             <template>
                 <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
                     <menupopup>
@@ -36,7 +36,7 @@
             <menupopup>
             </menupopup>
         </menu>
-        <menu value="&charsetMenuMore.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
+        <menu value="&charsetMenuMore.label;" accesskey="&charsetMenuMore.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMoreCharsetMenuRoot">
             <template>
                 <rule>
                     <menupopup>
@@ -45,7 +45,7 @@
                 </rule>
             </template>
             <menupopup>
-                <menu value="&charsetMenuMore1.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore1CharsetMenuRoot">
+                <menu value="&charsetMenuMore1.label;" accesskey="&charsetMenuMore1.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore1CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -56,7 +56,7 @@
                     <menupopup>
                     </menupopup>
                 </menu>
-                <menu value="&charsetMenuMore2.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore2CharsetMenuRoot">
+                <menu value="&charsetMenuMore2.label;" accesskey="&charsetMenuMore2.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore2CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -67,7 +67,7 @@
                     <menupopup>
                     </menupopup>
                 </menu>
-                <menu value="&charsetMenuMore3.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore3CharsetMenuRoot">
+                <menu value="&charsetMenuMore3.label;" accesskey="&charsetMenuMore3.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore3CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -78,7 +78,7 @@
                     <menupopup>
                     </menupopup>
                 </menu>
-                <menu value="&charsetMenuMore4.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore4CharsetMenuRoot">
+                <menu value="&charsetMenuMore4.label;" accesskey="&charsetMenuMore4.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore4CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -89,7 +89,7 @@
                     <menupopup>
                     </menupopup>
                 </menu>
-                <menu value="&charsetMenuMore5.label;"  datasources="rdf:charset-menu" ref="NC:BrowserMore5CharsetMenuRoot">
+                <menu value="&charsetMenuMore5.label;" accesskey="&charsetMenuMore5.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserMore5CharsetMenuRoot">
                     <template>
                         <rule>
                             <menupopup>
@@ -103,7 +103,7 @@
                 <menuseparator />
             </menupopup>
         </menu>
-        <menuitem name="charsetCustomize" value="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
+        <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" value="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
         </menupopup>
     </menu>
 
