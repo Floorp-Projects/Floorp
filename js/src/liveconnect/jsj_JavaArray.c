@@ -252,6 +252,8 @@ JavaArray_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
 
     old_reporter = JS_SetErrorReporter(cx, NULL);
     result = access_java_array_element(cx, jEnv, obj, id, NULL, JS_FALSE);
+    if (result && objp) 
+        *objp = obj;
     JS_SetErrorReporter(cx, old_reporter);
     jsj_ExitJava(jsj_env);
     return result;
