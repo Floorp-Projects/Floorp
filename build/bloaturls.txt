@@ -1,4 +1,3 @@
-http://www.mozilla.org
 ftp://ftp.mozilla.org
 resource:///res/samples/test2.html
 resource:///res/samples/test8.html
