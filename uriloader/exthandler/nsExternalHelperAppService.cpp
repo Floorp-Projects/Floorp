@@ -447,12 +447,12 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   mTempFile->Append(tempLeafName); // make this file unique!!!
   mTempFile->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0644);
 
-  nsCOMPtr<nsIFileChannel> mFileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_PROGID);
-  if (mFileChannel)
+  nsCOMPtr<nsIFileChannel> fileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_PROGID);
+  if (fileChannel)
   {
-    rv = mFileChannel->Init(mTempFile, -1, 0);
+    rv = fileChannel->Init(mTempFile, -1, 0);
     if (NS_FAILED(rv)) return rv; 
-    rv = mFileChannel->OpenOutputStream(getter_AddRefs(mOutStream));
+    rv = fileChannel->OpenOutputStream(getter_AddRefs(mOutStream));
     if (NS_FAILED(rv)) return rv; 
   }
 
@@ -462,6 +462,10 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
 {
   NS_ENSURE_ARG(aChannel);
+
+  // first, check to see if we've been canceled....
+  if (mCanceled) // then go cancel our underlying channel too
+    return aChannel->Cancel(NS_BINDING_ABORTED);
 
   nsresult rv = SetUpTempFile(aChannel);
 
@@ -496,6 +500,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
 NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIChannel * aChannel, nsISupports * aCtxt,
                                                   nsIInputStream * inStr, PRUint32 sourceOffset, PRUint32 count)
 {
+  // first, check to see if we've been canceled....
+  if (mCanceled) // then go cancel our underlying channel too
+    return aChannel->Cancel(NS_BINDING_ABORTED);
+
   // read the data out of the stream and write it to the temp file.
   PRUint32 numBytesRead = 0;
   if (mOutStream && mDataBuffer && count > 0)
@@ -519,8 +527,11 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
                                                 nsresult aStatus, const PRUnichar * errorMsg)
 {
   nsresult rv = NS_OK;
-
   mStopRequestIssued = PR_TRUE;
+
+  // first, check to see if we've been canceled....
+  if (mCanceled) // then go cancel our underlying channel too
+    return aChannel->Cancel(NS_BINDING_ABORTED);
 
   // go ahead and execute the application passing in our temp file as an argument
   // this may involve us calling back into the OS external app service to make the call
@@ -529,7 +540,10 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
 
   // close the stream...
   if (mOutStream)
+  {
     mOutStream->Close();
+    mOutStream = nsnull;
+  }
 
   if (mReceivedDispostionInfo && !mCanceled)
   {
@@ -596,37 +610,35 @@ nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, con
 NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBool aRememberThisPreference)
 {
   nsresult rv = NS_OK;
-  mReceivedDispostionInfo = PR_TRUE;
-  if (mStopRequestIssued)
+  nsCOMPtr<nsILocalFile> fileToUse;
+  if (mCanceled)
+    return NS_OK;
+
+  if (!aNewFileLocation)
   {
-    nsCOMPtr<nsILocalFile> fileToUse;
-    if (!aNewFileLocation)
-    {
-      nsXPIDLString leafName;
-      mTempFile->GetUnicodeLeafName(getter_Copies(leafName));
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName);
-    }
-    else
-      fileToUse = do_QueryInterface(aNewFileLocation);
-    if (NS_SUCCEEDED(rv) && fileToUse)
-    {
-       // extract the new leaf name from the file location
-       nsXPIDLCString fileName;
-       fileToUse->GetLeafName(getter_Copies(fileName));
-       nsCOMPtr<nsIFile> directoryLocation;
-       fileToUse->GetParent(getter_AddRefs(directoryLocation));
-       if (directoryLocation)
-       {
-         rv = mTempFile->MoveTo(directoryLocation, fileName);
-       }
-    }
-    else
-      Cancel(); // call cancel if we failed to save the file to disk.
+    nsXPIDLString leafName;
+    mTempFile->GetUnicodeLeafName(getter_Copies(leafName));
+    rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName);
+    if (NS_FAILED(rv)) 
+      return Cancel();
+    mFinalFileDestination = do_QueryInterface(fileToUse);
   }
-  // o.t. remember the new file location to save to.
   else
+   fileToUse = do_QueryInterface(aNewFileLocation);
+
+  mReceivedDispostionInfo = PR_TRUE;
+  // if the on stop request was actually issued then it's now time to actually perform the file move....
+  if (mStopRequestIssued && fileToUse)
   {
-    mFinalFileDestination = aNewFileLocation;
+     // extract the new leaf name from the file location
+     nsXPIDLCString fileName;
+     fileToUse->GetLeafName(getter_Copies(fileName));
+     nsCOMPtr<nsIFile> directoryLocation;
+     fileToUse->GetParent(getter_AddRefs(directoryLocation));
+     if (directoryLocation)
+     {
+       rv = mTempFile->MoveTo(directoryLocation, fileName);
+     }
   }
 
   return rv;
@@ -634,6 +646,9 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
 
 NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication, PRBool aRememberThisPreference)
 {
+  if (mCanceled)
+    return NS_OK;
+
   mReceivedDispostionInfo = PR_TRUE; 
   if (mMimeInfo && aApplication)
     mMimeInfo->SetPreferredApplicationHandler(aApplication);
@@ -655,5 +670,18 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
 NS_IMETHODIMP nsExternalAppHandler::Cancel()
 {
   mCanceled = PR_TRUE;
+  // shutdown our stream to the temp file
+  if (mOutStream)
+  {
+    mOutStream->Close();
+    mOutStream = nsnull;
+  }
+
+  // clean up after ourselves and delete the temp file...
+  if (mTempFile)
+  {
+    mTempFile->Delete(PR_TRUE);
+    mTempFile = nsnull;
+  }
   return NS_OK;
 }
