@@ -355,12 +355,12 @@ function onOKCommand()
    if ( getFieldValue("start-checkbox", "checked") )
      gEvent.start.setTime( gStartDate.getTime() );
    else
-     gEvent.start.setTime( kNODATE );;
+     gEvent.start.clear(); // libical icaltime_null_time
 
    if ( getFieldValue("due-checkbox", "checked") )
      gEvent.due.setTime( gDueDate.getTime() );
    else
-     gEvent.due.setTime( kNODATE );
+     gEvent.due.clear(); // libical icaltime_null_time
 
    gEvent.url = getFieldValue( "uri-field" );
 
