@@ -2,6 +2,7 @@
 // Microsoft Developer Studio generated include file.
 // Used by npspy.rc
 //
+#define IDC_STATIC                      -1
 #define IDD_DIALOG_OPTIONS              101
 #define IDI_ICON1                       102
 #define IDI_ICON_APP                    102
