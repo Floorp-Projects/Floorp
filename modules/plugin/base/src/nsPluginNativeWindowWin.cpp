@@ -109,6 +109,7 @@ void PluginWindowEvent::Init(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
 typedef enum {
   nsPluginType_Unknown = 0,
   nsPluginType_Flash,
+  nsPluginType_Real,
   nsPluginType_Other
 } nsPluginType;
 
@@ -137,6 +138,9 @@ private:
 public:
   nsPluginType mPluginType;
 };
+
+static PRBool sInMessageDispatch = PR_FALSE;
+static UINT sLastMsg = 0;
 
 static PRBool ProcessFlashMessageDelayed(nsPluginNativeWindowWin * aWin, 
                                          HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -185,12 +189,31 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
         if (mimetype) { 
           if (!strcmp(mimetype, "application/x-shockwave-flash"))
             win->mPluginType = nsPluginType_Flash;
+          else if (!strcmp(mimetype, "audio/x-pn-realaudio-plugin"))
+            win->mPluginType = nsPluginType_Real;
           else
             win->mPluginType = nsPluginType_Other;
         }
       }
     }
   }
+
+  // Real may go into a state where it recursivly dispatches the same event
+  // when subclassed. If this is Real, lets examine the event and drop it
+  // on the floor if we get into this recursive situation. See bug 192914.
+  if (win->mPluginType == nsPluginType_Real) {
+    
+    if (sInMessageDispatch && (msg == sLastMsg)) {
+#ifdef DEBUG
+      printf("Dropping event %d for Real on the floor\n", msg);
+#endif
+      return PR_TRUE;  // prevents event dispatch
+    } else {
+      sLastMsg = msg;  // no need to prevent dispatch
+    }
+  }
+
+
 
   // Activate/deactivate mouse capture on the plugin widget
   // here, before we pass the Windows event to the plugin
@@ -232,9 +255,14 @@ static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
   nsCOMPtr<nsIPluginInstance> inst;
   win->GetPluginInstance(inst);
 
+  sInMessageDispatch = PR_TRUE;
+
   NS_TRY_SAFE_CALL_RETURN(res, 
                           ::CallWindowProc((WNDPROC)win->GetWindowProc(), hWnd, msg, wParam, lParam),
                           nsnull, inst);
+
+  sInMessageDispatch = PR_FALSE;
+
   return res;
 }
 
