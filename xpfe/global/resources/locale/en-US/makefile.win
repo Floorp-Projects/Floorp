@@ -44,6 +44,7 @@ CHROME_L10N = \
 	.\wizardManager.properties \
 	.\wizardOverlay.dtd \
 	.\about.dtd \
+	.\accept2locale.properties \
 	.\languageNames.properties \
 	.\manifest.rdf \
   .\regionNames.properties \
