@@ -14,7 +14,7 @@
    - 
    - The Initial Developer of the Original Code is Netscape
    - Communications Corporation. Portions created by Netscape are
-   - Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   - Copyright (C) 1998-2000 Netscape Communications Corporation. All
    - Rights Reserved.
    - 
    - Contributor(s): 
@@ -41,8 +41,13 @@
 <!ENTITY widthEditField.label "Width">
 <!ENTITY constrainCheckbox.label "Constrain">
 
+<!-- These controls are in the Image Map box of the expanded area -->
+<!ENTITY imagemapBox.label "Image Map">
+<!ENTITY removeImageMapButton.label "Remove Image Map">
+<!ENTITY editImageMapButton.label "Edit Image Map...">
+
 <!-- These are the options for image alignment -->
-<!ENTITY alignment.label "Align Text to Image:">
+<!ENTITY alignment.label "Align Text to Image">
 <!ENTITY bottomPopup.value "at the bottom">
 <!ENTITY topPopup.value "at the top">
 <!ENTITY centerPopup.value "in the center">
@@ -59,5 +64,3 @@
 <!ENTITY leaveAtLocationCheckbox.label "Leave">
 <!ENTITY makePageBackgroundCheckbox.label "Make Page Background">
 <!ENTITY editImageButton.label "Edit Image">
-<!ENTITY removeImageMapButton.label "Remove Image Map">
-<!ENTITY editImageMapButton.label "Edit Image Map...">
