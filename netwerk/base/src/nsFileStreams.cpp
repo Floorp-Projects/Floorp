@@ -165,7 +165,7 @@ nsFileStream::SetEOF()
 
 #if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
     // Some system calls require an EOF offset.
-    PRUint32 offset;
+    PRInt64 offset;
     nsresult rv = Tell(&offset);
     if (NS_FAILED(rv)) return rv;
 #endif
