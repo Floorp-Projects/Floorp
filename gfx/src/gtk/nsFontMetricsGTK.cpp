@@ -16,10 +16,11 @@
  * Reserved.
  */
 
+#include <gdk/gdk.h>
+
 #include "xp_core.h"
 #include "nsFontMetricsGTK.h"
 
-#include <gdk/gdk.h>
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 

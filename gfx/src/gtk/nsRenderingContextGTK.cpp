@@ -16,9 +16,9 @@
  * Reserved.
  */
 
+#include <gtk/gtk.h>
 #include "nsRenderingContextGTK.h"
 #include <math.h>
-#include <gtk/gtk.h>
 
 typedef unsigned char BYTE;
 
@@ -261,7 +261,7 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
                                                           PRUint32 aSurfFlags,
                                                           nsDrawingSurface &aSurface)
 {
-#if 0
+
   GdkPixmap *pixmap = gdk_pixmap_new(mRenderingSurface->drawable, aBounds->width,
                                      aBounds->height, -1);
 
@@ -270,8 +270,8 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
   surface->drawable = pixmap ;
   surface->gc       = mRenderingSurface->gc;
 
-  return ((nsDrawingSurface)surface);
-#endif
+//  return ((nsDrawingSurface)surface);
+
   return NS_OK;
 }
 

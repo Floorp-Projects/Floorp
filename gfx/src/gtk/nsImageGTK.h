@@ -21,6 +21,11 @@
 
 #include "nsIImage.h"
 
+#include "X11/Xlib.h"
+#include "X11/Xutil.h"
+
+#undef Bool
+
 class nsImageGTK : public nsIImage
 {
 public:
@@ -32,35 +37,31 @@ public:
   /**
   @see nsIImage.h
   */
-  virtual PRInt32         GetHeight()         { return 0; }
-  virtual PRInt32         GetWidth()          { return 0; }
-  virtual PRUint8*        GetBits()           { return nsnull; }
-  virtual void*           GetBitInfo()        { return nsnull; }
-  virtual PRInt32         GetLineStride()     {return 0; }
-  NS_IMETHOD              Draw(nsIRenderingContext &aContext,
-                               nsDrawingSurface aSurface,
-                               PRInt32 aX, PRInt32 aY,
-                               PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD              Draw(nsIRenderingContext &aContext,
-                               nsDrawingSurface aSurface,
-                               PRInt32 aSX, PRInt32 aSY,
-                               PRInt32 aSWidth, PRInt32 aSHeight,
-                               PRInt32 aDX, PRInt32 aDY,
-                               PRInt32 aDWidth, PRInt32 aDHeight);
-  virtual nsColorMap* GetColorMap() {return nsnull;}
+  virtual PRInt32     GetHeight()         { return mHeight; }
+  virtual PRInt32     GetWidth()          { return mWidth; }
+  virtual PRUint8*    GetBits()           { return mImageBits; }
+  virtual void*       GetBitInfo()        { return nsnull; }
+  virtual PRInt32     GetLineStride()     {return mRowBytes; }
+  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+  virtual nsColorMap* GetColorMap() {return mColorMap;}
   virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
-  virtual PRBool      IsOptimized()       { return PR_FALSE; }
+  virtual PRBool      IsOptimized()       { return (mImage!=nsnull); }
+
+  virtual  nsresult   BuildImage(nsDrawingSurface aDrawingSurface);
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
-  virtual PRUint8*    GetAlphaBits()      { return nsnull; }
+  virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
   virtual PRInt32     GetAlphaWidth()   { return 0;}
   virtual PRInt32     GetAlphaHeight()   {return 0;}
   virtual PRInt32     GetAlphaXLoc() {return 0;}
   virtual PRInt32     GetAlphaYLoc() {return 0;}
   virtual PRInt32     GetAlphaLineStride(){ return 0; }
-  virtual void CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
-  
-  virtual nsIImage*   DuplicateImage();
+  virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
+  virtual nsIImage*   DuplicateImage() {return(nsnull);}
+
+  void AllocConvertedBits(PRUint32 aSize);
 
   /** 
     * Return the image size of the Device Independent Bitmap(DIB).
@@ -80,17 +81,48 @@ public:
    * @return the number of bytes in this span
    */
   PRInt32  CalcBytesSpan(PRUint32  aWidth);
-
   PRBool  SetAlphaMask(nsIImage *aTheMask);
-
-  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel) {mAlphaLevel=aAlphaLevel;}
-
-  virtual PRInt32 GetAlphaLevel() {return(mAlphaLevel);}
-
-  void MoveAlphaMask(PRInt32 aX, PRInt32 aY){}
+  virtual void  SetAlphaLevel(PRInt32 /* aAlphaLevel */) {}
+  virtual PRInt32 GetAlphaLevel() {return(0);}
+  virtual void  MoveAlphaMask(PRInt32 /* aX */, PRInt32 /* aY */) {}
 
 private:
-  PRInt16             mAlphaLevel;        // an alpha level every pixel uses
+  void CreateImage(nsDrawingSurface aSurface);
+  void ConvertImage(nsDrawingSurface aSurface);
+
+  /** 
+   * Calculate the amount of memory needed for the initialization of the image
+   */
+  void ComputMetrics();
+  void ComputePaletteSize(PRIntn nBitCount);
+
+
+private:
+  PRBool     mStaticImage;
+  PRInt32    mWidth;
+  PRInt32    mHeight;
+  PRInt32    mDepth;       // bits per pixel
+  PRInt32    mOriginalDepth;       // bits per pixel
+  PRInt32    mRowBytes;
+  PRInt32    mOriginalRowBytes;
+  GdkPixmap  *mThePixMap;
+  PRUint8    *mImageBits;
+  PRUint8    *mConvertedBits;
+  PRBool     mConverted;
+  PRUint8    *mBitsForCreate;
+  PRInt32    mSizeImage;
+  GdkImage   *mImage ;
+  nsColorMap *mColorMap;
+  PRInt16     mNumPalleteColors;
+  PRInt8      mNumBytesPixel;
+
+ // alpha layer members
+  PRUint8    *mAlphaBits;
+  PRInt8     mAlphaDepth;        // alpha layer depth
+  PRInt16    mARowBytes;
+  PRInt16    mAlphaWidth;        // alpha layer width
+  PRInt16    mAlphaHeight;       // alpha layer height
+  nsPoint    mLocation;          // alpha mask location
 
 
 };
