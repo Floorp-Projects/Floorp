@@ -252,7 +252,7 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 		{
 			// set up the url spec and initialize the url with it.
 			nsFilePath filePath(folderPath); // convert to file url representation...
-			urlSpec = PR_smprintf("mailboxMessage://%s?number=%d", (const char *) filePath, msgKey);
+			urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
 			nsCOMPtr <nsIMsgMailNewsUrl> url = do_QueryInterface(*aMailboxUrl);
 			url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);
