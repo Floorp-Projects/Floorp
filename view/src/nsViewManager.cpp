@@ -1921,11 +1921,22 @@ NS_IMETHODIMP nsViewManager :: SetViewClip(nsIView *aView, nsRect *aRect)
 
 NS_IMETHODIMP nsViewManager :: SetViewVisibility(nsIView *aView, nsViewVisibility aVisible)
 {
-  nsViewVisibility isNowVisible;
-  aView->GetVisibility(isNowVisible);
-  if ( aVisible != isNowVisible ) {
+  nsViewVisibility  oldVisible;
+  aView->GetVisibility(oldVisible);
+  if (aVisible != oldVisible) {
     aView->SetVisibility(aVisible);
-    UpdateView(aView, nsnull, NS_VMREFRESH_NO_SYNC);
+    if (nsViewVisibility_kHide == aVisible) {
+      nsIView* parentView = nsnull;
+      aView->GetParent(parentView);
+      if (parentView) {
+        nsRect  bounds;
+        aView->GetBounds(bounds);
+        UpdateView(parentView, bounds, NS_VMREFRESH_NO_SYNC);
+      }
+    }
+    else {
+      UpdateView(aView, nsnull, NS_VMREFRESH_NO_SYNC);
+    }
   }
   return NS_OK;
 }
