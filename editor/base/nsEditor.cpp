@@ -2552,8 +2552,8 @@ nsEditor::GetNextNode(nsIDOMNode  *aCurrentNode,
     }
   }
   
-  // otherwise, walk up the parent change until there is a child that comes before 
-  // the ancestor of aCurrentNode.  Then return that node's rightmost child
+  // otherwise, walk up the parent change until there is a child that comes after 
+  // the ancestor of aCurrentNode.  Then return that node's leftmost child
 
   nsCOMPtr<nsIDOMNode> parent(do_QueryInterface(aCurrentNode));
   do {
