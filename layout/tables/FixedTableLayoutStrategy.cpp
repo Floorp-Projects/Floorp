@@ -83,7 +83,7 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
  */
 PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputedWidth)
 {
-  NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
+  // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
   if (gsDebug==PR_TRUE) printf ("** %p: AssignPreliminaryColumnWidths **\n", mTableFrame);
 
   const nsStylePosition* tablePosition;
@@ -123,7 +123,9 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
     if (eStyleUnit_Coord == colPosition->mWidth.GetUnit()) { 
       colWidths[colX] = colPosition->mWidth.GetCoordValue();
     } // get the percentage width
-    else if (eStyleUnit_Percent == colPosition->mWidth.GetUnit()) { 
+    else if ((eStyleUnit_Percent == colPosition->mWidth.GetUnit()) &&
+             (aComputedWidth != NS_UNCONSTRAINEDSIZE)) { 
+      // Only apply percentages if we're unconstrained.
       float percent = colPosition->mWidth.GetPercentValue();
       colWidths[colX] = NSToCoordRound(percent * (float)availWidth); 
     }
@@ -139,7 +141,8 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nscoord aComputed
         if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
           colWidths[colX] = cellPosition->mWidth.GetCoordValue() / colSpan;
         }
-        else if (eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) {
+        else if ((eStyleUnit_Percent == cellPosition->mWidth.GetUnit()) &&
+                 (aComputedWidth != NS_UNCONSTRAINEDSIZE)) {
           float percent = cellPosition->mWidth.GetPercentValue();
           colWidths[colX] = NSToCoordRound(percent * (float)availWidth / (float)colSpan); 
         }
