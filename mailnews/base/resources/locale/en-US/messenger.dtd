@@ -358,7 +358,7 @@ Rights Reserved.
 <!ENTITY fileButton.label "File">  
 <!ENTITY nextButton.label "Next">  
 <!ENTITY deleteButton.label "Delete">  
-<!ENTITY markButton.label "As Read">
+<!ENTITY markButton.label "Mark">
 <!ENTITY printButton.label "Print">  
 <!ENTITY stopButton.label "Stop">  
 
