@@ -475,10 +475,11 @@ JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
     uint32 size;
     int deltaLog2;
 
-    /* Avoid 0 and 1 hash codes, they indicate free and removed entries. */
     keyHash = table->ops->hashKey(table, key);
-    ENSURE_LIVE_KEYHASH(keyHash);
     keyHash *= JS_DHASH_GOLDEN_RATIO;
+
+    /* Avoid 0 and 1 hash codes, they indicate free and removed entries. */
+    ENSURE_LIVE_KEYHASH(keyHash);
     keyHash &= ~COLLISION_FLAG;
 
     switch (op) {
