@@ -2198,9 +2198,10 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 
       // TWM sucks and doesn't support compound text.. argh
       XTextProperty tmpProp;
+      // XGetWMName is weird - returns nonzero for success
       status = XGetWMName(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
                           &tmpProp);
-      if (status != Success) {
+      if (status) {
         if (prop.value) // free from the previous attempt
           XFree(prop.value);
         int xret = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XStringStyle,
@@ -2212,7 +2213,6 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
           // we're fucked, set it however we can.
           gtk_window_set_title(GTK_WINDOW(mShell), nsAutoCString(aTitle));
         }
-      } else {
         if (tmpProp.value)
           XFree(tmpProp.value);
       }
