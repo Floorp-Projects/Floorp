@@ -525,7 +525,7 @@ XPC_WN_Shared_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
             }
             return Throw(NS_ERROR_XPC_CANT_CONVERT_WN_TO_FUN, cx);
         case JSTYPE_NUMBER:
-            *vp = JSVAL_ONE;
+            *vp = JS_GetNaNValue(cx);
             return JS_TRUE;
         case JSTYPE_BOOLEAN:
             *vp = JSVAL_TRUE;
