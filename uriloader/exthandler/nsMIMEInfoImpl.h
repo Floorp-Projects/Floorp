@@ -34,16 +34,7 @@ class nsMIMEInfoImpl : public nsIMIMEInfo {
     PRBool InExtensions(nsIAtom* anIAtom);
 
     // nsIMIMEInfo methods
-    NS_IMETHOD GetFileExtensions(char * *aFileExtensions);
-    NS_IMETHOD SetFileExtensions(char * aFileExtensions);
-
-    NS_IMETHOD GetMIMEType(char * *aMIMEType);
-    NS_IMETHOD SetMIMEType(char * aMIMEType);
-
-    NS_IMETHOD GetDescription(PRUnichar * *aDescription);
-    NS_IMETHOD SetDescription(PRUnichar * aDescription);
-
-    NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval);
+    NS_DECL_NSIMIMEINFO
 
     // member variables
     nsIAtom*            mMIMEType;

@@ -39,13 +39,7 @@ class nsMIMEService : public nsIMIMEService {
     virtual ~nsMIMEService();
 
     // nsIMIMEService methods
-    NS_IMETHOD GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval);
-    NS_IMETHOD GetTypeFromExtension(const char *aFileExt, char **aContentType);
-    NS_IMETHOD GetTypeFromURI(nsIURI *aURI, char **aContentType);
-    NS_IMETHOD GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval);
-
-    NS_IMETHOD AddMIMEInfo(nsIMIMEInfo *aMIMEInfo);
-    NS_IMETHOD RemoveMIMEInfo(nsIMIMEInfo *aMIMEInfo);
+    NS_DECL_NSIMIMESERVICE
 
 private:
     nsresult AddMapping(const char* mimeType, 

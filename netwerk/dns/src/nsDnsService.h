@@ -45,10 +45,7 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     // nsIDNSService methods:
-    NS_IMETHOD Lookup(nsISupports *ctxt,
-                      const char *hostname,
-                      nsIDNSListener *listener,
-                      nsIRequest **result);
+    NS_DECL_NSIDNSSERVICE
 
 protected:
     // nsDNSLookup cache? - list of nsDNSLookups

@@ -35,8 +35,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIHTTPHeader methods:
-  NS_IMETHOD GetField(nsIAtom** aResult);
-  NS_IMETHOD GetValue(char ** aResult);
+  NS_DECL_NSIHTTPHEADER
 
   nsHeaderEntry(nsIAtom* aHeaderAtom, const char* aValue);
   virtual ~nsHeaderEntry();

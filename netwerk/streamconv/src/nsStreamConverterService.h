@@ -33,8 +33,7 @@ public:
 
     /////////////////////////////////////////////////////
     // nsIStreamConverterService methods
-    NS_IMETHOD Convert(nsIInputStream *aFromStream, const PRUnichar *aFromType, const PRUnichar *aToType, nsIInputStream **_retval);
-    NS_IMETHOD AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType, nsIStreamListener *aListener, nsIStreamListener **_retval);
+    NS_DECL_NSISTREAMCONVERTERSERVICE
 
     /////////////////////////////////////////////////////
     // nsStreamConverterService methods

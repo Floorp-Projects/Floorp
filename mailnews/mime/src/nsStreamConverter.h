@@ -40,8 +40,7 @@ public:
   NS_DECL_ISUPPORTS 
 
   // nsIStreamConverter
-  NS_IMETHOD Init(nsIURI *aURI, nsIStreamListener *outListener, nsIChannel * aChannel);
-  NS_IMETHOD GetContentType(char **aOutputContentType);
+  NS_DECL_NSISTREAMCONVERTER2
 
   // nsIMimeStreamConverter support
   NS_IMETHOD SetMimeOutputType(nsMimeOutputType aType);

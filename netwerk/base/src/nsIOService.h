@@ -28,33 +28,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIIOService methods:
-    NS_IMETHOD GetProtocolHandler(const char *scheme,
-                                  nsIProtocolHandler **_retval);
-    NS_IMETHOD MakeAbsolute(const char *aRelativeSpec,
-                            nsIURI *aBaseURI,
-                            char **_retval);
-    NS_IMETHOD NewURI(const char *aSpec, nsIURI *aBaseURI,
-                      nsIURI **_retval);
-    NS_IMETHOD NewChannelFromURI(const char* verb, nsIURI *aURI,
-                                 nsIEventSinkGetter *eventSinkGetter,
-                                 nsIChannel **_retval);
-    NS_IMETHOD NewChannel(const char* verb, const char *aSpec,
-                          nsIURI *aBaseURI,
-                          nsIEventSinkGetter *eventSinkGetter,
-                          nsIChannel **_retval);
-    NS_IMETHOD GetAppCodeName(PRUnichar* *aAppCodeName);
-    NS_IMETHOD GetAppVersion(PRUnichar* *aAppVersion);
-    NS_IMETHOD GetAppName(PRUnichar* *aAppName);
-    NS_IMETHOD GetLanguage(PRUnichar* *aLanguage);
-    NS_IMETHOD SetLanguage(PRUnichar* aLanguage);
-    NS_IMETHOD GetPlatform(PRUnichar* *aPlatform);
-    NS_IMETHOD GetUserAgent(PRUnichar* *aUserAgent);
-    NS_IMETHOD NewAsyncStreamObserver(nsIStreamObserver *receiver, nsIEventQueue *eventQueue, nsIStreamObserver **_retval);
-    NS_IMETHOD NewAsyncStreamListener(nsIStreamListener *receiver, nsIEventQueue *eventQueue, nsIStreamListener **_retval);
-    NS_IMETHOD NewSyncStreamListener(nsIInputStream **inStream, nsIBufferOutputStream **outStream, nsIStreamListener **_retval);
-    NS_IMETHOD NewChannelFromNativePath(const char *nativePath, nsIFileChannel **_retval);
-    NS_IMETHOD NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer, nsILoadGroup* parent, nsILoadGroup **result);
-    NS_IMETHOD NewInputStreamChannel(nsIURI* uri, const char *contentType, nsIInputStream *inStr, nsIChannel **result);
+    NS_DECL_NSIIOSERVICE
 
     // nsIOService methods:
     nsIOService();
