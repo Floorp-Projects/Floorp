@@ -27,7 +27,7 @@ $ViewerTest               = 0;
 $BloatTest                = 0;
 $BloatTest2               = 0;
 $DomToTextConversionTest  = 0;
-$XpcomGlueTest            = 1;
+$XpcomGlueTest            = 0;
 $CodesizeTest             = 0;
 $MailBloatTest            = 0;
 $EmbedTest                = 0;  # Assumes you wanted $BuildEmbed=1
