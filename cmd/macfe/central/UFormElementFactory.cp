@@ -535,14 +535,21 @@ LPane* UFormElementFactory::MakeTextArea(
 	//  Resize to proper size
 		theTextView->FocusDraw();
 //		UTextTraits::SetPortTextTraits( theTextView->GetTextTraits() );
-		::GetFontInfo(&fontInfo);
+		
+		// Always use generic application font for form sizing measurements
+		short wantedWidth;
+		short wantedHeight;
+		do
+		{
+			StTextState textState;
+			::TextFont(applFont);
+			::TextSize(12);
+			::TextFace(0);
+			::GetFontInfo(&fontInfo);
+			wantedWidth = textAreaData->cols * ::CharWidth('M') + 8;	// M is better than space
+			wantedHeight = textAreaData->rows * (fontInfo.ascent + fontInfo.descent + fontInfo.leading) + 8;
+		} while (0);
 	
-				// measuring a space doesn't work well when users set a proportional font
-				// as their default fixed width font in their preferences (such as palatino)
-	short wantedWidth = textAreaData->cols * ::CharWidth('M') + 8;	// M is better than space
-//	short wantedWidth = textAreaData->cols * fontInfo.widMax + 8;
-			
-		short wantedHeight = textAreaData->rows * (fontInfo.ascent + fontInfo.descent + fontInfo.leading) + 8;
 		
 		// make the image big so there is something to scroll, if necessary....
 		if ( textAreaData->auto_wrap == TEXTAREA_WRAP_OFF )
@@ -635,9 +642,20 @@ LPane* UFormElementFactory::MakeHTMLArea(
 
 		// Resize to proper size
 		theHTMLAreaView->FocusDraw();
-		::GetFontInfo(&fontInfo);
-		short wantedWidth = htmlAreaData->cols * ::CharWidth('M') + 8;
-		short wantedHeight = htmlAreaData->rows * (fontInfo.ascent + fontInfo.descent + fontInfo.leading) + 8;
+		
+		// Always use generic application font for form sizing measurements
+		short wantedWidth;
+		short wantedHeight;
+		do
+		{
+			StTextState textState;
+			::TextFont(applFont);
+			::TextSize(12);
+			::TextFace(0);
+			::GetFontInfo(&fontInfo);
+			wantedWidth = htmlAreaData->cols * ::CharWidth('M') + 8;
+			wantedHeight = htmlAreaData->rows * (fontInfo.ascent + fontInfo.descent + fontInfo.leading) + 8;
+		} while (0);
 		
 		theView->ResizeFrameTo(wantedWidth + 16 + BigTextLeftIndent + BigTextRightIndent,
 								   wantedHeight + 16 + BigTextTopIndent + BigTextBottomIndent,
@@ -1953,7 +1971,7 @@ void UFormElementFactory::ResetFormElementData(
 			MWContext *pContext = *(((CHTMLView*)htmlEdit)->GetContext());
 			if ( fromDefaults )
 			{
-				EDT_SetDefaultText( pContext,(char*)(htmlAreaData->default_text) );
+				EDT_SetDefaultHTML( pContext,(char*)(htmlAreaData->default_text) );
 			}
 			else
 			{

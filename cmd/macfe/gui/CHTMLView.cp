@@ -5149,7 +5149,7 @@ void CHTMLView::EraseBackground(
 	Uint32					inHeight,
 	LO_Color*				inColor)
 {
-	if (!FocusDraw())
+	if (!FocusExposed(false))
 		return;
 
 	// Convert draw rect from image coordinate system to local
