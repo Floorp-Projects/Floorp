@@ -1176,6 +1176,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     NSRepository::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
     nsRect rect(100, 100, 600, 700);
+    //nsRect rect(100, 100, 600, 600);
     window->Create((nsIWidget*) nsnull, rect, HandleEvent, 
                    (nsIDeviceContext *) nsnull,
                    appShell);
