@@ -167,6 +167,7 @@ protected:
   NS_IMETHOD IsTargetOptionDisabled(PRBool &aIsDisabled);
   nsresult   CountAllChild(nsIDOMNode * aNode, PRInt32& aCount);
   nsresult   ScrollToFrame(nsIContent * aOptElement);
+  PRBool     IsClickingInCombobox(nsIDOMEvent* aMouseEvent);
 
   nsListControlFrame();
   virtual ~nsListControlFrame();

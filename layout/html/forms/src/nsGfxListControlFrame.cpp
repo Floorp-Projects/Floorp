@@ -2492,6 +2492,27 @@ nsGfxListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   return NS_OK;
 }
 
+//---------------------------------------------------------
+// helper method
+PRBool nsGfxListControlFrame::IsClickingInCombobox(nsIDOMEvent* aMouseEvent)
+{
+  // Cheesey way to figure out if we clicking in the ListBox portion
+  // or the Combobox portion
+  // Return TRUE if we are clicking in the combobox frame
+  if (mComboboxFrame) {
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
+    PRInt32 scrX;
+    PRInt32 scrY;
+    mouseEvent->GetScreenX(&scrX);
+    mouseEvent->GetScreenY(&scrY);
+    nsRect rect;
+    mComboboxFrame->GetAbsoluteRect(&rect);
+    if (rect.Contains(scrX, scrY)) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
 
 //----------------------------------------------------------------------
 // Sets the mSelectedIndex and mOldSelectedIndex from figuring out what 
@@ -2503,6 +2524,11 @@ nsGfxListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
                                          PRInt32&     aOldIndex, 
                                          PRInt32&     aCurIndex)
 {
+
+  if (IsClickingInCombobox(aMouseEvent)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv = NS_ERROR_FAILURE;
   nsIEventStateManager *stateManager;
   if (NS_OK == mPresContext->GetEventStateManager(&stateManager)) {
@@ -2593,14 +2619,7 @@ nsGfxListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         stateManager->GetEventTarget(&frame);
         nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
         if (listFrame) {
-          nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
-          PRInt32 scrX;
-          PRInt32 scrY;
-          mouseEvent->GetScreenX(&scrX);
-          mouseEvent->GetScreenY(&scrY);
-          nsRect rect;
-          mComboboxFrame->GetAbsoluteRect(&rect);
-          if (!rect.Contains(scrX, scrY)) {
+          if (!IsClickingInCombobox(aMouseEvent)) {
             return NS_OK;
           }
         }
