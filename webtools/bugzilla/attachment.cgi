@@ -342,17 +342,11 @@ sub view
     SendSQL("SELECT mimetype, filename, thedata FROM attachments WHERE attach_id = $::FORM{'id'}");
     my ($contenttype, $filename, $thedata) = FetchSQLData();
 
-    # Determine if the browser supports the Content-Disposition header or not
-    my $usedisposition = 1; # assume yes, unless we discover otherwise
-    if ($::ENV{HTTP_USER_AGENT} =~ /^Mozilla.*MSIE (\d+)/) {
-        if ($1 < 5) { $usedisposition = 0; } # MSIE < 5.0 chokes on it
-    }
-    
     # Return the appropriate HTTP response headers.
     $filename =~ s/^.*[\/\\]//;
     my $filesize = length($thedata);
     print qq{Content-Type: $contenttype; name="$filename"\n};
-    print qq{Content-Disposition: attachment; filename=$filename\n} if $usedisposition;
+    print qq{Content-Disposition: inline; filename=$filename\n};
     print qq{Content-Length: $filesize\n};
     print qq{\n$thedata};
 
