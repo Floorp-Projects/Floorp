@@ -325,7 +325,7 @@ function UpdateSettings()
 
 function doHelpButton()
 {
-  openHelp("comp-doc-publish-site_settings");
+  openHelp("comp-doc-publish-site-settings");
 }
 
 function onAccept()
