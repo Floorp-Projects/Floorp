@@ -740,7 +740,7 @@ function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFiles
     persistObj.persistFlags = persistObj.persistFlags 
                             | webPersist.PERSIST_FLAGS_NO_BASE_TAG_MODIFICATIONS
                             | webPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES
-                            | webPersist.PERSIST_FLAGS_FIXUP_LINKS_TO_DESTINATION
+                            | webPersist.PERSIST_FLAGS_DONT_FIXUP_LINKS
                             | webPersist.PERSIST_FLAGS_FIXUP_ORIGINAL_DOM;
     persistObj.saveDocument(editorDoc, aDestinationLocation, aRelatedFilesParentDir, 
                             aMimeType, outputFlags, wrapColumn);
