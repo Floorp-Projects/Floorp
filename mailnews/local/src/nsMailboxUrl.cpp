@@ -289,7 +289,7 @@ NS_METHOD nsMailboxUrl::SetURLInfo(URL_Struct *URL_s)
 	if (m_mailboxAction == nsMailboxActionDisplayMessage)
 	{
 		// set the byte field range for the url struct...
-		char * byteRange = PR_smprintf("bytes=%d-%d", m_messageKey, m_messageKey+m_messageSize);
+		char * byteRange = PR_smprintf("bytes=%d-%d", m_messageKey, m_messageKey+m_messageSize - 1);
 		m_URL_s->range_header = byteRange;
 	}
 
