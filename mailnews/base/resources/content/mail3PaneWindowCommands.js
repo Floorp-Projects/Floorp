@@ -894,7 +894,7 @@ function IsFolderSelected()
 
 function IsMessageDisplayedInMessagePane()
 {
-	return (!IsThreadAndMessagePaneSplitterCollapsed() && (GetNumSelectedMessages() > 0));
+  return (!IsMessagePaneCollapsed() && (GetNumSelectedMessages() > 0));
 }
 
 function MsgDeleteFolder()
@@ -1047,7 +1047,7 @@ function SwitchPaneFocus(event)
       searchInput.focus();
     else if ((focusedElement == threadTree || focusedElement == searchInput) && !IsFolderPaneCollapsed())
       folderTree.focus();
-    else if (focusedElement != messagePane && !IsThreadAndMessagePaneSplitterCollapsed())
+    else if (focusedElement != messagePane && !IsMessagePaneCollapsed())
       SetFocusMessagePane();
     else 
       threadTree.focus();
@@ -1056,7 +1056,7 @@ function SwitchPaneFocus(event)
   {
     if (focusedElement == searchInput)
       threadTree.focus();
-    else if (focusedElement == threadTree && !IsThreadAndMessagePaneSplitterCollapsed())
+    else if (focusedElement == threadTree && !IsMessagePaneCollapsed())
       SetFocusMessagePane();
     else if (focusedElement != folderTree && !IsFolderPaneCollapsed())
       folderTree.focus();

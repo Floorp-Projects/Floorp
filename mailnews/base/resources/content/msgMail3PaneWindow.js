@@ -1039,7 +1039,7 @@ function GetTotalCountElement()
 	return totalCount;
 }
 
-function IsThreadAndMessagePaneSplitterCollapsed()
+function IsMessagePaneCollapsed()
 {
   var messagePane = GetMessagePane();
   try {
