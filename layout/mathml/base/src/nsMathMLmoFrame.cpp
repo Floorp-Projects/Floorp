@@ -815,6 +815,37 @@ nsMathMLmoFrame::ReflowDirtyChild(nsIPresShell* aPresShell,
   return ReLayoutChildren(presContext, target);
 }
 
+NS_IMETHODIMP
+nsMathMLmoFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                  nsIContent*     aContent,
+                                  PRInt32         aNameSpaceID,
+                                  nsIAtom*        aAttribute,
+                                  PRInt32         aModType, 
+                                  PRInt32         aHint)
+{
+  // check if this is an attribute that can affect the embellished hierarchy
+  // in a significant way and re-layout the entire hierarchy.
+  if (nsMathMLAtoms::accent_ == aAttribute ||
+      nsMathMLAtoms::movablelimits_ == aAttribute) {
+
+    // set the target as the parent of our outermost embellished container
+    // (we ensure that we are the core, not just a sibling of the core)
+    nsIFrame* target = this;
+    nsEmbellishData embellishData;
+    do {
+      target->GetParent(&target);
+      GetEmbellishDataFrom(target, embellishData);
+    } while (embellishData.coreFrame == this);
+
+    // we have automatic data to update in the children of the target frame
+    return ReLayoutChildren(aPresContext, target);
+  }
+
+  return nsMathMLContainerFrame::
+         AttributeChanged(aPresContext, aContent, aNameSpaceID,
+                          aAttribute, aModType, aHint);
+}
+
 // ----------------------
 // the Style System will use these to pass the proper style context to our MathMLChar
 NS_IMETHODIMP
