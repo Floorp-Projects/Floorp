@@ -112,7 +112,6 @@ public:
 
   // nsIOptionElement
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
-  NS_IMETHOD GetValueOrText(nsAString& aValue);
 
   // nsIContent
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify, 
@@ -278,23 +277,27 @@ nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::GetValueOrText(nsAString& aValue)
+nsHTMLOptionElement::SetValue(const nsAString& aValue)
 {
-  nsHTMLValue value;
-  nsresult rv = GetHTMLAttribute(nsHTMLAtoms::value, value);
+  SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue, PR_TRUE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLOptionElement::GetValue(nsAString& aValue)
+{
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
+  // If the value attr is there, that is *exactly* what we use.  If it is
+  // not, we compress whitespace .text.
   if (NS_CONTENT_ATTR_NOT_THERE == rv) {
     // XXX When an equivalent of CompressWhitespace exists for nsAString,
     // somebody please clean this up.  The only reason I can think that we're
     // we're doing it anyway is because GetText() leaves whitespace around if
     // the text is all whitespace we apparently want to compress even that.
     nsAutoString getVal;
-    rv = GetText(getVal);
+    GetText(getVal);
     getVal.CompressWhitespace();
     aValue = getVal;
-  } else {
-    // Need to use GetValue to get the real value because it does extra
-    // processing on the return value. (i.e it trims it.)
-    rv = GetValue(aValue);
   }
 
   return NS_OK;
@@ -350,7 +353,7 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
 //NS_IMPL_BOOL_ATTR(nsHTMLOptionElement, DefaultSelected, defaultselected)
 //NS_IMPL_INT_ATTR(nsHTMLOptionElement, Index, index)
 //NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Label, label)
-NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
+//NS_IMPL_STRING_ATTR(nsHTMLOptionElement, Value, value)
 
 NS_IMETHODIMP
 nsHTMLOptionElement::GetDisabled(PRBool* aDisabled)

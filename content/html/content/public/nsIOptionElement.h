@@ -46,8 +46,6 @@
 { 0xd49fe03a, 0x1dd1, 0x11b2,    \
   { 0xa0, 0xe0, 0x83, 0x66, 0x76, 0x19, 0xaf, 0x69 } }
 
-class nsIDOMHTMLOptionElement;
-
 /**
  * This interface is used to notify a SELECT when OPTION
  * elements are added and removed from its subtree.
@@ -61,16 +59,12 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOPTIONELEMENT_IID)
 
   /**
-   * Check whether the option element is selected from its own point
-   * of view.  This should only be used by SelectElement, really.
-   * Everyone else is safe using GetSelected() on the DOMHTMLOptionElement.
+   * Select the option element from its own point of view.  This should only be
+   * used by SelectElement, really.  Everyone else is safe using GetSelected()
+   * on the DOMHTMLOptionElement, which goes through the <select> to make sure
+   * everything gets updated correctly.
    */
   NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify) = 0;
-
-  /**
-   * Get the value or, barring that, the text of the option.
-   */
-  NS_IMETHOD GetValueOrText(nsAString& aValue) = 0;
 };
 
 #endif // nsIOptionElement_h___
