@@ -31,6 +31,7 @@
  *                                         fixed uninitialized event.isMeta.
  * 04/12/2000       IBM Corp.      DispatchMouseEvent changes.
  * 04/14/2000       IBM Corp.      Ported CaptureRollupEvents changes from Windows.
+ * 06/09/2000       IBM Corp.      Added cases for more cursors in SetCursor.
  *
  */
 
@@ -1912,21 +1913,38 @@ nsresult nsWindow::SetCursor( nsCursor aCursor)
    switch( aCursor)
    {
       // builtins
-      case eCursor_select:   sptr = SPTR_TEXT;   break;
-      case eCursor_wait:     sptr = SPTR_WAIT;   break;
-      case eCursor_sizeWE:   sptr = SPTR_SIZEWE; break;
-      case eCursor_sizeNS:   sptr = SPTR_SIZENS; break;
-      case eCursor_standard: sptr = SPTR_ARROW;  break;
+      case eCursor_standard: sptr = SPTR_ARROW;    break;
+      case eCursor_wait:     sptr = SPTR_WAIT;     break;
+      case eCursor_select:   sptr = SPTR_TEXT;     break;
+      case eCursor_sizeWE:   sptr = SPTR_SIZEWE;   break;
+      case eCursor_sizeNS:   sptr = SPTR_SIZENS;   break;
+      case eCursor_sizeNW:   sptr = SPTR_SIZENWSE; break;
+      case eCursor_sizeSE:   sptr = SPTR_SIZENWSE; break;
+      case eCursor_sizeNE:   sptr = SPTR_SIZENESW; break;
+      case eCursor_sizeSW:   sptr = SPTR_SIZENESW; break;
+      case eCursor_move:     sptr = SPTR_MOVE;     break;
       // custom
       case eCursor_hyperlink:
-      case eCursor_arrow_west_plus:
-      case eCursor_arrow_west:
-      case eCursor_arrow_east_plus:
-      case eCursor_arrow_east:
-      case eCursor_arrow_south_plus:
-      case eCursor_arrow_south:
       case eCursor_arrow_north:
       case eCursor_arrow_north_plus:
+      case eCursor_arrow_south:
+      case eCursor_arrow_south_plus:
+      case eCursor_arrow_west:
+      case eCursor_arrow_west_plus:
+      case eCursor_arrow_east:
+      case eCursor_arrow_east_plus:
+      case eCursor_crosshair:
+      case eCursor_help:
+      case eCursor_copy:
+      case eCursor_alias:
+      case eCursor_context_menu:
+      case eCursor_cell:
+      case eCursor_grab:
+      case eCursor_grabbing:
+      case eCursor_spinning:
+      case eCursor_count_up:
+      case eCursor_count_down:
+      case eCursor_count_up_down:
          break;
 
       default:
