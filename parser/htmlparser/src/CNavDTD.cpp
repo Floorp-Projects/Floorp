@@ -3629,11 +3629,14 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
                   }
                 }
                 else if(1==theNode->mUseCount) {
-                  // This fixes bug 30885 and 29626
+                  // This fixes bug 30885,29626.
                   // Make sure that the node, which is about to
                   // get released does not stay on the style stack...
-                  nsCParserNode* node=mBodyContext->PopStyle(theTag);
-                  IF_FREE(node, &mNodeAllocator);
+                  // Also be sure to remove the correct style off the
+                  // style stack. -  Ref. bug 94208.
+                  // Ex <FONT><B><I></FONT><FONT></B></I></FONT>
+                  // Make sure that </B> removes B off the style stack.
+                  mBodyContext->RemoveStyle(theTag);
                 }
                 mBodyContext->PushStyles(theChildStyleStack);
               }
@@ -3653,9 +3656,11 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
               //Ah, at last, the final case. If you're here, then we just popped a 
               //style tag that got onto that tag stack from a stylestack somewhere.
               //Pop it from the stylestack if the target is also a style tag.
-              if(theTargetTagIsStyle) {
-                nsCParserNode* node=mBodyContext->PopStyle(theTag);
-                IF_FREE(node, &mNodeAllocator);
+              //Make sure to remove the matching style. In the following example
+              //<FONT><B><I></FONT><FONT color=red></B></I></FONT> make sure that 
+              //</I> does not remove <FONT color=red> off the style stack. - bug 94208
+              if (theTargetTagIsStyle && theTag == aTarget) {
+                mBodyContext->RemoveStyle(theTag);
               }
             }
           }
