@@ -18,7 +18,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   IBM Corp. 
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -30,17 +31,6 @@
  * and other provisions required by the GPL.  If you do not delete
  * the provisions above, a recipient may use your version of this
  * file under either the NPL or the GPL.
- *
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 /*
@@ -121,14 +111,6 @@
 
 #define JS_DLL_CALLBACK
 #define JS_STATIC_DLL_CALLBACK(__x) static __x
-
-#elif defined(XP_OS2_VACPP) 
-#define JS_EXTERN_API(__type) extern __type
-#define JS_EXPORT_API(__type) __type
-#define JS_EXTERN_DATA(__type) extern __type
-#define JS_EXPORT_DATA(__type) __type
-#define JS_DLL_CALLBACK  _Optlink
-#define JS_STATIC_DLL_CALLBACK(__x) static __x JS_DLL_CALLBACK
 
 #else /* Unix */
 
