@@ -90,20 +90,7 @@ class nsEditorShell :   public nsIEditorShell,
     NS_DECL_NSIEDITORSPELLCHECK
 
     // nsIDocumentLoaderObserver
-    NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
-
-    NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-    NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* channel);
-    NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, PRUint32 aProgress,
-                               PRUint32 aProgressMax);
-    NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsString& aMsg);
-
-    NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus);
-
-    NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
-                                        nsIChannel* channel,
-                                        const char *aContentType,
-                                        const char *aCommand );
+    NS_DECL_NSIDOCUMENTLOADEROBSERVER
 
   protected:
     nsIDOMWindow       *mToolbarWindow;				// weak reference
