@@ -80,24 +80,151 @@ public class AddressBook extends GeneralFrame {
   }
 
   //***************************
-  class DataSource {
+  abstract class DataSource  {
     private String  mReadableName;
+    private ICardSource mCardSource;
+
+    DataSource (String aReadableName) {
+      mReadableName = aReadableName;
+    }
+
+    private DataSource () {
+       mReadableName = "";
+    }
+
+    protected abstract ICardSource getCardSource();
+    public String            getReadableName ()  { return mReadableName; }
+    public Vector   query (String aSearchString) {
+       Vector retVecVec = new Vector();   //return vector of vectors.
+   
+       //              try {
+       //open a connection to the LDAP server
+       System.out.println ("Opening server " + mReadableName);
+       ICardSource Four11AddressBook = getCardSource();
+   
+   
+       //create the query
+       ITerm query = new TermEqual (new AC_Attribute ("sn", aSearchString));
+   
+       String[] attributes = {"sn", "cn", "o", "mail", "city"};
+   
+       //query the LDAP server.
+       System.out.println ("Send query" + query);
+       ICardSet cardSet = Four11AddressBook.getCardSet (query, attributes);
+   
+       //Sort the list.
+       String[] sortOrder = {"sn", "cn"};
+       cardSet.sort (sortOrder);
+   
+       //hack. I've put the for loop in a try block to catch the exception
+       //thrown when cardEnum.hasMoreElements() incorrectly returns true.
+       try {
+         //enumerate thru the cards.
+         for (Enumeration cardEnum = cardSet.getEnumeration(); 
+              cardEnum.hasMoreElements(); ) {
+           System.out.println ("got card");
+           //get the addres card
+           ICard card = (ICard) cardEnum.nextElement(); 
+           //get the attributes for this card
+           IAttributeSet attrSet = card.getAttributeSet ();  
+           //create a simple vector to hold the attributes values for this card.
+           Vector thisRow = new Vector(6);                     
+   
+           String commonName = "";
+           String organization = "";
+           String mail = "";
+           String phone = "";
+           String city = "";
+           String nickName = "";
+           
+           // enumerate thru the card attributes.
+           for (Enumeration attEnum = attrSet.getEnumeration(); 
+                attEnum.hasMoreElements(); ) {
+             IAttribute attr = (IAttribute) attEnum.nextElement();
+             String attrName = attr.getName();
+   
+             if (attrName.equals ("cn")) {
+               commonName = attr.getValue();
+             }
+   
+             else if (attrName.equals ("o")) {
+               organization = attr.getValue();
+             }
+   
+             else if (attrName.equals ("mail")) {
+               mail = attr.getValue();
+             }
+   
+             else if (attrName.equals ("sn")) {
+               phone = attr.getValue();
+             }
+   
+             else if (attrName.equals ("city")) {
+               city = attr.getValue();
+             }
+   
+           }
+   
+           //create this row for the table.
+           thisRow.addElement (commonName);
+           thisRow.addElement (mail);
+           thisRow.addElement (organization);
+           thisRow.addElement (phone);
+           thisRow.addElement (city);
+           thisRow.addElement (nickName);
+   
+           //add this row to the table
+           retVecVec.addElement (thisRow);
+         }
+       }
+       catch (Exception e) {
+       }
+       //              }
+       //              catch( LDAPException e ) {
+       //                      System.out.println( "Error: " + e.toString() );
+       //              }
+   
+       System.out.println ("Done.");
+       return retVecVec;
+    }
+  }
+
+  //***************************
+  class LDAPDataSource extends DataSource {
     private String  mDomainName;
     private int     mPort;
 
-    DataSource (String aReadableName, String aDomainName) {
+    LDAPDataSource (String aReadableName, String aDomainName) {
       this (aReadableName, aDomainName, 389);
     }
 
-    DataSource (String aReadableName, String aDomainName, int aPort) {
-      mReadableName   = aReadableName;;
+    LDAPDataSource (String aReadableName, String aDomainName, int aPort) {
+      super(aReadableName);
       mDomainName     = aDomainName;
       mPort           = aPort;
     }
 
-    public String   getReadableName ()  { return mReadableName; }
+    protected ICardSource getCardSource()     {
+       return new LDAP_Server (mDomainName);
+    }
     public String   getDomainName ()    { return mDomainName; }
     public int      getPort ()          { return mPort; }
+  }
+  //***************************
+  class FileDataSource extends DataSource {
+    private String  mFileName;
+
+    FileDataSource (String aReadableName, String aFileName) {
+      super(aReadableName);
+      mFileName = aFileName;
+    }
+
+    protected ICardSource getCardSource() {
+       System.out.println("Entering in the getCardSource");
+       return new ACS_Personal (mFileName, false);
+    }
+    public String   getFileName ()  { return mFileName; }
+       
   }
 
   //***************************
@@ -162,10 +289,11 @@ public class AddressBook extends GeneralFrame {
 
     //hack together the data sources.
     mDataSourceList = new DataSourceList ();
-    mDataSourceList.addEntry (new DataSource ("Four11 Directory", "ldap.four11.com"));
-    mDataSourceList.addEntry (new DataSource ("InfoSpace Directory", "ldap.infospace.com"));
-    mDataSourceList.addEntry (new DataSource ("WhoWhere Directory", "ldap.whowhere.com"));
-    mDataSourceList.addEntry (new DataSource ("InfoSeek Directory", "ldap.infoseek.com"));
+    mDataSourceList.addEntry (new FileDataSource ("Local Addressbook","aBook.nab"));
+    mDataSourceList.addEntry (new LDAPDataSource ("Four11 Directory", "ldap.four11.com"));
+    mDataSourceList.addEntry (new LDAPDataSource ("InfoSpace Directory", "ldap.infospace.com"));
+    mDataSourceList.addEntry (new LDAPDataSource ("WhoWhere Directory", "ldap.whowhere.com"));
+    mDataSourceList.addEntry (new LDAPDataSource ("InfoSeek Directory", "ldap.infoseek.com"));
 
     //Create address panel
     AddressPanel addressPanel = new AddressPanel (mDataSourceList);
@@ -399,7 +527,8 @@ public class AddressBook extends GeneralFrame {
 
         if (!textToSearchFor.trim().equals ("")) {
           DataModel dm = (DataModel) mTable.getModel ();
-          dm.reloadData (ds.getDomainName(), ds.getPort(), textToSearchFor);
+          dm.reloadData (ds, textToSearchFor);
+          //dm.reloadData (ds.getDomainName(), ds.getPort(), textToSearchFor);
 
           dm.fireTableDataChanged();
 
@@ -556,6 +685,8 @@ public class AddressBook extends GeneralFrame {
     return null;
   }
 
+  /* This function is now obsolete, the responsible for querying is now
+  ** the datasource, so that we can create other types of datasources (files!)
   public Vector queryLDAP (String aServerName, int aPort, 
                            String aSearchString) {
 
@@ -651,6 +782,7 @@ public class AddressBook extends GeneralFrame {
     System.out.println ("Done.");
     return retVecVec;
   }
+  */
 
   public class DataModel extends AbstractTableModel {
     private Vector mVecVec;
@@ -672,11 +804,19 @@ public class AddressBook extends GeneralFrame {
       ((Vector)mVecVec.elementAt(row)).setElementAt(aValue, column);
     }
 
+    public void reloadData (DataSource ds, String aSearchString) {
+       mVecVec = ds.query(aSearchString);
+    }
+
+    /* This method is now obsolete, since I moved the query function
+    ** from the AddressBook to the datasource
+    **
     public void reloadData (String aServerName, int aPort, 
                             String aSearchString) {
       //reload the data from LDAP.
       mVecVec = queryLDAP (aServerName, aPort, aSearchString);
     }
+   */
 
     public Object getValueAt(int row, int column) {
       return (((Vector)mVecVec.elementAt(row)).elementAt(column));
