@@ -875,9 +875,12 @@ nsStyleTable::nsStyleTable(const nsStyleTable& aSource)
 
 nsChangeHint nsStyleTable::CalcDifference(const nsStyleTable& aOther) const
 {
+  // Changes in mRules may require reframing (if border-collapse stuff changes, for example).
+  if (mRules != aOther.mRules)
+    return NS_STYLE_HINT_FRAMECHANGE;
+
   if ((mLayoutStrategy == aOther.mLayoutStrategy) &&
       (mFrame == aOther.mFrame) &&
-      (mRules == aOther.mRules) &&
       (mCols == aOther.mCols) &&
       (mSpan == aOther.mSpan))
     return NS_STYLE_HINT_NONE;
