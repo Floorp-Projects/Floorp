@@ -116,6 +116,11 @@
 #if defined(XP_WIN)
 #define WM_DNS_SHUTDOWN         (WM_USER + 200)
 static char *windowClass = "Mozilla:DNSWindowClass";
+
+// Declaring helper function outside of class as we cannot get MSVC & GCC
+// to agree upon how to handle static friend functions (bug 134113)
+PR_STATIC_CALLBACK(LRESULT) NS_STDCALL
+nsDNSEventProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif /* XP_WIN */
 
 
@@ -273,12 +278,6 @@ private:
 
 
 #if defined(XP_WIN)
-    friend static
-    LRESULT CALLBACK    nsDNSEventProc(HWND    hwnd,
-                                       UINT    uMsg,
-                                       WPARAM  wParam,
-                                       LPARAM  lParam);
-
     HANDLE              mLookupHandle;
     PRUint32            mMsgID;
 #endif
@@ -1953,11 +1952,10 @@ nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code,
  *****************************************************************************/
 #if defined(XP_WIN)
 
-static LRESULT CALLBACK
+PR_STATIC_CALLBACK(LRESULT) NS_STDCALL
 nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT result = nsnull;
-    int     error = nsnull;
 
  	if ((uMsg >= WM_USER) && (uMsg < WM_USER+128)) {
         result = nsDNSService::gService->ProcessLookup(hWnd, uMsg, wParam, lParam);

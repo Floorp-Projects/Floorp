@@ -155,17 +155,18 @@ private:
 #endif /* XP_MAC */
 
 #if defined(XP_WIN)
-    friend static
-    LRESULT CALLBACK        nsDNSEventProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 public:
 
     PRUint32                AllocMsgID( void);
     HWND                    mDNSWindow;
 
+    // This should really be private but making public to be accessible
+    // by nsDNSEventProc helper function due to MSVC/GCC mismatch (bug 134113)
+    LRESULT                 ProcessLookup( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 private:
-    void                    FreeMsgID( PRUint32 msgID);
-	LRESULT                 ProcessLookup( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
- 
+    void                    FreeMsgID( PRUint32 msgID); 
+
     PRUint32                mMsgIDBitVector[4];
 #endif /* XP_WIN */
 
