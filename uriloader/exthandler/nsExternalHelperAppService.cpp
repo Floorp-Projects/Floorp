@@ -1219,7 +1219,8 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   // step (2), generate a salted file name for the temp file....
   nsAutoString saltedTempLeafName;
   // this salting code was ripped directly from the profile manager.
-  // turn PR_Now() into milliseconds since epoch 1058 // and salt rand with that. 
+  // turn PR_Now() into milliseconds since epoch
+  // and salt rand with that. 
   double fpTime;
   LL_L2D(fpTime, PR_Now());
   srand((uint)(fpTime * 1e-6 + 0.5));
