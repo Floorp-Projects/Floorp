@@ -28,7 +28,7 @@ body {
   margin: 8px;
 }
 
-body > *:first-child {
+body > *:first-node {
   margin-top: 0;
 }
 
