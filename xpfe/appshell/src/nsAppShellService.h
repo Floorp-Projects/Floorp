@@ -83,6 +83,7 @@ protected:
   nsCOMPtr<nsISplashScreen> mSplashScreen;
   nsCOMPtr<nsINativeAppSupport> mNativeAppSupport;
 
+  PRUint16 mModalWindowCount;
   // Set when the appshell service is going away.
   PRBool mShuttingDown;
   PRBool mQuitOnLastWindowClosing;

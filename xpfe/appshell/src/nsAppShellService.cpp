@@ -104,6 +104,7 @@ nsAppShellService::nsAppShellService() :
   mDeleteCalled( PR_FALSE ),
   mSplashScreen( nsnull ),
   mNativeAppSupport( nsnull ),
+  mModalWindowCount( 0 ),
   mShuttingDown( PR_FALSE ),
   mQuitOnLastWindowClosing( PR_TRUE )
 {
@@ -758,6 +759,63 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
     Quit();
 #endif 
   }
+  return NS_OK;
+}
+
+/* The only thing we do with this knowledge is deactivate all other windows
+   on Mac OS 9. */
+NS_IMETHODIMP
+nsAppShellService::TopLevelWindowIsModal(nsIXULWindow *aWindow, PRBool aModal)
+{
+#if defined(XP_MAC) || defined(XP_MACOSX)
+
+  PRBool enable,
+         takeAction = PR_FALSE;
+
+  // adjust our counter and prepare to take action if we just opened
+  // our first modal window or closed our last.
+  NS_ASSERTION(aModal || !aModal && mModalWindowCount > 0, "modal window count error");
+  if (aModal && ++mModalWindowCount == 1) {
+    enable = PR_FALSE;
+    takeAction = PR_TRUE;
+  } else if (!aModal && --mModalWindowCount == 0) {
+    enable = PR_TRUE;
+    takeAction = PR_TRUE;
+  }
+  if (!takeAction)
+    return NS_OK;
+
+  if (::OnMacOSX()) // application modal windows only happen on the classic Mac
+    return NS_OK;
+
+  // prepare to visit each open window
+  if (!mWindowMediator)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISimpleEnumerator> windowList;
+  mWindowMediator->GetXULWindowEnumerator(0, getter_AddRefs(windowList));
+  if (!windowList)
+    return NS_ERROR_FAILURE;
+
+  // if we just closed our last modal window, enable every window.
+  // if we just opened our first, disable every window but aWindow
+  do {
+    PRBool more;
+    windowList->HasMoreElements(&more);
+    if (!more)
+      break;
+
+    nsCOMPtr<nsISupports> supportsWindow;
+    windowList->GetNext(getter_AddRefs(supportsWindow));
+
+    nsCOMPtr<nsIXULWindow> listXULWindow(do_QueryInterface(supportsWindow));
+    if (enable || listXULWindow != aWindow) {
+      nsCOMPtr<nsIBaseWindow> listBaseWindow(do_QueryInterface(supportsWindow));
+      if (listBaseWindow)
+        listBaseWindow->SetEnabled(enable);
+    }
+  } while(1);
+#endif
   return NS_OK;
 }
 
