@@ -3905,8 +3905,9 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
         nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID,&rv));
         if (NS_SUCCEEDED(rv) && prefs) {
           PRBool selectAnchor;
-          rv = prefs->GetBoolPref("layout.selectanchor",&selectAnchor);
-          if (NS_SUCCEEDED(rv) && selectAnchor) {
+          nsresult rvPref;
+          rvPref = prefs->GetBoolPref("layout.selectanchor",&selectAnchor);
+          if (NS_SUCCEEDED(rvPref) && selectAnchor) {
             rv = SelectContent(content);
           }
         }
