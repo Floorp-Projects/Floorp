@@ -1176,10 +1176,10 @@ function EditorInitFormatMenu()
         }
         menuStr = menuStr.replace(/%obj%/,objStr);        
         propertiesMenu.setAttribute("value", menuStr)
-      } else {
-        // No element to set properties on - hide menu item
-        propertiesMenu.setAttribute("hidden","true");
       }
+    } else {
+      // No element to set properties on - hide menu item
+      propertiesMenu.setAttribute("hidden","true");
     }
   }
 }
