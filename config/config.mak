@@ -190,7 +190,7 @@ CFLAGS=$(CFLAGS) -DSTANDALONE_IMAGE_LIB
 !endif
 
 !ifdef MODULAR_NETLIB
-CFLAGS=$(CFLAGS) -DMODULAR_NETLIB
+CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED 
 !else
 # Defines for new cookie management...
 CFLAGS=$(CFLAGS) -DCookieManagement -DSingleSignon
