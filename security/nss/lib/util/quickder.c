@@ -110,12 +110,12 @@ static SECStatus GetItem(SECItem* src, SECItem* dest, PRBool includeTag)
         /* reaching the end of the buffer is not an error */
         dest->data = NULL;
         dest->len = 0;
-        dest->type = 0;
+        dest->type = siBuffer;
 
         return SECSuccess;
     }
 
-    dest->type = 0;
+    dest->type = siBuffer;
     dest->data = definite_length_decoder(src->data,  src->len, &dest->len,
         includeTag);
     if (dest->data == NULL)
