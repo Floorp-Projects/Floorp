@@ -66,7 +66,7 @@ Contributor(s):
     </hbox>
 
     <hbox align="center" class="indent">
-      <textbox flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl" preftype="string"
+      <textbox readonly="true" flex="1" id="mailnewsSoundFileUrl" preftype="string"
            prefstring="mail.biff.play_sound.url"/>
       <hbox autostretch="never">
         <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
