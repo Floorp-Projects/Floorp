@@ -53,36 +53,24 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdTextAreaProps.js"/>
 
-  <keyset>
-    <key key="&Settings.accessKey;" modifiers="alt" oncommand="SetTextboxFocus(gDialog.textareaName);"/>
-    <key key="&TextAreaName.accessKey;" modifiers="alt" oncommand="SetTextboxFocus(gDialog.textareaName);"/>
-    <key key="&TextAreaRows.accessKey;" modifiers="alt" oncommand="SetTextboxFocus(gDialog.textareaRows);"/>
-    <key key="&TextAreaCols.accessKey;" modifiers="alt" oncommand="SetTextboxFocus(gDialog.textareaCols);"/>
-    <key key="&TextAreaWrap.accessKey;" modifiers="alt" oncommand="gDialog.textareaWrap.focus();"/>
-    <key key="&TextAreaReadOnly.accessKey;" modifiers="alt" oncommand="gDialog.textareaReadOnly.focus();gDialog.textareaReadOnly.checked = !gDialog.textareaReadOnly.checked;"/>
-    <key key="&TextAreaDisabled.accessKey;" modifiers="alt" oncommand="gDialog.textareaDisabled.focus();gDialog.textareaDisabled.checked = !gDialog.textareaDisabled.checked;"/>
-    <key key="&TextAreaTabIndex.accessKey;" modifiers="alt" oncommand="SetTextboxFocus(gDialog.textareaTabIndex);"/>
-    <key key="&TextAreaAccessKey.accessKey;" modifiers="alt" oncommand="SetTextboxFocus(gDialog.textareaAccessKey);"/>
-    <key key="&InitialText.accessKey;" modifiers="alt" oncommand="gDialog.textareaValue.focus();"/>
-  </keyset>
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <groupbox orient="vertical"><caption label="&Settings.label;" accesskey="&Settings.accessKey;"/>
+  <groupbox><caption label="&Settings.label;"/>
     <grid><columns><column/><column/></columns>
       <rows>
         <row align="center">
-          <label value="&TextAreaName.label;" accesskey="&TextAreaName.accessKey;"/>
+          <label control="TextAreaName" value="&TextAreaName.label;" accesskey="&TextAreaName.accessKey;"/>
           <textbox id="TextAreaName" oninput="onInput();"/>
         </row>
         <row align="center">
-          <label value="&TextAreaRows.label;" accesskey="&TextAreaRows.accessKey;"/>
+          <label control="TextAreaRows" value="&TextAreaRows.label;" accesskey="&TextAreaRows.accessKey;"/>
           <hbox>
             <textbox id="TextAreaRows" class="narrow" oninput="forceInteger(this.id);onInput();"/>
           </hbox>
         </row>
         <row align="center">
-          <label value="&TextAreaCols.label;" accesskey="&TextAreaCols.accessKey;"/>
+          <label control="TextAreaCols" value="&TextAreaCols.label;" accesskey="&TextAreaCols.accessKey;"/>
           <hbox>
             <textbox id="TextAreaCols" class="narrow" oninput="forceInteger(this.id);onInput();"/>
           </hbox>
@@ -95,7 +83,7 @@
     <grid id="MoreSection"><columns><column/><column/></columns>
       <rows>
         <row align="center">
-          <label value="&TextAreaWrap.label;" accesskey="&TextAreaWrap.accessKey;"/>
+          <label control="TextAreaWrap" value="&TextAreaWrap.label;" accesskey="&TextAreaWrap.accessKey;"/>
           <menulist id="TextAreaWrap">
             <menupopup>
               <menuitem label="&WrapDefault.value;"/>
@@ -122,19 +110,19 @@
           <checkbox id="TextAreaDisabled" label="&TextAreaDisabled.label;" accesskey="&TextAreaDisabled.accessKey;"/>
         </row>
         <row align="center">
-          <label value="&TextAreaTabIndex.label;" accesskey="&TextAreaTabIndex.accessKey;"/>
+          <label control="TextAreaTabIndex" value="&TextAreaTabIndex.label;" accesskey="&TextAreaTabIndex.accessKey;"/>
           <hbox>
             <textbox id="TextAreaTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
           </hbox>
         </row>
         <row align="center">
-          <label value="&TextAreaAccessKey.label;" accesskey="&TextAreaAccessKey.accessKey;"/>
+          <label control="TextAreaAccessKey" value="&TextAreaAccessKey.label;" accesskey="&TextAreaAccessKey.accessKey;"/>
           <hbox>
             <textbox id="TextAreaAccessKey" class="narrow" maxlength="1"/>
           </hbox>
         </row>
         <row>
-          <label value="&InitialText.label;" accesskey="&InitialText.accessKey;"/>
+          <label control="TextAreaValue" value="&InitialText.label;" accesskey="&InitialText.accessKey;"/>
         </row>
         <textbox id="TextAreaValue" flex="1" multiline="true" rows="5"/>
       </rows>

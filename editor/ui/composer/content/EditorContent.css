@@ -61,6 +61,19 @@ table[empty-cells],
   border: 1px dotted red;
 }
 
+/* give a green dashed border to forms otherwise they are invisible
+*/
+form
+{
+  border: 2px dashed green;
+}
+/* give a green dotted border to labels otherwise they are invisible
+*/
+label
+{
+  border: 1px dotted green;
+}
+
 /* smileys */
 span.moz-smiley-s1,
 span.moz-smiley-s2,

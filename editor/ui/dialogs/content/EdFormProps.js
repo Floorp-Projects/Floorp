@@ -44,6 +44,7 @@ function Startup()
   var editor = GetCurrentEditor();
   if (!editor)
   {
+    dump("Failed to get active editor!\n");
     window.close();
     return;
   }
@@ -60,12 +61,14 @@ function Startup()
   gDialog.RemoveForm = document.getElementById("RemoveForm")
 
   // Get a single selected form element
-  var tagName = "form";
-  formElement = editor.getSelectedElement(tagName);
-  if (!formElement)
-    formElement = editor.getElementOrParentByTagName(tagName, editor.selection.anchorNode);
-  if (!formElement)
-    formElement = editor.getElementOrParentByTagName(tagName, editor.selection.focusNode);
+  const kTagName = "form";
+  try {
+    formElement = editor.getSelectedElement(kTagName);
+    if (!formElement)
+      formElement = editor.getElementOrParentByTagName(kTagName, editor.selection.anchorNode);
+    if (!formElement)
+      formElement = editor.getElementOrParentByTagName(kTagName, editor.selection.focusNode);
+  } catch (e) {}
 
   if (formElement)
   {
@@ -80,8 +83,10 @@ function Startup()
 
     // We don't have an element selected,
     //  so create one with default attributes
+    try {
+      formElement = editor.createElementWithDefaults(kTagName);
+    } catch (e) {}
 
-    formElement = editor.createElementWithDefaults(tagName);
     if (!formElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -112,7 +117,7 @@ function InitDialog()
 
 function RemoveForm()
 {
-  RemoveElementKeepingChildren(formElement);
+  RemoveBlockContainer(formElement);
   SaveWindowLocation();
   window.close();
 }

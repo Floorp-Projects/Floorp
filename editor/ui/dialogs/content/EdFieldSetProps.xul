@@ -56,16 +56,16 @@
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <groupbox orient="vertical"><caption label="&Legend.label;"/>
+  <groupbox><caption label="&Legend.label;" accesskey="&Legend.accesskey;"/>
     <grid><columns><column/><column/></columns>
       <rows>
         <row align="center">
-          <checkbox id="EditText" label="&EditLegendText.label;" checked="true" disabled="true"
+          <checkbox id="EditText" label="&EditLegendText.label;" accesskey="&EditLegendText.accesskey;" checked="true" disabled="true"
             oncommand="gDialog.legendText.disabled = !gDialog.editText.checked;"/>
-          <textbox id="LegendText"/>
+          <textbox id="LegendText" accesskey="&Legend.accesskey;"/>
         </row>
         <row align="center">
-          <label value="&LegendAlign.label;"/>
+          <label control="LegendAlign" value="&LegendAlign.label;" accesskey="&LegendAlign.accesskey;"/>
           <menulist id="LegendAlign">
             <menupopup>
               <menuitem label="&AlignDefault.label;"/>
@@ -81,7 +81,7 @@
 
   <!-- from EdDialogOverlay -->
   <hbox flex="1" style="margin-top: 0.2em">
-    <button id="RemoveFieldSet" label="&RemoveFieldSet.label;" oncommand="RemoveFieldSet();"/>
+    <button id="RemoveFieldSet" label="&RemoveFieldSet.label;" accesskey="&RemoveFieldSet.accesskey;" oncommand="RemoveFieldSet();"/>
     <!-- This will right-align the button -->
     <spacer flex="1"/>
     <button id="AdvancedEditButton"/>

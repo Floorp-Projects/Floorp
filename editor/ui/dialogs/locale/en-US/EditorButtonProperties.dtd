@@ -39,14 +39,21 @@
 <!ENTITY Settings.label "Settings">
 
 <!ENTITY ButtonType.label "Type">
+<!ENTITY ButtonType.accesskey "T">
 <!ENTITY submit.value "Submit">
 <!ENTITY reset.value "Reset">
 <!ENTITY button.value "Button">
 
 <!ENTITY ButtonName.label "Name:">
+<!ENTITY ButtonName.accesskey "N">
 <!ENTITY ButtonValue.label "Value:">
+<!ENTITY ButtonValue.accesskey "V">
 <!ENTITY tabIndex.label "Tab Index:">
+<!ENTITY tabIndex.accesskey "I">
 <!ENTITY ButtonDisabled.label "Disabled">
+<!ENTITY ButtonDisabled.accesskey "D">
 <!ENTITY AccessKey.label "Access Key:">
+<!ENTITY AccessKey.accesskey "K">
 
 <!ENTITY RemoveButton.label "Remove Button">
+<!ENTITY RemoveButton.accesskey "R">

@@ -56,7 +56,7 @@
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <groupbox orient="vertical"><caption label="&InputType.label;"/>
+  <groupbox><caption><label control="InputType" value="&InputType.label;" accesskey="&InputType.accesskey;"/></caption>
     <menulist id="InputType" oncommand="SelectInputType();">
       <menupopup>
         <menuitem label="&text.value;"/>
@@ -73,29 +73,29 @@
     </menulist>
   </groupbox>
 
-  <groupbox orient="vertical"><caption label="&InputSettings.label;"/>
+  <groupbox><caption label="&InputSettings.label;"/>
     <grid><columns><column/><column/></columns>
       <rows>
         <row align="center">
           <deck id="InputNameDeck">
-            <label value="&InputName.label;"/>
-            <label value="&GroupName.label;"/>
+            <label control="InputName" value="&InputName.label;" accesskey="&Name.accesskey;"/>
+            <label control="InputName" value="&GroupName.label;" accesskey="&Name.accesskey;"/>
           </deck>
           <textbox id="InputName" oninput="onInput();"/>
         </row>
         <row align="center">
           <deck id="InputValueDeck">
-            <label value="&InputValue.label;"/>
-            <label value="&InitialValue.label;"/>
+            <label control="InputValue" value="&InputValue.label;" accesskey="&Value.accesskey;"/>
+            <label control="InputValue" value="&InitialValue.label;" accesskey="&Value.accesskey;"/>
           </deck>
           <textbox id="InputValue" oninput="onInput();"/>
         </row>
         <row>
           <spacer/>
           <deck id="InputDeck" persist="index">
-            <checkbox id="InputChecked" label="&InputChecked.label;"/>
-            <checkbox id="InputSelected" label="&InputSelected.label;"/>
-            <checkbox id="InputReadOnly" label="&InputReadOnly.label;"/>
+            <checkbox id="InputChecked" label="&InputChecked.label;" accesskey="&InputChecked.accesskey;"/>
+            <checkbox id="InputSelected" label="&InputSelected.label;" accesskey="&InputSelected.accesskey;"/>
+            <checkbox id="InputReadOnly" label="&InputReadOnly.label;" accesskey="&InputReadOnly.accesskey;"/>
           </deck>
         </row>
       </rows>
@@ -108,34 +108,34 @@
       <rows>
         <row>
           <spacer/>
-          <checkbox id="InputDisabled" label="&InputDisabled.label;"/>
+          <checkbox id="InputDisabled" label="&InputDisabled.label;" accesskey="&InputDisabled.accesskey;"/>
         </row>
         <row align="center">
-          <label value="&tabIndex.label;"/>
+          <label control="InputTabIndex" value="&tabIndex.label;" accesskey="&tabIndex.accesskey;"/>
           <hbox>
             <textbox id="InputTabIndex" class="narrow" oninput="forceInteger(this.id);"/>
           </hbox>
         </row>
         <row align="center">
-          <label value="&AccessKey.label;"/>
+          <label control="InputAccessKey" value="&AccessKey.label;" accesskey="&AccessKey.accesskey;"/>
           <hbox>
             <textbox id="InputAccessKey" class="narrow"/>
           </hbox>
         </row>
         <row align="center">
-          <label value="&TextSize.label;"/>
+          <label control="InputSize" value="&TextSize.label;" accesskey="&TextSize.accesskey;"/>
           <hbox>
             <textbox id="InputSize" class="narrow" oninput="forceInteger(this.id);"/>
           </hbox>
         </row>
         <row align="center">
-          <label value="&TextLength.label;"/>
+          <label control="InputMaxLength" value="&TextLength.label;" accesskey="&TextLength.accesskey;"/>
           <hbox>
             <textbox id="InputMaxLength" class="narrow" oninput="forceInteger(this.id);"/>
           </hbox>
         </row>
         <row align="center">
-          <label value="&Accept.label;"/>
+          <label control="InputAccept" value="&Accept.label;" accesskey="&Accept.accesskey;"/>
           <textbox id="InputAccept"/>
         </row>
       </rows>
@@ -148,7 +148,7 @@
     <spacer flex="1"/>
     <deck id="AdvancedEditDeck">
       <button id="AdvancedEditButton"/>
-      <button label="&ImageProperties.label;" oncommand="doImageProperties();"/>
+      <button label="&ImageProperties.label;" accesskey="&ImageProperties.accesskey;" oncommand="doImageProperties();"/>
     </deck>
   </hbox>
   <separator class="groove"/>

@@ -39,9 +39,15 @@
 <!ENTITY Settings.label "Settings">
 
 <!ENTITY FormName.label "Form Name:">
+<!ENTITY FormName.accesskey "N">
 <!ENTITY FormAction.label "Action URL:">
+<!ENTITY FormAction.accesskey "A">
 <!ENTITY FormMethod.label "Method:">
+<!ENTITY FormMethod.accesskey "M">
 <!ENTITY FormEncType.label "Encoding:">
+<!ENTITY FormEncType.accesskey "c">
 <!ENTITY FormTarget.label "Target Frame:">
+<!ENTITY FormTarget.accesskey "T">
 
 <!ENTITY RemoveForm.label "Remove Form">
+<!ENTITY RemoveForm.accesskey "R">

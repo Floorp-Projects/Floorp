@@ -56,19 +56,19 @@
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <groupbox orient="vertical"><caption label="&Settings.label;"/>
+  <groupbox><caption label="&Settings.label;"/>
     <grid><columns><column/><column/></columns>
       <rows>
         <row align="center">
-          <label value="&FormName.label;"/>
+          <label control="FormName" value="&FormName.label;" accesskey="&FormName.accesskey;"/>
           <textbox id="FormName"/>
         </row>
         <row align="center">
-          <label value="&FormAction.label;"/>
+          <label control="FormAction" value="&FormAction.label;" accesskey="&FormAction.accesskey;"/>
           <textbox id="FormAction"/>
         </row>
         <row align="center">
-          <label value="&FormMethod.label;"/>
+          <label control="FormMethod" value="&FormMethod.label;" accesskey="&FormMethod.accesskey;"/>
           <hbox>
             <menulist id="FormMethod" editable="true" autoSelectMenuitem="true">
               <menupopup>
@@ -83,7 +83,7 @@
         </hbox>
         <rows id="MoreSection">
           <row align="center">
-            <label value="&FormEncType.label;"/>
+            <label control="FormEncType" value="&FormEncType.label;" accesskey="&FormEncType.accesskey;"/>
             <menulist id="FormEncType" editable="true" autoSelectMenuitem="true">
               <menupopup>
                 <menuitem label="application/x-www-form-urlencoded"/>
@@ -93,7 +93,7 @@
             </menulist>
           </row>
           <row align="center">
-            <label value="&FormTarget.label;"/>
+            <label control="FormTarget" value="&FormTarget.label;" accesskey="&FormTarget.accesskey;"/>
             <menulist id="FormTarget" editable="true" autoSelectMenuitem="true">
               <menupopup>
                 <menuitem label="_blank"/>
@@ -110,7 +110,7 @@
 
   <!-- from EdDialogOverlay -->
   <hbox flex="1" style="margin-top: 0.2em">
-    <button id="RemoveForm" label="&RemoveForm.label;" oncommand="RemoveForm();"/>
+    <button id="RemoveForm" label="&RemoveForm.label;" accesskey="&RemoveForm.accesskey;" oncommand="RemoveForm();"/>
     <!-- This will right-align the button -->
     <spacer flex="1"/>
     <button id="AdvancedEditButton"/>

@@ -61,8 +61,10 @@ function Startup()
   };
 
   // Get a single selected button element
-  var tagName = "button";
-  buttonElement = editor.getSelectedElement(tagName);
+  const kTagName = "button";
+  try {
+    buttonElement = editor.getSelectedElement(kTagName);
+  } catch (e) {}
 
   if (buttonElement)
     // We found an element and don't need to insert one
@@ -73,8 +75,10 @@ function Startup()
 
     // We don't have an element selected,
     //  so create one with default attributes
+    try {
+      buttonElement = editor.createElementWithDefaults(kTagName);
+    } catch (e) {}
 
-    buttonElement = editor.createElementWithDefaults(tagName);
     if (!buttonElement)
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -120,7 +124,7 @@ function InitDialog()
 
 function RemoveButton()
 {
-  RemoveElementKeepingChildren(buttonElement);
+  RemoveContainer(buttonElement);
   SaveWindowLocation();
   window.close();
 }
@@ -158,10 +162,13 @@ function onAccept()
 
   editor.cloneAttributes(buttonElement, globalElement);
 
-  if (insertNew && !InsertElementAroundSelection(buttonElement))
+  if (insertNew)
   {
-    buttonElement.innerHTML = editor.outputToString("text/html", 1); // OutputSelectionOnly (see nsIDocumentEncoder.h)
-    editor.insertElementAtSelection(buttonElement, true);
+    if (!InsertElementAroundSelection(buttonElement))
+    {
+      buttonElement.innerHTML = editor.outputToString("text/html", 1); // OutputSelectionOnly (see nsIDocumentEncoder.h)
+      editor.insertElementAtSelection(buttonElement, true);
+    }
   }
 
   SaveWindowLocation();

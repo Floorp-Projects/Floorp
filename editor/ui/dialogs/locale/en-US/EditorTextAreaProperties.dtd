@@ -37,7 +37,6 @@
 <!ENTITY windowTitle.label "Text Area Properties">
 
 <!ENTITY Settings.label "Settings">
-<!ENTITY Settings.accessKey "S">
 
 <!ENTITY TextAreaName.label "Field Name:">
 <!ENTITY TextAreaName.accessKey "N">

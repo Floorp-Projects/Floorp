@@ -37,9 +37,14 @@
 <!ENTITY windowTitle.label "Label Properties">
 
 <!ENTITY Settings.label "Settings">
+<!ENTITY Settings.accesskey "S">
 
 <!ENTITY EditLabelText.label "Edit Text:">
+<!ENTITY EditLabelText.accesskey "T">
 <!ENTITY LabelFor.label "For Control:">
+<!ENTITY LabelFor.accesskey "F">
 <!ENTITY AccessKey.label "Access Key:">
+<!ENTITY AccessKey.accesskey "K">
 
 <!ENTITY RemoveLabel.label "Remove Label">
+<!ENTITY RemoveLabel.accesskey "R">

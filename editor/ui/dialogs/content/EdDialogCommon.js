@@ -390,6 +390,7 @@ function InitMoreFewer()
   //   onMoreFewer will toggle it and redraw the dialog
   SeeMore = (gDialog.MoreFewerButton.getAttribute("more") != "1");
   onMoreFewer();
+  gDialog.MoreFewerButton.setAttribute("accesskey",GetString("PropertiesAccessKey"));
 }
 
 function onMoreFewer()
@@ -781,199 +782,194 @@ var NotAnInlineParent = {
   UL: true
 };
 
-function nodeDepth(node)
+function nodeIsBreak(editor, node)
 {
-  for (var depth = 0; node != null; depth++)
-    node = node.parentNode;
-  return depth;
+  return !node || node.localName == 'BR' || editor.nodeIsBlock(node);
 }
 
-function nthParent(node, n)
-{
-  for (; n > 0; n--)
-    node = node.parentNode;
-  return node;
-}
-
-function nodeIsBlock(node)
-{
-  // HR doesn't count because it's not a container
-  var editor = GetCurrentEditor();
-  return !editor || !node || 
-          (node.localName != 'HR' && editor.nodeIsBlock(node));
-}
-
-/* Ugly code alert! If only I could do this:
- * var range = editor.selection.flattenRange(range); // ensure anchorNode == parentNode
- * if (editor.isInlineRange(range) && editor.nodeIsBlock(node)) return false;
- * while (!editor.containmentAllowed(range.anchorNode, element))
- *   range = editor.parentRangeOf(range);
- * editor.insertNodeAtRange(element, range);
- * return true;
- */
 function InsertElementAroundSelection(element)
 {
   var editor = GetCurrentEditor();
+  editor.beginTransaction();
 
   try {
-    // We need to find a suitable container for the element.
-    // First get the selection
-    var anchorParent = editor.selection.anchorNode;
-    if (!anchorParent.localName)
-      var anchorSelected = true;
-    else if (editor.selection.anchorOffset < anchorParent.childNodes.length)
-      var anchor = anchorParent.childNodes[editor.selection.anchorOffset];
-    var focusParent = editor.selection.focusNode;
-    if (!focusParent.localName)
-      var focusSelected = true;
-    else if (editor.selection.focusOffset < focusParent.childNodes.length)
-      var focus = focusParent.childNodes[editor.selection.focusOffset];
-
-    // Find the common ancestor
-    var anchorDepth = nodeDepth(anchorParent);
-    var focusDepth = nodeDepth(focusParent);
-    if (anchorDepth > focusDepth)
-    {
-      anchor = nthParent(anchorParent, anchorDepth - focusDepth - 1);
-      anchorParent = anchor.parentNode;
-      anchorSelected = true;
-    }
-    else if (anchorDepth < focusDepth)
-    {
-      focus = nthParent(focusParent, focusDepth - anchorDepth - 1);
-      focusParent = focus.parentNode;
-      focusSelected = true;
-    }
-    var ordered = false;
-    while (anchorParent != focusParent)
-    {
-      anchor = anchorParent;
-      anchorParent = anchor.parentNode;
-      focus = focusParent;
-      focusParent = focus.parentNode;
-      anchorSelected = focusSelected = true;
-    }
-
-    // The common ancestor may not be suitable, so find a suitable one.
-    if (editor.nodeIsBlock(element))
-    {
-      // Block element parent must be a valid block
-      while (!(anchorParent.localName in IsBlockParent))
-      {
-        anchor = focus = anchorParent;
-        anchorSelected = focusSelected = true;
-        anchorParent = anchor.parentNode;
-        ordered = true;
-      }
-    }
+    // First get the selection as a single range
+    var range, start, end, offset;
+    var count = editor.selection.rangeCount;
+    if (count == 1)
+      range = editor.selection.getRangeAt(0).cloneRange();
     else
     {
-      // Inline element parent must not be an invalid block
-      while (anchorParent.localName in NotAnInlineParent)
-      {
-        anchor = focus = anchorParent;
-        anchorSelected = focusSelected = true;
-        anchorParent = anchor.parentNode;
-        ordered = true;
-      }
+      range = editor.document.createRange();
+      start = editor.selection.getRangeAt(0)
+      range.setStart(start.startContainer, start.startOffset);
+      end = editor.selection.getRangeAt(--count);
+      range.setEnd(end.endContainer, end.endOffset);
     }
 
-    // We now have an ancestor to hold the element
-    // and a range of child nodes to move into the element
-    if (anchor != focus)
+    // Flatten the selection to child nodes of the common ancestor
+    while (range.startContainer != range.commonAncestorContainer)
+      range.setStartBefore(range.startContainer);
+    while (range.endContainer != range.commonAncestorContainer)
+      range.setEndAfter(range.endContainer);
+
+    if (editor.nodeIsBlock(element))
+      // Block element parent must be a valid block
+      while (!(range.commonAncestorContainer.localName in IsBlockParent))
+        range.selectNode(range.commonAncestorContainer);
+    else
     {
-      if (!ordered)
-      {
-        // Ensure anchor <= focus
-        for (var node = anchorParent.firstChild; node != anchor; node = node.nextSibling)
-        {
-          if (node == focus)
-          {
-            focus = anchor;
-            anchor = node;
-            focusSelected = anchorSelected;
+      // Fail if we're not inserting a block (use setInlineProperty instead)
+      if (!nodeIsBreak(editor, range.commonAncestorContainer))
+        return false;
+      else if (range.commonAncestorContainer.localName in NotAnInlineParent)
+        // Inline element parent must not be an invalid block
+        do range.selectNode(range.commonAncestorContainer);
+        while (range.commonAncestorContainer.localName in NotAnInlineParent);
+      else
+        // Further insert block check
+        for (var i = range.startOffset; ; i++)
+          if (i == range.endOffset)
+            return false;
+          else if (nodeIsBreak(editor, range.commonAncestorContainer.childNodes[i]))
             break;
-          }
-        }
-      }
-      if (focus && !focusSelected)
-        focus = focus.previousSibling;
-    }
-    if (!editor.nodeIsBlock(element))
-    {
-      // Fail if we're not inserting a block
-      if (!anchor) return false;
-      for (node = anchor; ; node = node.nextSibling)
-        if (!node)
-          return false;
-        else if (nodeIsBlock(node))
-          break;
-        else if (node == focus)
-          return false;
     }
 
     // The range may be contained by body text, which should all be selected.
-    if (!nodeIsBlock(anchor))
-      while (!nodeIsBlock(anchor.previousSibling))
-        anchor = anchor.previousSibling;
-    if (!nodeIsBlock(focus))
-      while (!nodeIsBlock(focus.nextSibling))
-        focus = focus.nextSibling;
-  } catch (e) {return false;}
-
-  editor.beginTransaction();
-  try {
-    var anchorOffset = 0;
-    // Calculate the insertion point for the undoable insertNode method
-    if (!anchor)
-      anchor = anchorParent.firstChild;
-    else
-      for (node = anchorParent.firstChild; node != anchor; node = node.nextSibling)
-        anchorOffset++;
-    editor.insertNode(element, anchorParent, anchorOffset, true);
-    // Move all the old child nodes to the element
-    // Use editor methods in case of text nodes
-    while (anchor)
+    offset = range.startOffset;
+    start = range.startContainer.childNodes[offset];
+    if (!nodeIsBreak(editor, start))
     {
-      node = anchor.nextSibling;
-      editor.deleteNode(anchor);
-      editor.insertNode(anchor, element, element.childNodes.length);
-      if (anchor == focus) break;
-      anchor = node;
+      while (!nodeIsBreak(editor, start.previousSibling))
+      {
+        start = start.previousSibling;
+        offset--;
+      }
+    }
+    end = range.endContainer.childNodes[range.endOffset];
+    if (end && !nodeIsBreak(editor, end.previousSibling))
+    {
+      while (!nodeIsBreak(editor, end))
+        end = end.nextSibling;
+    }
+
+    // Now insert the node
+    editor.insertNode(element, range.commonAncestorContainer, offset, true);
+    offset = element.childNodes.length;
+    if (!editor.nodeIsBlock(element))
+      editor.setShouldTxnSetSelection(false);
+
+    // Move all the old child nodes to the element
+    var empty = true;
+    while (start != end)
+    {
+      var next = start.nextSibling;
+      editor.deleteNode(start);
+      editor.insertNode(start, element, element.childNodes.length);
+      empty = false;
+      start = next;
+    }
+    if (!editor.nodeIsBlock(element))
+      editor.setShouldTxnSetSelection(true);
+    else
+    {
+      // Also move a trailing <br>
+      if (start && start.localName == 'BR')
+      {
+        editor.deleteNode(start);
+        editor.insertNode(start, element, element.childNodes.length);
+        empty = false;
+      }
+      // Still nothing? Insert a <br> so the node is not empty
+      if (empty)
+        editor.insertNode(editor.createElementWithDefaults("br"), element, element.childNodes.length);
+
+      // Hack to set the selection just inside the element
+      editor.insertNode(editor.document.createTextNode(""), element, offset);
     }
   }
-  catch (ex) {}
+  finally {
+    editor.endTransaction();
+  }
 
-  editor.endTransaction();
   return true;
 }
 
-// Should I set the selection to the element, then insert HTML the element's innerHTML?
-// I would prefer to say editor.deleteNode(element, FLAG_TO_KEEP_CHILD_NODES);
-function RemoveElementKeepingChildren(element)
+function nodeIsBlank(node)
+{
+  return node && node.NODE_TYPE == Node.TEXT_NODE && !/\S/.test(node.data);
+}
+
+function nodeBeginsBlock(node)
+{
+  while (nodeIsBlank(node))
+    node = node.nextSibling;
+  return nodeIsBlock(node);
+}
+
+function nodeEndsBlock(node)
+{
+  while (nodeIsBlank(node))
+    node = node.previousSibling;
+  return nodeIsBlock(node);
+}
+
+// C++ function isn't exposed to JS :-(
+function RemoveBlockContainer(element)
 {
   var editor = GetCurrentEditor();
+  editor.beginTransaction();
 
   try {
-    editor.beginTransaction();
-    if (element.firstChild)
-    {
-      // Use editor methods in case of text nodes
-      var parent = element.parentNode;
-      var offset = 0;
-      for (var node = parent.firstChild; node != element; node = node.nextSibling)
-        offset++;
-      while ((node = element.firstChild))
-      {
-        editor.deleteNode(node);
-        editor.insertNode(node, parent, offset++);
-      }
+    var range = editor.document.createRange();
+    range.selectNode(element);
+    var offset = range.startOffset;
+    var parent = element.parentNode;
+
+    // May need to insert a break after the removed element
+    if (!nodeBeginsBlock(editor, element.nextSibling) &&
+        !nodeEndsBlock(editor, element.lastChild))
+      editor.insertNode(editor.createElementWithDefaults("br"), parent, range.endOffset);
+
+    // May need to insert a break before the removed element, or if it was empty
+    if (!nodeEndsBlock(editor, element.previousSibling) &&
+        !nodeBeginsBlock(editor, element.firstChild || element.nextSibling))
+      editor.insertNode(editor.createElementWithDefaults("br"), parent, offset++);
+
+    // Now remove the element
+    editor.deleteNode(element);
+
+    // Need to copy the contained nodes?
+    for (var i = 0; i < element.childNodes.length; i++)
+      editor.insertNode(element.childNodes[i].cloneNode(true), parent, offset++);
+  }
+  finally {
+    editor.endTransaction();
+  }
+}
+
+// C++ function isn't exposed to JS :-(
+function RemoveContainer(element)
+{
+  var editor = GetCurrentEditor();
+  editor.beginTransaction();
+
+  try {
+    var range = editor.document.createRange();
+    var parent = element.parentNode;
+    // Allow for automatic joining of text nodes
+    // so we can't delete the container yet
+    // so we need to copy the contained nodes
+    for (var i = 0; i < element.childNodes.length; i++) {
+      range.selectNode(element);
+      editor.insertNode(element.childNodes[i].cloneNode(true), parent, range.startOffset);
     }
+    // Now remove the element
     editor.deleteNode(element);
   }
-  catch (ex) {}
-
-  editor.endTransaction();
+  finally {
+    editor.endTransaction();
+  }
 }
 
 function FillLinkMenulist(linkMenulist, headingsArray)
