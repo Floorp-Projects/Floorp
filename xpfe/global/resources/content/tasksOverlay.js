@@ -396,15 +396,15 @@ function WalletDialog( which )
 {
   switch( which ) {
     case "signon":
-      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal,chrome,height=504,width=436"); 
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","SSViewer","modal=yes,chrome,resizable=no"); 
       break;
     case "cookie":
       this.pref.SetBoolPref("cookieviewer.cookieTab", true);
-      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no"); 
       break;
     case "image":
       this.pref.SetBoolPref("cookieviewer.cookieTab", false);
-      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
+      window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","CookieViewer","modal=yes,chrome,resizable=no"); 
       break;
     case "samples":
       window.content.location.href= 'http://www.mozilla.org/wallet/samples/';
@@ -414,7 +414,7 @@ function WalletDialog( which )
       break;
     case "wallet":
     default:
-      window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","walletEditor","modal,chrome,height=504,width=436"); 
+      window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","walletEditor","modal=yes,chrome,resizable=no"); 
       break;
   }
 }
