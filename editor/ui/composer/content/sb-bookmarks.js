@@ -197,8 +197,7 @@ function OpenEditNode()
     // create the html:input node
     htmlInput = document.createElement("html:input");
     htmlInput.setAttribute("value", name);
-    htmlInput.setAttribute("onkeydown", "return EditNodeKeyDown(event)");
-    htmlInput.setAttribute("onkeyup", "return EditNodeKeyUp(event)");
+    htmlInput.setAttribute("onkeypress", "return EditNodeKeyPress(event)");
 
     theParent.appendChild(htmlInput);
     dump("html:input node added.\n");
@@ -302,19 +301,14 @@ function CloseEditNode(saveChangeFlag)
     dump("CloseEditNode done.\n");
 }
 
-function EditNodeKeyDown(event)
+function EditNodeKeyPress(event)
 {
     if (event.which == 27)
     {
         CloseEditNode(false);
         return(false);
     }
-    return(true);
-}
-
-function EditNodeKeyUp(event)
-{
-    if (event.which == 13 || event.which == 10)
+    else if (event.which == 13 || event.which == 10)
     {
         CloseEditNode(true);
         return(false);
