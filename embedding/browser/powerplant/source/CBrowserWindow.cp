@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -28,19 +28,18 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
-#include "nsIDOMHTMLLinkElement.h"
-#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIWindowCreator.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsRect.h"
+#include "nsIWidget.h"
 
 #include "CBrowserWindow.h"
 #include "CBrowserShell.h"
+#include "CBrowserMsgDefs.h"
 #include "CWebBrowserChrome.h"
-#include "CWebBrowserCMAttachment.h"
 #include "CThrobber.h"
 #include "ApplIDs.h"
 #include "UMacUnicode.h"
@@ -67,762 +66,294 @@ using namespace std;
 
 enum
 {
-	paneID_BackButton		= 'Back',
-	paneID_ForwardButton	= 'Forw',
-	paneID_ReloadButton     = 'RLoa',
-	paneID_StopButton		= 'Stop',
-	paneID_URLField		= 'gUrl',
-	paneID_WebShellView	= 'WebS',
-	paneID_StatusBar		= 'Stat',
-	paneID_Throbber	   = 'THRB',
+    paneID_BackButton       = 'Back',
+    paneID_ForwardButton    = 'Forw',
+    paneID_ReloadButton     = 'RLoa',
+    paneID_StopButton       = 'Stop',
+    paneID_URLField     = 'gUrl',
+    paneID_StatusBar        = 'Stat',
+    paneID_Throbber    = 'THRB',
     paneID_ProgressBar   = 'Prog'
 };
 
-// CIDs
-static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 
 // ---------------------------------------------------------------------------
-//	¥ CBrowserWindow						Default Constructor		  [public]
+//  ¥ CBrowserWindow                        Default Constructor       [public]
 // ---------------------------------------------------------------------------
 
 CBrowserWindow::CBrowserWindow() :
-    mIsChromeWindow(false),
-    mBrowserShell(NULL), mBrowserChrome(NULL),
     mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
     mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
-    mProgressBar(NULL), mBusy(false),
-    mInitialLoadComplete(false), mVisible(false),
-    mSizeToContent(true),
-    mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE)
+    mProgressBar(NULL)
 {
-	nsresult rv = CommonConstruct();
-	if (NS_FAILED(rv))
-		Throw_(NS_ERROR_GET_CODE(rv));
 }
 
 
 // ---------------------------------------------------------------------------
-//	¥ CBrowserWindow						Parameterized Constructor [public]
+//  ¥ CBrowserWindow                        Parameterized Constructor [public]
 // ---------------------------------------------------------------------------
 
-CBrowserWindow::CBrowserWindow(LCommander*		inSuperCommander,
-                               const Rect&		inGlobalBounds,
-                               ConstStringPtr	inTitle,
-                               SInt16			inProcID,
-                               UInt32			inAttributes,
-                               WindowPtr		inBehind,
-                               Boolean          inIsChromeWindow) :
+CBrowserWindow::CBrowserWindow(LCommander*      inSuperCommander,
+                               const Rect&      inGlobalBounds,
+                               ConstStringPtr   inTitle,
+                               SInt16           inProcID,
+                               UInt32           inAttributes,
+                               WindowPtr        inBehind) :
     LWindow(inSuperCommander, inGlobalBounds, inTitle, inProcID, inAttributes, inBehind),
-    mIsChromeWindow(inIsChromeWindow),
-    mBrowserShell(NULL), mBrowserChrome(NULL),
     mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
     mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
-    mProgressBar(NULL), mBusy(false),
-    mInitialLoadComplete(false), mVisible(false),
-    mSizeToContent(true),
-    mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE)
+    mProgressBar(NULL)
 {
-	nsresult rv = CommonConstruct();
-	if (NS_FAILED(rv))
-		Throw_(NS_ERROR_GET_CODE(rv));
-}  
-
-
-// ---------------------------------------------------------------------------
-//	¥ CBrowserWindow						Stream Constructor		  [public]
-// ---------------------------------------------------------------------------
-
-CBrowserWindow::CBrowserWindow(LStream*	inStream) :
-    LWindow(inStream),
-    mIsChromeWindow(false),
-    mBrowserShell(NULL), mBrowserChrome(NULL),
-    mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
-    mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
-    mProgressBar(NULL), mBusy(false),
-    mInitialLoadComplete(false), mVisible(false),
-    mSizeToContent(true),
-    mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE)
-{
-	nsresult rv = CommonConstruct();
-	if (NS_FAILED(rv))
-		Throw_(NS_ERROR_GET_CODE(rv));
 }
 
 
 // ---------------------------------------------------------------------------
-//	¥ ~CBrowserWindow						Destructor				  [public]
+//  ¥ CBrowserWindow                        Stream Constructor        [public]
+// ---------------------------------------------------------------------------
+
+CBrowserWindow::CBrowserWindow(LStream* inStream) :
+    LWindow(inStream),
+    mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
+    mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
+    mProgressBar(NULL)
+{
+}
+
+
+// ---------------------------------------------------------------------------
+//  ¥ ~CBrowserWindow                       Destructor                [public]
 // ---------------------------------------------------------------------------
 
 CBrowserWindow::~CBrowserWindow()
 {
-   if (mBrowserShell)
-      mBrowserShell->SetTopLevelWindow(nsnull);
-   
-   if (mBrowserChrome)
-   {
-      mBrowserChrome->BrowserShell() = nsnull;
-      mBrowserChrome->BrowserWindow() = nsnull;
-      NS_RELEASE(mBrowserChrome);
-   }
-}
-
-
-CBrowserWindow* CBrowserWindow::CreateWindow(PRUint32 inChromeFlags, PRInt32 width, PRInt32 height)
-{
-    const SInt16 kStatusBarHeight = 16;
-    
-    CBrowserWindow	*theWindow;
-    PRUint32        chromeFlags;
-    
-    if (inChromeFlags == nsIWebBrowserChrome::CHROME_DEFAULT)
-        chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_RESIZE |
-                      nsIWebBrowserChrome::CHROME_WINDOW_CLOSE |
-                      nsIWebBrowserChrome::CHROME_TOOLBAR |
-                      nsIWebBrowserChrome::CHROME_STATUSBAR;
-    else
-        chromeFlags = inChromeFlags;
-    
-    // Bounds - Set to an arbitrary rect - we'll size it after all the subviews are in.
-    Rect globalBounds;
-    globalBounds.left = 4;
-    globalBounds.top = 42;
-    globalBounds.right = globalBounds.left + 600;
-    globalBounds.bottom = globalBounds.top + 400;
-    
-    // ProcID and attributes
-    short windowDefProc;
-    UInt32 windowAttrs = (windAttr_Enabled | windAttr_Targetable);
-    if (chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG)
-    {
-        windowAttrs |= windAttr_Modal;
-
-        if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR)
-        {
-            windowDefProc = kWindowMovableModalDialogProc;
-            windowAttrs |= windAttr_TitleBar;
-        }
-        else
-            windowDefProc = kWindowModalDialogProc;            
-    }
-    else
-    {
-        windowAttrs |= windAttr_Regular;    
-
-        if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)
-        {
-            windowDefProc = kWindowGrowDocumentProc;
-            windowAttrs |= windAttr_Resizable;
-        }
-        else
-            windowDefProc = kWindowDocumentProc;            
-        
-        if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_CLOSE)
-            windowAttrs |= windAttr_CloseBox;
-    }
-
-    Boolean isChrome = (chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME) != 0;
-    theWindow = new CBrowserWindow(LCommander::GetTopCommander(), globalBounds, "\p", windowDefProc, windowAttrs, window_InFront, isChrome);
-    ThrowIfNil_(theWindow);
-
-    SDimension16 windowSize, toolBarSize;
-    theWindow->GetFrameSize(windowSize);
-
-    if (chromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR)
-    {
-    	LView::SetDefaultView(theWindow);
-    	LCommander::SetDefaultCommander(theWindow);
-    	LAttachable::SetDefaultAttachable(nil);
-
-        LView *toolBarView = static_cast<LView*>(UReanimator::ReadObjects(ResType_PPob, 131));
-        ThrowIfNil_(toolBarView);
-                    
-        toolBarView->GetFrameSize(toolBarSize);
-        toolBarView->PlaceInSuperFrameAt(0, 0, false);
-        toolBarSize.width = windowSize.width;
-        toolBarView->ResizeFrameTo(toolBarSize.width, toolBarSize.height, false);
-    }
-
-    SPaneInfo aPaneInfo;
-    SViewInfo aViewInfo;
-    
-    aPaneInfo.paneID = paneID_WebShellView;
-    aPaneInfo.width = windowSize.width;
-    aPaneInfo.height = windowSize.height;
-    if (chromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR)
-        aPaneInfo.height -= toolBarSize.height;
-    if (chromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR)
-        aPaneInfo.height -= kStatusBarHeight - 1;
-    aPaneInfo.visible = true;
-    aPaneInfo.enabled = true;
-    aPaneInfo.bindings.left = true;
-    aPaneInfo.bindings.top = true;
-    aPaneInfo.bindings.right = true;
-    aPaneInfo.bindings.bottom = true;
-    aPaneInfo.left = 0;
-    aPaneInfo.top = (chromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR) ? toolBarSize.height : 0;
-    aPaneInfo.userCon = 0;
-    aPaneInfo.superView = theWindow;
-    
-    aViewInfo.imageSize.width = 0;
-    aViewInfo.imageSize.height = 0;
-    aViewInfo.scrollPos.h = aViewInfo.scrollPos.v = 0;
-    aViewInfo.scrollUnit.h = aViewInfo.scrollUnit.v = 1;
-    aViewInfo.reconcileOverhang = 0;
-    
-    CBrowserShell *aShell = new CBrowserShell(aPaneInfo, aViewInfo);
-    ThrowIfNil_(aShell);
-    aShell->PutInside(theWindow, false);
-   
-    if (chromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR)
-    {
-    	LView::SetDefaultView(theWindow);
-    	LCommander::SetDefaultCommander(theWindow);
-    	LAttachable::SetDefaultAttachable(nil);
-
-        LView *statusView = static_cast<LView*>(UReanimator::ReadObjects(ResType_PPob, 130));
-        ThrowIfNil_(statusView);
-        
-        statusView->PlaceInSuperFrameAt(0, windowSize.height - kStatusBarHeight + 1, false);
-        statusView->ResizeFrameTo(windowSize.width - 15, kStatusBarHeight, false);
-    }        
-
-    // Only add context menus to our default window type
-    if (inChromeFlags == nsIWebBrowserChrome::CHROME_DEFAULT)
-    {
-        CWebBrowserCMAttachment *cmAttachment = new CWebBrowserCMAttachment(theWindow, 0);
-        theWindow->AddAttachment(cmAttachment);
-    }       
-    
-    // Now the window is constructed...
-    theWindow->FinishCreate();        
-
-	Rect	theBounds;
-	theWindow->GetGlobalBounds(theBounds);
-    if (width == -1)
-        width = theBounds.right - theBounds.left;
-    if (height == -1)
-        height = theBounds.bottom - theBounds.top;
-        
-    theWindow->ResizeWindowTo(width, height);
-
-    return theWindow;
-}
-
-
-NS_IMETHODIMP CBrowserWindow::CommonConstruct()
-{
-   nsresult rv;
-   
-   // Make the base widget
-   mWindow = do_CreateInstance(kWindowCID, &rv);
-   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-   
-   // Make our CWebBrowserChrome
-   mBrowserChrome = new CWebBrowserChrome;
-   NS_ENSURE_TRUE(mBrowserChrome, NS_ERROR_OUT_OF_MEMORY);
-   NS_ADDREF(mBrowserChrome);
-   mBrowserChrome->BrowserWindow() = this;
-   
-   return NS_OK;
-}
-
-
-void CBrowserWindow::FinishCreate()
-{
-   // Initialize the top level widget
-   // This needs to be done AFTER the subviews are constructed
-   // but BEFORE the subviews do FinishCreateSelf.
-   
-   	Rect portRect;
-   	
-#if PP_Target_Carbon
-	::GetWindowPortBounds(GetMacWindow(), &portRect);
-#else
-	portRect = GetMacPort()->portRect;
-#endif
-	
-	nsRect r(0, 0, portRect.right - portRect.left, portRect.bottom - portRect.top);
-	
-	nsresult rv = mWindow->Create(Compat_GetMacWindow(), r, nsnull, nsnull, nsnull, nsnull, nsnull);
-	if (NS_FAILED(rv))
-	   Throw_(NS_ERROR_GET_CODE(rv));
-
-	mBrowserShell = dynamic_cast<CBrowserShell*>(FindPaneByID(paneID_WebShellView));
-	ThrowIfNULL_(mBrowserShell);  // Curtains if we don't have this
-	mBrowserChrome->BrowserShell() = mBrowserShell;
-
-   Inherited::FinishCreate();   
+    if (mBrowserShell)
+        mBrowserShell->RemoveListener(this);
 }
 
 
 // ---------------------------------------------------------------------------
-//	¥ FinishCreateSelf
+//  ¥ FinishCreateSelf
 // ---------------------------------------------------------------------------
 
 void CBrowserWindow::FinishCreateSelf()
 {
-	SetLatentSub(mBrowserShell);
-	
-	// Find our subviews - Depending on our chrome flags, we may or may
-	// not have any of these subviews so don't fail if they don't exist
-	mURLField = dynamic_cast<LEditText*>(FindPaneByID(paneID_URLField));
-	mStatusBar = dynamic_cast<LStaticText*>(FindPaneByID(paneID_StatusBar));
-	mThrobber = dynamic_cast<CThrobber*>(FindPaneByID(paneID_Throbber));
-	mProgressBar = dynamic_cast<LProgressBar*>(FindPaneByID(paneID_ProgressBar));
-	if (mProgressBar)
-	   mProgressBar->Hide();
-	
-	mBackButton = dynamic_cast<LControl*>(FindPaneByID(paneID_BackButton));
-	if (mBackButton)
-		mBackButton->Disable();
-	mForwardButton = dynamic_cast<LControl*>(FindPaneByID(paneID_ForwardButton));
-	if (mForwardButton)
-		mForwardButton->Disable();
-	mReloadButton = dynamic_cast<LControl*>(FindPaneByID(paneID_ReloadButton));
-	if (mReloadButton)
-		mReloadButton->Disable();	
-	mStopButton = dynamic_cast<LControl*>(FindPaneByID(paneID_StopButton));
-	if (mStopButton)
-		mStopButton->Disable();
+    mBrowserShell = dynamic_cast<CBrowserShell *>(FindPaneByID(CBrowserShell::paneID_MainBrowser));
+    ThrowIfNil_(mBrowserShell);
+    mBrowserShell->AddListener(this);
+    SetLatentSub(mBrowserShell);
+    
+    // Find our subviews - Depending on our chrome flags, we may or may
+    // not have any of these subviews so don't fail if they don't exist
+    mURLField = dynamic_cast<LEditText*>(FindPaneByID(paneID_URLField));
+    mStatusBar = dynamic_cast<LStaticText*>(FindPaneByID(paneID_StatusBar));
+    mThrobber = dynamic_cast<CThrobber*>(FindPaneByID(paneID_Throbber));
+    mProgressBar = dynamic_cast<LProgressBar*>(FindPaneByID(paneID_ProgressBar));
+    if (mProgressBar)
+       mProgressBar->Hide();
+    
+    mBackButton = dynamic_cast<LControl*>(FindPaneByID(paneID_BackButton));
+    if (mBackButton)
+        mBackButton->Disable();
+    mForwardButton = dynamic_cast<LControl*>(FindPaneByID(paneID_ForwardButton));
+    if (mForwardButton)
+        mForwardButton->Disable();
+    mReloadButton = dynamic_cast<LControl*>(FindPaneByID(paneID_ReloadButton));
+    if (mReloadButton)
+        mReloadButton->Disable();   
+    mStopButton = dynamic_cast<LControl*>(FindPaneByID(paneID_StopButton));
+    if (mStopButton)
+        mStopButton->Disable();
 
-	UReanimator::LinkListenerToControls(this, this, view_BrowserToolBar);
-	StartListening();
-	StartBroadcasting();	
+    UReanimator::LinkListenerToControls(this, this, view_BrowserToolBar);
+    StartListening();
+    StartBroadcasting();    
 }
 
-
-void CBrowserWindow::ResizeFrameBy(SInt16		inWidthDelta,
-                				   SInt16		inHeightDelta,
-                				   Boolean	    inRefresh)
-{
-	// Resize the widget BEFORE subviews get resized
-   	Rect portRect;
-   	
-#if PP_Target_Carbon
-	::GetWindowPortBounds(GetMacWindow(), &portRect);
-#else
-	portRect = GetMacPort()->portRect;
-#endif
-
-	mWindow->Resize(portRect.right - portRect.left, portRect.bottom - portRect.top, inRefresh);
-
-	Inherited::ResizeFrameBy(inWidthDelta, inHeightDelta, inRefresh);	
-}
-
+// ---------------------------------------------------------------------------
+//  ¥ ShowSelf
+// ---------------------------------------------------------------------------
 
 void CBrowserWindow::ShowSelf()
 {
-   Inherited::ShowSelf();
-   mWindow->Show(PR_TRUE);
+    Inherited::ShowSelf();
+
+    nsIWidget *widget = nsnull;
+
+    OSStatus err = ::GetWindowProperty(Compat_GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), nsnull, (void*)&widget);
+    if (err == noErr && widget)
+        widget->Show(PR_TRUE);
 }
 
 
 // ---------------------------------------------------------------------------
-//	¥ ListenToMessage
+//  ¥ ListenToMessage
 // ---------------------------------------------------------------------------
 
-void CBrowserWindow::ListenToMessage(MessageT		inMessage,
-									 void*			ioParam)
+void CBrowserWindow::ListenToMessage(MessageT       inMessage,
+                                     void*          ioParam)
 {
-	ProcessCommand(inMessage, ioParam);
+    switch (inMessage)
+    {
+        case msg_OnNetStartChange:
+            {
+                const MsgNetStartInfo *info = reinterpret_cast<MsgNetStartInfo*>(ioParam);
+
+                if (mProgressBar) {
+                    mProgressBar->Show();
+                    mProgressBar->SetIndeterminateFlag(true, true);
+                }
+               
+                if (mThrobber)
+                    mThrobber->Start();
+
+                if (mStopButton)
+                    mStopButton->Enable();
+            }
+            break;
+        
+        case msg_OnNetStopChange:
+            {
+                const MsgNetStopInfo *info = reinterpret_cast<MsgNetStopInfo*>(ioParam);
+
+                if (mThrobber)
+                    mThrobber->Stop();
+
+                if (mProgressBar) {
+                    if (mProgressBar->IsIndeterminate())
+                        mProgressBar->Stop();
+                    mProgressBar->Hide();
+                }
+
+                // Enable back, forward, reload, stop
+                if (mBackButton)
+                    mBrowserShell->CanGoBack() ? mBackButton->Enable() : mBackButton->Disable();
+                if (mForwardButton)
+                    mBrowserShell->CanGoForward() ? mForwardButton->Enable() : mForwardButton->Disable();
+                if (mReloadButton)
+                    mReloadButton->Enable();
+                if (mStopButton)
+                    mStopButton->Disable();
+                    
+                // Wipe the status clean
+                if (mStatusBar)
+                    mStatusBar->SetText(nsnull, 0);
+            }
+            break;
+ 
+         case msg_OnProgressChange:
+            {
+                const MsgOnProgressChangeInfo *info = reinterpret_cast<MsgOnProgressChangeInfo*>(ioParam);
+                
+                if (mProgressBar) {
+                    if (info->mMaxProgress != -1 && mProgressBar->IsIndeterminate())
+                        mProgressBar->SetIndeterminateFlag(false, false);
+                    else if (info->mMaxProgress == -1 && !mProgressBar->IsIndeterminate())
+                        mProgressBar->SetIndeterminateFlag(true, true);
+
+                    if (!mProgressBar->IsIndeterminate()) {
+                        PRInt32 aMax = max(0, info->mMaxProgress);
+                        PRInt32 aVal = min(aMax, max(0, info->mCurProgress));
+                        mProgressBar->SetMaxValue(aMax);
+                        mProgressBar->SetValue(aVal);
+                    }
+                }
+            }
+            break;
+                
+         case msg_OnLocationChange:
+            {
+                const MsgLocationChangeInfo *info = reinterpret_cast<MsgLocationChangeInfo*>(ioParam);
+                
+                if (mURLField)
+                    mURLField->SetText(info->mURLSpec, strlen(info->mURLSpec));
+            }
+            break;
+
+         case msg_OnStatusChange:
+            {
+                const MsgStatusChangeInfo *info = reinterpret_cast<MsgStatusChangeInfo*>(ioParam);
+                
+                if (mStatusBar) {
+                    nsCAutoString cStr;
+                    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(info->mMessage), cStr);
+                    mStatusBar->SetText(const_cast<char *>(cStr.get()), cStr.Length());
+                }
+            }
+            break;
+
+        case msg_OnChromeStatusChange:
+            {
+                const MsgChromeStatusChangeInfo *info = reinterpret_cast<MsgChromeStatusChangeInfo*>(ioParam);
+                
+                if (mStatusBar) {
+                    nsCAutoString cStr;
+                    CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(info->mStatus), cStr);
+                    mStatusBar->SetText(const_cast<char *>(cStr.get()), cStr.Length());
+                }
+            }
+            break;
+           
+        default:
+            ProcessCommand(inMessage, ioParam);
+            break;
+    }
 }
 
 // ---------------------------------------------------------------------------
-//	¥ ObeyCommand
+//  ¥ ObeyCommand
 // ---------------------------------------------------------------------------
 
-Boolean CBrowserWindow::ObeyCommand(CommandT			inCommand,
-									void				*ioParam)
+Boolean CBrowserWindow::ObeyCommand(CommandT            inCommand,
+                                    void                *ioParam)
 {
 #pragma unused(ioParam)
 
-	Boolean	cmdHandled = true;
-	nsresult rv;
-	
-	switch (inCommand)
-	{
-	    case cmd_OpenLinkInNewWindow:
-	        {	            
-	            // Get the URL from the link
-	            ThrowIfNil_(mContextMenuDOMNode);
-	            nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement(do_QueryInterface(mContextMenuDOMNode, &rv));
-	            ThrowIfError_(rv);
-	            
-	            nsAutoString href;
-	            rv = linkElement->GetHref(href);
-	            ThrowIfError_(rv);
-	            
-	            nsCAutoString urlSpec;
-	            CopyUCS2toASCII(href, urlSpec);
-	            SendOpenURLEventToSelf(urlSpec);
-	        }
+    Boolean cmdHandled = true;
+    
+    switch (inCommand)
+    {            
+        case paneID_BackButton:
+            mBrowserShell->Back();
+            break;
+
+        case paneID_ForwardButton:
+            mBrowserShell->Forward();
             break;
             
-        case cmd_ViewPageSource:
-            {
-                nsCAutoString currentURL;
-                rv = mBrowserShell->GetCurrentURL(currentURL);
-                ThrowIfError_(rv);
-                currentURL.Insert("view-source:", 0);
-                SendOpenURLEventToSelf(currentURL);
-            }
+        case paneID_ReloadButton:
+            mBrowserShell->Reload();
             break;
-            
-		case paneID_BackButton:
-			mBrowserShell->Back();
-			break;
 
-		case paneID_ForwardButton:
-			mBrowserShell->Forward();
-			break;
-			
-		case paneID_ReloadButton:
-		    mBrowserShell->Reload();
-		    break;
-
-		case paneID_StopButton:
-			mBrowserShell->Stop();
-			break;
-			
-	    case cmd_Reload:
-	        mBrowserShell->Reload();
-	        break;
-
-		case paneID_URLField:
-		  	{
-			SInt32    urlTextLen;
-			mURLField->GetText(nil, 0, &urlTextLen);
-        	StPointerBlock  urlTextPtr(urlTextLen, true, false);
-			mURLField->GetText(urlTextPtr.Get(), urlTextLen, &urlTextLen);
-			mBrowserShell->LoadURL(nsDependentCString(urlTextPtr.Get(), urlTextLen));
-			}
-			break;
-			
-	    default:
-	        cmdHandled = false;
-	        break;
-	}
-
-	if (!cmdHandled)
-		cmdHandled = LWindow::ObeyCommand(inCommand, ioParam);
-	return cmdHandled;
-}
-
-
-// ---------------------------------------------------------------------------
-//		¥ FindCommandStatus
-// ---------------------------------------------------------------------------
-//	This function enables menu commands.
-
-void
-CBrowserWindow::FindCommandStatus(
-	PP_PowerPlant::CommandT	inCommand,
-	Boolean					&outEnabled,
-	Boolean					&outUsesMark,
-	UInt16	                &outMark,
-	Str255					outName)
-{
-
-	switch (inCommand)
-	{
-	    case cmd_OpenLinkInNewWindow:
-            outEnabled = (mContextMenuContext & nsIContextMenuListener::CONTEXT_LINK) != 0;
-			break;
-
-        case cmd_Back:
-            outEnabled = mBrowserShell->CanGoBack();
-            break;
- 
-        case cmd_Forward:
-            outEnabled = mBrowserShell->CanGoForward();
-            break;
-            
-        case cmd_Stop:
-            outEnabled = mBusy;
+        case paneID_StopButton:
+            mBrowserShell->Stop();
             break;
             
         case cmd_Reload:
-            outEnabled = true;
+            mBrowserShell->Reload();
+            break;
+
+        case paneID_URLField:
+            {
+                SInt32    urlTextLen;
+                mURLField->GetText(nil, 0, &urlTextLen);
+                StPointerBlock  urlTextPtr(urlTextLen, true, false);
+                mURLField->GetText(urlTextPtr.Get(), urlTextLen, &urlTextLen);
+                mBrowserShell->LoadURL(nsDependentCString(urlTextPtr.Get(), urlTextLen));
+            }
             break;
             
-        case cmd_ViewPageSource:
-            outEnabled = true;
+        default:
+            cmdHandled = false;
             break;
-            
-        case cmd_ViewImage:
-            outEnabled = (mContextMenuContext & nsIContextMenuListener::CONTEXT_IMAGE) != 0;
-            break;
-            
-        case cmd_CopyLinkLocation:
-            outEnabled = (mContextMenuContext & nsIContextMenuListener::CONTEXT_LINK) != 0;
-            break;
-
-        case cmd_CopyImageLocation:
-            outEnabled = (mContextMenuContext & nsIContextMenuListener::CONTEXT_IMAGE) != 0;
-            break;
-           	        
-		default:
-			LWindow::FindCommandStatus(inCommand, outEnabled,
-									   outUsesMark, outMark, outName);
-			break;
-	}
-}
-
-
-NS_METHOD CBrowserWindow::GetWidget(nsIWidget** aWidget)
-{
-   NS_ENSURE_ARG_POINTER(aWidget);
-
-   *aWidget = mWindow;
-   NS_IF_ADDREF(*aWidget);
-   
-   return NS_OK;
-}
-
-
-NS_METHOD CBrowserWindow::GetIWebBrowserChrome(nsIWebBrowserChrome **aChrome)
-{
-	NS_ENSURE_ARG_POINTER(aChrome);
-
-	*aChrome = static_cast<nsIWebBrowserChrome *> (mBrowserChrome);
-	NS_IF_ADDREF(*aChrome);
-
-	return NS_OK;
-}
-
-
-NS_METHOD CBrowserWindow::SizeToContent()
-{
-  nsresult rv;
-  nsCOMPtr<nsIDOMWindow> domWindow;
-  rv = mBrowserChrome->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
-  if (NS_FAILED(rv)) return rv;
-  return domWindow->SizeToContent();
-}
-
-NS_METHOD CBrowserWindow::Stop()
-{
-    return mBrowserShell->Stop();
-}
-
-
-//*****************************************************************************
-//***    Chrome Interraction
-//*****************************************************************************
-
-NS_METHOD CBrowserWindow::SetStatus(const PRUnichar* aStatus)
-{
-   if (mStatusBar)
-   {
-		nsCAutoString cStr;
-		
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(aStatus), cStr);
-		mStatusBar->SetText(const_cast<char *>(cStr.get()), cStr.Length());
-   }
-   return NS_OK;
-}
-
-NS_METHOD CBrowserWindow::SetLocation(const nsString& aLocation)
-{
-	if (mURLField)
-	{
-		nsCAutoString cStr;
-		
-        CPlatformUCSConversion::GetInstance()->UCSToPlatform(aLocation, cStr);
-		mURLField->SetText(const_cast<char *>(cStr.get()), cStr.Length());
-	}
-   return NS_OK;
-}
-
-NS_METHOD CBrowserWindow::OnStatusNetStart(nsIWebProgress *progress, nsIRequest *request,
-                                           PRInt32 progressStateFlags, PRUint32 status)
-{
-	if (mProgressBar) {
-	   mProgressBar->Show();
-	   mProgressBar->SetIndeterminateFlag(true, true);
-   }
-   
-	if (mThrobber)
-		mThrobber->Start();
-
-	if (mStopButton)
-		mStopButton->Enable();
-
-    mBusy = true;
-    
-	// Inform any other interested parties
-	// Actually, all of the above stuff should done through
-	// broadcasters and listeners. But for demo's sake this
-	// better shows what's happening.
-	LBroadcaster::BroadcastMessage(msg_OnStartLoadDocument, 0);
-   
-   return NS_OK;
-}
-
-NS_METHOD CBrowserWindow::OnStatusNetStop(nsIWebProgress *progress, nsIRequest *request,
-                                          PRInt32 progressStateFlags, PRUint32 status)
-{
-	if (mThrobber)
-		mThrobber->Stop();
-		
-	if (mProgressBar) {
-	   if (mProgressBar->IsIndeterminate())
-	      mProgressBar->Stop();
-	   mProgressBar->Hide();
-	}
-	
-	// Enable back, forward, reload, stop
-	if (mBackButton)
-		mBrowserShell->CanGoBack() ? mBackButton->Enable() : mBackButton->Disable();
-	if (mForwardButton)
-		mBrowserShell->CanGoForward() ? mForwardButton->Enable() : mForwardButton->Disable();
-    if (mReloadButton)
-        mReloadButton->Enable();
-	if (mStopButton)
-		mStopButton->Disable();
-		
-    // If this is the first load, do some things.    
-    if (!mInitialLoadComplete) {
-    
-        if (mIsChromeWindow) {
-            // If we don't have a title yet, see if we can get one from the DOM
-            LStr255 windowTitle;
-            GetDescriptor(windowTitle);
-            if (!windowTitle.Length())
-                SetTitleFromDOMDocument();
-            
-            // If we are being sized intrinsically, do it now    
-        	if (mSizeToContent)
-        	    SizeToContent();
-        }
-        
-        // If we deferred showing ourselves because waiting to be sized, do it now
-        if (mVisible && !IsVisible())
-            Show();
-	    
-	    mInitialLoadComplete = true;	
-    }
-	mBusy = false;
-		
-	// Inform any other interested parties
-	// Actually, all of the above stuff should done through
-	// broadcasters and listeners. But for demo's sake this
-	// better shows what's happening.
-	LBroadcaster::BroadcastMessage(msg_OnEndLoadDocument, 0);
-
-   return NS_OK;
-}
-
-
-NS_METHOD CBrowserWindow::OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
-                                           PRInt32 curSelfProgress, PRInt32 maxSelfProgress, 
-                                           PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
-{
-   if (mProgressBar) {
-      if (maxTotalProgress != -1 && mProgressBar->IsIndeterminate())
-         mProgressBar->SetIndeterminateFlag(false, false);
-      else if (maxTotalProgress == -1 && !mProgressBar->IsIndeterminate())
-         mProgressBar->SetIndeterminateFlag(true, true);
-      
-      if (!mProgressBar->IsIndeterminate()) {
-         PRInt32 aMax = max(0, maxTotalProgress);
-         PRInt32 aVal = min(aMax, max(0, curTotalProgress));
-         mProgressBar->SetMaxValue(aMax);
-         mProgressBar->SetValue(aVal);
-      }
-   }
-   return NS_OK;
-}
-
-NS_METHOD CBrowserWindow::GetVisibility(PRBool *aVisibility)
-{
-    *aVisibility = mVisible;
-    return NS_OK;
-}
-  
-NS_METHOD CBrowserWindow::SetVisibility(PRBool aVisibility)
-{
-    // If we are waiting for content to load in order to size ourself,
-    // defer making ourselves visible until the load completes.
-    
-    if (aVisibility) { 
-        if (mInitialLoadComplete)
-            Show();
-    }
-    else
-        Hide();
-
-    mVisible = aVisibility;
-        
-    return NS_OK;
-}
-
-
-NS_METHOD CBrowserWindow::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
-{
-    // Find our CWebBrowserCMAttachment, if any
-    CWebBrowserCMAttachment *aCMAttachment = nsnull;
-	const TArray<LAttachment*>*	theAttachments = GetAttachmentsList();
-    
-	if (theAttachments) {
-		TArrayIterator<LAttachment*> iterate(*theAttachments);
-		
-		LAttachment*	theAttach;
-		while (iterate.Next(theAttach)) {
-			aCMAttachment = dynamic_cast<CWebBrowserCMAttachment*>(theAttach);
-			if (aCMAttachment != nil)
-			    break;
-		}
-	}
-	if (!aCMAttachment) {
-	    NS_ASSERTION(PR_FALSE, "No CWebBrowserCMAttachment");
-	    return NS_OK;
-    }
-    
-    Boolean bHandleClick = true;
-    SInt16  cmdListResID;
-    
-    if (aContextFlags & nsIContextMenuListener::CONTEXT_LINK) {
-        cmdListResID = mcmd_ContextLinkCmds;
-    }
-    else if (aContextFlags & nsIContextMenuListener::CONTEXT_IMAGE) {
-        cmdListResID = mcmd_ContextImageCmds;
-    }
-    else if (aContextFlags & nsIContextMenuListener::CONTEXT_DOCUMENT) {
-        cmdListResID = mcmd_ContextDocumentCmds;
-    }
-    else if (aContextFlags & nsIContextMenuListener::CONTEXT_TEXT) {
-        cmdListResID = mcmd_ContextTextCmds;
-    }
-    else {
-        bHandleClick = false;
-        mContextMenuContext = nsIContextMenuListener::CONTEXT_NONE;
-        mContextMenuDOMNode = nsnull;
-    }    
-    
-
-    if (bHandleClick) {
-        
-        // Call OSEventAvail with an event mask of zero which will return a
-        // null event but will fill in the mouse location and modifier keys.
-        
-        EventRecord macEvent;
-        
-#if PP_Target_Carbon
-		UEventMgr::GetMouseAndModifiers(macEvent);
-#else
-        ::OSEventAvail(0, &macEvent);
-#endif
-        
-        mContextMenuContext = aContextFlags;
-        mContextMenuDOMNode = aNode;
-        aCMAttachment->SetCommandList(cmdListResID);
-        aCMAttachment->DoContextMenuClick(macEvent);
     }
 
-    return NS_OK;
+    if (!cmdHandled)
+        cmdHandled = LWindow::ObeyCommand(inCommand, ioParam);
+    return cmdHandled;
 }
 
+
+#if 0
 NS_METHOD CBrowserWindow::SetTitleFromDOMDocument()
 {
     nsresult rv;
@@ -849,112 +380,4 @@ NS_METHOD CBrowserWindow::SetTitleFromDOMDocument()
         
     return rv;
 }
-
-void CBrowserWindow::SendOpenURLEventToSelf(const nsACString& url)
-{    
-    // Send an AppleEvent to ourselves to open a new window with the given URL
-    
-    // IMPORTANT: We need to make our target address using a ProcessSerialNumber
-    // from GetCurrentProcess. This will cause our AppleEvent to be handled from
-    // the event loop. Creating and showing a new window before the context menu
-    // click is done being processed is fatal. If we make the target address with a
-    // ProcessSerialNumber in which highLongOfPSN == 0 && lowLongOfPSN == kCurrentProcess,
-    // the event will be dispatched to us directly and we die.
-    
-    OSErr err;
-    ProcessSerialNumber	currProcess;
-    StAEDescriptor selfAddrDesc;
-    
-    err = ::GetCurrentProcess(&currProcess);
-    ThrowIfOSErr_(err);
-    err = ::AECreateDesc(typeProcessSerialNumber, (Ptr) &currProcess,
-				         sizeof(currProcess), selfAddrDesc);
-	ThrowIfOSErr_(err);
-
-	AppleEvent	getURLEvent;
-	err = ::AECreateAppleEvent(kInternetEventClass, kAEGetURL,
-							selfAddrDesc,
-							kAutoGenerateReturnID,
-							kAnyTransactionID,
-							&getURLEvent);
-    ThrowIfOSErr_(err);
-
-    const nsPromiseFlatCString& flatURL = PromiseFlatCString(url);	
-	StAEDescriptor urlDesc(typeChar, flatURL.get(), flatURL.Length());
-	
-	err = ::AEPutParamDesc(&getURLEvent, keyDirectObject, urlDesc);
-	if (err) {
-	    ::AEDisposeDesc(&getURLEvent);
-	    Throw_(err);
-	}
-	UAppleEventsMgr::SendAppleEvent(getURLEvent);
-}
-
-
-// ---------------------------------------------------------------------------
-//	Window Creator
-// ---------------------------------------------------------------------------
-
-class CWindowCreator : public nsIWindowCreator
-{
-  public:
-                         CWindowCreator();
-    virtual             ~CWindowCreator();
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWINDOWCREATOR 
-};
-
-NS_IMPL_ISUPPORTS1(CWindowCreator, nsIWindowCreator);
-
-CWindowCreator::CWindowCreator()
-{
-    NS_INIT_ISUPPORTS();
-}
-
-CWindowCreator::~CWindowCreator()
-{
-}
-
-NS_IMETHODIMP CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
-                                              PRUint32 aChromeFlags,
-                                              nsIWebBrowserChrome **_retval)
-{
-	NS_ENSURE_ARG_POINTER(_retval);
-	*_retval = 0;
-
-	CBrowserWindow *theWindow;
-
-	// we're ignoring aParent,
-	// but since windows on the Mac don't have parents anyway...
-	try {
-		theWindow = CBrowserWindow::CreateWindow(aChromeFlags, -1, -1);
-		theWindow->GetIWebBrowserChrome(_retval);
-	} catch(...) {
-		return NS_ERROR_FAILURE;
-	}
-
-	return NS_OK;
-}
-
-
-/*
-   InitializeWindowCreator creates and hands off an object with a callback
-   to a window creation function. This will be used by Gecko C++ code
-   (never JS) to create new windows when no previous window is handy
-   to begin with. This is done in a few exceptional cases, like PSM code.
-   Failure to set this callback will only disable the ability to create
-   new windows under these circumstances.
-*/
-
-nsresult InitializeWindowCreator()
-{
-	// Create a CWindowCreator and give it to the WindowWatcher service
-	// The WindowWatcher service will own it so we don't keep a ref.
-	CWindowCreator *windowCreator = new CWindowCreator;
-	if (!windowCreator) return NS_ERROR_FAILURE;
-	
-	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-	if (!wwatch) return NS_ERROR_FAILURE;
-	return wwatch->SetWindowCreator(windowCreator);
-}
+#endif

@@ -77,10 +77,7 @@ enum {
 
 // Mcmds
 enum {
-    mcmd_ContextLinkCmds        = 1200,
-    mcmd_ContextImageCmds       = 1201,
-    mcmd_ContextDocumentCmds    = 1202,
-    mcmd_ContextTextCmds        = 1203
+    mcmd_BrowserShellContextMenuCmds = 1200
 };
 
 // STR#s

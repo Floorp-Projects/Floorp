@@ -44,6 +44,7 @@
 #include "ApplIDs.h"
 #include "CBrowserWindow.h"
 #include "CBrowserShell.h"
+#include "CWindowCreator.h"
 #include "CUrlField.h"
 #include "CThrobber.h"
 #include "CIconServicesIcon.h"
@@ -66,24 +67,20 @@
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsIFileChannel.h"
-#include "nsIFileSpec.h"
 #include "nsMPFileLocProvider.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "macstdlibextras.h"
 #include "SIOUX.h"
-#include "nsIURL.h"
+#include "nsNetUtil.h"
 
 #include <TextServices.h>
 
-#undef NATIVE_PROMPTS
-
-#if USE_PROFILES
+#ifdef USE_PROFILES
 #include "CProfileManager.h"
 #include "nsIProfileChangeStatus.h"
 #endif
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static const char* kProgramName = "PPEmbed";
 
 // ===========================================================================
@@ -139,7 +136,7 @@ int main()
 CBrowserApp::CBrowserApp()
 {
 
-#if USE_PROFILES
+#ifdef USE_PROFILES
     mRefCnt = 1;
 #endif
 
@@ -157,6 +154,9 @@ CBrowserApp::CBrowserApp()
 	// Register the Appearance Manager/GA classes
 	PP_PowerPlant::UControlRegistry::RegisterClasses();
 	
+	// QuickTime is used by CThrobber
+	UQuickTime::Initialize();
+	
 	// Register classes used by embedding
 	RegisterClass_(CBrowserShell);
 	RegisterClass_(CBrowserWindow);
@@ -164,7 +164,7 @@ CBrowserApp::CBrowserApp()
 	RegisterClass_(CThrobber);
 	RegisterClass_(CIconServicesIcon);
 
-#if USE_PROFILES	
+#ifdef USE_PROFILES	
 	RegisterClass_(LScroller);
 	RegisterClass_(LTextTableView);
 	RegisterClass_(LColorEraseAttachment);
@@ -176,7 +176,7 @@ CBrowserApp::CBrowserApp()
    RegisterClass_(CWebBrowserCMAttachment);
    AddAttachment(new LCMAttachment);
 
-   SetSleepTime(15);
+   SetSleepTime(5);
     
    // Get the directory which contains the mozilla parts
    // In this case it is the app directory but it could
@@ -207,7 +207,7 @@ CBrowserApp::CBrowserApp()
    rv = NS_InitEmbedding(macDir, fileLocProvider);
 
    OverrideComponents();
-   InitializeWindowCreator();
+   CWindowCreator::Initialize();
    InitializeEmbedEventHandling(this);
 }
 
@@ -221,7 +221,7 @@ CBrowserApp::CBrowserApp()
 CBrowserApp::~CBrowserApp()
 {
    nsresult rv;
-   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+   nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
    if (NS_SUCCEEDED(rv) && prefs)
       prefs->SavePrefFile(nsnull);
 
@@ -239,7 +239,7 @@ CBrowserApp::StartUp()
 {
     nsresult rv;
         
-#if USE_PROFILES
+#ifdef USE_PROFILES
 
     // Register for profile changes    
     nsCOMPtr<nsIObserverService> observerService = 
@@ -267,11 +267,11 @@ CBrowserApp::StartUp()
     rv = locationProvider->Initialize(rootDir, "guest");   
     ThrowIfError_(rv);
     
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     ThrowIfNil_(prefs);
     // Needed because things read default prefs during startup
-    prefs->ResetPrefs();
-    prefs->ReadUserPrefs();
+    prefs->ResetUserPrefs();
+    prefs->ReadUserPrefs(nsnull);
 
 #endif
 
@@ -387,10 +387,11 @@ void CBrowserApp::HandleAppleEvent(const AppleEvent&	inAppleEvent,
                 else
                     chromeFlags = nsIWebBrowserChrome::CHROME_DEFAULT;
 			    
-       			CBrowserWindow *theWindow = CBrowserWindow::CreateWindow(chromeFlags, -1, -1);
+       			LWindow *theWindow = CWindowCreator::CreateWindowInternal(chromeFlags, -1, -1);
        			ThrowIfNil_(theWindow);
-       			theWindow->SetSizeToContent(false);
-                theWindow->GetBrowserShell()->LoadURL(dataAsStr);
+       			CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
+       			ThrowIfNil_(theBrowser);
+                theBrowser->LoadURL(dataAsStr);
        			       			
        			theWindow->Show();
 			}
@@ -417,13 +418,14 @@ CBrowserApp::ObeyCommand(
 	switch (inCommand) {
 	
 		case PP_PowerPlant::cmd_New:
-			{
-   			CBrowserWindow *theWindow = CBrowserWindow::CreateWindow(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
-   			ThrowIfNil_(theWindow);
-   			theWindow->SetSizeToContent(false);
-            // Just for demo sake, load a URL	
-            theWindow->GetBrowserShell()->LoadURL(nsDependentCString("http://www.mozilla.org"));
-   			theWindow->Show();
+			{			
+       			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
+       			ThrowIfNil_(theWindow);
+       			CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
+       			ThrowIfNil_(theBrowser);
+                // Just for demo sake, load a URL
+                theBrowser->LoadURL(nsDependentCString("http://www.mozilla.org"));
+   			    theWindow->Show();
 			}
 			break;
 
@@ -438,21 +440,16 @@ CBrowserApp::ObeyCommand(
                     
                     rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
+
+                    nsXPIDLCString urlSpec;                    
+                    rv = NS_GetURLSpecFromFile(macFile, getter_Copies(urlSpec));
                     ThrowIfError_(NS_ERROR_GET_CODE(rv));
-                    nsCOMPtr<nsIFileURL> aURL(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
-                    ThrowIfError_(NS_ERROR_GET_CODE(rv));
-                    
-                    rv = aURL->SetFile(macFile);
-                    ThrowIfError_(NS_ERROR_GET_CODE(rv));
-                    
-                    nsXPIDLCString urlSpec;
-                    rv = aURL->GetSpec(getter_Copies(urlSpec));
-                    ThrowIfError_(NS_ERROR_GET_CODE(rv));
-                        
-           			CBrowserWindow *theWindow = CBrowserWindow::CreateWindow(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
+                                            
+           			LWindow *theWindow = CWindowCreator::CreateWindowInternal(nsIWebBrowserChrome::CHROME_DEFAULT, -1, -1);
            			ThrowIfNil_(theWindow);
-           			theWindow->SetSizeToContent(false);
-                    theWindow->GetBrowserShell()->LoadURL(urlSpec);
+           			CBrowserShell *theBrowser = dynamic_cast<CBrowserShell*>(theWindow->FindPaneByID(CBrowserShell::paneID_MainBrowser));
+           			ThrowIfNil_(theBrowser);
+                    theBrowser->LoadURL(urlSpec);
            			theWindow->Show();
            		}
 			}
@@ -525,30 +522,32 @@ Boolean CBrowserApp::AttemptQuitSelf(SInt32 inSaveOption)
 
 nsresult CBrowserApp::InitializePrefs()
 {
-   nsresult rv;
-   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
-   if (NS_SUCCEEDED(rv)) {	  
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+        return rv;	  
 
-		// We are using the default prefs from mozilla. If you were
-		// disributing your own, this would be done simply by editing
-		// the default pref files.
-		
-		PRBool inited;
-		rv = prefs->GetBoolPref("ppbrowser.prefs_inited", &inited);
-		if (NS_FAILED(rv) || !inited)
-		{
-            prefs->SetIntPref("font.size.variable.x-western", 12);
-            prefs->SetIntPref("font.size.fixed.x-western", 12);
-            rv = prefs->SetBoolPref("ppbrowser.prefs_inited", PR_TRUE);
-            if (NS_SUCCEEDED(rv))
-                rv = prefs->SavePrefFile(nsnull);
-        }
+	// We are using the default prefs from mozilla. If you were
+	// disributing your own, this would be done simply by editing
+	// the default pref files.
+	nsCOMPtr<nsIPrefBranch> branch;
+	rv = prefs->GetBranch(nsnull, getter_AddRefs(branch));
+    if (NS_FAILED(rv))
+        return rv;	  
+
+    const char kVariableFontSizePref[] = "font.size.variable.x-western";
+    const char kFixedFontSizePref[] = "font.size.fixed.x-western";
+    
+    PRInt32 intValue;
+	rv = branch->GetIntPref(kVariableFontSizePref, &intValue);
+	if (NS_FAILED(rv))
+        branch->SetIntPref(kVariableFontSizePref, 14);
         
-	}
-	else
-		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
+    rv = branch->GetIntPref(kFixedFontSizePref, &intValue);    
+	if (NS_FAILED(rv))
+        branch->SetIntPref(kFixedFontSizePref, 13);
 		
-    return rv;
+    return NS_OK;
 }
 
 Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT	inCommand,
@@ -576,7 +575,8 @@ Boolean CBrowserApp::SelectFileObject(PP_PowerPlant::CommandT	inCommand,
 	}
     return result;
 }
-#if USE_PROFILES
+
+#ifdef USE_PROFILES
 
 // ---------------------------------------------------------------------------
 //  CBrowserApp : nsISupports
@@ -615,7 +615,7 @@ NS_IMETHODIMP CBrowserApp::Observe(nsISupports *aSubject, const char *aTopic, co
         while (iterator.Previous(theSub)) {
             CBrowserWindow *browserWindow = dynamic_cast<CBrowserWindow*>(theSub);
             if (browserWindow) {
-                browserWindow->Stop();
+                //browserWindow->Stop();
         	    mSubCommanders.RemoveItemsAt(1, iterator.GetCurrentIndex());
         	    delete browserWindow;
         	}

@@ -17,89 +17,57 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
- *   Conrad Carlen <conrad@ingress.com>
+ *   Conrad Carlen <ccarlen@netscape.com>
  */
 
 #ifndef __CThrobber__
 #define __CThrobber__
 
 #include <LControl.h>
-
-#ifndef nsError_h
-#include "nsError.h"
-#endif
-
-#ifndef nsCOMPtr_h___
-#include "nsCOMPtr.h"
-#endif
-
-#ifndef nsGUIEvent_h__
-#include "nsGUIEvent.h"
-#endif
-
-#include "nsITimer.h"
-
-#include "nsString.h"
-
-#include <map>
-#include <vector>
-using namespace std;
-
-class nsIWidget;
+#include <LPeriodical.h>
+ 
+// ToolBox
+#include <Movies.h>
 
 class CThrobber : public LControl,
-                  public nsISupports
+                  public LPeriodical
 {
 public:
 	enum { class_ID = FOUR_CHAR_CODE('Thrb') };
 
-                           CThrobber();
-						         CThrobber(LStream*	inStream);
-
-	virtual				      ~CThrobber();
-
-   NS_DECL_ISUPPORTS
-
+                             CThrobber();
+                             CThrobber(LStream*	inStream);
+ 
+	virtual				    ~CThrobber();
+ 
+    // LPane
+ 	virtual void            FinishCreateSelf();
+	virtual void	        ShowSelf();
+	virtual void	        HideSelf();
+ 	virtual void            DrawSelf();
+ 
+    void                    ResizeFrameBy(SInt16		inWidthDelta,
+                            		      SInt16		inHeightDelta,
+                            			  Boolean	    inRefresh);
+    void                    MoveBy(SInt32		inHorizDelta,
+         				           SInt32		inVertDelta,
+         						   Boolean      inRefresh);
+         						   
+    // LPeriodical
+	virtual void		    SpendTime(const EventRecord &inMacEvent);
+ 	
 	// CThrobber
-	virtual void            FinishCreateSelf();
-	virtual void	         ShowSelf();
-	virtual void	         HideSelf();
-	virtual void            DrawSelf();
-
-   void                    ResizeFrameBy(SInt16		inWidthDelta,
-                            				  SInt16		inHeightDelta,
-                            				  Boolean	inRefresh);
-   void                    MoveBy(SInt32		inHorizDelta,
-         				             SInt32		inVertDelta,
-         							    Boolean    inRefresh);
-	
-	virtual void            Start();
-	virtual void            Stop();
- protected:
-
-   enum { kDefaultImageIndex = 0, kAnimImageIndex };
-   
-   void                    AdjustFrame(Boolean inRefresh);
-   nsresult                LoadImages();
-   void                    DestroyImages();
-   void                    Tick();
-   
-   char                    mDefImageURL[256], mAnimImageURL[256];
-       
-   nsCOMPtr<nsIWidget>     mWidget;
-//   vector<nsIImageRequest*> *mImages;
-   bool                    mRunning;
-   SInt32                  mNumImages, mCompletedImages;
-   nsCOMPtr<nsITimer>      mTimer;
-   
-   static map<nsIWidget*, CThrobber*> mgThrobberMap;
-   
-   static CThrobber*       FindThrobberForWidget(nsIWidget* aWidget);
-   static void             AddThrobber(CThrobber* aThrobber);
-   static void             RemoveThrobber(CThrobber* aThrobber);
-   static nsEventStatus PR_CALLBACK HandleThrobberEvent(nsGUIEvent *aEvent);
-   static void             ThrobTimerCallback(nsITimer *aTimer, void *aClosure);
-
+ 	virtual void            Start();
+ 	virtual void            Stop();
+ 
+protected:
+    void                    CreateMovie();
+        
+protected:
+    SInt16                  mMovieResID;
+    Handle                  mMovieHandle;
+    Movie                   mMovie;
+    MovieController         mMovieController;
 };
 
 
