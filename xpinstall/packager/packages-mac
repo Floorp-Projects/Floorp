@@ -184,6 +184,7 @@ viewer:Components:nsProxyAutoConfig.js
 viewer:Components:nsXmlRpcClient.js
 viewer:Components:xmlextras.xpt
 viewer:Components:xmlextras.shlb
+viewer:Components:nsHelperAppDlg.js
 
 viewer:Components:gfx2.shlb
 viewer:Components:libimg2.shlb
