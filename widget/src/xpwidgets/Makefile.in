@@ -22,17 +22,20 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-
 include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = raptorbasewidget_s
 
 #LCFLAGS=-D_IMPL_NS_WIDGET 
 
-ifeq ($(OS_TARGET),Rhapsody)
-INCLUDES += -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../rhapsody
+INCLUDES += -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../$(MOZ_TOOLKIT) -I$(srcdir)
+
+ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
+CFLAGS += $(TK_GTK_CFLAGS)
 else
-INCLUDES += -I$(srcdir)/../public -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(srcdir)/../$(MOZ_TOOLKIT) -I$(srcdir)/.
+ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
+CFLAGS += $(TK_MOTIF_CFLAGS)
+endif
 endif
 
 CPPSRCS=nsBaseWidget.cpp                \
