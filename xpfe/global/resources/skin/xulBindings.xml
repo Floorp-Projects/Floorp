@@ -222,4 +222,19 @@
     </content>
   </binding>
 
+  <binding name="textfield" extends="xul:box">
+    <content excludes="observes,template">
+      <xul:html flex="1">
+        <html:input inherits="value,disabled,size"/>
+      </xul:html>
+    </content>
+  </binding>
+
+  <binding name="textarea" extends="xul:box">
+    <content excludes="observes,template">
+      <xul:html flex="1">
+        <html:textarea inherits="value,disabled,rows,cols"/>
+      </xul:html>
+    </content>
+  </binding>
 </bindings>

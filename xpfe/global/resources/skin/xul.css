@@ -262,3 +262,11 @@ separator {
 progressmeter {
   behavior: url(resource:/chrome/xulBindings.xml#progressmeter);
 }
+
+textfield {
+  behavior: url(resource:/chrome/xulBindings.xml#textfield);
+}
+
+textarea {
+  behavior: url(resource:/chrome/xulBindings.xml#textarea);
+}

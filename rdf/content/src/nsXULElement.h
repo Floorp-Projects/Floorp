@@ -359,6 +359,8 @@ protected:
     static nsIAtom*             kWindowAtom;
     static nsIAtom*             kMenuButtonAtom;
     static nsIAtom*             kMenuListAtom;
+    static nsIAtom*             kTextAreaAtom;
+    static nsIAtom*             kTextFieldAtom;
 
 public:
     static nsresult
