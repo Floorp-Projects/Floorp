@@ -167,7 +167,7 @@ if ($charts != 2) {
     "running (as root)\n\n",
     "   perl -MCPAN -eshell\n",
     "   install LDS/GD-1.19.tar.gz\n",
-    "   install N/NI/NINJAZ/Chart-0.99b.tar.gz";
+    "   install N/NI/NINJAZ/Chart-0.99b.tar.gz\n\n";
 }
 
 
