@@ -425,78 +425,6 @@ void FE_RunNetcaster(MWContext *context)
 
 /*
  *---------------------------------------------------------------------------
- * From ns/lib/xp/xp_hash.c
- *---------------------------------------------------------------------------
- */
-
-/* create a hash list, which isn't really a table.
- */
-PUBLIC XP_HashList *
-XP_HashListNew (int size, 
-                XP_HashingFunction  hash_func, 
-                XP_HashCompFunction comp_func)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
- /* free a hash list, which isn't really a table.
- */
-PUBLIC void
-XP_HashListDestroy (XP_HashList * hash_struct)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-
-/* add an element to a hash list, which isn't really a table.
- *
- * returns positive on success and negative on failure
- *
- * ERROR return codes
- *
- *  XP_HASH_DUPLICATE_OBJECT
- */
-PUBLIC int
-XP_HashListAddObject (XP_HashList * hash_struct, void * new_ele)
-{
-    MOZ_FUNCTION_STUB;
-    return -1;
-}
-
-
-/* removes an object by name from the hash list, which isn't really a table,
- * and returns the object if found
- */
-PUBLIC void *
-XP_HashListRemoveObject (XP_HashList * hash_struct, void * ele)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-/* finds an object by name in the hash list, which isn't really a table.
- */
-PUBLIC void *
-XP_HashListFindObject (XP_HashList * hash_struct, void * ele)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-PUBLIC uint32
-XP_StringHash (const void *xv)
-{ 
-    MOZ_FUNCTION_STUB;
-    return 0;
-}
-
-
-/*
- *---------------------------------------------------------------------------
  * From ns/lib/xp/xp_cntxt.c
  *---------------------------------------------------------------------------
  */
@@ -525,27 +453,6 @@ size_t XP_StrfTime(MWContext* context, char *result, size_t maxsize, int format,
     return 0;
 }
 
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/xp/xp_sec.c
- *---------------------------------------------------------------------------
- */
-
- /*
-** Take basic security key information and return an allocated string
-** that contains a "pretty printed" version.
-*/
-char *XP_PrettySecurityStatus(int level, char *cipher, int keySize,
-                              int secretKeySize)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-
-
 /*
  *---------------------------------------------------------------------------
  * From ns/lib/layout/layutil.c
@@ -560,7 +467,7 @@ int16
 LO_WindowWidthInFixedChars(MWContext *context)
 {
     MOZ_FUNCTION_STUB;
-    return -1;
+    return 80;
 }
 
 
@@ -1372,48 +1279,6 @@ XP_FindSomeContext()
     MOZ_FUNCTION_STUB;
     return NULL;
 }
-
-
-/*
- *---------------------------------------------------------------------------
- * From ns/lib/xp/xp_time.c
- *---------------------------------------------------------------------------
- */
-/* This parses a time/date string into a time_t
-   (seconds after "1-Jan-1970 00:00:00 GMT")
-   If it can't be parsed, 0 is returned.
-
-   Many formats are handled, including:
-
-     14 Apr 89 03:20:12
-     14 Apr 89 03:20 GMT
-     Fri, 17 Mar 89 4:01:33
-     Fri, 17 Mar 89 4:01 GMT
-     Mon Jan 16 16:12 PDT 1989
-     Mon Jan 16 16:12 +0130 1989
-     6 May 1992 16:41-JST (Wednesday)
-     22-AUG-1993 10:59:12.82
-     22-AUG-1993 10:59pm
-     22-AUG-1993 12:59am
-     22-AUG-1993 12:59 PM
-     Friday, August 04, 1995 3:54 PM
-     06/21/95 04:24:34 PM
-     20/06/95 21:07
-     95-06-08 19:32:48 EDT
-
-  If the input string doesn't contain a description of the timezone,
-  we consult the `default_to_gmt' to decide whether the string should
-  be interpreted relative to the local time zone (FALSE) or GMT (TRUE).
-  The correct value for this argument depends on what standard specified
-  the time string which you are parsing.
- */
-time_t
-XP_ParseTimeString (const char *string, XP_Bool default_to_gmt)
-{
-    MOZ_FUNCTION_STUB;
-    return 0;
-}
-
 
 /*
  *---------------------------------------------------------------------------
