@@ -95,6 +95,10 @@ public:
   NS_IMETHOD SetPostHeader(const char* name, const char* value) = 0;
 
   NS_IMETHOD SetPostData(nsIInputStream* input) = 0;
+  
+  NS_IMETHOD GetContentLength(PRInt32 *len) = 0;
+
+  NS_IMETHOD GetServerStatus(PRInt32 *status) = 0;
 
   /** Write the URL to aString, overwriting previous contents. */
   NS_IMETHOD ToString(PRUnichar* *aString) const = 0;
