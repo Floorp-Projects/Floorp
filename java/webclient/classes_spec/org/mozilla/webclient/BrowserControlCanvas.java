@@ -52,7 +52,7 @@ import java.awt.*;
 
  * See concrete subclasses for scope info.
 
- * @version $Id: BrowserControlCanvas.java,v 1.1 2000/03/04 01:10:51 edburns%acm.org Exp $
+ * @version $Id: BrowserControlCanvas.java,v 1.2 2001/05/25 23:09:45 ashuk%eng.sun.com Exp $
 
  * @see	org.mozilla.webclient.win32.Win32BrowserControlCanvas
 
@@ -121,11 +121,10 @@ protected void initialize(BrowserControl controlImpl)
 }
 
 /**
-  * Obtain the native window handle for this component's
-  * peer.
+  * Create the Native gtk window and get it's handle
   */
 
-abstract protected int getWindow(DrawingSurfaceInfo dsi);
+abstract protected int getWindow();
 
 //
 // Methods from Canvas
@@ -138,16 +137,12 @@ abstract protected int getWindow(DrawingSurfaceInfo dsi);
 public void addNotify () 
 {
 	super.addNotify();
-	
-	DrawingSurface ds = (DrawingSurface)this.getPeer();
-	DrawingSurfaceInfo dsi = ds.getDrawingSurfaceInfo();
-	
+
 	windowRelativeBounds = new Rectangle();
-	
-	// We must lock() the DrawingSurfaceInfo before
-	// accessing its native window handle.
-	dsi.lock();
-	nativeWindow = getWindow(dsi);
+
+    //Create the Native gtkWindow and it's container and
+    //get a handle to this widget
+   	nativeWindow = getWindow();
 
 	try {
 		Rectangle r = new Rectangle(getBoundsRelativeToWindow());
@@ -155,21 +150,17 @@ public void addNotify ()
 
         WindowControl wc = (WindowControl)
             webShell.queryInterface(BrowserControl.WINDOW_CONTROL_NAME);
+        //This createWindow call sets in motion the creation of the
+        //nativeInitContext and the creation of the Mozilla embedded
+        //webBrowser
         wc.createWindow(nativeWindow, r);
 	} catch (Exception e) {
-		dsi.unlock();
 		System.out.println(e.toString());
 		return;
 	}
-	
-	dsi.unlock();
-	
+
 	initializeOK = true;
 	webShellCount++;
-	
-	/*
-	  requestFocus();
-	  */
 } // addNotify()
 
 public BrowserControl getWebShell () 

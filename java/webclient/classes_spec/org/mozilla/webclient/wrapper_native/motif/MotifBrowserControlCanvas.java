@@ -36,7 +36,7 @@ import org.mozilla.util.ParameterCheck;
 
  * There is one instance of the WebShellCanvas per top level awt Frame.
 
- * @version $Id: MotifBrowserControlCanvas.java,v 1.2 2000/03/07 22:16:07 ashuk%eng.sun.com Exp $
+ * @version $Id: MotifBrowserControlCanvas.java,v 1.3 2001/05/25 23:09:44 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -75,6 +75,8 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
     private native void reparentWindow(int child, int parent);
     private native void processEvents();
     private native void setGTKWindowSize(int gtkWinPtr, int width, int height);
+    //New method for obtaining access to the Native Peer handle
+    private native int getHandleToPeer();
 
     public MotifBrowserControlCanvas() {
         super();
@@ -91,9 +93,12 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
         
         if (firstTime) {
             synchronized(getTreeLock()) {
-                canvasWinID = this.drawingSurfaceInfo.getDrawable();
+                //Use the AWT Native Peer interface to get the handle
+                //of this Canvas's native peer
+                canvasWinID = this.getHandleToPeer();
+                //Set our canvas as a parent of the top-level gtk widget
+                //which contains Mozilla.
                 this.reparentWindow(this.gtkWinID, this.canvasWinID);
-
                 firstTime = false;
             }
         }
@@ -115,15 +120,14 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
     }
 
 	/**
-	 * Obtain the native window handle for this
-	 * component's peer.
+	 * Create the top-level gtk window to be embedded in our AWT
+     * Window and return a handle to this window
 	 *
 	 * @returns The native window handle. 
 	 */
-	protected int getWindow(DrawingSurfaceInfo dsi) {
+    
+	protected int getWindow() {
         synchronized(getTreeLock()) {
-            this.drawingSurfaceInfo = (MDrawingSurfaceInfo) dsi;
-
             this.gtkTopWindow = this.createTopLevelWindow();
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             
@@ -137,5 +141,6 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
 
 		return this.gtkWinPtr;
 	}
+    
 }
 

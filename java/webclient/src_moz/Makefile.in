@@ -99,11 +99,14 @@ ifdef MOZ_ENABLE_GTK
 ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS        += $(MOZ_GTK_CFLAGS)
 CFLAGS          += $(MOZ_GTK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L/usr/X11R6/lib -lXt
+# Adding $(JDKHOME)/jre/lib/sparc because we need to link against
+# the libjawt.so shared library for the JAWT Native Interface 
+# functionality to work correctly.
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L$(JDKHOME)/jre/lib/sparc -ljawt -L/usr/X11R6/lib -lXt
 else
 CXXFLAGS        += $(TK_CFLAGS)
 CFLAGS          += $(TK_CFLAGS)
-EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L/usr/X11R6/lib -lXt 
+EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -lwc_share -lembed_base_s -L$(JDKHOME)/jre/lib/sparc -ljawt -L/usr/X11R6/lib -lXt
 endif
 endif
 
@@ -122,67 +125,15 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(INCLUDES) \
-       -I$(DEPTH)/widget/src/gtk -I../src_share
+       -I$(DEPTH)/widget/src/gtk -I../src_share -I../src_moz
 else
 INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES) \
-	-I$(DEPTH)/widget/src/gtk -I../src_share
+	-I$(DEPTH)/widget/src/gtk -I../src_share -I../src_moz
 endif
-
-
-ifneq ($(PACKAGE_BUILD),)
-ifneq ($(VERSION_NUMBER),)
-VERSION_NUMBER=0.9
-endif # VERSION_NUMBER
-PACKAGE_DIR=$(topsrcdir)/dist/javadev
-PACKAGE_LIB=$(PACKAGE_DIR)/lib
-PACKAGE_EXAMPLE=$(PACKAGE_DIR)/example
-endif # PACKAGE_BUILD
-
-ifneq ($(WEBCLIENT_PACKAGE_BUILD),)
-PACKAGE_VER = 1_0
-PACKAGE_DIR = $(DIST)/javadev
-PACKAGE_LIB = $(PACKAGE_DIR)/lib
-PACKAGE_EXAMPLE = $(PACKAGE_DIR)/example
-endif # WEBCLIENT_PACKAGE_BUILD
-
 
 
 buildRunems:
 ifeq ($(BAL_INTERFACE),)
-ifneq ($(WEBCLIENT_PACKAGE_BUILD),)
-	@echo +++ Creating Commercial Package. Use runem to run the test browser.
-	@echo +++ Checking for special libwidget_gtk.so.
-ifeq ($(OS_ARCH),Linux)
-	@if test ! -f libwidget_gtk.so ; then echo "You don't have libwidget_gtk.so, see the IMPORTANT section in Makefile.in!!!"; stopbuild; else echo "Found libwidget_gtk.so, continuing."; fi ;
-	chmod 775 libwidget_gtk.so
-	cp -f libwidget_gtk.so $(PACKAGE_LIB)
-endif
-	rm -f runem_unix_commercial
-	@echo "#!/bin/csh -x" >> runem_unix_commercial
-	@echo ln -s -f "$$"MOZILLA_FIVE_HOME/javadev/lib/libjavadom.so "$$"MOZILLA_FIVE_HOME/components/libjavadom.so >> runem_unix_commercial
-	@echo setenv CLASSPATH "$$"MOZILLA_FIVE_HOME/javadev/lib/$(LIBRARY_NAME)_$(PACKAGE_VER).jar>> runem_unix_commercial
-	@echo setenv LD_LIBRARY_PATH "$$"MOZILLA_FIVE_HOME'"':'"'"$$"MOZILLA_FIVE_HOME/components'"':'"'"$$"MOZILLA_FIVE_HOME/javadev/lib'"':'"'"$$"LD_LIBRARY_PATH>> runem_unix_commercial
-	@echo "$$"JDKHOME/bin/java org.mozilla.webclient.test.EmbeddedMozillaImpl "$$"MOZILLA_FIVE_HOME "$$"1 >> runem_unix_commercial
-	mkdir -p $(PACKAGE_EXAMPLE)
-	chmod 775 $(PACKAGE_EXAMPLE)
-	cp -f $(DIST)/bin/lib$(LIBRARY_NAME).so $(PACKAGE_LIB)
-	cp -f $(DIST)/bin/lib$(LIBRARY_NAME)stub.so $(PACKAGE_LIB)
-	cp -f $(DIST)/bin/libjavadomjni.so $(PACKAGE_LIB)
-	cp -f $(DIST)/bin/components/libjavadom.so $(PACKAGE_LIB)
-	chmod 775 $(PACKAGE_LIB)/lib$(LIBRARY_NAME).so
-	chmod 775 $(PACKAGE_LIB)/lib$(LIBRARY_NAME)stub.so
-	chmod 775 $(PACKAGE_LIB)/libjavadomjni.so
-	chmod 775 $(PACKAGE_LIB)/libjavadom.so
-	cp -f $(DEPTH)/java/webclient/src_moz/runem_unix_commercial $(PACKAGE_EXAMPLE)/runem
-
-	chmod 775  $(PACKAGE_EXAMPLE)/runem
-	cp -f $(DEPTH)/java/webclient/src_moz/install_win32.js $(DIST)/install.js
-ifeq ($(OS_ARCH),Linux)
-	cd $(DIST); zip -r $(LIBRARY_NAME)_$(PACKAGE_VER)_linux.xpi install.js javadev
-else
-	cd $(DIST); zip -r $(LIBRARY_NAME)_$(PACKAGE_VER)_solaris.xpi install.js javadev
-endif
-endif
 ifeq ($(PACKAGE_BUILD),)
 	@echo +++ Creating runem.  Use this to run the test browser.
 	rm -f runem
@@ -190,69 +141,6 @@ ifeq ($(PACKAGE_BUILD),)
 	@echo $(PERL) ../src_share/runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
 	chmod 755 runem
 else
-	@echo +++ Commercial Packaging - Copying runem_solaris. Used to run test
-	if test ! -d $(PACKAGE_EXAMPLE) ; then mkdir $(PACKAGE_EXAMPLE) ; else true ; fi ;
-	cp $(topsrcdir)/dist/bin/libwebclientstub.so $(PACKAGE_LIB)/libwebclientstub.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/libwebclient.so $(PACKAGE_LIB)/libwebclient.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/lib/libwc_share.a $(PACKAGE_LIB)/libwc_share.a.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/libjavadomjni.so $(PACKAGE_LIB)/libjavadomjni.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/libplugletjni.so $(PACKAGE_LIB)/libplugletjni.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libpluglet.so $(PACKAGE_LIB)/libpluglet.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libjavadom.so $(PACKAGE_LIB)/libjavadom.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libbcorb.so $(PACKAGE_LIB)/libbcorb.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libbcjavastubs.so $(PACKAGE_LIB)/libbcjavastubs.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libjavaloader.so $(PACKAGE_LIB)/libjavaloader.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libjavaSample.so $(PACKAGE_LIB)/libjavaSample.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libbcTest.so $(PACKAGE_LIB)/libbcTest.so.$(VERSION_NUMBER)
-	cp $(topsrcdir)/dist/bin/components/libbcxpcomstubs.so $(PACKAGE_LIB)/libbcxpcomstubs.so.$(VERSION_NUMBER)
-	rm -f $(topsrcdir)/dist/bin/libwebclientstub.so
-	rm -f $(topsrcdir)/dist/lib/libwebclientstub.so
-	rm -f $(topsrcdir)/dist/bin/libwebclient.so
-	rm -f $(topsrcdir)/dist/lib/libwebclient.so
-	rm -f $(topsrcdir)/dist/lib/libwc_share.a
-	rm -f $(topsrcdir)/dist/bin/libjavadomjni.so
-	rm -f $(topsrcdir)/dist/lib/libjavadomjni.so
-	rm -f $(topsrcdir)/dist/bin/libplugletjni.so
-	rm -f $(topsrcdir)/dist/lib/libplugletjni.so
-	rm -f $(topsrcdir)/dist/bin/components/libpluglet.so
-	rm -f $(topsrcdir)/dist/lib/components/libpluglet.so
-	rm -f $(topsrcdir)/dist/bin/components/libjavadom.so
-	rm -f $(topsrcdir)/dist/lib/components/libjavadom.so
-	rm -f $(topsrcdir)/dist/bin/components/libbcorb.so
-	rm -f $(topsrcdir)/dist/bin/components/libbcjavastubs.so
-	rm -f $(topsrcdir)/dist/bin/components/libjavaloader.so
-	rm -f $(topsrcdir)/dist/bin/components/libjavaSample.so
-	rm -f $(topsrcdir)/dist/bin/components/libbcTest.so
-	rm -f $(topsrcdir)/dist/bin/components/libbcxpcomstubs.so	
-	chmod 555 $(PACKAGE_LIB)/libwebclientstub.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libwebclient.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libwc_share.a.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libjavadomjni.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libplugletjni.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libpluglet.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libjavadom.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libbcorb.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libbcjavastubs.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libjavaloader.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libjavaSample.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libbcTest.so.$(VERSION_NUMBER)
-	chmod 555 $(PACKAGE_LIB)/libbcxpcomstubs.so.$(VERSION_NUMBER)
-	if test ! -d $(PACKAGE_LIB)/libbcorb.so ; then ln -s libbcorb.so.$(VERSION_NUMBER)  $(PACKAGE_LIB)/libbcorb.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libbcjavastubs.so ; then ln -s libbcjavastubs.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libbcjavastubs.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libjavaloader.so ; then ln -s libjavaloader.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libjavaloader.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libjavaSample.so ; then ln -s libjavaSample.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libjavaSample.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libbcTest.so ; then ln -s libbcTest.so.$(VERSION_NUMBER)  $(PACKAGE_LIB)/libbcTest.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libbcxpcomstubs.so ; then ln -s libbcxpcomstubs.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libbcxpcomstubs.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libwc_share.a ; then ln -s libwc_share.a.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwc_share.a ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libwebclientstub.so ; then ln -s libwebclientstub.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwebclientstub.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libwebclient.so ; then ln -s libwebclient.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwebclient.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libjavadomjni.so ; then ln -s libjavadomjni.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libjavadomjni.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libplugletjni.so ; then ln -s libplugletjni.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libplugletjni.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libpluglet.so ; then ln -s libpluglet.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libpluglet.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_LIB)/libjavadom.so ; then ln -s libjavadom.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libjavadom.so ; else true ; fi ;
-	if test ! -d $(PACKAGE_EXAMPLE)/runem ; then cp $(topsrcdir)/java/webclient/src_share/runem_solaris $(PACKAGE_EXAMPLE)/runem ; else true ; fi ;
-	chmod 755 $(PACKAGE_EXAMPLE)/runem
-	cp $(topsrcdir)/java/README.commercial $(PACKAGE_DIR)/README
 endif # PACKAGE_BUILD
 endif # BAL_INTERFACE
 
@@ -260,9 +148,4 @@ install:: buildRunems
 
 
 clobber_all:: clobber
-ifneq ($(WEBCLIENT_PACKAGE_BUILD),)
-	rm -f runem_unix_commercial
-	rm -rf $(DIST)/javadev
-	rm -f $(DIST)/$(LIBRARY_NAME)_$(PACKAGE_VER)*.xpi
-	rm -f $(DIST)/install.js
-endif
+

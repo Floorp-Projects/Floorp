@@ -26,6 +26,8 @@
  */
 
 #include <jni.h>
+#include <jawt_md.h>
+#include <jawt.h>
 #include "MotifBrowserControlCanvas.h"
 
 #include <X11/Xlib.h>
@@ -39,6 +41,8 @@
 #include "nsGtkEventHandler.h"
 
 #include <dlfcn.h>
+
+#include "ns_util.h" //for throwing Exceptions to Java
 
 extern "C" void NS_SetupRegistry();
 
@@ -151,6 +155,72 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBro
             gtk_widget_set_usize(gtkWidgetPtr, width, height);
         }
     }
+}
+
+
+/*
+ * Class:     org_mozilla_webclient_motif_MotifBrowserControlCanvas
+ * Method:    getHandleToPeer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_getHandleToPeer
+(JNIEnv * env, jobject canvas) {
+    JAWT awt;
+    JAWT_DrawingSurface* ds;
+    JAWT_DrawingSurfaceInfo* dsi;
+    JAWT_X11DrawingSurfaceInfo* dsi_x11;
+    Drawable handle_x11;
+    jint lock;
+
+    //Get the AWT
+    awt.version = JAWT_VERSION_1_3;
+    if (JAWT_GetAWT(env, &awt) == JNI_FALSE) {
+        printf(" +++ AWT Not Found +++ \n");
+        ::util_ThrowExceptionToJava(env, "Exception: AWT Not Found");
+        return 0;
+    }
+    
+    //Get the Drawing Surface
+    ds = awt.GetDrawingSurface(env, canvas);
+    if (ds == NULL) {
+        printf(" +++ NULL Drawing Surface +++ \n");
+        ::util_ThrowExceptionToJava(env, "Exception: Null Drawing Surface");
+        return 0;
+    }
+
+    //Lock the Drawing Surface
+    lock = ds->Lock(ds);
+    if ((lock & JAWT_LOCK_ERROR) != 0) {
+        printf(" +++ Error Locking Surface +++ \n");
+        ::util_ThrowExceptionToJava(env, "Exception: Error Locking Surface");
+        awt.FreeDrawingSurface(ds);
+        return 0;
+    }
+
+    //Get the Drawing Surface info
+    dsi = ds->GetDrawingSurfaceInfo(ds);
+    if (dsi == NULL) {
+        printf(" +++ Error Getting Surface Info +++ \n");
+        ::util_ThrowExceptionToJava(env, "Exception: Error Getting Surface Info");
+        ds->Unlock(ds);
+        awt.FreeDrawingSurface(ds);
+        return 0;
+    }
+    
+    //Get the Platform specific Drawing Info
+    dsi_x11 = (JAWT_X11DrawingSurfaceInfo*)dsi->platformInfo;
+
+    //Get the Handle to the Native Drawing Surface info
+    handle_x11 = (Drawable) dsi_x11->drawable;
+
+    //Clean up after us
+    ds->FreeDrawingSurfaceInfo(dsi);
+    ds->Unlock(ds);
+    awt.FreeDrawingSurface(ds);
+
+    //return the native peer handle
+    return (jint) handle_x11;
+
 }
 
 /*

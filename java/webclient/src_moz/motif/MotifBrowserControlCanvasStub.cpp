@@ -43,10 +43,16 @@ jint (* getGTKWinID) (JNIEnv *, jobject, jint);
 void (* reparentWindow) (JNIEnv *, jobject, jint, jint);
 void (* processEvents) (JNIEnv *, jobject);
 void (* setGTKWindowSize) (JNIEnv *, jobject, jint, jint, jint);
+jint (* getHandleToPeer) (JNIEnv *, jobject);
 
 void locateMotifBrowserControlStubFunctions(void * dll) {
   createTopLevelWindow = (jint (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_createTopLevelWindow");
  if (!createTopLevelWindow) {
+    printf("got dlsym error %s\n", dlerror());
+  }
+
+ getHandleToPeer = (jint (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_getHandleToPeer");
+ if (!getHandleToPeer) {
     printf("got dlsym error %s\n", dlerror());
   }
 
@@ -83,6 +89,15 @@ void locateMotifBrowserControlStubFunctions(void * dll) {
  */
 JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_createTopLevelWindow (JNIEnv * env, jobject obj) {
   return (* createTopLevelWindow) (env, obj);
+}
+
+/*
+ * Class:     org_mozilla_webclient_motif_MotifBrowserControlCanvas
+ * Method:    getHandleToPeer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_getHandleToPeer (JNIEnv * env, jobject obj) {
+  return (* getHandleToPeer) (env, obj);
 }
 
 /*

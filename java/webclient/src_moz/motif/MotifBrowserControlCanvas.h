@@ -47,6 +47,14 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBro
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_motif_MotifBrowserControlCanvas
+ * Method:    getHandleToPeer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_motif_MotifBrowserControlCanvas_getHandleToPeer
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     org_mozilla_webclient_wrapper_0005fnative_motif_MotifBrowserControlCanvas
  * Method:    getGTKWinID
  * Signature: (I)I
  */
