@@ -232,7 +232,9 @@ protected:
                               const nsString& aMedia);
     
 
+    public:
     enum State { eInProlog, eInDocumentElement, eInOverlayElement, eInScript, eInEpilog };
+    protected:
 
     State mState;
 
