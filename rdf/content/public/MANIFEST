@@ -4,3 +4,4 @@ nsIDOMXULDocument.h
 nsIDOMXULElement.h
 nsIRDFContentModelBuilder.h
 nsIRDFDocument.h
+nsIXULSortService.h

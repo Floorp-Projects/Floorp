@@ -37,6 +37,7 @@
 #include "nsRDFCID.h"
 #include "nsRepository.h"
 #include "rdf.h"
+#include "nsIXULSortService.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
@@ -55,6 +56,7 @@ static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULDataSourceCID,		 NS_XULDATASOURCE_CID);
 static NS_DEFINE_CID(kXULDocumentCID,            NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kRDFDefaultResourceCID,     NS_RDFDEFAULTRESOURCE_CID);
+static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 
 class RDFFactoryImpl : public nsIFactory
 {
@@ -140,6 +142,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kRDFServiceCID)) {
         if (NS_FAILED(rv = NS_NewRDFService((nsIRDFService**) &inst)))
+            return rv;
+    }
+    else if (mClassID.Equals(kXULSortServiceCID)) {
+        if (NS_FAILED(rv = NS_NewXULSortService((nsIXULSortService**) &inst)))
             return rv;
     }
     else if (mClassID.Equals(kRDFInMemoryDataSourceCID)) {
@@ -295,6 +301,10 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* aPath)
     rv = nsRepository::RegisterComponent(kRDFServiceCID,
                                          "RDF Service",
                                          NS_RDF_PROGID "|rdf-service",
+                                         aPath, PR_TRUE, PR_TRUE);
+    rv = nsRepository::RegisterComponent(kXULSortServiceCID,
+                                         "XUL Sort Service",
+                                         NS_RDF_PROGID "|xul-sort-service",
                                          aPath, PR_TRUE, PR_TRUE);
     rv = nsRepository::RegisterComponent(kRDFTreeBuilderCID,
                                          "RDF Tree Builder",
