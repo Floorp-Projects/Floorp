@@ -501,7 +501,7 @@ LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
   nsresult result = NS_OK;
 
   if (nsnull != mWebShell) {
-    result = mWebShell->Reload(nsReload);
+    result = mWebShell->Reload(nsURLReload);
   }
 
   return result;
