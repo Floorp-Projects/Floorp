@@ -45,6 +45,7 @@
 #include "prio.h"
 #include "prmem.h"
 #include "ns4xPlugin.h"
+#include "ns4xPluginStreamListener.h"
 #include "nsPluginInstancePeer.h"
 #include "nsIPlugin.h"
 #ifdef OJI
@@ -1093,7 +1094,7 @@ PRBool nsPluginTag::Equals(nsPluginTag *aPluginTag)
 ////////////////////////////////////////////////////////////////////////
 class nsPluginStreamListenerPeer;
 
-class nsPluginStreamInfo : public nsIPluginStreamInfo
+class nsPluginStreamInfo : public nsI4xPluginStreamInfo
 {
 public:
   nsPluginStreamInfo();
@@ -1159,6 +1160,12 @@ public:
   void
   SetStreamComplete(const PRBool complete);
 
+  void
+  SetRequest(nsIRequest *request)
+  {
+    mRequest = request;
+  }
+
 private:
 
   char* mContentType;
@@ -1216,7 +1223,7 @@ private:
   nsIPluginInstanceOwner  *mOwner;
   nsIPluginInstance       *mInstance;
   nsIPluginStreamListener *mPStreamListener;
-  nsPluginStreamInfo      *mPluginStreamInfo;
+  nsRefPtr<nsPluginStreamInfo> mPluginStreamInfo;
 
   // Set to PR_TRUE if we request failed (like with a HTTP response of 404)
   PRPackedBool            mRequestFailed;
@@ -1297,37 +1304,10 @@ nsPluginStreamInfo::~nsPluginStreamInfo()
 }
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ADDREF(nsPluginStreamInfo)
-NS_IMPL_RELEASE(nsPluginStreamInfo)
+NS_IMPL_ISUPPORTS2(nsPluginStreamInfo, nsIPluginStreamInfo,
+                   nsI4xPluginStreamInfo)
 ////////////////////////////////////////////////////////////////////////
 
-nsresult nsPluginStreamInfo::QueryInterface(const nsIID& aIID,
-                                            void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-
-  if (nsnull == aInstancePtrResult)
-    return NS_ERROR_NULL_POINTER;
-
-  if (aIID.Equals(kIPluginStreamInfoIID))
-  {
-    *aInstancePtrResult = (void *)((nsIPluginStreamInfo *)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kISupportsIID))
-  {
-    *aInstancePtrResult = (void *)((nsISupports *)((nsIStreamListener *)this));
-    AddRef();
-    return NS_OK;
-  }
-
-  return NS_NOINTERFACE;
-}
-
-
-////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginStreamInfo::GetContentType(nsMIMEType* result)
 {
@@ -1335,8 +1315,6 @@ nsPluginStreamInfo::GetContentType(nsMIMEType* result)
   return NS_OK;
 }
 
-
-////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginStreamInfo::IsSeekable(PRBool* result)
 {
@@ -1344,8 +1322,6 @@ nsPluginStreamInfo::IsSeekable(PRBool* result)
   return NS_OK;
 }
 
-
-////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginStreamInfo::GetLength(PRUint32* result)
 {
@@ -1353,8 +1329,6 @@ nsPluginStreamInfo::GetLength(PRUint32* result)
   return NS_OK;
 }
 
-
-////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginStreamInfo::GetLastModified(PRUint32* result)
 {
@@ -1362,8 +1336,6 @@ nsPluginStreamInfo::GetLastModified(PRUint32* result)
   return NS_OK;
 }
 
-
-////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginStreamInfo::GetURL(const char** result)
 {
@@ -1371,9 +1343,6 @@ nsPluginStreamInfo::GetURL(const char** result)
   return NS_OK;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////
 void
 nsPluginStreamInfo::MakeByteRangeString(nsByteRange* aRangeList, nsACString &rangeRequest, PRInt32 *numRequests)
 {
@@ -1647,7 +1616,6 @@ nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
   mOwner = nsnull;
   mInstance = nsnull;
   mPStreamListener = nsnull;
-  mPluginStreamInfo = nsnull;
   mHost = nsnull;
   mStreamType = nsPluginStreamType_Normal;
   mStartBinding = PR_FALSE;
@@ -1677,7 +1645,6 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
   NS_IF_RELEASE(mInstance);
   NS_IF_RELEASE(mPStreamListener);
   NS_IF_RELEASE(mHost);
-  NS_IF_RELEASE(mPluginStreamInfo);
 
   // close FD of mFileCacheOutputStream if it's still open
   // or we won't be able to remove the cache file
@@ -1747,7 +1714,6 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
   if (!mPluginStreamInfo)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(mPluginStreamInfo);
   mPluginStreamInfo->SetPluginInstance(aInstance);
   mPluginStreamInfo->SetPluginStreamListenerPeer(this);
 
@@ -1802,7 +1768,6 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbeded(nsIURI *aURL,
   if (!mPluginStreamInfo)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(mPluginStreamInfo);
   mPluginStreamInfo->SetPluginInstance(aInstance);
   mPluginStreamInfo->SetPluginStreamListenerPeer(this);
 
@@ -1829,7 +1794,6 @@ nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInst
   if (!mPluginStreamInfo)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(mPluginStreamInfo);
   mPluginStreamInfo->SetPluginInstance(aInstance);
   mPluginStreamInfo->SetPluginStreamListenerPeer(this);
 
@@ -2023,6 +1987,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request, nsISupports* aCo
     mPluginStreamInfo->SetLength(length);
   }
 
+  mPluginStreamInfo->SetRequest(request);
+
   nsCAutoString aContentType;
   rv = channel->GetContentType(aContentType);
   if (NS_FAILED(rv)) 
@@ -2176,6 +2142,8 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
   if(!mPStreamListener || !mPluginStreamInfo)
     return NS_ERROR_FAILURE;
 
+  mPluginStreamInfo->SetRequest(request);
+
   const char * url = nsnull;
   mPluginStreamInfo->GetURL(&url);
 
@@ -2190,21 +2158,25 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
     // get the absolute offset of the request, if one exists.
     nsCOMPtr<nsIByteRangeRequest> brr = do_QueryInterface(request);
     PRInt32 absoluteOffset = 0;
-    PRInt32 amtForwardToPlugin = 0;
     if (brr) {
-        brr->GetStartRange(&absoluteOffset);
-        
-        // we need to track how much data we have forward on to the plugin.  
-        nsPRUintKey key(absoluteOffset);
+      if (!mDataForwardToRequest)
+        return NS_ERROR_FAILURE;
 
-        if (!mDataForwardToRequest)
-            return NS_ERROR_FAILURE;
+      brr->GetStartRange(&absoluteOffset);
 
-        if (mDataForwardToRequest->Exists(&key))
-            amtForwardToPlugin = NS_PTR_TO_INT32(mDataForwardToRequest->Remove(&key));
-    
-        mDataForwardToRequest->Put(&key, (void*) (amtForwardToPlugin+aLength));
-        mPluginStreamInfo->SetStreamOffset(absoluteOffset + amtForwardToPlugin);
+      // we need to track how much data we have forwarded to the
+      // plugin.
+
+      // FIXME: http://bugzilla.mozilla.org/show_bug.cgi?id=240130
+      //
+      // Why couldn't this be tracked on the plugin info, and not in a
+      // *hash table*?
+      nsPRUintKey key(absoluteOffset);
+      PRInt32 amtForwardToPlugin =
+        NS_PTR_TO_INT32(mDataForwardToRequest->Get(&key));
+      mDataForwardToRequest->Put(&key, NS_INT32_TO_PTR(amtForwardToPlugin + aLength));
+
+      mPluginStreamInfo->SetStreamOffset(absoluteOffset + amtForwardToPlugin);
     }
 
     nsCOMPtr<nsIInputStream> stream = aIStream;
@@ -2219,9 +2191,9 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
             return rv;
     }
 
-    rv =  mPStreamListener->OnDataAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, 
-                                              stream, 
-                                              aLength);
+    rv =  mPStreamListener->OnDataAvailable(mPluginStreamInfo, 
+                                            stream, 
+                                            aLength);
 
     // if a plugin returns an error, the peer must kill the stream
     //   else the stream and PluginStreamListener leak
@@ -2317,7 +2289,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   if (NS_FAILED(aStatus)) {
     // on error status cleanup the stream 
     // and return w/o OnFileAvailable()
-    mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
+    mPStreamListener->OnStopBinding(mPluginStreamInfo, aStatus);
     return NS_OK;
   }
 
@@ -2345,13 +2317,13 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   if (mStartBinding)
   {
     // On start binding has been called
-    mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
+    mPStreamListener->OnStopBinding(mPluginStreamInfo, aStatus);
   }
   else
   {
     // OnStartBinding hasn't been called, so complete the action.
-    mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
-    mPStreamListener->OnStopBinding((nsIPluginStreamInfo*)mPluginStreamInfo, aStatus);
+    mPStreamListener->OnStartBinding(mPluginStreamInfo);
+    mPStreamListener->OnStopBinding(mPluginStreamInfo, aStatus);
   }
 
   if (NS_SUCCEEDED(aStatus))
@@ -2449,7 +2421,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     }
   }
 
-  rv = mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
+  rv = mPStreamListener->OnStartBinding(mPluginStreamInfo);
 
   mStartBinding = PR_TRUE;
 
@@ -2495,7 +2467,7 @@ nsPluginStreamListenerPeer::OnFileAvailable(nsIFile* aFile)
     return NS_OK;
   }
 
-  rv = mPStreamListener->OnFileAvailable((nsIPluginStreamInfo*)mPluginStreamInfo, path.get());
+  rv = mPStreamListener->OnFileAvailable(mPluginStreamInfo, path.get());
   return rv;
 }
 
@@ -6594,7 +6566,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   }
   
   mPluginStreamInfo->SetSeekable(0);
-  mPStreamListener->OnStartBinding((nsIPluginStreamInfo*)mPluginStreamInfo);
+  mPStreamListener->OnStartBinding(mPluginStreamInfo);
   mPluginStreamInfo->SetStreamOffset(0);
   
   // force the plugin use stream as file
@@ -6740,4 +6712,10 @@ void
 nsPluginStreamInfo::SetStreamComplete(const PRBool complete)
 {
   mStreamComplete = complete;
+
+  if (complete) {
+    // We're done, release the request.
+
+    SetRequest(nsnull);
+  }
 }

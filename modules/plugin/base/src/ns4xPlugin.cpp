@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -89,10 +89,7 @@ enum eNPPStreamTypeInternal {
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID); 
 static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
-static NS_DEFINE_IID(kIMemoryIID, NS_IMEMORY_IID);
-static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
 PR_BEGIN_EXTERN_C
 
@@ -461,9 +458,9 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
   CheckClassInitialized();
 
   // set up the MemAllocator service now because it might be used by the plugin
-  if (aServiceMgr != nsnull) {
-    if (nsnull == gMalloc)
-      aServiceMgr->GetService(kMemoryCID, kIMemoryIID, (nsISupports**)&gMalloc);
+  if (aServiceMgr && !gMalloc) {
+    aServiceMgr->GetService(kMemoryCID, NS_GET_IID(nsIMemory),
+                            (nsISupports**)&gMalloc);
   }
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -703,9 +700,9 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
 //----------------
 //Creates a ns4xPluginInstance object.
 
-nsresult ns4xPlugin :: CreateInstance(nsISupports *aOuter,  
-                                      const nsIID &aIID,  
-                                      void **aResult)  
+nsresult ns4xPlugin::CreateInstance(nsISupports *aOuter,  
+                                    const nsIID &aIID,  
+                                    void **aResult)  
 {
   if (aResult == NULL)
     return NS_ERROR_NULL_POINTER;
@@ -713,23 +710,18 @@ nsresult ns4xPlugin :: CreateInstance(nsISupports *aOuter,
   *aResult = NULL;
 
   // XXX This is suspicuous!
-  ns4xPluginInstance *inst = new ns4xPluginInstance(&fCallbacks, fLibrary);
+  nsRefPtr<ns4xPluginInstance> inst =
+    new ns4xPluginInstance(&fCallbacks, fLibrary);
 
   if (inst == NULL) 
     return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(inst);  // Stabilize
-
-  nsresult res = inst->QueryInterface(aIID, aResult);
-
-  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>    
-
-  return res;
+  return inst->QueryInterface(aIID, aResult);
 }
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult ns4xPlugin :: LockFactory(PRBool aLock)  
+nsresult ns4xPlugin::LockFactory(PRBool aLock)  
 {  
   // Not implemented in simplest case.  
   return NS_OK;
@@ -737,10 +729,10 @@ nsresult ns4xPlugin :: LockFactory(PRBool aLock)
 
 
 ////////////////////////////////////////////////////////////////////////
-NS_METHOD ns4xPlugin :: CreatePluginInstance(nsISupports *aOuter,
-                                             REFNSIID    aIID, 
-                                             const char  *aPluginMIMEType,
-                                             void        **aResult)
+NS_METHOD ns4xPlugin::CreatePluginInstance(nsISupports *aOuter,
+                                           REFNSIID    aIID, 
+                                           const char  *aPluginMIMEType,
+                                           void        **aResult)
 {
   return CreateInstance(aOuter, aIID, aResult);
 }
@@ -1031,31 +1023,38 @@ NPError NP_EXPORT
 _destroystream(NPP npp, NPStream *pstream, NPError reason)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("NPN_DestroyStream: npp=%p, url=%s, reason=%d\n", (void*)npp, pstream->url, (int)reason));
+                 ("NPN_DestroyStream: npp=%p, url=%s, reason=%d\n", (void*)npp,
+                  pstream->url, (int)reason));
 
-  if(!npp)
+  if (!npp)
     return NPERR_INVALID_INSTANCE_ERROR;
 
-  nsISupports* stream = (nsISupports*) pstream->ndata;
-  nsIPluginStreamListener* listener;
+  nsCOMPtr<nsIPluginStreamListener> listener =
+    do_QueryInterface((nsISupports *)pstream->ndata);
 
   // DestroyStream can kill two kinds of streams: NPP derived and NPN derived.
   // check to see if they're trying to kill a NPP stream
-  if(stream->QueryInterface(kIPluginStreamListenerIID, (void**)&listener) == NS_OK) {
-    // XXX we should try to kill this listener here somehow
-    NS_RELEASE(listener); 
-    return NPERR_NO_ERROR;
+  if (listener) {
+    // Tell the stream listner that the stream is now gone.
+    listener->OnStopBinding(nsnull, NS_BINDING_ABORTED);
+
+    // FIXME: http://bugzilla.mozilla.org/show_bug.cgi?id=240131
+    //
+    // Is it ok to leave pstream->ndata set here, and who releases it
+    // (or is it even properly ref counted)? And who closes the stream
+    // etc?
+  } else {
+    ns4xStreamWrapper* wrapper = (ns4xStreamWrapper *)pstream->ndata;
+    NS_ASSERTION(wrapper != NULL, "null wrapper");
+
+    if (wrapper == NULL)
+      return NPERR_INVALID_PARAM;
+
+    // This will release the wrapped nsIOutputStream.
+    delete wrapper;
+    pstream->ndata = nsnull;
   }
 
-  ns4xStreamWrapper* wrapper = (ns4xStreamWrapper*) pstream->ndata;
-  NS_ASSERTION(wrapper != NULL, "null wrapper");
-
-  if (wrapper == NULL)
-    return NPERR_INVALID_PARAM;
-
-  // This will release the wrapped nsIOutputStream.
-  delete wrapper;
-  pstream->ndata = nsnull;
   return NPERR_NO_ERROR;
 }
 
@@ -1112,12 +1111,9 @@ _reloadplugins(NPBool reloadPages)
   if(gServiceMgr == nsnull)
     return;
 
-  nsIPluginManager * pm;
-  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
+  nsCOMPtr<nsIPluginManager> pm(do_GetService(kPluginManagerCID));
 
   pm->ReloadPlugins(reloadPages);
-
-  NS_RELEASE(pm);
 }
 
 
@@ -1491,14 +1487,11 @@ _useragent(NPP npp)
     return NULL;
   
   char *retstr;
-  
-  nsIPluginManager * pm;
-  gServiceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&pm);
-  
+
+  nsCOMPtr<nsIPluginManager> pm(do_GetService(kPluginManagerCID));
+
   pm->UserAgent((const char **)&retstr);
-  
-  NS_RELEASE(pm);
-  
+
   return retstr;
 }
 

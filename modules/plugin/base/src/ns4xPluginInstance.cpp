@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -78,31 +78,30 @@ static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 ///////////////////////////////////////////////////////////////////////////////
 // ns4xPluginStreamListener Methods
 
-NS_IMPL_ISUPPORTS1(ns4xPluginStreamListener, nsIPluginStreamListener)
+NS_IMPL_ISUPPORTS2(ns4xPluginStreamListener, nsIPluginStreamListener,
+                   nsITimerCallback)
 
 ///////////////////////////////////////////////////////////////////////////////
 
 ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst, 
                                                    void* notifyData,
                                                    const char* aURL)
-    : mNotifyData(notifyData),
-      mStreamBuffer(nsnull),
-      mNotifyURL(nsnull),  
-      mStreamStarted(PR_FALSE),
-      mStreamCleanedUp(PR_FALSE),
-      mCallNotify(PR_FALSE),      
-      mStreamInfo(nsnull)
+  : mNotifyData(notifyData),
+    mStreamBuffer(nsnull),
+    mNotifyURL(aURL ? PL_strdup(aURL) : nsnull),
+    mInst((ns4xPluginInstance *)inst),
+    mStreamBufferSize(0),
+    mStreamBufferByteCount(0),
+    mStreamType(nsPluginStreamType_Normal),
+    mStreamStarted(PR_FALSE),
+    mStreamCleanedUp(PR_FALSE),
+    mCallNotify(PR_FALSE),
+    mIsSuspended(PR_FALSE)
 {
-  mInst = (ns4xPluginInstance*) inst;
-  mPosition = 0;
-  mStreamBufferSize = 0;
   // Initialize the 4.x interface structure
   memset(&mNPStream, 0, sizeof(mNPStream));
 
   NS_IF_ADDREF(mInst);
-
-  if (aURL)
-    mNotifyURL = PL_strdup(aURL);
 }
 
 
@@ -127,9 +126,10 @@ ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
     }
   }
 
-  // For those cases when NewStream is never called, we still may need to fire a
-  // notification callback. Return network error as fallback reason because for other
-  // cases, notify should have already been called for other reasons elsewhere.
+  // For those cases when NewStream is never called, we still may need
+  // to fire a notification callback. Return network error as fallback
+  // reason because for other cases, notify should have already been
+  // called for other reasons elsewhere.
   CallURLNotify(NPRES_NETWORK_ERR);
 
   // lets get rid of the buffer
@@ -138,7 +138,6 @@ ns4xPluginStreamListener::~ns4xPluginStreamListener(void)
     PR_Free(mStreamBuffer);
     mStreamBuffer=nsnull;
   }
-
 
   NS_IF_RELEASE(inst);
 
@@ -185,6 +184,8 @@ nsresult ns4xPluginStreamListener::CleanUpStream(NPReason reason)
 
   mStreamCleanedUp = PR_TRUE;
   mStreamStarted   = PR_FALSE;
+
+  StopDataPump();
 
   // fire notification back to plugin, just like before
   CallURLNotify(reason);
@@ -261,7 +262,6 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 
   mStreamInfo = pluginInfo;
 
-
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_NewStreamProc(callbacks->newstream,
                                                        npp,
                                                        (char *)contentType,
@@ -299,172 +299,322 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
   return NS_OK;
 }
 
+nsresult
+ns4xPluginStreamListener::SuspendRequest()
+{
+  NS_ASSERTION(!mIsSuspended,
+               "Suspending a request that's already suspended!");
+
+  nsCOMPtr<nsI4xPluginStreamInfo> pluginInfo4x =
+    do_QueryInterface(mStreamInfo);
+  nsIRequest *request;
+
+  if (!pluginInfo4x || !(request = pluginInfo4x->GetRequest())) {
+    NS_ERROR("Trying to suspend a non-suspendable stream!");
+
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = StartDataPump();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mIsSuspended = PR_TRUE;
+
+  return request->Suspend();
+}
+
+void
+ns4xPluginStreamListener::ResumeRequest()
+{
+  nsCOMPtr<nsI4xPluginStreamInfo> pluginInfo4x =
+    do_QueryInterface(mStreamInfo);
+
+  nsIRequest *request = pluginInfo4x->GetRequest();
+
+  // request can be null if the network stream is done.
+  if (request) {
+    request->Resume();
+  }
+
+  mIsSuspended = PR_FALSE;
+}
+
+nsresult
+ns4xPluginStreamListener::StartDataPump()
+{
+  nsresult rv;
+  mDataPumpTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Start pumping data to the plugin every 100ms until it obeys and
+  // eats the data.
+  return mDataPumpTimer->InitWithCallback(this, 100,
+                                          nsITimer::TYPE_REPEATING_SLACK);
+}
+
+void
+ns4xPluginStreamListener::StopDataPump()
+{
+  if (mDataPumpTimer) {
+    mDataPumpTimer->Cancel();
+
+    mDataPumpTimer = nsnull;
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
+
+// This method is called when there's more data available off the
+// network, but it's also called from our data pump when we're feeding
+// the plugin data that we already got off the network, but the plugin
+// was unable to consume it at the point it arrived. In the case when
+// the plugin pump calls this method, the input argument will be null,
+// and the length will be the number of bytes available in our
+// internal buffer.
 NS_IMETHODIMP
 ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                           nsIInputStream* input,
                                           PRUint32 length)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   if (!mInst || !mInst->IsStarted())
-    return rv;
+    return NS_ERROR_FAILURE;
+
+  // Just in case the caller switches plugin info on us.
+  mStreamInfo = pluginInfo;
 
   const NPPluginFuncs *callbacks = nsnull;
   mInst->GetCallbacks(&callbacks);
   // check out if plugin implements NPP_Write call
   if(!callbacks || !callbacks->write || !length)
-    return rv; // it'll cancel necko transaction 
+    return NS_ERROR_FAILURE; // it'll cancel necko transaction 
   
   if (!mStreamBuffer)
   {
-    // to optimize the mem usage & performance we have to allocate mStreamBuffer here
-    // in first ODA when length of data available in input stream is known.
-    // mStreamBuffer will be freed in DTOR.
-    // we also have to remember the size of that buff
-    // to make safe consecutive Read() calls form input stream into our buff.
-    if (length >= MAX_PLUGIN_NECKO_BUFFER) {
-        // ">" is rare case for decoded stream, but lets eat it all
-        mStreamBufferSize = length;    
-    } else {
-      PRUint32 contentLength;
-      pluginInfo->GetLength(&contentLength);
-      if (contentLength < MAX_PLUGIN_NECKO_BUFFER) {
-        // this is most common case for contentLength < 16k
-        mStreamBufferSize = length < contentLength ? contentLength:length; 
-      } else {
-        mStreamBufferSize = MAX_PLUGIN_NECKO_BUFFER;
-      }
-    }
+    // To optimize the mem usage & performance we have to allocate
+    // mStreamBuffer here in first ODA when length of data available
+    // in input stream is known.  mStreamBuffer will be freed in DTOR.
+    // we also have to remember the size of that buff to make safe
+    // consecutive Read() calls form input stream into our buff.
+
+    PRUint32 contentLength;
+    pluginInfo->GetLength(&contentLength);
+
+    mStreamBufferSize = PR_MAX(length, contentLength);
+
+    // Limit the size of the initial buffer to MAX_PLUGIN_NECKO_BUFFER
+    // (16k). This buffer will grow if needed, as in the case where
+    // we're getting data faster than the plugin can process it.
+    mStreamBufferSize = PR_MIN(mStreamBufferSize, MAX_PLUGIN_NECKO_BUFFER);
+
     mStreamBuffer = (char*) PR_Malloc(mStreamBufferSize);
     if (!mStreamBuffer)
       return NS_ERROR_OUT_OF_MEMORY;
   }
   
   // prepare NPP_ calls params
-  NPP npp;    
+  NPP npp;
   mInst->GetNPP(&npp);
-  PRInt32 streamOffset;
-  pluginInfo->GetStreamOffset(&streamOffset);
-  mPosition = streamOffset;
-  streamOffset += length;
 
-  // Set new stream offset for the next ODA call
-  // regardless of how following NPP_Write call will behave
-  // we pretend to consume all data from the input stream.
-  // It's possible that current steam position will be overwritten
-  // from NPP_RangeRequest call made from NPP_Write, so
-  // we cannot call SetStreamOffset after NPP_Write.
-  // Note: there is a special case when data flow
-  // should be temporarily stopped if NPP_WriteReady returns 0 (bug #89270)
-  pluginInfo->SetStreamOffset(streamOffset);
+  PRInt32 streamPosition;
+  pluginInfo->GetStreamOffset(&streamPosition);
+  PRInt32 streamOffset = streamPosition;
 
-  // set new end in case the content is compressed
-  // initial end is less than end of decompressed stream
-  // and some plugins (e.g. acrobat) can fail. 
-  if ((PRInt32)mNPStream.end < streamOffset)
-    mNPStream.end = streamOffset;
+  if (input) {
+    streamOffset += length;
 
-  do 
-  {
-    PRUint32 bytesToRead = PR_MIN(length, mStreamBufferSize);
-    PRInt32 amountRead = 0;
-    rv = input->Read(mStreamBuffer, bytesToRead, (PRUint32*)&amountRead);
-    if (amountRead == 0 || NS_FAILED(rv)) {
-      NS_WARNING("input->Read() returns no data, it's almost impossible to get here");
-      break;
+    // Set new stream offset for the next ODA call regardless of how
+    // following NPP_Write call will behave we pretend to consume all
+    // data from the input stream.  It's possible that current steam
+    // position will be overwritten from NPP_RangeRequest call made
+    // from NPP_Write, so we cannot call SetStreamOffset after
+    // NPP_Write.
+    //
+    // Note: there is a special case when data flow should be
+    // temporarily stopped if NPP_WriteReady returns 0 (bug #89270)
+    pluginInfo->SetStreamOffset(streamOffset);
+
+    // set new end in case the content is compressed
+    // initial end is less than end of decompressed stream
+    // and some plugins (e.g. acrobat) can fail. 
+    if ((PRInt32)mNPStream.end < streamOffset)
+      mNPStream.end = streamOffset;
+  }
+
+  nsresult rv = NS_OK;
+  while (NS_SUCCEEDED(rv) && length > 0) {
+    if (input && length) {
+      if (mStreamBufferSize < mStreamBufferByteCount + length &&
+          mIsSuspended) {
+        // We're in the ::OnDataAvailable() call that we might get
+        // after suspending a request, or we suspended the request
+        // from within this ::OnDataAvailable() call while there's
+        // still data in the input, and we don't have enough space to
+        // store what we got off the network. Reallocate our internal
+        // buffer.
+        mStreamBufferSize = mStreamBufferByteCount + length;
+        char *buf = (char *)PR_Realloc(mStreamBuffer, mStreamBufferSize);
+        if (!buf)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        mStreamBuffer = buf;
+      }
+
+      PRUint32 bytesToRead =
+        PR_MIN(length, mStreamBufferSize - mStreamBufferByteCount);
+
+      PRUint32 amountRead = 0;
+      rv = input->Read(mStreamBuffer + mStreamBufferByteCount, bytesToRead,
+                       &amountRead);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (amountRead == 0) {
+        NS_NOTREACHED("input->Read() returns no data, it's almost impossible "
+                      "to get here");
+
+        break;
+      }
+
+      mStreamBufferByteCount += amountRead;
+      length -= amountRead;
+    } else {
+      // No input, nothing to read. Set length to 0 so that we don't
+      // keep iterating through this outer loop any more.
+
+      length = 0;
     }
 
-    // this loop in general case will end on length <= 0, without extra input->Read() call
-    length -= amountRead;
-    
-    char *ptrStreamBuffer = mStreamBuffer; // tmp ptr
+    // Temporary pointer to the beginning of the data we're writing as
+    // we loop and feed the plugin data.
+    char *ptrStreamBuffer = mStreamBuffer;
 
-    // it is possible plugin's NPP_Write() returns 0 byte consumed
-    // we use zeroBytesWriteCount to count situation like this
-    // and break the loop
+    // it is possible plugin's NPP_Write() returns 0 byte consumed. We
+    // use zeroBytesWriteCount to count situation like this and break
+    // the loop
     PRInt32 zeroBytesWriteCount = 0;
-    
-    // amountRead tells us how many bytes were put in the buffer
-    // WriteReady returns to us how many bytes the plugin is 
-    // ready to handle  - we have to keep calling WriteReady and
-    // Write until amountRead > 0
-    for(;;) 
-    { // it breaks on (amountRead <= 0) or on error
-      PRInt32   numtowrite;
-      if (callbacks->writeready)
-      {
+
+    // mStreamBufferByteCount tells us how many bytes there are in the
+    // buffer. WriteReady returns to us how many bytes the plugin is
+    // ready to handle.
+    while (mStreamBufferByteCount > 0) {
+      PRInt32 numtowrite;
+      if (callbacks->writeready) {
         NS_TRY_SAFE_CALL_RETURN(numtowrite, 
-          CallNPP_WriteReadyProc(callbacks->writeready, npp, &mNPStream),
-          mInst->fLibrary, mInst);
-       
+                                CallNPP_WriteReadyProc(callbacks->writeready,
+                                                       npp, &mNPStream),
+                                mInst->fLibrary, mInst);
+
         NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
-          ("NPP WriteReady called: this=%p, npp=%p, return(towrite)=%d, url=%s\n",
-          this, npp, numtowrite, mNPStream.url));
-        
-        // if WriteReady returned 0, the plugin is not ready to handle 
-        // the data, return FAILURE for now
+                       ("NPP WriteReady called: this=%p, npp=%p, "
+                        "return(towrite)=%d, url=%s\n",
+                        this, npp, numtowrite, mNPStream.url));
+
+        // if WriteReady returned 0, the plugin is not ready to handle
+        // the data, suspend the stream (if it isn't already
+        // suspended).
         if (numtowrite <= 0) {
-          NS_ASSERTION(numtowrite,"WriteReady returned Zero");
-          rv = NS_ERROR_FAILURE;
+          if (!mIsSuspended) {
+            rv = SuspendRequest();
+          }
+
+          // Break out of the inner loop, but keep going through the
+          // outer loop in case there's more data to read from the
+          // input stream.
+
           break;
         }
-        if (numtowrite > amountRead)
-          numtowrite = amountRead;
+
+        numtowrite = PR_MIN(numtowrite, mStreamBufferByteCount);
+      } else {
+        // if WriteReady is not supported by the plugin, just write
+        // the whole buffer
+        numtowrite = mStreamBufferByteCount;
       }
-      else
-      {
-        // if WriteReady is not supported by the plugin, 
-        // just write the whole buffer
-        numtowrite = amountRead;
-      }
-      
-      PRInt32   writeCount = 0; // bytes consumed by plugin instance
-      
+
+      PRInt32 writeCount = 0; // bytes consumed by plugin instance
       NS_TRY_SAFE_CALL_RETURN(writeCount, 
-        CallNPP_WriteProc(callbacks->write, npp, &mNPStream, mPosition, numtowrite, (void *)ptrStreamBuffer),
-        mInst->fLibrary, mInst);
-      
+                              CallNPP_WriteProc(callbacks->write, npp,
+                                                &mNPStream, streamPosition,
+                                                numtowrite,
+                                                ptrStreamBuffer),
+                              mInst->fLibrary, mInst);
+
       NPP_PLUGIN_LOG(PLUGIN_LOG_NOISY,
-        ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, buf=%s, return(written)=%d,  url=%s\n",
-        this, npp, mPosition, numtowrite, (char *)ptrStreamBuffer, writeCount, mNPStream.url));
-      
-      if (writeCount > 0)
-      {
-        mPosition += writeCount;
-        amountRead -= writeCount;
-        if (amountRead <= 0)
-          break; // in common case we'll break for(;;) loop here 
-        
+                     ("NPP Write called: this=%p, npp=%p, pos=%d, len=%d, "
+                      "buf=%s, return(written)=%d,  url=%s\n",
+                      this, npp, streamPosition, numtowrite,
+                      ptrStreamBuffer, writeCount, mNPStream.url));
+
+      if (writeCount > 0) {
+        NS_ASSERTION(writeCount <= mStreamBufferByteCount,
+                     "Plugin read past the end of the available data!");
+
+        writeCount = PR_MIN(writeCount, mStreamBufferByteCount);
+        mStreamBufferByteCount -= writeCount;
+
+        streamPosition += writeCount;
+
         zeroBytesWriteCount = 0;
-        if (writeCount % sizeof(long)) {
-          // memmove will take care  about alignment 
-          memmove(ptrStreamBuffer,ptrStreamBuffer+writeCount,amountRead);
-        } else {
-          // if aligned we can use ptrStreamBuffer += to eliminate memmove()
-          ptrStreamBuffer += writeCount;
+
+        if (mStreamBufferByteCount > 0) {
+          // This alignment code is most likely bogus, but we'll leave
+          // it in for now in case it matters for some plugins on some
+          // architectures. Who knows...
+          if (writeCount % sizeof(PRWord)) {
+            // memmove will take care  about alignment 
+            memmove(mStreamBuffer, ptrStreamBuffer + writeCount,
+                    mStreamBufferByteCount);
+            ptrStreamBuffer = mStreamBuffer;
+          } else {
+            // if aligned we can use ptrStreamBuffer += to eliminate
+            // memmove()
+            ptrStreamBuffer += writeCount;
+          }
         }
-      } 
-      else if (writeCount == 0)
-      {
-        // if NPP_Write() returns writeCount == 0 lets say 3 times in a raw
-        // lets consider this as end of ODA call (plugin isn't hungry, or broken) without an error.
-        if (++zeroBytesWriteCount == 3)
-        {
-          length = 0; // break do{}while
-          rv = NS_OK;
+      } else if (writeCount == 0) {
+        // if NPP_Write() returns writeCount == 0 lets say 3 times in
+        // a row, suspend the request and continue feeding the plugin
+        // the data we got so far. Once that data is consumed, we'll
+        // resume the request.
+        if (mIsSuspended || ++zeroBytesWriteCount == 3) {
+          if (!mIsSuspended) {
+            rv = SuspendRequest();
+          }
+
+          // Break out of the for loop, but keep going through the
+          // while loop in case there's more data to read from the
+          // input stream.
+
           break;
         }
-      } 
-      else
-      {
-        length = 0; // break do{}while
+      } else {
+        // Something's really wrong, kill the stream.
         rv = NS_ERROR_FAILURE;
+
         break;
       }  
-    } // end of for(;;)
-  } while ((PRInt32)(length) > 0);
+    } // end of inner while loop
 
-  return rv == NS_BASE_STREAM_WOULD_BLOCK ? NS_OK:rv;
+    if (mStreamBufferByteCount && mStreamBuffer != ptrStreamBuffer) {
+      memmove(mStreamBuffer, ptrStreamBuffer, mStreamBufferByteCount);
+    }
+  }
+
+  if (streamPosition != streamOffset) {
+    // The plugin didn't consume all available data, or consumed some
+    // of our cached data while we're pumping cached data. Adjust the
+    // plugin info's stream offset to match reality, except if the
+    // plugin info's stream offset was set by a re-entering
+    // NPN_RequestRead() call.
+
+    PRInt32 postWriteStreamPosition;
+    pluginInfo->GetStreamOffset(&postWriteStreamPosition);
+
+    if (postWriteStreamPosition == streamOffset) {
+      pluginInfo->SetStreamOffset(streamPosition);
+    }
+  }
+
+  return rv;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -504,6 +654,20 @@ NS_IMETHODIMP
 ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, 
                                         nsresult status)
 {
+  StopDataPump();
+
+  if (mIsSuspended && NS_FAILED(status)) {
+    // We're suspended, and the stream was destroyed, or died for some
+    // reason. Make sure we cancel the suspended request.
+    nsCOMPtr<nsI4xPluginStreamInfo> pluginInfo4x =
+      do_QueryInterface(mStreamInfo);
+
+    nsIRequest *request;
+    if (pluginInfo4x && (request = pluginInfo4x->GetRequest())) {
+      request->Cancel(status);
+    }
+  }
+
   if(!mInst || !mInst->IsStarted())
     return NS_ERROR_FAILURE;
 
@@ -518,7 +682,7 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
 
     rv = CleanUpStream(reason);
   }
-  
+
   if(rv != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
 
@@ -532,6 +696,39 @@ ns4xPluginStreamListener::GetStreamType(nsPluginStreamType *result)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ns4xPluginStreamListener::Notify(nsITimer *aTimer)
+{
+  NS_ASSERTION(aTimer == mDataPumpTimer, "Uh, wrong timer?");
+
+  PRInt32 oldStreamBufferByteCount = mStreamBufferByteCount;
+
+  nsresult rv = OnDataAvailable(mStreamInfo, nsnull, mStreamBufferByteCount);
+
+  if (NS_FAILED(rv)) {
+    // We ran into an error, no need to keep firing this timer then.
+
+    aTimer->Cancel();
+
+    return NS_OK;
+  }
+
+  if (mStreamBufferByteCount != oldStreamBufferByteCount &&
+      ((mStreamStarted && mStreamBufferByteCount < 1024) ||
+       mStreamBufferByteCount == 0)) {
+    // The plugin read some data and we've got less than 1024 bytes in
+    // our buffer (or its empty and the stream is already
+    // done). Resume the request so that we get more data off the
+    // network.
+
+    ResumeRequest();
+
+    // Necko will pump data now that we've resumed the request.
+    StopDataPump();
+  }
+
+  return NS_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 nsInstanceStream::nsInstanceStream()
@@ -553,7 +750,8 @@ NS_IMPL_ISUPPORTS2(ns4xPluginInstance, nsIPluginInstance, nsIScriptablePlugin)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aLibrary)
+ns4xPluginInstance::ns4xPluginInstance(NPPluginFuncs* callbacks,
+                                       PRLibrary* aLibrary)
   : fCallbacks(callbacks)
 {
   NS_ASSERTION(fCallbacks != NULL, "null callbacks");
@@ -575,7 +773,7 @@ ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aL
 
 
 ///////////////////////////////////////////////////////////////////////////////
-ns4xPluginInstance :: ~ns4xPluginInstance(void)
+ns4xPluginInstance::~ns4xPluginInstance(void)
 {
   PLUGIN_LOG(PLUGIN_LOG_BASIC, ("ns4xPluginInstance dtor: this=%p\n",this));
 
@@ -599,7 +797,7 @@ ns4xPluginInstance :: ~ns4xPluginInstance(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 PRBool
-ns4xPluginInstance :: IsStarted(void)
+ns4xPluginInstance::IsStarted(void)
 {
   return mStarted;
 }
@@ -1220,8 +1418,8 @@ nsresult ns4xPluginInstance::GetValueInternal(NPPVariable variable, void* value)
 
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP ns4xPluginInstance :: GetValue(nsPluginInstanceVariable variable,
-                                             void *value)
+NS_IMETHODIMP ns4xPluginInstance::GetValue(nsPluginInstanceVariable variable,
+                                           void *value)
 {
   nsresult  res = NS_OK;
 
@@ -1275,7 +1473,7 @@ nsresult ns4xPluginInstance::GetCallbacks(const NPPluginFuncs ** aCallbacks)
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult ns4xPluginInstance :: SetWindowless(PRBool aWindowless)
+nsresult ns4xPluginInstance::SetWindowless(PRBool aWindowless)
 {
   mWindowless = aWindowless;
   return NS_OK;
@@ -1283,7 +1481,7 @@ nsresult ns4xPluginInstance :: SetWindowless(PRBool aWindowless)
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult ns4xPluginInstance :: SetTransparent(PRBool aTransparent)
+nsresult ns4xPluginInstance::SetTransparent(PRBool aTransparent)
 {
   mTransparent = aTransparent;
   return NS_OK;
@@ -1291,7 +1489,7 @@ nsresult ns4xPluginInstance :: SetTransparent(PRBool aTransparent)
 
 ////////////////////////////////////////////////////////////////////////
 /* readonly attribute nsQIResult scriptablePeer; */
-NS_IMETHODIMP ns4xPluginInstance :: GetScriptablePeer(void * *aScriptablePeer)
+NS_IMETHODIMP ns4xPluginInstance::GetScriptablePeer(void * *aScriptablePeer)
 {
   if (!aScriptablePeer)
     return NS_ERROR_NULL_POINTER;
@@ -1303,7 +1501,7 @@ NS_IMETHODIMP ns4xPluginInstance :: GetScriptablePeer(void * *aScriptablePeer)
 
 ////////////////////////////////////////////////////////////////////////
 /* readonly attribute nsIIDPtr scriptableInterface; */
-NS_IMETHODIMP ns4xPluginInstance :: GetScriptableInterface(nsIID * *aScriptableInterface)
+NS_IMETHODIMP ns4xPluginInstance::GetScriptableInterface(nsIID * *aScriptableInterface)
 {
   if (!aScriptableInterface)
     return NS_ERROR_NULL_POINTER;
