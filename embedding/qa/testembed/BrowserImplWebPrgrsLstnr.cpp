@@ -89,7 +89,7 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
 	FormatAndPrintOutput("OnProgressChange(): curTotalProgress value = ", nProgress, 1); 
 	FormatAndPrintOutput("OnProgressChange(): maxTotalProgress value = ", nProgressMax, 1);
 
-	if (curSelfProgress == maxSelfProgress)
+	if (curSelfProgress == maxSelfProgress && maxSelfProgress != -1)
 	{
 		QAOutput("nsIWebProgLstnr::OnProgressChange(): Self progress complete!", 1);
 
@@ -97,7 +97,7 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
 		WebProgDOMWindowTest(progress, "OnProgressChange()", 1);
 	}
 
-	if (nProgress > nProgressMax)
+	if (nProgress > nProgressMax && nProgressMax != -1)
 	{
 		nProgress = nProgressMax; // Progress complete
 
