@@ -139,7 +139,7 @@ nsExpatTokenizer::nsExpatTokenizer() : nsHTMLTokenizer() {
     if (mExpatParser) {
       SetupExpatCallbacks();
     }
-  }  
+  }
 }
 
 /**
@@ -168,28 +168,32 @@ void nsExpatTokenizer::SetErrorContextInfo(nsParserError* aError, PRUint32 aByte
   /* Figure out the substring inside aSourceBuffer that contains the line on which the error
      occurred.  Copy the line into aError->sourceLine */
   PR_ASSERT(aByteIndex > 0 && aByteIndex < aLength);
-  char* start = (char* ) &aSourceBuffer[aByteIndex];  /* Will try to find the start of the line */
-  char* end = (char* ) &aSourceBuffer[aByteIndex];    /* Will try to find the end of the line */
-  PRUint32 startIndex = aByteIndex;          /* Track the position of the 'start' pointer into the buffer */
-  PRUint32 endIndex = aByteIndex;          /* Track the position of the 'end' pointer into the buffer */
+  /* Assert that the byteIndex and the length of the buffer is even */
+  PR_ASSERT(aByteIndex % 2 == 0 && aLength % 2 == 0);  
+  PRUnichar* start = (PRUnichar* ) &aSourceBuffer[aByteIndex];  /* Will try to find the start of the line */
+  PRUnichar* end = (PRUnichar* ) &aSourceBuffer[aByteIndex];    /* Will try to find the end of the line */
+  PRUint32 startIndex = aByteIndex / 2;          /* Track the position of the 'start' pointer into the buffer */
+  PRUint32 endIndex = aByteIndex / 2;          /* Track the position of the 'end' pointer into the buffer */
+  PRUint32 numCharsInBuffer = aLength / 2;
   PRBool reachedStart;
   PRBool reachedEnd;
+  
 
   /* Use start to find the first new line before the error position and
      end to find the first new line after the error position */
   reachedStart = ('\n' == *start || '\r' == *start || startIndex <= 0);
-  reachedEnd = ('\n' == *end || '\r' == *end || endIndex >= aLength);
+  reachedEnd = ('\n' == *end || '\r' == *end || endIndex >= numCharsInBuffer);
   while (!reachedStart || !reachedEnd) {
     if (!reachedStart) {
       start--;
       startIndex--;
+      reachedStart = ('\n' == *start || '\r' == *start || startIndex <= 0);
     }
     if (!reachedEnd) {
       end++;
       endIndex++;
+      reachedEnd = ('\n' == *end || '\r' == *end || endIndex >= numCharsInBuffer);
     }
-    reachedStart = ('\n' == *start || '\r' == *start || startIndex <= 0);
-    reachedEnd = ('\n' == *end || '\r' == *end || endIndex >= aLength);
   }
 
   if (startIndex == endIndex) {
@@ -201,11 +205,7 @@ void nsExpatTokenizer::SetErrorContextInfo(nsParserError* aError, PRUint32 aByte
     
     /* At this point, the substring starting at (startIndex + 1) and ending at (endIndex - 1),
        is the line on which the error occurred. Copy that substring into the error structure. */
-    char* tempLine = new char[endIndex - startIndex];
-    strncpy(tempLine, &aSourceBuffer[startIndex + 1], (endIndex - 1) - startIndex);
-    tempLine[endIndex - startIndex - 1] = '\0';
-    aError->sourceLine.Append(tempLine);
-    delete [] tempLine;
+    aError->sourceLine.Append((const PRUnichar* )&aSourceBuffer[startIndex + (1 * sizeof(XML_Char))], (endIndex - 1) - startIndex);
   }
 }
 
