@@ -56,7 +56,7 @@ public class PQGGen {
         System.out.println("Generating PQG parameters for "+size+
                             "-bit keypairs. This could take hours...");
 
-        CryptoManager.initialize();
+        CryptoManager.initialize(".");
 
         pqg = PQGParams.generate(size);
 
