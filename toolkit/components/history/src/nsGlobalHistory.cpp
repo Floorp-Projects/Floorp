@@ -3916,7 +3916,7 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       PRInt32 yarnLength = yarn.mYarn_Fill;;
       nsCAutoString titleStr;
       if (property_column == kToken_NameColumn) {
-        titleStr =  NS_ConvertUCS2toUTF8((const PRUnichar*)yarn.mYarn_Buf, yarnLength);
+        titleStr =  NS_ConvertUCS2toUTF8((const PRUnichar*)yarn.mYarn_Buf, yarnLength / 2);
         startPtr = titleStr.get();
         yarnLength = titleStr.Length();
       }
