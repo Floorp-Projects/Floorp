@@ -203,7 +203,11 @@ NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aCo
 #ifdef NS_PRINT_PREVIEW
   // there are a couple of cases where the kUseAltDCFor_CREATE_RC flag has been turned off
   // but we still need to initialize with the Alt DC
-  return aContext->Init(mAltDC?mAltDC:this, aWin);
+  if (mAltDC) {
+    return aContext->Init(mAltDC, aWin);
+  } else {
+    return aContext->Init(this, aWin);
+  }
 #else
   return aContext->Init(this, aWin);
 #endif
