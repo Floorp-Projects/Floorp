@@ -129,7 +129,7 @@ nsresult
 NS_NewMenuPopupFrame ( nsIFrame** aNewFrame );
 
 nsresult
-NS_NewMenuFrame ( nsIFrame** aNewFrame );
+NS_NewMenuFrame ( nsIFrame** aNewFrame, PRUint32 aFlags );
 
 nsresult
 NS_NewMenuBarFrame ( nsIFrame** aNewFrame );
@@ -1826,9 +1826,10 @@ nsCSSFrameConstructor::TableIsValidCellContent(nsIPresContext* aPresContext,
         (nsXULAtoms::treecolgroup    == tag.get())  ||
         (nsXULAtoms::treefoot        == tag.get())  ||
         (nsXULAtoms::treepusher      == tag.get())  ||
-        (nsXULAtoms::xpmenu            == tag.get())  ||
-        (nsXULAtoms::xpmenubar         == tag.get())  ||
-        (nsXULAtoms::xpmenubutton      == tag.get())  ||
+        (nsXULAtoms::xpmenu          == tag.get())  ||
+        (nsXULAtoms::xpmenuitem      == tag.get())  || 
+        (nsXULAtoms::xpmenubar       == tag.get())  ||
+        (nsXULAtoms::xpmenubutton    == tag.get())  ||
         (nsXULAtoms::toolbox         == tag.get())  ||
         (nsXULAtoms::toolbar         == tag.get())  ||
         (nsXULAtoms::toolbaritem     == tag.get())  ||
@@ -2780,7 +2781,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresContext*          aPresConte
       aTag !=  nsXULAtoms::slider &&
       aTag !=  nsXULAtoms::splitter &&
       aTag !=  nsXULAtoms::scrollbar &&
-      aTag !=  nsXULAtoms::xpmenu
+      aTag !=  nsXULAtoms::xpmenu &&
+      aTag !=  nsXULAtoms::xpmenuitem
      ) {
      return NS_OK;
 
@@ -3034,13 +3036,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
     // End of PROGRESS METER CONSTRUCTION logic
 
     // Menu Construction    
-    else if (aTag == nsXULAtoms::xpmenu) {
+    else if (aTag == nsXULAtoms::xpmenu ||
+             aTag == nsXULAtoms::xpmenuitem) {
       // A derived class box frame
       // that has custom reflow to prevent menu children
       // from becoming part of the flow.
       processChildren = PR_TRUE; // Will need this to be custom.
       isReplaced = PR_TRUE;
-      rv = NS_NewMenuFrame(&newFrame);
+      rv = NS_NewMenuFrame(&newFrame, (aTag == nsXULAtoms::xpmenu));
     }
     else if (aTag == nsXULAtoms::xpmenubar) {
       // XXX Will be a derived class toolbar frame.
