@@ -292,6 +292,12 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval);
 extern JSBool
 js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 
+extern JSIdArray *
+js_NewIdArray(JSContext *cx, jsint length);
+
+extern JSIdArray *
+js_GrowIdArray(JSContext *cx, JSIdArray *ida, jsint length);
+
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 	     jsval *statep, jsid *idp);
@@ -309,6 +315,9 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 extern JSBool
 js_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
+
+extern JSBool
+js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj);
 
 extern JSBool
 js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
@@ -335,12 +344,6 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
 
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);
-
-extern JSIdArray *
-js_NewIdArray(JSContext *cx, jsint length);
-
-extern JSIdArray *
-js_GrowIdArray(JSContext *cx, JSIdArray *ida, jsint length);
 
 JS_END_EXTERN_C
 

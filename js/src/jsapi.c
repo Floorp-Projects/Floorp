@@ -635,7 +635,14 @@ JS_NewRuntime(uint32 maxbytes)
 	goto bad;
     js_SetupLocks(20,20);       /* this is asymmetric with JS_ShutDown. */
     rt->rtLock = JS_NEW_LOCK();
+    if (!rt->rtLock)
+	goto bad;
     rt->stateChange = JS_NEW_CONDVAR(rt->rtLock);
+    if (!rt->stateChange)
+	goto bad;
+    rt->setSlotLock = JS_NEW_LOCK();
+    if (!rt->setSlotLock)
+	goto bad;
 #endif
     rt->propertyCache.empty = JS_TRUE;
     JS_INIT_CLIST(&rt->contextList);
@@ -664,8 +671,12 @@ JS_DestroyRuntime(JSRuntime *rt)
 	JS_DESTROY_CONDVAR(rt->gcDone);
     if (rt->requestDone)
 	JS_DESTROY_CONDVAR(rt->requestDone);
-    JS_DESTROY_LOCK(rt->rtLock);
-    JS_DESTROY_CONDVAR(rt->stateChange);
+    if (rt->rtLock)
+        JS_DESTROY_LOCK(rt->rtLock);
+    if (rt->stateChange)
+        JS_DESTROY_CONDVAR(rt->stateChange);
+    if (rt->setSlotLock)
+        JS_DESTROY_LOCK(rt->setSlotLock);
 #endif
     free(rt);
 }
@@ -1420,6 +1431,8 @@ JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 {
     CHECK_REQUEST(cx);
+    if (obj->map->ops->setProto)
+        return obj->map->ops->setProto(cx, obj, JSSLOT_PROTO, proto);
     OBJ_SET_SLOT(cx, obj, JSSLOT_PROTO, OBJECT_TO_JSVAL(proto));
     return JS_TRUE;
 }
@@ -1440,6 +1453,8 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
+    if (obj->map->ops->setParent)
+        return obj->map->ops->setParent(cx, obj, JSSLOT_PARENT, parent);
     OBJ_SET_SLOT(cx, obj, JSSLOT_PARENT, OBJECT_TO_JSVAL(parent));
     return JS_TRUE;
 }
@@ -1447,15 +1462,14 @@ JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 JS_PUBLIC_API(JSObject *)
 JS_GetConstructor(JSContext *cx, JSObject *proto)
 {
-    JSBool ok;
     jsval cval;
 
     CHECK_REQUEST(cx);
-    ok = OBJ_GET_PROPERTY(cx, proto,
+    if (!OBJ_GET_PROPERTY(cx, proto,
 			  (jsid)cx->runtime->atomState.constructorAtom,
-			  &cval);
-    if (!ok)
+			  &cval)) {
 	return NULL;
+    }
     if (!JSVAL_IS_FUNCTION(cx, cval)) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR,
 			     OBJ_GET_CLASS(cx, proto)->name);
