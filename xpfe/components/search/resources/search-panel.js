@@ -290,8 +290,8 @@ function readRDFString(aDS,aRes,aProp) {
 function ensureDefaultEnginePrefs(aRDF,aDS) 
    {
 
-    mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
-    var defaultName = mPrefs.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString);
+    var prefbranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+    var defaultName = prefbranch.getComplexValue("browser.search.defaultenginename" , Components.interfaces.nsIPrefLocalizedString).data;
     var kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
     var kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
     var kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
@@ -301,7 +301,7 @@ function ensureDefaultEnginePrefs(aRDF,aDS)
         var engineRes = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
         var name = readRDFString(aDS, engineRes, kNC_Name);
         if (name == defaultName)
-		   mPrefs.setCharPref("browser.search.defaultengine", engineRes.Value);
+		   prefbranch.setCharPref("browser.search.defaultengine", engineRes.Value);
     }
   }
 
@@ -310,15 +310,15 @@ function ensureSearchPref() {
    
 
    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
-   mPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+   var prefbranch = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
    var ds = rdf.GetDataSource("rdf:internetsearch");
-   kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+   var kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
    try {
-        defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
+        var defaultEngine = prefbranch.getCharPref("browser.search.defaultengine");
         } catch(ex) {
             ensureDefaultEnginePrefs(rdf, ds);
-            defaultEngine = mPrefs.getCharPref("browser.search.defaultengine");
-            }
+            defaultEngine = prefbranch.getCharPref("browser.search.defaultengine");
+        }
    }
 
 // Initialize the Search panel:
@@ -638,9 +638,9 @@ function doSearch()
     return;
   }
 
+  var engineURIs = [];
   if (searchMode > 0) {
     var foundEngine = false;
-    var engineURIs  = [];
     var treeitemNode;
     var engineBox = document.getElementById("engineKids");
 
@@ -690,7 +690,6 @@ function doSearch()
   else
   {
     var basicEngines = document.getElementById("basicEngineMenu");
-    var engineURIs = [];
     engineURIs[0] = basicEngines.selectedItem.id;
     debug("basic mode URI = " + engineURIs[0]);
   }

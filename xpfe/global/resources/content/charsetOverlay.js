@@ -153,7 +153,7 @@ function UpdateCharsetDetector()
  
     if (pref) {
         prefvalue = pref.getComplexValue("intl.charset.detector",
-                                         Components.interfaces.nsIPrefLocalizedString);
+                                         Components.interfaces.nsIPrefLocalizedString).data;
         if (prefvalue == "") prefvalue = "off";
         dump("intl.charset.detector = "+ prefvalue + "\n");
     }

@@ -78,7 +78,7 @@ function onLoad()
       if (element)
         dialog.openAppList.selectedItem = element;
       dialog.input.value = pref.getComplexValue("general.open_location.last_url",
-                                                Components.interfaces.nsISupportsWString);
+                                                Components.interfaces.nsISupportsWString).data;
     }
     catch(ex) {
     }

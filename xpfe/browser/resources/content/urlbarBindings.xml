@@ -211,11 +211,11 @@
           var defaultEngine = null;
           try {
             defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
-                                                        Components.interfaces.nsISupportsWString);
+                                                        Components.interfaces.nsISupportsWString).data;
           } catch(ex) {
             this.ensureDefaultEnginePrefs(rdf, ds);
             defaultEngine = this.mPrefs.getComplexValue("browser.search.defaultengine",
-                                                        Components.interfaces.nsISupportsWString);
+                                                        Components.interfaces.nsISupportsWString).data;
           }
           
           if (defaultEngine) {
@@ -244,7 +244,7 @@
         <parameter name="aDS"/>
         <body><![CDATA[
           var defaultName = this.mPrefs.getComplexValue("browser.search.defaultenginename",
-                                                        Components.interfaces.nsIPrefLocalizedString);
+                                                        Components.interfaces.nsIPrefLocalizedString).data;
           const kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
           const kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
           const kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");

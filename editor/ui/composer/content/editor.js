@@ -1595,7 +1595,7 @@ function  getUnicharPref(aPrefName, aDefVal)
   if (!gPrefs) return "";
   try
   {
-    return gPrefs.getComplexValue(aPrefName, Components.interfaces.nsISupportsWString);
+    return gPrefs.getComplexValue(aPrefName, Components.interfaces.nsISupportsWString).data;
   }
   catch(e)
   {
@@ -1838,7 +1838,7 @@ function EditorSetDefaultPrefsAndDoctype()
     try
     {
       prefCharsetString = gPrefs.getComplexValue("intl.charset.default",
-                                                 Components.interfaces.nsIPrefLocalizedString);
+                                                 Components.interfaces.nsIPrefLocalizedString).data;
     }
     catch (ex) {}
     if ( prefCharsetString && prefCharsetString != 0)
@@ -1874,7 +1874,7 @@ function EditorSetDefaultPrefsAndDoctype()
     try
     {
       prefAuthorString = gPrefs.getComplexValue("editor.author",
-                                                Components.interfaces.nsISupportsWString);
+                                                Components.interfaces.nsISupportsWString).data;
     }
     catch (ex) {}
     if ( prefAuthorString && prefAuthorString != 0)
