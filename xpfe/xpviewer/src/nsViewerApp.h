@@ -53,6 +53,7 @@ public:
   NS_IMETHOD ProcessArguments(int argc, char** argv);
   NS_IMETHOD OpenWindow();
   NS_IMETHOD OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow);
+  NS_IMETHOD ViewSourceFor(const PRUnichar* pURL);
   NS_IMETHOD CreateRobot(nsBrowserWindow* aWindow);
   NS_IMETHOD CreateSiteWalker(nsBrowserWindow* aWindow);
   NS_IMETHOD CreateJSConsole(nsBrowserWindow* aWindow);

@@ -147,6 +147,7 @@ public:
   virtual nsEventStatus DispatchMenuItem(PRInt32 aID);
 
   void DoFileOpen();
+  void DoViewSource();
   void DoCopy();
   void DoJSConsole();
   void DoEditorMode(nsIWebShell* aWebShell);
@@ -178,9 +179,9 @@ public:
   void DoDebugSave();
   void DoToggleSelection();
   void DoDebugRobot();
-  void DoSiteWalker();
   nsEventStatus DispatchDebugMenu(PRInt32 aID);
 #endif
+  void DoSiteWalker();
 
   nsEventStatus ProcessDialogEvent(nsGUIEvent *aEvent);
 
@@ -303,6 +304,25 @@ protected:
 
 
 };
+
+// nsViewSourceWindow
+//
+// Objects of this class are nsBrowserWindows with no chrome and which render the *source*
+// for web pages rather than the web pages themselves.
+//
+// We also override SetTitle to block the nsIWebShell from resetting our nice "Source for..."
+// title.
+//
+// Note that there is no nsViewSourceWindow interface, nor does this class have a CID or
+// provide a factory.  Deal with it (but seriously, I explain why somewhere).
+class nsViewSourceWindow : public nsBrowserWindow {
+public:
+  nsViewSourceWindow( nsIAppShell     *anAppShell,
+                      nsIPref         *aPrefs,
+                      nsViewerApp     *anApp,
+                      const PRUnichar *aURL );
+  NS_IMETHOD SetTitle( const PRUnichar *aTitle );
+};;
 
 // XXX This is bad; because we can't hang a closure off of the event
 // callback we have no way to store our This pointer; therefore we

@@ -386,7 +386,7 @@ HandleBrowserEvent(nsGUIEvent *aEvent)
       // It draws one line between the layout window and the status bar
       case NS_PAINT: 
         nsIWidget * statusWidget;
-        if (NS_OK == bw->mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
+        if (bw->mStatusBar && NS_OK == bw->mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
           nsRect rect;
           statusWidget->GetBounds(rect);
 
@@ -721,7 +721,15 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     case VIEWER_FILE_OPEN:
       DoFileOpen();
       break;
+
+    case VIEWER_FILE_VIEW_SOURCE:
+      DoViewSource();
+      break;
   
+    case VIEWER_TOP100:
+      DoSiteWalker();
+      break;
+
     case VIEWER_EDIT_COPY:
       DoCopy();
       break;
@@ -847,6 +855,26 @@ nsBrowserWindow::DoFileOpen()
     mWebShell->LoadURL(nsString(lpszFileURL));
     delete lpszFileURL;
   }
+}
+
+//-----------------------------------------------------
+void
+nsBrowserWindow::DoViewSource()
+{
+    // Ask the app shell to open a "view source window" for this window's URL.
+    PRInt32    theIndex;
+    PRUnichar *theURL;
+    if ( // Get the history index for this page.
+         NS_OK == mWebShell->GetHistoryIndex(theIndex)
+         &&
+         // Get the URL for that index.
+         NS_OK == mWebShell->GetURL(theIndex,&theURL) ) {
+        // Tell the app to open the source for this URL.
+        mApp->ViewSourceFor(theURL);
+        //XXX Find out how theURL is allocated, and perhaps delete it...
+    } else {
+        // FE_Alert!
+    }
 }
 
 #define DIALOG_FONT    "Helvetica"
@@ -2039,8 +2067,8 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
     txtHeight = 24;
   }
 
-  nsIWidget * tbManagerWidget;
-  if (NS_OK != mToolbarMgr->QueryInterface(kIWidgetIID,(void**)&tbManagerWidget)) {
+  nsIWidget * tbManagerWidget = 0;
+  if (mToolbarMgr && NS_OK != mToolbarMgr->QueryInterface(kIWidgetIID,(void**)&tbManagerWidget)) {
     return;
   }
 
@@ -2049,16 +2077,20 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   PRInt32 preferredWidth  = aWidth;
   PRInt32 preferredHeight = aHeight;
 
-  tbManagerWidget->GetPreferredSize(preferredWidth, preferredHeight);
-  tbManagerWidget->Resize(0,0, aWidth, preferredHeight, PR_TRUE);
-  rr.y      += preferredHeight;
-  rr.height -= preferredHeight;
+  // If there is a toolbar widget, size/position it.
+  if(tbManagerWidget) {
+    tbManagerWidget->GetPreferredSize(preferredWidth, preferredHeight);
+    tbManagerWidget->Resize(0,0, aWidth, preferredHeight, PR_TRUE);
+    rr.y      += preferredHeight;
+    rr.height -= preferredHeight;
+  }
 
   nsIWidget* statusWidget = nsnull;
   PRInt32 statusBarHeight = 0;
 
-  if (NS_OK == mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
-    if (mStatusBar) {
+  // If there is a status bar widget, size/position it.
+  if (mStatusBar && NS_OK == mStatusBar->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
+    if (statusWidget) {
       if (mChromeMask & NS_CHROME_STATUS_BAR_ON) {
         //PRInt32 width;
         //statusWidget->GetPreferredSize(width, statusBarHeight);
@@ -2312,7 +2344,7 @@ nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
     mLocation->SetText(aURL,size);
   }
   nsIWidget * widget;
-  if (NS_OK == mToolbarBtns[gStopBtnInx]->QueryInterface(kIWidgetIID,(void**)&widget)) {
+  if (mToolbarBtns && NS_OK == mToolbarBtns[gStopBtnInx]->QueryInterface(kIWidgetIID,(void**)&widget)) {
     widget->Enable(PR_TRUE);
     widget->Invalidate(PR_TRUE);
     NS_RELEASE(widget);
@@ -2335,7 +2367,7 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 
     mThrobber->Stop();
   }
   nsIWidget * widget;
-  if (NS_OK == mToolbarBtns[gStopBtnInx]->QueryInterface(kIWidgetIID,(void**)&widget)) {
+  if (mToolbarBtns && NS_OK == mToolbarBtns[gStopBtnInx]->QueryInterface(kIWidgetIID,(void**)&widget)) {
     widget->Enable(PR_FALSE);
     widget->Invalidate(PR_TRUE);
     NS_RELEASE(widget);
@@ -2474,8 +2506,10 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
     mThrobber->Stop();
   }
 
-  mToolbarBtns[gStopBtnInx]->Enable(PR_FALSE);
-  mToolbarBtns[gStopBtnInx]->Invalidate(PR_TRUE);
+  if (mToolbarBtns && mToolbarBtns[gStopBtnInx]) {
+    mToolbarBtns[gStopBtnInx]->Enable(PR_FALSE);
+    mToolbarBtns[gStopBtnInx]->Invalidate(PR_TRUE);
+  }
 
   nsAutoString url;
   if (nsnull != aURL) {
@@ -3224,13 +3258,13 @@ nsBrowserWindow::DoDebugRobot()
   mApp->CreateRobot(this);
 }
 
+#endif NS_DEBUG
+
 void
 nsBrowserWindow::DoSiteWalker()
 {
   mApp->CreateSiteWalker(this);
 }
-
-#endif NS_DEBUG
 
 //-----------------------------------------------------
 //-- Menu Struct
@@ -3342,6 +3376,7 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
 
   CreateMenuItem(fileMenu, "New Window", VIEWER_WINDOW_OPEN);
   CreateMenuItem(fileMenu, "Open...",  VIEWER_FILE_OPEN);
+  CreateMenuItem(fileMenu, "View Source", VIEWER_FILE_VIEW_SOURCE);
 
   nsIMenu * samplesMenu = CreateMenu(fileMenu, "Samples", 'S');
   PRInt32 i = 0;
@@ -3631,4 +3666,53 @@ NS_NewBrowserWindowFactory(nsIFactory** aFactory)
   }
   *aFactory = inst;
   return rv;
+}
+
+nsViewSourceWindow::nsViewSourceWindow( nsIAppShell     *anAppShell,
+                                        nsIPref         *aPrefs,
+                                        nsViewerApp     *anApp,
+                                        const PRUnichar *aURL )
+  : nsBrowserWindow() {
+
+  // Wire the window to the "parent" application.
+  this->SetApp(anApp);
+
+  // "View Source" windows have none of this chrome.
+  PRUint32 chromeMask = (PRUint32)~( NS_CHROME_TOOL_BAR_ON            // No toolbar.
+                                     |
+                                     NS_CHROME_LOCATION_BAR_ON        // No location bar.
+                                     |
+                                     NS_CHROME_PERSONAL_TOOLBAR_ON ); // No personal toolbar.
+
+  // Initialize the window.
+  this->Init(anAppShell, mPrefs, nsRect(0, 0, 620, 400), chromeMask, PR_FALSE);
+
+  // Get the new window's web shell.
+  nsIWebShell *pWebShell = 0;
+  if( NS_OK == this->GetWebShell(pWebShell) ) {
+    // Have the web shell load the URL's source.
+    pWebShell->LoadURL(aURL,"view-source");
+
+    // Set title (bypassing our override so it gets set for real).
+    nsString title = "Source for ";
+    title += aURL;
+    this->nsBrowserWindow::SetTitle( title );
+
+    // Make the window visible.
+    this->Show();
+
+    // Release the shell object.
+    NS_RELEASE(pWebShell);
+  } else {
+    // Do our best to handle the error.
+    this->Alert( "Unable to get web shell in nsViewSourceWindow ctor" );
+  }
+
+}
+
+nsresult
+nsViewSourceWindow::SetTitle( const PRUnichar * ) {
+  // Swallow this request (to block the nsIWebShell from giving us a 
+  // bogus title.
+  return NS_OK;
 }

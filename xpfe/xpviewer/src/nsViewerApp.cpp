@@ -510,6 +510,19 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
   return NS_OK;
 }
 
+// I think this should be punted to the app shell to allow for "view source" to be
+// better separated from plain browsing.  But, this way is better given the current
+// situation.
+NS_IMETHODIMP
+nsViewerApp::ViewSourceFor(const PRUnichar *pURL)
+{
+
+  // Create browser window
+  nsViewSourceWindow* pNewWindow = new nsViewSourceWindow(mAppShell, mPrefs, this, pURL);
+
+  return pNewWindow ? NS_OK : NS_ERROR_FAILURE;
+}
+
 //----------------------------------------
 
 // nsDispatchListener implementation
