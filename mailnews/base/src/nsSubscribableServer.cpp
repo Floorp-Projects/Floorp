@@ -144,7 +144,7 @@ nsSubscribableServer::AddToSubscribeDS(const char *aName)
 	NS_ASSERTION(aName,"attempting to add something with no name");
 	if (!aName) return NS_ERROR_FAILURE;
 
-#ifdef DEBUG_NEWS
+#ifdef DEBUG_SUBSCRIBE
 	printf("AddToSubscribeDS(%s)\n",aName);
 #endif
 	nsXPIDLCString serverUri;
@@ -175,7 +175,7 @@ nsSubscribableServer::SetPropertiesInSubscribeDS(const char *uri, const char *aN
 {
 	nsresult rv;
 
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_SUBSCRIBE
 	printf("SetPropertiesInSubscribeDS(%s,%s,??)\n",uri,aName);
 #endif
 		
@@ -198,7 +198,9 @@ NS_IMETHODIMP
 nsSubscribableServer::FindAndAddParentToSubscribeDS(const char *uri, const char *serverUri, const char *aName, nsIRDFResource *aChildResource)
 {
 	nsresult rv;
+#ifdef DEBUG_SUBSCRIBE
 	printf("FindAndAddParentToSubscribeDS(%s,%s,%s,??)\n",uri,serverUri,aName);
+#endif
 
 	nsCOMPtr <nsIRDFResource> parentResource;
 
