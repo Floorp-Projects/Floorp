@@ -154,9 +154,11 @@ static void MyReadLocation(MachineLocation * loc)
         MacintoshInitializeTime();
         ReadLocation(&storedLoc);
         /* install a sleep queue routine, so that when the machine wakes up, time can be recomputed. */
-        if ((gSleepQEntry.sleepQProc = NewSleepQUPP(MySleepQProc)) != NULL) {
-            SleepQInstall(&gSleepQEntry);
-            gSleepQEntryInstalled = JS_TRUE;
+        if (&SleepQInstall != (void*)kUnresolvedCFragSymbolAddress) {
+            if ((gSleepQEntry.sleepQProc = NewSleepQUPP(MySleepQProc)) != NULL) {
+                SleepQInstall(&gSleepQEntry);
+                gSleepQEntryInstalled = JS_TRUE;
+            }
         }
         didReadLocation = JS_TRUE;
      }
