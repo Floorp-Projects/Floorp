@@ -2758,31 +2758,24 @@ MOZ_ARG_ENABLE_BOOL(jprof,
   MOZ_JPROF=1
   AC_DEFINE(MOZ_JPROF))
 
-dnl Detect webshell leaks, on debug builds
-if test "$MOZ_DEBUG"
-then
-  DETECT_WEBSHELL_LEAKS=1
-fi
-
-AC_ARG_ENABLE(detect-webshell-leaks,
+AC_MSG_CHECKING(webshell leaks option)
+MOZ_ARG_ENABLE_BOOL(detect-webshell-leaks,
 [  --enable-detect-webshell-leaks
                           Enable detection of webshell leaks 
                           (default=yes, unless --disable-debug is used)],
-    [ if test "$enableval" = "yes"; then
-        DETECT_WEBSHELL_LEAKS=1
-      else
-        if test "$enableval" = "no"; then
-          echo "*** Disabling detect webshell leaks code."
-          DETECT_WEBSHELL_LEAKS=""
-        fi
-      fi
-     ]
-)
+  [ AC_MSG_RESULT(on (user enabled))
+    DETECT_WEBSHELL_LEAKS=1 ],
+  [ AC_MSG_RESULT(off (user disabled)) ],
+  [ if test "$MOZ_DEBUG"; then
+      AC_MSG_RESULT(on (debug build))
+      DETECT_WEBSHELL_LEAKS=1 
+    else
+      AC_MSG_RESULT(off (non-debug build))
+    fi])
 
-if test "$DETECT_WEBSHELL_LEAKS"
-then
-  echo "*** Enabling detect webshell leaks code."
-  AC_DEFINE(DETECT_WEBSHELL_LEAKS)
+if test "$DETECT_WEBSHELL_LEAKS"; then
+  AC_DEFINE(DETECT_WEBSHELL_LEAKS) 
+  AC_SUBST(DETECT_WEBSHELL_LEAKS)
 fi
 
 MOZ_ARG_DISABLE_BOOL(double-buffer,
@@ -3003,7 +2996,6 @@ AC_SUBST(GC_LEAK_DETECTOR)
 AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)
-AC_SUBST(DETECT_WEBSHELL_LEAKS)
 AC_SUBST(MOZ_INSURE)
 AC_SUBST(MOZ_INSURE_DIRS)
 AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
