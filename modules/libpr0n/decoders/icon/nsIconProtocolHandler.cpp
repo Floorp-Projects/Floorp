@@ -81,10 +81,10 @@ NS_IMETHODIMP nsIconProtocolHandler::NewURI(const nsACString &aSpec,
   NS_NEWXPCOM(uri, nsMozIconURI);
   if (!uri) return NS_ERROR_FAILURE;
 
-  uri->SetSpec(aSpec);
+  nsresult rv = uri->SetSpec(aSpec);
+  if (NS_FAILED(rv)) return rv;
 
-  *result = uri;
-  NS_IF_ADDREF(*result);
+  NS_ADDREF(*result = uri);
   return NS_OK;
 }
 
