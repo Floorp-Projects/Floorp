@@ -529,6 +529,7 @@ SI_GetCharPref(const char * prefname, char** aPrefvalue);
 
 #ifdef AutoCapture
 static const char *pref_captureForms = "wallet.captureForms";
+static const char *pref_enabled = "wallet.enabled";
 #else
 static const char *pref_WalletNotified = "wallet.Notified";
 #endif /* AutoCapture */
@@ -588,9 +589,22 @@ wallet_GetFormsCapturingPref(void)
     wallet_RegisterCapturePrefCallbacks();
     return wallet_captureForms;
 }
-#endif
 
-#ifndef AutoCapture
+PRIVATE PRBool
+wallet_GetEnabledPref(void)
+{
+  /* This pref is not in the prefs panel.  It's purpose is to remove wallet from all UI */
+  static PRBool first_time = PR_TRUE;
+  static PRBool enabled = PR_FALSE;
+  if (first_time) {
+    PRBool x = SI_GetBoolPref(pref_enabled, PR_FALSE);
+    enabled = x;
+  }
+  return enabled;
+}
+
+#else
+
 PRIVATE void
 wallet_SetWalletNotificationPref(PRBool x) {
   SI_SetBoolPref(pref_WalletNotified, x);
@@ -3038,7 +3052,7 @@ wallet_OKToCapture(char* urlName) {
   nsAutoString url = nsAutoString(urlName);
 
   /* exit if pref is not set */
-  if (!wallet_GetFormsCapturingPref()) {
+  if (!wallet_GetFormsCapturingPref() || !wallet_GetEnabledPref()) {
     return PR_FALSE;
   }
 
