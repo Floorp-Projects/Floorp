@@ -2962,6 +2962,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
 {
   // determine which col groups and cols are collapsed
   nsIFrame* childFrame = mColGroups.FirstChild();
+  PRInt32 colX = 0;
   while (nsnull != childFrame) { 
     const nsStyleDisplay* groupDisplay;
     GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
@@ -2969,7 +2970,6 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
 
     nsTableColFrame* colFrame = nsnull;
     childFrame->FirstChild(nsnull, (nsIFrame**)&colFrame);
-    PRInt32 colX = 0;
     while (nsnull != colFrame) { 
       const nsStyleDisplay *colDisplay;
       colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
@@ -2988,18 +2988,22 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
     return NS_OK; // no collapsed cols, we're done
   }
 
+  PRInt32 numCols = colX;
+
   // collapse the cols and/or col groups
   PRInt32 numRows = mCellMap->GetRowCount();
-  nsIFrame* groupFrame = mColGroups.FirstChild(); 
+  nsTableIterator groupIter(mColGroups, PR_TRUE);
+  nsIFrame* groupFrame = groupIter.First(); 
   nscoord cellSpacingX = GetCellSpacingX();
   nscoord xOffset = 0;
-  PRInt32 colX = 0;
+  colX = (groupIter.IsLeftToRight()) ? 0 : numCols - 1; 
+  PRInt32 direction = (groupIter.IsLeftToRight()) ? 1 : -1; 
   while (nsnull != groupFrame) {
     const nsStyleDisplay* groupDisplay;
     groupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
     PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupDisplay->mVisible);
-    nsIFrame* colFrame;
-    groupFrame->FirstChild(nsnull, &colFrame);
+    nsTableIterator colIter(*groupFrame, PR_TRUE);
+    nsIFrame* colFrame = colIter.First();
     while (nsnull != colFrame) {
       const nsStyleDisplay* colDisplay;
       colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
@@ -3007,14 +3011,15 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
         PRBool collapseCol = (NS_STYLE_VISIBILITY_COLLAPSE == colDisplay->mVisible);
         PRInt32 colSpan = ((nsTableColFrame*)colFrame)->GetSpan();
         for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
-          PRInt32 colWidth = GetColumnWidth(colX+spanX);
+          PRInt32 col2X = colX + (direction * spanX);
+          PRInt32 colWidth = GetColumnWidth(col2X);
           if (collapseGroup || collapseCol) {
             xOffset += colWidth + cellSpacingX;
           }
           nsTableCellFrame* lastCell  = nsnull;
           nsTableCellFrame* cellFrame = nsnull;
           for (PRInt32 rowX = 0; rowX < numRows; rowX++) {
-            CellData* cellData = mCellMap->GetCellAt(rowX, colX+spanX);
+            CellData* cellData = mCellMap->GetCellAt(rowX, col2X);
             nsRect cellRect;
             if (cellData) {
               cellFrame = cellData->mCell;
@@ -3042,11 +3047,11 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
             lastCell = cellFrame;
           }
         }
-        colX += colSpan;
+        colX += direction * colSpan;
       }
-      colFrame->GetNextSibling(&colFrame);
+      colFrame = colIter.Next();
     } // inner while
-    groupFrame->GetNextSibling(&groupFrame);
+    groupFrame = groupIter.Next();
   } // outer while
 
   aWidth -= xOffset;
@@ -5295,3 +5300,104 @@ nsTableFrame::IsFinalPass(const nsReflowState& aState)
   return (NS_UNCONSTRAINEDSIZE != aState.availableWidth) ||
          (NS_UNCONSTRAINEDSIZE != aState.availableHeight);
 }
+
+// nsTableIterator
+nsTableIterator::nsTableIterator(nsIFrame& aSource,
+                                 PRBool    aUseDirection)
+{
+  nsIFrame* firstChild;
+  aSource.FirstChild(nsnull, &firstChild);
+  Init(firstChild, aUseDirection);
+}
+
+nsTableIterator::nsTableIterator(nsFrameList& aSource,
+                                 PRBool       aUseDirection)
+{
+  nsIFrame* firstChild = aSource.FirstChild();
+  Init(firstChild, aUseDirection);
+}
+
+void nsTableIterator::Init(nsIFrame* aFirstChild,
+                           PRBool    aUseDirection)
+{
+  mFirstListChild = aFirstChild;
+  mFirstChild     = aFirstChild;
+  mCurrentChild   = nsnull;
+  mLeftToRight    = PR_TRUE;
+  mCount          = -1;
+
+  if (!mFirstChild) {
+    return;
+  }
+  if (aUseDirection) {
+    nsTableFrame* table = nsnull;
+    nsresult rv = nsTableFrame::GetTableFrame(mFirstChild, table);
+    if (NS_SUCCEEDED(rv) && (table != nsnull)) {
+      const nsStyleDisplay* display;
+      table->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      mLeftToRight = (NS_STYLE_DIRECTION_LTR == display->mDirection);
+    }
+    else {
+      NS_ASSERTION(PR_FALSE, "source of table iterator is not part of a table");
+      return;
+    }
+  }
+  if (!mLeftToRight) {
+    mCount = 0;
+    nsIFrame* nextChild;
+    mFirstChild->GetNextSibling(&nextChild);
+    while (nsnull != nextChild) {
+      mCount++;
+      mFirstChild = nextChild;
+      nextChild->GetNextSibling(&nextChild);
+    }
+  } 
+}
+
+nsIFrame* nsTableIterator::First()
+{
+  mCurrentChild = mFirstChild;
+  return mCurrentChild;
+}
+      
+nsIFrame* nsTableIterator::Next()
+{
+  if (!mCurrentChild) {
+    return nsnull;
+  }
+
+  if (mLeftToRight) {
+    mCurrentChild->GetNextSibling(&mCurrentChild);
+    return mCurrentChild;
+  }
+  else {
+    nsIFrame* targetChild = mCurrentChild;
+    mCurrentChild = nsnull;
+    nsIFrame* child = mFirstListChild;
+    while (child && (child != targetChild)) {
+      mCurrentChild = child;
+      child->GetNextSibling(&child);
+    }
+    return mCurrentChild;
+  }
+}
+
+PRBool nsTableIterator::IsLeftToRight()
+{
+  return mLeftToRight;
+}
+
+PRInt32 nsTableIterator::Count()
+{
+  if (-1 == mCount) {
+    mCount = 0;
+    nsIFrame* child = mFirstListChild;
+    while (nsnull != child) {
+      mCount++;
+      child->GetNextSibling(&child);
+    }
+  }
+  return mCount;
+}
+
+

@@ -217,9 +217,6 @@ protected:
   nscoord ComputeCellAvailWidth(const RowReflowState& aState,
                                 nsIFrame*             aKidFrame) const;
 
-  nsIFrame * GetFirstChildForDirection(PRUint8 aDir);
-  nsIFrame * GetNextChildForDirection(PRUint8 aDir, nsIFrame *aCurrentChild);
-
   /**
    * Called for a resize reflow. Typically because the column widths have
    * changed. Reflows all the existing table cell frames
@@ -249,7 +246,7 @@ private:
   PRBool   mInitializedChildren;  // PR_TRUE if child cells have been initialized 
                                   // (for now, that means "added to the table", and
                                   // is NOT the same as having nsIFrame::Init() called.)
-
+  
 };
 
 inline PRInt32 nsTableRowFrame::GetRowIndex() const
