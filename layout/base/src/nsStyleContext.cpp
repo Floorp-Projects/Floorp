@@ -1031,7 +1031,7 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
   mBreakAfter = PR_FALSE;
   mOverflow = NS_STYLE_OVERFLOW_VISIBLE;
   mClipFlags = NS_STYLE_CLIP_AUTO;
-  mClip.SizeTo(0,0,0,0);
+  mClip.SetRect(0,0,0,0);
 }
 
 void StyleDisplayImpl::SetFrom(const nsStyleDisplay& aSource)

@@ -149,26 +149,10 @@ nsContainerFrame::PaintChildren(nsIPresContext*      aPresContext,
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
 
-  // Child elements have the opportunity to override the visibility property
-  // of their parent and display even if the parent is hidden
-  PRBool clipState;
-
-  // If overflow is hidden then set the clip rect so that children
-  // don't leak out of us
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-    aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
-                                  nsClipCombine_kIntersect, clipState);
-  }
-
   nsIFrame* kid = mFrames.FirstChild();
   while (nsnull != kid) {
     PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
     kid->GetNextSibling(&kid);
-  }
-
-  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-    aRenderingContext.PopState(clipState);
   }
 }
 
@@ -527,41 +511,82 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     vm->SetViewZIndex(aView, zIndex);
     vm->SetViewAutoZIndex(aView, autoZIndex);
 
-    // Clip applies to block-level and replaced elements with overflow
-    // set to other than 'visible'
-    if (display->IsBlockLevel()) {
-      if (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN) {
-        nscoord left, top, right, bottom;
+    // There are two types of clipping:
+    // - 'clip' which only applies to absolutely positioned elements, and is
+    //    relative to the element's border edge. 'clip' applies to the entire
+    //    element
+    // - 'overflow-clip' which only applies to block-level elements and replaced
+    //   elements that have 'overflow' set to 'hidden'. 'overflow-clip' is relative
+    //   to the content area and applies to content only (not border or background).
+    //   Note that out-of-flow frames like floated or absolutely positioned frames
+    //   are block-level, but we can't rely on the 'display' value being set correctly
+    //   in the style context...
+    PRBool  hasClip, hasOverflowClip;
+    PRBool  isBlockLevel = display->IsBlockLevel() || (0 != (kidState & NS_FRAME_OUT_OF_FLOW));
+    hasClip = position->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
+    hasOverflowClip = isBlockLevel && (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN);
+    if (hasClip || hasOverflowClip) {
+      nsRect  clipRect, overflowClipRect;
 
-        // Start with the 'auto' values and then factor in user
-        // specified values
-        left = top = 0;
-        right = frameSize.width;
-        bottom = frameSize.height;
+      if (hasClip) {
+        // Start with the 'auto' values and then factor in user specified values
+        clipRect.SetRect(0, 0, frameSize.width, frameSize.height);
 
-        if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
-          top += display->mClip.top;
+        if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
+          if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
+            clipRect.y = display->mClip.y;
+          }
+          if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
+            clipRect.x = display->mClip.x;
+          }
+          if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
+            clipRect.width = clipRect.x + display->mClip.width;
+          }
+          if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
+            clipRect.height = clipRect.y + display->mClip.height;
+          }
         }
-        if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
-          right -= display->mClip.right;
-        }
-        if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
-          bottom -= display->mClip.bottom;
-        }
-        if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
-          left += display->mClip.left;
-        }
-        // Set clipping of child views.
-        aView->SetChildClip(left, top, right, bottom);
-        PRUint32 vflags;
-        aView->GetViewFlags(&vflags);
-        aView->SetViewFlags(vflags | NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
-      } else {
-        // Remove clipping of child views.
-        PRUint32 vflags;
-        aView->GetViewFlags(&vflags);
-        aView->SetViewFlags(vflags & ~NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
       }
+
+      if (hasOverflowClip) {
+        const nsStyleSpacing* spacing;
+        nsMargin              border, padding;
+
+        aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+        
+        // XXX We don't support the 'overflow-clip' property yet so just use the
+        // content area (which is the default value) as the clip shape
+        overflowClipRect.SetRect(0, 0, frameSize.width, frameSize.height);
+        spacing->GetBorder(border);
+        overflowClipRect.Deflate(border);
+        // XXX We need to handle percentage padding
+        if (spacing->GetPadding(padding)) {
+          overflowClipRect.Deflate(padding);
+        }
+      }
+
+      // If both 'clip' and 'overflow-clip' apply then use the intersection
+      // of the two
+      if (hasClip && hasOverflowClip) {
+        clipRect.IntersectRect(clipRect, overflowClipRect);
+      }
+
+      // Set clipping of child views.
+      if (hasClip) {
+        aView->SetChildClip(clipRect.x, clipRect.y, clipRect.XMost(), clipRect.YMost());
+      } else {
+        aView->SetChildClip(overflowClipRect.x, overflowClipRect.y,
+                            overflowClipRect.XMost(), overflowClipRect.YMost());
+      }
+      PRUint32 vflags;
+      aView->GetViewFlags(&vflags);
+      aView->SetViewFlags(vflags | NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
+
+    } else {
+      // Remove clipping of child views.
+      PRUint32 vflags;
+      aView->GetViewFlags(&vflags);
+      aView->SetViewFlags(vflags & ~NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN);
     }
 
     NS_RELEASE(vm);

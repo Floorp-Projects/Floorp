@@ -3072,6 +3072,53 @@ PresShell::GetPlaceholderFrameFor(nsIFrame*  aFrame,
 
 //nsIViewObserver
 
+// If the element is absolutely positioned and has a specified clip rect
+// then it pushes the current rendering context and sets the clip rect.
+// Returns PR_TRUE if the clip rect is set and PR_FALSE otherwise
+static PRBool
+SetClipRect(nsIRenderingContext& aRenderingContext, nsIFrame* aFrame)
+{
+  PRBool clipState;
+  const nsStyleDisplay* display;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  const nsStylePosition* position;
+  aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) position);
+
+  // 'clip' only applies to absolutely positioned elements, and is
+  // relative to the element's border edge. 'clip' applies to the entire
+  // element: border, padding, and content areas, and even scrollbars if
+  // there are any.
+  if (position->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT)) {
+    nsSize  size;
+
+    // Start with the 'auto' values and then factor in user specified values
+    aFrame->GetSize(size);
+    nsRect  clipRect(0, 0, size.width, size.height);
+
+    if (display->mClipFlags & NS_STYLE_CLIP_RECT) {
+      if (0 == (NS_STYLE_CLIP_TOP_AUTO & display->mClipFlags)) {
+        clipRect.y = display->mClip.y;
+      }
+      if (0 == (NS_STYLE_CLIP_LEFT_AUTO & display->mClipFlags)) {
+        clipRect.x = display->mClip.x;
+      }
+      if (0 == (NS_STYLE_CLIP_RIGHT_AUTO & display->mClipFlags)) {
+        clipRect.width = clipRect.x + display->mClip.width;
+      }
+      if (0 == (NS_STYLE_CLIP_BOTTOM_AUTO & display->mClipFlags)) {
+        clipRect.height = clipRect.y + display->mClip.height;
+      }
+    }
+
+    // Set updated clip-rect into the rendering context
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect, clipState);
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 PresShell::Paint(nsIView              *aView,
                  nsIRenderingContext& aRenderingContext,
@@ -3090,6 +3137,10 @@ PresShell::Paint(nsIView              *aView,
   {
     StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
 
+    // If the frame is absolutely positioned, then the 'clip' property
+    // applies
+    PRBool  setClipRect = SetClipRect(aRenderingContext, frame);
+
     rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_BACKGROUND);
     rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
@@ -3097,6 +3148,10 @@ PresShell::Paint(nsIView              *aView,
     rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_FOREGROUND);
                       
+    if (setClipRect) {
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
+    }
                
 #ifdef NS_DEBUG
     // Draw a border around the frame
