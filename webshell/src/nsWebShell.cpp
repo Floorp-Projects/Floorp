@@ -164,10 +164,10 @@ public:
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      nsIPostData* aPostData=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
-                     nsReloadType aType = nsReload,
+                     nsURLReloadType aType = nsURLReload,
                      const PRUint32 localIP = 0);
   NS_IMETHOD Stop(void);
-  NS_IMETHOD Reload(nsReloadType aType);
+  NS_IMETHOD Reload(nsURLReloadType aType);
    
   // History api's
   NS_IMETHOD Back(void);
@@ -1028,7 +1028,7 @@ NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsIPostData* aPostData,
                     PRBool aModifyHistory,
-                    nsReloadType aType,
+                    nsURLReloadType aType,
                     const PRUint32 aLocalIP)
 {
   nsresult rv;
@@ -1099,8 +1099,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                                 aPostData,      // Post Data
                                 nsnull,         // Extra Info...
                                 this,           // Observer
-                                (PRInt32)aType, // reload type
-                                aLocalIP);   // load attributes.
+                                aType,          // reload type
+                                aLocalIP);      // load attributes.
 
 
   return rv;
@@ -1126,7 +1126,7 @@ NS_IMETHODIMP nsWebShell::Stop(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWebShell::Reload(nsReloadType aType)
+NS_IMETHODIMP nsWebShell::Reload(nsURLReloadType aType)
 {
   nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
   if (nsnull != s) {
@@ -1202,7 +1202,7 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
                                   nsnull,         // Post Data
                                   nsnull,         // Extra Info...
                                   this,           // Observer
-                                  nsReload);      // the reload type
+                                  nsURLReload);   // the reload type
   }
   return rv;
 }
@@ -1726,7 +1726,7 @@ void refreshData::Notify(nsITimer *aTimer)
 {
   NS_PRECONDITION((nsnull != mShell), "Null pointer...");
   if (nsnull != mShell) {
-    mShell->LoadURL(mUrlSpec, nsnull, PR_TRUE, nsReload);
+    mShell->LoadURL(mUrlSpec, nsnull, PR_TRUE, nsURLReload);
   }
   /* 
    * LoadURL(...) will cancel all refresh timers... This causes the Timer and

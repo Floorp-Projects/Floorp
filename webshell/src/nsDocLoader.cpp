@@ -112,8 +112,7 @@ public:
 
     nsresult Bind(const nsString& aURLSpec, 
                   nsIPostData* aPostData,
-                  nsIStreamListener* aListener,
-                  PRInt32 type = 0);
+                  nsIStreamListener* aListener);
 
     nsresult Bind(nsIURL* aURL, nsIStreamListener* aListener);
 
@@ -476,7 +475,7 @@ public:
                             nsIPostData* aPostData = nsnull,
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
-                            PRInt32 type = 0,
+                            nsURLReloadType aType = nsURLReload,
                             const PRUint32 aLocalIP = 0);
 
     NS_IMETHOD Stop(void);
@@ -505,7 +504,7 @@ public:
     NS_IMETHOD RemoveChildGroup(nsIURLGroup* aGroup);
 
     // Implementation specific methods...
-    void LoadURLComplete(nsISupports* loader);
+    void LoadURLComplete(nsIURL* aURL, nsISupports* aLoader, PRInt32 aStatus);
     void SetParent(nsDocLoaderImpl* aParent);
 
 protected:
@@ -528,7 +527,12 @@ protected:
     nsIStreamObserver*  mStreamObserver;
 
     nsDocLoaderImpl*    mParent;
-    PRInt32             mLoadingURLs;
+    /*
+     * The following counts are for the current document loader only.  They
+     * do not take into account URLs being loaded by child document loaders.
+     */
+    PRInt32             mForegroundURLs;
+    PRInt32             mTotalURLs;
 };
 
 
@@ -542,9 +546,10 @@ nsDocLoaderImpl::nsDocLoaderImpl()
     }
 #endif /* DEBUG || FORCE_PR_LOG */
 
-    mParent = nsnull;
+    mParent         = nsnull;
     mStreamObserver = nsnull;
-    mLoadingURLs = 0;
+    mForegroundURLs = 0;
+    mTotalURLs      = 0;
 
     NS_NewISupportsArray(&m_LoadingDocsList);
     NS_NewLoadAttribs(&m_LoadAttrib);
@@ -653,10 +658,11 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
                               nsIPostData* aPostData,
                               nsISupports* aExtraInfo,
                               nsIStreamObserver* anObserver,
-                              PRInt32 type,
+                              nsURLReloadType aType,
                               const PRUint32 aLocalIP)
 {
   nsresult rv;
+  nsURLLoadType loadType;
   nsDocumentBindInfo* loader = nsnull;
 
   /* Check for initial error conditions... */
@@ -678,11 +684,22 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
 
   /* The DocumentBindInfo reference is only held by the Array... */
   m_LoadingDocsList->AppendElement((nsIStreamListener *)loader);
-  mLoadingURLs += 1;
 
+  /* Initialize the URL counters... */
+  NS_PRECONDITION(((mTotalURLs == 0) && (mForegroundURLs == 0)), "DocuemntLoader is busy...");
+  rv = m_LoadAttrib->GetLoadType(&loadType);
+  if (NS_FAILED(rv)) {
+    loadType = nsURLLoadNormal;
+  }
+  if (nsURLLoadBackground != loadType) {
+    mForegroundURLs = 1;
+  }
+  mTotalURLs = 1;
+
+  m_LoadAttrib->SetReloadType(aType);
   // If we've got special loading instructions, mind them.
-  if ( (type == 2) || (type == 3) ) {
-      // type 2 and 3 correspond to proxy bypas 
+  if ((aType == nsURLReloadBypassProxy) || 
+      (aType == nsURLReloadBypassCacheAndProxy)) {
       m_LoadAttrib->SetBypassProxy(PR_TRUE);
   }
   if ( aLocalIP ) {
@@ -693,7 +710,7 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
   mStreamObserver = anObserver;
   NS_IF_ADDREF(mStreamObserver);
 
-  rv = loader->Bind(aURLSpec, aPostData, nsnull, type);
+  rv = loader->Bind(aURLSpec, aPostData, nsnull);
 
 done:
   return rv;
@@ -713,12 +730,15 @@ nsDocLoaderImpl::Stop(void)
    * the StreamListener and the DocumentBindInfo object will be deleted...
    */
   m_LoadingDocsList->Clear();
-  mLoadingURLs = 0;
 
   /*
    * Now Stop() all documents being loaded by child DocumentLoaders...
    */
   mChildGroupList.EnumerateForwards(nsDocLoaderImpl::StopDocLoaderEnumerator, nsnull);
+
+  /* Reset the URL counters... */
+  mForegroundURLs = 0;
+  mTotalURLs      = 0;
 
   return NS_OK;
 }       
@@ -730,7 +750,7 @@ nsDocLoaderImpl::IsBusy(PRBool& aResult)
   aResult = PR_FALSE;
 
   /* If this document loader is busy? */
-  if (0 != mLoadingURLs) {
+  if (0 != mForegroundURLs) {
     aResult = PR_TRUE;
   } 
   /* Otherwise, check its child document loaders... */
@@ -783,7 +803,13 @@ nsDocLoaderImpl::CreateURL(nsIURL** aInstancePtrResult,
   } else {
     rv = NS_NewURL(&url, aBaseURL, aURLSpec, aContainer, this);
     if (NS_SUCCEEDED(rv)) {
-      url->SetLoadAttribs(m_LoadAttrib);
+      nsILoadAttribs* loadAttributes;
+
+      loadAttributes = url->GetLoadAttribs();
+      if (nsnull != loadAttributes) {
+        loadAttributes->Clone(m_LoadAttrib);
+        NS_RELEASE(loadAttributes);
+      }
     }
     *aInstancePtrResult = url;
   }
@@ -797,6 +823,7 @@ nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
 {
   nsresult rv;
   nsDocumentBindInfo* loader = nsnull;
+  nsURLLoadType loadType = nsURLLoadNormal;
 
   NS_NEWXPCOM(loader, nsDocumentBindInfo);
   if (nsnull == loader) {
@@ -811,7 +838,22 @@ nsDocLoaderImpl::OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer)
 
   /* The DocumentBindInfo reference is only held by the Array... */
   m_LoadingDocsList->AppendElement(((nsISupports*)(nsIStreamObserver*)loader));
-  mLoadingURLs += 1;
+
+  /* Update the URL counters... */
+  nsILoadAttribs* loadAttributes;
+
+  loadAttributes = aUrl->GetLoadAttribs();
+  if (nsnull != loadAttributes) {
+    rv = loadAttributes->GetLoadType(&loadType);
+    if (NS_FAILED(rv)) {
+      loadType = nsURLLoadNormal;
+    }
+    NS_RELEASE(loadAttributes);
+  }
+  if (nsURLLoadBackground != loadType) {
+    mForegroundURLs += 1;
+  }
+  mTotalURLs += 1;
 
   rv = loader->Bind(aUrl, aConsumer);
 done:
@@ -870,43 +912,56 @@ nsDocLoaderImpl::RemoveChildGroup(nsIURLGroup* aGroup)
 
 
 
-void nsDocLoaderImpl::LoadURLComplete(nsISupports* aBindInfo)
+void nsDocLoaderImpl::LoadURLComplete(nsIURL* aURL, nsISupports* aBindInfo, PRInt32 aStatus)
 {
   PRBool rv;
   PRBool bIsBusy;
 
+  NS_PRECONDITION(((mTotalURLs > 0) && (mForegroundURLs >= 0)), "URL counters are wrong.");
+
+  /*
+   * If the entry is not found in the list, then it must have been cancelled
+   * via Stop(...). So ignore just it... 
+   */
   rv = m_LoadingDocsList->RemoveElement(aBindInfo);
-  mLoadingURLs -= 1;
+  if (PR_FALSE != rv) {
+    nsILoadAttribs* loadAttributes;
+    nsURLLoadType loadType = nsURLLoadNormal;
 
-  IsBusy(bIsBusy);
+    loadAttributes = aURL->GetLoadAttribs();
+    if (nsnull != loadAttributes) {
+      rv = loadAttributes->GetLoadType(&loadType);
+      if (NS_FAILED(rv)) {
+        loadType = nsURLLoadNormal;
+      }
+      NS_RELEASE(loadAttributes);
+    }
+    if (nsURLLoadBackground != loadType) {
+      mForegroundURLs -= 1;
+    }
+    mTotalURLs -= 1;
 
-  if (! bIsBusy) {
-    PRInt32 count = mDocObservers.Count();
-    PRInt32 index;
+    NS_ASSERTION((mTotalURLs >= mForegroundURLs), "Foreground URL count is wrong.");
 
-    PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
-           ("DocLoader [%p] - OnConnectionsComplete(...) called.\n", this));
+    /* 
+     * If this was the last URL for the entire document (including any sub 
+     * documents) then fire an OnConnectionsComplete(...) notification.
+     */
+    IsBusy(bIsBusy);
 
-    for (index = 0; index < count; index++) {
-      nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-      observer->OnConnectionsComplete();
+    if (! bIsBusy) {
+      PRInt32 count = mDocObservers.Count();
+      PRInt32 index;
+
+      PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+             ("DocLoader [%p] - OnConnectionsComplete(...) called.\n", this));
+
+      for (index = 0; index < count; index++) {
+        nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
+        observer->OnConnectionsComplete();
+      }
     }
   }
-
-    /*
-     * If the entry was not found in the list, then it must have been cancelled
-     * via Stop(...).  
-     */
-#if defined(NS_DEBUG)
-    if (PR_TRUE != rv) {
-        nsDocumentBindInfo* docInfo;
-
-        rv = aBindInfo->QueryInterface(kDocumentBindInfoIID, (void**)&docInfo);
-        NS_ASSERTION(((NS_OK == rv) && (docInfo->GetStatus() == NS_BINDING_ABORTED)), 
-                     "Entry was not Aborted!");
-        NS_IF_RELEASE(docInfo);
-    }
-#endif /* NS_DEBUG */
 }
 
 void nsDocLoaderImpl::SetParent(nsDocLoaderImpl* aParent)
@@ -1083,8 +1138,7 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
 
 nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec, 
                                   nsIPostData* aPostData,
-                                  nsIStreamListener* aListener,
-                                  PRInt32 type)
+                                  nsIStreamListener* aListener)
 {
     nsresult rv;
     nsIURL* url = nsnull;
@@ -1097,11 +1151,6 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
     rv = m_DocLoader->CreateURL(&url, nsnull, aURLSpec, m_Container);
     if (NS_FAILED(rv)) {
       return rv;
-    }
-
-    rv = url->SetReloadType(type);
-    if (NS_FAILED(rv)) {
-        return rv;
     }
 
     /* Store any POST data into the URL */
@@ -1338,7 +1387,7 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
     /*
      * The stream is complete...  Tell the DocumentLoader to release us...
      */
-    m_DocLoader->LoadURLComplete((nsIStreamListener *)this);
+    m_DocLoader->LoadURLComplete(aURL, (nsIStreamListener *)this, aStatus);
 
     return rv;
 }
