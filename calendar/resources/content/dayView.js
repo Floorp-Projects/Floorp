@@ -108,7 +108,8 @@ function DayView( calendarWindow )
 
 DayView.prototype.refreshEvents = function()
 {
-
+    // clean up anything that was here before
+    this.removeElementsByAttribute("eventbox", "dayview");
 
     // Figure out the start and end days for the week we're currently viewing
     var startDate = new Date(this.calendarWindow.getSelectedDate());
