@@ -446,14 +446,17 @@ function cleanUpItemForAdding(aPaletteItem)
   aPaletteItem.removeAttribute("observes");
   aPaletteItem.removeAttribute("disabled");
   aPaletteItem.removeAttribute("type");
-
+  
   if (aPaletteItem.localName == "toolbaritem" && 
       aPaletteItem.firstChild) {
     aPaletteItem.firstChild.removeAttribute("observes");
     if (aPaletteItem.firstChild.localName == "textbox")
       aPaletteItem.firstChild.setAttribute("disabled", "true");
-    else
-      aPaletteItem.firstChild.removeAttribute("disabled");
+    else {
+      // So the throbber doesn't throb in the dialog,
+      // cute as that may be...
+      aPaletteItem.firstChild.removeAttribute("busy");
+    }
   }
 }
 
