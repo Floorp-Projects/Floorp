@@ -33,6 +33,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIComponentManager.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsDOMCID.h"
 
 
@@ -1076,6 +1077,48 @@ EditorAppCoreInsertElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
 
 //
+// Native method InsertLinkAroundSelection
+//
+PR_STATIC_CALLBACK(JSBool)
+EditorAppCoreInsertLinkAroundSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMEditorAppCore *nativeThis = (nsIDOMEditorAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMElementPtr b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIElementIID,
+                                           "Element",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->InsertLinkAroundSelection(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function insertLinkAroundSelection requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Exit
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1295,6 +1338,7 @@ static JSFunctionSpec EditorAppCoreMethods[] =
   {"getSelectedElement",          EditorAppCoreGetSelectedElement,     1},
   {"createElementWithDefaults",          EditorAppCoreCreateElementWithDefaults,     1},
   {"insertElement",          EditorAppCoreInsertElement,     2},
+  {"insertLinkAroundSelection",          EditorAppCoreInsertLinkAroundSelection,     1},
   {"exit",          EditorAppCoreExit,     0},
   {"setToolbarWindow",          EditorAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          EditorAppCoreSetContentWindow,     1},
@@ -1315,8 +1359,10 @@ EditorAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   nsIScriptNameSpaceManager* manager;
   nsIDOMEditorAppCore *nativeThis;
   nsIScriptObjectOwner *owner = nsnull;
+  nsIJSNativeInitializer* initializer = nsnull;
 
   static NS_DEFINE_IID(kIDOMEditorAppCoreIID, NS_IDOMEDITORAPPCORE_IID);
+  static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
   result = context->GetNameSpaceManager(&manager);
   if (NS_OK != result) {
@@ -1337,7 +1383,16 @@ EditorAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     return JS_FALSE;
   }
 
-  // XXX We should be calling Init() on the instance
+  result = nativeThis->QueryInterface(kIJSNativeInitializerIID, (void **)&initializer);
+  if (NS_OK == result) {
+    result = initializer->Initialize(cx, argc, argv);
+    NS_RELEASE(initializer);
+
+    if (NS_OK != result) {
+      NS_RELEASE(nativeThis);
+      return JS_FALSE;
+    }
+  }
 
   result = nativeThis->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
   if (NS_OK != result) {
