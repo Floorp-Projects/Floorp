@@ -302,6 +302,11 @@ DefParam("webdotbase",
          "t",
          "http://www.research.att.com/~north/cgi-bin/webdot.cgi/%urlbase%");
 
+DefParam("entryheaderhtml",
+         "This is a special header for the bug entry page. The text will be printed after the page header, before the bug entry form. It is meant to be a place to put pointers to intructions on how to enter bugs.",
+         "l",
+         '');
+
 DefParam("expectbigqueries",
          "If this is on, then we will tell mysql to <tt>set option SQL_BIG_TABLES=1</tt> before doing queries on bugs.  This will be a little slower, but one will not get the error <tt>The table ### is full</tt> for big queries that require a big temporary table.",
          "b",

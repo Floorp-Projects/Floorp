@@ -190,7 +190,20 @@ print "
 <INPUT TYPE=HIDDEN NAME=bug_status VALUE=NEW>
 <INPUT TYPE=HIDDEN NAME=reporter VALUE=\"$::COOKIE{'Bugzilla_login'}\">
 <INPUT TYPE=HIDDEN NAME=product VALUE=\""  . value_quote($product) . "\">
-  <TABLE CELLSPACING=2 CELLPADDING=0 BORDER=0>
+  <TABLE CELLSPACING=2 CELLPADDING=0 BORDER=0>";
+
+if (Param("entryheaderhtml")){
+  print "
+  <TR>
+    <td></td>
+    <td colspan=3>" .
+  Param("entryheaderhtml") . "\n" .
+  " </td> 
+  </TR>
+  <TR><td><br></td></TR>";
+}
+
+print "
   <TR>
     <td ALIGN=right valign=top><B>Reporter:</B></td>
     <td valign=top>$::COOKIE{'Bugzilla_login'}</td>
@@ -254,8 +267,8 @@ print "
     value_quote(formvalue('short_desc')) .
     "\"></TD>
   </TR>
-  <tr><td align=right valign=top><B>Description:</b></tr>
-  <tr>
+  <tr><td align=right valign=top><B>Description:</b></td>
+<!--  </tr> <tr> -->
     <td colspan=5><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80>" .
     value_quote(formvalue('comment')) .
     "</TEXTAREA><BR></td>
@@ -269,14 +282,24 @@ print "
        &nbsp;&nbsp;&nbsp;&nbsp;
        <INPUT TYPE=\"submit\" NAME=maketemplate VALUE=\"Remember values as bookmarkable template\">
     </td>
-  </tr>
+  </tr>";
+
+if ( Param('usebrowserinfo') ) {
+    print "
+  <tr>
+    <td></td>
+    <td colspan=3>
+     <br>
+     Some fields initialized from your user-agent, 
+     <b>$ENV{'HTTP_USER_AGENT'}</b>.  If you think it got it wrong, 
+     please tell " . Param('maintainer') . " what it should have been.
+    </td>
+  </tr>";
+}
+print "
   </TABLE>
   <INPUT TYPE=hidden name=form_name VALUE=enter_bug>
 </FORM>\n";
 
-if ( Param('usebrowserinfo') ) {
-    print "Some fields initialized from your user-agent, <b>$ENV{'HTTP_USER_AGENT'}</b>.
-           If you think it got it wrong, please tell " . Param('maintainer') . " what it should have been.";
-}
 print "</BODY></HTML>\n";
 

@@ -132,11 +132,11 @@ provide backwards compatibility with the older MySQL packages; you must
 answer YES to this question.  The default will be no, and if you select it
 things won't work later.
 
-   A host of 'localhost' should be fine and a testing user of 'test'
-should find itself with sufficient access to run tests on the 'test'
-database which MySQL created upon installation.  If 'make test' and 'make
-install' go through without errors you should be ready to go as far as
-database connectivity is concerned.
+   A host of 'localhost' should be fine and a testing user of 'test' and
+a null password should find itself with sufficient access to run tests on 
+the 'test' database which MySQL created upon installation.  If 'make test' 
+and 'make install' go through without errors you should be ready to go as 
+far as database connectivity is concerned.
 
 1.6. TimeDate Perl module collection
 
