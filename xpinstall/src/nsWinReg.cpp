@@ -176,6 +176,84 @@ nsWinReg::GetValueString(const nsString& subkey, const nsString& valname, nsStri
 }
  
 PRInt32
+nsWinReg::EnumValueNames(const nsString& aSubkey, PRInt32 aIndex, nsString &aReturn)
+{
+    char           namebuf[MAX_BUF];
+    HKEY           root;
+    HKEY           newkey;
+    LONG           result;
+    DWORD          namesize         = sizeof(namebuf);
+    char           subkeyCString[MAX_BUF];
+    unsigned short returnBuf[MAX_BUF];
+    PRInt32         rv = NS_ERROR_FAILURE;
+
+    subkeyCString[0] = 0;
+    returnBuf[0]     = 0;
+    namebuf[0]       = 0;
+
+    ::WideCharToMultiByte(CP_ACP, 0, 
+                          aSubkey.get(), -1,
+                          subkeyCString, sizeof subkeyCString, NULL, NULL); 
+
+    root   = (HKEY) mRootKey;
+    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_READ, &newkey );
+
+    if ( ERROR_SUCCESS == result ) {
+        result = RegEnumValue( newkey, aIndex, namebuf, &namesize, nsnull, 0, 0, 0 );
+        RegCloseKey( newkey );
+
+        if ( ERROR_SUCCESS == result ) {
+            if ( ::MultiByteToWideChar(CP_ACP, 0, namebuf, -1, returnBuf, MAX_BUF) )
+            {
+                aReturn.Assign(returnBuf);
+                rv = NS_OK;
+            }
+        } 
+    }
+
+    return rv;
+}
+
+PRInt32
+nsWinReg::EnumKeys(const nsString& aSubkey, PRInt32 aIndex, nsString &aReturn)
+{
+    char            keybuf[MAX_BUF];
+    HKEY            root;
+    HKEY            newkey;
+    LONG            result;
+    DWORD           type            = REG_SZ;
+    char            subkeyCString[MAX_BUF];
+    unsigned short  returnBuf[MAX_BUF];
+    PRInt32         rv = NS_ERROR_FAILURE;
+
+    subkeyCString[0] = 0;
+    returnBuf[0] = 0;
+    keybuf[0] = 0;
+
+    ::WideCharToMultiByte(CP_ACP, 0, 
+                          aSubkey.get(), -1,
+                          subkeyCString, sizeof subkeyCString, NULL, NULL); 
+
+    root   = (HKEY) mRootKey;
+    result = RegOpenKeyEx( root, subkeyCString, 0, KEY_READ, &newkey );
+
+    if ( ERROR_SUCCESS == result ) {
+        result = RegEnumKey( newkey, aIndex, keybuf, sizeof keybuf );
+        RegCloseKey( newkey );
+        
+        if ( ERROR_SUCCESS == result ) {
+            if ( ::MultiByteToWideChar(CP_ACP, 0, keybuf, -1, returnBuf, MAX_BUF) )
+            {
+                aReturn.Assign(returnBuf);
+                rv = NS_OK;
+            }
+        }
+    }
+
+    return rv;
+}
+
+PRInt32
 nsWinReg::SetValueNumber(const nsString& subkey, const nsString& valname, PRInt32 value, PRInt32* aReturn)
 {
 	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_SET_VAL_NUMBER, subkey, valname, value, aReturn);

@@ -59,6 +59,11 @@
 #include "nsInstall.h"
 
 #define _MAXKEYVALUE_ 8196
+
+#ifndef MAX_BUF
+#define MAX_BUF 4096
+#endif
+
 class nsWinReg
 {
   public:
@@ -88,6 +93,8 @@ class nsWinReg
     PRInt32           GetValueNumber(const nsString& subkey, const nsString& valname, PRInt32* aReturn);
     PRInt32           SetValue(const nsString& subkey, const nsString& valname, nsWinRegValue* value, PRInt32* aReturn);
     PRInt32           GetValue(const nsString& subkey, const nsString& valname, nsWinRegValue** aReturn);
+    PRInt32           EnumValueNames(const nsString& keyname, PRInt32 index, nsString &aReturn);
+    PRInt32           EnumKeys(const nsString& keyname, PRInt32 index, nsString &aReturn);
 
     nsInstall*        InstallObject(void);
 
