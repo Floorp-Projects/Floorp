@@ -3116,12 +3116,14 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
           if (NS_SUCCEEDED(aSelection->GetFocusNode(getter_AddRefs(focus))))
           {
             if (focus.get() == anchor.get())
-              rootElement = do_QueryInterface(focus);//set root to top of selection
-            if (!rootElement)//maybe its a text node since both are the same. both parents are the same. pick one
             {
-              nsCOMPtr<nsIDOMNode> parent;
-              anchor->GetParentNode(getter_AddRefs(parent));
-              rootElement = do_QueryInterface(parent);//set root to top of selection
+              rootElement = do_QueryInterface(focus);//set root to top of selection
+              if (!rootElement)//maybe its a text node since both are the same. both parents are the same. pick one
+              {
+                nsCOMPtr<nsIDOMNode> parent;
+                anchor->GetParentNode(getter_AddRefs(parent));
+                rootElement = do_QueryInterface(parent);//set root to top of selection
+              }
             }
           }
         }
