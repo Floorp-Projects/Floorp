@@ -236,15 +236,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
   }
 
   HWND hWnd = NS_REINTERPRET_CAST(HWND, mWnd);
-  if (gmGetGUIThreadInfo && (aEvent == nsIAccessibleEvent::EVENT_FOCUS || 
-      aEvent == nsIAccessibleEvent::EVENT_MENUPOPUPSTART ||
-      aEvent == nsIAccessibleEvent::EVENT_MENUPOPUPEND)) {
-    GUITHREADINFO guiInfo;
-    guiInfo.cbSize = sizeof(GUITHREADINFO);
-    if (gmGetGUIThreadInfo(NULL, &guiInfo)) {
-      hWnd = guiInfo.hwndFocus;
-    }
-  }
 
   // notify the window system
   NotifyWinEvent(aEvent, hWnd, worldID, childID);
