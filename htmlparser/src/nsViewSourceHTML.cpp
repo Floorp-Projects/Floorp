@@ -995,12 +995,3 @@ nsresult CViewSourceHTML::ReleaseTokenPump(nsITagHandler* aHandler){
   nsresult result=NS_OK;
   return result;
 }
-
-
-#include "windows.h"
-#include <stdio.h>
-
-const double gTicks = 1.0e-7;
-
-
-
