@@ -42,7 +42,7 @@
   <stringbundle id="historyBundle"
                 src="chrome://communicator/locale/history/history.properties"/>
   <stringbundle id="sortBundle" src="chrome://global/locale/nsOutlinerSorting.properties"/>
-  
+
 <commandset id="tasksCommands">
   <commandset id="selectEditMenuItems"/>
   <commandset id="globalEditMenuItems"/>
@@ -100,8 +100,10 @@
       <menuitem id="menu_cut"/>
       <menuitem id="menu_copy"/>
       <menuitem id="menu_delete"/>
-      <menuitem id="menu_deleteByHostname" command="cmd_deleteByHostname"/>
-      <menuitem id="menu_deleteByDomain" command="cmd_deleteByDomain"/>
+      <menuitem id="menu_deleteByHostname" command="cmd_deleteByHostname"
+                accesskey="&deleteHostnameCmd.accesskey;"/>
+      <menuitem id="menu_deleteByDomain" command="cmd_deleteByDomain"
+                accesskey="&deleteDomainCmd.accesskey;"/>
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
       <menuseparator/>
