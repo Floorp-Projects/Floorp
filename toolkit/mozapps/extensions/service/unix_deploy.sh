@@ -12,6 +12,7 @@ CLASSPATH=$AXIS_HOME:$CATALINA_HOME/webapps/axis/WEB-INF/classes:$AXISCLASSPATH:
 JAVA_ENDORSED_DIRS=$CATALINA_HOME/bin
 JAVA_HOME=/usr/java/j2sdk1.4.2_04
 java=$JAVA_HOME/bin/java
+javac=$JAVA_HOME/bin/javac
 
 name=$1
 if [ "x$name" = "x" ]; then
@@ -47,16 +48,16 @@ cd "$AXIS_HOME"
 #mkdir -p $pkg_dir || exit 1
 cp -f "$srcdir"/*.java "$AXIS_HOME/$pkg_dir"
 echo "Compiling original source files..."
-javac "$pkg_dir"/*.java || exit 1
+$javac "$pkg_dir"/*.java || exit 1
 
 #
 # create WSDL and supporting files from generated interface file.
 #
-java org.apache.axis.wsdl.Java2WSDL -o "$AXIS_HOME/$pkg_dir/$name.wsdl" \
+$java org.apache.axis.wsdl.Java2WSDL -o "$AXIS_HOME/$pkg_dir/$name.wsdl" \
     -l"http://localhost:8080/axis/services/$name" -n  "urn:$name" \
     -p"$pkg" "urn:$name" $pkg.$name || exit 1
   
-java org.apache.axis.wsdl.WSDL2Java -o . \
+$java org.apache.axis.wsdl.WSDL2Java -o . \
     -d Session -s -S true  -Nurn:$name $pkg "$AXIS_HOME/$pkg_dir/$name.wsdl" || exit 1
 
 #
@@ -84,11 +85,11 @@ sed -e "$regexp" $pkg_dir/${name}SoapBindingImpl.java > $pkg_dir/temp.java
 mv $pkg_dir/temp.java "$pkg_dir/${name}SoapBindingImpl.java"
 
 echo "Compiling generated source files..."
-javac "$pkg_dir/*.java" || exit 1
+$javac "$pkg_dir/*.java" || exit 1
 cd "$AXIS_HOME/$pkg_dir"
 cp *.class "$CATALINA_HOME/webapps/axis/WEB-INF/classes/$pkg_dir"
 
-java org.apache.axis.client.AdminClient -p 8080 deploy.wsdd  
+$java org.apache.axis.client.AdminClient -p 8080 deploy.wsdd  
 
 cd $srcdir
 
