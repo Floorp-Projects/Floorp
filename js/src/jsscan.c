@@ -1204,14 +1204,9 @@ skipline:
              * sharing among threads and sequentially across re-execution,
              * select JSOP_REGEXP.
              */
-#if 0
-            /* FIXME: http://bugzilla.mozilla.org/show_bug.cgi?id=240404 */
             tp->t_op = (cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO))
                        ? JSOP_OBJECT
                        : JSOP_REGEXP;
-#else
-            tp->t_op = JSOP_OBJECT;
-#endif
             tp->t_atom = atom;
             RETURN(TOK_OBJECT);
         }
