@@ -235,6 +235,9 @@ rdf/Makefile
 rdf/base/Makefile
 rdf/base/public/Makefile
 rdf/base/src/Makefile
+rdf/util/Makefile
+rdf/util/public/Makefile
+rdf/util/src/Makefile
 rdf/build/Makefile
 rdf/content/Makefile
 rdf/content/public/Makefile
