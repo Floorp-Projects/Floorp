@@ -885,7 +885,6 @@ nsFreeTypeXImageSBC::GetBoundingMetrics(const PRUnichar*   aString,
 gint
 nsFreeTypeXImageSBC::GetWidth(const PRUnichar* aString, PRUint32 aLength)
 {
-  nsresult res;
   char buf[512];
   PRInt32 bufLen = sizeof(buf);
   PRInt32 stringLen = aLength;
@@ -895,8 +894,8 @@ nsFreeTypeXImageSBC::GetWidth(const PRUnichar* aString, PRUint32 aLength)
     nsFreeType2::GetCustomEncoderInfo(familyName.get());
   NS_ASSERTION(ffei,"failed to find font encoder info");
   if (!ffei)
-    return NS_ERROR_FAILURE;
-  res = ffei->mEncodingInfo->mConverter->Convert(aString, &stringLen,
+    return 0;
+  ffei->mEncodingInfo->mConverter->Convert(aString, &stringLen,
                                                  buf, &bufLen);
   NS_ASSERTION((aLength&&bufLen)||(!aLength&&!bufLen), "converter failed");
 
@@ -909,9 +908,7 @@ nsFreeTypeXImageSBC::GetWidth(const PRUnichar* aString, PRUint32 aLength)
     unibuf[i] = (unsigned char)buf[i];
   }
 
-  gint width;
-  width = nsFreeTypeXImage::GetWidth(unibuf, bufLen);
-  return width;
+  return nsFreeTypeXImage::GetWidth(unibuf, bufLen);
 }
 
 gint
@@ -920,7 +917,6 @@ nsFreeTypeXImageSBC::DrawString(nsRenderingContextGTK* aContext,
                                 nscoord aY, const PRUnichar* aString,
                                 PRUint32 aLength)
 {
-  nsresult res;
   char buf[512];
   PRInt32 bufLen = sizeof(buf);
   PRInt32 stringLen = aLength;
@@ -930,9 +926,9 @@ nsFreeTypeXImageSBC::DrawString(nsRenderingContextGTK* aContext,
     nsFreeType2::GetCustomEncoderInfo(familyName.get());
   NS_ASSERTION(ffei,"failed to find font encoder info");
   if (!ffei)
-    return NS_ERROR_FAILURE;
-  res = ffei->mEncodingInfo->mConverter->Convert(aString, &stringLen,
-                                                 buf, &bufLen);
+    return 0;
+  ffei->mEncodingInfo->mConverter->Convert(aString, &stringLen,
+                                           buf, &bufLen);
   NS_ASSERTION((aLength&&bufLen)||(!aLength&&!bufLen), "converter failed");
 
   //
@@ -944,10 +940,8 @@ nsFreeTypeXImageSBC::DrawString(nsRenderingContextGTK* aContext,
     unibuf[i] = (unsigned char)buf[i];
   }
 
-  gint width;
-  width = nsFreeTypeXImage::DrawString(aContext, aSurface, aX, aY,
-                                       unibuf, bufLen);
-  return width;
+  return nsFreeTypeXImage::DrawString(aContext, aSurface, aX, aY,
+                                      unibuf, bufLen);
 }
 
 void
