@@ -360,10 +360,10 @@ function Startup()
   gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
 
   // set home button tooltip text
-  var homePage = getHomePage();
-  if (homePage) {
-    var homeButton = document.getElementById("home-button");
-    if (homeButton)
+  var homeButton = document.getElementById("home-button");
+  if (homeButton) {
+    var homePage = getHomePage();
+    if (homePage)
       homeButton.setAttribute("tooltiptext", homePage);
   }
 
