@@ -85,32 +85,32 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="cmd_viewpersonaltoolbar"  oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
 	<broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
 
-	<broadcaster id="Browser:NewEditor"       value="&newBlankPageCmd.label;"         					 oncommand="BrowserNewEditorWindow();"/>
-	<broadcaster id="Browser:NewEditorTemplate" value="&newPageFromTemplateCmd.label;"    disabled="true"  oncommand="BrowserNewWindow();"/>
-	<broadcaster id="Browser:NewEditorDraft"  value="&newPageFromDraftCmd.label;"        	disabled="true"  oncommand="BrowserNewWindow();"/>
+	<broadcaster id="Browser:NewEditor"       value="&newBlankPageCmd.label;"         	oncommand="BrowserNewEditorWindow();"/>
+	<broadcaster id="Browser:NewEditorTemplate" value="&newPageFromTemplateCmd.label;"  disabled="true"  oncommand="BrowserNewWindow();"/>
+	<broadcaster id="Browser:NewEditorDraft"  value="&newPageFromDraftCmd.label;"       disabled="true"  oncommand="BrowserNewWindow();"/>
  
-	<broadcaster id="Browser:Open"  value="&openCmd.label;"        										 oncommand="BrowserOpenWindow();"/>
-	<broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;"        								 oncommand="BrowserOpenFileWindow();"/>
+	<broadcaster id="Browser:Open"  value="&openCmd.label;"        	oncommand="BrowserOpenWindow();"/>
+	<broadcaster id="Browser:OpenFile"  value="&openFileCmd.label;" oncommand="BrowserOpenFileWindow();"/>
 
 	<broadcaster id="cmd_close" oncommand="BrowserClose()"/>
 
-	<broadcaster id="Browser:SendPage"  value="&sendPageCmd.label;"        	disabled ="true" 			 oncommand="BrowserReload();"/>
-	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;"      									 oncommand="BrowserEditPage(window.content.location.href);"/>
+	<broadcaster id="Browser:SendPage"  value="&sendPageCmd.label;" disabled ="true" oncommand="BrowserReload();"/>
+	<broadcaster id="Browser:EditPage"  value="&editPageCmd.label;"      			 oncommand="BrowserEditPage(window.content.location.href);"/>
  	
 	<broadcaster id="Browser:GoOffline"  value="&offlineGoOfflineCmd.label;"       disabled="true" 		 oncommand="BrowserReload();"/>
-	<broadcaster id="Browser:Synchronize"  value="&offlineSynchronizeCmd.label;"        	 disabled="true" 		 oncommand="BrowserReload();"/>
+	<broadcaster id="Browser:Synchronize"  value="&offlineSynchronizeCmd.label;"   disabled="true" 		 oncommand="BrowserReload();"/>
   
-	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"        	disabled ="true" 		 oncommand="BrowserReload();"/>
-	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"     	 oncommand="BrowserReload();"/>
-	<broadcaster id="Browser:Print"  value="&printCmd.label;"        										 oncommand="BrowserPrint();"/>
+	<broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"     disabled ="true" oncommand="BrowserReload();"/>
+	<broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"  oncommand="BrowserReload();"/>
+	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
   
   
-	<broadcaster id="canGoBack" 	 value="&goBackCmd.label;" 		disabled="true" 		oncommand="BrowserBack();"/>
+	<broadcaster id="canGoBack" 	 value="&goBackCmd.label;" 	disabled="true" oncommand="BrowserBack();"/>
 	<broadcaster id="canGoForward" value="&goForwardCmd.label;" disabled="true"	oncommand="BrowserForward();"/>
-	<broadcaster id="Browser:Home" value="&goHomeCmd.label;" 						oncommand="BrowserHome();" />
+	<broadcaster id="Browser:Home" value="&goHomeCmd.label;" 					oncommand="BrowserHome();" />
   
-	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	oncommand="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
-	<broadcaster id="Browser:ManageBookmark" value="&manBookmarksCmd.label;" 						oncommand="BrowserEditBookmarks();" />
+	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
+	<broadcaster id="Browser:ManageBookmark" value="&manBookmarksCmd.label;" oncommand="BrowserEditBookmarks();" />
 </broadcasterset>
 
 
