@@ -53,7 +53,9 @@
 #include "nsISimpleEnumerator.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIChromeEventHandler.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPref.h"
 #include "nsString.h"
@@ -151,6 +153,7 @@ nsTypeAheadFind::~nsTypeAheadFind()
   RemoveCurrentScrollPositionListener();
   RemoveCurrentKeypressListener();
   RemoveCurrentWindowFocusListener();
+  mTimer = nsnull;
 
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
@@ -254,7 +257,7 @@ int PR_CALLBACK nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instanc
       }
       else {
         progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, typeAheadFind),
-                                      nsIWebProgress::NOTIFY_STATE_DOCUMENT);  
+                                      nsIWebProgress::NOTIFY_STATE_DOCUMENT|nsIWebProgress::NOTIFY_STATE_WINDOW);
         // Initialize string bundle
         nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID));
         if (stringBundleService)
@@ -299,97 +302,24 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
  * STATE_IS_WINDOW=0x8000
  */
 
-  if (!(aStateFlags & (STATE_TRANSFERRING|STATE_STOP)))
+  if (!(aStateFlags & STATE_START))
     return NS_OK;
 
   nsCOMPtr<nsIDOMWindow> domWindow;
   aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
-  nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(domWindow));
-  if (!domWindow || mManualFindWindows->IndexOf(windowSupports) >= 0)
+  nsCOMPtr<nsPIDOMWindow> privateDOMWindow(do_QueryInterface(domWindow));
+  nsCOMPtr<nsIChromeEventHandler> chromeEventHandler;
+  if (!privateDOMWindow)
     return NS_OK;
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  domWindow->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc)), parentDoc;
-  if (!doc)
+  PRBool isAutoStart;
+  GetAutoStart(domWindow, &isAutoStart);
+  if (!isAutoStart)
     return NS_OK;
-  nsCOMPtr<nsIPresShell> presShell;
-  doc->GetShellAt(0, getter_AddRefs(presShell));
-  if (!presShell)
-    return NS_OK;
-
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext)
-    return NS_OK;
-
-  // Don't listen for events on chrome windows
-  nsCOMPtr<nsISupports> pcContainer;
-  presContext->GetContainer(getter_AddRefs(pcContainer));
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(pcContainer));
-  PRInt32 itemType = nsIDocShellTreeItem::typeChrome;
-  if (treeItem) 
-    treeItem->GetItemType(&itemType);
-  if (itemType == nsIDocShellTreeItem::typeChrome) 
-    return NS_OK;
-
-  // Check for editor or message pane
-  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(treeItem));
-  if (editorDocShell) {
-    PRBool isEditable;
-    editorDocShell->GetEditable(&isEditable);
-    if (isEditable)
-      return NS_OK;
-  }
-  // XXX the manual id check for the mailnews message pane looks like a hack, 
-  // but is necessary. We conflict with mailnews single key shortcuts like "n" 
-  // for next unread message. 
-  // We need this manual check in Mozilla 1.0 and Netscape 7.0 
-  // because people will be using XPI's to install us there, so we have to 
-  // do our check from here rather than create a new interface or attribute on 
-  // the browser element. 
-  // XXX We'll use autotypeaheadfind="false" in future trunk builds
-  doc->GetParentDocument(getter_AddRefs(parentDoc));
-  if (parentDoc) {
-    nsCOMPtr<nsIContent> browserElContent;
-    // get content for <browser>
-    parentDoc->FindContentForSubDocument(doc,
-                                         getter_AddRefs(browserElContent)); 
-    nsCOMPtr<nsIDOMElement> browserElement(do_QueryInterface(browserElContent));
-    if (browserElement) {
-      nsAutoString id, tagName, autoFind;
-      browserElement->GetLocalName(tagName);
-      browserElement->GetAttribute(NS_LITERAL_STRING("id"), id);
-      browserElement->GetAttribute(NS_LITERAL_STRING("autotypeaheadfind"),
-                                   autoFind);
-      if (tagName.EqualsWithConversion("editor") || 
-          id.EqualsWithConversion("messagepane") ||
-          autoFind.EqualsWithConversion("false")) {
-        SetAutoStart(domWindow, PR_FALSE);
-        return NS_OK;
-      }
-    }
-  }
-
-  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(domWindow));
+  privateDOMWindow->GetChromeEventHandler(getter_AddRefs(chromeEventHandler));
+  nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(chromeEventHandler));
   if (eventTarget)
     AttachNewWindowFocusListener(eventTarget);
-  
-  // Some time when a new doc is loaded, SetNewDocument is called which
-  // will call RemoveAllListeners. We don't know exactly when that will happen,
-  // so we continually add a focus listener to ourselves as the web progress
-  // state changes through STATE_START, STATE_TRANSFERRING, STATE_STOP.
-  // However, it's possible that the focus event was fired right after our 
-  // listener was removed. Therefore, we need to call our focus handler manually
-  // if we're currently focused on the new window that just loaded
-  nsCOMPtr<nsIFocusController> focusController;
-  doc->GetFocusController(getter_AddRefs(focusController));
-  if (focusController) {
-    nsCOMPtr<nsIDOMWindowInternal> focusedWindowInternal;
-    focusController->GetFocusedWindow(getter_AddRefs(focusedWindowInternal));
-    nsCOMPtr<nsIDOMWindow> focusedWindow(do_QueryInterface(focusedWindowInternal));
-    if (focusedWindow == domWindow || !focusedWindow)
-      UseInWindow(domWindow);
-  }
+
   return NS_OK;
 }
 
@@ -450,15 +380,18 @@ NS_IMETHODIMP nsTypeAheadFind::Focus(nsIDOMEvent* aEvent)
     domWin = do_QueryInterface(ourGlobal);
   }
 
-  return UseInWindow(domWin);
+  PRBool isAutoStart;
+  GetAutoStart(domWin, &isAutoStart);
+
+  return isAutoStart? UseInWindow(domWin): NS_OK;
 }
 
 
-nsresult nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDomWin)
+nsresult nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDOMWin)
 {
   // Focus events on windows are important
   nsCOMPtr<nsIDOMDocument> domDoc;
-  aDomWin->GetDocument(getter_AddRefs(domDoc));
+  aDOMWin->GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
 
   if (!doc)
@@ -474,16 +407,18 @@ nsresult nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDomWin)
   nsCOMPtr<nsIPresShell> oldPresShell(do_QueryReferent(mFocusedWeakShell));
   if (!oldPresShell || oldPresShell != presShell)
     CancelFind();
+  else if (presShell == oldPresShell)
+    return NS_OK; // Focus on same window, no need to reattach listeners
 
   RemoveCurrentSelectionListener();
   RemoveCurrentScrollPositionListener();
   RemoveCurrentKeypressListener();
 
-  nsCOMPtr<nsIDOMEventTarget> winTarget(do_QueryInterface(aDomWin));
+  nsCOMPtr<nsIDOMEventTarget> winTarget(do_QueryInterface(aDOMWin));
   if (!winTarget)
     return NS_OK;
 
-  mFocusedWindow = aDomWin;
+  mFocusedWindow = aDOMWin;
   mFocusedWeakShell = do_GetWeakReference(presShell);
 
   // Add scroll position and selection listeners, so we can cancel 
@@ -680,7 +615,7 @@ NS_IMETHODIMP nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       // Otherwise we're going to start at the first visible element
       PRBool isSelectionCollapsed;
       mFocusedDocSelection->GetIsCollapsed(&isSelectionCollapsed);
-      isFirstVisiblePreferred = !mCaretBrowsingOn && isSelectionCollapsed;
+      isFirstVisiblePreferred = !mCaretBrowsingOn;
     }
   }
 
@@ -1175,10 +1110,10 @@ NS_IMETHODIMP nsTypeAheadFind::StartNewFind(nsIDOMWindow *aWindow,
 }
 
 
-NS_IMETHODIMP nsTypeAheadFind::SetAutoStart(nsIDOMWindow *aWindow, 
+NS_IMETHODIMP nsTypeAheadFind::SetAutoStart(nsIDOMWindow *aDOMWin, 
                                             PRBool aAutoStartOn)
 {
-  nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(aWindow));
+  nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(aDOMWin));
   PRInt32 index = mManualFindWindows->IndexOf(windowSupports);
 
   if (aAutoStartOn) {
@@ -1193,11 +1128,80 @@ NS_IMETHODIMP nsTypeAheadFind::SetAutoStart(nsIDOMWindow *aWindow,
 }
 
 
-NS_IMETHODIMP nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aWindow,
+NS_IMETHODIMP nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin,
                                             PRBool *aIsAutoStartOn)
 {
+  *aIsAutoStartOn = PR_FALSE;
+
+  if (!aDOMWin)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aDOMWin->GetDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (!doc)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  doc->GetShellAt(0, getter_AddRefs(presShell));
+  if (!presShell)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  if (!presContext)
+    return NS_OK;
+
+  // Don't listen for events on chrome windows
+  nsCOMPtr<nsISupports> pcContainer;
+  presContext->GetContainer(getter_AddRefs(pcContainer));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(pcContainer));
+  PRInt32 itemType = nsIDocShellTreeItem::typeChrome;
+  if (treeItem) 
+    treeItem->GetItemType(&itemType);
+  if (itemType == nsIDocShellTreeItem::typeChrome) 
+    return NS_OK;
+
+  // Check for editor or message pane
+  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(treeItem));
+  if (editorDocShell) {
+    PRBool isEditable;
+    editorDocShell->GetEditable(&isEditable);
+    if (isEditable)
+      return NS_OK;
+  }
+  // XXX the manual id check for the mailnews message pane looks like a hack, 
+  // but is necessary. We conflict with mailnews single key shortcuts like "n" 
+  // for next unread message. 
+  // We need this manual check in Mozilla 1.0 and Netscape 7.0 
+  // because people will be using XPI's to install us there, so we have to 
+  // do our check from here rather than create a new interface or attribute on 
+  // the browser element. 
+  // XXX We'll use autotypeaheadfind="false" in future trunk builds
+  nsCOMPtr<nsIDocument> parentDoc;
+  doc->GetParentDocument(getter_AddRefs(parentDoc));
+  if (parentDoc) {
+    nsCOMPtr<nsIContent> browserElContent;
+    // get content for <browser>
+    parentDoc->FindContentForSubDocument(doc,
+                                         getter_AddRefs(browserElContent)); 
+    nsCOMPtr<nsIDOMElement> browserElement(do_QueryInterface(browserElContent));
+    if (browserElement) {
+      nsAutoString id, tagName, autoFind;
+      browserElement->GetLocalName(tagName);
+      browserElement->GetAttribute(NS_LITERAL_STRING("id"), id);
+      browserElement->GetAttribute(NS_LITERAL_STRING("autotypeaheadfind"),
+                                   autoFind);
+      if (tagName.EqualsWithConversion("editor") || 
+          id.EqualsWithConversion("messagepane") ||
+          autoFind.EqualsWithConversion("false")) {
+        return NS_OK;
+      }
+    }
+  }
+
   // Is this window stored in manual find windows list?
-  nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(aWindow));
+  nsCOMPtr<nsISupports> windowSupports(do_QueryInterface(aDOMWin));
   *aIsAutoStartOn = mManualFindWindows->IndexOf(windowSupports) < 0; 
 
   return NS_OK;
@@ -1248,10 +1252,10 @@ NS_IMETHODIMP nsTypeAheadFind::CancelFind()
 void nsTypeAheadFind::SetCaretEnabled(nsIPresShell *aPresShell, 
                                       PRBool aEnabled)
 {
-#ifdef TYPEAHEADFIND_CHANGE_SELECTION_LOOK
   if (!aPresShell || !mFocusedDocSelCon)
     return;
-  // Paint selection bright (typeaheadfind on)  or normal (typeaheadfind off)
+  // Show caret when type ahead find is on
+  // Also paint selection bright (typeaheadfind on)  or normal (typeaheadfind off)
   if (aEnabled)
     mFocusedDocSelCon->SetDisplaySelection(nsISelectionController::SELECTION_ATTENTION);
   else
@@ -1282,7 +1286,6 @@ void nsTypeAheadFind::SetCaretEnabled(nsIPresShell *aPresShell,
     caret->SetCaretVisible(isCaretVisibleDuringSelection != 0);
     mFocusedDocSelCon->SetCaretEnabled(isCaretVisibleDuringSelection != 0);
   }
-#endif
 }
 
 
@@ -1338,20 +1341,18 @@ void nsTypeAheadFind::AttachNewSelectionListener()
 
 void nsTypeAheadFind::RemoveCurrentKeypressListener()
 {
-  /*
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mFocusedWindow));
   if (target)
     target->RemoveEventListener(NS_LITERAL_STRING("keypress"), 
                                 NS_STATIC_CAST(nsIDOMKeyListener*, this),
-                                PR_TRUE);
-                                */
+                                PR_FALSE);
 }
 
 
 void nsTypeAheadFind::AttachNewKeypressListener(nsIDOMEventTarget *aTarget)
 {
   aTarget->AddEventListener(NS_LITERAL_STRING("keypress"),
-                            NS_STATIC_CAST(nsIDOMKeyListener*, this), PR_TRUE);
+                            NS_STATIC_CAST(nsIDOMKeyListener*, this), PR_FALSE);
 }
 
 
@@ -1362,7 +1363,7 @@ void nsTypeAheadFind::RemoveCurrentWindowFocusListener()
   if (target)
     target->RemoveEventListener(NS_LITERAL_STRING("focus"),
                                 NS_STATIC_CAST(nsIDOMFocusListener*, this), 
-                                PR_FALSE);
+                                PR_TRUE);
   mFocusedWindow = nsnull;
 }
 
@@ -1372,17 +1373,17 @@ void nsTypeAheadFind::AttachNewWindowFocusListener(nsIDOMEventTarget *aTarget)
   // Add focus listener
   aTarget->AddEventListener(NS_LITERAL_STRING("focus"),
                             NS_STATIC_CAST(nsIDOMFocusListener*, this),
-                            PR_FALSE);
+                            PR_TRUE);
 }
 
 
 void nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
                                    nsIDOMNode *aCurrentNode, 
                                    nsISelectionController **aSelCon,
-                                   nsISelection **aDomSel)
+                                   nsISelection **aDOMSel)
 {
   // if aCurrentNode is nsnull, get selection for document
-  *aDomSel = nsnull;
+  *aDOMSel = nsnull;
 
   nsCOMPtr<nsIPresContext> presContext;
   aPresShell->GetPresContext(getter_AddRefs(presContext));
@@ -1397,7 +1398,7 @@ void nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
   if (presContext && frame) {
     frame->GetSelectionController(presContext, aSelCon);
     if (*aSelCon)
-      (*aSelCon)->GetSelection(nsISelectionController::SELECTION_NORMAL, aDomSel);
+      (*aSelCon)->GetSelection(nsISelectionController::SELECTION_NORMAL, aDOMSel);
   }
 }
 
@@ -1452,12 +1453,13 @@ PRBool nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
 
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
-  ERectVisibility rectVisibility;
+  nsRectVisibility rectVisibility;
   viewManager->GetRectVisibility(containingView, relFrameRect,
                                  NS_STATIC_CAST(PRUint16, (kMinPixels * p2t)), 
                                  &rectVisibility);
 
-  if (rectVisibility != eAboveViewport && rectVisibility != eZeroAreaRect)
+  if (rectVisibility != nsRectVisibility_kAboveViewport && 
+      rectVisibility != nsRectVisibility_kZeroAreaRect)
     return PR_TRUE;
 
   // We know that the target range isn't usable because it's not in the 
@@ -1471,7 +1473,8 @@ PRBool nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   if (!frameTraversal)
     return PR_FALSE;
 
-  while (rectVisibility == eAboveViewport && rectVisibility != eZeroAreaRect) {
+  while (rectVisibility == nsRectVisibility_kAboveViewport && 
+         rectVisibility != nsRectVisibility_kZeroAreaRect) {
     frameTraversal->Next();
     nsISupports* currentItem;
     frameTraversal->CurrentItem(&currentItem);
