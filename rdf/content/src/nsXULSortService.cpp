@@ -253,7 +253,8 @@ nsresult	SetSortHints(nsIContent *tree, const nsString &sortResource, const nsSt
 nsresult	NodeHasSortInfo(nsIContent *node, nsString &sortResource, nsString &sortDirection, nsString &sortResource2, PRBool &inbetweenSeparatorSort, PRBool &found);
 nsresult	GetSortColumnInfo(nsIContent *tree, nsString &sortResource, nsString &sortDirection, nsString &sortResource2, PRBool &inbetweenSeparatorSort);
 nsresult	GetTreeCell(nsIContent *node, PRInt32 colIndex, nsIContent **cell);
-nsresult	SortTreeChildren(nsIContent *container, sortPtr sortInfo);
+nsresult	SortTreeChildren(nsIContent *container, sortPtr sortInfo, PRBool merelyInvertFlag);
+nsresult    InvertTreeChildren(contentSortInfo **data, PRInt32 numItems);
 nsresult	DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
 
 static nsresult	GetCachedTarget(sortPtr sortInfo, PRBool useCache, nsIRDFResource* aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsIRDFNode **aResult);
@@ -908,9 +909,11 @@ XULSortServiceImpl::CompareNodes(nsIRDFNode *cellNode1, PRBool isCollationKey1,
 		// sort collation keys
 		if (collationService)
 		{
-			nsAutoString uni1Str(uni1);
-			nsAutoString uni2Str(uni2);
-			collationService->CompareSortKey(uni1Str, uni2Str, &sortOrder);
+            collationService->CompareRawSortKey((const PRUint8 *) uni1,
+                nsCRT::strlen(uni1) * sizeof(PRUnichar),
+                (const PRUint8 *) uni2,
+                nsCRT::strlen(uni2) * sizeof(PRUnichar),
+                &sortOrder);			
 		}
 		else
 		{
@@ -1762,7 +1765,7 @@ CreateContentSortInfo(nsIContent *content, nsIRDFResource * resource)
 
 
 nsresult
-XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
+XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo, PRBool merelyInvertFlag)
 {
 	PRInt32			childIndex = 0, loop, numChildren = 0, numElements = 0, currentElement, nameSpaceID;
         nsCOMPtr<nsIContent>	child;
@@ -1820,15 +1823,22 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 			nsAutoString	type;
 			for (loop=currentElement; loop< currentElement + numElements; loop++)
 			{
-				if (NS_SUCCEEDED(rv = contentSortInfoArray[loop]->content->GetAttribute(kNameSpaceID_None, kRDF_type, type))
-					&& (rv == NS_CONTENT_ATTR_HAS_VALUE))
+				if (NS_SUCCEEDED(rv = contentSortInfoArray[loop]->content->GetAttribute(kNameSpaceID_None,
+				    kRDF_type, type)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
 				{
 					if (type.EqualsWithConversion(kURINC_BookmarkSeparator))
 					{
 						if (loop > startIndex+1)
 						{
-							NS_QuickSort((void *)&contentSortInfoArray[startIndex], loop-startIndex,
-								sizeof(contentSortInfo *), testSortCallback, (void *)sortInfo);
+                		    if (merelyInvertFlag == PR_TRUE)
+                		    {
+                		        InvertTreeChildren(&contentSortInfoArray[startIndex], loop-startIndex);
+                		    }
+                		    else
+                		    {
+    							NS_QuickSort((void *)&contentSortInfoArray[startIndex], loop-startIndex,
+    								sizeof(contentSortInfo *), testSortCallback, (void *)sortInfo);
+    						}
 							startIndex = loop+1;
 						}
 					}
@@ -1836,15 +1846,29 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 			}
 			if (loop > startIndex+1)
 			{
-				NS_QuickSort((void *)&contentSortInfoArray[startIndex], loop-startIndex, sizeof(contentSortInfo *),
-					testSortCallback, (void *)sortInfo);
+    		    if (merelyInvertFlag == PR_TRUE)
+    		    {
+    		        InvertTreeChildren(&contentSortInfoArray[startIndex], loop-startIndex);
+    		    }
+    		    else
+    		    {
+    				NS_QuickSort((void *)&contentSortInfoArray[startIndex], loop-startIndex, sizeof(contentSortInfo *),
+    					testSortCallback, (void *)sortInfo);
+    			}
 				startIndex = loop+1;
 			}
 		}
 		else
 		{
-			NS_QuickSort((void *)(&contentSortInfoArray[currentElement]), numElements, sizeof(contentSortInfo *),
-				testSortCallback, (void *)sortInfo);
+		    if (merelyInvertFlag == PR_TRUE)
+		    {
+		        InvertTreeChildren(&contentSortInfoArray[currentElement], numElements);
+		    }
+		    else
+		    {
+    			NS_QuickSort((void *)(&contentSortInfoArray[currentElement]), numElements,
+    			    sizeof(contentSortInfo *), testSortCallback, (void *)sortInfo);
+	    	}
 		}
 
 		nsCOMPtr<nsIContent>	parentNode;
@@ -1885,7 +1909,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 				if (tag.get() != kTreeChildrenAtom)	continue;
 
 				sortInfo->parentContainer = parentNode;
-				SortTreeChildren(child, sortInfo);
+				SortTreeChildren(child, sortInfo, merelyInvertFlag);
 			}
 		}
 	}
@@ -1893,6 +1917,25 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 	contentSortInfoArray = nsnull;
 
 	return(NS_OK);
+}
+
+
+
+nsresult
+XULSortServiceImpl::InvertTreeChildren(contentSortInfo **data, PRInt32 numItems)
+{
+    if (numItems > 1)
+    {
+        PRInt32     upPoint = (numItems + 1)/2, downPoint = (numItems - 2)/2;
+        PRInt32     half = numItems/2;
+        while (half-- > 0)
+        {
+            contentSortInfo *temp = data[downPoint];
+            data[downPoint--] = data[upPoint];
+            data[upPoint++] = temp;
+        }
+    }
+    return(NS_OK);
 }
 
 
@@ -2255,6 +2298,14 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const char *sortResource, const char 
 
 
 
+#ifdef	DEBUG
+#ifdef	XP_MAC
+#include <Timer.h>
+#endif
+#endif
+
+
+
 nsresult
 XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
                            const nsString& sortDirection)
@@ -2262,6 +2313,12 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	PRInt32		treeBodyIndex;
 	nsresult	rv;
 	_sortStruct	sortInfo;
+
+#ifdef	DEBUG
+	PRTime		now;
+	Microseconds((UnsignedWide *)&now);
+	printf("DoSort begins\n");
+#endif
 
 	// get tree node
 	nsCOMPtr<nsIContent>	contentNode = do_QueryInterface(node);
@@ -2282,6 +2339,30 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	sortInfo.cacheFirstHint = PR_FALSE;
 	sortInfo.cacheFirstNode = nsnull;
 	sortInfo.cacheIsFirstNodeCollationKey = PR_FALSE;
+
+    // optimization - if we're about to merely invert the current sort
+    // then just reverse-index the current tree
+    PRBool          invertTreeFlag = PR_FALSE;
+	nsAutoString	value;
+	if (NS_SUCCEEDED(rv = treeNode->GetAttribute(kNameSpaceID_None, kSortActiveAtom, value))
+		&& (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase(trueStr)))
+	{
+		if (NS_SUCCEEDED(rv = treeNode->GetAttribute(kNameSpaceID_RDF, kResourceAtom,
+			value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE) && (value.EqualsIgnoreCase(sortResource)))
+		{
+			if (NS_SUCCEEDED(rv = treeNode->GetAttribute(kNameSpaceID_None, kSortDirectionAtom,
+				value)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+			{
+			    PRBool  canOptimize = PR_FALSE;
+
+        		if ((value.Equals(descendingStr) && sortDirection.Equals(ascendingStr)) ||
+        		    (value.Equals(ascendingStr) && sortDirection.Equals(descendingStr)))
+        		{
+        		    invertTreeFlag = PR_TRUE;
+        		}
+			}
+		}
+	}
 
 	// remove any sort hints on tree root node
 	treeNode->UnsetAttribute(kNameSpaceID_None, kSortActiveAtom, PR_FALSE);
@@ -2353,12 +2434,11 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 
 	nsCOMPtr<nsIContent>	treeBody;
 	if (NS_FAILED(rv = FindTreeChildrenElement(treeNode, getter_AddRefs(treeBody))))	return(rv);
-	if (NS_SUCCEEDED(rv = SortTreeChildren(treeBody, &sortInfo)))
-	{
-	}
+
+    SortTreeChildren(treeBody, &sortInfo, invertTreeFlag);
 
 	// Now remove the treebody and re-insert it to force the frames to be rebuilt.
-    	nsCOMPtr<nsIContent>	treeParent;
+    nsCOMPtr<nsIContent>	treeParent;
 	if (NS_FAILED(rv = treeBody->GetParent(*getter_AddRefs(treeParent))))	return(rv);
 	if (NS_FAILED(rv = treeParent->IndexOf(treeBody, treeBodyIndex)))	return(rv);
 	if (NS_FAILED(rv = treeParent->RemoveChildAt(treeBodyIndex, PR_TRUE)))	return(rv);
@@ -2370,6 +2450,16 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	treeBody->SetDocument(doc, PR_TRUE, PR_TRUE);
 
 	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	return(rv);
+
+#ifdef	DEBUG
+	PRTime		now2;
+	Microseconds((UnsignedWide *)&now2);
+	PRUint64	loadTime64;
+	LL_SUB(loadTime64, now2, now);
+	PRUint32	loadTime32;
+	LL_L2UI(loadTime32, loadTime64);
+	printf("DoSort finished.  (%u microseconds)\n", loadTime32);
+#endif
 
 	return(NS_OK);
 }
