@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.14 $ 
-# $Date: 2002/05/10 22:51:05 $ 
+# $Revision: 1.15 $ 
+# $Date: 2002/05/10 22:56:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -281,7 +281,9 @@ sub Link {
     $name = "name=\"$args{'name'}\"";
   }
 
-    
+  # This is important to prevent recursion.  Our popup windows have
+  # links inside them.  Luckally the links do not cause popups.
+
   if (!($args{'windowtxt'})) {
       $out .= "<a $name href=\"$args{'href'}\">";
       $out .= "$args{'linktxt'}</a>\n";
