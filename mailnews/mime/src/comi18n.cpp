@@ -57,7 +57,6 @@
 #include "nsIStringCharsetDetector.h"
 #include "nsIPref.h"
 #include "mimebuf.h"
-#include "nsTextFormatter.h"
 #include "nsMsgI18N.h"
 #include "nsMimeTypes.h"
 
@@ -765,21 +764,9 @@ convert_and_encode:
           return NULL;
         }
         // UTF-8 to mail charset conversion (or iso-8859-1 in case of us-ascii).
-        PRUnichar *u = NULL;
-        nsAutoString fmt; fmt.AssignWithConversion("%s");
-        char aChar = begin[len];
-        begin[len] = '\0';
-        u = nsTextFormatter::smprintf(fmt.get(), begin);
-        begin[len] = aChar;
-        if (NULL == u) {
-            PR_FREEIF(srcbuf);
-            PR_FREEIF(retbuf);
-            return NULL; //error
-        }
         nsresult rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, 
                                              !nsCRT::strcasecmp(charset, "us-ascii") ? "ISO-8859-1" : charset, 
-                                             u, &buf1);
-        nsTextFormatter::smprintf_free(u);
+                                             NS_ConvertUTF8toUCS2(begin, len).get(), &buf1);
         if (NS_FAILED(rv) || NULL == buf1) {
           PR_FREEIF(srcbuf);
           PR_FREEIF(retbuf);
