@@ -53,17 +53,12 @@ CPPSRCS		= \
 		nsHttpAuthManager.cpp \
 		nsHttpBasicAuth.cpp \
 		nsHttpDigestAuth.cpp \
+		nsHttpNTLMAuth.cpp \
 		nsHttpTransaction.cpp \
 		nsHttpHandler.cpp \
 		nsHttpChannel.cpp \
 		nsHttpPipeline.cpp \
 		$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS		+= \
-		nsHttpNTLMAuth.cpp \
-		$(NULL)
-endif
 
 LOCAL_INCLUDES=-I$(srcdir)/../../../base/src
 

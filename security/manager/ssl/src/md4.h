@@ -1,3 +1,4 @@
+/* vim:set ts=2 sw=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,13 +14,12 @@
  *
  * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by IBM Corporation are Copyright (C) 2003
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,19 +35,36 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHttpNTLMAuth_h__
-#define nsHttpNTLMAuth_h__
+#ifndef md4_h__
+#define md4_h__
 
-#include "nsIHttpAuthenticator.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-class nsHttpNTLMAuth : public nsIHttpAuthenticator
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIHTTPAUTHENTICATOR
+#include "prtypes.h"
 
-    nsHttpNTLMAuth() {}
-    virtual ~nsHttpNTLMAuth() {}
-};
+/**
+ * md4sum - computes the MD4 sum over the input buffer per RFC 1320
+ * 
+ * @param input
+ *        buffer containing input data
+ * @param inputLen
+ *        length of input buffer (number of bytes)
+ * @param result
+ *        16-byte buffer that will contain the MD4 sum upon return
+ *
+ * NOTE: MD4 is superceded by MD5.  do not use MD4 unless required by the
+ * protocol you are implementing (e.g., NTLM requires MD4).
+ *
+ * NOTE: this interface is designed for relatively small buffers.  A streaming
+ * interface would make more sense if that were a requirement.  Currently, this
+ * is good enough for the applications we care about.
+ */
+void md4sum(const PRUint8 *input, PRUint32 inputLen, PRUint8 *result);
 
-#endif // !nsHttpNTLMAuth_h__
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* md4_h__ */

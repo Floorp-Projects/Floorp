@@ -1,3 +1,4 @@
+/* vim:set ts=2 sw=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,13 +14,12 @@
  *
  * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by IBM Corporation are Copyright (C) 2003
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,19 +35,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsHttpNTLMAuth_h__
-#define nsHttpNTLMAuth_h__
+#ifndef nsNTLMAuthModule_h__
+#define nsNTLMAuthModule_h__
 
-#include "nsIHttpAuthenticator.h"
+#include "nsIAuthModule.h"
+#include "nsString2.h"
 
-class nsHttpNTLMAuth : public nsIHttpAuthenticator
+class nsNTLMAuthModule : public nsIAuthModule
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIHTTPAUTHENTICATOR
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAUTHMODULE
 
-    nsHttpNTLMAuth() {}
-    virtual ~nsHttpNTLMAuth() {}
+  nsNTLMAuthModule() {}
+  virtual ~nsNTLMAuthModule();
+
+  nsresult InitTest();
+
+private:
+  nsString mDomain;
+  nsString mUsername;
+  nsString mPassword;
 };
 
-#endif // !nsHttpNTLMAuth_h__
+#define NS_NTLMAUTHMODULE_CLASSNAME \
+  "nsNTLMAuthModule"
+#define NS_NTLMAUTHMODULE_CONTRACTID \
+  NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm"
+#define NS_NTLMAUTHMODULE_CID \
+{ /* a4e5888f-4fe4-4632-8e7e-745196ea7c70 */       \
+  0xa4e5888f,                                      \
+  0x4fe4,                                          \
+  0x4632,                                          \
+  {0x8e, 0x7e, 0x74, 0x51, 0x96, 0xea, 0x7c, 0x70} \
+}
+
+#endif // nsNTLMAuthModule_h__
