@@ -42,6 +42,8 @@
 [ptr] native nsIDocumentLoaderObserver(nsIDocumentLoaderObserver);
 [ptr] native nsIContentViewer(nsIContentViewer);
 
+interface nsIChromeEventHandler;
+
 [scriptable, uuid(69E5DE00-7B8B-11d3-AF61-00A024FFC08C)]
 interface nsIDocShell : nsISupports
 {
@@ -110,6 +112,12 @@ interface nsIDocShell : nsISupports
 	as the underlying content changes.
 	*/
 	readonly attribute nsIContentViewer contentViewer;
+
+	/*
+	This attribute allows chrome to tie in to handle DOM events that may be of
+	interest to chrome.
+	*/
+	attribute nsIChromeEventHandler chromeEventHandler;
 
 	/*
 	URI content listener parent
