@@ -70,6 +70,7 @@
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
 #include "nsXULTemplateBuilder.h"
+#include "nsSupportsArray.h"
 
 #include "jsapi.h"
 #include "pldhash.h"
@@ -81,6 +82,38 @@ static NS_DEFINE_CID(kHTMLElementFactoryCID,     NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
+
+PRBool
+IsElementInBuilder(nsIContent *aContent, nsIXULTemplateBuilder *aBuilder)
+{
+    // Make sure that the element is contained within the heirarchy
+    // that we're supposed to be processing.
+    nsCOMPtr<nsIDocument> doc;
+    aContent->GetDocument(*getter_AddRefs(doc));
+
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
+    if (! xuldoc)
+        return PR_FALSE;
+
+    nsCOMPtr<nsIContent> content = dont_QueryInterface(aContent);
+    do {
+        nsCOMPtr<nsIXULTemplateBuilder> builder;
+        xuldoc->GetTemplateBuilderFor(content, getter_AddRefs(builder));
+        if (builder) {
+            if (builder == aBuilder)
+                return PR_TRUE; // aBuilder is the builder for this element.
+
+            // We found a builder, but it's not aBuilder.
+            break;
+        }
+
+        nsCOMPtr<nsIContent> parent;
+        content->GetParent(*getter_AddRefs(parent));
+        content = parent;
+    } while (content);
+
+    return PR_FALSE;
+}
 
 //----------------------------------------------------------------------
 //
@@ -126,9 +159,6 @@ protected:
     nsresult Init();
 
     // Implementation methods
-    PRBool
-    IsElementInBuilder(nsIContent *aElement);
-
     nsresult
     OpenContainer(nsIContent* aElement);
 
@@ -930,6 +960,9 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
     rv = aTemplateNode->GetAttrCount(numAttribs);
     if (NS_FAILED(rv)) return rv;
 
+    // XXXwaterson. Ugh, we just checked the failure code, above. Why
+    // do it again? This method needs a scrub-down, and could stand
+    // to have some of this bogo-error checking removed.
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         for (PRInt32 aLoop=0; aLoop<numAttribs; aLoop++) {
             PRInt32    attribNameSpaceID;
@@ -1010,7 +1043,6 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
 
     return NS_OK;
 }
-
 
 PRBool
 nsXULContentBuilder::IsDirectlyContainedBy(nsIContent* aChild, nsIContent* aParent)
@@ -1751,7 +1783,7 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement)
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
 
-    NS_ASSERTION(IsElementContainedBy(aElement, mRoot), "element not managed by this template builder");
+    NS_ASSERTION(IsElementInBuilder(aElement, this), "element not managed by this template builder");
 
     return CreateTemplateAndContainerContents(aElement, nsnull /* don't care */, nsnull /* don't care */);
 }
@@ -1907,26 +1939,13 @@ nsXULContentBuilder::SynchronizeMatch(nsTemplateMatch* match, const VariableSet&
     }
 #endif
 
-    Value parentValue;
-    match->mAssignments.GetAssignmentFor(mContentVar, &parentValue);
-
-    nsIContent* parent = VALUE_TO_ICONTENT(parentValue);
-
     // Now that we've got the resource of the member variable, we
     // should be able to update its kids appropriately
-    nsresult rv;
-    nsCOMPtr<nsISupportsArray> elements;
-    rv = NS_NewISupportsArray(getter_AddRefs(elements));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new ISupportsArray");
-    if (NS_FAILED(rv)) return rv;
+    nsSupportsArray elements;
+    GetElementsForResource(resource, &elements);
 
-    rv = GetElementsForResource(resource, elements);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to retrieve elements from resource");
-    if (NS_FAILED(rv)) return rv;
-
-    PRUint32 cnt;
-    rv = elements->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
+    PRUint32 cnt = 0;
+    elements.Count(&cnt);
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG) && cnt == 0) {
@@ -1939,24 +1958,19 @@ nsXULContentBuilder::SynchronizeMatch(nsTemplateMatch* match, const VariableSet&
 #endif
 
     for (PRInt32 i = PRInt32(cnt) - 1; i >= 0; --i) {
-        nsISupports* isupports = elements->ElementAt(i);
-        nsCOMPtr<nsIContent> element( do_QueryInterface(isupports) );
-        NS_IF_RELEASE(isupports);
-
-        // If the element is contained by the parent of the rule
-        // that we've just matched, then it's the wrong element.
-        if (! IsElementContainedBy(element, parent))
+        nsCOMPtr<nsIContent> element = do_QueryElementAt(&elements, i);
+        if (! IsElementInBuilder(element, this))
             continue;
 
         nsCOMPtr<nsIContent> templateNode;
         mTemplateMap.GetTemplateFor(element, getter_AddRefs(templateNode));
 
+        NS_ASSERTION(templateNode, "couldn't find template node for element");
         if (! templateNode)
-            return NS_ERROR_UNEXPECTED;
+            continue;
 
         // this node was created by a XUL template, so update it accordingly
-        rv = SynchronizeUsingTemplate(templateNode, element, *match, modified);
-        if (NS_FAILED(rv)) return rv;
+        SynchronizeUsingTemplate(templateNode, element, *match, modified);
     }
         
 #ifdef PR_LOGGING
@@ -1977,43 +1991,11 @@ nsXULContentBuilder::SynchronizeMatch(nsTemplateMatch* match, const VariableSet&
 // Implementation methods
 //
 
-PRBool
-nsXULContentBuilder::IsElementInBuilder(nsIContent *aContent)
-{
-    // Make sure that the element is contained within the heirarchy
-    // that we're supposed to be processing.
-    nsCOMPtr<nsIDocument> doc;
-    aContent->GetDocument(*getter_AddRefs(doc));
-
-    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(doc);
-    if (! xuldoc)
-        return PR_FALSE;
-
-    nsCOMPtr<nsIContent> content = dont_QueryInterface(aContent);
-    do {
-        nsCOMPtr<nsIXULTemplateBuilder> builder;
-        xuldoc->GetTemplateBuilderFor(content, getter_AddRefs(builder));
-        if (builder) {
-            if (builder == NS_STATIC_CAST(nsIXULTemplateBuilder *, this))
-                return PR_TRUE; // We're the builder for this element.
-
-            // We found a builder, but it's not us.
-            break;
-        }
-
-        nsCOMPtr<nsIContent> parent;
-        content->GetParent(*getter_AddRefs(parent));
-        content = parent;
-    } while (content);
-
-    return PR_FALSE;
-}
-
 nsresult
 nsXULContentBuilder::OpenContainer(nsIContent* aElement)
 {
     // See if we're responsible for this element
-    if (! IsElementInBuilder(aElement))
+    if (! IsElementInBuilder(aElement, this))
         return NS_OK;
 
     nsCOMPtr<nsIRDFResource> resource;
@@ -2055,7 +2037,7 @@ nsresult
 nsXULContentBuilder::CloseContainer(nsIContent* aElement)
 {
     // See if we're responsible for this element
-    if (! IsElementInBuilder(aElement))
+    if (! IsElementInBuilder(aElement, this))
         return NS_OK;
 
     nsCOMPtr<nsIAtom> tag;
@@ -2143,7 +2125,7 @@ nsXULContentBuilder::InitializeRuleNetworkForSimpleRules(InnerNode** aChildNode)
         new nsContentTestNode(mRules.GetRoot(),
                               mConflictSet,
                               xuldoc,
-                              mRoot,
+                              this,
                               mContentVar,
                               mContainerVar,
                               nsnull);
@@ -2263,7 +2245,7 @@ nsXULContentBuilder::CompileContentCondition(nsTemplateRule* aRule,
         new nsContentTestNode(aParentNode,
                               mConflictSet,
                               xuldoc,
-                              mRoot,
+                              this,
                               mContentVar, // XXX see above
                               urivar,
                               tag);

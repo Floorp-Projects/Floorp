@@ -45,6 +45,7 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsIAtom.h"
 
+class nsIXULTemplateBuilder;
 class nsIXULDocument;
 class nsConflictSet;
 
@@ -54,7 +55,7 @@ public:
     nsContentTestNode(InnerNode* aParent,
                       nsConflictSet& aConflictSet,
                       nsIXULDocument* aDocument,
-                      nsIContent* aRoot,
+                      nsIXULTemplateBuilder* aBuilder,
                       PRInt32 aContentVariable,
                       PRInt32 aIdVariable,
                       nsIAtom* aTag);
@@ -112,14 +113,11 @@ public:
 protected:
     nsConflictSet& mConflictSet;
     nsIXULDocument* mDocument; // [WEAK] because we know the document will outlive us
-    nsCOMPtr<nsIContent> mRoot;
+    nsIXULTemplateBuilder *mBuilder;
     PRInt32 mContentVariable;
     PRInt32 mIdVariable;
     nsCOMPtr<nsIAtom> mTag;
 };
-
-extern PRBool
-IsElementContainedBy(nsIContent* aElement, nsIContent* aContainer);
 
 #endif // nsContentTestNode_h__
 

@@ -50,45 +50,20 @@
 extern PRLogModuleInfo* gXULTemplateLog;
 #endif
 
-PRBool
-IsElementContainedBy(nsIContent* aElement, nsIContent* aContainer)
-{
-    // Make sure that we're actually creating content for the tree
-    // content model that we've been assigned to deal with.
-
-    // Walk up the parent chain from us to the root and
-    // see what we find.
-    if (aElement == aContainer)
-        return PR_TRUE;
-
-    // walk up the tree until you find rootAtom
-    nsCOMPtr<nsIContent> element(do_QueryInterface(aElement));
-    nsCOMPtr<nsIContent> parent;
-    element->GetParent(*getter_AddRefs(parent));
-    element = parent;
-    
-    while (element) {
-        if (element.get() == aContainer)
-            return PR_TRUE;
-
-        element->GetParent(*getter_AddRefs(parent));
-        element = parent;
-    }
-    
-    return PR_FALSE;
-}
+extern PRBool
+IsElementInBuilder(nsIContent *aContent, nsIXULTemplateBuilder *aBuilder);
 
 nsContentTestNode::nsContentTestNode(InnerNode* aParent,
                                      nsConflictSet& aConflictSet,
                                      nsIXULDocument* aDocument,
-                                     nsIContent* aRoot,
+                                     nsIXULTemplateBuilder* aBuilder,
                                      PRInt32 aContentVariable,
                                      PRInt32 aIdVariable,
                                      nsIAtom* aTag)
     : TestNode(aParent),
       mConflictSet(aConflictSet),
       mDocument(aDocument),
-      mRoot(aRoot),
+      mBuilder(aBuilder),
       mContentVariable(aContentVariable),
       mIdVariable(aIdVariable),
       mTag(aTag)
@@ -107,6 +82,21 @@ nsContentTestNode::nsContentTestNode(InnerNode* aParent,
 #endif
 }
 
+#ifdef PR_LOGGING
+static void
+ElementToString(nsIContent *aContent, nsString &aResult)
+{
+    aResult.Truncate();
+
+    nsCOMPtr<nsIAtom> tag;
+    aContent->GetTag(*getter_AddRefs(tag));
+    tag->ToString(aResult);
+
+    aResult.Append(PRUnichar('@'));
+    aResult.AppendInt(PRInt32(aContent), 16);
+}
+#endif
+
 nsresult
 nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
 {
@@ -123,6 +113,22 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
 
         Value idValue;
         PRBool hasIdBinding = inst->mAssignments.GetAssignmentFor(mIdVariable, &idValue);
+
+#ifdef PR_LOGGING
+        if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+            nsAutoString content(NS_LITERAL_STRING("(unbound)"));
+            if (hasContentBinding)
+                ElementToString(VALUE_TO_ICONTENT(contentValue), content);
+
+            const char *id = "(unbound)";
+            if (hasIdBinding)
+                VALUE_TO_IRDFRESOURCE(idValue)->GetValueConst(&id);
+
+            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                   ("nsContentTestNode[%p]: FilterInstantiations() content=%s id=%s",
+                    this, NS_LossyConvertUCS2toASCII(content).get(), id));
+        }
+#endif
 
         if (hasContentBinding && hasIdBinding) {
             // both are bound, consistency check
@@ -146,6 +152,9 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
                 if (resource.get() != VALUE_TO_IRDFRESOURCE(idValue))
                     consistent = PR_FALSE;
             }
+
+            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                   ("    consistency check => %s", consistent ? "passed" : "failed"));
 
             if (consistent) {
                 Element* element =
@@ -172,8 +181,18 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
                 nsCOMPtr<nsIAtom> tag;
                 content->GetTag(*getter_AddRefs(tag));
 
-                if (tag != mTag)
+                if (tag != mTag) {
                     consistent = PR_FALSE;
+
+                    const PRUnichar *expected, *actual;
+                    mTag->GetUnicode(&expected);
+                    tag->GetUnicode(&actual);
+
+                    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                           ("    => tag mismatch; expected %s, actual %s",
+                            NS_LossyConvertUCS2toASCII(expected).get(),
+                            NS_LossyConvertUCS2toASCII(actual).get()));
+                }
             }
 
             if (consistent) {
@@ -181,6 +200,15 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
                 nsXULContentUtils::GetElementRefResource(content, getter_AddRefs(resource));
 
                 if (resource) {
+#ifdef PR_LOGGING
+                    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                        const char *str;
+                        resource->GetValueConst(&str);
+                        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                               ("    => [%s]", str));
+                    }
+#endif
+
                     Instantiation newinst = *inst;
                     newinst.AddAssignment(mIdVariable, Value(resource.get()));
 
@@ -194,6 +222,10 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
 
                     aInstantiations.Insert(inst, newinst);
                 }
+                else {
+                    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                           ("    => element has no resource"));
+                }
             }
 
             aInstantiations.Erase(inst--);
@@ -201,21 +233,19 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
         else if (hasIdBinding) {
             // the 'id' is bound, find elements in the content tree that match
             const char* uri;
-            rv = VALUE_TO_IRDFRESOURCE(idValue)->GetValueConst(&uri);
-            if (NS_FAILED(rv)) return rv;
+            VALUE_TO_IRDFRESOURCE(idValue)->GetValueConst(&uri);
 
-            rv = mDocument->GetElementsForID(NS_ConvertUTF8toUCS2(uri), elements);
-            if (NS_FAILED(rv)) return rv;
+            mDocument->GetElementsForID(NS_ConvertUTF8toUCS2(uri), elements);
+
             PRUint32 count;
-            rv = elements->Count(&count);
-            if (NS_FAILED(rv)) return rv;
+            elements->Count(&count);
 
             for (PRInt32 j = PRInt32(count) - 1; j >= 0; --j) {
                 nsISupports* isupports = elements->ElementAt(j);
                 nsCOMPtr<nsIContent> content = do_QueryInterface(isupports);
                 NS_IF_RELEASE(isupports);
 
-                if (IsElementContainedBy(content, mRoot)) {
+                if (IsElementInBuilder(content, mBuilder)) {
                     if (mTag) {
                         // If we've got a tag, check it to ensure
                         // we're consistent.
@@ -225,6 +255,16 @@ nsContentTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void*
                         if (tag != mTag)
                             continue;
                     }
+
+#ifdef PR_LOGGING
+                    if (PR_LOG_TEST(gXULTemplateLog, PR_LOG_DEBUG)) {
+                        nsAutoString str;
+                        ElementToString(content, str);
+
+                        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                               ("    => %s", NS_LossyConvertUCS2toASCII(str).get()));
+                    }
+#endif                    
 
                     Instantiation newinst = *inst;
                     newinst.AddAssignment(mContentVariable, Value(content.get()));
