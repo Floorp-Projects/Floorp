@@ -911,7 +911,7 @@ sub BuildRuntimeProjects()
 	
 	#// Build all of the startup libraries, for Application, Component, and Shared Libraries. These are
 	#// required for all subsequent libraries in the system.
-#	_BuildProject(":mozilla:lib:mac:NSStartup:NSStartup.mcp",							"NSStartup.all");
+	_BuildProject(":mozilla:lib:mac:NSStartup:NSStartup.mcp",							"NSStartup.all");
 	
 	#// for NSRuntime under Carbon, don't use BuildOneProject to alias the shlb or the xsym since the 
 	#// target names differ from the output names. Make them by hand instead.
@@ -991,7 +991,7 @@ sub BuildCommonProjects()
 		
 	BuildOneProject(":mozilla:js:macbuild:JavaScript.mcp",						"JavaScript$D.shlb", "JavaScript.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	
-	BuildOneProject(":mozilla:js:macbuild:JSLoader.mcp",						"JSLoader$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:js:macbuild:JSLoader.mcp",						"JSLoader$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:js:macbuild:LiveConnect.mcp",						"LiveConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
