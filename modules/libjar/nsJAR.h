@@ -36,9 +36,6 @@
 #include "prlog.h"
 #include "prtypes.h"
 #include "prinrval.h"
-#if 0
-#include "xp_regexp.h"
-#endif
 
 #include "nsRepository.h"
 #include "nsIComponentManager.h"
