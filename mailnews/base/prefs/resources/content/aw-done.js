@@ -20,15 +20,29 @@
 
 function onInit() {
     var pageData = parent.wizardManager.WSM.PageData;
-    var email = pageData.identity.email.value;
-    setDivTextFromForm("identity.email.text", email);
 
-    var username = pageData.login.username.value;
-    setDivTextFromForm("server.username.text", username);
+    var email = "";
+    if (pageData.identity && pageData.identity.email)
+        email = pageData.identity.email.value;
+    setDivTextFromForm("identity.email", email);
+
+    var username="";
+    if (pageData.login && pageData.login.username)
+        username = pageData.login.username.value;
+    setDivTextFromForm("server.username", username);
 }
 
 function setDivTextFromForm(divid, value) {
-    var div = document.getElementById(divid);
+
+    // hide the .label if the div has no value
+    if (!value || value =="") {
+        var div = document.getElementById(divid + ".label");
+        div.style.display="none";
+        return;
+    }
+
+    // otherwise fill in the .text element
+    var div = document.getElementById(divid+".text");
     if (!div) return;
     
     if (div.firstChild)

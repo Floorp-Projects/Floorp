@@ -18,12 +18,21 @@
  * Rights Reserved.
  */
 
+// the account wizard path is something like:
+
+// accounttype -> identity -> server -> login -> accname -> done
+//                        \-> newsserver ----/
+//
+// where the accounttype determines which path to take
+// (server vs. newsserver
+
 var wizardMap = {
-    accounttype: { next: "identity", finish: false},
-    identity: { next: "server", previous: "accounttype"},
+    accounttype: { next: "identity" },
+    identity: { previous: "accounttype"}, // don't define next: server/newsserver
     server:   { next: "login", previous: "identity"},
-    login:    { next: "accname", previous: "server"},
-    accname:  { next: "done", previous: "login" },
+    newsserver: { next: "accname", previous: "identity"},
+    login:    { next: "accname", previous: "server"}, 
+    accname:  { next: "done", }, // don't define previous: login/newsserver
     done:     { previous: "accname", finish: true }
 }
 
@@ -80,21 +89,33 @@ function createAccount(pageData) {
   try {
     var am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
 
-    // the following fields are used to create the account
+    // shared fields across all accounts
     var fullname = pageData.identity.fullName.value; 
     var email    = pageData.identity.email.value;
-    var hostname = pageData.server.hostname.value;
-    var servertype = pageData.server.servertype.value;
-    var smtphostname = pageData.server.smtphostname.value;
-    var username = pageData.login.username.value;
-    var rememberPassword = pageData.login.rememberPassword.value;
-    var password = pageData.login.password.value;
     var prettyName = pageData.accname.prettyName.value;
-        
-    // workaround for lame-ass combo box bug
-    if (!servertype  || servertype == "")
-        servertype = "pop3";
-        
+
+    // required fields for each account
+    var hostname = getCurrentHostname(pageData);
+    var servertype = getCurrentServerType(pageData);
+
+    // optional fields, depending on the panels that were displayed
+    var smtphostname;
+    var username=null;
+    var password=null;
+    var rememberPassword=false;
+
+    // generic server panel
+    if (pageData.server) {
+        smtphostname = pageData.server.smtphostname.value;
+    }
+
+    // login panel
+    if (pageData.login) {
+        username = pageData.login.username.value;
+        password = pageData.login.password.value;
+        rememberPassword = pageData.login.rememberPassword.value;
+    }
+    
     dump("am.createIncomingServer(" + username + "," +
                                       hostname + "," +
                                       servertype + "\n");
@@ -119,8 +140,10 @@ function createAccount(pageData) {
     account.incomingServer = server;
     account.addIdentity(identity);
 
-    dump("Setting SMTP server..\n");
-    smtpService.defaultServer.hostname = smtphostname;
+    if (smtphostname) {
+        dump("Setting SMTP server..\n");
+        smtpService.defaultServer.hostname = smtphostname;
+    }
   }
   
   catch (ex) {
@@ -134,10 +157,6 @@ function createAccount(pageData) {
 // check if there already is a "none" account. (aka "Local Folders")
 // if not, create it.
 function verifyLocalFoldersAccount(account) {
-    
-    dump("Account is " + account + "\n");
-    dump("Server is " + account.server + "\n");
-    dump("Identity is " + account.identity + "\n");
     
     var am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
     dump("Looking for local mail..\n");
@@ -199,20 +218,23 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 
 	var rootFolder = server.RootFolder;
 
-	// we need to do this or it is possible that the server's draft, stationery fcc folder
-	// will not be in rdf
+	// we need to do this or it is possible that the server's draft,
+    // stationery fcc folder will not be in rdf
 	//
 	// this can happen in a couple cases
-	// 1) the first account we create, creates the local mail.  since local mail
-	// was just created, it obviously hasn't been opened, or in rdf..
-	// 2) the account we created is of a type where defaultCopiesAndFoldersPrefsToServer is true
-	// this since we are creating the server, it obviously hasn't been opened, or in rdf.
+	// 1) the first account we create, creates the local mail.  since
+    // local mail was just created, it obviously hasn't been opened,
+    // or in rdf..
+	// 2) the account we created is of a type where
+    // defaultCopiesAndFoldersPrefsToServer is true
+	// this since we are creating the server, it obviously hasn't been
+    // opened, or in rdf.
 	//
 	// this makes the assumption that the server's draft, stationery fcc folder
-	// are at the top level (ie subfolders of the root folder.)  this works because
-	// we happen to be doing things that way, and if the user changes that, it will
-	// work because to change the folder, it must be in rdf, coming from the folder cache.
-	// in the worst case.
+	// are at the top level (ie subfolders of the root folder.)  this works
+    // because we happen to be doing things that way, and if the user changes
+    // that, it will work because to change the folder, it must be in rdf,
+    // coming from the folder cache, in the worst case.
 	var folders = rootFolder.GetSubFolders();
 	var msgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 	var numFolders = new Object();
@@ -232,3 +254,25 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 
 	return;
 }
+
+// value of checkbox on the first page
+function serverIsNntp(pageData) {
+    return pageData.accounttype.newsaccount.value == true;
+}
+
+function getCurrentServerType(pageData) {
+    var servertype = "pop3";    // hopefully don't resort to default!
+    if (serverIsNntp(pageData))
+        servertype = "nntp";
+    else if (pageData.server && pageData.server.servertype)
+        servertype = pageData.server.servertype.value;
+    return servertype;
+}
+
+function getCurrentHostname(pageData) {
+    if (serverIsNntp(pageData))
+        return pageData.newsserver.hostname.value;
+    else
+        return pageData.server.hostname.value;
+}
+        

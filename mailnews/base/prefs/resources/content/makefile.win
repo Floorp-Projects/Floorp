@@ -46,9 +46,11 @@ install::
 	$(MAKE_INSTALL) AccountWizard.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-overlay.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-accounttype.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-accounttype.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-identity.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-identity.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-server.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) aw-newsserver.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-server.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-login.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-login.js			$(DIST)\bin\chrome\messenger\content\default
@@ -73,8 +75,10 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.js
 	rm -f $(DIST)\chrome\messenger\content\default\aw-accounttype.xul
+	rm -f $(DIST)\chrome\messenger\content\default\aw-accounttype.js
 	rm -f $(DIST)\chrome\messenger\content\default\aw-identity.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-server.xul
+	rm -f $(DIST)\chrome\messenger\content\default\aw-newsserver.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-smtp.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-login.xul
 	rm -f $(DIST)\chrome\messenger\content\default\aw-accname.xul

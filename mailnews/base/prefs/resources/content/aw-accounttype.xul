@@ -27,8 +27,10 @@ Rights Reserved.
 <window id="accounttype" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     class="dialog"
-    onload="parent.wizardManager.onPageLoad('accounttype');">
+    onload="parent.wizardManager.onPageLoad('accounttype');"
+    onunload="onUnload();">
 
+<html:script src="aw-accounttype.js"/>
 <box align="vertical" style="width: 100%; height: 100%" flex="100%">
   <box id="wizardHeader">
     <html:span class="title"><html:div class="title">&accountTypeTitle.label;</html:div></html:span>

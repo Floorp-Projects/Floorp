@@ -39,12 +39,12 @@ function onInit() {
     var accountNameInput = document.getElementById("prettyName");
     if (accountNameInput.value=="") {
         var pageData = parent.wizardManager.WSM.PageData;
-        var type = pageData.server.servertype.value;
+        var type = parent.getCurrentServerType(pageData);
         dump(parent.wizardManager.WSM);
         var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
         var accountName;
         if (type == "nntp") {
-            accountName = pageData.server.hostName.value;
+            accountName = pageData.newsserver.hostname.value;
         } else {
             accountName = pageData.identity.email.value;
         }

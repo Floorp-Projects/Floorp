@@ -43,7 +43,6 @@ function validate(data)
     window.alert(alertText);
     return false;
   }
-  dump("emailArray[0] = '" + emailArray[0] + "'\n");
-  dump("emailArray[1] = '" + emailArray[1] + "'\n");
   return true;
 }
+

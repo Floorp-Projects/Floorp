@@ -43,7 +43,7 @@ function onInit() {
     if (loginNameInput.value == "") {
       // retrieve data from previously entered pages
       var pageData = parent.wizardManager.WSM.PageData;
-      var type = pageData.server.servertype.value;
+      var type = parent.getCurrentServerType(pageData);
 
       dump("type = " + type + "\n");
       protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);

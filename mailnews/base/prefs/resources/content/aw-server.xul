@@ -45,7 +45,6 @@ Rights Reserved.
       <html:select id="servertype" name="servertype">
         <html:option value="pop3">&popType.label;</html:option>
         <html:option value="imap">&imapType.label;</html:option>
-        <html:option value="nntp">&nntpType.label;</html:option>
       </html:select>
     </html:div>
     <html:br/>

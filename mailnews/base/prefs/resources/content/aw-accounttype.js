@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,28 +19,25 @@
  *
  * Contributor(s):
  * Alec Flett <alecf@netscape.com>
- * Seth Spitzer <sspitzer@netscape.com>
  */
 
-var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
-function validate() {
-  var servername = document.getElementById("hostname");
-  var smtpserver = document.getElementById("smtphostname");
+function onUnload() {
+    var pageData = parent.wizardManager.WSM.PageData;
+    var wizardMap = parent.wizardMap;
 
-  if ((servername && servername.value =="") ||
-      (smtpserver && smtpserver.value == "")) {
-    var alertText = Bundle.GetStringFromName("enterValidHostname");
-    window.alert(alertText);
-    return false;
-  }
-  return true;
-}
+    if (pageData.accounttype.mailaccount.value) {
+        wizardMap.identity.next = "server";
+        wizardMap.accname.previous = "server";
+    }
 
-function onInit() {
+    else if (pageData.accounttype.newsaccount.value) {
+        wizardMap.identity.next = "newsserver";
+        wizardMap.accname.previous = "newsserver";
+    }
 
-  var smtpserver = document.getElementById("smtphostname");
-
-  if (smtpserver && smtpserver.value == "")
-    smtpserver.value = parent.smtpService.defaultServer.hostname;
+    else {
+        dump("Handle other types here?");
+    }
+    return true;
 }

@@ -42,9 +42,11 @@ AccountWizard.xul
 AccountWizard.js
 aw-overlay.xul
 aw-accounttype.xul
+aw-accounttype.js
 aw-identity.xul
 aw-identity.js
 aw-server.xul
+aw-newsserver.xul
 aw-server.js
 aw-login.xul
 aw-login.js
