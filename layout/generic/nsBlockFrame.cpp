@@ -4125,7 +4125,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
     // sequel of elements that can't be wrapped anymore (see patch for bug 80817)
     // let them set xmost to be the width of the widest element of the reflowed line
     // (patches bug 93363 and other NOWRAP dups)
-    xmost = aMaxElementSize.width;
+    xmost = aLine->mMaxElementWidth + aState.BorderPadding().left;
   } else {
     xmost = aLine->mBounds.XMost();
   }
