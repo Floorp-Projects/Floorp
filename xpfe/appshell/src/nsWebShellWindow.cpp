@@ -392,7 +392,7 @@ nsIDOMNode * nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, 
       while (nsnull != node) {
         nsString name;
         node->GetNodeName(name);
-        printf("[%s]\n", name.ToNewCString());
+        //printf("[%s]\n", name.ToNewCString());
         if (name.Equals(aName)) {
           NS_ADDREF(node);
           NS_RELEASE(parent);
@@ -573,7 +573,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
 				          menuitemElement->GetNodeName(menuitemNodeType);
 				          if (menuitemNodeType.Equals("menuitem")) {
 				            menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
-				            printf("MenuItem [%s]\n", menuitemName.ToNewCString() );
+				            //printf("MenuItem [%s]\n", menuitemName.ToNewCString() );
 				            // TODO: set nsMenuItem name 
 				            // TODO: make nsMenuItem a child of nsMenu
 				          }
@@ -667,7 +667,7 @@ nsIDOMNode *  nsWebShellWindow::FindNamedDOMNode(const nsString &aName, nsIDOMNo
   while (nsnull != node) {
     nsString name;
     node->GetNodeName(name);
-    printf("FindNamedDOMNode[%s] %d == %d\n", name.ToNewCString(), aCount, aEndCount);
+    //printf("FindNamedDOMNode[%s] %d == %d\n", name.ToNewCString(), aCount, aEndCount);
     if (name.Equals(aName)) {
       aCount++;
       if (aCount == aEndCount) {
