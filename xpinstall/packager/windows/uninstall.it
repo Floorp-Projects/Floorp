@@ -1,0 +1,170 @@
+[General]
+; Run Mode values:
+;   Normal - Shows all dialogs.  Requires user input.
+;   Auto   - Shows some dialogs, but none requiring user input.  It will
+;            automatically install the product using default values.
+;   Silent - Show no dialogs at all.  It will install product using default
+;            values.
+Run Mode=Normal
+
+Product Name=Mozilla Seamonkey
+
+; Valid Path values:
+;   PROGRAMFILESDIR
+;   WINDISK
+;   WINDIR
+;   WINSYSDIR
+;   COMMON_STARTUP
+;   COMMON_PROGRAMS
+;   COMMON_STARTMENU
+;   COMMON_DESKTOP
+;
+;   PERSONAL_STARTUP
+;   PERSONAL_PROGRAMS
+;   PERSONAL_STARTMENU
+;   PERSONAL_DESKTOP
+;
+;   PERSONAL_APPDATA
+;   PERSONAL_CACHE
+;   PERSONAL_COOKIES
+;   PERSONAL_FAVORITES
+;   PERSONAL_FONTS
+;   PERSONAL_HISTORY
+;   PERSONAL_NETHOOD
+;   PERSONAL_PERSONAL
+;   PERSONAL_PRINTHOOD (supported only under Windows NT)
+;   PERSONAL_RECENT
+;   PERSONAL_SENDTO
+;   PERSONAL_TEMPLATES
+;
+;   PROGRAMFILESDIR
+;   COMMONFILESDIR
+;   MEDIAPATH
+;   CONFIGPATH (supported only under Windows95 and Windows98)
+;   DEVICEPATH
+
+; This provides information on where in the Windows Registry to locate the Uninstall log files
+;
+Main Root Key=HKEY_LOCAL_MACHINE
+Main Key=[WinRegKey Mozilla Seamonkey]
+Decrypt Main Key=TRUE
+
+Root Key=HKEY_LOCAL_MACHINE
+Key=[Mozilla Seamonkey CurrentVersion]\Uninstall
+Decrypt Key=TRUE
+
+
+[Dialog Uninstall]
+Show Dialog=FALSE
+Title=Mozilla Seamonkey $UserAgentShort$ Uninstaller
+Message0=This will uninstall Mozilla Seamonkey from you system.  Click Uninstall to begin.
+
+;[Check Instance0]
+;Class Name=NetscapeWindowClass
+;Window Name=
+;Message=Setup has detected that an instance of Seamonkey is currently running.  Please quit Seamonkey before continuing Setup.
+
+;[Check Instance1]
+;Process Name=psm.exe
+;Message=Setup has detected that an instance of Personal Security Manager is currently running.  Personal Security Manager will quit by itself when there are no other applications running that require it.  A reboot might be necessary.  Setup will then be able to continue.
+
+
+
+
+; The Timing key needs to be one of the following values:
+;   pre download     - process before any files have been downloaded.
+;   post download    - process after all files have been downloaded.
+;   pre core         - process before the core file has been uncompressed.
+;   post core        - process after the core file has been uncompressed.
+;   pre smartupdate  - process before the smartupdate engine has been launched.
+;   post smartupdate - process after the smartupdate engine has been launched.
+;   pre launchapp    - process before the launching of executables.
+;   post launchapp   - process after the launching of executables.
+;   depend reboot    - process depending on if a reboot is necessary or not.
+;                      if reboot is necessary, installer can set it up so
+;                      the app runs once upon windows reboot.
+
+;Uncompress FileX sections
+;[Uncompress File0]
+;Timing=post download
+;Source=[XPI PATH]\core.xpi
+;Destination=[SETUP PATH]
+;Message=Configuring Seamonkey, please wait...
+
+;[Uncompress File1]
+;Timing=post download
+;Source=[XPI PATH]\extratest.xpi
+;Destination=[SETUP PATH]
+;Message=Configuring Extra test files, please wait...
+
+;Move FileX sections
+;[Move File0]
+;Timing=post download
+;Source=[SETUP PATH]\bin\*
+;Destination=[SETUP PATH]\program
+
+;[Move File1]
+;Timing=post download
+;Source=[SETUP PATH]\ftmain\*
+;Destination=[SETUP PATH]\program
+
+;Copy FileX sections
+;[Copy File0]
+;Timing=post launchapp
+;Source=[JRE BIN PATH]\npjava*.dll
+;Destination=[SETUP PATH]\Plugins
+;Fail If Exists=FALSE
+
+;[Copy File1]
+;Timing=post launchapp
+;Source=[TEMP]\xtratest\bin\*.*
+;Destination=[SETUP PATH]
+;Fail If Exists=FALSE
+
+;[Copy File1]
+;Timing=post download
+;Source=[SETUP PATH]\bin\*.exe
+;Destination=[TEMP]
+;Fail If Exists=
+
+;Create DirectoryX sections
+;[Create Directory0]
+;Timing=post download
+;Destination=[SETUP PATH]\Plugins
+
+;[Create Directory1]
+;Timing=post download
+;Destination=[TEMP]\Test\temp
+
+;Delete FileX sections
+;[Delete File0]
+;Timing=post download
+;Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
+
+;Remove DirectoryX sections
+;[Remove Directory0]
+;Timing=post launchapp
+;Destination=[TEMP]\xtratest
+;Remove subdirs=TRUE
+
+;RunAppX sections
+;[RunApp0]
+;Timing=depend reboot
+;Wait=FALSE
+;Target=[SETUP PATH]\mozilla.exe
+;Parameters=-installer
+;WorkingDir=[SETUP PATH]
+
+;[Windows Registry0]
+;Root Key=HKEY_LOCAL_MACHINE
+;Key=Software\Mozilla\Mozilla Seamonkey\$UserAgent$\Main
+;Name=Program Folder Path
+;Name Value=[Default Folder]
+;Type=REG_SZ
+;Decrypt Key=FALSE
+;Decrypt Name=FALSE
+;Decrypt Name Value=TRUE
+;Overwrite Key=TRUE
+;Overwrite Name=TRUE
+;Timing=pre smartupdate
+
