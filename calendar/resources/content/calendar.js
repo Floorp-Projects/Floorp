@@ -1001,7 +1001,7 @@ function deleteToDoCommand( DoNotConfirm )
             tree.view.selection.getRangeAt(t,start,end);
             for (var v=start.value; v<=end.value; v++){
                 var toDoItem = tree.taskView.getCalendarTaskAtRow( v );
-                refreshRemoteCalendarAndRunFunction( toDoItem.id, calendarEvent.parent.server, "deleteTodo" );
+                refreshRemoteCalendarAndRunFunction( toDoItem.id, toDoItem.parent.server, "deleteTodo" );
             }
         }
     } else {
