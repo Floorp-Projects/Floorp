@@ -113,7 +113,9 @@ nsSocketTransportService::PostEvent(nsISocketEventHandler *handler,
     if (!mEventQ.mHead)
         mEventQ.mHead = event;
 
-    PR_SetPollableEvent(mThreadEvent);
+    if (mThreadEvent)
+        PR_SetPollableEvent(mThreadEvent);
+    // else wait for Poll timeout
     return NS_OK;
 }
 
@@ -223,6 +225,67 @@ nsSocketTransportService::RemoveFromIdleList(SocketContext *sock)
     LOG(("  active=%u idle=%u\n", mActiveCount, mIdleCount));
 }
 
+PRInt32
+nsSocketTransportService::Poll()
+{
+    PRPollDesc *pollList;
+    PRUint32 pollCount;
+    PRIntervalTime pollTimeout;
+
+    if (mPollList[0].fd) {
+        pollList = mPollList;
+        pollCount = PollCount();
+        pollTimeout = NS_SOCKET_POLL_TIMEOUT;
+    }
+    else {
+        // no pollable event, so busy wait...
+        pollCount = PollCount() - 1;
+        if (pollCount)
+            pollList = &mPollList[1];
+        else
+            pollList = nsnull;
+        pollTimeout = PR_MillisecondsToInterval(25);
+    }
+
+    return PR_Poll(pollList, pollCount, pollTimeout);
+}
+
+PRBool
+nsSocketTransportService::ServiceEventQ()
+{
+    PRBool keepGoing;
+
+    // grab the event queue
+    SocketEvent *head = nsnull, *event;
+    {
+        nsAutoLock lock(mEventQLock);
+
+        // wait should not block
+        if (mThreadEvent)
+            PR_WaitForPollableEvent(mThreadEvent);
+
+        head = mEventQ.mHead;
+        mEventQ.mHead = nsnull;
+        mEventQ.mTail = nsnull;
+
+        // check to see if we're supposed to shutdown
+        keepGoing = mInitialized;
+    }
+    // service the event queue
+    mServicingEventQ = PR_TRUE;
+    while (head) {
+        head->mHandler->OnSocketEvent(head->mType,
+                                      head->mUparam,
+                                      head->mVparam);
+        // delete head of queue
+        event = head->mNext;
+        delete head;
+        head = event;
+    }
+    mServicingEventQ = PR_FALSE;
+    return keepGoing;
+}
+
 //-----------------------------------------------------------------------------
 // host:port -> ipaddr cache
 
@@ -329,11 +392,18 @@ nsSocketTransportService::Init()
 
     if (!mThreadEvent) {
         mThreadEvent = PR_NewPollableEvent();
+        //
         // NOTE: per bug 190000, this failure could be caused by Zone-Alarm
-        // or similar software.  Though this could also be a low-memory
-        // error, we'll treat it like being offline in the hopes of giving
-        // the user a better error message.
-        NS_ENSURE_TRUE(mThreadEvent, NS_ERROR_OFFLINE);
+        // or similar software.
+        //
+        // NOTE: per bug 191739, this failure could also be caused by lack
+        // of a loopback device on Windows and OS/2 platforms (NSPR creates
+        // a loopback socket pair on these platforms to implement a pollable
+        // event object).  if we can't create a pollable event, then we'll
+        // have to "busy wait" to implement the socket event queue :-(
+        //
+        NS_WARN_IF_FALSE(mThreadEvent,
+                "running socket transport thread without a pollable event");
     }
 
     nsresult rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
@@ -360,7 +430,9 @@ nsSocketTransportService::Shutdown()
         // signal uninitialized to block further events
         mInitialized = PR_FALSE;
 
-        PR_SetPollableEvent(mThreadEvent);
+        if (mThreadEvent)
+            PR_SetPollableEvent(mThreadEvent);
+        // else wait for Poll timeout
     }
 
     // join with thread
@@ -425,10 +497,14 @@ nsSocketTransportService::Run()
     //
     // setup thread
     //
-    NS_ASSERTION(mThreadEvent, "no thread event");
-
-    mPollList[0].fd = mThreadEvent;
-    mPollList[0].in_flags = PR_POLL_READ;
+    if (mThreadEvent) {
+        mPollList[0].fd = mThreadEvent;
+        mPollList[0].in_flags = PR_POLL_READ;
+    }
+    else {
+        mPollList[0].fd = nsnull;
+        mPollList[0].in_flags = 0;
+    }
 
     PRInt32 i, count;
 
@@ -486,16 +562,12 @@ nsSocketTransportService::Run()
 
         LOG(("  calling PR_Poll [active=%u idle=%u]\n", mActiveCount, mIdleCount));
 
-        PRInt32 n = PR_Poll(mPollList, PollCount(), NS_SOCKET_POLL_TIMEOUT);
+        PRInt32 n = Poll();
         if (n < 0) {
             LOG(("  PR_Poll error [%d]\n", PR_GetError()));
             active = PR_FALSE;
         }
-        else if (n == 0) {
-            LOG(("  PR_Poll timeout expired\n"));
-            // loop around again
-        }
-        else {
+        else if (n > 0) {
             count = PollCount();
 
             //
@@ -519,38 +591,16 @@ nsSocketTransportService::Run()
             }
 
             //
-            // service the event queue
+            // service the event queue (mPollList[0].fd == mThreadEvent)
             //
-            if (mPollList[0].out_flags == PR_POLL_READ) {
-
-                // grab the event queue
-                SocketEvent *head = nsnull, *event;
-                {
-                    nsAutoLock lock(mEventQLock);
-
-                    // wait should not block
-                    PR_WaitForPollableEvent(mPollList[0].fd);
-
-                    head = mEventQ.mHead;
-                    mEventQ.mHead = nsnull;
-                    mEventQ.mTail = nsnull;
-
-                    // check to see if we're supposed to shutdown
-                    active = mInitialized;
-                }
-                // service the event queue
-                mServicingEventQ = PR_TRUE;
-                while (head) {
-                    head->mHandler->OnSocketEvent(head->mType,
-                                                  head->mUparam,
-                                                  head->mVparam);
-                    // delete head of queue
-                    event = head->mNext;
-                    delete head;
-                    head = event;
-                }
-                mServicingEventQ = PR_FALSE;
-            }
+            if (mPollList[0].out_flags == PR_POLL_READ)
+                active = ServiceEventQ();
+        }
+        else {
+            //
+            // service event queue whenever PR_Poll times out.
+            //
+            active = ServiceEventQ();
         }
     }
 
