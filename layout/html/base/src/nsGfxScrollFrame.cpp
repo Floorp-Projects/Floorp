@@ -419,6 +419,11 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     }
   }
 
+  // Add the "lazy" attribute if the content is non-XUL (and therefore
+  // we can be sure no mediator is involved). Style rules in xul.css
+  // make sure that "lazy" scrollbars are XBL-bound only when needed.
+  PRBool lazyScrollbar = !mContent->IsContentOfType(nsIContent::eXUL);
+
   // create horzontal scrollbar
   nsresult rv;
   nsCOMPtr<nsIElementFactory> elementFactory = 
@@ -444,6 +449,10 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
                    NS_LITERAL_STRING("true"), PR_FALSE);
 
+  if (lazyScrollbar)
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::lazy,
+                     NS_LITERAL_STRING("true"), PR_FALSE);
+
   aAnonymousChildren.AppendElement(content);
 
   // create vertical scrollbar
@@ -454,6 +463,10 @@ nsGfxScrollFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
   content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
                    NS_LITERAL_STRING("true"), PR_FALSE);
+
+  if (lazyScrollbar)
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::lazy,
+                     NS_LITERAL_STRING("true"), PR_FALSE);
 
   aAnonymousChildren.AppendElement(content);
 
