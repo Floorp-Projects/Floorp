@@ -38,6 +38,7 @@
 
 #include <windows.h>
 #include <io.h>
+#include <stdlib.h>
 
 #include "CondMgr.h"
 #include "HSAPI.h"
