@@ -1,0 +1,180 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla JSIRC Library.
+ *
+ * The Initial Developer of the Original Code is New Dimensions Consulting,
+ * Inc. Portions created by New Dimensions Consulting, Inc. are
+ * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *
+ *
+ * Contributor(s):
+ *  Robert Ginda, rginda@ndcico.com, original author
+ * 
+ * Styles for UI, See test3-output-default.css for output window styles
+ *
+ */
+
+@import url(chrome://global/skin/);
+
+window {
+
+    font-size: 12px;
+    background: url(chrome://chatzilla/skin/images/xtal.jpg);
+
+}
+
+menubar, menu, menuitem, menupopup {
+
+    background: silver;
+
+}
+
+#outer-box {
+
+    margin: 5px;
+
+}
+
+#main-splitter {
+
+    border: thin silver outset;
+    margin-left: 2px;
+    margin-right: 2px;
+    background: silver;
+
+}
+
+.status-table {
+
+    width: 100%;
+    font-weight: bold;
+
+}
+
+#status-bar {
+
+    border: thin silver double;
+    background: #dddddd;
+
+}
+
+toolbar {
+
+    background: #dddddd;
+    border: silver double;
+
+}
+
+.activity-button {
+
+    background: #dddddd;
+    padding-top: 1px;
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 0px;
+    margin: 1px;
+    border: groove 2px;
+
+}
+
+.activity-button:hover {
+
+    background: #eeeeee;
+    padding-top: 0px;
+    padding-left: 1px;
+    padding-right: 3px;
+    padding-bottom: 1px;
+    border: 2px grey outset;
+
+}
+
+.activity-button:active {
+
+    background: #cccccc;
+    padding-top: 1px;
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 0px;
+    border: 2px grey inset;
+
+}
+
+.status-label {
+    
+    text-align: right;
+
+}
+
+.status-data {
+
+    text-align: left;
+    color: darkslategrey;
+
+}
+
+/* Activity indicator buttons */
+.activity-button {
+    
+    font-weight: bold;
+
+}
+
+/* input textbox */
+/*
+.input-window {
+
+    overflow: clip;
+    width: 100%;
+
+}
+*/
+
+.output-container {
+
+    border: thin silver inset;
+    width: 100%;
+
+}
+
+/* Listbox on left of UI (aka QuickList) */
+
+.quick-list {
+
+/*
+	border: thin silver inset;
+	background: #dddddd;
+*/
+	overflow: auto;
+
+
+}
+
+
+/* common container for individual quicklist items */
+.list-option {
+
+    margin: 2px;
+
+}
+
+/* text in the quicklist */
+.option-text {
+    font-weight: bold;
+    align: right;
+}
+
+/* graphic in the quicklist */
+.option-graphic {
+}

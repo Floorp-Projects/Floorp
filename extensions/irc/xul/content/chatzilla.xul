@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+
+<!--
+  The contents of this file are subject to the Mozilla Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/MPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is JSIRC Test Client #3
+ 
+  The Initial Developer of the Original Code is New Dimensions Consulting,
+  Inc. Portions created by New Dimensions Consulting, Inc. are
+  Copyright (C) 1999 New Dimenstions Consulting, Inc. All
+  Rights Reserved.
+ 
+  Contributor(s): 
+ 
+ 
+  Contributor(s):
+   Robert Ginda, rginda@ndcico.com, original author
+-->
+
+<!DOCTYPE window>
+
+<?xml-stylesheet href="chrome://chatzilla/skin" type="text/css"?>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        align="vertical" onload="onLoad();" onunload="onUnload();">
+
+<html:script src="chrome://chatzilla/content/lib/js/utils.js"/>
+<html:script src="chrome://chatzilla/content/lib/js/connection-xpcom.js"/>
+<html:script src="chrome://chatzilla/content/lib/js/events.js"/>
+<html:script src="chrome://chatzilla/content/lib/js/command-manager.js"/>
+<html:script src="chrome://chatzilla/content/lib/js/irc.js"/>
+<html:script src="chrome://chatzilla/content/lib/js/irc-debug.js"/>
+<html:script src="chrome://chatzilla/content/lib/xul/listbox.js"/>
+<html:script src="chrome://chatzilla/content/lib/xul/munger.js"/>
+
+<html:script src="chrome://chatzilla/content/commands.js"/>
+<html:script src="chrome://chatzilla/content/readprefs.js"/>
+<html:script src="chrome://chatzilla/content/static.js"/>
+<html:script src="chrome://chatzilla/content/handlers.js"/>
+
+<toolbox>
+  <menubar>
+    <menu value="Options">
+      <menupopup>
+        <menuitem id="menu-dmessages" value="Debug Messages"
+                  oncommand="onToggleTraceHook()"/>
+        <menuitem id="menu-munger" value="Munger" oncommand="onToggleMunger()"
+                  checked="true"/>
+        <menuitem id="menu-viewicons" value="Icons in View Buttons" 
+                  checked="true" oncommand="onNotImplemented();"/>
+        <menuseparator/>
+        <menu value="Style">
+          <menupopup>
+           <menuitem value="Default"
+                     oncommand="onDoStyleChange('default')"/>
+           <menuitem value="Marble"
+                     oncommand="onDoStyleChange('marble')"/>
+           <menuitem value="Loud"
+                     oncommand="onDoStyleChange('loud')"/>
+           <menuseparator/>
+           <menuitem value="Other..."
+                     oncommand="onDoStyleChange('other')"/>
+          </menupopup>
+        </menu>
+      </menupopup>
+    </menu>
+    <menu value="Views">
+      <menupopup>
+        <menu value="Current View">
+          <menupopup>
+            <menuitem value="Hide" oncommand="onHideCurrentView();"/>
+            <menuitem value="Clear" oncommand="onClearCurrentView();"/>
+            <menuitem value="Delete" oncommand="onDeleteCurrentView();"/>
+          </menupopup>
+        </menu>
+        <menuitem value="Logging..." enabled="false"
+                  oncommand="onNotImplemented();"/>
+      </menupopup>
+    </menu>
+  </menubar>
+</toolbox>
+
+<toolbox id="views-tbox">
+  <toolbar id="views-tbar">
+  </toolbar>
+</toolbox>
+
+<box id="outer-box" align="vertical" flex="1">
+  <box id="inner-box" align="horizontal" flex="1">
+    <html:div id="quickList" class="quick-list" flex="0" width-hidden="150px">
+    </html:div>
+    <splitter id="main-splitter" align="vertical" collapse="before"/>
+    <box align="vertical" flex="1">
+      <html:iframe id="it-doesnt-matter-anyway" class="output-container"
+       src="about:blank" flex="1"/>
+    <!--
+      <html:textarea id="input" class="input-window"/>
+    -->
+      <html:input type="text" id="input" class="input-window"/>
+    </box>
+  </box>
+</box>
+
+<toolbox>
+  <toolbar id="status-bar">
+    <html:table class="status-table">
+      <html:tr>
+        <html:td class="status-label">Network</html:td>
+        <html:td class="status-data">
+         <html:a id="net-name">(none)</html:a> 
+        </html:td>
+        <html:td class="status-label">Server</html:td>
+        <html:td class="status-data">
+          <html:a id="server-name">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Nickname</html:td>
+        <html:td class="status-data">
+          <html:a id="server-nick">(unknown)</html:a>
+        </html:td>
+        <html:td class="status-label">Lag</html:td>
+        <html:td class="status-data">
+          <html:a id="server-lag">-1</html:a>
+        </html:td>
+        <html:td class="status-label">Last Ping</html:td>
+        <html:td class="status-data">
+          <html:a id="last-ping">(never)</html:a>
+        </html:td>
+      </html:tr>
+      <html:tr>
+        <html:td class="status-label">Channel</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-name">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Mode</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-mode">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Users</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-users">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Limit</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-limit">(none)</html:a>
+        </html:td>
+        <html:td class="status-label">Key</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-key">(none)</html:a>
+        </html:td>
+      </html:tr>
+      <html:tr>
+        <html:td class="status-label">Topic By</html:td>
+        <html:td class="status-data">
+          <html:a id="channel-topicby">(nobody)</html:a>
+        </html:td>
+        <html:td class="status-label">Topic</html:td>
+        <html:td class="status-data" colspan="7">
+          <html:a id="channel-topic">(none)</html:a>
+        </html:td>
+      </html:tr>
+    </html:table>
+  </toolbar>
+</toolbox>
+</window>
