@@ -79,15 +79,15 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
  * Flags for the getNativeData function.
  * See getNativeData()
  */
-#define NS_NATIVE_WINDOW    0
-#define NS_NATIVE_GRAPHIC   1
-#define NS_NATIVE_COLORMAP  2
-#define NS_NATIVE_WIDGET    3
-#define NS_NATIVE_DISPLAY   4
-#define NS_NATIVE_REGION		5
-#define NS_NATIVE_OFFSETX		6
-#define NS_NATIVE_OFFSETY		7
-#define NS_NATIVE_PLUGIN_PORT	8
+#define NS_NATIVE_WINDOW      0
+#define NS_NATIVE_GRAPHIC     1
+#define NS_NATIVE_COLORMAP    2
+#define NS_NATIVE_WIDGET      3
+#define NS_NATIVE_DISPLAY     4
+#define NS_NATIVE_REGION      5
+#define NS_NATIVE_OFFSETX     6
+#define NS_NATIVE_OFFSETY     7
+#define NS_NATIVE_PLUGIN_PORT 8
 #define NS_NATIVE_SCREEN      9
 
 // {18032AD5-B265-11d1-AA2A-000000000000}
@@ -709,7 +709,7 @@ class nsIWidget : public nsISupports {
     /**
      * Invalidate the widget and repaint it.
      *
-     * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
+     * @param aIsSynchronous PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
      * @see #Update()
      */
 
@@ -929,7 +929,7 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight) = 0;
 
     /**
-     * Dispatches and event to the widget
+     * Dispatches an event to the widget
      *
      */
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) = 0;
@@ -948,7 +948,7 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD EnableDragDrop(PRBool aEnable) = 0;
    
-    virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) = 0;
+    virtual void  ConvertToDeviceCoordinates(nscoord &aX,nscoord &aY) = 0;
 
     /**
      * Enables/Disables system mouse capture.
@@ -973,7 +973,7 @@ class nsIWidget : public nsISupports {
      * Enables/Disables system capture of any and all events that would cause a
      * dropdown to be rolled up, This method ignores the aConsumeRollupEvent 
      * parameter when aDoCapture is FALSE
-     * @param aCapture PR_TRUE enables capture, PR_FALSE disables capture 
+     * @param aDoCapture PR_TRUE enables capture, PR_FALSE disables capture 
      * @param aConsumeRollupEvent PR_TRUE consumes the rollup event, PR_FALSE dispatches rollup event
      *
      */
