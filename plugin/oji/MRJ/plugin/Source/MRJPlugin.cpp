@@ -399,6 +399,11 @@ NS_METHOD MRJPlugin::GetJavaWrapper(JNIEnv* env, jint jsobj, jobject *jobj)
 	return NS_OK;
 }
 
+NS_METHOD MRJPlugin::UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_METHOD MRJPlugin::GetJavaVM(JavaVM* *result)
 {
 	*result = NULL;
