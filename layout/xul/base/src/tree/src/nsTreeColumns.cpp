@@ -65,7 +65,7 @@ nsTreeColumn::~nsTreeColumn()
     mNext->SetPrevious(nsnull);
     NS_RELEASE(mNext);
   }
-};
+}
 
 // QueryInterface implementation for nsTreeColumn
 NS_INTERFACE_MAP_BEGIN(nsTreeColumn)
