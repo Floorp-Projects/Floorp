@@ -20,7 +20,7 @@
 #
 # Contributor(s): Dawn Endico    <endico@mozilla.org>
 #                 Terry Weissman <terry@mozilla.org>
-#                 Dave Miller    <justdave@netscape.com>
+#                 Dave Miller    <justdave@bugzilla.org>
 
 use strict;
 
