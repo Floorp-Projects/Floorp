@@ -129,6 +129,7 @@ public:
   NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
+  NS_IMETHOD DoneAddingContent();
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);
@@ -161,9 +162,11 @@ public:
   static PRBool                   GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRInt32 aIndex, nsString& aValue);
 
 protected:
+
   NS_IMETHOD GetSelectedIndexFromDOM(PRInt32* aIndex); // from DOM
   NS_IMETHOD IsTargetOptionDisabled(PRBool &aIsDisabled);
   nsresult   CountAllChild(nsIDOMNode * aNode, PRInt32& aCount);
+  nsresult   ScrollToFrame(nsIContent * aOptElement);
 
   nsListControlFrame();
   virtual ~nsListControlFrame();
@@ -207,6 +210,7 @@ protected:
   void     ClearSelection();
   void     ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aDoInvert, PRBool aSetValue);
   void     ResetSelectedItem();
+  PRBool   CheckIfAllFramesHere();
 
   PRBool   HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2);
   void     HandleListSelection(nsIDOMEvent * aDOMEvent);
@@ -237,6 +241,10 @@ protected:
   PRBool       mIgnoreMouseUp;             
   PRBool*      mSelectionCache;
   PRInt32      mSelectionCacheLength;
+
+  PRBool       mIsAllContentHere;
+  PRBool       mIsAllFramesHere;
+  PRBool       mHasBeenInitialized;
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
