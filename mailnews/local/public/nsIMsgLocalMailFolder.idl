@@ -56,6 +56,5 @@ interface nsIMsgLocalMailFolder : nsISupports {
   void parseFolder(in nsIMsgWindow aMsgWindow, in nsIUrlListener listener);
   void copyFolderLocal(in nsIMsgFolder srcFolder, in boolean isMove, in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
   void doNextSubFolder(in nsIMsgFolder srcFolder, in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
-  readonly attribute boolean parsingInbox;
   attribute boolean checkForNewMessagesAfterParsing;
 };

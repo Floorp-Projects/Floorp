@@ -142,8 +142,7 @@ public:
 	NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
 
 	NS_IMETHOD GetDeletable (PRBool *deletable); 
-	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
-
+  NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
 	NS_IMETHOD GetSizeOnDisk(PRUint32* size);
 
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
@@ -215,7 +214,6 @@ protected:
                                     //time
   const char *mType;
   PRBool      mCheckForNewMessagesAfterParsing;
-  PRBool      mParsingInbox;
   nsCOMPtr<nsIMsgStringService> mMsgStringService;
 
   nsresult setSubfolderFlag(PRUnichar *aFolderName, PRUint32 flags);

@@ -177,59 +177,57 @@ nsPop3IncomingServer::GetLocalStoreType(char **type)
 NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 {
 	nsresult rv;
-
 	nsCOMPtr<nsIPop3Service> pop3Service(do_GetService(kCPop3ServiceCID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-	nsCOMPtr<nsIMsgFolder> inbox;
-	nsCOMPtr<nsIFolder> rootFolder;
-	rv = GetRootFolder(getter_AddRefs(rootFolder));
-	if(NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIMsgFolder> inbox;
+  nsCOMPtr<nsIFolder> rootFolder;
+  rv = GetRootFolder(getter_AddRefs(rootFolder));
+  if(NS_SUCCEEDED(rv))
 	{
-		nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
-		if(rootMsgFolder)
+    nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
+    if(rootMsgFolder)
 		{
-			PRUint32 numFolders;
-			rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1,
-                                                   &numFolders,
-                                                   getter_AddRefs(inbox));
-            if (NS_FAILED(rv) || numFolders != 1) return rv;
-		}
-	}
+      PRUint32 numFolders;
+      rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1,
+                                             &numFolders,
+                                             getter_AddRefs(inbox));
+      if (NS_FAILED(rv) || numFolders != 1) return rv;
+    }
+  }
 
 	//Biff just needs to give status in one of the windows. so do it in topmost window.
-	nsCOMPtr<nsIMsgMailSession> mailSession = 
-	         do_GetService(kCMsgMailSessionCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-	
-	nsCOMPtr<nsIMsgWindow> msgWindow;
+	nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(kCMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIMsgWindow> msgWindow;
 
 	rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
-	if(NS_SUCCEEDED(rv))
+  if(NS_SUCCEEDED(rv))
+  {
+    PRBool downloadOnBiff = PR_FALSE;
+    rv = GetDownloadOnBiff(&downloadOnBiff);
+    if (downloadOnBiff)
     {
-        PRBool downloadOnBiff = PR_FALSE;
-        rv = GetDownloadOnBiff(&downloadOnBiff);
-        if (downloadOnBiff)
-        {
-            nsCOMPtr <nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
-            PRBool parsingInbox;
-            if (localInbox && NS_SUCCEEDED(rv))
-            {
-              rv = localInbox->GetParsingInbox(&parsingInbox);
-              NS_ENSURE_SUCCESS(rv,rv);
-              if (!parsingInbox)
-                rv = pop3Service->GetNewMail(msgWindow, nsnull, inbox, this, nsnull);
-              else
-                rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
-            }
-        }
+      nsCOMPtr <nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
+      if (localInbox && NS_SUCCEEDED(rv))
+      {
+        PRBool valid =PR_FALSE;
+        nsCOMPtr <nsIMsgDatabase> db;
+        rv = inbox->GetMsgDatabase(msgWindow, getter_AddRefs(db));
+        if (NS_SUCCEEDED(rv) && db)
+          rv = db->GetSummaryValid(&valid);
+        if (NS_SUCCEEDED(rv) && valid)
+          rv = pop3Service->GetNewMail(msgWindow, nsnull, inbox, this, nsnull);
         else
-            rv = pop3Service->CheckForNewMail(msgWindow, nsnull, inbox, this,
-                                              nsnull);
+          rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
+      }
     }
-
-	return NS_OK;
+    else
+      rv = pop3Service->CheckForNewMail(msgWindow, nsnull, inbox, this,
+                                        nsnull);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

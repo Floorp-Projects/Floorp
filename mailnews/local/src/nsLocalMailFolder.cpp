@@ -98,7 +98,6 @@
 #include "nsEscape.h"
 #include "nsLocalStringBundle.h"
 
-
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -149,7 +148,7 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
   : mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull),
-    mCheckForNewMessagesAfterParsing(PR_FALSE), mParsingInbox(PR_FALSE)
+    mCheckForNewMessagesAfterParsing(PR_FALSE)
 
 {
 //  NS_INIT_REFCNT(); done by superclass
@@ -572,8 +571,6 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
       if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING ||
         folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
       {
-        if(mFlags & MSG_FOLDER_FLAG_INBOX)
-          mParsingInbox = PR_TRUE;
         if(NS_FAILED(rv = ParseFolder(aMsgWindow, this)))
           return rv;
         else
@@ -611,7 +608,6 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
       NS_ENSURE_SUCCESS(rv,rv);
     }
   }
-  
   return rv;
 }
 
@@ -1455,7 +1451,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDeletable(PRBool *deletable)
 
   return NS_OK;
 }
- 
+
 NS_IMETHODIMP nsMsgLocalMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 {
 #ifdef HAVE_PORT
@@ -1469,6 +1465,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRequiresCleanup(PRBool *requiresCleanup)
 #endif
   return NS_OK;
 }
+
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetSizeOnDisk(PRUint32* size)
 {
@@ -2191,13 +2188,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrl
     PRUint32 numFolders;
     rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
   }
-  PRBool parsingInbox;
   nsCOMPtr<nsIMsgLocalMailFolder> localInbox = do_QueryInterface(inbox, &rv);
   if (NS_SUCCEEDED(rv) && localInbox)
   {
-    rv = localInbox->GetParsingInbox(&parsingInbox);
-    NS_ENSURE_SUCCESS(rv,rv);
-    if (!parsingInbox)
+    PRBool valid = PR_FALSE;
+    nsCOMPtr <nsIMsgDatabase> db;
+    rv = inbox->GetMsgDatabase(aWindow, getter_AddRefs(db));
+    if (NS_SUCCEEDED(rv) && db)
+      rv = db->GetSummaryValid(&valid);
+    if (valid)
       rv = localMailServer->GetNewMail(aWindow, aListener, inbox, nsnull); 
     else
       rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
@@ -3130,10 +3129,11 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
         }
       }
     }
-    if (mParsingInbox)
+    if (mDatabase && (mFlags & MSG_FOLDER_FLAG_INBOX))
     {
-      mParsingInbox = PR_FALSE;
-      if (mCheckForNewMessagesAfterParsing)
+      PRBool valid;
+      mDatabase->GetSummaryValid(&valid);
+      if (valid && mCheckForNewMessagesAfterParsing)
       {
         if (msgWindow)
            rv = GetNewMessages(msgWindow, nsnull);
@@ -3141,7 +3141,6 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
       }
     }
   }
-  mParsingInbox = PR_FALSE;  //make sure we turn off this flag even if parsing fails or else it will be a deadlock
   return nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
 }
 
@@ -3271,14 +3270,6 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::SetCheckForNewMessagesAfterParsing(PRBool aCheckForNewMessagesAfterParsing)
 {
   mCheckForNewMessagesAfterParsing = aCheckForNewMessagesAfterParsing;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgLocalMailFolder::GetParsingInbox(PRBool *aParsingInbox)
-{
-  NS_ENSURE_ARG(aParsingInbox);
-  *aParsingInbox = mParsingInbox;
   return NS_OK;
 }
 
