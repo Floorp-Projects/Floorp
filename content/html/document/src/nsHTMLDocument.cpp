@@ -162,7 +162,7 @@ IsNamedItem(nsIContent* aContent, nsIAtom *aTag, nsAString& aName);
 
 // MatchElementId is defined in nsXMLDocument.cpp
 nsIContent *
-MatchElementId(nsIContent *aContent, const nsAString& aId);
+MatchElementId(nsIContent *aContent, const nsACString& aUTF8Id, const nsAString& aId);
 
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
@@ -2839,7 +2839,7 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
                      "getElementById(\"\") called, fix caller?");
 
     if (mRootContent && !aElementId.IsEmpty()) {
-      e = MatchElementId(mRootContent, aElementId);
+      e = MatchElementId(mRootContent, NS_ConvertUCS2toUTF8(aElementId), aElementId);
     }
 
     if (!e) {
