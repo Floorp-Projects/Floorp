@@ -147,6 +147,7 @@ extern void _MD_unix_init_running_cpu(struct _PRCPU *cpu);
 */
 #if defined(DEBUG)
 #if !defined(SOLARIS)	
+#include <string.h>  /* for memset() */
 #define _MD_INIT_STACK(ts,REDZONE)					\
     PR_BEGIN_MACRO                 					\
 	(void) mprotect((void*)ts->seg->vaddr, REDZONE, PROT_NONE);	\
@@ -309,6 +310,7 @@ extern char *   _MD_read_dir(struct _MDDir *, PRIntn);
 extern PRInt32  _MD_open(const char *name, PRIntn osflags, PRIntn mode);
 extern PRInt32	_MD_delete(const char *name);
 extern PRInt32	_MD_getfileinfo(const char *fn, PRFileInfo *info);
+extern PRInt32  _MD_getfileinfo64(const char *fn, PRFileInfo64 *info);
 extern PRInt32  _MD_getopenfileinfo(const PRFileDesc *fd, PRFileInfo *info);
 extern PRInt32  _MD_getopenfileinfo64(const PRFileDesc *fd, PRFileInfo64 *info);
 extern PRInt32	_MD_rename(const char *from, const char *to);
