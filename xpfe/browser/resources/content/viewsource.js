@@ -23,7 +23,6 @@
 
 const pageLoaderIface = Components.interfaces.nsIWebPageDescriptor;
 var gBrowser = null;
-var appCore = null;
 var gPrefs = null;
 
 try {
@@ -50,18 +49,6 @@ function viewSource(url)
 {
   if (!url)
     return false; // throw Components.results.NS_ERROR_FAILURE;
-
-  try {
-    appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
-                        .createInstance(Components.interfaces.nsIBrowserInstance);
-
-    // Initialize browser instance..
-    appCore.setWebShellWindow(window);
-  } catch(ex) {
-    // Give up.
-    window.close();
-    return false;
-  }
 
   var loadFromURL = true;
   //
