@@ -43,11 +43,16 @@
 #include "nsIEventQueueService.h"
 #include "nsICmdLineService.h"
 
+#ifdef MOZ_ENABLE_XREMOTE
+#include <nsIXRemoteService.h>
+#endif
+
 #include <stdlib.h>
 
 #include "nsIWidget.h"
 #include "nsIPref.h"
 #include "nsPhWidgetLog.h"
+#include "nsCRT.h"
 
 #include <Pt.h>
 #include <errno.h>
@@ -57,6 +62,9 @@ PRBool nsAppShell::gExitMainLoop = PR_FALSE;
 
 static PLHashTable *sQueueHashTable = nsnull;
 static PLHashTable *sCountHashTable = nsnull;
+
+// Set our static member
+PRBool nsAppShell::mPtInited = PR_FALSE;
 
 //-------------------------------------------------------------------------
 //
@@ -125,6 +133,55 @@ static int event_processor_callback(int fd, void *data, unsigned mode)
 }
 
 
+
+//-------------------------------------------------------------------------
+//
+// A client has connected and probably will want to xremote control us
+//
+//-------------------------------------------------------------------------
+
+#ifdef MOZ_ENABLE_XREMOTE
+
+/* the connector name that a client can use to remote control this instance of mozilla */
+#define BrowserRemoteServerName			"MozillaBrowserRemoteServer"
+#define MailRemoteServerName				"MozillaMailRemoteServer"
+
+#define MOZ_REMOTE_MSG_TYPE					100
+
+static void const * RemoteMsgHandler( PtConnectionServer_t *connection, void *user_data,
+    		unsigned long type, void const *msg, unsigned len, unsigned *reply_len )
+{
+	if( type != MOZ_REMOTE_MSG_TYPE ) return NULL;
+
+	/* we are given strings and we reply with strings */
+	char *command = ( char * ) msg, *response = NULL;
+
+	// parse the command
+	nsCOMPtr<nsIXRemoteService> remoteService;
+	remoteService = do_GetService(NS_IXREMOTESERVICE_CONTRACTID);
+
+	if( remoteService ) {
+		command[len] = 0;
+		/* it seems we can pass any non-null value as the first argument - if this changes, pass a valid nsWidget* and move this code to nsWidget.cpp */
+  	remoteService->ParseCommand( (nsIWidget*)0x1, command, &response );
+		}
+
+	PtConnectionReply( connection, response ? strlen( response ) : 0, response );
+
+	if( response ) nsCRT::free( response );
+
+	return ( void * ) 1; /* return any non NULL value to indicate we handled the message */
+}
+
+static void client_connect( PtConnector_t *cntr, PtConnectionServer_t *csrvr, void *data )
+{
+	PtConnectionMsgHandler_t handlers[] = { { 0, RemoteMsgHandler } };
+	PtConnectionAddMsgHandlers( csrvr, handlers, sizeof(handlers)/sizeof(handlers[0]) );
+}
+
+#endif
+
+
 //-------------------------------------------------------------------------
 //
 // Create the application shell
@@ -153,6 +210,38 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
     if(NS_FAILED(rv))
       argv = bav;
   }
+
+	/*
+	This used to be done in the init function of nsToolkit. It was moved here because the phoenix
+	browser may ( when -ProfileManager is used ) create/ListenToEventQueue of an nsAppShell before
+	the toolkit is initialized and ListenToEventQueue relies on the Pt being already initialized
+	*/
+	if( !mPtInited )
+	{
+		PtInit( NULL );
+		PtChannelCreate(); // Force use of pulses
+		mPtInited = PR_TRUE;
+
+#ifdef MOZ_ENABLE_XREMOTE
+
+		char *RemoteServerName = BrowserRemoteServerName;
+		char *RemoteServerNameExtra = nsnull;
+
+		if( argc > 0 && argv && argv[0] ) {
+			if( PL_strstr( argv[0], "Firebird" ) ) RemoteServerName = BrowserRemoteServerName;
+			else if( PL_strstr( argv[0], "thunderbird" ) ) RemoteServerName = MailRemoteServerName;
+			else {
+				/* full mozilla creates 2 connectors one for the browser side and another one for the mail side */
+				RemoteServerName = BrowserRemoteServerName;
+				RemoteServerNameExtra = MailRemoteServerName;
+				}
+			}
+
+		/* create a connector for the xremote control */
+		PtConnectorCreate( RemoteServerName, client_connect, NULL );
+		if( RemoteServerNameExtra ) PtConnectorCreate( RemoteServerNameExtra, client_connect, NULL );
+#endif
+	}
 
   return NS_OK;
 }
@@ -278,6 +367,7 @@ IntHashKey(PRInt32 key)
 NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
                                              PRBool aListen)
 {
+
   if (!sQueueHashTable) {
     sQueueHashTable = PL_NewHashTable(3, (PLHashFunction)IntHashKey,
                                       PL_CompareValues, PL_CompareValues, 0, 0);

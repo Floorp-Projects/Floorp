@@ -231,7 +231,7 @@ NS_METHOD nsWindow::PreCreateWidget( nsWidgetInitData *aInitData ) {
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
-  PtArg_t   arg[20];
+  PtArg_t   arg[25];
   int       arg_count = 0;
   PhPoint_t pos;
   PhDim_t   dim;
@@ -275,7 +275,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
   else
   {
     // No border or decorations is the default
-    render_flags = Ph_WM_RENDER_INLINE | Ph_WM_RENDER_RESIZE;
+    render_flags = Ph_WM_RENDER_RESIZE;
 
     if( mWindowType != eWindowType_popup ) {
 
@@ -367,19 +367,22 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
       mClientWidget = PtCreateWidget( PtRawDrawContainer, mWidget, arg_count, arg );
      }
 	else {
-		PtSetParentWidget( NULL );
-
 		/* Dialog and TopLevel Windows */
 		PtSetArg( &arg[arg_count++], Pt_ARG_FLAGS, Pt_DELAY_REALIZE, Pt_DELAY_REALIZE);
 		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_RENDER_FLAGS, render_flags, -1 );
+		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_MANAGED_FLAGS, 0, Ph_WM_CLOSE );
+		PtSetArg( &arg[arg_count++], Pt_ARG_WINDOW_NOTIFY_FLAGS, Ph_WM_CLOSE|Ph_WM_MOVE, ~0 );
 		PtSetArg( &arg[arg_count++], Pt_ARG_FILL_COLOR, Pg_TRANSPARENT, 0 );
 
 		PtRawCallback_t cb_raw = { Ph_EV_INFO, EvInfo, NULL };
 		PtCallback_t cb_resize = { ResizeHandler, NULL };
+		PtCallback_t cb_window = { WindowWMHandler, this };
+
 		PtSetArg( &arg[arg_count++], Pt_CB_RESIZE, &cb_resize, NULL );
 		PtSetArg( &arg[arg_count++], Pt_CB_RAW, &cb_raw, NULL );
-		mWidget = PtCreateWidget( PtWindow, NULL, arg_count, arg );
-	}
+		PtSetArg( &arg[arg_count++], Pt_CB_WINDOW, &cb_window, 0 );
+		mWidget = PtCreateWidget( PtWindow, parentWidget, arg_count, arg );
+		}
   }
 
   if( mWidget ) {
@@ -422,11 +425,6 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
 					}
     else if( !parentWidget ) {
        if( mClientWidget ) PtAddCallback(mClientWidget, Pt_CB_RESIZE, ResizeHandler, nsnull );
-       else {
-				PtAddCallback(mWidget, Pt_CB_RESIZE, ResizeHandler, nsnull ); 
-				PtAddCallback(mWidget, Pt_CB_WINDOW, WindowWMHandler, this ); 
-				PtSetResource( mWidget, Pt_ARG_WINDOW_NOTIFY_FLAGS, Ph_WM_CLOSE|Ph_WM_MOVE, ~0 );
-       	}
     	}
 
     // call the event callback to notify about creation
@@ -812,7 +810,7 @@ int nsWindow::EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 			nsCOMPtr<nsIPresShell> presShell;
 			docShell->GetPresShell( getter_AddRefs(presShell) );
 
-            nsIViewManager* viewManager = presShell->GetViewManager();
+			nsIViewManager* viewManager = presShell->GetViewManager();
 			NS_ENSURE_TRUE(viewManager, NS_ERROR_FAILURE);
 
 			windowEnumerator->HasMoreElements(&more);
@@ -892,7 +890,6 @@ NS_METHOD nsWindow::Move( PRInt32 aX, PRInt32 aY ) {
 	}
 
 int nsWindow::MenuRegionCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo ) {
-/* ATENTIE */ printf( "\n\n\n.......MenuRegionCallback\n\n" );
 	if( gRollupWidget && gRollupListener ) {
 		/* rollup the menu */
 		gRollupListener->Rollup();

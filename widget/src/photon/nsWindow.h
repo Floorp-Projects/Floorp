@@ -47,7 +47,6 @@
 #include "nsString.h"
 
 #include <Pt.h>
-#include <Ap.h>
 
 class nsFont;
 class nsIAppShell;
@@ -100,7 +99,6 @@ public:
 
   inline NS_IMETHOD    GetAttention(void)
 		{
-/* ATENTIE */ printf( "\n\n\n!!!!!!!!!!!!! GetAttention !!!!!!!!!!!!!!!!!!!!!!\n\n\n\n" );
 		if( mWidget ) PtWindowToFront( mWidget );
 		return NS_OK;
 		}

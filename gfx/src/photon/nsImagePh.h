@@ -107,6 +107,7 @@ public:
 		if( y > mDecodedY2 ) mDecodedY2 = y;
 		if( x > mDecodedX2 ) mDecodedX2 = x;
 		mDirtyFlags = aFlags;
+		mPhImage.size.h = mDecodedY2;
 		}
 
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);

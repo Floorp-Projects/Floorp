@@ -127,6 +127,13 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 		char rev = reversed == PR_TRUE ? 1 : 0;
 		PpSetPC( mPC, Pp_PC_REVERSED, &rev, 0 );
 
+		double margin_top, margin_left, margin_right, margin_bottom;
+		PhRect_t rmargin = { { 0, 0 }, { 0, 0 } };
+		aPS->GetMarginTop( &margin_top );
+		aPS->GetMarginLeft( &margin_left );
+		aPS->GetMarginRight( &margin_right );
+		aPS->GetMarginBottom( &margin_bottom );
+
 
 		PRInt16 unit;
 		double width, height;
@@ -140,13 +147,24 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 		if( unit == nsIPrintSettings::kPaperSizeInches ) {
 		  dim.w  = width * 1000;
 		  dim.h = height * 1000;
+
+			rmargin.ul.x = margin_left * 1000;
+			rmargin.ul.y = margin_top * 1000;
+			rmargin.lr.x = margin_right * 1000;
+			rmargin.lr.y = margin_bottom * 1000;
 			}
 		else if( unit == nsIPrintSettings::kPaperSizeMillimeters ) {
 			dim.w = short(NS_TWIPS_TO_INCHES(NS_MILLIMETERS_TO_TWIPS(float(width*1000))));
 			dim.h = short(NS_TWIPS_TO_INCHES(NS_MILLIMETERS_TO_TWIPS(float(height*1000))));
+
+			rmargin.ul.x = short(NS_TWIPS_TO_INCHES(NS_MILLIMETERS_TO_TWIPS(float(margin_left*1000))));
+			rmargin.ul.y = short(NS_TWIPS_TO_INCHES(NS_MILLIMETERS_TO_TWIPS(float(margin_top*1000))));
+			rmargin.lr.x = short(NS_TWIPS_TO_INCHES(NS_MILLIMETERS_TO_TWIPS(float(margin_right*1000))));
+			rmargin.lr.y = short(NS_TWIPS_TO_INCHES(NS_MILLIMETERS_TO_TWIPS(float(margin_bottom*1000))));
 			}
 
 		PpSetPC( mPC, Pp_PC_PAPER_SIZE, &dim, 0 );
+		PpSetPC( mPC, Pp_PC_NONPRINT_MARGINS, &rmargin, 0 );
   }
 	else { /* silent is set - used when the call is comming from the embedded version */
 		PRInt32 p;

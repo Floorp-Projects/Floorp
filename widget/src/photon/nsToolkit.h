@@ -51,12 +51,6 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD   Init( PRThread *aThread );
-
-  static PhDrawContext_t *GetDefaultPhotonDrawContext();
-  
-private:
-  static PRBool                     mPtInited;                   
-  static PhDrawContext_t  *mDefaultPhotonDrawContext;
 };
 
 

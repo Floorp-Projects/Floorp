@@ -222,6 +222,9 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PRUint32 aWidth, PRUint32 aHeight, PRU
 	mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, mWidth, mHeight, 0);
 	if( !mDrawContext ) return NS_ERROR_FAILURE;
 
+	PhDCSetCurrent( mDrawContext );
+	PgSetDrawBufferSize( 0xffff );
+
 	nsresult rv;
 	nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
 	if (NS_SUCCEEDED(rv)) {
@@ -245,6 +248,9 @@ int nsDrawingSurfacePh::prefChanged(const char *aPref, void *aClosure)
 		PhDCRelease( surface->mDrawContext ); 
 		surface->mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, surface->mWidth, surface->mHeight, 0);
 		if( !surface->mDrawContext ) return NS_ERROR_FAILURE;
+
+		PhDCSetCurrent( surface->mDrawContext );
+		PgSetDrawBufferSize( 0xffff );
 
 		PgDestroyGC(surface->mDrawContext->gc);
 		surface->mDrawContext->gc = surface->mGC;

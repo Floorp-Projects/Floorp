@@ -108,7 +108,7 @@ public:
   NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
 
   NS_IMETHOD  GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
-  NS_IMETHOD  GetClientRect(nsRect &aRect);
+  inline NS_IMETHOD  GetClientRect(nsRect &aRect) { return GetRect ( aRect ); }
   NS_IMETHOD GetRect(nsRect &aRect);
  
   NS_IMETHOD  GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
@@ -130,7 +130,6 @@ public:
 
   static int prefChanged(const char *aPref, void *aClosure);
   nsresult    SetDPI(PRInt32 dpi);
-  int IsPrinting(void);
 
 protected:
 
@@ -155,7 +154,7 @@ protected:
 
   static nscoord        mDpi;
 
-  PRBool mIsPrinting, mIsPrintingStart;
+  PRBool mIsPrintingStart;
 
 private:
 	nsCOMPtr<nsIScreenManager> mScreenManager;

@@ -79,11 +79,12 @@ nsFilePicker::~nsFilePicker()
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
+NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
 {
-  PRBool result = PR_TRUE;
 	PRInt32 flags = 0;
 	char *btn1;
+
+	NS_ENSURE_ARG_POINTER(aReturnVal);
 
   if (mMode == modeGetFolder) {
 		flags |= Pt_FSR_SELECT_DIRS|Pt_FSR_NO_SELECT_FILES;
@@ -163,12 +164,26 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 			return NS_ERROR_FAILURE;
 			}
 
+	*aReturnVal = returnOK;
+
 	if( info.ret == Pt_FSDIALOG_BTN2 ) {
-		result = PR_FALSE;
+		*aReturnVal = returnCancel;
 		}
 	else if( mMode != modeOpenMultiple ) {
 		mFile.SetLength(0);
 		mFile.Append( info.path );
+
+		if( mMode == modeSave ) {
+			nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+			NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+			file->InitWithNativePath( mFile );
+			
+			PRBool exists = PR_FALSE;
+			file->Exists(&exists);
+			if (exists)
+				*aReturnVal = returnReplace;
+			}
 		}
 	else { /* here mMode is modeOpenMultiple */
 		PtFileSelectorInfo_t *minfo = info.minfo;

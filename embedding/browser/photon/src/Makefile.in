@@ -21,7 +21,7 @@
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@
+VPATH		=  @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -114,14 +114,20 @@ ifdef BUILD_STATIC_LIBS
 # This is so sick! We'll work backwards from the embedding manifest to
 # produce the set of components that we need to link in to a
 # ``minimal'' embedding harness.
+ifdef MINIMO
+EMBED_MANIFEST=$(topsrcdir)/embedding/config/minimo-unix
+else
 EMBED_MANIFEST=$(topsrcdir)/embedding/config/basebrowser-qnx
+endif
 
 ifdef MOZ_FAT_EMBED
 EMBED_LINK_COMPS=$(FINAL_LINK_COMPS)
 EMBED_LINK_COMP_NAMES=$(FINAL_LINK_COMP_NAMES)
+EMBED_LINK_COMP_MODULES = $(FINAL_LINK_COMP_NAMES)
 else
 EMBED_LINK_COMPS=embed-link-comps
 EMBED_LINK_COMP_NAMES=embed-link-comp-names
+EMBED_LINK_COMP_MODULES = embed-link-comp-modules
 endif
 
 # Create a map that we can use to go from library name to component
@@ -149,6 +155,7 @@ embed-link-comps: $(EMBED_MANIFEST) components
 		sed -e 's.^components/lib..' -e 's/\.so//' | \
 		sort | \
 		join -o 1.1 - components > $@
+		sort -u -o $@ $@
 
 # Compute the symbols we'll need for the ``minimal embedding client''
 # by joining the compoent list with the sorted list of embedding
@@ -156,13 +163,26 @@ embed-link-comps: $(EMBED_MANIFEST) components
 embed-link-comp-names: embed-link-comps components
 	sort embed-link-comps | join -o 1.1 - components > $@
 	#sort embed-link-comps | join -o 2.2 - components > $@
+	sort -u -o $@ $@
 
-EmbedComponents.cpp: EmbedComponents.cpp.in Makefile Makefile.in $(EMBED_LINK_COMP_NAMES)
+# since embed-link-comp-names is filled with the static library names, we cannot use them - we need something
+# filled with the modules names ( foe instance nsCookieModule instead of cookie
+embed-link-comp-modules: embed-link-comp-names
+	for i in `cat embed-link-comp-names` ; \
+		do ( \
+			objdump -x ../../../../dist/lib/components/lib$$i.a | \
+			grep _gModuleInfo | \
+			awk '{ print $$6; }' | \
+			sed -e "s/_gModuleInfo//" ) ; \
+		done \
+		> $@
+
+EmbedComponents.cpp: EmbedComponents.cpp.in Makefile Makefile.in $(EMBED_LINK_COMP_MODULES)
 	cat $< | \
-	sed -e "s|%DECL_NSGETMODULES%|$(foreach m,$(shell cat $(EMBED_LINK_COMP_NAMES)),DECL_NSGETMODULE($(m)))|" | \
-	sed -e "s|%MODULE_LIST%|$(foreach m, $(shell cat $(EMBED_LINK_COMP_NAMES)),MODULE($(m)),)|" \
+	sed -e "s|%DECL_NSGETMODULES%|$(foreach m,$(shell cat $(EMBED_LINK_COMP_MODULES)),DECL_NSGETMODULE($(m)))|" | \
+	sed -e "s|%MODULE_LIST%|$(foreach m, $(shell cat $(EMBED_LINK_COMP_MODULES)),MODULE($(m)),)|" \
 	> $@
 
-GARBAGE += EmbedComponents.cpp embed-link-comp-names embed-link-comps components
+GARBAGE += EmbedComponents.cpp embed-link-comp-names embed-link-comps components embed-link-comp-modules
 endif
 

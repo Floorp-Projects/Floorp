@@ -51,8 +51,9 @@
 
 // unicode conversion
 #include "nsIPlatformCharset.h"
+#include "nsICharsetConverterManager.h"
 
-#define DEBUG_CLIPBOARD
+//#define DEBUG_CLIPBOARD
 
 
 // Define this to enable the obsolete X cut buffer mechanism
@@ -65,6 +66,8 @@ NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 #define Ph_CLIPBOARD_TYPE_IMAGE			"IMAG"
 #define Ph_CLIPBOARD_TYPE_HTML			"HTML"
 
+static unsigned long get_flavour_timestamp( char *type );
+
 //-------------------------------------------------------------------------
 //
 // nsClipboard constructor
@@ -73,7 +76,7 @@ NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 nsClipboard::nsClipboard()
 {
 #ifdef DEBUG_CLIPBOARD
-  //printf("nsClipboard::nsClipboard()\n");
+  printf("nsClipboard::nsClipboard()\n");
 #endif /* DEBUG_CLIPBOARD */
 
 	NS_INIT_ISUPPORTS();
@@ -92,7 +95,7 @@ nsClipboard::nsClipboard()
 nsClipboard::~nsClipboard()
 {
 #ifdef DEBUG_CLIPBOARD
- // printf("nsClipboard::~nsClipboard()\n");  
+  printf("nsClipboard::~nsClipboard()\n");  
 #endif /* DEBUG_CLIPBOARD */
 }
 
@@ -144,7 +147,7 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable * aTransferable, PRInt32 aWhi
 	else 
 	{
 #ifdef DEBUG_CLIPBOARD
-		//printf("  nsClipboard::GetData(), aTransferable is NULL.\n");
+		printf("  nsClipboard::GetData(), aTransferable is NULL.\n");
 #endif
 	}
 
@@ -204,16 +207,16 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 		return (NS_ERROR_FAILURE);
 
 #ifdef DEBUG_CLIPBOARD
-	//printf("  nsClipboard::SetNativeClipboardData(%i)\n", aWhichClipboard);
+	printf("  nsClipboard::SetNativeClipboardData(%i)\n", aWhichClipboard);
 #endif /* DEBUG_CLIPBOARD */
 
-  	nsCOMPtr<nsITransferable> transferable(GetTransferable(aWhichClipboard));
+		nsCOMPtr<nsITransferable> transferable(GetTransferable(aWhichClipboard));
 
 	// make sure we have a good transferable
 	if (nsnull == transferable) 
 	{
 #ifdef DEBUG_CLIPBOARD
-		//printf("nsClipboard::SetNativeClipboardData(): no transferable!\n");
+		printf("nsClipboard::SetNativeClipboardData(): no transferable!\n");
 #endif
 		return NS_ERROR_FAILURE;
 	}
@@ -243,7 +246,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 			nsXPIDLCString flavorStr;
 			currentFlavor->ToString(getter_Copies(flavorStr));
 
-     	nsresult err = GetFormat( flavorStr, &cliphdr[index] );
+     	nsresult err = GetFormat( flavorStr, cliphdr[index].type );
 			if( err != NS_OK ) 
 				continue;
 
@@ -252,18 +255,33 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 			transferable->GetTransferData( flavorStr, getter_AddRefs(genericDataWrapper), &dataLen );
 			nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataLen );
 
-			if (strcmp(cliphdr[index].type, Ph_CLIPBOARD_TYPE_MOZ_BOOKMARK) == 0)
+			if( !strcmp(cliphdr[index].type, Ph_CLIPBOARD_TYPE_TEXT) ||
+					!strcmp(cliphdr[index].type, Ph_CLIPBOARD_TYPE_HTML) ||
+					!strcmp(cliphdr[index].type, Ph_CLIPBOARD_TYPE_MOZ_BOOKMARK) )
 			{
-           		cliphdr[index].length = dataLen;
-           		cliphdr[index].data = data;
-			}
-			else if (strcmp(cliphdr[index].type, Ph_CLIPBOARD_TYPE_TEXT) == 0)
-			{
-				int len = 0;
-				char *plain;
-				nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText( (PRUnichar*)data, dataLen/2, &plain, &len );
-        cliphdr[index].length = len+1;
-        cliphdr[index].data = plain;
+				PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
+				char *utf8String = ToNewUTF8String(nsDependentString(castedUnicode, dataLen/2));
+				nsMemory::Free(NS_REINTERPRET_CAST(char*, data));
+
+				if( !strcmp(cliphdr[index].type, Ph_CLIPBOARD_TYPE_TEXT) )
+				{
+					/* we have to create a null terminated string, because
+						PhClipboardCopyString does that and some other applications
+						rely on the null terminated thing
+					*/
+					PRInt32 len = strlen(utf8String);
+					char *temp = ( char * ) nsMemory::Alloc( len + 1 );
+					memcpy( temp, utf8String, len );
+					temp[len] = 0;
+					nsMemory::Free(NS_REINTERPRET_CAST(char*, utf8String));
+
+        	cliphdr[index].length = len+1;
+        	cliphdr[index].data = temp;
+				}
+			else {
+				cliphdr[index].length = strlen(utf8String);
+				cliphdr[index].data = utf8String;
+				}
 			}
    	index++;	
 		}
@@ -271,7 +289,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
 	PhClipboardCopy( 1, index, cliphdr );
 	for( PRUint32 k=0; k<index; k++)
-		nsCRT::free ( NS_REINTERPRET_CAST(char*, cliphdr[k].data) );
+		nsMemory::Free(NS_REINTERPRET_CAST(char*, cliphdr[k].data));
 
 	free( cliphdr );
 
@@ -292,15 +310,16 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 {
 	if (aWhichClipboard == kSelectionClipboard)
 		return (NS_ERROR_FAILURE);
+
 #ifdef DEBUG_CLIPBOARD
-	//printf("nsClipboard::GetNativeClipboardData(%i)\n", aWhichClipboard);
+	printf("nsClipboard::GetNativeClipboardData(%i)\n", aWhichClipboard);
 #endif /* DEBUG_CLIPBOARD */
 
   	// make sure we have a good transferable
 	if (nsnull == aTransferable) 
   	{
 #ifdef DEBUG_CLIPBOARD
-    //	printf("  GetNativeClipboardData: Transferable is null!\n");
+    printf("  GetNativeClipboardData: Transferable is null!\n");
 #endif
     	return NS_ERROR_FAILURE;
   	}
@@ -319,17 +338,29 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 
 	if (cnt > 0) 
 	{
-  		void         *clipPtr;
-  		PhClipHeader  cliptype;
-  		PhClipHeader *cliphdr;
-  		void         *data = nsnull;
-  		PRUint32      dataLen;
+  	void         *clipPtr;
+  	PhClipHeader *cliphdr;
+  	char         *data = nsnull, type[8];
+  	PRUint32      dataLen;
 
-  		clipPtr = PhClipboardPasteStart( 1 );
-  		if(!clipPtr)
-     		return NS_ERROR_FAILURE;
+  	clipPtr = PhClipboardPasteStart( 1 );
+  	if(!clipPtr) return NS_ERROR_FAILURE;
 
-		for ( PRUint32 i = 0; i < cnt; ++i ) 
+	/*
+		Look at the timestamps of the data in the clipboard and eliminate the flavours if they are not synchronized.
+		We can have a HTML flavour from a previous copy and a TEXT flavour from a more recent copy from another application
+		( from instance from ped or pterm ). The HTML flavour and TEXT flavour are desynchronized and we have
+		to use only the most recent one */
+		unsigned long *dont_use_flavour = ( unsigned long * ) calloc( 1, cnt );
+		if( !dont_use_flavour ) {
+			PhClipboardPasteFinish( clipPtr );
+			return NS_ERROR_FAILURE;
+			}
+
+		unsigned long max_time = 0;
+		PRUint32 i;
+
+		for ( i = 0; i < cnt; ++i ) 
 		{
 			nsCOMPtr<nsISupports> genericFlavor;
 			flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
@@ -338,64 +369,101 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 			{
 				nsXPIDLCString flavorStr;
 				currentFlavor->ToString ( getter_Copies(flavorStr) );
-				nsresult err = GetFormat( flavorStr, &cliptype);
+
+				nsresult err = GetFormat( flavorStr, type );
 				if (err != NS_OK) 
 					continue;
 
-				cliphdr = PhClipboardPasteType( clipPtr, cliptype.type );
-				if (cliphdr) 
-				{
-					int len_unicode;
-					PRUnichar *unicode;
-
-					data = cliphdr->data;
-					dataLen = cliphdr->length;
-
-					nsCOMPtr<nsISupports> genericDataWrapper;
-					if (strcmp(cliptype.type, Ph_CLIPBOARD_TYPE_MOZ_BOOKMARK) == 0)
-					{
-						len_unicode = cliphdr->length;
-						nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, cliphdr->data, len_unicode, getter_AddRefs(genericDataWrapper) );
-					}
-					else if ((strcmp(cliptype.type, Ph_CLIPBOARD_TYPE_TEXT) == 0) || (strcmp(cliptype.type, Ph_CLIPBOARD_TYPE_HTML) == 0))
-					{
-						nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode( (char*) data, dataLen, &unicode, &len_unicode );
-						len_unicode--;
-						len_unicode *= 2;
-						nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, unicode, len_unicode, getter_AddRefs(genericDataWrapper) );
-					}
-
-					aTransferable->SetTransferData(flavorStr, genericDataWrapper, len_unicode );
-            		break;
-    			}
+			dont_use_flavour[i] = get_flavour_timestamp( type );
+			if( dont_use_flavour[i] > max_time ) max_time = dont_use_flavour[i];
 			}
 		}
+
+		for ( i = 0; i < cnt; ++i )
+		{
+		if( abs( dont_use_flavour[i] - max_time ) >= 4 )
+			dont_use_flavour[i] = 1; /* this flavour is desynchronized */
+		else dont_use_flavour[i] = 0; /* this flavour is ok */
+		}
+
+		for ( i = 0; i < cnt; ++i ) 
+		{
+			if( dont_use_flavour[i] ) continue; /* this flavour is desynchronized */
+			nsCOMPtr<nsISupports> genericFlavor;
+			flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
+			nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericFlavor) );
+			if ( currentFlavor ) 
+			{
+				nsXPIDLCString flavorStr;
+				currentFlavor->ToString ( getter_Copies(flavorStr) );
+
+				nsresult err = GetFormat( flavorStr, type );
+				if (err != NS_OK) 
+					continue;
+
+				cliphdr = PhClipboardPasteType( clipPtr, type );
+				if (cliphdr) 
+				{
+					data = (char*)cliphdr->data;
+
+					if( !strcmp(type, Ph_CLIPBOARD_TYPE_TEXT) )
+						/* for the Ph_CLIPBOARD_TYPE_TEXT, we null terminate the data, since PhClipboardCopyString() does that */
+						dataLen = cliphdr->length - 1;
+					else dataLen = cliphdr->length;
+
+
+					if( !strcmp(type, Ph_CLIPBOARD_TYPE_TEXT) ||
+							!strcmp(type, Ph_CLIPBOARD_TYPE_HTML) ||
+							!strcmp(type, Ph_CLIPBOARD_TYPE_MOZ_BOOKMARK) )
+					{
+						nsresult rv;
+						PRInt32 outUnicodeLen;
+						PRUnichar *unicodeData = nsnull;
+
+    				// get the decoder
+    				nsCOMPtr<nsIUnicodeDecoder> decoder;
+    				nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+    				rv = ccm->GetUnicodeDecoderRaw("UTF-8", getter_AddRefs(decoder));
+
+    				if( NS_SUCCEEDED(rv) )
+							{
+
+    					decoder->GetMaxLength(data, dataLen, &outUnicodeLen);   // |outUnicodeLen| is number of chars
+    					if (outUnicodeLen) {
+      					unicodeData = NS_REINTERPRET_CAST(PRUnichar*, nsMemory::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
+      					if ( unicodeData ) {
+        					PRInt32 numberTmp = dataLen;
+        					rv = decoder->Convert(data, &numberTmp, unicodeData, &outUnicodeLen);
+#ifdef DEBUG_CLIPBOARD
+        					if (numberTmp != dataLen)
+        					  printf("didn't consume all the bytes\n");
+#endif
+
+        					(unicodeData)[outUnicodeLen] = '\0';    // null terminate. Convert() doesn't do it for us
+      						}
+								} // if valid length
+
+
+    					data = NS_REINTERPRET_CAST(char*,unicodeData);
+    					dataLen = outUnicodeLen * 2;
+
+							nsCOMPtr<nsISupports> genericDataWrapper;
+							nsPrimitiveHelpers::CreatePrimitiveForData( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+							aTransferable->SetTransferData( flavorStr, genericDataWrapper, dataLen );
+
+							/* free the allocated memory */
+							nsMemory::Free( unicodeData );
+
+     					break;
+							}
+					}
+    		}
+			}
+		}
+
+		free( dont_use_flavour );
 		PhClipboardPasteFinish( clipPtr );
 	}
-
-#if 0
-  // We're back from the callback, no longer blocking:
-  mBlocking = PR_FALSE;
-
-  // 
-  // Now we have data in mSelectionData.data.
-  // We just have to copy it to the transferable.
-  // 
-
-  if ( foundData ) {
-    nsCOMPtr<nsISupports> genericDataWrapper;
-    nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor.get(), mSelectionData.data,
-                                               mSelectionData.length, getter_AddRefs(genericDataWrapper));
-    aTransferable->SetTransferData(foundFlavor.get(),
-                                   genericDataWrapper,
-                                   mSelectionData.length);
-  }
-    
-  // transferable is now owning the data, so we can free it.
-  nsMemory::Free(mSelectionData.data);
-  mSelectionData.data = nsnull;
-  mSelectionData.length = 0;
-#endif
 
 	return NS_OK;
 }
@@ -412,13 +480,13 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
 	if (aWhichClipboard == kSelectionClipboard)
 		return (NS_ERROR_FAILURE);
 #ifdef DEBUG_CLIPBOARD
-	//printf("  nsClipboard::ForceDataToClipboard()\n");
+	printf("  nsClipboard::ForceDataToClipboard()\n");
 #endif /* DEBUG_CLIPBOARD */
 
   	// make sure we have a good transferable
-  	nsITransferable *transferable = GetTransferable(aWhichClipboard);
+		nsITransferable *transferable = GetTransferable(aWhichClipboard);
 
-  	if (!transferable) 
+		if (!transferable)
  		return NS_ERROR_FAILURE;
 
   	return NS_OK;
@@ -440,7 +508,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
   // in GetNativeClipboardData(). From this point on, no client will
   // ever ask for text/plain explicitly. If they do, you must ASSERT!
 #ifdef DEBUG_CLIPBOARD
-//	printf("  nsClipboard::HasDataMatchingFlavors()\n  {\n");
+	printf("  nsClipboard::HasDataMatchingFlavors()\n  {\n");
 #endif
 
   nsresult res = NS_OK;
@@ -453,7 +521,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
   nsCAutoString foundFlavor;
   if (cnt > 0) {
     void         *clipPtr;
-    PhClipHeader  cliptype;
+		char					type[8];
     PhClipHeader *cliphdr;
 
     clipPtr = PhClipboardPasteStart( 1 );
@@ -470,10 +538,10 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
         nsXPIDLCString flavorStr;
         currentFlavor->ToString ( getter_Copies(flavorStr) );
 
-        nsresult err = GetFormat( flavorStr, &cliptype);
+        nsresult err = GetFormat( flavorStr, type );
         if (err != NS_OK) continue;
 
-        cliphdr = PhClipboardPasteType( clipPtr, cliptype.type );
+        cliphdr = PhClipboardPasteType( clipPtr, type );
         if (cliphdr)
         {
 
@@ -491,24 +559,19 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
 }
 
 
-nsresult nsClipboard::GetFormat(const char* aMimeStr, PhClipHeader *cliphdr ) 
+nsresult nsClipboard::GetFormat(const char* aMimeStr, char *format ) 
 {
-  	nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
+ 	nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
+	int ret = NS_OK;
 
-  	cliphdr->type[0]=0;
-  	if (mimeStr.Equals(kUnicodeMime) || mimeStr.Equals(kHTMLMime) || mimeStr.Equals(kTextMime))
-    	strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_TEXT );
-  	else if (mimeStr.Equals(kHTMLMime))
-    	strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_HTML );
-  	else if (mimeStr.Equals("moz/bookmarkclipboarditem"))
-    	strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_MOZ_BOOKMARK );
-//  	else if (mimeStr.Equals(kPNGImageMime) || mimeStr.Equals(kJPEGImageMime) || mimeStr.Equals(kGIFImageMime))
-//		strcpy( cliphdr->type, Ph_CLIPBOARD_TYPE_IMAGE);
-
-    if (cliphdr->type[0] == 0)
-        return NS_ERROR_FAILURE;
-    else
-        return NS_OK;
+ 	if( mimeStr.Equals(kUnicodeMime) || mimeStr.Equals(kTextMime) )
+   	strcpy( format, Ph_CLIPBOARD_TYPE_TEXT );
+ 	else if( mimeStr.Equals(kHTMLMime) )
+   	strcpy( format, Ph_CLIPBOARD_TYPE_HTML );
+ 	else if (mimeStr.Equals("moz/bookmarkclipboarditem"))
+   	strcpy( format, Ph_CLIPBOARD_TYPE_MOZ_BOOKMARK );
+	else ret = NS_ERROR_FAILURE;
+	return ret;
 }
 
 /* inline */
@@ -526,4 +589,27 @@ nsITransferable *nsClipboard::GetTransferable(PRInt32 aWhichClipboard)
   return transferable;
 }
 
+static unsigned long get_flavour_timestamp( char *type )
+{
+	int ig = 1; /* we always use input group 1 in mozilla */
+	char fname[512];
+	extern struct _Ph_ctrl *_Ph_;
 
+  strcpy( fname, "/var/clipboard/" );
+  if( access( fname, X_OK ) != 0 )
+		return 0;
+
+	struct stat buf;
+	if( fstat( _Ph_->fd, &buf ) != 0 )
+		return 0;
+
+  if(gethostname(&fname[strlen(fname)],PATH_MAX-40)!=0)
+    strcpy(&fname[strlen(fname)],"localhost");
+
+  sprintf( &fname[strlen(fname)], "/%08x/%d.%s",buf.st_uid, ig, type );
+	struct stat st;
+	if( stat( fname, &st ) != 0 )
+		return 0;
+
+	return st.st_mtime;
+}

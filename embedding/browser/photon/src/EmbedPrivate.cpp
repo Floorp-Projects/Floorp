@@ -348,7 +348,7 @@ EmbedPrivate::LoadCurrentURI(void)
   if (mURI.Length())
 	mNavigation->LoadURI(mURI.get(),                        // URI string
                      nsIWebNavigation::LOAD_FLAGS_NONE, // Load flags
-                     nsnull,                            // Referring URI
+                     nsnull,                            // Refering URI
                      nsnull,                            // Post data
                      nsnull);                           // extra headers
 }
@@ -627,7 +627,7 @@ EmbedPrivate::SaveURI(char *aURI, char *fname)
 	if (mWindow && mFixup)
 	{
 		nsIURI* uri;
-		mFixup->CreateFixupURI( NS_LITERAL_STRING(aURI), 0, &(uri));
+		mFixup->CreateFixupURI( NS_LITERAL_CSTRING(aURI), 0, &(uri));
 		return (mWindow->SaveURI(uri, fname));
 	}
 
