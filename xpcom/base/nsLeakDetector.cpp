@@ -169,23 +169,32 @@ nsresult NS_InitLeakDetector()
 
 	// open the first leak file.
 	rv = nextLeakFile();
-	if (rv != NS_OK)
+	if (NS_FAILED(rv))
 		return rv;
+
+    static nsModuleComponentInfo info = {
+        "Leak Detector", kCLeakDetectorCID, NS_CLEAKDETECTOR_CONTRACTID, nsLeakDetectorConstructor
+    };
 
 	// create a generic factory for the leak detector.
 	nsCOMPtr<nsIGenericFactory> factory;
-	rv = NS_NewGenericFactory(getter_AddRefs(factory), &nsLeakDetectorConstructor);
-	if (rv != NS_OK)
+	rv = NS_NewGenericFactory(getter_AddRefs(factory), &info);
+	if (NS_FAILED(rv))
 		return rv;
 
 	// register this factory with the component manager.
-	rv = nsComponentManager::RegisterFactory(kCLeakDetectorCID, "LeakDetector", NS_CLEAKDETECTOR_CONTRACTID, factory, PR_TRUE);
-	return rv;
+	return nsComponentManager::RegisterFactory(info.mCID, info.mDescription, info.mContractID, factory, PR_TRUE);
 }
 
+#ifdef XP_MAC
+#define SHUTDOWN_LEAKS_EARLY
+#undef SHUTDOWN_LEAKS_MEDIUM
+#undef SHUTDOWN_LEAKS_LATE
+#else
 #undef SHUTDOWN_LEAKS_EARLY
 #undef SHUTDOWN_LEAKS_MEDIUM
 #define SHUTDOWN_LEAKS_LATE
+#endif
 
 class LeakDetectorFinalizer
 {
