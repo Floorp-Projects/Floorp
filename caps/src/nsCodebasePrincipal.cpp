@@ -59,7 +59,7 @@ nsCodebasePrincipal::GetPreferences(char** aPrefName, char** aID,
 {
     if (!mPrefName) {
         nsCAutoString s;
-        s.Assign("security.principal.codebase.p");
+        s.Assign("capability.principal.codebase.p");
         s.AppendInt(mCapabilitiesOrdinal++);
         s.Append(".id");
         mPrefName = s.ToNewCString();

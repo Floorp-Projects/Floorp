@@ -169,6 +169,15 @@ localDefPref("browser.navcenter.docked.selector.visible", true);
 localDefPref("browser.navcenter.docked.tree.width", 250); // Percent of parent window consumed by docked nav center
 localDefPref("browser.navcenter.floating.rect", "20, 20, 400, 600"); // Window dimensions when floating
 
+pref("capability.policy.default.barprop.visible.write", "UniversalBrowserWrite");
+
+pref("capability.policy.default.history.current.read", "UniversalBrowserRead");
+pref("capability.policy.default.history.next.read", "UniversalBrowserRead");
+pref("capability.policy.default.history.previous.read", "UniversalBrowserRead");
+
+pref("capability.policy.default.navigator.preference.read", "UniversalPreferencesRead");
+pref("capability.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
+
 localDefPref("ghist.expires.pos",          4);
 localDefPref("ghist.expires.width",        1400);
 localDefPref("ghist.firstvisit.pos",       2);
@@ -398,15 +407,6 @@ pref("mime.table.allow_remove", true);
 pref("signed.applets.codebase_principal_support", false);
 pref("security.checkloaduri", true);
 pref("security.xpconnect.plugin.unrestricted", true);
-
-pref("security.policy.default.barprop.visible.write", "UniversalBrowserWrite");
-
-pref("security.policy.default.history.current.read", "UniversalBrowserRead");
-pref("security.policy.default.history.next.read", "UniversalBrowserRead");
-pref("security.policy.default.history.previous.read", "UniversalBrowserRead");
-
-pref("security.policy.default.navigator.preference.read", "UniversalPreferencesRead");
-pref("security.policy.default.navigator.preference.write", "UniversalPreferencesWrite");
 
 // Middle-mouse handling
 pref("middlemouse.paste", false);

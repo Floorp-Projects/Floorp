@@ -33,6 +33,7 @@
  *                               use in OS2
  */
 
+#include "nsIPref.h"
 #include "nsISecurityPref.h"
 
 #include "nsIFileSpec.h"
@@ -93,7 +94,7 @@ static NS_DEFINE_CID(kSecurityManagerCID,   NS_SCRIPTSECURITYMANAGER_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 //========================================================================================
-class nsPref: public nsISecurityPref
+class nsPref: public nsIPref, public nsISecurityPref
 //========================================================================================
 {
     NS_DECL_ISUPPORTS
@@ -465,15 +466,15 @@ nsPref* nsPref::GetInstance()
 nsresult nsPref::SecurePrefCheck(const char* aPrefName)
 //----------------------------------------------------------------------------------------
 {
-    static const char securityPrefix[] = "security.";
-    if ((aPrefName[0] == 's' || aPrefName[0] == 'S') &&
-        PL_strncasecmp(aPrefName, securityPrefix, sizeof(securityPrefix)-1) == 0)
+    static const char capabilityPrefix[] = "capability.";
+    if ((aPrefName[0] == 'c' || aPrefName[0] == 'C') &&
+        PL_strncasecmp(aPrefName, capabilityPrefix, sizeof(capabilityPrefix)-1) == 0)
     {
         nsresult rv;
         NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, kSecurityManagerCID, &rv);
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
         PRBool enabled;
-        rv = secMan->IsCapabilityEnabled("SecurityPreferencesAccess", &enabled);
+        rv = secMan->IsCapabilityEnabled("CapabilityPreferencesAccess", &enabled);
         if (NS_FAILED(rv) || !enabled)
             return NS_ERROR_FAILURE;
     }
@@ -1045,7 +1046,7 @@ NS_IMETHODIMP nsPref::SetFilePref(const char *pref_name,
 
 /*
  * Pref access without security check - these are here
- * to support nsScriptSecurityManager and psm_glue
+ * to support nsScriptSecurityManager.
  * These functions are part of nsISecurityPref, not nsIPref.
  * **PLEASE** do not call these functions from elsewhere
  */
@@ -1059,7 +1060,7 @@ NS_IMETHODIMP nsPref::SecuritySetBoolPref(const char *pref, PRBool value)
     return _convertRes(PREF_SetBoolPref(pref, value));
 }
 
-NS_IMETHODIMP nsPref::SecurityCopyCharPref(const char *pref, char ** return_buf)
+NS_IMETHODIMP nsPref::SecurityGetCharPref(const char *pref, char ** return_buf)
 {
 #if defined(DEBUG_tao_)
     checkPref("CopyCharPref", pref);
