@@ -1440,8 +1440,6 @@ if test ! -z "$MISSING_NSPR"; then
    echo "*** NSPR was not detected in your system.  This is not a problem."
    echo "*** I will use the one in the current source tree instead. "
    echo
-   sleep 3
-
    NSPR_INCLUDE_DIR=
    NSPR_CFLAGS=
    NSPR_LIBS="-lplds$NSPR_VERSION -lplc$NSPR_VERSION -lnspr$NSPR_VERSION $PTHREAD_LDFLAGS"
