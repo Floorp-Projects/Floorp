@@ -25,3 +25,4 @@ examples/tabdump.pl
 examples/modattr.pl
 examples/rename.pl
 examples/psoftsync.pl
+install-bin
