@@ -102,6 +102,9 @@ nsresult saveDefaultMailClient();
     // HKEY_LOCAL_MACHINE\\Software\\Mozilla\\Desktop
 nsresult saveUserDefaultMailClient();
 
+    nsresult setMailtoProtocolHandler();
+    nsresult setNewsProtocolHandler();
+
 nsresult CopyMozMapiToWinSysDir();
 nsresult RestoreBackedUpMapiDll();
 
@@ -112,7 +115,6 @@ nsresult RestoreBackedUpMapiDll();
     nsresult MakeMapiStringBundle(nsIStringBundle ** aMapiStringBundle) ;
     // display an error dialog for MAPI messages
     nsresult ShowMapiErrorDialog() ;
-
 } ;
 
 #endif
