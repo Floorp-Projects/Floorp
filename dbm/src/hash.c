@@ -47,7 +47,6 @@ static char sccsid[] = "@(#)hash.c	8.9 (Berkeley) 6/16/94";
 #if !defined(macintosh)
 #ifdef XP_OS2_EMX
 #include <sys/types.h>
-#include "xp_mcom.h" /* For strdup. */
 #endif
 #include <sys/stat.h>
 #endif
