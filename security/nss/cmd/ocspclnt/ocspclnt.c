@@ -34,7 +34,7 @@
 /*
  * Test program for client-side OCSP.
  *
- * $Id: ocspclnt.c,v 1.3 2002/07/03 00:13:25 javi%netscape.com Exp $
+ * $Id: ocspclnt.c,v 1.4 2002/07/03 20:22:27 javi%netscape.com Exp $
  */
 
 #include "secutil.h"
@@ -831,11 +831,11 @@ print_response (FILE *out_file, SECItem *data, CERTCertDBHandle *handle)
     if (response == NULL)
 	return SECFailure;
 
-    PORT_Assert (response->statusValue <= OCSPResponse_other);
+    PORT_Assert (response->statusValue <= ocspResponse_other);
     fprintf (out_file, "Response Status: %s\n",
 	     responseStatusNames[response->statusValue]);
 
-    if (response->statusValue == OCSPResponse_successful) {
+    if (response->statusValue == ocspResponse_successful) {
 	ocspResponseBytes *responseBytes = response->responseBytes;
 	SECStatus sigStatus;
 	CERTCertificate *signerCert = NULL;
