@@ -241,6 +241,8 @@ public:
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
   NS_IMETHOD CanCreateNewWebShell(PRBool& aResult);
+  NS_IMETHOD ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult);
+
   NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
                                 nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
                                 nsIWebShell** aNewShell);
@@ -1899,6 +1901,16 @@ nsWebShell::CanCreateNewWebShell(PRBool& aResult)
   aResult = PR_TRUE;
   if (nsnull != mContainer) {
     return mContainer->CanCreateNewWebShell(aResult);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult)
+{
+  aResult = PR_FALSE;
+  if (nsnull != mContainer) {
+    return mContainer->ChildShellAdded(aChildShell, frameNode, aResult);
   }
   return NS_OK;
 }

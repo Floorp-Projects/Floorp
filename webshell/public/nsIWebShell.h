@@ -34,6 +34,7 @@ class nsIDocumentLoaderObserver;
 class nsIWebShell;
 class nsIWebShellContainer;
 class nsIPref;
+class nsIContent;
 
 // Interface ID for nsIWebShell
 #define NS_IWEB_SHELL_IID \
@@ -102,8 +103,9 @@ public:
   
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
                                   nsIWebShell*& aResult) = 0;
-
   
+  NS_IMETHOD ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult) = 0;
+
   /**
    * Notify the WebShellContainer that a contained webshell is
    * offering focus (for example if it finshed tabbing through its
