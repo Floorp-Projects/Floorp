@@ -214,7 +214,8 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
     }
     PrintProgress(__LINE__);
 
-#if !defined(DEBUG)
+    for (keys = 4; keys < 8; ++keys)
+		key[keys] = 4096;		/* set to invalid value */
     did = should = PR_FALSE;
     for (keys = 4; keys < 8; ++keys)
     {
@@ -222,7 +223,6 @@ static PRIntn PR_CALLBACK Tpd(PRIntn argc, char **argv)
         MY_ASSERT(PR_FAILURE == rv);
     }
     PrintProgress(__LINE__);
-#endif
     
     did = PR_FALSE; should = PR_TRUE;
     for (keys = 0; keys < 4; ++keys)
