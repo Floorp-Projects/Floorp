@@ -46,6 +46,18 @@ GtkMozEmbedChrome::GtkMozEmbedChrome()
   mDestroyCBData    = nsnull;
   mVisibilityCB     = nsnull;
   mVisibilityCBData = nsnull;
+  mLinkCB           = nsnull;
+  mLinkCBData       = nsnull;
+  mJSStatusCB       = nsnull;
+  mJSStatusCBData   = nsnull;
+  mLocationCB       = nsnull;
+  mLocationCBData   = nsnull;
+  mTitleCB          = nsnull;
+  mTitleCBData      = nsnull;
+  mProgressCB       = nsnull;
+  mProgressCBData   = nsnull;
+  mNetCB            = nsnull;
+  mNetCBData        = nsnull;
   mBounds.x         = 0;
   mBounds.y         = 0;
   mBounds.width     = 0;
@@ -90,8 +102,6 @@ NS_IMETHODIMP GtkMozEmbedChrome::Init(GtkWidget *aOwningWidget)
 NS_IMETHODIMP GtkMozEmbedChrome::SetNewBrowserCallback(GtkMozEmbedChromeCB *aCallback, void *aData)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetNewBrowserCallback\n"));
-  NS_ENSURE_ARG_POINTER(aCallback);
-  // it's ok to pass in null for the data if you want...
   mNewBrowserCB = aCallback;
   mNewBrowserCBData = aData;
   return NS_OK;
@@ -100,7 +110,6 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetNewBrowserCallback(GtkMozEmbedChromeCB *aCal
 NS_IMETHODIMP GtkMozEmbedChrome::SetDestroyCallback(GtkMozEmbedDestroyCB *aCallback, void *aData)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetDestroyCallback\n"));
-  NS_ENSURE_ARG_POINTER(aCallback);
   mDestroyCB = aCallback;
   mDestroyCBData = aData;
   return NS_OK;
@@ -109,41 +118,96 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetDestroyCallback(GtkMozEmbedDestroyCB *aCallb
 NS_IMETHODIMP GtkMozEmbedChrome::SetVisibilityCallback(GtkMozEmbedVisibilityCB *aCallback, void *aData)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetVisibilityCallback\n"));
-  NS_ENSURE_ARG_POINTER(aCallback);
   mVisibilityCB = aCallback;
   mVisibilityCBData = aData;
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::GetLinkMessage (const char **retval)
+NS_IMETHODIMP GtkMozEmbedChrome::SetLinkChangeCallback (GtkMozEmbedLinkCB *aCallback, void *aData)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetLinkChangeCallback\n"));
+  mLinkCB = aCallback;
+  mLinkCBData = aData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetJSStatusChangeCallback (GtkMozEmbedJSStatusCB *aCallback, void *aData)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetJSStatusChangeCallback\n"));
+  mJSStatusCB = aCallback;
+  mJSStatusCBData = aData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetLocationChangeCallback (GtkMozEmbedLocationCB *aCallback, void *aData)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetLocationChangeCallback\n"));
+  mLocationCB = aCallback;
+  mLocationCBData = aData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetTitleChangeCallback (GtkMozEmbedTitleCB *aCallback, void *aData)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetTitleChangeCB\n"));
+  mTitleCB = aCallback;
+  mTitleCBData = aData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetProgressCallback (GtkMozEmbedProgressCB *aCallback, void *aData)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetProgressCallback\n"));
+  mProgressCB = aCallback;
+  mProgressCBData = aData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::SetNetCallback (GtkMozEmbedNetCB *aCallback, void *aData)
+{
+  PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::SetNetCallback\n"));
+  mNetCB = aCallback;
+  mNetCBData = aData;
+  return NS_OK;
+}
+
+NS_IMETHODIMP GtkMozEmbedChrome::GetLinkMessage (char **retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetLinkMessage\n"));
   NS_ENSURE_ARG_POINTER(retval);
-  *retval = mLinkMessage;
+  *retval = NULL;
+  if (mLinkMessage)
+    *retval = nsCRT::strdup(mLinkMessage);
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::GetJSStatus (const char **retval)
+NS_IMETHODIMP GtkMozEmbedChrome::GetJSStatus (char **retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetJSStatus\n"));
   NS_ENSURE_ARG_POINTER(retval);
-  *retval = mJSStatus;
+  *retval = NULL;
+  if (mJSStatus)
+    *retval = nsCRT::strdup(mLinkMessage);
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::GetLocation (const char **retval)
+NS_IMETHODIMP GtkMozEmbedChrome::GetLocation (char **retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetLocation\n"));
   NS_ENSURE_ARG_POINTER(retval);
-  *retval = mLocation;
+  *retval = NULL;
+  if (mJSStatus)
+    *retval = nsCRT::strdup(mJSStatus);
   return NS_OK;
 }
 
-NS_IMETHODIMP GtkMozEmbedChrome::GetTitleChar (const char **retval)
+NS_IMETHODIMP GtkMozEmbedChrome::GetTitleChar (char **retval)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetTitleChar\n"));
   NS_ENSURE_ARG_POINTER(retval);
-  *retval = mTitle;
+  *retval = NULL;
+  if (mTitle)
+    *retval = nsCRT::strdup(mTitle);
   return NS_OK;
 }
 
@@ -163,6 +227,9 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetJSStatus(const PRUnichar *status)
   nsString jsStatusString(status);
   mJSStatus = jsStatusString.ToNewCString();
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("js status is %s\n", (const char *)mJSStatus));
+  // let any listeners know that the status has changed
+  if (mJSStatusCB)
+    mJSStatusCB(mJSStatusCBData);
   return NS_OK;
 }
 
@@ -178,6 +245,9 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetOverLink(const PRUnichar *link)
   nsString linkMessageString(link);
   mLinkMessage = linkMessageString.ToNewCString();
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("message is %s\n", (const char *)mLinkMessage));
+  // if there are any listeners, let them know about the change
+  if (mLinkCB)
+    mLinkCB(mLinkCBData);
   return NS_OK;
 }
 
@@ -211,9 +281,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::GetNewBrowser(PRUint32 chromeMask,
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetNewBrowser\n"));
   NS_ENSURE_STATE(mNewBrowserCB);
   if (mNewBrowserCB)
-  {
     return mNewBrowserCB(chromeMask, _retval, mNewBrowserCBData);
-  }
   return NS_ERROR_FAILURE;
 }
 
@@ -326,7 +394,7 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 c
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::OnProgressChange\n"));
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("maxTotalProgress is %d and curTotalProgress is %d\n",
 				    maxTotalProgress, curTotalProgress));
-  if (maxTotalProgress)
+  if (maxTotalProgress >= 0)
   {
     PRUint32 percentage = (curTotalProgress * 100) / maxTotalProgress;
     PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("%d%% percent\n", percentage));
@@ -335,6 +403,10 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnProgressChange(nsIChannel *channel, PRInt32 c
   {
     PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("Unknown percent\n"));
   }
+  
+  // call our callback if it's been registered
+  if (mProgressCB)
+    mProgressCB(mProgressCBData, maxTotalProgress, curTotalProgress);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -375,7 +447,10 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnStatusChange(nsIChannel *channel, PRInt32 aSt
   if (aStatus & nsIWebProgress::flag_win_stop)
     PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("flag_win_stop\n"));
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // if we have a callback registered, call it
+  if (mNetCB)
+    mNetCB(mNetCBData, aStatus);
+  return NS_OK;
 }
 
 NS_IMETHODIMP GtkMozEmbedChrome::OnChildStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
@@ -392,6 +467,9 @@ NS_IMETHODIMP GtkMozEmbedChrome::OnLocationChange(nsIURI *aLocation)
   aLocation->GetSpec(&newURIString);
   mLocation = newURIString;
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("new location is %s\n", (const char *)mLocation));
+  // if there are any listeners let them know about the location change
+  if (mLocationCB)
+    mLocationCB(mLocationCBData);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -566,6 +644,10 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetTitle(const PRUnichar * aTitle)
   mTitleUnicode = aTitle;
   mTitle = newTitleString.ToNewCString();
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("title is %s\n", (const char *)mTitle));
+  // if there's a callback, call it to let it know that the title has
+  // changed.
+  if (mTitleCB)
+    mTitleCB(mTitleCBData);
   return NS_OK;
 }
 
