@@ -77,7 +77,7 @@ class nsInstallProgressDialog : public nsIXPINotifier,
 
     private:
 
-        nsCOMPtr<nsIDOMXULDocument>  mDocument;
-        nsCOMPtr<nsIWebShellWindow>  mWindow;
+        nsCOMPtr<nsIDOMXULDocument>  mDocument;		// why is this owned?
+        nsCOMPtr<nsIWebShellWindow>  mWindow;			// why is this owned?
 };
 #endif
