@@ -44,7 +44,10 @@ default: $(SUBMAKEFILES)
 	$(MAKE) nspr
 	$(MAKE) tier_0
 ifdef MOZ_LDAP_XPCOM
-	$(MAKE) -C directory/c-sdk/ldap
+	# Call each of ldap's stages individually since
+	# its default target isn't -j safe
+	$(MAKE) -C directory/c-sdk/ldap export
+	$(MAKE) -C directory/c-sdk/ldap install
 endif
 	$(MAKE) tier_1
 	$(MAKE) tier_9
