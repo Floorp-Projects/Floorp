@@ -1012,6 +1012,7 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aMetrics.mMaximumWidth = aMetrics.width;
   }
+  FinishAndStoreOverflow(&aMetrics);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsImageFrame::Reflow: size=%d,%d",
@@ -1331,7 +1332,6 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
         }
       }
       else {
-        PRBool paintOutline   = PR_FALSE;
         if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && imgCon) {
           // Render the image into our content area (the area inside
           // the borders and padding)
@@ -1383,7 +1383,6 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
           
             aRenderingContext.DrawImage(imgCon, r, paintArea);
           }
-          paintOutline = PR_TRUE;
         }
 
         nsImageMap* map = GetImageMap(aPresContext);
@@ -1396,18 +1395,6 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
           aRenderingContext.Translate(inner.x, inner.y);
           map->Draw(aPresContext, aRenderingContext);
           aRenderingContext.PopState();
-          paintOutline = PR_TRUE;
-        }
-
-        // paint the outline in the overlay layer (or if there is an image map) until the 
-        // general problem of painting it outside the border box is solved.
-        if (paintOutline) {
-          const nsStyleBorder* myBorder = GetStyleBorder();
-          const nsStyleOutline* myOutline = GetStyleOutline();
-          nsRect rect(0, 0, mRect.width, mRect.height);
-          nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                       aDirtyRect, rect, *myBorder,
-                                       *myOutline, mStyleContext, 0);
         }
 
 #ifdef DEBUG

@@ -347,7 +347,9 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
 
     clientRect.Deflate(margin);
 
-    kid->SetBounds(aState, childRect);
+    // remove overflow area when we update the bounds,
+    // because we've already accounted for it
+    kid->SetBounds(aState, childRect, PR_TRUE);
   }
 
   aState.SetLayoutFlags(oldflags);

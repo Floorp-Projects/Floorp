@@ -65,6 +65,9 @@ public:
   void* operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW;
   void operator delete(void* aPtr, size_t sz);
 
+  // We compute and store the HTML content's overflow area. So don't
+  // try to compute it in the box code.
+  virtual PRBool ComputesOwnOverflowArea() { return PR_TRUE; }
   
   nsBoxToBlockAdaptor(nsIPresShell* aShell, nsIFrame* aFrame);
   virtual ~nsBoxToBlockAdaptor();

@@ -2093,39 +2093,17 @@ nscoord width;
     }
   }
 
-
-  // This if control whether the outline paints on the inside 
-  // or outside of the frame
-  // XXX This is temporary fix for nsbeta3+ Bug 48973
-  // so we can use "mozoutline
-#if 0 // outside
   nsRect inside(aBorderArea);
   nsRect outside(inside);
-  inside.Inflate(width, width);
+  outside.Inflate(width, width);
 
   nsRect clipRect(aBorderArea);
   clipRect.Inflate(width, width); // make clip extra big for now
-
-#else // inside
-  nsMargin borderWidth;
-  aBorderStyle.GetBorder(borderWidth);
-
-  nsRect outside(aBorderArea);
-  outside.Deflate(borderWidth);
-  nsRect inside(outside);
-  inside.Deflate(width, width);
-
-  nsRect clipRect(outside);
-#endif
-
-  aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace);
 
   // rounded version of the border
   for(i=0;i<4;i++){
     if(borderRadii[i] > 0){
       PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,nsnull,&aOutlineStyle,aStyleContext,aSkipSides,borderRadii,aGap,PR_TRUE);
-      aRenderingContext.PopState();
       return;
     }
   }
@@ -2137,7 +2115,6 @@ nscoord width;
       (outlineStyle == NS_STYLE_BORDER_STYLE_DASHED))  {
     DrawDashedSides(0, aRenderingContext, aDirtyRect, ourColor, nsnull, &aOutlineStyle, PR_TRUE,
                     outside, inside, aSkipSides, aGap);
-    aRenderingContext.PopState();
     return;
   }
 
@@ -2192,8 +2169,6 @@ nscoord width;
       aRenderingContext.SetPenMode(nsPenMode_kNone);
     }  
   }
-  // Restore clipping
-  aRenderingContext.PopState();
 }
 
 /* draw the edges of the border described in aBorderEdges one segment at a time.

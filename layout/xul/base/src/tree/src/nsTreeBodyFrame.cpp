@@ -449,14 +449,15 @@ nsTreeBodyFrame::EnsureView()
 }
 
 NS_IMETHODIMP
-nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect)
+nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                           PRBool aRemoveOverflowArea)
 {
   if (aRect != mRect && !mReflowCallbackPosted) {
     mReflowCallbackPosted = PR_TRUE;
     mPresContext->PresShell()->PostReflowCallback(this);
   }
 
-  return nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect);
+  return nsLeafBoxFrame::SetBounds(aBoxLayoutState, aRect, aRemoveOverflowArea);
 }
 
 
@@ -465,8 +466,13 @@ nsTreeBodyFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag)
 {
   if (mView) {
     CalcInnerBox();
-    if (!mHasFixedRowCount)
+    if (!mHasFixedRowCount) {
+#ifdef DEBUG_roc
+      printf("*** SETTING mPageLength in ReflowFinished, mInnerBox=%d,%d,%d,%d\n",
+             mInnerBox.x, mInnerBox.y, mInnerBox.width, mInnerBox.height);
+#endif
       mPageLength = mInnerBox.height / mRowHeight;
+    }
 
     PRInt32 lastPageTopRow = PR_MAX(0, mRowCount - mPageLength);
     if (mTopRowIndex > lastPageTopRow)

@@ -70,7 +70,8 @@ public:
 
   // nsIBox
   NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect);
+  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                       PRBool aRemoveOverflowArea = PR_FALSE);
 
   // nsIReflowCallback
   NS_IMETHOD ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlushFlag);

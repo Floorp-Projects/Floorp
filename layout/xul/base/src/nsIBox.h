@@ -93,7 +93,13 @@ public:
   NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed)=0;
   NS_IMETHOD Collapse(nsBoxLayoutState& aBoxLayoutState)=0;
   NS_IMETHOD UnCollapse(nsBoxLayoutState& aBoxLayoutState)=0;
-  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect)=0;
+  // This does not alter the overflow area. If the caller is changing
+  // the box size, the caller is responsible for updating the overflow
+  // area. It's enough to just call Layout or SyncLayout on the
+  // box. You can pass PR_TRUE to aRemoveOverflowArea as a
+  // convenience.
+  NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
+                       PRBool aRemoveOverflowArea = PR_FALSE)=0;
   NS_IMETHOD GetBounds(nsRect& aRect)=0;
   NS_IMETHOD Layout(nsBoxLayoutState& aBoxLayoutState)=0;
   NS_IMETHOD IsDirty(PRBool& aIsDirty)=0;

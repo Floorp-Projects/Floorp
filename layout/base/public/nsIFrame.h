@@ -49,6 +49,7 @@
 #include "nsStyleStruct.h"
 #include "nsStyleContext.h"
 #include "nsIContent.h"
+#include "nsHTMLReflowMetrics.h"
 
 /**
  * New rules of reflow:
@@ -69,7 +70,6 @@
 
 struct nsHTMLReflowState;
 class nsHTMLReflowCommand;
-struct nsHTMLReflowMetrics;
 
 class nsIAtom;
 class nsIPresContext;
@@ -1029,7 +1029,18 @@ public:
    * @param if nonnull, we record whether this rect is bigger than the frame's bounds
    * @return the rect relative to this frame's origin
    */
-  nsRect GetOutlineRect(PRBool* aAnyOutline = nsnull) const;
+  nsRect GetOutlineRect(PRBool* aAnyOutline = nsnull, nsSize *aUseSize = nsnull) const;
+
+  /**
+   * Set/unset the NS_FRAME_OUTSIDE_CHILDREN flag and store the overflow area
+   * as a frame property in the frame manager so that it can be retrieved
+   * later without reflowing the frame.
+   */
+  void FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize);
+
+  void FinishAndStoreOverflow(nsHTMLReflowMetrics* aMetrics) {
+    FinishAndStoreOverflow(&aMetrics->mOverflowArea, nsSize(aMetrics->width, aMetrics->height));
+  }
 
   /** Selection related calls
    */
@@ -1207,8 +1218,7 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
     * @param aCreateIfNecessary  create a new nsRect for the overflow area
     * @return pointer to the overflow area rectangle 
     */
-  virtual nsRect* GetOverflowAreaProperty(nsIPresContext* aPresContext,
-                                          PRBool          aCreateIfNecessary = PR_FALSE) = 0;
+  nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
 
   /**
    * Return PR_TRUE if and only if this frame obeys visibility:hidden.
