@@ -4807,23 +4807,10 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       // The anonymous content is appended to existing anonymous content for this
       // element (the scrollbars).
 
-      // save the incoming pseudo frame state, so that we don't end up
-      // with those pseudoframes in childItems
-      nsPseudoFrames priorPseudoFrames; 
-      aState.mPseudoFrames.Reset(&priorPseudoFrames);
-
       nsFrameItems childItems;
       CreateAnonymousFrames(aPresShell, aPresContext, nsHTMLAtoms::combobox,
                             aState, aContent, comboboxFrame, PR_TRUE, childItems);
   
-      // process the current pseudo frame state
-      if (!aState.mPseudoFrames.IsEmpty()) {
-        ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, childItems);
-      }
-
-      // restore the incoming pseudo frame state 
-      aState.mPseudoFrames = priorPseudoFrames;
-      
       comboboxFrame->SetInitialChildList(aPresContext, nsnull,
                                          childItems.childList);
 
@@ -5605,6 +5592,11 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
   anonymousItems->Count(&count);
 
   if (count) {
+    // save the incoming pseudo frame state, so that we don't end up
+    // with those pseudoframes in aChildItems
+    nsPseudoFrames priorPseudoFrames; 
+    aState.mPseudoFrames.Reset(&priorPseudoFrames);
+
     // A content element can have multiple sources of anonymous content. For example,
     // SELECTs have a combobox dropdown button and also scrollbars in the list view.
     // nsPresShell doesn't handle this very well. It's a problem because a reframe could
@@ -5688,6 +5680,14 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
 
       creator->PostCreateFrames();
     }
+
+    // process the current pseudo frame state
+    if (!aState.mPseudoFrames.IsEmpty()) {
+      ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aChildItems);
+    }
+
+    // restore the incoming pseudo frame state 
+    aState.mPseudoFrames = priorPseudoFrames;
   }
 
   return NS_OK;
