@@ -1968,6 +1968,14 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
 {
   nsresult  result = NS_OK;
 
+  // Do nothing if there is no change.  Note that this assumes that two
+  // attributes that have the same nsISupports value are in fact equal.
+  nsHTMLValue oldValue;
+  result = GetHTMLAttribute(aAttribute, oldValue);
+  if (result != NS_CONTENT_ATTR_NOT_THERE && oldValue == aValue) {
+    return NS_OK;
+  }
+  
   nsChangeHint impact = NS_STYLE_HINT_NONE;
   GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION,
                            impact);
