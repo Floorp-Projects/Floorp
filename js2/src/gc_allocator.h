@@ -74,6 +74,10 @@ namespace JavaScript {
 	
 	#undef define_atomic_type
 	
+	/**
+	 * Traits for classes that need to have their destructor called
+	 * when reclaimed by the garbage collector.
+	 */
 	template <class T> struct gc_traits_finalizable {
 		static void finalizer(void* obj, void* client_data)
 		{
