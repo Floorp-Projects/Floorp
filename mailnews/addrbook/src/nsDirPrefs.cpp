@@ -1725,7 +1725,11 @@ DIR_PrefId DIR_AtomizePrefName(const char *prefname)
 			break;
 		}
 		break;
-	
+
+	case 'u': /* uri */
+		rc = idUri;
+		break;
+
 	case 'v': /* vlvDisabled */
 		rc = idVLVDisabled;
 		break;

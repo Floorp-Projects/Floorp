@@ -114,6 +114,7 @@ typedef enum
 	idFileName,
 	idPort,
 	idMaxHits,
+	idUri,
 	idLastSearchString,
 	idType,	
 	idCSID,
