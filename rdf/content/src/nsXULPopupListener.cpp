@@ -331,8 +331,8 @@ XULPopupListenerImpl::MouseOut(nsIDOMEvent* aMouseEvent)
   }
   
   if ( mPopupContent ) {
-    mPopupContent->RemoveAttribute("menugenerated");  // hide the popup
-    mPopupContent->RemoveAttribute("menuactive");
+    nsCOMPtr<nsIDOMXULPopupElement> popupElement = do_QueryInterface(mPopupContent);
+    popupElement->ClosePopup();
 
     mPopupContent = nsnull;  // release the popup
     
