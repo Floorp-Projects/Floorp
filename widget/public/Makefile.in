@@ -76,7 +76,14 @@ EXPORTS =               \
 	nsIImageButtonListener.h \
 	nsIContentConnector.h \
 	nsISelectionMgr.h \
-        $(NULL)
+	nsIDragSource.h \
+	nsIDragTarget.h \
+	nsIClipboard.h \
+	nsIDataFlavor.h \
+	nsITransferable.h \
+	nsIDragService.h \
+	nsIDraggedObject.h \
+	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
