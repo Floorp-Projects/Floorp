@@ -50,27 +50,12 @@
 #if defined(XP_OS2)
     #define WIDGET_DLL      "WDGTOS2"
     #define GFXWIN_DLL      "GFX_OS2"
-    #define VIEW_DLL        "NGVIEW"
-    #define WEB_DLL         "WEBSHELL"
-    #define DOM_DLL         "JSDOM"
-    #define CAPS_DLL        "CAPS"
 #elif defined(XP_PC)
     #define WIDGET_DLL "gkwidget.dll"
     #define GFXWIN_DLL "gkgfxwin.dll"
-    #define VIEW_DLL   "gkview.dll"
-    #define DOM_DLL    "jsdom.dll"
-    #define CAPS_DLL   "caps.dll"
 #elif defined(XP_MAC)
     #define WIDGET_DLL    "WIDGET_DLL"
     #define GFXWIN_DLL    "GFXWIN_DLL"
-    #define VIEW_DLL        "VIEW_DLL"
-    #define WEB_DLL            "WEB_DLL"
-    #define DOM_DLL        "DOM_DLL"
-    #define CAPS_DLL    "CAPS_DLL"
-#else
-    #define VIEW_DLL   "libgkview"MOZ_DLL_SUFFIX
-    #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
-    #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
 #endif
 
 // Class ID's
@@ -111,14 +96,6 @@ static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
 #endif
 
-// unneeded widgets
-#if 0
-static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
-static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
-static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
-#endif
-
 // GFXWIN
 #if !defined(XP_UNIX) && !defined(XP_OS2) && !defined(XP_WIN)
 static NS_DEFINE_CID(kCRenderingContextCID, NS_RENDERING_CONTEXT_CID);
@@ -136,16 +113,6 @@ static NS_DEFINE_CID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 static NS_DEFINE_CID(kScreenManagerCID, NS_SCREENMANAGER_CID);
 static NS_DEFINE_CID(kPrintOptionsCID,NS_PRINTOPTIONS_CID);
 #endif
-
-// VIEW
-static NS_DEFINE_IID(kCViewManagerCID, NS_VIEW_MANAGER_CID);
-static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
-static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
-static NS_DEFINE_IID(kCScrollPortViewCID, NS_SCROLL_PORT_VIEW_CID);
-
-// DOM
-static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
-static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -211,15 +178,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCMenuItemCID,      NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
 
-  // UNNEEDED WIDGETS
-#if 0
-  nsComponentManager::RegisterComponentLib(kCComboBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCContextMenuCID,   NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCListBoxCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCRadioButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCTextAreaCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-#endif
-
   // GFXWIN
 #if !defined(XP_UNIX) && !defined(XP_OS2) && !defined(XP_WIN)
   nsComponentManager::RegisterComponentLib(kCRenderingContextCID, "Rendering Context", "@mozilla.org/gfx/renderingcontext;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
@@ -238,13 +196,4 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kPrintOptionsCID, "PrintOptions", "@mozilla.org/gfx/printoptions;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
 #endif
 
-  // VIEW
-  nsComponentManager::RegisterComponentLib(kCViewManagerCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCViewCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCScrollingViewCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCScrollPortViewCID, NULL, NULL, VIEW_DLL, PR_FALSE, PR_FALSE);
-
-  // DOM
-  nsComponentManager::RegisterComponentLib(kCDOMScriptObjectFactory, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCScriptNameSetRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
 }

@@ -7,10 +7,8 @@ nsIWidget.h
 nsIKBStateControl.h
 nsIButton.h
 nsICheckButton.h
-nsIListWidget.h
 nsITextWidget.h
 nsITextAreaWidget.h
-nsIListBox.h
 nsIScrollbar.h
 nsGUIEvent.h
 nsEvent.h

@@ -63,7 +63,6 @@
 
 #if USE_NATIVE_VERSION
 # include "nsTextAreaWidget.h"
-# include "nsListBox.h"
 # include "nsCheckButton.h"
 #endif
 
@@ -89,7 +88,6 @@ static NS_DEFINE_CID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_CID(kCCheckButton,   NS_CHECKBUTTON_CID);
 static NS_DEFINE_CID(kCFilePicker,    NS_FILEPICKER_CID);
 static NS_DEFINE_CID(kCFileOpen,      NS_FILEWIDGET_CID);
-static NS_DEFINE_CID(kCListbox,       NS_LISTBOX_CID);
 static NS_DEFINE_CID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_CID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_CID(kCTextArea,      NS_TEXTAREA_CID);
@@ -209,9 +207,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
 #if USE_NATIVE_VERSION
     else if (mClassID.Equals(kCCheckButton)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsCheckButton();
-    }
-    else if (mClassID.Equals(kCListbox)) {
-       inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsListBox();
     }
     else if (mClassID.Equals(kCTextArea)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsTextAreaWidget();
