@@ -120,7 +120,7 @@ protected:
   virtual nsIXTFElement *GetXTFElement() const = 0;
   
   // implementation helpers:  
-  PRBool AggregatesInterface(REFNSIID aIID);
+  PRBool QueryInterfaceInner(REFNSIID aIID, void** result);
 
   PRBool HandledByInner(nsIAtom* attr) const;
   

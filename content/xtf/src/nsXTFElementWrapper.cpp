@@ -95,12 +95,16 @@ nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   else if (NS_SUCCEEDED(rv = nsXTFElementWrapperBase::QueryInterface(aIID, aInstancePtr))) {
     return rv;
   }
-  else if (AggregatesInterface(aIID)) {
-#ifdef DEBUG
-//    printf("nsXTFElementWrapper::QueryInterface(): creating aggregation tearoff\n");
-#endif
-    return NS_NewXTFInterfaceAggregator(aIID, GetXTFElement(), (nsIContent*)this,
-                                        (nsISupports**)aInstancePtr);
+  else {
+    // try to get get the interface from our wrapped element:
+    void *innerPtr = nsnull;
+    QueryInterfaceInner(aIID, &innerPtr);
+
+    if (innerPtr)
+      return NS_NewXTFInterfaceAggregator(aIID,
+                                          NS_STATIC_CAST(nsISupports*, innerPtr),
+                                          NS_STATIC_CAST(nsIContent*, this),
+                                          aInstancePtr);
   }
 
   return NS_ERROR_NO_INTERFACE;
@@ -542,15 +546,14 @@ nsXTFElementWrapper::SetNotificationMask(PRUint32 aNotificationMask)
 //----------------------------------------------------------------------
 // implementation helpers:
 PRBool
-nsXTFElementWrapper::AggregatesInterface(REFNSIID aIID)
+nsXTFElementWrapper::QueryInterfaceInner(REFNSIID aIID, void** result)
 {
   // We must ensure that the inner element has a distinct xpconnect
   // identity, so we mustn't aggregate nsIXPConnectWrappedJS:
   if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS))) return PR_FALSE;
 
-  nsCOMPtr<nsISupports> inst;
-  GetXTFElement()->QueryInterface(aIID, getter_AddRefs(inst));
-  return (inst!=nsnull);
+  GetXTFElement()->QueryInterface(aIID, result);
+  return (*result!=nsnull);
 }
 
 PRBool
