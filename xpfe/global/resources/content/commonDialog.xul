@@ -15,8 +15,9 @@
 	<keyset id="keyset"/>
 
     <box align="horizontal" flex="100%">
-	<image id="info.icon" src="chrome://global/skin/message-icon.gif" width="32" height="32" border="0" style="margin: 5px"/>
-
+		<box autostretch="never">
+			<image id="info.icon" src="chrome://global/skin/message-icon.gif" border="0" style="margin: 5px"/>
+		</box>
 	<box align="vertical" flex="100%">
 		<text id="info.header" style="margin-left:2em; margin-right:2em; margin-top:5px; font-size: 110%; font-weight: bold;"
 			value="&header.label;"/>
