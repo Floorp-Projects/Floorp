@@ -37,9 +37,34 @@ function TopLevelDrag ( event )
 }
 
 
+//
+// Determine if d&d is on or not, off by default for beta but we want mozilla
+// folks to be able to turn it on if they so desire.
+//
+var pref = null;
+try {
+	pref = Components.classes['component://netscape/preferences'];
+	pref = pref.getService();
+	pref = pref.QueryInterface(Components.interfaces.nsIPref);
+}
+catch (ex) {
+	dump("failed to get prefs service!\n");
+	pref = null;
+}
+var gDragDropEnabled = false;
+try {
+  gDragDropEnabled = pref.GetBoolPref("xpfe.dragdrop.enable");
+}
+catch (ex) {
+  dump("failed to get the xpfe.dragdrop.enable pref, assuming it is off\n");
+}  
+
 
 function BeginDragTree ( event )
 {
+    if ( !gDragDropEnabled )
+      return;
+    
 	//XXX we rely on a capturer to already have determined which item the mouse was over
 	//XXX and have set an attribute.
     
@@ -122,6 +147,9 @@ function BeginDragTree ( event )
 
 function DragOverTree ( event )
 {
+    if ( !gDragDropEnabled )
+      return;
+    
 	var validFlavor = false;
 	var dragSession = null;
 	var retVal = true;
@@ -154,6 +182,9 @@ function DragOverTree ( event )
 
 function DropOnTree ( event )
 {
+    if ( !gDragDropEnabled )
+      return;
+    
 	var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
 	if (RDF)	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 	if (!RDF)	return(false);
