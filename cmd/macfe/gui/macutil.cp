@@ -511,7 +511,7 @@ void * StructCopy(const void * struc, UInt32 size)
 }
 
 
-void SetMenuSize( LStdPopupMenu* popup, short shouldBe )
+void SetMenuSize( LPopupButton* popup, short shouldBe )
 {
 	MenuHandle		menu;
 	short			count;

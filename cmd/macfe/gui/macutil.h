@@ -26,6 +26,7 @@
 #include <LControl.h>
 #include <LPane.h>
 #include <LGAPopup.h>
+#include <LPopupButton.h>
 #include <Processes.h>
 
 #include "PascalString.h"
@@ -172,7 +173,7 @@ void CreateMenuString( CStr255& itemName );
 Handle TextHandleToHardLineBreaks(CSimpleTextView &inTextView);
 
 // ¥Êsets the number of entries in popup to be shouldBe
-void SetMenuSize( LStdPopupMenu* popup, short shouldBe );
+void SetMenuSize( LPopupButton* popup, short shouldBe );
 void SetMenuSizeForLGAPopup( LGAPopup* popup, short shouldBe );
 
 void SetMenuItem( CommandT whichItem, Boolean toState );
