@@ -19,8 +19,82 @@
 #ifndef nsError_h
 #define nsError_h
 
+/*
+ * To add error code to your module, you need to do the following:
+ *
+ * 1) Add a module offset code.  Add yours to the bottom of the list 
+ *    right below this comment, adding 1.
+ *
+ * 2) In your module, define a header file which uses one of the
+ *    NE_ERROR_GENERATExxxxxx macros.  Some examples below:
+ *
+ *    #define NS_ERROR_MYMODULE_MYERROR1 NS_ERROR_GENERATE(NS_ERROR_SEVERITY_ERROR,NS_ERROR_MODULE_MYMODULE,1)
+ *    #define NS_ERROR_MYMODULE_MYERROR2 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_MYMODULE,2)
+ *    #define NS_ERROR_MYMODULE_MYERROR3 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MYMODULE,3)
+ *
+ */
+
+
+/**
+ * @name Standard Module Offset Code. Each Module should identify a unique number
+ *       and then all errors associated with that module become offsets from the
+ *       base associated with that module id. There are 16 bits of code bits for
+ *       each module.
+ */
+
+#define NS_ERROR_MODULE_XPCOM     1
+#define NS_ERROR_MODULE_BASE      2
+#define NS_ERROR_MODULE_GFX       3
+#define NS_ERROR_MODULE_WIDGET    4
+#define NS_ERROR_MODULE_CALENDAR  5
+
+/**
+ * @name Standard Error Handling Macros
+ */
+
 #define NS_FAILED(_nsresult) ((_nsresult) & 0x80000000)
 #define NS_SUCCEEDED(_nsresult) (!((_nsresult) & 0x80000000))
+
+/**
+ * @name Severity Code.  This flag identifies the level of warning
+ */
+
+#define NS_ERROR_SEVERITY_SUCCESS       0
+#define NS_ERROR_SEVERITY_ERROR         1
+
+/**
+ * @name Mozilla Code.  This flag separates consumers of mozilla code
+ *       from the native platform
+ */
+
+#define NS_ERROR_MODULE_BASE_OFFSET 0x45
+
+/**
+ * @name Standard Error Generating Macros
+ */
+
+#define NS_ERROR_GENERATE(sev,module,code) \
+    ((nsresult) (((PRUint32)(sev)<<31) | ((PRUint32)(module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))) )
+
+#define NS_ERROR_GENERATE_SUCCESS(module,code) \
+    ((nsresult) (((PRUint32)(NS_ERROR_SEVERITY_SUCCESS)<<31) | ((PRUint32)(module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))) )
+
+#define NS_ERROR_GENERATE_FAILURE(module,code) \
+    ((nsresult) (((PRUint32)(NS_ERROR_SEVERITY_ERROR)<<31) | ((PRUint32)(module+NS_ERROR_MODULE_BASE_OFFSET)<<16) | ((PRUint32)(code))) )
+
+/**
+ * @name Standard Macros for retrieving error bits
+ */
+
+#if PR_BYTES_PER_INT == 4
+#define NS_IS_ERROR(err)           (((nsresult)(err))<0)
+#else
+#define NS_IS_ERROR(err)           (((((PRUint32)(err)) >> 31) & 0x1) == NS_ERROR_SEVERITY_ERROR)
+#endif
+
+#define NS_ERROR_GET_CODE(err)     ((err) & 0xffff)
+#define NS_ERROR_GET_MODULE(err)   (((((err) >> 16) - NS_ERROR_MODULE_BASE_OFFSET) & 0x1fff))
+#define NS_ERROR_GET_SEVERITY(err) (((err) >> 31) & 0x1)
 
 /**
  * @name Standard return values
