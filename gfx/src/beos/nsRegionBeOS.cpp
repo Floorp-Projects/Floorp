@@ -162,8 +162,8 @@ void nsRegionBeOS :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, P
     BRect rect = mRegion.Frame();
     *aX = nscoord(rect.left);
     *aY = nscoord(rect.top);
-    *aWidth = nscoord(rect.Width());
-    *aHeight = nscoord(rect.Height());
+    *aWidth = nscoord(rect.Width()+1);
+    *aHeight = nscoord(rect.Height()+1);
   }
   else
   {
