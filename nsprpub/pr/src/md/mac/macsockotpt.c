@@ -173,9 +173,9 @@ static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode otEvent, O
 				if (_PR_MD_GET_INTSOFF()) {
 					dnsContext.thread->md.missedIONotify = PR_TRUE;
 					cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-				}
-				else
+				} else {
 					DoneWaitingOnThisThread(dnsContext.thread);
+				}
 				break;
 		
         case kOTProviderWillClose:
@@ -189,8 +189,7 @@ static pascal void  DNSNotifierRoutine(void * contextPtr, OTEventCode otEvent, O
 				if (_PR_MD_GET_INTSOFF()) {
 					dnsContext.thread->md.missedIONotify = PR_TRUE;
 					cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-				}
-				else {
+				} else {
 					DoneWaitingOnThisThread(dnsContext.thread);
 				}
                 break;
@@ -299,8 +298,7 @@ WakeUpNotifiedThread(PRThread *thread, OTResult result)
 		if (_PR_MD_GET_INTSOFF()) {
 			thread->md.missedIONotify = PR_TRUE;
 			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-		}
-		else {
+		} else {
 			DoneWaitingOnThisThread(thread);
 		}
 	}
@@ -1175,8 +1173,7 @@ static pascal void  RawEndpointNotifierRoutine(void * contextPtr, OTEventCode co
 		if (_PR_MD_GET_INTSOFF()) {
 			thread->md.asyncNotifyPending = PR_TRUE;
 			cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-		}
-		else {
+		} else {
 			DoneWaitingOnThisThread(thread);
 		}
 	}

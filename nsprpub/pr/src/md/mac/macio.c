@@ -81,8 +81,7 @@ static void AsyncIOCompletion (ExtendedParamBlock *pbAsyncPtr)
     if (_PR_MD_GET_INTSOFF()) {
         thread->md.missedIONotify = PR_TRUE;
         cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-    }
-    else {
+    } else {
         _PR_INTSOFF(is);
 
         thread->md.osErrCode = noErr;
