@@ -1992,6 +1992,16 @@ function MsgJunkMail()
   OpenOrFocusWindow(args, "mailnews:junk", "chrome://messenger/content/junkMail.xul");
 }
 
+function MsgJunkMailInfo()
+{
+  var desiredWindow = GetWindowByWindowType("mailnews:junkmailinfo");
+
+  if (desiredWindow)
+    desiredWindow.focus();
+  else
+    window.openDialog("chrome://messenger/content/junkMailInfo.xul", "mailnews:junkmailinfo", "centerscreen,resizeable=no,titlebar,chrome", null);
+}
+
 function MsgSearchAddresses()
 {
   var args = { directory: null };

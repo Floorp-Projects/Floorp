@@ -20,7 +20,6 @@
 # This is a list of local files which get copied to the res\mailnews\messenger directory
 #
 
-custreceipt.dtd
 pref-diskspace.dtd
 pref-mailnews.dtd
 pref-receipts.dtd

@@ -46,7 +46,6 @@ pref-mailnews.xul
 pref-mailnews.js
 pref-receipts.xul
 pref-viewing_messages.xul
-custreceipt.xul
 AccountWizard.xul
 AccountWizard.js
 aw-wizardAdapter.js

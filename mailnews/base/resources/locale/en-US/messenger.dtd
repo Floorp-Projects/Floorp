@@ -529,4 +529,5 @@ Rights Reserved.
 <!-- junk bar -->
 <!ENTITY junkBarMessage.label "&brandShortName; thinks this message is junk mail">
 <!ENTITY notJunkButton.label "This is Not Junk">
+<!ENTITY junkInfoButton.label "Help">
 

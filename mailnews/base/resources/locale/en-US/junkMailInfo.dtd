@@ -1,0 +1,7 @@
+<!ENTITY window.title  "Junk Mail">
+<!ENTITY window.width  "450">
+<!ENTITY window.height "200">
+<!ENTITY info1.label   "&brandShortName; can analyze your incoming messages and identify those which are likely to be junk mail.">
+<!ENTITY info2.label   "You can train &brandShortName; to more accurately analyze incoming messages by using the junk toolbar button to mark messages as junk or not junk.">
+<!ENTITY info3.label   "Once &brandShortName; is correctly identifying your messages, incoming junk mail can automatically be moved to the Junk folder by going to the Tools menu and choosing Junk Mail Controls.">
+<!ENTITY info4.label   "For more information about Junk Mail Controls, click the Help button.">
