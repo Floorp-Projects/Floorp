@@ -103,7 +103,7 @@ AtomImpl::SizeOf(nsISizeOfHandler* aHandler) const
 
 static PLHashNumber HashKey(const PRUnichar* k)
 {
-  return (PLHashNumber) nsCRT::HashCode(k);
+  return (PLHashNumber) nsCRT::HashValue(k);
 }
 
 static PRIntn CompareKeys(const PRUnichar* k1, const PRUnichar* k2)
@@ -131,7 +131,7 @@ NS_BASE nsIAtom* NS_NewAtom(const PRUnichar* us)
                                      nsnull, nsnull);
   }
   PRInt32 uslen;
-  PRInt32 hashCode = nsCRT::HashCode(us, &uslen);
+  PRUint32 hashCode = nsCRT::HashValue(us, &uslen);
   PLHashEntry** hep = PL_HashTableRawLookup(gAtomHashTable, hashCode, us);
   PLHashEntry* he = *hep;
   if (nsnull != he) {
