@@ -39,6 +39,9 @@ CVST=cvs -q -d $(CVTREX) co -P
 LIBNLS_BRANCH           = -r libnls_v3_zulu_branch
 LIBNLS_DIR              = ns/modules/libnls
 
+TREX_MSGSDK_BRANCH      = 
+TREX_MSGSDK_DIR         = mozilla/msgsdk
+
 
 default:  pull_all build_all
 
@@ -69,6 +72,7 @@ endif
 pull_trex:
 	cd $(MOZ_SRC); \
 	$(CVS)  mozilla/gconfig; \
+    $(CVS)  $(TREX_MSGSDK_BRANCH)   $(TREX_MSGSDK_DIR); \
 	$(CVS)  mozilla/xpfc; \
 	$(CVS)  mozilla/calendar; \
 	cd $(MOZ_SRC)/.
@@ -92,6 +96,8 @@ endif
 
 
 build_trex:
+    cd $(MOZ_SRC)/$(MOZ_TOP)/msgsdk; \
+    gmake buildC; \
 	cd $(MOZ_SRC)/mozilla/gconfig; \
 	gmake; \
 	cd $(MOZ_SRC)/mozilla/xpfc; \
