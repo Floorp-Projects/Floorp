@@ -1,0 +1,194 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="prefmProgress.css" type="text/css"?> 
+
+<!DOCTYPE window
+[
+<!ENTITY downloadWindow.title "Updating profile"> 
+<!ENTITY  location "Location"> 
+<!ENTITY  saving "Saving"> 
+<!ENTITY  status "Status:"> 
+<!ENTITY  dialogStatus.label "( nn.nK of mm.mK bytes )"> 
+<!ENTITY  timeLeft "Time Left:">
+<!ENTITY dialogTimeLeft.label "?"> 
+<!ENTITY dialogCancel.label "Cancel"> 
+
+]
+> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+  		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Updating profile"
+        width="425"
+        height="225"
+        onload="onLoad()">
+
+    <data>
+        <broadcaster id="data.progress" type="progress" value="0" max="0" completed="false"/>
+        <broadcaster id="data.status" type="string" value=""/>
+        <broadcaster id="data.execute" command=""/>
+    </data>
+
+    <dialog>
+        <observes element="data.progress" attribute="value" onchange="onProgress()"/>
+        <observes element="data.progress" attribute="completed" onchange="onCompletion()"/>
+        <observes element="data.status"   attribute="value" onchange="onStatus()"/>
+    </dialog>
+
+    <html:script>
+        var data;
+        var dialog;
+
+        function loadDialog() {
+            dialog.location.setAttribute( "value", data.location.getAttribute( "value" ) );
+            dialog.fileName.setAttribute( "value", data.fileName.getAttribute( "value" ) );
+        }
+
+        function onLoad() {
+            // Set global variables.
+            data = new Object;
+            data.progress      = document.getElementById("data.progress");
+            data.status        = document.getElementById("data.status");
+            data.execute       = document.getElementById("data.execute");
+            dialog = new Object;
+            dialog.status      = document.getElementById("dialog.status");
+            dialog.progress    = document.getElementById("dialog.progress");
+            dialog.progressPercent = document.getElementById("dialog.progressPercent");
+            dialog.cancel      = document.getElementById("dialog.cancel");
+
+            // Fill dialog.
+            loadDialog();
+
+            // Commence.
+            data.execute.setAttribute("command","start");
+        }
+
+        var started = false;
+        var completed = false;
+        var interval = 1000; // Update every 1000 milliseconds.
+        var lastUpdate = -interval; // Update initially.
+
+        function stop() {
+            if ( started &amp;&amp; !completed ) {
+                // Stop the download.
+                data.execute.setAttribute( "command", "stop" );
+            } else {
+                // Close the window.
+                data.execute.setAttribute( "command", "close" );
+            }
+        }
+
+        function onProgress() {
+            // Check for first time.
+            if ( !started ) {
+                // Initialize download start time.
+                started = true;
+                dialog.cancel.removeAttribute( "disabled" );
+            }
+            // Get stats.
+            var currentStatus = data.progress.getAttribute("value");
+            var max   = data.progress.getAttribute("max");
+
+            // Determine if progress bar should update
+            // If a file isn't done copying, don't increment progress bar.
+            if ( currentStatus == lastUpdate ) {
+                return;
+            }
+
+            // Update with the current progress value.
+            lastUpdate = currentStatus;
+
+            // Update download rate.
+            var elapsed = now - startTime;
+            var rate; // bytes/sec
+            if ( elapsed ) {
+                rate = ( bytes * 1000 ) / elapsed;
+            } else {
+                rate = 0;
+            }
+
+            // Calculate percentage.
+            var percent = Math.round( (currentStatus*100)/max );
+
+            // Advance progress meter.
+            dialog.progress.setAttribute( "value", percent );
+            
+             // Update percentage label on progress meter.
+            dialog.progressPercent.childNodes[0].nodeValue = percent + "%";
+            
+        }
+
+        function onCompletion() {
+            if ( !completed ) {
+                completed = true;
+                data.execute.setAttribute( "command", "close" );
+            }
+        }
+
+        function onStatus() {
+            var txt = data.status.getAttribute( "value" );
+            dialog.status.childNodes[0].nodeValue = txt;
+        }
+    </html:script>
+
+    <html:table style="width:100%;">
+
+        <html:tr>
+            <html:td align="right">
+                &location;
+            </html:td>
+            <html:td align="left">
+                <html:input id="dialog.location" readonly="" style="background-color:lightgray;width:300px;"/>
+            </html:td>
+        </html:tr>
+    
+        <html:tr>
+            <html:td align="right">
+                &saving;
+            </html:td>
+            <html:td align="left">
+                <html:input id="dialog.fileName" readonly="" value="" style="background-color:lightgray;width:300px;"/>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="right">
+                &status;
+            </html:td>
+            <html:td align="left">
+                <html:span id="dialog.status">
+                    &dialogStatus.label;
+                </html:span>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="right">
+                &timeLeft;
+            </html:td>
+            <html:td align="left">
+                <html:span id="dialog.timeLeft">
+                    &dialogTimeLeft.label;
+                </html:span>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="center" height="40px" colspan="2">
+                <progressmeter id="dialog.progress" mode="normal" value="0"
+                               style="width:300px;height:16px;"/>
+                <html:span id="dialog.progressPercent" style="border-left:5px solid lightgray;">
+                    0%
+                </html:span>
+            </html:td>
+        </html:tr>
+
+        <html:tr>
+            <html:td align="center" colspan="2">
+                <html:button id="dialog.cancel" onclick="stop()">&dialogCancel.label;</html:button>
+            </html:td>
+        </html:tr>
+
+    </html:table>
+
+</window>
