@@ -789,11 +789,9 @@ BOOL LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize)
   char szSetupDirTemp[MAX_BUF];
   char szTempDirTemp[MAX_BUF];
 
-#ifdef XXX_SSU_VERIFY_XPI_FILE_AGAINST_ARCHIVE_LIST
   char szArchiveLstFile[MAX_BUF];
   char *szBufPtr;
   int  iLen;
-#endif
 
   /* initialize default behavior */
   bRet = FALSE;
@@ -837,52 +835,51 @@ BOOL LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize)
 
       if(FileExists(szBuf))
       {
+#ifdef XXX_SSU
         /* jar file found.  Unset attribute to download from the net */
         siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
         /* save the path of where jar was found at */
         lstrcpy(siCObject->szArchivePath, szTempDirTemp);
         AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
         bRet = TRUE;
+#endif
+
+        /* if the archive name is in the archive.lst file, then it was uncompressed
+         * by the self extracting .exe file.  Assume that the .xpi file exists.
+         * This is a safe assumption because the self extracting.exe creates the
+         * archive.lst with what it uncompresses everytime it is run. */
+        lstrcpy(szArchiveLstFile, szTempDirTemp);
+        AppendBackSlash(szArchiveLstFile, sizeof(szArchiveLstFile));
+        lstrcat(szArchiveLstFile, "Archive.lst");
+
+        GetPrivateProfileString("Archives", NULL, "", szBuf, (MAX_BUF * 2), szArchiveLstFile);
+        if(*szBuf != '\0')
+        {
+          szBufPtr = szBuf;
+          while(*szBufPtr != '\0')
+          {
+            if(lstrcmpi(siCObject->szArchiveName, szBufPtr) == 0)
+            {
+              /* jar file found.  Unset attribute to download from the net */
+              siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
+              /* save the path of where jar was found at */
+              lstrcpy(siCObject->szArchivePath, szTempDirTemp);
+              AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
+              bRet = TRUE;
+
+              /* found what we're looking for.  No need to continue */
+              break;
+            }
+
+            iLen = lstrlen(szBufPtr);
+            szBufPtr += iLen +1;
+          }
+        }
 
         /* save path where archive is located */
         if(szPath != NULL)
           lstrcpy(szPath, szTempDirTemp);
       }
-
-#ifdef XXX_SSU_VERIFY_XPI_FILE_AGAINST_ARCHIVE_LIST
-      /* if the archive name is in the archive.lst file, then it was uncompressed
-       * by the self extracting .exe file.  Assume that the .xpi file exists.
-       * This is a safe assumption because the self extracting.exe creates the
-       * archive.lst with what it uncompresses everytime it is run. */
-      lstrcpy(szArchiveLstFile, szTempDirTemp);
-      AppendBackSlash(szArchiveLstFile, sizeof(szArchiveLstFile));
-      lstrcat(szArchiveLstFile, "Archive.lst");
-
-      GetPrivateProfileString("Archives", NULL, "", szBuf, (MAX_BUF * 2), szArchiveLstFile);
-      if(*szBuf != '\0')
-      {
-        szBufPtr = szBuf;
-        while(*szBufPtr != '\0')
-        {
-          if(lstrcmpi(siCObject->szArchiveName, szBufPtr) == 0)
-          {
-            /* jar file found.  Unset attribute to download from the net */
-            siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
-            /* save the path of where jar was found at */
-            lstrcpy(siCObject->szArchivePath, szTempDirTemp);
-            AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
-            bRet = TRUE;
-
-            /* found what we're looking for.  No need to continue */
-            break;
-          }
-
-          iLen = lstrlen(szBufPtr);
-          szBufPtr += iLen +1;
-        }
-      }
-#endif
-
     }
     else
     {
@@ -913,12 +910,14 @@ BOOL LocateJar(siC *siCObject, LPSTR szPath, DWORD dwPathSize)
 
         if(FileExists(szBuf))
         {
+#ifdef XXX_SSU
           /* jar file found.  Unset attribute to download from the net */
           siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
           /* save the path of where jar was found at */
           lstrcpy(siCObject->szArchivePath, szTempDirTemp);
           AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
           bRet = TRUE;
+#endif
 
           /* save path where archive is located */
           if(szPath != NULL)
@@ -5489,7 +5488,8 @@ void SaveInstallerFiles()
   siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
   while(siCObject)
   {
-    if(LocateJar(siCObject, szArchivePath, sizeof(szArchivePath)) == TRUE)
+    LocateJar(siCObject, szArchivePath, sizeof(szArchivePath));
+    if(*szArchivePath != '\0')
     {
       lstrcpy(szBuf, szArchivePath);
       AppendBackSlash(szBuf, sizeof(szBuf));
