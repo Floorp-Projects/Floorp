@@ -80,11 +80,11 @@ public:
 
   NS_IMETHOD SetTitle(const PRUnichar* aTitle) = 0;
 
-  NS_IMETHOD GetTitle(PRUnichar** aResult) = 0;
+  NS_IMETHOD GetTitle(const PRUnichar** aResult) = 0;
 
   NS_IMETHOD SetStatus(const PRUnichar* aStatus) = 0;
 
-  NS_IMETHOD GetStatus(PRUnichar** aResult) = 0;
+  NS_IMETHOD GetStatus(const PRUnichar** aResult) = 0;
 
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax) = 0;
 

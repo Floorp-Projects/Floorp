@@ -174,7 +174,7 @@ public:
   NS_IMETHOD GetChildCount(PRInt32& aResult);
   NS_IMETHOD AddChild(nsIWebShell* aChild);
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult);
-  NS_IMETHOD GetName(PRUnichar** aName);
+  NS_IMETHOD GetName(const PRUnichar** aName);
   NS_IMETHOD SetName(const PRUnichar* aName);
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult);
@@ -212,11 +212,11 @@ public:
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
   NS_IMETHOD GetHistoryLength(PRInt32& aResult);
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
-  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, PRUnichar** aURLResult);
+  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult);
 
   // Chrome api's
   NS_IMETHOD SetTitle(const PRUnichar* aTitle);
-  NS_IMETHOD GetTitle(PRUnichar** aResult);
+  NS_IMETHOD GetTitle(const PRUnichar** aResult);
 
   // nsIWebShellContainer
   NS_IMETHOD WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason);
@@ -1090,7 +1090,7 @@ nsWebShell::ChildAt(PRInt32 aIndex, nsIWebShell*& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetName(PRUnichar** aName)
+nsWebShell::GetName(const PRUnichar** aName)
 {
   *aName = mName;
   return NS_OK;
@@ -1110,7 +1110,7 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
   aResult = nsnull;
   nsString aName(aName1);
 
-  PRUnichar *childName;
+  const PRUnichar *childName;
   PRInt32 i, n = mChildren.Count();
   for (i = 0; i < n; i++) {
     nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
@@ -1506,7 +1506,7 @@ nsWebShell::GetHistoryIndex(PRInt32& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetURL(PRInt32 aHistoryIndex, PRUnichar** aURLResult)
+nsWebShell::GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult)
 {
   nsresult rv = NS_ERROR_ILLEGAL_VALUE;
   if ((aHistoryIndex >= 0) &&
@@ -1568,7 +1568,7 @@ nsWebShell::SetTitle(const PRUnichar* aTitle)
 }
 
 NS_IMETHODIMP
-nsWebShell::GetTitle(PRUnichar** aResult)
+nsWebShell::GetTitle(const PRUnichar** aResult)
 {
   *aResult = mTitle;
   return NS_OK;

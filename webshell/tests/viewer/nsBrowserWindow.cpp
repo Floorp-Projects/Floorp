@@ -429,7 +429,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     {
       PRInt32 theIndex;
       mWebShell->GetHistoryIndex(theIndex);
-      PRUnichar* theURL;
+      const PRUnichar* theURL;
       mWebShell->GetURL(theIndex,&theURL);
       nsAutoString theString(theURL);
       mApp->ViewSource(theString);
@@ -1711,7 +1711,7 @@ nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::GetTitle(PRUnichar** aResult)
+nsBrowserWindow::GetTitle(const PRUnichar** aResult)
 {
   *aResult = mTitle;
   return NS_OK;
@@ -1728,7 +1728,7 @@ nsBrowserWindow::SetStatus(const PRUnichar* aStatus)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::GetStatus(PRUnichar** aResult)
+nsBrowserWindow::GetStatus(const PRUnichar** aResult)
 {
   return NS_OK;
 }
@@ -1849,7 +1849,7 @@ nsBrowserWindow::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aRes
     nsIWebShell *ws;
     
     if (NS_OK == bw->GetWebShell(ws)) {
-      PRUnichar *name;
+      const PRUnichar *name;
       if (NS_OK == ws->GetName(&name)) {
 	if (aNameStr.Equals(name)) {
 	  aResult = ws;
@@ -2536,7 +2536,7 @@ nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
 
 static void DumpAWebShell(nsIWebShell* aShell, FILE* out, PRInt32 aIndent)
 {
-  PRUnichar *name;
+  const PRUnichar *name;
   nsAutoString str;
   nsIWebShell* parent;
   PRInt32 i, n;
@@ -2826,7 +2826,7 @@ nsBrowserWindow::DoDebugSave()
   PRBool    doSave = PR_FALSE;
   nsString  path;
 
-  PRUnichar *urlString;
+  const PRUnichar *urlString;
   mWebShell->GetURL(0,&urlString);
   nsIURL* url;
   nsresult rv = NS_NewURL(&url, urlString);
