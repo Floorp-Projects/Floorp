@@ -37,37 +37,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef LEGACYPLUGIN_H
-#define LEGACYPLUGIN_H
+#ifndef XPCMEDIAPLAYER_H
+#define XPCMEDIAPLAYER_H
 
-#include "npapi.h"
-#include "nsISupports.h"
+#include "nsWMP.h"
+#include "XPConnect.h"
 
-// Plugin types supported
-enum PluginInstanceType
+#include "wmp.h"
+//#include "wmp7.h"
+
+class nsWMPControls;
+class nsWMPSettings;
+
+class nsWMPScriptablePeer :
+    public nsScriptablePeer,
+    public nsIWMPPlayer2
 {
-    itScript,
-    itControl
-};
+    friend nsWMPControls;
+    friend nsWMPSettings;
+protected:
+    virtual ~nsWMPScriptablePeer();
 
-// Data associated with a plugin instance
-struct PluginInstanceData {
-    NPP pPluginInstance;
-    PluginInstanceType nType;
-    union
-    {
-        CActiveScriptSiteInstance *pScriptSite;
-        struct {
-            CControlSiteInstance *pControlSite;
-            CControlEventSinkInstance *pControlEventSink;
-        };
-    };
-    char *szUrl;
-    char *szContentType;
-    CLSID clsid;
-#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-    nsISupports *pScriptingPeer;
-#endif
+    HRESULT GetIWMPCore(IWMPCore **pwmpc);
+
+public:
+    nsWMPScriptablePeer();
+
+    nsWMPControls *mControls;
+    nsWMPSettings *mSettings;
+
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIWMPCORE
+    NS_DECL_NSIWMPPLAYER2
 };
 
 #endif

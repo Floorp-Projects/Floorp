@@ -1,0 +1,241 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Adam Lock <adamlock@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+#include "nsIMozAxPlugin.idl"
+
+[scriptable, uuid(94D55E95-3FAC-11d3-B155-00C04F79FAA6)]
+interface nsIWMPMedia : nsISupports
+{
+    /** Determines if the supplied object is the same as the this one */
+    boolean isIdentical(in nsIWMPMedia aIn);
+
+    /** Returns the media URL */
+    readonly attribute AString sourceURL;
+
+    /** Returns or sets the name of the media */
+    attribute AString name;
+
+    /** Returns the original width of the source images */
+    readonly attribute long width;
+    /** Returns the original height of the source images */
+    readonly attribute long height;
+
+    /** Returns the number of markers in the file */
+    readonly attribute long markerCount;
+
+    /** Returns the time of a marker */
+    double markerTime(in long aMarkerNum);
+
+    /** Returns the name of a marker */
+    AString markerName(in long aMarkerNum);
+
+    /** Returns duration of current media */
+    readonly attribute double duration;
+
+    /** Returns duration of current media as a string */
+    readonly attribute AString durationString;
+
+    /** Returns the count of the attributes associated with this media */
+    readonly attribute long attributeCount;
+
+    /** Returns the name of the attribute whose index has been specified */
+    AString getAttributeName(in long aIndex);
+
+    /** Returns the value of specified attribute for this media */
+    AString getItemInfo(in AString aItemName);
+    /** Sets the value of specified attribute for this media */
+    void setItemInfo(in AString aItemName, in AString aValue);
+
+    /** Gets an item info by atom */
+    AString getItemInfoByAtom(in long aAtom);
+
+    /* 
+    [ 
+        id( DISPID_WMPMEDIA_ISMEMBEROF ), helpstring( "Is the media a member of the given playlist" ) ]
+        HRESULT isMemberOf( [in] IWMPPlaylist* pPlaylist, [out, retval] VARIANT_BOOL* pvarfIsMemberOf );
+        */
+
+    /** Is the attribute read only */
+    boolean isReadOnlyItem(in AString aItemName);
+};
+
+[scriptable, uuid(74C09E02-F828-11d2-A74B-00A0C905F36E)]
+interface nsIWMPControls : nsISupports
+{
+    /** Returns whether or not the specified media functionality is available */
+    boolean isAvailable(in AString aItem);
+
+    /** Begins playing media */
+    void play();
+        
+    /** Stops play of media */
+    void stop();
+
+    /** Pauses play of media */
+    void pause();
+
+    /** Fast play of media in forward direction */
+    void fastForward();
+
+    /** Fast play of media in reverse direction */
+    void fastReverse();
+
+    /** Returns or sets the current position in media */
+    attribute double currentPosition;
+
+    /** Returns the current position in media as a string */
+    readonly attribute AString currentPositionString;
+
+    /** Sets the current item to the next item in the playlist */
+    void next();
+
+    /** Sets the current item to the previous item in the playlist */
+    void previous();
+
+    /** Returns/Sets the play item */
+    attribute nsIWMPMedia currentItem;
+
+    /** Returns or sets the current marker */
+    attribute long currentMarker;
+
+    /** Sets the current item and plays it */
+    void playItem(in nsIWMPMedia aItem);
+};
+
+[scriptable, uuid(9104D1AB-80C9-4fed-ABF0-2E6417A6DF14)]
+interface nsIWMPSettings : nsISupports
+{
+    /** Returns whether or not the specified media functionality is available */
+    boolean isAvailable(in AString aItem);
+
+    /** Returns or sets whether media should automatically begin playing */
+    attribute boolean autoStart;
+
+    /** Returns or sets the base URL used for relative path resolution */
+    attribute AString baseURL;
+
+    /** Returns or sets the frame location that changes when a URL flip occurs */
+    attribute AString defaultFrame;
+
+    /** Returns or sets whether URL events should spawn a browser */
+    attribute boolean invokeURLs;
+
+    /** Returns or sets whether audio should be muted */
+    attribute boolean mute;
+
+    /** Returns or sets how many times media should play */
+    attribute long playCount;
+
+    /** Returns or sets current playback rate*/
+    attribute double rate;
+
+    /** Returns or sets current audio balance */
+    attribute long balance;
+
+    /** Returns or sets current audio volume */
+    attribute long volume;
+
+    /** Returns the mode of the playlist */
+    boolean getMode(in AString aMode);
+    /** Sets the mode of the playlist */
+    void setMode(in AString aMode, in boolean aValue);
+
+    /** Returns or sets whether error dialogs are shown by default when embedded */
+    attribute boolean enableErrorDialogs;
+};
+
+
+[scriptable, uuid(D84CCA99-CCE2-11d2-9ECC-0000F8085981)]
+interface nsIWMPCore : nsISupports
+{
+    /** Returns or sets the URL */
+    attribute AString URL;
+
+    // openState
+    // playState
+
+    /** Returns the control handler */
+    readonly attribute nsIWMPControls controls;
+
+    /** Returns the settings handler */
+    readonly attribute nsIWMPSettings settings;
+
+    // currentMedia
+    // mediaCollection
+    // playlistCollection
+    // versionInfo
+    // launchURL
+    // network
+    // currentPlaylist
+    // cdromCollection
+    // closedCaption
+
+    /*
+    readonly attribute isOnline;
+    [ id(DISPID_WMPCORE_ISONLINE), propget, helpstring( "Returns whether the machine is online." ) ]
+        HRESULT isOnline( [out, retval] VARIANT_BOOL *pfOnline );
+
+    readonly attribute IWMPError error;
+    [ id(DISPID_WMPCORE_ERROR), propget, helpstring("Returns the error object")]
+        HRESULT error([out, retval] IWMPError **ppError);
+
+    readonly attribute AString status;
+    [ id(DISPID_WMPCORE_STATUS), propget, helpstring("Returns status string")]
+        HRESULT status([out, retval] BSTR *pbstrStatus);
+    */
+};
+
+[scriptable, uuid(0E6B01D1-D407-4c85-BF5F-1C01F6150280)]
+interface nsIWMPPlayer2 : nsIWMPCore
+{
+    /*
+    [ id(DISPID_WMPOCX_ENABLED), propget, helpstring("Returns a boolen value specifying whether or not the control is enabled")]
+        HRESULT enabled([out, retval] VARIANT_BOOL *pbEnabled);
+    [ id(DISPID_WMPOCX_ENABLED), propput, helpstring("Sets a boolean value specifying whether or not the control is enabled")]
+        HRESULT enabled([in] VARIANT_BOOL bEnabled);
+    [ id(DISPID_WMPOCX_FULLSCREEN), propget, helpstring("Returns a boolean value specifying whether or not the control is in full screen mode")]
+        HRESULT fullScreen([out, retval] VARIANT_BOOL *pbFullScreen);
+    [ id(DISPID_WMPOCX_FULLSCREEN), propput, helpstring("Sets a boolean value specifying whether or not the control is in full screen mode")]
+        HRESULT fullScreen(VARIANT_BOOL bFullScreen);
+    [ id(DISPID_WMPOCX_ENABLECONTEXTMENU), propget, helpstring("Returns a boolean value specifying whether or not the context menu is enabled on the control")]
+        HRESULT enableContextMenu([out, retval] VARIANT_BOOL *pbEnableContextMenu);
+    [ id(DISPID_WMPOCX_ENABLECONTEXTMENU), propput, helpstring("Sets a boolean value specifying whether or not the context menu is enabled on the control")]
+        HRESULT enableContextMenu(VARIANT_BOOL bEnableContextMenu);
+    [ id(DISPID_WMPOCX_UIMODE), propput, helpstring("Specifies the ui mode to select")]
+        HRESULT uiMode([in] BSTR bstrMode);
+    [ id(DISPID_WMPOCX_UIMODE), propget, helpstring("Returns the currently selected ui mode")]
+        HRESULT uiMode([out, retval] BSTR *pbstrMode);
+    [ id(DISPID_WMPOCX2_STRETCHTOFIT), propget, helpstring("Returns a boolen value specifying whether or not video is stretched")]
+        HRESULT stretchToFit([out, retval] VARIANT_BOOL *pbEnabled);
+    [ id(DISPID_WMPOCX2_STRETCHTOFIT), propput, helpstring("Sets a boolean value specifying whether or not video is stretched")]
+        HRESULT stretchToFit([in] VARIANT_BOOL bEnabled);
+    [ id(DISPID_WMPOCX2_WINDOWLESSVIDEO), propget, helpstring("Returns a boolen value specifying whether or not video is windowless")]
+        HRESULT windowlessVideo([out, retval] VARIANT_BOOL *pbEnabled);
+    [ id(DISPID_WMPOCX2_WINDOWLESSVIDEO), propput, helpstring("Sets a boolean value specifying whether or not video is windowless")]
+        HRESULT windowlessVideo([in] VARIANT_BOOL bEnabled);
+        */
+
+    /** Returns or sets whether or not video is stretched */
+    attribute boolean stretchToFit;
+};

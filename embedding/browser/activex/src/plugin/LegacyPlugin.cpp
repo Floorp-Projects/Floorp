@@ -44,6 +44,13 @@
 #include "nsISupports.h"
 
 #include "LegacyPlugin.h"
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+#include "XPConnect.h"
+#endif
+#ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+#include "LiveConnect.h"
+#endif
+
 
 // NPP_Initialize
 //
@@ -66,7 +73,7 @@ void NPP_Shutdown(void)
 {
     NG_TRACE_METHOD(NPP_Shutdown);
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-    liveconnect_shutdown();
+    liveconnect_Shutdown();
 #endif
     _Module.Unlock();
 }
@@ -80,7 +87,7 @@ jref NPP_GetJavaClass(void)
 {
     NG_TRACE_METHOD(NPP_GetJavaClass);
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-    return liveconnect_getjavaclass();
+    return liveconnect_GetJavaClass();
 #endif
     return NULL;
 }
@@ -116,6 +123,12 @@ NPError NewControl(const char *pluginType,
     tstring szName;
     tstring szCodebase;
     PropertyList pl;
+
+    if (strcmp(pluginType, MIME_OLEOBJECT1) != 0 &&
+        strcmp(pluginType, MIME_OLEOBJECT2) != 0)
+    {
+        clsid = xpc_GetCLSIDForType(pluginType);
+    }
 
     for (int16 i = 0; i < argc; i++)
     {
@@ -234,7 +247,7 @@ NPError NewControl(const char *pluginType,
     }
 
     // Make sure we got a CLSID
-    if (memcmp(&clsid, &CLSID_NULL, sizeof(CLSID)) == 0)
+    if (::IsEqualCLSID(clsid, CLSID_NULL))
     {
         return NPERR_GENERIC_ERROR;
     }
@@ -249,6 +262,13 @@ NPError NewControl(const char *pluginType,
         return NPERR_GENERIC_ERROR;
     }
     pSite->AddRef();
+
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+    CComPtr<IServiceProvider> sp;
+    xpc_GetServiceProvider(pData, &sp);
+    if (sp)
+        pSite->SetServiceProvider(sp);
+#endif
 
     // TODO check the object is installed and at least as recent as
     //      that specified in szCodebase
@@ -268,8 +288,19 @@ NPError NewControl(const char *pluginType,
         return NPERR_GENERIC_ERROR;
     }
 
+    CControlEventSinkInstance *pSink = NULL;
+    CControlEventSinkInstance::CreateInstance(&pSink);
+    if (pSink)
+    {
+        pSink->AddRef();
+        CComPtr<IUnknown> control;
+        pSite->GetControlUnknown(&control);
+        pSink->SubscribeToEvents(control);
+    }
+
     pData->nType = itControl;
     pData->pControlSite = pSite;
+    pData->pControlEventSink = pSink;
 
     return NPERR_NO_ERROR;
 }
@@ -301,6 +332,7 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
     {
         return NPERR_GENERIC_ERROR;
     }
+    pData->pPluginInstance = instance;
     pData->szUrl = NULL;
     pData->szContentType = (pluginType) ? strdup(pluginType) : NULL;
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
@@ -314,14 +346,10 @@ NPError NP_LOADDS NPP_New(NPMIMEType pluginType,
     {
         rv = NewScript(pluginType, pData, mode, argc, argn, argv);
     }
-    else if (strcmp(pluginType, MIME_OLEOBJECT1) == 0 ||
-             strcmp(pluginType, MIME_OLEOBJECT2) == 0)
+    else /* if (strcmp(pluginType, MIME_OLEOBJECT1) == 0 ||
+             strcmp(pluginType, MIME_OLEOBJECT2) == 0) */
     {
         rv = NewControl(pluginType, pData, mode, argc, argn, argv);
-    }
-    else
-    {
-        // Unknown MIME type
     }
 
     // Test if plugin creation has succeeded and cleanup if it hasn't
@@ -364,6 +392,11 @@ NPP_Destroy(NPP instance, NPSavedData** save)
         {
             pSite->Detach();
             pSite->Release();
+        }
+        if (pData->pControlEventSink)
+        {
+            pData->pControlEventSink->UnsubscribeFromEvents();
+            pData->pControlEventSink->Release();
         }
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
         if (pData->pScriptingPeer)
@@ -446,7 +479,7 @@ NPP_SetWindow(NPP instance, NPWindow* window)
                 pSite->SetPosition(rcPos);
             }
         }
-}
+    }
 
     return NPERR_NO_ERROR;
 }
@@ -617,7 +650,7 @@ NPP_GetValue(NPP instance, NPPVariable variable, void *value)
 {
     NPError rv = NPERR_GENERIC_ERROR;
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-    rv = xpconnect_getvalue(instance, variable, value);
+    rv = xpc_GetValue(instance, variable, value);
 #endif
     return rv;
 }

@@ -59,8 +59,9 @@
 #include "_java/MozAxPlugin.h"
 
 #include "LegacyPlugin.h"
+#include "LiveConnect.h"
 
-void liveconnect_shutdown()
+void liveconnect_Shutdown()
 {
     JRIEnv* env = NPN_GetJavaEnv();
     if (env) {
@@ -78,7 +79,7 @@ void liveconnect_shutdown()
     }
 }
 
-jref liveconnect_getjavaclass()
+jref liveconnect_GetJavaClass()
 {
     JRIEnv* env = NPN_GetJavaEnv();
     if (env) {

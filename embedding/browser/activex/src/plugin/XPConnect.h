@@ -39,13 +39,42 @@
 #ifndef XPCONNECT_H
 #define XPCONNECT_H
 
+#include <servprov.h>
+
 #include "nsIClassInfo.h"
 #include "nsIMozAxPlugin.h"
 
 #include "LegacyPlugin.h"
 
+template <class T> class nsIClassInfoImpl : public nsIClassInfo
+{
+    NS_IMETHODIMP GetFlags(PRUint32 *aFlags)
+    {
+        *aFlags = nsIClassInfo::PLUGIN_OBJECT | nsIClassInfo::DOM_OBJECT;
+        return NS_OK;
+    }
+    NS_IMETHODIMP GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+    {
+        *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+        return NS_OK;
+    }
+    // The rest of the methods can safely return error codes...
+    NS_IMETHODIMP GetInterfaces(PRUint32 *count, nsIID * **array)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHODIMP GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHODIMP GetContractID(char * *aContractID)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHODIMP GetClassDescription(char * *aClassDescription)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHODIMP GetClassID(nsCID * *aClassID)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHODIMP GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+    { return NS_ERROR_NOT_IMPLEMENTED; }
+};
+
 class nsScriptablePeer :
-    public nsIClassInfo,
+    public nsIClassInfoImpl<nsScriptablePeer>,
     public nsIMozAxPlugin
 {
 protected:
@@ -57,7 +86,6 @@ public:
     PluginInstanceData* mPlugin;
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSICLASSINFO
     NS_DECL_NSIMOZAXPLUGIN
 
 protected:
@@ -67,5 +95,13 @@ protected:
     nsresult HR2NS(HRESULT hr) const;
     NS_IMETHOD InternalInvoke(const char *aMethod, unsigned int aNumArgs, nsIVariant *aArgs[]);
 };
+
+extern void xpc_AddRef();
+extern void xpc_Release();
+extern CLSID xpc_GetCLSIDForType(const char *mimeType);
+extern NPError xpc_GetValue(NPP instance, NPPVariable variable, void *value);
+extern nsScriptablePeer *xpc_GetPeerForCLSID(const CLSID &clsid);
+extern nsIID xpc_GetIIDForCLSID(const CLSID &clsid);
+extern HRESULT xpc_GetServiceProvider(PluginInstanceData *pData, IServiceProvider **pSP);
 
 #endif
