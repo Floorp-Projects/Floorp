@@ -337,7 +337,7 @@ NS_IMETHODIMP nsNetSupportDialog::Alert( const nsString &aText )
   nsAutoString aText(text);
 #endif
 	mMsg = &aText;
-	nsString  url( "resource:/res/samples/NetSupportAlert.xul") ;
+	nsString  url( "chrome://navigator/content/NetSupportAlert.xul") ;
 	DoDialog( url );
 	return NS_OK;
 }
@@ -354,7 +354,7 @@ NS_IMETHODIMP nsNetSupportDialog::Confirm( const nsString &aText, PRInt32* retur
 #endif
 	mMsg = &aText;
 	mReturnValue = returnValue;
-	nsString  url( "resource:/res/samples/NetSupportConfirm.xul") ; 
+	nsString  url( "chrome://navigator/content/NetSupportConfirm.xul") ; 
 	DoDialog( url  );
 	return NS_OK;	
 }
@@ -377,7 +377,7 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck( const nsString &aText, const nsS
 	mReturnValue = returnValue;
 	mCheckValue = checkValue;
 	mCheckMsg = &aCheckMsg;
-	nsString  url( "resource:/res/samples/NetSupportConfirmCheck.xul") ; 
+	nsString  url( "chrome://navigator/content/NetSupportConfirmCheck.xul") ; 
 	DoDialog( url  );
 	return NS_OK;	
 }
@@ -401,7 +401,7 @@ NS_IMETHODIMP nsNetSupportDialog::Prompt(	const nsString &aText, const nsString 
 	mDefault = &aDefault;
 	mUser	= &aResult;
 	mReturnValue = returnValue;
-	nsString  url( "resource:/res/samples/NetSupportPrompt.xul")  ;
+	nsString  url( "chrome://navigator/content/NetSupportPrompt.xul")  ;
 	DoDialog( url );
 #ifdef NECKO
   *resultText = aResult.ToNewUnicode();
@@ -430,7 +430,7 @@ NS_IMETHODIMP nsNetSupportDialog::PromptUserAndPassword(  const nsString &aText,
 	mUser = &aUser;
 	mPassword	= &aPassword;
 	mReturnValue = returnValue;
-	nsString  url( "resource:/res/samples/NetSupportUserPassword.xul")  ;
+	nsString  url( "chrome://navigator/content/NetSupportUserPassword.xul")  ;
 	DoDialog( url );
 #ifdef NECKO
   *user = aUser.ToNewUnicode();
@@ -456,7 +456,7 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword( 	const nsString &aText,
 	mMsg = &aText;
 	mPassword	= &aPassword;
 	mReturnValue = returnValue;
-	nsString  url( "resource:/res/samples/NetSupportPassword.xul")  ;
+	nsString  url( "chrome://navigator/content/NetSupportPassword.xul")  ;
 	DoDialog( url );
 #ifdef NECKO
   *pwd = aPassword.ToNewUnicode();
