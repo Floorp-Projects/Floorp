@@ -66,7 +66,7 @@ JS::HashNumber JS::hashString(const String &s)
 static const int minLgNBuckets = 4;
 
 
-JS::GenericHashTable::Iterator::Iterator(GenericHashTable &ht):
+JS::GenericHashTableIterator::GenericHashTableIterator(GenericHashTable &ht):
 		ht(ht), entry(0), nextBucket(ht.buckets)
 {
 	DEBUG_ONLY(++ht.nReferences);
@@ -75,8 +75,8 @@ JS::GenericHashTable::Iterator::Iterator(GenericHashTable &ht):
 
 
 
-JS::GenericHashTable::Iterator &
-JS::GenericHashTable::Iterator::operator++()
+JS::GenericHashTableIterator &
+JS::GenericHashTableIterator::operator++()
 {
 	GenericHashEntry *e = entry;
 
