@@ -54,6 +54,12 @@ nsObject ** nsObjectArray::GetArray()
   return mArray;
 }
 
+nsObject * nsObjectArray::GetObject(PRInt32 aIndex)
+{
+  if ((aIndex < 0) || (aIndex >= mUsage)) return NULL;
+  return mArray[aIndex];
+}
+
 PRInt32 nsObjectArray::GetUsage()
 {
   return mUsage;
@@ -87,14 +93,21 @@ nsresult nsObjectArray::InsureCapacity(PRInt32 aCapacity)
   return NS_OK;
 }
 
-nsresult nsObjectArray::AddObject(nsObject * aObject)
+nsresult nsObjectArray::AddObject(nsObject * aObject, PRInt32 aPosition)
 {
   nsresult res;
+
+  if ((aPosition < 0) || (aPosition > mUsage)) aPosition = mUsage;
 
   res = InsureCapacity(mUsage + 1);
   if (NS_FAILED(res)) return res;
 
-  (mArray)[mUsage++] = aObject;
+  PRInt32 i;
+  for (i = mUsage; i > aPosition; i--) mArray[i] = mArray[i-1];
+
+  mArray[aPosition] = aObject;
+  mUsage++;
+
   return NS_OK;
 }
 

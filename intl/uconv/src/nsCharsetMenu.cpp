@@ -37,6 +37,7 @@
 #include "nsCollationCID.h"
 #include "nsIPref.h"
 #include "nsILocaleService.h"
+#include "nsICurrentCharsetListener.h"
 #include "nsLocaleCID.h"
 #include "nsQuickSort.h"
 #include "nsObjectArray.h"
@@ -90,7 +91,7 @@ public:
  * @created         23/Nov/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsCharsetMenu : public nsIRDFDataSource
+class nsCharsetMenu : public nsIRDFDataSource, nsICurrentCharsetListener
 {
   NS_DECL_ISUPPORTS
 
@@ -111,6 +112,7 @@ private:
   nsObjectArray mBrowserMenu;
   nsObjectArray mBrowserMoreMenu;
   PRInt32       mStaticCount;
+  PRInt32       mCurrentCharset;
 
   nsresult Init();
   nsresult Done();
@@ -129,7 +131,7 @@ private:
       nsIRDFContainer * aContainer, nsString * aCharset);
   nsresult AddItemToArray(nsICharsetConverterManager * aCCMan, 
       nsObjectArray * aObjectArray, nsString * aCharset, 
-      nsMenuItem ** aResult);
+      nsMenuItem ** aResult, PRInt32 aPosition = -1);
   nsresult AddItemToContainer(nsIRDFService * aRDFServ, 
       nsICharsetConverterManager * aCCMan, nsIRDFContainer * aContainer, 
       nsMenuItem * aItem);
@@ -154,6 +156,11 @@ private:
 public:
   nsCharsetMenu();
   virtual ~nsCharsetMenu();
+
+  //--------------------------------------------------------------------------
+  // Interface nsICurrentCharsetListener [declaration]
+
+  NS_IMETHOD SetCurrentCharset(const PRUnichar * aCharset);
 
   //--------------------------------------------------------------------------
   // Interface nsIRDFDataSource [declaration]
@@ -257,7 +264,8 @@ nsMenuItem::~nsMenuItem()
 //----------------------------------------------------------------------------
 // Class nsCharsetMenu [implementation]
 
-NS_IMPL_ISUPPORTS(nsCharsetMenu, NS_GET_IID(nsIRDFDataSource));
+// NS_IMPL_ISUPPORTS(nsCharsetMenu, NS_GET_IID(nsIRDFDataSource));
+NS_IMPL_ISUPPORTS2(nsCharsetMenu, nsIRDFDataSource, nsICurrentCharsetListener)
 
 nsIRDFDataSource * nsCharsetMenu::mInner = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_BrowserCharsetMenuRoot = NULL;
@@ -272,6 +280,7 @@ nsIRDFResource * nsCharsetMenu::kNC_Name = NULL;
 nsIRDFResource * nsCharsetMenu::kNC_Checked = NULL;
 
 nsCharsetMenu::nsCharsetMenu() 
+:mStaticCount(0), mCurrentCharset(-1)
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
@@ -571,7 +580,8 @@ done:
 nsresult nsCharsetMenu::AddItemToArray(nsICharsetConverterManager * aCCMan,
                                        nsObjectArray * aObjectArray,
                                        nsString * aCharset,
-                                       nsMenuItem ** aResult) 
+                                       nsMenuItem ** aResult, 
+                                       PRInt32 aPosition) 
 {
   nsresult res = NS_OK;
   nsMenuItem * item = NULL; 
@@ -597,7 +607,7 @@ nsresult nsCharsetMenu::AddItemToArray(nsICharsetConverterManager * aCCMan,
     goto done;
   }
 
-  res = aObjectArray->AddObject(item);
+  res = aObjectArray->AddObject(item, aPosition);
   if (NS_FAILED(res)) goto done;
 
   if (aResult != NULL) *aResult = item;
@@ -747,11 +757,11 @@ PRInt32 nsCharsetMenu::FindItem(nsObjectArray * aArray,
   nsMenuItem ** array = (nsMenuItem **)aArray->GetArray();
 
   for (PRInt32 i=0; i<size; i++) if (aCharset->Equals(*(array[i]->mName))) {
-    *aResult = array[i];
+    if (aResult != NULL) *aResult = array[i];
     return i;
   };
 
-  aResult = NULL;
+  if (aResult != NULL) *aResult = NULL;
   return -1;
 }
 
@@ -805,6 +815,30 @@ nsresult nsCharsetMenu::NewRDFContainer(nsIRDFDataSource * aDataSource,
   }
 
   return res;
+}
+
+//----------------------------------------------------------------------------
+// Interface nsICurrentCharsetListener [implementation]
+
+NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
+{
+  nsString * oldCurrent = NULL;
+  nsAutoString newCurrent(aCharset);  // this is the incoming current charset
+  nsMenuItem * item = (nsMenuItem *) mBrowserMoreMenu.GetObject(mCurrentCharset);
+  if (item != NULL) oldCurrent = item->mName;
+  
+  // turn off checkmark on old current
+  if (oldCurrent != NULL) SetCharsetCheckmark(oldCurrent, PR_FALSE);
+
+  // XXX iff necessary, add new charset item, freeing a position if needed
+
+  // set the new current
+  mCurrentCharset = FindItem(&mBrowserMenu, &newCurrent, NULL);
+
+  // turn on checkmark on current charset
+  SetCharsetCheckmark(&newCurrent, PR_TRUE);
+
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------------
