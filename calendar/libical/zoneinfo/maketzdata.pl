@@ -87,15 +87,15 @@ foreach my $tz (@zonetab) {
     close TZFILE;
   }
 
+  # add in the softwarestudio prefix
+  $name = $tzid_prefix . $name;
+
   $hashdata = {
 	       name => $name,
 	       offset => $data_offset,
 	       lat => $lat,
 	       long => $long
 	      };
-
-  # add in the softwarestudio prefix
-  $name = $tzid_prefix . $name;
 
   # put the data in the hash for later
   $tzs{$name} = $hashdata;
