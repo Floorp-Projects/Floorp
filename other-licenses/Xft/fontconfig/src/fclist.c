@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/src/fclist.c,v 1.1.1.1 2002/02/14 23:34:12 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/src/fclist.c,v 1.2 2002/02/28 16:51:48 keithp Exp $
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -356,14 +356,16 @@ bail0:
 }
 
 FcFontSet *
-FcFontList (FcConfig	*config,
-	    FcPattern	*p,
-	    FcObjectSet *os)
+FcFontSetList (FcConfig	    *config,
+	       FcFontSet    **sets,
+	       int	    nsets,
+	       FcPattern    *p,
+	       FcObjectSet  *os)
 {
     FcFontSet	    *ret;
     FcFontSet	    *s;
     int		    f;
-    FcSetName	    set;
+    int		    set;
     FcListHashTable table;
     int		    i;
     FcListBucket    *bucket;
@@ -379,9 +381,9 @@ FcFontList (FcConfig	*config,
      * Walk all available fonts adding those that
      * match to the hash table
      */
-    for (set = FcSetSystem; set <= FcSetApplication; set++)
+    for (set = 0; set < nsets; set++)
     {
-	s = config->fonts[set];
+	s = sets[set];
 	if (!s)
 	    continue;
 	for (f = 0; f < s->nfont; f++)
@@ -439,4 +441,26 @@ bail1:
     FcListHashTableCleanup (&table);
 bail0:
     return 0;
+}
+
+FcFontSet *
+FcFontList (FcConfig	*config,
+	    FcPattern	*p,
+	    FcObjectSet *os)
+{
+    FcFontSet	*sets[2];
+    int		nsets;
+
+    if (!config)
+    {
+	config = FcConfigGetCurrent ();
+	if (!config)
+	    return 0;
+    }
+    nsets = 0;
+    if (config->fonts[FcSetSystem])
+	sets[nsets++] = config->fonts[FcSetSystem];
+    if (config->fonts[FcSetApplication])
+	sets[nsets++] = config->fonts[FcSetApplication];
+    return FcFontSetList (config, sets, nsets, p, os);
 }

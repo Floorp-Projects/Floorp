@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/fc-cache/fc-cache.c,v 1.2 2002/02/15 07:36:14 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/fc-cache/fc-cache.c,v 1.3 2002/02/26 05:10:30 tsi Exp $
  *
  * Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -28,10 +28,21 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #else
+#ifdef linux
+#define HAVE_GETOPT_LONG 1
+#endif
 #define HAVE_GETOPT 1
 #endif
 
+#ifndef HAVE_GETOPT
+#define HAVE_GETOPT 0
+#endif
+#ifndef HAVE_GETOPT_LONG
+#define HAVE_GETOPT_LONG 0
+#endif
+
 #if HAVE_GETOPT_LONG
+#undef  _GNU_SOURCE
 #define _GNU_SOURCE
 #include <getopt.h>
 const struct option longopts[] = {

@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/src/fcxml.c,v 1.5 2002/02/22 18:54:07 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/src/fcxml.c,v 1.6 2002/02/28 16:51:48 keithp Exp $
  *
  * Copyright © 2002 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -23,7 +23,7 @@
  */
 
 #include <stdarg.h>
-#include <xmlparse.h>
+#include <expat.h>
 #include "fcint.h"
 
 FcTest *
@@ -1596,12 +1596,22 @@ FcConfigParseAndLoad (FcConfig	    *config,
     do {
 	buf = XML_GetBuffer (p, BUFSIZ);
 	if (!buf)
+	{
+	    FcConfigError (&parse, "cannot get parse buffer");
 	    goto bail3;
+	}
 	len = fread (buf, 1, BUFSIZ, f);
 	if (len < 0)
+	{
+	    FcConfigError (&parse, "failed reading config file");
 	    goto bail3;
+	}
 	if (!XML_ParseBuffer (p, len, len == 0))
+	{
+	    FcConfigError (&parse, "%s", 
+			   XML_ErrorString (XML_GetErrorCode (p)));
 	    goto bail3;
+	}
     } while (len != 0);
     error = parse.error;
 bail3:

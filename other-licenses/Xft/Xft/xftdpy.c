@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/Xft/xftdpy.c,v 1.9 2002/02/15 07:36:11 keithp Exp $
+ * $XFree86: xc/lib/Xft/xftdpy.c,v 1.10 2002/03/04 21:15:26 tsi Exp $
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -233,7 +233,7 @@ XftDefaultParseBool (char *v)
     char    c0, c1;
 
     c0 = *v;
-    if (isupper (c0))
+    if (isupper ((int)c0))
 	c0 = tolower (c0);
     if (c0 == 't' || c0 == 'y' || c0 == '1')
 	return 1;
@@ -242,7 +242,7 @@ XftDefaultParseBool (char *v)
     if (c0 == 'o')
     {
 	c1 = v[1];
-	if (isupper (c1))
+	if (isupper ((int)c1))
 	    c1 = tolower (c1);
 	if (c1 == 'n')
 	    return 1;

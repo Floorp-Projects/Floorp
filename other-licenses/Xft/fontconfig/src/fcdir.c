@@ -1,5 +1,5 @@
 /*
- * $XFree86: xc/lib/fontconfig/src/fcdir.c,v 1.2 2002/02/15 06:01:28 keithp Exp $
+ * $XFree86: xc/lib/fontconfig/src/fcdir.c,v 1.4 2002/03/03 18:35:22 keithp Exp $
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.
  *
@@ -53,7 +53,7 @@ FcFileScan (FcFontSet	    *set,
 	if (name)
 	{
 	    /* "." means the file doesn't contain a font */
-	    if (strcmp (name, FC_INVALID_FONT_FILE) != 0)
+	    if (strcmp ((const char *) name, FC_INVALID_FONT_FILE) != 0)
 	    {
 		font = FcNameParse (name);
 		if (font)
@@ -148,7 +148,7 @@ FcDirScan (FcFontSet	    *set,
 	if (e->d_name[0] != '.')
 	{
 	    strcpy ((char *) base, (char *) e->d_name);
-	    FcFileScan (set, cache, blanks, file, force);
+	    ret = FcFileScan (set, cache, blanks, file, force);
 	}
     }
     free (file);
