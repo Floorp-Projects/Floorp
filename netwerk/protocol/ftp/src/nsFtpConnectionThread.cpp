@@ -1084,7 +1084,7 @@ nsFtpState::S_syst() {
 FTP_STATE
 nsFtpState::R_syst() {
     if (mResponseCode/100 == 2) {
-        if (( mResponseMsg.Find("L8") > 1) || 
+        if (( mResponseMsg.Find("L8") > -1) || 
             ( mResponseMsg.Find("UNIX") > -1) || 
             ( mResponseMsg.Find("BSD") > -1) )  // non standard response (91019)
         {
