@@ -426,6 +426,9 @@ NS_IMETHODIMP nsSOAPMessage::GetHeaderBlocks(PRUint32 *aCount, nsISOAPHeaderBloc
   int length = 0;
   nsCOMPtr<nsIDOMElement> element;
   nsresult rv = GetHeader(getter_AddRefs(element));
+  if (NS_FAILED(rv) || !element) return rv;
+  nsCOMPtr<nsISOAPEncoding> encoding;
+  rv = GetEncoding(getter_AddRefs(encoding));
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIDOMElement> next;
   nsCOMPtr<nsISOAPHeaderBlock> header;
@@ -445,6 +448,8 @@ NS_IMETHODIMP nsSOAPMessage::GetHeaderBlocks(PRUint32 *aCount, nsISOAPHeaderBloc
 
     rv = header->SetElement(element);
     if (NS_FAILED(rv)) return rv;
+    rv = header->SetEncoding(encoding);
+    if (NS_FAILED(rv)) return rv;
     nsSOAPUtils::GetNextSiblingElement(element, getter_AddRefs(next));
   }
   if (*aCount) {
@@ -463,12 +468,14 @@ NS_IMETHODIMP nsSOAPMessage::GetParameters(PRBool aDocumentStyle, PRUint32 *aCou
   int length = 0;
   nsCOMPtr<nsIDOMElement> element;
   nsresult rv = GetBody(getter_AddRefs(element));
+  if (NS_FAILED(rv) || !element) return rv;
+  nsCOMPtr<nsISOAPEncoding> encoding;
+  rv = GetEncoding(getter_AddRefs(encoding));
   if (NS_FAILED(rv)) return rv;
-  if (!element) return NS_ERROR_ILLEGAL_VALUE;
   nsCOMPtr<nsIDOMElement> next;
   nsCOMPtr<nsISOAPParameter> param;
   nsSOAPUtils::GetFirstChildElement(element, getter_AddRefs(next));
-  if (aDocumentStyle) {
+  if (!aDocumentStyle) {
     element = next;
     if (!element) return NS_ERROR_ILLEGAL_VALUE;
     nsSOAPUtils::GetFirstChildElement(element, getter_AddRefs(next));
@@ -487,6 +494,8 @@ NS_IMETHODIMP nsSOAPMessage::GetParameters(PRBool aDocumentStyle, PRUint32 *aCou
     (*aCount)++;
 
     rv = param->SetElement(element);
+    if (NS_FAILED(rv)) return rv;
+    rv = param->SetEncoding(encoding);
     if (NS_FAILED(rv)) return rv;
     nsSOAPUtils::GetNextSiblingElement(element, getter_AddRefs(next));
   }

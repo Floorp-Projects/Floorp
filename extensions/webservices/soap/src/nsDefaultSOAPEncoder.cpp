@@ -993,7 +993,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
       rc = nsSOAPUtils::GetLocalName(explicittype, name);
       if (NS_FAILED(rc)) return rc;
       rc = collection->GetType(ns, name, getter_AddRefs(type));
-      if (NS_FAILED(rc)) return rc;
+//      if (NS_FAILED(rc)) return rc;
     }
     if (!type) {
       rc = aSource->GetNamespaceURI(ns);
@@ -1001,7 +1001,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
       rc = aSource->GetLocalName(name);
       if (NS_FAILED(rc)) return rc;
       nsCOMPtr<nsISchemaElement> element;
-      rc = collection->GetElement(ns, name, getter_AddRefs(element));
+//      rc = collection->GetElement(ns, name, getter_AddRefs(element));
       if (NS_FAILED(rc)) return rc;
       if (element) {
         rc = element->GetType(getter_AddRefs(type));
@@ -1014,7 +1014,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
 	else {
           rc = collection->GetType(*nsSOAPUtils::kXSURI[mVersion], name, getter_AddRefs(type));
 	}
-        if (NS_FAILED(rc)) return rc;
+//        if (NS_FAILED(rc)) return rc;
       }
     }
   }
@@ -1151,7 +1151,7 @@ NS_IMETHODIMP nsArrayEncoder::Decode(nsISOAPEncoding* aEncoding,
     rc = nsSOAPUtils::GetLocalName(value, name);
     if (NS_FAILED(rc)) return rc;
     rc = collection->GetElement(ns, name, getter_AddRefs(element));
-    if (NS_FAILED(rc)) return rc;
+//    if (NS_FAILED(rc)) return rc;
     if (element) {
       rc = element->GetType(getter_AddRefs(subtype));
       if (NS_FAILED(rc)) return rc;

@@ -46,17 +46,27 @@ NS_IMPL_ISUPPORTS1_CI(nsHTTPSOAPTransport, nsISOAPTransport)
 #ifdef DEBUG
 #define DEBUG_DUMP_DOCUMENT(message,doc) \
   { \
+	  nsresult rcc;\
 	  nsXPIDLString serial;\
-	  nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));\
-	  if (NS_FAILED(rv)) return rv;  \
-	  rv = serializer->SerializeToString(doc, getter_Copies(serial));\
-	  if (NS_FAILED(rv)) return rv;\
+	  nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rcc));\
+	  if (NS_FAILED(rcc)) return rcc;  \
+	  rcc = serializer->SerializeToString(doc, getter_Copies(serial));\
+	  if (NS_FAILED(rcc)) return rcc;\
 	  nsAutoString result(serial);\
 	  printf(message ":\n%s\n", NS_ConvertUCS2toUTF8(result).get());\
   }
+
+//  Availble from the debugger...
+
+nsresult DebugPrintDOM(nsIDOMNode* node)
+{
+	DEBUG_DUMP_DOCUMENT("DOM", node)
+	return NS_OK;
+}
 #else
 #define DEBUG_DUMP_DOCUMENT(message,doc)
 #endif
+
 /* void syncCall (in nsISOAPCall aCall, in nsISOAPResponse aResponse); */
 NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse *aResponse)
 {
