@@ -40,12 +40,12 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   
   
-  //nsIDragService
+  // nsIDragService
   NS_IMETHOD StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType);
+  NS_IMETHOD GetData (nsITransferable * aTransferable);
 
-  // Native Impl.
+  // native impl.
   NS_IMETHOD SetIDataObject (IDataObject * aDataObj);
-    NS_IMETHOD GetData (nsITransferable * aTransferable);
 
 protected:
   IDropSource        * mNativeDragSrc;
