@@ -20,7 +20,7 @@
  * Contributor(s):
  *  Brian Ryner <bryner@netscape.com>
 */
-
+#include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSCallbacks.h"
 #include "nsNSSIOLayer.h" // for nsNSSSocketInfo
 #include "nsIWebProgressListener.h"
@@ -37,8 +37,8 @@
 #include "ssl.h"
 #include "cert.h"
 
+
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-#define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
 
 char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   nsresult rv = NS_OK;
@@ -52,22 +52,15 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
                           NS_UI_THREAD_EVENTQ, &rv);
   if (NS_FAILED(rv)) return nsnull;
 
-  nsXPIDLString promptStr;
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
-  if (NS_FAILED(rv) || !bundleService) return nsnull;
-
-  nsCOMPtr<nsIStringBundle> bundle;
-  bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL, nsnull,
-                              getter_AddRefs(bundle));
-  if (!bundle) return nsnull;
-
-  bundle->GetStringFromName(NS_LITERAL_STRING("CertPassPrompt"),
-                            getter_Copies(promptStr));
-  
-  rv = dialog->PromptPassword(nsnull, promptStr,
+  nsString promptString;
+  nsNSSComponent::GetPIPNSSBundleString(NS_LITERAL_STRING("CertPassPrompt"),
+                                        promptString);
+  PRUnichar *uniString = promptString.ToNewUnicode();
+  rv = dialog->PromptPassword(nsnull, uniString,
                               NS_LITERAL_STRING(" "),
                               nsIPrompt::SAVE_PASSWORD_NEVER,
                               &password, &value);
+  nsMemory::Free(uniString);
   if (NS_SUCCEEDED(rv) && value) {
     char* str = nsString(password).ToNewCString();
     Recycle(password);
@@ -102,19 +95,12 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
       }
 
       nsXPIDLString shortDesc;
-      nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
-      if (NS_SUCCEEDED(rv) && bundleService) {
-        nsCOMPtr<nsIStringBundle> bundle;
-        bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL, nsnull,
-                              getter_AddRefs(bundle));
-
-        const PRUnichar* formatStrings[1] = { ToNewUnicode(nsLiteralCString(caName)) };
-        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("SignedBy"),
-                                          formatStrings, 1,
-                                          getter_Copies(shortDesc));
-        nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
-      }
-
+      const PRUnichar* formatStrings[1] = { ToNewUnicode(nsLiteralCString(caName)) };
+      rv = nsNSSComponent::PIPBundleFormatStringFromName(NS_LITERAL_STRING("SignedBy"),
+                                                         formatStrings, 1,
+                                                         getter_Copies(shortDesc));
+      nsMemory::Free(NS_CONST_CAST(PRUnichar*, formatStrings[0]));
+  
       nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
       infoObject->SetSecurityState(secStatus);
       infoObject->SetShortSecurityDescription((const PRUnichar*)shortDesc);

@@ -29,6 +29,8 @@
 #include "nsISecurityManagerComponent.h"
 #include "nsISignatureVerifier.h"
 #include "nsIContentHandler.h"
+#include "nsIEntropyCollector.h"
+#include "nsString.h"
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
 
@@ -38,9 +40,12 @@
 // Implementation of the PSM component interface.
 class nsNSSComponent : public nsISecurityManagerComponent,
                        public nsIContentHandler,
-                       public nsISignatureVerifier
+                       public nsISignatureVerifier,
+                       public nsIEntropyCollector
 {
 public:
+  NS_DEFINE_STATIC_CID_ACCESSOR( NS_NSSCOMPONENT_CID );
+
   nsNSSComponent();
   virtual ~nsNSSComponent();
 
@@ -48,8 +53,17 @@ public:
   NS_DECL_NSISECURITYMANAGERCOMPONENT
   NS_DECL_NSICONTENTHANDLER
   NS_DECL_NSISIGNATUREVERIFIER
+  NS_DECL_NSIENTROPYCOLLECTOR
 
   NS_METHOD Init();
+  static nsresult GetPIPNSSBundleString(const PRUnichar *name,
+                                        nsString &outString);
+  static nsresult PIPBundleFormatStringFromName(const PRUnichar *name,
+                                                const PRUnichar **params,
+                                                PRUint32 numParams,
+                                                PRUnichar **outString);
+private:
+  void InstallLoadableRoots();
 };
 
 #endif // _nsNSSComponent_h_

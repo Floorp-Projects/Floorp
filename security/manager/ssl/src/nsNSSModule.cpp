@@ -109,6 +109,13 @@ static nsModuleComponentInfo components[] =
     NS_ISSLFHSOCKETPROVIDER_CONTRACTID,
     nsSSLSocketProviderConstructor
   },
+
+  {
+    "Entropy Collector",
+    NS_ENTROPYCOLLECTOR_CID,
+    NS_ENTROPYCOLLECTOR_CONTRACTID,
+    nsNSSComponentConstructor
+  }
 };
 
 NS_IMPL_NSGETMODULE("NSS", components);
