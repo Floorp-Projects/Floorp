@@ -2008,7 +2008,7 @@ nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
     PRInt32 i, count = mProlog->Count();
 
     for (i = 0; i < count; i++) {
-      nsIContent* content = (nsIContent *)mProlog->ElementAt(0);
+      nsIContent* content = (nsIContent *)mProlog->ElementAt(i);
 
       if (!content)
         continue;
