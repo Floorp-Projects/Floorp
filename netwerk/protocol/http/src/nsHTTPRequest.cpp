@@ -571,7 +571,10 @@ nsHTTPPipelinedRequest::WriteRequest ()
                                            mAttempts ? TRANSPORT_OPEN_ALWAYS : TRANSPORT_REUSE_ALIVE);
 
         if (NS_FAILED (rv))
+        {
+            NS_RELEASE (req);
             return rv;
+        }
     }
     
     NS_RELEASE (req);
@@ -744,6 +747,8 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
         req -> mConnection -> ResponseCompleted (consumer, rv, i_Msg);
     }
  
+    NS_IF_RELEASE (req);
+
     //
     // These resouces are no longer needed...
     //
