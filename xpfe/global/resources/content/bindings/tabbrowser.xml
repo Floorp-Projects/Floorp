@@ -1,0 +1,635 @@
+<?xml version="1.0"?>
+
+<!--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is this file as it was released on
+   - March 28, 2001.
+   -
+   - The Initial Developer of the Original Code is Peter Annema.
+   - Portions created by Peter Annema are Copyright (C) 2001
+   - Peter Annema.  All Rights Reserved.
+   -
+   - Contributor(s):
+   -   David Hyatt <hyatt@netscape.com> (Original Author of <tabbrowser>)
+   -
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU General Public License Version 2 or later (the
+   - "GPL"), in which case the provisions of the GPL are applicable
+   - instead of those above.  If you wish to allow use of your
+   - version of this file only under the terms of the GPL and not to
+   - allow others to use your version of this file under the MPL,
+   - indicate your decision by deleting the provisions above and
+   - replace them with the notice and other provisions required by
+   - the GPL.  If you do not delete the provisions above, a recipient
+   - may use your version of this file under either the MPL or the
+   - GPL.
+  -->
+
+<bindings id="tabBrowserBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+ 
+  <binding id="tabbrowser">
+    <resources>
+      <stylesheet src="chrome://global/skin/browser.css"/>
+    </resources>
+
+    <content>
+      <xul:tabbox onselect="if (event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
+        <xul:stack collapsed="true" tooltip="_child">
+          <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.getAttribute('label')) { this.childNodes[0].value = document.tooltipNode.getAttribute('label'); return true; } return false;">
+            <xul:label style="margin:0px; padding:0px;" value="Dummy"/>
+          </xul:tooltip>
+          <xul:tabs style="padding-left:1px; padding-top: 1px;" flex="1">
+            <xul:tab flex="1" maxwidth="150" class="tabbrowser-tab" label="(Untitled)" crop="center"/>
+          </xul:tabs>
+          <xul:hbox mousethrough="always" align="center">
+            <spacer flex="1"/>
+            <xul:image mousethrough="never" class="tabbrowser-closebox" label="Close Tab" onclick="this.parentNode.parentNode.parentNode.parentNode.removeCurrentTab();"/>
+          </xul:hbox>
+        </xul:stack>
+        <xul:tabpanels flex="1" style="margin:0px; padding:0px; border:0px;">
+          <xul:browser type="content-primary" inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
+        </xul:tabpanels>
+      </xul:tabbox>
+      <children/>
+    </content>
+    <implementation>
+      <field name="mTabBox">
+        document.getAnonymousNodes(this)[0]
+      </field>
+      <field name="mStrip">
+        this.mTabBox.firstChild
+      </field>
+      <field name="mTabContainer">
+        this.mStrip.childNodes[1]
+      </field>
+      <field name="mPanelContainer">
+        this.mTabBox.childNodes[1]
+      </field>
+      <field name="mCurrentTab">
+        null
+      </field>
+      <field name="mCurrentBrowser">
+        null
+      </field>
+      <field name="mProgressListeners">
+        null
+      </field>
+      <field name="mTabListeners">
+        new Array()
+      </field>
+      <field name="mTabbedMode">
+        false
+      </field>
+      <field name="mIsBusy">
+        false
+      </field>
+
+      <!-- A web progress listener object definition for a given tab. --> 
+      <method name="mTabProgressListener">
+        <parameter name="aTabBrowser"/>
+        <parameter name="aTab"/>
+        <body>
+        <![CDATA[
+          return ({
+            mTabBrowser: aTabBrowser,
+            mTab: aTab,
+
+            onProgressChange : function (aWebProgress, aRequest,
+                      aCurSelfProgress, aMaxSelfProgress,
+                      aCurTotalProgress, aMaxTotalProgress) {
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+                for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
+                  var p = this.mTabBrowser.mProgressListeners[i];
+                  if (p)
+                    p.onProgressChange(aWebProgress, aRequest,
+                                       aCurSelfProgress, aMaxSelfProgress,
+                                       aCurTotalProgress, aMaxTotalProgress);
+                }
+              }
+            },
+            
+            onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+            {
+              if (!aRequest)
+                return;
+      
+              //ignore local/resource:/chrome: files
+              if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
+                return;
+
+              const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+              const nsIChannel = Components.interfaces.nsIChannel;
+              if (aStateFlags & nsIWebProgressListener.STATE_START && 
+                  aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+                this.mTab.setAttribute("busy", "true"); 
+                this.mTab.label = "Loading...";
+                
+                if (this.mTabBrowser.mCurrentTab == this.mTab)
+                  this.mTabBrowser.mIsBusy = true;
+              }
+              else if (aStateFlags & nsIWebProgressListener.STATE_STOP &&
+                       aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+                this.mTab.removeAttribute("busy");
+                if (this.mTab.label == "Loading...")
+                  this.mTab.label = "(Untitled)";
+                
+                if (this.mTabBrowser.mCurrentTab == this.mTab)
+                  this.mTabBrowser.mIsBusy = false;
+              }
+
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+                for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
+                  var p = this.mTabBrowser.mProgressListeners[i];
+                  if (p)
+                    p.onStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
+                }
+              }
+            }
+            ,
+
+            onLocationChange : function(aWebProgress, aRequest, aLocation) {
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+                for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
+                  var p = this.mTabBrowser.mProgressListeners[i];
+                  if (p)
+                    p.onLocationChange(aWebProgress, aRequest, aLocation);
+                }
+              }
+            },
+
+            onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
+              //ignore local/resource:/chrome: files
+              if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
+                return;
+              
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+                for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
+                  var p = this.mTabBrowser.mProgressListeners[i];
+                  if (p)
+                    p.onStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+                }
+              }
+            },
+
+            onSecurityChange : function(aWebProgress, aRequest, aState) { 
+              if (this.mTabBrowser.mCurrentTab == this.mTab) {
+                for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
+                  var p = this.mTabBrowser.mProgressListeners[i];
+                  if (p)
+                    p.onSecurityChange(aWebProgress, aRequest, aState);
+                }
+              }
+            },
+
+            QueryInterface : function(aIID)
+            {
+              if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+                  aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+                  aIID.equals(Components.interfaces.nsISupports))
+                return this;
+              throw Components.results.NS_NOINTERFACE;
+            }
+                  
+            });
+        ]]>
+        </body>
+      </method>
+
+      <method name="updateTitlebar">
+        <body>
+          <![CDATA[
+            var newTitle = "";
+            var docTitle;
+            if (this.docShell.contentViewer)
+              docTitle = this.contentDocument.title;
+            
+            if (docTitle) {
+              newTitle += this.ownerDocument.documentElement.getAttribute("titlepreface");
+              newTitle += docTitle;
+              newTitle += this.ownerDocument.documentElement.getAttribute("titlemenuseparator");
+            }
+            newTitle += this.ownerDocument.documentElement.getAttribute("titlemodifier");
+            window.title = newTitle;
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateCurrentBrowser">
+        <body>
+          <![CDATA[
+            var newBrowser = this.mPanelContainer.childNodes[this.mPanelContainer.index];
+            if (this.mCurrentBrowser)
+              this.mCurrentBrowser.setAttribute("type", "content");
+            
+            newBrowser.setAttribute("type", "content-primary");
+            this.mCurrentBrowser = newBrowser;
+            this.mCurrentTab = this.selectedTab;
+
+            // Update the URL bar.
+            var loc = ({ spec: this.mCurrentBrowser.contentWindow.location.href });
+            var webProgress = this.mCurrentBrowser.webProgress;
+            for (var i = 0; i < this.mProgressListeners.length; i++) {
+              var p = this.mProgressListeners[i];
+              if (p)
+                p.onLocationChange(webProgress, null, loc);
+            }
+
+            // Update the window title.
+            this.updateTitlebar();
+            
+            // If the new tab is busy, and our current state is not busy, then
+            // we need to fire a start to all progress listeners.
+            const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
+            if (this.mCurrentTab.getAttribute("busy") == "true" && !this.mIsBusy) {
+              this.mIsBusy = true;
+              var webProgress = this.mCurrentBrowser.webProgress;
+              for (var i = 0; i < this.mProgressListeners.length; i++) {
+                var p = this.mProgressListeners[i];
+                if (p)
+                  p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_START | nsIWebProgressListener.STATE_IS_NETWORK, 0);
+              }
+            }
+
+            // If the new tab is not busy, and our current state is busy, then
+            // we need to fire a stop to all progress listeners.
+            if (this.mCurrentTab.getAttribute("busy") != "true" && this.mIsBusy) {
+              this.mIsBusy = false;
+              var webProgress = this.mCurrentBrowser.webProgress;
+              for (var i = 0; i < this.mProgressListeners.length; i++) {
+                var p = this.mProgressListeners[i];
+                if (p)
+                  p.onStateChange(webProgress, null, nsIWebProgressListener.STATE_STOP | nsIWebProgressListener.STATE_IS_NETWORK, 0);
+              }
+            }
+
+            // Focus our new content area.
+            setTimeout("window._content.focus()", 0);
+          ]]>
+        </body>
+      </method>
+
+      <method name="onTitleChanged">
+        <parameter name="evt"/>
+        <body>
+          <![CDATA[
+            if (evt.target != this.contentDocument)
+              return;
+
+            if (this.contentDocument.title == "")
+              return;
+
+            var i = 0;
+            for ( ; i < this.parentNode.childNodes.length; i++) {
+              if (this.parentNode.childNodes[i] == this)
+                break;
+            }
+
+            var tabBrowser = this.parentNode.parentNode.parentNode;
+            var tab = tabBrowser.mTabContainer.childNodes[i];
+            tab.setAttribute("label", this.contentDocument.title);
+
+            if (tab == tabBrowser.mCurrentTab)
+              this.parentNode.parentNode.parentNode.updateTitlebar();
+          ]]> 
+        </body>
+      </method>
+
+      <method name="addTab">
+        <parameter name="aURI"/>
+        <body>
+          <![CDATA[
+            if (!this.mTabbedMode) {
+              this.mTabbedMode = true; // Welcome to multi-tabbed mode.
+
+              // Going from one tab to two for the first time.  Get the first tab all hooked up with a title listener.
+              this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+              if (this.mCurrentBrowser.contentDocument.title != "")
+                this.mCurrentTab.label = this.mCurrentBrowser.contentDocument.title;
+
+              // Remove all our progress listeners from the active browser.
+              if (this.mProgressListeners) {
+                for (var i = 0; i < this.mProgressListeners.length; i++) {
+                  var p = this.mProgressListeners[i];
+                  if (p)
+                    this.mCurrentBrowser.webProgress.removeProgressListener(p);
+                }
+              }
+
+              // Wire up a progress listener to our tab.
+              var t = (this.mTabProgressListener)(this, this.mCurrentTab);
+              this.webProgress.addProgressListener(t);
+              this.mTabListeners[0] = t;
+            }
+
+            var b = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                             "browser"); 
+            var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                             "tab");
+
+            if (aURI == "about:blank")
+              t.setAttribute("label", "Blank");
+            else
+              t.setAttribute("label", aURI);
+            
+            t.setAttribute("crop", "center");
+            t.maxWidth = 150;
+            t.setAttribute("flex", "1");
+
+            this.mTabContainer.appendChild(t);
+
+            b.setAttribute("type", "content");
+            b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
+            b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
+            
+            this.mPanelContainer.appendChild(b);
+
+            b.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+
+            if (this.mStrip.collapsed)
+              this.mStrip.collapsed = false; 
+
+            // wire up a progress listener for the new browser object.
+            var position = this.mTabContainer.childNodes.length-1;
+            var tabListener = (this.mTabProgressListener)(this, t);
+            b.webProgress.addProgressListener(tabListener);
+            this.mTabListeners[position] = tabListener;
+            
+            b.loadURI(aURI, nsIWebNavigation.LOAD_FLAGS_NONE);
+
+            return t;
+          ]]>
+        </body>
+      </method>
+      
+      <method name="removeCurrentTab">
+        <body>
+          <![CDATA[
+            var l = this.mTabContainer.childNodes.length;
+            if (l == 1)
+              return; // Don't allow the last tab to close.
+
+            if (l == 2)
+              this.mStrip.collapsed = true; // Go ahead and collapse, since we're going back to 1 tab.
+
+            var index = this.mPanelContainer.index;
+
+            // Remove our progress listener.
+            this.webProgress.removeProgressListener(this.mTabListeners[index]);
+            this.mTabListeners.splice(index, 1);
+
+            // Remove our title change listener
+            this.mCurrentBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
+
+            // We are no longer the primary content area.
+            this.mCurrentBrowser.setAttribute("type", "content");
+
+            // Now select the new tab before nuking the old one.
+            var newIndex = (index > 0) ? index-1 : index;
+
+            var oldTab = this.mCurrentTab;
+            var oldBrowser = this.mCurrentBrowser;
+
+            this.mTabContainer.removeChild(oldTab);
+            this.mPanelContainer.removeChild(oldBrowser);
+
+            this.selectedTab = this.mTabContainer.childNodes[newIndex];
+
+            if (newIndex == 0) {
+              // No select event is going to fire.  We need to just call updateCurrentBrowser()
+              // by hand.
+              this.updateCurrentBrowser();
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="addProgressListener">
+        <parameter name="aListener"/>
+        <body>
+          <![CDATA[
+            if (!this.mProgressListeners)
+              this.mProgressListeners = new Array();
+            
+            this.mProgressListeners.push(aListener);
+
+            if (!this.mTabbedMode)
+              // Just perform a direct wiring to the single active browser.
+              this.mCurrentBrowser.addProgressListener(aListener);
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeProgressListener">
+        <parameter name="aListener"/>
+        <body>
+          <![CDATA[
+            if (!this.mProgressListeners) return;
+            for (var i = 0; i < this.mProgressListeners.length; i++) {
+              if (this.mProgressListeners[i] == aListener) {
+                this.mProgressListeners[i] = null;
+                break;
+              }
+            }
+
+            if (!this.mTabbedMode)
+              // Just do a direct removal.
+              this.mCurrentBrowser.removeProgressListener(aListener);
+         ]]>
+        </body>
+      </method>
+
+      <property name="selectedTab">
+        <getter>
+          return this.mTabBox.selectedTab;
+        </getter>
+        <setter>
+          <![CDATA[
+          // Update the tab
+          this.mTabBox.selectedTab = val;
+          return val;
+          ]]>
+        </setter>
+      </property>
+
+      <!-- BEGIN FORWARDED BROWSER PROPERTIES.  IF YOU ADD A PROPERTY TO THE BROWSER ELEMENT
+           MAKE SURE TO ADD IT HERE AS WELL. -->
+      <property name="canGoBack"
+                onget="return this.mCurrentBrowser.canGoBack;"
+                readonly="true"/>
+
+      <property name="canGoForward"
+                onget="return this.mCurrentBrowser.canGoForward;"
+                readonly="true"/>
+
+      <method name="goBack">
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.goBack();
+          ]]>
+        </body>
+      </method>
+
+      <method name="goForward">
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.goForward();
+          ]]>
+        </body>
+      </method>
+
+      <method name="reload">
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.reload();
+          ]]>
+        </body>
+      </method>
+
+      <method name="reloadWithFlags">
+        <parameter name="aFlags"/>
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.reloadWithFlags(aFlags);
+          ]]>
+        </body>
+      </method>
+
+      <method name="stop">
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.stop();
+          ]]>
+        </body>
+      </method>
+
+      <!-- throws exception for unknown schemes -->
+      <method name="loadURI">
+        <parameter name="aURI"/>
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.loadURI(aURI);
+          ]]>
+        </body>
+      </method>
+
+      <!-- throws exception for unknown schemes -->
+      <method name="loadURIWithFlags">
+        <parameter name="aURI"/>
+        <parameter name="aFlags"/>
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags);
+          ]]>
+        </body>
+      </method>
+
+      <method name="goHome">
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.goHome();
+          ]]>
+        </body>
+      </method>
+
+      <property name="homePage">
+        <getter>
+          <![CDATA[
+            return this.mCurrentBrowser.homePage;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            this.mCurrentBrowser.homePage = val;
+            return val;
+          ]]>
+        </setter>
+      </property>
+
+      <method name="gotoIndex">
+        <parameter name="aIndex"/>
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.gotoIndex(aIndex);
+          ]]>
+        </body>
+      </method>
+
+      <property name="currentURI"
+                onget="return this.mCurrentBrowser.currentURI;"
+                readonly="true"/>
+
+      <property name="docShell"
+                onget="return this.mCurrentBrowser.docShell"
+                readonly="true"/>
+
+      <property name="webNavigation"
+                onget="return this.mCurrentBrowser.webNavigation"
+                readonly="true"/>
+
+      <property name="webBrowserFind"
+                readonly="true"
+                onget="return this.mCurrentBrowser.webBrowserFind"/>
+
+      <property name="webProgress"
+                readonly="true"
+                onget="return this.mCurrentBrowser.webProgress"/>
+
+      <property name="contentWindow"
+                readonly="true"
+                onget="return this.mCurrentBrowser.contentWindow"/>
+
+      <property name="sessionHistory"
+                onget="return this.mCurrentBrowser.sessionHistory;"
+                readonly="true"/>
+
+      <property name="markupDocumentViewer"
+                onget="return this.mCurrentBrowser.markupDocumentViewer;"
+                readonly="true"/>
+
+      <property name="contentViewerEdit"
+                onget="return this.mCurrentBrowser.contentViewerEdit;"
+                readonly="true"/>
+
+      <property name="contentViewerFile"
+                onget="return this.mCurrentBrowser.contentViewerFile;"
+                readonly="true"/>
+
+      <property name="documentCharsetInfo"
+                onget="return this.mCurrentBrowser.documentCharsetInfo;"
+                readonly="true"/>
+
+      <property name="contentDocument"
+                onget="return this.mCurrentBrowser.contentDocument;"
+                readonly="true"/>
+
+      <constructor>
+        this.mCurrentBrowser = this.mPanelContainer.firstChild;
+        this.mCurrentTab = this.mTabContainer.firstChild;
+      </constructor>
+
+      <destructor>
+        <![CDATA[
+          if (this.mTabListeners) {
+            for (var i = 0; i < this.mTabListeners.length; i++) {
+              this.mPanelContainer.childNodes[i].webProgress.removeProgressListener(this.mTabListeners[i]);
+              this.mTabListeners[i] = null;
+              this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            }
+          }
+        ]]>
+      </destructor>
+    </implementation>
+  </binding>
+
+</bindings>

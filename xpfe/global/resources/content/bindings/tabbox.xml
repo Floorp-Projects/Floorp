@@ -119,6 +119,11 @@
             }
           }
 
+          // Fire an onselect event for the tabs element.
+          var event = document.createEvent('Events');
+          event.initEvent('select', false, true);
+          this.dispatchEvent(event);
+
           var parent = this.parentNode;
           while (parent && parent.localName != 'tabbox')
             parent = parent.parentNode;
@@ -131,7 +136,7 @@
                                "tabpanels");
           tabpanels = tabpanels.length ? tabpanels[0] : null;
           if (tabpanels)
-            tabpanels.index = selectedIndex;
+            tabpanels.index = selectedIndex; // This will cause an onselect event to fire for the tabpanel element.
           return val;
         ]]>
         </setter>
