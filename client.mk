@@ -384,7 +384,7 @@ build_all: build
 build_all_dep: alldep
 build_all_depend: alldep
 clobber clobber_all: clean
-pull_and_build_all: checkout depend build
+pull_and_build_all: checkout alldep
 
 # Do everything from scratch
 everything: checkout clean build
