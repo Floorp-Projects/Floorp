@@ -134,20 +134,23 @@ NS_CreateHTMLElement(nsIHTMLContent** aInstancePtrResult,
     rv = NS_NewHTMLSpacer(aInstancePtrResult, atom);
     break;
   case eHTMLTag_table:
-    rv = NS_NewTablePart(aInstancePtrResult, atom);
+    rv = NS_NewHTMLTableElement(aInstancePtrResult, atom);
     break;
   case eHTMLTag_tbody:
   case eHTMLTag_tfoot:
   case eHTMLTag_thead:
-    rv = NS_NewTableRowGroupPart(aInstancePtrResult, atom);
+    rv = NS_NewHTMLTableSectionElement(aInstancePtrResult, atom);
     break;
   case eHTMLTag_td:
   case eHTMLTag_th:
-    rv = NS_NewTableCellPart(aInstancePtrResult, atom);
+    rv = NS_NewHTMLTableCellElement(aInstancePtrResult, atom);
     break;
   case eHTMLTag_tr:
-    rv = NS_NewTableRowPart(aInstancePtrResult, atom);
+    rv = NS_NewHTMLTableRowElement(aInstancePtrResult, atom);
     break;
+  case eHTMLTag_caption:
+    rv = NS_NewHTMLTableCaptionElement(aInstancePtrResult, atom);
+      break;
   case eHTMLTag_wbr:
     rv = NS_NewHTMLWordBreak(aInstancePtrResult, atom);
     break;
