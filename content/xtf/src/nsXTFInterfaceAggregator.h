@@ -43,7 +43,7 @@ nsresult
 NS_NewXTFInterfaceAggregator(const nsIID& iid,
                              nsISupports* inner,
                              nsISupports* outer,
-                             nsISupports** result);
+                             void** result);
 
 
 #endif // __NS_XTFINTERFACEAGGREGATOR_H__

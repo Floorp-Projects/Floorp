@@ -54,7 +54,7 @@ protected:
   NS_NewXTFInterfaceAggregator(const nsIID& iid,
                                nsISupports* inner,
                                nsISupports* outer,
-                               nsISupports** result);
+                               void** result);
 
   nsXTFInterfaceAggregator(const nsIID& iid,
                            nsISupports* inner,
@@ -84,12 +84,12 @@ private:
 nsXTFInterfaceAggregator::nsXTFInterfaceAggregator(const nsIID& iid,
                                                    nsISupports* inner,
                                                    nsISupports* outer)
-    : mOuter(outer), mIID(iid)
+    : mInner(inner), mOuter(outer), mIID(iid)
 {
 #ifdef DEBUG
 //  printf("nsXTFInterfaceAggregator CTOR\n");
 #endif
-  inner->QueryInterface(iid, (void**)&mInner);
+  mInner->AddRef();
   mOuter->AddRef();
 }
 
@@ -106,13 +106,13 @@ nsresult
 NS_NewXTFInterfaceAggregator(const nsIID& iid,
                              nsISupports* inner,
                              nsISupports* outer,
-                             nsISupports** aResult){
+                             void** aResult){
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
 
   nsXTFInterfaceAggregator* result = new nsXTFInterfaceAggregator(iid,inner,outer);
-  if (! result)
+  if (!result)
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(result);
