@@ -1416,8 +1416,16 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
       rv = FetchAuthor(msgHdr, getter_Copies(valueText));
     else if (aColID[1] == 'i') // size
       rv = FetchSize(msgHdr, getter_Copies(valueText));
-    else
+    else if (aColID[1] == 't') // status
       rv = FetchStatus(m_flags[aRow], getter_Copies(valueText));
+    else if (aColID[1] == 'c') // score
+    {
+      nsXPIDLCString cStrScore;
+      msgHdr->GetStringProperty("score", getter_Copies(cStrScore));
+      CopyASCIItoUCS2(cStrScore, aValue);
+      break;
+    }
+
     aValue.Assign(valueText);
     break;
   case 'd':  // date
@@ -1846,7 +1854,8 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
   case nsMsgViewCommandType::label3:
   case nsMsgViewCommandType::label4:
   case nsMsgViewCommandType::label5:
-
+  case nsMsgViewCommandType::junk:
+  case nsMsgViewCommandType::unjunk:
     // since the FE could have constructed the list of indices in
     // any order (e.g. order of discontiguous selection), we have to
     // sort the indices in order to find out which nsMsgViewIndex will
@@ -1941,6 +1950,8 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
   case nsMsgViewCommandType::label3:
   case nsMsgViewCommandType::label4:
   case nsMsgViewCommandType::label5:
+  case nsMsgViewCommandType::junk:
+  case nsMsgViewCommandType::unjunk:
     *selectable_p = haveSelection;
     break;
   case nsMsgViewCommandType::cmdRequiringMsgBody:
@@ -2061,6 +2072,12 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
       case nsMsgViewCommandType::label4:
       case nsMsgViewCommandType::label5:
         rv = SetLabelByIndex(indices[i], (command - nsMsgViewCommandType::label0));
+        break;
+      case nsMsgViewCommandType::junk:
+        rv = SetStringPropertyByIndex(indices[i], "score", "100");
+        break;
+      case nsMsgViewCommandType::unjunk:
+        rv = SetStringPropertyByIndex(indices[i], "score", "0");
         break;
       default:
         NS_ASSERTION(PR_FALSE, "unhandled command");
@@ -2310,6 +2327,19 @@ nsresult nsMsgDBView::SetLabelByIndex(nsMsgViewIndex index, nsMsgLabelValue labe
   return rv;
 }
 
+nsresult nsMsgDBView::SetStringPropertyByIndex(nsMsgViewIndex index, const char *aProperty, const char *aValue)
+{  
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+  
+  nsCOMPtr <nsIMsgDatabase> dbToUse;
+  nsresult rv = GetDBForViewIndex(index, getter_AddRefs(dbToUse));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = dbToUse->SetStringProperty(m_keys[index], aProperty, aValue);
+  NoteChange(index, 1, nsMsgViewNotificationCode::changed);
+  return rv;
+}
 
 
 // reversing threads involves reversing the threads but leaving the
@@ -2570,6 +2600,7 @@ nsresult nsMsgDBView::GetFieldTypeAndLenForSort(nsMsgViewSortTypeValue sortType,
         case nsMsgViewSortType::byUnread:
         case nsMsgViewSortType::byStatus:
         case nsMsgViewSortType::byLabel:
+        case nsMsgViewSortType::byScore:
             *pFieldType = kU32;
             *pMaxLen = sizeof(PRUint32);
             break;
@@ -2690,6 +2721,13 @@ nsresult nsMsgDBView::GetLongField(nsIMsgHdr *msgHdr, nsMsgViewSortTypeValue sor
         if (NS_SUCCEEDED(rv)) 
             *result = !isRead;
         break;
+    case nsMsgViewSortType::byScore:
+      {
+        nsXPIDLCString scoreStr;
+        rv = msgHdr->GetStringProperty("score", getter_Copies(scoreStr));
+        *result = (!scoreStr.IsEmpty()) ? atoi(scoreStr.get()) : 0;
+      }
+      break;
     case nsMsgViewSortType::byId:
         // handled by caller, since caller knows the key
     default:

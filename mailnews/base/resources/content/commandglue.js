@@ -478,6 +478,9 @@ function ConvertColumnIDToSortType(columnID)
     case "labelCol":
       sortKey = nsMsgViewSortType.byLabel;
       break;
+    case "scoreCol":
+      sortKey = nsMsgViewSortType.byScore;
+      break;
     default:
       dump("unsupported sort column: " + columnID + "\n");
       sortKey = 0;
@@ -532,6 +535,9 @@ function ConvertSortTypeToColumnID(sortKey)
     case nsMsgViewSortType.byId:
       // there is no orderReceivedCol, so return null
       columnID = null;
+      break;
+    case nsMsgViewSortType.byScore:
+      columnID = "scoreCol";
       break;
     default:
       dump("unsupported sort key: " + sortKey + "\n");

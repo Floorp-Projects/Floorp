@@ -451,7 +451,6 @@ NS_IMPL_IDPREF_STR (BccList, "bcc_other_list");
 
 NS_IMPL_FOLDERPREF_STR (DraftFolder, "draft_folder");
 NS_IMPL_FOLDERPREF_STR (StationeryFolder, "stationery_folder");
-NS_IMPL_FOLDERPREF_STR (JunkMailFolder, "spam_folder");
 
 NS_IMPL_IDPREF_BOOL(ShowSaveMsgDlg, "showSaveMsgDlg");
 NS_IMPL_IDPREF_STR (DirectoryServer, "directoryServer");

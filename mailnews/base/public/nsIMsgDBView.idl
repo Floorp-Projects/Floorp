@@ -95,6 +95,7 @@ interface nsMsgViewSortType
 	const nsMsgViewSortTypeValue byRecipient = 0x1c;
     const nsMsgViewSortTypeValue byLocation = 0x1d;
 	const nsMsgViewSortTypeValue byLabel = 0x1e;
+	const nsMsgViewSortTypeValue byScore = 0x1f;
 };
 
 [scriptable, uuid(255d1c1e-fde7-11d4-a5be-0060b0fc04b7)]
@@ -196,6 +197,8 @@ interface nsMsgViewCommandType
   const nsMsgViewCommandTypeValue label5 = 26;
   const nsMsgViewCommandTypeValue lastLabel = 26;
 
+  const nsMsgViewCommandTypeValue junk = 27;
+  const nsMsgViewCommandTypeValue unjunk = 28;
 };
 
 [scriptable, uuid(65903eb2-1dd2-11b2-ac45-c5b69c1618d7)]

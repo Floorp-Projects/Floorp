@@ -357,24 +357,19 @@ function SaveAsTemplate(uri, folder)
 	}
 }
 
+function JunkSelectedMessages(setAsJunk)
+{
+  gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk : nsMsgViewCommandType.unjunk);
+}
+
 function MarkSelectedMessagesRead(markRead)
 {
-    if (markRead) {
-        gDBView.doCommand(nsMsgViewCommandType.markMessagesRead);
-    }
-    else {
-        gDBView.doCommand(nsMsgViewCommandType.markMessagesUnread);
-    }
+  gDBView.doCommand(markRead ? nsMsgViewCommandType.markMessagesRead : nsMsgViewCommandType.markMessagesUnread);
 }
 
 function MarkSelectedMessagesFlagged(markFlagged)
 {
-    if (markFlagged) {
-        gDBView.doCommand(nsMsgViewCommandType.flagMessages);
-    }
-    else {
-        gDBView.doCommand(nsMsgViewCommandType.unflagMessages);
-    }
+  gDBView.doCommand(markFlagged ? nsMsgViewCommandType.flagMessages : nsMsgViewCommandType.unflagMessages);
 }
 
 function MarkAllMessagesRead(compositeDataSource, folder)

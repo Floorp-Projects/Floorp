@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -47,6 +48,7 @@
 #include "nsWeakReference.h"
 #include "nsIMsgDatabase.h"
 #include "nsIFileSpec.h"
+#include "nsISpamSettings.h"
 
 class nsIMsgFolderCache;
 class nsIMsgProtocolInfo;
@@ -92,16 +94,18 @@ protected:
   nsresult InternalSetHostName(const char *aHostname, const char *prefName);
 
   nsresult getProtocolInfo(nsIMsgProtocolInfo **aResult);
-  nsCOMPtr<nsIFileSpec> mFilterFile;
-  nsCOMPtr<nsIMsgFilterList> mFilterList;
+  nsCOMPtr <nsIFileSpec> mFilterFile;
+  nsCOMPtr <nsIMsgFilterList> mFilterList;
   // pref callback to clear the user prefs
   static void clearPrefEnum(const char  *aPref, void *aClosure);
 
 private:
   nsIPref *m_prefs;
   nsCString m_password;
-  PRUint32	m_biffState;
+  PRUint32 m_biffState;
   PRPackedBool m_serverBusy;
+  nsCOMPtr <nsISpamSettings> mSpamSettings;
+
 protected:
   // member variable for canHaveFilters
   PRPackedBool m_canHaveFilters;

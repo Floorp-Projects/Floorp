@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -238,6 +239,7 @@ protected:
                     PRInt32 numIndices, nsIMsgFolder *destFolder);
   virtual nsresult CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool isMove, nsIMsgFolder *destFolder);
   virtual nsresult DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool deleteStorage);
+  nsresult SetStringPropertyByIndex(nsMsgViewIndex index, const char *aProperty, const char *aValue);
   nsresult ToggleReadByIndex(nsMsgViewIndex index);
   nsresult SetReadByIndex(nsMsgViewIndex index, PRBool read);
   nsresult SetThreadOfMsgReadByIndex(nsMsgViewIndex index, nsMsgKeyArray &keysMarkedRead, PRBool read);

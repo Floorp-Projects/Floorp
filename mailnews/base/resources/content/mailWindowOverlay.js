@@ -208,6 +208,7 @@ function InitViewSortByMenu()
     setSortByMenuItemCheckState("sortByThreadMenuitem", (sortType == nsMsgViewSortType.byThread));
     setSortByMenuItemCheckState("sortByUnreadMenuitem", (sortType == nsMsgViewSortType.byUnread));
     setSortByMenuItemCheckState("sortByLabelMenuitem", (sortType == nsMsgViewSortType.byLabel));
+    setSortByMenuItemCheckState("sortByScoreMenuitem", (sortType == nsMsgViewSortType.byScore));
  
     // the Sender / Recipient menu is dynamic
     setSortByMenuItemCheckState("sortBySenderOrRecipientMenuitem", (sortType == nsMsgViewSortType.byAuthor) || (sortType == nsMsgViewSortType.byRecipient));
@@ -541,6 +542,19 @@ function SelectedMessagesAreDeleted()
     catch (ex) {
         return 0;
     }
+}
+
+function SelectedMessagesAreJunk()
+{
+    var isJunk;
+    try {
+        var score = gDBView.hdrForFirstSelectedMessage.getStringProperty("score");
+        isJunk =  ((score != "") && (score != "0"));
+    }
+    catch (ex) {
+        isJunk = false;
+    }
+    return isJunk;
 }
 
 function SelectedMessagesAreRead()
@@ -1116,6 +1130,11 @@ function CloseMailWindow()
 {
     //dump("\nClose from XUL\nDo something...\n");
     window.close();
+}
+
+function MsgJunk()
+{
+  JunkSelectedMessages(!SelectedMessagesAreJunk());
 }
 
 function MsgMarkMsgAsRead(markRead)

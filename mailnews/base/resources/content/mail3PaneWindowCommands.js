@@ -223,6 +223,7 @@ var DefaultController =
       case "cmd_createFilterFromMenu":
 			case "cmd_delete":
 			case "button_delete":
+      case "button_junk":
 			case "cmd_shiftDelete":
 			case "cmd_nextMsg":
       case "button_next":
@@ -316,6 +317,10 @@ var DefaultController =
       case "cmd_shiftDelete":
         if (gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.deleteNoTrash, enabled, checkStatus);
+        return enabled.value;
+      case "button_junk":
+        if (gDBView)
+          gDBView.getCommandStatus(nsMsgViewCommandType.junk, enabled, checkStatus);
         return enabled.value;
       case "cmd_killThread":
         return ((GetNumSelectedMessages() == 1) && MailAreaHasFocus() && IsViewNavigationItemEnabled());
@@ -610,6 +615,9 @@ var DefaultController =
 			case "cmd_markAllRead":
                 gDBView.doCommand(nsMsgViewCommandType.markAllRead);
 				return;
+      case "button_junk":
+        MsgJunk();
+        return;
       case "cmd_stop":
         MsgStop();
         return;

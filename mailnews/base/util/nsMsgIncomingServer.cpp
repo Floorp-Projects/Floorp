@@ -1793,3 +1793,127 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
   }
   return rv;
 }
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
+{
+  NS_ENSURE_ARG_POINTER(aSpamSettings);
+  nsresult rv;
+  
+  if (!mSpamSettings) {
+    mSpamSettings = do_CreateInstance(NS_SPAMSETTINGS_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mSpamSettings->SetServer(this);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  rv = mSpamSettings->Clone(aSpamSettings);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  // set the server prefs from the spam settings
+  PRInt32 spamLevel;
+  rv = mSpamSettings->GetLevel(&spamLevel);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetIntValue("spamLevel", spamLevel);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRBool moveOnSpam;
+  rv = mSpamSettings->GetMoveOnSpam(&moveOnSpam);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetBoolValue("moveOnSpam", moveOnSpam);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsXPIDLCString spamActionTargetFolder;
+  rv = mSpamSettings->GetActionTargetFolder(getter_Copies(spamActionTargetFolder));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetCharValue("spamActionTargetFolder", spamActionTargetFolder.get());
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PRBool useWhiteList;
+  rv = mSpamSettings->GetUseWhiteList(&useWhiteList);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetBoolValue("useWhiteList", useWhiteList);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLCString whiteListAbURI;
+  rv = mSpamSettings->GetWhiteListAbURI(getter_Copies(whiteListAbURI));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetCharValue("whiteListAbURI", whiteListAbURI.get());
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PRBool purgeSpam;
+  rv = mSpamSettings->GetPurge(&purgeSpam);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetBoolValue("purgeSpam", purgeSpam);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PRInt32 purgeSpamInterval;
+  rv = mSpamSettings->GetPurgeInterval(&purgeSpamInterval);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = SetIntValue("purgeSpamInterval", purgeSpamInterval);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetSpamSettings(nsISpamSettings **aSpamSettings)
+{
+  NS_ENSURE_ARG_POINTER(aSpamSettings);
+
+  if (!mSpamSettings) {
+    nsresult rv;
+
+    mSpamSettings = do_CreateInstance(NS_SPAMSETTINGS_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = mSpamSettings->SetServer(this);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // set spam settings from server prefs
+    PRInt32 spamLevel;
+    rv = GetIntValue("spamLevel", &spamLevel);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetLevel(spamLevel);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRBool moveOnSpam;
+    rv = GetBoolValue("moveOnSpam", &moveOnSpam);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetMoveOnSpam(moveOnSpam);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsXPIDLCString spamActionTargetFolder;
+    rv = GetCharValue("spamActionTargetFolder", getter_Copies(spamActionTargetFolder));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetActionTargetFolder(spamActionTargetFolder);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRBool useWhiteList;
+    rv = GetBoolValue("useWhiteList", &useWhiteList);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetUseWhiteList(useWhiteList);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsXPIDLCString whiteListAbURI;
+    rv = GetCharValue("whiteListAbURI", getter_Copies(whiteListAbURI));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetWhiteListAbURI(whiteListAbURI);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRBool purgeSpam;
+    rv = GetBoolValue("purgeSpam", &purgeSpam);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetPurge(purgeSpam);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    PRInt32 purgeSpamInterval;
+    rv = GetIntValue("purgeSpamInterval", &purgeSpamInterval);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = mSpamSettings->SetPurgeInterval(purgeSpamInterval);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  NS_ADDREF(*aSpamSettings = mSpamSettings);
+  return NS_OK;
+}

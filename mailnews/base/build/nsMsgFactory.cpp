@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -101,6 +102,7 @@
 #include "nsMsgOfflineManager.h"
 
 #include "nsMsgProgress.h"
+#include "nsSpamSettings.h"
 
 #ifdef XP_WIN
 #include "nsMessengerWinIntegration.h"
@@ -146,6 +148,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchDBView);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuickSearchDBView);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpamSettings);
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init);
 #endif
@@ -319,6 +322,10 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Messenger Progress Manager", NS_MSGPROGRESS_CID,
       NS_MSGPROGRESS_CONTRACTID,
       nsMsgProgressConstructor,
+    },
+    { "Spam Settings", NS_SPAMSETTINGS_CID,
+      NS_SPAMSETTINGS_CONTRACTID,
+      nsSpamSettingsConstructor,
     },
 #ifdef XP_WIN
     { "Windows OS Integration", NS_MESSENGERWININTEGRATION_CID,

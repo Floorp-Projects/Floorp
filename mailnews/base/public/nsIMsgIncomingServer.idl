@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -46,6 +47,7 @@ interface nsIMsgWindow;
 interface nsIMsgFilterList;
 interface nsIMsgRetentionSettings;
 interface nsIMsgDownloadSettings;
+interface nsISpamSettings;
 
 /*
  * Interface for incoming mail/news host
@@ -148,7 +150,6 @@ interface nsIMsgIncomingServer : nsISupports {
   /* the on-disk path to message storage for this server */
   attribute nsIFileSpec localPath;
 
-  
   /* the RDF URI for the root mail folder */
   readonly attribute string serverURI;
 
@@ -308,7 +309,6 @@ interface nsIMsgIncomingServer : nsISupports {
    */
   attribute boolean defaultCopiesAndFoldersPrefsToServer;
 
-
   /* can this server allows sub folder creation */
   attribute boolean canCreateFoldersOnServer;
 
@@ -362,6 +362,11 @@ interface nsIMsgIncomingServer : nsISupports {
    * the existing return receipts filter, if it exists.
    */
   void configureTemporaryReturnReceiptsFilter(in nsIMsgFilterList filterList);
+
+  /**
+   * spam settings
+   */
+  attribute nsISpamSettings spamSettings;
 };
 
 %{C++

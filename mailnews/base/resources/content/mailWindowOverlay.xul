@@ -228,6 +228,7 @@ Rights Reserved.
   <command id="button_next"/>
   <command id="button_file"/>
   <command id="cmd_delete"/>
+  <command id="button_junk"/>
 </commandset>
 
 
@@ -1074,6 +1075,7 @@ Rights Reserved.
           <menuitem id="sortByThreadMenuitem" type="radio" name="sortby" label="&sortByThreadCmd.label;"  accesskey="&sortByThreadCmd.accesskey;" oncommand="MsgSortByThread()"/>
           <menuitem id="sortByUnreadMenuitem" type="radio" name="sortby" label="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByUnread()"/>
           <menuitem id="sortByLabelMenuitem" type="radio" name="sortby" label="&sortByLabelCmd.label;" accesskey="&sortByLabelCmd.accesskey;" oncommand="MsgSortByLabel()"/>
+          <menuitem id="sortByScoreMenuitem" type="radio" name="sortby" label="&sortByScoreCmd.label;" accesskey="&sortByScoreCmd.accesskey;" oncommand="MsgSortByScore()"/>
           <menuseparator/>
           <menuitem id="sortAscending" type="radio" name="sortdirection" label="&sortAscending.label;" accesskey="&sortAscending.accesskey;" oncommand="MsgSortAscending()"/>
           <menuitem id="sortDescending" type="radio" name="sortdirection" label="&sortDescending.label;" accesskey="&sortDescending.accesskey;" oncommand="MsgSortDescending()"/>
@@ -1414,7 +1416,7 @@ Rights Reserved.
     <menuitem label="&filtersCmd.label;"
               accesskey="&filtersCmd.accesskey;"
               oncommand="MsgFilters(null);"/>
-<!-- not ready for prime time 
+<!-- not ready yet
     <menuitem label="&junkMailCmd.label;" 
               accesskey="&junkMailCmd.accesskey;" 
               oncommand="MsgJunkMail()"/>
@@ -1538,6 +1540,9 @@ Rights Reserved.
       </toolbarbutton>
       <toolbarbutton class="toolbarbutton-1" id="button-next" label="&nextButton.label;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
       <toolbarbutton class="toolbarbutton-1" id="button-delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
+<!-- not ready yet
+      <toolbarbutton class="toolbarbutton-1" id="button-junk" label="&junkButton.label;" tooltiptext="&junkButton.tooltip;" observes="button_junk" oncommand="goDoCommand('button_junk')"/>
+-->
       <toolbarbutton type="menu-button" id="button-mark" class="toolbarbutton-1" label="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
                   observes="button_mark" tooltiptext="&markButton.tooltip;">  
             <menupopup onpopupshowing="InitMessageMark()">

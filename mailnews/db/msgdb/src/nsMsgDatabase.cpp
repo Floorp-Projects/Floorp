@@ -1875,6 +1875,19 @@ NS_IMETHODIMP nsMsgDatabase::MarkOffline(nsMsgKey key, PRBool offline,
 	return SetKeyFlag(key, offline, MSG_FLAG_OFFLINE, instigator);
 }
 
+NS_IMETHODIMP nsMsgDatabase::SetStringProperty(nsMsgKey aKey, const char *aProperty, const char *aValue)
+{
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+		
+  nsresult rv = GetMsgHdrForKey(aKey, getter_AddRefs(msgHdr));
+  if (NS_FAILED(rv) || !msgHdr) 
+    return NS_MSG_MESSAGE_NOT_FOUND; // XXX return rv?
+
+  rv = msgHdr->SetStringProperty(aProperty, aValue);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
 NS_IMETHODIMP nsMsgDatabase::SetLabel(nsMsgKey key, nsMsgLabelValue label)
 {
   nsresult rv;

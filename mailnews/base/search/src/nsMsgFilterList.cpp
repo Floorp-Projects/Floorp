@@ -165,6 +165,8 @@ NS_IMETHODIMP nsMsgFilterList::ClearLog()
 nsresult 
 nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
 {
+  NS_ENSURE_ARG_POINTER(aFileSpec);
+
   nsCOMPtr <nsIMsgFolder> folder;
   nsresult rv = GetFolder(getter_AddRefs(folder));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -184,6 +186,8 @@ nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
 NS_IMETHODIMP
 nsMsgFilterList::GetLogURL(char **aLogURL)
 {
+  NS_ENSURE_ARG_POINTER(aLogURL);
+
   nsCOMPtr <nsIFileSpec> file;
   nsresult rv = GetLogFileSpec(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1027,7 +1031,7 @@ NS_IMETHODIMP nsMsgFilterList::GetArbitraryHeaders(char **aResult)
 
 NS_IMETHODIMP nsMsgFilterList::FlushLogIfNecessary()
 {
-  // if we are logging, flush the log at the end of applying the filters
+  // only flush the log if we are logging
   PRBool loggingEnabled = PR_FALSE;
   nsresult rv = GetLoggingEnabled(&loggingEnabled);
   NS_ENSURE_SUCCESS(rv,rv);

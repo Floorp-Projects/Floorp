@@ -557,6 +557,7 @@ var MessageWindowController =
       case "cmd_killThread":
       case "cmd_watchThread":
 			case "button_delete":
+      case "button_junk":
 			case "cmd_shiftDelete":
       case "button_print":
 			case "cmd_print":
@@ -620,6 +621,8 @@ var MessageWindowController =
 			case "cmd_shiftDelete":
         var loadedFolder = GetLoadedMsgFolder();
         return gCurrentMessageUri && loadedFolder && (loadedFolder.canDeleteMessages || isNewsURI(gCurrentFolderUri));
+      case "button_junk":
+        return (!isNewsURI(gCurrentFolderUri));
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -753,6 +756,9 @@ var MessageWindowController =
 			case "cmd_shiftDelete":
 				MsgDeleteMessageFromMessageWindow(true, false);
 				break;
+      case "button_junk":
+        MsgJunk();
+        break;
 			case "button_delete":
 				MsgDeleteMessageFromMessageWindow(false, true);
 				break;

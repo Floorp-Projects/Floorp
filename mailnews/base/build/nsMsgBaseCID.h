@@ -438,6 +438,17 @@
  0x9f4dd201, 0x3b1f, 0x11d5,											\
  {0x9d, 0xaa, 0xc3, 0x45, 0xc9, 0x45, 0x3d, 0x3c }}
 
+//
+// nsSpamSettings
+// 
+#define NS_SPAMSETTINGS_CONTRACTID \
+  "@mozilla.org/messenger/spamsettings;1"
+
+#define NS_SPAMSETTINGS_CID									      \
+{ /* ce6038ae-e5e0-4372-9cff-2a6633333b2b */			\
+ 0xce6038ae, 0xe5e0, 0x4372,											\
+ {0x9c, 0xff, 0x2a, 0x66, 0x33, 0x33, 0x3b, 0x2b }}
+
 // 
 // nsMessengerOSIntegration 
 //
