@@ -992,7 +992,8 @@ Rights Reserved.
         <menuitem id="context-bookmarklink"
                   label="&bookmarkLinkCmd.label;"
                   accesskey="&bookmarkLinkCmd.accesskey;"
-                  oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
+                  oncommand="initBMService();
+                             BookmarksUtils.addBookmark(gContextMenu.linkURL(),
                                                         gContextMenu.linkText());"/>
 
 </popup>
