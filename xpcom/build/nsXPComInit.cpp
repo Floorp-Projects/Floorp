@@ -523,6 +523,31 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
         // if we find no persistent registry, we will try to autoregister
         // the default components directory.
         nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);        
+
+        // If the application is using an MRE, then, 
+        // auto register components in the MRE directory as well.
+        //
+        // The application indicates that it's using an MRE by
+        // returning a valid nsIFile when queried (via appFileLocProvider)
+        // for the NS_MRE_DIR atom as shown below
+        //
+
+        if ( appFileLocationProvider ) {
+            nsCOMPtr<nsIFile> mreDir;
+            PRBool persistent = PR_TRUE;
+
+            appFileLocationProvider->GetFile(NS_MRE_DIR, &persistent, getter_AddRefs(mreDir));
+
+            if (mreDir)
+            {
+                rv = nsComponentManagerImpl::gComponentManager->AutoRegister(mreDir);
+                if (NS_FAILED(rv))
+                {
+                    NS_ERROR("Could not AutoRegister MRE components");
+                    return rv;
+                }
+            }
+        }
     }
     
     // Pay the cost at startup time of starting this singleton.
