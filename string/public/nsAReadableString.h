@@ -35,17 +35,6 @@
 #include "nsCharTraits.h"
 #endif
 
-#include <iterator>
-  // for |bidirectional_iterator_tag|
-
-#include <algorithm>
-  // for |min|, |copy|
-
-
-#ifdef HAVE_CPP_NAMESPACE_STD
-using std::bidirectional_iterator_tag;
-#endif
-
 /*
   This file defines the abstract interfaces |nsAReadableString| and
   |nsAReadableCString| (the 'A' is for 'abstract', as opposed to the 'I' in
@@ -87,14 +76,14 @@ template <class CharT> class basic_nsAWritableString;
 
 template <class CharT>
 class nsReadingIterator
-      : public bidirectional_iterator_tag
+//    : public bidirectional_iterator_tag
   {
     public:
       typedef ptrdiff_t                   difference_type;
       typedef CharT                       value_type;
       typedef const CharT*                pointer;
       typedef const CharT&                reference;
-      typedef bidirectional_iterator_tag  iterator_category;
+//    typedef bidirectional_iterator_tag  iterator_category;
 
     private:
       friend class basic_nsAReadableString<CharT>;

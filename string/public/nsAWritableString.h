@@ -48,14 +48,14 @@ template <class CharT> class basic_nsAWritableString;
 
 template <class CharT>
 class nsWritingIterator
-    : public bidirectional_iterator_tag
+//  : public bidirectional_iterator_tag
   {
     public:
       typedef ptrdiff_t                   difference_type;
       typedef CharT                       value_type;
       typedef CharT*                      pointer;
       typedef CharT&                      reference;
-      typedef bidirectional_iterator_tag  iterator_category;
+//    typedef bidirectional_iterator_tag  iterator_category;
 
     private:
       friend class basic_nsAWritableString<CharT>;
