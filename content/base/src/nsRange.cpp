@@ -2208,7 +2208,7 @@ nsresult nsRange::SurroundContents(nsIDOMNode* aN)
     if(tFound)
     {
       nsCOMPtr<nsIDOMNode> tChild;
-      tChildList->Item(i-1, getter_AddRefs(tChild));
+      tChildList->Item(i, getter_AddRefs(tChild));
       tAncestorContainer->InsertBefore(aN, tChild, getter_AddRefs(tempNode));
     }
     else // there is an error this may need to be updated later
