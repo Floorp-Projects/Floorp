@@ -349,11 +349,14 @@ public:
     BinaryOperator(const JSType *t1, const JSType *t2, JSBinaryOperator *function) :
         t1(t1), t2(t2), function(function) { }
 
+    BinaryOperator(const JSType *t1, const JSType *t2, JSFunction *function) :
+        t1(t1), t2(t2), function(function) { }
+
     static BinaryOp mapICodeOp(ICodeOp op);
 
     const JSType *t1;
     const JSType *t2;
-    JSBinaryOperator *function;
+    JSFunction *function;
 
 };
 
@@ -389,28 +392,74 @@ typedef std::vector<BinaryOperator *> BinaryOperatorList;
 BinaryOperatorList binaryOperators[15];
 
         
+JSBinaryOperator::JSBinaryCode defaultFunction[] = {
+    add_Default,
+    subtract_Default,
+    multiply_Default,
+    divide_Default,
+    remainder_Default,
+    shiftLeft_Default,
+    shiftRight_Default,
+    UshiftRight_Default,
+    or_Default,
+    xor_Default,
+    and_Default,
+    less_Default,
+    lessEqual_Default,
+    equal_Default,
+    identical_Default
+};
 
 class InitBinaryOperators {
+
 public:
     InitBinaryOperators() {
-        binaryOperators[BinaryOperator::Add].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(add_Default)));
-        binaryOperators[BinaryOperator::Subtract].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(subtract_Default)));
-        binaryOperators[BinaryOperator::Multiply].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(multiply_Default)));
-        binaryOperators[BinaryOperator::Divide].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(divide_Default)));
-        binaryOperators[BinaryOperator::Remainder].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(remainder_Default)));
-        binaryOperators[BinaryOperator::LeftShift].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(shiftLeft_Default)));
-        binaryOperators[BinaryOperator::RightShift].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(shiftRight_Default)));
-        binaryOperators[BinaryOperator::LogicalRightShift].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(UshiftRight_Default)));
-        binaryOperators[BinaryOperator::BitwiseOr].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(or_Default)));
-        binaryOperators[BinaryOperator::BitwiseXor].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(xor_Default)));
-        binaryOperators[BinaryOperator::BitwiseAnd].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(and_Default)));
-        binaryOperators[BinaryOperator::Less].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(less_Default)));
-        binaryOperators[BinaryOperator::LessEqual].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(lessEqual_Default)));
-        binaryOperators[BinaryOperator::Equal].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(equal_Default)));
-        binaryOperators[BinaryOperator::Identical].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(identical_Default)));
-    }
+
+        for (int i = BinaryOperator::Add; i <= BinaryOperator::Identical; i++)            
+            binaryOperators[i].push_back(new BinaryOperator(&Any_Type, &Any_Type, new JSBinaryOperator(defaultFunction[i])));
+  }
 } initializer = InitBinaryOperators();
 
+static JSValue defineAdd(const JSValues& argv)
+{
+    // should be three args, first two are types, third is a function.
+    ASSERT(argv[0].isType());
+    ASSERT(argv[1].isType());
+    ASSERT(argv[2].isFunction());
+
+// XXX need to prove that argv[2].function takes T1 and T2 as args and returns Boolean for the relational operators ?
+
+//    stdOut << *argv[2].function->getICode();
+    binaryOperators[BinaryOperator::Add].push_back(new BinaryOperator(argv[0].type, argv[1].type, argv[2].function));
+
+    return kUndefinedValue;
+}
+
+void Context::initContext()
+{
+// predefine the predefined types;
+
+    mGlobal->defineVariable(widenCString("any"), JSValue(&Any_Type));
+    mGlobal->defineVariable(widenCString("Integer"), JSValue(&Integer_Type));
+    mGlobal->defineVariable(widenCString("Number"), JSValue(&Number_Type));
+    mGlobal->defineVariable(widenCString("Character"), JSValue(&Character_Type));
+    mGlobal->defineVariable(widenCString("String"), JSValue(&String_Type));
+    mGlobal->defineVariable(widenCString("Function"), JSValue(&Function_Type));
+    mGlobal->defineVariable(widenCString("Array"), JSValue(&Array_Type));
+    mGlobal->defineVariable(widenCString("Type"), JSValue(&Type_Type));
+    mGlobal->defineVariable(widenCString("Boolean"), JSValue(&Boolean_Type));
+    mGlobal->defineVariable(widenCString("Null"), JSValue(&Null_Type));
+    mGlobal->defineVariable(widenCString("Void"), JSValue(&Void_Type));
+    mGlobal->defineVariable(widenCString("none"), JSValue(&None_Type));
+
+
+// hack - the following should be available only after importing the 'Operators' package
+// (hmm, how will that work - the import needs to connect the functions into this mechanism
+//   do we watch for the specific package name???)
+
+    StringAtom& name = mWorld.identifiers[widenCString("defineAdd")];
+    mGlobal->defineNativeFunction(name, defineAdd);
+}
 
 static const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op)
 {
