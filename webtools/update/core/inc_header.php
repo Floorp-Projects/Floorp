@@ -69,13 +69,16 @@
  <div>
   <label for="q" title="Search update.mozilla.org">search update:</label>
   <input type="hidden" name="cof" value="LW:174;LH:60;L:http://www.mozilla.org/images/mlogosm.gif;GIMP:#cc0000;T:black;ALC:#0000ff;GFNT:grey;LC:#990000;BGC:white;AH:center;VLC:purple;GL:0;GALT:#666633;AWFID:9262c37cefe23a86;">
-  <input type="hidden" name="domains" value="mozilla.org">
-  <input type="hidden" name="sitesearch" value="mozilla.org">
+  <input type="hidden" name="domains" value="update.mozilla.org">
+  <input type="hidden" name="sitesearch" value="update.mozilla.org">
   <input type="text" id="q" name="q" accesskey="s" size="30">
   <input type="submit" id="submit" value="Go">
  </div>
  </form>
 </div>
+Firefox: <a href="/extensions/?application=firefox">Extensions</a> <a href="/themes/?application=firefox">Themes</a> <a href="/searchplugins/">Search Plugins</a> | 
+Thunderbird: <a href="/extensions/?application=thunderbird">Extensions</a> <a href="/themes/?application=thunderbird">Themes</a> | 
+Mozilla Suite: <a href="/extensions/?application=mozilla">Extensions</a> <a href="/themes/?application=mozilla">Themes</a>
 <!-- closes #header-->
 <?php return; ?>
 

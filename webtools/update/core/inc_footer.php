@@ -54,6 +54,14 @@
 
 <?php
 
+
+//if ($_SESSION["debug"]=="true") {
+//print(session_id());
+//echo"<PRE>";print_r($_SESSION); echo"</PRE><Br>\n";
+//echo"Current application data: $application - $app_version - $OS ";
+//}
+
+
 return;
 
 //Site Timer Counter :: Debug-Mode Item Only

@@ -44,9 +44,9 @@
 include"dbconfig.php"; // Include Database Server Configuration File
 
 // General Website Configuration Variables
-$websitepath = "/opt/update-beta/";                 // Local Path to Site Files
-$repositorypath = "/opt/update-beta/files/";        //Path to XPI/JAR Respository
-$sitehostname = "update-beta.mozilla.org";          // DNS Hostname
+$websitepath = "D:/Websites/update/mozilla/webtools/update";                 // Local Path to Site Files
+$repositorypath = "D:/Websites/update/mozilla/webtools/update/files/";        //Path to XPI/JAR Respository
+$sitehostname = "mozillaupdate.psychoticwolf.net";          // DNS Hostname
 $ftpurl = "http://ftp.mozilla.org/pub/mozilla.org"; // URL to FTP site
 
 // Page Header and Footer Path Variables
@@ -61,8 +61,9 @@ function getmicrotime() {
 $time_start = getmicrotime();
 
 // Update Core Include Files
-include"inc_guids.php"; // GUID Handler
-include"inc_global.php"; // Global Functions
-include"sessionconfig.php"; //Start Session
+include"inc_guids.php"; // GUID --> AppName Handler
+include"inc_global.php"; // Global Functions - Variable Cleanup
+include"inc_browserdetection.php"; //Browser Detection - App Variable Handling
+//include"sessionconfig.php"; //Start Session
 
 ?>

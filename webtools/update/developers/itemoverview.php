@@ -104,7 +104,13 @@ $sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `t_version` TV
     <BR>
         <img src="/images/ratings.png" border=0 height=34 width=34 alt="" class="iconbar">Rated: <?php echo"$rating"; ?> of 5<BR>&nbsp;<br>
     <BR>
-        <img src="/images/edit.png" border=0 height=34 width=34 alt="" class="iconbar">Comments: <?php echo"$num_comments"; ?><BR>&nbsp;<br>
+<?php
+
+$sql = "SELECT CommentID FROM  `t_feedback` WHERE ID = '$id'";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    $num_comments = mysql_num_rows($sql_result);
+?>
+        <img src="/images/edit.png" border=0 height=34 width=34 alt="" class="iconbar"><a href="commentsmanager.php?id=<?php echo"$id"; ?>">Comments: <?php echo"$num_comments"; ?></a><BR>&nbsp;<br>
 
     <h2>Developer Comments</h2>
 <?php

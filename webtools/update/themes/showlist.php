@@ -192,13 +192,13 @@ echo"".ucwords("$typename")." $startitem - $enditem of $totalresults&nbsp;&nbsp;
 
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";
+echo"<a href=\"?".uriparams()."&pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" &bull; <a href=\"?pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?".uriparams()."&pageid=$nextid\">Next &#187;</a>";
 }
 
 echo"<br><br>\n";
@@ -209,6 +209,8 @@ echo"<br><br>\n";
 
 echo"<DIV class=\"key-point\">";
 echo"<FORM NAME=\"listviews\" METHOD=\"GET\" ACTION=\"showlist.php\">\n";
+echo"<input name=\"application\" type=\"hidden\" value=\"$application\">\n";
+
 //Items-Per-Page
 echo"Show/Page: ";
 $perpage = array("5","10","20","50");
@@ -240,7 +242,7 @@ echo"Versions: ";
 echo"<SELECT name=\"version\">";
 if ($application != "thunderbird") {echo"<OPTION value=\"auto-detect\">Auto-Detect</OPTION>";}
 $app_orig = $application; //Store original to protect against possible corruption
-$sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `t_applications` WHERE `AppName` = '$application' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+$sql = "SELECT `Version`, `major`, `minor`, `release`, `SubVer` FROM `t_applications` WHERE `AppName` = '$application' AND `public_ver` = 'YES' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   while ($row = mysql_fetch_array($sql_result)) {
   $version = $row["Version"];
@@ -346,7 +348,7 @@ $authorcount = count($authors);
 foreach ($authors as $author) {
 $userid = $authorids[$author];
 $n++;
-$authorstring .= "<A HREF=\"authorprofiles.php?id=$userid\">$author</A>";
+$authorstring .= "<A HREF=\"authorprofiles.php?".uriparams()."&id=$userid\">$author</A>";
 if ($authorcount != $n) {$authorstring .=", "; }
 
 }
@@ -376,7 +378,7 @@ echo"<IMG SRC=\"$previewuri\" BORDER=0 HEIGHT=$height WIDTH=$width ALT=\"$name p
 echo"</DIV>\n";
 }
 echo"<h5>";
-echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?id=$id&vid=$vid\">$name $version</A></SPAN><BR>";
+echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?".uriparams()."&id=$id\">$name $version</A></SPAN><BR>";
 echo"<SPAN class=\"authorline\">By $authors</SPAN>";
 echo"</h5>";
 
@@ -389,7 +391,7 @@ echo"<BR>";
 echo"<DIV style=\"margin-top: 30px; height: 34px\">";
 echo"<DIV class=\"iconbar\">";
 if ($appname=="Thunderbird") {
-echo"<A HREF=\"moreinfo.php?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
+echo"<A HREF=\"moreinfo.php?".uriparams()."&id=$id\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
 } else {
 echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
@@ -397,7 +399,7 @@ echo"<BR><SPAN class=\"filesize\">&nbsp;&nbsp;$filesize kb</SPAN></DIV>";
 echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
 if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
 if ($homepage) {echo"<DIV class=\"iconbar\"><A HREF=\"$homepage\"><IMG SRC=\"/images/home.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
-echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
+echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"moreinfo.php?".uriparams()."&id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
 echo"</DIV>";
 
 echo"<DIV class=\"baseline\">$datestring | Total Downloads: $downloadcount";
@@ -428,14 +430,14 @@ if ($pageid <=$num_pages) {
 
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";
+echo"<a href=\"?".uriparams()."&pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" &bull; <a href=\"?pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?".uriparams()."&pageid=$nextid\">Next &#187;</a>";
 }
 echo"<BR>\n";
 
@@ -459,7 +461,7 @@ while ($i <= $maxpagesonpage && $i <= $num_pages) {
 if ($i==$pageid) { 
     echo"<SPAN style=\"color: #FF0000\">$i</SPAN>&nbsp;";
   } else {
-    echo"<A HREF=\"?pageid=$i\">$i</A>&nbsp;";
+    echo"<A HREF=\"?".uriparams()."&pageid=$i\">$i</A>&nbsp;";
 
 }
 

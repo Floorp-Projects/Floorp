@@ -38,54 +38,103 @@
 
 //Submit Review/Rating Feedback to Table
 require"../core/config.php";
-if (!$_POST[rating] && $_POST[rating] !=="0") {
-//No Rating Defined, send user back...
-$return_path="extensions/moreinfo.php?id=$_POST[id]&vid=$_POST[vid]&page=opinion&error=norating";
-header("Location: http://$_SERVER[HTTP_HOST]/$return_path");
-exit;
+
+
+//Check and see if the ID/vID is valid.
+$sql = "SELECT TM.ID, TV.vID FROM `t_main` TM INNER JOIN `t_version` TV ON TM.ID=TV.ID WHERE TM.ID = '".escape_string($_POST[id])."' AND `vID`='".escape_string($_POST["vid"])."' LIMIT 1";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    if(mysql_num_rows($sql_result)=="0") {
+        unset($_POST["id"],$_POST["vid"],$id,$vid);
+    } else {
+        $id = escape_string($_POST["id"]);
+        $vid = escape_string($_POST["vid"]);
+    }
+
+    $name = escape_string(strip_tags($_POST["name"]));
+    $title = escape_string(strip_tags($_POST["title"]));
+    $rating = escape_string($_POST["rating"]);
+    $comments = nl2br(strip_tags(escape_string($_POST["comments"])));
+    $email = escape_string($_POST["email"]);
+    if (!$name) {
+        $name="Anonymous";
+    }
+    if (!$title) {
+        $title="No Title";
+    }
+
+    //Make Sure Rating is as expected.
+    if (is_numeric($rating) and $rating<=5 and $rating>=0) {
+    } else {
+        unset($rating);
+    }
+
+    if (!$rating or !$comments ) {
+    //No Rating or Comment Defined, throw an error.
+        page_error("3","Comment is Blank or Rating is Null.");
+        exit;
+    }
+
+
+//Compile Info about What Version of the item this comment is about.
+$sql = "SELECT TV.Version, `OSName`, `AppName` FROM `t_version` TV
+        INNER JOIN `t_os` TOS ON TOS.OSID=TV.OSID
+        INNER JOIN `t_applications` TA ON TA.AppID=TV.AppID
+        WHERE TV.ID = '$id' AND TV.vID='$vid' LIMIT 1";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+    $row = mysql_fetch_array($sql_result);
+    $version = $row["Version"];
+    $os = $row["OSName"];
+    $appname = $row["AppName"];
+    $versiontagline = "version $version for $appname";
+    if ($os !=="ALL") {$versiontagline .=" on $os"; }
+
+//Check the Formkey against the DB, and see if this has already been posted...
+$formkey = escape_string($_POST["formkey"]);
+$date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-1, date("Y")));
+$sql = "SELECT `CommentID` FROM  `t_feedback` WHERE `formkey` = '$formkey' AND `CommentDate`>='$date'";
+$sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_ERROR);
+if (mysql_num_rows($sql_result)=="0") {
+
+//FormKey doesn't exist, go ahead and add their comment.
+    $sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$_SERVER[REMOTE_ADDR]', '$email', '$formkey', '$versiontagline');";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
+
+    //Get Rating Data and Create $ratingarray
+    $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-30, date("Y")));
+    $sql = "SELECT ID, CommentVote FROM  `t_feedback` WHERE `ID` = '$id' AND `CommentDate`>='$date' AND `CommentVote` IS NOT NULL";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    while ($row = mysql_fetch_array($sql_result)) {
+        $ratingarray[$row[ID]][] = $row["CommentVote"];
+    }
+
+    //Compile Rating Average
+    if (!$ratingarray[$id]) {
+        $ratingarray[$id] = array();
+    }
+    $numratings = count($ratingarray[$id]);
+    $sumratings = array_sum($ratingarray[$id]);
+
+    if ($numratings>0) {
+        $rating = round($sumratings/$numratings, 1);
+    } else {
+        $rating="2.5"; //Default Rating
+    }
+
+
+    $sql = "UPDATE `t_main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+
 }
 
-if (!$_POST[comments]) {
-  $_POST[comments]="NULL";
-  } else {
-  //Comments is not null, format comments and get default name/title.. if needed.
-  $_POST["comments"]="'$_POST[comments]'";
-  if (!$_POST[name]) {$_POST[name]=="Anonymous"; }
-  if (!$_POST[title]) {$_POST[title]=="My Comments..."; }
-  }
 
-$_POST["name"] = strip_tags($_POST["name"]);
-$_POST["title"] = strip_tags($_POST["title"]);
-$_POST["comments"] = strip_tags($_POST["comments"]);
+if ($_POST["type"]=="E") {
+    $type="extensions";
+} else if ($_POST["type"]=="T") {
+    $type="themes";
+}
 
-
-$sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`) VALUES ('$_POST[id]', '$_POST[name]', '$_POST[rating]', '$_POST[title]', $_POST[comments], NOW(NULL), '$_SERVER[REMOTE_ADDR]');";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-
-//Get Rating Data and Create $ratingarray
-$sql = "SELECT ID, CommentVote FROM  `t_feedback` WHERE `ID` = '$_POST[id]' AND `CommentVote` IS NOT NULL ORDER  BY `CommentDate` ASC";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  while ($row = mysql_fetch_array($sql_result)) {
-     $ratingarray[$row[ID]][] = $row["CommentVote"];
-   }
-
-//Compile Rating Average
-$id = $_POST[id];
-if (!$ratingarray[$id]) {$ratingarray[$id] = array(); }
-$numratings = count($ratingarray[$id]);
-$sumratings = array_sum($ratingarray[$id]);
-if ($numratings>0) {
-$rating = round($sumratings/$numratings, 1);
-} else {
-$rating="0"; } //Default Rating
-
-
-$sql = "UPDATE `t_main` SET `Rating`='$rating' WHERE `ID`='$id' LIMIT 1";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-
-
-$return_path="extensions/moreinfo.php?id=$_POST[id]&vid=$_POST[vid]&page=comments&action=postsuccessfull";
-header("Location: http://$_SERVER[HTTP_HOST]/$return_path");
+$return_path="$type/moreinfo.php?id=$id&vid=$vid&page=comments&action=postsuccessfull";
+header("Location: http://$sitehostname/$return_path");
 exit;
 ?>

@@ -96,22 +96,25 @@ if (!is_numeric($_GET["numpg"])) { unset($_GET["numpg"]); }
 // page_error() function
 
 function page_error($reason, $custom_message) {
-global $page_header, $page_footer;
-echo"<TITLE>Mozilla Update :: Error</TITLE>\n";
-echo"<LINK REL=\"STYLESHEET\" TYPE=\"text/css\" HREF=\"/core/update.css\">\n";
-include"$page_header";
+    global $page_header, $page_footer;
 
-echo"<DIV class=\"contentbox\" style=\"border-color: #F00; width: 90%; margin: auto; min-height: 250px; margin-bottom: 5px\">\n";
-echo"<DIV class=\"boxheader\">Mozilla Update :: Error</DIV>\n";
-echo"<SPAN style=\"font-size: 12pt\">\n";
-echo"Mozilla Update has encountered an error and is unable to fulfill your request. Please try your request again later. If the
-problem continues, please contact the Mozilla Update staff. More information about the error may be found at the end of this
-message.<BR><BR>
-Error $reason: $custom_message<BR><BR>
-&nbsp;&nbsp;&nbsp;<A HREF=\"javascript:history.back()\">&#171;&#171; Go Back to Previous Page</A>";
-echo"</SPAN></DIV>\n";
-include"$page_footer";
-exit;
+    echo"<TITLE>Mozilla Update :: Error</TITLE>\n";
+    echo"<LINK REL=\"STYLESHEET\" TYPE=\"text/css\" HREF=\"/core/update.css\">\n";
+
+    include"$page_header";
+
+    echo"<h1>Mozilla Update :: Error</h1>\n";
+    echo"<SPAN style=\"font-size: 12pt\">\n";
+    echo"Mozilla Update has encountered an error and is unable to fulfill your request. Please try your request again later. If the
+    problem continues, please contact the Mozilla Update staff. More information about the error may be found at the end of this
+    message.<BR><BR>
+    Error $reason: $custom_message<BR><BR>
+    &nbsp;&nbsp;&nbsp;<A HREF=\"javascript:history.back()\">&#171;&#171; Go Back to Previous Page</A>";
+    echo"</SPAN>\n";
+
+    include"$page_footer";
+    echo"</body>\n</html>\n";
+    exit;
 }
 
 function writeFormKey()
@@ -135,4 +138,24 @@ function checkFormKey()
 	}
 	return true;
 }
+
+// -----------------------------
+// function uriparams() -- print all the present and valid URI variables.
+// Usage: string uriparams()
+// -----------------------------
+
+function uriparams() {
+    global $app_version, $application, $items_per_page, $category, $OS;
+    $uriparams = "";
+
+    if ($application) { $uriparams .="application=$application"; }
+    if ($app_version) { $uriparams .="&version=$app_version"; }
+    if ($OS) { $uriparams .="&os=$OS"; }
+    if ($category) { $uriparams .="&category=$category"; }
+    if ($items_per_page) { $uriparams .="&numpg=$items_per_page"; }
+
+    return $uriparams;
+}
+
+
 ?>

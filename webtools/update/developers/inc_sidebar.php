@@ -14,6 +14,7 @@ if ($_SESSION["level"] == "user") {
 <li><A HREF="listmanager.php?type=T">Themes list</A></li>
 <li><A HREF="listmanager.php?type=E">Extensions list</A></li>
 <li><A HREF="usermanager.php">Users Manager</A></li>
+<li><a href="commentsmanger.php?function=flaggedcomments">Comments Manager</a></li>
 <?php
 } else {
 ?>
@@ -25,6 +26,7 @@ if ($_SESSION["level"] == "user") {
 <li><a href="appmanager.php">Application Manager</a></li>
 <li><a href="categorymanager.php">Category Manager</A></li>
 <li><a href="faqmanager.php">FAQ Manager</A></li>
+<li><a href="commentsmanager.php?function=flaggedcomments">Comments Manager</a></li>
 <?php } ?>
 <li><a href="logout.php">Logout</A></li>
 </ul>

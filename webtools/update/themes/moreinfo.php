@@ -58,7 +58,7 @@ exit;
   $row = mysql_fetch_array($sql_result);
 
 //Page Titles
-$pagetitles = array("releases"=>"All Releases", "comments"=>"User Comments", "staffreview"=>"Editor Review", "opinion"=>" My Opinion");
+$pagetitles = array("releases"=>"All Releases", "previews"=>"Preview Images", "comments"=>"User Comments", "staffreview"=>"Editor Review", "opinion"=>" My Opinion");
 $pagetitle = $pagetitles[$_GET["page"]];
 ?>
 
@@ -74,6 +74,9 @@ include"inc_sidebar.php";
 ?>
 
 <?php
+$id = $_GET["id"];
+
+
 //Get Author Data
 $sql2 = "SELECT  TM.Name, TU.UserName, TU.UserID, TU.UserEmail FROM  `t_main`  TM 
 LEFT JOIN t_authorxref TAX ON TM.ID = TAX.ID
@@ -107,16 +110,66 @@ FROM  `t_main` TM
 INNER  JOIN t_version TV ON TM.ID = TV.ID
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
 INNER  JOIN t_os TOS ON TV.OSID = TOS.OSID
-WHERE TM.ID = '$_GET[id]' AND `approved` = 'YES' ";
-if ($_GET["vid"]) { $sql .=" AND TV.vID = '$_GET[vid]' "; }
-$sql .= "ORDER  BY  `Name` , `Version` DESC LIMIT 1";
+";
+
+if ($category && $category !=="%") { $sql .="INNER  JOIN t_categoryxref TCX ON TM.ID = TCX.ID
+INNER JOIN t_categories TC ON TCX.CategoryID = TC.CategoryID "; }
+if ($editorpick=="true") { $sql .="INNER JOIN t_reviews TR ON TM.ID = TR.ID "; }
+$sql .="WHERE TM.ID = '$_GET[id]'";
+
+if ($_GET["vid"]) {$vid=$_GET["vid"]; $sql .=" AND TV.vID = '$vid' ";
+} else {
+$sql .=" AND Type = '$type' AND AppName = '$application' AND `approved` = 'YES' ";
+if ($editorpick=="true") { $sql .="AND TR.Pick = 'YES' "; }
+if ($category && $category !=="%") {$sql .="AND CatName LIKE '$category' ";}
+if ($app_version) { $sql .=" AND TV.MinAppVer_int <= '".strtolower($app_version)."' AND TV.MaxAppVer_int >= '".strtolower($app_version)."' ";}
+if ($OS) { $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') "; }
+}
+
+$sql .= "\nORDER  BY  `Name` , `Version` DESC LIMIT 1";
+
+//echo"<pre>$sql</pre><BR>\n";
+
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $row = mysql_fetch_array($sql_result);
+
+  if (mysql_num_rows($sql_result)=="0") {
+    echo"<h1>Incompatible Theme or Theme No Longer Available</h1>\n";
+    echo"The theme you requested is either incompatible with the application selected, or the version of it is no longer available on Mozilla Update.<br><br>\n";
+    echo"To try your request again for a different application version, use the form below.<br>\n";
+
+    echo"<form name=\"changeapp\" method=\"get\" action=\"?\">
+        <input name=\"id\" type=\"hidden\" value=\"$id\">
+        <input name=\"os\" type=\"hidden\" value=\"$OS\">
+        <strong>".ucwords($application)."</strong> <input name=\"application\" type=\"hidden\" value=\"$application\">";
+    echo"<select name=\"version\">";
+  $sql = "SELECT `Version`,`major`,`minor`,`release`,`SubVer` FROM `t_applications` WHERE `AppName`='$application' and `public_ver` ='YES' ORDER BY `major` DESC, `minor` DESC, `release` DESC, `SubVer` DESC";
+  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    while ($row = mysql_fetch_array($sql_result)) {
+        $release = "$row[major].$row[minor]";
+        if ($row["release"]) {
+            $release .= ".$row[release]";
+        }
+        $subver = $row["SubVer"];
+        if ($subver !=="final") {
+            $release .="$subver";
+       }
+
+        echo"<option value=\"$release\">$row[Version]</option>";
+
+    
+    }
+    echo"</select>&nbsp;<input name=\"go\" type=\"submit\" value=\"Go\">";
+    echo"</form>";
+
+    include"$page_footer";
+    echo"</body>\n</html>\n";
+    exit;
+  }
 
 
 $v++;
     $id = $row["ID"];
-    $type = $row["Type"];
     $name = $row["Name"];
     $dateadded = $row["DateAdded"];
     $dateupdated = $row["DateUpdated"];
@@ -155,7 +208,7 @@ $authorcount = count($authors);
 foreach ($authors as $author) {
 $userid = $authorids[$author];
 $n++;
-$authorstring .= "<A HREF=\"authorprofiles.php?id=$userid\">$author</A>";
+$authorstring .= "<A HREF=\"authorprofiles.php?".uriparams()."&id=$userid\">$author</A>";
 if ($authorcount != $n) {$authorstring .=", "; }
 
 }
@@ -180,13 +233,27 @@ if (!$rating) { $rating="0"; }
 ?>
 
 
-<H3> <?php ucwords("$application "); ?> Extensions &#187; <?php echo"$row[Name]"; if ($pagetitle) {echo" :: $pagetitle"; } ?></H3>
+<H3> <?php ucwords("$application "); ?> Themes &#187; <?php echo"$row[Name]"; if ($pagetitle) {echo" :: $pagetitle"; } ?></H3>
 
-<A HREF="?<?php echo"id=$id&vid=$vid"; ?>">More Info</A> | 
-<A HREF="?<?php echo"id=$id&vid=$vid&page=releases"; ?>">All Releases</A> | 
-<A HREF="?<?php echo"id=$id&vid=$vid&page=comments"; ?>">Comments</A> | 
-<A HREF="?<?php echo"id=$id&vid=$vid&page=staffreview"; ?>">Editor Review</A> | 
-<A HREF="?<?php echo"id=$id&vid=$vid&page=opinion"; ?>">My Opinion</A>
+<A HREF="?<?php echo"".uriparams()."&id=$id&vid=$vid"; ?>">More Info</A> | 
+<A HREF="?<?php echo"".uriparams()."&id=$id&vid=$vid&page=releases"; ?>">All Releases</A> | 
+<A HREF="?<?php echo"".uriparams()."&id=$id&vid=$vid&page=comments"; ?>">Comments</A> | 
+<?php
+$sql = "SELECT `PreviewID` from `t_previews` WHERE `ID`='$id' and `preview`='NO' LIMIT 1";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+   if (mysql_num_rows($sql_result)>"0") {
+?>
+<A HREF="?<?php echo"".uriparams()."&id=$id&vid=$vid&page=previews"; ?>">Previews</A> | 
+<?php
+}
+
+$sql = "SELECT `rID` from `t_reviews` WHERE `ID`='$id' LIMIT 1";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+   if (mysql_num_rows($sql_result)>"0") {
+?>
+<A HREF="?<?php echo"".uriparams()."&id=$id&vid=$vid&page=staffreview"; ?>">Editor Review</A> | 
+<?php } ?>
+<A HREF="?<?php echo"".uriparams()."&id=$id&vid=$vid&page=opinion"; ?>">My Opinion</A>
 <?php
 echo"<DIV id=\"item\">\n";
 
@@ -197,13 +264,24 @@ echo"<IMG SRC=\"$previewuri\" BORDER=0 HEIGHT=$height WIDTH=$width ALT=\"$name p
 echo"</DIV>\n";
 }
 echo"<h5>";
-echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?id=$id&vid=$vid\">$name $version</A></SPAN><BR>";
+echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?".uriparams()."&id=$id&vid=$vid\">$name $version</A></SPAN><BR>";
 echo"<SPAN class=\"authorline\">By $authors</SPAN>";
 echo"</h5>";
 
+//Categories
+ $sql = "SELECT `CatName` from `t_categoryxref` TCX INNER JOIN `t_categories` TC ON TCX.CategoryID=TC.CategoryID  WHERE `ID`='$id' ORDER BY `CatName` ASC";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    $num_results = mysql_num_rows($sql_result); $i=0;
+    while ($row = mysql_fetch_array($sql_result)) {
+    $i++;
+    $categories .= $row["CatName"];
+    if ($num_results < $i ) { $categories .= ", "; }
+    }
 
 //Description & Version Notes
-echo"$description<BR>\n";
+echo"$description";
+if ($categories) { echo" (Categories: $categories)"; }
+echo"<BR>\n";
 if ($notes) {echo"<BR>\n$notes<BR>"; }
 echo"<BR>\n";
 
@@ -259,7 +337,7 @@ echo"<DIV style=\"margin-top: 30px; height: 34px\">";
 echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
 if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
 if ($homepage) {echo"<DIV class=\"iconbar\"><A HREF=\"$homepage\"><IMG SRC=\"/images/home.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
-echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
+echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"moreinfo.php?".uriparams()."&id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
 
 echo"</DIV>";
 
@@ -277,14 +355,23 @@ if ($homepage) {echo"<SPAN style=\"font-size:10pt\">Having a problem with this t
 echo"<UL style=\"font-size:10pt\">";
 if ($homepage) {echo"<LI> <A HREF=\"$homepage\">Theme Homepage</A>"; }
 if ($appname !="Thunderbird") {echo"<LI> <a href=\"install.php/$filename?id=$id&vid=$vid\">Download Theme</A>"; }
-echo"<LI> <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=releases\">Other Versions</A>";
+echo"<LI> <A HREF=\"moreinfo.php?".uriparams()."&id=$id&vid=$vid&page=releases\">Other Versions</A>";
 ?>
 </UL>
 </DIV>
 
+<?php
+$sql = "SELECT `devcomments` FROM `t_main` WHERE `id`='$id' LIMIT 1";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  $row = mysql_fetch_array($sql_result);
+  if ($row["devcomments"]) {
+    $devcomments = nl2br($row["devcomments"]);
+    echo"<h3>Developer Comments:</h3>\n";
+    echo"$devcomments";
+    echo"<br>\n";
+  }
+?>
 
-
-<DIV class="commentbox">
 <H3>User Comments:</H3>
 <?php
 $sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote FROM  `t_feedback` WHERE ID = '$_GET[id]' AND CommentNote IS NOT NULL ORDER  BY `CommentDate` DESC LIMIT 1";
@@ -307,7 +394,6 @@ $sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote 
     $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
     $commentdate = gmdate("F d, Y g:ia", $timestamp);
 
-//echo"<DIV class=\"commenttitlebar\">";
 echo"<h4>$commenttitle</h4>";
 echo"<SPAN class=\"liststars\">";
 
@@ -318,26 +404,25 @@ for ($i = $i; $i <= 5; $i++) {
 echo"<IMG SRC=\"/images/stars/graystar_icon.png\" BORDER=0 WIDTH=16 HEIGHT=16 ALT=\"\">";
 }
 echo"</SPAN>";
-//echo"</DIV>";
+
 echo"&nbsp;&nbsp;By $commentname<BR>\n";
 echo"&nbsp;<BR>\n";
 echo"$commentnotes<BR>\n\n";
 echo"&nbsp;<BR>\n";
 echo"<DIV class=\"commentfooter\">\n";
-echo"$commentdate | <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=comments\">More Comments...</A> | <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=opinion\">Rate It!</A>\n";
+echo"$commentdate | <A HREF=\"moreinfo.php?".uriparams()."&id=$id&vid=$vid&page=comments\">More Comments...</A> | <A HREF=\"moreinfo.php?".uriparams()."&id=$id&vid=$vid&page=opinion\">Rate It!</A>\n";
 echo"</DIV>\n";
 }
 
 if ($num_results=="0") {
 echo"<DIV class=\"nocomment\">";
 echo"Nobody's Commented on this Extension Yet<BR>";
-echo"Be the First! <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=opinion\">Rate It!</A>";
+echo"Be the First! <A HREF=\"moreinfo.php?".uriparams()."&id=$id&vid=$vid&page=opinion\">Rate It!</A>";
 echo"</DIV>";
 }
 
 ?>
 
-</DIV>
 <?php
 echo"<DIV class=\"baseline\">$datestring | Total Downloads: $downloadcount";
 if ($populardownloads > 5 ) {echo" | Downloads this Week: $populardownloads";}
@@ -371,7 +456,7 @@ if ($appvernames[$row["MaxAppVer"]]) {$maxappver = $appvernames[$row["MaxAppVer"
 echo"<DIV>"; //Open Version DIV
 
 //Description & Version Notes
-echo"<h4><A HREF=\"moreinfo.php?id=$id&vid=$vid\">Version $version</A></h4>\n";
+echo"<h4><A HREF=\"moreinfo.php?".uriparams()."&id=$id&vid=$vid\">Version $version</A></h4>\n";
 if ($notes) {echo"$notes<br><br>\n"; }
 
 //Icon Bar Modules
@@ -388,37 +473,160 @@ echo"</DIV>";
 //End General Page
 } else if ($page=="comments") {
 //Comments/Ratings Page
-echo"<h3>User Comments:</h3>";
 
-$sql = "SELECT CommentName, CommentTitle, CommentNote, CommentDate, CommentVote FROM  `t_feedback` WHERE ID = '$_GET[id]' AND CommentNote IS NOT NULL ORDER  BY  `CommentDate` DESC";
+if ($_GET["numpg"]) {$items_per_page=$_GET["numpg"]; } else {$items_per_page="25";} //Default Num per Page is 25
+if (!$_GET["pageid"]) {$pageid="1"; } else { $pageid = $_GET["pageid"]; } //Default PageID is 1
+$startpoint = ($pageid-1)*$items_per_page;
+
+    $sql = "SELECT CommentID FROM  `t_feedback` WHERE ID = '$id'";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+        $num_pages = ceil(mysql_num_rows($sql_result)/$items_per_page);
+
+
+    //Comments/Ratings Page
+    echo"<h3>User Comments:</h3>";
+
+    if ($pageid <=$num_pages) {
+        $previd=$pageid-1;
+        if ($previd >"0") {
+            echo"<a href=\"?".uriparams()."&id=$id&page=$page&pageid=$previd\">&#171; Previous</A> &bull; ";
+        }
+    }
+
+    echo"Page $pageid of $num_pages";
+    $nextid=$pageid+1;
+
+    if ($pageid <$num_pages) {
+        echo" &bull; <a href=\"?".uriparams()."&id=$id&page=$page&pageid=$nextid\">Next &#187;</a>";
+    }
+    echo"<BR>\n";
+
+
+    $sql = "SELECT CommentID, CommentName, CommentTitle, CommentNote, CommentDate, CommentVote, `helpful-yes`,`helpful-no` FROM  `t_feedback` WHERE ID = '$id' ORDER  BY  `CommentDate` DESC LIMIT $startpoint, $items_per_page";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+        $num_results = mysql_num_rows($sql_result);
+        while ($row = mysql_fetch_array($sql_result)) {
+            $commentid = $row["CommentID"];
+            $name = $row["CommentName"];
+            $title = $row["CommentTitle"];
+            $notes = $row["CommentNote"];
+            $helpful_yes = $row["helpful-yes"];
+            $helpful_no = $row["helpful-no"];
+            $date = date("l, F j Y", strtotime($row["CommentDate"]));
+            $rating = $row["CommentVote"];
+            if (!$title) {$title = "No Title"; }
+            if (!$name) {$name = "Anonymous"; }
+
+            echo"<a name=\"$commentid\"></a>\n";
+            echo"<h4>$title</h4>";
+            echo"&nbsp;&nbsp;Posted on $date by $name<br>";
+            echo"$notes<BR>\n\n";
+
+            echo"<DIV class=\"iconbar\" style=\"padding-left: 20px\" title=\"$rating of 5 stars\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</DIV><BR><BR>";
+            if ($helpful_yes>0 or $helpful_no>0) {
+            $helpful_total=$helpful_yes+$helpful_no;
+                echo"$helpful_yes of $helpful_total people found this comment helpful.<br>\n";
+            }
+            echo"Was this comment helpful to you? <a href=\"../core/commenthelpful.php?".uriparams()."&id=$id&type=$type&commentid=$commentid&pageid=$pageid&action=yes\">Yes</a>&nbsp;&nbsp;&nbsp;<a href=\"../core/commenthelpful.php?".uriparams()."&id=$id&type=$type&commentid=$commentid&pageid=$pageid&action=no\">No</a>";
+            echo" <span style=\"font-size: xx-small\"><a href=\"../core/reportcomment.php?".uriparams()."&id=$id&type=$type&commentid=$commentid&pageid=$pageid&action=report\" ONCLICK=\"return confirm('Report this comment as inappropriate on the site?');\">(Report Comment)</a></span>";
+            echo"<BR>";
+
+        }
+
+        if ($num_results=="0") {
+            echo"<DIV class=\"nocomment\">";
+            echo"Nobody has commented on this extension yet...<BR>
+            Be the First!
+            <A HREF=\"moreinfo.php?".uriparams()."&id=$id&vid=$vid&page=opinion\">Leave your comments</A>...";
+            echo"</DIV>\n";
+        }
+
+        echo"<DIV style=\"height: 15px; border-bottom: 1px #CCC solid\"></DIV>";
+
+// Begin Code for Dynamic Navbars
+if ($pageid <=$num_pages) {
+    $previd=$pageid-1;
+    if ($previd >"0") {
+        echo"<a href=\"?".uriparams()."&id=$id&page=$page&pageid=$previd\">&#171; Previous</A> &bull; ";
+    }
+}
+
+echo"Page $pageid of $num_pages";
+$nextid=$pageid+1;
+
+if ($pageid <$num_pages) {
+    echo" &bull; <a href=\"?".uriparams()."&id=$id&page=$page&pageid=$nextid\">Next &#187;</a>";
+}
+echo"<BR>\n";
+
+//Skip to Page...
+if ($num_pages>1) {
+    echo"Jump to Page: ";
+    $pagesperpage=9; //Plus 1 by default..
+    $i = 01;
+
+    //Dynamic Starting Point
+    if ($pageid>11) {
+        $nextpage=$pageid-10;
+    }
+
+    $i=$nextpage;
+
+    //Dynamic Ending Point
+    $maxpagesonpage=$pageid+$pagesperpage;
+    //Page #s
+    while ($i <= $maxpagesonpage && $i <= $num_pages) {
+        if ($i==$pageid) { 
+            echo"<SPAN style=\"color: #FF0000\">$i</SPAN>&nbsp;";
+        } else {
+            echo"<A HREF=\"?".uriparams()."&id=$id&page=$page&pageid=$i\">$i</A>&nbsp;";
+        }
+        $i++;
+    }
+}
+
+if ($num_pages>1) {
+    echo"<br>\nComments per page: \n";
+    $perpagearray = array("25","50","100");
+    foreach ($perpagearray as $items_per_page) {
+       echo"<A HREF=\"?".uriparams()."&id=$id&page=$page&pageid=1\">$items_per_page</A>&nbsp;";
+    }
+}
+
+
+
+
+
+} else if ($page=="previews") {
+// Item Previews Tab
+echo"<h2>Previews for $name</h2>\n";
+
+$sql = "SELECT `PreviewURI`,`caption` from `t_previews` WHERE `ID`='$id' and `preview`='NO' ORDER BY `PreviewID` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  $num_results = mysql_num_rows($sql_result);
   while ($row = mysql_fetch_array($sql_result)) {
-    $name = $row["CommentName"];
-    $title = $row["CommentTitle"];
-    $notes = $row["CommentNote"];
-    $date = date("l, F j Y", strtotime($row["CommentDate"]));
-    $rating = $row["CommentVote"];
+    $uri = $row["PreviewURI"];
+    $caption = $row["caption"];
+   echo"<h4>$caption</h4>";
+    list($src_width, $src_height, $type, $attr) = getimagesize("$websitepath/$uri");
 
+    //Scale Image Dimensions
+    $dest_width="690"; // Destination Width /$tn_size_width
+    $dest_height_fixed="520"; // Destination Height / $tn_size_height (Fixed)
+    if ($src_width<=$dest_width AND $src_height<=$dest_width) {
+    $dest_width = $src_width;
+    $dest_height = $src_height;
+    } else {
+        $dest_height= ($src_height * $dest_width) / $src_width; // (Aspect Ratio Variable Height
+        if ($dest_height>$dest_height_fixed) {
+            $dest_height = $dest_height_fixed;
+            $dest_width = ($src_width * $dest_height) / $src_height;
+        }
+    }
 
-echo"<h4>$title</h4>";
-echo"&nbsp;&nbsp;Posted on $date by $name<br>";
-echo"$notes<BR>\n\n";
+    echo"<img src=\"$uri\" alt=\"$caption\" width=\"$dest_width\" height=\"$dest_height\" border=0><br>\n";
 
-echo"<DIV class=\"iconbar\" style=\"padding-left: 20px\" title=\"$rating of 5 stars\"><A HREF=\"moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV><BR><BR>";
+  }
 
-}
-
-if ($num_results=="0") {
-echo"<DIV class=\"nocomment\">";
-echo"Nobody has commented on this extension yet...<BR>
-Be the First!
-<A HREF=\"moreinfo.php?id=$id&vid=$vid&page=opinion\">Leave your comments</A>...";
-echo"</DIV>\n";
-}
-
-
-echo"<DIV style=\"height: 5px;\"></DIV>";
 
 } else if ($page=="staffreview") {
 //Staff/Editor Review Tab
@@ -457,7 +665,7 @@ echo"
 
 This $typename has not yet been reviewed.<BR><BR>
 
-To see what other users think of this theme, view the <A HREF=\"moreinfo.php?id=$id&page=comments\">User Comments...</A>
+To see what other users think of this theme, view the <A HREF=\"moreinfo.php?".uriparams()."&id=$id&page=comments\">User Comments...</A>
 ";
 
 
@@ -478,9 +686,10 @@ Your comment submission had the following error(s), please fix these errors and 
 }
 ?>
 <DIV class="opinionform">
-<FORM NAME="opinon" METHOD="POST" ACTION="../core/postfeedback.php">
+<FORM NAME="opinon" METHOD="POST" ACTION="../core/postfeedback.php?<?php echo uriparams(); ?>">
 <INPUT NAME="id" TYPE="HIDDEN" VALUE="<?php echo"$id"; ?>">
 <INPUT NAME="vid" TYPE="HIDDEN" VALUE="<?php echo"$vid"; ?>">
+    <INPUT name="type" type="hidden" value="E">
 Your Name:<BR>
 <INPUT NAME="name" TYPE="TEXT" SIZE=30 MAXLENGTH=30><BR>
 

@@ -139,7 +139,7 @@ $v++;
     $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
     $dateupdated = gmdate("F d, Y g:i:sa", $timestamp); //gmdate("F d, Y", $dutimestamp);
 
-echo"<h3><A HREF=\"moreinfo.php?id=$id\">$name</A></h3>";
+echo"<h3><A HREF=\"moreinfo.php?".uriparams()."&id=$id\">$name</A></h3>";
 echo"$description<br>\n";
 }
 }

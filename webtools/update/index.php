@@ -49,44 +49,10 @@ require"core/config.php";
 include"$page_header";
 ?>
 
-<div class="key-point cnet" id="firefox-feature">
-  <script type="text/javascript">
-  <!--
-    var classes = new Array("cnet");
-    var date = new Date();
-    var seconds;
-    var classid;
-    seconds = date.getSeconds();
-    classid = seconds % classes.length;
-    document.getElementById('firefox-feature').className = 'key-point front-feature-' + classes[classid];
-  -->
-  </script>
-  <a href="/products/firefox" title="Learn more about Firefox" id="featurelink">Learn more about Firefox</a>
-  <div id="feature-content">
-    <h2 style="margin: 0; font-size: 2px;"><img src="/images/t_firefox.gif" alt="Featuring: Firefox!"></h2>
-    <p>Firefox 0.9 is the <a href="shelf.html">award winning</a> preview of Mozilla's next generation browser. Download Firefox entirely free or <a href="">purchase it on a CD</a> from the Mozilla store. <a href="#dfg">Learn more about Firefox...</a></p>
-    <script type="text/javascript" src="products/firefox/download.js"></script>
-    <script type="text/javascript">
-    <!--
-    writeDownloadsFrontpage();
-    //-->
-    </script>
-    <noscript>
-      <div class="download">
-        <h3>Download Now</h3>
-        <ul>
-          <li><a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/0.9.2/FirefoxSetup-0.9.2.exe">Windows (4.7MB)</a> </li>
-          <li><a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/0.9.1/firefox-0.9.1-i686-linux-gtk2+xft-installer.tar.gz">Linux (8.1MB)</a></li>
-          <li><a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/0.9.1/firefox-0.9.1-mac.dmg.gz">Mac OS X (8.6MB)</a></li>
-        </ul>
-      </div>
-    </noscript>
-  </div>
-</div>
 <?php
     if ($_GET["application"]) {$application=$_GET["application"]; }
 
-    //Temporary!! Current Version Array Code
+    //XXX Temporary!! Current Version Array Code
         $currentver_array = array("firefox"=>"0.95", "thunderbird"=>"0.8", "mozilla"=>"1.7");
         $currentver_display_array = array("firefox"=>"1.0 Preview Release", "thunderbird"=>"0.8", "mozilla"=>"1.7.x");
         $currentver = $currentver_array[$application];
@@ -95,7 +61,7 @@ include"$page_header";
 
 <div id="mBody">
   <div class="frontcolumn">
-    <h2><a href="extensions/">Get Extensions</a></h2>
+    <h2><a href="extensions/?application=<?php echo"$application"; ?>">Get Extensions</a></h2>
     <a href="products/thunderbird"><img src="images/product-front-thunderbird.png" alt="Thunderbird" class="promo" width="60" height="60"></a>
     <p>Extensions are small add-ons that add new functionality. They can add anything from a toolbar button to a completely new feature.</p>
 
@@ -108,10 +74,10 @@ WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `minAppVer_int`<='$curr
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numextensions = mysql_num_rows($sql_result);
 ?>
-     <a href="/extensions/">Browse extensions</a><BR>(<?php echo"$numextensions"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)<BR> 
+     <a href="/extensions/?application=<?php echo"$application"; ?>">Browse extensions</a><BR>(<?php echo"$numextensions"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)<BR> 
   </div>
   <div class="frontcolumn">
-    <h2><a href="themes/">Get Themes</a></h2>
+    <h2><a href="themes/?application=<?php echo"$application"; ?>">Get Themes</a></h2>
     <a href="products/mozilla1.x"><img src="images/product-front-mozilla.png" alt="Mozilla" class="promo" width="60" height="60"></a>
     <p>Themes are skins for Firefox, they allow you to change the look and feel of the browser and personalize it to your tastes.</p>
 <?php
@@ -122,7 +88,7 @@ WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int`<='$curr
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numthemes = mysql_num_rows($sql_result);
 ?>
-     <a href="/themes/">Browse themes</a><BR>(<?php echo"$numthemes"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)
+     <a href="/themes/?application=<?php echo"$application"; ?>">Browse themes</a><BR>(<?php echo"$numthemes"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)
   </div>
   <div class="frontcolumnlast">
     <h2><a href="http://www.MozillaStore.com">Get Plugins</a></h2>
