@@ -35,132 +35,86 @@
 #include "nsAbout.h"
 #include "nsIGenericFactory.h"
 
+
+#include "nsIAppShellService.h"
+#include "nsCommandLineService.h"  
+#include "nsNetSupportDialog.h"
+#include "nsAppShellService.h"
+#include "nsXPConnectFactory.h"
+#include "nsWindowMediator.h"
+#include "nsSessionHistory.h"
+#include "nsCommonDialogs.h"
+#include "nsDialogParamBlock.h"
+#include "nsFileLocations.h"
+
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
 
-static NS_DEFINE_CID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kCmdLineServiceCID,   NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_CID(kProtocolHelperCID,   NS_PROTOCOL_HELPER_CID);
-static NS_DEFINE_CID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
-static NS_DEFINE_CID(kFileLocatorCID,      NS_FILELOCATOR_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-static NS_DEFINE_CID(kWindowMediatorCID,   NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSIONHISTORY_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShellService);
+NS_GENERIC_FACTORY_CONSTRUCTOR(XPConnectFactoryImpl);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNetSupportDialog);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowMediator);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSessionHistory);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommonDialogs);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileLocator);
 
-static NS_DEFINE_CID(kCommonDialogsCID,    NS_CommonDialog_CID );
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID );
-static NS_DEFINE_CID(kAboutModuleCID,      NS_ABOUT_CID);
-/*
- * Global entry point to register all components in the registry...
- */
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+
+static nsModuleComponentInfo gAppShellModuleInfo[] =
 {
-    nsComponentManager::RegisterComponent(kAppShellServiceCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kCmdLineServiceCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kFileLocatorCID,
-                                         NULL, NS_FILELOCATOR_PROGID, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kProtocolHelperCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-   	nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kSessionHistoryCID, "sessionhistory", NS_ISESSIONHISTORY_PROGID, path, PR_TRUE, PR_TRUE);
+  { "AppShell Service",
+    NS_APPSHELL_SERVICE_CID,
+    "component://netscape/appshell/appShellService",
+    nsAppShellServiceConstructor,
+  },
+  { "CommandLine Service",
+    NS_COMMANDLINE_SERVICE_CID,
+    NULL,
+    nsCmdLineServiceConstructor,
+  },
+  { "XPConnect Factory?",
+    NS_XPCONNECTFACTORY_CID,
+    NULL,
+    XPConnectFactoryImplConstructor,
+  },
+  { "Net Support Dialogs",
+    NS_NETSUPPORTDIALOG_CID,
+    NULL,
+    nsNetSupportDialogConstructor,
+  },
+  { "Window Mediator",
+    NS_WINDOWMEDIATOR_CID,
+    NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
+    nsWindowMediatorConstructor,
+  },
+  { "Session History",
+    NS_SESSIONHISTORY_CID,
+    NULL,
+    nsSessionHistoryConstructor,
+  },
+  { "Common Dialogs",
+    NS_CommonDialog_CID,
+    "component://netscape/appshell/commonDialogs",
+    nsCommonDialogsConstructor,
+  },
+  { "kDialogParamBlockCID",
+    NS_DialogParamBlock_CID,
+    NULL,
+    nsDialogParamBlockConstructor,
+  },
+  { "kAboutModuleCID",
+    NS_ABOUT_CID,
+    NS_ABOUT_MODULE_PROGID_PREFIX,
+    nsAbout::Create,
+  },
+  { "File Locator Service",
+    NS_FILELOCATOR_CID,
+    NS_FILELOCATOR_PROGID,
+    nsFileLocatorConstructor,
+  },
+};
 
-    nsComponentManager::RegisterComponent(kWindowMediatorCID,
-                                         "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
-                                         path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kCommonDialogsCID, NULL, "component://netscape/appshell/commonDialogs", path, PR_TRUE, PR_TRUE);
-    nsComponentManager::RegisterComponent(kDialogParamBlockCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-    
-     nsComponentManager::RegisterComponent(kAboutModuleCID,  "about:", NS_ABOUT_MODULE_PROGID_PREFIX, path, PR_TRUE, PR_TRUE);
-   return NS_OK;
-}
-
-/*
- * Global entry point to unregister all components in the registry...
- */
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
-{
-    nsComponentManager::UnregisterComponent(kAppShellServiceCID, path);
-    nsComponentManager::UnregisterComponent(kCmdLineServiceCID,  path);
-    nsComponentManager::UnregisterComponent(kFileLocatorCID,  path);
-    nsComponentManager::UnregisterComponent(kProtocolHelperCID,  path);
-    nsComponentManager::UnregisterComponent(kXPConnectFactoryCID, path);
-    nsComponentManager::UnregisterComponent(kNetSupportDialogCID, path);
-    nsComponentManager::UnregisterComponent(kWindowMediatorCID, path);
-    nsComponentManager::UnregisterComponent(kSessionHistoryCID, path);
-    nsComponentManager::UnregisterComponent(kCommonDialogsCID, path);
-    nsComponentManager::UnregisterComponent(kDialogParamBlockCID, path);
-    nsComponentManager::UnregisterComponent(kAboutModuleCID, path); 
-    return NS_OK;
-}
-
-
-/*
- * Global entry point to create class factories for the components
- * available withing the DLL...
- */
-#if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_APPSHELL nsresult 
-NSGetFactory_APPSHELL_DLL(nsISupports* serviceMgr,
-                          const nsCID &aClass,
-                          const char *aClassName,
-                          const char *aProgID,
-                          nsIFactory **aFactory)
-#else
-extern "C" NS_APPSHELL nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-#endif
-{
-  nsresult rv = NS_ERROR_FACTORY_NOT_REGISTERED;
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aClass.Equals(kAppShellServiceCID)) {
-    rv = NS_NewAppShellServiceFactory(aFactory);
-  }
-  else if (aClass.Equals(kCmdLineServiceCID)) {
-    rv = NS_NewCmdLineServiceFactory(aFactory);
-  }
-  else if (aClass.Equals(kFileLocatorCID)) {
-    rv = NS_NewFileLocatorFactory(aFactory);
-  }
-  else if (aClass.Equals(kXPConnectFactoryCID)) {
-    rv = NS_NewXPConnectFactoryFactory(aFactory);
-  }
-  else if ( aClass.Equals( kNetSupportDialogCID ) )
-  {
-  	 rv = NS_NewNetSupportDialogFactory(aFactory);
-  } 
-  else if ( aClass.Equals( kWindowMediatorCID ) )
-  {
-  	rv = NS_NewWindowMediatorFactory( aFactory );
-  }
-  else if ( aClass.Equals( kSessionHistoryCID ) )
-  {
-  	rv = NS_NewSessionHistoryFactory( aFactory );
-  }
-  else if ( aClass.Equals( kCommonDialogsCID ) )
-  {
-  	rv = NS_NewCommonDialogsFactory( aFactory );
-  }
-  else  if ( aClass.Equals( kDialogParamBlockCID ) )
-  {
-  	rv = NS_NewDialogParamBlockFactory( aFactory );
-  }
-  else if ( aClass.Equals(kAboutModuleCID ) )
-  {
-  	  nsIGenericFactory* fact;
-  	 rv = NS_NewGenericFactory(&fact, nsAbout::Create);
-  	 *aFactory = fact;
-  }
-  return rv;
-}
+NS_IMPL_NSGETMODULE("appshell", gAppShellModuleInfo)
 

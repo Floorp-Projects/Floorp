@@ -22,43 +22,10 @@
 
 
 #include "nsICmdLineService.h"
-#include "nsVoidArray.h"
+#include "nsCommandLineService.h"
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "plstr.h"
-
-
-
-/* Define Class IDs */
-static NS_DEFINE_CID(kCmdLineServiceCID,         NS_COMMANDLINE_SERVICE_CID);
-
-
-class nsCmdLineService : public nsICmdLineService
-{
-public:
-  nsCmdLineService(void);
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Initialize(PRInt32  aArgc, char** aArgv);
-  NS_IMETHOD GetCmdLineValue(const char* aArg, char **aValue);
-  NS_IMETHOD GetURLToLoad(char ** aResult);
-  NS_IMETHOD GetProgramName(char ** aResult);
-  NS_IMETHOD GetArgc(PRInt32  *  aResult);
-  NS_IMETHOD GetArgv(char *** aResult);
-
-protected:
-  virtual ~nsCmdLineService();
-
-  nsVoidArray    mArgList;      // The arguments
-  nsVoidArray    mArgValueList; // The argument values
-  PRInt32        mArgCount; // This is not argc. This is # of argument pairs 
-                            // in the arglist and argvaluelist arrays. This
-                            // normally is argc/2.
-  PRInt32        mArgc;     // This is argc;
-  char **        mArgv;     // This is argv;
-};
-
 
 nsCmdLineService::nsCmdLineService()
 	:  mArgCount(0), mArgc(0), mArgv(0)
@@ -278,94 +245,5 @@ NS_EXPORT nsresult NS_NewCmdLineService(nsICmdLineService** aResult)
 
   NS_ADDREF(*aResult);
   return NS_OK;
-}
-
-
-
-//----------------------------------------------------------------------
-
-// Factory code for creating nsAppShellService's
-
-class nsCmdLineServiceFactory : public nsIFactory
-{
-public:
-  nsCmdLineServiceFactory();
-  NS_DECL_ISUPPORTS
-
-  // nsIFactory methods
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-  
-  NS_IMETHOD LockFactory(PRBool aLock);  
-protected:
-  virtual ~nsCmdLineServiceFactory();
-};
-
-
-nsCmdLineServiceFactory::nsCmdLineServiceFactory()
-{
-  NS_INIT_REFCNT();
-}
-
-nsresult
-nsCmdLineServiceFactory::LockFactory(PRBool lock)
-{
-
-  return NS_OK;
-}
-
-nsCmdLineServiceFactory::~nsCmdLineServiceFactory()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsCmdLineServiceFactory, nsIFactory);
-
-
-nsresult
-nsCmdLineServiceFactory::CreateInstance(nsISupports *aOuter,
-                                  const nsIID &aIID,
-                                  void **aResult)
-{
-  nsresult rv;
-  nsCmdLineService* inst;
-
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = NULL;
-  if (nsnull != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    goto done;
-  }
-
-  NS_NEWXPCOM(inst, nsCmdLineService);
-  if (inst == NULL) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
-
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-done:
-  return rv;
-}
-
-
-extern "C" NS_APPSHELL nsresult
-NS_NewCmdLineServiceFactory(nsIFactory** aFactory)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst = new nsCmdLineServiceFactory();
-  if (nsnull == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aFactory = inst;
-  return rv;
 }
 

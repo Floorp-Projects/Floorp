@@ -67,6 +67,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "jsapi.h"
 
+#include "nsAppShellService.h"
+
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -77,48 +79,6 @@ static NS_DEFINE_CID(kMetaCharsetCID, NS_META_CHARSET_CID);
 // copied from nsEventQueue.cpp
 static char *gEQActivatedNotification = "nsIEventQueueActivated";
 static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
-
-class nsAppShellService : public nsIAppShellService,
-                          public nsIObserver,
-                          public nsSupportsWeakReference
-{
-public:
-  nsAppShellService(void);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIAPPSHELLSERVICE
-  NS_DECL_NSIOBSERVER
-
-protected:
-  virtual ~nsAppShellService();
-
-  void RegisterObserver(PRBool aRegister);
-  NS_IMETHOD JustCreateTopWindow(nsIWebShellWindow *aParent,
-                                 nsIURI *aUrl, 
-                                 PRBool aShowWindow, PRBool aLoadDefaultPage,
-                                 PRUint32 aChromeMask,
-                                 nsIXULWindowCallbacks *aCallbacks,
-                                 PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                 nsIWebShellWindow **aResult);
-  void InitializeComponent( const nsCID &aComponentCID );
-  void ShutdownComponent( const nsCID &aComponentCID );
-  typedef void (nsAppShellService::*EnumeratorMemberFunction)(const nsCID&);
-  void EnumerateComponents( void (nsAppShellService::*function)(const nsCID&) );
-
-  nsIAppShell* mAppShell;
-  nsISupportsArray* mWindowList;
-  nsICmdLineService* mCmdLineService;
-  nsIWindowMediator* mWindowMediator;
-  nsCOMPtr<nsIWebShellWindow> mHiddenWindow;
-  PRBool mDeleteCalled;
-  nsISplashScreen *mSplashScreen;
-
-  // The mShutdownTimer is set in Quit() to asynchronously call the
-  // ExitCallback(). This allows one last pass through any events in
-  // the event queue before shutting down the appshell.
-  nsCOMPtr<nsITimer> mShutdownTimer;
-  static void ExitCallback(nsITimer* aTimer, void* aClosure);
-};
 
 nsAppShellService::nsAppShellService() : mWindowMediator( NULL )
 {
@@ -848,39 +808,6 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
 }
 
 
-NS_EXPORT nsresult NS_NewAppShellService(nsIAppShellService** aResult)
-{
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-	
-  *aResult = new nsAppShellService();
-  if (nsnull == *aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-// Entry point to create nsAppShellService factory instances...
-NS_DEF_FACTORY(AppShellService,nsAppShellService)
-
-nsresult NS_NewAppShellServiceFactory(nsIFactory** aResult)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst = new nsAppShellServiceFactory;
-  if (nsnull == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aResult = inst;
-  return rv;
-}
 
 //-------------------------------------------------------------------------
 // nsIObserver interface and friends

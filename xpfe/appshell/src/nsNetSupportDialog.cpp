@@ -29,12 +29,9 @@
 #include "nsIWebShellWindow.h"
 #include "nsICommonDialogs.h"
 #include "nsIDOMWindow.h"
-#include "nsXPComFactory.h"
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID( kCommonDialogsCID,          NS_CommonDialog_CID);
-
 
 PRBool GetNSIPrompt( nsCOMPtr<nsIPrompt> & outPrompt )
 {
@@ -186,29 +183,4 @@ nsresult nsNetSupportDialog::Select(const PRUnichar *inDialogTitle, const PRUnic
 	return rv;	
 }
 
-
-
-
-// COM Fluff
-
 NS_IMPL_ISUPPORTS1( nsNetSupportDialog, nsIPrompt );
-NS_DEF_FACTORY(NetSupportDialog, nsNetSupportDialog)
-
-
-
-nsresult NS_NewNetSupportDialogFactory(nsIFactory** aFactory)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst = new nsNetSupportDialogFactory();
-  if (nsnull == inst)
-  {
-  	rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else
-  {
-    NS_ADDREF(inst);
-  }
-  *aFactory = inst;
-  return rv;
-}
-

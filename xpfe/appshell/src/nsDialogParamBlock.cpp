@@ -21,34 +21,8 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
  
-#include "nsIDialogParamBlock.h"
+#include "nsDialogParamBlock.h"
 #include "nsString.h"
-#include "nsXPComFactory.h"
-
-class nsDialogParamBlock: public nsIDialogParamBlock
-{
- 	enum {kNumInts = 8, kNumStrings =16 };
-public: 	
-		nsDialogParamBlock();
-	virtual ~nsDialogParamBlock();
-	 
-    NS_DECL_NSIDIALOGPARAMBLOCK
-
-  	// COM
-	NS_DECL_ISUPPORTS	
-private:
-	nsresult InBounds( PRInt32 inIndex, PRInt32 inMax )
-	{
-		if ( inIndex >= 0 && inIndex< inMax )
-			return NS_OK;
-		else
-			return NS_ERROR_ILLEGAL_VALUE;
-	}
-	
-	PRInt32 mInt[ kNumInts ];
-	PRInt32 mNumStrings;
-	nsString* mString;  	
-};
 
 nsDialogParamBlock::nsDialogParamBlock(): mNumStrings( 0 ), mString(NULL )
 {
@@ -117,25 +91,3 @@ NS_IMETHODIMP nsDialogParamBlock::SetString(PRInt32 inIndex, const PRUnichar *in
 NS_IMPL_ADDREF(nsDialogParamBlock);
 NS_IMPL_RELEASE(nsDialogParamBlock);
 NS_IMPL_QUERY_INTERFACE1(nsDialogParamBlock, nsIDialogParamBlock)
-
-// Entry point to create nsAppShellService factory instances...
-NS_DEF_FACTORY(DialogParamBlock, nsDialogParamBlock)
-
-nsresult NS_NewDialogParamBlockFactory(nsIFactory** aResult)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst;
-  
-  inst = new nsDialogParamBlockFactory;
-  if (nsnull == inst)
-  {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else
-  {
-    NS_ADDREF(inst);
-  }
-  *aResult = inst;
-  return rv;
-}
-

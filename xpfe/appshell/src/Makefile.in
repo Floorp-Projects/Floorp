@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+IS_COMPONENT=1
 MODULE		= raptor
 LIBRARY_NAME	= nsappshell
 
@@ -36,7 +37,6 @@ CPPSRCS		= \
 		nsXULCommand.cpp \
 		nsAppShellService.cpp \
 		nsWebShellWindow.cpp \
-		nsAppShellFactory.cpp \
 		nsCommandLineService.cpp \
 		nsXPConnectFactory.cpp \
 		nsJSXPConnectFactory.cpp \
@@ -48,6 +48,7 @@ CPPSRCS		= \
 		nsDialogParamBlock.cpp \
 		nsCommonDialogs.cpp \
 		nsAbout.cpp \
+		nsAppShellFactory.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

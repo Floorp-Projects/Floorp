@@ -36,7 +36,6 @@
 #include "nsIWindowMediator.h"
 #include "nsCOMPtr.h"
 #include "nsIWebShell.h"
-#include "nsXPComFactory.h"
 #include "nsIWebShellWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMElement.h"
@@ -44,11 +43,12 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsWindowMediator.h"
+
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFContainerCID,                    NS_RDFCONTAINER_CID);
 static const char kURINC_WindowMediatorRoot[] = "NC:WindowMediatorRoot";
 
@@ -160,152 +160,6 @@ struct nsWindowInfo
 		}
 };
 
-class nsWindowEnumerator;
-
-class nsWindowMediator : public nsIWindowMediator
-{
-friend class nsWindowEnumerator;
-
-public:
-	nsWindowMediator();
-	virtual ~nsWindowMediator();
-  nsresult Init();
-
-  NS_DECL_NSIWINDOWMEDIATOR
-	
-	// COM and RDF 
-	NS_DECL_ISUPPORTS	
-
-	// RDF
-  // nsIRDFDataSource
-  NS_IMETHOD GetURI(char* *uri)
-  {
-    NS_PRECONDITION(uri != nsnull, "null ptr");
-    if (! uri)
-      return NS_ERROR_NULL_POINTER;
-
-    *uri = nsXPIDLCString::Copy("rdf:window-mediator");
-    if (! *uri)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD GetSource(nsIRDFResource* property,
-                       nsIRDFNode* target,
-                       PRBool tv,
-                       nsIRDFResource** source)
-  {
-      return mInner->GetSource(property, target, tv, source);
-  }
-
-  NS_IMETHOD GetSources(nsIRDFResource* property,
-                        nsIRDFNode* target,
-                        PRBool tv,
-                        nsISimpleEnumerator** sources)
-  {
-      return mInner->GetSources(property, target, tv, sources);
-  }
-
-  NS_IMETHOD GetTarget(nsIRDFResource* source,
-                       nsIRDFResource* property,
-                       PRBool tv,
-                       nsIRDFNode** target)
- {
-   return mInner->GetTarget(source, property, tv, target);
- }
-
- 	NS_IMETHOD GetTargets(nsIRDFResource* source,
-                        nsIRDFResource* property,
-                        PRBool tv,
-                        nsISimpleEnumerator** targets)
-  {
-      return mInner->GetTargets(source, property, tv, targets);
-  }
-
-  NS_IMETHOD Assert(nsIRDFResource* aSource, 
-                    nsIRDFResource* aProperty, 
-                    nsIRDFNode* aTarget,
-                    PRBool aTruthValue);
-
-  NS_IMETHOD Unassert(nsIRDFResource* aSource,
-                      nsIRDFResource* aProperty,
-                      nsIRDFNode* aTarget);
-
-  NS_IMETHOD Change(nsIRDFResource* aSource,
-                    nsIRDFResource* aProperty,
-                    nsIRDFNode* aOldTarget,
-                    nsIRDFNode* aNewTarget);
-
-  NS_IMETHOD Move(nsIRDFResource* aOldSource,
-                  nsIRDFResource* aNewSource,
-                  nsIRDFResource* aProperty,
-                  nsIRDFNode* aTarget);
-
-  NS_IMETHOD HasAssertion(nsIRDFResource* source,
-                          nsIRDFResource* property,
-                          nsIRDFNode* target,
-                          PRBool tv,
-                          PRBool* hasAssertion)
-  {
-      return mInner->HasAssertion(source, property, target, tv, hasAssertion);
-  }
-
-  NS_IMETHOD AddObserver(nsIRDFObserver* n)
-  {
-      return mInner->AddObserver(n);
-  }
-
-  NS_IMETHOD RemoveObserver(nsIRDFObserver* n)
-  {
-      return mInner->RemoveObserver(n);
-  }
-
-  NS_IMETHOD ArcLabelsIn( nsIRDFNode* node, nsISimpleEnumerator** labels)
-  {
-      return mInner->ArcLabelsIn(node, labels);
-  }
-
-  NS_IMETHOD ArcLabelsOut(nsIRDFResource* source, nsISimpleEnumerator** labels)
-  {
-      return mInner->ArcLabelsOut(source, labels);
-  }
-
-  NS_IMETHOD GetAllResources(nsISimpleEnumerator** aCursor)
-  {
-      return mInner->GetAllResources(aCursor);
-  }
-
-  NS_IMETHOD GetAllCommands(nsIRDFResource* source,
-                            nsIEnumerator** commands);
-  NS_IMETHOD GetAllCmds(nsIRDFResource* source,
-                            nsISimpleEnumerator** commands);
-
-  NS_IMETHOD IsCommandEnabled(nsISupportsArray* aSources,
-                              nsIRDFResource*   aCommand,
-                              nsISupportsArray* aArguments,
-                              PRBool* aResult);
-
-  NS_IMETHOD DoCommand(nsISupportsArray* aSources,
-                       nsIRDFResource*   aCommand,
-                       nsISupportsArray* aArguments);
-private:
-	// Helper functions
-	nsresult AddWindowToRDF( nsWindowInfo* ioWindowInfo );
-	PRInt32 AddEnumerator( nsWindowEnumerator* inEnumerator );
-	PRInt32 RemoveEnumerator( nsWindowEnumerator* inEnumerator);
-	PRInt32		mTimeStamp;
-	nsVoidArray mEnumeratorList;
-	nsVoidArray	mWindowList;
-	
-
-  // pseudo-constants for RDF
-  static nsIRDFResource* kNC_WindowMediatorRoot;
-  static nsIRDFResource* kNC_Name;
-  static nsIRDFResource* kNC_URL;
-  static PRInt32 gRefCnt;
-  static nsIRDFDataSource* mInner;
-};
 
 
 class nsWindowEnumerator : public nsISimpleEnumerator
@@ -801,28 +655,6 @@ nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 }
 
 
-//----------------------------------------------------------------------
-
-// Entry point to create nsAppShellService factory instances...
-NS_DEF_FACTORY(WindowMediator, nsWindowMediator)
-
-nsresult NS_NewWindowMediatorFactory(nsIFactory** aResult)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst;
-  
-  inst = new nsWindowMediatorFactory;
-  if (nsnull == inst)
-  {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else
-  {
-    NS_ADDREF(inst);
-  }
-  *aResult = inst;
-  return rv;
-}
 
 // window Enumerator
 nsWindowEnumerator::nsWindowEnumerator ( const PRUnichar* inTypeString, nsWindowMediator& inMediator,
