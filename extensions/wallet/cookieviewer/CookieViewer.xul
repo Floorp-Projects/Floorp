@@ -56,7 +56,7 @@
       <vbox class="tabpanel" id="system" flex="1">
           <label value="&div.cookiesonsystem.label;"/>
           <separator class="thin"/>
-          <tree id="cookiesTree" flex="1" style="height: 10em;" multiple="true"
+          <tree id="cookiesTree" flex="1" style="height: 10em;"
                     onkeypress="HandleCookieKeyPress(event)"
                     onselect="CookieSelected();">
             <treecols>
@@ -152,7 +152,7 @@
           <description id="permissionsText" value="&div.bannedservers.label;"/>
           <separator class="thin"/>
           <tree id="permissionsTree" flex="1" style="height: 10em;"
-                seltype="multiple" hidecolumnpicker="true"
+                hidecolumnpicker="true"
                 onkeypress="HandlePermissionKeyPress(event)"
                 onselect="PermissionSelected();">
             <treecols>
