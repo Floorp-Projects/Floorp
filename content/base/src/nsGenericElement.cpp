@@ -421,7 +421,9 @@ nsNode3Tearoff::GetBaseURI(nsAWritableString& aURI)
   return NS_OK;
 }
 
-nsDOMEventRTTearoff *nsDOMEventRTTearoff::mCachedEventTearoff[];
+nsDOMEventRTTearoff *
+nsDOMEventRTTearoff::mCachedEventTearoff[NS_EVENT_TEAROFF_CACHE_SIZE];
+
 PRUint32 nsDOMEventRTTearoff::mCachedEventTearoffCount = 0;
 
 
