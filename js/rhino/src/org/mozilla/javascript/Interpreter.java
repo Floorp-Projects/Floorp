@@ -372,15 +372,6 @@ public class Interpreter {
 
             case TokenStream.TARGET : {
                 markTargetLabel(node, iCodeTop);
-                // if this target has a FINALLY_PROP, it is a JSR target
-                // and so on the top of the stack it has either a PC value 
-                // when called from GOSUB or exception object to rethrow
-                // when called from exception handler
-                if (node.getProp(Node.FINALLY_PROP) != null) {
-                    itsStackDepth = 1;
-                    if (itsStackDepth > itsData.itsMaxStack)
-                        itsData.itsMaxStack = itsStackDepth;
-                }
                 break;
             }
 
@@ -501,17 +492,7 @@ public class Interpreter {
             }
 
             case TokenStream.JSR : {
-                /*
-                    mark the target with a FINALLY_PROP to indicate
-                    that it will have an incoming PC value on the top
-                    of the stack.
-                    !!!
-                    This only works if the target follows the JSR
-                    in the tree.
-                    !!!
-                */
                 Node target = (Node)(node.getProp(Node.TARGET_PROP));
-                target.putProp(Node.FINALLY_PROP, node);
                 // Bug 115717 is due to adding a GOSUB here before
                 // we insert an ENDTRY. I'm not sure of the best way
                 // to fix this; perhaps we need to maintain a stack
@@ -850,19 +831,8 @@ public class Interpreter {
                 iCodeTop = addShort(0, iCodeTop); // placeholder for catch pc
                 iCodeTop = addShort(0, iCodeTop); // placeholder for finally pc
 
-                Node lastChild = null;
-                /*
-                    when we encounter the child of the catchTarget, we
-                    set the stackDepth to 1 to account for the incoming
-                    exception object.
-                */
                 boolean insertedEndTry = false;
                 while (child != null) {
-                    if (catchTarget != null && lastChild == catchTarget) {
-                        itsStackDepth = 1;
-                        if (itsStackDepth > itsData.itsMaxStack)
-                            itsData.itsMaxStack = itsStackDepth;
-                    }
                     /*
                         When the following child is the catchTarget
                         (or the finallyTarget if there are no catches),
@@ -878,16 +848,47 @@ public class Interpreter {
                         iCodeTop = addByte(ENDTRY, iCodeTop);
                         insertedEndTry = true;
                     }
+
+                    boolean generated = false;
+
                     if (child == catchTarget) {
+                        if (child.getType() != TokenStream.TARGET)
+                            Context.codeBug();
+
                         int catchOffset = iCodeTop - tryStart;
                         recordJumpOffset(tryStart + 1, catchOffset);
+
+                        markTargetLabel(child, iCodeTop);
+                        generated = true;
+
+                        // Catch code has exception object on the stack
+                        itsStackDepth = 1;
+                        if (itsStackDepth > itsData.itsMaxStack)
+                            itsData.itsMaxStack = itsStackDepth;
                     }
                     if (child == finallyTarget) {
+                        if (child.getType() != TokenStream.TARGET)
+                            Context.codeBug();
+
                         int finallyOffset = iCodeTop - tryStart;
                         recordJumpOffset(tryStart + 3, finallyOffset);
+
+                        markTargetLabel(child, iCodeTop);
+                        generated = true;
+
+                        // Adjust stack for finally code: on the top of the
+                        // stack it has either a PC value  when called from
+                        // GOSUB or exception object to rethrow when called
+                        // from exception handler
+                        itsStackDepth = 1;
+                        if (itsStackDepth > itsData.itsMaxStack) {
+                            itsData.itsMaxStack = itsStackDepth;
+                        }
                     }
-                    iCodeTop = generateICode(child, iCodeTop);
-                    lastChild = child;
+
+                    if (!generated) {
+                        iCodeTop = generateICode(child, iCodeTop);
+                    }
                     child = nextSibling;
                 }
                 itsStackDepth = 0;
@@ -1763,7 +1764,7 @@ public class Interpreter {
             stack[stackTop] = ScriptRuntime.getCatchObject(cx, scope,
                                                            javaException);
         } else {
-            // Call finally handler with javaException on stack top to 
+            // Call finally handler with javaException on stack top to
             // distinguish from normal invocation through GOSUB
             // which would contain DBL_MRK on the stack
             stack[stackTop] = javaException;
@@ -2960,7 +2961,7 @@ public class Interpreter {
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
     private String lastAddString;
-    
+
     private int version;
     private boolean inLineStepMode;
     private String debugSource;
