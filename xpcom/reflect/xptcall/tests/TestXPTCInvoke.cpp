@@ -75,14 +75,14 @@ InvokeTestTarget::MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval)
 NS_IMETHODIMP 
 InvokeTestTarget::AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval)
 {
-    *retval = p1 + p2;
+    LL_ADD(*retval, p1, p2);
     return NS_OK;
 }
 
 NS_IMETHODIMP 
 InvokeTestTarget::MultTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval)
 {
-    *retval = p1 * p2;
+    LL_MUL(*retval, p1, p2);
     return NS_OK;
 }
 
@@ -90,7 +90,7 @@ int main()
 {
     InvokeTestTarget *test = new InvokeTestTarget();
 
-    PRInt32 out;
+    PRInt32 out, tmp32 = 0;
     PRInt64 out64;
     printf("calling direct:\n");
     if(NS_SUCCEEDED(test->AddTwoInts(1,1,&out)))
@@ -98,7 +98,8 @@ int main()
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->AddTwoLLs(LL_INIT(0,1),LL_INIT(0,1),&out64)))
-        printf("\t1L + 1L = %d\n", (int)out64);
+        LL_L2I(tmp32, out64);
+        printf("\t1L + 1L = %d\n", (int)tmp32);
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->MultTwoInts(2,2,&out)))
@@ -106,7 +107,8 @@ int main()
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->MultTwoLLs(LL_INIT(0,2),LL_INIT(0,2),&out64)))
-        printf("\t2L * 2L = %d\n", (int)out64);
+        LL_L2I(tmp32, out64);
+        printf("\t2L * 2L = %d\n", (int)tmp32);
     else
         printf("\tFAILED");
 
