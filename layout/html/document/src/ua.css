@@ -33,12 +33,12 @@ BODY {
   font-style: normal;
   font-variant: normal;
   font-weight: normal;
-  font-size: 10pt;
+  font-size: 11pt;
   line-height: 1.1;
   background: rgb(255,255,255);
 //  background: rgb(192,192,192);
   color: black;
-  margin: 10px;
+  padding: 12px;
   display: block;
 }
 
@@ -216,6 +216,7 @@ PLAINTEXT, XMP, PRE {
 
 // Table tags
 TABLE {
+  display: block;
   border-style: outset;
   border-color: #C0C0C0;
   cell-spacing: 4px;
@@ -232,6 +233,10 @@ TH {
   border-style: inset;
   border-color: #C0C0C0;
 }
+CAPTION {
+  text-align: center;
+}
+
 // XXX Special rule to eliminate margin around for nav4 compatability
 // XXX This isn't good enough because we only want the margin eliminated
 // around the first paragraph!
