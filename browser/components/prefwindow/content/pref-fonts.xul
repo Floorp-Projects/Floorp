@@ -217,32 +217,19 @@
                       oncommand="changeScreenResolution()"
                       dpi="&resolution.dpival;">
               <menupopup>
-                <menuitem
-#ifdef XP_OS2
-                          value="96"
-                          label="96 &resolution.dpi;"
-#else
-                          value="72"
-                          label="72 &resolution.dpi;"
-#endif
+                <menuitem value="" 
+                          label="&resolution.dpival;"
                           id="otherResolution"/>
-                <menuitem 
-#ifdef XP_OS2
-                          value="120"
-                          label="120 &resolution.dpi;"
-#else
-                          value="96"
-                          label="96 &resolution.dpi;"
-#endif
+                <menuitem value="" 
+                          label="&resolution.dpival;" 
                           id="defaultResolution"/>
-                <menuitem value="0" hidden="true"
+                <menuitem value="0"
                           label="&resolution.system.label;" 
-                          id="systemResolution"/>
-#ifndef XP_OS2
-                <menuseparator/>
-                <menuitem id="userResolution"/>
+                          id="systemResolution"
+                          hidden="true"/>
+                <menuseparator id="resolutionSeparator"/>
+                <menuitem id="userResolution" hidden="true"/>
                 <menuitem id="arbitraryResolution" value="other" label="&resolution.other;"/>
-#endif
               </menupopup>
             </menulist>
           </hbox>
