@@ -1131,7 +1131,7 @@ nsLocalFile::Delete(PRBool recursive)
         if (recursive)
         {
             nsDirEnumerator* dirEnum = new nsDirEnumerator();
-            if (dirEnum)
+            if (dirEnum == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
         
             rv = dirEnum->Init(this);
