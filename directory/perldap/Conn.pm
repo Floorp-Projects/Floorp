@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.10 1998/07/30 22:12:02 leif Exp $
+# $Id: Conn.pm,v 1.11 1998/08/03 06:58:01 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -148,15 +148,30 @@ sub isURL
 
 
 #############################################################################
-# Return the Error code from the last LDAP api function call.  
+# Return the actual low level LD connection structure, which is needed if
+# you want to call any of the API functions yourself...
 #
-sub getError 
+sub getLD
 {
   my ($self) = @_;
-  my ($matched, $msg);
 
-  return ldap_get_lderrno($self->{ld}, $matched, $msg);
+  return $self->{ld} if $self->{ld};
 }
+
+
+#############################################################################
+# Return the Error code from the last LDAP api function call. The last two
+# optional arguments are pointers to strings, and will be set to the
+# match string and extra error string if appropriate.
+#
+sub getErrorCode
+{
+  my ($self, $match, $msg) = @_;
+  my $ret;
+
+  return ldap_get_lderrno($self->{ld}, $match, $msg);
+}
+*getError = \*getErrorCode;
 
 
 #############################################################################
@@ -165,11 +180,11 @@ sub getError
 sub getErrorString 
 {
   my ($self) = @_;
-  my ($ret);
+  my ($err);
 
-  ldap_get_lderrno($self->{ld}, \$matched, \$ret);
-
-  return $ret;
+  
+  $err = ldap_get_lderrno($self->{ld}, undef, undef);
+  return ldap_err2string($err);
 }
 
 
@@ -180,7 +195,7 @@ sub printError
 {
   my ($self, $str) = @_;
 
-  $str = "Last error: " if ($str eq "");
+  $str = "LDAP error: " if ($str eq "");
   ldap_perror($self->{ld}, $str);
 }
 
@@ -362,7 +377,7 @@ sub add
 	  $gotcha++;
 	}
 
-      $ret = ldap_add_s($self->{ld}, $entry->{dn}, %ent) if $gotcha;
+      $ret = ldap_add_s($self->{ld}, $entry->{dn}, \%ent) if $gotcha;
     }
 
   return ($ret == LDAP_SUCCESS);
