@@ -32,6 +32,10 @@ ifdef MOZ_MATHML
 DIRS           += mathml
 endif
 
+ifdef MOZ_SVG
+DIRS           += svg
+endif
+
 DIRS           += events build
 
 ifdef ENABLE_TESTS

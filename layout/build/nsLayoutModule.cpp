@@ -54,6 +54,11 @@
 
 #include "nsIDocumentEncoder.h"
 
+// SVG
+#ifdef MOZ_SVG
+#include "nsSVGAtoms.h"
+#endif
+
 // XXX
 #include "nsIServiceManager.h"
 
@@ -202,6 +207,11 @@ nsLayoutModule::Initialize()
   nsMathMLAtoms::AddRefAtoms();
 #endif
 
+// SVG
+#ifdef MOZ_SVG
+  nsSVGAtoms::AddRefAtoms();
+#endif
+
   // XXX Initialize the script name set thingy-ma-jigger
   if (!gRegistry) {
     rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
@@ -243,6 +253,10 @@ nsLayoutModule::Shutdown()
 #ifdef MOZ_MATHML
   nsMathMLOperators::ReleaseTable();
   nsMathMLAtoms::ReleaseAtoms();
+#endif
+// SVG
+#ifdef MOZ_SVG
+  nsSVGAtoms::ReleaseAtoms();
 #endif
 
   nsTextTransformer::Shutdown();
