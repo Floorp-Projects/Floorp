@@ -66,6 +66,6 @@ void GC_remove_roots(char *begin, char *end) {}
 void GC_clear_roots() {}
 void GC_generic_init_threads() {}
 void GC_gcollect() {}
-FILE* gc_stdout = NULL;
+FILE* GC_stdout = NULL;
 FILE* GC_stderr = NULL;
 #endif
