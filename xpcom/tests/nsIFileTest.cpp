@@ -1,4 +1,4 @@
-#include "nsIFile.h"
+#include "nsILocalFile.h"
 #include "nsFileUtils.h"
 
 #include "stdio.h"
@@ -51,27 +51,17 @@ void Inspect()
     printf("^^^^^^^^^^ PLEASE INSPECT OUTPUT FOR ERRORS\n");
 }
 
-void GetPaths(nsIFile* file)
+void GetPaths(nsILocalFile* file)
 {
     nsresult rv;
     nsXPIDLCString pathName;
 
-    printf("Getting Paths\n");
+    printf("Getting Path\n");
 
-    rv = file->GetPath(nsIFile::UNIX_PATH, getter_Copies(pathName));
+    rv = file->GetPath(getter_Copies(pathName));
     VerifyResult(rv);
     
-    printf("Unix filepath: %s\n", (const char *)pathName);
-
-    rv = file->GetPath(nsIFile::NATIVE_PATH, getter_Copies(pathName));
-    VerifyResult(rv);
-    
-    printf("Native filepath: %s\n", (const char *)pathName);
-    
-    rv = file->GetPath(nsIFile::NSPR_PATH, getter_Copies(pathName));
-    VerifyResult(rv);
-    
-    printf("NSPR filepath: %s\n", (const char *)pathName);
+    printf("filepath: %s\n", (const char *)pathName);
 }
 
 extern "C" void
@@ -80,16 +70,17 @@ NS_SetupRegistry()
   nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL);
 }
 
-void InitTest(PRInt32 creationType, char* creationPath, char* appendPath)
+void InitTest(char* creationPath, char* appendPath)
 {
-    nsIFile* file = nsnull;
-    nsresult rv = nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL,
-						     NS_GET_IID(nsIFile),
-						     (void**) &file);
+    nsILocalFile* file = nsnull;
+    nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+                                              nsnull, 
+                                              nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                              (void**)&file);
     
     if (NS_FAILED(rv) || (!file)) 
     {
-        printf("create nsIFile failed\n");
+        printf("create nsILocalFile failed\n");
         return;
     }
 
@@ -98,7 +89,7 @@ void InitTest(PRInt32 creationType, char* creationPath, char* appendPath)
     Banner("InitWithPath");
     printf("creationPath == %s\nappendPath == %s\n", creationPath, appendPath);
 
-    rv = file->InitWithPath(creationType, creationPath);
+    rv = file->InitWithPath(creationPath);
     VerifyResult(rv);
     
     printf("Getting Filename\n");
@@ -130,25 +121,26 @@ void InitTest(PRInt32 creationType, char* creationPath, char* appendPath)
 }
 
 
-void CreationTest(PRInt32 creationType, char* creationPath, char* appendPath,
+void CreationTest(char* creationPath, char* appendPath,
 		  PRInt32 whatToCreate, PRInt32 perm)
 {
-    nsCOMPtr<nsIFile> file;
+    nsCOMPtr<nsILocalFile> file;
     nsresult rv = 
-      nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL,
-					 NS_GET_IID(nsIFile),
-					 (void **)getter_AddRefs(file));
-    
+    nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+                                              nsnull, 
+                                              nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                              (void **)getter_AddRefs(file));
+
     if (NS_FAILED(rv) || (!file)) 
     {
-        printf("create nsIFile failed\n");
+        printf("create nsILocalFile failed\n");
         return;
     }
 
     Banner("Creation Test");
     printf("creationPath == %s\nappendPath == %s\n", creationPath, appendPath);
 
-    rv = file->InitWithPath(creationType, creationPath);
+    rv = file->InitWithPath(creationPath);
     VerifyResult(rv);
  
     printf("Appending %s\n", appendPath);
@@ -182,24 +174,24 @@ void CreationTest(PRInt32 creationType, char* creationPath, char* appendPath,
 }    
     
 void
-DeletionTest(PRInt32 creationType, char* creationPath, char* appendPath, PRBool recursive)
+DeletionTest(char* creationPath, char* appendPath, PRBool recursive)
 {
-    nsCOMPtr<nsIFile> file;
+    nsCOMPtr<nsILocalFile> file;
     nsresult rv = 
       nsComponentManager::CreateInstance(NS_FILE_PROGID, NULL,
-					 NS_GET_IID(nsIFile),
+					 NS_GET_IID(nsILocalFile),
 					 (void**)getter_AddRefs(file));
     
     if (NS_FAILED(rv) || (!file)) 
     {
-        printf("create nsIFile failed\n");
+        printf("create nsILocalFile failed\n");
         return;
     }
 
     Banner("Deletion Test");
     printf("creationPath == %s\nappendPath == %s\n", creationPath, appendPath);
 
-    rv = file->InitWithPath(creationType, creationPath);
+    rv = file->InitWithPath(creationPath);
     VerifyResult(rv);
  
     printf("Appending %s\n", appendPath);
@@ -238,35 +230,24 @@ int main(void)
 
 
 #ifdef XP_PC
-    InitTest(nsIFile::UNIX_PATH, "/c|/temp/", "sub1/sub2/");
-    InitTest(nsIFile::NATIVE_PATH, "c:\\temp\\", "sub1/sub2/");
-    
-    InitTest(nsIFile::UNIX_PATH, "/d|/temp/", "sub1/sub2/");
-    InitTest(nsIFile::NATIVE_PATH, "d:\\temp\\", "sub1/sub2/");
+    InitTest("c:\\temp\\", "sub1/sub2/");
+    InitTest("d:\\temp\\", "sub1/sub2/");
 
-    CreationTest(nsIFile::UNIX_PATH, "/c|/temp/", "file.txt", nsIFile::NORMAL_FILE_TYPE, 0644);
-    DeletionTest(nsIFile::UNIX_PATH, "/c|/temp/", "file.txt", PR_FALSE);
+    CreationTest("c:\\temp\\", "file.txt", nsIFile::NORMAL_FILE_TYPE, 0644);
+    DeletionTest("c:\\temp\\", "file.txt", PR_FALSE);
 
-    
-    CreationTest(nsIFile::UNIX_PATH, "/c|/temp/", "mumble/a/b/c/d/e/f/g/h/i/j/k/", nsIFile::DIRECTORY_TYPE, 0644);
-    DeletionTest(nsIFile::UNIX_PATH, "/c|/temp/", "mumble", PR_TRUE);
+    CreationTest("c:\\temp\\", "mumble/a/b/c/d/e/f/g/h/i/j/k/", nsIFile::DIRECTORY_TYPE, 0644);
+    DeletionTest("c:\\temp\\", "mumble", PR_TRUE);
 
 #else
 #ifdef XP_UNIX
-    InitTest(nsIFile::UNIX_PATH, "/tmp/", "sub1/sub2/");
-    InitTest(nsIFile::NATIVE_PATH, "/tmp/", "sub1/sub2/");
+    InitTest("/tmp/", "sub1/sub2/");
     
-    InitTest(nsIFile::UNIX_PATH, "/tmp", "sub1/sub2/");
-    InitTest(nsIFile::NATIVE_PATH, "/tmp", "sub1/sub2/");
-
-    CreationTest(nsIFile::UNIX_PATH, "/tmp", "file.txt",
-		 nsIFile::NORMAL_FILE_TYPE, 0644);
-    DeletionTest(nsIFile::UNIX_PATH, "/tmp/", "file.txt", PR_FALSE);
-
+    CreationTest("/tmp", "file.txt", nsIFile::NORMAL_FILE_TYPE, 0644);
+    DeletionTest("/tmp/", "file.txt", PR_FALSE);
     
-    CreationTest(nsIFile::UNIX_PATH, "/tmp", "mumble/a/b/c/d/e/f/g/h/i/j/k/",
-		 nsIFile::DIRECTORY_TYPE, 0644);
-    DeletionTest(nsIFile::UNIX_PATH, "/tmp", "mumble", PR_TRUE);
+    CreationTest("/tmp", "mumble/a/b/c/d/e/f/g/h/i/j/k/", nsIFile::DIRECTORY_TYPE, 0644);
+    DeletionTest("/tmp", "mumble", PR_TRUE);
 #endif /* XP_UNIX */
 #endif /* XP_PC */
 }
