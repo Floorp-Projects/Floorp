@@ -4004,6 +4004,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
     // Add in the attributes and add the style content object to the
     // head container.
     element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+    AddBaseTagInfo(element);
     result = AddAttributes(aNode, element);
     if (NS_FAILED(result)) {
       return result;
@@ -4084,9 +4085,12 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
   rv = NS_NewHTMLMetaElement(getter_AddRefs(it), nodeInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  it->SetContentID(mDocument->GetAndIncrementContentID());
+
   // Add in the attributes and add the meta content object to the head
   // container.
   it->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+  AddBaseTagInfo(it);
   rv = AddAttributes(aNode, it);
   if (NS_FAILED(rv)) {
     return rv;
@@ -4277,6 +4281,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // Add in the attributes and add the style content object to the
   // head container.
   element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+  AddBaseTagInfo(element);
   rv = AddAttributes(aNode, element);
   if (NS_FAILED(rv)) {
     return rv;
@@ -4404,6 +4409,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   // Add in the attributes and add the style content object to the
   // head container.
   element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
+  AddBaseTagInfo(element);
   rv = AddAttributes(aNode, element);
   if (NS_FAILED(rv)) {
     return rv;
