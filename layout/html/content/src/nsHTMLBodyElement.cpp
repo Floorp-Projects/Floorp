@@ -107,7 +107,8 @@ public:
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize);
 
-  void HandleFixedBackground(nsIPresContext* aPresContext, nsIPresShell *aPresShell, PRBool aIsFixed);
+  void HandleFixedBackground(nsIPresContext* aPresContext,
+                             nsIPresShell *aPresShell, PRBool aIsFixed);
 
   nsHTMLBodyElement*    mPart;  // not ref-counted, cleared by content 
   nsIHTMLCSSStyleSheet* mSheet; // not ref-counted, cleared by content 
@@ -116,27 +117,27 @@ public:
 //----------------------------------------------------------------------
 
 // special subclass of inner class to override set document
-class nsBodyInner: public nsGenericHTMLContainerElement
+class nsBodySuper: public nsGenericHTMLContainerElement
 {
 public:
-  nsBodyInner();
-  virtual ~nsBodyInner();
+  nsBodySuper();
+  virtual ~nsBodySuper();
 
-  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
 
   BodyRule*       mContentStyleRule;
   BodyFixupRule*  mInlineStyleRule;
 };
 
 
-nsBodyInner::nsBodyInner()
-  : nsGenericHTMLContainerElement(),
-    mContentStyleRule(nsnull),
-    mInlineStyleRule(nsnull)
+nsBodySuper::nsBodySuper() : nsGenericHTMLContainerElement(),
+                             mContentStyleRule(nsnull),
+                             mInlineStyleRule(nsnull)
 {
 }
 
-nsBodyInner::~nsBodyInner()
+nsBodySuper::~nsBodySuper()
 {
   if (nsnull != mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
@@ -150,61 +151,72 @@ nsBodyInner::~nsBodyInner()
   }
 }
 
-nsresult nsBodyInner::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
+NS_IMETHODIMP
+nsBodySuper::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers)
 {
   if (nsnull != mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
     mContentStyleRule->mSheet = nsnull;
-    NS_RELEASE(mContentStyleRule); // destroy old style rule since the sheet will probably change
+
+    // destroy old style rule since the sheet will probably change
+    NS_RELEASE(mContentStyleRule);
   }
   if (nsnull != mInlineStyleRule) {
     mInlineStyleRule->mPart = nsnull;
     mInlineStyleRule->mSheet = nsnull;
-    NS_RELEASE(mInlineStyleRule); // destroy old style rule since the sheet will probably change
+
+    // destroy old style rule since the sheet will probably change
+    NS_RELEASE(mInlineStyleRule);
   }
-  return nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
+  return nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                                    aCompileEventHandlers);
 }
 
 //----------------------------------------------------------------------
 
-class nsHTMLBodyElement : public nsIDOMHTMLBodyElement,
-                          public nsIJSScriptObject,
-                          public nsIHTMLContent
+class nsHTMLBodyElement : public nsBodySuper,
+                          public nsIDOMHTMLBodyElement
 {
 public:
-  nsHTMLBodyElement(nsINodeInfo *aNodeInfo);
+  nsHTMLBodyElement();
   virtual ~nsHTMLBodyElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLBodyElement
   NS_DECL_IDOMHTMLBODYELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC2(mInner)
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
-  nsBodyInner mInner;
 
 friend class BodyRule;
 friend class BodyFixupRule;
 };
+
+
+NS_IMPL_ADDREF_INHERITED(nsHTMLBodyElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLBodyElement, nsGenericElement) 
 
 
 //----------------------------------------------------------------------
@@ -245,8 +257,8 @@ BodyRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
   return NS_OK;
 }
 
-// Strength is an out-of-band weighting, useful for mapping CSS ! important
-// always 0 here
+// Strength is an out-of-band weighting, useful for mapping CSS !
+// important always 0 here
 NS_IMETHODIMP
 BodyRule::GetStrength(PRInt32& aStrength) const
 {
@@ -255,7 +267,8 @@ BodyRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-BodyRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+BodyRule::MapFontStyleInto(nsIMutableStyleContext* aContext,
+                           nsIPresContext* aPresContext)
 {
   // set up the basefont (defaults to 3)
   nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
@@ -276,10 +289,10 @@ BodyRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPr
 }
 
 NS_IMETHODIMP
-BodyRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+BodyRule::MapStyleInto(nsIMutableStyleContext* aContext,
+                       nsIPresContext* aPresContext)
 {
-  if (nsnull != mPart) {
-
+  if (mPart) {
     nsStyleSpacing* styleSpacing = (nsStyleSpacing*)(aContext->GetMutableStyleData(eStyleStruct_Spacing));
 
     if (nsnull != styleSpacing) {
@@ -416,7 +429,8 @@ void BodyRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 //----------------------------------------------------------------------
 
 
-BodyFixupRule::BodyFixupRule(nsHTMLBodyElement* aPart, nsIHTMLCSSStyleSheet* aSheet)
+BodyFixupRule::BodyFixupRule(nsHTMLBodyElement* aPart,
+                             nsIHTMLCSSStyleSheet* aSheet)
   : mPart(aPart),
     mSheet(aSheet)
 {
@@ -430,25 +444,11 @@ BodyFixupRule::~BodyFixupRule()
 NS_IMPL_ADDREF(BodyFixupRule);
 NS_IMPL_RELEASE(BodyFixupRule);
 
-nsresult BodyFixupRule::QueryInterface(const nsIID& aIID,
-                                       void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleRule))) {
-    *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtrResult = (void*) ((nsISupports*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+
+NS_INTERFACE_MAP_BEGIN(BodyFixupRule)
+   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+   NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 BodyFixupRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
@@ -481,29 +481,32 @@ BodyFixupRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
-BodyFixupRule::MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+BodyFixupRule::MapFontStyleInto(nsIMutableStyleContext* aContext,
+                                nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
+BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
+                            nsIPresContext* aPresContext)
 {
-  NS_ASSERTION(aContext && aPresContext, "null arguments (aContext and aPresContext) not allowed");
-  if (!(aContext && aPresContext)) {
-    return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_ARG(aContext);
+  NS_ENSURE_ARG(aPresContext);
 
   // get the context data for the BODY, HTML element, and CANVAS
   nsCOMPtr<nsIStyleContext> parentContext;
   nsCOMPtr<nsIStyleContext> canvasContext;
-  parentContext = getter_AddRefs(aContext->GetParent());
+  parentContext = dont_AddRef(aContext->GetParent());
+
   if (parentContext){
     canvasContext = getter_AddRefs(parentContext->GetParent());
   }
+
   if (!(parentContext && canvasContext && aContext)) {
     return NS_ERROR_FAILURE;
   }
+
   // get the context data for the background information
   PRBool bFixedBackground = PR_FALSE;
   nsStyleColor* canvasStyleColor;
@@ -561,13 +564,12 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
     styleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
                                    NS_STYLE_BG_IMAGE_NONE |
                                    NS_STYLE_BG_PROPAGATED_TO_PARENT;  
-                                    // NOTE: if this was the BODY then 
-                                    // this flag is somewhat erroneous 
-                                    // as it was propogated to the GRANDPARENT!
-                                    // We patch this next by marking the HTML's
-                                    // background as propagated too, so we can walk
-                                    // up the chain of contexts that have to propagation
-                                    // bit set (see nsCSSStyleRule.cpp MapDeclarationColorInto)
+    // NOTE: if this was the BODY then this flag is somewhat erroneous
+    // as it was propogated to the GRANDPARENT!  We patch this next by
+    // marking the HTML's background as propagated too, so we can walk
+    // up the chain of contexts that have to propagation bit set (see
+    // nsCSSStyleRule.cpp MapDeclarationColorInto)
+
     if (styleColor == bodyStyleColor) {
       htmlStyleColor->mBackgroundFlags |= NS_STYLE_BG_PROPAGATED_TO_PARENT;
     }
@@ -579,23 +581,26 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
     nsCOMPtr<nsIDocument> doc;
     presShell->GetDocument(getter_AddRefs(doc));
     if (doc) {
-      nsIHTMLContentContainer*  htmlContainer;
-      if (NS_OK == doc->QueryInterface(NS_GET_IID(nsIHTMLContentContainer),
-                                       (void**)&htmlContainer)) {
-        nsIHTMLStyleSheet* styleSheet;
-        if (NS_OK == htmlContainer->GetAttributeStyleSheet(&styleSheet)) {
+      nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
+
+      if (htmlContainer) {
+        nsCOMPtr<nsIHTMLStyleSheet> styleSheet;
+        htmlContainer->GetAttributeStyleSheet(getter_AddRefs(styleSheet));
+
+        if (styleSheet) {
           styleSheet->SetDocumentForegroundColor(styleColor->mColor);
-          if (!(styleColor->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
+          if (!(styleColor->mBackgroundFlags &
+                NS_STYLE_BG_COLOR_TRANSPARENT)) {
             styleSheet->SetDocumentBackgroundColor(styleColor->mBackgroundColor);
           }
-          NS_RELEASE(styleSheet);
         }
-        NS_RELEASE(htmlContainer);
       }
     }
+
     // take care of some special requirements for fixed backgrounds
     HandleFixedBackground(aPresContext, presShell, bFixedBackground);
   }
+
   return NS_OK;
 }
 
@@ -683,54 +688,69 @@ NS_NewHTMLBodyElement(nsIHTMLContent** aInstancePtrResult,
                       nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLBodyElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLBodyElement* it = new nsHTMLBodyElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLBodyElement::nsHTMLBodyElement(nsINodeInfo *aNodeInfo)
+nsHTMLBodyElement::nsHTMLBodyElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLBodyElement::~nsHTMLBodyElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLBodyElement)
 
-NS_IMPL_RELEASE(nsHTMLBodyElement)
+NS_IMPL_HTMLCONTENT_QI(nsHTMLBodyElement, nsGenericHTMLContainerElement,
+                       nsIDOMHTMLBodyElement)
 
-nsresult
-nsHTMLBodyElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLBodyElement))) {
-    nsIDOMHTMLBodyElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 nsresult
 nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLBodyElement* it = new nsHTMLBodyElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLBodyElement* it = new nsHTMLBodyElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, ALink, alink)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Background, background)
@@ -738,24 +758,24 @@ NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Link, link)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Text, text)
 NS_IMPL_STRING_ATTR(nsHTMLBodyElement, VLink, vlink)
 
+
 NS_IMETHODIMP 
 nsHTMLBodyElement::GetBgColor(nsAWritableString& aBgColor)
 {
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
-  if (NS_CONTENT_ATTR_NOT_THERE == mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor)) {
+  if (NS_CONTENT_ATTR_NOT_THERE == nsBodySuper::GetAttribute(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor)) {
     nsresult result = NS_OK;
-    if (mInner.mDocument) {
+    if (mDocument) {
       // Make sure the presentation is up-to-date
-      result = mInner.mDocument->FlushPendingNotifications();
+      result = mDocument->FlushPendingNotifications();
       if (NS_FAILED(result)) {
         return result;
       }
     }
 
     nsCOMPtr<nsIPresContext> context;
-    result = nsGenericHTMLElement::GetPresContext(this, 
-                                                  getter_AddRefs(context));
+    result = GetPresContext(this, getter_AddRefs(context));
     if (NS_FAILED(result)) {
       return result;
     }
@@ -774,13 +794,14 @@ nsHTMLBodyElement::GetBgColor(nsAWritableString& aBgColor)
 
     if (frame) {
       const nsStyleColor* styleColor;
-      result = frame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);
+      result = frame->GetStyleData(eStyleStruct_Color,
+                                   (const nsStyleStruct*&)styleColor);
       if (NS_FAILED(result)) {
         return result;
       }
 
       nsHTMLValue value(styleColor->mBackgroundColor);
-      nsGenericHTMLElement::ColorToString(value, aBgColor);
+      ColorToString(value, aBgColor);
     }
   }
 
@@ -790,7 +811,8 @@ nsHTMLBodyElement::GetBgColor(nsAWritableString& aBgColor)
 NS_IMETHODIMP 
 nsHTMLBodyElement::SetBgColor(const nsAReadableString& aBgColor)
 {
-  return mInner.SetAttribute(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor, PR_TRUE); 
+  return nsBodySuper::SetAttribute(kNameSpaceID_None, nsHTMLAtoms::bgcolor,
+                                   aBgColor, PR_TRUE); 
 }
 
 NS_IMETHODIMP
@@ -803,25 +825,18 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::link) ||
       (aAttribute == nsHTMLAtoms::alink) ||
       (aAttribute == nsHTMLAtoms::vlink)) {
-    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+    if (ParseColor(aValue, mDocument, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if ((aAttribute == nsHTMLAtoms::marginwidth) ||
            (aAttribute == nsHTMLAtoms::marginheight)) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
 
-NS_IMETHODIMP
-nsHTMLBodyElement::AttributeToString(nsIAtom* aAttribute,
-                                     const nsHTMLValue& aValue,
-                                     nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 static void
@@ -831,7 +846,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 {
   if (nsnull != aAttributes) {
     nsHTMLValue value;
-    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext, aPresContext);
+    nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aContext,
+                                                      aPresContext);
 
     aAttributes->GetAttribute(nsHTMLAtoms::text, value);
     if ((eHTMLUnit_Color == value.GetUnit()) || 
@@ -877,7 +893,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     }
 
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
@@ -890,29 +907,18 @@ nsHTMLBodyElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFun
 }
 
 
-NS_IMETHODIMP
-nsHTMLBodyElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                  nsEvent* aEvent,
-                                  nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-
 static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 {
-  nsIHTMLStyleSheet*  sheet = nsnull;
-  nsIHTMLContentContainer*  htmlContainer;
-  
-  if (nsnull != aDocument) {
-    if (NS_OK == aDocument->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer)) {
-      htmlContainer->GetAttributeStyleSheet(&sheet);
-      NS_RELEASE(htmlContainer);
+  nsIHTMLStyleSheet* sheet = nsnull;
+
+  if (aDocument) {
+    nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(aDocument));
+
+    if (container) {
+      container->GetAttributeStyleSheet(&sheet);
     }
   }
+
   NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");
   return sheet;
 }
@@ -920,37 +926,37 @@ static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 NS_IMETHODIMP
 nsHTMLBodyElement::GetContentStyleRules(nsISupportsArray* aRules)
 {
-  mInner.GetContentStyleRules(aRules);
+  nsBodySuper::GetContentStyleRules(aRules);
 
-  if (nsnull == mInner.mContentStyleRule) {
-    nsIHTMLStyleSheet*  sheet = nsnull;
+  if (!mContentStyleRule) {
+    nsCOMPtr<nsIHTMLStyleSheet> sheet;
 
-    if (nsnull != mInner.mDocument) {  // find style sheet
-      sheet = GetAttrStyleSheet(mInner.mDocument);
+    if (mDocument) {  // find style sheet
+      sheet = dont_AddRef(GetAttrStyleSheet(mDocument));
     }
 
-    mInner.mContentStyleRule = new BodyRule(this, sheet);
-    NS_IF_RELEASE(sheet);
-    NS_IF_ADDREF(mInner.mContentStyleRule);
+    mContentStyleRule = new BodyRule(this, sheet);
+    NS_IF_ADDREF(mContentStyleRule);
   }
-  if (aRules && mInner.mContentStyleRule) {
-    aRules->AppendElement(mInner.mContentStyleRule);
+  if (aRules && mContentStyleRule) {
+    aRules->AppendElement(mContentStyleRule);
   }
   return NS_OK;
 }
 
 static nsIHTMLCSSStyleSheet* GetInlineStyleSheet(nsIDocument* aDocument)
 {
-  nsIHTMLCSSStyleSheet*  sheet = nsnull;
-  nsIHTMLContentContainer*  htmlContainer;
-  
-  if (nsnull != aDocument) {
-    if (NS_OK == aDocument->QueryInterface(NS_GET_IID(nsIHTMLContentContainer), (void**)&htmlContainer)) {
-      htmlContainer->GetInlineStyleSheet(&sheet);
-      NS_RELEASE(htmlContainer);
+  nsIHTMLCSSStyleSheet* sheet = nsnull;
+
+  if (aDocument) {
+    nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(aDocument));
+
+    if (container) {
+      container->GetInlineStyleSheet(&sheet);
     }
   }
-  NS_ASSERTION(nsnull != sheet, "can't get inline style sheet");
+
+  NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");
   return sheet;
 }
 
@@ -959,7 +965,7 @@ nsHTMLBodyElement::GetInlineStyleRules(nsISupportsArray* aRules)
 {
   PRBool useBodyFixupRule = PR_FALSE;
 
-  mInner.GetInlineStyleRules(aRules);
+  nsGenericHTMLContainerElement::GetInlineStyleRules(aRules);
 
   // The BodyFixupRule only applies when we have HTML as the parent of the BODY
   // - check if this is the case, and set the flag to use the rule only if 
@@ -968,29 +974,29 @@ nsHTMLBodyElement::GetInlineStyleRules(nsISupportsArray* aRules)
   GetParent(*getter_AddRefs(parentElement));
   if (parentElement) {
     nsCOMPtr<nsIAtom> tag;
-    if (NS_SUCCEEDED(parentElement->GetTag(*getter_AddRefs(tag))) && tag){
-      if (tag.get() == nsHTMLAtoms::html) {
-        // create the fixup rule
-        useBodyFixupRule = PR_TRUE;
-      }
+    parentElement->GetTag(*getter_AddRefs(tag));
+
+    if (tag.get() == nsHTMLAtoms::html) {
+      // create the fixup rule
+      useBodyFixupRule = PR_TRUE;
     }
   }
 
-  if (nsnull == mInner.mInlineStyleRule &&
-      useBodyFixupRule) {
-    nsIHTMLCSSStyleSheet*  sheet = nsnull;
+  if (!mInlineStyleRule && useBodyFixupRule) {
+    nsCOMPtr<nsIHTMLCSSStyleSheet> sheet;
 
-    if (nsnull != mInner.mDocument) {  // find style sheet
-      sheet = GetInlineStyleSheet(mInner.mDocument);
+    if (mDocument) {  // find style sheet
+      sheet = dont_AddRef(GetInlineStyleSheet(mDocument));
     }
 
-    mInner.mInlineStyleRule = new BodyFixupRule(this, sheet);
-    NS_IF_RELEASE(sheet);
-    NS_IF_ADDREF(mInner.mInlineStyleRule);
+    mInlineStyleRule = new BodyFixupRule(this, sheet);
+    NS_IF_ADDREF(mInlineStyleRule);
   }
-  if (aRules && mInner.mInlineStyleRule) {
-    aRules->AppendElement(mInner.mInlineStyleRule);
+
+  if (aRules && mInlineStyleRule) {
+    aRules->AppendElement(mInlineStyleRule);
   }
+
   return NS_OK;
 }
 
@@ -1008,8 +1014,8 @@ nsHTMLBodyElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
            (aAttribute == nsHTMLAtoms::marginheight)) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (! nsGenericHTMLElement::GetBackgroundAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (!GetBackgroundAttributesImpact(aAttribute, aHint)) {
       aHint = NS_STYLE_HINT_CONTENT;
     }
   }
@@ -1020,6 +1026,7 @@ nsHTMLBodyElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLBodyElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  // XXX - self? Unique? (Content Size Dump)
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

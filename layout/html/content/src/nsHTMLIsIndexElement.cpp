@@ -32,40 +32,29 @@
 #include "nsIPresContext.h"
 
 
-class nsHTMLIsIndexElement : public nsIDOMHTMLIsIndexElement,
-                             public nsIJSScriptObject,
-                             public nsIHTMLContent
+class nsHTMLIsIndexElement : public nsGenericHTMLLeafElement,
+                             public nsIDOMHTMLIsIndexElement
 {
 public:
-  nsHTMLIsIndexElement(nsINodeInfo *aNodeInfo);
+  nsHTMLIsIndexElement();
   virtual ~nsHTMLIsIndexElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLIsIndexElement
   NS_DECL_IDOMHTMLISINDEXELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLLeafElement mInner;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -73,53 +62,70 @@ NS_NewHTMLIsIndexElement(nsIHTMLContent** aInstancePtrResult,
                          nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLIsIndexElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLIsIndexElement* it = new nsHTMLIsIndexElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLIsIndexElement::nsHTMLIsIndexElement(nsINodeInfo *aNodeInfo)
+nsHTMLIsIndexElement::nsHTMLIsIndexElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLIsIndexElement::~nsHTMLIsIndexElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLIsIndexElement)
 
-NS_IMPL_RELEASE(nsHTMLIsIndexElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLIsIndexElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLIsIndexElement, nsGenericElement);
 
-nsresult
-nsHTMLIsIndexElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLIsIndexElement))) {
-    nsIDOMHTMLIsIndexElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLIsIndexElement, nsGenericHTMLLeafElement,
+                       nsIDOMHTMLIsIndexElement);
+
 
 nsresult
 nsHTMLIsIndexElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLIsIndexElement* it = new nsHTMLIsIndexElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLIsIndexElement* it = new nsHTMLIsIndexElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -132,69 +138,11 @@ nsHTMLIsIndexElement::GetForm(nsIDOMHTMLFormElement** aForm)
 
 NS_IMPL_STRING_ATTR(nsHTMLIsIndexElement, Prompt, prompt)
 
-NS_IMETHODIMP
-nsHTMLIsIndexElement::StringToAttribute(nsIAtom* aAttribute,
-                                        const nsAReadableString& aValue,
-                                        nsHTMLValue& aResult)
-{
-  // XXX write me
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-NS_IMETHODIMP
-nsHTMLIsIndexElement::AttributeToString(nsIAtom* aAttribute,
-                                        const nsHTMLValue& aValue,
-                                        nsAWritableString& aResult) const
-{
-  // XXX write me
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  // XXX write me
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLIsIndexElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                               PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLIsIndexElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                   nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLIsIndexElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                     nsEvent* aEvent,
-                                     nsIDOMEvent** aDOMEvent,
-                                     PRUint32 aFlags,
-                                     nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
 
 NS_IMETHODIMP
 nsHTMLIsIndexElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

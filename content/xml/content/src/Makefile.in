@@ -32,7 +32,6 @@ REQUIRES	= xpcom js dom widget locale necko caps webshell docshell htmlparser vi
 
 CPPSRCS		= \
 		nsXMLElement.cpp \
-		nsGenericXMLElement.cpp \
 		nsXMLCDATASection.cpp \
 		nsXMLProcessingInstruction.cpp \
 		nsXMLEntity.cpp \

@@ -39,45 +39,35 @@
 #include "nsIURL.h"
 
 
-class nsHTMLLinkElement : public nsIDOMHTMLLinkElement,
-                          public nsIJSScriptObject,
+class nsHTMLLinkElement : public nsGenericHTMLLeafElement,
+                          public nsIDOMHTMLLinkElement,
                           public nsILink,
-                          public nsIHTMLContent,
                           public nsIStyleSheetLinkingElement,
                           public nsIDOMLinkStyle
 {
 public:
-  nsHTMLLinkElement(nsINodeInfo *aNodeInfo);
+  nsHTMLLinkElement();
   virtual ~nsHTMLLinkElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLLinkElement
   NS_DECL_IDOMHTMLLINKELEMENT
-
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
 
   // nsILink
   NS_IMETHOD    GetLinkState(nsLinkState &aState);
   NS_IMETHOD    SetLinkState(nsLinkState aState);
   NS_IMETHOD    GetHrefCString(char* &aBuf);
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIStyleSheetLinkingElement  
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
@@ -86,8 +76,12 @@ public:
   // nsIDOMLinkStyle
   NS_DECL_IDOMLINKSTYLE
 
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
+                            nsEventStatus* aEventStatus);
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+
 protected:
-  nsGenericHTMLLeafElement mInner;
   nsIStyleSheet* mStyleSheet;
 
   // The cached visited state
@@ -99,21 +93,31 @@ NS_NewHTMLLinkElement(nsIHTMLContent** aInstancePtrResult,
                       nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLLinkElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLLinkElement* it = new nsHTMLLinkElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLLinkElement::nsHTMLLinkElement(nsINodeInfo *aNodeInfo)
+nsHTMLLinkElement::nsHTMLLinkElement()
   : mLinkState(eLinkState_Unknown)
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
   mStyleSheet = nsnull;
   nsHTMLUtils::AddRef(); // for GetHrefCString
 }
@@ -124,89 +128,72 @@ nsHTMLLinkElement::~nsHTMLLinkElement()
   nsHTMLUtils::Release(); // for GetHrefCString
 }
 
-NS_IMPL_ADDREF(nsHTMLLinkElement)
 
-NS_IMPL_RELEASE(nsHTMLLinkElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLLinkElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, nsGenericElement) 
 
-nsresult
-nsHTMLLinkElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLLinkElement))) {
-    nsIDOMHTMLLinkElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleSheetLinkingElement))) {
-    nsIStyleSheetLinkingElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsILink))) {
-    *aInstancePtr = (void*)(nsILink*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMLinkStyle))) {
-    *aInstancePtr = (void*)(nsIDOMLinkStyle*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI3(nsHTMLLinkElement, nsGenericHTMLLeafElement,
+                        nsIDOMHTMLLinkElement, nsIDOMLinkStyle,
+                        nsIStyleSheetLinkingElement);
+
 
 nsresult
 nsHTMLLinkElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLLinkElement* it = new nsHTMLLinkElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLLinkElement* it = new nsHTMLLinkElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsHTMLLinkElement::GetDisabled(PRBool* aDisabled)
 {
+  nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(mStyleSheet));
   nsresult result = NS_OK;
-  
-  if (nsnull != mStyleSheet) {
-    nsIDOMStyleSheet* ss;
-    
-    result = mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void**)&ss);
-    if (NS_OK == result) {
-      result = ss->GetDisabled(aDisabled);
-      NS_RELEASE(ss);
-    }
-  }
-  else {
+
+  if (ss) {
+    result = ss->GetDisabled(aDisabled);
+  } else {
     *aDisabled = PR_FALSE;
   }
-  
+
   return result;
 }
 
 NS_IMETHODIMP 
 nsHTMLLinkElement::SetDisabled(PRBool aDisabled)
 {
+  nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(mStyleSheet));
   nsresult result = NS_OK;
-  
-  if (nsnull != mStyleSheet) {
-    nsIDOMStyleSheet* ss;
-    
-    result = mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void**)&ss);
-    if (NS_OK == result) {
-      result = ss->SetDisabled(aDisabled);
-      NS_RELEASE(ss);
-    }
+
+  if (ss) {
+    result = ss->SetDisabled(aDisabled);
   }
-  
+
   return result;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Charset, charset)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Hreflang, hreflang)
@@ -215,6 +202,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rel, rel)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Rev, rev)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
+
 
 NS_IMETHODIMP
 nsHTMLLinkElement::GetHref(nsAWritableString& aValue)
@@ -226,7 +214,9 @@ nsHTMLLinkElement::GetHref(nsAWritableString& aValue)
     aValue.Assign(NS_ConvertASCIItoUCS2(buf));
     nsCRT::free(buf);
   }
+
   // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
+
   return NS_OK;
 }
 
@@ -237,7 +227,9 @@ nsHTMLLinkElement::SetHref(const nsAReadableString& aValue)
   // somebody asks for it.
   mLinkState = eLinkState_Unknown;
 
-  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, aValue, PR_TRUE);
+  return nsGenericHTMLLeafElement::SetAttribute(kNameSpaceID_HTML,
+                                                nsHTMLAtoms::href, aValue,
+                                                PR_TRUE);
 }
 
 NS_IMETHODIMP 
@@ -261,71 +253,22 @@ nsHTMLLinkElement::GetStyleSheet(nsIStyleSheet*& aStyleSheet)
 }
 
 NS_IMETHODIMP
-nsHTMLLinkElement::StringToAttribute(nsIAtom* aAttribute,
-                              const nsAReadableString& aValue,
-                              nsHTMLValue& aResult)
-{
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-NS_IMETHODIMP
-nsHTMLLinkElement::AttributeToString(nsIAtom* aAttribute,
-                              const nsHTMLValue& aValue,
-                              nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLLinkElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                            PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLLinkElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsHTMLLinkElement::HandleDOMEvent(nsIPresContext* aPresContext,
                            nsEvent* aEvent,
                            nsIDOMEvent** aDOMEvent,
                            PRUint32 aFlags,
                            nsEventStatus* aEventStatus)
 {
-  return mInner.HandleDOMEventForAnchors(this,
-                                         aPresContext, 
-                                         aEvent, 
-                                         aDOMEvent,
-                                         aFlags, 
-                                         aEventStatus);
+  return HandleDOMEventForAnchors(this, aPresContext, aEvent, aDOMEvent,
+                                  aFlags, aEventStatus);
 }
-
 
 NS_IMETHODIMP
 nsHTMLLinkElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -349,18 +292,20 @@ nsHTMLLinkElement::GetHrefCString(char* &aBuf)
   nsAutoString relURLSpec;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec)) {
+      nsGenericHTMLLeafElement::GetAttribute(kNameSpaceID_HTML,
+                                             nsHTMLAtoms::href, relURLSpec)) {
     // Clean up any leading or trailing whitespace
     relURLSpec.Trim(" \t\n\r");
 
     // Get base URL.
     nsCOMPtr<nsIURI> baseURL;
-    mInner.GetBaseURL(*getter_AddRefs(baseURL));
+    GetBaseURL(*getter_AddRefs(baseURL));
 
     if (baseURL) {
       // Get absolute URL.
-      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mInner.mDocument, baseURL,
-                                    nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
+      NS_MakeAbsoluteURIWithCharset(&aBuf, relURLSpec, mDocument, baseURL,
+                                    nsHTMLUtils::IOService,
+                                    nsHTMLUtils::CharsetMgr);
     }
     else {
       // Absolute URL is same as relative URL.

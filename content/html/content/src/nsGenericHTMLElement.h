@@ -30,6 +30,7 @@
 #include "nsVoidArray.h"
 #include "nsIJSScriptObject.h"
 #include "nsINameSpaceManager.h"  // for kNameSpaceID_HTML
+#include "nsIFormControl.h"
 
 #include "nsIStatefulFrame.h"
 
@@ -51,87 +52,91 @@ class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
 class nsIURI;
 class nsIFormControlFrame;
-class nsIFormControl;
 class nsIForm;
 class nsIPresState;
 
 class nsGenericHTMLElement : public nsGenericElement {
 public:
   nsGenericHTMLElement();
-  ~nsGenericHTMLElement();
+  virtual ~nsGenericHTMLElement();
 
-  nsresult CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericHTMLElement* aDest,
-                       PRBool aDeep);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  static nsresult DOMQueryInterface(nsIDOMHTMLElement *aElement,
+                                    REFNSIID aIID, void **aInstancePtr);
+
+  NS_METHOD CopyInnerTo(nsIContent* aSrcContent,
+                        nsGenericHTMLElement* aDest,
+                        PRBool aDeep);
 
   // Implementation for nsIDOMNode
-  nsresult    GetNodeName(nsAWritableString& aNodeName);
-  nsresult    GetLocalName(nsAWritableString& aLocalName);
+  NS_METHOD GetNodeName(nsAWritableString& aNodeName);
+  NS_METHOD GetLocalName(nsAWritableString& aLocalName);
 
   // Implementation for nsIDOMElement
-  nsresult    GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn) 
+  NS_METHOD GetAttribute(const nsAReadableString& aName,
+                         nsAWritableString& aReturn) 
   {
     return nsGenericElement::GetAttribute(aName, aReturn);
   }
-  nsresult    SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
+  NS_METHOD SetAttribute(const nsAReadableString& aName,
+                         const nsAReadableString& aValue)
   {
     return nsGenericElement::SetAttribute(aName, aValue);
   }
-  nsresult GetTagName(nsAWritableString& aTagName);
-  nsresult GetElementsByTagName(const nsAReadableString& aTagname,
-                                nsIDOMNodeList** aReturn);
+  NS_METHOD GetTagName(nsAWritableString& aTagName);
+  NS_METHOD GetElementsByTagName(const nsAReadableString& aTagname,
+                                 nsIDOMNodeList** aReturn);
 
   // Implementation for nsIDOMHTMLElement
-  nsresult    GetId(nsAWritableString& aId);
-  nsresult    SetId(const nsAReadableString& aId);
-  nsresult    GetTitle(nsAWritableString& aTitle);
-  nsresult    SetTitle(const nsAReadableString& aTitle);
-  nsresult    GetLang(nsAWritableString& aLang);
-  nsresult    SetLang(const nsAReadableString& aLang);
-  nsresult    GetDir(nsAWritableString& aDir);
-  nsresult    SetDir(const nsAReadableString& aDir);
-  nsresult    GetClassName(nsAWritableString& aClassName);
-  nsresult    SetClassName(const nsAReadableString& aClassName);
-  nsresult    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
-  nsresult    GetOffsetTop(PRInt32* aOffsetTop);
-  nsresult    GetOffsetLeft(PRInt32* aOffsetLeft);
-  nsresult    GetOffsetWidth(PRInt32* aOffsetWidth);
-  nsresult    GetOffsetHeight(PRInt32* aOffsetHeight);
-  nsresult    GetOffsetParent(nsIDOMElement** aOffsetParent);
-  nsresult    GetInnerHTML(nsAWritableString& aInnerHTML);
-  nsresult    SetInnerHTML(const nsAReadableString& aInnerHTML);
-  nsresult    GetOffsetRect(nsRect& aRect, 
-                            nsIAtom* aOffsetParentTag,
-                            nsIContent** aOffsetParent);
-
+  NS_METHOD GetId(nsAWritableString& aId);
+  NS_METHOD SetId(const nsAReadableString& aId);
+  NS_METHOD GetTitle(nsAWritableString& aTitle);
+  NS_METHOD SetTitle(const nsAReadableString& aTitle);
+  NS_METHOD GetLang(nsAWritableString& aLang);
+  NS_METHOD SetLang(const nsAReadableString& aLang);
+  NS_METHOD GetDir(nsAWritableString& aDir);
+  NS_METHOD SetDir(const nsAReadableString& aDir);
+  NS_METHOD GetClassName(nsAWritableString& aClassName);
+  NS_METHOD SetClassName(const nsAReadableString& aClassName);
+  NS_METHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
+  NS_METHOD GetOffsetTop(PRInt32* aOffsetTop);
+  NS_METHOD GetOffsetLeft(PRInt32* aOffsetLeft);
+  NS_METHOD GetOffsetWidth(PRInt32* aOffsetWidth);
+  NS_METHOD GetOffsetHeight(PRInt32* aOffsetHeight);
+  NS_METHOD GetOffsetParent(nsIDOMElement** aOffsetParent);
+  NS_METHOD GetInnerHTML(nsAWritableString& aInnerHTML);
+  NS_METHOD SetInnerHTML(const nsAReadableString& aInnerHTML);
+  NS_METHOD GetOffsetRect(nsRect& aRect, 
+                         nsIAtom* aOffsetParentTag,
+                         nsIContent** aOffsetParent);
 
   // Implementation for nsIContent
-  nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
-  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
-  nsresult NormalizeAttributeString(const nsAReadableString& aStr,
-                                    nsINodeInfo*& aNodeInfo);
-  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue,
-                        PRBool aNotify);
-  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
-                        PRBool aNotify);
-  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aResult) const;
-  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsAWritableString& aResult) const;
-  nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
-  nsresult GetAttributeNameAt(PRInt32 aIndex,
-                              PRInt32& aNameSpaceID, 
-                              nsIAtom*& aName,
-                              nsIAtom*& aPrefix) const;
-  nsresult GetAttributeCount(PRInt32& aResult) const;
-  nsresult List(FILE* out, PRInt32 aIndent) const;
-  nsresult DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
-  nsresult SetParentForFormControls(nsIContent* aParent,
-                                    nsIFormControl* aControl,
-                                    nsIForm* aForm);
-  nsresult SetDocumentForFormControls(nsIDocument* aDocument,
-                                      PRBool aDeep,
-                                      PRBool aCompileEventHandlers,
-                                      nsIFormControl* aControl,
-                                      nsIForm* aForm);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
+  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const;
+  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
+                                      nsINodeInfo*& aNodeInfo);
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          const nsAReadableString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
+                          const nsAReadableString& aValue,
+                          PRBool aNotify);
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                            PRBool aNotify);
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
+                                PRInt32& aNameSpaceID, 
+                                nsIAtom*& aName,
+                                nsIAtom*& aPrefix) const;
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
+
   nsresult HandleDOMEventForAnchors(nsIContent* aOuter,
                                     nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
@@ -140,28 +145,30 @@ public:
                                     nsEventStatus* aEventStatus);
 
   // Implementation for nsIHTMLContent
-  nsresult Compact();
-  nsresult SetHTMLAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
-                            PRBool aNotify);
-  nsresult GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
-  nsresult GetID(nsIAtom*& aResult) const;
-  nsresult GetClasses(nsVoidArray& aArray) const;
-  nsresult HasClass(nsIAtom* aClass) const;
-  nsresult GetContentStyleRules(nsISupportsArray* aRules);
-  nsresult GetInlineStyleRules(nsISupportsArray* aRules);
-  nsresult GetBaseURL(nsIURI*& aBaseURL) const;
-  nsresult GetBaseTarget(nsAWritableString& aBaseTarget) const;
-  nsresult ToHTMLString(nsAWritableString& aResult) const;
-  nsresult ToHTML(FILE* out) const;
-  nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
-                  size_t aInstanceSize) const;
+  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,
+                              PRBool aNotify);
+  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute, nsHTMLValue& aValue) const;
+  NS_IMETHOD GetID(nsIAtom*& aResult) const;
+  NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
+  NS_IMETHOD HasClass(nsIAtom* aClass) const;
+  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
+  NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const;
+  NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const;
 
   //----------------------------------------
-  nsresult AttributeToString(nsIAtom* aAttribute,
-                             const nsHTMLValue& aValue,
-                             nsAWritableString& aResult) const;
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
 
   void ListAttributes(FILE* out) const;
+
+  PRUint32 BaseSizeOf(nsISizeOfHandler* aSizer) const;
+
 
 
   //----------------------------------------
@@ -203,11 +210,12 @@ public:
   static PRBool ParseValue(const nsAReadableString& aString, PRInt32 aMin,
                            nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
-  static PRBool ParseValue(const nsAReadableString& aString, PRInt32 aMin, PRInt32 aMax,
-                           nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
+  static PRBool ParseValue(const nsAReadableString& aString, PRInt32 aMin,
+                           PRInt32 aMax, nsHTMLValue& aResult,
+                           nsHTMLUnit aValueUnit);
 
-  static PRBool ParseColor(const nsAReadableString& aString, nsIDocument* aDocument,
-                           nsHTMLValue& aResult);
+  static PRBool ParseColor(const nsAReadableString& aString,
+                           nsIDocument* aDocument, nsHTMLValue& aResult);
 
   static PRBool ColorToString(const nsHTMLValue& aValue,
                               nsAWritableString& aResult);
@@ -215,7 +223,8 @@ public:
   static PRBool ParseCommonAttribute(nsIAtom* aAttribute, 
                                      const nsAReadableString& aValue, 
                                      nsHTMLValue& aResult);
-  static PRBool ParseAlignValue(const nsAReadableString& aString, nsHTMLValue& aResult);
+  static PRBool ParseAlignValue(const nsAReadableString& aString,
+                                nsHTMLValue& aResult);
 
   PRBool ParseDivAlignValue(const nsAReadableString& aString,
                             nsHTMLValue& aResult) const;
@@ -266,7 +275,8 @@ public:
                                        nsAWritableString& aResult);
 
   nsresult  ReparseStyleAttribute(void);
-  nsresult  ParseStyleAttribute(const nsAReadableString& aValue, nsHTMLValue& aResult);
+  nsresult  ParseStyleAttribute(const nsAReadableString& aValue,
+                                nsHTMLValue& aResult);
 
   /** Attribute Mapping Helpers
    *
@@ -310,9 +320,10 @@ public:
                                   nsIFormControlFrame *&aFormControlFrame,
                                   PRBool aFlushNotifications=PR_TRUE);
   static nsresult GetPrimaryPresState(nsIHTMLContent* aContent,
-                                          nsIStatefulFrame::StateType aStateType,
-                                          nsIPresState** aPresState);
-  static nsresult GetPresContext(nsIHTMLContent* aContent, nsIPresContext** aPresContext);
+                                      nsIStatefulFrame::StateType aStateType,
+                                      nsIPresState** aPresState);
+  static nsresult GetPresContext(nsIHTMLContent* aContent,
+                                 nsIPresContext** aPresContext);
 
   static nsresult GetBaseURL(const nsHTMLValue& aBaseHref,
                              nsIDocument* aDocument,
@@ -330,351 +341,329 @@ public:
 class nsGenericHTMLLeafElement : public nsGenericHTMLElement {
 public:
   nsGenericHTMLLeafElement();
-  ~nsGenericHTMLLeafElement();
+  virtual ~nsGenericHTMLLeafElement();
 
-  nsresult CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericHTMLLeafElement* aDest,
-                       PRBool aDeep);
+  NS_METHOD CopyInnerTo(nsIContent* aSrcContent,
+                        nsGenericHTMLLeafElement* aDest,
+                        PRBool aDeep);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
-  nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
-  nsresult    HasChildNodes(PRBool* aHasChildNodes) {
+  NS_METHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
+  NS_METHOD HasChildNodes(PRBool* aHasChildNodes) {
     *aHasChildNodes = PR_FALSE;
     return NS_OK;
   }
-  nsresult    GetFirstChild(nsIDOMNode** aFirstChild) {
+  NS_METHOD GetFirstChild(nsIDOMNode** aFirstChild) {
     *aFirstChild = nsnull;
     return NS_OK;
   }
-  nsresult    GetLastChild(nsIDOMNode** aLastChild) {
+  NS_METHOD GetLastChild(nsIDOMNode** aLastChild) {
     *aLastChild = nsnull;
     return NS_OK;
   }
-  nsresult    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                           nsIDOMNode** aReturn) {
+  NS_METHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                        nsIDOMNode** aReturn) {
     return NS_ERROR_FAILURE;
   }
-  nsresult    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                           nsIDOMNode** aReturn) {
+  NS_METHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                        nsIDOMNode** aReturn) {
     return NS_ERROR_FAILURE;
   }
-  nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
+  NS_METHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
     return NS_ERROR_FAILURE;
   }
-  nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) {
+  NS_METHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) {
     return NS_ERROR_FAILURE;
   }
 
   // Remainder of nsIHTMLContent (and nsIContent)
-  nsresult Compact() {
+  NS_IMETHOD Compact() {
     return NS_OK;
   }
-  nsresult CanContainChildren(PRBool& aResult) const {
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const {
     aResult = PR_FALSE;
     return NS_OK;
   }
-  nsresult ChildCount(PRInt32& aResult) const {
+  NS_IMETHOD ChildCount(PRInt32& aResult) const {
     aResult = 0;
     return NS_OK;
   }
-  nsresult ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
     aResult = nsnull;
     return NS_OK;
   }
-  nsresult IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
     aResult = -1;
     return NS_OK;
   }
-  nsresult InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) {
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) {
     return NS_OK;
   }
-  nsresult ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) {
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) {
     return NS_OK;
   }
-  nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify) {
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify) {
     return NS_OK;
   }
-  nsresult RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
     return NS_OK;
   }
 };
 
 //----------------------------------------------------------------------
 
-class nsGenericHTMLContainerElement : public nsGenericHTMLElement {
+class nsGenericHTMLContainerElement : public nsGenericHTMLElement
+{
 public:
   nsGenericHTMLContainerElement();
-  ~nsGenericHTMLContainerElement();
+  virtual ~nsGenericHTMLContainerElement();
 
-  nsresult CopyInnerTo(nsIContent* aSrcContent,
+  NS_METHOD CopyInnerTo(nsIContent* aSrcContent,
                        nsGenericHTMLContainerElement* aDest,
                        PRBool aDeep);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
-  nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
-  nsresult    HasChildNodes(PRBool* aHasChildNodes);
-  nsresult    GetFirstChild(nsIDOMNode** aFirstChild);
-  nsresult    GetLastChild(nsIDOMNode** aLastChild);
+  NS_METHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
+  NS_METHOD HasChildNodes(PRBool* aHasChildNodes);
+  NS_METHOD GetFirstChild(nsIDOMNode** aFirstChild);
+  NS_METHOD GetLastChild(nsIDOMNode** aLastChild);
   
-  nsresult    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                           nsIDOMNode** aReturn)
+  NS_METHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                         nsIDOMNode** aReturn)
   {
     return nsGenericElement::doInsertBefore(aNewChild, aRefChild, aReturn);
   }
-  nsresult    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                           nsIDOMNode** aReturn)
+  NS_METHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                         nsIDOMNode** aReturn)
   {
     return nsGenericElement::doReplaceChild(aNewChild, aOldChild, aReturn);
   }
-  nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+  NS_METHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   {
     return nsGenericElement::doRemoveChild(aOldChild, aReturn);
   }
-  nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+  NS_METHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
   {
     return nsGenericElement::doInsertBefore(aNewChild, nsnull, aReturn);
   }
 
   // Remainder of nsIHTMLContent (and nsIContent)
-  nsresult Compact();
-  nsresult CanContainChildren(PRBool& aResult) const;
-  nsresult ChildCount(PRInt32& aResult) const;
-  nsresult ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
-  nsresult IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
-  nsresult InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
-  nsresult ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
-  nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  nsresult RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD Compact();
+  NS_IMETHOD CanContainChildren(PRBool& aResult) const;
+  NS_IMETHOD ChildCount(PRInt32& aResult) const;
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
+  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
+  NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
   nsCheapVoidArray mChildren;
 };
 
 //----------------------------------------------------------------------
 
-class nsGenericHTMLContainerFormElement : public nsGenericHTMLContainerElement {
+class nsGenericHTMLContainerFormElement : public nsGenericHTMLContainerElement,
+                                          public nsIFormControl
+{
 public:
   nsGenericHTMLContainerFormElement();
-  ~nsGenericHTMLContainerFormElement();
+  virtual ~nsGenericHTMLContainerFormElement();
 
-  nsresult SetForm(nsIForm* aForm);
-  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue,
-                          PRBool aNotify);
-  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
-                          PRBool aNotify);
-  nsresult SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  // nsIFormControl
+  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
+  NS_IMETHOD Init();
+
+  NS_IMETHOD SetParent(nsIContent *aParent);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
+
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          const nsAReadableString& aValue, PRBool aNotify);
+  NS_METHOD SetAttribute(const nsAReadableString& aName,
+                         const nsAReadableString& aValue)
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
-  nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
 
+  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+
+protected:
   nsIForm* mForm;
 };
 
 //----------------------------------------------------------------------
 
-class nsGenericHTMLLeafFormElement : public nsGenericHTMLLeafElement {
+class nsGenericHTMLLeafFormElement : public nsGenericHTMLLeafElement,
+                                     public nsIFormControl
+{
 public:
   nsGenericHTMLLeafFormElement();
   ~nsGenericHTMLLeafFormElement();
 
-  nsresult SetForm(nsIForm* aForm);
-  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue,
-                          PRBool aNotify);
-  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
-                          PRBool aNotify);
-  nsresult SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  // nsIFormControl
+  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
+  NS_IMETHOD Init();
+
+  NS_IMETHOD SetParent(nsIContent *aParent);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
+
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                          const nsAReadableString& aValue, PRBool aNotify);
+  NS_METHOD SetAttribute(const nsAReadableString& aName,
+                         const nsAReadableString& aValue)
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
-  nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
 
+protected:
   nsIForm* mForm;
 };
 
 
 //----------------------------------------------------------------------
-/**
- * Implement the nsIDOMHTMLElement API by forwarding the methods to a
- * generic content object (either nsGenericHTMLLeafElement or
- * nsGenericHTMLContainerContent)
- */
-#define NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(_g)       \
-  NS_IMETHOD GetId(nsAWritableString& aId) {                     \
-    return _g.GetId(aId);                               \
-  }                                                     \
-  NS_IMETHOD SetId(const nsAReadableString& aId) {               \
-    return _g.SetId(aId);                               \
-  }                                                     \
-  NS_IMETHOD GetTitle(nsAWritableString& aTitle) {               \
-    return _g.GetTitle(aTitle);                         \
-  }                                                     \
-  NS_IMETHOD SetTitle(const nsAReadableString& aTitle) {         \
-    return _g.SetTitle(aTitle);                         \
-  }                                                     \
-  NS_IMETHOD GetLang(nsAWritableString& aLang) {                 \
-    return _g.GetLang(aLang);                           \
-  }                                                     \
-  NS_IMETHOD SetLang(const nsAReadableString& aLang) {           \
-    return _g.SetLang(aLang);                           \
-  }                                                     \
-  NS_IMETHOD GetDir(nsAWritableString& aDir) {                   \
-    return _g.GetDir(aDir);                             \
-  }                                                     \
-  NS_IMETHOD SetDir(const nsAReadableString& aDir) {             \
-    return _g.SetDir(aDir);                             \
-  }                                                     \
-  NS_IMETHOD GetClassName(nsAWritableString& aClassName) {       \
-    return _g.GetClassName(aClassName);                 \
-  }                                                     \
-  NS_IMETHOD SetClassName(const nsAReadableString& aClassName) { \
-    return _g.SetClassName(aClassName);                 \
-  }                                                     \
-  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { \
-    return _g.GetStyle(aStyle);                         \
-  }                                                     \
-  NS_IMETHOD GetOffsetTop(PRInt32* aOffsetTop) {        \
-    return _g.GetOffsetTop(aOffsetTop);                 \
-  }                                                     \
-  NS_IMETHOD GetOffsetLeft(PRInt32* aOffsetLeft) {      \
-    return _g.GetOffsetLeft(aOffsetLeft);               \
-  }                                                     \
-  NS_IMETHOD GetOffsetWidth(PRInt32* aOffsetWidth) {    \
-    return _g.GetOffsetWidth(aOffsetWidth);             \
-  }                                                     \
-  NS_IMETHOD GetOffsetHeight(PRInt32* aOffsetHeight) {  \
-    return _g.GetOffsetHeight(aOffsetHeight);           \
-  }                                                     \
-  NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) { \
-    return _g.GetOffsetParent(aOffsetParent);           \
-  }                                                     \
-  NS_IMETHOD GetInnerHTML(nsAWritableString& aInnerHTML) {       \
-    return _g.GetInnerHTML(aInnerHTML);                 \
-  }                                                     \
-  NS_IMETHOD SetInnerHTML(const nsAReadableString& aInnerHTML) { \
-    return _g.SetInnerHTML(aInnerHTML);                 \
-  }
 
+#define NS_IMPL_HTMLCONTENT_QI0(_class, _base)                                \
+nsresult                                                                      \
+_class::QueryInterface(REFNSIID aIID, void** aInstancePtr)                    \
+{                                                                             \
+  NS_ENSURE_ARG_POINTER(aInstancePtr);                                        \
+                                                                              \
+  *aInstancePtr = nsnull;                                                     \
+                                                                              \
+  nsresult rv;                                                                \
+                                                                              \
+  rv = _base::QueryInterface(aIID, aInstancePtr);                             \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  rv = DOMQueryInterface(this, aIID, aInstancePtr);                           \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  return NS_NOINTERFACE;                                                      \
+}
 
-#define NS_IMPL_IHTMLCONTENT_USING_GENERIC(_g)                         \
-  NS_IMETHOD Compact() {                                               \
-    return _g.Compact();                                               \
-  }                                                                    \
-  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,                     \
-                              const nsHTMLValue& aValue, PRBool aNotify) { \
-    return _g.SetHTMLAttribute(aAttribute, aValue, aNotify);           \
-  }                                                                    \
-  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,                     \
-                              nsHTMLValue& aValue) const {             \
-    return _g.GetHTMLAttribute(aAttribute, aValue);                    \
-  }                                                                    \
-  NS_IMETHOD GetID(nsIAtom*& aResult) const {                          \
-    return _g.GetID(aResult);                                          \
-  }                                                                    \
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const {                   \
-    return _g.GetClasses(aArray);                                      \
-  }                                                                    \
-  NS_IMETHOD HasClass(nsIAtom* aClass) const {                         \
-    return _g.HasClass(aClass);                                        \
-  }                                                                    \
-  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules) {          \
-    return _g.GetContentStyleRules(aRules);                            \
-  }                                                                    \
-  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules) {           \
-    return _g.GetInlineStyleRules(aRules);                             \
-  }                                                                    \
-  NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const {                     \
-    return _g.GetBaseURL(aBaseURL);                                    \
-  }                                                                    \
-  NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const {              \
-    return _g.GetBaseTarget(aBaseTarget);                              \
-  }                                                                    \
-  NS_IMETHOD ToHTMLString(nsAWritableString& aResult) const {                   \
-    return _g.ToHTMLString(aResult);                                   \
-  }                                                                    \
-  NS_IMETHOD ToHTML(FILE* out) const {                                 \
-    return _g.ToHTML(out);                                             \
-  }                                                                    \
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
-                               const nsAReadableString& aValue,                 \
-                               nsHTMLValue& aResult);                  \
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
-                               const nsHTMLValue& aValue,              \
-                               nsAWritableString& aResult) const;               \
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,  \
-                                          nsMapAttributesFunc& aMapFunc) const;  \
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,       \
-                                      PRInt32& aHint) const;
-  
-#define NS_IMPL_IHTMLCONTENT_USING_GENERIC2(_g)                        \
-  NS_IMETHOD Compact() {                                               \
-    return _g.Compact();                                               \
-  }                                                                    \
-  NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,                     \
-                              const nsHTMLValue& aValue, PRBool aNotify) { \
-    return _g.SetHTMLAttribute(aAttribute, aValue, aNotify);           \
-  }                                                                    \
-  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,                     \
-                              nsHTMLValue& aValue) const {             \
-    return _g.GetHTMLAttribute(aAttribute, aValue);                    \
-  }                                                                    \
-  NS_IMETHOD GetID(nsIAtom*& aResult) const {                          \
-    return _g.GetID(aResult);                                          \
-  }                                                                    \
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const {                   \
-    return _g.GetClasses(aArray);                                      \
-  }                                                                    \
-  NS_IMETHOD HasClass(nsIAtom* aClass) const {                         \
-    return _g.HasClass(aClass);                                        \
-  }                                                                    \
-  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);           \
-  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);            \
-  NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const {                     \
-    return _g.GetBaseURL(aBaseURL);                                    \
-  }                                                                    \
-  NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const {              \
-    return _g.GetBaseTarget(aBaseTarget);                              \
-  }                                                                    \
-  NS_IMETHOD ToHTMLString(nsAWritableString& aResult) const {                   \
-    return _g.ToHTMLString(aResult);                                   \
-  }                                                                    \
-  NS_IMETHOD ToHTML(FILE* out) const {                                 \
-    return _g.ToHTML(out);                                             \
-  }                                                                    \
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
-                               const nsAReadableString& aValue,                 \
-                               nsHTMLValue& aResult);                  \
-  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
-                               const nsHTMLValue& aValue,              \
-                               nsAWritableString& aResult) const;               \
-  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, \
-                                          nsMapAttributesFunc& aMapFunc) const;  \
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,       \
-                                      PRInt32& aHint) const;
+#define NS_IMPL_HTMLCONTENT_QI(_class, _base, _if)                            \
+nsresult                                                                      \
+_class::QueryInterface(REFNSIID aIID, void** aInstancePtr)                    \
+{                                                                             \
+  NS_ENSURE_ARG_POINTER(aInstancePtr);                                        \
+                                                                              \
+  *aInstancePtr = nsnull;                                                     \
+                                                                              \
+  nsresult rv;                                                                \
+                                                                              \
+  rv = _base::QueryInterface(aIID, aInstancePtr);                             \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  rv = DOMQueryInterface(this, aIID, aInstancePtr);                           \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  nsISupports *inst = nsnull;                                                 \
+                                                                              \
+  if (aIID.Equals(NS_GET_IID(_if))) {                                         \
+    inst = NS_STATIC_CAST(_if *, this);                                       \
+  } else {                                                                    \
+    return NS_NOINTERFACE;                                                    \
+  }                                                                           \
+                                                                              \
+  NS_ADDREF(inst);                                                            \
+                                                                              \
+  *aInstancePtr = inst;                                                       \
+                                                                              \
+  return NS_OK;                                                               \
+}
 
-/**
- * This macro implements the portion of query interface that is
- * generic to all html content objects.
- */
-#define NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(_id, _iptr, _this) \
-  NS_IMPL_CONTENT_QUERY_INTERFACE(_id, _iptr, _this, nsIHTMLContent) \
-  if (_id.Equals(NS_GET_IID(nsIDOMHTMLElement))) {              \
-    nsIDOMHTMLElement* tmp = _this;                             \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }                                                             \
-  if (_id.Equals(NS_GET_IID(nsIHTMLContent))) {                 \
-    nsIHTMLContent* tmp = _this;                                \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }                                                             \
-  if (_id.Equals(NS_GET_IID(nsIStyledContent))) {               \
-    nsIStyledContent* tmp = _this;                              \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }
+#define NS_IMPL_HTMLCONTENT_QI2(_class, _base, _if1, _if2)                    \
+nsresult                                                                      \
+_class::QueryInterface(REFNSIID aIID, void** aInstancePtr)                    \
+{                                                                             \
+  NS_ENSURE_ARG_POINTER(aInstancePtr);                                        \
+                                                                              \
+  *aInstancePtr = nsnull;                                                     \
+                                                                              \
+  nsresult rv;                                                                \
+                                                                              \
+  rv = _base::QueryInterface(aIID, aInstancePtr);                             \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  rv = DOMQueryInterface(this, aIID, aInstancePtr);                           \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  nsISupports *inst = nsnull;                                                 \
+                                                                              \
+  if (aIID.Equals(NS_GET_IID(_if1))) {                                        \
+    inst = NS_STATIC_CAST(_if1 *, this);                                      \
+  } else if (aIID.Equals(NS_GET_IID(_if2))) {                                 \
+    inst = NS_STATIC_CAST(_if2 *, this);                                      \
+  } else {                                                                    \
+    return NS_NOINTERFACE;                                                    \
+  }                                                                           \
+                                                                              \
+  NS_ADDREF(inst);                                                            \
+                                                                              \
+  *aInstancePtr = inst;                                                       \
+                                                                              \
+  return NS_OK;                                                               \
+}
+
+#define NS_IMPL_HTMLCONTENT_QI3(_class, _base, _if1, _if2, _if3)              \
+nsresult                                                                      \
+_class::QueryInterface(REFNSIID aIID, void** aInstancePtr)                    \
+{                                                                             \
+  NS_ENSURE_ARG_POINTER(aInstancePtr);                                        \
+                                                                              \
+  *aInstancePtr = nsnull;                                                     \
+                                                                              \
+  nsresult rv;                                                                \
+                                                                              \
+  rv = _base::QueryInterface(aIID, aInstancePtr);                             \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  rv = DOMQueryInterface(this, aIID, aInstancePtr);                           \
+                                                                              \
+  if (NS_SUCCEEDED(rv))                                                       \
+    return rv;                                                                \
+                                                                              \
+  nsISupports *inst = nsnull;                                                 \
+                                                                              \
+  if (aIID.Equals(NS_GET_IID(_if1))) {                                        \
+    inst = NS_STATIC_CAST(_if1 *, this);                                      \
+  } else if (aIID.Equals(NS_GET_IID(_if2))) {                                 \
+    inst = NS_STATIC_CAST(_if2 *, this);                                      \
+  } else if (aIID.Equals(NS_GET_IID(_if3))) {                                 \
+    inst = NS_STATIC_CAST(_if3 *, this);                                      \
+  } else {                                                                    \
+    return NS_NOINTERFACE;                                                    \
+  }                                                                           \
+                                                                              \
+  NS_ADDREF(inst);                                                            \
+                                                                              \
+  *aInstancePtr = inst;                                                       \
+                                                                              \
+  return NS_OK;                                                               \
+}
 
 /**
  * A macro to implement the getter and setter for a given string
@@ -685,13 +674,13 @@ public:
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAWritableString& aValue)                    \
   {                                                                  \
-    mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue); \
+    NS_STATIC_CAST(nsIHTMLContent *, this)->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue);     \
     return NS_OK;                                                    \
   }                                                                  \
   NS_IMETHODIMP                                                      \
   _class::Set##_method(const nsAReadableString& aValue)              \
   {                                                                  \
-    return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue, PR_TRUE); \
+    return NS_STATIC_CAST(nsIHTMLContent *, this)->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue, PR_TRUE); \
   }
 
 /**
@@ -704,7 +693,8 @@ public:
   _class::Get##_method(PRBool* aValue)                                \
   {                                                                   \
     nsHTMLValue val;                                                  \
-    nsresult rv = mInner.GetHTMLAttribute(nsHTMLAtoms::_atom, val);   \
+    nsresult rv;                                                      \
+    rv = NS_STATIC_CAST(nsIHTMLContent *, this)->GetHTMLAttribute(nsHTMLAtoms::_atom, val); \
     *aValue = NS_CONTENT_ATTR_NOT_THERE != rv;                        \
     return NS_OK;                                                     \
   }                                                                   \
@@ -713,10 +703,10 @@ public:
   {                                                                   \
     nsHTMLValue empty(eHTMLUnit_Empty);                               \
     if (aValue) {                                                     \
-      return mInner.SetHTMLAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE); \
+      return NS_STATIC_CAST(nsIHTMLContent *, this)->SetHTMLAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE); \
     }                                                                 \
     else {                                                            \
-      mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, PR_TRUE);  \
+      NS_STATIC_CAST(nsIHTMLContent *, this)->UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, PR_TRUE);  \
       return NS_OK;                                                   \
     }                                                                 \
   }
@@ -733,7 +723,7 @@ public:
     nsHTMLValue value;                                              \
     *aValue = -1;                                                   \
     if (NS_CONTENT_ATTR_HAS_VALUE ==                                \
-        mInner.GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {       \
+        NS_STATIC_CAST(nsIHTMLContent *, this)->GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {       \
       if (value.GetUnit() == eHTMLUnit_Integer) {                   \
         *aValue = value.GetIntValue();                              \
       }                                                             \
@@ -744,7 +734,7 @@ public:
   _class::Set##_method(PRInt32 aValue)                              \
   {                                                                 \
     nsHTMLValue value(aValue, eHTMLUnit_Integer);                   \
-    return mInner.SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE); \
+    return NS_STATIC_CAST(nsIHTMLContent *, this)->SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE); \
   }
 
 #endif /* nsGenericHTMLElement_h___ */

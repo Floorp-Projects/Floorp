@@ -33,40 +33,29 @@
 #include "nsITextContent.h"
 
 
-class nsHTMLScriptElement : public nsIDOMHTMLScriptElement,
-                     public nsIJSScriptObject,
-                     public nsIHTMLContent
+class nsHTMLScriptElement : public nsGenericHTMLContainerElement,
+                            public nsIDOMHTMLScriptElement
 {
 public:
-  nsHTMLScriptElement(nsINodeInfo *aNodeInfo);
+  nsHTMLScriptElement();
   virtual ~nsHTMLScriptElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLScriptElement
   NS_DECL_IDOMHTMLSCRIPTELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLContainerElement mInner;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -74,53 +63,70 @@ NS_NewHTMLScriptElement(nsIHTMLContent** aInstancePtrResult,
                         nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLScriptElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLScriptElement* it = new nsHTMLScriptElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLScriptElement::nsHTMLScriptElement(nsINodeInfo *aNodeInfo)
+nsHTMLScriptElement::nsHTMLScriptElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLScriptElement::~nsHTMLScriptElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLScriptElement)
 
-NS_IMPL_RELEASE(nsHTMLScriptElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLScriptElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLScriptElement, nsGenericElement) 
 
-nsresult
-nsHTMLScriptElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLScriptElement))) {
-    nsIDOMHTMLScriptElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLScriptElement, nsGenericHTMLContainerElement,
+                       nsIDOMHTMLScriptElement);
+
 
 nsresult
 nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLScriptElement* it = new nsHTMLScriptElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLScriptElement* it = new nsHTMLScriptElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -191,7 +197,7 @@ NS_IMETHODIMP
 nsHTMLScriptElement::GetHtmlFor(nsAWritableString& aValue)
 {
   // XXX write me
-//  mInner.GetAttribute(nsHTMLAtoms::charset, aValue);
+//  GetAttribute(nsHTMLAtoms::charset, aValue);
   return NS_OK;
 }
 
@@ -199,7 +205,7 @@ NS_IMETHODIMP
 nsHTMLScriptElement::SetHtmlFor(const nsAReadableString& aValue)
 {
   // XXX write me
-//  return mInner.SetAttr(nsHTMLAtoms::charset, aValue);
+//  return SetAttr(nsHTMLAtoms::charset, aValue);
   return NS_OK;
 }
 
@@ -207,7 +213,7 @@ NS_IMETHODIMP
 nsHTMLScriptElement::GetEvent(nsAWritableString& aValue)
 {
   // XXX write me
-//  mInner.GetAttribute(nsHTMLAtoms::charset, aValue);
+//  GetAttribute(nsHTMLAtoms::charset, aValue);
   return NS_OK;
 }
 
@@ -215,7 +221,7 @@ NS_IMETHODIMP
 nsHTMLScriptElement::SetEvent(const nsAReadableString& aValue)
 {
   // XXX write me
-//  return mInner.SetAttr(nsHTMLAtoms::charset, aValue);
+//  return SetAttr(nsHTMLAtoms::charset, aValue);
   return NS_OK;
 }
 
@@ -224,69 +230,11 @@ NS_IMPL_BOOL_ATTR(nsHTMLScriptElement, Defer, defer)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Type, type)
 
-NS_IMETHODIMP
-nsHTMLScriptElement::StringToAttribute(nsIAtom* aAttribute,
-                                const nsAReadableString& aValue,
-                                nsHTMLValue& aResult)
-{
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-NS_IMETHODIMP
-nsHTMLScriptElement::AttributeToString(nsIAtom* aAttribute,
-                                const nsHTMLValue& aValue,
-                                nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLScriptElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                              PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLScriptElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                  nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLScriptElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                             nsEvent* aEvent,
-                             nsIDOMEvent** aDOMEvent,
-                             PRUint32 aFlags,
-                             nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
 
 NS_IMETHODIMP
 nsHTMLScriptElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-#ifdef DEBUG
-  mInner.SizeOf(aSizer, aResult, sizeof(*this));
-#endif
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
   return NS_OK;
 }

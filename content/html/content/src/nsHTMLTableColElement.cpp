@@ -34,44 +34,43 @@
 #include "nsIPresContext.h"
 
 
-class nsHTMLTableColElement :  public nsIDOMHTMLTableColElement,
-                               public nsIHTMLTableColElement,
-                               public nsIJSScriptObject,
-                               public nsIHTMLContent
+class nsHTMLTableColElement : public nsGenericHTMLContainerElement,
+                              public nsIDOMHTMLTableColElement,
+                              public nsIHTMLTableColElement
 {
 public:
-  nsHTMLTableColElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTableColElement();
   virtual ~nsHTMLTableColElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLTableColElement
   NS_DECL_IDOMHTMLTABLECOLELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
   // nsIHTMLTableColElement
   NS_IMETHOD GetSpanValue(PRInt32* aSpan);
 
-protected:
-  nsGenericHTMLContainerElement mInner;
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -79,60 +78,74 @@ NS_NewHTMLTableColElement(nsIHTMLContent** aInstancePtrResult,
                           nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLTableColElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLTableColElement* it = new nsHTMLTableColElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLTableColElement::nsHTMLTableColElement(nsINodeInfo *aNodeInfo)
+nsHTMLTableColElement::nsHTMLTableColElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLTableColElement::~nsHTMLTableColElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLTableColElement)
 
-NS_IMPL_RELEASE(nsHTMLTableColElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableColElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableColElement, nsGenericElement) 
 
-nsresult
-nsHTMLTableColElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableColElement))) {
-    nsIDOMHTMLTableColElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIHTMLTableColElement))) {
-    nsIHTMLTableColElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI2(nsHTMLTableColElement,
+                        nsGenericHTMLContainerElement,
+                        nsIDOMHTMLTableColElement,
+                        nsIHTMLTableColElement);
+
 
 nsresult
 nsHTMLTableColElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTableColElement* it = new nsHTMLTableColElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLTableColElement* it = new nsHTMLTableColElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Ch, _char)
@@ -141,51 +154,51 @@ NS_IMPL_INT_ATTR(nsHTMLTableColElement, Span, span)
 NS_IMPL_STRING_ATTR(nsHTMLTableColElement, VAlign, valign)
 NS_IMPL_STRING_ATTR(nsHTMLTableColElement, Width, width)
 
+
 NS_IMETHODIMP
 nsHTMLTableColElement::StringToAttribute(nsIAtom* aAttribute,
-                                  const nsAReadableString& aValue,
-                                  nsHTMLValue& aResult)
+                                         const nsAReadableString& aValue,
+                                         nsHTMLValue& aResult)
 {
-  /* ignore these attributes, stored simply as strings
-     ch
-   */
+  /* ignore these attributes, stored simply as strings ch */
   /* attributes that resolve to integers */
   if (aAttribute == nsHTMLAtoms::choff) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::span) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* attributes that resolve to integers or percents or proportions */
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+    /* attributes that resolve to integers or percents or proportions */
+
+    if (ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* other attributes */
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (mInner.ParseTableCellHAlignValue(aValue, aResult)) {
+    /* other attributes */
+
+    if (ParseTableCellHAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
-    if (nsGenericHTMLElement::ParseTableVAlignValue(aValue, aResult)) {
+    if (ParseTableVAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
-                                  const nsHTMLValue& aValue,
-                                  nsAWritableString& aResult) const
+                                         const nsHTMLValue& aValue,
+                                         nsAWritableString& aResult) const
 {
   /* ignore these attributes, stored already as strings
      ch
@@ -194,21 +207,23 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
      choff, span
    */
   if (aAttribute == nsHTMLAtoms::align) {
-    if (mInner.TableCellHAlignValueToString(aValue, aResult)) {
+    if (TableCellHAlignValueToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
-    if (nsGenericHTMLElement::TableVAlignValueToString(aValue, aResult)) {
+    if (TableVAlignValueToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (nsGenericHTMLElement::ValueOrPercentOrProportionalToString(aValue, aResult)) {
+    if (ValueOrPercentOrProportionalToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
+                                                          aResult);
 }
 
 static void
@@ -218,16 +233,18 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
-  if (nsnull != aAttributes) {
 
+  if (aAttributes) {
     nsHTMLValue value;
     nsStyleText* textStyle = nsnull;
 
     // width
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+
     if (value.GetUnit() != eHTMLUnit_Null) {
       nsStylePosition* position = (nsStylePosition*)
         aContext->GetMutableStyleData(eStyleStruct_Position);
+
       switch (value.GetUnit()) {
       case eHTMLUnit_Percent:
         position->mWidth.SetPercentValue(value.GetPercentValue());
@@ -249,31 +266,30 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 
     // align: enum
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) 
-    {
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
       textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
       textStyle->mTextAlign = value.GetIntValue();
     }
     
     // valign: enum
     aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) 
-    {
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
       if (nsnull==textStyle)
         textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(),
+                                            eStyleUnit_Enumerated);
     }
 
     // span: int
     aAttributes->GetAttribute(nsHTMLAtoms::span, value);
-    if (value.GetUnit() == eHTMLUnit_Integer)
-    {
+    if (value.GetUnit() == eHTMLUnit_Integer) {
       nsStyleTable *tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
       tableStyle->mSpan = value.GetIntValue();
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
@@ -286,7 +302,7 @@ nsHTMLTableColElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::span)) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
   }
 
@@ -304,33 +320,26 @@ nsHTMLTableColElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMa
 }
 
 
-NS_IMETHODIMP
-nsHTMLTableColElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                               nsEvent* aEvent,
-                               nsIDOMEvent** aDOMEvent,
-                               PRUint32 aFlags,
-                               nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
 NS_METHOD nsHTMLTableColElement::GetSpanValue(PRInt32* aSpan)
 {
-  if (nsnull!=aSpan)
-  {
+  if (nsnull!=aSpan) {
     PRInt32 span=-1;
     GetSpan(&span);
+
     if (-1==span)
       span=1; // the default;
+
     *aSpan = span;
   }
+
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsHTMLTableColElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
+nsHTMLTableColElement::SizeOf(nsISizeOfHandler* aSizer,
+                              PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

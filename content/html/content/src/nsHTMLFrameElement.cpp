@@ -38,44 +38,39 @@
 #include "nsDOMError.h"
 
 
-class nsHTMLFrameElement : public nsIDOMHTMLFrameElement,
-                           public nsIJSScriptObject,
-                           public nsIHTMLContent,
+class nsHTMLFrameElement : public nsGenericHTMLLeafElement,
+                           public nsIDOMHTMLFrameElement,
                            public nsIChromeEventHandler
 {
 public:
-  nsHTMLFrameElement(nsINodeInfo *aNodeInfo);
+  nsHTMLFrameElement();
   virtual ~nsHTMLFrameElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLFrameElement
   NS_DECL_IDOMHTMLFRAMEELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
   // nsIChromeEventHandler
   NS_DECL_NSICHROMEEVENTHANDLER
 
-protected:
-  nsGenericHTMLLeafElement mInner;
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -83,59 +78,72 @@ NS_NewHTMLFrameElement(nsIHTMLContent** aInstancePtrResult,
                        nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLFrameElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLFrameElement* it = new nsHTMLFrameElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLFrameElement::nsHTMLFrameElement(nsINodeInfo *aNodeInfo)
+nsHTMLFrameElement::nsHTMLFrameElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLFrameElement::~nsHTMLFrameElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLFrameElement)
 
-NS_IMPL_RELEASE(nsHTMLFrameElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLFrameElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLFrameElement, nsGenericElement);
 
-nsresult
-nsHTMLFrameElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLFrameElement))) {
-    nsIDOMHTMLFrameElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIChromeEventHandler))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIChromeEventHandler*, this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI2(nsHTMLFrameElement, nsGenericHTMLLeafElement,
+                        nsIDOMHTMLFrameElement, nsIChromeEventHandler);
+
 
 nsresult
 nsHTMLFrameElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLFrameElement* it = new nsHTMLFrameElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLFrameElement* it = new nsHTMLFrameElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLFrameElement, FrameBorder, frameborder)
 NS_IMPL_STRING_ATTR(nsHTMLFrameElement, LongDesc, longdesc)
@@ -154,11 +162,11 @@ nsHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 
   *aContentDocument = nsnull;
 
-  NS_ENSURE_TRUE(mInner.mDocument, NS_OK);
+  NS_ENSURE_TRUE(mDocument, NS_OK);
 
   nsCOMPtr<nsIPresShell> presShell;
 
-  presShell = dont_AddRef(mInner.mDocument->GetShellAt(0));
+  presShell = dont_AddRef(mDocument->GetShellAt(0));
   NS_ENSURE_TRUE(presShell, NS_OK);
 
   nsCOMPtr<nsISupports> tmp;
@@ -192,25 +200,23 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    if (nsGenericHTMLElement::ParseColor(aValue, mInner.mDocument, aResult)) {
+    if (ParseColor(aValue, mDocument, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
-  } 
+  }
   else if (aAttribute == nsHTMLAtoms::frameborder) {
     // XXX need to check for correct mode
-    if (nsGenericHTMLElement::ParseFrameborderValue(PR_FALSE, aValue, aResult)) {
+    if (ParseFrameborderValue(PR_FALSE, aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
-  } 
+  }
   else if (aAttribute == nsHTMLAtoms::marginwidth) {
-    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                                  eHTMLUnit_Pixel)) {
+    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::marginheight) {
-    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                                  eHTMLUnit_Pixel)) {
+    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -219,10 +225,11 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::scrolling) {
-    if (nsGenericHTMLElement::ParseScrollingValue(PR_FALSE, aValue, aResult)) {
+    if (ParseScrollingValue(PR_FALSE, aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -232,70 +239,37 @@ nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
                                       nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::frameborder) {
-    nsGenericHTMLElement::FrameborderValueToString(PR_FALSE, aValue, aResult);
+    FrameborderValueToString(PR_FALSE, aValue, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   } 
   else if (aAttribute == nsHTMLAtoms::scrolling) {
-    nsGenericHTMLElement::ScrollingValueToString(PR_FALSE, aValue, aResult);
+    ScrollingValueToString(PR_FALSE, aValue, aResult);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLLeafElement::AttributeToString(aAttribute, aValue,
+                                                     aResult);
 }
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLFrameElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                             PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLFrameElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                 nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFrameElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                   nsEvent* aEvent,
-                                   nsIDOMEvent** aDOMEvent,
-                                   PRUint32 aFlags,
-                                   nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
 
 NS_IMETHODIMP
 nsHTMLFrameElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }
+
 
 //*****************************************************************************
 // nsHTMLFrameElement::nsIChromeEventHandler
 //*****************************************************************************   
 
-NS_IMETHODIMP nsHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
-   nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
-   nsEventStatus* aEventStatus)
+NS_IMETHODIMP
+nsHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
+                                      nsEvent* aEvent,
+                                      nsIDOMEvent** aDOMEvent,
+                                      PRUint32 aFlags, 
+                                      nsEventStatus* aEventStatus)
 {
-   return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
+  return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
 }

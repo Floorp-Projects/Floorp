@@ -35,40 +35,29 @@
 #include "nsIDOMHTMLDocument.h"
 
 
-class nsHTMLTitleElement : public nsIDOMHTMLTitleElement,
-                           public nsIJSScriptObject,
-                           public nsIHTMLContent
+class nsHTMLTitleElement : public nsGenericHTMLContainerElement,
+                           public nsIDOMHTMLTitleElement
 {
 public:
-  nsHTMLTitleElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTitleElement();
   virtual ~nsHTMLTitleElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLTitleElement
   NS_DECL_IDOMHTMLTITLEELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLContainerElement mInner;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -76,116 +65,87 @@ NS_NewHTMLTitleElement(nsIHTMLContent** aInstancePtrResult,
                        nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLTitleElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLTitleElement* it = new nsHTMLTitleElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLTitleElement::nsHTMLTitleElement(nsINodeInfo *aNodeInfo)
+nsHTMLTitleElement::nsHTMLTitleElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLTitleElement::~nsHTMLTitleElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLTitleElement)
 
-NS_IMPL_RELEASE(nsHTMLTitleElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLTitleElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLTitleElement, nsGenericElement) 
 
-nsresult
-nsHTMLTitleElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTitleElement))) {
-    nsIDOMHTMLTitleElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLTitleElement,
+                       nsGenericHTMLContainerElement,
+                       nsIDOMHTMLTitleElement);
+
 
 nsresult
 nsHTMLTitleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTitleElement* it = new nsHTMLTitleElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLTitleElement* it = new nsHTMLTitleElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
-}
 
-NS_IMETHODIMP
-nsHTMLTitleElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAReadableString& aValue,
-                                      nsHTMLValue& aResult)
-{
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
+  nsresult rv = it->Init(mNodeInfo);
 
-NS_IMETHODIMP
-nsHTMLTitleElement::AttributeToString(nsIAtom* aAttribute,
-                                      const nsHTMLValue& aValue,
-                                      nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
+  if (NS_FAILED(rv))
+    return rv;
 
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
+  CopyInnerTo(this, it, aDeep);
 
-NS_IMETHODIMP
-nsHTMLTitleElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                             PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsHTMLTitleElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                 nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP 
 nsHTMLTitleElement::GetText(nsAWritableString& aTitle)
 {
   nsresult result = NS_OK;
-  nsIDOMNode* child;
+  nsCOMPtr<nsIDOMNode> child;
 
-  result = GetFirstChild(&child);
-  if ((NS_OK == result) && (nsnull != child)) {
-    nsIDOMText* text;
-    
-    result = child->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&text);
-    if (NS_OK == result) {
+  result = GetFirstChild(getter_AddRefs(child));
+
+  if ((NS_OK == result) && child) {
+    nsCOMPtr<nsIDOMText> text(do_QueryInterface(child));
+
+    if (text) {
       text->GetData(aTitle);
-      NS_RELEASE(text);
     }
-    NS_RELEASE(child);
   }
 
   return result;
@@ -195,47 +155,36 @@ NS_IMETHODIMP
 nsHTMLTitleElement::SetText(const nsAReadableString& aTitle)
 {
   nsresult result = NS_OK;
-  nsIDOMNode* child;
-  nsIDocument* document;
+  nsCOMPtr<nsIDOMNode> child;
+  nsCOMPtr<nsIDocument> document;
 
-  result = GetDocument(document);
+  result = GetDocument(*getter_AddRefs(document));
+
   if (NS_OK == result) {
     nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(document));
+
     if (htmlDoc) {
       htmlDoc->SetTitle(aTitle);
     }   
-    NS_RELEASE(document);
   }
 
-  result = GetFirstChild(&child);
-  if ((NS_OK == result) && (nsnull != child)) {
-    nsIDOMText* text;
+  result = GetFirstChild(getter_AddRefs(child));
+
+  if ((NS_OK == result) && child) {
+    nsCOMPtr<nsIDOMText> text(do_QueryInterface(child));
     
-    result = child->QueryInterface(NS_GET_IID(nsIDOMText), (void**)&text);
-    if (NS_OK == result) {
+    if (text) {
       text->SetData(aTitle);
-      NS_RELEASE(text);
     }
-    NS_RELEASE(child);
   }
 
   return result;
 }
 
 NS_IMETHODIMP
-nsHTMLTitleElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                   nsEvent* aEvent,
-                                   nsIDOMEvent** aDOMEvent,
-                                   PRUint32 aFlags,
-                                   nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-
-NS_IMETHODIMP
 nsHTMLTitleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

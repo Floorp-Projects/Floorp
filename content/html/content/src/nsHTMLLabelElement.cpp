@@ -42,123 +42,125 @@
 #include "nsIPresShell.h"
 
 
-class nsHTMLLabelElement : public nsIDOMHTMLLabelElement,
-                  public nsIJSScriptObject,
-                  public nsIHTMLContent,
-                  public nsIFormControl
-
+class nsHTMLLabelElement : public nsGenericHTMLContainerFormElement,
+                           public nsIDOMHTMLLabelElement
 {
 public:
-  nsHTMLLabelElement(nsINodeInfo *aNodeInfo);
+  nsHTMLLabelElement();
   virtual ~nsHTMLLabelElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMElement, because of the "htmlFor" attribute handling we can't
-  // use the NS_IMPL_IDOMELEMENT_USING_GENERIC macro here...
+  // use the NS_FORWARD_IDOMHTMLELEMENT macro here...
   NS_IMETHOD GetTagName(nsAWritableString& aTagName) {
-    return mInner.GetTagName(aTagName);
+    return nsGenericHTMLContainerFormElement::GetTagName(aTagName);
   }
-  NS_IMETHOD GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn) {
+  NS_IMETHOD GetAttribute(const nsAReadableString& aName,
+                          nsAWritableString& aReturn) {
     nsAutoString name(aName);
     if (name.EqualsIgnoreCase("htmlfor")) {
-      return mInner.GetAttribute(NS_LITERAL_STRING("for"), aReturn);
+      return nsGenericHTMLContainerFormElement::GetAttribute(NS_LITERAL_STRING("for"), aReturn);
     }
-    return mInner.GetAttribute(aName, aReturn);
+    return nsGenericHTMLContainerFormElement::GetAttribute(aName, aReturn);
   }
-  NS_IMETHOD SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue) {
+  NS_IMETHOD SetAttribute(const nsAReadableString& aName,
+                          const nsAReadableString& aValue) {
     nsAutoString name(aName);
     if (name.EqualsIgnoreCase("htmlfor")) {
-      return mInner.SetAttribute(NS_LITERAL_STRING("for"), aValue);
+      return nsGenericHTMLContainerElement::SetAttribute(NS_LITERAL_STRING("for"), aValue);
     }
-    return mInner.SetAttribute(aName, aValue);
+    return nsGenericHTMLContainerElement::SetAttribute(aName, aValue);
   }
   NS_IMETHOD RemoveAttribute(const nsAReadableString& aName) {
     nsAutoString name(aName);
     if (name.EqualsIgnoreCase("htmlfor")) {
-      return mInner.RemoveAttribute(NS_LITERAL_STRING("for"));
+      return nsGenericHTMLContainerFormElement::RemoveAttribute(NS_LITERAL_STRING("for"));
     }
-    return mInner.RemoveAttribute(aName);
+    return nsGenericHTMLContainerFormElement::RemoveAttribute(aName);
   }
   NS_IMETHOD GetAttributeNode(const nsAReadableString& aName,
                               nsIDOMAttr** aReturn) {
     nsAutoString name(aName);
     if (name.EqualsIgnoreCase("htmlfor")) {
-      return mInner.GetAttributeNode(NS_LITERAL_STRING("for"), aReturn);
+      return nsGenericHTMLContainerFormElement::GetAttributeNode(NS_LITERAL_STRING("for"), aReturn);
     }
-    return mInner.GetAttributeNode(aName, aReturn);
+    return nsGenericHTMLContainerFormElement::GetAttributeNode(aName, aReturn);
   }
   NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
-    return mInner.SetAttributeNode(aNewAttr, aReturn);
+    return nsGenericHTMLContainerFormElement::SetAttributeNode(aNewAttr, aReturn);
   }
   NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
-    return mInner.RemoveAttributeNode(aOldAttr, aReturn);
+    return nsGenericHTMLContainerFormElement::RemoveAttributeNode(aOldAttr, aReturn);
   }
   NS_IMETHOD GetElementsByTagName(const nsAReadableString& aTagname,
                                   nsIDOMNodeList** aReturn) {
-    return mInner.GetElementsByTagName(aTagname, aReturn);
+    return nsGenericHTMLContainerFormElement::GetElementsByTagName(aTagname,
+                                                                   aReturn);
   }
   NS_IMETHOD GetAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName, nsAWritableString& aReturn) {
-    return mInner.GetAttributeNS(aNamespaceURI, aLocalName, aReturn);
+                            const nsAReadableString& aLocalName,
+                            nsAWritableString& aReturn) {
+    return nsGenericHTMLContainerFormElement::GetAttributeNS(aNamespaceURI,
+                                                             aLocalName,
+                                                             aReturn);
   }
   NS_IMETHOD SetAttributeNS(const nsAReadableString& aNamespaceURI,
                             const nsAReadableString& aQualifiedName,
                             const nsAReadableString& aValue) {
-    return mInner.SetAttributeNS(aNamespaceURI, aQualifiedName, aValue);
+    return nsGenericHTMLContainerFormElement::SetAttributeNS(aNamespaceURI,
+                                                             aQualifiedName,
+                                                             aValue);
   }
   NS_IMETHOD RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
                                const nsAReadableString& aLocalName) {
-    return mInner.RemoveAttributeNS(aNamespaceURI, aLocalName);
+    return nsGenericHTMLContainerFormElement::RemoveAttributeNS(aNamespaceURI,
+                                                                aLocalName);
   }
   NS_IMETHOD GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
                                 const nsAReadableString& aLocalName,
                                 nsIDOMAttr** aReturn) {
-    return mInner.GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn);
+    return nsGenericHTMLContainerFormElement::GetAttributeNodeNS(aNamespaceURI,
+                                                                 aLocalName,
+                                                                 aReturn);
   }
   NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
-    return mInner.SetAttributeNodeNS(aNewAttr, aReturn);
+    return nsGenericHTMLContainerFormElement::SetAttributeNodeNS(aNewAttr,
+                                                                 aReturn);
   }
   NS_IMETHOD GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
                                     const nsAReadableString& aLocalName,
                                     nsIDOMNodeList** aReturn) {
-    return mInner.GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
+    return nsGenericHTMLContainerFormElement::GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
   }
   NS_IMETHOD HasAttribute(const nsAReadableString& aName, PRBool* aReturn) {
     return HasAttribute(aName, aReturn);
   }
   NS_IMETHOD HasAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName, PRBool* aReturn) {
-    return mInner.HasAttributeNS(aNamespaceURI, aLocalName, aReturn);
+                            const nsAReadableString& aLocalName,
+                            PRBool* aReturn) {
+    return nsGenericHTMLContainerFormElement::HasAttributeNS(aNamespaceURI,
+                                                             aLocalName,
+                                                             aReturn);
   }
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerFormElement::)
 
   // nsIDOMHTMLLabelElement
   NS_DECL_IDOMHTMLLABELELEMENT
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
-
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
   // nsIFormControl
-  NS_IMETHOD GetType(PRInt32* aType) { return NS_FORM_LABEL; }
-  NS_IMETHOD Init() { return NS_OK; }
+  NS_IMETHOD GetType(PRInt32* aType);
 
-protected:
-  nsGenericHTMLContainerFormElement mInner;
-  nsIForm*                          mForm;
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
+                            nsEventStatus* aEventStatus);
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 // construction, destruction
@@ -167,21 +169,30 @@ NS_NewHTMLLabelElement(nsIHTMLContent** aInstancePtrResult,
                        nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLLabelElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLLabelElement* it = new nsHTMLLabelElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLLabelElement::nsHTMLLabelElement(nsINodeInfo *aNodeInfo)
+nsHTMLLabelElement::nsHTMLLabelElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
-  mForm = nsnull;
 }
 
 nsHTMLLabelElement::~nsHTMLLabelElement()
@@ -192,112 +203,61 @@ nsHTMLLabelElement::~nsHTMLLabelElement()
 
 // nsISupports 
 
-NS_IMPL_ADDREF(nsHTMLLabelElement)
-NS_IMPL_RELEASE(nsHTMLLabelElement)
 
-nsresult
-nsHTMLLabelElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLLabelElement))) {
-    *aInstancePtr = (void*)(nsIDOMHTMLLabelElement*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
-    *aInstancePtr = (void*)(nsIFormControl*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ADDREF_INHERITED(nsHTMLLabelElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLLabelElement, nsGenericElement) 
+
+NS_IMPL_HTMLCONTENT_QI(nsHTMLLabelElement, nsGenericHTMLContainerFormElement,
+                       nsIDOMHTMLLabelElement);
+
 
 // nsIDOMHTMLLabelElement
 
 nsresult
 nsHTMLLabelElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLLabelElement* it = new nsHTMLLabelElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLLabelElement* it = new nsHTMLLabelElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
-}
 
-// nsIContent
+  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(mNodeInfo);
 
-NS_IMETHODIMP
-nsHTMLLabelElement::SetParent(nsIContent* aParent)
-{
-  return mInner.SetParentForFormControls(aParent, this, mForm);
-}
+  if (NS_FAILED(rv))
+    return rv;
 
-NS_IMETHODIMP
-nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
-{
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLLabelElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  nsresult result = NS_OK;
-  *aForm = nsnull;
-  if (nsnull != mForm) {
-    nsIDOMHTMLFormElement* formElem = nsnull;
-    result = mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&formElem);
-    if (NS_OK == result) {
-      *aForm = formElem;
-    }
-  }
-  return result;
+  return nsGenericHTMLContainerFormElement::GetForm(aForm);
 }
+
+
+// nsIFormControl
 
 NS_IMETHODIMP
-nsHTMLLabelElement::SetForm(nsIDOMHTMLFormElement* aForm)
+nsHTMLLabelElement::GetType(PRInt32* aType)
 {
-  nsCOMPtr<nsIFormControl> formControl;
-  nsresult result = QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(formControl));
-  if (NS_FAILED(result)) formControl = nsnull;
+  *aType = NS_FORM_LABEL;
 
-  nsAutoString nameVal, idVal;
-  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
-
-  if (mForm && formControl) {
-    mForm->RemoveElement(formControl);
-
-    if (nameVal.Length())
-      mForm->RemoveElementFromTable(this, nameVal);
-
-    if (idVal.Length())
-      mForm->RemoveElementFromTable(this, idVal);
-  }
-
-  if (aForm) {
-    nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm, &result);
-    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
-    if ((NS_OK == result) && theForm) {
-      if (formControl) {
-        theForm->AddElement(formControl);
-
-        if (nameVal.Length())
-          theForm->AddElementToTable(this, nameVal);
-
-        if (idVal.Length())
-          theForm->AddElementToTable(this, idVal);
-      }
-    }
-  } else {
-    mForm = nsnull;
-  }
-
-  mInner.SetForm(mForm);
-
-  return result;
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
 //NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
@@ -305,7 +265,8 @@ NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
 NS_IMETHODIMP
 nsHTMLLabelElement::GetHtmlFor(nsAWritableString& aValue)
 {
-  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_for, aValue);                 
+  nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_HTML,
+                                                  nsHTMLAtoms::_for, aValue);
   return NS_OK;                                                    
 }  
 
@@ -316,52 +277,9 @@ nsHTMLLabelElement::SetHtmlFor(const nsAReadableString& aValue)
   static char whitespace[] = " \r\n\t";
   nsAutoString value(aValue);
   value.Trim(whitespace, PR_TRUE, PR_TRUE);
-  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_for, value, PR_TRUE);
-}
-
-NS_IMETHODIMP
-nsHTMLLabelElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAReadableString& aValue,
-                                      nsHTMLValue& aResult)
-{
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-NS_IMETHODIMP
-nsHTMLLabelElement::AttributeToString(nsIAtom* aAttribute,
-                                      const nsHTMLValue& aValue,
-                                      nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLLabelElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                             PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLLabelElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                 nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
+  return nsGenericHTMLContainerFormElement::SetAttribute(kNameSpaceID_HTML,
+                                                         nsHTMLAtoms::_for,
+                                                         value, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -372,8 +290,12 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
-  nsresult rv = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
+  nsresult rv;
+  rv = nsGenericHTMLContainerFormElement::HandleDOMEvent(aPresContext,
+                                                         aEvent,
+                                                         aDOMEvent,
+                                                         aFlags,
+                                                         aEventStatus);
 
   // Now a little special trickery because we are a label:
   // We need to pass this event on to our child iff it is a focus,
@@ -387,7 +309,8 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
       case NS_FOCUS_CONTENT:
 
 // Bug 49897: According to the spec, the following should not be passed
-// Bug 7554: Despite the spec, IE passes left click events, so for compatability:
+// Bug 7554: Despite the spec, IE passes left click events, so for
+// compatability:
       case NS_MOUSE_LEFT_CLICK:
 //      case NS_MOUSE_LEFT_DOUBLECLICK:
 //      case NS_MOUSE_LEFT_BUTTON_UP:
@@ -409,22 +332,17 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
         rv = GetHtmlFor(elementId);
         if (NS_SUCCEEDED(rv) && elementId.Length()) { // --- We have a FOR attr
           nsCOMPtr<nsIDocument> iDoc;
-          rv = mInner.GetDocument(*getter_AddRefs(iDoc));
+          rv = GetDocument(*getter_AddRefs(iDoc));
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIDOMElement> domElement;
-// XXX This should be merged into nsIDocument
-            nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(iDoc, &rv);
-            if (NS_SUCCEEDED(rv) && htmlDoc) {
-              rv = htmlDoc->GetElementById(elementId, getter_AddRefs(domElement));
+
+            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(iDoc));
+
+            if (domDoc) {
+              rv = domDoc->GetElementById(elementId,
+                                          getter_AddRefs(domElement));
             }
-#ifdef INCLUDE_XUL
-            else {
-              nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(iDoc, &rv);
-              if (NS_SUCCEEDED(rv) && xulDoc) {
-                rv = xulDoc->GetElementById(elementId, getter_AddRefs(domElement));
-              }
-            }
-#endif // INCLUDE_XUL
+
             if (NS_SUCCEEDED(rv) && domElement) {
               // Get our grubby paws on the content interface
               node = do_QueryInterface(domElement, &rv);
@@ -432,27 +350,35 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
               // Find out of this is a form element.
               if (NS_SUCCEEDED(rv)) {
                 nsIFormControlFrame* control;
-                nsresult gotFrame = nsGenericHTMLElement::GetPrimaryFrame(node, control);
+                nsresult gotFrame = GetPrimaryFrame(node, control);
                 isFormElement = NS_SUCCEEDED(gotFrame) && control;
               }
             }
           }
-        } else { // --- No FOR attribute, we are a label for our first child element
+        } else {
+          // --- No FOR attribute, we are a label for our first child
+          // element
           PRInt32 numNodes;
-          rv = mInner.ChildCount(numNodes);
+          rv = ChildCount(numNodes);
           if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIContent> contNode;
-	    PRInt32 i;
-            for (i = 0; NS_SUCCEEDED(rv) && !isFormElement && (i < numNodes); i++) {
+            PRInt32 i;
+            for (i = 0; NS_SUCCEEDED(rv) && !isFormElement && (i < numNodes);
+                 i++) {
               rv = ChildAt(i, *getter_AddRefs(contNode));
+
               if (NS_SUCCEEDED(rv) && contNode) {
                 // We need to make sure this child is a form element
                 nsresult isHTMLContent = PR_FALSE;
+
                 node = do_QueryInterface(contNode, &isHTMLContent);
+
                 if (NS_SUCCEEDED(isHTMLContent) && node) {
                   // Find out of this is a form element.
                   nsIFormControlFrame* control;
-                  nsresult gotFrame = nsGenericHTMLElement::GetPrimaryFrame(node, control);
+
+                  nsresult gotFrame = GetPrimaryFrame(node, control);
+
                   isFormElement = NS_SUCCEEDED(gotFrame) && control;
                 }
               }
@@ -466,28 +392,19 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv) && node) {
       // Only pass along event if this is a form element
       if (isFormElement) {
-        rv = node->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+        rv = node->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,
+                                  aEventStatus);
       }
     }
   } // Close trickery
+
   return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLLabelElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-#ifdef DEBUG
-  mInner.SizeOf(aSizer, aResult, sizeof(*this));
-  if (mForm) {
-    PRBool recorded;
-    aSizer->RecordObject(mForm, &recorded);
-    if (!recorded) {
-      PRUint32 formSize;
-      mForm->SizeOf(aSizer, &formSize);
-      aSizer->AddSize(nsHTMLAtoms::iform, formSize);
-    }
-  }
-#endif
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
   return NS_OK;
 }

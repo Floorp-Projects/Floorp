@@ -33,40 +33,39 @@
 #include "nsIHTMLAttributes.h"
 
 
-class nsHTMLLIElement : public nsIDOMHTMLLIElement,
-                        public nsIJSScriptObject,
-                        public nsIHTMLContent
+class nsHTMLLIElement : public nsGenericHTMLContainerElement,
+                        public nsIDOMHTMLLIElement
 {
 public:
-  nsHTMLLIElement(nsINodeInfo *aNodeInfo);
+  nsHTMLLIElement();
   virtual ~nsHTMLLIElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLLIElement
   NS_DECL_IDOMHTMLLIELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLContainerElement mInner;
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -74,57 +73,76 @@ NS_NewHTMLLIElement(nsIHTMLContent** aInstancePtrResult,
                     nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLLIElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLLIElement* it = new nsHTMLLIElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLLIElement::nsHTMLLIElement(nsINodeInfo *aNodeInfo)
+nsHTMLLIElement::nsHTMLLIElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLLIElement::~nsHTMLLIElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLLIElement)
 
-NS_IMPL_RELEASE(nsHTMLLIElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLLIElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLLIElement, nsGenericElement);
 
-nsresult
-nsHTMLLIElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLLIElement))) {
-    nsIDOMHTMLLIElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLLIElement, nsGenericHTMLContainerElement,
+                       nsIDOMHTMLLIElement);
+
 
 nsresult
 nsHTMLLIElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLLIElement* it = new nsHTMLLIElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLLIElement* it = new nsHTMLLIElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type)
 NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value)
+
 
 static nsGenericHTMLElement::EnumTable kListItemTypeTable[] = {
   { "disc", NS_STYLE_LIST_STYLE_DISC },
@@ -145,17 +163,16 @@ nsHTMLLIElement::StringToAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
-    if (nsGenericHTMLElement::ParseCaseSensitiveEnumValue(aValue,
-                                                          kListItemTypeTable,
-                                                          aResult)) {
+    if (ParseCaseSensitiveEnumValue(aValue, kListItemTypeTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::value) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -169,16 +186,17 @@ nsHTMLLIElement::AttributeToString(nsIAtom* aAttribute,
     switch (v) {
       case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
       case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
-        nsGenericHTMLElement::EnumValueToString(aValue, kListItemTypeTable,
-                                                aResult, PR_FALSE);
+        EnumValueToString(aValue, kListItemTypeTable, aResult, PR_FALSE);
         break;
       default:
-        nsGenericHTMLElement::EnumValueToString(aValue, kListItemTypeTable,
-                                                aResult, PR_TRUE);
+        EnumValueToString(aValue, kListItemTypeTable, aResult, PR_TRUE);
     }
+
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
+                                                          aResult);
 }
 
 static void
@@ -197,7 +215,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       list->mListStyleType = value.GetIntValue();
     }
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
@@ -207,7 +226,7 @@ nsHTMLLIElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::type) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
   }
 
@@ -226,19 +245,9 @@ nsHTMLLIElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
 }
 
 NS_IMETHODIMP
-nsHTMLLIElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                nsEvent* aEvent,
-                                nsIDOMEvent** aDOMEvent,
-                                PRUint32 aFlags,
-                                nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-
-NS_IMETHODIMP
 nsHTMLLIElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

@@ -46,59 +46,46 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLEmbedElement.h"
 
-class nsHTMLEmbedElement : public nsIDOMHTMLEmbedElement,
-                           public nsIJSScriptObject,
-                           public nsIHTMLContent
+class nsHTMLEmbedElement : public nsGenericHTMLLeafElement,
+                           public nsIDOMHTMLEmbedElement
 {
 public:
-  nsHTMLEmbedElement(nsINodeInfo *aNodeInfo);
+  nsHTMLEmbedElement();
   virtual ~nsHTMLEmbedElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLEmbedElement
   NS_DECL_IDOMHTMLEMBEDELEMENT
 
-  // nsIJSScriptObject
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,
                              void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
-  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
-                        jsval aID, jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
-                        jsval aID, jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
-                        jsval aID, jsval *aVp);
-  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
-                        jsval aID, jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                            PRBool* aDidDefineProperty);
-  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
-  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+  virtual PRBool GetProperty(JSContext *aContext, JSObject *aObj, 
+                             jsval aID, jsval *aVp);
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
   nsresult GetPluginInstance(nsIPluginInstance** aPluginInstance);
-
-protected:
-  nsGenericHTMLLeafElement mInner;
 };
 
 nsresult
@@ -106,52 +93,69 @@ NS_NewHTMLEmbedElement(nsIHTMLContent** aInstancePtrResult,
                        nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLEmbedElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLEmbedElement* it = new nsHTMLEmbedElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
-nsHTMLEmbedElement::nsHTMLEmbedElement(nsINodeInfo *aNodeInfo)
+nsHTMLEmbedElement::nsHTMLEmbedElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLEmbedElement::~nsHTMLEmbedElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLEmbedElement)
-NS_IMPL_RELEASE(nsHTMLEmbedElement)
 
-nsresult
-nsHTMLEmbedElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-    if (aIID.Equals(NS_GET_IID(nsIDOMHTMLEmbedElement))) {
-      nsIDOMHTMLEmbedElement* tmp = this;
-      *aInstancePtr = (void*) tmp;
-      NS_ADDREF_THIS();
-      return NS_OK;
-    }
+NS_IMPL_ADDREF_INHERITED(nsHTMLEmbedElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLEmbedElement, nsGenericElement);
 
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLEmbedElement, nsGenericHTMLLeafElement,
+                       nsIDOMHTMLEmbedElement);
+
 
 nsresult
 nsHTMLEmbedElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLEmbedElement* it = new nsHTMLEmbedElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLEmbedElement* it = new nsHTMLEmbedElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -160,14 +164,14 @@ nsHTMLEmbedElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseAlignValue(aValue, aResult)) {
+    if (ParseAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
-                                                     aValue, aResult)) {
+  else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -178,15 +182,16 @@ nsHTMLEmbedElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::AlignValueToString(aValue, aResult);
+      AlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (nsGenericHTMLElement::ImageAttributeToString(aAttribute,
-                                                        aValue, aResult)) {
+  else if (ImageAttributeToString(aAttribute, aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLLeafElement::AttributeToString(aAttribute, aValue,
+                                                     aResult);
 }
 
 static void
@@ -194,25 +199,30 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIMutableStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext, aPresContext, nsnull);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext,
+                                                   aPresContext);
+  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext,
+                                               aPresContext);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext,
+                                                    aPresContext, nsnull);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLEmbedElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                              PRInt32& aHint) const
 {
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (! nsGenericHTMLElement::GetImageMappedAttributesImpact(aAttribute, aHint)) {
-      if (! nsGenericHTMLElement::GetImageAlignAttributeImpact(aAttribute, aHint)) {
-        if (! nsGenericHTMLElement::GetImageBorderAttributeImpact(aAttribute, aHint)) {
+  if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
+      if (!GetImageAlignAttributeImpact(aAttribute, aHint)) {
+        if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
           aHint = NS_STYLE_HINT_CONTENT;
         }
       }
     }
   }
+
   return NS_OK;
 }
 
@@ -226,24 +236,14 @@ nsHTMLEmbedElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFu
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsHTMLEmbedElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-
 NS_IMETHODIMP
 nsHTMLEmbedElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }
+
 
 /***************************************************************************/
 
@@ -259,16 +259,15 @@ nsHTMLEmbedElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
   nsCOMPtr<nsIPresContext> context;
   nsCOMPtr<nsIPresShell> shell;
   
-  if (mInner.mDocument) {
+  if (mDocument) {
     // Make sure the presentation is up-to-date
-    result = mInner.mDocument->FlushPendingNotifications();
+    result = mDocument->FlushPendingNotifications();
     if (NS_FAILED(result)) {
       return result;
     }
   }
   
-  result = nsGenericHTMLElement::GetPresContext(this, 
-                                                getter_AddRefs(context));
+  result = GetPresContext(this, getter_AddRefs(context));
   if (NS_FAILED(result)) {
     return result;
   }
@@ -320,8 +319,8 @@ NS_IMETHODIMP
 nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
                                     void** aScriptObject)
 {
-  if (mInner.mDOMSlots && mInner.mDOMSlots->mScriptObject)
-    return mInner.GetScriptObject(aContext, aScriptObject);
+  if (mDOMSlots && mDOMSlots->mScriptObject)
+    return nsGenericHTMLLeafElement::GetScriptObject(aContext, aScriptObject);
 
   nsresult rv;
   *aScriptObject = nsnull;
@@ -330,14 +329,15 @@ nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
   // the javascript prototype object of the object we eventually reflect to the
   // DOM.
   JSObject* elementObject = nsnull;
-  rv = mInner.GetScriptObject(aContext, (void**)&elementObject);
+  rv = nsGenericHTMLLeafElement::GetScriptObject(aContext,
+                                                 (void**)&elementObject);
   if (NS_FAILED(rv) || !elementObject)
     return rv;
 
   // Flush pending reflows to ensure the plugin is instansiated, assuming
   // it's visible
-  if (mInner.mDocument) {
-    mInner.mDocument->FlushPendingNotifications();
+  if (mDocument) {
+    mDocument->FlushPendingNotifications();
   }
 
   nsCOMPtr<nsIPluginInstance> pi;
@@ -348,15 +348,15 @@ nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
   // don't cache it so that the next call can get the correct script object
   // if the plugin instance is available at the next call.
   if (NS_FAILED(rv)) {
-    if (mInner.mDocument) {
+    if (mDocument) {
       // Since we're resetting the script object to null we'll remove the
       // reference to it so that we won't add the same named reference
       // again the next time someone requests the script object.
-      aContext->RemoveReference((void *)&mInner.mDOMSlots->mScriptObject,
-                                mInner.mDOMSlots->mScriptObject);
+      aContext->RemoveReference((void *)&mDOMSlots->mScriptObject,
+                                mDOMSlots->mScriptObject);
     }
 
-    mInner.SetScriptObject(nsnull);
+    SetScriptObject(nsnull);
 
     *aScriptObject = elementObject;
 
@@ -411,43 +411,23 @@ nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
 
   // If we got an xpconnect-wrapped plugin object, set its' prototype to the
   // element object.
-  if (!*aScriptObject || !JS_SetPrototype(cx, interfaceObject, elementObject)) {
+  if (!*aScriptObject || !JS_SetPrototype(cx, interfaceObject,
+                                          elementObject)) {
     *aScriptObject = elementObject; // fall back
     return NS_OK;
   }
 
   // Cache it.
-  mInner.SetScriptObject(*aScriptObject);
+  SetScriptObject(*aScriptObject);
 
   return NS_OK;
-}
-
-// TODO: if this method ever gets called, it will destroy the
-// prototype chain.
-NS_IMETHODIMP
-nsHTMLEmbedElement::SetScriptObject(void *aScriptObject)
-{
-       return mInner.SetScriptObject(aScriptObject);
-}
-
-// nsIJSScriptObject
-
-PRBool    
-nsHTMLEmbedElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-  return mInner.AddProperty(aContext, aObj, aID, aVp);
-}
-
-PRBool    
-nsHTMLEmbedElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-  return mInner.DeleteProperty(aContext, aObj, aID, aVp);
 }
 
 // Allow access to arbitrary XPCOM interfaces supported by the plugin
 // via a pluginObject.nsISomeInterface notation.
 PRBool    
-nsHTMLEmbedElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
+nsHTMLEmbedElement::GetProperty(JSContext *aContext, JSObject *aObj,
+                                jsval aID, jsval *aVp)
 {
   if (JSVAL_IS_STRING(aID)) {
     PRBool retval = PR_FALSE;
@@ -479,38 +459,7 @@ nsHTMLEmbedElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
     }
   }
 
-  return mInner.GetProperty(aContext, aObj, aID, aVp);
-}
-
-PRBool    
-nsHTMLEmbedElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-  return mInner.SetProperty(aContext, aObj, aID, aVp);
-}
-
-PRBool    
-nsHTMLEmbedElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
-{
-  return mInner.EnumerateProperty(aContext, aObj);
-}
-
-PRBool    
-nsHTMLEmbedElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                            PRBool *aDidDefineProperty)
-{
-  return mInner.Resolve(aContext, aObj, aID, aDidDefineProperty);
-}
-
-PRBool    
-nsHTMLEmbedElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
-{
-  return mInner.Convert(aContext, aObj, aID);
-}
-
-void      
-nsHTMLEmbedElement::Finalize(JSContext *aContext, JSObject *aObj)
-{
-  mInner.Finalize(aContext, aObj);
+  return nsGenericHTMLLeafElement::GetProperty(aContext, aObj, aID, aVp);
 }
 
 /////////////////////////////////////////////

@@ -32,40 +32,31 @@
 #include "nsIPresContext.h"
 
 
-class nsHTMLBaseFontElement : public nsIDOMHTMLBaseFontElement,
-                              public nsIJSScriptObject,
-                              public nsIHTMLContent
+class nsHTMLBaseFontElement : public nsGenericHTMLLeafElement,
+                              public nsIDOMHTMLBaseFontElement
 {
 public:
-  nsHTMLBaseFontElement(nsINodeInfo *aNodeInfo);
+  nsHTMLBaseFontElement();
   virtual ~nsHTMLBaseFontElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLBaseElement
   NS_DECL_IDOMHTMLBASEFONTELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLLeafElement mInner;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -73,92 +64,76 @@ NS_NewHTMLBaseFontElement(nsIHTMLContent** aInstancePtrResult,
                           nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLBaseFontElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLBaseFontElement* it = new nsHTMLBaseFontElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLBaseFontElement::nsHTMLBaseFontElement(nsINodeInfo *aNodeInfo)
+nsHTMLBaseFontElement::nsHTMLBaseFontElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLBaseFontElement::~nsHTMLBaseFontElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLBaseFontElement)
 
+NS_IMPL_ADDREF(nsHTMLBaseFontElement)
 NS_IMPL_RELEASE(nsHTMLBaseFontElement)
 
-nsresult
-nsHTMLBaseFontElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLBaseFontElement))) {
-    nsIDOMHTMLBaseFontElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLBaseFontElement, nsGenericHTMLLeafElement,
+                       nsIDOMHTMLBaseFontElement)
+
 
 nsresult
 nsHTMLBaseFontElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLBaseFontElement* it = new nsHTMLBaseFontElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLBaseFontElement* it = new nsHTMLBaseFontElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Color, color)
 NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Face, face)
 NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Size, size)
-
-NS_IMETHODIMP
-nsHTMLBaseFontElement::StringToAttribute(nsIAtom* aAttribute,
-                                         const nsAReadableString& aValue,
-                                         nsHTMLValue& aResult)
-{
-  // XXX write me
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-NS_IMETHODIMP
-nsHTMLBaseFontElement::AttributeToString(nsIAtom* aAttribute,
-                                         const nsHTMLValue& aValue,
-                                         nsAWritableString& aResult) const
-{
-  // XXX write me
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapFontAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                      nsIMutableStyleContext* aContext,
-                      nsIPresContext* aPresContext)
-{
-  // XXX write me
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
 
 
 NS_IMETHODIMP
@@ -177,30 +152,10 @@ nsHTMLBaseFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 }
 
 NS_IMETHODIMP
-nsHTMLBaseFontElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                    nsMapAttributesFunc& aMapFunc) const
+nsHTMLBaseFontElement::SizeOf(nsISizeOfHandler* aSizer,
+                              PRUint32* aResult) const
 {
-  aFontMapFunc = &MapFontAttributesInto;
-  aMapFunc = &MapAttributesInto;
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
   return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsHTMLBaseFontElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                      nsEvent* aEvent,
-                                      nsIDOMEvent** aDOMEvent,
-                                      PRUint32 aFlags,
-                                      nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-
-NS_IMETHODIMP
-nsHTMLBaseFontElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
 }

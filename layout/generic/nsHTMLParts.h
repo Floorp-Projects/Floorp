@@ -39,7 +39,6 @@ class nsITextContent;
 class nsIURI;
 class nsString;
 class nsIWebShell;
-class nsIAttributeContent;
 class nsIPresShell;
 
 // Factory method for creating a content iterator for generated

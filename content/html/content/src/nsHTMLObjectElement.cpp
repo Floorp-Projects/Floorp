@@ -33,40 +33,39 @@
 #include "nsDOMError.h"
 
 
-class nsHTMLObjectElement : public nsIDOMHTMLObjectElement,
-                            public nsIJSScriptObject,
-                            public nsIHTMLContent
+class nsHTMLObjectElement : public nsGenericHTMLContainerElement,
+                            public nsIDOMHTMLObjectElement
 {
 public:
-  nsHTMLObjectElement(nsINodeInfo *aNodeInfo);
+  nsHTMLObjectElement();
   virtual ~nsHTMLObjectElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLObjectElement
   NS_DECL_IDOMHTMLOBJECTELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLContainerElement mInner;
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -74,53 +73,70 @@ NS_NewHTMLObjectElement(nsIHTMLContent** aInstancePtrResult,
                         nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLObjectElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLObjectElement* it = new nsHTMLObjectElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLObjectElement::nsHTMLObjectElement(nsINodeInfo *aNodeInfo)
+nsHTMLObjectElement::nsHTMLObjectElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLObjectElement::~nsHTMLObjectElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLObjectElement)
 
-NS_IMPL_RELEASE(nsHTMLObjectElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLObjectElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement) 
 
-nsresult
-nsHTMLObjectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLObjectElement))) {
-    nsIDOMHTMLObjectElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLObjectElement, nsGenericHTMLContainerElement,
+                       nsIDOMHTMLObjectElement);
+
 
 nsresult
 nsHTMLObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLObjectElement* it = new nsHTMLObjectElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLObjectElement* it = new nsHTMLObjectElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -129,6 +145,7 @@ nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)
   *aForm = nsnull;/* XXX */
   return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Code, code)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Align, align)
@@ -147,6 +164,7 @@ NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Type, type)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, UseMap, usemap)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLObjectElement, Width, width)
+
 
 NS_IMETHODIMP
 nsHTMLObjectElement::GetContentDocument(nsIDOMDocument** aContentDocument)
@@ -169,14 +187,14 @@ nsHTMLObjectElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseAlignValue(aValue, aResult)) {
+    if (ParseAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
-                                                     aValue, aResult)) {
+  else if (ParseImageAttribute(aAttribute, aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -187,15 +205,16 @@ nsHTMLObjectElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::AlignValueToString(aValue, aResult);
+      AlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (nsGenericHTMLElement::ImageAttributeToString(aAttribute,
-                                                        aValue, aResult)) {
+  else if (ImageAttributeToString(aAttribute, aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
+                                                          aResult);
 }
 
 static void
@@ -203,20 +222,24 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIMutableStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext, aPresContext, nsnull);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext,
+                                                   aPresContext);
+  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext,
+                                               aPresContext);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext,
+                                                    aPresContext, nsnull);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLObjectElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint) const
 {
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (! nsGenericHTMLElement::GetImageBorderAttributeImpact(aAttribute, aHint)) {
-      if (! nsGenericHTMLElement::GetImageMappedAttributesImpact(aAttribute, aHint)) {
-        if (! nsGenericHTMLElement::GetImageAlignAttributeImpact(aAttribute, aHint)) {
+  if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
+      if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
+        if (!GetImageAlignAttributeImpact(aAttribute, aHint)) {
           aHint = NS_STYLE_HINT_CONTENT;
         }
       }
@@ -236,21 +259,10 @@ nsHTMLObjectElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsHTMLObjectElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-
 NS_IMETHODIMP
 nsHTMLObjectElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

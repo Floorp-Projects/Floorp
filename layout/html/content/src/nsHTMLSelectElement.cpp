@@ -36,7 +36,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
-#include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
@@ -45,7 +44,6 @@
 #include "nsIJSScriptObject.h"
 #include "nsISelectElement.h"
 #include "nsISelectControlFrame.h"
-#include "nsISizeOfHandler.h"
 #include "nsIDOMNSHTMLOptionCollection.h"
 
 // PresState
@@ -116,28 +114,26 @@ private:
   nsHTMLSelectElement* mSelect;
 };
 
-class nsHTMLSelectElement : public nsIDOMHTMLSelectElement,
+class nsHTMLSelectElement : public nsGenericHTMLContainerFormElement,
+                            public nsIDOMHTMLSelectElement,
                             public nsIDOMNSHTMLSelectElement,
-                            public nsIJSScriptObject,
-                            public nsIHTMLContent,
-                            public nsIFormControl,
                             public nsISelectElement
 {
 public:
-  nsHTMLSelectElement(nsINodeInfo *aNodeInfo);
+  nsHTMLSelectElement();
   virtual ~nsHTMLSelectElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLSelectElement
   NS_DECL_IDOMHTMLSELECTELEMENT
@@ -145,121 +141,22 @@ public:
   // nsIDOMNSHTMLSelectElement
   NS_DECL_IDOMNSHTMLSELECTELEMENT
 
-  // nsIContent
-  //NS_IMPL_ICONTENT_NO_SETPARENT_NO_SETDOCUMENT_NO_FOCUS_USING_GENERIC(mInner)
-  NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
-    return mInner.GetDocument(aResult);
-  }
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
-  NS_IMETHOD GetParent(nsIContent*& aResult) const {
-    return mInner.GetParent(aResult);
-  }
-  NS_IMETHOD SetParent(nsIContent* aParent);
-  NS_IMETHOD CanContainChildren(PRBool& aResult) const {
-    return mInner.CanContainChildren(aResult);
-  }
-  NS_IMETHOD ChildCount(PRInt32& aResult) const {
-    return mInner.ChildCount(aResult);
-  }
-  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
-    return mInner.ChildAt(aIndex, aResult);
-  }
-  NS_IMETHOD IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
-    return mInner.IndexOf(aPossibleChild, aResult);
-  }
-
   NS_IMETHOD InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
   NS_IMETHOD ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
   NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
-  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {
-    return mInner.GetNameSpaceID(aResult);
-  }
-  NS_IMETHOD GetTag(nsIAtom*& aResult) const {
-    return mInner.GetTag(aResult);
-  }
-  NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
-    return mInner.GetNodeInfo(aResult);
-  }
-  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
-                                      nsINodeInfo*& aNodeInfo) {
-    return mInner.NormalizeAttributeString(aStr, aNodeInfo);
-  }
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue, PRBool aNotify) {
-    return mInner.SetAttribute(aNameSpaceID, aName, aValue, aNotify);
-  }
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsAReadableString& aValue, PRBool aNotify) {
-    return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
-  }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsAWritableString& aResult) const {
-    return mInner.GetAttribute(aNameSpaceID, aName, aResult);
-  }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {
-    return mInner.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);
-  }
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                            PRBool aNotify) {
-    return mInner.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);
-  }
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
-                                PRInt32& aNameSpaceID,
-                                nsIAtom*& aName,
-                                nsIAtom*& aPrefix) const {
-    return mInner.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);
-  }
-  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {
-    return mInner.GetAttributeCount(aResult);
-  }
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {
-    return mInner.List(out, aIndent);
-  }
-  NS_IMETHOD DumpContent(FILE* out,
-                         PRInt32 aIndent,
-                         PRBool aDumpAll) const {
-    return mInner.DumpContent(out, aIndent,aDumpAll);
-  }
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
-  NS_IMETHOD GetContentID(PRUint32* aID) {
-    return mInner.GetContentID(aID);
-  }
-  NS_IMETHOD SetContentID(PRUint32 aID) {
-    return mInner.SetContentID(aID);
-  }
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {
-    return mInner.RangeAdd(aRange);
-  }
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange) {
-    return mInner.RangeRemove(aRange);
-  }
-  NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {
-    return mInner.GetRangeList(aResult);
-  }
+
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);   
 
-  NS_IMETHOD GetBindingParent(nsIContent** aContent) {
-    return mInner.GetBindingParent(aContent);
-  }
-
-  NS_IMETHOD SetBindingParent(nsIContent* aParent) {
-    return mInner.SetBindingParent(aParent);
-  }  
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-  // nsIFormControl
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
+  // Overriden nsIFormControl methods
   NS_IMETHOD GetType(PRInt32* aType);
   NS_IMETHOD Init();
 
@@ -268,34 +165,32 @@ public:
   NS_IMETHOD RemoveOption(nsIContent* aContent);
   NS_IMETHOD DoneAddingContent(PRBool aIsDone);
   NS_IMETHOD IsDoneAddingContent(PRBool * aIsDone);
-  NS_IMETHOD IsOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool * aIsSelected);
-  NS_IMETHOD SetOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool aIsSelected);
+  NS_IMETHOD IsOptionSelected(nsIDOMHTMLOptionElement* anOption,
+                              PRBool * aIsSelected);
+  NS_IMETHOD SetOptionSelected(nsIDOMHTMLOptionElement* anOption,
+                               PRBool aIsSelected);
 
-  // nsIJSScriptObject
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj,
-                                jsval aID, jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj,
-                                   jsval aID, jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj,
-                                jsval aID, jsval *aVp);
+  // Overriden nsIJSScriptObject methods
   // Implement this to enable setting option via frm.select[x]
   virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj,
                                 jsval aID, jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                            PRBool *aDidDefineProperty);
-  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
-  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
+
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
 
 protected:
   // Helper Methods
-  nsresult GetPresState(nsIPresState** aPresState, nsISupportsArray** aValueArray);
-  nsresult GetOptionIndex(nsIDOMHTMLOptionElement* aOption, PRUint32 * anIndex);
+  nsresult GetPresState(nsIPresState** aPresState,
+                        nsISupportsArray** aValueArray);
+  nsresult GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
+                          PRUint32 * anIndex);
   nsresult SetOptionSelectedByIndex(PRInt32 aIndex, PRBool aIsSelected);
 
-  nsGenericHTMLContainerFormElement mInner;
-  nsIForm*      mForm;
   nsHTMLOptionCollection* mOptions;
   PRBool        mIsDoneAddingContent;
 };
@@ -310,22 +205,31 @@ NS_NewHTMLSelectElement(nsIHTMLContent** aInstancePtrResult,
                         nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsHTMLSelectElement* it = new nsHTMLSelectElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLSelectElement* it = new nsHTMLSelectElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLSelectElement::nsHTMLSelectElement(nsINodeInfo *aNodeInfo)
+nsHTMLSelectElement::nsHTMLSelectElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
   mOptions = nsnull;
-  mForm = nsnull;
   mIsDoneAddingContent = PR_TRUE;
 }
 
@@ -333,7 +237,7 @@ nsHTMLSelectElement::~nsHTMLSelectElement()
 {
   // Null out form's pointer to us - no ref counting here!
   SetForm(nsnull);
-  if (nsnull != mOptions) {
+  if (mOptions) {
     mOptions->Clear();
     mOptions->DropReference();
     NS_RELEASE(mOptions);
@@ -342,142 +246,135 @@ nsHTMLSelectElement::~nsHTMLSelectElement()
 
 // ISupports
 
-NS_IMPL_ADDREF(nsHTMLSelectElement)
-NS_IMPL_RELEASE(nsHTMLSelectElement)
 
-nsresult
-nsHTMLSelectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  // NS_IMPL_HTML_CONTENT_QUERY_INTERFACE returns mInner as the script object
-  // We need to be our own so we can implement setprop to set select[i]
-  if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
-    *aInstancePtr = (void*)(nsIJSScriptObject*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLSelectElement))) {
-    *aInstancePtr = (void*)(nsIDOMHTMLSelectElement*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLSelectElement))) {
-    *aInstancePtr = (void*)(nsIDOMNSHTMLSelectElement*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsIFormControl))) {
-    *aInstancePtr = (void*)(nsIFormControl*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  else if (aIID.Equals(NS_GET_IID(nsISelectElement))) {
-    *aInstancePtr = (void*)(nsISelectElement*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ADDREF_INHERITED(nsHTMLSelectElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement);
+
+NS_IMPL_HTMLCONTENT_QI3(nsHTMLSelectElement, nsGenericHTMLContainerFormElement,
+                        nsIDOMHTMLSelectElement, nsIDOMNSHTMLSelectElement,
+                        nsISelectElement);
+
 
 // nsIDOMHTMLSelectElement
 
 nsresult
 nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLSelectElement* it = new nsHTMLSelectElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLSelectElement* it = new nsHTMLSelectElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  nsresult rv = it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
-  return rv;
+
+  nsresult rv = NS_STATIC_CAST(nsGenericElement *, it)->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
+{
+  return nsGenericHTMLContainerFormElement::GetForm(aForm);
+}
+
 
 // nsIContent
 NS_IMETHODIMP
 nsHTMLSelectElement::AppendChildTo(nsIContent* aKid, PRBool aNotify) 
 {
-  nsresult res = mInner.AppendChildTo(aKid, aNotify);
+  nsresult res = nsGenericHTMLContainerFormElement::AppendChildTo(aKid,
+                                                                  aNotify);
   if (NS_SUCCEEDED(res)) {
     AddOption(aKid);
   }
+
   return res;
 }
+
 NS_IMETHODIMP
 nsHTMLSelectElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex,
                                    PRBool aNotify) 
 {
-
-  nsresult res = mInner.InsertChildAt(aKid, aIndex, aNotify);
+  nsresult res = nsGenericHTMLContainerFormElement::InsertChildAt(aKid, aIndex,
+                                                                  aNotify);
   if (NS_SUCCEEDED(res)) {
     // No index is necessary
     // It dirties list and the list automatically 
     // refreshes itself on next access
     AddOption(aKid); 
   }
+
   return res;
 }
+
 NS_IMETHODIMP
-nsHTMLSelectElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) 
+nsHTMLSelectElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
+                                    PRBool aNotify) 
 {
   nsCOMPtr<nsIContent> content;
   if (NS_SUCCEEDED(ChildAt(aIndex, *getter_AddRefs(content)))) {
     RemoveOption(content);
   }
-  nsresult res = mInner.ReplaceChildAt(aKid, aIndex, aNotify);
+
+  nsresult res = nsGenericHTMLContainerFormElement::ReplaceChildAt(aKid,
+                                                                   aIndex,
+                                                                   aNotify);
+
   if (NS_SUCCEEDED(res)) {
     AddOption(aKid);
   }
+
   return res;
 }
+
 NS_IMETHODIMP
 nsHTMLSelectElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify) 
 {
   nsCOMPtr<nsIContent> content;
   ChildAt(aIndex, *getter_AddRefs(content));
-  nsresult res = mInner.RemoveChildAt(aIndex, aNotify);
+
+  nsresult res = nsGenericHTMLContainerFormElement::RemoveChildAt(aIndex,
+                                                                  aNotify);
+
   if (NS_SUCCEEDED(res) && content) {
     RemoveOption(content);
   }
+
   return res;
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::SetParent(nsIContent* aParent)
-{
-  return mInner.SetParentForFormControls(aParent, this, mForm);
-}
-
-NS_IMETHODIMP
-nsHTMLSelectElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
-{
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
-}
-
-NS_IMETHODIMP
-nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore)
+nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
+                         nsIDOMHTMLElement* aBefore)
 {
   nsresult result;
-  nsIDOMNode* ret;
+  nsCOMPtr<nsIDOMNode> ret;
 
   if (nsnull == aBefore) {
-    result = mInner.AppendChild(aElement, &ret);
-    NS_IF_RELEASE(ret);
+    result = AppendChild(aElement, getter_AddRefs(ret));
   }
   else {
     // Just in case we're not the parent, get the parent of the reference
     // element
-    nsIDOMNode* parent;
+    nsCOMPtr<nsIDOMNode> parent;
     
-    result = aBefore->GetParentNode(&parent);
-    if (NS_SUCCEEDED(result) && (nsnull != parent)) {
-      result = parent->InsertBefore(aElement, aBefore, &ret);
-      NS_IF_RELEASE(ret);
-      NS_RELEASE(parent);
+    aBefore->GetParentNode(getter_AddRefs(parent));
+    if (parent) {
+      result = parent->InsertBefore(aElement, aBefore, getter_AddRefs(ret));
     }
   }
 
@@ -488,53 +385,37 @@ NS_IMETHODIMP
 nsHTMLSelectElement::Remove(PRInt32 aIndex) 
 {
   nsresult result = NS_OK;
-  nsIDOMNode* option;
+  nsCOMPtr<nsIDOMNode> option;
 
-  if (nsnull == mOptions) {
+  if (!mOptions) {
     Init();
   }
 
-  result = mOptions->Item(aIndex, &option);
-  if (NS_SUCCEEDED(result) && (nsnull != option)) {
-    nsIDOMNode* parent;
+  mOptions->Item(aIndex, getter_AddRefs(option));
 
-    result = option->GetParentNode(&parent);
-    if (NS_SUCCEEDED(result) && (nsnull != parent)) {
-      nsIDOMNode* ret;
-      parent->RemoveChild(option, &ret);
-      NS_IF_RELEASE(ret);
-      NS_RELEASE(parent);
-    }
+  if (option) {
+    nsCOMPtr<nsIDOMNode> parent;
 
-    NS_RELEASE(option);
-  }
-
-  return result;
-}
-
-NS_IMETHODIMP
-nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  nsresult result = NS_OK;
-  *aForm = nsnull;
-  if (nsnull != mForm) {
-    nsIDOMHTMLFormElement* formElem = nsnull;
-    result = mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)&formElem);
-    if (NS_OK == result) {
-      *aForm = formElem;
+    option->GetParentNode(getter_AddRefs(parent));
+    if (parent) {
+      nsCOMPtr<nsIDOMNode> ret;
+      parent->RemoveChild(option, getter_AddRefs(ret));
     }
   }
+
   return result;
 }
 
 NS_IMETHODIMP
 nsHTMLSelectElement::GetOptions(nsIDOMNSHTMLOptionCollection** aValue)
 {
-  if (nsnull == mOptions) {
+  if (!mOptions) {
     Init();
   }
-  NS_ADDREF(mOptions);
+
   *aValue = mOptions;
+  NS_IF_ADDREF(*aValue);
+
   return NS_OK;
 }
 
@@ -560,13 +441,16 @@ nsHTMLSelectElement::GetType(nsAWritableString& aType)
 NS_IMETHODIMP
 nsHTMLSelectElement::GetLength(PRUint32* aLength)
 {
-  if (nsnull == mOptions) {
+  if (!mOptions) {
     Init();
   }
-  if (nsnull != mOptions) {
+
+  if (mOptions) {
     return mOptions->GetLength(aLength);
   }
+
   *aLength = 0;
+
   return NS_ERROR_FAILURE;
 }
 
@@ -581,7 +465,9 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
 
   PRUint32 curlen;
   PRInt32 i;
+
   GetLength(&curlen);
+
   if (curlen && (curlen > aLength)) { // Remove extra options
     for (i = (curlen - 1); (i >= (PRInt32)aLength) && NS_SUCCEEDED(rv); i--) {
       rv = Remove(i);
@@ -591,8 +477,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
     nsCOMPtr<nsIHTMLContent> element;
     nsCOMPtr<nsINodeInfo> nodeInfo;
 
-    mInner.mNodeInfo->NameChanged(nsHTMLAtoms::option,
-                                  *getter_AddRefs(nodeInfo));
+    mNodeInfo->NameChanged(nsHTMLAtoms::option, *getter_AddRefs(nodeInfo));
 
     rv = NS_NewHTMLOptionElement(getter_AddRefs(element), nodeInfo);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -614,6 +499,7 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
 
       if (i < ((PRInt32)aLength - 1)) {
         nsCOMPtr<nsIDOMNode> newNode;
+
         rv = node->CloneNode(PR_TRUE, getter_AddRefs(newNode));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -626,18 +512,24 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
 }
 
 //NS_IMPL_INT_ATTR(nsHTMLSelectElement, SelectedIndex, selectedindex)
+
 NS_IMETHODIMP
 nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+
+  nsresult rv = GetPrimaryFrame(this, formControlFrame);
+
   if (NS_SUCCEEDED(rv)) {
-    nsString value;
+    nsAutoString value;
     rv = formControlFrame->GetProperty(nsHTMLAtoms::selectedindex, value);
+
     if (NS_SUCCEEDED(rv) && (value.Length() > 0)) {
       PRInt32 retval = 0;
       PRInt32 error = 0;
+
       retval = value.ToInteger(&error, 10); // Convert to integer, base 10
+
       if (!error) {
         *aValue = retval;
       } else {
@@ -651,17 +543,21 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
     //
     nsCOMPtr<nsIPresState> presState;
     nsCOMPtr<nsISupportsArray> value;
-    nsresult res = GetPresState(getter_AddRefs(presState), getter_AddRefs(value));
+
+    nsresult res = GetPresState(getter_AddRefs(presState),
+                                getter_AddRefs(value));
+
     if (NS_SUCCEEDED(res) && presState) {
       nsCOMPtr<nsISupports> supp;
-      presState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), getter_AddRefs(supp));
+      presState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
+                                            getter_AddRefs(supp));
 
       res = NS_ERROR_NULL_POINTER;
+
       if (supp) {
-
         nsCOMPtr<nsISupportsArray> svalue = do_QueryInterface(supp);
-        if (svalue) {
 
+        if (svalue) {
           PRUint32 count = 0;
           svalue->Count(&count);
 
@@ -669,6 +565,7 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
           for (PRUint32 i=0; i<count; i++) {
             nsCOMPtr<nsISupports> suppval = getter_AddRefs(svalue->ElementAt(i));
             thisVal = do_QueryInterface(suppval);
+
             if (thisVal) {
               res = thisVal->GetData(aValue);
               if (NS_SUCCEEDED(res)) {
@@ -678,7 +575,9 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
             } else {
               res = NS_ERROR_UNEXPECTED;
             }
-            if (!NS_SUCCEEDED(res)) break;
+
+            if (NS_FAILED(res))
+              break;
           }
         }
       }
@@ -696,24 +595,31 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
         if (NS_SUCCEEDED(rv) && !isMultiple) {
           PRInt32 size = 1;
           rv = GetSize(&size);                 // Size 1 or not set
-          if (NS_SUCCEEDED(rv) && ((1 >= size) || (NS_CONTENT_ATTR_NOT_THERE == size))) {
+          if (NS_SUCCEEDED(rv) &&
+              ((1 >= size) || (NS_CONTENT_ATTR_NOT_THERE == size))) {
             *aValue = 0;
           }
         }
+
         nsCOMPtr<nsIDOMNSHTMLOptionCollection> options;
         rv = GetOptions(getter_AddRefs(options));
+
         if (NS_SUCCEEDED(rv) && options) {
           PRUint32 numOptions;
           rv = options->GetLength(&numOptions);
+
           if (NS_SUCCEEDED(rv)) {
             for (PRUint32 i = 0; i < numOptions; i++) {
               nsCOMPtr<nsIDOMNode> node;
               rv = options->Item(i, getter_AddRefs(node));
-              if (NS_SUCCEEDED(rv) && node) {
-                nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node, &rv);
-                if (NS_SUCCEEDED(rv) && option) {
+
+              if (node) {
+                nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(node));
+
+                if (option) {
                   PRBool selected;
-	                rv = option->GetDefaultSelected(&selected); // DefaultSelected == HTML Selected
+                  // DefaultSelected == HTML Selected
+	                rv = option->GetDefaultSelected(&selected);
                   if (NS_SUCCEEDED(rv) && selected) {
                     *aValue = i;
                     break;
@@ -734,38 +640,55 @@ NS_IMETHODIMP
 nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
-    nsString value;
+
+  GetPrimaryFrame(this, formControlFrame);
+
+  if (formControlFrame) {
+    nsAutoString value;
     value.AppendInt(aIndex, 10);
-    nsIPresContext* presContext;
-    nsGenericHTMLElement::GetPresContext(this, &presContext);
-    formControlFrame->SetProperty(presContext, nsHTMLAtoms::selectedindex, value);
-    NS_IF_RELEASE(presContext);
+
+    nsCOMPtr<nsIPresContext> presContext;
+
+    GetPresContext(this, getter_AddRefs(presContext));
+
+    formControlFrame->SetProperty(presContext, nsHTMLAtoms::selectedindex,
+                                  value);
   } else {
     SetOptionSelectedByIndex(aIndex, PR_TRUE);
   }
+
   return NS_OK;
 }
 
 nsresult
-nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption, PRUint32 * anIndex)
+nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
+                                    PRUint32 * anIndex)
 {
+  NS_ENSURE_ARG_POINTER(anIndex);
+  *anIndex = 0;
+
   // first find index of option
   nsCOMPtr<nsIDOMNSHTMLOptionCollection> options;
+
   nsresult rv = GetOptions(getter_AddRefs(options));
-  if (NS_SUCCEEDED(rv) && options) {
+
+  if (options) {
     PRUint32 numOptions;
+
     rv = options->GetLength(&numOptions);
-    if (NS_SUCCEEDED(rv)) {
-      for (PRUint32 i = 0; i < numOptions; i++) {
-        nsCOMPtr<nsIDOMNode> node;
-        rv = options->Item(i, getter_AddRefs(node));
-        if (NS_SUCCEEDED(rv) && node) {
-          nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node, &rv);
-          if (NS_SUCCEEDED(rv) && option && option.get() == aOption) {
-            *anIndex = i;
-            return NS_OK;
-          }
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsCOMPtr<nsIDOMNode> node;
+
+    for (PRUint32 i = 0; i < numOptions; i++) {
+      rv = options->Item(i, getter_AddRefs(node));
+      if (NS_SUCCEEDED(rv) && node) {
+        nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(node));
+        if (option && option.get() == aOption) {
+          *anIndex = i;
+          return NS_OK;
         }
       }
     }
@@ -775,7 +698,8 @@ nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption, PRUint32 *
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::IsOptionSelected(nsIDOMHTMLOptionElement* aOption, PRBool * aIsSelected)
+nsHTMLSelectElement::IsOptionSelected(nsIDOMHTMLOptionElement* aOption,
+                                      PRBool * aIsSelected)
 {
   // start off by assuming it isn't in the list of index objects
   *aIsSelected = PR_FALSE;
@@ -786,35 +710,45 @@ nsHTMLSelectElement::IsOptionSelected(nsIDOMHTMLOptionElement* aOption, PRBool *
     return NS_ERROR_FAILURE;
   }
 
-  // The PresState hold a nsISupportsArray that contain nsISupportsPRInt32 objects that hold
-  // the index of the option that is selected, for example, there are 10 options and option
-  // 2 and oiption 8 are selected then the array hold to objects, one that contains 2 and one that contains 8
+  // The PresState hold a nsISupportsArray that contain
+  // nsISupportsPRInt32 objects that hold the index of the option that
+  // is selected, for example, there are 10 options and option 2 and
+  // oiption 8 are selected then the array hold to objects, one that
+  // contains 2 and one that contains 8
+
   nsCOMPtr<nsIPresState> presState;
   nsCOMPtr<nsISupportsArray> value;
-  nsresult res = GetPresState(getter_AddRefs(presState), getter_AddRefs(value));
+
+  nsresult res = GetPresState(getter_AddRefs(presState),
+                              getter_AddRefs(value));
+
   if (NS_SUCCEEDED(res) && presState) {
-    // get the property by name
-    // I am not sure why this is done, versus just using the value array above
+    // get the property by name. I am not sure why this is done, versus
+    // just using the value array above
     nsCOMPtr<nsISupports> supp;
-    presState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), getter_AddRefs(supp));
+    presState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
+                                          getter_AddRefs(supp));
 
     res = NS_ERROR_NULL_POINTER;
-    if (supp) {
 
+    if (supp) {
       // Query for nsISupportArray from nsISupports
       nsCOMPtr<nsISupportsArray> svalue = do_QueryInterface(supp);
-      if (svalue) {
 
-        PRUint32 count = 0; // num items in array
+      if (svalue) {
+        PRUint32 count = 0, i; // num items in array
         svalue->Count(&count);
 
-        // loop through the array look for "index" object and
-        // then we compare it against the option's index to see if there is a match
+        // loop through the array look for "index" object and then we
+        // compare it against the option's index to see if there is a
+        // match
         nsCOMPtr<nsISupportsPRInt32> thisVal;
-        for (PRUint32 i=0; i<count; i++) {
+
+        for (i=0; i < count; i++) {
           // get index obj
           nsCOMPtr<nsISupports> suppval = getter_AddRefs(svalue->ElementAt(i));
           thisVal = do_QueryInterface(suppval);
+
           if (thisVal) {
             // get out the index
             PRInt32 optIndex;
@@ -829,7 +763,9 @@ nsHTMLSelectElement::IsOptionSelected(nsIDOMHTMLOptionElement* aOption, PRBool *
           } else {
             res = NS_ERROR_UNEXPECTED;
           }
-          if (!NS_SUCCEEDED(res)) break;
+
+          if (NS_FAILED(res))
+            break;
         }
       }
     }
@@ -840,9 +776,11 @@ nsHTMLSelectElement::IsOptionSelected(nsIDOMHTMLOptionElement* aOption, PRBool *
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::SetOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool aIsSelected)
+nsHTMLSelectElement::SetOptionSelected(nsIDOMHTMLOptionElement* anOption,
+                                       PRBool aIsSelected)
 {
-  PRUint32 index    = 0;
+  PRUint32 index = 0;
+
   if (NS_FAILED(GetOptionIndex(anOption, &index))) {
     return NS_ERROR_FAILURE;
   }
@@ -851,7 +789,8 @@ nsHTMLSelectElement::SetOptionSelected(nsIDOMHTMLOptionElement* anOption, PRBool
 }
 
 nsresult
-nsHTMLSelectElement::SetOptionSelectedByIndex(PRInt32 aIndex, PRBool aIsSelected)
+nsHTMLSelectElement::SetOptionSelectedByIndex(PRInt32 aIndex,
+                                              PRBool aIsSelected)
 {
   // Since there are no frames, then we must adjust which options
   // are selcted in the content and the current select state is kept in
@@ -915,9 +854,10 @@ nsHTMLSelectElement::SetOptionSelectedByIndex(PRInt32 aIndex, PRBool aIsSelected
     if (-1 != aIndex) {
       if (aIsSelected) {
         nsCOMPtr<nsISupportsPRInt32> thisVal;
-        res = nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-	                     nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(thisVal));
-        if (NS_SUCCEEDED(res) && thisVal) {
+
+        thisVal = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
+
+        if (thisVal) {
           res = thisVal->SetData(aIndex);
           if (NS_SUCCEEDED(res)) {
             PRBool okay = value->InsertElementAt((nsISupports *)thisVal, count);
@@ -927,7 +867,7 @@ nsHTMLSelectElement::SetOptionSelectedByIndex(PRInt32 aIndex, PRBool aIsSelected
       } else {
         // deselecting the option -> remove it from the list
         nsCOMPtr<nsISupportsPRInt32> thisVal;
-        for (PRUint32 i=0; i<count; i++) {
+        for (PRUint32 i = 0; i < count; i++) {
           nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
           thisVal = do_QueryInterface(suppval);
           if (thisVal) {
@@ -942,7 +882,8 @@ nsHTMLSelectElement::SetOptionSelectedByIndex(PRInt32 aIndex, PRBool aIsSelected
           } else {
             res = NS_ERROR_UNEXPECTED;
           }
-          if (!NS_SUCCEEDED(res)) break;
+          if (NS_FAILED(res))
+            break;
         }
       }
     }
@@ -950,9 +891,11 @@ nsHTMLSelectElement::SetOptionSelectedByIndex(PRInt32 aIndex, PRBool aIsSelected
     // If it is a new nsISupportsArray then 
     // set it into the PresState
     if (!doesExist) {
-      presState->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), value);
+      presState->SetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
+                                            value);
     }
   } // if
+
   return NS_OK;
 }
 
@@ -970,40 +913,49 @@ nsHTMLSelectElement::GetValue(nsAWritableString& aValue)
     result = GetOptions(getter_AddRefs(options));
     if (NS_SUCCEEDED(result)) {
       nsCOMPtr<nsIDOMNode> node;
+
       if (selectedIndex == -1) {
         selectedIndex = 0;
       }
+
       result = options->Item(selectedIndex, getter_AddRefs(node));
+
       if (NS_SUCCEEDED(result) && node) {
         nsCOMPtr<nsIHTMLContent> option = do_QueryInterface(node);
+
         if (option) {
           nsHTMLValue value;
           // first check to see if value is there and has a value
           nsresult rv = option->GetHTMLAttribute(nsHTMLAtoms::value, value);
+
           if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
             if (eHTMLUnit_String == value.GetUnit()) {
               value.GetStringValue(aValue);
             } else {
               aValue.SetLength(0);
             }
+
             return NS_OK;
           }
 #if 0 // temporary for bug 4050
           // first check to see if label is there and has a value
           rv = option->GetHTMLAttribute(nsHTMLAtoms::label, value);
+
           if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
             if (eHTMLUnit_String == value.GetUnit()) {
               value.GetStringValue(aValue);
             } else {
               aValue.SetLength(0);
             }
+
             return NS_OK;
           } 
 #endif
-          nsCOMPtr<nsIDOMHTMLOptionElement> optElement = do_QueryInterface(node);
+          nsCOMPtr<nsIDOMHTMLOptionElement> optElement(do_QueryInterface(node));
           if (optElement) {
             optElement->GetText(aValue);
           }
+
           return NS_OK;
         }
 
@@ -1021,19 +973,28 @@ nsHTMLSelectElement::SetValue(const nsAReadableString& aValue)
   nsCOMPtr<nsIDOMNSHTMLOptionCollection> options;
   
   result = GetOptions(getter_AddRefs(options));
+
   if (NS_SUCCEEDED(result)) {
     PRUint32 i, length;
+
     options->GetLength(&length);
+
     for(i = 0; i < length; i++) {
       nsCOMPtr<nsIDOMNode> node;
+
       result = options->Item(i, getter_AddRefs(node));
+
       if (NS_SUCCEEDED(result) && node) {
         nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
+
         if (option) {
           nsAutoString optionVal;
+
           option->GetValue(optionVal);
+
           if (optionVal.Equals(aValue)) {
             SetSelectedIndex((PRInt32)i);
+
             break;
           }
         }
@@ -1055,7 +1016,9 @@ NS_IMETHODIMP
 nsHTMLSelectElement::Blur()
 {
   nsCOMPtr<nsIPresContext> presContext;
-  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+
+  GetPresContext(this, getter_AddRefs(presContext));
+
   return RemoveFocus(presContext);
 }
 
@@ -1063,7 +1026,9 @@ NS_IMETHODIMP
 nsHTMLSelectElement::Focus()
 {
   nsCOMPtr<nsIPresContext> presContext;
-  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+
+  GetPresContext(this, getter_AddRefs(presContext));
+
   return SetFocus(presContext);
 }
 
@@ -1072,25 +1037,34 @@ nsHTMLSelectElement::SetFocus(nsIPresContext* aPresContext)
 {
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled)) {
+
+  if (NS_CONTENT_ATTR_HAS_VALUE ==
+      nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_HTML,
+                                                      nsHTMLAtoms::disabled,
+                                                      disabled)) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
+
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
+
+  if (esm) {
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
   }
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
+
+  GetPrimaryFrame(this, formControlFrame);
+
+  if (formControlFrame) {
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
     // Could call SelectAll(aPresContext) here to automatically
     // select text when we receive focus.
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1101,21 +1075,27 @@ nsHTMLSelectElement::RemoveFocus(nsIPresContext* aPresContext)
   nsresult rv = NS_OK;
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
+
+  GetPrimaryFrame(this, formControlFrame);
+
+  if (formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_FALSE);
   }
 
   nsCOMPtr<nsIEventStateManager> esm;
-  if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
+  aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
+  if (esm) {
     nsCOMPtr<nsIDocument> doc;
+
     GetDocument(*getter_AddRefs(doc));
+
     if (!doc)
       return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIContent> rootContent;
-    rootContent = getter_AddRefs(doc->GetRootContent());
+    rootContent = dont_AddRef(doc->GetRootContent());
+
     rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
   }
 
@@ -1128,21 +1108,26 @@ nsHTMLSelectElement::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   if (!mOptions) {
     Init();
   }
+
   if (mOptions) {
-    return  mOptions->Item(aIndex, aReturn);
+    return mOptions->Item(aIndex, aReturn);
   }
+
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP 
-nsHTMLSelectElement::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+nsHTMLSelectElement::NamedItem(const nsAReadableString& aName,
+                               nsIDOMNode** aReturn)
 {
   if (!mOptions) {
     Init();
   }
+
   if (mOptions) {
     return mOptions->NamedItem(aName, aReturn);
   }
+
   return NS_ERROR_FAILURE;
 }
 
@@ -1151,22 +1136,30 @@ nsHTMLSelectElement::AddOption(nsIContent* aContent)
 {
   // When first populating the select, this will be null but that's ok
   // as we will manually update the widget at frame construction time.
-  if (!mOptions) return NS_OK;
+  if (!mOptions)
+    return NS_OK;
 
   // Add the option to the option list.
   mOptions->AddOption(aContent);
 
   // Update the widget
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame, PR_FALSE);
-  if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+
+  nsresult result = GetPrimaryFrame(this, fcFrame, PR_FALSE);
+
+  if (NS_SUCCEEDED(result) && fcFrame) {
     nsISelectControlFrame* selectFrame = nsnull;
-    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
-    if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
-      nsIPresContext* presContext;
-      nsGenericHTMLElement::GetPresContext(this, &presContext);
-      result = selectFrame->AddOption(presContext, mOptions->IndexOf(aContent));
-      NS_IF_RELEASE(presContext);
+
+    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),
+                                     (void **) &selectFrame);
+
+    if (NS_SUCCEEDED(result) && selectFrame) {
+      nsCOMPtr<nsIPresContext> presContext;
+
+      GetPresContext(this, getter_AddRefs(presContext));
+
+      result = selectFrame->AddOption(presContext,
+                                      mOptions->IndexOf(aContent));
     }
   }
   
@@ -1181,7 +1174,8 @@ nsHTMLSelectElement::AddOption(nsIContent* aContent)
 // always return NS_OK whether aValueArray was nsnull or not
 //-----------------------------------------------------------------
 nsresult 
-nsHTMLSelectElement::GetPresState(nsIPresState** aPresState, nsISupportsArray** aValueArray)
+nsHTMLSelectElement::GetPresState(nsIPresState** aPresState,
+                                  nsISupportsArray** aValueArray)
 {
   *aValueArray = nsnull;
   *aPresState  = nsnull;
@@ -1190,23 +1184,25 @@ nsHTMLSelectElement::GetPresState(nsIPresState** aPresState, nsISupportsArray** 
   nsIPresState* presState;
   PRInt32 type;
   GetType(&type);
-  nsresult rv = nsGenericHTMLElement::GetPrimaryPresState(this, nsIStatefulFrame::eSelectType, 
-                                                          &presState);
+  nsresult rv = GetPrimaryPresState(this, nsIStatefulFrame::eSelectType, 
+                                    &presState);
 
   // Obtain the value property from the presentation state.
-  if (NS_FAILED(rv) || presState == nsnull) {
+  if (NS_FAILED(rv) || !presState) {
     return rv;
   }
 
   // check to see if there is already a supports
-  nsISupports * supp;
-  nsresult res = presState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("selecteditems"), &supp);
-  if (NS_SUCCEEDED(res) && supp != nsnull) {
-    if (NS_FAILED(supp->QueryInterface(NS_GET_IID(nsISupportsArray), (void**)aValueArray))) {
+  nsCOMPtr<nsISupports> supp;
+
+  nsresult res = presState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"), getter_AddRefs(supp));
+
+  if (NS_SUCCEEDED(res) && supp) {
+    if (NS_FAILED(supp->QueryInterface(NS_GET_IID(nsISupportsArray),
+                                       (void**)aValueArray))) {
       // Be paranoid - make sure it is zeroed out
       *aValueArray = nsnull;
     }
-    NS_RELEASE(supp);
   }
 
   *aPresState = presState;
@@ -1219,7 +1215,8 @@ nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
 {
   // When first populating the select, this will be null but that's ok
   // as we will manually update the widget at frame construction time.
-  if (!mOptions) return NS_OK;
+  if (!mOptions)
+    return NS_OK;
 
   PRInt32 oldIndex = mOptions->IndexOf(aContent);
 
@@ -1228,18 +1225,25 @@ nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
 
   // Update the widget
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame, PR_FALSE);
-  if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+  nsresult result = GetPrimaryFrame(this, fcFrame, PR_FALSE);
+
+  if (NS_SUCCEEDED(result) && fcFrame) {
     nsISelectControlFrame* selectFrame = nsnull;
-    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
-    if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
-      // We can't get our index if we've already been replaced in the OptionList.
-      // If we couldn't get our index, pass -1, remove all options and recreate
-      // Coincidentally, IndexOf returns -1 if the option isn't found in the list
-      nsIPresContext* presContext;
-      nsGenericHTMLElement::GetPresContext(this, &presContext);
+
+    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),
+                                     (void **)&selectFrame);
+
+    if (NS_SUCCEEDED(result) && selectFrame) {
+      // We can't get our index if we've already been replaced in the
+      // OptionList. If we couldn't get our index, pass -1, remove
+      // all options and recreate Coincidentally, IndexOf returns -1
+      // if the option isn't found in the list
+
+      nsCOMPtr<nsIPresContext> presContext;
+
+      GetPresContext(this, getter_AddRefs(presContext));
+
       result = selectFrame->RemoveOption(presContext, oldIndex);
-      NS_IF_RELEASE(presContext);
     }
   } else {
     // Since there are no frames, then we must adjust which options
@@ -1251,37 +1255,46 @@ nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
     //
     nsCOMPtr<nsIPresState> presState;
     nsCOMPtr<nsISupportsArray> value;
-    nsresult res = GetPresState(getter_AddRefs(presState), getter_AddRefs(value));
+    nsresult res = GetPresState(getter_AddRefs(presState),
+                                getter_AddRefs(value));
 
     if (NS_SUCCEEDED(res) && value) {
       // The nsISupportArray is a list of selected options
       // Get the number of "selected" options in the select
       PRUint32 count = 0;
+
       value->Count(&count);
 
       // look through the list to see if the option being removed is selected
       // then remove it from the nsISupportsArray
       PRInt32 j=0;
-      for (PRUint32 i=0; i<count; i++) {
+      PRUint32 i;
+
+      for (i = 0; i < count; i++) {
         nsCOMPtr<nsISupports> suppval = getter_AddRefs(value->ElementAt(i));
+
         if (suppval) {
           nsCOMPtr<nsISupportsPRInt32> thisVal = do_QueryInterface(suppval);
+
           if (thisVal) {
             res = thisVal->GetData(&j);
             // the the index being removed match the indexed that is cached?
+
             if (NS_SUCCEEDED(res) && j == oldIndex) {
               res = value->RemoveElementAt(i);
+
               break;
             }
           } else {
             res = NS_ERROR_UNEXPECTED;
           }
-          if (!NS_SUCCEEDED(res)) break;
+
           break;
         }
       } // for
     }
   }
+
   return result;
 }
 
@@ -1289,6 +1302,7 @@ NS_IMETHODIMP
 nsHTMLSelectElement::IsDoneAddingContent(PRBool * aIsDone)
 {
   *aIsDone = mIsDoneAddingContent;
+
   return NS_OK;
 }
 
@@ -1297,14 +1311,19 @@ nsHTMLSelectElement::DoneAddingContent(PRBool aIsDone)
 {
   mIsDoneAddingContent = aIsDone;
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = nsGenericHTMLElement::GetPrimaryFrame(this, fcFrame,PR_FALSE);
-  if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
+  nsresult result = GetPrimaryFrame(this, fcFrame, PR_FALSE);
+
+  if (NS_SUCCEEDED(result) && fcFrame) {
     nsISelectControlFrame* selectFrame = nsnull;
-    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),(void **) &selectFrame);
-    if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
+
+    result = fcFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame),
+                                     (void **)&selectFrame);
+
+    if (NS_SUCCEEDED(result) && selectFrame) {
       result = selectFrame->DoneAddingContent(mIsDoneAddingContent);
     }
   }
+
   return NS_OK;
 }
 
@@ -1322,24 +1341,17 @@ nsHTMLSelectElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::tabindex) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
 
-NS_IMETHODIMP
-nsHTMLSelectElement::AttributeToString(nsIAtom* aAttribute,
-                              const nsHTMLValue& aValue,
-                              nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 static void
@@ -1363,12 +1375,14 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       display->mFloats = NS_STYLE_FLOAT_RIGHT;
       break;
     default:
-      text->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+      text->mVerticalAlign.SetIntValue(value.GetIntValue(),
+                                       eStyleUnit_Enumerated);
       break;
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
@@ -1382,7 +1396,7 @@ nsHTMLSelectElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
            (aAttribute == nsHTMLAtoms::size)) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
   }
 
@@ -1401,10 +1415,10 @@ nsHTMLSelectElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
 
 NS_IMETHODIMP
 nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                           nsEvent* aEvent,
-                           nsIDOMEvent** aDOMEvent,
-                           PRUint32 aFlags,
-                           nsEventStatus* aEventStatus)
+                                    nsEvent* aEvent,
+                                    nsIDOMEvent** aDOMEvent,
+                                    PRUint32 aFlags,
+                                    nsEventStatus* aEventStatus)
 {
   // Do not process any DOM events if the element is disabled
   PRBool disabled;
@@ -1414,16 +1428,20 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  rv = GetPrimaryFrame(this, formControlFrame);
   nsIFrame* formFrame = nsnull;
 
-  if (formControlFrame && NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID, (void **)&formFrame)) && formFrame)
+  if (formControlFrame &&
+      NS_SUCCEEDED(formControlFrame->QueryInterface(kIFrameIID,
+                                                    (void **)&formFrame)) &&
+      formFrame)
   {
     const nsStyleUserInterface* uiStyle;
-    formFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct *&)uiStyle);
+    formFrame->GetStyleData(eStyleStruct_UserInterface,
+                            (const nsStyleStruct *&)uiStyle);
+
     if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
-        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
-    {
+        uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
       return NS_OK;
     }
   }
@@ -1435,13 +1453,14 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
   // at a class level (Bug 32920)
   if ((nsEventStatus_eIgnore == *aEventStatus) && 
       !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
-      (aEvent->message == NS_BLUR_CONTENT) &&
-      formControlFrame != nsnull) {
+      (aEvent->message == NS_BLUR_CONTENT) && formControlFrame) {
     formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
   }
 
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
+  return nsGenericHTMLContainerFormElement::HandleDOMEvent(aPresContext,
+                                                           aEvent, aDOMEvent,
+                                                           aFlags,
+                                                           aEventStatus);
 }
 
 // nsIFormControl
@@ -1452,62 +1471,15 @@ nsHTMLSelectElement::GetType(PRInt32* aType)
   if (aType) {
     *aType = NS_FORM_SELECT;
     return NS_OK;
-  } else {
-    return NS_FORM_NOTOK;
-  }
-}
-
-
-// An important assumption is that if aForm is null, the previous mForm will not be released
-// This allows nsHTMLFormElement to deal with circular references.
-NS_IMETHODIMP
-nsHTMLSelectElement::SetForm(nsIDOMHTMLFormElement* aForm)
-{
-  nsCOMPtr<nsIFormControl> formControl;
-  nsresult result = QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(formControl));
-  if (NS_FAILED(result)) formControl = nsnull;
-
-  nsAutoString nameVal, idVal;
-  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
-
-  if (mForm && formControl) {
-    mForm->RemoveElement(formControl);
-
-    if (nameVal.Length())
-      mForm->RemoveElementFromTable(this, nameVal);
-
-    if (idVal.Length())
-      mForm->RemoveElementFromTable(this, idVal);
   }
 
-  if (aForm) {
-    nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm, &result);
-    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
-    if ((NS_OK == result) && theForm) {
-      if (formControl) {
-        theForm->AddElement(formControl);
-
-        if (nameVal.Length())
-          theForm->AddElementToTable(this, nameVal);
-
-        if (idVal.Length())
-          theForm->AddElementToTable(this, idVal);
-      }
-    }
-  } else {
-    mForm = nsnull;
-  }
-
-  mInner.SetForm(mForm);
-
-  return result;
+  return NS_FORM_NOTOK;
 }
 
 NS_IMETHODIMP
 nsHTMLSelectElement::Init()
 {
-  if (nsnull == mOptions) {
+  if (!mOptions) {
     mOptions = new nsHTMLOptionCollection(this);
     NS_ADDREF(mOptions);
   }
@@ -1519,101 +1491,50 @@ nsHTMLSelectElement::Init()
 // nsIJSScriptObject interface
 
 PRBool    
-nsHTMLSelectElement::AddProperty(JSContext *aContext, 
-                          JSObject *aObj, 
-                          jsval aID, 
-                          jsval *aVp)
-{
-  return PR_TRUE;
-}
- 
-PRBool    
-nsHTMLSelectElement::DeleteProperty(JSContext *aContext, 
-                             JSObject *aObj, 
-                             jsval aID, 
-                             jsval *aVp)
-{
-  return PR_TRUE;
-}
- 
-PRBool    
-nsHTMLSelectElement::GetProperty(JSContext *aContext, 
-                          JSObject *aObj, 
-                          jsval aID, 
-                          jsval *aVp)
-{
-  return PR_TRUE;
-}
-
-PRBool    
-nsHTMLSelectElement::SetProperty(JSContext *aContext, 
-                                 JSObject *aObj, 
-                                 jsval aID, 
-                                 jsval *aVp)
+nsHTMLSelectElement::SetProperty(JSContext *aContext, JSObject *aObj,
+                                 jsval aID, jsval *aVp)
 {
   nsresult res = NS_OK;
   // Set options in the options list by indexing into select
+
   if (JSVAL_IS_INT(aID) && mOptions) {
-    nsIJSScriptObject* optList = nsnull;
-    res = mOptions->QueryInterface(NS_GET_IID(nsIJSScriptObject), (void **)&optList);
-    if (NS_SUCCEEDED(res) && optList) {
-      res = optList->SetProperty(aContext, aObj, aID, aVp);
-      NS_RELEASE(optList);
-    }
+    res = mOptions->SetProperty(aContext, aObj, aID, aVp);
   } else {
-    res = mInner.SetProperty(aContext, aObj, aID, aVp);
+    res = nsGenericHTMLContainerFormElement::SetProperty(aContext, aObj, aID,
+                                                         aVp);
   }
+
   return res;
-}
-
-PRBool    
-nsHTMLSelectElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
-{
-  return PR_TRUE;
-}
-
-PRBool    
-nsHTMLSelectElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                             PRBool *aDidDefineProperty)
-{
-  *aDidDefineProperty = PR_FALSE;
-
-  return PR_TRUE;
-}
-
-PRBool    
-nsHTMLSelectElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
-{
-  return PR_TRUE;
-}
-
-void      
-nsHTMLSelectElement::Finalize(JSContext *aContext, JSObject *aObj)
-{
 }
 
 //----------------------------------------------------------------------
 
 // nsHTMLOptionCollection implementation
-// XXX this was modified form nsHTMLFormElement.cpp. We need a base class implementation
+// XXX this was modified form nsHTMLFormElement.cpp. We need a base
+// class implementation
 
-static
-void GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)
+static void
+GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)
 {
   PRInt32 numChildren;
   aContent->ChildCount(numChildren);
-  nsIContent* child = nsnull;
-  nsIDOMHTMLOptionElement* option = nsnull;
+
+  nsCOMPtr<nsIContent> child;
+
   for (int i = 0; i < numChildren; i++) {
-    aContent->ChildAt(i, child);
+    aContent->ChildAt(i, *getter_AddRefs(child));
+
     if (child) {
-      nsresult result = child->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement), (void**)&option);
-      if ((NS_OK == result) && option) {
+      nsIDOMHTMLOptionElement* option = nsnull;
+
+      child->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement),
+                            (void**)&option);
+
+      if (option) {
         aOptions.AppendElement(option); // keep the ref count
       } else {
         GetOptionsRecurse(child, aOptions);
       }
-      NS_RELEASE(child);
     }
   }
 }
@@ -1656,18 +1577,22 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLOptionCollection, nsGenericDOMHTMLCollection)
 nsresult
 nsHTMLOptionCollection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+  nsISupports *inst = nsnull;
+
   if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
-    *aInstancePtr = (void*)(nsIJSScriptObject*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
+    inst = NS_STATIC_CAST(nsIJSScriptObject *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLOptionCollection))) {
+    inst = NS_STATIC_CAST(nsIDOMNSHTMLOptionCollection *, this);
+  } else {
+    return nsGenericDOMHTMLCollection::QueryInterface(aIID, aInstancePtr);
   }
-  if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLOptionCollection))) {
-    *aInstancePtr = (void*)(nsIDOMNSHTMLOptionCollection*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return nsGenericDOMHTMLCollection::QueryInterface(aIID, aInstancePtr);
+
+  *aInstancePtr = inst;
+  NS_ADDREF(inst);
+
+  return NS_OK;
 }
 
 // nsIDOMNSHTMLOptionCollection interface
@@ -1675,9 +1600,10 @@ nsHTMLOptionCollection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP    
 nsHTMLOptionCollection::GetLength(PRUint32* aLength)
 {
-  if (mDirty && (nsnull != mSelect)) {
+  if (mDirty && mSelect) {
     GetOptions();
   }
+
   *aLength = (PRUint32)mElements.Count();
 
   return NS_OK;
@@ -1687,12 +1613,15 @@ NS_IMETHODIMP
 nsHTMLOptionCollection::SetLength(PRUint32 aLength)
 {
   nsresult result = NS_ERROR_UNEXPECTED;
+
   if (mSelect) {
     if (mDirty) {
       GetOptions();
     }  
+
     result = mSelect->SetLength(aLength);
   }
+
   return result;  
 }
 
@@ -1700,12 +1629,15 @@ NS_IMETHODIMP
 nsHTMLOptionCollection::GetSelectedIndex(PRInt32 *aSelectedIndex)
 {
   nsresult result = NS_ERROR_UNEXPECTED;
+
   if (mSelect) {
     if (mDirty) {
       GetOptions();
     }  
+
     result = mSelect->GetSelectedIndex(aSelectedIndex);
   }
+
   return result;  
 }
 
@@ -1713,59 +1645,70 @@ NS_IMETHODIMP
 nsHTMLOptionCollection::SetSelectedIndex(PRInt32 aSelectedIndex)
 {
   nsresult result = NS_ERROR_UNEXPECTED;
+
   if (mSelect) {
     if (mDirty) {
       GetOptions();
     }
+
     result = mSelect->SetSelectedIndex(aSelectedIndex);
   }
+
   return result;
 }
 
 NS_IMETHODIMP
 nsHTMLOptionCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  if (mDirty && (nsnull != mSelect)) {
+  if (mDirty && mSelect) {
     GetOptions();
   }
+
   PRUint32 length = 0;
   GetLength(&length);
+
   if (aIndex >= length) {
     *aReturn = nsnull;
   } else {
     *aReturn = (nsIDOMNode*)mElements.ElementAt(aIndex);
     NS_ADDREF(*aReturn);
   }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsHTMLOptionCollection::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+nsHTMLOptionCollection::NamedItem(const nsAReadableString& aName,
+                                  nsIDOMNode** aReturn)
 {
-  if (mDirty && (nsnull != mSelect)) {
+  if (mDirty && mSelect) {
     GetOptions();
   }
+
   PRUint32 count = mElements.Count();
   nsresult result = NS_OK;
 
   *aReturn = nsnull;
-  for (PRUint32 i = 0; i < count && *aReturn == nsnull; i++) {
+  for (PRUint32 i = 0; i < count && !*aReturn; i++) {
     nsIDOMHTMLOptionElement *option;
     option = (nsIDOMHTMLOptionElement*)mElements.ElementAt(i);
+
     if (nsnull != option) {
-      nsIContent *content;
-      
-      result = option->QueryInterface(NS_GET_IID(nsIContent), (void **)&content);
-      if (NS_OK == result) {
+      nsCOMPtr<nsIContent> content(do_QueryInterface(option));
+
+      if (content) {
         nsAutoString name;
         // XXX Should it be an EqualsIgnoreCase?
-        if (((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+
+        if (((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name,
+                                    name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name))) ||
-            ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+            ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id,
+                                    name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name)))) {
-          result = option->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)aReturn);
+          result = option->QueryInterface(NS_GET_IID(nsIDOMNode),
+                                          (void **)aReturn);
         }
-        NS_RELEASE(content);
       }
     }
   }
@@ -1785,15 +1728,13 @@ nsHTMLOptionCollection::AddOption(nsIContent* aOption)
 void 
 nsHTMLOptionCollection::RemoveOption(nsIContent* aOption)
 {
-  nsIDOMHTMLOptionElement* option;
+  nsCOMPtr<nsIDOMHTMLOptionElement> option;
 
-  if ((nsnull != aOption) &&
-      NS_SUCCEEDED(aOption->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement), (void**)&option))) {
+  if (aOption &&
+      NS_SUCCEEDED(aOption->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement),
+                                           getter_AddRefs(option)))) {
     if (mElements.RemoveElement(option)) {
-      nsresult result;
-      NS_RELEASE2(option, result);
     }
-    NS_RELEASE(option);
   }
 }
 
@@ -1802,26 +1743,32 @@ nsHTMLOptionCollection::IndexOf(nsIContent* aOption)
 {
   nsCOMPtr<nsIDOMHTMLOptionElement> option;
 
-  if (mDirty && (nsnull != mSelect)) {
+  if (mDirty && mSelect) {
     GetOptions();
   }
-  if ((nsnull != aOption) &&
-    NS_SUCCEEDED(aOption->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement), getter_AddRefs(option)))) {
+
+  if (aOption &&
+    NS_SUCCEEDED(aOption->QueryInterface(NS_GET_IID(nsIDOMHTMLOptionElement),
+                                         getter_AddRefs(option)))) {
     return mElements.IndexOf(option);
   }
+
   return -1;
 }
 
 // nsIScriptObjectOwner interface
 
 NS_IMETHODIMP
-nsHTMLOptionCollection::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+nsHTMLOptionCollection::GetScriptObject(nsIScriptContext *aContext,
+                                        void** aScriptObject)
 {
   nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
+  if (!mScriptObject) {
     res = NS_NewScriptNSHTMLOptionCollection(aContext, (nsISupports *)(nsIDOMNSHTMLOptionCollection *)this, nsnull, (void**)&mScriptObject);
   }
+
   *aScriptObject = mScriptObject;
+
   return res;
 }
 
@@ -1834,42 +1781,34 @@ nsHTMLOptionCollection::SetScriptObject(void* aScriptObject)
 // nsIJSScriptObject interface
 
 PRBool    
-nsHTMLOptionCollection::AddProperty(JSContext *aContext, 
-                          JSObject *aObj, 
-                          jsval aID, 
-                          jsval *aVp)
+nsHTMLOptionCollection::AddProperty(JSContext *aContext, JSObject *aObj, 
+                                    jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
  
 PRBool    
-nsHTMLOptionCollection::DeleteProperty(JSContext *aContext, 
-                             JSObject *aObj, 
-                             jsval aID, 
-                             jsval *aVp)
+nsHTMLOptionCollection::DeleteProperty(JSContext *aContext, JSObject *aObj, 
+                                       jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
  
 PRBool    
-nsHTMLOptionCollection::GetProperty(JSContext *aContext, 
-                          JSObject *aObj, 
-                          jsval aID, 
-                          jsval *aVp)
+nsHTMLOptionCollection::GetProperty(JSContext *aContext, JSObject *aObj, 
+                                    jsval aID, jsval *aVp)
 {
   return PR_TRUE;
 }
 
 PRBool    
-nsHTMLOptionCollection::SetProperty(JSContext *aContext, 
-                          JSObject *aObj, 
-                          jsval aID, 
-                          jsval *aVp)
+nsHTMLOptionCollection::SetProperty(JSContext *aContext, JSObject *aObj, 
+                                    jsval aID, jsval *aVp)
 {
   // XXX How about some error reporting and error
   // propogation in this method???
 
-  if (JSVAL_IS_INT(aID) && (nsnull != mSelect)) {
+  if (JSVAL_IS_INT(aID) && mSelect) {
     PRInt32 indx = JSVAL_TO_INT(aID);
     nsresult result;
 
@@ -1891,30 +1830,28 @@ nsHTMLOptionCollection::SetProperty(JSContext *aContext,
         JSObject* jsobj = JSVAL_TO_OBJECT(*aVp); 
         JSClass* jsclass = JS_GetClass(aContext, jsobj);
         if ((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) {
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext, jsobj);
-          nsIDOMNode* option; 
-          nsIDOMNode* parent;
-          nsIDOMNode* refChild;
-          nsIDOMNode* ret;
+          nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext,
+                                                               jsobj);
 
-          if (NS_OK == supports->QueryInterface(NS_GET_IID(nsIDOMNode), (void **)&option)) {
+          nsCOMPtr<nsIDOMNode> option(do_QueryInterface(supports));
+          nsCOMPtr<nsIDOMNode> parent;
+          nsCOMPtr<nsIDOMNode> ret;
+
+          if (option) {
             if (indx == length) {
-              result = mSelect->AppendChild(option, &ret);
-              NS_IF_RELEASE(ret);
+              result = mSelect->AppendChild(option, getter_AddRefs(ret));
             }
             else {
-              refChild = (nsIDOMNode*)mElements.ElementAt(indx);
+              nsIDOMNode *refChild = (nsIDOMNode*)mElements.ElementAt(indx);
               if (nsnull != refChild) {
-                result = refChild->GetParentNode(&parent);
-                if (NS_SUCCEEDED(result) && (nsnull != parent)) {
+                result = refChild->GetParentNode(getter_AddRefs(parent));
+                if (NS_SUCCEEDED(result) && parent) {
                   
-                  result = parent->ReplaceChild(option, refChild, &ret);
-                  NS_IF_RELEASE(ret);
-                  NS_RELEASE(parent);
+                  result = parent->ReplaceChild(option, refChild,
+                                                getter_AddRefs(ret));
                 }
               }            
             }
-            NS_RELEASE(option);
           }
         }
       }
@@ -1953,12 +1890,15 @@ nsHTMLOptionCollection::Finalize(JSContext *aContext, JSObject *aObj)
 void
 nsHTMLOptionCollection::Clear()
 {
-  PRUint32 numOptions = mElements.Count();
-  for (PRUint32 i = 0; i < numOptions; i++) {
-    nsIDOMHTMLOptionElement* option = (nsIDOMHTMLOptionElement*)mElements.ElementAt(i);
+  PRUint32 numOptions = mElements.Count(), i;
+  nsIDOMHTMLOptionElement* option = nsnull;
+
+  for (i = 0; i < numOptions; i++) {
+    option = (nsIDOMHTMLOptionElement*)mElements.ElementAt(i);
     NS_ASSERTION(option,"option already released");
-    NS_RELEASE(option);
+    NS_IF_RELEASE(option);
   }
+
   mElements.Clear();
 }
 
@@ -1966,18 +1906,7 @@ nsHTMLOptionCollection::Clear()
 NS_IMETHODIMP
 nsHTMLSelectElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  if (!aResult) return NS_ERROR_NULL_POINTER;
-#ifdef DEBUG
-  mInner.SizeOf(aSizer, aResult, sizeof(*this));
-  if (mForm) {
-    PRBool recorded;
-    aSizer->RecordObject(mForm, &recorded);
-    if (!recorded) {
-      PRUint32 formSize;
-      mForm->SizeOf(aSizer, &formSize);
-      aSizer->AddSize(nsHTMLAtoms::iform, formSize);
-    }
-  }
-#endif
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
   return NS_OK;
 }

@@ -131,7 +131,8 @@ public:
    * @param aNotify specifies whether or not the document should be
    * notified of the attribute change.
    */
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
+                          const nsAReadableString& aValue,
                           PRBool aNotify) = 0;
 
   /**

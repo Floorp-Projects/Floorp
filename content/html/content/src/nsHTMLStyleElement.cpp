@@ -38,49 +38,40 @@
 // XXX no SRC attribute
 
 
-class nsHTMLStyleElement : public nsIDOMHTMLStyleElement,
-                           public nsIJSScriptObject,
-                           public nsIHTMLContent,
-                           public nsIStyleSheetLinkingElement,
-                           public nsIDOMLinkStyle
+class nsHTMLStyleElement : public nsGenericHTMLContainerElement,
+                           public nsIDOMHTMLStyleElement,
+                           public nsIDOMLinkStyle,
+                           public nsIStyleSheetLinkingElement
 {
 public:
-  nsHTMLStyleElement(nsINodeInfo *aNodeInfo);
+  nsHTMLStyleElement();
   virtual ~nsHTMLStyleElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLStyleElement
   NS_DECL_IDOMHTMLSTYLEELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+  // nsIDOMLinkStyle
+  NS_DECL_IDOMLINKSTYLE
 
   // nsIStyleSheetLinkingElement  
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
 
-  // nsIDOMLinkStyle
-  NS_DECL_IDOMLINKSTYLE
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
-  nsGenericHTMLContainerElement mInner;
   nsIStyleSheet* mStyleSheet;
 };
 
@@ -89,20 +80,30 @@ NS_NewHTMLStyleElement(nsIHTMLContent** aInstancePtrResult,
                        nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLStyleElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLStyleElement* it = new nsHTMLStyleElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLStyleElement::nsHTMLStyleElement(nsINodeInfo *aNodeInfo)
+nsHTMLStyleElement::nsHTMLStyleElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
   mStyleSheet = nsnull;
 }
 
@@ -111,44 +112,41 @@ nsHTMLStyleElement::~nsHTMLStyleElement()
   NS_IF_RELEASE(mStyleSheet);
 }
 
-NS_IMPL_ADDREF(nsHTMLStyleElement)
 
-NS_IMPL_RELEASE(nsHTMLStyleElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLStyleElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLStyleElement, nsGenericElement) 
 
-nsresult
-nsHTMLStyleElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLStyleElement))) {
-    nsIDOMHTMLStyleElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleSheetLinkingElement))) {
-    nsIStyleSheetLinkingElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMLinkStyle))) {
-    *aInstancePtr = (void*)(nsIDOMLinkStyle*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI3(nsHTMLStyleElement, nsGenericHTMLContainerElement,
+                        nsIDOMHTMLStyleElement, nsIDOMLinkStyle,
+                        nsIStyleSheetLinkingElement);
+
 
 nsresult
 nsHTMLStyleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLStyleElement* it = new nsHTMLStyleElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLStyleElement* it = new nsHTMLStyleElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -156,19 +154,17 @@ nsHTMLStyleElement::GetDisabled(PRBool* aDisabled)
 {
   nsresult result = NS_OK;
   
-  if (nsnull != mStyleSheet) {
-    nsIDOMStyleSheet* ss;
-    
-    result = mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void**)&ss);
-    if (NS_OK == result) {
+  if (mStyleSheet) {
+    nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(mStyleSheet));
+
+    if (ss) {
       result = ss->GetDisabled(aDisabled);
-      NS_RELEASE(ss);
     }
   }
   else {
     *aDisabled = PR_FALSE;
   }
-  
+
   return result;
 }
 
@@ -177,16 +173,14 @@ nsHTMLStyleElement::SetDisabled(PRBool aDisabled)
 {
   nsresult result = NS_OK;
   
-  if (nsnull != mStyleSheet) {
-    nsIDOMStyleSheet* ss;
-    
-    result = mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void**)&ss);
-    if (NS_OK == result) {
+  if (mStyleSheet) {
+    nsCOMPtr<nsIDOMStyleSheet> ss(do_QueryInterface(mStyleSheet));
+
+    if (ss) {
       result = ss->SetDisabled(aDisabled);
-      NS_RELEASE(ss);
     }
   }
-  
+
   return result;
 }
 
@@ -214,67 +208,11 @@ nsHTMLStyleElement::GetStyleSheet(nsIStyleSheet*& aStyleSheet)
 }
 
 NS_IMETHODIMP
-nsHTMLStyleElement::StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
-                               nsHTMLValue& aResult)
-{
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-NS_IMETHODIMP
-nsHTMLStyleElement::AttributeToString(nsIAtom* aAttribute,
-                               const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLStyleElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                             PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLStyleElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                 nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLStyleElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                            nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-
-NS_IMETHODIMP
 nsHTMLStyleElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -283,8 +221,9 @@ nsHTMLStyleElement::GetSheet(nsIDOMStyleSheet** aSheet)
   NS_ENSURE_ARG_POINTER(aSheet);
   *aSheet = 0;
 
-  if (mStyleSheet)
+  if (mStyleSheet) {
     mStyleSheet->QueryInterface(NS_GET_IID(nsIDOMStyleSheet), (void **)aSheet);
+  }
 
   // Always return NS_OK to avoid throwing JS exceptions if mStyleSheet
   // is not a nsIDOMStyleSheet

@@ -912,73 +912,6 @@ nsGenericDOMDataNode::CopyText(nsAWritableString& aResult)
   return NS_OK;
 }
 
-static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
-{
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(*getter_AddRefs(doc));
-  if (!doc)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  doc->GetScriptGlobalObject(getter_AddRefs(global));
-  if (!global)
-    return PR_FALSE;
-
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(global));
-  if (!window)
-    return PR_FALSE;
-
-  PRBool set;
-  window->HasMutationListeners(aType, &set);
-  if (!set)
-    return PR_FALSE;
-
-  // We know a mutation listener is registered, but it might not
-  // be in our chain.  Check quickly to see.
-  nsCOMPtr<nsIContent> curr = aContent;
-  nsCOMPtr<nsIEventListenerManager> manager;
-
-  while (curr) {
-    nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(curr));
-    if (rec) {
-      rec->GetListenerManager(getter_AddRefs(manager));
-      if (manager) {
-        PRBool hasMutationListeners = PR_FALSE;
-        manager->HasMutationListeners(&hasMutationListeners);
-        if (hasMutationListeners)
-          return PR_TRUE;
-      }
-    }
-
-    nsCOMPtr<nsIContent> prev = curr;
-    prev->GetParent(*getter_AddRefs(curr));
-  }
-
-  nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
-  if (rec) {
-    rec->GetListenerManager(getter_AddRefs(manager));
-    if (manager) {
-      PRBool hasMutationListeners = PR_FALSE;
-      manager->HasMutationListeners(&hasMutationListeners);
-      if (hasMutationListeners)
-        return PR_TRUE;
-    }
-  }
-  
-  rec = do_QueryInterface(window);
-  if (rec) {
-    rec->GetListenerManager(getter_AddRefs(manager));
-    if (manager) {
-      PRBool hasMutationListeners = PR_FALSE;
-      manager->HasMutationListeners(&hasMutationListeners);
-      if (hasMutationListeners)
-        return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
-}
-
 nsresult
 nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
                               const PRUnichar* aBuffer,
@@ -997,7 +930,7 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
   }
   mText.SetTo(aBuffer, aLength);
 
-  if (mDocument && HasMutationListeners(aOuterContent, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
+  if (mDocument && nsGenericElement::HasMutationListeners(aOuterContent, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aOuterContent));
     nsMutationEvent mutation;
     mutation.eventStructType = NS_MUTATION_EVENT;
@@ -1010,7 +943,8 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
       mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newVal));
     nsEventStatus status = nsEventStatus_eIgnore;
     nsCOMPtr<nsIDOMEvent> domEvent;
-    HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+    HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+                   NS_EVENT_FLAG_INIT, &status);
   }
 
   // Trigger a reflow
@@ -1037,7 +971,7 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent, const char* aBuffer,
   }
   mText.SetTo(aBuffer, aLength);
 
-  if (mDocument && HasMutationListeners(aOuterContent, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
+  if (mDocument && nsGenericElement::HasMutationListeners(aOuterContent, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {
     nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(aOuterContent));
     nsMutationEvent mutation;
     mutation.eventStructType = NS_MUTATION_EVENT;
@@ -1050,7 +984,8 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent, const char* aBuffer,
       mutation.mNewAttrValue = getter_AddRefs(NS_NewAtom(newVal));
     nsEventStatus status = nsEventStatus_eIgnore;
     nsCOMPtr<nsIDOMEvent> domEvent;
-    HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent), NS_EVENT_FLAG_INIT, &status);
+    HandleDOMEvent(nsnull, &mutation, getter_AddRefs(domEvent),
+                   NS_EVENT_FLAG_INIT, &status);
   }
 
   // Trigger a reflow

@@ -33,40 +33,40 @@
 #include "nsIPresContext.h"
 
 
-class nsHTMLTableColGroupElement : public nsIDOMHTMLTableColElement,
-                                   public nsIJSScriptObject,
-                                   public nsIHTMLContent
+class nsHTMLTableColGroupElement : public nsGenericHTMLContainerElement,
+                                   public nsIDOMHTMLTableColElement
 {
 public:
-  nsHTMLTableColGroupElement(nsINodeInfo *aNodeInfo);
+  nsHTMLTableColGroupElement();
   virtual ~nsHTMLTableColGroupElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLTableColElement
   NS_DECL_IDOMHTMLTABLECOLELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
 
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLContainerElement mInner;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -74,55 +74,73 @@ NS_NewHTMLTableColGroupElement(nsIHTMLContent** aInstancePtrResult,
                                nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLTableColGroupElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLTableColGroupElement* it = new nsHTMLTableColGroupElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLTableColGroupElement::nsHTMLTableColGroupElement(nsINodeInfo *aNodeInfo)
+nsHTMLTableColGroupElement::nsHTMLTableColGroupElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLTableColGroupElement::~nsHTMLTableColGroupElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLTableColGroupElement)
 
-NS_IMPL_RELEASE(nsHTMLTableColGroupElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableColGroupElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableColGroupElement, nsGenericElement) 
 
-nsresult
-nsHTMLTableColGroupElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  // DOM treats COLGROUP like COL
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLTableColElement))) {
-    nsIDOMHTMLTableColElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI(nsHTMLTableColGroupElement,
+                       nsGenericHTMLContainerElement,
+                       nsIDOMHTMLTableColElement);
+
 
 nsresult
 nsHTMLTableColGroupElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLTableColGroupElement* it = new nsHTMLTableColGroupElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLTableColGroupElement* it = new nsHTMLTableColGroupElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Ch, ch)
@@ -130,6 +148,7 @@ NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, ChOff, choff)
 NS_IMPL_INT_ATTR(nsHTMLTableColGroupElement, Span, span)
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, VAlign, valign)
 NS_IMPL_STRING_ATTR(nsHTMLTableColGroupElement, Width, width)
+
 
 NS_IMETHODIMP
 nsHTMLTableColGroupElement::StringToAttribute(nsIAtom* aAttribute,
@@ -141,34 +160,35 @@ nsHTMLTableColGroupElement::StringToAttribute(nsIAtom* aAttribute,
    */
   /* attributes that resolve to integers */
   if (aAttribute == nsHTMLAtoms::choff) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::span) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
+    if (ParseValue(aValue, 1, aResult, eHTMLUnit_Integer)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* attributes that resolve to integers or percents or proportions */
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (nsGenericHTMLElement::ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
+    /* attributes that resolve to integers or percents or proportions */
+
+    if (ParseValueOrPercentOrProportional(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-
-  /* other attributes */
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (mInner.ParseTableCellHAlignValue(aValue, aResult)) {
+    /* other attributes */
+
+    if (ParseTableCellHAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
-    if (nsGenericHTMLElement::ParseTableVAlignValue(aValue, aResult)) {
+    if (ParseTableVAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -184,21 +204,23 @@ nsHTMLTableColGroupElement::AttributeToString(nsIAtom* aAttribute,
      choff, repeat
    */
   if (aAttribute == nsHTMLAtoms::align) {
-    if (mInner.TableCellHAlignValueToString(aValue, aResult)) {
+    if (TableCellHAlignValueToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
-    if (nsGenericHTMLElement::TableVAlignValueToString(aValue, aResult)) {
+    if (TableVAlignValueToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (nsGenericHTMLElement::ValueOrPercentOrProportionalToString(aValue, aResult)) {
+    if (ValueOrPercentOrProportionalToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
+                                                          aResult);
 }
 
 static void
@@ -208,13 +230,14 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
-  if (nsnull != aAttributes) {
 
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
     nsStyleText* textStyle = nsnull;
 
     // width
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);
+
     if (value.GetUnit() != eHTMLUnit_Null) {
       nsStylePosition* position = (nsStylePosition*)
         aContext->GetMutableStyleData(eStyleStruct_Position);
@@ -230,9 +253,10 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         break;
       
       case eHTMLUnit_Proportional:
-        position->mWidth.SetIntValue(value.GetIntValue(), eStyleUnit_Proportional);
-        break;
+        position->mWidth.SetIntValue(value.GetIntValue(),
+                                     eStyleUnit_Proportional);
 
+        break;
       default:
         break;
       }
@@ -248,14 +272,16 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     
     // valign: enum
     aAttributes->GetAttribute(nsHTMLAtoms::valign, value);
-    if (value.GetUnit() == eHTMLUnit_Enumerated) 
-    {
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
       if (nsnull==textStyle)
         textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(),
+                                            eStyleUnit_Enumerated);
     }
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 NS_IMETHODIMP
@@ -267,7 +293,7 @@ nsHTMLTableColGroupElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::valign)) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
   }
 
@@ -284,21 +310,11 @@ nsHTMLTableColGroupElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aF
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsHTMLTableColGroupElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                               nsEvent* aEvent,
-                               nsIDOMEvent** aDOMEvent,
-                               PRUint32 aFlags,
-                               nsEventStatus* aEventStatus)
+nsHTMLTableColGroupElement::SizeOf(nsISizeOfHandler* aSizer,
+                                   PRUint32* aResult) const
 {
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
 
-
-NS_IMETHODIMP
-nsHTMLTableColGroupElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
-{
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  return NS_OK;
 }

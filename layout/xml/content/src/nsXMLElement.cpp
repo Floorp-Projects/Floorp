@@ -40,20 +40,40 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIRefreshURI.h"
 #include "nsStyleConsts.h"
+#include "nsIPresShell.h"
+
+#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsIDOMViewCSS.h"
+#include "nsIXBLService.h"
+#include "nsIXBLBinding.h"
+#include "nsIBindingManager.h"
+#include "nsIScriptGlobalObject.h"
 
 
 nsresult
 NS_NewXMLElement(nsIXMLContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIXMLContent* it = new nsXMLElement(aNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aInstancePtrResult);
+
+  nsXMLElement* it = new nsXMLElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIXMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIXMLContent *, it);
+
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 static nsIAtom* kSimpleAtom;  // XXX these should get moved to nsXMLAtoms
@@ -66,13 +86,9 @@ static nsIAtom* kOnLoadAtom;
 static nsIAtom* kEmbedAtom;
 static PRUint32 kElementCount;
 
-nsXMLElement::nsXMLElement(nsINodeInfo *aNodeInfo)
+nsXMLElement::nsXMLElement() : mNameSpace(nsnull)
 {
-  NS_INIT_REFCNT();
-
-  mInner.Init(this, aNodeInfo);
   mIsLink = PR_FALSE;
-  mContentID = 0;
 
   if (0 == kElementCount++) {
     kSimpleAtom = NS_NewAtom("simple");
@@ -101,27 +117,37 @@ nsXMLElement::~nsXMLElement()
 }
 
 NS_IMETHODIMP 
-nsXMLElement::QueryInterface(REFNSIID aIID,
-                             void** aInstancePtr)
+nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  NS_IMPL_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this, nsIXMLContent)
-  if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
-    nsIXMLContent* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+  *aInstancePtr = nsnull;
+
+  nsresult rv = nsGenericContainerElement::QueryInterface(aIID, aInstancePtr);
+
+  if (NS_SUCCEEDED(rv))
+    return rv;
+
+  nsISupports *inst = nsnull;
+
+  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
+    inst = NS_STATIC_CAST(nsIDOMNode *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIDOMElement))) {
+    inst = NS_STATIC_CAST(nsIDOMElement *, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIXMLContent))) {
+    inst = NS_STATIC_CAST(nsIXMLContent *, this);
+  } else {
+    return NS_NOINTERFACE;
   }
-  if (aIID.Equals(nsIStyledContent::GetIID())) {
-    nsIStyledContent* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }  
-  return NS_NOINTERFACE;
+
+  NS_ADDREF(inst);
+
+  *aInstancePtr = inst;
+
+  return NS_OK;
 }
 
-NS_IMPL_ADDREF(nsXMLElement)
-NS_IMPL_RELEASE(nsXMLElement)
+NS_IMPL_ADDREF_INHERITED(nsXMLElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsXMLElement, nsGenericElement)
 
 static inline nsresult MakeURI(const char *aSpec, nsIURI *aBase, nsIURI **aURI)
 {
@@ -199,8 +225,8 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
   } // while
 
   if (NS_SUCCEEDED(rv)) {
-    if (!*aURI && mInner.mDocument) {
-      nsCOMPtr<nsIURI> docBase = dont_AddRef(mInner.mDocument->GetDocumentURL());
+    if (!*aURI && mDocument) {
+      nsCOMPtr<nsIURI> docBase = dont_AddRef(mDocument->GetDocumentURL());
       if (base.IsEmpty()) {
         *aURI = docBase.get();    
         NS_IF_ADDREF(*aURI);  // nsCOMPtr releases this once
@@ -218,25 +244,8 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
 }
 
 NS_IMETHODIMP 
-nsXMLElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
+nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo,
                            const nsAReadableString& aValue,
-                           PRBool aNotify)
-{
-  nsresult rv;
-  nsCOMPtr<nsINodeInfoManager> nimgr;
-  rv = mInner.mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsINodeInfo> ni;
-  rv = nimgr->GetNodeInfo(aName, nsnull, aNameSpaceID,
-                          *getter_AddRefs(ni));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return SetAttribute(ni, aValue, aNotify);
-}
-
-NS_IMETHODIMP 
-nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue,
                            PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
@@ -260,10 +269,11 @@ nsXMLElement::SetAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aVal
     // We will check for actuate="onLoad" in MaybeTriggerAutoLink
   }
 
-  return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
+  return nsGenericContainerElement::SetAttribute(aNodeInfo, aValue, aNotify);
 }
 
-static nsresult WebShellToPresContext(nsIWebShell *aShell, nsIPresContext **aPresContext)
+static nsresult WebShellToPresContext(nsIWebShell *aShell,
+                                      nsIPresContext **aPresContext)
 {
   *aPresContext = nsnull;
 
@@ -276,7 +286,8 @@ static nsresult WebShellToPresContext(nsIWebShell *aShell, nsIPresContext **aPre
 }
 
 
-static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAReadableString& aURI, nsIURI **aAbsURI)
+static nsresult CheckLoadURI(nsIURI *aBaseURI, const nsAReadableString& aURI,
+                             nsIURI **aAbsURI)
 {
   // XXX URL escape?
   nsCAutoString str; str.Assign(NS_ConvertUCS2toUTF8(aURI));
@@ -338,15 +349,19 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
     do {
       // actuate="onLoad" ?
       nsAutoString value;
-      rv = GetAttribute(kNameSpaceID_XLink,kActuateAtom,value);
+      rv = nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
+                                                   kActuateAtom,
+                                                   value);
       if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
           value.EqualsAtom(kOnLoadAtom,PR_FALSE)) {
 
         // show= ?
         nsLinkVerb verb = eLinkVerb_Undefined;
-        rv = GetAttribute(kNameSpaceID_XLink, kShowAtom, value);
+        rv = nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
+                                                     kShowAtom, value);
         if (NS_FAILED(rv))
           break;
+
         // XXX Should probably do this using atoms 
         if (value.EqualsWithConversion("new")) {
           verb = eLinkVerb_New;
@@ -367,7 +382,9 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
           break;
 
         // href= ?
-        rv = GetAttribute(kNameSpaceID_XLink,kHrefAtom,value);
+        rv = nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
+                                                     kHrefAtom,
+                                                     value);
         if (rv == NS_CONTENT_ATTR_HAS_VALUE && !value.IsEmpty()) {
           nsCOMPtr<nsIURI> uri;
           rv = CheckLoadURI(base,value,getter_AddRefs(uri));
@@ -375,7 +392,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
             nsCOMPtr<nsIPresContext> pc;
             rv = WebShellToPresContext(aShell,getter_AddRefs(pc));
             if (NS_SUCCEEDED(rv)) {
-              rv = mInner.TriggerLink(pc, verb, base, value, nsAutoString(), PR_TRUE);
+              rv = TriggerLink(pc, verb, base, value, nsAutoString(), PR_TRUE);
 
               return SpecialAutoLoadReturn(rv,verb);
             }
@@ -390,16 +407,19 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
 
 NS_IMETHODIMP 
 nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
-			     nsEvent* aEvent,
-			     nsIDOMEvent** aDOMEvent,
-			     PRUint32 aFlags,
-			     nsEventStatus* aEventStatus)
+                             nsEvent* aEvent,
+                             nsIDOMEvent** aDOMEvent,
+                             PRUint32 aFlags,
+                             nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   NS_ENSURE_ARG(aPresContext);
   // Try script event handlers first
-  nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                       aFlags, aEventStatus);
+  nsresult ret = nsGenericContainerElement::HandleDOMEvent(aPresContext,
+                                                           aEvent,
+                                                           aDOMEvent,
+                                                           aFlags,
+                                                           aEventStatus);
 
   if (mIsLink && (NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
@@ -420,27 +440,33 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
         if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
           nsAutoString show, href, target;
           nsIURI* baseURL = nsnull;
-	        nsLinkVerb verb = eLinkVerb_Undefined;
-          GetAttribute(kNameSpaceID_XLink, kHrefAtom, href);
+          nsLinkVerb verb = eLinkVerb_Undefined;
+          nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
+                                                  kHrefAtom,
+                                                  href);
           if (href.IsEmpty()) {
             *aEventStatus = nsEventStatus_eConsumeDoDefault; 
             break;
           }
-          GetAttribute(kNameSpaceID_XLink, kShowAtom, show);
-	        // XXX Should probably do this using atoms 
-	        if (show.EqualsWithConversion("new")) {
-	          verb = eLinkVerb_New;
-	        }
-          else if (show.EqualsWithConversion("replace")) {
+
+          nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink,
+                                                  kShowAtom,
+                                                  show);
+
+          // XXX Should probably do this using atoms 
+          if (show.EqualsWithConversion("new")) {
+            verb = eLinkVerb_New;
+          } else if (show.EqualsWithConversion("replace")) {
             verb = eLinkVerb_Replace;
+          } else if (show.EqualsWithConversion("embed")) {
+            verb = eLinkVerb_Embed;
           }
-	        else if (show.EqualsWithConversion("embed")) {
-	          verb = eLinkVerb_Embed;
-	        }
-          
+
           GetXMLBaseURI(&baseURL);
 
-          ret = mInner.TriggerLink(aPresContext, verb, baseURL, href, target, PR_TRUE);
+          ret = TriggerLink(aPresContext, verb, baseURL, href, target,
+                            PR_TRUE);
+
           NS_IF_RELEASE(baseURL);
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
         }
@@ -455,7 +481,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
       {
         nsAutoString href, target;
         nsIURI* baseURL = nsnull;
-        GetAttribute(kNameSpaceID_XLink, kHrefAtom, href);
+        nsGenericContainerElement::GetAttribute(kNameSpaceID_XLink, kHrefAtom,
+                                                href);
         if (href.IsEmpty()) {
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
           break;
@@ -463,7 +490,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
         GetXMLBaseURI(&baseURL);
 
-        ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);
+        ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href,
+                          target, PR_FALSE);
         
         NS_IF_RELEASE(baseURL);
         *aEventStatus = nsEventStatus_eConsumeDoDefault; 
@@ -474,7 +502,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_EXIT_SYNTH:
       {
         nsAutoString empty;
-        ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
+        ret = TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty,
+                          empty, PR_FALSE);
         *aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;
@@ -483,19 +512,142 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
       break;
     }
   }
+
   return ret;
 }
 
 NS_IMETHODIMP
 nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsXMLElement* it = new nsXMLElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  nsXMLElement* it = new nsXMLElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mInner.CopyInnerTo((nsIContent *)(nsIXMLContent *)this, &it->mInner, aDeep);
+
+  nsCOMPtr<nsISupports> kungFuDeathGrip(NS_STATIC_CAST(nsIContent *, this));
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  CopyInnerTo(this, it, aDeep);
+
+  it->mNameSpace = mNameSpace;
+  NS_IF_ADDREF(it->mNameSpace);
+
   return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
 }
+
+NS_IMETHODIMP
+nsXMLElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+
+  // XXX Yuck! Reaching into the generic content object isn't good.
+  nsDOMSlots *slots = GetDOMSlots();
+
+  if (!slots) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!slots->mScriptObject) {
+    nsIDOMScriptObjectFactory *factory;
+
+    res = nsGenericElement::GetScriptObjectFactory(&factory);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+
+    nsAutoString tag;
+    mNodeInfo->GetQualifiedName(tag);
+
+    res = factory->NewScriptXMLElement(tag, aContext,
+                                       NS_STATIC_CAST(nsIContent *, this),
+                                       mParent, (void**)&slots->mScriptObject);
+    NS_RELEASE(factory);
+
+    if (mDocument && slots->mScriptObject) {
+      aContext->AddNamedReference((void *)&slots->mScriptObject,
+                                  slots->mScriptObject,
+                                  "nsXMLElement::mScriptObject");
+
+      // See if we have a frame.  
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+      if (shell) {
+        nsIFrame* frame;
+        shell->GetPrimaryFrameFor(this, &frame);
+        if (!frame) {
+          // We must ensure that the XBL Binding is installed before we hand
+          // back this object.
+          nsCOMPtr<nsIBindingManager> bindingManager;
+          mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+          nsCOMPtr<nsIXBLBinding> binding;
+          bindingManager->GetBinding(this, getter_AddRefs(binding));
+          if (!binding) {
+            nsCOMPtr<nsIScriptGlobalObject> global;
+            mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+            nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(global));
+            if (viewCSS) {
+              nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+              nsAutoString empty;
+              nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
+              viewCSS->GetComputedStyle(elt, empty, getter_AddRefs(cssDecl));
+              if (cssDecl) {
+                nsAutoString behavior;
+                behavior.AssignWithConversion("-moz-binding");
+
+                nsAutoString value;
+                cssDecl->GetPropertyValue(behavior, value);
+                if (!value.IsEmpty()) {
+                  // We have a binding that must be installed.
+                  nsresult rv;
+                  PRBool dummy;
+                  NS_WITH_SERVICE(nsIXBLService, xblService,
+                                  "@mozilla.org/xbl;1", &rv);
+                  xblService->LoadBindings(this, value, PR_FALSE,
+                                           getter_AddRefs(binding), &dummy);
+                  if (binding) {
+                    binding->ExecuteAttachedHandler();
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  *aScriptObject = slots->mScriptObject;
+  return res;
+}
+
+NS_IMETHODIMP
+nsXMLElement::SetContainingNameSpace(nsINameSpace* aNameSpace)
+{
+  NS_IF_RELEASE(mNameSpace);
+  
+  mNameSpace = aNameSpace;
+  
+  NS_IF_ADDREF(mNameSpace);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
+{
+  aNameSpace = mNameSpace;
+  NS_IF_ADDREF(aNameSpace);
+
+  return NS_OK;  
+}
+
 
 // nsIStyledContent implementation
 
@@ -504,12 +656,13 @@ nsXMLElement::GetID(nsIAtom*& aResult) const
 {
   nsresult rv;  
   nsCOMPtr<nsIAtom> atom;
-  rv = mInner.mNodeInfo->GetIDAttributeAtom(getter_AddRefs(atom));
+  rv = mNodeInfo->GetIDAttributeAtom(getter_AddRefs(atom));
   
   aResult = nsnull;
   if (NS_SUCCEEDED(rv) && atom) {
     nsAutoString value;
-    rv = GetAttribute(kNameSpaceID_Unknown, atom, value);
+    rv = nsGenericContainerElement::GetAttribute(kNameSpaceID_Unknown, atom,
+                                                 value);
     if (NS_SUCCEEDED(rv))
       aResult = NS_NewAtom(value);
   }
@@ -517,35 +670,19 @@ nsXMLElement::GetID(nsIAtom*& aResult) const
   return rv;
 }
 
-NS_IMETHODIMP
-nsXMLElement::GetClasses(nsVoidArray& aArray) const
-{
-  aArray.Clear();
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP
-nsXMLElement::HasClass(nsIAtom* aClass) const
+nsXMLElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-NS_IMETHODIMP
-nsXMLElement::GetContentStyleRules(nsISupportsArray* aRules)
-{
+#ifdef DEBUG
+  *aResult = sizeof(*this);
+#else
+  *aResult = 0;
+#endif
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXMLElement::GetInlineStyleRules(nsISupportsArray* aRules)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXMLElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                       PRInt32& aHint) const
-{
-  aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
-  return NS_OK;
-}

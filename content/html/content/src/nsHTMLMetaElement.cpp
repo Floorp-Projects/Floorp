@@ -32,40 +32,29 @@
 #include "nsIPresContext.h"
 
 
-class nsHTMLMetaElement : public nsIDOMHTMLMetaElement,
-		   public nsIJSScriptObject,
-		   public nsIHTMLContent
+class nsHTMLMetaElement : public nsGenericHTMLLeafElement,
+                          public nsIDOMHTMLMetaElement
 {
 public:
-  nsHTMLMetaElement(nsINodeInfo *aNodeInfo);
+  nsHTMLMetaElement();
   virtual ~nsHTMLMetaElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLMetaElement
   NS_DECL_IDOMHTMLMETAELEMENT
 
-  // nsIJSScriptObject
-  NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
-
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-protected:
-  nsGenericHTMLLeafElement mInner;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -73,122 +62,84 @@ NS_NewHTMLMetaElement(nsIHTMLContent** aInstancePtrResult,
                       nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLMetaElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLMetaElement* it = new nsHTMLMetaElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLMetaElement::nsHTMLMetaElement(nsINodeInfo *aNodeInfo)
+nsHTMLMetaElement::nsHTMLMetaElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLMetaElement::~nsHTMLMetaElement()
 {
-
 }
 
-NS_IMPL_ADDREF(nsHTMLMetaElement)
 
-NS_IMPL_RELEASE(nsHTMLMetaElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLMetaElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLMetaElement, nsGenericElement) 
 
-nsresult
-nsHTMLMetaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLMetaElement))) {
-    nsIDOMHTMLMetaElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+
+NS_IMPL_HTMLCONTENT_QI(nsHTMLMetaElement, nsGenericHTMLLeafElement,
+                       nsIDOMHTMLMetaElement)
+
 
 nsresult
 nsHTMLMetaElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLMetaElement* it = new nsHTMLMetaElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLMetaElement* it = new nsHTMLMetaElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
+
 
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Content, content)
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, HttpEquiv, httpEquiv)
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Scheme, scheme)
 
-NS_IMETHODIMP
-nsHTMLMetaElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsAReadableString& aValue,
-                                     nsHTMLValue& aResult)
-{
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-NS_IMETHODIMP
-nsHTMLMetaElement::AttributeToString(nsIAtom* aAttribute,
-                                     const nsHTMLValue& aValue,
-                                     nsAWritableString& aResult) const
-{
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
-}
-
-static void
-MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIMutableStyleContext* aContext,
-                  nsIPresContext* aPresContext)
-{
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-}
-
-NS_IMETHODIMP
-nsHTMLMetaElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
-                                            PRInt32& aHint) const
-{
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    aHint = NS_STYLE_HINT_CONTENT;
-  }
-
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsHTMLMetaElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
-                                                nsMapAttributesFunc& aMapFunc) const
-{
-  aFontMapFunc = nsnull;
-  aMapFunc = &MapAttributesInto;
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsHTMLMetaElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                  nsEvent* aEvent,
-                                  nsIDOMEvent** aDOMEvent,
-                                  PRUint32 aFlags,
-                                  nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
 
 NS_IMETHODIMP
 nsHTMLMetaElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

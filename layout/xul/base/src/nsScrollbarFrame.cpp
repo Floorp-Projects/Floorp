@@ -51,63 +51,24 @@
 class AnonymousElement : public nsXMLElement, public nsIAnonymousContent
 {
 public:
-  AnonymousElement(nsINodeInfo *aNodeInfo):nsXMLElement(aNodeInfo) {}
-
-  // nsIStyledContent
-  NS_IMETHOD GetID(nsIAtom*& aResult) const;
-  NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
-  NS_IMETHOD HasClass(nsIAtom* aClass) const;
-
-  NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
-
-  NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
-
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, 
-                                           PRInt32& aHint) const;
+  AnonymousElement() {}
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-
-  // NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(mInner)
-
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
+                            nsEvent* aEvent,
+                            nsIDOMEvent** aDOMEvent,
+                            PRUint32 aFlags,
+                            nsEventStatus* aEventStatus);
 };
 
+#if 0
 NS_IMETHODIMP
 AnonymousElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
   return this->nsXMLElement::SizeOf(aSizer, aResult);
 }
-
-/*
-NS_IMETHODIMP 
-AnonymousElement::GetTag(nsIAtom*& aResult) const
-{
-   return mInner.GetTag(aResult);
-}
-
-
-NS_IMETHODIMP
-AnonymousElement::List(FILE* out, PRInt32 aIndent) const
-{
-  
-  NS_PRECONDITION(nsnull != mInner.mDocument, "bad content");
-
-  PRInt32 indx;
-  for (indx = aIndent; --indx >= 0; ) fputs("  ", out);
-
-  fprintf(out, "Comment refcount=%d<", mRefCnt);
-
-  nsAutoString tmp;
-  mInner.ToCString(tmp, 0, mInner.mText.GetLength());
-  fputs(tmp, out);
-
-  fputs(">\n", out);
- 
-  return mInner.List(out, aIndent);
-}
-*/
+#endif
 
 NS_IMETHODIMP
 AnonymousElement::HandleDOMEvent(nsIPresContext* aPresContext,
@@ -130,8 +91,8 @@ AnonymousElement::HandleDOMEvent(nsIPresContext* aPresContext,
     SetParent(nsnull);
 */
 
-  nsresult rv = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
+  nsresult rv = nsXMLElement::HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                             aFlags, aEventStatus);
 
   /*
   if (!anonymousParent)
@@ -140,64 +101,14 @@ AnonymousElement::HandleDOMEvent(nsIPresContext* aPresContext,
   return rv;
 }
 
-
-// nsIStyledContent Implementation
-NS_IMETHODIMP
-AnonymousElement::GetID(nsIAtom*& aResult) const
-{
-  /*
-  nsAutoString value;
-  GetAttribute(kNameSpaceID_None, kIdAtom, value);
-
-  aResult = NS_NewAtom(value); // The NewAtom call does the AddRef.
-  */
-
-  aResult = nsnull;
-
-  return NS_OK;
-}
-    
-NS_IMETHODIMP
-AnonymousElement::GetClasses(nsVoidArray& aArray) const
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP 
-AnonymousElement::HasClass(nsIAtom* aClass) const
-{
-	return NS_COMFALSE;
-}
-
-NS_IMETHODIMP
-AnonymousElement::GetContentStyleRules(nsISupportsArray* aRules)
-{
-  return NS_OK;
-}
-    
-NS_IMETHODIMP
-AnonymousElement::GetInlineStyleRules(nsISupportsArray* aRules)
-{
-  // we don't currently support the style attribute
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AnonymousElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, 
-                                         PRInt32& aHint) const
-{
-  aHint = NS_STYLE_HINT_CONTENT;  // we never map attribtes to style
-  return NS_OK;
-}
-
 NS_IMPL_ADDREF_INHERITED(AnonymousElement, nsXMLElement)
 NS_IMPL_RELEASE_INHERITED(AnonymousElement, nsXMLElement)
 
 //
 // QueryInterface
 //
+
 NS_INTERFACE_MAP_BEGIN(AnonymousElement)
-  NS_INTERFACE_MAP_ENTRY(nsIStyledContent)
   NS_INTERFACE_MAP_ENTRY(nsIAnonymousContent)
 NS_INTERFACE_MAP_END_INHERITING(nsXMLElement)
 
@@ -207,7 +118,6 @@ nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNam
     NS_ENSURE_ARG_POINTER(aParent);
 
     // create the xml element
-    nsCOMPtr<nsIXMLContent> content;
     //NS_NewXMLElement(getter_AddRefs(content), aTag);
 
     nsCOMPtr<nsIDocument> doc;
@@ -220,7 +130,18 @@ nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNam
     nodeInfoManager->GetNodeInfo(aTag, nsnull, aNameSpaceId,
                                  *getter_AddRefs(nodeInfo));
 
-    content = new AnonymousElement(nodeInfo);
+    nsXMLElement *content = new AnonymousElement();
+
+    if (!content)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = content->Init(nodeInfo);
+
+    if (NS_FAILED(rv)) {
+      delete content;
+
+      return rv;
+    }
 
     aNewNode = content;
 

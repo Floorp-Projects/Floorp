@@ -50,72 +50,44 @@
 #endif
 
 
-class nsHTMLAppletElement : public nsIDOMHTMLAppletElement,
-                            public nsIJSScriptObject,
-                            public nsIHTMLContent
+class nsHTMLAppletElement : public nsGenericHTMLContainerElement,
+                            public nsIDOMHTMLAppletElement
 {
 public:
-  nsHTMLAppletElement(nsINodeInfo *aNodeInfo);
+  nsHTMLAppletElement();
   virtual ~nsHTMLAppletElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
 
   // nsIDOMHTMLAppletElement
   NS_DECL_IDOMHTMLAPPLETELEMENT
 
-  // nsIJSScriptObject
-  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj,
-                        jsval aID, jsval *aVp) {
-    return mInner.AddProperty(aContext, aObj, aID, aVp);
-  }
-  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj,
-                        jsval aID, jsval *aVp) {
-    return mInner.DeleteProperty(aContext, aObj, aID, aVp);
-  }
-  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj,
-                        jsval aID, jsval *aVp) {
-    return mInner.GetProperty(aContext, aObj, aID, aVp);
-  }
-  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj,
-                        jsval aID, jsval *aVp) {
-    return mInner.SetProperty(aContext, aObj, aID, aVp);
-  }
-  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj) {
-    return mInner.EnumerateProperty(aContext, aObj);
-  }
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                            PRBool *aDidDefineProperty) {
-    return mInner.Resolve(aContext, aObj, aID, aDidDefineProperty);
-  }
-  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID) {
-    return mInner.Convert(aContext, aObj, aID);
-  }
-  virtual void      Finalize(JSContext *aContext, JSObject *aObj) {
-    mInner.Finalize(aContext, aObj);
-  }
-
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,
                              void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 
 protected:
-  nsGenericHTMLContainerElement mInner;
   PRBool mReflectedApplet;
 };
 
@@ -124,20 +96,30 @@ NS_NewHTMLAppletElement(nsIHTMLContent** aInstancePtrResult,
                         nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLAppletElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLAppletElement* it = new nsHTMLAppletElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLAppletElement::nsHTMLAppletElement(nsINodeInfo *aNodeInfo)
+nsHTMLAppletElement::nsHTMLAppletElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
   mReflectedApplet = PR_FALSE;
 }
 
@@ -145,33 +127,39 @@ nsHTMLAppletElement::~nsHTMLAppletElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLAppletElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLAppletElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLAppletElement, nsGenericElement) 
 
-NS_IMPL_RELEASE(nsHTMLAppletElement)
+NS_IMPL_HTMLCONTENT_QI(nsHTMLAppletElement, nsGenericHTMLContainerElement,
+                       nsIDOMHTMLAppletElement)
 
-nsresult
-nsHTMLAppletElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  if (aIID.Equals(NS_GET_IID(nsIDOMHTMLAppletElement))) {
-    nsIDOMHTMLAppletElement* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
 
 nsresult
 nsHTMLAppletElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLAppletElement* it = new nsHTMLAppletElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLAppletElement* it = new nsHTMLAppletElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Align, align)
@@ -215,10 +203,11 @@ nsHTMLAppletElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
   else if (nsGenericHTMLElement::ImageAttributeToString(aAttribute,
-                                                        aValue, aResult)) {
+                                                          aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
+                                                          aResult);
 }
 
 static void
@@ -226,20 +215,24 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIMutableStyleContext* aContext,
                   nsIPresContext* aPresContext)
 {
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext, aPresContext);
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext, aPresContext, nsnull);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
+  nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext,
+                                               aPresContext);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aContext,
+                                                   aPresContext);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext,
+                                                    aPresContext, nsnull);
 }
 
 NS_IMETHODIMP
 nsHTMLAppletElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint) const
 {
-  if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (! nsGenericHTMLElement::GetImageMappedAttributesImpact(aAttribute, aHint)) {
-      if (! nsGenericHTMLElement::GetImageAlignAttributeImpact(aAttribute, aHint)) {
-        if (! nsGenericHTMLElement::GetImageBorderAttributeImpact(aAttribute, aHint)) {
+  if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
+      if (!GetImageAlignAttributeImpact(aAttribute, aHint)) {
+        if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
           aHint = NS_STYLE_HINT_CONTENT;
         }
       }
@@ -259,123 +252,116 @@ nsHTMLAppletElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
 
 
 
-NS_IMETHODIMP
-nsHTMLAppletElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                    nsEvent* aEvent,
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-extern nsresult NS_GetObjectFramePluginInstance(nsIFrame* aFrame, nsIPluginInstance*& aPluginInstance);
+extern nsresult
+NS_GetObjectFramePluginInstance(nsIFrame* aFrame,
+                                nsIPluginInstance*& aPluginInstance);
 
 /**
- * For backwards compatibility an applet element's JavaScript object should expose both the public 
- * fields of the applet, and the attributes of the applet tag. The call to nsGenericElement::GetScriptObject
- * takes case of the tag attributes. Here we generate a JavaScript reference to the applet object itself,
- * and set its __proto__ property to the tag object. That way, if the Java applet has public fields that
- * shadow the tag attributes, the applet's fields take precedence.
+ * For backwards compatibility an applet element's JavaScript object
+ * should expose both the public fields of the applet, and the
+ * attributes of the applet tag. The call to
+ * nsGenericElement::GetScriptObject takes case of the tag
+ * attributes. Here we generate a JavaScript reference to the applet
+ * object itself, and set its __proto__ property to the tag
+ * object. That way, if the Java applet has public fields that shadow
+ * the tag attributes, the applet's fields take precedence.
  */
 NS_IMETHODIMP
 nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
                                      void** aScriptObject)
 {
- nsresult rv = NS_OK;
-NS_WITH_SERVICE(nsIJVMManager, jvm, nsIJVMManager::GetCID(), &rv);
-if (NS_SUCCEEDED(rv)) {
-	// nsresult rv = NS_OK;
-	if (!mReflectedApplet) {
-    // 0. Make sure the presentation is up-to-date
-    if (mInner.mDocument) {
-      mInner.mDocument->FlushPendingNotifications();
-    }
-
-		// 1. get the script object corresponding to the <APPLET> element itself.
-		JSObject* elementObject = nsnull;
-		rv = mInner.GetScriptObject(aContext, (void**)&elementObject);
-		if (NS_OK != rv)
-			return rv;
-	
-		// 2. get the plugin instance corresponding to this element.
-		nsIPresShell* shell = nsnull;
-    if (mInner.mDocument)
-      shell = mInner.mDocument->GetShellAt(0);
-
-    nsIFrame* frame = nsnull;
-
-    if (shell) {
-      shell->GetPrimaryFrameFor(mInner.mContent, &frame);
-  		NS_RELEASE(shell);
-    }
-
-    if(frame != nsnull)
-    {
-      nsIAtom* frameType = nsnull;
-      frame->GetFrameType(&frameType);
-      if(nsLayoutAtoms::objectFrame != frameType)
-      {
-        *aScriptObject = elementObject;
-        return rv;
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIJVMManager, jvm, nsIJVMManager::GetCID(), &rv);
+  if (NS_SUCCEEDED(rv)) {
+    if (!mReflectedApplet) {
+      // 0. Make sure the presentation is up-to-date
+      if (mDocument) {
+        mDocument->FlushPendingNotifications();
       }
+
+      // 1. get the script object corresponding to the <APPLET> element itself.
+      JSObject* elementObject = nsnull;
+      rv = nsGenericHTMLContainerElement::GetScriptObject(aContext,
+                                                          (void**)&elementObject);
+      if (NS_OK != rv)
+        return rv;
+
+      // 2. get the plugin instance corresponding to this element.
+      nsCOMPtr<nsIPresShell> shell;
+      if (mDocument)
+        shell = dont_AddRef(mDocument->GetShellAt(0));
+
+      nsIFrame* frame = nsnull;
+
+      if (shell) {
+        shell->GetPrimaryFrameFor(this, &frame);
+      }
+
+      if (frame) {
+        nsCOMPtr<nsIAtom> frameType;
+        frame->GetFrameType(getter_AddRefs(frameType));
+        if(nsLayoutAtoms::objectFrame != frameType.get()) {
+          *aScriptObject = elementObject;
+          return rv;
+        }
+      }
+
+      // 3. get the Java object corresponding to this applet, and
+      // reflect it into JavaScript using the LiveConnect manager.
+      JSContext* context = (JSContext*)aContext->GetNativeContext();
+      JSObject* wrappedAppletObject = nsnull;
+      nsCOMPtr<nsIPluginInstance> pluginInstance;
+
+      rv = NS_GetObjectFramePluginInstance(frame,
+                                           *getter_AddRefs(pluginInstance));
+
+      if ((rv == NS_OK) && (nsnull != pluginInstance)) {
+        nsCOMPtr<nsIJVMPluginInstance> javaPluginInstance;
+
+        javaPluginInstance = do_QueryInterface(pluginInstance);
+
+        if (javaPluginInstance) {
+          jobject appletObject = nsnull;
+          rv = javaPluginInstance->GetJavaObject(&appletObject);
+          if (NS_OK == rv) {
+            nsCOMPtr<nsILiveConnectManager> manager;
+
+            manager = do_GetService(nsIJVMManager::GetCID());
+
+            if (manager) {
+              rv = manager->WrapJavaObject(context, appletObject,
+                                           &wrappedAppletObject);
+            }
+          }
+        }
+      }
+
+      // 4. set the __proto__ field of the applet object to be the
+      // element script object.
+      if (nsnull != wrappedAppletObject) {
+        JS_SetPrototype(context, wrappedAppletObject, elementObject);
+        SetScriptObject(wrappedAppletObject);
+        mReflectedApplet = PR_TRUE;
+      }
+      *aScriptObject = wrappedAppletObject;
     }
+    else {
+      rv = nsGenericHTMLContainerElement::GetScriptObject(aContext,
+                                                          aScriptObject);
+    }
+  }
+  else {
+    rv = nsGenericHTMLContainerElement::GetScriptObject(aContext,
+                                                        aScriptObject);
+  }
 
-    // 3. get the Java object corresponding to this applet, and reflect it into
-		// JavaScript using the LiveConnect manager.
-		JSContext* context = (JSContext*)aContext->GetNativeContext();
-		JSObject* wrappedAppletObject = nsnull;
-		nsIPluginInstance* pluginInstance = nsnull;
-		rv = NS_GetObjectFramePluginInstance(frame, pluginInstance);
-		if ((rv == NS_OK) && (nsnull != pluginInstance)) {
-			nsIJVMPluginInstance* javaPluginInstance = nsnull;
-			if (pluginInstance->QueryInterface(NS_GET_IID(nsIJVMPluginInstance), (void**)&javaPluginInstance) == NS_OK) {
-				jobject appletObject = nsnull;
-				rv = javaPluginInstance->GetJavaObject(&appletObject);
-				if (NS_OK == rv) {
-					nsILiveConnectManager* manager = NULL;
-					rv = nsServiceManager::GetService(nsIJVMManager::GetCID(),
-					                                  NS_GET_IID(nsILiveConnectManager),
-					                                  (nsISupports **)&manager);
-					if (rv == NS_OK) {
-						rv = manager->WrapJavaObject(context, appletObject, &wrappedAppletObject);
-						nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
-					}
-				}
-				NS_RELEASE(javaPluginInstance);
-			}
-			NS_RELEASE(pluginInstance);
-		}
-		
-		// 4. set the __proto__ field of the applet object to be the element script object.
-		if (nsnull != wrappedAppletObject) {
-			JS_SetPrototype(context, wrappedAppletObject, elementObject);
-			mInner.SetScriptObject(wrappedAppletObject);
-			mReflectedApplet = PR_TRUE;
-		}
-		*aScriptObject = wrappedAppletObject;
-	} else {
-		rv = mInner.GetScriptObject(aContext, aScriptObject);
-	}
-	return rv;
-}
-else    
-	return mInner.GetScriptObject(aContext, aScriptObject);
-}
-
-
-
-// TODO: if this method ever gets called, it will destroy the prototype type chain.
-
-NS_IMETHODIMP
-nsHTMLAppletElement::SetScriptObject(void *aScriptObject)
-{
-	return mInner.SetScriptObject(aScriptObject);
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLAppletElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }

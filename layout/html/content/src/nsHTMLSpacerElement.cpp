@@ -53,50 +53,36 @@
 
 // XXX nav attrs: suppress
 
-class nsHTMLSpacerElement : public nsIDOMHTMLElement,
-                            public nsIJSScriptObject,
-                            public nsIHTMLContent
+class nsHTMLSpacerElement : public nsGenericHTMLLeafElement,
+                            public nsIDOMHTMLElement
 {
 public:
-  nsHTMLSpacerElement(nsINodeInfo *aNodeInfo);
+  nsHTMLSpacerElement();
   virtual ~nsHTMLSpacerElement();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMELEMENT(nsGenericHTMLLeafElement::)
 
   // nsIDOMHTMLElement
-  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+  NS_FORWARD_IDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
 
-  // nsIContent
-  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
-
-  // nsIHTMLContent
-  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
-
-  // nsIJSScriptObject
-  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
-  virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
-                        jsval aID, jsval *aVp);
-  virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
-                        jsval aID, jsval *aVp);
-  virtual PRBool    GetProperty(JSContext *aContext, JSObject *aObj, 
-                        jsval aID, jsval *aVp);
-  virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
-                        jsval aID, jsval *aVp);
-  virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                            PRBool *aDidDefineProperty);
-  virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
-  virtual void      Finalize(JSContext *aContext, JSObject *aObj);
-
-protected:
-  nsGenericHTMLLeafElement mInner;
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
+                               const nsAReadableString& aValue,
+                               nsHTMLValue& aResult);
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
+                               const nsHTMLValue& aValue,
+                               nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                          nsMapAttributesFunc& aMapFunc) const;
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                      PRInt32& aHint) const;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 };
 
 nsresult
@@ -104,56 +90,69 @@ NS_NewHTMLSpacerElement(nsIHTMLContent** aInstancePtrResult,
                         nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
-  NS_ENSURE_ARG_POINTER(aNodeInfo);
 
-  nsIHTMLContent* it = new nsHTMLSpacerElement(aNodeInfo);
-  if (nsnull == it) {
+  nsHTMLSpacerElement* it = new nsHTMLSpacerElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) aInstancePtrResult);
+
+  nsresult rv = it->Init(aNodeInfo);
+
+  if (NS_FAILED(rv)) {
+    delete it;
+
+    return rv;
+  }
+
+  *aInstancePtrResult = NS_STATIC_CAST(nsIHTMLContent *, it);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 
-nsHTMLSpacerElement::nsHTMLSpacerElement(nsINodeInfo *aNodeInfo)
+nsHTMLSpacerElement::nsHTMLSpacerElement()
 {
-  NS_INIT_REFCNT();
-  mInner.Init(this, aNodeInfo);
 }
 
 nsHTMLSpacerElement::~nsHTMLSpacerElement()
 {
 }
 
-NS_IMPL_ADDREF(nsHTMLSpacerElement)
 
-NS_IMPL_RELEASE(nsHTMLSpacerElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLSpacerElement, nsGenericElement);
+NS_IMPL_RELEASE_INHERITED(nsHTMLSpacerElement, nsGenericElement);
 
-nsresult
-nsHTMLSpacerElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  // Note that this has to stay above the generic element
-  // QI macro, since it overrides the nsIJSScriptObject implementation
-  // from the generic element.
-  if (aIID.Equals(NS_GET_IID(nsIJSScriptObject))) {
-    nsIJSScriptObject* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    AddRef();
-    return NS_OK;
-  }                                                             
-  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
-  return NS_NOINTERFACE;
-}
+NS_IMPL_HTMLCONTENT_QI0(nsHTMLSpacerElement, nsGenericHTMLLeafElement);
+
 
 nsresult
 nsHTMLSpacerElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsHTMLSpacerElement* it = new nsHTMLSpacerElement(mInner.mNodeInfo);
-  if (nsnull == it) {
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  nsHTMLSpacerElement* it = new nsHTMLSpacerElement();
+
+  if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
   nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
-  mInner.CopyInnerTo(this, &it->mInner, aDeep);
-  return it->QueryInterface(NS_GET_IID(nsIDOMNode), (void**) aReturn);
+
+  nsresult rv = it->Init(mNodeInfo);
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  CopyInnerTo(this, it, aDeep);
+
+  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+
+  NS_ADDREF(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -162,22 +161,22 @@ nsHTMLSpacerElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::size) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (nsGenericHTMLElement::ParseAlignValue(aValue, aResult)) {
+    if (ParseAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if ((aAttribute == nsHTMLAtoms::width) ||
            (aAttribute == nsHTMLAtoms::height)) {
-    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
-                                                  eHTMLUnit_Pixel)) {
+    if (ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -188,11 +187,13 @@ nsHTMLSpacerElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsGenericHTMLElement::AlignValueToString(aValue, aResult);
+      AlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  return mInner.AttributeToString(aAttribute, aValue, aResult);
+
+  return nsGenericHTMLLeafElement::AttributeToString(aAttribute, aValue,
+                                                     aResult);
 }
 
 static void
@@ -223,7 +224,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       }
     }
 
-    nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
+    nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext,
+                                                 aPresContext);
 
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -244,8 +246,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         }
       }
     }
-    if (typeIsBlock)
-    {
+
+    if (typeIsBlock) {
       // width: value
       aAttributes->GetAttribute(nsHTMLAtoms::width, value);
       if (value.GetUnit() == eHTMLUnit_Pixel) {
@@ -255,6 +257,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       else if (value.GetUnit() == eHTMLUnit_Percent) {
         position->mWidth.SetPercentValue(value.GetPercentValue());
       }
+
       // height: value
       aAttributes->GetAttribute(nsHTMLAtoms::height, value);
       if (value.GetUnit() == eHTMLUnit_Pixel) {
@@ -265,7 +268,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         position->mHeight.SetPercentValue(value.GetPercentValue());
       }
     }
-    else 
+    else
     {
       // size: value
       aAttributes->GetAttribute(nsHTMLAtoms::size, value);
@@ -275,7 +278,9 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       }
     }
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
+
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext,
+                                                aPresContext);
 }
 
 
@@ -290,9 +295,9 @@ nsHTMLSpacerElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::align) {
     aHint = NS_STYLE_HINT_REFLOW;
   }
-  else if (! nsGenericHTMLElement::GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (! nsGenericHTMLElement::GetImageMappedAttributesImpact(aAttribute, aHint)) {
-      if (! nsGenericHTMLElement::GetImageBorderAttributeImpact(aAttribute, aHint)) {
+  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
+    if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
+      if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
         aHint = NS_STYLE_HINT_CONTENT;
       }
     }
@@ -300,7 +305,6 @@ nsHTMLSpacerElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsHTMLSpacerElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
@@ -311,71 +315,10 @@ nsHTMLSpacerElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsHTMLSpacerElement::HandleDOMEvent(nsIPresContext* aPresContext,
-                                   nsEvent* aEvent,
-                                   nsIDOMEvent** aDOMEvent,
-                                   PRUint32 aFlags,
-                                   nsEventStatus* aEventStatus)
-{
-  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                               aFlags, aEventStatus);
-}
-
-PRBool    
-nsHTMLSpacerElement::AddProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-  return mInner.AddProperty(aContext, aObj, aID, aVp);
-}
-
-PRBool    
-nsHTMLSpacerElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-  return mInner.DeleteProperty(aContext, aObj, aID, aVp);
-}
-
-PRBool    
-nsHTMLSpacerElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-  return mInner.GetProperty(aContext, aObj, aID, aVp);
-}
-
-PRBool    
-nsHTMLSpacerElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
-{
-  return NS_OK;
-}
-
-PRBool    
-nsHTMLSpacerElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
-{
-  return mInner.EnumerateProperty(aContext, aObj);
-}
-
-PRBool    
-nsHTMLSpacerElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
-                             PRBool *aDidDefineProperty)
-{
-  return mInner.Resolve(aContext, aObj, aID, aDidDefineProperty);
-}
-
-PRBool    
-nsHTMLSpacerElement::Convert(JSContext *aContext, JSObject *aObj, jsval aID)
-{
-  return mInner.Convert(aContext, aObj, aID);
-}
-
-void      
-nsHTMLSpacerElement::Finalize(JSContext *aContext, JSObject *aObj)
-{
-  mInner.Finalize(aContext, aObj);
-}
-
 NS_IMETHODIMP
 nsHTMLSpacerElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
-  return mInner.SizeOf(aSizer, aResult, sizeof(*this));
+  *aResult = sizeof(*this) + BaseSizeOf(aSizer);
+
+  return NS_OK;
 }
-
-
