@@ -28,6 +28,7 @@
  *   Pierre Chanial <pierrechanial@netscape.net>
  *   Jason Eager <jce2@po.cwru.edu>
  *   Joe Hewitt <hewitt@netscape.com>
+ *   Alec Flett <alecf@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -3688,4 +3689,135 @@ function displayPageInfo()
                       "dialog=no", null, "securityTab");
 }
 
+const mediatorContractId = "@mozilla.org/appshell/window-mediator;1";
+const nsIWebBrowserChrome = Components.interfaces.nsIWebBrowserChrome;
+
+function nsBrowserContentListener(toplevelWindow, contentWindow)
+{
+    // this one is not as easy as you would hope.
+    // need to convert toplevelWindow to an XPConnected object, instead
+    // of a DOM-based object, to be able to QI() it to nsIXULWindow
+    
+    this.init(toplevelWindow, contentWindow);
+}
+
+/* implements nsIURIContentListener */
+
+nsBrowserContentListener.prototype =
+{
+    init: function(toplevelWindow, contentWindow)
+    {
+        this.toplevelWindow = toplevelWindow;
+        this.contentWindow = contentWindow;
+
+        // hook up the whole parent chain thing
+        var windowDocShell = this.convertWindowToDocShell(toplevelWindow);
+        if (windowDocShell)
+            windowDocshell.parentURIContentListener = this;
+    
+        var registerWindow = false;
+        try {          
+          var treeItem = contentWindow.docShell.QueryInterface(Components.interfaces.nsIDocShellTreeItem);
+          var treeOwner = treeItem.treeOwner;
+          var interfaceRequestor = treeOwner.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+          var webBrowserChrome = interfaceRequestor.getInterface(nsIWebBrowserChrome);
+          if (webBrowserChrome)
+          {
+            var chromeFlags = webBrowserChrome.chromeFlags;
+            var res = chromeFlags & nsIWebBrowserChrome.CHROME_ALL;
+            var res2 = chromeFlags & nsIWebBrowserChrome.CHROME_DEFAULT;
+            if ( res == nsIWebBrowserChrome.CHROME_ALL || res2 == nsIWebBrowserChrome.CHROME_DEFAULT)
+            {             
+              registerWindow = true;
+            }
+         }
+       } catch (ex) {} 
+
+        // register ourselves
+       if (registerWindow)
+       {
+        var uriLoader = Components.classes["@mozilla.org/uriloader;1"].getService(Components.interfaces.nsIURILoader);
+        uriLoader.registerContentListener(this);
+       }
+    },
+    close: function()
+    {
+        this.contentWindow = null;
+        var uriLoader = Components.classes["@mozilla.org/uriloader;1"].getService(Components.interfaces.nsIURILoader);
+
+        uriLoader.unRegisterContentListener(this);
+    },
+    QueryInterface: function(iid)
+    {
+        if (iid.equals(Components.interfaces.nsIURIContentListener))
+            return this;
+        if (iid.equals(Components.interfaces.nsISupportsWeakReference))
+            return this;
+        throw Components.results.NS_NOINTERFACE;
+
+    },
+    onStartURIOpen: function(uri)
+    {
+        // ignore and don't abort
+        return false;
+    },
+
+    doContent: function(contentType, isContentPreferred, request, contentHandler)
+    {
+        // forward the doContent to our content area webshell
+        var docShell = this.contentWindow.docShell;
+        var contentListener;
+        try {
+            contentListener =
+                docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIURIContentListener);
+        } catch (ex) {
+            dump(ex);
+        }
+        
+        if (!contentListener) return false;
+        
+        return contentListener.doContent(contentType, isContentPreferred, request, contentHandler);
+        
+    },
+
+    isPreferred: function(contentType, desiredContentType)
+    {
+        // seems like we should be getting this from helper apps or something
+        switch(contentType) {
+            case "text/html":
+            case "text/xul":
+            case "text/rdf":
+            case "text/xml":
+            case "text/css":
+            case "image/gif":
+            case "image/jpeg":
+            case "image/png":
+            case "text/plain":
+            case "application/http-index-format":
+                return true;
+        }
+        return false;
+    },
+    canHandleContent: function(contentType, isContentPreferred, desiredContentType)
+    {
+        var docShell = this.contentWindow.docShell;
+        var contentListener;
+        try {
+            contentListener =
+                docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIURIContentListener);
+        } catch (ex) {
+            dump(ex);
+        }
+        if (!contentListener) return false;
+        
+        return contentListener.canHandleContent(contentType, isContentPreferred, desiredContentType);
+    },
+    convertWindowToDocShell: function(win) {
+        // don't know how to do this
+        return null;
+    },
+    loadCookie: null,
+    parentContentListener: null
+}
 
