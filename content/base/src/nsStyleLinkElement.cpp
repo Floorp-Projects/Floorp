@@ -114,20 +114,20 @@ void nsStyleLinkElement::ParseLinkTypes(const nsAReadableString& aTypes,
     if (nsCRT::IsAsciiSpace(*start)) {
       if (inString) {
         aResult.AppendString(Substring(start, current));
-        inString = false;
+        inString = PR_FALSE;
       }
     }
     else {
       if (!inString) {
         start = current;
-        inString = true;
+        inString = PR_TRUE;
       }
     }
     current++;
   }
   if (inString) {
     aResult.AppendString(Substring(start, current));
-    inString = false;
+    inString = PR_FALSE;
   }
 }
 
