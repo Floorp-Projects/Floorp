@@ -42,6 +42,7 @@
 #include "nsIRootBox.h"
 #include "nsBoxObject.h"
 #include "nsIPresShell.h"
+#include "nsFrameManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -103,8 +104,7 @@ nsPopupBoxObject::HidePopup()
   if (!ourFrame)
     return NS_OK;
   
-  nsIFrame* rootFrame;
-  mPresShell->GetRootFrame(&rootFrame);
+  nsIFrame* rootFrame = mPresShell->FrameManager()->GetRootFrame();
   if (!rootFrame)
     return NS_OK;
 
@@ -138,8 +138,7 @@ nsPopupBoxObject::ShowPopup(nsIDOMElement* aSrcContent,
                             const PRUnichar *aPopupType, const PRUnichar *anAnchorAlignment, 
                             const PRUnichar *aPopupAlignment)
 {
-  nsIFrame* rootFrame;
-  mPresShell->GetRootFrame(&rootFrame);
+  nsIFrame* rootFrame = mPresShell->FrameManager()->GetRootFrame();
   if (!rootFrame)
     return NS_OK;
 

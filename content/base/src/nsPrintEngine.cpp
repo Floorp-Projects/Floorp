@@ -495,9 +495,8 @@ nsPrintEngine::GetSeqFrameAndCountPagesInternal(nsPrintObject*  aPO,
 
   // Finds the SimplePageSequencer frame
   // in PP mPrtPreview->mPrintObject->mSeqFrame is null
-  nsIFrame* curFrame;
   aSeqFrame  = nsnull;
-  aPO->mPresShell->GetRootFrame(&curFrame);
+  nsIFrame *curFrame = aPO->mPresShell->FrameManager()->GetRootFrame();
   while (curFrame != nsnull) {
     nsIPageSequenceFrame * sqf = nsnull;
     if (NS_SUCCEEDED(CallQueryInterface(curFrame, &sqf)) && sqf) {
@@ -2041,8 +2040,7 @@ void nsPrintEngine::CheckForHiddenFrameSetFrames()
   for (PRInt32 i=0;i<mPrt->mPrintDocList->Count();i++) {
     nsPrintObject* po = (nsPrintObject*)mPrt->mPrintDocList->ElementAt(i);
     NS_ASSERTION(po, "nsPrintObject can't be null!");
-    nsIFrame* frame;
-    po->mDisplayPresShell->GetRootFrame(&frame);
+    nsIFrame* frame = po->mDisplayPresShell->FrameManager()->GetRootFrame();
     if (frame && frame->GetSize().height == 0) {
       // set this PO and its children to not print and be hidden
       SetPrintPO(po, PR_FALSE, PR_TRUE, eSetPrintFlag | eSetHiddenFlag);
@@ -2806,8 +2804,8 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
       // Dump all the frames and view to a a file
       FILE * fd = fopen(filename, "w");
       if (fd) {
-        nsIFrame  *theRootFrame;
-        aPO->mPresShell->GetRootFrame(&theRootFrame);
+        nsIFrame *theRootFrame =
+          aPO->mPresShell->FrameManager()->GetRootFrame();
         fprintf(fd, "Title: %s\n", docStr?docStr:"");
         fprintf(fd, "URL:   %s\n", urlStr?urlStr:"");
         fprintf(fd, "--------------- Frames ----------------\n");
@@ -3208,8 +3206,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
 #ifdef NS_DEBUG
       // output the regression test
       nsIFrameDebug* fdbg;
-      nsIFrame* root;
-      poPresShell->GetRootFrame(&root);
+      nsIFrame* root = poPresShell->FrameManager()->GetRootFrame();
 
       if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
         fdbg->DumpRegressionData(poPresContext, mPrt->mDebugFilePtr, 0, PR_TRUE);
@@ -3217,8 +3214,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO, PRBool aDoSyncPrinting, PRBool& aDon
       fclose(mPrt->mDebugFilePtr);
 #endif
     } else {
-      nsIFrame* rootFrame;
-      poPresShell->GetRootFrame(&rootFrame);
+      nsIFrame* rootFrame = poPresShell->FrameManager()->GetRootFrame();
 
 #ifdef EXTENDED_DEBUG_PRINTING
       if (aPO->IsPrintable()) {
@@ -4666,8 +4662,7 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aInden
 
   nsIPresShell *shell = aPresContext->GetPresShell();
   if (shell) {
-    nsIFrame* frame;
-    shell->GetRootFrame(&frame);
+    nsIFrame* frame = shell->FrameManager()->GetRootFrame();
     if (frame) {
       nsIFrameDebug* debugFrame;
       nsresult rv = CallQueryInterface(frame, &debugFrame);
@@ -4833,7 +4828,7 @@ static void DumpPrintObjectsList(nsVoidArray * aDocList)
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     nsIFrame* rootFrame = nsnull;
     if (po->mPresShell) {
-      po->mPresShell->GetRootFrame(&rootFrame);
+      rootFrame = po->mPresShell->FrameManager()->GetRootFrame();
       while (rootFrame != nsnull) {
         nsIPageSequenceFrame * sqf = nsnull;
         if (NS_SUCCEEDED(CallQueryInterface(rootFrame, &sqf))) {
@@ -4925,7 +4920,7 @@ static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
   if (fd) {
     nsIFrame* rootFrame = nsnull;
     if (aPO->mPresShell) {
-      aPO->mPresShell->GetRootFrame(&rootFrame);
+      rootFrame = aPO->mPresShell->FrameManager()->GetRootFrame();
     }
     for (PRInt32 k=0;k<aLevel;k++) fprintf(fd, "  ");
     fprintf(fd, "%s %p %p %p %p %d %d,%d,%d,%d\n", types[aPO->mFrameType], aPO, aPO->mWebShell.get(), aPO->mSeqFrame,

@@ -107,8 +107,7 @@ void DebugList(nsIDOMHTMLTableElement* aTable) {
       }
       nsIPresShell *shell = doc->GetShellAt(0);
       if (shell) {
-        nsIFrame* rootFrame;
-        shell->GetRootFrame(rootFrame);
+        nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
         if (rootFrame) {
           rootFrame->List(stdout, 0);
         }

@@ -1700,7 +1700,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       NS_ASSERTION(newAcc, "No root/doc accessible created");
     }
 
-    aPresShell->GetRootFrame(aFrameHint);
+    *aFrameHint = aPresShell->GetRootFrame();
     NS_ADDREF(*aAccessible = newAcc );
     return NS_OK;
   }

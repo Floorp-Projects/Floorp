@@ -83,10 +83,9 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
   }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsIFrame *frame = nsnull;
   // The root frame and all text frames in the document share the same
   // selection controller.
-  shell->GetRootFrame(&frame);
+  nsIFrame *frame = shell->GetRootFrame();
   if (frame) {
     nsCOMPtr<nsISelectionController> selCon;
     frame->GetSelectionController(shell->GetPresContext(),

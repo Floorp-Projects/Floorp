@@ -43,6 +43,7 @@
 #include "nsRect.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
+#include "nsFrameManager.h"
 #include "nsStyleContext.h"
 #include "nsIScrollableView.h"
 #include "nsLayoutAtoms.h"
@@ -2978,8 +2979,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     nsIView* viewportView = nsnull;
     nsRect viewportArea;
 
-    nsIFrame* rootFrame;
-    aPresContext->PresShell()->GetRootFrame(&rootFrame);
+    nsIFrame* rootFrame =
+      aPresContext->PresShell()->FrameManager()->GetRootFrame();
     NS_ASSERTION(rootFrame, "no root frame");
 
     if (aPresContext->IsPaginated()) {

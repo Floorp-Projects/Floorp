@@ -286,8 +286,7 @@ nsWebCrawler::DumpRegressionData()
       }
     } 
     else {
-      nsIFrame* root;
-      shell->GetRootFrame(&root);
+      nsIFrame* root = shell->GetRootFrame();
       if (nsnull != root) {
         nsPresContext *presContext = shell->GetPresContext();
         

@@ -2509,8 +2509,7 @@ nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell,
 
   nsPresContext *presContext = aPresShell->GetPresContext();
 
-  nsIFrame *frame = nsnull;
-  aPresShell->GetRootFrame(&frame);
+  nsIFrame *frame = aPresShell->GetRootFrame();
 
   if (presContext && frame) {
     frame->GetSelectionController(presContext, aSelCon);

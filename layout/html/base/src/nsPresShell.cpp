@@ -877,8 +877,7 @@ IncrementalReflow::Dispatch(nsPresContext      *aPresContext,
     nsReflowPath *path = NS_STATIC_CAST(nsReflowPath *, mRoots[i]);
     nsIFrame *first = path->mFrame;
 
-    nsIFrame* root;
-    aPresContext->PresShell()->GetRootFrame(&root);
+    nsIFrame* root = aPresContext->PresShell()->FrameManager()->GetRootFrame();
 
     first->WillReflow(aPresContext);
     nsContainerFrame::PositionFrameView(aPresContext, first);
@@ -1102,7 +1101,6 @@ public:
   NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD ResizeReflow(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD StyleChangeReflow();
-  NS_IMETHOD GetRootFrame(nsIFrame** aFrame) const;
   NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const;
   NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
                                 nsIFrame**  aPrimaryFrame) const;
@@ -3401,11 +3399,10 @@ PresShell::StyleChangeReflow()
   return NS_OK; //XXX this needs to be real. MMP
 }
 
-NS_IMETHODIMP
-PresShell::GetRootFrame(nsIFrame** aResult) const
+nsIFrame*
+nsIPresShell::GetRootFrame() const
 {
-  *aResult = FrameManager()->GetRootFrame();
-  return NS_OK;
+  return FrameManager()->GetRootFrame();
 }
 
 NS_IMETHODIMP
@@ -6533,8 +6530,7 @@ PresShell::Observe(nsISupports* aSubject,
 {
 #ifdef MOZ_XUL
   if (!nsCRT::strcmp(aTopic, "chrome-flush-skin-caches")) {
-    nsIFrame *rootFrame;
-    GetRootFrame(&rootFrame);
+    nsIFrame *rootFrame = FrameManager()->GetRootFrame();
     // Need to null-check because "chrome-flush-skin-caches" can happen
     // at interesting times during startup.
     if (rootFrame) {
@@ -7028,8 +7024,7 @@ PresShell::VerifyIncrementalReflow()
   // Now that the document has been reflowed, use its frame tree to
   // compare against our frame tree.
   nsIFrame* root1 = FrameManager()->GetRootFrame();
-  nsIFrame* root2;
-  sh->GetRootFrame(&root2);
+  nsIFrame* root2 = sh->FrameManager()->GetRootFrame();
   PRBool ok = CompareTrees(mPresContext, root1, cx, root2);
   if (!ok && (VERIFY_REFLOW_NOISY & gVerifyReflowFlags)) {
     printf("Verify reflow failed, primary tree:\n");
@@ -7640,8 +7635,7 @@ void ReflowCountMgr::DoIndiTotalsTree()
     printf("------------------------------------------------\n");
 
     if (mPresShell) {
-      nsIFrame * rootFrame;
-      mPresShell->GetRootFrame(&rootFrame);
+      nsIFrame * rootFrame = mPresShell->FrameManager()->GetRootFrame();
       RecurseIndiTotals(mPresContext, mIndiFrameCounts, rootFrame, 0);
       printf("------------------------------------------------\n");
       printf("-- Individual Counts of Frames not in Root Tree\n");

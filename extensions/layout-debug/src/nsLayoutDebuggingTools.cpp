@@ -426,8 +426,7 @@ DumpFramesRecur(nsIDocShell* aDocShell, FILE* out)
         fprintf(out, "webshell=%p \n", NS_STATIC_CAST(void*, aDocShell));
         nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
         if (shell) {
-            nsIFrame* root;
-            shell->GetRootFrame(&root);
+            nsIFrame* root = shell->GetRootFrame();
             if (root) {
                 nsIFrameDebug* fdbg;
                 if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
@@ -524,8 +523,7 @@ nsLayoutDebuggingTools::DumpStyleContexts()
     FILE *out = stdout;
     nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
     if (shell) {
-        nsIFrame* root;
-        shell->GetRootFrame(&root);
+        nsIFrame* root = shell->GetRootFrame();
         if (!root) {
             fputs("null root frame\n", out);
         } else {

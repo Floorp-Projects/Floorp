@@ -418,7 +418,7 @@ nsIFrame* nsDocAccessible::GetFrame()
 
   nsIFrame* root = nsnull;
   if (shell) 
-    shell->GetRootFrame(&root);
+    root = shell->GetRootFrame();
 
   return root;
 }

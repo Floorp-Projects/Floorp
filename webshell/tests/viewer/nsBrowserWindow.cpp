@@ -2432,8 +2432,7 @@ DumpFramesRecurse(nsIDocShell* aDocShell, FILE* out, nsString *aFilterName)
     fprintf(out, "webshell=%p \n", aDocShell);
     nsIPresShell* shell = GetPresShellFor(aDocShell);
     if (nsnull != shell) {
-      nsIFrame* root;
-      shell->GetRootFrame(&root);
+      nsIFrame* root = shell->GetRootFrame();
       if (nsnull != root) {
         nsIFrameDebug* fdbg;
         if (NS_SUCCEEDED(CallQueryInterface(root, &fdbg))) {
@@ -2530,8 +2529,7 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
 {
   nsCOMPtr<nsIPresShell> shell = dont_AddRef(GetPresShell());
   if (shell) {
-    nsIFrame* root;
-    shell->GetRootFrame(&root);
+    nsIFrame* root = shell->GetRootFrame();
     shell->ListStyleContexts(root, out);
   } else {
     fputs("null pres shell\n", out);

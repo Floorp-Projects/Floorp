@@ -58,6 +58,7 @@
 #include "nsIDOMScreen.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIPresShell.h"
+#include "nsFrameManager.h"
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
@@ -83,8 +84,8 @@ const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere f
 static nsIPopupSetFrame*
 GetPopupSetFrame(nsPresContext* aPresContext)
 {
-  nsIFrame* rootFrame;
-  aPresContext->PresShell()->GetRootFrame(&rootFrame);
+  nsIFrame* rootFrame =
+    aPresContext->PresShell()->FrameManager()->GetRootFrame();
   if (!rootFrame)
     return nsnull;
 
