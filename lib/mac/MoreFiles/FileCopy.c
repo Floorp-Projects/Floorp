@@ -182,7 +182,11 @@ static	OSErr	PreflightFileCopySpace(short srcVRefNum,
 		dstBlksPerAllocBlk = ((unsigned long)pb.xPB.ioVAlBlkSiz >> 9);
 		
 		/* Convert freeBytes to free disk blocks (512-byte blocks) */
+#if (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
+		dstFreeBlocks = (pb.xPB.ioVFreeBytes >> 9);
+#else
 		dstFreeBlocks = (pb.xPB.ioVFreeBytes.hi << 23) + (pb.xPB.ioVFreeBytes.lo >> 9);
+#endif
 		
 		/* Now, get the size of the file's data resource forks */
 		pb.hPB.fileParam.ioNamePtr = (StringPtr)srcName;
