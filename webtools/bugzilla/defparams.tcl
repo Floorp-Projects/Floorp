@@ -90,6 +90,17 @@ proc check_urlbase {url} {
     return ""
 }
 
+DefParam bannerhtml {The html that gets emitted at the head of every Bugzilla page.} l {<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
+<TR><TD><A HREF="http://www.mozilla.org/"><IMG
+ SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
+ BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>}
+
+DefParam blurbhtml {A blurb that appears as part of the header of every Bugzilla page.  This is a place to put brief warnings, pointers to one or two related pages, etc.} l {   This is <B>Bugzilla</B>: the Mozilla bug system.  For more 
+   information about what Bugzilla is and what it can do, see 
+   <A HREF="http://www.mozilla.org/">mozilla.org</A>'s
+   <A HREF="http://www.mozilla.org/bugs/"><B>bug pages</B></A>.
+}
+
 
 DefParam whinedays {The number of days that we'll let a bug sit untouched in a NEW state before our cronjob will whine at the owner.} t 7 check_numeric
 

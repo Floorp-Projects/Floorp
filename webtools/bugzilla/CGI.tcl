@@ -289,22 +289,12 @@ name=PleaseMailAPassword>
 }
 
 
-proc CopyOut {filename} {
-    if {[file exists $filename]} {
-        set fid [open $filename "r"]
-        while {[gets $fid line] > 0} {
-            puts $line
-        }
-        close $fid
-    }
-}
-
 proc PutHeader {title h1 {h2 ""}} {
     puts "<HTML><HEAD><TITLE>$title</TITLE></HEAD>";
     puts "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"";
     puts "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">";
 
-    CopyOut "banner.html"
+    puts [Param bannerhtml]
 
     puts "<TABLE BORDER=0 CELLPADDING=12 CELLSPACING=0 WIDTH=\"100%\">";
     puts " <TR>\n";
@@ -319,7 +309,7 @@ proc PutHeader {title h1 {h2 ""}} {
     puts "  </TD>\n";
     puts "  <TD>\n";
 
-    CopyOut "blurb.html"
+    puts [Param blurbhtml]
 
     puts "</TD></TR></TABLE>\n";
 
