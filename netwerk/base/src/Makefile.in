@@ -44,7 +44,6 @@ CPPSRCS		= \
 		nsLoadGroup.cpp \
 		nsInputStreamChannel.cpp \
 		nsDirectoryIndexStream.cpp \
-		nsURIDispatcher.cpp \
 		nsUnicharStreamLoader.cpp \
 		$(NULL)
 
