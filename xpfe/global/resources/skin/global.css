@@ -613,6 +613,13 @@ progressmeter[mode="undetermined"]
    background-image: url(chrome://global/skin/progressmeter-busy.gif);
 }
 
+/********* Box ********/
+
+box 
+{
+   vertical-align: top;
+}
+
 /********* TitledBox **********/
 
 titledbox

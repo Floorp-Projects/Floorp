@@ -84,7 +84,7 @@ protected:
 
   virtual nsIFrame* GetSelectedFrame();
     virtual void ComputeChildsNextPosition( nsCalculatedBoxInfo* aInfo, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect, nscoord aMaxAscent);
-    virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
+    virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool*& aResized, PRInt32 aInfoCount, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
     virtual void LayoutChildrenInRect(nsRect& aSize, nscoord& aMaxAscent);
     virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);
 

@@ -151,6 +151,9 @@ nsresult
 NS_NewTitledButtonFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
+NS_NewXULTextFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+
+nsresult
 NS_NewTitledBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
@@ -4376,14 +4379,22 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
 
     // TITLED BUTTON CONSTRUCTION
     else if (aTag == nsXULAtoms::titledbutton ||
-             aTag == nsXULAtoms::image ||
-             aTag == nsXULAtoms::text) {
+             aTag == nsXULAtoms::image) {
 
         processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewTitledButtonFrame(aPresShell, &newFrame);
     }
     // End of TITLED BUTTON CONSTRUCTION logic
+
+    // TEXT CONSTRUCTION
+    else if (aTag == nsXULAtoms::text) {
+        processChildren = PR_TRUE;
+      isReplaced = PR_TRUE;
+      rv = NS_NewXULTextFrame(aPresShell, &newFrame);
+    }
+    // End of TEXT CONSTRUCTION logic
+
 
     // DECK CONSTRUCTION
     else if (aTag == nsXULAtoms::deck || aTag == nsXULAtoms::tabpanel) {

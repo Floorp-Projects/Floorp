@@ -44,6 +44,7 @@ class nsHTMLInfo;
 #define NS_FRAME_BOX_SIZE_VALID    0x0001
 #define NS_FRAME_BOX_IS_COLLAPSED  0x0002
 #define NS_FRAME_BOX_NEEDS_RECALC  0x0004
+#define NS_FRAME_IS_BOX            0x0008
 
 class nsCalculatedBoxInfo : public nsBoxInfo {
 public:
@@ -178,7 +179,8 @@ protected:
     virtual nsresult GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
     virtual void ComputeChildsNextPosition( nsCalculatedBoxInfo* aInfo, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect, nscoord aMaxAscent);
     virtual nsresult PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect);
-    virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
+    virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool*& aResized, PRInt32 aInfoCount, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
+
     virtual void LayoutChildrenInRect(nsRect& aSize, nscoord& aMaxAscent);
     virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);
     virtual void BoundsCheck(const nsBoxInfo& aBoxInfo, nsRect& aRect);
