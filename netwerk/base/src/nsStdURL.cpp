@@ -888,7 +888,21 @@ nsStdURL::Resolve(const char *relativePath, char **result)
         case '/':
             finalSpec += (char*)start;
             break;
+        case '?': 
+            rv = AppendString(finalSpec,mDirectory,ESCAPED,
+                              nsIIOService::url_Directory);
+            rv = AppendFileName(finalSpec,mFileBaseName,mFileExtension,
+                                ESCAPED);
+            if (mParam)
+            {
+                finalSpec += ';';
+                rv = AppendString(finalSpec,mParam,ESCAPED,
+                                  nsIIOService::url_Param);
+            }
+            finalSpec += (char*)start;
+            break;
         case '#':
+        case '\0':
             rv = AppendString(finalSpec,mDirectory,ESCAPED,
                               nsIIOService::url_Directory);
             rv = AppendFileName(finalSpec,mFileBaseName,mFileExtension,
@@ -997,14 +1011,14 @@ nsStdURL::SetSpec(const char* i_Spec)
     while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
         fwdPtr++;
 
-    // Strip linebreaks
+    // Strip linebreaks and tabs
     char* copyToPtr = 0;
     char* midPtr = fwdPtr;
     while (midPtr && (*midPtr != '\0')) {
-        while ((*midPtr == '\r') || (*midPtr == '\n')) { // if linebreak
+        while ((*midPtr == '\r') || (*midPtr == '\n') || (*midPtr == '\t')) { // if linebreak or tab
             if (!copyToPtr)
                 copyToPtr = midPtr; // start copying
-            midPtr++; // skip linebreak
+            midPtr++; // skip linebreak and tab
         }
         if (copyToPtr) { // if copying
             *copyToPtr = *midPtr;
@@ -1012,7 +1026,7 @@ nsStdURL::SetSpec(const char* i_Spec)
         }
         midPtr++;
     }
-    if (copyToPtr) { // If we removed linebreaks, copyToPtr is the end of the string
+    if (copyToPtr) { // If we removed linebreaks or tabs, copyToPtr is the end of the string
         midPtr = copyToPtr;
     }
 
