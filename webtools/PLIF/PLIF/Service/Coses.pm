@@ -55,11 +55,11 @@ sub init {
 
 sub expand {
     my $self = shift;
-    my($app, $output, $session, $protocol, $string, $data) = @_;
+    my($app, $output, $session, $protocol, $string, $data, $stringType) = @_;
     my $xmlService = $app->getService('service.xml');
     my @index = (); my $index = 0;
     my @stack = (); my $stack = $xmlService->parseNS($string);
-    my @scope = (); my $scope = {'data' => $data};
+    my @scope = (); my $scope = $data;
     my $result = '';
     my $pendingText = '';
     my $originalKeys = {}; # hash with keys being the hash refs and values being hashes with keys being the new keys and values being the original keys
