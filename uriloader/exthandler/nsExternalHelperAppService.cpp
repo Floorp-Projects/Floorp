@@ -1484,6 +1484,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         break;
 
     case NS_ERROR_FILE_NOT_FOUND:
+    case NS_ERROR_FILE_TARGET_DOES_NOT_EXIST:
     case NS_ERROR_FILE_UNRECOGNIZED_PATH:
         // Helper app not found, let's verify this happened on launch
         if (type == kLaunchError) {
