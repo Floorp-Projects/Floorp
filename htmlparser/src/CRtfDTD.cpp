@@ -111,6 +111,7 @@ static RTFEntry gRTFTable[] = {
  * @param 
  * @return
  */
+static
 const char* GetTagName(eRTFTags aTag) {
   PRInt32  cnt=sizeof(gRTFTable)/sizeof(RTFEntry);
   PRInt32  low=0; 
