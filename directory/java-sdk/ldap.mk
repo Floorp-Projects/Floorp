@@ -137,9 +137,8 @@ DOCCLASSES=netscape.ldap netscape.ldap.beans netscape.ldap.controls \
 all: classes
 
 basics: $(DISTDIR) $(CLASSDIR)
-	cp -p manifest.mf $(CLASS_DEST)
 
-classes: LDAPCLASSES BEANS TOOLS
+classes: LDAPCLASSES BEANS
 
 doc: $(DISTDIR) $(DOCDIR) DOCS
 
@@ -153,7 +152,7 @@ tests: $(CLASSDIR)
 package: basepackage filterpackage beanpackage docpackage
 
 basepackage: $(CLASSPACKAGEDIR)
-	cd $(DISTDIR)/classes; rm -f ../packages/$(BASEPACKAGENAME); $(JAR) cvfm ../packages/$(BASEPACKAGENAME) manifest.mf netscape/ldap/*.class netscape/ldap/client/*.class netscape/ldap/client/opers/*.class netscape/ldap/ber/stream/*.class netscape/ldap/controls/*.class netscape/ldap/util/*.class netscape/ldap/errors/*.props com/netscape/sasl/*.class com/netscape/sasl/mechanisms/*.class tools/*.class
+	cd $(DISTDIR)/classes; rm -f ../packages/$(BASEPACKAGENAME); $(JAR) cvf ../packages/$(BASEPACKAGENAME) netscape/ldap/*.class netscape/ldap/client/*.class netscape/ldap/client/opers/*.class netscape/ldap/ber/stream/*.class netscape/ldap/controls/*.class netscape/ldap/util/*.class netscape/ldap/errors/*.props com/netscape/sasl/*.class com/netscape/sasl/mechanisms/*.class *.class
 
 beanpackage: $(CLASSPACKAGEDIR)
 	cd $(DISTDIR)/classes; rm -f ../packages/$(BEANPACKAGENAME); $(JAR) cvf ../packages/$(BEANPACKAGENAME) netscape/ldap/beans
@@ -188,7 +187,7 @@ ERRORS: basics $(ERRORSDIR)
 CONTROLS: basics
 	cd ldapjdk/$(SRCDIR)/controls; $(JAVAC) -d "$(CLASS_DEST)" *.java
 
-LDAPCLASSES: BER OPERS CLIENT MAIN UTIL CONTROLS ERRORS SASL SASLMECHANISM
+LDAPCLASSES: BER OPERS CLIENT MAIN UTIL CONTROLS ERRORS SASL SASLMECHANISM TOOLS
 
 BEANS: OTHERBEANS
 

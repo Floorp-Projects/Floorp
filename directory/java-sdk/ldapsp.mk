@@ -67,7 +67,6 @@ else
 BASEPACKAGENAME=ldapsp.jar
 endif
 CLASSPACKAGE=$(CLASSPACKAGEDIR)/$(PACKAGENAME)
-MANIFEST=$(BASEDIR)/ldapsp/manifest.mf
 
 ifndef JAVADOC
   JAVADOC=javadoc -classpath "$(JAVACLASSPATH)"
@@ -94,7 +93,7 @@ basics: $(DISTDIR) $(CLASSDIR)
 classes: JNDICLASSES 
 
 basepackage: $(CLASSPACKAGEDIR)
-	cd $(DISTDIR)/classes; rm -f ../packages/$(BASEPACKAGENAME); $(JAR) cvfm ../packages/$(BASEPACKAGENAME) $(MANIFEST) com/netscape/jndi/ldap/*.class com/netscape/jndi/ldap/common/*.class com/netscape/jndi/ldap/schema/*.class com/netscape/jndi/ldap/controls/*.class
+	cd $(DISTDIR)/classes; rm -f ../packages/$(BASEPACKAGENAME); $(JAR) cvf ../packages/$(BASEPACKAGENAME) com/netscape/jndi/ldap/*.class com/netscape/jndi/ldap/common/*.class com/netscape/jndi/ldap/schema/*.class com/netscape/jndi/ldap/controls/*.class
 
 MAIN: basics
 	cd ldapsp/$(SRCDIR); $(JAVAC) -d $(CLASS_DEST) *.java
