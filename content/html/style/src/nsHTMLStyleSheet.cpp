@@ -29,6 +29,9 @@
 #include "nsIPresContext.h"
 #include "nsILinkHandler.h"
 #include "nsIDocument.h"
+#include "nsTableCell.h"
+#include "nsTableColFrame.h"
+#include "nsTableFrame.h"
 
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
@@ -87,7 +90,7 @@ void HTMLAnchorRule::List(FILE* out, PRInt32 aIndent) const
 {
 }
 
-
+// -----------------------------------------------------------
 
 class HTMLStyleSheetImpl : public nsIHTMLStyleSheet {
 public:
@@ -224,6 +227,54 @@ nsresult HTMLStyleSheetImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
+struct AppendData 
+{
+  AppendData(PRInt32 aBackstopCount, PRInt32 aInsertPoint, nsISupportsArray* aResults)
+    : mCount(0),
+      mBackstop(aBackstopCount),
+      mInsert(aInsertPoint),
+      mResults(aResults)
+  {}
+
+  PRInt32 mCount;
+  PRInt32 mBackstop;
+  PRInt32 mInsert;
+  nsISupportsArray* mResults;
+};
+
+PRBool AppendFunc(nsISupports* aElement, void *aData)
+{
+  AppendData* data = (AppendData*)aData;
+  if (data->mCount < data->mBackstop) {
+    data->mResults->InsertElementAt(aElement, data->mInsert++);
+  }
+  else {
+    data->mResults->AppendElement(aElement);
+  }
+  data->mCount++;
+  return PR_TRUE;
+}
+
+PRInt32 AppendRulesFrom(nsIFrame* aFrame, nsIPresContext* aPresContext, PRInt32& aInsertPoint, nsISupportsArray* aResults)
+{
+  PRInt32 count = 0;
+  nsIStyleContext*  context;
+  aFrame->GetStyleContext(aPresContext, context);
+  if (nsnull != context) {
+    count = context->GetStyleRuleCount();
+    if (0 < count) {
+      PRInt32 backstopCount = context->GetBackstopStyleRuleCount();
+      nsISupportsArray* rules = context->GetStyleRules();
+
+      AppendData  data(backstopCount, aInsertPoint, aResults);
+      rules->EnumerateForwards(AppendFunc, &data);
+      aInsertPoint = data.mInsert;
+    }
+    NS_RELEASE(context);
+  }
+  return count;
+}
+
 PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                                           nsIContent* aContent,
                                           nsIFrame* aParentFrame,
@@ -244,10 +295,10 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
   if (aContent != parentContent) {  // if not a pseudo frame...
     nsIHTMLContent* htmlContent;
     if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
+      nsIAtom*  tag = htmlContent->GetTag();
       // if we have anchor colors, check if this is an anchor with an href
-      if ((nsnull != mLinkRule) || (nsnull != mVisitedRule) || (nsnull != mActiveRule)) {
-        nsIAtom*  tag = htmlContent->GetTag();
-        if (tag == nsHTMLAtoms::a) {
+      if (tag == nsHTMLAtoms::a) {
+        if ((nsnull != mLinkRule) || (nsnull != mVisitedRule) || (nsnull != mActiveRule)) {
           // test link state
           nsILinkHandler* linkHandler;
 
@@ -296,8 +347,32 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
             NS_RELEASE(linkHandler);
           }
         }
-        NS_IF_RELEASE(tag);
-      }
+      } // end A tag
+      else if ((tag == nsHTMLAtoms::td) || (tag == nsHTMLAtoms::th)) {
+        // propogate row/col style rules
+        PRInt32 backstopInsertPoint = 0;
+        nsTableCell*  cell = (nsTableCell*)aContent;
+        PRInt32 colIndex = cell->GetColIndex();
+
+        nsIFrame* rowFrame = aParentFrame;
+        nsIFrame* rowGroupFrame;
+        nsIFrame* tableFrame;
+
+        rowFrame->GetContentParent(rowGroupFrame);
+        rowGroupFrame->GetContentParent(tableFrame);
+
+        nsTableColFrame* colFrame;
+        nsIFrame* colGroupFrame;
+
+        ((nsTableFrame*)tableFrame)->GetColumnFrame(colIndex, colFrame);
+        colFrame->GetContentParent(colGroupFrame);
+
+        matchCount += AppendRulesFrom(colGroupFrame, aPresContext, backstopInsertPoint, aResults);
+        matchCount += AppendRulesFrom(colFrame, aPresContext, backstopInsertPoint, aResults);
+        matchCount += AppendRulesFrom(rowGroupFrame, aPresContext, backstopInsertPoint, aResults);
+        matchCount += AppendRulesFrom(rowFrame, aPresContext, backstopInsertPoint, aResults);
+
+      } // end TD/TH tag
 
       // just get the one and only style rule from the content
       nsIStyleRule* rule = htmlContent->GetStyleRule();
@@ -308,6 +383,7 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         matchCount++;
       }
 
+      NS_IF_RELEASE(tag);
       NS_RELEASE(htmlContent);
     }
   }
