@@ -1160,7 +1160,9 @@ nsComponentManagerImpl::ProgIDToClassID(const char *aProgID, nsCID *aClass)
     else {
         // This is the first time someone has asked for this
         // ProgID. Go to the registry to find the CID.
-        res = PlatformProgIDToCLSID(aProgID, aClass);
+        if (!mPrePopulationDone) {
+            res = PlatformProgIDToCLSID(aProgID, aClass);
+        }
 
         if (NS_SUCCEEDED(res)) {
             // Found it. So put it into the cache.
