@@ -158,13 +158,18 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
 
   *_retval = nsnull;
 
-  nsCOMPtr<nsISupportsArray> rules;
-  NS_NewISupportsArray(getter_AddRefs(rules));
-  if (!rules) return NS_ERROR_OUT_OF_MEMORY;
-
   nsRuleNode* ruleNode = nsnull;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   mCSSUtils->GetRuleNodeForContent(content, &ruleNode);
+  if (!ruleNode) {
+    // This can fail for content nodes that are not in the document or
+    // if the document they're in doesn't have a presshell.  Bail out.
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupportsArray> rules;
+  NS_NewISupportsArray(getter_AddRefs(rules));
+  if (!rules) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsIStyleRule> srule;
   nsCOMPtr<nsICSSStyleRule> cssRule;
