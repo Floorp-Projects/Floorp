@@ -232,7 +232,8 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
 
 	// find the frame that contains the content node that has focus
 	nsIFrame*       theFrame = nsnull;
-  err = frameSelection->GetFrameForNodeOffset(contentNode, focusOffset, &theFrame);
+	PRInt32         theFrameOffset = 0;
+  err = frameSelection->GetFrameForNodeOffset(contentNode, focusOffset, &theFrame, &theFrameOffset);
 	if (NS_FAILED(err) || !theFrame)
 		return err;
 	
@@ -267,7 +268,7 @@ NS_IMETHODIMP nsCaret::GetWindowRelativeCoordinates(nsRect& outCoordinates, PRBo
 
 	// now we can measure the offset into the frame.
 	nsPoint		framePos(0, 0);
-	theFrame->GetPointFromOffset(presContext, rendContext, focusOffset, &framePos);
+	theFrame->GetPointFromOffset(presContext, rendContext, theFrameOffset, &framePos);
 
 	nsRect          frameRect;
 	theFrame->GetRect(frameRect);
@@ -427,6 +428,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 				}
 #endif // NOT_NEEDED
 				nsIFrame*	theFrame = nsnull;
+				PRInt32         theFrameOffset = 0;
 
 				//get frame selection and find out what frame to use...
 				nsCOMPtr<nsIFrameSelection> frameSelection;
@@ -434,7 +436,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 				if (NS_FAILED(err) || !frameSelection)
 					return PR_FALSE;
 				
-				err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, &theFrame);
+				err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, &theFrame, &theFrameOffset);
 				if (NS_FAILED(err))
 					return PR_FALSE;
 				else
@@ -449,7 +451,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 					theFrame->SetFrameState(state);
 					
 					mLastCaretFrame = theFrame;
-					mLastContentOffset = contentOffset;
+					mLastContentOffset = theFrameOffset;
 					return PR_TRUE;
 				}
 			}
