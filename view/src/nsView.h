@@ -240,7 +240,7 @@ public:
    * Gets the dirty region associated with this view. Used by the view
    * manager.
    */
-  NS_IMETHOD  GetDirtyRegion(nsIRegion*& aRegion) const;
+  nsresult GetDirtyRegion(nsIRegion*& aRegion);
   /**
    * Set the widget associated with this view.
    * @param aWidget widget to associate with view. It is an error

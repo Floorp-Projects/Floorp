@@ -57,7 +57,7 @@
 #include "nsHTMLContainerFrame.h" // view creation
 
 #include "nsSimplePageSequence.h" // for nsSharedPageData
-#include "nsIRegion.h"
+#include "nsRegion.h"
 #include "nsIViewManager.h"
 
 // for page number localization formatting
@@ -232,9 +232,9 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       if (view) {
         nsCOMPtr<nsIViewManager> vm;
         view->GetViewManager(*getter_AddRefs(vm));
-        nsCOMPtr<nsIRegion> region = dont_AddRef(nsSimplePageSequenceFrame::CreateRegion());
-        region->SetTo(0,0, aDesiredSize.width, aDesiredSize.height);
-        vm->SetViewChildClipRegion(view, region);
+        nsRegion region;
+        region.Copy(nsRectFast(0, 0, aDesiredSize.width, aDesiredSize.height));
+        vm->SetViewChildClipRegion(view, &region);
       }
 
 #ifdef NS_DEBUG

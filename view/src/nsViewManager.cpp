@@ -55,6 +55,7 @@
 #include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
 #include "nsIPref.h"
+#include "nsRegion.h"
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -395,8 +396,6 @@ nsViewManager::~nsViewManager()
   mContext = nsnull;
 
   NS_IF_RELEASE(mBlender);
-  NS_IF_RELEASE(mOpaqueRgn);
-  NS_IF_RELEASE(mTmpRgn);
 
   NS_IF_RELEASE(mOffScreenCX);
   NS_IF_RELEASE(mBlackCX);
@@ -436,27 +435,26 @@ nsrefcnt nsViewManager::Release(void)
   return mRefCnt;
 }
 
-nsresult 
+nsresult
 nsViewManager::CreateRegion(nsIRegion* *result)
 {
   nsresult rv;
-  
+
   if (!mRegionFactory) {
     nsCOMPtr<nsIComponentManager> compMgr;
     rv = NS_GetComponentManager(getter_AddRefs(compMgr));
-        
+
     if (NS_SUCCEEDED(rv))
-      rv = compMgr->GetClassObject(kRegionCID, 
-                                   NS_GET_IID(nsIFactory), 
+      rv = compMgr->GetClassObject(kRegionCID,
+                                   NS_GET_IID(nsIFactory),
                                    getter_AddRefs(mRegionFactory));
-    
+
     if (!mRegionFactory) {
       *result = nsnull;
       return NS_ERROR_FAILURE;
-        }
+    }
   }
-  
-  
+
   nsIRegion* region = nsnull;
   rv = mRegionFactory->CreateInstance(nsnull, NS_GET_IID(nsIRegion), (void**)&region);
   if (NS_SUCCEEDED(rv)) {
@@ -491,13 +489,6 @@ NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
   mMouseGrabber = nsnull;
   mKeyGrabber = nsnull;
 
-  // create regions
-  mOpaqueRgn = nsnull;
-  mTmpRgn = nsnull;
-  
-  CreateRegion(&mOpaqueRgn);
-  CreateRegion(&mTmpRgn);
-  
   if (nsnull == mEventQueueService) {
     mEventQueueService = do_GetService(kEventQueueServiceCID);
     NS_ASSERTION(mEventQueueService, "couldn't get event queue service");
@@ -694,7 +685,8 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   }
 
   nsRect damageRectInPixels;
-  aRegion->GetBoundingBox(&damageRectInPixels.x, &damageRectInPixels.y, &damageRectInPixels.width, &damageRectInPixels.height);
+  aRegion->GetBoundingBox(&damageRectInPixels.x, &damageRectInPixels.y,
+                          &damageRectInPixels.width, &damageRectInPixels.height);
 
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
@@ -1005,9 +997,9 @@ static void PopState(nsIRenderingContext **aRCs, PRInt32 aRCCount) {
   }
 }
 
-void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* aContext,
+void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceContext* aContext,
                                                      nsView* aRootView) {
-  // We accumulate the bounds of widgets obscuring aRootView's widget into mOpaqueRgn.
+  // We accumulate the bounds of widgets obscuring aRootView's widget into opaqueRgn.
   // In OptimizeDisplayList, display list elements which lie behind obscuring native
   // widgets are dropped.
   // This shouldn't really be necessary, since the GFX/Widget toolkit should remove these
@@ -1019,53 +1011,58 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceC
   // 
   // NB: we must NOT add widgets that correspond to floating views!
   // We may be required to paint behind them
-  if (aRgn) {
-    aRgn->SetTo(0, 0, 0, 0);
-    nsCOMPtr<nsIWidget> widget;
-    GetWidgetForView(aRootView, getter_AddRefs(widget));
-    if (widget) {
-      nsCOMPtr<nsIEnumerator> children(dont_AddRef(widget->GetChildren()));
-      if (children) {
-        children->First();
-        do {
-          nsCOMPtr<nsISupports> child;
-          if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
-            nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
-            if (childWidget) {
-              nsView* view = nsView::GetViewFor(childWidget);
-              if (view) {
-                nsViewVisibility visible = nsViewVisibility_kHide;
-                view->GetVisibility(visible);
-                if (visible == nsViewVisibility_kShow) {
-                  PRBool floating = PR_FALSE;
-                  view->GetFloating(floating);
-                  if (!floating) {
-                    nsRect bounds;
-                    view->GetBounds(bounds);
-                    if (bounds.width > 0 && bounds.height > 0) {
-                      nsView* viewParent = view->GetParent();
+  aRgn.Empty();
 
-                      while (viewParent && viewParent != aRootView) {
-                        viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
-                        viewParent = viewParent->GetParent();
-                      }
+  nsCOMPtr<nsIWidget> widget;
+  GetWidgetForView(aRootView, getter_AddRefs(widget));
+  if (!widget) {
+    return;
+  }
 
-                      // maybe we couldn't get the view into the coordinate
-                      // system of aRootView (maybe it's not a descendant
-                      // view of aRootView?); if so, don't use it
-                      if (viewParent) {
-                        aRgn->Union(bounds.x, bounds.y, bounds.width, bounds.height);
-                      }
-                    }
-                  }
-                }
+  nsCOMPtr<nsIEnumerator> children(dont_AddRef(widget->GetChildren()));
+  if (!children) {
+    return;
+  }
+
+  children->First();
+  do {
+    nsCOMPtr<nsISupports> child;
+    if (!NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
+      return;
+    }
+
+    nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
+    if (childWidget) {
+      nsView* view = nsView::GetViewFor(childWidget);
+      if (view) {
+        nsViewVisibility visible = nsViewVisibility_kHide;
+        view->GetVisibility(visible);
+        if (visible == nsViewVisibility_kShow) {
+          PRBool floating = PR_FALSE;
+          view->GetFloating(floating);
+          if (!floating) {
+            nsRect bounds;
+            view->GetBounds(bounds);
+            if (bounds.width > 0 && bounds.height > 0) {
+              nsView* viewParent = view->GetParent();
+
+              while (viewParent && viewParent != aRootView) {
+                viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
+                viewParent = viewParent->GetParent();
+              }
+
+              // maybe we couldn't get the view into the coordinate
+              // system of aRootView (maybe it's not a descendant
+              // view of aRootView?); if so, don't use it
+              if (viewParent) {
+                aRgn.Or(aRgn, nsRectFast(bounds));
               }
             }
           }
-        } while (NS_SUCCEEDED(children->Next()));
+        }
       }
     }
-  }
+  } while (NS_SUCCEEDED(children->Next()));
 }
 
 void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRect& aRect, PRBool &aResult)
@@ -1079,11 +1076,9 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
 
   ReapplyClipInstructions(PR_FALSE, fakeClipRect, index);
     
-  if (nsnull != mOpaqueRgn) {
-    mOpaqueRgn->SetTo(0, 0, 0, 0);
-    AddCoveringWidgetsToOpaqueRegion(mOpaqueRgn, mContext, aRootView);
-    OptimizeDisplayList(aRect, finalTransparentRect);
-  }
+  nsRegion opaqueRgn;
+  AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext, aRootView);
+  OptimizeDisplayList(aRect, finalTransparentRect, opaqueRgn);
 
   // ShowDisplayList(mDisplayListCount);
 
@@ -1744,7 +1739,6 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
                           doDefault = PR_FALSE;
                       }
                     }
-                    
 
                     // since we got an NS_PAINT event, we need to
                     // draw something so we don't get blank areas.
@@ -2457,7 +2451,7 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, nsIRegion *aRegion)
+NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, const nsRegion *aRegion)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
  
@@ -2478,7 +2472,7 @@ NS_IMETHODIMP nsViewManager::SetViewChildClipRegion(nsIView *aView, nsIRegion *a
   // and it is set to no more than the bounds of the view.
   if (aRegion != nsnull) {
     newClipFlag = PR_TRUE;
-    aRegion->GetBoundingBox(&newClipRect.x, &newClipRect.y, &newClipRect.width, &newClipRect.height);
+    aRegion->GetBoundRect(newClipRect);
     if (IsClipView(view)) {
       nsRect dims;
       view->GetDimensions(dims);
@@ -2626,23 +2620,21 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
     }
   }
 
-  if (nsnull != mOpaqueRgn) {
-    nsRect finalTransparentRect;
+  nsRect finalTransparentRect;
 
-    mOpaqueRgn->SetTo(0, 0, 0, 0);
-    // We DON'T use AddCoveringWidgetsToOpaqueRegion here. Our child widgets are going to be moved
-    // as if they were scrolled, so we need to examine the display list elements that might be covered by
-    // child widgets.
-
-    // We DO need to use OptimizeDisplayList here to eliminate views that are covered by views we know
-    // are opaque. Typically aView itself is opaque and we want to eliminate views behind aView, such as
-    // aView's parent, that aren't being scrolled and would otherwise cause us to decide not to blit.
-
-    // (Of course it's possible that aView's parent is actually in front of aView (if aView has a negative
-    // z-index) but if so, this code still does the right thing. Yay for the display list based approach!)
-    OptimizeDisplayList(r, finalTransparentRect);
-  }
+  // We DON'T use AddCoveringWidgetsToOpaqueRegion here. Our child widgets are going to be moved
+  // as if they were scrolled, so we need to examine the display list elements that might be covered by
+  // child widgets.
   
+  // We DO need to use OptimizeDisplayList here to eliminate views that are covered by views we know
+  // are opaque. Typically aView itself is opaque and we want to eliminate views behind aView, such as
+  // aView's parent, that aren't being scrolled and would otherwise cause us to decide not to blit.
+
+  // (Of course it's possible that aView's parent is actually in front of aView (if aView has a negative
+  // z-index) but if so, this code still does the right thing. Yay for the display list based approach!)
+  nsRegion opaqueRegion; // empty; no opaque overlay
+  OptimizeDisplayList(r, finalTransparentRect, opaqueRegion);
+
   PRBool anyUnscrolledViews = PR_FALSE;
   PRBool anyUnblittableViews = PR_FALSE;
 
@@ -3550,9 +3542,6 @@ void nsViewManager::ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect,
 /**
    Walk the display list, looking for opaque views, and remove any views that are behind them
    and totally occluded.
-   We rely on a good region implementation. If nsIRegion doesn't cut it, we can disable this
-   optimization ... or better still, fix nsIRegion on that platform.
-   It seems to be good on Windows.
 
    @param aFinalTransparentRect
        Receives a rectangle enclosing all pixels in the damage rectangle
@@ -3560,40 +3549,37 @@ void nsViewManager::ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect,
        Usually this will be empty, but nothing really prevents someone
        from creating a set of views that are (for example) all transparent.
 */
-nsresult nsViewManager::OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect)
+nsresult nsViewManager::OptimizeDisplayList(const nsRect& aDamageRect, nsRect& aFinalTransparentRect,
+                                            nsRegion &aOpaqueRegion)
 {
   aFinalTransparentRect = aDamageRect;
-
-  if (nsnull == mOpaqueRgn || nsnull == mTmpRgn) {
-    return NS_OK;
-  }
 
   PRInt32 count = mDisplayListCount;
   for (PRInt32 i = count - 1; i >= 0; i--) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(i));
     if (element->mFlags & VIEW_RENDERED) {
-      mTmpRgn->SetTo(element->mBounds.x, element->mBounds.y, element->mBounds.width, element->mBounds.height);
-      mTmpRgn->Subtract(*mOpaqueRgn);
+      nsRegion tmpRgn;
+      tmpRgn.Copy(nsRectFast(element->mBounds));
+      tmpRgn.Sub(tmpRgn, aOpaqueRegion);
 
-      if (mTmpRgn->IsEmpty()) {
+      if (tmpRgn.IsEmpty()) {
         element->mFlags &= ~VIEW_RENDERED;
       } else {
-        mTmpRgn->GetBoundingBox(&element->mBounds.x, &element->mBounds.y,
-                                &element->mBounds.width, &element->mBounds.height);
+        tmpRgn.GetBoundRect(element->mBounds);
 
         // a view is opaque if it is neither transparent nor transluscent
         if (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))) {
-          mOpaqueRgn->Union(element->mBounds.x, element->mBounds.y, element->mBounds.width, element->mBounds.height);
+          aOpaqueRegion.Or(aOpaqueRegion, nsRectFast(element->mBounds));
         }
       }
     }
   }
 
-  mTmpRgn->SetTo(aDamageRect.x, aDamageRect.y, aDamageRect.width, aDamageRect.height);
-  mTmpRgn->Subtract(*mOpaqueRgn);
-  mTmpRgn->GetBoundingBox(&aFinalTransparentRect.x, &aFinalTransparentRect.y,
-                          &aFinalTransparentRect.width, &aFinalTransparentRect.height);
-  
+  nsRegion tmpRgn;
+  tmpRgn.Copy(nsRectFast(aDamageRect));
+  tmpRgn.Sub(tmpRgn, aOpaqueRegion);
+  tmpRgn.GetBoundRect(aFinalTransparentRect);
+
   return NS_OK;
 }
 

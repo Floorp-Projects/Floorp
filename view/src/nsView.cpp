@@ -931,29 +931,18 @@ NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::GetDirtyRegion(nsIRegion *&aRegion) const
+nsresult nsView::GetDirtyRegion(nsIRegion*& aRegion)
 {
-	if (nsnull == mDirtyRegion) {
-		// The view doesn't have a dirty region so create one
-		nsresult rv = nsComponentManager::CreateInstance(kRegionCID, 
-		                               nsnull, 
-		                               NS_GET_IID(nsIRegion), 
-		                               (void**) &mDirtyRegion);
+  if (nsnull == mDirtyRegion) {
+    nsresult rv = GetViewManager()->CreateRegion(&mDirtyRegion);
+    if (NS_FAILED(rv))
+       return rv;
+  }
 
-		if (NS_FAILED(rv))
-			return rv;
-		
-		rv = mDirtyRegion->Init();
-		if (NS_FAILED(rv))
-			return rv;
-	}
-
-	aRegion = mDirtyRegion;
-	NS_ADDREF(aRegion);
-	
-	return NS_OK;
+  aRegion = mDirtyRegion;
+  NS_ADDREF(aRegion);
+  return NS_OK;
 }
-
 
 NS_IMETHODIMP nsView::SetCompositorFlags(PRUint32 aFlags)
 {

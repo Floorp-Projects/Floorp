@@ -51,7 +51,7 @@
 #include "nsIPrintPreviewContext.h"
 #include "nsIPrintContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRegion.h"
+#include "nsRegion.h"
 #include "nsLayoutAtoms.h"
 
 #include "nsIPref.h" // for header/footer gap & ExtraMargin for Print Preview
@@ -636,20 +636,6 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
 
 }
 
-nsIRegion* nsSimplePageSequenceFrame::CreateRegion()
-{
-  nsIRegion* region;
-  nsresult rv = nsComponentManager::CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**)&region);
-  if (NS_SUCCEEDED(rv)) {
-    if (NS_SUCCEEDED(region->Init())) {
-      return region;
-    } else {
-      NS_RELEASE(region);
-    }
-  }
-  return nsnull;
-}
-
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
                                       nsIPrintSettings* aPrintSettings,
@@ -740,7 +726,6 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
     PRInt32 pageNum = 1;
     nscoord y = 0;//mMargin.top;
 
-    nsCOMPtr<nsIRegion> emptyRegion = getter_AddRefs(CreateRegion());
     for (nsIFrame* page = mFrames.FirstChild(); nsnull != page; page->GetNextSibling(&page)) {
       nsIView*  view = nsnull;
       page->GetView(aPresContext, &view);
@@ -756,7 +741,8 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*   aPresContext,
         // sure the child views don't get asked to print
         // but my guess is that there won't be any
         vm->SetViewVisibility(view, nsViewVisibility_kHide);
-        vm->SetViewChildClipRegion(view, emptyRegion);
+        nsRegion emptyRegion;
+        vm->SetViewChildClipRegion(view, &emptyRegion);
       } else {
         nsRect rect;
         page->GetRect(rect);

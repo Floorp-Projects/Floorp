@@ -27,7 +27,8 @@ VPATH       = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE      = gfx
-EXPORTS         = nsFontList.h
+EXPORTS         = nsFontList.h \
+                  nsRegion.h
 LIBRARY_NAME    = gkgfx
 EXPORT_LIBRARY = 1
 REQUIRES	= xpcom \
@@ -93,6 +94,7 @@ CPPSRCS = \
         nsNameValuePairDB.cpp \
         nsRenderingContextImpl.cpp \
         nsRect.cpp \
+        nsRegion.cpp \
         nsTransform2D.cpp \
         nsScriptableRegion.cpp \
         nsGraphicsImpl.cpp \
@@ -108,7 +110,6 @@ endif
 
 ifneq (,$(filter gtk gtk2 xlib os2,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += \
-        nsRegion.cpp \
         nsRegionImpl.cpp \
         $(NULL)
 endif

@@ -56,11 +56,11 @@
 #include "nsLayoutAtoms.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
-#include "nsIRegion.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
 #include "nsCSSRendering.h"
 #include "nsTransform2D.h"
+#include "nsRegion.h"
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
@@ -497,20 +497,6 @@ nsContainerFrame::PositionFrameView(nsIPresContext* aPresContext,
   }
 }
 
-static nsIRegion* CreateRegion()
-{
-  nsIRegion* region;
-  nsresult rv = nsComponentManager::CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**)&region);
-  if (NS_SUCCEEDED(rv)) {
-    if (NS_SUCCEEDED(region->Init())) {
-      return region;
-    } else {
-      NS_RELEASE(region);
-    }
-  }
-  return nsnull;
-}
-
 void
 nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
                                            nsIFrame*       aFrame,
@@ -741,12 +727,9 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
       }
 
       // Set clipping of child views.
-      nsIRegion *region = CreateRegion();
-      if (region != nsnull) {
-        region->SetTo(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
-        vm->SetViewChildClipRegion(aView, region);
-        NS_RELEASE(region);
-      }
+      nsRegion region;
+      region.Copy(nsRectFast(clipRect));
+      vm->SetViewChildClipRegion(aView, &region);
     } else {
       // Remove clipping of child views.
       vm->SetViewChildClipRegion(aView, nsnull);
