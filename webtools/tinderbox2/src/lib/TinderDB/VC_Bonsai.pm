@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.33 $ 
-# $Date: 2002/05/03 22:01:05 $ 
+# $Revision: 1.34 $ 
+# $Date: 2002/05/03 22:29:28 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.33 $ )[1];
+$VERSION = ( qw $Revision: 1.34 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -335,7 +335,23 @@ sub status_table_start {
   return ;  
 }
 
+# a helper function to determine if we break a large cell symbolizing
+# no data.
 
+sub is_break_cell {
+    my ($tree,$time,$last_treestate) = @_;
+    
+    
+    $is_state_same = (
+                      !(defined($DATABASE{$tree}{$time}{'treestate'})) ||
+                      ($last_treestate eq $DATABASE{$tree}{$time}{'treestate'})
+                      );
+    
+    $is_author_data = defined($DATABASE{$tree}{$time}{'author'});
+    $is_break_cell = ( !($is_state_same) || ($is_author_data) );
+    
+    return $is_break_cell;
+}
 
 
 
@@ -381,17 +397,29 @@ sub status_table_row {
   }
 
   # create a multi-row dummy cell for missing data?
+  # cell stops if there is data or the treestate changes.
+
+  # first find out what time the break will occur at.
 
   my $next_time;
   my $next_index = $NEXT_DB;
   $next_time = $DB_TIMES[$next_index];
 
-  while (!defined($DATABASE{$tree}{$next_time}{'author'})) {
+
+  while (!(
+         is_break_cell($tree,$next_time,$LAST_TREESTATE)
+         )) {
       $next_time = $DB_TIMES[$next_index];
       $next_index++;
+
   }
+
+  # Do we need a multiline empty cell or do we have data?
+
   if  ( $next_time < $row_times->[$row_index] ) {
       
+      # now convert the break time to a rowspan.
+
       my ($rowspan) = 1;
       while ( 
               ( ($row_index + $rowspan) <= $#{$row_times}) &&
@@ -622,6 +650,7 @@ sub status_table_row {
     $query_links.=  "\t\t".$text_browser_color_string."\n";
 
     @outrow = (
+               "\t<!-- VC_Bonsai -->\n".               
                "\t<td align=center $cell_options>\n".
                $query_links.
                "\t</td>\n".
