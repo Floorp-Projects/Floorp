@@ -441,14 +441,14 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
 
     nsCOMPtr<nsIRDFDate> dateLiteral = do_QueryInterface(aNode);
     if (dateLiteral) {
-        PRInt64	tm;
-        rv = dateLiteral->GetValue(&tm);
+        PRInt64	value;
+        rv = dateLiteral->GetValue(&value);
         if (NS_FAILED(rv)) return rv;
 
         rv = gFormat->FormatPRTime(nsnull /* nsILocale* locale */,
                                   kDateFormatShort,
                                   kTimeFormatSeconds,
-                                  PRTime(tm),
+                                  PRTime(value),
                                   aResult);
 
         if (NS_FAILED(rv)) return rv;
