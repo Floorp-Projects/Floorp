@@ -267,7 +267,7 @@ static PRUint32 gCounter = 0;
         s.Append(++gCounter, 10);
 
         nsIRDFResource* resource;
-        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(s, &resource)))
+        if (NS_FAILED(rv = gRDFService->GetUnicodeResource(s.GetUnicode(), &resource)))
             return rv;
 
         // XXX an ugly but effective way to make sure that this
@@ -380,7 +380,7 @@ rdf_MakeContainer(nsIRDFDataSource* aDataSource, nsIRDFResource* aContainer, nsI
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFLiteral> nextVal;
-    rv = gRDFService->GetLiteral(nsAutoString("1"), getter_AddRefs(nextVal));
+    rv = gRDFService->GetLiteral(nsAutoString("1").GetUnicode(), getter_AddRefs(nextVal));
     if (NS_FAILED(rv)) return rv;
 
     rv = aDataSource->Assert(aContainer, kRDF_nextVal, nextVal, PR_TRUE);
@@ -448,7 +448,7 @@ rdf_ContainerSetNextValue(nsIRDFDataSource* aDataSource,
     s.Append(aIndex, 10);
 
     nsCOMPtr<nsIRDFLiteral> nextVal;
-    if (NS_FAILED(rv = gRDFService->GetLiteral(s, getter_AddRefs(nextVal)))) {
+    if (NS_FAILED(rv = gRDFService->GetLiteral(s.GetUnicode(), getter_AddRefs(nextVal)))) {
         NS_ERROR("unable to get nextVal literal");
         return rv;
     }
@@ -512,7 +512,7 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* aDataSource,
     nextValStr.Append("_");
     nextValStr.Append(nextVal, 10);
 
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(nextValStr, aResult)))
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(nextValStr.GetUnicode(), aResult)))
         goto done;
 
     // Now increment the RDF:nextVal property.
@@ -525,7 +525,7 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* aDataSource,
     nextValStr.Truncate();
     nextValStr.Append(nextVal, 10);
 
-    if (NS_FAILED(rv = gRDFService->GetLiteral(nextValStr, &nextValLiteral)))
+    if (NS_FAILED(rv = gRDFService->GetLiteral(nextValStr.GetUnicode(), &nextValLiteral)))
         goto done;
 
     if (NS_FAILED(rv = aDataSource->Assert(aContainer, kRDF_nextVal, nextValLiteral, PR_TRUE)))
