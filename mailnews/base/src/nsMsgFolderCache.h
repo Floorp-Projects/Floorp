@@ -39,7 +39,7 @@ public:
 
 	//nsMsgFolderCache
 	NS_IMETHOD Init(nsIFileSpec *dbFileSpec);
-	NS_IMETHOD GetCacheElement(char *uri, PRBool createIfMissing, 
+	NS_IMETHOD GetCacheElement(const char *uri, PRBool createIfMissing, 
 								nsIMsgFolderCacheElement **result);
 	NS_IMETHOD Close();
 

@@ -34,6 +34,7 @@ nsMsgFolderCache::nsMsgFolderCache()
 {
 	m_mdbEnv = nsnull;
 	m_mdbStore = nsnull;
+	NS_INIT_REFCNT();
 	m_mdbAllFoldersTable = nsnull;
 }
 
@@ -42,8 +43,11 @@ static nsIMdbFactory *gMDBFactory = nsnull;
 
 nsMsgFolderCache::~nsMsgFolderCache()
 {
-	NS_IF_RELEASE(gMDBFactory);
+	if (gMDBFactory)
+		gMDBFactory->CutStrongRef(GetEnv());
 	gMDBFactory = nsnull;
+	if (m_mdbEnv)
+		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
 }
 
 
@@ -258,15 +262,8 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 
 		if (NS_SUCCEEDED(rv))
 		{
-			if (!m_dbFileSpec.Exists())
-			{
-				InitNewDB();
-			}
-			else
-			{
-				InitExistingDB();
-			}
-
+			// ### evil cast until MDB supports file streams.
+			rv = OpenMDB((const char *) m_dbFileSpec, PR_TRUE);
 		}
 	}
 	return rv;
@@ -277,7 +274,7 @@ typedef struct _findCacheElementByURIEntry {
   nsIMsgFolderCacheElement *m_cacheElement;
 } findCacheElementByURIEntry;
 
-NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(char *uri, PRBool createIfMissing, 
+NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *uri, PRBool createIfMissing, 
 							nsIMsgFolderCacheElement **result)
 {
 	if (!result || !uri)
@@ -318,7 +315,28 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(char *uri, PRBool createIfMissin
 
 NS_IMETHODIMP nsMsgFolderCache::Close()
 {
-	return NS_OK;
+	nsresult ret;
+
+	nsIMdbThumb	*commitThumb = NULL;
+	if (m_mdbStore)
+		ret = m_mdbStore->CompressCommit(GetEnv(), &commitThumb);
+
+	if (commitThumb)
+	{
+		mdb_count outTotal = 0;    // total somethings to do in operation
+		mdb_count outCurrent = 0;  // subportion of total completed so far
+		mdb_bool outDone = PR_FALSE;      // is operation finished?
+		mdb_bool outBroken = PR_FALSE;     // is operation irreparably dead and broken?
+		while (!outDone && !outBroken && ret == NS_OK)
+		{
+			ret = commitThumb->DoMore(GetEnv(), &outTotal, &outCurrent, &outDone, &outBroken);
+		}
+		NS_RELEASE(commitThumb);
+	}
+	// ### do something with error, but clear it now because mork errors out on commits.
+	if (GetEnv())
+		GetEnv()->ClearErrors();
+	return ret;
 }
 
 
