@@ -4675,7 +4675,7 @@ PK11_WaitForTokenEvent(PK11SlotInfo *slot, PK11TokenEvent event,
 	if (timeout == PR_INTERVAL_NO_WAIT) {
 	    return waitForRemoval ? PK11TokenPresent : PK11TokenRemoved;
 	}
-	if (timeout == PR_INTERVAL_NO_TIMEOUT ) {
+	if (timeout != PR_INTERVAL_NO_TIMEOUT ) {
 	    interval = PR_IntervalNow();
 	    if (!first_time_set) {
 		first_time = interval;
