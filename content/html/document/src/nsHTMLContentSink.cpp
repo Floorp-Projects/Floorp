@@ -1079,16 +1079,9 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   if (NS_OK == rv) {
     if (nsnull != leaf) {
       if (nsnull != parent) {
-        PRBool allowReflow = parent == mBody;
-#ifdef NS_DEBUG
-        if (allowReflow) {
-          SINK_TRACE(SINK_TRACE_REFLOW,
-                     ("HTMLContentSink::AddLeaf: reflow after append"));
-        }
-#endif
         AppendToCorrectParent(parentType, parent,
                               (nsHTMLTag) aNode.GetNodeType(), leaf,
-                              allowReflow);
+                              PR_FALSE);
       } else {
         // XXX drop stuff on the floor that doesn't have a container!
         // Bad parser!
