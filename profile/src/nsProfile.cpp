@@ -1181,6 +1181,13 @@ nsProfile::SetCurrentProfile(const PRUnichar * aCurrentProfile)
         // Bring network back online
         observerService->NotifyObservers(subject, "profile-change-net-restore", context.get());
     }
+    else
+    {
+        // Ensure that the prefs service exists so it can respond to
+        // the notifications we're about to send around. It needs to.
+        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get prefs service");
+    }
 
     // Phase 4: Notify observers that the profile has changed - Here they respond to new profile
     observerService->NotifyObservers(subject, "profile-do-change", context.get());
