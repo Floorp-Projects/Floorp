@@ -66,10 +66,22 @@
 #define G_LITTLE_ENDIAN 1
 #define G_BIG_ENDIAN 2
 
-/* check our endianness */
-#if USE_MOZILLA_TYPES
+/* include this before so that we can get endian definitions if
+   they are there... */
 
-#if IS_LITTLE_ENDIAN
+#include "xlibrgb.h"
+
+/* check our endianness */
+#ifdef USE_MOZILLA_TYPES
+
+/* check to make sure that we don't have both types defined. */
+#ifdef IS_LITTLE_ENDIAN
+#ifdef IS_BIG_ENDIAN
+#error what the hell?  both endian types are defined!
+#endif
+#endif
+
+#ifdef IS_LITTLE_ENDIAN
 #define G_BYTE_ORDER G_LITTLE_ENDIAN
 #else
 #define G_BYTE_ORDER G_BIG_ENDIAN
@@ -89,8 +101,6 @@
 #ifndef MAX
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #endif
-
-#include "xlibrgb.h"
 
 typedef enum {
   LSB_FIRST,

@@ -65,7 +65,7 @@ extern "C" {
  * you will need to set these defines.  It's pretty easy for Intel
  * but I'm not sure about other platforms.
  */
-#if USE_MOZILLA_TYPES
+#ifdef USE_MOZILLA_TYPES
 /* prtypes contains definitions for uint32/int32 and uint16/int16 */
 #include "prtypes.h"
 #include "prcpucfg.h"
