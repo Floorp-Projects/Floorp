@@ -611,7 +611,8 @@ function ThreadPaneOnClick(event)
     }
 	else if(event.detail == 2)
 	{
-    ThreadPaneDoubleClick(event.target.parentNode.parentNode);
+    dump("Howdy partner.\n");
+		ThreadPaneDoubleClick(event.target.parentNode.parentNode);
 	}
 }
 
