@@ -1,6 +1,6 @@
 
 #ifndef PROJ_PATH
-BASE_PATH = ../../base
+BASE_PATH = ../../../base
 DOM_PATH = .
 #endif
 
@@ -9,22 +9,22 @@ INCLUDE_PATHS = -I$(BASE_PATH) -I. -I-
 
 CC := $(CC) -g $(INCLUDE_PATHS)
 
-DOM_OBJS = NodeDefinition.o \
-           Document.o \
-	   DocumentFragment.o \
-	   NamedNodeMap.o \
-	   NodeListDefinition.o \
-	   Element.o \
-           Attr.o \
-           CharacterData.o \
-           Text.o \
-           Comment.o \
-           CDATASection.o \
-           ProcessingInstruction.o \
-           Notation.o \
-           Entity.o \
-           EntityReference.o \
-           DocumentType.o \
+DOM_OBJS = NodeDefinition.o           \
+           Document.o                 \
+	       DocumentFragment.o         \
+	       NamedNodeMap.o             \
+	       NodeListDefinition.o       \
+	       Element.o                  \
+           Attr.o                     \
+           CharacterData.o            \
+           Text.o                     \
+           Comment.o                  \
+           CDATASection.o             \
+           ProcessingInstruction.o    \
+           Notation.o                 \
+           Entity.o                   \
+           EntityReference.o          \
+           DocumentType.o             \
            DOMImplementation.o
 
 target: $(DOM_OBJS)
@@ -79,3 +79,8 @@ DocumentType.o: DocumentType.cpp dom.h
 
 DOMImplementation.o: DOMImplementation.cpp dom.h
 	$(CC) -c DOMImplementation.cpp
+
+
+
+
+
