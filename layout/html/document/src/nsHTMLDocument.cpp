@@ -69,7 +69,6 @@
 #include "nsIIOService.h"
 #include "nsICookieService.h"
 
-#include "nsIParserService.h"
 #include "nsIServiceManager.h"
 #include "nsIFormManager.h"
 #include "nsIComponentManager.h"
