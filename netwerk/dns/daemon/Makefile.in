@@ -13,38 +13,22 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../..
-
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE		= necko
-
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS =			\
-	nsDnsAsyncLookup.cpp 	\
-	$(NULL)
+MODULE		= necko
 
-BASE_LIBS=
-
-NETLIB_LIBS =
-
-LIBS =
-
-DEFINES		+= -D"GETHOSTBYNAME_DELAY=5"
-
-REQUIRES=
-
-include $(topsrcdir)/config/config.mk
+CPPSRCS		= nsDnsAsyncLookup.cpp
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
-# hack until necko lands
-ifndef NECKO
-PUBLIC = $(DEPTH)/netwerk/dist/include
-endif
-
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -D"GETHOSTBYNAME_DELAY=5"
+
