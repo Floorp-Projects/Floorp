@@ -99,9 +99,12 @@ Contributor(s):
           <text class="label" id="dialog.timeElapsed" value="&#160;"/>
         </row>
         <separator class="thin"/>
-        <row>
-          <spring/>
+        <row>   
+          <spring/> 
           <progressmeter id="dialog.progress" mode="normal" value="0"/>
+          <box autostretch="never" halign="right">
+            <text class="label" id="dialog.progressText" value="&#160;"/>
+          </box>
         </row>
       </rows>
     </grid>
