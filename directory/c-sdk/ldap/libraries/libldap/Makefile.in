@@ -246,7 +246,7 @@ EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME)
 endif
 
 ifeq ($(OS_ARCH), OpenBSD)
-EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) -lc_r
+EXTRA_LIBS = -L$(dist_libdir) -l$(LBER_LIBNAME) -pthread
 endif
 
 ###########################################################################
