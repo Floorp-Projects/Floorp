@@ -20,6 +20,7 @@
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
 #include "nsUnitConversion.h"
+#include "nsIDeviceContext.h"
 
 NS_IMPL_ADDREF(nsScrollbar)
 NS_IMPL_RELEASE(nsScrollbar)
@@ -96,7 +97,7 @@ NS_IMETHODIMP nsScrollbar::Create(nsIWidget *aParent,
 	  // save the event callback function
 	  mEventCallback = aHandleEventFunction;
 	  
-	  mMouseDownInButton = PR_FALSE;
+	  mMouseDownInScroll = PR_FALSE;
 	  mWidgetArmed = PR_FALSE;
 
 	  //InitCallbacks("nsButton");
@@ -129,7 +130,7 @@ nsRefData		*theRefData;
 	if(0!=aParent)
 		{
 		theRefData = (nsRefData*)(((WindowPeek)aParent)->refCon);
-		theNsWindow = (nsWindow*)theRefData->GetTopWidget();
+		theNsWindow = (nsWindow*)theRefData->GetCurWidget();
 		}
 		
 	if(nsnull!=theNsWindow)
@@ -186,24 +187,30 @@ PRBool 	result;
 	switch (aEvent.message)
 		{
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
-			mMouseDownInButton = PR_TRUE;
+			mMouseDownInScroll = PR_TRUE;
 			DrawWidget();
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
-			mMouseDownInButton = PR_FALSE;
+			mMouseDownInScroll = PR_FALSE;
 			DrawWidget();
 			if(mWidgetArmed==PR_TRUE)
 				result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_EXIT:
-			DrawWidget();
-			mWidgetArmed = PR_FALSE;
+			if( mMouseDownInScroll )
+				{
+				DrawWidget();
+				mWidgetArmed = PR_FALSE;
+				}
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_ENTER:
-			DrawWidget();
-			mWidgetArmed = PR_TRUE;
+			if( mMouseDownInScroll )
+				{
+				DrawWidget();
+				mWidgetArmed = PR_TRUE;
+				}
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_MOVE:
@@ -229,10 +236,11 @@ void
 nsScrollbar::DrawWidget()
 {
 PRInt32							offx,offy;
-nsRect							therect,tr;
-Rect								macrect;
+nsRect							theRect,tr;
+Rect								macRect;
 GrafPtr							theport;
 RGBColor						blackcolor = {0,0,0};
+RGBColor						redcolor = {255<<8,0,0};
 RgnHandle						thergn;
 
 
@@ -240,42 +248,93 @@ RgnHandle						thergn;
 	GetPort(&theport);
 	::SetPort(mWindowPtr);
 	::SetOrigin(-offx,-offy);
-	GetBounds(therect);
-	nsRectToMacRect(therect,macrect);
+	GetBounds(theRect);
+	nsRectToMacRect(theRect,macRect);
 	thergn = ::NewRgn();
 	::GetClip(thergn);
-	::ClipRect(&macrect);
+	::ClipRect(&macRect);
 	::PenNormal();
 	::RGBForeColor(&blackcolor);
 	
 	// Frame the general scrollbar
-	::FrameRect(&macrect);
-
-
-	// draw the thumb
-	if(mIsVertical)
-		{
-		tr.width = therect.width;
-		tr.height = mThumbSize;
-		tr.x = therect.x;
-		tr.y = therect.y+mPosition;
-		}
-	else
-		{
-		tr.width = mThumbSize;
-		tr.height = therect.height;
-		tr.x = therect.x+mPosition;
-		tr.y = therect.y;
-		}
-		
-	nsRectToMacRect(tr,macrect);
-	::PaintRect(&macrect);
-		
+	::FrameRect(&macRect);
+	DrawThumb(PR_FALSE);
+			
+	::RGBForeColor(&blackcolor);
 	::PenSize(1,1);
 	::SetClip(thergn);
 	::SetOrigin(0,0);
 	::SetPort(theport);
 }
+
+//-------------------------------------------------------------------------
+/*  Draw or clear the thumb area of the scrollbar
+ *  @update  dc 08/31/98
+ *  @param   aClear -- A boolean indicating if it will be erased instead of painted
+ *  @return  nothing is returned
+ */
+void
+nsScrollbar::DrawThumb(PRBool	aClear)
+{
+PRInt32							offx,offy;
+nsRect							frameRect,thumbRect;
+Rect								macFrameRect,macThumbRect;
+GrafPtr							theport;
+RGBColor						blackcolor = {0,0,0};
+RGBColor						redcolor = {255<<8,0,0};
+RgnHandle						thergn;
+
+
+	CalcOffset(offx,offy);
+	GetPort(&theport);
+	::SetPort(mWindowPtr);
+	::SetOrigin(-offx,-offy);
+	GetBounds(frameRect);
+	nsRectToMacRect(frameRect,macFrameRect);
+	::PenNormal();
+	::RGBForeColor(&blackcolor);
+	
+	// draw or clear the thumb
+	if(mIsVertical)
+		{	
+		thumbRect.width = frameRect.width;
+		thumbRect.height = (frameRect.height*mThumbSize)/mMaxRange;
+		thumbRect.x = frameRect.x;
+		thumbRect.y = frameRect.y+(frameRect.height*mPosition)/mMaxRange;
+		}
+	else
+		{
+		thumbRect.width = (frameRect.width*mThumbSize)/mMaxRange;
+		thumbRect.height = frameRect.height;
+		thumbRect.y = frameRect.y+(frameRect.width*mPosition)/mMaxRange;
+		thumbRect.y = frameRect.y;
+		}
+
+	// clip only at the thumb
+	thergn = ::NewRgn();
+	::GetClip(thergn);
+	nsRectToMacRect(thumbRect,macThumbRect);
+	::ClipRect(&macThumbRect);
+	
+	if(aClear == PR_TRUE)
+		::EraseRect(&macThumbRect);
+	else
+		{
+		::RGBForeColor(&redcolor);
+		::PaintRect(&macThumbRect);
+		}
+	
+	// Frame the general scrollbar
+	::FrameRect(&macFrameRect);
+
+	::RGBForeColor(&blackcolor);
+	::PenSize(1,1);
+	::SetClip(thergn);
+	::SetOrigin(0,0);
+	::SetPort(theport);
+}
+
+
 
 //=================================================================
 /*	set the maximum range of a scroll bar
@@ -311,8 +370,13 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
 	if(aPos>=0)
 		{
+		// erase the old position
+		
+		
+		DrawThumb(PR_TRUE);
 		mPosition = aPos;
-		this->DrawWidget();
+		DrawThumb(PR_FALSE);
+		//this->DrawWidget();
   	return (NS_OK);
   	}
   else
@@ -341,14 +405,13 @@ NS_METHOD nsScrollbar::GetPosition(PRUint32& aPos)
  */
 NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
-    if (aSize > 0) 
-    	{
-    	mThumbSize = aSize;
-    	this->DrawWidget();
-    	return(NS_OK);
-    	}
-    else
-			return(NS_ERROR_FAILURE);
+
+    if (aSize <= 0) 
+  		aSize = 1;
+    
+  	mThumbSize = aSize;
+  	this->DrawWidget();				// ??? is this necessary - DWC
+  	return(NS_OK);
 }
 
 
@@ -360,7 +423,7 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
  */
 NS_METHOD nsScrollbar::GetThumbSize(PRUint32& aSize)
 {
- 
+
 	aSize = mThumbSize;
 	return(NS_OK);
 }
@@ -404,7 +467,8 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
 
-	mThumbSize = (((int)aThumbSize) > 0?aThumbSize:1);
+	this->SetThumbSize(aThumbSize);
+	
 	mMaxRange  = (((int)aMaxRange) > 0?aMaxRange:10);
 	mLineIncrement = (((int)aLineIncrement) > 0?aLineIncrement:1);
 
@@ -436,7 +500,7 @@ PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 //-------------------------------------------------------------------------
 int nsScrollbar::AdjustScrollBarPosition(int aPosition) 
 {
-  int maxRange=0,cap,sliderSize=0;
+int maxRange=0,cap,sliderSize=0;
 
 	cap = maxRange - sliderSize;
   return aPosition > cap ? cap : aPosition;
@@ -449,9 +513,9 @@ int nsScrollbar::AdjustScrollBarPosition(int aPosition)
 //-------------------------------------------------------------------------
 PRBool nsScrollbar::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
-PRBool 	result = PR_TRUE;
-int 		newPosition=0;
-int			range;
+PRBool 				result = PR_TRUE;
+PRUint32 			newPosition=0;
+PRUint32			range;
 
 	switch (aEvent.message) 
 		{
