@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window>
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorHLineProperties.dtd">
 <!-- dialog containing a control requiring initial setup -->
 <!-- WE SHOULD NOT USE ABSOLUTE WITH AND HEIGHT - USE BOXES INSTEAD? -->
-<xul:window class="dialog" title="PUT TITLE HERE"
+<xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
@@ -20,9 +20,9 @@
   <div><hr width="100%"/></div>
   <xul:spring flex="100%"/>
   <xul:box>
-    <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvanced()" value="Advanced Edit..."/>
+    <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvanced()" value="&AdvancedEditButton.label;"/>
     <xul:spring flex="100%"/>    
-    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
-    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>
+    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
+    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
   </xul:box>
 </xul:window>
