@@ -18,104 +18,85 @@
  * Rights Reserved.
  */
 
-treeitem[IsUnread="true"] > treerow {
+.tree-thread-row[IsUnread="true"] {
 	font-weight: bold;
 }
 
-treeitem[Priority="Highest"] > treerow > treecell.prioritycol > .tree-button
+.prioritycol[value="Highest"]
 {
 	color:red;
 }
 
-treeitem[Priority="High"] > treerow > treecell.prioritycol > .tree-button
+.prioritycol[value="High"]
 {
 	color: rgb(128, 0, 0);
 }
 
-treeitem[Priority="Lowest"] > treerow > treecell.prioritycol > .tree-button
+.prioritycol[value="Lowest"]
 {
 	color: rgb(170, 170, 170);
 }
 
-treeitem[Priority="Low"] > treerow > treecell.prioritycol > .tree-button
+.prioritycol[value="Low"]
 {
 	color: rgb(85, 85, 85);
 }
 
-treeitem > treerow > treecell > .tree-icon {
+.tree-cell-threadpane-icon {
   list-style-image: url("chrome://messenger/skin/message-mail.gif");
   min-height: 14px;
 }
 
-treeitem[open="true"] > treerow > treecell > .tree-icon
-{
-  list-style-image: url("chrome://messenger/skin/message-mail.gif");
-  min-height: 14px;
-}
-
-treeitem[Status="new"] > treerow > treecell > .tree-icon {
+.tree-cell-threadpane-icon[Status="new"] {
   list-style-image: url("chrome://messenger/skin/message-mail-new.gif");
-  min-height: 14px;
 }
 
-treeitem[MessageType="news"] > treerow > treecell > .tree-icon {
+.tree-cell-threadpane-icon[MessageType="news"] {
   list-style-image: url("chrome://messenger/skin/message-news.gif");
-  min-height: 14px;
 }
 
-treeitem[MessageType="news"][open="true"] > treerow > treecell > .tree-icon
-{
-  list-style-image: url("chrome://messenger/skin/message-news.gif");
-  min-height: 14px;
-}
-
-treeitem[MessageType="news"][Status="new"] > treerow > treecell > .tree-icon {
+.tree-cell-threadpane-icon[MessageType="news"][Status="new"] {
   list-style-image: url("chrome://messenger/skin/message-news-new.gif");
-  min-height: 14px;
 }
 
-treeitem[MessageType="mail"][HasAttachment="true"] > treerow > treecell > .tree-icon {
+.tree-cell-threadpane-icon[MessageType="mail"][HasAttachment="true"] {
   list-style-image: url("chrome://messenger/skin/message-mail-attach.gif");
-  min-height: 14px;
 }
 
-treeitem[IsImapDeleted="true"] > treerow  > treecell > .tree-icon{
+.tree-cell-threadpane-icon[IsImapDeleted="true"] {
   list-style-image: url("chrome://messenger/skin/message-mail-imapdelete.gif");
-  min-height: 14px;
 }
 
-treecell.unreadcol > .tree-button {
+.unreadcol {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
   min-height: 14px;
 }
 
-treeitem[IsUnread="true"] > treerow > treecell.unreadcol > .tree-button {
+.unreadcol[value="true"] {
   list-style-image: url("chrome://messenger/skin/unreadmail.gif");
-  min-height: 14px;
 }
 
-treecell.flagcol > .tree-button {
+.flagcol {
   list-style-image: url("chrome://messenger/skin/readmail.gif");
   min-height: 14px;
 }
 
-treeitem[Flagged="flagged"] > treerow > treecell.flagcol > .tree-button{
+.flagcol[value="flagged"] {
   list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
-  min-height: 14px;
 }
 
-treecell.threadColumnHeader[currentView="threaded"] > .tree-button{
+treecell.threadColumnHeader[currentView="threaded"] > .tree-header-image {
   list-style-image: url("chrome://messenger/skin/threadcol.gif");
 }
 
-treecell.threadColumnHeader[currentView="unthreaded"] > .tree-button{
+treecell.threadColumnHeader[currentView="unthreaded"] > .tree-header-image {
   list-style-image: url("chrome://messenger/skin/unthreadcol.gif");
 }
 
-treecell.readColumnHeader > .tree-button {
+treecell.readColumnHeader > .tree-header-image {
   list-style-image: url("chrome://messenger/skin/unreadmail.gif");
 }
 
-treecell.flagColumnHeader > .tree-button {
+treecell.flagColumnHeader > .tree-header-image {
   list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
 }

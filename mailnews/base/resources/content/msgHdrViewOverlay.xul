@@ -21,7 +21,6 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgHdrViewOverlay.dtd">
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/msgHdrViewOverlay.css" type="text/css"?>
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
