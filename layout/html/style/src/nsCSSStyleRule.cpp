@@ -372,7 +372,7 @@ nsrefcnt CSSStyleRuleImpl::Release(void)
     fprintf(stdout, "%d Release CSSStyleRule\n", mRefCnt - 1);
   }
   if (--mRefCnt == 0) {                                
-    delete this;                                       
+    NS_DELETEXPCOM(this);
     return 0;                                          
   }                                                    
   return mRefCnt;                                      
@@ -392,17 +392,17 @@ nsresult CSSStyleRuleImpl::QueryInterface(const nsIID& aIID,
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   if (aIID.Equals(kICSSStyleRuleIID)) {
     *aInstancePtrResult = (void*) ((nsICSSStyleRule*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kIStyleRuleIID)) {
     *aInstancePtrResult = (void*) ((nsIStyleRule*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
     *aInstancePtrResult = (void*) ((nsISupports*)this);
-    AddRef();
+    NS_ADDREF_THIS();
     return NS_OK;
   }
   return NS_NOINTERFACE;

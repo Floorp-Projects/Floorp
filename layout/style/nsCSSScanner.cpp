@@ -109,9 +109,7 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput)
   NS_PRECONDITION(nsnull != aInput, kNullPointer);
   Close();
   mInput = aInput;
-  if (nsnull != aInput) {
-    aInput->AddRef();
-  }
+  NS_IF_ADDREF(aInput);
 }
 
 void nsCSSScanner::Close()

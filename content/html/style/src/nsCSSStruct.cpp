@@ -2490,7 +2490,8 @@ NS_HTML nsresult
     return NS_ERROR_NULL_POINTER;
   }
 
-  CSSDeclarationImpl  *it = new CSSDeclarationImpl();
+  CSSDeclarationImpl  *it;
+  NS_NEWXPCOM(it, CSSDeclarationImpl);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
