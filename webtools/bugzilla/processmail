@@ -187,18 +187,21 @@ sub ProcessOneBug {
     my $thisdiff = "";
     my $lastbug = "";
     my $interestingchange = 0;
+    my $depbug = 0;
+    my @depbugs;
     while (MoreSQLData()) {
-        my ($bug, $summary, $what, $old, $new) = (FetchSQLData());
-        if ($bug ne $lastbug) {
+        my ($summary, $what, $old, $new);
+        ($depbug, $summary, $what, $old, $new) = (FetchSQLData());
+        if ($depbug ne $lastbug) {
             if ($interestingchange) {
                 $deptext .= $thisdiff;
             }
-            $lastbug = $bug;
+            $lastbug = $depbug;
             my $urlbase = Param("urlbase");
             $thisdiff =
-              "\nBug $id depends on bug $bug, which changed state.\n\n" . 
-              "Bug $bug Summary: $summary\n" . 
-              "${urlbase}show_bug.cgi?id=$bug\n\n"; 
+              "\nBug $id depends on bug $depbug, which changed state.\n\n" . 
+              "Bug $depbug Summary: $summary\n" . 
+              "${urlbase}show_bug.cgi?id=$depbug\n\n"; 
             $thisdiff .= FormatTriple("What    ", "Old Value", "New Value");
             $thisdiff .= ('-' x 76) . "\n";
             $interestingchange = 0;
@@ -207,7 +210,10 @@ sub ProcessOneBug {
         if ($what eq 'bug_status' && IsOpenedState($old) ne IsOpenedState($new)) {
             $interestingchange = 1;
         }
+        
+        push(@depbugs, $depbug);
     }
+    
     if ($interestingchange) {
         $deptext .= $thisdiff;
     }
@@ -290,7 +296,9 @@ sub ProcessOneBug {
                                           \@reasons, \%values,
                                           \%defmailhead, 
                                           \%fielddescription, $difftext, 
-                                          $newcomments, $start, $id))) {
+                                          $newcomments, $start, $id, 
+                                          \@depbugs))) 
+        {
 
             # if a value is not returned, this means that the person
             # was not sent mail.  add them to the excludedAddresses list.
@@ -628,16 +636,17 @@ sub filterEmailGroup ($$$) {
     return @filteredList;
 }
 
-sub NewProcessOnePerson ($$$$$$$$$$$) {
+sub NewProcessOnePerson ($$$$$$$$$$$$) {
     my ($person, $count, $hlRef, $reasonsRef, $valueRef, $dmhRef, $fdRef, $difftext, 
-        $newcomments, $start, $id) = @_;
+        $newcomments, $start, $id, $depbugsRef) = @_;
 
     my %values = %$valueRef;
     my @headerlist = @$hlRef;
     my @reasons = @$reasonsRef;
     my %defmailhead = %$dmhRef;
     my %fielddescription = %$fdRef;
-
+    my @depbugs = @$depbugsRef;
+    
     if ($seen{$person}) {
       return;
     }
@@ -666,6 +675,15 @@ sub NewProcessOnePerson ($$$$$$$$$$$) {
     #
     return unless CanSeeBug($id, $userid, $groupset);
     
+    # We shouldn't send changedmail if this is a dependency mail, and any of 
+    # the depending bugs is not visible to the user.
+    foreach my $dep_id (@depbugs) {
+        my $save_id = $dep_id;
+        detaint_natural($dep_id) || warn("Unexpected Error: \@depbugs contains a non-numeric value: '$save_id'")
+                                 && return;
+        return unless CanSeeBug($dep_id, $userid, $groupset);
+    }
+
     my %mailhead = %defmailhead;
     
     my $head = "";
