@@ -351,7 +351,7 @@ $::VersionTableLoaded = 0;
 sub GetVersionTable {
     return if $::VersionTableLoaded;
     my $mtime = ModTime("data/versioncache");
-    if (!defined $mtime || $mtime eq "") {
+    if (!defined $mtime || $mtime eq "" || !-r "data/versioncache") {
         $mtime = 0;
     }
     if (time() - $mtime > 3600) {
