@@ -247,7 +247,7 @@
       <label value="&search.label;" accesskey="&search.accesskey;" control="search-box"/>
       <textbox id="search-box" flex="1"
                type="timed" timeout="500"
-               callback="document.getElementById('bookmarks-view').searchBookmarks(document.getElementById('search-box').value)"/>
+               oncommand="document.getElementById('bookmarks-view').searchBookmarks(this.value)"/>
     </toolbar>
   </toolbox>
 

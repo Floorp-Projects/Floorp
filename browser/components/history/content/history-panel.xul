@@ -84,7 +84,7 @@
     <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
     <textbox id="search-box" flex="1"
              type="timed" timeout="500"
-             callback="searchHistory(gSearchBox.value);"/>
+             oncommand="searchHistory(gSearchBox.value);"/>
     <toolbarbutton id="viewButton" type="menu" label="&view.label;" selectedsort="day" persist="selectedsort">
       <menupopup>
         <menuitem id="bydayandsite" label="&byDayAndSite.label;" accesskey="&byDayAndSite.accesskey;" type="radio"
