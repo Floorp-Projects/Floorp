@@ -46,7 +46,7 @@ CPP_OBJS= .\$(OBJDIR)\nsCellMap.obj \
 	.\$(OBJDIR)\BasicTableLayoutStrategy.obj
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
-  -I..\..\base\src -I..\..\style\src \
+  -I..\..\base\src -I..\..\style\src -I..\..\content\src \
   -I..\..\..\base\src \
   -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib
 
