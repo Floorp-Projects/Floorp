@@ -198,6 +198,7 @@ _OBJS			= \
 	$(addsuffix .$(OBJ_SUFFIX), $(JMC_GEN)) \
 	$(CSRCS:.c=.$(OBJ_SUFFIX)) \
 	$(CPPSRCS:.cpp=.$(OBJ_SUFFIX)) \
+	$(CMMSRCS:.mm=.$(OBJ_SUFFIX)) \
 	$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX))
 OBJS	= $(strip $(addprefix $(OBJ_PREFIX),$(_OBJS)))
 endif
@@ -941,6 +942,11 @@ else
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO)
+	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
+
 %.i: %.cpp
 	$(CCC) -C -E $(COMPILE_CXXFLAGS) $< > $*.i
 
@@ -1447,7 +1453,7 @@ endif
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .out .a .ln .o .ho .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX)
+.SUFFIXES: .out .a .ln .o .ho .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX) .mm
 
 #
 # Don't delete these files if we get killed.
