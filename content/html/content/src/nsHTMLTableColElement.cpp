@@ -321,7 +321,8 @@ nsHTMLTableColElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) con
   };
 
   static const AttributeDependenceEntry span_attribute[] = {
-    { &nsHTMLAtoms::span }
+    { &nsHTMLAtoms::span },
+    { nsnull }
   };
 
   static const AttributeDependenceEntry* const col_map[] = {
