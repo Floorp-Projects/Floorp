@@ -54,8 +54,10 @@ class nsInterfaceInfo : public nsIInterfaceInfo
 
     // Get the interface information or iid associated with a param of some
     // method in this interface.
-    NS_IMETHOD GetInfoForParam(nsXPTParamInfo* param, nsIInterfaceInfo** info);
-    NS_IMETHOD GetIIDForParam(nsXPTParamInfo* param, nsIID** iid);
+    NS_IMETHOD GetInfoForParam(const nsXPTParamInfo* param, 
+                               nsIInterfaceInfo** info);
+    // returns IAllocatator alloc'd copy
+    NS_IMETHOD GetIIDForParam(const nsXPTParamInfo* param, nsIID** iid);
 
 public:
     virtual ~nsInterfaceInfo();
