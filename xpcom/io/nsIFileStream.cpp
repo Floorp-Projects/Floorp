@@ -133,7 +133,6 @@ FileImpl::FileImpl(const nsFileSpec& inFile, int nsprMode, PRIntn accessMode)
 //----------------------------------------------------------------------------------------
 : mFileDesc(nsnull)
 , mNSPRMode(-1)
-, mFailed(PR_FALSE)
 , mEOF(PR_FALSE)
 , mLength(-1)
 , mGotBuffers(PR_FALSE)
@@ -147,13 +146,17 @@ FileImpl::FileImpl(const nsFileSpec& inFile, int nsprMode, PRIntn accessMode)
     
     if (NS_FAILED(rv))
     {
+        mFailed = PR_TRUE;
 #if DEBUG
         char *fileName = inFile.GetLeafName();
         printf("Opening file %s failed\n", fileName);
         nsCRT::free(fileName);
 #endif
     }
-    
+    else
+    {
+        mFailed = PR_FALSE;
+    }
 }
 
 //----------------------------------------------------------------------------------------
@@ -276,7 +279,7 @@ NS_IMETHODIMP FileImpl::Available(PRUint32 *aLength)
 NS_IMETHODIMP FileImpl::GetIsOpen(PRBool* outOpen)
 //----------------------------------------------------------------------------------------
 {
-    *outOpen = (mFileDesc != nsnull);
+    *outOpen = (mFileDesc != nsnull && !mFailed);
     return NS_OK;
 }
 
@@ -645,6 +648,16 @@ NS_COM nsresult NS_NewIOFileStream(
     FileImpl* stream = new FileImpl(inFile, nsprMode, accessMode);
     if (! stream)
         return NS_ERROR_OUT_OF_MEMORY;
+    else 
+    {
+        PRBool isOpened = PR_FALSE;
+        stream->GetIsOpen(&isOpened);
+        if (!isOpened)
+        {
+            delete stream;
+            return NS_ERROR_FAILURE;
+        }
+    }
 
     NS_ADDREF(stream);
     *aResult = (nsISupports*)(void*)stream;
