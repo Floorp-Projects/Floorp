@@ -1192,7 +1192,9 @@ nsFtpState::R_syst() {
         if (( mResponseMsg.Find("L8") > -1) || 
             ( mResponseMsg.Find("UNIX") > -1) || 
             ( mResponseMsg.Find("BSD") > -1) ||
-            ( mResponseMsg.Find("MACOS Peter's Server") > -1))
+            ( mResponseMsg.Find("MACOS Peter's Server") > -1) ||
+            ( mResponseMsg.Find("MVS") > -1) ||
+            ( mResponseMsg.Find("OS/390") > -1))
         {
             mServerType = FTP_UNIX_TYPE;
         }
