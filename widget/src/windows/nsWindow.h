@@ -310,7 +310,7 @@ public:
             HWND            GetWindowHandle() { return mWnd; }
             WNDPROC         GetPrevWindowProc() { return mPrevWndProc; }
 
-    virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint = nsnull);
+    virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam = NULL, nsPoint* aPoint = nsnull);
 #ifdef ACCESSIBILITY
     virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsPoint* aPoint = nsnull);
     void                    CreateRootAccessible();
@@ -502,7 +502,7 @@ class ChildWindow : public nsWindow {
 
 public:
                             ChildWindow(){}
-    PRBool          DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint = nsnull);
+    PRBool          DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam = NULL, nsPoint* aPoint = nsnull);
 
 protected:
     virtual DWORD           WindowStyle();

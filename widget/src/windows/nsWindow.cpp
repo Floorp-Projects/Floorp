@@ -3403,7 +3403,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_MOUSEMOVE:
             //RelayMouseEvent(msg,wParam, lParam); 
-            result = DispatchMouseEvent(NS_MOUSE_MOVE);
+            result = DispatchMouseEvent(NS_MOUSE_MOVE, wParam);
             break;
 
         case WM_LBUTTONDOWN:
@@ -3421,12 +3421,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 									break;
             }
 #endif
-            result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
+            result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN, wParam);
             } break;
 
         case WM_LBUTTONUP:
             //RelayMouseEvent(msg,wParam, lParam); 
-            result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_UP);
+            result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_UP, wParam);
             break;
 
         case WM_CONTEXTMENU:
@@ -3434,12 +3434,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             // if the context menu is brought up from the keyboard, |lParam|
             // will be maxlong. Send a different event msg instead.
             PRUint32 msg = (lParam == 0xFFFFFFFF) ? NS_CONTEXTMENU_KEY : NS_CONTEXTMENU;
-            result = DispatchMouseEvent(msg);
+            result = DispatchMouseEvent(msg, wParam);
         }
             break;
             
         case WM_LBUTTONDBLCLK:
-            result = DispatchMouseEvent(NS_MOUSE_LEFT_DOUBLECLICK);
+            result = DispatchMouseEvent(NS_MOUSE_LEFT_DOUBLECLICK, wParam);
             break;
 
         case WM_MBUTTONDOWN:
@@ -3455,15 +3455,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 		              break;
             }
 #endif
-            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);
+            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN, wParam);
             } break;
 
         case WM_MBUTTONUP:
-            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_UP);
+            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_UP, wParam);
             break;
 
         case WM_MBUTTONDBLCLK:
-            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN);           
+            result = DispatchMouseEvent(NS_MOUSE_MIDDLE_BUTTON_DOWN, wParam);
             break;
 
         case WM_RBUTTONDOWN:
@@ -3479,15 +3479,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 break;
             }
 #endif
-            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);            
+            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN, wParam);
             } break;
 
         case WM_RBUTTONUP:
-            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP);
+            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP, wParam);
             break;
 
         case WM_RBUTTONDBLCLK:
-            result = DispatchMouseEvent(NS_MOUSE_RIGHT_DOUBLECLICK);                      
+            result = DispatchMouseEvent(NS_MOUSE_RIGHT_DOUBLECLICK, wParam);
             break;
 
         case WM_HSCROLL:
@@ -4405,7 +4405,7 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
-PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
+PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint* aPoint)
 {
   PRBool result = PR_FALSE;
 
@@ -4524,9 +4524,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
       break;
   }
 
-  pluginEvent.wParam = 0;
-  pluginEvent.wParam |= (event.isShift) ? MK_SHIFT : 0;
-  pluginEvent.wParam |= (event.isControl) ? MK_CONTROL : 0;
+  pluginEvent.wParam = wParam;     // plugins NEED raw OS event flags!
   pluginEvent.lParam = MAKELONG(event.point.x, event.point.y);
 
   event.nativeMsg = (void *)&pluginEvent;
@@ -4596,11 +4594,11 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
         if (gCurrentWindow == NULL || gCurrentWindow != this) {
           if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
             MouseTrailer::IgnoreNextCycle();
-            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, gCurrentWindow->GetLastPoint());
+            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, wParam, gCurrentWindow->GetLastPoint());
           }
           gCurrentWindow = this;
           if (!mIsDestroying) {
-            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER);
+            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER, wParam);
           }
         }
       } 
@@ -4759,7 +4757,7 @@ HBRUSH nsWindow::OnControlColor()
 // Deal with all sort of mouse event
 //
 //-------------------------------------------------------------------------
-PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
+PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint* aPoint)
 {
   PRBool result = PR_FALSE;
 
@@ -4785,7 +4783,7 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 
   } // switch
 
-  return nsWindow::DispatchMouseEvent(aEventType, aPoint);
+  return nsWindow::DispatchMouseEvent(aEventType, wParam, aPoint);
 }
 
 //-------------------------------------------------------------------------
