@@ -180,9 +180,9 @@ protected:
   PRUint32          mVFlags;
   nsIRegion*        mDirtyRegion;
   PRUint32			    mCompositorFlags;
-
   // Bug #19416
-  PRBool            mShouldIgnoreSetPosition;
+  PRPackedBool      mShouldIgnoreSetPosition;
+  PRPackedBool      mChildRemoved;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
