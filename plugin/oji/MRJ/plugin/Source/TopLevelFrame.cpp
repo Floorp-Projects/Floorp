@@ -82,7 +82,7 @@ TopLevelFrame::TopLevelFrame(nsIEventHandler* handler, JMFrameRef frameRef, JMFr
 		}
 		
 		Point zeroPt = { 0, 0 };
-		::JMSetFrameVisibility(frameRef, mWindow, zeroPt, nil);
+		::JMSetFrameVisibility(frameRef, mWindow, zeroPt, mWindow->clipRgn);
 	}
 }
 
@@ -131,6 +131,7 @@ void TopLevelFrame::showHide(Boolean visible)
 			// ::HideWindow(mWindow);
 			// Let the browser know it doesn't have to send events anymore.
 			thePluginManager2->UnregisterWindow(mHandler, mWindow);
+			activate(false);
 		}
 		
 		// ::ShowHide(mWindow, visible);
@@ -152,10 +153,18 @@ void TopLevelFrame::reorder(ReorderRequest request)
 {
 	switch (request) {
 	case eBringToFront:		/* bring the window to front */
+		::BringToFront(mWindow);
 		break;
 	case eSendToBack:		/* send the window to back */
+		::SendBehind(mWindow, NULL);
 		break;
 	case eSendBehindFront:	/* send the window behind the front window */
+		WindowPtr frontWindow = ::FrontWindow();
+		if (mWindow == frontWindow) {
+			::SendBehind(mWindow, GetNextWindow(mWindow));
+		} else {
+			::SendBehind(mWindow, frontWindow);
+		}
 		break;
 	}
 }
@@ -198,9 +207,15 @@ void TopLevelFrame::click(const EventRecord* event)
 		MRJFrame::click(event);
 		break;
 	case inDrag:
-		Rect bounds = (**GetGrayRgn()).rgnBBox;
-		DragWindow(mWindow, where, &bounds);
-		computeBounds(mWindow, &mBounds);
+		{
+			Rect bounds = (**GetGrayRgn()).rgnBBox;
+			DragWindow(mWindow, where, &bounds);
+			computeBounds(mWindow, &bounds);
+			::JMSetFrameSize(mFrameRef, &bounds);
+
+			Point zeroPt = { 0, 0 };
+			::JMSetFrameVisibility(mFrameRef, mWindow, zeroPt, mWindow->clipRgn);
+		}
 		break;
 	case inGrow:
 		Rect limits = { 30, 30, 5000, 5000 };
@@ -213,6 +228,9 @@ void TopLevelFrame::click(const EventRecord* event)
 			newBounds.right = newBounds.left + width;
 			newBounds.bottom = newBounds.top + height;
 			::JMSetFrameSize(mFrameRef, &newBounds);
+
+			Point zeroPt = { 0, 0 };
+			::JMSetFrameVisibility(mFrameRef, mWindow, zeroPt, mWindow->clipRgn);
 		}
 		break;
 	case inGoAway:
