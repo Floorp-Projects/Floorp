@@ -1226,10 +1226,10 @@ function SidebarTogglePanel(panel_menuitem) {
   if (did_exclude)
   {
     // if we excluded a tab in view then add another one
+    var tabs = sidebarObj.panels.node.childNodes;
     if (panel.is_in_view())
     {
       // we excluded one so let's try to bring a non-excluded one into view
-      var tabs = sidebarObj.panels.node.childNodes;
       var newFirst = null;
       var added = false;
       for (var i = 2; i < tabs.length ; i += 2)
@@ -1264,7 +1264,6 @@ function SidebarTogglePanel(panel_menuitem) {
     if (sidebarObj.panels.num_panels_in_view() > gNumTabsInViewPref)
     {
       // we included a new tab so let's take the last one out of view
-      var tabs = sidebarObj.panels.node.childNodes;
       for (i = 2; i < tabs.length; i += 2)
       {
         var currHeader = tabs[i];
@@ -1292,16 +1291,19 @@ function SidebarNavigate(aDirection)
   debug("SidebarNavigate " + aDirection);
 
   var tabs = sidebarObj.panels.node.childNodes;
+  var i;
+  var currHeader;
+  var currTab;
   // move forward a tab (down in the template)
   if (aDirection > 0)
   {
     // ensure we have a tab below the last one
     var foundLast = false; 
     var oldFirst = null;
-    for (var i = 2; i < tabs.length; i += 2) 
+    for (i = 2; i < tabs.length; i += 2) 
     {
-      var currHeader = tabs[i];
-      var currTab = new sbPanel(currHeader.getAttribute("id"), currHeader, i);
+      currHeader = tabs[i];
+      currTab = new sbPanel(currHeader.getAttribute("id"), currHeader, i);
   
       if (!currTab.is_excluded())
       {     
@@ -1343,10 +1345,10 @@ function SidebarNavigate(aDirection)
   {
     var newFirst = null, newLast = null;
     var foundFirst = false;
-    for (var i = 2; i < tabs.length; i += 2)
+    for (i = 2; i < tabs.length; i += 2)
     {
-      var currHeader = tabs[i];
-      var currTab = new sbPanel(currHeader.getAttribute("id"), currHeader, i);
+      currHeader = tabs[i];
+      currTab = new sbPanel(currHeader.getAttribute("id"), currHeader, i);
 
       if (!currTab.is_excluded())
       {
