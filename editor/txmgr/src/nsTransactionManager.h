@@ -54,20 +54,20 @@ public:
   NS_DECL_ISUPPORTS
 
   /* nsITransactionManager method implementations. */
-  virtual nsresult Do(nsITransaction *aTransaction);
-  virtual nsresult Undo(void);
-  virtual nsresult Redo(void);
-  virtual nsresult Clear(void);
-  virtual nsresult BeginBatch(void);
-  virtual nsresult EndBatch(void);
-  virtual nsresult GetNumberOfUndoItems(PRInt32 *aNumItems);
-  virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems);
-  virtual nsresult SetMaxTransactionCount(PRInt32 aMaxCount);
-  virtual nsresult PeekUndoStack(nsITransaction **aTransaction);
-  virtual nsresult PeekRedoStack(nsITransaction **aTransaction);
-  virtual nsresult Write(nsIOutputStream *aOutputStream);
-  virtual nsresult AddListener(nsITransactionListener *aListener);
-  virtual nsresult RemoveListener(nsITransactionListener *aListener);
+  NS_IMETHOD Do(nsITransaction *aTransaction);
+  NS_IMETHOD Undo(void);
+  NS_IMETHOD Redo(void);
+  NS_IMETHOD Clear(void);
+  NS_IMETHOD BeginBatch(void);
+  NS_IMETHOD EndBatch(void);
+  NS_IMETHOD GetNumberOfUndoItems(PRInt32 *aNumItems);
+  NS_IMETHOD GetNumberOfRedoItems(PRInt32 *aNumItems);
+  NS_IMETHOD SetMaxTransactionCount(PRInt32 aMaxCount);
+  NS_IMETHOD PeekUndoStack(nsITransaction **aTransaction);
+  NS_IMETHOD PeekRedoStack(nsITransaction **aTransaction);
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream);
+  NS_IMETHOD AddListener(nsITransactionListener *aListener);
+  NS_IMETHOD RemoveListener(nsITransactionListener *aListener);
 
   /* nsTransactionManager specific methods. */
   virtual nsresult ClearUndoStack(void);
