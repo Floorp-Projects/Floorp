@@ -1362,6 +1362,8 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 	// set native font and attributes
 	SetPortTextState();
 
+  NS_ASSERTION(strlen(aString) >= aLength, "Getting width on garbage string");
+  
 	// measure text
 	short textWidth = ::TextWidth(aString, 0, aLength);
 	aWidth = NSToCoordRound(float(textWidth) * mP2T);
