@@ -73,6 +73,7 @@ nsUserInfo::GetUsername(char * *aUsername)
 {
     struct passwd *pw = nsnull;
 
+    // is this portable?  those are POSIX compliant calls, but I need to check
     pw = getpwuid(geteuid());
 
     // do I need to free pw? 
@@ -96,10 +97,12 @@ nsUserInfo::GetDomain(char * *aDomain)
     struct utsname buf;
     char *domainname = nsnull;
 
+    // is this portable?  that is a POSIX compliant call, but I need to check
     if (uname(&buf)) { 
         return rv;
     }
  
+    // I need to see why on linux it is __domainname, yet for the header file, it is domainname
 #if 1
     domainname = buf.__domainname;
 #else
