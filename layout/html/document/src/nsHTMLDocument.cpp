@@ -152,7 +152,6 @@ static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 
-static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
 static int PR_CALLBACK
 MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 {
@@ -549,7 +548,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   PRUnichar* requestCharset = nsnull;
   nsCharsetSource requestCharsetSource = kCharsetUninitialized;
   
-  nsIParserFilter *cdetflt = nsnull;
+  nsCOMPtr <nsIParserFilter> cdetflt;
   nsCOMPtr<nsIHTMLContentSink> sink;
 #ifdef rickgdebug
   nsString outString;   // added out. Redirect to stdout if desired -- gpk 04/01/99
@@ -709,28 +708,21 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     if((kCharsetFromAutoDetection > charsetSource )  && gPlugDetector)
     {
-      // we could do charset detection
-      nsICharsetDetector *cdet = nsnull;
-      nsIWebShellServices *wss = nsnull;
-      nsICharsetDetectionAdaptor *adp = nsnull;
-
-      if(NS_SUCCEEDED( rv_detect = 
-            nsComponentManager::CreateInstance(g_detector_progid, nsnull,
-                           NS_GET_IID(nsICharsetDetector), (void**)&cdet)))
+      nsCOMPtr <nsICharsetDetector> cdet = do_CreateInstance(g_detector_progid, 
+                                                             &rv_detect);
+      if(NS_SUCCEEDED( rv_detect )) 
       {
-        if(NS_SUCCEEDED( rv_detect = 
-            nsComponentManager::CreateInstance(
-                           NS_CHARSET_DETECTION_ADAPTOR_PROGID, nsnull,
-                           kIParserFilterIID, (void**)&cdetflt)))
+        cdetflt = do_CreateInstance(NS_CHARSET_DETECTION_ADAPTOR_PROGID,
+			            &rv_detect);
+        if(NS_SUCCEEDED( rv_detect )) 
         {
-          if(cdetflt && 
-                NS_SUCCEEDED( rv_detect=
-                     cdetflt->QueryInterface(
-                        NS_GET_IID(nsICharsetDetectionAdaptor),(void**) &adp)))
+          nsCOMPtr<nsICharsetDetectionAdaptor> adp = do_QueryInterface(cdetflt, 
+                                                                       &rv_detect);
+          if(cdetflt && NS_SUCCEEDED( rv_detect ))
           {
-            if( NS_SUCCEEDED( rv_detect=
-                     docShell->QueryInterface(
-                        NS_GET_IID(nsIWebShellServices),(void**) &wss)))
+            nsCOMPtr<nsIWebShellServices> wss = do_QueryInterface(docShell,
+                                                                  &rv_detect);
+            if( NS_SUCCEEDED( rv_detect )) 
             {
               rv_detect = adp->Init(wss, cdet, (nsIDocument*)this, 
                      mParser, charset.GetUnicode(),aCommand);
@@ -744,10 +736,6 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
         // create one next time.
         gPlugDetector = PR_FALSE;
       }
-      NS_IF_RELEASE(wss);
-      NS_IF_RELEASE(cdet);
-      NS_IF_RELEASE(adp);
-      // NO NS_IF_RELEASE(cdetflt); here, do it after mParser->SetParserFilter
     }
   }
 #endif
@@ -774,11 +762,10 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 //        NS_NewNavHTMLDTD(&theDTD);
 //        mParser->RegisterDTD(theDTD);
 
-    nsIParserFilter *oldFilter = nsnull;
     if(cdetflt)
-       oldFilter = mParser->SetParserFilter(cdetflt);
-    NS_IF_RELEASE(oldFilter);
-    NS_IF_RELEASE(cdetflt);
+      // The current implementation for SetParserFilter needs to 
+      // be changed to be more XPCOM friendly. See bug #40149
+      nsCOMPtr<nsIParserFilter> oldFilter = getter_AddRefs(mParser->SetParserFilter(cdetflt));
 
 #ifdef DEBUG_charset
 	  char* cCharset = charset.ToNewCString();
