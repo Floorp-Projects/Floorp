@@ -476,6 +476,7 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBoo
 
   PRInt32  left, top, width, height,
            ourWidth, ourHeight;
+  PRBool   haveCoordinates =  PR_FALSE;
   nsresult result;
 
   if (!mChromeLoaded) {
@@ -495,23 +496,27 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBoo
 
   if (aRelative) {
     nsCOMPtr<nsIBaseWindow> base(do_QueryInterface(aRelative, &result));
-    if (base) { // assume result will be an error indication
+    if (base) {
       base->GetPositionAndSize(&left, &top, &width, &height);
       if (aScreen)
         screenmgr->ScreenForRect(left, top, width, height, getter_AddRefs(screen));
+      else
+        haveCoordinates = PR_TRUE;
     }
   } else
     screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
-  if (!screen)
-    return NS_ERROR_FAILURE;
 
-  if (aScreen)
+  if (aScreen && screen) {
     screen->GetAvailRect(&left, &top, &width, &height);
+    haveCoordinates = PR_TRUE;
+  }
 
-  GetSize(&ourWidth, &ourHeight);
-  SetPosition(left+(width-ourWidth)/2, top+(height-ourHeight)/(aAlert?3:2));
-
-  return NS_OK;
+  if (haveCoordinates) {
+    GetSize(&ourWidth, &ourHeight);
+    SetPosition(left+(width-ourWidth)/2, top+(height-ourHeight)/(aAlert?3:2));
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULWindow::Repaint(PRBool aForce)
@@ -734,14 +739,9 @@ void nsXULWindow::OnChromeLoaded()
 
   LoadTitleFromXUL();
   LoadIconFromXUL();
-#ifdef XP_UNIX
-  /* don't override wm placement prefs on unix --dr */
-  LoadPositionAndSizeFromXUL(PR_FALSE, PR_TRUE);
-#else
-  LoadPositionAndSizeFromXUL(PR_TRUE, PR_TRUE);
-#endif
-
+  LoadSizeFromXUL();
   if(mIntrinsicallySized) {
+    // (if LoadSizeFromXUL set the size, mIntrinsicallySized will be false)
     nsCOMPtr<nsIContentViewer> cv;
     mDocShell->GetContentViewer(getter_AddRefs(cv));
     nsCOMPtr<nsIMarkupDocumentViewer> markupViewer(do_QueryInterface(cv));
@@ -749,69 +749,129 @@ void nsXULWindow::OnChromeLoaded()
       markupViewer->SizeToContent();
   }
 
+  PRBool positionSet = PR_TRUE;
+  nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
+#ifdef XP_UNIX
+  // don't override WM placement on unix for independent, top-level windows
+  // (however, we think the benefits of intelligent dependent window placement
+  // trump that override.)
+  if (!parentWindow)
+    positionSet = PR_FALSE;
+#endif
+  if (positionSet)
+    positionSet = LoadPositionFromXUL();
+
   //LoadContentAreas();
 
-  if (mCenterAfterLoad) {
-    nsCOMPtr<nsIXULWindow> parentWindow(do_QueryReferent(mParentWindow));
-    Center(parentWindow, PR_TRUE, PR_FALSE);
-  }
+  if (mCenterAfterLoad && !positionSet)
+    Center(parentWindow, parentWindow ? PR_FALSE : PR_TRUE, PR_FALSE);
 
   if(mShowAfterLoad)
     SetVisibility(PR_TRUE);
 }
 
-NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition, 
-   PRBool aSize)
+PRBool nsXULWindow::LoadPositionFromXUL()
 {
   nsresult rv;
+  PRBool   gotPosition = PR_FALSE;
   
   // if we're the hidden window, don't try to validate our size/position. We're
   // special.
-  if ( mIsHiddenWindow )
-    return NS_OK;
+  if (mIsHiddenWindow)
+    return false;
 
   nsCOMPtr<nsIDOMElement> windowElement;
   GetWindowDOMElement(getter_AddRefs(windowElement));
   NS_ASSERTION(windowElement, "no xul:window");
   if (!windowElement)
-    return NS_ERROR_FAILURE;
+    return false;
 
   PRInt32 currX = 0;
   PRInt32 currY = 0;
   PRInt32 currWidth = 0;
   PRInt32 currHeight = 0;
-
-  GetPositionAndSize(&currX, &currY, &currWidth, &currHeight);
-
   PRInt32 errorCode;
   PRInt32 temp;
 
-  // Obtain the position and sizing information from the <xul:window> element.
+  GetPositionAndSize(&currX, &currY, &currWidth, &currHeight);
+
+  // Obtain the position information from the <xul:window> element.
   PRInt32 specX = currX;
   PRInt32 specY = currY;
-  PRInt32 specWidth = currWidth;
-  PRInt32 specHeight = currHeight;
-  nsAutoString posString, sizeString;
+  nsAutoString posString;
 
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("screenX"), posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode))
+    if (NS_SUCCEEDED(errorCode)) {
       specX = temp;
+      gotPosition = PR_TRUE;
+    }
   }
-
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("screenY"), posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode))
+    if (NS_SUCCEEDED(errorCode)) {
       specY = temp;
+      gotPosition = PR_TRUE;
+    }
   }
     
+  if (gotPosition) {
+    // our position will be relative to our parent, if any
+    nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
+    if (parent) {
+      PRInt32 parentX, parentY;
+      if (NS_SUCCEEDED(parent->GetPosition(&parentX, &parentY))) {
+        specX += parentX;
+        specY += parentY;
+      }
+      mWindow->ConstrainPosition(PR_FALSE, &specX, &specY);
+    } else {
+      StaggerPosition(specX, specY, currWidth, currHeight);
+      mWindow->ConstrainPosition(PR_TRUE, &specX, &specY);
+    }
+    if (specX != currX || specY != currY)
+      SetPosition(specX, specY);
+  }
+
+  return gotPosition;
+}
+
+PRBool nsXULWindow::LoadSizeFromXUL()
+{
+  nsresult rv;
+  PRBool   gotSize = PR_FALSE;
+  
+  // if we're the hidden window, don't try to validate our size/position. We're
+  // special.
+  if (mIsHiddenWindow)
+    return false;
+
+  nsCOMPtr<nsIDOMElement> windowElement;
+  GetWindowDOMElement(getter_AddRefs(windowElement));
+  NS_ASSERTION(windowElement, "no xul:window");
+  if (!windowElement)
+    return false;
+
+  PRInt32 currWidth = 0;
+  PRInt32 currHeight = 0;
+  PRInt32 errorCode;
+  PRInt32 temp;
+
+  GetPosition(&currWidth, &currHeight);
+
+  // Obtain the position and sizing information from the <xul:window> element.
+  PRInt32 specWidth = currWidth;
+  PRInt32 specHeight = currHeight;
+  nsAutoString sizeString;
+
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("width"), sizeString);
   if (NS_SUCCEEDED(rv)) {
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
       specWidth = temp;
+      gotSize = PR_TRUE;
     }
   }
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("height"), sizeString);
@@ -819,22 +879,14 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
       specHeight = temp;
+      gotSize = PR_TRUE;
     }
   }
 
-  // Now set position and size.
-  if (aPosition) {
-    StaggerPosition(specX, specY, specWidth, specHeight);
-    mWindow->ConstrainPosition(&specX, &specY);
-    if (specX != currX || specY != currY)
-      SetPosition(specX, specY);
-  }
-
-  if (aSize) {
-    if (specWidth != currWidth || specHeight != currHeight) {
-      mIntrinsicallySized = PR_FALSE;
+  if (gotSize) {
+    mIntrinsicallySized = PR_FALSE;
+    if (specWidth != currWidth || specHeight != currHeight)
       SetSize(specWidth, specHeight, PR_FALSE);
-    }
 
     rv = windowElement->GetAttribute(NS_LITERAL_STRING("sizemode"), sizeString);
     if (NS_SUCCEEDED(rv)) {
@@ -850,7 +902,7 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
     }
   }
 
-  return NS_OK;
+  return gotSize;
 }
 
 /* Stagger windows of the same type so they don't appear on top of each other.
@@ -1055,8 +1107,19 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
   PRInt32 x, y, cx, cy;
   PRInt32 sizeMode;
 
+  // get our size, position and mode to persist
   NS_ENSURE_SUCCESS(GetPositionAndSize(&x, &y, &cx, &cy), NS_ERROR_FAILURE);
   mWindow->GetSizeMode(&sizeMode);
+
+  // make our position relative to our parent, if any
+  nsCOMPtr<nsIBaseWindow> parent(do_QueryReferent(mParentWindow));
+  if (parent) {
+    PRInt32 parentX, parentY;
+    if (NS_SUCCEEDED(parent->GetPosition(&parentX, &parentY))) {
+      x -= parentX;
+      y -= parentY;
+    }
+  }
 
   char           sizeBuf[10];
   nsAutoString   sizeString;
