@@ -1184,8 +1184,7 @@ nsHTMLDocument::ContentReplaced(nsIContent* aContainer, nsIContent* aOldChild,
                                 nsIContent* aNewChild,
                                 PRInt32 aIndexInContainer)
 {
-  NS_ABORT_IF_FALSE(aContainer && aOldChild && aNewChild,
-                    "Null container, new child, or old child!");
+  NS_ABORT_IF_FALSE(aOldChild && aNewChild, "Null new or old child!");
 
   nsresult rv = UnregisterNamedItems(aOldChild);
 
