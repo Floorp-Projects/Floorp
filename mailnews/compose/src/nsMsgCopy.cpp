@@ -35,6 +35,7 @@ NS_IMPL_ISUPPORTS(CopyListener, nsCOMTypeInfo<nsIMsgCopyServiceListener>::GetIID
 
 CopyListener::CopyListener(void) 
 { 
+  mComposeAndSend = nsnull;
   NS_INIT_REFCNT(); 
 }
 
