@@ -127,6 +127,9 @@ public:
  
   PRBool IsDisabled();
 
+  void MarkAsGenerated();
+  PRBool IsGenerated();
+
 protected:
   void GetMenuChildrenElement(nsIContent** aResult);
 

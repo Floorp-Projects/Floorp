@@ -359,6 +359,9 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIFrame* aMenuItem)
   if (aMenuItem) {
     nsMenuFrame* newFrame = (nsMenuFrame*)aMenuItem;
     newFrame->SelectMenu(PR_TRUE);
+    
+    newFrame->MarkAsGenerated(); // Have the menu building. Get it ready to be shown.
+
     if (wasOpen)
       newFrame->OpenMenu(PR_TRUE);
   }

@@ -285,9 +285,9 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     // If we're a menu (and not a menu item),
     // kick off the timer.
     if (!isMenuBar && IsMenu() && !mMenuOpen && !mOpenTimer) {
-        // We're a menu, we're closed, and no timer has been kicked off.
+        // We're a menu, we're built, we're closed, and no timer has been kicked off.
         NS_NewTimer(getter_AddRefs(mOpenTimer));
-        mOpenTimer->Init(this, 125);   // 125 ms delay
+        mOpenTimer->Init(this, 250);   // 250 ms delay 
     }
   }
   return NS_OK;
@@ -317,14 +317,27 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
   }
 }
 
-void 
-nsMenuFrame::OpenMenu(PRBool aActivateFlag) 
+PRBool nsMenuFrame::IsGenerated()
 {
-  gEatMouseMove = PR_TRUE;
+  nsCOMPtr<nsIContent> child;
+  GetMenuChildrenElement(getter_AddRefs(child));
+  
+  // Generate the menu if it hasn't been generated already.  This
+  // takes it from display: none to display: block and gives us
+  // a menu forevermore.
+  if (child) {
+    nsCOMPtr<nsIAtom> generated = dont_AddRef(NS_NewAtom("menugenerated"));
+    nsString genVal;
+    child->GetAttribute(kNameSpaceID_None, generated, genVal);
+    if (genVal == "")
+      return PR_FALSE;
+  }
 
-  if (!mIsMenu)
-    return;
+  return PR_TRUE;
+}
 
+void nsMenuFrame::MarkAsGenerated()
+{
   nsCOMPtr<nsIContent> child;
   GetMenuChildrenElement(getter_AddRefs(child));
   
@@ -338,10 +351,24 @@ nsMenuFrame::OpenMenu(PRBool aActivateFlag)
     if (genVal == "")
       child->SetAttribute(kNameSpaceID_None, generated, "true", PR_TRUE);
   }
-  
+}
+
+void 
+nsMenuFrame::OpenMenu(PRBool aActivateFlag) 
+{
+  gEatMouseMove = PR_TRUE;
+
+  if (!mIsMenu)
+    return;
+
+  MarkAsGenerated();
+
   nsIFrame* frame = mPopupFrames.FirstChild();
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   
+  nsCOMPtr<nsIContent> child;
+  GetMenuChildrenElement(getter_AddRefs(child));
+
   if (aActivateFlag) {
     // Execute the oncreate handler
     if (!OnCreate())
