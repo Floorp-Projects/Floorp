@@ -34,12 +34,10 @@
 /**********************************************************************
  * --------------------------- W A R N I N G --------------------------
  *
- * This file is the same as Debug_ship.java, except the static final
+ * This file is the same as Debug_ship.jnot, except the static final
  * constants have been set to enable debugging and tracing.  You must
- * double-edit any changes in this file into Debug_ship.java, and 
+ * double-edit any changes in this file into Debug_ship.jnot, and 
  * vice-versa.
- * See debug_tweak.mk for how one of these two files is copied into
- * Debug.java during the build.
  **********************************************************************/
 
 package org.mozilla.jss.util;
@@ -49,7 +47,7 @@ package org.mozilla.jss.util;
  * trace statements to standard output.
  *
  * @see org.mozilla.jss.util.Assert
- * @version $Revision: 1.2 $ $Date: 2000/12/19 06:18:56 $
+ * @version $Revision: 1.1 $ $Date: 2002/05/23 18:29:03 $
  */
 public class Debug
 {

@@ -31,10 +31,6 @@
  * GPL.
  */
 
-/* This file demonstrates the use of JSS api to generate RSA and
- * DSA keys. The key pairs are stored in key3.db
- */
-
 /**
  * Note: when this program is run, it must have a key3.db WITH A PASSWORD
  * SET in the directory specified by the argument. The first time the
@@ -56,6 +52,7 @@ import org.mozilla.jss.pkcs11.*;
 import org.mozilla.jss.util.*;
 import org.mozilla.jss.crypto.*;
 import org.mozilla.jss.*;
+import org.mozilla.jss.pkcs11.PK11KeyPairGenerator;
 import java.io.*;
 import java.awt.*;
 import java.security.cert.*;
@@ -77,12 +74,8 @@ public class TestKeyGen {
             return;
         }
 
-        CryptoManager.InitializationValues vals = new
-            CryptoManager.InitializationValues( args[0] );
-        CryptoManager.initialize(vals);
+        CryptoManager.initialize(args[0]);
         manager = CryptoManager.getInstance();
-        manager.setPasswordCallback(
-            new Password( "netscape".toCharArray() ));
 
         java.util.Enumeration tokens =
                 manager.getTokensSupportingAlgorithm(KeyPairAlgorithm.RSA);
@@ -147,12 +140,12 @@ public class TestKeyGen {
         System.out.println("G: "+dsaParams.getG());
         System.out.println("Y: "+dsaPubKey.getY());
 
-        // 1024-bit DSA
-        kpg.initialize(1024);
+        // 1024-bit DSA, passing in PQG params
+        kpg.initialize(PK11KeyPairGenerator.PQG1024);
         keyPair = kpg.genKeyPair();
         Assert._assert( keyPair.getPublic() instanceof DSAPublicKey);
         dsaPubKey = (DSAPublicKey) keyPair.getPublic();
-        System.out.println("Generated 1024-bit DSA KeyPair!");
+        System.out.println("Generated 1024-bit DSA KeyPair with PQG params!");
         dsaParams = dsaPubKey.getParams();
         System.out.println("P: "+dsaParams.getP());
         System.out.println("Q: "+dsaParams.getQ());

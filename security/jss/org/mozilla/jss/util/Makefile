@@ -62,8 +62,6 @@ ALL_TRASH += Debug.java
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
 
-include debug_tweak.mk
-
 include $(CORE_DEPTH)/coreconf/rules.mk
 
 #######################################################################

@@ -60,6 +60,7 @@ public final class JSSProvider extends java.security.Provider {
             "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA1RSA");
 
         put("Alg.Alias.Signature.SHA1/RSA", "SHA-1/RSA");
+        put("Alg.Alias.Signature.SHA1withRSA", "SHA-1/RSA");
 
         /////////////////////////////////////////////////////////////
         // Message Digesting

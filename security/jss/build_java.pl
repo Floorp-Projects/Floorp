@@ -6,7 +6,6 @@ use File::stat;
 use File::Copy;
 
 @excluded_sources = qw(
-Debug_.*\.java
 provider\.new/
 org/mozilla/jss/provider/java/security/KeyFactorySpi1_4\.java
 org/mozilla/jss/pkix/cert/X509Certificate\.java
@@ -104,12 +103,12 @@ sub setup_vars {
         $class_dir = "$dist_dir/classes";
         $class_release_dir .= "/$cmdline_vars{SOURCE_RELEASE_CLASSES_DIR}";
         $javac_opt_flag = "-O";
-        $debug_source_file = "org/mozilla/jss/util/Debug_ship.java";
+        $debug_source_file = "org/mozilla/jss/util/Debug_ship.jnot";
     } else {
         $class_dir = "$dist_dir/classes_DBG";
         $class_release_dir .= "/$cmdline_vars{SOURCE_RELEASE_CLASSES_DBG_DIR}";
         $javac_opt_flag = "-g";
-        $debug_source_file = "org/mozilla/jss/util/Debug_debug.java";
+        $debug_source_file = "org/mozilla/jss/util/Debug_debug.jnot";
     }
     $jni_header_dir = "$dist_dir/private/jss/_jni";
 
