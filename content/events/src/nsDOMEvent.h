@@ -117,6 +117,15 @@ public:
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY);
   NS_IMETHOD    SetLayerY(PRInt32 aLayerY);
 
+  NS_IMETHOD    GetPageX(PRInt32* aClientX);
+  NS_IMETHOD    SetPageX(PRInt32 aClientX);
+
+  NS_IMETHOD    GetPageY(PRInt32* aClientY);
+  NS_IMETHOD    SetPageY(PRInt32 aClientY);
+
+  NS_IMETHOD    GetWhich(PRUint32* aKeyCode);
+  NS_IMETHOD    SetWhich(PRUint32 aKeyCode);
+
   NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc);
 
   // nsIPrivateDOMEvent interface

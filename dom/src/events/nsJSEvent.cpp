@@ -64,7 +64,10 @@ enum Event_slots {
   EVENT_BUTTON = -14,
   NSEVENT_LAYERX = -15,
   NSEVENT_LAYERY = -16,
-  NSEVENT_RC = -17
+  NSEVENT_PAGEX = -17,
+  NSEVENT_PAGEY = -18,
+  NSEVENT_WHICH = -19,
+  NSEVENT_RC = -20
 };
 
 /***********************************************************************/
@@ -281,6 +284,66 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNSEvent* b;
         if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
           if(NS_OK == b->GetLayerY(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSEvent");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSEVENT_PAGEX:
+      {
+        PRInt32 prop;
+        nsIDOMNSEvent* b;
+        if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
+          if(NS_OK == b->GetPageX(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSEvent");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSEVENT_PAGEY:
+      {
+        PRInt32 prop;
+        nsIDOMNSEvent* b;
+        if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
+          if(NS_OK == b->GetPageY(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSEvent");
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NSEVENT_WHICH:
+      {
+        PRUint32 prop;
+        nsIDOMNSEvent* b;
+        if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
+          if(NS_OK == b->GetWhich(&prop)) {
           *vp = INT_TO_JSVAL(prop);
             NS_RELEASE(b);
           }
@@ -652,6 +715,81 @@ SetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
+      case NSEVENT_PAGEX:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        nsIDOMNSEvent *b;
+        if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
+          b->SetPageX(prop);
+          NS_RELEASE(b);
+        }
+        else {
+           
+           JS_ReportError(cx, "Object must be of type NSEvent");
+           return JS_FALSE;
+        }
+        
+        break;
+      }
+      case NSEVENT_PAGEY:
+      {
+        PRInt32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRInt32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        nsIDOMNSEvent *b;
+        if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
+          b->SetPageY(prop);
+          NS_RELEASE(b);
+        }
+        else {
+           
+           JS_ReportError(cx, "Object must be of type NSEvent");
+           return JS_FALSE;
+        }
+        
+        break;
+      }
+      case NSEVENT_WHICH:
+      {
+        PRUint32 prop;
+        int32 temp;
+        if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+          prop = (PRUint32)temp;
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be a number");
+          return JS_FALSE;
+        }
+      
+        nsIDOMNSEvent *b;
+        if (NS_OK == a->QueryInterface(kINSEventIID, (void **)&b)) {
+          b->SetWhich(prop);
+          NS_RELEASE(b);
+        }
+        else {
+           
+           JS_ReportError(cx, "Object must be of type NSEvent");
+           return JS_FALSE;
+        }
+        
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -778,6 +916,9 @@ static JSPropertySpec EventProperties[] =
   {"button",    EVENT_BUTTON,    JSPROP_ENUMERATE},
   {"layerX",    NSEVENT_LAYERX,    JSPROP_ENUMERATE},
   {"layerY",    NSEVENT_LAYERY,    JSPROP_ENUMERATE},
+  {"pageX",    NSEVENT_PAGEX,    JSPROP_ENUMERATE},
+  {"pageY",    NSEVENT_PAGEY,    JSPROP_ENUMERATE},
+  {"which",    NSEVENT_WHICH,    JSPROP_ENUMERATE},
   {"rc",    NSEVENT_RC,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
