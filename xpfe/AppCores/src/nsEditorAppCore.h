@@ -38,6 +38,7 @@ class nsIWebShellWindow;
 class nsIPresShell;
 class nsIHTMLEditor;
 class nsITextEditor;
+class nsIOutputStream;
 
 //#define TEXT_EDITOR 1
 
@@ -79,6 +80,9 @@ class nsEditorAppCore : public nsBaseAppCore,
 
 		NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);
 		NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);
+		NS_IMETHOD    GetContentsAsText(nsIOutputStream* aContentsAsText);
+		NS_IMETHOD    GetContentsAsHTML(nsIOutputStream* aContentsAsHTML);
+
 		NS_IMETHOD    GetEditorSelection(nsIDOMSelection** aEditorSelection);
 
     NS_IMETHOD    Undo();

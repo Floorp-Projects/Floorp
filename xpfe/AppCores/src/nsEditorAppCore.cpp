@@ -953,6 +953,64 @@ nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
   return err;
 }
 
+
+
+NS_IMETHODIMP
+nsEditorAppCore::GetContentsAsText(nsIOutputStream* aContentsAsText)
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->OutputText(aContentsAsText);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->OutputText(aContentsAsText);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::GetContentsAsHTML(nsIOutputStream* aContentsAsHTML)
+{
+	nsresult	err = NS_NOINTERFACE;
+	
+	switch (mEditorType)
+	{
+		case ePlainTextEditorType:
+			{
+				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
+				if (textEditor)
+					err = textEditor->OutputHTML(aContentsAsHTML);
+			}
+			break;
+		case eHTMLTextEditorType:
+			{
+				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
+				if (htmlEditor)
+					err = htmlEditor->OutputHTML(aContentsAsHTML);
+			}
+			break;
+		default:
+			err = NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+  return err;
+}
+
 NS_METHOD
 nsEditorAppCore::GetEditorDocument(nsIDOMDocument** aEditorDocument)
 {
