@@ -482,8 +482,10 @@ nsBrowserAppCore::SignonViewer()
   return NS_OK;
 }
 #else
+NS_IMETHODIMP    
 nsBrowserAppCore::SignonViewer()
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
 
@@ -506,8 +508,10 @@ nsBrowserAppCore::CookieViewer()
   return NS_OK;
 }
 #else
+NS_IMETHODIMP    
 nsBrowserAppCore::CookieViewer()
 {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
 
