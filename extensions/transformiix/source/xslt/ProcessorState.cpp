@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.3 2000/05/24 03:45:41 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.cpp,v 1.4 2000/06/11 15:59:53 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.3 $ $Date: 2000/05/24 03:45:41 $
+ * @version $Revision: 1.4 $ $Date: 2000/06/11 15:59:53 $
 **/
 
 #include "ProcessorState.h"
@@ -233,7 +233,7 @@ MBool ProcessorState::addToResultTree(Node* node) {
 /**
  * Copies the node using the rules defined in the XSL specification
 **/
-Node* copyNode(Node* node) {
+Node* ProcessorState::copyNode(Node* node) {
     return 0;
 } //-- copyNode
 
@@ -302,7 +302,6 @@ void ProcessorState::generateId(Node* node, String& dest) {
     domHelper.generateId(node, dest);
 } //-- generateId
 
-
 /**
  * Returns the AttributeSet associated with the given name
  * or null if no AttributeSet is found
@@ -311,6 +310,12 @@ NodeSet* ProcessorState::getAttributeSet(const String& name) {
     return (NodeSet*)namedAttributeSets.get(name);
 } //-- getAttributeSet
 
+/**
+ * Gets the default Namespace URI stack.
+**/ 
+Stack* ProcessorState::getDefaultNSURIStack() {
+    return &defaultNameSpaceURIStack;
+} //-- getDefaultNSURIStack
 
 /**
  * Returns the global document base for resolving relative URIs within
@@ -338,7 +343,7 @@ void ProcessorState::getDocumentHref
       MITREObjectWrapper* objWrapper
           = (MITREObjectWrapper*)includes.get(*key);
       if (xslDocument == objWrapper->object) {
-	  documentBase.append(*key);
+          documentBase.append(*key);
           break;
       }
   }
@@ -385,6 +390,23 @@ Element* ProcessorState::getNamedTemplate(String& name) {
     return 0;
 } //-- getNamedTemplate
 
+/**
+ * Returns the namespace URI for the given name
+**/
+void ProcessorState::getNameSpaceURI(String& name, String& nameSpaceURI) {
+    String prefix;
+
+    XMLUtils::getNameSpace(name, prefix);
+    if (prefix.length() == 0) {
+        nameSpaceURI.append(*(String*)defaultNameSpaceURIStack.peek());
+    }
+    else {
+        String* result = (String*)nameSpaceMap.get(prefix);
+        if (result) {
+            nameSpaceURI.append(*result);        
+        }
+    }
+} //-- getNameSpaceURI
 
 /**
  * Returns the NodeStack which keeps track of where we are in the
@@ -457,12 +479,42 @@ void ProcessorState::preserveSpace(String& names) {
     }
 
 } //-- preserveSpace
+
+/**
+ * Sets a new default Namespace URI.
+**/ 
+void ProcessorState::setDefaultNameSpaceURI(const String& nsURI) {
+    Int32 len = nsURI.length();
+    unsigned long hashCode = 0;
+    for (Int32 i = 0; i < len; i++) {
+        hashCode +=  ((Int32)nsURI.charAt(i)) << 3;
+    }
+
+    String* nsURIPointer = (String*)nameSpaceURITable.retrieve(hashCode);
+    if ( ! nsURIPointer ) {
+        nsURIPointer = new String(nsURI);
+        nameSpaceURITable.add(nsURIPointer, hashCode);
+    }
+    defaultNameSpaceURIStack.push(nsURIPointer);
+} //-- setDefaultNameSpaceURI
+
 /**
  * Sets the document base for use when resolving relative URIs
 **/
 void ProcessorState::setDocumentBase(const String& documentBase) {
      this->documentBase = documentBase;
 } //-- setDocumentBase
+
+/**
+ * Sets the output method. Valid output method options are,
+ * "xml", "html", or "text".
+**/ 
+void ProcessorState::setOutputMethod(const String& method) {
+    format.setMethod(method);
+    if ( method.indexOf(HTML) == 0 ) {
+        setDefaultNameSpaceURI(HTML_NS);
+    }
+}
 
 /**
  * Adds the set of names to the Whitespace stripping element set
@@ -542,9 +594,9 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node) {
             if (wsStrip.contains(name)) return MB_TRUE;
             String method;
             if (format.getMethod(method).isEqual("html")) {
-	        String ucName = name;
+                String ucName = name;
                 ucName.toUpperCase();
-	        if (ucName.isEqual("SCRIPT")) return MB_FALSE;
+                if (ucName.isEqual("SCRIPT")) return MB_FALSE;
             }
             break;
         }
@@ -616,23 +668,23 @@ void ProcessorState::sortByDocumentOrder(NodeSet* nodes) {
 
     int i = 1;
     for ( ; i < nodes->size(); i++) {
-	    Node* node = nodes->get(i);
+        Node* node = nodes->get(i);
         for (int k = 0; k < sorted.size(); k++) {
-		    Node* tmpNode = sorted.get(k);
+            Node* tmpNode = sorted.get(k);
             if (domHelper.appearsFirst(node, tmpNode) == node) {
-			    sorted.add(k, node);
+                sorted.add(k, node);
                 break;
             }
             else if (k == sorted.size()-1) {
-			    sorted.add(node);
+                sorted.add(node);
                 break;
-			}
-		}
+            }
+        }
     }
 
     nodes->clear();
     for (i = 0; i < sorted.size(); i++)
-	  nodes->add(sorted.get(i));
+        nodes->add(sorted.get(i));
 
     sorted.clear();
 
@@ -701,57 +753,65 @@ void ProcessorState::initialize() {
     nodeStack = new NodeStack();
     nodeStack->push(this->resultDocument);
 
+    setDefaultNameSpaceURI("");
+
     //-- determine xsl properties
     Element* element = xslDocument->getDocumentElement();
-    if ( element ) {
-        //-- process namespace nodes
-        NamedNodeMap* atts = element->getAttributes();
-        if ( atts ) {
-            for (int i = 0; i < atts->getLength(); i++) {
-                Attr* attr = (Attr*)atts->item(i);
-                String attName = attr->getName();
-                String attValue = attr->getValue();
-                if ( attName.indexOf(XMLUtils::XMLNS) == 0) {
-                    String ns;
-                    XMLUtils::getLocalPart(attName, ns);
-                    //-- default namespace
-                    if ( attName.isEqual(XMLUtils::XMLNS) ) {
-                        //-- handle default
-                        //-- do nothing for now
-                    }
-                    // namespace declaration
-                    else {
-                        String ns;
-                        XMLUtils::getNameSpace(attName, ns);
-                        nameSpaceMap.put(ns, new String(attValue));
-                    }
-                    // check for XSL namespace
-                    if ( attValue.indexOf(XSLT_NS) == 0) {
-                        xsltNameSpace = ns;
-                    }
-                }
-                else if ( attName.isEqual(DEFAULT_SPACE_ATTR) ) {
-                    if ( attValue.isEqual(STRIP_VALUE) ) {
-                        defaultSpace = STRIP;
-                    }
-                }
-                else if ( attName.isEqual(RESULT_NS_ATTR) ) {
-		    if (attValue.length() > 0) {
-		        if ( attValue.indexOf(HTML_NS) == 0 ) {
-			    format.setMethod("html");
-                        }
-                        else format.setMethod(attValue);
-		    }
-                }
-                else if ( attName.isEqual(INDENT_RESULT_ATTR) ) {
-		    if ( attValue.length() > 0 ) {
-		        format.setIndent(attValue.isEqual(YES_VALUE));
-                    }
-                }
+    if ( element )
+        initialize(element);
+}
 
-            } //-- end for each att
-        } //-- end if atts are not null
-    } //-- end if document element exists
+/**
+ * Initializes this ProcessorState (second stage)
+**/
+void ProcessorState::initialize(Element* element) {
+
+    //-- process namespace nodes
+    NamedNodeMap* atts = element->getAttributes();
+    if ( atts ) {
+        for (int i = 0; i < atts->getLength(); i++) {
+            Attr* attr = (Attr*)atts->item(i);
+            String attName = attr->getName();
+            String attValue = attr->getValue();
+            if ( attName.indexOf(XMLUtils::XMLNS) == 0) {
+                String ns;
+                XMLUtils::getLocalPart(attName, ns);
+                // default namespace
+                if ( attName.isEqual(XMLUtils::XMLNS) ) {
+                    setDefaultNameSpaceURI(attValue);
+                }
+                // namespace declaration
+                else {
+                    String ns;
+                    XMLUtils::getNameSpace(attName, ns);
+                    nameSpaceMap.put(ns, new String(attValue));
+                }
+                // check for XSL namespace
+                if ( attValue.indexOf(XSLT_NS) == 0) {
+                    xsltNameSpace = ns;
+                }
+            }
+            else if ( attName.isEqual(DEFAULT_SPACE_ATTR) ) {
+                if ( attValue.isEqual(STRIP_VALUE) ) {
+                    defaultSpace = STRIP;
+                }
+            }
+            else if ( attName.isEqual(RESULT_NS_ATTR) ) {
+                if (attValue.length() > 0) {
+                    if ( attValue.indexOf(HTML_NS) == 0 ) {
+                        setOutputMethod("html");
+                    }
+                    else setOutputMethod(attValue);
+                }
+            }
+            else if ( attName.isEqual(INDENT_RESULT_ATTR) ) {
+                if ( attValue.length() > 0 ) {
+                    format.setIndent(attValue.isEqual(YES_VALUE));
+                }
+            }
+
+        } //-- end for each att
+    } //-- end if atts are not null
 
     /* Create default (built-in) templates */
 
