@@ -345,19 +345,11 @@ function changePassword()
 {
   getSelectedItem();
   token = selected_slot.getToken();
-  try {
-    // this seems to be neccessary, otherwise it fails in the PKCS#11 layer.
-    // but it doesn't feel right...
-    if (!token.isLoggedIn()) {
-      token.login(true);
-    }
-    window.open("changepassword.xul",
-                selected_slot.tokenName, 
-                "chrome,width=300,height=350,resizable=0,modal=1,dialog=1");
-    showSlotInfo();
-    enableButtons();
-  } catch (e) {
-  }
+  window.open("changepassword.xul",
+              selected_slot.tokenName, 
+              "chrome,resizable=1,modal=1,dialog=1");
+  showSlotInfo();
+  enableButtons();
 }
 
 // browse fs for PKCS#11 device
