@@ -32,6 +32,7 @@ class nsITextContent;
 class nsIURI;
 class nsString;
 class nsIWebShell;
+class nsIAttributeContent;
 
 // Factory methods for creating html content objects
 // XXX argument order is wrong (out parameter should be last)
@@ -246,6 +247,11 @@ NS_CreateHTMLElement(nsIHTMLContent** aResult,
 #define NS_BLOCK_DOCUMENT_ROOT   0x8
 #define NS_AREA_NO_SPACE_MGR     0x10
 #define NS_AREA_WRAP_SIZE        0x20
+
+// Special Generated Content Frame
+extern nsresult
+NS_NewAttributeContent(nsIContent ** aResult);
+
 
 // Create a basic area frame. By default, area frames will extend
 // their height to cover any children that "stick out".
