@@ -1261,7 +1261,7 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
   }
 
   nsCOMPtr<nsIFontMetrics> metrics;
-  mContext->GetMetricsFor(aFont, getter_AddRefs(metrics));
+  mContext->GetMetricsFor(aFont, *getter_AddRefs(metrics));
   nsFontHandle fontHandle;
   metrics->GetFontHandle(fontHandle);
   BFont *font = (BFont*)fontHandle;
