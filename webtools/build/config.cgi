@@ -37,7 +37,7 @@ $ENV{PATH}       = "$ENV{PATH}:/opt/cvs-tools/bin:/usr/local/bin"; # for cvs & m
   'MOZ_CO_BRANCH',  'HEAD',
   'MOZ_OBJDIR',     '@TOPSRCDIR@',
   'MOZ_CVS_FLAGS',  '-q -z 3',
-  'MOZ_CO_FLAGS',   '-P'
+  'MOZ_CO_FLAGS',   '-P',
 );
 
 # Set up pull by date
@@ -50,6 +50,7 @@ $default{MOZ_CO_DATE} = strftime("%d %b %Y %H:%M %Z",
 %fillin = %default;
 $default_objdir_fillin='@TOPSRCDIR@/obj-@CONFIG_GUESS@';
 $fillin{MOZ_OBJDIR} = $default_objdir_fillin;
+$fillin{MOZ_MAKE_FLAGS}='-j4';
 
 if ($query->param()) {
   &parse_params;
@@ -74,6 +75,10 @@ sub parse_params {
   if ($query->param('pull_by_date') eq 'on') {
     my $pull_date = $query->param('pull_date');
     $query->param(-name=>'MOZ_CO_DATE', -values=>[ $pull_date ]);
+  }
+  if ($query->param('parallel_build') eq 'on') {
+    my $gmake_flags = $query->param('gmake_flags');
+    $query->param(-name=>'MOZ_MAKE_FLAGS', -values=>[ $gmake_flags ]);
   }
   if ($query->param('MOZ_OBJDIR') eq 'fillin') {
     my $objdir = $query->param('objdir_fillin');
@@ -316,7 +321,7 @@ sub print_configure_form {
      size="16">
     </td></tr><tr><td>
     <input type="checkbox" name="pull_by_date");
-  print 'checked' if $fillin{MOZ_CO_DATE} ne $default{MOZ_CO_DATE};
+  #print 'checked' if $fillin{MOZ_CO_DATE} ne $default{MOZ_CO_DATE};
   print qq(>&nbsp;
     Pull by date
     </td><td>
@@ -344,6 +349,19 @@ sub print_configure_form {
     </td></tr></table>
     </td></tr>
 
+    <!-- Make Options -->
+    <tr bgcolor="$chrome_color"><td>
+    <font face="Helvetica,Arial"><b>
+    Make options:</b></font><br>
+    </td></tr><tr><td><table><tr><td>
+    <input type="checkbox" name="parallel_build");
+  #print 'checked' if $fillin{MOZ_MAKE_FLAGS} ne $default{MOZ_MAKE_FLAGS};
+  print qq(>&nbsp;
+    Parallel build using
+    <input type='text' name='gmake_flags' value='$fillin{MOZ_MAKE_FLAGS}' 
+      size='10'>
+    </td></tr></table>
+    </td></tr>
 
     </table>
     </td></tr></table>
