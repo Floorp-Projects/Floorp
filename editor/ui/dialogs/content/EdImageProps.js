@@ -60,16 +60,10 @@ function Startup()
   dialog.alignTypeSelect   = document.getElementById( "alignTypeSelect" );
   dialog.editImageMap      = document.getElementById( "editImageMap" );
   dialog.removeImageMap    = document.getElementById( "removeImageMap" );
+  dialog.doConstrain = false;
   
   // Another version of button just for this dialog -- on same line as "More Properties"
   dialog.AdvancedEditButton2 = document.getElementById( "AdvancedEditButton2" );
-
-  // Set SeeMore bool to the OPPOSITE of the current state,
-  //   which is automatically saved by using the 'persist="more"' 
-  //   attribute on the MoreFewerButton button
-  //   onMoreFewer will toggle the state and redraw the dialog
-  SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
-  onMoreFewer();
 
   // Get a single selected image element
   var tagName = "img"
@@ -98,9 +92,17 @@ function Startup()
   // Make a copy to use for AdvancedEdit
   globalElement = imageElement.cloneNode(false);
   
-  // Initialize all widgets with image attributes
-  InitDialog();
+  // Set SeeMore bool to the OPPOSITE of the current state,
+  //   which is automatically saved by using the 'persist="more"' 
+  //   attribute on the MoreFewerButton button
+  //   onMoreFewer will toggle the state and redraw the dialog
+  SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
+
+  // Initialize widgets with image attributes in the case where the entire dialog isn't visible
+  if ( SeeMore ) // this is actually in the opposite state until onMoreFewer is called below
+    InitDialog();
   
+  onMoreFewer();  // this call will initialize all widgets if entire dialog is visible
   dialog.srcInput.focus();
 }
 
@@ -119,51 +121,56 @@ function InitDialog()
   if (str)
     dialog.altTextInput.value = str;
   
-  // setup the height and width widgets
-  dialog.widthInput.value = InitPixelOrPercentCombobox(globalElement, "width", "widthUnitsSelect");
-  dialog.heightInput.value = InitPixelOrPercentCombobox(globalElement, "height", "heightUnitsSelect");
-  
-  // TODO: We need to get the actual image dimensions.
-  //       If different from attribute dimensions, then "custom" is checked.
-  // For now, always check custom, so we don't trash existing values
-  if ( dialog.widthInput.value.length && dialog.heightInput.value.length )
-    dialog.customsizeRadio.checked = true;
-  else
-    dialog.originalsizeRadio.checked = true;
-
-  // set spacing editfields
-  dialog.imagelrInput.value = globalElement.getAttribute("hspace");
-  dialog.imagetbInput.value = globalElement.getAttribute("vspace");
-  dialog.border.value       = globalElement.getAttribute("border");    
-
-  // Get alignment setting  
-  var align = globalElement.getAttribute("align");
-  if (align) {
-    align.toLowerCase();
-dump("Image Align exists = "+align+"\n");
-  }
-
-dump("Image Align="+align+"\n");
-  switch ( align )
+  if ( SeeMore )
   {
-    case "top":
-      dialog.alignTypeSelect.selectedIndex = 0;
-      break;
-    case "center":
-      dialog.alignTypeSelect.selectedIndex = 1;
-      break;
-    case "left":
-      dialog.alignTypeSelect.selectedIndex = 3;
-      break;
-    case "right":
-      dialog.alignTypeSelect.selectedIndex = 4;
-      break;
-    default:  // Default or "bottom"
-      dialog.alignTypeSelect.selectedIndex = 2;
-      break;
-  }
+	  // setup the height and width widgets
+	  dialog.widthInput.value = InitPixelOrPercentCombobox(globalElement, "width", "widthUnitsSelect");
+	  dialog.heightInput.value = InitPixelOrPercentCombobox(globalElement, "height", "heightUnitsSelect");
+	  
+	  // TODO: We need to get the actual image dimensions.
+	  //       If different from attribute dimensions, then "custom" is checked.
+	  // For now, always check custom, so we don't trash existing values
+	  if ( dialog.widthInput.value.length && dialog.heightInput.value.length )
+	  {
+	    dialog.isCustomSize = true; 
+	    dialog.customsizeRadio.checked = true;
+	  }
+	  else
+	  {
+	    dialog.isCustomSize = false;
+	    dialog.originalsizeRadio.checked = true;
+	  }
 
-dump( "Image Align Select Index after setting="+dialog.alignTypeSelect.selectedIndex+"\n");
+	  // set spacing editfields
+	  dialog.imagelrInput.value = globalElement.getAttribute("hspace");
+	  dialog.imagetbInput.value = globalElement.getAttribute("vspace");
+	  dialog.border.value       = globalElement.getAttribute("border");    
+
+	  // Get alignment setting  
+	  var align = globalElement.getAttribute("align");
+	  if (align) {
+	    align = align.toLowerCase();
+	  }
+
+	  switch ( align )
+	  {
+	    case "top":
+	      dialog.alignTypeSelect.selectedIndex = 0;
+	      break;
+	    case "center":
+	      dialog.alignTypeSelect.selectedIndex = 1;
+	      break;
+	    case "left":
+	      dialog.alignTypeSelect.selectedIndex = 3;
+	      break;
+	    case "right":
+	      dialog.alignTypeSelect.selectedIndex = 4;
+	      break;
+	    default:  // Default or "bottom"
+	      dialog.alignTypeSelect.selectedIndex = 2;
+	      break;
+	  }
+  }
 
   imageTypeExtension = checkForImage();
   // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
@@ -185,10 +192,77 @@ function chooseFile()
   dialog.srcInput.focus();
 }
 
+function SetGlobalElementToCurrentDialogSettings()
+{
+  // src
+  var str = dialog.srcInput.value.trimString();
+  globalElement.setAttribute("src", str);
+
+  // alt
+  str = dialog.altTextInput.value.trimString();
+  globalElement.setAttribute("alt", str);
+
+  var alignment;
+  switch ( dialog.alignTypeSelect.selectedIndex )
+  {
+    case 0:
+      alignment = "top";
+      break;
+    case 1:
+      alignment = "center";
+      break;
+    case 3:
+      alignment = "left";
+      break;
+    case 4:
+      alignment = "right";
+      break;
+    default:  // Default or "bottom" (2)
+      alignment = "";
+      break;
+  }
+  
+  if ( alignment == "" )
+    globalElement.removeAttribute( "align" );
+  else
+    globalElement.setAttribute( "align", alignment );
+
+  if ( dialog.imagelrInput.value.length > 0 )
+    globalElement.setAttribute("hspace", dialog.imagelrInput.value);
+  else
+    globalElement.removeAttribute("hspace");
+  
+  if ( dialog.imagetbInput.value.length > 0 )
+    globalElement.setAttribute("vspace", dialog.imagetbInput.value);
+  else
+    globalElement.removeAttribute("vspace");
+
+  if ( dialog.border.value.length > 0 )
+    globalElement.setAttribute("border", dialog.border.value);
+  else
+    globalElement.removeAttribute("border");
+  
+  // width
+  str = dialog.widthInput.value;
+  if (dialog.widthUnitsSelect.selectedIndex == 1)
+    str = str + "%";
+  globalElement.setAttribute("width", str);
+
+  // height
+  str = dialog.heightInput.value;
+  if (dialog.heightUnitsSelect.selectedIndex == 1)
+    str = str + "%";
+  globalElement.setAttribute("height", str);
+}
+
 function onMoreFewer()
 {
   if (SeeMore)
   {
+    dialog.isCustomSize = dialog.customsizeRadio.checked;
+    dialog.doConstrain = dialog.constrainCheckbox.checked;
+    SetGlobalElementToCurrentDialogSettings();
+    
     dialog.MoreSection.setAttribute("style","display: none");
     // Show the "Advanced Edit" button on same line as "More Properties"
     dialog.AdvancedEditButton2.setAttribute("style","display: inherit");
@@ -207,13 +281,21 @@ function onMoreFewer()
     dialog.MoreFewerButton.setAttribute("more","1");
     dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));
     SeeMore = true;
+    
+    InitDialog();
+    
+    if (dialog.isCustomSize)
+      dialog.customsizeRadio.checked = true;
+    else
+      dialog.originalsizeRadio.checked = true;
+    
+    if (dialog.doConstrain)
+      dialog.constrainCheckbox.checked = true;
   }
 }
 
 function doDimensionEnabling( doEnable )
 {
-dump("doDimensionEnabling called\n");
-
   // Enabled only if "Custom" is checked
   var enable = (doEnable && dialog.customsizeRadio.checked);
 
@@ -232,8 +314,6 @@ dump("doDimensionEnabling called\n");
 
 function doOverallEnabling()
 {
-dump("doOverallEnabling called\n");
-
   var imageTypeExtension = checkForImage();
   var canEnableAll       = imageTypeExtension != 0;
   if ( wasEnableAll == canEnableAll )
@@ -374,29 +454,58 @@ function ValidateData()
   var alt = dialog.altTextInput.value.trimString();
   globalElement.setAttribute("alt", alt);
   
-  var isPercentWidth = (dialog.widthUnitsSelect.selectedIndex == 1);
-  var maxLimitWidth = isPercentWidth ? 100 : maxPixels;  // Defined in EdDialogCommon.js
-  var isPercentHeight = (dialog.heightUnitsSelect.selectedIndex == 1);
-  var maxLimitHeight = isPercentHeight ? 100 : maxPixels;  // Defined in EdDialogCommon.js
-
   //TODO: WE SHOULD ALWAYS SET WIDTH AND HEIGHT FOR FASTER IMAGE LAYOUT
   //  IF USER DOESN'T SET IT, WE NEED TO GET VALUE FROM ORIGINAL IMAGE 
+  
   var width = "";
   var height = "";
-  if ( dialog.customsizeRadio.checked )
+  var isPercentWidth, isPercentHeight;
+  var maxLimitWidth, maxLimitHeight;
+
+  if ( SeeMore )
   {
-    width = ValidateNumberString(dialog.widthInput.value, 1, maxLimitWidth);
+    dialog.isCustomSize = dialog.customsizeRadio.checked;
+		isPercentWidth = (dialog.widthUnitsSelect.selectedIndex == 1);
+		isPercentHeight = (dialog.heightUnitsSelect.selectedIndex == 1);
+		width = dialog.widthInput.value;
+		height = dialog.heightInput.value;
+  }
+  else /* can't SeeMore */
+  {
+    var tailindex;
+    
+    width = globalElement.getAttribute( "width" );
+    
+    tailindex = width.lastIndexOf("%"); 
+    isPercentWidth = ( tailindex > 0 );
+    if ( isPercentWidth )
+      width = width.substring(0, tailindex);
+    
+    height = globalElement.getAttribute( "height" );
+    tailindex = height.lastIndexOf("%"); 
+    isPercentHeight = ( tailindex > 0 );
+    if ( isPercentHeight )
+      height = height.substring(0, tailindex);
+  }
+
+  if ( dialog.isCustomSize )
+  {
+	  maxLimitWidth = isPercentWidth ? 100 : maxPixels;  // Defined in EdDialogCommon.js
+    width = ValidateNumberString(width, 1, maxLimitWidth);
     if (width == "") {
-      dump("Image Width is empty\n");
+      if ( !SeeMore )
+        onMoreFewer();
       dialog.widthInput.focus();
       return false;
     }
     if (isPercentWidth)
       width = width + "%";
 
-    height = ValidateNumberString(dialog.heightInput.value, 1, maxLimitHeight);
+	  maxLimitHeight = isPercentHeight ? 100 : maxPixels;  // Defined in EdDialogCommon.js
+    height = ValidateNumberString(height, 1, maxLimitHeight);
     if (height == "") {
-      dump("Image Height is empty\n");
+      if ( !SeeMore )
+        onMoreFewer();
       dialog.heightInput.focus();
       return false;
     }
@@ -404,7 +513,7 @@ function ValidateData()
       height = height + "%";
   }
 
-  if ( dialog.originalsizeRadio.checked )
+  if ( !dialog.isCustomSize )
   {
   // for now (until we can get the actual image dimensions), clear the height/width attributes if not set
     globalElement.removeAttribute( "width" );
@@ -412,66 +521,71 @@ function ValidateData()
   }
   else
   {
-  if (width.length > 0)
-    globalElement.setAttribute("width", width);
-  if (height.length > 0)
-    globalElement.setAttribute("height", height);
+	  if (width.length > 0)
+	    globalElement.setAttribute("width", width);
+	  if (height.length > 0)
+	    globalElement.setAttribute("height", height);
   }
 
   // spacing attributes
   // All of these should use ValidateNumberString() to 
   //  ensure value is within acceptable range
-  if ( dialog.imagelrInput.value.length > 0 )
+  var amount;
+  if ( SeeMore )
   {
-    var hspace = ValidateNumberString(dialog.imagelrInput.value, 0, maxPixels);
-    if (hspace == "")
-      return false;
-    globalElement.setAttribute( "hspace", hspace );
-  }
-  else
-    globalElement.removeAttribute( "hspace" );
-  
-  if ( dialog.imagetbInput.value.length > 0 )
-  {
-    var vspace = ValidateNumberString(dialog.imagetbInput.value, 0, maxPixels);
-    if (vspace == "")
-      return false;
-    globalElement.setAttribute( "vspace", vspace );
-  }
-  else
-    globalElement.removeAttribute( "vspace" );
-  
+	  if ( dialog.imagelrInput.value.length > 0 )
+	  {
+	    amount = ValidateNumberString(dialog.imagelrInput.value, 0, maxPixels);
+	    if (amount == "")
+	      return false;
+      globalElement.setAttribute( "hspace", amount );
+    }
+    else
+      globalElement.removeAttribute( "hspace" );
+
+	  if ( dialog.imagetbInput.value.length > 0 )
+	  {
+	    var vspace = ValidateNumberString(dialog.imagetbInput.value, 0, maxPixels);
+	    if (vspace == "")
+	      return false;
+	    globalElement.setAttribute( "vspace", vspace );
+	  }
+	  else
+	    globalElement.removeAttribute( "vspace" );
+
   // note this is deprecated and should be converted to stylesheets
-
-  if ( dialog.border.value.length > 0 )
-  {
-    var border = ValidateNumberString(dialog.border.value, 0, maxPixels);
-    if (border == "")
-      return false;
-    globalElement.setAttribute( "border", border );
+	  if ( dialog.border.value.length > 0 )
+	  {
+	    var border = ValidateNumberString(dialog.border.value, 0, maxPixels);
+	    if (border == "")
+	      return false;
+	    globalElement.setAttribute( "border", border );
+	  }
+	  else
+	    globalElement.removeAttribute( "border" );
+  
+	  // Default or setting "bottom" means don't set the attribute
+	  var align = "";
+	  switch ( dialog.alignTypeSelect.selectedIndex )
+	  {
+	    case 0:
+	      align = "top";
+	      break;
+	    case 1:
+	      align = "center";
+	      break;
+	    case 3:
+	      align = "left";
+	      break;
+	    case 4:
+	      align = "right";
+	      break;
+	  }
+	  if (align == "")
+	    globalElement.removeAttribute( "align" );
+	  else
+	    globalElement.setAttribute( "align", align );
   }
-  else
-    globalElement.removeAttribute( "border" );
-
-  // Default or setting "bottom" means don't set the attribute
-  var align = "";
-  switch ( dialog.alignTypeSelect.selectedIndex )
-  {
-    case 0:
-      align = "top";
-      break;
-    case 1:
-      align = "center";
-      break;
-    case 3:
-      break;
-    case 4:
-      break;
-  }
-  if (align == "")
-    globalElement.removeAttribute( "align" );
-  else
-    globalElement.setAttribute( "align", align );
 
   return true;
 }
