@@ -146,11 +146,11 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     
     PR_FREEIF(serverType);
     
-    nsIMsgIncomingServer *server;
+    nsCOMPtr<nsIMsgIncomingServer> server;
     rv = nsComponentManager::CreateInstance(serverTypeProgID,
                                             nsnull,
                                             nsIMsgIncomingServer::GetIID(),
-                                            (void **)&server);
+                                            getter_AddRefs(server));
     PR_FREEIF(serverTypeProgID);
     
     if (NS_SUCCEEDED(rv))
