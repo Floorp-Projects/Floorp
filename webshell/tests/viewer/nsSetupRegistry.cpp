@@ -212,6 +212,7 @@ static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
 static NS_DEFINE_IID(kProfileCID, NS_PROFILE_CID);
 #endif
 
+
 #ifdef NEW_CLIPBOARD_SUPPORT
 static NS_DEFINE_IID(kClipboardCID,          NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kTransferableCID,       NS_TRANSFERABLE_CID);
