@@ -82,7 +82,7 @@ public:
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                  void * menuNode, void * aWebShell);
+                                 void* aDOMNode, void * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   nsEventStatus CheckRebuild(PRBool & aMenuEvent);
   nsEventStatus SetRebuild(PRBool aMenuEvent);
@@ -164,7 +164,7 @@ protected:
   
   PRUint32              mNumMenus;
   nsSupportsArray       mMenusArray;        // holds refs
-  nsCOMPtr<nsIDOMNode>  mDOMNode;
+  nsCOMPtr<nsIContent>  mMenuBarContent;    // menubar content node, strong ref
   nsIWidget *           mParent;            // weak ref
 
   PRBool       mIsMenuBarAdded;

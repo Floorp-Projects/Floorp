@@ -23,6 +23,7 @@
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsGUIEvent.h"
+#include "nsWidgetAtoms.h"
 
 #include <Gestalt.h>
 #include <Appearance.h>
@@ -161,7 +162,9 @@ nsToolkit::nsToolkit() : mInited(false)
 //
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
-{
+{ 
+  nsWidgetAtoms::ReleaseAtoms();
+  
 	/* StopPumping decrements a refcount on gEventQueueHandler; a prelude toward
 	   stopping event handling. This is not something you want to do unless you've
 	   bloody well started event handling and incremented the refcount. That's
@@ -185,6 +188,9 @@ NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
 {
 	if (gEventQueueHandler)
 		gEventQueueHandler->StartPumping();
+
+  nsWidgetAtoms::AddRefAtoms();
+
 	mInited = true;
 	return NS_OK;
 }

@@ -40,6 +40,8 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentObserver.h"
 
+#include "nsWidgetAtoms.h"
+
 #include "nsIDOMXULDocument.h"
 
 #include <Menus.h>
@@ -69,9 +71,7 @@ MenuHandle gLevel3HierMenu = nsnull;
 MenuHandle gLevel4HierMenu = nsnull;
 MenuHandle gLevel5HierMenu = nsnull;
 
-#if !TARGET_CARBON
 extern nsMenuStack          gPreviousMenuStack;
-#endif
 extern PRInt16 gCurrentMenuDepth;
 
 // #if APPLE_MENU_HACK
@@ -96,22 +96,19 @@ NS_IMPL_ISUPPORTS5(nsMenuBar, nsIMenuBar, nsIMenuListener, nsIDocumentObserver, 
 // nsMenuBar constructor
 //
 nsMenuBar::nsMenuBar()
-{
+{  
   gCurrentMenuDepth = 1;
   
-#if !TARGET_CARBON
   nsPreviousMenuStackUnwind(nsnull, nsnull);
-#endif
+
   NS_INIT_REFCNT();
   mNumMenus       = 0;
   mParent         = nsnull;
   mIsMenuBarAdded = PR_FALSE;
   mUnicodeTextRunConverter = nsnull;
   
-#if !TARGET_CARBON
   MenuDefUPP mdef = NewMenuDefProc( nsDynamicMDEFMain );
   InstallDefProc((short)nsMacResources::GetLocalResourceFile(), (ResType)'MDEF', (short)128, (Ptr) mdef );
-#endif
 
   mOriginalMacMBarHandle = nsnull;
   mMacMBarHandle = nsnull;
@@ -199,13 +196,9 @@ nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
   nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
   nsCOMPtr<nsIMenuListener> menuListener;
-  //((nsISupports*)mMenuVoidArray[i-1])->QueryInterface(NS_GET_IID(nsIMenuListener), (void**)&menuListener);
-  //printf("gPreviousMenuStack.Count() = %d \n", gPreviousMenuStack.Count());
-#if !TARGET_CARBON
   nsCOMPtr<nsIMenu> theMenu;
   gPreviousMenuStack.GetMenuAt(gPreviousMenuStack.Count() - 1, getter_AddRefs(theMenu));
   menuListener = do_QueryInterface(theMenu);
-#endif
   if (menuListener) {
     //TODO: MenuSelected is the right thing to call...
     //eventStatus = menuListener->MenuSelected(aMenuEvent);
@@ -299,8 +292,9 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
                             void * menubarNode, void * aWebShell )
 {
   mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWebShell*, aWebShell)));
-  mDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);   // strong ref
-      
+  nsIDOMNode* aDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);
+  mMenuBarContent = do_QueryInterface(aDOMNode);           // strong ref
+  
   if(gFirstMenuBar) {
       gOriginalMenuBar = getter_AddRefs(NS_GetWeakReference((nsIMenuBar *)this));
       
@@ -310,7 +304,6 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
 	  MenuHandle macMenuHandle = ::NewMenu(2, "\psubmenu");
 	  if(macMenuHandle) { 
 	    gLevel2HierMenu = macMenuHandle;
-#if !TARGET_CARBON
 	    SInt8 state = ::HGetState((Handle)macMenuHandle);
 	    ::HLock((Handle)macMenuHandle);
 			gSystemMDEFHandle = (**macMenuHandle).menuProc;
@@ -318,14 +311,12 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
 			(**macMenuHandle).menuWidth = -1;
 			(**macMenuHandle).menuHeight = -1;
 			::HSetState((Handle)macMenuHandle, state);
-#endif
 			::InsertMenu(macMenuHandle, hierMenu);
     }
 			
     macMenuHandle = ::NewMenu(3, "\psubmenu");
 	  if(macMenuHandle) { 
 	    gLevel3HierMenu = macMenuHandle;
-#if !TARGET_CARBON
 	    SInt8 state = ::HGetState((Handle)macMenuHandle);
 	    ::HLock((Handle)macMenuHandle);
 		  gSystemMDEFHandle = (**macMenuHandle).menuProc;
@@ -333,14 +324,12 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
 		  (**macMenuHandle).menuWidth = -1;
 		  (**macMenuHandle).menuHeight = -1;
 		  ::HSetState((Handle)macMenuHandle, state);
-#endif
 		  ::InsertMenu(macMenuHandle, hierMenu);
     }
 			
     macMenuHandle = ::NewMenu(4, "\psubmenu");
 	  if(macMenuHandle) { 
 	    gLevel4HierMenu = macMenuHandle;
-#if !TARGET_CARBON
 	    SInt8 state = ::HGetState((Handle)macMenuHandle);
 	    ::HLock((Handle)macMenuHandle);
 		  gSystemMDEFHandle = (**macMenuHandle).menuProc;
@@ -348,14 +337,12 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
 		  (**macMenuHandle).menuWidth = -1;
 		  (**macMenuHandle).menuHeight = -1;
 		  ::HSetState((Handle)macMenuHandle, state);
-#endif
 		  ::InsertMenu(macMenuHandle, hierMenu);
     }
 			
     macMenuHandle = ::NewMenu(5, "\psubmenu");
 	  if(macMenuHandle) { 
 	    gLevel5HierMenu = macMenuHandle; 
-#if !TARGET_CARBON
 	    SInt8 state = ::HGetState((Handle)macMenuHandle);
 	    ::HLock((Handle)macMenuHandle);
 			gSystemMDEFHandle = (**macMenuHandle).menuProc;
@@ -363,7 +350,6 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
 			(**macMenuHandle).menuWidth = -1;
 			(**macMenuHandle).menuHeight = -1;
 		  ::HSetState((Handle)macMenuHandle, state);
-#endif
 		  ::InsertMenu(macMenuHandle, hierMenu);
 		}
 	} else {
@@ -375,50 +361,45 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
     
   Create(aParentWindow);
 
-  nsCOMPtr<nsIWebShell>    webShell = do_QueryReferent(mWebShellWeakRef);
+  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
   if (webShell)
     RegisterAsDocumentObserver(webShell);
       
   // set this as a nsMenuListener on aParentWindow
   aParentWindow->AddMenuListener((nsIMenuListener *)this);
-         
-  nsCOMPtr<nsIDOMNode> menuNode;
-  mDOMNode->GetFirstChild(getter_AddRefs(menuNode));
-  while (menuNode)
-  {
-    nsCOMPtr<nsIDOMElement> menuElement(do_QueryInterface(menuNode));
-    if (menuElement)
-    {
-      nsAutoString menuNodeType;
-      nsAutoString menuName;
-      nsAutoString menuAccessKey(NS_LITERAL_STRING(" "));
-
-      menuElement->GetNodeName(menuNodeType);
-      if (menuNodeType == NS_LITERAL_STRING("menu")) {
-        menuElement->GetAttribute(NS_LITERAL_STRING("label"), menuName);
-        menuElement->GetAttribute(NS_LITERAL_STRING("accesskey"), menuAccessKey);
+  
+  PRInt32 count;
+  mMenuBarContent->ChildCount(count);
+  for ( int i = 0; i < count; ++i ) { 
+    nsCOMPtr<nsIContent> menu;
+    mMenuBarContent->ChildAt ( i, *getter_AddRefs(menu) );
+    if ( menu ) {
+      nsCOMPtr<nsIAtom> tag;
+      menu->GetTag ( *getter_AddRefs(tag) );
+      if (tag == nsWidgetAtoms::menu) {
+        nsAutoString menuName;
+        nsAutoString menuAccessKey(NS_LITERAL_STRING(" "));
+        menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
+        menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::accesskey, menuAccessKey);
 			  
         // Don't create the whole menu yet, just add in the top level names
               
         // Create nsMenu, the menubar will own it
         nsCOMPtr<nsIMenu> pnsMenu ( do_CreateInstance(kMenuCID) );
-        if ( pnsMenu )
-        {
+        if ( pnsMenu ) {
           pnsMenu->Create(NS_STATIC_CAST(nsIMenuBar*, this), menuName, menuAccessKey, 
                           NS_STATIC_CAST(nsIChangeManager *, this), 
-                          NS_REINTERPRET_CAST(nsIWebShell*, aWebShell), menuNode);
+                          NS_REINTERPRET_CAST(nsIWebShell*, aWebShell), menu);
 
           // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership
           AddMenu(pnsMenu); 
                   
           nsAutoString menuIDstring;
-          menuElement->GetAttribute(NS_LITERAL_STRING("id"), menuIDstring);
-          if(menuIDstring == NS_LITERAL_STRING("menu_Help")) {
+          menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::id, menuIDstring);
+          if ( menuIDstring == NS_LITERAL_STRING("menu_Help") ) {
             nsMenuEvent event;
             MenuHandle handle = nsnull;
-#if !(defined(RHAPSODY) || defined(TARGET_CARBON))
             ::HMGetHelpMenuHandle(&handle);
-#endif
             event.mCommand = (unsigned int) handle;
             nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
             listener->MenuSelected(event);
@@ -426,18 +407,14 @@ nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
         }
       } 
     }
-    nsCOMPtr<nsIDOMNode> tempNode = menuNode;  
-    tempNode->GetNextSibling(getter_AddRefs(menuNode));
-  } // end while (nsnull != menuNode)
+  } // for each menu
         
   // Give the aParentWindow this nsMenuBar to hold onto.
   // The parent takes ownership
   aParentWindow->SetMenuBar(this);
 		
-#ifdef XP_MAC
   Handle tempMenuBar = ::GetMenuBar(); // Get a copy of the menu list
 	SetNativeData((void*)tempMenuBar);
-#endif
 		
   return nsEventStatus_eIgnore;
 }
@@ -493,18 +470,21 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
     if (appleMenu)
     {
       // this code reads the "label" attribute from the <menuitem/> with
-      // id="aboutName" and puts its value in the Apple Menu
+      // id="aboutName" and puts its label in the Apple Menu
       nsAutoString label;
-      nsCOMPtr<nsIDOMNode> domNode;
-      aMenu->GetDOMNode(getter_AddRefs(domNode));
-      if (domNode) {
-        nsCOMPtr<nsIDOMDocument> domDoc;
-        domNode->GetOwnerDocument(getter_AddRefs(domDoc));
-        if (domDoc) {
-          nsCOMPtr<nsIDOMElement> aboutMenuItem;
-          domDoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(aboutMenuItem));
-          if (aboutMenuItem)
-            aboutMenuItem->GetAttribute(NS_LITERAL_STRING("label"), label);
+      nsCOMPtr<nsIContent> menu;
+      aMenu->GetMenuContent(getter_AddRefs(menu));
+      if (menu) {
+        nsCOMPtr<nsIDocument> doc;
+        menu->GetDocument(*getter_AddRefs(doc));
+        if (doc) {
+          nsCOMPtr<nsIDOMDocument> domdoc ( do_QueryInterface(doc) );
+          if ( domdoc ) {
+            nsCOMPtr<nsIDOMElement> aboutMenuItem;
+            domdoc->GetElementById(NS_LITERAL_STRING("aboutName"), getter_AddRefs(aboutMenuItem));
+            if (aboutMenuItem)
+              aboutMenuItem->GetAttribute(NS_LITERAL_STRING("label"), label);
+          }
         }
       }
 
@@ -524,11 +504,10 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   PRBool helpMenu;
   aMenu->IsHelpMenu(&helpMenu);
   if(!helpMenu) {
-    nsCOMPtr<nsIDOMNode> domNode;
-    aMenu->GetDOMNode(getter_AddRefs(domNode));
-    nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(domNode);
+    nsCOMPtr<nsIContent> menu;
+    aMenu->GetMenuContent(getter_AddRefs(menu));
     nsAutoString menuHidden;
-    domElement->GetAttribute(NS_LITERAL_STRING("hidden"), menuHidden);
+    menu->GetAttribute(kNameSpaceID_None, nsWidgetAtoms::hidden, menuHidden);
     if( menuHidden != NS_LITERAL_STRING("true"))
       ::InsertMenu(menuHandle, 0);
   }
@@ -615,10 +594,9 @@ NS_METHOD nsMenuBar::Paint()
     if (isHelpMenu)
     {
       MenuHandle helpMenuHandle = nil;
-#if !TARGET_CARBON
       ::HMGetHelpMenuHandle(&helpMenuHandle);
       menu->SetNativeData((void*)helpMenuHandle);
-#endif 
+
       nsMenuEvent event;
       event.mCommand = (unsigned int) helpMenuHandle;
       nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(menu);
@@ -725,8 +703,7 @@ NS_IMETHODIMP
 nsMenuBar::ContentAppended( nsIDocument * aDocument, nsIContent  * aContainer,
                               PRInt32 aNewIndexInContainer)
 {
- nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
-  if ( aContainer == me.get() ) {
+  if ( aContainer == mMenuBarContent ) {
     //Register(aContainer, );
     //InsertMenu ( aNewIndexInContainer );
   }
@@ -819,8 +796,7 @@ NS_IMETHODIMP
 nsMenuBar::ContentRemoved( nsIDocument * aDocument, nsIContent * aContainer,
                             nsIContent * aChild, PRInt32 aIndexInContainer )
 {  
-  nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
-  if ( aContainer == me.get() ) {
+  if ( aContainer == mMenuBarContent ) {
     Unregister(aChild);
     RemoveMenu ( aIndexInContainer );
   }
@@ -846,8 +822,7 @@ NS_IMETHODIMP
 nsMenuBar::ContentInserted( nsIDocument * aDocument, nsIContent * aContainer,
                             nsIContent * aChild, PRInt32 aIndexInContainer )
 {  
-  nsCOMPtr<nsIContent> me ( do_QueryInterface(mDOMNode) );
-  if ( aContainer == me.get() ) {
+  if ( aContainer == mMenuBarContent ) {
     //Register(aChild, );
     //InsertMenu ( aIndexInContainer );
   }

@@ -162,7 +162,7 @@ protected:
 
     PRUint32                mNumMenus;
     nsSupportsArray         mMenusArray;        // holds refs
-    nsCOMPtr<nsIDOMNode>    mDOMNode;
+    nsCOMPtr<nsIContent>    mMenuBarContent;    // menubar content node, strong ref
     nsIWidget*              mParent;            // weak ref
 
     PRBool                  mIsMenuBarAdded;
