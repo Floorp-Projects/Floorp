@@ -23,6 +23,7 @@
 #include <Scrap.h>
 #include <TextEdit.h>
 #include "nscore.h"
+#include "nsString.h"
 
 NS_IMPL_ADDREF(nsSelectionMgr)
 NS_IMPL_RELEASE(nsSelectionMgr)
@@ -114,7 +115,30 @@ nsresult nsSelectionMgr::CopyToClipboard()
 
 nsresult nsSelectionMgr::PasteTextBlocking(nsString* aPastedText)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (aPastedText)
+    return NS_ERROR_NULL_POINTER;
+  
+  aPastedText->Truncate(0);
+  
+  long     scrapOffset;
+  long     theLength = 0;
+  Handle   destHandle;
+  // Just Grab TEXT for now, later we will grab HTML, XIF, etc.
+  OSErr err = GetScrap(destHandle,'TEXT',&scrapOffset);
+  
+  if (err < 0)  // really an error, no text in scrap
+  {
+    return NS_OK;
+  }
+  else          // err is the length
+    theLength = err;
+  
+  char cMemTags = HGetState(destHandle);
+  char* text = &((*destHandle)[scrapOffset]);
+  HLock(destHandle);
+  aPastedText->SetString(text, theLength);
+  HSetState(destHandle, cMemTags);
+  return NS_OK;
 }
 
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult)
