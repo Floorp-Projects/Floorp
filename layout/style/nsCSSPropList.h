@@ -89,7 +89,7 @@ CSS_PROP(-moz-outline-radius-bottomleft, _moz_outline_radius_bottomLeft, VISUAL)
 CSS_PROP(-moz-outline-radius-bottomright, _moz_outline_radius_bottomRight, VISUAL)
 CSS_PROP(azimuth, azimuth, AURAL)
 CSS_PROP(background, background, VISUAL)
-CSS_PROP(background-attachment, background_attachment, VISUAL)
+CSS_PROP(background-attachment, background_attachment, FRAMECHANGE)
 CSS_PROP(background-color, background_color, VISUAL)
 CSS_PROP(background-image, background_image, VISUAL)
 CSS_PROP(background-position, background_position, VISUAL)
@@ -188,7 +188,7 @@ CSS_PROP(max-height, max_height, REFLOW)
 CSS_PROP(max-width, max_width, REFLOW)
 CSS_PROP(min-height, min_height, REFLOW)
 CSS_PROP(min-width, min_width, REFLOW)
-CSS_PROP(-moz-opacity, opacity, VISUAL) // XXX bug 3935
+CSS_PROP(-moz-opacity, opacity, FRAMECHANGE) // XXX bug 3935
 CSS_PROP(orphans, orphans, REFLOW)
 CSS_PROP(-moz-outline, outline, VISUAL)  // XXX This is temporary fix for nsbeta3+ Bug 48973, turning outline into -moz-outline  XXX bug 48973
 CSS_PROP(-moz-outline-color, outline_color, VISUAL) // XXX bug 48973
