@@ -60,7 +60,8 @@ typedef	enum enum_ChunkState
 			CHUNK_STATE_FINAL,
             CHUNK_STATE_TRAILER_HEADER,
             CHUNK_STATE_TRAILER_VALUE,
-            CHUNK_STATE_TRAILER
+            CHUNK_STATE_TRAILER,
+            CHUNK_STATE_DONE
 		}	ChunkState;
 
 #define	HTTP_CHUNK_TYPE		"chunked"
