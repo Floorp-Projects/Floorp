@@ -106,7 +106,7 @@ NS_IMPL_QUERY_HEAD(nsDocShell)
    NS_IMPL_QUERY_BODY(nsIHTMLDocShell)
    NS_IMPL_QUERY_BODY(nsIDocShellEdit)
    NS_IMPL_QUERY_BODY(nsIDocShellFile)
-   NS_IMPL_QUERY_BODY(nsIGenericWindow)
+   NS_IMPL_QUERY_BODY(nsIBaseWindow)
    NS_IMPL_QUERY_BODY(nsIScrollable)
    NS_IMPL_QUERY_BODY(nsITextScroll)
    NS_IMPL_QUERY_BODY(nsICapabilities)
@@ -782,7 +782,7 @@ NS_IMETHODIMP nsDocShell::FindChildWithName(const PRUnichar *aName, nsIDocShell 
 
 
 //*****************************************************************************
-// nsDocShell::nsIGenericWindow
+// nsDocShell::nsIBaseWindow
 //*****************************************************************************   
 
 NS_IMETHODIMP nsDocShell::InitWindow(nativeWindow parentNativeWindow,

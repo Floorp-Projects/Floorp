@@ -24,7 +24,7 @@
 #include "nsIDocShellContainer.idl"
 #include "nsIDocShellEdit.idl"
 #include "nsIDocShellFile.idl"
-#include "nsIGenericWindow.idl"
+#include "nsIBaseWindow.idl"
 #include "nsIScrollable.idl"
 #include "nsITextScroll.idl"
 
@@ -35,7 +35,7 @@ nsIDocShell
 nsIHTMLDocShell
 nsIDocShellEdit
 nsIDocShellFile
-nsIGenericWindow
+nsIBaseWindow
 nsIScrollable
 nsITextScroll
 */

@@ -62,7 +62,7 @@ class nsDocShell : public nsIDocShell,
                        public nsIDocShellEdit, 
                        public nsIDocShellFile, 
                        public nsIDocShellContainer,
-                       public nsIGenericWindow, 
+                       public nsIBaseWindow, 
                        public nsIScrollable, 
                        public nsITextScroll, 
                        public nsIContentViewerContainer,
@@ -78,7 +78,7 @@ public:
    NS_DECL_NSIDOCSHELLEDIT
    NS_DECL_NSIDOCSHELLFILE
    NS_DECL_NSIDOCSHELLCONTAINER
-   NS_DECL_NSIGENERICWINDOW
+   NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
    NS_DECL_NSIHTMLDOCSHELL
