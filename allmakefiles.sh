@@ -137,6 +137,7 @@ htmlparser/src/Makefile
 htmlparser/tests/Makefile
 htmlparser/tests/grabpage/Makefile
 htmlparser/tests/logparse/Makefile
+htmlparser/tests/outsinks/Makefile
 include/Makefile
 intl/Makefile
 intl/chardet/Makefile
