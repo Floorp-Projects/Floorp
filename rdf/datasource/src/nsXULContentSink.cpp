@@ -191,11 +191,6 @@ protected:
     static nsIRDFResource* kRDF_type;
     static nsIRDFResource* kXUL_element;
 
-    nsresult
-    MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
-                                 const nsString& aTag,
-                                 nsIRDFResource** aResource);
-
     // Text management
     nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                        PRBool* aDidFlush=nsnull);
@@ -494,34 +489,6 @@ XULContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
         return NS_OK;
     }
     return NS_NOINTERFACE;
-}
-
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-XULContentSinkImpl::MakeResourceFromQualifiedTag(PRInt32 aNameSpaceID,
-                                                 const nsString& aTag,
-                                                 nsIRDFResource** aResource)
-{
-    nsresult rv;
-    nsAutoString uri;
-
-    rv = mNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
-    //NS_VERIFY(NS_SUCCEEDED(rv), "unable to get namespace URI");
-
-    // some hacky logic to try to construct an appopriate URI for the
-    // namespace/tag pair.
-    if ((uri.Last() != '#' || uri.Last() != '/') &&
-        (aTag.First() != '#')) {
-        uri.Append('#');
-    }
-
-    uri.Append(aTag);
-
-    rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
-    NS_VERIFY(NS_SUCCEEDED(rv), "unable to get resource");
-
-    return rv;
 }
 
 
@@ -1476,11 +1443,12 @@ XULContentSinkImpl::OpenTag(const nsIParserNode& aNode)
 
     // Convert the container's namespace/tag pair to a fully qualified
     // URI so that we can specify it as an RDF resource.
+    nsCOMPtr<nsIAtom> attr = dont_AddRef( NS_NewAtom(tag) );
+
     nsCOMPtr<nsIRDFResource> tagResource;
-    if (NS_FAILED(rv = MakeResourceFromQualifiedTag(nameSpaceID, tag, getter_AddRefs(tagResource)))) {
-        NS_ERROR("unable to construct resource from namespace/tag pair");
-        return rv;
-    }
+    rv = nsRDFContentUtils::GetResource(nameSpaceID, attr, getter_AddRefs(tagResource));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to construct resource from namespace/tag pair");
+    if (NS_FAILED(rv)) return rv;
 
     rv = mDataSource->Assert(rdfResource, kRDF_type, tagResource, PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to assert tag type");
