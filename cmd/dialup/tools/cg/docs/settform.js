@@ -26,6 +26,7 @@ var x=thePlatform.indexOf("(")+1;
 var y=thePlatform.indexOf(";",x+1);
 thePlatform=thePlatform.substring(x,y);
 
+
 if (thePlatform != "Macintosh")	{
 	compromisePrincipals();			// work around for the security check
 	}
@@ -39,6 +40,7 @@ function loadData()
  	var	forceNew			= 	"";
  	var showPhones			=	"";
  	var asFormName			=	"asglobals";
+	var oneStepMode			=   "";
  
  	modeSectionName			=	"Mode Selection";
  	newSectionName			=	"New Acct Mode";	
@@ -48,7 +50,8 @@ function loadData()
 	//set the online/offline flags
 	forceExisting 	= parent.parent.globals.GetNameValuePair(acctSetupFile,modeSectionName,"ForceExisting");
 	forceNew		= parent.parent.globals.GetNameValuePair(acctSetupFile,modeSectionName,"ForceNew");
-	
+	oneStepMode		= parent.parent.globals.GetNameValuePair(acctSetupFile,modeSectionName,"OneStepMode");
+
 	if ((forceNew != null) && (forceNew != "") && (forceNew == "yes"))
 	{
 		setRadio(asFormName, "asmode", 0); 
@@ -56,6 +59,10 @@ function loadData()
 	else if ((forceExisting != null) && (forceExisting != "") && (forceExisting == "yes"))
 	{
 		setRadio(asFormName, "asmode", 1);
+	}
+	else if (oneStepMode == "no")
+	{
+		setRadio(asFormName, "asmode", 3);
 	}
 	else
 	{
@@ -66,7 +73,6 @@ function loadData()
 	
 	//set the two other options flags
 	setCheckBox(asFormName, "Show_Intro_Screens", parent.parent.globals.GetNameValuePair(acctSetupFile,modeSectionName,"Show_Intro_Screens"));	
-	setCheckBox(asFormName, "OneStepMode", parent.parent.globals.GetNameValuePair(acctSetupFile,modeSectionName,"OneStepMode"));	
 	var Dialer_Idle_Time = parseInt(parent.parent.globals.GetNameValuePair(acctSetupFile,modeSectionName,"Dialer_Disconnect_After"));
 	
 	if (Dialer_Idle_Time == null || isNaN(Dialer_Idle_Time) || Dialer_Idle_Time == "null" || Dialer_Idle_Time == "" || Dialer_Idle_Time < 5)
@@ -112,15 +118,18 @@ function saveData()
  	newSectionName			=	"New Acct Mode";
  	existingSectionName		=	"Existing Acct Mode";
 
+
 	parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName,"IntlMode", getCheckBox(asFormName,"intmode"));
 
 	var modeRadio = getRadio(asFormName, "asmode");
 	var modeRadioString = new String(modeRadio);
+
 	if (modeRadioString == "yes")
 	{
 		//debug("SaveData: Ext no, New yes");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceNew", "yes");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceExisting", "no");
+		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "OneStepMode", "yes");
 		parent.parent.globals.document.vars.path.value = "New Path";
 	}
 	else if (modeRadioString == "no")
@@ -128,21 +137,27 @@ function saveData()
 		//debug("SaveData: New no, Ext yes");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceNew", "no");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceExisting", "yes");	
+		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "OneStepMode", "yes");
 		parent.parent.globals.document.vars.path.value = "Existing Path";
+	}
+	else if (modeRadioString == "3")
+	{
+		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceNew", "no");
+		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceExisting", "no");	
+		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "OneStepMode", "no");
 	}
 	else
 	{
 		//debug("SaveData: both no");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceNew", "no");
 		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "ForceExisting", "no");	
+		parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "OneStepMode", "yes");
 	}
 	
 	//set dialer idle time, show_intro screens and OneStepMode
 	parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "Show_Intro_Screens", getCheckBox(asFormName, "Show_Intro_Screens"));
-	parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "OneStepMode", getCheckBox(asFormName, "OneStepMode"));
 	parent.parent.globals.SetNameValuePair(acctSetupFile, modeSectionName, "Dialer_Disconnect_After", getText(asFormName, "Dialer_Disconnect_After"));
 	
-
 }
 
 // end hiding contents from old browsers  -->
