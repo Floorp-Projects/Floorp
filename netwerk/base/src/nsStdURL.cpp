@@ -313,7 +313,7 @@ nsStdURL::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
     if (!i_Scheme) return NS_ERROR_NULL_POINTER;
 
     // mScheme is guaranteed to be lower case.
-    if (*i_Scheme == *mScheme || *i_Scheme == (*mScheme - ('a' - 'A')) ) {
+    if ( mScheme && (*i_Scheme == *mScheme || *i_Scheme == (*mScheme - ('a' - 'A'))) ) {
         *o_Equals = PL_strcasecmp(mScheme, i_Scheme) ? PR_FALSE : PR_TRUE;
     } else {
         *o_Equals = PR_FALSE;
@@ -1026,6 +1026,7 @@ nsStdURL::GetFile(nsIFile * *aFile)
 
     if ((path.CharAt(0) == '/' && path.CharAt(1) == '/')) {
         // unc path
+
 #ifdef DEBUG_dougt
         printf("+++ accessing UNC path\n");
 #endif
