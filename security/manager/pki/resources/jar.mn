@@ -25,6 +25,7 @@ pippki.jar:
     content/pippki/MineOverlay.xul           (content/MineOverlay.xul)
     content/pippki/viewCertDetails.xul       (content/viewCertDetails.xul)
     content/pippki/editcacert.xul            (content/editcacert.xul)
+    content/pippki/editemailcert.xul         (content/editemailcert.xul)
     content/pippki/editsslcert.xul           (content/editsslcert.xul)
     content/pippki/editcerts.js              (content/editcerts.js)
     content/pippki/deletecert.xul            (content/deletecert.xul)

@@ -3682,8 +3682,15 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
     srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
                                nsscert,
                                trust.GetTrust());
+  } else if (type == nsIX509Cert::EMAIL_CERT) {
+    // always start with untrusted and move up
+    trust.SetValidPeer();
+    trust.AddPeerTrust(0, trusted & nsIX509CertDB::TRUSTED_EMAIL, 0);
+    srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), 
+                               nsscert,
+                               trust.GetTrust());
   } else {
-    // ignore user and email certs
+    // ignore user certs
     return NS_OK;
   }
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
@@ -3726,7 +3733,17 @@ nsNSSCertificateDB::GetCertTrust(nsIX509Cert *cert,
     } else {
       return NS_ERROR_FAILURE;
     }
-  } /* user or email, ignore */
+  } else if (certType == nsIX509Cert::EMAIL_CERT) {
+    if (trustType & nsIX509CertDB::TRUSTED_SSL) {
+      *_isTrusted = trust.HasTrustedPeer(PR_TRUE, PR_FALSE, PR_FALSE);
+    } else if (trustType & nsIX509CertDB::TRUSTED_EMAIL) {
+      *_isTrusted = trust.HasTrustedPeer(PR_FALSE, PR_TRUE, PR_FALSE);
+    } else if (trustType & nsIX509CertDB::TRUSTED_OBJSIGN) {
+      *_isTrusted = trust.HasTrustedPeer(PR_FALSE, PR_FALSE, PR_TRUE);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+  } /* user: ignore */
   return NS_OK;
 }
 
