@@ -87,62 +87,6 @@ static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);//for tripple click pref
 
 #define TEXT_BUF_SIZE 100
 
-// Helper class for managing stack buffers for painting (etc.)
-
-struct nsAutoTextBuffer {
-  nsAutoTextBuffer();
-  ~nsAutoTextBuffer();
-
-  nsresult GrowBy(PRInt32 aAtLeast);
-
-  nsresult GrowTo(PRInt32 aNewSize);
-
-  PRUnichar* mBuffer;
-  PRInt32 mBufferLen;
-  PRUnichar mAutoBuffer[TEXT_BUF_SIZE];
-};
-
-nsAutoTextBuffer::nsAutoTextBuffer()
-  : mBuffer(mAutoBuffer),
-    mBufferLen(TEXT_BUF_SIZE)
-{
-}
-
-nsAutoTextBuffer::~nsAutoTextBuffer()
-{
-  if (mBuffer && (mBuffer != mAutoBuffer)) {
-    delete [] mBuffer;
-  }
-}
-
-nsresult
-nsAutoTextBuffer::GrowBy(PRInt32 aAtLeast)
-{
-  PRInt32 newSize = mBufferLen * 2;
-  if (newSize < mBufferLen + aAtLeast) {
-    newSize = mBufferLen + aAtLeast + 100;
-  }
-  return GrowTo(newSize);
-}
-
-nsresult
-nsAutoTextBuffer::GrowTo(PRInt32 aNewSize)
-{
-  if (aNewSize > mBufferLen) {
-    PRUnichar* newBuffer = new PRUnichar[aNewSize];
-    if (!newBuffer) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nsCRT::memcpy(newBuffer, mBuffer, sizeof(PRUnichar) * mBufferLen);
-    if (mBuffer != mAutoBuffer) {
-      delete [] mBuffer;
-    }
-    mBuffer = newBuffer;
-    mBufferLen = aNewSize;
-  }
-  return NS_OK;
-}
-
 //----------------------------------------
 
 struct nsAutoIndexBuffer {
@@ -760,7 +704,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
   if (0 != (mState & TEXT_SKIP_LEADING_WS)) {
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
-    aTX.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace);
+    aTX.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace);
     NS_ASSERTION(isWhitespace, "mState and content are out of sync");
     if (isWhitespace) {
       if (nsnull != indexp) {
@@ -789,7 +733,7 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
     PRInt32 wordLen, contentLen;
 
     // Get the next word
-    bp = aTX.GetNextWord(inWord, wordLen, contentLen, isWhitespace);
+    bp = aTX.GetNextWord(inWord, &wordLen, &contentLen, &isWhitespace);
     if (nsnull == bp) {
       break;
     }
@@ -815,21 +759,29 @@ nsTextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
         	strInx += wordLen;
         }
       }
-      else if (0 == wordLen) {
+      else if ('\n' == bp[0]) {
         if (nsnull != indexp) {
           *indexp++ = strInx;
         }
         break;
       }
       else if (nsnull != indexp) {
-        // Point mapping indicies at the same content index since
-        // all of the compressed whitespace maps down to the same
-        // renderable character.
-        PRInt32 i = contentLen;
-        while (--i >= 0) {
-          *indexp++ = strInx;
+        if (1 == wordLen) {
+          // Point mapping indicies at the same content index since
+          // all of the compressed whitespace maps down to the same
+          // renderable character.
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *indexp++ = strInx;
+          }
+          strInx++;
+        } else {
+          // Point mapping indicies at each content index in the word
+          PRInt32 i = contentLen;
+          while (--i >= 0) {
+            *indexp++ = strInx++;
+          }
         }
-        strInx++;
       }
     }
     else {
@@ -2236,7 +2188,8 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
         keepSearching = PR_TRUE;
         tx.Init(this, mContent, aPos->mStartOffset);
 
-        if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE) &&
+        if (tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace,
+                           PR_FALSE) &&
           (aPos->mStartOffset - contentLen >= mContentOffset) ){
           if ((aPos->mEatingWS && !isWhitespace) || !aPos->mEatingWS){
             aPos->mContentOffset = aPos->mStartOffset - contentLen;
@@ -2247,7 +2200,9 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
               aPos->mEatingWS = PR_FALSE;//if no real word then
             }
             else{
-              while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
+              while (isWhitespace &&
+                     tx.GetPrevWord(PR_FALSE, &wordLen, &contentLen,
+                                    &isWhitespace, PR_FALSE)){
                 aPos->mContentOffset -= contentLen;
                 aPos->mEatingWS = PR_TRUE;
               }
@@ -2274,7 +2229,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
         printf("Next- Start=%d aPos->mEatingWS=%s\n", aPos->mStartOffset, aPos->mEatingWS ? "TRUE" : "FALSE");
 #endif
 
-        if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE) &&
+        if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, PR_FALSE) &&
           (aPos->mStartOffset + contentLen <= (mContentLength + mContentOffset))){
 
 #ifdef DEBUGWORDJUMP
@@ -2286,7 +2241,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
             //check for whitespace next.
             keepSearching = PR_TRUE;
             aPos->mEatingWS = PR_TRUE;
-            while (!isWhitespace && tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
+            while (!isWhitespace && tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, PR_FALSE)){
 #ifdef DEBUGWORDJUMP
               printf("2-GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n", 
                      wordLen, contentLen, isWhitespace ? "WS" : "NOT WS");
@@ -2659,7 +2614,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     // Get next word/whitespace from the text
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
-    bp = tx.GetNextWord(inWord, wordLen, contentLen, isWhitespace);
+    bp = tx.GetNextWord(inWord, &wordLen, &contentLen, &isWhitespace);
     if (nsnull == bp) {
       break;
     }
@@ -2669,14 +2624,13 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     // Measure the word/whitespace
     nscoord width;
     if (isWhitespace) {
-      if (0 == wordLen) {
+      if ('\n' == bp[0]) {
         // We hit a newline. Stop looping.
+        NS_WARN_IF_FALSE(ts.mPreformatted, "newline w/o ts.mPreformatted");
         prevOffset = offset;
         offset++;
         endsInWhitespace = PR_TRUE;
-        if (ts.mPreformatted) {
-          endsInNewline = PR_TRUE;
-        }
+        endsInNewline = PR_TRUE;
         break;
       }
       if (skipWhitespace) {
@@ -2693,7 +2647,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
         width = ts.mSpaceWidth * wordLen;
       }
       else {
-        width = ts.mSpaceWidth + ts.mWordSpacing;/* XXX simplistic */
+        width = (wordLen * ts.mSpaceWidth) + ts.mWordSpacing;// XXX simplistic
       }
       breakable = PR_TRUE;
       firstLetterOK = PR_FALSE;
@@ -3097,7 +3051,8 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
   tx.Init(aTextFrame, aContent, 0);
   PRBool isWhitespace;
   PRInt32 wordLen, contentLen;
-  PRUnichar* bp = tx.GetNextWord(PR_TRUE, wordLen, contentLen, isWhitespace);
+  PRUnichar* bp = tx.GetNextWord(PR_TRUE, &wordLen, &contentLen,
+                                 &isWhitespace);
   if (!bp || isWhitespace) {
     // Don't bother measuring nothing
     *aStop = PR_TRUE;
@@ -3202,7 +3157,7 @@ nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
     return;
   }
   PRInt32 fragOffset = mContentOffset;
-  PRInt32 n = mContentLength;
+  PRInt32 n = fragOffset + mContentLength;
   while (fragOffset < n) {
     PRUnichar ch = frag->CharAt(fragOffset++);
     if (ch == '\r') {
