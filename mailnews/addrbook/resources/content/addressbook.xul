@@ -150,7 +150,6 @@ Contributor(s):
                       <menuitem id="menu_newEditor"/>
                     </menupopup>
                 </menu>
-                <menuitem label="&renameAddressBookCmd.label;" accesskey="&renameAddressBookCmd.accesskey;" oncommand="AbEditSelectedDirectory()"/>
                 <menuitem id="menu_close"/>
                 <menuseparator/>
         <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
