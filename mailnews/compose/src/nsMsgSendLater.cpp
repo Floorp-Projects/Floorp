@@ -707,7 +707,8 @@ nsMsgSendLater::DeleteCurrentMessage()
     return NS_ERROR_FACTORY_NOT_LOADED;
   }
 
-  msgArray->InsertElementAt(mMessage, 0);
+  nsCOMPtr<nsISupports> msgSupport = do_QueryInterface(mMessage, &res);
+  msgArray->InsertElementAt(msgSupport, 0);
   res = mMessageFolder->DeleteMessages(msgArray, nsnull, PR_TRUE);
   if (NS_FAILED(res))
     return NS_ERROR_FAILURE;
