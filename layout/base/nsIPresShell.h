@@ -387,6 +387,7 @@ public:
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, 
                                    nsIFrame* aFrame, 
                                    nsIContent* aContent, 
+                                   PRUint32 aFlags,
                                    nsEventStatus* aStatus) = 0;
 
   /**

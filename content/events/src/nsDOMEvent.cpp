@@ -249,14 +249,14 @@ nsDOMEvent::GetEventPhase(PRUint16* aEventPhase)
 NS_IMETHODIMP
 nsDOMEvent::GetBubbles(PRBool* aBubbles)
 {
-  *aBubbles = mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE;
+  *aBubbles = !(mEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMEvent::GetCancelable(PRBool* aCancelable)
 {
-  *aCancelable = mEvent->flags & NS_EVENT_FLAG_CANT_CANCEL;
+  *aCancelable = !(mEvent->flags & NS_EVENT_FLAG_CANT_CANCEL);
   return NS_OK;
 }
 

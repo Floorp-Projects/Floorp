@@ -584,11 +584,9 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent event;
-  event.eventStructType = NS_GUI_EVENT;
+  nsEvent event;
+  event.eventStructType = NS_EVENT;
   event.message = NS_FORM_CHANGE;
-  event.flags = NS_EVENT_FLAG_NONE;
-  event.widget = nsnull;
   HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
   return NS_OK;     
@@ -688,11 +686,9 @@ nsHTMLInputElement::Select()
     nsCOMPtr<nsIPresContext> presContext;
     nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext)); 
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsGUIEvent event;
-    event.eventStructType = NS_GUI_EVENT;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
     event.message = NS_FORM_SELECTED;
-    event.flags = NS_EVENT_FLAG_NONE;
-    event.widget = nsnull;
     rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
     // If the DOM event was not canceled (e.g. by a JS event handler returning false)
@@ -765,7 +761,7 @@ nsHTMLInputElement::Click()
           if (NS_SUCCEEDED(rv) && context) {
             nsEventStatus status = nsEventStatus_eIgnore;
             nsMouseEvent event;
-            event.eventStructType = NS_GUI_EVENT;
+            event.eventStructType = NS_MOUSE_EVENT;
             event.message = NS_MOUSE_LEFT_CLICK;
             event.isShift = PR_FALSE;
             event.isControl = PR_FALSE;
@@ -958,7 +954,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             {
               nsEventStatus status = nsEventStatus_eIgnore;
               nsMouseEvent event;
-              event.eventStructType = NS_GUI_EVENT;
+              event.eventStructType = NS_MOUSE_EVENT;
               event.message = NS_MOUSE_LEFT_CLICK;
               event.isShift = PR_FALSE;
               event.isControl = PR_FALSE;
@@ -1029,7 +1025,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 // nsIHTMLContent
 
 static nsGenericHTMLElement::EnumTable kInputTypeTable[] = {
-  { "browse", NS_FORM_BROWSE }, // XXX not valid html, but it is convient
+  { "browse", NS_FORM_BROWSE }, // XXX not valid html, but it is convenient
   { "button", NS_FORM_INPUT_BUTTON },
   { "checkbox", NS_FORM_INPUT_CHECKBOX },
   { "file", NS_FORM_INPUT_FILE },

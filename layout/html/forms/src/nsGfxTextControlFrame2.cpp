@@ -341,7 +341,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
             event.eventStructType = NS_EVENT;
             event.message = NS_FORM_SELECTED;
 
-            presShell->HandleEventWithTarget(&event,mFrame,content,&status);
+            presShell->HandleEventWithTarget(&event,mFrame,content,NS_EVENT_FLAG_INIT,&status);
           }
         }
       }

@@ -332,14 +332,14 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     if (presShell) {
       if (IsReset(type) == PR_TRUE) {
         event.message = NS_FORM_RESET;
-        presShell->HandleEventWithTarget(&event, nsnull, formContent, &status);
+        presShell->HandleEventWithTarget(&event, nsnull, formContent, NS_EVENT_FLAG_INIT, &status);
         if (nsEventStatus_eConsumeNoDefault != status && mFormFrame) {
           mFormFrame->OnReset(aPresContext);
         }
       }
       else if (IsSubmit(type) == PR_TRUE) {
         event.message = NS_FORM_SUBMIT;
-        presShell->HandleEventWithTarget(&event, nsnull, formContent, &status);
+        presShell->HandleEventWithTarget(&event, nsnull, formContent, NS_EVENT_FLAG_INIT, &status);
         if (nsEventStatus_eConsumeNoDefault != status && mFormFrame) {
           mFormFrame->OnSubmit(aPresContext, this);
         }

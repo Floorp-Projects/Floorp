@@ -243,7 +243,7 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
       nsEvent event;
       event.eventStructType = NS_EVENT;
       event.message = NS_IMAGE_ERROR;
-      presShell->HandleEventWithTarget(&event,this,mContent,&status);
+      presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT,&status);
 
       nsAutoString usemap;
       mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
@@ -273,7 +273,7 @@ nsImageFrame::UpdateImage(nsIPresContext* aPresContext, PRUint32 aStatus, void* 
     nsEvent event;
     event.eventStructType = NS_EVENT;
     event.message = NS_IMAGE_LOAD;
-    presShell->HandleEventWithTarget(&event,this,mContent,&status);
+    presShell->HandleEventWithTarget(&event,this,mContent,NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CANT_BUBBLE,&status);
   }
 
 #if 0 // ifdef'ing out the deleting of the lowsrc image

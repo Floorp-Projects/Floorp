@@ -1851,7 +1851,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> presShell;
     mPresContext->GetShell(getter_AddRefs(presShell));
     if (presShell) {
-      ret = presShell->HandleEventWithTarget(&event, mCurrentTarget, mouseContent, aStatus);
+      ret = presShell->HandleEventWithTarget(&event, mCurrentTarget, mouseContent, NS_EVENT_FLAG_INIT, aStatus);
       if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {
         nsMouseEvent event2;
         //fire double click
@@ -1877,7 +1877,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
         event2.isAlt = aEvent->isAlt;
         event2.isMeta = aEvent->isMeta;
 
-        ret = presShell->HandleEventWithTarget(&event2, mCurrentTarget, mouseContent, aStatus);
+        ret = presShell->HandleEventWithTarget(&event2, mCurrentTarget, mouseContent, NS_EVENT_FLAG_INIT, aStatus);
       }
     }
   }

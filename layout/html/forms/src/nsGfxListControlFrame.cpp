@@ -2630,16 +2630,14 @@ nsGfxListControlFrame::SelectionChanged(nsIContent* aContent)
 
   // Dispatch the NS_FORM_CHANGE event
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent event;
-  event.eventStructType = NS_GUI_EVENT;
-  event.widget = nsnull;
+  nsEvent event;
+  event.eventStructType = NS_EVENT;
   event.message = NS_FORM_CHANGE;
-  event.flags = NS_EVENT_FLAG_NONE;
 
   nsCOMPtr<nsIPresShell> presShell;
   mPresContext->GetShell(getter_AddRefs(presShell));
   if (presShell) {
-    ret = presShell->HandleEventWithTarget(&event, this, nsnull, &status);
+    ret = presShell->HandleEventWithTarget(&event, this, nsnull, NS_EVENT_FLAG_INIT, &status);
   }
   return ret;
 }
