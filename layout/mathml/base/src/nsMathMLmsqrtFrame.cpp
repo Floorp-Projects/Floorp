@@ -60,13 +60,13 @@ NS_NewMathMLmsqrtFrame(nsIFrame** aNewFrame)
 }
 
 nsMathMLmsqrtFrame::nsMathMLmsqrtFrame() :
-  mSqrtChar(),
-  mSqrtBar()
+  mSqrChar(),
+  mBarChar()
 {
    nsAutoString sqr(PRUnichar(0x221A)),
                 bar(PRUnichar(0xF8E5));
-   mSqrtChar.SetData(sqr);
-   mSqrtBar.SetData(bar);
+   mSqrChar.SetData(sqr);
+   mBarChar.SetData(bar);
 }
 
 nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
@@ -104,15 +104,11 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext&      aPresContext,
   rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
                                      aDirtyRect, aWhichLayer);
 
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
-    return rv;
-  }
-
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
     // paint the sqrt symbol
-    rv = mSqrtChar.Paint(aPresContext, aRenderingContext, mStyleContext);
+    rv = mSqrChar.Paint(aPresContext, aRenderingContext, mStyleContext);
     // paint the overline bar
-    rv = mSqrtBar.Paint(aPresContext, aRenderingContext, mStyleContext);
+    rv = mBarChar.Paint(aPresContext, aRenderingContext, mStyleContext);
   }
 
   return rv;
@@ -125,86 +121,46 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
                            nsReflowStatus&          aStatus)
 {
   nsresult rv = NS_OK;
-  nsReflowStatus childStatus;
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize);
-  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
 
-  //////////////////
-  // Reflow Children
-
-  nsRect rect;
-  aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (nsnull != childFrame) 
-  {
-    //////////////
-    // WHITESPACE: don't forget that whitespace doesn't count in MathML!
-    if (IsOnlyWhitespace(childFrame)) {
-      ReflowEmptyChild(aPresContext, childFrame);
-    }
-    else {
-      nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                         childFrame, availSize);
-      rv = ReflowChild(childFrame, aPresContext,
-                       childDesiredSize, childReflowState, childStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      // At this stage, the origin points of the children have no use, so we
-      // will use the origins as placeholders to store the child's ascent and
-      // descent. Before return, we should set the origins so as to overwrite
-      // what we are storing there now.
-      childFrame->SetRect(&aPresContext,
-                          nsRect(childDesiredSize.descent, childDesiredSize.ascent,
-                                 childDesiredSize.width, childDesiredSize.height));
-
-      aDesiredSize.width += childDesiredSize.width;
-      if (aDesiredSize.ascent < childDesiredSize.ascent) {
-        aDesiredSize.ascent = childDesiredSize.ascent;
-      }
-      if (aDesiredSize.descent < childDesiredSize.descent) {
-        aDesiredSize.descent = childDesiredSize.descent;
-      }
-    }
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+  ///////////////
+  // Let the base class format our content like an inferred mrow
+  rv = nsMathMLContainerFrame::Reflow(aPresContext, aDesiredSize,
+                                      aReflowState, aStatus);
+  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  nscoord oldAscent = aDesiredSize.ascent;
 
   ////////////
   // Prepare the radical symbol and the overline bar
-
   nsIRenderingContext& renderingContext = *aReflowState.rendContext;
   nsStyleFont font;
   mStyleContext->GetStyle(eStyleStruct_Font, font);
   renderingContext.SetFont(font.mFont);
 
-  // grab some metrics to help adjusting the placements
+  // grab some metrics that will help to adjust the placements
   nsCOMPtr<nsIFontMetrics> fm;
   nscoord fontAscent, fontDescent; 
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
   fm->GetMaxAscent(fontAscent);
   fm->GetMaxDescent(fontDescent);
 
-  nsBoundingMetrics bm, bmdata[2];
+  nsBoundingMetrics bmSqr, bmBar;
   nscoord dx, dy;
 
   // radical symbol  
-  renderingContext.GetBoundingMetrics(mSqrtChar.GetUnicode(), PRUint32(1), bm);
-  bmdata[0] = bm;
-  nscoord charWidth = bm.width; // width of the radical symbol
+  renderingContext.GetBoundingMetrics(mSqrChar.GetUnicode(), PRUint32(1), bmSqr);
+  nscoord charWidth = bmSqr.width; // width of the radical symbol
 
   // overline bar
-  renderingContext.GetBoundingMetrics(mSqrtBar.GetUnicode(), PRUint32(1), bm);
-  bmdata[1] = bm;
-  nscoord thickspace = bm.ascent - bm.descent; // height of the overline bar
+  renderingContext.GetBoundingMetrics(mBarChar.GetUnicode(), PRUint32(1), bmBar);
+  nscoord thickspace = bmBar.ascent - bmBar.descent; // height of the overline bar
 
   // Stretch the sqrt symbol to the appropriate height if it is not big enough.
   nsCharMetrics contSize(aDesiredSize);
   nsCharMetrics desSize(fontDescent, fontAscent, charWidth, fontAscent + fontDescent);
-  mSqrtChar.Stretch(aPresContext, renderingContext, mStyleContext,
+  mSqrChar.Stretch(aPresContext, renderingContext, mStyleContext,
                     NS_STRETCH_DIRECTION_VERTICAL, contSize, desSize);
   charWidth = desSize.width;
   if (aDesiredSize.ascent < desSize.ascent) {
@@ -216,22 +172,23 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 
   dx = 0;
-  dy = bmdata[0].ascent - fontAscent;
-  mSqrtChar.SetRect(nsRect(dx, dy, desSize.width, aDesiredSize.height));
-  dx = bmdata[0].rightBearing;
+  dy = bmSqr.ascent - fontAscent;
+  mSqrChar.SetRect(nsRect(dx, dy, desSize.width, aDesiredSize.height));
+  dx = bmSqr.rightBearing;
 
   // Stretch the overline bar to the appropriate width if it is not big enough.
   contSize = nsCharMetrics(aDesiredSize);
-  desSize = nsCharMetrics(fontDescent, fontAscent, bmdata[1].rightBearing-bmdata[1].leftBearing, fontAscent + fontDescent);
+  desSize = nsCharMetrics(fontDescent, fontAscent, bmBar.rightBearing-bmBar.leftBearing, fontAscent + fontDescent);
   nsCharMetrics oldSize = desSize;
-  mSqrtBar.Stretch(aPresContext, renderingContext, mStyleContext,
+  mBarChar.Stretch(aPresContext, renderingContext, mStyleContext,
                    NS_STRETCH_DIRECTION_HORIZONTAL, contSize, desSize);
 
-  dy = bmdata[1].ascent - fontAscent;
+  dy = bmBar.ascent - fontAscent;
   if (oldSize == desSize) { // hasn't changed size! Char will be painted as a normal char
-    dx -= bmdata[1].leftBearing; // adjust so that it coincides with the sqrt char
+    dx -= bmBar.leftBearing; // adjust so that it coincides with the sqrt char
   } 
-  mSqrtBar.SetRect(nsRect(dx, dy, desSize.width, thickspace));
+  dy = bmBar.ascent - fontAscent;
+  mBarChar.SetRect(nsRect(dx, dy, desSize.width, thickspace));
 
   // Update the size of the container
   aDesiredSize.width += charWidth;
@@ -240,14 +197,15 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
 
   //////////////////
   // Place Children now by setting the origin of each child.
+
+  nsRect rect;
   dx = charWidth;
-  childFrame = mFrames.FirstChild();
+  dy = aDesiredSize.ascent - oldAscent;
+  nsIFrame* childFrame = mFrames.FirstChild();
   while (nsnull != childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
       childFrame->GetRect(rect);
-      // rect.y was storing the child's ascent, from earlier.
-      dy = aDesiredSize.ascent - rect.y;
-      childFrame->MoveTo(&aPresContext, dx, dy);
+      childFrame->MoveTo(&aPresContext, dx, rect.y + dy);
       dx += rect.width;
     }
     rv = childFrame->GetNextSibling(&childFrame);
