@@ -83,13 +83,11 @@ EXPORTS		= \
 		nsNoIncomingServer.h \
 		$(NULL)
 
-ifdef HAVE_MOVEMAIL
+ifdef MOZ_MOVEMAIL
 CPPSRCS		+= \
 		nsMovemailService.cpp \
 		nsMovemailIncomingServer.cpp
-endif
 
-ifdef HAVE_MOVEMAIL
 EXPORTS		+= \
 		nsMovemailService.h \
 		nsMovemailIncomingServer.h
@@ -100,3 +98,6 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef MOZ_MOVEMAIL
+DEFINES	+= -DHAVE_MOVEMAIL
+endif

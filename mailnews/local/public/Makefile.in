@@ -42,7 +42,7 @@ XPIDLSRCS	= \
 		nsILocalMailIncomingServer.idl \
 		$(NULL)
 
-ifdef HAVE_MOVEMAIL
+ifdef MOZ_MOVEMAIL
 XPIDLSRCS	+= \
 		nsIMovemailService.idl \
 		nsIMovemailIncomingServer.idl
@@ -50,3 +50,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef MOZ_MOVEMAIL
+DEFINES	+= -DHAVE_MOVEMAIL
+endif
