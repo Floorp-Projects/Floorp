@@ -75,6 +75,13 @@ URLImpl::URLImpl(const nsString& aSpec)
   NS_INIT_REFCNT();
   mProtocolUrl = nsnull;
 
+  mProtocol = nsnull;
+  mHost = nsnull;
+  mFile = nsnull;
+  mRef = nsnull;
+  mPort = -1;
+  mSpec = nsnull;
+
   ParseURL(nsnull, aSpec);
 }
 
@@ -82,6 +89,13 @@ URLImpl::URLImpl(const nsIURL* aURL, const nsString& aSpec)
 {
   NS_INIT_REFCNT();
   mProtocolUrl = nsnull;
+
+  mProtocol = nsnull;
+  mHost = nsnull;
+  mFile = nsnull;
+  mRef = nsnull;
+  mPort = -1;
+  mSpec = nsnull;
 
   ParseURL(aURL, aSpec);
 }
@@ -121,11 +135,11 @@ URLImpl::~URLImpl()
 {
   NS_IF_RELEASE(mProtocolUrl);
 
-  free(mSpec);
-  free(mProtocol);
-  free(mHost);
-  free(mFile);
-  free(mRef);
+  PR_FREEIF(mSpec);
+  PR_FREEIF(mProtocol);
+  PR_FREEIF(mHost);
+  PR_FREEIF(mFile);
+  PR_FREEIF(mRef);
 }
 
 nsresult URLImpl::Set(const char *aNewSpec)
@@ -213,24 +227,21 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     uPort = aURL->GetPort();
   }
 
-  mProtocol = nsnull;
-  mHost = nsnull;
-  mFile = nsnull;
-  mRef = nsnull;
+  PR_FREEIF(mProtocol);
+  PR_FREEIF(mHost);
+  PR_FREEIF(mFile);
+  PR_FREEIF(mRef);
   mPort = -1;
-  mSpec = nsnull;
+  PR_FREEIF(mSpec);
 
   if (nsnull == cSpec) {
-    delete cSpec;
     if (nsnull == aURL) {
-      delete cSpec;
       return NS_ERROR_ILLEGAL_VALUE;
     }
     mProtocol = (nsnull != uProtocol) ? PL_strdup(uProtocol) : nsnull;
     mHost = (nsnull != uHost) ? PL_strdup(uHost) : nsnull;
     mPort = uPort;
     mFile = (nsnull != uFile) ? PL_strdup(uFile) : nsnull;
-    delete cSpec;
     return NS_OK;
   }
 
@@ -256,7 +267,7 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     } else {
       char* dp = PL_strrchr(uFile, '/');
       PRInt32 dirlen = (dp + 1) - uFile;
-      mFile = (char*) malloc(dirlen + len);
+      mFile = (char*) PR_Malloc(dirlen + len);
       PL_strncpy(mFile, uFile, dirlen);
       PL_strcpy(mFile + dirlen, cSpec);
     }
@@ -265,7 +276,7 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
 
     // get protocol first
     PRInt32 plen = cp - cSpec;
-    mProtocol = (char*) malloc(plen + 1);
+    mProtocol = (char*) PR_Malloc(plen + 1);
     PL_strncpy(mProtocol, cSpec, plen);
     mProtocol[plen] = 0;
     cp++;                               // eat : in protocol
@@ -290,7 +301,7 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       // resource/file url's do not have host names.
       // The remainder of the string is the file name
       PRInt32 flen = PL_strlen(cp);
-      mFile = (char*) malloc(flen + 1);
+      mFile = (char*) PR_Malloc(flen + 1);
       PL_strcpy(mFile, cp);
       
 #ifdef NS_WIN32
@@ -309,23 +320,23 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       if (nsnull == cp) {
         // There is no file name, only a host name
         PRInt32 hlen = PL_strlen(cp0);
-        mHost = (char*) malloc(hlen + 1);
+        mHost = (char*) PR_Malloc(hlen + 1);
         PL_strcpy(mHost, cp0);
 
         // Set filename to "/"
-        mFile = (char*) malloc(2);
+        mFile = (char*) PR_Malloc(2);
         mFile[0] = '/';
         mFile[1] = 0;
       }
       else {
         PRInt32 hlen = cp - cp0;
-        mHost = (char*) malloc(hlen + 1);
+        mHost = (char*) PR_Malloc(hlen + 1);
         PL_strncpy(mHost, cp0, hlen);
         mHost[hlen] = 0;
 
         // The rest is the file name
         PRInt32 flen = PL_strlen(cp);
-        mFile = (char*) malloc(flen + 1);
+        mFile = (char*) PR_Malloc(flen + 1);
         PL_strcpy(mFile, cp);
       }
     }
@@ -442,15 +453,15 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 
 #ifdef XP_PC
   // XXX For now, all resources are relative to the .exe file
-  resourceBase = (char *)PR_Malloc(2000);;
-  DWORD mfnLen = GetModuleFileName(NULL, resourceBase, 2000);
+  resourceBase = (char *)PR_Malloc(_MAX_PATH);;
+  DWORD mfnLen = GetModuleFileName(NULL, resourceBase, _MAX_PATH);
   // Truncate the executable name from the rest of the path...
   cp = strrchr(resourceBase, '\\');
   if (nsnull != cp) {
     *cp = '\0';
   }
   // Change the first ':' into a '|'
-  cp = strchr(resourceBase, ':');
+  cp = PL_strchr(resourceBase, ':');
   if (nsnull != cp) {
       *cp = '|';
   }
@@ -487,15 +498,15 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
   if (aResourceFileName[0] == '/') {
     aResourceFileName++;
   }
-  PRInt32 baseLen = strlen(resourceBase);
-  PRInt32 resLen = strlen(aResourceFileName);
+  PRInt32 baseLen = PL_strlen(resourceBase);
+  PRInt32 resLen = PL_strlen(aResourceFileName);
   PRInt32 totalLen = 8 + baseLen + 1 + resLen + 1;
   char* fileName = (char *)PR_Malloc(totalLen);
   PR_snprintf(fileName, totalLen, "file:///%s/%s", resourceBase, aResourceFileName);
 
 #ifdef XP_PC
   // Change any backslashes into foreward slashes...
-  while ((cp = strchr(fileName, '\\')) != 0) {
+  while ((cp = PL_strchr(fileName, '\\')) != 0) {
     *cp = '/';
     cp++;
   }
