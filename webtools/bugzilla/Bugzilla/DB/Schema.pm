@@ -1276,18 +1276,8 @@ sub get_table_ddl {
     while (@indexes) {
         my $index_name = shift(@indexes);
         my $index_info = shift(@indexes);
-        my($index_fields,$index_type);
-        if (ref($index_info) eq 'HASH') {
-            $index_fields = $index_info->{FIELDS};
-            $index_type = $index_info->{TYPE};
-        } else {
-            $index_fields = $index_info;
-            $index_type = '';
-        }
-        my $index_sql = $self->_get_create_index_ddl($table,
-                                                     $index_name,
-                                                     $index_fields,
-                                                     $index_type);
+        my $index_sql  = $self->get_add_index_ddl($table, $index_name, 
+                                                  $index_info);
         push(@ddl, $index_sql) if $index_sql;
     }
 
@@ -1376,6 +1366,40 @@ sub get_add_column_ddl {
         $self->get_type_ddl($definition);
 
     return ($statement);
+}
+
+sub get_add_index_ddl {
+
+=item C<get_add_index_ddl>
+
+ Description: Gets SQL for creating an index.
+              NOTE: Subclasses should not override this function. Instead,
+              if they need to specify a custom CREATE INDEX statement, 
+              they should override C<_get_create_index_ddl>
+ Params:      $table - The name of the table the index will be on.
+              $name  - The name of the new index.
+              $definition - An index definition. Either a hashref 
+                            with FIELDS and TYPE or an arrayref 
+                            containing a list of columns.
+ Returns:     An array of SQL statements that will create the 
+              requested index.
+
+=cut
+
+    my ($self, $table, $name, $definition) = @_;
+
+    my ($index_fields, $index_type);
+    # Index defs can be arrays or hashes
+    if (ref($definition) eq 'HASH') {
+        $index_fields = $definition->{FIELDS};
+        $index_type = $definition->{TYPE};
+    } else {
+        $index_fields = $definition;
+        $index_type = '';
+    }
+    
+    return $self->_get_create_index_ddl($table, $name, $index_fields, 
+                                        $index_type);
 }
 
 sub get_alter_column_ddl {
@@ -1468,6 +1492,23 @@ sub get_alter_column_ddl {
     return @statements;
 }
 
+sub get_drop_index_ddl {
+
+=item C<get_drop_index_ddl($table, $name)>
+
+ Description: Generates SQL statements to drop an index.
+ Params:      $table - The table the index is on.
+              $name  - The name of the index being dropped.
+ Returns:     An array of SQL statements.
+
+=cut
+    my ($self, $table, $name) = @_;
+
+    # Although ANSI SQL-92 doesn't specify a method of dropping an index,
+    # many DBs support this syntax.
+    return ("DROP INDEX $name");
+}
+
 sub get_column_abstract {
 
 =item C<get_column_abstract($table, $column)>
@@ -1513,7 +1554,7 @@ sub get_index_abstract {
     # table doesn't exist.
     if (exists $self->{abstract_schema}->{$table}) {
         my %indexes = (@{ $self->{abstract_schema}{$table}{INDEXES} });
-        return dclone($indexes{$index});
+        return $indexes{$index};
     }
     return undef;
 }
@@ -1538,19 +1579,77 @@ sub set_column {
 
     my ($self, $table, $column, $new_def) = @_;
 
-    my $abstract_fields = \@{ $self->{abstract_schema}{$table}{FIELDS} };
+    my $fields = \@{ $self->{abstract_schema}{$table}{FIELDS} };
+    $self->_set_object($table, $column, $new_def, $fields);
+}
 
-    my $field_position = lsearch($abstract_fields, $column) + 1;
-    # If the column doesn't exist, then add it.
-    if (!$field_position) {
-        push(@$abstract_fields, $column);
-        push(@$abstract_fields, $new_def);
+sub set_index {
+
+=item C<set_index($table, $name, $definition)>
+
+ Description: Changes the definition of an index in this Schema object.
+              If the index doesn't exist, it will be added.
+              The table that you specify must already exist in the Schema.
+              NOTE: This does not affect the database on the disk.
+              Use the C<Bugzilla::DB> "Schema Modification Methods"
+              if you want to do that.
+ Params:      $table      - The table the index is on.
+              $name       - The name of the index.
+              $definition - A hashref or an arrayref. An index 
+                            definition in C<ABSTRACT_SCHEMA> format.
+ Returns:     nothing
+
+=cut
+
+    my ($self, $table, $name, $definition) = @_;
+
+    my $indexes = \@{ $self->{abstract_schema}{$table}{INDEXES} };
+    $self->_set_object($table, $name, $definition, $indexes);
+}
+
+# A private helper for set_index and set_column.
+# This does the actual "work" of those two functions.
+# $array_to_change is an arrayref.
+sub _set_object {
+    my ($self, $table, $name, $definition, $array_to_change) = @_;
+
+    my $obj_position = lsearch($array_to_change, $name) + 1;
+    # If the object doesn't exist, then add it.
+    if (!$obj_position) {
+        push(@$array_to_change, $name);
+        push(@$array_to_change, $definition);
     }
-    # We're modifying an existing column.
+    # We're modifying an existing object in the Schema.
     else {
-        splice(@$abstract_fields, $field_position, 1, $new_def);
+        splice(@$array_to_change, $obj_position, 1, $definition);
     }
 
+    $self->{schema} = dclone($self->{abstract_schema});
+    $self->_adjust_schema();
+}
+
+=item C<delete_index($table, $name)>
+
+ Description: Removes an index definition from this Schema object.
+              If the index doesn't exist, we will fail.
+              The table that you specify must exist in the Schema.
+              NOTE: This does not affect the database on the disk.
+              Use the C<Bugzilla::DB> "Schema Modification Methods"
+              if you want to do that.
+ Params:      $table - The table the index is on.
+              $name  - The name of the index that we're removing.
+ Returns:     nothing
+
+=cut
+sub delete_index {
+    my ($self, $table, $name) = @_;
+
+    my $indexes = $self->{abstract_schema}{$table}{INDEXES};
+    my $name_position = lsearch($indexes, $name);
+    die "Attempted to delete nonexistent index $name on the $table table" 
+        if $name_position == -1;
+    # Delete the key/value pair from the array.
+    splice(@$indexes, $name_position, 2);
     $self->{schema} = dclone($self->{abstract_schema});
     $self->_adjust_schema();
 }

@@ -108,4 +108,9 @@ sub get_alter_column_ddl {
     return (("ALTER TABLE $table CHANGE COLUMN $column $column $new_ddl"));
 }
 
+sub get_drop_index_ddl {
+    my ($self, $table, $name) = @_;
+    return ("DROP INDEX $name ON $table");
+}
+
 1;

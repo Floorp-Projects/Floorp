@@ -392,6 +392,23 @@ sub bz_add_field ($$$) {
               ADD COLUMN $field $definition");
 }
 
+sub bz_add_index {
+    my ($self, $table, $name, $definition) = @_;
+
+    my $index_exists = $self->bz_index_info($table, $name);
+
+    if (!$index_exists) {
+        my @statements = $self->_bz_real_schema->get_add_index_ddl(
+            $table, $name, $definition);
+        print "Adding new index '$name' to the $table table ...\n";
+        foreach my $sql (@statements) {
+            $self->do($sql);
+        }
+        $self->_bz_real_schema->set_index($table, $name, $definition);
+        $self->_bz_store_real_schema;
+    }
+}
+
 # XXX - Need to make this cross-db compatible
 # XXX - This shouldn't print stuff to stdout
 sub bz_change_field_type ($$$) {
@@ -428,6 +445,23 @@ sub bz_drop_field ($$) {
     print "Deleting unused field $field from table $table ...\n";
     $self->do("ALTER TABLE $table
               DROP COLUMN $field");
+}
+
+sub bz_drop_index {
+    my ($self, $table, $name) = @_;
+
+    my $index_exists = $self->bz_index_info($table, $name);
+
+    if ($index_exists) {
+        my @statements = $self->_bz_real_schema->get_drop_index_ddl(
+            $table, $name);
+        print "Removing index '$name' from the $table table...\n";
+        foreach my $sql (@statements) {
+            $self->do($sql);
+        }
+        $self->_bz_real_schema->delete_index($table, $name);
+        $self->_bz_store_real_schema;        
+    }
 }
 
 # XXX - Needs to be made cross-db compatible
@@ -778,6 +812,8 @@ Bugzilla::DB - Database access routines, using L<DBI>
 
   # Schema Modification
   $dbh->bz_add_column($table, $name, \%definition);
+  $dbh->bz_add_index($table, $name, $definition);
+  $dbh->bz_drop_index($table, $name);
 
   # Schema Modification (DEPRECATED)
   $dbh->bz_add_field($table, $column, $definition);
@@ -1095,6 +1131,26 @@ C<Bugzilla::DB::Schema::ABSTRACT_SCHEMA>.
  Params:      $table = the table where the column is being added
               $name  = the name of the new column
               \%definition = Abstract column definition for the new column
+ Returns:     nothing
+
+=item C<bz_add_index($table, $name, $definition)>
+
+ Description: Adds a new index to a table in the database. Prints
+              out a brief statement that it did so, to stdout.
+              If the index already exists, we will do nothing.
+ Params:      $table - The table the new index is on.
+              $name  - A name for the new index.
+              $definition - An abstract index definition. 
+                            Either a hashref or an arrayref.
+ Returns:     nothing
+
+=item C<bz_drop_index($table, $name)>
+
+ Description: Removes an index from the database. Prints out a brief
+              statement that it did so, to stdout. If the index
+              doesn't exist, we do nothing.
+ Params:      $table - The table that the index is on.
+              $name  - The name of the index that you want to drop.
  Returns:     nothing
 
 =back
