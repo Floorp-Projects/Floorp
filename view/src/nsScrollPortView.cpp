@@ -82,6 +82,7 @@ nsScrollPortView::nsScrollPortView()
 {
   mOffsetX = mOffsetY = 0;
   mOffsetXpx = mOffsetYpx = 0;
+  mLineHeight = NSIntPointsToTwips(12);
 
   mListeners = nsnull;
   mSmoothScroll = nsnull;
