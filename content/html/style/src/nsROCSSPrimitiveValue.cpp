@@ -121,6 +121,13 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
         tmpStr.Append(mValue.mString);
         break;
       }
+    case CSS_URI :
+      {
+        tmpStr.Assign(NS_LITERAL_STRING("url(") +
+                      nsDependentString(mValue.mString) +
+                      NS_LITERAL_STRING(")"));
+        break;
+      }
     case CSS_PERCENTAGE :
       {
         tmpStr.AppendFloat(mValue.mFloat * 100);
@@ -185,7 +192,6 @@ nsROCSSPrimitiveValue::GetCssText(nsAWritableString& aCssText)
     case CSS_HZ :
     case CSS_KHZ :
     case CSS_DIMENSION :
-    case CSS_URI :
     case CSS_IDENT :
     case CSS_ATTR :
     case CSS_COUNTER :
@@ -316,11 +322,22 @@ nsROCSSPrimitiveValue::SetStringValue(PRUint16 aStringType,
 NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetStringValue(nsAWritableString& aReturn)
 {
-  if (mType != CSS_STRING) {
-    aReturn.Truncate();
-    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  switch (mType) {
+    case CSS_STRING:
+      aReturn.Assign(mValue.mString);
+      break;
+    case CSS_URI:
+      aReturn.Assign(NS_LITERAL_STRING("url(") +
+                     nsDependentString(mValue.mString) +
+                     NS_LITERAL_STRING(")"));
+      break;
+    case CSS_IDENT:
+    case CSS_ATTR:
+    default:
+      aReturn.Truncate();
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+      break;
   }
-  aReturn.Assign(mValue.mString);
   return NS_OK;
 }
 
