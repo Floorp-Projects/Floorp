@@ -29,6 +29,7 @@ Contributor(s):
 <!ENTITY ListName.label "List Name: ">
 <!ENTITY ListNickName.label "List Nickname: ">
 <!ENTITY ListDescription.label "Description: ">
+<!-- See bug 58485, when we implement drag and drop, add 'or drag addresses' back in -->
 <!ENTITY AddressTitle.label "Type email addresses to add them to the mailing list:">
 <!ENTITY RemoveButton.label "Remove">
 <!ENTITY UpButton.label	"Move Up">
