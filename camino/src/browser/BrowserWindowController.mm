@@ -290,14 +290,20 @@ static NSArray* sToolbarDefaults = nil;
     NS_IF_RELEASE(mURIFixer);
   } // matters
   
-// Loop over all tabs, and tell them that the window is closed. This
-// stops gecko from going any further on any of its open connections
-// and breaks all the necessary cycles between Gecko and the BrowserWrapper.
+  // Loop over all tabs, and tell them that the window is closed. This
+  // stops gecko from going any further on any of its open connections
+  // and breaks all the necessary cycles between Gecko and the BrowserWrapper.
   int numTabs = [mTabBrowser numberOfTabViewItems];
   for (int i = 0; i < numTabs; i++) {
     NSTabViewItem* item = [mTabBrowser tabViewItemAtIndex: i];
     [[item view] windowClosed];
   }
+  
+  // if the bookmark manager is visible when we close the window, all hell
+  // breaks loose in the autorelease pool and when we try to show another
+  // window. Honestly, I don't know why, but the easy fix is to simply
+  // ensure that the browser is visible when we close.
+  [self ensureBrowserVisible:self];
   
   // autorelease just in case we're here because of a window closing
   // initiated from gecko, in which case this BWC would still be on the 
@@ -421,9 +427,10 @@ static NSArray* sToolbarDefaults = nil;
       mPendingURL = mPendingReferrer = nil;
     }
     
+#if USE_DRAWER_FOR_BOOKMARKS
     [mSidebarDrawer setDelegate: self];
-
     [self setupSidebarTabs];
+#endif
 
     if ( mChromeMask && !(mChromeMask & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR) ) {
       // remove the personal toolbar and adjust the content area upwards. Removing it
@@ -479,6 +486,7 @@ static NSArray* sToolbarDefaults = nil;
 }
 
 
+#if 0
 - (void)drawerWillOpen: (NSNotification*)aNotification
 {
   [mSidebarBookmarksDataSource ensureBookmarks];
@@ -522,6 +530,7 @@ static NSArray* sToolbarDefaults = nil;
     }
   }
 }
+#endif
 
 - (void)setupToolbar
 {
@@ -1707,6 +1716,8 @@ static NSArray* sToolbarDefaults = nil;
   return newTab;
 }
 
+#if USE_DRAWER_FOR_BOOKMARKS
+
 -(void)setupSidebarTabs
 {
     IconTabViewItem   *bookItem = [[[IconTabViewItem alloc] initWithIdentifier:@"bookmarkSidebarCHIconTabViewItem"
@@ -1759,6 +1770,8 @@ static NSArray* sToolbarDefaults = nil;
     [mSidebarTabView setDelegate:self];
     [mSidebarTabView selectFirstTabViewItem:self];
 }
+
+#endif
 
 -(void)setChromeMask:(unsigned int)aMask
 {
@@ -2154,21 +2167,15 @@ static NSArray* sToolbarDefaults = nil;
   
   // swap out between content and bookmarks.
 	[mContentView toggleBookmarkManager:sender];
-  
-#if !USE_DRAWER_FOR_BOOKMARKS
-//XXXXXX needed until we can turn this on full time, since it's a nib change. 
-mSidebarBookmarksDataSource->mOutlineView = mBookmarksController->mItemPane; 
-mHistoryDataSource->mOutlineView = mBookmarksController->mItemPane;
-#endif
-
-  [mBookmarksController selectLastContainer];
-  
+    
   // if we're now showing the bm manager, force it to have focus,
   // otherwise give focus back to gecko.
   if ( [mContentView isBookmarkManagerVisible] ) {
     // cancel all pending loads. safari does this, i think we should too
     [self stopAllPendingLoads];
     
+    [mBookmarksController selectLastContainer];
+
     // set focus to appropriate area of bm manager
     [mBookmarksController focus];
   }

@@ -48,17 +48,6 @@
 
 @implementation BookmarksController
 
-#if 0
-- (id) init
-{
-  if ( self = [super init] )
-  {
-    mAddItemButton = nil;
-  }
-  return self;
-}
-#endif
-
 //
 // - windowDidLoad
 //
