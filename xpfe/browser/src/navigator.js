@@ -79,6 +79,7 @@
               // 1 = home (browser.startup.homepage)
               // 2 = last 
               choice = pref.GetIntPref("browser.startup.page");
+		dump("browser.startup.page = " + choice + "\n");
     	  switch (choice) {
     		case 0:
                 		startpage = "about:blank";
