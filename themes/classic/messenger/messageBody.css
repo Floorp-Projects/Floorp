@@ -144,41 +144,53 @@ span.moz-txt-underscore {
 
 /* ::::: smilies ::::: */
 
-span[-moz-smiley] {
+span.moz-smiley-s1,
+span.moz-smiley-s2,
+span.moz-smiley-s3,
+span.moz-smiley-s4,
+span.moz-smiley-s5,
+span.moz-smiley-s6,
+span.moz-smiley-s7 {
   min-height: 17px; margin-left: 2px; margin-top: 2px;
   padding-left: 20px; 
   background-repeat: no-repeat; 
   background-position: center center;
 }
 
-span[-moz-smiley] > span {
+span.moz-smiley-s1 > span,
+span.moz-smiley-s2 > span,
+span.moz-smiley-s3 > span,
+span.moz-smiley-s4 > span,
+span.moz-smiley-s5 > span,
+span.moz-smiley-s6 > span,
+span.moz-smiley-s7 > span {
     display: none;
 }
 
-span[-moz-smiley="s1"] {
+span.moz-smiley-s1 {
   background-image: url("chrome://editor/content/images/smile_n.gif");
 }
 
-span[-moz-smiley="s2"] {
+span.moz-smiley-s2 {
   background-image: url("chrome://editor/content/images/frown_n.gif");
 }
 
-span[-moz-smiley="s3"] {
+span.moz-smiley-s3 {
   background-image: url("chrome://editor/content/images/wink_n.gif");
 }
 
-span[-moz-smiley="s4"] { 
+span.moz-smiley-s4 { 
   background-image: url("chrome://editor/content/images/tongue_n.gif");
 }
 
-span[-moz-smiley="s5"] {
+span.moz-smiley-s5 {
   background-image: url("chrome://editor/content/images/laughing_n.gif");
 }
 
-span[-moz-smiley="s6"] {
+span.moz-smiley-s6 {
   background-image: url("chrome://editor/content/images/embarrassed_n.gif");
 }
 
-span[-moz-smiley="s7"] {
+span.moz-smiley-s7 {
   background-image: url("chrome://editor/content/images/undecided_n.gif");
 }
