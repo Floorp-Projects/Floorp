@@ -456,6 +456,23 @@
   (depict markup-stream ':bottom-10))
 
 
+; (^ <base> <exponent>)
+(defun depict-^ (markup-stream world level base exponent)
+  (declare (ignore world level))
+  (depict-integer markup-stream base)
+  (depict-char-style (markup-stream ':superscript)
+    (depict-integer markup-stream exponent)))
+
+
+; (hex <integer> [<length>])
+(defun depict-hex (markup-stream world level n length)
+  (if (minusp n)
+    (progn
+      (depict markup-stream "-")
+      (depict-hex markup-stream world level (- n) length))
+    (depict markup-stream (format nil "0x~V,'0X" length n))))
+
+
 (defun depict-function-bindings (markup-stream world arg-binding-exprs)
   (depict-list markup-stream
                #'(lambda (markup-stream arg-binding)

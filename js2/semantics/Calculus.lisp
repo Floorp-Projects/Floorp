@@ -1935,7 +1935,7 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; SPECIAL FORMS
 
-;;; Control structures
+;;; Constants
 
 (defun eval-bottom ()
   (error "Reached a BOTTOM statement"))
@@ -1949,6 +1949,34 @@
    (world-bottom-type world)
    (list 'expr-annotation:special-form special-form)))
 
+
+; (^ <base> <exponent>)
+; Alternative way of writing the integer or rational constant <base>^<exponent>.
+(defun scan-^ (world type-env special-form base exponent)
+  (declare (ignore type-env))
+  (unless (and (integerp base) (integerp exponent) (plusp base))
+    (error "Bad constant ~S^~S" base exponent))
+  (values
+   (expt base exponent)
+   (if (minusp exponent)
+     (world-rational-type world)
+     (world-integer-type world))
+   (list 'expr-annotation:special-form special-form base exponent)))
+
+
+; (hex <integer> [<length>])
+; Alternative way of writing the integer in hexadecimal.  length is the minimum number of digits to write.
+(defun scan-hex (world type-env special-form n &optional (length 1))
+  (declare (ignore type-env))
+  (unless (and (integerp n) (integerp length) (>= length 0))
+    (error "Bad hex constant ~S [~S]" n length))
+  (values
+   n
+   (world-integer-type world)
+   (list 'expr-annotation:special-form special-form n length)))
+
+
+;;; Control structures
 
 ; (function ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>)
 (defun scan-function (world type-env special-form arg-binding-exprs body-expr)
@@ -2673,9 +2701,13 @@
      (terminal-action scan-terminal-action depict-terminal-action))
     
     (:special-form
-     ;;Control structures
+     ;;Constants
      (bottom scan-bottom depict-bottom)
      (todo scan-bottom depict-bottom)
+     (^ scan-^ depict-^)
+     (hex scan-hex depict-hex)
+     
+     ;;Control structures
      (function scan-function depict-function)
      (if scan-if depict-if)
      (progn scan-progn depict-progn)
@@ -2743,7 +2775,7 @@
     
     (neg (-> (integer) integer) #'- :unary :minus nil %suffix% %suffix%)
     (* (-> (integer integer) integer) #'* :infix "*" nil %factor% %factor% %factor%)
-    (mod (-> (integer integer) integer) #'mod :infix ((:semantic-keyword "mod")) nil %factor% %factor% %unary%)
+    (mod (-> (integer integer) integer) #'mod :infix ((:semantic-keyword "mod")) t %factor% %factor% %unary%)
     (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
     (- (-> (integer integer) integer) #'- :infix :minus t %term% %term% %factor%)
     (= (-> (integer integer) boolean) #'= :infix "=" t %relational% %term% %term%)
@@ -2799,7 +2831,12 @@
     (char<= (-> (character character) boolean) #'char<= :infix :less-or-equal t %relational% %term% %term%)
     (char>= (-> (character character) boolean) #'char>= :infix :greater-or-equal t %relational% %term% %term%)
     
-    (string-equal (-> (string string) boolean) #'string= :infix "=" t %relational% %term% %term%)
+    (string= (-> (string string) boolean) #'string= :infix "=" t %relational% %term% %term%)
+    (string/= (-> (string string) boolean) #'string/= :infix :not-equal t %relational% %term% %term%)
+    (string< (-> (string string) boolean) #'string< :infix "<" t %relational% %term% %term%)
+    (string> (-> (string string) boolean) #'string> :infix ">" t %relational% %term% %term%)
+    (string<= (-> (string string) boolean) #'string<= :infix :less-or-equal t %relational% %term% %term%)
+    (string>= (-> (string string) boolean) #'string>= :infix :greater-or-equal t %relational% %term% %term%)
     
     (integer-set-length (-> (integer-set) integer) #'intset-length :unary "|" "|" %primary% %expr%)
     (integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
