@@ -56,6 +56,7 @@ if ($os_type eq "MAC") {
 
 my $opt_trace = 0;
 my $opt_classpath = "";
+my $opt_rhino_interp = 0;
 my $opt_engine_type = "";
 my $opt_output_file = "";
 my @opt_test_list_files;
@@ -440,7 +441,7 @@ sub usage {
        "(-e|--engine) <type>      Specify the type of engine to test. <type> " .
        "is one of \n" .
        "                          (smopt|smdebug|lcopt|lcdebug|xpcshell|" .
-       "rhino).\n" .
+       "rhino|rhinoi).\n" .
        "(-f|--file) <file>        Redirect output to file named <file>.\n" .
        "                          (default is " .
        "results-<engine-type>-<date-stamp>.html)\n" .
@@ -470,6 +471,11 @@ sub get_engine_command {
     
     if ($opt_engine_type eq "rhino") {
         &dd ("getting rhino engine command.");
+        $opt_rhino_interp = 0;
+        $retval = &get_rhino_engine_command;
+    } elsif ($opt_engine_type eq "rhinoi") {
+        &dd ("getting rhinoi engine command.");
+        $opt_rhino_interp = 1;
         $retval = &get_rhino_engine_command;
     } elsif ($opt_engine_type eq "xpcshell") {
         &dd ("getting xpcshell engine command.");
@@ -507,6 +513,10 @@ sub get_rhino_engine_command {
     }
     
     $retval .= "org.mozilla.javascript.tools.shell.Main";
+
+    if ($opt_rhino_interp) {
+        $retval .= " -opt -1";
+    }
     
     return $retval;
     
