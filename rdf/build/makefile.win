@@ -47,6 +47,9 @@ LLIBS=\
  $(DIST)\lib\raptorhtml.lib      \
  $(DIST)\lib\jsdom.lib           \
  $(DIST)\lib\js3250.lib          \
+ $(DIST)\lib\mailnews.lib        \
+ $(DIST)\lib\msglocal.lib        \
+ $(DIST)\lib\msgcore.lib         \
  $(LIBNSPR)  
 
 MISCDEP=$(LLIBS)
