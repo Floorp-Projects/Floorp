@@ -420,9 +420,9 @@ real_checkout:
         cvs_co $(CVSCO_ACCESSIBLE) && \
         cvs_co $(CVSCO_GFX2) && \
         cvs_co $(CVSCO_IMGLIB2) && \
-	cvs_co $(CVSCO_SEAMONKEY) && \
 	$(CHECKOUT_CALENDAR) && \
 	$(CHECKOUT_LIBART) && \
+	cvs_co $(CVSCO_SEAMONKEY) && \
 	cvs_co $(CVSCO_NOSUBDIRS)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 #	@: Check the log for conflicts. ;
@@ -478,9 +478,9 @@ real_fast-update:
 	fast_update $(CVSCO_ACCESSIBLE) && \
 	fast_update $(CVSCO_GFX2) && \
 	fast_update $(CVSCO_IMGLIB2) && \
-	fast_update $(CVSCO_SEAMONKEY) && \
 	$(FASTUPDATE_CALENDAR) && \
 	$(FASTUPDATE_LIBART) && \
+	fast_update $(CVSCO_SEAMONKEY) && \
 	fast_update $(CVSCO_NOSUBDIRS)
 	@echo "fast_update finish: "`date` | tee -a $(CVSCO_LOGFILE)
 #	@: Check the log for conflicts. ;
