@@ -168,7 +168,11 @@ nsHttpChannel::Init(nsIURI *uri,
     rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
     if (NS_FAILED(rv)) return rv;
 
-    rv = nsHttpHandler::get()->AddStandardRequestHeaders(&mRequestHead.Headers(), caps);
+    PRBool useProxy = (proxyHost && !PL_strcmp(proxyType, "http"));
+
+    rv = nsHttpHandler::get()->AddStandardRequestHeaders(&mRequestHead.Headers(),
+                                                         caps,
+                                                         useProxy);
     if (NS_FAILED(rv)) return rv;
 
     // check to see if authorization headers should be included

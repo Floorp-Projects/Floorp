@@ -81,7 +81,8 @@ public:
 
     nsresult Init();
     nsresult AddStandardRequestHeaders(nsHttpHeaderArray *,
-                                       PRUint32 capabilities);
+                                       PRUint32 capabilities,
+                                       PRBool useProxy);
     PRBool   IsAcceptableEncoding(const char *encoding);
 
     const char   *UserAgent();

@@ -24,6 +24,7 @@
  *   Christopher Blizzard <blizzard@mozilla.org>
  *   Adrian Havill <havill@redhat.com>
  *   Gervase Markham <gerv@gerv.net>
+ *   Bradley Baetz <bbaetz@netscape.com>
  */
 
 #include "nsHttp.h"
@@ -242,46 +243,56 @@ nsHttpHandler::Init()
 
 nsresult
 nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
-                                         PRUint32 caps)
+                                         PRUint32 caps,
+                                         PRBool useProxy)
 {
     nsresult rv;
 
     LOG(("nsHttpHandler::AddStandardRequestHeaders\n"));
 
-    // Add the User-Agent header:
+    // Add the "User-Agent" header
     rv = request->SetHeader(nsHttp::User_Agent, UserAgent());
     if (NS_FAILED(rv)) return rv;
 
     // MIME based content negotiation lives!
-    // Add the Accept header:
+    // Add the "Accept" header
     rv = request->SetHeader(nsHttp::Accept, mAccept.get());
     if (NS_FAILED(rv)) return rv;
 
-    // Add the Accept-Language header:
+    // Add the "Accept-Language" header
     rv = request->SetHeader(nsHttp::Accept_Language, mAcceptLanguages.get());
     if (NS_FAILED(rv)) return rv;
 
-    // Add the Accept-Encoding header:
+    // Add the "Accept-Encoding" header
     rv = request->SetHeader(nsHttp::Accept_Encoding, mAcceptEncodings.get());
     if (NS_FAILED(rv)) return rv;
 
-    // Add the Accept-Charset header:
+    // Add the "Accept-Charset" header
     rv = request->SetHeader(nsHttp::Accept_Charset, mAcceptCharsets.get());
     if (NS_FAILED(rv)) return rv;
 
-    // Add the Connection header:
-    const char *connectionType = "close";
-    if (caps && ALLOW_KEEPALIVE) {
+    // RFC2616 section 19.6.2 states that the "Connection: keep-alive"
+    // and "Keep-alive" request headers should not be sent by HTTP/1.1
+    // user-agents.  Otherwise, problems with proxy servers (especially
+    // transparent proxies) can result.
+    // However, we need to send something so that we can use keepalive
+    // with HTTP/1.0 servers/proxies. We use Proxy-Connection: when we're
+    // talking to an http proxy, and Connection: otherwise
+    
+    const char* connectionType = "close";
+    if (caps & ALLOW_KEEPALIVE) {
         char buf[32];
-
+        
         PR_snprintf(buf, sizeof(buf), "%d", mIdleTimeout);
-
+        
         rv = request->SetHeader(nsHttp::Keep_Alive, buf);
         if (NS_FAILED(rv)) return rv;
         
         connectionType = "keep-alive";
     }
-    return request->SetHeader(nsHttp::Connection, connectionType);
+
+    const nsHttpAtom& connAtom = useProxy ? nsHttp::Proxy_Connection : nsHttp::Connection;
+    return request->SetHeader(connAtom, connectionType);
 }
 
 PRBool
