@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -140,16 +140,15 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
             goto done;
     }
 
-#ifdef OJI
-    if (JSJ_callbacks->get_java_wrapper != NULL)
-    {
-      java_wrapper_obj = JSJ_callbacks->get_java_wrapper(jEnv, (jint)js_obj);
-    }
-#else
     /* No existing reflection found, so create a new Java object that wraps
        the JavaScript object by storing its address in a private integer field. */
+#if 0
     java_wrapper_obj =
         (*jEnv)->NewObject(jEnv, njJSObject, njJSObject_JSObject, (jint)js_obj);
+#else
+    if (JSJ_callbacks->get_java_wrapper != NULL) {
+        java_wrapper_obj = JSJ_callbacks->get_java_wrapper(jEnv, (jint)js_obj);
+    }
 #endif /*! OJI */
     if (!java_wrapper_obj) {
         jsj_UnexpectedJavaError(cx, jEnv, "Couldn't create new instance of "
@@ -248,16 +247,15 @@ jsj_WrapJSObject(JSContext *cx, JNIEnv *jEnv, JSObject *js_obj)
     handle->js_obj = js_obj;
     handle->cx = cx;
 
-#ifdef OJI
-    if (JSJ_callbacks->get_java_wrapper != NULL)
-    {
-      java_wrapper_obj = JSJ_callbacks->get_java_wrapper(jEnv, (jint)js_obj);
-    }
-#else
     /* No existing reflection found, so create a new Java object that wraps
        the JavaScript object by storing its address in a private integer field. */
+#if 0
     java_wrapper_obj =
         (*jEnv)->NewObject(jEnv, njJSObject, njJSObject_JSObject, (jint)handle);
+#else
+    if (JSJ_callbacks->get_java_wrapper != NULL) {
+        java_wrapper_obj = JSJ_callbacks->get_java_wrapper(jEnv, (jint)js_obj);
+    }
 #endif /*! OJI */
     if (!java_wrapper_obj) {
         jsj_UnexpectedJavaError(cx, jEnv, "Couldn't create new instance of "

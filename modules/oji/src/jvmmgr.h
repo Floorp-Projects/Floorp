@@ -211,9 +211,6 @@ JVM_PrintToConsole(const char* msg);
 PR_EXTERN(void)
 JVM_StartDebugger(void);
 
-PR_EXTERN(JavaVM*)
-JVM_GetJavaVM(void);
-
 PR_EXTERN(JNIEnv*)
 JVM_GetJNIEnv(void);
 

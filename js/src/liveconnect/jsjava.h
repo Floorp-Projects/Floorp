@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -44,6 +44,14 @@ typedef struct JSJavaVM JSJavaVM;
 
 /* LiveConnect and Java state, one per thread */
 typedef struct JSJavaThreadState JSJavaThreadState;
+
+/*
+ * An opaque type that represents the connection to the Java VM. In stand-alone
+ * Java environments, this may be a JNI JavaVM object; in the browser environment
+ * it is a reference to a JVM plugin. A set of callbacks in the JSJCallbacks
+ * struct allow it to be manipulated.
+ */
+typedef struct SystemJavaVM SystemJavaVM;
 
 /*
  * This callback table provides hooks to external functions that implement
@@ -104,13 +112,18 @@ typedef struct JSJCallbacks {
        NULL, error messages are sent to stderr. */
     void                (*error_print)(const char *error_msg);
 
-    JavaVM *            (*get_java_vm)(char **errp);
-#ifdef OJI
     /* This enables liveconnect to ask the VM for a java wrapper so that VM gets a chance to
        store a mapping between a jsobject and java wrapper. So the unwrapping can be done on the
        VM side before calling nsILiveconnect apis. This saves on a round trip request. */
-    jobject      (*get_java_wrapper)(JNIEnv *jEnv, jint jsobject);
-#endif
+    jobject             (*get_java_wrapper)(JNIEnv *jEnv, jint jsobject);
+
+    /* The following set of methods abstract over the JavaVM object. */
+    PRBool              (*create_java_vm)(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs);
+    PRBool              (*destroy_java_vm)(SystemJavaVM* jvm, JNIEnv* initialEnv);
+    JNIEnv*             (*attach_current_thread)(SystemJavaVM* jvm);
+    PRBool              (*detach_current_thread)(SystemJavaVM* jvm, JNIEnv* env);
+    SystemJavaVM*       (*get_java_vm)(JNIEnv* env);
+
     /* Reserved for future use */
     void *              reserved[10];
 } JSJCallbacks;
@@ -155,7 +168,7 @@ typedef struct JavaPackageDef {
    The classpath argument is ignored, however, if java_vm is non-NULL. */
 PR_IMPLEMENT(JSBool)
 JSJ_SimpleInit(JSContext *cx, JSObject *global_obj,
-               JavaVM *java_vm, const char *classpath);
+               SystemJavaVM *java_vm, const char *classpath);
 
 /* Free up all resources.  Destroy the Java VM if it was created by LiveConnect */
 PR_IMPLEMENT(void)
@@ -185,10 +198,11 @@ JSJ_Init(JSJCallbacks *callbacks);
 
 /* Called once per Java VM, this function initializes the classes, fields, and
    methods required for Java reflection.  If java_vm is NULL, a new Java VM is
-   created, using the provided classpath in addition to any default classpath.
-   The classpath argument is ignored, however, if java_vm is non-NULL. */
+   created according to the create_java_vm callback in the JSJCallbacks,
+   using the provided classpath in addition to any default initargs.
+   The initargs argument is ignored, however, if java_vm is non-NULL. */
 PR_IMPLEMENT(JSJavaVM *)
-JSJ_ConnectToJavaVM(JavaVM *java_vm, const char *classpath);
+JSJ_ConnectToJavaVM(SystemJavaVM *java_vm, void* initargs);
 
 /* Initialize the provided JSContext by setting up the JS classes necessary for
    reflection and by defining JavaPackage objects for the default Java packages

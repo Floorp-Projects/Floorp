@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -344,11 +344,16 @@ JSJavaVM *jsjava_vm_list = NULL;
  * The classpath argument is ignored, however, if java_vm_arg is non-NULL.
  */
 JSJavaVM *
-JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
+JSJ_ConnectToJavaVM(SystemJavaVM *java_vm_arg, void* initargs)
 {
-    JavaVM *java_vm;
+    SystemJavaVM* java_vm;
     JSJavaVM *jsjava_vm;
     JNIEnv *jEnv;
+
+    PR_ASSERT(JSJ_callbacks);
+    PR_ASSERT(JSJ_callbacks->attach_current_thread);
+    PR_ASSERT(JSJ_callbacks->detach_current_thread);
+    PR_ASSERT(JSJ_callbacks->get_java_vm);
 
     jsjava_vm = (JSJavaVM*)malloc(sizeof(JSJavaVM));
     if (!jsjava_vm)
@@ -359,53 +364,20 @@ JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
 
     /* If a Java VM was passed in, try to attach to it on the current thread. */
     if (java_vm) {
-        if ((*java_vm)->AttachCurrentThread(java_vm, &jEnv, NULL) < 0) {
+        jEnv = JSJ_callbacks->attach_current_thread(java_vm);
+        if (jEnv == NULL) {
             jsj_LogError("Failed to attach to Java VM thread\n");
             free(jsjava_vm);
             return NULL;
         }
-    } else if ( JSJ_callbacks && JSJ_callbacks->get_java_vm != NULL ) {
-        char* err_msg = NULL;
-        java_vm = JSJ_callbacks->get_java_vm(&err_msg);
-        PR_ASSERT( java_vm );
-        if (!java_vm) {
-            free(jsjava_vm);
-            if (err_msg)
-                free(err_msg);
-            return NULL;
-        }
-
-        if ((*java_vm)->AttachCurrentThread(java_vm, &jEnv, NULL) < 0) {
-            jsj_LogError("Failed to attach to Java VM thread\n");
-            free(jsjava_vm);
-            return NULL;
-        }
-    } 
-#if !defined(OJI) && !defined(XP_MAC)
+    }
     else {
-        /* No Java VM supplied, so create our own */
-        JDK1_1InitArgs vm_args;
-        
-        /* Magic constant indicates JRE version 1.1 */
-        vm_args.version = 0x00010001;
-        JNI_GetDefaultJavaVMInitArgs(&vm_args);
-        
-        /* Prepend the classpath argument to the default JVM classpath */
-        if (user_classpath) {
-#ifdef XP_UNIX
-            const char *full_classpath = PR_smprintf("%s:%s", user_classpath, vm_args.classpath);
-#else
-            const char *full_classpath = PR_smprintf("%s;%s", user_classpath, vm_args.classpath);
-#endif
-            if (!full_classpath) {
-                free(jsjava_vm);
-                return NULL;
-            }
-            vm_args.classpath = (char*)full_classpath;
-        }
+        PRBool ok;
+        PR_ASSERT(JSJ_callbacks->create_java_vm);
+        PR_ASSERT(JSJ_callbacks->destroy_java_vm);
 
-        /* Attempt to create our own VM */
-        if (JNI_CreateJavaVM(&java_vm, &jEnv, &vm_args) < 0) {
+        ok = JSJ_callbacks->create_java_vm(&java_vm, &jEnv, initargs);
+        if (!ok || java_vm == NULL) {
             jsj_LogError("Failed to create Java VM\n");
             free(jsjava_vm);
             return NULL;
@@ -414,7 +386,7 @@ JSJ_ConnectToJavaVM(JavaVM *java_vm_arg, const char *user_classpath)
         /* Remember that we created the VM so that we know to destroy it later */
         jsjava_vm->jsj_created_java_vm = JS_TRUE;
     }
-#endif /* !OJI */
+
     jsjava_vm->java_vm = java_vm;
     jsjava_vm->main_thread_env = jEnv;
     
@@ -503,18 +475,18 @@ void
 JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
 {
     JNIEnv *jEnv;
-    JavaVM *java_vm;
+    SystemJavaVM *java_vm;
     JSJavaVM *j, **jp;
-    
+
     java_vm = jsjava_vm->java_vm;
-    (*java_vm)->AttachCurrentThread(java_vm, &jEnv, NULL);
+    jEnv = jsjava_vm->main_thread_env;
 
     /* Drop all references to Java objects and classes */
     jsj_DiscardJavaObjReflections(jEnv);
     jsj_DiscardJavaClassReflections(jEnv);
 
     if (jsjava_vm->jsj_created_java_vm) { 
-        (*java_vm)->DestroyJavaVM(java_vm);
+        (void)JSJ_callbacks->destroy_java_vm(java_vm, jEnv);
     } else {
         UNLOAD_CLASS(java/lang/Object,                jlObject);
         UNLOAD_CLASS(java/lang/Class,                 jlClass);
@@ -598,12 +570,13 @@ PR_IMPLEMENT(JSJavaThreadState *)
 JSJ_AttachCurrentThreadToJava(JSJavaVM *jsjava_vm, const char *name, JNIEnv **java_envp)
 {
     JNIEnv *jEnv;
-    JavaVM *java_vm;
+    SystemJavaVM *java_vm;
     JSJavaThreadState *jsj_env;
 
     /* Try to attach a Java thread to the current native thread */
     java_vm = jsjava_vm->java_vm;
-    if ((*java_vm)->AttachCurrentThread(java_vm, &jEnv, NULL) < 0)
+    jEnv = JSJ_callbacks->attach_current_thread(java_vm);
+    if (jEnv == NULL) 
         return NULL;
 
     /* If we found an existing thread state, just return it. */
@@ -620,7 +593,7 @@ JSJ_AttachCurrentThreadToJava(JSJavaVM *jsjava_vm, const char *name, JNIEnv **ja
 }
 
 static JSJavaVM *
-map_java_vm_to_jsjava_vm(JavaVM *java_vm)
+map_java_vm_to_jsjava_vm(SystemJavaVM *java_vm)
 {
     JSJavaVM *v;
     for (v = jsjava_vm_list; v; v = v->next) {
@@ -644,7 +617,7 @@ JSJavaThreadState *
 jsj_MapJavaThreadToJSJavaThreadState(JNIEnv *jEnv, char **errp)
 {
     JSJavaThreadState *jsj_env;
-    JavaVM *java_vm;
+    SystemJavaVM *java_vm;
     JSJavaVM *jsjava_vm;
 
     /* If we found an existing thread state, just return it. */
@@ -656,7 +629,8 @@ jsj_MapJavaThreadToJSJavaThreadState(JNIEnv *jEnv, char **errp)
        Invoke the callback to create one on-the-fly. */
 
     /* First, figure out which Java VM is calling us */
-    if ((*jEnv)->GetJavaVM(jEnv, &java_vm) < 0)
+    java_vm = JSJ_callbacks->get_java_vm(jEnv);
+    if (jsjava_vm == NULL)
         return NULL;
 
     /* Get our private JavaVM data */
@@ -695,12 +669,14 @@ JSJ_SetDefaultJSContextForJavaThread(JSContext *cx, JSJavaThreadState *jsj_env)
 PR_IMPLEMENT(JSBool)
 JSJ_DetachCurrentThreadFromJava(JSJavaThreadState *jsj_env)
 {
-    JavaVM *java_vm;
+    SystemJavaVM *java_vm;
+    JNIEnv* jEnv;
     JSJavaThreadState *e, **p;
 
     /* Disassociate the current native thread from its corresponding Java thread */
     java_vm = jsj_env->jsjava_vm->java_vm;
-    if ((*java_vm)->DetachCurrentThread(java_vm) < 0)
+    jEnv = jsj_env->jEnv;
+    if (!JSJ_callbacks->detach_current_thread(java_vm, jEnv))
         return JS_FALSE;
 
     /* Destroy the LiveConnect execution environment passed in */
@@ -767,11 +743,84 @@ default_map_java_object_to_js_object(JNIEnv *jEnv, jobject hint, char **errp)
     return the_global_js_obj;
 }
 
+static PRBool PR_CALLBACK
+default_create_java_vm(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
+{
+    jint err;
+    const char* user_classpath = (const char*)initargs;
+
+    /* No Java VM supplied, so create our own */
+    JDK1_1InitArgs vm_args;
+        
+    /* Magic constant indicates JRE version 1.1 */
+    vm_args.version = 0x00010001;
+    JNI_GetDefaultJavaVMInitArgs(&vm_args);
+        
+    /* Prepend the classpath argument to the default JVM classpath */
+    if (user_classpath) {
+#ifdef XP_UNIX
+        const char *full_classpath = PR_smprintf("%s:%s", user_classpath, vm_args.classpath);
+#else
+        const char *full_classpath = PR_smprintf("%s;%s", user_classpath, vm_args.classpath);
+#endif
+        if (!full_classpath) {
+            return PR_FALSE;
+        }
+        vm_args.classpath = (char*)full_classpath;
+    }
+
+    err = JNI_CreateJavaVM((JavaVM**)jvm, initialEnv, &vm_args);
+    return err == 0;
+}
+
+static PRBool PR_CALLBACK
+default_destroy_java_vm(SystemJavaVM* jvm, JNIEnv* initialEnv)
+{
+    JavaVM* java_vm = (JavaVM*)jvm;
+    jint err = (*java_vm)->DestroyJavaVM(java_vm);
+    return err == 0;
+}
+
+static JNIEnv* PR_CALLBACK
+default_attach_current_thread(SystemJavaVM* jvm)
+{
+    JavaVM* java_vm = (JavaVM*)jvm;
+    JNIEnv* env = NULL;
+    jint err = (*java_vm)->AttachCurrentThread(java_vm, &env, NULL);
+    return env;
+}
+
+static PRBool PR_CALLBACK
+default_detach_current_thread(SystemJavaVM* jvm, JNIEnv* env)
+{
+    JavaVM* java_vm = (JavaVM*)jvm;
+    /* assert that env is the JNIEnv of the current thread */
+    jint err = (*java_vm)->DetachCurrentThread(java_vm);
+    return err == 0;
+}
+
+static SystemJavaVM* PR_CALLBACK
+default_get_java_vm(JNIEnv* env)
+{
+    JavaVM* java_vm = NULL;
+    jint err = (*env)->GetJavaVM(env, &java_vm);
+    return (SystemJavaVM*)java_vm;
+}
+
 /* Trivial implementations of callback functions */
 JSJCallbacks jsj_default_callbacks = {
     default_map_jsj_thread_to_js_context,
     default_map_js_context_to_jsj_thread,
-    default_map_java_object_to_js_object
+    default_map_java_object_to_js_object,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    default_create_java_vm,
+    default_destroy_java_vm,
+    default_attach_current_thread,
+    default_detach_current_thread,
+    default_get_java_vm
 };
 
 /*
@@ -782,12 +831,12 @@ JSJCallbacks jsj_default_callbacks = {
  * The classpath argument is ignored, however, if java_vm is non-NULL.
  */
 JSBool
-JSJ_SimpleInit(JSContext *cx, JSObject *global_obj, JavaVM *java_vm, const char *classpath)
+JSJ_SimpleInit(JSContext *cx, JSObject *global_obj, SystemJavaVM *java_vm, const char *classpath)
 {
     JNIEnv *jEnv;
 
     PR_ASSERT(!the_jsj_vm);
-    the_jsj_vm = JSJ_ConnectToJavaVM(java_vm, classpath);
+    the_jsj_vm = JSJ_ConnectToJavaVM(java_vm, (void*)classpath);
     if (!the_jsj_vm)
         return JS_FALSE;
 
