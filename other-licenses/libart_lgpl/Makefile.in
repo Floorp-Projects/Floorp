@@ -106,9 +106,7 @@ ifdef ENABLE_TESTS
 SIMPLE_PROGRAMS	= testart$(BIN_SUFFIX) testuta$(BIN_SUFFIX)
 endif
 
-include $(topsrcdir)/config/config.mk
-
-FORCE_SHARED_LIB = 1
+FORCE_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk
 

@@ -28,6 +28,8 @@ LIBRARY_NAME	= mozctl
 RESFILE		= MozillaControl.res
 DEFFILE		= L_mozctl.def
 EXPORT_LIBRARY	= 1
+FORCE_SHARED_LIB= 1
+
 
 REQUIRES = \
 	xpcom \
@@ -75,6 +77,7 @@ CPPSRCS =                              \
     $(NULL)
 
 EXTRA_DSO_LDOPTS = \
+	$(DIST)/lib/$(LIB_PREFIX)gkgfx.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \

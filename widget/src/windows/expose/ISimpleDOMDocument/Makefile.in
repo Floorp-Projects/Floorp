@@ -56,6 +56,8 @@ MIDL_GENERATED_FILES = \
 
 GARBAGE += $(MIDL_GENERATED_FILES)
 
+FORCE_SHARED_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
 $(MIDL_GENERATED_FILES):

@@ -76,10 +76,15 @@ EXTRA_DSO_LIBS += mpfilelocprovider_s
 EXTRA_DSO_LDOPTS += libuls.lib libconv.lib unikbd.lib
 _COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
 else
+ifeq ($(OS_ARCH),WINNT)
+EXTRA_DSO_LDOPTS = $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS))))
+_COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
+else
 EXTRA_DSO_LDOPTS = -L$(DIST)/lib/components
 EXTRA_DSO_LIBS = $(shell cat $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS))
 _COMPONENT_LIST := $(shell cat $(FINAL_LINK_COMP_NAMES))
 endif
+endif # WINNT
 else
 EXTRA_DSO_LIBS = gkgfx mpfilelocprovider_s
 ifdef MOZ_OJI
@@ -132,7 +137,7 @@ endif
 
 ifdef MOZ_LDAP_XPCOM
 XP_LIBS		+= \
-		-lldap40 -llber40 \
+		$(LDAP_LIBS) \
 		$(NULL)
 endif
 
@@ -206,7 +211,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 RESFILE = splash.res
 DEFINES	+= -DWIN32_LEAN_AND_MEAN
 CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
-OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib
+OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
 endif
 
 XP_DIST_DEP_LIBS := $(filter-out -L$(DIST)/bin -L$(DIST)/lib, $(XP_DIST_LIBS))
@@ -217,11 +222,11 @@ EXE_DEF_FILE = mozilla.def
 endif
 else
 EXTRA_DEPS	= \
-		$(addprefix $(DIST)/,$(patsubst -l%,bin/lib%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/lib%_s.a))) \
+		$(addprefix $(DIST)/,$(patsubst -l%,bin/$(LIB_PREFIX)%$(DLL_SUFFIX),$(XP_DIST_DEP_LIBS:-l%_s=lib/$(LIB_PREFIX)%_s.a))) \
 		$(NULL)
 
 ifdef BUILD_STATIC_LIBS
-EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/lib,$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/lib,$(shell cat $(FINAL_LINK_LIBS))))
+EXTRA_DEPS	+= $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/components/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_COMPS)))) $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(shell cat $(FINAL_LINK_LIBS))))
 endif
 endif
 
