@@ -23,6 +23,7 @@
 
 #include "nsIGraphics.h"
 #include "nsCOMPtr.h"
+#include "nsIRenderingContext.h"
 
 class nsIRenderingContext;
 
