@@ -74,7 +74,10 @@ public:
 #endif
 
 public:
-    virtual AtkObject *GetAtkObject(void);
+    // return the atk object for this nsAccessibleWrap
+    NS_IMETHOD GetNativeInterface(void **aOutAccessible);
+
+    AtkObject * GetAtkObject(void);
     MaiInterface *GetMaiInterface(PRInt16 aIfaceType);
 
     static void TranslateStates(PRUint32 aAccState,

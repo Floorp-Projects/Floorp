@@ -88,7 +88,9 @@ public:
     NS_IMETHOD GetAccFirstChild(nsIAccessible * *aAccFirstChild);
     NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount);
 
-    virtual AtkObject *GetAtkObject(void);
+    // return the atk object for app root accessible
+    NS_IMETHOD GetNativeInterface(void **aOutAccessible);
+
     nsresult AddRootAccessible(nsRootAccessibleWrap *aRootAccWrap);
     nsresult RemoveRootAccessible(nsRootAccessibleWrap *aRootAccWrap);
 private:
