@@ -2397,6 +2397,19 @@ PresShell::SetReflowEventStatus(PRBool aPending)
 }
 
 NS_IMETHODIMP 
+PresShell::FlushPendingNotifications()
+{
+  // XXX Only flush if the lock count is 0. Ideally nothing
+  // besides Enter/ExitReflowLock should call ProcessReflowCommands.
+  // Will be changed by Nisheeth.
+  if (!mReflowLockCount) {
+    ProcessReflowCommands(PR_FALSE);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
 PresShell::BeginBatchingReflows()
 {  
   mBatchReflows = PR_TRUE;
@@ -2420,12 +2433,6 @@ PresShell::GetReflowBatchingStatus(PRBool* aIsBatching)
 {
   *aIsBatching = mBatchReflows;
   return NS_OK;
-}
-
-NS_IMETHODIMP 
-PresShell::FlushPendingNotifications()
-{  
-  return ProcessReflowCommands(PR_FALSE);  
 }
 
 NS_IMETHODIMP
