@@ -51,6 +51,7 @@ public:
 	// Access methods
 	Widget			getToolBarWidget	();
 	Widget			getLastItem			();
+	Widget			getIndicatorItem	();
 
 	void			setRaised			(XP_Bool);
 

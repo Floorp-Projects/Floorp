@@ -429,6 +429,12 @@ XFE_PersonalToolbar::getLastItem()
 	return XfeToolBarGetLastItem(m_toolBar);
 }
 //////////////////////////////////////////////////////////////////////////
+Widget
+XFE_PersonalToolbar::getIndicatorItem()
+{
+	return XfeToolBarGetIndicatorItem(m_toolBar);
+}
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_PersonalToolbar::setRaised(XP_Bool state)
 {

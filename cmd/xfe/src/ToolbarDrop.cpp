@@ -373,28 +373,35 @@ XFE_PersonalDrop::dragOut()
 /* virtual */ void
 XFE_PersonalDrop::dragMotion()
 {
+	// Try to find an item at the X,Y that the motion occured
 	Widget target = XfeDescendantFindByCoordinates(_widget,
 												   _dropEventX,
 												   _dropEventY);
 
-    if (XfeIsAlive(target))
-    {
-		_personalToolbar->setDropTargetItem(target,_dropEventX - XfeX(target));
-    }
-    else
-    {
-		target = _personalToolbar->getLastItem();
 
+	// If we found the indicator, ignore it
+	if (target != _personalToolbar->getIndicatorItem())
+	{
+		// If an item is found, use it as the target
 		if (XfeIsAlive(target))
 		{
-			_personalToolbar->setDropTargetItem(target,1000);
+			_personalToolbar->setDropTargetItem(target,
+												_dropEventX - XfeX(target));
 		}
+		// Otherwise use the last item
 		else
 		{
-			_personalToolbar->clearDropTargetItem();
+			Widget last = _personalToolbar->getLastItem();
+
+			// The 10000 forces the position to be at the END of the item
+			if (XfeIsAlive(last))
+			{
+				_personalToolbar->setDropTargetItem(last,10000);
+			}
 		}
 	}
 
+	// Assign the drop widget so that addEntry() can do its magic
     _dropWidget = _personalToolbar->getDropTargetItem();
 }
 //////////////////////////////////////////////////////////////////////////
