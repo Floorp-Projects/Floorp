@@ -360,6 +360,10 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libnetutil.a \
 		  $(NULL)
 
+ifdef SMART_MAIL
+BASIC_LIBS    += $(DIST)/lib/libpop3url.a
+endif
+
 ifdef MOZ_MAIL_NEWS
 ifdef MOZ_SECURITY
 BASIC_LIBS	+= $(DIST)/lib/libns_mime.a

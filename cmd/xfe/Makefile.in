@@ -398,6 +398,12 @@ BASIC_LIBS	+= \
 		$(NULL)
 endif
 
+ifdef SMART_MAIL
+BASIC_LIBS    += \
+                $(DIST)/lib/libpop3url.a \
+                $(NULL)
+endif
+
 ifdef MOZ_MAIL_NEWS
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libmozmsg.a \
