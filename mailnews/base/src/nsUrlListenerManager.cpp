@@ -41,6 +41,8 @@ nsUrlListenerManager::~nsUrlListenerManager()
 		for (int i = count - 1; i >= 0; i--)
 			m_listeners->RemoveElementAt(i);
 	}
+
+	delete m_listeners;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsIUrlListenerManager::GetIID());
