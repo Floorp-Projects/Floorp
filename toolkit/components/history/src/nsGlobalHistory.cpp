@@ -1635,7 +1635,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     if (IsFindResource(aSource)) {
       if (aProperty == kNC_Name)
         return GetFindUriName(uri, aTarget);
-		
+        
       if (aProperty == kNC_NameSort) {
         // parse out the 'text' token
         nsVoidArray tokenList;
@@ -2370,7 +2370,7 @@ nsGlobalHistory::GetLoaded(PRBool* _result)
 NS_IMETHODIMP
 nsGlobalHistory::Init(const char* aURI)
 {
-	return(NS_OK);
+    return(NS_OK);
 }
 
 
@@ -2378,7 +2378,7 @@ nsGlobalHistory::Init(const char* aURI)
 NS_IMETHODIMP
 nsGlobalHistory::Refresh(PRBool aBlocking)
 {
-	return(NS_OK);
+    return(NS_OK);
 }
 
 NS_IMETHODIMP
@@ -2811,7 +2811,7 @@ nsresult nsGlobalHistory::Commit(eCommitType commitType)
   if (!mStore || !mTable)
     return NS_OK;
 
-  nsresult	err = NS_OK;
+  nsresult  err = NS_OK;
   nsCOMPtr<nsIMdbThumb> thumb;
 
   if (commitType == kLargeCommit || commitType == kSessionCommit)
@@ -4049,11 +4049,11 @@ nsGlobalHistory::StartSearch(const nsAString &aSearchString,
     AutoCompleteTypedSearch(&result);
   } else {
     // if the search string is empty after it has had prefixes removed, then 
-    // there is no need to proceed with the search
+    // we need to ignore the previous result set
     nsAutoString cut(aSearchString);
     AutoCompleteCutPrefix(cut, nsnull);
     if (cut.Length() == 0)
-      return NS_ERROR_ILLEGAL_VALUE;
+      aPreviousResult = nsnull;
     
     // pass string through filter and then determine which prefixes to exclude
     // when chopping prefixes off of history urls during comparison
