@@ -186,11 +186,6 @@ struct _PT_Notified
 typedef struct PTDebug
 {
     PRTime timeStarted;
-    PRUintn predictionsFoiled;
-    PRUintn pollingListMax;
-    PRUintn continuationsServed;
-    PRUintn recyclesNeeded;
-    PRUintn quiescentIO;
     PRUintn locks_created, locks_destroyed;
     PRUintn locks_acquired, locks_released;
     PRUintn cvars_created, cvars_destroyed;
@@ -1035,6 +1030,9 @@ extern void _PR_MD_MAKE_NONBLOCK(PRFileDesc *fd);
 extern PRInt32 _PR_MD_OPEN(const char *name, PRIntn osflags, PRIntn mode);
 #define    _PR_MD_OPEN _MD_OPEN
 
+extern PRInt32 _PR_MD_OPEN_FILE(const char *name, PRIntn osflags, PRIntn mode);
+#define    _PR_MD_OPEN_FILE _MD_OPEN_FILE
+
 extern PRInt32 _PR_MD_CLOSE_FILE(PRInt32 osfd);
 #define    _PR_MD_CLOSE_FILE _MD_CLOSE_FILE
 
@@ -1066,6 +1064,9 @@ extern PRInt32 _PR_MD_STAT(const char *name, struct stat *buf);
 
 extern PRInt32 _PR_MD_MKDIR(const char *name, PRIntn mode);
 #define _PR_MD_MKDIR _MD_MKDIR
+
+extern PRInt32 _PR_MD_MAKE_DIR(const char *name, PRIntn mode);
+#define _PR_MD_MAKE_DIR _MD_MAKE_DIR
 
 extern PRInt32 _PR_MD_RMDIR(const char *name);
 #define _PR_MD_RMDIR _MD_RMDIR
@@ -1421,9 +1422,7 @@ struct PRThread {
 #if defined(_PR_PTHREADS)
     pthread_t id;                   /* pthread identifier for the thread */
     PRBool okToDelete;              /* ok to delete the PRThread struct? */
-    PRCondVar *io_cv;               /* a condition used to run i/o */
     PRCondVar *waiting;             /* where the thread is waiting | NULL */
-	PRIntn io_tq_index;             /* the io-queue index for this thread */
     void *sp;                       /* recorded sp for garbage collection */
     PRThread *next, *prev;          /* simple linked list of all threads */
     PRUint32 suspend;               /* used to store suspend and resume flags */
@@ -1549,35 +1548,7 @@ struct PRFilePrivate {
     PRFileDesc *next;
     PRIntn lockCount;
     _MDFileDesc md;
-#ifdef _PR_PTHREADS
-    PRIntn eventMask[1];   /* An array of _pt_tq_count bitmasks.
-                            * eventMask[i] is only accessed by
-                            * the i-th i/o continuation thread.
-                            * A 0 in a bitmask means the event
-                            * should be igored in the revents
-                            * bitmask returned by poll.
-                            *
-                            * poll's revents bitmask is a short,
-                            * but we need to declare eventMask
-                            * as an array of PRIntn's so that
-                            * each bitmask can be updated
-                            * individually without disturbing
-                            * adjacent memory.  Only the lower
-                            * 16 bits of each PRIntn are used. */
-#endif
-/* IMPORTANT: eventMask MUST BE THE LAST FIELD OF THIS STRUCTURE */
 };
-
-/*
- * The actual size of the PRFilePrivate structure,
- * including the eventMask array at the end
- */
-#ifdef _PR_PTHREADS
-extern PRIntn _pt_tq_count;
-#define PRFILEPRIVATE_SIZE (sizeof(PRFilePrivate) + (_pt_tq_count-1) * sizeof(PRIntn))
-#else
-#define PRFILEPRIVATE_SIZE sizeof(PRFilePrivate)
-#endif
 
 struct PRDir {
     PRDirEntry d;
@@ -1673,10 +1644,6 @@ extern PRLogModuleInfo *_pr_gc_lm;
 extern PRFileDesc *_pr_stdin;
 extern PRFileDesc *_pr_stdout;
 extern PRFileDesc *_pr_stderr;
-
-#if defined(_PR_INET6)
-extern PRBool _pr_ipv6_enabled;  /* defined in prnetdb.c */
-#endif
 
 /* Overriding malloc, free, etc. */
 #if !defined(_PR_NO_PREEMPT) && defined(XP_UNIX) \

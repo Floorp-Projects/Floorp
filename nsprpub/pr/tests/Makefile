@@ -39,6 +39,7 @@ endif
 CSRCS =             \
 	accept.c		\
 	acceptread.c	\
+	addrstr.c		\
 	affinity.c		\
 	alarm.c			\
 	anonfm.c		\
@@ -83,6 +84,8 @@ CSRCS =             \
 	lock.c          \
 	lockfile.c      \
 	logger.c		\
+	makedir.c		\
+	mbcs.c          \
 	multiacc.c		\
 	multiwait.c		\
 	many_cv.c		\
@@ -91,12 +94,14 @@ CSRCS =             \
 	nblayer.c		\
 	nonblock.c		\
 	ntioto.c        \
+	ntoh.c			\
 	op_2long.c      \
 	op_excl.c		\
 	op_filnf.c		\
 	op_filok.c		\
 	op_noacc.c		\
 	op_nofil.c		\
+	openfile.c		\
 	parent.c    	\
 	perf.c    		\
 	pipeping.c		\

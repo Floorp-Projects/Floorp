@@ -74,9 +74,19 @@ typedef struct {
 /*
  * All components must define an entrypoint named libVersionPoint which
  * is of type versionEntryPointType.
+ *
+ * For example, for a library named libfoo, we would have:
+ *
+ *   PRVersionDescription prVersionDescription_libfoo =
+ *   {
+ *       ...
+ *   };
+ *
+ *   PR_IMPLEMENT(const PRVersionDescription*) libVersionPoint(void)
+ *   {
+ *       return &prVersionDescription_libfoo;
+ *   }
  */
-NSPR_API(const PRVersionDescription *) libVersionPoint(void);
-
 typedef const PRVersionDescription *(*versionEntryPointType)(void);
 
 /* 

@@ -761,7 +761,7 @@ PR_IMPLEMENT(PRStatus) PR_DeleteSemaphore(const char *name)
  * From the semctl(2) man page in glibc 2.0
  */
 #if (defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)) \
-    || defined(FREEBSD) || defined(OPENBSD)
+    || defined(FREEBSD) || defined(OPENBSD) || defined(BSDI)
 /* union semun is defined by including <sys/sem.h> */
 #else
 /* according to X/OPEN we have to define it ourselves */

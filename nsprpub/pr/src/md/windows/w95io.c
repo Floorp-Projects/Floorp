@@ -24,8 +24,28 @@
 
 #include "primpl.h"
 #include <direct.h>
+#include <mbstring.h>
+
 
 struct _MDLock               _pr_ioq_lock;
+
+/*
+ * NSPR-to-NT access right mapping table for files.
+ */
+static DWORD fileAccessTable[] = {
+    FILE_GENERIC_READ,
+    FILE_GENERIC_WRITE,
+    FILE_GENERIC_EXECUTE
+};
+
+/*
+ * NSPR-to-NT access right mapping table for directories.
+ */
+static DWORD dirAccessTable[] = {
+    FILE_GENERIC_READ,
+    FILE_GENERIC_WRITE|FILE_DELETE_CHILD,
+    FILE_GENERIC_EXECUTE
+};
 
 /*
  * The NSPR epoch (00:00:00 1 Jan 1970 UTC) in FILETIME.
@@ -72,6 +92,8 @@ _PR_MD_INIT_IO()
         PR_ASSERT(filetime.prt == _pr_filetime_offset);
     }
 #endif /* DEBUG */
+
+    _PR_NT_InitSids();
 }
 
 PRStatus
@@ -173,6 +195,67 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
                       flags,
                       flag6,
                       NULL);
+    if (file == INVALID_HANDLE_VALUE) {
+		_PR_MD_MAP_OPEN_ERROR(GetLastError());
+        return -1; 
+	}
+
+    return (PRInt32)file;
+}
+
+PRInt32
+_PR_MD_OPEN_FILE(const char *name, PRIntn osflags, int mode)
+{
+    HANDLE file;
+    PRInt32 access = 0;
+    PRInt32 flags = 0;
+    PRInt32 flag6 = 0;
+    SECURITY_ATTRIBUTES sa;
+    LPSECURITY_ATTRIBUTES lpSA = NULL;
+    PSECURITY_DESCRIPTOR pSD = NULL;
+    PACL pACL = NULL;
+
+    if (osflags & PR_CREATE_FILE) {
+        if (_PR_NT_MakeSecurityDescriptorACL(mode, fileAccessTable,
+                &pSD, &pACL) == PR_SUCCESS) {
+            sa.nLength = sizeof(sa);
+            sa.lpSecurityDescriptor = pSD;
+            sa.bInheritHandle = FALSE;
+            lpSA = &sa;
+        }
+    }
+    
+    if (osflags & PR_SYNC) flag6 = FILE_FLAG_WRITE_THROUGH;
+ 
+    if (osflags & PR_RDONLY || osflags & PR_RDWR)
+        access |= GENERIC_READ;
+    if (osflags & PR_WRONLY || osflags & PR_RDWR)
+        access |= GENERIC_WRITE;
+
+    if ( osflags & PR_CREATE_FILE && osflags & PR_EXCL )
+        flags = CREATE_NEW;
+    else if (osflags & PR_CREATE_FILE) {
+        if (osflags & PR_TRUNCATE)
+            flags = CREATE_ALWAYS;
+        else
+            flags = OPEN_ALWAYS;
+    } else {
+        if (osflags & PR_TRUNCATE)
+            flags = TRUNCATE_EXISTING;
+        else
+            flags = OPEN_EXISTING;
+    }
+
+    file = CreateFile(name,
+                      access,
+                      FILE_SHARE_READ|FILE_SHARE_WRITE,
+                      lpSA,
+                      flags,
+                      flag6,
+                      NULL);
+    if (lpSA != NULL) {
+        _PR_NT_FreeSecurityDescriptorACL(pSD, pACL);
+    }
     if (file == INVALID_HANDLE_VALUE) {
 		_PR_MD_MAP_OPEN_ERROR(GetLastError());
         return -1; 
@@ -353,12 +436,13 @@ _MD_CloseFile(PRInt32 osfd)
 void FlipSlashes(char *cp, int len)
 {
     while (--len >= 0) {
-    if (cp[0] == '/') {
-        cp[0] = PR_DIRECTORY_SEPARATOR;
+        if (cp[0] == '/') {
+            cp[0] = PR_DIRECTORY_SEPARATOR;
+        }
+        cp = _mbsinc(cp);
     }
-    cp++;
-    }
-}
+} /* end FlipSlashes() */
+
 
 /*
 **
@@ -661,7 +745,7 @@ _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info)
      * FindFirstFile() expands wildcard characters.  So
      * we make sure the pathname contains no wildcard.
      */
-    if (NULL != strpbrk(fn, "?*")) {
+    if (NULL != _mbspbrk(fn, "?*")) {
         PR_SetError(PR_FILE_NOT_FOUND_ERROR, 0);
         return -1;
     }
@@ -683,7 +767,7 @@ _PR_MD_GETFILEINFO64(const char *fn, PRFileInfo64 *info)
          * If the pathname does not contain ., \, and /, it cannot be
          * a root directory or a pathname that ends in a slash.
          */
-        if (NULL == strpbrk(fn, ".\\/")) {
+        if (NULL == _mbspbrk(fn, ".\\/")) {
             _PR_MD_MAP_OPENDIR_ERROR(GetLastError());
             return -1;
         } 
@@ -861,6 +945,34 @@ _PR_MD_MKDIR(const char *name, PRIntn mode)
         return 0;
     } else {
 		_PR_MD_MAP_MKDIR_ERROR(GetLastError());
+        return -1;
+    }
+}
+
+PRInt32
+_PR_MD_MAKE_DIR(const char *name, PRIntn mode)
+{
+    BOOL rv;
+    SECURITY_ATTRIBUTES sa;
+    LPSECURITY_ATTRIBUTES lpSA = NULL;
+    PSECURITY_DESCRIPTOR pSD = NULL;
+    PACL pACL = NULL;
+
+    if (_PR_NT_MakeSecurityDescriptorACL(mode, dirAccessTable,
+            &pSD, &pACL) == PR_SUCCESS) {
+        sa.nLength = sizeof(sa);
+        sa.lpSecurityDescriptor = pSD;
+        sa.bInheritHandle = FALSE;
+        lpSA = &sa;
+    }
+    rv = CreateDirectory(name, lpSA);
+    if (lpSA != NULL) {
+        _PR_NT_FreeSecurityDescriptorACL(pSD, pACL);
+    }
+    if (rv) {
+        return 0;
+    } else {
+        _PR_MD_MAP_MKDIR_ERROR(GetLastError());
         return -1;
     }
 }

@@ -104,14 +104,20 @@ typedef enum PRTransmitFileFlags {
 
 #define PR_AF_INET AF_INET
 #define PR_AF_LOCAL AF_UNIX
-#ifdef AF_INET6
-#define PR_AF_INET6 AF_INET6
-#endif
 #define PR_INADDR_ANY INADDR_ANY
 #define PR_INADDR_LOOPBACK INADDR_LOOPBACK
 #define PR_INADDR_BROADCAST INADDR_BROADCAST
 
 #endif /* WIN32 */
+
+/*
+** Define PR_AF_INET6 in prcpucfg.h with the same
+** value as AF_INET6 on platforms with IPv6 support.
+** Otherwise define it here.
+*/
+#ifndef PR_AF_INET6
+#define PR_AF_INET6 100
+#endif
 
 /*
 **************************************************************************
@@ -122,15 +128,21 @@ typedef enum PRTransmitFileFlags {
 ** or IPv6 (AF_INET6).
 **************************************************************************
 *************************************************************************/
-#if defined(_PR_INET6)
 
-#if !defined(AF_INET6)
-#error "AF_INET6 is not defined"
-#endif
+struct PRIPv6Addr {
+	union {
+		PRUint8  _S6_u8[16];
+		PRUint16 _S6_u16[8];
+		PRUint32 _S6_u32[4];
+		PRUint64 _S6_u64[2];
+	} _S6_un;
+};
+#define pr_s6_addr		_S6_un._S6_u8
+#define pr_s6_addr16	_S6_un._S6_u16
+#define pr_s6_addr32	_S6_un._S6_u32
+#define pr_s6_addr64 	_S6_un._S6_addr64
 
-typedef struct in6_addr PRIPv6Addr;
-
-#endif /* defined(_PR_INET6) */
+typedef struct PRIPv6Addr PRIPv6Addr;
 
 union PRNetAddr {
     struct {
@@ -151,7 +163,6 @@ union PRNetAddr {
         char pad[8];
 #endif
     } inet;
-#if defined(_PR_INET6)
     struct {
         PRUint16 family;                /* address family (AF_INET6) */
         PRUint16 port;                  /* port number */
@@ -159,7 +170,6 @@ union PRNetAddr {
         PRIPv6Addr ip;                  /* the actual 128 bits of address */
         PRUint32 scope_id;              /* set of interfaces for a scope */
     } ipv6;
-#endif /* defined(_PR_INET6) */
 #if defined(XP_UNIX)
     struct {                            /* Unix domain socket address */
         PRUint16 family;                /* address family (AF_UNIX) */
@@ -181,12 +191,17 @@ union PRNetAddr {
 #else
 
 #if defined(XP_UNIX)
-#define PR_NETADDR_SIZE(_addr) \
-        ((_addr)->raw.family == AF_UNIX \
-        ? sizeof((_addr)->local) \
-        : sizeof((_addr)->inet))
+#define PR_NETADDR_SIZE(_addr) 					\
+        ((_addr)->raw.family == PR_AF_INET		\
+        ? sizeof((_addr)->inet)					\
+        : ((_addr)->raw.family == PR_AF_INET6	\
+        ? sizeof((_addr)->ipv6)					\
+        : sizeof((_addr)->local)))
 #else
-#define PR_NETADDR_SIZE(_addr) sizeof((_addr)->inet)
+#define PR_NETADDR_SIZE(_addr) 					\
+        ((_addr)->raw.family == PR_AF_INET		\
+        ? sizeof((_addr)->inet)					\
+        : sizeof((_addr)->ipv6))
 #endif /* defined(XP_UNIX) */
 
 #endif /* defined(_PR_INET6) */
@@ -351,10 +366,6 @@ typedef PRInt32 (PR_CALLBACK *PRTransmitfileFN)(
      PRInt32 hlen, PRTransmitFileFlags flags, PRIntervalTime t);
 typedef PRStatus (PR_CALLBACK *PRGetsocknameFN)(PRFileDesc *fd, PRNetAddr *addr);
 typedef PRStatus (PR_CALLBACK *PRGetpeernameFN)(PRFileDesc *fd, PRNetAddr *addr);
-typedef PRStatus (PR_CALLBACK *PRGetsockoptFN)(  /* OBSOLETE */
-    PRFileDesc *fd, PRSockOption optname, void* optval, PRInt32 *optlen);
-typedef PRStatus (PR_CALLBACK *PRSetsockoptFN)(  /* OBSOLETE */
-    PRFileDesc *fd, PRSockOption optname, const void* optval, PRInt32 optlen);
 typedef PRStatus (PR_CALLBACK *PRGetsocketoptionFN)(
     PRFileDesc *fd, PRSocketOptionData *data);
 typedef PRStatus (PR_CALLBACK *PRSetsocketoptionFN)(
@@ -391,8 +402,8 @@ struct PRIOMethods {
     PRTransmitfileFN transmitfile;  /* Transmit at entire file                  */
     PRGetsocknameFN getsockname;    /* Get (net) address associated with fd     */
     PRGetpeernameFN getpeername;    /* Get peer's (net) address                 */
-    PRGetsockoptFN getsockopt;      /*             OBSOLETE                     */
-    PRSetsockoptFN setsockopt;      /*             OBSOLETE                     */
+    PRReservedFN reserved_fn_6;     /* reserved for future use */
+    PRReservedFN reserved_fn_5;     /* reserved for future use */
     PRGetsocketoptionFN getsocketoption;
                                     /* Get current setting of specified option  */
     PRSetsocketoptionFN setsocketoption;
@@ -574,7 +585,6 @@ NSPR_API(PRFileDesc*) PR_PopIOLayer(PRFileDesc *fd_stack, PRDescIdentity id);
  **************************************************************************
  */
 
-NSPR_API(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode);
 /* Open flags */
 #define PR_RDONLY       0x01
 #define PR_WRONLY       0x02
@@ -588,8 +598,8 @@ NSPR_API(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode);
 /*
 ** File modes ....
 **
-** CAVEAT: 'mode' is currently only applicable on UNIX platforms. We are
-** still in the process of seeing how these apply to other file systems.
+** CAVEAT: 'mode' is currently only applicable on UNIX platforms.
+** The 'mode' argument may be ignored by PR_Open on other platforms.
 **
 **   00400   Read by owner.
 **   00200   Write by owner.
@@ -602,6 +612,35 @@ NSPR_API(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode);
 **   00001   Execute by others.
 **
 */
+
+NSPR_API(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode);
+
+/*
+ **************************************************************************
+ * FUNCTION: PR_OpenFile
+ * DESCRIPTION:
+ *     Open a file for reading, writing, or both.
+ *     PR_OpenFile has the same prototype as PR_Open but implements
+ *     the specified file mode where possible.
+ **************************************************************************
+ */
+
+/* File mode bits */
+#define PR_IRWXU 00700  /* read, write, execute/search by owner */
+#define PR_IRUSR 00400  /* read permission, owner */
+#define PR_IWUSR 00200  /* write permission, owner */
+#define PR_IXUSR 00100  /* execute/search permission, owner */
+#define PR_IRWXG 00070  /* read, write, execute/search by group */
+#define PR_IRGRP 00040  /* read permission, group */
+#define PR_IWGRP 00020  /* write permission, group */
+#define PR_IXGRP 00010  /* execute/search permission, group */
+#define PR_IRWXO 00007  /* read, write, execute/search by others */
+#define PR_IROTH 00004  /* read permission, others */
+#define PR_IWOTH 00002  /* write permission, others */
+#define PR_IXOTH 00001  /* execute/search permission, others */
+
+NSPR_API(PRFileDesc*) PR_OpenFile(
+    const char *name, PRIntn flags, PRIntn mode);
 
 /*
  **************************************************************************
@@ -1036,6 +1075,18 @@ NSPR_API(PRStatus) PR_CloseDir(PRDir *dir);
  */
 
 NSPR_API(PRStatus) PR_MkDir(const char *name, PRIntn mode);
+
+/*
+ *************************************************************************
+ * FUNCTION: PR_MakeDir
+ * DESCRIPTION:
+ *     Create a new directory with the given name and access mode.
+ *     PR_MakeDir has the same prototype as PR_MkDir but implements
+ *     the specified access mode where possible.
+ *************************************************************************
+ */
+
+NSPR_API(PRStatus) PR_MakeDir(const char *name, PRIntn mode);
 
 /*
  *************************************************************************
@@ -1529,7 +1580,8 @@ NSPR_API(PRInt32) PR_SendFile(
 **    void *buf
 **        A pointer to a buffer to receive data sent by the client.  This 
 **        buffer must be large enough to receive <amount> bytes of data
-**        and two PRNetAddr structures, plus an extra 32 bytes.
+**        and two PRNetAddr structures, plus an extra 32 bytes. See:
+**        PR_ACCEPT_READ_BUF_OVERHEAD.
 **    PRInt32 amount
 **        The number of bytes of client data to receive.  Does not include
 **        the size of the PRNetAddr structures.  If 0, no data will be read
@@ -1552,7 +1604,16 @@ NSPR_API(PRInt32) PR_SendFile(
 **     The number of bytes read from the client or -1 on failure.  The reason 
 **     for the failure is obtained by calling PR_GetError().
 **************************************************************************
-**/
+**/       
+/* define buffer overhead constant. Add this value to the user's 
+** data length when allocating a buffer to accept data.
+**    Example:
+**    #define USER_DATA_SIZE 10
+**    char buf[USER_DATA_SIZE + PR_ACCEPT_READ_BUF_OVERHEAD];
+**    bytesRead = PR_AcceptRead( s, fd, &a, &p, USER_DATA_SIZE, ...);
+*/
+#define PR_ACCEPT_READ_BUF_OVERHEAD (32+(2*sizeof(PRNetAddr)))
+
 NSPR_API(PRInt32) PR_AcceptRead(
     PRFileDesc *listenSock, PRFileDesc **acceptedSock,
     PRNetAddr **peerAddr, void *buf, PRInt32 amount, PRIntervalTime timeout);

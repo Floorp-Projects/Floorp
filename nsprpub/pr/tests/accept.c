@@ -84,7 +84,7 @@ static PRNetAddr listenAddr;
 static PRNetAddr clientAddr;
 static PRThread *clientThread;
 static PRNetAddr *raddr;
-static char buf[4096 + 64];
+static char buf[4096 + 2*sizeof(PRNetAddr) + 32];
 static PRInt32 status;
 static PRInt32 bytesRead;
 

@@ -16,48 +16,9 @@
  * Reserved.
  */
 
-/*
-** Delete this section of the header after (if) agreement is reached to
-** provide the service suggested here. Move some parts of it, if
-** appropriate to platform specific implementation files.
-**
-** Proposal: Nothing in this header file should be construed as a
-** commitment on the part of the NSPR team, Netsacpe/AOL/Sun Alliance
-** et.al. to provide the API or function suggested in this header file.
-** This is a proposal, a draft, yadda. ... So, don't count on it.
-** lth. 29-Oct-1999
-**
-** --------------------------------------------------------------------
-**
-** Requirements, Discussion:
-**
-** Goal: foreach platform, find at least 160 bits of "good noise", that
-** is: from the platform itself, not extrapolated, stired, hashed,
-** xor'd, whatever, from a little available noise.
-**
-**
-** Required on the following platforms:
-**   MAC, Win9x, WinNT, Solaris, Linux (k: 2.2.x).
-** Best effort on: 
-**   AIX, HP-UX.
-** Not required on: 
-**   Tru65 Unix (Compaq)
-**
-** Notes: 
-** 
-** I presume it is legal to put this function on Mozilla.org,
-** that it is not regulated as "cryptographic 'munitions'". 
-**
-** Cartman says they need it 15-Jan-2000.
-**
-** --------------------------------------------------------------------
-*/
 
 /*
 ** prrng.h -- NSPR Random Number Generator
-** 
-** 
-** 
 ** 
 **
 ** lth. 29-Oct-1999.
@@ -113,8 +74,7 @@ PR_BEGIN_EXTERN_C
 ** History:
 **   Parts of the model dependent implementation for PR_GetRandomNoise()
 **   were taken in whole or part from code previously in Netscape's NSS
-**   component. There is no Goddamned Goverenment Munitions is this
-**   code. Clinton: FOAD.
+**   component.
 **
 */
 NSPR_API(PRSize) PR_GetRandomNoise( 

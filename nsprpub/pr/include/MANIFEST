@@ -37,6 +37,7 @@ prshma.h
 prsystem.h
 prthread.h
 prtime.h
+prtpool.h
 prtrace.h
 prtypes.h
 prvrsion.h

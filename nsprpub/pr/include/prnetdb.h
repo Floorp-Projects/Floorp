@@ -117,13 +117,11 @@ NSPR_API(PRStatus) PR_GetHostByName(
 **                      for the failure can be retrieved by PR_GetError().
 ***********************************************************************/
 
-/*
- * #define PR_AI_ALL        0x08
- * #define PR_AI_V4MAPPED   0x10
- * #define PR_AI_ADDRCONFIG 0x20
- * #define PR_AI_DEFAULT    (PR_AI_V4MAPPED | PR_AI_ADDRCONFIG)
- */
-#define PR_AI_DEFAULT 0x30
+
+#define PR_AI_ALL        0x08
+#define PR_AI_V4MAPPED   0x10
+#define PR_AI_ADDRCONFIG 0x20
+#define PR_AI_DEFAULT    (PR_AI_V4MAPPED | PR_AI_ADDRCONFIG)
 
 NSPR_API(PRStatus) PR_GetIPNodeByName(
     const char *hostname,
@@ -217,7 +215,8 @@ typedef enum PRNetAddrValue
 {
     PR_IpAddrNull,      /* do NOT overwrite the IP address */
     PR_IpAddrAny,       /* assign logical INADDR_ANY to IP address */
-    PR_IpAddrLoopback   /* assign logical INADDR_LOOPBACK */
+    PR_IpAddrLoopback,  /* assign logical INADDR_LOOPBACK  */
+    PR_IpAddrV4Mapped   /* IPv4 mapped address */
 } PRNetAddrValue;
 
 NSPR_API(PRStatus) PR_InitializeNetAddr(
@@ -267,6 +266,23 @@ NSPR_API(PRStatus) PR_SetNetAddr(
 NSPR_API(PRBool) PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val);
 
 /***********************************************************************
+** FUNCTION:	
+** DESCRIPTION:	PR_ConvertIPv4AddrToIPv6()
+** Convert an IPv4 addr to an (IPv4-mapped) IPv6 addr
+**
+** INPUTS:
+**  PRUint32 	v4addr		IPv4 address
+**
+** OUTPUTS:
+**  PRIPv6Addr *v6addr      The converted IPv6 address
+**
+** RETURN:
+**  void
+**                       
+***********************************************************************/
+NSPR_API(void) PR_ConvertIPv4AddrToIPv6(PRUint32 v4addr, PRIPv6Addr *v6addr);
+
+/***********************************************************************
 ** MACRO:	
 ** DESCRIPTION:	PR_NetAddrFamily()
 ** Get the 'family' field of a PRNetAddr union.
@@ -290,12 +306,8 @@ NSPR_API(PRBool) PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val);
 ** RETURN:
 **  PRUint16                The 'port' field of 'addr'.
 ***********************************************************************/
-#ifdef _PR_INET6
 #define PR_NetAddrInetPort(addr) \
     ((addr)->raw.family == PR_AF_INET6 ? (addr)->ipv6.port : (addr)->inet.port)
-#else
-#define PR_NetAddrInetPort(addr) ((addr)->inet.port)
-#endif
 
 /***********************************************************************
 ** FUNCTION:	
@@ -358,28 +370,6 @@ NSPR_API(PRStatus) PR_GetProtoByNumber(
     PRInt32 protocolnumber, char* buffer, PRInt32 bufsize, PRProtoEnt* result);
 
 /***********************************************************************
-** FUNCTION:	
-** DESCRIPTION:	PR_SetIPv6Enable()
-**  Enable IPv6 capability on a platform that supports the architecture.
-**
-**  Note: IPv6 must first be enabled for the host platform. If it is not,
-**        the function will always return PR_FAILURE on any attempt to
-**        change the setting.
-**
-** INPUTS:
-**  PRBool itIs
-**                      Assign it a value of PR_TRUE to turn on IPv6
-**                      addressing, PR_FALSE to turn it off.
-** RETURN:
-**  PRStatus            PR_SUCCESS if the IPv6 is enabled for this particular
-**                      host. Otherwise it will return failure and GetError()
-**                      will confirm the result by indicating that the
-**                      protocol is not supported
-**                      (PR_PROTOCOL_NOT_SUPPORTED_ERROR) 
-***********************************************************************/
-NSPR_API(PRStatus) PR_SetIPv6Enable(PRBool itIs);
-
-/***********************************************************************
 ** FUNCTIONS: PR_ntohs, PR_ntohl, PR_ntohll, PR_htons, PR_htonl, PR_htonll
 **
 ** DESCRIPTION: API entries for the common byte ordering routines.
@@ -398,14 +388,6 @@ NSPR_API(PRUint64) PR_ntohll(PRUint64);
 NSPR_API(PRUint16) PR_htons(PRUint16);
 NSPR_API(PRUint32) PR_htonl(PRUint32);
 NSPR_API(PRUint64) PR_htonll(PRUint64);
-
-/***********************************************************************
-** FUNCTION: PR_FamilyInet
-**
-** DESCRIPTION: Routine to get value of address family for Internet Protocol
-**
-***********************************************************************/
-NSPR_API(PRUint16) PR_FamilyInet(void);
 
 PR_END_EXTERN_C
 

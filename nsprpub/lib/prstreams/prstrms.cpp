@@ -222,7 +222,7 @@ PRfilebuf::underflow()
 }
 
 streambuf*	
-PRfilebuf::setbuf(char *buffptr, int bufflen)
+PRfilebuf::setbuf(char *buffptr, PRstreambuflen bufflen)
 {
     if (is_open() && (ebuf()))
         return 0;

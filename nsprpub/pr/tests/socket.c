@@ -130,6 +130,7 @@ static PRInt32 num_udp_datagrams_per_client = NUM_UDP_DATAGRAMS_PER_CLIENT;
 static PRInt32 udp_datagram_size = UDP_DGRAM_SIZE;
 
 static PRInt32 thread_count;
+PRUint16 server_domain = PR_AF_INET, client_domain = PR_AF_INET;
 
 int failed_already=0;
 typedef struct buffer {
@@ -169,7 +170,7 @@ readn(PRFileDesc *sockfd, char *buf, int len)
     int rem;
     int bytes;
     int offset = 0;
-	int err, oserr;
+	int err;
 	PRIntervalTime timeout = PR_INTERVAL_NO_TIMEOUT;
 
 	if (test_cancelio)
@@ -362,19 +363,23 @@ TCP_Server(void *arg)
     /*
      * Create a tcp socket
      */
-    if ((sockfd = PR_NewTCPSocket()) == NULL) {
+	if ((sockfd = PR_OpenTCPSocket(server_domain)) == NULL) {
         fprintf(stderr,"prsocket_test: PR_NewTCPSocket failed\n");
         goto exit;
     }
     memset(&netaddr, 0 , sizeof(netaddr));
-    netaddr.inet.family = PR_AF_INET;
-    netaddr.inet.port = PR_htons(TCP_SERVER_PORT);
-    netaddr.inet.ip = PR_htonl(PR_INADDR_ANY);
+	
+	if (PR_SetNetAddr(PR_IpAddrAny, server_domain, TCP_SERVER_PORT,
+									&netaddr) == PR_FAILURE) {
+        fprintf(stderr,"prsocket_test: PR_SetNetAddr failed\n");
+        goto exit;
+	}
     /*
      * try a few times to bind server's address, if addresses are in
      * use
      */
     i = 0;
+	
     while (PR_Bind(sockfd, &netaddr) < 0) {
         if (PR_GetError() == PR_ADDRESS_IN_USE_ERROR) {
             netaddr.inet.port += 2;
@@ -401,9 +406,15 @@ TCP_Server(void *arg)
 
     DPRINTF(("TCP_Server: PR_BIND netaddr.inet.ip = 0x%lx, netaddr.inet.port = %d\n",
         netaddr.inet.ip, netaddr.inet.port));
-    tcp_server_addr.inet.family = netaddr.inet.family;
-    tcp_server_addr.inet.port = netaddr.inet.port;
-    tcp_server_addr.inet.ip = netaddr.inet.ip;
+	if (PR_SetNetAddr(PR_IpAddrLoopback, client_domain,
+									PR_ntohs(PR_NetAddrInetPort(&netaddr)),
+									&tcp_server_addr) == PR_FAILURE) {
+        fprintf(stderr,"prsocket_test: PR_SetNetAddr failed\n");
+        goto exit;
+	}
+	if ((client_domain == PR_AF_INET6) && (server_domain == PR_AF_INET))
+		PR_ConvertIPv4AddrToIPv6(PR_htonl(INADDR_LOOPBACK),
+								&tcp_server_addr.ipv6.ip);
 
     /*
      * Wake up parent thread because server address is bound and made
@@ -413,11 +424,13 @@ TCP_Server(void *arg)
 
     for (i = 0; i < (num_tcp_clients * num_tcp_connections_per_client); i++) {
 
+    DPRINTF(("TCP_Server: Accepting connection\n"));
         if ((newsockfd = PR_Accept(sockfd, &netaddr,
             PR_INTERVAL_NO_TIMEOUT)) == NULL) {
             fprintf(stderr,"prsocket_test: ERROR - PR_Accept failed\n");
             goto exit;
         }
+    DPRINTF(("TCP_Server: Accepted connection\n"));
         scp = PR_NEW(Serve_Client_Param);
         if (scp == NULL) {
             fprintf(stderr,"prsocket_test: PR_NEW failed\n");
@@ -480,15 +493,18 @@ UDP_Server(void *arg)
     /*
      * Create a udp socket
      */
-    if ((sockfd = PR_NewUDPSocket()) == NULL) {
+	if ((sockfd = PR_OpenUDPSocket(server_domain)) == NULL) {
         fprintf(stderr,"prsocket_test: PR_NewUDPSocket failed\n");
         failed_already=1;
         return;
     }
     memset(&netaddr, 0 , sizeof(netaddr));
-    netaddr.inet.family = PR_AF_INET;
-    netaddr.inet.port = PR_htons(UDP_SERVER_PORT);
-    netaddr.inet.ip = PR_htonl(PR_INADDR_ANY);
+	if (PR_SetNetAddr(PR_IpAddrAny, server_domain, UDP_SERVER_PORT,
+									&netaddr) == PR_FAILURE) {
+        fprintf(stderr,"prsocket_test: PR_SetNetAddr failed\n");
+        failed_already=1;
+        return;
+	}
     /*
      * try a few times to bind server's address, if addresses are in
      * use
@@ -514,16 +530,23 @@ UDP_Server(void *arg)
 
     DPRINTF(("PR_Bind: UDP Server netaddr.inet.ip = 0x%lx, netaddr.inet.port = %d\n",
         netaddr.inet.ip, netaddr.inet.port));
-    udp_server_addr = netaddr;
-
     /*
      * We can't use the IP address returned by PR_GetSockName in
-         * netaddr.inet.ip because netaddr.inet.ip is returned
-         * as 0 (= PR_INADDR_ANY).
+     * netaddr.inet.ip because netaddr.inet.ip is returned
+     * as 0 (= PR_INADDR_ANY).
      */
 
-    udp_server_addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
-
+	if (PR_SetNetAddr(PR_IpAddrLoopback, client_domain,
+									PR_ntohs(PR_NetAddrInetPort(&netaddr)),
+									&udp_server_addr) == PR_FAILURE) {
+        fprintf(stderr,"prsocket_test: PR_SetNetAddr failed\n");
+        failed_already=1;
+        return;
+	}
+	if ((client_domain == PR_AF_INET6) && (server_domain == PR_AF_INET))
+		PR_ConvertIPv4AddrToIPv6(PR_htonl(INADDR_LOOPBACK),
+								&udp_server_addr.ipv6.ip);
+		
     /*
      * Wake up parent thread because server address is bound and made
      * available in the global variable 'udp_server_addr'
@@ -606,17 +629,14 @@ TCP_Client(void *arg)
         failed_already=1;
         return;
     }
-    netaddr.inet.family = cp->server_addr.inet.family;
-    netaddr.inet.port = cp->server_addr.inet.port;
-    netaddr.inet.ip = cp->server_addr.inet.ip;
+    netaddr = cp->server_addr;
 
     for (i = 0; i < num_tcp_connections_per_client; i++) {
-        if ((sockfd = PR_OpenTCPSocket(PR_AF_INET)) == NULL) {
+        if ((sockfd = PR_OpenTCPSocket(client_domain)) == NULL) {
             fprintf(stderr,"prsocket_test: PR_OpenTCPSocket failed\n");
             failed_already=1;
             return;
         }
-
         if (PR_Connect(sockfd, &netaddr,PR_INTERVAL_NO_TIMEOUT) < 0){
         	fprintf(stderr, "PR_Connect failed: (%ld, %ld)\n",
             		PR_GetError(), PR_GetOSError());
@@ -712,7 +732,7 @@ UDP_Client(void *arg)
         failed_already=1;
         return;
     }
-    if ((sockfd = PR_OpenUDPSocket(PR_AF_INET)) == NULL) {
+    if ((sockfd = PR_OpenUDPSocket(client_domain)) == NULL) {
         fprintf(stderr,"prsocket_test: PR_OpenUDPSocket failed\n");
         failed_already=1;
         return;
@@ -723,9 +743,12 @@ UDP_Client(void *arg)
      * number
      */
     memset(&netaddr, 0 , sizeof(netaddr));
-    netaddr.inet.family = PR_AF_INET;
-    netaddr.inet.ip = PR_htonl(PR_INADDR_ANY);
-    netaddr.inet.port = PR_htons(0);
+	if (PR_SetNetAddr(PR_IpAddrAny, client_domain, 0,
+									&netaddr) == PR_FAILURE) {
+        fprintf(stderr,"prsocket_test: PR_SetNetAddr failed\n");
+        failed_already=1;
+        return;
+	}
     if (PR_Bind(sockfd, &netaddr) < 0) {
         fprintf(stderr,"prsocket_test: ERROR - PR_Bind failed\n");
         perror("PR_Bind");
@@ -741,9 +764,7 @@ UDP_Client(void *arg)
     DPRINTF(("PR_Bind: UDP Client netaddr.inet.ip = 0x%lx, netaddr.inet.port = %d\n",
         netaddr.inet.ip, netaddr.inet.port));
 
-    netaddr.inet.family = cp->server_addr.inet.family;
-    netaddr.inet.port = cp->server_addr.inet.port;
-    netaddr.inet.ip = cp->server_addr.inet.ip;
+    netaddr = cp->server_addr;
 
     if (cp->udp_connect) {
         if (PR_Connect(sockfd, &netaddr,PR_INTERVAL_NO_TIMEOUT) < 0){
@@ -894,7 +915,6 @@ TCP_Socket_Client_Server_Test(void)
         return -1;
     }
     cparamp->server_addr = tcp_server_addr;
-    cparamp->server_addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
     cparamp->exit_mon = mon2;
     cparamp->exit_counter = &thread_count;
     cparamp->datalen = datalen;
@@ -2138,8 +2158,41 @@ main(int argc, char **argv)
 #endif
     PR_SetConcurrency(4);
     /*
-     * run client-server test with TCP
+     * run client-server test with TCP, Ipv4-Ipv4
      */
+	printf("TCP Client/Server Test - IPv4/Ipv4\n");
+    if (TCP_Socket_Client_Server_Test() < 0) {
+        printf("TCP_Socket_Client_Server_Test failed\n");
+        goto done;
+    } else
+        printf("TCP_Socket_Client_Server_Test Passed\n");
+    /*
+     * client-server test, Ipv6-Ipv4
+     */
+	client_domain = PR_AF_INET6;
+	printf("TCP Client/Server Test - IPv6/Ipv4\n");
+    if (TCP_Socket_Client_Server_Test() < 0) {
+        printf("TCP_Socket_Client_Server_Test failed\n");
+        goto done;
+    } else
+        printf("TCP_Socket_Client_Server_Test Passed\n");
+    /*
+     * client-server test, Ipv4-Ipv6
+     */
+	client_domain = PR_AF_INET;
+	server_domain = PR_AF_INET6;
+	printf("TCP Client/Server Test - IPv4/Ipv6\n");
+    if (TCP_Socket_Client_Server_Test() < 0) {
+        printf("TCP_Socket_Client_Server_Test failed\n");
+        goto done;
+    } else
+        printf("TCP_Socket_Client_Server_Test Passed\n");
+    /*
+     * client-server test, Ipv6-Ipv6
+     */
+	client_domain = PR_AF_INET6;
+	server_domain = PR_AF_INET6;
+	printf("TCP Client/Server Test - IPv6/Ipv6\n");
     if (TCP_Socket_Client_Server_Test() < 0) {
         printf("TCP_Socket_Client_Server_Test failed\n");
         goto done;
@@ -2147,8 +2200,44 @@ main(int argc, char **argv)
         printf("TCP_Socket_Client_Server_Test Passed\n");
 	test_cancelio = 0;
     /*
-     * run client-server test with UDP
+     * run client-server test with UDP, IPv4/IPv4
      */
+	printf("UDP Client/Server Test - IPv4/Ipv4\n");
+	client_domain = PR_AF_INET;
+	server_domain = PR_AF_INET;
+    if (UDP_Socket_Client_Server_Test() < 0) {
+        printf("UDP_Socket_Client_Server_Test failed\n");
+        goto done;
+    } else
+        printf("UDP_Socket_Client_Server_Test Passed\n");
+    /*
+     * run client-server test with UDP, IPv6/IPv4
+     */
+	printf("UDP Client/Server Test - IPv6/Ipv4\n");
+	client_domain = PR_AF_INET6;
+	server_domain = PR_AF_INET;
+    if (UDP_Socket_Client_Server_Test() < 0) {
+        printf("UDP_Socket_Client_Server_Test failed\n");
+        goto done;
+    } else
+        printf("UDP_Socket_Client_Server_Test Passed\n");
+    /*
+     * run client-server test with UDP,IPv4-IPv6
+     */
+	printf("UDP Client/Server Test - IPv4/Ipv6\n");
+	client_domain = PR_AF_INET;
+	server_domain = PR_AF_INET6;
+    if (UDP_Socket_Client_Server_Test() < 0) {
+        printf("UDP_Socket_Client_Server_Test failed\n");
+        goto done;
+    } else
+        printf("UDP_Socket_Client_Server_Test Passed\n");
+    /*
+     * run client-server test with UDP,IPv6-IPv6
+     */
+	printf("UDP Client/Server Test - IPv6/Ipv6\n");
+	client_domain = PR_AF_INET6;
+	server_domain = PR_AF_INET6;
     if (UDP_Socket_Client_Server_Test() < 0) {
         printf("UDP_Socket_Client_Server_Test failed\n");
         goto done;

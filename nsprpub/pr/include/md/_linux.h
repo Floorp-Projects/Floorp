@@ -70,6 +70,10 @@
 #else
 #define _PR_NO_LARGE_FILES
 #endif
+#ifdef _PR_INET6
+#define _PR_HAVE_GETHOSTBYNAME2
+#define _PR_INET6_PROBE
+#endif
 #define _PR_HAVE_SYSV_SEMAPHORES
 #define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
 

@@ -48,8 +48,8 @@ PRIOMethods _pr_faulty_methods = {
     (PRTransmitfileFN)_PR_InvalidInt, 
     (PRGetsocknameFN)_PR_InvalidStatus,    
     (PRGetpeernameFN)_PR_InvalidStatus,    
-    (PRGetsockoptFN)_PR_InvalidStatus,    
-    (PRSetsockoptFN)_PR_InvalidStatus,    
+    (PRReservedFN)_PR_InvalidInt,    
+    (PRReservedFN)_PR_InvalidInt,    
     (PRGetsocketoptionFN)_PR_InvalidStatus,
     (PRSetsocketoptionFN)_PR_InvalidStatus,
     (PRSendfileFN)_PR_InvalidInt, 
@@ -245,26 +245,6 @@ PR_IMPLEMENT(PRStatus) PR_GetSockName(PRFileDesc *fd, PRNetAddr *addr)
 PR_IMPLEMENT(PRStatus) PR_GetPeerName(PRFileDesc *fd, PRNetAddr *addr)
 {
 	return((fd->methods->getpeername)(fd,addr));
-}
-
-PR_IMPLEMENT(PRStatus) PR_GetSockOpt(
-    PRFileDesc *fd, PRSockOption optname, void* optval, PRInt32* optlen)
-{
-#if defined(DEBUG)
-    static PRBool warn = PR_TRUE;
-    if (warn) warn = _PR_Obsolete("PR_GetSockOpt()", "PR_GetSocketOption()");
-#endif
-	return((fd->methods->getsockopt)(fd, optname, optval, optlen));
-}
-
-PR_IMPLEMENT(PRStatus) PR_SetSockOpt(
-    PRFileDesc *fd, PRSockOption optname, const void* optval, PRInt32 optlen)
-{
-#if defined(DEBUG)
-    static PRBool warn = PR_TRUE;
-    if (warn) warn = _PR_Obsolete("PR_SetSockOpt()", "PR_SetSocketOption()");
-#endif
-	return((fd->methods->setsockopt)(fd, optname, optval, optlen));
 }
 
 PR_IMPLEMENT(PRStatus) PR_GetSocketOption(

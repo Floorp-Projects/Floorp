@@ -23,6 +23,22 @@
 
 #include "primpl.h"
 
+/*
+ * NSPR-to-NT access right mapping table for semaphore objects.
+ *
+ * The SYNCHRONIZE access is required by WaitForSingleObject.
+ * The SEMAPHORE_MODIFY_STATE access is required by ReleaseSemaphore.
+ * The OR of these three access masks must equal SEMAPHORE_ALL_ACCESS.
+ * This is because if a semaphore object with the specified name
+ * exists, CreateSemaphore requests SEMAPHORE_ALL_ACCESS access to
+ * the existing object.
+ */
+static DWORD semAccessTable[] = {
+    STANDARD_RIGHTS_REQUIRED|0x1, /* read (0x1 is "query state") */
+    STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|SEMAPHORE_MODIFY_STATE, /* write */
+    0 /* execute */
+};
+
 #ifndef _PR_GLOBAL_THREADS_ONLY
 
 /*
@@ -94,6 +110,10 @@ PRSem *_PR_MD_OPEN_SEMAPHORE(
     const char *osname, PRIntn flags, PRIntn mode, PRUintn value)
 {
     PRSem *sem;
+    SECURITY_ATTRIBUTES sa;
+    LPSECURITY_ATTRIBUTES lpSA = NULL;
+    PSECURITY_DESCRIPTOR pSD = NULL;
+    PACL pACL = NULL;
 
     sem = PR_NEW(PRSem);
     if (sem == NULL) {
@@ -101,7 +121,17 @@ PRSem *_PR_MD_OPEN_SEMAPHORE(
         return NULL;
     }
     if (flags & PR_SEM_CREATE) {
-        sem->sem = CreateSemaphore(NULL, value, 0x7fffffff, osname);
+        if (_PR_NT_MakeSecurityDescriptorACL(mode, semAccessTable,
+                &pSD, &pACL) == PR_SUCCESS) {
+            sa.nLength = sizeof(sa);
+            sa.lpSecurityDescriptor = pSD;
+            sa.bInheritHandle = FALSE;
+            lpSA = &sa;
+        }
+        sem->sem = CreateSemaphore(lpSA, value, 0x7fffffff, osname);
+        if (lpSA != NULL) {
+            _PR_NT_FreeSecurityDescriptorACL(pSD, pACL);
+        }
         if (sem->sem == NULL) {
             _PR_MD_MAP_DEFAULT_ERROR(GetLastError());
             PR_DELETE(sem);
@@ -114,7 +144,8 @@ PRSem *_PR_MD_OPEN_SEMAPHORE(
             return NULL;
         }
     } else {
-        sem->sem = OpenSemaphore(SEMAPHORE_ALL_ACCESS, FALSE, osname);
+        sem->sem = OpenSemaphore(
+                SEMAPHORE_MODIFY_STATE|SYNCHRONIZE, FALSE, osname);
         if (sem->sem == NULL) {
             DWORD err = GetLastError();
 

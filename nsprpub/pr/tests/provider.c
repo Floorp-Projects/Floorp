@@ -1049,9 +1049,7 @@ static void Help(void)
     PR_fprintf(debug_out, "\t-G           use GLOBAL threads               (LOCAL)\n");
     PR_fprintf(debug_out, "\t-T <string>  thread provider ('n' | 'p' | 'w')(n)\n");
     PR_fprintf(debug_out, "\t-X           use XTP as transport             (TCP)\n");
-#ifdef _PR_INET6
     PR_fprintf(debug_out, "\t-6           Use IPv6                         (IPv4)\n");
-#endif /* _PR_INET6 */
     PR_fprintf(debug_out, "\t-v           verbosity (accumulative)         (0)\n");
     PR_fprintf(debug_out, "\t-p           pthread statistics               (FALSE)\n");
     PR_fprintf(debug_out, "\t-d           debug mode                       (FALSE)\n");
@@ -1120,12 +1118,9 @@ PRIntn main(PRIntn argc, char** argv)
         case 'X':  /* use XTP as transport */
             protocol = 36;
             break;
-#ifdef _PR_INET6
-	case '6':  /* Use IPv6 */
-            domain = AF_INET6;
-            PR_SetIPv6Enable(PR_TRUE);
+		case '6':  /* Use IPv6 */
+            domain = PR_AF_INET6;
             break;
-#endif /* _PR_INET6 */
         case 'a':  /* the value for accepting */
             accepting = atoi(opt->value);
             break;

@@ -34,17 +34,6 @@ PR_BEGIN_EXTERN_C
 */
 NSPR_API(PRStatus) PR_Yield(void);
 
-/*
-** These are obsolete and are replaced by PR_GetSocketOption() and
-** PR_SetSocketOption().
-*/
-
-NSPR_API(PRStatus) PR_GetSockOpt(
-    PRFileDesc *fd, PRSockOption optname, void* optval, PRInt32* optlen);
-
-NSPR_API(PRStatus) PR_SetSockOpt(
-    PRFileDesc *fd, PRSockOption optname, const void* optval, PRInt32 optlen);
-
 /************************************************************************/
 /************* The following definitions are for select *****************/
 /************************************************************************/
@@ -159,64 +148,6 @@ NSPR_API(PRInt32)     PR_FD_NISSET(PRInt32 osfd, PR_fd_set *set);
 
 NSPR_API(PRInt32) PR_Stat(const char *path, struct stat *buf);
 #endif /* NO_NSPR_10_SUPPORT */
-
-/***********************************************************************
-** FUNCTION: PR_CreateNetAddr(), PR_DestroyNetAddr()
-** DESCRIPTION:
-**  Create an instance of a PRNetAddr, assigning well known values as
-**  appropriate.
-**
-** INPUTS
-**  PRNetAddrValue val  The value to be assigned to the IP Address portion
-**                      of the network address. This can only specify the
-**                      special well known values that are equivalent to
-**                      INADDR_ANY and INADDR_LOOPBACK.
-**
-**  PRUInt16 port       The port number to be assigned in the structure.
-**
-** OUTPUTS:
-**  None
-**
-** RETURN:
-**  PRNetAddr *addr     The initialized address that has been allocated
-**                      from the heap. It must be freed by the caller.
-**                      A returned value of zero indicates an error. The
-**                      cause of the error (most likely low memory) may
-**                      be retrieved by calling PR_GetError().
-**
-***********************************************************************/
-NSPR_API(PRNetAddr*) PR_CreateNetAddr(PRNetAddrValue val, PRUint16 port);
-NSPR_API(PRStatus) PR_DestroyNetAddr(PRNetAddr *addr);
-
-
-
-/***********************************************************************
-** FUNCTION: PR_GetHostName() **OBSOLETE**
-**   Use PR_GetSystemInfo() (prsystem.h) with an argument of
-**   PR_SI_HOSTNAME instead.
-** DESCRIPTION:	
-** Get the DNS name of the hosting computer.
-**
-** INPUTS:
-**  char *name          The location where the host's name is stored.
-**  PRIntn bufsize      Number of bytes in 'name'.
-** OUTPUTS:
-**  PRHostEnt *name
-**                      This string is filled in by the runtime if the
-**                      function returns PR_SUCCESS. The string must be
-**                      allocated by the caller
-** RETURN:
-**  PRStatus            PR_SUCCESS if the  succeeds. If it fails the
-**                      result will be PR_FAILURE and the reason for
-**                      the failure can be retrieved by PR_GetError().
-***********************************************************************/
-NSPR_API(PRStatus) PR_GetHostName(char *name, PRUint32 namelen);
-
-/*
-** Return the current thread's last error string.
-** obsoleted by PR_GetErrorText().
-*/
-NSPR_API(const char *) PR_GetErrorString(void);
 
 PR_END_EXTERN_C
 

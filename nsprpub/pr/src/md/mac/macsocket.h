@@ -164,8 +164,6 @@ extern int select (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfd
 #define macsock_shutdown PR_Shutdown
 #define macsock_getpeername PR_GetPeerName
 #define macsock_getsockname PR_GetSockName
-#define macsock_getsockopt PR_GetSockOpt
-#define macsock_setsockopt PR_SetSockOpt
 #define macsock_socketavailable PR_SocketAvailable
 #define macsock_send PR_Send
 #define macsock_sendto PR_SendTo

@@ -26,6 +26,7 @@ CC		= @CC@
 CCC		= @CXX@
 AR		= @AR@
 AR_FLAGS	= @AR_FLAGS@
+LD		= @LD@
 RANLIB		= @RANLIB@
 PERL		= @PERL@
 DLLTOOL		= @DLLTOOL@

@@ -38,6 +38,7 @@
 #define pripcsem_h___
 
 #include "prtypes.h"
+#include "prio.h"
 
 PR_BEGIN_EXTERN_C
 

@@ -80,6 +80,18 @@ const PRUint64 bigFoxFox     = LL_INIT( 0xffffffff, 0xffffffff );
 const PRUint64 bigFoxZero    = LL_INIT( 0xffffffff, 0x00000000 );
 const PRUint64 bigEightZero  = LL_INIT( 0x80000000, 0x00000000 );
 const PRUint64 big64K        = LL_INIT( 0x00000000, 0x00010000 );
+const PRInt64 bigInt0        = LL_INIT( 0x01a00000, 0x00001000 );
+const PRInt64 bigInt1        = LL_INIT( 0x01a00000, 0x00001100 );
+const PRInt64 bigInt2        = LL_INIT( 0x01a00000, 0x00000100 );
+const PRInt64 bigInt3        = LL_INIT( 0x01a00001, 0x00001000 );
+const PRInt64 bigInt4        = LL_INIT( 0x01a00001, 0x00001100 );
+const PRInt64 bigInt5        = LL_INIT( 0x01a00001, 0x00000100 );
+const PRInt64 bigInt6        = LL_INIT( 0xb1a00000, 0x00001000 );
+const PRInt64 bigInt7        = LL_INIT( 0xb1a00000, 0x00001100 );
+const PRInt64 bigInt8        = LL_INIT( 0xb1a00000, 0x00000100 );
+const PRInt64 bigInt9        = LL_INIT( 0xb1a00001, 0x00001000 );
+const PRInt64 bigInt10       = LL_INIT( 0xb1a00001, 0x00001100 );
+const PRInt64 bigInt11       = LL_INIT( 0xb1a00001, 0x00000100 );
 const PRInt32 one = 1l;
 const PRInt32 minusOne = -1l;
 const PRInt32 sixteen  = 16l;
@@ -236,7 +248,55 @@ TestComparisons( void )
 
     if ( !LL_CMP( bigMaxInt32, <, big2To31 ))
         SetFailed( "LL_CMP", "Max 32-bit signed int >= 2^31");
-        
+
+    /* Two positive numbers */
+    if ( !LL_CMP( bigInt0, <=, bigInt0 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( !LL_CMP( bigInt0, <=, bigInt1 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( LL_CMP( bigInt0, <=, bigInt2 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( !LL_CMP( bigInt0, <=, bigInt3 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( !LL_CMP( bigInt0, <=, bigInt4 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( !LL_CMP( bigInt0, <=, bigInt5 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    /* Two negative numbers */
+    if ( !LL_CMP( bigInt6, <=, bigInt6 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( !LL_CMP( bigInt6, <=, bigInt7 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( LL_CMP( bigInt6, <=, bigInt8 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( !LL_CMP( bigInt6, <=, bigInt9 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( !LL_CMP( bigInt6, <=, bigInt10 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( !LL_CMP( bigInt6, <=, bigInt11 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    /* One positive, one negative */
+    if ( LL_CMP( bigInt0, <=, bigInt6 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( LL_CMP( bigInt0, <=, bigInt7 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
+    if ( LL_CMP( bigInt0, <=, bigInt8 ))
+        SetFailed( "LL_CMP", "LL_CMP(<=) failed");
+
     /* Bitwise Compare two numbers */
     if ( !LL_UCMP( bigZero, ==, bigZero ))
         SetFailed( "LL_UCMP", "0 == 0");
@@ -258,7 +318,55 @@ TestComparisons( void )
         
     if ( LL_UCMP( bigMinusNumber, <, bigNumber ))
         SetFailed( "LL_UCMP", "-n < n");
-        
+
+    /* Two positive numbers */
+    if ( !LL_UCMP( bigInt0, <=, bigInt0 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt0, <=, bigInt1 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( LL_UCMP( bigInt0, <=, bigInt2 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt0, <=, bigInt3 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt0, <=, bigInt4 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt0, <=, bigInt5 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    /* Two negative numbers */
+    if ( !LL_UCMP( bigInt6, <=, bigInt6 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt6, <=, bigInt7 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( LL_UCMP( bigInt6, <=, bigInt8 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt6, <=, bigInt9 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt6, <=, bigInt10 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt6, <=, bigInt11 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    /* One positive, one negative */
+    if ( !LL_UCMP( bigInt0, <=, bigInt6 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt0, <=, bigInt7 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
+    if ( !LL_UCMP( bigInt0, <=, bigInt8 ))
+        SetFailed( "LL_UCMP", "LL_UCMP(<=) failed");
+
     return;
 }
 

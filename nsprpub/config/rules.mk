@@ -62,12 +62,10 @@ endif
 
 ifdef USE_AUTOCONF
 ifdef INTERNAL_TOOLS
-ifdef CROSS_COMPILE
 CC=$(HOST_CC)
 CCC=$(HOST_CXX)
 CFLAGS=$(HOST_CFLAGS)
 CXXFLAGS=$(HOST_CXXFLAGS)
-endif
 endif
 endif
 
@@ -409,6 +407,29 @@ $(OBJDIR)/%.$(OBJ_SUFFIX): %.s
 
 %: %.pl
 	rm -f $@; cp $< $@; chmod +x $@
+
+#
+# HACK ALERT
+#
+# The only purpose of this rule is to pass Mozilla's Tinderbox depend
+# builds (http://tinderbox.mozilla.org/showbuilds.cgi).  Mozilla's
+# Tinderbox builds NSPR continuously as part of the Mozilla client.
+# Because NSPR's make depend is not implemented, whenever we change
+# an NSPR header file, the depend build does not recompile the NSPR
+# files that depend on the header.
+#
+# This rule makes all the objects depend on a dummy header file.
+# Touch this dummy header file to force the depend build to recompile
+# everything.
+#
+# This rule should be removed when make depend is implemented.
+#
+
+DUMMY_DEPEND_H = $(topsrcdir)/config/prdepend.h
+
+$(filter $(OBJDIR)/%.$(OBJ_SUFFIX),$(OBJS)): $(OBJDIR)/%.$(OBJ_SUFFIX): $(DUMMY_DEPEND_H)
+
+# END OF HACK
 
 ################################################################################
 # Special gmake rules.

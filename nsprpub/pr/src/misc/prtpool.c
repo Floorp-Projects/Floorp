@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include "prtpool.h"
 #include "nspr.h"
 
 /*
@@ -84,22 +83,17 @@ struct PRThreadPool {
 	PRInt32		max_threads;
 	PRInt32		current_threads;
 	PRInt32		idle_threads;
-	PRInt32		stacksize;
+	PRUint32	stacksize;
 	tp_jobq		jobq;
 	io_jobq		ioq;
 	timer_jobq	timerq;
+	PRLock		*join_lock;		/* used with jobp->join_cv */
 	PRCondVar	*shutdown_cv;
 	PRBool		shutdown;
 };
 
 typedef enum io_op_type
 	{ JOB_IO_READ, JOB_IO_WRITE, JOB_IO_CONNECT, JOB_IO_ACCEPT } io_op_type;
-
-typedef enum _PRJobStatus
-	{ JOB_ON_TIMERQ, JOB_ON_IOQ, JOB_QUEUED, JOB_RUNNING, JOB_COMPLETED,
-					JOB_CANCELED, JOB_FREED } _PRJobStatus;
-
-typedef void (* Jobfn)(void *arg);
 
 #ifdef OPT_WINNT
 typedef struct NT_notifier {
@@ -110,12 +104,14 @@ typedef struct NT_notifier {
 
 struct PRJob {
 	PRCList			links;		/* 	for linking jobs */
-	_PRJobStatus 	status;
-	PRBool			joinable;
-	Jobfn			job_func;
+	PRBool			on_ioq;		/* job on ioq */
+	PRBool			on_timerq;	/* job on timerq */
+	PRJobFn			job_func;
 	void 			*job_arg;
-	PRLock			*jlock;
 	PRCondVar		*join_cv;
+	PRBool			join_wait;	/* == PR_TRUE, when waiting to join */
+	PRCondVar		*cancel_cv;	/* for cancelling IO jobs */
+	PRBool			cancel_io;	/* for cancelling IO jobs */
 	PRThreadPool	*tpool;		/* back pointer to thread pool */
 	PRJobIoDesc		*iod;
 	io_op_type		io_op;
@@ -134,11 +130,39 @@ struct PRJob {
 #define WTHREAD_LINKS_PTR(_qp) \
     ((wthread *) ((char *) (_qp) - offsetof(wthread, links)))
 
+#define JOINABLE_JOB(_jobp) (NULL != (_jobp)->join_cv)
+
+#define JOIN_NOTIFY(_jobp)								\
+				PR_BEGIN_MACRO							\
+				PR_Lock(_jobp->tpool->join_lock);		\
+				_jobp->join_wait = PR_FALSE;			\
+				PR_NotifyCondVar(_jobp->join_cv);		\
+				PR_Unlock(_jobp->tpool->join_lock);		\
+				PR_END_MACRO
+
+#define CANCEL_IO_JOB(jobp)								\
+				PR_BEGIN_MACRO							\
+				jobp->cancel_io = PR_FALSE;				\
+				jobp->on_ioq = PR_FALSE;				\
+				PR_REMOVE_AND_INIT_LINK(&jobp->links);	\
+				tp->ioq.cnt--;							\
+				PR_NotifyCondVar(jobp->cancel_cv);		\
+				PR_END_MACRO
+
 static void delete_job(PRJob *jobp);
 static PRThreadPool * alloc_threadpool();
-static PRJob * alloc_job(PRBool joinable);
+static PRJob * alloc_job(PRBool joinable, PRThreadPool *tp);
 static void notify_ioq(PRThreadPool *tp);
 static void notify_timerq(PRThreadPool *tp);
+
+/*
+ * locks are acquired in the following order
+ *
+ *	tp->ioq.lock,tp->timerq.lock
+ *			|
+ *			V
+ *		tp->jobq->lock		
+ */
 
 /*
  * worker thread function
@@ -172,17 +196,14 @@ PRCList *head;
 		tp->idle_threads--;
 		tp->jobq.cnt--;
 		PR_Unlock(tp->jobq.lock);
-		PR_Lock(jobp->jlock);
-		jobp->status = JOB_RUNNING;
-		PR_Unlock(jobp->jlock);
 #else
 
 		PR_Lock(tp->jobq.lock);
 		while (PR_CLIST_IS_EMPTY(&tp->jobq.list) && (!tp->shutdown)) {
 			tp->idle_threads++;
 			PR_WaitCondVar(tp->jobq.cv, PR_INTERVAL_NO_TIMEOUT);
+			tp->idle_threads--;
 		}	
-		tp->idle_threads--;
 		if (tp->shutdown) {
 			PR_Unlock(tp->jobq.lock);
 			break;
@@ -194,20 +215,14 @@ PRCList *head;
 		PR_REMOVE_AND_INIT_LINK(head);
 		tp->jobq.cnt--;
 		jobp = JOB_LINKS_PTR(head);
-		PR_Lock(jobp->jlock);
-		jobp->status = JOB_RUNNING;
-		PR_Unlock(jobp->jlock);
 		PR_Unlock(tp->jobq.lock);
 #endif
 
 		jobp->job_func(jobp->job_arg);
-		if (!jobp->joinable) {
+		if (!JOINABLE_JOB(jobp)) {
 			delete_job(jobp);
 		} else {
-			PR_Lock(jobp->jlock);
-			jobp->status = JOB_COMPLETED;
-			PR_NotifyCondVar(jobp->join_cv);
-			PR_Unlock(jobp->jlock);
+			JOIN_NOTIFY(jobp);
 		}
 	}
 	PR_Lock(tp->jobq.lock);
@@ -236,11 +251,9 @@ add_to_jobq(PRThreadPool *tp, PRJob *jobp)
 #else
 	PR_Lock(tp->jobq.lock);
 	PR_APPEND_LINK(&jobp->links,&tp->jobq.list);
-	jobp->status = JOB_QUEUED;
 	tp->jobq.cnt++;
 	if ((tp->idle_threads < tp->jobq.cnt) &&
 					(tp->current_threads < tp->max_threads)) {
-		PRThread *thr;
 		wthread *wthrp;
 		/*
 		 * increment thread count and unlock the jobq lock
@@ -248,15 +261,19 @@ add_to_jobq(PRThreadPool *tp, PRJob *jobp)
 		tp->current_threads++;
 		PR_Unlock(tp->jobq.lock);
 		/* create new worker thread */
-		thr = PR_CreateThread(PR_USER_THREAD, wstart,
+		wthrp = PR_NEWZAP(wthread);
+		if (wthrp) {
+			wthrp->thread = PR_CreateThread(PR_USER_THREAD, wstart,
 						tp, PR_PRIORITY_NORMAL,
 						PR_GLOBAL_THREAD,PR_JOINABLE_THREAD,tp->stacksize);
+			if (NULL == wthrp->thread) {
+				PR_DELETE(wthrp);  /* this sets wthrp to NULL */
+			}
+		}
 		PR_Lock(tp->jobq.lock);
-		if (NULL == thr) {
+		if (NULL == wthrp) {
 			tp->current_threads--;
 		} else {
-			wthrp = PR_NEWZAP(wthread);
-			wthrp->thread = thr;
 			PR_APPEND_LINK(&wthrp->links, &tp->jobq.wthreads);
 		}
 	}
@@ -331,6 +348,10 @@ PRIntervalTime now;
 		PR_Lock(tp->ioq.lock);
 		for (qp = tp->ioq.list.next; qp != &tp->ioq.list; qp = qp->next) {
 			jobp = JOB_LINKS_PTR(qp);
+			if (jobp->cancel_io) {
+				CANCEL_IO_JOB(jobp);
+				continue;
+			}
 			if (pollfds_used == (pollfd_cnt))
 				break;
 			pollfds[pollfds_used].fd = jobp->iod->socket;
@@ -391,11 +412,18 @@ PRIntervalTime now;
 				jobp = polljobs[index];	
 
                 if ((revents & PR_POLL_NVAL) ||  /* busted in all cases */
+                	(revents & PR_POLL_ERR) ||
                 			((events & PR_POLL_WRITE) &&
 							(revents & PR_POLL_HUP))) { /* write op & hup */
 					PR_Lock(tp->ioq.lock);
+					if (jobp->cancel_io) {
+						CANCEL_IO_JOB(jobp);
+						PR_Unlock(tp->ioq.lock);
+						continue;
+					}
 					PR_REMOVE_AND_INIT_LINK(&jobp->links);
 					tp->ioq.cnt--;
+					jobp->on_ioq = PR_FALSE;
 					PR_Unlock(tp->ioq.lock);
 
 					/* set error */
@@ -403,21 +431,36 @@ PRIntervalTime now;
 						jobp->iod->error = PR_BAD_DESCRIPTOR_ERROR;
                     else if (PR_POLL_HUP & revents)
 						jobp->iod->error = PR_CONNECT_RESET_ERROR;
+                    else 
+						jobp->iod->error = PR_IO_ERROR;
 
 					/*
 					 * add to jobq
 					 */
 					add_to_jobq(tp, jobp);
-				} else if (revents & events) {
+				} else if (revents) {
 					/*
 					 * add to jobq
 					 */
 					PR_Lock(tp->ioq.lock);
+					if (jobp->cancel_io) {
+						CANCEL_IO_JOB(jobp);
+						PR_Unlock(tp->ioq.lock);
+						continue;
+					}
 					PR_REMOVE_AND_INIT_LINK(&jobp->links);
 					tp->ioq.cnt--;
+					jobp->on_ioq = PR_FALSE;
 					PR_Unlock(tp->ioq.lock);
 
-					jobp->iod->error = 0;
+					if (jobp->io_op == JOB_IO_CONNECT) {
+						if (PR_GetConnectStatus(&pollfds[index]) == PR_SUCCESS)
+							jobp->iod->error = 0;
+						else
+							jobp->iod->error = PR_GetError();
+					} else
+						jobp->iod->error = 0;
+
 					add_to_jobq(tp, jobp);
 				}
 			}
@@ -429,6 +472,10 @@ PRIntervalTime now;
 		PR_Lock(tp->ioq.lock);
 		for (qp = tp->ioq.list.next; qp != &tp->ioq.list; qp = qp->next) {
 			jobp = JOB_LINKS_PTR(qp);
+			if (jobp->cancel_io) {
+				CANCEL_IO_JOB(jobp);
+				continue;
+			}
 			if (PR_INTERVAL_NO_TIMEOUT == jobp->timeout)
 				break;
 			if ((PR_INTERVAL_NO_WAIT != jobp->timeout) &&
@@ -436,6 +483,7 @@ PRIntervalTime now;
 				break;
 			PR_REMOVE_AND_INIT_LINK(&jobp->links);
 			tp->ioq.cnt--;
+			jobp->on_ioq = PR_FALSE;
 			jobp->iod->error = PR_IO_TIMEOUT_ERROR;
 			add_to_jobq(tp, jobp);
 		}
@@ -494,6 +542,7 @@ PRIntervalTime now;
 			 */
 			PR_REMOVE_AND_INIT_LINK(&jobp->links);
 			tp->timerq.cnt--;
+			jobp->on_timerq = PR_FALSE;
 			add_to_jobq(tp, jobp);
 		}
 		PR_Unlock(tp->timerq.lock);
@@ -510,6 +559,8 @@ delete_threadpool(PRThreadPool *tp)
 			PR_DestroyCondVar(tp->jobq.cv);
 		if (NULL != tp->jobq.lock)
 			PR_DestroyLock(tp->jobq.lock);
+		if (NULL != tp->join_lock)
+			PR_DestroyLock(tp->join_lock);
 #ifdef OPT_WINNT
 		if (NULL != tp->jobq.nt_completion_port)
 			CloseHandle(tp->jobq.nt_completion_port);
@@ -544,6 +595,9 @@ PRThreadPool *tp;
 		goto failed;
 	tp->jobq.cv = PR_NewCondVar(tp->jobq.lock);
 	if (NULL == tp->jobq.cv)
+		goto failed;
+	tp->join_lock = PR_NewLock();
+	if (NULL == tp->join_lock)
 		goto failed;
 #ifdef OPT_WINNT
 	tp->jobq.nt_completion_port = CreateIoCompletionPort(INVALID_HANDLE_VALUE,
@@ -581,7 +635,7 @@ failed:
 /* Create thread pool */
 PR_IMPLEMENT(PRThreadPool *)
 PR_CreateThreadPool(PRInt32 initial_threads, PRInt32 max_threads,
-                                PRSize stacksize)
+                                PRUint32 stacksize)
 {
 PRThreadPool *tp;
 PRThread *thr;
@@ -643,32 +697,29 @@ static void
 delete_job(PRJob *jobp)
 {
 	if (NULL != jobp) {
-		if (NULL != jobp->jlock) {
-			PR_DestroyLock(jobp->jlock);
-			jobp->jlock = NULL;
-		}
 		if (NULL != jobp->join_cv) {
 			PR_DestroyCondVar(jobp->join_cv);
 			jobp->join_cv = NULL;
 		}
-		jobp->status = JOB_FREED;
+		if (NULL != jobp->cancel_cv) {
+			PR_DestroyCondVar(jobp->cancel_cv);
+			jobp->cancel_cv = NULL;
+		}
 		PR_DELETE(jobp);
 	}
 }
 
 static PRJob *
-alloc_job(PRBool joinable)
+alloc_job(PRBool joinable, PRThreadPool *tp)
 {
 	PRJob *jobp;
 
 	jobp = PR_NEWZAP(PRJob);
 	if (NULL == jobp) 
 		goto failed;
-	jobp->jlock = PR_NewLock();
-	if (NULL == jobp->jlock)
-		goto failed;
 	if (joinable) {
-		jobp->join_cv = PR_NewCondVar(jobp->jlock);
+		jobp->join_cv = PR_NewCondVar(tp->join_lock);
+		jobp->join_wait = PR_TRUE;
 		if (NULL == jobp->join_cv)
 			goto failed;
 	} else {
@@ -686,32 +737,31 @@ failed:
 
 /* queue a job */
 PR_IMPLEMENT(PRJob *)
-PR_QueueJob(PRThreadPool *tpool, JobFn fn, void *arg, PRBool joinable)
+PR_QueueJob(PRThreadPool *tpool, PRJobFn fn, void *arg, PRBool joinable)
 {
 	PRJob *jobp;
 
-	jobp = alloc_job(joinable);
+	jobp = alloc_job(joinable, tpool);
 	if (NULL == jobp)
 		return NULL;
 
 	jobp->job_func = fn;
 	jobp->job_arg = arg;
 	jobp->tpool = tpool;
-	jobp->joinable = joinable;
 
 	add_to_jobq(tpool, jobp);
 	return jobp;
 }
 
-/* queue a job, when a socket is readable */
+/* queue a job, when a socket is readable or writeable */
 static PRJob *
-queue_io_job(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn, void * arg,
+queue_io_job(PRThreadPool *tpool, PRJobIoDesc *iod, PRJobFn fn, void * arg,
 				PRBool joinable, io_op_type op)
 {
 	PRJob *jobp;
 	PRIntervalTime now;
 
-	jobp = alloc_job(joinable);
+	jobp = alloc_job(joinable, tpool);
 	if (NULL == jobp) {
 		return NULL;
 	}
@@ -723,9 +773,7 @@ queue_io_job(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn, void * arg,
 
 	jobp->job_func = fn;
 	jobp->job_arg = arg;
-	jobp->status = JOB_ON_IOQ;
 	jobp->tpool = tpool;
-	jobp->joinable = joinable;
 	jobp->iod = iod;
 	if (JOB_IO_READ == op) {
 		jobp->io_op = JOB_IO_READ;
@@ -738,7 +786,7 @@ queue_io_job(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn, void * arg,
 		jobp->io_poll_flags = PR_POLL_READ;
 	} else if (JOB_IO_CONNECT == op) {
 		jobp->io_op = JOB_IO_CONNECT;
-		jobp->io_poll_flags = PR_POLL_WRITE;
+		jobp->io_poll_flags = PR_POLL_WRITE|PR_POLL_EXCEPT;
 	} else {
 		delete_job(jobp);
 		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
@@ -778,6 +826,7 @@ queue_io_job(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn, void * arg,
 		PR_INSERT_AFTER(&jobp->links,qp);
 	}
 
+	jobp->on_ioq = PR_TRUE;
 	tpool->ioq.cnt++;
 	/*
 	 * notify io worker thread(s)
@@ -789,7 +838,7 @@ queue_io_job(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn, void * arg,
 
 /* queue a job, when a socket is readable */
 PR_IMPLEMENT(PRJob *)
-PR_QueueJob_Read(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn, void * arg,
+PR_QueueJob_Read(PRThreadPool *tpool, PRJobIoDesc *iod, PRJobFn fn, void * arg,
 											PRBool joinable)
 {
 	return (queue_io_job(tpool, iod, fn, arg, joinable, JOB_IO_READ));
@@ -797,7 +846,7 @@ PR_QueueJob_Read(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn, void * arg,
 
 /* queue a job, when a socket is writeable */
 PR_IMPLEMENT(PRJob *)
-PR_QueueJob_Write(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn,void * arg,
+PR_QueueJob_Write(PRThreadPool *tpool, PRJobIoDesc *iod, PRJobFn fn,void * arg,
 										PRBool joinable)
 {
 	return (queue_io_job(tpool, iod, fn, arg, joinable, JOB_IO_WRITE));
@@ -806,27 +855,40 @@ PR_QueueJob_Write(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn,void * arg,
 
 /* queue a job, when a socket has a pending connection */
 PR_IMPLEMENT(PRJob *)
-PR_QueueJob_Accept(PRThreadPool *tpool, PRJobIoDesc *iod, JobFn fn, void * arg,
-												PRBool joinable)
+PR_QueueJob_Accept(PRThreadPool *tpool, PRJobIoDesc *iod, PRJobFn fn,
+								void * arg, PRBool joinable)
 {
 	return (queue_io_job(tpool, iod, fn, arg, joinable, JOB_IO_ACCEPT));
 }
 
 /* queue a job, when a socket can be connected */
 PR_IMPLEMENT(PRJob *)
-PR_QueueJob_Connect(PRThreadPool *tpool, PRJobIoDesc *iod, PRNetAddr *addr,
-				JobFn fn, void * arg, PRBool joinable)
+PR_QueueJob_Connect(PRThreadPool *tpool, PRJobIoDesc *iod,
+			const PRNetAddr *addr, PRJobFn fn, void * arg, PRBool joinable)
 {
-	/*
-	 * not implemented
-	 */
-	 return NULL;
+	PRStatus rv;
+	PRErrorCode err;
+
+	rv = PR_Connect(iod->socket, addr, PR_INTERVAL_NO_WAIT);
+	if ((rv == PR_FAILURE) && ((err = PR_GetError()) == PR_IN_PROGRESS_ERROR)){
+		/* connection pending */
+		return(queue_io_job(tpool, iod, fn, arg, joinable, JOB_IO_CONNECT));
+	} else {
+		/*
+		 * connection succeeded or failed; add to jobq right away
+		 */
+		if (rv == PR_FAILURE)
+			iod->error = err;
+		else
+			iod->error = 0;
+		return(PR_QueueJob(tpool, fn, arg, joinable));
+	}
 }
 
 /* queue a job, when a timer expires */
 PR_IMPLEMENT(PRJob *)
 PR_QueueJob_Timer(PRThreadPool *tpool, PRIntervalTime timeout,
-							JobFn fn, void * arg, PRBool joinable)
+							PRJobFn fn, void * arg, PRBool joinable)
 {
 	PRIntervalTime now;
 	PRJob *jobp;
@@ -841,7 +903,7 @@ PR_QueueJob_Timer(PRThreadPool *tpool, PRIntervalTime timeout,
 		 */
 		return(PR_QueueJob(tpool, fn, arg, joinable));
 	}
-	jobp = alloc_job(joinable);
+	jobp = alloc_job(joinable, tpool);
 	if (NULL == jobp) {
 		return NULL;
 	}
@@ -853,9 +915,7 @@ PR_QueueJob_Timer(PRThreadPool *tpool, PRIntervalTime timeout,
 
 	jobp->job_func = fn;
 	jobp->job_arg = arg;
-	jobp->status = JOB_ON_TIMERQ;
 	jobp->tpool = tpool;
-	jobp->joinable = joinable;
 	jobp->timeout = timeout;
 
 	now = PR_IntervalNow();
@@ -863,6 +923,7 @@ PR_QueueJob_Timer(PRThreadPool *tpool, PRIntervalTime timeout,
 
 
 	PR_Lock(tpool->timerq.lock);
+	jobp->on_timerq = PR_TRUE;
 	if (PR_CLIST_IS_EMPTY(&tpool->timerq.list))
 		PR_APPEND_LINK(&jobp->links,&tpool->timerq.list);
 	else {
@@ -921,27 +982,64 @@ PR_CancelJob(PRJob *jobp) {
 	PRStatus rval = PR_FAILURE;
 	PRThreadPool *tp;
 
-	if (JOB_QUEUED == jobp->status) {
+	if (jobp->on_timerq) {
 		/*
-		 * now, check again while holding thread pool lock
+		 * now, check again while holding the timerq lock
 		 */
 		tp = jobp->tpool;
-		PR_Lock(tp->jobq.lock);
-		PR_Lock(jobp->jlock);
-		if (JOB_QUEUED == jobp->status) {
+		PR_Lock(tp->timerq.lock);
+		if (jobp->on_timerq) {
+			jobp->on_timerq = PR_FALSE;
 			PR_REMOVE_AND_INIT_LINK(&jobp->links);
-			if (!jobp->joinable) {
-				PR_Unlock(jobp->jlock);
+			tp->timerq.cnt--;
+			PR_Unlock(tp->timerq.lock);
+			if (!JOINABLE_JOB(jobp)) {
 				delete_job(jobp);
 			} else {
-				jobp->status = JOB_CANCELED;
-				PR_NotifyCondVar(jobp->join_cv);
-				PR_Unlock(jobp->jlock);
+				JOIN_NOTIFY(jobp);
 			}
 			rval = PR_SUCCESS;
-		}
-		PR_Unlock(tp->jobq.lock);
+		} else
+			PR_Unlock(tp->timerq.lock);
+	} else if (jobp->on_ioq) {
+		/*
+		 * now, check again while holding the ioq lock
+		 */
+		tp = jobp->tpool;
+		PR_Lock(tp->ioq.lock);
+		if (jobp->on_ioq) {
+			jobp->cancel_cv = PR_NewCondVar(tp->ioq.lock);
+			if (NULL == jobp->cancel_cv) {
+				PR_Unlock(tp->ioq.lock);
+				PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
+				return PR_FAILURE;
+			}
+			/*
+			 * mark job 'cancelled' and notify io thread(s)
+			 * XXXX:
+			 *		this assumes there is only one io thread; when there
+			 * 		are multiple threads, the io thread processing this job
+			 * 		must be notified.
+			 */
+			jobp->cancel_io = PR_TRUE;
+			PR_Unlock(tp->ioq.lock);	/* release, reacquire ioq lock */
+			notify_ioq(tp);
+			PR_Lock(tp->ioq.lock);
+			while (jobp->cancel_io)
+				PR_WaitCondVar(jobp->cancel_cv, PR_INTERVAL_NO_TIMEOUT);
+			PR_Unlock(tp->ioq.lock);
+			PR_ASSERT(!jobp->on_ioq);
+			if (!JOINABLE_JOB(jobp)) {
+				delete_job(jobp);
+			} else {
+				JOIN_NOTIFY(jobp);
+			}
+			rval = PR_SUCCESS;
+		} else
+			PR_Unlock(tp->ioq.lock);
 	}
+	if (PR_FAILURE == rval)
+		PR_SetError(PR_INVALID_STATE_ERROR, 0);
 	return rval;
 }
 
@@ -949,19 +1047,14 @@ PR_CancelJob(PRJob *jobp) {
 PR_IMPLEMENT(PRStatus)
 PR_JoinJob(PRJob *jobp)
 {
-	/*
-	 * No references to the thread pool
-	 */
-	if (!jobp->joinable) {
+	if (!JOINABLE_JOB(jobp)) {
 		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
 		return PR_FAILURE;
 	}
-	PR_Lock(jobp->jlock);
-	while((JOB_COMPLETED != jobp->status) &&
-			(JOB_CANCELED != jobp->status))
+	PR_Lock(jobp->tpool->join_lock);
+	while(jobp->join_wait)
 		PR_WaitCondVar(jobp->join_cv, PR_INTERVAL_NO_TIMEOUT);
-
-	PR_Unlock(jobp->jlock);
+	PR_Unlock(jobp->tpool->join_lock);
 	delete_job(jobp);
 	return PR_SUCCESS;
 }
@@ -1017,9 +1110,7 @@ PRStatus rval_status;
 	/*
 	 * wakeup io thread(s)
 	 */
-	PR_Lock(tpool->ioq.lock);
 	notify_ioq(tpool);
-	PR_Unlock(tpool->ioq.lock);
 
 	/*
 	 * wakeup timer thread(s)
@@ -1064,7 +1155,7 @@ PRStatus rval_status;
 	}
 
 	/*
-	 * Delete unjoinable jobs; joinable jobs must be reclaimed by the user
+	 * Delete queued jobs
 	 */
 	while (!PR_CLIST_IS_EMPTY(&tpool->jobq.list)) {
 		PRJob *jobp;
@@ -1073,17 +1164,10 @@ PRStatus rval_status;
 		PR_REMOVE_AND_INIT_LINK(head);
 		jobp = JOB_LINKS_PTR(head);
 		tpool->jobq.cnt--;
-
-		if (!jobp->joinable) {
-			delete_job(jobp);
-		} else {
-			PR_Lock(jobp->jlock);
-			jobp->status = JOB_CANCELED;
-			PR_NotifyCondVar(jobp->join_cv);
-			PR_Unlock(jobp->jlock);
-		}
+		delete_job(jobp);
 	}
 
+	/* delete io jobs */
 	while (!PR_CLIST_IS_EMPTY(&tpool->ioq.list)) {
 		PRJob *jobp;
 
@@ -1091,16 +1175,10 @@ PRStatus rval_status;
 		PR_REMOVE_AND_INIT_LINK(head);
 		tpool->ioq.cnt--;
 		jobp = JOB_LINKS_PTR(head);
-		if (!jobp->joinable) {
-			delete_job(jobp);
-		} else {
-			PR_Lock(jobp->jlock);
-			jobp->status = JOB_CANCELED;
-			PR_NotifyCondVar(jobp->join_cv);
-			PR_Unlock(jobp->jlock);
-		}
+		delete_job(jobp);
 	}
 
+	/* delete timer jobs */
 	while (!PR_CLIST_IS_EMPTY(&tpool->timerq.list)) {
 		PRJob *jobp;
 
@@ -1108,14 +1186,7 @@ PRStatus rval_status;
 		PR_REMOVE_AND_INIT_LINK(head);
 		tpool->timerq.cnt--;
 		jobp = JOB_LINKS_PTR(head);
-		if (!jobp->joinable) {
-			delete_job(jobp);
-		} else {
-			PR_Lock(jobp->jlock);
-			jobp->status = JOB_CANCELED;
-			PR_NotifyCondVar(jobp->join_cv);
-			PR_Unlock(jobp->jlock);
-		}
+		delete_job(jobp);
 	}
 
 	PR_ASSERT(0 == tpool->jobq.cnt);

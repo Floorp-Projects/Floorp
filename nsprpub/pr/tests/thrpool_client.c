@@ -25,7 +25,6 @@
 ** Modification History:
 */
 #include "primpl.h"
-#include "prtpool.h"
 
 #include "plgetopt.h"
 

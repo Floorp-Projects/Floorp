@@ -129,8 +129,8 @@ WorkerThreadFunc(void *_listenSock)
     char *sendBuf;
 
     if (debug_mode) DPRINTF("\tServer buffer is %d bytes; %d data, %d netaddrs\n",
-            _client_data+(4*sizeof(PRNetAddr)), _client_data, (4*sizeof(PRNetAddr)));
-    dataBuf = (char *)PR_MALLOC(_client_data *sizeof(char) + 4*sizeof(PRNetAddr));
+            _client_data+(2*sizeof(PRNetAddr))+32, _client_data, (2*sizeof(PRNetAddr))+32);
+    dataBuf = (char *)PR_MALLOC(_client_data + 2*sizeof(PRNetAddr) + 32);
     if (!dataBuf)
         if (debug_mode) printf("\tServer could not malloc space!?\n");
     sendBuf = (char *)PR_MALLOC(_server_data *sizeof(char));

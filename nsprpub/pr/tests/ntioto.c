@@ -56,6 +56,7 @@
 #include <nspr.h> 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*
 ** Test harness infrastructure
@@ -95,10 +96,17 @@ static void Help( void )
     exit(1);
 } /* end Help() */
 
+
+/*
+** static computation of PR_AcceptRead() buffer size.
+*/
+#define ACCEPT_READ_DATASIZE 10
+#define ACCEPT_READ_BUFSIZE (PR_ACCEPT_READ_BUF_OVERHEAD + ACCEPT_READ_DATASIZE)
+
 static void AcceptThread(void *arg)
 {
     PRIntn bytesRead;
-    char dataBuf[100];
+    char dataBuf[ACCEPT_READ_BUFSIZE];
     PRFileDesc  *arSock;
     PRNetAddr   *arAddr;
 
@@ -106,7 +114,7 @@ static void AcceptThread(void *arg)
         &arSock,
         &arAddr,
         dataBuf,
-        10,
+        ACCEPT_READ_DATASIZE,
         PR_SecondsToInterval(1));
 
     if ( bytesRead == -1 && PR_GetError() == PR_IO_TIMEOUT_ERROR )

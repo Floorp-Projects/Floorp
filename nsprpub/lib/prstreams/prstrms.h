@@ -31,6 +31,12 @@
 #endif
 #include <iostream.h>
 
+#if defined(AIX) && defined(__64BIT__)
+typedef long PRstreambuflen;
+#else
+typedef int PRstreambuflen;
+#endif
+
 #if defined (PRFSTREAMS_BROKEN)
 
 // fix it sometime
@@ -51,7 +57,7 @@ public:
     ~PRfilebuf();
     virtual	int	overflow(int=EOF);
     virtual	int	underflow();
-    virtual	streambuf *setbuf(char *buff, int bufflen);
+    virtual	streambuf *setbuf(char *buff, PRstreambuflen bufflen);
     virtual	streampos seekoff(streamoff, ios::seek_dir, int);
     virtual int sync();
     PRfilebuf *open(const char *name, int mode, int flags);

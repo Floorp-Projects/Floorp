@@ -294,9 +294,7 @@ static void Help(void)
     PR_fprintf(err, "\t-B <nK>  Transport recv/send buffer size (default: sys)\n");
     PR_fprintf(err, "\t-G       Use GLOBAL threads              (default: LOCAL)\n");
     PR_fprintf(err, "\t-X       Use XTP transport               (default: TCP)\n");
-#ifdef _PR_INET6
     PR_fprintf(err, "\t-6       Use IPv6                        (default: IPv4)\n");
-#endif /* _PR_INET6 */
     PR_fprintf(err, "\t-h       This message and nothing else\n");
     PR_fprintf(err, "\t<server> DNS name of server\n");
     PR_fprintf(err, "\t\tIf <server> is not specified, this host will be\n");
@@ -325,12 +323,9 @@ PRIntn main(PRIntn argc, char **argv)
         case 'X':  /* Use XTP as the transport */
             protocol = 36;
             break;
-#ifdef _PR_INET6
         case '6':  /* Use IPv6 */
             domain = PR_AF_INET6;
-            PR_SetIPv6Enable(PR_TRUE);
             break;
-#endif /* _PR_INET6 */
         case 's':  /* initial_streams */
             initial_streams = atoi(opt->value);
             break;

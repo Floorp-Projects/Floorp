@@ -25,16 +25,14 @@
 /* These two functions are only used in assertions. */
 #if defined(DEBUG)
 
-static PRBool IsValidNetAddr(const PRNetAddr *addr)
+PRBool IsValidNetAddr(const PRNetAddr *addr)
 {
     if ((addr != NULL)
 #ifdef XP_UNIX
-	    && (addr->raw.family != AF_UNIX)
+	    && (addr->raw.family != PR_AF_LOCAL)
 #endif
-#ifdef _PR_INET6
-	    && (addr->raw.family != AF_INET6)
-#endif
-	    && (addr->raw.family != AF_INET)) {
+	    && (addr->raw.family != PR_AF_INET6)
+	    && (addr->raw.family != PR_AF_INET)) {
         return PR_FALSE;
     }
     return PR_TRUE;
@@ -228,6 +226,10 @@ static PRStatus PR_CALLBACK SocketConnect(
     PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeout)
 {
 	PRInt32 rv;    /* Return value of _PR_MD_CONNECT */
+    const PRNetAddr *addrp = addr;
+#if defined(_PR_INET6)
+	PRNetAddr addrCopy;
+#endif
 	PRThread *me = _PR_MD_CURRENT_THREAD();
 
 	if (_PR_PENDING_INTERRUPT(me)) {
@@ -235,8 +237,15 @@ static PRStatus PR_CALLBACK SocketConnect(
 		PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
 		return PR_FAILURE;
 	}
+#if defined(_PR_INET6)
+	if (addr->raw.family == PR_AF_INET6) {
+		addrCopy = *addr;
+		addrCopy.raw.family = AF_INET6;
+		addrp = &addrCopy;
+	}
+#endif
 
-	rv = _PR_MD_CONNECT(fd, addr, PR_NETADDR_SIZE(addr), timeout);
+	rv = _PR_MD_CONNECT(fd, addrp, PR_NETADDR_SIZE(addr), timeout);
 	PR_LOG(_pr_io_lm, PR_LOG_MAX, ("connect -> %d", rv));
 	if (rv == 0)
 		return PR_SUCCESS;
@@ -414,6 +423,10 @@ PRIntervalTime timeout)
 	_PR_MD_MAKE_NONBLOCK(fd2);
 #endif
 
+#ifdef _PR_INET6
+	if (addr && (AF_INET6 == addr->raw.family))
+        addr->raw.family = PR_AF_INET6;
+#endif
 	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
 	PR_ASSERT(IsValidNetAddrLen(addr, al) == PR_TRUE);
 
@@ -458,6 +471,10 @@ PRIntervalTime timeout)
 	        PR_ASSERT(al == PR_NETADDR_SIZE(addr));
         	fd2->secret->md.accepted_socket = PR_TRUE;
         	memcpy(&fd2->secret->md.peer_addr, addr, al);
+#ifdef _PR_INET6
+		if (AF_INET6 == addr->raw.family)
+        	addr->raw.family = PR_AF_INET6;
+#endif
 	}
 	return fd2;
 }
@@ -467,6 +484,10 @@ PRIntervalTime timeout)
 static PRStatus PR_CALLBACK SocketBind(PRFileDesc *fd, const PRNetAddr *addr)
 {
 	PRInt32 result;
+    const PRNetAddr *addrp = addr;
+#if defined(_PR_INET6)
+	PRNetAddr addrCopy;
+#endif
 
 	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
 
@@ -480,7 +501,14 @@ static PRStatus PR_CALLBACK SocketBind(PRFileDesc *fd, const PRNetAddr *addr)
 	}
 #endif /* XP_UNIX */
 
-	result = _PR_MD_BIND(fd, addr, PR_NETADDR_SIZE(addr));
+#if defined(_PR_INET6)
+	if (addr->raw.family == PR_AF_INET6) {
+		addrCopy = *addr;
+		addrCopy.raw.family = AF_INET6;
+		addrp = &addrCopy;
+	}
+#endif
+	result = _PR_MD_BIND(fd, addrp, PR_NETADDR_SIZE(addr));
 	if (result < 0) {
 		return PR_FAILURE;
 	}
@@ -630,6 +658,10 @@ static PRInt32 PR_CALLBACK SocketSendTo(
     PRIntn flags, const PRNetAddr *addr, PRIntervalTime timeout)
 {
 	PRInt32 temp, count;
+    const PRNetAddr *addrp = addr;
+#if defined(_PR_INET6)
+	PRNetAddr addrCopy;
+#endif
 	PRThread *me = _PR_MD_CURRENT_THREAD();
 
 	if (_PR_PENDING_INTERRUPT(me)) {
@@ -643,11 +675,18 @@ static PRInt32 PR_CALLBACK SocketSendTo(
 	}
 
 	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
+#if defined(_PR_INET6)
+	if (addr->raw.family == PR_AF_INET6) {
+		addrCopy = *addr;
+		addrCopy.raw.family = AF_INET6;
+		addrp = &addrCopy;
+	}
+#endif
 
 	count = 0;
 	while (amount > 0) {
 		temp = _PR_MD_SENDTO(fd, buf, amount, flags,
-		    addr, PR_NETADDR_SIZE(addr), timeout);
+		    addrp, PR_NETADDR_SIZE(addr), timeout);
 		if (temp < 0) {
 					count = -1;
 					break;
@@ -681,6 +720,10 @@ PRIntn flags, PRNetAddr *addr, PRIntervalTime timeout)
 
 	al = sizeof(PRNetAddr);
 	rv = _PR_MD_RECVFROM(fd, buf, amount, flags, addr, &al, timeout);
+#ifdef _PR_INET6
+	if (addr && (AF_INET6 == addr->raw.family))
+        addr->raw.family = PR_AF_INET6;
+#endif
 	return rv;
 }
 
@@ -730,6 +773,10 @@ PRIntervalTime timeout)
 			(*nd)->secret->md.accepted_socket = PR_TRUE;
 			memcpy(&(*nd)->secret->md.peer_addr, *raddr,
 				PR_NETADDR_SIZE(*raddr));
+#ifdef _PR_INET6
+			if (AF_INET6 == *raddr->raw.family)
+        		*raddr->raw.family = PR_AF_INET6;
+#endif
 		}
 	}
 	}
@@ -779,6 +826,10 @@ PRIntervalTime timeout)
 			(*nd)->secret->md.accepted_socket = PR_TRUE;
 			memcpy(&(*nd)->secret->md.peer_addr, *raddr,
 				PR_NETADDR_SIZE(*raddr));
+#ifdef _PR_INET6
+			if (AF_INET6 == *raddr->raw.family)
+        		*raddr->raw.family = PR_AF_INET6;
+#endif
 		}
 	}
 	return rv;
@@ -826,6 +877,10 @@ void *callbackArg)
 			(*nd)->secret->md.accepted_socket = PR_TRUE;
 			memcpy(&(*nd)->secret->md.peer_addr, *raddr,
 				PR_NETADDR_SIZE(*raddr));
+#ifdef _PR_INET6
+			if (AF_INET6 == *raddr->raw.family)
+        		*raddr->raw.family = PR_AF_INET6;
+#endif
 		}
 	}
 	return rv;
@@ -910,6 +965,10 @@ static PRStatus PR_CALLBACK SocketGetName(PRFileDesc *fd, PRNetAddr *addr)
 	if (result < 0) {
 		return PR_FAILURE;
 	}
+#ifdef _PR_INET6
+	if (AF_INET6 == addr->raw.family)
+        addr->raw.family = PR_AF_INET6;
+#endif
 	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
 	PR_ASSERT(IsValidNetAddrLen(addr, addrlen) == PR_TRUE);
 	return PR_SUCCESS;
@@ -925,119 +984,13 @@ static PRStatus PR_CALLBACK SocketGetPeerName(PRFileDesc *fd, PRNetAddr *addr)
 	if (result < 0) {
 		return PR_FAILURE;
 	}
+#ifdef _PR_INET6
+	if (AF_INET6 == addr->raw.family)
+        addr->raw.family = PR_AF_INET6;
+#endif
 	PR_ASSERT(IsValidNetAddr(addr) == PR_TRUE);
 	PR_ASSERT(IsValidNetAddrLen(addr, addrlen) == PR_TRUE);
 	return PR_SUCCESS;
-}
-
-static PRStatus PR_CALLBACK SocketGetSockOpt(
-    PRFileDesc *fd, PRSockOption optname, void* optval, PRInt32* optlen)
-{
-    PRInt32 level, name;
-    PRStatus rv;
-
-    /*
-     * PR_SockOpt_Nonblocking is a special case that does not
-     * translate to a getsockopt() call
-     */
-    if (PR_SockOpt_Nonblocking == optname)
-    {
-        PR_ASSERT(sizeof(PRIntn) <= *optlen);
-        *((PRIntn *) optval) = (PRIntn) fd->secret->nonblocking;
-        *optlen = sizeof(PRIntn);
-        return PR_SUCCESS;
-    }
-
-    rv = _PR_MapOptionName(optname, &level, &name);
-    if (PR_SUCCESS == rv)
-    {
-        if (PR_SockOpt_Linger == optname)
-        {
-#if !defined(XP_BEOS)
-            struct linger linger;
-            PRInt32 len = sizeof(linger);
-            rv = _PR_MD_GETSOCKOPT(
-                fd, level, name, (char *) &linger, &len);
-            if (PR_SUCCESS == rv)
-            {
-                ((PRLinger*)(optval))->polarity = linger.l_onoff
-                    ? PR_TRUE : PR_FALSE;
-                ((PRLinger*)(optval))->linger = PR_SecondsToInterval(
-                    linger.l_linger);
-                *optlen = sizeof(PRLinger);
-            }
-#else
-            PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
-            return PR_FAILURE;
-#endif
-        }
-        else
-        {
-            rv = _PR_MD_GETSOCKOPT(
-                fd, level, name, (char*)optval, optlen);
-        }
-    }
-    return rv;
-}
-
-static PRStatus PR_CALLBACK SocketSetSockOpt(
-    PRFileDesc *fd, PRSockOption optname, const void* optval, PRInt32 optlen)
-{
-	PRInt32 level, name;
-    PRStatus rv;
-
-    /*
-     * PR_SockOpt_Nonblocking is a special case that does not
-     * translate to a setsockopt call.
-     */
-    if (PR_SockOpt_Nonblocking == optname)
-    {
-        PRBool fNonblocking = *((PRIntn *) optval) ? PR_TRUE : PR_FALSE;
-        PR_ASSERT(sizeof(PRIntn) == optlen);
-#ifdef WINNT
-        PR_ASSERT((fd->secret->md.io_model_committed == PR_FALSE)
-            || (fd->secret->nonblocking == fNonblocking));
-        if (fd->secret->md.io_model_committed
-            && (fd->secret->nonblocking != fNonblocking))
-        {
-            /*
-             * On NT, once we have associated a socket with the io
-             * completion port, we can't disassociate it.  So we
-             * can't change the nonblocking option of the socket
-             * afterwards.
-             */
-            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-            return PR_FAILURE;
-        }
-#endif
-        fd->secret->nonblocking = fNonblocking;
-        return PR_SUCCESS;
-    }
-
-    rv = _PR_MapOptionName(optname, &level, &name);
-    if (PR_SUCCESS == rv)
-    {
-        if (PR_SockOpt_Linger == optname)
-        {
-#if !defined(XP_BEOS)
-            struct linger linger;
-            linger.l_onoff = ((PRLinger*)(optval))->polarity ? 1 : 0;
-            linger.l_linger = PR_IntervalToSeconds(
-                ((PRLinger*)(optval))->linger);
-            rv = _PR_MD_SETSOCKOPT(
-                fd, level, name, (char *) &linger, sizeof(linger));
-#else
-            PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
-            return PR_FAILURE;
-#endif
-        }
-        else
-        {
-            rv = _PR_MD_SETSOCKOPT(
-                fd, level, name, (const char*)optval, optlen);
-        }
-    }
-    return rv;
 }
 
 static PRInt16 PR_CALLBACK SocketPoll(
@@ -1077,8 +1030,8 @@ static PRIOMethods tcpMethods = {
 	SocketTransmitFile,
 	SocketGetName,
 	SocketGetPeerName,
-	SocketGetSockOpt,
-	SocketSetSockOpt,
+	(PRReservedFN)_PR_InvalidInt,
+	(PRReservedFN)_PR_InvalidInt,
 	_PR_SocketGetSocketOption,
 	_PR_SocketSetSocketOption,
     SocketSendFile, 
@@ -1116,8 +1069,8 @@ static PRIOMethods udpMethods = {
 	(PRTransmitfileFN)_PR_InvalidInt,
 	SocketGetName,
 	SocketGetPeerName,
-	SocketGetSockOpt,
-	SocketSetSockOpt,
+	(PRReservedFN)_PR_InvalidInt,
+	(PRReservedFN)_PR_InvalidInt,
 	_PR_SocketGetSocketOption,
 	_PR_SocketSetSocketOption,
     (PRSendfileFN)_PR_InvalidInt, 
@@ -1156,8 +1109,8 @@ static PRIOMethods socketpollfdMethods = {
     (PRTransmitfileFN)_PR_InvalidInt, 
     (PRGetsocknameFN)_PR_InvalidStatus,    
     (PRGetpeernameFN)_PR_InvalidStatus,    
-    (PRGetsockoptFN)_PR_InvalidStatus,    
-    (PRSetsockoptFN)_PR_InvalidStatus,    
+    (PRReservedFN)_PR_InvalidInt,    
+    (PRReservedFN)_PR_InvalidInt,    
     (PRGetsocketoptionFN)_PR_InvalidStatus,
     (PRSetsocketoptionFN)_PR_InvalidStatus,
     (PRSendfileFN)_PR_InvalidInt, 
@@ -1183,24 +1136,65 @@ static const PRIOMethods* PR_GetSocketPollFdMethods()
     return &socketpollfdMethods;
 }  /* PR_GetSocketPollFdMethods */
 
+#if !defined(_PR_INET6) || defined(_PR_INET6_PROBE)
+PR_EXTERN(PRStatus) _pr_push_ipv6toipv4_layer(PRFileDesc *fd);
+
+#if defined(_PR_INET6_PROBE)
+
+PR_EXTERN(PRBool) _pr_ipv6_is_present;
+
+PR_IMPLEMENT(PRBool) _pr_test_ipv6_socket()
+{
+PRInt32 osfd;
+
+	osfd = _PR_MD_SOCKET(AF_INET6, SOCK_STREAM, 0);
+	if (osfd != -1) {
+		_PR_MD_CLOSE_SOCKET(osfd);
+		return PR_TRUE;
+	}
+	return PR_FALSE;
+}
+#endif	/* _PR_INET6_PROBE */
+
+#endif
 
 PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 {
 	PRInt32 osfd;
 	PRFileDesc *fd;
+	PRInt32 tmp_domain = domain;
 
 	if (!_pr_initialized) _PR_ImplicitInitialization();
-	if (AF_INET != domain
-#if defined(_PR_INET6)
-			&& AF_INET6 != domain
-#endif
+	if (PR_AF_INET != domain
+			&& PR_AF_INET6 != domain
 #if defined(XP_UNIX)
-			&& AF_UNIX != domain
+			&& PR_AF_LOCAL != domain
 #endif
 			) {
 		PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, 0);
 		return NULL;
 	}
+
+#if defined(_PR_INET6)
+	if (PR_AF_INET6 == domain) {
+#if defined(_PR_INET6_PROBE)
+        if (_pr_ipv6_is_present == PR_FALSE) 
+            domain = AF_INET;
+        else
+#endif
+		domain = AF_INET6;
+    }
+#elif defined(_PR_INET6_PROBE)
+	if (PR_AF_INET6 == domain) {
+		if (_pr_ipv6_is_present == PR_FALSE) 
+			domain = AF_INET;
+		else
+			domain = AF_INET6;
+	}
+#else
+	if (PR_AF_INET6 == domain)
+		domain = AF_INET;
+#endif	/* _PR_INET6 */
 	osfd = _PR_MD_SOCKET(domain, type, proto);
 	if (osfd == -1) {
 		return 0;
@@ -1212,10 +1206,23 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 	/*
 	 * Make the sockets non-blocking
 	 */
-	if (fd != NULL)
+	if (fd != NULL) {
 		_PR_MD_MAKE_NONBLOCK(fd);
-	else
+#if !defined(_PR_INET6) || defined(_PR_INET6_PROBE)
+		/*
+		 * For platforms with no support for IPv6 
+		 * create layered socket for IPv4-mapped IPv6 addresses
+		 */
+		if (PR_AF_INET6 == tmp_domain && PR_AF_INET == domain) {
+			if (PR_FAILURE == _pr_push_ipv6toipv4_layer(fd)) {
+				PR_Close(fd);
+				fd = NULL;
+			}
+		}
+#endif
+	} else
 		_PR_MD_CLOSE_SOCKET(osfd);
+
 	return fd;
 }
 
@@ -1223,11 +1230,6 @@ PR_IMPLEMENT(PRFileDesc *) PR_NewTCPSocket(void)
 {
 	PRInt32 domain = AF_INET;
 
-#if defined(_PR_INET6)
-	if (_pr_ipv6_enabled) {
-		domain = AF_INET6;
-	}
-#endif
 	return PR_Socket(domain, SOCK_STREAM, 0);
 }
 
@@ -1235,11 +1237,6 @@ PR_IMPLEMENT(PRFileDesc*) PR_NewUDPSocket(void)
 {
 	PRInt32 domain = AF_INET;
 
-#if defined(_PR_INET6)
-	if (_pr_ipv6_enabled) {
-		domain = AF_INET6;
-	}
-#endif
 	return PR_Socket(domain, SOCK_DGRAM, 0);
 }
 

@@ -100,9 +100,6 @@ PRIntn main(PRIntn argc, char *argv)
     else
     {
         PRSockOption option;
-        PRLinger linger;
-        PRUint32 ttl = 20;
-        PRBool boolean = PR_TRUE;
         PRUint32 segment = 1024;
         PRNetAddr addr;
 
@@ -110,76 +107,6 @@ PRIntn main(PRIntn argc, char *argv)
         if (PR_FAILURE == rv) Failed("PR_InitializeNetAddr()", NULL);
         rv = PR_Bind(udp, &addr);
         if (PR_FAILURE == rv) Failed("PR_Bind()", NULL);
-        for(option = PR_SockOpt_Linger; option < PR_SockOpt_Last; Incr(&option))
-        {
-            void *value;
-            PRInt32 *size;
-            PRInt32 ttlsize = sizeof(ttl);
-            PRInt32 segmentsize = sizeof(segment);
-            PRInt32 booleansize = sizeof(boolean);
-            PRInt32 lingersize = sizeof(linger);
-
-            PRFileDesc *socket = udp;
-            switch (option)
-            {
-            case PR_SockOpt_Linger:          /* linger on close if data present */
-                socket = tcp;
-                linger.polarity = PR_TRUE;
-                linger.linger = PR_SecondsToInterval(1);
-                value = &linger;
-                size = &lingersize;
-                break;
-            case PR_SockOpt_NoDelay:         /* don't delay send to coalesce packets */
-            case PR_SockOpt_Keepalive:       /* keep connections alive */
-                socket = tcp;
-            case PR_SockOpt_Reuseaddr:       /* allow local address reuse */
-                value = &boolean;
-                size = &booleansize;
-                break;
-#ifndef WIN32
-            case PR_SockOpt_MaxSegment:      /* maximum segment size */
-                socket = tcp;
-#endif
-            case PR_SockOpt_RecvBufferSize:  /* send buffer size */
-            case PR_SockOpt_SendBufferSize:  /* receive buffer size */
-                value = &segment;
-                size = &segmentsize;
-                break;
-
-            case PR_SockOpt_IpTimeToLive:    /* time to live */
-                value = &ttl;
-                size = &ttlsize;
-                break;
-            case PR_SockOpt_Broadcast:
-                value = &boolean;
-                size = &booleansize;
-                break;
-            case PR_SockOpt_IpTypeOfService: /* type of service and precedence */
-            case PR_SockOpt_AddMember:       /* add an IP group membership */
-            case PR_SockOpt_DropMember:      /* drop an IP group membership */
-            case PR_SockOpt_McastInterface:  /* multicast interface address */
-            case PR_SockOpt_McastTimeToLive: /* multicast timetolive */
-            case PR_SockOpt_McastLoopback:   /* multicast loopback */
-            default:
-                continue;
-            }
-			/*
-			 * TCP_MAXSEG can only be read, not set
-			 */
-            if (option != PR_SockOpt_MaxSegment) {
-#ifdef WIN32
-            	if (option != PR_SockOpt_McastLoopback)
-#endif
-				{
-            		rv = PR_SetSockOpt(socket, option, value, *size);
-            		if (PR_FAILURE == rv) Failed("PR_SetSockOpt()",
-														tag[option]);
-				}
-			}
-            
-            rv = PR_GetSockOpt(socket, option, &value, size);
-            if (PR_FAILURE == rv) Failed("PR_GetSockOpt()", tag[option]);
-        }
         for(option = PR_SockOpt_Linger; option < PR_SockOpt_Last; Incr(&option))
         {
             PRSocketOptionData data;

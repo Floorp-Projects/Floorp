@@ -220,8 +220,8 @@
 /* The file is busy */
 #define PR_FILE_IS_BUSY_ERROR                    (-5936L)
 
-/* Reserved Error Code -5935 */
-#define PR_RESERVED_ERROR_5935                   (-5935L)
+/* The I/O operation was aborted */
+#define PR_OPERATION_ABORTED_ERROR               (-5935L)
 
 /* Operation is still in progress (probably a non-blocking connect) */
 #define PR_IN_PROGRESS_ERROR                     (-5934L)

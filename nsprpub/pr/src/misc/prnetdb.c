@@ -95,13 +95,54 @@ static sigset_t timer_set;
 PRLock* _getproto_lock = NULL;
 #endif
 
-#if defined(_PR_INET6)
-PRBool _pr_ipv6_enabled = PR_FALSE;
-#if defined(AIX)
-const struct in6_addr in6addr_any = IN6ADDR_ANY_INIT;
-const struct in6_addr in6addr_loopback = IN6ADDR_LOOPBACK_INIT;
-#endif /* AIX */
-#endif /* _PR_INET6 */
+#if defined(_PR_INET6_PROBE)
+PR_EXTERN(PRBool) _pr_ipv6_is_present;
+#endif
+
+#define _PR_IN6_IS_ADDR_UNSPECIFIED(a)				\
+				(((a)->pr_s6_addr32[0] == 0) &&	\
+				((a)->pr_s6_addr32[1] == 0) &&		\
+				((a)->pr_s6_addr32[2] == 0) &&		\
+				((a)->pr_s6_addr32[3] == 0))
+ 
+#define _PR_IN6_IS_ADDR_LOOPBACK(a)					\
+               (((a)->pr_s6_addr32[0] == 0)	&&	\
+               ((a)->pr_s6_addr32[1] == 0)		&&	\
+               ((a)->pr_s6_addr32[2] == 0)		&&	\
+               ((a)->pr_s6_addr[12] == 0)		&&	\
+               ((a)->pr_s6_addr[13] == 0)		&&	\
+               ((a)->pr_s6_addr[14] == 0)		&&	\
+               ((a)->pr_s6_addr[15] == 0x1U))
+ 
+const PRIPv6Addr _pr_in6addr_any =	{{{ 0, 0, 0, 0,
+										0, 0, 0, 0,
+										0, 0, 0, 0,
+										0, 0, 0, 0 }}};
+
+const PRIPv6Addr _pr_in6addr_loopback = {{{ 0, 0, 0, 0,
+											0, 0, 0, 0,
+											0, 0, 0, 0,
+											0, 0, 0, 0x1U }}};
+/*
+ * The values at bytes 10 and 11 are compared using pointers to
+ * 8-bit fields, and not 32-bit fields, to make the comparison work on
+ * both big-endian and little-endian systems
+ */
+
+#define _PR_IN6_IS_ADDR_V4MAPPED(a)			\
+		(((a)->pr_s6_addr32[0] == 0) 	&&	\
+		((a)->pr_s6_addr32[1] == 0)	&&	\
+		((a)->pr_s6_addr[8] == 0)		&&	\
+		((a)->pr_s6_addr[9] == 0)		&&	\
+		((a)->pr_s6_addr[10] == 0xff)	&&	\
+		((a)->pr_s6_addr[11] == 0xff))
+
+#define _PR_IN6_IS_ADDR_V4COMPAT(a)			\
+		(((a)->pr_s6_addr32[0] == 0) &&	\
+		((a)->pr_s6_addr32[1] == 0) &&		\
+		((a)->pr_s6_addr32[2] == 0))
+
+#define _PR_IN6_V4MAPPED_TO_IPADDR(a) ((a)->pr_s6_addr32[3])
 
 void _PR_InitNet(void)
 {
@@ -122,31 +163,6 @@ void _PR_InitNet(void)
 #if !defined(_PR_HAVE_GETPROTO_R)
 	_getproto_lock = PR_NewLock();
 #endif
-
-}
-
-PR_IMPLEMENT(PRStatus) PR_SetIPv6Enable(PRBool itIs)
-{
-#if defined(XP_MAC)
-#pragma unused (itIs)
-#endif
-
-#if defined(_PR_INET6)
-    _pr_ipv6_enabled = itIs;
-    return PR_SUCCESS;
-#else /* defined(_PR_INET6) */
-    PR_SetError(PR_PROTOCOL_NOT_SUPPORTED_ERROR, 0);
-    return PR_FAILURE;
-#endif /* defined(_PR_INET6) */
-}  /* PR_SetIPv6Enable */
-
-PR_IMPLEMENT(PRStatus) PR_GetHostName(char *name, PRUint32 namelen)
-{
-#if defined(DEBUG)
-    static PRBool warn = PR_TRUE;
-    if (warn) warn = _PR_Obsolete("PR_GetHostName()", "PR_GetSystemInfo()");
-#endif
-    return PR_GetSystemInfo(PR_SI_HOSTNAME, name, namelen);
 }
 
 /*
@@ -174,8 +190,6 @@ static char *Alloc(PRIntn amount, char **bufp, PRIntn *buflenp, PRIntn align)
 	return buf;
 }
 
-#if defined(_PR_INET6)
-
 typedef enum _PRIPAddrConversion {
     _PRIPAddrNoConversion,
     _PRIPAddrIPv4Mapped,
@@ -190,7 +204,7 @@ static void MakeIPv4MappedAddr(const char *v4, char *v6)
     memset(v6, 0, 10);
     memset(v6 + 10, 0xff, 2);
     memcpy(v6 + 12, v4, 4);
-    PR_ASSERT(IN6_IS_ADDR_V4MAPPED((struct in6_addr *) v6));
+    PR_ASSERT(_PR_IN6_IS_ADDR_V4MAPPED(((PRIPv6Addr *) v6)));
 }
 
 /*
@@ -200,10 +214,8 @@ static void MakeIPv4CompatAddr(const char *v4, char *v6)
 {
     memset(v6, 0, 12);
     memcpy(v6 + 12, v4, 4);
-    PR_ASSERT(IN6_IS_ADDR_V4COMPAT((struct in6_addr *) v6));
+    PR_ASSERT(_PR_IN6_IS_ADDR_V4COMPAT(((PRIPv6Addr *) v6)));
 }
-
-#endif /* _PR_INET6 */
 
 /*
 ** Copy a hostent, and all of the memory that it refers to into
@@ -211,36 +223,33 @@ static void MakeIPv4CompatAddr(const char *v4, char *v6)
 */
 static PRStatus CopyHostent(
     struct hostent *from,
-    char *buf,
-    PRIntn bufsize,
-#if defined(_PR_INET6)
+    char **buf,
+    PRIntn *bufsize,
     _PRIPAddrConversion conversion,
-#endif
     PRHostEnt *to)
 {
 	PRIntn len, na;
 	char **ap;
 
-	/* Do the easy stuff */
-#if defined(_PR_INET6)
 	if (conversion != _PRIPAddrNoConversion
 			&& from->h_addrtype == AF_INET) {
 		PR_ASSERT(from->h_length == 4);
-		to->h_addrtype = AF_INET6;
+		to->h_addrtype = PR_AF_INET6;
 		to->h_length = 16;
 	} else {
-		to->h_addrtype = from->h_addrtype;
+#if defined(_PR_INET6) || defined(_PR_INET6_PROBE)
+		if (AF_INET6 == from->h_addrtype)
+			to->h_addrtype = PR_AF_INET6;
+		else
+#endif
+			to->h_addrtype = from->h_addrtype;
 		to->h_length = from->h_length;
 	}
-#else
-	to->h_addrtype = from->h_addrtype;
-	to->h_length = from->h_length;
-#endif
 
 	/* Copy the official name */
 	if (!from->h_name) return PR_FAILURE;
 	len = strlen(from->h_name) + 1;
-	to->h_name = Alloc(len, &buf, &bufsize, 0);
+	to->h_name = Alloc(len, buf, bufsize, 0);
 	if (!to->h_name) return PR_FAILURE;
 	memcpy(to->h_name, from->h_name, len);
 
@@ -251,7 +260,7 @@ static PRStatus CopyHostent(
 		for (na = 1, ap = from->h_aliases; *ap != 0; na++, ap++){;} /* nothing to execute */
 	}
 	to->h_aliases = (char**)Alloc(
-	    na * sizeof(char*), &buf, &bufsize, sizeof(char**));
+	    na * sizeof(char*), buf, bufsize, sizeof(char**));
 	if (!to->h_aliases) return PR_FAILURE;
 
 	/* Copy the aliases, one at a time */
@@ -260,7 +269,7 @@ static PRStatus CopyHostent(
 	} else {
 		for (na = 0, ap = from->h_aliases; *ap != 0; na++, ap++) {
 			len = strlen(*ap) + 1;
-			to->h_aliases[na] = Alloc(len, &buf, &bufsize, 0);
+			to->h_aliases[na] = Alloc(len, buf, bufsize, 0);
 			if (!to->h_aliases[na]) return PR_FAILURE;
 			memcpy(to->h_aliases[na], *ap, len);
 		}
@@ -270,14 +279,13 @@ static PRStatus CopyHostent(
 	/* Count the addresses, then allocate storage for the pointers */
 	for (na = 1, ap = from->h_addr_list; *ap != 0; na++, ap++){;} /* nothing to execute */
 	to->h_addr_list = (char**)Alloc(
-	    na * sizeof(char*), &buf, &bufsize, sizeof(char**));
+	    na * sizeof(char*), buf, bufsize, sizeof(char**));
 	if (!to->h_addr_list) return PR_FAILURE;
 
 	/* Copy the addresses, one at a time */
 	for (na = 0, ap = from->h_addr_list; *ap != 0; na++, ap++) {
-		to->h_addr_list[na] = Alloc(to->h_length, &buf, &bufsize, 0);
+		to->h_addr_list[na] = Alloc(to->h_length, buf, bufsize, 0);
 		if (!to->h_addr_list[na]) return PR_FAILURE;
-#if defined(_PR_INET6)
 		if (conversion != _PRIPAddrNoConversion
 				&& from->h_addrtype == AF_INET) {
 			if (conversion == _PRIPAddrIPv4Mapped) {
@@ -289,9 +297,6 @@ static PRStatus CopyHostent(
 		} else {
 			memcpy(to->h_addr_list[na], *ap, to->h_length);
 		}
-#else
-		memcpy(to->h_addr_list[na], *ap, to->h_length);
-#endif
 	}
 	to->h_addr_list[na] = 0;
 	return PR_SUCCESS;
@@ -345,9 +350,6 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
 #ifdef XP_UNIX
 	sigset_t oldset;
 #endif
-#if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
-	int error_num;
-#endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
@@ -356,60 +358,22 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
 #endif
 	LOCK_DNS();
 
-#ifdef _PR_INET6
-    if (_pr_ipv6_enabled)
-    {
-#ifdef _PR_HAVE_GETHOSTBYNAME2
-        h = gethostbyname2(name, AF_INET6);
-        if (NULL == h)
-        {
-            h = gethostbyname2(name, AF_INET);
-        }
-#elif defined(_PR_HAVE_GETIPNODEBYNAME)
-        h = getipnodebyname(name, AF_INET6, AI_DEFAULT, &error_num);
-#else
-#error "Unknown name-to-address translation function"
-#endif
-    }
-    else
-    {
-#ifdef XP_OS2_VACPP
-	    h = gethostbyname((char *)name);
-#else
-        h = gethostbyname(name);
-#endif
-    }
-#else
 #ifdef XP_OS2_VACPP
 	h = gethostbyname((char *)name);
 #else
     h = gethostbyname(name);
 #endif
-#endif /* _PR_INET6 */
     
 	if (NULL == h)
 	{
-#if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
-	    PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, error_num);
-#else
 	    PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, _MD_GETHOST_ERRNO());
-#endif
 	}
 	else
 	{
-#if defined(_PR_INET6)
 		_PRIPAddrConversion conversion = _PRIPAddrNoConversion;
-
-		if (_pr_ipv6_enabled) conversion = _PRIPAddrIPv4Mapped;
-		rv = CopyHostent(h, buf, bufsize, conversion, hp);
-#else
-		rv = CopyHostent(h, buf, bufsize, hp);
-#endif
+		rv = CopyHostent(h, &buf, &bufsize, conversion, hp);
 		if (PR_SUCCESS != rv)
 		    PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
-#if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
-		freehostent(h);
-#endif
 	}
 	UNLOCK_DNS();
 #ifdef XP_UNIX
@@ -418,40 +382,40 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
 	return rv;
 }
 
+#if defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
+typedef struct hostent  * (*_pr_getipnodebyname_t)(const char *, int,
+										int, int *);
+typedef struct hostent  * (*_pr_getipnodebyaddr_t)(const void *, size_t,
+													int, int *);
+typedef void (*_pr_freehostent_t)(struct hostent *);
+extern void * _pr_getipnodebyname_fp;
+extern void * _pr_getipnodebyaddr_fp;
+extern void * _pr_freehostent_fp;
+#endif
+
 PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
     const char *name, PRUint16 af, PRIntn flags,
     char *buf, PRIntn bufsize, PRHostEnt *hp)
 {
-	struct hostent *h;
+	struct hostent *h = 0;
 	PRStatus rv = PR_FAILURE;
 #ifdef XP_UNIX
 	sigset_t oldset;
 #endif
-#if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
+#if defined(_PR_HAVE_GETIPNODEBYNAME)
+	PRUint16 md_af = af;
 	int error_num;
+	int tmp_flags = 0;
+#endif
+#if defined(_PR_HAVE_GETHOSTBYNAME2)
+    PRBool did_af_inet = PR_FALSE;
+    char **new_addr_list;
 #endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-#if defined(_PR_INET6)
-    PR_ASSERT(af == AF_INET || af == AF_INET6);
-    if (af != AF_INET && af != AF_INET6) {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return PR_FAILURE;
-    }
-#else
-    PR_ASSERT(af == AF_INET);
-    if (af != AF_INET) {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return PR_FAILURE;
-    }
-#endif
-
-    /*
-     * Flags other than PR_AI_DEFAULT are not yet supported.
-     */
-    PR_ASSERT(flags == PR_AI_DEFAULT);
-    if (flags != PR_AI_DEFAULT) {
+    PR_ASSERT(af == PR_AF_INET || af == PR_AF_INET6);
+    if (af != PR_AF_INET && af != PR_AF_INET6) {
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return PR_FAILURE;
     }
@@ -461,25 +425,48 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 #endif
 	LOCK_DNS();
 
+#if defined(_PR_HAVE_GETIPNODEBYNAME)
+	if (flags & PR_AI_V4MAPPED)
+		tmp_flags |= AI_V4MAPPED;
+	if (flags & PR_AI_ADDRCONFIG)
+		tmp_flags |= AI_ADDRCONFIG;
+	if (flags & PR_AI_ALL)
+		tmp_flags |= AI_ALL;
+    if (af == PR_AF_INET6)
+    	md_af = AF_INET6;
+	else
+    	md_af = af;
+#endif
+
 #ifdef _PR_INET6
 #ifdef _PR_HAVE_GETHOSTBYNAME2
-    if (af == AF_INET6)
+    if (af == PR_AF_INET6)
     {
-        h = gethostbyname2(name, af); 
-        if (NULL == h)
+#ifdef _PR_INET6_PROBE
+      if (_pr_ipv6_is_present == PR_TRUE)
+#endif
+        h = gethostbyname2(name, AF_INET6); 
+        if ((NULL == h) && (flags & PR_AI_V4MAPPED))
         {
+            did_af_inet = PR_TRUE;
             h = gethostbyname2(name, AF_INET);
         }
     }
     else
     {
+        did_af_inet = PR_TRUE;
         h = gethostbyname2(name, af);
     }
 #elif defined(_PR_HAVE_GETIPNODEBYNAME)
-    h = getipnodebyname(name, af, AI_DEFAULT, &error_num);
+    h = getipnodebyname(name, md_af, tmp_flags, &error_num);
 #else
 #error "Unknown name-to-address translation function"
-#endif
+#endif	/* _PR_HAVE_GETHOSTBYNAME2 */
+#elif defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
+    if (_pr_ipv6_is_present == PR_TRUE)
+    	h = (*((_pr_getipnodebyname_t)_pr_getipnodebyname_fp))(name, md_af, tmp_flags, &error_num);
+	else
+    	h = gethostbyname(name);
 #else /* _PR_INET6 */
 #ifdef XP_OS2_VACPP
 	h = gethostbyname((char *)name);
@@ -492,26 +479,62 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 	{
 #if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
 	    PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, error_num);
+#elif defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
+    	if (_pr_ipv6_is_present == PR_TRUE)
+	    	PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, error_num);
+		else
+	    	PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, _MD_GETHOST_ERRNO());
 #else
 	    PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, _MD_GETHOST_ERRNO());
 #endif
 	}
 	else
 	{
-#if defined(_PR_INET6)
 		_PRIPAddrConversion conversion = _PRIPAddrNoConversion;
 
-		if (af == AF_INET6) conversion = _PRIPAddrIPv4Mapped;
-		rv = CopyHostent(h, buf, bufsize, conversion, hp);
-#else
-		rv = CopyHostent(h, buf, bufsize, hp);
-#endif
+		if (af == PR_AF_INET6) conversion = _PRIPAddrIPv4Mapped;
+		rv = CopyHostent(h, &buf, &bufsize, conversion, hp);
 		if (PR_SUCCESS != rv)
 		    PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
 #if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
 		freehostent(h);
+#elif defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYNAME)
+    	if (_pr_ipv6_is_present == PR_TRUE)
+			(*((_pr_freehostent_t)_pr_freehostent_fp))(h);
+#endif
+#if defined(_PR_INET6) && defined(_PR_HAVE_GETHOSTBYNAME2)
+		if ((flags & PR_AI_V4MAPPED) && (flags & (PR_AI_ALL|PR_AI_ADDRCONFIG))
+				&& !did_af_inet && (h = gethostbyname2(name, AF_INET)) != 0) {
+			/* Append the V4 addresses to the end of the list */
+			PRIntn na, na_old;
+			char **ap;
+			
+			/* Count the addresses, then grow storage for the pointers */
+			for (na_old = 0, ap = hp->h_addr_list; *ap != 0; na_old++, ap++)
+					{;} /* nothing to execute */
+			for (na = na_old + 1, ap = h->h_addr_list; *ap != 0; na++, ap++)
+					{;} /* nothing to execute */
+			new_addr_list = (char**)Alloc(
+				na * sizeof(char*), &buf, &bufsize, sizeof(char**));
+			if (!new_addr_list) return PR_FAILURE;
+
+			/* Copy the V6 addresses, one at a time */
+			for (na = 0, ap = hp->h_addr_list; *ap != 0; na++, ap++) {
+				new_addr_list[na] = hp->h_addr_list[na];
+			}
+			hp->h_addr_list = new_addr_list;
+
+			/* Copy the V4 addresses, one at a time */
+			for (ap = h->h_addr_list; *ap != 0; na++, ap++) {
+				hp->h_addr_list[na] = Alloc(hp->h_length, &buf, &bufsize, 0);
+				if (!hp->h_addr_list[na]) return PR_FAILURE;
+				MakeIPv4MappedAddr(*ap, hp->h_addr_list[na]);
+			}
+			hp->h_addr_list[na] = 0;
+		}
 #endif
 	}
+
 	UNLOCK_DNS();
 #ifdef XP_UNIX
 	ENABLECLOCK(&oldset);
@@ -525,11 +548,13 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 	struct hostent *h;
 	PRStatus rv = PR_FAILURE;
 	const void *addr;
+	PRUint32 tmp_ip;
 	int addrlen;
+	PRInt32 af;
 #ifdef XP_UNIX
 	sigset_t oldset;
 #endif
-#if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYADDR)
+#if defined(_PR_HAVE_GETIPNODEBYADDR)
 	int error_num;
 #endif
 
@@ -539,56 +564,101 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 	DISABLECLOCK(&oldset);
 #endif
 	LOCK_DNS();
-#if defined(_PR_INET6)
-	if (hostaddr->raw.family == AF_INET6)
+	if (hostaddr->raw.family == PR_AF_INET6)
 	{
-		addr = &hostaddr->ipv6.ip;
-		addrlen = sizeof(hostaddr->ipv6.ip);
+#if defined(_PR_INET6_PROBE)
+		if (_pr_ipv6_is_present == PR_TRUE)
+			af = AF_INET6;
+		else
+			af = AF_INET;
+#elif defined(_PR_INET6)
+		af = AF_INET6;
+#else
+		af = AF_INET;
+#endif
 	}
 	else
-#endif /* defined(_PR_INET6) */
 	{
 		PR_ASSERT(hostaddr->raw.family == AF_INET);
+		af = AF_INET;
+	}
+	if (hostaddr->raw.family == PR_AF_INET6) {
+#if defined(_PR_INET6) || defined(_PR_INET6_PROBE)
+		if (af == AF_INET6) {
+			addr = &hostaddr->ipv6.ip;
+			addrlen = sizeof(hostaddr->ipv6.ip);
+		}
+		else
+#endif
+		{
+			PR_ASSERT(af == AF_INET);
+			if (!_PR_IN6_IS_ADDR_V4MAPPED(&hostaddr->ipv6.ip)) {
+				PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+				return rv;
+			}
+			tmp_ip = _PR_IN6_V4MAPPED_TO_IPADDR((PRIPv6Addr *)
+												&hostaddr->ipv6.ip);
+			addr = &tmp_ip;
+			addrlen = sizeof(tmp_ip);
+		}
+	} else {
+		PR_ASSERT(hostaddr->raw.family == AF_INET);
+		PR_ASSERT(af == AF_INET);
 		addr = &hostaddr->inet.ip;
 		addrlen = sizeof(hostaddr->inet.ip);
 	}
-#if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYADDR)
-	h = getipnodebyaddr(addr, addrlen, hostaddr->raw.family, &error_num);
-#else
+
+#if defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6)
+	h = getipnodebyaddr(addr, addrlen, af, &error_num);
+#elif defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6_PROBE)
+    if (_pr_ipv6_is_present == PR_TRUE)
+    	h = (*((_pr_getipnodebyaddr_t)_pr_getipnodebyaddr_fp))(addr, addrlen,
+				af, &error_num);
+	else
+		h = gethostbyaddr(addr, addrlen, af);
+#else	/* _PR_HAVE_GETIPNODEBYADDR */
 #ifdef XP_OS2_VACPP
-	h = gethostbyaddr((char *)addr, addrlen, hostaddr->raw.family);
+	h = gethostbyaddr((char *)addr, addrlen, af);
 #else
-	h = gethostbyaddr(addr, addrlen, hostaddr->raw.family);
+	h = gethostbyaddr(addr, addrlen, af);
 #endif
-#endif /* _PR_INET6 && _PR_HAVE_GETIPNODEBYADDR */
+#endif /* _PR_HAVE_GETIPNODEBYADDR */
 	if (NULL == h)
 	{
 #if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYADDR)
 		PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, error_num);
+#elif defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYADDR)
+    	if (_pr_ipv6_is_present == PR_TRUE)
+	    	PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, error_num);
+		else
+	    	PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, _MD_GETHOST_ERRNO());
 #else
 		PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, _MD_GETHOST_ERRNO());
 #endif
 	}
 	else
 	{
-#if defined(_PR_INET6)
 		_PRIPAddrConversion conversion = _PRIPAddrNoConversion;
-		if (hostaddr->raw.family == AF_INET6) {
-			if (IN6_IS_ADDR_V4MAPPED((struct in6_addr*)addr)) {
-				conversion = _PRIPAddrIPv4Mapped;
-			} else if (IN6_IS_ADDR_V4COMPAT((struct in6_addr*)addr)) {
-				conversion = _PRIPAddrIPv4Compat;
+		if (hostaddr->raw.family == PR_AF_INET6) {
+			if (af == AF_INET) {
+				if (_PR_IN6_IS_ADDR_V4MAPPED((PRIPv6Addr*)
+												&hostaddr->ipv6.ip)) {
+					conversion = _PRIPAddrIPv4Mapped;
+				} else if (_PR_IN6_IS_ADDR_V4COMPAT((PRIPv6Addr *)
+													&hostaddr->ipv6.ip)) {
+					conversion = _PRIPAddrIPv4Compat;
+				}
 			}
 		}
-		rv = CopyHostent(h, buf, bufsize, conversion, hostentry);
-#else
-		rv = CopyHostent(h, buf, bufsize, hostentry);
-#endif
+		rv = CopyHostent(h, &buf, &bufsize, conversion, hostentry);
 		if (PR_SUCCESS != rv) {
 		    PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
 		}
 #if defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYADDR)
 		freehostent(h);
+#elif defined(_PR_INET6_PROBE) && defined(_PR_HAVE_GETIPNODEBYADDR)
+    	if (_pr_ipv6_is_present == PR_TRUE)
+			(*((_pr_freehostent_t)_pr_freehostent_fp))(h);
 #endif
 	}
 	UNLOCK_DNS();
@@ -807,9 +877,11 @@ PR_IMPLEMENT(PRUintn) PR_NetAddrSize(const PRNetAddr* addr)
      */
     if (AF_INET == addr->raw.family)
         addrsize = sizeof(addr->inet);
+    else if (PR_AF_INET6 == addr->raw.family)
 #if defined(_PR_INET6)
-    else if (AF_INET6 == addr->raw.family)
         addrsize = sizeof(struct sockaddr_in6);
+#else
+        addrsize = sizeof(addr->ipv6);
 #endif
 #if defined(XP_UNIX)
     else if (AF_UNIX == addr->raw.family)
@@ -829,14 +901,14 @@ PR_IMPLEMENT(PRIntn) PR_EnumerateHostEnt(
     else
     {
         address->raw.family = hostEnt->h_addrtype;
-#if defined(_PR_INET6)
-        if (AF_INET6 == hostEnt->h_addrtype)
+        if (PR_AF_INET6 == hostEnt->h_addrtype)
         {
             address->ipv6.port = htons(port);
+        	address->ipv6.flowinfo = 0;
+        	address->ipv6.scope_id = 0;
             memcpy(&address->ipv6.ip, addr, hostEnt->h_length);
         }
         else
-#endif /* defined(_PR_INET6) */
         {
             PR_ASSERT(AF_INET == hostEnt->h_addrtype);
             address->inet.port = htons(port);
@@ -852,46 +924,22 @@ PR_IMPLEMENT(PRStatus) PR_InitializeNetAddr(
     PRStatus rv = PR_SUCCESS;
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
-#if defined(_PR_INET6)
-    if (_pr_ipv6_enabled)
-    {
-        addr->ipv6.family = AF_INET6;
-        addr->ipv6.port = htons(port);
-        switch (val)
-        {
-        case PR_IpAddrNull:
-            break;  /* don't overwrite the address */
-        case PR_IpAddrAny:
-            addr->ipv6.ip = in6addr_any;
-            break;
-        case PR_IpAddrLoopback:
-            addr->ipv6.ip = in6addr_loopback;
-            break;
-        default:
-            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-            rv = PR_FAILURE;
-        }
-    }
-    else
-#endif  /* defined(_PR_INET6) */
-    {
-        addr->inet.family = AF_INET;
-        addr->inet.port = htons(port);
-        switch (val)
-        {
-        case PR_IpAddrNull:
-            break;  /* don't overwrite the address */
-        case PR_IpAddrAny:
-            addr->inet.ip = htonl(INADDR_ANY);
-            break;
-        case PR_IpAddrLoopback:
-            addr->inet.ip = htonl(INADDR_LOOPBACK);
-            break;
-        default:
-            PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-            rv = PR_FAILURE;
-        }
-    }
+	addr->inet.family = AF_INET;
+	addr->inet.port = htons(port);
+	switch (val)
+	{
+	case PR_IpAddrNull:
+		break;  /* don't overwrite the address */
+	case PR_IpAddrAny:
+		addr->inet.ip = htonl(INADDR_ANY);
+		break;
+	case PR_IpAddrLoopback:
+		addr->inet.ip = htonl(INADDR_LOOPBACK);
+		break;
+	default:
+		PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+		rv = PR_FAILURE;
+	}
     return rv;
 }  /* PR_InitializeNetAddr */
 
@@ -902,19 +950,20 @@ PR_IMPLEMENT(PRStatus) PR_SetNetAddr(
     if (!_pr_initialized) _PR_ImplicitInitialization();
 
     addr->raw.family = af;
-#if defined(_PR_INET6)
-    if (af == AF_INET6)
+    if (af == PR_AF_INET6)
     {
         addr->ipv6.port = htons(port);
+        addr->ipv6.flowinfo = 0;
+        addr->ipv6.scope_id = 0;
         switch (val)
         {
         case PR_IpAddrNull:
             break;  /* don't overwrite the address */
         case PR_IpAddrAny:
-            addr->ipv6.ip = in6addr_any;
+            addr->ipv6.ip = _pr_in6addr_any;
             break;
         case PR_IpAddrLoopback:
-            addr->ipv6.ip = in6addr_loopback;
+            addr->ipv6.ip = _pr_in6addr_loopback;
             break;
         default:
             PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
@@ -922,7 +971,6 @@ PR_IMPLEMENT(PRStatus) PR_SetNetAddr(
         }
     }
     else
-#endif  /* defined(_PR_INET6) */
     {
         addr->inet.port = htons(port);
         switch (val)
@@ -946,19 +994,28 @@ PR_IMPLEMENT(PRStatus) PR_SetNetAddr(
 PR_IMPLEMENT(PRBool)
 PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val)
 {
-#if defined(_PR_INET6)
-    if (addr->raw.family == AF_INET6) {
-        if (val == PR_IpAddrAny
-                && IN6_IS_ADDR_UNSPECIFIED((struct in6_addr*)&addr->ipv6.ip)) {
-            return PR_TRUE;
-        } else if (val == PR_IpAddrLoopback
-                && IN6_IS_ADDR_LOOPBACK((struct in6_addr*)&addr->ipv6.ip)) {
+    if (addr->raw.family == PR_AF_INET6) {
+        if (val == PR_IpAddrAny) {
+			if (_PR_IN6_IS_ADDR_UNSPECIFIED((PRIPv6Addr *)&addr->ipv6.ip)) {
+            	return PR_TRUE;
+			} else if (_PR_IN6_IS_ADDR_V4MAPPED((PRIPv6Addr *)&addr->ipv6.ip)
+					&& _PR_IN6_V4MAPPED_TO_IPADDR((PRIPv6Addr *)&addr->ipv6.ip)
+							== htonl(INADDR_ANY)) {
+            	return PR_TRUE;
+			}
+        } else if (val == PR_IpAddrLoopback) {
+            if (_PR_IN6_IS_ADDR_LOOPBACK((PRIPv6Addr *)&addr->ipv6.ip)) {
+            	return PR_TRUE;
+			} else if (_PR_IN6_IS_ADDR_V4MAPPED((PRIPv6Addr *)&addr->ipv6.ip)
+					&& _PR_IN6_V4MAPPED_TO_IPADDR((PRIPv6Addr *)&addr->ipv6.ip)
+							== htonl(INADDR_LOOPBACK)) {
+            	return PR_TRUE;
+			}
+        } else if (val == PR_IpAddrV4Mapped
+                && _PR_IN6_IS_ADDR_V4MAPPED((PRIPv6Addr *)&addr->ipv6.ip)) {
             return PR_TRUE;
         }
-    }
-    else
-#endif
-    {
+    } else {
         if (addr->raw.family == AF_INET) {
             if (val == PR_IpAddrAny && addr->inet.ip == htonl(INADDR_ANY)) {
                 return PR_TRUE;
@@ -971,40 +1028,258 @@ PR_IsNetAddrType(const PRNetAddr *addr, PRNetAddrValue val)
     return PR_FALSE;
 }
 
-PR_IMPLEMENT(PRNetAddr*) PR_CreateNetAddr(PRNetAddrValue val, PRUint16 port)
-{
-    PRNetAddr *addr = NULL;
-    if ((PR_IpAddrAny == val) || (PR_IpAddrLoopback == val))
-    {
-        addr = PR_NEWZAP(PRNetAddr);
-        if (NULL == addr)
-            PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-        else
-            if (PR_FAILURE == PR_InitializeNetAddr(val, port, addr))
-                PR_DELETE(addr);  /* and that will make 'addr' == NULL */
-    }
-    else
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-    return addr;
-}  /* PR_CreateNetAddr */
+#ifndef _PR_INET6
+#define XX 127
+static const unsigned char index_hex[256] = {
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+     0, 1, 2, 3,  4, 5, 6, 7,  8, 9,XX,XX, XX,XX,XX,XX,
+    XX,10,11,12, 13,14,15,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,10,11,12, 13,14,15,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+    XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX, XX,XX,XX,XX,
+};
 
-PR_IMPLEMENT(PRStatus) PR_DestroyNetAddr(PRNetAddr *addr)
+/*
+ * StringToV6Addr() returns 1 if the conversion succeeds,
+ * or 0 if the input is not a valid IPv6 address string.
+ * (Same as inet_pton(AF_INET6, string, addr).)
+ */
+static int StringToV6Addr(const char *string, PRIPv6Addr *addr)
 {
-    PR_Free(addr);
-    return PR_SUCCESS;
-}  /* PR_DestroyNetAddr */
+    const unsigned char *s = (const unsigned char *)string;
+    int section = 0;        /* index of the current section (a 16-bit
+                             * piece of the address */
+    int double_colon = -1;  /* index of the section after the first
+                             * 16-bit group of zeros represented by
+                             * the double colon */
+    unsigned int val;
+    int len;
+
+    /* Handle initial (double) colon */
+    if (*s == ':') {
+        if (s[1] != ':') return 0;
+        s += 2;
+        addr->pr_s6_addr16[0] = 0;
+        section = double_colon = 1;
+    }
+
+    while (*s) {
+        if (section == 8) return 0; /* too long */
+        if (*s == ':') {
+            if (double_colon != -1) return 0; /* two double colons */
+            addr->pr_s6_addr16[section++] = 0;
+            double_colon = section;
+            s++;
+            continue;
+        }
+        for (len = val = 0; len < 4 && index_hex[*s] != XX; len++) {
+            val = (val << 4) + index_hex[*s++];
+        }
+        if (*s == '.') {
+            if (len == 0) return 0; /* nothing between : and . */
+            break;
+        }
+        if (*s == ':') {
+            s++;
+            if (!*s) return 0; /* cannot end with single colon */
+        } else if (*s) {
+            return 0; /* bad character */
+        }
+        addr->pr_s6_addr16[section++] = htons((unsigned short)val);
+    }
+    
+    if (*s == '.') {
+        /* Have a trailing v4 format address */
+        if (section > 6) return 0; /* not enough room */
+
+        /*
+         * The number before the '.' is decimal, but we parsed it
+         * as hex.  That means it is in BCD.  Check it for validity
+         * and convert it to binary.
+         */
+        if (val > 0x0255 || (val & 0xf0) > 0x90 || (val & 0xf) > 9) return 0;
+        val = (val >> 8) * 100 + ((val >> 4) & 0xf) * 10 + (val & 0xf);
+        addr->pr_s6_addr[2 * section] = val;
+
+        s++;
+        val = index_hex[*s++];
+        if (val > 9) return 0;
+        while (*s >= '0' && *s <= '9') {
+            val = val * 10 + *s++ - '0';
+            if (val > 255) return 0;
+        }
+        if (*s != '.') return 0; /* must have exactly 4 decimal numbers */
+        addr->pr_s6_addr[2 * section + 1] = val;
+        section++;
+
+        s++;
+        val = index_hex[*s++];
+        if (val > 9) return 0;
+        while (*s >= '0' && *s <= '9') {
+            val = val * 10 + *s++ - '0';
+            if (val > 255) return 0;
+        }
+        if (*s != '.') return 0; /* must have exactly 4 decimal numbers */
+        addr->pr_s6_addr[2 * section] = val;
+
+        s++;
+        val = index_hex[*s++];
+        if (val > 9) return 0;
+        while (*s >= '0' && *s <= '9') {
+            val = val * 10 + *s++ - '0';
+            if (val > 255) return 0;
+        }
+        if (*s) return 0; /* must have exactly 4 decimal numbers */
+        addr->pr_s6_addr[2 * section + 1] = val;
+        section++;
+    }
+    
+    if (double_colon != -1) {
+        /* Stretch the double colon */
+        int tosection;
+        int ncopy = section - double_colon;
+        for (tosection = 7; ncopy--; tosection--) {
+            addr->pr_s6_addr16[tosection] = 
+                addr->pr_s6_addr16[double_colon + ncopy];
+        }
+        while (tosection >= double_colon) {
+            addr->pr_s6_addr16[tosection--] = 0;
+        }
+    } else if (section != 8) {
+        return 0; /* too short */
+    }
+    return 1;
+}
+#undef XX
+            
+static const char *basis_hex = "0123456789abcdef";
+
+/*
+ * V6AddrToString() returns a pointer to the buffer containing
+ * the text string if the conversion succeeds, and NULL otherwise.
+ * (Same as inet_ntop(AF_INET6, addr, buf, size), except that errno
+ * is not set on failure.)
+ */
+static const char *V6AddrToString(
+    const PRIPv6Addr *addr, char *buf, PRUint32 size)
+{
+#define STUFF(c) do { \
+    if (!size--) return NULL; \
+    *buf++ = (c); \
+} while (0)
+
+    int double_colon = -1;          /* index of the first 16-bit
+                                     * group of zeros represented
+                                     * by the double colon */
+    int double_colon_length = 1;    /* use double colon only if
+                                     * there are two or more 16-bit
+                                     * groups of zeros */
+    int zero_length;
+    int section;
+    unsigned int val;
+    const char *bufcopy = buf;
+
+    /* Scan to find the placement of the double colon */
+    for (section = 0; section < 8; section++) {
+        if (addr->pr_s6_addr16[section] == 0) {
+            zero_length = 1;
+            section++;
+            while (section < 8 && addr->pr_s6_addr16[section] == 0) {
+                zero_length++;
+                section++;
+            }
+            /* Select the longest sequence of zeros */
+            if (zero_length > double_colon_length) {
+                double_colon = section - zero_length;
+                double_colon_length = zero_length;
+            }
+        }
+    }
+
+    /* Now start converting to a string */
+    section = 0;
+
+    if (double_colon == 0) {
+        if (double_colon_length == 6 ||
+            (double_colon_length == 5 && addr->pr_s6_addr16[5] == 0xffff)) {
+            /* ipv4 format address */
+            STUFF(':');
+            STUFF(':');
+            if (double_colon_length == 5) {
+                STUFF('f');
+                STUFF('f');
+                STUFF('f');
+                STUFF('f');
+                STUFF(':');
+            }
+            if (addr->pr_s6_addr[12] > 99) STUFF(addr->pr_s6_addr[12]/100 + '0');
+            if (addr->pr_s6_addr[12] > 9) STUFF((addr->pr_s6_addr[12]%100)/10 + '0');
+            STUFF(addr->pr_s6_addr[12]%10 + '0');
+            STUFF('.');
+            if (addr->pr_s6_addr[13] > 99) STUFF(addr->pr_s6_addr[13]/100 + '0');
+            if (addr->pr_s6_addr[13] > 9) STUFF((addr->pr_s6_addr[13]%100)/10 + '0');
+            STUFF(addr->pr_s6_addr[13]%10 + '0');
+            STUFF('.');
+            if (addr->pr_s6_addr[14] > 99) STUFF(addr->pr_s6_addr[14]/100 + '0');
+            if (addr->pr_s6_addr[14] > 9) STUFF((addr->pr_s6_addr[14]%100)/10 + '0');
+            STUFF(addr->pr_s6_addr[14]%10 + '0');
+            STUFF('.');
+            if (addr->pr_s6_addr[15] > 99) STUFF(addr->pr_s6_addr[15]/100 + '0');
+            if (addr->pr_s6_addr[15] > 9) STUFF((addr->pr_s6_addr[15]%100)/10 + '0');
+            STUFF(addr->pr_s6_addr[15]%10 + '0');
+            STUFF('\0');
+            return bufcopy;
+        }
+    }
+
+    while (section < 8) {
+        if (section == double_colon) {
+            STUFF(':');
+            STUFF(':');
+            section += double_colon_length;
+            continue;
+        }
+        val = ntohs(addr->pr_s6_addr16[section]);
+        if (val > 0xfff) {
+            STUFF(basis_hex[val >> 12]);
+        }
+        if (val > 0xff) {
+            STUFF(basis_hex[(val >> 8) & 0xf]);
+        }
+        if (val > 0xf) {
+            STUFF(basis_hex[(val >> 4) & 0xf]);
+        }
+        STUFF(basis_hex[val & 0xf]);
+        section++;
+        if (section < 8 && section != double_colon) STUFF(':');
+    }
+    STUFF('\0');
+    return bufcopy;
+#undef STUFF    
+}
+
+#endif /* !_PR_INET6 */
 
 PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
 {
     PRStatus status = PR_SUCCESS;
-
-#if defined(_PR_INET6)
     PRIntn rv;
 
+#if defined(_PR_INET6)
     rv = inet_pton(AF_INET6, string, &addr->ipv6.ip);
     if (1 == rv)
     {
-        addr->raw.family = AF_INET6;
+        addr->raw.family = PR_AF_INET6;
     }
     else
     {
@@ -1022,6 +1297,13 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
         }
     }
 #else /* _PR_INET6 */
+    rv = StringToV6Addr(string, &addr->ipv6.ip);
+    if (1 == rv) {
+        addr->raw.family = PR_AF_INET6;
+        return PR_SUCCESS;
+    }
+    PR_ASSERT(0 == rv);
+
     addr->inet.family = AF_INET;
 #ifdef XP_OS2_VACPP
     addr->inet.ip = inet_addr((char *)string);
@@ -1044,17 +1326,20 @@ PR_IMPLEMENT(PRStatus) PR_StringToNetAddr(const char *string, PRNetAddr *addr)
 PR_IMPLEMENT(PRStatus) PR_NetAddrToString(
     const PRNetAddr *addr, char *string, PRUint32 size)
 {
-#if defined(_PR_INET6)
-    if (AF_INET6 == addr->raw.family)
+    if (PR_AF_INET6 == addr->raw.family)
     {
+#if defined(_PR_INET6)
         if (NULL == inet_ntop(AF_INET6, &addr->ipv6.ip, string, size))
+#else
+        if (NULL == V6AddrToString(&addr->ipv6.ip, string, size))
+#endif
         {
-            PR_SetError(PR_INVALID_ARGUMENT_ERROR, errno);
+            /* the size of the result buffer is inadequate */
+            PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0);
             return PR_FAILURE;
         }
     }
     else
-#endif  /* defined(_PR_INET6) */
     {
         PR_ASSERT(AF_INET == addr->raw.family);
         PR_ASSERT(size >= 16);
@@ -1076,17 +1361,27 @@ failed:
 
 }  /* PR_NetAddrToString */
 
+/*
+ * Convert an IPv4 addr to an (IPv4-mapped) IPv6 addr
+ */
+PR_IMPLEMENT(void) PR_ConvertIPv4AddrToIPv6(PRUint32 v4addr, PRIPv6Addr *v6addr)
+{
+    PRUint8 *dstp;
+    dstp = v6addr->pr_s6_addr;
+    memset(dstp, 0, 10);
+    memset(dstp + 10, 0xff, 2);
+    memcpy(dstp + 12,(char *) &v4addr, 4);
+}
+
 PR_IMPLEMENT(PRUint16) PR_ntohs(PRUint16 n) { return ntohs(n); }
 PR_IMPLEMENT(PRUint32) PR_ntohl(PRUint32 n) { return ntohl(n); }
 PR_IMPLEMENT(PRUint16) PR_htons(PRUint16 n) { return htons(n); }
 PR_IMPLEMENT(PRUint32) PR_htonl(PRUint32 n) { return htonl(n); }
 PR_IMPLEMENT(PRUint64) PR_ntohll(PRUint64 n)
 {
-    /*
-    ** There is currently no attempt to optomize out depending
-    ** on the host' byte order. That would be easy enough to
-    ** do.
-    */
+#ifdef IS_BIG_ENDIAN
+    return n;
+#else
     PRUint64 tmp;
     PRUint32 hi, lo;
     LL_L2UI(lo, n);
@@ -1094,20 +1389,19 @@ PR_IMPLEMENT(PRUint64) PR_ntohll(PRUint64 n)
     LL_L2UI(hi, tmp);
     hi = PR_ntohl(hi);
     lo = PR_ntohl(lo);
-    LL_UI2L(n, hi);
+    LL_UI2L(n, lo);
     LL_SHL(n, n, 32);
-    LL_UI2L(tmp, lo);
+    LL_UI2L(tmp, hi);
     LL_ADD(n, n, tmp);
     return n;
+#endif
 }  /* ntohll */
 
 PR_IMPLEMENT(PRUint64) PR_htonll(PRUint64 n)
 {
-    /*
-    ** There is currently no attempt to optomize out depending
-    ** on the host' byte order. That would be easy enough to
-    ** do.
-    */
+#ifdef IS_BIG_ENDIAN
+    return n;
+#else
     PRUint64 tmp;
     PRUint32 hi, lo;
     LL_L2UI(lo, n);
@@ -1115,18 +1409,10 @@ PR_IMPLEMENT(PRUint64) PR_htonll(PRUint64 n)
     LL_L2UI(hi, tmp);
     hi = htonl(hi);
     lo = htonl(lo);
-    LL_UI2L(n, hi);
+    LL_UI2L(n, lo);
     LL_SHL(n, n, 32);
-    LL_UI2L(tmp, lo);
+    LL_UI2L(tmp, hi);
     LL_ADD(n, n, tmp);
     return n;
-}  /* htonll */
-
-PR_IMPLEMENT(PRUint16) PR_FamilyInet(void)
-{
-#ifdef _PR_INET6
-    return (_pr_ipv6_enabled ? AF_INET6 : AF_INET);
-#else
-    return AF_INET;
 #endif
-}
+}  /* htonll */
