@@ -168,8 +168,12 @@ Can't contact the directory server at $ldapserver:$ldapport</font>\n";
           $checkins = $checkincount{$p};
 
           print "<tr>\n";
-          print "<td>$fullname{$p}</td>\n";
-          print "<td>" . GenerateUserLookUp($uname, $namepart, $p) . "</td>\n";
+          if ($fullname{$p}) {
+              print "<td>$fullname{$p}</td>\n<td>";
+          } else {
+              print "<td colspan=2>";
+          }
+          print GenerateUserLookUp($uname, $namepart, $p) . "</td>\n";
           print "<td><a href=\"showcheckins.cgi?person=" . url_quote($uname);
           print BatchIdPart() . "\"> $checkins ";
           print Pluralize('change', $checkins) . "</a>$extra</td>\n";
