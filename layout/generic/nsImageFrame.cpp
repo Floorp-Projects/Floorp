@@ -384,10 +384,23 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
   // XXX we need to make sure that the reflow from the OnContainerStart has been
   // processed before we start calling invalidate
 
+  if (!aRect)
+    return NS_ERROR_NULL_POINTER;
+
+
+  nsRect r(aRect->x, aRect->y, aRect->width, aRect->height);
+
+  // The y coordinate of aRect is passed as a scanline where the first scanline is given
+  // a value of 1. We need to convert this to the nsFrames coordinate space by subtracting
+  // 1.
+  r.y -= 1;
+
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
-  nsRect r(*aRect);
-  r *= p2t; // convert to twips
+  r.x = NSIntPixelsToTwips(r.x, p2t);
+  r.y = NSIntPixelsToTwips(r.y, p2t);
+  r.width = NSIntPixelsToTwips(r.width, p2t);
+  r.height = NSIntPixelsToTwips(r.height, p2t);
 
   mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
 

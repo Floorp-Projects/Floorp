@@ -443,7 +443,7 @@ PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
   // limit the size of the blit to the amount of the image read in
   if (aSX + aSWidth > mDecodedX2) {
     aDWidth -= ((aSX + aSWidth - mDecodedX2)*origDWidth)/origSWidth;
-    aSWidth = mDecodedX2 - mDecodedX1;
+    aSWidth -= (aSX + aSWidth) - mDecodedX2;
   }
   if (aSX < mDecodedX1) {
     aDX += ((mDecodedX1 - aSX)*origDWidth)/origSWidth;
@@ -452,7 +452,7 @@ PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
 
   if (aSY + aSHeight > mDecodedY2) {
     aDHeight -= ((aSY + aSHeight - mDecodedY2)*origDHeight)/origSHeight;
-    aSHeight = mDecodedY2 - mDecodedY1;
+    aSHeight -= (aSY + aSHeight) - mDecodedY2;
   }
   if (aSY < mDecodedY1) {
     aDY += ((mDecodedY1 - aSY)*origDHeight)/origSHeight;
