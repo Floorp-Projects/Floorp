@@ -86,11 +86,9 @@ nsSocketProviderService::GetSocketProvider(const char *aSocketType, nsISocketPro
   progID += aSocketType;
   progID.ToCString(buf, MAX_SOCKET_TYPE_PROGID_LENGTH);
 
-  NS_WITH_SERVICE(nsISocketProvider, provider, buf, &rv);
+  rv = nsServiceManager::GetService(buf, NS_GET_IID(nsISocketProvider), (nsISupports **)_result);
   if (NS_FAILED(rv)) 
-    return NS_ERROR_UNKNOWN_SOCKET_TYPE;
-  *_result = provider;
-  NS_ADDREF(provider);
+      return NS_ERROR_UNKNOWN_SOCKET_TYPE;
 
   return NS_OK;
 }
