@@ -401,6 +401,16 @@ NS_METHOD RootContentFrame::Reflow(nsIPresContext*      aPresContext,
         mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
       }
     }
+    else {
+      aDesiredSize.width = aReflowState.maxSize.width;
+      aDesiredSize.height = aReflowState.maxSize.height;
+      aDesiredSize.ascent = aDesiredSize.height;
+      aDesiredSize.descent = 0;
+      if (nsnull != aDesiredSize.maxElementSize) {
+        aDesiredSize.maxElementSize->width = 0;
+        aDesiredSize.maxElementSize->height = 0;
+      }
+    }
   }
 
 #ifdef NS_DEBUG
