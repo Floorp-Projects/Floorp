@@ -59,6 +59,8 @@
 #define _PR_SI_ARCHITECTURE "mips"
 #elif defined(__arm__)
 #define _PR_SI_ARCHITECTURE "arm"
+#elif defined(__hppa__)
+#define _PR_SI_ARCHITECTURE "hppa"
 #elif defined(__s390__)
 #define _PR_SI_ARCHITECTURE "s390"
 #elif defined(__s390x__)
