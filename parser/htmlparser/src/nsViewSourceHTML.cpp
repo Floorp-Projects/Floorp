@@ -101,7 +101,7 @@ static int gErrorThreshold = 10;
 #endif
 
 #ifdef VIEW_SOURCE_HTML
-static const char* kPreStyle = "font-family: monospace; font-weight:normal; color:black; padding-top:4px; margin-left:4px;";
+static const char* kPreStyle = "font-family: -moz-fixed; font-weight:normal; color:black; padding-top:4px; margin-left:4px;";
 #endif // VIEW_SOURCE_HTML
 
 /**
