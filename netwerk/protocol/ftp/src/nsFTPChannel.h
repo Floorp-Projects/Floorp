@@ -43,6 +43,11 @@
 #include "nsIAuthPrompt.h"
 #include "nsIFTPChannel.h"
 
+#include "nsICacheService.h"
+#include "nsICacheEntryDescriptor.h"
+#include "nsICacheListener.h"
+#include "nsICacheSession.h"
+
 #define FTP_COMMAND_CHANNEL_SEG_SIZE 64
 #define FTP_COMMAND_CHANNEL_MAX_SIZE 512
 
@@ -54,7 +59,9 @@
 class nsFTPChannel : public nsIFTPChannel,
                      public nsIInterfaceRequestor,
                      public nsIProgressEventSink,
-                     public nsIStreamListener {
+                     public nsIStreamListener, 
+                     public nsICacheListener
+{
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
@@ -64,6 +71,7 @@ public:
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSICACHELISTENER
 
     // nsFTPChannel methods:
     nsFTPChannel();
@@ -74,7 +82,10 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     // initializes the channel. 
-    nsresult Init(nsIURI* uri);
+    nsresult Init(nsIURI* uri, nsICacheSession* session);
+
+    nsresult SetupState();
+    nsresult GenerateCacheKey(nsACString &cacheKey);
     
 
 protected:
@@ -88,7 +99,7 @@ protected:
     nsCOMPtr<nsIAuthPrompt>         mAuthPrompter;
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
-    PRBool                          mConnected;
+    PRBool                          mIsPending;
     PRUint32                        mLoadFlags;
 
     PRUint32                        mSourceOffset;
@@ -110,6 +121,10 @@ protected:
     PRPackedBool                    mCanceled;
 
     nsCOMPtr<nsIIOService>          mIOService;
+
+    nsCOMPtr<nsICacheSession>         mCacheSession;
+    nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
+
 };
 
 #endif /* nsFTPChannel_h___ */

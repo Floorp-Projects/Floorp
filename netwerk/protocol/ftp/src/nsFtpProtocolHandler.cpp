@@ -42,6 +42,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 #include "prlog.h"
+#include "nsIPref.h"
 #include "nsNetUtil.h"
 
 // For proxification of FTP URLs
@@ -68,6 +69,8 @@ static NS_DEFINE_IID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,       NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kHttpHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 
 nsSupportsHashtable* nsFtpProtocolHandler::mRootConnectionList = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +161,34 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
     
-    rv = channel->Init(url);
+    static PRBool checkedPref = PR_FALSE;
+    static PRBool useCache = PR_TRUE;
+
+     if (!checkedPref) {
+        // XXX should register a prefs changed callback for this
+        nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        prefs->GetBoolPref("browser.cache.enable", &useCache);
+
+        checkedPref = PR_TRUE;
+    }
+
+    if (useCache && !mCacheSession) {
+         nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = serv->CreateSession("FTP",
+                                 nsICache::STORE_ANYWHERE,
+                                 nsICache::STREAM_BASED,
+                                 getter_AddRefs(mCacheSession));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mCacheSession->SetDoomEntriesIfExpired(PR_TRUE);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = channel->Init(url, mCacheSession);
     if (NS_FAILED(rv)) {
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));
         return rv;

@@ -30,6 +30,7 @@
 #include "nsIThreadPool.h"
 #include "nsIObserverService.h"
 #include "nsAutoLock.h"
+#include "nsICacheSession.h"
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FTPPROTOCOLHANDLER_CID \
@@ -49,11 +50,13 @@ public:
     // FTP Connection list access
     static nsresult InsertConnection(nsIURI *aKey, nsISupports *aConn);
     static nsresult RemoveConnection(nsIURI *aKey, nsISupports **_retval);
-    
+
+    static nsresult BuildStreamConverter(nsIStreamListener* in, nsIStreamListener** out);
 protected:
     static nsSupportsHashtable* mRootConnectionList;
 
     nsCOMPtr<nsIIOService> mIOSvc;
+    nsCOMPtr<nsICacheSession> mCacheSession;
 };
 
 #endif /* nsFtpProtocolHandler_h___ */
