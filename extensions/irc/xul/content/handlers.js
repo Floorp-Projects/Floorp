@@ -520,12 +520,12 @@ function onHideCurrentView()
     }
 }
 
-function onDeleteCurrentView()
+function onDeleteView(view)
 {
-    var tb = getTabForObject(client.currentObject);
+    var tb = getTabForObject(view);
     if (client.viewsArray.length < 2)
     {
-        client.currentObject.display (getMsg("onDeleteCurrentViewMsg"), "ERROR");
+        view.display (getMsg("onDeleteViewMsg"), "ERROR");
         return;
     }
     
@@ -534,8 +534,8 @@ function onDeleteCurrentView()
         var i = deleteTab (tb);
         if (i != -1)
         {
-            delete client.currentObject.messageCount;
-            delete client.currentObject.messages;
+            delete view.messageCount;
+            delete view.messages;
 
             if (i >= client.viewsArray.length)
                 i = client.viewsArray.length - 1;            
@@ -1504,7 +1504,7 @@ function cli_idelete (e)
 {
     if ("inputData" in e && e.inputData)
         return false;
-    onDeleteCurrentView();
+    onDeleteView(client.currentObject);
     return true;
 
 }
@@ -3095,7 +3095,7 @@ function my_cpart (e)
             client.rdf.setTreeRoot("user-list", this.getGraphResource());
 
         if (client.DELETE_ON_PART)
-            client.onInputDelete(e);
+            onDeleteView(this);
     }
     else
         this.display (getMsg("my_cpartMsg2",

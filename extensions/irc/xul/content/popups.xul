@@ -47,7 +47,7 @@
       <!-- Context menu commands -->
       <command id="cmd_leaveview" oncommand="onPopupSimulateCommand('/part');"/>
       <command id="cmd_clearview" oncommand="onClearCurrentView();"/>
-      <command id="cmd_deleteview" oncommand="onDeleteCurrentView();"/>
+      <command id="cmd_deleteview" oncommand="onDeleteView(client.currentObject);"/>
       <command id="cmd_status" oncommand="client.onInputStatus();"/>
       <command id="cmd_popup_query"
         oncommand="onPopupSimulateCommand('/query $nick');"/>
