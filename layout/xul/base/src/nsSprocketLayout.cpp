@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   David Hyatt <hyatt@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
@@ -101,10 +102,84 @@ nsSprocketLayout::SetFrameState(nsIBox* aBox, nsFrameState aState)
    frame->SetFrameState(aState);
 }
 
+static void
+HandleBoxPack(nsIBox* aBox, const nsFrameState& aFrameState, nscoord& aX, nscoord& aY, 
+              const nsRect& aOriginalRect, const nsRect& aClientRect)
+{
+  // In the normal direction we lay out our kids in the positive direction (e.g., |x| will get
+  // bigger for a horizontal box, and |y| will get bigger for a vertical box).  In the reverse
+  // direction, the opposite is true.  We'll be laying out each child at a smaller |x| or
+  // |y|.
+  if (aFrameState & NS_STATE_IS_DIRECTION_NORMAL) {
+    aX = aClientRect.x; // The normal direction. |x| and |y| increase as we move through our children.
+    aY = aClientRect.y;
+  }
+  else {
+    aX = aClientRect.x + aOriginalRect.width;  // The reverse direction. |x| and |y| decrease as we
+    aY = aClientRect.y + aOriginalRect.height; // move through our children.
+  }
+
+  // Get our pack/alignment information.
+  nsIBox::Halignment halign;
+  nsIBox::Valignment valign;
+  aBox->GetVAlign(valign);
+  aBox->GetHAlign(halign);
+
+  // The following code handles box PACKING.  Packing comes into play in the case where the computed size for 
+  // all of our children (now stored in our client rect) is smaller than the size available for
+  // the box (stored in |aOriginalRect|).  
+  // 
+  // Here we adjust our |x| and |y| variables accordingly so that we start at the beginning,
+  // middle, or end of the box.
+  //
+  // XXXdwh JUSTIFY needs to be implemented!
+  if (aFrameState & NS_STATE_IS_HORIZONTAL) {
+    switch(halign) {
+      case nsBoxFrame::hAlign_Left:
+        break; // Nothing to do.  The default initialized us properly.
+
+      case nsBoxFrame::hAlign_Center:
+        if (aFrameState & NS_STATE_IS_DIRECTION_NORMAL)
+          aX += (aOriginalRect.width - aClientRect.width)/2;
+        else 
+          aX -= (aOriginalRect.width - aClientRect.width)/2;
+        break;
+
+      case nsBoxFrame::hAlign_Right:
+        if (aFrameState & NS_STATE_IS_DIRECTION_NORMAL)
+          aX += (aOriginalRect.width - aClientRect.width);
+        else
+          aX -= (aOriginalRect.width - aClientRect.width);
+        break; // Nothing to do for the reverse dir.  The default initialized us properly.
+    }
+  } else {
+    switch(valign) {
+      case nsBoxFrame::vAlign_Top:
+      case nsBoxFrame::vAlign_BaseLine: // This value is technically impossible to specify for pack.
+        break;  // Don't do anything.  We were initialized correctly.
+
+      case nsBoxFrame::vAlign_Middle:
+        if (aFrameState & NS_STATE_IS_DIRECTION_NORMAL)
+          aY += (aOriginalRect.height - aClientRect.height)/2;
+        else
+          aY -= (aOriginalRect.height - aClientRect.height)/2;
+        break;
+
+      case nsBoxFrame::vAlign_Bottom:
+        if (aFrameState & NS_STATE_IS_DIRECTION_NORMAL)
+          aY += (aOriginalRect.height - aClientRect.height);
+        else
+          aY -= (aOriginalRect.height - aClientRect.height);
+        break;
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  // see if we are collapsed. If we are? its easy. Layout out each child at 0,0,0,0;
+  // See if we are collapsed. If we are, then simply iterate over all our
+  // children and give them a rect of 0 width and height.
   PRBool collapsed = PR_FALSE;
   aBox->IsCollapsed(aState, collapsed);
   if (collapsed) {
@@ -128,16 +203,21 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   nsRect clientRect;
   aBox->GetClientRect(clientRect);
 
+  // |originalClientRect| represents the rect of the entire box (excluding borders
+  // and padding).  We store it here because we're going to use |clientRect| to hold
+  // the required size for all our kids.  As an example, consider an hbox with a
+  // specified width of 300.  If the kids total only 150 pixels of width, then
+  // we have 150 pixels left over.  |clientRect| is going to hold a width of 150 and
+  // is going to be adjusted based off the value of the PACK property.  If flexible
+  // objects are in the box, then the two rects will match.
   nsRect originalClientRect(clientRect);
 
+  // The frame state contains cached knowledge about our box, such as our orientation
+  // and direction.
   nsFrameState frameState = 0;
   GetFrameState(aBox, frameState);
 
-  //if (frameState & NS_STATE_CURRENTLY_IN_DEBUG)
-  //   printf("In debug\n");
-
-  // ----- build a list of our child desired sizes and computeds sizes ------
-
+  // Build a list of our children's desired sizes and computed sizes
   nsBoxSize*         boxSizes = nsnull;
   nsComputedBoxSize* computedBoxSizes = nsnull;
 
@@ -149,113 +229,91 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   PRInt32 flexes = 0;
   PopulateBoxSizes(aBox, aState, boxSizes, computedBoxSizes, min, max, flexes);
   
+  // The |size| variable will hold the total size of children along the axis of
+  // the box.  Continuing with the example begun in the comment above, size would
+  // be 150 pixels.
   nscoord size = clientRect.width;
   if (!IsHorizontal(aBox))
-      size = clientRect.height;
-
+    size = clientRect.height;
   ComputeChildSizes(aBox, aState, size, boxSizes, computedBoxSizes);
 
-
+  // After the call to ComputeChildSizes, the |size| variable contains the
+  // total required size of all the children.  We adjust our clientRect in the
+  // appropriate dimension to match this size.  In our example, we now assign
+  // 150 pixels into the clientRect.width.
+  //
+  // The variables |min| and |max| hold the minimum required size box must be 
+  // in the OPPOSITE orientation, e.g., for a horizontal box, |min| is the minimum
+  // height we require to enclose our children, and |max| is the maximum height
+  // required to enclose our children.
   if (IsHorizontal(aBox)) {
-      clientRect.width = size;
-      if (clientRect.height < min)
-         clientRect.height = min;
+    clientRect.width = size;
+    if (clientRect.height < min)
+      clientRect.height = min;
 
-      if (frameState & NS_STATE_AUTO_STRETCH) {
-        if (clientRect.height > max)
-           clientRect.height = max;
-      }
+    if (frameState & NS_STATE_AUTO_STRETCH) {
+      if (clientRect.height > max)
+        clientRect.height = max;
+    }
   } else {
-      clientRect.height = size;
-      if (clientRect.width < min)
-         clientRect.width = min;
+    clientRect.height = size;
+    if (clientRect.width < min)
+      clientRect.width = min;
 
-      if (frameState & NS_STATE_AUTO_STRETCH) {
-        if (clientRect.width > max)
-           clientRect.width = max;
-      }
+    if (frameState & NS_STATE_AUTO_STRETCH) {
+      if (clientRect.width > max)
+        clientRect.width = max;
+    }
   }
 
-  // ----------------------
-  // layout all children 
-  // ----------------------
-
+  // With the sizes computed, now it's time to lay out our children.
   PRBool needsRedraw = PR_FALSE;
   PRBool finished;
   nscoord passes = 0;
 
-
-  // ok what we want to do if flow each child at the location given in the spring.
-  // unfortunately after flowing a child it might get bigger. We have not control over this
-  // so it the child gets bigger or smaller than we expected we will have to do a 2nd, 3rd, 4th pass to 
-  // adjust. 
-
+  // We flow children at their preferred locations (along with the appropriate computed flex).  
+  // After we flow a child, it is possible that the child will change its size.  If/when this happens,
+  // we have to do another pass.  Typically only 2 passes are required, but the code is prepared to
+  // do as many passes as are necessary to achieve equilibrium.
   nscoord x = 0;
   nscoord y = 0;
-  nsIBox::Halignment halign;
-  nsIBox::Valignment valign;
-  aBox->GetVAlign(valign);
-  aBox->GetHAlign(halign);
   nscoord origX = 0;
   nscoord origY = 0;
 
+  // |childResized| lets us know if a child changed its size after we attempted to lay it out at
+  // the specified size.  If this happens, we usually have to do another pass.
   PRBool childResized = PR_FALSE;
 
-
+  // |passes| stores our number of passes.  If for any reason we end up doing more than, say, 10
+  // passes, we assert to indicate that something is seriously screwed up.
   passes = 0;
   do 
   { 
-    #ifdef DEBUG_REFLOW
+#ifdef DEBUG_REFLOW
     if (passes > 0) {
       AddIndents();
       printf("ChildResized doing pass: %d\n", passes);
     }
-    #endif 
+#endif 
 
+    // Always assume that we're done.  This will change if, for example, children don't stay
+    // the same size after being flowed.
     finished = PR_TRUE;
 
-    x = clientRect.x;
-    y = clientRect.y;
+    // Handle box packing.
+    HandleBoxPack(aBox, frameState, x, y, originalClientRect, clientRect);
 
-    //if (!(frameState & NS_STATE_AUTO_STRETCH)) {
-      if (frameState & NS_STATE_IS_HORIZONTAL) {
-        switch(halign) {
-          case nsBoxFrame::hAlign_Left:
-            x = clientRect.x;
-          break;
-
-          case nsBoxFrame::hAlign_Center:
-            x = clientRect.x + (originalClientRect.width - clientRect.width)/2;
-          break;
-
-          case nsBoxFrame::hAlign_Right:
-            x = clientRect.x + (originalClientRect.width - clientRect.width);
-          break;
-        }
-      } else {
-        switch(valign) {
-          case nsBoxFrame::vAlign_Top:
-          case nsBoxFrame::vAlign_BaseLine:
-          y = clientRect.y;
-          break;
-
-          case nsBoxFrame::vAlign_Middle:
-            y = clientRect.y + (originalClientRect.height - clientRect.height)/2;
-          break;
-
-          case nsBoxFrame::vAlign_Bottom:
-            y = clientRect.y + (originalClientRect.height - clientRect.height);
-          break;
-        }
-      }
-   // }
-
+    // Now that packing is taken care of we set up a few additional
+    // tracking variables.
     origX = x;
     origY = y;
 
     nscoord nextX = x;
     nscoord nextY = y;
 
+    // Now we iterate over our box children and our box size lists in 
+    // parallel.  For each child, we look at its sizes and figure out
+    // where to place it.
     nsComputedBoxSize* childComputedBoxSize = computedBoxSizes;
     nsBoxSize* childBoxSize                 = boxSizes;
 
@@ -264,8 +322,9 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
     PRInt32 count = 0;
     while (child || (childBoxSize && childBoxSize->bogus))
-    {    
-      //NS_ASSERTION(childBoxSize, "no childBoxSize");
+    { 
+      // If for some reason, our lists are not the same length, we guard
+      // by bailing out of the loop.
       if (childBoxSize == nsnull)
         break;
         
@@ -277,6 +336,10 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       nsSize maxSize(0,0);
       
       if (!childBoxSize->bogus) {
+        // We have a valid box size entry.  This entry already contains information about our
+        // sizes along the axis of the box (e.g., widths in a horizontal box).  If our default
+        // ALIGN is not stretch, however, then we also need to know the child's size along the
+        // opposite axis.
         if (!(frameState & NS_STATE_AUTO_STRETCH)) {
            child->GetPrefSize(aState, prefSize);
            child->GetMinSize(aState, minSize);
@@ -289,53 +352,85 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         }
       }
 
-      // figure our our child's computed width and height
-      if (frameState & NS_STATE_IS_HORIZONTAL) {
+      // Obtain the computed size along the axis of the box for this child from the computedBoxSize entry.  
+      // We store the result in |width| for horizontal boxes and |height| for vertical boxes.
+      if (frameState & NS_STATE_IS_HORIZONTAL)
         width = childComputedBoxSize->size;
-      } else  {
-        height = childComputedBoxSize->size;
-      }
-      
-      if (frameState & NS_STATE_IS_HORIZONTAL) 
-         x += (childBoxSize->left);
       else
-         y += (childBoxSize->left);
+        height = childComputedBoxSize->size;
+      
+      // Adjust our x/y for the left/right spacing.
+      if (frameState & NS_STATE_IS_HORIZONTAL)
+        if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
+          x += (childBoxSize->left);
+        else
+          x -= (childBoxSize->right);
+      else
+        if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
+          y += (childBoxSize->left);
+        else
+          y -= (childBoxSize->right);
 
       nextX = x;
       nextY = y;
 
-      nsRect childRect(x, y, width, height);
+      // Now we build a child rect.
+      nscoord rectX = x;
+      nscoord rectY = y;
+      if (!(frameState & NS_STATE_IS_DIRECTION_NORMAL)) {
+        if (frameState & NS_STATE_IS_HORIZONTAL)
+          rectX -= width;
+        else
+          rectY -= height;
+      }
 
-     // if (!childBoxSize->collapsed) {
-        
-        if (childRect.width > clientRect.width || childRect.height > clientRect.height) {
-           if (childRect.width > clientRect.width)
-              clientRect.width = childRect.width;
+      // We now create an accurate child rect based off our computed size information.
+      nsRect childRect(rectX, rectY, width, height);
 
-            if (childRect.height > clientRect.height)
-              clientRect.height = childRect.height;
-        }
-     // }      
+      // Sanity check against our clientRect.  It is possible that a child specified
+      // a size that is too large to fit.  If that happens, then we have to grow
+      // our client rect.  Remember, clientRect is not the total rect of the enclosing
+      // box.  It currently holds our perception of how big the children needed to
+      // be.
+      if (childRect.width > clientRect.width || childRect.height > clientRect.height) {
+        if (childRect.width > clientRect.width)
+          clientRect.width = childRect.width;
 
+        if (childRect.height > clientRect.height)
+          clientRect.height = childRect.height;
+      }
+    
+      // |x|, |y|, |nextX|, and |nextY| are updated by this function call.  This call
+      // also deals with box ALIGNMENT (when stretching is not turned on).
       ComputeChildsNextPosition(aBox, child, 
-                    x, 
-                    y, 
-                    nextX, 
-                    nextY, 
-                    childRect, 
-                    originalClientRect, 
-                    childBoxSize->ascent,
-                    maxAscent);
+                                x, 
+                                y, 
+                                nextX, 
+                                nextY, 
+                                childRect, 
+                                originalClientRect, 
+                                childBoxSize->ascent,
+                                maxAscent);
 
-
-      if (frameState & NS_STATE_IS_HORIZONTAL) 
-         nextX += (childBoxSize->right);
-      else
-         nextY += (childBoxSize->right);
-
-      childRect.x = x;
-      childRect.y = y;
-
+      // Now we update our nextX/Y along our axis and we update our x/y along the opposite
+      // axis (since a non-stretching alignment could have caused an adjustment).
+      if (frameState & NS_STATE_IS_HORIZONTAL) {
+        if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
+          nextX += (childBoxSize->right);
+        else
+          nextX -= (childBoxSize->left);
+        childRect.y = y;
+      }
+      else {
+        if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
+          nextY += (childBoxSize->right);
+        else 
+          nextY -= (childBoxSize->left);
+        childRect.x = x;
+      }
+      
+      // If we encounter a completely bogus box size, we just leave this child completely
+      // alone and continue through the loop to the next child.
       if (childBoxSize->bogus) 
       {
         childComputedBoxSize = childComputedBoxSize->next;
@@ -350,149 +445,150 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
       PRBool layout = PR_TRUE;
 
+      // Deflate the rect of our child by its margin.
       child->GetMargin(margin);
-      //if (childRect.width >= margin.left + margin.right && childRect.height >= margin.top + margin.bottom) 
       childRect.Deflate(margin);
       if (childRect.width < 0)
         childRect.width = 0;
-
       if (childRect.height < 0)
         childRect.height = 0;
 
+      // Now we're trying to figure out if we have to lay out this child, i.e., to call
+      // the child's Layout method.
       if (passes > 0) {
         layout = PR_FALSE;
       } else {
-        // always layout if we are dirty or have dirty children
+        // Always perform layout if we are dirty or have dirty children
         PRBool dirty = PR_FALSE;           
         PRBool dirtyChildren = PR_FALSE;           
         child->IsDirty(dirty);
         child->HasDirtyChildren(dirtyChildren);
-        if (!(dirty || dirtyChildren) && aState.GetLayoutReason() != nsBoxLayoutState::Initial) {
-           layout = PR_FALSE;
-        }
+        if (!(dirty || dirtyChildren) && aState.GetLayoutReason() != nsBoxLayoutState::Initial)
+          layout = PR_FALSE;
       }
 
+      // We computed a childRect.  Now we want to set the bounds of the child to be that rect.
+      // If our old rect is different, then we know our size changed and we cache that fact
+      // in the |sizeChanged| variable.
       nsRect oldRect(0,0,0,0);
       PRBool sizeChanged = PR_FALSE;
 
-    //  if (childBoxSize->collapsed || layout) {
-        child->GetBounds(oldRect);
-        child->SetBounds(aState, childRect);
-        sizeChanged = (childRect.width != oldRect.width || childRect.height != oldRect.height);
-     // }
+      child->GetBounds(oldRect);
+      child->SetBounds(aState, childRect);
+      sizeChanged = (childRect.width != oldRect.width || childRect.height != oldRect.height);
 
       PRBool possibleRedraw = PR_FALSE;
 
       if (sizeChanged) {
-         child->GetMaxSize(aState, maxSize);
+        // Our size is different.  Sanity check against our maximum allowed size to ensure
+        // we didn't exceed it.
+        child->GetMaxSize(aState, maxSize);
 
-         // make sure the size is in our max size.
-         if (childRect.width > maxSize.width)
-            childRect.width = maxSize.width;
+        // make sure the size is in our max size.
+        if (childRect.width > maxSize.width)
+          childRect.width = maxSize.width;
 
-         if (childRect.height > maxSize.height)
-            childRect.height = maxSize.height;
+        if (childRect.height > maxSize.height)
+          childRect.height = maxSize.height;
            
-         // set it again
-         child->SetBounds(aState, childRect);
+        // set it again
+        child->SetBounds(aState, childRect);
 
-         // ok a child changed size so we should redraw the whole box. But it still has the possibility of 
-         // redeeming itself. If it happens to get bigger during layout like
-         // wrapping text might. It may still end up the same size as it was. Then
-         // we don't need to redraw ourselves.
-         possibleRedraw = PR_TRUE;
+        // Since the child changed size, we know a redraw is probably going to be required.
+        possibleRedraw = PR_TRUE;
       }
 
-
-      if (layout || sizeChanged) {
+      // If we already determined that layout was required or if our size has changed, then
+      // we make sure to call layout on the child, since its children may need to be shifted
+      // around as a result of the size change.
+      if (layout || sizeChanged)
         child->Layout(aState);
-      }
       
-      // make collapsed children not show up
-     // if (childBoxSize && childBoxSize->collapsed) {
-     //   if (layout || sizeChanged) 
-     //       child->Collapse(aState);
-      //  else
-      //      child->SetBounds(aState, nsRect(0,0,0,0));
-      //} else 
-      {
-          // if the child was html it may have changed its rect. Lets look
-          nsRect newChildRect;
-          child->GetBounds(newChildRect);
+      // If the child was a block or inline (e.g., HTML) it may have changed its rect *during* layout. 
+      // We have to check for this.
+      nsRect newChildRect;
+      child->GetBounds(newChildRect);
 
-          if (newChildRect != childRect)
-          {
+      if (newChildRect != childRect) {
 #ifdef DEBUG_GROW
-            child->DumpBox(stdout);
-            printf(" GREW from (%d,%d) -> (%d,%d)\n", childRect.width, childRect.height, newChildRect.width, newChildRect.height);
+        child->DumpBox(stdout);
+        printf(" GREW from (%d,%d) -> (%d,%d)\n", childRect.width, childRect.height, newChildRect.width, newChildRect.height);
 #endif
-            newChildRect.Inflate(margin);
-            childRect.Inflate(margin);
+        newChildRect.Inflate(margin);
+        childRect.Inflate(margin);
 
-            // ok the child changed size
-            ChildResized(aBox,
-                         aState, 
-                         child,
-                         childBoxSize,
-                         childComputedBoxSize,
-                         boxSizes, 
-                         computedBoxSizes, 
-                         childRect,
-                         newChildRect,
-                         clientRect,
-                         flexes,
-                         finished);
+        // The child changed size during layout.  The ChildResized method handles this
+        // scenario.
+        ChildResized(aBox,
+                     aState, 
+                     child,
+                     childBoxSize,
+                     childComputedBoxSize,
+                     boxSizes, 
+                     computedBoxSizes, 
+                     childRect,
+                     newChildRect,
+                     clientRect,
+                     flexes,
+                     finished);
 
-            childResized = PR_TRUE;
+        // We note that a child changed size, which means that another pass will be required.
+        childResized = PR_TRUE;
 
-            if (clientRect.width > originalClientRect.width || clientRect.height > originalClientRect.height) {
-               if (clientRect.width > originalClientRect.width)
-                  originalClientRect.width = clientRect.width;
+        // Now that a child resized, it's entirely possible that OUR rect is too small.  Now we
+        // ensure that |originalClientRect| is grown to accommodate the size of |clientRect|.
+        if (clientRect.width > originalClientRect.width || clientRect.height > originalClientRect.height) {
+          if (clientRect.width > originalClientRect.width)
+            originalClientRect.width = clientRect.width;
 
-                if (clientRect.height > originalClientRect.height)
-                  originalClientRect.height = clientRect.height;
-            }
+          if (clientRect.height > originalClientRect.height)
+            originalClientRect.height = clientRect.height;
+        }
 
+        // If the child resized then recompute its position.
+        ComputeChildsNextPosition(aBox, child, 
+                                  x, 
+                                  y, 
+                                  nextX, 
+                                  nextY, 
+                                  newChildRect, 
+                                  originalClientRect, 
+                                  childBoxSize->ascent,
+                                  maxAscent);
 
-            // if the child resized then recompute it position.
-            ComputeChildsNextPosition(aBox, child, 
-                                      x, 
-                                      y, 
-                                      nextX, 
-                                      nextY, 
-                                      newChildRect, 
-                                      originalClientRect, 
-                                      childBoxSize->ascent,
-                                      maxAscent);
+        // Only update the variable in the opposite axis (since this is only here to deal with
+        // a non-stretching ALIGNMENT)
+        if (frameState & NS_STATE_IS_HORIZONTAL)
+          newChildRect.y = y;
+        else
+          newChildRect.x = x;
+         
+        if (newChildRect.width >= margin.left + margin.right && newChildRect.height >= margin.top + margin.bottom) 
+          newChildRect.Deflate(margin);
 
-            newChildRect.x = x;
-            newChildRect.y = y;
-
-            if (newChildRect.width >= margin.left + margin.right && newChildRect.height >= margin.top + margin.bottom) 
-              newChildRect.Deflate(margin);
-
-            if (childRect.width >= margin.left + margin.right && childRect.height >= margin.top + margin.bottom) 
-              childRect.Deflate(margin);
+        if (childRect.width >= margin.left + margin.right && childRect.height >= margin.top + margin.bottom) 
+          childRect.Deflate(margin);
             
+        child->SetBounds(aState, newChildRect);
 
-            child->SetBounds(aState, newChildRect);
+        // Don't redraw if the child didn't really change size.
+        if (oldRect.width == newChildRect.width || oldRect.height == newChildRect.height)
+          possibleRedraw = PR_FALSE;
 
-            // if the child resized but was the exact size it was. Don't redraw.
-            if (oldRect.width == newChildRect.width || oldRect.height == newChildRect.height)
-               possibleRedraw = PR_FALSE;
-
-              // if we are the first we don't need to do a second pass
-              if (count == 0)
-                 finished = PR_TRUE;
-          }
-      
-        x = nextX;
-        y = nextY;
+        // If we are the first box that changed size, then we don't need to do a second pass
+        if (count == 0)
+          finished = PR_TRUE;
       }
 
+      // Now update our x/y finally.
+      x = nextX;
+      y = nextY;
+     
+      // If we get here and |possibleRedraw| is still set, then it's official.  We do need a repaint.
       if (possibleRedraw)
         needsRedraw = PR_TRUE;
 
+      // Move to the next child.
       childComputedBoxSize = childComputedBoxSize->next;
       childBoxSize = childBoxSize->next;
 
@@ -500,29 +596,30 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       count++;
     }
 
+    // Sanity-checking code to ensure we don't do an infinite # of passes.
     passes++;
     NS_ASSERTION(passes < 10, "A Box's child is constantly growing!!!!!");
-    if (passes > 10) {
+    if (passes > 10)
       break;
-    }
   } while (PR_FALSE == finished);
 
+  // Get rid of our size lists.
   while(boxSizes)
   {
-     nsBoxSize* toDelete = boxSizes;
-     boxSizes = boxSizes->next;
-     delete toDelete;
+    nsBoxSize* toDelete = boxSizes;
+    boxSizes = boxSizes->next;
+    delete toDelete;
   }
 
   while(computedBoxSizes)
   {
-     nsComputedBoxSize* toDelete = computedBoxSizes;
-     computedBoxSizes = computedBoxSizes->next;
-     delete toDelete;
+    nsComputedBoxSize* toDelete = computedBoxSizes;
+    computedBoxSizes = computedBoxSizes->next;
+    delete toDelete;
   }
 
   if (childResized) {
-    // see if one of our children forced us to get bigger
+    // See if one of our children forced us to get bigger
     nsRect tmpClientRect(originalClientRect);
     nsMargin bp(0,0,0,0);
     aBox->GetBorderAndPadding(bp);
@@ -545,64 +642,37 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     }
   }
 
-    x = clientRect.x;
-    y = clientRect.y;
+  // Because our size grew, we now have to readjust because of box packing.  Repack
+  // in order to update our x and y to the correct values.
+  HandleBoxPack(aBox, frameState, x, y, originalClientRect, clientRect);
 
-    //if (!(frameState & NS_STATE_AUTO_STRETCH)) {
-      if (frameState & NS_STATE_IS_HORIZONTAL) {
-        switch(halign) {
-          case nsBoxFrame::hAlign_Left:
-            x = clientRect.x;
-          break;
+  // Compare against our original x and y and only worry about adjusting the children if
+  // we really did have to change the positions because of packing (typically for 'center'
+  // or 'end' pack values).
+  if (x != origX || y != origY) {
+    nsIBox* child = nsnull;
+    // reposition all our children
+    aBox->GetChildBox(&child);
 
-          case nsBoxFrame::hAlign_Center:
-            x = clientRect.x + (originalClientRect.width - clientRect.width)/2;
-          break;
-
-          case nsBoxFrame::hAlign_Right:
-            x = clientRect.x + (originalClientRect.width - clientRect.width);
-          break;
-        }
-      } else {
-        switch(valign) {
-          case nsBoxFrame::vAlign_Top:
-          case nsBoxFrame::vAlign_BaseLine:
-          y = clientRect.y;
-          break;
-
-          case nsBoxFrame::vAlign_Middle:
-            y = clientRect.y + (originalClientRect.height - clientRect.height)/2;
-          break;
-
-          case nsBoxFrame::vAlign_Bottom:
-            y = clientRect.y + (originalClientRect.height - clientRect.height);
-          break;
-        }
-      }
-    //}
-
-    if (x != origX || y != origY) {
-      nsIBox* child = nsnull;
-      // reposition all our children
-      aBox->GetChildBox(&child);
-
-      while (child) 
-      {
-        nsRect childRect;
-        child->GetBounds(childRect);
-        childRect.x += (x - origX);
-        childRect.y += (y - origY);
-        child->SetBounds(aState, childRect);
-        child->GetNextBox(&child);
-      }
-
+    while (child) 
+    {
+      nsRect childRect;
+      child->GetBounds(childRect);
+      childRect.x += (x - origX);
+      childRect.y += (y - origY);
+      child->SetBounds(aState, childRect);
+      child->GetNextBox(&child);
     }
+  }
 
+  // Now do our redraw.
   if (needsRedraw)
     aBox->Redraw(aState);
 
   aState.PopStackMemory();
 
+  // That's it!  If you made it this far without having a nervous breakdown, 
+  // congratulations!  Go get yourself a beer.
   return NS_OK;
 }
 
@@ -844,47 +914,55 @@ nsSprocketLayout::ComputeChildsNextPosition(nsIBox* aBox,
   aBox->GetHAlign(halign);
 
   if (IsHorizontal(aBox)) {
-        aNextX = aCurX + aCurrentChildSize.width;
+    // Handle alignment of a horizontal box's children.
+    if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
+      aNextX = aCurX + aCurrentChildSize.width;
+    else aNextX = aCurX - aCurrentChildSize.width;
 
-        if (frameState & NS_STATE_AUTO_STRETCH) {
-               aCurY = aBoxRect.y;
-        } else {
-            switch (valign) 
-            {
-               case nsBoxFrame::vAlign_BaseLine:
-                   aCurY = aBoxRect.y + (aMaxAscent - childAscent);
-               break;
+    if (frameState & NS_STATE_AUTO_STRETCH)
+      aCurY = aBoxRect.y;
+    else {
+      switch (valign) 
+      {
+         case nsBoxFrame::vAlign_BaseLine:
+             aCurY = aBoxRect.y + (aMaxAscent - childAscent);
+         break;
 
-               case nsBoxFrame::vAlign_Top:
-                   aCurY = aBoxRect.y;
-                   break;
-               case nsBoxFrame::vAlign_Middle:
-                   aCurY = aBoxRect.y + (aBoxRect.height/2 - aCurrentChildSize.height/2);
-                   break;
-               case nsBoxFrame::vAlign_Bottom:
-                   aCurY = aBoxRect.y + aBoxRect.height - aCurrentChildSize.height;
-                   break;
-            }
-        }
-    } else {
-        aNextY = aCurY + aCurrentChildSize.height;
-        if (frameState & NS_STATE_AUTO_STRETCH) {
-                   aCurX = aBoxRect.x;
-        } else {
-            switch (halign) 
-            {
-               case nsBoxFrame::hAlign_Left:
-                   aCurX = aBoxRect.x;
-                   break;
-               case nsBoxFrame::hAlign_Center:
-                   aCurX = aBoxRect.x + (aBoxRect.width/2 - aCurrentChildSize.width/2);
-                   break;
-               case nsBoxFrame::hAlign_Right:
-                   aCurX = aBoxRect.x + aBoxRect.width - aCurrentChildSize.width;
-                   break;
-            }
-        }
+         case nsBoxFrame::vAlign_Top:
+             aCurY = aBoxRect.y;
+             break;
+         case nsBoxFrame::vAlign_Middle:
+             aCurY = aBoxRect.y + (aBoxRect.height/2 - aCurrentChildSize.height/2);
+             break;
+         case nsBoxFrame::vAlign_Bottom:
+             aCurY = aBoxRect.y + aBoxRect.height - aCurrentChildSize.height;
+             break;
+      }
     }
+  } else {
+    // Handle alignment of a vertical box's children.
+    if (frameState & NS_STATE_IS_DIRECTION_NORMAL)
+      aNextY = aCurY + aCurrentChildSize.height;
+    else
+      aNextY = aCurY - aCurrentChildSize.height;
+
+    if (frameState & NS_STATE_AUTO_STRETCH)
+      aCurX = aBoxRect.x;
+    else {
+      switch (halign) 
+      {
+         case nsBoxFrame::hAlign_Left:
+             aCurX = aBoxRect.x;
+             break;
+         case nsBoxFrame::hAlign_Center:
+             aCurX = aBoxRect.x + (aBoxRect.width/2 - aCurrentChildSize.width/2);
+             break;
+         case nsBoxFrame::hAlign_Right:
+             aCurX = aBoxRect.x + aBoxRect.width - aCurrentChildSize.width;
+             break;
+      }
+    }
+  }
 }
 
 void

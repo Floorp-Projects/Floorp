@@ -58,6 +58,7 @@ class nsHTMLInfo;
 #define NS_STATE_IS_COLLAPSED            0x10000000
 #define NS_STATE_STYLE_CHANGE            0x20000000
 #define NS_STATE_EQUAL_SIZE              0x40000000
+#define NS_STATE_IS_DIRECTION_NORMAL     0x80000000
 
 class nsBoxFrame : public nsContainerFrame, public nsContainerBox
 {
@@ -155,6 +156,7 @@ public:
                    nsDidReflowStatus aStatus);
 
   virtual PRBool IsHorizontal() const;
+  virtual PRBool IsNormalDirection() const;
 
   virtual ~nsBoxFrame();
 
@@ -199,7 +201,8 @@ protected:
 
 
     virtual PRBool GetInitialEqualSize(PRBool& aEqualSize); 
-    virtual void GetInitialOrientation(PRBool& aIsHorizontal); 
+    virtual void GetInitialOrientation(PRBool& aIsHorizontal);
+    virtual void GetInitialDirection(PRBool& aIsNormal);
     virtual PRBool GetInitialHAlignment(Halignment& aHalign); 
     virtual PRBool GetInitialVAlignment(Valignment& aValign); 
     virtual PRBool GetInitialAutoStretch(PRBool& aStretch); 

@@ -826,7 +826,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   mDidDrag = PR_FALSE;
 
   mOuter->GetParentBox(&mParentBox);
-
+  
   // get our index
   nscoord childIndex = nsFrameNavigator::IndexOf(mOuter->mPresContext, mParentBox, mOuter);
   PRInt32 childCount = nsFrameNavigator::CountFrames(mOuter->mPresContext, mParentBox);
@@ -839,7 +839,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
 	EnsureOrient();
   PRBool isHorizontal = !mOuter->IsHorizontal();
-
+  
   ResizeType resizeBefore = GetResizeBefore();
   ResizeType resizeAfter  = GetResizeAfter();
 
@@ -930,6 +930,23 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     rv = childBox->GetNextBox(&childBox);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
+  }
+
+  PRBool isNormalDirection = PR_TRUE;
+  mParentBox->GetDirection(isNormalDirection);
+  if (!isNormalDirection) {
+    // The before array is really the after array, and the order needs to be reversed.
+    // First reverse both arrays.
+    Reverse(mChildInfosBefore, mChildInfosBeforeCount);
+    Reverse(mChildInfosAfter, mChildInfosAfterCount);
+
+    // Now swap the two arrays.
+    nscoord newAfterCount = mChildInfosBeforeCount;
+    mChildInfosBeforeCount = mChildInfosAfterCount;
+    mChildInfosAfterCount = newAfterCount;
+    nsSplitterInfo* temp = mChildInfosAfter;
+    mChildInfosAfter = mChildInfosBefore;
+    mChildInfosBefore = temp;
   }
 
   // if the resizebefore is closest we must reverse the list because the first child in the list

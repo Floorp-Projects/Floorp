@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   David Hyatt (hyatt@netscape.com)
  */
 
 /**
@@ -95,6 +96,7 @@ public:
   NS_IMETHOD GetVAlign(Valignment& aAlign) = 0;
   NS_IMETHOD GetHAlign(Halignment& aAlign) = 0;
   NS_IMETHOD GetOrientation(PRBool& aIsHorizontal)=0;
+  NS_IMETHOD GetDirection(PRBool& aIsNormal)=0;
   NS_IMETHOD Redraw(nsBoxLayoutState& aState, const nsRect* aRect = nsnull, PRBool aImmediate = PR_FALSE)=0;
   NS_IMETHOD NeedsRecalc()=0;
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox)=0;

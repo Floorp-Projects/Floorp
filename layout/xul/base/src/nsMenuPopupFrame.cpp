@@ -446,38 +446,62 @@ nsMenuPopupFrame :: AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioY
                                                     const nsString& aPopupAnchor, const nsString& aPopupAlign,
                                                     PRBool* outFlushWithTopBottom )
 {
-  if (aPopupAnchor == NS_LITERAL_STRING("topright") && aPopupAlign == NS_LITERAL_STRING("topleft")) {
+  nsAutoString popupAnchor(aPopupAnchor);
+  nsAutoString popupAlign(aPopupAlign);
+
+  const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+  if (vis->mDirection == NS_STYLE_DIRECTION_RTL) {
+    if (popupAnchor == NS_LITERAL_STRING("topright"))
+      popupAnchor.AssignWithConversion("topleft");
+    else if (popupAnchor == NS_LITERAL_STRING("topleft"))
+      popupAnchor.AssignWithConversion("topright");
+    else if (popupAnchor == NS_LITERAL_STRING("bottomleft"))
+      popupAnchor.AssignWithConversion("bottomright");
+    else if (popupAnchor == NS_LITERAL_STRING("bottomright"))
+      popupAnchor.AssignWithConversion("bottomleft");
+
+    if (popupAlign == NS_LITERAL_STRING("topright"))
+      popupAlign.AssignWithConversion("topleft");
+    else if (popupAlign == NS_LITERAL_STRING("topleft"))
+      popupAlign.AssignWithConversion("topright");
+    else if (popupAlign == NS_LITERAL_STRING("bottomleft"))
+      popupAlign.AssignWithConversion("bottomright");
+    else if (popupAnchor == NS_LITERAL_STRING("bottomright"))
+      popupAlign.AssignWithConversion("bottomleft");
+  }
+
+  if (popupAnchor == NS_LITERAL_STRING("topright") && popupAlign == NS_LITERAL_STRING("topleft")) {
     *ioXPos += inParentRect.width;
   }
-  else if (aPopupAnchor == NS_LITERAL_STRING("topleft") && aPopupAlign == NS_LITERAL_STRING("topleft")) {
+  else if (popupAnchor == NS_LITERAL_STRING("topleft") && popupAlign == NS_LITERAL_STRING("topleft")) {
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor == NS_LITERAL_STRING("topright") && aPopupAlign == NS_LITERAL_STRING("bottomright")) {
+  else if (popupAnchor == NS_LITERAL_STRING("topright") && popupAlign == NS_LITERAL_STRING("bottomright")) {
     *ioXPos -= (mRect.width - inParentRect.width);
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor == NS_LITERAL_STRING("bottomright") && aPopupAlign == NS_LITERAL_STRING("bottomleft")) {
+  else if (popupAnchor == NS_LITERAL_STRING("bottomright") && popupAlign == NS_LITERAL_STRING("bottomleft")) {
     *ioXPos += inParentRect.width;
     *ioYPos -= (mRect.height - inParentRect.height);
   }
-  else if (aPopupAnchor == NS_LITERAL_STRING("bottomright") && aPopupAlign == NS_LITERAL_STRING("topright")) {
+  else if (popupAnchor == NS_LITERAL_STRING("bottomright") && popupAlign == NS_LITERAL_STRING("topright")) {
     *ioXPos -= (mRect.width - inParentRect.width);
     *ioYPos += inParentRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor == NS_LITERAL_STRING("topleft") && aPopupAlign == NS_LITERAL_STRING("topright")) {
+  else if (popupAnchor == NS_LITERAL_STRING("topleft") && popupAlign == NS_LITERAL_STRING("topright")) {
     *ioXPos -= mRect.width;
   }
-  else if (aPopupAnchor == NS_LITERAL_STRING("topleft") && aPopupAlign == NS_LITERAL_STRING("bottomleft")) {
+  else if (popupAnchor == NS_LITERAL_STRING("topleft") && popupAlign == NS_LITERAL_STRING("bottomleft")) {
     *ioYPos -= mRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }
-  else if (aPopupAnchor == NS_LITERAL_STRING("bottomleft") && aPopupAlign == NS_LITERAL_STRING("bottomright")) {
+  else if (popupAnchor == NS_LITERAL_STRING("bottomleft") && popupAlign == NS_LITERAL_STRING("bottomright")) {
     *ioXPos -= mRect.width;
     *ioYPos -= (mRect.height - inParentRect.height);
   }
-  else if (aPopupAnchor == NS_LITERAL_STRING("bottomleft") && aPopupAlign == NS_LITERAL_STRING("topleft")) {
+  else if (popupAnchor == NS_LITERAL_STRING("bottomleft") && popupAlign == NS_LITERAL_STRING("topleft")) {
     *ioYPos += inParentRect.height;
     *outFlushWithTopBottom = PR_TRUE;
   }

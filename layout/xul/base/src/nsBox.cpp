@@ -999,6 +999,17 @@ nsBox::GetOrientation(PRBool& aIsHorizontal)
    return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsBox::GetDirection(PRBool& aIsNormal)
+{
+   nsIFrame* frame = nsnull;
+   GetFrame(&frame);
+   nsFrameState state;
+   frame->GetFrameState(&state);
+   aIsNormal = (state & NS_STATE_IS_DIRECTION_NORMAL);
+   return NS_OK;
+}
+
 nsresult
 nsBox::SyncLayout(nsBoxLayoutState& aState)
 {
