@@ -43,7 +43,7 @@ char * JavaSecUI_targetRiskStr(int risk)
   } else {
     str =  XP_GetString(CAPS_TARGET_RISK_STR_HIGH);
   }
-  return XP_STRDUP(str);
+  return str;
 }
 
 int JavaSecUI_targetRiskLow(void) 
@@ -68,7 +68,7 @@ char * JavaSecUI_getHelpURL(int id)
   PR_ASSERT(tag != NULL);
   PR_ASSERT(java_sec_help_url != NULL);
 
-  char *helpURL = new char[strlen(java_sec_help_url) + strlen(tag) + 1];
+  char *helpURL = (char *)XP_ALLOC(strlen(java_sec_help_url) + strlen(tag) + 1);
   XP_STRCPY(helpURL, java_sec_help_url);
   XP_STRCAT(helpURL, tag);
   return helpURL;
@@ -78,7 +78,7 @@ char * JavaSecUI_getString(int id)
 {
   char *str = XP_GetString(id);
   PR_ASSERT(str != NULL);
-  return XP_STRDUP(str);
+  return str;
 }
 
 #ifdef __cplusplus
