@@ -26,18 +26,15 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifdef JAVA_OR_OJI
-ifdef REGENERATE
+ifdef NSJVM
 DIRS		= classes
 endif
-endif
 
-ifdef MOZ_OJI
 
 MODULE		= java
 LIBRARY_NAME	= jsj
 
-REQUIRES	= java js applet nspr img util layer
+REQUIRES	= java js applet nspr img util layer xpcom caps oji plugin
 
 CSRCS = jsj.c		  \
 	jsj_JSObject.c	  \
@@ -53,27 +50,19 @@ CSRCS = jsj.c		  \
 	jsj_hash.c	  \
 	jsj_method.c	  \
 	jsj_utils.c
+ nsCLiveconnect.c  \
+	nsCLiveconnectFactory.c
 
-endif
 
-ifdef MOZ_OJI
-ifdef REGENERATE
+ifdef NSJVM
 JNI_GEN		= netscape.javascript.JSObject netscape.javascript.JSException
 endif
-else # MOZ_JAVA
-JRI_GEN		= netscape.javascript.JSObject netscape.javascript.JSException
-endif
 
-ifdef JAVA_OR_OJI
 EXPORTS		= $(srcdir)/jsjava.h \
-		  $(srcdir)/$(JRI_GEN_DIR)/netscape_javascript_JSObject.h \
-		  $(srcdir)/$(JRI_GEN_DIR)/netscape_javascript_JSException.h \
+		  $(srcdir)/$(JNI_GEN_DIR)/netscape_javascript_JSObject.h \
+		  $(srcdir)/$(JNI_GEN_DIR)/netscape_javascript_JSException.h \
 		  $(NULL)
 
-else
-EXPORTS = $(srcdir)/jsjava.h	 \
-          $(NULL)
-endif
 
 
 include $(topsrcdir)/config/rules.mk

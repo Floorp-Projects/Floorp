@@ -1007,7 +1007,7 @@ jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
         return invoke_overloaded_java_method(cx, jsj_env, member_descriptor, JS_TRUE, 
                                              java_class, class_descriptor, argc, argv, vp);
     }
-    
+    jsj_init_js_obj_reflections_table();    
     return invoke_overloaded_java_method(cx, jsj_env, member_descriptor,
                                          JS_FALSE, java_obj, 
                                          class_descriptor, argc, argv, vp);

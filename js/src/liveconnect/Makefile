@@ -21,18 +21,14 @@ DEPTH		= ../../..
 
 include $(DEPTH)/config/config.mk
 
-ifdef JAVA_OR_OJI
-ifdef REGENERATE
+ifdef NSJVM
 DIRS		= classes
 endif
-endif
-
-ifdef MOZ_OJI
 
 MODULE		= java
 LIBRARY_NAME	= jsj
 
-REQUIRES	= java js applet nspr img util layer
+REQUIRES	= java js applet nspr img util layer xpcom caps oji plugin
 
 CSRCS = jsj.c		  \
 	jsj_JSObject.c	  \
@@ -47,28 +43,25 @@ CSRCS = jsj.c		  \
 	jsj_field.c	  \
 	jsj_hash.c	  \
 	jsj_method.c	  \
-	jsj_utils.c
+	jsj_utils.c		\
+    nsCLiveconnect.c          \
+	nsCLiveconnectFactory.c
 
-endif
 
-ifdef MOZ_OJI
-ifdef REGENERATE
+LLIBS=$(LIBNSPR) $(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib \
+ $(DIST)/lib/xpcom32.lib	
+
+
+ifdef NSJVM
 JNI_GEN		= netscape.javascript.JSObject netscape.javascript.JSException
 endif
-else # MOZ_JAVA
-JRI_GEN		= netscape.javascript.JSObject netscape.javascript.JSException
-endif
 
-ifdef JAVA_OR_OJI
 EXPORTS		= jsjava.h \
-		  $(JRI_GEN_DIR)/netscape_javascript_JSObject.h \
-		  $(JRI_GEN_DIR)/netscape_javascript_JSException.h \
+		  $(JNI_GEN_DIR)/netscape_javascript_JSObject.h \
+		  $(JNI_GEN_DIR)/netscape_javascript_JSException.h \
+		  nsILiveconnect.h \
 		  $(NULL)
 
-else
-EXPORTS = jsjava.h	 \
-          $(NULL)
-endif
 
 
 include $(DEPTH)/config/rules.mk
@@ -87,8 +80,8 @@ endif
 
 ifdef JAVA_OR_OJI
 $(OBJDIR)/stubs.o:					 \
-	$(JRI_GEN_DIR)/netscape_javascript_JSObject.c	 \
-	$(JRI_GEN_DIR)/netscape_javascript_JSException.c \
+	$(JNI_GEN_DIR)/netscape_javascript_JSObject.c	 \
+	$(JNI_GEN_DIR)/netscape_javascript_JSException.c \
 	$(NULL)
 else
 $(OBJDIR)/stubs.o:

@@ -177,8 +177,8 @@ jsj_ConvertJSValueToJavaObject(JSContext *cx, JNIEnv *jEnv, jsval v, JavaSignatu
                reference is passed to the original JS object by wrapping it
                inside an instance of netscape.javascript.JSObject */
             if (convert_js_obj_to_JSObject_wrapper(cx, jEnv, js_obj, signature, cost, java_value))             {
-                if (*java_value)
-                    *is_local_refp = JS_TRUE;
+                //if (*java_value)
+                  //  *is_local_refp = JS_TRUE;
                 return JS_TRUE;
             }
             
