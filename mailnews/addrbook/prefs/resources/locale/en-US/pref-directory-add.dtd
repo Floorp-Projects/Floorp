@@ -1,0 +1,51 @@
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<!ENTITY newDirectoryTitle.label           "New Directory">
+<!ENTITY directoryName.label               "Name: ">
+<!ENTITY directoryName.accesskey           "n">
+<!ENTITY directoryHostname.label           "Hostname: ">
+<!ENTITY directoryHostname.accesskey       "h">
+<!ENTITY directoryBaseDN.label             "Base DN: ">
+<!ENTITY directoryBaseDN.accesskey         "b">
+<!ENTITY findButton.label                  "Find">
+<!ENTITY findButton.accesskey              "f">
+<!ENTITY advancedOptionsButton.label       "Advanced Options">
+<!ENTITY advancedOptionsButton.accesskey   "a">
+<!ENTITY General.tab                       "General">
+<!ENTITY Offline.tab                       "Offline">
+<!ENTITY Advanced.tab                      "Advanced">
+<!ENTITY advancedOptionsTitle.label        "Advanced Options">
+<!ENTITY portNumber.label                  "Port Number: ">
+<!ENTITY portNumber.accesskey              "p">
+<!ENTITY loginID.label                     "Login with username and password ">
+<!ENTITY loginID.accesskey                 "n">
+<!ENTITY password.label                    "Save password ">
+<!ENTITY password.accesskey                "a">
+<!ENTITY searchFilter.label                "Search Filter: ">
+<!ENTITY searchFilter.accesskey            "f">
+<!ENTITY scope.label                       "Scope: ">
+<!ENTITY scope.accesskey                   "s">
+<!ENTITY scopeBase.label                   "Base">
+<!ENTITY scopeOneLevel.label               "One Level">
+<!ENTITY scopeSubtree.label                "Subtree">
+<!ENTITY return.label                      "Don't return more than">
+<!ENTITY return.accesskey                  "r">
+<!ENTITY results.label                     "results">

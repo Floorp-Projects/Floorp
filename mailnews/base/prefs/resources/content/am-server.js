@@ -24,6 +24,12 @@
  *   hwaara@chello.se
  */
 
+function onLoad()
+{
+   createDirectoriesList(false);
+   parent.onPanelLoaded('am-server.xul');
+}
+
 function onInit() 
 {
     initServerType();
@@ -31,6 +37,8 @@ function onInit()
     setupBiffUI();
     setupMailOnServerUI();
     setupLimitMessageSizeUI();
+    enabling();
+    setupDirectoriesList();
 }
 
 function onPreInit(account, accountValues)

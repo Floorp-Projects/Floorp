@@ -46,6 +46,13 @@ Rights Reserved.
 <!ENTITY useCABSizelimitPart2.label	"cards.">
 
 <!-- Autocompletion -->
-<!ENTITY addressingTitle.label				  "Addressing Messages">
-<!ENTITY addressingText.label				  "When you address messages, Mail can autocomplete addresses for you by looking for matching entries in your address books, or showing you a list of possible matches.">
-<!ENTITY addressingEnable.label				  "Enable address autocompletion">
+<!ENTITY addressingTitle.label                 "Address Autocompletion">
+<!-- LOCALIZATION NOTE (addressingText.label) : do not translate "LDAP" in below line -->
+<!ENTITY addressingText.label                  "When you address messages, Mail can autocomplete addresses for you by looking for matching entries in your address books or by using an address lookup service(LDAP directory server), and show you a list of possible matches.">
+<!ENTITY addressingEnable.label                "Local Address Books">
+<!ENTITY autocompleteText.label                "When I address messages, autocomplete using:">
+<!-- LOCALIZATION NOTE (directories.label) : do not translate "LDAP" in below line -->
+<!ENTITY directories.label                     "LDAP Directory Server:">
+<!ENTITY editDirectories.label                 "Edit Directories...">
+<!ENTITY matchText.label                       "If there is a match in your local address books:">
+<!ENTITY skipDirectory.label                   "Use the address and do not search in the directory">

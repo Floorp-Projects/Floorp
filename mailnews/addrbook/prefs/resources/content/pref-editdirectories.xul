@@ -1,0 +1,53 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-directory.dtd">
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        class="color-dialog"
+        style="-moz-user-focus: ignore;"
+        title="&window.title;" align="vertical"
+        onload="onInitEditDirectories();">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
+
+    <html>&directoriesText.label;</html>
+    <box flex="1">
+      <tree class="inset" id="directoriesTree" flex="1"
+            datasources="rdf:null" onselect="selectDirectory();">
+        <treecolgroup>
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren id="directoriesTree_root" flex="1"/>
+      </tree>
+      <box orient="vertical">
+        <button id="addButton" label="&addDirectory.label;" oncommand="newDirectory();"/>
+        <button id="editButton" label="&editDirectory.label;" oncommand="editDirectory();" disabled="true"/>
+        <button id="removeButton" label="&deleteDirectory.label;" oncommand="removeDirectory();" disabled="true"/>
+      </box>
+    </box>
+    <box id="okCancelButtonsRight"/>
+</window>

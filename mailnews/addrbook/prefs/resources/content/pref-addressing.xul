@@ -6,16 +6,23 @@
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="parent.initPanel('chrome://messenger/content/addressbook/pref-addressing.xul');"
+        onload="onLoad();"
         class="color-dialog"
         orient="vertical">
 
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["emailCollection", "emailCollectionIncoming",
                        "emailCollectionOutgoing", "emailCollectionNewsgroup",
                        "addressingAutocomplete", "enableCABsizeLimit",
-                       "CABsizeLimit"];
+                       "CABsizeLimit", "autocompleteLDAP", 
+                       "directoriesList", "autocompleteSkipDirectory"];
+
+  function onLoad(){
+    createDirectoriesList(true);
+    parent.initPanel('chrome://messenger/content/addressbook/pref-addressing.xul');   
+  }
 
   function Startup(){
     doEnabling();
@@ -49,7 +56,7 @@
       CABsizeLimit.setAttribute("disabled", "true");
       useCABSizelimitPart2.setAttribute("disabled", "true");
     }
-
+    enableAutocomplete();
   }
   ]]>
   </script>  
@@ -86,14 +93,44 @@
 	</box>
 	</titledbox>
 	
-    <titledbox orient="vertical">
+    <titledbox orient="vertical"  id="addressAutocompletion">
       <label value="&addressingTitle.label;"/>
       <html>&addressingText.label;</html>
+      <separator class="thin"/>
+      <html>&autocompleteText.label;</html>
       <box autostretch="never">
         <checkbox id="addressingAutocomplete" label="&addressingEnable.label;"
           pref="true" preftype="bool" prefstring="mail.enable_autocomplete"
           prefattribute="checked"/>
       </box>
-    </titledbox>
-
+      <box autostretch="never">
+        <checkbox id="autocompleteLDAP" label="&directories.label;" 
+                  pref="true" preftype="bool" 
+                  prefstring="ldap_2.autoComplete.useDirectory" 
+                  prefattribute="checked" 
+                  oncommand="enableAutocomplete();"/>
+        <menulist id="directoriesList" flex="1"
+                  pref="true" preftype="string" 
+                  prefstring="ldap_2.autoComplete.directoryServer"
+                  prefattribute="value">
+          <menupopup id="directoriesListPopup" 
+            oncreate="createDirectoriesList(true);">
+          </menupopup>
+       </menulist>
+       <button id="editButton" label="&editDirectories.label;" 
+               pref="true" preftype="bool" 
+               prefstring="pref.ldap.disable_button.edit_directories" 
+               prefattribute="disabled"
+               oncommand="onEditDirectories();"/>
+     </box>
+     <separator class="thin"/>
+     <html>&matchText.label;</html>
+     <box autostretch="never">
+       <checkbox id="autocompleteSkipDirectory"
+                 label="&skipDirectory.label;" 
+                 pref="true" preftype="bool" 
+                 prefstring="ldap_2.autoComplete.skipDirectoryIfLocalMatchFound"
+                 prefattribute="checked"/>    
+     </box>
+   </titledbox>
 </window>

@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+     Srilatha Moturi <srilatha@netscape.com>, original implementor
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-directory-add.dtd">
+
+<window id="addDirectory"
+        class="dialog" style="width: 30em; -moz-user-focus: ignore;"
+        orient="vertical"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&newDirectoryTitle.label;"
+        onload="Startup();">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory-add.js"/>
+  <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
+
+  <keyset id="keyset"/>
+  <box id="editDirectory" align="vertical">
+
+    <tabbox orient="vertical" style="margin:5px">
+      <tabs id="directoryTabBox">
+        <tab label="&General.tab;"/>
+        <tab label="&Offline.tab;"/>
+        <tab label="&Advanced.tab;"/>
+      </tabs>
+	   
+      <tabpanels id="directoryTabPanels" flex="1">
+         <box index="general" align="vertical" flex="1">
+           <grid flex="1">
+             <columns>
+               <column/>
+               <column flex="1"/>
+             </columns>
+      
+             <rows>
+               <row>
+                 <text class="label" value="&directoryName.label;" accesskey="&directoryName.accesskey;" 
+                       for="description"/>
+                 <textbox id="description" flex="1"/>
+               </row>
+               <row>
+                 <text class="label" value="&directoryHostname.label;" accesskey="&directoryHostname.accesskey;"
+                       for="hostname"/>
+                 <textbox id="hostname" flex="1"/>
+               </row>
+               <row>
+                 <text class="label" value="&directoryBaseDN.label;" 
+                       accesskey="&directoryBaseDN.accesskey;"
+                       for="basedn"/>
+                 <textbox id="basedn" flex="1"/>
+                 <button label="&findButton.label;" 
+                         accesskey="&findButton.accesskey;" disabled="true"/>
+               </row>
+             </rows>
+           </grid>
+         </box>
+         <box index="offline" align="vertical" flex="1" style="width:100%">
+         </box>
+         <box index="advanced" align="vertical" flex="1" style="width:100%">
+           <grid flex="1">
+             <columns>
+               <column/>
+               <column flex="1"/>
+             </columns>
+      
+             <rows>
+               <row>
+                 <text class="label" value="&portNumber.label;" 
+                       accesskey="&portNumber.accesskey;"
+                       for="port"/>
+                 <box>
+                   <textbox id="port" size="6"/>
+                 </box>
+               </row>
+               <row>
+                 <text class="label" value="&return.label;" 
+                       accesskey="&return.accesskey;"
+                       for="results"/>
+                 <box autostretch="never">
+                   <textbox id="results" size="6"/>
+                   <text class="label" value="&results.label;"/>
+                 </box>
+               </row>
+               <row>
+                 <text class="label" value="&searchFilter.label;" 
+                       accesskey="&searchFilter.accesskey;"
+                       for="search"/>
+                 <textbox multiline="true" id="search" flex="1"/>
+              </row>
+            </rows>
+          </grid>
+          <box orient="horizontal">
+	        <checkbox id="login" label="&loginID.label;"/>
+          </box>
+          <box orient="horizontal" class="indent">
+            <checkbox class="indent" id="password" 
+                      label="&password.label;" disabled="true"/>
+          </box>
+          <box orient="horizontal">
+            <html>&scope.label;</html>
+          </box>
+          <box orient="horizontal" class="indent">
+            <radiogroup id="scope" orient="horizontal" autostretch="never">
+              <radio group="scope" id="base" value="0" label="&scopeBase.label;"/>
+              <radio group="scope" id="one" value="1" label="&scopeOneLevel.label;"/>
+              <radio group="scope" id="sub" value="2" label="&scopeSubtree.label;"/>                
+            </radiogroup>
+          </box>
+        </box>
+      </tabpanels>
+    </tabbox>
+  </box>
+  <box id="okCancelButtonsRight"/>
+  
+</window>
+        

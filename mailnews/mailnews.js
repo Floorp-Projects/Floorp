@@ -164,6 +164,9 @@ pref("ldap_1.directory6.filter1.repeatFilterForWords", false);
 
 pref("ldap_2.autoComplete.interval",							650);
 pref("ldap_2.autoComplete.enabled",								true);
+pref("ldap_2.autoComplete.useDirectory", false);
+pref("ldap_2.autoComplete.skipDirectoryIfLocalMatchFound", true);
+pref("ldap_2.autoComplete.directoryServer", "");
 
 pref("ldap_2.servers.pab.position",								1);
 pref("ldap_2.servers.pab.description",							"chrome://messenger/locale/addressbook/addressBook.properties");
@@ -224,6 +227,7 @@ pref("ldap_2.servers.switchboard.serverName",					"ldap.switchboard.com");
 
 pref("ldap_2.user_id",											0);
 pref("ldap_2.version",											3); /* Update kCurrentListVersion in include/dirprefs.h if you change this */
+pref("ldap_2.prefs_migrated",      false);
 
 pref("mailnews.confirm.moveFoldersToTrash", true);
 
@@ -242,6 +246,8 @@ pref("mail.identity.default.bcc_others",false);
 pref("mail.identity.default.bcc_list","");
 pref("mail.identity.default.draft_folder","mailbox://nobody@Local Folders/Drafts");
 pref("mail.identity.default.stationery_folder","mailbox://nobody@Local Folders/Templates");
+pref("mail.identity.default.directoryServer","");
+pref("mail.identity.default.overrideGlobal_Pref", false);
 
 pref("mail.update_compose_title_as_you_type", true);
 
