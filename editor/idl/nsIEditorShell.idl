@@ -120,7 +120,6 @@ interface nsIEditorShell : nsISupports
   nsIDOMElement GetElementOrParentByTagName(in wstring tagName, in nsIDOMNode node);
   nsIDOMElement CreateElementWithDefaults(in wstring tagName);
   void InsertElement(in nsIDOMElement element, in boolean deleteSelection);
-  void SaveHLineSettings(in nsIDOMElement element);
   void InsertLinkAroundSelection(in nsIDOMElement anchorElement);
   void SelectElement(in nsIDOMElement element);
   void SetSelectionAfterElement(in nsIDOMElement element);

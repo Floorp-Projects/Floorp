@@ -105,7 +105,6 @@ public:
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
 
-  NS_IMETHOD SaveHLineSettings(nsIDOMElement* aElement);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
 
 

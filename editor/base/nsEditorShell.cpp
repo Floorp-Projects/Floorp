@@ -1872,24 +1872,6 @@ nsEditorShell::InsertElement(nsIDOMElement *element, PRBool deleteSelection)
 }
 
 NS_IMETHODIMP
-nsEditorShell::SaveHLineSettings(nsIDOMElement* aElement)
-{
-  nsresult  result = NS_NOINTERFACE;
-  switch (mEditorType)
-  {
-    case eHTMLTextEditorType:
-      // this is bogus. We should save the HLine settings (or HRule, as it's more properly known) here.
-      result = mEditor->SaveHLineSettings(aElement);
-      break;
-
-    case ePlainTextEditorType:
-    default:
-      result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
-}
-
-NS_IMETHODIMP
 nsEditorShell::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 {
   nsresult  result = NS_NOINTERFACE;

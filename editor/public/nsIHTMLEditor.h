@@ -306,15 +306,6 @@ public:
     */
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
 
-  /** Save the attributes of a Horizontal Rule in user preferences
-    * These prefs are used when the user inserts a new Horizontal line
-    *
-    * XXX this functionality should move to the editorShell.
-    * 
-    * @param aElement An HR element
-    */
-  NS_IMETHOD SaveHLineSettings(nsIDOMElement* aElement)=0;
-  
   /** Insert an link element as the parent of the current selection
     *   be useful for other elements.
     *
