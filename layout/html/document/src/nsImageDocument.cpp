@@ -29,6 +29,7 @@
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
+#include "nsIViewManager.h"
 
 // XXX TODO:
 
@@ -262,6 +263,15 @@ nsImageDocument::StartLayout()
       cx->GetVisibleArea(r);
       shell->ResizeReflow(r.width, r.height);
       NS_RELEASE(cx);
+
+      // Now trigger a refresh
+      // XXX It's unfortunate that this has to be here
+      nsIViewManager* vm = shell->GetViewManager();
+      if (nsnull != vm) {
+        vm->EnableRefresh();
+        NS_RELEASE(vm);
+      }
+
       NS_RELEASE(shell);
     }
   }
