@@ -30,6 +30,9 @@ nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
   NS_INIT_REFCNT();
 #ifdef IBMBIDI
   mDefaultsSet = PR_FALSE;
+  mLTRKeyboard[0] = '\0';
+  mRTLKeyboard[0] = '\0';
+  mCurrentLocaleName[0] = '\0';
 #endif
 }
 
@@ -50,7 +53,12 @@ NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
 
   // call LoadKeyboardLayout() only if the target keyboard layout is different from the current
   char currentLocaleName[KL_NAMELENGTH];
-  strcpy(currentLocaleName, (aLevel & 1) ? mRTLKeyboard : mLTRKeyboard);
+  strncpy(currentLocaleName, (aLevel & 1) ? mRTLKeyboard : mLTRKeyboard, KL_NAMELENGTH);
+  currentLocaleName[KL_NAMELENGTH-1] = '\0'; // null terminate
+
+  NS_ASSERTION((strlen(currentLocaleName) > 0), 
+    "currentLocaleName has string length == 0");
+
   if (strcmp(mCurrentLocaleName, currentLocaleName)) {
     if (!::LoadKeyboardLayout(currentLocaleName, KLF_ACTIVATE | KLF_SUBSTITUTE_OK)) {
       return NS_ERROR_FAILURE;
@@ -72,11 +80,24 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
   if (!::GetKeyboardLayoutName(mCurrentLocaleName))
     return NS_ERROR_FAILURE;
 
+  NS_ASSERTION((strlen(mCurrentLocaleName) > 0), 
+    "GetKeyboardLayoutName return string length == 0");
+  NS_ASSERTION((strlen(mCurrentLocaleName) < KL_NAMELENGTH), 
+    "GetKeyboardLayoutName return string length >= KL_NAMELENGTH");
+
   // The language set by the user overrides the default language for that direction
-  if (*aIsRTL)
-    strcpy(mRTLKeyboard, mCurrentLocaleName);
-  else
-    strcpy(mLTRKeyboard, mCurrentLocaleName);
+  if (*aIsRTL) {
+    strncpy(mRTLKeyboard, mCurrentLocaleName, KL_NAMELENGTH);
+    mRTLKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
+  } else {
+    strncpy(mLTRKeyboard, mCurrentLocaleName, KL_NAMELENGTH);
+    mLTRKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
+  }
+
+  NS_ASSERTION((strlen(mRTLKeyboard) < KL_NAMELENGTH), 
+    "mLTRKeyboard has string length >= KL_NAMELENGTH");
+  NS_ASSERTION((strlen(mLTRKeyboard) < KL_NAMELENGTH), 
+    "mRTLKeyboard has string length >= KL_NAMELENGTH");
 #endif
   return NS_OK;
 }
@@ -92,6 +113,8 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
   HKL far* buf;
   HKL locale;
   char localeName[KL_NAMELENGTH];
+  PRBool isLTRKeyboardSet = PR_FALSE;
+  PRBool isRTLKeyboardSet = PR_FALSE;
   
   // GetKeyboardLayoutList with 0 as first parameter returns the number of keyboard layouts available
   keyboards = ::GetKeyboardLayoutList(0, nsnull);
@@ -112,10 +135,14 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
   // Go through the list and pick a default LTR and RTL keyboard layout
   while (keyboards--) {
     locale = buf[keyboards];
-    if (IsRTLLanguage(locale))
+    if (IsRTLLanguage(locale)) {
       sprintf(mRTLKeyboard, "%.*x", KL_NAMELENGTH - 1, LANGIDFROMLCID(locale));
-    else
+      isRTLKeyboardSet = PR_TRUE;
+    }
+    else {
       sprintf(mLTRKeyboard, "%.*x", KL_NAMELENGTH - 1, LANGIDFROMLCID(locale));
+      isLTRKeyboardSet = PR_TRUE;
+    }
   }
   PR_Free(buf);
 
@@ -123,16 +150,39 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
   // mLTRKeyboard as appropriate. If the user has many keyboard layouts
   // installed this prevents us from arbitrarily resetting the current
   // layout (bug 80274)
+
+  // If one or other keyboard is still not initialized, copy the
+  // initialized keyboard to the uninitialized (bug 85813)
   locale = ::GetKeyboardLayout(0);
   if (!::GetKeyboardLayoutName(localeName))
     return NS_ERROR_FAILURE;
 
+  NS_ASSERTION((strlen(localeName) > 0), 
+    "GetKeyboardLayoutName return string length == 0");
+  NS_ASSERTION((strlen(localeName) < KL_NAMELENGTH), 
+    "GetKeyboardLayout return string length >= KL_NAMELENGTH");
+
   if (IsRTLLanguage(locale)) {
-    strcpy(mRTLKeyboard, localeName);
+    strncpy(mRTLKeyboard, localeName, KL_NAMELENGTH);
+    mRTLKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
+    if (! isLTRKeyboardSet) {
+      strncpy(mLTRKeyboard, localeName, KL_NAMELENGTH);
+      mLTRKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
+    }
   }
   else {
-    strcpy(mLTRKeyboard, localeName);
+    strncpy(mLTRKeyboard, localeName, KL_NAMELENGTH);
+    mLTRKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
+    if (! isRTLKeyboardSet) {
+      strncpy(mRTLKeyboard, localeName, KL_NAMELENGTH);
+      mRTLKeyboard[KL_NAMELENGTH-1] = '\0'; // null terminate
+    }
   }
+
+  NS_ASSERTION((strlen(mRTLKeyboard) > 0), 
+    "mLTRKeyboard has string length == 0");
+  NS_ASSERTION((strlen(mLTRKeyboard) > 0), 
+    "mLTRKeyboard has string length == 0");
 
   return NS_OK;
 }
