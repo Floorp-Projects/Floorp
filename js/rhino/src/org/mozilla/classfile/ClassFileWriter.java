@@ -68,12 +68,18 @@ public class ClassFileWriter {
     public ClassFileWriter(String className, String superClassName,
                            String sourceFileName)
     {
+        generatedClassName = className;
         itsConstantPool = new ConstantPool(this);
         itsThisClassIndex = itsConstantPool.addClass(className);
         itsSuperClassIndex = itsConstantPool.addClass(superClassName);
         if (sourceFileName != null)
             itsSourceFileNameIndex = itsConstantPool.addUtf8(sourceFileName);
         itsFlags = ACC_PUBLIC;
+    }
+    
+    public final String getClassName()
+    {
+        return generatedClassName;
     }
 
     /**
@@ -130,11 +136,11 @@ public class ClassFileWriter {
      * "Lname-with-dots-replaced-by-slashes;" form suitable for use as
      * JVM type signatures.
      */
-    public String classNameToSignature(String name)
+    public static String classNameToSignature(String name)
     {
         int nameLength = name.length();
         int colonPos = 1 + nameLength;
-        char[] buf = getCharBuffer(colonPos + 1);
+        char[] buf = new char[colonPos + 1];
         buf[0] = 'L';
         buf[colonPos] = ';';
         name.getChars(0, nameLength, buf, 1);
@@ -985,6 +991,14 @@ public class ClassFileWriter {
         xop(ByteCode.ALOAD_0, ByteCode.ALOAD, local);
     }
 
+    /**
+     * Load "this" into stack.
+     */
+    public void addLoadThis()
+    {
+        add(ByteCode.ALOAD_0);
+    }
+
     private void xop(byte shortOp, byte op, int local)
     {
         switch (local) {
@@ -1003,6 +1017,89 @@ public class ClassFileWriter {
           default:
             add(op, local);
         }
+    }
+
+    public int addTableSwitch(int low, int high)
+    {
+        if (DEBUGCODE) {
+            System.out.println("Add "+bytecodeStr(ByteCode.TABLESWITCH)
+                               +" "+low+" "+high);
+        }
+        if (low > high)
+            throw new IllegalArgumentException("Bad bounds: "+low+' '+ high);
+
+        int newStack = itsStackTop + stackChange(ByteCode.TABLESWITCH);
+        if (newStack < 0 || Short.MAX_VALUE < newStack) badStack(newStack);
+
+        int entryCount = high - low + 1;
+        int padSize = 3 & ~itsCodeBufferTop; // == 3 - itsCodeBufferTop % 4
+
+        int N = addReservedCodeSpace(1 + padSize + 4 * (1 + 2 + entryCount));
+        int switchStart = N;
+        itsCodeBuffer[N++] = ByteCode.TABLESWITCH;
+        while (padSize != 0) {
+            itsCodeBuffer[N++] = 0;
+            --padSize;
+        }
+        N += 4; // skip default offset
+        N = putInt32(low, itsCodeBuffer, N);
+        putInt32(high, itsCodeBuffer, N);
+
+        itsStackTop = (short)newStack;
+        if (newStack > itsMaxStack) itsMaxStack = (short)newStack;
+        if (DEBUGSTACK) {
+            System.out.println("After "+bytecodeStr(ByteCode.TABLESWITCH)
+                               +" stack = "+itsStackTop);
+        }
+
+        return switchStart;
+    }
+
+    public final void markTableSwitchDefault(int switchStart)
+    {
+        setTableSwitchJump(switchStart, -1, itsCodeBufferTop);
+    }
+
+    public final void markTableSwitchCase(int switchStart, int caseIndex)
+    {
+        setTableSwitchJump(switchStart, caseIndex, itsCodeBufferTop);
+    }
+
+    public void setTableSwitchJump(int switchStart, int caseIndex,
+                                   int jumpTarget)
+    {
+        if (!(0 <= jumpTarget && jumpTarget <= itsCodeBufferTop))
+            throw new IllegalArgumentException("Bad jump target: "+jumpTarget);
+        if (!(caseIndex >= -1))
+            throw new IllegalArgumentException("Bad case index: "+caseIndex);
+
+        int padSize = 3 & ~switchStart; // == 3 - switchStart % 4
+        int caseOffset;
+        if (caseIndex < 0) {
+            // default label
+            caseOffset = switchStart + 1 + padSize;
+        } else {
+            caseOffset = switchStart + 1 + padSize + 4 * (3 + caseIndex);
+        }
+        if (!(0 <= switchStart 
+              && switchStart <= itsCodeBufferTop - 4 * 4 - padSize - 1))
+        {
+            throw new IllegalArgumentException(
+                switchStart+" is outside a possible range of tableswitch"
+                +" in already generated code");
+        }
+        if (!(itsCodeBuffer[switchStart] == ByteCode.TABLESWITCH)) {
+            throw new IllegalArgumentException(
+                switchStart+" is not offset of tableswitch statement");
+        }
+        if (!(0 <= caseOffset && caseOffset + 4 <= itsCodeBufferTop)) {
+            // caseIndex >= -1 does not guarantee that caseOffset >= 0 due
+            // to a possible overflow.
+            throw new IllegalArgumentException(
+                "Too big case index: "+caseIndex);
+        }
+        // ALERT: perhaps check against case bounds?
+        putInt32(jumpTarget - switchStart, itsCodeBuffer, caseOffset);
     }
 
     public int acquireLabel() {
@@ -1053,31 +1150,33 @@ public class ClassFileWriter {
         }
     }
 
-    private void addToCodeBuffer(byte b) {
-        if (itsCurrentMethod == null)
-            throw new IllegalArgumentException("No method to add to");
-        int N = itsCodeBufferTop;
-        if (N == itsCodeBuffer.length) {
-            byte[] tmp = new byte[N * 2];
-            System.arraycopy(itsCodeBuffer, 0, tmp, 0, N);
-            itsCodeBuffer = tmp;
-        }
+    private void addToCodeBuffer(byte b)
+    {
+        int N = addReservedCodeSpace(1);
         itsCodeBuffer[N] = b;
-        itsCodeBufferTop = N + 1;
     }
 
-    private void addToCodeInt16(int value) {
+    private void addToCodeInt16(int value)
+    {
+        int N = addReservedCodeSpace(2);
+        putInt16(value, itsCodeBuffer, N);
+    }
+
+    private int addReservedCodeSpace(int size)
+    {
         if (itsCurrentMethod == null)
             throw new IllegalArgumentException("No method to add to");
-        int N = itsCodeBufferTop;
-        if (N + 2 > itsCodeBuffer.length) {
+        int oldTop = itsCodeBufferTop;
+        int newTop = oldTop + size;
+        if (newTop > itsCodeBuffer.length) {
             int newSize = itsCodeBuffer.length * 2;
-            if (N + 2 > newSize) { newSize = N + 2; }
+            if (newTop > newSize) { newSize = newTop; }
             byte[] tmp = new byte[newSize];
-            System.arraycopy(itsCodeBuffer, 0, tmp, 0, N);
+            System.arraycopy(itsCodeBuffer, 0, tmp, 0, oldTop);
             itsCodeBuffer = tmp;
         }
-        itsCodeBufferTop = putInt16(value, itsCodeBuffer, N);
+        itsCodeBufferTop = newTop;
+        return oldTop;
     }
 
     public void addExceptionHandler(int startLabel, int endLabel,
@@ -2287,6 +2386,8 @@ public class ClassFileWriter {
     private static final boolean DEBUGLABELS = false;
     private static final boolean DEBUGCODE = false;
     private static final int CodeBufferSize = 128;
+    
+    private String generatedClassName;
 
     private ExceptionTableEntry itsExceptionTable[];
     private int itsExceptionTableTop;
