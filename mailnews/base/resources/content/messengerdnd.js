@@ -87,15 +87,17 @@ function DragOverTree(event)
        var sourceID = dataObj.data.substring(0, len.value);
        if (!sourceID)	continue;
 
-       var sourceNode = RDF.GetResource(sourceID, true);
+       var sourceNode;
        try
        {
+         sourceNode = RDF.GetResource(sourceID, true);
          var folder = sourceNode.QueryInterface(Components.interfaces.nsIFolder);
          if (folder)
             dragFolder = true;
        }
        catch(ex)
        {
+          sourceNode = null;
           var isServer = treeItem.getAttribute("IsServer");
           if (isServer == "true")
           {
@@ -125,7 +127,7 @@ function DragOverTree(event)
   	   var sourceFolder = sourceResource.QueryInterface(Components.interfaces.nsIMsgFolder);
        var sourceServer = sourceFolder.server;
 
-       if (sourceNode == targetNode)	
+       if (targetID == sourceID)	
           return (false);
 
       if (sourceServer != targetServer && targetServer.type == "imap") //don't allow drop on different imap servers.
