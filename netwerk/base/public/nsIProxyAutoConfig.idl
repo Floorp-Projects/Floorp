@@ -33,6 +33,7 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
+interface nsIIOService;
 
 [scriptable, uuid(26fae72a-1dd2-11b2-9dd9-cb3e0c2c79ba)]
 interface nsIProxyAutoConfig : nsISupports
@@ -41,6 +42,11 @@ interface nsIProxyAutoConfig : nsISupports
     * Get the proxy for the specified host 
     */
     void ProxyForURL(in nsIURI uri, out string host, out long port, out string type);
+
+    /**
+    * Load the PAC file from the specified URI
+    */
+    void LoadPACFromURL(in nsIURI uri, in nsIIOService ioService);
 };
 
 %{C++
