@@ -11,7 +11,7 @@
 **
 **	File:	MoreDesktopMgr.h
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -23,28 +23,21 @@
 **	descended from Apple Sample Code, but that you've made changes.
 */
 
-/* 
- * This code, which was decended from Apple Sample Code, has been modified by 
- * Netscape.
- */
-
 #ifndef __MOREDESKTOPMGR__
 #define __MOREDESKTOPMGR__
 
 #include <Types.h>
 #include <Files.h>
 
-#include "PascalElim.h"
+#include "Optimization.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Rather than duplicate this case statement I am making this function public */
-pascal OSType	DTIconToResIcon(short iconType);
 /*****************************************************************************/
 
-pascal	OSErr	DTOpen(StringPtr volName,
+pascal	OSErr	DTOpen(ConstStr255Param volName,
 					   short vRefNum,
 					   short *dtRefNum,
 					   Boolean *newDTDatabase);
@@ -80,7 +73,97 @@ pascal	OSErr	DTOpen(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	DTGetAPPL(StringPtr volName,
+pascal	OSErr	DTXGetAPPL(ConstStr255Param volName,
+						   short vRefNum,
+						   OSType creator,
+						   Boolean searchCatalog,
+						   short *applVRefNum,
+						   long *applParID,
+						   Str255 applName);
+/*	¦ Find an application on a volume that can open a file with a given creator.
+	The DTXGetAPPL function finds an application (file type 'APPL') with
+	the specified creator on the specified volume. It first tries to get
+	the application mapping from the desktop database. If that fails,
+	then it tries to find an application in the Desktop file. If that
+	fails and searchCatalog is true, then it tries to find an application
+	with the specified creator using the File Manager's CatSearch routine. 
+
+	volName			input:	A pointer to the name of a mounted volume
+							or nil.
+	vRefNum			input:	Volume specification.
+	creator			input:	The file's creator type.
+	searchCatalog	input:	If true, search the catalog for the application
+							if it isn't found in the desktop database.
+	applVRefNum		output:	The volume reference number of the volume the
+							application is on.
+	applParID		output:	The parent directory ID of the application.
+	applName		output:	The name of the application.
+	
+	Result Codes
+		noErr				0		No error
+		nsvErr				-35		Volume not found
+		ioErr				-36		I/O error
+		paramErr			-50		No default volume
+		rfNumErr			-51		Reference number invalid
+		extFSErr			-58		External file system error - no file
+									system claimed this call
+		desktopDamagedErr	-1305	The desktop database has become corrupted - 
+									the Finder will fix this, but if your
+									application is not running with the
+									Finder, use PBDTReset or PBDTDelete
+		afpItemNotFound		-5012	Information not found
+	
+	__________
+	
+	Also see:	FSpDTGetAPPL
+*/
+
+/*****************************************************************************/
+
+pascal	OSErr	FSpDTXGetAPPL(ConstStr255Param volName,
+							  short vRefNum,
+							  OSType creator,
+							  Boolean searchCatalog,
+							  FSSpec *spec);
+/*	¦ Find an application on a volume that can open a file with a given creator.
+	The FSpDTXGetAPPL function finds an application (file type 'APPL') with
+	the specified creator on the specified volume. It first tries to get
+	the application mapping from the desktop database. If that fails,
+	then it tries to find an application in the Desktop file. If that
+	fails and searchCatalog is true, then it tries to find an application
+	with the specified creator using the File Manager's CatSearch routine. 
+
+	volName			input:	A pointer to the name of a mounted volume
+							or nil.
+	vRefNum			input:	Volume specification.
+	creator			input:	The file's creator type.
+	searchCatalog	input:	If true, search the catalog for the application
+							if it isn't found in the desktop database.
+	spec			output:	FSSpec record containing the application name and
+							location.
+	
+	Result Codes
+		noErr				0		No error
+		nsvErr				-35		Volume not found
+		ioErr				-36		I/O error
+		paramErr			-50		No default volume
+		rfNumErr			-51		Reference number invalid
+		extFSErr			-58		External file system error - no file
+									system claimed this call
+		desktopDamagedErr	-1305	The desktop database has become corrupted - 
+									the Finder will fix this, but if your
+									application is not running with the
+									Finder, use PBDTReset or PBDTDelete
+		afpItemNotFound		-5012	Information not found
+	
+	__________
+	
+	Also see:	FSpDTGetAPPL
+*/
+
+/*****************************************************************************/
+
+pascal	OSErr	DTGetAPPL(ConstStr255Param volName,
 						  short vRefNum,
 						  OSType creator,
 						  short *applVRefNum,
@@ -89,10 +172,10 @@ pascal	OSErr	DTGetAPPL(StringPtr volName,
 /*	¦ Find an application on a volume that can open a file with a given creator.
 	The DTGetAPPL function finds an application (file type 'APPL') with
 	the specified creator on the specified volume. It first tries to get
-	the application mapping from the desktop database. If that fails, then
-	it tries to find an application with the specified creator using
-	the File Manager's CatSearch routine. If that fails, then it tries to
-	find an application in the Desktop file.
+	the application mapping from the desktop database. If that fails,
+	then it tries to find an application in the Desktop file. If that
+	fails, then it tries to find an application with the specified creator
+	using the File Manager's CatSearch routine. 
 
 	volName		input:	A pointer to the name of a mounted volume
 						or nil.
@@ -124,17 +207,17 @@ pascal	OSErr	DTGetAPPL(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	FSpDTGetAPPL(StringPtr volName,
+pascal	OSErr	FSpDTGetAPPL(ConstStr255Param volName,
 							 short vRefNum,
 							 OSType creator,
 							 FSSpec *spec);
 /*	¦ Find an application on a volume that can open a file with a given creator.
 	The FSpDTGetAPPL function finds an application (file type 'APPL') with
 	the specified creator on the specified volume. It first tries to get
-	the application mapping from the desktop database. If that fails, then
-	it tries to find an application with the specified creator using
-	the File Manager's CatSearch routine. If that fails, then it tries to
-	find an application in the Desktop file.
+	the application mapping from the desktop database. If that fails,
+	then it tries to find an application in the Desktop file. If that
+	fails, then it tries to find an application with the specified creator
+	using the File Manager's CatSearch routine. 
 
 	volName		input:	A pointer to the name of a mounted volume
 						or nil.
@@ -164,7 +247,7 @@ pascal	OSErr	FSpDTGetAPPL(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	DTGetIcon(StringPtr volName,
+pascal	OSErr	DTGetIcon(ConstStr255Param volName,
 						  short vRefNum,
 						  short iconType,
 						  OSType fileCreator,
@@ -211,7 +294,7 @@ pascal	OSErr	DTGetIcon(StringPtr volName,
 
 pascal	OSErr	DTSetComment(short vRefNum,
 							 long dirID,
-							 StringPtr name,
+							 ConstStr255Param name,
 							 ConstStr255Param comment);
 /*	¦ Set a file or directory's Finder comment field.
 	The DTSetComment function sets a file or directory's Finder comment
@@ -286,13 +369,19 @@ pascal	OSErr	FSpDTSetComment(const FSSpec *spec,
 
 pascal	OSErr	DTGetComment(short vRefNum,
 							 long dirID,
-							 StringPtr name,
+							 ConstStr255Param name,
 							 Str255 comment);
 /*	¦ Get a file or directory's Finder comment field (if any).
 	The DTGetComment function gets a file or directory's Finder comment
 	field (if any) from the Desktop Manager or if the Desktop Manager is
 	not available, from the Finder's Desktop file.
 
+	IMPORTANT NOTE: Inside Macintosh says that comments are up to
+	200 characters. While that may be correct for the HFS file system's
+	Desktop Manager, other file systems (such as Apple Photo Access) return
+	up to 255 characters. Make sure the comment buffer is a Str255 or you'll
+	regret it.
+	
 	vRefNum	input:	Volume specification.
 	dirID	input:	Directory ID.
 	name	input:	Pointer to object name, or nil when dirID
@@ -303,6 +392,7 @@ pascal	OSErr	DTGetComment(short vRefNum,
 		noErr				0		No error
 		nsvErr				-35		Volume not found
 		ioErr				-36		I/O error
+		fnfErr				-43		File not found
 		paramErr			-50		Volume doesn't support this function
 		rfNumErr			Ð51		Reference number invalid
 		extFSErr			-58		External file system error - no file
@@ -328,6 +418,12 @@ pascal	OSErr	FSpDTGetComment(const FSSpec *spec,
 	field (if any) from the Desktop Manager or if the Desktop Manager is
 	not available, from the Finder's Desktop file.
 
+	IMPORTANT NOTE: Inside Macintosh says that comments are up to
+	200 characters. While that may be correct for the HFS file system's
+	Desktop Manager, other file systems (such as Apple Photo Access) return
+	up to 255 characters. Make sure the comment buffer is a Str255 or you'll
+	regret it.
+	
 	spec	input:	An FSSpec record specifying the file or directory.
 	comment	output:	A Str255 where the comment is to be returned.
 
@@ -335,6 +431,7 @@ pascal	OSErr	FSpDTGetComment(const FSSpec *spec,
 		noErr				0		No error
 		nsvErr				-35		Volume not found
 		ioErr				-36		I/O error
+		fnfErr				-43		File not found
 		paramErr			-50		Volume doesn't support this function
 		rfNumErr			Ð51		Reference number invalid
 		extFSErr			-58		External file system error - no file
@@ -355,10 +452,10 @@ pascal	OSErr	FSpDTGetComment(const FSSpec *spec,
 
 pascal	OSErr	DTCopyComment(short srcVRefNum,
 							  long srcDirID,
-							  StringPtr srcName,
+							  ConstStr255Param srcName,
 							  short dstVRefNum,
 							  long dstDirID,
-							  StringPtr dstName);
+							  ConstStr255Param dstName);
 /*	¦ Copy the file or folder comment from the source to the destination object.
 	The DTCopyComment function copies the file or folder comment from the
 	source to the destination object.  The destination volume must support
@@ -439,8 +536,6 @@ pascal	OSErr	FSpDTCopyComment(const FSSpec *srcSpec,
 }
 #endif
 
-#ifndef __COMPILINGMOREFILES
-#undef pascal
-#endif
+#include "OptimizationEnd.h"
 
 #endif	/* __MOREDESKTOPMGR__ */

@@ -7,7 +7,7 @@
 **
 **	File:		FullPath.c
 **
-**	Copyright © 1995-1996 Apple Computer, Inc.
+**	Copyright © 1995-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -19,11 +19,6 @@
 **	descended from Apple Sample Code, but that you've made changes.
 */
 
-/* 
- * This code, which was decended from Apple Sample Code, has been modified by 
- * Netscape.
- */
- 
 #include <Types.h>
 #include <Errors.h>
 #include <Memory.h>
@@ -84,7 +79,7 @@
 
 pascal	OSErr	GetFullPath(short vRefNum,
 							long dirID,
-							StringPtr name,
+							ConstStr255Param name,
 							short *fullPathLength,
 							Handle *fullPath)
 {
@@ -95,7 +90,7 @@ pascal	OSErr	GetFullPath(short vRefNum,
 	*fullPath = NULL;
 	
 	result = FSMakeFSSpecCompat(vRefNum, dirID, name, &spec);
-	if ( result == noErr )
+	if ( (result == noErr) || (result == fnfErr) )
 	{
 		result = FSpGetFullPath(&spec, fullPathLength, fullPath);
 	}
@@ -110,11 +105,15 @@ pascal	OSErr	FSpGetFullPath(const FSSpec *spec,
 							   Handle *fullPath)
 {
 	OSErr		result;
+	OSErr		realResult;
 	FSSpec		tempSpec;
 	CInfoPBRec	pb;
 	
 	*fullPathLength = 0;
 	*fullPath = NULL;
+	
+	// Default to noErr
+	realResult = noErr;
 	
 	/* Make a copy of the input FSSpec that can be modified */
 	BlockMoveData(spec, &tempSpec, sizeof(FSSpec));
@@ -140,10 +139,12 @@ pascal	OSErr	FSpGetFullPath(const FSSpec *spec,
 		pb.dirInfo.ioDrDirID = tempSpec.parID;
 		pb.dirInfo.ioFDirIndex = 0;
 		result = PBGetCatInfoSync(&pb);
-		if ( result == noErr )
+		// Allow file/directory name at end of path to not exist.
+		realResult = result;
+		if ( (result == noErr) || (result == fnfErr) )
 		{
 			/* if the object is a directory, append a colon so full pathname ends with colon */
-			if ( (pb.hFileInfo.ioFlAttrib & ioDirMask) != 0 )
+			if ( (result == noErr) && (pb.hFileInfo.ioFlAttrib & ioDirMask) != 0 )
 			{
 				++tempSpec.name[0];
 				tempSpec.name[tempSpec.name[0]] = ':';
@@ -179,7 +180,8 @@ pascal	OSErr	FSpGetFullPath(const FSSpec *spec,
 	if ( result == noErr )
 	{
 		/* Return the length */
-		*fullPathLength = GetHandleSize(*fullPath);
+		*fullPathLength = InlineGetHandleSize(*fullPath);
+		result = realResult;	// return realResult in case it was fnfErr
 	}
 	else
 	{

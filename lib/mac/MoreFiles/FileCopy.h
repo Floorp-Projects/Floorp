@@ -7,7 +7,7 @@
 **
 **	File:		FileCopy.h
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -25,7 +25,7 @@
 #include <Types.h>
 #include <Files.h>
 
-#include "PascalElim.h"
+#include "Optimization.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,8 +38,8 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 						 ConstStr255Param srcName,
 						 short dstVRefNum,
 						 long dstDirID,
-						 StringPtr dstPathname,
-						 StringPtr copyName,
+						 ConstStr255Param dstPathname,
+						 ConstStr255Param copyName,
 						 void *copyBufferPtr,
 						 long copyBufferSize,
 						 Boolean preflight);
@@ -128,7 +128,7 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 
 pascal	OSErr	FSpFileCopy(const FSSpec *srcSpec,
 							const FSSpec *dstSpec,
-							StringPtr copyName,
+							ConstStr255Param copyName,
 							void *copyBufferPtr,
 							long copyBufferSize,
 							Boolean preflight);
@@ -215,8 +215,6 @@ pascal	OSErr	FSpFileCopy(const FSSpec *srcSpec,
 }
 #endif
 
-#ifndef __COMPILINGMOREFILES
-#undef pascal
-#endif
+#include "OptimizationEnd.h"
 
 #endif	/* __FILECOPY__ */

@@ -7,7 +7,7 @@
 **
 **	File:		FSpCompat.h
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -25,7 +25,7 @@
 #include <Types.h>
 #include <Files.h>
 
-#include "PascalElim.h"
+#include "Optimization.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,7 +36,7 @@ extern "C" {
 pascal	OSErr	FSMakeFSSpecCompat(short vRefNum,
 								   long dirID,
 								   ConstStr255Param fileName,
-								   FSSpecPtr spec);
+								   FSSpec *spec);
 /*	¦ Initialize a FSSpec record.
 	The FSMakeFSSpecCompat function fills in the fields of an FSSpec record.
 	If the file system can't create the FSSpec, then the compatibility code
@@ -482,9 +482,7 @@ pascal	void	FSpCreateResFileCompat(const FSSpec *spec,
 }
 #endif
 
-#ifndef __COMPILINGMOREFILES
-#undef pascal
-#endif
+#include "OptimizationEnd.h"
 
 #endif	/* __FSPCOMPAT__ */
 

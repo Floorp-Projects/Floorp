@@ -7,7 +7,7 @@
 **
 **	File:		Search.c
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -18,6 +18,15 @@
 **	we require that you make it clear in the source that the code was
 **	descended from Apple Sample Code, but that you've made changes.
 */
+
+/* 
+ * This code, which was decended from Apple Sample Code, has been modified by 
+ * Netscape.
+ *
+ * To avoid potential conflicts with other files named search renamed to
+ * MoreFilesSearch.c
+ */
+
 
 #include <Types.h>
 #include <Gestalt.h>
@@ -103,7 +112,7 @@ typedef ExtendedTMTask *ExtendedTMTaskPtr;
 
 /*****************************************************************************/
 
-static	OSErr	CheckVol(StringPtr pathname,
+static	OSErr	CheckVol(ConstStr255Param pathname,
 						 short vRefNum,
 						 short *realVRefNum,
 						 long *volID);
@@ -117,8 +126,8 @@ static	OSErr	VerifyUserPB(CSParamPtr userPB,
 							 Boolean *includeDirs,
 							 Boolean *includeNames);
 
-static	Boolean	IsSubString(StringPtr aStringPtr,
-							StringPtr subStringPtr);
+static	Boolean	IsSubString(ConstStr255Param aStringPtr,
+							ConstStr255Param subStringPtr);
 
 static	Boolean	CompareMasked(const long *data1,
 							  const long *data2,
@@ -131,7 +140,7 @@ static	void	CheckForMatches(CInfoPBPtr cPB,
 								Boolean includeFiles,
 								Boolean includeDirs);
 
-#ifdef	__WANTPASCALELIMINATION
+#if	__WANTPASCALELIMINATION
 #undef	pascal
 #endif
 
@@ -147,7 +156,7 @@ static	void	TimeOutTask(void);
 
 #endif
 
-#ifdef	__WANTPASCALELIMINATION
+#if	__WANTPASCALELIMINATION
 #define	pascal	
 #endif
 
@@ -161,7 +170,7 @@ static	long	GetDirModDate(short vRefNum,
 **	is used to help insure that calls to resume searching with IndexedSearch
 **	are to the same volume as the last call to IndexedSearch.
 */
-static	OSErr	CheckVol(StringPtr pathname,
+static	OSErr	CheckVol(ConstStr255Param pathname,
 						 short vRefNum,
 						 short *realVRefNum,
 						 long *volID)
@@ -205,7 +214,7 @@ static	OSErr	CheckStack(unsigned short stackDepth,
 		/* Time to grow stack */
 		SetHandleSize((Handle)searchStack, *searchStackSize + (kAdditionalLevelRecs * sizeof(LevelRec)));
 		result = MemError();	/* should be noErr */
-		*searchStackSize = GetHandleSize((Handle)searchStack);
+		*searchStackSize = InlineGetHandleSize((Handle)searchStack);
 	}
 	else
 	{
@@ -237,17 +246,23 @@ static	OSErr	VerifyUserPB(CSParamPtr userPB,
 	
 	/* ioMatchPtr cannot be NULL */
 	if ( userPB->ioMatchPtr == NULL )
+	{
 		goto ParamErrExit;
+	}
 	
 	/* ioSearchInfo1 cannot be NULL */
 	if ( searchInfo1 == NULL )
+	{
 		goto ParamErrExit;
+	}
 	
 	/* If any bits except partialName, fullName, or negate are set, then */
 	/* ioSearchInfo2 cannot be NULL because information in ioSearchInfo2 is required  */
 	if ( ((userPB->ioSearchBits & ~(fsSBPartialName | fsSBFullName | fsSBNegate)) != 0) &&
 		 ( searchInfo2 == NULL ))
+	{
 		goto ParamErrExit;
+	}
 	
 	*includeFiles = false;
 	*includeDirs = false;
@@ -260,7 +275,9 @@ static	OSErr	VerifyUserPB(CSParamPtr userPB,
 		if ( (searchInfo1->hFileInfo.ioNamePtr == NULL) ||
 			 (searchInfo1->hFileInfo.ioNamePtr[0] == 0) ||
 			 (searchInfo1->hFileInfo.ioNamePtr[0] > (sizeof(Str63) - 1)) )
+		{
 			goto ParamErrExit;
+		}
 		
 		*includeNames = true;
 	}
@@ -270,16 +287,22 @@ static	OSErr	VerifyUserPB(CSParamPtr userPB,
 		/* The only attributes you can search on are the directory flag */
 		/* and the locked flag. */
 		if ( (searchInfo2->hFileInfo.ioFlAttrib & ~(ioDirMask | 0x01)) != 0 )
+		{
 			goto ParamErrExit;
+		}
 		
 		/* interested in the directory bit? */
 		if ( (searchInfo2->hFileInfo.ioFlAttrib & ioDirMask) != 0 )
 		{
 			/* yes, so do they want just directories or just files? */
 			if ( (searchInfo1->hFileInfo.ioFlAttrib & ioDirMask) != 0 )
+			{
 				*includeDirs = true;
+			}
 			else
+			{
 				*includeFiles = true;
+			}
 		}
 		else
 		{
@@ -300,19 +323,25 @@ static	OSErr	VerifyUserPB(CSParamPtr userPB,
 	if ( *includeDirs &&
 		 ((userPB->ioSearchBits & fsSBFlAttrib) != 0) &&
 		 ((searchInfo2->hFileInfo.ioFlAttrib & 0x01) != 0) )
+	{
 		goto ParamErrExit;
+	}
 	
 	/* If files are included in the search, then there cannot be */
 	/* a search on the number of files. */
 	if ( *includeFiles &&
 		 ((userPB->ioSearchBits & fsSBDrNmFls) != 0) )
+	{
 		goto ParamErrExit;
+	}
 	
 	/* If directories are included in the search, then there cannot */
 	/* be a search on file lengths. */
 	if ( *includeDirs &&
 		 ((userPB->ioSearchBits & (fsSBFlLgLen | fsSBFlPyLen | fsSBFlRLgLen | fsSBFlRPyLen)) != 0) )
+	{
 		goto ParamErrExit;
+	}
 	
 	return ( noErr );
 		 
@@ -327,8 +356,8 @@ ParamErrExit:
 **	Both input strings have already been converted to all uppercase using
 **	UprString (the same non-international call the File Manager uses).
 */
-static	Boolean	IsSubString(StringPtr aStringPtr,
-							StringPtr subStringPtr)
+static	Boolean	IsSubString(ConstStr255Param aStringPtr,
+							ConstStr255Param subStringPtr)
 {
 	short	strLength;		/* length of string */
 	short	subStrLength;	/* length of subString */
@@ -445,12 +474,16 @@ static	void	CheckForMatches(CInfoPBPtr cPB,
 	if ( (cPB->hFileInfo.ioFlAttrib & ioDirMask) == 0 )
 	{
 		if (!includeFiles)
+		{
 			goto Failed;
+		}
 	}
 	else
 	{
 		if (!includeDirs)
+		{
 			goto Failed;
+		}
 	}
 	
 	if ( (searchBits & fsSBPartialName) != 0 )
@@ -471,7 +504,7 @@ static	void	CheckForMatches(CInfoPBPtr cPB,
 		}
 		
 		{
-			if ( !IsSubString(itemName, (StringPtr)matchName) )
+			if ( !IsSubString(itemName, matchName) )
 			{
 				goto Failed;
 			}
@@ -618,7 +651,9 @@ Hit:
 Failed:
 	/* Do we reverse our findings? */
 	if ( (searchBits & fsSBNegate) != 0 )
+	{
 		foundMatch = !foundMatch;	/* matches are not, not matches are */
+	}
 	
 	if ( foundMatch )
 	{
@@ -627,7 +662,9 @@ Failed:
 		userPB->ioMatchPtr[userPB->ioActMatchCount].vRefNum = cPB->hFileInfo.ioVRefNum;
 		userPB->ioMatchPtr[userPB->ioActMatchCount].parID = cPB->hFileInfo.ioFlParID;
 		if ( cPB->hFileInfo.ioNamePtr[0] > 63 )
+		{
 			cPB->hFileInfo.ioNamePtr[0] = 63;
+		}
 		BlockMoveData(cPB->hFileInfo.ioNamePtr,
 					  userPB->ioMatchPtr[userPB->ioActMatchCount].name,
 					  cPB->hFileInfo.ioNamePtr[0] + 1);
@@ -646,7 +683,7 @@ Failed:
 **	continue.
 */
 
-#ifdef	__WANTPASCALELIMINATION
+#if	__WANTPASCALELIMINATION
 #undef	pascal
 #endif
 
@@ -669,7 +706,7 @@ static	void	TimeOutTask(void)
 
 #endif
 
-#ifdef	__WANTPASCALELIMINATION
+#if	__WANTPASCALELIMINATION
 #define	pascal	
 #endif
 
@@ -707,6 +744,7 @@ static	long	GetDirModDate(short vRefNum,
 }
 
 /*****************************************************************************/
+
 #if !TARGET_CARBON
 /* NSCP - pinkerton
  * some of the timer stuff is mismatched for carbon. We don't use it anyway.
@@ -775,7 +813,7 @@ pascal	OSErr	IndexedSearch(CSParamPtr pb,
 		/* Make sure searchStack really exists */
 		if ( searchStack != NULL )
 		{
-			searchStackSize = GetHandleSize((Handle)searchStack);
+			searchStackSize = InlineGetHandleSize((Handle)searchStack);
 			
 			/* See if the search is a new search or a resumed search. */
 			if ( catPosition->initialize == 0 )
@@ -817,7 +855,9 @@ pascal	OSErr	IndexedSearch(CSParamPtr pb,
 							/* Check the dir's mod date against the saved mode date on our "stack" */
 							modDate = GetDirModDate(realVRefNum, dirID);
 							if ( modDate != (*searchStack)[catPosition->stackDepth].dirModDate )
+							{
 								result = catChangedErr;
+							}
 						}
 						else
 						{
@@ -1050,7 +1090,7 @@ pascal OSErr PBCatSearchSyncCompat(CSParamPtr paramBlock)
 
 /*****************************************************************************/
 
-pascal	OSErr	NameFileSearch(StringPtr volName,
+pascal	OSErr	NameFileSearch(ConstStr255Param volName,
 							   short vRefNum,
 							   ConstStr255Param fileName,
 							   FSSpecPtr matches,
@@ -1074,9 +1114,14 @@ pascal	OSErr	NameFileSearch(StringPtr volName,
 	pb.csParam.ioVRefNum = vRefNum;
 	pb.csParam.ioMatchPtr = matches;
 	pb.csParam.ioReqMatchCount = reqMatchCount;
-	pb.csParam.ioSearchBits = ( partial ) ?		/* tell CatSearch what we're looking for: */
-		( fsSBPartialName + fsSBFlAttrib ) :	/* partial name file matches or */
-		( fsSBFullName + fsSBFlAttrib );		/* full name file matches */
+	if ( partial )	/* tell CatSearch what we're looking for: */
+	{
+		pb.csParam.ioSearchBits = fsSBPartialName + fsSBFlAttrib;	/* partial name file matches or */
+	}
+	else
+	{
+		pb.csParam.ioSearchBits =  fsSBFullName + fsSBFlAttrib;		/* full name file matches */
+	}
 	pb.csParam.ioSearchInfo1 = &searchInfo1;
 	pb.csParam.ioSearchInfo2 = &searchInfo2;
 	pb.csParam.ioSearchTime = 0;
@@ -1131,7 +1176,7 @@ pascal	OSErr	NameFileSearch(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	CreatorTypeFileSearch(StringPtr volName,
+pascal	OSErr	CreatorTypeFileSearch(ConstStr255Param volName,
 									  short vRefNum,
 									  OSType creator,
 									  OSType fileType,
@@ -1177,15 +1222,25 @@ pascal	OSErr	CreatorTypeFileSearch(StringPtr volName,
 	
 	/* search for creator; if creator = 0x00000000, ignore creator */
 	searchInfo1.hFileInfo.ioFlFndrInfo.fdCreator = creator;
-	searchInfo2.hFileInfo.ioFlFndrInfo.fdCreator = ( creator == (OSType)0x00000000 ) ?
-		(OSType)0x00000000 :
-		(OSType)0xffffffff;
+	if ( creator == (OSType)0x00000000 )
+	{
+		searchInfo2.hFileInfo.ioFlFndrInfo.fdCreator = (OSType)0x00000000;
+	}
+	else
+	{
+		searchInfo2.hFileInfo.ioFlFndrInfo.fdCreator = (OSType)0xffffffff;
+	}
 	
 	/* search for fileType; if fileType = 0x00000000, ignore fileType */
 	searchInfo1.hFileInfo.ioFlFndrInfo.fdType = fileType;
-	searchInfo2.hFileInfo.ioFlFndrInfo.fdType = ( fileType == (OSType)0x00000000 ) ?
-		(OSType)0x00000000 :
-		(OSType)0xffffffff;
+	if ( fileType == (OSType)0x00000000 )
+	{
+		searchInfo2.hFileInfo.ioFlFndrInfo.fdType = (OSType)0x00000000;
+	}
+	else
+	{
+		searchInfo2.hFileInfo.ioFlFndrInfo.fdType = (OSType)0xffffffff;
+	}
 	
 	/* zero all other FInfo fields */
 	searchInfo1.hFileInfo.ioFlFndrInfo.fdFlags = 0;

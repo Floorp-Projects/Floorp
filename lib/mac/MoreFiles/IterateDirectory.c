@@ -5,7 +5,7 @@
 **
 **	File:		IterateDirectory.c
 **
-**	Copyright © 1995-1996 Jim Luther
+**	Copyright © 1995-1998 Jim Luther and Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -59,7 +59,7 @@ typedef IterateGlobals *IterateGlobalsPtr;
 /*	Static Prototype */
 
 static	void	IterateDirectoryLevel(long dirID,
-									  IterateGlobalsPtr theGlobals);
+									  IterateGlobals *theGlobals);
 
 /*****************************************************************************/
 
@@ -68,7 +68,7 @@ static	void	IterateDirectoryLevel(long dirID,
 */
 
 static	void	IterateDirectoryLevel(long dirID,
-									  IterateGlobalsPtr theGlobals)
+									  IterateGlobals *theGlobals)
 {
 	if ( (theGlobals->maxLevels == 0) ||						/* if maxLevels is zero, we aren't checking levels */
 		 (theGlobals->currentLevel < theGlobals->maxLevels) )	/* if currentLevel < maxLevels, look at this level */
@@ -106,8 +106,11 @@ static	void	IterateDirectoryLevel(long dirID,
 			++index; /* prepare to get next item */
 		} while ( (theGlobals->result == noErr) && (!theGlobals->quitFlag) ); /* time to fall back a level? */
 		
-		if ( theGlobals->result == fnfErr )	/* fnfErr is OK - it only means we hit the end of this level */
+		if ( (theGlobals->result == fnfErr) ||	/* fnfErr is OK - it only means we hit the end of this level */
+			 (theGlobals->result == afpAccessDenied) ) /* afpAccessDenied is OK, too - it only means we cannot see inside a directory */
+		{
 			theGlobals->result = noErr;
+		}
 			
 		--theGlobals->currentLevel;	/* return to previous level as we leave */
 	}
@@ -117,7 +120,7 @@ static	void	IterateDirectoryLevel(long dirID,
 
 pascal	OSErr	IterateDirectory(short vRefNum,
 								 long dirID,
-								 StringPtr name,
+								 ConstStr255Param name,
 								 unsigned short maxLevels,
 								 IterateFilterProcPtr iterateFilter,
 								 void *yourDataPtr)
@@ -179,7 +182,7 @@ pascal	OSErr	FSpIterateDirectory(const FSSpec *spec,
 									IterateFilterProcPtr iterateFilter,
 									void *yourDataPtr)
 {
-	return ( IterateDirectory(spec->vRefNum, spec->parID, (StringPtr)spec->name,
+	return ( IterateDirectory(spec->vRefNum, spec->parID, spec->name,
 						maxLevels, iterateFilter, yourDataPtr) );
 }
 

@@ -11,4 +11,5 @@ MoreDesktopMgr.h
 MoreFiles.h
 MoreFilesExtras.h
 MoreFilesSearch.h
-PascalElim.h
+Optimization.h
+OptimizationEnd.h

@@ -7,7 +7,7 @@
 **
 **	File:		MoreFiles.h
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -25,7 +25,7 @@
 #include <Types.h>
 #include <Files.h>
 
-#include "PascalElim.h"
+#include "Optimization.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,7 +33,7 @@ extern "C" {
 
 /*****************************************************************************/
 
-pascal	OSErr	HGetVolParms(StringPtr volName,
+pascal	OSErr	HGetVolParms(ConstStr255Param volName,
 							 short vRefNum,
 							 GetVolParmsInfoBuffer *volParmsInfo,
 							 long *infoSize);
@@ -168,7 +168,7 @@ pascal	OSErr	ExchangeFiles(short vRefNum,
 
 /*****************************************************************************/
 
-pascal	OSErr	ResolveFileIDRef(StringPtr volName,
+pascal	OSErr	ResolveFileIDRef(ConstStr255Param volName,
 								 short vRefNum,
 								 long fileID,
 								 long *parID,
@@ -211,7 +211,7 @@ pascal	OSErr	ResolveFileIDRef(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	FSpResolveFileIDRef(StringPtr volName,
+pascal	OSErr	FSpResolveFileIDRef(ConstStr255Param volName,
 									short vRefNum,
 									long fileID,
 									FSSpecPtr spec);
@@ -260,12 +260,13 @@ pascal	OSErr	CreateFileIDRef(short vRefNum,
 /*	¦ Establish a file ID reference for a file.
 	The CreateFileIDRef function creates a file ID reference for the
 	specified file, or if a file ID reference already exists, supplies
-	the file ID reference and returns the result code fidExists.
+	the file ID reference and returns the result code fidExists or afpIDExists.
 
 	vRefNum		input:	Volume specification.
 	parID		input:	Directory ID.
 	fileName	input:	The name of the file.
-	fileID		output:	The file ID reference.
+	fileID		output:	The file ID reference (if result is noErr,
+						fidExists, or afpIDExists).
 	
 	Result Codes
 		noErr				0		No error
@@ -298,10 +299,11 @@ pascal	OSErr	FSpCreateFileIDRef(const FSSpec *spec,
 /*	¦ Establish a file ID reference for a file.
 	The FSpCreateFileIDRef function creates a file ID reference for the
 	specified file, or if a file ID reference already exists, supplies
-	the file ID reference and returns the result code fidExists.
+	the file ID reference and returns the result code fidExists or afpIDExists.
 
 	spec		input:	An FSSpec record specifying the file.
-	fileID		output:	The file ID reference.
+	fileID		output:	The file ID reference (if result is noErr,
+						fidExists, or afpIDExists).
 	
 	Result Codes
 		noErr				0		No error
@@ -329,7 +331,7 @@ pascal	OSErr	FSpCreateFileIDRef(const FSSpec *spec,
 
 /*****************************************************************************/
 
-pascal	OSErr	DeleteFileIDRef(StringPtr volName,
+pascal	OSErr	DeleteFileIDRef(ConstStr255Param volName,
 								short vRefNum,
 								long fileID);
 /*	¦ Delete a file ID reference.
@@ -451,7 +453,7 @@ pascal	OSErr	UnlockRange(short refNum,
 
 pascal	OSErr	GetForeignPrivs(short vRefNum,
 								long dirID,
-								StringPtr name,
+								ConstStr255Param name,
 								void *foreignPrivBuffer,
 								long *foreignPrivSize,
 								long *foreignPrivInfo1,
@@ -532,8 +534,8 @@ pascal	OSErr	FSpGetForeignPrivs(const FSSpec *spec,
 
 pascal	OSErr	SetForeignPrivs(short vRefNum,
 								long dirID,
-								StringPtr name,
-								void *foreignPrivBuffer,
+								ConstStr255Param name,
+								const void *foreignPrivBuffer,
 								long *foreignPrivSize,
 								long foreignPrivInfo1,
 								long foreignPrivInfo2,
@@ -572,7 +574,7 @@ pascal	OSErr	SetForeignPrivs(short vRefNum,
 /*****************************************************************************/
 
 pascal	OSErr	FSpSetForeignPrivs(const FSSpec *spec,
-								   void *foreignPrivBuffer,
+								   const void *foreignPrivBuffer,
 								   long *foreignPrivSize,
 								   long foreignPrivInfo1,
 								   long foreignPrivInfo2,
@@ -607,7 +609,7 @@ pascal	OSErr	FSpSetForeignPrivs(const FSSpec *spec,
 
 /*****************************************************************************/
 
-pascal	OSErr	HGetLogInInfo(StringPtr volName,
+pascal	OSErr	HGetLogInInfo(ConstStr255Param volName,
 							  short vRefNum,
 							  short *loginMethod,
 							  StringPtr userName);
@@ -640,7 +642,7 @@ pascal	OSErr	HGetLogInInfo(StringPtr volName,
 
 pascal	OSErr	HGetDirAccess(short vRefNum,
 							  long dirID,
-							  StringPtr name,
+							  ConstStr255Param name,
 							  long *ownerID,
 							  long *groupID,
 							  long *accessRights);
@@ -703,7 +705,7 @@ pascal	OSErr	FSpGetDirAccess(const FSSpec *spec,
 
 pascal	OSErr	HSetDirAccess(short vRefNum,
 							  long dirID,
-							  StringPtr name,
+							  ConstStr255Param name,
 							  long ownerID,
 							  long groupID,
 							  long accessRights);
@@ -770,7 +772,7 @@ pascal	OSErr	FSpSetDirAccess(const FSSpec *spec,
 
 /*****************************************************************************/
 
-pascal	OSErr	HMapID(StringPtr volName,
+pascal	OSErr	HMapID(ConstStr255Param volName,
 					   short vRefNum,
 					   long ugID,
 					   short objType,
@@ -802,7 +804,7 @@ pascal	OSErr	HMapID(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	HMapName(StringPtr volName,
+pascal	OSErr	HMapName(ConstStr255Param volName,
 						 short vRefNum,
 						 ConstStr255Param name,
 						 short objType,
@@ -838,8 +840,8 @@ pascal	OSErr	HCopyFile(short srcVRefNum,
 						  ConstStr255Param srcName,
 						  short dstVRefNum,
 						  long dstDirID,
-						  StringPtr dstPathname,
-						  StringPtr copyName);
+						  ConstStr255Param dstPathname,
+						  ConstStr255Param copyName);
 /*	¦ Duplicate a file on a file server and optionally to rename it.
 	The HCopyFile function duplicates a file and optionally to renames it.
 	The source and destination volumes must be on the same file server.
@@ -884,7 +886,7 @@ pascal	OSErr	HCopyFile(short srcVRefNum,
 
 pascal	OSErr	FSpCopyFile(const FSSpec *srcSpec,
 							const FSSpec *dstSpec,
-							StringPtr copyName);
+							ConstStr255Param copyName);
 /*	¦ Duplicate a file on a file server and optionally to rename it.
 	The FSpCopyFile function duplicates a file and optionally to renames it.
 	The source and destination volumes must be on the same file server.
@@ -927,8 +929,8 @@ pascal	OSErr	HMoveRename(short vRefNum,
 							long srcDirID,
 							ConstStr255Param srcName,
 							long dstDirID,
-							StringPtr dstpathName,
-							StringPtr copyName);
+							ConstStr255Param dstpathName,
+							ConstStr255Param copyName);
 /*	¦ Move a file or directory on a file server and optionally to rename it.
 	The HMoveRename function moves a file or directory and optionally
 	renames it. The source and destination locations must be on the same
@@ -964,7 +966,7 @@ pascal	OSErr	HMoveRename(short vRefNum,
 
 pascal	OSErr	FSpMoveRename(const FSSpec *srcSpec,
 							  const FSSpec *dstSpec,
-							  StringPtr copyName);
+							  ConstStr255Param copyName);
 /*	¦ Move a file or directory on a file server and optionally to rename it.
 	The FSpMoveRename function moves a file or directory and optionally
 	renames it. The source and destination locations must be on the same
@@ -995,7 +997,7 @@ pascal	OSErr	FSpMoveRename(const FSSpec *srcSpec,
 
 /*****************************************************************************/
 
-pascal	OSErr	GetVolMountInfoSize(StringPtr volName,
+pascal	OSErr	GetVolMountInfoSize(ConstStr255Param volName,
 									short vRefNum,
 									short *size);
 /*	¦ Get the size of a volume mounting information record.
@@ -1023,7 +1025,7 @@ pascal	OSErr	GetVolMountInfoSize(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	GetVolMountInfo(StringPtr volName,
+pascal	OSErr	GetVolMountInfo(ConstStr255Param volName,
 								short vRefNum,
 								void *volMountInfo);
 /*	¦ Retrieve a volume mounting information record.
@@ -1053,7 +1055,7 @@ pascal	OSErr	GetVolMountInfo(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	VolumeMount(void *volMountInfo,
+pascal	OSErr	VolumeMount(const void *volMountInfo,
 							short *vRefNum);
 /*	¦ Mount a volume using a volume mounting information record.
 	The VolumeMount function mounts a volume using a volume mounting
@@ -1098,7 +1100,7 @@ pascal	OSErr	VolumeMount(void *volMountInfo,
 
 pascal	OSErr	Share(short vRefNum,
 					  long dirID,
-					  StringPtr name);
+					  ConstStr255Param name);
 /*	¦ Establish a local volume or directory as a share point.
 	The Share function establishes a local volume or directory as a
 	share point.
@@ -1155,7 +1157,7 @@ pascal	OSErr	FSpShare(const FSSpec *spec);
 
 pascal	OSErr	Unshare(short vRefNum,
 						long dirID,
-						StringPtr name);
+						ConstStr255Param name);
 /*	¦ Remove a share point.
 	The Unshare function removes a share point.
 
@@ -1234,8 +1236,6 @@ pascal	OSErr	GetUGEntry(short objType,
 }
 #endif
 
-#ifndef __COMPILINGMOREFILES
-#undef pascal
-#endif
+#include "OptimizationEnd.h"
 
 #endif	/* __MOREFILES__ */

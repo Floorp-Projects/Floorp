@@ -7,7 +7,7 @@
 **
 **	File:		MoreFiles.c
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -18,6 +18,11 @@
 **	we require that you make it clear in the source that the code was
 **	descended from Apple Sample Code, but that you've made changes.
 */
+
+/* 
+ * This code, which was decended from Apple Sample Code, has been modified by 
+ * Netscape.
+ */
 
 #include <Types.h>
 #include <Errors.h>
@@ -30,7 +35,7 @@
 
 /*****************************************************************************/
 
-pascal	OSErr	HGetVolParms(StringPtr volName,
+pascal	OSErr	HGetVolParms(ConstStr255Param volName,
 							 short vRefNum,
 							 GetVolParmsInfoBuffer *volParmsInfo,
 							 long *infoSize)
@@ -38,12 +43,15 @@ pascal	OSErr	HGetVolParms(StringPtr volName,
 	HParamBlockRec pb;
 	OSErr error;
 
-	pb.ioParam.ioNamePtr = volName;
+	pb.ioParam.ioNamePtr = (StringPtr)volName;
 	pb.ioParam.ioVRefNum = vRefNum;
 	pb.ioParam.ioBuffer = (Ptr)volParmsInfo;
 	pb.ioParam.ioReqCount = *infoSize;
 	error = PBHGetVolParmsSync(&pb);
-	*infoSize = pb.ioParam.ioActCount;
+	if ( error == noErr )
+	{
+		*infoSize = pb.ioParam.ioActCount;
+	}
 	return ( error );
 }
 
@@ -89,7 +97,7 @@ pascal	OSErr	ExchangeFiles(short vRefNum,
 
 /*****************************************************************************/
 
-pascal	OSErr	ResolveFileIDRef(StringPtr volName,
+pascal	OSErr	ResolveFileIDRef(ConstStr255Param volName,
 								 short vRefNum,
 								 long fileID,
 								 long *parID,
@@ -101,23 +109,30 @@ pascal	OSErr	ResolveFileIDRef(StringPtr volName,
 	
 	tempStr[0] = 0;
 	if ( volName != NULL )
+	{
 		BlockMoveData(volName, tempStr, volName[0] + 1);
+	}
 	pb.fidParam.ioNamePtr = (StringPtr)tempStr;
 	pb.fidParam.ioVRefNum = vRefNum;
 	pb.fidParam.ioFileID = fileID;
 	error = PBResolveFileIDRefSync(&pb);
-	*parID = pb.fidParam.ioSrcDirID;
-	if ( fileName != NULL )
-		BlockMoveData(tempStr, fileName, tempStr[0] + 1);
+	if ( error == noErr )
+	{
+		*parID = pb.fidParam.ioSrcDirID;
+		if ( fileName != NULL )
+		{
+			BlockMoveData(tempStr, fileName, tempStr[0] + 1);
+		}
+	}
 	return ( error );
 }
 
 /*****************************************************************************/
 
-pascal	OSErr	FSpResolveFileIDRef(StringPtr volName,
+pascal	OSErr	FSpResolveFileIDRef(ConstStr255Param volName,
 									short vRefNum,
 									long fileID,
-									FSSpecPtr spec)
+									FSSpec *spec)
 {
 	OSErr	error;
 	
@@ -143,7 +158,10 @@ pascal	OSErr	CreateFileIDRef(short vRefNum,
 	pb.fidParam.ioVRefNum = vRefNum;
 	pb.fidParam.ioSrcDirID = parID;
 	error = PBCreateFileIDRefSync(&pb);
-	*fileID = pb.fidParam.ioFileID;
+	if ( (error == noErr) || (error == fidExists) || (error == afpIDExists) )
+	{
+		*fileID = pb.fidParam.ioFileID;
+	}
 	return ( error );
 }
 
@@ -157,13 +175,13 @@ pascal	OSErr	FSpCreateFileIDRef(const FSSpec *spec,
 
 /*****************************************************************************/
 
-pascal	OSErr	DeleteFileIDRef(StringPtr volName,
+pascal	OSErr	DeleteFileIDRef(ConstStr255Param volName,
 								short vRefNum,
 								long fileID)
 {
 	HParamBlockRec pb;
 
-	pb.fidParam.ioNamePtr = volName;
+	pb.fidParam.ioNamePtr = (StringPtr)volName;
 	pb.fidParam.ioVRefNum = vRefNum;
 	pb.fidParam.ioFileID = fileID;
 	return ( PBDeleteFileIDRefSync(&pb) );
@@ -213,7 +231,7 @@ pascal	OSErr	UnlockRange(short refNum,
 
 pascal	OSErr	GetForeignPrivs(short vRefNum,
 								long dirID,
-								StringPtr name,
+								ConstStr255Param name,
 								void *foreignPrivBuffer,
 								long *foreignPrivSize,
 								long *foreignPrivInfo1,
@@ -224,7 +242,7 @@ pascal	OSErr	GetForeignPrivs(short vRefNum,
 	HParamBlockRec pb;
 	OSErr error;
 
-	pb.foreignPrivParam.ioNamePtr = name;
+	pb.foreignPrivParam.ioNamePtr = (StringPtr)name;
 	pb.foreignPrivParam.ioVRefNum = vRefNum;
 	pb.foreignPrivParam.ioForeignPrivDirID = dirID;	
 	pb.foreignPrivParam.ioForeignPrivBuffer = (Ptr)foreignPrivBuffer;
@@ -248,7 +266,7 @@ pascal	OSErr	FSpGetForeignPrivs(const FSSpec *spec,
 								   long *foreignPrivInfo3,
 								   long *foreignPrivInfo4)
 {
-	return ( GetForeignPrivs(spec->vRefNum, spec->parID, (StringPtr)spec->name,
+	return ( GetForeignPrivs(spec->vRefNum, spec->parID, spec->name,
 							 foreignPrivBuffer, foreignPrivSize,
 							 foreignPrivInfo1, foreignPrivInfo2,
 							 foreignPrivInfo3, foreignPrivInfo4) );
@@ -258,8 +276,8 @@ pascal	OSErr	FSpGetForeignPrivs(const FSSpec *spec,
 
 pascal	OSErr	SetForeignPrivs(short vRefNum,
 								long dirID,
-								StringPtr name,
-								void *foreignPrivBuffer,
+								ConstStr255Param name,
+								const void *foreignPrivBuffer,
 								long *foreignPrivSize,
 								long foreignPrivInfo1,
 								long foreignPrivInfo2,
@@ -269,7 +287,7 @@ pascal	OSErr	SetForeignPrivs(short vRefNum,
 	HParamBlockRec pb;
 	OSErr error;
 
-	pb.foreignPrivParam.ioNamePtr = name;
+	pb.foreignPrivParam.ioNamePtr = (StringPtr)name;
 	pb.foreignPrivParam.ioVRefNum = vRefNum;
 	pb.foreignPrivParam.ioForeignPrivDirID = dirID;	
 	pb.foreignPrivParam.ioForeignPrivBuffer = (Ptr)foreignPrivBuffer;
@@ -279,21 +297,24 @@ pascal	OSErr	SetForeignPrivs(short vRefNum,
 	pb.foreignPrivParam.ioForeignPrivInfo3 = foreignPrivInfo3;
 	pb.foreignPrivParam.ioForeignPrivInfo4 = foreignPrivInfo4;
 	error = PBSetForeignPrivsSync(&pb);
-	*foreignPrivSize = pb.foreignPrivParam.ioForeignPrivActCount;
+	if ( error == noErr )
+	{
+		*foreignPrivSize = pb.foreignPrivParam.ioForeignPrivActCount;
+	}
 	return ( error );
 }
 
 /*****************************************************************************/
 
 pascal	OSErr	FSpSetForeignPrivs(const FSSpec *spec,
-								   void *foreignPrivBuffer,
+								   const void *foreignPrivBuffer,
 								   long *foreignPrivSize,
 								   long foreignPrivInfo1,
 								   long foreignPrivInfo2,
 								   long foreignPrivInfo3,
 								   long foreignPrivInfo4)
 {
-	return ( SetForeignPrivs(spec->vRefNum, spec->parID, (StringPtr)spec->name,
+	return ( SetForeignPrivs(spec->vRefNum, spec->parID, spec->name,
 							 foreignPrivBuffer, foreignPrivSize,
 							 foreignPrivInfo1, foreignPrivInfo2,
 							 foreignPrivInfo3, foreignPrivInfo4) );
@@ -301,7 +322,7 @@ pascal	OSErr	FSpSetForeignPrivs(const FSSpec *spec,
 
 /*****************************************************************************/
 
-pascal	OSErr	HGetLogInInfo(StringPtr volName,
+pascal	OSErr	HGetLogInInfo(ConstStr255Param volName,
 							  short vRefNum,
 							  short *loginMethod,
 							  StringPtr userName)
@@ -309,11 +330,14 @@ pascal	OSErr	HGetLogInInfo(StringPtr volName,
 	HParamBlockRec pb;
 	OSErr error;
 
-	pb.objParam.ioNamePtr = volName;
+	pb.objParam.ioNamePtr = (StringPtr)volName;
 	pb.objParam.ioVRefNum = vRefNum;
 	pb.objParam.ioObjNamePtr = userName;
 	error = PBHGetLogInInfoSync(&pb);
-	*loginMethod = pb.objParam.ioObjType;
+	if ( error == noErr )
+	{
+		*loginMethod = pb.objParam.ioObjType;
+	}
 	return ( error );
 }
 
@@ -321,7 +345,7 @@ pascal	OSErr	HGetLogInInfo(StringPtr volName,
 
 pascal	OSErr	HGetDirAccess(short vRefNum,
 							  long dirID,
-							  StringPtr name,
+							  ConstStr255Param name,
 							  long *ownerID,
 							  long *groupID,
 							  long *accessRights)
@@ -329,13 +353,16 @@ pascal	OSErr	HGetDirAccess(short vRefNum,
 	HParamBlockRec pb;
 	OSErr error;
 
-	pb.accessParam.ioNamePtr = name;
+	pb.accessParam.ioNamePtr = (StringPtr)name;
 	pb.accessParam.ioVRefNum = vRefNum;
 	pb.fileParam.ioDirID = dirID;
 	error = PBHGetDirAccessSync(&pb);
-	*ownerID = pb.accessParam.ioACOwnerID;
-	*groupID = pb.accessParam.ioACGroupID;
-	*accessRights = pb.accessParam.ioACAccess;
+	if ( error == noErr )
+	{
+		*ownerID = pb.accessParam.ioACOwnerID;
+		*groupID = pb.accessParam.ioACGroupID;
+		*accessRights = pb.accessParam.ioACAccess;
+	}
 	return ( error );
 }
 
@@ -346,7 +373,7 @@ pascal	OSErr	FSpGetDirAccess(const FSSpec *spec,
 								long *groupID,
 								long *accessRights)
 {
-	return ( HGetDirAccess(spec->vRefNum, spec->parID, (StringPtr)spec->name,
+	return ( HGetDirAccess(spec->vRefNum, spec->parID, spec->name,
 						   ownerID, groupID, accessRights) );
 }
 
@@ -354,14 +381,14 @@ pascal	OSErr	FSpGetDirAccess(const FSSpec *spec,
 
 pascal	OSErr	HSetDirAccess(short vRefNum,
 							  long dirID,
-							  StringPtr name,
+							  ConstStr255Param name,
 							  long ownerID,
 							  long groupID,
 							  long accessRights)
 {
 	HParamBlockRec pb;
 
-	pb.accessParam.ioNamePtr = name;
+	pb.accessParam.ioNamePtr = (StringPtr)name;
 	pb.accessParam.ioVRefNum = vRefNum;
 	pb.fileParam.ioDirID = dirID;
 	pb.accessParam.ioACOwnerID = ownerID;
@@ -377,13 +404,13 @@ pascal	OSErr	FSpSetDirAccess(const FSSpec *spec,
 								long groupID,
 								long accessRights)
 {
-	return ( HSetDirAccess(spec->vRefNum, spec->parID, (StringPtr)spec->name,
+	return ( HSetDirAccess(spec->vRefNum, spec->parID, spec->name,
 						   ownerID, groupID, accessRights) );
 }
 
 /*****************************************************************************/
 
-pascal	OSErr	HMapID(StringPtr volName,
+pascal	OSErr	HMapID(ConstStr255Param volName,
 					   short vRefNum,
 					   long ugID,
 					   short objType,
@@ -391,7 +418,7 @@ pascal	OSErr	HMapID(StringPtr volName,
 {
 	HParamBlockRec pb;
 
-	pb.objParam.ioNamePtr = volName;
+	pb.objParam.ioNamePtr = (StringPtr)volName;
 	pb.objParam.ioVRefNum = vRefNum;
 	pb.objParam.ioObjType = objType;
 	pb.objParam.ioObjNamePtr = name;
@@ -401,7 +428,7 @@ pascal	OSErr	HMapID(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	HMapName(StringPtr volName,
+pascal	OSErr	HMapName(ConstStr255Param volName,
 						 short vRefNum,
 						 ConstStr255Param name,
 						 short objType,
@@ -410,12 +437,15 @@ pascal	OSErr	HMapName(StringPtr volName,
 	HParamBlockRec pb;
 	OSErr error;
 
-	pb.objParam.ioNamePtr = volName;
+	pb.objParam.ioNamePtr = (StringPtr)volName;
 	pb.objParam.ioVRefNum = vRefNum;
 	pb.objParam.ioObjType = objType;
 	pb.objParam.ioObjNamePtr = (StringPtr)name;
 	error = PBHMapNameSync(&pb);
-	*ugID = pb.objParam.ioObjID;
+	if ( error == noErr )
+	{
+		*ugID = pb.objParam.ioObjID;
+	}
 	return ( error );
 }
 
@@ -426,8 +456,8 @@ pascal	OSErr	HCopyFile(short srcVRefNum,
 						  ConstStr255Param srcName,
 						  short dstVRefNum,
 						  long dstDirID,
-						  StringPtr dstPathname,
-						  StringPtr copyName)
+						  ConstStr255Param dstPathname,
+						  ConstStr255Param copyName)
 {
 	HParamBlockRec pb;
 
@@ -436,8 +466,8 @@ pascal	OSErr	HCopyFile(short srcVRefNum,
 	pb.copyParam.ioNamePtr = (StringPtr)srcName;
 	pb.copyParam.ioDstVRefNum = dstVRefNum;
 	pb.copyParam.ioNewDirID = dstDirID;
-	pb.copyParam.ioNewName = dstPathname;
-	pb.copyParam.ioCopyName = copyName;
+	pb.copyParam.ioNewName = (StringPtr)dstPathname;
+	pb.copyParam.ioCopyName = (StringPtr)copyName;
 #if TARGET_CARBON
 	/* pinkerton
 	 * PBHCopyFileSync() doesn't exist in Carbon. We need a replacement.
@@ -453,11 +483,11 @@ pascal	OSErr	HCopyFile(short srcVRefNum,
 
 pascal	OSErr	FSpCopyFile(const FSSpec *srcSpec,
 							const FSSpec *dstSpec,
-							StringPtr copyName)
+							ConstStr255Param copyName)
 {
 	return ( HCopyFile(srcSpec->vRefNum, srcSpec->parID, srcSpec->name,
 					   dstSpec->vRefNum, dstSpec->parID,
-					   (StringPtr)dstSpec->name, copyName) );
+					   dstSpec->name, copyName) );
 }
 
 /*****************************************************************************/
@@ -466,8 +496,8 @@ pascal	OSErr	HMoveRename(short vRefNum,
 							long srcDirID,
 							ConstStr255Param srcName,
 							long dstDirID,
-							StringPtr dstpathName,
-							StringPtr copyName)
+							ConstStr255Param dstpathName,
+							ConstStr255Param copyName)
 {
 	HParamBlockRec pb;
 
@@ -480,8 +510,8 @@ if ( srcDirID != dstDirID )
 	pb.copyParam.ioDirID = srcDirID;
 	pb.copyParam.ioNamePtr = (StringPtr)srcName;
 	pb.copyParam.ioNewDirID = dstDirID;
-	pb.copyParam.ioNewName = dstpathName;
-	pb.copyParam.ioCopyName = copyName;
+	pb.copyParam.ioNewName = (StringPtr)dstpathName;
+	pb.copyParam.ioCopyName = (StringPtr)copyName;
 
 #if TARGET_CARBON
 	/* pinkerton
@@ -498,24 +528,32 @@ if ( srcDirID != dstDirID )
 
 pascal	OSErr	FSpMoveRename(const FSSpec *srcSpec,
 							  const FSSpec *dstSpec,
-							  StringPtr copyName)
+							  ConstStr255Param copyName)
 {
+	OSErr	error;
+	
 	/* make sure the FSSpecs refer to the same volume */
 	if ( srcSpec->vRefNum != dstSpec->vRefNum )
-		return ( diffVolErr );
-	return ( HMoveRename(srcSpec->vRefNum, srcSpec->parID, srcSpec->name, 
-						 dstSpec->parID, (StringPtr)dstSpec->name, copyName) );
+	{
+		error = diffVolErr;
+	}
+	else
+	{
+		error = HMoveRename(srcSpec->vRefNum, srcSpec->parID, srcSpec->name, 
+							dstSpec->parID, dstSpec->name, copyName);
+	}
+	return ( error );
 }
 
 /*****************************************************************************/
 
-pascal	OSErr	GetVolMountInfoSize(StringPtr volName,
+pascal	OSErr	GetVolMountInfoSize(ConstStr255Param volName,
 									short vRefNum,
 									short *size)
 {
 	ParamBlockRec pb;
 
-	pb.ioParam.ioNamePtr = volName;
+	pb.ioParam.ioNamePtr = (StringPtr)volName;
 	pb.ioParam.ioVRefNum = vRefNum;
 	pb.ioParam.ioBuffer = (Ptr)size;
 	return ( PBGetVolMountInfoSize(&pb) );
@@ -523,13 +561,13 @@ pascal	OSErr	GetVolMountInfoSize(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	GetVolMountInfo(StringPtr volName,
+pascal	OSErr	GetVolMountInfo(ConstStr255Param volName,
 								short vRefNum,
 								void *volMountInfo)
 {
 	ParamBlockRec pb;
 
-	pb.ioParam.ioNamePtr = volName;
+	pb.ioParam.ioNamePtr = (StringPtr)volName;
 	pb.ioParam.ioVRefNum = vRefNum;
 	pb.ioParam.ioBuffer = (Ptr)volMountInfo;
 	return ( PBGetVolMountInfo(&pb) );
@@ -537,7 +575,7 @@ pascal	OSErr	GetVolMountInfo(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	VolumeMount(void *volMountInfo,
+pascal	OSErr	VolumeMount(const void *volMountInfo,
 							short *vRefNum)
 {
 	ParamBlockRec pb;
@@ -545,7 +583,10 @@ pascal	OSErr	VolumeMount(void *volMountInfo,
 
 	pb.ioParam.ioBuffer = (Ptr)volMountInfo;
 	error = PBVolumeMount(&pb);
-	*vRefNum = pb.ioParam.ioVRefNum;
+	if ( error == noErr )
+	{
+		*vRefNum = pb.ioParam.ioVRefNum;
+	}
 	return ( error );
 }
 
@@ -553,11 +594,11 @@ pascal	OSErr	VolumeMount(void *volMountInfo,
 
 pascal	OSErr	Share(short vRefNum,
 					  long dirID,
-					  StringPtr name)
+					  ConstStr255Param name)
 {
 	HParamBlockRec pb;
 
-	pb.fileParam.ioNamePtr = name;
+	pb.fileParam.ioNamePtr = (StringPtr)name;
 	pb.fileParam.ioVRefNum = vRefNum;
 	pb.fileParam.ioDirID = dirID;
 	return ( PBShareSync(&pb) );
@@ -567,18 +608,18 @@ pascal	OSErr	Share(short vRefNum,
 
 pascal	OSErr	FSpShare(const FSSpec *spec)
 {
-	return ( Share(spec->vRefNum, spec->parID, (StringPtr)spec->name) );
+	return ( Share(spec->vRefNum, spec->parID, spec->name) );
 }
 
 /*****************************************************************************/
 
 pascal	OSErr	Unshare(short vRefNum,
 						long dirID,
-						StringPtr name)
+						ConstStr255Param name)
 {
 	HParamBlockRec pb;
 
-	pb.fileParam.ioNamePtr = name;
+	pb.fileParam.ioNamePtr = (StringPtr)name;
 	pb.fileParam.ioVRefNum = vRefNum;
 	pb.fileParam.ioDirID = dirID;
 	return ( PBUnshareSync(&pb) );
@@ -588,7 +629,7 @@ pascal	OSErr	Unshare(short vRefNum,
 
 pascal	OSErr	FSpUnshare(const FSSpec *spec)
 {
-	return ( Unshare(spec->vRefNum, spec->parID, (StringPtr)spec->name) );
+	return ( Unshare(spec->vRefNum, spec->parID, spec->name) );
 }
 
 /*****************************************************************************/
@@ -604,7 +645,10 @@ pascal	OSErr	GetUGEntry(short objType,
 	pb.objParam.ioObjNamePtr = objName;
 	pb.objParam.ioObjID = *objID;
 	error = PBGetUGEntrySync(&pb);
-	*objID = pb.objParam.ioObjID;
+	if ( error == noErr )
+	{
+		*objID = pb.objParam.ioObjID;
+	}
 	return ( error );
 }
 

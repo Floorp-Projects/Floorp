@@ -7,7 +7,7 @@
 **
 **	File:		FileCopy.c
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -58,7 +58,7 @@ enum
 
 static	OSErr	GetDestinationDirInfo(short vRefNum,
 									  long dirID,
-									  StringPtr name,
+									  ConstStr255Param name,
 									  long *theDirID,
 									  Boolean *isDirectory,
 									  Boolean *isDropBox);
@@ -91,7 +91,7 @@ static	OSErr	CheckForForks(short vRefNum,
 static	OSErr	PreflightFileCopySpace(short srcVRefNum,
 									   long srcDirID,
 									   ConstStr255Param srcName,
-									   StringPtr dstVolName,
+									   ConstStr255Param dstVolName,
 									   short dstVRefNum,
 									   Boolean *spaceOK);
 /*	PreflightFileCopySpace determines if there's enough space on a
@@ -117,7 +117,7 @@ static	OSErr	PreflightFileCopySpace(short srcVRefNum,
 
 static	OSErr	GetDestinationDirInfo(short vRefNum,
 									  long dirID,
-									  StringPtr name,
+									  ConstStr255Param name,
 									  long *theDirID,
 									  Boolean *isDirectory,
 									  Boolean *isDropBox)
@@ -131,6 +131,7 @@ static	OSErr	GetDestinationDirInfo(short vRefNum,
 	*isDirectory = (pb.dirInfo.ioFlAttrib & ioDirMask) != 0;
 	/* see if access priviledges are make changes, not see folder, and not see files (drop box) */
 	*isDropBox = ((pb.dirInfo.ioACUser & 0x07) == 0x03);
+	
 	return ( error );
 }
 
@@ -151,11 +152,8 @@ static	OSErr	CheckForForks(short vRefNum,
 	pb.fileParam.ioDirID = dirID;
 	pb.fileParam.ioFDirIndex = 0;
 	error = PBHGetFInfoSync(&pb);
-	if ( error == noErr )
-	{
-		*hasDataFork = (pb.fileParam.ioFlLgLen != 0);
-		*hasResourceFork = (pb.fileParam.ioFlRLgLen != 0);
-	}
+	*hasDataFork = (pb.fileParam.ioFlLgLen != 0);
+	*hasResourceFork = (pb.fileParam.ioFlRLgLen != 0);
 	
 	return ( error );
 }
@@ -165,58 +163,84 @@ static	OSErr	CheckForForks(short vRefNum,
 static	OSErr	PreflightFileCopySpace(short srcVRefNum,
 									   long srcDirID,
 									   ConstStr255Param srcName,
-									   StringPtr dstVolName,
+									   ConstStr255Param dstVolName,
 									   short dstVRefNum,
 									   Boolean *spaceOK)
 {
-	HParamBlockRec pb;
+	UniversalFMPB pb;
 	OSErr error;
-	unsigned short dstFreeBlocks;
-	unsigned short dstBlksPerAllocBlk;
-	unsigned short srcDataBlks;
-	unsigned short srcResourceBlks;
+	unsigned long dstFreeBlocks;
+	unsigned long dstBlksPerAllocBlk;
+	unsigned long srcDataBlks;
+	unsigned long srcResourceBlks;
 	
-	/* Get the number of 512 byte blocks per allocation block and */
-	/* number of free allocation blocks on the destination volume */
-	error = GetVolumeInfoNoName(dstVolName, dstVRefNum, &pb);
+	error = XGetVolumeInfoNoName(dstVolName, dstVRefNum, &pb.xPB);
 	if ( error == noErr )
 	{
 		/* get allocation block size (always multiple of 512) and divide by 512
 		  to get number of 512-byte blocks per allocation block */
-		dstBlksPerAllocBlk = ((unsigned long)pb.volumeParam.ioVAlBlkSiz >> 9);
-		dstFreeBlocks = (unsigned short)pb.volumeParam.ioVFrBlk;
+		dstBlksPerAllocBlk = ((unsigned long)pb.xPB.ioVAlBlkSiz >> 9);
+		
+		/* Convert freeBytes to free disk blocks (512-byte blocks) */
+		dstFreeBlocks = (pb.xPB.ioVFreeBytes.hi << 23) + (pb.xPB.ioVFreeBytes.lo >> 9);
 		
 		/* Now, get the size of the file's data resource forks */
-		pb.fileParam.ioNamePtr = (StringPtr)srcName;
-		pb.fileParam.ioVRefNum = srcVRefNum;
-		pb.fileParam.ioFVersNum = 0;
-		pb.fileParam.ioDirID = srcDirID;
-		pb.fileParam.ioFDirIndex = 0;
-		error = PBHGetFInfoSync(&pb);
+		pb.hPB.fileParam.ioNamePtr = (StringPtr)srcName;
+		pb.hPB.fileParam.ioVRefNum = srcVRefNum;
+		pb.hPB.fileParam.ioFVersNum = 0;
+		pb.hPB.fileParam.ioDirID = srcDirID;
+		pb.hPB.fileParam.ioFDirIndex = 0;
+		error = PBHGetFInfoSync(&pb.hPB);
 		if ( error == noErr )
 		{
+			/* Since space on Mac OS disks is always allocated in allocation blocks, */
+			/* this code takes into account rounding up to the end of an allocation block. */
+
 			/* get number of 512-byte blocks needed for data fork */
-			srcDataBlks = ((unsigned long)pb.fileParam.ioFlLgLen % 512) ?
-						  (((unsigned long)pb.fileParam.ioFlLgLen >> 9) + 1) :
-						  ((unsigned long)pb.fileParam.ioFlLgLen >> 9);
+			if ( ((unsigned long)pb.hPB.fileParam.ioFlLgLen & 0x000001ff) != 0 )
+			{
+				srcDataBlks = ((unsigned long)pb.hPB.fileParam.ioFlLgLen >> 9) + 1;
+			}
+			else
+			{
+				srcDataBlks = (unsigned long)pb.hPB.fileParam.ioFlLgLen >> 9;
+			}
+			
 			/* now, calculate number of new allocation blocks needed */
-			srcDataBlks = (srcDataBlks % dstBlksPerAllocBlk) ?
-						  ((srcDataBlks / dstBlksPerAllocBlk) + 1) :
-						  (srcDataBlks / dstBlksPerAllocBlk);
+			if ( srcDataBlks % dstBlksPerAllocBlk )
+			{
+				srcDataBlks = (srcDataBlks / dstBlksPerAllocBlk) + 1;
+			}
+			else
+			{
+				srcDataBlks /= dstBlksPerAllocBlk;
+			}
 		
 			/* get number of 512-byte blocks needed for resource fork */
-			srcResourceBlks = ((unsigned long)pb.fileParam.ioFlRLgLen % 512) ?
-							  (((unsigned long)pb.fileParam.ioFlRLgLen >> 9) + 1) :
-							  ((unsigned long)pb.fileParam.ioFlRLgLen >> 9);
+			if ( ((unsigned long)pb.hPB.fileParam.ioFlRLgLen & 0x000001ff) != 0 )
+			{
+				srcResourceBlks = ((unsigned long)pb.hPB.fileParam.ioFlRLgLen >> 9) + 1;
+			}
+			else
+			{
+				srcResourceBlks = (unsigned long)pb.hPB.fileParam.ioFlRLgLen >> 9;
+			}
+
 			/* now, calculate number of new allocation blocks needed */
-			srcResourceBlks = (srcResourceBlks % dstBlksPerAllocBlk) ?
-							  ((srcResourceBlks / dstBlksPerAllocBlk) + 1) :
-							  (srcResourceBlks / dstBlksPerAllocBlk);
+			if ( srcResourceBlks % dstBlksPerAllocBlk )
+			{
+				srcResourceBlks = (srcResourceBlks / dstBlksPerAllocBlk) + 1;
+			}
+			else
+			{
+				srcResourceBlks /= dstBlksPerAllocBlk;
+			}
 			
 			/* Is there enough room on the destination volume for the source file? */
-			*spaceOK = ((srcDataBlks + srcResourceBlks) <= dstFreeBlocks);
+			*spaceOK = ( ((srcDataBlks + srcResourceBlks) * dstBlksPerAllocBlk) <= dstFreeBlocks );
 		}
 	}
+	
 	return ( error );
 }
 
@@ -227,8 +251,8 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 						 ConstStr255Param srcName,
 						 short dstVRefNum,
 						 long dstDirID,
-						 StringPtr dstPathname,
-						 StringPtr copyName,
+						 ConstStr255Param dstPathname,
+						 ConstStr255Param copyName,
 						 void *copyBufferPtr,
 						 long copyBufferSize,
 						 Boolean preflight)
@@ -264,30 +288,44 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 		err = PreflightFileCopySpace(srcVRefNum, srcDirID, srcName,
 									 dstPathname, dstVRefNum, &spaceOK);
 		if ( err != noErr )
+		{
 			return ( err );
+		}
+		
 		if ( !spaceOK )
+		{
 			return ( dskFulErr );
+		}
 	}
 
 	/* get the destination's real dirID and make sure it really is a directory */
 	err = GetDestinationDirInfo(dstVRefNum, dstDirID, dstPathname,
 								&dstDirID, &isDirectory, &isDropBox);
 	if ( err != noErr )
+	{
 		goto ErrorExit;
+	}
+	
 	if ( !isDirectory )
+	{
 		return ( dirNFErr );
+	}
 
 	/* get the destination's real vRefNum */
 	err = DetermineVRefNum(dstPathname, dstVRefNum, &dstVRefNum);
 	if ( err != noErr )
+	{
 		goto ErrorExit;
+	}
 	
 	/* See if PBHCopyFile can be used.  Using PBHCopyFile saves time by letting the file server
 	** copy the file if the source and destination locations are on the same file server. */
 	tempLong = sizeof(infoBuffer);
-	err = HGetVolParms((StringPtr)srcName, srcVRefNum, &infoBuffer, &tempLong);
+	err = HGetVolParms(srcName, srcVRefNum, &infoBuffer, &tempLong);
 	if ( (err != noErr) && (err != paramErr) )
+	{
 		return ( err );
+	}
 
 	if ( (err != paramErr) && hasCopyFile(infoBuffer) )
 	{
@@ -298,23 +336,25 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 		tempLong = sizeof(infoBuffer);
 		err = HGetVolParms(NULL, dstVRefNum, &infoBuffer, &tempLong);
 		if ( (err != noErr) && (err != paramErr) )
+		{
 			return ( err );
+		}
 		if ( (err != paramErr) && (srcServerAdr == infoBuffer.vMServerAdr) )
 		{
 			/* Source and Dest are on same server and PBHCopyFile is supported. Copy with CopyFile. */
 			err = HCopyFile(srcVRefNum, srcDirID, srcName, dstVRefNum, dstDirID, NULL, copyName);
 			if ( err != noErr )
-				goto ErrorExit;
-			
-			dstCreated = true;
-			
+			{
+				return ( err );
+			}
+						
 			/* AppleShare's CopyFile clears the isAlias bit, so I still need to attempt to copy
 			   the File's attributes to attempt to get things right. */
 			if ( copyName != NULL )				/* Did caller supply copy file name? */
 			{
 				/* Yes, use the caller supplied copy file name. */
-				return ( CopyFileMgrAttributes(srcVRefNum, srcDirID, (StringPtr)srcName,
-											 dstVRefNum, dstDirID, copyName, true) );
+				(void) CopyFileMgrAttributes(srcVRefNum, srcDirID, srcName,
+											 dstVRefNum, dstDirID, copyName, true);
 			}
 			else
 			{
@@ -322,10 +362,11 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 				if ( GetFilenameFromPathname(srcName, dstName) == noErr )
 				{
 					/* */
-					return ( CopyFileMgrAttributes(srcVRefNum, srcDirID, (StringPtr)srcName,
-												 dstVRefNum, dstDirID, dstName, true) );
+					(void) CopyFileMgrAttributes(srcVRefNum, srcDirID, srcName,
+												 dstVRefNum, dstDirID, dstName, true);
 				}
 			}
+			return ( err );
 		}
 	}
 
@@ -344,7 +385,9 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 			copyBufferSize = minCopyBuffSize;
 			copyBufferPtr = NewPtr(copyBufferSize);
 			if ( copyBufferPtr == NULL )
+			{
 				return ( memFullErr );
+			}
 		}
 		ourCopyBuffer = true;
 	}
@@ -352,22 +395,28 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 	/* Open the source data fork. */
 	err = HOpenAware(srcVRefNum, srcDirID, srcName, srcCopyMode, &srcRefNum);
 	if ( err != noErr )
-		goto ErrorExit;
+		return ( err );
+	
+	/* Once a file is opened, we have to exit via ErrorExit to make sure things are cleaned up */
 	
 	/* See if the copy will be renamed. */
 	if ( copyName != NULL )				/* Did caller supply copy file name? */
 		BlockMoveData(copyName, dstName, copyName[0] + 1);	/* Yes, use the caller supplied copy file name. */
 	else
 	{	/* They didn't, so get the source file name and use it. */
-		err = GetFileLocation(srcRefNum, &tempInt, &tempLong, (StringPtr)&dstName);
+		err = GetFileLocation(srcRefNum, &tempInt, &tempLong, dstName);
 		if ( err != noErr )
+		{
 			goto ErrorExit;
+		}
 	}
 
 	/* Create the destination file. */
 	err = HCreateMinimum(dstVRefNum, dstDirID, dstName);
 	if ( err != noErr )
+	{
 		goto ErrorExit;
+	}
 	dstCreated = true;	/* After creating the destination file, any
 						** error conditions should delete the destination file */
 
@@ -400,15 +449,17 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 		** of making sure the Finder doesn't read a partially copied resource fork.
 		*/
 		/* Copy attributes but don't lock the destination. */
-		err = CopyFileMgrAttributes(srcVRefNum, srcDirID, (StringPtr)srcName,
-									dstVRefNum, dstDirID, (StringPtr)&dstName, false);
+		err = CopyFileMgrAttributes(srcVRefNum, srcDirID, srcName,
+									dstVRefNum, dstDirID, dstName, false);
 		if ( err != noErr )
+		{
 			goto ErrorExit;
+		}
 	}
 
 	/* Attempt to copy the comments while both forks are empty.
 	** Ignore the result because we really don't care if it worked or not. */
-	(void) DTCopyComment(srcVRefNum, srcDirID, (StringPtr)srcName, dstVRefNum, dstDirID, (StringPtr)&dstName);
+	(void) DTCopyComment(srcVRefNum, srcDirID, srcName, dstVRefNum, dstDirID, dstName);
 
 	/* See which forks we need to copy. By doing this, we won't create a data or resource fork
 	** for the destination unless it's really needed (some foreign file systems such as
@@ -416,14 +467,18 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 	** structures to support resource forks). */
 	err = CheckForForks(srcVRefNum, srcDirID, srcName, &hasDataFork, &hasResourceFork);
 	if ( err != noErr )
-		goto ErrorExit;	
+	{
+		goto ErrorExit;
+	}
 	
 	if ( hasDataFork )
 	{
 		/* Open the destination data fork. */
 		err = HOpenAware(dstVRefNum, dstDirID, dstName, dstCopyMode, &dstDataRefNum);
 		if ( err != noErr )
+		{
 			goto ErrorExit;
+		}
 	}
 
 	if ( hasResourceFork )
@@ -431,7 +486,9 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 		/* Open the destination resource fork. */
 		err = HOpenRFAware(dstVRefNum, dstDirID, dstName, dstCopyMode, &dstRsrcRefNum);
 		if ( err != noErr )
+		{
 			goto ErrorExit;
+		}
 	}
 
 	if ( hasDataFork )
@@ -439,17 +496,19 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 		/* Copy the data fork. */
 		err = CopyFork(srcRefNum, dstDataRefNum, copyBufferPtr, copyBufferSize);
 		if ( err != noErr )
+		{
 			goto ErrorExit;
+		}
 	
 		/* Close both data forks and clear reference numbers. */
-		FSClose(srcRefNum);
-		FSClose(dstDataRefNum);
+		(void) FSClose(srcRefNum);
+		(void) FSClose(dstDataRefNum);
 		srcRefNum = dstDataRefNum = 0;
 	}
 	else
 	{
 		/* Close the source data fork since it was opened earlier */
-		FSClose(srcRefNum);
+		(void) FSClose(srcRefNum);
 		srcRefNum = 0;
 	}
 
@@ -458,44 +517,61 @@ pascal	OSErr	FileCopy(short srcVRefNum,
 		/* Open the source resource fork. */
 		err = HOpenRFAware(srcVRefNum, srcDirID, srcName, srcCopyMode, &srcRefNum);
 		if ( err != noErr )
+		{
 			goto ErrorExit;
+		}
 	
 		/* Copy the resource fork. */
 		err = CopyFork(srcRefNum, dstRsrcRefNum, copyBufferPtr, copyBufferSize);
 		if ( err != noErr )
+		{
 			goto ErrorExit;
+		}
 	
 		/* Close both resource forks and clear reference numbers. */
-		FSClose(srcRefNum);
-		FSClose(dstRsrcRefNum);
+		(void) FSClose(srcRefNum);
+		(void) FSClose(dstRsrcRefNum);
 		srcRefNum = dstRsrcRefNum = 0;
 	}
 
 	/* Get rid of the copy buffer if we allocated it. */
 	if ( ourCopyBuffer )
+	{
 		DisposePtr((Ptr)copyBufferPtr);
+	}
 
 	/* Attempt to copy attributes again to set mod date.  Copy lock condition this time
 	** since we're done with the copy operation.  This operation will fail if we're copying
 	** into an AppleShare dropbox, so we don't check for error conditions. */
-	CopyFileMgrAttributes(srcVRefNum, srcDirID, (StringPtr)srcName,
-							dstVRefNum, dstDirID, (StringPtr)&dstName, true);
+	CopyFileMgrAttributes(srcVRefNum, srcDirID, srcName,
+							dstVRefNum, dstDirID, dstName, true);
 
 	/* Hey, we did it! */
 	return ( noErr );
 	
 ErrorExit:
 	if ( srcRefNum != 0 )
-		FSClose(srcRefNum);		/* Close the source file */
+	{
+		(void) FSClose(srcRefNum);		/* Close the source file */
+	}
 	if ( dstDataRefNum != 0 )
-		FSClose(dstDataRefNum);	/* Close the destination file data fork */
+	{
+		(void) FSClose(dstDataRefNum);	/* Close the destination file data fork */
+	}
 	if ( dstRsrcRefNum != 0 )
-		FSClose(dstRsrcRefNum);	/* Close the destination file resource fork */
+	{
+		(void) FSClose(dstRsrcRefNum);	/* Close the destination file resource fork */
+	}
 	if ( dstCreated )
-		HDelete(dstVRefNum, dstDirID, dstName);	/* Delete dest file.  This may fail if the file 
+	{
+		(void) HDelete(dstVRefNum, dstDirID, dstName);	/* Delete dest file.  This may fail if the file 
 												   is in a "drop folder" */
+	}
 	if ( ourCopyBuffer )	/* dispose of any memory we allocated */
+	{
 		DisposePtr((Ptr)copyBufferPtr);
+	}
+	
 	return ( err );
 }
 
@@ -503,13 +579,13 @@ ErrorExit:
 
 pascal	OSErr	FSpFileCopy(const FSSpec *srcSpec,
 							const FSSpec *dstSpec,
-							StringPtr copyName,
+							ConstStr255Param copyName,
 							void *copyBufferPtr,
 							long copyBufferSize,
 							Boolean preflight)
 {
 	return ( FileCopy(srcSpec->vRefNum, srcSpec->parID, srcSpec->name,
-					 dstSpec->vRefNum, dstSpec->parID, (StringPtr)dstSpec->name,
+					 dstSpec->vRefNum, dstSpec->parID, dstSpec->name,
 					 copyName, copyBufferPtr, copyBufferSize, preflight) );
 }
 

@@ -7,7 +7,7 @@
 **
 **	File:		DirectoryCopy.c
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -88,10 +88,11 @@ struct PreflightGlobals
 	Str63			itemName;			/* the name of the current item */
 	CInfoPBRec		myCPB;				/* the parameter block used for PBGetCatInfo calls */
 
-	unsigned short	dstBlksPerAllocBlk;	/* the number of 512 byte blocks per allocation block on destination */
-	unsigned short	allocBlksNeeded;	/* the total number of allocation blocks needed  */
+	unsigned long	dstBlksPerAllocBlk;	/* the number of 512 byte blocks per allocation block on destination */
+										
+	unsigned long	allocBlksNeeded;	/* the total number of allocation blocks needed  */
 
-	unsigned short	tempBlocks;			/* temporary storage for calculations (save some stack space)  */
+	unsigned long	tempBlocks;			/* temporary storage for calculations (save some stack space)  */
 	CopyFilterProcPtr copyFilterProc;	/* pointer to filter function */
 };
 #if PRAGMA_ALIGN_SUPPORTED
@@ -106,7 +107,7 @@ typedef PreflightGlobals *PreflightGlobalsPtr;
 /* static prototypes */
 
 static	void	GetLevelSize(long currentDirID,
-							 PreflightGlobalsPtr theGlobals);
+							 PreflightGlobals *theGlobals);
 
 static	OSErr	PreflightDirectoryCopySpace(short srcVRefNum,
 											long srcDirID,
@@ -116,12 +117,12 @@ static	OSErr	PreflightDirectoryCopySpace(short srcVRefNum,
 
 static	void	CopyLevel(long sourceDirID,
 						  long dstDirID,
-						  EnumerateGlobalsPtr theGlobals);
+						  EnumerateGlobals *theGlobals);
 						  
 /*****************************************************************************/
 
 static	void	GetLevelSize(long currentDirID,
-							 PreflightGlobalsPtr theGlobals)
+							 PreflightGlobals *theGlobals)
 {
 	short	index = 1;
 	
@@ -147,25 +148,47 @@ static	void	GetLevelSize(long currentDirID,
 				}
 				else
 				{
-					/* we have a file - add its allocation blocks to allocBlksNeeded */
+					/* We have a file - add its allocation blocks to allocBlksNeeded. */
+					/* Since space on Mac OS disks is always allocated in allocation blocks, */
+					/* this takes into account rounding up to the end of an allocation block. */
 					
 					/* get number of 512-byte blocks needed for data fork */
-					theGlobals->tempBlocks = ((unsigned long)theGlobals->myCPB.hFileInfo.ioFlLgLen % 512) ?
-												(((unsigned long)theGlobals->myCPB.hFileInfo.ioFlLgLen >> 9) + 1) :
-												((unsigned long)theGlobals->myCPB.hFileInfo.ioFlLgLen >> 9);
-					/* now, calculate number of new allocation blocks needed */
-					theGlobals->allocBlksNeeded += (theGlobals->tempBlocks % theGlobals->dstBlksPerAllocBlk) ?
-													((theGlobals->tempBlocks / theGlobals->dstBlksPerAllocBlk) + 1) :
-													(theGlobals->tempBlocks / theGlobals->dstBlksPerAllocBlk);
+					if ( ((unsigned long)theGlobals->myCPB.hFileInfo.ioFlLgLen & 0x000001ff) != 0 )
+					{
+						theGlobals->tempBlocks = ((unsigned long)theGlobals->myCPB.hFileInfo.ioFlLgLen >> 9) + 1;
+					}
+					else
+					{
+						theGlobals->tempBlocks = (unsigned long)theGlobals->myCPB.hFileInfo.ioFlLgLen >> 9;
+					}
+					/* now, calculate number of new allocation blocks needed for the data fork and add it to the total */
+					if ( theGlobals->tempBlocks % theGlobals->dstBlksPerAllocBlk )
+					{
+						theGlobals->allocBlksNeeded += (theGlobals->tempBlocks / theGlobals->dstBlksPerAllocBlk) + 1;
+					}
+					else
+					{
+						theGlobals->allocBlksNeeded += theGlobals->tempBlocks / theGlobals->dstBlksPerAllocBlk;
+					}
 					
 					/* get number of 512-byte blocks needed for resource fork */
-					theGlobals->tempBlocks = ((unsigned long)theGlobals->myCPB.hFileInfo.ioFlRLgLen % 512) ?
-												(((unsigned long)theGlobals->myCPB.hFileInfo.ioFlRLgLen >> 9) + 1) :
-												((unsigned long)theGlobals->myCPB.hFileInfo.ioFlRLgLen >> 9);
-					/* now, calculate number of new allocation blocks needed */
-					theGlobals->allocBlksNeeded += (theGlobals->tempBlocks % theGlobals->dstBlksPerAllocBlk) ?
-													((theGlobals->tempBlocks / theGlobals->dstBlksPerAllocBlk) + 1) :
-													(theGlobals->tempBlocks / theGlobals->dstBlksPerAllocBlk);
+					if ( ((unsigned long)theGlobals->myCPB.hFileInfo.ioFlRLgLen & 0x000001ff) != 0 )
+					{
+						theGlobals->tempBlocks = ((unsigned long)theGlobals->myCPB.hFileInfo.ioFlRLgLen >> 9) + 1;
+					}
+					else
+					{
+						theGlobals->tempBlocks = (unsigned long)theGlobals->myCPB.hFileInfo.ioFlRLgLen >> 9;
+					}
+					/* now, calculate number of new allocation blocks needed for the resource  fork and add it to the total */
+					if ( theGlobals->tempBlocks % theGlobals->dstBlksPerAllocBlk )
+					{
+						theGlobals->allocBlksNeeded += (theGlobals->tempBlocks / theGlobals->dstBlksPerAllocBlk) + 1;
+					}
+					else
+					{
+						theGlobals->allocBlksNeeded += theGlobals->tempBlocks / theGlobals->dstBlksPerAllocBlk;
+					}
 				}
 			}
 		}
@@ -181,21 +204,20 @@ static	OSErr	PreflightDirectoryCopySpace(short srcVRefNum,
 											CopyFilterProcPtr copyFilterProc,
 											Boolean *spaceOK)
 {
-	HParamBlockRec pb;
+	XVolumeParam pb;
 	OSErr error;
-	unsigned short dstFreeBlocks;
+	unsigned long dstFreeBlocks;
 	PreflightGlobals theGlobals;
 	
-	/* Get the number of 512 byte blocks per allocation block and */
-	/* number of free allocation blocks on the destination volume */
-	error = GetVolumeInfoNoName(NULL, dstVRefNum, &pb);
+	error = XGetVolumeInfoNoName(NULL, dstVRefNum, &pb);
 	if ( error == noErr )
 	{
-		dstFreeBlocks = (unsigned short)pb.volumeParam.ioVFrBlk;
+		/* Convert freeBytes to free disk blocks (512-byte blocks) */
+		dstFreeBlocks = (pb.ioVFreeBytes.hi << 23) + (pb.ioVFreeBytes.lo >> 9);
 		
 		/* get allocation block size (always multiple of 512) and divide by 512
 		  to get number of 512-byte blocks per allocation block */
-		theGlobals.dstBlksPerAllocBlk = ((unsigned long)pb.volumeParam.ioVAlBlkSiz >> 9);
+		theGlobals.dstBlksPerAllocBlk = ((unsigned long)pb.ioVAlBlkSiz >> 9);
 		
 		theGlobals.allocBlksNeeded = 0;
 
@@ -206,9 +228,13 @@ static	OSErr	PreflightDirectoryCopySpace(short srcVRefNum,
 		
 		GetLevelSize(srcDirID, &theGlobals);
 		
-		/* Is there enough room on the destination volume for the source file? */
-		*spaceOK = (theGlobals.allocBlksNeeded <= dstFreeBlocks);
+		/* Is there enough room on the destination volume for the source file?					*/
+		/* Note:	This will work because the largest number of disk blocks supported			*/
+		/*			on a 2TB volume is 0xffffffff and (allocBlksNeeded * dstBlksPerAllocBlk)	*/
+		/*			will always be less than 0xffffffff.										*/
+		*spaceOK = ((theGlobals.allocBlksNeeded * theGlobals.dstBlksPerAllocBlk) <= dstFreeBlocks);
 	}
+
 	return ( error );
 }
 
@@ -216,7 +242,7 @@ static	OSErr	PreflightDirectoryCopySpace(short srcVRefNum,
 
 static	void	CopyLevel(long sourceDirID,
 						  long dstDirID,
-						  EnumerateGlobalsPtr theGlobals)
+						  EnumerateGlobals *theGlobals)
 {
 	long currentSrcDirID;
 	long newDirID;
@@ -373,10 +399,10 @@ static	void	CopyLevel(long sourceDirID,
 
 pascal	OSErr	FilteredDirectoryCopy(short srcVRefNum,
 									  long srcDirID,
-									  StringPtr srcName,
+									  ConstStr255Param srcName,
 									  short dstVRefNum,
 									  long dstDirID,
-									  StringPtr dstName,
+									  ConstStr255Param dstName,
 									  void *copyBufferPtr,
 									  long copyBufferSize,
 									  Boolean preflight,
@@ -403,7 +429,9 @@ pascal	OSErr	FilteredDirectoryCopy(short srcVRefNum,
 			copyBufferSize = dirCopyMinCopyBuffSize;
 			copyBufferPtr = NewPtr(copyBufferSize);
 			if ( copyBufferPtr == NULL )
+			{
 				return ( memFullErr );
+			}
 		}
 		ourCopyBuffer = true;
 	}
@@ -411,7 +439,9 @@ pascal	OSErr	FilteredDirectoryCopy(short srcVRefNum,
 	/* Get the real dirID where we're copying from and make sure it is a directory. */
 	error = GetDirectoryID(srcVRefNum, srcDirID, srcName, &srcDirID, &isDirectory);
 	if ( error != noErr )
+	{
 		goto ErrorExit;
+	}
 	if ( !isDirectory )
 	{
 		error = dirNFErr;
@@ -432,7 +462,9 @@ pascal	OSErr	FilteredDirectoryCopy(short srcVRefNum,
 		/*  Get the real dirID where we're going to put the copy and make sure it is a directory. */
 		error = GetDirectoryID(dstVRefNum, dstDirID, dstName, &dstDirID, &isDirectory);
 		if ( error != noErr )
+		{
 			goto ErrorExit;
+		}
 		if ( !isDirectory )
 		{
 			error =  dirNFErr;
@@ -443,16 +475,22 @@ pascal	OSErr	FilteredDirectoryCopy(short srcVRefNum,
 	/* Get the real vRefNum of both the source and destination */
 	error = DetermineVRefNum(srcName, srcVRefNum, &srcVRefNum);
 	if ( error != noErr )
+	{
 		goto ErrorExit;
+	}
 	error = DetermineVRefNum(dstName, dstVRefNum, &dstVRefNum);
 	if ( error != noErr )
+	{
 		goto ErrorExit;
+	}
 	
 	if ( preflight )
 	{
 		error = PreflightDirectoryCopySpace(srcVRefNum, srcDirID, dstVRefNum, copyFilterProc, &spaceOK);
 		if ( error != noErr )
+		{
 			goto ErrorExit;
+		}
 		if ( !spaceOK )
 		{
 			error = dskFulErr; /* not enough room on destination */
@@ -464,7 +502,9 @@ pascal	OSErr	FilteredDirectoryCopy(short srcVRefNum,
 	/* same name as the source directory. */
 	error = GetDirName(srcVRefNum, srcDirID, srcDirName);
 	if ( error != noErr )
+	{
 		goto ErrorExit;
+	}
 	
 	/* Again, special case destination if the destination is the */
 	/* root parent directory. This time, we'll rename the disk to */
@@ -542,15 +582,19 @@ pascal	OSErr	FilteredDirectoryCopy(short srcVRefNum,
 		
 		/* handle any errors from CopyFileMgrAttributes */
 		if ( (error != noErr) && (copyErrHandler != NULL) )
+		{
 			theGlobals.bailout = CallCopyErrProc(copyErrHandler, error, copyDirFMAttributesOp,
 												srcVRefNum, srcDirID, NULL,
 												dstVRefNum, dstDirID, NULL);
+		}
 	}
 
 ErrorExit:
 	/* Get rid of the copy buffer if we allocated it. */
 	if ( ourCopyBuffer )
+	{
 		DisposePtr((Ptr)copyBufferPtr);
+	}
 
 	return ( error );
 }
@@ -559,10 +603,10 @@ ErrorExit:
 
 pascal	OSErr	DirectoryCopy(short srcVRefNum,
 							  long srcDirID,
-							  StringPtr srcName,
+							  ConstStr255Param srcName,
 							  short dstVRefNum,
 							  long dstDirID,
-							  StringPtr dstName,
+							  ConstStr255Param dstName,
 							  void *copyBufferPtr,
 							  long copyBufferSize,
 							  Boolean preflight,
@@ -584,8 +628,8 @@ pascal	OSErr	FSpFilteredDirectoryCopy(const FSSpec *srcSpec,
 										 CopyErrProcPtr copyErrHandler,
 										 CopyFilterProcPtr copyFilterProc)
 {
-	return ( FilteredDirectoryCopy(srcSpec->vRefNum, srcSpec->parID, (StringPtr)srcSpec->name,
-								   dstSpec->vRefNum, dstSpec->parID, (StringPtr)dstSpec->name,
+	return ( FilteredDirectoryCopy(srcSpec->vRefNum, srcSpec->parID, srcSpec->name,
+								   dstSpec->vRefNum, dstSpec->parID, dstSpec->name,
 								   copyBufferPtr, copyBufferSize, preflight,
 								   copyErrHandler, copyFilterProc) );
 }
@@ -599,8 +643,8 @@ pascal	OSErr	FSpDirectoryCopy(const FSSpec *srcSpec,
 								 Boolean preflight,
 								 CopyErrProcPtr copyErrHandler)
 {
-	return ( FilteredDirectoryCopy(srcSpec->vRefNum, srcSpec->parID, (StringPtr)srcSpec->name,
-								   dstSpec->vRefNum, dstSpec->parID, (StringPtr)dstSpec->name,
+	return ( FilteredDirectoryCopy(srcSpec->vRefNum, srcSpec->parID, srcSpec->name,
+								   dstSpec->vRefNum, dstSpec->parID, dstSpec->name,
 								   copyBufferPtr, copyBufferSize, preflight,
 								   copyErrHandler, NULL) );
 }

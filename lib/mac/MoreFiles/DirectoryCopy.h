@@ -7,7 +7,7 @@
 **
 **	File:		DirectoryCopy.h
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -25,7 +25,7 @@
 #include <Types.h>
 #include <Files.h>
 
-#include "PascalElim.h"
+#include "Optimization.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,10 +49,10 @@ typedef	pascal	Boolean	(*CopyErrProcPtr) (OSErr error,
 										   short failedOperation,
 										   short srcVRefNum,
 										   long srcDirID,
-										   StringPtr srcName,
+										   ConstStr255Param srcName,
 										   short dstVRefNum,
 										   long dstDirID,
-										   StringPtr dstName);
+										   ConstStr255Param dstName);
 /*	¦ Prototype for the CopyErrProc function DirectoryCopy calls.
 	This is the prototype for the CopyErrProc function DirectoryCopy
 	calls if an error condition is detected sometime during the copy.  If
@@ -103,10 +103,10 @@ typedef	pascal	Boolean	(*CopyFilterProcPtr) (const CInfoPBRec * const cpbPtr);
 
 pascal	OSErr	FilteredDirectoryCopy(short srcVRefNum,
 									  long srcDirID,
-									  StringPtr srcName,
+									  ConstStr255Param srcName,
 									  short dstVRefNum,
 									  long dstDirID,
-									  StringPtr dstName,
+									  ConstStr255Param dstName,
 									  void *copyBufferPtr,
 									  long copyBufferSize,
 									  Boolean preflight,
@@ -302,10 +302,10 @@ pascal	OSErr	FSpFilteredDirectoryCopy(const FSSpec *srcSpec,
 
 pascal	OSErr	DirectoryCopy(short srcVRefNum,
 							  long srcDirID,
-							  StringPtr srcName,
+							  ConstStr255Param srcName,
 							  short dstVRefNum,
 							  long dstDirID,
-							  StringPtr dstName,
+							  ConstStr255Param dstName,
 							  void *copyBufferPtr,
 							  long copyBufferSize,
 							  Boolean preflight,
@@ -488,8 +488,6 @@ pascal	OSErr	FSpDirectoryCopy(const FSSpec *srcSpec,
 }
 #endif
 
-#ifndef __COMPILINGMOREFILES
-#undef pascal
-#endif
+#include "OptimizationEnd.h"
 
 #endif	/* __DIRECTORYCOPY__ */

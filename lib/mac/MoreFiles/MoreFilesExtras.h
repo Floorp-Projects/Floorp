@@ -7,7 +7,7 @@
 **
 **	File:		MoreFilesExtras.h
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -25,10 +25,79 @@
 #include <Types.h>
 #include <Files.h>
 
-#include "PascalElim.h"
+#include "Optimization.h"
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+/*****************************************************************************/
+
+/* Constants and types from Universal Interfaces 3.0.1 Files.h */
+
+#if	UNIVERSAL_INTERFACES_VERSION < 0x0301
+
+enum {
+	volMountNoLoginMsgFlagBit	= 0,							/* Input to VolumeMount: If set, the file system */
+	volMountNoLoginMsgFlagMask	= 0x0001,						/*  should suppresss any log-in message/greeting dialog */
+	volMountExtendedFlagsBit	= 7,							/* Input to VolumeMount: If set, the mount info is a */
+	volMountExtendedFlagsMask	= 0x0080						/*  AFPXVolMountInfo record for 3.7 AppleShare Client */
+};
+
+/* AFPXVolMountInfo is the new AFP volume mount info record, requires the 3.7 AppleShare Client */
+
+struct AFPXVolMountInfo {
+	short 							length;						/* length of location data (including self) */
+	VolumeType 						media;						/* type of media */
+	short 							flags;						/* bits for no messages, no reconnect */
+	SInt8 							nbpInterval;				/* NBP Interval parameter (IM2, p.322) */
+	SInt8 							nbpCount;					/* NBP Interval parameter (IM2, p.322) */
+	short 							uamType;					/* User Authentication Method type */
+	short 							zoneNameOffset;				/* short positive offset from start of struct to Zone Name */
+	short 							serverNameOffset;			/* offset to pascal Server Name string */
+	short 							volNameOffset;				/* offset to pascal Volume Name string */
+	short 							userNameOffset;				/* offset to pascal User Name string */
+	short 							userPasswordOffset;			/* offset to pascal User Password string */
+	short 							volPasswordOffset;			/* offset to pascal Volume Password string */
+	short 							extendedFlags;				/* extended flags word */
+	short 							uamNameOffset;				/* offset to a pascal UAM name string */
+	short 							alternateAddressOffset;		/* offset to Alternate Addresses in tagged format */
+	char 							AFPData[176];				/* variable length data may follow */
+};
+typedef struct AFPXVolMountInfo			AFPXVolMountInfo;
+typedef AFPXVolMountInfo *				AFPXVolMountInfoPtr;
+
+enum {
+	kAFPExtendedFlagsAlternateAddressMask = 1					/*  bit in AFPXVolMountInfo.extendedFlags that means alternateAddressOffset is used*/
+};
+
+enum {
+																/* constants for use in AFPTagData.fType field*/
+	kAFPTagTypeIP				= 0x01,
+	kAFPTagTypeIPPort			= 0x02,
+	kAFPTagTypeDDP				= 0x03							/* Currently unused*/
+};
+
+enum {
+																/* constants for use in AFPTagData.fLength field*/
+	kAFPTagLengthIP				= 0x06,
+	kAFPTagLengthIPPort			= 0x08,
+	kAFPTagLengthDDP			= 0x06
+};
+
+struct AFPTagData {
+	UInt8 							fLength;					/* length of this data tag including the fLength field */
+	UInt8 							fType;
+	UInt8 							fData[1];					/* variable length data */
+};
+typedef struct AFPTagData				AFPTagData;
+
+struct AFPAlternateAddress {
+	UInt8 							fAddressCount;
+	UInt8 							fAddressList[1];			/* actually variable length packed set of AFPTagData */
+};
+typedef struct AFPAlternateAddress		AFPAlternateAddress;
+
 #endif
 
 /*****************************************************************************/
@@ -159,6 +228,7 @@ union UniversalFMPB
 	CMovePBRec		cmPB;
 	WDPBRec			wdPB;
 	FCBPBRec		fcbPB;
+	XVolumeParam	xPB;
 };
 typedef union UniversalFMPB UniversalFMPB;
 typedef UniversalFMPB *UniversalFMPBPtr, **UniversalFMPBHandle;
@@ -182,7 +252,7 @@ typedef unsigned char Str8[9];
 
 
 /*
-**	I use the following record instead of the AFPVolMountInfo structure in Files.h
+**	I use the following records instead of the AFPVolMountInfo and AFPXVolMountInfo structures in Files.h
 */
 
 struct MyAFPVolMountInfo
@@ -199,17 +269,53 @@ struct MyAFPVolMountInfo
 	short userNameOffset;		/* offset from start of record to userName */
 	short userPasswordOffset;	/* offset from start of record to userPassword */
 	short volPasswordOffset;	/* offset from start of record to volPassword */
-	Str31 zoneName;				/* server's AppleTalk zone name */					
-	Str31 serverName;			/* server name */					
+	Str32 zoneName;				/* server's AppleTalk zone name */					
+	char filler1;				/* to word align volPassword */
+	Str32 serverName;			/* server name */					
+	char filler2;				/* to word align volPassword */
 	Str27 volName;				/* volume name */					
 	Str31 userName;				/* user name (zero length Pascal string for guest) */
 	Str8 userPassword;			/* user password (zero length Pascal string if no user password) */					
-	char filler1;				/* to word align volPassword */
+	char filler3;				/* to word align volPassword */
 	Str8 volPassword;			/* volume password (zero length Pascal string if no volume password) */					
-	char filler2;				/* to end record on word boundry */
+	char filler4;				/* to end record on word boundry */
 };
 typedef struct MyAFPVolMountInfo MyAFPVolMountInfo;
 typedef MyAFPVolMountInfo *MyAFPVolMountInfoPtr, **MyAFPVolMountInfoHandle;
+
+struct MyAFPXVolMountInfo
+{
+	short length;				/* length of this record */
+	VolumeType media;			/* type of media, always AppleShareMediaType */
+	short flags;				/* bits for no messages, no reconnect, etc */
+	char nbpInterval;			/* NBP interval parameter; 7 is a good choice */
+	char nbpCount;				/* NBP count parameter; 5 is a good choice */
+	short uamType;				/* User Authentication Method */
+	short zoneNameOffset;		/* offset from start of record to zoneName */
+	short serverNameOffset;		/* offset from start of record to serverName */
+	short volNameOffset;		/* offset from start of record to volName */
+	short userNameOffset;		/* offset from start of record to userName */
+	short userPasswordOffset;	/* offset from start of record to userPassword */
+	short volPasswordOffset;	/* offset from start of record to volPassword */
+	short extendedFlags;		/* extended flags word */
+	short uamNameOffset;		/* offset to a pascal UAM name string */
+	short alternateAddressOffset; /* offset to Alternate Addresses in tagged format */
+	Str32 zoneName;				/* server's AppleTalk zone name */					
+	char filler1;				/* to word align volPassword */
+	Str32 serverName;			/* server name */					
+	char filler2;				/* to word align volPassword */
+	Str27 volName;				/* volume name */					
+	Str31 userName;				/* user name (zero length Pascal string for guest) */
+	Str8 userPassword;			/* user password (zero length Pascal string if no user password) */					
+	char filler3;				/* to word align volPassword */
+	Str8 volPassword;			/* volume password (zero length Pascal string if no volume password) */					
+	char filler4;				/* to word align uamNameOffset */
+	Str32 uamName;				/* UAM name */
+	char filler5;				/* to word align alternateAddress */
+	char alternateAddress[kVariableLengthArray];	/* AFPAlternateAddress */
+};
+typedef struct MyAFPXVolMountInfo MyAFPXVolMountInfo;
+typedef MyAFPXVolMountInfo *MyAFPXVolMountInfoPtr, **MyAFPXVolMountInfoHandle;
 
 #if PRAGMA_ALIGN_SUPPORTED
 #pragma options align=reset
@@ -218,7 +324,7 @@ typedef MyAFPVolMountInfo *MyAFPVolMountInfoPtr, **MyAFPVolMountInfoHandle;
 /*****************************************************************************/
 
 pascal	void	TruncPString(StringPtr destination,
-							 StringPtr source,
+							 ConstStr255Param source,
 							 short maxLength);
 /*	¦ International friendly string truncate routine.
 	The TruncPString function copies up to maxLength characters from
@@ -250,7 +356,7 @@ pascal	Ptr	GetTempBuffer(long buffReqSize,
 
 /*****************************************************************************/
 
-pascal	OSErr	GetVolumeInfoNoName(StringPtr pathname,
+pascal	OSErr	GetVolumeInfoNoName(ConstStr255Param pathname,
 									short vRefNum,
 									HParmBlkPtr pb);
 /*	¦ Call PBHGetVInfoSync ignoring returned name.
@@ -281,9 +387,37 @@ pascal	OSErr	GetVolumeInfoNoName(StringPtr pathname,
 
 /*****************************************************************************/
 
+pascal	OSErr	XGetVolumeInfoNoName(ConstStr255Param pathname,
+									short vRefNum,
+									XVolumeParamPtr pb);
+/*	¦ Call PBXGetVolInfoSync ignoring returned name.
+	XGetVolumeInfoNoName uses pathname and vRefNum to call PBXGetVolInfoSync
+	in cases where the returned volume name is not needed by the caller.
+	The pathname and vRefNum parameters are not touched, and the pb
+	parameter is initialized by PBXGetVolInfoSync except that ioNamePtr in
+	the parameter block is always returned as NULL (since it might point
+	to XGetVolumeInfoNoName's local variable tempPathname).
+
+	pathName	input:	Pointer to a full pathname or nil.  If you pass in a 
+						partial pathname, it is ignored. A full pathname to a
+						volume must end with a colon character (:).
+	vRefNum		input:	Volume specification (volume reference number, working
+						directory number, drive number, or 0).
+	pb			input:	A pointer to HParamBlockRec.
+				output:	The parameter block as filled in by PBXGetVolInfoSync
+						except that ioNamePtr will always be NULL.
+	
+	Result Codes
+		noErr				0		No error
+		nsvErr				-35		No such volume
+		paramErr			-50		No default volume, or pb was NULL
+*/
+
+/*****************************************************************************/
+
 pascal	OSErr GetCatInfoNoName(short vRefNum,
 							   long dirID,
-							   StringPtr name,
+							   ConstStr255Param name,
 							   CInfoPBPtr pb);
 /*	¦ Call PBGetCatInfoSync ignoring returned name.
 	GetCatInfoNoName uses vRefNum, dirID and name to call PBGetCatInfoSync
@@ -320,7 +454,7 @@ pascal	OSErr GetCatInfoNoName(short vRefNum,
 
 /*****************************************************************************/
 
-pascal	OSErr	DetermineVRefNum(StringPtr pathname,
+pascal	OSErr	DetermineVRefNum(ConstStr255Param pathname,
 								 short vRefNum,
 								 short *realVRefNum);
 /*	¦ Determine the real volume reference number.
@@ -422,7 +556,7 @@ pascal	OSErr	XGetVInfo(short volReference,
 
 /*****************************************************************************/
 
-pascal	OSErr	CheckVolLock(StringPtr pathname,
+pascal	OSErr	CheckVolLock(ConstStr255Param pathname,
 							 short vRefNum);
 /*	¦ Determine if a volume is locked.
 	The CheckVolLock function determines if a volume is locked - either by
@@ -460,7 +594,7 @@ pascal	OSErr GetDriverName(short driverRefNum,
 
 /*****************************************************************************/
 
-pascal	OSErr	FindDrive(StringPtr pathname,
+pascal	OSErr	FindDrive(ConstStr255Param pathname,
 						  short vRefNum,
 						  DrvQElPtr *driveQElementPtr);
 /*	¦ Find a volume's drive queue element in the drive queue.
@@ -487,7 +621,7 @@ pascal	OSErr	FindDrive(StringPtr pathname,
 
 /*****************************************************************************/
 
-pascal	OSErr	GetDiskBlocks(StringPtr pathname,
+pascal	OSErr	GetDiskBlocks(ConstStr255Param pathname,
 							  short vRefNum,
 							  unsigned long *numBlocks);
 /*	¦ Return the number of physical disk blocks on a disk drive.
@@ -525,7 +659,82 @@ pascal	OSErr	GetDiskBlocks(StringPtr pathname,
 
 /*****************************************************************************/
 
-pascal	OSErr	UnmountAndEject(StringPtr pathname,
+pascal	OSErr	GetVolFileSystemID(ConstStr255Param pathname,
+								   short vRefNum,
+								   short *fileSystemID);
+/*	¦ Get a volume's file system ID.
+	The GetVolFileSystemID function returned the file system ID of
+	a mounted volume. The file system ID identifies the file system
+	that handles requests to a particular volume. Here's a partial list
+	of file system ID numbers (only Apple's file systems are listed):
+		FSID	File System
+		-----   -----------------------------------------------------
+		$0000	Macintosh HFS or MFS
+		$0100	ProDOS File System
+		$0101	PowerTalk Mail Enclosures
+		$4147	ISO 9660 File Access (through Foreign File Access)
+		$4242	High Sierra File Access (through Foreign File Access)
+		$464D	QuickTake File System (through Foreign File Access)
+		$4953	Macintosh PC Exchange (MS-DOS)
+		$4A48	Audio CD Access (through Foreign File Access)
+		$4D4B	Apple Photo Access (through Foreign File Access)
+	
+	See the Technical Note "FL 35 - Determining Which File System
+	Is Active" and the "Guide to the File System Manager" for more
+	information.
+	
+	pathName		input:	Pointer to a full pathname or nil.  If you pass
+							in a partial pathname, it is ignored. A full
+							pathname to a volume must contain at least
+							one colon character (:) and must not start with
+							a colon character.
+	vRefNum			input:	Volume specification (volume reference number,
+							working directory number, drive number, or 0).
+	fileSystemID	output:	The volume's file system ID.
+	
+	Result Codes
+		noErr				0		No error
+		nsvErr				-35		No such volume
+		paramErr			-50		No default volume, or pb was NULL
+*/
+
+/*****************************************************************************/
+
+pascal	OSErr	GetVolState(ConstStr255Param pathname,
+							short vRefNum,
+							Boolean *volumeOnline,
+							Boolean *volumeEjected,
+							Boolean *driveEjectable,
+							Boolean *driverWantsEject);
+/*	¦ Returns a volume's online and eject information.
+	The GetVolState function determines if a volume is online or offline,
+	if an offline volume is ejected, and if the volume's driver is
+	ejectable or wants eject calls.
+	
+	pathName			input:	Pointer to a full pathname or nil.
+	vRefNum				input:	Volume specification (volume reference number,
+								working directory number, drive number, or 0).
+	volumeOnline		output:	True if the volume is online;
+								False if the volume is offline.
+	volumeEjected		output:	True if the volume is ejected (ejected
+								volumes are always offline); False if the
+								volume is not ejected.
+	driveEjectable		output:	True if the volume's drive is ejectable;
+								False if the volume's drive is not ejectable.
+	driverWantsEject	output:	True if the volume's driver wants an Eject
+								request after unmount (even if the drive
+								is not ejectable); False if the volume's
+								driver does not need an eject request.
+	
+	Result Codes
+		noErr				0		No error
+		nsvErr				-35		No such volume
+		paramErr			-50		No default volume, or pb was NULL
+*/
+
+/*****************************************************************************/
+
+pascal	OSErr	UnmountAndEject(ConstStr255Param pathname,
 								short vRefNum);
 /*	¦ Unmount and eject a volume.
 	The UnmountAndEject function unmounts and ejects a volume. The volume
@@ -691,7 +900,7 @@ pascal	OSErr RestoreDefault(short oldVRefNum,
 
 pascal	OSErr GetDInfo(short vRefNum,
 					   long dirID,
-					   StringPtr name,
+					   ConstStr255Param name,
 					   DInfo *fndrInfo);
 /*	¦ Get the finder information for a directory.
 	The GetDInfo function gets the finder information for a directory.
@@ -748,7 +957,7 @@ pascal	OSErr FSpGetDInfo(const FSSpec *spec,
 
 pascal	OSErr SetDInfo(short vRefNum,
 					   long dirID,
-					   StringPtr name,
+					   ConstStr255Param name,
 					   const DInfo *fndrInfo);
 /*	¦ Set the finder information for a directory.
 	The SetDInfo function sets the finder information for a directory.
@@ -814,7 +1023,7 @@ pascal	OSErr FSpSetDInfo(const FSSpec *spec,
 
 pascal	OSErr	GetDirectoryID(short vRefNum,
 							   long dirID,
-							   StringPtr name,
+							   ConstStr255Param name,
 							   long *theDirID,
 							   Boolean *isDirectory);
 /*	¦ Get the directory ID number of the directory specified.
@@ -917,7 +1126,7 @@ pascal	OSErr	GetDirName(short vRefNum,
 
 pascal	OSErr	GetIOACUser(short vRefNum,
 							long dirID,
-							StringPtr name,
+							ConstStr255Param name,
 							SInt8 *ioACUser);
 /*	¦ Get a directory's access restrictions byte.
 	GetIOACUser returns a directory's access restrictions byte.
@@ -970,7 +1179,7 @@ pascal	OSErr	FSpGetIOACUser(const FSSpec *spec,
 
 pascal	OSErr	GetParentID(short vRefNum,
 							long dirID,
-							StringPtr name,
+							ConstStr255Param name,
 							long *parID);
 /*	¦ Get the parent directory ID number of the specified object.
 	The GetParentID function gets the parent directory ID number of the
@@ -1023,7 +1232,7 @@ pascal	OSErr	GetFilenameFromPathname(ConstStr255Param pathname,
 
 pascal	OSErr	GetObjectLocation(short vRefNum,
 								  long dirID,
-								  StringPtr pathname,
+								  ConstStr255Param pathname,
 								  short *realVRefNum,
 								  long *realParID,
 								  Str255 realName,
@@ -1073,7 +1282,7 @@ pascal	OSErr	GetObjectLocation(short vRefNum,
 
 pascal	OSErr	GetDirItems(short vRefNum,
 							long dirID,
-							StringPtr name,
+							ConstStr255Param name,
 							Boolean getFiles,
 							Boolean getDirectories,
 							FSSpecPtr items,
@@ -1127,7 +1336,7 @@ pascal	OSErr	GetDirItems(short vRefNum,
 
 pascal	OSErr	DeleteDirectoryContents(short vRefNum,
 								 		long dirID,
-										StringPtr name);
+										ConstStr255Param name);
 /*	¦ Delete the contents of a directory.
 	The DeleteDirectoryContents function deletes the contents of a directory.
 	All files and subdirectories in the specified directory are deleted.
@@ -1164,7 +1373,7 @@ pascal	OSErr	DeleteDirectoryContents(short vRefNum,
 
 pascal	OSErr	DeleteDirectory(short vRefNum,
 								long dirID,
-								StringPtr name);
+								ConstStr255Param name);
 /*	¦ Delete a directory and its contents.
 	The DeleteDirectory function deletes a directory and its contents.
 	All files and subdirectories in the specified directory are deleted.
@@ -1202,7 +1411,7 @@ pascal	OSErr	DeleteDirectory(short vRefNum,
 
 pascal	OSErr	CheckObjectLock(short vRefNum,
 								long dirID,
-								StringPtr name);
+								ConstStr255Param name);
 /*	¦ Determine if a file or directory is locked.
 	The CheckObjectLock function determines if a file or directory is locked.
 	If CheckObjectLock returns noErr, then the file or directory
@@ -1323,7 +1532,7 @@ pascal	OSErr	FSpGetFileSize(const FSSpec *spec,
 
 pascal	OSErr	BumpDate(short vRefNum,
 						 long dirID,
-						 StringPtr name);
+						 ConstStr255Param name);
 /*	¦ Update the modification date of a file or directory.
 	The BumpDate function changes the modification date of a file or
 	directory to the current date/time.  If the modification date is already
@@ -1456,7 +1665,7 @@ pascal	OSErr	FSpChangeCreatorType(const FSSpec *spec,
 
 pascal	OSErr	ChangeFDFlags(short vRefNum,
 							  long dirID,
-							  StringPtr name,
+							  ConstStr255Param name,
 							  Boolean	setBits,
 							  unsigned short flagBits);
 /*	¦ Set or clear Finder Flag bits.
@@ -1533,7 +1742,7 @@ pascal	OSErr	FSpChangeFDFlags(const FSSpec *spec,
 
 pascal	OSErr	SetIsInvisible(short vRefNum,
 							   long dirID,
-							   StringPtr name);
+							   ConstStr255Param name);
 /*	¦ Set the invisible Finder Flag bit.
 	The SetIsInvisible function sets the invisible bit in the fdFlags
 	word of the specified file or directory's finder information.
@@ -1592,7 +1801,7 @@ pascal	OSErr	FSpSetIsInvisible(const FSSpec *spec);
 
 pascal	OSErr	ClearIsInvisible(short vRefNum,
 								 long dirID,
-								 StringPtr name);
+								 ConstStr255Param name);
 /*	¦ Clear the invisible Finder Flag bit.
 	The ClearIsInvisible function clears the invisible bit in the fdFlags
 	word of the specified file or directory's finder information.
@@ -1651,7 +1860,7 @@ pascal	OSErr	FSpClearIsInvisible(const FSSpec *spec);
 
 pascal	OSErr	SetNameLocked(short vRefNum,
 							  long dirID,
-							  StringPtr name);
+							  ConstStr255Param name);
 /*	¦ Set the nameLocked Finder Flag bit.
 	The SetNameLocked function sets the nameLocked bit in the fdFlags word
 	of the specified file or directory's finder information.
@@ -1710,7 +1919,7 @@ pascal	OSErr	FSpSetNameLocked(const FSSpec *spec);
 
 pascal	OSErr	ClearNameLocked(short vRefNum,
 								long dirID,
-								StringPtr name);
+								ConstStr255Param name);
 /*	¦ Clear the nameLocked Finder Flag bit.
 	The ClearNameLocked function clears the nameLocked bit in the fdFlags
 	word of the specified file or directory's finder information.
@@ -1887,7 +2096,7 @@ pascal	OSErr	FSpClearIsStationery(const FSSpec *spec);
 
 pascal	OSErr	SetHasCustomIcon(short vRefNum,
 								 long dirID,
-								 StringPtr name);
+								 ConstStr255Param name);
 /*	¦ Set the hasCustomIcon Finder Flag bit.
 	The SetHasCustomIcon function sets the hasCustomIcon bit in the
 	fdFlags word of the specified file or directory's finder information.
@@ -1946,7 +2155,7 @@ pascal	OSErr	FSpSetHasCustomIcon(const FSSpec *spec);
 
 pascal	OSErr	ClearHasCustomIcon(short vRefNum,
 								   long dirID,
-								   StringPtr name);
+								   ConstStr255Param name);
 /*	¦ Clear the hasCustomIcon Finder Flag bit.
 	The ClearHasCustomIcon function clears the hasCustomIcon bit in the
 	fdFlags word of the specified file or directory's finder information.
@@ -2005,7 +2214,7 @@ pascal	OSErr	FSpClearHasCustomIcon(const FSSpec *spec);
 
 pascal	OSErr	ClearHasBeenInited(short vRefNum,
 								   long dirID,
-								   StringPtr name);
+								   ConstStr255Param name);
 /*	¦ Clear the hasBeenInited Finder Flag bit.
 	The ClearHasBeenInited function clears the hasBeenInited bit in the
 	fdFlags word of the specified file or directory's finder information.
@@ -2064,10 +2273,10 @@ pascal	OSErr	FSpClearHasBeenInited(const FSSpec *spec);
 
 pascal	OSErr	CopyFileMgrAttributes(short srcVRefNum,
 									  long srcDirID,
-									  StringPtr srcName,
+									  ConstStr255Param srcName,
 									  short dstVRefNum,
 									  long dstDirID,
-									  StringPtr dstName,
+									  ConstStr255Param dstName,
 									  Boolean copyLockBit);
 /*	¦ Copy all File Manager attributes from the source to the destination.
 	The CopyFileMgrAttributes function copies all File Manager attributes
@@ -2513,10 +2722,10 @@ pascal	OSErr	FSpGetFileLocation(short refNum,
 
 pascal	OSErr	CopyDirectoryAccess(short srcVRefNum,
 									long srcDirID,
-									StringPtr srcName,
+									ConstStr255Param srcName,
 									short dstVRefNum,
 									long dstDirID,
-									StringPtr dstName);
+									ConstStr255Param dstName);
 /*	¦ Copy the AFP directory access privileges.
 	The CopyDirectoryAccess function copies the AFP directory access
 	privileges from one directory to another. Both directories must be on
@@ -2579,8 +2788,8 @@ pascal	OSErr	HMoveRenameCompat(short vRefNum,
 								  long srcDirID,
 								  ConstStr255Param srcName,
 								  long dstDirID,
-								  StringPtr dstpathName,
-								  StringPtr copyName);
+								  ConstStr255Param dstpathName,
+								  ConstStr255Param copyName);
 /*	¦ Move a file or directory and optionally rename it.
 	The HMoveRenameCompat function moves a file or directory and optionally
 	renames it.  The source and destination locations must be on the same
@@ -2636,7 +2845,7 @@ pascal	OSErr	HMoveRenameCompat(short vRefNum,
 
 pascal	OSErr	FSpMoveRenameCompat(const FSSpec *srcSpec,
 									const FSSpec *dstSpec,
-									StringPtr copyName);
+									ConstStr255Param copyName);
 /*	¦ Move a file or directory and optionally rename it.
 	The FSpMoveRenameCompat function moves a file or directory and optionally
 	renames it.  The source and destination locations must be on the same
@@ -2687,70 +2896,79 @@ pascal	OSErr	FSpMoveRenameCompat(const FSSpec *srcSpec,
 
 /*****************************************************************************/
 
-pascal	void	BuildAFPVolMountInfo(short theFlags,
-									 char theNBPInterval,
-									 char theNBPCount,
-									 short theUAMType,
-									 Str31 theZoneName,
-									 Str31 theServerName,
-									 Str27 theVolName,
-									 Str31 theUserName,
-									 Str8 theUserPassWord,
-									 Str8 theVolPassWord,
-									 MyAFPVolMountInfoPtr theAFPInfo);
-/*	¦ Initialize the fields of an AFPVolMountInfo record.
-	The BuildAFPVolMountInfo function initializes the fields of an
-	AFPVolMountInfo record for use before using that record to call
+pascal	OSErr	BuildAFPVolMountInfo(short flags,
+									 char nbpInterval,
+									 char nbpCount,
+									 short uamType,
+									 Str32 zoneName,
+									 Str31 serverName,
+									 Str27 volName,
+									 Str31 userName,
+									 Str8 userPassword,
+									 Str8 volPassword,
+									 AFPVolMountInfoPtr *afpInfoPtr);
+/*	¦ Allocate and initializes the fields of an AFPVolMountInfo record.
+	The BuildAFPVolMountInfo function allocates and initializes the fields
+	of an AFPVolMountInfo record before using that record to call
 	the VolumeMount function.
 	
-	theFlags		input:	The AFP mounting flags. 0 = normal mount;
+	flags			input:	The AFP mounting flags. 0 = normal mount;
 							set bit 0 to inhibit greeting messages.
-	theNBPInterval	input:	The interval used for VolumeMount's
+	nbpInterval		input:	The interval used for VolumeMount's
 							NBP Lookup call. 7 is a good choice.
-	theNBPCount		input:	The retry count used for VolumeMount's
+	nbpCount		input:	The retry count used for VolumeMount's
 							NBP Lookup call. 5 is a good choice.
-	theUAMType		input:	The user authentication method to use.
-	theZoneName		input:	The AppleTalk zone name of the server.
-	theServerName	input:	The AFP server name.
-	theVolName		input:	The AFP volume name.
-	theUserName		input:	The user name (zero length Pascal string for
+	uamType			input:	The user authentication method to use.
+	zoneName		input:	The AppleTalk zone name of the server.
+	serverName		input:	The AFP server name.
+	volName			input:	The AFP volume name.
+	userName		input:	The user name (zero length Pascal string for
 							guest).
-	theUserPassWord	input:	The user password (zero length Pascal string
+	userPassWord	input:	The user password (zero length Pascal string
 							if no user password)
-	theVolPassWord	input:	The volume password (zero length Pascal string
+	volPassWord		input:	The volume password (zero length Pascal string
 							if no volume password)
-	theAFPInfo		input:	Pointer to AFPVolMountInfo record to
-							initialize.
-
+	afpInfoPtr		output:	A pointer to the newly created and initialized
+							AFPVolMountInfo record. If the function fails to
+							create an AFPVolMountInfo record, it sets
+							afpInfoPtr to NULL and the function result is
+							memFullErr. Your program is responsible
+							for disposing of this pointer when it is finished
+							with it.
+	
+	Result Codes
+		noErr				0		No error
+		memFullErr			-108	memory full error
+	
 	__________
 	
 	Also see:	GetVolMountInfoSize, GetVolMountInfo, VolumeMount,
-				RetrieveAFPVolMountInfo
+				RetrieveAFPVolMountInfo, BuildAFPXVolMountInfo,
+				RetrieveAFPXVolMountInfo
 */
 
 /*****************************************************************************/
 
-pascal	OSErr	RetrieveAFPVolMountInfo(AFPVolMountInfoPtr theAFPInfo,
-										short *theFlags,
-										short *theUAMType,
-										StringPtr theZoneName,
-										StringPtr theServerName,
-										StringPtr theVolName,
-										StringPtr theUserName);
+pascal	OSErr	RetrieveAFPVolMountInfo(AFPVolMountInfoPtr afpInfoPtr,
+										short *flags,
+										short *uamType,
+										StringPtr zoneName,
+										StringPtr serverName,
+										StringPtr volName,
+										StringPtr userName);
 /*	¦ Retrieve the AFP mounting information from an AFPVolMountInfo record.
 	The RetrieveAFPVolMountInfo function retrieves the AFP mounting
 	information returned in an AFPVolMountInfo record by the
 	GetVolMountInfo function.
 	
-	theAFPInfo		input:	Pointer to AFPVolMountInfo record that contains
+	afpInfoPtr		input:	Pointer to AFPVolMountInfo record that contains
 							the AFP mounting information.
-	theFlags		output:	The AFP mounting flags. 0 = normal mount;
-							if bit 0 is set, greeting meesages were inhibited.
-	theUAMType		output:	The user authentication method used.
-	theZoneName		output:	The AppleTalk zone name of the server.
-	theServerName	output:	The AFP server name.
-	theVolName		output:	The AFP volume name.
-	theUserName		output:	The user name (zero length Pascal string for
+	flags			output:	The AFP mounting flags.
+	uamType			output:	The user authentication method used.
+	zoneName		output:	The AppleTalk zone name of the server.
+	serverName		output:	The AFP server name.
+	volName			output:	The AFP volume name.
+	userName		output:	The user name (zero length Pascal string for
 							guest).
 	
 	Result Codes
@@ -2761,7 +2979,117 @@ pascal	OSErr	RetrieveAFPVolMountInfo(AFPVolMountInfoPtr theAFPInfo,
 	__________
 	
 	Also see:	GetVolMountInfoSize, GetVolMountInfo, VolumeMount,
-				BuildAFPVolMountInfo
+				BuildAFPVolMountInfo, BuildAFPXVolMountInfo,
+				RetrieveAFPXVolMountInfo
+*/
+
+/*****************************************************************************/
+
+pascal	OSErr	BuildAFPXVolMountInfo(short flags,
+									  char nbpInterval,
+									  char nbpCount,
+									  short uamType,
+									  Str32 zoneName,
+									  Str31 serverName,
+									  Str27 volName,
+									  Str31 userName,
+									  Str8 userPassword,
+									  Str8 volPassword,
+									  Str32 uamName,
+									  unsigned long alternateAddressLength,
+									  void *alternateAddress,
+									  AFPXVolMountInfoPtr *afpXInfoPtr);
+/*	¦ Allocate and initializes the fields of an AFPXVolMountInfo record.
+	The BuildAFPXVolMountInfo function allocates and initializes the fields
+	of an AFPXVolMountInfo record before using that record to call
+	the VolumeMount function.
+	
+	flags					input:	The AFP mounting flags.
+	nbpInterval				input:	The interval used for VolumeMount's
+									NBP Lookup call. 7 is a good choice.
+	nbpCount				input:	The retry count used for VolumeMount's
+									NBP Lookup call. 5 is a good choice.
+	uamType					input:	The user authentication method to use.
+	zoneName				input:	The AppleTalk zone name of the server.
+	serverName				input:	The AFP server name.
+	volName					input:	The AFP volume name.
+	userName				input:	The user name (zero length Pascal string
+									for guest).
+	userPassWord			input:	The user password (zero length Pascal
+									string if no user password)
+	volPassWord				input:	The volume password (zero length Pascal
+									string if no volume password)
+	uamName					input:	The User Authentication Method name.
+	alternateAddressLength	input:	Length of alternateAddress data.
+	alternateAddress		input	The AFPAlternateAddress (variable length)
+	afpXInfoPtr				output:	A pointer to the newly created and
+									initialized AFPVolMountInfo record.
+									If the function fails to create an
+									AFPVolMountInfo record, it sets
+									afpInfoPtr to NULL and the function
+									result is memFullErr. Your program is
+									responsible for disposing of this pointer
+									when it is finished with it.
+	
+	Result Codes
+		noErr				0		No error
+		memFullErr			-108	memory full error
+	
+	__________
+	
+	Also see:	GetVolMountInfoSize, GetVolMountInfo, VolumeMount,
+				BuildAFPVolMountInfo, RetrieveAFPVolMountInfo,
+				RetrieveAFPXVolMountInfo
+*/
+
+/*****************************************************************************/
+
+pascal	OSErr	RetrieveAFPXVolMountInfo(AFPXVolMountInfoPtr afpXInfoPtr,
+										 short *flags,
+										 short *uamType,
+										 StringPtr zoneName,
+										 StringPtr serverName,
+										 StringPtr volName,
+										 StringPtr userName,
+										 StringPtr uamName,
+										 unsigned long *alternateAddressLength,
+										 AFPAlternateAddress **alternateAddress);
+/*	¦ Retrieve the AFP mounting information from an AFPXVolMountInfo record.
+	The RetrieveAFPXVolMountInfo function retrieves the AFP mounting
+	information returned in an AFPXVolMountInfo record by the
+	GetVolMountInfo function.
+	
+	afpXInfoPtr				input:	Pointer to AFPXVolMountInfo record that
+									contains the AFP mounting information.
+	flags					output:	The AFP mounting flags.
+	uamType					output:	The user authentication method used.
+	zoneName				output:	The AppleTalk zone name of the server.
+	serverName				output:	The AFP server name.
+	volName					output:	The AFP volume name.
+	userName				output:	The user name (zero length Pascal
+									string for guest).
+	uamName					output:	The User Authentication Method name.
+	alternateAddressLength	output:	Length of alternateAddress data returned.
+	alternateAddress:		output:	A pointer to the newly created and
+									AFPAlternateAddress record (a variable
+									length record). If the function fails to
+									create an AFPAlternateAddress record,
+									it sets alternateAddress to NULL and the
+									function result is memFullErr. Your
+									program is responsible for disposing of
+									this pointer when it is finished with it.
+	
+	Result Codes
+		noErr				0		No error
+		paramErr			-50		media field in AFP mounting information
+									was not AppleShareMediaType
+		memFullErr			-108	memory full error
+	
+	__________
+	
+	Also see:	GetVolMountInfoSize, GetVolMountInfo, VolumeMount,
+				BuildAFPVolMountInfo, RetrieveAFXVolMountInfo,
+				BuildAFPXVolMountInfo
 */
 
 /*****************************************************************************/
@@ -2803,8 +3131,6 @@ pascal	OSErr	GetUGEntries(short objType,
 }
 #endif
 
-#ifndef __COMPILINGMOREFILES
-#undef pascal
-#endif
+#include "OptimizationEnd.h"
 
 #endif	/* __MOREFILESEXTRAS__ */

@@ -5,7 +5,7 @@
 **
 **	File:		IterateDirectory.h
 **
-**	Copyright © 1995-1996 Jim Luther
+**	Copyright © 1995-1998 Jim Luther and Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -22,7 +22,7 @@
 #include <Types.h>
 #include <Files.h>
 
-#include "PascalElim.h"
+#include "Optimization.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,7 +68,7 @@ typedef	pascal	void (*IterateFilterProcPtr) (const CInfoPBRec * const cpbPtr,
 
 pascal	OSErr	IterateDirectory(short vRefNum,
 								 long dirID,
-								 StringPtr name,
+								 ConstStr255Param name,
 								 unsigned short maxLevels,
 								 IterateFilterProcPtr iterateFilter,
 								 void *yourDataPtr);
@@ -166,8 +166,6 @@ pascal	OSErr	FSpIterateDirectory(const FSSpec *spec,
 }
 #endif
 
-#ifndef __COMPILINGMOREFILES
-#undef pascal
-#endif
+#include "OptimizationEnd.h"
 
 #endif	/* __ITERATEDIRECTORY__ */

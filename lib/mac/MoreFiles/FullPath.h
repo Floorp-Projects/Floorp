@@ -7,7 +7,7 @@
 **
 **	File:		FullPath.h
 **
-**	Copyright © 1995-1996 Apple Computer, Inc.
+**	Copyright © 1995-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -25,7 +25,7 @@
 #include <Types.h>
 #include <Files.h>
 
-#include "PascalElim.h"
+#include "Optimization.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,7 +80,7 @@ extern "C" {
 
 pascal	OSErr	GetFullPath(short vRefNum,
 							long dirID,
-							StringPtr name,
+							ConstStr255Param name,
 							short *fullPathLength,
 							Handle *fullPath);
 /*	¦ Get a full pathname to a volume, directory or file.
@@ -89,6 +89,10 @@ pascal	OSErr	GetFullPath(short vRefNum,
 	fullPath and the length of the full pathname is returned in
 	fullPathLength. Your program is responsible for disposing of the
 	fullPath handle.
+	
+	Note that a full pathname can be made to a file/directory that does not
+	yet exist if all directories up to that file/directory exist. In this case,
+	GetFullPath will return a fnfErr.
 	
 	vRefNum			input:	Volume specification.
 	dirID			input:	Directory ID.
@@ -106,7 +110,8 @@ pascal	OSErr	GetFullPath(short vRefNum,
 		nsvErr				-35		No such volume
 		ioErr				-36		I/O error
 		bdNamErr			-37		Bad filename
-		fnfErr				-43		File or directory does not exist
+		fnfErr				-43		File or directory does not exist (fullPath
+									and fullPathLength are still valid)
 		paramErr			-50		No default volume
 		memFullErr			-108	Not enough memory
 		dirNFErr			-120	Directory not found or incomplete pathname
@@ -130,6 +135,10 @@ pascal	OSErr	FSpGetFullPath(const FSSpec *spec,
 	fullPathLength. Your program is responsible for disposing of the
 	fullPath handle.
 	
+	Note that a full pathname can be made to a file/directory that does not
+	yet exist if all directories up to that file/directory exist. In this case,
+	FSpGetFullPath will return a fnfErr.
+	
 	spec			input:	An FSSpec record specifying the object.
 	fullPathLength	output:	The number of characters in the full pathname.
 							If the function fails to create a full pathname,
@@ -143,7 +152,8 @@ pascal	OSErr	FSpGetFullPath(const FSSpec *spec,
 		nsvErr				-35		No such volume
 		ioErr				-36		I/O error
 		bdNamErr			-37		Bad filename
-		fnfErr				-43		File or directory does not exist
+		fnfErr				-43		File or directory does not exist (fullPath
+									and fullPathLength are still valid)
 		paramErr			-50		No default volume
 		memFullErr			-108	Not enough memory
 		dirNFErr			-120	Directory not found or incomplete pathname
@@ -228,8 +238,6 @@ pascal OSErr LocationFromFullPath(short fullPathLength,
 }
 #endif
 
-#ifndef __COMPILINGMOREFILES
-#undef pascal
-#endif
+#include "OptimizationEnd.h"
 
 #endif	/* __FULLPATH__ */

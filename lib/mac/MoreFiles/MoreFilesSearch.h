@@ -7,7 +7,7 @@
 **
 **	File:		Search.h
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -19,13 +19,21 @@
 **	descended from Apple Sample Code, but that you've made changes.
 */
 
+/* 
+ * This code, which was decended from Apple Sample Code, has been modified by 
+ * Netscape.
+ *
+ * To avoid potential conflicts with other files named search renamed to
+ * MoreFilesSearch.h
+ */
+
 #ifndef __SEARCH__
 #define __SEARCH__
 
 #include <Types.h>
 #include <Files.h>
 
-#include "PascalElim.h"
+#include "Optimization.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -122,7 +130,7 @@ pascal	OSErr	PBCatSearchSyncCompat(CSParamPtr paramBlock);
 
 /*****************************************************************************/
 
-pascal	OSErr	NameFileSearch(StringPtr volName,
+pascal	OSErr	NameFileSearch(ConstStr255Param volName,
 							   short vRefNum,
 							   ConstStr255Param fileName,
 							   FSSpecPtr matches,
@@ -179,7 +187,7 @@ pascal	OSErr	NameFileSearch(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	CreatorTypeFileSearch(StringPtr volName,
+pascal	OSErr	CreatorTypeFileSearch(ConstStr255Param volName,
 									  short vRefNum,
 									  OSType creator,
 									  OSType fileType,
@@ -241,8 +249,6 @@ pascal	OSErr	CreatorTypeFileSearch(StringPtr volName,
 }
 #endif
 
-#ifndef __COMPILINGMOREFILES
-#undef pascal
-#endif
+#include "OptimizationEnd.h"
 
 #endif	/* __SEARCH__ */

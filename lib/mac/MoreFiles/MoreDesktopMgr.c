@@ -11,7 +11,7 @@
 **
 **	File:	MoreDesktopMgr.c
 **
-**	Copyright © 1992-1996 Apple Computer, Inc.
+**	Copyright © 1992-1998 Apple Computer, Inc.
 **	All rights reserved.
 **
 **	You may incorporate this sample code into your applications without
@@ -39,7 +39,7 @@
 
 #include "MoreFiles.h"
 #include "MoreFilesExtras.h"
-#include "MoreFilesSearch.h"
+#include "MoreFilesSearch.h"	/* shd 11/16/99 - renamed from Search.h */
 #include "MoreDesktopMgr.h"
 
 /*****************************************************************************/
@@ -145,7 +145,7 @@ typedef APPLRec *APPLRecPtr;
 static	OSErr	GetDesktopFileName(short vRefNum,
 								   Str255 desktopName);
 
-static	OSErr	GetAPPLFromDesktopFile(StringPtr volName,
+static	OSErr	GetAPPLFromDesktopFile(ConstStr255Param volName,
 									   short vRefNum,
 									   OSType creator,
 									   short *applVRefNum,
@@ -167,9 +167,9 @@ static	OSErr	GetIconRsrcIDFromLocalID(BundleTypePtr theBundleType,
 										 short iconLocalID,
 										 short *iconRsrcID);
 
-pascal	OSType	DTIconToResIcon(short iconType);
+static	OSType	DTIconToResIcon(short iconType);
 
-static	OSErr	GetIconFromDesktopFile(StringPtr volName,
+static	OSErr	GetIconFromDesktopFile(ConstStr255Param volName,
 									   short vRefNum,
 									   short iconType,
 									   OSType fileCreator,
@@ -178,12 +178,12 @@ static	OSErr	GetIconFromDesktopFile(StringPtr volName,
 
 static	OSErr	GetCommentID(short vRefNum,
 							 long dirID,
-							 StringPtr name,
+							 ConstStr255Param name,
 							 short *commentID);
 
 static	OSErr	GetCommentFromDesktopFile(short vRefNum,
 										  long dirID,
-										  StringPtr name,
+										  ConstStr255Param name,
 										  Str255 comment);
 
 /*****************************************************************************/
@@ -199,12 +199,13 @@ static	OSErr	GetDesktopFileName(short vRefNum,
 	OSErr			error;
 	HParamBlockRec	pb;
 	short			index;
-	Boolean			found = false;
+	Boolean			found;
 	
 	pb.fileParam.ioNamePtr = desktopName;
 	pb.fileParam.ioVRefNum = vRefNum;
 	pb.fileParam.ioFVersNum = 0;
 	index = 1;
+	found = false;
 	do
 	{
 		pb.fileParam.ioDirID = fsRtDirID;
@@ -226,7 +227,7 @@ static	OSErr	GetDesktopFileName(short vRefNum,
 
 /*****************************************************************************/
 
-pascal	OSErr	DTOpen(StringPtr volName,
+pascal	OSErr	DTOpen(ConstStr255Param volName,
 					   short vRefNum,
 					   short *dtRefNum,
 					   Boolean *newDTDatabase)
@@ -243,7 +244,7 @@ pascal	OSErr	DTOpen(StringPtr volName,
 	{
 		if ( hasDesktopMgr(volParmsInfo) )
 		{
-			pb.ioNamePtr = volName;
+			pb.ioNamePtr = (StringPtr)volName;
 			pb.ioVRefNum = vRefNum;
 			error = PBDTOpenInform(&pb);
 			/* PBDTOpenInform informs us if the desktop was just created */
@@ -259,7 +260,9 @@ pascal	OSErr	DTOpen(StringPtr volName,
 			*dtRefNum = pb.ioDTRefNum;
 		}
 		else
+		{
 			error = paramErr;
+		}
 	}
 	return ( error );
 }
@@ -272,7 +275,7 @@ pascal	OSErr	DTOpen(StringPtr volName,
 **	Get a application's location from the
 **	Desktop file's 'APPL' resources.
 */
-static	OSErr	GetAPPLFromDesktopFile(StringPtr volName,
+static	OSErr	GetAPPLFromDesktopFile(ConstStr255Param volName,
 									   short vRefNum,
 									   OSType creator,
 									   short *applVRefNum,
@@ -311,7 +314,7 @@ static	OSErr	GetAPPLFromDesktopFile(StringPtr volName,
 				applResHandle = Get1Resource(kAPPLResType, 0);
 				if ( applResHandle != NULL )
 				{
-					applSize = GetHandleSize((Handle)applResHandle);
+					applSize = InlineGetHandleSize((Handle)applResHandle);
 					if ( applSize != 0 )	/* make sure the APPL resource isn't empty */
 					{
 						foundCreator = false;
@@ -333,7 +336,9 @@ static	OSErr	GetAPPLFromDesktopFile(StringPtr volName,
 										   ((APPLRecPtr)applPtr)->applName[0] + 1;
 								/* application mappings are word aligned within the resource */
 								if ( ((unsigned long)applPtr % 2) != 0 )
+								{
 									applPtr += 1;
+								}
 							}
 						}
 						if ( foundCreator == true )
@@ -343,34 +348,46 @@ static	OSErr	GetAPPLFromDesktopFile(StringPtr volName,
 							BlockMoveData(((APPLRecPtr)applPtr)->applName,
 										  applName,
 										  ((APPLRecPtr)applPtr)->applName[0] + 1);
-							error = noErr;
+							/* error is already noErr */
+						}
+						else
+						{
+							error = afpItemNotFound;	/* didn't find a creator match */
 						}
 					}
 					else
+					{
 						error = afpItemNotFound;	/* no APPL mapping available */
+					}
 				}
 				else
+				{
 					error = afpItemNotFound;	/* no APPL mapping available */
+				}
 				
 				/* restore the resource chain and close the Desktop file */
 				UseResFile(savedResFile);
 				CloseResFile(dfRefNum);
 			}
 			else
+			{
 				error = afpItemNotFound;
+			}
 		}
 	}
+	
 	return ( error );
 }
 
 /*****************************************************************************/
 
-pascal	OSErr	DTGetAPPL(StringPtr volName,
-						  short vRefNum,
-						  OSType creator,
-						  short *applVRefNum,
-						  long *applParID,
-						  Str255 applName)
+pascal	OSErr	DTXGetAPPL(ConstStr255Param volName,
+						   short vRefNum,
+						   OSType creator,
+						   Boolean searchCatalog,
+						   short *applVRefNum,
+						   long *applParID,
+						   Str255 applName)
 {
 	OSErr error;
 	UniversalFMPB pb;
@@ -424,11 +441,15 @@ pascal	OSErr	DTGetAPPL(StringPtr volName,
 					++index;
 				} while ( (error == noErr) && !applFound );
 				if ( error != noErr )
+				{
 					error = afpItemNotFound;
+				}
 			}
 			else
+			{
 				/* Desktop database is empty (new), set error to try CatSearch */
 				error = afpItemNotFound;
+			}
 		}
 		/* acceptable errors from Desktop Manager to continue are paramErr or afpItemNotFound */
 		if ( error == paramErr )
@@ -456,13 +477,16 @@ pascal	OSErr	DTGetAPPL(StringPtr volName,
 					}
 				}
 				else if ( error == fnfErr )
+				{
 					error = afpItemNotFound;
+				}
 			}
 		}
 		/* acceptable error from DesktopFile code to continue is afpItemNotFound */
-		if ( error == afpItemNotFound )
+		if ( (error == afpItemNotFound) && searchCatalog)
 		{
-			/* Couldn't be found in the Desktop file either, try searching with CatSearch */
+			/* Couldn't be found in the Desktop file either, */
+			/* try searching with CatSearch if requested */
 			
 			error = CreatorTypeFileSearch(NULL, realVRefNum, creator, kAPPLResType, &spec, 1,
 											&actMatchCount, true);
@@ -475,21 +499,51 @@ pascal	OSErr	DTGetAPPL(StringPtr volName,
 					BlockMoveData(spec.name, applName, spec.name[0] + 1);
 				}
 				else
+				{
 					error = afpItemNotFound;
+				}
 			}
 		}
 	}
+	
 	return ( error );
 }
 
 /*****************************************************************************/
 
-pascal	OSErr	FSpDTGetAPPL(StringPtr volName,
+pascal	OSErr	FSpDTXGetAPPL(ConstStr255Param volName,
+							  short vRefNum,
+							  OSType creator,
+							  Boolean searchCatalog,
+							  FSSpec *spec)
+{
+	return ( DTXGetAPPL(volName, vRefNum, creator, searchCatalog,
+						&(spec->vRefNum), &(spec->parID), spec->name) );
+}
+
+/*****************************************************************************/
+
+pascal	OSErr	DTGetAPPL(ConstStr255Param volName,
+						  short vRefNum,
+						  OSType creator,
+						  short *applVRefNum,
+						  long *applParID,
+						  Str255 applName)
+{
+	/* Call DTXGetAPPL with the "searchCatalog" parameter true */ 
+	return ( DTXGetAPPL(volName, vRefNum, creator, true,
+						applVRefNum, applParID, applName) );
+}
+
+/*****************************************************************************/
+
+pascal	OSErr	FSpDTGetAPPL(ConstStr255Param volName,
 							 short vRefNum,
 							 OSType creator,
 							 FSSpec *spec)
 {
-	return ( DTGetAPPL(volName, vRefNum, creator,
+	/* Call DTXGetAPPL with the "searchCatalog" parameter true */ 
+	return ( DTXGetAPPL(volName, vRefNum, creator, true,
 						&(spec->vRefNum), &(spec->parID), spec->name) );
 }
 
@@ -612,7 +666,7 @@ static	OSErr	GetLocalIDFromFREF(BundleTypePtr theBundleType,
 	idIterator = &theBundleType->idArray[0];
 	*iconLocalID = 0;
 	
-	while ( (index <= (theBundleType->count + 1)) && (*iconLocalID == 0) )
+	while ( (index <= theBundleType->count) && (*iconLocalID == 0) )
 	{
 		theFref = (FREFRecHandle)Get1Resource(kFREFResType, idIterator->rsrcID);
 		if ( theFref != NULL )
@@ -656,7 +710,7 @@ static	OSErr	GetIconRsrcIDFromLocalID(BundleTypePtr theBundleType,
 	idIterator = &theBundleType->idArray[0];
 	*iconRsrcID = 0;
 	
-	while ( (index <= (theBundleType->count+1)) && (*iconRsrcID == 0) )
+	while ( (index <= theBundleType->count) && (*iconRsrcID == 0) )
 	{
 		if ( idIterator->localID == iconLocalID )
 		{
@@ -679,7 +733,7 @@ static	OSErr	GetIconRsrcIDFromLocalID(BundleTypePtr theBundleType,
 **	Map a Desktop Manager icon type to the corresponding resource type.
 **	Return (OSType)0 if there is no corresponding resource type.
 */
-pascal OSType	DTIconToResIcon(short iconType)
+static	OSType	DTIconToResIcon(short iconType)
 {
 	OSType	resType;
 	
@@ -728,7 +782,7 @@ pascal OSType	DTIconToResIcon(short iconType)
 **				get the icon resource type from the desktop mgr's iconType
 **				get the icon of that type and number
 */
-static	OSErr	GetIconFromDesktopFile(StringPtr volName,
+static	OSErr	GetIconFromDesktopFile(ConstStr255Param volName,
 									   short vRefNum,
 									   short iconType,
 									   OSType fileCreator,
@@ -807,12 +861,18 @@ static	OSErr	GetIconFromDesktopFile(StringPtr volName,
 											/* Copy the resource handle, and return the copy */
 											HandToHand(&returnIconHandle);
 											if ( MemError() == noErr )
+											{
 												*iconHandle = returnIconHandle;
+											}
 											else
+											{
 												error = afpItemNotFound;
+											}
 										}
 										else
+										{
 											error = afpItemNotFound;
+										}
 									}
 								}
 							}
@@ -826,7 +886,9 @@ static	OSErr	GetIconFromDesktopFile(StringPtr volName,
 				CloseResFile(dfRefNum);
 			}
 			else
+			{
 				error = ResError(); /* could not open Desktop file */
+			}
 		}
 		if ( (error != noErr) && (error != memFullErr) )
 		{
@@ -839,7 +901,7 @@ static	OSErr	GetIconFromDesktopFile(StringPtr volName,
 
 /*****************************************************************************/
 
-pascal	OSErr	DTGetIcon(StringPtr volName,
+pascal	OSErr	DTGetIcon(ConstStr255Param volName,
 						  short vRefNum,
 						  short iconType,
 						  OSType fileCreator,
@@ -911,13 +973,19 @@ pascal	OSErr	DTGetIcon(StringPtr volName,
 					}
 				}
 				else
+				{
 					error = memFullErr;	/* handle could not be allocated */
+				}
 			}
 			else
+			{
 				error = paramErr;	/* unknown icon type requested */
+			}
 		}
 		else
+		{
 			error = afpItemNotFound;	/* the desktop database was empty - nothing to return */
+		}
 	}
 	else
 	{
@@ -934,7 +1002,7 @@ pascal	OSErr	DTGetIcon(StringPtr volName,
 
 pascal	OSErr	DTSetComment(short vRefNum,
 							 long dirID,
-							 StringPtr name,
+							 ConstStr255Param name,
 							 ConstStr255Param comment)
 {
 	DTPBRec pb;
@@ -946,15 +1014,19 @@ pascal	OSErr	DTSetComment(short vRefNum,
 	if ( error == noErr )
 	{
 		pb.ioDTRefNum = dtRefNum;
-		pb.ioNamePtr = name;
+		pb.ioNamePtr = (StringPtr)name;
 		pb.ioDirID = dirID;
 		pb.ioDTBuffer = (Ptr)&comment[1];
 		/* Truncate the comment to 200 characters just in case */
 		/* some file system doesn't range check */
 		if ( comment[0] <= 200 )
+		{
 			pb.ioDTReqCount = comment[0];
+		}
 		else
+		{
 			pb.ioDTReqCount = 200;
+		}
 		error = PBDTSetCommentSync(&pb);
 	}
 	return (error);
@@ -965,7 +1037,7 @@ pascal	OSErr	DTSetComment(short vRefNum,
 pascal	OSErr	FSpDTSetComment(const FSSpec *spec,
 							  ConstStr255Param comment)
 {
-	return (DTSetComment(spec->vRefNum, spec->parID, (StringPtr)spec->name, comment));
+	return (DTSetComment(spec->vRefNum, spec->parID, spec->name, comment));
 }
 
 /*****************************************************************************/
@@ -978,7 +1050,7 @@ pascal	OSErr	FSpDTSetComment(const FSSpec *spec,
 */
 static	OSErr	GetCommentID(short vRefNum,
 							 long dirID,
-							 StringPtr name,
+							 ConstStr255Param name,
 							 short *commentID)
 {
 	CInfoPBRec pb;
@@ -999,7 +1071,7 @@ static	OSErr	GetCommentID(short vRefNum,
 */
 static	OSErr	GetCommentFromDesktopFile(short vRefNum,
 										  long dirID,
-										  StringPtr name,
+										  ConstStr255Param name,
 										  Str255 comment)
 {
 	OSErr error;
@@ -1038,27 +1110,39 @@ static	OSErr	GetCommentFromDesktopFile(short vRefNum,
 						commentHandle = (StringHandle)Get1Resource(kFCMTResType,commentID);
 						if ( commentHandle != NULL )
 						{
-							if ( GetHandleSize((Handle)commentHandle) > 0 )
+							if ( InlineGetHandleSize((Handle)commentHandle) > 0 )
+							{
 								BlockMoveData(*commentHandle, comment, *commentHandle[0] + 1);
+							}
 							else
+							{
 								error = afpItemNotFound;	/* no comment available */
+							}
 						}
 						else
+						{
 							error = afpItemNotFound;	/* no comment available */
+						}
 						
 						/* restore the resource chain and close the Desktop file */
 						UseResFile(savedResFile);
 						CloseResFile(dfRefNum);
 					}
 					else
+					{
 						error = afpItemNotFound;
+					}
 				}
 				else
+				{
 					error = afpItemNotFound;
+				}
 			}
 		}
 		else
+		{
 			error = afpItemNotFound;	/* no comment available */
+		}
 	}
 	
 	return ( error );
@@ -1068,7 +1152,7 @@ static	OSErr	GetCommentFromDesktopFile(short vRefNum,
 
 pascal	OSErr	DTGetComment(short vRefNum,
 							 long dirID,
-							 StringPtr name,
+							 ConstStr255Param name,
 							 Str255 comment)
 {
 	DTPBRec pb;
@@ -1089,12 +1173,30 @@ pascal	OSErr	DTGetComment(short vRefNum,
 			if ( !newDTDatabase )
 			{
 				pb.ioDTRefNum = dtRefNum;
-				pb.ioNamePtr = name;
+				pb.ioNamePtr = (StringPtr)name;
 				pb.ioDirID = dirID;
 				pb.ioDTBuffer = (Ptr)&comment[1];
+				/*
+				**	IMPORTANT NOTE #1: Inside Macintosh says that comments
+				**	are up to 200 characters. While that may be correct for
+				**	the HFS file system's Desktop Manager, other file
+				**	systems (such as Apple Photo Access) return up to
+				**	255 characters. Make sure the comment buffer is a Str255
+				**	or you'll regret it.
+				**
+				**	IMPORTANT NOTE #2: Although Inside Macintosh doesn't
+				**	mention it, ioDTReqCount is a input field to
+				**	PBDTGetCommentSync. Some file systems (like HFS) ignore
+				**	ioDTReqCount and always return the full comment --
+				**	others (like AppleShare) respect ioDTReqCount and only
+				**	return up to ioDTReqCount characters of the comment.
+				*/
+				pb.ioDTReqCount = sizeof(Str255) - 1;
 				error = PBDTGetCommentSync(&pb);
 				if (error == noErr)
+				{
 					comment[0] = (unsigned char)pb.ioDTActCount;
+				}
 			}
 		}
 		else
@@ -1102,11 +1204,15 @@ pascal	OSErr	DTGetComment(short vRefNum,
 			/* There is no desktop database - try the Desktop file */
 			error = GetCommentFromDesktopFile(vRefNum, dirID, name, comment);
 			if ( error != noErr )
+			{
 				error = afpItemNotFound;	/* return an expected error */
+			}
 		}
 	}
 	else
+	{
 		error = paramErr;
+	}
 	
 	return (error);
 }
@@ -1116,17 +1222,17 @@ pascal	OSErr	DTGetComment(short vRefNum,
 pascal	OSErr	FSpDTGetComment(const FSSpec *spec,
 							  Str255 comment)
 {
-	return (DTGetComment(spec->vRefNum, spec->parID, (StringPtr)spec->name, comment));
+	return (DTGetComment(spec->vRefNum, spec->parID, spec->name, comment));
 }
 
 /*****************************************************************************/
 
 pascal	OSErr	DTCopyComment(short srcVRefNum,
 							  long srcDirID,
-							  StringPtr srcName,
+							  ConstStr255Param srcName,
 							  short dstVRefNum,
 							  long dstDirID,
-							  StringPtr dstName)
+							  ConstStr255Param dstName)
 /* The destination volume must support the Desktop Manager for this to work */
 {
 	OSErr error;
@@ -1146,8 +1252,8 @@ pascal	OSErr	FSpDTCopyComment(const FSSpec *srcSpec,
 							   const FSSpec *dstSpec)
 /* The destination volume must support the Desktop Manager for this to work */
 {
-	return (DTCopyComment(srcSpec->vRefNum, srcSpec->parID, (StringPtr)srcSpec->name,
-						dstSpec->vRefNum, dstSpec->parID, (StringPtr)dstSpec->name));
+	return (DTCopyComment(srcSpec->vRefNum, srcSpec->parID, srcSpec->name,
+						dstSpec->vRefNum, dstSpec->parID, dstSpec->name));
 }
 
 /*****************************************************************************/
