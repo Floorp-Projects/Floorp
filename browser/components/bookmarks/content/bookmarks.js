@@ -514,7 +514,6 @@ var BookmarksCommand = {
       var urlArc   = RDF.GetResource(NC_NS+"URL");
       RDFC.Init(BMDS, resource);
       var containerChildren = RDFC.GetElements();
-      var tabs      = browser.mTabContainer.childNodes;
       var tabPanels = browser.mPanelContainer.childNodes;
       var tabCount  = tabPanels.length;
       // Get the preferences service
@@ -522,7 +521,16 @@ var BookmarksCommand = {
                                   .getService(Components.interfaces.nsIPrefService);
       var doReplace = prefService.getBranch(null)
                                  .getBoolPref("browser.tabs.loadFolderAndReplace");
-      var index0 = doReplace? 0:tabCount;
+      var index0;
+      if (doReplace)
+        index0 = 0;
+      else {
+        for (index0=tabCount-1; index0>0; --index0)
+          if (browser.browsers[index0].webNavigation.currentURI.spec != "about:blank") {
+            ++index0;
+            break;
+          }
+      }
       var index  = index0;
       while (containerChildren.hasMoreElements()) {
         var res = containerChildren.getNext().QueryInterface(kRDFRSCIID);
@@ -542,6 +550,7 @@ var BookmarksCommand = {
         return;
 
       // Select the first tab in the group.
+      var tabs = browser.mTabContainer.childNodes;
       browser.selectedTab = tabs[index0];
 
       // Close any remaining open tabs that are left over.
