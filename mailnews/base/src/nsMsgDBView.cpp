@@ -4352,14 +4352,15 @@ NS_IMETHODIMP nsMsgDBView::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags,
       // update the previous view, if any.
       OnExtraFlagChanged(index, aNewFlags);
       NoteChange(index, 1, nsMsgViewNotificationCode::changed);
-      PRUint32 deltaFlags = (aOldFlags ^ aNewFlags);
-      if (deltaFlags & (MSG_FLAG_READ | MSG_FLAG_NEW))
-      {
-        nsMsgViewIndex threadIndex = ThreadIndexOfMsg(aKeyChanged);
-        // may need to fix thread counts
-        if (threadIndex != nsMsgViewIndex_None)
-          NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
-      }
+    }
+
+    PRUint32 deltaFlags = (aOldFlags ^ aNewFlags);
+    if (deltaFlags & (MSG_FLAG_READ | MSG_FLAG_NEW))
+    {
+      nsMsgViewIndex threadIndex = ThreadIndexOfMsg(aKeyChanged);
+      // may need to fix thread counts
+      if (threadIndex != nsMsgViewIndex_None && threadIndex != index)
+        NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
     }
   }
   // don't need to propagate notifications, right?
