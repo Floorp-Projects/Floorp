@@ -15,7 +15,11 @@
             <NC:type>imap</NC:type>
             <NC:rememberPassword>false</NC:rememberPassword>
             <NC:redirectorType>aol</NC:redirectorType>
-            <NC:deleteModel>2</NC:deleteModel>
+            <NC:ServerType-imap>
+              <NC:nsIImapIncomingServer>
+                <NC:deleteModel>2</NC:deleteModel>
+              </NC:nsIImapIncomingServer>
+            </NC:ServerType-imap>
           </NC:nsIMsgIncomingServer>
         </NC:incomingServer>
 

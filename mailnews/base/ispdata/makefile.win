@@ -20,15 +20,16 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
+DESTDIR = $(DIST)\bin\defaults\isp
 
 include <$(DEPTH)\config\rules.mak>
 
 install::
-	$(MAKE_INSTALL) aol.rdf					$(DIST)\bin\defaults\isp
-	$(MAKE_INSTALL) example.rdf				$(DIST)\bin\defaults\isp
+	$(MAKE_INSTALL) aol.rdf					$(DESTDIR)
+	$(MAKE_INSTALL) example.rdf				$(DESTDIR)
 
 clobber::
-	rm -f $(DIST)\bin\defaults\isp\aol.rdf
-	rm -f $(DIST)\bin\defaults\isp\example.rdf
+	rm -f $(DESTDIR)\aol.rdf
+	rm -f $(DESTDIR)\example.rdf
 
 
