@@ -1968,9 +1968,4 @@ function dumpTXN(aTxn)
     }
   }
 }
-
-function openAboutDialog()
-{
-  window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
-}
   
