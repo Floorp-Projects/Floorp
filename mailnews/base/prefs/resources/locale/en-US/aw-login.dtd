@@ -7,8 +7,8 @@
 <!ENTITY usernameLabel.label "User Name:">
 
 <!ENTITY passwordTitle.label "Password Storage">
-<!ENTITY savePasswordDesc.label "your password can be saved and automatically sent to the server when you launch Mail so that you are not asked for it each time you access this account.  This is not recommended if other people have access to your computer.">
-<!ENTITY savePasswordLabel.label "If you want Mozilla Mail to save your password, check the box below.">
+<!ENTITY savePasswordDesc.label "Your password can be saved and automatically sent to the server when you launch Mail so that you are not asked for it each time you access this account.  This is not recommended if other people have access to your computer.">
+<!ENTITY savePasswordLabel.label "If you would like your password saved, check the box below.">
 <!ENTITY savePasswordCheckbox.label "Save my password">
 
 <!ENTITY passwordDesc.label "Enter the password given to you by your email provider.">
