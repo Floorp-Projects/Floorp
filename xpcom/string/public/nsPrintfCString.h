@@ -38,8 +38,8 @@
 #ifndef nsPrintfCString_h___
 #define nsPrintfCString_h___
  
-#ifndef nsAString_h___
-#include "nsAString.h"
+#ifndef nsAFlatString_h___
+#include "nsAFlatString.h"
 #endif
 
 
@@ -68,7 +68,7 @@
    */
 
 class NS_COM nsPrintfCString
-    : public nsACString
+    : public nsAFlatCString
   {
     enum { kLocalBufferSize=15 };
       // ought to be large enough for most things ... a |long long| needs at most 20 (so you'd better ask)
