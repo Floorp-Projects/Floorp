@@ -1,5 +1,7 @@
 # target: xpcomDebug.shlb
 mozilla/modules/plugin/src/nsMalloc.cpp
+mozilla/xpcom/macbuild/xpcom.exp
+mozilla/xpcom/macbuild/xpcomDebug.exp
 mozilla/xpcom/src/nsDebug.cpp
 mozilla/xpcom/src/nsHashtable.cpp
 mozilla/xpcom/src/nsID.cpp
