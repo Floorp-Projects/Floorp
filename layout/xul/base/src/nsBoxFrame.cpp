@@ -707,15 +707,27 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   }
 
   // get our desiredSize
-  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE)
-     computedSize.width = prefSize.width;
-  else
-     computedSize.width += m.left + m.right;
+  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
+    if (aReflowState.availableWidth != NS_INTRINSICSIZE && 
+        aReflowState.availableWidth > 0 && aReflowState.availableWidth < prefSize.width) {
+      computedSize.width = aReflowState.availableWidth;
+    } else {
+      computedSize.width = prefSize.width;
+    }
+  } else {
+    computedSize.width += m.left + m.right;
+  }
 
-  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE)
-     computedSize.height = prefSize.height;
-  else
-     computedSize.height += m.top + m.bottom;
+  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
+    if (aReflowState.availableHeight != NS_INTRINSICSIZE && 
+      aReflowState.availableHeight > 0 && aReflowState.availableHeight < prefSize.height) {
+      computedSize.height = aReflowState.availableHeight;
+    } else {
+      computedSize.height = prefSize.height;
+    }
+  } else {
+    computedSize.height += m.top + m.bottom;
+  }
 
   nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);
 
@@ -748,15 +760,26 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   {
      nsSize minSize(0,0);
      GetMinSize(state,  minSize);
-#define FIX_FOR_BUG_40596
-#ifdef FIX_FOR_BUG_40596
-     if (mRect.width > minSize.width)
-#else
-     if (mRect.width < minSize.width)
-#endif
-        maxElementSize->width = minSize.width;
-     else
+
+     if (mRect.width > minSize.width) {
+       if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) {
+         maxElementSize->width = minSize.width;
+       } else {
+         maxElementSize->width = mRect.width;
+       }
+     } else {
         maxElementSize->width = mRect.width;
+     }
+
+     if (mRect.height > minSize.height) {
+       if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
+         maxElementSize->height = minSize.height;
+       } else {
+         maxElementSize->height = mRect.height;
+       }
+     } else {
+        maxElementSize->height = mRect.height;
+     }
   }
 
   return NS_OK;
