@@ -138,6 +138,7 @@
 #include "nsIDOMCrypto.h"
 #include "nsIDOMCRMFObject.h"
 #include "nsIDOMPkcs11.h"
+#include "nsIDOMCSSPrimitiveValue.h"
 #include "plhash.h"
 
 static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
@@ -782,6 +783,7 @@ void XXXDomNeverCalled()
     NS_InitDocumentClass(nsnull, nsnull);
     NS_NewScriptNSHTMLOptionCollection(0, 0, 0, 0);
     NS_NewScriptMediaList(0, 0, 0, 0);
+    NS_NewScriptCSSPrimitiveValue(0, 0, 0, 0);
   }
 }
 
