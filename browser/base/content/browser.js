@@ -1467,7 +1467,7 @@ function addBookmarkForTabBrowser(aTabBrowser, aSelect)
   var dialogArgs = currentTabInfo;
   dialogArgs.objGroup = tabsInfo;
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-             "centerscreen,chrome,dialog,resizable,dependent", dialogArgs);
+             ADD_BM_DIALOG_FEATURES, dialogArgs);
 }
 
 function addBookmarkForBrowser(aDocShell, aIsWebPanel)
@@ -2359,7 +2359,7 @@ var bookmarksButtonObserver = {
         url: url
       }
       openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                 "centerscreen,chrome,dialog,resizable,dependent", dialogArgs);
+                 ADD_BM_DIALOG_FEATURES, dialogArgs);
     }
   },
 
@@ -4587,7 +4587,7 @@ function asyncOpenWebPanel(event)
            bWebPanel: true
          }
          openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                    "centerscreen,chrome,dialog,resizable,dependent", dialogArgs);
+                    ADD_BM_DIALOG_FEATURES, dialogArgs);
          event.preventDefault();
          return false;
        }
@@ -5447,7 +5447,8 @@ function AddKeywordForSearchField()
     postData: postData,
     description: BookmarksUtils.getDescriptionFromDocument(node.ownerDocument)
   }
-  openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", dialogArgs);
+  openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
+             ADD_BM_DIALOG_FEATURES, dialogArgs);
 }
 
 /////////////// livemark handling
