@@ -47,7 +47,14 @@
         <th>Votes</th>
       </tr>
 
+      [% onevoteproduct = 0 %]
+      [% multivoteproduct = 0 %]
       [% FOREACH product = products %]
+        [% IF product.onevoteonly %]
+          [% onevoteproduct = 1 %]
+        [% ELSE %]
+          [% multivoteproduct = 1 %]
+        [% END %]
         <tr>
           <th>[% product.name FILTER html %]</th>
           <td></td>
@@ -109,9 +116,15 @@
       <input type="submit" value="Change My Votes">
       <br>
       <br>
-      To change your votes, type in new numbers (using zero to
-      mean no votes) or change the checkbox, and then click 
-      <b>Change My Votes</b>.
+      To change your votes,
+      [% IF multivoteproduct %]
+        type in new numbers (using zero to mean no votes)
+        [% " or " IF onevoteproduct %]
+      [% END %]
+      [% IF onevoteproduct %]
+        change the checkbox
+      [% END %]
+      and then click <b>Change My Votes</b>.
     [% END %]  
   </form>
 [% ELSE %]
