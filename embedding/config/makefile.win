@@ -26,7 +26,7 @@ include <$(DEPTH)\config\config.mak>
 
 embed_chrome: embed-jar.mn
 !if "$(_CHROME_FILE_FORMAT)" != "jar"
-        $(PERL) $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) -s $(DIST)\bin\chrome -d $(DIST)\bin\chrome < embed-jar.mn
+        $(PERL) $(DEPTH)\config\make-jars.pl -v -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -s $(DIST)\bin\chrome -d $(DIST)\bin\chrome < embed-jar.mn
 !else
 	nsinstall -D $(DIST)\Embed\tmpchrome\US
 	unzip -d $(DIST)\Embed\tmpchrome\US $(DIST)\bin\chrome\US.jar
