@@ -79,9 +79,6 @@ pref("update.severity", 0);
 // The number of extension/theme/etc updates available
 pref("update.extensions.count", 0);
 
-pref("keyword.enabled", true);
-pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&sourceid=mozilla-search&q=");
-
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.contentlocale", "chrome://browser-region/locale/region.properties");
 pref("general.useragent.vendor", "Mozilla Sunbird");
@@ -89,81 +86,9 @@ pref("general.useragent.vendorSub",
 #expand __APP_VERSION__
 );
 
-pref("general.smoothScroll", false);
-#ifdef XP_UNIX
-pref("general.autoScroll", false);
-#else
-pref("general.autoScroll", true);
-#endif
-
-
-// 0 = blank, 1 = home (browser.startup.homepage), 2 = last
-// XXXBlake Remove this stupid pref
-pref("browser.startup.page",                1);
-pref("browser.startup.homepage",	        "chrome://browser-region/locale/region.properties");
-// "browser.startup.homepage_override" was for 4.x
-pref("browser.startup.homepage_override.1", false);
-
-pref("browser.cache.disk.capacity",         50000);
-pref("browser.enable_automatic_image_resizing", true);
-pref("browser.urlbar.matchOnlyTyped", false);
-pref("browser.chrome.site_icons", true);
-pref("browser.chrome.favicons", true);
-pref("browser.formfill.enable", true);
-
-pref("browser.download.useDownloadDir", true);
-pref("browser.download.folderList", 0);
-pref("browser.download.manager.showAlertOnComplete", true);
-pref("browser.download.manager.showAlertInterval", 2000);
-pref("browser.download.manager.retention", 2);
-pref("browser.download.manager.showWhenStarting", true);
-pref("browser.download.manager.useWindow", true);
-pref("browser.download.manager.closeWhenDone", true);
-pref("browser.download.manager.openDelay", 0);
-pref("browser.download.manager.focusWhenStarting", false);
-pref("browser.download.manager.flashCount", 2);
-
-// pointer to the default engine name
-pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
-// pointer to the Web Search url (content area context menu)
-pref("browser.search.defaulturl", "chrome://browser-region/locale/region.properties");
-
-// basic search popup constraint: minimum sherlock plugin version displayed
-// (note: must be a string representation of a float or it'll default to 0.0)
-pref("browser.search.basic.min_ver", "0.0");
-
-pref("browser.history.grouping", "day");
-pref("browser.sessionhistory.max_entries", 50);
- 
-// Tab browser preferences.
-pref("browser.tabs.loadInBackground", true);
-pref("browser.tabs.loadFolderAndReplace", true);
-pref("browser.tabs.opentabfor.middleclick", true);
-pref("browser.tabs.opentabfor.urlbar", true);
-pref("browser.tabs.loadBookmarksInBackground", false);
-
-// Smart Browsing prefs
-pref("browser.related.enabled", true);
-pref("browser.related.autoload", 1);  // 0 = Always, 1 = After first use, 2 = Never
-pref("browser.related.provider", "http://www-rl.netscape.com/wtgn?");
-pref("browser.related.disabledForDomains", "");
-pref("browser.goBrowsing.enabled", true);
-
-// Default bookmark sorting
-pref("browser.bookmarks.sort.direction", "descending");
-pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
-
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",        true);
 pref("javascript.options.showInConsole",    true);
-
-// popups.policy 1=allow,2=reject
-pref("privacy.popups.policy",               1);
-pref("privacy.popups.usecustom",            true);
-pref("privacy.popups.firstTime",            true);
-
-pref("network.cookie.cookieBehavior",       0); // cookies enabled
-pref("network.cookie.enableForCurrentSessionOnly", false);
 
 // l12n and i18n
 pref("intl.accept_languages", "chrome://global/locale/intl.properties");
@@ -189,10 +114,6 @@ pref("mousewheel.withaltkey.action",0);
 
 pref("profile.allow_automigration", false);   // setting to false bypasses automigration in the profile code
 
-// Customizable toolbar stuff
-pref("custtoolbar.personal_toolbar_folder", "");
-pref("browser.throbber.url","chrome://browser-region/locale/region.properties");
-
 // pref to control the alert notification 
 pref("alerts.slideIncrement", 1);
 pref("alerts.slideIncrementTime", 10);
@@ -203,8 +124,6 @@ pref("alerts.height", 50);
 pref("update_notifications.enabled", true);
 pref("update_notifications.provider.0.frequency", 7); // number of days
 pref("update_notifications.provider.0.datasource", "chrome://browser-region/locale/region.properties");
-
-pref("browser.xul.error_pages.enabled", false);
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
@@ -231,11 +150,3 @@ pref("security.warn_entering_weak.show_once", true);
 pref("security.warn_leaving_secure.show_once", true);
 pref("security.warn_viewing_mixed.show_once", true);
 pref("security.warn_submit_insecure.show_once", true);
-
-pref("browser.urlbar.clickSelectsAll", true);
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-pref("browser.urlbar.clickSelectsAll", false);
-#endif
-#endif
-
