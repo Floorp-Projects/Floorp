@@ -43,8 +43,7 @@ const PRInt16 kMacMenuID = 2;
 const PRInt16 kMacMenuID = 1;
 #endif /* APPLE_MENU_HACK */
 
-
-PRInt16 nsMenu::mMacMenuIDCount = kMacMenuID;
+PRInt16 mMacMenuIDCount = kMacMenuID;
 
 nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        

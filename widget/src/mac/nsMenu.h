@@ -37,6 +37,9 @@ extern const PRInt16 kMacMenuID;
 extern const PRInt16 kAppleMenuID;
 #endif /* APPLE_MENU_HACK */
 
+//static PRInt16      mMacMenuIDCount;		// use GetUniqueMenuID()
+ extern PRInt16 mMacMenuIDCount;// = kMacMenuID;
+
 class nsMenu : public nsIMenu, public nsIMenuListener
 {
 
@@ -101,7 +104,7 @@ protected:
   nsIMenuListener *   mListener;
 
 private:
-  static PRInt16      mMacMenuIDCount;		// use GetUniqueMenuID()
+  
 };
 
 
