@@ -39,11 +39,18 @@
 #include "nsIDOMEvent.h"
 #include "nsNetUtil.h"
 
+// For GetText().
+#include "nsIContentIterator.h"
+#include "nsIDOMText.h"
+#include "nsIEnumerator.h"
+
 #include "nsCOMPtr.h"
 #include "nsIFrameManager.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIHTMLAttributes.h"
+
+nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 
 // XXX suppress
 
@@ -665,12 +672,41 @@ nsHTMLAnchorElement::GetText(nsAWritableString& aText)
 {
   aText.Truncate();
 
-  nsCOMPtr<nsIDOMNode> child;
+  // Since this is a Netscape 4 proprietary attribute, we have to implement
+  // the same behavior. Basically it is returning the last text node of
+  // of the anchor. Returns an empty string if there is no text node.
+  // The nsIContentIterator does exactly what we want, if we start the 
+  // iteration from the end.
+  nsCOMPtr<nsIContentIterator> iter;
+  nsresult rv = NS_NewContentIterator(getter_AddRefs(iter));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  GetFirstChild(getter_AddRefs(child));
+  // Initialize the content iterator with the children of the anchor
+  iter->Init(this);
 
-  if (child) {
-    child->GetNodeValue(aText);
+  nsCOMPtr<nsIContent> curNode;
+
+  // Position the iterator. Last() is the anchor itself, this is not what we 
+  // want. Prev() positions the iterator to the last child of the anchor,
+  // starting at the deepest level of children, just like NS4 does.
+  rv = iter->Last();
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = iter->Prev();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  iter->CurrentNode(getter_AddRefs(curNode));
+
+  while(curNode && (NS_ENUMERATOR_FALSE == iter->IsDone())) {
+    nsCOMPtr<nsIDOMText> textNode(do_QueryInterface(curNode));
+    if(textNode) {
+      // The current node is a text node. Get its value and break the loop.
+      textNode->GetData(aText);
+      break;
+    }
+
+    rv = iter->Prev();
+    NS_ENSURE_SUCCESS(rv, rv);
+    iter->CurrentNode(getter_AddRefs(curNode));
   }
 
   return NS_OK;
