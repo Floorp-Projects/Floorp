@@ -69,6 +69,7 @@
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
 #include "nsIWebShell.h"
+#include "nsIStyleContext.h"
 #include "nsIXULContentSink.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULParentDocument.h"
@@ -3151,7 +3152,29 @@ XULDocumentImpl::StartLayout(void)
         // Resize-reflow this time
         nsCOMPtr<nsIPresContext> cx;
         shell->GetPresContext(getter_AddRefs(cx));
-        nsRect r;
+
+		if (cx) {
+			nsCOMPtr<nsISupports> container;
+			cx->GetContainer(getter_AddRefs(container));
+			if (container) {
+			  nsCOMPtr<nsIWebShell> webShell;
+			  webShell = do_QueryInterface(container);
+			  if (webShell) {
+				nsCOMPtr<nsIStyleContext> styleContext;
+				if (NS_SUCCEEDED(cx->ResolveStyleContextFor(mRootContent, nsnull,
+										   PR_FALSE,
+										   getter_AddRefs(styleContext)))) {
+
+					const nsStyleDisplay* disp = (const nsStyleDisplay*)
+						styleContext->GetStyleData(eStyleStruct_Display);
+
+					webShell->SetScrolling(disp->mOverflow);
+				}
+			  }
+			}
+		}
+        
+		nsRect r;
         cx->GetVisibleArea(r);
         shell->InitialReflow(r.width, r.height);
 
