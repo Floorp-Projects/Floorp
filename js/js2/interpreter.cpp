@@ -493,12 +493,13 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue base;
                     JSValue prop;
                     if (op2(call).first == NotARegister) {
-                        base = mGlobal->getReference(prop, *((*registers)[op3(call).first].string));
+                        base = mGlobal;
+                        prop = mGlobal->getProperty(*((*registers)[op3(call).first].string));
                     }
                     else {
                         base = (*registers)[op2(call).first];
                         ASSERT(base.tag == JSValue::object_tag);        // XXX runtime error
-                        base = base.object->getReference(prop, *((*registers)[op3(call).first].string));
+                        prop = base.object->getProperty(*((*registers)[op3(call).first].string));
                     }
                     ASSERT(prop.isFunction()); // XXX runtime error
                     JSFunction *target = prop.function;
