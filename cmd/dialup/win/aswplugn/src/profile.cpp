@@ -152,6 +152,15 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fSetCurrentProfileName(JRIEnv* env,
 	else
 	{
 		trace("profile.cpp : SetCurrentProfileName : Current User profile is set to = %s", newProfileName);
+
+		if (PREF_ERROR == PREF_SetDefaultBoolPref("profile.temporary", FALSE)) 
+		{
+			trace("profile.cpp : SetCurrentProfileName : Error in setting Temporary flag to false.");
+		}
+		else
+		{
+			trace("profile.cpp : SetCurrentProfileName : Made the profile to be permanent.");
+		}
 	}
 
 }
