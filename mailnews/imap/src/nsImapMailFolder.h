@@ -105,7 +105,7 @@ public:
     NS_IMETHOD AddUnique(nsISupports* element);
     NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
     NS_IMETHOD GetMessages(nsISimpleEnumerator* *result);
-	NS_IMETHOD UpdateFolder();
+	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
     
 	NS_IMETHOD CreateSubfolder(const char *folderName);
     
@@ -155,7 +155,7 @@ public:
                                nsIMsgCopyServiceListener* listener);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgHdr, nsIMessage
                                          **message);
-    NS_IMETHOD GetNewMessages();
+    NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
 
     NS_IMETHOD GetPath(nsIFileSpec** aPathName);
 

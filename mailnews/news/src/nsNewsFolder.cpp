@@ -376,10 +376,10 @@ nsresult nsMsgNewsFolder::GetDatabase()
 
 
 NS_IMETHODIMP
-nsMsgNewsFolder::UpdateFolder()
+nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
   GetDatabase();	// want this cached...
-  return GetNewMessages();
+  return GetNewMessages(aWindow);
 }
 
 NS_IMETHODIMP
@@ -892,7 +892,7 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
   return rv;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
+NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aWindow)
 {
   nsresult rv = NS_OK;
 

@@ -599,7 +599,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if((aCommand == kNC_GetNewMessages))
       {
-        rv = folder->GetNewMessages();
+        rv = folder->GetNewMessages(mWindow);
       }
       else if((aCommand == kNC_Copy))
       {

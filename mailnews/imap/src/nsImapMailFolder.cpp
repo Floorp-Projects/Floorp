@@ -419,7 +419,7 @@ nsresult nsImapMailFolder::GetDatabase()
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::UpdateFolder()
+nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
 	PRBool selectFolder = PR_FALSE;
@@ -1162,7 +1162,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders)
     return nsMsgFolder::DeleteSubFolders(folders);
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetNewMessages()
+NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 {
     nsresult rv = NS_ERROR_FAILURE;
     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
@@ -1180,7 +1180,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages()
 		if (NS_SUCCEEDED(rv) && pEventQService)
 			pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
 												getter_AddRefs(eventQ));
-    rv = imapService->SelectFolder(eventQ, inbox, this, nsnull, nsnull);
+    rv = imapService->SelectFolder(eventQ, inbox, this, aWindow, nsnull);
     return rv;
 }
 
@@ -2511,7 +2511,11 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
     NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
 	if (aUrl)
 	{
+		nsCOMPtr<nsIMsgWindow> aWindow;
+		nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
         nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aUrl);
+		if (mailUrl)
+			mailUrl->GetMsgWindow(getter_AddRefs(aWindow));
         if (imapUrl)
         {
             nsIImapUrl::nsImapAction imapAction = nsIImapUrl::nsImapTest;
@@ -2556,7 +2560,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 					PRBool folderOpen = PR_FALSE;
 					session->IsFolderOpenInWindow(this, &folderOpen);
 					if (folderOpen)
-						UpdateFolder();
+						UpdateFolder(aWindow);
 					else
 						UpdatePendingCounts(PR_TRUE, PR_FALSE);
 				}
@@ -2573,7 +2577,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         ClearCopyState(aExitCode);
                     }
                 }
-                UpdateFolder();
+                UpdateFolder(aWindow);
                 break;
             default:
                 break;
@@ -2582,7 +2586,6 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 		// give base class a chance to send folder loaded notification...
 		rv = nsMsgDBFolder::OnStopRunningUrl(aUrl, aExitCode);
 		// query it for a mailnews interface for now....
-		nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
 		if (mailUrl)
 			rv = mailUrl->UnRegisterListener(this);
 	}

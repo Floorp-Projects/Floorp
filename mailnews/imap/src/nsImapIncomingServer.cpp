@@ -471,7 +471,7 @@ NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 	{
 		nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
 		if(rootMsgFolder)
-			rv = rootMsgFolder->GetNewMessages();
+			rv = rootMsgFolder->GetNewMessages(nsnull);
 	}
 
 	return rv;

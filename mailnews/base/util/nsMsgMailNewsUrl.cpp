@@ -21,6 +21,9 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailSession.h"
 #include "nsXPIDLString.h"
+#include "nsIDocumentLoader.h"
+#include "nsILoadGroup.h"
+#include "nsIWebShell.h"
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -249,6 +252,37 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFee
 	return rv;
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup **aLoadGroup)
+{
+	nsresult rv = NS_OK;
+	// note: it is okay to return a null load group and not return an error
+	// it's possible the url really doesn't have load group
+	if (!m_loadGroup)
+	{
+		if (m_msgWindow)
+		{
+			nsCOMPtr <nsIWebShell> webShell;
+			m_msgWindow->GetRootWebShell(getter_AddRefs(webShell));
+			if (webShell)
+			{
+				nsCOMPtr <nsIDocumentLoader> docLoader;
+				webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+				if (docLoader)
+					docLoader->GetLoadGroup(getter_AddRefs(m_loadGroup));
+			}
+		}
+	}
+
+	if (aLoadGroup)
+	{
+		*aLoadGroup = m_loadGroup;
+		NS_IF_ADDREF(*aLoadGroup);
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+	return rv;
+
+}
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetUpdatingFolder(PRBool *aResult)
 {

@@ -55,7 +55,7 @@ interface nsIMsgFolder : nsIFolder {
 	void endFolderLoading();
   
 	/* get new headers for db */
-	void updateFolder();
+	void updateFolder(in nsIMsgWindow aWindow);
   
 	nsIMsgThread getThreadForMessage(in nsIMessage message);
 	boolean hasMessage(in nsIMessage message);
@@ -153,7 +153,7 @@ interface nsIMsgFolder : nsIFolder {
   readonly attribute boolean locked;
 
 	nsIMessage createMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
-	void getNewMessages();
+	void getNewMessages(in nsIMsgWindow aWindow);
 
 	void writeToFolderCache(in nsIMsgFolderCache folderCache);
 	attribute wstring charset;

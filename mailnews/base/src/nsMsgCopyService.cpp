@@ -289,7 +289,7 @@ nsMsgCopyService::FindRequest(nsISupports* aSupport,
 NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, nsCOMTypeInfo<nsIMsgCopyService>::GetIID())
 
 NS_IMETHODIMP
-nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src foler */
+nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
                                nsISupportsArray* messages,
                                nsIMsgFolder* dstFolder,
                                PRBool isMove,

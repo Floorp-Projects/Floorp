@@ -932,6 +932,20 @@ NS_IMETHODIMP nsImapUrl::SetMockChannel(nsIImapMockChannel * aChannel)
     return rv;
 }
 
+NS_IMETHODIMP nsImapUrl::AddChannelToLoadGroup()
+{
+	nsCOMPtr <nsILoadGroup> aLoadGroup;
+	if (m_mockChannel)
+	{
+		GetLoadGroup(getter_AddRefs(aLoadGroup));
+		if (aLoadGroup)
+		{
+			aLoadGroup->AddChannel(m_mockChannel, nsnull /* context isupports */);
+		}
+	}
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsImapUrl::GetAllowContentChange(PRBool *result)
 {
 	if (!result)

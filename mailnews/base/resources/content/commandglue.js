@@ -214,7 +214,7 @@ function ChangeFolderByURI(uri)
 	{
 		gCurrentLoadingFolderURI = uri;
 		msgfolder.startFolderLoading();
-		msgfolder.updateFolder();
+		msgfolder.updateFolder(msgWindow);
 	}
 	catch(ex)
 	{
@@ -223,7 +223,7 @@ function ChangeFolderByURI(uri)
   else
   {
 	gCurrentLoadingFolderURI = "";
-	msgfolder.updateFolder();
+	msgfolder.updateFolder(msgWindow);
 	RerootFolder(uri, msgfolder);
   }
 }

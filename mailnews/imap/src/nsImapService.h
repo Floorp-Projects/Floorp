@@ -53,7 +53,7 @@ public:
 	NS_IMETHOD SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder *aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
-							nsIMsgStatusFeedback *aMsgStatusFeedback,
+							nsIMsgWindow *aMsgWindow,
                             nsIURI ** aURL);	
 	NS_IMETHOD LiteSelectFolder(nsIEventQueue * aClientEventQueue, 
                                 nsIMsgFolder * aImapMailFolder, 

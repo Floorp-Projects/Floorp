@@ -39,7 +39,7 @@
 #include "nsEscape.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIPref.h"
-
+#include "nsILoadGroup.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 
@@ -98,7 +98,7 @@ NS_IMETHODIMP
 nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue, 
                             nsIMsgFolder * aImapMailFolder, 
                             nsIUrlListener * aUrlListener, 
-							nsIMsgStatusFeedback *aStatusFeedback,
+							nsIMsgWindow *aMsgWindow,
                             nsIURI ** aURL)
 {
 
@@ -123,8 +123,9 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapSelectFolder);
 
 		nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
-    	mailNewsUrl->SetStatusFeedback(aStatusFeedback);  
+		mailNewsUrl->SetMsgWindow(aMsgWindow);
 		mailNewsUrl->SetUpdatingFolder(PR_TRUE);
+		imapUrl->AddChannelToLoadGroup();
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
 		if (NS_SUCCEEDED(rv))
@@ -435,7 +436,12 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
         if (NS_SUCCEEDED(rv) && aStreamListener)
         {
           nsCOMPtr<nsIChannel> aChannel;
-          rv = NewChannel(nsnull, url, nsnull, nsnull, nsnull, getter_AddRefs(aChannel));
+		  nsCOMPtr<nsILoadGroup> aLoadGroup;
+		  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
+		  if (NS_SUCCEEDED(rv) && mailnewsUrl)
+			mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+
+          rv = NewChannel(nsnull, url, aLoadGroup, nsnull, nsnull, getter_AddRefs(aChannel));
           if (NS_FAILED(rv)) return rv;
 
           nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);

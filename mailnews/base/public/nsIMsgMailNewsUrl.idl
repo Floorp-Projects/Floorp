@@ -24,6 +24,7 @@ interface nsIUrlListener;
 interface nsIMsgStatusFeedback;
 interface nsIMsgIncomingServer;
 interface nsIMsgWindow;
+interface nsILoadGroup;
 
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
@@ -55,6 +56,8 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	void SetMsgWindow(in nsIMsgWindow aMsgWindow);
 	void GetMsgWindow(out nsIMsgWindow aMsgWindow);
 
+	// the load group is computed from the msgWindow
+	readonly attribute nsILoadGroup loadGroup;
 	attribute boolean updatingFolder;
 };
 

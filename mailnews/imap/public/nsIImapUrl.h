@@ -183,6 +183,8 @@ public:
 
     NS_IMETHOD GetMockChannel(nsIImapMockChannel ** aChannel) = 0;
     NS_IMETHOD SetMockChannel(nsIImapMockChannel * aChannel) = 0;
+
+	NS_IMETHOD AddChannelToLoadGroup() = 0;
 };
 
 #endif /* nsIImapUrl_h___ */

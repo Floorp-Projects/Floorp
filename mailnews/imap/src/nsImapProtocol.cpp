@@ -6323,6 +6323,12 @@ NS_IMETHODIMP nsImapMockChannel::IsPending(PRBool *result)
 
 NS_IMETHODIMP nsImapMockChannel::Cancel()
 {
+	if (m_channelContext)
+	{
+		nsCOMPtr<nsIImapProtocol> protocol = do_QueryInterface(m_channelContext);
+		if (protocol)
+			protocol->TellThreadToDie(PR_TRUE);
+	}
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

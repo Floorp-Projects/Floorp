@@ -513,7 +513,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 }
 
 NS_IMETHODIMP
-nsMsgLocalMailFolder::UpdateFolder()
+nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
 	return GetDatabase(); // this will cause a reparse, if needed.
 }
@@ -1492,7 +1492,7 @@ nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr,
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages()
+NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 {
     nsresult rv = NS_OK;
     
