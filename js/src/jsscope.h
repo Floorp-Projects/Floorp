@@ -106,10 +106,8 @@
  * What if we add Y again?  X->Y->Z->Y is wrong and we'll enumerate Y twice.
  * Therefore we must fork in such a case, if not earlier.  Because delete is
  * "bursty", we should not fork eagerly.  Delaying a fork till we are at risk
- * of adding Y after it was deleted already requires a flag in the JSScope, at
- * least.  So we tag the scope->lastProp pointer with SCOPE_MIDDLE_DELETE_TAG,
- * to avoid expanding the size of JSScope, and to penalize only the code that
- * already must care about forking (js_{Add,Remove}ScopeProperty).
+ * of adding Y after it was deleted already requires a flag in the JSScope, to
+ * wit, SCOPE_MIDDLE_DELETE.
  *
  * What about thread safety?  If the property tree operations done by requests
  * are find-node and insert-node, then the only hazard is duplicate insertion.
@@ -198,8 +196,8 @@
 struct JSScope {
     JSObjectMap     map;                /* base class state */
     JSObject        *object;            /* object that owns this scope */
+    uint16          flags;              /* flags, see below */
     int16           hashShift;          /* multiplicative hash shift */
-    int16           sizeLog2;           /* log2(table size) */
     uint32          entryCount;         /* number of entries in table */
     uint32          removedCount;       /* removed entry sentinels in table */
     JSScopeProperty **table;            /* table of ptrs to shared tree nodes */
@@ -220,28 +218,23 @@ struct JSScope {
 
 #define OBJ_SCOPE(obj)                  ((JSScope *)(obj)->map)
 
-#define SCOPE_MIDDLE_DELETE_TAG         ((jsuword)1) 
-#define SCOPE_LAST_PROP_WORD(scope)     ((jsuword)(scope)->lastProp)
+/* By definition, hashShift = JS_DHASH_BITS - log2(capacity). */
+#define SCOPE_CAPACITY(scope)           JS_BIT(JS_DHASH_BITS-(scope)->hashShift)
 
-#define SCOPE_LAST_PROP(scope)                                                \
-    ((JSScopeProperty *) (SCOPE_LAST_PROP_WORD(scope) &                       \
-                          ~SCOPE_MIDDLE_DELETE_TAG))
+/* Scope flags and some macros to hide them from other files than jsscope.c. */
+#define SCOPE_MIDDLE_DELETE             0x0001
 
-#define SCOPE_HAD_MIDDLE_DELETE(scope)                                        \
-    (SCOPE_LAST_PROP_WORD(scope) & SCOPE_MIDDLE_DELETE_TAG)
+#define SCOPE_HAD_MIDDLE_DELETE(scope)  ((scope)->flags & SCOPE_MIDDLE_DELETE)
+#define SCOPE_SET_MIDDLE_DELETE(scope)  ((scope)->flags |= SCOPE_MIDDLE_DELETE)
+#define SCOPE_CLR_MIDDLE_DELETE(scope)  ((scope)->flags &= ~SCOPE_MIDDLE_DELETE)
 
-#define SCOPE_SET_LAST_PROP(scope, sprop)                                     \
-    ((scope)->lastProp = (JSScopeProperty *)                                  \
-                         ((jsuword) (sprop) |                                 \
-                          SCOPE_HAD_MIDDLE_DELETE(scope)))
-
-#define SCOPE_REMOVE_LAST_PROP(scope)                                         \
-    SCOPE_SET_LAST_PROP(scope, SCOPE_LAST_PROP(scope)->parent)
-
-#define SCOPE_SET_MIDDLE_DELETE(scope)                                        \
-    ((scope)->lastProp = (JSScopeProperty *)                                  \
-                         (SCOPE_LAST_PROP_WORD(scope) |                       \
-                          SCOPE_MIDDLE_DELETE_TAG))
+/*
+ * A little information hiding for scope->lastProp, in case it ever becomes
+ * a tagged pointer again.
+ */
+#define SCOPE_LAST_PROP(scope)          ((scope)->lastProp)
+#define SCOPE_REMOVE_LAST_PROP(scope)   ((scope)->lastProp =                  \
+                                         (scope)->lastProp->parent)
 
 struct JSScopeProperty {
     jsid            id;                 /* int-tagged jsval/untagged JSAtom* */
