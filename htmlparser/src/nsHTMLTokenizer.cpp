@@ -550,7 +550,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
           nsAutoString endTag; endTag.AssignWithConversion(nsHTMLTags::GetStringValue(theTag));
           endTag.InsertWithConversion("</",0,2);
-          CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag);
+          CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,eHTMLTag_text);
           result=((CTextToken*)textToken)->ConsumeUntil(0,PRBool(theTag!=eHTMLTag_script),aScanner,endTag,mParseMode,aFlushTokens);  //tell new token to finish consuming text...    
           //endTag.Append(">");
           CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);

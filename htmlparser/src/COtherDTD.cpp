@@ -21,7 +21,7 @@
  */          
     
 //#define ENABLE_CRC      
-//#define RICKG_DEBUG    
+//#define RICKG_DEBUG     
  
       
 #include "nsDebug.h"  
@@ -368,10 +368,10 @@ PRBool COtherDTD::Verify(nsString& aURLRef,nsIParser* aParser){
   if(mDTDDebug) {
     // mDTDDebug->Verify(this,aParser,mBodyContext->GetCount(),mBodyContext->mStack,aURLRef);
   }
-  return result;
+  return result; 
 }
 
-/**
+/** 
  * This method is called to determine if the given DTD can parse
  * a document in a given source-type. 
  * NOTE: Parsing always assumes that the end result will involve
@@ -538,7 +538,8 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
           while(theIndex>0) {             
             eHTMLTags theParent= mBodyContext->TagAt(--theIndex);
             CElement *theElement=gElementTable->mElements[theParent];
-            theElement->HandleEndToken(0,theChild,mBodyContext,mSink);
+            nsIParserNode *theNode=mBodyContext->PeekNode();
+            theElement->HandleEndToken(theNode,theChild,mBodyContext,mSink);
             theChild=theParent;
           }
 
@@ -761,9 +762,9 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
       mLineNumber += aToken->mNewlineCount;
 
       PRBool theTagWasHandled=PR_FALSE; 
-
-      switch(theChildTag) {    
-     
+ 
+      switch(theChildTag) {     
+      
         case eHTMLTag_html: 
           if(!HasOpenContainer(theChildTag)) { 
             mSink->OpenHTML(*theNode);
@@ -819,8 +820,8 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
  
     case eHTMLTag_body: //we intentionally don't let the user close HTML or BODY
     case eHTMLTag_html:  
-      break;  
-       
+      break;   
+        
     case eHTMLTag_script:    
       mHasOpenScript=PR_FALSE;      
      

@@ -1423,7 +1423,6 @@ public:
    **********************************************************/
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
 
-    nsEntryStack* theStack=0;
     nsresult      result=NS_OK;
 
     switch(aTag) {
@@ -2290,6 +2289,8 @@ nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDConte
   }
 
 
+/* This junk is intentionally commented out...
+
   PRInt32 theLastOptionalTag=-1;
   PRBool   done=PR_FALSE;
 
@@ -2318,7 +2319,7 @@ nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDConte
     }
     //there's nothing to do...
   }
-
+*/
   return result;
 }
 
