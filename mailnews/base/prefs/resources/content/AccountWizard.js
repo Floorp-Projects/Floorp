@@ -27,7 +27,7 @@ var wizardMap = {
     done:     { previous: "accname" }
 }
 
-var pagePrefix="aw-";
+var pagePrefix="chrome://messenger/content/aw-";
 var pagePostfix=".xul";
 
 var currentPageTag;

@@ -11,7 +11,7 @@
         align="vertical"
         onload="onLoad(event);">
 
-    <html:script src="AccountManager.js"/>
+    <html:script src="chrome://messenger/content/AccountManager.js"/>
 
 	<keyset id="keyset"/>
 

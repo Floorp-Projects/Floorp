@@ -27,7 +27,7 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     align="vertical"
     onload="parent.wizardPageLoaded('done');">
-  <html:script src="aw-done.js"/>
+  <html:script src="chrome://messenger/content/aw-done.js"/>
   <box class="title" align="horizontal">
     <html:div class="title">&completionTitle.label;</html:div>
     <spring flex="100%"/>

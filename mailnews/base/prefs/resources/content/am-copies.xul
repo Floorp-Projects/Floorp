@@ -5,7 +5,7 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       align="vertical">
-<html:script src="am-copies.js"/>
+<html:script src="chrome://messenger/content/am-copies.js"/>
 <html:input type="hidden" name="identity.fccFolder" id="identity.fccFolder"/>
 <html:input type="hidden" name="identity.draftFolder" id="identity.draftFolder"/>
 <html:input type="hidden" name="identity.stationaryFolder" id="identity.stationaryFolder"/>

@@ -30,10 +30,10 @@ Rights Reserved.
     height="350" width="450"
     onload="onLoad();">
 
-<html:script language="JavaScript" src="AccountWizard.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/AccountWizard.js"/>
 <box align="vertical" flex="100%">
   <html:iframe flex="100%" style="width: 100%; height:100%; border: none"
-               src="aw-accounttype.xul"
+               src="chrome://messenger/content/aw-accounttype.xul"
                name="wizardContents" scrolling="auto"/>
   <html:div>
     &instructions.label;
