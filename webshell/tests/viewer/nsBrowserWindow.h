@@ -22,6 +22,10 @@
 #ifndef nsBrowserWindow_h___
 #define nsBrowserWindow_h___
 
+// Local Includes
+#include "nsWebBrowserChrome.h"
+
+
 #include "nsIBrowserWindow.h"
 #include "nsIStreamListener.h"
 #include "nsIProgressEventSink.h"
@@ -66,6 +70,8 @@ class nsBrowserWindow : public nsIBrowserWindow,
                         public nsIWebShellContainer,
                         public nsIPrompt
 {
+friend class nsWebBrowserChrome;
+
 public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -285,9 +291,12 @@ public:
 
 protected:
   nsIDOMDocument* GetDOMDocument(nsIDocShell *aDocShell);
+  NS_IMETHOD EnsureWebBrowserChrome();
 
   nsBrowserWindow();
   virtual ~nsBrowserWindow();
+
+  nsWebBrowserChrome*   mWebBrowserChrome;
 };
 
 // XXX This is bad; because we can't hang a closure off of the event
