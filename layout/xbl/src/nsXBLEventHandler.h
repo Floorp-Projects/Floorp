@@ -127,7 +127,7 @@ protected:
 
 protected:
   nsIDOMEventReceiver* mEventReceiver; // Both of these refs are weak.
-  nsIXBLPrototypeHandler* mProtoHandler;
+  nsCOMPtr<nsIXBLPrototypeHandler> mProtoHandler;
 
   nsAutoString mEventName;
 
