@@ -83,18 +83,18 @@ include $(topsrcdir)/config/rules.mk
 $(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-mozbrowser:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+phoenix:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
 		-e "s|%MREDIR%|$(mredir)|" \
 		-e "s|mozilla-bin|$(PROGRAM)|g" > $@
 	chmod +x $@
 
-libs:: mozbrowser
+libs:: phoenix
 	$(INSTALL) $< $(DIST)/bin
 	
-install:: mozbrowser
+install:: phoenix
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
-GARBAGE += mozbrowser
+GARBAGE += phoenix
 
 endif
