@@ -196,6 +196,7 @@ static NSArray* sToolbarDefaults = nil;
 - (void)dealloc
 {
   [fImage release];
+  [super dealloc];
 }
 
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
@@ -368,6 +369,8 @@ static NSArray* sToolbarDefaults = nil;
   // ensure that the browser is visible when we close.
   [self ensureBrowserVisible:self];
   
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
+
   // autorelease just in case we're here because of a window closing
   // initiated from gecko, in which case this BWC would still be on the 
   // stack and may need to stay alive until it unwinds. We've already
@@ -462,10 +465,13 @@ static NSArray* sToolbarDefaults = nil;
       // However, unlike the progress meter, this doesn't need to be in a subview from
       // the status bar because it is in a fixed position on the LHS.
       [mPopupBlocked retain];
+      NSFont* savedFont = [[mPopupBlocked cell] font];
       NSMenu* savedMenu = [mPopupBlocked menu];     // must cache this before replacing cell
       IconPopUpCell* iconCell = [[[IconPopUpCell alloc] initWithImage:[NSImage imageNamed:@"popup-blocked"]] autorelease];
       [mPopupBlocked setCell:iconCell];
-      //[iconCell setPreferredEdge:NSMinYEdge];
+      [iconCell setFont:savedFont];
+      [mPopupBlocked setToolTip:NSLocalizedString(@"A web popup was blocked", "Web Popup Toolitp")]; 
+//      [iconCell setPreferredEdge:NSMaxYEdge];
       [iconCell setMenu:savedMenu];
       [iconCell setBordered:NO];
       mPopupBlockSuperview = [mPopupBlocked superview];
@@ -474,7 +480,7 @@ static NSArray* sToolbarDefaults = nil;
       // register for notifications so we can populate the popup blocker menu
       // right before it's displayed.
       [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(buildPopupBlockerMenu:)
-                                              name:NSPopUpButtonCellWillPopUpNotification object:nil];
+                                              name:NSPopUpButtonCellWillPopUpNotification object:iconCell];
     }
 
     // Set up the toolbar's search text field
@@ -2321,7 +2327,6 @@ static NSArray* sToolbarDefaults = nil;
   NSPopUpButton* popup = [notifier object];
   
   // clear out existing menu. loop until we hit our special tag
-  NSMenu* menu = [popup menu];
   int numItemsToDelete = [popup indexOfItemWithTag:kSeparatorTag];
   for ( int i = 0; i < numItemsToDelete; ++i ) 
     [popup removeItemAtIndex:0];
