@@ -263,6 +263,6 @@ nsPasswordManager::FindPasswordEntry
 
 NS_IMETHODIMP nsPasswordManager::AddReject(const nsACString& host)
 {
-  return ::SINGSIGN_AddReject(host);
+  return ::SINGSIGN_AddReject(host.get());
 }
 
