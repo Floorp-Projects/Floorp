@@ -71,16 +71,7 @@
 static PRLock *_pr_rename_lock = NULL;
 static PRMonitor *_pr_Xfe_mon = NULL;
 
-/*
- * Variables used by the GC code, initialized in _MD_InitSegs().
- * _pr_zero_fd should be a static variable.  Unfortunately, there is
- * still some Unix-specific code left in function PR_GrowSegment()
- * in file memory/prseg.c that references it, so it needs
- * to be a global variable for now.
- */
-PRInt32 _pr_zero_fd = -1;
 static PRInt64 minus_one;
-static PRLock *_pr_md_lock = NULL;
 
 sigset_t timer_set;
 
@@ -2827,6 +2818,14 @@ void _PR_UnixInit(void)
     _PR_InitIOV();  /* one last hack */
 }
 
+#if !defined(_PR_PTHREADS)
+
+/*
+ * Variables used by the GC code, initialized in _MD_InitSegs().
+ */
+static PRInt32 _pr_zero_fd = -1;
+static PRLock *_pr_md_lock = NULL;
+
 /*
  * _MD_InitSegs --
  *
@@ -2846,6 +2845,8 @@ void _MD_InitSegs(void)
     }
 #endif
     _pr_zero_fd = open("/dev/zero",O_RDWR , 0);
+    /* Prevent the fd from being inherited by child processes */
+    fcntl(_pr_zero_fd, F_SETFD, FD_CLOEXEC);
     _pr_md_lock = PR_NewLock();
 }
 
@@ -2904,6 +2905,8 @@ void _MD_FreeSegment(PRSegment *seg)
     else
         PR_DELETE(seg->vaddr);
 }
+
+#endif /* _PR_PTHREADS */
 
 /*
  *-----------------------------------------------------------------------

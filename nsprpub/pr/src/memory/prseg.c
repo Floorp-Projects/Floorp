@@ -18,6 +18,17 @@
 
 #include "primpl.h"
 
+#if defined(_PR_PTHREADS)
+
+/*
+** The pthreads version doesn't use these functions.
+*/
+void _PR_InitSegs(void)
+{
+}
+
+#else /* _PR_PTHREADS */
+
 void _PR_InitSegs(void)
 {
 	_PR_MD_INIT_SEGS();
@@ -59,3 +70,5 @@ void _PR_DestroySegment(PRSegment *seg)
 	_PR_MD_FREE_SEGMENT(seg);
     PR_DELETE(seg);
 }
+
+#endif /* _PR_PTHREADS */
