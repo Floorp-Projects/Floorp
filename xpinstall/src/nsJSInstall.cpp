@@ -47,7 +47,8 @@ enum Install_slots
   INSTALL_JARFILE         = -4,
   INSTALL_FORCE           = -5,
   INSTALL_ARGUMENTS       = -6,
-  INSTALL_URL             = -7
+  INSTALL_URL             = -7,
+  INSTALL_INSTALL         = -8
 };
 
 /***********************************************************************/
@@ -122,6 +123,10 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
+
+      case INSTALL_INSTALL:
+          *vp = OBJECT_TO_JSVAL(obj);
+          break;
         
       default:
         return JS_TRUE;
@@ -2378,6 +2383,7 @@ static JSPropertySpec InstallProperties[] =
   {"jarfile",           INSTALL_JARFILE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"arguments",         INSTALL_ARGUMENTS,          JSPROP_ENUMERATE | JSPROP_READONLY},
   {"url",               INSTALL_URL,                JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"Install",           INSTALL_INSTALL,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -2483,7 +2489,7 @@ static JSFunctionSpec InstallMethods[] =
 
 
 
-PRInt32 InitXPInstallObjects(JSContext *jscontext, 
+JSObject * InitXPInstallObjects(JSContext *jscontext, 
                              JSObject *global, 
                              const char* jarfile, 
                              const PRUnichar* url,
@@ -2491,6 +2497,14 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext,
 {
   JSObject *installObject       = nsnull;
   nsInstall *nativeInstallObject;
+
+
+    if (global == nsnull)
+    {
+        //we are the global
+        // new global object
+        global = JS_NewObject(jscontext, &InstallClass, nsnull, nsnull);
+    }
 
   installObject  = JS_InitClass( jscontext,         // context
                                  global,            // global object
@@ -2505,11 +2519,11 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext,
 
   if (nsnull == installObject) 
   {
-      return NS_ERROR_FAILURE;
+      return nsnull;
   }
 
   if ( PR_FALSE == JS_DefineConstDoubles(jscontext, installObject, install_constants) )
-            return NS_ERROR_FAILURE;
+            return nsnull;
   
   nativeInstallObject = new nsInstall();
 
@@ -2526,16 +2540,16 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext,
 
   if(NS_OK != InitWinRegPrototype(jscontext, global, &winRegPrototype))
   {
-      return NS_ERROR_FAILURE;
+      return nsnull;
   }
   nativeInstallObject->SaveWinRegPrototype(winRegPrototype);
 
   if(NS_OK != InitWinProfilePrototype(jscontext, global, &winRegPrototype))
   {
-      return NS_ERROR_FAILURE;
+      return nsnull;
   }
   nativeInstallObject->SaveWinProfilePrototype(winProfilePrototype);
 #endif
  
-  return NS_OK;
+  return installObject;
 }
