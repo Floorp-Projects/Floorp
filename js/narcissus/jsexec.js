@@ -709,7 +709,7 @@ function execute(n, x) {
 
       case IDENTIFIER:
         for (s = x.scope; s; s = s.parent) {
-            if (s.object.hasOwnProperty(n.value))
+            if (n.value in s.object)
                 break;
         }
         v = new Reference(s && s.object, n.value, n);
