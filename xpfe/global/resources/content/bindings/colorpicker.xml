@@ -134,7 +134,6 @@
 
       <method name="resetHover">
         <body><![CDATA[
-          dump("go!\n");
           if (this.mHoverCell)
             this.mHoverCell.removeAttribute("hover");
         ]]></body>
