@@ -597,6 +597,12 @@ Local_SACopy(char **destination, const char *source) {
   return *destination;
 }
 
+/* remove terminating CRs or LFs */
+static void
+si_StripLF(nsAutoString buffer) {
+  buffer.Trim("\n\r", PR_FALSE, PR_TRUE, PR_FALSE);
+}
+
 #ifdef WALLET_PASSWORDMANAGER_DEFAULT_IS_OFF
 /* If user-entered password is "********", then generate a random password */
 static void
@@ -669,8 +675,8 @@ public:
   {
     MOZ_COUNT_DTOR(si_SignonDataStruct);
   }
-  nsString name;
-  nsString value;
+  nsAutoString name;
+  nsAutoString value;
   PRBool isPassword;
 };
 
@@ -723,12 +729,12 @@ public:
     MOZ_COUNT_DTOR(si_Reject);
   }
   char * passwordRealm;
-  nsString userName;
+  nsAutoString userName;
 };
 
 //typedef struct _SignonDataStruct {
-//  nsString name;
-//  nsString value;
+//  nsAutoString name;
+//  nsAutoString value;
 //  PRBool isPassword;
 //} si_SignonDataStruct;
 
@@ -745,7 +751,7 @@ public:
 
 //typedef struct _RejectStruct {
 //  char * passwordRealm;
-//  nsString userName;
+//  nsAutoString userName;
 //} si_Reject;
 
 static nsVoidArray * si_signon_list=0;
@@ -1004,13 +1010,13 @@ si_RemoveUser(const char *passwordRealm, const nsString& userName, PRBool save, 
 
 nsresult
 SINGSIGN_RemoveUser(const char *host, const PRUnichar *user, PRBool notify) {
-  PRBool rv = si_RemoveUser(host, nsDependentString(user), PR_TRUE, PR_FALSE, notify);
+  PRBool rv = si_RemoveUser(host, nsAutoString(user), PR_TRUE, PR_FALSE, notify);
   return rv ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
 SINGSIGN_RemoveUserAfterLoginFailure(const char *host, const PRUnichar *user, PRBool notify) {
-  PRBool rv = si_RemoveUser(host, nsDependentString(user), PR_TRUE, PR_TRUE, notify);
+  PRBool rv = si_RemoveUser(host, nsAutoString(user), PR_TRUE, PR_TRUE, notify);
   return rv ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -1407,7 +1413,7 @@ void
 SI_RemoveAllSignonData() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, EmptyString(), PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE)) {
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
@@ -1432,7 +1438,7 @@ void
 SI_DeleteAll() {
   if (si_PartiallyLoaded) {
     /* repeatedly remove first user node of first URL node */
-    while (si_RemoveUser(NULL, EmptyString(), PR_FALSE, PR_FALSE, PR_TRUE, PR_TRUE)) {
+    while (si_RemoveUser(NULL, nsAutoString(), PR_FALSE, PR_FALSE, PR_TRUE, PR_TRUE)) {
     }
   }
   si_PartiallyLoaded = PR_FALSE;
@@ -1936,6 +1942,7 @@ SI_LoadSignonData() {
     if (!buffer.IsEmpty() && buffer.CharAt(0) == '.') {
       break; /* end of reject list */
     }
+    si_StripLF(buffer);
     passwordRealm = ToNewCString(buffer);
     si_PutReject(passwordRealm, buffer, PR_FALSE); /* middle parameter is obsolete */
     Recycle (passwordRealm);
@@ -1943,6 +1950,7 @@ SI_LoadSignonData() {
 
   /* read the URL line */
   while (NS_SUCCEEDED(si_ReadLine(strm, buffer))) {
+    si_StripLF(buffer);
     /* a blank line is perfectly valid here -- corresponds to a local file */
     passwordRealm = ToNewCString(buffer);
     if (!passwordRealm) {
@@ -1966,6 +1974,7 @@ SI_LoadSignonData() {
 
       /* save the name part and determine if it is a password */
       PRBool ret;
+      si_StripLF(buffer);
       nsAutoString name;
       nsAutoString value;
       PRBool isPassword;
@@ -1985,6 +1994,7 @@ SI_LoadSignonData() {
         badInput = PR_TRUE;
         break;
       }
+      si_StripLF(buffer);
       value = buffer;
 
       data = new si_SignonDataStruct;
@@ -2572,7 +2582,7 @@ PRBool
 SINGSIGN_StorePassword(const char *passwordRealm, const PRUnichar *user, const PRUnichar *password)
 {
 //  Wallet_GiveCaveat(nsnull, dialog); ??? what value to use for dialog?
-  si_RememberSignonDataFromBrowser(passwordRealm, nsDependentString(user), nsDependentString(password));
+  si_RememberSignonDataFromBrowser(passwordRealm, nsAutoString(user), nsAutoString(password));
   return PR_TRUE;
 }
 
@@ -2696,7 +2706,7 @@ SINGSIGN_PromptUsernameAndPassword
   }
   if (checked) {
     Wallet_GiveCaveat(nsnull, dialog);
-    si_RememberSignonDataFromBrowser (passwordRealm, nsDependentString(*user), nsDependentString(*pwd));
+    si_RememberSignonDataFromBrowser (passwordRealm, nsAutoString(*user), nsAutoString(*pwd));
   } else if (remembered) {
     /* a login was remembered but user unchecked the box; we forget the remembered login */
     si_RemoveUser(passwordRealm, username, PR_TRUE, PR_FALSE, PR_TRUE);  
@@ -2753,7 +2763,7 @@ SINGSIGN_PromptPassword
   }
   if (checked) {
     Wallet_GiveCaveat(nsnull, dialog);
-    si_RememberSignonDataFromBrowser(passwordRealm, username, nsDependentString(*pwd));
+    si_RememberSignonDataFromBrowser(passwordRealm, username, nsAutoString(*pwd));
   }
 
   /* cleanup and return */
@@ -2807,7 +2817,7 @@ SINGSIGN_Prompt
   }
   if (checked) {
     Wallet_GiveCaveat(nsnull, dialog);
-    si_RememberSignonDataFromBrowser(passwordRealm, emptyUsername, nsDependentString(*resultText));
+    si_RememberSignonDataFromBrowser(passwordRealm, emptyUsername, nsAutoString(*resultText));
   }
 
   /* cleanup and return */
@@ -3223,7 +3233,7 @@ si_LoadSignonDataFromKeychain() {
 
     } else {
       /* reject */
-      si_PutReject(passwordRealm, nsDependentString(buffer), PR_FALSE);
+      si_PutReject(passwordRealm, nsAutoString(buffer), PR_FALSE);
     }
     reject = PR_FALSE; /* reset reject flag */
     PR_Free(passwordRealm);
