@@ -39,7 +39,7 @@
 #include "nsIBoxObject.idl"
 
 interface nsIDOMElement;
-
+interface nsIDOMKeyEvent;
 
 [scriptable, uuid(F5099746-5049-4e81-A03E-945D5110FEE2)]
 interface nsIMenuBoxObject : nsISupports
@@ -47,6 +47,8 @@ interface nsIMenuBoxObject : nsISupports
   void openMenu(in boolean openFlag);
 
   attribute nsIDOMElement activeChild;
+
+  boolean handleKeyPress(in nsIDOMKeyEvent keyEvent);
 };
 
 %{C++

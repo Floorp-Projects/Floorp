@@ -376,16 +376,9 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
   if (aEvent->message == NS_KEY_PRESS && !IsDisabled()) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
     PRUint32 keyCode = keyEvent->keyCode;
-    if ((keyCode == NS_VK_F4 && !mMenuParent) && IsOpen() &&
-      !keyEvent->isAlt && !keyEvent->isShift && !keyEvent->isControl) 
-      OpenMenu(PR_FALSE); // Close menu on unmodified F4
-    else if (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN || 
-       (keyCode == NS_VK_F4 && !keyEvent->isAlt && !keyEvent->isShift && 
-       !keyEvent->isControl && !mMenuParent)) 
-      // Plain or modified down or up arrow will open any menu
-      // Unmodified F4 will open <menulist> as well
-      if (!IsOpen())
-        OpenMenu(PR_TRUE);
+    if ((keyCode == NS_VK_F4 && !keyEvent->isAlt) ||
+        ((keyCode == NS_VK_UP || keyCode == NS_VK_DOWN) && keyEvent->isAlt))
+      OpenMenu(!IsOpen()); // Toggle menulist on unmodified F4 or Alt arrow
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsDisabled() && IsMenu() ) {
     PRBool isMenuBar = PR_FALSE;

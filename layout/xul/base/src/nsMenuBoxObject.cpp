@@ -35,12 +35,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsCOMPtr.h"
+#include "nsISupportsUtils.h"
 #include "nsIMenuBoxObject.h"
 #include "nsBoxObject.h"
 #include "nsIPresShell.h"
 #include "nsIMenuFrame.h"
 #include "nsIFrame.h"
+#include "nsGUIEvent.h"
 
 class nsMenuBoxObject : public nsIMenuBoxObject, public nsBoxObject
 {
@@ -89,7 +90,8 @@ NS_IMETHODIMP nsMenuBoxObject::OpenMenu(PRBool aOpenFlag)
   if (!frame)
     return NS_OK;
 
-  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(frame));
+  nsIMenuFrame* menuFrame;
+  CallQueryInterface(frame, &menuFrame);
   if (!menuFrame)
     return NS_OK;
 
@@ -102,7 +104,8 @@ NS_IMETHODIMP nsMenuBoxObject::GetActiveChild(nsIDOMElement** aResult)
   if (!frame)
     return NS_OK;
 
-  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(frame));
+  nsIMenuFrame* menuFrame;
+  CallQueryInterface(frame, &menuFrame);
   if (!menuFrame)
     return NS_OK;
 
@@ -115,11 +118,44 @@ NS_IMETHODIMP nsMenuBoxObject::SetActiveChild(nsIDOMElement* aResult)
   if (!frame)
     return NS_OK;
 
-  nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(frame));
+  nsIMenuFrame* menuFrame;
+  CallQueryInterface(frame, &menuFrame);
   if (!menuFrame)
     return NS_OK;
 
   return menuFrame->SetActiveChild(aResult);
+}
+
+/* boolean handleKeyPress (in nsIDOMKeyEvent keyEvent); */
+NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, PRBool* aHandledFlag)
+{
+  *aHandledFlag = PR_FALSE;
+  NS_ENSURE_ARG(aKeyEvent);
+
+  nsIFrame* frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  nsIMenuFrame* menuFrame;
+  CallQueryInterface(frame, &menuFrame);
+  if (!menuFrame)
+    return NS_OK;
+
+  PRUint32 keyCode;
+  aKeyEvent->GetKeyCode(&keyCode);
+  switch (keyCode) {
+    case NS_VK_UP:
+    case NS_VK_DOWN:
+    case NS_VK_HOME:
+    case NS_VK_END:
+      PRBool altKey;
+      aKeyEvent->GetAltKey(&altKey);
+      if (altKey)
+        return NS_OK;
+      return menuFrame->KeyboardNavigation(keyCode, *aHandledFlag);
+    default:
+      return menuFrame->ShortcutNavigation(aKeyEvent, *aHandledFlag);
+  }
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
