@@ -181,7 +181,10 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
 
   DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray);
 
-  mTwipsToPixels = (float)alArray [CAPS_VERTICAL_RESOLUTION] / (float)NS_METERS_TO_TWIPS (1);
+// This change breaks opening and closing of sidebar
+//  mTwipsToPixels = (float)alArray [CAPS_VERTICAL_RESOLUTION] / (float)NS_METERS_TO_TWIPS (1);
+  mTwipsToPixels = ((float)alArray[CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
+
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   mDepth = alArray[CAPS_COLOR_BITCOUNT];
