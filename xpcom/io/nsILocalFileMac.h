@@ -30,7 +30,7 @@
 #include "nsISupports.h"
 
 #include <Files.h>
-
+#include <Processes.h>
 
 #define NS_ILOCALFILEMAC_IID_STR "614c3010-1dd2-11b2-be04-bcd57a64ffc9"
 
@@ -45,6 +45,9 @@ typedef enum {
 	eInitWithFSSpec
 } nsLocalFileMacInitType;
 
+
+class nsILocalFile;
+
 class nsILocalFileMac : public nsISupports
 {
 public: 
@@ -57,6 +60,11 @@ public:
 	// Since the OS native way to represent a file on the Mac is an FSSpec
 	// we provide a way to initialize an nsLocalFile with one
 	NS_IMETHOD InitWithFSSpec(const FSSpec *fileSpec) = 0;
+
+  // Init this filespec to point to an application which is sought by
+  // creator code. If this app is missing, this will fail. It will first
+  // look for running application with the given creator.
+	NS_IMETHOD InitFindingAppByCreatorCode(OSType aAppCreator) = 0;
 
 	// In case we need to get the FSSpecs at the heart of an nsLocalFileMac
 	NS_IMETHOD GetFSSpec(FSSpec *fileSpec) = 0;			// The one we were inited with
@@ -78,6 +86,16 @@ public:
 	// method that will return the combined size of both forks rather than just the
 	// size of the data fork as returned by GetFileSize()
 	NS_IMETHOD GetFileSizeWithResFork(PRInt64 *aFileSize) = 0;
+	
+	// Launch the application that this file points to, optionally with a document.
+	// If aDocToLoad == NULL, the application is launched without a doc.
+	NS_IMETHOD LaunchAppWithDoc(nsILocalFile* aDocToLoad, PRBool aLaunchInBackground)=0;
+
+	// Open the document that this file points to with the given application.
+	// If aAppToOpenWith is nil, then we look at the creator code of the document,
+	// then find an app with that signature to open with.
+	NS_IMETHOD OpenDocWithApp(nsILocalFile* aAppToOpenWith, PRBool aLaunchInBackground)=0;
+	
 };
 
 #endif

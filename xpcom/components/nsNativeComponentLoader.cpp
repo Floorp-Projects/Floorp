@@ -33,7 +33,7 @@
 #ifdef  XP_MAC  // sdagley dougt fix
 #include <Files.h>
 #include <Errors.h>
-#include "nsLocalFileMac.h"
+#include "nsILocalFileMac.h"
 #endif
 
 #define PRINT_CRITICAL_ERROR_TO_SCREEN 1
