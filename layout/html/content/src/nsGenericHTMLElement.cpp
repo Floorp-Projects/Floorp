@@ -1154,6 +1154,7 @@ nsGenericHTMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
                                      PRUint32 aFlags,
                                      nsEventStatus& aEventStatus)
 {
+  aEventStatus = nsEventStatus_eIgnore;
   nsresult ret = NS_OK;
   
   nsIDOMEvent* domEvent = nsnull;
@@ -1174,7 +1175,7 @@ nsGenericHTMLElement::HandleDOMEvent(nsIPresContext& aPresContext,
   }
 
   //Bubbling stage
-  if (DOM_EVENT_CAPTURE != aFlags && mParent != nsnull) {
+  if ((DOM_EVENT_CAPTURE != aFlags) && (mParent != nsnull)) {
     ret = mParent->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                   DOM_EVENT_BUBBLE, aEventStatus);
   }
