@@ -42,7 +42,7 @@ class nsIEventListenerManager;
 class nsIDOMEventReceiver : public nsIDOMEventTarget {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMEVENTRECEIVER_IID; return iid; }
+   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENTRECEIVER_IID)
 
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
   NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;

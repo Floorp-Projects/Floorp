@@ -31,6 +31,7 @@
  */
 class nsIDOMPaintListener : public nsIDOMEventListener {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMPAINTLISTENER_IID)
   /**
   * Processes a paint event
   * @param aEvent @see nsIDOMEvent.h 

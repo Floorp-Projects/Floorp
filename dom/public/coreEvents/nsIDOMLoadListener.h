@@ -35,7 +35,7 @@
 class nsIDOMLoadListener : public nsIDOMEventListener {
 
 public:
-
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMLOADLISTENER_IID)
   /**
   * Processes a page or image load event
   * @param aMouseEvent @see nsIDOMEvent.h 

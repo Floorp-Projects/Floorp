@@ -36,7 +36,7 @@ class nsIDOMFocusListener : public nsIDOMEventListener {
 
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMFOCUSLISTENER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMFOCUSLISTENER_IID)
 
   /**
   * Processes a focus event
