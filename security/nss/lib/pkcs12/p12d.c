@@ -2337,7 +2337,7 @@ sec_pkcs12_add_cert(sec_PKCS12SafeBag *cert, PRBool keyExists, void *wincx)
 	                                  derCert, NULL, PR_FALSE, PR_FALSE);
 	if(!newCert) {
 	     if(nickName) SECITEM_ZfreeItem(nickName, PR_TRUE);
-	     cert->error = SEC_ERROR_NO_MEMORY;
+	     cert->error = PORT_GetError();
 	     cert->problem = PR_TRUE;
 	     return SECFailure;
 	}

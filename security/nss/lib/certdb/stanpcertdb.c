@@ -140,6 +140,8 @@ CERT_ChangeCertTrust(CERTCertDBHandle *handle, CERTCertificate *cert,
     return rv;
 }
 
+extern const NSSError NSS_ERROR_INVALID_CERTIFICATE;
+
 SECStatus
 __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
 		       CERTCertTrust *trust)
@@ -183,6 +185,9 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
                                               PR_TRUE);
     PK11_FreeSlot(slot);
     if (!permInstance) {
+	if (NSS_GetError() == NSS_ERROR_INVALID_CERTIFICATE) {
+	    PORT_SetError(SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
+	}
 	return SECFailure;
     }
     nssPKIObject_AddInstance(&c->object, permInstance);
@@ -230,6 +235,16 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
 	    /* Then, see if it is already a perm cert */
 	    c = NSSTrustDomain_FindCertificateByEncodedCertificate(handle, 
 	                                                           &encoding);
+	    /* actually, that search ends up going by issuer/serial,
+	     * so it is still possible to return a cert with the same
+	     * issuer/serial but a different encoding, and we're
+	     * going to reject that
+	     */
+	    if (c && !nssItem_Equal(&c->encoding, &encoding, NULL)) {
+		nssCertificate_Destroy(c);
+		PORT_SetError(SEC_ERROR_REUSED_ISSUER_AND_SERIAL);
+		return NULL;
+	    }
 	}
 	if (c) {
 	    return STAN_GetCERTCertificate(c);

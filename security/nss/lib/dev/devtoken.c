@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.31 $ $Date: 2002/10/10 21:17:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.32 $ $Date: 2002/11/21 20:43:05 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -537,6 +537,8 @@ find_objects_by_template
     return objects;
 }
 
+extern const NSSError NSS_ERROR_INVALID_CERTIFICATE;
+
 NSS_IMPLEMENT nssCryptokiObject *
 nssToken_ImportCertificate
 (
@@ -553,6 +555,7 @@ nssToken_ImportCertificate
   PRBool asTokenObject
 )
 {
+    PRStatus status;
     CK_CERTIFICATE_TYPE cert_type;
     CK_ATTRIBUTE_PTR attr;
     CK_ATTRIBUTE cert_tmpl[10];
@@ -593,10 +596,36 @@ nssToken_ImportCertificate
                                                                searchType,
                                                                NULL);
     if (rvObject) {
+	NSSItem existingDER;
 	NSSSlot *slot = nssToken_GetSlot(tok);
 	nssSession *session = nssSlot_CreateSession(slot, NULL, PR_TRUE);
 	if (!session) {
 	    nssCryptokiObject_Destroy(rvObject);
+	    nssSlot_Destroy(slot);
+	    return (nssCryptokiObject *)NULL;
+	}
+	/* Reject any attempt to import a new cert that has the same
+	 * issuer/serial as an existing cert, but does not have the
+	 * same encoding
+	 */
+	NSS_CK_TEMPLATE_START(cert_tmpl, attr, ctsize);
+	NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_VALUE);
+	NSS_CK_TEMPLATE_FINISH(cert_tmpl, attr, ctsize);
+	status = nssCKObject_GetAttributes(rvObject->handle, 
+	                                   cert_tmpl, ctsize, NULL,
+	                                   session, slot);
+	NSS_CK_ATTRIBUTE_TO_ITEM(cert_tmpl, &existingDER);
+	if (status == PR_SUCCESS) {
+	    if (!nssItem_Equal(encoding, &existingDER, NULL)) {
+		nss_SetError(NSS_ERROR_INVALID_CERTIFICATE);
+		status = PR_FAILURE;
+	    }
+	    nss_ZFreeIf(existingDER.data);
+	}
+	if (status == PR_FAILURE) {
+	    nssCryptokiObject_Destroy(rvObject);
+	    nssSession_Destroy(session);
+	    nssSlot_Destroy(slot);
 	    return (nssCryptokiObject *)NULL;
 	}
 	/* according to PKCS#11, label, ID, issuer, and serial number 
