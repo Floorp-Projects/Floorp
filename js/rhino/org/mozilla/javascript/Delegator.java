@@ -16,8 +16,8 @@
  * Copyright (C) 2000 Matthias Radestock. All Rights Reserved.
  *
  * Contributor(s):
- * 	Redfig Ltd (http://www.redfig.com)
- *	LShift Ltd (http://www.lshift.net)
+ *      Redfig Ltd (http://www.redfig.com)
+ *      LShift Ltd (http://www.lshift.net)
  *
  * Alternatively, the contents of this file may be used under the terms
  * of the GNU Public License (the  "GPL License"), in which case the
@@ -73,7 +73,7 @@ public class Delegator implements Function {
      * @see org.mozilla.javascript.Scriptable
      */
     public Delegator(Scriptable obj) {
-	this.obj = obj;
+        this.obj = obj;
     }
 
     /**
@@ -82,7 +82,7 @@ public class Delegator implements Function {
      * @return the delegee
      */
     public Scriptable getDelegee() {
-	return obj;
+        return obj;
     }
     /**
      * Set the delegee.
@@ -91,91 +91,91 @@ public class Delegator implements Function {
      * @see org.mozilla.javascript.Scriptable
      */
     public void setDelegee(Scriptable obj) {
-	this.obj = obj;
+        this.obj = obj;
     }
     /**
      * @see org.mozilla.javascript.Scriptable#getClassName
      */
     public String getClassName() {
-	return obj.getClassName();
+        return obj.getClassName();
     }
     /**
      * @see org.mozilla.javascript.Scriptable#get
      */
     public Object get(String name, Scriptable start) {
-	return obj.get(name,start);
+        return obj.get(name,start);
     }
     /**
      * @see org.mozilla.javascript.Scriptable#get
      */
     public Object get(int index, Scriptable start) {
-	return obj.get(index,start);
-	}
+        return obj.get(index,start);
+        }
     /**
      * @see org.mozilla.javascript.Scriptable#has
      */
     public boolean has(String name, Scriptable start) {
-	return obj.has(name,start);
-	}
+        return obj.has(name,start);
+        }
     /**
      * @see org.mozilla.javascript.Scriptable#has
      */
     public boolean has(int index, Scriptable start) {
-	return obj.has(index,start);
-	}
+        return obj.has(index,start);
+        }
     /**
      * @see org.mozilla.javascript.Scriptable#put
      */
     public void put(String name, Scriptable start, Object value) {
-	obj.put(name,start,value);
+        obj.put(name,start,value);
     }
     /**
      * @see org.mozilla.javascript.Scriptable#put
      */
     public void put(int index, Scriptable start, Object value) {
-	obj.put(index,start,value);
+        obj.put(index,start,value);
     }
     /**
      * @see org.mozilla.javascript.Scriptable#delete
      */
     public void delete(String name) {
-	obj.delete(name);
+        obj.delete(name);
     }
     /**
      * @see org.mozilla.javascript.Scriptable#delete
      */
     public void delete(int index) {
-	obj.delete(index);
+        obj.delete(index);
     }
     /**
      * @see org.mozilla.javascript.Scriptable#getPrototype
      */
     public Scriptable getPrototype() {
-	return obj.getPrototype();
+        return obj.getPrototype();
     }
     /**
      * @see org.mozilla.javascript.Scriptable#setPrototype
      */
     public void setPrototype(Scriptable prototype) {
-	obj.setPrototype(prototype);
+        obj.setPrototype(prototype);
     }
     /**
      * @see org.mozilla.javascript.Scriptable#getParentScope
      */
     public Scriptable getParentScope() {
-	return obj.getParentScope();
+        return obj.getParentScope();
     }
     /**
      * @see org.mozilla.javascript.Scriptable#setParentScope
      */
     public void setParentScope(Scriptable parent) {
-	obj.setParentScope(parent);
+        obj.setParentScope(parent);
     }
     /**
      * @see org.mozilla.javascript.Scriptable#getIds
      */
     public Object[] getIds() {
-	return obj.getIds();
+        return obj.getIds();
     }
     /**
      * Note that this method does not get forwarded to the delegee if
@@ -199,15 +199,15 @@ public class Delegator implements Function {
      * @see org.mozilla.javascript.Scriptable#hasInstance
      */
     public boolean hasInstance(Scriptable instance) {
-	return obj.hasInstance(instance);
+        return obj.hasInstance(instance);
     }
     /**
      * @see org.mozilla.javascript.Function#call
      */
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-		       Object[] args)
-	throws JavaScriptException {
-	return ((Function)obj).call(cx,scope,thisObj,args);
+                       Object[] args)
+        throws JavaScriptException {
+        return ((Function)obj).call(cx,scope,thisObj,args);
     }
 
     /**
@@ -228,23 +228,23 @@ public class Delegator implements Function {
      * @see org.mozilla.javascript.Function#construct
      */
     public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-	throws JavaScriptException {
-	if (obj == null) {
-	    //this little trick allows us to declare prototype objects for
-	    //Delegators
-	    try {
-		Delegator n = (Delegator)this.getClass().newInstance();
-		n.setDelegee((Scriptable)args[0]);
-		return n;
-	    }
-	    catch (Exception e) {
-		e.printStackTrace();
-		System.exit(0);
-	    }
-	    return (Scriptable)null;
-	}
-	else {
-	    return ((Function)obj).construct(cx,scope,args);
-	}
+        throws JavaScriptException {
+        if (obj == null) {
+            //this little trick allows us to declare prototype objects for
+            //Delegators
+            try {
+                Delegator n = (Delegator)this.getClass().newInstance();
+                n.setDelegee((Scriptable)args[0]);
+                return n;
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                System.exit(0);
+            }
+            return null;
+        }
+        else {
+            return ((Function)obj).construct(cx,scope,args);
+        }
     }
 }
