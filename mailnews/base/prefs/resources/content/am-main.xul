@@ -20,7 +20,7 @@
     <html>&accountSettingsDesc.label;</html>
     <box autostretch="never">
       <text class="label" value="&accountName.label;" for="server.prettyName"/>
-      <textfield wsm_persist="true" type="text" size="30" id="server.prettyName" flex="1"/>
+      <textfield wsm_persist="true" size="30" id="server.prettyName" flex="1"/>
     </box>
     
     <separator class="thin"/>
