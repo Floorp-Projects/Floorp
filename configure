@@ -8208,7 +8208,7 @@ else
 #include "confdefs.h"
 #include <varargs.h>
 int main() {
-va_list ap, foo;foo = "abcdef";ap = foo+3;
+va_list ap, foo;foo = "abcdef";ap = foo;
 ; return 0; }
 EOF
 if { (eval echo configure:8215: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
