@@ -740,7 +740,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                  (computedMargin.right < 200000), "oy");
 #endif
     ComputeBorderFor(frame, mComputedBorderPadding);
-    ComputePaddingFor(frame, parentReflowState, mComputedPadding);
+    ComputePadding(containingBlockWidth);
     mComputedBorderPadding += mComputedPadding;
 
     nsStyleUnit widthUnit = mStylePosition->mWidth.GetUnit();
@@ -1262,6 +1262,46 @@ nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth)
                                computedMargin.bottom);
       }
     }
+  }
+}
+
+void
+nsHTMLReflowState::ComputePadding(nscoord aContainingBlockWidth)
+{
+  // If style can provide us the padding directly, then use it.
+#if 0
+  if (!mStyleSpacing->GetPadding(mComputedPadding))
+#else
+  mStyleSpacing->CalcPaddingFor(frame, mComputedPadding);
+  if ((eStyleUnit_Percent == mStyleSpacing->mPadding.GetTopUnit()) ||
+      (eStyleUnit_Percent == mStyleSpacing->mPadding.GetRightUnit()) ||
+      (eStyleUnit_Percent == mStyleSpacing->mPadding.GetBottomUnit()) ||
+      (eStyleUnit_Percent == mStyleSpacing->mPadding.GetLeftUnit()))
+#endif
+  {
+    // We have to compute the value (because it's uncomputable by
+    // the style code).
+    nsStyleCoord left, right, top, bottom;
+    ComputeHorizontalValue(aContainingBlockWidth,
+                           mStyleSpacing->mPadding.GetLeftUnit(),
+                           mStyleSpacing->mPadding.GetLeft(left),
+                           mComputedPadding.left);
+    ComputeHorizontalValue(aContainingBlockWidth,
+                           mStyleSpacing->mPadding.GetRightUnit(),
+                           mStyleSpacing->mPadding.GetRight(right),
+                           mComputedPadding.right);
+
+    // According to the CSS2 spec, padding percentages are
+    // calculated with respect to the *width* of the containing
+    // block, even for padding-top and padding-bottom.
+    ComputeHorizontalValue(aContainingBlockWidth,
+                           mStyleSpacing->mPadding.GetTopUnit(),
+                           mStyleSpacing->mPadding.GetTop(top),
+                           mComputedPadding.top);
+    ComputeHorizontalValue(aContainingBlockWidth,
+                           mStyleSpacing->mPadding.GetBottomUnit(),
+                           mStyleSpacing->mPadding.GetBottom(bottom),
+                           mComputedPadding.bottom);
   }
 }
 

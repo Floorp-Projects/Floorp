@@ -345,9 +345,13 @@ protected:
                                            const nsStylePosition* aPosition,
                                            const nsStyleDisplay* aDisplay);
 
-  // Computes margins from the specified margin style information, and
+  // Computes margin values from the specified margin style information, and
   // fills in the mComputedMargin member
   void ComputeMargin(nscoord aContainingBlockWidth);
+  
+  // Computes padding values from the specified padding style information, and
+  // fills in the mComputedPadding member
+  void ComputePadding(nscoord aContainingBlockWidth);
 };
 
 //----------------------------------------------------------------------
