@@ -168,16 +168,13 @@ static const char kDisableXULCachePref[] = "nglayout.debug.disable_xul_cache";
 PR_STATIC_CALLBACK(int)
 DisableXULCacheChangedCallback(const char* aPref, void* aClosure)
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
     if (prefs)
         prefs->GetBoolPref(kDisableXULCachePref, &gDisableXULCache);
 
     // Flush the cache, regardless
     static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
-    nsCOMPtr<nsIXULPrototypeCache> cache =
-        do_GetService(kXULPrototypeCacheCID, &rv);
+    nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService(kXULPrototypeCacheCID));
 
     if (cache)
         cache->Flush();
