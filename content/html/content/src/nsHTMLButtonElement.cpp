@@ -395,7 +395,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
             keyEvent->charCode == NS_VK_SPACE) {
           nsEventStatus status = nsEventStatus_eIgnore;
           nsMouseEvent event;
-          event.eventStructType = NS_GUI_EVENT;
+          event.eventStructType = NS_MOUSE_EVENT;
           event.message = NS_MOUSE_LEFT_CLICK;
           event.isShift = PR_FALSE;
           event.isControl = PR_FALSE;
