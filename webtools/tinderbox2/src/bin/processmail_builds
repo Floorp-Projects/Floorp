@@ -12,8 +12,8 @@
 # server.  No locks are used by the mail processes, data is passed to
 # the tinderbox server in a maildir like format.
 
-# $Revision: 1.27 $ 
-# $Date: 2002/05/08 00:44:45 $ 
+# $Revision: 1.28 $ 
+# $Date: 2002/05/08 22:14:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_builds,v $ 
 # $Name:  $ 
@@ -249,10 +249,13 @@ entry of the update file.
 TinderboxPrint:
 
 Arbitrary links and text can be embedded in the tinderbox build
-cells. Any log file which contains a line beginnging with
-"TinderboxPrint: " will be copied into the build cell.  Here are some
-examples of embedded performance numbers (and links to the web page
-relevant to these numbers) from one mozilla build.
+cells. Any log file which contains a line beginning with
+"TinderboxPrint: " will be copied into the build cell.  If you are
+ebedding links, you should put exactly one link per TinderboxPrint
+command since the links are checked to ensure that they are well
+formed. Here are some examples of embedded performance numbers (and
+links to the web page relevant to these numbers) from one mozilla
+build.
 
 	TinderboxPrint: <a title="Leaks: total bytes 'malloc'ed and not 'free'd"href="http://tegu.mozilla.org/graph/query.cgi?testname=trace_malloc_leaks&units=bytes&tbox=backupboy&autoscale=1&days=7&avg=1">Lk:301KB</a>
 
@@ -916,7 +919,22 @@ sub parse_mail_body {
     # Find and save the TinderboxPrint data
 
     if ($line =~ m/\s*TinderboxPrint\s*:\s*(.*)/) {
-        $TINDERBOX{'print'} .= "&nbsp; ".$1;
+        my $print = $1;
+
+        # Long lines might get split by mailing software but then we
+        # can't reconstitute it, since we will not know how many lines
+        # to take.  Make sure refs, if they exist, are closed;
+
+        my $good_line = (
+                         ($print !~ m!<\s*a\s+!i) ||
+                         ($print =~ m!>[^<>]*<\s*/a\s+!i)
+                         );
+
+        if ($good_line) {
+            $TINDERBOX{'print'} .= "&nbsp; ".$print;
+        }
+
+        print FULL $line;
         next;
     }
 
