@@ -681,14 +681,17 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   nsCOMPtr<nsIURI> uri;
   if (aChannel) {
     aChannel->GetOriginalURI(getter_AddRefs(uri));
-
+    nsresult rv;
+    PRBool isAbout = PR_FALSE;
     PRBool isChrome = PR_FALSE;
     PRBool isRes = PR_FALSE;
-    uri->SchemeIs("chrome", &isChrome);
-    uri->SchemeIs("resource", &isRes);
+    rv = uri->SchemeIs("chrome", &isChrome);
+    rv |= uri->SchemeIs("resource", &isRes);
+    rv |= uri->SchemeIs("about", &isAbout);
 
-    if (!isChrome && !isRes)
+    if (NS_SUCCEEDED(rv) && !isChrome && !isRes && !isAbout) {
       aChannel->GetURI(getter_AddRefs(uri));
+    }
   }
 
   ResetToURI(uri, aLoadGroup);
