@@ -2793,6 +2793,7 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
             "Window",
             "HTMLDocument",
             "Event",
+            "ChromeWindow",
             nsnull
         };
 
