@@ -46,8 +46,19 @@
  * We use a set of locks for all the emulated atomic operations.
  * By hashing on the address of the integer to be locked the
  * contention between multiple threads should be lessened.
+ *
+ * The number of atomic locks can be set by the environment variable
+ * NSPR_ATOMIC_HASH_LOCKS
  */
-static pthread_mutex_t atomic_lock[16] = {
+
+/*
+ * lock counts should be a power of 2
+ */
+#define DEFAULT_ATOMIC_LOCKS	16	/* should be in sync with the number of initializers
+										below */
+#define MAX_ATOMIC_LOCKS		(4 * 1024)
+
+static pthread_mutex_t static_atomic_locks[DEFAULT_ATOMIC_LOCKS] = {
         PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
         PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
         PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER,
@@ -58,13 +69,78 @@ static pthread_mutex_t atomic_lock[16] = {
         PTHREAD_MUTEX_INITIALIZER, PTHREAD_MUTEX_INITIALIZER };
 
 #ifdef DEBUG
-static PRInt32 hash_lock_counts[16];
+static PRInt32 static_hash_lock_counts[DEFAULT_ATOMIC_LOCKS];
+static PRInt32 *hash_lock_counts;
 #endif
 
-#define _PR_HASH_FOR_LOCK(ptr) (((long)ptr>>4)&15)
+static PRUint32	num_atomic_locks = DEFAULT_ATOMIC_LOCKS;
+static pthread_mutex_t *atomic_locks = NULL;
+static PRUint32 atomic_hash_mask;
+
+#define _PR_HASH_FOR_LOCK(ptr) 							\
+			((PRUint32) (((PRUptrdiff) (ptr) >> 2)	^	\
+						((PRUptrdiff) (ptr) >> 8)) &	\
+						atomic_hash_mask)
 
 void _PR_MD_INIT_ATOMIC()
 {
+char *eval;
+int index;
+PRIntn lock_count;
+
+
+	PR_ASSERT(PR_FloorLog2(MAX_ATOMIC_LOCKS) ==
+						PR_CeilingLog2(MAX_ATOMIC_LOCKS));
+
+	PR_ASSERT(PR_FloorLog2(DEFAULT_ATOMIC_LOCKS) ==
+							PR_CeilingLog2(DEFAULT_ATOMIC_LOCKS));
+
+	if (((eval = getenv("NSPR_ATOMIC_HASH_LOCKS")) != NULL)  &&
+		((num_atomic_locks = atoi(eval)) != DEFAULT_ATOMIC_LOCKS)) {
+
+		if (num_atomic_locks > MAX_ATOMIC_LOCKS)
+			num_atomic_locks = MAX_ATOMIC_LOCKS;
+		else {
+			num_atomic_locks = PR_FloorLog2(num_atomic_locks);
+			if (num_atomic_locks == 0)
+				num_atomic_locks = DEFAULT_ATOMIC_LOCKS;
+			else	
+				num_atomic_locks = 1L << num_atomic_locks;
+		}
+		atomic_locks = (pthread_mutex_t *) PR_Malloc(sizeof(pthread_mutex_t) *
+						num_atomic_locks);
+		if (atomic_locks) {
+			for (index = 0; index < num_atomic_locks; index++) {
+				if (pthread_mutex_init(&atomic_locks[index], NULL)) {
+						PR_DELETE(atomic_locks);
+						atomic_locks = NULL;
+						break; 
+				}
+			}
+		}
+#ifdef DEBUG
+		if (atomic_locks) {
+			hash_lock_counts = PR_CALLOC(num_atomic_locks * sizeof(PRInt32));
+			if (hash_lock_counts == NULL) {
+				PR_DELETE(atomic_locks);
+				atomic_locks = NULL;
+			}
+		}
+#endif
+	}
+	if (atomic_locks == NULL) {
+		/*
+		 *	Use statically allocated locks
+		 */
+		atomic_locks = static_atomic_locks;
+		num_atomic_locks = DEFAULT_ATOMIC_LOCKS;
+#ifdef DEBUG
+		hash_lock_counts = static_hash_lock_counts;
+#endif
+	}
+	PR_ASSERT(PR_FloorLog2(num_atomic_locks) ==
+								PR_CeilingLog2(num_atomic_locks));
+	atomic_hash_mask = num_atomic_locks - 1;
 }
 
 PRInt32
@@ -73,12 +149,12 @@ _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
     PRInt32 rv;
     PRInt32 idx = _PR_HASH_FOR_LOCK(val);
 
-    pthread_mutex_lock(&atomic_lock[idx]);
+    pthread_mutex_lock(&atomic_locks[idx]);
     rv = ++(*val);
 #ifdef DEBUG
     hash_lock_counts[idx]++;
 #endif
-    pthread_mutex_unlock(&atomic_lock[idx]);
+    pthread_mutex_unlock(&atomic_locks[idx]);
     return rv;
 }
 
@@ -88,12 +164,12 @@ _PR_MD_ATOMIC_ADD(PRInt32 *ptr, PRInt32 val)
     PRInt32 rv;
     PRInt32 idx = _PR_HASH_FOR_LOCK(ptr);
 
-    pthread_mutex_lock(&atomic_lock[idx]);
+    pthread_mutex_lock(&atomic_locks[idx]);
     rv = ((*ptr) += val);
 #ifdef DEBUG
     hash_lock_counts[idx]++;
 #endif
-    pthread_mutex_unlock(&atomic_lock[idx]);
+    pthread_mutex_unlock(&atomic_locks[idx]);
     return rv;
 }
 
@@ -103,12 +179,12 @@ _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
     PRInt32 rv;
     PRInt32 idx = _PR_HASH_FOR_LOCK(val);
 
-    pthread_mutex_lock(&atomic_lock[idx]);
+    pthread_mutex_lock(&atomic_locks[idx]);
     rv = --(*val);
 #ifdef DEBUG
     hash_lock_counts[idx]++;
 #endif
-    pthread_mutex_unlock(&atomic_lock[idx]);
+    pthread_mutex_unlock(&atomic_locks[idx]);
     return rv;
 }
 
@@ -118,13 +194,13 @@ _PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
     PRInt32 rv;
     PRInt32 idx = _PR_HASH_FOR_LOCK(val);
 
-    pthread_mutex_lock(&atomic_lock[idx]);
+    pthread_mutex_lock(&atomic_locks[idx]);
     rv = *val;
     *val = newval;
 #ifdef DEBUG
     hash_lock_counts[idx]++;
 #endif
-    pthread_mutex_unlock(&atomic_lock[idx]);
+    pthread_mutex_unlock(&atomic_locks[idx]);
     return rv;
 }
 #else  /* _PR_PTHREADS && !_PR_DCETHREADS */
