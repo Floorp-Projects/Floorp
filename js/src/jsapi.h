@@ -524,6 +524,12 @@ JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
 extern JS_PUBLIC_API(JSBool)
 JS_AddRoot(JSContext *cx, void *rp);
 
+#ifdef NAME_ALL_GC_ROOTS
+#define JS_DEFINE_TO_TOKEN(def) #def
+#define JS_DEFINE_TO_STRING(def) JS_DEFINE_TO_TOKEN(def)
+#define JS_AddRoot(cx,rp) JS_AddNamedRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#endif
+
 extern JS_PUBLIC_API(JSBool)
 JS_AddNamedRoot(JSContext *cx, void *rp, const char *name);
 
