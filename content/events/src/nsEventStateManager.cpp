@@ -2760,20 +2760,24 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   PRInt32 itemType;
   nsCOMPtr<nsIDocShellTreeItem> shellItem(do_QueryInterface(docShell));
   shellItem->GetItemType(&itemType);
+  
   if (itemType != nsIDocShellTreeItem::typeChrome) {   // If not content, forget selection - just use mCurrentFocus
     // we're going to tab from the selection position 
-    nsCOMPtr<nsIContent> selectionContent, endSelectionContent;  // We won't be using this, need arg for method call
-    PRUint32 selectionOffset; // We won't be using this either, need arg for method call
-    GetDocSelectionLocation(getter_AddRefs(selectionContent), getter_AddRefs(endSelectionContent), &selectionFrame, &selectionOffset);
-    if (selectionContent == rootContent)  // If selection on rootContent, same as null -- we have no selection yet
-      selectionFrame = nsnull;
-    // Only use tabindex if selection is synchronized with focus
-    // That way, if the user clicks in content, or does a find text that lands between focusable elements,
-    // they can then tab relative to that selection
-    if (selectionFrame) {
-      PRBool selectionWithFocus;
-      MoveFocusToCaret(PR_FALSE, &selectionWithFocus);
-      ignoreTabIndex = !selectionWithFocus;
+    nsCOMPtr<nsIDOMHTMLAreaElement> areaElement(do_QueryInterface(mCurrentFocus));
+    if (!areaElement) {
+      nsCOMPtr<nsIContent> selectionContent, endSelectionContent;  // We won't be using this, need arg for method call
+      PRUint32 selectionOffset; // We won't be using this either, need arg for method call
+      GetDocSelectionLocation(getter_AddRefs(selectionContent), getter_AddRefs(endSelectionContent), &selectionFrame, &selectionOffset);
+      if (selectionContent == rootContent)  // If selection on rootContent, same as null -- we have no selection yet
+        selectionFrame = nsnull;
+      // Only use tabindex if selection is synchronized with focus
+      // That way, if the user clicks in content, or does a find text that lands between focusable elements,
+      // they can then tab relative to that selection
+      if (selectionFrame) {
+        PRBool selectionWithFocus;
+        MoveFocusToCaret(PR_FALSE, &selectionWithFocus);
+        ignoreTabIndex = !selectionWithFocus;
+      }
     }
   }
 
@@ -4133,6 +4137,7 @@ nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent
 
   nsCOMPtr<nsIDOMNode> startNode, endNode;
   PRBool isCollapsed = PR_FALSE;
+  nsCOMPtr<nsIContent> startContent, endContent;
   if (domSelection) {
     domSelection->GetIsCollapsed(&isCollapsed);
     nsCOMPtr<nsIDOMRange> domRange;
@@ -4142,10 +4147,29 @@ nsresult nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent
       domRange->GetEndContainer(getter_AddRefs(endNode));
       typedef PRInt32* PRInt32_ptr;
       domRange->GetStartOffset(PRInt32_ptr(aStartOffset));
+
+      nsCOMPtr<nsIContent> childContent;
+      PRBool canContainChildren;
+
+      startContent = do_QueryInterface(startNode);
+      if (NS_SUCCEEDED(startContent->CanContainChildren(canContainChildren)) &&
+          canContainChildren) {
+        startContent->ChildAt(*aStartOffset, *getter_AddRefs(childContent));
+        if (childContent)
+          startContent = childContent;
+      }
+
+      endContent = do_QueryInterface(endNode);
+      if (NS_SUCCEEDED(endContent->CanContainChildren(canContainChildren)) &&
+          canContainChildren) {
+        PRInt32 endOffset = 0;
+        domRange->GetEndOffset(&endOffset);
+        endContent->ChildAt(endOffset, *getter_AddRefs(childContent));
+        if (childContent)
+          endContent = childContent;
+      }
     }
   }
-  nsCOMPtr<nsIContent> startContent(do_QueryInterface(startNode));
-  nsCOMPtr<nsIContent> endContent(do_QueryInterface(endNode));
 
   nsIFrame *startFrame = nsnull;
   if (startContent) {
