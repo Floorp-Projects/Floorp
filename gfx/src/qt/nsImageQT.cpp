@@ -330,7 +330,7 @@ NS_IMETHODIMP nsImageQT::Draw(nsIRenderingContext &aContext,
     // The image bits can change as a result of ImageUpdated() - for
     // example: animated GIFs.
     if (nsnull == mImagePixmap) {
-      CreateImagePixmap(aSWidth,aSHeight);
+      CreateImagePixmap();
     }
     if (nsnull == mImagePixmap)
         return NS_ERROR_FAILURE;
@@ -368,7 +368,7 @@ NS_IMETHODIMP nsImageQT::Draw(nsIRenderingContext &aContext,
     // The image bits can change as a result of ImageUpdated() - for
     // example: animated GIFs.
     if (nsnull == mImagePixmap) {
-      CreateImagePixmap(aWidth,aHeight);
+      CreateImagePixmap();
     }
     if (nsnull == mImagePixmap)
         return NS_ERROR_FAILURE;
@@ -388,9 +388,9 @@ void nsImageQT::CreateOffscreenPixmap(PRInt32 aWidth,PRInt32 aHeight)
   }
 }
 
-void nsImageQT::CreateImagePixmap(PRInt32 aWidth,PRInt32 aHeight)
+void nsImageQT::CreateImagePixmap()
 {
-  mImagePixmap = new QImage(aWidth,aHeight,mDepth);
+  mImagePixmap = new QImage(mWidth,mHeight,mDepth);
 
   if (mImagePixmap) {
     PRInt8 bytesPerPixel = mRequestDepth / 8;
@@ -402,11 +402,11 @@ void nsImageQT::CreateImagePixmap(PRInt32 aWidth,PRInt32 aHeight)
     QRgb *line;
 
     mImagePixmap->setAlphaBuffer(PR_TRUE);
-    for (i = 0; i < aHeight; i++) {
+    for (i = 0; i < mHeight; i++) {
       line = (QRgb*)mImagePixmap->scanLine(i);
 
       imagePtr = image;
-      for (j = 0; j < aWidth; j++) {
+      for (j = 0; j < mWidth; j++) {
         pixel = 0xFF000000 | *(imagePtr + bytesPerPixel - 1)
                  | (*(imagePtr + bytesPerPixel - 2) << 8)
                   | (*(imagePtr + bytesPerPixel - 3) << 16);
@@ -459,7 +459,7 @@ NS_IMETHODIMP nsImageQT::DrawTile(nsIRenderingContext &aContext,
   // The image bits can change as a result of ImageUpdated() - for
   // example: animated GIFs.
   if (nsnull == mImagePixmap) {
-    CreateImagePixmap(mWidth,mHeight);
+    CreateImagePixmap();
   }
   if (nsnull == mImagePixmap)
     return NS_ERROR_FAILURE;
@@ -541,7 +541,7 @@ NS_IMETHODIMP nsImageQT::DrawToImage(nsIImage *aDstImage,
     return NS_ERROR_FAILURE;
  
   if (!mImagePixmap)
-    CreateImagePixmap(mWidth,mHeight);
+    CreateImagePixmap();
  
   if (!mImagePixmap)
     return NS_ERROR_FAILURE;

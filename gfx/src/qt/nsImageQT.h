@@ -153,7 +153,7 @@ private:
    */
   void ComputeMetrics();
   void ComputePaletteSize(PRIntn nBitCount);
-  void CreateImagePixmap(PRInt32 aWidth,PRInt32 aHeight);
+  void CreateImagePixmap();
 
 private:
   PRInt32   mWidth;
