@@ -32,48 +32,33 @@
   <script type="application/x-javascript">
   <![CDATA[
 
-    function HideWallet() {
-      var element;
-      element = document.getElementById("wallet");
-      element.setAttribute("style","display: none;" );
-      element.setAttribute("disabled","true" );
-    }
-
     function CheckForEncrypt() {
       // remove either encrypt or obscure depending on pref setting
       var elementOn, elementOff;
+      var pref;
+      pref = Components.classes['@mozilla.org/preferences;1'];
+      pref = pref.getService();
+      pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
       try {
-        if (this.pref.GetBoolPref("wallet.crypto")) {
+        if (pref.getBoolPref("wallet.crypto")) {
           elementOn = document.getElementById("obscure");
           elementOff = document.getElementById("encrypt");
-  } else {
+        } else {
           elementOn = document.getElementById("encrypt");
           elementOff = document.getElementById("obscure");
-  }
+        }
         elementOn.setAttribute("disabled","false");
         elementOff.setAttribute("disabled","true");
-      }
-      catch(e) {
-        var encrypt = document.getElementById("encrypt");
-          if(encrypt) {
-            encrypt.setAttribute("disabled", "true");
-          }
-          var obscure = document.getElementById("obscure");
-          if(obscure) {
-            obscure.setAttribute("disabled", "true");
-          }
-          dump("wallet.crypto pref is missing from all.js\n");
-      }
-    }
-
-    function CheckForWallet() {
-      // remove wallet functions if not in browser
-      try {
-        if (!appCore) {
-          HideWallet();
-        }
       } catch(e) {
-        HideWallet();
+        var encrypt = document.getElementById("encrypt");
+        if(encrypt) {
+          encrypt.setAttribute("disabled", "true");
+        }
+        var obscure = document.getElementById("obscure");
+        if(obscure) {
+          obscure.setAttribute("disabled", "true");
+        }
+        dump("wallet.crypto pref is missing from all.js\n");
       }
     }
 
@@ -83,6 +68,11 @@
       wallet = wallet.getService();
       wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
       var strings = document.getElementById("personalManagers");
+
+      var pref;
+      pref = Components.classes['@mozilla.org/preferences;1'];
+      pref = pref.getService();
+      pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
 
       switch( action ) {
         case "password":
@@ -103,12 +93,16 @@
           }
           break;
         case "encrypt":
-          wallet.WALLET_InitReencryptCallback(window._content);
-          this.pref.SetBoolPref("wallet.crypto", true);
+          if (pref) {
+            wallet.WALLET_InitReencryptCallback(window._content);
+            pref.setBoolPref("wallet.crypto", true);
+          }
           break;
         case "obscure":
-          wallet.WALLET_InitReencryptCallback(window._content);
-          this.pref.SetBoolPref("wallet.crypto", false);
+          if (pref) {
+            wallet.WALLET_InitReencryptCallback(window._content);
+            pref.setBoolPref("wallet.crypto", false);
+          }
           break;
 /*
         case "safefill":
@@ -160,8 +154,7 @@
               UnableToCapture = "&UnableToCapture;"
               Captured = "&Captured;"
               NotCaptured = "&NotCaptured;"
-              noPrefills = "&noPrefills;"
-              oncreate="CheckForWallet()"> 
+              noPrefills = "&noPrefills;">
     <menu label="&walletPasswordManager.label;"
           accesskey="&walletPasswordManager.accesskey;"
           position="1">
