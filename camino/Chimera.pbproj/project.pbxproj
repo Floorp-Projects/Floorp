@@ -582,7 +582,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Camino</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Camino 0.7.0, © 2003 The Mozilla Organization</string>
+	<string>Camino 0.7+, © 2003 The Mozilla Foundation</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -594,7 +594,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.7.0</string>
+	<string>0.7+</string>
 	<key>CFBundleSignature</key>
 	<string>CHIM</string>
 	<key>CFBundleURLTypes</key>
@@ -645,7 +645,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.7.0</string>
+	<string>0.7+</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSMainNibFile</key>
@@ -1540,10 +1540,13 @@
 		};
 		3FB2BA910545EA80002B9691 = {
 			fileEncoding = 30;
+			indentWidth = 2;
 			isa = PBXFileReference;
 			name = BookmarkViewController.mm;
 			path = src/bookmarks/BookmarkViewController.mm;
 			refType = 2;
+			tabWidth = 2;
+			usesTabs = 0;
 		};
 		3FB2BA920545EA80002B9691 = {
 			fileEncoding = 30;
@@ -8398,7 +8401,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Camino</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Camino 0.7.0, © 2003 The Mozilla Organization</string>
+	<string>Camino 0.7+, © 2003 The Mozilla Foundation</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -8410,7 +8413,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.7.0</string>
+	<string>0.7+</string>
 	<key>CFBundleSignature</key>
 	<string>CHIM</string>
 	<key>CFBundleURLTypes</key>
@@ -8461,7 +8464,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.7.0</string>
+	<string>0.7+</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSMainNibFile</key>
