@@ -75,13 +75,15 @@ write_classname_iid_define(FILE *file, const char *className)
 static gboolean
 interface(TreeState *state)
 {
-    IDL_tree iface = state->tree, iter;
+    IDL_tree iface = state->tree, iter, orig;
     char *className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
     char *classNameUpper;
     const char *iid;
     const char *name_space;
     struct nsID id;
     char iid_parsed[UUID_LENGTH];
+
+    orig = state->tree;
 
     fprintf(state->file,   "\n/* starting interface:    %s */\n",
             className);
@@ -117,10 +119,11 @@ interface(TreeState *state)
         }
 
         /* #define NS_ISUPPORTS_IID_STR "00000000-0000-0000-c000-000000000046" */
-        fprintf(state->file, "\n");
-        fprintf(state->file, "#define ");
+        fputc('\n', state->file);
+        fputs("#define ", state->file);
         write_classname_iid_define(state->file, className);
         fprintf(state->file, "_STR \"%s\"\n", iid_parsed);
+        fputc('\n', state->file);
 
         /* #define NS_ISUPPORTS_IID { {0x00000000 .... 0x46 }} */
         fprintf(state->file, "#define ");
@@ -132,7 +135,35 @@ interface(TreeState *state)
                 id.m0, id.m1, id.m2,
                 id.m3[0], id.m3[1], id.m3[2], id.m3[3],
                 id.m3[4], id.m3[5], id.m3[6], id.m3[7]);
+        fputc('\n', state->file);
     }
+
+    /* The interface declaration itself. */
+    fprintf(state->file, "class %s", className);
+    if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
+        fputs(" : ", state->file);
+        do {
+            fprintf(state->file, "public %s",
+                    IDL_IDENT(IDL_LIST(iter).data).str);
+            if (IDL_LIST(iter).next)
+                fputs(", ", state->file);
+        } while ((iter = IDL_LIST(iter).next));
+    }
+    fputs(" {\n"
+          " public: \n", state->file);
+    if (iid) {
+        fputs("  NS_DEFINE_STATIC_IID_ACCESSOR(", state->file);
+        write_classname_iid_define(state->file, className);
+        fputs(")\n", state->file);
+    }
+
+    state->tree = IDL_INTERFACE(iface).body;
+
+    if (state->tree && !xpidl_process_node(state))
+        return FALSE;
+
+    fputs("};\n", state->file);
+    fputc('\n', state->file);
 
     /*
      * #define NS_DECL_NSIFOO - create method prototypes that can be used in
@@ -141,8 +172,8 @@ interface(TreeState *state)
      * Walk the tree explicitly to prototype a reworking of xpidl to get rid of
      * the callback mechanism.
      */
-    fputc('\n', state->file);
-    fputs("/* Use this when declaring classes that implement this "
+    state->tree = orig;
+    fputs("/* Use this macro when declaring classes that implement this "
           "interface. */\n", state->file);
     fputs("#define NS_DECL_", state->file);
     classNameUpper = className;
@@ -169,9 +200,11 @@ interface(TreeState *state)
             if (!write_attr_accessor(data, state->file, TRUE))
                 return FALSE;
             if (!IDL_ATTR_DCL(state->tree).f_readonly) {
+                fputs("; \\\n", state->file); /* Terminate the previous one. */
                 fputs("  ", state->file);
                 if (!write_attr_accessor(data, state->file, FALSE))
                     return FALSE;
+                /* '; \n' at end will clean up. */
             }
             break;
 
@@ -206,33 +239,7 @@ interface(TreeState *state)
             fprintf(state->file, "; \n");
         }
     }
-    fprintf(state->file, "\n");
-
-    /* The interface declaration itself. */
-    fprintf(state->file, "class %s", className);
-    if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
-        fputs(" : ", state->file);
-        do {
-            fprintf(state->file, "public %s",
-                    IDL_IDENT(IDL_LIST(iter).data).str);
-            if (IDL_LIST(iter).next)
-                fputs(", ", state->file);
-        } while ((iter = IDL_LIST(iter).next));
-    }
-    fputs(" {\n"
-          " public: \n", state->file);
-    if (iid) {
-        fputs("  NS_DEFINE_STATIC_IID_ACCESSOR(", state->file);
-        write_classname_iid_define(state->file, className);
-        fputs(")\n", state->file);
-    }
-
-    state->tree = IDL_INTERFACE(iface).body;
-
-    if (state->tree && !xpidl_process_node(state))
-        return FALSE;
-
-    fputs("};\n", state->file);
+    fputc('\n', state->file);
 
     return TRUE;
 }
