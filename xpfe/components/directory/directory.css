@@ -29,10 +29,10 @@
 @import url(chrome://global/skin/);
 
 treecol[sortActive="true"] {
- background-color: lightgray;
+  background-color: lightgray;
 }
 
-/* Hide the twisty when type != DIRECTORY (XXX is there a != in CSS) */
+/* Hide the twisty when type != DIRECTORY (XXX is there a '!=' in CSS?) */
 treeitem[type="FILE"] > treerow > treecell > .tree-icon > .twisty {
   list-style-image: none;
 }
@@ -43,32 +43,43 @@ treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .tree-icon > .
 }
 
 /* Show an animated icon when a symbolic link is loading */
-treeitem[type="SYM-LINK"][loading="true"] > treerow > treecell > .tree-icon > .twisty {
+treeitem[type="SYMBOLIC-LINK"][loading="true"] > treerow > treecell > .tree-icon > .twisty {
   list-style-image: url("resource:/res/rdf/loading.gif");
 }
 
-/* Make a file look like a link */
-treeitem[type="FILE"] > treerow > treecell.filename {
+/* Make a filenames look like links */
+treeitem > treerow > treecell.filename {
   color: #666699;
+  text-decoration: underline;
+}
+
+treeitem > treerow > treecell.filename:hover {
+  color: #333366;
+  text-decoration: underline;
+}
+
+treeitem > treerow > treecell.filename:active {
+  color: #990000;
   text-decoration: underline;
 }
 
 /* Italicize a symbolic link and make it look like a link (it can be a dir or link) */
-treeitem[type="SYM-LINK"] > treerow > treecell.filename {
-  color: #666699;
-  text-decoration: underline;
+treeitem[type="SYMBOLIC-LINK"] > treerow > treecell.filename {
+  color: inherit;
+  text-decoration: inherit;
   font-style: italic;
 }
-  
 
-treeitem[type="FILE"] > treerow > treecell.filename:hover {
-  color: #333366;
-  text-decoration: underline;
+treeitem[type="SYMBOLIC-LINK"] > treerow > treecell.filename:hover {
+  color: inherit;
+  text-decoration: inherit;
+  font-style: italic;
 }
 
-treeitem[type="SYM-LINK"] > treerow > treecell.filename:hover {
-  color: #333366;
-  text-decoration: underline;
+treeitem[type="SYMBOLIC-LINK"] > treerow > treecell.filename:active {
+  color: inherit;
+  text-decoration: inherit;
+  font-style: italic;
 }
 
 /* Override rule in xul.css that colors the selected row blue */
