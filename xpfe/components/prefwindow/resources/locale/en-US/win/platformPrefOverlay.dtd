@@ -6,3 +6,4 @@
 <!ENTITY defaultPendingText         "&brandShortName; will be set as your default browser when you click OK.">
 <!ENTITY makeDefaultText            "Set &brandShortName; as your default browser.">
 
+<!ENTITY urlbar.label "Control+Enter in the Location bar">
