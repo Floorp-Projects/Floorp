@@ -4,22 +4,68 @@
 <overlay id="taskbarOverlay"
                  xmlns:html="http://www.w3.org/TR/REC-html40"
                  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<box id="taskbarMenuBox" align="horizontal" flex="10"
+	 datasources="chrome://global/locale/taskbar.rdf"
+     ref="chrome://global/locale/taskbar.rdf#root" 
+	 rdf:containment="http://home.netscape.com/NC-rdf#entry 
+					  http://home.netscape.com/NC-rdf#child">
+  <spring flex="1"/>
+  <template>
+	<!-- Rules for content hanging _directly_ off the toolbar -->
+	<rule parent="box" iscontainer="true">
+	  <menu uri="...">
+	    <titledbutton align="right" class="bookmarkFolder toolbar-flat"
+					  value="rdf:http://home.netscape.com/NC-rdf#title" crop="right" />
+		<menupopup 
+			class="standard" popupalign="bottomleft" popupanchor="topleft"/>
+	  </menu>
+	  <spring uri="rdf:*" class="taskbarspacer" flex="1"/>
+	</rule>
 
-<box id="taskbarMenuBox" align="horizontal" flex="1">
-  <spring flex="1"/>
-  <menu>
-    <titledbutton value="&mozillaButton.label;" crop="right" class="bookmarkFolder toolbar-flat" align="right"/>
-    <menupopup class="standard" popupalign="bottomleft" popupanchor="topleft">
-      <menuitem class="standard" value="&bonsai.label;"
-                oncommand="openTopWin('http://bonsai.mozilla.org/toplevel.cgi?treeid=SeaMonkey');"/>
-      <menuitem class="standard" value="&bugzillaButton.label;"
-                oncommand="openTopWin('http://bugzilla.mozilla.org');"/>
-    </menupopup>
-  </menu>
-  <spring flex="1"/>
-  <!-- The "Open Windows" menu uses the window mediator
-       to display all of the open windows -->
-  <menu align="right"
+	<rule parent="box">
+      <titledbutton class="bookmarkbutton toolbar-flat" uri="rdf:*" align="left" 
+					value="rdf:http://home.netscape.com/NC-rdf#title" crop="right"/>
+	  <spring uri="rdf:*" class="personaltoolbarspacer" flex="0"/>
+	</rule>
+
+	<!-- Recursive rules for nested folders -->
+	<rule iscontainer="true">
+		<menupopup class="standard">
+	    	<menu class="standard" uri="rdf:*" 
+	        	  value="rdf:http://home.netscape.com/NC-rdf#title" >
+	  			<menupopup class="standard"/>
+			</menu>
+		</menupopup>
+	</rule>
+
+	<!-- second level folders -->
+    <rule iscontainer="true">
+ 		<menupopup class="standard" popupalign="bottomleft" popupanchor="topleft">
+        	<menu class="standard" uri="..." 
+				  value="rdf:http://home.netscape.com/NC-rdf#title">
+				<menupopup class="standard"/>
+			</menu>
+	  	</menupopup>
+	</rule>
+
+    <rule>
+		<menupopup>
+            	<menuitem class="standard" 
+						  uri="..." 
+						  value="rdf:http://home.netscape.com/NC-rdf#title"
+						  oncommand="rdf:http://home.netscape.com/NC-rdf#content"/>
+		</menupopup>
+	</rule>
+    </template>
+  	<spring class="taskbarspacer" flex="9"/>
+</box>
+<!--  end -->
+
+<box id="taskbarGotoMenuBox" align="right"
+        flex="1">
+  	<!-- The "Open Windows" menu uses the window mediator
+       	 to display all of the open windows -->
+  	<menu align="right"
         oncommand="ShowWindowFromResource(event.target)"
         datasources="rdf:window-mediator"
         ref="NC:WindowMediatorRoot" >
