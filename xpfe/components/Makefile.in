@@ -118,6 +118,7 @@ DIRS    = \
           windowds \
           prefwindow \
           console \
+          history/public \
           sidebar/public \
           bookmarks/public \
           alerts \
