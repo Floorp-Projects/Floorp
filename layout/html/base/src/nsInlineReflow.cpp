@@ -287,14 +287,16 @@ void
 nsInlineReflow::CalculateMargins()
 {
   PerFrameData* pfd = mFrameData;
-  const nsStyleSpacing* spacing = GetSpacing();
   if (mTreatFrameAsBlock) {
+    const nsStyleSpacing* spacing = GetSpacing();
     pfd->mMarginFlags = CalculateBlockMarginsFor(mPresContext, pfd->mFrame,
+                                                 &mOuterReflowState,
                                                  spacing, pfd->mMargin);
   }
   else {
     // Get the margins from the style system
-    spacing->CalcMarginFor(pfd->mFrame, pfd->mMargin);
+    nsHTMLReflowState::ComputeMarginFor(pfd->mFrame, &mOuterReflowState,
+                                        pfd->mMargin);
     pfd->mMarginFlags = 0;
   }
 }
@@ -302,12 +304,13 @@ nsInlineReflow::CalculateMargins()
 PRUintn
 nsInlineReflow::CalculateBlockMarginsFor(nsIPresContext& aPresContext,
                                          nsIFrame* aFrame,
+                                         const nsHTMLReflowState* aParentRS,
                                          const nsStyleSpacing* aSpacing,
                                          nsMargin& aMargin)
 {
   PRUint32 rv = 0;
 
-  aSpacing->CalcMarginFor(aFrame, aMargin);
+  nsHTMLReflowState::ComputeMarginFor(aFrame, aParentRS, aMargin);
 
   // Get font height if we will be doing an auto margin. We use the
   // default font height for the auto margin value.
@@ -637,6 +640,20 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics)
   // Remember this for later...
   if (mTreatFrameAsBlock) {
     mIsBlock = PR_TRUE;
+
+    // Special handling for CSS2 section 10.3.3
+    if ((aMetrics.width < mFrameAvailSize.width) &&
+        (NS_UNCONSTRAINEDSIZE != mRightEdge)) {
+      // The block frame didn't use all of the available space. See if
+      // it has auto left/right margins. If it does, center it.
+      const nsStyleSpacing* spacing = GetSpacing();
+      if (nsnull != spacing) {
+        if ((eStyleUnit_Auto == spacing->mMargin.GetLeftUnit()) &&
+            (eStyleUnit_Auto == spacing->mMargin.GetRightUnit())) {
+          pfd->mBounds.x += (mRightEdge - aMetrics.width) / 2;
+        }
+      }
+    }
   }
 
 //XXX disabled: css2 spec claims otherwise; the problem is we need to
