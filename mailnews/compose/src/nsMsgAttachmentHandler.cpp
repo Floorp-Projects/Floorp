@@ -399,17 +399,17 @@ FetcherURLDoneCallback(nsIURI* aURL, nsresult aStatus,
   if (ma != nsnull)
   {
     ma->m_size = totalSize;
-#ifdef XP_MAC
     if (aContentType)
     {
+#ifdef XP_MAC
       //Do not change the type if we are dealing with an apple double file
       if (!ma->mAppleFileSpec)
+#endif
       {
         PR_FREEIF(ma->m_type);
         ma->m_type = PL_strdup(aContentType);
       }
     }
-#endif
 
     if (aCharset)
     {
