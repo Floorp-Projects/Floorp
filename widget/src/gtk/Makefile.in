@@ -26,7 +26,7 @@ MODULE		= widget
 LIBRARY_NAME	= widget_gtk
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string layout pref js dom appshell timer uconv necko img view util rdf uriloader docshell msgcompose msgbase editor locale txmgr gfx2 windowwatcher
+REQUIRES	= xpcom string layout pref js dom appshell timer uconv necko img view util rdf uriloader docshell msgcompose msgbase editor locale txmgr gfx2 windowwatcher mailnews
 
 CSRCS		= \
 		keysym2ucs.c
