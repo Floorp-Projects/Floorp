@@ -602,6 +602,14 @@ nsPopupSetFrame::ActivatePopup(PRBool aActivateFlag)
       content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
       content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
 
+      // get rid of the reflows we just created. If we leave them hanging around, we
+      // can get into trouble if a dialog with a modal event loop comes along and
+      // processes the reflows before we get to call DestroyChain(). Processing the
+      // reflow will cause the popup to show itself again. (bug 71219)
+      nsCOMPtr<nsIDocument> doc;
+      content->GetDocument(*getter_AddRefs(doc));
+      doc->FlushPendingNotifications();
+         
       // make sure we hide the popup.
       nsIFrame* activeChild = GetActiveChild();
       nsIView* view = nsnull;
