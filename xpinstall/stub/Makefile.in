@@ -38,9 +38,8 @@ CPPSRCS		= \
 
 # LOCAL_INCLUDES	= -I$(srcdir)/../public
 
-LIBS 		= \
-		$(NSPR_LIBS) \
-		-lxpcom \
+EXTRA_DSO_LDOPTS= \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
