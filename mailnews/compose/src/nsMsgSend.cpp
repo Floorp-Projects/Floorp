@@ -1060,7 +1060,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	}
 	else 
   {
-		DeliverMessage();
+		status = DeliverMessage();
 		shouldDeleteDeliveryState = PR_FALSE;
 	}
 
@@ -2074,7 +2074,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 
   // If no attachments - finish now (this will call the done_callback).
 	if (m_attachment_pending_count <= 0)
-		GatherMimeAttachments();
+		return GatherMimeAttachments();
 
 	return 0;
 }
@@ -2436,10 +2436,10 @@ nsMsgComposeAndSend::DeliverMessage()
       if (mail_p) {
         mSendMailAlso = PR_TRUE;
       }
-      DeliverFileAsNews();   /* will call DeliverFileAsMail if it needs to */
+      return DeliverFileAsNews();   /* will call DeliverFileAsMail if it needs to */
     }
 	else if (mail_p) {
-		DeliverFileAsMail();
+		return DeliverFileAsMail();
     }
 	else {
       return NS_ERROR_UNEXPECTED;
@@ -3080,8 +3080,7 @@ nsMsgComposeAndSend::SendMessageFile(
 					    nsnull, nsnull, nsnull);
 	if (NS_SUCCEEDED(rv))
   { 
-    DeliverMessage();
-		return NS_OK;
+    return DeliverMessage();
   }
   else
     return rv;
