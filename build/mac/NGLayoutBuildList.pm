@@ -343,10 +343,6 @@ sub BuildCommonProjects()
 	BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",								"NSStdLib$D.shlb");
 	MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb", "$dist_dir");
 	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb.xSYM", "$dist_dir") : 0;
-	
-	BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.shlb");
-	MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb", "$dist_dir");
-	$main::DEBUG ? MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb.xSYM", "$dist_dir") : 0;
 
 	BuildProject(":mozilla:jpeg:macbuild:JPEG.mcp",											"JPEG$D.shlb");
 	MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.shlb", "$dist_dir");
@@ -361,6 +357,8 @@ sub BuildCommonProjects()
 	$main::DEBUG ? MakeAlias(":mozilla:modules:zlib:macbuild:zlib$D.shlb.xSYM", "$dist_dir") : 0;
 	
 # static
+
+	BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.o");
 
 	BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",	 "Security.o");
 
