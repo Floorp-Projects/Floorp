@@ -47,6 +47,7 @@
 // this should eventually be moved to the nntp server for upgrading
 #include "nsINntpIncomingServer.h"
 
+#define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
 #define BUF_STR_LEN 1024
 
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer) || defined(DEBUG_seth)
@@ -96,13 +97,21 @@ typedef struct _findIdentityByKeyEntry {
   nsIMsgIdentity *identity;
 } findIdentityByKeyEntry;
 
-class nsMsgAccountManager : public nsIMsgAccountManager {
+class nsMsgAccountManager : public nsIMsgAccountManager,
+                            public nsIShutdownListener
+{
 public:
 
   nsMsgAccountManager();
   virtual ~nsMsgAccountManager();
   
   NS_DECL_ISUPPORTS
+
+  /* nsIShutdownListener methods */
+
+  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
+  
+  /* nsIMsgAccountManager methods */
   
   /* nsIMsgAccount createAccount (in nsIMsgIncomingServer server,
      in nsIMsgIdentity identity); */
@@ -175,6 +184,9 @@ private:
                                    void* closure);
   static PRBool addIdentitiesToArray(nsHashKey *aKey, void *aData,
                                      void *closure);
+
+  static PRBool hashTableGetAccountList(nsHashKey *aKey, void *aData,
+                                        void *closure);
   static PRBool hashTableFindAccount(nsHashKey *aKey, void *aData,
                                      void *closure);
   static PRBool hashTableFindFirst(nsHashKey *aKey, void *aData,
@@ -213,11 +225,37 @@ private:
 
   nsIMsgAccount *LoadAccount(nsCAutoString& accountKey);
   nsresult SetPasswordForServer(nsIMsgIncomingServer * server);
+
+  nsIPref *prefService();
   nsIPref *m_prefs;
 };
 
 
-NS_IMPL_ISUPPORTS(nsMsgAccountManager, GetIID());
+NS_IMPL_ADDREF(nsMsgAccountManager)
+NS_IMPL_RELEASE(nsMsgAccountManager)
+  
+nsresult
+nsMsgAccountManager::QueryInterface(const nsIID& iid, void **result)
+{
+  nsresult rv = NS_NOINTERFACE;
+  if (! result)
+    return NS_ERROR_NULL_POINTER;
+
+  void *res = nsnull;
+  if (iid.Equals(nsCOMTypeInfo<nsIMsgAccountManager>::GetIID()) ||
+      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    res = NS_STATIC_CAST(nsIMsgAccountManager*, this);
+  else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
+    res = NS_STATIC_CAST(nsIShutdownListener*, this);
+
+  if (res) {
+    NS_ADDREF(this);
+    *result = res;
+    rv = NS_OK;
+  }
+
+  return rv;
+}
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
@@ -234,6 +272,34 @@ nsMsgAccountManager::~nsMsgAccountManager()
   if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
   UnloadAccounts();
   delete m_accounts;
+}
+
+nsIPref*
+nsMsgAccountManager::prefService() {
+
+  // get the prefs service
+  if (!m_prefs) {
+    nsresult rv =
+      nsServiceManager::GetService(kPrefServiceCID,
+                                   nsCOMTypeInfo<nsIPref>::GetIID(),
+                                   (nsISupports**)&m_prefs,
+                                   this);
+    NS_ASSERTION(NS_SUCCEEDED(rv),
+                 "prefs service not available. I will crash soon!");
+  }
+
+  return m_prefs;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::OnShutdown(const nsCID& aClass, nsISupports *service)
+{
+  if (aClass.Equals(kPrefServiceCID)) {
+    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+    m_prefs = nsnull;
+  }
+
+  return NS_OK;
 }
 
 /*
@@ -317,6 +383,17 @@ nsMsgAccountManager::AddAccount(nsIMsgAccount *account)
     // do an addref for the storage in the hash table
     NS_ADDREF(account);
     m_accounts->Put(&key, account);
+
+    // reconstruct the list of accounts
+    // this is wierd, because we could have been called
+    // from the initial LoadAccounts(). The expectation is that LoadAccounts
+    // keeps its own copy of this pref during initialization so we aren't
+    // clobbering it every time.
+    nsCString accountList;
+    m_accounts->Enumerate(hashTableGetAccountList, &accountList);
+
+    prefService()->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
+                               accountList.GetBuffer());
     
     if (m_accounts->Count() == 1)
       m_defaultAccount = dont_QueryInterface(account);
@@ -705,18 +782,11 @@ nsMsgAccountManager::LoadAccounts()
     return NS_OK;
   
   m_accountsLoaded = PR_TRUE;
-  // get the prefs service
-  if (!m_prefs) {
-    rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      nsCOMTypeInfo<nsIPref>::GetIID(),
-                                      (nsISupports**)&m_prefs);
-    if (NS_FAILED(rv)) return rv;
-  }
-
   // mail.accountmanager.accounts is the main entry point for all accounts
+
   nsXPIDLCString accountList;
-  rv = m_prefs->CopyCharPref("mail.accountmanager.accounts",
-                             getter_Copies(accountList));
+  rv = prefService()->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
+                                   getter_Copies(accountList));
 
   if (NS_FAILED(rv) || !accountList || !accountList[0]) {
 #ifdef DEBUG_ACCOUNTMANAGER
@@ -762,6 +832,28 @@ nsMsgAccountManager::LoadAccounts()
 
     /* finished loading accounts */
     return NS_OK;
+}
+
+PRBool
+nsMsgAccountManager::hashTableGetAccountList(nsHashKey *aKey, void *aData,
+                                             void *closure)
+{
+  nsresult rv;
+  nsCString* accountList = (nsCString*) closure;
+  nsIMsgAccount *account = (nsIMsgAccount *) aData;
+
+  nsXPIDLCString key;
+  rv = account->GetKey(getter_Copies(key));
+  if (NS_FAILED(rv)) return PR_TRUE;
+
+  if ((*accountList).IsEmpty())
+    (*accountList) += key;
+  else {
+    (*accountList) += ',';
+    (*accountList) += key;
+  }
+
+  return PR_TRUE;
 }
 
 nsresult
@@ -852,15 +944,8 @@ nsMsgAccountManager::upgradePrefs()
     PRInt32 numAccounts = 0;
     char *oldstr = nsnull;
     PRBool oldbool;
-  
-	if (!m_prefs) {
-		rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      nsCOMTypeInfo<nsIPref>::GetIID(),
-                                      (nsISupports**)&m_prefs);
-		if (NS_FAILED(rv)) return rv;
-	}
 
-    rv = m_prefs->GetIntPref("mail.server_type", &oldMailType);
+    rv = prefService()->GetIntPref("mail.server_type", &oldMailType);
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_ACCOUNTMANAGER
         printf("Tried to upgrade old prefs, but couldn't find server type!\n");
@@ -876,47 +961,47 @@ nsMsgAccountManager::upgradePrefs()
     identity->SetKey("identity1");
 
     // identity stuff
-    rv = m_prefs->CopyCharPref("mail.identity.useremail", &oldstr);
+    rv = prefService()->CopyCharPref("mail.identity.useremail", &oldstr);
     if (NS_SUCCEEDED(rv)) {
       identity->SetEmail(oldstr);
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
     
-    rv = m_prefs->CopyCharPref("mail.identity.username", &oldstr);
+    rv = prefService()->CopyCharPref("mail.identity.username", &oldstr);
     if (NS_SUCCEEDED(rv)) {
       identity->SetFullName(oldstr);
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
     
-    rv = m_prefs->CopyCharPref("mail.identity.reply_to", &oldstr);
+    rv = prefService()->CopyCharPref("mail.identity.reply_to", &oldstr);
     if (NS_SUCCEEDED(rv)) {
       identity->SetReplyTo(oldstr);
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
     
-    rv = m_prefs->CopyCharPref("mail.identity.organization", &oldstr);
+    rv = prefService()->CopyCharPref("mail.identity.organization", &oldstr);
     if (NS_SUCCEEDED(rv)) {
       identity->SetOrganization(oldstr);
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
     
-    rv = m_prefs->GetBoolPref("mail.compose_html", &oldbool);
+    rv = prefService()->GetBoolPref("mail.compose_html", &oldbool);
     if (NS_SUCCEEDED(rv)) {
       identity->SetComposeHtml(oldbool);
     }
     
-    rv = m_prefs->CopyCharPref("network.hosts.smtp_server", &oldstr);
+    rv = prefService()->CopyCharPref("network.hosts.smtp_server", &oldstr);
     if (NS_SUCCEEDED(rv)) {
       identity->SetSmtpHostname(oldstr);
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
     
-    rv = m_prefs->CopyCharPref("mail.smtp_name", &oldstr);
+    rv = prefService()->CopyCharPref("mail.smtp_name", &oldstr);
     if (NS_SUCCEEDED(rv)) {
       identity->SetSmtpUsername(oldstr);
       PR_FREEIF(oldstr);
@@ -942,9 +1027,9 @@ nsMsgAccountManager::upgradePrefs()
     
     // we still need to create these additional prefs.
     // assume there is at least one account
-    m_prefs->SetCharPref("mail.accountmanager.accounts","account1");
-    m_prefs->SetCharPref("mail.account.account1.identities","identity1");
-    m_prefs->SetCharPref("mail.account.account1.server","server1");
+    prefService()->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,"account1");
+    prefService()->SetCharPref("mail.account.account1.identities","identity1");
+    prefService()->SetCharPref("mail.account.account1.server","server1");
 
     char *oldAccountsValueBuf=nsnull;
     char newAccountsValueBuf[BUF_STR_LEN];
@@ -953,21 +1038,22 @@ nsMsgAccountManager::upgradePrefs()
 
     // handle the rest of the accounts.
     for (PRInt32 i=2;i<=numAccounts;i++) {
-      rv = m_prefs->CopyCharPref("mail.accountmanager.accounts", &oldAccountsValueBuf);
+      rv = prefService()->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS, &oldAccountsValueBuf);
       if (NS_SUCCEEDED(rv)) {
         PR_snprintf(newAccountsValueBuf, BUF_STR_LEN, "%s,account%d",oldAccountsValueBuf,i);
-        m_prefs->SetCharPref("mail.accountmanager.accounts", newAccountsValueBuf);
+        prefService()->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
+                                   newAccountsValueBuf);
       }
       PR_FREEIF(oldAccountsValueBuf);
       oldAccountsValueBuf = nsnull;
       
       PR_snprintf(prefNameBuf, BUF_STR_LEN, "mail.account.account%d.identities", i);
       PR_snprintf(prefValueBuf, BUF_STR_LEN, "identity%d", i);
-      m_prefs->SetCharPref(prefNameBuf, prefValueBuf);
+      prefService()->SetCharPref(prefNameBuf, prefValueBuf);
 
       PR_snprintf(prefNameBuf, BUF_STR_LEN, "mail.account.account%d.server", i);
       PR_snprintf(prefValueBuf, BUF_STR_LEN, "server%d", i);
-      m_prefs->SetCharPref(prefNameBuf, prefValueBuf);
+      prefService()->SetCharPref(prefNameBuf, prefValueBuf);
     }
 
     return NS_OK;
@@ -1062,7 +1148,7 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   if (NS_SUCCEEDED(rv)) {
     server->SetType("pop3");
 	
-    rv = m_prefs->CopyCharPref("mail.pop_name", &oldstr);
+    rv = prefService()->CopyCharPref("mail.pop_name", &oldstr);
     if (NS_SUCCEEDED(rv)) {
       server->SetUsername(oldstr);
       PR_FREEIF(oldstr);
@@ -1070,7 +1156,7 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
     }
     
 #ifdef CAN_UPGRADE_4x_PASSWORDS
-    rv = m_prefs->CopyCharPref("mail.pop_password", &oldstr);
+    rv = prefService()->CopyCharPref("mail.pop_password", &oldstr);
     if (NS_SUCCEEDED(rv)) {
       server->SetPassword(oldstr);
       PR_FREEIF(oldstr);
@@ -1082,17 +1168,17 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
 
     char *hostname=nsnull;
-    rv = m_prefs->CopyCharPref("network.hosts.pop_server", &hostname);
+    rv = prefService()->CopyCharPref("network.hosts.pop_server", &hostname);
     if (NS_SUCCEEDED(rv)) {
       server->SetHostName(hostname);
     }
     
-    rv = m_prefs->GetBoolPref("mail.check_new_mail", &oldbool);
+    rv = prefService()->GetBoolPref("mail.check_new_mail", &oldbool);
     if (NS_SUCCEEDED(rv)) {
       server->SetDoBiff(oldbool);
     }
     
-    rv = m_prefs->GetIntPref("mail.check_time", &oldint);
+    rv = prefService()->GetIntPref("mail.check_time", &oldint);
     if (NS_SUCCEEDED(rv)) {
       server->SetBiffMinutes(oldint);
     }
@@ -1157,12 +1243,12 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
     rv = createSpecialFile(dir,"Unsent Message");
     if (NS_FAILED(rv)) return 0;
 	
-    rv = m_prefs->GetBoolPref("mail.leave_on_server", &oldbool);
+    rv = prefService()->GetBoolPref("mail.leave_on_server", &oldbool);
     if (NS_SUCCEEDED(rv)) {
       popServer->SetLeaveMessagesOnServer(oldbool);
     }
     
-    rv = m_prefs->GetBoolPref("mail.delete_mail_left_on_server", &oldbool);
+    rv = prefService()->GetBoolPref("mail.delete_mail_left_on_server", &oldbool);
     if (NS_SUCCEEDED(rv)) {
       popServer->SetDeleteMailLeftOnServer(oldbool);
     }
@@ -1178,7 +1264,7 @@ nsMsgAccountManager::MigrateImapAccounts(nsIMsgIdentity *identity)
   nsresult rv;
   PRInt32 numAccounts = 0;
   char *hostList=nsnull;
-  rv = m_prefs->CopyCharPref("network.hosts.imap_servers", &hostList);
+  rv = prefService()->CopyCharPref("network.hosts.imap_servers", &hostList);
   if (NS_FAILED(rv)) return 0;
 
   if (!hostList || !*hostList) return 0;
@@ -1326,7 +1412,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 
   char prefName[BUF_STR_LEN];
   PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.userName",hostname);
-  rv = m_prefs->CopyCharPref(prefName, &oldstr);
+  rv = prefService()->CopyCharPref(prefName, &oldstr);
   if (NS_SUCCEEDED(rv)) {
     server->SetUsername(oldstr);
     PR_FREEIF(oldstr);
@@ -1336,7 +1422,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 #ifdef CAN_UPGRADE_4x_PASSWORDS
   // upgrade the password
   PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.password",hostname);
-  rv = m_prefs->CopyCharPref(prefName, &oldstr);
+  rv = prefService()->CopyCharPref(prefName, &oldstr);
   if (NS_SUCCEEDED(rv)) {
     server->SetPassword("enter your clear text password here");
     PR_FREEIF(oldstr);
@@ -1349,13 +1435,13 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
 
   // upgrade the biff prefs
   PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.check_new_mail",hostname);
-  rv = m_prefs->GetBoolPref(prefName, &oldbool);
+  rv = prefService()->GetBoolPref(prefName, &oldbool);
   if (NS_SUCCEEDED(rv)) {
     server->SetDoBiff(oldbool);
   }
 
   PR_snprintf(prefName, BUF_STR_LEN, "mail.imap.server.%s.check_time",hostname);
-  rv = m_prefs->GetIntPref(prefName, &oldint);
+  rv = prefService()->GetIntPref(prefName, &oldint);
   if (NS_SUCCEEDED(rv)) {
     server->SetBiffMinutes(oldint);
   }
@@ -1551,7 +1637,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
     char *news_directory_value = nsnull;
 	nsFileSpec dirWithTheNewsrcFiles;
     
-	rv = m_prefs->CopyCharPref("news.directory", &news_directory_value);
+	rv = prefService()->CopyCharPref("news.directory", &news_directory_value);
 	if (NS_SUCCEEDED(rv)) {
       dirWithTheNewsrcFiles = news_directory_value;
       PR_FREEIF(news_directory_value);
@@ -1682,7 +1768,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	// we don't handle nntp servers that accept username / passwords yet
 	char prefName[BUF_STR_LEN];
 	PR_snprintf(prefName, BUF_STR_LEN, "???nntp.server.%s.userName",hostname);
-	rv = m_prefs->CopyCharPref(prefName, &oldstr);
+	rv = prefService()->CopyCharPref(prefName, &oldstr);
 	if (NS_SUCCEEDED(rv)) {
 		server->SetUsername(oldstr);
 		PR_FREEIF(oldstr);
@@ -1692,7 +1778,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 #ifdef CAN_UPGRADE_4x_PASSWORDS
 	// upgrade the password
 	PR_snprintf(prefName, BUF_STR_LEN, "???nntp.server.%s.password",hostname);
-	rv = m_prefs->CopyCharPref(prefName, &oldstr);
+	rv = prefService()->CopyCharPref(prefName, &oldstr);
 	if (NS_SUCCEEDED(rv)) {
 		server->SetPassword("enter your clear text password here");
 		PR_FREEIF(oldstr);
