@@ -254,6 +254,11 @@ namespace JSTypes {
             if (prototype)
                 setPrototype(prototype);
         }
+        
+        JSScope* getParent()
+        {
+            return mParent;
+        }
     
         bool isDefined(const String& name)
         {
