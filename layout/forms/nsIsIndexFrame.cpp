@@ -1,0 +1,563 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsIsIndexFrame.h"
+
+#include "nsIContent.h"
+#include "prtypes.h"
+#include "nsIAtom.h"
+#include "nsIPresContext.h"
+#include "nsIHTMLContent.h"
+#include "nsHTMLIIDs.h"
+#include "nsHTMLAtoms.h"
+#include "nsIPresState.h"
+#include "nsIFileWidget.h"
+#include "nsWidgetsCID.h"
+#include "nsIComponentManager.h"
+#include "nsIView.h"
+#include "nsHTMLParts.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsINameSpaceManager.h"
+#include "nsCOMPtr.h"
+#include "nsFileSpec.h"
+#include "nsISupportsArray.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMDocument.h"
+#include "nsDocument.h"
+#include "nsIPresShell.h"
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIStatefulFrame.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIComponentManager.h"
+#include "nsITextContent.h"
+#include "nsHTMLParts.h"
+#include "nsLinebreakConverter.h"
+#include "nsILinkHandler.h"
+#include "nsIHTMLDocument.h"
+#include "nsXPIDLString.h"
+#include "nsNetUtil.h"
+#include "nsICharsetConverterManager.h"
+#include "nsEscape.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMKeyEvent.h"
+#include "nsIFormControlFrame.h"
+
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
+nsresult
+NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+{
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsIsIndexFrame* it = new (aPresShell) nsIsIndexFrame();
+  if (!it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aNewFrame = it;
+  return NS_OK;
+}
+
+nsIsIndexFrame::nsIsIndexFrame():
+  mTextContent(nsnull),
+  mInputContent(nsnull)
+{
+    //Shrink the area around it's contents
+  SetFlags(NS_BLOCK_SHRINK_WRAP);
+}
+
+nsIsIndexFrame::~nsIsIndexFrame()
+{
+  if (mTextContent) {
+    NS_RELEASE(mTextContent);
+  }
+  // remove ourself as a listener of the text control (bug 40533)
+  if (mInputContent) {
+    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mInputContent));
+    reciever->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
+    NS_RELEASE(mInputContent);
+  }
+}
+
+NS_IMETHODIMP
+nsIsIndexFrame::UpdatePromptLabel()
+{
+  nsresult result;
+  if (!mTextContent) return NS_ERROR_UNEXPECTED;
+
+  // Get the text from the "prompt" attribute.
+  // If it is zero length, set it to a default value (localized)
+  nsAutoString prompt;
+  if (mContent) {
+    nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(mContent, &result);
+    if ((NS_OK == result) && htmlContent) {
+      nsHTMLValue value;
+      result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::prompt, value);
+      if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+        if (eHTMLUnit_String == value.GetUnit()) {
+          value.GetStringValue(prompt);
+        }
+      }
+    }
+  }
+  if (prompt.Length() == 0) {
+    // Generate localized label.
+    // We can't make any assumption as to what the default would be
+    // because the value is localized for non-english platforms, thus
+    // it might not be the string "This is a searchable index. Enter search keywords: "
+    result = nsFormControlHelper::GetLocalizedString("IsIndexPrompt", prompt);
+  }
+  nsCOMPtr<nsITextContent> text = do_QueryInterface(mTextContent);
+  result = text->SetText(prompt.GetUnicode(), prompt.Length(), PR_TRUE);
+  return result;
+}
+
+NS_IMETHODIMP
+nsIsIndexFrame::GetInputFrame(nsIPresContext* aPresContext,
+                              nsIFormControlFrame** oFrame)
+{
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    nsIFrame *frame;
+    presShell->GetPrimaryFrameFor(mInputContent, &frame);
+    if (frame) {
+      return frame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**) oFrame);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIsIndexFrame::GetInputValue(nsIPresContext* aPresContext,
+                              nsString& oString)
+{
+  nsIFormControlFrame* frame = nsnull;
+  GetInputFrame(aPresContext, &frame);
+  if (frame) {
+    ((nsNewFrame*)frame)->GetTextControlFrameState(oString);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIsIndexFrame::SetInputValue(nsIPresContext* aPresContext,
+                              const nsString aString)
+{
+  nsIFormControlFrame* frame = nsnull;
+  GetInputFrame(aPresContext, &frame);
+  if (frame) {
+    ((nsNewFrame*)frame)->SetTextControlFrameState(aString);
+  }
+  return NS_OK;
+}
+
+void 
+nsIsIndexFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+{
+  nsIFormControlFrame* frame = nsnull;
+  GetInputFrame(mPresContext, &frame);
+  if (frame) {
+    frame->SetFocus(aOn, aRepaint);
+  }
+}
+
+NS_IMETHODIMP
+nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
+                                       nsISupportsArray& aChildList)
+{
+  nsresult result;
+
+  // Get the node info manager (used to create hr's and input's)
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsINodeInfoManager> nimgr;
+  nsresult rv = doc->GetNodeInfoManager(*getter_AddRefs(nimgr));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create an hr
+  nsCOMPtr<nsINodeInfo> hrInfo;
+  nsCOMPtr<nsIHTMLContent> prehr;
+  nimgr->GetNodeInfo(nsHTMLAtoms::hr, nsnull, kNameSpaceID_None,
+                     *getter_AddRefs(hrInfo));
+  if (NS_OK == NS_NewHTMLHRElement(getter_AddRefs(prehr), hrInfo)) {
+    result = aChildList.AppendElement(prehr);
+  }
+
+  // Add a child text content node for the label
+  if (NS_SUCCEEDED(result)) {
+    nsCOMPtr<nsIContent> labelContent;
+    result = NS_NewTextNode(getter_AddRefs(labelContent));
+    if (NS_SUCCEEDED(result) && labelContent) {
+      // set the value of the text node and add it to the child list
+      result = labelContent->QueryInterface(NS_GET_IID(nsITextContent),(void**)&mTextContent);
+      if (NS_SUCCEEDED(result) && mTextContent) {
+        UpdatePromptLabel();
+        result = aChildList.AppendElement(mTextContent);
+      }
+    }
+  }
+
+  // Create text input field
+  nsCOMPtr<nsINodeInfo> inputInfo;
+  nimgr->GetNodeInfo(nsHTMLAtoms::input, nsnull, kNameSpaceID_None,
+                     *getter_AddRefs(inputInfo));
+
+  if (NS_OK == NS_NewHTMLInputElement(&mInputContent, inputInfo)) {
+    mInputContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("text"), PR_FALSE);
+    aChildList.AppendElement(mInputContent);
+
+    // Register as an event listener to submit on Enter press
+    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mInputContent));
+    reciever->AddEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
+  }
+
+  // Create an hr
+  nsCOMPtr<nsIHTMLContent> posthr;
+  if (NS_OK == NS_NewHTMLHRElement(getter_AddRefs(posthr), hrInfo)) {
+    aChildList.AppendElement(posthr);
+  }
+
+  return result;
+}
+
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
+nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  } else if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
+    *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;
+    return NS_OK;
+  } else  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
+    return NS_OK;
+  } else  if (aIID.Equals(NS_GET_IID(nsIDOMKeyListener))) {
+    *aInstancePtr = (void*)(nsIDOMKeyListener*) this;
+    return NS_OK;
+  }
+  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+void
+nsIsIndexFrame::ScrollIntoView(nsIPresContext* aPresContext)
+{
+  if (aPresContext) {
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    presShell->ScrollFrameIntoView(this,
+                   NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
+
+  }
+}
+
+
+NS_IMETHODIMP nsIsIndexFrame::Reflow(nsIPresContext*          aPresContext, 
+                                         nsHTMLReflowMetrics&     aDesiredSize,
+                                         const nsHTMLReflowState& aReflowState, 
+                                         nsReflowStatus&          aStatus)
+{
+  DO_GLOBAL_REFLOW_COUNT("nsIsIndexFrame", aReflowState.reason);
+
+  // The Areaframe takes care of all our reflow 
+  // (except for when style is used to change its size?)
+  nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsIsIndexFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                       nsIContent*     aChild,
+                                       PRInt32         aNameSpaceID,
+                                       nsIAtom*        aAttribute,
+                                       PRInt32         aHint)
+{
+  nsresult rv = NS_OK;
+  if (nsHTMLAtoms::prompt == aAttribute) {
+    UpdatePromptLabel();
+  }
+  return nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+}
+
+
+nsresult 
+nsIsIndexFrame::KeyPress(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
+  if (keyEvent) {
+    PRUint32 code;
+    keyEvent->GetKeyCode(&code);
+    if (code == 0) {
+      keyEvent->GetCharCode(&code);
+    }
+    if (nsIDOMKeyEvent::DOM_VK_RETURN == code) {
+      OnSubmit(mPresContext);
+      aEvent->PreventDefault(); // XXX Needed?
+    }
+  }
+
+  return NS_OK;
+}
+
+#ifdef NS_DEBUG
+NS_IMETHODIMP
+nsIsIndexFrame::GetFrameName(nsString& aResult) const
+{
+  return MakeFrameName("IsIndex", aResult);
+}
+#endif
+
+// submission
+// much of this is cut and paste from nsFormFrame::OnSubmit
+NS_IMETHODIMP
+nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
+{
+  nsresult result;
+  if (!mContent || !mInputContent) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Begin ProcessAsURLEncoded
+  nsAutoString data;
+
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  if(NS_FAILED(GetEncoder(getter_AddRefs(encoder))))  // Non-fatal error
+     encoder = nsnull;
+
+  nsAutoString value;
+  GetInputValue(aPresContext, value);
+  URLEncode(value, encoder, data);
+  // End ProcessAsURLEncoded
+
+  // make the url string
+  nsCOMPtr<nsILinkHandler> handler;
+  if (NS_OK == aPresContext->GetLinkHandler(getter_AddRefs(handler))) {
+    nsAutoString href;
+
+    // Get the document.
+    // We'll need it now to form the URL we're submitting to.
+    // We'll also need it later to get the DOM window when notifying form submit observers (bug 33203)
+    nsCOMPtr<nsIDocument> document;
+    mContent->GetDocument(*getter_AddRefs(document));
+    if (!document) return NS_OK; // No doc means don't submit, see Bug 28988
+
+    // Resolve url to an absolute url
+    nsCOMPtr<nsIURI> docURL;
+    document->GetBaseURL(*getter_AddRefs(docURL));
+    NS_ASSERTION(docURL, "No Base URL found in Form Submit!\n");
+    if (!docURL) return NS_OK; // No base URL -> exit early, see Bug 30721
+
+      // If an action is not specified and we are inside 
+      // a HTML document then reload the URL. This makes us
+      // compatible with 4.x browsers.
+      // If we are in some other type of document such as XML or
+      // XUL, do nothing. This prevents undesirable reloading of
+      // a document inside XUL.
+
+      nsresult rv;
+      nsCOMPtr<nsIHTMLDocument> htmlDoc;
+      htmlDoc = do_QueryInterface(document, &rv);
+      if (NS_FAILED(rv)) {   
+        // Must be a XML, XUL or other non-HTML document type
+        // so do nothing.
+        return NS_OK;
+      } 
+
+      // Necko's MakeAbsoluteURI doesn't reuse the baseURL's rel path if it is
+      // passed a zero length rel path.
+      nsXPIDLCString relPath;
+      docURL->GetSpec(getter_Copies(relPath));
+      NS_ASSERTION(relPath, "Rel path couldn't be formed in form submit!\n");
+      if (relPath) {
+        href.AppendWithConversion(relPath);
+
+        // If re-using the same URL, chop off old query string (bug 25330)
+        PRInt32 queryStart = href.FindChar('?');
+        if (kNotFound != queryStart) {
+          href.Truncate(queryStart);
+        }
+      } else {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+    // Add the URI encoded form values to the URI
+    // Get the scheme of the URI.
+    nsCOMPtr<nsIURI> actionURL;
+    nsXPIDLCString scheme;
+    if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href, docURL))) {
+      result = actionURL->GetScheme(getter_Copies(scheme));
+    }
+    nsAutoString theScheme; theScheme.AssignWithConversion( NS_STATIC_CAST(const char*, scheme) );
+    // Append the URI encoded variable/value pairs for GET's
+    if (!theScheme.EqualsIgnoreCase("javascript")) { // Not for JS URIs, see bug 26917
+        if (href.FindChar('?', PR_FALSE, 0) == kNotFound) { // Add a ? if needed
+          href.AppendWithConversion('?');
+        } else {                              // Adding to existing query string
+          if (href.Last() != '&' && href.Last() != '?') {   // Add a & if needed
+            href.AppendWithConversion('&');
+          }
+        }
+        href.Append(data);
+    }
+    nsAutoString absURLSpec;
+    result = NS_MakeAbsoluteURI(absURLSpec, href, docURL);
+    if (NS_FAILED(result)) return result;
+
+    // Now pass on absolute url to the click handler
+    nsIInputStream* postDataStream = nsnull;
+    if (handler) {
+      handler->OnLinkClick(mContent, eLinkVerb_Replace,
+                           absURLSpec.GetUnicode(),
+                           nsnull, nsnull);
+    }
+  }
+  return result;
+}
+
+void nsIsIndexFrame::GetSubmitCharset(nsString& oCharset)
+{
+  oCharset.AssignWithConversion("UTF-8"); // default to utf-8
+  nsresult rv;
+  // XXX
+  // We may want to get it from the HTML 4 Accept-Charset attribute first
+  // see 17.3 The FORM element in HTML 4 for details
+
+  // Get the charset from document
+  nsIDocument* doc = nsnull;
+  mContent->GetDocument(doc);
+  if( nsnull != doc ) {
+    rv = doc->GetDocumentCharacterSet(oCharset);
+    NS_RELEASE(doc);
+  }
+
+}
+
+NS_IMETHODIMP nsIsIndexFrame::GetEncoder(nsIUnicodeEncoder** encoder)
+{
+  *encoder = nsnull;
+  nsAutoString charset;
+  nsresult rv = NS_OK;
+  GetSubmitCharset(charset);
+  
+  // Get Charset, get the encoder.
+  nsICharsetConverterManager * ccm = nsnull;
+  rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
+                                    NS_GET_IID(nsICharsetConverterManager),
+                                    (nsISupports**)&ccm);
+  if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
+     rv = ccm->GetUnicodeEncoder(&charset, encoder);
+     nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
+     if (nsnull == encoder) {
+       rv = NS_ERROR_FAILURE;
+     }
+     if (NS_SUCCEEDED(rv)) {
+       rv = (*encoder)->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
+     }
+  }
+  return NS_OK;
+}
+
+// XXX i18n helper routines
+char*
+nsIsIndexFrame::UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder)
+{
+   char* res = nsnull;
+   if(NS_SUCCEEDED(encoder->Reset()))
+   {
+      PRInt32 maxByteLen = 0;
+      if(NS_SUCCEEDED(encoder->GetMaxLength(aSrc, (PRInt32) aLen, &maxByteLen))) 
+      {
+          res = new char[maxByteLen+1];
+          if(nsnull != res) 
+          {
+             PRInt32 reslen = maxByteLen;
+             PRInt32 reslen2 ;
+             PRInt32 srclen = aLen;
+             encoder->Convert(aSrc, &srclen, res, &reslen);
+             reslen2 = maxByteLen-reslen;
+             encoder->Finish(res+reslen, &reslen2);
+             res[reslen+reslen2] = '\0';
+          }
+      }
+
+   }
+   return res;
+}
+
+// XXX i18n helper routines
+void
+nsIsIndexFrame::URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder, nsString& oString) 
+{
+  char* inBuf = nsnull;
+  if(encoder)
+    inBuf  = UnicodeToNewBytes(aString.GetUnicode(), aString.Length(), encoder);
+
+  if(nsnull == inBuf)
+    inBuf  = aString.ToNewCString();
+
+  // convert to CRLF breaks
+  char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(inBuf,
+                           nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakNet);
+  delete [] inBuf;
+  
+  char* outBuf = nsEscape(convertedBuf, url_XPAlphas);
+  oString.AssignWithConversion(outBuf);
+  nsCRT::free(outBuf);
+  nsMemory::Free(convertedBuf);
+}
+
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsIsIndexFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
+{
+  *aStateType = nsIStatefulFrame::eFileType; // XXX eIsIndexType
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIsIndexFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+{
+  // Construct a pres state.
+  NS_NewPresState(aState); // The addref happens here.
+  
+  // This string will hold a single item, whether or not we're checked.
+  nsAutoString stateString;
+  GetInputValue(aPresContext, stateString);
+  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("value"), stateString);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsIsIndexFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+{
+  nsAutoString string;
+  aState->GetStateProperty(NS_ConvertASCIItoUCS2("value"), string);
+  SetInputValue(aPresContext, string);
+
+  return NS_OK;
+}
