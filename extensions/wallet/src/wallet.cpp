@@ -1899,7 +1899,7 @@ wallet_GetHostFile(nsIURI * url, nsString& outHostFile)
 
   PRInt32 queryPos = urlName.FindChar('?');
   PRInt32 stringEnd = (queryPos == kNotFound) ? urlName.Length() : queryPos;
-  outHostFile = Substring(urlName, 0, stringEnd);
+  urlName.Left(outHostFile, stringEnd);
 }
 
 /*
