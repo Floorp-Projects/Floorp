@@ -21,12 +21,6 @@
 #include "nsMsgCompFields.h"
 #include "nsMsgCompFieldsFact.h"
 
-extern "C" {
-	extern int MK_OUT_OF_MEMORY;
-	extern int MK_MSG_INVALID_NEWS_HEADER;
-	extern int MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS;
-}
-
 /* this function will be used by the factory to generate an Message Compose Fields Object....*/
 nsresult NS_NewMsgCompFields(nsIMsgCompFields** aInstancePtrResult)
 {
@@ -126,9 +120,11 @@ nsresult nsMsgCompFields::SetHeader(PRInt32 header, const char *value, PRInt32 *
 			return status; /* it was a news URL, and we snarfed it up */
 		else {
 			if (status == MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS) {
+#ifdef UNREAD_CODE
 				MSG_Pane *owner = GetOwner();
 				if (owner)
 					FE_Alert (owner->GetContext(), XP_GetString(status));
+#endif
 			}
 
 			status = 0; /* It isn't a valid news URL, so treat it like a newsgroup
