@@ -75,7 +75,7 @@ struct JSRuntime {
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
     JSGCThing           *gcFreeList;
-    jsrefcount          gcDisabled;
+    jsrefcount          gcKeepAtoms;
     uint32              gcBytes;
     uint32              gcLastBytes;
     uint32              gcMaxBytes;
@@ -248,8 +248,8 @@ struct JSRuntime {
 # define JS_RUNTIME_UNMETER(rt, which)  /* nothing */
 #endif
 
-#define JS_ENABLE_GC(rt)    JS_ATOMIC_DECREMENT(&(rt)->gcDisabled);
-#define JS_DISABLE_GC(rt)   JS_ATOMIC_INCREMENT(&(rt)->gcDisabled);
+#define JS_KEEP_ATOMS(rt)   JS_ATOMIC_INCREMENT(&(rt)->gcKeepAtoms);
+#define JS_UNKEEP_ATOMS(rt) JS_ATOMIC_DECREMENT(&(rt)->gcKeepAtoms);
 
 #ifdef JS_ARGUMENT_FORMATTER_DEFINED
 /*

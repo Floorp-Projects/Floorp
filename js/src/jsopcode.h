@@ -172,22 +172,22 @@ struct JSCodeSpec {
     uint32              format;         /* immediate operand format */
 };
 
-extern char             js_const_str[];
-extern char             js_var_str[];
-extern char             js_function_str[];
-extern char             js_in_str[];
-extern char             js_instanceof_str[];
-extern char             js_new_str[];
-extern char             js_delete_str[];
-extern char             js_typeof_str[];
-extern char             js_void_str[];
-extern char             js_null_str[];
-extern char             js_this_str[];
-extern char             js_false_str[];
-extern char             js_true_str[];
-extern JSCodeSpec       js_CodeSpec[];
+extern const char       js_const_str[];
+extern const char       js_var_str[];
+extern const char       js_function_str[];
+extern const char       js_in_str[];
+extern const char       js_instanceof_str[];
+extern const char       js_new_str[];
+extern const char       js_delete_str[];
+extern const char       js_typeof_str[];
+extern const char       js_void_str[];
+extern const char       js_null_str[];
+extern const char       js_this_str[];
+extern const char       js_false_str[];
+extern const char       js_true_str[];
+extern const JSCodeSpec js_CodeSpec[];
 extern uintN            js_NumCodeSpecs;
-extern jschar           js_EscapeMap[];
+extern const jschar     js_EscapeMap[];
 
 /*
  * Return a GC'ed string containing the chars in str, with any non-printing

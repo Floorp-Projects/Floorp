@@ -55,6 +55,9 @@ struct JSTryNote {
     ptrdiff_t    catchStart;    /* start of catch block (0 if end) */
 };
 
+#define JSTRYNOTE_GRAIN         sizeof(ptrdiff_t)
+#define JSTRYNOTE_ALIGNMASK     (JSTRYNOTE_GRAIN - 1)
+
 struct JSScript {
     jsbytecode   *code;         /* bytecodes and their immediate operands */
     uint32       length;        /* length of code vector */
@@ -64,20 +67,22 @@ struct JSScript {
     const char   *filename;     /* source filename or null */
     uintN        lineno;        /* base line number of script */
     uintN        depth;         /* maximum stack depth in slots */
-    jssrcnote    *notes;        /* line number and other decompiling data */
     JSTryNote    *trynotes;     /* exception table for this script */
     JSPrincipals *principals;   /* principals for this script */
     JSObject     *object;       /* optional Script-class object wrapper */
 };
 
-#define JSSCRIPT_FIND_CATCH_START(script, pc, catchpc)                        \
+/* No need to store script->notes now that it is allocated right after code. */
+#define SCRIPT_NOTES(script)    ((jssrcnote*)((script)->code+(script)->length))
+
+#define SCRIPT_FIND_CATCH_START(script, pc, catchpc)                          \
     JS_BEGIN_MACRO                                                            \
         JSTryNote *tn_ = (script)->trynotes;                                  \
         jsbytecode *catchpc_ = NULL;                                          \
         if (tn_) {                                                            \
             ptrdiff_t offset_ = PTRDIFF(pc, (script)->main, jsbytecode);      \
             while (JS_UPTRDIFF(offset_, tn_->start) >= (jsuword)tn_->length)  \
-                tn_++;                                                        \
+                ++tn_;                                                        \
             if (tn_->catchStart)                                              \
                 catchpc_ = (script)->main + tn_->catchStart;                  \
         }                                                                     \
@@ -89,9 +94,24 @@ extern JS_FRIEND_DATA(JSClass) js_ScriptClass;
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);
 
+extern JSBool
+js_InitScriptGlobals();
+
+extern void
+js_FreeScriptGlobals();
+
+extern const char *
+js_SaveScriptFilename(JSContext *cx, const char *filename);
+
+extern void
+js_MarkScriptFilename(const char *filename);
+
+extern void
+js_SweepScriptFilenames(JSRuntime *rt);
+
 /*
- * Three successively less primitive ways to make a new JSScript.  The first
- * two do *not* call a non-null cx->runtime->newScriptHook -- only the last,
+ * Two successively less primitive ways to make a new JSScript.  The first
+ * does *not* call a non-null cx->runtime->newScriptHook -- only the second,
  * js_NewScriptFromCG, calls this optional debugger hook.
  *
  * The js_NewScript function can't know whether the script it creates belongs
@@ -101,14 +121,7 @@ js_InitScriptClass(JSContext *cx, JSObject *obj);
  * kind (function or other) of new JSScript.
  */
 extern JSScript *
-js_NewScript(JSContext *cx, uint32 length);
-
-extern JSScript *
-js_NewScriptFromParams(JSContext *cx, jsbytecode *code, uint32 length,
-		       jsbytecode *prolog, uint32 prologLength,
-		       const char *filename, uintN lineno, uintN depth,
-		       jssrcnote *notes, JSTryNote *trynotes,
-		       JSPrincipals *principals);
+js_NewScript(JSContext *cx, uint32 length, uint32 snlength, uint32 tnlength);
 
 extern JS_FRIEND_API(JSScript *)
 js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun);
@@ -131,8 +144,9 @@ js_MarkScript(JSContext *cx, JSScript *script, void *arg);
 extern jssrcnote *
 js_GetSrcNote(JSScript *script, jsbytecode *pc);
 
+/* XXX need cx to lock function objects declared by prolog bytecodes. */
 extern uintN
-js_PCToLineNumber(JSScript *script, jsbytecode *pc);
+js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
 
 extern jsbytecode *
 js_LineNumberToPC(JSScript *script, uintN lineno);

@@ -133,7 +133,7 @@ NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 const char XUL_FASTLOAD_FILE_BASENAME[] = "XUL";
 
 // increase the subtractor when changing version
-#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 7)
+#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 8)
 
 #define XUL_SERIALIZATION_BUFFER_SIZE   (64 * 1024)
 #define XUL_DESERIALIZATION_BUFFER_SIZE (8 * 1024)

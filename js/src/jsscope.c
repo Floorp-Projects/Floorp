@@ -1449,7 +1449,7 @@ js_SweepScopeProperties(JSRuntime *rt)
     uintN i;
 
 #ifdef DEBUG_brendan
-    uint32 livePropCapacity, totalLiveCount = 0;
+    uint32 livePropCapacity = 0, totalLiveCount = 0;
     static FILE *logfp;
     if (!logfp)
         logfp = fopen("/tmp/proptree.stats", "a");
@@ -1490,9 +1490,6 @@ js_SweepScopeProperties(JSRuntime *rt)
     js_nkids_sqsum = 0;
     memset(js_nkids_hist, 0, sizeof js_nkids_hist);
 #endif
-
-    /* Mark watched scope properties hidden in the runtime before we sweep. */
-    js_MarkWatchPoints(rt);
 
     ap = &rt->propertyArenaPool.first.next;
     while ((a = *ap) != NULL) {

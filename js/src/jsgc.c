@@ -53,6 +53,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
+#include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -1031,15 +1032,13 @@ js_GC(JSContext *cx, uintN gcflags)
 #endif
 
     /*
-     * Don't collect garbage if the runtime is down or if GC is disabled, and
-     * we're not the last context in the runtime.  The last context must force
-     * a GC, and nothing should disable that final collection or there may be
-     * shutdown leaks, or runtime bloat until the next context is created.
+     * Don't collect garbage if the runtime isn't up, and cx is not the last
+     * context in the runtime.  The last context must force a GC, and nothing
+     * should suppress that final collection or there may be shutdown leaks,
+     * or runtime bloat until the next context is created.
      */
-    if ((rt->state != JSRTS_UP || rt->gcDisabled) &&
-        !(gcflags & GC_LAST_CONTEXT)) {
+    if (rt->state != JSRTS_UP && !(gcflags & GC_LAST_CONTEXT))
         return;
-    }
 
     /*
      * Let the API user decide to defer a GC if it wants to (unless this
@@ -1159,7 +1158,11 @@ js_GC(JSContext *cx, uintN gcflags)
     rt->gcRunning = JS_TRUE;
     JS_UNLOCK_GC(rt);
 
-    /* Reset malloc counter */
+    /* If a suspended compile is running on another context, keep atoms. */
+    if (rt->gcKeepAtoms)
+        gcflags |= GC_KEEP_ATOMS;
+
+    /* Reset malloc counter. */
     rt->gcMallocBytes = 0;
 
     /* Drop atoms held by the property cache, and clear property weak links. */
@@ -1181,6 +1184,7 @@ restart:
     if (rt->gcLocksHash)
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_marker, cx);
     js_MarkAtomState(&rt->atomState, gcflags, gc_mark_atom_key_thing, cx);
+    js_MarkWatchPoints(rt);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL) {
         /*
@@ -1291,6 +1295,7 @@ restart:
      */
     js_SweepAtomState(&rt->atomState);
     js_SweepScopeProperties(rt);
+    js_SweepScriptFilenames(rt);
     for (a = rt->gcArenaPool.first.next; a; a = a->next) {
         flagp = (uint8 *) a->base;
         split = (uint8 *) FIRST_THING_PAGE(a);
@@ -1375,6 +1380,11 @@ restart:
 
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_FINALIZE_END);
+#ifdef DEBUG_brendan
+  { extern void DumpSrcNoteSizeHist();
+    DumpSrcNoteSizeHist();
+  }
+#endif
 
 out:
     JS_LOCK_GC(rt);

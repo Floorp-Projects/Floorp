@@ -858,71 +858,69 @@ SrcNotes(JSContext *cx, JSScript *script)
     jsatomid atomIndex;
     JSAtom *atom;
 
-    notes = script->notes;
-    if (notes) {
-        fprintf(gOutFile, "\nSource notes:\n");
-        offset = 0;
-        for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
-            delta = SN_DELTA(sn);
-            offset += delta;
-            fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
-                    PTRDIFF(sn, notes, jssrcnote), offset, delta,
-                    js_SrcNoteSpec[SN_TYPE(sn)].name);
-            type = (JSSrcNoteType) SN_TYPE(sn);
-            switch (type) {
-              case SRC_SETLINE:
-                fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
-                break;
-              case SRC_FOR:
-                fprintf(gOutFile, " cond %u update %u tail %u",
-                       (uintN) js_GetSrcNoteOffset(sn, 0),
-                       (uintN) js_GetSrcNoteOffset(sn, 1),
-                       (uintN) js_GetSrcNoteOffset(sn, 2));
-                break;
-              case SRC_COND:
-              case SRC_IF_ELSE:
-              case SRC_WHILE:
-              case SRC_PCBASE:
-              case SRC_PCDELTA:
-                fprintf(gOutFile, " offset %u", (uintN) js_GetSrcNoteOffset(sn, 0));
-                break;
-              case SRC_LABEL:
-              case SRC_LABELBRACE:
-              case SRC_BREAK2LABEL:
-              case SRC_CONT2LABEL:
-              case SRC_FUNCDEF: {
-                const char *bytes;
-                JSFunction *fun;
-                JSString *str;
+    fprintf(gOutFile, "\nSource notes:\n");
+    offset = 0;
+    notes = SCRIPT_NOTES(script);
+    for (sn = notes; !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
+        delta = SN_DELTA(sn);
+        offset += delta;
+        fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
+                PTRDIFF(sn, notes, jssrcnote), offset, delta,
+                js_SrcNoteSpec[SN_TYPE(sn)].name);
+        type = (JSSrcNoteType) SN_TYPE(sn);
+        switch (type) {
+          case SRC_SETLINE:
+            fprintf(gOutFile, " lineno %u", (uintN) js_GetSrcNoteOffset(sn, 0));
+            break;
+          case SRC_FOR:
+            fprintf(gOutFile, " cond %u update %u tail %u",
+                   (uintN) js_GetSrcNoteOffset(sn, 0),
+                   (uintN) js_GetSrcNoteOffset(sn, 1),
+                   (uintN) js_GetSrcNoteOffset(sn, 2));
+            break;
+          case SRC_COND:
+          case SRC_IF_ELSE:
+          case SRC_WHILE:
+          case SRC_PCBASE:
+          case SRC_PCDELTA:
+            fprintf(gOutFile, " offset %u", (uintN) js_GetSrcNoteOffset(sn, 0));
+            break;
+          case SRC_LABEL:
+          case SRC_LABELBRACE:
+          case SRC_BREAK2LABEL:
+          case SRC_CONT2LABEL:
+          case SRC_FUNCDEF: {
+            const char *bytes;
+            JSFunction *fun;
+            JSString *str;
 
-                atomIndex = (jsatomid) js_GetSrcNoteOffset(sn, 0);
-                atom = js_GetAtom(cx, &script->atomMap, atomIndex);
-                if (type != SRC_FUNCDEF) {
-                    bytes = ATOM_BYTES(atom);
-                } else {
-                    fun = (JSFunction *)
-                        JS_GetPrivate(cx, ATOM_TO_OBJECT(atom));
-                    str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
-                    bytes = str ? JS_GetStringBytes(str) : "N/A";
-                }
-                fprintf(gOutFile, " atom %u (%s)", (uintN)atomIndex, bytes);
-                break;
-              }
-              case SRC_SWITCH:
-                fprintf(gOutFile, " length %u", (uintN) js_GetSrcNoteOffset(sn, 0));
-                caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
-                if (caseOff)
-                    fprintf(gOutFile, " first case offset %u", caseOff);
-                break;
-              case SRC_CATCH:
-                delta = (uintN) js_GetSrcNoteOffset(sn, 0);
-                if (delta)
-                    fprintf(gOutFile, " guard size %u", delta);
-                break;
-              default:;
+            atomIndex = (jsatomid) js_GetSrcNoteOffset(sn, 0);
+            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
+            if (type != SRC_FUNCDEF) {
+                bytes = js_AtomToPrintableString(cx, atom);
+            } else {
+                fun = (JSFunction *)
+                    JS_GetPrivate(cx, ATOM_TO_OBJECT(atom));
+                str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
+                bytes = str ? JS_GetStringBytes(str) : "N/A";
             }
-            fputc('\n', gOutFile);
+            fprintf(gOutFile, " atom %u (%s)", (uintN)atomIndex, bytes);
+            break;
+          }
+          case SRC_SWITCH:
+            fprintf(gOutFile, " length %u", (uintN) js_GetSrcNoteOffset(sn, 0));
+            caseOff = (uintN) js_GetSrcNoteOffset(sn, 1);
+            if (caseOff)
+                fprintf(gOutFile, " first case offset %u", caseOff);
+            break;
+          case SRC_CATCH:
+            delta = (uintN) js_GetSrcNoteOffset(sn, 0);
+            if (delta)
+                fprintf(gOutFile, " guard size %u", delta);
+            break;
+          default:;
         }
+        fputc('\n', gOutFile);
     }
 }
 
@@ -1115,16 +1113,22 @@ Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+typedef struct DumpAtomArgs {
+    JSContext   *cx;
+    FILE        *fp;
+} DumpAtomArgs;
+
 static int
 DumpAtom(JSHashEntry *he, int i, void *arg)
 {
-    FILE *fp = (FILE *) arg;
+    DumpAtomArgs *args = (DumpAtomArgs *)arg;
+    FILE *fp = args->fp;
     JSAtom *atom = (JSAtom *)he;
 
     fprintf(fp, "%3d %08x %5lu ",
             i, (uintN)he->keyHash, (unsigned long)atom->number);
     if (ATOM_IS_STRING(atom))
-        fprintf(fp, "\"%s\"\n", ATOM_BYTES(atom));
+        fprintf(fp, "\"%s\"\n", js_AtomToPrintableString(args->cx, atom));
     else if (ATOM_IS_INT(atom))
         fprintf(fp, "%ld\n", (long)ATOM_TO_INT(atom));
     else
@@ -1145,10 +1149,12 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
         if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
             continue;
         fprintf(fp, "%3u %p", i, sprop);
-        if (sprop->id & JSVAL_INT)
+        if (JSVAL_IS_INT(sprop->id)) {
             fprintf(fp, " [%ld]", (long)JSVAL_TO_INT(sprop->id));
-        else
-            fprintf(fp, " \"%s\"", ATOM_BYTES((JSAtom *)sprop->id));
+        } else {
+            fprintf(fp, " \"%s\"",
+                    js_AtomToPrintableString(cx, (JSAtom *)sprop->id));
+        }
 
 #define DUMP_ATTR(name) if (sprop->attrs & JSPROP_##name) fputs(" " #name, fp)
         DUMP_ATTR(ENUMERATE);
@@ -1185,8 +1191,19 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_DumpArenaStats(stdout);
 #endif
         } else if (strcmp(bytes, "atom") == 0) {
+            DumpAtomArgs args;
+
             fprintf(gOutFile, "\natom table contents:\n");
-            JS_HashTableDump(cx->runtime->atomState.table, DumpAtom, stdout);
+            args.cx = cx;
+            args.fp = stdout;
+            JS_HashTableEnumerateEntries(cx->runtime->atomState.table,
+                                         DumpAtom,
+                                         &args);
+#ifdef HASHMETER
+            JS_HashTableDumpMeter(cx->runtime->atomState.table,
+                                  DumpAtom,
+                                  stdout);
+#endif
         } else if (strcmp(bytes, "global") == 0) {
             DumpScope(cx, cx->globalObject, stdout);
         } else {
@@ -1874,7 +1891,7 @@ Exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     if (!fun->atom)
         return JS_TRUE;
-    name = ATOM_BYTES(fun->atom);
+    name = JS_GetStringBytes(ATOM_TO_STRING(fun->atom));
     nargc = 1 + argc;
     nargv = JS_malloc(cx, (nargc + 1) * sizeof(char *));
     if (!nargv)

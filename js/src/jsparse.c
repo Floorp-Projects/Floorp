@@ -328,6 +328,7 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
     JSAtom *atom;
     JSRuntime *rt;
     JSOp op;
+    const char *name;
 
     JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_NAME);
     atom = CURRENT_TOKEN(ts).t_atom;
@@ -350,11 +351,13 @@ CheckGetterOrSetter(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
         return TOK_ERROR;
     }
     CURRENT_TOKEN(ts).t_op = op;
-    if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+    name = js_AtomToPrintableString(cx, atom);
+    if (!name ||
+        !js_ReportCompileErrorNumber(cx, ts, NULL,
                                      JSREPORT_WARNING |
                                      JSREPORT_STRICT,
                                      JSMSG_DEPRECATED_USAGE,
-                                     ATOM_BYTES(atom))) {
+                                     name)) {
         return TOK_ERROR;
     }
     return tt;
@@ -389,12 +392,14 @@ js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
     }
 
     /*
-     * Prevent GC activation (possible if out of memory when atomizing,
-     * or from pre-ECMAv2 switch case expr eval in the unlikely case of a
-     * branch-callback -- unlikely because it means the switch case must
-     * have called a function).
+     * Protect atoms from being collected by a GC activation, which might
+     * - nest on this thread due to out of memory (the so-called "last ditch"
+     *   GC attempted within js_AllocGCThing), or
+     * - run for any reason on another thread if this thread is suspended on
+     *   an object lock before it finishes generating bytecode into a script
+     *   protected from the GC by a root or a stack frame reference.
      */
-    JS_DISABLE_GC(cx->runtime);
+    JS_KEEP_ATOMS(cx->runtime);
     TREE_CONTEXT_INIT(&tc);
     pn = Statements(cx, ts, &tc);
     if (pn) {
@@ -410,7 +415,7 @@ js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
     }
 
     TREE_CONTEXT_FINISH(&tc);
-    JS_ENABLE_GC(cx->runtime);
+    JS_UNKEEP_ATOMS(cx->runtime);
     cx->fp = fp;
     return pn;
 }
@@ -447,7 +452,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
     }
 
     /* Prevent GC activation while compiling. */
-    JS_DISABLE_GC(cx->runtime);
+    JS_KEEP_ATOMS(cx->runtime);
 
     pn = Statements(cx, ts, &cg->treeContext);
     if (!pn) {
@@ -484,7 +489,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(stdout);
 #endif
-    JS_ENABLE_GC(cx->runtime);
+    JS_UNKEEP_ATOMS(cx->runtime);
     cx->fp = fp;
     return ok;
 }
@@ -645,7 +650,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     }
 
     /* Prevent GC activation while compiling. */
-    JS_DISABLE_GC(cx->runtime);
+    JS_KEEP_ATOMS(cx->runtime);
 
     /* Push a JSStackFrame for use by FunctionBody and js_EmitFunctionBody. */
     fp = cx->fp;
@@ -680,7 +685,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
 
     /* Restore saved state and release code generation arenas. */
     cx->fp = fp;
-    JS_ENABLE_GC(cx->runtime);
+    JS_UNKEEP_ATOMS(cx->runtime);
     js_FinishCodeGenerator(cx, &funcg);
     return ok;
 }
@@ -705,7 +710,9 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_FUNC, tc);
     if (!pn)
         return NULL;
+#if JS_HAS_GETTER_SETTER
     op = CURRENT_TOKEN(ts).t_op;
+#endif
 
     /* Scan the optional function name into funAtom. */
     if (js_MatchToken(cx, ts, TOK_NAME))
@@ -741,17 +748,20 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
                 ok = JS_TRUE;
                 if (pobj == fun->object &&
                     sprop->getter == js_GetArgument) {
+                    const char *name = js_AtomToPrintableString(cx, argAtom);
+
                     /*
                      * A duplicate parameter name. We force a duplicate node
                      * on the SCOPE_LAST_PROP(scope) list with the same id,
                      * distinguished by the SPROP_IS_DUPLICATE flag, and not
                      * mapped by an entry in scope.
                      */
-                    ok = js_ReportCompileErrorNumber(cx, ts, NULL,
+                    ok = name &&
+                         js_ReportCompileErrorNumber(cx, ts, NULL,
                                                      JSREPORT_WARNING |
                                                      JSREPORT_STRICT,
                                                      JSMSG_DUPLICATE_FORMAL,
-                                                     ATOM_BYTES(argAtom));
+                                                     name);
 
                     dupflag = SPROP_IS_DUPLICATE;
                 }
@@ -819,20 +829,24 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         ATOM_LIST_SEARCH(ale, &tc->decls, funAtom);
         if (ale) {
             prevop = ALE_JSOP(ale);
-            if ((JS_HAS_STRICT_OPTION(cx) || prevop == JSOP_DEFCONST) &&
-                !js_ReportCompileErrorNumber(cx, ts, NULL,
-                                             (prevop != JSOP_DEFCONST)
-                                             ? JSREPORT_WARNING|JSREPORT_STRICT
-                                             : JSREPORT_ERROR,
-                                             JSMSG_REDECLARED_VAR,
-                                             (prevop == JSOP_DEFFUN ||
-                                              prevop == JSOP_CLOSURE)
-                                             ? js_function_str
-                                             : (prevop == JSOP_DEFCONST)
-                                             ? js_const_str
-                                             : js_var_str,
-                                             ATOM_BYTES(funAtom))) {
-                return NULL;
+            if (JS_HAS_STRICT_OPTION(cx) || prevop == JSOP_DEFCONST) {
+                const char *name = js_AtomToPrintableString(cx, funAtom);
+                if (!name ||
+                    !js_ReportCompileErrorNumber(cx, ts, NULL,
+                                                 (prevop != JSOP_DEFCONST)
+                                                 ? JSREPORT_WARNING |
+                                                   JSREPORT_STRICT
+                                                 : JSREPORT_ERROR,
+                                                 JSMSG_REDECLARED_VAR,
+                                                 (prevop == JSOP_DEFFUN ||
+                                                  prevop == JSOP_CLOSURE)
+                                                 ? js_function_str
+                                                 : (prevop == JSOP_DEFCONST)
+                                                 ? js_const_str
+                                                 : js_var_str,
+                                                 name)) {
+                    return NULL;
+                }
             }
             if (tc->topStmt && prevop == JSOP_DEFVAR)
                 tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
@@ -902,8 +916,16 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 #endif
         op = JSOP_NOP;
 
+    /*
+     * Pending a better automatic GC root management scheme (see Mozilla bug
+     * 40757, http://bugzilla.mozilla.org/show_bug.cgi?id=40757), we need to
+     * atomize here to protect against a GC activation.
+     */
+    pn->pn_funAtom = js_AtomizeObject(cx, fun->object, 0);
+    if (!pn->pn_funAtom)
+        return JS_FALSE;
+
     pn->pn_op = op;
-    pn->pn_fun = fun;
     pn->pn_body = body;
     pn->pn_flags = funtc.flags & TCF_FUN_FLAGS;
     pn->pn_tryCount = funtc.tryCount;
@@ -1988,23 +2010,27 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         ATOM_LIST_SEARCH(ale, &tc->decls, atom);
         if (ale) {
             prevop = ALE_JSOP(ale);
-            if ((JS_HAS_STRICT_OPTION(cx) ||
-                 pn->pn_op == JSOP_DEFCONST ||
-                 prevop == JSOP_DEFCONST) &&
-                !js_ReportCompileErrorNumber(cx, ts, NULL,
-                                             (pn->pn_op != JSOP_DEFCONST &&
-                                              prevop != JSOP_DEFCONST)
-                                             ? JSREPORT_WARNING|JSREPORT_STRICT
-                                             : JSREPORT_ERROR,
-                                             JSMSG_REDECLARED_VAR,
-                                             (prevop == JSOP_DEFFUN ||
-                                              prevop == JSOP_CLOSURE)
-                                             ? js_function_str
-                                             : (prevop == JSOP_DEFCONST)
-                                             ? js_const_str
-                                             : js_var_str,
-                                             ATOM_BYTES(atom))) {
-                return NULL;
+            if (JS_HAS_STRICT_OPTION(cx) ||
+                pn->pn_op == JSOP_DEFCONST ||
+                prevop == JSOP_DEFCONST) {
+                const char *name = js_AtomToPrintableString(cx, atom);
+                if (!name ||
+                    !js_ReportCompileErrorNumber(cx, ts, NULL,
+                                                 (pn->pn_op != JSOP_DEFCONST &&
+                                                  prevop != JSOP_DEFCONST)
+                                                 ? JSREPORT_WARNING |
+                                                   JSREPORT_STRICT
+                                                 : JSREPORT_ERROR,
+                                                 JSMSG_REDECLARED_VAR,
+                                                 (prevop == JSOP_DEFFUN ||
+                                                  prevop == JSOP_CLOSURE)
+                                                 ? js_function_str
+                                                 : (prevop == JSOP_DEFCONST)
+                                                 ? js_const_str
+                                                 : js_var_str,
+                                                 name)) {
+                    return NULL;
+                }
             }
             if (pn->pn_op == JSOP_DEFVAR && prevop == JSOP_CLOSURE)
                 tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
@@ -2034,10 +2060,13 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             OBJ_IS_NATIVE(pobj) &&
             (sprop = (JSScopeProperty *)prop) != NULL) {
             if (sprop->getter == js_GetArgument) {
-                if (pn->pn_op == JSOP_DEFCONST) {
+                const char *name = js_AtomToPrintableString(cx, atom);
+                if (!name) {
+                    ok = JS_FALSE;
+                } else if (pn->pn_op == JSOP_DEFCONST) {
                     js_ReportCompileErrorNumber(cx, ts, NULL, JSREPORT_ERROR,
                                                 JSMSG_REDECLARED_PARAM,
-                                                ATOM_BYTES(atom));
+                                                name);
                     ok = JS_FALSE;
                 } else {
                     currentGetter = js_GetArgument;
@@ -2046,7 +2075,7 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                                                      JSREPORT_WARNING |
                                                      JSREPORT_STRICT,
                                                      JSMSG_VAR_HIDES_ARG,
-                                                     ATOM_BYTES(atom));
+                                                     name);
                 }
             } else {
                 if (fun) {

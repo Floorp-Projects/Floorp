@@ -63,21 +63,21 @@
 #include "jsscript.h"
 #include "jsstr.h"
 
-char js_const_str[]         = "const";
-char js_var_str[]           = "var";
-char js_function_str[]      = "function";
-char js_in_str[]            = "in";
-char js_instanceof_str[]    = "instanceof";
-char js_new_str[]           = "new";
-char js_delete_str[]        = "delete";
-char js_typeof_str[]        = "typeof";
-char js_void_str[]          = "void";
-char js_null_str[]          = "null";
-char js_this_str[]          = "this";
-char js_false_str[]         = "false";
-char js_true_str[]          = "true";
+const char js_const_str[]       = "const";
+const char js_var_str[]         = "var";
+const char js_function_str[]    = "function";
+const char js_in_str[]          = "in";
+const char js_instanceof_str[]  = "instanceof";
+const char js_new_str[]         = "new";
+const char js_delete_str[]      = "delete";
+const char js_typeof_str[]      = "typeof";
+const char js_void_str[]        = "void";
+const char js_null_str[]        = "null";
+const char js_this_str[]        = "this";
+const char js_false_str[]       = "false";
+const char js_true_str[]        = "true";
 
-char *js_incop_str[]        = {"++", "--"};
+const char *js_incop_str[]      = {"++", "--"};
 
 /* Pollute the namespace locally for MSVC Win16, but not for WatCom.  */
 #ifdef __WINDOWS_386__
@@ -90,7 +90,7 @@ char *js_incop_str[]        = {"++", "--"};
 #endif
 #endif /* !__WINDOWS_386__ */
 
-JSCodeSpec FAR js_CodeSpec[] = {
+const JSCodeSpec FAR js_CodeSpec[] = {
 #define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
     {name,token,length,nuses,ndefs,prec,format},
 #include "jsopcode.tbl"
@@ -139,7 +139,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 		JSBool lines, FILE *fp)
 {
     JSOp op;
-    JSCodeSpec *cs;
+    const JSCodeSpec *cs;
     intN len, off;
     JSAtom *atom;
     JSString *str;
@@ -362,7 +362,7 @@ Sprint(Sprinter *sp, const char *format, ...)
     return offset;
 }
 
-jschar js_EscapeMap[] = {
+const jschar js_EscapeMap[] = {
     '\b', 'b',
     '\f', 'f',
     '\n', 'n',
@@ -617,7 +617,7 @@ static ptrdiff_t
 PopOff(SprintStack *ss, JSOp op)
 {
     uintN top;
-    JSCodeSpec *cs, *topcs;
+    const JSCodeSpec *cs, *topcs;
     ptrdiff_t off;
 
     /* ss->top points to the next free slot; be paranoid about underflow. */
@@ -795,7 +795,7 @@ GetSlotAtom(JSPrinter *jp, JSPropertyOp getter, uintN slot)
 static const char *
 VarPrefix(jssrcnote *sn)
 {
-    char *kw;
+    const char *kw;
     static char buf[8];
 
     kw = NULL;
@@ -838,7 +838,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     jsbytecode *endpc, *done, *forelem_done;
     ptrdiff_t len, todo, oplen, cond, next, tail;
     JSOp op, lastop, saveop;
-    JSCodeSpec *cs, *topcs;
+    const JSCodeSpec *cs, *topcs;
     jssrcnote *sn;
     const char *lval, *rval, *xval;
     jsint i, argc;
@@ -2500,7 +2500,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     jsval *sp, *base, *limit;
     JSScript *script;
     JSOp op;
-    JSCodeSpec *cs;
+    const JSCodeSpec *cs;
     uint32 format, mode;
     intN depth;
     jssrcnote *sn;

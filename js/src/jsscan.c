@@ -66,7 +66,7 @@
 #define RESERVE_ECMA_KEYWORDS
 
 static struct keyword {
-    char        *name;
+    const char  *name;
     JSTokenType tokentype;      /* JSTokenType */
     JSOp        op;             /* JSOp */
     JSVersion   version;        /* JSVersion */
@@ -561,7 +561,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
                 : NULL;
         } else if (cg) {
             report.filename = cg->filename;
-            report.lineno = cg->currentLine;
+            report.lineno = CG_CURRENT_LINE(cg);
         }
 
 #if JS_HAS_ERROR_EXCEPTIONS

@@ -631,12 +631,20 @@ JS_NewRuntime(uint32 maxbytes)
     JS_END_MACRO;
 #endif /* DEBUG */
 
+    if (!js_InitScriptGlobals())
+        return NULL;
     if (!js_InitStringGlobals())
         return NULL;
     rt = (JSRuntime *) malloc(sizeof(JSRuntime));
     if (!rt)
         return NULL;
+    
+    /* Initialize infallibly first, so we can goto bad and JS_DestroyRuntime. */
     memset(rt, 0, sizeof(JSRuntime));
+    JS_INIT_CLIST(&rt->contextList);
+    JS_INIT_CLIST(&rt->trapList);
+    JS_INIT_CLIST(&rt->watchPointList);
+
     if (!js_InitGC(rt, maxbytes))
         goto bad;
 #ifdef JS_THREADSAFE
@@ -670,9 +678,6 @@ JS_NewRuntime(uint32 maxbytes)
     rt->propertyCache.empty = JS_TRUE;
     if (!js_InitPropertyTree(rt))
         goto bad;
-    JS_INIT_CLIST(&rt->contextList);
-    JS_INIT_CLIST(&rt->trapList);
-    JS_INIT_CLIST(&rt->watchPointList);
     return rt;
 
 bad:
@@ -724,11 +729,11 @@ JS_PUBLIC_API(void)
 JS_ShutDown(void)
 {
     JS_ArenaShutDown();
+    js_FinishDtoa();
+    js_FreeScriptGlobals();
     js_FreeStringGlobals();
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
-#else
-    js_FinishDtoa();
 #endif
 }
 
@@ -1655,9 +1660,6 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
-    if (cx->runtime->gcDisabled)
-        return;
-
     if (cx->stackPool.current == &cx->stackPool.first)
         JS_FinishArenaPool(&cx->stackPool);
     JS_FinishArenaPool(&cx->codePool);
@@ -3703,7 +3705,6 @@ JS_GetStringBytes(JSString *str)
 {
     char *bytes;
 
-    CHECK_REQUEST(cx);
     bytes = js_GetStringBytes(str);
     return bytes ? bytes : "";
 }
@@ -3725,7 +3726,6 @@ JS_GetStringChars(JSString *str)
      */
     jschar *chars;
 
-    CHECK_REQUEST(cx);
     chars = js_GetStringChars(str);
     return chars ? chars : JSSTRING_CHARS(str);
 }
@@ -3733,14 +3733,12 @@ JS_GetStringChars(JSString *str)
 JS_PUBLIC_API(size_t)
 JS_GetStringLength(JSString *str)
 {
-    CHECK_REQUEST(cx);
     return JSSTRING_LENGTH(str);
 }
 
 JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2)
 {
-    CHECK_REQUEST(cx);
     return js_CompareStrings(str1, str2);
 }
 

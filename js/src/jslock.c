@@ -848,7 +848,6 @@ js_CleanupLocks()
         fl_list_table_len = 0;
     }
 #endif /* !NSPR_LOCK */
-    js_FinishDtoa();
 }
 
 void
