@@ -35,6 +35,7 @@ class nsIDOMDocument;
 class nsIWidgetController : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWIDGETCONTROLLER_IID)
 
   NS_IMETHOD Initialize(nsIDOMDocument* aDocument, nsISupports* aContainer) = 0;
 };

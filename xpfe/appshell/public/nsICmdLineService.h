@@ -41,6 +41,7 @@ class nsIFactory;
 class nsICmdLineService : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMMANDLINE_SERVICE_IID)
 
   NS_IMETHOD Initialize(PRInt32 aArgc, char ** aArgv) = 0;
   NS_IMETHOD GetCmdLineValue(char * aArg, char ** aValue) = 0;
