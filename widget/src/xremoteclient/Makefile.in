@@ -35,23 +35,34 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		XRemoteClient.cpp \
 		XRemoteClientFactory.cpp \
 		$(NULL)
+
+ifdef MOZ_ENABLE_PHOTON
+	CPPSRCS		+= PhRemoteClient.cpp
+else
+	CPPSRCS		+= XRemoteClient.cpp
+endif
 
 EXTRA_DSO_LDOPTS = \
 		$(XLIBS) $(XLDFLAGS)  \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
+ifdef MOZ_ENABLE_PHOTON
+	EXTRA_DSO_LDOPTS += -lph
+endif
+
 EXPORTS		= \
 		nsXRemoteClientCID.h
 
+ifndef MOZ_ENABLE_PHOTON
 PROGRAM         = mozilla-xremote-client$(BIN_SUFFIX)
 
 PROGOBJS        = mozilla-xremote-client.$(OBJ_SUFFIX) \
 		XRemoteClient_standalone.$(OBJ_SUFFIX) \
 		$(NULL)
+endif
 
 LIBS            = \
 		$(NSPR_LIBS) \
@@ -63,5 +74,7 @@ ifeq ($(OS_ARCH), OpenVMS)
 DEFINES		+= -DGENERIC_MOTIF_REDEFINES
 endif
 
+ifndef MOZ_ENABLE_PHOTON
 XRemoteClient_standalone.$(OBJ_SUFFIX): XRemoteClient.cpp
 	$(CXX) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) -DXREMOTE_STANDALONE $<
+endif
