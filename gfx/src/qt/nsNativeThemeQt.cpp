@@ -266,9 +266,9 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
     return NS_OK;
 }
 
-    NS_IMETHODIMP
-    nsNativeThemeQt::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
-                                        nsIAtom* aAttribute, PRBool* aShouldRepaint)
+NS_IMETHODIMP
+nsNativeThemeQt::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
+                                    nsIAtom* aAttribute, PRBool* aShouldRepaint)
 {
     *aShouldRepaint = TRUE;
     return NS_OK;
