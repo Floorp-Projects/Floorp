@@ -17,6 +17,7 @@
  */
 
 #include <gtk/gtk.h>
+#include <gdk/gdkx.h>
 #include "gtklayout.h"
 
 #include "nsWindow.h"
@@ -216,12 +217,17 @@ void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,
 void nsWindow::CreateGC()
 {
   if (nsnull == mGC) {
-    if (mWidget != nsnull && GTK_WIDGET(mWidget)->window != nsnull)
+    if (!mWidget) {
+      mWidget = ::gtk_window_new(GTK_WINDOW_POPUP);
+      gtk_widget_realize(mWidget);
       mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
-    else {
-      GtkWidget* window = ::gtk_window_new(GTK_WINDOW_POPUP);
-      mGC = ::gdk_gc_new(GTK_WIDGET(window)->window);
     }
+    else if (!GTK_WIDGET(mWidget)->window) {
+      gtk_widget_realize(mWidget);
+      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
+    }
+    else
+      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
   }
 }
 
@@ -251,7 +257,8 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
    // XXX: This is a kludge, need to be able to create multiple top
    // level windows instead.
   if (gFirstTopLevelWindow == 0) {
-    mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    mainWindow = aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    //gtk_window_new(GTK_WINDOW_TOPLEVEL);
 /*  mainWindow = ::XtVaCreateManagedWidget("mainWindow",
         xmMainWindowWidgetClass,
         (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL),
@@ -259,8 +266,8 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 */
     gFirstTopLevelWindow = mainWindow;
   }
+/*
   else {
-#if 0
     Widget shell = ::XtVaCreatePopupShell(" ",
         xmDialogShellWidgetClass,
         (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL), 0);
@@ -276,13 +283,13 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 
     XtVaSetValues(mainWindow, XmNallowShellResize, 1,
          XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
-#endif
   }
+*/
 
   // Initially used xmDrawingAreaWidgetClass instead of
   // newManageClass. Drawing area will spontaneously resize
   // to fit it's contents.
-#if 0
+/*
   frame = ::XtVaCreateManagedWidget("drawingArea",
 				    newManageClass,
 				    mainWindow,
@@ -293,14 +300,19 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                                     XmNrecomputeSize, False,
                                     XmNuserData, this,
 				    nsnull);
-#endif
+*/
+  mWidget = gtk_vbox_new(0, FALSE);
+  gtk_container_add(GTK_CONTAINER(mainWindow), mWidget);
 
-  frame = gtk_layout_new(0,0);
+  GtkAdjustment *hadj = (GtkAdjustment*)gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  GtkAdjustment *vadj = (GtkAdjustment*)gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
-  mWidget = frame;
+  frame = gtk_layout_new(hadj,vadj);
+
+  gtk_box_pack_start(GTK_BOX(mWidget), frame, FALSE, FALSE, 0);
 
   if (mainWindow) {
-    gtk_container_add(GTK_CONTAINER(mainWindow), frame);
+//    gtk_container_add(GTK_CONTAINER(mainWindow), frame);
 //    XmMainWindowSetAreas(mainWindow, nsnull, nsnull, nsnull, nsnull, frame);
   }
 
@@ -346,11 +358,13 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
                                     XmNrecomputeSize, False,
                                     XmNuserData, this,
 				    nsnull);
-#endif
-  mWidget = gtk_layout_new(0,0);
+  GtkAdjustment *hadj = (GtkAdjustment*)gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  GtkAdjustment *vadj = (GtkAdjustment*)gtk_adjustment_new (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  mWidget = gtk_layout_new(hadj,vadj);
   if (aWidgetParent) {
     aWidgetParent->AddChild(this);
   }
+#endif
 
   // Force cursor to default setting
   mCursor = eCursor_select;
@@ -618,14 +632,23 @@ void nsWindow::RemoveChild(nsIWidget* aChild)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Show(PRBool bState)
 {
-#if 0
+  g_print("nsWindow::Show called with %d", bState);
+  gtk_widget_show_all(gtk_widget_get_toplevel(mWidget));
+  mShown = bState;
+  if (bState) {
+    gtk_widget_show(mWidget);
+    // gtk_widget_show_all(mWidget); Maybe?
+  } else {
+  }
+  
+/*
   mShown = bState;
   if (bState) {
     XtManageChild(mWidget);
   }
   else
     XtUnmanageChild(mWidget);
-#endif
+*/
   return NS_OK;
 }
 
@@ -646,7 +669,8 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 #if 0
   mBounds.x = aX;
   mBounds.y = aY;
-
+  // TODO
+  // gtk_layout_move(GTK_LAYOUT(layout), mWidget, aX, aY);
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
 #endif
   return NS_OK;
@@ -664,6 +688,8 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
                   gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
+  // TODO
+  // gtk_layout_set_size(GTK_LAYOUT(layout), aWidth, aHeight);
   XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 #endif
   return NS_OK;
@@ -718,13 +744,15 @@ NS_METHOD nsWindow::SetFocus(void)
 
   XtSetKeyboardFocus(w, mWidget);
 #endif
+// TODO
+  gtk_widget_grab_focus(mWidget);
   return NS_OK;
 }
 
 
 //-------------------------------------------------------------------------
 //
-// Get this component dimension
+// Set this component dimension
 //
 //-------------------------------------------------------------------------
 void nsWindow::SetBounds(const nsRect &aRect)
@@ -1033,13 +1061,14 @@ NS_IMETHODIMP nsWindow::Update()
 //-------------------------------------------------------------------------
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
-#if 0
   switch(aDataType) {
 
     case NS_NATIVE_WINDOW:
-      return (void*)XtWindow(mWidget);
+ //     return (void*)XtWindow(mWidget);
+      return (void*)mWidget->window;
     case NS_NATIVE_DISPLAY:
-      return (void*)XtDisplay(mWidget);
+ //     return (void*)XtDisplay(mWidget);
+      return (void*)GDK_DISPLAY();
     case NS_NATIVE_WIDGET:
       return (void*)(mWidget);
     case NS_NATIVE_GRAPHIC:
@@ -1062,7 +1091,6 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     default:
       break;
   }
-#endif
   return NULL;
 }
 
