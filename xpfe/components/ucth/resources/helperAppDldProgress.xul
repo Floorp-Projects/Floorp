@@ -36,6 +36,7 @@ Contributor(s):
         class="dialog"
         title="&downloadWindow.title;"
         onload="onLoad()"
+        onclose="onCancel()"
         onunload="onUnload()">
 
     <script type="application/x-javascript" src="chrome://global/content/helperAppDldProgress.js"/>
