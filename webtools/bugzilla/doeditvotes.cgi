@@ -34,8 +34,8 @@ GetVersionTable();
 
 my $who = DBNameToIdAndCheck($::COOKIE{'Bugzilla_login'});
 
-if ($who ne $::FORM{'who'}) {
-    PutHeader("Wrong login.");
+if ( (! defined $who) || (!$who) ) {
+    PutHeader("Bad login.");
     print "The login info got confused.  If you want to adjust the votes\n";
     print "for <tt>$::COOKIE{'Bugzilla_login'}</tt>, then please\n";
     print "<a href=showvotes.cgi?user=$who>click here</a>.<hr>\n";
