@@ -26,7 +26,7 @@
         onload="StartUp('Fonts')"  title="&window.title;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&header;</html:SPAN>
 </html:DIV>
@@ -89,4 +89,5 @@
 					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:1:int:browser.use_document_fonts" />&useDocFontRadio;</html:label></html:td></html:tr>
 					<html:tr><html:td><html:label><html:input name="fonts" type="radio" id="pref:2:int:browser.use_document_fonts" />&useDocFontsRadio;</html:label></html:td></html:tr>
 		</html:table>
+</html:div>
 </window>

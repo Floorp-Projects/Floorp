@@ -18,7 +18,7 @@
         onload="StartUp('Top')"  title="&window.title;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 &categoryHeader;
 <html:br />
 <html:iframe name="preftree" id="preftree" src="preftree.xul"
@@ -36,12 +36,6 @@
 		  </html:td>
 	  </html:tr>
 </html:table>
-
+</html:div>
 </xul:window>
-
-
-
-
-
-
 

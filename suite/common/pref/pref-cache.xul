@@ -23,7 +23,7 @@
         onload="return StartUp('Cache');"  title="&title.label;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&cacheHeader;</html:SPAN>
 </html:DIV>
@@ -43,5 +43,6 @@
 			<html:tr><html:td><html:label><html:input type="radio" name="cache" id="pref:1:int:composer.font.size" />&everyTimeRadio.label;</html:label></html:td></html:tr>
 			<html:tr><html:td><html:label><html:input type="radio" name="cache" id="pref:2:int:composer.font.size" />&neverRadio.label;</html:label></html:td></html:tr>
 </html:table>
-
+</html:div>
 </window>
+

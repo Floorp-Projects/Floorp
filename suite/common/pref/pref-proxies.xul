@@ -21,7 +21,7 @@
         onload="return StartUp('Proxies');"  title="Sample Prefs Panel">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 <html:div ID="top">
 		<html:SPAN ID="lefttext">&proxiesHeader.label;</html:SPAN>
 </html:div>
@@ -44,4 +44,5 @@
 
  
 </html:table>
+</html:div>
 </window>

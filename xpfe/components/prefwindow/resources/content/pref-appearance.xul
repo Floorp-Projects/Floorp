@@ -23,7 +23,7 @@
 		onload="StartUp('Appearance')" >
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 	<html:DIV ID="top">
 		<html:SPAN ID="lefttext">&appear;</html:SPAN>
 	</html:DIV>
@@ -47,4 +47,5 @@
 			<html:tr><html:td><html:label><html:input name="showtoolbar" type="radio" id="pref:1:int:browser.chrome.toolbar_style" />&textonlyRadio.label;</html:label></html:td></html:tr>
 		</html:table>
 	</html:form>
+</html:div>
 </xul:window>

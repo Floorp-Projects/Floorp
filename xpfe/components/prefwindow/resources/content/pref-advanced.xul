@@ -32,7 +32,7 @@
 
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 	<html:DIV ID="top"><html:SPAN ID="lefttext">
 		&advHeader;
 		</html:SPAN>
@@ -124,5 +124,5 @@
 
 		</html:table>
 	
-
+</html:div>
 </window>

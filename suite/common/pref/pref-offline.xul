@@ -28,7 +28,7 @@
         onload="return StartUp('offline');"  title="&title.label;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
-
+<html:div flex="100%">
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&header;</html:SPAN>
 </html:DIV>
@@ -65,5 +65,5 @@
 			</html:label></html:td></html:tr>
 
 </html:table>
-
+</html:div>
 </window>
