@@ -710,6 +710,26 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
                 if (NS_SUCCEEDED(result)) {
                   strUnicodeBuffer->SetLength(unicodeLength);
                 } else {
+#ifdef DEBUG
+                  /*
+                   * We currently fail often because of XML documents
+                   * which are in UTF-8 importing stylesheets which
+                   * use an ISO-8859-1 char, especially in comments in
+                   * the sheet.  See http://bugzilla.mozilla.org/show_bug.cgi?id=106843
+                   *
+                   * This assertion should at least make it possible
+                   * to catch such errors in chrome, pending this bug
+                   * being fixed
+                   */
+                   
+                  nsXPIDLCString uriStr;
+                  mURL->GetSpec(getter_Copies(uriStr));
+                  nsCAutoString errorMessage;
+                  errorMessage = NS_LITERAL_CSTRING("Decoding sheet from ") +
+                                 uriStr +
+                                 NS_LITERAL_CSTRING(" failed");
+                  NS_ASSERTION(PR_FALSE, errorMessage.get());
+#endif // DEBUG
                   strUnicodeBuffer->SetLength(0);
                 }
               }
