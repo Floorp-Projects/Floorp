@@ -513,7 +513,6 @@ const int kReuseWindowOnAE = 2;
 {
   if ( !mFindDialog )
      mFindDialog = [[FindDlgController alloc] initWithWindowNibName: @"FindDialog"];
-  NSLog(@"window is %@", [[mFindDialog window] description]);
   [mFindDialog showWindow:self];
 }
 
