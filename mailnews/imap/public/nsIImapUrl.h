@@ -47,7 +47,7 @@
 
 #define IMAP_PORT 143
 
-class nsIMsgIdentity; 
+class nsIMsgIncomingServer; 
 
 class nsIImapUrl : public nsIMsgMailNewsUrl
 {
@@ -106,11 +106,8 @@ public:
 	// Getters and Setters for the imap specific event sinks to bind to to your url
 	///////////////////////////////////////////////////////////////////////////////
 
-	// If the action for the url requires a particular identity (i.e. one different
-	// from the default, then the client can set the identity to use for the url. 
-	// If no identity is set, then the default identity is returned by GetIdentity.
-	NS_IMETHOD SetIdentity(nsIMsgIdentity * aMsgIdentity) = 0;
-	NS_IMETHOD GetIdentity(nsIMsgIdentity ** aMsgIdentity) = 0;
+	NS_IMETHOD SetServer(nsIMsgIncomingServer * aIncomingServer) = 0;
+	NS_IMETHOD GetServer(nsIMsgIncomingServer ** aIncomingServer) = 0;
 
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog) = 0;
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog) = 0;
@@ -124,10 +121,8 @@ public:
     NS_IMETHOD GetImapExtension(nsIImapExtension** aImapExtension) = 0;
     NS_IMETHOD SetImapExtension(nsIImapExtension* aImapExtension) = 0;
 
-    NS_IMETHOD GetImapMiscellaneous(nsIImapMiscellaneous** aImapMiscellaneous)
-        = 0;
-    NS_IMETHOD SetImapMiscellaneous(nsIImapMiscellaneous* aImapMiscellaneous)
-        = 0;
+    NS_IMETHOD GetImapMiscellaneous(nsIImapMiscellaneous** aImapMiscellaneous) = 0;
+    NS_IMETHOD SetImapMiscellaneous(nsIImapMiscellaneous* aImapMiscellaneous) = 0;
     
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap url state
