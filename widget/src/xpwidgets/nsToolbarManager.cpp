@@ -18,13 +18,11 @@
 
 #include "nsIToolbar.h"
 #include "nsToolbarManager.h"
-#include "nsIToolbarManagerListener.h"
 #include "nsIToolbarItemHolder.h"
 
 #include "nsIRenderingContext.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
-#include "nsIImageButton.h"
 #include "nsRepository.h"
 #include "nsImageButton.h"
 
@@ -59,26 +57,19 @@ const PRInt32 kMaxNumToolbars = 32;
 //--------------------------------------------------------------------
 //-- nsToolbarManager Constructor
 //--------------------------------------------------------------------
-nsToolbarManager::nsToolbarManager() : ChildWindow(), nsIToolbarManager(), nsIImageButtonListener(),
-		mGrippyHilighted(kNoGrippyHilighted), mNumToolbars(0), mNumTabsSave(0)
+nsToolbarManager::nsToolbarManager() : ChildWindow(), nsIToolbarManager(),
+		mGrippyHilighted(kNoGrippyHilighted), mNumToolbars(0), mTabsCollapsed(0)
 {
   NS_INIT_REFCNT();
 
   // XXX Needs to be changed to a Vector class
   mToolbars = new nsCOMPtr<nsIToolbar> [kMaxNumToolbars];
-  mTabsSave = new TabInfo* [kMaxNumToolbars];
-
-  PRInt32 i;
-  for (i=0;i<kMaxNumToolbars;i++) {
-    mTabsSave[i] = nsnull;
-  }
 }
 
 //--------------------------------------------------------------------
 nsToolbarManager::~nsToolbarManager()
 {
   delete [] mToolbars;
-  delete [] mTabsSave;
 }
 
 //--------------------------------------------------------------------
@@ -92,11 +83,6 @@ nsresult nsToolbarManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
-  if (aIID.Equals(kCIImageButtonListenerIID)) {                                          
-    *aInstancePtr = (void*) (nsIImageButtonListener *)this;                                        
-    AddRef();                                                            
-    return NS_OK;                                                        
-  }                                                                      
   if (aIID.Equals(kIContentConnectorIID)) {                                          
     *aInstancePtr = (void*) (nsIContentConnector *)this;                                        
     AddRef();                                                           
@@ -106,6 +92,11 @@ nsresult nsToolbarManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
+//
+// [static] HandleToolbarMgrEvent
+//
+// Static event handler function to target events to the correct widget
+//
 static nsEventStatus PR_CALLBACK
 HandleToolbarMgrEvent ( nsGUIEvent *aEvent )
 {
@@ -169,6 +160,9 @@ nsToolbarManager::SetContentRoot(nsIContent* pContent)
 nsEventStatus
 nsToolbarManager::HandleEvent(nsGUIEvent *aEvent) 
 {
+  if ( !aEvent )
+    return nsEventStatus_eIgnore;
+ 
   switch ( aEvent->message ) {
     case NS_PAINT:
     {
@@ -186,7 +180,11 @@ nsToolbarManager::HandleEvent(nsGUIEvent *aEvent)
       ctx->CreateDrawingSurface(&r, 0, ds);
       ctx->SelectOffScreenDrawingSurface(ds);
 
-      //*** Paint the grippy bar for each toolbar
+      // fill in the bg area
+      ctx->SetColor ( NS_RGB(0xDD,0xDD,0xDD) );
+      ctx->FillRect ( rect );
+      
+      // Paint the grippy bar for each toolbar
       DrawGrippies(ctx);
       
       ctx->CopyOffScreenBits(ds, 0, 0, rect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
@@ -195,10 +193,15 @@ nsToolbarManager::HandleEvent(nsGUIEvent *aEvent)
     }
     break;
     
+//  case NS_MOUSE_LEFT_CLICK:
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      OnMouseLeftClick ( *NS_STATIC_CAST(nsMouseEvent*, aEvent) );
+      break;
+    
     case NS_MOUSE_MOVE:
       OnMouseMove ( aEvent->point );
       break;
-    
+      
     case NS_MOUSE_EXIT:
       OnMouseExit();
       break;
@@ -210,86 +213,15 @@ nsToolbarManager::HandleEvent(nsGUIEvent *aEvent)
 } // HandleEvent
 
 
-#if GRIPPYS_NOT_WIDGETS
-//--------------------------------------------------------------------
-NS_METHOD nsToolbarManager::AddTabToManager(nsIToolbar *    aToolbar,
-                                            const nsString& aUpURL,
-                                            const nsString& aPressedURL,
-                                            const nsString& aDisabledURL,
-                                            const nsString& aRollOverURL)
-{
-DebugStr("\pnsToolbarManager::AddTabToManager");
-  if (mNumTabsSave > 0) {
-    TabInfo * tabInfo = mTabsSave[--mNumTabsSave];
-    tabInfo->mToolbar = aToolbar;
-    mTabs[mNumTabs++] = tabInfo;
-
-    nsIWidget * widget;
-	  if (NS_OK == tabInfo->mTab->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	    widget->Show(PR_TRUE);
-      NS_RELEASE(widget);
-    }
-    return NS_OK;
-  }
-
-  nsIImageButton * tab;
-  nsresult rv = nsRepository::CreateInstance(kImageButtonCID, nsnull, kIImageButtonIID,
-                                    (void**)&tab);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  nsRect rt(0, 0, EXPAND_TAB_WIDTH, EXPAND_TAB_HEIGHT);
-  
-	//nsIWidget* parent = nsnull;
-	//if (aParent != nsnull)
-  //  aParent->QueryInterface(kIWidgetIID,(void**)&parent);
-
-  nsIWidget* 	parent;
-	if (NS_OK != QueryInterface(kIWidgetIID,(void**)&parent)) {
-    return NS_OK;
-  }
-
-  nsIWidget * widget;
-	if (NS_OK == tab->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->Create(parent, rt, NULL, NULL);
-	  widget->Show(PR_TRUE);
-
-	  widget->Resize(0, 1, EXPAND_TAB_WIDTH, EXPAND_TAB_HEIGHT, PR_FALSE);
-    widget->SetClientData((void *)parent);
-
-    tab->SetBorderWidth(0);
-    tab->SetBorderOffset(0);
-    tab->SetShowBorder(PR_FALSE);
-    tab->SetShowText(PR_FALSE);
-    tab->SetLabel("");
-    tab->SetImageDimensions(rt.width, rt.height);
-    tab->SetImageURLs(aUpURL, aPressedURL, aDisabledURL, aRollOverURL);
-    tab->AddListener(this);
-
-    mTabs[mNumTabs]             = new TabInfo;
-    mTabs[mNumTabs]->mTab       = tab;
-    mTabs[mNumTabs++]->mToolbar = aToolbar;
-	}
-
-
-  return NS_OK;    
-}
-
-#endif
-
 
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarManager::AddToolbar(nsIToolbar* aToolbar)
 {
   mToolbars[mNumToolbars] = aToolbar;
   mTabs[mNumToolbars].mToolbar = aToolbar;  // hook this toolbar up to a grippy
+  mTabs[mNumToolbars].mCollapsed = PR_FALSE;
   mNumToolbars++;
   
-#if GRIPPYS_NOT_WIDGETS
-  aToolbar->SetToolbarManager(this);
-#endif
-
   return NS_OK;    
 }
 
@@ -310,35 +242,12 @@ NS_METHOD nsToolbarManager::InsertToolbarAt(nsIToolbar* aToolbar, PRInt32 anInde
   // Insert the new widget
   mToolbars[downToInx] = aToolbar;
   mTabs[downToInx].mToolbar = aToolbar;  // hook this toolbar up to a grippy
+  mTabs[mNumToolbars].mCollapsed = PR_FALSE;
   mNumToolbars++;
-
-#if GRIPPYS_NOT_WIDGETS
-  aToolbar->SetToolbarManager(this);
-#endif
 
   return NS_OK;    
 }
 
-//--------------------------------------------------------------------
-NS_METHOD nsToolbarManager::GetTabIndex(nsIImageButton * aTab, PRInt32 &anIndex)
-{
-#if GRIPPYS_NOT_WIDGETS
-  anIndex = 0;
-  PRInt32 i = 0;
-  while (i < mNumTabs) {
-    if (mTabs[i]->mTab == aTab) {
-      for (anIndex=0;anIndex<mNumToolbars;anIndex++) {
-        if (mToolbars[anIndex] == mTabs[i]->mToolbar) {
-          return NS_OK;
-        }
-      }
-      return NS_ERROR_FAILURE;
-    }
-    i++;
-  }
-#endif
-  return NS_ERROR_FAILURE;
-}
 
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarManager::GetNumToolbars(PRInt32 & aNumToolbars) 
@@ -360,114 +269,72 @@ NS_METHOD nsToolbarManager::GetToolbarAt(nsIToolbar*& aToolbar, PRInt32 anIndex)
   return NS_OK;
 }
 
-//--------------------------------------------------------------------
-NS_METHOD nsToolbarManager::CollapseToolbar(nsIToolbar * aToolbar) 
+
+//
+// CollapseToolbar
+//
+// Given the tab that was clicked on, collapse its corresponding toolbar. This
+// assumes that the tab is expanded.
+//
+void
+nsToolbarManager::CollapseToolbar ( TabInfo & inTab ) 
 {
-  nsCOMPtr<nsIWidget> widget ( aToolbar );
+  nsCOMPtr<nsIWidget> widget ( inTab.mToolbar );
   if ( widget ) {
+    // mark the tab as collapsed. We don't actually have to set the new
+    // bounding rect because that will be done for us when the bars are
+    // relaid out.
+    inTab.mCollapsed = PR_TRUE;
+    ++mTabsCollapsed;
+    
+    // hide the toolbar
     widget->Show(PR_FALSE);
-//  AddTabToManager(aToolbar, mExpandUpURL, mExpandPressedURL, mExpandDisabledURL, mExpandRollOverURL);
+    
+    DoLayout();
+    
     if ( mListener )
       mListener->NotifyToolbarManagerChangedSize(this);
-  }
- 
-  return NS_OK;
-}
+  } 
+  
+} // CollapseToolbar
 
-//--------------------------------------------------------------------
-NS_METHOD nsToolbarManager::ExpandToolbar(nsIToolbar * aToolbar) 
+
+//
+// ExpandToolbar
+//
+// Given the collapsed (horizontal) tab that was clicked on, expand its
+// corresponding toolbar. This assumes the tab is collapsed.
+//
+void
+nsToolbarManager::ExpandToolbar ( TabInfo & inTab ) 
 {
-#if GRIPPYS_NOT_WIDGETS
-  PRInt32     inx   = 0;
-  PRBool      found = PR_FALSE;
-  nsIWidget * toolbarWidget;
-
-	if (NS_OK == aToolbar->QueryInterface(kIWidgetIID,(void**)&toolbarWidget)) {
-    PRInt32 i;
-    for (i=0;i<mNumTabs;i++) {
-      if (mTabs[i]->mToolbar == aToolbar) {
-        inx = i;
-        found = PR_TRUE;
-        break;
-      }
-    }
-
-    if (found) {
-      PRInt32 i;
-      TabInfo * tabInfo = mTabs[inx];
-      mTabsSave[mNumTabsSave++] = tabInfo;
-      tabInfo->mToolbar = nsnull;
-
-      mNumTabs--;
-      for (i=inx;i<mNumTabs;i++) {
-        mTabs[i] = mTabs[i+1];
-      }
-      nsIWidget * tabWidget;
-	    if (NS_OK == tabInfo->mTab->QueryInterface(kIWidgetIID,(void**)&tabWidget)) {
-	      tabWidget->Show(PR_FALSE);
-        NS_RELEASE(tabWidget);
-      }
-    }
-    toolbarWidget->Show(PR_TRUE);
-    //DoLayout();
-    if (nsnull != mListener) {
+  nsCOMPtr<nsIWidget> widget ( inTab.mToolbar );
+  if ( widget ) {
+    // mark the tab as expanded. We don't actually have to set the new
+    // bounding rect because that will be done for us when the bars are
+    // relaid out.
+    inTab.mCollapsed = PR_FALSE;
+    --mTabsCollapsed;
+    
+    // show the toolbar
+    widget->Show(PR_TRUE);
+    
+    DoLayout();
+    
+    if ( mListener )
       mListener->NotifyToolbarManagerChangedSize(this);
-    }
-    NS_RELEASE(toolbarWidget);
-  }
+  } 
 
-#endif
-  return NS_OK;
-}
+} // ExpandToolbar
 
-//--------------------------------------------------------------------
-NS_METHOD nsToolbarManager::NotifyImageButtonEvent(nsIImageButton * aImgBtn,
-                                                   nsGUIEvent     * aEvent)
-{
-#if GRIPPYS_NOT_WIDGETS
-  if (aEvent->message != NS_MOUSE_LEFT_BUTTON_UP) {
-    return NS_OK;
-  }
-
-  // First check to see if it is one of our tabs
-  // meaning its a tollbar expansion
-  PRInt32 index;
-  if (NS_OK == GetTabIndex(aImgBtn, index)) {
-    nsIToolbar * tb;
-    GetToolbarAt(tb, index);
-    if (nsnull != tb) {
-      ExpandToolbar(tb);
-      NS_RELEASE(tb);
-    }
-  }
-
-  // If not then a toolbar is collapsing
-  PRInt32 i;
-  for (i=0;i<mNumToolbars;i++) {
-    nsIToolbar     * toolbar = mToolbars[i];
-    nsIToolbarItem * item;
-    if (NS_OK == toolbar->GetItemAt(item, 0)) {
-      nsIWidget * widget;
-      if (NS_OK == item->QueryInterface(kIWidgetIID,(void**)&widget)) {
-        if (widget == aEvent->widget) {
-          CollapseToolbar(toolbar);
-        }
-        NS_RELEASE(widget);
-      }
-      NS_RELEASE(item);
-    }
-  }
-#endif
-  return NS_OK;
-}
 
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarManager::AddToolbarListener(nsIToolbarManagerListener * aListener) 
 {
   mListener = aListener;
-
   return NS_OK;
 }
+
 
 //--------------------------------------------------------------------
 NS_METHOD nsToolbarManager::SetCollapseTabURLs(const nsString& aUpURL,
@@ -524,7 +391,7 @@ NS_METHOD nsToolbarManager::DoLayout()
 const kGrippyIndent = 10;
 
   // First layout all the items
-  for (i=0;i<mNumToolbars;i++) {
+  for (i=0;i<mNumToolbars;++i) {
     PRBool visible;
     mToolbars[i]->IsVisible(visible);
     if (visible) {
@@ -540,29 +407,26 @@ const kGrippyIndent = 10;
         
         widget->Resize(kGrippyIndent, y, tbRect.width - kGrippyIndent, height, PR_TRUE);
         mTabs[i].mBoundingRect = nsRect(0, y, 9, height);   // cache the location of this grippy for hit testing
+        mTabs[i].mToolbarHeight = height;
         
         y += height;
       }
     }
   }
 
-#if GRIPPYS_NOT_WIDGETS
-  nsRect rect;
-  x = 0;
-  for (i=0;i<mNumTabs;i++) {
-    nsRect rect;
-    nsIWidget * widget;
-  	if (NS_OK == mTabs[i]->mTab->QueryInterface(kIWidgetIID,(void**)&widget)) {
-      widget->GetBounds(rect);
-      rect.x = x;
-      rect.y = y;
-      widget->Resize(rect.x, rect.y, rect.width, rect.height, PR_TRUE);
-      x += rect.width;
-      NS_RELEASE(widget);
+  // If there are any collapsed toolbars, we need to fix up the positions of the
+  // tabs associated with them to lie horizontally (make them as wide as their
+  // corresponding toolbar is tall).
+  if (mTabsCollapsed > 0) {
+    unsigned int horiz = 0;
+    for ( i = 0; i < mNumToolbars; ++i ) {
+      if ( mTabs[i].mCollapsed ) {
+        mTabs[i].mBoundingRect = nsRect ( horiz, y, mTabs[i].mToolbarHeight, 9 );
+        horiz += mTabs[i].mToolbarHeight;
+      }
     }
   }
-#endif
-
+    
   return NS_OK;    
 }
 
@@ -572,6 +436,7 @@ NS_METHOD nsToolbarManager::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
   PRInt32 suggestedWidth  = aWidth;
   PRInt32 suggestedHeight = aHeight;
 
+  // compute heights of all the toolbars
   aWidth  = 0;
   aHeight = 0;
   PRInt32 i;
@@ -601,9 +466,10 @@ NS_METHOD nsToolbarManager::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
     }
   }
 
-  if (mNumToolbars > 0) {
+  // If there are any collapsed toolbars, make the toolbox bigger by a bit to allow room 
+  // at the bottom for the collapsed tabs
+  if (mTabsCollapsed > 0)
     aHeight += EXPAND_TAB_HEIGHT;
-  }
 
   return NS_OK;
 }
@@ -664,7 +530,8 @@ nsToolbarManager :: DrawGrippies ( nsIRenderingContext* aContext ) const
         else
           widget->GetPreferredSize(width, height);
         
-        DrawGrippy ( aContext, mTabs[i].mBoundingRect, PR_FALSE );
+        if ( ! mTabs[i].mCollapsed )
+          DrawGrippy ( aContext, mTabs[i].mBoundingRect, PR_FALSE );
                 
         y += height;
       }
@@ -730,9 +597,36 @@ nsToolbarManager :: OnMouseMove ( nsPoint & aMouseLoc )
 
 
 //
-// OnMouseMove
+// OnMouseLeftClick
 //
-// Handle mouse move events for hilighting and unhilighting the grippies
+// Check if a click is in a grippy and expand/collapse appropriately.
+//
+void
+nsToolbarManager :: OnMouseLeftClick ( nsMouseEvent & aEvent )
+{
+	for ( int i = 0; i < mNumToolbars; ++i ) {
+		if ( mTabs[i].mBoundingRect.Contains(aEvent.point) ) {
+			TabInfo & clickedTab = mTabs[i];			
+			if ( clickedTab.mCollapsed )
+				ExpandToolbar ( clickedTab );
+			else
+				CollapseToolbar ( clickedTab );
+			
+			// don't keep repeating this process since toolbars have now be
+			// relaid out and a new toolbar may be under the current mouse
+			// location!
+			break;
+		}
+	}
+	
+} // OnMouseLeftClick
+
+
+//
+// OnMouseExit
+//
+// Update the grippies that may have been hilighted while the mouse was within the
+// manager.
 //
 void
 nsToolbarManager :: OnMouseExit ( )
@@ -744,4 +638,4 @@ nsToolbarManager :: OnMouseExit ( )
 			mGrippyHilighted = kNoGrippyHilighted;
 		}
 	}
-} // OnMouseMove
+} // OnMouseExit

@@ -18,7 +18,6 @@
 
 //
 // pinkerton ToDo:
-// - remove dependence on toolbar manager and grippy
 // - make this talk to DOM for its children.
 // - rip out nsIToolbar stuff
 //
@@ -28,7 +27,6 @@
 #include "nsWidgetsCID.h"
 #include "nspr.h"
 #include "nsIWidget.h"
-#include "nsIImageButton.h"
 #include "nsIToolbarItemHolder.h"
 #include "nsImageButton.h"
 #include "nsRepository.h"
@@ -41,10 +39,6 @@ static NS_DEFINE_IID(kCToolbarCID,  NS_TOOLBAR_CID);
 static NS_DEFINE_IID(kCIToolbarIID, NS_ITOOLBAR_IID);
 static NS_DEFINE_IID(kIToolbarIID, NS_ITOOLBAR_IID);
 
-#if GRIPPYS_NOT_WIDGETS
-#define TAB_WIDTH  9
-#define TAB_HEIGHT 42
-#endif
 
 const PRInt32 gMaxInfoItems = 32;
 
@@ -103,11 +97,6 @@ nsToolbar::nsToolbar() : nsDataModelWidget(), nsIToolbar(),
   mWrapItems                = PR_FALSE;
   mDoHorizontalLayout       = PR_TRUE;
 
-#if GRIPPYS_NOT_WIDGETS
-  mToolbarMgr = nsnull;
-#endif
-
-  //mItemDeque = new nsDeque(gItemInfoKiller);
   mItems = (ToolbarLayoutInfo **) new PRInt32[gMaxInfoItems];
   mNumItems = 0;
 }
@@ -117,10 +106,6 @@ nsToolbar::~nsToolbar()
 {
   delete mDataModel;
   
-#if GRIPPYS_NOT_WIDGETS
-  NS_IF_RELEASE(mToolbarMgr);
-#endif
-
   PRInt32 i;
   for (i=0;i<mNumItems;i++) {
     delete mItems[i];
@@ -655,26 +640,6 @@ NS_METHOD nsToolbar::SetBorderType(nsToolbarBorderType aBorderType)
   return NS_OK;
 }
 
-#if GRIPPYS_NOT_WIDGETS
-
-//--------------------------------------------------------------------
-NS_METHOD nsToolbar::SetToolbarManager(nsIToolbarManager * aToolbarManager)
-{
-  mToolbarMgr = aToolbarManager;
-  NS_ADDREF(mToolbarMgr);
-
-  return NS_OK;
-}
-
-//--------------------------------------------------------------------
-NS_METHOD nsToolbar::GetToolbarManager(nsIToolbarManager *& aToolbarManager)
-{
-  aToolbarManager = mToolbarMgr;
-  NS_ADDREF(aToolbarManager);
-  return NS_OK;
-}
-
-#endif
 
 //--------------------------------------------------------------------
 //
@@ -921,80 +886,6 @@ NS_METHOD nsToolbar::GetPreferredConstrainedSize(PRInt32& aSuggestedWidth, PRInt
   return NS_OK;
 }
 
-
-#if GRIPPYS_NOT_WIDGETS
-
-//-------------------------------------------------------------------
-NS_METHOD nsToolbar::CreateTab(nsIWidget *& aTab)
-{
-  nsresult rv;
-
-  // Create the generic toolbar holder for the tab widget
-  nsIToolbarItemHolder * toolbarItemHolder;
-  rv = nsRepository::CreateInstance(kToolbarItemHolderCID, nsnull, kIToolbarItemHolderIID,
-                                    (void**)&toolbarItemHolder);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  // Get the ToolbarItem interface for adding it to the toolbar
-  nsIToolbarItem * toolbarItem;
-	if (NS_OK != toolbarItemHolder->QueryInterface(kIToolbarItemIID,(void**)&toolbarItem)) {
-    NS_RELEASE(toolbarItemHolder);
-    return NS_OK;
-  }
-
-  nsRect rt(0, 0, TAB_WIDTH, TAB_HEIGHT);
-
-  nsIImageButton * tab;
-  rv = nsRepository::CreateInstance(kImageButtonCID, nsnull, kIImageButtonIID,
-                                    (void**)&tab);
-  if (NS_OK != rv) {
-    NS_RELEASE(toolbarItem);
-    NS_RELEASE(toolbarItemHolder);
-    return rv;
-  }
-  
-  // Get the nsIWidget interface for the tab so it can be added to the parent widget
-  // and it can be put into the generic ToolbarItemHolder
-  nsIWidget * widget = nsnull;
-	if (NS_OK == tab->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->Create(this, rt, NULL, NULL);
-	  widget->Show(PR_TRUE);
-	  widget->SetClientData(NS_STATIC_CAST(void*, this));
-
-	  widget->Resize(0, 1, TAB_WIDTH, TAB_HEIGHT, PR_FALSE);
-
-    toolbarItemHolder->SetWidget(widget); // put the widget into the holder
-
-    tab->SetBorderWidth(0);
-    tab->SetBorderOffset(0);
-    tab->SetShowBorder(PR_FALSE);
-    tab->SetShowText(PR_FALSE);
-    tab->SetLabel("");
-    tab->SetImageDimensions(rt.width, rt.height);
-
-    nsString up, pres, dis, roll;
-    mToolbarMgr->GetCollapseTabURLs(up, pres, dis, roll);
-    tab->SetImageURLs(up, pres, dis, roll);
-    InsertItemAt(toolbarItem, 0, PR_TRUE, 0);  // add the item with zero gap, stretchable, zero position
-
-    nsIImageButtonListener * listener = nsnull;
-    if (NS_OK == mToolbarMgr->QueryInterface(kIImageButtonListenerIID,(void**)&listener)) {
-      tab->AddListener(listener);
-      NS_RELEASE(listener);
-    }
-        
-    aTab = widget;
-	}
-  NS_RELEASE(tab);
-  NS_RELEASE(toolbarItem);
-  NS_RELEASE(toolbarItemHolder);
-
-  return NS_OK;
-}
-
-#endif
 
 
 //

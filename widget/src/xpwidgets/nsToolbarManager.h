@@ -21,24 +21,26 @@
 
 #include "nsIImageRequest.h"
 #include "nsIToolbarManager.h"
-#include "nsIToolbarManagerListener.h"
 #include "nsIToolbarItem.h"
 #include "nsIToolbar.h"
+#include "nsIToolbarManagerListener.h"	// needed for VC4.2
 #include "nsIContentConnector.h"
 #include "nsWindow.h"
-#include "nsIImageButtonListener.h"
 
 #include "nsCOMPtr.h"
 
-class nsIImageButton;
 class nsIWidget;
 
 struct nsRect;
 
 
 struct TabInfo {
+  TabInfo ( ) : mCollapsed(PR_TRUE), mToolbarHeight(0) { };
+  
   nsCOMPtr<nsIToolbar>  mToolbar;
   nsRect                mBoundingRect;
+  PRBool                mCollapsed;
+  unsigned int          mToolbarHeight;
 };
 
 
@@ -55,8 +57,7 @@ struct TabInfo {
 //------------------------------------------------------------
 class nsToolbarManager : public ChildWindow,
                          public nsIToolbarManager, //*** for now 
-                         public nsIContentConnector,
-                         public nsIImageButtonListener
+                         public nsIContentConnector
 {
 public:
     nsToolbarManager();
@@ -70,11 +71,8 @@ public:
 
     NS_IMETHOD AddToolbar(nsIToolbar* aToolbar);
     NS_IMETHOD InsertToolbarAt(nsIToolbar* aToolbar, PRInt32 anIndex);
-    NS_IMETHOD GetTabIndex(nsIImageButton * aTab, PRInt32 &anIndex);
     NS_IMETHOD GetNumToolbars(PRInt32 & aNumToolbars);
     NS_IMETHOD GetToolbarAt(nsIToolbar*& aToolbar, PRInt32 anIndex); 
-    NS_IMETHOD CollapseToolbar(nsIToolbar * aToolbar); 
-    NS_IMETHOD ExpandToolbar(nsIToolbar * aToolbar); 
     NS_IMETHOD AddToolbarListener(nsIToolbarManagerListener * aListener); 
     NS_IMETHOD DoLayout();
     NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
@@ -94,10 +92,6 @@ public:
                                 const nsString& aDisabledURL,
                                 const nsString& aRollOverURL);
 
-    // nsIImageButtonListener
-    NS_IMETHOD NotifyImageButtonEvent(nsIImageButton * aImgBtn,
-                                      nsGUIEvent     * aEvent);
-
   // Override the widget creation method
   NS_IMETHOD Create(nsIWidget *aParent,
                             const nsRect &aRect,
@@ -114,8 +108,12 @@ protected:
   void DrawGrippy ( nsIRenderingContext* aContext, const nsRect & aBoundingRect, 
                      PRBool aDrawHilighted ) const ;
 
+  void CollapseToolbar ( TabInfo & inTab ) ; 
+  void ExpandToolbar ( TabInfo & inTab ) ; 
+
   void OnMouseMove ( nsPoint & aMouseLoc ) ;
   void OnMouseExit ( ) ;
+  void OnMouseLeftClick ( nsMouseEvent & aEvent ) ;
 
   nsCOMPtr<nsIToolbarManagerListener> mListener;
 
@@ -139,10 +137,8 @@ protected:
   PRInt32       mNumToolbars;
 
   TabInfo    mTabs[10];
-  int mGrippyHilighted;      // used to indicate which grippy the mouse is inside
-
-  TabInfo    ** mTabsSave;
-  PRInt32       mNumTabsSave;
+  int        mGrippyHilighted; // used to indicate which grippy the mouse is inside
+  int        mTabsCollapsed;   // how many tabs are collapsed?
 
   // Images for the pieces of the grippy panes. They are composites of a set of urls
   // which specify the top, middle, and bottom of the grippy.
