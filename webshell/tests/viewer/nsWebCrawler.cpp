@@ -344,11 +344,11 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
       nscoord oldWidth = r.width;
       while (r.width > 100) {
         r.width -= 10;
-        mBrowser->SizeWindowTo(r.width, r.height);
+        mBrowser->SizeWindowTo(r.width, r.height, PR_FALSE, PR_FALSE);
       }
       while (r.width < oldWidth) {
         r.width += 10;
-        mBrowser->SizeWindowTo(r.width, r.height);
+        mBrowser->SizeWindowTo(r.width, r.height, PR_FALSE, PR_FALSE);
       }
     }
 

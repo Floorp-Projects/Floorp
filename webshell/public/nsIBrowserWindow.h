@@ -73,7 +73,8 @@ public:
 
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY) = 0;
 
-  NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight) = 0;
+  NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
+                          PRBool aWidthTransient, PRBool aHeightTransient) = 0;
   NS_IMETHOD SizeContentTo(PRInt32 aWidth, PRInt32 aHeight) = 0;
 
   NS_IMETHOD GetContentBounds(nsRect& aResult) = 0;

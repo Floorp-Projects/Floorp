@@ -1505,7 +1505,8 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
       heightDelta = height - oldHeight;
       browser->GetWindowBounds(windowBounds);
       browser->SizeWindowTo(windowBounds.width + widthDelta,
-                            windowBounds.height + heightDelta);
+                            windowBounds.height + heightDelta,
+                            PR_FALSE, PR_FALSE);
     }
   }
   */

@@ -81,7 +81,8 @@ CWebShellContainer::SizeTo(PRInt32 aWidth, PRInt32 aHeight)
 
 
 NS_IMETHODIMP
-CWebShellContainer::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight)
+CWebShellContainer::SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
+                                 PRBool aWidthTransient, PRBool aHeightTransient)
 {
 	NG_TRACE_METHOD(CWebShellContainer::SizeWindowTo);
 	return NS_OK;
