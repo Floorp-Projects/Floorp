@@ -99,6 +99,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (void)completeSetup;
 - (void)setupAppearanceOfTableView:(NSTableView*)tableView;
 
+- (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren;
+
 - (void)setSearchResultArray:(NSArray *)anArray;
 - (void)displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem;
 - (BOOL)doDrop:(id <NSDraggingInfo>)info intoFolder:(BookmarkFolder *)dropFolder index:(int)index;
@@ -1456,7 +1458,10 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 {
   // how can I tell if this is coming from the quicksearch field?
   // the object seems to be the field editor in that situation
-  if ([aNotification object] != mBookmarksOutlineView && [aNotification object] != mHistoryOutlineView)
+
+  // currently, ignore all notifications coming from table views (including
+  // outline views), to avoid responding because of inline editing.
+  if (![[aNotification object] isKindOfClass:[NSTableView class]])
   {
     NSString* currentText = [mSearchField stringValue];
     [self searchStringChanged:currentText];
