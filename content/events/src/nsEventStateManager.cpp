@@ -2318,9 +2318,10 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
             mDocument->GetScriptGlobalObject(getter_AddRefs(newGlobal));
             nsCOMPtr<nsPIDOMWindow> newWindow = do_QueryInterface(newGlobal);
             nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(oldGlobal);
-            
-            newWindow->GetRootCommandDispatcher(mDocument, getter_AddRefs(newCommandDispatcher));
-            oldWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(oldCommandDispatcher));
+            if(newWindow)
+              newWindow->GetRootCommandDispatcher(mDocument, getter_AddRefs(newCommandDispatcher));
+            if(oldWindow)
+			  oldWindow->GetRootCommandDispatcher(gLastFocusedDocument, getter_AddRefs(oldCommandDispatcher));
             if(oldCommandDispatcher && oldCommandDispatcher != newCommandDispatcher)
               oldCommandDispatcher->SetSuppressFocus(PR_TRUE);
           }
