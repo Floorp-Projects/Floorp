@@ -245,10 +245,10 @@ nsHTTPChannel::OpenInputStream(nsIInputStream **o_Stream)
 
     rv = NS_NewSyncStreamListener(o_Stream,
                                   getter_AddRefs(mBufOutputStream),
-                                  getter_AddRefs(listener));
+                                  getter_AddRefs(mResponseDataListener));
 
-    mFinalListener = new nsHTTPFinalListener (this, listener, nsnull);
-    mResponseDataListener = mFinalListener;
+    // mFinalListener = new nsHTTPFinalListener (this, listener, nsnull);
+    // mResponseDataListener = mFinalListener;
 
     if (NS_FAILED(rv)) return rv;
 
@@ -304,8 +304,9 @@ nsHTTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *aContext)
 
     if (listener)
     {
-        mFinalListener = new nsHTTPFinalListener (this, listener, aContext);
-        mResponseDataListener = mFinalListener;
+//        mFinalListener = new nsHTTPFinalListener (this, listener, aContext);
+//        mResponseDataListener = mFinalListener;
+        mResponseDataListener = listener;
     }
     else
         mResponseDataListener = listener;
