@@ -1312,7 +1312,7 @@ tab[selected="true"] {
 }
 
 /* BEN - made tabpanel outset. */
-tabpanel {
+deck, tabpanel {
   border: 1px outset white;
   padding: 10px;
 }
