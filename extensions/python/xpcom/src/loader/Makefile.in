@@ -43,10 +43,10 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 PYTHON_INCLUDES = @MOZ_PYTHON_INCLUDES@
 PYTHON_LIBS = @MOZ_PYTHON_LIBS@
+PYTHON_VER_DOTTED = @MOZ_PYTHON_VER_DOTTED@
 
 include $(DEPTH)/config/autoconf.mk
 
-#MODULE		= pyloader
 LIBRARY_NAME	= pyloader
 IS_COMPONENT	= 1
 REQUIRES	= xpcom string $(NULL)
@@ -61,6 +61,7 @@ CPPSRCS		=		   \
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
+CXXFLAGS += -DPYTHON_SO=\"libpython$(PYTHON_VER_DOTTED).so\"
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 clobber::
