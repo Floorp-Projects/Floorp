@@ -40,6 +40,7 @@
 #include "utilities.h"
 #include "parser.h"
 #include "vmtypes.h"
+#include "jsclasses.h"
 
 
 namespace JavaScript {
@@ -47,6 +48,7 @@ namespace ICG {
     
     using namespace VM;
     using namespace JSTypes;
+    using namespace JSClasses;
     
     typedef std::map<String, TypedRegister, std::less<String> > VariableList;
     typedef std::map<uint32, uint32, std::less<uint32> > InstructionMap;
@@ -129,6 +131,7 @@ namespace ICG {
         InstructionMap *mInstructionMap;
 
         bool mWithinWith;               // state from genStmt that indicates generating code beneath a with statement
+        JSClass *mClass;                // enclosing class when generating code for methods
 
         void markMaxRegister() \
         { if (topRegister > maxRegister) maxRegister = topRegister; }
@@ -179,7 +182,7 @@ namespace ICG {
         JSType *findType(const StringAtom& typeName);
     
     public:
-        ICodeGenerator(World *world, JSScope *global);
+        ICodeGenerator(World *world, JSScope *global, JSClass *aClass = NULL);
         
         ~ICodeGenerator()
         {
@@ -218,6 +221,8 @@ namespace ICG {
         { parameterCount++; return grabRegister(name, &Any_Type); }
         TypedRegister allocateParameter(const StringAtom& name, const StringAtom& typeName) 
         { parameterCount++; return grabRegister(name, findType(typeName)); }
+        TypedRegister allocateParameter(const StringAtom& name, JSType *type) 
+        { parameterCount++; return grabRegister(name, type); }
         
         Formatter& print(Formatter& f);
         
