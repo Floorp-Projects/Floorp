@@ -14,3 +14,46 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+
+DEPTH=../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/config/rules.mk
+
+EXPORT_RESOURCE_SKIN = \
+	$(srcdir)/Editor.css \
+	$(NULL)
+
+EXPORT_RESOURCE_TOOLBAR = \
+	$(srcdir)/images/ED_Bold.gif \
+	$(srcdir)/images/ED_Bullets.gif \
+	$(srcdir)/images/ED_Center.gif \
+	$(srcdir)/images/ED_ClearStyle.gif \
+	$(srcdir)/images/ED_Copy.gif \
+	$(srcdir)/images/ED_Cut.gif \
+	$(srcdir)/images/ED_Dedent.gif \
+	$(srcdir)/images/ED_Find.gif \
+	$(srcdir)/images/ED_HLine.gif \
+	$(srcdir)/images/ED_Image.gif \
+	$(srcdir)/images/ED_Indent.gif \
+	$(srcdir)/images/ED_Italic.gif \
+	$(srcdir)/images/ED_Left.gif \
+	$(srcdir)/images/ED_Link.gif \
+	$(srcdir)/images/ED_Numbers.gif \
+	$(srcdir)/images/ED_Paste.gif \
+	$(srcdir)/images/ED_Redo.gif \
+	$(srcdir)/images/ED_Right.gif \
+	$(srcdir)/images/ED_Spell.gif \
+	$(srcdir)/images/ED_Table.gif \
+	$(srcdir)/images/ED_Target.gif \
+	$(srcdir)/images/ED_Underline.gif \
+	$(srcdir)/images/ED_Undo.gif \
+	$(NULL)
+
+install:: 
+	$(INSTALL) $(EXPORT_RESOURCE_SKIN) $(DIST)/bin/chrome/editor/skin
+	$(INSTALL) $(EXPORT_RESOURCE_TOOLBAR) $(DIST)/bin/chrome/editor/skin/images
