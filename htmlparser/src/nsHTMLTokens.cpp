@@ -1061,7 +1061,7 @@ nsString& CNewlineToken::GetStringValueXXX(void) {
 nsresult CNewlineToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) {
 
 #if 1
-  mTextValue.AssignWithConversion(kNewLine);  //This is what I THINK we should be doing.
+  mTextValue.Assign(kNewLine);  //This is what I THINK we should be doing.
 #else
   mTextValue=aChar;
 #endif
