@@ -16,8 +16,10 @@ js1_2/regexp/regress-9141.js
 ecma_3/RegExp/regress-100199.js
 #See bug number 104375
 ecma_3/String/regress-104375.js
-#See bug number 105972.js
+#See bug number 105972
 ecma_3/RegExp/regress-105972.js
+#See bug number 104077
+js1_5/Regress/regress-104077.js
 #
 # Unfixable bugs:
 #
@@ -83,3 +85,9 @@ js1_5/Exceptions/regress-50447.js
 js1_2/version120/regress-99663.js
 #This test uses the gc() function of SpiderMonkey
 ecma_3/Function/regress-104584.js
+#These tests break with new Unicode in JDK 1.4
+ecma/String/15.5.4.11-2.js
+ecma/String/15.5.4.11-5.js
+ecma/String/15.5.4.12-1.js
+ecma/String/15.5.4.12-4.js
+ecma/String/15.5.4.12-5.js
