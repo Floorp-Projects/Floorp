@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -31,10 +32,36 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsString.h"
 
-#include <X11/xpm.h>
 #include <X11/extensions/shape.h>
 
 #include "xlibrgb.h"
+
+/* drag bitmaps */
+static const unsigned char drag_bitmap[] = {
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00,
+   0x00, 0xc0, 0x02, 0x00, 0x00, 0x60, 0x06, 0x00, 0x00, 0x38, 0x04, 0x00,
+   0x00, 0x0e, 0x0c, 0x00, 0x80, 0x03, 0x08, 0x00, 0xe0, 0x00, 0x18, 0x00,
+   0xb0, 0x00, 0x30, 0x00, 0x20, 0x01, 0x60, 0x00, 0x20, 0x02, 0xc0, 0x00,
+   0x20, 0x04, 0x80, 0x00, 0x20, 0x02, 0x80, 0x01, 0x20, 0x01, 0x00, 0x03,
+   0xa0, 0x00, 0x00, 0x06, 0x60, 0x00, 0x00, 0x0c, 0x60, 0x00, 0x00, 0x08,
+   0x20, 0x00, 0x00, 0x0c, 0x60, 0x00, 0x00, 0x03, 0x40, 0x00, 0x80, 0x01,
+   0xc0, 0x00, 0xe0, 0x00, 0x80, 0x00, 0x30, 0x00, 0x80, 0x01, 0x0c, 0x00,
+   0x00, 0x01, 0x06, 0x00, 0x00, 0x03, 0x03, 0x00, 0x00, 0x82, 0x01, 0x00,
+   0x00, 0x64, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+static const unsigned char drag_mask[] = {
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00,
+   0x00, 0xc0, 0x03, 0x00, 0x00, 0xe0, 0x07, 0x00, 0x00, 0xf8, 0x07, 0x00,
+   0x00, 0xfe, 0x0f, 0x00, 0x80, 0xff, 0x0f, 0x00, 0xe0, 0xff, 0x1f, 0x00,
+   0xf0, 0xff, 0x3f, 0x00, 0xe0, 0xff, 0x7f, 0x00, 0xe0, 0xff, 0xff, 0x00,
+   0xe0, 0xff, 0xff, 0x00, 0xe0, 0xff, 0xff, 0x01, 0xe0, 0xff, 0xff, 0x03,
+   0xe0, 0xff, 0xff, 0x07, 0xe0, 0xff, 0xff, 0x0f, 0xe0, 0xff, 0xff, 0x0f,
+   0xe0, 0xff, 0xff, 0x0f, 0xe0, 0xff, 0xff, 0x03, 0xc0, 0xff, 0xff, 0x01,
+   0xc0, 0xff, 0xff, 0x00, 0x80, 0xff, 0x3f, 0x00, 0x80, 0xff, 0x0f, 0x00,
+   0x00, 0xff, 0x07, 0x00, 0x00, 0xff, 0x03, 0x00, 0x00, 0xfe, 0x01, 0x00,
+   0x00, 0x7c, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00,
+   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
@@ -45,13 +72,12 @@ Window    nsDragService::sWindow;
 Display  *nsDragService::sDisplay;
 PRBool    nsDragService::mDragging = PR_FALSE;
 
-#undef DEBUG_peter
 nsDragService::nsDragService()
 {
+  sDisplay = xlib_rgb_get_display();
   mCanDrop = PR_FALSE;
   sWindow = 0;
 }
-
 
 nsDragService::~nsDragService()
 {
@@ -59,94 +85,55 @@ nsDragService::~nsDragService()
 
 // nsIDragService
 NS_IMETHODIMP nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
-                                                nsISupportsArray * anArrayTransferables,
-                                                nsIScriptableRegion * aRegion,
+                                                nsISupportsArray *aArrayTransferables,
+                                                nsIScriptableRegion *aRegion,
                                                 PRUint32 aActionType)
 {
+  nsBaseDragService::InvokeDragSession(aDOMNode, aArrayTransferables,
+                                       aRegion, aActionType);
+
+  /* no data - no dnd */
+  if (!aArrayTransferables)
+    return NS_ERROR_INVALID_ARG;
+
   nsresult rv;
   PRUint32 numItemsToDrag = 0;
 
-  if (!anArrayTransferables)
-    return NS_ERROR_INVALID_ARG;
+  mSourceDataItems = aArrayTransferables;
 
-  mDataItems = anArrayTransferables;
-
-  rv = mDataItems->Count(&numItemsToDrag);
+  rv = mSourceDataItems->Count(&numItemsToDrag);
   if (!numItemsToDrag)
     return NS_ERROR_FAILURE;
 
-  if (numItemsToDrag > 1) {
-    fprintf(stderr, "nsDragService: Cannot drag more than one item!\n");
-    return NS_ERROR_FAILURE;
-  }
   mDragging = PR_TRUE;
 
-  if (sWindow == 0) {
-    Pixmap aPixmap;
-    Pixmap aShapeMask;
-    XpmAttributes attr;
-    XSetWindowAttributes wattr;
-    XWMHints wmHints;
+  CreateDragCursor(aActionType);
 
-    wattr.override_redirect = true;
-    
-    sWindow = XCreateWindow(xlib_rgb_get_display(),
-                            DefaultRootWindow(xlib_rgb_get_display()),
-                            0,0,32,32,0,xlib_rgb_get_depth(),
-                            InputOutput,CopyFromParent,
-                            CWOverrideRedirect, &wattr);
-    
-    attr.valuemask = 0;
-    fprintf(stderr, "%s\n", XpmGetErrorString(
-    XpmCreatePixmapFromData(xlib_rgb_get_display(),
-                            sWindow,
-                            drag_xpm,
-                            &aPixmap,
-                            &aShapeMask,
-                            &attr))
-    );
-    wmHints.flags = StateHint;
-    wmHints.initial_state = NormalState;
-    XSetWMProperties(xlib_rgb_get_display(), sWindow, NULL, NULL, NULL, 0, NULL,
-                     &wmHints, NULL);
-    XSetTransientForHint(xlib_rgb_get_display(), sWindow, sWindow);
-    XShapeCombineMask(xlib_rgb_get_display(), sWindow, ShapeClip,
-                      0,0,aShapeMask, ShapeSet);
-    XShapeCombineMask(xlib_rgb_get_display(), sWindow, ShapeBounding,
-                      0,0,aShapeMask, ShapeSet);
-    XMapWindow(xlib_rgb_get_display(), sWindow);
-    GC agc = XCreateGC(xlib_rgb_get_display(), sWindow, 0, NULL);
-    XCopyArea(xlib_rgb_get_display(), aPixmap, sWindow, agc,
-              0,0,32,32,0,0);
-    XFreeGC(xlib_rgb_get_display(), agc);
-  }
   return NS_OK;
 }
-
-
-
 
 NS_IMETHODIMP nsDragService::StartDragSession()
 {
   mDragging = PR_TRUE;
-  return NS_OK;
+
+  return nsBaseDragService::StartDragSession();
 }
 
 NS_IMETHODIMP nsDragService::EndDragSession()
 {
   if (sWindow) {
-    XDestroyWindow(xlib_rgb_get_display(), sWindow);
+    XDestroyWindow(sDisplay, sWindow);
     sWindow = 0;
   }
   mDragging = PR_FALSE;
-  return NS_OK;
-}
 
+  return nsBaseDragService::EndDragSession();
+}
 
 // nsIDragSession
 
 // For some reason we need this, but GTK does not. Hmmm...
-NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession **aSession)
+NS_IMETHODIMP nsDragService::GetCurrentSession(nsIDragSession **aSession)
 {
   if (!aSession)
     return NS_ERROR_FAILURE;
@@ -161,75 +148,136 @@ NS_IMETHODIMP nsDragService::GetCurrentSession (nsIDragSession **aSession)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDragService::SetCanDrop(PRBool           aCanDrop)
+NS_IMETHODIMP nsDragService::SetCanDrop(PRBool aCanDrop)
 {
   mCanDrop = aCanDrop;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDragService::GetCanDrop(PRBool          *aCanDrop)
+NS_IMETHODIMP nsDragService::GetCanDrop(PRBool *aCanDrop)
 {
   *aCanDrop = mCanDrop;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDragService::GetNumDropItems(PRUint32 * aNumItems)
+NS_IMETHODIMP nsDragService::GetNumDropItems(PRUint32 *aNumItems)
 {
-  // FIXME: Currently we can only drop one item, cos we are lame, just like gtk
-  *aNumItems = 1;
+  mSourceDataItems->Count(aNumItems);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDragService::GetData(nsITransferable * aTransferable, PRUint32 anItemIndex)
+NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable, PRUint32 anItemIndex)
 {
-  nsCOMPtr<nsISupports> genItem;
+  if (!aTransferable)
+    return NS_ERROR_INVALID_ARG;
 
-  mDataItems->GetElementAt(0, getter_AddRefs(genItem));
+  nsresult rv = NS_ERROR_FAILURE;
+  nsCOMPtr <nsISupportsArray> flavorList;
+  rv = aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+  if (NS_FAILED(rv))
+    return rv;
 
-  nsCOMPtr<nsITransferable> item (do_QueryInterface(genItem));
-  nsCOMPtr<nsISupports> data;
-  PRUint32 dataLen = 0;
+  PRUint32 cnt, i;
+  flavorList->Count (&cnt);
 
-  // FIXME: we can only drag and drop data of type "text/unicode"
+  for (i = 0; i < cnt; ++i) {
+    nsCAutoString foundFlavor;
+    nsCOMPtr <nsISupports> genericWrapper;
 
-  item->GetTransferData("text/unicode", getter_AddRefs(data), &dataLen);
+    flavorList->GetElementAt(i, getter_AddRefs(genericWrapper));
+    nsCOMPtr <nsISupportsString> currentFlavor;
+    currentFlavor = do_QueryInterface(genericWrapper);
 
-  aTransferable->SetTransferData("text/unicode", data, dataLen);
+    if (currentFlavor) {
+      nsXPIDLCString flavorStr;
+      currentFlavor->ToString(getter_Copies(flavorStr));
+      foundFlavor = nsCAutoString(flavorStr);
+
+#if 0
+      g_print("Looking for data in type %s\n",
+          NS_STATIC_CAST(const char*, flavorStr));
+#endif
+
+      /* set the data */
+      nsCOMPtr <nsISupports> genItem;
+      mSourceDataItems->GetElementAt(anItemIndex, getter_AddRefs(genItem));
+      
+      nsCOMPtr <nsITransferable> item(do_QueryInterface(genItem));
+      nsCOMPtr <nsISupports> data;
+      PRUint32 dataLen = 0;
+
+      item->GetTransferData(foundFlavor, getter_AddRefs(data), &dataLen);
+      aTransferable->SetTransferData(foundFlavor, data, dataLen);
+    }
+  }
 
   EndDragSession();
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDragService::IsDataFlavorSupported (const char *aDataFlavor, PRBool *_retval)
+NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval)
 {
-  //FIXME: we are lame
-
-  const char *name = "text/unicode";
-
-  if (strcmp(name, aDataFlavor) == 0) {
-    *_retval = PR_TRUE;
-  } else {
-    *_retval = PR_FALSE;
-  }
+  /* XXX Please implement this - for now - support all flavors */
+  *_retval = PR_TRUE;
   return NS_OK;
 }
 
-//nsIDragSessionXlib
+// nsIDragSessionXlib
+
 NS_IMETHODIMP nsDragService::IsDragging(PRBool *result) {
   *result = mDragging;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDragService::UpdatePosition(PRInt32 x, PRInt32 y){
+NS_IMETHODIMP nsDragService::UpdatePosition(PRInt32 x, PRInt32 y)
+{
   if (sWindow) {
     Window aRoot, aChild;
     int cx, cy;
     unsigned int mask;
-    XQueryPointer(xlib_rgb_get_display(),
-                  sWindow, &aRoot, &aChild,
-                  &x, &y, &cx, &cy, &mask); 
-    XMoveWindow(xlib_rgb_get_display(), sWindow, x, y);
+    XQueryPointer(sDisplay, sWindow, &aRoot, &aChild, &x, &y, &cx, &cy, &mask); 
+    XMoveWindow(sDisplay, sWindow, x, y);
   }
   return NS_OK;
+}
+
+void nsDragService::CreateDragCursor(PRUint32 aActionType)
+{
+  if (sWindow == 0) {
+    Pixmap aPixmap;
+    Pixmap aShapeMask;
+    XSetWindowAttributes wattr;
+    XWMHints wmHints;
+    int depth;
+
+    wattr.override_redirect = true;
+    depth = xlib_rgb_get_depth();
+    
+    /* make a window off-screen at -64, -64 */
+    sWindow = XCreateWindow(sDisplay, DefaultRootWindow(sDisplay),
+                            -64, -64, 32, 32, 0, depth,
+                            InputOutput, CopyFromParent,
+                            CWOverrideRedirect, &wattr);
+    
+    aPixmap = XCreatePixmapFromBitmapData(sDisplay, sWindow,
+                                          (char *)drag_bitmap,
+                                          32, 32, 0x0, 0xffffffff, depth);
+
+    aShapeMask = XCreatePixmapFromBitmapData(sDisplay, sWindow,
+                                             (char *)drag_mask,
+                                             32, 32, 0xffffffff, 0x0, 1);
+
+    wmHints.flags = StateHint;
+    wmHints.initial_state = NormalState;
+    XSetWMProperties(sDisplay, sWindow, NULL, NULL, NULL, 0, NULL,
+                     &wmHints, NULL);
+    XSetTransientForHint(sDisplay, sWindow, sWindow);
+    XShapeCombineMask(sDisplay, sWindow, ShapeClip, 0, 0, 
+                      aShapeMask, ShapeSet);
+    XShapeCombineMask(sDisplay, sWindow, ShapeBounding, 0, 0,
+                      aShapeMask, ShapeSet);
+    XSetWindowBackgroundPixmap(sDisplay, sWindow, aPixmap);
+    XMapWindow(sDisplay, sWindow);
+  }
 }

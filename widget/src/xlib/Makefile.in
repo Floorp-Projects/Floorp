@@ -72,7 +72,7 @@ include $(topsrcdir)/config/rules.mk
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -L$(DIST)/lib -lgkgfx $(MOZ_COMPONENT_LIBS)
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
-EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lXt -lxlibrgb -lxlibxtbin -lXpm $(MOZ_XLIB_LDFLAGS)
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lXt -lxlibrgb -lxlibxtbin $(MOZ_XLIB_LDFLAGS)
 else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif
