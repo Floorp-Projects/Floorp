@@ -45,23 +45,6 @@ Rights Reserved.
     <textfield flex="1" id="filterName"/>
   </box>
 
-  <titledbox id="searchTermListBox"/>
-  <titledbox>
-    <title>
-      <text value="&filterAction.label;"/>
-    </title>
-    <menulist id="actionMenu" flex="1" oncommand="onActionChanged(event)">
-      <menupopup>
-        <menuitem data="1" actionvalueindex="0" value="&moveToFolder.label;"/>
-        <menuitem data="2" actionvalueindex="1" value="&changePriority.label;"/>
-        <menuitem data="3" actionvalueindex="2" value="&delete.label;"/>
-        <menuitem data="4" actionvalueindex="2" value="&markRead.label;"/>
-      </menupopup>
-    </menulist>
-    <deck id="actionValueDeck" flex="1">
-      <menulist id="actionTargetFolder" flex="1"
-                oncommand="onTargetFolderSelected(event);"/>
-
   <titledbox id="searchTermListBox" flex="1"/>
 
   <titledbox autostretch="never">
