@@ -288,18 +288,22 @@ public class JavaAdapter extends ScriptableObject {
     public static Object callMethod(Scriptable object, String methodId,
                                     Object[] args) 
     {
-    	if (object.has(methodId, object)) {
-	        try {
-		        Context cx = Context.enter();
-		        Object fun = object.get(methodId, object);
-		        return ScriptRuntime.call(cx, fun, object, args, object);
-	        } catch (JavaScriptException ex) {
-	              // TODO: could occur
-	        } finally {	
-	            Context.exit();
-	        }
-	    }
-        return Context.getUndefinedValue();
+        try {
+            Context cx = Context.enter();
+            Object fun = ScriptableObject.getProperty(object,methodId);
+            if (fun == Scriptable.NOT_FOUND) {
+                // It is an error that this function doesn't exist.
+                // Easiest thing to do is just pass the undefined value 
+                // along and ScriptRuntime will take care of reporting 
+                // the error.
+                fun = Undefined.instance;
+            }
+            return ScriptRuntime.call(cx, fun, object, args, object);
+        } catch (JavaScriptException ex) {
+            throw WrappedException.wrapException(ex);
+        } finally {
+            Context.exit();
+        }
     }
     
     public static Scriptable toObject(Object value, Scriptable scope,
@@ -609,12 +613,11 @@ public class JavaAdapter extends ScriptableObject {
                  "Ljava/lang/String;[Ljava/lang/Object;)",
                 "Ljava/lang/Object;");
 
-        Class retType = returnType;
-        if (retType.equals(Void.TYPE)) {
+        if (returnType.equals(Void.TYPE)) {
             cfw.add(ByteCode.POP);
             cfw.add(ByteCode.RETURN);
         } else {
-            generateReturnResult(cfw, retType);
+            generateReturnResult(cfw, returnType);
         }
         cfw.stopMethod((short)(scopeLocal + 1), null);
     }
