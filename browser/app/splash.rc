@@ -69,8 +69,8 @@ IDD_SPLASH DIALOGEX
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_DDE_APPLICATION_NAME,            "Mozilla Firebird Debug"
-    IDS_STARTMENU_APPNAME,              "Mozilla Firebird Debug"
+    ID_DDE_APPLICATION_NAME,            "Mozilla Firebird"
+    IDS_STARTMENU_APPNAME,              "Mozilla Firebird"
 END
 
 #ifdef MOZ_STATIC_BUILD
