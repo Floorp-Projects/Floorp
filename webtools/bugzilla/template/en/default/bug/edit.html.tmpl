@@ -143,7 +143,8 @@
         <b>Reporter:</b>
       </td>
       <td>
-        [% bug.reporter.identity FILTER html %]
+        <a href="mailto:[% bug.reporter.email FILTER html %]">
+          [% bug.reporter.identity FILTER html %]</a>
       </td>
     </tr>
 
