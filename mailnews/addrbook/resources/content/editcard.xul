@@ -56,6 +56,56 @@
 		style="height:100%; width:100%; border:none"
 		align="vertical">
 
+<html:script language="JavaScript">
+
+function GenerateDisplayName()
+{
+        /* see AB_GenerateDisplayName in http://lxr.mcom.com/nova/source/ns/lib/libaddr/abglue.cpp for the proper logic */ 
+
+	var firstNameField = document.getElementById('FirstName');
+        var lastNameField = document.getElementById('LastName');
+	var displayNameField = document.getElementById('DisplayName');
+
+	/* todo: i18N work todo here */
+	/* this used to be XP_GetString(MK_ADDR_FIRST_LAST_SEP) */
+	var firstLastSep = " ";
+
+	/* todo: move pref out to be a global var for performance? */
+	var pref = Components.classes['component://netscape/preferences'];
+	var lastFirst = false;
+
+	if (pref) {
+        	pref = pref.getService();
+        } 
+	if (pref) {
+		pref = pref.QueryInterface(Components.interfaces.nsIPref);
+	}
+	if (pref) {
+		lastFirst = pref.GetBoolPref("mail.addr_book.lastnamefirst");
+	}
+
+	/* todo:  mscott says there was a pref in 4.5 that would */
+	/* cause GenerateDisplayName() to do nothing.  */
+	/* the i18N people need it. */
+	/* find the pref and heed it. */
+
+	/* trying to be smart about no using the first last sep */
+	/* if first or last is missing */
+	/* todo:  is this i18N safe? */
+	if ((lastNameField.value == "") || (firstNameField.value == "")) { 
+	 	firstLastSep = "";
+	}
+
+	if (lastFirst) {
+        	displayNameField.value = lastNameField.value + firstLastSep + firstNameField.value;
+	}
+	else {
+        	displayNameField.value = firstNameField.value + firstLastSep + lastNameField.value;
+	}
+}
+
+</html:script>      
+
 	<tabcontrol align="vertical" style="margin:5px">
 	   <tabbox align="horizontal">
 	      <tab>&Name.tab;</tab>
@@ -77,12 +127,12 @@
 						<box align="horizontal" flex="100%">
 							<spring flex="100%"/>
 							<html:label for="FirstName">&FirstName.label;</html:label>
-							<html:input type="text" id="FirstName" class="CardEdit"/>
+							<html:input type="text" id="FirstName" class="CardEdit" onkeyup="if (event.which == 13) { GenerateDisplayName(); }" />
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
 							<html:label for="LastName">&LastName.label;</html:label>
-							<html:input id="LastName" type="text" class="CardEdit"/>
+							<html:input id="LastName" type="text" class="CardEdit" onkeyup="if (event.which == 13) { GenerateDisplayName(); }"/>
 						</box>
 						<box align="horizontal">
 							<spring flex="100%"/>
