@@ -355,7 +355,6 @@ XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIController* nativeRet;
-  nsIDOMElementPtr b0;
 
   *rval = JSVAL_NULL;
 
@@ -379,17 +378,9 @@ XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     return JS_TRUE;
   }
 
-  if (argc >= 1) {
+  if (argc >= 0) {
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIElementIID,
-                                           "Element",
-                                           cx,
-                                           argv[0])) {
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->GetController(b0, &nativeRet)) {
+    if (NS_OK != nativeThis->GetController(&nativeRet)) {
       return JS_FALSE;
     }
 
@@ -397,7 +388,7 @@ XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, nsIController::GetIID(), cx, rval);
   }
   else {
-    JS_ReportError(cx, "Function getController requires 1 parameters");
+    JS_ReportError(cx, "Function getController requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -413,8 +404,7 @@ XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 {
   nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMElementPtr b0;
-  nsIControllerPtr b1;
+  nsIControllerPtr b0;
 
   *rval = JSVAL_NULL;
 
@@ -438,29 +428,21 @@ XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     return JS_TRUE;
   }
 
-  if (argc >= 2) {
+  if (argc >= 1) {
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           kIElementIID,
-                                           "Element",
-                                           cx,
-                                           argv[0])) {
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&b0,
+                                           kIControllerIID, cx, argv[0])) {
       return JS_FALSE;
     }
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&b1,
-                                           kIControllerIID, cx, argv[1])) {
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->SetController(b0, b1)) {
+    if (NS_OK != nativeThis->SetController(b0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function setController requires 2 parameters");
+    JS_ReportError(cx, "Function setController requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -504,8 +486,8 @@ static JSFunctionSpec XULFocusTrackerMethods[] =
   {"addFocusListener",          XULFocusTrackerAddFocusListener,     1},
   {"removeFocusListener",          XULFocusTrackerRemoveFocusListener,     1},
   {"focusChanged",          XULFocusTrackerFocusChanged,     0},
-  {"getController",          XULFocusTrackerGetController,     1},
-  {"setController",          XULFocusTrackerSetController,     2},
+  {"getController",          XULFocusTrackerGetController,     0},
+  {"setController",          XULFocusTrackerSetController,     1},
   {0}
 };
 

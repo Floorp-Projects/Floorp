@@ -44,9 +44,9 @@ public:
 
   NS_IMETHOD    FocusChanged()=0;
 
-  NS_IMETHOD    GetController(nsIDOMElement* aElement, nsIController** aReturn)=0;
+  NS_IMETHOD    GetController(nsIController** aReturn)=0;
 
-  NS_IMETHOD    SetController(nsIDOMElement* aElement, nsIController* aController)=0;
+  NS_IMETHOD    SetController(nsIController* aController)=0;
 };
 
 
@@ -56,8 +56,8 @@ public:
   NS_IMETHOD    AddFocusListener(nsIDOMElement* aListener);  \
   NS_IMETHOD    RemoveFocusListener(nsIDOMElement* aListener);  \
   NS_IMETHOD    FocusChanged();  \
-  NS_IMETHOD    GetController(nsIDOMElement* aElement, nsIController** aReturn);  \
-  NS_IMETHOD    SetController(nsIDOMElement* aElement, nsIController* aController);  \
+  NS_IMETHOD    GetController(nsIController** aReturn);  \
+  NS_IMETHOD    SetController(nsIController* aController);  \
 
 
 
@@ -67,8 +67,8 @@ public:
   NS_IMETHOD    AddFocusListener(nsIDOMElement* aListener) { return _to AddFocusListener(aListener); }  \
   NS_IMETHOD    RemoveFocusListener(nsIDOMElement* aListener) { return _to RemoveFocusListener(aListener); }  \
   NS_IMETHOD    FocusChanged() { return _to FocusChanged(); }  \
-  NS_IMETHOD    GetController(nsIDOMElement* aElement, nsIController** aReturn) { return _to GetController(aElement, aReturn); }  \
-  NS_IMETHOD    SetController(nsIDOMElement* aElement, nsIController* aController) { return _to SetController(aElement, aController); }  \
+  NS_IMETHOD    GetController(nsIController** aReturn) { return _to GetController(aReturn); }  \
+  NS_IMETHOD    SetController(nsIController* aController) { return _to SetController(aController); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULFocusTrackerClass(nsIScriptContext *aContext, void **aPrototype);
