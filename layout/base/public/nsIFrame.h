@@ -209,6 +209,10 @@ typedef PRUint32 nsFrameState;
 // If this bit is set the frame has descendant with a view
 #define NS_FRAME_HAS_CHILD_WITH_VIEW                  0x00040000
 
+// If this bit is set, then reflow may be dispatched from the current
+// frame instead of the root frame.
+#define NS_FRAME_REFLOW_ROOT                          0x00080000
+
 // The lower 20 bits of the frame state word are reserved by this API.
 #define NS_FRAME_RESERVED                             0x000FFFFF
 

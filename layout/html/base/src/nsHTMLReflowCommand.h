@@ -175,7 +175,6 @@ public:
 
 protected:
   void      BuildPath();
-  nsIFrame* GetContainingBlock(nsIFrame* aFloater) const;
 
 private:
   nsReflowType    mType;
