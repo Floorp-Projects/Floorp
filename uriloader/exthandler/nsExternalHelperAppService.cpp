@@ -1436,7 +1436,16 @@ nsresult nsExternalAppHandler::ShowProgressDialog()
   nsCOMPtr<nsILocalFile> local = do_QueryInterface(mFinalFileDestination);
 
   nsCOMPtr<nsIDownload> dl = do_CreateInstance("@mozilla.org/download;1", &rv);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    // we don't have a progress window implementation available,
+    // so we just proceed normally so that we can handle the file
+    // once the download is complete.
+    mProgressWindowCreated = PR_TRUE;
+
+    // however, we do want to indicate that the progress object was
+    // not created, so return an error
+    return rv;
+  }
 
   nsXPIDLString openWith(NS_LITERAL_STRING(""));  
   nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
