@@ -337,6 +337,10 @@ sub packit_l10n {
       my $tinderstatus = 'success';
       open LOCLOG, ">$logfile";
 
+      # Make the log file flush on every write.
+      my $oldfh = select(LOCLOG);
+      $| = 1;
+      select($oldfh);
 
     if (do_installer()) {
       if (is_windows()) {
