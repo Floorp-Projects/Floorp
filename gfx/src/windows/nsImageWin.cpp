@@ -739,7 +739,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   PRBool          result;
   PRInt32         numTiles,x0,y0,x1,y1,destScaledWidth,destScaledHeight;
   PRInt32         validWidth,validHeight,validX,validY,targetRowBytes;
-  PRInt32         temp1,temp2,ScaledTileHeight_Offset,ScaledTileWidth_Offset;
   PRInt32         x,y,width,height,canRaster;
   nsCOMPtr<nsIDeviceContext> theDeviceContext;
   HDC             theHDC;
@@ -750,7 +749,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   aContext.GetDeviceContext(*getter_AddRefs(theDeviceContext));
   theDeviceContext->GetCanonicalPixelScale(scale);
 
-
   destScaledWidth  = PR_MAX(PRInt32(mBHead->biWidth*scale), 1);
   destScaledHeight = PR_MAX(PRInt32(mBHead->biHeight*scale), 1);
   
@@ -758,8 +756,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   validY = 0;
   validWidth  = mBHead->biWidth;
   validHeight = mBHead->biHeight;
-
-
   
   // limit the image rectangle to the size of the image data which
   // has been validated.
@@ -782,8 +778,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
     validX = mDecodedX1; 
   }
 
-
-
   // put the DestRect into absolute coordintes of the device
   y0 = aDestRect.y - aSYOffset;
   x0 = aDestRect.x - aSXOffset;
@@ -796,39 +790,31 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
   ScaledTileWidth = PR_MAX(PRInt32(mBHead->biWidth*scale), 1);
   ScaledTileHeight = PR_MAX(PRInt32(mBHead->biHeight*scale), 1);
 
-
   ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
 
-
   // do alpha depth equal to 8 here.. this needs some special attention
-
-
   if ( mAlphaDepth == 8) {
-    unsigned char *screenBits=nsnull;
+    unsigned char *screenBits=nsnull,*adjAlpha,*adjImage,*adjScreen;
     HDC           memDC=nsnull;
     HBITMAP       tmpBitmap=nsnull,oldBitmap;
     unsigned char alpha;
     PRInt32       targetBytesPerPixel,imageBytesPerPixel;
 
-
     if (!mImageBits) {
       ConvertDDBtoDIB();
     }
-
 
     // draw the alpha and the bitmap to an offscreen buffer.. for the blend.. first 
     ((nsDrawingSurfaceWin *)aSurface)->GetDC(&theHDC);
     if (theHDC) {
     // create a buffer for the blend            
       memDC = CreateCompatibleDC(theHDC);
-      width = x1-x0;
-      height = y1-y0;
-
+      width = aDestRect.width;
+      height = aDestRect.height;
 
       ALPHA24BITMAPINFO bmi(width, height);
       tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, (LPVOID *)&screenBits, NULL, 0);
       oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
-
 
       // number of bytes in a row on a 32 bit boundary
       targetRowBytes = (bmi.bmiHeader.biWidth * bmi.bmiHeader.biBitCount) >> 5;  // number of 32 bit longs
@@ -837,10 +823,8 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       }
       targetRowBytes <<= 2;   // divide by 4 to get the number of bytes from the number of 32 bit longs
 
-
       targetBytesPerPixel = bmi.bmiHeader.biBitCount/8;
     }
-
 
     if (!tmpBitmap) {
       if (memDC) {
@@ -854,44 +838,41 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       ::StretchBlt(memDC, 0, 0, width, height,theHDC, aDestRect.x, aDestRect.y, width, height, SRCCOPY);
   
       imageBytesPerPixel = mBHead->biBitCount/8;
-      ScaledTileHeight_Offset = ScaledTileHeight + aSYOffset;
-      ScaledTileWidth_Offset = ScaledTileWidth + aSXOffset;
 
-
-      // this is the adjusted width of these imagebuffers
-      temp1 = mRowBytes + imageBytesPerPixel * aSXOffset;
-      temp2 = mARowBytes + aSXOffset;
+      // windows bitmaps start at the bottom.. and go up.  This messes up the offsets for the
+      // image and tiles.. so I reverse the the direction.. to go (the normal way) from top to bottom.
+      adjScreen = screenBits + ((height-1) * targetRowBytes);
+      adjImage = mImageBits + ((validHeight-1) * mRowBytes);
+      adjAlpha = mAlphaBits + ((validHeight-1) * mARowBytes);
 
 
       for (int y = 0,byw=aSYOffset; y < height; y++,byw++) {
-        if (byw >= ScaledTileHeight_Offset) {
-          byw = aSYOffset;
+        if (byw >= ScaledTileHeight) {
+          byw = 0;
         }
-        targetRow = screenBits + y * targetRowBytes;
-        imageRow = mImageBits + (byw * temp1);
-        alphaRow = mAlphaBits + (byw * temp2);
 
+        targetRow = adjScreen - (y * targetRowBytes);
+        imageRow = adjImage - (byw * mRowBytes);
+        alphaRow = adjAlpha - (byw * mARowBytes);
 
-        for (int x=0,bxw=aSXOffset;x<width;x++,targetRow+=targetBytesPerPixel,imageRow+=imageBytesPerPixel,bxw++, alphaRow++) {
+        for (int x=0,bxw=0;x<width;x++,targetRow+=targetBytesPerPixel,imageRow+=imageBytesPerPixel,bxw++, alphaRow++) {
           // if we went past the row width of our buffer.. go back and start again
-          if (bxw>=ScaledTileWidth_Offset) {
-            bxw = aSXOffset;
-            imageRow = mImageBits + (byw * temp1);
-            alphaRow = mAlphaBits + (byw * temp2);
+          if (bxw>=ScaledTileWidth) {
+            bxw = 0;
+            imageRow = adjImage - (byw * mRowBytes);
+            alphaRow = adjAlpha - (byw * mARowBytes);
           }
 
-
           alpha = *alphaRow;
+
           MOZ_BLEND(targetRow[0], targetRow[0], imageRow[0], alpha);
           MOZ_BLEND(targetRow[1], targetRow[1], imageRow[1], alpha);
           MOZ_BLEND(targetRow[2], targetRow[2], imageRow[2], alpha);
         }
       }
 
-
       // copy the blended image back to the screen
       ::StretchBlt(theHDC, aDestRect.x, aDestRect.y, width, height,memDC, 0, 0, width, height, SRCCOPY);
-
 
       ::SelectObject(memDC, oldBitmap);
       ::DeleteObject(tmpBitmap);
@@ -917,7 +898,6 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       return(NS_OK);
     }
   }
-
 
   // if we got to this point.. everything else failed.. and the slow blit backstop
   // will finish this tiling
@@ -993,9 +973,7 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
         return (PR_FALSE);
       }
 
-
       oldMaskBits = (HBITMAP)::SelectObject(maskDC,maskBits);
-
 
       // get the mask into our new tiled mask
       MONOBITMAPINFO  bmi(mAlphaWidth,mAlphaHeight);
@@ -1055,11 +1033,9 @@ nsImageWin::ProgressiveDoubleBlit(nsDrawingSurface aSurface,
       ::DeleteDC(maskDC);
     }
 
-
   ::SelectObject(offDC,oldBits);
   ::DeleteObject(tileBits);
   ::DeleteDC(offDC);
-
 
   return(PR_TRUE);
 }
@@ -1072,7 +1048,6 @@ ALPHABLENDPROC nsImageWin::gAlphaBlend = NULL;
 PRBool nsImageWin::CanAlphaBlend(void)
 {
   static PRBool alreadyChecked = PR_FALSE;
-
 
   if (!alreadyChecked) {
     OSVERSIONINFO os;
@@ -1088,7 +1063,6 @@ PRBool nsImageWin::CanAlphaBlend(void)
     }
     alreadyChecked = PR_TRUE;
   }
-
 
   return gAlphaBlend != NULL;
 }
