@@ -158,9 +158,8 @@ JavaScript use <i>static scope</i>, which means that variables are first looked
 up in the function and then, if not found there, in the lexically enclosing
 scope. This causes problems if functions you define in your shared scope
 need access to variables you define in your instance scope. 
-  <p>With Rhino 1.5, it is possible to compile functions to use <i>dynamic 
-scope</i>. With dynamic scope, functions look at the top-level scope of the
-calling function rather than their lexical scope. So we can store information 
+  <p>With Rhino 1.6, it is possible to use <i>dynamic scope</i>. With dynamic scope, functions look at the top-level scope of the currently executed script
+rather than their lexical scope. So we can store information 
 that varies across scopes in the instance scope yet still share functions 
 that manipulate that information reside in the shared scope. </p>
   <p>The <a href="http://lxr.mozilla.org/mozilla/source/js/rhino/examples/DynamicScopes.java">

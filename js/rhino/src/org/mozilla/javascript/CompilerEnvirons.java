@@ -59,7 +59,7 @@ public class CompilerEnvirons
     {
         setErrorReporter(cx.getErrorReporter());
         this.languageVersion = cx.getLanguageVersion();
-        useDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
+        useDynamicScope = cx.compileFunctionsWithDynamicScopeFlag;
         generateDebugInfo = (!cx.isGeneratingDebugChanged()
                              || cx.isGeneratingDebug());
         reservedKeywordAsIdentifier
@@ -110,11 +110,6 @@ public class CompilerEnvirons
     public final boolean isUseDynamicScope()
     {
         return useDynamicScope;
-    }
-
-    public void setUseDynamicScope(boolean flag)
-    {
-        this.useDynamicScope = flag;
     }
 
     public final boolean isReservedKeywordAsIdentifier()

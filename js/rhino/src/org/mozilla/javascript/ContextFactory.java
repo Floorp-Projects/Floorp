@@ -229,6 +229,9 @@ public class ContextFactory
             version = cx.getLanguageVersion();
             return (version == Context.VERSION_DEFAULT
                     || version >= Context.VERSION_1_6);
+
+          case Context.FEATURE_DYNAMIC_SCOPE:
+            return false;
         }
         // It is a bug to call the method with unknown featureIndex
         throw new IllegalArgumentException(String.valueOf(featureIndex));

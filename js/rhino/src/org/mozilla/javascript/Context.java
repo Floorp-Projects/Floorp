@@ -211,8 +211,26 @@ public class Context
      * By default {@link #hasFeature(int)} returns true if
      * the current JS version is set to {@link #VERSION_DEFAULT}
      * or is greater then {@link #VERSION_1_6}.
+     * @since 1.6 Release 1
      */
     public static final int FEATURE_E4X = 6;
+
+    /**
+     * Control if dynamic scope should be used for name access.
+     * If hasFeature(FEATURE_DYNAMIC_SCOPE) returns true, then the name lookup
+     * during name resolution will use the top scope of the script or function
+     * which is at the top of JS execution stack instead of the top scope of the
+     * script or function from the current stack frame if the top scope of
+     * the top stack frame contains the top scope of the current stack frame
+     * on its prototype chain.
+     * <p>
+     * This is useful to define shared scope containing functions that can
+     * be called from scripts and functions using private scopes.
+     * <p>
+     * By default {@link #hasFeature(int)} returns false.
+     * @since 1.6 Release 1
+     */
+    public static final int FEATURE_DYNAMIC_SCOPE = 7;
 
     public static final String languageVersionProperty = "language version";
     public static final String errorReporterProperty   = "error reporter";
@@ -1913,13 +1931,9 @@ public class Context
     }
 
     /**
-     * Return whether functions are compiled by this context using
-     * dynamic scope.
-     * <p>
-     * If functions are compiled with dynamic scope, then they execute
-     * in the scope of their caller, rather than in their parent scope.
-     * This is useful for sharing functions across multiple scopes.
-     * @since 1.5 Release 1
+     * @deprecated Use {@link #hasFeature(int)} and
+     * {@link #FEATURE_DYNAMIC_SCOPE} to control dynamic scoping that also works
+     * with nested functions defined by functions in the shared scope.
      */
     public final boolean hasCompileFunctionsWithDynamicScope()
     {
@@ -1927,11 +1941,9 @@ public class Context
     }
 
     /**
-     * Set whether functions compiled by this context should use
-     * dynamic scope.
-     * <p>
-     * @param flag if true, compile functions with dynamic scope
-     * @since 1.5 Release 1
+     * @deprecated Use {@link #hasFeature(int)} and
+     * {@link #FEATURE_DYNAMIC_SCOPE} to control dynamic scoping that also works
+     * with nested functions defined by functions in the shared scope.
      */
     public final void setCompileFunctionsWithDynamicScope(boolean flag)
     {
@@ -2586,7 +2598,8 @@ public class Context
     private boolean generatingDebug;
     private boolean generatingDebugChanged;
     private boolean generatingSource=true;
-    private boolean compileFunctionsWithDynamicScopeFlag;
+    boolean compileFunctionsWithDynamicScopeFlag;
+    boolean useDynamicScope;
     private int optimizationLevel;
     private WrapFactory wrapFactory;
     Debugger debugger;

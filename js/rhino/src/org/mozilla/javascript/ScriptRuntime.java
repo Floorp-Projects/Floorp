@@ -1758,6 +1758,9 @@ public class ScriptRuntime {
     private static Object topScopeName(Context cx, Scriptable scope,
                                        String name)
     {
+        if (cx.useDynamicScope) {
+            scope = locateDynamicScope(cx, scope);
+        }
         return ScriptableObject.getProperty(scope, name);
     }
 
@@ -1813,6 +1816,10 @@ public class ScriptRuntime {
                 }
             }
         }
+        // scope here is top scope
+        if (cx.useDynamicScope) {
+            scope = locateDynamicScope(cx, scope);
+        }
         if (ScriptableObject.hasProperty(scope, id)) {
             return scope;
         }
@@ -1837,6 +1844,9 @@ public class ScriptRuntime {
             // global object. Find the global object by
             // walking up the scope chain.
             bound = ScriptableObject.getTopLevelScope(scope);
+            if (cx.useDynamicScope) {
+                bound = locateDynamicScope(cx, bound);
+            }
             bound.put(id, bound, value);
             /*
             This code is causing immense performance problems in
@@ -2848,6 +2858,26 @@ public class ScriptRuntime {
         return (cx.topCallScope != null);
     }
 
+    private static Scriptable locateDynamicScope(Context cx, Scriptable scope)
+    {
+        // Return cx.topCallScope is scope is present on its prototype chain
+        // and return scope otherwise.
+        // Should only be called when scope is top scope.
+        if (cx.topCallScope == scope) {
+            return scope;
+        }
+        Scriptable proto = cx.topCallScope;
+        for (;;) {
+            proto = proto.getPrototype();
+            if (proto == scope) {
+                return cx.topCallScope;
+            }
+            if (proto == null) {
+                return scope;
+            }
+        }
+    }
+
     public static Object doTopCall(Callable callable,
                                    Context cx, Scriptable scope,
                                    Scriptable thisObj, Object[] args)
@@ -2857,6 +2887,7 @@ public class ScriptRuntime {
 
         Object result;
         cx.topCallScope = ScriptableObject.getTopLevelScope(scope);
+        cx.useDynamicScope = cx.hasFeature(Context.FEATURE_DYNAMIC_SCOPE);
         try {
             result = callable.call(cx, scope, thisObj, args);
         } finally {

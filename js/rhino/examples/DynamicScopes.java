@@ -40,65 +40,94 @@ import org.mozilla.javascript.*;
  */
 public class DynamicScopes {
 
+    static boolean useDynamicScope;
+
+    static class MyFactory extends ContextFactory
+    {
+        protected boolean hasFeature(Context cx, int featureIndex)
+        {
+            if (featureIndex == Context.FEATURE_DYNAMIC_SCOPE) {
+                return useDynamicScope;
+            }
+            return super.hasFeature(cx, featureIndex);
+        }
+    }
+
+    static {
+        ContextFactory.initGlobal(new MyFactory());
+    }
+
+
     /**
      * Main entry point.
      *
      * Set up the shared scope and then spawn new threads that execute
-     * relative to that shared scope. Try compiling functions with and
+     * relative to that shared scope. Try to run functions with and
      * without dynamic scope to see the effect.
      *
      * The expected output is
      * <pre>
      * sharedScope
+     * nested:sharedScope
      * sharedScope
+     * nested:sharedScope
      * sharedScope
+     * nested:sharedScope
      * thread0
+     * nested:thread0
      * thread1
+     * nested:thread1
      * thread2
+     * nested:thread2
      * </pre>
      * The final three lines may be permuted in any order depending on
      * thread scheduling.
      */
     public static void main(String[] args)
-        throws JavaScriptException
     {
         Context cx = Context.enter();
         try {
-            cx.setCompileFunctionsWithDynamicScope(false);
-            runScripts(cx);
-            cx.setCompileFunctionsWithDynamicScope(true);
-            runScripts(cx);
+            // Precompile source only once
+            String source = ""
+                            +"var x = 'sharedScope';\n"
+                            +"function f() { return x; }\n"
+                            // Dynamic scope works with nested function too
+                            +"function initClosure(prefix) {\n"
+                            +"    return function test() { return prefix+x; }\n"
+                            +"}\n"
+                            +"var closure = initClosure('nested:');\n"
+                            +"";
+            Script script = cx.compileString(source, "sharedScript", 1, null);
+
+            useDynamicScope = false;
+            runScripts(cx, script);
+            useDynamicScope = true;
+            runScripts(cx, script);
         } finally {
             cx.exit();
         }
     }
 
-    static void runScripts(Context cx)
-        throws JavaScriptException
+    static void runScripts(Context cx, Script script)
     {
         // Initialize the standard objects (Object, Function, etc.)
         // This must be done before scripts can be executed. The call
         // returns a new scope that we will share.
-        ScriptableObject scope = cx.initStandardObjects(null, true);
+        ScriptableObject sharedScope = cx.initStandardObjects(null, true);
 
-        // Now we can evaluate a script and functions will be compiled to
-        // use dynamic scope if the Context is so initialized.
-        String source = "var x = 'sharedScope';" +
-                        "function f() { return x; }";
-        cx.evaluateString(scope, source, "MySource", 1, null);
+        // Now we can execute the precompiled script against the scope
+        // to define x variable and f function in the shared scope.
+        script.exec(cx, sharedScope);
 
         // Now we spawn some threads that execute a script that calls the
         // function 'f'. The scope chain looks like this:
         // <pre>
-        //            ------------------
-        //           |   shared scope   |
-        //            ------------------
+        //            ------------------                ------------------
+        //           | per-thread scope | -prototype-> |   shared scope   |
+        //            ------------------                ------------------
         //                    ^
         //                    |
-        //            ------------------
-        //           | per-thread scope |
-        //            ------------------
-        //                    ^
+        //               parentScope
         //                    |
         //            ------------------
         //           | f's activation   |
@@ -112,9 +141,13 @@ public class DynamicScopes {
         final int threadCount = 3;
         Thread[] t = new Thread[threadCount];
         for (int i=0; i < threadCount; i++) {
-            String script = "function g() { var x = 'local'; return f(); }" +
-                            "java.lang.System.out.println(g());";
-            t[i] = new Thread(new PerThread(scope, script,
+            String source2 = ""
+                +"function g() { var x = 'local'; return f(); }\n"
+                +"java.lang.System.out.println(g());\n"
+                +"function g2() { var x = 'local'; return closure(); }\n"
+                +"java.lang.System.out.println(g2());\n"
+                +"";
+            t[i] = new Thread(new PerThread(sharedScope, source2,
                                             "thread" + i));
         }
         for (int i=0; i < threadCount; i++)
@@ -131,9 +164,9 @@ public class DynamicScopes {
 
     static class PerThread implements Runnable {
 
-        PerThread(Scriptable scope, String script, String x) {
-            this.scope = scope;
-            this.script = script;
+        PerThread(Scriptable sharedScope, String source, String x) {
+            this.sharedScope = sharedScope;
+            this.source = source;
             this.x = x;
         }
 
@@ -142,8 +175,8 @@ public class DynamicScopes {
             Context cx = Context.enter();
             try {
                 // We can share the scope.
-                Scriptable threadScope = cx.newObject(scope);
-                threadScope.setPrototype(scope);
+                Scriptable threadScope = cx.newObject(sharedScope);
+                threadScope.setPrototype(sharedScope);
 
                 // We want "threadScope" to be a new top-level
                 // scope, so set its parent scope to null. This
@@ -154,7 +187,7 @@ public class DynamicScopes {
                 // Create a JavaScript property of the thread scope named
                 // 'x' and save a value for it.
                 threadScope.put("x", threadScope, x);
-                cx.evaluateString(threadScope, script, "threadScript", 1, null);
+                cx.evaluateString(threadScope, source, "threadScript", 1, null);
             }
             catch (JavaScriptException jse) {
                 // ignore
@@ -163,8 +196,8 @@ public class DynamicScopes {
                 Context.exit();
             }
         }
-        private Scriptable scope;
-        private String script;
+        private Scriptable sharedScope;
+        private String source;
         private String x;
     }
 
