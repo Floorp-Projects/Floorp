@@ -85,7 +85,7 @@ nsCommandParams::Init()
 #endif
 
 /* short getValueType (in string name); */
-NS_IMETHODIMP nsCommandParams::GetValueType(const nsAReadableString & name, PRInt16 *_retval)
+NS_IMETHODIMP nsCommandParams::GetValueType(const nsAString & name, PRInt16 *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = eNoType;
@@ -99,8 +99,8 @@ NS_IMETHODIMP nsCommandParams::GetValueType(const nsAReadableString & name, PRIn
   return NS_ERROR_FAILURE;
 }
 
-/* boolean getBooleanValue (in DOMString name); */
-NS_IMETHODIMP nsCommandParams::GetBooleanValue(const nsAReadableString & name, PRBool *_retval)
+/* boolean getBooleanValue (in AString name); */
+NS_IMETHODIMP nsCommandParams::GetBooleanValue(const nsAString & name, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -115,8 +115,8 @@ NS_IMETHODIMP nsCommandParams::GetBooleanValue(const nsAReadableString & name, P
   return NS_ERROR_FAILURE;
 }
 
-/* long getLongValue (in DOMString name); */
-NS_IMETHODIMP nsCommandParams::GetLongValue(const nsAReadableString & name, PRInt32 *_retval)
+/* long getLongValue (in AString name); */
+NS_IMETHODIMP nsCommandParams::GetLongValue(const nsAString & name, PRInt32 *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -131,8 +131,8 @@ NS_IMETHODIMP nsCommandParams::GetLongValue(const nsAReadableString & name, PRIn
   return NS_ERROR_FAILURE;
 }
 
-/* double getDoubleValue (in DOMString name); */
-NS_IMETHODIMP nsCommandParams::GetDoubleValue(const nsAReadableString & name, double *_retval)
+/* double getDoubleValue (in AString name); */
+NS_IMETHODIMP nsCommandParams::GetDoubleValue(const nsAString & name, double *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0.0;
@@ -147,8 +147,8 @@ NS_IMETHODIMP nsCommandParams::GetDoubleValue(const nsAReadableString & name, do
   return NS_ERROR_FAILURE;
 }
 
-/* DOMString getStringValue (in DOMString name); */
-NS_IMETHODIMP nsCommandParams::GetStringValue(const nsAReadableString & name, nsAWritableString & _retval)
+/* AString getStringValue (in AString name); */
+NS_IMETHODIMP nsCommandParams::GetStringValue(const nsAString & name, nsAWritableString & _retval)
 {
   _retval.Truncate();
   HashEntry*  foundEntry = GetNamedEntry(name);
@@ -162,8 +162,8 @@ NS_IMETHODIMP nsCommandParams::GetStringValue(const nsAReadableString & name, ns
   return NS_ERROR_FAILURE;
 }
 
-/* nsISupports getISupportsValue (in DOMString name); */
-NS_IMETHODIMP nsCommandParams::GetISupportsValue(const nsAReadableString & name, nsISupports **_retval)
+/* nsISupports getISupportsValue (in AString name); */
+NS_IMETHODIMP nsCommandParams::GetISupportsValue(const nsAString & name, nsISupports **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
@@ -182,8 +182,8 @@ NS_IMETHODIMP nsCommandParams::GetISupportsValue(const nsAReadableString & name,
 #pragma mark -
 #endif
 
-/* void setBooleanValue (in DOMString name, in boolean value); */
-NS_IMETHODIMP nsCommandParams::SetBooleanValue(const nsAReadableString & name, PRBool value)
+/* void setBooleanValue (in AString name, in boolean value); */
+NS_IMETHODIMP nsCommandParams::SetBooleanValue(const nsAString & name, PRBool value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eBooleanType, foundEntry);
@@ -194,8 +194,8 @@ NS_IMETHODIMP nsCommandParams::SetBooleanValue(const nsAReadableString & name, P
   return NS_OK;
 }
 
-/* void setLongValue (in DOMString name, in long value); */
-NS_IMETHODIMP nsCommandParams::SetLongValue(const nsAReadableString & name, PRInt32 value)
+/* void setLongValue (in AString name, in long value); */
+NS_IMETHODIMP nsCommandParams::SetLongValue(const nsAString & name, PRInt32 value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eLongType, foundEntry);
@@ -205,8 +205,8 @@ NS_IMETHODIMP nsCommandParams::SetLongValue(const nsAReadableString & name, PRIn
   return NS_OK;
 }
 
-/* void setDoubleValue (in DOMString name, in double value); */
-NS_IMETHODIMP nsCommandParams::SetDoubleValue(const nsAReadableString & name, double value)
+/* void setDoubleValue (in AString name, in double value); */
+NS_IMETHODIMP nsCommandParams::SetDoubleValue(const nsAString & name, double value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eDoubleType, foundEntry);
@@ -216,8 +216,8 @@ NS_IMETHODIMP nsCommandParams::SetDoubleValue(const nsAReadableString & name, do
   return NS_OK;
 }
 
-/* void setStringValue (in DOMString name, in DOMString value); */
-NS_IMETHODIMP nsCommandParams::SetStringValue(const nsAReadableString & name, const nsAReadableString & value)
+/* void setStringValue (in AString name, in AString value); */
+NS_IMETHODIMP nsCommandParams::SetStringValue(const nsAString & name, const nsAString & value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eWStringType, foundEntry);
@@ -227,8 +227,8 @@ NS_IMETHODIMP nsCommandParams::SetStringValue(const nsAReadableString & name, co
   return NS_OK;
 }
 
-/* void setISupportsValue (in DOMString name, in nsISupports value); */
-NS_IMETHODIMP nsCommandParams::SetISupportsValue(const nsAReadableString & name, nsISupports *value)
+/* void setISupportsValue (in AString name, in nsISupports value); */
+NS_IMETHODIMP nsCommandParams::SetISupportsValue(const nsAString & name, nsISupports *value)
 {
   HashEntry*  foundEntry;
   GetOrMakeEntry(name, eISupportsType, foundEntry);
@@ -238,9 +238,9 @@ NS_IMETHODIMP nsCommandParams::SetISupportsValue(const nsAReadableString & name,
   return NS_OK;
 }
 
-/* void removeValue (in DOMString name); */
+/* void removeValue (in AString name); */
 NS_IMETHODIMP
-nsCommandParams::RemoveValue(const nsAReadableString & name)
+nsCommandParams::RemoveValue(const nsAString & name)
 {
   nsPromiseFlatString flatName = PromiseFlatString(name);
   // PL_DHASH_REMOVE doesn't tell us if the entry was really removed, so we return
@@ -257,7 +257,7 @@ nsCommandParams::RemoveValue(const nsAReadableString & name)
 #endif
 
 nsCommandParams::HashEntry*
-nsCommandParams::GetNamedEntry(const nsAReadableString& name)
+nsCommandParams::GetNamedEntry(const nsAString& name)
 {
   nsPromiseFlatString flatName = PromiseFlatString(name);
   HashEntry *foundEntry = (HashEntry *)PL_DHashTableOperate(&mValuesHash, (void *)flatName.get(), PL_DHASH_LOOKUP);
@@ -308,7 +308,7 @@ nsCommandParams::GetNumEntries()
 }
 
 nsresult
-nsCommandParams::GetOrMakeEntry(const nsAReadableString& name, PRUint8 entryType, HashEntry*& outEntry)
+nsCommandParams::GetOrMakeEntry(const nsAString& name, PRUint8 entryType, HashEntry*& outEntry)
 {
   nsPromiseFlatString flatName = PromiseFlatString(name);
 
@@ -401,7 +401,7 @@ nsCommandParams::First()
   return NS_OK;
 }
 
-/* DOMString getNext (); */
+/* AString getNext (); */
 NS_IMETHODIMP
 nsCommandParams::GetNext(nsAWritableString & _retval)
 {
