@@ -50,62 +50,6 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-        nsScrollBoxFrame.cpp \
-        nsEditorBoxObject.cpp \
-        nsIFrameBoxObject.cpp \
-        nsBrowserBoxObject.cpp \
-        nsTreeBoxObject.cpp \
-        nsScrollBoxObject.cpp \
-        nsPopupBoxObject.cpp \
-        nsMenuBoxObject.cpp \
-        nsBoxObject.cpp \
-        nsImageBoxFrame.cpp        \
-        nsRootBoxFrame.cpp        \
-        nsDocElementBoxFrame.cpp \
-        nsStackLayout.cpp        \
-        nsSplitterFrame.cpp        \
-		nsButtonBoxFrame.cpp \
-        nsSpringFrame.cpp \
-		nsSliderFrame.cpp \
-        nsProgressMeterFrame.cpp        \
-        nsGroupBoxFrame.cpp        \
-        nsBox.cpp        \
-        nsContainerBox.cpp        \
-        nsBoxFrame.cpp        \
-        nsBoxLayoutState.cpp        \
-		nsBoxToBlockAdaptor.cpp \
-		nsSprocketLayout.cpp \
-		nsBoxLayout.cpp \
-        nsLeafBoxFrame.cpp \
-        nsTextBoxFrame.cpp \
-        nsFrameNavigator.cpp        \
-        nsRepeatService.cpp        \
-        nsGrippyFrame.cpp        \
-        nsStackFrame.cpp        \
-        nsDeckFrame.cpp        \
-	nsTreeIndentationFrame.cpp \
-        nsTreeItemDragCapturer.cpp \
-  nsXULTreeFrame.cpp \
-  nsXULTreeGroupFrame.cpp \
-  nsXULTreeOuterGroupFrame.cpp \
-  nsXULTreeSliceFrame.cpp \
-  nsXULTreeCellFrame.cpp \
-  nsTreeLayout.cpp \
-	nsScrollbarFrame.cpp \
-        nsScrollbarButtonFrame.cpp \
-	nsMenuPopupFrame.cpp \
-	nsMenuFrame.cpp \
-	nsMenuBarFrame.cpp \
-	nsMenuBarListener.cpp \
-	nsMenuListener.cpp \
-	nsMenuDismissalListener.cpp \
-	nsPopupSetFrame.cpp \
-	nsTitleBarFrame.cpp \
-	nsResizerFrame.cpp \
- nsXULTooltipListener.cpp \
-	$(NULL)
-
 CPP_OBJS=					\
   .\$(OBJDIR)\nsScrollBoxFrame.obj \
   .\$(OBJDIR)\nsEditorBoxObject.obj \
@@ -116,51 +60,51 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsPopupBoxObject.obj \
   .\$(OBJDIR)\nsMenuBoxObject.obj \
   .\$(OBJDIR)\nsBoxObject.obj \
-	.\$(OBJDIR)\nsImageBoxFrame.obj		\
-	.\$(OBJDIR)\nsRootBoxFrame.obj		\
+  .\$(OBJDIR)\nsImageBoxFrame.obj		\
+  .\$(OBJDIR)\nsRootBoxFrame.obj		\
   .\$(OBJDIR)\nsDocElementBoxFrame.obj \
-	.\$(OBJDIR)\nsStackLayout.obj		\
-	.\$(OBJDIR)\nsPopupSetFrame.obj \
-	.\$(OBJDIR)\nsMenuBarFrame.obj \
-	    .\$(OBJDIR)\nsMenuFrame.obj \
-        .\$(OBJDIR)\nsSplitterFrame.obj    \
-		.\$(OBJDIR)\nsButtonBoxFrame.obj    \
-        .\$(OBJDIR)\nsSpringFrame.obj    \
-	 	.\$(OBJDIR)\nsSliderFrame.obj \
-        .\$(OBJDIR)\nsProgressMeterFrame.obj    \
-        .\$(OBJDIR)\nsGroupBoxFrame.obj    \
-        .\$(OBJDIR)\nsBox.obj    \
-        .\$(OBJDIR)\nsContainerBox.obj    \
-        .\$(OBJDIR)\nsBoxFrame.obj    \
-        .\$(OBJDIR)\nsBoxLayoutState.obj    \
-        .\$(OBJDIR)\nsBoxToBlockAdaptor.obj    \
-        .\$(OBJDIR)\nsSprocketLayout.obj    \
-        .\$(OBJDIR)\nsBoxLayout.obj    \
-        .\$(OBJDIR)\nsLeafBoxFrame.obj    \
-        .\$(OBJDIR)\nsTextBoxFrame.obj    \
-        .\$(OBJDIR)\nsFrameNavigator.obj    \
-        .\$(OBJDIR)\nsRepeatService.obj    \
-        .\$(OBJDIR)\nsGrippyFrame.obj    \
-        .\$(OBJDIR)\nsDeckFrame.obj    \
-        .\$(OBJDIR)\nsStackFrame.obj    \
-	.\$(OBJDIR)\nsTreeIndentationFrame.obj \
-        .\$(OBJDIR)\nsTreeItemDragCapturer.obj \
+  .\$(OBJDIR)\nsStackLayout.obj		\
+  .\$(OBJDIR)\nsPopupSetFrame.obj \
+  .\$(OBJDIR)\nsMenuBarFrame.obj \
+  .\$(OBJDIR)\nsMenuFrame.obj \
+  .\$(OBJDIR)\nsSplitterFrame.obj    \
+  .\$(OBJDIR)\nsButtonBoxFrame.obj    \
+  .\$(OBJDIR)\nsSpringFrame.obj    \
+  .\$(OBJDIR)\nsSliderFrame.obj \
+  .\$(OBJDIR)\nsProgressMeterFrame.obj    \
+  .\$(OBJDIR)\nsGroupBoxFrame.obj    \
+  .\$(OBJDIR)\nsBox.obj    \
+  .\$(OBJDIR)\nsContainerBox.obj    \
+  .\$(OBJDIR)\nsBoxFrame.obj    \
+  .\$(OBJDIR)\nsBoxLayoutState.obj    \
+  .\$(OBJDIR)\nsBoxToBlockAdaptor.obj    \
+  .\$(OBJDIR)\nsSprocketLayout.obj    \
+  .\$(OBJDIR)\nsBoxLayout.obj    \
+  .\$(OBJDIR)\nsLeafBoxFrame.obj    \
+  .\$(OBJDIR)\nsTextBoxFrame.obj    \
+  .\$(OBJDIR)\nsFrameNavigator.obj    \
+  .\$(OBJDIR)\nsRepeatService.obj    \
+  .\$(OBJDIR)\nsGrippyFrame.obj    \
+  .\$(OBJDIR)\nsDeckFrame.obj    \
+  .\$(OBJDIR)\nsStackFrame.obj    \
+  .\$(OBJDIR)\nsTreeIndentationFrame.obj \
+  .\$(OBJDIR)\nsTreeItemDragCapturer.obj \
   .\$(OBJDIR)\nsXULTreeFrame.obj \
   .\$(OBJDIR)\nsXULTreeGroupFrame.obj \
   .\$(OBJDIR)\nsXULTreeOuterGroupFrame.obj \
   .\$(OBJDIR)\nsXULTreeSliceFrame.obj \
   .\$(OBJDIR)\nsXULTreeCellFrame.obj \
   .\$(OBJDIR)\nsTreeLayout.obj \
-	.\$(OBJDIR)\nsScrollbarFrame.obj \
-	.\$(OBJDIR)\nsScrollbarButtonFrame.obj \
-	.\$(OBJDIR)\nsMenuPopupFrame.obj \
-	.\$(OBJDIR)\nsMenuBarListener.obj \
-	.\$(OBJDIR)\nsMenuListener.obj \
-	.\$(OBJDIR)\nsMenuDismissalListener.obj \
-	.\$(OBJDIR)\nsTitleBarFrame.obj \
-	.\$(OBJDIR)\nsResizerFrame.obj \
-	.\$(OBJDIR)\nsXULTooltipListener.obj \
-	$(NULL)
+  .\$(OBJDIR)\nsScrollbarFrame.obj \
+  .\$(OBJDIR)\nsScrollbarButtonFrame.obj \
+  .\$(OBJDIR)\nsMenuPopupFrame.obj \
+  .\$(OBJDIR)\nsMenuBarListener.obj \
+  .\$(OBJDIR)\nsMenuListener.obj \
+  .\$(OBJDIR)\nsMenuDismissalListener.obj \
+  .\$(OBJDIR)\nsTitleBarFrame.obj \
+  .\$(OBJDIR)\nsResizerFrame.obj \
+  .\$(OBJDIR)\nsXULTooltipListener.obj \
+  $(NULL)
 
 LINCS= \
   -I..\..\..\html\style\src -I..\..\..\html\base\src \

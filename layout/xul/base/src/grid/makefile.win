@@ -35,25 +35,13 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-	nsGridLayout2.cpp \
-	nsGridRowLayout.cpp \
-	nsGridRowLeafLayout.cpp \
-	nsGridRowLeafFrame.cpp \
-	nsGridRowGroupFrame.cpp \
-	nsGridRowGroupLayout.cpp \
-    nsGrid.cpp \
-	nsGridRow.cpp \
-	nsGridCell.cpp \
-	$(NULL)
-
 CPP_OBJS=		\
     .\$(OBJDIR)\nsGridLayout2.obj \
     .\$(OBJDIR)\nsGridRowLayout.obj \
-	.\$(OBJDIR)\nsGridRowLeafLayout.obj \
-	.\$(OBJDIR)\nsGridRowLeafFrame.obj \
-	.\$(OBJDIR)\nsGridRowGroupFrame.obj \
-	.\$(OBJDIR)\nsGridRowGroupLayout.obj \
+    .\$(OBJDIR)\nsGridRowLeafLayout.obj \
+    .\$(OBJDIR)\nsGridRowLeafFrame.obj \
+    .\$(OBJDIR)\nsGridRowGroupFrame.obj \
+    .\$(OBJDIR)\nsGridRowGroupLayout.obj \
     .\$(OBJDIR)\nsGrid.obj \
     .\$(OBJDIR)\nsGridRow.obj \
     .\$(OBJDIR)\nsGridCell.obj \
