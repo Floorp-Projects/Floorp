@@ -156,11 +156,7 @@ function calendarInit()
 
    if( window.arguments && window.arguments[0].url )
    {
-      var arrayForNames = window.arguments[0].url.split( "/" );
-      var CalendarNameWithExtension = arrayForNames[ arrayForNames.length - 1 ];
-      var CalendarName = CalendarNameWithExtension.replace( ".ics", "" );
-
-      gCalendarWindow.calendarManager.launchAddCalendarDialog( CalendarName, window.arguments[0].url );
+      gCalendarWindow.calendarManager.checkCalendarURL( window.arguments[0].url );
    }
 }
 
