@@ -126,10 +126,17 @@ NS_IMETHODIMP nsGfxRadioControlFrame::SetProperty(nsIPresContext* aPresContext, 
 {
   if (nsHTMLAtoms::checked == aName) {
     PRBool state = (aValue == NS_STRING_TRUE) ? PR_TRUE : PR_FALSE;
-    SetRadioState(aPresContext, state);
 
+
+    // if there is no form than the radiobtn is an orphan
     if (mFormFrame) {
-      mFormFrame->OnRadioChecked(aPresContext, *this, state);
+      // if this failed then it didn't have a named radio group
+      if (NS_FAILED(mFormFrame->OnRadioChecked(aPresContext, *this, state))) {
+        // The line below is commented out to duplicate NavQuirks behavior
+        //SetRadioState(aPresContext, state);
+      }
+    } else {
+      SetRadioState(aPresContext, state);
     }
   }
   else {

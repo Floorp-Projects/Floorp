@@ -442,7 +442,6 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
         nsCOMPtr<nsIDOMHTMLInputElement> input(do_QueryInterface(content));
         if (input) {
           input->SetChecked(PR_TRUE);
-          //OnRadioChecked(aPresContext, *radioBtn, PR_TRUE);
         }
       }
     }
@@ -521,13 +520,19 @@ void nsFormFrame::RemoveRadioControlFrame(nsIFormControlFrame * aFrame)
   }
 }
   
-void
-nsFormFrame::OnRadioChecked(nsIPresContext* aPresContext, nsGfxRadioControlFrame& aControl, PRBool aChecked)
+//--------------------------------------------------------
+// returns NS_ERROR_FAILURE if the radiobtn doesn't have a group
+// returns NS_OK is it did have a radio group 
+//--------------------------------------------------------
+nsresult
+nsFormFrame::OnRadioChecked(nsIPresContext*         aPresContext, 
+                            nsGfxRadioControlFrame& aControl, 
+                            PRBool                  aNewCheckedVal)
 {
   nsString radioName;
   aControl.GetName(&radioName);
   if (0 == radioName.Length()) { // don't consider a radio without a name 
-    return;
+    return NS_ERROR_FAILURE;
   }
  
   // locate the radio group with the name of aRadio
@@ -536,20 +541,35 @@ nsFormFrame::OnRadioChecked(nsIPresContext* aPresContext, nsGfxRadioControlFrame
     nsRadioControlGroup* group = (nsRadioControlGroup *) mRadioGroups.ElementAt(j);
     nsString groupName;
     group->GetName(groupName);
-    nsGfxRadioControlFrame* checkedRadio = group->GetCheckedRadio();
+    // get the currently checked radio button
+    nsGfxRadioControlFrame* currentCheckBtn = group->GetCheckedRadio();
     if (groupName.Equals(radioName)) {
-      if (aChecked) {
-        if (&aControl != checkedRadio) {
-          if (checkedRadio) {
-            checkedRadio->SetChecked(aPresContext, PR_FALSE, PR_FALSE);
+      // is the new checked btn different than the current button?
+      if (&aControl != currentCheckBtn) {
+        // if the new button is being set to false
+        // then don't do anything
+        if (aNewCheckedVal) {
+          // the current btn could be null
+          if (currentCheckBtn != nsnull) {
+            currentCheckBtn->SetChecked(aPresContext, !aNewCheckedVal, PR_FALSE);
           }
+          aControl.SetChecked(aPresContext, aNewCheckedVal, PR_FALSE);
           group->SetCheckedRadio(&aControl);
         }
-      } else if (&aControl == checkedRadio) {
-        checkedRadio->SetChecked(aPresContext, PR_FALSE, PR_FALSE);
+      } else {
+        // here we are setting the same radio button 
+        // as the one that is currently checked 
+        //
+        currentCheckBtn->SetChecked(aPresContext, aNewCheckedVal, PR_FALSE);
+        // So if we are setting the current btn to be 0 or off 
+        // then we must set a default selction
+        if (!aNewCheckedVal) {
+          DoDefaultSelection(aPresContext, group, currentCheckBtn);
+        }
       }
     }
   }
+  return NS_OK;
 }
 
 

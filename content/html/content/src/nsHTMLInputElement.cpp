@@ -53,6 +53,8 @@
 #include "nsISizeOfHandler.h"
 
 #include "nsIPresState.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMHTMLCollection.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -197,6 +199,11 @@ public:
   // nsIBindableContent
   NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
   NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
+
+  // Helper method
+  NS_IMETHOD SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
+                                 nsIStatefulFrame::StateType aStateType,
+                                 PRBool aValue);
 
 protected:
   nsGenericHTMLLeafElement mInner;
@@ -524,7 +531,11 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
   else {
     // Retrieve the presentation state instead.
     nsCOMPtr<nsIPresState> presState;
-    nsGenericHTMLElement::GetPrimaryPresState(this, nsIStatefulFrame::eCheckboxType, getter_AddRefs(presState));
+    PRInt32 type;
+    GetType(&type);
+    nsIStatefulFrame::StateType stateType = (type == NS_FORM_INPUT_CHECKBOX?nsIStatefulFrame::eCheckboxType:
+                                                                            nsIStatefulFrame::eRadioType);
+    nsGenericHTMLElement::GetPrimaryPresState(this, stateType, getter_AddRefs(presState));
 
     // Obtain the value property from the presentation state.
     if (presState) {
@@ -540,34 +551,92 @@ nsHTMLInputElement::GetChecked(PRBool* aValue)
   return NS_OK;      
 }
 
+NS_IMETHODIMP 
+nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent, 
+                                        nsIStatefulFrame::StateType aStateType,
+                                        PRBool aValue)
+{
+  nsCOMPtr<nsIPresState> presState;
+  nsGenericHTMLElement::GetPrimaryPresState(aHTMLContent, aStateType, getter_AddRefs(presState));
+
+  // Obtain the value property from the presentation state.
+  if (presState) {
+    nsAutoString value;
+    if (PR_TRUE == aValue)
+      value = "1";
+    else 
+      value = "0";
+    presState->SetStateProperty("checked", value);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP 
 nsHTMLInputElement::SetChecked(PRBool aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
+
+    // First check to see if the new value 
+    // is different than our current Value
+    // if so, then return
+    nsAutoString checkedStr;
+    formControlFrame->GetProperty(nsHTMLAtoms::checked, checkedStr);
+    if ((checkedStr.Equals("1") && aValue) || (checkedStr.Equals("0") && !aValue)) {
+      return NS_OK;
+    }
+
+    // the value is being toggled
     nsIPresContext* presContext;
     nsGenericHTMLElement::GetPresContext(this, &presContext);
-    if (PR_TRUE == aValue) {
-     formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, "1");
-    }
-    else {
-      formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, "0");
-    }
+    formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, PR_TRUE == aValue?"1":"0");
     NS_IF_RELEASE(presContext);
   }
   else {
     // Retrieve the presentation state instead.
     nsCOMPtr<nsIPresState> presState;
-    nsGenericHTMLElement::GetPrimaryPresState(this, nsIStatefulFrame::eCheckboxType, getter_AddRefs(presState));
+    PRInt32 type;
+    GetType(&type);
+    nsIStatefulFrame::StateType stateType = (type == NS_FORM_INPUT_CHECKBOX?nsIStatefulFrame::eCheckboxType:
+                                                                            nsIStatefulFrame::eRadioType);
+    if (NS_FAILED(SetPresStateChecked(this, stateType, aValue))) {
+      return NS_ERROR_FAILURE;
+    }
 
-    // Obtain the value property from the presentation state.
-    if (presState) {
-      nsAutoString value;
-      if (PR_TRUE == aValue)
-        value = "1";
-      else value = "0";
-      presState->SetStateProperty("checked", value);
+    if (stateType == nsIStatefulFrame::eRadioType) {
+      nsIDOMHTMLInputElement * radioElement = (nsIDOMHTMLInputElement*)this;
+      nsAutoString name;
+      GetName(name);
+    
+      nsCOMPtr<nsIDOMHTMLFormElement> formElement;
+      if (NS_SUCCEEDED(GetForm(getter_AddRefs(formElement)))) {
+        nsCOMPtr<nsIDOMHTMLCollection> controls; 
+        nsresult rv = formElement->GetElements(getter_AddRefs(controls)); 
+        if (controls) {
+          if (NS_SUCCEEDED(rv) && nsnull != controls) {
+            PRUint32 numControls;
+            controls->GetLength(&numControls);
+            for (PRUint32 i = 0; i < numControls; i++) {
+              nsCOMPtr<nsIDOMNode> elementNode;
+              controls->Item(i, getter_AddRefs(elementNode));
+              if (elementNode) {
+                nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
+                if (NS_SUCCEEDED(rv) && inputElement && (radioElement != inputElement.get())) {
+                  nsAutoString childName;
+                  rv = inputElement->GetName(childName);
+                  if (NS_SUCCEEDED(rv)) {
+                    if (name == childName) {
+                      nsCOMPtr<nsIHTMLContent> htmlContent = do_QueryInterface(inputElement);
+                      SetPresStateChecked(htmlContent, nsIStatefulFrame::eRadioType, PR_FALSE);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
