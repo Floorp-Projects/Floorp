@@ -11,6 +11,10 @@
 #include "nsIDOMDocument.h"
 #include "nsIJSEventListener.h"
 #include "nsIController.h"
+#include "nsIControllers.h" // XXX Will go away
+#include "nsIDOMXULElement.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
+#include "nsIDOMNSHTMLInputElement.h"
 
 PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
@@ -366,6 +370,30 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
 NS_IMETHODIMP
 nsXBLEventHandler::GetController(nsIController** aResult)
 {
+  // XXX Fix this so there's a generic interface that describes controllers, 
+  // This code should have no special knowledge of what objects might have controllers.
+  nsCOMPtr<nsIControllers> controllers;
+
+  nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mBoundElement);
+  if (xulElement)
+    xulElement->GetControllers(getter_AddRefs(controllers));
+  else {
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea = do_QueryInterface(mBoundElement);
+    if (htmlTextArea)
+      htmlTextArea->GetControllers(getter_AddRefs(controllers));
+    else {
+      nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement = do_QueryInterface(mBoundElement);
+      if (htmlInputElement)
+        htmlInputElement->GetControllers(getter_AddRefs(controllers));
+    }
+  }
+
+  // Return the first controller.
+  // XXX Just ditch this stupid controllers array.  It was a bad idea.
+  if (controllers) {
+    controllers->GetControllerAt(0, aResult);
+  }
+  else *aResult = nsnull;
 
   return NS_OK;
 }
