@@ -50,6 +50,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsEscape.h"
+#include "nsNetError.h"
 
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
                      NS_THIS_SIMPLEURI_IMPLEMENTATION_CID);
@@ -158,7 +159,7 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
 
     PRInt32 pos = spec.FindChar(':');
     if (pos == -1)
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_MALFORMED_URI;
 
     mScheme.Truncate();
     mPath.Truncate();

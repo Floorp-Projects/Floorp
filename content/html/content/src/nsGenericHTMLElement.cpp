@@ -3069,8 +3069,8 @@ nsGenericHTMLElement::AttrToURI(nsIAtom* aAttrName, nsAString& aAbsoluteURI)
 {
   nsAutoString attrValue;
   nsresult rv = GetAttr(kNameSpaceID_None, aAttrName, attrValue);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-    aAbsoluteURI.Truncate();
+  if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+    SetDOMStringToNull(aAbsoluteURI);
     return NS_OK;
   }
 
@@ -3087,10 +3087,6 @@ nsGenericHTMLElement::AttrToURI(nsIAtom* aAttrName, nsAString& aAbsoluteURI)
                                                  attrValue, doc, baseURI);
 
   if (NS_FAILED(rv)) {
-    if (rv != NS_ERROR_MALFORMED_URI) {
-      return rv;
-    }
-
     // Just use the attr value as the result...
     aAbsoluteURI = attrValue;
     return NS_OK;
