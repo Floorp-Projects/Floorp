@@ -320,6 +320,9 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
       aPresContext->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
       GetListItemText(aPresContext, *myList, text);
       aRenderingContext.SetFont(fm);
@@ -616,6 +619,36 @@ static PRUnichar gEthiopicHalehameChars[ETHIOPIC_HALEHAME_CHARS_SIZE] =
 0x12a0, 0x12a8, 0x12c8, 0x12d0, 0x12d8, 0x12e8,
 0x12f0, 0x1308, 0x1320, 0x1330, 0x1338, 0x1340,
 0x1348, 0x1350
+};
+#define ETHIOPIC_HALEHAME_AM_CHARS_SIZE 33
+static PRUnichar gEthiopicHalehameAmChars[ETHIOPIC_HALEHAME_AM_CHARS_SIZE] =
+{                                      
+0x1200, 0x1208, 0x1210, 0x1218, 0x1220, 0x1228,
+0x1230, 0x1238, 0x1240, 0x1260, 0x1270, 0x1278,
+0x1280, 0x1290, 0x1298, 0x12a0, 0x12a8, 0x12b8,
+0x12c8, 0x12d0, 0x12d8, 0x12e0, 0x12e8, 0x12f0,
+0x1300, 0x1308, 0x1320, 0x1328, 0x1330, 0x1338,
+0x1340, 0x1348, 0x1350
+};
+#define ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE 31
+static PRUnichar gEthiopicHalehameTiErChars[ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE] =
+{                                      
+0x1200, 0x1208, 0x1210, 0x1218, 0x1228, 0x1230,
+0x1238, 0x1240, 0x1250, 0x1260, 0x1270, 0x1278,
+0x1290, 0x1298, 0x12a0, 0x12a8, 0x12b8, 0x12c8,
+0x12d0, 0x12d8, 0x12e0, 0x12e8, 0x12f0, 0x1300,
+0x1308, 0x1320, 0x1328, 0x1330, 0x1338, 0x1348,
+0x1350
+};
+#define ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE 34
+static PRUnichar gEthiopicHalehameTiEtChars[ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE] =
+{                                      
+0x1200, 0x1208, 0x1210, 0x1218, 0x1220, 0x1228,
+0x1230, 0x1238, 0x1240, 0x1250, 0x1260, 0x1270,
+0x1278, 0x1280, 0x1290, 0x1298, 0x12a0, 0x12a8,
+0x12b8, 0x12c8, 0x12d0, 0x12d8, 0x12e0, 0x12e8,
+0x12f0, 0x1300, 0x1308, 0x1320, 0x1328, 0x1330,
+0x1338, 0x1340, 0x1348, 0x1350
 };
 
 
@@ -1185,6 +1218,18 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
       EthiopicToText(mOrdinal, result);
       break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
+      CharListToText(mOrdinal, result, gEthiopicHalehameAmChars, ETHIOPIC_HALEHAME_AM_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
+      CharListToText(mOrdinal, result, gEthiopicHalehameTiErChars, ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
+      CharListToText(mOrdinal, result, gEthiopicHalehameTiEtChars, ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE);
+      break;
   }
 #ifdef IBMBIDI
   if (NS_STYLE_DIRECTION_RTL != vis->mDirection)
@@ -1398,6 +1443,10 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
       GetListItemText(aCX, *myList, text);
       fm->GetHeight(aMetrics.height);
       aReflowState.rendContext->SetFont(fm);
