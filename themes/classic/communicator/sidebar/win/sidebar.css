@@ -73,20 +73,29 @@
   .box-texttab
     {
       -moz-binding        : url("chrome://communicator/skin/sidebar/sidebarBindings.xml#panelheader");
-      background-color    : ThreeDHighlight;
+      background-color    : ThreeDFace;
       color               : ButtonText;
       cursor              : pointer;
     }
 
-  .panelheader-box-1
+  .box-texttab,
+  .box-texttab[selected="true"],
+  .box-texttab[selected="true"]:hover,
+  .box-texttab[selected="true"]:hover:active
     {
       border-left         : 1px solid ThreeDHighlight;
       border-top          : 1px solid ThreeDHighlight;
       border-right        : 1px solid ThreeDShadow;
       border-bottom       : 1px solid ThreeDShadow;
-      padding             : 3px 2px 3px 0px;
     }
-
+    
+  .panelheader-box-1,
+  .box-texttab[selected="true"]:hover > .panelheader-box-1
+    {
+      border              : 1px solid transparent;
+      padding             : 2px 1px 2px 0px;
+    }
+    
   .panelheader-grippy-icon
     {
       margin              : 2px 7px 0px 7px;
@@ -104,14 +113,29 @@
 
   .box-texttab:hover
     {
-      background-color      : ButtonFace;
+      border-right          : 1px solid ThreeDDarkShadow;
+      border-bottom         : 1px solid ThreeDDarkShadow;
     }
     
+  .box-texttab:hover > .panelheader-box-1
+    {
+      border-right          : 1px solid ThreeDShadow;
+      border-bottom         : 1px solid ThreeDShadow;
+    }
+
+  .box-texttab:hover:active
+    {
+      border                : 1px solid ThreeDShadow;
+    }
+    
+  .box-texttab:hover:active > .panelheader-box-1
+    {
+      border                : 1px solid transparent;
+    }
+
   .box-texttab[selected="true"],
   .box-texttab[selected="true"]:hover
     {
-      background-color      : ThreeDFace;
-      color                 : ButtonText;
       font-weight           : bold;
       cursor                : default;
     }
