@@ -349,6 +349,7 @@ nsComboboxControlFrame::nsComboboxControlFrame()
 
   mGoodToGo = PR_FALSE;
   mInRedisplayText = PR_FALSE;
+  mRedisplayTextEventPosted = PR_FALSE;
 
   mRecentSelectedIndex = -1;
 
@@ -1819,8 +1820,18 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
     if (eventQueue) {
       RedisplayTextEvent* event = new RedisplayTextEvent(this, textToDisplay);
       if (event) {
+        // Revoke outstanding events to avoid out-of-order events which could mean
+        // displaying the wrong text.
+        if (mRedisplayTextEventPosted) {
+          eventQueue->RevokeEvents(this);
+          mRedisplayTextEventPosted = PR_FALSE;
+        }
+
         rv = eventQueue->PostEvent(event);
-        if (NS_FAILED(rv)) {
+
+        if (NS_SUCCEEDED(rv)) {
+          mRedisplayTextEventPosted = PR_TRUE;
+        } else {
           PL_DestroyEvent(event);
         }
       } else {
@@ -1839,6 +1850,7 @@ nsComboboxControlFrame::HandleRedisplayTextEvent(const nsAString& aText)
   // into the correct parent (mDisplayFrame). See bug 282607.
   NS_PRECONDITION(!mInRedisplayText, "Nested RedisplayText");
   mInRedisplayText = PR_TRUE;
+  mRedisplayTextEventPosted = PR_FALSE;
 
   ActuallyDisplayText(aText, PR_TRUE);
   mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
