@@ -6186,7 +6186,10 @@ void lo_LayoutTextBlock ( MWContext * context, lo_DocState * state, Bool flushLa
 	justify = ( state->align_stack != NULL ) && ( state->align_stack->alignment == LO_ALIGN_JUSTIFY );
 		
 	/* bail if we're at the end of this block */
-	if ( block->buffer_read_index == block->buffer_write_index )
+    /* XXX MATT XXX sometimes buffer_read_index may be larger then
+     * buffer_write_index, don't know why XXX
+     */
+	if ( block->buffer_read_index >= block->buffer_write_index )
 		{
 		/* if there's also no text in the line buffer, clear this block */
 		if ( state->line_buf_len == 0 )
