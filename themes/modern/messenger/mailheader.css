@@ -35,8 +35,7 @@ window {
   overflow: auto;
 }
 
-body {
-  /* XXX Doesn't seem to work. (Same with "html|body".) */
+html|html {
   background-color: white;
 }
 

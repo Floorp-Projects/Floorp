@@ -25,7 +25,7 @@ table[name=header-part2]    { background-color: #DEDEDE; border: 0px solid #DEDE
 table[name=header-part3]    { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
 div.headerdisplayname       { font-weight: bold;  white-space: pre; display: inline; }
 
-body {
+html {
   background-color: white;
 }
 
