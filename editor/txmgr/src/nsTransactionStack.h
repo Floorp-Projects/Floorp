@@ -28,8 +28,8 @@ class nsTransactionReleaseFunctor : public nsDequeFunctor
 {
 public:
 
-  nsTransactionReleaseFunctor()  {}
-  ~nsTransactionReleaseFunctor() {}
+  nsTransactionReleaseFunctor()          {}
+  virtual ~nsTransactionReleaseFunctor() {}
   virtual void *operator()(void *aObject);
 };
 
