@@ -59,6 +59,7 @@ $::param{'version'} = '2.9';
 
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
+$::defaultqueryname = "(Default query) ";
 
 sub ConnectToDatabase {
     if (!defined $::db) {

@@ -56,83 +56,133 @@ if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
     confirm_login();
+} else {
+    quietly_check_login();
+}
+my $userid = 0;
+if (defined $::COOKIE{"Bugzilla_login"}) {
+    $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
 }
 
+# Backwards compatability hack -- if there are any of the old QUERY_*
+# cookies around, and we are logged in, then move them into the database
+# and nuke the cookie.
+if ($userid) {
+    my @oldquerycookies;
+    foreach my $i (keys %::COOKIE) {
+        if ($i =~ /^QUERY_(.*)$/) {
+            push(@oldquerycookies, [$1, $i, $::COOKIE{$i}]);
+        }
+    }
+    if (defined $::COOKIE{'DEFAULTQUERY'}) {
+        push(@oldquerycookies, [$::defaultqueryname, 'DEFAULTQUERY',
+                                $::COOKIE{'DEFAULTQUERY'}]);
+    }
+    if (@oldquerycookies) {
+        foreach my $ref (@oldquerycookies) {
+            my ($name, $cookiename, $value) = (@$ref);
+            if ($value) {
+                my $qname = SqlQuote($name);
+                SendSQL("SELECT query FROM namedqueries " .
+                        "WHERE userid = $userid AND name = $qname");
+                my $query = FetchOneColumn();
+                if (!$query) {
+                    SendSQL("REPLACE INTO namedqueries " .
+                            "(userid, name, query) VALUES " .
+                            "($userid, $qname, " . SqlQuote($value) . ")");
+                }
+            }
+            print "Set-Cookie: $cookiename= ; path=/ ; expires=Sun, 30-Jun-1980 00:00:00 GMT\n";
+        }
+    }
+}
+                
+
+
+
 if ($::FORM{'nukedefaultquery'}) {
-    print "Set-Cookie: DEFAULTQUERY= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
-    delete $::COOKIE{"DEFAULTQUERY"};
+    if ($userid) {
+        SendSQL("DELETE FROM namedqueries " .
+                "WHERE userid = $userid AND name = '$::defaultqueryname'");
+    }
     $::buffer = "";
 }
 
 
-my $userdefaultquery = 1;
-if (!defined $::COOKIE{"DEFAULTQUERY"}) {
-    $userdefaultquery = 0;
-    $::COOKIE{"DEFAULTQUERY"} = Param("defaultquery");
+my $userdefaultquery;
+if ($userid) {
+    SendSQL("SELECT query FROM namedqueries " .
+            "WHERE userid = $userid AND name = '$::defaultqueryname'");
+    $userdefaultquery = FetchOneColumn();
 }
 
-if (!defined $::buffer || $::buffer eq "") {
-    $::buffer = $::COOKIE{"DEFAULTQUERY"};
-}
-
-use vars qw(%default);
+my %default;
 my %type;
 
-foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
-                  "priority", "bug_severity", "product", "reporter", "op_sys",
-                  "component", "version", "chfield", "chfieldfrom",
-                  "chfieldto", "chfieldvalue",
-                  "email1", "emailtype1", "emailreporter1",
-                  "emailassigned_to1", "emailcc1", "emailqa_contact1",
-                  "emaillongdesc1",
-                  "email2", "emailtype2", "emailreporter2",
-                  "emailassigned_to2", "emailcc2", "emailqa_contact2",
-                  "emaillongdesc2",
-                  "changedin", "votes", "short_desc", "short_desc_type",
-                  "long_desc", "long_desc_type", "bug_file_loc",
-                  "bug_file_loc_type", "status_whiteboard",
-                  "status_whiteboard_type", "keywords") {
-    $default{$name} = "";
-    $type{$name} = 0;
-}
-
-
-foreach my $item (split(/\&/, $::buffer)) {
-    my @el = split(/=/, $item);
-    my $name = $el[0];
-    my $value;
-    if ($#el > 0) {
-        $value = url_decode($el[1]);
-    } else {
-        $value = "";
+sub ProcessFormStuff {
+    my ($buf) = (@_);
+    my $foundone = 0;
+    foreach my $name ("bug_status", "resolution", "assigned_to",
+                      "rep_platform", "priority", "bug_severity",
+                      "product", "reporter", "op_sys",
+                      "component", "version", "chfield", "chfieldfrom",
+                      "chfieldto", "chfieldvalue",
+                      "email1", "emailtype1", "emailreporter1",
+                      "emailassigned_to1", "emailcc1", "emailqa_contact1",
+                      "emaillongdesc1",
+                      "email2", "emailtype2", "emailreporter2",
+                      "emailassigned_to2", "emailcc2", "emailqa_contact2",
+                      "emaillongdesc2",
+                      "changedin", "votes", "short_desc", "short_desc_type",
+                      "long_desc", "long_desc_type", "bug_file_loc",
+                      "bug_file_loc_type", "status_whiteboard",
+                      "status_whiteboard_type", "keywords") {
+        $default{$name} = "";
+        $type{$name} = 0;
     }
-    if (defined $default{$name}) {
-        if ($default{$name} ne "") {
-            $default{$name} .= "|$value";
-            $type{$name} = 1;
+
+
+    foreach my $item (split(/\&/, $buf)) {
+        my @el = split(/=/, $item);
+        my $name = $el[0];
+        my $value;
+        if ($#el > 0) {
+            $value = url_decode($el[1]);
         } else {
-            $default{$name} = $value;
+            $value = "";
+        }
+        if (defined $default{$name}) {
+            $foundone = 1;
+            if ($default{$name} ne "") {
+                $default{$name} .= "|$value";
+                $type{$name} = 1;
+            } else {
+                $default{$name} = $value;
+            }
         }
     }
+    return $foundone;
 }
-                  
+
+
+if (!ProcessFormStuff($::buffer)) {
+    # Ah-hah, there was no form stuff specified.  Do it again with the
+    # default query.
+    if ($userdefaultquery) {
+        ProcessFormStuff($userdefaultquery);
+    } else {
+        ProcessFormStuff(Param("defaultquery"));
+    }
+}
+
+
+                 
 
 if ($default{'chfieldto'} eq "") {
     $default{'chfieldto'} = "Now";
 }
 
 
-
-my $namelist = "";
-
-foreach my $i (sort (keys %::COOKIE)) {
-    if ($i =~ /^QUERY_/) {
-        if ($::COOKIE{$i} ne "") {
-            my $name = substr($i, 6); 
-            $namelist .= "<OPTION>$name";
-        }
-    }
-}
 
 print "Set-Cookie: BUGLIST=
 Content-type: text/html\n\n";
@@ -582,16 +632,33 @@ if (@::legal_keywords) {
 print "
 </table>
 <p>
+";
 
-
-
+if (!$userid) {
+    print qq{<INPUT TYPE="hidden" NAME="cmdtype" VALUE="doit">};
+} else {
+    print "
 <BR>
 <INPUT TYPE=radio NAME=cmdtype VALUE=doit CHECKED> Run this query
 <BR>
 ";
 
-if ($namelist ne "") {
-    print "
+    my @namedqueries;
+    if ($userid) {
+        SendSQL("SELECT name FROM namedqueries " .
+                "WHERE userid = $userid AND name != '$::defaultqueryname' " .
+                "ORDER BY name");
+        while (MoreSQLData()) {
+            push(@namedqueries, FetchOneColumn());
+        }
+    }
+    
+    
+    
+    
+    if (@namedqueries) {
+        my $namelist = make_options(\@namedqueries);
+        print qq{
 <table cellspacing=0 cellpadding=0><tr>
 <td><INPUT TYPE=radio NAME=cmdtype VALUE=editnamed> Load the remembered query:</td>
 <td rowspan=3><select name=namedcmd>$namelist</select>
@@ -599,16 +666,19 @@ if ($namelist ne "") {
 <td><INPUT TYPE=radio NAME=cmdtype VALUE=runnamed> Run the remembered query:</td>
 </tr><tr>
 <td><INPUT TYPE=radio NAME=cmdtype VALUE=forgetnamed> Forget the remembered query:</td>
-</tr></table>"
-}
+</tr></table>};
+    }
 
-print "
+    print "
 <INPUT TYPE=radio NAME=cmdtype VALUE=asdefault> Remember this as the default query
 <BR>
 <INPUT TYPE=radio NAME=cmdtype VALUE=asnamed> Remember this query, and name it:
 <INPUT TYPE=text NAME=newqueryname>
 <BR>
+"
+}
 
+print "
 <NOBR><B>Sort By:</B>
 <SELECT NAME=\"order\">
 ";
@@ -640,8 +710,6 @@ print "
 ";
 
 
-quietly_check_login();
-
 if (UserInGroup("tweakparams")) {
     print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
 }
@@ -651,7 +719,7 @@ if (UserInGroup("editcomponents")) {
 if (UserInGroup("editkeywords")) {
     print "<a href=editkeywords.cgi>Edit Bugzilla keywords</a><br>\n";
 }
-if (defined $::COOKIE{"Bugzilla_login"}) {
+if ($userid) {
     print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
 }
 print "<a href=changepassword.cgi>Change your password or preferences.</a><br>\n";

@@ -673,6 +673,15 @@ $table{profiles} =
     unique(login_name)';
 
 
+$table{namedqueries} =
+    'userid mediumint not null,
+     name varchar(64) not null,
+     watchfordiffs tinyint not null,
+     query mediumtext not null,
+
+     unique(userid, name),
+     index(watchfordiffs)';
+
 # This isn't quite cooked yet...
 #
 #  $table{diffprefs} =

@@ -135,7 +135,8 @@ CrossCheck("profiles", "userid",
            ["bugs_activity", "who"],
            ["cc", "who"],
            ["votes", "who"],
-           ["longdescs", "who"]);
+           ["longdescs", "who"],
+           ["namedqueries", "userid"]);
 
 
 Status("Checking passwords");

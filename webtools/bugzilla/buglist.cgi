@@ -27,18 +27,24 @@ use strict;
 require "CGI.pl";
 use Date::Parse;
 
-use vars %::MFORM,
-    @::components,
-    @::default_column_list,
-    @::keywordsbyname,
-    @::legal_keywords,
-    @::legal_platform,
-    @::legal_priority,
-    @::legal_product,
-    @::legal_resolution_no_dup,
-    @::legal_severity,
-    @::legal_target_milestone,
-    @::versions;
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::defaultqueryname;
+    $zz = @::components;
+    $zz = @::default_column_list;
+    $zz = @::keywordsbyname;
+    $zz = @::legal_keywords;
+    $zz = @::legal_platform;
+    $zz = @::legal_priority;
+    $zz = @::legal_product;
+    $zz = @::legal_resolution_no_dup;
+    $zz = @::legal_severity;
+    $zz = @::legal_target_milestone;
+    $zz = @::versions;
+};
 
 
 
@@ -51,73 +57,99 @@ if (!defined $::FORM{'cmdtype'}) {
     $::FORM{'cmdtype'} = 'doit';
 }
 
+sub LookupNamedQuery {
+    my ($name) = (@_);
+    confirm_login();
+    my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+    SendSQL("SELECT query FROM namedqueries " .
+            "WHERE userid = $userid AND name = " . SqlQuote($name));
+    my $result = FetchOneColumn();
+    if (!defined $result) {
+        print "Content-type: text/html\n\n";
+        PutHeader("Something weird happened");
+        print qq{The named query $name seems to no longer exist.};
+        PutFooter();
+        exit;
+    }
+    return $result;
+}
+
+
+        
+
+
 CMD: for ($::FORM{'cmdtype'}) {
     /^runnamed$/ && do {
-        $::buffer = $::COOKIE{"QUERY_" . $::FORM{"namedcmd"}};
+        $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
         ProcessFormFields($::buffer);
         last CMD;
     };
     /^editnamed$/ && do {
-	my $url = "query.cgi?" . $::COOKIE{"QUERY_" . $::FORM{"namedcmd"}};
-        print "Content-type: text/html
+	my $url = "query.cgi?" . LookupNamedQuery($::FORM{"namedcmd"});
+        print qq{Content-type: text/html
 Refresh: 0; URL=$url
 
 <TITLE>What a hack.</TITLE>
-Loading your query named <B>$::FORM{'namedcmd'}</B>...
-";
+<A HREF="$url">Loading your query named <B>$::FORM{'namedcmd'}</B>...</A>
+};
         exit;
     };
     /^forgetnamed$/ && do {
-        print "Set-Cookie: QUERY_" . $::FORM{'namedcmd'} . "= ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
-Content-type: text/html
+        confirm_login();
+        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        SendSQL("DELETE FROM namedqueries WHERE userid = $userid " .
+                "AND name = " . SqlQuote($::FORM{'namedcmd'}));
+        
+        print "Content-type: text/html\n\n";
+        PutHeader("Forget what?", "");
 
-<HTML>
-<TITLE>Forget what?</TITLE>
+        print qq{
 OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
 <P>
-<A HREF=query.cgi>Go back to the query page.</A>
-";
-        PutFooter();
-        exit;
-    };
-    /^asnamed$/ && do {
-        if ($::FORM{'newqueryname'} =~ /^[a-zA-Z0-9_ ]+$/) {
-    print "Set-Cookie: QUERY_" . $::FORM{'newqueryname'} . "=$::buffer ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
-Content-type: text/html
-
-<HTML>
-<TITLE>OK, done.</TITLE>
-OK, you now have a new query named <B>$::FORM{'newqueryname'}</B>.
-
-<P>
-
-<A HREF=query.cgi>Go back to the query page.</A>
-";
-        } else {
-            print "Content-type: text/html
-
-<HTML>
-<TITLE>Picky, picky.</TITLE>
-Query names can only have letters, digits, spaces, or underbars.  You entered 
-\"<B>$::FORM{'newqueryname'}</B>\", which doesn't cut it.
-<P>
-Click the <B>Back</B> button and type in a valid name for this query.
-";
-        }
+<A HREF="query.cgi">Go back to the query page.</A>
+};
         PutFooter();
         exit;
     };
     /^asdefault$/ && do {
-        print "Set-Cookie: DEFAULTQUERY=$::buffer ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
-Content-type: text/html
-
-<HTML>
-<TITLE>OK, default is set.</TITLE>
+        confirm_login();
+        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        print "Content-type: text/html\n\n";
+        SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
+                "($userid, '$::defaultqueryname'," .
+                SqlQuote($::buffer) . ")");
+        PutHeader("OK, default is set");
+        print qq{
 OK, you now have a new default query.  You may also bookmark the result of any
 individual query.
 
-<P><A HREF=query.cgi>Go back to the query page, using the new default.</A>
-";
+<P><A HREF="query.cgi">Go back to the query page, using the new default.</A>
+};
+        PutFooter();
+        exit();
+    };
+    /^asnamed$/ && do {
+        confirm_login();
+        my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
+        print "Content-type: text/html\n\n";
+        my $name = trim($::FORM{'newqueryname'});
+        if ($name eq "" || $name =~ /[<>&]/) {
+            PutHeader("Please pick a valid name for your new query");
+            print "Click the <B>Back</B> button and type in a valid name\n";
+            print "for this query.  (Query names should not contain unusual\n";
+            print "characters.)\n";
+            PutFooter();
+            exit();
+        }
+        SendSQL("REPLACE INTO namedqueries (userid, name, query) VALUES " .
+                "($userid, " . SqlQuote($name) .
+                ", " . SqlQuote($::buffer) . ")");
+        PutHeader("OK, query saved.");
+        print qq{
+OK, you have a new query named <code>$name</code>
+<P>
+<BR><A HREF="query.cgi">Go back to the query page</A>
+};
         PutFooter();
         exit;
     };
@@ -256,7 +288,7 @@ if ($::FORM{'regetlastlist'}) {
 Sorry, I seem to have lost the cookie that recorded the results of your last
 query.  You will have to start over at the <A HREF="query.cgi">query page</A>.
 };
-        PutTrailer();
+        PutFooter();
         exit;
     }
     my @list = split(/:/, $::COOKIE{'BUGLIST'});
