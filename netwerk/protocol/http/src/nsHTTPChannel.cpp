@@ -662,7 +662,7 @@ nsHTTPChannel::CheckCache()
     // retrieve an existing cache entry or create a new one.
     if (!mCacheEntry) {
 
-#if defined(XP_MAC) || defined(XP_UNIX)
+#if defined(XP_PC) || defined(XP_MAC) || defined(XP_UNIX)
         // Temporary code to disable cache on platforms where it is not known to work
         static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
