@@ -31,10 +31,13 @@ nsTopProgressListener::nsTopProgressListener()
     NS_INIT_ISUPPORTS();
     mListeners = new nsVoidArray();
     mActive = 0;
+    mLock = PR_NewLock();
 }
 
 nsTopProgressListener::~nsTopProgressListener()
 {
+    if (mLock) PR_Lock(mLock);
+
     if (mListeners)
     {
         PRInt32 i=0;
@@ -47,26 +50,37 @@ nsTopProgressListener::~nsTopProgressListener()
         mListeners->Clear();
         delete (mListeners);
     }
+
+    if (mLock)
+    {
+        PR_Unlock(mLock);
+        PR_DestroyLock(mLock);
+    }
 }
 
 
-NS_IMPL_ISUPPORTS(nsTopProgressListener, NS_GET_IID(nsIXPIListener));
+NS_IMPL_THREADSAFE_ISUPPORTS(nsTopProgressListener, NS_GET_IID(nsIXPIListener));
 
 
 long
 nsTopProgressListener::RegisterListener(nsIXPIListener * newListener)
 {
+    if (mLock) PR_Lock(mLock);
     NS_IF_ADDREF( newListener );
-    return mListeners->AppendElement( newListener );
+    long retval = mListeners->AppendElement( newListener );
+    if (mLock) PR_Unlock(mLock);
+    return retval;
 }
 
 
 void
 nsTopProgressListener::UnregisterListener(long id)
 {
+    if (mLock) PR_Lock(mLock);
     nsIXPIListener *item = (nsIXPIListener*)mListeners->ElementAt(id);
-    NS_IF_RELEASE(item);
     mListeners->ReplaceElementAt(nsnull, id);
+    NS_IF_RELEASE(item);
+    if (mLock) PR_Unlock(mLock);
 }
 
 
