@@ -202,6 +202,7 @@ protected:
     nsCOMPtr<nsISupportsArray>						mStreamAsFileObserverArray;
     PRBool                              mApplyConversion;
     PRBool                              mNotificationProxiesBuilt;
+    PRBool                              mOpenInputStreamHasEventQueue;
 };
 
 #include "nsIRunnable.h"

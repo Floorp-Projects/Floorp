@@ -112,6 +112,12 @@ interface nsIHTTPChannel : nsIChannel
        to allow other non-http specs to be used in proxy cases. 
    */
     attribute string proxyRequestURI;
+
+	/**
+	 * This is a kludge which tells the channel to create a separate thread with the
+	 * even queue for OpenInputStream or not
+	 */
+	attribute boolean openInputStreamHasEventQueue;
     
 };
 
