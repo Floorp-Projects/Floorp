@@ -71,8 +71,7 @@ BOOL InitInstance(HINSTANCE hInstance, DWORD dwCmdShow)
   if(!hWnd)
     return(FALSE);
 
-  ShowWindow(hWnd, dwCmdShow);
-  UpdateWindow(hWnd);
+  hWndMain = hWnd;
 
   return(TRUE);
 }
@@ -90,7 +89,7 @@ void PrintError(LPSTR szMsg, DWORD dwErrorCodeSH)
   else
     wsprintf(szErrorString, "%s", szMsg);
 
-  MessageBox(NULL, szErrorString, NULL, MB_ICONEXCLAMATION);
+  MessageBox(hWndMain, szErrorString, NULL, MB_ICONEXCLAMATION);
 }
 
 void *NS_GlobalAlloc(DWORD dwMaxBuf)
@@ -156,6 +155,7 @@ HRESULT NS_LoadString(HANDLE hInstance, DWORD dwID, LPSTR szStringBuf, DWORD dwS
 HRESULT Initialize(HINSTANCE hInstance)
 {
   char szBuf[MAX_BUF];
+  HWND hwndFW;
 
   bSDInit         = FALSE;
   bSDUserCanceled = FALSE;
@@ -177,6 +177,17 @@ HRESULT Initialize(HINSTANCE hInstance)
     return(1);
 
   lstrcpy(szClassName, CLASS_NAME);
+
+  /* Allow only one instance of setup to run.
+   * Detect a previous instance of setup, bring it to the 
+   * foreground, and quit current instance */
+  if((hwndFW = FindWindow(szClassName, szClassName)) != NULL)
+  {
+    ShowWindow(hwndFW, SW_RESTORE);
+    SetForegroundWindow(hwndFW);
+    return(1);
+  }
+
   hAccelTable = LoadAccelerators(hInstance, szClassName);
 
   if((hSetupRscInst = LoadLibraryEx("Setuprsc.dll", NULL, LOAD_WITH_ALTERED_SEARCH_PATH)) == NULL)
@@ -2293,7 +2304,7 @@ void ViewSiComponents()
       siCTemp = siCTemp->Next;
     }
 
-    MessageBox(NULL, szBuf, NULL, MB_ICONEXCLAMATION);
+    MessageBox(hWndMain, szBuf, NULL, MB_ICONEXCLAMATION);
   }
 }
 
@@ -2486,11 +2497,76 @@ void GetAlternateArchiveSearchPath(LPSTR lpszCmdLine)
   }
 }
 
+HRESULT CheckInstances()
+{
+  char  szSection[MAX_BUF];
+  char  szClassName[MAX_BUF];
+  char  szWindowName[MAX_BUF];
+  char  szMessage[MAX_BUF];
+  char  szIndex[MAX_BUF];
+  int   iIndex;
+  BOOL  bContinue;
+  HWND  hwndFW;
+  LPSTR szWN;
+  LPSTR szCN;
+
+  bContinue = TRUE;
+  iIndex    = -1;
+  while(bContinue)
+  {
+    ZeroMemory(szClassName,  sizeof(szClassName));
+    ZeroMemory(szWindowName, sizeof(szWindowName));
+    ZeroMemory(szMessage,    sizeof(szMessage));
+
+    ++iIndex;
+    itoa(iIndex, szIndex, 10);
+    lstrcpy(szSection, "Check Instance");
+    lstrcat(szSection, szIndex);
+
+    if((GetPrivateProfileString(szSection, "Class Name", "", szClassName, MAX_BUF, szFileIniConfig) == 0L) &&
+       (GetPrivateProfileString(szSection, "Window Name", "", szWindowName, MAX_BUF, szFileIniConfig) == 0L))
+    {
+      bContinue = FALSE;
+    }
+    else if((*szClassName != '\0') || (*szWindowName != '\0'))
+    {
+      if(*szClassName == '\0')
+        szCN = NULL;
+      else
+        szCN = szClassName;
+
+      if(*szWindowName == '\0')
+        szWN = NULL;
+      else
+        szWN = szWindowName;
+
+      if((hwndFW = FindWindow(szClassName, szWN)) != NULL)
+      {
+        GetPrivateProfileString(szSection, "Message", "", szMessage, MAX_BUF, szFileIniConfig);
+        if(*szMessage != '\0')
+          MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION);
+
+        ShowWindow(hwndFW, SW_RESTORE);
+        SetForegroundWindow(hwndFW);
+        return(TRUE);
+      }
+    }
+  }
+
+  return(FALSE);
+}
+
 HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 {
   HDC  hdc;
   char szBuf[MAX_BUF];
   char szShowDialog[MAX_BUF];
+
+  if(CheckInstances())
+    return(1);
+
+  ShowWindow(hWndMain, SW_SHOWNORMAL);
+  UpdateWindow(hWndMain);
 
   if(InitSetupGeneral())
     return(1);
