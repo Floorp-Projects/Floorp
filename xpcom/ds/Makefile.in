@@ -61,7 +61,6 @@ CPPSRCS		= \
 		nsStaticNameTable.cpp \
 		nsStatistics.cpp \
 		nsStringEnumerator.cpp \
-		nsStringService.cpp \
 		nsSupportsArray.cpp \
 		nsSupportsArrayEnumerator.cpp \
 		nsSupportsPrimitives.cpp \
@@ -130,7 +129,6 @@ XPIDLSRCS	= \
 		nsIVariant.idl \
 		nsISerializable.idl \
 		nsIStringEnumerator.idl \
-		nsIStringService.idl \
 		nsISupportsArray.idl \
 		nsISupportsIterators.idl \
 		nsITimelineService.idl \
@@ -142,7 +140,6 @@ SDK_XPIDLSRCS   = \
 		nsIObserver.idl		   \
 		nsIProperties.idl          \
 		nsISimpleEnumerator.idl	   \
-		nsIStringService.idl       \
 		nsISupportsPrimitives.idl  \
 		$(NULL)
 
