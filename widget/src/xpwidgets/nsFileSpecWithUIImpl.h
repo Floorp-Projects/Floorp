@@ -127,6 +127,10 @@ class nsFileSpecWithUIImpl
 	/* boolean exists (); */
 	NS_IMETHOD exists(PRBool *_retval)
 		{ return mBaseFileSpec ? mBaseFileSpec->exists(_retval) : NS_ERROR_NOT_INITIALIZED; }
+    
+    /* boolean isHidden (); */
+	NS_IMETHOD isHidden(PRBool *_retval)
+		{ return mBaseFileSpec ? mBaseFileSpec->isHidden(_retval) : NS_ERROR_NOT_INITIALIZED; }
 
 	/* readonly attribute unsigned long FileSize; */
 	NS_IMETHOD GetFileSize(PRUint32 *aFileSize)
