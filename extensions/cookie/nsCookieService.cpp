@@ -154,10 +154,10 @@ nsCookieService::Init()
 
     if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&mCookieHTTPNotify)))
         return rv;
-    rv = pNetModuleMgr->RegisterModule("http-request", eventQ, mCookieHTTPNotify, &kCookieHTTPNotifyCID);
+    rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, eventQ, mCookieHTTPNotify, &kCookieHTTPNotifyCID);
     if (NS_FAILED(rv)) return rv; 
 
-    rv = pNetModuleMgr->RegisterModule("http-response", eventQ, mCookieHTTPNotify, &kCookieHTTPNotifyCID);
+    rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, eventQ, mCookieHTTPNotify, &kCookieHTTPNotifyCID);
     if (NS_FAILED(rv))
         return rv; 
      
