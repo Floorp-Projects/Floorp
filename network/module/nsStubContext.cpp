@@ -650,7 +650,7 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
              * the cached info in the URL object...
              */
             if ((URL_s->address_modified) && (NULL != pConn->pURL)) {
-                pConn->pURL->Set(NET_URLStruct_Address(URL_s));
+                pConn->pURL->Set(URL_s->address);
             }
 
             /* 
