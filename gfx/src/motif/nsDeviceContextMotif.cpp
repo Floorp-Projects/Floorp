@@ -207,15 +207,13 @@ uint8 nsDeviceContextMotif :: AllocColor(uint8 aRed, uint8 aGreen, uint8 aBlue, 
     return(color.pixel);
   }
 
- 
-   // No more colors left, now must look for closest match. 
+  // No color found so look for the closest match
 
   uint8 closest = 0;
   uint8 r, g, b;
   unsigned long distance = ~0;
   unsigned long d;
   int dr, dg, db;
-  // No color found so look for the closest match
   for (int colorindex = 0; colorindex < 256; colorindex++) {
     r = mDeviceColors[colorindex].red >> 8;
     g = mDeviceColors[colorindex].green >> 8;
@@ -448,7 +446,7 @@ NS_IMETHODIMP nsDeviceContextMotif :: CheckFontExistence(const nsString& aFontNa
 
 void nsDeviceContextMotif::AllocColors()
 {
-    uint8* index = new uint8[256];
+    uint8* inx = new uint8[256];
 
     if (PR_TRUE == mColorsAllocated)
       return;
@@ -471,7 +469,7 @@ void nsDeviceContextMotif::AllocColors()
      reserved[i].red = sReservedColors[i].red;
      reserved[i].green = sReservedColors[i].green;
      reserved[i].blue = sReservedColors[i].blue;
-     index[i] = i;
+     inx[i] = i;
     }
 #else
     IL_RGB  reserved[1]; //XXX REMOVE THIS here and below
@@ -483,15 +481,14 @@ void nsDeviceContextMotif::AllocColors()
     IL_ColorSpace* colorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
 
       // Create a logical palette
-     XColor xcolor;
      NI_RGB* map = colorSpace->cmap.map;    
 
      for (PRInt32 colorindex = RESERVED_SIZE; colorindex < (COLOR_CUBE_SIZE + RESERVED_SIZE); colorindex++)     {
-       index[colorindex] = AllocColor(map->red, map->green, map->blue, PR_TRUE);
+       inx[colorindex] = AllocColor(map->red, map->green, map->blue, PR_TRUE);
        map++;
      }
 
-    mIndex = index;
+    mIndex = inx;
 
     if (mColorSpace)
       mColorSpace->cmap.index = mIndex;

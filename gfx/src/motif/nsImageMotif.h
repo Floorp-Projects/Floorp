@@ -38,7 +38,7 @@ class nsImageMotif : public nsIImage
 {
 public:
   nsImageMotif();
-  ~nsImageMotif();
+  virtual ~nsImageMotif();
 
   NS_DECL_ISUPPORTS
 
@@ -137,4 +137,4 @@ private:
 
 };
 
-#endif
+#endif // nsImageMotif_h___

@@ -53,7 +53,7 @@ class nsGfxFactoryMotif : public nsIFactory
     NS_IMETHOD LockFactory(PRBool aLock);   
 
     nsGfxFactoryMotif(const nsCID &aClass);   
-    ~nsGfxFactoryMotif();   
+    virtual ~nsGfxFactoryMotif();   
 
   private:   
     nsrefcnt  mRefCnt;   
