@@ -1369,7 +1369,7 @@ nsHTTPIndex::FireTimer(nsITimer* aTimer, void* aClosure)
 
                 if (src && prop && target)
                 {
-                    if (prop == httpIndex->kNC_loading)
+                    if (prop.get() == httpIndex->kNC_loading)
                     {
                         httpIndex->Unassert(src, prop, target);
                     }
