@@ -413,7 +413,8 @@ PRBool BasicTableLayoutStrategy::AssignFixedColumnWidths(nsIPresContext* aPresCo
       numColsEffected = mCols;
     PRInt32 maxOfMinColWidths=0;
     PRInt32 maxOfMaxColWidths=0;
-    for (PRInt32 effectedColIndex=0; effectedColIndex<numColsEffected; effectedColIndex++)
+    PRInt32 effectedColIndex;
+    for (effectedColIndex=0; effectedColIndex<numColsEffected; effectedColIndex++)
     {
       if (maxOfMinColWidths < minColWidthArray[effectedColIndex])
         maxOfMinColWidths = minColWidthArray[effectedColIndex];
@@ -580,8 +581,9 @@ PRBool BasicTableLayoutStrategy::SetColumnsToMinWidth(nsIPresContext* aPresConte
     if (NS_STYLE_TABLE_COLS_ALL!=mCols)
       numColsEffected = mCols;
     PRInt32 maxOfEffectedColWidths=0;
+    PRInt32 effectedColIndex;
     // XXX need to fix this and all similar code if any fixed-width columns intersect COLS
-    for (PRInt32 effectedColIndex=0; effectedColIndex<numColsEffected; effectedColIndex++)
+    for (effectedColIndex=0; effectedColIndex<numColsEffected; effectedColIndex++)
     {
       if (maxOfEffectedColWidths < minColWidthArray[effectedColIndex])
         maxOfEffectedColWidths = minColWidthArray[effectedColIndex];
@@ -894,7 +896,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
     {
       PRInt32 numSpecifiedProportionalColumns = proportionalColumnsList->Count();
       PRInt32 maxOfMaxColWidths = 0;
-      for (PRInt32 i=0; i<numSpecifiedProportionalColumns; i++)
+      PRInt32 i;
+      for (i=0; i<numSpecifiedProportionalColumns; i++)
       {
         ProportionalColumnLayoutStruct * info = 
           (ProportionalColumnLayoutStruct *)(proportionalColumnsList->ElementAt(i));
@@ -935,7 +938,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
       if (gsDebug==PR_TRUE) 
         printf("  aTableFixedWidth specified as %d, expanding columns by excess = %d\n", aTableFixedWidth, excess);
       // first, get the total width
-      for (PRInt32 i = 0; i<numAutoColumns; i++)
+      PRInt32 i;
+      for ( i = 0; i<numAutoColumns; i++)
       {
         PRInt32 colIndex = autoColumns[i];
         totalWidthOfAutoColumns += mTableFrame->GetColumnWidth(colIndex);
