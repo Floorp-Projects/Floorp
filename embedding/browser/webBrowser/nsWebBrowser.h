@@ -31,7 +31,7 @@
 class nsWebBrowserInitInfo
 {
 public:
-   //nsIGenericWindow Stuff
+   //nsIBaseWindow Stuff
 /*   nativeWindow         parentNativeWindow;
    nsCOMPtr<nsIWidget>  parentWidget; */
    PRInt32        x;
@@ -43,7 +43,7 @@ public:
 
 
 class nsWebBrowser : public nsIWebBrowser, public nsIWebBrowserNav,
-   public nsIProgress, public nsIGenericWindow, public nsIScrollable,
+   public nsIProgress, public nsIBaseWindow, public nsIScrollable,
    public nsITextScroll
 {
 public:
@@ -52,7 +52,7 @@ public:
    NS_DECL_NSIWEBBROWSER
    NS_DECL_NSIWEBBROWSERNAV
    NS_DECL_NSIPROGRESS
-   NS_DECL_NSIGENERICWINDOW
+   NS_DECL_NSIBASEWINDOW
    NS_DECL_NSISCROLLABLE   
    NS_DECL_NSITEXTSCROLL
 
