@@ -113,6 +113,9 @@ static NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID,        NS_IDOCUMENT_VIEWER_IID);
 
+static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
+static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
+
 static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
 
@@ -265,9 +268,15 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
             nsIPresShell* presShell = GetPresShellFor(aWebShell);
             if( presShell )
             {
+#ifdef TEXT_EDITOR
+              nsITextEditor *editor = nsnull;
+              nsresult result = nsComponentManager::CreateInstance(kTextEditorCID, nsnull,
+                                                    kITextEditorIID, (void **)&editor);
+#else
               nsIHTMLEditor *editor = nsnull;
               nsresult result = nsComponentManager::CreateInstance(kHTMLEditorCID, nsnull,
                                                     kIHTMLEditorIID, (void **)&editor);
+#endif // TEXT_EDITOR
               if(!editor)
                 result = NS_ERROR_OUT_OF_MEMORY;
               if (NS_SUCCEEDED(result))
