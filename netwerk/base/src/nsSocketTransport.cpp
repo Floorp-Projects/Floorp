@@ -31,6 +31,7 @@
 #include "nsSocketTransportService.h"
 #include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
+#include "nsIDNSService.h"
 
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
@@ -326,12 +327,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         SetFlag(eSocketRead_Done);
         SetFlag(eSocketWrite_Done);
 
-        // only close the connection if we had one to begin with.
-        if (NS_ERROR_DNS_DOES_NOT_EXIST != rv) {
-            CloseConnection();
-        } else {
-            mCurrentState = eSocketState_Closed;
-        }
+        CloseConnection();
         //
         // Fall into the Done state...
         //
@@ -502,7 +498,7 @@ nsresult nsSocketTransport::doResolveHost(void)
     PR_LOG(gSocketLog, PR_LOG_ERROR, 
            ("Host name resolution FAILURE [this=%x].\n", this));
 
-    rv = NS_ERROR_DNS_DOES_NOT_EXIST;
+    rv = NS_ERROR_UNKNOWN_HOST;
   }
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
@@ -996,7 +992,10 @@ nsresult nsSocketTransport::CloseConnection(void)
   PRStatus status;
   nsresult rv = NS_OK;
 
-  NS_ASSERTION(mSocketFD, "Socket does not exist");
+  if (!mSocketFD) {
+    mCurrentState = eSocketState_Closed;
+    return NS_OK;
+  }
 
   status = PR_Close(mSocketFD);
   if (PR_SUCCESS != status) {
