@@ -41,6 +41,8 @@
 #include "nsIDocShell.h"
 #include "nsIDOMWindow.h"
 #include "nsINetSupportDialogService.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIPrompt.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -319,9 +321,16 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                         rv = inputElement->GetValue(value);
                         if (NS_FAILED(rv) || value.Length() == 0) {
                           PRUnichar* valueString = NULL;
-                          NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-                          if (NS_SUCCEEDED(rv)) {
-                            SINGSIGN_RestoreSignonData(dialog, URLName, nameString, &valueString, elementNumber++);
+                          nsCOMPtr<nsIInterfaceRequestor> interfaces;
+                          nsCOMPtr<nsIPrompt> prompter;
+
+                          channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
+                          if (interfaces)
+                            interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
+                          if (!prompter)
+                            prompter = do_GetService(kNetSupportDialogCID);
+                          if (prompter) {
+                            SINGSIGN_RestoreSignonData(prompter, URLName, nameString, &valueString, elementNumber++);
                           }
                           if (valueString) {
                             nsAutoString value(valueString);                                    
