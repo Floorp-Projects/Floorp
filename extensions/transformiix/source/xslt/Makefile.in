@@ -60,6 +60,7 @@ CPPSRCS = Names.cpp \
 ifdef TX_EXE
 CPPSRCS += txHTMLOutput.cpp	\
            txTextOutput.cpp \
+           txUnknownHandler.cpp \
            txXMLOutput.cpp
 else
 CPPSRCS += txMozillaTextOutput.cpp \

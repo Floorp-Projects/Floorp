@@ -100,6 +100,7 @@ CPP_OBJS=                                       \
   ../xslt/$(OBJDIR)/txRtfHandler.obj \
   ../xslt/$(OBJDIR)/txTextHandler.obj \
   ../xslt/$(OBJDIR)/txTextOutput.obj \
+  ../xslt/$(OBJDIR)/txUnknownHandler.obj \
   ../xslt/$(OBJDIR)/txXMLOutput.obj \
   ../xslt/$(OBJDIR)/txXSLTPatterns.obj \
   ../xslt/$(OBJDIR)/txPatternParser.obj \

@@ -70,6 +70,7 @@
 #else
 #include "txHTMLOutput.h"
 #include "txTextOutput.h"
+#include "txUnknownHandler.h"
 #include "txXMLOutput.h"
 #endif
 
@@ -2037,6 +2038,25 @@ void XSLTProcessor::startTransform(Node* aNode, ProcessorState* aPs)
     mHaveDocumentElement = MB_FALSE;
     mOutputHandler->startDocument();
     process(aNode, NULL_STRING, aPs);
+#ifdef TX_EXE
+    txOutputFormat* format = aPs->getOutputFormat();
+    if (format->mMethod == eMethodNotSet) {
+        // This is an unusual case, no output method has been set and we
+        // didn't create a document element. Switching to XML output mode
+        // anyway.
+        txUnknownHandler* oldHandler = (txUnknownHandler*)mOutputHandler;
+        ostream* out;
+        oldHandler->getOutputStream(&out);
+        mOutputHandler = new txXMLOutput();
+        format->mMethod = eXMLOutput;
+        NS_ASSERTION(mOutputHandler, "Setting mResultHandler to NULL!");
+        mOutputHandler->setOutputStream(out);
+        mOutputHandler->setOutputFormat(format);
+        mResultHandler = mOutputHandler;
+        oldHandler->flush(mOutputHandler);
+        delete oldHandler;
+    }
+#endif
     mOutputHandler->endDocument();
 }
 
@@ -2051,7 +2071,6 @@ MBool XSLTProcessor::initializeHandlers(ProcessorState* aPs)
     delete mOutputHandler;
 #ifdef TX_EXE
     switch (outputFormat->mMethod) {
-        case eMethodNotSet:
         case eXMLOutput:
         {
             mOutputHandler = new txXMLOutput();
@@ -2065,6 +2084,11 @@ MBool XSLTProcessor::initializeHandlers(ProcessorState* aPs)
         case eTextOutput:
         {
             mOutputHandler = new txTextOutput();
+            break;
+        }
+        case eMethodNotSet:
+        {
+            mOutputHandler = new txUnknownHandler();
             break;
         }
     }
@@ -2242,22 +2266,34 @@ XSLTProcessor::startElement(ProcessorState* aPs, const String& aName, const PRIn
 {
     if (!mHaveDocumentElement && (mResultHandler == mOutputHandler)) {
         txOutputFormat* format = aPs->getOutputFormat();
-        // XXX Should check for whitespace-only sibling text nodes
-        if ((format->mMethod == eMethodNotSet)
-            && (aNsID == kNameSpaceID_None)
-            && aName.isEqualIgnoreCase("html")) {
-            // Switch to html output mode according to the XSLT spec.
-            format->mMethod = eHTMLOutput;
+        if (format->mMethod == eMethodNotSet) {
+            // XXX Should check for whitespace-only sibling text nodes
+            if ((aNsID == kNameSpaceID_None) &&
+                aName.isEqualIgnoreCase("html")) {
+                // Switch to html output mode according to the XSLT spec.
+                format->mMethod = eHTMLOutput;
+#ifndef TX_EXE
+                mOutputHandler->setOutputFormat(format);
+#endif
+            }
 #ifdef TX_EXE
             ostream* out;
             mOutputHandler->getOutputStream(&out);
-            delete mOutputHandler;
-            mOutputHandler = new txHTMLOutput();
+            txUnknownHandler* oldHandler = (txUnknownHandler*)mOutputHandler;
+            if (format->mMethod == eHTMLOutput) {
+                mOutputHandler = new txHTMLOutput();
+            }
+            else {
+                mOutputHandler = new txXMLOutput();
+                format->mMethod = eXMLOutput;
+            }
             NS_ASSERTION(mOutputHandler, "Setting mResultHandler to NULL!");
             mOutputHandler->setOutputStream(out);
-            mResultHandler = mOutputHandler;
-#endif
             mOutputHandler->setOutputFormat(format);
+            mResultHandler = mOutputHandler;
+            oldHandler->flush(mOutputHandler);
+            delete oldHandler;
+#endif
         }
         mHaveDocumentElement = MB_TRUE;
     }
