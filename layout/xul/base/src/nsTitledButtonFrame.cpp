@@ -391,15 +391,20 @@ nsTitledButtonFrame::Paint(nsIPresContext& aPresContext,
 	if (!disp->mVisible)
 		return NS_OK;
 
+   	nsRect rect (0,0, mRect.width, mRect.height);
 
-	nsRect rect (0,0, mRect.width, mRect.height);
+    aRenderingContext.PushState();
+    PRBool clipState;
+    aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);    
+
 	mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
 	
-   LayoutTitleAndImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);  
+    LayoutTitleAndImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);  
    
-   PaintTitle(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);   
-   PaintImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    PaintTitle(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);   
+    PaintImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
+    aRenderingContext.PopState(clipState);
 
    /*
    aRenderingContext.SetColor(NS_RGB(0,128,0));
