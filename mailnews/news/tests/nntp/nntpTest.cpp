@@ -132,6 +132,18 @@ nsresult nsNntpTestDriver::RunDriver()
     // this test should fail
     rv = ConvertStringTest("http://news.mozilla.org/a","a");
     if (NS_SUCCEEDED(rv)) return NS_ERROR_FAILURE;
+
+    // this test should fail
+    rv = ConvertStringTest("mailto://news.mozilla.org/a","a");
+    if (NS_SUCCEEDED(rv)) return NS_ERROR_FAILURE;
+    
+    // this test should fail
+    rv = ConvertStringTest("ldap://news.mozilla.org/a","a");
+    if (NS_SUCCEEDED(rv)) return NS_ERROR_FAILURE;
+    
+    // this test should fail
+    rv = ConvertStringTest("ftp://news.mozilla.org/a","a");
+    if (NS_SUCCEEDED(rv)) return NS_ERROR_FAILURE;
     
     return NS_OK;
 }
