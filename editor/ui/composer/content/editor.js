@@ -608,6 +608,10 @@ function EditorSetFontSize(size)
       size == "medium" )
   {
     editorShell.RemoveTextProperty("font", "size");
+    // Also remove big and small, 
+    //  else it will seem like size isn't changing correctly
+    editorShell.RemoveTextProperty("small", "");
+    editorShell.RemoveTextProperty("big", "");
   } else {
     // Temp: convert from new CSS size strings to old HTML size strings
     switch (size)
@@ -633,6 +637,115 @@ function EditorSetFontSize(size)
   }
   gContentWindow.focus();
 }
+
+function initFontFaceMenu(menuPopup)
+{
+  if (menuPopup)
+  {
+    var children = menuPopup.childNodes;
+    if (!children) return;
+
+    var firstHas = new Object;
+    var anyHas = new Object;
+    var allHas = new Object;
+    allHas.value = false;
+
+    // we need to set or clear the checkmark for each menu item since the selection
+    // may be in a new location from where it was when the menu was previously opened
+
+    // Fixed width (second menu item) is special case: old TT ("teletype") attribute
+    editorShell.GetTextProperty("tt", "", "", firstHas, anyHas, allHas);
+    children[1].setAttribute("checked", allHas.value);
+    var fontWasFound = anyHas.value;
+
+    // Skip over default, TT, and separator
+    for (var i = 3; i < menuPopup.childNodes.length; i++)
+    {
+      var menuItem = children[i];
+      var faceType = menuItem.getAttribute("data");
+      
+      if (faceType)
+      {
+        editorShell.GetTextProperty("font", "face", faceType, firstHas, anyHas, allHas);
+
+        // Check the item only if all of selection has the face...
+        menuItem.setAttribute("checked", allHas.value);
+        // ...but remember if ANY part of the selection has it
+        fontWasFound |= anyHas.value;
+      }
+    }
+    // Check the default item if no other item was checked
+    // note that no item is checked in the case of "mixed" selection
+    children[0].setAttribute("checked", !fontWasFound);
+  }    
+}
+
+function initFontSizeMenu(menuPopup)
+{
+  if (menuPopup)
+  {
+    var children = menuPopup.childNodes;
+    if (!children) return;
+
+    var firstHas = new Object;
+    var anyHas = new Object;
+    var allHas = new Object;
+    allHas.value = false;
+
+    var sizeWasFound = false;
+
+    // we need to set or clear the checkmark for each menu item since the selection
+    // may be in a new location from where it was when the menu was previously opened
+
+    // First 2 items add <small> and <big> tags
+    // While it would be better to show the number of levels,
+    //  at least this tells user if either of them are set
+    var menuItem = children[0];
+    if (menuItem)
+    {
+      editorShell.GetTextProperty("small", "", "", firstHas, anyHas, allHas);
+      menuItem.setAttribute("checked", allHas.value);
+      sizeWasFound = anyHas.value;
+    }
+
+    menuItem = children[1];
+    if (menuItem)
+    {
+      editorShell.GetTextProperty("big", "", "", firstHas, anyHas, allHas);
+      menuItem.setAttribute("checked", allHas.value);
+      sizeWasFound |= anyHas.value;
+    }
+
+    // Fixed size items start after menu separator
+    var menuIndex = 3;
+    // Index of the medium (default) item
+    var mediumIndex = 5;
+
+    // Scan through all supported "font size" attribute values
+    for (var i = -2; i <= 3; i++)
+    {
+      menuItem = children[menuIndex];
+      
+      // Skip over medium since it'll be set below.
+      // If font size=0 is actually set, we'll toggle it off below if 
+      // we enter this loop in this case.
+      if (menuItem && (i != 0))
+      {
+        var sizeString = (i <= 0) ? String(i) : ("+" + String(i));
+        editorShell.GetTextProperty("font", "size", sizeString, firstHas, anyHas, allHas);
+        // Check the item only if all of selection has the size...
+        menuItem.setAttribute("checked", allHas.value);
+        // ...but remember if ANY of of selection had size set
+        sizeWasFound |= anyHas.value;
+      }      
+      menuIndex++;
+    }
+    
+    // if no size was found, then check default (medium)
+    // note that no item is checked in the case of "mixed" selection
+    children[mediumIndex].setAttribute("checked", !sizeWasFound);
+  }    
+ }
 
 function onFontColorChange()
 {
