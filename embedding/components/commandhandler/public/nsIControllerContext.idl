@@ -38,22 +38,32 @@
  * ***** END LICENSE BLOCK ***** */
  
 #include "nsISupports.idl"
-#include "nsIControllerCommandManager.idl"
+#include "nsIControllerCommandTable.idl"
 
 [scriptable, uuid(47B82B60-A36F-4167-8072-6F421151ED50)]
 interface nsIControllerContext : nsISupports
 {
 
+  /**
+   *  Init the controller, optionally passing a controller
+   *  command table.
+   *
+   * @param aCommandTable  a command table, used internally
+   *                       by this controller. May be null, in
+   *                       which case the controller will create
+   *                       a new, empty table.
+   */
+  void init(in nsIControllerCommandTable aCommandTable);
 
   /** 
-   *  Set the cookie that is passed to commands
-   *  Note that the commandRefCon is *not* addreffed
-   *    and thus it needs to outlive the controller
+   *  Set a context on this controller, which is passed
+   *  to commands to give them some context when they execute.
+   *
+   * @param aCommandContext  the context passed to commands.
+   *                        Note that this is *not* addreffed by the
+   *                        controller, and so needs to outlive it,
+   *                        or be nulled out.
    */
-  void setCommandRefCon(in nsISupports commandRefCon);
+  void setCommandContext(in nsISupports aCommandContext);
   
-  /**
-   *  Set the command manager. This will have the effect of making the manager immutable
-   */
-  void setControllerCommandManager(in nsIControllerCommandManager commandManager);
 };

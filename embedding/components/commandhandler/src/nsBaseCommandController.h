@@ -48,15 +48,8 @@
 
 #include "nsIController.h"
 #include "nsIControllerContext.h"
-#include "nsIControllerCommand.h"
-#include "nsIControllerCommandManager.h"
+#include "nsIControllerCommandTable.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-
-//#include "nsHashtable.h"
-//#include "nsString.h"
-//#include "nsWeakPtr.h"
-
 
 // The base editor controller is used for both text widgets, 
 //   and all other text and html editing
@@ -87,12 +80,10 @@ public:
   
 private:
 
-   nsISupports *mCommandRefCon;
+   nsISupports *mCommandContext;
    
    // Our reference to the command manager
-   nsCOMPtr<nsIControllerCommandManager> mCommandManager;     
-
-   PRBool mImmutableManager;
+   nsCOMPtr<nsIControllerCommandTable> mCommandTable;     
 };
 
 #endif /* nsBaseCommandController_h_ */

@@ -43,7 +43,7 @@
 #include "nsEditorController.h"
 #include "nsIEditor.h"
 #include "nsEditorCommands.h"
-#include "nsIControllerCommandManager.h"
+#include "nsIControllerCommandTable.h"
 
 
 
@@ -52,7 +52,7 @@
     _cmdClass* theCmd;                                                                    \
     NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
-    rv = inCommandManager->RegisterCommand(_cmdName,                   \
+    rv = inCommandTable->RegisterCommand(_cmdName,                                        \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
 
@@ -61,21 +61,21 @@
     _cmdClass* theCmd;                                                                    \
     NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
     if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
-    rv = inCommandManager->RegisterCommand(_cmdName,                   \
+    rv = inCommandTable->RegisterCommand(_cmdName,                                        \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                                     \
-    rv = inCommandManager->RegisterCommand(_cmdName,                   \
+    rv = inCommandTable->RegisterCommand(_cmdName,                                        \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                                     \
-    rv = inCommandManager->RegisterCommand(_cmdName,                   \
+    rv = inCommandTable->RegisterCommand(_cmdName,                                        \
                                    NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
 
 
 // static
-nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager *inCommandManager)
+nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *inCommandTable)
 {
   nsresult rv;
  

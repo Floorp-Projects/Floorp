@@ -430,7 +430,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   // setup the HTML editor command controller
   if (needHTMLController)
   {
-    // The third controller takes an nsIEditor as the refCon
+    // The third controller takes an nsIEditor as the context
     rv = SetupEditorCommandController("@mozilla.org/editor/htmleditorcontroller;1",
                                       aWindow, editor,
                                       &mHTMLCommandControllerId);
@@ -477,7 +477,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
     txnMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*,
                         stateMaintainer));
 
-  // Set refCon on all controllers to be the editor
+  // Set context on all controllers to be the editor
   rv = SetEditorOnControllers(aWindow, editor);
   if (NS_FAILED(rv)) return rv;
 
@@ -1131,18 +1131,18 @@ nsEditingSession::PrepareForEditing()
   SetupEditorCommandController
 
   Create a command controller, append to controllers,
-  get and return the controller ID, and set the refCon
+  get and return the controller ID, and set the context
 ----------------------------------------------------------------------------*/
 nsresult
 nsEditingSession::SetupEditorCommandController(
                                   const char *aControllerClassName,
                                   nsIDOMWindow *aWindow,
-                                  nsISupports *aRefCon,
+                                  nsISupports *aContext,
                                   PRUint32 *aControllerId)
 {
   NS_ENSURE_ARG_POINTER(aControllerClassName);
   NS_ENSURE_ARG_POINTER(aWindow);
-  NS_ENSURE_ARG_POINTER(aRefCon);
+  NS_ENSURE_ARG_POINTER(aContext);
   NS_ENSURE_ARG_POINTER(aControllerId);
 
   nsresult rv;
@@ -1174,8 +1174,8 @@ nsEditingSession::SetupEditorCommandController(
     if (NS_FAILED(rv)) return rv;  
   }  
 
-  // Set the refCon
-  return SetRefConOnControllerById(controllers, aRefCon, *aControllerId);
+  // Set the context
+  return SetContextOnControllerById(controllers, aContext, *aControllerId);
 }
 
 /*---------------------------------------------------------------------------
@@ -1202,33 +1202,33 @@ nsEditingSession::SetEditorOnControllers(nsIDOMWindow *aWindow,
   nsCOMPtr<nsISupports> editorAsISupports = do_QueryInterface(aEditor);
   if (mBaseCommandControllerId)
   {
-    rv = SetRefConOnControllerById(controllers, editorAsISupports,
+    rv = SetContextOnControllerById(controllers, editorAsISupports,
                                    mBaseCommandControllerId);
     if (NS_FAILED(rv)) return rv;
   }
 
   if (mDocStateControllerId)
   {
-    rv = SetRefConOnControllerById(controllers, editorAsISupports,
+    rv = SetContextOnControllerById(controllers, editorAsISupports,
                                    mDocStateControllerId);
     if (NS_FAILED(rv)) return rv;
   }
 
   if (mHTMLCommandControllerId)
-    rv = SetRefConOnControllerById(controllers, editorAsISupports,
+    rv = SetContextOnControllerById(controllers, editorAsISupports,
                                    mHTMLCommandControllerId);
 
   return rv;
 }
 
 nsresult
-nsEditingSession::SetRefConOnControllerById(nsIControllers* aControllers,
-                                            nsISupports* aRefCon,
+nsEditingSession::SetContextOnControllerById(nsIControllers* aControllers,
+                                            nsISupports* aContext,
                                             PRUint32 aID)
 {
   NS_ENSURE_ARG_POINTER(aControllers);
-  // aRefCon can be null (when destroying editor)
 
+  // aContext can be null (when destroying editor)
   nsCOMPtr<nsIController> controller;    
   aControllers->GetControllerById(aID, getter_AddRefs(controller));
   
@@ -1237,5 +1237,5 @@ nsEditingSession::SetRefConOnControllerById(nsIControllers* aControllers,
                                        do_QueryInterface(controller);
   if (!editorController) return NS_ERROR_FAILURE;
 
-  return editorController->SetCommandRefCon(aRefCon);
+  return editorController->SetCommandContext(aContext);
 }

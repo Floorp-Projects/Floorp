@@ -83,8 +83,8 @@ protected:
     nsCOMPtr<nsISupports>   mISupports;    
     
     HashEntry(PRUint8 inType, const char * inEntryName)
-    : mEntryType(inType)
-    , mEntryName(inEntryName)
+    : mEntryName(inEntryName)
+    , mEntryType(inType)
     {
       memset(&mData, 0, sizeof(mData));
       Reset(mEntryType);

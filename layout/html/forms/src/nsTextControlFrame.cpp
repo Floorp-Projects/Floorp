@@ -1257,7 +1257,7 @@ nsTextControlFrame::PreDestroy(nsIPresContext* aPresContext)
           nsCOMPtr<nsIControllerContext> editController = do_QueryInterface(controller);
           if (editController)
           {
-            editController->SetCommandRefCon(nsnull);
+            editController->SetCommandContext(nsnull);
           }
         }
       }
@@ -1807,7 +1807,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
           nsCOMPtr<nsIControllerContext> editController = do_QueryInterface(controller);
           if (editController)
           {
-            editController->SetCommandRefCon(mEditor);
+            editController->SetCommandContext(mEditor);
             found = PR_TRUE;
           }
         }
