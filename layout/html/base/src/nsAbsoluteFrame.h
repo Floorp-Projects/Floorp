@@ -45,10 +45,13 @@ public:
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
 
-  NS_IMETHOD  ContentChanged(nsIPresShell*   aShell,
-                             nsIPresContext* aPresContext,
+  NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
                              nsIContent*     aChild,
                              nsISupports*    aSubContent);
+  NS_IMETHOD  AttributeChanged(nsIPresContext* aPresContext,
+                               nsIContent*     aChild,
+                               nsIAtom*        aAttribute,
+                               PRInt32         aHint);
 
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 

@@ -44,11 +44,6 @@ public:
                           nsIContent** aContent,
                           PRInt32& aCursor);
 
-  NS_IMETHOD AttributeChanged(nsIPresShell* aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              nsIAtom* aAttribute);
-
   nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext& aPresContext,
                                              nsIFrame*       aFloatedFrame);
   nsAbsoluteFrame* CreateAbsolutePlaceholderFrame(nsIPresContext& aPresContext,
@@ -80,14 +75,6 @@ public:
                                      nsIFrame* aFrame,
                                      nsIStyleContext* aStyleContext,
                                      PRBool aForce);
-
-  // Helper methods for handling attribute changes
-  static void ApplyStyleChangeToTree(nsIPresContext& aPresContext,
-                                     nsIFrame* aFrame);
-  static void ApplyRenderingChangeToTree(nsIPresContext& aPresContext,
-                                         nsIFrame* aFrame);
-  static void StyleChangeReflow(nsIPresContext& aPresContext,
-                                nsIFrame* aFrame);
 
 protected:
   virtual ~nsHTMLContainerFrame();

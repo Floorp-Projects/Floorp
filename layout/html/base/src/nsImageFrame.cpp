@@ -71,10 +71,10 @@ public:
                          nsIFrame** aFrame,
                          nsIContent** aContent,
                          PRInt32& aCursor);
-  NS_IMETHOD AttributeChanged(nsIPresShell* aShell,
-                              nsIPresContext* aPresContext,
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
-                              nsIAtom* aAttribute);
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint);
 
 protected:
   virtual ~ImageFrame();
@@ -894,22 +894,17 @@ ImageFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-ImageFrame::AttributeChanged(nsIPresShell* aShell,
-                             nsIPresContext* aPresContext,
+ImageFrame::AttributeChanged(nsIPresContext* aPresContext,
                              nsIContent* aChild,
-                             nsIAtom* aAttribute)
+                             nsIAtom* aAttribute,
+                             PRInt32 aHint)
 {
-  nsresult rv = nsLeafFrame::AttributeChanged(aShell, aPresContext, aChild,
-                                              aAttribute);
+  nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
+                                              aAttribute, aHint);
   if (NS_OK != rv) {
     return rv;
   }
-  if ((nsHTMLAtoms::width == aAttribute) ||
-      (nsHTMLAtoms::height == aAttribute)) {
-    nsHTMLContainerFrame::ApplyStyleChangeToTree(*aPresContext, this);
-    nsHTMLContainerFrame::StyleChangeReflow(*aPresContext, this);
-  }
-  else if (nsHTMLAtoms::src == aAttribute) {
+  if (nsHTMLAtoms::src == aAttribute) {
     nsAutoString oldSRC;
     mImageLoader.GetURL(oldSRC);
     nsAutoString newSRC;

@@ -69,10 +69,6 @@ public:
                                    nsIFrame* aParent,
                                    nsIStyleContext* aStyleContext,
                                    nsIFrame*& aContinuingFrame);
-  NS_IMETHOD AttributeChanged(nsIPresShell* aShell,
-                              nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              nsIAtom* aAttribute);
 
   // nsIInlineReflow
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
@@ -245,29 +241,6 @@ nsInlineFrame::CreateContinuingFrame(nsIPresContext&  aCX,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsInlineFrame::AttributeChanged(nsIPresShell* aShell,
-                                nsIPresContext* aPresContext,
-                                nsIContent* aChild,
-                                nsIAtom* aAttribute)
-{
-  nsresult result = nsHTMLContainerFrame::AttributeChanged(aShell, 
-                                                           aPresContext,
-                                                           aChild, 
-                                                           aAttribute);
-  if (NS_OK != result) {
-    return result;
-  }
-  if (nsHTMLAtoms::color == aAttribute) {
-    ApplyStyleChangeToTree(*aPresContext, this);
-    ApplyRenderingChangeToTree(*aPresContext, this);
-  }
-  else if (nsHTMLAtoms::face == aAttribute) {
-    ApplyStyleChangeToTree(*aPresContext, this);
-    StyleChangeReflow(*aPresContext, this);
-  }
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsInlineFrame::FindTextRuns(nsLineLayout&  aLineLayout,
