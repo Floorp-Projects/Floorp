@@ -168,7 +168,8 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
                                           PRBool& aBailOnHeight)
 {
 
-  if (aReflowState.reason == eReflowReason_Incremental) {
+  if (aReflowState.reason == eReflowReason_Incremental ||
+      aReflowState.reason == eReflowReason_Dirty) {
     aBailOnHeight = PR_FALSE;
     aBailOnWidth  = PR_FALSE;
 
@@ -258,7 +259,8 @@ void nsFormControlFrame::SkipResizeReflow(nsSize& aCacheSize,
                                           PRBool& aBailOnHeight)
 {
 
-  if (aReflowState.reason == eReflowReason_Incremental) {
+  if (aReflowState.reason == eReflowReason_Incremental ||
+      aReflowState.reason == eReflowReason_Dirty) {
     aBailOnHeight = PR_FALSE;
     aBailOnWidth  = PR_FALSE;
 
@@ -1008,21 +1010,12 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
     containingView->GetPosition(&viewOffset.x, &viewOffset.y);
     nsIView * parent;
     containingView->GetParent(parent);
-    while (nsnull != parent) {
-      nsPoint po;
-      parent->GetPosition(&po.x, &po.y);
-      viewOffset.x += po.x;
-      viewOffset.y += po.y;
-      nsIScrollableView * scrollView;
-      if (NS_OK == containingView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollView)) {
-        nscoord x;
-        nscoord y;
-        scrollView->GetScrollPosition(x, y);
-        viewOffset.x -= x;
-        viewOffset.y -= y;
-      }
+
+    // if we don't have a parent view then 
+    // check to see if we have a widget and adjust our offset for the widget
+    if (parent == nsnull) {
       nsIWidget * widget;
-      parent->GetWidget(widget);
+      containingView->GetWidget(widget);
       if (nsnull != widget) {
         // Add in the absolute offset of the widget.
         nsRect absBounds;
@@ -1032,12 +1025,41 @@ nsFormControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
         aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
         aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
         NS_RELEASE(widget);
-        break;
       }
-      parent->GetParent(parent);
+      rv = NS_OK;
+    } else {
+
+      while (nsnull != parent) {
+        nsPoint po;
+        parent->GetPosition(&po.x, &po.y);
+        viewOffset.x += po.x;
+        viewOffset.y += po.y;
+        nsIScrollableView * scrollView;
+        if (NS_OK == containingView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollView)) {
+          nscoord x;
+          nscoord y;
+          scrollView->GetScrollPosition(x, y);
+          viewOffset.x -= x;
+          viewOffset.y -= y;
+        }
+        nsIWidget * widget;
+        parent->GetWidget(widget);
+        if (nsnull != widget) {
+          // Add in the absolute offset of the widget.
+          nsRect absBounds;
+          nsRect lc;
+          widget->WidgetToScreen(lc, absBounds);
+          // Convert widget coordinates to twips   
+          aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
+          aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
+          NS_RELEASE(widget);
+          break;
+        }
+        parent->GetParent(parent);
+      }
+      aAbsoluteTwipsRect.x += viewOffset.x;
+      aAbsoluteTwipsRect.y += viewOffset.y;
     }
-    aAbsoluteTwipsRect.x += viewOffset.x;
-    aAbsoluteTwipsRect.y += viewOffset.y;
   }
 
    // convert to pixel coordinates
