@@ -4,8 +4,8 @@
 # bonsai database availible.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2003/08/17 00:57:43 $ 
+# $Revision: 1.3 $ 
+# $Date: 2003/12/23 13:10:17 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcsim/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -185,10 +185,11 @@ sub get_checkin_data {
         $time += $next_checkin;
     
         my (
-            $rectype, $date, $author, $revision, 
-            $file, $repository_dir, $log, 
+            $rectype, $time, $author,
+            $repository, $repository_dir, $file,
+            $revision,
             $sticky, $branch,
-            $lines_added, $lines_removed,
+            $lines_added, $lines_removed, $log,
             );
 
         # I do not use these Bonsai fields.
@@ -216,7 +217,7 @@ sub get_checkin_data {
             $file = pickone(@BASENAMES);
             $log = pickone(@LOGS);
             
-            @tmp = (
+            @row = (
                     $rectype, $time, $author,
                     $repository, $repository_dir, $file,
                     $revision,
@@ -224,7 +225,12 @@ sub get_checkin_data {
                     $lines_added, $lines_removed, $log,
                     );
             
-            push @out, [ @tmp ];
+            # This the format that Bonsai expects to get back is a LoL 
+            # a list (rows from the database) of 
+            # lists (columns for each line, these columns must be in the 
+            #        Bonsai expected order).
+
+            push @out, [ @row ];
         }
     }
     
