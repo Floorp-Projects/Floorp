@@ -75,7 +75,6 @@ box#sidebar-box {
 box#sidebar-panels {
   min-width: 1px;
   min-height: 1px;
-  border-bottom: 2px solid #003366;
 }
 
 box#sidebar-box[hidden="true"] {
@@ -126,7 +125,7 @@ titledbutton.panel-bar {
   padding: 0px;
   margin: 0px;
   min-width: 1px;
-  padding-left: 15px;
+  padding-left: 5px;
   border-top: 1px solid white;
   background-color: #CCCCCC;
   font-size: smaller;
@@ -134,7 +133,6 @@ titledbutton.panel-bar {
 
 titledbutton.panel-bar[selected="true"] {
   background-color: #98CCF8;
-  padding-left: 5px;
   margin: 0px;
   border-bottom: 1px solid #808080;
 }
