@@ -36,12 +36,6 @@
 
 extern ilISystemServices *il_ss;
 
-#if 0
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <limits.h>
-#endif /* XP_PC */
-
 PR_BEGIN_EXTERN_C
 int MK_UNABLE_TO_LOCATE_FILE = -1;
 int MK_OUT_OF_MEMORY = -2;
@@ -74,11 +68,10 @@ char *XP_GetString(int i)
   return ("XP_GetString replacement needed");
 }
 
-/* We need this because Solaris' version of qsort is broken and
- * causes array bounds reads. XXX Moving solaris version to xp/xp_qsort.c
- */
+/* Mac's native qsort is broken, and uses this version here
+   for historical reasons.  Mac should point at mozilla/lib/xp/xp_qsort.c
+   and mozilla/include/xp_qsort.h like the rest of the world. */
 #if defined(XP_MAC)
-
 
 /* prototypes for local routines */
 static void  shortsort(char *lo, char *hi, unsigned width,
@@ -366,7 +359,7 @@ static void  swap (
         }
 }
 
-#endif /* SOLARIS or XP_MAC */
+#endif /* XP_MAC */
 
 #ifdef XP_MAC
 #include <OSUtils.h>
