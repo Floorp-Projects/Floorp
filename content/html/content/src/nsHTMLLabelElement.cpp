@@ -217,7 +217,8 @@ nsHTMLLabelElement::HandleDOMEvent(nsPresContext* aPresContext,
       *aEventStatus == nsEventStatus_eConsumeNoDefault ||
       (aEvent->message != NS_MOUSE_LEFT_CLICK &&
        aEvent->message != NS_FOCUS_CONTENT) ||
-      aFlags & NS_EVENT_FLAG_CAPTURE)
+      aFlags & NS_EVENT_FLAG_CAPTURE ||
+      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT))
     return NS_OK;
 
   nsCOMPtr<nsIContent> content = GetForContent();
@@ -225,25 +226,23 @@ nsHTMLLabelElement::HandleDOMEvent(nsPresContext* aPresContext,
     mHandlingEvent = PR_TRUE;
     switch (aEvent->message) {
       case NS_MOUSE_LEFT_CLICK:
-        if (ShouldFocus(this)) {
-          // Focus the for content.
-          content->SetFocus(aPresContext);
-        }
+        if (aEvent->eventStructType == NS_MOUSE_EVENT) {
+          if (ShouldFocus(this)) {
+            // Focus the for content.
+            content->SetFocus(aPresContext);
+          }
 
-        // This sends the event twice down parts of its path.  Oh well.
-        // This is needed for:
-        //  * Making radio buttons and checkboxes get checked.
-        //  * Triggering user event handlers. (For compatibility with IE,
-        //    we do only left click.  If we wanted to interpret the HTML
-        //    spec very narrowly, we would do nothing.  If we wanted to
-        //    do something sensible, we might send more events through
-        //    like this.)  See bug 7554, bug 49897, and bug 96813.
-        // XXX The event should probably have its target modified.  See
-        // bug 146066.  (But what if |aDOMEvent| is null and it gets
-        // created later?  If we forced the existence of an event and
-        // modified its target, we could replace |mHandlingEvent|.)
-        rv = content->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                     aFlags, aEventStatus);
+          // Dispatch a new click event to |content|
+          //    (For compatibility with IE, we do only left click.  If
+          //    we wanted to interpret the HTML spec very narrowly, we
+          //    would do nothing.  If we wanted to do something
+          //    sensible, we might send more events through like
+          //    this.)  See bug 7554, bug 49897, and bug 96813.
+          nsEventStatus status = *aEventStatus;
+          rv = DispatchClickEvent(aPresContext, NS_STATIC_CAST(nsInputEvent*, aEvent),
+                                  content, PR_TRUE, &status);
+          // Do we care about the status this returned?  I don't think we do...
+        }
         break;
       case NS_FOCUS_CONTENT:
         // Since we don't have '-moz-user-focus: normal', the only time
@@ -252,8 +251,12 @@ nsHTMLLabelElement::HandleDOMEvent(nsPresContext* aPresContext,
         // case.
         // Since focus doesn't bubble, this is basically the second part
         // of redirecting |SetFocus|.
-        rv = content->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                     aFlags, aEventStatus);
+        {
+          nsEvent event(NS_FOCUS_CONTENT);
+          nsEventStatus status = *aEventStatus;
+          rv = DispatchEvent(aPresContext, &event, content, PR_TRUE, &status);
+          // Do we care about the status this returned?  I don't think we do...
+        }
         break;
     }
     mHandlingEvent = PR_FALSE;

@@ -1373,6 +1373,65 @@ IsArea(nsIContent *aContent)
           aContent->IsContentOfType(nsIContent::eHTML));
 }
 
+/* static */
+nsresult
+nsGenericHTMLElement::DispatchEvent(nsPresContext* aPresContext,
+                                    nsEvent* aEvent,
+                                    nsIContent* aTarget,
+                                    PRBool aFullDispatch,
+                                    nsEventStatus* aStatus)
+{
+  NS_PRECONDITION(aTarget, "Must have target");
+  NS_PRECONDITION(aEvent, "Must have source event");
+  NS_PRECONDITION(aStatus, "Null out param?");
+
+  if (!aPresContext) {
+    return NS_OK;
+  }
+
+  nsIPresShell *shell = aPresContext->GetPresShell();
+  if (!shell) {
+    return NS_OK;
+  }
+
+  if (aFullDispatch) {
+    return shell->HandleEventWithTarget(aEvent, nsnull, aTarget, NS_EVENT_FLAG_INIT,
+                                        aStatus);
+  }
+
+  return shell->HandleDOMEventWithTarget(aTarget, aEvent, aStatus);
+}
+              
+/* static */
+nsresult
+nsGenericHTMLElement::DispatchClickEvent(nsPresContext* aPresContext,
+                                         nsInputEvent* aSourceEvent,
+                                         nsIContent* aTarget,
+                                         PRBool aFullDispatch,
+                                         nsEventStatus* aStatus)
+{
+  NS_PRECONDITION(aTarget, "Must have target");
+  NS_PRECONDITION(aSourceEvent, "Must have source event");
+  NS_PRECONDITION(aStatus, "Null out param?");
+
+  nsMouseEvent event(NS_MOUSE_LEFT_CLICK, aSourceEvent->widget);
+  event.point = aSourceEvent->point;
+  event.refPoint = aSourceEvent->refPoint;
+  PRUint32 clickCount = 1;
+  if (aSourceEvent->eventStructType == NS_MOUSE_EVENT) {
+    clickCount = NS_STATIC_CAST(nsMouseEvent*, aSourceEvent)->clickCount;
+  }
+  event.clickCount = clickCount;
+  event.isShift = aSourceEvent->isShift;
+  event.isControl = aSourceEvent->isControl;
+  event.isAlt = aSourceEvent->isAlt;
+  event.isMeta = aSourceEvent->isMeta;
+  event.internalAppFlags |=
+    aSourceEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
+
+  return DispatchEvent(aPresContext, &event, aTarget, aFullDispatch, aStatus);
+}
+
 nsresult
 nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
                                                nsEvent* aEvent,
@@ -1515,27 +1574,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
           nsKeyEvent* keyEvent = NS_STATIC_CAST(nsKeyEvent*, aEvent);
           if (keyEvent->keyCode == NS_VK_RETURN) {
             nsEventStatus status = nsEventStatus_eIgnore;
-            nsCOMPtr<nsIContent> mouseContent;
-
-            //fire click
-            nsGUIEvent* guiEvent = NS_STATIC_CAST(nsGUIEvent*, aEvent);
-            nsMouseEvent event(NS_MOUSE_LEFT_CLICK, guiEvent->widget);
-            event.point = aEvent->point;
-            event.refPoint = aEvent->refPoint;
-            event.clickCount = 1;
-            event.isShift = keyEvent->isShift;
-            event.isControl = keyEvent->isControl;
-            event.isAlt = keyEvent->isAlt;
-            event.isMeta = keyEvent->isMeta;
-            event.internalAppFlags |=
-              aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
-
-            nsIPresShell *presShell = aPresContext->GetPresShell();
-            if (presShell) {
-              ret = presShell->HandleDOMEventWithTarget(this, &event, &status);
-              // presShell may no longer be alive, don't use it here
-              // unless you keep a reference.
-            }
+            ret = DispatchClickEvent(aPresContext, keyEvent, this, PR_FALSE, &status);
           }
         }
         break;
