@@ -603,6 +603,7 @@ nsBrowserWindow::DoFind()
        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
        lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
        lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
+       NS_RELEASE(lookAndFeel);
     }
 
 
@@ -974,6 +975,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   nsILookAndFeel * lookAndFeel;
   if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+    NS_RELEASE(lookAndFeel);
   } else {
     txtHeight = 24;
   }
