@@ -250,8 +250,8 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     break;
 
   case nsImageNotification_kAborted:
-    // Update the image load status
-    mImageLoadStatus |= NS_IMAGE_LOAD_STATUS_ERROR;
+    // Treat this like an error
+    NotifyError(aImageRequest, nsImageError_kNoData);
     break;
   }
 }
