@@ -46,7 +46,7 @@ pascal void* Install(void* unused)
 	dirID = gControls->opt->dirID;
 #else /* PRE_BETA_HACKERY */
 
-#ifndef DEBUG
+#ifndef MIW_DEBUG
 	/* get "Temporary Items" folder path */
 	ERR_CHECK_RET(FindFolder(kOnSystemDisk, kTemporaryFolderType, kCreateFolder, &vRefNum, &dirID), (void*)0);
 #else
@@ -71,7 +71,7 @@ pascal void* Install(void* unused)
 			return (void*)0;
 		}
 	}	
-#endif /* DEBUG */
+#endif /* MIW_DEBUG */
 #endif /* PRE_BETA_HACKERY */
 	
 	GetIndString(pIDIfname, rStringList, sTempIDIName);
@@ -94,11 +94,15 @@ pascal void* Install(void* unused)
 	gSDDlg = true;
 	ourHZ = GetZone();
 	GetPort(&oldPort);
+
+#if MOZILLA == 0
 #if SDINST_IS_DLL == 1
 	gInstFunc(&sdistruct);
 #else
 	SDI_NetInstall(&sdistruct);
-#endif
+#endif /* SDINST_IS_DLL */
+#endif /* MOZILLA */
+
 	SetPort(oldPort);
 	
 	if (gWPtr)
@@ -141,6 +145,8 @@ pascal void* Install(void* unused)
 			if (err!=noErr) 
 			{
 				ErrorHandler();
+				if (coreFile)
+					DisposePtr((Ptr)coreFile);
 				return (void*) nil;
 			}
 			
@@ -153,7 +159,9 @@ pascal void* Install(void* unused)
 			CleanupExtractedFiles(vRefNum, dirID);
 #endif
 			err = FSpDelete(&coreFileSpec);
-			if (err!=noErr) SysBeep(10); // DEBUG
+#ifdef MIW_DEBUG
+			if (err!=noErr) SysBeep(10); 
+#endif
 		}
 	
 		if (coreFile)
@@ -173,9 +181,12 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	OSErr 	err;
 	short	refNum, instChoice;
 	long 	count, compsDone, i, j;
-	char 	*buf, *fnum, *keybuf, ch;
+	char 	ch;
+	Ptr 	buf, keybuf, fnum;
 	Str255	pfnum, pkeybuf;
-
+	FSSpec	fsExists;
+	StringPtr	pcurrArchive = 0;
+	
 	err = FSMakeFSSpec(vRefNum, dirID, idiName, idiSpec);
 	if ((err != noErr) && (err != fnfErr))
 	{
@@ -214,70 +225,79 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
 			{
-				// get file number from STR# resource
-				GetIndString(pfnum, rIndices, compsDone+1);
-				fnum = PascalToC(pfnum);
-				
-				// construct through concatenation [File<num>]\r
-				GetIndString(pkeybuf, rIDIKeys, sFile);
-				keybuf = PascalToC(pkeybuf);
-				ch = '[';
-				strncat(buf, &ch, 1);
-				strncat(buf, keybuf, strlen(keybuf));
-				strncat(buf, fnum, strlen(fnum));
-				DisposePtr(keybuf);
-				
-				keybuf = NewPtrClear(2);
-				keybuf = "]\r";
-				strncat(buf, keybuf, strlen(keybuf));
-				if (keybuf)
-					DisposePtr(keybuf);
-
-				// write out \tdesc=
-				GetIndString(pkeybuf, rIDIKeys, sDesc);
-				keybuf = PascalToC(pkeybuf);
-				ch = '\t';								
-				strncat(buf, &ch, 1);					// \t
-				strncat(buf, keybuf, strlen(keybuf));	// \tdesc
-				ch = '=';								// \tdesc=
-				strncat(buf, &ch, 1);
-				if (keybuf)
-					DisposePtr(keybuf);
-				
-				// write out gControls->cfg->comp[i].shortDesc\r
-				HLock(gControls->cfg->comp[i].shortDesc);
-				strncat(buf, *gControls->cfg->comp[i].shortDesc, strlen(*gControls->cfg->comp[i].shortDesc));				
-				HUnlock(gControls->cfg->comp[i].shortDesc);
-				ch = '\r';
-				strncat(buf, &ch, 1);
 			
-				// iterate over gControls->cfg->comp[i].numURLs
-				for (j=0; j<gControls->cfg->comp[i].numURLs; j++)
+				// verify that file does not exist already
+				HLock(gControls->cfg->comp[i].archive);
+				pcurrArchive = CToPascal(*gControls->cfg->comp[i].archive);
+				HUnlock(gControls->cfg->comp[i].archive);				
+				err = FSMakeFSSpec(vRefNum, dirID, pcurrArchive, &fsExists);
+				if (err == fnfErr)
 				{
-					// write out \tnumURLs+1= from STR# resource
-					GetIndString(pkeybuf, rIndices, j+2); // j+2 since 1-based idx, not 0-based
+					// get file number from STR# resource
+					GetIndString(pfnum, rIndices, compsDone+1);
+					fnum = PascalToC(pfnum);
+				
+					// construct through concatenation [File<num>]\r
+					GetIndString(pkeybuf, rIDIKeys, sFile);
 					keybuf = PascalToC(pkeybuf);
-					ch = '\t';
-					strncat(buf, &ch, 1);					// \t
-					strncat(buf, keybuf, strlen(keybuf));	// \t<n>
-					ch = '=';
-					strncat(buf, &ch, 1);					// \t<n>=
+					ch = '[';
+					strncat(buf, &ch, 1);
+					strncat(buf, keybuf, strlen(keybuf));
+					strncat(buf, fnum, strlen(fnum));
+					DisposePtr(keybuf);
+				
+					keybuf = NewPtrClear(3);
+					keybuf = "]\r";
+					strncat(buf, keybuf, strlen(keybuf));
 					if (keybuf)
 						DisposePtr(keybuf);
-					
-					// write out gControls->cfg->comp[i].url[j]+archive\r
-					HLock(gControls->cfg->comp[i].url[j]);					
-					strncat(buf, *gControls->cfg->comp[i].url[j], strlen(*gControls->cfg->comp[i].url[j]));
-					HUnlock(gControls->cfg->comp[i].url[j]);
-					HLock(gControls->cfg->comp[i].archive);
-					strncat(buf, *gControls->cfg->comp[i].archive, strlen(*gControls->cfg->comp[i].archive));
-					HUnlock(gControls->cfg->comp[i].archive);
+
+					// write out \tdesc=
+					GetIndString(pkeybuf, rIDIKeys, sDesc);
+					keybuf = PascalToC(pkeybuf);
+					ch = '\t';								
+					strncat(buf, &ch, 1);					// \t
+					strncat(buf, keybuf, strlen(keybuf));	// \tdesc
+					ch = '=';								// \tdesc=
+					strncat(buf, &ch, 1);
+					if (keybuf)
+						DisposePtr(keybuf);
+				
+					// write out gControls->cfg->comp[i].shortDesc\r
+					HLock(gControls->cfg->comp[i].shortDesc);
+					strncat(buf, *gControls->cfg->comp[i].shortDesc, strlen(*gControls->cfg->comp[i].shortDesc));				
+					HUnlock(gControls->cfg->comp[i].shortDesc);
 					ch = '\r';
 					strncat(buf, &ch, 1);
+			
+					// iterate over gControls->cfg->comp[i].numURLs
+					for (j=0; j<gControls->cfg->comp[i].numURLs; j++)
+					{
+						// write out \tnumURLs+1= from STR# resource
+						GetIndString(pkeybuf, rIndices, j+2); // j+2 since 1-based idx, not 0-based
+						keybuf = PascalToC(pkeybuf);
+						ch = '\t';
+						strncat(buf, &ch, 1);					// \t
+						strncat(buf, keybuf, strlen(keybuf));	// \t<n>
+						ch = '=';
+						strncat(buf, &ch, 1);					// \t<n>=
+						if (keybuf)
+							DisposePtr(keybuf);
+					
+						// write out gControls->cfg->comp[i].url[j]+archive\r
+						HLock(gControls->cfg->comp[i].url[j]);					
+						strncat(buf, *gControls->cfg->comp[i].url[j], strlen(*gControls->cfg->comp[i].url[j]));
+						HUnlock(gControls->cfg->comp[i].url[j]);
+						HLock(gControls->cfg->comp[i].archive);
+						strncat(buf, *gControls->cfg->comp[i].archive, strlen(*gControls->cfg->comp[i].archive));
+						HUnlock(gControls->cfg->comp[i].archive);
+						ch = '\r';
+						strncat(buf, &ch, 1);
+					}
+					if (fnum)
+						DisposePtr(fnum);
+					compsDone++;
 				}
-				if (fnum)
-					DisposePtr(fnum);
-				compsDone++;
 			}
 		}
 		else if (compsDone >= gControls->cfg->st[instChoice].numComps)
