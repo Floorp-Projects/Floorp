@@ -104,7 +104,18 @@ CalendarEventSelection.prototype.emptySelection = function ( Event )
    this.selectedEvents = new Array();
 
    this.onSelectionChanged();
+}
+
+CalendarEventSelection.prototype.setArrayToSelection = function( ArrayOfEvents )
+{
+   this.selectedEvents = new Array();
+
+   for( i = 0; i < ArrayOfEvents.length; i++ )
+   {
+      this.selectedEvents[ this.selectedEvents.length ] = ArrayOfEvents[i];
+   }
    
+   this.onSelectionChanged();
 }
 
 CalendarEventSelection.prototype.isSelectedEvent = function ( Event )
@@ -133,12 +144,15 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
    {
       document.getElementById( "delete_command" ).removeAttribute( "disabled" );
 
-      document.getElementById( "modify_command" ).removeAttribute( "disabled" );
-	  
-		if (gMailAccounts)
-		{
-			document.getElementById("send_event_command").removeAttribute("disabled");
-		}
+      if( this.selectedEvents.length == 1 )
+         document.getElementById( "modify_command" ).removeAttribute( "disabled" );
+	  else
+         document.getElementById( "modify_command" ).setAttribute( "disabled", "true" );
+
+      if (gMailAccounts)
+      {
+         document.getElementById("send_event_command").removeAttribute("disabled");
+      }
    }
    else
    {
@@ -146,7 +160,7 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
 
       document.getElementById( "modify_command" ).setAttribute( "disabled", "true" );
 
-		document.getElementById("send_event_command").setAttribute("disabled", "true");
+      document.getElementById("send_event_command").setAttribute("disabled", "true");
    }
 
    for( var index in this.observerList )
