@@ -311,30 +311,39 @@ sub BuildCommonProjects()
 
 	Moz::BuildProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp");
 	MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", "$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", "$dist_dir") : 0;
 	
 	Moz::BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp", "MoreFiles$D.shlb");
 	MakeAlias(":mozilla:lib:mac:MoreFiles:build:MoreFiles$D.shlb", "$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:MoreFiles:build:MoreFiles$D.shlb.xSYM", "$dist_dir") : 0;
 
 	BuildProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",	"NSPR20$D.shlb");
 	MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb", "$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:nsprpub:macbuild:NSPR20$D.shlb.xSYM", "$dist_dir") : 0;
 
 	BuildProject(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator.mcp",	"MemAllocator$D.shlb");
 	MakeAlias(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator$D.shlb", "$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:MacMemoryAllocator:MemAllocator$D.shlb.xSYM", "$dist_dir") : 0;
 	
 	BuildProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",								"NSStdLib$D.shlb");
 	MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb", "$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:lib:mac:NSStdLib:NSStdLib$D.shlb.xSYM", "$dist_dir") : 0;
 	
 	BuildProject(":mozilla:xpcom:macbuild:xpcomPPC.mcp",								"xpcom$D.shlb");
 	MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb", "$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:xpcom:macbuild:xpcom$D.shlb.xSYM", "$dist_dir") : 0;
 
 	BuildProject(":mozilla:jpeg:macbuild:JPEG.mcp",											"JPEG$D.shlb");
 	MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.shlb", "$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:jpeg:macbuild:JPEG$D.shlb.xSYM", "$dist_dir") : 0;
 
 	BuildProject(":mozilla:js:macbuild:JavaScriptPPC.mcp",		"JavaScriptNoJSJ$D.shlb");
 	MakeAlias(":mozilla:js:macbuild:JavaScript$D.shlb", "$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:js:macbuild:JavaScript$D.shlb.xSYM", "$dist_dir") : 0;
 
 	BuildProject(":mozilla:modules:zlib:macbuild:zlib.mcp",		"zlib$D.shlb");
 	MakeAlias(":mozilla:modules:zlib:macbuild:zlib$D.shlb", "$dist_dir");
+	$main::DEBUG ? MakeAlias(":mozilla:modules:zlib:macbuild:zlib$D.shlb.xSYM", "$dist_dir") : 0;
 	
 # static
 
