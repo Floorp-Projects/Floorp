@@ -672,7 +672,7 @@ FrameManager::RevokePostedEvents()
                                       (nsISupports **)&eventService);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIEventQueue> eventQueue;
-      rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
+      rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, 
                                              getter_AddRefs(eventQueue));
       nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
 
@@ -718,7 +718,7 @@ FrameManager::DequeuePostedEventFor(nsIFrame* aFrame)
                                       (nsISupports **)&eventService);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIEventQueue> eventQueue;
-      rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
+      rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, 
                                              getter_AddRefs(eventQueue));
       nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
 
@@ -789,7 +789,7 @@ FrameManager::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                     (nsISupports **)&eventService);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIEventQueue> eventQueue;
-    rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
+    rv = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, 
                                            getter_AddRefs(eventQueue));
     nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
 

@@ -102,7 +102,7 @@ public:
 
           if (NS_FAILED(rv)) return rv;
   
-          rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
+          rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
         }
 
         if (NS_FAILED(rv)) return rv;

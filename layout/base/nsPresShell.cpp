@@ -683,11 +683,11 @@ PresShell::Init(nsIDocument* aDocument,
       }      
     }
   }
-
+  
   // Cache the event queue of the current UI thread
   NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &result);
-  if (NS_SUCCEEDED(result))
-    result = eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(mEventQueue));
+  if (NS_SUCCEEDED(result))                    // XXX this implies that the UI is the current thread.
+    result = eventService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQueue));
   
   return NS_OK;
 }

@@ -661,7 +661,7 @@ NS_IMETHODIMP nsImapProtocol::Run()
 
     result = pEventQService->CreateThreadEventQueue();
 	
-	pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(me->m_eventQueue));
+	pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,getter_AddRefs(me->m_eventQueue));
 
     NS_ASSERTION(me->m_eventQueue, 
                  "Unable to create imap thread event queue.\n");
@@ -6353,7 +6353,7 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(PRUint32 startPosition, PRInt32 readC
   NS_WITH_SERVICE(nsIEventQueueService, pEventQService,kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
+  rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
   if (NS_FAILED(rv)) return rv;
   rv = imapServer->GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull);
   return rv;

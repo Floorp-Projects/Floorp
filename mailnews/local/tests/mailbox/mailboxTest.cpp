@@ -644,7 +644,7 @@ int main()
     result = pEventQService->CreateThreadEventQueue();
 	if (NS_FAILED(result)) return result;
 
-    pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(queue));
+    pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,getter_AddRefs(queue));
     if (NS_FAILED(result) || !queue) {
         printf("unable to get event queue.\n");
         return 1;

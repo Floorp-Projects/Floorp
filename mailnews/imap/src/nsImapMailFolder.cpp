@@ -94,7 +94,7 @@ nsImapMailFolder::nsImapMailFolder() :
 
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
     if (NS_SUCCEEDED(rv) && pEventQService)
-        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+        pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                             getter_AddRefs(m_eventQueue));
 	m_moveCoalescer = nsnull;
 
@@ -460,7 +460,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
 		nsCOMPtr <nsIEventQueue> eventQ;
 		NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
 		if (NS_SUCCEEDED(rv) && pEventQService)
-			pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+			pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
 												getter_AddRefs(eventQ));
 		rv = imapService->SelectFolder(eventQ, this, this, msgWindow, nsnull);
 		m_urlRunning = PR_TRUE;
@@ -1216,7 +1216,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
 		nsCOMPtr <nsIEventQueue> eventQ;
 		NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
 		if (NS_SUCCEEDED(rv) && pEventQService)
-			pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+			pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
 												getter_AddRefs(eventQ));
     rv = imapService->SelectFolder(eventQ, inbox, this, aWindow, nsnull);
     return rv;
@@ -2843,7 +2843,7 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 		nsCOMPtr <nsIEventQueue> eventQ;
 		NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
 		if (NS_SUCCEEDED(rv) && pEventQService)
-			pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+			pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
 												getter_AddRefs(eventQ));
 		m_moveCoalescer->PlaybackMoves (eventQ);
 		delete m_moveCoalescer;

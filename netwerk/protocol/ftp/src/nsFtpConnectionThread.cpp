@@ -835,7 +835,7 @@ nsFtpConnectionThread::S_user() {
           }
           nsINetPrompt* proxyprompter = NULL;
           rv = pIProxyObjectManager->GetProxyObject
-            (nsnull, nsINetPrompt::GetIID(), prompter, PROXY_SYNC, (void**)&proxyprompter);
+            (NS_UI_THREAD_EVENTQ, nsINetPrompt::GetIID(), prompter, PROXY_SYNC, (void**)&proxyprompter);
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
             static nsAutoString message;
@@ -912,7 +912,7 @@ nsFtpConnectionThread::S_pass() {
           }
           nsINetPrompt* proxyprompter = NULL;
           rv = pIProxyObjectManager->GetProxyObject
-            (nsnull, nsINetPrompt::GetIID(), prompter, PROXY_SYNC, (void**)&proxyprompter);
+            (NS_UI_THREAD_EVENTQ, nsINetPrompt::GetIID(), prompter, PROXY_SYNC, (void**)&proxyprompter);
             PRUnichar *passwd = nsnull;
             PRBool retval;
             static nsAutoString message;
@@ -1692,7 +1692,7 @@ nsFtpConnectionThread::Run() {
     rv = eventQService->CreateThreadEventQueue();
     if (NS_FAILED(rv)) return rv;
 
-    rv = eventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(mFTPEventQueue));
+    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mFTPEventQueue));
     if (NS_FAILED(rv)) return rv;
 
     // we've got to send the event queue for this sucker over to the 

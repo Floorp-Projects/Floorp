@@ -488,7 +488,7 @@ int main(int argc, char **argv)
     if (NS_FAILED(rv)) return rv;
 
     nsIEventQueue* mainQueue;
-    rv = theEventQueueService->GetThreadEventQueue(PR_GetCurrentThread(),
+    rv = theEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                                    &mainQueue);
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get event queue for current thread");

@@ -747,7 +747,7 @@ ImportMailThread( void *stuff)
 	// Initialize the curFolder proxy object
     NS_WITH_SERVICE( nsIProxyObjectManager, proxyMgr, kProxyObjectManagerCID, &rv);
 	if (NS_SUCCEEDED(rv)) {
-		rv = proxyMgr->GetProxyObject( nsnull, nsIMsgFolder::GetIID(),
+		rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, nsIMsgFolder::GetIID(),
 										curFolder, PROXY_SYNC, getter_AddRefs( curProxy));
 
 		IMPORT_LOG1( "Proxy result for curFolder: 0x%lx\n", rv);
@@ -783,7 +783,7 @@ ImportMailThread( void *stuff)
 						break;
 					}
 
-					rv = proxyMgr->GetProxyObject( nsnull, nsIMsgFolder::GetIID(), 
+					rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, nsIMsgFolder::GetIID(), 
 													subFolder, PROXY_SYNC, getter_AddRefs( curProxy));
 					if (NS_FAILED( rv)) {
 						nsImportStringBundle::GetStringByID( IMPORT_ERROR_MB_NOPROXY, error);
@@ -798,7 +798,7 @@ ImportMailThread( void *stuff)
 					while ((newDepth < depth) && NS_SUCCEEDED( rv)) {
 						nsCOMPtr<nsIFolder> parFolder;
 						curProxy->GetParent( getter_AddRefs( parFolder));
-						rv = proxyMgr->GetProxyObject( nsnull, nsIMsgFolder::GetIID(),
+						rv = proxyMgr->GetProxyObject( NS_UI_THREAD_EVENTQ, nsIMsgFolder::GetIID(),
 														parFolder, PROXY_SYNC, getter_AddRefs( curProxy));
 						depth--;
 					}

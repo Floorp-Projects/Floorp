@@ -205,7 +205,7 @@ gtk_mozilla_get_type (void)
 
     nsIEventQueue * EQueue = nsnull;
 
-    rv = aEventQService->GetThreadEventQueue(PR_GetCurrentThread(), &EQueue);
+    rv = aEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &EQueue);
     if (!NS_SUCCEEDED(rv)) {
       printf("Could not get the newly created thread event queue.\n");
       return rv;

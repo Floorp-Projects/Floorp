@@ -231,7 +231,7 @@ nsPrefMigration::getPrefService()
   if(NS_FAILED(rv))
     return rv;
   
-  rv = pIProxyObjectManager->GetProxyObject(nsnull, 
+  rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
                                             nsIPref::GetIID(), 
                                             pIMyService, 
                                             PROXY_SYNC,
@@ -319,7 +319,7 @@ extern "C" void ProfileMigrationController(void *data)
   nsCOMPtr<nsIPrefMigration> prefProxy;
   nsCOMPtr<nsIPrefMigration> migratorInterface = do_QueryInterface(interfaceM);
 
-  rv = pIProxyObjectManager->GetProxyObject(nsnull, 
+  rv = pIProxyObjectManager->GetProxyObject(NS_UI_THREAD_EVENTQ, 
                                             nsIPrefMigration::GetIID(), 
                                             migratorInterface, 
                                             PROXY_SYNC,

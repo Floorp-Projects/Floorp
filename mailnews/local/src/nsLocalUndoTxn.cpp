@@ -196,7 +196,7 @@ nsLocalMoveCopyMsgTxn::UndoImapDeleteFlag(nsIMsgFolder* folder,
                             kEventQueueServiceCID, &rv);  
             if (NS_SUCCEEDED(rv) && pEventQService)
             {
-                pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),
+                pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                               getter_AddRefs(eventQueue));
                 if (eventQueue)
                 {

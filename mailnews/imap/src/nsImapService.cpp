@@ -300,7 +300,7 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
 
                if (NS_FAILED(rv)) return rv;
 
-               rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
+               rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
                if (NS_FAILED(rv)) return rv;
                
                // ** jt -- this really isn't an optimal way of deleting a
@@ -480,7 +480,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 
           if (NS_FAILED(rv)) return rv;
 
-          rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
+          rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
           if (NS_FAILED(rv)) return rv;
           rv = GetImapConnectionAndLoadUrl(queue, aImapUrl, aDisplayConsumer, aURL);
         }

@@ -117,7 +117,7 @@ main(int argc, char* argv[])
   if (NS_FAILED(ret)) return ret;
 
   nsIEventQueue *eventQ = nsnull;
-  ret = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+  ret = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
   if (NS_FAILED(ret)) return ret;
 
   ret = channel->OpenInputStream(0, -1, &in);

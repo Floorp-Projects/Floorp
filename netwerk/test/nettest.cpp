@@ -288,7 +288,7 @@ int main(int argc, char **argv)
 		nsIEventQueue* eventQ = nsnull;
 		NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
 		if (NS_SUCCEEDED(rv)) {
-		  rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
+		  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
 		}
 		if (NS_FAILED(rv)) return rv;
 

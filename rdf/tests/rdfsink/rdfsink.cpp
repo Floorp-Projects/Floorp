@@ -181,7 +181,7 @@ main(int argc, char** argv)
         goto done;
     }
 
-    if (NS_FAILED(rv = theEventQueueService->GetThreadEventQueue(PR_GetCurrentThread(),
+    if (NS_FAILED(rv = theEventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD,
                                                                  &mainQueue))) {
         NS_ERROR("unable to get event queue for current thread");
         goto done;

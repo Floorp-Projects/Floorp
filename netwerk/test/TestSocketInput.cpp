@@ -153,7 +153,7 @@ main(int argc, char* argv[])
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIEventQueue> eventQ;
-  rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), getter_AddRefs(eventQ));
+  rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
   if (NS_FAILED(rv)) return rv;
 
   NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);

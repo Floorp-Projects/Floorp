@@ -237,7 +237,7 @@ int main(int argc, char **argv)
 	if (!NS_SUCCEEDED(rv))
 		return 1;
   
-  rv = eventQueueService->GetThreadEventQueue(PR_GetCurrentThread(), 
+  rv = eventQueueService->GetThreadEventQueue(NS_CURRENT_THREAD, 
 	                                            &eventQueue);
   
   NS_ASSERTION(NS_SUCCEEDED(rv),"Could not get the newly created thread event queue.\n");

@@ -141,7 +141,7 @@ nsNetModRegEntry::nsNetModRegEntry(const char *aTopic,
     
     if (NS_FAILED(*result)) return;
     
-    *result = eventQService->GetThreadEventQueue(PR_CurrentThread(), getter_AddRefs(mEventQ)); 
+    *result = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQ)); 
 }
 
 nsresult
