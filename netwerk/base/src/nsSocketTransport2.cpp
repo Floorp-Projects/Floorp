@@ -127,12 +127,14 @@ ErrorAccordingToNSPR(PRErrorCode errorCode)
     case PR_NETWORK_UNREACHABLE_ERROR: // XXX need new nsresult for this!
         rv = NS_ERROR_CONNECTION_REFUSED;
         break;
+    case PR_IO_TIMEOUT_ERROR:
     case PR_CONNECT_TIMEOUT_ERROR:
         rv = NS_ERROR_NET_TIMEOUT;
         break;
     default:
         rv = NS_ERROR_FAILURE;
     }
+    LOG(("ErrorAccordingToNSPR [in=%d out=%x]\n", errorCode, rv));
     return rv;
 }
 
