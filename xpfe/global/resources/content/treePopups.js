@@ -36,19 +36,21 @@ function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
       // Construct an entry for each cell in the row.
       var columnName = currTreeCol.getAttribute("value");
       if (firstTime) {
-        popupChild = document.createElement("menuitem");
-        popupChild.setAttribute("type", "checkbox");
-        popupChild.setAttribute("value", columnName);
-        if (columnName == "") {
-          var display = currTreeCol.getAttribute("display");
-          popupChild.setAttribute("value", display);
+        if (currTreeCol.getAttribute("collapsed") != "true") {
+          popupChild = document.createElement("menuitem");
+          popupChild.setAttribute("type", "checkbox");
+          popupChild.setAttribute("value", columnName);
+          if (columnName == "") {
+            var display = currTreeCol.getAttribute("display");
+            popupChild.setAttribute("value", display);
+          }
+          popupChild.setAttribute("colid", currColNode.id);
+          popupChild.setAttribute("oncommand", "ToggleColumnState(this, document)");
+          if ("true" != currColNode.getAttribute("hidden")) {
+            popupChild.setAttribute("checked", "true");
+          }
+          popup.appendChild(popupChild);
         }
-        popupChild.setAttribute("colid", currColNode.id);
-        popupChild.setAttribute("oncommand", "ToggleColumnState(this, document)");
-        if ("true" != currColNode.getAttribute("hidden")) {
-          popupChild.setAttribute("checked", "true");
-        }
-        popup.appendChild(popupChild);
       } else {
         if ("true" == currColNode.getAttribute("hidden")) {
           if (popupChild.getAttribute("checked"))
@@ -57,10 +59,14 @@ function BuildTreePopup( treeColGroup, treeHeadRow, popup, skipCell )
           if (!popupChild.getAttribute("checked"))
             popupChild.setAttribute("checked", "true");
         }
+        if (currColNode.getAttribute("collapsed") == "true")
+          popupChild.setAttribute("hidden", "true");
+        else
+          popupChild.removeAttribute("hidden");
+
         popupChild = popupChild.nextSibling;
       }
-
-    }
+    } 
 
     currTreeCol = currTreeCol.nextSibling;
     currColNode = currColNode.nextSibling;

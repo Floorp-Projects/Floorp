@@ -19,25 +19,15 @@
  *
  * Contributor(s): 
  *   Peter Annema <disttsc@bart.nl>
- *   Blake Ross <blakeross@telocity.com>
+ *   Blake Ross   <blakeross@telocity.com>
  */
-
 
 
 var NC_NS  = "http://home.netscape.com/NC-rdf#";
 var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 
-
-
-function debug(msg)
-{
-    // Uncomment for noise
-    //dump(msg+"\n");
-}
-
 function Init() {
     var tree = document.getElementById("bookmarksTree");
-    debug("adding controller to tree");
     tree.controllers.appendController(BookmarksController);
     var children = document.getElementById('treechildren-bookmarks');
     tree.selectItem(children.firstChild);
@@ -47,7 +37,6 @@ function Init() {
 var BookmarksController = {
     supportsCommand: function(command)
     {
-        debug("bookmarks in supports with " + command);
         switch(command)
         {
             case "cmd_undo":
@@ -65,7 +54,6 @@ var BookmarksController = {
     },
     isCommandEnabled: function(command)
     {
-        debug("bookmarks in enabled with " + command);
         switch(command)
         {
             case "cmd_undo":
@@ -83,7 +71,6 @@ var BookmarksController = {
     },
     doCommand: function(command)
     {
-        debug("bookmarks in do with " + command);
         switch(command)
         {
             case "cmd_undo":
@@ -108,7 +95,6 @@ var BookmarksController = {
     },
     onEvent: function(event)
     {
-        debug("bookmarks in event");
         // On blur events set the menu item texts back to the normal values
         /*if (event == 'blur' )
           {
@@ -120,7 +106,6 @@ var BookmarksController = {
 
 function CommandUpdate_Bookmarks()
 {
-    debug("CommandUpdate_Bookmarks()");
     //goUpdateCommand('button_delete');
     // get selection info from dir pane
     /*
@@ -146,7 +131,6 @@ function copySelectionToClipboard()
     var select_list = treeNode.selectedItems;
     if (!select_list) return false;
     if (select_list.length < 1) return false;
-    debug("# of Nodes selected: " + select_list.length + "\n");
 
     var rdf_uri = "@mozilla.org/rdf/rdf-service;1"
     var RDF = Components.classes[rdf_uri].getService();
@@ -182,7 +166,6 @@ function copySelectionToClipboard()
                 nameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
         if (nameNode) theName = nameNode.Value;
 
-        debug("Node " + nodeIndex + ": " + ID + "    name: " + theName);
         url += "ID:{" + ID + "};";
         url += "NAME:{" + theName + "};";
 
@@ -209,7 +192,6 @@ function copySelectionToClipboard()
     }
 
     if (url == "") return false;
-    debug("Copy URL: " + url);
 
     // get some useful components
     var trans_uri = "@mozilla.org/widget/transferable;1";
@@ -262,7 +244,6 @@ function copySelectionToClipboard()
         // double byte data
         trans.setTransferData("text/html", htmlData, html.length*2);
     }
-    debug("Write bookmarks to clipboard");
     clip.setData(trans, null,
                  Components.interfaces.nsIClipboard.kGlobalClipboard);
     return true;
@@ -291,9 +272,7 @@ function doPaste()
     if (select_list.length != 1) return false;
     
     var pasteNodeID = select_list[0].getAttribute("id");
-    debug("Paste onto " + pasteNodeID);
     var isContainerFlag = (select_list[0].getAttribute("container") == "true");
-    debug("Container status: " + ((isContainerFlag) ? "true" : "false"));
 
     var clip_uri = "@mozilla.org/widget/clipboard;1";
     var clip = Components.classes[clip_uri].getService();
@@ -358,8 +337,6 @@ function doPaste()
     }
     RDFC.Init(Bookmarks, pasteContainerRes);
 
-    debug("Inited RDFC");
-
     if (isContainerFlag == false)
     {
         pasteNodeIndex = RDFC.IndexOf(pasteNodeRes);
@@ -371,8 +348,6 @@ function doPaste()
     var bmTypeRes = RDF.GetResource(NC_NS + "Bookmark");
     if (!bmTypeRes) return false;
 
-    debug("Loop over strings");
-
     var dirty = false;
     for (var x=0; x<strings.length; x=x+2)
     {
@@ -382,17 +357,13 @@ function doPaste()
         {
             theID = theID.substr(4, theID.length-5);
             theName = theName.substr(6, theName.length-7);
-            debug("Paste  ID: " + theID + "    NAME: " + theName);
 
             var IDRes = RDF.GetResource(theID);
             if (!IDRes) continue;
 
             if (RDFC.IndexOf(IDRes) > 0)
-            {
-                debug("Unable to add ID:'" + theID +
-                      "' as its already in this folder.\n");
                 continue;
-            }
+
             if (theName != "")
             {
                 var NameLiteral = RDF.GetLiteral(theName);
@@ -403,15 +374,9 @@ function doPaste()
                 }
             }
             if (isContainerFlag == true)
-            {
-                RDFC.AppendElement(IDRes);
-                debug("Appended node onto end of container");
-            }
+              RDFC.AppendElement(IDRes);
             else
-            {
-                RDFC.InsertElementAt(IDRes, pasteNodeIndex++, true);
-                debug("Pasted at index # " + pasteNodeIndex);
-            }
+              RDFC.InsertElementAt(IDRes, pasteNodeIndex++, true);
             dirty = true;
 
             // make sure appropriate bookmark type is set
@@ -420,7 +385,6 @@ function doPaste()
             {
                 // set default bookmark type
                 Bookmarks.Assert(IDRes, typeRes, bmTypeRes, true);
-                debug("Setting default bookmark type\n");
             }
         }
     }
@@ -429,10 +393,7 @@ function doPaste()
         var rdf_ds_interface = Components.interfaces.nsIRDFRemoteDataSource;
         var remote = Bookmarks.QueryInterface(rdf_ds_interface);
         if (remote)
-        {
-            remote.Flush();
-            debug("Wrote out bookmark changes.");
-        }
+          remote.Flush();
     }
     return true;
 }
@@ -444,8 +405,6 @@ function doDelete(promptFlag)
     var select_list = treeNode.selectedItems;
     if (!select_list) return false;
     if (select_list.length < 1) return false;
-
-    debug("# of Nodes selected: " + select_list.length);
 
     if (promptFlag == true)
     {
@@ -493,9 +452,6 @@ function doDelete(promptFlag)
         if (!parentID) parentID = node.parentNode.parentNode.getAttribute("id");
         if (!parentID) continue;
 
-        debug("Node " + nodeIndex + ": " + ID);
-        debug("Parent Node " + nodeIndex + ": " + parentID);
-
         var IDRes = RDF.GetResource(ID);
         if (!IDRes) continue;
         var parentIDRes = RDF.GetResource(parentID);
@@ -510,10 +466,7 @@ function doDelete(promptFlag)
     {
         var remote = Bookmarks.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
         if (remote)
-        {
-            remote.Flush();
-            debug("Wrote out bookmark changes.");
-        }
+          remote.Flush();
     }
 
     return true;
@@ -566,7 +519,7 @@ function OpenBookmarksFind()
 {
     window.openDialog("chrome://communicator/content/bookmarks/bm-find.xul",
                       "FindBookmarksWindow",
-                      "dialog=no,close,chrome,resizable");
+                      "dialog=no,close,chrome,resizable", "bookmarks");
     return true;
 }
 
@@ -641,8 +594,6 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 
 function doContextCmd(cmdName)
 {
-    debug("doContextCmd start: cmd='" + cmdName + "'");
-
     // Do some prompting/confirmation for various bookmark
     // commands that we know about.
     // If we have values to pass it, they are added to the arguments array
@@ -701,7 +652,6 @@ function doContextCmd(cmdName)
               var filename = filePicker.fileURL.spec;
             if ((!filename) || (filename == "")) return false;
 
-            debug("Import: '" + filename + "'\n");
             urlVal = filename;
         }
         catch(ex)
@@ -725,7 +675,6 @@ function doContextCmd(cmdName)
                 filePicker.fileURL.spec &&
                 filePicker.fileURL.spec.length > 0) {
               urlVal = filePicker.fileURL.spec;
-              debug("Export: '" + urlVal + "'\n");
             } else {
               return false;
             }
@@ -775,7 +724,6 @@ function doContextCmd(cmdName)
     if (!urlArc) return false;
 
     var select_list = treeNode.selectedItems;
-    debug("# of Nodes selected: " + select_list.length);
 
     var uri;
     var rdfNode;
@@ -861,8 +809,6 @@ function doContextCmd(cmdName)
 
     // do the command
     compositeDB.DoCommand(selectionArray, cmdResource, argumentsArray);
-
-    debug("doContextCmd ends.");
     return true;
 }
 
@@ -884,42 +830,3 @@ function bookmarkSelect()
     status.setAttribute("value", val);
     return true;
 }
-
-//*==================================================
-// Handy debug routines
-//==================================================
-function dump_attributes(node,depth) {
-  var attributes = node.attributes;
-  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | . ";
-
-  if (!attributes || attributes.length == 0) {
-    debug(indent.substr(indent.length - depth*2) + "no attributes");
-  }
-  for (var ii=0; ii < attributes.length; ii++) {
-    var attr = attributes.item(ii);
-    debug(indent.substr(indent.length - depth*2) + attr.name +"="+attr.value);
-  }
-}
-
-function dump_tree(node) {
-  dump_tree_recur(node, 0, 0);
-}
-
-function dump_tree_recur(node, depth, index) {
-  if (!node) {
-    debug("dump_tree: node is null");
-  }
-  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + ";
-  debug(indent.substr(indent.length - depth*2) + index + " " + node.nodeName);
-  if (node.nodeName != "#text") {
-    //debug(" id="+node.getAttribute('id'));
-    dump_attributes(node, depth);
-  }
-  var kids = node.childNodes;
-  for (var ii=0; ii < kids.length; ii++) {
-    dump_tree_recur(kids[ii], depth + 1, ii);
-  }
-}
-//==================================================
-// end of handy debug routines
-//==================================================*/
