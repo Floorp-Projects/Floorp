@@ -3263,6 +3263,9 @@ MOZ_ARG_ENABLE_BOOL(xft,
 if test "$MOZ_ENABLE_XFT"
 then
     PKG_CHECK_MODULES(MOZ_XFT, xft)
+    if test "$MOZ_ENABLE_GTK2"; then
+        PKG_CHECK_MODULES(_PANGOCHK, pango >= 1.1.0)
+    fi
 fi
 
 AC_SUBST(MOZ_ENABLE_XFT)
