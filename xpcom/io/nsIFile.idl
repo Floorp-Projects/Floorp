@@ -1,0 +1,134 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+// This is the only correct cross-platform way to specify a file.
+// Strings are not such a way. If you grew up on windows or unix, you
+// may think they are. Welcome to reality.
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(c8c0a080-0868-11d3-915f-d9d889d48e3c)]
+interface nsIFile : nsISupports
+{
+    /**
+	 *	 Initialization routines.  These functions shall be called to 
+	 *   setup the nsIFile.  
+	 *
+	 *   InitWithNativeString is called with a **native** path.  For
+	 *   example, on windows this would be "c:\\foo\\bar" and on the
+	 *   mac it would be "Macintosh HD:foo:bar"
+	 *
+	 *   InitWithUnixStyleString is called with a Unix style string.
+	 *   If you are running on unix this is the same as
+	 *   InitWithNativeString.  This strings look like like
+	 *   "/Development/MPW/SysErrs.err"
+	 *  
+	 *  InitWithNSPRStyleString is called with an nspr style string.
+	 *  NSPR expects a UNIX path on unix and Macintosh, but a native 
+	 *  path on windows.  If you want to create a nsIFile form a
+	 *  string that comes back from NSPR, use this call.
+	 *  
+	 */
+	void InitWithNativeString([const] in string filePath);
+	void InitWithUnixStyleString([const] in string filePath);
+	void InitWithNSPRStyleString([const] in string filePath);
+
+	/**
+	 *  Create() will create a new file, directory or symlink in the file system.  
+	 *  Any nodes that have not been created or resolved, will be.
+	 * 
+	 *  type -       TODO
+	 *  attributes - 
+	 */
+	void Create([const] in string type, [const] in string attributes);
+	
+	/**
+	 *	 Accessor to the file name (the leaf name not the full file path) of the file itself.   
+	 */
+	readonly attribute string FileName;
+	
+	/**
+	 *	 Accessor to the native full file path.   
+	 */
+	readonly attribute string NativePath;
+	
+	/**
+	 *	 Accessor to the unix style full file path.   
+	 */
+	readonly attribute string UnixStylePath;
+	
+	/**
+	 *	 Accessor to the nspr style full file path.      
+	 */
+	readonly attribute string NSPRStylePath;
+	
+	/**
+	 *  This will rename the file on disk.  This function will
+	 *  not move file objects.  If the file can not be renamed 
+	 *  an error code will be returned.      
+	 */
+	void Rename([const] in string newName);
+	
+	/**
+	 *  This will copy this file (if created) to the specified 
+	 *  newParentDir.  Permissions will try to be mantained.
+	 */
+	void CopyTo([const] in nsIFile newParentDir);
+	
+	/**
+	 *  This will move (copy then delete) this file (if created) 
+	 *  to the specified newParentDir.  Permissions will try 
+	 *  to be mantained.  If the MoveTo failes, this will not
+	 *  be deleted.
+	 */
+	void MoveTo([const] in nsIFile newParentDir);
+	
+	/**
+	 *  This will try to execute this file.  It will not block for
+	 *  execution.  'args' will be passed through on the command line
+	 *  if the OS supports that.
+	 */
+	void Execute([const] in string args);
+	
+	/**
+	 *  This will try to delete this file.  The 'recursive' flag
+	 *  must be PR_TRUE to delete directories which are not empty.
+	 */
+	void Delete(in boolean recursive);
+
+	/**
+	 *  Attributes of nsIFile.
+	 */
+	attribute unsigned long LastModificationDate;
+		
+	readonly attribute unsigned long Permissions;
+	readonly attribute unsigned long FileSize;
+	readonly attribute unsigned long DiskSpaceAvailable;
+
+	readonly attribute nsIFile Parent;
+	
+	boolean Exists();
+	boolean Writeable();
+	boolean Readable();
+	boolean Directory();
+	boolean File();
+	
+    boolean Hidden();
+	boolean Symlink();
+
+};
