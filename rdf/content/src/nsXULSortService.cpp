@@ -514,7 +514,7 @@ XULSortServiceImpl::GetTreeCellValue(nsIContent *node, nsString & val)
 				PRInt32		numTextFrags;
 				if (NS_SUCCEEDED(rv = text->GetText(textFrags, numTextFrags)))
 				{
-					char *value = textFrags->Get1b();
+					const char *value = textFrags->Get1b();
 					PRInt32 len = textFrags->GetLength();
 					val.SetString(value, len);
 					found = PR_TRUE;
@@ -909,7 +909,7 @@ XULSortServiceImpl::PrintTreeChildren(nsIContent *container, PRInt32 colIndex, P
 				PRInt32		numTextFrags;
 				if (NS_SUCCEEDED(rv = text->GetText(textFrags, numTextFrags)))
 				{
-					char *val = textFrags->Get1b();
+					const char *val = textFrags->Get1b();
 					PRInt32 len = textFrags->GetLength();
 					if (val)	printf("value='%.*s'", len, val);
 				}
