@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.211 $ ';
+$::UtilsVersion = '$Revision: 1.212 $ ';
 
 package TinderUtils;
 
@@ -94,6 +94,9 @@ sub ParseArgs {
         $args->{TestOnly} = 1, next if $arg eq '--testonly';
         $args->{BuildOnce} = 1, next if $arg eq '--once';
         $args->{UseTimeStamp} = 0, next if $arg eq '--notimestamp';
+
+        # debug post-mozilla.pl
+        $args->{SkipMozilla} = 1, next if $arg eq '--skip-mozilla'; 
 
         my %args_with_options = qw(
             --display DisplayServer
@@ -356,7 +359,15 @@ sub SetupPath {
         $Settings::Compiler = 'cc';
         $Settings::mail = '/usr/bin/mail';
         $Settings::Make = '/usr/bin/make';
-        $Settings::DistBin = "dist/Mozilla.app/Contents/MacOS";
+
+        # There should be a way of auto-detecting this, for now
+        # you have to match BuildDebug and --enable-optimize, 
+        # --disable-debug to make things work here.
+        if ($Settings::BuildDebug) {
+            $Settings::DistBin = "dist/MozillaDebug.app/Contents/MacOS";
+        } else {
+            $Settings::DistBin = "dist/Mozilla.app/Contents/MacOS";
+        }
     }
 
     if ($Settings::OS eq 'FreeBSD') {
@@ -729,46 +740,51 @@ sub BuildIt {
             print_log "Previous consecutive build failures: $build_failure_count\n";
         }
 
-        # Make sure we have client.mk
-        unless (-e "$TreeSpecific::name/client.mk") {
 
+        my $build_status = 'none';
+
+        # Allow skipping of mozilla phase.
+        unless ($Settings::SkipMozilla) {
+          
+          # Make sure we have client.mk
+          unless (-e "$TreeSpecific::name/client.mk") {
+            
             # Set CVSROOT here.  We should only need to checkout a new
             # version of client.mk once; we might have more than one
             # cvs tree so set CVSROOT here to avoid confusion.
             $ENV{CVSROOT} = $Settings::moz_cvsroot;
-
+            
             run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/client.mk");
-        }
-
-        # Create toplevel source directory.
-        chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
-
-        # Build it
-        my $build_status = 'none';
-        unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
+          }
+          
+          # Create toplevel source directory.
+          chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
+          
+          # Build it
+          unless ($Settings::TestOnly) { # Do not build if testing smoke tests.
             if ($Settings::OS =~ /^WIN/) {
-                DeleteBinaryDir($binary_dir);
+              DeleteBinaryDir($binary_dir);
             } else {
-                # Delete binary so we can test for it to determine success after building.
-                DeleteBinary($full_binary_name);
-                if($Settings::EmbedTest or $Settings::BuildEmbed) {
-                    DeleteBinary($full_embed_binary_name);
-                }
+              # Delete binary so we can test for it to determine success after building.
+              DeleteBinary($full_binary_name);
+              if ($Settings::EmbedTest or $Settings::BuildEmbed) {
+                DeleteBinary($full_embed_binary_name);
+              }
 
-                # Delete dist directory to avoid accumulating cruft there, some commercial
-                # build processes also need to do this.
-                if (-e $dist_dir) {
-                    print_log "Deleting $dist_dir\n";
-                    File::Path::rmtree($dist_dir, 0, 0);
-                    if (-e "$dist_dir") {
-                        print_log "Error: rmtree('$dist_dir', 0, 0) failed.\n";
-                    }
+              # Delete dist directory to avoid accumulating cruft there, some commercial
+              # build processes also need to do this.
+              if (-e $dist_dir) {
+                print_log "Deleting $dist_dir\n";
+                File::Path::rmtree($dist_dir, 0, 0);
+                if (-e "$dist_dir") {
+                  print_log "Error: rmtree('$dist_dir', 0, 0) failed.\n";
                 }
+              }
             }
             # Build up initial make command.
             my $make = "$Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
             if ($Settings::FastUpdate) {
-                $make = "$Settings::Make -f client.mk fast-update && $Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs' build";
+              $make = "$Settings::Make -f client.mk fast-update && $Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs' build";
             }
 
             # Build up target string.
@@ -782,43 +798,46 @@ sub BuildIt {
             my $status = 0;
             $status = run_shell_command "$make $targets";
             if ($status != 0) {
-                $build_status = 'busted';
+              $build_status = 'busted';
             } elsif (not BinaryExists($full_binary_name)) {
-                print_log "Error: binary not found: $binary_basename\n";
-                $build_status = 'busted';
+              print_log "Error: binary not found: $binary_basename\n";
+              $build_status = 'busted';
             } else {
-                $build_status = 'success';
+              $build_status = 'success';
             }
 
             # TestGtkEmbed is only built by default on certain platforms.
             if ($build_status ne 'busted' and ($Settings::EmbedTest or $Settings::BuildEmbed)) {
-                if (not BinaryExists($full_embed_binary_name)) {
-                    print_log "Error: binary not found: $Settings::EmbedBinaryName\n";
-                    $build_status = 'busted';
-                } else {
-                    $build_status = 'success';
-                }
+              if (not BinaryExists($full_embed_binary_name)) {
+                print_log "Error: binary not found: $Settings::EmbedBinaryName\n";
+                $build_status = 'busted';
+              } else {
+                $build_status = 'success';
+              }
             }
-        }
+          }
 
-        if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
+          if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
             print_log "$binary_basename binary exists, build successful.\n";
 
             if ($Settings::RunMozillaTests) {
-                $build_status = run_all_tests($full_binary_name,
-                                              $full_embed_binary_name,
-                                              $build_dir);
+              $build_status = run_all_tests($full_binary_name,
+                                            $full_embed_binary_name,
+                                            $build_dir);
             } else {
-                print_log "Skipping tests.\n";
-                $build_status = 'success';
+              print_log "Skipping tests.\n";
+              $build_status = 'success';
             }
-        }
+          }
+
+        } # SkipMozilla
 
         #
         #  Run (optional) external, post-mozilla build here.
         #
         my $external_build = "$Settings::BaseDir/post-mozilla.pl";
-        if (-e $external_build and $build_status eq 'success') {
+        if (((-e $external_build) and ($build_status eq 'success')) || 
+            ($Settings::SkipMozilla)) {
             $build_status = PostMozilla::main($build_dir);
         }
 

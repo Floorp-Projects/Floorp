@@ -7,12 +7,14 @@ $DisplayServer = ':0.0';
 #- Default values of command-line opts
 #-
 $BuildDepend       = 1;      # Depend or Clobber
+$BuildDebug        = 0;      # Debug or Opt (Darwin)
 $ReportStatus      = 1;      # Send results to server, or not
 $ReportFinalStatus = 1;      # Finer control over $ReportStatus.
 $UseTimeStamp      = 1;      # Use the CVS 'pull-by-timestamp' option, or not
 $BuildOnce         = 0;      # Build once, don't send results to server
 $TestOnly          = 0;      # Only run tests, don't pull/build
 $BuildEmbed        = 0;      # After building seamonkey, go build embed app.
+$SkipMozilla       = 0;      # Use to debug post-mozilla.pl scripts.
 
 # Tests
 $CleanProfile             = 0;
