@@ -47,6 +47,8 @@ CPPSRCS		= \
 		nsWidgetFactory.cpp \
 		nsToolkit.cpp \
 		nsBidiKeyboard.cpp \
+		nsCommonWidget.cpp \
+		nsLookAndFeel.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
