@@ -341,36 +341,6 @@ nsTableCellMap::InsertCells(nsVoidArray&          aCellFrames,
   }
 }
 
-PRInt32
-nsTableCellMap::RemoveUnusedCols(PRInt32 aMaxToRemove)
-{
-  PRInt32 numColsRemoved = 0;
-  for (PRInt32 colX = mCols.Count() - 1; colX >= 0; colX--) {
-    nsColInfo* colInfo = (nsColInfo *) mCols.ElementAt(colX);
-    if (!colInfo || (colInfo->mNumCellsOrig > 0) || (colInfo->mNumCellsSpan > 0)) {
-      return numColsRemoved;
-    }
-    else { 
-      // remove the col from the cols array
-      colInfo = (nsColInfo *) mCols.ElementAt(colX);
-      mCols.RemoveElementAt(colX);
-      delete colInfo;
-
-      // remove the col entry from each of the maps
-      nsCellMap* cellMap = mFirstMap;
-      while (cellMap) {
-        cellMap->RemoveCol(colX);
-        cellMap = cellMap->GetNextSibling();
-      }
-
-      numColsRemoved++;
-      if (numColsRemoved >= aMaxToRemove) {
-        return numColsRemoved;
-      }
-    }
-  }
-  return numColsRemoved;
-}
 
 void 
 nsTableCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
@@ -821,13 +791,13 @@ PRBool nsCellMap::CellsSpanInOrOut(nsTableCellMap& aMap,
     if (aStartRowIndex > 0) {
       cellData = GetMapCellAt(aMap, aStartRowIndex, colX, PR_TRUE);
       if (cellData && (cellData->IsRowSpan())) {
-        return PR_TRUE; // a cell row spans into
+        return PR_TRUE; // there is a row span into the region
       }
     }
     if (aEndRowIndex < mRowCount - 1) {
       cellData = GetMapCellAt(aMap, aEndRowIndex + 1, colX, PR_TRUE);
       if ((cellData) && (cellData->IsRowSpan())) {
-        return PR_TRUE; // a cell row spans out
+        return PR_TRUE; // there is a row span out of the region
       }
     }
   }
@@ -835,7 +805,14 @@ PRBool nsCellMap::CellsSpanInOrOut(nsTableCellMap& aMap,
     for (PRInt32 rowX = aStartRowIndex; rowX <= aEndRowIndex; rowX++) {
       CellData* cellData = GetMapCellAt(aMap, rowX, aStartColIndex, PR_TRUE);
       if (cellData && (cellData->IsColSpan())) {
-        return PR_TRUE;
+        return PR_TRUE; // there is a col span into the region
+      }
+      nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(rowX));
+      if (row) {
+        cellData = (CellData *)(row->ElementAt(aEndColIndex + 1));
+        if (cellData && (cellData->IsColSpan())) {
+          return PR_TRUE; // there is a col span out of the region 
+        }
       }
     }
   }
@@ -1040,8 +1017,6 @@ void nsCellMap::ExpandWithCells(nsTableCellMap& aMap,
       }
     }
   }
-  // remove any unused cols
-  aMap.RemoveUnusedCols(aMap.GetColCount());
 }
 
 void nsCellMap::ShrinkWithoutRows(nsTableCellMap& aMap,
@@ -1086,9 +1061,6 @@ void nsCellMap::ShrinkWithoutRows(nsTableCellMap& aMap,
 
     // Decrement our row and next available index counts.
     mRowCount--;
-
-    // remove cols that may not be needed any more due to the removal of the rows
-    aMap.RemoveUnusedCols(colCount);
   }
 }
 
@@ -1259,9 +1231,6 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
       }
     }
   }
-
-  // remove cols that may not be needed any more due to the removal of the cell
-  aMap.RemoveUnusedCols(aMap.GetColCount());
 }
 
 void
@@ -1369,8 +1338,6 @@ nsCellMap::RebuildConsideringRows(nsIPresContext* aPresContext,
     delete row;
   }
   delete [] origRows;
-  // remove any unused cols
-  aMap.RemoveUnusedCols(aMap.GetColCount());
 }
 
 void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
@@ -1463,16 +1430,13 @@ void nsCellMap::RemoveCell(nsTableCellMap&   aMap,
 
   PRBool isZeroRowSpan;
   PRInt32 rowSpan = GetRowSpan(aMap, aRowIndex, startColIndex, PR_FALSE, isZeroRowSpan);
-#if 0 // A bunch of unused stuff assuming no function call side effects
-  PRInt32 endRowIndex = aRowIndex + rowSpan - 1;
-  PRBool isZeroColSpan;
-  PRInt32 endColIndex = startColIndex + 
-    GetEffectiveColSpan(aMap, aRowIndex, startColIndex, isZeroColSpan) - 1;
   // record whether removing the cells is going to cause complications due 
   // to existing row spans, col spans or table sizing. 
-#endif
   PRBool spansCauseRebuild = CellsSpanInOrOut(aMap, aRowIndex, aRowIndex + rowSpan - 1, 
                                               startColIndex, numCols - 1);
+  // XXX if the cell has a col span to the end of the map, and the end has no originating 
+  // cells, we need to assume that this the only such cell, and rebuild so that there are 
+  // no extraneous cols at the end. The same is true for removing rows.
 
   if (spansCauseRebuild) {
     RebuildConsideringCells(aMap, nsnull, aRowIndex, startColIndex, PR_FALSE);

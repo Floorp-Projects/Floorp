@@ -909,8 +909,6 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
           availWidth = CalculateCellAvailableWidth(aReflowState.tableFrame,
                                                    kidFrame, cellColIndex,
                                                    cellColSpan, cellSpacingX);
-          if (aReflowState.x + availWidth > aReflowState.reflowState.mComputedWidth)
-            availWidth -= (aReflowState.x + availWidth - aReflowState.reflowState.mComputedWidth);
         }
         
         // remember the rightmost (ltr) or leftmost (rtl) column this cell spans into
