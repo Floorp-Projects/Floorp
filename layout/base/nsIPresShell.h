@@ -160,6 +160,9 @@ public:
   NS_IMETHOD GetStyleSet(nsIStyleSet** aResult) = 0;
   nsIStyleSet* GetStyleSet() { return mStyleSet; }
 
+  NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const = 0;
+  nsIFrameManager* GetFrameManager() { return mFrameManager; }
+
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle) = 0;
 
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle) = 0;
@@ -402,11 +405,6 @@ public:
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
 
   /**
-   * Returns the frame manager object
-   */
-  NS_IMETHOD GetFrameManager(nsIFrameManager** aFrameManager) const = 0;
-
-  /**
    * Notify the Clipboard that we have something to copy.
    */
   NS_IMETHOD DoCopy() = 0;
@@ -622,6 +620,7 @@ protected:
   nsIPresContext*           mPresContext;   // [STRONG]
   nsIStyleSet*              mStyleSet;      // [STRONG]
   nsIViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
+  nsIFrameManager*          mFrameManager;  // [STRONG]
 };
 
 /**

@@ -1320,7 +1320,6 @@ protected:
   PRInt16                       mSelectionFlags;
   PRPackedBool                  mScrollingEnabled; //used to disable programmable scrolling from outside
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
-  nsIFrameManager*              mFrameManager;  // we hold a reference
   PresShellViewEventListener    *mViewEventListener;
   nsCOMPtr<nsIEventQueueService> mEventQueueService;
   nsCOMPtr<nsIEventQueue>       mReflowEventQueue;
