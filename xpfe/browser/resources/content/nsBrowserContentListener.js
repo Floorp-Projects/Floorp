@@ -96,9 +96,9 @@ nsBrowserContentListener.prototype =
     },
     QueryInterface: function(iid)
     {
-        if (iid.equals(Components.interfaces.nsIURIContentListener))
-            return this;
-        if (iid.equals(Components.interfaces.nsISupportsWeakReference))
+        if (iid.equals(Components.interfaces.nsIURIContentListener) ||
+            iid.equals(Components.interfaces.nsISupportsWeakReference) ||
+            iid.equals(Components.interfaces.nsISupports))
             return this;
         throw Components.results.NS_NOINTERFACE;
 
