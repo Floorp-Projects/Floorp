@@ -230,14 +230,14 @@ nsSecureBrowserUIImpl::OnStartDocumentLoad(nsIDocumentLoader* aLoader,
             GetBundleString("LeaveSiteMessage", message);
             GetBundleString("DontShowAgain", dontShowAgain);
 
-            PRBool outCheckValue = PR_FALSE;
+            PRBool outCheckValue = PR_TRUE;
 			dialog->AlertCheck(mWindow, 
                                windowTitle.GetUnicode(), 
                                message.GetUnicode(), 
                                dontShowAgain.GetUnicode(), 
                                &outCheckValue);
             
-            if (outCheckValue)
+            if (!outCheckValue)
             {
                 mPref->SetBoolPref(LEAVE_SITE_PREF, PR_FALSE);
 		        NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
@@ -266,14 +266,14 @@ nsSecureBrowserUIImpl::OnStartDocumentLoad(nsIDocumentLoader* aLoader,
             GetBundleString("EnterSiteMessage", message);
             GetBundleString("DontShowAgain", dontShowAgain);
 
-            PRBool outCheckValue = PR_FALSE;
+            PRBool outCheckValue = PR_TRUE;
 			dialog->AlertCheck(mWindow, 
                                windowTitle.GetUnicode(), 
                                message.GetUnicode(), 
                                dontShowAgain.GetUnicode(), 
                                &outCheckValue);
             
-            if (outCheckValue)
+            if (!outCheckValue)
             {
                 mPref->SetBoolPref(ENTER_SITE_PREF, PR_FALSE);
                 NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
@@ -404,7 +404,7 @@ nsSecureBrowserUIImpl::OnStartURLLoad(nsIDocumentLoader* loader,
             GetBundleString("MixedContentMessage", message);
             GetBundleString("DontShowAgain", dontShowAgain);
 
-            PRBool outCheckValue = PR_FALSE;
+            PRBool outCheckValue = PR_TRUE;
 			
             dialog->AlertCheck(mWindow, 
                                windowTitle.GetUnicode(), 
@@ -412,7 +412,7 @@ nsSecureBrowserUIImpl::OnStartURLLoad(nsIDocumentLoader* loader,
                                dontShowAgain.GetUnicode(), 
                                &outCheckValue);
             
-            if (outCheckValue)
+            if (!outCheckValue)
             {
                 mPref->SetBoolPref(MIXEDCONTENT_PREF, PR_FALSE);
                 NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
