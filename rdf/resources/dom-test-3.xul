@@ -5,7 +5,7 @@ This test exercises creation of DOM elements from the XUL document. It
 creates a bookmark element and tries to insert it.
 
 -->
-<?xml-stylesheet href="dom-test-1.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
 
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"

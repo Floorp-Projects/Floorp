@@ -1,82 +1,132 @@
-<?xml version="1.0"?>
-<?xml-stylesheet href="dom-test-1.css" type="text/css"?>
+<?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
+<!--
 
-<xul:window
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<!--
+
+  This test exercises some simple DOM manipulation on a tree control
+
+-->
+
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+
+<window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  align="vertical">
 
-<html:script>
-function RemovePersonalToolbar()
-{
-  var personalToolbarFolder = document.getElementById("NC:PersonalToolbarFolder");
-  dump("personalToolbarFolder = " + personalToolbarFolder + "\n");
-  if (personalToolbarFolder == null)
-    return;
-
-  var bookmarksRoot = document.getElementById("NC:BookmarksRoot");
-  dump("bookmarksRoot = " + bookmarksRoot + "\n");
-  if (bookmarksRoot == null)
-    return;
-
-  bookmarksRoot.removeChild(personalToolbarFolder);
-}
-
-function AddPersonalToolbar()
-{
-  var bookmarksRoot = document.getElementById("NC:BookmarksRoot");
-  dump("bookmarksRoot = " + bookmarksRoot + "\n");
-  if (bookmarksRoot == null)
-    return;
-
-  var personalToolbarFolder = document.getElementById("NC:PersonalToolbarFolder");
-  dump("personalToolbarFolder = " + personalToolbarFolder + "\n");
-  if (personalToolbarFolder != null) // already there
-    return;
-
-  personalToolbarFolder = document.createElement("xul:treeitem");
-  personalToolbarFolder.setAttribute("id", "NC:PersonalToolbarFolder");
-  bookmarksRoot.appendChild(personalToolbarFolder);
-}
-
-function MutateBody()
-{
-  // This test changes the "id" attribute on the treebody
-  var tree = document.getElementById("tree");
-  dump("tree = " + tree + "\n");
-
-  var body = tree.childNodes[3]; // two treecols, a treehead, and a treebody
-  dump("body = " + body + "\n");
-
-  var currentId = body.getAttribute("id");
-  dump("currentId = " + currentId + "\n");
-
-  if (currentId == "NC:BookmarksRoot") {
-    body.setAttribute("id", "NC:PersonalToolbarFolder");
-  }
-  else {
-    body.setAttribute("id", "NC:BookmarksRoot");
-  }
-}
+  <html:script>
+  function RemovePersonalToolbar()
+  {
+    var personalToolbarFolder = document.getElementById("NC:PersonalToolbarFolder");
+    dump("personalToolbarFolder = " + personalToolbarFolder + "\n");
+    if (personalToolbarFolder == null)
+      return;
   
-</html:script>
+    var bookmarksRoot = document.getElementById("NC:BookmarksRoot");
+    dump("bookmarksRoot = " + bookmarksRoot + "\n");
+    if (bookmarksRoot == null)
+      return;
+  
+    bookmarksRoot.removeChild(personalToolbarFolder);
+  }
+  
+  function AddPersonalToolbar()
+  {
+    var bookmarksRoot = document.getElementById("NC:BookmarksRoot");
+    dump("bookmarksRoot = " + bookmarksRoot + "\n");
+    if (bookmarksRoot == null)
+      return;
+  
+    var personalToolbarFolder = document.getElementById("NC:PersonalToolbarFolder");
+    dump("personalToolbarFolder = " + personalToolbarFolder + "\n");
+    if (personalToolbarFolder != null) // already there
+      return;
+  
+    personalToolbarFolder = document.createElement("xul:treeitem");
+    personalToolbarFolder.setAttribute("id", "NC:PersonalToolbarFolder");
+    bookmarksRoot.appendChild(personalToolbarFolder);
+  }
+  
+  function MutateBody()
+  {
+    // This test changes the "id" attribute on the treebody
+    var tree = document.getElementById("tree");
+    dump("tree = " + tree + "\n");
 
-<html:button onclick="RemovePersonalToolbar();">Remove Personal Toolbar</html:button>
-<html:button onclick="AddPersonalToolbar();">Add Personal Toolbar</html:button>
-<html:button onclick="MutateBody();">MutateBody</html:button>
+    var body = tree.childNodes[2]; // template, treehead, treechildren
+    dump("body = " + body + "\n");
 
-<tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-  <treehead>
-    <treeitem>
-      <treecell>Name</treecell>
-      <treecell>URL</treecell>
-    </treeitem>
-  </treehead>
+    var currentRef = body.getAttribute("ref");
+    dump("currentRef = " + currentRef + "\n");
 
-  <treebody id="NC:BookmarksRoot">
-  </treebody>
-</tree>
+    if (currentRef == "NC:BookmarksRoot") {
+      body.setAttribute("ref", "NC:PersonalToolbarFolder");
+    }
+    else {
+      body.setAttribute("ref", "NC:BookmarksRoot");
+    }
+  }
+  </html:script>
 
-</xul:window>
+  <box align="horizontal">  
+    <html:button onclick="RemovePersonalToolbar();">Remove Personal Toolbar</html:button>
+    <html:button onclick="AddPersonalToolbar();">Add Personal Toolbar</html:button>
+    <html:button onclick="MutateBody();">Swap Body (Bookmarks Root/Personal Toolbar Folder)</html:button>
+  </box>
+
+  <tree id="tree" datasources="rdf:bookmarks" onclick="return OpenURL(event,event.target.parentNode);">
+    <template>
+      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
+         <treeitem uri="...">
+           <treerow>
+             <treecell>
+               <html:hr width="75%" align="center" size="1" />
+             </treecell>
+           </treerow>
+         </treeitem>  		
+       </rule>
+
+       <rule rootcontainment="treechildren" subcontainment="treechildren">
+         <treeitem uri="...">
+           <treerow>
+             <treecell>
+               <treeindentation />
+               <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+             </treecell>
+             <treecell>
+               <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+             </treecell>
+           </treerow>
+         </treeitem>
+       </rule>
+    </template>
+
+    <treehead>
+      <treerow>
+        <treecell>Name</treecell>
+        <treecell>URL</treecell>
+      </treerow>
+    </treehead>
+
+    <treechildren id="treeroot" ref="NC:BookmarksRoot" open="true" />
+  </tree>
+
+</window>

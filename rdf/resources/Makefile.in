@@ -36,7 +36,6 @@ FILES = \
 	dialogWindow.xul                \
 	sidebar-registry.rdf            \
 	document.gif			\
-	dom-test-1.css			\
 	dom-test-1.xul			\
 	dom-test-2.xul			\
 	dom-test-3.xul			\
@@ -45,6 +44,7 @@ FILES = \
 	dom-test-5.xul			\
 	dom-test-6.xul			\
 	dom-test-7.xul			\
+	dom-test-8.xul			\
 	flash-registry.rdf		\
 	flash.css			\
 	flash.js			\
