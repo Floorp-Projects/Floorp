@@ -1234,7 +1234,7 @@ strings semantics
 
   >  foo(const PRUnichar* s) {
   >    nsAutoString str(s);
-  >    bar(str.GetUnicode());
+  >    bar(str.get());
   >  }
 
   >where s is null, bar will get passed a zero-length PRUnichar
@@ -1294,7 +1294,7 @@ Subject: Re: NS_LITERAL_STRING is broken
 <pre>
 const char* foobar = "foobar";
 
-... NS_LITERAL_STRING(foobar).GetUnicode() ...
+... NS_LITERAL_STRING(foobar).get() ...
 </pre>
 </div>
 
@@ -1999,7 +1999,7 @@ Subject: Re: how to free an nsString::ToNewCString
 
 <hr>
 
-<p>You use several <span class="code">NS_ConvertASCIItoUCS2("...").GetUnicode()</span>, these should be
+<p>You use several <span class="code">NS_ConvertASCIItoUCS2("...").get()</span>, these should be
 
   NS_LITERAL_STRING("...").get()
 
