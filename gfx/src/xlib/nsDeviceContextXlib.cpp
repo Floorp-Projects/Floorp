@@ -190,6 +190,13 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::CreateRenderingContext()\n"));
 
+#ifdef NS_PRINT_PREVIEW
+  /* Defer to Alt when there is one */
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC)) {
+    return mAltDC->CreateRenderingContext(aContext);
+  }
+#endif /* NS_PRINT_PREVIEW */
+
   nsIRenderingContext      *context;
   nsDrawingSurfaceXlibImpl *surface = nsnull;
   nsresult                  rv;
@@ -342,6 +349,13 @@ NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
+#ifdef NS_PRINT_PREVIEW                                                         
+  /* Defer to Alt when there is one */
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_SURFACE_DIM)) {
+    return mAltDC->GetDeviceSurfaceDimensions(aWidth, aHeight);
+  }
+#endif /* NS_PRINT_PREVIEW */
+ 
   if (mWidth == -1)
     mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
 
