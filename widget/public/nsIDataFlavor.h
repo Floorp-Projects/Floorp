@@ -33,11 +33,14 @@
 //const char * kAOLMailMime = "AOLMAIL";
 //const char * kImageMime   = "text/image";
 
-#define kTextMime    "text/text"
-#define kUnicodeMime "text/unicode"
-#define kHTMLMime    "text/html"
-#define kAOLMailMime "AOLMAIL"
-#define kImageMime   "text/image"
+#define kTextMime      "text/txt"
+#define kXIFMime       "text/xif"
+#define kUnicodeMime   "text/unicode"
+#define kHTMLMime      "text/html"
+#define kAOLMailMime   "AOLMAIL"
+#define kPNGImageMime  "image/png"
+#define kJPEGImageMime "image/jpg"
+#define kGIFImageMime  "image/gif"
 
 class nsIDataFlavor : public nsISupports {
 
