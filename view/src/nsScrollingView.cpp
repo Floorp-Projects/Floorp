@@ -238,6 +238,7 @@ nsScrollingView :: nsScrollingView()
   mVScrollBarView = nsnull;
   mHScrollBarView = nsnull;
   mCornerView = nsnull;
+  mScrollPref = nsScrollPreference_kAuto;
 }
 
 nsScrollingView :: ~nsScrollingView()
@@ -690,7 +691,9 @@ void nsScrollingView :: ComputeContainerSize()
 
       if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollh))
       {
-        if (mSizeX > mBounds.width)
+        if (((mSizeX > mBounds.width) &&
+            (mScrollPref != nsScrollPreference_kNeverScroll)) ||
+            (mScrollPref == nsScrollPreference_kAlwaysScroll))
           scrollh->Release(); //DO NOT USE NS_RELEASE()! MMP
         else
           NS_RELEASE(scrollh); //MUST USE NS_RELEASE()! MMP
@@ -708,11 +711,12 @@ void nsScrollingView :: ComputeContainerSize()
 
       if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollv))
       {
-        if (mSizeY > mBounds.height)
+        if ((mSizeY > mBounds.height) && (mScrollPref != nsScrollPreference_kNeverScroll))
         {
           //we need to be able to scroll
 
           mVScrollBarView->SetVisibility(nsViewVisibility_kShow);
+          win->Enable(PR_TRUE);
 
           //now update the scroller position for the new size
 
@@ -729,8 +733,18 @@ void nsScrollingView :: ComputeContainerSize()
         {
           mOffsetY = 0;
           dy = NS_TO_INT_ROUND(scale * offy);
-          mVScrollBarView->SetVisibility(nsViewVisibility_kHide);
-          NS_RELEASE(scrollv);
+
+          if (mScrollPref == nsScrollPreference_kAlwaysScroll)
+          {
+            mVScrollBarView->SetVisibility(nsViewVisibility_kShow);
+            win->Enable(PR_FALSE);
+          }
+          else
+          {
+            mVScrollBarView->SetVisibility(nsViewVisibility_kHide);
+            win->Enable(PR_TRUE);
+            NS_RELEASE(scrollv);
+          }
         }
 
         //don't release the vertical scroller here because if we need to
@@ -749,11 +763,12 @@ void nsScrollingView :: ComputeContainerSize()
 
       if (NS_OK == win->QueryInterface(kscroller, (void **)&scrollh))
       {
-        if (mSizeX > mBounds.width)
+        if ((mSizeX > mBounds.width) && (mScrollPref != nsScrollPreference_kNeverScroll))
         {
           //we need to be able to scroll
 
           mHScrollBarView->SetVisibility(nsViewVisibility_kShow);
+          win->Enable(PR_TRUE);
 
           //now update the scroller position for the new size
 
@@ -775,7 +790,17 @@ void nsScrollingView :: ComputeContainerSize()
         {
           mOffsetX = 0;
           dx = NS_TO_INT_ROUND(scale * offx);
-          mHScrollBarView->SetVisibility(nsViewVisibility_kHide);
+
+          if (mScrollPref == nsScrollPreference_kAlwaysScroll)
+          {
+            mHScrollBarView->SetVisibility(nsViewVisibility_kShow);
+            win->Enable(PR_FALSE);
+          }
+          else
+          {
+            mHScrollBarView->SetVisibility(nsViewVisibility_kHide);
+            win->Enable(PR_TRUE);
+          }
         }
 
         NS_RELEASE(scrollh);
@@ -874,6 +899,17 @@ PRBool nsScrollingView :: GetShowQuality(void)
 void nsScrollingView :: SetQuality(nsContentQuality aQuality)
 {
   ((CornerView *)mCornerView)->SetQuality(aQuality);
+}
+
+void nsScrollingView :: SetScrollPreference(nsScrollPreference aPref)
+{
+  mScrollPref = aPref;
+  ComputeContainerSize();
+}
+
+nsScrollPreference nsScrollingView :: GetScrollPreference(void)
+{
+  return mScrollPref;
 }
 
 void nsScrollingView :: AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float scale)
