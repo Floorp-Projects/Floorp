@@ -49,7 +49,7 @@ var hideDetailsAccessKey = "";
 
 function onload()
 {
-  doSetOKCancel(cookieAccept);
+  doSetOKCancel(cookieAccept, cookieDeny);
 
   var dialog = document.documentElement;
 
@@ -126,9 +126,6 @@ function onload()
         messageParent.appendChild(descriptionNode);
       }
 
-      // Must we remember the decision?
-      params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
-
       if (cookie) {
         document.getElementById('ifl_name').setAttribute("value",cookie.name);
         document.getElementById('ifl_value').setAttribute("value",cookie.value);
@@ -146,6 +143,8 @@ function onload()
       }
       // set default result to not accept the cookie
       params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, 0);
+      // and to not persist
+      params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, 0);
     } catch (e) {
     }
   }
@@ -167,15 +166,21 @@ function showhideinfo()
   sizeToContent();
 }
 
-function onChangePersistence()
-{
-  params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
-}
-
 function cookieAccept()
 {
   // say that the cookie was accepted
   params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, 1); 
+  // And remember that when needed
+  params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
+  window.close();
+}
+
+function cookieDeny()
+{
+  // say that the cookie was rejected
+  params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, 0); 
+  // And remember that when needed
+  params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
   window.close();
 }
 
