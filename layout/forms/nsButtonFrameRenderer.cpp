@@ -330,7 +330,7 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
   // see if the outline has changed.
 //  nsCOMPtr<nsIStyleContext> oldOutline = mOutlineStyle;
 
-	nsCOMPtr<nsIAtom> atom (do_QueryInterface(NS_NewAtom(":-moz-outline")));
+	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-outline")) );
 	aPresContext.ProbePseudoStyleContextFor(content, atom, context,
 										  PR_FALSE,
 										  getter_AddRefs(mOutlineStyle));
@@ -344,7 +344,7 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
   */
 
     // style for the inner such as a dotted line (Windows)
-	atom = do_QueryInterface(NS_NewAtom(":-moz-focus-inner"));
+	atom = getter_AddRefs(NS_NewAtom(":-moz-focus-inner"));
 	aPresContext.ProbePseudoStyleContextFor(content, atom, context,
 										  PR_FALSE,
 										  getter_AddRefs(mInnerFocusStyle));
@@ -352,7 +352,7 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
 
 
 	// style for outer focus like a ridged border (MAC).
-	atom = do_QueryInterface(NS_NewAtom(":-moz-focus-outer"));
+	atom = getter_AddRefs(NS_NewAtom(":-moz-focus-outer"));
 	aPresContext.ProbePseudoStyleContextFor(content, atom, context,
 										  PR_FALSE,
 										  getter_AddRefs(mOuterFocusStyle));
