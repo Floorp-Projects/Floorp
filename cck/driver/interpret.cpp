@@ -1279,6 +1279,22 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					CopyDir(from, to, NULL, TRUE);
 				}
 			}
+			else if (strcmp(pcmd, "ChangeCheckboxState") == 0)
+			{
+				// Change state and visibility of target widget/checkbox depending 
+				// on whether the current widget/checkbox is checked or unchecked
+				WIDGET *tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
+				if (curWidget)
+				{
+					if ((curWidget->value) == "1")
+						tmpWidget->control->EnableWindow(TRUE);
+					else
+					{
+						((CButton*)tmpWidget->control)->SetCheck(0);
+						tmpWidget->control->EnableWindow(FALSE);
+					}
+				}
+			}
 			else if (strcmp(pcmd, "DisableFields") == 0)
 			{
 				// Disable widgets specified in parms list
@@ -1471,8 +1487,12 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
         
         if (str[0] == '1')
         {
-          SetGlobal("QuicklaunchDialog","TRUE");
-          SetGlobal("QuicklaunchEnabled","TRUE");
+			if ((CWizardUI::GetScreenValue(findWidget("QuickLauncherLocked"))) == "1")
+			// check if Quick launch is locked
+				SetGlobal("QuicklaunchDialog","FALSE");
+			else
+				SetGlobal("QuicklaunchDialog","TRUE");
+			SetGlobal("QuicklaunchEnabled","TRUE");
         }
         else
         {
