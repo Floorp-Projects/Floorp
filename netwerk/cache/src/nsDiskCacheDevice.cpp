@@ -631,8 +631,15 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 
     NS_ASSERTION(binding->mRecord.ValidRecord(), "bad record");
 
+    PRUint32  newSize = entry->DataSize() + deltaSize;
+    if (newSize > mCacheCapacity) {
+        nsresult rv = nsCacheService::GlobalInstance()->DoomEntry_Locked(entry);
+        NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry_Locked() failed.");
+        return NS_ERROR_ABORT;
+    }
+
     PRUint32  sizeK = ((entry->DataSize() + 0x0399) >> 10); // round up to next 1k
-    PRUint32  newSizeK =  ((entry->DataSize() + deltaSize + 0x399) >> 10);
+    PRUint32  newSizeK =  ((newSize + 0x399) >> 10);
 
     NS_ASSERTION((sizeK < USHRT_MAX) && (sizeK == binding->mRecord.DataFileSize()),
                  "data size out of sync");
