@@ -136,22 +136,24 @@ function DeleteProfile( deleteFiles )
 {
   var profileTree = document.getElementById( "profiles" );
   var profileKids = document.getElementById( "profilekids" )
-  var selected = profileTree.selectedItems[0];
-  var firstAdjacent = selected.previousSibling;
-  var name = selected.getAttribute( "rowName" );
-  try {
-    profile.deleteProfile( name, deleteFiles );
-    profileKids.removeChild( selected );
+  if (profileTree.selectedItems && profileTree.selectedItems.length) {
+    var selected = profileTree.selectedItems[0];
+    var firstAdjacent = selected.previousSibling;
+    var name = selected.getAttribute( "rowName" );
+    try {
+      profile.deleteProfile( name, deleteFiles );
+      profileKids.removeChild( selected );
+    }
+    catch (ex) {
+      var lString = bundle.GetStringFromName("deletefailed");
+      lString = lString.replace(/\s*<html:br\/>/g,"\n");
+      alert( lString );
+    }
+    if( firstAdjacent )
+      profileTree.selectItem( firstAdjacent );
+    // set the button state
+    DoEnabling();
   }
-  catch (ex) {
-    var lString = bundle.GetStringFromName("deletefailed");
-    lString = lString.replace(/\s*<html:br\/>/g,"\n");
-    alert( lString );
-  }
-  if( firstAdjacent )
-    profileTree.selectCell( firstAdjacent );
-  // set the button state
-  DoEnabling();
 }
 
 function ConfirmMigrateAll()

@@ -79,6 +79,7 @@ function chooseProfileFolder( aRootFolder )
   }
   if( aRootFolder ) {
     var folderText = document.getElementById("ProfileDir");
+    dump("*** setting rootFolderAttribute to " + aRootFolder + "\n");
     folderText.setAttribute( "rootFolder", aRootFolder );
     if ( aRootFolder != top.profile.defaultProfileParentDir.nativePath )
       document.getElementById( "useDefault" ).removeAttribute("disabled");

@@ -108,7 +108,7 @@ function onFinish()
 
   var profName = wizardManager.WSM.PageData["newProfile1_2"].ProfileName.value;
   dump("**** profName: "+ profName + "\n");
-  var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.rootFolder;
+  var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
 
   // Get langcode
   var langcode = window.frames["content"].document.getElementById("langList").selectedItem.getAttribute("data");
