@@ -32,14 +32,14 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://messenger/content/msgFolderPickerOverlay.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
 
-  <menu class="push" label="&newfolderclickhere.label;" uri="" id="msgNewFolderPicker" 
+  <menulist label="&newfolderclickhere.label;" id="msgNewFolderPicker" 
     sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"
     sortDirection="ascending"
     datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
     ref="msgaccounts:/">
         <template>
           <rule nc:CanCreateSubfolders="true" nc:CanCreateFoldersOnServer="true" iscontainer="true" isempty="false">
-            <menupopup>
+            <menupopup class="menulist-menupopup">
               <menu uri="..." class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgNewFolderPicker')"
         SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
@@ -82,7 +82,7 @@ Rights Reserved.
           </rule>
   </template>
   <menupopup />
-  </menu>
+  </menulist>
 
   <menulist label="&renamefolderclickhere.label;" uri=""
     id="msgRenameFolderPicker"

@@ -53,10 +53,7 @@
 
     <text value="&description.label;" class="label" accesskey="&description.accesskey;" for="msgNewFolderPicker"/>
 
-    <hbox>
-      <menu id="msgNewFolderPicker" oncommand="doEnabling();" crop="right" flex="1"/>
-      <spacer flex="1"/>
-    </hbox>
+    <menulist id="msgNewFolderPicker" oncommand="doEnabling();" crop="right"/>
 
     <vbox hidden="true" id="newFolderTypeBox">
 
