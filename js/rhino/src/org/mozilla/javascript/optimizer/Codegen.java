@@ -1312,6 +1312,7 @@ class BodyCodegen
                                    +"Lorg/mozilla/javascript/Scriptable;"
                                    +"[Ljava/lang/Object;"
                                    +")Lorg/mozilla/javascript/Scriptable;");
+        	cfw.addAStore(variableObjectLocal);
             debugVariableName = "activation";
         } else {
             cfw.addALoad(contextLocal);
@@ -1325,10 +1326,9 @@ class BodyCodegen
                                    +"Lorg/mozilla/javascript/NativeFunction;"
                                    +"Lorg/mozilla/javascript/Scriptable;"
                                    +"Z"
-                                   +")Lorg/mozilla/javascript/Scriptable;");
+                                   +")V");
             debugVariableName = "global";
         }
-        cfw.addAStore(variableObjectLocal);
 
         int functionCount = scriptOrFn.getFunctionCount();
         for (int i = 0; i != functionCount; i++) {

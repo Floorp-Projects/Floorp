@@ -1876,10 +1876,10 @@ public class ScriptRuntime {
         }
     }
 
-    public static Scriptable initScript(Context cx, Scriptable scope,
-                                        NativeFunction funObj,
-                                        Scriptable thisObj,
-                                        boolean fromEvalCode)
+    public static void initScript(Context cx, final Scriptable scope,
+                                  NativeFunction funObj,
+                                  Scriptable thisObj,
+                                  boolean fromEvalCode)
     {
         String[] argNames = funObj.argNames;
         if (argNames != null) {
@@ -1908,8 +1908,6 @@ public class ScriptRuntime {
                 }
             }
         }
-
-        return scope;
     }
 
     public static Scriptable runScript(Script script) {
