@@ -38,7 +38,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.30 2003/02/27 01:31:34 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.31 2003/03/26 00:31:13 wtc%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -1260,6 +1260,9 @@ ssl_GetWrappingKey( PRInt32                   symWrapMechIndex,
  */
 extern PRBool
 ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk);
+
+/* get rid of the symmetric wrapping key references. */
+extern SECStatus SSL3_ShutdownServerCache(void);
 
 /********************** misc calls *********************/
 

@@ -115,3 +115,9 @@ SSL_SetMaxServerCacheLocks;
 ;+    local:
 ;+*;
 ;+};
+;+NSS_3.7.4 {       # NSS 3.7.4 release
+;+    global:
+SSL_ShutdownServerSessionIDCache;
+;+    local:
+;+*;
+;+};

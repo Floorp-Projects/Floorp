@@ -37,7 +37,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.51 2003/03/13 16:36:43 relyea%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.52 2003/03/26 00:31:12 wtc%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -3320,6 +3320,33 @@ typedef struct {
     PK11SymKey *      symWrapKey[kt_kea_size];
 } ssl3SymWrapKey;
 
+static PZLock *          symWrapKeysLock;
+static ssl3SymWrapKey    symWrapKeys[SSL_NUM_WRAP_MECHS];
+
+SECStatus
+SSL3_ShutdownServerCache(void)
+{
+    int             i, j;
+
+    if (!symWrapKeysLock)
+    	return SECSuccess;	/* was never initialized */
+    PZ_Lock(symWrapKeysLock);
+    /* get rid of all symWrapKeys */
+    for (i = 0; i < SSL_NUM_WRAP_MECHS; ++i) {
+    	for (j = 0; j < kt_kea_size; ++j) {
+	    PK11SymKey **   pSymWrapKey;
+	    pSymWrapKey = &symWrapKeys[i].symWrapKey[j];
+	    if (*pSymWrapKey) {
+		PK11_FreeSymKey(*pSymWrapKey);
+	    	*pSymWrapKey = NULL;
+	    }
+	}
+    }
+
+    PZ_Unlock(symWrapKeysLock);
+    return SECSuccess;
+}
+
 /* Try to get wrapping key for mechanism from in-memory array.
  * If that fails, look for one on disk.
  * If that fails, generate a new one, put the new one on disk,
@@ -3343,9 +3370,6 @@ getWrappingKey( sslSocket *       ss,
     SECStatus                rv;
     SECItem                  wrappedKey;
     SSLWrappedSymWrappingKey wswk;
-
-    static PZLock *          symWrapKeysLock;
-    static ssl3SymWrapKey    symWrapKeys[SSL_NUM_WRAP_MECHS];
 
     svrPrivKey  = ss->serverCerts[exchKeyType].serverKey;
     PORT_Assert(svrPrivKey != NULL);
