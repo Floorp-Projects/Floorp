@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-MODULE = necko
+MODULE = nkcache
 XPIDL_MODULE = necko_cache
 
 DEPTH = ..\..\..
