@@ -27,7 +27,7 @@
 
 use diagnostics;
 use strict;
-use Chart::Lines;
+eval "use Chart::Lines";
 
 require "CGI.pl";
 require "globals.pl";
@@ -114,7 +114,9 @@ FIN
 sub choose_product
 	{
 	my $product_popup = make_options (\@myproducts, $myproducts[0]);
-	my $charts = (-d $dir) ? "<option value=\"show_chart\">Bug Charts" : "";
+	my $charts = defined $Chart::Lines::VERSION && -d $dir ? "<option value=\"show_chart\">Bug Charts" : "";
+	# get rid of warning:
+	$Chart::Lines::VERSION = $Chart::Lines::VERSION;
 
 	print <<FIN;
 <center>
