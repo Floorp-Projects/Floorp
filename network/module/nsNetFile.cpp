@@ -848,7 +848,7 @@ PRIntn nsNetFile::convertToPRFlag(nsFileMode aMode) {
         case nsReadWriteBinary:
             return PR_RDWR;
         case nsOverWrite:
-            return (PR_TRUNCATE | PR_WRONLY);
+            return (PR_TRUNCATE | PR_WRONLY | PR_CREATE_FILE);
         default:
             return PR_RDONLY;
     }
