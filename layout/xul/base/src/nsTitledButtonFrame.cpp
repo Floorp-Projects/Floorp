@@ -246,15 +246,16 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::align, align);
   setAlignment(align); 
 
-
+/*
   // get the alignment
   nsAutoString disabled;
   mContent->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::disabled, disabled);
   SetDisabled(disabled);
 
   // defer the update
-  if (!mRenderer.isEnabled())
+  if (mRenderer.isDisabled())
 	 mUpdateHappendedInInit = PR_TRUE;
+*/
 
   return rv;
 }
@@ -263,9 +264,9 @@ void
 nsTitledButtonFrame::SetDisabled(nsAutoString aDisabled)
 {
   if (aDisabled.EqualsIgnoreCase("true"))
-     mRenderer.SetEnabled(PR_FALSE);
+     mRenderer.SetDisabled(PR_TRUE, PR_TRUE);
   else
-	 mRenderer.SetEnabled(PR_TRUE);
+	 mRenderer.SetDisabled(PR_FALSE, PR_TRUE);
 }
 
 void
@@ -365,12 +366,14 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
 	  nsAutoString align;
 	  aChild->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::value, align);
 	  setAlignment(align); 
-  } else if (nsHTMLAtoms::disabled == aAttribute) {
+  } 
+  /*
+  else if (nsHTMLAtoms::disabled == aAttribute) {
 	  nsAutoString disabled;
 	  aChild->GetAttribute(nsXULAtoms::nameSpaceID, nsHTMLAtoms::value, disabled);
 	  SetDisabled(disabled);
-	  mRenderer.Update(PR_TRUE);
   }
+  */
 
 
   return NS_OK;
@@ -389,11 +392,13 @@ nsTitledButtonFrame::Paint(nsIPresContext& aPresContext,
 
     // if we changed an attribute in our Init method then we need to update the
 	// styles now.
+	/*
 	if (PR_TRUE == mUpdateHappendedInInit)
     {
 		mUpdateHappendedInInit = PR_FALSE;
-		mRenderer.Update(PR_TRUE);
+
 	}
+	*/
 
 	nsRect rect (0,0, mRect.width, mRect.height);
 	mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
@@ -651,7 +656,7 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
 	   aRenderingContext.SetFont(fontStyle->mFont);
 	   
 	   // if disabled paint 
-	   if (PR_FALSE == mRenderer.isEnabled())
+	   if (PR_TRUE == mRenderer.isDisabled())
 	   {
 		    	 // place 4 pixels of spacing
 		   float p2t;
@@ -1048,7 +1053,7 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
   nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
   // if disabled do nothing
-  if (nsnull == mRenderer.isEnabled()) {
+  if (PR_TRUE == mRenderer.isDisabled()) {
     return NS_OK;
   }
 
@@ -1064,8 +1069,7 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
         case NS_MOUSE_LEFT_BUTTON_DOWN: 
 			if (mRenderer.GetState() == nsButtonFrameRenderer::active) 
 			{ // do mouse click 
-				mRenderer.SetFocus(PR_TRUE);
-				mRenderer.Update(PR_TRUE);
+				mRenderer.SetFocus(PR_TRUE, PR_TRUE);
 			}
 		  break;
 
@@ -1100,7 +1104,7 @@ nsTitledButtonFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsI
     return rv;
   }
 
-  mRenderer.UpdateStyles(*aPresContext);
+  mRenderer.ReResolveStyles(*aPresContext);
   
   return NS_OK;
   

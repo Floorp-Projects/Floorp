@@ -4,11 +4,15 @@
 #include "nsIPresContext.h"
 #include "nsGenericHTMLElement.h"
 
+#define ACTIVE "active"
+#define HOVER "hover"
+#define NORMAL ""
+#define FOCUS "focus"
+#define ENABLED "enabled"
+#define DISABLED "disabled"
+
 nsButtonFrameRenderer::nsButtonFrameRenderer()
 {
-	mState = normal;
-        mFocus = PR_FALSE;
-	mEnabled = PR_TRUE;
 	mNameSpace = kNameSpaceID_HTML;
 }
 
@@ -26,74 +30,221 @@ void
 nsButtonFrameRenderer::SetFrame(nsIFrame* aFrame, nsIPresContext& aPresContext)
 {
 	mFrame = aFrame;
-	UpdateStyles(aPresContext);
+	ReResolveStyles(aPresContext);
 }
 
-void
-nsButtonFrameRenderer::Update(PRBool notify)
+
+nsString
+nsButtonFrameRenderer::GetPseudoClassAttribute()
 {
+  // get the content
   nsCOMPtr<nsIContent> content;
   mFrame->GetContent(getter_AddRefs(content));
+	
+  // create and atom for the pseudo class
+  nsCOMPtr<nsIAtom> atom = do_QueryInterface(NS_NewAtom("pseudoclass"));
 
-  nsString state ="";
-
-  switch (mState)
-  {
-      case hover:
-         state = "hover";
-		 break;
-	  case active:
-		 state = "active";
-		 break;
-	  case normal:
-		 state = "";
-		 break;
-  }
-
-  nsString enabled;
-  
-  if (mEnabled)
-	  enabled = "enabled";
-  else
-	  enabled = "disabled";
- 
-  nsString focus;
-  if (mFocus)
-	  focus = "focus";
-  else
-	  focus = "";
-
-  nsString value = state + " " + focus + " " + enabled;
-  value.Trim(" ");
-  value.CompressWhitespace();
+  // get the attribute
+  nsAutoString value;
+  content->GetAttribute(mNameSpace, atom, value);
 
   /*
   char ch[256];
   value.ToCString(ch,256);
-  printf("selector='%s'\n",ch);
+  printf("getting pseudo='%s'\n",ch);
   */
 
+  return value;
+}
+
+
+void
+nsButtonFrameRenderer::SetPseudoClassAttribute(const nsString& value, PRBool notify)
+{
+  // get the content
+  nsCOMPtr<nsIContent> content;
+  mFrame->GetContent(getter_AddRefs(content));
+	
+  // create and atom for the pseudo class
   nsCOMPtr<nsIAtom> atom = do_QueryInterface(NS_NewAtom("pseudoclass"));
-  content->SetAttribute(mNameSpace, atom, value, notify);
+
+  nsString pseudo = value;
+  // remove whitespace
+  pseudo.Trim(" ");
+  pseudo.CompressWhitespace();
+
+  // set it
+  content->SetAttribute(mNameSpace, atom, pseudo, notify);
+  
+  /*
+  char ch[256];
+  pseudo.ToCString(ch,256);
+  printf("setting pseudo='%s'\n",ch);
+  */
+}
+
+
+void
+nsButtonFrameRenderer::SetState(ButtonState state, PRBool notify)
+{
+	// get the pseudo class
+	nsString pseudo = GetPseudoClassAttribute();
+
+    // remove all other states and add new state
+	switch (state)
+	{
+	  case hover:
+		 RemoveClass(pseudo, ACTIVE);
+		 AddClass(pseudo, HOVER);
+		 break;
+	  case active:
+		 RemoveClass(pseudo, HOVER);
+		 AddClass(pseudo, ACTIVE);
+		 break;
+	  case normal:
+		 RemoveClass(pseudo, HOVER);
+ 		 RemoveClass(pseudo, ACTIVE);
+		 break;
+	}
+
+	// set the pseudo class
+	SetPseudoClassAttribute(pseudo, notify);
 }
 
 void
-nsButtonFrameRenderer::SetState(ButtonState state)
+nsButtonFrameRenderer::SetFocus(PRBool aFocus, PRBool notify)
 {
-   mState = state;
+   ToggleClass(aFocus, FOCUS, notify);
 }
 
 void
-nsButtonFrameRenderer::SetFocus(PRBool aFocus)
+nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 {
-   mFocus = aFocus;
+   // get the pseudo class
+   nsString pseudo = GetPseudoClassAttribute();
+
+   // if focus add it 
+   if (aDisabled) {
+	   AddClass(pseudo, DISABLED);
+	   RemoveClass(pseudo, ENABLED);
+   } else {
+	   RemoveClass(pseudo, DISABLED);
+	   AddClass(pseudo, ENABLED);
+   }
+
+   // set pseudo class
+   SetPseudoClassAttribute(pseudo, notify);
+}
+
+nsButtonFrameRenderer::ButtonState
+nsButtonFrameRenderer::GetState()  
+{
+	nsString pseudo = GetPseudoClassAttribute();
+	PRInt32 index = IndexOfClass(pseudo, HOVER);
+    if (index != -1)
+		return hover;
+
+	index = IndexOfClass(pseudo, ACTIVE);
+    if (index != -1)
+		return active;
+
+	return normal;
+}
+
+PRBool
+nsButtonFrameRenderer::isDisabled() 
+{
+	nsString pseudo = GetPseudoClassAttribute();
+	PRInt32 index = IndexOfClass(pseudo, DISABLED);
+    if (index != -1)
+		return PR_TRUE;
+	else
+		return PR_FALSE;
+}
+
+PRBool
+nsButtonFrameRenderer::isFocus() 
+{
+	nsString pseudo = GetPseudoClassAttribute();
+	PRInt32 index = IndexOfClass(pseudo, FOCUS);
+    if (index != -1)
+		return PR_TRUE;
+	else
+		return PR_FALSE;
 }
 
 void
-nsButtonFrameRenderer::SetEnabled(PRBool aEnabled)
+nsButtonFrameRenderer::ToggleClass(PRBool aValue, const nsString& c, PRBool notify)
 {
-   mEnabled = aEnabled;
+   // get the pseudo class
+   nsString pseudo = GetPseudoClassAttribute();
+
+   // if focus add it 
+   if (aValue) 
+	   AddClass(pseudo, c);
+   else
+	   RemoveClass(pseudo, c);
+
+   // set pseudo class
+   SetPseudoClassAttribute(pseudo, notify);
 }
+
+
+void
+nsButtonFrameRenderer::AddClass(nsString& pseudoclass, const nsString newClass)
+{
+	// see if the class is already there
+	// if not add it
+
+	PRInt32 index = IndexOfClass(pseudoclass, newClass);
+    if (index == -1) {
+       pseudoclass += " ";
+	   pseudoclass += newClass;
+	}
+}
+
+void
+nsButtonFrameRenderer::RemoveClass(nsString& pseudoclass, const nsString newClass)
+{
+	// see if the class is there
+	// if so remove it
+	PRInt32 index = IndexOfClass(pseudoclass, newClass);
+    if (index == -1)
+		return;
+
+    // remove it
+	pseudoclass.Cut(index, newClass.Length());
+}
+
+PRInt32
+nsButtonFrameRenderer::IndexOfClass(nsString& pseudoclass, const nsString& c)
+{
+	// easy first case
+	if (pseudoclass.Equals(c))
+       return 0;
+ 
+	// look on left
+	PRInt32 index = pseudoclass.Find(nsString(c) + " ");
+	if (index == -1 || index > 0) {
+		// look on right
+        index = pseudoclass.Find(nsString(" ") + c);
+	    if (index == -1 || index != pseudoclass.Length() - (c.Length()+1))
+		{
+			// look in center
+			index = pseudoclass.Find(nsString(" ") + c + " ");
+			if (index == -1)
+				return -1;
+			else
+				index++;
+		} else 
+			index++;
+	}
+
+	
+
+	return index;
+}
+
 
 
 NS_IMETHODIMP
@@ -102,7 +253,7 @@ nsButtonFrameRenderer::HandleEvent(nsIPresContext& aPresContext,
                                   nsEventStatus& aEventStatus)
 {
   // if disabled do nothing
-  if (nsnull == mEnabled) {
+  if (PR_TRUE == isDisabled()) {
     return NS_OK;
   }
 
@@ -123,12 +274,10 @@ nsButtonFrameRenderer::HandleEvent(nsIPresContext& aPresContext,
   switch (aEvent->message) {
 
         case NS_MOUSE_ENTER:
-            SetState(hover);
-			Update(PR_TRUE);
+            SetState(hover, PR_TRUE);
 	      break;
         case NS_MOUSE_LEFT_BUTTON_DOWN: 
- 			SetState(active);
- 			Update(PR_TRUE);
+ 			SetState(active, PR_TRUE);
 		  // grab all mouse events
 		  
 		 // PRBool result;
@@ -136,14 +285,12 @@ nsButtonFrameRenderer::HandleEvent(nsIPresContext& aPresContext,
 		  break;
 
         case NS_MOUSE_LEFT_BUTTON_UP:
-			SetState(hover);
- 			Update(PR_TRUE);
+			SetState(hover, PR_TRUE);
 			// stop grabbing mouse events
             //viewMan->GrabMouseEvents(nsnull,result);
 	        break;
         case NS_MOUSE_EXIT:
-			SetState(normal);
-			Update(PR_TRUE);
+			SetState(normal, PR_TRUE);
 	        break;
   }
 
@@ -386,7 +533,7 @@ nsButtonFrameRenderer::GetButtonOutlineBorderAndPadding()
 }
 
 void 
-nsButtonFrameRenderer::UpdateStyles(nsIPresContext& aPresContext)
+nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
 {
 	// get all the styles
 	nsCOMPtr<nsIContent> content;
