@@ -286,7 +286,7 @@ PR_IMPLEMENT(void)
 PL_VectorRemove(PLVector* v, PRUint32 index, PRUint32 count)
 {
     PRUint32 moveCount;
-    //PR_ASSERT(count >= 0);
+    /* PR_ASSERT(count >= 0); */
     PR_ASSERT(index + count <= v->size);
 
     /* just remove a range */
@@ -308,8 +308,8 @@ PL_VectorAssertValid(PLVector* v)
         PR_ASSERT(v->maxSize == 0);
     }
     else {        
-        //PR_ASSERT(v->size >= 0);
-        //PR_ASSERT(v->maxSize >= 0);
+        /* PR_ASSERT(v->size >= 0); */
+        /* PR_ASSERT(v->maxSize >= 0); */
         PR_ASSERT(v->size <= v->maxSize);
     }
 }
