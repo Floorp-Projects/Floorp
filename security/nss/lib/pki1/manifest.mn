@@ -30,19 +30,20 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.4 $ $Date: 2002/01/04 05:22:06 $ $Name:  $"
+MANIFEST_CVS_ID = "@(#) $RCSfile: manifest.mn,v $ $Revision: 1.5 $ $Date: 2002/01/10 15:11:04 $ $Name:  $"
 
 CORE_DEPTH = ../../..
 
+# In 4.0, move nss*.h back to EXPORTS
 PRIVATE_EXPORTS = \
 	oiddata.h \
 	pki1.h	  \
 	pki1t.h	  \
+	nsspki1.h  \
+	nsspki1t.h \
 	$(NULL)
 
 EXPORTS =	   \
-	nsspki1.h  \
-	nsspki1t.h \
 	$(NULL)
 
 MODULE = security
