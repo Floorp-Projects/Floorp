@@ -238,33 +238,36 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
 {
-	Rect screenRect = (**::GetGrayRgn()).rgnBBox;
+	if (mWindowMadeHere)
+	{
+		Rect screenRect = (**::GetGrayRgn()).rgnBBox;
 
-	short windowWidth = mWindowPtr->portRect.right - mWindowPtr->portRect.left;
-	if (((PRInt32)aX) < screenRect.left - windowWidth)
-		aX = screenRect.left - windowWidth;
-	else if (((PRInt32)aX) > screenRect.right)
-		aX = screenRect.right;
+		short windowWidth = mWindowPtr->portRect.right - mWindowPtr->portRect.left;
+		if (((PRInt32)aX) < screenRect.left - windowWidth)
+			aX = screenRect.left - windowWidth;
+		else if (((PRInt32)aX) > screenRect.right)
+			aX = screenRect.right;
 
-	if (((PRInt32)aY) < screenRect.top)
-		aY = screenRect.top;
-	else if (((PRInt32)aY) > screenRect.bottom)
-		aY = screenRect.bottom;
+		if (((PRInt32)aY) < screenRect.top)
+			aY = screenRect.top;
+		else if (((PRInt32)aY) > screenRect.bottom)
+			aY = screenRect.bottom;
 
-	// propagate the event in global coordinates
-	nsWindow::Move(aX, aY);
+		// propagate the event in global coordinates
+		nsWindow::Move(aX, aY);
 
-	// reset the coordinates to (0,0) because it's the top level widget
-	mBounds.x = 0;
-	mBounds.y = 0;
+		// reset the coordinates to (0,0) because it's the top level widget
+		mBounds.x = 0;
+		mBounds.y = 0;
 
-	// move the window if it has not been moved yet
-	// (ie. if this function isn't called in response to a DragWindow event)
-	Point macPoint;
-	macPoint = topLeft(mWindowPtr->portRect);
-	::LocalToGlobal(&macPoint);
-	if ((macPoint.h != aX) || (macPoint.v != aY)) {
-		::MoveWindow(mWindowPtr, aX, aY, false);
+		// move the window if it has not been moved yet
+		// (ie. if this function isn't called in response to a DragWindow event)
+		Point macPoint;
+		macPoint = topLeft(mWindowPtr->portRect);
+		::LocalToGlobal(&macPoint);
+		if ((macPoint.h != aX) || (macPoint.v != aY)) {
+			::MoveWindow(mWindowPtr, aX, aY, false);
+		}
 	}
 	return NS_OK;
 }
@@ -276,21 +279,22 @@ NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-	// move the window if it has not been moved yet
-	// (ie. if this function isn't called in response to a GrowWindow event)
-	Rect macRect = mWindowPtr->portRect;
-#ifdef WINDOW_SIZE_TWEAKING
-	macRect.right ++;
-	macRect.bottom ++;
-#endif
-	if (((macRect.right - macRect.left) != aWidth)
-		|| ((macRect.bottom - macRect.top) != aHeight))
+	if (mWindowMadeHere)
 	{
+		Rect macRect = mWindowPtr->portRect;
 #ifdef WINDOW_SIZE_TWEAKING
-		::SizeWindow(mWindowPtr, aWidth - 1, aHeight - 1, aRepaint);
-#else
-		::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
+		macRect.right ++;
+		macRect.bottom ++;
 #endif
+		if (((macRect.right - macRect.left) != aWidth)
+			|| ((macRect.bottom - macRect.top) != aHeight))
+		{
+#ifdef WINDOW_SIZE_TWEAKING
+			::SizeWindow(mWindowPtr, aWidth - 1, aHeight - 1, aRepaint);
+#else
+			::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
+#endif
+		}
 	}
 	nsWindow::Resize(aWidth, aHeight, aRepaint);
 	return NS_OK;
