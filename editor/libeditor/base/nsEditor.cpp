@@ -39,6 +39,7 @@
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
+#include "nsICaret.h"
 
 #include "nsIContent.h"           // for temp method GetColIndexForCell, to be removed
 #include "nsITableCellLayout.h"   // for temp method GetColIndexForCell, to be removed
@@ -248,6 +249,14 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   NS_ADDREF(mPresShell);
   mPresShell->GetViewManager(&mViewManager);
   mUpdateCount=0;
+
+  /* Show the caret */
+  nsCOMPtr<nsICaret>	caret;
+  if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret))))
+  {
+  	caret->SetCaretVisible(PR_TRUE);
+  	caret->SetCaretReadOnly(PR_FALSE);
+  }
 
   NS_POSTCONDITION(mDoc && mPresShell, "bad state");
   
