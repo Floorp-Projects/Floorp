@@ -21,7 +21,7 @@
 /* this should eventually derive from some sort of BaseAppCore */
 
 #include "nsIDOMBaseAppCore.idl"
-#include "nsIDOMWindow.idl"
+#include "xulstubs.idl"
 #include "nsIDOMEditorAppCore.idl"
 
 native nsAutoString(nsAutoString&);
