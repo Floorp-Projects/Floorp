@@ -551,12 +551,11 @@ nsresult nsAbDirectoryDataSource::createDirectoryNameNode(nsIAbDirectory *direct
 nsresult nsAbDirectoryDataSource::createDirectoryUriNode(nsIAbDirectory *directory,
                                                      nsIRDFNode **target)
 {
-  char *uri;
-  nsresult rv = directory->GetDirUri(&uri);
+  nsXPIDLCString uri;
+  nsresult rv = directory->GetDirUri(getter_Copies(uri));
   if (NS_FAILED(rv)) return rv;
   nsString nameString; nameString.AssignWithConversion(uri);
   createNode(nameString, target);
-  nsMemory::Free(uri);
   return NS_OK;
 }
 

@@ -673,17 +673,15 @@ NS_IMETHODIMP nsAbDirectory::DeleteDirectory(nsIAbDirectory *directory)
 	{	//it's a mailing list
 		nsresult rv = NS_OK;
 
-		char *uri;
-		rv = directory->GetDirUri(&uri);
+		nsXPIDLCString uri;
+		rv = directory->GetDirUri(getter_Copies(uri));
 		if (NS_FAILED(rv)) return rv;
 
 		nsCOMPtr<nsIAddrDatabase> database;
 		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
 		if (NS_SUCCEEDED(rv))
 		{
-			rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
-			nsMemory::Free(uri);
-
+			rv = addresBook->GetAbDatabaseFromURI((const char *)uri, getter_AddRefs(database));				
 			if (NS_SUCCEEDED(rv))
 				rv = database->DeleteMailList(directory, PR_TRUE);
 
@@ -728,15 +726,14 @@ NS_IMETHODIMP nsAbDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
 	dir->GetIsMailList(&bIsMailingList);
 	if (bIsMailingList)
 	{
-		char *uri;
-		rv = dir->GetDirUri(&uri);
+		nsXPIDLCString uri;
+		rv = dir->GetDirUri(getter_Copies(uri));
 		if (NS_FAILED(rv)) return rv;
 		nsCOMPtr<nsIAddrDatabase> database;
 		NS_WITH_SERVICE(nsIAddressBook, addresBook, kAddrBookCID, &rv); 
 		if (NS_SUCCEEDED(rv))
 		{
-			rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
-			nsMemory::Free(uri);
+			rv = addresBook->GetAbDatabaseFromURI((const char *)uri, getter_AddRefs(database));
 		}
 		if(NS_SUCCEEDED(rv) && database)
 		{
@@ -792,9 +789,9 @@ NS_IMETHODIMP nsAbDirectory::GetDirUri(char **uri)
 	if (uri)
 	{
 		if (mURI)
-			*uri = PL_strdup(mURI);
+			*uri =  nsCRT::strdup(mURI);
 		else
-			*uri = PL_strdup("");
+			*uri =  nsCRT::strdup("");
 		return NS_OK;
 	}
 	else

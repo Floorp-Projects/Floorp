@@ -2330,7 +2330,7 @@ static nsresult OpenAddressBook(const char * dbUri, nsIAddrDatabase** aDatabase,
 }
 
 
-nsresult nsMsgCompose::GetABDirectories(char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory)
+nsresult nsMsgCompose::GetABDirectories(const char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory)
 {
   static PRBool collectedAddressbookFound;
   if (nsCRT::strcmp(dirUri, kDirectoryRoot) == 0)
@@ -2369,20 +2369,20 @@ nsresult nsMsgCompose::GetABDirectories(char * dirUri, nsISupportsArray* directo
             if (NS_SUCCEEDED(directory->GetIsMailList(&bIsMailList)) && bIsMailList)
               continue;
 
-            char* uri;
-            rv = directory->GetDirUri(&uri);
+            nsXPIDLCString uri;
+            rv = directory->GetDirUri(getter_Copies(uri));
             if (NS_FAILED(rv))
               return rv;
 
             PRInt32 pos;
-            if (nsCRT::strcmp(uri, kPersonalAddressbookUri) == 0)
+            if (nsCRT::strcmp((const char *)uri, kPersonalAddressbookUri) == 0)
               pos = 0;
             else
             {
               PRUint32 count = 0;
               directoriesArray->Count(&count);
 
-              if (PL_strcmp(uri, kCollectedAddressbookUri) == 0)
+              if (PL_strcmp((const char *)uri, kCollectedAddressbookUri) == 0)
               {
                 collectedAddressbookFound = PR_TRUE;
                 pos = count;
@@ -2397,9 +2397,7 @@ nsresult nsMsgCompose::GetABDirectories(char * dirUri, nsISupportsArray* directo
             }
 
             directoriesArray->InsertElementAt(directory, pos);
-            rv = GetABDirectories(uri, directoriesArray, PR_TRUE);
-
-            PR_Free(uri);
+            rv = GetABDirectories((const char *)uri, directoriesArray, PR_TRUE);
           }
         }
       } while (NS_SUCCEEDED(subDirectories->Next()));
@@ -2587,12 +2585,12 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
       if (NS_FAILED(rv))
         return rv;
 
-      char* uri;
-      rv = abDirectory->GetDirUri(&uri);
+      nsXPIDLCString uri;
+      rv = abDirectory->GetDirUri(getter_Copies(uri));
       if (NS_FAILED(rv))
         return rv;
 
-      rv = OpenAddressBook(uri, getter_AddRefs(abDataBase), getter_AddRefs(abDirectory));
+      rv = OpenAddressBook((const char *)uri, getter_AddRefs(abDataBase), getter_AddRefs(abDirectory));
       if (NS_FAILED(rv) || !abDataBase || !abDirectory)
         continue;
 

@@ -830,72 +830,7 @@ nsIAddrDatabase *GetAddressBook( const PRUnichar *name, PRBool makeNew)
 		}
 	}
 	
-
 	return( pDatabase);
-	
-	/*
-	NS_WITH_SERVICE(nsIAbDirectory, directoryFactory, kAbDirectoryCID, &rv);
-	if (NS_FAILED(rv)) {
-		IMPORT_LOG0( "*** Unable to get nsIAbDirectory service.\n");
-		return( nsnull);
-	}
-	
-	nsString	sName = name;
-	char *		cName = sName.ToNewCString();
-	int			nLen = nsCRT::strlen( cName) + 10;
-	char *		nName = new char[nLen];
-	char *		pUri = nsnull;
-
-	nsCOMPtr<nsIEnumerator>	nodes;
-	directoryFactory->GetChildNodes( getter_AddRefs( nodes));
-	if (nodes) {
-		nsISupports *	pSupports = nsnull;
-		int				cnt = 1;
-		rv = nodes->First();
-		while(NS_SUCCEEDED( rv)) {
-			pSupports = nsnull;
-			rv = nodes->CurrentItem( &pSupports);
-			if (NS_SUCCEEDED( rv))
-				rv = nodes->Next();
-			if (pSupports) {
-				nsCOMPtr<nsISupports> iFace( dont_AddRef( pSupports));
-				nsCOMPtr<nsIAbDirectory> dir( do_QueryInterface( pSupports));
-				if (dir) {
-					char *dirName = nsnull;
-					dir->GetDirName( &dirName);
-					if (dirName && !nsCRT::strcasecmp( dirName, cName)) {
-						if (!makeNew) {
-							delete [] nName;
-							nsCRT::free( cName);
-							dir->GetDirUri( &pUri);
-							return( pUri);							
-						}
-
-						rv = nodes->First();
-						nsCRT::free( cName);
-						cName = sName.ToNewCString();
-						PR_snprintf( nName, nLen, "%s-%d", cName, cnt);
-						cnt++;
-						nsCRT::free( cName);
-						cName = nsCRT::strdup( nName); 
-					}
-				}
-			}
-		}	
-	}
-	
-	delete [] nName;
-
-
-	nsCOMPtr<nsIAbDirectory>	newDir;
-	rv = directoryFactory->CreateNewDirectory( cName, nsnull, getter_AddRefs( newDir));
-	nsCRT::free( cName);
-	if (NS_SUCCEEDED( rv) && newDir) {
-		newDir->GetDirUri( &pUri);
-	}
-	
-	return( pUri);
-	*/
 }
 
 void nsImportGenericAddressBooks::ReportError( PRUnichar *pName, nsString *pStream)

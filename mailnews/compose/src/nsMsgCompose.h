@@ -97,7 +97,7 @@ class nsMsgCompose : public nsIMsgCompose
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity);
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields);
 	void CleanUpRecipients(nsString& recipients);
-  nsresult GetABDirectories(char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory);
+  nsresult GetABDirectories(const char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory);
   nsresult BuildMailListArray(nsIAddrDatabase* database, nsIAbDirectory* parentDir, nsISupportsArray* array);
   nsresult GetMailListAddresses(nsString& name, nsISupportsArray* mailListArray, nsISupportsArray** addresses);
   nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval);
