@@ -79,11 +79,9 @@ nsImageOS2::nsImageOS2()
    mInfo      = 0;
    mRowBytes  = 0;
    mImageBits = 0;
-   mBitmap    = 0;
 
    mARowBytes  = 0;
    mAlphaBits  = 0;
-   mABitmap    = 0;
    mAlphaDepth = 0;
    mAlphaLevel = 0;
 
@@ -194,14 +192,6 @@ void nsImageOS2::CleanUp(PRBool aCleanUpAll)
       delete [] mAlphaBits; 
       mAlphaBits = 0;
    }
-   if( mBitmap) {
-      GFX (::GpiDeleteBitmap (mBitmap), FALSE);
-      mBitmap = 0;
-   }
-   if( mABitmap) {
-      GFX (::GpiDeleteBitmap (mABitmap), FALSE);
-      mABitmap = 0;
-   }
 }
 
 void nsImageOS2::ImageUpdated( nsIDeviceContext *aContext,
@@ -217,7 +207,7 @@ void nsImageOS2::ImageUpdated( nsIDeviceContext *aContext,
 
    aContext->GetDepth( mDeviceDepth);
 
-   if( aFlags & nsImageUpdateFlags_kColorMapChanged && mInfo->cBitCount == 8)
+   if( (aFlags & nsImageUpdateFlags_kColorMapChanged) && mInfo->cBitCount == 8)
    {
       PRGB2 pBmpEntry  = mInfo->argbColor;
       PRUint8 *pMapByte = mColorMap->Index;
@@ -259,89 +249,60 @@ nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
-  PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
-  PRInt32 srcy;
+   PRInt32 origSHeight = aSHeight, origDHeight = aDHeight;
+   PRInt32 origSWidth = aSWidth, origDWidth = aDWidth;
 
-  if (mInfo == nsnull || aSWidth < 0 || aDWidth < 0 || aSHeight < 0 || aDHeight < 0) 
-    return NS_ERROR_FAILURE;
+   if (mInfo == nsnull || aSWidth < 0 || aDWidth < 0 || aSHeight < 0 || aDHeight < 0) 
+      return NS_ERROR_FAILURE;
 
-  if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
-    return NS_OK;
-
-  // limit the size of the blit to the amount of the image read in
-  if (aSX + aSWidth > mDecodedX2) {
-    aDWidth -= ((aSX + aSWidth - mDecodedX2)*origDWidth)/origSWidth;
-    aSWidth -= (aSX + aSWidth) - mDecodedX2;
-  }
-  if (aSX < mDecodedX1) {
-    aDX += ((mDecodedX1 - aSX)*origDWidth)/origSWidth;
-    aSX = mDecodedX1;
-  }
-
-  if (aSY + aSHeight > mDecodedY2) {
-    aDHeight -= ((aSY + aSHeight - mDecodedY2)*origDHeight)/origSHeight;
-    aSHeight -= (aSY + aSHeight) - mDecodedY2;
-  }
-  if (aSY < mDecodedY1) {
-    aDY += ((mDecodedY1 - aSY)*origDHeight)/origSHeight;
-    aSY = mDecodedY1;
-  }
-
-  if (aDWidth <= 0 || aDHeight <= 0)
-    return NS_OK;
-
-  // Translate to bottom-up coordinates for the source bitmap
-  srcy = mInfo->cy - (aSY + aSHeight);
-
-  nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
-
-#define OLD_OS2_IMAGE_CODE    // notLoadedDY still used elsewhere
-#ifdef OLD_OS2_IMAGE_CODE
-   // Find target rect in OS/2 coords.
-   nsRect trect2( aDX, aDY, aDWidth, aDHeight);
-   RECTL  rcl2;
-   surf->NS2PM_ININ (trect2, rcl2); // !! !! !!
+   if (0 == aSWidth || 0 == aDWidth || 0 == aSHeight || 0 == aDHeight)
+      return NS_OK;
 
    // limit the size of the blit to the amount of the image read in
-   PRInt32 notLoadedDY = 0;
-   if( mDecodedY2 < mInfo->cy)
-   {
-      notLoadedDY = aSHeight - PRInt32(float(mDecodedY2/float(mInfo->cy))*aSHeight);
+   PRInt32 aSX2 = aSX + aSWidth;
+
+   if (aSX2 > mDecodedX2) 
+      aSX2 = mDecodedX2;
+
+   if (aSX < mDecodedX1) {
+      aDX += (mDecodedX1 - aSX) * origDWidth / origSWidth;
+      aSX = mDecodedX1;
+   }
+  
+   aSWidth = aSX2 - aSX;
+   aDWidth -= (origSWidth - aSWidth) * origDWidth / origSWidth;
+  
+   if (aSWidth <= 0 || aDWidth <= 0)
+      return NS_OK;
+
+   PRInt32 aSY2 = aSY + aSHeight;
+
+   if (aSY2 > mDecodedY2)
+      aSY2 = mDecodedY2;
+
+   if (aSY < mDecodedY1) {
+      aDY += (mDecodedY1 - aSY) * origDHeight / origSHeight;
+      aSY = mDecodedY1;
    }
 
-#if 0
-   // Set up blit coord array
-   POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom + notLoadedDY },
-                       { rcl.xRight, rcl.yTop },
-                       { aSX, mInfo->cy - aSY - aSH + notLoadedDY },
-                       { aSX + aSW, mInfo->cy - aSY } };
-#endif
-#endif
+   aSHeight = aSY2 - aSY;
+   aDHeight -= (origSHeight - aSHeight) * origDHeight / origSHeight;
+
+   if (aSHeight <= 0 || aDHeight <= 0)
+      return NS_OK;
+
+   nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
+ 
 
    nsRect trect( aDX, aDY, aDWidth, aDHeight);
    RECTL  rcl;
    surf->NS2PM_ININ (trect, rcl);
 
    // Set up blit coord array
-   POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom },
-                       { rcl.xRight, rcl.yTop },
-                       { aSX, srcy },
-                       { aSX + aSWidth, mInfo->cy - aSY } };
-
-   // Don't bother creating HBITMAPs, just use the pel data to GpiDrawBits
-   // at all times.  This (a) makes printing work 'cos bitmaps are
-   //                         device-independent.
-   //                     (b) is allegedly more efficient...
-   //
-#if 0
-   if( mBitmap == 0 && mIsOptimized)
-   {
-      // moz has asked us to optimize this image, but we haven't got
-      // round to actually doing it yet.  So do it now.
-      CreateBitmaps( surf);
-   }
-#endif
+   POINTL aptl[ 4] = { { rcl.xLeft, rcl.yBottom },              // TLL
+                       { rcl.xRight, rcl.yTop },                // TUR
+                       { aSX, mInfo->cy - (aSY + aSHeight) },   // SLL
+                       { aSX + aSWidth, mInfo->cy - aSY } };    // SUR
 
    if( mAlphaDepth == 0)
    {
@@ -400,7 +361,7 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
 
             bihMem.cbFix = sizeof (BITMAPINFOHEADER2);
             bihMem.cx = rcl.xRight - rcl.xLeft + 1;
-            bihMem.cy = rcl.yTop - rcl.yBottom + notLoadedDY + 1;
+            bihMem.cy = rcl.yTop - rcl.yBottom + 1;
             bihMem.cPlanes = 1;
             LONG lBitCount = 0;
             GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
@@ -414,7 +375,7 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
 
                POINTL aptlDevToMem [3] = { 0, 0,                                    // TLL - mem bitmap (0, 0)
                                            bihMem.cx, bihMem.cy,                    // TUR - mem bitmap (cx, cy)
-                                           rcl.xLeft, rcl.yBottom + notLoadedDY };  // SLL - device (Dx1, Dy2)
+                                           rcl.xLeft, rcl.yBottom };                // SLL - device (Dx1, Dy2)
 
                GFX (::GpiBitBlt (MemPS, surf->GetPS (), 3, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
 
@@ -481,7 +442,7 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
                    GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
 
                    // Transfer bitmap from memory bitmap back to device
-                   POINTL aptlMemToDev [3] = { rcl.xLeft, rcl.yBottom + notLoadedDY,    // TLL - device (Dx1, Dy2)
+                   POINTL aptlMemToDev [3] = { rcl.xLeft, rcl.yBottom,                  // TLL - device (Dx1, Dy2)
                                                rcl.xRight, rcl.yTop,                    // TUR - device (Dx2, Dy1)
                                                0, 0 };                                  // SLL - mem bitmap (0, 0)
 
@@ -501,7 +462,7 @@ if (Technology == CAPS_TECH_RASTER_DISPLAY)
       }
 
 //DJ - temporary hack
-} else  // This is not display driver. Can't get info that is alredy drawn. Output only image without mask.
+} else  // This is not display driver. Can't get info that is already drawn. Output only image without mask.
 {
   GFX (::GpiDrawBits (surf->GetPS (), mImageBits, mInfo, 4, aptl, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
 }
@@ -517,24 +478,6 @@ nsresult nsImageOS2::Optimize( nsIDeviceContext* aContext)
    // Defer this until we have a PS...
    mIsOptimized = PR_TRUE;
    return NS_OK;
-}
-
-void nsImageOS2::CreateBitmaps( nsDrawingSurfaceOS2 *surf)
-{
-   mBitmap = GFX (::GpiCreateBitmap (surf->GetPS(), (PBITMAPINFOHEADER2)mInfo,
-                                     CBM_INIT, (PBYTE)mImageBits, mInfo),
-                  GPI_ERROR);
-
-   if( mAlphaBits)
-   {
-      if( mAlphaDepth == 1)
-      {
-         MONOBITMAPINFO maskInfo( mInfo);
-         mABitmap = GFX (::GpiCreateBitmap (surf->GetPS(), maskInfo, CBM_INIT,
-                                            (PBYTE)mAlphaBits, maskInfo),
-                         GPI_ERROR);
-      }
-   }
 }
 
 //------------------------------------------------------------
@@ -770,7 +713,7 @@ void nsImageOS2::NS2PM_ININ( const nsRect &in, RECTL &rcl)
 // ---------------------------------------------------
 //	Update mImageBits with content of new mBitmap
 //
-NS_IMETHODIMP nsImageOS2::UpdateImageBits( HPS mPS )
+NS_IMETHODIMP nsImageOS2::UpdateImageBits( HPS aPS )
 {
   BITMAPINFOHEADER2 rawInfo = { 0 };
   rawInfo.cbFix   = sizeof (BITMAPINFOHEADER2);
@@ -778,12 +721,12 @@ NS_IMETHODIMP nsImageOS2::UpdateImageBits( HPS mPS )
   rawInfo.cBitCount = mInfo->cBitCount;
 
   int RawDataSize = mInfo->cy * RASWIDTH (mInfo->cx, mInfo->cBitCount);
-  PRUint8* pRawBitData = (PRUint8*)malloc (RawDataSize);
+  PRUint8* pRawBitData = new PRUint8 [RawDataSize];
 
   if (pRawBitData)
   {
-    GFX (::GpiQueryBitmapBits (mPS, 0, mInfo->cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&rawInfo), GPI_ALTERROR);
-    free (mImageBits);
+    GFX (::GpiQueryBitmapBits (aPS, 0, mInfo->cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&rawInfo), GPI_ALTERROR);
+    delete [] mImageBits;
     mImageBits = pRawBitData;
     return NS_OK;
   }
@@ -795,8 +738,7 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
                                       nscoord aDX, nscoord aDY,
                                       nscoord aDWidth, nscoord aDHeight)
 {
-  HBITMAP oldBitmap;
-  int rc = NS_OK;
+  nsresult rc = NS_OK;
 
   DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
   SIZEL sizel = { 0, 0 };
@@ -808,27 +750,20 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
     return NS_OK;
 
   // Create a memory DC that is compatible with the screen
-  HDC destDC = GFX (::DevOpenDC( 0/*hab*/, OD_MEMORY, "*", 5,
-                      (PDEVOPENDATA) &dop, (HDC)0), DEV_ERROR);
+  HDC MemDC = GFX (::DevOpenDC( 0/*hab*/, OD_MEMORY, "*", 5,
+                   (PDEVOPENDATA) &dop, (HDC)0), DEV_ERROR);
 
   // create the PS
-  HPS destPS = GFX (::GpiCreatePS (0/*hab*/, destDC, &sizel,
+  HPS MemPS = GFX (::GpiCreatePS (0/*hab*/, MemDC, &sizel,
                                   PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
 
   nsImageOS2* destImg = NS_STATIC_CAST(nsImageOS2*, aDstImage); 
 
-  if(!destImg->mBitmap)
-  {
-    destImg->mBitmap = GFX (::GpiCreateBitmap (destPS,
-                                (PBITMAPINFOHEADER2)destImg->mInfo,
-                                CBM_INIT, (PBYTE)destImg->mImageBits,
-                                destImg->mInfo),
-                            GPI_ERROR);
-    destImg->mIsOptimized = PR_TRUE;
-  }
-
-  oldBitmap = GFX (::GpiSetBitmap (destPS, destImg->mBitmap), HBM_ERROR);
-
+  HBITMAP hTmpBitmap = GFX (::GpiCreateBitmap (MemPS, (PBITMAPINFOHEADER2)destImg->mInfo,
+                                               CBM_INIT, (PBYTE)destImg->mImageBits,
+                                               destImg->mInfo), GPI_ERROR);
+  GFX (::GpiSetBitmap (MemPS, hTmpBitmap), HBM_ERROR);
+  
   nsRect trect( aDX, aDY, aDWidth, aDHeight);
   RECTL  rcl;
   destImg->NS2PM_ININ (trect, rcl);
@@ -842,27 +777,27 @@ NS_IMETHODIMP nsImageOS2::DrawToImage(nsIImage* aDstImage,
   if( 1==mAlphaDepth && mAlphaBits){
     // Apply mask to target, clear pels we will fill in from the image
     MONOBITMAPINFO MaskBitmapInfo (mInfo);
-    GFX (::GpiDrawBits (destPS, mAlphaBits, MaskBitmapInfo, 4, aptl, ROP_SRCAND,
+    GFX (::GpiDrawBits (MemPS, mAlphaBits, MaskBitmapInfo, 4, aptl, ROP_SRCAND,
                         BBO_IGNORE), GPI_ERROR);
 
     // Now combine image with target
-    GFX (::GpiDrawBits (destPS, mImageBits, mInfo, 4, aptl, ROP_SRCPAINT, 
+    GFX (::GpiDrawBits (MemPS, mImageBits, mInfo, 4, aptl, ROP_SRCPAINT, 
                         BBO_IGNORE), GPI_ERROR);
   } else {
     // alpha depth of 8 not used (yet?)
     NS_ASSERTION( mAlphaDepth != 8, "Alpha depth of 8 not implemented in DrawToImage" );
 
     // no transparency, just blit it
-    GFX (::GpiDrawBits (destPS, mImageBits, mInfo, 4, aptl, ROP_SRCCOPY,
+    GFX (::GpiDrawBits (MemPS, mImageBits, mInfo, 4, aptl, ROP_SRCCOPY,
                         BBO_IGNORE), GPI_ERROR);
   }
 
-  rc = destImg->UpdateImageBits (destPS);
+  rc = destImg->UpdateImageBits (MemPS);
 
-  GFX (::GpiSetBitmap (destPS, oldBitmap), HBM_ERROR);
-
-  GFX (::GpiDestroyPS (destPS), FALSE);
-  GFX (::DevCloseDC (destDC), DEV_ERROR);
+  GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
+  GFX (::GpiDeleteBitmap (hTmpBitmap), FALSE);
+  GFX (::GpiDestroyPS (MemPS), FALSE);
+  GFX (::DevCloseDC (MemDC), DEV_ERROR);
 
   return rc;
 }
