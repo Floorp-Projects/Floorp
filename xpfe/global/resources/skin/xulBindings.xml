@@ -554,5 +554,24 @@
     </content>
   </binding>
 
+  
+  <!-- XUL <statusbar> -->
+  <binding id="statusbar" extends="xul:box"/>
+    
+  <binding id="statusbar-panel" extends="xul:box">
+    <content excludes="observes,template" autostretch="never" valign="middle">
+      <xul:image class="statusbar-panel-icon" inherits="src"/>
+      <xul:text class="statusbar-panel-text" inherits="value,crop" crop="right"/>
+    </content>
+    <interface>
+      <property name="value"
+                onget="return this.getAttribute('value');"
+                onset="this.setAttribute('value',val); return val;"/>
+      <property name="src"
+                onget="return this.getAttribute('src');"
+                onset="this.setAttribute('src',val); return val;"/>
+    </interface>
+  </binding>
+  
 </bindings>
 
