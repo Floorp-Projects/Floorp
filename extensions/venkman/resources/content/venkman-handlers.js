@@ -99,11 +99,21 @@ function con_step()
 }
 
 console.onDebugTrap =
-function con_ondt ()
+function con_ondt (type)
 {
-    var frame = getCurrentFrame();
-    var url = frame.script.fileName;
-    var sourceRec = console.scripts[url];
+    var frame = setCurrentFrameByIndex(0);
+    
+    if (type != jsdIExecutionHook.TYPE_INTERRUPTED ||
+        console._lastStackDepth != console.frames.length)
+    {
+        display (formatFrame(frame));
+    }
+
+    displaySource (frame.script.fileName, frame.line, 
+                   (type == jsdIExecutionHook.TYPE_INTERRUPTED) ? 0 : 2);
+    
+    console._lastStackDepth = console.frames.length;
+    
     enableDebugCommands()
 
 }
@@ -283,7 +293,7 @@ function cli_icommands (e)
 console.onInputCompleteLine =
 function con_icline (e)
 {
-    if (console._inputHistory[0] != e.line)
+    if (console._inputHistory.length != 0 && console._inputHistory[0] != e.line)
         console._inputHistory.unshift (e.line);
     
     if (console._inputHistory.length > console.prefs["input.history.max"])
@@ -595,7 +605,7 @@ console.onProjectSelect =
 function con_projsel (e)
 {    
     var rowIndex = console.projectView.selectedIndex;
-    if (rowIndex == -1 || rowIndex > console.projectView.visualFootprint)
+    if (rowIndex == -1 || rowIndex > console.projectView.rowCount)
         return;
     var row =
         console.projectView.childData.locateChildByVisualRow(rowIndex);
@@ -634,7 +644,7 @@ console.onStackSelect =
 function con_stacksel (e)
 {
     var rowIndex = console.stackView.selectedIndex;
-    if (rowIndex == -1 || rowIndex > console.stackView.visualFootprint)
+    if (rowIndex == -1 || rowIndex > console.stackView.rowCount)
         return;
     var row =
         console.stackView.childData.locateChildByVisualRow(rowIndex);
@@ -673,14 +683,13 @@ function con_stacksel (e)
             return;
         }
         
-        source = console.scripts[objVal.creatorURL];
-        if (!source)
+        if (!(objVal.creatorURL in console.scripts))
         {
             dd ("object from unknown source");
             return;
         }
 
-        sourceView.displaySource(source);
+        sourceView.displaySource(console.scripts[objVal.creatorURL]);
         sourceView.scrollTo (objVal.creatorLine);
         if (sourceView.childData && sourceView.childData.isLoaded)
         {
@@ -732,9 +741,10 @@ console.onScriptSelect =
 function con_scptsel (e)
 {
     var rowIndex = console.scriptsView.selectedIndex;
-    dd ("rowindex is " + rowIndex);
-    if (rowIndex == -1 || rowIndex > console.stackView.childData.length)
+
+    if (rowIndex == -1 || rowIndex > console.scriptsView.rowCount)
         return;
+
     var row =
         console.scriptsView.childData.locateChildByVisualRow(rowIndex);
     ASSERT (row, "bogus row");
