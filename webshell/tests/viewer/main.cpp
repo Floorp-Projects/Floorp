@@ -17,7 +17,8 @@
  */
 
 #include "nsViewer.h"
-#include "nsMotifMenu.h"
+//REMOVE-LATER #include "nsMotifMenu.h"
+#include "nsIImageManager.h"
 
 class nsMotifViewer : public nsViewer {
     virtual void AddMenu(nsIWidget* aMainWindow);
@@ -40,6 +41,11 @@ nsMotifViewer * gViewer = nsnull;
 //--------------------------------------------------------
 void main(int argc, char **argv)
 {
+
+  // Hack to get il_ss set so it doesn't fail in xpcompat.c
+  nsIImageManager *manager;
+  NS_NewImageManager(&manager);
+
   gViewer = new nsMotifViewer();
   SetViewer(gViewer);
   gViewer->ProcessArguments(argc, argv);
@@ -55,7 +61,7 @@ void MenuProc(PRUint32 aId)
 //--------------------------------------------------------
 void nsMotifViewer::AddMenu(nsIWidget* aMainWindow)
 {
-  CreateViewerMenus(XtParent(aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
+//REMOVE-LATER  CreateViewerMenus(XtParent(aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
 }
 
 
