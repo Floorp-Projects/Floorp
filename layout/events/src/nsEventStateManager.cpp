@@ -1052,10 +1052,10 @@ nsEventStateManager::GetParentSelfScrollingFrame(nsIFrame* aFrame)
 PRBool
 nsEventStateManager::CheckDisabled(nsIContent* aContent)
 {
-  nsIAtom* tag;
   PRBool disabled = PR_FALSE;
 
-  aContent->GetTag(tag);
+  nsCOMPtr<nsIAtom> tag;
+  aContent->GetTag(*getter_AddRefs(tag));
 
   if (nsHTMLAtoms::input == tag ||
       nsHTMLAtoms::select == tag ||
@@ -1732,12 +1732,12 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aParent, nsIContent* aCh
       return content;
     }
     if (nsnull != child) {
-      nsIAtom* tag;
+      nsCOMPtr<nsIAtom> tag;
       PRInt32 tabIndex = -1;
       PRBool disabled = PR_TRUE;
       PRBool hidden = PR_FALSE;
 
-      child->GetTag(tag);
+      child->GetTag(*getter_AddRefs(tag));
       if (nsHTMLAtoms::input==tag) {
         nsIDOMHTMLInputElement *nextInput;
         if (NS_OK == child->QueryInterface(kIDOMHTMLInputElementIID,(void **)&nextInput)) {
