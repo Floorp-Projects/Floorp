@@ -107,9 +107,9 @@ DateFormater.prototype.getFormatedDate = function( date )
    try
    {     
       if( this.CalendarWindow.calendarPreferences.getPref( "dateformat" ) == 0 )
-         this.getLongFormatedDate( Date );
+         return( this.getLongFormatedDate( date ) );
       else
-         this.getShortFormatedDate( Date );
+         return( this.getShortFormatedDate( date ) );
    }
    catch(ex)
    {
@@ -121,7 +121,7 @@ DateFormater.prototype.getLongFormatedDate = function( date )
 {
    if( (navigator.platform.indexOf("Win") == 0) || (navigator.platform.indexOf("Mac") != -1) )
    {
-      dateService.FormatDate( "", dateService.dateFormatLong, date.getFullYear(), date.getMonth()+1, date.getDate() )
+      return( dateService.FormatDate( "", dateService.dateFormatLong, date.getFullYear(), date.getMonth()+1, date.getDate() ) );
    }
    else
    {
