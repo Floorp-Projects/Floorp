@@ -36,6 +36,10 @@
 #include "prio.h"
 #include "prmem.h" // XXX can be removed when we start doing real content-type discovery
 
+#include "nsIMIMEService.h"
+
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
+
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -450,15 +454,41 @@ nsFileChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
 NS_IMETHODIMP
 nsFileChannel::GetContentType(char * *aContentType)
 {
-    // XXX temporary hack until we have a contenttype strategy
-    *aContentType = new char[PL_strlen(DUMMY_TYPE) + 1];
-    if (!*aContentType)
+    nsresult rv;
+    char *cStrSpec= nsnull;
+    rv = mURI->GetSpec(&cStrSpec);
+    if (!cStrSpec)
         return NS_ERROR_OUT_OF_MEMORY;
+    // find the file extension
+    nsString2 specStr(cStrSpec);
+    nsString2 extStr;
+    PRInt32 extLoc = specStr.RFind('.');
+    if (-1 != extLoc) {
+        specStr.Right(extStr, extLoc);
+        PRUnichar *ext = extStr.ToNewUnicode();
 
-    PL_strcpy(*aContentType, DUMMY_TYPE);
-    return NS_OK;
+        NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    //return NS_ERROR_NOT_IMPLEMENTED;
+        nsIMIMEInfo *MIMEInfo = nsnull;
+        rv = MIMEService->GetFromExtension(ext, &MIMEInfo);
+        delete [] ext;
+        if (NS_FAILED(rv)) return rv;
+
+        rv = MIMEInfo->GetMIMEType(aContentType);
+
+        NS_RELEASE(MIMEInfo);
+        return rv;
+        // we should probably set the content-type for this response at this stage too.
+    }
+
+    // if all else fails treat it as text/html?
+    *aContentType = nsCRT::strdup(DUMMY_TYPE);
+    if (!*aContentType) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        rv = NS_OK;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
