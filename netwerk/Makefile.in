@@ -32,6 +32,7 @@ DIRS=            \
 	protocol \
 	util     \
     mime     \
+    streamconv \
 	$(NULL)
 
 ifdef ENABLE_TESTS
