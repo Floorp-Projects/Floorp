@@ -35,7 +35,7 @@ DEFINES += -D_IMPL_NS_WIDGET
 
 INCLUDES+= -I$(srcdir)/../xpwidgets -I$(srcdir)/../motif -I$(srcdir)/.
 
-INCLUDES += $(TK_MOTIF_CFLAGS)
+INCLUDES += $(TK_CFLAGS)
 
 CPPSRCS= \
         nsMenuBar.cpp \
