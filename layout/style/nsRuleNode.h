@@ -392,7 +392,7 @@ private:
     return (PRWord(mChildrenTaggedPtr) & kTypeMask) == kHashType;
   }
   nsRuleList* ChildrenList() {
-    return NS_STATIC_CAST(nsRuleList*, mChildrenTaggedPtr);
+    return NS_REINTERPRET_CAST(nsRuleList*, mChildrenTaggedPtr);
   }
   PLDHashTable* ChildrenHash() {
     return (PLDHashTable*) (PRWord(mChildrenTaggedPtr) & ~PRWord(kTypeMask));
