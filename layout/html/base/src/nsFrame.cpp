@@ -324,7 +324,9 @@ nsFrame::Init(nsIPresContext*  aPresContext,
     if (state & NS_FRAME_INDEPENDENT_SELECTION) {
       mState |= NS_FRAME_INDEPENDENT_SELECTION;
     }
-
+    if (state & NS_FRAME_GENERATED_CONTENT){
+      mState |= NS_FRAME_GENERATED_CONTENT;
+    }
   }
   return SetStyleContext(aPresContext, aContext);
 }
@@ -1031,7 +1033,8 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
     *aSelectable = (selectStyle != NS_STYLE_USER_SELECT_NONE);
   if (aSelectStyle)
     *aSelectStyle = selectStyle;
-
+  if (mState & NS_FRAME_GENERATED_CONTENT)
+    *aSelectable = false;
   return NS_OK;
 }
 
@@ -3377,7 +3380,38 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           if (NS_SUCCEEDED(result) && aPos->mResultFrame 
             && blockFrame != aPos->mResultFrame)// make sure block element is not the same as the one we had before
           {
-            result = aPos->mResultFrame->QueryInterface(NS_GET_IID(nsILineIterator),
+/* SPECIAL CHECK FOR TABLE NAVIGATION
+  tables need to navigate also and the frame that supports it is nsTableRowGroupFrame which is INSIDE
+  nsTableOuterFrame.  if we have stumbled onto an nsTableOuter we need to drill into nsTableRowGroup
+  if we hit a header or footer thats ok just go into them,
+*/
+            PRBool searchTableBool = PR_FALSE;
+            nsIAtom *resultFrameType;
+            if(NS_SUCCEEDED(aPos->mResultFrame->GetFrameType(&resultFrameType)) && resultFrameType == nsLayoutAtoms::tableOuterFrame)
+            {
+              nsIFrame *frame = aPos->mResultFrame;
+              result = frame->FirstChild(aPresContext, nsnull,&frame);
+              //got the table frame now
+              while(frame) //ok time to drill down to find iterator
+              {
+                result = frame->FirstChild(aPresContext, nsnull,&frame);
+                if (NS_SUCCEEDED(result))
+                {
+                  result = frame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),
+                                                            getter_AddRefs(iter));
+                  if (NS_SUCCEEDED(result))
+                  {
+                    aPos->mResultFrame = frame;
+                    searchTableBool = PR_TRUE;
+                    break; //while aPos->mResultFrame
+                  }
+                }
+                else
+                  break;
+              }
+            }
+            if (!searchTableBool)
+              result = aPos->mResultFrame->QueryInterface(NS_GET_IID(nsILineIteratorNavigator),
                                                         getter_AddRefs(iter));
             if (NS_SUCCEEDED(result) && iter)//we've struck another block element!
             {
