@@ -911,6 +911,13 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
   }
   if (count < 0) return count;
 
+  if (aEncrypt && mSelfEncryptionCert) {
+    // Make sure self's configured cert is prepared for being used
+    // as an email recipient cert.
+    
+    mSelfEncryptionCert->SaveSMimeProfile();
+  }
+
   /* If the message is to be encrypted, then get the recipient certs */
   if (aEncrypt) {
 	  mailbox = mailbox_list;

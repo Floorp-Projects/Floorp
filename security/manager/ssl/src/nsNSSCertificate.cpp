@@ -2724,6 +2724,15 @@ nsNSSCertificate::IsSameCert(nsIX509Cert *other, PRBool *result)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNSSCertificate::SaveSMimeProfile()
+{
+  if (SECSuccess != CERT_SaveSMimeProfile(mCert, nsnull, nsnull))
+    return NS_ERROR_FAILURE;
+  else
+    return NS_OK;
+}
+
 
 /* nsNSSCertificateDB */
 
