@@ -54,8 +54,6 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
-EXTRA_LIBS += $(DIST)/lib/libpkcs12.a \
-              $(DIST)/lib/libpkcs7.a
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
