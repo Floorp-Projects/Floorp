@@ -33,7 +33,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsIInputStream.h"
 #include "nsIStreamConverterService.h"
-#include "nsIHttpChannel.h"
+#include "nsIHTTPChannel.h"
 #include "nsHTTPEnums.h"
 
 #include "nsVoidArray.h"
