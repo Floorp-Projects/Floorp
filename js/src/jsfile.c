@@ -237,7 +237,7 @@ typedef struct JSFile {
 
 /* a few forward declarations... */
 static JSClass file_class;
-JS_EXPORT_API(JSObject*) js_NewFileObject(JSContext *cx, char *filename);
+JS_PUBLIC_API(JSObject*) js_NewFileObject(JSContext *cx, char *filename);
 static JSBool file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 static JSBool file_close(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
@@ -2009,7 +2009,7 @@ file_init(JSContext *cx, JSObject *obj, char *bytes)
 }
 
 /* Returns a JSObject. This function is globally visible */
-JS_EXPORT_API(JSObject*)
+JS_PUBLIC_API(JSObject*)
 js_NewFileObject(JSContext *cx, char *filename)
 {
     JSObject    *obj;
@@ -2544,7 +2544,7 @@ static JSClass file_class = {
 };
 
 /* -------------------- Functions exposed to the outside -------------------- */
-JS_EXPORT_API(JSObject*)
+JS_PUBLIC_API(JSObject*)
 js_InitFileClass(JSContext *cx, JSObject* obj, JSBool initStandardStreams)
 {
     JSObject *file, *ctor, *afile;

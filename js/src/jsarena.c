@@ -61,7 +61,7 @@ static JSArenaStats *arena_stats_list;
 
 #define JS_ARENA_DEFAULT_ALIGN  sizeof(double)
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size, JSUint32 align)
 {
     if (align == 0)
@@ -80,7 +80,7 @@ JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size, JSUint32 al
 #endif
 }
 
-JS_EXPORT_API(void *)
+JS_PUBLIC_API(void *)
 JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
 {
     JSArena **ap, *a, *b;
@@ -136,7 +136,7 @@ JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb)
     return p;
 }
 
-JS_EXPORT_API(void *)
+JS_PUBLIC_API(void *)
 JS_ArenaGrow(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr)
 {
     void *newp;
@@ -198,7 +198,7 @@ FreeArenaList(JSArenaPool *pool, JSArena *head, JSBool reallyFree)
     pool->current = head;
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_ArenaRelease(JSArenaPool *pool, char *mark)
 {
     JSArena *a;
@@ -212,14 +212,14 @@ JS_ArenaRelease(JSArenaPool *pool, char *mark)
     }
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_FreeArenaPool(JSArenaPool *pool)
 {
     FreeArenaList(pool, &pool->first, JS_FALSE);
     COUNT(pool, ndeallocs);
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_FinishArenaPool(JSArenaPool *pool)
 {
     FreeArenaList(pool, &pool->first, JS_TRUE);
@@ -240,7 +240,7 @@ JS_FinishArenaPool(JSArenaPool *pool)
 #endif
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_CompactArenaPool(JSArenaPool *pool)
 {
 #if 0 /* XP_MAC */
@@ -254,7 +254,7 @@ JS_CompactArenaPool(JSArenaPool *pool)
 #endif
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_ArenaFinish()
 {
     JSArena *a, *next;
@@ -276,7 +276,7 @@ JS_ArenaFinish()
 }
 
 #ifdef JS_ARENAMETER
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_ArenaCountAllocation(JSArenaPool *pool, JSUint32 nb)
 {
     pool->stats.nallocs++;
@@ -286,13 +286,13 @@ JS_ArenaCountAllocation(JSArenaPool *pool, JSUint32 nb)
     pool->stats.variance += nb * nb;
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_ArenaCountInplaceGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr)
 {
     pool->stats.ninplace++;
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_ArenaCountGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr)
 {
     pool->stats.ngrows++;
@@ -304,13 +304,13 @@ JS_ArenaCountGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr)
     pool->stats.variance += size * size;
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_ArenaCountRelease(JSArenaPool *pool, char *mark)
 {
     pool->stats.nreleases++;
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_ArenaCountRetract(JSArenaPool *pool, char *mark)
 {
     pool->stats.nfastrels++;
@@ -319,7 +319,7 @@ JS_ArenaCountRetract(JSArenaPool *pool, char *mark)
 #include <math.h>
 #include <stdio.h>
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_DumpArenaStats(FILE *fp)
 {
     JSArenaStats *stats;

@@ -1036,7 +1036,7 @@ static int FuncStuff(SprintfState *ss, const char *sp, JSUint32 len)
     return 0;
 }
 
-JS_EXPORT_API(JSUint32) JS_sxprintf(JSStuffFunc func, void *arg, 
+JS_PUBLIC_API(JSUint32) JS_sxprintf(JSStuffFunc func, void *arg, 
                                  const char *fmt, ...)
 {
     va_list ap;
@@ -1048,7 +1048,7 @@ JS_EXPORT_API(JSUint32) JS_sxprintf(JSStuffFunc func, void *arg,
     return rv;
 }
 
-JS_EXPORT_API(JSUint32) JS_vsxprintf(JSStuffFunc func, void *arg, 
+JS_PUBLIC_API(JSUint32) JS_vsxprintf(JSStuffFunc func, void *arg, 
                                   const char *fmt, va_list ap)
 {
     SprintfState ss;
@@ -1102,7 +1102,7 @@ static int GrowStuff(SprintfState *ss, const char *sp, JSUint32 len)
 /*
 ** sprintf into a malloc'd buffer
 */
-JS_EXPORT_API(char *) JS_smprintf(const char *fmt, ...)
+JS_PUBLIC_API(char *) JS_smprintf(const char *fmt, ...)
 {
     va_list ap;
     char *rv;
@@ -1116,12 +1116,12 @@ JS_EXPORT_API(char *) JS_smprintf(const char *fmt, ...)
 /*
 ** Free memory allocated, for the caller, by JS_smprintf
 */
-JS_EXPORT_API(void) JS_smprintf_free(char *mem)
+JS_PUBLIC_API(void) JS_smprintf_free(char *mem)
 {
 	JS_DELETE(mem);
 }
 
-JS_EXPORT_API(char *) JS_vsmprintf(const char *fmt, va_list ap)
+JS_PUBLIC_API(char *) JS_vsmprintf(const char *fmt, va_list ap)
 {
     SprintfState ss;
     int rv;
@@ -1161,7 +1161,7 @@ static int LimitStuff(SprintfState *ss, const char *sp, JSUint32 len)
 ** sprintf into a fixed size buffer. Make sure there is a NUL at the end
 ** when finished.
 */
-JS_EXPORT_API(JSUint32) JS_snprintf(char *out, JSUint32 outlen, const char *fmt, ...)
+JS_PUBLIC_API(JSUint32) JS_snprintf(char *out, JSUint32 outlen, const char *fmt, ...)
 {
     va_list ap;
     int rv;
@@ -1177,7 +1177,7 @@ JS_EXPORT_API(JSUint32) JS_snprintf(char *out, JSUint32 outlen, const char *fmt,
     return rv;
 }
 
-JS_EXPORT_API(JSUint32) JS_vsnprintf(char *out, JSUint32 outlen,const char *fmt,
+JS_PUBLIC_API(JSUint32) JS_vsnprintf(char *out, JSUint32 outlen,const char *fmt,
                                   va_list ap)
 {
     SprintfState ss;
@@ -1202,7 +1202,7 @@ JS_EXPORT_API(JSUint32) JS_vsnprintf(char *out, JSUint32 outlen,const char *fmt,
     return n ? n - 1 : n;
 }
 
-JS_EXPORT_API(char *) JS_sprintf_append(char *last, const char *fmt, ...)
+JS_PUBLIC_API(char *) JS_sprintf_append(char *last, const char *fmt, ...)
 {
     va_list ap;
     char *rv;
@@ -1213,7 +1213,7 @@ JS_EXPORT_API(char *) JS_sprintf_append(char *last, const char *fmt, ...)
     return rv;
 }
 
-JS_EXPORT_API(char *) JS_vsprintf_append(char *last, const char *fmt, va_list ap)
+JS_PUBLIC_API(char *) JS_vsprintf_append(char *last, const char *fmt, va_list ap)
 {
     SprintfState ss;
     int rv;
