@@ -3,7 +3,7 @@
   FILE: icaltime.c
   CREATOR: eric 02 June 2000
   
-  $Id: icaltime.c,v 1.7 2003/10/08 06:44:35 cls%seawood.org Exp $
+  $Id: icaltime.c,v 1.8 2004/03/12 21:53:55 mostafah%oeone.com Exp $
   $Locker:  $
     
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -794,6 +794,13 @@ int icaltime_is_valid_time(struct icaltimetype t){
 	return 1;
     }
 
+}
+
+/**	@brief Returns true if time is a DATE
+ */
+int icaltime_is_date(const struct icaltimetype t) {
+
+	return t.is_date;
 }
 
 int icaltime_is_null_time(struct icaltimetype t)
