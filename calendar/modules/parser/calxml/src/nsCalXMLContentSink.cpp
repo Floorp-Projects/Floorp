@@ -64,6 +64,7 @@ static NS_DEFINE_IID(kCalTimebarCanvasCID, NS_CAL_TIMEBARCANVAS_CID);
 
 static NS_DEFINE_IID(kCalContextcontrollerIID, NS_ICAL_CONTEXT_CONTROLLER_IID);
 static NS_DEFINE_IID(kIXPFCXMLContentSinkIID,  NS_IXPFC_XML_CONTENT_SINK_IID); 
+static NS_DEFINE_IID(kIXPFCContentSinkIID,     NS_IXPFC_CONTENT_SINK_IID); 
 static NS_DEFINE_IID(kCXPFolderCanvas,         NS_XP_FOLDER_CANVAS_CID);
 static NS_DEFINE_IID(kCXPItem,                 NS_XP_ITEM_CID);
 
@@ -225,6 +226,9 @@ nsresult nsCalXMLContentSink::QueryInterface(const nsIID& aIID, void** aInstance
   else if(aIID.Equals(kIXPFCXMLContentSinkIID)) {  //do this class...
     *aInstancePtr = (nsIXPFCXMLContentSink*)(this);                                        
   }                 
+  else if(aIID.Equals(kIXPFCContentSinkIID)) {  //do this class...
+    *aInstancePtr = (nsIXPFCContentSink*)(this);                                        
+  }
   else {
     *aInstancePtr=0;
     return NS_NOINTERFACE;
@@ -1092,4 +1096,19 @@ nsresult nsCalXMLContentSink::SetRootCanvas(nsIXPFCCanvas * aCanvas)
   mCanvasStack->Push(aCanvas);
   NS_ADDREF(aCanvas);
   return NS_OK;
+}
+
+nsresult nsCalXMLContentSink::SetContentSinkContainer(nsISupports * 
+                                                      aContentSinkContainer)
+{
+  nsresult res;
+  nsIXPFCCanvas * canvas;
+  static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
+  res = aContentSinkContainer->QueryInterface(kIXPFCCanvasIID, (void **)&canvas);
+  if (NS_OK == res)
+  {
+    res = SetRootCanvas(canvas);
+    NS_RELEASE(canvas);
+  }
+  return res;
 }
