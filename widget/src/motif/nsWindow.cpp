@@ -736,6 +736,14 @@ void nsWindow::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 void nsWindow::SetFocus(void)
 {
+   // Go get the parent of all widget's to determine which widget 
+   // tree to use to set the focus. 
+  Widget w = mWidget;
+  while (NULL != XtParent(w)) {
+    w = XtParent(w);
+  }
+
+  XtSetKeyboardFocus(w, mWidget);
 }
 
     
