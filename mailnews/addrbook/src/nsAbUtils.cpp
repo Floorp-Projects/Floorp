@@ -19,9 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
+ * Created by: Paul Sandoz   <paul.sandoz@sun.com>
+ * 
  * Contributor(s):
- * Created by: Paul Sandoz   <paul.sandoz@sun.com> 
- * Contributor(s): Csaba Borbola <csaba.borbola@sun.com>
+ *          Csaba Borbola <csaba.borbola@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 

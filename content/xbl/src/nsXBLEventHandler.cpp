@@ -19,9 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
  * Original Author: David W. Hyatt (hyatt@netscape.com)
- * Contributor(s): Brendan Eich (brendan@mozilla.org)
+ * 
+ * Contributor(s):
+ *          Brendan Eich (brendan@mozilla.org)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of

@@ -17,9 +17,6 @@
  * Copyright (C) 1999 New Dimenstions Consulting, Inc. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *
- *
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
  *  Chiaki Koufugata, chiaki@mozilla.gr.jp, UI i18n

@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Contributor(s): Yueheng Xu <yueheng.xu@intel.com>
+ *                 Yueheng Xu <yueheng.xu@intel.com>
  *                 Hoa Nguyen <hoa.nguyen@intel.com>
  *
  *

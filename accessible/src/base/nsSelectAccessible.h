@@ -19,9 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
  * Original Author: Eric Vaughan (evaughan@netscape.com)
- * Contributor(s):  John Gaunt (jgaunt@netscape.com)
+ * 
+ * Contributor(s):
+ *                  John Gaunt (jgaunt@netscape.com)
  *                  Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- * Contributor(s): Tao Cheng <tao@netscape.com>
+ *          Tao Cheng <tao@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
