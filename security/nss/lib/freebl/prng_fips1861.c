@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.10 2001/01/04 08:21:12 nelsonb%netscape.com Exp $
+ * $Id: prng_fips1861.c,v 1.11 2001/01/29 14:24:57 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -492,6 +492,9 @@ RNG_UpdateAndEnd_FIPS186_1(SHA1Context *ctx,
 SECStatus 
 DSA_RandomUpdate(void *data, size_t bytes, unsigned char *q)
 {
+    if( q && (*q == 0) ) {
+        ++q;
+    }
     return prng_RandomUpdate(globalrng, data, bytes, q);
 }
 
@@ -502,5 +505,8 @@ DSA_RandomUpdate(void *data, size_t bytes, unsigned char *q)
 SECStatus 
 DSA_GenerateGlobalRandomBytes(void *dest, size_t len, unsigned char *q)
 {
+    if( q && (*q == 0) ) {
+        ++q;
+    }
     return prng_GenerateGlobalRandomBytes(globalrng, dest, len, q);
 }
