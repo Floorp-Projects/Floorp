@@ -799,10 +799,8 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       {
         PRBool keywordsEnabled = PR_FALSE;
 
-        if(mPrefs) {
-          rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
-          if (NS_FAILED(rv)) return rv;
-        }
+        if (mPrefs && NS_FAILED(mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled)))
+            keywordsEnabled = PR_FALSE;
 
         nsCAutoString host;
         url->GetHost(host);
