@@ -299,7 +299,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
       }
 
       gfx_format format = gfxIFormats::RGB;
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
+#if defined(XP_PC) || defined(XP_BEOS)
       format = gfxIFormats::BGR;
 #endif
 
