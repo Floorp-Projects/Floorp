@@ -37,6 +37,12 @@
 #include "prprf.h"
 
 #include "resources.h"
+#include <strstrea.h>
+
+#if defined(WIN32)
+#include <windows.h>
+#endif
+
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -237,6 +243,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   case VIEWER_FILE_OPEN:
     DoFileOpen();
+    break;
+  
+  case VIEWER_EDIT_COPY:
+    DoCopy();
     break;
 
   case VIEWER_DEMO0:
@@ -1180,22 +1190,102 @@ nsBrowserWindow::ShowStyleSize()
 {
 }
 
+
+
+
+static PRBool GetSaveFileNameFromFileSelector(nsIWidget* aParentWindow,
+                                              nsString&  aFileName)
+{
+  PRInt32 offset = aFileName.RFind('/');
+  if (offset != -1)
+    aFileName.Cut(0,offset+1);
+
+  PRBool selectedFileName = PR_FALSE;
+  nsIFileWidget *fileWidget;
+  nsString title("Save HTML");
+  nsresult rv = NSRepository::CreateInstance(kFileWidgetCID,
+                                             nsnull,
+                                             kIFileWidgetIID,
+                                             (void**)&fileWidget);
+  if (NS_OK == rv) {
+    nsString titles[] = {"html","txt"};
+    nsString filters[] = {"*.html", "*.txt"};
+    fileWidget->SetFilterList(2, titles, filters);
+    fileWidget->Create(aParentWindow,
+                       title,
+                       eMode_save,
+                       nsnull,
+                       nsnull);
+    fileWidget->SetDefaultString(aFileName);
+
+    PRUint32 result = fileWidget->Show();
+    if (result) {
+      fileWidget->GetFile(aFileName);
+      selectedFileName = PR_TRUE;
+    }
+ 
+    NS_RELEASE(fileWidget);
+  }
+
+  return selectedFileName;
+}
+
+void DoFileSave(nsIWidget* aParentWindow, nsString& aFileName)
+{
+
+
+  if () 
+  {
+  }
+}
+
+
+
+
 void
 nsBrowserWindow::DoDebugSave()
 {
+  PRBool    doSave = PR_FALSE;
+  nsString  path;
+
+  nsString urlString;
+  mWebShell->GetURL(0,urlString);
+  nsIURL* url;
+  nsresult rv = NS_NewURL(&url, urlString);
+  
+  if (rv == NS_OK)
+  {
+    const char* name = url->GetFile();
+    path = name;
+
+    doSave = GetSaveFileNameFromFileSelector(mWindow, path);
+    NS_RELEASE(url);
+
+  }
+  if (!doSave)
+    return;
+
+
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
     nsIDocument* doc = shell->GetDocument();
     if (nsnull != doc) {
       nsString buffer;
+
       doc->CreateXIF(buffer,PR_FALSE);
 
       nsIParser* parser;
       nsresult rv = NS_NewParser(&parser);
       if (NS_OK == rv) {
         nsIHTMLContentSink* sink = nsnull;
-        
+
         rv = NS_New_HTML_ContentSinkStream(&sink);
+
+
+        char filename[MAX_PATH+1];
+        path.ToCString(filename,MAX_PATH);
+        ofstream    out(filename);
+        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
 
         if (NS_OK == rv) {
           parser->SetContentSink(sink);
@@ -1207,8 +1297,10 @@ nsBrowserWindow::DoDebugSave()
             parser->RegisterDTD(dtd);
             dtd->SetContentSink(sink);
             dtd->SetParser(parser);
-            parser->Parse(buffer, PR_TRUE);           
+            parser->Parse(buffer, PR_FALSE);           
           }
+          out.close();
+
           NS_IF_RELEASE(dtd);
           NS_IF_RELEASE(sink);
         }
@@ -1217,6 +1309,95 @@ nsBrowserWindow::DoDebugSave()
     }
   }
 }
+
+void
+nsBrowserWindow::DoCopy()
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      nsString buffer;
+
+      doc->CreateXIF(buffer,PR_TRUE);
+
+      nsIParser* parser;
+      nsresult rv = NS_NewParser(&parser);
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+        
+        rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+
+        ostrstream  data;
+        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
+
+        if (NS_OK == rv) {
+          parser->SetContentSink(sink);
+          
+          nsIDTD* dtd = nsnull;
+          rv = NS_NewXIFDTD(&dtd);
+          if (NS_OK == rv) 
+          {
+            parser->RegisterDTD(dtd);
+            dtd->SetContentSink(sink);
+            dtd->SetParser(parser);
+            parser->Parse(buffer, PR_FALSE);           
+          }
+          NS_IF_RELEASE(dtd);
+          NS_IF_RELEASE(sink);
+          char* str = data.str();
+
+#if defined(WIN32)
+          HGLOBAL     hGlobalMemory;
+          PSTR        pGlobalMemory;
+
+          PRInt32 len = data.pcount();
+          if (len)
+          {
+            // Copy text to Global Memory Area
+            hGlobalMemory = (HGLOBAL)GlobalAlloc(GHND, len+1);
+            if (hGlobalMemory != NULL) {
+              pGlobalMemory = (PSTR) GlobalLock(hGlobalMemory);
+              char * s  = str;
+              for (int i=0;i< len;i++) {
+                *pGlobalMemory++ = *s++;
+              }
+
+              // Put data on Clipboard
+              GlobalUnlock(hGlobalMemory);
+              OpenClipboard(NULL);
+              EmptyClipboard();
+              SetClipboardData(CF_TEXT, hGlobalMemory);
+              CloseClipboard();
+            }
+          }
+          // in ostrstreams if you cal the str() function
+          // then you are responsible for deleting the string
+#endif
+          if (str) delete str;
+
+        }
+        NS_RELEASE(parser);
+      }
+    }
+  }
+}
+
+
+void 
+nsBrowserWindow::DoToggleSelection()
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      PRBool  current = doc->GetDisplaySelection();
+      doc->SetDisplaySelection(!current);
+      ForceRefresh();
+    }
+  }
+}
+
 
 void
 nsBrowserWindow::DoDebugRobot()
@@ -1328,6 +1509,11 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
   case VIEWER_DEBUGSAVE:
     DoDebugSave();
     break;
+
+  case VIEWER_TOGGLE_SELECTION:
+    DoToggleSelection();
+    break;
+
 
   case VIEWER_DEBUGROBOT:
     DoDebugRobot();

@@ -51,6 +51,7 @@
 #define VIEWER_SHOW_STYLE_SIZE      40031
 #define VIEWER_DEBUGSAVE            40032
 #define VIEWER_SHOW_CONTENT_QUALITY 40033
+#define VIEWER_TOGGLE_SELECTION     40034
 
 // Note: must be in ascending sequential order
 #define VIEWER_ONE_COLUMN       40040
