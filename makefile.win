@@ -161,7 +161,7 @@ splitsymbols:
 componentreg:
 !if defined(MOZILLA_OFFICIAL)
 	cd $(DIST)\bin
-#	regxpcom.exe
+	regxpcom.exe
 !endif
 
 install:: rebase splitsymbols componentreg
