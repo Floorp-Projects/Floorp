@@ -22,7 +22,8 @@
 
 // Remember that these 'words' are 32bit DWORDS
 
-#if defined(LINUX) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__bsdi__) || defined(NTO) || defined(__BEOS__)
+#if defined(LINUX) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || \
+    defined(__bsdi__) || defined(NTO) || defined(__BEOS__) || defined(__sun__)
 
 static PRUint32
 invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
