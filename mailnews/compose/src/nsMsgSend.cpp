@@ -181,7 +181,6 @@ static nsresult StripOutGroupNames(char * addresses)
   char aChar;
   char * readPtr = addresses;           // current read position
   char * writePtr = addresses;          // current write position
-  char * startRecipient = addresses;    // begining of the current recipient (or potential group name)
   char * previousSeparator = addresses; // remember last time we wrote a recipient separator
   char * endPtr = addresses + PL_strlen(addresses);
 
@@ -3915,7 +3914,7 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
    negative, then `error_message' contains the file name (this is kind of
    a kludge...)
  */
-nsresult 
+NS_IMETHODIMP 
 nsMsgComposeAndSend::CreateAndSendMessage(
               nsIEditor                         *aEditor,
               nsIMsgIdentity                    *aUserIdentity,
