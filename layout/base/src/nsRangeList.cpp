@@ -1954,7 +1954,7 @@ nsRangeList::HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOf
       if (!parent) return NS_ERROR_NULL_POINTER;
 
       range->GetStartOffset(&offset);
-      if (parent.get() == parentNode && offset == aContentOffset)
+      if (parent == parentNode && offset == aContentOffset)
       {
         // Cell is already selected
         if (rangeCount == 1)
