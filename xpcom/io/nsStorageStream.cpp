@@ -34,6 +34,7 @@
 #include "nsCOMPtr.h"
 #include "prbit.h"
 #include "nsIInputStream.h"
+#include "nsISeekableStream.h"
 #include "prlog.h"
 
 #if defined(PR_LOGGING)
@@ -332,6 +333,7 @@ nsStorageStream::Seek(PRInt32 aPosition)
 
 // There can be many nsStorageInputStreams for a single nsStorageStream
 class nsStorageInputStream : public nsIInputStream
+                           , public nsISeekableStream
 {
 public:
     nsStorageInputStream(nsStorageStream *aStorageStream, PRUint32 aSegmentSize)
@@ -350,6 +352,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
+    NS_DECL_NSISEEKABLESTREAM
 
 protected:
     
@@ -369,7 +372,9 @@ private:
     PRUint32 SegOffset(PRUint32 aPosition) {return aPosition & (mSegmentSize - 1);}
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsStorageInputStream, nsIInputStream)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsStorageInputStream,
+                              nsIInputStream,
+                              nsISeekableStream)
 
 NS_IMETHODIMP
 nsStorageStream::NewInputStream(PRInt32 aStartingOffset, nsIInputStream* *aInputStream)
@@ -492,6 +497,40 @@ NS_IMETHODIMP
 nsStorageInputStream::SetObserver(nsIInputStreamObserver * aObserver)
 {
     NS_NOTREACHED("SetObserver");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsStorageInputStream::Seek(PRInt32 aWhence, PRInt32 aOffset)
+{
+    PRUint32 pos;
+
+    switch (aWhence) {
+    case NS_SEEK_SET:
+        pos = aOffset;
+        break;
+    case NS_SEEK_CUR:
+        pos = mLogicalCursor + aOffset;
+        break;
+    case NS_SEEK_END:
+        pos = mStorageStream->mLogicalLength + aOffset;
+        break;
+    }
+
+    return Seek(pos);
+}
+
+NS_IMETHODIMP
+nsStorageInputStream::Tell(PRUint32 *aResult)
+{
+    *aResult = mLogicalCursor;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsStorageInputStream::SetEOF()
+{
+    NS_NOTREACHED("nsStorageInputStream::SetEOF");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
