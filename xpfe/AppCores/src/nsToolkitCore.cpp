@@ -21,6 +21,7 @@
 #include "nsAppCoresManager.h"
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
+#include "nsIEventQueueService.h"
 #include "nsIDOMBaseAppCore.h"
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
@@ -37,11 +38,15 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
+#include "nsXPComCIID.h"
 
 class nsIScriptContext;
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+
 static NS_DEFINE_IID(kIDOMBaseAppCoreIID, NS_IDOMBASEAPPCORE_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIToolkitCoreIID, NS_IDOMTOOLKITCORE_IID);
@@ -137,7 +142,6 @@ NS_IMETHODIMP
 nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
-  nsString           controllerCID;
   nsIAppShellService *appShell;
   nsIWebShellWindow  *window;
 
@@ -153,12 +157,9 @@ nsToolkitCore::ShowDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   if (NS_FAILED(rv))
     return rv;
 
-  // hardwired temporary hack.  See nsAppRunner.cpp at main()
-  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
-  appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
+  appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
                                nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
@@ -172,7 +173,6 @@ NS_IMETHODIMP
 nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
-  nsString           controllerCID;
   nsIAppShellService *appShell;
   nsIWebShellWindow  *window;
 
@@ -188,12 +188,9 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
   if (NS_FAILED(rv))
     return rv;
 
-  // hardwired temporary hack.  See nsAppRunner.cpp at main()
-  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
-  appShell->CreateTopLevelWindow(parent, urlObj, controllerCID, window,
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, window,
                                nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
@@ -287,7 +284,6 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
                                   const nsString& aArgs) {
 
   nsresult           rv;
-  nsString           controllerCID;
   nsIAppShellService *appShell;
   nsIWebShellWindow  *window;
 
@@ -303,14 +299,11 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   if (NS_FAILED(rv))
     return rv;
 
-  // hardwired temporary hack.  See nsAppRunner.cpp at main()
-  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
   nsCOMPtr<nsArgCallbacks> cb;
   cb = nsDontQueryInterface<nsArgCallbacks>( new nsArgCallbacks( aArgs ) );
-  appShell->CreateTopLevelWindow(parent, urlObj, controllerCID, window,
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, window,
                                nsnull, cb, 615, 650);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
@@ -324,7 +317,6 @@ NS_IMETHODIMP
 nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
-  nsString           controllerCID;
   nsIAppShellService *appShell;
   nsIWebShellWindow  *window;
 
@@ -340,12 +332,24 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   if (NS_FAILED(rv))
     return rv;
 
-  // hardwired temporary hack.  See nsAppRunner.cpp at main()
-  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+	// First push a nested event queue for event processing from netlib
+	// onto our UI thread queue stack.
+	nsIEventQueueService *eQueueService;
+	nsCOMPtr<nsIEventQueue> innerQueue;
+  if (NS_FAILED(rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                    kIEventQueueServiceIID,
+                                    (nsISupports **)&eQueueService))) {
+		NS_ERROR("Unable to obtain queue service.");
+		return rv;
+	}
+
+#ifdef XP_WIN32 // XXX: Won't work with any other platforms yet.
+	eQueueService->PushThreadEventQueue();
+#endif // XP_WIN32
 
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
-  appShell->CreateDialogWindow(parent, urlObj, controllerCID, window,
+  appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
                                nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
@@ -358,10 +362,14 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
     // arguably this should be done by the new window, within ShowModal...
     if (NS_SUCCEEDED(gotParent))
       parentWindowWidgetThing->Enable(PR_FALSE);
-    window->ShowModal();
+    window->ShowModal(); // XXX This method pops the queue itself. Ugh. There should really be one
+												 // call for all of this.
     if (NS_SUCCEEDED(gotParent))
       parentWindowWidgetThing->Enable(PR_TRUE);
   }
+
+	// Release the event queue 
+	nsServiceManager::ReleaseService(kEventQueueServiceCID, eQueueService);
 
   return rv;
 }

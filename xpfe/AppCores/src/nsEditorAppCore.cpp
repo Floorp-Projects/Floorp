@@ -1227,8 +1227,6 @@ nsEditorAppCore::EndBatchChanges()
 static PRInt32 MakeNewWindow(char* urlName)
 {
   nsresult rv;
-  nsString controllerCID;
-
   char *  urlstr=nsnull;
   //char *   progname = nsnull;
   //char *   width=nsnull, *height=nsnull;
@@ -1263,13 +1261,7 @@ static PRInt32 MakeNewWindow(char* urlName)
     goto done;
   }
 
-  /*
-   * XXX: Currently, the CID for the "controller" is passed in as an argument 
-   *      to CreateTopLevelWindow(...).  Once XUL supports "controller" 
-   *      components this will be specified in the XUL description...
-   */
-  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-  appShell->CreateTopLevelWindow(nsnull, url, controllerCID, newWindow,
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
               nsnull, nsnull, 615, 480);
 
   NS_RELEASE(url);

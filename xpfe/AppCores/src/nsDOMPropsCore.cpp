@@ -431,7 +431,6 @@ NS_IMETHODIMP
 nsDOMPropsCore::ShowProperties(const nsString& aUrl, nsIDOMWindow* aParent, nsIDOMNode* aNode) {
 
   nsresult           rv;
-  nsString           controllerCID;
   nsIAppShellService *appShell;
 
   nsCOMPtr<nsIURL> urlObj;
@@ -444,15 +443,13 @@ nsDOMPropsCore::ShowProperties(const nsString& aUrl, nsIDOMWindow* aParent, nsID
   if (NS_FAILED(rv))
     return rv;
 
-  // hardwired temporary hack.  See nsAppRunner.cpp at main()
-  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
   nsIWebShellWindow *newWindow;
 
   nsPropertiesDialog *dialog = new nsPropertiesDialog(aNode);
 
   nsCOMPtr<nsIWebShellWindow> parent = DOMWindowToWebShellWindow(aParent);
 
-  rv = appShell->CreateTopLevelWindow(parent, urlObj, controllerCID, newWindow,
+  rv = appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, newWindow,
                                       nsnull, dialog, 450, 240);
 
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
