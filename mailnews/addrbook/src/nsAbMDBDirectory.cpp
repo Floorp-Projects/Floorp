@@ -979,22 +979,17 @@ nsresult nsAbMDBDirectory::GetAbDatabase()
 {
   NS_ASSERTION(!mURI.IsEmpty(), "Not initialized?");
 
-  if (!mDatabase) {
-    nsresult rv;
+  nsresult rv = NS_OK;
 
+  if (!mDatabase) {
     nsCOMPtr<nsIAddressBook> addressBook = do_GetService(NS_ADDRESSBOOK_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = addressBook->GetAbDatabaseFromURI(mURI.get(), getter_AddRefs(mDatabase));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = mDatabase->AddListener(this);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_SUCCEEDED(rv))
+      rv = mDatabase->AddListener(this);
   }
-
-  if (!mDatabase)
-    return NS_ERROR_NULL_POINTER;
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsAbMDBDirectory::HasCardForEmailAddress(const char * aEmailAddress, PRBool * aCardExists)
@@ -1004,6 +999,11 @@ NS_IMETHODIMP nsAbMDBDirectory::HasCardForEmailAddress(const char * aEmailAddres
 
   if (!mDatabase)
     rv = GetAbDatabase();
+  if (rv == NS_ERROR_FILE_NOT_FOUND)
+  {
+    // If file wasn't found, the card cannot exist.
+    return NS_OK;
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAbCard> card; 

@@ -310,9 +310,8 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *aURI, nsIAddrDatab
   /* bug 66410 */
   rv = addrDBFactory->Open(dbPath, PR_FALSE /* no create */, aDB, PR_TRUE);
   delete dbPath;
-  NS_ENSURE_SUCCESS(rv,rv);
   
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsAddressBook::GetAbDatabaseFromFile(char* pDbFile, nsIAddrDatabase **db)

@@ -88,7 +88,7 @@ var gShowCondensedEmailAddresses = true; // show the friendly display names for 
 var gPersonalAddressBookDirectory; // used for determining if we want to show just the display name in email address nodes
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
-var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
+var abAddressCollector = null;
 
 // other components may listen to on start header & on end header notifications for each message we display
 // to do that you need to add yourself to our gMessageListeners array with object that has two properties:
@@ -386,16 +386,22 @@ var messageHeaderSink = {
 
         if (lowerCaseHeaderName == "from")
         {
-          if (header.value && abAddressCollector) {
+          if (header.value) {
             if ((gCollectIncoming && !dontCollectAddress) || 
                 (gCollectNewsgroup && dontCollectAddress))
             {
+              if (!abAddressCollector)
+                abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
+
               gCollectAddress = header.headerValue;
               // collect, and add card if doesn't exist, unknown preferred send format
               gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, true, Components.interfaces.nsIAbPreferMailFormat.unknown);', 2000);
             }
             else if (gCollectOutgoing) 
             {
+              if (!abAddressCollector)
+                abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
+
               // collect, but only update existing cards, unknown preferred send format
               gCollectAddress = header.headerValue;
               gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, false, Components.interfaces.nsIAbPreferMailFormat.unknown);', 2000);
@@ -867,6 +873,9 @@ function setFromBuddyIcon(email)
    try {
      // better to cache this?
      var myScreenName = pref.getCharPref("aim.session.screenname");
+
+     if (!abAddressCollector)
+       abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
 
      var card = abAddressCollector.getCardFromAttribute("PrimaryEmail", email);
 

@@ -705,7 +705,7 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(nsFileSpec *dbName, PRBool create)
       UnixToNative(nativeFileName);
 #endif
       if (!dbName->Exists()) 
-        ret = NS_ERROR_FAILURE;  // check: use the right error code later
+        ret = NS_ERROR_FILE_NOT_FOUND;
       else
       {
         mdbOpenPolicy inOpenPolicy;
