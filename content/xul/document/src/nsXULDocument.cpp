@@ -4297,7 +4297,12 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNo
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
             // Positions are one-indexed.
             PRInt32 pos = posStr.ToInteger(NS_REINTERPRET_CAST(PRInt32*, &rv));
-            if (NS_SUCCEEDED(rv)) {
+            // Note: if the insertion index (which is |pos - 1|) would be less
+            // than 0 or greater than the number of children aParent has, then
+            // don't insert, since the position is bogus.  Just skip on to
+            // appending.
+            if (NS_SUCCEEDED(rv) && pos > 0 &&
+                PRUint32(pos - 1) <= aParent->GetChildCount()) {
                 rv = aParent->InsertChildAt(aChild, pos - 1, aNotify,
                                             PR_TRUE);
                 if (NS_SUCCEEDED(rv))
