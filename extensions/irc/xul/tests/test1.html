@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<!--
+/*
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/ 
+ * 
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License. 
+ *
+ * The Original Code is JSIRC Test Client #1
+ *
+ * The Initial Developer of the Original Code is New Dimensions Consulting,
+ * Inc. Portions created by New Dimensions Consulting, Inc. Copyright (C) 1999
+ * New Dimenstions Consulting, Inc. All Rights Reserved.
+ *
+ *
+ * Contributor(s):
+ *  Robert Ginda, rginda@ndcico.com, original author
+ */
+-->
+  <head>
+    <title>JSIRC-test1</title>
+
+	<script src="resource:///jsirc/js/lib/utils.js"></script>
+	<script src="resource:///jsirc/js/lib/connection-xpcom.js"></script>
+	<script src="resource:///jsirc/js/lib/events.js"></script>
+	<script src="resource:///jsirc/js/lib/irc.js"></script>
+	<script src="resource:///jsirc/xul/lib/EntryHistory.js"></script>
+
+ 	<script src="resource:///jsirc/xul/tests/test1-static.js"></script>
+	<script src="resource:///jsirc/xul/tests/test1-handlers.js"></script>
+
+  </head>
+
+  <body onload="onLoad();" onunload="onUnload();">
+	<!--form id="mainform" onsubmit="onSubmit();"-->
+	  <table style="width: 100%; height: 300">
+		<tr>
+          <td>
+            <center>
+			  <button onclick="onListNetworks()" style="width: 90%">
+				Networks</button>
+			  <button onclick="onListUsers()" style="width: 90%">
+				Users</button>
+			  <button onclick="onListChannels()" style="width: 90%">
+				Channels</button>
+			  <button onclick="onListChanUsers()" style="width: 90%">
+				Channel Users</button>
+            </center>
+	      </td>
+		  <td>
+              <textarea id="txtProperties"
+			   style="width:100%; height: 100; font-family: monospace"
+               readonly>
+              </textarea>
+		  </td>
+        </tr>
+        <tr>
+		  <td style="width: 20%; vertical-align: top;">
+			<center>
+			  <select id="lstQuickList" size="22" 
+				style="width: 90%; height: 100%" >
+			  </select>
+             <input id="status" style="width: 90%; border: none" readonly>
+          </td>
+          <td>
+			<textarea id="output" style="width: 100%; height: 300" 
+             readonly>
+			</textarea><br>
+			<input type="text" id="input" style="width: 100%;">
+          </td>
+		</tr>
+	  </table>
+	<span id="testspan" style="background: green">
+	  test span!
+	</span>
+	<!--/form-->
+
+    <hr>
+    <address><a href="mailto:rginda@ndcico.com"></a></address>
+<!-- Created: Wed Aug 25 01:43:14 DST 1999 -->
+<!-- hhmts start -->
+Last modified: Sun Sep  5 19:22:47 XXX 1999
+<!-- hhmts end -->
+  </body>
+</html>

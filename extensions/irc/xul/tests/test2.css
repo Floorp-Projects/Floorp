@@ -1,0 +1,173 @@
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/ 
+# 
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License. 
+#
+# The Original Code is Mozilla JSIRC Library.
+#
+# The Initial Developer of the Original Code is New Dimensions Consulting,
+# Inc. Portions created by New Dimensions Consulting, Inc. Copyright (C) 1999
+# New Dimenstions Consulting, Inc. All Rights Reserved.
+#
+#
+# Contributor(s):
+#  Robert Ginda, rginda@ndcico.com, original author
+
+foo {}
+
+body {
+
+	background: slategrey;
+
+}
+
+.action-button {
+
+	width: 90%;
+	background: url(csteel2.jpg);
+	color: black;
+	font-weight: bold;
+	font-family: sans-serif;
+
+}
+
+.quick-list {
+
+	width: 90%;
+
+}
+
+.activity-list {
+
+	width: 90%;
+
+}
+
+.output-window {
+
+	border: 2 silver inset;
+	overflow: auto;
+	background: url(csteel1.jpg);
+	color: black;
+	width: 100%;
+	height: 320px;
+
+}
+
+.chat-view {
+
+	vertical-align: text-bottom;
+
+}
+
+.input-window {
+
+	background: black;
+	color: slategrey;
+	width: 100%;
+
+}
+
+.properties-window {
+
+	width:100%;
+	height: 100;
+	background: slategrey;
+	font-family: monospace;
+
+}
+
+.msg {
+
+	font-family: sans-serif;
+
+}
+
+.msg[user="!ME"] {
+
+	text-decoration: underline;
+
+}
+
+.msg-data {
+
+	font-weight: bold;
+
+}
+
+.msg-data[msgtype="JOIN"],
+.msg-data[msgtype="PART"] {
+
+	font-size: large;
+	font-variant: small-caps;
+	color: darkslategrey;
+
+}
+
+.msg-data[msgtype="ACTION"] {
+
+	color: red;
+
+}
+
+.msg-data[msgtype="NOTICE"] {
+
+	color: green;
+
+}
+
+.msg-data[msgtype="KICK"] {
+
+	color: slategrey;
+
+}
+
+.msg-data[msgtype="QUIT"] {
+
+	color: brown;
+
+}
+
+.msg-user {
+
+	color: grey;
+
+}
+
+.msg-user[user="!ME"] {
+
+	color: orange;
+
+}
+
+.msg-user[msgtype="ACTION"] {
+
+	font-style: italic;
+
+}
+
+.msg-type {
+
+	display: none;
+	color: grey;
+	font-weight: bold;
+	margin-right: 10px;
+
+}
+
+.msg-type[msgtype="NOTICE"] {
+
+	display: inline;
+
+}
+
+.msg-type[network="{LOCAL}"] {
+
+	display: inline;
+
+}

@@ -1,0 +1,193 @@
+JS-IRC README file.
+
+Copyright (C) 1999 Robert Ginda; rginda@ndcico.com
+
+
+Files You'll find...
+**-------------------------------------------
+jsirc/bslib
+
+basic-socket library.  NSPR socket functions wrapped in an object oriented
+C api.  Allows clients to connect to as many servers as desired, without
+having to worry about the messy details.
+
+'make main' in this directory to create the required .o files, and a
+sample test client.
+
+**-------------------------------------------
+jsirc/bslib/xpcom
+
+Really Lame XPCOM wrapper around the bslib.
+
+'make libbs' in this directory to create the xpcom component (libbs.so)
+and the XPCOM interface file (bsIConnection.xpt.)  Copy these files to
+MOZILLA_FIVE_HOME/components directory.
+
+**-------------------------------------------
+jsirc/js/lib
+
+JavaScript library files, including...
+
+utils.js
+
+Utility functions used throughout the other files.  Some are very useful,
+some are only slightly useful.
+
+events.js
+
+Event and EventPump classes.  Defines a common way to create and route
+events in JavaScript.  Used HEAVILY throughout the rest of the libs to
+perform asychronous tasks.  Check the code for more details.
+
+connection.js
+
+JavaScript wrapper around the bsIConnection component, (CBSConnection).
+This is intended to make it easier to port the library to other (read
+non-XPCOM) JavaScript platforms, or to dump bsIConnection all-together
+when the time is right.
+
+http.js 
+
+Retrieves documents using the HTTP protocol and a CBSConnection.  I've got
+the protocol all wrong here, but it will still retrieve the root document
+for a web site.  Needs more work.
+
+irc.js
+
+IRC Library.  Provides DOM like access to IRC.  This is what your looking
+for.
+
+dcc.js
+
+DCC Library.  DCC is a protocol initiated over irc, and then carried out
+over a Direct Client to Client (hence the name) connection.  Currently,
+only DCC-Chat is supported.  Adding the rest should be straightforward.
+
+**-------------------------------------------
+jsirc/js/tests
+
+Scripts to test the various libraries including...
+
+test_matchobject.js
+
+Tests the object pattern matching functionality of utils.js.  Also a good
+reference while learning the rules for matching an object against a group of
+pattern objects.  Object pattern matching is at the root of the hook
+functionality provided by events.js, so look here if you need a clue.
+
+toys.js
+
+Functions for making annoying colors in IRC.
+
+ircbot.js
+
+The sample bot I use to test the IRC library.  It's mostly functional,
+with a few mods you could even use it to secure a channel (if that's what
+you're into.)  This is a good place to look to get a feel for how the
+whole thing fits together.
+
+**-------------------------------------------
+Misc. Notes...
+
+Events By object:
+
+The IRCServer object generates/ handles the following events.  It is generally
+not advisable to override an event handler defined on the server, unless you
+realize what your replacing.  Alternatley, You can hook any of these events
+through the normal event hooking facilities.
+
+onRawData:
+	name			value
+	set             "server"
+	type            "parsedata"
+	destMethod      "onParsedData"
+	destObject      server (this)
+	server          server (this)
+	connection      CBSConnection (this.connection)
+	source          the <prefix> of the message (if it exists)
+	user            user object initialized with data from the message <prefix>
+	params          array containing the <middle> parameters of the message
+	code            the first <middle> parameter (most messages have this)
+	meat            the <trailing> parameter of the message
+
+onParsedData:
+	type			<code>.toLowerCase();
+	destMethod		"on" + <Code>
+
+onTopic:
+	channel			new channel (params[1])
+
+on332: topic reply
+	channel
+	topic
+	destObject		e.channel
+	set				"channel"
+
+on333: topic info
+	channel
+	topicBy
+	topicDate
+	destObject		e.channel
+	set				"channel"
+
+on353:	name reply (also occurs on join)  If this.usersStable == true; clear
+		this.users, set usersStable = false.  Add all users in this message to
+		server.channel.users (which also adds to server.users), setting isOp
+		and isVoice, but not host information (because it isnt here.)
+	set				"channel"
+	destObject		e.channel
+	channel
+
+on366:	End of names.  set usersStable = true; so the next we see a name
+		reply, we know it starts
+a new list
+	set				"channel"
+	destObject		e.channel
+	channel
+
+on329:	/most likely/ the channel time stamp.  sent after a 366
+	on some (all?) servers, not in the rev of the RFC I saw.
+	set				"channel"
+	destObject		e.channel
+	channel
+	timeStamp		Date
+
+on324:	channel mode reply, happens in response to a /MODE <channel>.
+	type			"chanmode"
+	destMethod		"onChanMode"
+	channel
+	
+onMode:	Some user issued a /MODE command relative to some channel the lib
+		is active on, *OR* the client's user has changed modes.  This message
+		is just an incremental update if it	relates to the channel.
+	channel			IF this is in response to a USER mode change, ie, the user
+					representing the bot get's set +i or such, this property
+					will NOT be defined.
+	type			"chanmode" or "usermode"
+	destMethod		"onChanMode" or "onUserMode"
+	
+	
+onUserMode:	 User 'me' has changed mode.  Currently ignored.
+
+onChanMode:	User issued a MODE command in an active channel, or the client's
+			user requested a mode update/ joined a new channel.
+			When this event completes, the mode property of the channel in
+			question will be updated with the information in the event.
+
+			A channel.onBan event will be created for each ban that appears
+			in the new mode.
+	set				"channel"
+	destObject		channel
+
+onNick:	User in one of the active channels has changed their nickname.  <user>
+		will be renamed on the <server> and all <channel>s in which
+		they appear.
+	channel
+	user
+
+onQuit: User in one of the active channels has quit IRC.  <user> will be 
+		deleted from every <channel> they appear in.  <server>.<user>
+		lastQuitDate and lastQuitMessage will be set.
+	channel
+	user		previous CIRCUser will be upgraded to a CIRCChanUser
+	
