@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.95 $ ';
+$::UtilsVersion = '$Revision: 1.96 $ ';
 
 package TinderUtils;
 
@@ -947,13 +947,18 @@ sub run_all_tests {
 											  $binary,
 											  " -P $Settings::MozProfileName " . $url,
 											  $Settings::XULOpenWindowTestTimeout,
-											  "TinderboxPrint:Txul",
+											  "__xulWinOpenTime",
 											  ":");
 		}
 		if($open_time) {
 			$test_result = 'success';
+
+			print_log "TinderboxPrint:" .
+			  "<a href=\"http://tegu.mozilla.org/graph/xulwinopen/query.cgi?tbox=" .
+				::hostname() . "\">Txul:$open_time" . "ms</a>\n";
+
 			if($Settings::TestsPhoneHome) {
-			  send_xulwinopen_results_to_server(1200, "no data", ::hostname());
+			  send_xulwinopen_results_to_server($open_time, "no data", ::hostname());
 			}
 		} else {
 			$test_result = 'testfailed';
@@ -997,7 +1002,7 @@ sub run_all_tests {
 		# Since we are iterating here, save off logs as StartupPerformanceTest-0,1,2...
 		#
 		# -P $Settings::MozProfileName added 3% to startup time, assume one profile
-		# and get the 3% back.
+		# and get the 3% back. (http://bugzilla.mozilla.org/show_bug.cgi?id=112767)
 		#
 		if($test_result eq 'success') {
 		  $startuptime = 
