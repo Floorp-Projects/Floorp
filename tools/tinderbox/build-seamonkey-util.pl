@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.228 $ ';
+$::UtilsVersion = '$Revision: 1.229 $ ';
 
 package TinderUtils;
 
@@ -840,7 +840,7 @@ sub BuildIt {
                                             $full_embed_binary_name,
                                             $build_dir);
             } else {
-              print_log "Skipping tests.\n";
+              print_log "Skipping Mozilla tests.\n";
               $build_status = 'success';
             }
           }
