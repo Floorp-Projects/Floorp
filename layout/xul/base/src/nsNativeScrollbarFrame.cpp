@@ -37,7 +37,6 @@
 
 
 #include "nsNativeScrollbarFrame.h"
-#include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
 #include "nsBoxLayoutState.h"
 #include "nsComponentManagerUtils.h"

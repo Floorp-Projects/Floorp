@@ -47,7 +47,6 @@
 #include "nsIDocument.h"
 #include "nsIViewManager.h"
 #include "nsIDOMDocumentType.h"
-#include "nsINameSpaceManager.h"
 #include "nsITextContent.h"
 #include "nsIWidget.h"
 #include "nsIXULDocument.h"

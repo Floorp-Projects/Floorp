@@ -66,21 +66,19 @@
 #include "prlog.h"
 #include "prtime.h"
 #include "rdf.h"
-
+#include "nsContentUtils.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsIScriptableDateFormat.h"
 
 
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
-static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
 
 //------------------------------------------------------------------------
 
 nsrefcnt nsXULContentUtils::gRefCnt;
 nsIRDFService* nsXULContentUtils::gRDF;
-nsINameSpaceManager* nsXULContentUtils::gNameSpaceManager;
 nsIDateTimeFormat* nsXULContentUtils::gFormat;
 
 #define XUL_RESOURCE(ident, uri) nsIRDFResource* nsXULContentUtils::ident
@@ -119,12 +117,6 @@ nsXULContentUtils::Init()
 #undef XUL_RESOURCE
 #undef XUL_LITERAL
 
-        rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
-                                                nsnull,
-                                                NS_GET_IID(nsINameSpaceManager),
-                                                (void**) &gNameSpaceManager);
-        if (NS_FAILED(rv)) return rv;
-
         rv = nsComponentManager::CreateInstance(kDateTimeFormatCID,
                                                 nsnull,
                                                 NS_GET_IID(nsIDateTimeFormat),
@@ -152,7 +144,6 @@ nsXULContentUtils::Finish()
 #undef XUL_RESOURCE
 #undef XUL_LITERAL
 
-        NS_IF_RELEASE(gNameSpaceManager);
         NS_IF_RELEASE(gFormat);
     }
 
@@ -480,7 +471,7 @@ nsXULContentUtils::GetResource(PRInt32 aNameSpaceID, const nsAString& aAttribute
     PRUnichar buf[256];
     nsAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
     if (aNameSpaceID != kNameSpaceID_Unknown && aNameSpaceID != kNameSpaceID_None) {
-        rv = gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
+        rv = nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceURI(aNameSpaceID, uri);
         // XXX ignore failure; treat as "no namespace"
     }
 

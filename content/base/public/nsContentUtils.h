@@ -49,6 +49,7 @@ class nsIXPConnect;
 class nsIContent;
 class nsIDocument;
 class nsIDocShell;
+class nsINameSpaceManager;
 class nsIScriptSecurityManager;
 class nsIThreadJSContextStack;
 class nsIParserService;
@@ -207,6 +208,11 @@ public:
 
   static nsIParserService* GetParserServiceWeakRef();
   
+  static nsINameSpaceManager* GetNSManagerWeakRef()
+  {
+      return sNameSpaceManager;
+  };
+
 private:
   static nsresult doReparentContentWrapper(nsIContent *aChild,
                                            nsIDocument *aNewDocument,
@@ -225,6 +231,7 @@ private:
 
   static nsIParserService *sParserService;
 
+  static nsINameSpaceManager *sNameSpaceManager;
 };
 
 

@@ -61,6 +61,8 @@ typedef UNICODE_CHAR DOM_CHAR;
 #define kTxAttrIndexOffset 0x40000000;
 #define kTxChildIndexOffset 0x80000000;
 
+extern nsINameSpaceManager* gNameSpaceManager;
+
 class nsIDOMAttr;
 class nsIDOMDocument;
 class nsIDOMDocumentType;
@@ -310,13 +312,8 @@ public:
     void namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI);
 
 private:
-    friend class Attr; // Attrs and Nodes need to get to the cached nsNSManager
-    friend class Node; 
-
     PLDHashTable mWrapperHashTable;
     PLDHashTable mAttributeNodes;
-
-    nsCOMPtr<nsINameSpaceManager> nsNSManager;
 
 #ifdef DEBUG
     friend class MozillaObjectWrapper;

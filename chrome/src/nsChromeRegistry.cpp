@@ -90,7 +90,6 @@
 #include "nsICSSLoader.h"
 #include "nsIDocumentObserver.h"
 #include "nsIXULDocument.h"
-#include "nsINameSpaceManager.h"
 #include "nsIIOService.h"
 #include "nsIResProtocolHandler.h"
 #include "nsLayoutCID.h"

@@ -46,7 +46,6 @@
 #include "nsIStyleSet.h"
 #include "nsIDocument.h"
 #include "nsHTMLParts.h"
-#include "nsINameSpaceManager.h"
 
 void XXXNeverCalled()
 {

@@ -40,7 +40,6 @@
 #define nsNodeInfo_h___
 
 #include "nsINodeInfo.h"
-#include "nsINameSpaceManager.h"
 #include "plhash.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"

@@ -67,7 +67,6 @@
 #include "nsIDOMXULCheckboxElement.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
-#include "nsINameSpaceManager.h"
 #include "nsIObjectFrame.h"
 #include "nsIPluginInstance.h"
 #include "nsIPresContext.h"

@@ -1671,7 +1671,8 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement, const nsTemplateMat
 void 
 nsXULContentBuilder::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult)
 {
-    gNameSpaceManager->GetElementFactory(aNameSpaceID, aResult);
+    nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(aNameSpaceID,
+                                                             aResult);
 
     if (!*aResult) {
         *aResult = gXMLElementFactory; // Nothing found. Use generic XML element.

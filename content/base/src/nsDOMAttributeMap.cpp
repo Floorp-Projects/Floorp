@@ -297,11 +297,8 @@ nsDOMAttributeMap::GetNamedItemNS(const nsAString& aNamespaceURI,
     NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
 
     if (aNamespaceURI.Length()) {
-      nsCOMPtr<nsINameSpaceManager> nsmgr;
-      nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
-      NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
-
-      nsmgr->GetNameSpaceID(aNamespaceURI, nameSpaceID);
+      nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
+                                                            nameSpaceID);
 
       if (nameSpaceID == kNameSpaceID_Unknown)
         return NS_OK;
@@ -417,11 +414,8 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
     NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
 
     if (aNamespaceURI.Length()) {
-      nsCOMPtr<nsINameSpaceManager> nsmgr;
-      nimgr->GetNamespaceManager(*getter_AddRefs(nsmgr));
-      NS_ENSURE_TRUE(nsmgr, NS_ERROR_FAILURE);
-
-      nsmgr->GetNameSpaceID(aNamespaceURI, nameSpaceID);
+      nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
+                                                            nameSpaceID);
 
       if (nameSpaceID == kNameSpaceID_Unknown)
         return NS_ERROR_DOM_NOT_FOUND_ERR;

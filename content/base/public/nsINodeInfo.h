@@ -64,7 +64,6 @@
 
 // Forward declarations
 class nsINodeInfoManager;
-class nsINameSpaceManager;
 class nsIDocument;
 class nsIURI;
 class nsIPrincipal;
@@ -335,11 +334,9 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INODEINFOMANAGER_IID)
 
   /*
-   * Initialize the nodeinfo manager with a namespace manager, this should
-   * allways be done.
+   * Initialize the nodeinfo manager with a document.
    */
-  NS_IMETHOD Init(nsIDocument *aDocument,
-                  nsINameSpaceManager *aNameSpaceManager) = 0;
+  NS_IMETHOD Init(nsIDocument *aDocument) = 0;
 
   /*
    * Release the reference to the document, this will be called when
@@ -362,11 +359,6 @@ public:
   NS_IMETHOD GetNodeInfo(const nsAString& aQualifiedName,
                          const nsAString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo) = 0;
-
-  /*
-   * Getter for the namespace manager used by this nodeinfo manager.
-   */
-  NS_IMETHOD GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager) = 0;
 
   /*
    * Retrieve a pointer to the document that owns this node info

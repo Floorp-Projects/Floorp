@@ -56,9 +56,11 @@ class nsIElementFactory;
 #define kNameSpaceID_XSLT     5
 #define kNameSpaceID_XBL      6
 #define kNameSpaceID_MathML   7
+#define kNameSpaceID_RDF      8
+#define kNameSpaceID_XUL      9
+#define kNameSpaceID_SVG      10
 
-// 'html' is by definition bound to the namespace name "urn:w3-org-ns:HTML" XXX ???
-// 'xml' is by definition bound to the namespace name "urn:Connolly:input:required" XXX
+#define NS_NAMESPACEMANAGER_CONTRACTID "@mozilla.org/content/namespacemanager;1"
 
 #define NS_INAMESPACEMANAGER_IID \
   { 0xa6cf90d5, 0x15b3, 0x11d2, \
@@ -67,21 +69,17 @@ class nsIElementFactory;
 /**
  * The Name Space Manager tracks the associtation between a NameSpace
  * URI and the PRInt32 runtime id. Mappings between NameSpaces and 
- * NameSpace prefixes are managed by nsINameSpaces
+ * NameSpace prefixes are managed by nsINameSpaces.
  *
  * All NameSpace URIs are stored in a global table so that IDs are
  * consistent accross the app. NameSpace IDs are only consistent at runtime
  * ie: they are not guaranteed to be consistent accross app sessions.
  *
  * The nsINameSpaceManager needs to have a live reference for as long as
- * the NameSpace IDs are needed. Generally, a document keeps a reference to 
- * a nsINameSpaceManager. Also, each nsINameSpace that comes from the manager
- * keeps a reference to it.
+ * the NameSpace IDs are needed.
  *
  * To create a stack of NameSpaces, call CreateRootNameSpace, and then create
  * child NameSpaces from the root.
- *
- * The "html" and "xml" namespaces come "pre-canned" from the root.
  *
  */
 
@@ -105,13 +103,13 @@ public:
 
   NS_IMETHOD HasRegisteredFactory(PRInt32 aNameSpaceID,
                                   PRBool* aHasFactory) = 0;
+
+  NS_IMETHOD HasNameSpaceURI(PRInt32 aNameSpaceID,
+                             PRBool* aHasNameSpaceURI) = 0;
 };
-
-nsresult
-  NS_NewNameSpaceManager(nsINameSpaceManager** aInstancePtrResult);
-
-void
-  NS_NameSpaceManagerShutdown();
-
  
+nsresult NS_GetNameSpaceManager(nsINameSpaceManager** aInstancePtrResult);
+
+void NS_NameSpaceManagerShutdown();
+
 #endif // nsINameSpaceManager_h___

@@ -1019,8 +1019,8 @@ nsXMLDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult)
   aNodeInfo->GetNamespaceID(namespaceID);
 
   nsCOMPtr<nsIElementFactory> elementFactory;
-  mNameSpaceManager->GetElementFactory(namespaceID,
-                                       getter_AddRefs(elementFactory));
+  nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(namespaceID,
+                                                           getter_AddRefs(elementFactory));
 
   if (elementFactory) {
     rv = elementFactory->CreateInstanceByTag(aNodeInfo,

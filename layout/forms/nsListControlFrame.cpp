@@ -45,7 +45,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
 #include "nsIFormControl.h"
-#include "nsINameSpaceManager.h"
 #include "nsIDeviceContext.h" 
 #include "nsIDOMHTMLCollection.h" 
 #include "nsIDOMNSHTMLOptionCollectn.h"

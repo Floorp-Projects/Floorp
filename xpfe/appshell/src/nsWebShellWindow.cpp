@@ -54,7 +54,6 @@
 #include "nsIPref.h"
 #include "nsReadableUtils.h"
 
-#include "nsINameSpaceManager.h"
 #include "nsEscape.h"
 #include "nsVoidArray.h"
 #include "nsIScriptGlobalObject.h"

@@ -65,7 +65,6 @@ class nsIDOMEvent;
 class nsIDeviceContext;
 class nsIParser;
 class nsIDOMNode;
-class nsINameSpaceManager;
 class nsIDOMDocumentFragment;
 class nsILineBreaker;
 class nsIWordBreaker;
@@ -291,11 +290,6 @@ public:
    */
   NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject** aGlobalObject) = 0;
   NS_IMETHOD SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
-
-  /**
-   * Get the name space manager for this document
-   */
-  NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager) = 0;
 
   /**
    * Get the script loader for this document

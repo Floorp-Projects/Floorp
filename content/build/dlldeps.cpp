@@ -41,13 +41,10 @@
 
 #include "nsIDocument.h"
 #include "nsHTMLParts.h"
-#include "nsINameSpaceManager.h"
 
 void XXXNeverCalled()
 {
   nsIDocument* doc;
   NS_NewHTMLDocument(&doc);
   NS_NewImageDocument(&doc);
-  nsINameSpaceManager* nsm;
-  NS_NewNameSpaceManager(&nsm);
 }

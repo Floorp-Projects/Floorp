@@ -110,7 +110,6 @@
 #include "nsIFileURL.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
-#include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID.
 #include "nsRDFCID.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsVoidArray.h"

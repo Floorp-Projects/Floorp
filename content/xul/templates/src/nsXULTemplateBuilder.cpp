@@ -125,7 +125,6 @@
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,      NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 
@@ -135,11 +134,8 @@ static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
 //
 
 nsrefcnt                  nsXULTemplateBuilder::gRefCnt = 0;
-PRInt32                   nsXULTemplateBuilder::kNameSpaceID_RDF;
-PRInt32                   nsXULTemplateBuilder::kNameSpaceID_XUL;
 nsIRDFService*            nsXULTemplateBuilder::gRDFService;
 nsIRDFContainerUtils*     nsXULTemplateBuilder::gRDFContainerUtils;
-nsINameSpaceManager*      nsXULTemplateBuilder::gNameSpaceManager;
 nsIScriptSecurityManager* nsXULTemplateBuilder::gScriptSecurityManager;
 nsIPrincipal*             nsXULTemplateBuilder::gSystemPrincipal;
 
@@ -177,8 +173,6 @@ nsXULTemplateBuilder::~nsXULTemplateBuilder(void)
             gRDFContainerUtils = nsnull;
         }
 
-        NS_RELEASE(gNameSpaceManager);
-
         NS_IF_RELEASE(gSystemPrincipal);
 
         if (gScriptSecurityManager) {
@@ -194,30 +188,6 @@ nsXULTemplateBuilder::Init()
 {
     if (gRefCnt++ == 0) {
         nsresult rv;
-
-        // Register the XUL and RDF namespaces: these'll just retrieve
-        // the IDs if they've already been registered by someone else.
-        rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
-                                                nsnull,
-                                                NS_GET_IID(nsINameSpaceManager),
-                                                (void**) &gNameSpaceManager);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create namespace manager");
-        if (NS_FAILED(rv)) return rv;
-
-        // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
-        static const char kXULNameSpaceURI[]
-            = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-        static const char kRDFNameSpaceURI[]
-            = RDF_NAMESPACE_URI;
-
-        rv = gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
-        if (NS_FAILED(rv)) return rv;
-
-        rv = gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kRDFNameSpaceURI), kNameSpaceID_RDF);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
-        if (NS_FAILED(rv)) return rv;
 
         // Initialize the global shared reference to the service
         // manager and get some shared resource objects.
@@ -1388,7 +1358,7 @@ nsXULTemplateBuilder::IsTemplateElement(nsIContent* aContent)
     PRInt32 nameSpaceID;
     aContent->GetNameSpaceID(nameSpaceID);
 
-    if (nameSpaceID == nsXULTemplateBuilder::kNameSpaceID_XUL) {
+    if (nameSpaceID == kNameSpaceID_XUL) {
         nsCOMPtr<nsIAtom> tag;
         aContent->GetTag(*getter_AddRefs(tag));
 

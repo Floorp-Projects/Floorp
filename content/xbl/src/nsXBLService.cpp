@@ -93,7 +93,6 @@
 #include "nsIDOMLoadListener.h"
 
 // Static IIDs/CIDs. Try to minimize these.
-static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
 
 static PRBool IsChromeOrResourceURI(nsIURI* aURI)
@@ -474,16 +473,11 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
 PRUint32 nsXBLService::gRefCnt = 0;
 nsIXULPrototypeCache* nsXBLService::gXULCache = nsnull;
  
-nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
- 
 nsHashtable* nsXBLService::gClassTable = nsnull;
 
 JSCList  nsXBLService::gClassLRUList = JS_INIT_STATIC_CLIST(&nsXBLService::gClassLRUList);
 PRUint32 nsXBLService::gClassLRUListLength = 0;
 PRUint32 nsXBLService::gClassLRUListQuota = 64;
-
-nsIAtom* nsXBLService::kEventAtom = nsnull;
-nsIAtom* nsXBLService::kInputAtom = nsnull;
 
 // Enabled by default. Must be over-ridden to disable
 PRBool nsXBLService::gDisableChromeCache = PR_FALSE;
@@ -500,28 +494,18 @@ nsXBLService::nsXBLService(void)
 
   gRefCnt++;
   if (gRefCnt == 1) {
-    nsresult rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
-                                                     nsnull,
-                                                     NS_GET_IID(nsINameSpaceManager),
-                                                     (void**) &gNameSpaceManager);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create namespace manager");
-    if (NS_FAILED(rv)) return;
-    
-    // Create our atoms
-    kEventAtom = NS_NewAtom("event");
-    kInputAtom = NS_NewAtom("input");
-
     // Find out if the XUL cache is on or off
+    nsresult rv;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
       prefs->GetBoolPref(kDisableChromeCachePref, &gDisableChromeCache);
 
     gClassTable = new nsHashtable();
 
-    rv = nsServiceManager::GetService("@mozilla.org/xul/xul-prototype-cache;1",
-                                      NS_GET_IID(nsIXULPrototypeCache),
-                                      (nsISupports**) &gXULCache);
-    if (NS_FAILED(rv)) return;
+    rv = CallGetService("@mozilla.org/xul/xul-prototype-cache;1", &gXULCache);
+    if (NS_FAILED(rv)) {
+      return;
+    }
   }
 }
 
@@ -529,12 +513,6 @@ nsXBLService::~nsXBLService(void)
 {
   gRefCnt--;
   if (gRefCnt == 0) {
-    NS_IF_RELEASE(gNameSpaceManager);
-    
-    // Release our atoms
-    NS_RELEASE(kEventAtom);
-    NS_RELEASE(kInputAtom);
-
     // Walk the LRU list removing and deleting the nsXBLJSClasses.
     FlushMemory();
 
@@ -548,10 +526,7 @@ nsXBLService::~nsXBLService(void)
     delete gClassTable;
     gClassTable = nsnull;
 
-    if (gXULCache) {
-      nsServiceManager::ReleaseService("@mozilla.org/xul/xul-prototype-cache;1", gXULCache);
-      gXULCache = nsnull;
-    }
+    NS_IF_RELEASE(gXULCache);
   }
 }
 
@@ -981,7 +956,8 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
 
             PRInt32 nameSpaceID;
 
-            gNameSpaceManager->GetNameSpaceID(nameSpace, nameSpaceID);
+            nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(nameSpace,
+                                                                  nameSpaceID);
 
             nsCOMPtr<nsIAtom> tagName = getter_AddRefs(NS_NewAtom(display));
             protoBinding->SetBaseTag(nameSpaceID, tagName);
@@ -1057,7 +1033,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
     if (!info && bindingManager &&
         (tagName != nsXULAtoms::scrollbar) &&
         (tagName != nsXULAtoms::thumb) &&
-        (tagName != kInputAtom) &&
+        (tagName != nsHTMLAtoms::input) &&
         (tagName != nsHTMLAtoms::select) && !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no

@@ -58,7 +58,8 @@ class nsSVGDocument : public nsXMLDocument,
                                nsILoadGroup* aLoadGroup,
                                nsISupports* aContainer,
                                nsIStreamListener **aDocListener,
-                               PRBool aReset = PR_TRUE);
+                               PRBool aReset = PR_TRUE,
+                               nsIContentSink* aSink = nsnull);
 
   NS_DECL_NSIDOMSVGDOCUMENT
   NS_FORWARD_NSIDOMDOCUMENT(nsXMLDocument::)

@@ -1615,26 +1615,17 @@ CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
 void 
 CSSStyleSheetInner::RebuildNameSpaces(void)
 {
-  nsCOMPtr<nsINameSpaceManager>  nameSpaceMgr;
-  if (mNameSpace) {
-    mNameSpace->GetNameSpaceManager(*getter_AddRefs(nameSpaceMgr));
-  }
-  else {
-    NS_NewNameSpaceManager(getter_AddRefs(nameSpaceMgr));
-  }
-  if (nameSpaceMgr) {
-    nameSpaceMgr->CreateRootNameSpace(*getter_AddRefs(mNameSpace));
-    if (kNameSpaceID_Unknown != mDefaultNameSpaceID) {
-      nsCOMPtr<nsINameSpace> defaultNameSpace;
-      mNameSpace->CreateChildNameSpace(nsnull, mDefaultNameSpaceID,
-                                       *getter_AddRefs(defaultNameSpace));
-      if (defaultNameSpace) {
-        mNameSpace = defaultNameSpace;
-      }
+  nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(mNameSpace));
+  if (kNameSpaceID_Unknown != mDefaultNameSpaceID) {
+    nsCOMPtr<nsINameSpace> defaultNameSpace;
+    mNameSpace->CreateChildNameSpace(nsnull, mDefaultNameSpaceID,
+                                     *getter_AddRefs(defaultNameSpace));
+    if (defaultNameSpace) {
+      mNameSpace = defaultNameSpace;
     }
-    if (mOrderedRules) {
-      mOrderedRules->EnumerateForwards(CreateNameSpace, address_of(mNameSpace));
-    }
+  }
+  if (mOrderedRules) {
+    mOrderedRules->EnumerateForwards(CreateNameSpace, address_of(mNameSpace));
   }
 }
 
@@ -2236,11 +2227,7 @@ CSSStyleSheetImpl::AppendStyleRule(nsICSSRule* aRule)
       aRule->GetType(type);
       if (nsICSSRule::NAMESPACE_RULE == type) {
         if (! mInner->mNameSpace) {
-          nsCOMPtr<nsINameSpaceManager>  nameSpaceMgr;
-          NS_NewNameSpaceManager(getter_AddRefs(nameSpaceMgr));
-          if (nameSpaceMgr) {
-            nameSpaceMgr->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
-          }
+          nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
         }
 
         if (mInner->mNameSpace) {
@@ -2935,11 +2922,7 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
     cssRule->GetType(type);
     if (type == nsICSSRule::NAMESPACE_RULE) {
       if (! mInner->mNameSpace) {
-        nsCOMPtr<nsINameSpaceManager>  nameSpaceMgr;
-        result = NS_NewNameSpaceManager(getter_AddRefs(nameSpaceMgr));
-        if (NS_FAILED(result))
-          return result;
-        nameSpaceMgr->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
+        nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(mInner->mNameSpace));
       }
 
       NS_ENSURE_TRUE(mInner->mNameSpace, NS_ERROR_FAILURE);

@@ -63,7 +63,6 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIEventListenerManager.h"
 #include "nsINameSpace.h"
-#include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIScriptObjectOwner.h"
@@ -394,9 +393,6 @@ protected:
     static nsrefcnt             gRefCnt;
     // pseudo-constants
     static nsIRDFService*       gRDFService;
-    static nsINameSpaceManager* gNameSpaceManager;
-    static PRInt32              kNameSpaceID_RDF;
-    static PRInt32              kNameSpaceID_XUL;
 
 public:
     static nsresult

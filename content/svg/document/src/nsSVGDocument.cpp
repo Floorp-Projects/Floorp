@@ -66,13 +66,15 @@ nsSVGDocument::StartDocumentLoad(const char* aCommand,
                                  nsILoadGroup* aLoadGroup,
                                  nsISupports* aContainer,
                                  nsIStreamListener **aDocListener,
-                                 PRBool aReset) {
+                                 PRBool aReset,
+                                 nsIContentSink* aSink) {
   nsresult rv = nsXMLDocument::StartDocumentLoad(aCommand,
                                                  aChannel,
                                                  aLoadGroup,
                                                  aContainer,
                                                  aDocListener,
-                                                 aReset);
+                                                 aReset,
+                                                 aSink);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);

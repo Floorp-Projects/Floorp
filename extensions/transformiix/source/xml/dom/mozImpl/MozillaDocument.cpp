@@ -188,13 +188,6 @@ Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, this)
     if (!success) {
         mAttributeNodes.ops = nsnull;
     }
-
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
-    NS_ASSERTION(doc,"document doesn't implement nsIDocument");
-    if (doc) {
-        doc->GetNameSpaceManager(*getter_AddRefs(nsNSManager));
-        NS_ASSERTION(nsNSManager, "Unable to get nsINamespaceManager");
-    }
 }
 
 /**
@@ -380,10 +373,9 @@ Attr* Document::createAttribute(nsIDOMAttr* aAttr)
     aAttr->GetNamespaceURI(ns);
     PRInt32 namespaceID = kNameSpaceID_None;
     if (!ns.IsEmpty()) {
-        NS_ASSERTION(nsNSManager,
-                     "owner document lacks namespace manager");
-        if (nsNSManager) {
-            nsNSManager->GetNameSpaceID(ns, namespaceID);
+        NS_ASSERTION(gNameSpaceManager, "No namespace manager");
+        if (gNameSpaceManager) {
+            gNameSpaceManager->GetNameSpaceID(ns, namespaceID);
         }
     }
 
@@ -660,18 +652,18 @@ Node* Document::createWrapper(nsIDOMNode* aNode)
 PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
 {
     PRInt32 namesspaceID = kNameSpaceID_Unknown;
-    if (nsNSManager) {
-        nsNSManager->RegisterNameSpace(aNamespaceURI,
-                                       namesspaceID);
+    if (gNameSpaceManager) {
+        gNameSpaceManager->RegisterNameSpace(aNamespaceURI,
+                                             namesspaceID);
     }
     return namesspaceID;
 }
 
 void Document::namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI)
 {
-    if (nsNSManager) {
-        nsNSManager->GetNameSpaceURI(aNamespaceID,
-                                     aNamespaceURI);
+    if (gNameSpaceManager) {
+        gNameSpaceManager->GetNameSpaceURI(aNamespaceID,
+                                           aNamespaceURI);
     }
 }
 

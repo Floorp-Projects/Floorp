@@ -42,7 +42,6 @@
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLXULHandler.h"
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"

@@ -173,7 +173,8 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
 
 TX_LG_IMPL;
 static PRBool gInitialized = PR_FALSE;
-static nsIExceptionProvider *sXPathExceptionProvider = 0;
+static nsIExceptionProvider *gXPathExceptionProvider = 0;
+nsINameSpaceManager *gNameSpaceManager = 0;
 
 // Perform our one-time intialization for this module
 PR_STATIC_CALLBACK(nsresult)
@@ -185,14 +186,14 @@ Initialize(nsIModule* aSelf)
 
     gInitialized = PR_TRUE;
 
-    sXPathExceptionProvider = new nsXPathExceptionProvider();
-    if (!sXPathExceptionProvider)
+    gXPathExceptionProvider = new nsXPathExceptionProvider();
+    if (!gXPathExceptionProvider)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(sXPathExceptionProvider);
+    NS_ADDREF(gXPathExceptionProvider);
     nsCOMPtr<nsIExceptionService> xs =
         do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
     if (xs)
-        xs->RegisterExceptionProvider(sXPathExceptionProvider,
+        xs->RegisterExceptionProvider(gXPathExceptionProvider,
                                       NS_ERROR_MODULE_DOM_XPATH);
 
     if (!txXSLTProcessor::txInit()) {
@@ -203,6 +204,12 @@ Initialize(nsIModule* aSelf)
                                  &gTxSecurityManager);
     if (NS_FAILED(rv)) {
         gTxSecurityManager = nsnull;
+        return rv;
+    }
+
+    rv = CallGetService(NS_NAMESPACEMANAGER_CONTRACTID, &gNameSpaceManager);
+    if (NS_FAILED(rv)) {
+        gNameSpaceManager = nsnull;
         return rv;
     }
 
@@ -220,13 +227,13 @@ Shutdown(nsIModule* aSelf)
         return;
 
     gInitialized = PR_FALSE;
-    if (sXPathExceptionProvider) {
+    if (gXPathExceptionProvider) {
         nsCOMPtr<nsIExceptionService> xs =
             do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
         if (xs)
-            xs->UnregisterExceptionProvider(sXPathExceptionProvider,
+            xs->UnregisterExceptionProvider(gXPathExceptionProvider,
                                             NS_ERROR_MODULE_DOM_XPATH);
-        NS_RELEASE(sXPathExceptionProvider);
+        NS_RELEASE(gXPathExceptionProvider);
     }
 
     NS_IF_RELEASE(NS_CLASSINFO_NAME(XSLTProcessor));
@@ -239,6 +246,7 @@ Shutdown(nsIModule* aSelf)
     txXSLTProcessor::txShutdown();
 
     NS_IF_RELEASE(gTxSecurityManager);
+    NS_IF_RELEASE(gNameSpaceManager);
 
     TX_LG_DELETE;
 }

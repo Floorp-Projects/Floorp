@@ -43,8 +43,6 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsHTMLAtoms.h"
-#include "nsINameSpaceManager.h"
-
 #include "nsIWidget.h"
 #include "nsIPresContext.h"
 #include "nsIDOMWindowInternal.h"

@@ -30,7 +30,6 @@
 
 // content includes
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocument.h"
 

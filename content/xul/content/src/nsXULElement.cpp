@@ -158,16 +158,9 @@ nsICSSParser* nsXULPrototypeElement::sCSSParser = nsnull;
 nsIXULPrototypeCache* nsXULPrototypeScript::sXULPrototypeCache = nsnull;
 nsIXBLService * nsXULElement::gXBLService = nsnull;
 
-// XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
-#define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
-static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
-// End of XUL interface includes
-
 //----------------------------------------------------------------------
 
 static NS_DEFINE_CID(kEventListenerManagerCID,    NS_EVENTLISTENERMANAGER_CID);
-static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
@@ -435,9 +428,6 @@ StyleHintFor(nsINodeInfo* aNodeInfo)
 
 nsrefcnt             nsXULElement::gRefCnt;
 nsIRDFService*       nsXULElement::gRDFService;
-nsINameSpaceManager* nsXULElement::gNameSpaceManager;
-PRInt32              nsXULElement::kNameSpaceID_RDF;
-PRInt32              nsXULElement::kNameSpaceID_XUL;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
@@ -478,20 +468,6 @@ nsXULElement::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
         if (NS_FAILED(rv)) return rv;
 
-
-        rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
-                                                nsnull,
-                                                NS_GET_IID(nsINameSpaceManager),
-                                                (void**) &gNameSpaceManager);
-
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create namespace manager");
-        if (NS_FAILED(rv)) return rv;
-
-        if (gNameSpaceManager) {
-            gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kRDFNameSpaceURI), kNameSpaceID_RDF);
-            gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
-        }
-
         InitEventHandlerMap();
     }
 
@@ -524,8 +500,6 @@ nsXULElement::~nsXULElement()
             nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
             gRDFService = nsnull;
         }
-
-        NS_IF_RELEASE(gNameSpaceManager);
     }
 }
 
@@ -1459,7 +1433,8 @@ nsXULElement::GetAttributeNS(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
     PRInt32 nsid;
 
-    gNameSpaceManager->GetNameSpaceID(aNamespaceURI, nsid);
+    nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
+                                                          nsid);
 
     if (nsid == kNameSpaceID_Unknown) {
         // Unkonwn namespace means no attr...
@@ -1496,7 +1471,8 @@ nsXULElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
     PRInt32 nameSpaceId;
     nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(aLocalName));
 
-    gNameSpaceManager->GetNameSpaceID(aNamespaceURI, nameSpaceId);
+    nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
+                                                          nameSpaceId);
 
     return UnsetAttr(nameSpaceId, tag, PR_TRUE);
 }
@@ -1554,7 +1530,8 @@ nsXULElement::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     kungFuGrip = dont_AddRef(NS_STATIC_CAST(nsIDOMNodeList *, elements));
 
     if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
-        gNameSpaceManager->GetNameSpaceID(aNamespaceURI, nameSpaceId);
+        nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
+                                                              nameSpaceId);
 
         if (nameSpaceId == kNameSpaceID_Unknown) {
             // Unkonwn namespace means no matches, we return an empty list...
@@ -1606,7 +1583,7 @@ nsXULElement::HasAttributeNS(const nsAString& aNamespaceURI,
     nsCOMPtr<nsIAtom> name(dont_AddRef(NS_NewAtom(aLocalName)));
     PRInt32 nsid;
 
-    gNameSpaceManager->GetNameSpaceID(aNamespaceURI, nsid);
+    nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI, nsid);
 
     if (nsid == kNameSpaceID_Unknown) {
         // Unkonwn namespace means no attr...

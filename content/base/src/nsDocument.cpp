@@ -529,7 +529,6 @@ nsDocument::nsDocument() : mSubDocuments(nsnull),
   mRootContent = nsnull;
   mListenerManager = nsnull;
   mInDestructor = PR_FALSE;
-  mNameSpaceManager = nsnull;
   mHeaderData = nsnull;
   mChildNodes = nsnull;
   mModCount = 0;
@@ -620,8 +619,6 @@ nsDocument::~nsDocument()
     NS_RELEASE(mListenerManager);
   }
 
-  NS_IF_RELEASE(mNameSpaceManager);
-
   if (mScriptLoader) {
     mScriptLoader->DropDocumentReference();
   }
@@ -694,7 +691,7 @@ NS_IMPL_RELEASE(nsDocument)
 
 nsresult nsDocument::Init()
 {
-  if (mNameSpaceManager) {
+  if (mArena) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
@@ -703,13 +700,10 @@ nsresult nsDocument::Init()
   rv = NS_NewHeapArena(&mArena, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_NewNameSpaceManager(&mNameSpaceManager);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   mNodeInfoManager = new nsNodeInfoManager();
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_OUT_OF_MEMORY);
 
-  mNodeInfoManager->Init(this, mNameSpaceManager);
+  mNodeInfoManager->Init(this);
 
   return rv;
 }
@@ -756,8 +750,6 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 NS_IMETHODIMP
 nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
 {
-  nsresult rv = NS_OK;
-
   mDocumentTitle.Truncate();
 
   NS_IF_RELEASE(mDocumentURL);
@@ -807,7 +799,6 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   mStyleSheets.Clear();
 
   NS_IF_RELEASE(mListenerManager);
-  NS_IF_RELEASE(mNameSpaceManager);
 
   mDOMStyleSheets = nsnull; // Release the stylesheets list.
 
@@ -822,10 +813,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
     // load group, and it works just fine.
   }
 
-  if (NS_OK == rv)
-    rv = NS_NewNameSpaceManager(&mNameSpaceManager);
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1772,14 +1760,6 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 }
 
 NS_IMETHODIMP
-nsDocument::GetNameSpaceManager(nsINameSpaceManager*& aManager)
-{
-  aManager = mNameSpaceManager;
-  NS_IF_ADDREF(aManager);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::GetScriptLoader(nsIScriptLoader** aScriptLoader) 
 {
   NS_ENSURE_ARG_POINTER(aScriptLoader);
@@ -2490,7 +2470,8 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
   nsCOMPtr<nsIContentList> list;
 
   if (!aNamespaceURI.Equals(NS_LITERAL_STRING("*"))) {
-    mNameSpaceManager->GetNameSpaceID(aNamespaceURI, nameSpaceId);
+    nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceID(aNamespaceURI,
+                                                          nameSpaceId);
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
       // Unkonwn namespace means no matches, we create an empty list...
@@ -2877,7 +2858,7 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
   xblService->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
   
   nsCAutoString contractID("@mozilla.org/layout/xul-boxobject");
-  if (namespaceID == nsXULAtoms::nameSpaceID) {
+  if (namespaceID == kNameSpaceID_XUL) {
     if (tag.get() == nsXULAtoms::browser)
       contractID += "-browser";
     else if (tag.get() == nsXULAtoms::editor)

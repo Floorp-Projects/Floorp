@@ -103,6 +103,7 @@
 
 #include "nsIExpatSink.h"
 #include "nsUnicharUtils.h"
+#include "nsXULAtoms.h"
 
 static const char kNameSpaceSeparator = ':';
 static const char kNameSpaceDef[] = "xmlns";
@@ -111,12 +112,6 @@ static const char kNameSpaceDef[] = "xmlns";
 static PRLogModuleInfo* gLog;
 #endif
 
-// XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
-#define XUL_NAMESPACE_URI "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
-
-
-static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
 //----------------------------------------------------------------------
@@ -147,16 +142,9 @@ public:
 protected:
     // pseudo-constants
     static nsrefcnt               gRefCnt;
-    static nsINameSpaceManager*   gNameSpaceManager;
     static nsIXULPrototypeCache*  gXULCache;
 
-    static nsIAtom* kClassAtom;
-    static nsIAtom* kIdAtom;
     static nsIAtom* kScriptAtom;
-    static nsIAtom* kStyleAtom;
-    static nsIAtom* kTemplateAtom;
-
-    static PRInt32 kNameSpaceID_XUL;
 
     PRUnichar* mText;
     PRInt32 mTextLength;
@@ -262,16 +250,9 @@ protected:
 };
 
 nsrefcnt XULContentSinkImpl::gRefCnt;
-nsINameSpaceManager* XULContentSinkImpl::gNameSpaceManager;
 nsIXULPrototypeCache* XULContentSinkImpl::gXULCache;
 
-nsIAtom* XULContentSinkImpl::kClassAtom;
-nsIAtom* XULContentSinkImpl::kIdAtom;
 nsIAtom* XULContentSinkImpl::kScriptAtom;
-nsIAtom* XULContentSinkImpl::kStyleAtom;
-nsIAtom* XULContentSinkImpl::kTemplateAtom;
-
-PRInt32 XULContentSinkImpl::kNameSpaceID_XUL;
 
 //----------------------------------------------------------------------
 
@@ -358,27 +339,9 @@ XULContentSinkImpl::XULContentSinkImpl(nsresult& rv)
     NS_INIT_ISUPPORTS();
 
     if (gRefCnt++ == 0) {
-        rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
-                                                nsnull,
-                                                NS_GET_IID(nsINameSpaceManager),
-                                                (void**) &gNameSpaceManager);
+        kScriptAtom = NS_NewAtom("script");
 
-        if (NS_FAILED(rv)) return;
-
-
-        rv = gNameSpaceManager->RegisterNameSpace(NS_ConvertASCIItoUCS2(kXULNameSpaceURI), kNameSpaceID_XUL);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
-        if (NS_FAILED(rv)) return;
-
-        kClassAtom          = NS_NewAtom("class");
-        kIdAtom             = NS_NewAtom("id");
-        kScriptAtom         = NS_NewAtom("script");
-        kStyleAtom          = NS_NewAtom("style");
-        kTemplateAtom       = NS_NewAtom("template");
-
-        rv = nsServiceManager::GetService(kXULPrototypeCacheCID,
-                                          NS_GET_IID(nsIXULPrototypeCache),
-                                          (nsISupports**) &gXULCache);
+        rv = CallGetService(kXULPrototypeCacheCID, &gXULCache);
     }
 
 #ifdef PR_LOGGING
@@ -465,18 +428,8 @@ XULContentSinkImpl::~XULContentSinkImpl()
     PR_FREEIF(mText);
 
     if (--gRefCnt == 0) {
-        NS_IF_RELEASE(gNameSpaceManager);
-
-        NS_IF_RELEASE(kClassAtom);
-        NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kScriptAtom);
-        NS_IF_RELEASE(kStyleAtom);
-        NS_IF_RELEASE(kTemplateAtom);
-
-        if (gXULCache) {
-            nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULCache);
-            gXULCache = nsnull;
-        }
+        NS_IF_RELEASE(gXULCache);
     }
 }
 
@@ -1182,7 +1135,7 @@ XULContentSinkImpl::PushNameSpacesFrom(const PRUnichar** aAttributes)
         nameSpace =
             (nsINameSpace*)mNameSpaceStack.ElementAt(mNameSpaceStack.Count() - 1);
     } else {
-        gNameSpaceManager->CreateRootNameSpace(*getter_AddRefs(nameSpace));
+        nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(nameSpace));
         if (! nameSpace)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1576,7 +1529,7 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
       nsAutoString value;
 
       // Compute the element's class list if the element has a 'class' attribute.
-      rv = aElement->GetAttr(kNameSpaceID_None, kClassAtom, value);
+      rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::clazz, value);
       if (NS_FAILED(rv)) return rv;
 
       if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
@@ -1585,7 +1538,7 @@ XULContentSinkImpl::AddAttributes(const PRUnichar** aAttributes,
       }
 
       // Parse the element's 'style' attribute
-      rv = aElement->GetAttr(kNameSpaceID_None, kStyleAtom, value);
+      rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::style, value);
       if (NS_FAILED(rv)) return rv;
 
       if (rv == NS_CONTENT_ATTR_HAS_VALUE) {

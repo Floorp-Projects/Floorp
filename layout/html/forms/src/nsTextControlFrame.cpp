@@ -86,7 +86,6 @@
 #include "nsIComponentManager.h"
 
 #include "nsBoxLayoutState.h"
-#include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h" //getframetype
 //for keylistener for "return" check
 #include "nsIPrivateDOMEvent.h"

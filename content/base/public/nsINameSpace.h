@@ -43,7 +43,6 @@
 
 class nsIAtom;
 class nsString;
-class nsINameSpaceManager;
 
 #define NS_INAMESPACE_IID \
   { 0xa6cf90d4, 0x15b3, 0x11d2, \
@@ -58,14 +57,12 @@ class nsINameSpaceManager;
  * New NameSpaces are created as a child of an existing NameSpace. Searches
  * for NameSpaces based on prefix search up the chain of nested NameSpaces
  *
- * Each NameSpace keeps a live reference on its parent and its Manager.
+ * Each NameSpace keeps a live reference on its parent.
  *
  */
 class nsINameSpace : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INAMESPACE_IID)
-
-  NS_IMETHOD GetNameSpaceManager(nsINameSpaceManager*& aManager) const = 0;
 
   // Get data of this name space
   NS_IMETHOD GetNameSpaceID(PRInt32& aID) const = 0;

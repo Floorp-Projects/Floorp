@@ -88,7 +88,6 @@
 #include "nsIAccessible.h"
 #include "nsIAccessibilityService.h"
 #endif
-#include "nsINameSpaceManager.h"
 #include "nsGUIEvent.h"
 
 #ifdef IBMBIDI

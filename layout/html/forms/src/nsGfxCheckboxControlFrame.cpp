@@ -43,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsIComponentManager.h"
 #include "nsHTMLAtoms.h"
-#include "nsINameSpaceManager.h"
 #include "nsIPresState.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"

@@ -66,7 +66,6 @@ class nsXULContentUtils
 protected:
     static nsrefcnt gRefCnt;
     static nsIRDFService* gRDF;
-    static nsINameSpaceManager* gNameSpaceManager;
     static nsIDateTimeFormat* gFormat;
 
     static PRBool gDisableXULCache;

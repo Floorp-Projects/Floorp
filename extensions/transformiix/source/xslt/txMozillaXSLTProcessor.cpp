@@ -224,8 +224,6 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
  * txMozillaXSLTProcessor
  */
 
-NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
-
 NS_IMPL_ADDREF(txMozillaXSLTProcessor)
 NS_IMPL_RELEASE(txMozillaXSLTProcessor)
 NS_INTERFACE_MAP_BEGIN(txMozillaXSLTProcessor)
@@ -602,13 +600,8 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
         }        
     }
 
-    nsresult rv;
-    nsCOMPtr<nsINameSpaceManager> namespaceManager =
-        do_GetService(kNameSpaceManagerCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRInt32 nsId = kNameSpaceID_Unknown;
-    rv = namespaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    nsresult rv = gNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
@@ -630,13 +623,8 @@ txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
                                      const nsAString& aLocalName,
                                      nsIVariant **aResult)
 {
-    nsresult rv;
-    nsCOMPtr<nsINameSpaceManager> namespaceManager =
-        do_GetService(kNameSpaceManagerCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRInt32 nsId = kNameSpaceID_Unknown;
-    rv = namespaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    nsresult rv = gNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
@@ -652,13 +640,8 @@ NS_IMETHODIMP
 txMozillaXSLTProcessor::RemoveParameter(const nsAString& aNamespaceURI,
                                         const nsAString& aLocalName)
 {
-    nsresult rv;
-    nsCOMPtr<nsINameSpaceManager> namespaceManager =
-        do_GetService(kNameSpaceManagerCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRInt32 nsId = kNameSpaceID_Unknown;
-    rv = namespaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    nsresult rv = gNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
 

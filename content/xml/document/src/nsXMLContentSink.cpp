@@ -118,11 +118,7 @@ static char kNameSpaceSeparator = ':';
 
 static const char* kLoadAsData = "loadAsData";
 
-static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
-
-nsINameSpaceManager* nsXMLContentSink::gNameSpaceManager = nsnull;
-PRUint32 nsXMLContentSink::gRefCnt = 0;
 
 // XXX Open Issues:
 // 1) what's not allowed - We need to figure out which HTML tags
@@ -160,17 +156,6 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
 nsXMLContentSink::nsXMLContentSink()
 {
   NS_INIT_ISUPPORTS();
-  gRefCnt++;
-  if (gRefCnt == 1) {
-#ifdef DEBUG
-    nsresult rv =
-#endif
-    nsServiceManager::GetService(kNameSpaceManagerCID,
-                                 NS_GET_IID(nsINameSpaceManager),
-                                 (nsISupports**) &gNameSpaceManager);
-
-     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get namespace manager");
-  }
 
   mDocument = nsnull;
   mDocumentURL = nsnull;
@@ -195,11 +180,6 @@ nsXMLContentSink::nsXMLContentSink()
 
 nsXMLContentSink::~nsXMLContentSink()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_IF_RELEASE(gNameSpaceManager);
-  }
-
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mDocumentURL);
   NS_IF_RELEASE(mDocumentBaseURL);
@@ -227,8 +207,6 @@ nsXMLContentSink::Init(nsIDocument* aDoc,
                        nsIWebShell* aContainer,
                        nsIChannel* aChannel)
 {
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
-
   NS_PRECONDITION(nsnull != aDoc, "null ptr");
   NS_PRECONDITION(nsnull != aURL, "null ptr");
   if ((nsnull == aDoc) || (nsnull == aURL)) {
@@ -607,8 +585,8 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount, PR
   // own content element implementation (e.g., XUL or MathML).  
   // This is done based off a contractid/namespace scheme. 
   nsCOMPtr<nsIElementFactory> elementFactory;
-  gNameSpaceManager->GetElementFactory(aNameSpaceID,
-                                       getter_AddRefs(elementFactory));
+  nsContentUtils::GetNSManagerWeakRef()->GetElementFactory(aNameSpaceID,
+                                                           getter_AddRefs(elementFactory));
   if (elementFactory) {
     // Create the content element using the element factory.
     elementFactory->CreateInstanceByTag(aNodeInfo, aResult);
@@ -621,7 +599,8 @@ nsXMLContentSink::CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount, PR
   if (!mPrettyPrintHasFactoredElements && !mPrettyPrintHasSpecialRoot &&
       mPrettyPrintXML) {
     PRBool hasFactory = PR_FALSE;
-    rv = gNameSpaceManager->HasRegisteredFactory(aNameSpaceID, &hasFactory);
+    rv = nsContentUtils::GetNSManagerWeakRef()->HasRegisteredFactory(aNameSpaceID,
+                                                                     &hasFactory);
     NS_ENSURE_SUCCESS(rv, rv);
     mPrettyPrintHasFactoredElements = hasFactory;
   }
@@ -2120,15 +2099,8 @@ nsXMLContentSink::PushNameSpacesFrom(const PRUnichar** aAtts)
     nameSpace =
       (nsINameSpace*)mNameSpaceStack->ElementAt(mNameSpaceStack->Count() - 1);
   } else {
-    nsCOMPtr<nsINameSpaceManager> manager;
-    mDocument->GetNameSpaceManager(*getter_AddRefs(manager));
-
-    NS_ASSERTION(manager, "no name space manager in document");
-
-    if (manager) {
-      rv = manager->CreateRootNameSpace(*getter_AddRefs(nameSpace));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = nsContentUtils::GetNSManagerWeakRef()->CreateRootNameSpace(*getter_AddRefs(nameSpace));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   NS_ENSURE_TRUE(nameSpace, NS_ERROR_UNEXPECTED);

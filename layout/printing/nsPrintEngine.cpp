@@ -107,7 +107,6 @@ static const char* kPrintingPromptService = "@mozilla.org/embedcomp/printingprom
 #include "nsIDocument.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
-#include "nsINameSpaceManager.h"
 #include "nsIWebShell.h"
 
 // Focus

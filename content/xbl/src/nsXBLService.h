@@ -52,7 +52,6 @@ class nsIXBLBinding;
 class nsIXBLDocumentInfo;
 class nsIXBLPrototypeHandler;
 class nsIXBLPrototypeBinding;
-class nsINameSpaceManager;
 class nsIContent;
 class nsIDocument;
 class nsIAtom;
@@ -61,7 +60,6 @@ class nsIURI;
 class nsSupportsHashtable;
 class nsHashtable;
 class nsIXULPrototypeCache;
-class nsIXULContentUtils;
 
 class nsXBLService : public nsIXBLService, public nsIObserver, public nsSupportsWeakReference
 {
@@ -119,11 +117,8 @@ public:
 
 // MEMBER VARIABLES
 public:
-  static nsIXULContentUtils* gXULUtils;
   static nsIXULPrototypeCache* gXULCache;
     
-  static nsINameSpaceManager* gNameSpaceManager; // Used to register the XBL namespace
-  
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
 
   static PRBool gDisableChromeCache;
@@ -133,10 +128,6 @@ public:
   static JSCList  gClassLRUList;             // LRU list of cached classes.
   static PRUint32 gClassLRUListLength;       // Number of classes on LRU list.
   static PRUint32 gClassLRUListQuota;        // Quota on class LRU list.
-
-  // XBL Atoms
-  static nsIAtom* kEventAtom;
-  static nsIAtom* kInputAtom;
 
   nsFixedSizeAllocator mPool;
 };
