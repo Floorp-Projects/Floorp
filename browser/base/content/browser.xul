@@ -25,6 +25,7 @@ Contributor(s):
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://navigator/content/navigator.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/bookmarks/bookmarks.css" type="text/css"?>
 
 <?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
 <?xul-overlay href="chrome://communicator/content/platformCommunicatorOverlay.xul"?>
@@ -64,7 +65,7 @@ Contributor(s):
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/charset.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarksOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
@@ -75,7 +76,6 @@ Contributor(s):
   <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
   <stringbundle id="bundle_navigator_region" src="chrome://navigator-region/locale/region.properties"/>
   <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
-  <stringbundle id="bundle_bookmarks" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   
   <commandset commandupdater="true"
@@ -93,26 +93,22 @@ Contributor(s):
   <command id="cmd_newNavigator"
            oncommand="OpenBrowserWindow()"/>
   <command id="cmd_bm_open"                      oncommand="goDoCommand('cmd_bm_open');"/>
-  <command id="cmd_bm_openfolder"                oncommand="goDoCommand('cmd_bm_openfolder');"/>
+  <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
+  <command id="cmd_bm_openinnewtab"              oncommand="goDoCommand('cmd_bm_openinnewtab');"/>
+  <command id="cmd_bm_expandfolder"              oncommand="goDoCommand('cmd_bm_expandfolder');"/>
+  <command id="cmd_bm_managefolder"              oncommand="goDoCommand('cmd_bm_managefolder');"/>
   <command id="cmd_bm_newfolder"                 oncommand="goDoCommand('cmd_bm_newfolder');"/>
   <command id="cmd_bm_newbookmark"               oncommand="goDoCommand('cmd_bm_newbookmark');"/>
   <command id="cmd_bm_newseparator"              oncommand="goDoCommand('cmd_bm_newseparator');"/>
   <command id="cmd_bm_find"                      oncommand="goDoCommand('cmd_bm_find');"/>
-  <command id="cmd_bm_setnewbookmarkfolder"      oncommand="goDoCommand('cmd_bm_setnewbookmarkfolder');"/>
-  <command id="cmd_bm_setpersonaltoolbarfolder"  oncommand="goDoCommand('cmd_bm_setpersonaltoolbarfolder');"/>
-  <command id="cmd_bm_setnewsearchfolder"        oncommand="goDoCommand('cmd_bm_setnewsearchfolder');"/>
   <command id="cmd_bm_properties"                oncommand="goDoCommand('cmd_bm_properties');"/>
   <command id="cmd_bm_rename"                    oncommand="goDoCommand('cmd_bm_rename');"/>
-  <command id="cmd_bm_openinnewwindow"           oncommand="goDoCommand('cmd_bm_openinnewwindow');"/>
-  <command id="cmd_bm_import"                    oncommand="goDoCommand('cmd_bm_import');"/>
-  <command id="cmd_bm_export"                    oncommand="goDoCommand('cmd_bm_export');"/>
-  <command id="cmd_bm_fileBookmark"           oncommand="goDoCommand('cmd_bm_fileBookmark');"/>
+  <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
+  <command id="cmd_bm_cut"                       oncommand="goDoCommand('cmd_bm_cut');"/>
+  <command id="cmd_bm_copy"                      oncommand="goDoCommand('cmd_bm_copy');"/>
+  <command id="cmd_bm_paste"                     oncommand="goDoCommand('cmd_bm_paste');"/>
+  <command id="cmd_bm_delete"                    oncommand="goDoCommand('cmd_bm_delete');"/>
 
-  <command id="cmd_bm_cut"                    oncommand="goDoCommand('cmd_bm_cut');"/>
-  <command id="cmd_bm_copy"                   oncommand="goDoCommand('cmd_bm_copy');"/>
-  <command id="cmd_bm_paste"                  oncommand="goDoCommand('cmd_bm_paste');"/>
-  <command id="cmd_bm_delete"                 oncommand="goDoCommand('cmd_bm_delete');"/>
-  <command id="cmd_bm_selectAll"              oncommand="goDoCommand('cmd_bm_selectAll');"/>
   <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
   <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
   <command id="Browser:SavePage" oncommand="saveDocument(window._content.document);"/>
@@ -228,8 +224,6 @@ Contributor(s):
   <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-  <popup id="bmContext" 
-         onpopupshowing="gBookmarksShell.createContextMenu(event);"/>
   <popup id="toolbar-context-menu">
     <menuitem oncommand="BrowserCustomizeToolbar()"
               label="&viewCustomizeToolbar.label;"
@@ -594,10 +588,15 @@ Contributor(s):
           </menupopup>
         </menu>
     
-        <menu label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
+        <menu id="bookmarks-menu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
               datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
               ref="NC:BookmarksRoot" flags="dont-test-empty"
-              oncommand="OpenBookmarkURL(event.target, this.database)">
+              oncommand="BookmarksUtils.loadBookmarkBrowser(event, this.database)"
+              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
+              ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
+              ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
+              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
+              ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
           <template xmlns:nc="http://home.netscape.com/NC-rdf#">
             <rule nc:FolderGroup="true" iscontainer="true">
               <menupopup>
@@ -791,115 +790,9 @@ Contributor(s):
       </hbox>
     </toolbar>
   
-    <toolbar id="PersonalToolbar" class="chromeclass-directories"
-             ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
-             ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
-             ondragenter="nsDragAndDrop.dragEnter(event, personalToolbarDNDObserver); event.preventBubble()"
-             ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
-             ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
-      <!-- Personal toolbar items -->
-      <hbox id="NC:PersonalToolbarFolder" flex="1" style="min-width: 1px;" context="bmContext" 
-           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch"
-           ref="NC:PersonalToolbarFolder" flags="dont-test-empty"
-           oncommand="OpenBookmarkURL(event.target, this.database)"
-           rdf:type="http://home.netscape.com/NC-rdf#Folder">
-        <tooltip id="ptTooltip" noautohide="true" onpopupshowing="return FillInPTTooltip(document.tooltipNode)">
-          <vbox flex="1">  
-            <label id="ptTitleText" />
-            <label id="ptUrlText" />
-          </vbox>
-        </tooltip>
-        <template xmlns:nc="http://home.netscape.com/NC-rdf#">
-          <rule parent="hbox" rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <toolbarseparator uri="rdf:*"
-                              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
-          </rule>
-
-          <!-- yes, the type attribute is necessary otherwise all leaves are 
-               treated as containers for some reason -->
-          <rule parent="hbox" iscontainer="true"
-                nc:FolderGroup="true">
-            <toolbarbutton class="bookmark-item bookmark-group" uri="rdf:*" xulcontentsgenerated="true" 
-                           group="true"
-                           container="false"
-                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </rule>
-
-          <rule parent="hbox" iscontainer="true" isempty="true"
-                rdf:type="http://home.netscape.com/NC-rdf#Folder">
-            <toolbarbutton type="menu" editable="true" class="bookmark-item"
-                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <menupopup>
-                <menuitem label="&emptyItem.label;" disabled="true"/>
-              </menupopup>
-            </toolbarbutton>
-          </rule>
-
-          <rule parent="hbox" iscontainer="true">
-            <toolbarbutton type="menu" class="bookmark-item" uri="rdf:*" editable="true"
-                           rdf:type="http://home.netscape.com/NC-rdf#Folder"
-                           label="rdf:http://home.netscape.com/NC-rdf#Name">
-              <menupopup/>
-            </toolbarbutton>
-          </rule>
-
-          <rule parent="hbox">
-            <toolbarbutton class="bookmark-item" uri="rdf:*" editable="true" 
-                           status="rdf:http://home.netscape.com/WEB-rdf#status"
-                           rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
-                           statustext="rdf:http://home.netscape.com/NC-rdf#URL"
-                           tooltip="ptTooltip"
-                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-          </rule>
-
-          <rule nc:FolderGroup="true" iscontainer="true">
-            <menupopup>
-              <menuitem class="menuitem-iconic bookmark-group" 
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"
-                        group="true"
-                        uri="rdf:*"
-                        xulcontentsgenerated="true"/>
-            </menupopup>
-          </rule>
-
-          <rule iscontainer="true" isempty="true" rdf:type="http://home.netscape.com/NC-rdf#Folder">
-            <menupopup>
-              <menu class="menu-iconic bookmark-item" uri="rdf:*" 
-                  type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                  label="rdf:http://home.netscape.com/NC-rdf#Name">
-                <menupopup>
-                  <menuitem label="&emptyItem.label;" disabled="true"/>
-                </menupopup>
-              </menu>
-            </menupopup>
-          </rule>
-
-          <rule iscontainer="true">
-            <menupopup>
-              <menu class="menu-iconic bookmark-item" uri="rdf:*"
-                    type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                    label="rdf:http://home.netscape.com/NC-rdf#Name">
-                <menupopup/>
-              </menu>
-            </menupopup>
-          </rule>
-
-          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <menupopup>
-              <menuseparator uri="rdf:*"
-                             type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"/>
-            </menupopup>
-          </rule>
-          <rule>
-            <menupopup>
-              <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
-                        label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-            </menupopup>
-          </rule>
-        </template>
-      </hbox>
+    <!-- Bookmarks in the personal toolbar folder -->
+    <toolbar id="PersonalToolbar" class="chromeclass-directories">
+      <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
     </toolbar>
 
   </toolbox>

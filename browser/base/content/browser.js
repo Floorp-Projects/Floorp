@@ -25,7 +25,7 @@
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Kevin Puetz (puetzk@iastate.edu)
  *   Ben Goodger <ben@netscape.com> 
- *   Pierre Chanial <pierrechanial@netscape.net>
+ *   Pierre Chanial <chanial@noos.fr>
  *   Jason Eager <jce2@po.cwru.edu>
  *   Joe Hewitt <hewitt@netscape.com>
  *   Alec Flett <alecf@netscape.com>
@@ -49,7 +49,6 @@ var gURLBar = null;
 var gProxyButton = null;
 var gProxyFavIcon = null;
 var gProxyDeck = null;
-var gBookmarksService = null;
 var gSearchService = null;
 var gNavigatorBundle;
 var gBrandBundle;
@@ -121,11 +120,7 @@ function UpdateBookmarksLastVisitedDate(event)
   var url = getWebNavigation().currentURI.spec;
   if (url) {
     // if the URL is bookmarked, update its "Last Visited" date
-    if (!gBookmarksService)
-      gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                                    .getService(Components.interfaces.nsIBookmarksService);
-
-    gBookmarksService.updateLastVisitedDate(url, _content.document.characterSet);
+    BMSVC.updateLastVisitedDate(url, _content.document.characterSet);
   }
 }
 
@@ -134,11 +129,10 @@ function HandleBookmarkIcon(iconURL, addFlag)
   var url = getWebNavigation().currentURI.spec
   if (url) {
     // update URL with new icon reference
-    if (!gBookmarksService)
-      gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                                    .getService(Components.interfaces.nsIBookmarksService);
-    if (addFlag)    gBookmarksService.updateBookmarkIcon(url, iconURL);
-    else            gBookmarksService.removeBookmarkIcon(url, iconURL);
+    if (addFlag)
+      BMSVC.updateBookmarkIcon(url, iconURL);
+    else
+      BMSVC.removeBookmarkIcon(url, iconURL);
   }
 }
 
@@ -248,10 +242,9 @@ function Startup()
 
   // initialize observers and listeners
   window.XULBrowserWindow = new nsBrowserStatusHandler();
-
   window.browserContentListener =
     new nsBrowserContentListener(window, getBrowser());
-  
+
   // Initialize browser instance..
   appCore.setWebShellWindow(window);
 
@@ -366,12 +359,6 @@ function Startup()
   // does clicking on the urlbar select its contents?
   gClickSelectsAll = pref.getBoolPref("browser.urlbar.clickSelectsAll");
 
-  // now load bookmarks after a delay
-  setTimeout(LoadBookmarksCallback, 0);
-}
-
-function LoadBookmarksCallback()
-{
   // set home button tooltip text
   var homePage = getHomePage();
   if (homePage) {
@@ -380,16 +367,9 @@ function LoadBookmarksCallback()
       homeButton.setAttribute("tooltiptext", homePage);
   }
 
-  try {
-    if (!gBookmarksService)
-      gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                                    .getService(Components.interfaces.nsIBookmarksService);
-    gBookmarksService.ReadBookmarks();
-    // tickle personal toolbar to load personal toolbar items
-    var personalToolbar = document.getElementById("NC:PersonalToolbarFolder");
-    personalToolbar.builder.rebuild();
-  } catch (e) {
-  }
+  // now load bookmarks after a delay
+  var bt = document.getElementById("bookmarks-toolbar");
+  bt.loadBookmarksWithDelay();
 }
 
 function WindowFocusTimerCallback(element)
@@ -524,93 +504,6 @@ function BrowserHome()
   loadURI(homePage);
 }
 
-function OpenBookmarkGroup(element, datasource)
-{
-  if (!datasource)
-    return;
-    
-  var id = element.getAttribute("id");
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                          .getService(Components.interfaces.nsIRDFService);
-  var resource = rdf.GetResource(id, true);
-  OpenBookmarkGroupFromResource(resource, datasource, rdf);
-}
-
-function OpenBookmarkGroupFromResource(resource, datasource, rdf) {
-  var urlResource = rdf.GetResource("http://home.netscape.com/NC-rdf#URL");
-  var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
-  rdfContainer.Init(datasource, resource);
-  var containerChildren = rdfContainer.GetElements();
-  var tabPanels = gBrowser.mPanelContainer.childNodes;
-  var tabCount = tabPanels.length;
-  var index = 0;
-  while (containerChildren.hasMoreElements()) {
-    var resource = containerChildren.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    var target = datasource.GetTarget(resource, urlResource, true);
-    if (target) {
-      var uri = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-      if (index < tabCount)
-        tabPanels[index].loadURI(uri, null, nsIWebNavigation.LOAD_FLAGS_NONE);
-      else
-        gBrowser.addTab(uri);
-      index++;
-    }
-  }  
-  
-  if (index == 0)
-    return; // If the bookmark group was completely invalid, just bail.
-     
-  // Select the first tab in the group.
-  var tabs = gBrowser.mTabContainer.childNodes;
-  gBrowser.selectedTab = tabs[0];
-  
-  // Close any remaining open tabs that are left over.
-  for (var i = tabCount-1; i >= index; i--)
-    gBrowser.removeTab(tabs[i]);
-}
-
-function OpenBookmarkURL(node, datasources)
-{
-  if (node.getAttribute("group") == "true")
-    OpenBookmarkGroup(node, datasources);
-    
-  if (node.getAttribute("container") == "true")
-    return;
-
-  var url = node.getAttribute("id");
-  if (!url) // if empty url (most likely a normal menu item like "Manage Bookmarks",
-    return; // don't bother loading it
-  try {
-    // add support for IE favorites under Win32, and NetPositive URLs under BeOS
-    if (datasources) {
-      var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                          .getService(Components.interfaces.nsIRDFService);
-      var src = rdf.GetResource(url, true);
-      var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-      var target = datasources.GetTarget(src, prop, true);
-      if (target) {
-        target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-        if (target)
-          url = target;
-      }
-    }
-  } catch (ex) {
-    return;
-  }
-
-  // Ignore "NC:" urls.
-  if (url.substring(0, 3) == "NC:")
-    return;
-
-  // Check if we have a browser window
-  if (_content) {
-    loadURI(url);
-    _content.focus();
-  }
-  else
-    openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
-}
-
 function addGroupmarkAs()
 {
   BookmarksUtils.addBookmarkForTabBrowser(gBrowser, true);
@@ -694,7 +587,7 @@ function BrowserEditBookmarks()
     if (!gDisableBookmarks) {
       gDisableBookmarks = true;
 
-      open("chrome://browser/content/bookmarks/bookmarks.xul", "_blank",
+      open("chrome://browser/content/bookmarks/bookmarksManager.xul", "_blank",
         "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar");
       setTimeout(enableBookmarks, 2000);
     }
@@ -768,11 +661,7 @@ function getShortcutOrURI(url)
 {
   // rjc: added support for URL shortcuts (3/30/1999)
   try {
-    if (!gBookmarksService)
-      gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                                    .getService(Components.interfaces.nsIBookmarksService);
-
-    var shortcutURL = gBookmarksService.resolveKeyword(url);
+    var shortcutURL = BMSVC.resolveKeyword(url);
     if (!shortcutURL) {
       // rjc: add support for string substitution with shortcuts (4/4/2000)
       //      (see bug # 29871 for details)
@@ -780,7 +669,7 @@ function getShortcutOrURI(url)
       if (aOffset > 0) {
         var cmd = url.substr(0, aOffset);
         var text = url.substr(aOffset+1);
-        shortcutURL = gBookmarksService.resolveKeyword(cmd);
+        shortcutURL = BMSVC.resolveKeyword(cmd);
         if (shortcutURL && text) {
           aOffset = shortcutURL.indexOf("%s");
           if (aOffset >= 0)
@@ -1747,508 +1636,6 @@ function FillInHTMLTooltip(tipElement)
   return retVal;
 }
 
-var gBookmarksShell = null;
-
-///////////////////////////////////////////////////////////////////////////////
-// Class which defines methods for a bookmarks UI implementation based around
-// a toolbar. Subclasses BookmarksBase in bookmarksOverlay.js. Some methods
-// are required by the base class, others are for event handling. Window specific
-// glue code should go into the BookmarksWindow class in bookmarks.js
-function BookmarksToolbar (aID)
-{
-  this.id = aID;
-}
-
-BookmarksToolbar.prototype = {
-  __proto__: BookmarksUIElement.prototype,
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Personal Toolbar Specific Stuff
-  
-  get db ()
-  {
-    return this.element.database;
-  },
-
-  get element ()
-  {
-    return document.getElementById(this.id);
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // This method constructs a menuitem for a context menu for the given command.
-  // This is implemented by the client so that it can intercept menuitem naming
-  // as appropriate.
-  createMenuItem: function (aDisplayName, aCommandName, aItemNode)
-  {
-    const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    var xulElement = document.createElementNS(kXULNS, "menuitem");
-    xulElement.setAttribute("cmd", aCommandName);
-    var cmd = "cmd_" + aCommandName.substring(NC_NS_CMD.length)
-    xulElement.setAttribute("command", cmd);
-    
-    switch (aCommandName) {
-    case NC_NS_CMD + "bm_open":
-      xulElement.setAttribute("label", aDisplayName);
-      xulElement.setAttribute("default", "true");
-      break;
-    case NC_NS_CMD + "bm_openfolder":
-      xulElement.setAttribute("default", "true");
-      if (aItemNode.localName == "hbox") 
-        // Don't show an "Open Folder" item for clicks on the toolbar itself.
-        return null;
-    default:
-      xulElement.setAttribute("label", aDisplayName);
-      break;
-    }
-    return xulElement;
-  },
-
-  // Command implementation
-  commands: {
-    openFolder: function (aSelectedItem)
-    {
-      var mbo = aSelectedItem.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
-      mbo.openMenu(true);
-    },
-
-    editCell: function (aSelectedItem, aXXXLameAssIndex)
-    {
-      goDoCommand("cmd_bm_properties");
-      return; // Disable Inline Edit for now. See bug 77125 for why this is being disabled
-              // on the personal toolbar for the moment. 
-
-      if (aSelectedItem.getAttribute("editable") != "true")
-        return;
-      var property = "http://home.netscape.com/NC-rdf#Name";
-      aSelectedItem.setMode("edit");
-      aSelectedItem.addObserver(this.postModifyCallback, "accept", 
-                                [gBookmarksShell, aSelectedItem, property]);
-    },
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Called after an inline-edit cell has left inline-edit mode, and data
-    // needs to be modified in the datasource.
-    postModifyCallback: function (aParams)
-    {
-      aParams[0].propertySet(aParams[1].id, aParams[2], aParams[3]);
-    },
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Creates a dummy item that can be placed in edit mode to retrieve data
-    // to create new bookmarks/folders.
-    createBookmarkItem: function (aMode, aSelectedItem)
-    {
-      /////////////////////////////////////////////////////////////////////////
-      // HACK HACK HACK HACK HACK         
-      // Disable Inline-Edit for now and just use a dialog. 
-      
-      // XXX - most of this is just copy-pasted from the other two folder
-      //       creation functions. Yes it's ugly, but it'll do the trick for 
-      //       now as this is in no way intended to be a long-term solution.
-
-      const kPromptSvcContractID = "@mozilla.org/embedcomp/prompt-service;1";
-      const kPromptSvcIID = Components.interfaces.nsIPromptService;
-      const kPromptSvc = Components.classes[kPromptSvcContractID].getService(kPromptSvcIID);
-      
-      var defaultValue  = gBookmarksShell.getLocaleString("ile_newfolder");
-      var dialogTitle   = gBookmarksShell.getLocaleString("newfolder_dialog_title");
-      var dialogMsg     = gBookmarksShell.getLocaleString("newfolder_dialog_msg");
-      var stringValue   = { value: defaultValue };
-      if (kPromptSvc.prompt(window, dialogTitle, dialogMsg, stringValue, null, { value: 0 })) {
-        var relativeNode = aSelectedItem || gBookmarksShell.element;
-        var parentNode = relativeNode ? gBookmarksShell.findRDFNode(relativeNode, false) : gBookmarksShell.element;
-
-        var args = [{ property: NC_NS + "parent",
-                      resource: parentNode.id },
-                    { property: NC_NS + "Name",
-                      literal:  stringValue.value }];
-        
-        const kBMDS = gBookmarksShell.RDF.GetDataSource("rdf:bookmarks");
-        var relId = relativeNode ? relativeNode.id : "NC:PersonalToolbarFolder";
-        BookmarksUtils.doBookmarksCommand(relId, NC_NS_CMD + "newfolder", args);
-      }
-      
-      return; 
-      
-      // HACK HACK HACK HACK HACK         
-      /////////////////////////////////////////////////////////////////////////
-      
-      const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-      var dummyButton = document.createElementNS(kXULNS, "menubutton");
-      dummyButton = gBookmarksShell.createBookmarkFolderDecorations(dummyButton);
-      dummyButton.setAttribute("class", "button-toolbar bookmark-item");
-
-      dummyButton.setAttribute("label", gBookmarksShell.getLocaleString("ile_newfolder") + "  ");
-      // By default, create adjacent to the selected button. If there is no button after
-      // the selected button, or the target is the toolbar itself, just append. 
-      var bIsButton = aSelectedItem.localName == "button" || aSelectedItem.localName == "menubutton";
-      if (aSelectedItem.nextSibling && bIsButton)
-        aSelectedItem.parentNode.insertBefore(dummyButton, aSelectedItem.nextSibling);
-      else
-        (bIsButton ? aSelectedItem.parentNode : aSelectedItem).appendChild(dummyButton);
-
-      gBookmarksShell._focusElt = document.commandDispatcher.focusedElement;
-      dummyButton.setMode("edit");
-      // |aSelectedItem| will be the node we create the new folder relative to. 
-      dummyButton.addObserver(this.onEditFolderName, "accept", 
-                              [dummyButton, aSelectedItem, dummyButton]);
-      dummyButton.addObserver(this.onEditFolderName, "reject", 
-                              [dummyButton, aSelectedItem, dummyButton]);
-    },
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Edit folder name & update the datasource if name is valid
-    onEditFolderName: function (aParams, aTopic)
-    {
-      // Because the toolbar has no concept of selection, this function
-      // is much simpler than the one in bookmarksTree.js. However it may
-      // become more complex if pink ever lets me put context menus on menus ;) 
-      var name = aParams[3];
-      var dummyButton = aParams[2];
-      var relativeNode = aParams[1];
-      var parentNode = gBookmarksShell.findRDFNode(relativeNode, false);
-
-      dummyButton.parentNode.removeChild(dummyButton);
-
-      if (!gBookmarksShell.commands.validateNameAndTopic(name, aTopic, relativeNode, dummyButton))
-        return;
-
-      parentNode = relativeNode.parentNode;
-      if (relativeNode.localName == "hbox") {
-        parentNode = relativeNode;
-        relativeNode = (gBookmarksShell.commands.nodeIsValidType(relativeNode) && 
-                        relativeNode.lastChild) || relativeNode;
-      }
-
-      var args = [{ property: NC_NS + "parent",
-                    resource: parentNode.id },
-                  { property: NC_NS + "Name",
-                    literal:  name }];
-
-      BookmarksUtils.doBookmarksCommand(relativeNode.id, NC_NS_CMD + "newfolder", args);
-      // We need to do this because somehow focus shifts and no commands 
-      // operate any more. 
-      //gBookmarksShell._focusElt.focus();
-    },
-
-    nodeIsValidType: function (aNode)
-    {
-      switch (aNode.localName) {
-      case "button":
-      case "menubutton":
-      // case "menu":
-      // case "menuitem":
-        return true;
-      }
-      return false;
-    },
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Performs simple validation on what the user has entered:
-    //  1) prevents entering an empty string
-    //  2) in the case of a canceled operation, remove the dummy item and
-    //     restore selection.
-    validateNameAndTopic: function (aName, aTopic, aOldSelectedItem, aDummyItem)
-    {
-      // Don't allow user to enter an empty string "";
-      if (!aName) return false;
-
-      // If the user hit escape, go no further.
-      return !(aTopic == "reject");
-    }
-  },
-
-  _focusElt: null,
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Evaluates an event to determine whether or not it affords opening a tree
-  // item. Typically, this is when the left mouse button is used, and provided
-  // the click-rate matches that specified by our owning tree class. For example,
-  // some trees open an item when double clicked (bookmarks/history windows) and
-  // others on a single click (sidebar panels).
-  isValidOpenEvent: function (aEvent)
-  {
-    return !(aEvent.type == "click" &&
-             (aEvent.button != 0 || aEvent.detail != this.openClickCount))
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // For the given selection, selects the best adjacent element. This method is
-  // useful when an action such as a cut or a deletion is performed on a
-  // selection, and focus/selection needs to be restored after the operation
-  // is performed.
-  getNextElement: function (aElement)
-  {
-    if (aElement.nextSibling)
-      return aElement.nextSibling;
-    else if (aElement.previousSibling)
-      return aElement.previousSibling;
-    else
-      return aElement.parentNode;
-  },
-
-  selectElement: function (aElement)
-  {
-  },
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Add the treeitem element specified by aURI to the tree's current selection.
-  addItemToSelection: function (aURI)
-  {
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Return a set of DOM nodes that represents the current item in the Bookmarks
-  // Toolbar. This is always |document.popupNode|.
-  getSelection: function ()
-  {
-    return [document.popupNode];
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Return a set of DOM nodes that represent the selection in the tree widget.
-  // This method is takes a node parameter which is the popupNode for the
-  // document. If the popupNode is not contained by the selection, the
-  // popupNode is selected and the new selection returned.
-  getContextSelection: function (aItemNode)
-  {
-    return [aItemNode];
-  },
-
-  getSelectedFolder: function ()
-  {
-    return "NC:PersonalToolbarFolder";
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // For a given start DOM element, find the enclosing DOM element that contains
-  // the template builder RDF resource decorations (id, ref, etc). In the 
-  // Toolbar case, this is always the popup node (until we're proven wrong ;)
-  findRDFNode: function (aStartNode, aIncludeStartNodeFlag)
-  {
-    var temp = aStartNode;
-    while (temp && temp.localName != (aIncludeStartNodeFlag ? "toolbarbutton" : "hbox")) 
-      temp = temp.parentNode;
-    return temp || this.element;
-  },
-
-  selectFolderItem: function (aFolderURI, aItemURI, aAdditiveFlag)
-  {
-    var folder = document.getElementById(aFolderURI);
-    var kids = ContentUtils.childByLocalName(folder, "treechildren");
-    if (!kids) return;
-
-    var item = kids.firstChild;
-    while (item) {
-      if (item.id == aItemURI) break;
-      item = item.nextSibling;
-    }
-    if (!item) return;
-
-    this.tree[aAdditiveFlag ? "addItemToSelection" : "selectItem"](item);
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Command handling & Updating.
-  controller: {
-    supportsCommand: function (aCommand)
-    {
-      switch(aCommand) {
-      case "cmd_bm_undo":
-      case "cmd_bm_redo":
-        return false;
-      case "cmd_bm_cut":
-      case "cmd_bm_copy":
-      case "cmd_bm_paste":
-      case "cmd_bm_delete":
-      case "cmd_bm_selectAll":
-      case "cmd_bm_open":
-      case "cmd_bm_openfolder":
-      case "cmd_bm_openinnewwindow":
-      case "cmd_bm_newbookmark":
-      case "cmd_bm_newfolder":
-      case "cmd_bm_newseparator":
-      case "cmd_bm_find":
-      case "cmd_bm_properties":
-      case "cmd_bm_rename":
-      case "cmd_bm_setnewbookmarkfolder":
-      case "cmd_bm_setpersonaltoolbarfolder":
-      case "cmd_bm_setnewsearchfolder":
-      case "cmd_bm_import":
-      case "cmd_bm_export":
-      case "cmd_bm_fileBookmark":
-        return true;
-      default:
-        return false;
-      }
-    },
-
-    isCommandEnabled: function (aCommand)
-    {
-      switch(aCommand) {
-      case "cmd_bm_undo":
-      case "cmd_bm_redo":
-        return false;
-      case "cmd_bm_paste":
-        var cp = gBookmarksShell.canPaste();
-        return cp;
-      case "cmd_bm_cut":
-      case "cmd_bm_copy":
-      case "cmd_bm_delete":
-        return document.popupNode && document.popupNode.id != "NC:PersonalToolbarFolder";
-      case "cmd_bm_selectAll":
-        return false;
-      case "cmd_bm_open":
-        var seln = gBookmarksShell.getSelection();
-        return document.popupNode != null && seln[0].getAttributeNS(RDF_NS, "type") == NC_NS + "Bookmark";
-      case "cmd_bm_openfolder":
-        seln = gBookmarksShell.getSelection();
-        return document.popupNode != null && seln[0].getAttributeNS(RDF_NS, "type") == NC_NS + "Folder";
-      case "cmd_bm_openinnewwindow":
-        return true;
-      case "cmd_bm_find":
-      case "cmd_bm_newbookmark":
-      case "cmd_bm_newfolder":
-      case "cmd_bm_newseparator":
-      case "cmd_bm_import":
-      case "cmd_bm_export":
-        return true;
-      case "cmd_bm_properties":
-      case "cmd_bm_rename":
-        return document.popupNode != null;
-      case "cmd_bm_setnewbookmarkfolder":
-        seln = gBookmarksShell.getSelection();
-        if (!seln.length) return false;
-        var folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
-        return document.popupNode && seln[0].id != "NC:NewBookmarkFolder" && folderType;
-      case "cmd_bm_setpersonaltoolbarfolder":
-        seln = gBookmarksShell.getSelection();
-        if (!seln.length) return false;
-        folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
-        return document.popupNode && seln[0].id != "NC:PersonalToolbarFolder" && folderType;
-      case "cmd_bm_setnewsearchfolder":
-        seln = gBookmarksShell.getSelection();
-        if (!seln.length) return false;
-        folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
-        return document.popupNode && seln[0].id != "NC:NewSearchFolder" && folderType;
-      case "cmd_bm_fileBookmark":
-        seln = gBookmarksShell.getSelection();
-        return seln.length > 0;
-      default:
-        return false;
-      }
-    },
-
-    doCommand: function (aCommand)
-    {
-      switch(aCommand) {
-      case "cmd_bm_undo":
-      case "cmd_bm_redo":
-        break;
-      case "cmd_bm_paste":
-      case "cmd_bm_copy":
-      case "cmd_bm_cut":
-      case "cmd_bm_delete":
-      case "cmd_bm_newbookmark":
-      case "cmd_bm_newfolder":
-      case "cmd_bm_newseparator":
-      case "cmd_bm_properties":
-      case "cmd_bm_rename":
-      case "cmd_bm_open":
-      case "cmd_bm_openfolder":
-      case "cmd_bm_openinnewwindow":
-      case "cmd_bm_setnewbookmarkfolder":
-      case "cmd_bm_setpersonaltoolbarfolder":
-      case "cmd_bm_setnewsearchfolder":
-      case "cmd_bm_find":
-      case "cmd_bm_import":
-      case "cmd_bm_export":
-      case "cmd_bm_fileBookmark":
-        gBookmarksShell.execCommand(aCommand.substring("cmd_".length));
-        break;
-      case "cmd_bm_selectAll":
-        break;
-      }
-    },
-
-    onEvent: function (aEvent)
-    {
-    },
-
-    onCommandUpdate: function ()
-    {
-    }
-  }
-};
-
-function BM_navigatorLoad(aEvent)
-{
-  if (!gBookmarksShell) {
-    gBookmarksShell = new BookmarksToolbar("NC:PersonalToolbarFolder");
-    controllers.appendController(gBookmarksShell.controller);
-    removeEventListener("load", BM_navigatorLoad, false);
-  }
-}
-
-
-// An interim workaround for 101131 - Bookmarks Toolbar button nonfunctional.
-// This simply checks to see if the bookmark menu is empty (aside from static
-// items) when it is opened and if it is, prompts a rebuild. 
-// The best fix for this is more time consuming, and relies on document
-// <template>s without content (referencing a remote <template/> by id) 
-// be noted as 'waiting' for a template to load from somewhere. When the 
-// ::Merge function in nsXULDocument is called and a template node inserted, 
-// the id of the template to be inserted is looked up in the map of waiting
-// references, and then the template builder hooked up. 
-function checkBookmarksMenuTemplateBuilder()
-{
-  var lastStaticSeparator = document.getElementById("lastStaticSeparator");
-  if (!lastStaticSeparator.nextSibling) {
-    var button = document.getElementById("bookmarks-button");
-    button.builder.rebuild();
-  }
-}
-
-addEventListener("load", BM_navigatorLoad, false);
-
-function _RDF(aType)
-  {
-    return "http://www.w3.org/1999/02/22-rdf-syntax-ns#" + aType;
-  }
-function NC_RDF(aType)
-  {
-    return "http://home.netscape.com/NC-rdf#" + aType;
-  }
-
-var RDFUtils = {
-  getResource: function(aString)
-    {
-      return this.rdf.GetResource(aString, true);
-    },
-
-  getTarget: function(aDS, aSourceID, aPropertyID)
-    {
-      var source = this.getResource(aSourceID);
-      var property = this.getResource(aPropertyID);
-      return aDS.GetTarget(source, property, true);
-    },
-
-  getValueFromResource: function(aResource)
-    {
-      aResource = aResource.QueryInterface(Components.interfaces.nsIRDFResource);
-      return aResource ? aResource.Value : null;
-    },
-  _rdf: null,
-  get rdf() {
-    if (!this._rdf) {
-      this._rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                            .getService(Components.interfaces.nsIRDFService);
-    }
-    return this._rdf;
-  }
-}
-
 var proxyIconDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
@@ -2393,6 +1780,7 @@ var personalToolbarDNDObserver = {
 
   onDragStart: function (aEvent, aXferData, aDragAction)
     {
+      var target = aEvent.originalTarget;
 
       // Prevent dragging from an invalid region
       if (!this.canDrop(aEvent))
@@ -2400,182 +1788,115 @@ var personalToolbarDNDObserver = {
 
       // Prevent dragging out of menupopups on non Win32 platforms. 
       // a) on Mac drag from menus is generally regarded as being satanic
-      // b) on Linux, this causes an X-server crash, see bug 79003, 96504 and 139471
+      // b) on Linux, this causes an X-server crash, (bug 151336)
       // c) on Windows, there is no hang or crash associated with this, so we'll leave 
       // the functionality there. 
-      if (navigator.platform != "Win32" && aEvent.target.localName != "toolbarbutton")
+      if (navigator.platform != "Win32" && target.localName != "toolbarbutton")
         return;
 
-      // prevent dragging folders in the personal toolbar and menus.
-      // PCH: under linux, since containers open on mouse down, we hit bug 96504. 
-      // In addition, a drag start is fired when leaving an open toolbarbutton(type=menu) 
-      // menupopup (see bug 143031)
-      if (this.isContainer(aEvent.target) && aEvent.target.getAttribute("group") != "true") {
+      // a drag start is fired when leaving an open toolbarbutton(type=menu) 
+      // (see bug 143031)
+      if (this.isContainer(target) && 
+          target.getAttribute("group") != "true") {
         if (this.isPlatformNotSupported) 
           return;
         if (!aEvent.shiftKey && !aEvent.altKey)
           return;
         // menus open on mouse down
-        aEvent.target.firstChild.hidePopup();
+        target.firstChild.hidePopup();
       }
-
-      // Prevent dragging non-bookmark menuitem or menus
-      var uri = aEvent.target.id;
-      if (!this.isBookmark(uri))
-        return;
-
-      //PCH: cleanup needed here, url is already calculated in isBookmark()
-      var db = document.getElementById("NC:PersonalToolbarFolder").database;
-      var url = RDFUtils.getTarget(db, uri, NC_RDF("URL"));
-      if (url)
-        url = url.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-      else
-        url = "";
-      var name = RDFUtils.getTarget(db, uri, NC_RDF("Name"));
-      if (name)
-        name = name.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-      else
-        name = "";
-      var urlString = url + "\n" + name;
-      var htmlString = "<A HREF='" + url + "'>" + name + "</A>";
-      aXferData.data = new TransferData();
-      aXferData.data.addDataForFlavour("moz/rdfitem", uri);
-      aXferData.data.addDataForFlavour("text/x-moz-url", urlString);
-      aXferData.data.addDataForFlavour("text/html", htmlString);
-      aXferData.data.addDataForFlavour("text/unicode", url);
-
-      return;
+      var bt = document.getElementById("bookmarks-toolbar");
+      var selection  = bt.getBTSelection(target);
+      aXferData.data = BookmarksUtils.getXferDataFromSelection(selection);
     },
 
   onDragOver: function(aEvent, aFlavour, aDragSession) 
   {
+    var bt = document.getElementById("bookmarks-toolbar");
+    var orientation = bt.getBTOrientation(aEvent)
     if (aDragSession.canDrop)
-      this.onDragSetFeedBack(aEvent);
+      this.onDragSetFeedBack(aEvent.originalTarget, orientation);
+    if (orientation != this.mCurrentDropPosition) {
+      // emulating onDragExit and onDragEnter events since the drop region
+      // has changed on the target.
+      this.onDragExit(aEvent, aDragSession);
+      this.onDragEnter(aEvent, aDragSession);
+    }
     if (this.isPlatformNotSupported)
       return;
     if (this.isTimerSupported)
       return;
     this.onDragOverCheckTimers();
-    return;
   },
 
   onDragEnter: function (aEvent, aDragSession)
   {
-    var target = aEvent.target;
+    var target = aEvent.originalTarget;
+    var bt = document.getElementById("bookmarks-toolbar");
+    var orientation = bt.getBTOrientation(aEvent);
     if (target.localName == "menupopup" || target.localName == "hbox")
       target = target.parentNode;
     if (aDragSession.canDrop) {
-      this.onDragSetFeedBack(aEvent);
+      this.onDragSetFeedBack(target, orientation);
       this.onDragEnterSetTimer(target, aDragSession);
     }
     this.mCurrentDragOverTarget = target;
-    return;
+    this.mCurrentDropPosition   = orientation;
   },
 
   onDragExit: function (aEvent, aDragSession)
   {
-    var target = aEvent.target;
+    var target = aEvent.originalTarget;
     if (target.localName == "menupopup" || target.localName == "hbox")
       target = target.parentNode;
     this.onDragRemoveFeedBack(target);
     this.onDragExitSetTimer(target, aDragSession);
     this.mCurrentDragOverTarget = null;
-    return;
+    this.mCurrentDropPosition = null;
   },
 
   onDrop: function (aEvent, aXferData, aDragSession)
   {
+    this.onDragRemoveFeedBack(aEvent.originalTarget);
+    var bt          = document.getElementById("bookmarks-toolbar");
+    var selection   = BookmarksUtils.getSelectionFromXferData(aDragSession);
 
-    this.onDragRemoveFeedBack(aEvent.target);
-    var dropPosition = this.determineDropPosition(aEvent);
-
-    // PCH: BAD!!! We should use the flavor
-    // this code should be merged with the one in bookmarks.xml
-    var xferData = aXferData.data.split("\n");
-    if (xferData[0] == "")
-      return;
-    var elementRes = RDFUtils.getResource(xferData[0]);
-
-    var childDB = document.getElementById("NC:PersonalToolbarFolder").database;
-    var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
-
-    // if dragged url is already bookmarked, remove it from current location first
-    var parentContainer = this.findParentContainer(aDragSession.sourceNode);
-    if (parentContainer) {
-      rdfContainer.Init(childDB, parentContainer);
-      rdfContainer.RemoveElement(elementRes, false);
+    // if the personal toolbar does not exist, recreate it
+    if (aEvent.originalTarget == "bookmarks-toolbar") {
+      BookmarksUtils.recreatePersonalToolbarFolder(transactionSet);
+      target = { parent: "NC:PersonalToolbarFolder", index: 1 };
+    } else {
+      var orientation = bt.getBTOrientation(aEvent);
+      var target      = bt.getBTSelection(aEvent.originalTarget);
+      target          = BookmarksUtils.getTargetFromSelection(target, orientation);
     }
 
-    // determine charset of link
-    var linkCharset = aDragSession.sourceDocument ? aDragSession.sourceDocument.characterSet : null;
-    // determine title of link
-    var linkTitle;
-    // look it up in bookmarks
-    var bookmarksDS = RDFUtils.rdf.GetDataSource("rdf:bookmarks");
-    var nameRes = RDFUtils.getResource(NC_RDF("Name"));
-    var nameFromBookmarks = bookmarksDS.GetTarget(elementRes, nameRes, true);
-    if (nameFromBookmarks)
-      nameFromBookmarks = nameFromBookmarks.QueryInterface(Components.interfaces.nsIRDFLiteral);
-    if (nameFromBookmarks)
-      linkTitle = nameFromBookmarks.Value;
-    else if (xferData.length >= 2)
-      linkTitle = xferData[1]
-    else {
-      // look up this URL's title in global history
-      var historyDS = RDFUtils.rdf.GetDataSource("rdf:history");
-      var titlePropRes = RDFUtils.getResource(NC_RDF("Name"));
-      var titleFromHistory = historyDS.GetTarget(elementRes, titlePropRes, true);
-      if (titleFromHistory)
-        titleFromHistory = titleFromHistory.QueryInterface(Components.interfaces.nsIRDFLiteral);
-      if (titleFromHistory)
-        linkTitle = titleFromHistory.Value;
-    }
-
-    var dropIndex;
-    if (aEvent.target.id == "bookmarks-button") 
-      // dropPosition is always DROP_ON
-      parentContainer = RDFUtils.getResource("NC:BookmarksRoot");
-    else if (dropPosition == this.DROP_ON) 
-      parentContainer = RDFUtils.getResource(aEvent.target.id);
-    else {
-      parentContainer = this.findParentContainer(aEvent.target);
-      rdfContainer.Init(childDB, parentContainer);
-      var dropElementRes = RDFUtils.getResource(aEvent.target.id);
-      dropIndex = rdfContainer.IndexOf(dropElementRes);
-    }
-    switch (dropPosition) {
-      case this.DROP_BEFORE:
-        if (dropIndex<1) dropIndex = 1;
-        break;
-      case this.DROP_ON:
-        dropIndex = -1;
-        break;
-      case this.DROP_AFTER:
-        if (dropIndex <= rdfContainer.GetCount()) ++dropIndex;         
-        if (dropIndex<1) dropIndex = -1;
-        break;
-    }
-
-    this.insertBookmarkAt(xferData[0], linkTitle, linkCharset, parentContainer, dropIndex);       
-    return;
+    const kDSIID      = Components.interfaces.nsIDragService;
+    const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
+    if (aDragSession.dragAction & kCopyAction)
+      BookmarksUtils.insertSelection("drag", selection, target, true);
+    else
+      BookmarksUtils.moveSelection("drag", selection, target);
   },
 
   canDrop: function (aEvent, aDragSession)
   {
-    var target = aEvent.target;
+    var target = aEvent.originalTarget;
     return target.id && target.localName != "menupopup" && target.localName != "toolbar" &&
            target.localName != "menuseparator" && target.localName != "toolbarseparator" &
            target.id != "NC:SystemBookmarksStaticRoot" &&
            target.id.substring(0,5) != "find:";
   },
 
+  canHandleMultipleItems: true,
+
   getSupportedFlavours: function () 
   {
     var flavourSet = new FlavourSet();
     flavourSet.appendFlavour("moz/rdfitem");
-    flavourSet.appendFlavour("text/unicode");
-    flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
     flavourSet.appendFlavour("text/x-moz-url");
+    flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+    flavourSet.appendFlavour("text/unicode");
     return flavourSet;
   }, 
   
@@ -2584,48 +1905,69 @@ var personalToolbarDNDObserver = {
   // Private methods and properties //
   ////////////////////////////////////
 
-  DROP_BEFORE:-1,
-  DROP_ON    : 0,
-  DROP_AFTER : 1,
   springLoadedMenuDelay: 350, // milliseconds
-  isPlatformNotSupported: navigator.platform.indexOf("Linux") != -1 ||
-                          navigator.platform.indexOf("Mac")   != -1, // see bug 136524
+  isPlatformNotSupported: navigator.platform.indexOf("Mac") != -1, // see bug 136524
   isTimerSupported: navigator.platform.indexOf("Win") == -1,
 
   mCurrentDragOverTarget: null,
+  mCurrentDropPosition: null,
   loadTimer  : null,
   closeTimer : null,
   loadTarget : null,
   closeTarget: null,
 
+  _observers : null,
+  get mObservers ()
+  {
+    if (!this._observers) {
+      this._observers = [
+        document.getElementById("bookmarks-ptf"),
+        document.getElementById("bookmarks-menu").parentNode
+      ]
+    }
+    return this._observers;
+  },
+
+  getObserverForNode: function (aNode)
+  {
+    if (!aNode)
+      return null;
+    var node = aNode;
+    var observer;
+    do {
+      for (var i=0; i < this.mObservers.length; i++) {
+        observer = this.mObservers[i];
+        if (observer == node)
+          return observer;
+      }
+      node = node.parentNode;
+    } while (node != document)
+    return null;
+  },
 
   onDragCloseMenu: function (aNode)
   {
     var children = aNode.childNodes;
     for (var i = 0; i < children.length; i++) {
-      if (children[i].id == "NC:PersonalToolbarFolder") {
-        this.onDragCloseMenu(children[i]);
-      }
-      else if (this.isContainer(children[i]) && children[i].getAttribute("open") == "true") {
-        this.onDragCloseMenu(children[i].firstChild);
-        if (children[i] != this.mCurrentDragOverTarget)
-          children[i].firstChild.hidePopup();
+      if (this.isContainer(children[i]) && 
+          children[i].getAttribute("open") == "true") {
+        this.onDragCloseMenu(children[i].lastChild);
+        if (children[i] != this.mCurrentDragOverTarget || this.mCurrentDropPosition != BookmarksUtils.DROP_ON)
+          children[i].lastChild.hidePopup();
       }
     } 
   },
 
   onDragCloseTarget: function ()
   {
-    // if the mouse is not over a menu, then close everything.
-    if (!this.mCurrentDragOverTarget) {
-      this.onDragCloseMenu(document.getElementById("PersonalToolbar"));
-      return
+    var currentObserver = this.getObserverForNode(this.mCurrentDragOverTarget);
+    // close all the menus not hovered by the mouse
+    for (var i=0; i < this.mObservers.length; i++) {
+      if (currentObserver != this.mObservers[i])
+        this.onDragCloseMenu(this.mObservers[i]);
+      else
+        this.onDragCloseMenu(this.mCurrentDragOverTarget.parentNode);
     }
-    // The bookmark button is not a sibling of the folders in the PT
-    if (this.mCurrentDragOverTarget.parentNode.id == "NC:PersonalToolbarFolder")
-      this.onDragCloseMenu(document.getElementById("PersonalToolbar"));
-    else
-      this.onDragCloseMenu(this.mCurrentDragOverTarget.parentNode);
   },
 
   onDragLoadTarget: function (aTarget) 
@@ -2633,8 +1975,10 @@ var personalToolbarDNDObserver = {
     if (!this.mCurrentDragOverTarget)
       return;
     // Load the current menu
-    if (this.isContainer(aTarget) && aTarget.getAttribute("group") != "true")
-      aTarget.firstChild.showPopup(aTarget, -1, -1, "menupopup");
+    if (this.mCurrentDropPosition == BookmarksUtils.DROP_ON && 
+        this.isContainer(aTarget)             && 
+        aTarget.getAttribute("group") != "true")
+      aTarget.lastChild.showPopup(aTarget);
   },
 
   onDragOverCheckTimers: function ()
@@ -2695,58 +2039,57 @@ var personalToolbarDNDObserver = {
     }
   },
 
-  onDragSetFeedBack: function (aEvent)
+  onDragSetFeedBack: function (aTarget, aOrientation)
   {
-    var target = aEvent.target
-    var dropPosition = this.determineDropPosition(aEvent)
-    switch (target.localName) {
+   switch (aTarget.localName) {
       case "toolbarseparator":
       case "toolbarbutton":
-        if (this.isContainer(target)) {
-          target.setAttribute("dragover-left"  , "true");
-          target.setAttribute("dragover-right" , "true");
-          target.setAttribute("dragover-top"   , "true");
-          target.setAttribute("dragover-bottom", "true");
-        }
-        else {
-          switch (dropPosition) {
-            case this.DROP_BEFORE: 
-              target.removeAttribute("dragover-right");
-              target.setAttribute("dragover-left", "true");
-              break;
-            case this.DROP_AFTER:
-              target.removeAttribute("dragover-left");
-              target.setAttribute("dragover-right", "true");
-              break;
-          }
+        switch (aOrientation) {
+          case BookmarksUtils.DROP_BEFORE: 
+            aTarget.setAttribute("dragover-left", "true");
+            break;
+          case BookmarksUtils.DROP_AFTER:
+            aTarget.setAttribute("dragover-right", "true");
+            break;
+          case BookmarksUtils.DROP_ON:
+            aTarget.setAttribute("dragover-top"   , "true");
+            aTarget.setAttribute("dragover-bottom", "true");
+            aTarget.setAttribute("dragover-left"  , "true");
+            aTarget.setAttribute("dragover-right" , "true");
+            break;
         }
         break;
       case "menuseparator": 
       case "menu":
       case "menuitem":
-        switch (dropPosition) {
-          case this.DROP_BEFORE: 
-            target.removeAttribute("dragover-bottom");
-            target.setAttribute("dragover-top", "true");
+        switch (aOrientation) {
+          case BookmarksUtils.DROP_BEFORE: 
+            aTarget.setAttribute("dragover-top", "true");
             break;
-          case this.DROP_AFTER:
-            target.removeAttribute("dragover-top");
-            target.setAttribute("dragover-bottom", "true");
+          case BookmarksUtils.DROP_AFTER:
+            aTarget.setAttribute("dragover-bottom", "true");
+            break;
+          case BookmarksUtils.DROP_ON:
             break;
         }
         break;
       case "hbox"     : 
-        target.lastChild.setAttribute("dragover-right", "true");
+        aTarget.lastChild.setAttribute("dragover-right", "true");
         break;
       case "menupopup": 
       case "toolbar"  : break;
-      default: dump("No feedback for: "+target.localName+"\n");
+      case "bookmarks-toolbar": break; // no personal toolbar folder
+      default: dump("No feedback for: "+aTarget.localName+"\n");
     }
   },
 
   onDragRemoveFeedBack: function (aTarget)
-  {
-    if (aTarget.localName == "hbox") {
+  { 
+    if (aTarget.localName == "bookmarks-toolbar") {
+      var ptf = document.getAnonymousElementByAttribute(aTarget, "anonid", "bookmarks-ptf");
+      if (ptf.hasChildNodes())
+        ptf.lastChild.removeAttribute("dragover-right");
+    } else if (aTarget.localName == "hbox") {
       aTarget.lastChild.removeAttribute("dragover-right");
     } else {
       aTarget.removeAttribute("dragover-left");
@@ -2763,101 +2106,9 @@ var personalToolbarDNDObserver = {
 
   isContainer: function (aTarget)
   {
-    return (aTarget.localName == "menu" || aTarget.localName == "toolbarbutton") &&
+    return  aTarget.localName == "menu" || (aTarget.localName == "toolbarbutton") &&
            (aTarget.getAttribute("container") == "true" || aTarget.getAttribute("group") == "true");
-  },
-
-
-  ///////////////////////////////////////////////////////
-  // Methods that need to be moved into BookmarksUtils //
-  ///////////////////////////////////////////////////////
-
-  //XXXPCH this function returns wrong vertical positions
-  //XXX skin authors could break us, we'll cross that bridge when they turn us 90degrees
-  determineDropPosition: function (aEvent)
-  {
-    var overButtonBoxObject = aEvent.target.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
-    // most things only drop on the left or right
-    var regionCount = 2;
-
-    // you can drop ONTO containers, so there is a "middle" region
-    if (this.isContainer(aEvent.target))
-      return this.DROP_ON;
-      
-    var measure;
-    var coordValue;
-    var clientCoordValue;
-    if (aEvent.target.localName == "menuitem") {
-      measure = overButtonBoxObject.height/regionCount;
-      coordValue = overButtonBoxObject.y;
-      clientCoordValue = aEvent.clientY;
-    }
-    else if (aEvent.target.localName == "toolbarbutton") {
-      measure = overButtonBoxObject.width/regionCount;
-      coordValue = overButtonBoxObject.x;
-      clientCoordValue = aEvent.clientX;
-    }
-    else
-      return this.DROP_ON;
-    
-    // in the first region?
-    if (clientCoordValue < (coordValue + measure))
-      return this.DROP_BEFORE;
-    // in the last region?
-    if (clientCoordValue >= (coordValue + (regionCount - 1)*measure))
-      return this.DROP_AFTER;
-    // must be in the middle somewhere
-    return this.DROP_ON;
-  },
-
-  isBookmark: function (aURI)
-  {
-    if (!aURI)
-      return false;
-    var db = document.getElementById("NC:PersonalToolbarFolder").database;
-    var typeValue = RDFUtils.getTarget(db, aURI, _RDF("type"));
-    typeValue = RDFUtils.getValueFromResource(typeValue);
-    return (typeValue == NC_RDF("BookmarkSeparator") ||
-            typeValue == NC_RDF("Bookmark") ||
-            typeValue == NC_RDF("Folder"))
-  },
-
-  // returns the parent resource of the dragged element. This is determined
-  // by inspecting the source element of the drag and walking up the DOM tree
-  // to find the appropriate containing node.
-  findParentContainer: function (aElement)
-  {
-    if (!aElement) return null;
-    switch (aElement.localName) {
-      case "toolbarbutton":
-        var box = aElement.parentNode;
-        return RDFUtils.getResource(box.getAttribute("ref"));
-      case "menu":
-      case "menuitem":
-        var parentNode = aElement.parentNode.parentNode;
-     
-        if (parentNode.getAttribute("type") != NC_RDF("Folder") &&
-            parentNode.getAttributeNS("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "type") != "http://home.netscape.com/NC-rdf#Folder")
-          return RDFUtils.getResource("NC:BookmarksRoot");
-        return RDFUtils.getResource(parentNode.id);
-      case "treecell":
-        var treeitem = aElement.parentNode.parentNode.parentNode.parentNode;
-        var res = treeitem.getAttribute("ref");
-        if (!res)
-          res = treeitem.id;            
-        return RDFUtils.getResource(res);
-    }
-    return null;
-  },
-
-  insertBookmarkAt: function (aURL, aTitle, aCharset, aFolderRes, aIndex)
-  {
-    const kBMSContractID = "@mozilla.org/browser/bookmarks-service;1";
-    const kBMSIID = Components.interfaces.nsIBookmarksService;
-    const kBMS = Components.classes[kBMSContractID].getService(kBMSIID);
-    kBMS.createBookmarkWithDetails(aTitle, aURL, aCharset, aFolderRes, aIndex);
   }
-
 }
 
 const MAX_HISTORY_MENU_ITEMS = 15;
@@ -3313,7 +2564,6 @@ const NS_ERROR_MODULE_NETWORK = 2152398848;
 const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
 const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
 
-
 function nsBrowserStatusHandler()
 {
   this.init();
@@ -3445,10 +2695,7 @@ nsBrowserStatusHandler.prototype =
       gProxyFavIcon.setAttribute("src", aHref);
 
       // update any bookmarks with new icon reference
-      if (!gBookmarksService)
-        gBookmarksService = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                                      .getService(Components.interfaces.nsIBookmarksService);
-      gBookmarksService.updateBookmarkIcon(this.urlBar.value, aHref);
+      BMSVC.updateBookmarkIcon(this.urlBar.value, aHref);
     }
   },
 
