@@ -58,6 +58,8 @@
 #include "nsIAtom.h"
 #include "nsIImapIncomingServer.h"
 #include "nsIMsgSearchNotify.h"
+#include "nsIPref.h"
+#include "nsIObserver.h"
 
 #include "nsIStringBundle.h"
 
@@ -74,10 +76,18 @@ enum eFieldType {
 #define MSG_VIEW_FLAG_HASCHILDREN 0x40000000
 #define MSG_VIEW_FLAG_ISTHREAD 0x8000000
 
+/* There currently only 5 labels defined */
+#define PREF_LABELS_MAX 5
+#define PREF_LABELS_DESCRIPTION  "mailnews.labels.description."
+#define PREF_LABELS_COLOR  "mailnews.labels.color."
+
+#define LABEL_COLOR_STRING "lc-"
+#define LABEL_COLOR_WHITE_STRING "#FFFFFF"
+
 // I think this will be an abstract implementation class.
 // The classes that implement the outliner support will probably
 // inherit from this class.
-class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsIOutlinerView, public nsIMsgCopyServiceListener, public nsIMsgSearchNotify
+class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsIOutlinerView, public nsIMsgCopyServiceListener, public nsIMsgSearchNotify, public nsIObserver
 {
 public:
   nsMsgDBView();
@@ -89,6 +99,7 @@ public:
   NS_DECL_NSIOUTLINERVIEW
   NS_DECL_NSIMSGCOPYSERVICELISTENER
   NS_DECL_NSIMSGSEARCHNOTIFY
+  NS_DECL_NSIOBSERVER
 
 protected:
   static nsrefcnt gInstanceCount;
@@ -104,17 +115,22 @@ protected:
   static nsIAtom* kAttachMsgAtom;
   static nsIAtom* kHasUnreadAtom;
 
+#ifdef SUPPORT_PRIORITY_COLORS
   static nsIAtom* kHighestPriorityAtom;
   static nsIAtom* kHighPriorityAtom;
   static nsIAtom* kLowestPriorityAtom;
   static nsIAtom* kLowPriorityAtom;
+#endif
 
   static PRUnichar* kHighestPriorityString;
   static PRUnichar* kHighPriorityString;
   static PRUnichar* kLowestPriorityString;
   static PRUnichar* kLowPriorityString;
   static PRUnichar* kNormalPriorityString;
-  
+
+  static nsIAtom* kLabelColorWhiteAtom;
+  static nsIAtom* kLabelColorBlackAtom;
+
   static PRUnichar* kReadString;
   static PRUnichar* kRepliedString;
   static PRUnichar* kForwardedString;
@@ -268,6 +284,13 @@ protected:
   nsresult GetKeyForFirstSelectedMessage(nsMsgKey *key);
   PRBool OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices);
   PRUnichar * GetString(const PRUnichar *aStringName);
+  nsresult AddLabelPrefObservers();
+  nsresult RemoveLabelPrefObservers();
+  nsresult GetPrefLocalizedString(const char *aPrefName, nsString& aResult);
+  nsresult GetLabelPrefStringAndAtom(const char *aPrefName, nsString& aColor, nsIAtom** aColorAtom);
+  nsresult AppendLabelProperties(nsMsgLabelValue label, nsISupportsArray *aProperties);
+  nsresult AppendSelectedTextColorProperties(nsMsgLabelValue label, nsISupportsArray *aProperties);
+  nsresult InitLabelPrefs(void);
   void InitializeAtomsAndLiterals();
   PRInt32 GetLevelInUnreadView(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);
   nsresult GetImapDeleteModel(nsIMsgFolder *folder);
@@ -312,6 +335,12 @@ protected:
   nsCOMPtr<nsIMsgWindow> mMsgWindow;
   nsCOMPtr<nsIMsgDBViewCommandUpdater> mCommandUpdater; // we push command update notifications to the UI from this.
   nsCOMPtr<nsIStringBundle> mMessengerStringBundle;  
+
+  // used for the preference labels
+  nsString mLabelPrefDescriptions[PREF_LABELS_MAX];
+  nsString mLabelPrefColors[PREF_LABELS_MAX];
+  // used to cache the atoms created for each color to be displayed
+  static nsIAtom* mLabelPrefColorAtoms[PREF_LABELS_MAX];
 };
 
 #endif

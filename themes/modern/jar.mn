@@ -597,6 +597,7 @@ modern.jar:
   skin/modern/messenger/searchDialog.css                           (messenger/searchDialog.css)
   skin/modern/messenger/subscribe.css                              (messenger/subscribe.css)
   skin/modern/messenger/threadPane.css                             (messenger/threadPane.css)
+  skin/modern/messenger/threadPaneLabels.css                       (messenger/threadPaneLabels.css)
   skin/modern/messenger/addressbook/addressbook.css                (messenger/addressbook/addressbook.css)
   skin/modern/messenger/addressbook/addressPanes.css               (messenger/addressbook/addressPanes.css)
   skin/modern/messenger/addressbook/cardDialog.css                 (messenger/addressbook/cardDialog.css)

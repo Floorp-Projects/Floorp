@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Sean Su <ssu@netscape.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+
+<?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-labels.dtd">
+
+<window xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        onload="parent.initPanel('chrome://messenger/content/pref-labels.xul');"
+        orient="vertical">
+  <popupset id="aTooltipSet"/>
+
+  <script type="application/x-javascript">
+  <![CDATA[
+    var _elementIDs = ["label1TextBox", "label1Color", "label2TextBox", "label2Color", "label3TextBox", "label3Color", "label4TextBox", "label4Color", "label5TextBox", "label5Color"];
+  ]]>
+  </script>
+
+  <script type="application/x-javascript" src="chrome://messenger/content/pref-labels.js"/>
+
+  <hbox class="box-smallheader" title="&pane.title;"/>
+  <description>&displayText.label;</description>
+
+  <!-- label color: 1 (default red) -->
+  <hbox class="indent" autostretch="never">
+    <textbox
+        id="label1TextBox"
+        pref="true"
+        preftype="localizedstring"
+        prefstring="mailnews.labels.description.1"
+        prefattribute="value"/>
+    <colorpicker
+        class="small-margin"
+        type="button"
+        id="labelColorPicker1"
+        palettename="standard"
+        onchange="setColorWell(this);"/>
+    <data
+        id="label1Color"
+        pref="true"
+        preftype="color"
+        prefstring="mailnews.labels.color.1"
+        prefattribute="value"
+        wsm_attributes="value"/>
+  </hbox>    
+
+  <!-- label color: 2 (default orange) -->
+  <hbox class="indent" autostretch="never">
+    <textbox
+        id="label2TextBox"
+        pref="true"
+        preftype="localizedstring"
+        prefstring="mailnews.labels.description.2"
+        prefattribute="value"/>
+    <colorpicker
+        class="small-margin"
+        type="button"
+        id="labelColorPicker2"
+        palettename="standard"
+        onchange="setColorWell(this);"/>
+    <data
+        id="label2Color"
+        pref="true"
+        preftype="color"
+        prefstring="mailnews.labels.color.2"
+        prefattribute="value"
+        wsm_attributes="value"/>
+  </hbox>    
+
+  <!-- label color: 3 (default green) -->
+  <hbox class="indent" autostretch="never">
+    <textbox
+        id="label3TextBox"
+        pref="true"
+        preftype="localizedstring"
+        prefstring="mailnews.labels.description.3"
+        prefattribute="value"/>
+    <colorpicker
+        class="small-margin"
+        type="button"
+        id="labelColorPicker3"
+        palettename="standard"
+        onchange="setColorWell(this);"/>
+    <data
+        id="label3Color"
+        pref="true"
+        preftype="color"
+        prefstring="mailnews.labels.color.3"
+        prefattribute="value"
+        wsm_attributes="value"/>
+  </hbox>    
+
+  <!-- label color: 4 (default blue) -->
+  <hbox class="indent" autostretch="never">
+    <textbox
+        id="label4TextBox"
+        pref="true"
+        preftype="localizedstring"
+        prefstring="mailnews.labels.description.4"
+        prefattribute="value"/>
+    <colorpicker
+        class="small-margin"
+        type="button"
+        id="labelColorPicker4"
+        palettename="standard"
+        onchange="setColorWell(this);"/>
+    <data
+        id="label4Color"
+        pref="true"
+        preftype="color"
+        prefstring="mailnews.labels.color.4"
+        prefattribute="value"
+        wsm_attributes="value"/>
+  </hbox>    
+
+  <!-- label color: 5 (default purple) -->
+  <hbox class="indent" autostretch="never">
+    <textbox
+        id="label5TextBox"
+        pref="true"
+        preftype="localizedstring"
+        prefstring="mailnews.labels.description.5"
+        prefattribute="value"/>
+    <colorpicker
+        class="small-margin"
+        type="button"
+        id="labelColorPicker5"
+        palettename="standard"
+        onchange="setColorWell(this);"/>
+    <data
+        id="label5Color"
+        pref="true"
+        preftype="color"
+        prefstring="mailnews.labels.color.5"
+        prefattribute="value"
+        wsm_attributes="value"/>
+  </hbox>    
+
+  <hbox pack="end">
+    <button label="&restoreDefaults.label;" accesskey="&restoreDefaults.accesskey;"
+            oncommand="restoreColorAndDescriptionToDefaults();">
+    </button>
+   </hbox>
+</window>
+

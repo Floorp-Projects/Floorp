@@ -340,3 +340,22 @@ pref("mail.compose.max_recycled_windows", 0);
 // false makes it so we act like 4.x
 // see bug #103010 for details
 pref("news.persist_server_open_state_in_folderpane",false);
+
+// New color prefs for Labels
+pref("mailnews.labels.description.0", "chrome://messenger/locale/messenger.properties");
+pref("mailnews.labels.description.1", "chrome://messenger/locale/messenger.properties");
+pref("mailnews.labels.description.2", "chrome://messenger/locale/messenger.properties");
+pref("mailnews.labels.description.3", "chrome://messenger/locale/messenger.properties");
+pref("mailnews.labels.description.4", "chrome://messenger/locale/messenger.properties");
+pref("mailnews.labels.description.5", "chrome://messenger/locale/messenger.properties");
+
+// mailews.labels.color.0 is not defined because there is no color associated with
+// this particular label.  It is defined above (mailnews.lables.description.0) because
+// its description string is required in order to prepend the accesskey '0':
+//   ie: '0 None'.
+pref("mailnews.labels.color.1", "#FF0000"); // default: red
+pref("mailnews.labels.color.2", "#FF9900"); // default: orange
+pref("mailnews.labels.color.3", "#009900"); // default: green
+pref("mailnews.labels.color.4", "#3333FF"); // default: blue
+pref("mailnews.labels.color.5", "#993399"); // default: purple
+ 

@@ -73,3 +73,5 @@ mailPrefsOverlay.xul
 am-prefs.js
 am-offline.xul
 am-offline.js
+pref-labels.xul
+pref-labels.js

@@ -75,6 +75,8 @@ CHROME_CONTENT = \
 	.\smtpEditOverlay.xul \
 	.\smtpEditOverlay.js \
 	.\mailPrefsOverlay.xul \
+  .\pref-labels.xul\
+  .\pref-labels.js\
       .\am-offline.xul \
       .\am-offline.js \
 	$(NULL)

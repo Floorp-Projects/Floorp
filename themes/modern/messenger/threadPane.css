@@ -46,7 +46,10 @@ outlinerbody:-moz-outliner-cell-text(container, closed, hasUnread, read) {
 }
 
 /* ::::: priority colors ::::: */
-
+/****
+ ****  Priority colors currently not being used at the moment.  It has been
+ ****  disabled so as to not conflict with the labels color feature.
+ ****
 outlinerbody:-moz-outliner-cell-text(priorityCol, priority-highest) {
   color: red;
 }
@@ -70,6 +73,7 @@ outlinerbody:-moz-outliner-cell-text(priorityCol, selected, focus) {
 outlinerbody:-moz-outliner-cell-text(priorityCol, selected, focus) {
   color: #FFFFFF;
 }
+ ****/
 
 /* ::::: message icons ::::: */
 

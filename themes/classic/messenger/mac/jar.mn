@@ -17,4 +17,5 @@ classic.jar:
 	skin/classic/messenger/searchDialog.css
 	skin/classic/messenger/subscribe.css
 	skin/classic/messenger/threadPane.css
+	skin/classic/messenger/threadPaneLabels.css
 

@@ -144,7 +144,7 @@ Rights Reserved.
 <!ENTITY sortByStatusCmd.label "Status">
 <!ENTITY sortByStatusCmd.accesskey "u">
 <!ENTITY sortByLabelCmd.label "Label">
-<!ENTITY sortByLabelCmd.accesskey "l">
+<!ENTITY sortByLabelCmd.accesskey "L">
 <!ENTITY sortBySubjectCmd.label "Subject">
 <!ENTITY sortBySubjectCmd.accesskey "S">
 <!-- Sender / Recipient lives in messenger.properties, since that item is dynamic -->
@@ -364,7 +364,8 @@ Rights Reserved.
 <!ENTITY addAllToAddressBookCmd.label ".Add All to Address Book">
 <!ENTITY addAllToAddressBookCmd.accesskey "A">
 <!ENTITY labelMenu.label "Label">
-<!ENTITY labelMenu.accesskey "l">
+<!ENTITY labelMenu.accesskey "L">
+<!ENTITY labelCmd0.accesskey "0">
 <!ENTITY labelCmd1.label "1">
 <!ENTITY labelCmd1.accesskey "1">
 <!ENTITY labelCmd2.label "2">

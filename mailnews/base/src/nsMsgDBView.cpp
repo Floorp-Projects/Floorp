@@ -56,6 +56,10 @@
 #include "nsIDOMElement.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsMsgMimeCID.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIPrefLocalizedString.h"
 
 /* Implementation file */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -63,10 +67,12 @@ static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 
 nsrefcnt nsMsgDBView::gInstanceCount	= 0;
 
-nsIAtom * nsMsgDBView::kHighestPriorityAtom	= nsnull;
-nsIAtom * nsMsgDBView::kHighPriorityAtom	= nsnull;
-nsIAtom * nsMsgDBView::kLowestPriorityAtom	= nsnull;
-nsIAtom * nsMsgDBView::kLowPriorityAtom	= nsnull;
+#ifdef SUPPORT_PRIORITY_COLORS
+nsIAtom * nsMsgDBView::kHighestPriorityAtom = nsnull;
+nsIAtom * nsMsgDBView::kHighPriorityAtom = nsnull;
+nsIAtom * nsMsgDBView::kLowestPriorityAtom = nsnull;
+nsIAtom * nsMsgDBView::kLowPriorityAtom = nsnull;
+#endif
 
 nsIAtom * nsMsgDBView::kUnreadMsgAtom	= nsnull;
 nsIAtom * nsMsgDBView::kNewMsgAtom = nsnull;
@@ -77,6 +83,11 @@ nsIAtom * nsMsgDBView::kNewsMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kImapDeletedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kAttachMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kHasUnreadAtom = nsnull;
+
+nsIAtom * nsMsgDBView::mLabelPrefColorAtoms[PREF_LABELS_MAX] = {nsnull, nsnull, nsnull, nsnull, nsnull};
+
+nsIAtom * nsMsgDBView::kLabelColorWhiteAtom = nsnull;
+nsIAtom * nsMsgDBView::kLabelColorBlackAtom = nsnull;
 
 PRUnichar * nsMsgDBView::kHighestPriorityString = nsnull;
 PRUnichar * nsMsgDBView::kHighPriorityString = nsnull;
@@ -98,6 +109,7 @@ NS_INTERFACE_MAP_BEGIN(nsMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
    NS_INTERFACE_MAP_ENTRY(nsIMsgCopyServiceListener)
    NS_INTERFACE_MAP_ENTRY(nsIMsgSearchNotify)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
 
 nsMsgDBView::nsMsgDBView()
@@ -125,6 +137,7 @@ nsMsgDBView::nsMsgDBView()
     InitializeAtomsAndLiterals();
   }
   
+  AddLabelPrefObservers();
   gInstanceCount++;
 }
 
@@ -140,10 +153,12 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
   kAttachMsgAtom = NS_NewAtom("attach");
   kHasUnreadAtom = NS_NewAtom("hasUnread");
 
+#ifdef SUPPORT_PRIORITY_COLORS
   kHighestPriorityAtom = NS_NewAtom("priority-highest");
   kHighPriorityAtom = NS_NewAtom("priority-high");
   kLowestPriorityAtom = NS_NewAtom("priority-lowest");
   kLowPriorityAtom = NS_NewAtom("priority-low");
+#endif
 
   // priority strings
   kHighestPriorityString = GetString(NS_LITERAL_STRING("priorityHighest").get());
@@ -151,6 +166,9 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
   kLowestPriorityString =  GetString(NS_LITERAL_STRING("priorityLowest").get());
   kLowPriorityString = GetString(NS_LITERAL_STRING("priorityLow").get());
   kNormalPriorityString = GetString(NS_LITERAL_STRING("priorityNormal").get());
+
+  kLabelColorWhiteAtom = NS_NewAtom("lc-white");
+  kLabelColorBlackAtom = NS_NewAtom("lc-black");
 
   kReadString = GetString(NS_LITERAL_STRING("read").get());
   kRepliedString = GetString(NS_LITERAL_STRING("replied").get());
@@ -176,22 +194,158 @@ nsMsgDBView::~nsMsgDBView()
     NS_IF_RELEASE(kAttachMsgAtom);
     NS_IF_RELEASE(kHasUnreadAtom);
 
+#ifdef SUPPORT_PRIORITY_COLORS
     NS_IF_RELEASE(kHighestPriorityAtom);
     NS_IF_RELEASE(kHighPriorityAtom);
     NS_IF_RELEASE(kLowestPriorityAtom);
     NS_IF_RELEASE(kLowPriorityAtom);
+#endif
+
+    for(PRInt32 i = 0; i < PREF_LABELS_MAX; i++)
+      NS_IF_RELEASE(mLabelPrefColorAtoms[i]);
+
+    NS_IF_RELEASE(kLabelColorWhiteAtom);
+    NS_IF_RELEASE(kLabelColorBlackAtom);
 
     nsCRT::free(kHighestPriorityString);
     nsCRT::free(kHighPriorityString);
     nsCRT::free(kLowestPriorityString);
     nsCRT::free(kLowPriorityString);
     nsCRT::free(kNormalPriorityString);
-    
+
     nsCRT::free(kReadString);
     nsCRT::free(kRepliedString);
     nsCRT::free(kForwardedString);
     nsCRT::free(kNewString);
   }
+}
+
+nsresult nsMsgDBView::InitLabelPrefs()
+{
+  nsresult rv = NS_OK;
+  nsCString prefString;
+
+  for(PRInt32 i = 0; i < PREF_LABELS_MAX; i++)
+  {
+    prefString.Assign(PREF_LABELS_DESCRIPTION);
+    prefString.AppendInt(i + 1);
+    rv = GetPrefLocalizedString(prefString.get(), mLabelPrefDescriptions[i]);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    prefString.Assign(PREF_LABELS_COLOR);
+    prefString.AppendInt(i + 1);
+    rv = GetLabelPrefStringAndAtom(prefString.get(), mLabelPrefColors[i], &mLabelPrefColorAtoms[i]);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return rv;
+}
+
+nsresult nsMsgDBView::AddLabelPrefObservers()
+{
+  nsresult rv = NS_OK;
+  nsCString prefString;
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  InitLabelPrefs();
+
+  for(PRInt32 i = 0; i < PREF_LABELS_MAX; i++)
+  {
+    prefString.Assign(PREF_LABELS_DESCRIPTION);
+    prefString.AppendInt(i + 1);
+    rv = pbi->AddObserver(prefString.get(), this, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    prefString.Assign(PREF_LABELS_COLOR);
+    prefString.AppendInt(i + 1);
+    rv = pbi->AddObserver(prefString.get(), this, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return rv;
+}
+
+nsresult nsMsgDBView::RemoveLabelPrefObservers()
+{
+  nsresult rv = NS_OK;
+  nsCString prefString;
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  for(PRInt32 i = 0; i < PREF_LABELS_MAX; i++)
+  {
+    prefString.Assign(PREF_LABELS_DESCRIPTION);
+    prefString.AppendInt(i + 1);
+    rv = pbi->RemoveObserver(prefString.get(), this);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    prefString.Assign(PREF_LABELS_COLOR);
+    prefString.AppendInt(i + 1);
+    rv = pbi->RemoveObserver(prefString.get(), this);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgDBView::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+{
+  nsresult rv = NS_OK;
+  PRBool matchFound = PR_FALSE;
+
+  if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
+  {
+    nsCString prefName;
+    nsCString indexStr;
+    PRUint32 prefNameLength;
+    PRInt32 indexInt;
+    PRInt32 irv;
+
+    prefName.AssignWithConversion(someData);
+    prefNameLength = prefName.Length();
+
+    /* Get the last character and convert it to an int.
+     * It should be a char from 1-5. */
+    indexStr.Assign(prefName.get() + prefNameLength - 1);
+    indexInt = indexStr.ToInteger(&irv);
+    NS_ASSERTION(!irv, "ToInteger() failed");
+    if (irv)
+      return NS_ERROR_FAILURE;
+
+    /* Determine if it's a description or a color preference */
+    if(prefName.Find(PREF_LABELS_DESCRIPTION, true, 0, 1) != kNotFound)
+    {
+      /* it's a description, get the localized string from the pref */
+      rv = GetPrefLocalizedString(prefName.get(), mLabelPrefDescriptions[indexInt - 1]);
+      matchFound = PR_TRUE;
+    }
+    else if(prefName.Find(PREF_LABELS_COLOR, true, 0, 1) != kNotFound)
+    {
+      /* it's a color, get the color string from the pref, and create a new atom for it */
+      rv = GetLabelPrefStringAndAtom(prefName.get(), mLabelPrefColors[indexInt - 1], &mLabelPrefColorAtoms[indexInt - 1]);
+      matchFound = PR_TRUE;
+    }
+
+    if(matchFound) {
+      NS_ENSURE_SUCCESS(rv,rv);
+      mOutliner->Invalidate();
+    }
+  }
+  return NS_OK;
 }
 
 // helper function used to fetch strings from the messenger string bundle
@@ -215,6 +369,93 @@ PRUnichar * nsMsgDBView::GetString(const PRUnichar *aStringName)
 		return ptrv;
 	else
 		return nsCRT::strdup(aStringName);
+}
+
+// helper function used to fetch localized strings from the prefs
+nsresult nsMsgDBView::GetPrefLocalizedString(const char *aPrefName, nsString& aResult)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrefService> prefService;
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsCOMPtr<nsIPrefLocalizedString> pls;
+  nsXPIDLString ucsval;
+
+  prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = prefBranch->GetComplexValue(aPrefName, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(pls));
+  NS_ENSURE_SUCCESS(rv, rv);
+  pls->ToString(getter_Copies(ucsval));
+  aResult = ucsval.get();
+  return rv;
+}
+
+// helper function used to fetch color information from the prefs and create atoms for them.
+nsresult nsMsgDBView::GetLabelPrefStringAndAtom(const char *aPrefName, nsString& aColor, nsIAtom** aColorAtom)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIPrefService> prefService;
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  nsXPIDLCString csval;
+  nsCAutoString prefColorOutliner(LABEL_COLOR_STRING);
+
+  prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = prefBranch->GetCharPref(aPrefName, getter_Copies(csval));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aColor.AssignWithConversion(csval);
+
+  /* Build the color atom here.  This is where we cache it to be used
+   * later in AppendLabelProperties() */
+  NS_IF_RELEASE(*aColorAtom);
+  prefColorOutliner.AppendWithConversion(aColor.get() + 1);
+  *aColorAtom = NS_NewAtom(prefColorOutliner.get());
+  NS_ENSURE_TRUE(*aColorAtom, NS_ERROR_FAILURE);
+
+  return rv;
+}
+
+// helper function used to tell the outliner to apply a certain color style
+// for fonts and highlights.
+nsresult nsMsgDBView::AppendLabelProperties(nsMsgLabelValue label, nsISupportsArray *aProperties)
+{
+  NS_ENSURE_ARG_POINTER(aProperties);
+
+  // We need to subtract 1 because mLabelPrefColors is 0 based.
+  if(!mLabelPrefColors[label - 1].IsEmpty())
+  {
+    NS_ENSURE_TRUE(mLabelPrefColorAtoms[label - 1], NS_ERROR_FAILURE);
+    aProperties->AppendElement(mLabelPrefColorAtoms[label - 1]);
+  }
+  return NS_OK;
+}
+
+// helper function used to tell the outliner to apply a certain color style
+// for fonts when it is highlighted.
+nsresult nsMsgDBView::AppendSelectedTextColorProperties(nsMsgLabelValue label, nsISupportsArray *aProperties)
+{
+  NS_ENSURE_ARG_POINTER(aProperties);
+
+  // This checks to see if the text color is white (#FFFFFF).  If it is, we
+  // want to set the text color black when highlighted so it will be
+  // readable.  We don't care if the text color is black because this
+  // means the highlight color will be black.
+  //
+  // We need to subtract 1 because mLabelPrefColors is 0 based.
+  if(mLabelPrefColors[label - 1].Equals(NS_LITERAL_STRING(LABEL_COLOR_WHITE_STRING)))
+    aProperties->AppendElement(kLabelColorBlackAtom);  
+  else
+    aProperties->AppendElement(kLabelColorWhiteAtom);  
+
+  return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -414,19 +655,28 @@ nsresult nsMsgDBView::FetchPriority(nsIMsgHdr *aHdr, PRUnichar ** aPriorityStrin
 
 nsresult nsMsgDBView::FetchLabel(nsIMsgHdr *aHdr, PRUnichar ** aLabelString)
 {
+  nsresult rv = NS_OK;
   nsMsgLabelValue label = 0;
-  PRUnichar labelString[2];
-  labelString[1] = '\0';
+
+  NS_ENSURE_ARG_POINTER(aHdr);  
+  NS_ENSURE_ARG_POINTER(aLabelString);  
+
   aHdr->GetLabel(&label);
 
-
-  if (label)
+  // we don't care if label is not between 1 and PREF_LABELS_MAX inclusive.
+  if ((label < 1) || (label > PREF_LABELS_MAX))
   {
-    *labelString = '0' + label;
-    *aLabelString = nsCRT::strdup(labelString);
-  }
-  else
     *aLabelString = nsnull;
+    return NS_OK;
+  }
+
+  // We need to subtract 1 because mLabelPrefDescriptions is 0 based.
+  if(!mLabelPrefDescriptions[label - 1].IsEmpty())
+  {
+    *aLabelString = nsCRT::strdup(mLabelPrefDescriptions[label - 1].get());
+    if (!*aLabelString)
+       return NS_ERROR_OUT_OF_MEMORY;
+  }
   return NS_OK;
 }
 
@@ -712,6 +962,31 @@ nsresult nsMsgDBView::GetSelectedIndices(nsUInt32Array *selection)
 
 NS_IMETHODIMP nsMsgDBView::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
 {
+  nsMsgLabelValue label;
+
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX; 
+
+  // this is where we tell the outliner to apply styles to a particular row
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  nsresult rv = NS_OK;
+
+  rv = GetMsgHdrForViewIndex(index, getter_AddRefs(msgHdr));
+
+  if (NS_FAILED(rv) || !msgHdr) {
+    ClearHdrCache();
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+  }
+
+  // we only care if label is between 1 and PREF_LABELS_MAX inclusive.
+  if (NS_SUCCEEDED(msgHdr->GetLabel(&label)) && ((label >= 1) || (label <= PREF_LABELS_MAX)))
+  {
+    // Set the row properties.  This will color the background of a row given
+    // a particular label color.
+    rv = AppendLabelProperties(label, properties);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -722,6 +997,8 @@ NS_IMETHODIMP nsMsgDBView::GetColumnProperties(const PRUnichar *colID, nsIDOMEle
 
 NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colID, nsISupportsArray *properties)
 {
+  nsMsgLabelValue label;
+
   if (!IsValidIndex(aRow))
     return NS_MSG_INVALID_DBVIEW_INDEX; 
 
@@ -759,25 +1036,46 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   if (mIsNews)
     properties->AppendElement(kNewsMsgAtom);
     
+#ifdef SUPPORT_PRIORITY_COLORS
   // add special styles for priority
   nsMsgPriorityValue priority;
   msgHdr->GetPriority(&priority);
   switch (priority)
   {
   case nsMsgPriority::highest:
-    properties->AppendElement(kHighestPriorityAtom);  
+    properties->AppendElement(kHighestPriorityAtom);
     break;
   case nsMsgPriority::high:
-    properties->AppendElement(kHighPriorityAtom);  
+    properties->AppendElement(kHighPriorityAtom);
     break;
   case nsMsgPriority::low:
-    properties->AppendElement(kLowPriorityAtom);  
+    properties->AppendElement(kLowPriorityAtom);
     break;
   case nsMsgPriority::lowest:
-    properties->AppendElement(kLowestPriorityAtom);  
+    properties->AppendElement(kLowestPriorityAtom);
     break;
   default:
     break;
+  }
+#endif
+
+  // we only care if label is between 1 and PREF_LABELS_MAX inclusive.
+  if (NS_SUCCEEDED(msgHdr->GetLabel(&label)) && ((label >= 1) || (label <= PREF_LABELS_MAX)))
+  {
+    // Set the cell properties.  This will color the text of a column given
+    // a particular label color.
+    rv = AppendLabelProperties(label, properties);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // AppendSelectedTextColorProperties() should not be merged into
+    // AppendLabelProperties() because AppendLabelProperties() is called
+    // by both GetCellProperties() and GetRowProperties().
+    //
+    // AppendSelectedTextColorProperties() is used to only apply the
+    // 'selected' text color for a label (it will not work if it's
+    // only called from GetRowProperties() instead of here).
+    rv = AppendSelectedTextColorProperties(label, properties);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (colID[0] == 'f')  
@@ -1139,7 +1437,6 @@ NS_IMETHODIMP nsMsgDBView::PerformActionOnCell(const PRUnichar *action, PRInt32 
 
 NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount)
 {
-
   m_viewFlags = viewFlags;
   m_sortOrder = sortOrder;
   m_sortType = sortType;
@@ -1191,6 +1488,8 @@ NS_IMETHODIMP nsMsgDBView::ReloadFolderAfterQuickSearch()
 
 NS_IMETHODIMP nsMsgDBView::Close()
 {
+  RemoveLabelPrefObservers();
+
   if (mOutliner) 
     mOutliner->RowCountChanged(0, -GetSize());
   // this is important, because the outliner will ask us for our
@@ -1414,6 +1713,7 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
   case nsMsgViewCommandType::deleteMsg:
   case nsMsgViewCommandType::deleteNoTrash:
   case nsMsgViewCommandType::markThreadRead:
+  case nsMsgViewCommandType::label0:
   case nsMsgViewCommandType::label1:
   case nsMsgViewCommandType::label2:
   case nsMsgViewCommandType::label3:
@@ -1611,12 +1911,13 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
       case nsMsgViewCommandType::markThreadRead:
         rv = SetThreadOfMsgReadByIndex(indices[i], imapUids, PR_TRUE);
         break;
+      case nsMsgViewCommandType::label0:
       case nsMsgViewCommandType::label1:
       case nsMsgViewCommandType::label2:
       case nsMsgViewCommandType::label3:
       case nsMsgViewCommandType::label4:
       case nsMsgViewCommandType::label5:
-        rv = SetLabelByIndex(indices[i], (command - nsMsgViewCommandType::label1 + 1));
+        rv = SetLabelByIndex(indices[i], (command - nsMsgViewCommandType::label0));
         break;
       default:
         NS_ASSERTION(PR_FALSE, "unhandled command");

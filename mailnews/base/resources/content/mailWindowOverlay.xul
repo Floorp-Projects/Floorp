@@ -252,6 +252,7 @@ Rights Reserved.
               events="create-menu-label"
               oncommandupdate="goUpdateMailMenuItems(this)">
 
+    <command id="cmd_label0" oncommand="goDoCommand('cmd_label0');" disabled="true"/>
     <command id="cmd_label1" oncommand="goDoCommand('cmd_label1');" disabled="true"/>
     <command id="cmd_label2" oncommand="goDoCommand('cmd_label2');" disabled="true"/>
     <command id="cmd_label3" oncommand="goDoCommand('cmd_label3');" disabled="true"/>
@@ -492,6 +493,37 @@ Rights Reserved.
         </rule>
       </template>
     </menu>
+    <menuseparator/>
+    <menu label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
+      <menupopup id="threadPaneContext-labels" onpopupshowing="InitMessageLabel('threadPaneContext')">
+        <menuitem
+           id="threadPaneContext-labelMenuItem0"
+           accesskey="&labelCmd0.accesskey;"
+           observes="cmd_label0"/>
+        <menuseparator/>
+        <menuitem
+           id="threadPaneContext-labelMenuItem1"
+           accesskey="&labelCmd1.accesskey;"
+           observes="cmd_label1"/>
+        <menuitem
+           id="threadPaneContext-labelMenuItem2"
+           accesskey="&labelCmd2.accesskey;"
+           observes="cmd_label2"/>
+        <menuitem
+           id="threadPaneContext-labelMenuItem3"
+           accesskey="&labelCmd3.accesskey;"
+           observes="cmd_label3"/>
+        <menuitem
+           id="threadPaneContext-labelMenuItem4"
+           accesskey="&labelCmd4.accesskey;"
+           observes="cmd_label4"/>
+        <menuitem
+           id="threadPaneContext-labelMenuItem5"
+           accesskey="&labelCmd5.accesskey;"
+           observes="cmd_label5"/>
+      </menupopup>
+    </menu>
+    <menuseparator/>
     <menuitem id="threadPaneContext-saveAs"
         label="&contextSaveAs.label;"
         accesskey="&contextSaveAs.accesskey;"
@@ -741,6 +773,37 @@ Rights Reserved.
         </rule>
       </template>
     </menu>
+    <menuseparator/>
+    <menu label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
+      <menupopup id="messagePaneContext-labels" onpopupshowing="InitMessageLabel('messagePaneContext')">
+        <menuitem
+           id="messagePaneContext-labelMenuItem0"
+           accesskey="&labelCmd0.accesskey;"
+           observes="cmd_label0"/>
+        <menuseparator/>
+        <menuitem
+           id="messagePaneContext-labelMenuItem1"
+           accesskey="&labelCmd1.accesskey;"
+           observes="cmd_label1"/>
+        <menuitem
+           id="messagePaneContext-labelMenuItem2"
+           accesskey="&labelCmd2.accesskey;"
+           observes="cmd_label2"/>
+        <menuitem
+           id="messagePaneContext-labelMenuItem3"
+           accesskey="&labelCmd3.accesskey;"
+           observes="cmd_label3"/>
+        <menuitem
+           id="messagePaneContext-labelMenuItem4"
+           accesskey="&labelCmd4.accesskey;"
+           observes="cmd_label4"/>
+        <menuitem
+           id="messagePaneContext-labelMenuItem5"
+           accesskey="&labelCmd5.accesskey;"
+           observes="cmd_label5"/>
+      </menupopup>
+    </menu>
+    <menuseparator/>
     <menuitem id="messagePaneContext-saveAs"
         label="&contextSaveAs.label;"
         accesskey="&contextSaveAs.accesskey;"
@@ -1229,12 +1292,32 @@ Rights Reserved.
     </menu>
     <menuseparator/>
     <menu label="&labelMenu.label;" accesskey="&labelMenu.accesskey;">
-      <menupopup onpopupshowing="InitMessageLabel()">
-        <menuitem type="checkbox" id="labelMenuItem1" label="&labelCmd1.label;" accesskey="&labelCmd1.accesskey;" observes="cmd_label1"/>
-        <menuitem type="checkbox" id="labelMenuItem2" label="&labelCmd2.label;" accesskey="&labelCmd2.accesskey;" observes="cmd_label2"/>
-        <menuitem type="checkbox" id="labelMenuItem3" label="&labelCmd3.label;" accesskey="&labelCmd3.accesskey;" observes="cmd_label3"/>
-        <menuitem type="checkbox" id="labelMenuItem4" label="&labelCmd4.label;" accesskey="&labelCmd4.accesskey;" observes="cmd_label4"/>
-        <menuitem type="checkbox" id="labelMenuItem5" label="&labelCmd5.label;" accesskey="&labelCmd5.accesskey;" observes="cmd_label5"/>
+      <menupopup id="menuPopup-labels" onpopupshowing="InitMessageLabel('menuPopup')">
+        <menuitem
+           id="menuPopup-labelMenuItem0"
+           accesskey="&labelCmd0.accesskey;"
+           observes="cmd_label0"/>
+        <menuseparator/>
+        <menuitem
+           id="menuPopup-labelMenuItem1"
+           accesskey="&labelCmd1.accesskey;"
+           observes="cmd_label1"/>
+        <menuitem
+           id="menuPopup-labelMenuItem2"
+           accesskey="&labelCmd2.accesskey;"
+           observes="cmd_label2"/>
+        <menuitem
+           id="menuPopup-labelMenuItem3"
+           accesskey="&labelCmd3.accesskey;"
+           observes="cmd_label3"/>
+        <menuitem
+           id="menuPopup-labelMenuItem4"
+           accesskey="&labelCmd4.accesskey;"
+           observes="cmd_label4"/>
+        <menuitem
+           id="menuPopup-labelMenuItem5"
+           accesskey="&labelCmd5.accesskey;"
+           observes="cmd_label5"/>
       </menupopup>
     </menu>
     <menuseparator/>

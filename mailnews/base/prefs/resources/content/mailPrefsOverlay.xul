@@ -70,6 +70,11 @@
             <treecell class="treecell-indent" url="chrome://messenger/content/addressbook/pref-addressing.xul" label="&address.label;"/> 
           </treerow>
         </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell class="treecell-indent" url="chrome://messenger/content/pref-labels.xul" label="&labels.label;"/>
+          </treerow>
+        </treeitem>
       </treechildren>
     </treeitem>
   </treechildren>

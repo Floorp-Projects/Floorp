@@ -21,6 +21,7 @@ Rights Reserved.
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/threadPane.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/threadPaneLabels.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/threadpane.dtd">
 
@@ -48,7 +49,7 @@ Rights Reserved.
   <splitter class="tree-splitter"/>
   <outlinercol id="priorityCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&priorityColumn.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="labelCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&labelColumn.label;"/>
+  <outlinercol id="labelCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&labelColumn.label;" hidden="true"/>
   <splitter class="tree-splitter"/>
   <outlinercol id="unreadCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&unreadColumn.label;"/>
   <splitter class="tree-splitter"/>

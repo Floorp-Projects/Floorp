@@ -248,6 +248,7 @@ var DefaultController =
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
+      case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
       case "cmd_label3":
@@ -367,6 +368,7 @@ var DefaultController =
       case "cmd_markAsFlagged":
       case "button_file":
       case "cmd_file":
+      case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
       case "cmd_label3":
@@ -618,6 +620,9 @@ var DefaultController =
 			case "cmd_markAsFlagged":
 				MsgMarkAsFlagged(null);
 				return;
+      case "cmd_label0":
+        gDBView.doCommand(nsMsgViewCommandType.label0);
+ 				return;
       case "cmd_label1":
         gDBView.doCommand(nsMsgViewCommandType.label1);
         return; 

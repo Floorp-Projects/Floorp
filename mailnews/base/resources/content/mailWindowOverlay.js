@@ -301,11 +301,53 @@ function InitMessageMark()
     document.commandDispatcher.updateCommands('create-menu-mark');
 }
 
-function InitMessageLabel()
+function SetMenuItemLabel(menuItemId, customLabel)
 {
-dump("initing message label\n");
+    var menuItem = document.getElementById(menuItemId);
+
+    if(menuItem)
+        menuItem.setAttribute('label', customLabel);
+}
+
+function InitMessageLabel(menuType)
+{
+    /* this code gets the label strings and changes the menu labels */
+    var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+    var prefBranch = prefs.getDefaultBranch(null);
+    var color;
+
+    for (var i = 0;i <= 5; i++)
+    {
+        try
+        {
+            var prefString = prefs.getComplexValue("mailnews.labels.description." + i,
+                                                   Components.interfaces.nsIPrefLocalizedString);
+            var formattedPrefString = gMessengerBundle.getFormattedString("labelMenuItemFormat" + i,
+                                                                          [prefString], 1); 
+            SetMenuItemLabel(menuType + '-labelMenuItem' + i, formattedPrefString);
+
+            // commented out for now until UE decides on how to show the Labels menu items.
+            // This code will color either the text or background for the Labels menu items.
+            /*****
+            if (i != 0)
+            {
+                color = prefBranch.getCharPref("mailnews.labels.color." + i);
+                // this colors the text of the menuitem only.
+                document.getElementById(menuType + "-labelMenuItem" + i).setAttribute("style", ("color: " + color));
+
+                // this colors the background of the menuitem and
+                // when selected, text becomes white.
+                //document.getElementById(menuType + "-labelMenuItem" + i).setAttribute("style", ("color: #FFFFFF"));
+                //document.getElementById(menuType + "-labelMenuItem" + i).setAttribute("style", ("background-color: " + color));
+            }
+            ****/
+        }
+        catch(ex)
+        {
+            dump("bad! " + ex + "\n");
+        }
+    }
     document.commandDispatcher.updateCommands('create-menu-label');
-  /* this code should probably get the label strings and change the menu labels */
 }
 
 function InitMarkReadItem(id)

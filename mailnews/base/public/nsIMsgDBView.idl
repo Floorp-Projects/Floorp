@@ -185,12 +185,13 @@ interface nsMsgViewCommandType
   const nsMsgViewCommandTypeValue selectThread = 18;
   const nsMsgViewCommandTypeValue selectFlagged = 19;
   const nsMsgViewCommandTypeValue cmdRequiringMsgBody = 20;
-  const nsMsgViewCommandTypeValue label1 = 21;
-  const nsMsgViewCommandTypeValue label2 = 22;
-  const nsMsgViewCommandTypeValue label3 = 23;
-  const nsMsgViewCommandTypeValue label4 = 24;
-  const nsMsgViewCommandTypeValue label5 = 25;
-  const nsMsgViewCommandTypeValue lastLabel = 25;
+  const nsMsgViewCommandTypeValue label0 = 21;
+  const nsMsgViewCommandTypeValue label1 = 22;
+  const nsMsgViewCommandTypeValue label2 = 23;
+  const nsMsgViewCommandTypeValue label3 = 24;
+  const nsMsgViewCommandTypeValue label4 = 25;
+  const nsMsgViewCommandTypeValue label5 = 26;
+  const nsMsgViewCommandTypeValue lastLabel = 26;
 
 };
 

@@ -51,6 +51,7 @@ CHROME_L10N = \
 	.\SmtpServerList.dtd \
 	.\smtpEditOverlay.dtd \
 	.\mailPrefsOverlay.dtd \
+  .\pref-labels.dtd\
       .\am-offline.dtd \
 	$(NULL)
 
