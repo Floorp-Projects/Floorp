@@ -61,6 +61,7 @@
 #include "profilerutils.h"
 #endif
 
+#include <unistd.h>
 
 ////////////////////////////////////////////////////
 nsIRollupListener * gRollupListener = nsnull;
@@ -323,6 +324,43 @@ NS_IMETHODIMP nsChildView::Destroy()
 
 #pragma mark -
 
+static pascal OSStatus OnContentClick(EventHandlerCallRef handler, EventRef event, void* userData)
+{
+    WindowRef window;
+    GetEventParameter(event, kEventParamDirectObject, typeWindowRef, NULL,
+                      sizeof(window), NULL, &window);
+
+    EventRecord macEvent;
+    ConvertEventRefToEventRecord(event, &macEvent);
+    GrafPtr port = GetWindowPort(window);
+    StPortSetter setter(port);
+    Point localWhere = macEvent.where;
+    GlobalToLocal(&localWhere);
+    
+    nsChildView* childView = (nsChildView*) userData;
+    nsMouseEvent geckoEvent;
+    geckoEvent.eventStructType = NS_MOUSE_EVENT;
+    geckoEvent.message = NS_MOUSE_LEFT_BUTTON_DOWN;
+    geckoEvent.nativeMsg = &macEvent;
+    geckoEvent.widget = childView;
+    geckoEvent.time = PR_IntervalNow();
+    geckoEvent.flags = 0;
+    geckoEvent.clickCount = 1;
+
+    geckoEvent.refPoint.x = geckoEvent.point.x = localWhere.h;
+    geckoEvent.refPoint.y = geckoEvent.point.y = localWhere.v;
+
+    geckoEvent.isShift = ((macEvent.modifiers & (shiftKey|rightShiftKey)) != 0);
+    geckoEvent.isControl = ((macEvent.modifiers & controlKey) != 0);
+    geckoEvent.isAlt = ((macEvent.modifiers & optionKey) != 0);
+    geckoEvent.isMeta = ((macEvent.modifiers & cmdKey) != 0);
+    
+    // send event into Gecko by going directly to the
+    // the widget.
+    childView->DispatchMouseEvent(geckoEvent);
+
+    return noErr;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -376,23 +414,47 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_COLORMAP:
       //¥TODO
       break;
+#endif
 
     case NS_NATIVE_PLUGIN_PORT:
       // this needs to be a combination of the port and the offsets.
       if (mPluginPort == nsnull)
         mPluginPort = new nsPluginPort;
         
-    point.MoveTo(mBounds.x, mBounds.y);
-    LocalToWindowCoordinate(point);
+        [mView setIsPluginView: YES];
+        
+        NSWindow* window = [mView window];
+        if (window) {
+            WindowRef topLevelWindow = (WindowRef) [window _windowRef];  // PRIVATE APPLE SPI FOO.
+            if (topLevelWindow) {
+                mPluginPort->port = GetWindowPort(topLevelWindow);
 
-    // for compatibility with 4.X, this origin is what you'd pass
-    // to SetOrigin.
-    mPluginPort->port = ::GetWindowPort(mWindowPtr);
-    mPluginPort->portx = -point.x;
-    mPluginPort->porty = -point.y;
+                NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
+                NSRect frame = [window frame];
+                viewOrigin.y = frame.size.height - viewOrigin.y;
+                
+                // need to convert view's origin to window coordinates.
+                // then, encode as "SetOrigin" ready values.
+                mPluginPort->portx = -viewOrigin.x;
+                mPluginPort->porty = -viewOrigin.y;
+                
+                // set up the clipping region for plugins.
+                RgnHandle clipRgn = ::NewRgn();
+                if (clipRgn != NULL) {
+                    NSRect visibleBounds = [mView visibleRect];
+                    NSPoint clipOrigin = [mView convertPoint:visibleBounds.origin toView:nil];
+                    clipOrigin.y = frame.size.height - clipOrigin.y;
+                    SetRectRgn(clipRgn, clipOrigin.x, clipOrigin.y,
+                               clipOrigin.x + visibleBounds.size.width,
+                               clipOrigin.y + visibleBounds.size.height);
+                    SetPortClipRegion(mPluginPort->port, clipRgn);
+                    DisposeRgn(clipRgn);
+                }
+            }
+        }
     
       retVal = (void*)mPluginPort;
-#endif
+        break;
   }
 
   return retVal;
@@ -978,7 +1040,7 @@ NS_IMETHODIMP nsChildView::Invalidate(PRBool aIsSynchronous)
   if (aIsSynchronous)
     [mView display];
   else
-    [mView setNeedsDisplay];
+    [mView setNeedsDisplay:true];
   
   return NS_OK;
 }
@@ -1175,13 +1237,13 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   if (! mVisible)
     return;
   
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  ::SetPort(GetQuickDrawPort());
+  StPortSetter port(GetQuickDrawPort());
+  if (mPluginPort) ::SetOrigin(mPluginPort->portx, mPluginPort->porty);
         
   // initialize the paint event
   nsPaintEvent paintEvent;
   paintEvent.eventStructType      = NS_PAINT_EVENT;   // nsEvent
+  paintEvent.nativeMsg = nsnull;
   paintEvent.message          = NS_PAINT;
   paintEvent.widget         = this;         // nsGUIEvent
   paintEvent.nativeMsg        = NULL;
@@ -1204,7 +1266,19 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   }
   EndDraw();
   
-  ::SetPort(oldPort);
+#if 0
+  // draw where a plugin will be.
+  if (mPluginPort) {
+      ::SetOrigin(mPluginPort->portx, mPluginPort->porty);
+      Rect bounds = { 0, 0, mBounds.height, mBounds.width };
+      ::FrameRect(&bounds);
+      ::MoveTo(bounds.left, bounds.top);
+      ::LineTo(bounds.right, bounds.bottom);
+      ::MoveTo(bounds.right, bounds.top);
+      ::LineTo(bounds.left, bounds.bottom);
+      ::SetOrigin(0, 0);
+  }
+#endif
 }
 
 
@@ -1298,7 +1372,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
     NS_IF_ADDREF(aWidget);
     
     if (nsnull != mMenuListener){
-      if(NS_MENU_EVENT == event->eventStructType)
+      if (NS_MENU_EVENT == event->eventStructType)
         aStatus = mMenuListener->MenuSelected( static_cast<nsMenuEvent&>(*event) );
     }
     if (mEventCallback)
@@ -1397,6 +1471,7 @@ PRBool nsChildView::ReportDestroyEvent()
   // nsEvent
   nsGUIEvent moveEvent;
   moveEvent.eventStructType = NS_GUI_EVENT;
+  moveEvent.nativeMsg = nsnull;
   moveEvent.message     = NS_DESTROY;
   moveEvent.point.x     = 0;
   moveEvent.point.y     = 0;
@@ -1419,6 +1494,7 @@ PRBool nsChildView::ReportMoveEvent()
   // nsEvent
   nsGUIEvent moveEvent;
   moveEvent.eventStructType = NS_GUI_EVENT;
+  moveEvent.nativeMsg = nsnull;
   moveEvent.message     = NS_MOVE;
   moveEvent.point.x     = mBounds.x;
   moveEvent.point.y     = mBounds.y;
@@ -1441,6 +1517,7 @@ PRBool nsChildView::ReportSizeEvent()
   // nsEvent
   nsSizeEvent sizeEvent;
   sizeEvent.eventStructType = NS_SIZE_EVENT;
+  sizeEvent.nativeMsg = nsnull;
   sizeEvent.message     = NS_SIZE;
   sizeEvent.point.x     = 0;
   sizeEvent.point.y     = 0;
@@ -1671,6 +1748,9 @@ NS_IMETHODIMP nsChildView::ResetInputState()
 GrafPtr
 nsChildView::GetQuickDrawPort()
 {
+    if (mPluginPort)
+        return mPluginPort->port;
+    else
   return [mView qdPort];
 }
 
@@ -1771,20 +1851,22 @@ nsChildView::Idle()
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
+  nsMouseEvent geckoEvent;
+
   int button = [theEvent buttonNumber];
   if (button == 1) {
     // The right mouse went down.  Fire off a right mouse down and
     // then send the context menu event.
-    nsMouseEvent geckoEvent;
     geckoEvent.eventStructType = NS_MOUSE_EVENT;
+    geckoEvent.nativeMsg = nsnull;
     [self convert: theEvent message: NS_MOUSE_RIGHT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
     geckoEvent.clickCount = 1;
     mGeckoChild->DispatchMouseEvent(geckoEvent);
   }
 
   // Fire the context menu event into Gecko.
-  nsMouseEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  geckoEvent.nativeMsg = nsnull;
   [self convert:theEvent message:NS_CONTEXTMENU toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = 0;
   
@@ -1816,6 +1898,7 @@ nsChildView::Idle()
   mGeckoChild = inChild;
   mEventSink = inSink;
 //  mMouseEnterExitTag = nsnull;
+  mIsPluginView = NO;
   return self;
 }
 
@@ -1882,7 +1965,12 @@ nsChildView::Idle()
 // But we can't. :(
 - (BOOL)isOpaque
 {
-  return NO;
+  return mIsPluginView;
+}
+
+-(void)setIsPluginView:(BOOL)aIsPlugin
+{
+  mIsPluginView = aIsPlugin;
 }
 
 //
@@ -1918,14 +2006,26 @@ nsChildView::Idle()
   mGeckoChild->UpdateWidget(r, rendContext);
 }
 
-
 - (void)mouseDown:(NSEvent *)theEvent
 {
   nsMouseEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  geckoEvent.nativeMsg = nsnull;
   [self convert:theEvent message:NS_MOUSE_LEFT_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
   
+  NSPoint mouseLoc = [theEvent locationInWindow];
+  NSPoint screenLoc = [[self window] convertBaseToScreen: mouseLoc];
+
+  EventRecord macEvent;
+  macEvent.what = mouseDown;
+  macEvent.message = 0;
+  macEvent.when = ::TickCount();
+  // macEvent.where.h = screenLoc.x, macEvent.where.v = screenLoc.y; XXX fix this, they are flipped!
+  GetGlobalMouse(&macEvent.where);
+  macEvent.modifiers = GetCurrentKeyModifiers();
+  geckoEvent.nativeMsg = &macEvent;
+
   // send event into Gecko by going directly to the
   // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
@@ -1937,8 +2037,21 @@ nsChildView::Idle()
 {
   nsMouseEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  geckoEvent.nativeMsg = nsnull;
   [self convert:theEvent message:NS_MOUSE_LEFT_BUTTON_UP toGeckoEvent:&geckoEvent];
   
+  NSPoint mouseLoc = [theEvent locationInWindow];
+  NSPoint screenLoc = [[self window] convertBaseToScreen: mouseLoc];
+
+  EventRecord macEvent;
+  macEvent.what = mouseUp;
+  macEvent.message = 0;
+  macEvent.when = ::TickCount();
+  // macEvent.where.h = screenLoc.x, macEvent.where.v = screenLoc.y; XXX fix this, they are flipped!
+  GetGlobalMouse(&macEvent.where);
+  macEvent.modifiers = GetCurrentKeyModifiers();
+  geckoEvent.nativeMsg = &macEvent;
+
   // send event into Gecko by going directly to the
   // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
@@ -1956,7 +2069,20 @@ nsChildView::Idle()
   
   nsMouseEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  geckoEvent.nativeMsg = nsnull;
   [self convert:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
+
+  NSPoint mouseLoc = [theEvent locationInWindow];
+  NSPoint screenLoc = [[self window] convertBaseToScreen: mouseLoc];
+
+  EventRecord macEvent;
+  macEvent.what = nullEvent;
+  macEvent.message = 0;
+  macEvent.when = ::TickCount();
+  // macEvent.where.h = screenLoc.x, macEvent.where.v = screenLoc.y; XXX fix this, they are flipped!
+  GetGlobalMouse(&macEvent.where);
+  macEvent.modifiers = GetCurrentKeyModifiers();
+  geckoEvent.nativeMsg = &macEvent;
 
   // send event into Gecko by going directly to the
   // the widget.
@@ -1967,6 +2093,7 @@ nsChildView::Idle()
 {
     nsMouseEvent geckoEvent;
     geckoEvent.eventStructType = NS_MOUSE_EVENT;
+    geckoEvent.nativeMsg = nsnull;
     [self convert:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
     
     // send event into Gecko by going directly to the
@@ -1988,6 +2115,7 @@ nsChildView::Idle()
 {
   nsMouseEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  geckoEvent.nativeMsg = nsnull;
   [self convert:theEvent message:NS_MOUSE_MIDDLE_BUTTON_DOWN toGeckoEvent:&geckoEvent];
   geckoEvent.clickCount = [theEvent clickCount];
   
@@ -2002,6 +2130,7 @@ nsChildView::Idle()
 {
   nsMouseEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_EVENT;
+  geckoEvent.nativeMsg = nsnull;
   [self convert:theEvent message:NS_MOUSE_MIDDLE_BUTTON_UP toGeckoEvent:&geckoEvent];
   
   // send event into Gecko by going directly to the
@@ -2020,6 +2149,7 @@ const PRInt32 kNumLines = 4;
   // the OS). --dwh
   nsMouseScrollEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+  geckoEvent.nativeMsg = nsnull;
   [self convert:theEvent message:NS_MOUSE_SCROLL toGeckoEvent:&geckoEvent];
   geckoEvent.delta = PRInt32([theEvent deltaY])*(-kNumLines);
   geckoEvent.scrollFlags |= nsMouseScrollEvent::kIsVertical;
@@ -2045,6 +2175,7 @@ const PRInt32 kNumLines = 4;
 {
   outGeckoEvent->message = inMsg;
   outGeckoEvent->widget = [self widget];
+  outGeckoEvent->nativeMsg = nsnull;
   outGeckoEvent->time = PR_IntervalNow();
   
   if (outGeckoEvent->eventStructType != NS_KEY_EVENT) {
@@ -2143,6 +2274,7 @@ const PRInt32 kNumLines = 4;
 {
   nsFocusEvent event;
   event.eventStructType = NS_FOCUS_EVENT;
+  event.nativeMsg = nsnull;
   event.message = NS_GOTFOCUS;
   event.widget = mGeckoChild;
 
@@ -2159,6 +2291,7 @@ const PRInt32 kNumLines = 4;
 {
   nsFocusEvent event;
   event.eventStructType = NS_FOCUS_EVENT;
+  event.nativeMsg = nsnull;
   event.message = NS_LOSTFOCUS;
   event.widget = mGeckoChild;
 
