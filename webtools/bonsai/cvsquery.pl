@@ -435,7 +435,7 @@ sub build_map {
         if( $i eq '-l' ){
             $local = $IS_LOCAL;
         }
-        elsif( !build_map($i, $mod_map )){
+        elsif($i eq $name || !build_map($i, $mod_map )){
             $mod_map->{$i} = $local;   
         }
     }
