@@ -134,7 +134,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.23 $ )[1];
+$VERSION = ( qw $Revision: 1.24 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -582,6 +582,10 @@ sub status_table_row {
   # since an early time.  The earliest time was assigned a state in
   # apply_db_updates().  It is possible that there are no treestates at
   # all this should not prevent the VC column from being rendered.
+
+  if (!($LAST_TREESTATE)) {
+      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
+  }
 
   my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
   my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
