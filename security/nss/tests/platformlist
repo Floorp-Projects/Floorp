@@ -1,10 +1,10 @@
-Darwin_6.5
-HP-UX_B.11.00_32bit
-HP-UX_B.11.00_64bit
-RH_Linux_7.2
-RH_Linux_AdvSvr
-SunOS_5.8_32bit
-SunOS_5.8_64bit
+Darwin6.5
+HP-UX_B.11.00_32_bit
+HP-UX_B.11.00_64
+RH_Linux_7.2_(Enigma)
+RH_Linux_Advanced_Server_2.1AS_(Pensacola)
+SunOS_5.8_32_bit
+SunOS_5.8_64_bit
 Windows-2000
 Windows-XP
 
