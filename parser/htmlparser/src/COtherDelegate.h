@@ -45,37 +45,175 @@
 #include "nsIDTD.h"
 
 class COtherDelegate : public ITokenizerDelegate {
-  public:
-                          COtherDelegate();
-                          COtherDelegate(COtherDelegate& aDelegate);
+public:
 
-      virtual PRInt32     GetToken(CScanner& aScanner,CToken*& aToken);
-      virtual PRBool      WillAddToken(CToken& aToken);
 
-      virtual PRBool      WillTokenize(PRBool aIncremental);
-      virtual PRBool      DidTokenize(PRBool aIncremental);
+    /**
+     * Default constructor
+     * @update	gess5/11/98
+     */
+    COtherDelegate();
 
-      virtual eParseMode  GetParseMode(void) const;
-      virtual nsIDTD*     GetDTD(void) const;
-      static  void        SelfTest();
 
-   protected:
+    /**
+     * Copy constructor
+     * @update	gess 5/11/98
+     */
+    COtherDelegate(COtherDelegate& aDelegate);
 
-      virtual CToken*     CreateTokenOfType(eHTMLTokenTypes aType);
+    /**
+     * Consume next token from given scanner.
+     * @update	gess 5/11/98
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    virtual PRInt32 GetToken(CScanner& aScanner,CToken*& aToken);
 
-              PRInt32     ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-              PRInt32     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-              PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner);
-              PRInt32     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
-              PRInt32     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-              PRInt32     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-              PRInt32     ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
-              PRInt32     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    /**
+     * Ask if its ok to add this token
+     * @update	gess 5/11/98
+     * @param   aToken is the token to be added
+     * @return  True if ok to add the given token
+     */
+    virtual PRBool WillAddToken(CToken& aToken);
 
-                    //the only special case method...
-      virtual PRInt32     ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    /**
+     * Called as a preprocess -- tells delegate that tokenization will begin
+     * @update	gess 5/11/98
+     * @param   aIncremental tells us if tokenization is incremental
+     * @return  TRUE if ok to continue -- FALSE if process should stop
+     */
+    virtual PRBool WillTokenize(PRBool aIncremental);
 
-              nsDeque     mTokenDeque;
+    /**
+     * Postprocess -- called to say that tokenization has concluded
+     * @update	gess 5/11/98
+     * @param   aIncremental tells us if tokenization was incremental
+     * @return  TRUE if all went well--FALSE if you encountered an error
+     */
+    virtual PRBool DidTokenize(PRBool aIncremental);
+
+    /**
+     * DEPRECATED. Tells us what mode the delegate is operating in.
+     * @update	gess 5/11/98
+     * @return  parse mode
+     */
+    virtual eParseMode  GetParseMode(void) const;
+
+    /**
+     * Retrieve the DTD required by this delegate
+     * (The parser will call this prior to tokenization)
+     * @update	gess 5/11/98
+     * @return  ptr to DTD -- should NOT be null.
+     */
+    virtual nsIDTD*     GetDTD(void) const;
+
+    /**
+     * Conduct self test.
+     * @update	gess 5/11/98
+     */
+    static  void        SelfTest();
+
+protected:
+
+    /**
+     * Called to cause delegate to create a token of given type.
+     * @update	gess 5/11/98
+     * @param   aType represents the kind of token you want to create.
+     * @return  new token or NULL
+     */
+    virtual CToken*     CreateTokenOfType(eHTMLTokenTypes aType);
+
+    /**
+     * Retrieve the next TAG from the given scanner.
+     * @update	gess 5/11/98
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    PRInt32     ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    
+    /**
+     * Retrieve next START tag from given scanner.
+     * @update	gess 5/11/98
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    PRInt32     ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    
+    /**
+     * Retrieve collection of HTML/XML attributes from given scanner
+     * @update	gess 5/11/98
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner);
+    
+    /**
+     * Retrieve a sequence of text from given scanner.
+     * @update	gess 5/11/98
+     * @param   aString will contain retrieved text.
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    PRInt32     ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken);
+    
+    /**
+     * Retrieve an entity from given scanner
+     * @update	gess 5/11/98
+     * @param   aChar last char read from scanner
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    PRInt32     ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    
+    /**
+     * Retrieve a whitespace sequence from the given scanner
+     * @update	gess 5/11/98
+     * @param   aChar last char read from scanner
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    PRInt32     ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    
+    /**
+     * Retrieve a comment from the given scanner
+     * @update	gess 5/11/98
+     * @param   aChar last char read from scanner
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    PRInt32     ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+
+    /**
+     * Retrieve newlines from given scanner
+     * @update	gess 5/11/98
+     * @param   aChar last char read from scanner
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    PRInt32     ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+
+    /**
+     * Causes content to be skipped up to sequence contained in aString.
+     * @update	gess 5/11/98
+     * @param   aString ????
+     * @param   aChar last char read from scanner
+     * @param   aScanner is the input source
+     * @param   aToken is the next token (or null)
+     * @return  error code
+     */
+    virtual PRInt32     ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+
+    nsDeque     mTokenDeque;
 
 };
 
