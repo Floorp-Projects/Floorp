@@ -269,6 +269,7 @@ nsMacLocale::GetPlatformLocale(const nsAString& locale, short* scriptCode, short
       return NS_OK;
     }
   }
+  return NS_ERROR_FAILURE;
 }
   
 NS_IMETHODIMP
@@ -293,6 +294,7 @@ nsMacLocale::GetXPLocale(short scriptCode, short langCode, short regionCode, nsA
   
   if (!validResultFound) {
     return NS_ERROR_FAILURE;
+  }
   
   //
   // parse region
@@ -312,7 +314,6 @@ nsMacLocale::GetXPLocale(short scriptCode, short langCode, short regionCode, nsA
   }
   
   return NS_ERROR_FAILURE;
-
 }
 
 //
