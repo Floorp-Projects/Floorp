@@ -325,7 +325,7 @@ sub EnsureFileInDir
         }
         unlink $destPath;       # in case we had a symlink on unix
         if ($preproc) {
-            if (system("$preprocessor $defines < $file > $destPath") != 0) {
+            if (system("$^X $preprocessor $defines < $file > $destPath") != 0) {
                 die "Preprocessing of $file failed: $!";
             }
         } else {
@@ -380,11 +380,13 @@ while (<STDIN>) {
 		my $dest = $1;
 		my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
 		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0, 1);
+		$args = "$args$dest ";
 	    } elsif (/^\*\+\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
 		# preprocessed, override
 		my $dest = $1;
 		my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
 		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1, 1);
+		$overrides = "$overrides$dest ";
             } elsif (/^\s*$/) {
                 # end with blank line
                 last;
