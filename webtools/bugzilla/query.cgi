@@ -349,7 +349,8 @@ function selectProduct(f) {
 #    set legal_product [concat $default{"product"} [lreplace $legal_product $w $w]]
 # }
 
-PutHeader("Bugzilla Query Page", "Query Page");
+PutHeader("Bugzilla Query Page", "Query Page", "",
+          q{onLoad="selectProduct(document.forms[0]);"});
 
 push @::legal_resolution, "---"; # Oy, what a hack.
 push @::legal_target_milestone, "---"; # Oy, what a hack.

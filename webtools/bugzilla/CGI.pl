@@ -481,7 +481,7 @@ name=PleaseMailAPassword>
 
 
 sub PutHeader {
-    my ($title, $h1, $h2) = (@_);
+    my ($title, $h1, $h2, $extra) = (@_);
 
     if (!defined $h1) {
 	$h1 = $title;
@@ -489,11 +489,14 @@ sub PutHeader {
     if (!defined $h2) {
 	$h2 = "";
     }
+    if (!defined $extra) {
+	$extra = "";
+    }
 
     print "<HTML><HEAD>\n<TITLE>$title</TITLE>\n";
     print Param("headerhtml") . "\n</HEAD>\n";
     print "<BODY   BGCOLOR=\"#FFFFFF\" TEXT=\"#000000\"\n";
-    print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\">\n";
+    print "LINK=\"#0000EE\" VLINK=\"#551A8B\" ALINK=\"#FF0000\" $extra>\n";
 
     print PerformSubsts(Param("bannerhtml"), undef);
 
