@@ -835,8 +835,7 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
   }
 
   if(aLoadContext){
-     nsCOMPtr<nsISupports> loadContext (do_QueryReferent(NS_GetWeakReference(aLoadContext))); 
-     nsCOMPtr<nsILoadGroup> group (do_GetInterface(loadContext));
+     nsCOMPtr<nsILoadGroup> group (do_GetInterface(aLoadContext));
      nsresult rv = group->GetDefaultLoadAttributes(&necko_attribs);
 /*
 Need code to check freshness of necko cache.
