@@ -595,6 +595,29 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
   return PR_FALSE;
 }
 
+/* very big ugly nasty hack */
+gint do_auto_change_focus(nsWindow *win)
+{
+  nsGUIEvent gevent;
+  gevent.message = NS_GOTFOCUS;
+  gevent.widget  = (nsWidget *)win;
+
+  gevent.eventStructType = NS_GUI_EVENT;
+
+  gevent.time = 0;
+  gevent.point.x = 0;
+  gevent.point.y = 0;
+
+  win->AddRef();
+  win->DispatchFocus(gevent);
+  win->Release();
+
+  g_print("generating focus event\n");
+  
+  return FALSE;
+}
+
+
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 {
   if (mMenuBar == aMenuBar) {
@@ -654,6 +677,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
         gtk_widget_show(mVBox);
 
       gtk_widget_show(mShell);
+      gtk_timeout_add(500, (GtkFunction)do_auto_change_focus, this);
     }
   }
   // hide
