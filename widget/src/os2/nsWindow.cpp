@@ -1780,7 +1780,6 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    event.charCode = 0;
 
    PRBool rc = DispatchWindowEvent( &event);
-   NS_RELEASE(event.widget);
 
    // Break off now if this was a key-up.
    if( fsFlags & KC_KEYUP)
