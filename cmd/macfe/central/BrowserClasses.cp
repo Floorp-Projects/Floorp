@@ -49,6 +49,18 @@
 // еее PowerPlant Grayscale Classes
 	#include <UGALibRegistry.h>
 
+// еее AM wrappers classes and their AM implementations
+	#include <LProgressBar.h>
+	#include <LPushButton.h>
+	#include <LAMPushButtonImp.h>
+	#include <LAMControlImp.h>
+
+#if 0
+// еее Things that will go away after appearance conversion complete
+	#include "CProgressBar.h"
+	#include "CPatternProgressBar.h"
+#endif
+	
 // еее General Purpose UI Classes
 	#include "CBevelButton.h"
 	#include "CPatternButton.h"	
@@ -67,8 +79,7 @@
 	#include "CClusterView.h"
 	#include "CTabSwitcher.h"
 	#include "CPatternTabControl.h"	
-	#include "CProgressBar.h"
-//	#include "CProgressCaption.h"
+	#include "CProgressCaption.h"
 	#include "CTaskBarView.h"
 	#include "LTableHeader.h"
 	#include "LTableViewHeader.h"
@@ -80,7 +91,6 @@
 	#include "CPaneEnabler.h"
 	#include "CStringListToolTipPane.h"	
 	#include "CSaveProgress.h"	
-	#include "CPatternProgressBar.h"
 	#include "CTargetFramer.h"
 	
 #ifdef MOZ_MAIL_NEWS
@@ -212,6 +222,19 @@ void RegisterAllBrowserClasses(void)
 	// еее PowerPlant Grayscale Classes
 	RegisterGALibraryClasses();
 
+	// еее PowerPlant appearance manager classes and their implementations
+	RegisterClass_(LProgressBar);
+	RegisterClassID_(LAMControlImp, LProgressBar::imp_class_ID);
+	RegisterClass_(LPushButton);
+	RegisterClassID_(LAMPushButtonImp, LPushButton::imp_class_ID);
+
+#if 0
+	// еее Things that will go away after appearance port complete
+	RegisterClass_(CProgressBar);
+	RegisterClass_(CPatternProgressBar);
+	RegisterClass_(CPatternProgressCaption);
+#endif
+
 	// еее General Purpose UI Classes
 	RegisterClass_(CBevelButton);
 	RegisterClass_(CDeluxeBevelButton);
@@ -227,7 +250,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CClusterView);
 	RegisterClass_(CPatternTabControl);
 	RegisterClass_(CTabSwitcher);
-	RegisterClass_(CProgressBar);
 	RegisterClass_(CKeyScrollAttachment);
 	RegisterClass_(CToolTipAttachment);
 	RegisterClass_(CDynamicTooltipPane);
@@ -246,7 +268,7 @@ void RegisterAllBrowserClasses(void)
 //	RegisterClass_(CBiffButtonAttachment);
 #endif // MOZ_MAIL_NEWS
 	RegisterClass_(CSimpleDividedView);
-	//RegisterClass_(CProgressCaption);
+	RegisterClass_(CProgressCaption);
 	RegisterClass_(CTaskBarView);
 
 	RegisterClass_(CToolTipPane);
@@ -254,9 +276,6 @@ void RegisterAllBrowserClasses(void)
 
 	RegisterClass_(LTableHeader);
 	RegisterClass_(LTableViewHeader);
-
-	RegisterClass_(CPatternProgressBar);
-	RegisterClass_(CPatternProgressCaption);
 
 	RegisterClass_(CTextEdit);
 	RegisterClass_(CEditBroadcaster);
