@@ -56,7 +56,7 @@ static PRUint16 *gMappingTables[4] = {
 // Class nsUnicodeToEUCJP [implementation]
 
 nsUnicodeToEUCJP::nsUnicodeToEUCJP() 
-: nsTablesEncoderSupport(4,
+: nsMultiTableEncoderSupport(4,
                          (uShiftTable**) gShiftTables, 
                          (uMappingTable**) gMappingTables)
 {

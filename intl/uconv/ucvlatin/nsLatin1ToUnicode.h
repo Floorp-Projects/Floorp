@@ -31,7 +31,7 @@
  * @created         23/Nov/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsLatin1ToUnicode : public nsTableDecoderSupport
+class nsLatin1ToUnicode : public nsOneByteDecoderSupport
 {
 public:
 
@@ -44,14 +44,6 @@ public:
    * Static class constructor.
    */
   static nsresult CreateInstance(nsISupports **aResult);
-
-protected:
-
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 };
 
 #endif /* nsLatin1ToUnicode_h___ */
