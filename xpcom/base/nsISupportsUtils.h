@@ -144,14 +144,14 @@ public:
  */
 
 #define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
-  static const nsIID& GetIID() {static nsIID iid = the_iid; return iid;}
+  static const nsIID& GetIID() {static const nsIID iid = the_iid; return iid;}
 
 /**
  * A macro to build the static const CID accessor method
  */
 
 #define NS_DEFINE_STATIC_CID_ACCESSOR(the_cid) \
-  static const nsID& GetCID() {static nsID cid = the_cid; return cid;}
+  static const nsID& GetCID() {static const nsID cid = the_cid; return cid;}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Macros to help detect thread-safety:
