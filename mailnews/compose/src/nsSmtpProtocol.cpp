@@ -1190,7 +1190,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 }
 
 
-nsresult nsSmtpProtocol::LoadUrl(nsIURL * aURL)
+nsresult nsSmtpProtocol::LoadUrl(nsIURL * aURL, nsISupports * /* aConsumer */)
 {
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 

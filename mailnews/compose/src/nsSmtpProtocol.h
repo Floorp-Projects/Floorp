@@ -74,7 +74,7 @@ public:
 	nsSmtpProtocol(nsIURL * aURL);
 	virtual ~nsSmtpProtocol();
 
-	virtual nsresult LoadUrl(nsIURL * aURL);
+	virtual nsresult LoadUrl(nsIURL * aURL, nsISupports * aConsumer = nsnull);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// we suppport the nsIStreamListener interface 
