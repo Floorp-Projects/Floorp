@@ -90,6 +90,8 @@ public:
     virtual ~nsThreadPool();
 
     nsIRunnable* GetRequest(nsIThread* currentThread);
+    void         RequestDone(nsIRunnable *request);
+
     static PRBool InterruptThreads(nsISupports* aElement, 
                                    void *aData);
 
@@ -101,12 +103,13 @@ protected:
     nsresult RemoveThread(nsIThread* currentThread);
 
     nsCOMPtr<nsISupportsArray>  mThreads;
-    nsCOMPtr<nsISupportsArray>  mRequests;
+    nsCOMPtr<nsISupportsArray>  mPendingRequests;
+    nsCOMPtr<nsISupportsArray>  mRunningRequests;
     
     PRLock*                     mLock;
     PRCondVar*                  mThreadExit;
-    PRCondVar*                  mRequestAdded;
-    PRCondVar*                  mRequestsAtZero;
+    PRCondVar*                  mPendingRequestAdded;
+    PRCondVar*                  mPendingRequestsAtZero;
 
     
     PRUint32                    mStackSize;
