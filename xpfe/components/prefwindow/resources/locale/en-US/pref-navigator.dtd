@@ -13,7 +13,8 @@
 <!ENTITY  clickRadio "Clicking the Home button will take you to this page.">
 <!ENTITY  location "Location:">
 <!ENTITY  useCurrent "Use Current Page">
-<!ENTITY  browseFile "Select File...">
+<!ENTITY  browseFile "Choose File...">
+<!ENTITY  browseBookmarks "Choose from Bookmarks...">
 <!ENTITY  header3.label "History">
 <!ENTITY  historyPages "List of the pages you have previously visited.">
 <!--LOCALIZATION NOTE (histDay): DONT_TRANSLATE -->
@@ -22,7 +23,7 @@
 <!ENTITY  homepageRadio "Homepage">
 <!ENTITY  pagesHis "Pages in history expire after:">
 <!ENTITY  clearRadio "Clear the list of sites on the location bar: ">
-<!ENTITY  clearHis "clear history">
+<!ENTITY  clearHis "Clear History">
 <!ENTITY  header4.label "Location Bar History">
 <!ENTITY  clearBar "Clear the list of sites on the location bar:">
-<!ENTITY  clearLoc "Clear">
+<!ENTITY  clearLoc "Clear Location Bar">
