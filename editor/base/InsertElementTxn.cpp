@@ -39,6 +39,7 @@ nsresult InsertElementTxn::Init(nsIDOMNode *aNode,
 
   mNode = do_QueryInterface(aNode);
   mParent = do_QueryInterface(aParent);
+  mOffset = aOffset;
   return NS_OK;
 }
 
