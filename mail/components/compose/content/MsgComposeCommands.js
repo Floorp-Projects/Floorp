@@ -1264,6 +1264,11 @@ function ComposeStartup(recycled, aParams)
           document.getElementById("insertMenu").setAttribute("hidden", true);
           document.getElementById("menu_showFormatToolbar").setAttribute("hidden", true);
         }
+        else //if (gMsgCompose.composeHTML) 
+        {
+           var fontsList = document.getElementById("FontFacePopup");
+           initLocalFontFaceMenu(fontsList);
+        }
         // Do setup common to Message Composer and Web Composer
         EditorSharedStartup();   
       }
