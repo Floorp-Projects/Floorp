@@ -22,13 +22,13 @@
 
 #include "nsISupports.idl"
 #include "nsIURL.idl"
+#include "nsIEnumerator.idl"
 
 [scriptable, uuid(D8C7D8A1-E84C-11d2-BF87-00105A1B0627)]
 interface nsIChromeRegistry : nsISupports
 {
 	void convertChromeURL(in nsIURI aChromeURL);
-	long getOverlayCount(in nsIURI aChromeURL);
-	nsIURI getOverlayAt(in nsIURI aChromeURL, in long aIndex);
+	nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
 };
 
 

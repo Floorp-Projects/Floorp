@@ -33,6 +33,7 @@
 #include "nsHashtable.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsISimpleEnumerator.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
@@ -60,6 +61,41 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, name);
 void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, char** o_remaining);
 
 ////////////////////////////////////////////////////////////////////////////////
+class nsOverlayEnumerator : public nsISimpleEnumerator
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    nsOverlayEnumerator(nsISimpleEnumerator *aArcs);
+    virtual ~nsOverlayEnumerator();
+
+private:
+    nsCOMPtr<nsISimpleEnumerator> mArcs;
+};
+
+NS_IMPL_ISUPPORTS1(nsOverlayEnumerator, nsISimpleEnumerator)
+
+nsOverlayEnumerator::nsOverlayEnumerator(nsISimpleEnumerator *aArcs)
+{
+  NS_INIT_REFCNT();
+  mArcs = aArcs;
+}
+
+nsOverlayEnumerator::~nsOverlayEnumerator()
+{
+}
+
+NS_IMETHODIMP nsOverlayEnumerator::HasMoreElements(PRBool *aIsTrue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOverlayEnumerator::GetNext(nsISupports **aResult)
+{
+  return NS_OK;
+}
+
 
 class nsChromeRegistry : public nsIChromeRegistry
 {
@@ -352,21 +388,93 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::GetOverlayCount(nsIURI *aChromeURL, PRInt32 *aResult)
+NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumerator **aResult)
 {
+  *aResult = nsnull;
+
+  nsresult rv;
+
   if (!mDataSourceTable)
-  {
-    *aResult = 0;
     return NS_OK;
+
+  // Obtain the package, provider and remaining from the URL
+  nsXPIDLCString package, provider, remaining;
+
+#if 0 // This change happens when we switch to using chrome://skin@global/foo..
+  rv = aChromeURL->GetHost(getter_Copies(package));
+  if (NS_FAILED(rv)) return rv;
+  rv = aChromeURL->GetPreHost(getter_Copies(provider));
+  if (NS_FAILED(rv)) return rv;
+  rv = aChromeURL->GetPath(getter_Copies(remaining));
+  if (NS_FAILED(rv)) return rv;
+#else // For now however...
+
+  rv = aChromeURL->GetHost(getter_Copies(package));
+  if (NS_FAILED(rv)) return rv;
+  nsXPIDLCString tempPath;
+  rv = aChromeURL->GetPath(getter_Copies(tempPath));
+  if (NS_FAILED(rv)) return rv;
+
+  BreakProviderAndRemainingFromPath(
+      (const char*)tempPath, 
+      getter_Copies(provider), 
+      getter_Copies(remaining));
+
+#endif
+
+  // Construct the lookup string-
+  // which is basically chrome:// + package + provider
+  
+  nsAutoString lookup("chrome://");
+
+  lookup += package; // no trailing slash here
+  
+  NS_ASSERTION(*provider == '/', "No leading slash here!");
+  
+  //definitely have a leading slash...
+  if (*provider != '/')
+      lookup += '/';
+  lookup += provider; 
+  
+  // end it on a slash if none is present
+  if (lookup.CharAt(lookup.Length()-1) != '/')
+      lookup += '/';
+
+  // Get the chromeResource from this lookup string
+  nsCOMPtr<nsIRDFResource> chromeResource;
+  if (NS_FAILED(rv = GetPackageTypeResource(lookup, getter_AddRefs(chromeResource)))) {
+      NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
+      return rv;
   }
 
-  return NS_OK;
-}
+  nsCAutoString overlayFile;
 
-NS_IMETHODIMP nsChromeRegistry::GetOverlayAt(nsIURI *aChromeURL, PRInt32 aIndex, nsIURI **aResult)
-{
-  if (!mDataSourceTable)
-    return NS_OK;
+  // Retrieve the mInner data source.
+  overlayFile = "resource:/chrome/";
+  overlayFile += package;
+  overlayFile += provider; // provider already has a / in the front of it
+  overlayFile += "/";
+  overlayFile += "overlays.rdf";
+
+  void *data = mDataSourceTable->Get(&nsStringKey(overlayFile));
+  if (data)
+  {
+    nsCOMPtr<nsIRDFDataSource> dataSource;
+    nsISupports *supports = NS_STATIC_CAST(nsISupports*, data);
+    
+    dataSource = do_QueryInterface(supports);
+    if (dataSource)
+    {
+      nsCOMPtr<nsISimpleEnumerator> arcs;
+      dataSource->ArcLabelsOut(chromeResource, getter_AddRefs(arcs));
+
+      *aResult = new nsOverlayEnumerator(arcs);
+
+      NS_ADDREF(*aResult);
+    }
+
+  }
+
 
   return NS_OK;
 }
