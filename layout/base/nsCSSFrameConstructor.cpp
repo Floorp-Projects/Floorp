@@ -82,10 +82,13 @@
 
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
+#include "nsIMenuFrame.h"
+
+#include "nsBox.h"
+
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIMenuFrame.h"
 #endif
 
 // XXX - temporary, this is for GfxList View
@@ -132,13 +135,9 @@ nsresult
 NS_NewPolylineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 #endif
 
-#ifdef INCLUDE_XUL
-#include "nsXULAtoms.h"
-#include "nsTreeIndentationFrame.h"
+#include "nsDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
-#include "nsDocument.h"
-#include "nsToolbarItemFrame.h"
 #include "nsIScrollable.h"
 
 #ifdef DEBUG
@@ -146,6 +145,12 @@ static PRBool gNoisyContentUpdates = PR_FALSE;
 static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
 #endif
+
+
+#ifdef INCLUDE_XUL
+#include "nsXULAtoms.h"
+#include "nsTreeIndentationFrame.h"
+#include "nsToolbarItemFrame.h"
 
 #include "nsXULTreeFrame.h"
 #include "nsXULTreeOuterGroupFrame.h"
@@ -3346,12 +3351,15 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
       contentFrame->GetStyleContext(getter_AddRefs(styleContext));
   } else {
         // otherwise build a box or a block
+#ifdef INCLUDE_XUL
         PRInt32 nameSpaceID;
         if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
             nameSpaceID == nsXULAtoms::nameSpaceID) {
           NS_NewBoxFrame(aPresShell, &contentFrame, PR_TRUE);
         }
-        else {
+        else
+#endif 
+        {
           NS_NewDocumentElementFrame(aPresShell, &contentFrame);
           isBlockFrame = PR_TRUE;
 
@@ -3598,12 +3606,15 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     nsIAtom* rootPseudo;
         
     if (!isPaginated) {
+#ifdef INCLUDE_XUL
         PRInt32 nameSpaceID;
         if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
             nameSpaceID == nsXULAtoms::nameSpaceID) 
         {
           NS_NewRootBoxFrame(aPresShell, &rootFrame);
-        } else {
+        } else 
+#endif
+        {
           NS_NewCanvasFrame(aPresShell, &rootFrame);
         }
 
@@ -3650,11 +3661,14 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   // Only need to create a scroll frame/view for cases 2 and 3.
   // Currently OVERFLOW_SCROLL isn't honored, as
   // scrollportview::SetScrollPref is not implemented.
+#ifdef INCLUDE_XUL
   PRInt32 nameSpaceID; // Never create scrollbars for XUL documents
   if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
       nameSpaceID == nsXULAtoms::nameSpaceID) {
     isScrollable = PR_FALSE;
-  } else {
+  } else 
+#endif
+  {
     nsresult rv;
     nsCOMPtr<nsISupports> container;
     if (nsnull != aPresContext) {
@@ -3987,6 +4001,9 @@ nsCSSFrameConstructor::ConstructTextControlFrame(nsIPresShell*        aPresShell
 PRBool
 nsCSSFrameConstructor::HasGfxScrollbars()
 {
+#ifndef INCLUDE_XUL
+  return PR_FALSE;
+#endif
   // Get the Prefs
   if (!mGotGfxPrefs) {
     nsCOMPtr<nsIPref> pref(do_GetService(NS_PREF_CONTRACTID));
@@ -4060,7 +4077,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
 
         nsHTMLContainerFrame::CreateViewForFrame(aPresContext, comboboxFrame,
                                                  aStyleContext, aParentFrame, PR_FALSE);
-
+#ifdef INCLUDE_XUL
         if (HasGfxScrollbars() && mDoGfxCombobox) {
           ///////////////////////////////////////////////////////////////////
           // Combobox - New GFX Implementation
@@ -4234,7 +4251,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
             aNewFrame = comboboxFrame;
             aFrameHasBeenInitialized = PR_TRUE;
           }
-        } else {
+        } else 
+#endif
+        {
           ///////////////////////////////////////////////////////////////////
           // Combobox - Old Native Implementation
           ///////////////////////////////////////////////////////////////////
@@ -4318,7 +4337,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
           }
         }
       } else if (HasGfxScrollbars() && mDoGfxListbox) {
-        
+#ifdef INCLUDE_XUL        
         ///////////////////////////////////////////////////////////////////
         // ListBox - New GFX Implementation
         ///////////////////////////////////////////////////////////////////
@@ -4418,7 +4437,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         aNewFrame = listFrame; 
 
         // yes we have already initialized our frame 
-        aFrameHasBeenInitialized = PR_TRUE; 
+        aFrameHasBeenInitialized = PR_TRUE;
+#endif 
       } else {
         ///////////////////////////////////////////////////////////////////
         // ListBox - Old Native Implementation
@@ -4616,7 +4636,7 @@ nsCSSFrameConstructor::ConstructTitledBoxFrame(nsIPresShell*        aPresShell,
   nsIFrame * boxFrame;
   NS_NewTitledBoxInnerFrame(shell, &boxFrame);
 
-
+#ifdef INCLUDE_XUL
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
   aPresContext->ResolvePseudoStyleContextFor(aContent, nsXULAtoms::titledboxContentPseudo,
@@ -4625,7 +4645,7 @@ nsCSSFrameConstructor::ConstructTitledBoxFrame(nsIPresShell*        aPresShell,
                       newFrame, styleContext, nsnull, boxFrame);
 
   NS_RELEASE(styleContext);          
-  
+#endif
     nsFrameItems                childItems;
 
     ProcessChildren(aPresShell, aPresContext, aState, aContent, boxFrame, PR_FALSE,
@@ -5411,7 +5431,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 
   // nsGenericElement::SetDocument ought to keep a list like this one,
   // but it can't because nsGfxScrollFrames get around this.
-
+#ifdef INCLUDE_XUL
   if (aTag !=  nsHTMLAtoms::input &&
       aTag !=  nsHTMLAtoms::textarea &&
       aTag !=  nsHTMLAtoms::combobox &&
@@ -5422,7 +5442,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
      return NS_OK;
 
   }
-  
+#endif
   // get the document
   nsCOMPtr<nsIDocument> doc;
   nsresult rv = aParent->GetDocument(*getter_AddRefs(doc));
@@ -6415,6 +6435,7 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell,
                                              nsIFrame*&               aNewFrame,
                                              nsFrameItems&            aAnonymousFrames)
 {
+#ifdef INCLUDE_XUL
   NS_NewGfxScrollFrame(aPresShell, &aNewFrame, aDocument, aIsRoot);
 
   InitAndRestoreFrame(aPresContext, aState, aContent, 
@@ -6435,6 +6456,8 @@ nsCSSFrameConstructor::BuildGfxScrollFrame (nsIPresShell* aPresShell,
                         aAnonymousFrames);
 
   return NS_OK;
+#endif
+  return NS_ERROR_FAILURE;
 } 
 
 nsresult
@@ -7011,6 +7034,8 @@ nsCSSFrameConstructor::InitAndRestoreFrame(nsIPresContext*          aPresContext
   nsresult rv = NS_OK;
   
   NS_ASSERTION(aNewFrame, "Null frame cannot be initialized");
+  if (!aNewFrame)
+    return NS_ERROR_NULL_POINTER;
 
   // Initialize the frame
   rv = aNewFrame->Init(aPresContext, aContent, aParentFrame, 
@@ -12235,6 +12260,7 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
                                                PRBool          aIsScrollbar,
                                                nsILayoutHistoryState* aFrameState)
 {
+#ifdef INCLUDE_XUL
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
   nsresult rv = NS_OK;
@@ -12318,6 +12344,9 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
   }
 
   return rv;
+#else
+  return NS_ERROR_FAILURE;
+#endif
 }
 
 //----------------------------------------

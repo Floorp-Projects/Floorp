@@ -784,7 +784,7 @@ NS_IMETHODIMP
 nsXBLService::GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult)
 {
   *aResult = nsnull;
-  if (gXULUtils->UseXULCache()) {
+  if (gXULUtils && gXULUtils->UseXULCache()) {
     // The first line of defense is the chrome cache.  
     // This cache crosses the entire product, so any XBL bindings that are
     // part of chrome will be reused across all XUL documents.
@@ -1032,7 +1032,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
   
   // We've got a file.  Check our XBL document cache.
   nsCOMPtr<nsIXBLDocumentInfo> info;
-  if (gXULUtils->UseXULCache()) {
+  if (gXULUtils && gXULUtils->UseXULCache()) {
     // The first line of defense is the chrome cache.  
     // This cache crosses the entire product, so that any XBL bindings that are
     // part of chrome will be reused across all XUL documents.
@@ -1092,7 +1092,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
  
         // If the doc is a chrome URI, then we put it into the XUL cache.
         PRBool cached = PR_FALSE;
-        if (IsChromeURI(uri) && gXULUtils->UseXULCache()) {
+        if (IsChromeURI(uri) && gXULUtils && gXULUtils->UseXULCache()) {
           cached = PR_TRUE;
           gXULCache->PutXBLDocumentInfo(info);
 

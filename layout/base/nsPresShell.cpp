@@ -2082,7 +2082,8 @@ NS_IMETHODIMP
 PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
   if (!aFrame)
     return NS_ERROR_NULL_POINTER;
-    
+
+#ifdef INCLUDE_XUL    
   // Before we scroll the frame into view, ask the command dispatcher
   // if we're resetting focus because a window just got an activate
   // event. If we are, we do not want to scroll the frame into view.
@@ -2123,7 +2124,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame){
 	  }
     }
   }
-    
+#endif    
   if (IsScrollingEnabled())
     return ScrollFrameIntoView(aFrame, NS_PRESSHELL_SCROLL_ANYWHERE,
                                NS_PRESSHELL_SCROLL_ANYWHERE);
@@ -2913,7 +2914,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   if (!aFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-
+#ifdef INCLUDE_XUL
   // Before we scroll the frame into view, ask the command dispatcher
   // if we're resetting focus because a window just got an activate
   // event. If we are, we do not want to scroll the frame into view.
@@ -2954,7 +2955,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
 	  }
     }
   }
-
+#endif
   if (mViewManager) {
     // Get the viewport scroller
     nsIScrollableView* scrollingView;
