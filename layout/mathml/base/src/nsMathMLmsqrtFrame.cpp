@@ -246,11 +246,11 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
     ruleThickness = onePixel;
   }
 
-  // adjust clearance psi to absorb any excess difference if any
-  // in height between radical and content
-
-  if (bmSqr.descent > (bmBase.ascent + bmBase.descent) + psi)
-    psi = (psi + bmSqr.descent - (bmBase.ascent + bmBase.descent))/2;
+  // adjust clearance psi to get an exact number of pixels -- this
+  // gives a nicer & uniform look on stacked radicals (bug 130282)
+  nscoord delta = psi % onePixel;
+  if (delta)
+    psi += onePixel - delta; // round up
 
   nscoord dx = 0, dy = 0;
   // place the radical symbol and the radical bar
@@ -269,7 +269,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   mBoundingMetrics.rightBearing = bmSqr.width + 
     PR_MAX(bmBase.width, bmBase.rightBearing); // take also care of the rule
 
-  aDesiredSize.ascent = bmBase.ascent + psi + ruleThickness + leading;
+  aDesiredSize.ascent = mBoundingMetrics.ascent + leading;
   aDesiredSize.descent =
     PR_MAX(baseSize.descent, (mBoundingMetrics.descent + ruleThickness));
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;

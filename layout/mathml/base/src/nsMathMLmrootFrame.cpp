@@ -274,11 +274,11 @@ nsMathMLmrootFrame::Reflow(nsIPresContext*          aPresContext,
     ruleThickness = onePixel;
   }
 
-  // adjust clearance psi to absorb any excess difference if any
-  // in height between radical and content
-
-  if (bmSqr.descent > (bmBase.ascent + bmBase.descent) + psi)
-    psi = (psi + bmSqr.descent - (bmBase.ascent + bmBase.descent))/2;
+  // adjust clearance psi to get an exact number of pixels -- this
+  // gives a nicer & uniform look on stacked radicals (bug 130282)
+  nscoord delta = psi % onePixel;
+  if (delta)
+    psi += onePixel - delta; // round up
 
   // Update the desired size for the container (like msqrt, index is not yet included)
   // the baseline will be that of the base.
