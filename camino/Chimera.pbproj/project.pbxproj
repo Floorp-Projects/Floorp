@@ -6818,61 +6818,61 @@
 		F5A70907036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-audio.gif";
-			path = "../layout/html/base/src/gopher-audio.gif";
+			path = "../dist/bin/res/html/gopher-audio.gif";
 			refType = 2;
 		};
 		F5A70908036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-binary.gif";
-			path = "../layout/html/base/src/gopher-binary.gif";
+			path = "../dist/bin/res/html/gopher-binary.gif";
 			refType = 2;
 		};
 		F5A70909036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-find.gif";
-			path = "../layout/html/base/src/gopher-find.gif";
+			path = "../dist/bin/res/html/gopher-find.gif";
 			refType = 2;
 		};
 		F5A7090A036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-image.gif";
-			path = "../layout/html/base/src/gopher-image.gif";
+			path = "../dist/bin/res/html/gopher-image.gif";
 			refType = 2;
 		};
 		F5A7090B036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-menu.gif";
-			path = "../layout/html/base/src/gopher-menu.gif";
+			path = "../dist/bin/res/html/gopher-menu.gif";
 			refType = 2;
 		};
 		F5A7090C036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-movie.gif";
-			path = "../layout/html/base/src/gopher-movie.gif";
+			path = "../dist/bin/res/html/gopher-movie.gif";
 			refType = 2;
 		};
 		F5A7090D036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-sound.gif";
-			path = "../layout/html/base/src/gopher-sound.gif";
+			path = "../dist/bin/res/html/gopher-sound.gif";
 			refType = 2;
 		};
 		F5A7090E036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-telnet.gif";
-			path = "../layout/html/base/src/gopher-telnet.gif";
+			path = "../dist/bin/res/html/gopher-telnet.gif";
 			refType = 2;
 		};
 		F5A7090F036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-text.gif";
-			path = "../layout/html/base/src/gopher-text.gif";
+			path = "../dist/bin/res/html/gopher-text.gif";
 			refType = 2;
 		};
 		F5A70910036DB4B201202892 = {
 			isa = PBXFileReference;
 			name = "gopher-unknown.gif";
-			path = "../layout/html/base/src/gopher-unknown.gif";
+			path = "../dist/bin/res/html/gopher-unknown.gif";
 			refType = 2;
 		};
 		F5A70925036DB55501202892 = {
