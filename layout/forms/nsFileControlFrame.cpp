@@ -88,6 +88,10 @@ nsFileControlFrame::~nsFileControlFrame()
     delete mCachedState;
     mCachedState = nsnull;
   }
+  if (mFormFrame) {
+    mFormFrame->RemoveFormControlFrame(*this);
+    mFormFrame = nsnull;
+  }
 }
 
 NS_IMETHODIMP

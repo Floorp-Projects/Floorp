@@ -148,6 +148,14 @@ nsFormFrame::nsFormFrame()
 nsFormFrame::~nsFormFrame()
 {
   RemoveRadioGroups();
+  PRInt32 numControls = mFormControls.Count();
+  PRInt32 i;
+  // Traverse list from end to 0 -> void array remove method does less work
+  for (i = (numControls-1); i>=0; i--) {
+    nsIFormControlFrame* fcFrame = (nsIFormControlFrame*) mFormControls.ElementAt(i);
+    fcFrame->SetFormFrame(nsnull);
+    mFormControls.RemoveElement(fcFrame);
+  }
 }
 
 PRBool 
@@ -271,12 +279,14 @@ void nsFormFrame::RemoveRadioGroups()
 
 void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aFrame)
 {
+  // Make sure we have a form control
   nsIFormControlFrame* fcFrame = nsnull;
   nsresult result = aFrame.QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
   if ((NS_OK != result) || (nsnull == fcFrame)) {
     return;
   }
 
+  // Get this control's form frame and add this control to it
   nsCOMPtr<nsIContent> iContent;
   result = aFrame.GetContent(getter_AddRefs(iContent));
   if (NS_SUCCEEDED(result) && iContent) {
@@ -304,6 +314,12 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aF
       }
     }
   }
+}
+
+void nsFormFrame::RemoveFormControlFrame(nsIFormControlFrame& aFrame)
+{
+  // Remove form control from array
+  mFormControls.RemoveElement(&aFrame);
 }
 
 nsresult nsFormFrame::GetRadioInfo(nsIFormControlFrame* aFrame,
@@ -343,6 +359,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
   aFrame.GetType(&type);
 
   // a solo text control can be a submitter (if return is hit)
+  // XXX pollmann this logic is flawed - three text boxes?
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
     mTextSubmitter = (nsnull == mTextSubmitter) ? &aFrame : nsnull;
     return;
@@ -372,14 +389,9 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
     }
   }
 }
-  
+
 void nsFormFrame::RemoveRadioControlFrame(nsIFormControlFrame * aFrame)
 {
-
-  // determine which radio buttons belong to which radio groups, unnamed radio buttons
-  // don't go into any group since they can't be submitted. Determine which controls
-  // are capable of form submission.
-
   PRInt32 type;
   aFrame->GetType(&type);
 

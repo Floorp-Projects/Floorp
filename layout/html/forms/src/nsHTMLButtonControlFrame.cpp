@@ -80,6 +80,14 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
   mRenderer.SetNameSpace(kNameSpaceID_None);
 }
 
+nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
+{
+  if (mFormFrame) {
+    mFormFrame->RemoveFormControlFrame(*this);
+    mFormFrame = nsnull;
+  }
+}
+
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::Init(nsIPresContext&  aPresContext,
               nsIContent*      aContent,

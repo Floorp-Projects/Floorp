@@ -129,7 +129,10 @@ nsListControlFrame::~nsListControlFrame()
   reciever->RemoveEventListenerByIID((nsIDOMKeyListener *)this, kIDOMKeyListenerIID);
 
   mComboboxFrame = nsnull;
-  mFormFrame = nsnull;
+  if (mFormFrame) {
+    mFormFrame->RemoveFormControlFrame(*this);
+    mFormFrame = nsnull;
+  }
   NS_IF_RELEASE(mPresContext);
   if (mSelectionCache) {
     delete[] mSelectionCache;

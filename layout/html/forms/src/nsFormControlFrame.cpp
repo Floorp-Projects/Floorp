@@ -71,7 +71,12 @@ nsFormControlFrame::nsFormControlFrame()
 
 nsFormControlFrame::~nsFormControlFrame()
 {
-  mFormFrame = nsnull;
+  if (mFormFrame) {
+    mFormFrame->RemoveFormControlFrame(*this);
+    // This method only removes from radio lists if we are a radio input
+    mFormFrame->RemoveRadioControlFrame(this);
+    mFormFrame = nsnull;
+  }
 }
 
 // Frames are not refcounted, no need to AddRef

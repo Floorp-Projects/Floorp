@@ -62,6 +62,7 @@ class nsImageControlFrame : public nsImageControlFrameSuper,
 {
 public:
   nsImageControlFrame();
+  ~nsImageControlFrame();
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -145,6 +146,14 @@ nsImageControlFrame::nsImageControlFrame()
   mTranslatedRect = nsRect(0,0,0,0);
   mGotFocus       = PR_FALSE;
   mFormFrame      = nsnull;
+}
+
+nsImageControlFrame::~nsImageControlFrame()
+{
+  if (mFormFrame) {
+    mFormFrame->RemoveFormControlFrame(*this);
+    mFormFrame = nsnull;
+  }
 }
 
 nsresult
