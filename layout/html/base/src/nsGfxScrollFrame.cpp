@@ -1592,7 +1592,7 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*  aPresContext,
       }
 
       if (mHasHorizontalScrollbar) {
-          SetAttribute(mHScrollbarFrame, nsXULAtoms::maxpos, maxX, PR_FALSE);
+          SetAttribute(mHScrollbarFrame, nsXULAtoms::maxpos, maxX);
           SetAttribute(mHScrollbarFrame, nsXULAtoms::pageincrement, nscoord(float(scrollAreaSize.width)*0.8));
           SetAttribute(mHScrollbarFrame, nsXULAtoms::increment, 10*mOnePixel, PR_FALSE);
       }      
