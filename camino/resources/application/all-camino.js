@@ -65,7 +65,7 @@ pref("chimera.log_js_to_console", true);
 
 // Identify Camino in the UA string
 pref("general.useragent.vendor", "Camino");
-pref("general.useragent.vendorSub", "0.7+");
+pref("general.useragent.vendorSub", "0.8+");
 
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);

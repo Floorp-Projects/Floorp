@@ -86,7 +86,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Camino</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Camino 0.7+, © 2003 The Mozilla Foundation</string>
+	<string>Camino 0.8+, © 2003-2004 The Mozilla Foundation</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -98,7 +98,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.7+</string>
+	<string>0.8+</string>
 	<key>CFBundleSignature</key>
 	<string>CHIM</string>
 	<key>CFBundleURLTypes</key>
@@ -149,7 +149,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>0.7+</string>
+	<string>0.8+</string>
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSMainNibFile</key>
