@@ -27,14 +27,5 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 
-FILES		= \
-	profileMigrationProgress.js	\
-	profileMigrationProgress.xul	\
-    no_space.xul                  \
-    no_space.js                   \
-        $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/chrome/packages/core/communicator/content/profile

@@ -109,13 +109,6 @@ CPP_OBJS =                            \
 
 include <$(DEPTH)\config\rules.mak>
 
-LOCALEDIR=$(DIST)\bin\chrome\locales\en-US\global\locale
-
-install:: $(DLL)
-	$(MAKE_INSTALL) xpcom.properties $(LOCALEDIR)
-#	$(MAKE_INSTALL) $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin
-#	$(MAKE_INSTALL) $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
-
 install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 

@@ -25,23 +25,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR	= packages/embedding
-CHROME_CONTENT_DIR = browser/content
-
-CHROME_CONTENT 	= \
-		$(NULL)
-
-SKINFILES 	= \
-		$(srcdir)/simple-shell.css \
-		$(srcdir)/embedding.css \
-		$(srcdir)/back.gif \
-		$(srcdir)/forward.gif \
-		$(srcdir)/reload.gif \
-		$(srcdir)/stop.gif
-
 include $(topsrcdir)/config/rules.mk
-
-INSTALLROOT = $(DIST)/bin/chrome/packages/embedding/browser
-
-install::
-	$(INSTALL) $(SKINFILES) $(INSTALLROOT)/skin

@@ -1438,7 +1438,6 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
 
   // Now validate the arguments
-  PRBool goodargs = PR_FALSE;
   uint32 chromeType = 0;
   nsIFile* chrome = nsnull;
   if ( argc >=2 )
@@ -1454,13 +1453,16 @@ InstallRegisterChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
         if (folder)
         {
           chrome = folder->GetFileSpec();
-          goodargs = PR_TRUE;
         }
       }
     }
   }
+  nsAutoString path;
+  if (argc >= 3) {
+    ConvertJSValToStr(path, cx, argv[2]);
+  }
 
-  *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType));
+  *rval = INT_TO_JSVAL(nativeThis->RegisterChrome(chrome, chromeType, NS_ConvertUCS2toUTF8(path)));
 
   return JS_TRUE;
 }

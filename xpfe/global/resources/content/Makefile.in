@@ -32,59 +32,8 @@ else
 DIRS		= unix
 endif
 
-CHROME_DIR=packages/widget-toolkit
-CHROME_CONTENT_DIR=global/content
-CHROME_MISC_DIR=.
-CHROME_TYPE=content
-
-CHROME_MISC= \
-		manifest.rdf \
-		$(NULL)
-
-CHROME_CONTENT= \
-		manifest.rdf \
-		hiddenWindow.xul \
-		globalOverlay.xul \
-		globalOverlay.js \
-		dialogOverlay.xul \
-		dialogOverlay.js \
-		commonDialog.xul \
-		commonDialog.js \
-		charsetOverlay.xul \
-		charsetOverlay.js \
-		strres.js \
-		logo.gif \
-		about.xul \
-		credits.html \
-		mozilla.html \
-		charsetDetectorsOverlay.js \
-		charsetDetectorsOverlay.xul \
-		selectDialog.js \
-		selectDialog.xul \
-		nsWidgetStateManager.js \
-		widgetStateManager.js \
-		wizardHandlerSet.js \
-		wizardManager.js \
-		wizardOverlay.js \
-		wizardOverlay.xul \
-		treePopups.js \
-		htmlBindings.xml \
-		menulistBindings.xml \
-		radioBindings.xml \
-		scrollbarBindings.xml \
-		tabBindings.xml \
-		treeBindings.xml \
-		xulBindings.xml \
-		nsClipboard.js \
-		nsDragAndDrop.js \
-		nsJSSupportsUtils.js \
-		nsTransferable.js \
-		nsJSComponentManager.js\
-		nsUserSettings.js \
-		xul.css \
-		toolbarBindings.xml \
-		stringbundleBindings.xml \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
+chrome::
+	@$(REGCHROME) content global toolkit.jar; \
+	$(REGCHROME) locale en-US/global en-US.jar

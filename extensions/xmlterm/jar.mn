@@ -1,4 +1,4 @@
-packages/xmlterm.jar:
+xmlterm.jar:
 	xmlterm/content/xmlterm.xul            (ui/content/xmlterm.xul)
 	xmlterm/content/xmltermOverlay.xul     (ui/content/xmltermOverlay.xul)
 	xmlterm/content/xmltermOverlay.js      (ui/content/xmltermOverlay.js)
@@ -7,11 +7,8 @@ packages/xmlterm.jar:
 	xmlterm/content/xmltermTips.html       (ui/content/xmltermTips.html)
 	xmlterm/content/XMLTermChrome.js       (ui/contentXMLTermChrome.js)
 	xmlterm/content/XMLTermCommands.js     (ui/contentXMLTermCommands.js)
-
 	xmlterm/skin/xmlterm.css               (ui/skin/xmlterm.css)
 	xmlterm/skin/xmltpage.css              (ui/skin/xmltpage.css)
 	xmlterm/skin/wheel.gif                 (ui/skin/wheel.gif)
-
 	xmlterm/locale/xmltermOverlay.dtd      (ui/locale/en-US/xmltermOverlay.dtd)
-
 	manifest.rdf                           (ui/manifest.rdf)

@@ -37,7 +37,7 @@ use Mac::Processes;
 use File::Copy;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildProject BuildProjectClean OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication);
+@EXPORT			= qw(BuildProject BuildProjectClean GetFileModDate OpenErrorLog MakeAlias StopForErrors DontStopForErrors InstallFromManifest InstallResources SetBuildNumber SetAgentString SetTimeBomb Delay ActivateApplication);
 @EXPORT_OK	= qw(CloseErrorLog UseCodeWarriorLib QUIET);
 
 	use Cwd;
@@ -92,12 +92,6 @@ sub activate_CodeWarrior()
 #END_OF_APPLESCRIPT
 	}
 
-BEGIN
-	{
-#		UseCodeWarriorLib(":CodeWarriorLib");
-#		activate_CodeWarrior();
-		CodeWarriorLib::activate();
-	}
 
 $logging								= 0;
 $recent_errors_file			= "";
@@ -416,25 +410,28 @@ sub InstallResources($;$;$)
 	}
 
  
- sub SetBuildNumber
- {
+sub SetBuildNumber($$$)
+{
+    my($build_num_file, $build_gen_script, $files_to_touch) = @_;
+    
+    open (OUTPUT, ">$build_num_file") || die "could not open buildnumber";
 
-   open (OUTPUT, ">:mozilla:config:build_number") || die "could not open buildnumber";
-
-   open (BDATE, "perl :mozilla:config:bdate.pl|");
+    open (BDATE, "perl :mozilla:config:bdate.pl|");
    
-   while (<BDATE>) {
-     print OUTPUT $_;
-   }
+    while (<BDATE>) {
+      print OUTPUT $_;
+    }
 
-   close (BDATE);
-   close (OUTPUT);
+    close (BDATE);
+    close (OUTPUT);
 
-
-
-   	   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:appshell:public:nsBuildID.h :mozilla:config:build_number");
-	   system ("perl :mozilla:config:aboutime.pl :mozilla:xpfe:browser:resources:locale:en-US:navigator.dtd :mozilla:config:build_number");
- }
+    my($file);
+    foreach $file (@$files_to_touch)
+    {
+        print "Writing build number to $file\n";
+        system ("perl $build_gen_script $file $build_num_file");    
+    }
+}
 
 sub SetAgentString
 {
@@ -490,6 +487,15 @@ sub Delay($)
      $now = time;
   }
 	
+}
+
+
+sub GetFileModDate($)
+{
+    my($filePath)=@_;
+    my($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+        $atime,$mtime,$ctime,$blksize,$blocks) = stat($filePath);
+    return $mtime;
 }
 
 

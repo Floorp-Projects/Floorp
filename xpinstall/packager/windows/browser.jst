@@ -233,10 +233,26 @@ if(verifyDiskSpace(fProgram, srDest))
     resetError();
 
     // register chrome
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","core.pkg"));
-    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","widget-toolkit.pkg"));
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.skn"));
-    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.skn"));
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","toolkit.jar"),"content/global/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/communicator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/editor/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome","comm.jar"),"content/navigator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/communicator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/editor/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/global/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/messenger/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","classic.jar"),"skin/classic/navigator/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","blue.jar"),"skin/blue/communicator/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","blue.jar"),"skin/blue/editor/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","blue.jar"),"skin/blue/global/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","blue.jar"),"skin/blue/messenger/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","blue.jar"),"skin/blue/navigator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/communicator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/editor/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/global/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/messenger/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome","modern.jar"),"skin/modern/navigator/");
+
 
     /* Log files that are created after the installer is done, so they can be uninstalled */
     logComment("Installing: "    + fProgram + "Xpcs Registry.dat");

@@ -226,7 +226,7 @@ class nsInstall
         PRInt32	   LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
-        PRInt32    RegisterChrome(nsIFile* chrome, PRUint32 chromeType);
+        PRInt32    RegisterChrome(nsIFile* chrome, PRUint32 chromeType, const char* path);
         PRInt32    ResetError();
         PRInt32    SetPackageFolder(nsInstallFolder& aFolder);
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);

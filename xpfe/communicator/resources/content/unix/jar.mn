@@ -1,5 +1,5 @@
-packages/core.jar:
-    communicator/content/platformBrowserBindings.xul
-    communicator/content/platformEditorBindings.xul
-    communicator/content/platformGlobalOverlay.xul
+comm.jar:
+    content/communicator/platformBrowserBindings.xul
+    content/communicator/platformEditorBindings.xul
+    content/communicator/platformGlobalOverlay.xul
 

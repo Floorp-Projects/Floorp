@@ -1,2 +1,2 @@
-locales/en-US.jar:
-        global/locale/xpcom.properties
+en-US.jar:
+        locale/en-US/global/xpcom.properties

@@ -1,6 +1,6 @@
-packages/core.jar:
-	communicator/content/domviewer/DOMDataSourceViewer.css
-	communicator/content/domviewer/DOMDataSourceViewer.js
-	communicator/content/domviewer/DOMDataSourceViewer.xul
-	communicator/content/domviewer/DOMTree.xul
-	communicator/content/domviewer/domviewer.html
+comm.jar:
+	content/communicator/domviewer/DOMDataSourceViewer.css
+	content/communicator/domviewer/DOMDataSourceViewer.js
+	content/communicator/domviewer/DOMDataSourceViewer.xul
+	content/communicator/domviewer/DOMTree.xul
+	content/communicator/domviewer/domviewer.html

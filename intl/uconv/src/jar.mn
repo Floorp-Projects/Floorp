@@ -1,2 +1,2 @@
-locales/en-US.jar:
-	global/locale/charsetTitles.properties
+en-US.jar:
+	locale/en-US/global/charsetTitles.properties

@@ -30,9 +30,6 @@ MODULE		= xpcom
 XPIDL_MODULE	= xpcom_base
 LIBRARY_NAME	= xpcombase_s
 
-CHROME_DIR=locales/en-US
-CHROME_L10N_DIR=global/locale
-
 CPPSRCS		= \
 		nsAllocator.cpp \
 		nsMemoryImpl.cpp \
@@ -110,9 +107,4 @@ DEFINES		+= -D_IMPL_NS_COM
 
 ifeq ($(OS_ARCH), Linux)
 DEFINES		+= -D_BSD_SOURCE
-endif
-
-ifndef MOZ_ENABLE_JAR_PACKAGING
-install:: 
-	$(INSTALL) -m 444 $(srcdir)/xpcom.properties $(CHROME_DIST)/$(CHROME_L10N_DIR)
 endif

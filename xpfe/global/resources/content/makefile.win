@@ -24,58 +24,8 @@ DEPTH=..\..\..\..
 
 DIRS=win
 
-CHROME_DIR=packages\widget-toolkit
-CHROME_CONTENT_DIR=global\content
-CHROME_MISC_DIR=.
-CHROME_TYPE=content
-
-CHROME_MISC= \
-	.\manifest.rdf \
-	$(NULL)
-
-CHROME_CONTENT= \
-	.\hiddenWindow.xul \
-	.\globalOverlay.xul \
-	.\globalOverlay.js \
-	.\dialogOverlay.xul \
-	.\dialogOverlay.js \
-	.\commonDialog.xul \
-	.\commonDialog.js \
-	.\strres.js \
-	.\logo.gif \
-	.\about.xul \
-	.\mozilla.html \
-	.\credits.html \
-	.\charsetOverlay.xul \
-	.\charsetOverlay.js \
-	.\charsetDetectorsOverlay.js \
-	.\charsetDetectorsOverlay.xul \
-	.\selectDialog.js \
-	.\selectDialog.xul \
-	.\nsWidgetStateManager.js \
-	.\widgetStateManager.js \
-	.\wizardHandlerSet.js \
-	.\wizardManager.js \
-	.\wizardOverlay.js \
-	.\wizardOverlay.xul \
-	.\treePopups.js \
-	.\xulBindings.xml \
-	.\htmlBindings.xml \
-	.\menulistBindings.xml \
-	.\radioBindings.xml \
-	.\scrollbarBindings.xml \
-	.\tabBindings.xml \
-	.\treeBindings.xml \
-	.\toolbarBindings.xml \
-	.\nsClipboard.js \
-	.\nsDragAndDrop.js \
-	.\nsJSSupportsUtils.js \
-	.\nsTransferable.js \
-	.\nsJSComponentManager.js \
-	.\nsUserSettings.js \
-	.\xul.css \
-	.\stringbundleBindings.xml \
-	$(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
+chrome::
+        $(REGCHROME) content global toolkit.jar
+        $(REGCHROME) locale en-US/global en-US.jar

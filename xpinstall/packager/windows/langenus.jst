@@ -6,7 +6,7 @@ var fProgram;
 // ----LOCALIZATION NOTE: translate only these ------
 var prettyName = "English-US Language Pack";
 var regName    = "locales/mozilla/en-US";
-var chromeName = "en-US.loc";
+var chromeName = "en-US.jar";
 // --- END CHANGABLE STUFF ---
 
 srDest = $SpaceRequired$:bin;
@@ -29,7 +29,11 @@ if(verifyDiskSpace(fProgram, srDest))
 
   // register chrome
   var cf = getFolder("Chrome");
-  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName));
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/global/");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/communicator/");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/messenger/");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/editor/");
+  registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/navigator/");
 
   // check return value
   if(err == SUCCESS)

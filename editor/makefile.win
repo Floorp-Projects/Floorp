@@ -29,3 +29,7 @@ DIRS= public idl base txmgr ui txtsvc
 !endif
 
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+        $(REGCHROME) content editor comm.jar
+        $(REGCHROME) locale en-US/editor en-US.jar

@@ -30,3 +30,6 @@ DIRS		= content locale
 
 include $(topsrcdir)/config/rules.mk
 
+chrome::
+	@$(REGCHROME) locale en-US/necko en-US.jar
+

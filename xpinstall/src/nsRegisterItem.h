@@ -39,7 +39,8 @@ class nsRegisterItem : public nsInstallObject
 
         nsRegisterItem( nsInstall* install,
                         nsIFile* chrome,
-                        PRUint32 chromeType );
+                        PRUint32 chromeType,
+                        const char* path );
 
         virtual ~nsRegisterItem();
 
@@ -55,6 +56,7 @@ class nsRegisterItem : public nsInstallObject
         nsCString mURL;
         nsCOMPtr<nsIFile> mChrome;
         PRUint32  mChromeType;
+        char* mPath; 
 };
 
 #endif /* nsRegisterItem_h__ */

@@ -26,16 +26,4 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CHROME_DIR	= $(DIST)/bin/chrome/packages/core/necko/content
-
-EXPORT_RESOURCES = \
-		redirect_loop.xul \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(CHROME_DIR)/, $(EXPORT_RESOURCES))
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCES)) $(CHROME_DIR)
-

@@ -36,7 +36,7 @@ $DEBUG					= 0;
 $CARBON					= 0;	# turn on to build with TARGET_CARBON
 $PROFILE				= 0;
 $GC_LEAK_DETECTOR		= 0;	# turn on to use GC leak detection
-$INCLUDE_CLASSIC_SKIN = 1; 
+$INCLUDE_CLASSIC_SKIN 	= 1; 
 
 $pull{all} 				= 0;
 $pull{moz}				= 0;
@@ -60,12 +60,11 @@ $build{nglayout}        = 0;
 $build{editor}          = 0;
 $build{viewer}          = 0;
 $build{xpapp}           = 0;
-$build{extensions}      = 0;
+$build{extensions}      = 1;
 $build{plugins}         = 0;
 $build{mailnews}        = 0;
 $build{apprunner}       = 0;
-$build{resources}       = 0;
-$build{jars}    		= 0;
+$build{resources}       = 1;
 
 $build{xptlink}		    = 0;
 
@@ -76,8 +75,9 @@ $options{mng}			= 1;
 $options{ldap}			= 0;
 $options{xmlextras}		= 0;
 
-$options{jar_manifests} = 0;        # use jar.mn files for resources, not MANIFESTs
-$options{jars}    		= 0;        # build jar files
+$options{jar_manifests} = 1;        # use jar.mn files for resources, not MANIFESTs
+$options{jars}    		= 1;        # build jar files
+$options{chrome_files}  = 0;        # install files in chrome as well as making jar files.
 
 # Don't change these (where should they go?)
 $optiondefines{mathml}{MOZ_MATHML}		= 1;
@@ -182,7 +182,11 @@ ConfigureBuildSystem();
 
 Checkout();
 
-SetBuildNumber();
+my(@gen_files) = (
+    ":mozilla:xpfe:appshell:public:nsBuildID.h",
+    ":mozilla:xpfe:browser:resources:locale:en-US:navigator.dtd"
+);
+SetBuildNumber(":mozilla:config:build_number", ":mozilla:config:aboutime.pl", \@gen_files);
 
 chdir($MOZ_SRC);
 BuildDist();

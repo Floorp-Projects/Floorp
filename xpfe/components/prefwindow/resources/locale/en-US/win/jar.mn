@@ -1,2 +1,2 @@
-locales/en-US.jar:
-        communicator/locale/pref/platformPrefOverlay.dtd
+en-US.jar:
+        locale/en-US/communicator/pref/platformPrefOverlay.dtd

@@ -1,24 +1,24 @@
 #!/perl
 
-# add-chrome <jar-file-name> <pkg-name> <chrome-type> <installed-chrome.txt-file>
-
 my $installedChromeFile = $ARGV[0];
 my $chromeType = $ARGV[1];
 my $pkgName = $ARGV[2];
 my $jarFileName = $ARGV[3];
 my $disableJarPackaging = $ARGV[4];
 
-#print "add-chrome $jarFileName $pkgName $chromeType $installedChromeFile\n";
+#print "add-chrome $installedChromeFile $chromeType $pkgName $jarFileName $disableJarPackaging\n";
+
+if ($jarFileName =~ /(.*)\.jar/) {
+    $jarFileName = $1;
+}
 
 my $line;
 if ($disableJarPackaging) {
-    $line = "$chromeType,install,url,resource:/chrome/$jarFileName/";
+    $line = "$chromeType,install,url,resource:/chrome/$jarFileName/$chromeType/$pkgName/";
 }
 else {
-    $line = "$chromeType,install,url,jar:resource:/chrome/$jarFileName.jar!/";
+    $line = "$chromeType,install,url,jar:resource:/chrome/$jarFileName.jar!/$chromeType/$pkgName/";
 }
-#coming...
-#my $line = "$chromeType,install,url,jar:resource:/chrome/$jarFileName!/$chromeType/$pkgName/"; 
 
 if (open(FILE, "<$installedChromeFile")) {
     while (<FILE>) {

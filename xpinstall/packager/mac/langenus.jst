@@ -6,7 +6,7 @@ var fProgram;
 // --- LOCALIZATION NOTE: translate only these ---
 var prettyName = "English-US Language Pack";
 var regName    = "locales/mozilla/en-US";
-var chromeName = "locales/en-US";
+var chromeName = "en-US.jar";
 // --- END LOCALIZABLE RESOURCES ---
 
 err = initInstall(prettyName, regName, "$Version$"); 
@@ -26,7 +26,11 @@ if (verifyDiskSpace(fProgram, srDest))
     logComment("addDirectory() returned: " + err);
 
     var cf = getFolder("Chrome");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName));
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/global/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/communicator/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/messenger/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/editor/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), "locale/en-US/navigator/");
 
     if(err == SUCCESS)
     {

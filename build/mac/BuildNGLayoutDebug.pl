@@ -29,42 +29,6 @@ use NGLayoutBuildList;
 use Cwd;
 use Moz;
 
-#-----------------------------------------------
-# configuration variables that globally affect what is built
-#-----------------------------------------------
-$BUILD_ROOT				= ":";
-								# $BUILD_ROOT = ":", the default, with $build{all}
-								# builds the whole tree. Leaving $BUILD_ROOT undefined
-								# will also have this effect.
-								#
-								# $BUILD_ROOT = ":mozilla:mailnews:" with $build{all}
-								# will "make everything in the mailnews directory".
-								#
-								# This is equivalent to the unix commands:
-								#   cd mozilla/mailnews
-								#   gmake
-								# or the windows commands:
-								#   cd mozilla\mailnews
-								#   nmake -f makefile.win
-								#
-								# In conjunction with build{all}, this will carry out
-								# all build phases (export, build, install...), but only
-								# using files inside $BUILD_ROOT. Replace $build{all}
-								# with specific component flags to build stuff from
-								# those components that happens to live inside
-								# $BUILD_ROOT.
-								#
-								# ":", and ":mozilla:" both have the same effect, because
-								# this works by checking that path strings begin with
-								# $BUILD_ROOT.
-								#
-								# $BUILD_ROOT affects only the build phase, not the pull
-								# phase. There is still no scriptable way to update-and-build
-								# a specific directory. In particular, $pull{all} will
-								# still pull the whole tree, irrespective of the
-								# setting of $BUILD_ROOT. To update and build a particular
-								# directory, use MacCVS Pro to update the directory,
-								# then turn off all $pull variables, and set $BUILD_ROOT.
 $DEBUG					= 1;
 $CARBON					= 0;	# Turn on to build with TARGET_CARBON
 $PROFILE				= 0;
@@ -93,7 +57,7 @@ $build{nglayout} 		= 0;
 $build{editor} 			= 0;
 $build{viewer} 			= 0;
 $build{xpapp} 			= 0;
-$build{extensions} 		= 0;
+$build{extensions} 		= 1;
 $build{plugins}			= 0;
 $build{mailnews} 		= 0;
 $build{apprunner}		= 0;
@@ -108,8 +72,10 @@ $options{mng}			= 1;
 $options{ldap}			= 0;
 $options{xmlextras}		= 0;
 
-$options{jar_manifests} = 0;        # use jar.mn files for resources, not MANIFESTs
-$options{jars}    		= 0;        # build jar files
+$options{jar_manifests} = 1;        # use jar.mn files for resources, not MANIFESTs
+$options{jars}    		= 1;        # build jar files
+$options{chrome_files}  = 0;        # install files in chrome as well as making jar files.
+
 
 # Don't change these (where should they go?)
 $optiondefines{mathml}{MOZ_MATHML}		= 1;

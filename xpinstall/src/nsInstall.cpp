@@ -1354,7 +1354,7 @@ nsInstall::Patch(const nsString& aRegName, const nsString& aJarSource, nsInstall
 }
 
 PRInt32
-nsInstall::RegisterChrome(nsIFile* chrome, PRUint32 chromeType)
+nsInstall::RegisterChrome(nsIFile* chrome, PRUint32 chromeType, const char* path)
 {
     PRInt32 result = SanityCheck();
     if (result != SUCCESS)
@@ -1363,7 +1363,7 @@ nsInstall::RegisterChrome(nsIFile* chrome, PRUint32 chromeType)
     if (!chrome || !chromeType)
         return SaveError( INVALID_ARGUMENTS );
 
-    nsRegisterItem* ri = new nsRegisterItem(this, chrome, chromeType);
+    nsRegisterItem* ri = new nsRegisterItem(this, chrome, chromeType, path);
     if (ri == nsnull)
         return SaveError(OUT_OF_MEMORY);
     else

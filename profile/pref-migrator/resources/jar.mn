@@ -1,9 +1,9 @@
-packages/core.jar:
-	communicator/content/profile/no_space.js	(content/no_space.js)
-	communicator/content/profile/no_space.xul	(content/no_space.xul)
-	communicator/content/profile/profileMigrationProgress.js	(content/profileMigrationProgress.js)
-	communicator/content/profile/profileMigrationProgress.xul	(content/profileMigrationProgress.xul)
+comm.jar:
+	content/communicator/profile/no_space.js                        (content/no_space.js)
+	content/communicator/profile/no_space.xul                       (content/no_space.xul)
+	content/communicator/profile/profileMigrationProgress.js	(content/profileMigrationProgress.js)
+	content/communicator/profile/profileMigrationProgress.xul	(content/profileMigrationProgress.xul)
 
-locales/en-US.jar:
-	communicator/locale/profile/no_space.dtd	(locale/en-US/no_space.dtd)
-	communicator/locale/profile/profileMigrationProgress.dtd	(locale/en-US/profileMigrationProgress.dtd)
+en-US.jar:
+	locale/en-US/communicator/profile/no_space.dtd                  (locale/en-US/no_space.dtd)
+	locale/en-US/communicator/profile/profileMigrationProgress.dtd	(locale/en-US/profileMigrationProgress.dtd)

@@ -17,13 +17,26 @@ if (verifyDiskSpace(fProgram, srDest))
 
     logComment("addDirectory() returned: " + err);
 
-    var ctype = (CONTENT | DELAYED_CHROME);
     var cf = getFolder(fProgram,"chrome");
-    registerChrome(ctype, getFolder(cf,"packages/core"));
-    registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
-    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/classic"));
-    registerChrome(SKIN|DELAYED_CHROME, getFolder(cf,"skins/modern"));
-    registerChrome(LOCALE|DELAYED_CHROME, getFolder(cf,"locales/en-US"));
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"toolkit.jar"),"content/global/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/communicator/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/editor/");
+    registerChrome(CONTENT | DELAYED_CHROME, getFolder(cf,"comm.jar"),"content/navigator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"classic.jar"),"skin/classic/communicator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"classic.jar"),"skin/classic/editor/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"classic.jar"),"skin/classic/global/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"classic.jar"),"skin/classic/messenger/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"classic.jar"),"skin/classic/navigator/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"blue.jar"),"skin/blue/communicator/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"blue.jar"),"skin/blue/editor/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"blue.jar"),"skin/blue/global/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"blue.jar"),"skin/blue/messenger/");
+//    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"blue.jar"),"skin/blue/navigator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/communicator/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/editor/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/global/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/messenger/");
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"modern.jar"),"skin/modern/navigator/");
 
     // make an alias to the browser on the desktop 
     var desktopFolder = getFolder("Mac Desktop");

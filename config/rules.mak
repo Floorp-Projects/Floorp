@@ -594,14 +594,13 @@ install:: chrome
 !ifndef MOZ_OLD_JAR_PACKAGING
 
 !if exist($(JAR_MANIFEST))
-chrome:: 
+
+chrome::
         $(PERL) $(DEPTH)\config\make-jars.pl -c -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
+
 !endif
 
-!if "$(CHROME_TYPE)" != "$(NULL)"
-chrome::
-    -for %t in ($(CHROME_TYPE)) do @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chrome.txt %t packageName $(CHROME_DIR:\=/) $(MOZ_DISABLE_JAR_PACKAGING)
-!endif
+REGCHROME = @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chrome.txt
 
 regchrome:
 
