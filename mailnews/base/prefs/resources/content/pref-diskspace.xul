@@ -13,9 +13,7 @@
         
   <script language="javascript">
   <![CDATA[
-    var _elementIDs = ["limitMessageSize", "maxSize", "newsKeepMethod", "newsKeepDays",
-                       "newsKeepCount", "newsKeepOnlyUnread", "newsRemoveBodiesByAge",
-                       "newsRemoveBodiesDays"];
+    var _elementIDs = ["limitMessageSize", "maxSize" ];
   ]]>
   </script>
 
@@ -43,6 +41,7 @@
     </box>                                   
 	</titledbox>
 
+<!--	no offline news in 6.0  see bug #17211
 	<titledbox orient="vertical">
 		<title><text value="&newgroupMsgOnly.label;"/></title>
 		
@@ -80,5 +79,6 @@
       <text class="label" value="&days.label;"/>
     </box>
 	</titledbox>
+-->
 
 </window>
