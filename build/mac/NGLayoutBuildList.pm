@@ -470,6 +470,11 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",	 "$addressbook_chrome_dir:locale:en-US:", 0);
 		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_chrome_dir:content:default:", 0);
 		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_chrome_dir:locale:en-US:", 0);
+
+    	_InstallResources(":mozilla:mailnews:import:resources:content:MANIFEST", 		"$messenger_chrome_dir:content:default:", 0);
+    	_InstallResources(":mozilla:mailnews:import:resources:locale:en-US:MANIFEST",	"$messenger_chrome_dir:locale:en-US:", 0);
+    	_InstallResources(":mozilla:mailnews:import:eudora:resources:locale:en-US:MANIFEST",	"$messenger_chrome_dir:locale:en-US:", 0);
+    	_InstallResources(":mozilla:mailnews:import:text:resources:locale:en-US:MANIFEST",	"$messenger_chrome_dir:locale:en-US:", 0);
 	}
 	
 	# copy the chrome registry. We want an actual copy so that changes for custom UI's
@@ -1183,6 +1188,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:mailnews:db:macbuild:msgDBIDL.mcp",					"MsgDB");
 	BuildIDLProject(":mozilla:mailnews:imap:macbuild:msgimapIDL.mcp",				"MsgImap");
 	BuildIDLProject(":mozilla:mailnews:mime:macbuild:mimeIDL.mcp",					"Mime");
+	BuildIDLProject(":mozilla:mailnews:import:macbuild:msgImportIDL.mcp",			"msgImport");
 
 	BuildIDLProject(":mozilla:caps:macbuild:CapsIDL.mcp",							"caps");
 
@@ -1630,6 +1636,9 @@ sub BuildMailNewsProjects()
 	BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp",	"smime$D.shlb", "smime.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:mailnews:mime:cthandlers:signstub:macbuild:signed.mcp",	"signed$D.shlb", "signed.toc", 1, $main::ALIAS_SYM_FILES, 1);
 #	BuildOneProject(":mozilla:mailnews:mime:cthandlers:calendar:macbuild:calendar.mcp", "calendar$D.shlb", "calendar.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:import:macbuild:msgImport.mcp", 					"msgImport$D.shlb", "msgImport.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:import:text:macbuild:msgImportText.mcp", 		"msgImportText$D.shlb", "msgImportText.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:import:eudora:macbuild:msgImportEudora.mcp", 	"msgImportEudora$D.shlb", "msgImportEudora.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	print("--- MailNews projects complete ----\n");
 }
