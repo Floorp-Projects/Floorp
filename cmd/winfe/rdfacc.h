@@ -188,13 +188,14 @@ BOOL IsExecutableURL(const char* pURL);
 HICON DrawLocalFileIcon(HT_Resource r, int left, int top, HDC hdc);
 CRDFImage* DrawArbitraryURL(HT_Resource r, int left, int top, int imageWidth, 
 								   int imageHeight, HDC hDC, COLORREF bkColor,
-								   CCustomImageObject* pObject, BOOL largeIcon);
+								   CCustomImageObject* pObject, BOOL isToolbarIcon, 
+								   HT_IconType state);
 CRDFImage* DrawRDFImage(CRDFImage* pImage, int left, int top, int imageWidth, int imageHeight, HDC hDC,
 						COLORREF bkColor);
 
 HICON FetchLocalFileIcon(HT_Resource r);
-CRDFImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* pObject, BOOL largeIcon);
-IconType DetermineIconType(HT_Resource pNode, BOOL largeIcon);
+CRDFImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* pObject, BOOL isToolbarIcon, HT_IconType state = HT_SMALLICON);
+IconType DetermineIconType(HT_Resource pNode, BOOL isToolbarIcon, HT_IconType state);
 
 void PaintBackground(HDC hdc, CRect rect, CRDFImage* pImage, int xSrcOffset=-1, int ySrcOffset=-1);
 	// This function tiles and paints the background image in the tree.

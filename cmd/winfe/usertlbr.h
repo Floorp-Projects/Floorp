@@ -98,6 +98,7 @@ public:
 
 	virtual BOOL UseLargeIcons() { return FALSE; }
 	virtual void UpdateIconInfo();
+	HT_IconType TranslateButtonState();
 
 	virtual void DrawButtonBitmap(HDC hDC, CRect rcImg);
 

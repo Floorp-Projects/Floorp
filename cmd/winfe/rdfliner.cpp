@@ -639,9 +639,9 @@ HICON DrawLocalFileIcon(HT_Resource r, int left, int top, HDC hDC)
 }
 
 CRDFImage* DrawArbitraryURL(HT_Resource r, int left, int top, int imageWidth, int imageHeight, HDC hDC, COLORREF bkColor, 
-					  CCustomImageObject* pObject, BOOL largeIcon)
+					  CCustomImageObject* pObject, BOOL isToolbarIcon, HT_IconType state)
 {
-	CRDFImage* pImage = FetchCustomIcon(r, pObject, largeIcon);
+	CRDFImage* pImage = FetchCustomIcon(r, pObject, isToolbarIcon, state);
 	return DrawRDFImage(pImage, left, top, imageWidth, imageHeight, hDC, bkColor);
 }
 
@@ -817,13 +817,11 @@ HICON FetchLocalFileIcon(HT_Resource r)
 	return hIcon;
 }
 
-CRDFImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* imageObject, BOOL largeIcon)
+CRDFImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* imageObject, BOOL isToolbarIcon,
+						   HT_IconType state)
 {
 	CRDFImage* pImage = NULL;
-	CString hashString;
-	if (largeIcon)
-		hashString = HT_GetNodeLargeIconURL(r);
-	else hashString = HT_GetNodeSmallIconURL(r);
+	CString hashString = HT_GetIconURL(r, isToolbarIcon, state);
 	
 	if (strncmp("icon/large:workspace", hashString, 20) == 0)
 	{
@@ -841,13 +839,13 @@ CRDFImage* FetchCustomIcon(HT_Resource r, CCustomImageObject* imageObject, BOOL 
 	return pImage;
 }
 
-
-IconType DetermineIconType(HT_Resource pNode, BOOL largeIcon)
+IconType DetermineIconType(HT_Resource pNode, BOOL isToolbar, HT_IconType state)
 { 
    IconType returnValue;
    if (pNode != NULL)
    {
-	    char* pURL = largeIcon? HT_GetNodeLargeIconURL(pNode) : HT_GetNodeSmallIconURL(pNode);
+	    char* pURL = HT_GetIconURL(pNode, isToolbar, state);
+		
 		//TRACE("%s\n", pURL);
 		if (strncmp("icon", pURL, 4) != 0)
 		{
@@ -2736,7 +2734,7 @@ int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void
 			rect.top += 1; // Handle the padding.
 
 			if (idx == HTFE_USE_CUSTOM_IMAGE)
-				DrawArbitraryURL(r, rect.left, rect.top, 16, 16, hdc, ::GetBkColor(hdc), this, FALSE);
+				DrawArbitraryURL(r, rect.left, rect.top, 16, 16, hdc, ::GetBkColor(hdc), this, FALSE, HT_SMALLICON);
 			else if (idx == HTFE_LOCAL_FILE)
 				DrawLocalFileIcon(r, rect.left, rect.top, hdc);
 			else m_pIUserImage->DrawTransImage ( idx, rect.left, rect.top, hdc );

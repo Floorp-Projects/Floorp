@@ -201,9 +201,30 @@ int CRDFToolbarButton::Create(CWnd *pParent, int nToolbarStyle, CSize noviceButt
 	return bResult;
 }
 
+HT_IconType CRDFToolbarButton::TranslateButtonState()
+{
+	if (!m_bEnabled)
+		return HT_TOOLBAR_DISABLED;
+
+	switch (m_eState)
+	{
+	case eNORMAL:
+		return HT_TOOLBAR_ENABLED;
+	case eDISABLED:
+		return HT_TOOLBAR_DISABLED;
+	case eBUTTON_UP:
+		return HT_TOOLBAR_ROLLOVER;
+	case eBUTTON_DOWN:
+		return HT_TOOLBAR_PRESSED;
+	default:
+		return HT_TOOLBAR_ENABLED;
+	}
+}
+
 void CRDFToolbarButton::UpdateIconInfo()
 {
-	m_nIconType = DetermineIconType(m_Node, UseLargeIcons());
+	HT_IconType iconState = TranslateButtonState();
+	m_nIconType = DetermineIconType(m_Node, TRUE, iconState);
 	UINT oldBitmapID = m_nBitmapID;
 	m_nBitmapID = GetBitmapID();
 	if (m_nBitmapID != oldBitmapID)
@@ -934,7 +955,7 @@ void CRDFToolbarButton::FillInMenu(HT_Resource theNode)
 	HT_Resource theItem = NULL;
 	while (theItem = HT_GetNextItem(theCursor))
 	{
-		IconType nIconType = DetermineIconType(theItem, FALSE);
+		IconType nIconType = DetermineIconType(theItem, FALSE, HT_SMALLICON);
 		void* pCustomIcon = NULL;
 		if (nIconType == LOCAL_FILE)
 			pCustomIcon = FetchLocalFileIcon(theItem);
@@ -1062,7 +1083,7 @@ void CRDFToolbarButton::DrawCustomIcon(HDC hDC, int x, int y)
 
 		CRDFImage* pCustomImage = DrawArbitraryURL(m_Node, x, y, m_bitmapSize.cx, m_bitmapSize.cy, hDC, 
 					 pToolbar->GetBackgroundColor(), 
-					 this, UseLargeIcons());
+					 this, TRUE, TranslateButtonState());
 	
 		if (!pCustomImage->FrameSuccessfullyLoaded())
 			return;
