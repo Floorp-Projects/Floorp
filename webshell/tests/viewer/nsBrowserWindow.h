@@ -205,6 +205,8 @@ public:
   nsIWidget* mWindow;
   nsIWebShell* mWebShell;
 
+  nsString mOpenFileDirectory;
+
   // "Toolbar"
   nsITextWidget* mLocation;
   nsIButton* mBack;

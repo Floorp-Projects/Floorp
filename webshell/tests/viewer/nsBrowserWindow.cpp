@@ -703,7 +703,7 @@ nsBrowserWindow::GoTo(const PRUnichar* aURL,const char* aCommand)
 
 
 static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
-					  nsString* aFileName)
+					  nsString* aFileName, nsString* aDisplayDirectory)
 {
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
@@ -721,6 +721,7 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
                           "*.gif; *.jpg; *.jpeg; *.png",
                           "*.*"};
     fileWidget->SetFilterList(5, titles, filters);
+    fileWidget->SetDisplayDirectory(*aDisplayDirectory);
     fileWidget->Create(aParentWindow,
 		       title,
 		       eMode_load,
@@ -733,6 +734,7 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
       selectedFileName = PR_TRUE;
     }
  
+    fileWidget->GetDisplayDirectory(*aDisplayDirectory);
     NS_RELEASE(fileWidget);
   }
 
@@ -743,7 +745,7 @@ void
 nsBrowserWindow::DoFileOpen()
 {
   nsAutoString fileName;
-  if (GetFileNameFromFileSelector(mWindow, &fileName)) {
+  if (GetFileNameFromFileSelector(mWindow, &fileName, &mOpenFileDirectory)) {
     nsAutoString fileURL;
     BuildFileURL(fileName, fileURL);
     // Ask the Web widget to load the file URL
