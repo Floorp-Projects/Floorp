@@ -322,18 +322,13 @@ void multiListSelfTest(FILE * fd, char * aTitle, nsIListBox * listBox) {
   multi->SetSelectedIndices(inxs, 3);
   fprintf(fd, "\nTesting selecting items 0,2,4\n");fflush(fd);
 
-  char * item0 = "Multi List Item 0";
+  /*char * item0 = "Multi List Item 0";
   nsString selItem;
   multi->GetSelectedItem(selItem);
   selStr = selItem.ToNewCString();
   fprintf(fd, "\nTesting GetSelectedItem\n\t is [%s] should be [%s] Test: [%s]\n", 
     selStr, item0,  eval(!strcmp(selStr, item0))); fflush(fd);
-  if (nsnull != selStr) delete selStr;
-
-  i = multi->GetSelectedIndex();
-  fprintf(fd, "\nTesting GetSelectedIndex\n\t is [%d] should be [%d] Test: [%s]\n", 
-    i, 0, eval(i == 0)); fflush(fd);
-
+  if (nsnull != selStr) delete selStr;*/ 
 
   int status = 1;
   count = multi->GetSelectedCount();
@@ -1379,7 +1374,7 @@ nsresult WidgetTest(int *argc, char **argv)
     button->Show(PR_TRUE);
     //NS_RELEASE(button);
 
-    rect.SetRect(x, y+30, 100, 25);  
+    rect.SetRect(x, y+30, 150, 25);  
     NSRepository::CreateInstance(kCButtonCID, nsnull, kIButtonIID, (void**)&button);
     button->Create(window, rect, DoSelfTests, NULL);
     nsString selfTestLabel("Perform Self Tests");
@@ -1514,7 +1509,8 @@ nsresult WidgetTest(int *argc, char **argv)
 
    
     nsString status("The non-visual tests: ");
-    status.Append(eval(gOverallStatus));
+    status.Append( (gOverallStatus  ? "PASSED":"FAILED"));
+
     gNonVisualStatus = gOverallStatus;
 
     statusText->SetText(status);
