@@ -10,30 +10,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <html:script language="JavaScript" src="FilterEditor.js"/>
 
-<!--
-
-<box id="subject-template" align="horizontal" style="display: none;">
-<html:select name="criteria">
-  <html:option>contains</html:option>
-  <html:option>doesn't contain</html:option>
-</html:select>
-</box>
-
-<box id="sender-template" align="horizontal" style="display: none;">
-<html:select name="criteria">
-  <html:option>contains</html:option>
-  <html:option>doesn't contain</html:option>
-</html:select>
-</box>
-
-<box id="date-template" align="horizontal" style="display: none;">
-<html:select name="criteria">
-  <html:option>contains</html:option>
-  <html:option>doesn't contain</html:option>
-</html:select>
-</box>
--->
-<box align="vertical" style="width: 100%;" flex="100%">
+<box align="vertical" style="width: 100%;">
   <box align="horizontal" class="padded">
     <html:div>Filter Name:</html:div>
     <html:input type="text" flex="100%"/>
