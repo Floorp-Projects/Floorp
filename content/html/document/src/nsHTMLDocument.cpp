@@ -661,7 +661,7 @@ nsHTMLDocument::TryChannelCharset(nsIChannel *aChannel,
     nsCAutoString charsetVal;
     nsresult rv = aChannel->GetContentCharset(charsetVal);
     if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsICharsetAlias> calias(do_CreateInstance(kCharsetAliasCID));
+      nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID));
       if (calias) {
         nsAutoString preferred;
         rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal),
