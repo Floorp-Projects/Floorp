@@ -116,7 +116,7 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
 
     if (mEventSinkGetter) {
         rv = mEventSinkGetter->GetEventSink(verb, NS_GET_IID(nsIProgressEventSink), 
-                                  (nsISupports**)(nsIProgressEventSink**)getter_AddRefs(mEventSink));
+                                  getter_AddRefs(mEventSink));
         if (NS_FAILED(rv)) {
             PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::Init() (couldn't find event sink)\n"));
         }
