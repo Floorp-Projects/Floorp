@@ -95,7 +95,7 @@ Cookie_CheckConfirm(char * szMessage, char * szCheckMessage, PRBool* checkValue)
 
 PRIVATE Bool cookies_changed = FALSE;
 PRIVATE Bool cookie_permissions_changed = FALSE;
-PRIVATE Bool cookie_remember_checked = FALSE;
+PRIVATE PRBool cookie_remember_checked = FALSE;
 
 PRIVATE NET_CookieBehaviorEnum net_CookieBehavior = NET_Accept;
 PRIVATE Bool net_WarnAboutCookies = FALSE;
@@ -1495,7 +1495,7 @@ net_IntSetCookieString(char * cur_url,
 		 */
 
 	    {
-		Bool old_cookie_remember_checked = cookie_remember_checked;
+		PRBool old_cookie_remember_checked = cookie_remember_checked;
         PRBool userHasAccepted = Cookie_CheckConfirm
 		    (new_string, remember_string, &cookie_remember_checked);
 		PR_FREEIF(new_string);
