@@ -124,7 +124,6 @@ ConvertGeckoRectToMacRect(const nsRect& aRect, Rect& outMacRect)
 
 #pragma mark -
 
-
 //-------------------------------------------------------------------------
 //
 // nsChildView constructor
@@ -187,7 +186,6 @@ nsChildView::~nsChildView()
   NS_IF_RELEASE(mFontMetrics);
   
   delete mPluginPort;
-  
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIKBStateControl);
@@ -1861,9 +1859,15 @@ nsChildView::GetQuickDrawPort ( )
   
 } // mouseUp
 
-
 - (void)mouseMoved:(NSEvent*)theEvent
 {
+  NSView* view = [[[self window] contentView] hitTest: [theEvent locationInWindow]];
+  if (view != (NSView*)self) {
+    // We shouldn't handle this.  Send it to the right view.
+    [view mouseMoved: theEvent];
+    return;
+  }
+  
   nsMouseEvent geckoEvent;
   geckoEvent.eventStructType = NS_MOUSE_EVENT;
   [self convert:theEvent message:NS_MOUSE_MOVE toGeckoEvent:&geckoEvent];
@@ -1871,7 +1875,6 @@ nsChildView::GetQuickDrawPort ( )
   // send event into Gecko by going directly to the
   // the widget.
   mGeckoChild->DispatchMouseEvent(geckoEvent);
-  
 }
 
 - (void)mouseDragged:(NSEvent*)theEvent
