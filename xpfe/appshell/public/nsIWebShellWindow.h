@@ -48,8 +48,6 @@ public:
   NS_IMETHOD GetDOMWindow(nsIDOMWindow** aDOMWindow) = 0;
   NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow) = 0;
 
-  NS_IMETHOD AddWebShellInfo(const nsString& aID, PRBool aPrimary, nsIWebShell* aChildShell) = 0;
-
   NS_IMETHOD GetContentShellById(const nsString& anID, nsIWebShell** aResult) = 0;
 
   NS_IMETHOD LockUntilChromeLoad() = 0;
