@@ -4327,8 +4327,8 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
   if (newString)
     nsCRT::free(newString);
 #endif
-  if (NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID) == aTopic || 
-      NS_LITERAL_STRING("quit-application") == aTopic)
+//  if (NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID) == aTopic || 
+//      NS_LITERAL_STRING("quit-application") == aTopic)
   {
     Destroy();
   }
