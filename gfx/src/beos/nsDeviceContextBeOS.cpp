@@ -61,7 +61,7 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
  
 nscoord nsDeviceContextBeOS::mDpi = 96; 
- 
+
 nsDeviceContextBeOS::nsDeviceContextBeOS()
   : DeviceContextImpl()
 {
@@ -80,10 +80,8 @@ nsDeviceContextBeOS::~nsDeviceContextBeOS()
 {
   nsresult rv; 
   nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv); 
-  if (NS_SUCCEEDED(rv)) { 
-    prefs->UnregisterCallback("browser.display.screen_resolution", 
-                              prefChanged, (void *)this); 
-  } 
+  if (NS_SUCCEEDED(rv))
+    prefs->UnregisterCallback("browser.display.screen_resolution", prefChanged, (void *)this); 
 }
 
 NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
@@ -92,11 +90,14 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
   // XXXRight now this will only get the primary monitor. 
 
   nsresult ignore; 
+  mWidget = aNativeWidget;
   nsCOMPtr<nsIScreenManager> sm ( do_GetService("@mozilla.org/gfx/screenmanager;1", &ignore) ); 
-  if ( sm ) { 
+  if (sm) 
+  { 
     nsCOMPtr<nsIScreen> screen; 
-    sm->GetPrimaryScreen ( getter_AddRefs(screen) ); 
-    if ( screen ) { 
+    sm->GetPrimaryScreen(getter_AddRefs(screen)); 
+    if (screen)
+    { 
       PRInt32 x, y, width, height, depth; 
       screen->GetAvailRect ( &x, &y, &width, &height ); 
       screen->GetPixelDepth ( &depth ); 
@@ -107,9 +108,10 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
   } 
   
   static int initialized = 0; 
-  if (!initialized) { 
+  if (!initialized) 
+  {
     initialized = 1; 
- 
+
     // Set prefVal the value of the preference "browser.display.screen_resolution" 
     // or -1 if we can't get it. 
     // If it's negative, we pretend it's not set. 
@@ -117,29 +119,37 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
     // If it's positive, we use it as the logical resolution 
     PRInt32 prefVal = -1; 
     nsresult res; 
- 
+
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res)); 
-    if (NS_SUCCEEDED(res) && prefs) { 
+    if (NS_SUCCEEDED(res) && prefs)
+    { 
       res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal); 
-      if (! NS_SUCCEEDED(res)) { 
+      if (! NS_SUCCEEDED(res))
+      { 
         prefVal = -1; 
       } 
-      prefs->RegisterCallback("browser.display.screen_resolution", prefChanged, 
-                              (void *)this); 
+      prefs->RegisterCallback("browser.display.screen_resolution", prefChanged, (void *)this); 
     } 
  
     // Set OSVal to what the operating system thinks the logical resolution is. 
     PRInt32 OSVal = 72; 
-    
-    if (prefVal > 0) { 
+    // BeOS lacks monitor info, so we use estimation
+    float fPrefVal = float(mWidthFloat)*72./800.;
+    prefVal = int(fPrefVal);
+    if (prefVal > 0)
+    { 
       // If there's a valid pref value for the logical resolution, 
       // use it. 
       mDpi = prefVal; 
-    } else if ((prefVal == 0) || (OSVal > 96)) { 
+    }
+    else if ((prefVal == 0) || (OSVal > 96))
+    { 
       // Either if the pref is 0 (force use of OS value) or the OS 
       // value is bigger than 96, use the OS value. 
       mDpi = OSVal; 
-    } else { 
+    }
+    else
+    { 
       // if we couldn't get the pref or it's negative, and the OS 
       // value is under 96ppi, then use 96. 
       mDpi = 96; 
@@ -154,10 +164,12 @@ NS_IMETHODIMP nsDeviceContextBeOS::Init(nsNativeWidget aNativeWidget)
   menu_info info;
   get_menu_info(&info);
   mMenuFont.SetFamilyAndStyle(info.f_family,info.f_style);
+  mMenuFont.SetSize(info.font_size);
   
 #ifdef DEBUG 
   static PRBool once = PR_TRUE; 
-  if (once) { 
+  if (once)
+  { 
     printf("GFX: dpi=%d t2p=%g p2t=%g depth=%d\n", mDpi, mTwipsToPixels, mPixelsToTwips,mDepth); 
     once = PR_FALSE; 
   } 
@@ -188,25 +200,25 @@ NS_IMETHODIMP nsDeviceContextBeOS::CreateRenderingContext(nsIRenderingContext *&
     surf = new nsDrawingSurfaceBeOS(); 
  
     if (surf && w) 
-      { 
- 
-        // init the nsDrawingSurfaceBeOS 
-        rv = surf->Init(w); 
- 
-        if (NS_OK == rv) 
-          // Init the nsRenderingContextBeOS 
-          rv = pContext->Init(this, surf); 
-      } 
-    else 
-      rv = NS_ERROR_OUT_OF_MEMORY; 
+    {
+      // init the nsDrawingSurfaceBeOS 
+      rv = surf->Init(w);
+      if (NS_OK == rv)
+        // Init the nsRenderingContextBeOS 
+        rv = pContext->Init(this, surf);
+    } 
+    else
+    {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
   }
-  else 
+  else
+  {
     rv = NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (NS_OK != rv)
-  {
     NS_IF_RELEASE(pContext); 
-  }
 
   aContext = pContext; 
  
@@ -250,7 +262,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetSystemFont(nsSystemFontID aID, nsFont *aFo
     case eSystemFont_MessageBox : 
     case eSystemFont_SmallCaption : 
     case eSystemFont_StatusBar : 
-    case eSystemFont_Window:                      // css3 
+    case eSystemFont_Window:              // css3 
     case eSystemFont_Document: 
     case eSystemFont_Workspace: 
     case eSystemFont_Desktop: 
@@ -333,7 +345,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetRect(nsRect &aRect)
 NS_IMETHODIMP nsDeviceContextBeOS::GetClientRect(nsRect &aRect) 
 { 
 //XXX do we know if the client rect should ever differ from the screen rect? 
-  return GetRect ( aRect );
+  return GetRect(aRect);
 }
 
 NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
@@ -351,16 +363,14 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceContextFor(nsIDeviceContextSpec *aDe
   NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
   
   dcps->SetSpec(aDevice);
-  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext,
-                            (nsIDeviceContext*)this);
+  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
 
-  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext),
-                            (void **)&aContext);
+  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext), (void **)&aContext);
 
   NS_RELEASE(dcps);
   
   return rv;
-  #else
+#else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif /* USE_POSTSCRIPT */
 }
@@ -397,8 +407,7 @@ nsDeviceContextBeOS::SetDPI(PRInt32 aDpi)
   mDpi = aDpi; 
   
   int pt2t = 72; 
- 
-  // make p2t a nice round number - this prevents rounding problems 
+
   mPixelsToTwips = float(NSToIntRound(float(NSIntPointsToTwips(pt2t)) / float(aDpi))); 
   mTwipsToPixels = 1.0f / mPixelsToTwips; 
  
@@ -411,7 +420,8 @@ int nsDeviceContextBeOS::prefChanged(const char *aPref, void *aClosure)
   nsDeviceContextBeOS *context = (nsDeviceContextBeOS*)aClosure; 
   nsresult rv; 
   
-  if (nsCRT::strcmp(aPref, "browser.display.screen_resolution")==0) { 
+  if (nsCRT::strcmp(aPref, "browser.display.screen_resolution")==0)
+  {
     PRInt32 dpi; 
     nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
     rv = prefs->GetIntPref(aPref, &dpi); 
@@ -433,8 +443,9 @@ nsDeviceContextBeOS::GetSystemFontInfo(const BFont *theFont, nsSystemFontID anID
   
   // do we have the default_font defined by BeOS, if not then 
   // we error out. 
-  if( !theFont )
-  	switch (anID) 
+  if (!theFont)
+  {
+    switch (anID) 
   	{
       case eSystemFont_Menu:
         status = GetSystemFontInfo(&mMenuFont, anID, aFont); 
@@ -449,8 +460,9 @@ nsDeviceContextBeOS::GetSystemFontInfo(const BFont *theFont, nsSystemFontID anID
       default:
         theFont = be_plain_font; // BeOS default font 
     }
-   
-  if( !theFont ) 
+  }
+  
+  if (!theFont) 
   { 
     status = NS_ERROR_FAILURE; 
   } 
@@ -458,19 +470,26 @@ nsDeviceContextBeOS::GetSystemFontInfo(const BFont *theFont, nsSystemFontID anID
   { 
     font_family family; 
     font_style style; 
-    font_height height; 
+    font_height height;
+    uint16 face; 
  
-    theFont->GetFamilyAndStyle(&family, &style);   
-    aFont->name.AssignWithConversion( family ); 
- 
-       // No weight 
-           
-    theFont->GetHeight(&height); 
-    aFont->size = NSIntPixelsToTwips(uint32(height.ascent+height.descent+height.leading), mPixelsToTwips); 
- 
-       // no style 
+    theFont->GetFamilyAndStyle(&family, &style);
+
+    face = theFont->Face();
+    aFont->name.Assign(NS_ConvertUTF8toUCS2(family));
+    aFont->size = NSIntPixelsToTwips(uint32(theFont->Size()), mPixelsToTwips); 
+
+    if(face & B_ITALIC_FACE)
+      aFont->style = NS_FONT_STYLE_ITALIC;
     
-       // no decoration 
+    if(face & B_BOLD_FACE)
+      aFont->weight = NS_FONT_WEIGHT_BOLD;
+
+    if(face & B_UNDERSCORE_FACE)
+      aFont->decorations |= NS_FONT_DECORATION_UNDERLINE;
+
+    if(face & B_STRIKEOUT_FACE)
+      aFont->decorations |= NS_FONT_DECORATION_LINE_THROUGH;
 
     aFont->systemFont = PR_TRUE;
 
