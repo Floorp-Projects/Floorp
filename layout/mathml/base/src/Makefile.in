@@ -58,6 +58,7 @@ CPPSRCS =         nsMathMLChar.cpp		        \
                   nsMathMLmpaddedFrame.cpp		\
                   nsMathMLmstyleFrame.cpp		\
                   nsMathMLmsqrtFrame.cpp		\
+                  nsMathMLmrootFrame.cpp		\
                   $(NULL)
 
 include $(topsrcdir)/config/config.mk
