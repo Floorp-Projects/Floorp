@@ -41,6 +41,23 @@ Rights Reserved.
 	<box align="vertical" style="width:36em; min-height:12em">
 		<spring flex="100%"/>
 		<html:div style="margin-bottom:.3em">&info.label;</html:div>
+		<box align="horizontal" flex="100%">
+			<html:input type="radio" id="all" name="download" check="true"/>
+			<html:label for="all">&all.label;</html:label>
+		</box>
+
+		<box align="horizontal" flex="100%">
+			<html:input type="radio" id="some" name="download"/>
+			<html:label for="some">&download.label;</html:label>
+			<html:input type="text" id="number" size="10"/>
+			<html:label>&headers.label;</html:label>
+		</box>
+
+		<box align="horizontal" flex="100%">
+			<html:input type="checkbox" id="mark"/>
+			<html:label>&mark.label;</html:label>
+		</box>
+
 		<spring flex="100%"/>
 		<box id="okCancelButtons"/>
 	</box>
