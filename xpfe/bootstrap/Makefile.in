@@ -39,7 +39,9 @@ endif
 
 ifeq (,$(filter mac,$(MOZ_WIDGET_TOOLKIT)))
 ifndef BUILD_STATIC_LIBS
+ifndef MOZ_TIMELINE
 GRE_BUILD       = 1;
+endif
 endif
 endif
 
