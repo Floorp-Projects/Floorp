@@ -63,7 +63,7 @@ REQUIRES	= xpcom \
 		  icalss \
 		  $(NULL)
 
-#XPIDLSRCS = oeIICal.idl
+XPIDLSRCS = oeIICal.idl
 
 CPPSRCS		= \
 		oeICalEventImpl.cpp \
