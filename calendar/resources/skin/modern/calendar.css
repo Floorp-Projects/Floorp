@@ -560,7 +560,7 @@
 
 #day-view-box
 {
-	background-color			: white;
+    background-color: #FAFCFB;
 }
 
 #inner-day-view-box
@@ -784,12 +784,12 @@
 
 #week-view-box
 {
-	background-color			: white;
+    background-color: #FAFCFB;
 }
 
 #inner-week-view-box
 {
-	margin						: 15px;
+	margin						: 0px 15px;
 }
 
 #week-view-day-gradient
@@ -869,44 +869,37 @@
 }
 
 /* Week View: Day name header */
-
-#weekview-header-spacer-image
-{
-   list-style-image     : url("chrome://calendar/skin/week-view-1px.gif");
+#weekview-daynumber-spacer{
+   width: 125px;
 }
-
 #weekview-header-spacer-left
 {
 	-moz-box-align 		: start;
-	background-color		: #1D7AB5;
+   background-color          : #FAFCFB;
+   border-bottom             : 1px solid #1D7AB5;
 }
 
 #weekview-daynumber-spacer-mid
 {
-	-moz-box-pack			: end;  
-	-moz-box-align 		: start;
-   width                :99px;
-	background-color		: #ffffff;
-   background-image     : url("chrome://calendar/skin/week-view-1px.gif");
-   background-position  : top;
-   background-repeat    : repeat-x;
-}
-
-#weekview-daynumber-spacer-image
-{
-   list-style-image        : url("chrome://calendar/skin/week-view-corner.gif");
+   background-color        : #FAFCFB;
+   background-image        : url("chrome://calendar/skin/week-view-corner.png");
+   background-position     : 100% 0%;
+   background-repeat       : no-repeat;
+   width:43px;
 }
 
 #week-view-header-days
 {
-   border-top               : 1px solid #1D7AB5;
-   border-right             : 1px solid #1D7AB5;
+   -moz-border-top-colors:  #3f7d91 #E7EEEC  #E7EEEC;
+   -moz-border-right-colors:  #3f7d91 #E7EEEC  #E7EEEC;
+   border-top: 3px solid;
+   border-right: 3px solid;
 }
 
 .weekview-daynumber-class
 {
    -moz-box-align       : center;
-   width                :78px;
+   display: -moz-stack;
 }
 
 #week-view-header
@@ -916,9 +909,22 @@
    font-family             : Arial, Helvetica;
    text-align              : center; 
    font-weight             : bold;
-   background-color	      : white;
+   background-color 	   : #ffffff;
 }
 
+.week-header-date{
+   font-size: 33px;
+   font-weight: bold;
+   color: #C7DED8;
+}
+.week-header-date-text{
+   top: 15px;
+}
+
+#week-view-header-spacer{
+   background-color: #fff;
+   width: 19px;
+}
 
 
 /* Week View: Calendar Tree */
@@ -929,13 +935,14 @@
    border-bottom        : 1px solid #2085c4;
    border-right         : 1px solid #2085c4;
 	padding					: 2px;
-   background-color     : white;
+   background-color     : #E7EEEC;
 }
 
 #week-view-content-box
 {
    overflow             : auto;
    border               : 1px solid #2085c4;
+   background-color     :#ffffff;
 }
 
 
@@ -943,6 +950,10 @@
 {
 }
   
+#week-view-content-holder{
+    margin-right: 3px;
+    background-color: #ffffff;
+}
 
 .week-view-event-class
 {
@@ -978,8 +989,7 @@
    font-size            : 10pt;
    font-family          : Arial, Helvetica;
    color                : #1d7ab5;
-   
-   
+   width                : 80px;
 }
 
 .week-time-class
@@ -1006,6 +1016,10 @@
 .week-view-hour-box-class-last-day
 {
    border-bottom        : 1px solid #2085c4;
+}
+
+.weekend{
+   background-color 		: #FFF9EF;
 }
 
 .week-view-hour-box-class[today="true"]
@@ -1052,7 +1066,6 @@
    -moz-box-align : start;
 }
 
-#week-view-header-spacer,
 #all-day-content-spacer
 {
   	width			: 8px;
@@ -1103,5 +1116,4 @@
    font-family          : Arial, Helvetica;
    -moz-box-align       : start;
 }
-
 

@@ -115,6 +115,7 @@ var kWeekViewHourWidth = 78;
 var kWeekViewItemWidth = 20;
 var kWeekViewHourLeftStart = 97;
 var kWeekViewHourHeightDifference = 2;
+var kDaysInWeek = 7;
 
 const kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW = "8"; //the maximum number of dots that fit in the month view
 

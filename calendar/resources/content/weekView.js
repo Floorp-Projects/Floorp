@@ -344,15 +344,18 @@ WeekView.prototype.createEventBox = function ( calendarEventDisplay, dayIndex )
    
    eventBox.calendarEventDisplay = calendarEventDisplay;
    
+   var totalWeekWidth = parseFloat(document.defaultView.getComputedStyle(document.getElementById("week-view-content-holder"), "").getPropertyValue("width")) + 1;
+   var boxLeftOffset = Math.ceil(parseFloat(document.defaultView.getComputedStyle(document.getElementById("week-tree-hour-0"), "").getPropertyValue("width")));
+   var boxWidth = (totalWeekWidth - boxLeftOffset)/ kDaysInWeek;
    var Height = ( hourDuration * kWeekViewHourHeight ) + 1;
-   var Width = ( 80 / calendarEventDisplay.NumberOfSameTimeEvents ) - 1;
+   var Width = Math.floor( boxWidth / calendarEventDisplay.NumberOfSameTimeEvents ) + 1;
    eventBox.setAttribute( "height", Height );
    eventBox.setAttribute( "width", Width );
       
    top = eval( ( startHour*kWeekViewHourHeight ) + ( ( startMinutes/60 ) * kWeekViewHourHeight ) - kWeekViewHourHeightDifference );
    eventBox.setAttribute( "top", top );
    
-   left = eval( kWeekViewHourLeftStart + ( kWeekViewHourWidth * ( dayIndex - 1 ) ) + ( ( calendarEventDisplay.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) ) + 1 );
+   left = eval( boxLeftOffset + ( boxWidth * ( dayIndex - 1 ) ) + ( ( calendarEventDisplay.CurrentSpot - 1 ) * eventBox.getAttribute( "width" ) ) ) ;
    eventBox.setAttribute( "left", left );
    
    eventBox.setAttribute( "class", "week-view-event-class" );
@@ -472,6 +475,7 @@ WeekView.prototype.refreshDisplay = function( )
 
    var dateString = "Week "+weekNumber+ ": "+firstDayMonthName + " " + firstDayOfWeek.getDate() + " - " +
                     lastDayMonthName  + " " + lastDayOfWeek.getDate();
+   
    var weekTextItem = document.getElementById( "week-title-text" );
    weekTextItem.setAttribute( "value" , dateString ); 
    
