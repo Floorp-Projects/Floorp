@@ -218,7 +218,7 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
           (NS_STYLE_BORDER_STYLE_SOLID  != bStyle)) {
         bStyle = NS_STYLE_BORDER_STYLE_SOLID;
       }
-      bStyle |= NS_STYLE_BORDER_STYLE_RULES_MASK;
+      bStyle |= NS_STYLE_BORDER_STYLE_RULES_MARKER;
       borderData->SetBorderStyle(aSide, bStyle);
 
       nscolor borderColor;
