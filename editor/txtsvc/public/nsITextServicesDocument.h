@@ -266,6 +266,14 @@ public:
    */
 
   NS_IMETHOD SetDisplayStyle(TSDDisplayStyle aStyle) = 0;
+
+  /**
+   * Returns the DOM range for a given offset and length
+   * @param aOffset offset into string returned by GetCurrentTextBlock().
+   * @param aLength number characters selected.
+   * @return aDOMRange the DOM range that represents the offset and length
+   */
+  NS_IMETHOD GetDOMRangeFor(PRInt32 aOffset, PRInt32 aLength, nsIDOMRange** aRange) = 0;
 };
 
 #endif // nsITextServicesDocument_h__

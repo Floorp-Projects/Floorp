@@ -203,6 +203,8 @@ protected:
   PRInt32              mPasswordIMEIndex;
   nsCOMPtr<nsIDOMNode> mBogusNode;     // magic node acts as placeholder in empty doc
   nsCOMPtr<nsIDOMNode> mBody;          // cached root node
+  nsCOMPtr<nsIDOMNode> mCachedSelectionNode;    // cached selected node
+  PRInt32              mCachedSelectionOffset;  // cached selected offset
   PRUint32             mFlags;
   PRUint32             mActionNesting;
   PRPackedBool         mLockRulesSniffing;

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Neil Deakin <neil@mozdevgroup.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -115,8 +116,9 @@ nsTextServicesDocument::nsTextServicesDocument()
 
 nsTextServicesDocument::~nsTextServicesDocument()
 {
-  if (mEditor && mNotifier)
-    mEditor->RemoveEditActionListener(mNotifier);
+  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
+  if (editor && mNotifier)
+    editor->RemoveEditActionListener(mNotifier);
 
   ClearOffsetTable(&mOffsetTable);
 }
@@ -281,8 +283,7 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
     }
   }
 
-  mEditor = do_QueryInterface(aEditor);
-
+  mEditor = do_GetWeakReference(aEditor);
   nsTSDNotifier *notifier = new nsTSDNotifier(this);
 
   if (!notifier)
@@ -293,7 +294,7 @@ nsTextServicesDocument::InitWithEditor(nsIEditor *aEditor)
 
   mNotifier = do_QueryInterface(notifier);
 
-  result = mEditor->AddEditActionListener(mNotifier);
+  result = aEditor->AddEditActionListener(mNotifier);
 
   UNLOCK_DOC(this);
 
@@ -321,8 +322,6 @@ nsTextServicesDocument::SetExtent(nsIDOMRange* aDOMRange)
 {
   NS_ENSURE_ARG_POINTER(aDOMRange);
   NS_ENSURE_TRUE(mDOMDocument, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mEditor, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mNotifier, NS_ERROR_FAILURE);
 
   LOCK_DOC(this);
 
@@ -548,10 +547,10 @@ nsTextServicesDocument::ExpandRangeToWordBoundaries(nsIDOMRange *aRange)
   // Now adjust the range so that it uses our new
   // end points.
 
-  result = aRange->SetStart(rngStartNode, rngStartOffset);
+  result = aRange->SetEnd(rngEndNode, rngEndOffset);
   NS_ENSURE_SUCCESS(result, result);
 
-  return aRange->SetEnd(rngEndNode, rngEndOffset);
+  return aRange->SetStart(rngStartNode, rngStartOffset);
 }
 
 NS_IMETHODIMP
@@ -569,7 +568,9 @@ nsTextServicesDocument::CanEdit(PRBool *aCanEdit)
   if (!aCanEdit)
     return NS_ERROR_NULL_POINTER;
 
-  *aCanEdit = (mEditor) ? PR_TRUE : PR_FALSE;
+  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
+
+  *aCanEdit = (editor) ? PR_TRUE : PR_FALSE;
 
   return NS_OK;
 }
@@ -1850,11 +1851,11 @@ nsTextServicesDocument::DeleteSelection()
   nsresult result = NS_OK;
 
   // We don't allow deletion during a collapsed selection!
-
-  NS_ASSERTION(mEditor, "DeleteSelection called without an editor present!"); 
+  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
+  NS_ASSERTION(editor, "DeleteSelection called without an editor present!"); 
   NS_ASSERTION(SelectionIsValid(), "DeleteSelection called without a valid selection!"); 
 
-  if (!mEditor || !SelectionIsValid())
+  if (!editor || !SelectionIsValid())
     return NS_ERROR_FAILURE;
 
   if (SelectionIsCollapsed())
@@ -2017,7 +2018,7 @@ nsTextServicesDocument::DeleteSelection()
 
   // Now delete the actual content!
 
-  result = mEditor->DeleteSelection(nsIEditor::ePrevious);
+  result = editor->DeleteSelection(nsIEditor::ePrevious);
 
   if (NS_FAILED(result))
   {
@@ -2150,9 +2151,10 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 {
   nsresult result = NS_OK;
 
-  NS_ASSERTION(mEditor, "InsertText called without an editor present!"); 
+  nsCOMPtr<nsIEditor> editor (do_QueryReferent(mEditor));
+  NS_ASSERTION(editor, "InsertText called without an editor present!"); 
 
-  if (!mEditor || !SelectionIsValid())
+  if (!editor || !SelectionIsValid())
     return NS_ERROR_FAILURE;
 
   if (!aText)
@@ -2183,7 +2185,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
   LOCK_DOC(this);
 
-  result = mEditor->BeginTransaction();
+  result = editor->BeginTransaction();
 
   if (NS_FAILED(result))
   {
@@ -2191,13 +2193,13 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     return result;
   }
 
-  nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(mEditor, &result));
+  nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(editor, &result));
   if (textEditor)
     result = textEditor->InsertText(*aText);
 
   if (NS_FAILED(result))
   {
-    mEditor->EndTransaction();
+    editor->EndTransaction();
     UNLOCK_DOC(this);
     return result;
   }
@@ -2235,7 +2237,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
       if (!itEntry)
       {
-        mEditor->EndTransaction();
+        editor->EndTransaction();
         UNLOCK_DOC(this);
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -2245,7 +2247,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
       if (!mOffsetTable.InsertElementAt(itEntry, mSelStartIndex))
       {
-        mEditor->EndTransaction();
+        editor->EndTransaction();
         UNLOCK_DOC(this);
         return NS_ERROR_FAILURE;
       }
@@ -2267,7 +2269,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
       if (!itEntry)
       {
-        mEditor->EndTransaction();
+        editor->EndTransaction();
         UNLOCK_DOC(this);
         return NS_ERROR_FAILURE;
       }
@@ -2288,7 +2290,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
       if (!itEntry)
       {
-        mEditor->EndTransaction();
+        editor->EndTransaction();
         UNLOCK_DOC(this);
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -2315,7 +2317,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
     if (NS_FAILED(result))
     {
-      mEditor->EndTransaction();
+      editor->EndTransaction();
       UNLOCK_DOC(this);
       return result;
     }
@@ -2324,7 +2326,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
         
     if (NS_FAILED(result))
     {
-      mEditor->EndTransaction();
+      editor->EndTransaction();
       UNLOCK_DOC(this);
       return result;
     }
@@ -2341,7 +2343,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
     if (NS_FAILED(result))
     {
-      mEditor->EndTransaction();
+      editor->EndTransaction();
       UNLOCK_DOC(this);
       return result;
     }
@@ -2350,7 +2352,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
     if (!itEntry)
     {
-      mEditor->EndTransaction();
+      editor->EndTransaction();
       UNLOCK_DOC(this);
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2360,7 +2362,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
     if (!mOffsetTable.InsertElementAt(itEntry, mSelStartIndex + 1))
     {
-      mEditor->EndTransaction();
+      editor->EndTransaction();
       UNLOCK_DOC(this);
       return NS_ERROR_FAILURE;
     }
@@ -2397,7 +2399,7 @@ nsTextServicesDocument::InsertText(const nsString *aText)
 
     if (NS_FAILED(result))
     {
-      mEditor->EndTransaction();
+      editor->EndTransaction();
       UNLOCK_DOC(this);
       return result;
     }
@@ -2406,13 +2408,13 @@ nsTextServicesDocument::InsertText(const nsString *aText)
   
     if (NS_FAILED(result))
     {
-      mEditor->EndTransaction();
+      editor->EndTransaction();
       UNLOCK_DOC(this);
       return result;
     }
   }
 
-  result = mEditor->EndTransaction();
+  result = editor->EndTransaction();
 
   UNLOCK_DOC(this);
 
@@ -2425,18 +2427,74 @@ nsTextServicesDocument::SetDisplayStyle(TSDDisplayStyle aStyle)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsTextServicesDocument::GetDOMRangeFor(PRInt32 aOffset, PRInt32 aLength, nsIDOMRange** aRange)
+{
+  if (!mSelCon || aOffset < 0 || aLength < 0)
+    return NS_ERROR_FAILURE;
+
+  nsIDOMNode *sNode = 0, *eNode = 0;
+  PRInt32 i, sOffset = 0, eOffset = 0;
+  OffsetEntry *entry;
+
+  // Find the start
+  for (i = 0; !sNode && i < mOffsetTable.Count(); i++)
+  {
+    entry = (OffsetEntry *)mOffsetTable[i];
+    if (entry->mIsValid)
+    {
+      if (entry->mIsInsertedText)
+      {
+        if (entry->mStrOffset == aOffset)
+        {
+          sNode   = entry->mNode;
+          sOffset = entry->mNodeOffset + entry->mLength;
+        }
+      }
+      else if (aOffset >= entry->mStrOffset && aOffset <= entry->mStrOffset + entry->mLength)
+      {
+        sNode   = entry->mNode;
+        sOffset = entry->mNodeOffset + aOffset - entry->mStrOffset;
+      }
+    }
+  }
+
+  if (!sNode)
+    return NS_ERROR_FAILURE;
+
+  // Now find the end
+  PRInt32 endOffset = aOffset + aLength;
+
+  for (i = mOffsetTable.Count() - 1; !eNode && i >= 0; i--)
+  {
+    entry = (OffsetEntry *)mOffsetTable[i];
+    
+    if (entry->mIsValid)
+    {
+      if (entry->mIsInsertedText)
+      {
+        if (entry->mStrOffset == eOffset)
+        {
+          eNode   = entry->mNode;
+          eOffset = entry->mNodeOffset + entry->mLength;
+        }
+      }
+      else if (endOffset >= entry->mStrOffset && endOffset <= entry->mStrOffset + entry->mLength)
+      {
+        eNode   = entry->mNode;
+        eOffset = entry->mNodeOffset + endOffset - entry->mStrOffset;
+      }
+    }
+  }
+
+  return CreateRange(sNode, sOffset, eNode, eOffset, aRange);
+}
+
 nsresult
 nsTextServicesDocument::InsertNode(nsIDOMNode *aNode,
                                    nsIDOMNode *aParent,
                                    PRInt32 aPosition)
 {
-  //**** KDEBUG ****
-  // printf("** InsertNode: 0x%.8x  0x%.8x  %d\n", aNode, aParent, aPosition);
-  // fflush(stdout);
-  //**** KDEBUG ****
-
-  NS_ASSERTION(0, "InsertNode called, offset tables might be out of sync."); 
-
   return NS_OK;
 }
 
@@ -2499,7 +2557,6 @@ nsTextServicesDocument::DeleteNode(nsIDOMNode *aChild)
 
     if (entry->mNode == aChild)
     {
-      NS_ASSERTION(!entry->mIsValid, "DeleteNode called for a valid node! Offset table is out of sync."); 
       entry->mIsValid = PR_FALSE;
     }
 
@@ -2520,9 +2577,6 @@ nsTextServicesDocument::SplitNode(nsIDOMNode *aExistingRightNode,
   // printf("** SplitNode: 0x%.8x  %d  0x%.8x\n", aExistingRightNode, aOffset, aNewLeftNode);
   // fflush(stdout);
   //**** KDEBUG ****
-
-  NS_ASSERTION(0, "SplitNode called, offset tables might be out of sync."); 
-
   return NS_OK;
 }
 
@@ -2589,8 +2643,6 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
 
   if (!rightHasEntry)
   {
-    // XXX: Not sure if we should be throwing an error here!
-    NS_ASSERTION(0, "JoinNode called with node not listed in offset table.");
     return NS_ERROR_FAILURE;
   }
 
@@ -4579,6 +4631,13 @@ nsTextServicesDocument::GetWordBreaker(nsIWordBreaker** aResult)
   return result;
 }
 
+// Spellchecker code has this. See bug 211343
+#ifdef XP_MAC
+#define IS_NBSP_CHAR(c) (((unsigned char)0xca)==(c))
+#else
+#define IS_NBSP_CHAR(c) (((unsigned char)0xa0)==(c))
+#endif
+
 nsresult
 nsTextServicesDocument::FindWordBounds(nsVoidArray *aOffsetTable,
                                        nsString *aBlockStr,
@@ -4627,6 +4686,18 @@ nsTextServicesDocument::FindWordBounds(nsVoidArray *aOffsetTable,
   result = aWordBreaker->FindWord(str, strLen, strOffset,
                                  &beginWord, &endWord);
   NS_ENSURE_SUCCESS(result, result);
+
+  // Strip out the NBSPs at the ends
+  while ((beginWord <= endWord) && (IS_NBSP_CHAR(str[beginWord]))) 
+    beginWord++;
+  if (str[endWord] == (unsigned char)0x20)
+  {
+    PRUint32 realEndWord = endWord - 1;
+    while ((realEndWord > beginWord) && (IS_NBSP_CHAR(str[realEndWord]))) 
+      realEndWord--;
+    if (realEndWord < endWord - 1) 
+      endWord = realEndWord + 1;
+  }
 
   // Now that we have the string offsets for the beginning
   // and end of the word, run through the offset table and

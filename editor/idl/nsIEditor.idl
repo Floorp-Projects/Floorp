@@ -51,6 +51,7 @@ interface nsITransactionManager;
 interface nsITransaction;
 interface nsIEditorObserver;
 interface nsIEditActionListener;
+interface nsIInlineSpellChecker;
 
 %{C++
 class nsIPresShell;
@@ -62,8 +63,7 @@ typedef short EDirection;
 [ptr] native nsIPresShellPtr(nsIPresShell);
 [ptr] native nsIContentPtr(nsIContent);
 
-
-[scriptable, uuid(e456440e-2e2b-4097-b3ec-60dc22b0aa9a)]
+[scriptable, uuid(D4882FFB-E927-408b-96BE-D4391B456FA9)]
 
 interface nsIEditor  : nsISupports
 {
@@ -282,6 +282,10 @@ interface nsIEditor  : nsISupports
     *          for further editing.
     */
   void setShouldTxnSetSelection(in boolean should);
+
+  /* ------------ Inline Spell Checking methods -------------- */
+
+  readonly attribute nsIInlineSpellChecker inlineSpellChecker;
 
   /* ------------ Clipboard methods -------------- */
 

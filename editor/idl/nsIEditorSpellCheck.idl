@@ -40,7 +40,7 @@
 interface nsIEditor;
 interface nsITextServicesFilter;
 
-[scriptable, uuid(87ce8b81-1cf2-11d3-9ce4-c60a16061e7c)]
+[scriptable, uuid(6088a862-1229-11d9-941d-c035b2e390c6)]
 interface nsIEditorSpellCheck : nsISupports
 {
 
@@ -59,5 +59,6 @@ interface nsIEditorSpellCheck : nsISupports
   void          SetCurrentDictionary(in wstring dictionary);
   void          UninitSpellChecker();
   void          setFilter(in nsITextServicesFilter filter);
+  boolean       CheckCurrentWordNoSuggest(in wstring suggestedWord);
 
 };

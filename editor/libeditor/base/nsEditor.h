@@ -59,6 +59,8 @@
 #include "nsIDTD.h"
 #include "nsIDOMElement.h"
 #include "nsSelectionState.h"
+#include "nsIEditorSpellCheck.h"
+#include "nsIInlineSpellChecker.h"
 
 class nsIEditActionListener;
 class nsIDocumentStateListener;
@@ -547,6 +549,15 @@ public:
 
   PRBool GetShouldTxnSetSelection();
 
+  nsresult HandleInlineSpellCheck(PRInt32 action,
+                                    nsISelection *aSelection,
+                                    nsIDOMNode *previousSelectedNode,
+                                    PRInt32 previousSelectedOffset,
+                                    nsIDOMNode *aStartNode,
+                                    PRInt32 aStartOffset,
+                                    nsIDOMNode *aEndNode,
+                                    PRInt32 aEndOffset);
+
 public:
   // Argh!  These transaction names are used by PlaceholderTxn and
   // nsPlaintextEditor.  They should be localized to those classes.
@@ -563,6 +574,7 @@ protected:
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
   nsIViewManager *mViewManager;
   PRInt32         mUpdateCount;
+  nsCOMPtr<nsIInlineSpellChecker> mInlineSpellChecker;  // used for real-time spellchecking
   nsCOMPtr<nsITransactionManager> mTxnMgr;
   nsWeakPtr         mPlaceHolderTxn;     // weak reference to placeholder for begin/end batch purposes
   nsIAtom          *mPlaceHolderName;    // name of placeholder transaction

@@ -280,7 +280,22 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
   // create a dom document fragment that represents the structure to paste
   nsCOMPtr<nsIDOMNode> fragmentAsNode;
   PRInt32 rangeStartHint, rangeEndHint;
-  res = CreateDOMFragmentFromPaste(aInputString, aContextStr, aInfoStr, 
+
+  nsAutoString contextStr;
+  contextStr.Assign(aContextStr);
+
+#ifdef MOZ_THUNDERBIRD
+  // See Bug #228920 --> editor / parser has trouble inserting single cell data from Excel.
+  // The details are in the bug. Until we figure out why the parser is not building the right 
+  // document structure for the single cell paste case, we can explicitly check for just such  
+  // a condition and work around it. By setting the contextStr to an empty string we end up 
+  // pasting just the cell text which is what we want anyway. 
+  // A paste from an excel cell always starts with a new line, two spaces and then the td tag
+  if (StringBeginsWith(aInputString, NS_LITERAL_STRING("\n  <td"))) 
+    contextStr = NS_LITERAL_STRING("");
+#endif
+
+  res = CreateDOMFragmentFromPaste(aInputString, contextStr, aInfoStr, 
                                             address_of(fragmentAsNode),
                                             &rangeStartHint, &rangeEndHint);
   NS_ENSURE_SUCCESS(res, res);

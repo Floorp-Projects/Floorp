@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  txmgr \
+		  txtsvc \
 		  htmlparser \
 		  necko \
 		  pref \

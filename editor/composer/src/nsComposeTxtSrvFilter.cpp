@@ -49,6 +49,7 @@ nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
   mPreAtom         = do_GetAtom("pre");
   mSpanAtom        = do_GetAtom("span");
   mMozQuoteAtom    = do_GetAtom("_moz_quote");
+  mClassAtom       = do_GetAtom("class");
   mTypeAtom        = do_GetAtom("type");
   mScriptAtom      = do_GetAtom("script");
   mTextAreaAtom    = do_GetAtom("textarea");
@@ -81,6 +82,11 @@ nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, PRBool *_retval)
         nsAutoString mozQuote;
         if (NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, mMozQuoteAtom, mozQuote))) {
           *_retval = mozQuote.LowerCaseEqualsLiteral("true");            
+        }
+
+        nsAutoString className;
+        if (NS_SUCCEEDED(content->GetAttr(kNameSpaceID_None, mClassAtom, className))) {
+          *_retval = className.EqualsLiteral("moz-signature");
         }
       }         
     } else if (tag == mScriptAtom ||

@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Daniel Glazman <glazman@netscape.com>
+ *   Neil Deakin <neil@mozdevgroup.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -425,13 +426,16 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
   nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   
+  nsCOMPtr<nsIDOMNode> rangeStartParent, rangeEndParent;
+  PRInt32 rangeStartOffset = 0, rangeEndOffset = 0;
   // do we have a real range to act on?
   PRBool bDamagedRange = PR_FALSE;  
   if (mDocChangeRange)
   {  
-    nsCOMPtr<nsIDOMNode> rangeStartParent, rangeEndParent;
     mDocChangeRange->GetStartContainer(getter_AddRefs(rangeStartParent));
     mDocChangeRange->GetEndContainer(getter_AddRefs(rangeEndParent));
+    mDocChangeRange->GetStartOffset(&rangeStartOffset);
+    mDocChangeRange->GetEndOffset(&rangeEndOffset);
     if (rangeStartParent && rangeEndParent) 
       bDamagedRange = PR_TRUE; 
   }
@@ -540,11 +544,19 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
     }    
   }
 
+  res = mHTMLEditor->HandleInlineSpellCheck(action, selection, 
+                                            mRangeItem.startNode, mRangeItem.startOffset,
+                                            rangeStartParent, rangeStartOffset,
+                                            rangeEndParent, rangeEndOffset);
+  if (NS_FAILED(res)) 
+    return res;
+
   // detect empty doc
   res = CreateBogusNodeIfNeeded(selection);
   
   // adjust selection HINT if needed
-  if (NS_FAILED(res)) return res;
+  if (NS_FAILED(res)) 
+    return res;
   
   if (!mDidExplicitlySetInterline)
   {
