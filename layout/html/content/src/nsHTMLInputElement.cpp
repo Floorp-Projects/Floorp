@@ -32,8 +32,15 @@
 #include "nsIForm.h"
 #include "nsIWidget.h"
 #include "nsITextWidget.h"
+// XXX: All of the header files related to accessing widgets directly
+// should be removed when all widget references are replaced with
+// frame references.
 #include "nsICheckButton.h"
 #include "nsIRadioButton.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIFormControlFrame.h"
+#include "nsIFrame.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -44,6 +51,7 @@ static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
+static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 
 class nsHTMLInputElement : public nsIDOMHTMLInputElement,
                            public nsIScriptObjectOwner,
@@ -130,6 +138,9 @@ protected:
   nsIWidget*               mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
   nsIForm*                 mForm;
   PRInt32                  mType;
+
+   // Return the primary frame associated with this content
+  nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame);   
 
   PRBool IsImage() const {
     nsAutoString tmp;
@@ -661,3 +672,27 @@ nsHTMLInputElement::GetStyleHintForAttributeChange(
 
   return NS_OK;
 }
+
+nsresult nsHTMLInputElement::GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame)
+{
+  nsIDocument* doc = nsnull;
+  nsresult res;
+   // Get the document
+  if (NS_OK == GetDocument(doc)) {
+     // Get presentation shell 0
+    nsIPresShell* presShell = doc->GetShellAt(0);
+    if (nsnull != presShell) {
+      nsIFrame *frame = nsnull;
+      presShell->GetPrimaryFrameFor(this, frame);
+      if (nsnull != frame) {
+        res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aFormControlFrame);
+      }
+      NS_RELEASE(presShell);
+    }
+  NS_RELEASE(doc);
+  }
+
+  return res;
+}
+           
+
