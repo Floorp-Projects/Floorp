@@ -252,22 +252,19 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
         rv = NS_New_HTMLToTXT_SinkStream(&sink, aStream, charset,
                                          mWrapColumn, mFlags);
 
-    	if (sink && NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv))
       {
+        parser->SetContentSink(sink);
+
+        nsIDTD* dtd = nsnull;
+        rv = NS_NewXIFDTD(&dtd);
         if (NS_SUCCEEDED(rv))
         {
-          parser->SetContentSink(sink);
-
-          nsIDTD* dtd = nsnull;
-          rv = NS_NewXIFDTD(&dtd);
-          if (NS_SUCCEEDED(rv))
-          {
-            parser->RegisterDTD(dtd);
-            parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);
-          }
-          NS_IF_RELEASE(dtd);
-          NS_IF_RELEASE(sink);
+          parser->RegisterDTD(dtd);
+          parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);
         }
+        NS_IF_RELEASE(dtd);
+        NS_IF_RELEASE(sink);
       }
       NS_RELEASE(parser);
     }
