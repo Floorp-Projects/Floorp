@@ -179,28 +179,51 @@ protected:
   PRBool ParseFontFaceRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParsePageRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
 
-  void ParseIDSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
-                         PRInt32& aParsingStatus, nsresult& aErrorCode);
-  void ParseClassSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
-                         PRInt32& aParsingStatus, nsresult& aErrorCode);
-  void ParsePseudoSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
-                         PRInt32& aParsingStatus, nsresult& aErrorCode,
-                         PRBool aIsNegated);
-  void ParseAttributeSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
-                         PRInt32& aParsingStatus, nsresult& aErrorCode);
+  enum nsSelectorParsingStatus {
+    // we have parsed a selector and we saw a token that cannot be part of a selector:
+    eSelectorParsingStatus_Done,
+    // we should continue parsing the selector:
+    eSelectorParsingStatus_Continue,
+    // same as "Done" but we did not find a selector:
+    eSelectorParsingStatus_Empty,
+    // we saw an unexpected token or token value,
+    // or we saw end-of-file with an unfinished selector:
+    eSelectorParsingStatus_Error 
+  };
+  nsSelectorParsingStatus ParseIDSelector(PRInt32&       aDataMask,
+                                          nsCSSSelector& aSelector,
+                                          nsresult&      aErrorCode);
 
-  void ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
-                         nsCSSSelector& aSelector,
-                         PRInt32& aParsingStatus, nsresult& aErrorCode,
-                         PRBool aIsNegated);
-  void ParseNegatedSimpleSelector(PRInt32&  aDataMask, nsCSSSelector& aSelector,
-                         PRInt32& aParsingStatus, nsresult& aErrorCode);
-  void ParseLangSelector(nsCSSSelector& aSelector, PRInt32& aParsingStatus,
-                         nsresult& aErrorCode);
+  nsSelectorParsingStatus ParseClassSelector(PRInt32&       aDataMask,
+                                             nsCSSSelector& aSelector,
+                                             nsresult&      aErrorCode);
+
+  nsSelectorParsingStatus ParsePseudoSelector(PRInt32&       aDataMask,
+                                              nsCSSSelector& aSelector,
+                                              nsresult&      aErrorCode,
+                                              PRBool         aIsNegated);
+
+  nsSelectorParsingStatus ParseAttributeSelector(PRInt32&       aDataMask,
+                                                 nsCSSSelector& aSelector,
+                                                 nsresult&      aErrorCode);
+
+  nsSelectorParsingStatus ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
+                                                       nsCSSSelector& aSelector,
+                                                       nsresult&      aErrorCode,
+                                                       PRBool         aIsNegated);
+
+  nsSelectorParsingStatus ParseLangSelector(nsCSSSelector& aSelector,
+                                            nsresult&      aErrorCode);
+
+  nsSelectorParsingStatus ParseNegatedSimpleSelector(PRInt32&       aDataMask,
+                                                     nsCSSSelector& aSelector,
+                                                     nsresult&      aErrorCode);
+
+  nsSelectorParsingStatus ParseSelector(nsresult&      aErrorCode,
+                                        nsCSSSelector& aSelectorResult);
 
   PRBool ParseSelectorList(nsresult& aErrorCode, nsCSSSelectorList*& aListHead);
   PRBool ParseSelectorGroup(nsresult& aErrorCode, nsCSSSelectorList*& aListHead);
-  PRBool ParseSelector(nsresult& aErrorCode, nsCSSSelector& aSelectorResult);
   nsCSSDeclaration* ParseDeclarationBlock(nsresult& aErrorCode,
                                            PRBool aCheckForBraces);
   PRBool ParseDeclaration(nsresult& aErrorCode,
@@ -1651,7 +1674,18 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
   PRBool        done = PR_FALSE;
   while (!done) {
     nsCSSSelector selector;
-    if (! ParseSelector(aErrorCode, selector)) {
+    nsSelectorParsingStatus parsingStatus = ParseSelector(aErrorCode, selector);
+    if (parsingStatus == eSelectorParsingStatus_Empty) {
+      if (!list) {
+        REPORT_UNEXPECTED(PESelectorGroupNoSelector);
+      }
+      break;
+    }
+    if (parsingStatus == eSelectorParsingStatus_Error) {
+      if (list) {
+        delete list;
+        list = nsnull;
+      }
       break;
     }
     if (nsnull == list) {
@@ -1747,14 +1781,12 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
       weight += selector.CalcWeight();
     }
   }
-  if (!list) {
-    REPORT_UNEXPECTED(PESelectorGroupNoSelector);
-  }
+
   if (PRUnichar(0) != combinator) { // no dangling combinators
     if (list) {
       delete list;
+      list = nsnull;
     }
-    list = nsnull;
     // This should report the problematic combinator
     REPORT_UNEXPECTED(PESelectorGroupExtraCombinator);
   }
@@ -1773,17 +1805,13 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
 #define SEL_MASK_PCLASS   0x20
 #define SEL_MASK_PELEM    0x40
 
-#define SELECTOR_PARSING_ENDED_OK       1
-#define SELECTOR_PARSING_STOPPED_OK     2
-#define SELECTOR_PARSING_STOPPED_ERROR  3
-
 //
 // Parses an ID selector #name
 //
-void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
-                                    nsCSSSelector& aSelector,
-                                    PRInt32& aParsingStatus,
-                                    nsresult& aErrorCode)
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParseIDSelector(PRInt32&       aDataMask,
+                               nsCSSSelector& aSelector,
+                               nsresult&      aErrorCode)
 {
   if (!mToken.mIdent.IsEmpty()) { // verify is legal ID
     PRUnichar first = mToken.mIdent.First();
@@ -1795,8 +1823,7 @@ void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
                                    nsCSSScanner::GetLexTable())) {
       REPORT_UNEXPECTED_TOKEN(PEIDSelNotIdent);
       UngetToken();
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
     aDataMask |= SEL_MASK_ID;
     aSelector.AddID(mToken.mIdent);
@@ -1804,47 +1831,44 @@ void CSSParserImpl::ParseIDSelector(PRInt32&  aDataMask,
   else {
     REPORT_UNEXPECTED_TOKEN(PEIDSelEmpty);
     UngetToken();
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
-  aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+  return eSelectorParsingStatus_Continue;
 }
 
 //
 // Parses a class selector .name
 //
-void CSSParserImpl::ParseClassSelector(PRInt32&  aDataMask,
-                                        nsCSSSelector& aSelector,
-                                        PRInt32& aParsingStatus,
-                                        nsresult& aErrorCode)
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParseClassSelector(PRInt32&       aDataMask,
+                                  nsCSSSelector& aSelector,
+                                  nsresult&      aErrorCode)
 {
   if (! GetToken(aErrorCode, PR_FALSE)) { // get ident
     REPORT_UNEXPECTED_EOF(PEClassSelEOF);
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
   if (eCSSToken_Ident != mToken.mType) {  // malformed selector
     REPORT_UNEXPECTED_TOKEN(PEClassSelNotIdent);
     UngetToken();
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
   aDataMask |= SEL_MASK_CLASS;
 
   aSelector.AddClass(mToken.mIdent);
 
-  aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+  return eSelectorParsingStatus_Continue;
 }
 
 //
 // Parse a type element selector or a universal selector
 // namespace|type or namespace|* or *|* or *
 //
-void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
-                                      nsCSSSelector& aSelector,
-                                      PRInt32& aParsingStatus,
-                                      nsresult& aErrorCode,
-                                      PRBool aIsNegated)
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&       aDataMask,
+                                            nsCSSSelector& aSelector,
+                                            nsresult&      aErrorCode,
+                                            PRBool         aIsNegated)
 {
   nsAutoString buffer;
   if (mToken.IsSymbol('*')) {  // universal element selector, or universal namespace
@@ -1854,8 +1878,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
 
       if (! GetToken(aErrorCode, PR_FALSE)) {
         REPORT_UNEXPECTED_EOF(PETypeSelEOF);
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
       if (eCSSToken_Ident == mToken.mType) {  // element name
         aDataMask |= SEL_MASK_ELEM;
@@ -1874,8 +1897,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       else {
         REPORT_UNEXPECTED_TOKEN(PETypeSelNotType);
         UngetToken();
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
     }
     else {  // was universal element selector
@@ -1893,8 +1915,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       // don't set any tag in the selector
     }
     if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
-      aParsingStatus = SELECTOR_PARSING_STOPPED_OK;
-      return;
+      return eSelectorParsingStatus_Done;
     }
   }
   else if (eCSSToken_Ident == mToken.mType) {    // element name or namespace name
@@ -1913,15 +1934,13 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
           buffer.get()
         };
         REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
       aSelector.SetNameSpace(nameSpaceID);
 
       if (! GetToken(aErrorCode, PR_FALSE)) {
         REPORT_UNEXPECTED_EOF(PETypeSelEOF);
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
       if (eCSSToken_Ident == mToken.mType) {  // element name
         aDataMask |= SEL_MASK_ELEM;
@@ -1940,8 +1959,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       else {
         REPORT_UNEXPECTED_TOKEN(PETypeSelNotType);
         UngetToken();
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
     }
     else {  // was element name
@@ -1965,8 +1983,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
       aDataMask |= SEL_MASK_ELEM;
     }
     if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
-      aParsingStatus = SELECTOR_PARSING_STOPPED_OK;
-      return;
+      return eSelectorParsingStatus_Done;
     }
   }
   else if (mToken.IsSymbol('|')) {  // No namespace
@@ -1976,8 +1993,7 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
     // get mandatory tag
     if (! GetToken(aErrorCode, PR_FALSE)) {
       REPORT_UNEXPECTED_EOF(PETypeSelEOF);
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
     if (eCSSToken_Ident == mToken.mType) {  // element name
       aDataMask |= SEL_MASK_ELEM;
@@ -1996,12 +2012,10 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
     else {
       REPORT_UNEXPECTED_TOKEN(PETypeSelNotType);
       UngetToken();
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
     if (! GetToken(aErrorCode, PR_FALSE)) {   // premature eof is ok (here!)
-      aParsingStatus = SELECTOR_PARSING_STOPPED_OK;
-      return;
+      return eSelectorParsingStatus_Done;
     }
   }
   else {
@@ -2019,26 +2033,25 @@ void CSSParserImpl::ParseTypeOrUniversalSelector(PRInt32&  aDataMask,
     }
   }
 
-  aParsingStatus = SELECTOR_PARSING_ENDED_OK;
   if (aIsNegated) {
     // restore last token read in case of a negated type selector
     UngetToken();
   }
+  return eSelectorParsingStatus_Continue;
 }
 
 //
 // Parse attribute selectors [attr], [attr=value], [attr|=value],
 // [attr~=value], [attr^=value], [attr$=value] and [attr*=value]
 //
-void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParseAttributeSelector(PRInt32&       aDataMask,
                                       nsCSSSelector& aSelector,
-                                      PRInt32& aParsingStatus,
-                                      nsresult& aErrorCode)
+                                      nsresult&      aErrorCode)
 {
   if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
     REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
 
   PRInt32 nameSpaceID = kNameSpaceID_None;
@@ -2048,8 +2061,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
     if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
         REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
       if (eCSSToken_Ident == mToken.mType) { // attr name
         attr = mToken.mIdent;
@@ -2057,21 +2069,18 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
       else {
         REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
         UngetToken();
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
        }
     }
     else {
       REPORT_UNEXPECTED_TOKEN(PEAttSelNoBar);
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
   }
   else if (mToken.IsSymbol('|')) { // NO namespace
     if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
       REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
     if (eCSSToken_Ident == mToken.mType) { // attr name
       attr = mToken.mIdent;
@@ -2079,8 +2088,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
     else {
       REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
       UngetToken();
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
   }
   else if (eCSSToken_Ident == mToken.mType) { // attr name or namespace
@@ -2097,13 +2105,11 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
           attr.get()
         };
         REPORT_UNEXPECTED_P(PEUnknownNamespacePrefix, params);
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
       if (! GetToken(aErrorCode, PR_FALSE)) { // premature EOF
         REPORT_UNEXPECTED_EOF(PEAttributeNameEOF);
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
       if (eCSSToken_Ident == mToken.mType) { // attr name
         attr = mToken.mIdent;
@@ -2111,16 +2117,14 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
       else {
         REPORT_UNEXPECTED_TOKEN(PEAttributeNameExpected);
         UngetToken();
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
     }
   }
   else {  // malformed
     REPORT_UNEXPECTED_TOKEN(PEAttributeNameOrNamespaceExpected);
     UngetToken();
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
 
   if (! mCaseSensitive) {
@@ -2128,8 +2132,7 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
   }
   if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
     REPORT_UNEXPECTED_EOF(PEAttSelInnerEOF);
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
   if ((eCSSToken_Symbol == mToken.mType) ||
       (eCSSToken_Includes == mToken.mType) ||
@@ -2164,21 +2167,18 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
     else {
       REPORT_UNEXPECTED_TOKEN(PEAttSelUnexpected);
       UngetToken(); // bad function
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
     if (NS_ATTR_FUNC_SET != func) { // get value
       if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
         REPORT_UNEXPECTED_EOF(PEAttSelValueEOF);
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
       if ((eCSSToken_Ident == mToken.mType) || (eCSSToken_String == mToken.mType)) {
         nsAutoString  value(mToken.mIdent);
         if (! GetToken(aErrorCode, PR_TRUE)) { // premature EOF
           REPORT_UNEXPECTED_EOF(PEAttSelCloseEOF);
-          aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-          return;
+          return eSelectorParsingStatus_Error;
         }
         if (mToken.IsSymbol(']')) {
           PRBool isCaseSensitive = mCaseSensitive;
@@ -2207,40 +2207,36 @@ void CSSParserImpl::ParseAttributeSelector(PRInt32&  aDataMask,
         else {
           REPORT_UNEXPECTED_TOKEN(PEAttSelNoClose);
           UngetToken();
-          aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-          return;
+          return eSelectorParsingStatus_Error;
         }
       }
       else {
         REPORT_UNEXPECTED_TOKEN(PEAttSelBadValue);
         UngetToken();
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
     }
   }
   else {
     REPORT_UNEXPECTED_TOKEN(PEAttSelUnexpected);
     UngetToken(); // bad dog, no biscut!
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
    }
-   aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+   return eSelectorParsingStatus_Continue;
 }
 
 //
 // Parse pseudo-classes and pseudo-elements
 //
-void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
-                                      nsCSSSelector& aSelector,
-                                      PRInt32& aParsingStatus,
-                                      nsresult& aErrorCode,
-                                      PRBool aIsNegated)
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
+                                   nsCSSSelector& aSelector,
+                                   nsresult&      aErrorCode,
+                                   PRBool         aIsNegated)
 {
   if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
     REPORT_UNEXPECTED_EOF(PEPseudoSelEOF);
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
 
   // First, find out whether we are parsing a CSS3 pseudo-element
@@ -2249,8 +2245,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     parsingPseudoElement = PR_TRUE;
     if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
       REPORT_UNEXPECTED_EOF(PEPseudoSelEOF);
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
   }
 
@@ -2259,8 +2254,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     // malformed selector
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelBadName);
     UngetToken();
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
 
   // OK, now we know we have an mIdent.  Atomize it.  All the atoms, for
@@ -2297,8 +2291,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
        nsCSSPseudoClasses::lang == pseudo)) { // There are no other function pseudos
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelNonFunc);
     UngetToken();
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
   
   // If it starts with "::", it better be a pseudo-element
@@ -2307,35 +2300,34 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
       !isAnonBox) {
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelNotPE);
     UngetToken();
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
 
   if (nsCSSPseudoClasses::notPseudo == pseudo) {
     if (aIsNegated) { // :not() can't be itself negated
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelDoubleNot);
       UngetToken();
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
     // CSS 3 Negation pseudo-class takes one simple selector as argument
-    ParseNegatedSimpleSelector(aDataMask, aSelector, aParsingStatus, aErrorCode);
-    if (SELECTOR_PARSING_ENDED_OK != aParsingStatus) {
-      return;
+    nsSelectorParsingStatus parsingStatus =
+      ParseNegatedSimpleSelector(aDataMask, aSelector, aErrorCode);
+    if (eSelectorParsingStatus_Continue != parsingStatus) {
+      return parsingStatus;
     }
   }    
   else if (!parsingPseudoElement &&
            nsCSSPseudoClasses::IsPseudoClass(pseudo)) {
     aDataMask |= SEL_MASK_PCLASS;
     if (nsCSSPseudoClasses::lang == pseudo) {
-      ParseLangSelector(aSelector, aParsingStatus, aErrorCode);
+      nsSelectorParsingStatus parsingStatus = ParseLangSelector(aSelector, aErrorCode);
+      if (eSelectorParsingStatus_Continue != parsingStatus) {
+        return parsingStatus;
+      }
     }
     // XXX are there more pseudo classes which accept arguments ?
     else {
       aSelector.AddPseudoClass(pseudo);
-    }
-    if (SELECTOR_PARSING_ENDED_OK != aParsingStatus) {
-      return;
     }
   }
   else if (isPseudoElement || isAnonBox) {
@@ -2344,8 +2336,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     if (aIsNegated) { // pseudo-elements can't be negated
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelPEInNot);
       UngetToken();
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
     // CSS2 pseudo-elements and -moz-tree-* pseudo-elements are allowed
     // to have a single ':' on them.  Others (CSS3+ pseudo-elements and
@@ -2359,8 +2350,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
         ) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelNewStyleOnly);
       UngetToken();
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;      
+      return eSelectorParsingStatus_Error;
     }
 
     if (0 == (aDataMask & SEL_MASK_PELEM)) {
@@ -2374,8 +2364,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
         // item in the list to the pseudoclass list.  They will be pulled
         // from the list later along with the pseudo-element.
         if (!ParseTreePseudoElement(aErrorCode, aSelector)) {
-          aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-          return;
+          return eSelectorParsingStatus_Error;
         }
       }
 #endif
@@ -2385,194 +2374,178 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
         if ((eCSSToken_WhiteSpace == mToken.mType) || 
             (mToken.IsSymbol('{') || mToken.IsSymbol(','))) {
           UngetToken();
-          aParsingStatus = SELECTOR_PARSING_STOPPED_OK;
-          return;
+          return eSelectorParsingStatus_Done;
         }
         REPORT_UNEXPECTED_TOKEN(PEPseudoSelTrailing);
         UngetToken();
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
+        return eSelectorParsingStatus_Error;
       }
     }
     else {  // multiple pseudo elements, not legal
       REPORT_UNEXPECTED_TOKEN(PEPseudoSelMultiplePE);
       UngetToken();
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
+      return eSelectorParsingStatus_Error;
     }
   } else {
     // Not a pseudo-class, not a pseudo-element.... forget it
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelUnknown);
     UngetToken();
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    return;
+    return eSelectorParsingStatus_Error;
   }
-  aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+  return eSelectorParsingStatus_Continue;
 }
 
 //
 // Parse the argument of a negation pseudo-class :not()
 //
-void CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&  aDataMask,
-                                      nsCSSSelector& aSelector,
-                                      PRInt32& aParsingStatus,
-                                      nsresult& aErrorCode)
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
+                                          nsCSSSelector& aSelector,
+                                          nsresult&      aErrorCode)
 {
   // Check if we have the first parenthesis
-  if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
-    
-    if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
-      REPORT_UNEXPECTED_EOF(PENegationEOF);
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
-    }
-    aParsingStatus = SELECTOR_PARSING_ENDED_OK;
+  if (!ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
+    REPORT_UNEXPECTED_TOKEN(PENegationBadArg);
+    return eSelectorParsingStatus_Error;
+  }
+
+  if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof
+    REPORT_UNEXPECTED_EOF(PENegationEOF);
+    return eSelectorParsingStatus_Error;
+  }
+  if (!aSelector.mNegations) {
+    aSelector.mNegations = new nsCSSSelector();
     if (!aSelector.mNegations) {
-      aSelector.mNegations = new nsCSSSelector();
-      if (!aSelector.mNegations) {
-        aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
-      }
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      return eSelectorParsingStatus_Error;
     }
-    // ID, class and attribute selectors and pseudo-classes are stored in
-    // the first mNegations attached to a selector
-    if (eCSSToken_ID == mToken.mType) {   // #id
-      ParseIDSelector(aDataMask, *aSelector.mNegations, aParsingStatus, aErrorCode);
-    }
-    else if (mToken.IsSymbol('.')) {  // .class
-      ParseClassSelector(aDataMask, *aSelector.mNegations, aParsingStatus, aErrorCode);
-    }
-    else if (mToken.IsSymbol(':')) { // :pseudo
-      ParsePseudoSelector(aDataMask, *aSelector.mNegations, aParsingStatus, aErrorCode, PR_TRUE);
-    }
-    else if (mToken.IsSymbol('[')) {  // attribute
-      ParseAttributeSelector(aDataMask, *aSelector.mNegations, aParsingStatus, aErrorCode);
-    }
-    else {
-      // then it should be a type element or universal selector
-      nsCSSSelector *newSel = new nsCSSSelector();
-      if (!newSel) {
-        aErrorCode = NS_ERROR_OUT_OF_MEMORY;
-        aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-        return;
-      }
-      nsCSSSelector* negations = aSelector.mNegations;
-      while (nsnull != negations->mNegations) {
-        negations = negations->mNegations;
-      }
-      // negated type element selectors and universal selectors are stored after the first
-      // mNegations containing only negated IDs, classes, attributes and pseudo-classes
-      negations->mNegations = newSel;
-      ParseTypeOrUniversalSelector(aDataMask, *newSel, aParsingStatus, aErrorCode, PR_TRUE);
-    }
-    if (SELECTOR_PARSING_STOPPED_ERROR == aParsingStatus) {
-      REPORT_UNEXPECTED_TOKEN(PENegationBadInner);
-      return;
-    }
-    // close the parenthesis
-    if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-      REPORT_UNEXPECTED_TOKEN(PENegationNoClose);
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    }
+  }
+  // ID, class and attribute selectors and pseudo-classes are stored in
+  // the first mNegations attached to a selector
+  nsSelectorParsingStatus parsingStatus;
+  if (eCSSToken_ID == mToken.mType) { // #id
+    parsingStatus = ParseIDSelector(aDataMask, *aSelector.mNegations, aErrorCode);
+  }
+  else if (mToken.IsSymbol('.')) {    // .class
+    parsingStatus = ParseClassSelector(aDataMask, *aSelector.mNegations, aErrorCode);
+  }
+  else if (mToken.IsSymbol(':')) {    // :pseudo
+    parsingStatus = ParsePseudoSelector(aDataMask, *aSelector.mNegations, aErrorCode, PR_TRUE);
+  }
+  else if (mToken.IsSymbol('[')) {    // [attribute
+    parsingStatus = ParseAttributeSelector(aDataMask, *aSelector.mNegations, aErrorCode);
   }
   else {
-    REPORT_UNEXPECTED_TOKEN(PENegationBadArg);
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    // then it should be a type element or universal selector
+    nsCSSSelector *newSel = new nsCSSSelector();
+    if (!newSel) {
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      return eSelectorParsingStatus_Error;
+    }
+    nsCSSSelector* negations = aSelector.mNegations;
+    while (nsnull != negations->mNegations) {
+      negations = negations->mNegations;
+    }
+    // negated type element selectors and universal selectors are stored after the first
+    // mNegations containing only negated IDs, classes, attributes and pseudo-classes
+    negations->mNegations = newSel;
+    parsingStatus = ParseTypeOrUniversalSelector(aDataMask, *newSel, aErrorCode, PR_TRUE);
   }
+  if (eSelectorParsingStatus_Error == parsingStatus) {
+    REPORT_UNEXPECTED_TOKEN(PENegationBadInner);
+    return parsingStatus;
+  }
+  // close the parenthesis
+  if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(PENegationNoClose);
+    return eSelectorParsingStatus_Error;
+  }
+
+  return eSelectorParsingStatus_Continue;
 }
 
 //
 // Parse the argument of a pseudo-class :lang()
 //
-void CSSParserImpl::ParseLangSelector(nsCSSSelector& aSelector,
-                                      PRInt32& aParsingStatus,
-                                      nsresult& aErrorCode)
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParseLangSelector(nsCSSSelector& aSelector, nsresult& aErrorCode)
 {
   // Check if we have the first parenthesis
-  if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
-
-    if (! GetToken(aErrorCode, PR_TRUE)) { // premature eof
-      REPORT_UNEXPECTED_EOF(PELangArgEOF);
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
-    }
-    // We expect an identifier with a language abbreviation
-    if (eCSSToken_Ident != mToken.mType) {
-      REPORT_UNEXPECTED_TOKEN(PELangArgNotIdent);
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-      return;
-    }
-
-    // Add the pseudo with the language parameter
-    aSelector.AddPseudoClass(nsCSSPseudoClasses::lang, mToken.mIdent.get());
-
-    // close the parenthesis
-    if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-      REPORT_UNEXPECTED_TOKEN(PELangNoClose);
-      aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
-    }
-  }
-  else {
+  if (!ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
     REPORT_UNEXPECTED_TOKEN(PELangNoArg);
-    aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
+    return eSelectorParsingStatus_Error;
   }
+
+  if (! GetToken(aErrorCode, PR_TRUE)) { // premature eof
+    REPORT_UNEXPECTED_EOF(PELangArgEOF);
+    return eSelectorParsingStatus_Error;
+  }
+  // We expect an identifier with a language abbreviation
+  if (eCSSToken_Ident != mToken.mType) {
+    REPORT_UNEXPECTED_TOKEN(PELangArgNotIdent);
+    UngetToken();
+    return eSelectorParsingStatus_Error;
+  }
+
+  // Add the pseudo with the language parameter
+  aSelector.AddPseudoClass(nsCSSPseudoClasses::lang, mToken.mIdent.get());
+
+  // close the parenthesis
+  if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(PELangNoClose);
+    return eSelectorParsingStatus_Error;
+  }
+
+  return eSelectorParsingStatus_Continue;
 }
 
 /**
  * This is the format for selectors:
  * operator? [[namespace |]? element_name]? [ ID | class | attrib | pseudo ]*
  */
-PRBool CSSParserImpl::ParseSelector(nsresult& aErrorCode,
-                                nsCSSSelector& aSelector)
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParseSelector(nsresult& aErrorCode, nsCSSSelector& aSelector)
 {
-  PRInt32  dataMask = 0;
-  PRInt32  parsingStatus = SELECTOR_PARSING_ENDED_OK;
-
   if (! GetToken(aErrorCode, PR_TRUE)) {
     REPORT_UNEXPECTED_EOF(PESelectorEOF);
-    return PR_FALSE;
+    return eSelectorParsingStatus_Error;
   }
 
-  ParseTypeOrUniversalSelector(dataMask, aSelector, parsingStatus, aErrorCode, PR_FALSE);
-  if (SELECTOR_PARSING_STOPPED_OK == parsingStatus) {
-    return PR_TRUE;
-  }
-  else if (SELECTOR_PARSING_STOPPED_ERROR == parsingStatus) {
-    return PR_FALSE;
+  PRInt32 dataMask = 0;
+  nsSelectorParsingStatus parsingStatus =
+    ParseTypeOrUniversalSelector(dataMask, aSelector, aErrorCode, PR_FALSE);
+  if (parsingStatus != eSelectorParsingStatus_Continue) {
+    return parsingStatus;
   }
 
   for (;;) {
-    parsingStatus = SELECTOR_PARSING_ENDED_OK;
-    if (eCSSToken_ID == mToken.mType) {   // #id
-      ParseIDSelector(dataMask, aSelector, parsingStatus, aErrorCode);
+    if (eCSSToken_ID == mToken.mType) { // #id
+      parsingStatus = ParseIDSelector(dataMask, aSelector, aErrorCode);
     }
-    else if (mToken.IsSymbol('.')) {  // .class
-      ParseClassSelector(dataMask, aSelector, parsingStatus, aErrorCode);
+    else if (mToken.IsSymbol('.')) {    // .class
+      parsingStatus = ParseClassSelector(dataMask, aSelector, aErrorCode);
     }
-    else if (mToken.IsSymbol(':')) { // :pseudo
-      ParsePseudoSelector(dataMask, aSelector, parsingStatus, aErrorCode, PR_FALSE);
+    else if (mToken.IsSymbol(':')) {    // :pseudo
+      parsingStatus = ParsePseudoSelector(dataMask, aSelector, aErrorCode, PR_FALSE);
     }
-    else if (mToken.IsSymbol('[')) {  // attribute
-      ParseAttributeSelector(dataMask, aSelector, parsingStatus, aErrorCode);
+    else if (mToken.IsSymbol('[')) {    // [attribute
+      parsingStatus = ParseAttributeSelector(dataMask, aSelector, aErrorCode);
     }
     else {  // not a selector token, we're done
+      parsingStatus = eSelectorParsingStatus_Done;
       break;
     }
-    
-    if (SELECTOR_PARSING_STOPPED_OK == parsingStatus) {
-      return PR_TRUE;
+
+    if (parsingStatus != eSelectorParsingStatus_Continue) {
+      return parsingStatus;
     }
-    else if (SELECTOR_PARSING_STOPPED_ERROR == parsingStatus) {
-      return PR_FALSE;
-    }
-    
+
     if (! GetToken(aErrorCode, PR_FALSE)) { // premature eof is ok (here!)
-      return PR_TRUE;
+      return eSelectorParsingStatus_Done;
     }
   }
   UngetToken();
-  return PRBool(0 != dataMask);
+  return dataMask ? parsingStatus : eSelectorParsingStatus_Empty;
 }
 
 nsCSSDeclaration*
