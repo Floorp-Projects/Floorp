@@ -3414,6 +3414,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                        applyTopMargin, aState.mPrevBottomMargin,
                        aState.IsAdjacentWithTop(),
                        computedOffsets, frameReflowStatus);
+  if (frame == aState.mNextRCFrame) {
+    // NULL out mNextRCFrame so if we reflow it again we don't think it's still
+    // an incremental reflow
+    aState.mNextRCFrame = nsnull;
+  }
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -3875,6 +3880,11 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   PRBool         pushedFrame;
   nsresult rv = aLineLayout.ReflowFrame(aFrame, &aState.mNextRCFrame,
                                         frameReflowStatus, nsnull, pushedFrame);
+  if (aFrame == aState.mNextRCFrame) {
+    // NULL out mNextRCFrame so if we reflow it again we don't think it's still
+    // an incremental reflow
+    aState.mNextRCFrame = nsnull;
+  }
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -5084,6 +5094,11 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0,
                                 isAdjacentWithTop,
                                 aComputedOffsetsResult, frameReflowStatus);
+  if (floater == aState.mNextRCFrame) {
+    // NULL out mNextRCFrame so if we reflow it again we don't think it's still
+    // an incremental reflow
+    aState.mNextRCFrame = nsnull;
+  }
   if (NS_FAILED(rv)) {
     return rv;
   }
