@@ -2006,22 +2006,18 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
         nsIPresShell *shell = mDocument->GetShellAt(0);
 
         if (shell) {
-            PRBool validElement = PR_TRUE;
+            nsIContent *content = this;
 
             // find out what type of content node this is
             if (NodeInfo()->Equals(nsXULAtoms::label)) {
-                // XXXjag a side-effect is that we filter out
-                // anonymous <label>s in e.g. <menu>, <menuitem>,
-                // <button>. These <label>s inherit |accesskey| and
-                // would otherwise register themselves, overwriting
-                // the content we really meant to be registered.
-                if (!HasAttr(kNameSpaceID_None, nsXULAtoms::control))
-                    validElement = PR_FALSE;
+                // For anonymous labels the unregistering must
+                // occur on the binding parent control.
+                content = GetBindingParent();
             }
 
-            if (validElement) {
+            if (content) {
                 shell->GetPresContext()->EventStateManager()->
-                    UnregisterAccessKey(this, aOldValue.First());
+                    UnregisterAccessKey(content, aOldValue.First());
             }
         }
     }

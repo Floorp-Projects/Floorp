@@ -249,8 +249,6 @@ function init()
 
   gData.navigatorData = navigatorData;
 
-  setPageAccessKeys(document.getElementById("behaviourDeck").firstChild);
-
   prefWindow.registerOKCallbackFunc(doOnOk);
 }
 
@@ -267,6 +265,8 @@ function Startup()
     setHomePageValue(navigatorData.groupIsSet);
 
   updateHomePageButtons();
+
+  setPageAccessKeys(document.getElementById("behaviourDeck").firstChild);
 }
 
 function doOnOk()
@@ -300,14 +300,14 @@ function setPageAccessKeys(group)
 {
   var nodes = group.childNodes;
   for (var i = 0; i < nodes.length; ++i)
-    nodes[i].setAttribute("accesskey", nodes[i].getAttribute("ak"));
+    nodes[i].accessKey = nodes[i].getAttribute("ak");
 }
 
 function removePageAccessKeys(group)
 {
   var nodes = group.childNodes;
   for (var i = 0; i < nodes.length; ++i)
-    nodes[i].removeAttribute("accesskey");
+    nodes[i].accessKey = '';
 }
 
 function switchPage(index)
