@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.5 2001/01/18 16:36:24 wtc%netscape.com Exp $
+ * $Id: certt.h,v 1.6 2001/01/31 18:01:48 wtc%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -699,12 +699,12 @@ struct CERTOKDomainNameStr {
 };
 
 
-typedef SECStatus PR_CALLBACK (*CERTStatusChecker) (CERTCertDBHandle *handle,
+typedef SECStatus (PR_CALLBACK *CERTStatusChecker) (CERTCertDBHandle *handle,
 						    CERTCertificate *cert,
 						    int64 time,
 						    void *pwArg);
 
-typedef SECStatus PR_CALLBACK (*CERTStatusDestroy) (CERTStatusConfig *handle);
+typedef SECStatus (PR_CALLBACK *CERTStatusDestroy) (CERTStatusConfig *handle);
 
 struct CERTStatusConfigStr {
     CERTStatusChecker statusChecker;	/* NULL means no checking enabled */

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: hashops.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:50:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: hashops.c,v $ $Revision: 1.2 $ $Date: 2001/01/31 18:01:45 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -45,7 +45,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: hashops.c,v $ $Revision: 1.1 $ $Dat
 #include "base.h"
 #endif /* BASE_H */
 
-static PR_CALLBACK void *
+static void * PR_CALLBACK
 nss_arena_hash_alloc_table
 (
   void *pool,
@@ -65,7 +65,7 @@ nss_arena_hash_alloc_table
   return nss_ZAlloc(arena, size);
 }
 
-static PR_CALLBACK void
+static void PR_CALLBACK
 nss_arena_hash_free_table
 (
   void *pool, 
@@ -75,7 +75,7 @@ nss_arena_hash_free_table
   (void)nss_ZFreeIf(item);
 }
 
-static PR_CALLBACK PLHashEntry *
+static PLHashEntry * PR_CALLBACK
 nss_arena_hash_alloc_entry
 (
   void *pool,
@@ -95,7 +95,7 @@ nss_arena_hash_alloc_entry
   return nss_ZNEW(arena, PLHashEntry);
 }
 
-static PR_CALLBACK void
+static void PR_CALLBACK
 nss_arena_hash_free_entry
 (
   void *pool,
