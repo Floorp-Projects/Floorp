@@ -134,6 +134,7 @@ public:
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD Print();
+  NS_IMETHOD PrintContent(void);
   NS_IMETHOD SetEnableRendering(PRBool aOn);
   NS_IMETHOD GetEnableRendering(PRBool* aResult);
 
@@ -466,6 +467,15 @@ PluginViewerImpl::Print(void)
 
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+PluginViewerImpl::PrintContent()
+{
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 PluginViewerImpl::SetEnableRendering(PRBool aOn)

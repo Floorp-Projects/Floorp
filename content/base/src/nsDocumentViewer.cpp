@@ -82,6 +82,7 @@ public:
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD Print(void);
+  NS_IMETHOD PrintContent(void);
   NS_IMETHOD SetEnableRendering(PRBool aOn);
   NS_IMETHOD GetEnableRendering(PRBool* aResult);
 
@@ -469,6 +470,7 @@ DocumentViewerImpl::Hide(void)
 static NS_DEFINE_IID(kIDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
+
 NS_IMETHODIMP
 DocumentViewerImpl::Print(void)
 {
@@ -571,6 +573,15 @@ DocumentViewerImpl::Print(void)
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+DocumentViewerImpl::PrintContent()
+{
+
+  return NS_OK;
+
+}
+
 
 NS_IMETHODIMP
 DocumentViewerImpl::SetEnableRendering(PRBool aOn)
