@@ -590,6 +590,7 @@ static void* TV2FP(CFMutableDictionaryRef dict, const char* name, void *tvp)
                     newGlue[1] |= ((UInt32)tvp & 0xFFFF);
                     MakeDataExecutable(newGlue, sizeof(glue));
                     CFDictionaryAddValue(dict, nameRef, glueData);
+                    CFRelease(glueData);
 #ifdef DEBUG
                     printf("[TV2FP:  created wrapper for CFM function %s().]\n", name);
 #endif
