@@ -522,6 +522,7 @@ xfeCmdCleanUpDisk       cleanUpDisk
 xfeCmdPersonalToolbarAddBookmark                                   personalToolbarAddBookmark
 xfeCmdPersonalToolbarEditItem                                      personalToolbarEditItem
 xfeCmdPersonalToolbarRemoveItem                                    personalToolbarRemoveItem
+xfeCmdPersonalToolbarItemProperties                                personalToolbarItemProperties
 
 # Nav Center
 xfeCmdChangeRDFView		changeRDFVIEW
