@@ -167,6 +167,13 @@ nsMimeEmitter::Complete()
 nsresult
 nsMimeEmitter::WriteXMLHeader(const char *msgID)
 {
+  if ( (!msgID) || (!*msgID) )
+    return  NS_ERROR_FAILURE;
+    
+  char  *newValue = nsEscapeHTML(msgID);
+  if (!newValue)
+    return NS_ERROR_OUT_OF_MEMORY;
+    
   UtilityWrite("<?xml version=\"1.0\"?>");
 
   if (mHeaderDisplayType == MicroHeaders)
@@ -177,7 +184,7 @@ nsMimeEmitter::WriteXMLHeader(const char *msgID)
     UtilityWrite("<?xml-stylesheet href=\"resource:/res/mailnews/messenger/mailheader-all.css\" type=\"text/css\"?>");
 
   UtilityWrite("<message id=\"");
-  UtilityWrite(msgID);
+  UtilityWrite(newValue);
   UtilityWrite("\">");
 
   mXMLHeaderStarted = PR_TRUE;

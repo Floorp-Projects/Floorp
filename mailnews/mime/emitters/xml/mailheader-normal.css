@@ -1,7 +1,3 @@
-Subject:before {
-  content:  "Subject: ";
-}
-
 Subject {
   display: block;
   text-align:left; 
