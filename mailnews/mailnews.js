@@ -596,8 +596,6 @@ pref("mail.password_protect_local_cache", false);
 // overridden by stand alone mail
 pref("mail.standalone", false);
 
-pref("mailnews.view.last",0); // 0 == "all" view
-
 #ifdef XP_WIN
 // Unread mail count timer. Value to be specified in seconds
 // default is 5 minutes, i.e., 5 * 60 seconds = 300

@@ -100,7 +100,10 @@ function viewChange(aMenuList, val)
   {
     if (aMenuList.selectedItem)
       gCurrentViewLabel = aMenuList.selectedItem.label;
-    gPrefBranch.setIntPref("mailnews.view.last", parseInt(val));  
+
+    var msgDatabase = GetFirstSelectedMsgFolder().getMsgDatabase(msgWindow);
+    var dbFolderInfo = msgDatabase.dBFolderInfo; 
+    dbFolderInfo.setUint32Property("current-view", parseInt(val));
   }
   // if we're switching to -1 (virtual folder), don't do a search 
   if (val != "-1" && val != -1)

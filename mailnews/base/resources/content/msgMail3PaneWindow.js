@@ -271,15 +271,29 @@ var folderListener = {
                 gDefaultSearchViewTerms = null;
                 ViewChangeByValue(-1); // override current view
              }
-             else if (gDefaultSearchViewTerms)
-             {
-                viewDebug("searching gDefaultSearchViewTerms and rerootingFolder\n");
-               Search("");
-             }
              else
-             {
-              viewDebug("changing view by value\n");
-               ViewChangeByValue(pref.getIntPref("mailnews.view.last"));
+             {               
+               // get the view value from the folder
+               var msgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
+               if (msgFolder)
+               {
+                 var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
+                 var dbFolderInfo = msgDatabase.dBFolderInfo; 
+                 var result = dbFolderInfo.getUint32Property("current-view", 0);
+                 
+                 // if our new view is the same as the old view and we already have the list of search terms built up
+                 // for the old view, just re-use it
+                 if (gCurrentViewValue == result && gDefaultSearchViewTerms)
+                 {
+                   viewDebug("searching gDefaultSearchViewTerms and rerootingFolder\n");
+                   Search("");
+                 }
+                 else
+                 {
+                   viewDebug("changing view by value\n");
+                   ViewChangeByValue(result);
+                 }
+               }
              }
            }
          }
