@@ -4,8 +4,6 @@
 
 abcom.h
 abdefn.h
-addrbook.h
-allxpstr.h
 client.h
 csid.h
 ctxtfunc.h
@@ -14,7 +12,6 @@ dirprefs.h
 edt.h
 edttypes.h
 fe_proto.h
-fe_rgn.h
 glhist.h
 gui.h
 intl_csi.h
@@ -42,10 +39,8 @@ npupp.h
 ntypes.h
 platform.h
 proto.h
-resdef.h
 shist.h
 shistele.h
-spellchk.h
 structs.h
 unix-dns.h
 winfile.h
@@ -55,14 +50,11 @@ xpassert.h
 xpgetstr.h
 xp_core.h
 xp_debug.h
-xp_error.h
 xp_file.h
 xp_list.h
 xp_mcom.h
 xp_mem.h
 xp_path.h
 xp_regexp.h
-xp_sock.h
 xp_str.h
 xp_trace.h
-xupfonts.h
