@@ -1,0 +1,60 @@
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+NODEPEND=1
+IGNORE_MANIFEST = 1
+
+MODULE = urltest
+
+DEPTH= ..\..\..
+
+MAKE_OBJ_TYPE=EXE
+
+EXENAME=urltest
+PDBFILE=nunettest.pdb
+MAPFILE=nunettest.map
+
+OBJS=                                   \
+        .\$(OBJDIR)\urltest.obj         \
+        $(NULL)
+
+PROGRAM=.\$(OBJDIR)\$(EXENAME).EXE
+
+LCFLAGS=-DNETSCAPE
+LLIBS=$(LLIBS)				\
+		$(LIBNSPR)              \
+		$(DIST)\lib\xpcom32.lib	\
+		$(DIST)\lib\nunet.lib  \
+		$(DIST)\lib\netlib.lib  \
+		$(DIST)\lib\raptorbase.lib  \
+		$(DIST)\lib\plc3.lib
+
+LINCS=$(LINCS)  -I. \
+		-I$(PUBLIC)\raptor   \
+		-I$(PUBLIC)\netlib   \
+		-I$(PUBLIC)\nunet   \
+		-I$(PUBLIC)\pref     \
+		-I$(PUBLIC)\xpcom
+
+# clobber and clobber_all will remove the following garbage:
+GARBAGE	= $(GARBAGE) _gen
+
+include <$(DEPTH)/config/rules.mak>
+
+install:: $(PROGRAM)
+    $(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+
+clobber::
+	rm -f $(DIST)\bin\$(EXENAME).exe
