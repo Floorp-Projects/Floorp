@@ -29,11 +29,35 @@
 /**
  * Go into online/offline mode
  **/
-function setOfflineStatus(aToggleFlag)
+
+const kIOServiceProgID = "@mozilla.org/network/io-service;1";
+const kObserverServiceProgID = "@mozilla.org/observer-service;1";
+
+function toggleOfflineStatus()
 {
-  var ioService = Components.classesByID["{9ac9e770-18bc-11d3-9337-00104ba0fd40}"]
+  var checkfunc;
+  try {
+    checkfunc = document.getElementById("offline-status").getAttribute('checkfunc');
+  }
+  catch (ex) {
+    checkfunc = null;
+  }
+
+  var ioService = Components.classes[kIOServiceProgID]
                             .getService(Components.interfaces.nsIIOService);
+  if (checkfunc) {
+    if (!eval(checkfunc)) {
+      // the pre-offline check function returned false, so don't go offline
+      return;
+    }
+  }
+  ioService.offline = !ioService.offline;
+}
+
+function setOfflineUI(offline)
+{
   var broadcaster = document.getElementById("Communicator:WorkMode");
+  if (!broadcaster) return;
 
   //Checking for a preference "network.online", if it's locked, disabling 
   // network icon and menu item
@@ -46,24 +70,22 @@ function setOfflineStatus(aToggleFlag)
       
       var offlineLocked = prefBranch.prefIsLocked("network.online"); 
       
-      if (!offlineLocked ) {
-          if (aToggleFlag)
-              ioService.offline = !ioService.offline;
-      }
-      else {
+      if (offlineLocked ) {
           broadcaster.setAttribute("disabled","true");
       }
   } catch(e) {
   }
+
   var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
-  if (ioService.offline && broadcaster)
+
+  if (offline)
     {
       broadcaster.setAttribute("offline", "true");
       broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
       broadcaster.setAttribute("label", bundle.GetStringFromName("goonline"));
       FillInTooltip(broadcaster);
     }
-  else if (broadcaster)
+  else
     {
       broadcaster.removeAttribute("offline");
       broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
@@ -71,7 +93,6 @@ function setOfflineStatus(aToggleFlag)
       FillInTooltip(broadcaster);
     }
 }
-
 
 var goPrefWindow = 0;
 
@@ -360,3 +381,43 @@ function extractFileNameFromUrl(urlstr)
   return urlstr.slice(urlstr.lastIndexOf( "/" )+1);
 }
 
+var offlineObserver = {
+  Observe: function(subject, topic, state) {
+    // sanity checks
+    if (topic != "network:offline-status-changed") return;
+    setOfflineUI(state == "offline");
+  }
+}
+
+function utilityOnLoad(aEvent)
+{
+  var broadcaster = document.getElementById("Communicator:WorkMode");
+  if (!broadcaster) return;
+
+  var observerService = Components.classes[kObserverServiceProgID]
+		          .getService(Components.interfaces.nsIObserverService);
+
+  // crude way to prevent registering twice.
+  try {
+    observerService.RemoveObserver(offlineObserver, "network:offline-status-changed");
+  }
+  catch (ex) {
+  }
+  observerService.AddObserver(offlineObserver, "network:offline-status-changed");
+  // make sure we remove this observer later
+  addEventListener("unload",utilityOnUnload,false);
+
+  // set the initial state
+  var ioService = Components.classes[kIOServiceProgID]
+		      .getService(Components.interfaces.nsIIOService);
+  setOfflineUI(ioService.offline);
+}
+
+function utilityOnUnload(aEvent) 
+{
+  var observerService = Components.classes[kObserverServiceProgID]
+			  .getService(Components.interfaces.nsIObserverService);
+  observerService.RemoveObserver(offlineObserver, "network:offline-status-changed");
+}
+
+addEventListener("load",utilityOnLoad,true);
