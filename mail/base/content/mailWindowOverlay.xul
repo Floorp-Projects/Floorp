@@ -277,7 +277,8 @@
 #ifdef XP_MACOSX
 <commandset id="macWindowMenuItems">
   <!-- Mac Window menu -->
-  <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>
+  <command id="minimizeWindow" label="&minimizeWindow.label;" oncommand="window.minimize();"/>
+  <command id="zoomWindow" label="&zoomWindow.label;" oncommand="zoomWindow();"/>
   <command id="Tasks:Mail" oncommand="toMessengerWindow();"/>
   <command id="Tasks:AddressBook" oncommand="toAddressBook();"/>
 </commandset>
@@ -392,7 +393,7 @@
   <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
   <key id="key_addressbook"  key="&addressBookCmd.commandkey;" oncommand="toAddressBook();" modifiers="accel"/>
 #ifdef XP_MACOSX
-  <!-- Mac Window keys -->
+  <!-- Mac Window and Help menu keys -->
   <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
   <key id="key_macHelp" key="&hintsAndTipsMac.commandkey;" oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');" modifiers="accel"/>
 #endif
@@ -1654,7 +1655,7 @@
           </template>
           <menupopup id="windowPopup">
             <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
-            <menuitem label="&zoomWindow.label;" disabled="true"/>
+            <menuitem command="zoomWindow"/>
             <menuseparator/>
             <menuitem label="&bringAllToFront.label;" disabled="true"/>
             <menuseparator/>

@@ -82,6 +82,9 @@
     <commandset id="mailEditContextMenuItems"/>
 	<commandset id="tasksCommands"/>
     <commandset id="commandKeys"/>
+#ifdef XP_MACOSX
+  <commandset id="macWindowMenuItems"/>
+#endif
   </commandset>
 
   <broadcasterset id="mailBroadcasters">

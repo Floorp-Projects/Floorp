@@ -139,7 +139,8 @@
 
 #ifdef XP_MACOSX
   <!-- Mac Window menu -->
-  <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>
+  <command id="minimizeWindow" label="&minimizeWindow.label;" oncommand="window.minimize();"/>
+  <command id="zoomWindow" label="&zoomWindow.label;" oncommand="zoomWindow();"/>
   <command id="Tasks:Mail" oncommand="toMessengerWindow();"/>
   <command id="Tasks:AddressBook" oncommand="toAddressBook();"/>
 #endif
@@ -479,7 +480,7 @@
           </template>
           <menupopup id="windowPopup">
             <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
-            <menuitem label="&zoomWindow.label;" disabled="true"/>
+            <menuitem command="zoomWindow"/>
             <menuseparator/>
             <menuitem label="&bringAllToFront.label;" disabled="true"/>
             <menuseparator/>
