@@ -141,7 +141,10 @@ si_SelectDialog(const PRUnichar* szMessage, char** pList, PRInt32* pCount) {
   nsCOMPtr<nsIPrompt> prompter(do_QueryInterface(webshellwindow));
   PRInt32 selectedIndex;
   PRBool rtnValue;
+#ifdef XP_MAC
+#else
   rv = prompter->Select( NULL, szMessage, *pCount, (const char **)pList, &selectedIndex, &rtnValue );
+#end
   *pCount = selectedIndex;
   si_UserHasBeenSelected = PR_TRUE;
   return rtnValue;  
