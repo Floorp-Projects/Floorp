@@ -70,7 +70,11 @@ extern void DialerHangup();
 // keep a global execution environment
 JRIEnv* env;
 
-const BOOL gEnableTrace = TRUE;
+#ifdef DEBUG
+BOOL gEnableTrace = TRUE;
+#else
+BOOL gEnableTrace = FALSE;
+#endif
 
 // Keeps track of OS version, either win95, winNT, or win16 
 #ifdef WIN32
