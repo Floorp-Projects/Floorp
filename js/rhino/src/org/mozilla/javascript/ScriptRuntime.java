@@ -1951,6 +1951,12 @@ public class ScriptRuntime {
         } else if (type == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
             String name = function.functionName;
             if (name != null && name.length() != 0) {
+                // Always put function expression statements into initial
+                // activation object ignoring the with statement to follow
+                // SpiderMonkey
+                while (scope instanceof NativeWith) {
+                    scope = scope.getParentScope();
+                }
                 scope.put(name, scope, function);
             }
         }
