@@ -391,6 +391,37 @@ NS_IMETHODIMP nsMsgHdr::GetCCList(nsString &resultCCList)
 	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_ccListColumnToken, resultCCList);
 }
 
+NS_IMETHODIMP nsMsgHdr::GetMime2EncodedAuthor(nsString &resultAuthor)
+{
+	return m_mdb->RowCellColumnToMime2EncodedString(GetMDBRow(), m_mdb->m_senderColumnToken, resultAuthor);
+}
+
+NS_IMETHODIMP nsMsgHdr::GetMime2EncodedSubject(nsString &resultSubject)
+{
+	return m_mdb->RowCellColumnToMime2EncodedString(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject);
+}
+
+NS_IMETHODIMP nsMsgHdr::GetMime2EncodedRecipients(nsString &resultRecipients)
+{
+	return m_mdb->RowCellColumnToMime2EncodedString(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
+}
+
+
+NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(nsString &resultAuthor)
+{
+	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_senderColumnToken, resultAuthor);
+}
+
+NS_IMETHODIMP nsMsgHdr::GetSubjectCollationKey(nsString &resultSubject)
+{
+	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_subjectColumnToken, resultSubject);
+}
+
+NS_IMETHODIMP nsMsgHdr::GetRecipientsCollationKey(nsString &resultRecipients)
+{
+	return m_mdb->RowCellColumnToCollationKey(GetMDBRow(), m_mdb->m_recipientsColumnToken, resultRecipients);
+}
+
 
 nsresult nsMsgHdr::SetStringColumn(const char *str, mdb_token token)
 {

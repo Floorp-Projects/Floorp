@@ -57,6 +57,14 @@ public:
 	NS_IMETHOD GetRecipients(nsString &resultRecipients) = 0;
 	NS_IMETHOD GetCCList(nsString &ccList) =0;
 
+	NS_IMETHOD GetMime2EncodedAuthor(nsString &resultAuthor) = 0;
+	NS_IMETHOD GetMime2EncodedSubject(nsString &resultSubject) = 0;
+	NS_IMETHOD GetMime2EncodedRecipients(nsString &resultRecipients) = 0;
+
+	NS_IMETHOD GetAuthorCollationKey(nsString &resultAuthor) = 0;
+	NS_IMETHOD GetSubjectCollationKey(nsString &resultSubject) = 0;
+	NS_IMETHOD GetRecipientsCollationKey(nsString &resultRecipients) = 0;
+
     // flag handling routines
     NS_IMETHOD GetFlags(PRUint32 *result) = 0;
     NS_IMETHOD SetFlags(PRUint32 flags) = 0;

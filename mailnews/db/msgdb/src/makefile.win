@@ -22,7 +22,7 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=msgdb
 MODULE= mailnews
-REQUIRES=rdf
+REQUIRES=rdf mime
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -46,7 +46,8 @@ EXPORTS=	\
 			$(NULL)
 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\rdf -I$(PUBLIC)\rdfutil
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\rdf -I$(PUBLIC)\rdfutil -I$(PUBLIC)\mime -I$(PUBLIC)\locale
+
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -42,6 +42,8 @@ static const char * kMailboxNameColumnName = "mailboxName";
 static const char * kKnownArtsSetColumnName = "knownArts";
 static const char * kExpiredMarkColumnName = "expiredMark";
 static const char * kVersionColumnName = "version";
+static const char * kCharacterSetColumnName = "charSet";
+static const char * kLocaleColumnName = "locale";
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -495,17 +497,29 @@ PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
 }
 
 NS_IMETHODIMP
-nsDBFolderInfo::GetCSID(PRInt16 *result) 
+nsDBFolderInfo::GetCharacterSet(nsString &result) 
 {
-    if (!result) return NS_ERROR_NULL_POINTER;
-	*result = m_csid;
+	GetProperty(kCharacterSetColumnName, result);
     return NS_OK;
 }
 
-void nsDBFolderInfo::SetCSID(PRInt16 csid) 
+NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(nsString &charSet) 
 {
-	m_csid = csid;
+	return SetProperty(kCharacterSetColumnName, charSet);
 }
+
+NS_IMETHODIMP
+nsDBFolderInfo::GetLocale(nsString &result) 
+{
+	GetProperty(kLocaleColumnName, result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsDBFolderInfo::SetLocale(nsString &locale) 
+{
+	return SetProperty(kLocaleColumnName, locale);
+}
+
 
 PRInt16	nsDBFolderInfo::GetIMAPHierarchySeparator() 
 {

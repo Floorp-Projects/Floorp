@@ -65,7 +65,10 @@ public:
 	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity) ;
 	NS_IMETHOD			GetImapTotalPendingMessages(PRInt32 *result) ;
 	NS_IMETHOD			GetImapUnreadPendingMessages(PRInt32 *result) ;
-	NS_IMETHOD			GetCSID(PRInt16 *result) ;
+	NS_IMETHOD			GetCharacterSet(nsString &result) ;
+	NS_IMETHOD			SetCharacterSet(nsString &charSet) ;
+	NS_IMETHOD			GetLocale(nsString &result) ;
+	NS_IMETHOD			SetLocale(nsString &locale) ;
 
 	NS_IMETHOD			SetVersion(PRUint32 version) ;
 	NS_IMETHOD			GetVersion(PRUint32 *result);
@@ -104,7 +107,6 @@ public:
 	void				SetSortInfo(nsMsgSortType, nsMsgSortOrder);
 	void				GetSortInfo(nsMsgSortType *, nsMsgSortOrder *);
 	PRBool				TestFlag(PRInt32 flags);
-	void				SetCSID(PRInt16 csid) ;
 	PRInt16				GetIMAPHierarchySeparator() ;
 	void				SetIMAPHierarchySeparator(PRInt16 hierarchySeparator) ;
 	void				ChangeImapTotalPendingMessages(PRInt32 delta);

@@ -51,7 +51,10 @@ public:
 	NS_IMETHOD			SetImapUidValidity(PRInt32 uidValidity)  = 0;
     NS_IMETHOD			GetImapTotalPendingMessages(PRInt32 *result) = 0;
     NS_IMETHOD			GetImapUnreadPendingMessages(PRInt32 *result) = 0;
-    NS_IMETHOD			GetCSID(PRInt16 *result) = 0;
+	NS_IMETHOD			GetCharacterSet(nsString &result) = 0;
+	NS_IMETHOD			SetCharacterSet(nsString &result) = 0;
+	NS_IMETHOD			GetLocale(nsString &result) = 0;
+	NS_IMETHOD			SetLocale(nsString &locale) = 0;
     
 	NS_IMETHOD			SetVersion(PRUint32 version)  = 0;
 	NS_IMETHOD			GetVersion(PRUint32 *result) = 0;

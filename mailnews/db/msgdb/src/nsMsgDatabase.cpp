@@ -27,7 +27,25 @@
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
 
+#include "nsIMimeHeaderConverter.h"
+//#include "nsMimeHeaderConverter.h"
+
+#include "nsILocale.h"
+#include "nsLocaleCID.h"
+#include "nsILocaleFactory.h"
+#include "nsICollation.h"
+#include "nsCollationCID.h"
+  
+static   NS_DEFINE_CID(kCMimeHeaderConverterCID, NS_MIME_HEADER_CONVERTER_CID);
+
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
+static NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
+static NS_DEFINE_CID(kLocaleCID, NS_LOCALE_CID);
+static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
+static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
+static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
+static NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);
 
 #ifdef WE_HAVE_MDBINTERFACES
 static NS_DEFINE_CID(kIMBBCID, NS_IMBB_IID);
@@ -1665,6 +1683,74 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
 			YarnTonsString(&yarn, &resultStr);
 		}
 	}
+	return err;
+}
+
+nsresult nsMsgDatabase::RowCellColumnToMime2EncodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
+{
+	nsresult err;
+	nsString nakedString;
+	err = RowCellColumnTonsString(row, columnToken, nakedString);
+	if (NS_SUCCEEDED(err))
+	{
+ 
+		// apply mime decode
+		nsIMimeHeaderConverter *converter;
+		err = nsComponentManager::CreateInstance(kCMimeHeaderConverterCID, nsnull, 
+                                            nsIMimeHeaderConverter::GetIID(), (void **)&converter);
+
+		if (NS_SUCCEEDED(err) && nsnull != converter) 
+		{
+			nsString charset;
+			nsString decodedStr;
+			err = converter->DecodeMimePartIIStr(nakedString, charset, resultStr);
+			NS_RELEASE(converter);
+		}
+	}
+	return err;
+}
+
+nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
+{
+	nsString nakedString;
+	nsresult err;
+
+	err = RowCellColumnTonsString(row, columnToken, nakedString);
+	if (NS_SUCCEEDED(err))
+	{
+		nsILocaleFactory* localeFactory; 
+		nsILocale* locale; 
+		nsString localeName; 
+
+		// get a locale factory 
+		err = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
+
+		// do this for a new db if no UI to be provided for locale selection 
+		err = localeFactory->GetApplicationLocale(&locale); 
+
+		// or generate a locale from a stored locale name ("en_US", "fr_FR") 
+		err = localeFactory->NewLocale(&localeName, &locale); 
+
+		// and locale name can be taken as below, category should be one of the following 
+		// probably NSILOCALE_COLLATE is appropriate 
+		nsString catagory = "NSILOCALE_COLLATE"; 
+		err = locale->GetCatagory(&catagory, &localeName); 
+
+		nsICollationFactory *f;
+
+		err = nsComponentManager::CreateInstance(kCollationFactoryCID, NULL,
+								kICollationFactoryIID, (void**) &f); 
+
+		nsICollation *inst;
+
+		// get a collation interface instance 
+		err = f->CreateCollation(locale, &inst); 
+
+		if (NS_SUCCEEDED(err) && inst)
+		{
+			err = inst->CreateSortKey( kCollationCaseSensitive, nakedString, resultStr) ;
+		}
+ 	}
 	return err;
 }
 
