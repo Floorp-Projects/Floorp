@@ -285,8 +285,8 @@ CHelperAppLauncherDialog::~CHelperAppLauncherDialog()
 
 NS_IMPL_ISUPPORTS1(CHelperAppLauncherDialog, nsIHelperAppLauncherDialog)
 
-/* void show (in nsIHelperAppLauncher aLauncher, in nsISupports aContext); */
-NS_IMETHODIMP CHelperAppLauncherDialog::Show(nsIHelperAppLauncher *aLauncher, nsISupports *aContext)
+/* void show (in nsIHelperAppLauncher aLauncher, in nsISupports aContext, in boolean aForced); */
+NS_IMETHODIMP CHelperAppLauncherDialog::Show(nsIHelperAppLauncher *aLauncher, nsISupports *aContext, PRBool aForced)
 {
     return aLauncher->SaveToDisk(nsnull, PR_FALSE);
 }

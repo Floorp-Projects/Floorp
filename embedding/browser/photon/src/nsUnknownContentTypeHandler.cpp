@@ -59,7 +59,7 @@ nsUnknownContentTypeHandler::nsUnknownContentTypeHandler( ) {
 nsUnknownContentTypeHandler::~nsUnknownContentTypeHandler( ) { }
 
 
-NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports *aContext ) {
+NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports *aContext, PRBool aForced ) {
 	nsresult rv = NS_OK;
 /* ATENTIE */ //printf("Show!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 

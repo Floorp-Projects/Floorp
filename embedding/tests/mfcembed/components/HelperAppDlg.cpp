@@ -209,7 +209,8 @@ CWnd* CHelperAppLauncherDialog::GetParentFromContext(nsISupports *aWindowContext
 // when Gecko encounters a mime type it cannot handle
 //
 NS_IMETHODIMP CHelperAppLauncherDialog::Show(nsIHelperAppLauncher *aLauncher, 
-                                             nsISupports *aContext)
+                                             nsISupports *aContext,
+                                             PRBool aForced)
 {
     ResourceState setState;
 

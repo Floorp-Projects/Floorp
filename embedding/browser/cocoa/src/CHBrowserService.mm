@@ -226,9 +226,9 @@ CHBrowserService::CreateChromeWindow(nsIWebBrowserChrome *parent,
 }
 
 
-//    void show( in nsIHelperAppLauncher aLauncher, in nsISupports aContext );
+//    void show( in nsIHelperAppLauncher aLauncher, in nsISupports aContext, in boolean aForced );
 NS_IMETHODIMP
-CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext)
+CHBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext, PRBool aForced)
 {
   // Old way - always prompt to save file to disk
   return inLauncher->SaveToDisk(nsnull, PR_FALSE);

@@ -1316,9 +1316,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   PRBool alwaysAsk = PR_TRUE;
   // If we're handling an attachment we want to default to saving but
   // always ask just in case
-  if (mHandlingAttachment) {
-    mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
-  } else {
+  if (!mHandlingAttachment)
+  {
     mMimeInfo->GetAlwaysAskBeforeHandling(&alwaysAsk);
   }
   if (alwaysAsk)
@@ -1367,7 +1366,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     mDialog = do_CreateInstance( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mDialog->Show( this, mWindowContext );
+    rv = mDialog->Show( this, mWindowContext, mHandlingAttachment );
 
     // what do we do if the dialog failed? I guess we should call Cancel and abort the load....
   }

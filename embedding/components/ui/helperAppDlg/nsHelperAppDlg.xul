@@ -98,12 +98,14 @@
 
     <!-- Localizable strings (from .dtd) -->
     <strings style="display:none;">
-        <string id="brandShortName">         &brandShortName;         </string>
-        <string id="intro.withDesc">         &intro.label;            </string>
-        <string id="intro.noDesc">           &intro.noDesc.label;     </string>
-        <string id="defaultApp">             &useSystemDefault.label; </string>
-        <string id="badApp">                 &badApp;                 </string>
-        <string id="badApp.title">           &badApp.title;           </string>
-        <string id="chooseAppFilePickerTitle">&chooseAppFilePickerTitle;</string>
+        <string id="brandShortName">               &brandShortName;               </string>
+        <string id="intro.withDesc">               &intro.label;                  </string>
+        <string id="intro.noDesc">                 &intro.noDesc.label;           </string>
+        <string id="intro.attachment.label">       &intro.attachment.label;       </string>
+        <string id="intro.attachment.noDesc.label">&intro.attachment.noDesc.label;</string>
+        <string id="defaultApp">                   &useSystemDefault.label;       </string>
+        <string id="badApp">                       &badApp;                       </string>
+        <string id="badApp.title">                 &badApp.title;                 </string>
+        <string id="chooseAppFilePickerTitle">     &chooseAppFilePickerTitle;     </string>
     </strings>
 </dialog>
