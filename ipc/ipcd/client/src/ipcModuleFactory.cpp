@@ -96,7 +96,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcLockService, Init)
 #include "tmTransactionService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(tmTransactionService)
 
-#if 0
+#ifdef BUILD_DCONNECT
+
 #include "ipcDConnectService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcDConnectService, Init)
 
@@ -133,7 +134,8 @@ ipcDConnectServiceUnregisterProc(nsIComponentManager *aCompMgr,
                                     IPC_DCONNECTSERVICE_CONTRACTID, PR_TRUE);
     return NS_OK;
 }
-#endif
+
+#endif // BUILD_DCONNECT
 
 //-----------------------------------------------------------------------------
 // Define a table of CIDs implemented by this module along with other
@@ -160,11 +162,14 @@ static const nsModuleComponentInfo components[] = {
     IPC_TRANSACTIONSERVICE_CID,
     IPC_TRANSACTIONSERVICE_CONTRACTID,
     tmTransactionServiceConstructor },
-#if 0
+
+#ifdef BUILD_DCONNECT
   { IPC_DCONNECTSERVICE_CLASSNAME,
     IPC_DCONNECTSERVICE_CID,
     IPC_DCONNECTSERVICE_CONTRACTID,
-    ipcDConnectServiceConstructor },
+    ipcDConnectServiceConstructor,
+    ipcDConnectServiceRegisterProc,
+    ipcDConnectServiceUnregisterProc },
 #endif
 };
 

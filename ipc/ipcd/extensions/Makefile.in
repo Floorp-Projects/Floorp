@@ -44,6 +44,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ipcd
-DIRS        = lock transmngr
+DIRS        = lock transmngr dconnect
 
 include $(topsrcdir)/config/rules.mk

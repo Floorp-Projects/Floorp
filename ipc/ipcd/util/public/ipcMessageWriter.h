@@ -55,9 +55,10 @@ public:
                   ipcMessageWriter(PRUint32 initialCapacity) :
                     mBuf(NULL),
                     mBufPtr(NULL), mBufEnd(NULL),
-                    mCapacity(initialCapacity),
+                    mCapacity(0),
                     mError(PR_FALSE)
                   {
+                    EnsureCapacity(initialCapacity);
                   }
                   
                   ~ipcMessageWriter();

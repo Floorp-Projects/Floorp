@@ -84,6 +84,14 @@ SHARED_LIBRARY_LIBS = \
 			$(DIST)/lib/$(LIB_PREFIX)transmgrcom_s.$(LIB_SUFFIX) \
 			$(NULL)
 
+ifneq ($(BUILD_DCONNECT),)
+DEFINES				+= -DBUILD_DCONNECT
+LOCAL_INCLUDES		+= -I$(srcdir)/../../extensions/dconnect/src
+SHARED_LIBRARY_LIBS	+= $(DIST)/lib/$(LIB_PREFIX)ipcddconnect_s.$(LIB_SUFFIX) \
+					   $(DIST)/lib/$(LIB_PREFIX)ipcdutil_s.$(LIB_SUFFIX) \
+					   $(NULL)
+endif
+
 EXTRA_DSO_LDOPTS = \
 			$(LIBS_DIR) \
 			$(EXTRA_DSO_LIBS) \
