@@ -72,14 +72,13 @@ ToUTF8(const nsACString &aString, const char *aCharset, nsACString &aResult)
   rv = unicodeDecoder->GetMaxLength(inStr.get(), srcLen, &dstLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoPtr<PRUnichar> ustr(new PRUnichar[dstLen]);
+  nsAutoArrayPtr<PRUnichar> ustr(new PRUnichar[dstLen]);
   NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
 
   rv = unicodeDecoder->Convert(inStr.get(), &srcLen, ustr, &dstLen);
   if (NS_SUCCEEDED(rv)){
-    // Tru64 Cxx doesn't like |nsAutoPtr<PRUnichar>| as the 1st arg. of 
-    // Substring().
-    CopyUTF16toUTF8(Substring(NS_STATIC_CAST(PRUnichar *, ustr), ustr + dstLen), aResult);
+    // Tru64 Cxx and IRIX MIPSpro 7.3  need an explicit get()
+    CopyUTF16toUTF8(Substring(ustr.get(), ustr + dstLen), aResult);
   }
   return rv;
 }
