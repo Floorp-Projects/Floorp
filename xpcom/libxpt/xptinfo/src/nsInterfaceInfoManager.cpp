@@ -62,7 +62,7 @@ nsInterfaceInfoManager::GetInterfaceInfoManager()
     if(!impl)
     {
         impl = new nsInterfaceInfoManager();
-        if(!impl->initialized)
+        if(!impl->ctor_succeeded)
             NS_RELEASE(impl);
     }
     if(impl)
@@ -90,7 +90,7 @@ static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
 static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
 
 nsInterfaceInfoManager::nsInterfaceInfoManager()
-    : allocator(NULL), typelibRecords(NULL), initialized(PR_FALSE)
+    : allocator(NULL), typelibRecords(NULL), ctor_succeeded(PR_FALSE)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -102,7 +102,7 @@ nsInterfaceInfoManager::nsInterfaceInfoManager()
     PR_ASSERT(this->allocator != NULL);
 
     if(NS_SUCCEEDED(this->initInterfaceTables()))
-        initialized = PR_TRUE;
+        ctor_succeeded = PR_TRUE;
 }
 
 static

@@ -68,7 +68,7 @@ private:
     nsHashtable *IIDTable;
 
     nsIAllocator *allocator;
-    PRBool initialized;
+    PRBool ctor_succeeded;
 };
 
 #endif /* nsInterfaceInfoManager_h___ */
