@@ -65,10 +65,10 @@ MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
 # the JRI stubs.
 
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-MOZ_PLUGINSDK = C:\m\PluginSDK3
-JAVADIR = C:\j2sdk1.3.1
+MOZ_PLUGINSDK = d:\m\PluginSDK
+JAVADIR = d:\jdk-1.0.2
 JAVAH = $(MOZ_PLUGINSDK)\bin\win32\javah
-JAVAC = $(JAVADIR)\bin\oldjavac
+JAVAC = $(JAVADIR)\bin\javac
 JAVACLASSES = $(MOZ_PLUGINSDK)\classes\java_30.zip
 CLASSPATH = $(JAVACLASSES);.
 !endif
@@ -79,8 +79,7 @@ CLASSPATH = $(JAVACLASSES);.
 
 # MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
 
-# Uncomment these if you wish the plugin to support LiveConnect (Netscape4.x)
-# or XPConnect (Netscape 6.x/Mozilla) for scripting purposes.
+# XPConnect support in (Netscape 6.1+/Mozilla)
 
 
 ############
@@ -107,7 +106,11 @@ OBJS = \
     .\$(OBJDIR)\LegacyPlugin.obj       \
     .\$(OBJDIR)\MozActiveX.obj         \
     .\$(OBJDIR)\npwin.obj              \
+!ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+    .\$(OBJDIR)\XPConnect.obj          \
+!endif
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+    .\$(OBJDIR)\LiveConnect.obj        \
     .\$(OBJDIR)\javastubs.obj          \
 !endif
     $(NULL)
@@ -252,17 +255,6 @@ $(DEFFILE) : mkctldef.bat
     $(JAVAH) -classpath $(CLASSPATH) -jri -d _gen netscape.plugin.Plugin
     $(JAVAH) -classpath $(CLASSPATH) -jri -stubs -d _stubs netscape.plugin.Plugin
 
-!endif
-
-ActiveScriptSite.cpp: $(MOZCTLSRC)/ActiveScriptSite.cpp
-    -cp $(MOZCTLSRC)/ActiveScriptSite.cpp .
-
-MozActiveX.res: MozActiveX.rc resource.h
-
-MozActiveX.cpp: StdAfx.h
-
-!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-
 .\$(OBJDIR)\javastubs.obj : javastubs.c
 
 javastubs.c : \
@@ -280,13 +272,8 @@ javastubs.c : \
     .\_stubs\java_lang_Float.c      \
     .\_stubs\java_lang_Character.c  \
     $(NULL)
-!endif
 
-LegacyPlugin.cpp: StdAfx.h \
-!ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-    .\_xpidlgen\nsIMozAxPlugin.h    \
-!endif
-!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+LiveConnect.cpp: StdAfx.h \
     .\MozAxPlugin.class             \
     .\_gen\netscape_plugin_Plugin.h \
     .\_gen\java_lang_Object.h       \
@@ -300,6 +287,27 @@ LegacyPlugin.cpp: StdAfx.h \
     .\_gen\java_lang_Double.h       \
     .\_gen\java_lang_Float.h        \
     .\_gen\java_lang_Character.h    \
+    $(NULL)
+
+!endif
+
+ActiveScriptSite.cpp: $(MOZCTLSRC)/ActiveScriptSite.cpp
+    -cp $(MOZCTLSRC)/ActiveScriptSite.cpp .
+
+MozActiveX.res: MozActiveX.rc resource.h
+
+MozActiveX.cpp: StdAfx.h
+
+!ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+XPConnect.cpp: StdAfx.h \
+    .\_xpidlgen\nsIMozAxPlugin.h    \
+    $(NULL)
+!endif
+
+LegacyPlugin.cpp: StdAfx.h \
+    .\LegacyPlugin.h                \
+!ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+    .\_xpidlgen\nsIMozAxPlugin.h    \
 !endif
     $(NULL)
 
