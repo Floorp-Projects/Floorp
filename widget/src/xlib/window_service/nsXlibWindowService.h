@@ -27,9 +27,6 @@ class nsXlibWindowService : public nsIXlibWindowService
 
   NS_DECL_ISUPPORTS
 
-//   NS_IMETHOD SetCreateCallback(nsXlibWindowCallback *aFunc);
-//   NS_IMETHOD DispatchNativeXlibEvent(void *aNativeEvent);
-
   NS_IMETHOD SetWindowCreateCallback(nsXlibWindowCallback aCallback);
   NS_IMETHOD SetWindowDestroyCallback(nsXlibWindowCallback aCallback);
   NS_IMETHOD GetWindowCreateCallback(nsXlibWindowCallback * aCallbackOut);
