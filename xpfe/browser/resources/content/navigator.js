@@ -256,7 +256,7 @@ function UpdateBookmarksLastVisitedDate(event)
     var win = document.getElementById( "main-window" );
     var x = win.getAttribute( "x" );
     var y = win.getAttribute( "y" );
-    dump(" move to "+x+" "+y+"\n");
+    // dump(" move to "+x+" "+y+"\n");
     window.moveTo( x, y );
 
     //  TileWindow();
@@ -268,7 +268,7 @@ function UpdateBookmarksLastVisitedDate(event)
      if (pref)
      {
      	pref = pref.getService();
-     	dump("QIing for pref interface\n");
+     	// dump("QIing for pref interface\n");
      	
      	pref = pref.QueryInterface(Components.interfaces.nsIPref);
       	if ( pref )
@@ -513,45 +513,6 @@ function UpdateBookmarksLastVisitedDate(event)
   }
 
 
-  function BrowserSetForward()
-  {
-     var forwardBElem = document.getElementById("canGoForward");
-     if (!forwardBElem) {
-	     dump("Couldn't obtain handle to forward Broarcast element\n");
-	     return;
-	   }
-
-     var canForward = forwardBElem.getAttribute("disabled");
-     var fb = document.getElementById("forward-button");
-     
-     if (!fb) {
-	      dump("Could not obtain handle to forward button\n");
-	      return;
-     }
-	
-     // Enable/Disable the Forward button      
-     if (canForward == "true")  {
-        fb.setAttribute("disabled", "true");
-     }
-     else {
-        fb.setAttribute("disabled", "");
-     }
-        
-     // Enable/Disable the Forward menu
-     var fm = document.getElementById("menuitem-forward");
-     if (!fm) {
-       dump("Couldn't obtain menu item Forward\n");
-       return;
-     }
-
-     // Enable/Disable the Forward Menuitem
-     if (canForward == "true")  {
-        fm.setAttribute("disabled", "true");
-     }
-     else {
-        fm.setAttribute("disabled", "");
-     }    
-  }
 
   function BrowserCanStop() {
     var stop = document.getElementById("canStop");
@@ -618,75 +579,7 @@ function UpdateBookmarksLastVisitedDate(event)
         dump("BrowserAppCore has not been created!\n");
      }
   }
-
-  function BrowserSetBack()
-  {
-     var backBElem = document.getElementById("canGoBack");
-     if (!backBElem) {
-	     dump("Couldn't obtain handle to back Broadcast element\n");
-	     return;
-	   }
-
-     var canBack = backBElem.getAttribute("disabled");
-     var bb = document.getElementById("back-button");
-     
-     if (!bb) {
-	     dump("Could not obtain handle to back button\n");
-	     return;
-     }
-	
-     // Enable/Disable the Back button      
-     if (canBack == "true")  {
-        bb.setAttribute("disabled", "true");
-     }
-     else {
-        bb.setAttribute("disabled", "");
-     }
-        
-     // Enable/Disable the Back menu
-     var bm = document.getElementById("menuitem-back");
-     if (!bm) {
-       dump("Couldn't obtain menu item Back\n");
-       return;
-     }
-
-     // Enable/Disable the Back Menuitem
-     if (canBack == "true")  {
-        bm.setAttribute("disabled", "true");
-     }
-     else {
-        bm.setAttribute("disabled", "");
-     }     
-  }
-
-
-  function BrowserSetReload() {
-    var reload = document.getElementById("canReload");
-    if ( reload ) {
-        var reloadDisabled = reload.getAttribute("disabled");
-        //Enable/disable the reload button
-        var reloadButton   = document.getElementById( "reload-button" );
-        
-        if ( reloadButton ) {
-            if ( reloadDisabled == "true") {
-                reloadButton.setAttribute( "disabled", "true" );
-            } else {
-                reloadButton.setAttribute( "disabled", "" );
-            }
-        }
-        //Enable/disable the reload menu
-        var reloadMenu = document.getElementById("menuitem-reload");
-        if ( reloadMenu ) {
-            if ( reloadDisabled == "true") {
-                
-                reloadMenu.setAttribute( "disabled", "true" );
-            } else {
-                
-                reloadMenu.setAttribute( "disabled", "" );
-            }
-        }
-    }
-  }
+ 
 
   function BrowserReallyReload(reloadType) {
      // Get a handle to the "canReload" broadcast id
@@ -697,31 +590,13 @@ function UpdateBookmarksLastVisitedDate(event)
 	   }
 
      var canreload = reloadBElem.getAttribute("disabled");
-     var sb = document.getElementById("reload-button");
      
-     if (!sb) {
-    	 dump("Could not obtain handle to reload button\n");
-	     return;
-     }
 
      // If the reload button is currently disabled, just return
-     if ((sb.getAttribute("disabled")) == "true") {
+     if ( canreload) {
 	     return;
      }
 	
-     //reload button has just been pressed. Disable it. 
-     sb.setAttribute("disabled", "true");
-
-     // Get a handle to the reload menu item.
-     var sm = document.getElementById("menuitem-reload");
-     if (!sm) {
-       dump("Couldn't obtain menu item reload\n");
-     } else {
-       // Disable the reload menu-item.
-       
-       sm.setAttribute("disabled", "true");
-     }
-  
      //Call in to BrowserAppcore to reload the current loading
      if (appCore != null) {
         dump("Going to reload\n");
@@ -791,7 +666,7 @@ function OpenSearch(tabName, searchStr)
 
   function BrowserNewWindow()
   {
-    window.open();
+    OpenBrowserWindow();
   }
 
   function BrowserEditPage(url)

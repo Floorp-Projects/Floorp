@@ -215,7 +215,7 @@ var contextTarget = null; // Content element to which context menu applies.
   </popup>
 </popupset>
  
-<broadcaster id="canReload"/>
+<broadcaster id="canReload" value="&reloadCmd.label;"  oncommand="BrowserReallyReload(0);"/>
 <broadcaster id="canStop"/>
 <broadcaster id="canPrint"/>
 <broadcaster id="Browser:LoadingProgress"/>
@@ -331,8 +331,7 @@ var contextTarget = null; // Content element to which context menu applies.
         </menupopup>
       </menu>
       <menuseparator />
-      <menuitem value="&reloadCmd.label;" id="menuitem-reload" 
-        oncommand="BrowserReallyReload(0);"/>
+      <menuitem  id="menuitem-reload"  observes="canReload" />
       <menuitem value="&showImagesCmd.label;" oncommand="BrowserReload();"/>
       <menuitem value="&stopCmd.label;" id="menuitem-stop" 
         oncommand="BrowserStop();"/>
@@ -626,22 +625,16 @@ var contextTarget = null; // Content element to which context menu applies.
 <!-- sidebar/toolbar/content/status -->
 <box id="sidebarparent" align="horizontal" flex="100%">
   <!-- toolbar/content/status -->
-  <box id="sidebarbox" chromeclass="extrachrome" />
+  <box id="sidebarbox" chromeclass="extrachrome"/>
   <splitter id="sidebarsplitter" collapse="before" persist="state hidden"
     onclick="sidebarSaveState(this)"/>
   <box id="appcontent" align="vertical" flex="100%">
     <toolbox id="main-toolbox">
       <toolbar class="main-bar" chromeclass="toolbar">
-        <titledbutton id="back-button" align="top"
-          value="&backButton.label;" onclick="BrowserBack()">    
-          <observes element="canGoBack" attribute="disabled" 
-            onChange="BrowserSetBack()"/>          
-        </titledbutton>
-        <titledbutton id="forward-button" align="top"
-          value="&forwardButton.label;" onclick="BrowserForward()">
-          <observes element="canGoForward" attribute="disabled"
-            onChange="BrowserSetForward()"/>
-        </titledbutton>
+        <titledbutton id="back-button" align="top" value="&backButton.label;" observes="canGoBack" />          
+        
+        <titledbutton id="forward-button" align="top" value="&forwardButton.label;" observes="canGoForward" />
+        
 
         <!-- Right now only regular reload is supported.  When the
         functionality is available, look for 'Shift' key pressed state
@@ -649,10 +642,8 @@ var contextTarget = null; // Content element to which context menu applies.
         is available.  There's a shiftDown field in the event object.)
         -->
         <titledbutton id="reload-button" align="top"
-          value="&reloadButton.label;" onclick="BrowserReallyReload(0)">
-          <observes element="canReload" attribute="disabled" 
-            onChange="BrowserSetReload()" />
-        </titledbutton>
+          value="&reloadButton.label;" observes="canReload"/>
+       
 
         <titledbutton id="stop-button" align="top"
           value="&stopButton.label;" onclick="BrowserStop()">

@@ -58,6 +58,66 @@ function toOpenWindowByType( inType, uri )
 		window.open(uri, "_blank", "chrome,menubar,toolbar,resizable");
 }
 
+
+  function OpenBrowserWindow()
+  {
+            pref = Components.classes['component://netscape/preferences'];
+    
+            // if all else fails, use trusty "about:blank" as the start page
+            var startpage = "about:blank";  
+            if (pref) {
+              pref = pref.getService(); 
+              pref = pref.QueryInterface(Components.interfaces.nsIPref);
+            }
+	 
+           
+          
+            if (pref) {
+              // from mozilla/modules/libpref/src/init/all.js
+              // 0 = blank 
+              // 1 = home (browser.startup.homepage)
+              // 2 = last 
+			choice = 1;
+			try {
+              		choice = pref.GetIntPref("browser.startup.page");
+			}
+			catch (ex) {
+				dump("failed to get the browser.startup.page pref\n");
+			}
+		
+    	  switch (choice) {
+    		case 0:
+                		startpage = "about:blank";
+          			break;
+    		case 1:
+				try {
+                			startpage = pref.CopyCharPref("browser.startup.homepage");
+				}
+				catch (ex) {
+					dump("failed to get the browser.startup.homepage pref\n");
+					startpage = "about:blank";
+				}
+          			break;
+    		case 2:
+                		var history = Components.classes['component://netscape/browser/global-history'];
+    			if (history) {
+                   			history = history.getService();
+    	    		}
+    	    		if (history) {
+                  			history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+    	    		}
+    	    		if (history) {
+    				startpage = history.GetLastPageVisted();
+    	    		}
+          			break;
+       		default:
+                		startpage = "about:blank";
+    	  }
+  	}
+  	window.open(startpage);
+  }
+
+
 function CycleWindow( inType, inChromeURL )
 {
 	var windowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
@@ -74,8 +134,7 @@ function CycleWindow( inType, inChromeURL )
 	dump( "topWindowOfType = " + topWindowOfType + "\n");
 	if ( topWindowOfType == null )
 	{
-		dump( " no windows of this type so create a new one \n");
-		window.open(inChromeURL, "_blank", "chrome,menubar,toolbar,location,status,resizable");
+		OpenBrowserWindow();
 		return;
 	}
 	
@@ -118,7 +177,7 @@ function CycleWindow( inType, inChromeURL )
 	else
 	{
 		dump("open window \n");
-		window.open(  );
+		window.OpenBrowserWindow(  );
 	}
 }
 
