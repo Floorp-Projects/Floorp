@@ -811,64 +811,12 @@ nsTextEditorDragListener::DragExit(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
 {
-  // Create drag service for getting state of drag
-  nsresult rv;
-  NS_WITH_SERVICE(nsIDragService, dragService, "component://netscape/widget/dragservice", &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
-  
-  if (dragSession) {
-
-    // Create transferable for getting the drag data
-    nsCOMPtr<nsITransferable> trans;
-    rv = nsComponentManager::CreateInstance("component://netscape/widget/transferable", nsnull, 
-                                            NS_GET_IID(nsITransferable), 
-                                            (void**) getter_AddRefs(trans));
-    if ( NS_SUCCEEDED(rv) && trans ) {
-      // Add the text Flavor to the transferable, 
-      // because that is the only type of data we are
-      // looking for at the moment.
-      trans->AddDataFlavor(kUnicodeMime);
-      //trans->AddDataFlavor(mImageDataFlavor);
-
-      // Fill the transferable with data for each drag item in succession
-      PRUint32 numItems = 0; 
-      if (NS_SUCCEEDED(dragSession->GetNumDropItems(&numItems))) { 
-
-        printf("Num Drop Items %d\n", numItems); 
-
-        PRUint32 i; 
-        for (i=0;i<numItems;++i) {
-          if (NS_SUCCEEDED(dragSession->GetData(trans, i))) { 
-
-            // Get the string data out of the transferable
-            // Note: the transferable owns the pointer to the data
-            nsCOMPtr<nsISupports> genericDataObj;
-            PRUint32 len;
-            char* whichFlavor = nsnull;
-            trans->GetAnyTransferData(&whichFlavor, getter_AddRefs(genericDataObj), &len);
-            nsCOMPtr<nsISupportsWString> textDataObj( do_QueryInterface(genericDataObj) );
-            // If the string was not empty then paste it in
-            if ( textDataObj )
-            {
-              PRUnichar* text = nsnull;
-              textDataObj->ToString(&text);
-              nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-              if ( htmlEditor && text )
-                htmlEditor->InsertText(text);
-              dragSession->SetCanDrop(PR_TRUE);
-            }
-
-            nsCRT::free(whichFlavor);
-            // XXX This is where image support might go
-            //void * data;
-            //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
-          }
-        } // foreach drag item
-      }
-    } // if valid transferable
-  } // if valid drag session
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
+  if ( htmlEditor )
+  {
+    htmlEditor->InsertFromDrop();
+  }
 
   return NS_OK;
 }
