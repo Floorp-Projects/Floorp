@@ -699,7 +699,7 @@ XULContentSinkImpl::CloseContainer(const nsIParserNode& aNode)
 			
 			// Block the parser. It will only be unblocked after all
 			// of our child overlays have finished parsing.
-            rv = NS_ERROR_HTMLPARSER_BLOCK;
+            mParser->EnableParser(PR_FALSE);
 		}
 		
 		// Unblock the next sibling overlay. If there is no next sibling
