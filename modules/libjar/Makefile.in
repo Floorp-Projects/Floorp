@@ -22,8 +22,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		    = jar
-LIBRARY_NAME	= jar$(VERSION_NUMBER)
+MODULE          = jar
+LIBRARY_NAME    = jar$(VERSION_NUMBER)
+IS_COMPONENT    = 1
 
 XPIDLSRCS=nsIZip.idl \
           nsIJAR.idl \
