@@ -36,7 +36,7 @@
                 (($default-action $default-action)))
                ((:class-character no-dash) (- (:class-character dash) (#\-))
                 (($default-action $default-action)))
-               (:identity-escape (- :unicode-character :unicode-alphanumeric)
+               (:identity-escape (- :unicode-character (+ (#\_) :unicode-alphanumeric))
                                  (($default-action $default-action))))
               (($default-action character nil identity)
                ($digit-value integer digit-value digit-char-36)))
@@ -398,7 +398,7 @@
        
        (%section "Escapes")
        
-       (production :null-escape (#\\ #\Q) null-escape-q)
+       (production :null-escape (#\\ #\_) null-escape-underscore)
        
        (rule :atom-escape ((gen-matcher matcher-generator))
          (production :atom-escape (:decimal-escape) atom-escape-decimal
@@ -644,7 +644,7 @@
 (run-regexp "(?=(a+))" "baaabac")
 (run-regexp "(.*?)a(?!(a+)b\\2c)\\2(.*)" "baaabaac")
 (run-regexp "(aa|aabaac|ba|b|c)*" "aabaac")
-(run-regexp "[\\Q^01234]+\\Qaa+" "93-43aabbc")
+(run-regexp "[\\_^01234]+\\_aa+" "93-43aabbc")
 (run-regexp "a." "AAab")
 (run-regexp "a." "AAab" :ignore-case t)
 (run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd"))

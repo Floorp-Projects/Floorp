@@ -50,7 +50,7 @@
                 (($default-action $default-action)))
                ((:literal-string-char double) (- :unicode-character (+ (#\" #\\) :line-terminator))
                 (($default-action $default-action)))
-               (:identity-escape (- :non-terminator :unicode-alphanumeric)
+               (:identity-escape (- :non-terminator (+ (#\_) :unicode-alphanumeric))
                                  (($default-action $default-action)))
                (:ordinary-reg-exp-char (- :non-terminator (#\\ #\/))
                                        (($default-action $default-action))))
@@ -206,7 +206,7 @@
        (production :null-escapes (:null-escape) null-escapes-one)
        (production :null-escapes (:null-escapes :null-escape) null-escapes-more)
        
-       (production :null-escape (#\\ #\Q) null-escape-q)
+       (production :null-escape (#\\ #\_) null-escape-underscore)
        
        (rule :initial-identifier-character-or-escape
              ((character-value character) (contains-escapes boolean))
