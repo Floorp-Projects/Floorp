@@ -99,7 +99,8 @@ NS_IMETHODIMP nsMsgMailboxParserStub::OnStartBinding(nsIURL* aURL, const char *a
 
 NS_IMETHODIMP nsMsgMailboxParserStub::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length) 
 {
-    PRUint32 totalBytesRead, len = 0;
+    PRUint32 totalBytesRead = 0;
+    PRUint32 len = 0;
 	// mscott - for small mailboxes, it might be useful to print the data we get back out to the screen.
 	// however, as our test files get bigger, that would be information overload and we'd really just like
 	// to see (or count) the number of times OnDataAvailable has been called.
@@ -110,13 +111,13 @@ NS_IMETHODIMP nsMsgMailboxParserStub::OnDataAvailable(nsIURL* aURL, nsIInputStre
 
         nsresult err;
         char buffer[1000];
-        PRUint32 i;
 
 		PRUint32 numToRead = length > 1000 ? 1000 : length;
-        err = pIStream->Read(buffer, 0, numToRead, &len);
+        err = pIStream->Read(buffer, numToRead, &len);
 		totalBytesRead += len;
 #if 0 
         if (err == NS_OK) {
+            PRUint32 i = 0;
             for (i=0; i<len; i++) {
                 putchar(buffer[i]);
             }
