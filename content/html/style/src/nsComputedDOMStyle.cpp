@@ -1285,7 +1285,25 @@ nsComputedDOMStyle::GetMarkerOffset(nsIFrame *aFrame,
   const nsStyleContent* content=nsnull;
   GetStyleData(eStyleStruct_Content, (const nsStyleStruct*&)content, aFrame);
 
-  val->SetTwips(content? content->mMarkerOffset.GetCoordValue():0);
+  if (content) {
+    switch (content->mMarkerOffset.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(content->mMarkerOffset.GetCoordValue());
+        break;
+      case eStyleUnit_Auto:
+        val->SetString(NS_LITERAL_STRING("auto"));
+        break;
+      case eStyleUnit_Null:
+        val->SetString(NS_LITERAL_STRING("none"));
+        break;
+      default:
+        NS_WARNING("Double check the unit");
+        val->SetTwips(0);
+        break;
+    }
+  } else {
+    val->SetTwips(0);
+  }
 
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
@@ -1309,7 +1327,30 @@ nsComputedDOMStyle::GetOutlineWidth(nsIFrame *aFrame,
   const nsStyleOutline* outline=nsnull;
   GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline, aFrame);
 
-  val->SetTwips(outline? outline->mOutlineWidth.GetCoordValue():0);
+  if (outline) {
+    switch (outline->mOutlineWidth.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(outline->mOutlineWidth.GetCoordValue());
+        break;
+      case eStyleUnit_Integer:
+      case eStyleUnit_Proportional:
+      case eStyleUnit_Enumerated:
+      case eStyleUnit_Chars:
+        {
+          const nsAFlatCString& width =
+            nsCSSProps::LookupPropertyValue(eCSSProperty_outline_width,
+                                            outline->mOutlineWidth.GetIntValue());
+          val->SetString(width.get());
+          break;
+        }
+      default:
+        NS_WARNING("Double check the unit");
+        val->SetTwips(0);
+        break;
+    }
+  } else {
+    val->SetTwips(0);
+  }
 
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
@@ -1326,10 +1367,15 @@ nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline, aFrame);
 
   if(outline) {
-    const nsAFlatCString& style=
-      nsCSSProps::SearchKeywordTable(outline->GetOutlineStyle(),
-                                     nsCSSProps::kBorderStyleKTable);
-    val->SetString(style.get());
+    PRUint8 outlineStyle = outline->GetOutlineStyle();
+    if (outlineStyle == NS_STYLE_BORDER_STYLE_NONE) {
+      val->SetString(NS_LITERAL_STRING("none"));
+    } else {
+      const nsAFlatCString& style=
+        nsCSSProps::SearchKeywordTable(outline->GetOutlineStyle(),
+                                       nsCSSProps::kBorderStyleKTable);
+      val->SetString(style.get());
+    }
   }
   else {
     val->SetString("");
