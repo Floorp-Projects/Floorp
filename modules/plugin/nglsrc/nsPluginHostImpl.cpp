@@ -2351,6 +2351,9 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
   // set flags
   mPluginsLoaded = PR_FALSE;
 
+  //refresh the component registry first
+  nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+
   // load them again
   nsresult rv = LoadPlugins();
 
