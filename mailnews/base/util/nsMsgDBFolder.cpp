@@ -38,15 +38,7 @@
 #include "nsITransport.h"
 #include "nsIFileTransportService.h"
 #include "nsIMsgFolderCompactor.h"
-#if defined(XP_OS2)
-#define MAX_FILE_LENGTH_WITHOUT_EXTENSION 8
-#elif defined(XP_MAC)
-#define MAX_FILE_LENGTH_WITHOUT_EXTENSION 26
-#elif defined(XP_WIN32)
-#define MAX_FILE_LENGTH_WITHOUT_EXTENSION 256
-#else
-#define MAX_FILE_LENGTH_WITHOUT_EXTENSION 32000
-#endif
+#include "nsMsgUtils.h"
 
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -580,69 +572,44 @@ nsresult nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputStre
   return rv;
 }
 
+// XXX todo
+// move these to a common location and remove all the hard coded ".msf"
+#define SUMMARY_SUFFIX ".msf"
+#define SUMMARY_SUFFIX_LEN 4
+
 // path coming in is the root path without the leaf name,
 // on the way out, it's the whole path.
-nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &path, char **resultName)
+nsresult nsMsgDBFolder::CreateFileSpecForDB(const char *userLeafName, nsFileSpec &path, nsIFileSpec **dbFileSpec)
 {
-#if 0
-	const int charLimit = MAX_FILE_LENGTH_WITHOUT_EXTENSION;	// set on platform specific basis
-#endif
-#if defined(XP_MAC)
-	nsCAutoString illegalChars(":");
-#elif defined(XP_OS2) 
-	nsCAutoString illegalChars("\"/\\[]:;=,|?<>*$. ");
-#elif defined(XP_WIN32)
-	nsCAutoString illegalChars("\"/\\[]:;=,|?<>*$");
-#else		// UNIX	(what about beos?)
-	nsCAutoString illegalChars;
-#endif
+  NS_ENSURE_ARG_POINTER(dbFileSpec);
+  NS_ENSURE_ARG_POINTER(userLeafName);
 
-	if (!resultName || !userLeafName)
-		return NS_ERROR_NULL_POINTER;
-	*resultName = nsnull;
+  nsCAutoString proposedDBName(userLeafName);
+  NS_MsgHashIfNecessary(proposedDBName);
 
-	// mangledLeaf is the new leaf name.
-	// If userLeafName	(a) contains all legal characters
-	//					(b) is within the valid length for the given platform
-	//					(c) does not already exist on the disk
-	// then we simply return nsCRT::strdup(userLeafName)
-	// Otherwise we mangle it
-	// mangledPath is the entire path to the newly mangled leaf name
-	nsCAutoString mangledLeaf(userLeafName);
+  // (note, the caller of this will be using the dbFileSpec to call db->Open() 
+  // will turn the path into summary spec, and append the ".msf" extension)
+  //
+  // we want db->Open() to create a new summary file
+  // so we have to jump through some hoops to make sure the .msf it will
+  // create is unique.  now that we've got the "safe" proposedDBName,
+  // we append ".msf" to see if the file exists.  if so, we make the name
+  // unique and then string off the ".msf" so that we pass the right thing
+  // into Open().  this isn't ideal, since this is not atomic
+  // but it will make do.
+  proposedDBName+= SUMMARY_SUFFIX;
+  path += proposedDBName.get();
+  if (path.Exists()) 
+  {
+    path.MakeUnique();
+    proposedDBName = path.GetLeafName();
+  }
+  // now, take the ".msf" off
+  proposedDBName.Truncate(proposedDBName.Length() - SUMMARY_SUFFIX_LEN);
+  path.SetLeafName(proposedDBName);
 
-	PRInt32 illegalCharacterIndex = mangledLeaf.FindCharInSet(illegalChars);
-
-	if (illegalCharacterIndex == kNotFound)
-	{
-		path += (const char *) mangledLeaf;
-		if (!path.Exists())
-		{
-		// if there are no illegal characters
-		// and the file doesn't already exist, then don't do anything to the string
-		// Note that this might be truncated to charLength, but if so, the file still
-		// does not exist, so we are OK.
-			*resultName = mangledLeaf.ToNewCString();
-			return (*resultName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-		}
-	}
-	else
-	{
-
-		// First, replace all illegal characters with '_'
-		mangledLeaf.ReplaceChar(illegalChars, '_');
-
-		path += (const char *) mangledLeaf;
-	}
-	// if we are here, then any of the following may apply:
-	//		(a) there were illegal characters
-	//		(b) the file already existed
-
-	// Now, we have to loop until we find a filename that doesn't already
-	// exist on the disk
-	path.SetLeafName(mangledLeaf.get());
-  path.MakeUnique();
-  *resultName = path.GetLeafName();
-	return NS_OK;
+  NS_NewFileSpecWithSpec(path, dbFileSpec);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

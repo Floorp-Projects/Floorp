@@ -721,7 +721,14 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         nsCAutoString uri (mURI);
         parentName.Right(leafName, leafName.Length() - folderStart - 1);
         parentName.Truncate(folderStart);
-        path += parentName;
+
+	// the parentName might be too long or have some illegal chars
+        // so we make it safe
+        nsCAutoString safeParentName;
+        safeParentName.AssignWithConversion(parentName);
+        NS_MsgHashIfNecessary(safeParentName);
+        path += safeParentName;
+
         rv = CreateDirectoryForFolder(path);
         if (NS_FAILED(rv)) return rv;
         uri.Append('/');
@@ -748,22 +755,13 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
   rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
   if (NS_SUCCEEDED(rv) && mailDBFactory)
   {
-        nsCOMPtr<nsIMsgDatabase> unusedDB;
+    nsCOMPtr<nsIMsgDatabase> unusedDB;
     nsCOMPtr <nsIFileSpec> dbFileSpec;
 
-    nsXPIDLCString uniqueLeafName;
-    nsCAutoString proposedDBName(folderName);
-    proposedDBName += ".msf";
+    // warning, path will be changed
+    rv = CreateFileSpecForDB(folderName, path, getter_AddRefs(dbFileSpec));
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = CreatePlatformLeafNameForDisk(proposedDBName, path, getter_Copies(uniqueLeafName));
-
-    // take off the ".msf" on the end.
-    proposedDBName = uniqueLeafName;
-    proposedDBName.Truncate(proposedDBName.Length() - 4);
-
-    path.SetLeafName(proposedDBName);
-
-    NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
     rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
 
         if (NS_SUCCEEDED(rv) && unusedDB)
@@ -5490,20 +5488,13 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
       nsCOMPtr<nsIMsgDatabase> unusedDB;
       nsCOMPtr <nsIFileSpec> dbFileSpec;
 
-      nsXPIDLCString uniqueLeafName;
-      nsCAutoString proposedDBName(newLeafName.ToNewCString());
-	  //nsCAutoString proposedDBName(folderName);
-      proposedDBName += ".msf";
+      nsCAutoString proposedDBName;
+      proposedDBName.AssignWithConversion(newLeafName);
 
-      rv = CreatePlatformLeafNameForDisk(proposedDBName, path, getter_Copies(uniqueLeafName));
+      // warning, path will be changed
+      rv = CreateFileSpecForDB(proposedDBName.get(), path, getter_AddRefs(dbFileSpec));
+      NS_ENSURE_SUCCESS(rv,rv);
 
-      // take off the ".msf" on the end.
-      proposedDBName = uniqueLeafName;
-      proposedDBName.Truncate(proposedDBName.Length() - 4);
-
-      path.SetLeafName(proposedDBName);
-
-      NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
       // it's OK to use Open and not OpenFolderDB here, since we don't use the DB.
       rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
 

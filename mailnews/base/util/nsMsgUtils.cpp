@@ -41,10 +41,6 @@ static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
 
-#if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
-#define DEBUG_NS_MsgHashIfNecessary 1
-#endif
-
 nsresult GetMessageServiceContractIDForURI(const char *uri, nsString &contractID)
 {
 
@@ -236,38 +232,51 @@ static PRUint32 StringHash(const char *ubuf)
 nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
 {
 #if defined(XP_MAC)
+  nsCAutoString illegalChars(":");
   const PRUint32 MAX_LEN = 25;
-#elif defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
+  nsCAutoString illegalChars;  // is this correct for BEOS?
   const PRUint32 MAX_LEN = 55;
+#elif defined(XP_WIN32)
+  nsCAutoString illegalChars("\"/\\[]:;=,|?<>*$");
+  const PRUint32 MAX_LEN = 55;
+#elif defined(XP_OS2)
+  nsCAutoString illegalChars("\"/\\[]:;=,|?<>*$. ");
+  const PRUint32 MAX_LEN = 8;
 #else
 #error need_to_define_your_max_filename_length
 #endif
   nsCAutoString str(name);
 
-#ifdef DEBUG_NS_MsgHashIfNecessary
-  printf("in: %s\n",str.get());
-#endif
-
-  // Given a name, use either that name, if it fits on our
-  // filesystem, or a hashified version of it, if the name is too
-  // long to fit.
+  // Given a filename, make it safe for filesystem
+  // certain filenames require hashing because they 
+  // are too long or contain illegal characters
+  PRInt32 illegalCharacterIndex = str.FindCharInSet(illegalChars);
   char hashedname[MAX_LEN + 1];
-  PRBool needshash = PL_strlen(str.get()) > MAX_LEN;
-#if defined(XP_WIN16)  || defined(XP_OS2)
-  if (!needshash) {
-    needshash = PL_strchr(str.get(), '.') != nsnull ||
-      PL_strchr(str.get(), ':') != nsnull;
-  }
-#endif
-  PL_strncpy(hashedname, str.get(), MAX_LEN + 1);
-  if (needshash) {
-    PR_snprintf(hashedname + MAX_LEN - 8, 9, "%08lx",
+  if (illegalCharacterIndex == kNotFound) 
+  {
+    // no illegal chars, it's just too long
+    // keep the initial part of the string, but hash to make it fit
+    if (str.Length() > MAX_LEN) 
+    {
+      PL_strncpy(hashedname, str.get(), MAX_LEN + 1);
+      PR_snprintf(hashedname + MAX_LEN - 8, 9, "%08lx",
                 (unsigned long) StringHash(str.get()));
+      name = hashedname;
+    }
   }
-  name = hashedname;
-#ifdef DEBUG_NS_MsgHashIfNecessary
-  printf("out: %s\n",hashedname);
-#endif
+  else 
+  {
+      // found illegal chars, hash the whole thing
+      // if we do substitution, then hash, two strings
+      // could hash to the same value.
+      // for example, on mac:  "foo__bar", "foo:_bar", "foo::bar"
+      // would map to "foo_bar".  this way, all three will map to
+      // different values
+      PR_snprintf(hashedname, 9, "%08lx",
+                (unsigned long) StringHash(str.get()));
+      name = hashedname;
+  }
   
   return NS_OK;
 }

@@ -103,7 +103,7 @@ protected:
   nsresult CheckWithNewMessagesStatus(PRBool messageAdded);
   nsresult OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                   nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);
-  nsresult CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &baseDir, char **resultName);
+  nsresult CreateFileSpecForDB(const char *userLeafName, nsFileSpec &baseDir, nsIFileSpec **dbFileSpec);
 
   nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);
   nsresult GetFolderCacheElemFromFileSpec(nsIFileSpec *fileSpec, nsIMsgFolderCacheElement **cacheElement);
