@@ -40,7 +40,25 @@ const nsString& GetEmptyString() {
 
 
 /**
- *  Default constructor
+ *  Default Constructor
+ */
+nsCParserNode::nsCParserNode()
+  : mLineNumber(1),
+    mToken(nsnull),
+    mAttributes(nsnull),
+    mSkippedContent(nsnull),
+    mUseCount(0),
+    mGenericState(PR_FALSE),
+    mTokenAllocator(nsnull)
+{
+  MOZ_COUNT_CTOR(nsCParserNode);
+#ifdef HEAP_ALLOCATED_NODES
+  mNodeAllocator=nsnull;
+#endif
+}
+
+/**
+ *  Constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aToken -- token to init internal token
@@ -97,17 +115,17 @@ nsCParserNode::~nsCParserNode() {
  */
 
 nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator) {
-  mLineNumber=aLineNumber;
-  mTokenAllocator=aTokenAllocator;
   if(mAttributes && (mAttributes->GetSize())) {
-    CToken* theAttrToken=0;
-    while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
-      // nsViewSourceHTML.cpp:513 creates nsCParserNodes with a NULL token allocator
-      // need to check to see if mTokenAllocator is non-null
-      if(aTokenAllocator)
-        IF_FREE(theAttrToken, aTokenAllocator);
+    NS_ASSERTION(0!=mTokenAllocator, "Error: Attribute tokens on node without token allocator");
+    if(mTokenAllocator) {
+      CToken* theAttrToken=0;
+      while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
+        IF_FREE(theAttrToken, mTokenAllocator);
+      }
     }
   }
+  mLineNumber=aLineNumber;
+  mTokenAllocator=aTokenAllocator;
   mToken=aToken;
   IF_HOLD(mToken);
   mGenericState=PR_FALSE;
@@ -131,11 +149,14 @@ nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator
  */
 void nsCParserNode::AddAttribute(CToken* aToken) {
   NS_PRECONDITION(0!=aToken, "Error: Token shouldn't be null!");
+  NS_PRECONDITION(0!=mTokenAllocator, "Error: Can't add attribute without token allocator");
 
-  if(!mAttributes)
-    mAttributes=new nsDeque(0);
-  if(mAttributes) {
-    mAttributes->Push(aToken);
+  if(mTokenAllocator) {
+    if(!mAttributes)
+      mAttributes=new nsDeque(0);
+    if(mAttributes) {
+      mAttributes->Push(aToken);
+    }
   }
 }
 
@@ -344,12 +365,12 @@ void nsCParserNode::GetSource(nsString& aString) {
  */
 nsresult nsCParserNode::ReleaseAll() {
   if(mAttributes) {
-    CToken* theAttrToken=0;
-    while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
-      // nsViewSourceHTML.cpp:513 creates nsCParserNodes with a NULL token allocator
-      // need to check to see if mTokenAllocator is non-null
-      if(mTokenAllocator)
+    NS_ASSERTION(0!=mTokenAllocator, "Error: no token allocator");
+    if(mTokenAllocator) {
+      CToken* theAttrToken=0;
+      while((theAttrToken=NS_STATIC_CAST(CToken*,mAttributes->Pop()))) {
         IF_FREE(theAttrToken, mTokenAllocator);
+      }
     }
     delete mAttributes;
     mAttributes=0;
@@ -358,7 +379,12 @@ nsresult nsCParserNode::ReleaseAll() {
     delete mSkippedContent;
     mSkippedContent=0;
   }
-  IF_FREE(mToken, mTokenAllocator);
+
+  if(mTokenAllocator) {
+    // It was heap allocated, so free it!
+    IF_FREE(mToken,mTokenAllocator);
+  }
+
   return NS_OK;
 }
 

@@ -952,7 +952,7 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         const nsString& theString=aNode.GetSkippedContent();
         if(0<theString.Length()) {
           CTextToken *theToken=NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString));
-          nsCParserNode theNode(theToken,0);
+          nsCParserNode theNode(theToken,0,mTokenAllocator);
           result=mSink->AddLeaf(theNode); //when the node get's destructed, so does the new token
         }
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
@@ -971,7 +971,7 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
 
         CTextToken theToken(theNumber);
         PRInt32 theLineNumber=0;
-        nsCParserNode theNode(&theToken,theLineNumber);
+        nsCParserNode theNode(&theToken,theLineNumber,0 /*stack token*/);
         result=mSink->AddLeaf(theNode);
       }
       break;
@@ -1420,7 +1420,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
 
               //because this code calls CloseHead() directly, stack-based token/nodes are ok.
             CEndToken     theToken(eHTMLTag_head);
-            nsCParserNode theNode(&theToken,mLineNumber);
+            nsCParserNode theNode(&theToken,mLineNumber,0 /*stack token*/);
             result=CloseHead(&theNode);
           }
         }
@@ -1903,7 +1903,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
     case eHTMLTag_form:
       {
           //this is safe because we call close container directly. This node/token is not cached.
-        nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
+        nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenAllocator);
         result=CloseContainer(&theNode,theChildTag,PR_FALSE);
       }
       break;
@@ -2135,7 +2135,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 
   eHTMLTags theParentTag=mBodyContext->Last();
 
-  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,0);
+  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
     PRBool theParentContains=-1; //set to -1 to force CanOmit to recompute...
     if(CanOmit(theParentTag,eHTMLTag_entity,theParentContains)) {
@@ -2172,7 +2172,7 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   const nsAReadableString& theComment = theToken->GetStringValue();
   mLineNumber += CountCharInReadable(theComment, PRUnichar(kNewLine));
 
-  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,0);
+  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
 
   #ifdef  RICKG_DEBUG
@@ -2248,7 +2248,7 @@ nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
 
   nsresult  result=NS_OK;
 
-  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,0);
+  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
 
   #ifdef  RICKG_DEBUG
@@ -2298,7 +2298,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   docTypeStr.Cut(0,2); // Now remove "<!" from the begining
   theToken->SetStringValue(docTypeStr);
 
-  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,0);
+  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
 
   STOP_TIMER();
@@ -2943,7 +2943,7 @@ nsresult CNavDTD::CloseTransientStyles(eHTMLTags aChildTag){
     for(theTagPos=mBodyContext->mOpenStyles;theTagPos>0;theTagPos--){
       eHTMLTags theTag=GetTopNode();
       CStartToken   token(theTag);
-      nsCParserNode theNode(&token,mLineNumber);
+      nsCParserNode theNode(&token,mLineNumber,0 /*stack token*/);
       token.SetTypeID(theTag); 
       result=CloseContainer(theNode,theTag,PR_FALSE);
     }

@@ -141,7 +141,7 @@ class CToken {
      * @update	harishd 08/02/00
      */
     void Release(nsFixedSizeAllocator& aArenaPool) {
-      if(--mUseCount==0) 
+      if(--mUseCount==0)
         Destroy(this, aArenaPool);
     }
 

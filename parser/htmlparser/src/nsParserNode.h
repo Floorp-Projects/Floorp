@@ -108,10 +108,15 @@ class nsCParserNode :  public nsIParserNode {
 
     /**
      * Default constructor
+     */
+    nsCParserNode();
+
+    /**
+     * Constructor
      * @update	gess5/11/98
      * @param   aToken is the token this node "refers" to
      */
-    nsCParserNode(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0,nsNodeAllocator* aNodeAllocator=0);
+    nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator=0);
 
     /**
      * Destructor
@@ -123,7 +128,7 @@ class nsCParserNode :  public nsIParserNode {
      * Init
      * @update	gess5/11/98
      */
-    virtual nsresult Init(CToken* aToken=nsnull,PRInt32 aLineNumber=1,nsTokenAllocator* aTokenAllocator=0,nsNodeAllocator* aNodeAllocator=0);
+    virtual nsresult Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator=0);
 
     /**
      * Retrieve the name of the node
