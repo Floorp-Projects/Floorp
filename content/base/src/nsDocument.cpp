@@ -613,6 +613,13 @@ nsIURLGroup* nsDocument::GetDocumentURLGroup() const
   return mDocumentURLGroup;
 }
 
+NS_IMETHODIMP
+nsDocument::GetBaseURL(nsIURL*& aURL) const
+{
+  aURL = mDocumentURL;
+  return NS_OK;
+}
+
 nsCharSetID nsDocument::GetDocumentCharacterSet() const
 {
   return mCharacterSet;
