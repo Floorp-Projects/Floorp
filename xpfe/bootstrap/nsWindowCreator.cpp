@@ -70,9 +70,9 @@ nsWindowCreator::~nsWindowCreator() {
 NS_IMPL_ISUPPORTS1(nsWindowCreator, nsIWindowCreator)
 
 NS_IMETHODIMP
-nsWindowCreator::CreateWindow(nsIWebBrowserChrome *aParent,
-                              PRUint32 aChromeFlags,
-                              nsIWebBrowserChrome **_retval)
+nsWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
+                                    PRUint32 aChromeFlags,
+                                    nsIWebBrowserChrome **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;

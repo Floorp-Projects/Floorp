@@ -449,7 +449,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
       parentTreeOwner->GetNewWindow(chromeFlags, getter_AddRefs(newDocShellItem));
     else if (mWindowCreator) {
       nsCOMPtr<nsIWebBrowserChrome> newChrome;
-      mWindowCreator->CreateWindow(0, chromeFlags, getter_AddRefs(newChrome));
+      mWindowCreator->CreateChromeWindow(0, chromeFlags, getter_AddRefs(newChrome));
       if (newChrome) {
         nsCOMPtr<nsIInterfaceRequestor> thing(do_QueryInterface(newChrome));
         if (thing) {

@@ -34,9 +34,9 @@ WindowCreator::~WindowCreator() {
 NS_IMPL_ISUPPORTS1(WindowCreator, nsIWindowCreator)
 
 NS_IMETHODIMP
-WindowCreator::CreateWindow(nsIWebBrowserChrome *parent,
-                            PRUint32 chromeFlags,
-                            nsIWebBrowserChrome **_retval)
+WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *parent,
+                                  PRUint32 chromeFlags,
+                                  nsIWebBrowserChrome **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   ::CreateBrowserWindow(PRInt32(chromeFlags), parent, _retval);
