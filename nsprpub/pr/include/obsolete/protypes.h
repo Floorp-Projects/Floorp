@@ -17,7 +17,7 @@
  */
 
 /*
- * This section typedefs the old 'native' types to the new PR<type>s.
+ * This header typedefs the old 'native' types to the new PR<type>s.
  * These definitions are scheduled to be eliminated at the earliest
  * possible time. The NSPR API is implemented and documented using
  * the new definitions.
@@ -32,53 +32,107 @@ typedef PRIntn intn;
 #endif
 
 /*
- * BeOS already defines the integer types below in its standard
- * header file SupportDefs.h.
+ * It is trickier to define uint, int8, uint8, int16, uint16,
+ * int32, uint32, int64, and uint64 because some of these int
+ * types are defined by standard header files on some platforms.
+ * Our strategy here is to include all such standard headers
+ * first, and then define these int types only if they are not
+ * defined by those standard headers.
+ */
+
+/*
+ * BeOS defines all the int types below in its standard header
+ * file SupportDefs.h.
  */
 #ifdef XP_BEOS
-
 #include <support/SupportDefs.h>
+#endif
 
-#elif defined(VMS)
 /*
- * OpenVMS already defines the integer types below in its standard
+ * OpenVMS defines all the int types below in its standard
  * header files ints.h and types.h.
  */
+#ifdef VMS
 #include <ints.h>
 #include <types.h>
-#else
+#endif
 
-/* SVR4 typedef of uint is commonly found on UNIX machines. */
+/*
+ * SVR4 typedef of uint is commonly found on UNIX machines.
+ *
+ * On AIX 4.3, sys/inttypes.h (which is included by sys/types.h)
+ * defines the types int8, int16, int32, and int64.
+ */
 #ifdef XP_UNIX
 #include <sys/types.h>
-#else
+#endif
+
+/* model.h on HP-UX defines int8, int16, and int32. */
+#ifdef HPUX
+#include <model.h>
+#endif
+
+/*
+ * uint
+ */
+
+#if !defined(XP_BEOS) && !defined(VMS) \
+    && !defined(XP_UNIX) || defined(NTO)
 typedef PRUintn uint;
 #endif
 
+/*
+ * uint64
+ */
+
+#if !defined(XP_BEOS) && !defined(VMS)
 typedef PRUint64 uint64;
+#endif
+
+/*
+ * uint32
+ */
+
+#if !defined(XP_BEOS) && !defined(VMS)
 #if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
 typedef PRUint32 uint32;
 #else
 typedef unsigned long uint32;
 #endif
-typedef PRUint16 uint16;
-typedef PRUint8 uint8;
+#endif
 
 /*
- * On AIX 4.3, sys/inttypes.h (which is included by sys/types.h, a very
- * common header file) defines the types int8, int16, int32, and int64.
- * So we don't define these four types here to avoid conflicts in case
- * the code also includes sys/types.h.
+ * uint16
  */
-#if defined(_PR_AIX_HAVE_BSD_INT_TYPES)
-/* <sys/types.h> is already included */
-#else
-typedef PRInt64 int64;
 
-/* /usr/include/model.h on HP-UX defines int8, int16, and int32 */
-#if defined(HPUX)
-#include <model.h>
-#else
+#if !defined(XP_BEOS) && !defined(VMS)
+typedef PRUint16 uint16;
+#endif
+
+/*
+ * uint8
+ */
+
+#if !defined(XP_BEOS) && !defined(VMS)
+typedef PRUint8 uint8;
+#endif
+
+/*
+ * int64
+ */
+
+#if !defined(XP_BEOS) && !defined(VMS) \
+    && !defined(_PR_AIX_HAVE_BSD_INT_TYPES)
+typedef PRInt64 int64;
+#endif
+
+/*
+ * int32
+ */
+
+#if !defined(XP_BEOS) && !defined(VMS) \
+    && !defined(_PR_AIX_HAVE_BSD_INT_TYPES) \
+    && !defined(HPUX)
 #if !defined(WIN32) || !defined(_WINSOCK2API_)  /* defines its own "int32" */
 #if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
 typedef PRInt32 int32;
@@ -86,12 +140,27 @@ typedef PRInt32 int32;
 typedef long int32;
 #endif
 #endif
-typedef PRInt16 int16;
-typedef PRInt8 int8;
-#endif /* HPUX */
-#endif /* _PR_AIX_HAVE_BSD_INT_TYPES */
+#endif
 
-#endif /* XP_BEOS VMS */
+/*
+ * int16
+ */
+
+#if !defined(XP_BEOS) && !defined(VMS) \
+    && !defined(_PR_AIX_HAVE_BSD_INT_TYPES) \
+    && !defined(HPUX)
+typedef PRInt16 int16;
+#endif
+
+/*
+ * int8
+ */
+
+#if !defined(XP_BEOS) && !defined(VMS) \
+    && !defined(_PR_AIX_HAVE_BSD_INT_TYPES) \
+    && !defined(HPUX)
+typedef PRInt8 int8;
+#endif
 
 typedef PRFloat64 float64;
 typedef PRUptrdiff uptrdiff_t;
