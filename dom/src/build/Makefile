@@ -37,12 +37,12 @@ LD_ALL = -all
 LD_NONE = -none
 endif
 
-#
-# Rhapsody is using a more-portable way of specifying
-# the link line, Linux and other OS's probably want
-# to follow suit. -mcafee
-#
-ifeq ($(OS_TARGET),Rhapsody)
+ifeq ($(USE_NGLAYOUT_GTK),1)
+GFX_DSO_FLAGS = -lgfxgtk
+else
+GFX_DSO_FLAGS = -lgfxmotif
+endif
+
 EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/lib \
 	-ljsdombase_s	\
@@ -54,7 +54,7 @@ EXTRA_DSO_LDOPTS = \
 	-L$(DIST)/bin	\
 	-lraptorbase	\
 	-lraptorgfx	\
-	-lgfxmotif	\
+	$(GFX_DSO_FLAGS) \
 	-lgmbaseunix	\
 	-lnetlib	\
 	-ljs		\
@@ -63,28 +63,5 @@ EXTRA_DSO_LDOPTS = \
 	-lplds21	\
 	-lplc21		\
 	$(NULL)
-else
-# These must be maintained in the proper order for Linux.
-EXTRA_DSO_LDOPTS = \
-	$(LD_ALL)					\
-	$(DIST)/lib/libjsdombase_s.a			\
-	$(DIST)/lib/libjsdomcss_s.a			\
-	$(DIST)/lib/libjsdomcore_s.a			\
-	$(DIST)/lib/libjsdomevents_s.a			\
-	$(DIST)/lib/libjsdomhtml_s.a			\
-	$(DIST)/lib/libjsurl.a				\
-	$(LD_NONE)					\
-	$(DIST)/bin/libraptorbase.so			\
-	$(DIST)/bin/libraptorgfx.so \
-	$(DIST)/bin/libgfxmotif.so \
-	$(DIST)/bin/libgmbaseunix.so			\
-	$(DIST)/bin/libnetlib.so			\
-	$(DIST)/bin/libjs.so				\
-	$(DIST)/bin/libxpcom.so				\
-	$(DIST)/bin/libnspr21.so			\
-	$(DIST)/bin/libplds21.so			\
-	$(DIST)/bin/libplc21.so				\
-	-lm
-endif
 
 include $(DEPTH)/config/rules.mk
