@@ -1548,8 +1548,10 @@ deleteHTNode(HT_Resource node)
 	}
 
 	removeHTFromHash(node->view->pane, node);
-	parent = node->parent;
-	if (parent->numChildren > 0)	--(parent->numChildren);
+	if ((parent = node->parent) != NULL)
+	{
+		if (parent->numChildren > 0)	--(parent->numChildren);
+	}
 	while (parent != NULL)
 	{
 		--(parent->numChildrenTotal);
