@@ -39,6 +39,9 @@ foreach my $file (@files) {
     foreach my $line (@lines) {
         if ($line =~ m/template->process\(\"(.+?)\", .+?\)/) {
             $template = $1;
+            # Ignore templates with $ in the name, since they're
+            # probably vars, not real files
+            next if $template =~ m/\$/;
             push (@testitems, $template) unless $t{$template};
             $t{$template} = 1;
         }
