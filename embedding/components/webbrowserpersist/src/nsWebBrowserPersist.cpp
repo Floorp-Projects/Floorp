@@ -596,8 +596,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
         {
             stateFlags |= nsIWebProgressListener::STATE_IS_NETWORK;
         }
-        // XXX Shouldn't we pass status, or at least check it?
-        mProgressListener->OnStateChange(nsnull, request, stateFlags, NS_OK);
+        mProgressListener->OnStateChange(nsnull, request, stateFlags, status);
     }
 
     return NS_OK;
@@ -1242,7 +1241,6 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         {
             // do a simple comparison to see if they are identical locations
             nsCOMPtr<nsIURI> pathToFileParent;
-            rv = aFile->Clone(getter_AddRefs(pathToFileParent));
             if (NS_SUCCEEDED(aFile->Clone(getter_AddRefs(pathToFileParent))))
             {
                 nsCOMPtr<nsIURL> urlToChopOffFile = do_QueryInterface(pathToFileParent);
@@ -2130,6 +2128,9 @@ nsWebBrowserPersist::FixupNodeAttribute(nsIDOMNode *aNode,
             }
             nsAutoString newValue;
 
+            // remove username/password if present
+            fileAsURI->SetUserPass(NS_LITERAL_CSTRING(""));
+
             // reset node attribute 
             // Use relative or absolute links
             if (data->mDataPathIsRelative)
@@ -2189,11 +2190,23 @@ nsWebBrowserPersist::FixupAnchor(nsIDOMNode *aNode)
             return NS_OK;
         }
 
+        // if saving file to same location, we don't need to do any fixup
+        PRBool isEqual = PR_FALSE;
+        if (NS_SUCCEEDED(mCurrentBaseURI->Equals(mTargetBaseURI, &isEqual))
+            && isEqual)
+        {
+            return NS_OK;
+        }
+
+        nsCOMPtr<nsIURI> relativeURI;
+        relativeURI = (mPersistFlags & PERSIST_FLAGS_FIXUP_LINKS_TO_DESTINATION)
+                      ? mTargetBaseURI : mCurrentBaseURI;
         // Make a new URI to replace the current one
         nsCOMPtr<nsIURI> newURI;
-        rv = NS_NewURI(getter_AddRefs(newURI), oldCValue.get(), mCurrentBaseURI);
+        rv = NS_NewURI(getter_AddRefs(newURI), oldCValue.get(), relativeURI);
         if (NS_SUCCEEDED(rv))
         {
+            newURI->SetUserPass(NS_LITERAL_CSTRING(""));
             nsCAutoString uriSpec;
             newURI->GetSpec(uriSpec);
             attrNode->SetNodeValue(NS_ConvertUTF8toUCS2(uriSpec));
@@ -2267,8 +2280,6 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
     nsIURI *aFile, PRBool aReplaceExisting, const char *aFormatType,
     const nsString &aSaveCharset, PRUint32 aFlags)
 {
-    // NOTE: This function is based off of nsDocument::SaveFile
-
     NS_ENSURE_ARG_POINTER(aFile);
     
     nsresult  rv = NS_OK;
@@ -2301,6 +2312,8 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
     nsAutoString newContentType; newContentType.AssignWithConversion(aFormatType);
     rv = encoder->Init(aDocument, newContentType, aFlags);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    mTargetBaseURI = aFile;
 
     // Set the node fixup callback
     encoder->SetNodeFixup(aNodeFixup);
