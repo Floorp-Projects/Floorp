@@ -1233,7 +1233,7 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(
   res = mPrefs->GetComplexValue(aKey, NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(pls));
   if (NS_FAILED(res)) return res;
 
-  if (pls != NULL) {
+  if (pls) {
     nsXPIDLString ucsval;
     pls->ToString(getter_Copies(ucsval));
     if (ucsval)
