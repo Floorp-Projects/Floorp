@@ -38,6 +38,7 @@
 #include "nsString.h"
 
 #include "nsISmtpService.h"
+#include "nsISmtpUrl.h"
 
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
@@ -149,11 +150,11 @@ protected:
 	// host and port info...
 	PRUint32	m_port;
 	char		m_host[200];		
+	PRBool		m_runningURL;
 
-	nsINetService * m_netService;
+	nsINetService  * m_netService;
 	nsISmtpService * m_smtpService;
-
-	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
+	nsISmtpUrl	   * m_smtpUrl;
     nsresult SetupUrl(char *group);
 	PRBool m_protocolInitialized; 
 };
@@ -167,6 +168,7 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 	m_runningURL = PR_TRUE;
     m_eventQueue = queue;
 	m_netService = pNetService;
+	m_smtpUrl = nsnull;
 	NS_IF_ADDREF(m_netService); 
 	
 	InitializeTestDriver(); // prompts user for initialization information...
@@ -185,17 +187,21 @@ nsSmtpTestDriver::~nsSmtpTestDriver()
 nsresult nsSmtpTestDriver::RunDriver()
 {
 	nsresult status = NS_OK;
-	PRBool runCommand = PR_TRUE;
 
 	while (m_runningURL)
 	{
 		// if we haven't gotten started (and created a protocol) or
 		// if the protocol instance is currently not busy, then read in a new command
 		// and process it...
-		if (runCommand)
+		PRBool stillBusy = PR_FALSE;
+		if (m_smtpUrl)
+			m_smtpUrl->GetRunningUrlFlag(&stillBusy);
+
+		if (stillBusy == PR_FALSE) // can we run and dispatch another command?
 		{
-			status = ReadAndDispatchCommand();	
-			runCommand = PR_FALSE;
+			NS_IF_RELEASE(m_smtpUrl); // release our old url..
+			m_smtpUrl = nsnull;
+			status = ReadAndDispatchCommand();	 // run a new url
 		}
 
 	 // if running url
@@ -366,7 +372,12 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	// SMTP protocol instance every time we launch a mailto url...
 
 	nsFilePath filePath (fileName);
-	m_smtpService->SendMailMessage(filePath, userName, recipients, nsnull);
+	nsIURL * url = nsnull;
+	m_smtpService->SendMailMessage(filePath, userName, recipients, &url);
+	if (url)
+		url->QueryInterface(nsISmtpUrl::IID(), (void **) &m_smtpUrl);
+	NS_IF_RELEASE(url);
+
 
 	PR_FREEIF(fileName);
 	PR_FREEIF(userName);
