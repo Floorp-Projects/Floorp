@@ -82,11 +82,11 @@ _MD_WAKEUP_WAITER(PRThread *thread)
     return PR_SUCCESS;
 }
 
-/* These functions should not be called for OSF1 */
+/* These functions should not be called for Linux */
 void
 _MD_YIELD(void)
 {
-    PR_NOT_REACHED("_MD_YIELD should not be called for OSF1.");
+    PR_NOT_REACHED("_MD_YIELD should not be called for Linux.");
 }
 
 PRStatus
@@ -98,7 +98,7 @@ _MD_CREATE_THREAD(
     PRThreadState state,
     PRUint32 stackSize)
 {
-    PR_NOT_REACHED("_MD_CREATE_THREAD should not be called for OSF1.");
+    PR_NOT_REACHED("_MD_CREATE_THREAD should not be called for Linux.");
 	return PR_FAILURE;
 }
 #endif /* ! _PR_PTHREADS */
