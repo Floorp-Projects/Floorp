@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.11 $ $Date: 2002/02/15 01:10:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.12 $ $Date: 2002/03/05 16:08:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -358,6 +358,32 @@ nssCertificateStore_Remove
     PZ_Unlock(store->lock);
 }
 
+static NSSCertificate **
+get_array_from_list
+(
+  nssList *certList,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+)
+{
+    PRUint32 count;
+    NSSCertificate **rvArray = NULL;
+    count = nssList_Count(certList);
+    if (maximumOpt > 0) {
+	count = PR_MIN(maximumOpt, count);
+    }
+    if (rvOpt) {
+	nssList_GetArray(certList, (void **)rvOpt, count);
+    } else {
+	rvArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
+	if (rvArray) {
+	    nssList_GetArray(certList, (void **)rvArray, count);
+	}
+    }
+    return rvArray;
+}
+
 NSS_IMPLEMENT NSSCertificate **
 nssCertificateStore_FindCertificatesBySubject
 (
@@ -368,25 +394,14 @@ nssCertificateStore_FindCertificatesBySubject
   NSSArena *arenaOpt
 )
 {
-    PRUint32 count;
     NSSCertificate **rvArray = NULL;
     nssList *subjectList;
     PZ_Lock(store->lock);
     subjectList = (nssList *)nssHash_Lookup(store->subject, subject);
     if (subjectList) {
 	nssCertificateList_AddReferences(subjectList);
-	count = nssList_Count(subjectList);
-	if (maximumOpt > 0) {
-	    count = PR_MIN(maximumOpt, count);
-	}
-	if (rvOpt) {
-	    nssList_GetArray(subjectList, (void **)rvOpt, count);
-	} else {
-	    rvArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
-	    if (rvArray) {
-		nssList_GetArray(subjectList, (void **)rvArray, count);
-	    }
-	}
+	rvArray = get_array_from_list(subjectList, 
+	                              rvOpt, maximumOpt, arenaOpt);
     }
     PZ_Unlock(store->lock);
     return rvArray;
@@ -436,7 +451,6 @@ nssCertificateStore_FindCertificatesByNickname
   NSSArena *arenaOpt
 )
 {
-    PRUint32 count;
     NSSCertificate **rvArray = NULL;
     struct nickname_template_str nt;
     nt.nickname = nickname;
@@ -445,18 +459,8 @@ nssCertificateStore_FindCertificatesByNickname
     nssHash_Iterate(store->subject, match_nickname, &nt);
     if (nt.subjectList) {
 	nssCertificateList_AddReferences(nt.subjectList);
-	count = nssList_Count(nt.subjectList);
-	if (maximumOpt > 0) {
-	    count = PR_MIN(maximumOpt, count);
-	}
-	if (rvOpt) {
-	    nssList_GetArray(nt.subjectList, (void **)rvOpt, count);
-	} else {
-	    rvArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
-	    if (rvArray) {
-		nssList_GetArray(nt.subjectList, (void **)rvArray, count);
-	    }
-	}
+	rvArray = get_array_from_list(nt.subjectList, 
+	                              rvOpt, maximumOpt, arenaOpt);
     }
     PZ_Unlock(store->lock);
     return rvArray;
@@ -505,7 +509,6 @@ nssCertificateStore_FindCertificatesByEmail
   NSSArena *arenaOpt
 )
 {
-    PRUint32 count;
     NSSCertificate **rvArray = NULL;
     struct email_template_str et;
     et.email = email;
@@ -521,18 +524,8 @@ nssCertificateStore_FindCertificatesByEmail
     }
     PZ_Unlock(store->lock);
     if (et.emailList) {
-	count = nssList_Count(et.emailList);
-	if (maximumOpt > 0) {
-	    count = PR_MIN(maximumOpt, count);
-	}
-	if (rvOpt) {
-	    nssList_GetArray(et.emailList, (void **)rvOpt, count);
-	} else {
-	    rvArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
-	    if (rvArray) {
-		nssList_GetArray(et.emailList, (void **)rvArray, count);
-	    }
-	}
+	rvArray = get_array_from_list(et.emailList, 
+	                              rvOpt, maximumOpt, arenaOpt);
 	nssList_Destroy(et.emailList);
     }
     return rvArray;
