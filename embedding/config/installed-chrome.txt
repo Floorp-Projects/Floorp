@@ -25,3 +25,4 @@ locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/cookie/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/navigator/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/pipnss/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/pippki/
+content,install,url,jar:resource:/chrome/embed.jar!/content/xbl-marquee/
