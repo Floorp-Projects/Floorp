@@ -510,7 +510,7 @@ res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
 if [ test $res != 0 ]; then
     AC_CHECK_LIB(gtk, gtk_widget_set, 
 	[TK_GTK_LIBS="`gtk-config --libs`" TK_GTK_CFLAGS="`gtk-config --cflags`" ],
-	[MISSING_GTK=1],
+	[MISSING_GTK="-lgtk -lgtk_widget_set"],
 	`gtk-config --libs`)
 fi
 
