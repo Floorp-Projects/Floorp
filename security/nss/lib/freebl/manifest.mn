@@ -58,6 +58,8 @@ CSRCS = \
 else
 CSRCS = \
 	sha_fast.c \
+	md2.c \
+	md5.c \
 	$(NULL)
 endif
 
