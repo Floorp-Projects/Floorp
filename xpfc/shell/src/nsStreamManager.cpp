@@ -40,6 +40,7 @@ static NS_DEFINE_IID(kCCalXPFCXMLContentSinkCID, NS_XPFCXMLCONTENTSINK_IID);
 
 static NS_DEFINE_IID(kIStreamObjectIID,  NS_ISTREAM_OBJECT_IID);
 static NS_DEFINE_IID(kCStreamObjectCID,  NS_STREAM_OBJECT_CID);
+static NS_DEFINE_IID(kIStreamListenerIID,  NS_ISTREAMLISTENER_IID);
 
 nsStreamManager::nsStreamManager()
 {
