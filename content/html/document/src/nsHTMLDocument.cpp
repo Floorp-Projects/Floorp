@@ -1287,7 +1287,9 @@ PRInt32
 nsHTMLDocument::InternalGetNumberOfStyleSheets()
 {
   PRInt32 count = mStyleSheets.Count();
-  if (count != 0 && mStyleAttrStyleSheet == mStyleSheets[count - 1])
+  if (count != 0 && 
+      mStyleAttrStyleSheet == 
+          NS_STATIC_CAST(nsIStyleSheet*, mStyleSheets[count - 1]))
     --count;
   --count; // for the attr sheet
   NS_ASSERTION(count >= 0, "Why did we end up with a negative count?");
