@@ -81,6 +81,7 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
   mTMatrix = nsnull;
   mP2T = 1.0f;
   mStateCache = new nsVoidArray();
+  mRegion = nsnull;
   PushState();
 }
 
@@ -90,8 +91,10 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
   NS_IF_RELEASE(mFontCache);
   NS_IF_RELEASE(mFontMetrics);
 
-  if (mRegion)
+  if (mRegion) {
     ::XDestroyRegion(mRegion);
+    mRegion = nsnull;
+  }
 
   mTMatrix = nsnull;
   PopState();
@@ -140,6 +143,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
                      mContext->GetAppUnitsToDevUnits());
 
+  mRegion = ::XCreateRegion();
   // Select a default font here?
   return NS_OK;
 }
@@ -158,6 +162,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mP2T = mContext->GetDevUnitsToAppUnits();
   mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
                      mContext->GetAppUnitsToDevUnits());
+  mRegion = ::XCreateRegion();
   return NS_OK;
 }
 
@@ -234,7 +239,7 @@ PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine 
   if (aCombine == nsClipCombine_kIntersect)
   {
     Region a = ::XCreateRegion();
-    Region tRegion ;
+    Region tRegion = ::XCreateRegion();
 
     ::XOffsetRegion(a, trect.x, trect.y);
     ::XShrinkRegion(a, -trect.width, -trect.height);
@@ -250,7 +255,7 @@ PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine 
   else if (aCombine == nsClipCombine_kUnion)
   {
     Region a = ::XCreateRegion();
-    Region tRegion ;
+    Region tRegion = ::XCreateRegion();
 
     ::XOffsetRegion(a, trect.x, trect.y);
     ::XShrinkRegion(a, -trect.width, -trect.height);
@@ -265,7 +270,7 @@ PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine 
   else if (aCombine == nsClipCombine_kSubtract)
   {
     Region a = ::XCreateRegion();
-    Region tRegion ;
+    Region tRegion = ::XCreateRegion();
 
     ::XOffsetRegion(a, trect.x, trect.y);
     ::XShrinkRegion(a, -trect.width, -trect.height);
