@@ -60,6 +60,10 @@ CPPSRCS		= \
 		nsSecurityManagerFactory.cpp \
 		$(NULL)
 
+ifdef XPC_IDISPATCH_SUPPORT
+DEFINES += -DXPC_IDISPATCH_SUPPORT
+endif
+
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(ZLIB_LIBS) \
