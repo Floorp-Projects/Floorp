@@ -81,7 +81,7 @@ public:
 
   /** SetSelected needs to be overridden to talk to inner tableframe
    */
-  NS_IMETHOD nsTableOuterFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+  NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
 
   /** return the min width of the caption.  Return 0 if there is no caption. 
     * The return value is only meaningful after the caption has had a pass1 reflow.
