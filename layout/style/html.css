@@ -368,10 +368,10 @@ hr {
 
 *|*:-moz-any-link img, img[usemap], object[usemap] {
   border: 2px solid;
-  cursor: pointer;
 }
 
 img[usemap], object[usemap] {
+  cursor: pointer;
   color: blue;
   -moz-user-focus: normal;
 }
