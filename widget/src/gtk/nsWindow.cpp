@@ -2407,6 +2407,8 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       mIsTooSmall = PR_FALSE;
     }
   }
+
+
   if (mSuperWin) {
     // toplevel window?  if so, we should resize it as well.
     if (mIsToplevel && mShell)
@@ -2439,21 +2441,6 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   else {
     //g_print("not sending resize event\n");
   }
-#if 0
-  // XXX pav
-  // call the size allocation handler directly to avoid code duplication
-  // note, this could be a problem as this will make layout think that it
-  // got the size it requested which could be wrong.
-  // but, we don't use many native widgets anymore, so this shouldn't be a problem
-  // layout's will size to the size you tell them to, which are the only native widgets
-  // we still use after all the xp widgets land
-  GtkAllocation alloc;
-  alloc.width = aWidth;
-  alloc.height = aHeight;
-  alloc.x = 0;
-  alloc.y = 0;
-  handle_size_allocate(mWidget, &alloc, this);
-#endif
 
   if (nNeedToShow)
     Show(PR_TRUE);
