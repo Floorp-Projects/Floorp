@@ -71,7 +71,7 @@ static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 #else
 static NS_DEFINE_IID(kIPluginStreamPeerIID, NS_IPLUGINSTREAMPEER_IID);
 #endif
-static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
+static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
@@ -630,7 +630,7 @@ nsresult nsPluginStreamListenerPeer :: InitializeFullPage(nsIPluginInstance *aIn
 }
 
 
-NS_IMETHODIMP nsPluginStreamListenerPeer :: OnStartBinding(nsIURL* aURL, const char *aContentType)
+NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   nsresult  rv = NS_OK;
 
@@ -1496,7 +1496,7 @@ NS_IMETHODIMP nsPluginHostImpl :: Init(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginHostImpl :: Destroy(void)
+NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
 {
   nsPluginTag *plug = mPlugins;
 
@@ -1513,7 +1513,7 @@ NS_IMETHODIMP nsPluginHostImpl :: Destroy(void)
 
 /* Called by nsPluginInstanceOwner (nsObjectFrame.cpp - embeded case) */
 
-NS_IMETHODIMP nsPluginHostImpl :: InstantiateEmbededPlugin(const char *aMimeType, nsString& aURLSpec,
+NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType, nsString& aURLSpec,
                                                nsIPluginInstanceOwner *aOwner)
 {
   nsresult  rv;
@@ -1561,7 +1561,7 @@ NS_IMETHODIMP nsPluginHostImpl :: InstantiateEmbededPlugin(const char *aMimeType
 
 /* Called by nsPluginViewer.cpp (full-page case) */
 
-NS_IMETHODIMP nsPluginHostImpl :: InstantiateFullPagePlugin(const char *aMimeType, nsString& aURLSpec,
+NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType, nsString& aURLSpec,
                                                nsIStreamListener *&aStreamListener,
                                                nsIPluginInstanceOwner *aOwner)
 {
@@ -1605,9 +1605,40 @@ NS_IMETHODIMP nsPluginHostImpl :: InstantiateFullPagePlugin(const char *aMimeTyp
   return rv;
 }
 
-NS_IMETHODIMP nsPluginHostImpl :: SetUpPluginInstance(const char *aMimeType, 
-													  nsIURL *aURL,
-													  nsIPluginInstanceOwner *aOwner)
+#ifdef XP_MAC
+
+NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType, 
+													nsIURL *aURL,
+													nsIPluginInstanceOwner *aOwner)
+{
+	nsresult result = NS_ERROR_FAILURE;
+	nsIPlugin* plugin = NULL;
+	if (GetPluginFactory(aMimeType, &plugin) == NS_OK) {
+		// instantiate a plugin.
+		nsIPluginInstance* instance = NULL;
+        if (plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance) == NS_OK) {
+			aOwner->SetInstance(instance);
+
+			nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
+
+			// set up the peer for the instance
+			peer->Initialize(aOwner, aMimeType);     // this will not add a ref to the instance (or owner). MMP
+
+			// tell the plugin instance to initialize itself and pass in the peer.
+			instance->Initialize(peer);
+			NS_RELEASE(instance);
+			result = NS_OK;
+        }
+        NS_RELEASE(plugin);
+	}
+	return result;
+}
+
+#else
+
+NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType, 
+													nsIURL *aURL,
+													nsIPluginInstanceOwner *aOwner)
 {
   nsPluginTag *plugins = nsnull;
   PRInt32     variants, cnt;
@@ -1746,7 +1777,7 @@ NS_IMETHODIMP nsPluginHostImpl :: SetUpPluginInstance(const char *aMimeType,
           nsFactoryProc  fact = (nsFactoryProc)PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
 
           if (nsnull != fact)
-			(fact)(mServiceMgr, kIPluginIID, 0, 0, (nsIFactory**)&plugins->mEntryPoint);
+			(fact)(mServiceMgr, kPluginCID, 0, 0, (nsIFactory**)&plugins->mEntryPoint);
 
 		  // we only need to call this for 5x style plugins - CreatePlugin() handles this for
 		  // 4x style plugins
@@ -1793,6 +1824,8 @@ NS_IMETHODIMP nsPluginHostImpl :: SetUpPluginInstance(const char *aMimeType,
   }
 }
 
+#endif /* !XP_MAC */
+
 NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)
 {
 	nsresult res = NS_ERROR_FAILURE;
@@ -1813,7 +1846,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 					// need to get the plugin factory from this plugin.
 					nsFactoryProc nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
 					if (nsGetFactory != NULL) {
-                        res = nsGetFactory(mServiceMgr, kIPluginIID, nsnull, nsnull,    // XXX fix ClassName/ProgID
+                        res = nsGetFactory(mServiceMgr, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ProgID
                                            (nsIFactory**)&pluginTag->mEntryPoint);
 						plugin = pluginTag->mEntryPoint;
 						if (plugin != NULL)
@@ -1885,7 +1918,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 
 #else
 
-NS_IMETHODIMP nsPluginHostImpl :: LoadPlugins(void)
+NS_IMETHODIMP nsPluginHostImpl::LoadPlugins(void)
 {
 #ifdef XP_PC 
   long result; 
