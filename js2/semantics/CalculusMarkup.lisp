@@ -599,6 +599,7 @@
 ; (> <expr1> <expr2> [<type>])
 ; (<= <expr1> <expr2> [<type>])
 ; (>= <expr1> <expr2> [<type>])
+; (set<= <expr1> <expr2> [<type>])
 (defun depict-comparison (markup-stream world level order annotated-expr1 annotated-expr2)
   (depict-expr-parentheses (markup-stream level %relational%)
     (depict-logical-block (markup-stream 0)

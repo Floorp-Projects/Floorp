@@ -2536,20 +2536,26 @@
 
 
 ; Return code to compare code expression a against b using the given order, which should be one of
-; the symbols =, /=, <, >, <=, >=..
+; the symbols =, /=, <, >, <=, >=, set<=.
 ; Signal an error if this is not possible.
 (defun get-type-order-code (world type order a b)
   (flet ((simple-constant? (code)
            (or (keywordp code) (numberp code) (characterp code))))
-    (let ((order-name (get-type-order-name world type order)))
-      (cond
-       ((null order-name)
-        (assert-true (eq order '/=))
-        (list 'not (get-type-order-code world type '= a b)))
-       ((and (eq order-name 'union=) (or (simple-constant? a) (simple-constant? b)))
-        ;Optimize union= comparisons against a non-list constant.
-        (list 'eql a b))
-       (t (list order-name a b))))))
+    (cond
+     ((eq order 'set<=)
+      (unless (eq (type-kind type) :list-set)
+        (error "set<= not implemented on type ~S" type))
+      (list* 'subsetp a b (element-test world (set-element-type type))))
+     (t
+      (let ((order-name (get-type-order-name world type order)))
+        (cond
+         ((null order-name)
+          (assert-true (eq order '/=))
+          (list 'not (get-type-order-code world type '= a b)))
+         ((and (eq order-name 'union=) (or (simple-constant? a) (simple-constant? b)))
+          ;Optimize union= comparisons against a non-list constant.
+          (list 'eql a b))
+         (t (list order-name a b))))))))
 
 
 
@@ -3477,9 +3483,9 @@
          (list 'expr-annotation:special-form special-form base-annotated-expr exponent-annotated-expr))))))
 
 
-; Return the depict name for one of the comparison symbols =, /=, <, >, <=, >=.
+; Return the depict name for one of the comparison symbols =, /=, <, >, <=, >=, set<=.
 (defun comparison-name (order)
-  (cdr (assoc order '((= . "=") (/= . :not-equal) (< . "<") (> . ">") (<= . :less-or-equal) (>= . :greater-or-equal)))))
+  (cdr (assoc order '((= . "=") (/= . :not-equal) (< . "<") (> . ">") (<= . :less-or-equal) (>= . :greater-or-equal) (set<= . :subset-eq-10)))))
 
 
 ; Both expr1 and expr2 are coerced to the given type and then compared using the given order.
@@ -3518,17 +3524,21 @@
 (defun scan->= (world type-env special-form expr1 expr2 &optional (type-expr 'integer))
   (scan-comparison world type-env special-form '>= expr1 expr2 type-expr))
 
+; (set<= <expr1> <expr2> <type>)
+(defun scan-set<= (world type-env special-form expr1 expr2 type-expr)
+  (scan-comparison world type-env special-form 'set<= expr1 expr2 type-expr))
+
 
 ; (cascade <type> <expr1> <order1> <expr2> <order2> ... <ordern-1> <exprn>)
 ; Shorthand for (and (<order1> <expr1> <expr2> <type>) (<order1> <expr2> <expr3> <type>) ... (<ordern-1> <exprn-1> <exprn> <type>)),
-; where each order must be one of the symbols =, /=, <, >, <=, >=.
+; where each order must be one of the symbols =, /=, <, >, <=, >=, set<=.
 ; The intermediate expressions are evaluated at most once.
 (defun scan-cascade (world type-env special-form type-expr expr1 &rest orders-and-exprs)
   (let ((type (scan-type world type-expr)))
     (labels
       ((cascade (v1 orders-and-exprs)
          (unless (and (consp orders-and-exprs) (consp (cdr orders-and-exprs))
-                      (member (first orders-and-exprs) '(= /= < > <= >=)))
+                      (member (first orders-and-exprs) '(= /= < > <= >= set<=)))
            (error "Bad cascade tail: ~S" orders-and-exprs))
          (let* ((order (first orders-and-exprs))
                 (order-name (comparison-name order))
@@ -5599,6 +5609,7 @@
      (> scan-> depict-comparison)
      (<= scan-<= depict-comparison)
      (>= scan->= depict-comparison)
+     (set<= scan-set<= depict-comparison)
      (cascade scan-cascade depict-cascade)
      (and scan-and depict-and-or-xor)
      (or scan-or depict-and-or-xor)
