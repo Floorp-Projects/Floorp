@@ -1385,7 +1385,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             m_compFields->AddAttachment(attachment);
           }
         
-          decodedSubject.Insert(NS_LITERAL_STRING("Fwd: ").get(), 0);
+          decodedSubject.Insert(NS_LITERAL_STRING("[Fwd: ").get(), 0);
           decodedSubject.Append(NS_LITERAL_STRING("]").get());
 
           m_compFields->SetSubject(decodedSubject.get()); 
