@@ -280,18 +280,19 @@ CREATE TABLE `previews` (
 CREATE TABLE `reviews` (
   `rID` int(11) NOT NULL auto_increment,
   `ID` int(11) NOT NULL default '0',
-  `AppID` int(11) NOT NULL default '0',
   `DateAdded` datetime NOT NULL default '0000-00-00 00:00:00',
   `AuthorID` int(11) NOT NULL default '0',
   `Title` varchar(60) NOT NULL default '',
   `Body` text,
+  `ExtendedBody` text NOT NULL,
   `pick` enum('YES','NO') NOT NULL default 'NO',
   `featured` enum('YES','NO') NOT NULL default 'NO',
+  `featuredate` varchar(6) NOT NULL default '',
   PRIMARY KEY  (`rID`),
-  KEY `ID` (`ID`),
-  KEY `AppID` (`AppID`),
+  UNIQUE KEY `ID` (`ID`),
   KEY `AuthorID` (`AuthorID`)
 ) TYPE=InnoDB PACK_KEYS=0;
+        
 
 -- --------------------------------------------------------
 

@@ -98,13 +98,38 @@ if ($securitywarning=="true") {
     unset($uriparams_skip);
     ?>
     <?php
-    $feature="false";
-    if ($feature=="true") {
+    $featuredate = date("Ym");
+    $sql = "SELECT TM.ID, TM.Type, TM.Name, TR.Title, TR.Body, TR.ExtendedBody, TP.PreviewURI FROM `main` TM
+            INNER JOIN version TV ON TM.ID = TV.ID
+            INNER JOIN applications TA ON TV.AppID = TA.AppID
+            INNER JOIN os TOS ON TV.OSID = TOS.OSID
+            INNER JOIN `reviews` TR ON TR.ID = TM.ID
+            INNER JOIN `previews` TP ON TP.ID = TM.ID
+            WHERE  `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND (`OSName` = '$OS' OR `OSName` = 'ALL') AND `approved` = 'YES' AND TR.featured = 'YES' AND TR.featuredate = '$featuredate' AND TP.preview='YES' LIMIT 1";
+        $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+        while ($row = mysql_fetch_array($sql_result)) {
+        $id = $row["ID"];
+        $type = $row["Type"];
+        if ($type=="E") {$typename = "extensions"; } else if ($type=="T") {$typename="themes"; }
+        $name = $row["Name"];
+        $title = $row["Title"];
+        $body = nl2br($row["Body"]);
+        $extendedbody = $row["ExtendedBody"];
+        $previewuri = $row["PreviewURI"];
+        $attr = getimagesize("$websitepath/$previewuri");
+        $attr = $attr[3];
+
     ?>
-	<h2>Currently Featuring...</h2>
-	<a href="#charamel"><img src="images/screen-charamel.png" width="200" height="150" alt="Charamel Theme for Firefox" class="imgright"></a>
-	<p class="first">The <a href="">Charamel Theme</a> for Firefox and Thunderbird has been very popular since it was introduced way back in February. It brings forward the interface of the classic Netscape browser to a modern interpretation.</p>
-	<p>Great work on this simple and elegant theme Alex. We give it 3.5 stars out of five.</p>
+	<h2>Currently Featuring... <?php echo"$name"; ?></a></h2>
+	<a href="<?php echo"/$typename/moreinfo.php?".uriparams()."&amp;id=$id"; ?>"><img src="<?php echo"$previewuri"; ?>" <?php echo"$attr"; ?> alt="<?php echo"$name for $application"; ?>" class="imgright"></a>
+    <p class="first">
+    <strong><a href="<?php echo"/$typename/moreinfo.php?".uriparams()."&amp;id=$id"; ?>" style="text-decoration: none"><?php echo"$title"; ?></a></strong><br>
+    <?php
+    echo"$body";  
+    if ($extendedbody) {
+        echo" <a href=\"/$typename/moreinfo.php?".uriparams()."&amp;id=$id&amp;page=staffreview#more\">More...</a>";
+    }
+    ?></p>
     <?php } ?>
 	</div>
 	<div id="side" class="right">

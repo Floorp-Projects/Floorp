@@ -366,13 +366,14 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 		
 		<!-- Only Display Editor's Review if it's been written -->
         <?php
-        $sql = "SELECT `Title`, `DateAdded`, `Body`, `Pick` FROM `reviews` WHERE `ID` = '$id' LIMIT 1";
+        $sql = "SELECT `Title`, `DateAdded`, `Body`, `ExtendedBody`, `Pick` FROM `reviews` WHERE `ID` = '$id' LIMIT 1";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
             if (mysql_num_rows($sql_result)>"0") {
                 $row = mysql_fetch_array($sql_result);
                 $title = $row["Title"];
                 $dateadded = $row["DateAdded"];
-                $body = $row["Body"];
+                $body = nl2br($row["Body"]);
+                $extendedbody = $row["ExtendedBody"];
                 $pick = $row["Pick"];
                 $date = gmdate("F, Y", strtotime("$dateadded")); //Create Customizeable Timestamp
         ?>
@@ -384,7 +385,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             }
             echo"</strong><br>\n";
         ?>
-		<p class="first"><?php echo"$body"; ?></p>
+		<p class="first"><?php echo"$body"; ?> <?php if ($extendedbody) { echo" <a href=\"?".uriparams()."&amp;id=$id&amp;page=staffreview#more\">More...</a>";} ?></p>
         <?php
             }
         ?>
@@ -716,7 +717,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
     //Staff/Editor Review Tab
      echo"<h3>Editor Review</h3>\n";
-    $sql = "SELECT TR.ID, `Title`, TR.DateAdded, `Body`, `Type`, `Pick`, TU.UserName FROM `reviews`  TR
+    $sql = "SELECT TR.ID, `Title`, TR.DateAdded, `Body`, `ExtendedBody`, `Type`, `Pick`, TU.UserID, TU.UserName FROM `reviews`  TR
             INNER  JOIN main TM ON TR.ID = TM.ID
             INNER  JOIN userprofiles TU ON TR.AuthorID = TU.UserID
             WHERE `Type` = 'E' AND TR.ID = '$id' ORDER BY `rID` DESC LIMIT 1";
@@ -726,9 +727,11 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             $id = $row["ID"];
             $title = $row["Title"];
             $dateadded = $row["DateAdded"];
-            $body = $row["Body"];
+            $body = nl2br($row["Body"]);
+            $extendedbody = nl2br($row["ExtendedBody"]);
             $pick = $row["Pick"];
             $username = $row["UserName"];
+            $userid = $row["UserID"];
             $date = gmdate("F, Y", strtotime("$dateadded")); //Create Customizeable Timestamp
             $posteddate = date("F j Y, g:i:sa", strtotime("$dateadded"));
 
@@ -737,8 +740,12 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
                 echo"&nbsp;&#8212;&nbsp;$date Editors Pick\n";
             }
             echo"</h3>\n";
-            echo"Posted on $posteddate by $username<br>\n";
+            echo"Posted on $posteddate by <a href=\"authorprofiles.php?id=$userid\">$username</a><br>\n";
             echo"<p class=\"first\">$body</p>\n";
+            if ($extendedbody) {
+               echo"<a name=\"more\"></a>\n";
+               echo"<p>$extendedbody</p>\n";
+            }
         }
 
         $typename = "extension";

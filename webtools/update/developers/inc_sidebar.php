@@ -1,10 +1,12 @@
 <?php
 if (($_SESSION["level"] == "admin" or $_SESSION["level"] == "editor") and $skipqueue != "true") {
-    $sql ="SELECT TM.ID FROM `main` TM
-        INNER JOIN `version` TV ON TM.ID = TV.ID
-        WHERE `approved` = '?' GROUP BY `URI` ORDER BY TV.DateUpdated ASC";
+    $sql ="SELECT TM.ID FROM `main` TM INNER JOIN `version` TV ON TM.ID = TV.ID  WHERE `approved` = '?' GROUP BY `URI`";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
         $queuenum = mysql_num_rows($sql_result);
+
+    $sql = "SELECT `CommentID` FROM `feedback` WHERE `flag`='YES'";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+        $commentsnum = mysql_num_rows($sql_result);
 }
 ?>
 <div id="mBody">
@@ -25,7 +27,8 @@ if ($_SESSION["level"] == "user") {
 <li><A HREF="listmanager.php?type=T">Themes list</A></li>
 <li><A HREF="listmanager.php?type=E">Extensions list</A></li>
 <li><A HREF="usermanager.php">Users Manager</A></li>
-<li><a href="commentsmanger.php?function=flaggedcomments">Comments Manager</a></li>
+<li><a href="commentsmanger.php?function=flaggedcomments">Comments Manager <?php if ($skipcomments != "true") { echo"($commentsnum)"; } ?></a></li>
+<li><a href="reviewsmanager.php">Reviews Manager</a></li>
 <?php
 } else {
 ?>
@@ -37,7 +40,8 @@ if ($_SESSION["level"] == "user") {
 <li><a href="appmanager.php">Application Manager</a></li>
 <li><a href="categorymanager.php">Category Manager</A></li>
 <li><a href="faqmanager.php">FAQ Manager</A></li>
-<li><a href="commentsmanager.php?function=flaggedcomments">Comments Manager</a></li>
+<li><a href="commentsmanager.php?function=flaggedcomments">Comments Manager <?php if ($skipcomments != "true") { echo"($commentsnum)"; } ?></a></li>
+<li><a href="reviewsmanager.php">Reviews Manager</a></li>
 <?php } ?>
 <li><a href="logout.php">Logout</A></li>
 </ul>
