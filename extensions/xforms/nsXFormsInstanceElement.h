@@ -66,6 +66,7 @@ public:
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aNewValue);
   NS_IMETHOD AttributeRemoved(nsIAtom *aName);
+  NS_IMETHOD BeginAddingChildren();
   NS_IMETHOD DoneAddingChildren();
   NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
 
@@ -89,6 +90,7 @@ private:
 
   nsCOMPtr<nsIDOMDocument>  mDocument;
   nsIDOMElement            *mElement;
+  PRBool                    mIgnoreAttributeChanges;
 };
 
 NS_HIDDEN_(nsresult)

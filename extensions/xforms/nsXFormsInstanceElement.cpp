@@ -59,6 +59,7 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInstanceElement,
 
 nsXFormsInstanceElement::nsXFormsInstanceElement()
   : mElement(nsnull)
+  , mIgnoreAttributeChanges(PR_FALSE)
 {
 }
 
@@ -77,12 +78,10 @@ NS_IMETHODIMP
 nsXFormsInstanceElement::AttributeSet(nsIAtom *aName,
                                       const nsAString &aNewValue)
 {
-  if (aName == nsXFormsAtoms::src) {
-    // Note that this will fail if encountered during document construction,
-    // because we won't be in the document yet, so CreateInstanceDocument
-    // won't find a document to work with.  That's ok, we'll fix things after
-    // our children are appended and we're in the document (DoneAddingChildren)
+  if (mIgnoreAttributeChanges)
+    return NS_OK;
 
+  if (aName == nsXFormsAtoms::src) {
     LoadExternalInstance(aNewValue);
   }
 
@@ -92,9 +91,12 @@ nsXFormsInstanceElement::AttributeSet(nsIAtom *aName,
 NS_IMETHODIMP
 nsXFormsInstanceElement::AttributeRemoved(nsIAtom *aName)
 {
+  if (mIgnoreAttributeChanges)
+    return NS_OK;
+
   if (aName == nsXFormsAtoms::src) {
-    // We no longer have an external instance to use.
-    // Reset our instance document to whatever inline content we have.
+    // We no longer have an external instance to use.  Reset our instance
+    // document to whatever inline content we have.
     return CloneInlineInstance();
   }
 
@@ -102,11 +104,20 @@ nsXFormsInstanceElement::AttributeRemoved(nsIAtom *aName)
 }
 
 NS_IMETHODIMP
+nsXFormsInstanceElement::BeginAddingChildren()
+{
+  // Ignore attribute changes during document construction.  Attributes will be
+  // handled in the DoneAddingChildren.
+  mIgnoreAttributeChanges = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsInstanceElement::DoneAddingChildren()
 {
-  // By the time this is called, we should be inserted in the document
-  // and have all of our child elements, so this is our first opportunity
-  // to create the instance document.
+  // By the time this is called, we should be inserted in the document and have
+  // all of our child elements, so this is our first opportunity to create the
+  // instance document.
 
   nsAutoString src;
   mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
@@ -118,22 +129,25 @@ nsXFormsInstanceElement::DoneAddingChildren()
     LoadExternalInstance(src);
   }
 
+  // Now, observe changes to the "src" attribute.
+  mIgnoreAttributeChanges = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 {
-  aWrapper->SetNotificationMask (nsIXTFElement::NOTIFY_PARENT_CHANGED |
-                                 nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
-                                 nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED |
-                                 nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
+  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
+                                nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED |
+                                nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
+                                nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
+  // XXX observe nsIXTFElement::NOTIFY_PARENT_CHANGED ??
 
   nsCOMPtr<nsIDOMElement> node;
   aWrapper->GetElementNode(getter_AddRefs(node));
 
-  // It's ok to keep a weak pointer to mElement.  mElement will have an
-  // owning reference to this object, so as long as we null out mElement in
+  // It's ok to keep a weak pointer to mElement.  mElement will have an owning
+  // reference to this object, so as long as we null out mElement in
   // OnDestroyed, it will always be valid.
 
   mElement = node;
