@@ -1,5 +1,7 @@
 #include "mdb.h"
 #include "stdio.h"
+// for LINEBREAK
+#include "fe_proto.h"
 
 nsIMdbFactory *NS_NewIMdbFactory()
 {
@@ -11,22 +13,32 @@ nsIMdbFactory *NS_NewIMdbFactory()
     nsIMdbEnv* ev, // context
     nsIMdbThumb* ioThumb, // thumb from OpenFileStore() with done status
     nsIMdbStore** acqStore)  // acquire new db store object
-   {
-	   *acqStore = new nsIMdbStore;
-	   return 0;
-   }
-  
+{
+	nsIMdbStore *resultStore;
+
+	resultStore = new nsIMdbStore;
+	resultStore->m_fileStream = ioThumb->m_fileStream;
+	resultStore->m_backingFile = ioThumb->m_backingFile;
+	*acqStore = resultStore;
+   return 0;
+}
+
    mdb_err nsIMdbFactory::CreateNewFileStore( // create a new db with minimal content
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
     const char* inFilePath, // name of file which should not yet exist
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
     nsIMdbStore** acqStore)
-   {
-	   printf("new file store for %s\n", inFilePath);
-	   *acqStore = new nsIMdbStore;
-	   return 0;
-   }
+{
+	printf("new file store for %s\n", inFilePath);
+	nsIMdbStore *resultStore;
+
+	resultStore = new nsIMdbStore;
+	resultStore->m_backingFile = inFilePath;
+	resultStore->m_fileStream = NULL;
+	*acqStore = resultStore;
+	return 0;
+}
 
    mdb_err nsIMdbStore::SmallCommit( // save minor changes if convenient and uncostly
 	   nsIMdbEnv* ev)
@@ -37,6 +49,7 @@ nsIMdbFactory *NS_NewIMdbFactory()
     nsIMdbEnv* ev, // context
     nsIMdbThumb** acqThumb) 
    {
+	   WriteAll(ev, acqThumb);
 	   return 0;
    }
 
@@ -44,6 +57,7 @@ nsIMdbFactory *NS_NewIMdbFactory()
     nsIMdbEnv* ev, // context
     nsIMdbThumb** acqThumb)
    {
+	   WriteAll(ev, acqThumb);
 	   return 0;
    }
 
@@ -52,30 +66,149 @@ nsIMdbFactory *NS_NewIMdbFactory()
     nsIMdbEnv* ev, // context
     nsIMdbThumb** acqThumb)
    {
+	   WriteAll(ev, acqThumb);
 	   return 0;
    }
+
+mdb_err
+   nsIMdbStore::WriteAll(nsIMdbEnv* ev, // context
+nsIMdbThumb** acqThumb)
+{
+//	nsVoidArray		m_tables;
+//	nsStringArray	m_tokenStrings;
+
+	m_fileStream = new nsIOFileStream(m_backingFile);
+	WriteTokenList();
+	WriteTableList();
+	m_fileStream->close();
+	delete m_fileStream;
+	m_fileStream = NULL;
+	return 0;
+}
+
+const char *kStartTokenList = "token list"LINEBREAK;
+const char *kEndTokenList = "end token list"LINEBREAK;
+
+   mdb_err nsIMdbStore::WriteTokenList()
+   {
+	   *m_fileStream << kStartTokenList;
+	   PRInt32 i;
+
+	   for (i = 0; i < m_tokenStrings.Count(); i++)
+	   {
+		   nsString outputNSString;
+		   char *outputString;
+		   m_tokenStrings.StringAt(i, outputNSString);
+		   outputString = outputNSString.ToNewCString();
+
+		   *m_fileStream << outputString;
+		   delete [] outputString;
+		   *m_fileStream << LINEBREAK;
+	   }
+	   *m_fileStream << kEndTokenList;
+	   return 0;
+   }
+
+   mdb_err nsIMdbStore::ReadTokenList()
+   {
+	   char readlineBuffer[100];
+
+	   m_tokenStrings.Clear();
+
+	   m_fileStream->readline(readlineBuffer, sizeof(readlineBuffer));
+	   if (strcmp(readlineBuffer, kStartTokenList))
+		   return -1;
+
+	   while (TRUE)
+	   {
+		   if (m_fileStream->eof())
+			   break;
+
+			m_fileStream->readline(readlineBuffer, sizeof(readlineBuffer));
+
+			if (!strcmp(readlineBuffer, kEndTokenList))
+				break;
+
+			nsString unicodeStr(readlineBuffer);
+			m_tokenStrings.AppendString(unicodeStr);
+	   }
+	   return 0;
+   }
+
+const char *kStartTableList = "table list"LINEBREAK;
+const char *kEndTableList = "end table list"LINEBREAK;
+
+   mdb_err nsIMdbStore::WriteTableList()
+   {
+	   *m_fileStream << kStartTableList;
+	   PRInt32 i;
+
+	   for (i = 0; i < m_tables.Count(); i++)
+	   {
+		   nsIMdbTable *table = (nsIMdbTable *) m_tables.ElementAt(i);
+		   table->Write();
+	   }
+	   *m_fileStream << kEndTableList;
+	   return 0;
+   }
+
 
   mdb_err nsIMdbStore::NewTable( // make one new table of specific type
     nsIMdbEnv* ev, // context
     mdb_scope inRowScope,    // row scope for row ids
     mdb_kind inTableKind,    // the type of table to access
     mdb_bool inMustBeUnique, // whether store can hold only one of these
-    nsIMdbTable** acqTable) ;     // acquire scoped collection of rows
+    nsIMdbTable** acqTable)      // acquire scoped collection of rows
 
-  mdb_err nsIMdbPort::GetTable( // access one table with specific oid
-    nsIMdbEnv* ev, // context
-    const mdbOid* inOid,  // hypothetical table oid
-    nsIMdbTable** acqTable)
   {
-	  *acqTable = new nsIMdbTable;
+	  *acqTable = new nsIMdbTable(this, inTableKind);
+	  m_tables.AppendElement(*acqTable);
 	  return 0;
   }
 
+nsIMdbPort::nsIMdbPort() : m_backingFile("")
+{
+}
+
+mdb_err nsIMdbPort::GetTable( // access one table with specific oid
+nsIMdbEnv* ev, // context
+const mdbOid* inOid,  // hypothetical table oid
+nsIMdbTable** acqTable)
+{
+	mdb_err result = -1;
+	nsIMdbTable *retTable = NULL;
+	*acqTable = NULL;
+	for (PRInt32 i = 0; i < m_tables.Count(); i++)
+	{
+		nsIMdbTable *table = (nsIMdbTable *) m_tables[i];
+		if (table->m_Oid.mOid_Id == inOid->mOid_Id)
+		{
+			retTable = table;
+			table->AddRef();
+			*acqTable = table;
+			result = 0;
+			break;
+		}
+	}
+	return result;
+}
+ 
 mdb_err nsIMdbPort::StringToToken (  nsIMdbEnv* ev, // context
     const char* inTokenName, // Latin1 string to tokenize if possible
     mdb_token* outToken)
 {
-	*outToken = (mdb_token) inTokenName;
+	nsString unicodeStr(inTokenName);
+	PRInt32 tokenPos = m_tokenStrings.IndexOf(unicodeStr);
+	if (tokenPos >= 0)
+	{
+		*outToken = tokenPos;
+	}
+	else
+	{
+		m_tokenStrings.AppendString(unicodeStr);
+		*outToken = m_tokenStrings.Count() - 1;
+	}
+//	*outToken = (mdb_token) inTokenName;
 	return 0;
 }
  
@@ -87,10 +220,29 @@ mdb_err nsIMdbPort::GetTableKind (
     mdb_bool* outMustBeUnique, // whether port can hold only one of these
     nsIMdbTable** acqTable) 
 {
-	*acqTable = new nsIMdbTable;
+	nsIMdbTable *retTable = NULL;
+
+	for (PRInt32 i = 0; i < m_tables.Count(); i++)
+	{
+		nsIMdbTable *table = (nsIMdbTable *) m_tables[i];
+		if (table->m_kind == inTableKind)
+		{
+			retTable = table;
+			table->AddRef();
+			*acqTable = table;
+			break;
+		}
+	}
+	if (! retTable )
+		*acqTable = new nsIMdbTable (this, inTableKind);
 	return 0;
 }
 
+nsIMdbTable::nsIMdbTable(nsIMdbPort* owner, mdb_kind kind)
+{
+	m_owningPort = owner;
+	m_kind = kind;
+}
 
 mdb_err nsIMdbTable::HasOid( // test for the table position of a row member
     nsIMdbEnv* ev, // context
@@ -120,6 +272,26 @@ mdb_err nsIMdbTable::HasOid( // test for the table position of a row member
 	  *acqCursor = new nsIMdbTableRowCursor;
 	  (*acqCursor)->SetTable(ev, this);
 	  (*acqCursor)->m_pos = inRowPos;
+	  return 0;
+  }
+
+const char *kStartRowList = "start row list"LINEBREAK;
+const char *kEndRowList = "end row list"LINEBREAK;
+
+  mdb_err nsIMdbTable::Write()
+
+  {
+	  nsIOFileStream *stream = m_owningPort->m_fileStream;
+	  *stream << m_kind;
+	  *stream << kStartRowList;
+	  PRInt32 i;
+
+	  for (i = 0; i < m_rows.Count(); i++)
+	  {
+
+	  }
+
+	  *stream << kEndRowList;
 	  return 0;
   }
 
@@ -155,7 +327,7 @@ mdb_err nsIMdbStore::NewRowWithOid (nsIMdbEnv* ev, // new row w/ caller assigned
     const mdbOid* inOid,   // caller assigned oid
     nsIMdbRow** acqRow) 
 {
-	*acqRow = new nsIMdbRow;
+	*acqRow = new nsIMdbRow (NULL, this);
 	(*acqRow)->m_oid = *inOid;	
 	return 0;
 }
@@ -165,10 +337,15 @@ mdb_err nsIMdbTable::AddRow ( // make sure the row with inOid is a table member
     nsIMdbRow* ioRow) 
 {
 	m_rows.AppendElement(ioRow);
+	ioRow->m_owningTable = this;
 	return 0;
 }
 
-
+nsIMdbRow::nsIMdbRow(nsIMdbTable *owningTable, nsIMdbStore *owningStore)
+{
+	m_owningTable = owningTable;
+	m_owningStore = owningStore;
+}
 
 mdb_err nsIMdbRow::AddColumn( // make sure a particular column is inside row
     nsIMdbEnv* ev, // context
@@ -176,7 +353,18 @@ mdb_err nsIMdbRow::AddColumn( // make sure a particular column is inside row
     const mdbYarn* inYarn)
 {
 	// evilly, I happen to know the column token is a char * const str pointer.
-	printf("adding column %s : %s\n", inColumn, inYarn->mYarn_Buf);
+	char *columnName;
+
+	if (m_owningStore)
+	{
+		nsString columnStr;
+
+		m_owningStore->m_tokenStrings.StringAt(inColumn, columnStr);
+
+		columnName = columnStr.ToNewCString();
+		printf("adding column %s : %s\n", columnName, inYarn->mYarn_Buf);
+		delete [] columnName;
+	}
 	mdbCellImpl	newCell;
 	nsIMdbCell *existingCell = NULL;
 
@@ -255,6 +443,11 @@ mdb_err nsIMdbFactory::MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv)
 	return 0;
 }
 
+nsIMdbThumb::nsIMdbThumb() : m_backingFile("")
+{
+	m_fileStream = NULL;
+}
+
 mdb_err nsIMdbThumb::DoMore(nsIMdbEnv* ev,
     mdb_count* outTotal,    // total somethings to do in operation
     mdb_count* outCurrent,  // subportion of total completed so far
@@ -270,12 +463,10 @@ mdb_err nsIMdbFactory::OpenFileStore(class nsIMdbEnv *, nsIMdbHeap* , char const
 {
 
 	*retThumb = new nsIMdbThumb;
-	return 0;
-}
+	nsFilePath filePath(fileName);
+	(*retThumb)->m_fileStream = new nsIOFileStream(filePath);
+	(*retThumb)->m_backingFile = fileName;
 
-mdb_err nsIMdbStore::NewTable(class nsIMdbEnv *,unsigned long,unsigned long,unsigned char,class nsIMdbTable **retTable)
-{
-	*retTable = new nsIMdbTable;
 	return 0;
 }
 

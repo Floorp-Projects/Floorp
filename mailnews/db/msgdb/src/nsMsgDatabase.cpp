@@ -448,6 +448,7 @@ nsresult nsMsgDatabase::InitNewDB()
 			// create the unique table for the dbFolderInfo.
 			mdb_err err = store->NewTable(GetEnv(), m_hdrRowScopeToken, 
 				m_hdrTableKindToken, PR_FALSE, &m_mdbAllMsgHeadersTable);
+			m_mdbAllMsgHeadersTable->BecomeContent(GetEnv(), &gAllMsgHdrsTableOID);
 			m_dbFolderInfo = dbFolderInfo;
 
 		}
@@ -1369,7 +1370,7 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 
 /* static */struct mdbYarn *nsMsgDatabase::UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i)
 {
-	PR_snprintf((char *) yarn->mYarn_Buf, yarn->mYarn_Size, "%uld", i);
+	PR_snprintf((char *) yarn->mYarn_Buf, yarn->mYarn_Size, "%lx", i);
 	yarn->mYarn_Fill = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
 	yarn->mYarn_Form = 0;	// what to do with this? Should be parsed out of the mime2 header?
 	return yarn;
@@ -1380,10 +1381,25 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 	str->SetString((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
 }
 
-/* static */void nsMsgDatabase::YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i)
+/* static */void nsMsgDatabase::YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult)
 {
-	char *endPtr;
-	*i = XP_STRTOUL((char *) yarn->mYarn_Buf, &endPtr, yarn->mYarn_Fill); 
+	PRUint32 result;
+	char *p = (char *) yarn->mYarn_Buf;
+	PRInt32 numChars = min(8, yarn->mYarn_Fill);
+	PRInt32 i;
+	for (i=0, result = 0; i<numChars; i++, p++)
+	{
+		char C = *p;
+
+		PRInt8 unhex = ((C >= '0' && C <= '9') ? C - '0' :
+			((C >= 'A' && C <= 'F') ? C - 'A' + 10 :
+			 ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : -1)));
+		if (unhex < 0)
+			break;
+		result = (result << 4) | unhex;
+	}
+    
+	*pResult = result;
 }
 
 nsresult nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)

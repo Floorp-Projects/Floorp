@@ -4,6 +4,9 @@
 #define _MDB_ 1
 
 #include "msgCore.h"
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
+
 // { %%%%% begin scalar typedefs %%%%%
 typedef unsigned char mdb_bool;  // unsigned byte with zero=false, nonzero=true
 typedef unsigned long mdb_id;    // unsigned object identity in a scope
@@ -306,7 +309,7 @@ class nsIMdbHeap;
 // { %%%%% begin temporary dummy base class for class hierarchy %%%%%
 class mdbISupports { // msg db base class
 public:
-	mdbISupports() {mRefCnt ;}
+	mdbISupports() {mRefCnt = 0;}
 	mdb_count Release(void) {if (mRefCnt > 0) -- mRefCnt; int saveRefCnt = mRefCnt; if (mRefCnt == 0) delete this; return saveRefCnt;}
 	mdb_count AddRef(void) {return ++mRefCnt;}
 protected:
@@ -467,6 +470,10 @@ public:
    mdb_err CancelAndBreakThumb( // cancel pending operation
     nsIMdbEnv* ev) ;
 // } ===== end nsIMdbThumb methods =====
+   // mdbstubs hackery.
+   nsIMdbThumb() ;
+   nsFilePath		m_backingFile;
+   nsIOFileStream	*m_fileStream;
 };
 
 /*| nsIMdbEnv: a context parameter used when calling most abstract db methods.
@@ -860,8 +867,15 @@ public:
     nsIMdbPortTableCursor** acqCursor); // all such tables in the port
   // } ----- end table methods -----
 
-	nsVoidArray		m_tables;
+   // mdb stub hackery
 
+	nsIMdbPort() ;
+
+	nsVoidArray		m_tables;
+	nsStringArray	m_tokenStrings;
+
+	nsFilePath		m_backingFile;
+	nsIOFileStream	*m_fileStream;
 // } ===== end nsIMdbPort methods =====
 };
 
@@ -1026,6 +1040,15 @@ public:
   // } ----- end commit methods -----
 
 // } ===== end nsIMdbStore methods =====
+   // mdbstubs hack
+   nsIMdbStore() {}
+
+	mdb_err   WriteAll(nsIMdbEnv* ev, nsIMdbThumb** acqThumb);
+	mdb_err		ReadTokenList();
+	mdb_err		WriteTokenList();
+    mdb_err		WriteTableList();
+	mdb_err		ReadTableList();
+
 };
 
 /*| nsIMdbCursor: base cursor class for iterating row cells and table rows
@@ -1204,14 +1227,15 @@ public:
    mdb_err GetOid(nsIMdbEnv* ev,
     const mdbOid* outOid) ; // read object identity
    mdb_err BecomeContent(nsIMdbEnv* ev,
-    const mdbOid* inOid) ; // exchange content
+	   const mdbOid* inOid) {m_Oid = *inOid;  return 0;} // exchange content
   // } ----- end ID methods -----
 
   // { ----- begin activity dropping methods -----
    mdb_err DropActivity( // tell collection usage no longer expected
     nsIMdbEnv* ev) ;
   // } ----- end activity dropping methods -----
-
+	mdbOid m_Oid;
+	nsIMdbCollection() {m_Oid.mOid_Id = 0;}
 // } ===== end nsIMdbCollection methods =====
 };
 
@@ -1488,7 +1512,13 @@ public:
   // } ----- end index methods -----
 
    // ************************** mdbstubs hack
+   nsIMdbTable(nsIMdbPort*, mdb_kind kind);
+   mdb_err Write();
+   mdb_err Read();
 	nsVoidArray		m_rows;
+	nsIMdbPort*		m_owningPort;
+	mdb_kind		m_kind;
+
 // } ===== end nsIMdbTable methods =====
 };
 
@@ -1616,8 +1646,13 @@ public:
   // } ----- end row methods -----
 
 // } ===== end nsIMdbRow methods =====
+   // mdb stub hacks.
+   nsIMdbRow(nsIMdbTable *owningTable, nsIMdbStore *owningStore);
 	MDBCellArray	m_cells;
 	mdbOid			m_oid;
+	nsIMdbTable		*m_owningTable;
+	nsIMdbStore		*m_owningStore;
+
 
 };
 

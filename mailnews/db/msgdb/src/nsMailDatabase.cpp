@@ -60,7 +60,9 @@ nsMailDatabase::~nsMailDatabase()
 	if (stat ((const char *) summarySpec, &st) && create)
 		newFile = PR_TRUE;
 
-	mailDB = new nsMailDatabase(dbName);
+	nsFilePath dbPath(summarySpec);
+
+	mailDB = new nsMailDatabase(dbPath);
 
 	if (!mailDB)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -68,9 +70,9 @@ nsMailDatabase::~nsMailDatabase()
 	// stat file before we open the db, because if we've latered
 	// any messages, handling latered will change time stamp on
 	// folder file.
-	statResult = stat ((const char *) dbName, &st);
+	statResult = stat ((const char *) dbPath, &st);
 
-	nsresult err = mailDB->OpenMDB(dbName, create);
+	nsresult err = mailDB->OpenMDB(dbPath, create);
 
 	if (NS_SUCCEEDED(err))
 	{
