@@ -806,13 +806,13 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*        aPresCont
   if (nsnull != mCaptionFrame) { 
     // factor in caption and it's margin
     // we're guaranteed that captionMargin and captionTableStyle are set at this point
-    if (NS_SIDE_BOTTOM == captionTableStyle->mCaptionSide) { 
-      // bottom caption
+    if (NS_SIDE_BOTTOM != captionTableStyle->mCaptionSide) { 
+      // top caption
       innerY = 0;   // the inner table goes at the top of the outer table
       // the total v-space consumed is the inner table height + the caption height + the margin between them
       aReflowState.y = innerSize.height + updatedCaptionRect.YMost() + captionMargin.top; 
     } 
-    else { // top caption
+    else { // bottom caption
       innerY = updatedCaptionRect.YMost() + captionMargin.bottom;
       // the total v-space consumed is the inner table height + the caption height + the margin between them
       aReflowState.y = innerY + innerSize.height;
