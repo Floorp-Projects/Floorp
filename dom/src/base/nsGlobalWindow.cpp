@@ -2829,6 +2829,22 @@ void FirePopupBlockedEvent(nsIDOMDocument* aDoc)
   }
 }
 
+void FirePopupWindowEvent(nsIDOMDocument* aDoc)
+{
+  if (aDoc) {
+    // Fire a "PopupWindow" event
+    nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
+    nsCOMPtr<nsIDOMEvent> event;
+    docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+    if (event) {
+      event->InitEvent(NS_LITERAL_STRING("PopupWindow"), PR_TRUE, PR_TRUE);
+      PRBool noDefault;
+      nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(aDoc));
+      targ->DispatchEvent(event, &noDefault);
+    }
+  }
+}
+
 // static
 PRBool
 GlobalWindowImpl::CanSetProperty(const char *aPrefName)
@@ -2870,7 +2886,7 @@ GlobalWindowImpl::CheckForAbusePoint ()
   }
 
   if (!mIsDocumentLoaded || mRunningTimeout) {
-    return IsPopupBlocked(mDocument);
+    return PR_TRUE;
   }
 
   PRInt32 clickDelay = 0;
@@ -2883,7 +2899,7 @@ GlobalWindowImpl::CheckForAbusePoint ()
     LL_L2I(delta, ll_delta);
     delta /= 1000;
     if (delta > clickDelay) {
-      return IsPopupBlocked(mDocument);
+      return PR_TRUE;
     }
   }
 
@@ -2945,30 +2961,39 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
    * If we're in a commonly abused state (top level script, running a timeout,
    * or onload/onunload), and the preference is enabled, prevent window.open().
    */
-  if (CheckForAbusePoint()) {
-    if (name.IsEmpty()) {
-      FirePopupBlockedEvent(mDocument);
-      return NS_OK;
-    }
+  PRBool abusedWindow = CheckForAbusePoint();
+  
+  nsCOMPtr<nsIDOMWindow> topWindow;
+  GetTop(getter_AddRefs(topWindow));
+  nsCOMPtr<nsIDOMDocument> topDoc;
+  topWindow->GetDocument(getter_AddRefs(topDoc));
 
-    // Special case items that don't actually open new windows.
-    if (!name.EqualsIgnoreCase("_top") &&
-        !name.EqualsIgnoreCase("_self") &&
-        !name.EqualsIgnoreCase("_content")) {
-
-      nsCOMPtr<nsIWindowWatcher> wwatch =
-          do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-      // If getting a window watcher fails, we'd fail downstream anyway
-      // when trying to open a new window so just bail here.
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIDOMWindow> namedWindow;
-      wwatch->GetWindowByName(name.get(), this,
-                              getter_AddRefs(namedWindow));
-
-      if (!namedWindow) {
-        FirePopupBlockedEvent(mDocument);
+  if (abusedWindow) {
+    if (IsPopupBlocked(mDocument)) {
+      if (name.IsEmpty()) {
+        FirePopupBlockedEvent(topDoc);
         return NS_OK;
+      }
+
+      // Special case items that don't actually open new windows.
+      if (!name.EqualsIgnoreCase("_top") &&
+          !name.EqualsIgnoreCase("_self") &&
+          !name.EqualsIgnoreCase("_content")) {
+
+        nsCOMPtr<nsIWindowWatcher> wwatch =
+            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+        // If getting a window watcher fails, we'd fail downstream anyway
+        // when trying to open a new window so just bail here.
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIDOMWindow> namedWindow;
+        wwatch->GetWindowByName(name.get(), this,
+                                getter_AddRefs(namedWindow));
+
+        if (!namedWindow) {
+          FirePopupBlockedEvent(topDoc);
+          return NS_OK;
+        }
       }
     }
   }
@@ -2977,7 +3002,8 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
 
   nsCOMPtr<nsIDOMChromeWindow> chrome_win(do_QueryInterface(*_retval));
 
-  if (NS_SUCCEEDED(rv) && !chrome_win) {
+  if (NS_SUCCEEDED(rv)) {
+    if (!chrome_win) {
     // A new non-chrome window was created from a call to
     // window.open() from JavaScript, make sure there's a document in
     // the new window. We do this by simply asking the new window for
@@ -2995,8 +3021,12 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     }
 #endif
 
-    nsCOMPtr<nsIDOMDocument> doc;
-    (*_retval)->GetDocument(getter_AddRefs(doc));
+      nsCOMPtr<nsIDOMDocument> doc;
+      (*_retval)->GetDocument(getter_AddRefs(doc));
+    }
+    
+    if (abusedWindow)
+      FirePopupWindowEvent(topDoc);
   }
 
   return rv;

@@ -20,16 +20,10 @@
 
 var COOKIEPERMISSION = 0;
 var IMAGEPERMISSION = 1;
-var WINDOWPERMISSION = 2;
 
 function viewImages() {
   window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
                     "chrome,resizable=yes", "imageManager" );
-}
-
-function viewPopups() {
-  window.openDialog("chrome://communicator/content/wallet/CookieViewer.xul","_blank",
-                    "chrome,resizable=yes", "popupManager" );
 }
 
 function viewCookies() {

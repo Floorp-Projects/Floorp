@@ -110,10 +110,16 @@
       var policy = pref.getBoolPref("dom.disable_open_during_load");
 
       blocked = permissionmanager.testPermission(getBrowser().currentURI, nsIPermissionManager.POPUP_TYPE);
+      
+      document.getElementById("AboutPopups").hidden = policy;
+      document.getElementById("ManagePopups").hidden = !policy;
 
-      enableElement("BlockPopups", blocked != nsIPermissionManager.DENY_ACTION);
-      enableElement("AllowPopups", blocked != nsIPermissionManager.ALLOW_ACTION);
-      enableElement("ManagePopups", true);
+      if (policy) {
+        enableElement("AllowPopups", blocked != nsIPermissionManager.ALLOW_ACTION);
+        return;
+      }
+
+      enableElement("AllowPopups", false);
     }
 
     function enableElement(elementID, enable) {
@@ -158,32 +164,23 @@
       }
     }
 
-    function PopupAction(action) {
-      var policy = pref.getBoolPref("dom.disable_open_during_load");
-      var uri = getBrowser().currentURI;
-
-      switch (action) {
-        case "block":
-          permissionmanager.add(uri, nsIPermissionManager.POPUP_TYPE, nsIPermissionManager.DENY_ACTION);
-          break;
-        case "allow":
-          var browsers = getBrowser().browsers;
-          var popupIcon = document.getElementById("popupIcon");
-          permissionmanager.add(uri, nsIPermissionManager.POPUP_TYPE, nsIPermissionManager.ALLOW_ACTION);
-          for (var i = 0; i < browsers.length; i++) {
-            if (browsers[i].popupDomain == uri.host) {
-              browsers[i].popupDomain = null;
-              popupIcon.hidden = true;
-            }
-          }
-          break;
-      }
+    function PopupAction() {
+      var hostPort = getBrowser().currentURI.hostPort;
+      window.openDialog("chrome://communicator/content/popupManager.xul", "",
+                        "chrome,resizable=yes,modal=yes",
+                        hostPort,
+                        false);
     }
 
-    function ViewPopupManager() {
+    function OpenAboutPopups() {
+      window.openDialog("chrome://communicator/content/aboutPopups.xul", "", 
+                        "chrome,centerscreen,resizable=yes", 
+                        false);
+    }
+
+    function OpenManagePopups() {
       window.openDialog("chrome://communicator/content/popupManager.xul", "",
-                        "chrome,resizable=yes,modal=yes", 
-                        pref.getBoolPref("dom.disable_open_during_load"),
+                        "chrome,resizable=yes", 
                         "",
                         false);
     }
@@ -235,18 +232,17 @@
           id="popup"
           insertbefore="navBeginGlobalItems">
       <menupopup>
-        <menuitem id="BlockPopups" label="&cookieBlockPopupsCmd.label;"
-                  accesskey="&cookieBlockPopupsCmd.accesskey;" 
-                  msg="&cookieBlockPopupsMsg.label;"
-                  oncommand="PopupAction('block');"/> 
         <menuitem id="AllowPopups" label="&cookieAllowPopupsCmd.label;"
                   accesskey="&cookieAllowPopupsCmd.accesskey;" 
-                  msg="&cookieAllowPopupsMsg.label;"
-                  oncommand="PopupAction('allow');"/> 
-        <menuseparator/>
-        <menuitem id="ManagePopups" label="&cookieDisplayPopupsCmd.label;"
-                  accesskey="&cookieDisplayPopupsCmd.accesskey;" 
-                  oncommand="ViewPopupManager();"/> 
+                  oncommand="PopupAction();"/>
+        <menuitem id="AboutPopups" label="&cookieAboutPopupBlocking.label;"
+                  accesskey="&cookieAboutPopupBlocking.accesskey;"
+                  oncommand="OpenAboutPopups();"
+                  hidden="true"/>
+        <menuitem id="ManagePopups" label="&cookieManagePopups.label;"
+                  accesskey="&cookieManagePopups.accesskey;"
+                  oncommand="OpenManagePopups();"
+                  hidden="true"/>
       </menupopup>
     </menu>
   </menupopup>
