@@ -618,7 +618,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                     {	
                         nsXPIDLCString uri;
                         rdfResource->GetValue( getter_Copies(uri) );
-                        nsString messageUri = uri;
+                        nsString messageUri(uri);
                     }
                     if (messageType == 2)
                         HackToGetBody(0);
