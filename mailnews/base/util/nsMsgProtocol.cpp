@@ -43,6 +43,7 @@ nsMsgProtocol::nsMsgProtocol(nsIURI * aURL)
 	m_flags = 0;
 	m_startPosition = 0;
 	m_readCount = 0;
+  mLoadAttributes = 0;
 	m_socketIsOpen = PR_FALSE;
 		
 	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
@@ -110,15 +111,7 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSp
                                     nsnull,     // null base URI
                                     getter_AddRefs(m_channel));
 		PR_FREEIF(urlSpec);
-
-		if (NS_SUCCEEDED(rv) && m_channel)
-		{
-            rv = m_channel->SetLoadGroup(m_loadGroup);
-            if (NS_SUCCEEDED(rv)) {
-                m_socketIsOpen = PR_FALSE;
-                // rv = SetupTransportState();
-            }
-		}
+    m_socketIsOpen = PR_FALSE;
 	}
 
 	return rv;
