@@ -36,10 +36,6 @@ DEPTH=.
 #//
 #//------------------------------------------------------------------------
 
-!if "$(WATCOM)" != ""
-XTRADIRS = $(DISTDIRS)
-!endif
-
 DIRS = \
   config			\
   dbm				\
@@ -63,10 +59,6 @@ DIRS = \
   lib\xp			\
   lib\libpwcac			\
   network			\
-!if defined(NGPREFS)
-  cmd\wincom			\
-  cmd\winfe\prefs		\
-!endif
 # the following are associated with the layout engine
   expat				\
   htmlparser			\
@@ -78,12 +70,15 @@ DIRS = \
   rdf                           \
   silentdl                      \
   webshell			\
-  xpfe				\
   editor 			\
+!if defined(BUILD_CLIENT)
+# the following are associated with the browser
+  xpfe				\
+  extensions			\
 !ifndef DISABLE_MAILNEWS
   mailnews			\
 !endif
-  extensions			\
+!endif
   $(NULL)
 
 
