@@ -160,11 +160,11 @@ public:
 
   static nsCompatibility GetRepChars(nsIPresContext* aPresContext, char& char1, char& char2);
 
+  // wrap can be one of these three values.  
   typedef enum {
-    eHTMLTextWrap_Unknown = 0,
-    eHTMLTextWrap_Off     = 1,
-    eHTMLTextWrap_Hard    = 2,
-    eHTMLTextWrap_Soft    = 3
+    eHTMLTextWrap_Off     = 1,    // the default
+    eHTMLTextWrap_Hard    = 2,    // "hard" or "physical"
+    eHTMLTextWrap_Soft    = 3     // "soft" or "virtual"
   } nsHTMLTextWrap;
 
   /** returns the value of the "wrap" property in aOutValue

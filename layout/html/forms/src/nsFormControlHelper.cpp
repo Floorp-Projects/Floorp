@@ -66,8 +66,11 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 // For figuring out the "WRAP" property
 #define kTextControl_Wrap_Soft "SOFT"
+#define kTextControl_Wrap_Virtual "VIRTUAL"   // "virtual" is a synonym for "soft"
 #define kTextControl_Wrap_Hard "HARD"
+#define kTextControl_Wrap_Physical "PHYSICAL" // "physical" is a synonym for "hard"
 #define kTextControl_Wrap_Off  "OFF"
+
 
 
 MOZ_DECL_CTOR_COUNTER(nsFormControlHelper);
@@ -180,29 +183,27 @@ nsresult
 nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp)
 {
   nsString wrap;
+  aWrapProp = eHTMLTextWrap_Off; // the default
+  
   nsresult result = GetWrapProperty(aContent, wrap);
 
   if (NS_CONTENT_ATTR_NOT_THERE != result) {
-    nsAutoString wrapOff(kTextControl_Wrap_Off);
-    if (wrap.EqualsIgnoreCase(wrapOff)) {
-      aWrapProp = eHTMLTextWrap_Off;
-      return result;
-    }
 
     nsAutoString wrapHard(kTextControl_Wrap_Hard);
-    if (wrap.EqualsIgnoreCase(wrapHard)) {
+    nsAutoString wrapPhysical(kTextControl_Wrap_Physical);
+    if (wrap.EqualsIgnoreCase(wrapHard) ||
+        wrap.EqualsIgnoreCase(wrapPhysical)) {
       aWrapProp = eHTMLTextWrap_Hard;
       return result;
     }
 
     nsAutoString wrapSoft(kTextControl_Wrap_Soft);
-    if (wrap.EqualsIgnoreCase(wrapSoft)) {
+    nsAutoString wrapVirtual(kTextControl_Wrap_Virtual);
+    if (wrap.EqualsIgnoreCase(wrapSoft) ||
+        wrap.EqualsIgnoreCase(wrapVirtual)) {
       aWrapProp = eHTMLTextWrap_Soft;
       return result;
     }
-    aWrapProp = eHTMLTextWrap_Unknown;
-  } else {
-    aWrapProp = eHTMLTextWrap_Off;
   }
   return result;
 }
