@@ -1384,7 +1384,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn4->pn_type = TOK_LC;
             PN_INIT_LIST(pn4);
             while ((tt = js_PeekToken(cx, ts)) != TOK_RC &&
-                    tt != TOK_CASE && tt != TOK_DEFAULT) {
+                   tt != TOK_CASE && tt != TOK_DEFAULT) {
                 if (tt == TOK_ERROR)
                     return NULL;
                 pn5 = Statement(cx, ts, tc);
@@ -1506,8 +1506,15 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
                 return NULL;
             }
 
+            if (pn1->pn_type == TOK_VAR) {
+                /* Tell js_EmitTree(TOK_VAR) to generate a final POP. */
+                pn1->pn_extra = JS_TRUE;
+                pn2 = pn1->pn_head;
+            } else {
+                pn2 = pn1;
+            }
+
             /* Beware 'for (arguments in ...)' with or without a 'var'. */
-            pn2 = (pn1->pn_type == TOK_VAR) ? pn1->pn_head : pn1;
             if (pn2->pn_type == TOK_NAME &&
                 pn2->pn_atom == cx->runtime->atomState.argumentsAtom) {
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
