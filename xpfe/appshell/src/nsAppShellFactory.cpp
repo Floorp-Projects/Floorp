@@ -29,9 +29,8 @@
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
-#if 0
+#if defined (XP_MAC) || defined (XP_WIN )
 nsresult NS_NewDefaultProtocolHelperFactory(nsIFactory** aResult);
-
 #endif
 
 
@@ -98,7 +97,7 @@ NSGetFactory(nsISupports* serviceMgr,
              nsIFactory **aFactory)
 #endif
 {
-  nsresult rv = NS_OK;
+  nsresult rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;
@@ -120,12 +119,10 @@ NSGetFactory(nsISupports* serviceMgr,
     rv = NS_NewGlobalHistoryFactory(aFactory);
   }
 
-#if 0
+#if defined (XP_MAC) || defined (XP_WIN )
   else if (aClass.Equals(kProtocolHelperCID)) {
     rv = NS_NewDefaultProtocolHelperFactory(aFactory);
   }
-#endif
-#if defined (XP_MAC) || (XP_WIN )
   else if ( aClass.Equals( kNetSupportDialogCID ) )
   {
   	 rv = NS_NewNetSupportDialogFactory(aFactory);
