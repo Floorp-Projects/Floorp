@@ -179,22 +179,25 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 			mdb_bool mustBeUnique; // whether port can hold only one of these
 			ret = store->GetTableKind(m_mdb->GetEnv(), m_rowScopeToken, m_tableKindToken, &outTableCount, 
 				&mustBeUnique, &m_mdbTable);
-			NS_ASSERTION(mustBeUnique && outTableCount == 1, "only one global db info allowed");
+//			NS_ASSERTION(mustBeUnique && outTableCount == 1, "only one global db info allowed");
 
-			// find singleton row for global info.
-			ret = m_mdbTable->HasOid(m_mdb->GetEnv(), &gDBFolderInfoOID, &rowPos);
-			if (ret == NS_OK)
+			if (m_mdbTable)
 			{
-				nsIMdbTableRowCursor *rowCursor;
-				rowPos = -1;
-				ret= m_mdbTable->GetTableRowCursor(m_mdb->GetEnv(), rowPos, &rowCursor);
+				// find singleton row for global info.
+				ret = m_mdbTable->HasOid(m_mdb->GetEnv(), &gDBFolderInfoOID, &rowPos);
 				if (ret == NS_OK)
 				{
-					ret = rowCursor->NextRow(m_mdb->GetEnv(), &m_mdbRow, &rowPos);
-					rowCursor->Release();
-					if (ret == NS_OK && m_mdbRow)
+					nsIMdbTableRowCursor *rowCursor;
+					rowPos = -1;
+					ret= m_mdbTable->GetTableRowCursor(m_mdb->GetEnv(), rowPos, &rowCursor);
+					if (ret == NS_OK)
 					{
-						LoadMemberVariables();
+						ret = rowCursor->NextRow(m_mdb->GetEnv(), &m_mdbRow, &rowPos);
+						rowCursor->Release();
+						if (ret == NS_OK && m_mdbRow)
+						{
+							LoadMemberVariables();
+						}
 					}
 				}
 			}

@@ -80,11 +80,9 @@ nsMailDatabase::~nsMailDatabase()
 	stat (nativeFolderName, &st);
 	PR_FREEIF(nativeFolderName);
 
-	summarySpec.Delete(PR_FALSE);	// ### temporary hack until mork is persistent.
 	nsresult err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 	
-	if (create && upgrading)	// #### temporary hack until mork is persistent
-		err = mailDB->OpenMDB((const char *) summarySpec, create);
+	err = mailDB->OpenMDB((const char *) summarySpec, create);
 
 	if (NS_SUCCEEDED(err))
 	{

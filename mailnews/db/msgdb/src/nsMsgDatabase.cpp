@@ -446,8 +446,8 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 					}
 				}
 				while (NS_SUCCEEDED(ret) && !outBroken && !outDone);
-				m_mdbEnv->ClearErrors(); // ### temporary...
-				if (ret != 0 && NS_SUCCEEDED(ret) && outDone)
+//				m_mdbEnv->ClearErrors(); // ### temporary...
+				if (NS_SUCCEEDED(ret) && outDone)
 				{
 					ret = myMDBFactory->ThumbToOpenStore(m_mdbEnv, thumb, &m_mdbStore);
 					if (ret == NS_OK && m_mdbStore)
@@ -477,7 +477,7 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 
 NS_IMETHODIMP nsMsgDatabase::CloseMDB(PRBool commit)
 {
-//	--mRefCnt; don't decrement ref-count so we'll stay in memory until Mork files in and out.
+	--mRefCnt; 
 	PR_ASSERT(mRefCnt >= 0);
 	if (mRefCnt == 0)
 	{
@@ -492,7 +492,7 @@ NS_IMETHODIMP nsMsgDatabase::CloseMDB(PRBool commit)
 		}
 #endif
 		if (m_mdbStore)
-			m_mdbStore->Release();
+			m_mdbStore->CloseMdbObject(m_mdbEnv);
 		// if this terrifies you, we can make it a static method
 		delete this;	
 		return(NS_OK);
