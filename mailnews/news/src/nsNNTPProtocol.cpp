@@ -3723,7 +3723,7 @@ PRInt32 nsNNTPProtocol::Cancel()
           alertText = UNTIL_STRING_BUNDLES_MK_NNTP_CANCEL_DISALLOWED;
           if (dialog) {
               // until #7770 is fixed, we can't do dialogs on Linux from here
-#if defined(BUG_7770_FIXED) || defined(XP_PC)
+#if defined(BUG_7770_FIXED)
               rv = dialog->Alert(alertText);
 #else
               printf("%s\n",alertText.GetBuffer());
@@ -3747,7 +3747,7 @@ PRInt32 nsNNTPProtocol::Cancel()
    */
   if (dialog) {
       // until #7770 is fixed, we can't do dialogs on UNIX from here
-#if defined(BUG_7770_FIXED) || defined(XP_PC)
+#if defined(BUG_7770_FIXED)
       rv = dialog->Confirm(confirmText, &confirmCancelResult);
 #else
       printf("%s\n", confirmText.GetBuffer());
@@ -3818,7 +3818,7 @@ PRInt32 nsNNTPProtocol::Cancel()
     alertText = UNTIL_STRING_BUNDLES_MK_MSG_MESSAGE_CANCELLED;
     if (dialog) {
         // until #7770 is fixed, we can't do dialogs on Linux from here
-#if defined(BUG_7770_FIXED) || defined(XP_PC)
+#if defined(BUG_7770_FIXED)
         rv = dialog->Alert(alertText);
 #else
         printf("%s\n", alertText.GetBuffer());

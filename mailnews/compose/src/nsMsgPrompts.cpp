@@ -40,7 +40,7 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
   nsAutoString alertText(msg);
   if (dialog) 
   {
-#if defined(BUG_7770_FIXED) || defined(XP_PC)
+#if defined(BUG_7770_FIXED)
     rv = dialog->Alert(alertText);
 #else
     // will only work for single byte languages for now
@@ -68,7 +68,7 @@ nsMsgDisplayMessageByString(char *msg)
   nsAutoString alertText(msg);
   if (dialog) 
   {
-#if defined(BUG_7770_FIXED) || defined(XP_PC)
+#if defined(BUG_7770_FIXED)
     rv = dialog->Alert(alertText);
 #else
     // will only work for single byte languages for now
