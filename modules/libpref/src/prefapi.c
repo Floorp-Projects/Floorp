@@ -510,23 +510,7 @@ PR_IMPLEMENT(void) PREF_Cleanup()
 	}
 	gCallbacks = NULL;
 
-	if (gMochaContext)
-		JS_DestroyContext(gMochaContext);
-	gMochaContext = NULL;
-
-	if (gMochaTaskState)
-		JS_Finish(gMochaTaskState);                      
-	gMochaTaskState = NULL;
-	
-	if (gHashTable)
-		PR_HashTableDestroy(gHashTable);
-	gHashTable = NULL;
-
-#ifdef PREF_SUPPORT_OLD_PATH_STRINGS
-	if (gFileName)
-		PL_strfree(gFileName);
-	gFileName = NULL;
-#endif
+    PREF_CleanupPrefs();
 }
 
 /* Frees up all the objects except the callback list. */
@@ -543,6 +527,8 @@ PR_IMPLEMENT(void) PREF_CleanupPrefs()
 	if (gHashTable)
 		PR_HashTableDestroy(gHashTable);
 	gHashTable = NULL;
+
+    free(gSavedLine);
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 	if (gFileName)
