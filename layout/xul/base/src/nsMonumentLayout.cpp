@@ -40,15 +40,23 @@ nsBoxSizeListNodeImpl::Release(nsBoxLayoutState& aState)
    mRefCount--;
    if (mRefCount == 0) {
      Clear(aState);
+     if (mNext)
+       mNext->Release(aState);
      delete this;
    }
 }
 
 void
-nsBoxSizeListNodeImpl::Desecrate()
+nsBoxSizeListNodeImpl::Desecrate(nsBoxLayoutState& aState)
 {
   if (mParent)
-    mParent->Desecrate();
+    mParent->Desecrate(aState);
+}
+
+void
+nsBoxSizeListNodeImpl::MarkDirty(nsBoxLayoutState& aState)
+{
+  mBox->MarkDirty(aState);
 }
 
 void nsBoxSizeListNodeImpl::SetNext(nsBoxLayoutState& aState, nsBoxSizeList* aNext)
@@ -94,11 +102,36 @@ nsBoxSizeListNodeImpl::GetAt(PRInt32 aIndex)
    return nsnull;
 }
 
+nsBoxSizeList* 
+nsBoxSizeListNodeImpl::Get(nsIBox* aBox)
+{
+   nsBoxSizeList* node = this;
+   while(node)
+   {
+     if (node->GetBox() == aBox)
+        return node;
+
+     node = node->GetNext();
+   }
+
+   return nsnull;
+}
 
 //------ nsInfoListImpl2 ----
 
-nsBoxSizeListImpl::nsBoxSizeListImpl(nsIBox* aBox):nsBoxSizeListNodeImpl(aBox),mFirst(nsnull),mLast(nsnull),mCount(0)
+nsBoxSizeListImpl::nsBoxSizeListImpl(nsIBox* aBox):nsBoxSizeListNodeImpl(aBox),mListenerBox(nsnull), mListener(nsnull), mFirst(nsnull),mLast(nsnull),mCount(0)
 {
+}
+
+void
+nsBoxSizeListImpl::Release(nsBoxLayoutState& aState)
+{
+   if (mRefCount == 1) {
+     if (mListener)
+       mListener->WillBeDestroyed(mListenerBox, aState, *this);
+   }
+
+   nsBoxSizeListNodeImpl::Release(aState);
 }
 
 void
@@ -107,8 +140,9 @@ nsBoxSizeListImpl::Clear(nsBoxLayoutState& aState)
   nsBoxSizeList* list = mFirst;
   while(list)
   {
-    list->Release(aState);
+    nsBoxSizeList* toRelease = list;
     list = list->GetNext();
+    toRelease->Release(aState);
   }
 
   mFirst = nsnull;
@@ -129,12 +163,46 @@ nsBoxSizeListImpl::Append(nsBoxLayoutState& aState, nsBoxSizeList* aChild)
 }
 
 void
-nsBoxSizeListImpl::Desecrate()
+nsBoxSizeListImpl::Desecrate(nsBoxLayoutState& aState)
 {
   if (mIsSet) {
     mIsSet = PR_FALSE;
-    nsBoxSizeListNodeImpl::Desecrate();
+    if (mListener)
+       mListener->Desecrated(mListenerBox, aState, *this);
+
+    nsBoxSizeListNodeImpl::Desecrate(aState);
   }
+}
+
+void
+nsBoxSizeListImpl::MarkDirty(nsBoxLayoutState& aState)
+{
+   nsBoxSizeList* child = mFirst;
+   while(child)
+   {
+     child->MarkDirty(aState);
+     child = child->GetNext();
+   }
+
+   nsBoxSizeListNodeImpl::MarkDirty(aState);
+}
+
+PRBool
+nsBoxSizeListImpl::SetListener(nsIBox* aBox, nsBoxSizeListener& aListener)
+{
+  if (mListener)
+    return PR_FALSE;
+
+  mListener = &aListener;
+  mListenerBox = aBox;
+  return PR_TRUE;
+}
+
+void
+nsBoxSizeListImpl::RemoveListener()
+{
+  mListener = nsnull;
+  mListenerBox = nsnull;
 }
 
 nsBoxSize
@@ -151,8 +219,12 @@ nsBoxSizeListImpl::GetBoxSize(nsBoxLayoutState& aState)
     while(node) {
       nsBoxSize size = node->GetBoxSize(aState);
 
-      mBoxSize.pref += size.pref;
-      mBoxSize.min += size.min;
+      if (size.pref > mBoxSize.pref)
+         mBoxSize.pref = size.pref;
+
+      if (size.min > mBoxSize.min)
+         mBoxSize.min = size.min;
+
       if (mBoxSize.max != NS_INTRINSICSIZE)
         if (size.max == NS_INTRINSICSIZE)
             mBoxSize.max = size.max;
@@ -189,7 +261,7 @@ nsBoxSizeListNodeImpl::GetBoxSize(nsBoxLayoutState& aState)
   mBox->GetFlex(aState, flex);
   nsBox::AddMargin(mBox, pref);
 
-  size.Add(min, pref, max, ascent, flex, !isHorizontal); 
+  size.Add(min, pref, max, ascent, flex, isHorizontal); 
 
   return size;
 }
@@ -200,14 +272,6 @@ nsMonumentLayout::nsMonumentLayout(nsIPresShell* aPresShell):nsSprocketLayout()
 {
 }
 
-/*
-PRBool 
-nsMonumentLayout::GetInitialOrientation(PRBool& aIsHorizontal)
-{
-  aIsHorizontal = (mState & NS_STATE_IS_HORIZONTAL);
-  return PR_TRUE;
-}
-*/
 
 NS_IMETHODIMP
 nsMonumentLayout::CastToTemple(nsTempleLayout** aTemple)
@@ -222,17 +286,6 @@ nsMonumentLayout::CastToObelisk(nsObeliskLayout** aObelisk)
   *aObelisk = nsnull;
   return NS_ERROR_FAILURE;
 }
-
-/*
-void
-nsMonumentLayout::SetHorizontal(PRBool aIsHorizontal)
-{
-  if (aIsHorizontal) 
-    mState |= NS_STATE_IS_HORIZONTAL;
-  else
-    mState &= ~NS_STATE_IS_HORIZONTAL;
-}
-*/
 
 NS_IMETHODIMP
 nsMonumentLayout::GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIMonument** aParentMonument)
@@ -285,14 +338,18 @@ nsMonumentLayout::GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsB
    {
      nsIBoxLayout* layout = nsnull;
      child->GetLayoutManager(&layout);
-     nsIMonument* monument = nsnull;
-     if (layout == aRequestor) {
-        index = count;
-        break;
+     nsresult rv = NS_OK;
+     // only all monuments
+     nsCOMPtr<nsIMonument> monument = do_QueryInterface(layout, &rv);
+     if (NS_SUCCEEDED(rv) && monument) 
+     {
+       if (layout == aRequestor) {
+          index = count;
+          break;
+       }
+       count++;
      }
-
      child->GetNextBox(&child);
-     count++;
    }
 
    NS_ASSERTION(index != -1,"Error can't find requestor!!");
@@ -319,7 +376,7 @@ nsMonumentLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox*
 NS_IMETHODIMP
 nsMonumentLayout::GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList)
 {
-  nsBoxLayoutState state(nsnull);
+  nsBoxLayoutState state((nsIPresContext*)nsnull);
 
   nsBoxSizeList* list = nsnull;
 
@@ -337,32 +394,9 @@ nsMonumentLayout::GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSize
      count++;
   }
 
-  /*
-  // create an info list for the given column.
-  nsIBox* box = nsnull;
-  aBox->GetChildBox(&box);
-  PRInt32 count = 0;
-  while(box) {
-     if (count == aMonumentIndex)
-     {
-        *aList = new nsBoxSizeListNodeImpl(box);
-        return NS_OK;
-     }
-     box->GetNextBox(&box);
-     count++;
-  }
-  */
   return NS_ERROR_FAILURE;
 }
 
-/*
-NS_IMETHODIMP
-nsMonumentLayout::CountMonuments(PRInt32& aCount)
-{
-  aCount = 1;
-  return NS_OK;
-}
-*/
 
 NS_IMETHODIMP
 nsMonumentLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)
@@ -416,6 +450,39 @@ nsMonumentLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMonumentLayout::EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex)
+{
+  NS_ERROR("Should Never be Called!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMonumentLayout::DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
+{
+  NS_ERROR("Should Never be Called!");
+  return NS_OK;
+}
+
+PRInt32
+nsMonumentLayout::GetIndexOfChild(nsIBox* aBox, nsIBox* aChild)
+{
+   nsIBox* child = nsnull;
+   aBox->GetChildBox(&child);
+   PRInt32 count = 0;
+   while(child)
+   {
+    if (child == aChild) {
+        return count;
+     }
+
+     child->GetNextBox(&child);
+     count++;
+   }
+
+   return -1;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMonumentLayout, nsBoxLayout);

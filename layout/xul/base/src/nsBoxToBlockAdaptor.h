@@ -53,7 +53,7 @@ public:
 
   
   nsBoxToBlockAdaptor(nsIPresShell* aShell, nsIFrame* aFrame);
-  ~nsBoxToBlockAdaptor();
+  virtual ~nsBoxToBlockAdaptor();
 
 protected:
   virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);

@@ -50,14 +50,16 @@ public:
     virtual void Append(nsBoxLayoutState& aState, nsBoxSizeList* aChild);
     virtual void Clear(nsBoxLayoutState& aState) {}
     virtual nsBoxSizeList* GetAt(PRInt32 aIndex);
-
-    virtual void Desecrate();
+    virtual nsBoxSizeList* Get(nsIBox* aBox);
+    virtual PRBool SetListener(nsIBox* aBox, nsBoxSizeListener& aListener) { return PR_FALSE; }
+    virtual void RemoveListener() {}
+    virtual void Desecrate(nsBoxLayoutState& aState);
+    virtual void MarkDirty(nsBoxLayoutState& aState);
     virtual void AddRef() { mRefCount++; }
     virtual void Release(nsBoxLayoutState& aState);
     virtual PRInt32 GetRefCount() { return mRefCount; }
     virtual PRBool IsSet() { return mIsSet; }
     virtual nsIBox* GetBox() { return mBox; }
-
 
     nsBoxSizeListNodeImpl(nsIBox* aBox);
 
@@ -75,9 +77,13 @@ public:
     virtual nsBoxSizeList* GetFirst()        { return mFirst; }
     virtual nsBoxSizeList* GetLast()         { return mLast;  }
     virtual PRInt32 GetCount()               { return mCount; }
-    virtual void Desecrate();
+    virtual void Desecrate(nsBoxLayoutState& aState);
+    virtual void MarkDirty(nsBoxLayoutState& aState);
     virtual void Append(nsBoxLayoutState& aState, nsBoxSizeList* aChild);
     virtual void Clear(nsBoxLayoutState& aState);
+    virtual PRBool SetListener(nsIBox* aBox, nsBoxSizeListener& aListener);
+    virtual void RemoveListener();
+    virtual void Release(nsBoxLayoutState& aState);
 
     nsBoxSizeListImpl(nsIBox* aBox);
 
@@ -85,6 +91,8 @@ public:
     nsBoxSizeList* mLast;
     PRInt32 mCount;
     nsBoxSize mBoxSize;
+    nsBoxSizeListener* mListener;
+    nsIBox* mListenerBox;
 };
 
 class nsMonumentLayout : public nsSprocketLayout,
@@ -99,14 +107,15 @@ public:
   NS_IMETHOD GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsBoxSizeList** aList, nsMonumentLayout* aRequestor = nsnull);
   NS_IMETHOD GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aTempleBox, nsMonumentLayout* aRequestor = nsnull);
   NS_IMETHOD GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList);
-  //NS_IMETHOD CountMonuments(PRInt32& aCount);
   NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast);
   NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIMonument** aParentMonument);
   NS_IMETHOD GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList);
+  NS_IMETHOD EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex);
+  NS_IMETHOD DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState);
 
-  //virtual void SetHorizontal(PRBool aIsHorizontal);
 protected:
-  //virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
+  virtual PRInt32 GetIndexOfChild(nsIBox* aBox, nsIBox* aChild);
+
   nsMonumentLayout(nsIPresShell* aShell);
 };
 

@@ -42,6 +42,8 @@ public:
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus);
 
+  NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
+
   virtual void MouseClicked (nsIPresContext* aPresContext);
 
 

@@ -60,11 +60,13 @@ public:
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 
+#ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
       aResult = "Deck";
       return NS_OK;
   }
+#endif
 
   nsDeckFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
 

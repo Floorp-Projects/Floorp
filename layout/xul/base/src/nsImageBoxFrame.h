@@ -67,7 +67,7 @@ public:
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
 
-  ~nsImageBoxFrame();
+  virtual ~nsImageBoxFrame();
 protected:
 
   void CacheImageSize(nsBoxLayoutState& aBoxLayoutState);

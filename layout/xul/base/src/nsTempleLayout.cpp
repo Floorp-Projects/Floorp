@@ -51,15 +51,17 @@ nsTempleLayout::CastToTemple(nsTempleLayout** aTemple)
   return NS_OK;
 }
 
-void
-nsTempleLayout::EncriptionChanged(PRInt32 aIndex)
+NS_IMETHODIMP
+nsTempleLayout::EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex)
 {
   // if a cell changes size. 
   if (mMonuments) {
      nsBoxSizeList* size = mMonuments->GetAt(aIndex);
      if (size)
-        size->Desecrate();
+        size->Desecrate(aState);
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -81,14 +83,17 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
   nsCOMPtr<nsIBoxLayout> layout;
   while(box) {
 
-    nsIMonument* monument = nsnull;
     box->GetLayoutManager(getter_AddRefs(layout));
-    if (NS_SUCCEEDED(layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument)) && monument) 
-    {
+
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIMonument> monument = do_QueryInterface(layout, &rv);
+
+    if (monument) {
+
       if (!mMonuments) {
-        mMonuments = new nsBoxSizeListImpl(box);
-        mMonuments->AddRef();
-      }
+          mMonuments = new nsBoxSizeListImpl(box);
+          mMonuments->AddRef();
+        }
 
       current = mMonuments;
       nsBoxSizeList* node = nsnull;
@@ -117,9 +122,9 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
           current = current->GetNext();
         }
       }
-
-      box->GetNextBox(&box);
     }
+    
+    box->GetNextBox(&box);
   }
 
   *aList = mMonuments;
@@ -142,20 +147,27 @@ nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSi
   while(box) {
     nsIMonument* monument = nsnull;
     box->GetLayoutManager(getter_AddRefs(layout));
-    if (NS_SUCCEEDED(layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument)) && monument) 
-    {
-      monument->BuildBoxSizeList(box, aState, first, last);
-      if (count == 0)
-        aFirst = first;
-      else 
-        (aLast)->next = first;
-
-      aLast = last;
+    layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument);
+    
+    if (monument) 
+         monument->BuildBoxSizeList(box, aState, first, last);
+    else {
+         nsMonumentLayout::BuildBoxSizeList(box, aState, first, last);
+         first->bogus = PR_TRUE;
     }
+
+    if (count == 0)
+      aFirst = first;
+    else 
+      (aLast)->next = first;
+
+    aLast = last;
+    
     box->GetNextBox(&box);
     count++;
   }
 
+  /*
   nsMargin borderPadding(0,0,0,0);
   aBox->GetBorderAndPadding(borderPadding);
   nsMargin margin(0,0,0,0);
@@ -169,23 +181,41 @@ nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSi
 
   (aFirst)->Add(leftMargin,isHorizontal);
   (aLast)->Add(rightMargin,isHorizontal);
+  */
 
   return NS_OK;
 }
 
-/*
-void
-nsTempleLayout::DesecrateMonuments(nsBoxLayoutState& aState)
+NS_IMETHODIMP
+nsTempleLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList)
 {
-  mMonuments->Clear(aState);
-  mMonuments->Release(aState);
-  mMonuments = nsnull;
+  DesecrateMonuments(aBox, aState);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTempleLayout::ChildrenAddedOrRemoved()
+nsTempleLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
 {
-  DesecrateMonuments(aPresContext);
-  return nsMonumentLayout::ChildrenAddedOrRemoved();
+  DesecrateMonuments(aBox, aState);
+  return NS_OK;
 }
-*/
+
+NS_IMETHODIMP
+nsTempleLayout::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
+{
+  DesecrateMonuments(aBox, aState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTempleLayout::DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
+{
+  if (mMonuments) {
+    nsBoxSizeList* tmp = mMonuments;
+    mMonuments = nsnull;
+    tmp->Release(aState);
+  }
+
+  return NS_OK;
+}
+

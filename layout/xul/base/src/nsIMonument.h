@@ -38,6 +38,14 @@ class nsMonumentLayout;
 class nsBoxLayoutState;
 class nsIPresShell;
 class nsBoxSize;
+class nsBoxSizeList;
+
+class nsBoxSizeListener
+{
+public:
+  virtual void WillBeDestroyed(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList& aList)=0;
+  virtual void Desecrated(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList& aList)=0;
+};
 
 class nsBoxSizeList
 {
@@ -48,17 +56,22 @@ public:
     virtual nsBoxSizeList* GetNext()=0;
     virtual nsBoxSizeList* GetParent()=0;
     virtual nsBoxSizeList* GetAt(PRInt32 aIndex)=0;
+    virtual nsBoxSizeList* Get(nsIBox* aBox)=0;
     virtual void SetParent(nsBoxSizeList* aParent)=0;
     virtual void SetNext(nsBoxLayoutState& aState, nsBoxSizeList* aNext)=0;
     virtual void Append(nsBoxLayoutState& aState, nsBoxSizeList* aChild)=0;
     virtual void Clear(nsBoxLayoutState& aState)=0;
     virtual PRInt32 GetCount()=0;
-    virtual void Desecrate()=0;
+    virtual void Desecrate(nsBoxLayoutState& aState)=0;
+    virtual void MarkDirty(nsBoxLayoutState& aState)=0;
     virtual void AddRef()=0;
     virtual void Release(nsBoxLayoutState& aState)=0;
     virtual PRBool IsSet()=0;
     virtual nsIBox* GetBox()=0;
     virtual PRInt32 GetRefCount()=0;
+    virtual PRBool SetListener(nsIBox* aBox, nsBoxSizeListener& aListener)=0;
+    virtual void RemoveListener()=0;
+
 };
 
 // {AF0C1603-06C3-11d4-BA07-001083023C1E}
@@ -76,11 +89,11 @@ public:
   NS_IMETHOD GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsBoxSizeList** aList, nsMonumentLayout* aRequestor = nsnull)=0;
   NS_IMETHOD GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aTempleBox, nsMonumentLayout* aRequestor = nsnull)=0;
   NS_IMETHOD GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList)=0;
-  //NS_IMETHOD CountMonuments(PRInt32& aCount)=0;
   NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)=0;
   NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIMonument** aParentMonument)=0;
   NS_IMETHOD GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList)=0;
-
+  NS_IMETHOD EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex)=0;
+  NS_IMETHOD DesecrateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)=0;
 };
 
 #endif

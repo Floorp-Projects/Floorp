@@ -162,6 +162,36 @@ nsBoxLayout::AddSmallestSize(nsSize& aSize, const nsSize& aSize2)
      aSize.height = aSize2.height;
 }
 
+NS_IMETHODIMP
+nsBoxLayout::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxLayout::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxLayout::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxLayout::ChildBecameDirty(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChild)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBoxLayout::BecameDirty(nsIBox* aBox, nsBoxLayoutState& aState)
+{
+  return NS_OK;
+}
+
 // nsISupports
 NS_IMPL_ADDREF(nsBoxLayout);
 NS_IMPL_RELEASE(nsBoxLayout);

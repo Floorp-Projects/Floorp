@@ -33,7 +33,8 @@
 #include "nsMonumentLayout.h"
 #include "nsCOMPtr.h"
 
-class nsObeliskLayout : public nsMonumentLayout
+class nsObeliskLayout : public nsMonumentLayout, 
+                        public nsBoxSizeListener
 {
 public:
 
@@ -43,6 +44,11 @@ public:
   NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD CastToObelisk(nsObeliskLayout** aObelisk);
+  NS_IMETHOD ChildBecameDirty(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChild);
+  NS_IMETHOD BecameDirty(nsIBox* aBox, nsBoxLayoutState& aState);
+  NS_IMETHOD ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aPrevBox, nsIBox* aChildList);
+  NS_IMETHOD ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
+  NS_IMETHOD ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChildList);
 
 protected:
 
@@ -58,8 +64,11 @@ protected:
   */
 
   virtual void PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsBoxSize*& aBoxSizes, nsComputedBoxSize*& aComputedBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes);
+  virtual void WillBeDestroyed(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList& aList);
+  virtual void Desecrated(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList& aList);
 
-nsObeliskLayout(nsIPresShell* aShell);
+  nsObeliskLayout(nsIPresShell* aShell);
+  virtual ~nsObeliskLayout();
 
 private:
   nsBoxSizeList* mOtherMonumentList;

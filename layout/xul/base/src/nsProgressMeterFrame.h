@@ -54,6 +54,10 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
+#ifdef NS_DEBUG
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+#endif
+
 protected:
   nsProgressMeterFrame(nsIPresShell* aPresShell);
   virtual ~nsProgressMeterFrame();
