@@ -42,7 +42,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = popuplite ../browser/gtk/src app
+DIRS = popuplite
+
+ifdef XP_UNIX
+DIRS += ../browser/gtk/src app
+else
+DIRS += wince
+endif
 
 include $(topsrcdir)/config/rules.mk
 
