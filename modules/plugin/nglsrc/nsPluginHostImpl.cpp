@@ -93,6 +93,7 @@
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsILocalFile.h"
+#include "nsIFileChannel.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
@@ -4019,16 +4020,24 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
           // In the file case, hand the filename off to NewPostDataStream
           if (aIsFile) 
           {
-            // If the filename does not start with file:///, try
-            // passing it through unmodified
-            const char *filename = aPostData;
-            if (! PL_strncasecmp("file:///", filename, 8))
-              filename += 8;
+            nsXPIDLCString filename;
 
-            // tell the listener about it so it will delete the file later
-            listenerPeer->SetLocalFile(filename);
+            nsCOMPtr<nsIURI> url;
+            NS_NewURI(getter_AddRefs(url), aPostData);
+            nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(url));
+            if (fileURL) {
+              nsCOMPtr<nsIFile> file;
+              fileURL->GetFile(getter_AddRefs(file));
+              nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
+              if (localFile) {
+                localFile->GetPath(getter_Copies(filename));
 
-            NS_NewPostDataStream(getter_AddRefs(postDataStream), aIsFile, filename, 0);
+                // tell the listener about it so it will delete the file later
+                listenerPeer->SetLocalFile(filename);
+
+                NS_NewPostDataStream(getter_AddRefs(postDataStream), aIsFile, filename, 0);
+              }
+            }
           }
           else
           {
