@@ -87,6 +87,9 @@ public:
     static void GlobalInit();
     static void GlobalShutdown();
 
+private:
+    nsLocalFile(const nsLocalFile& other);
+
 protected:
     struct stat  mCachedStat;
     nsCString    mPath;

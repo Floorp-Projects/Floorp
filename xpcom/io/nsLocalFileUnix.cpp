@@ -201,6 +201,13 @@ nsLocalFile::nsLocalFile() :
 {
 }
 
+nsLocalFile::nsLocalFile(const nsLocalFile& other)
+  : mCachedStat(other.mCachedStat)
+  , mPath(other.mPath)
+  , mHaveCachedStat(other.mHaveCachedStat)
+{
+}
+
 nsLocalFile::~nsLocalFile()
 {
 }
@@ -240,18 +247,13 @@ nsLocalFile::FillStatCache() {
 NS_IMETHODIMP
 nsLocalFile::Clone(nsIFile **file)
 {
-    NS_ENSURE_ARG(file);
+    // Just copy-construct ourselves
+    *file = new nsLocalFile(*this);
+    if (!*file)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    nsLocalFile* localFile = new nsLocalFile();
-    if (!localFile)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = localFile->InitWithNativePath(mPath);
-    if (NS_FAILED(rv))
-        return rv;
-
-    *file = NS_STATIC_CAST(nsIFile *, localFile);
     NS_ADDREF(*file);
+    
     return NS_OK;
 }
 

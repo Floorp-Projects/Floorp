@@ -79,6 +79,7 @@ public:
     static void GlobalShutdown();
 
 private:
+    nsLocalFile(const nsLocalFile& other);
 
     // this is the flag which indicates if I can used cached information about the file
     PRPackedBool mDirty;

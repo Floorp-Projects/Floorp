@@ -250,6 +250,13 @@ nsLocalFile::nsLocalFile()
     MakeDirty();
 }
 
+nsLocalFile::nsLocalFile(const nsLocalFile& other)
+  : mDirty(other.mDirty)
+  , mWorkingPath(other.mWorkingPath)
+  , mFileInfo64(other.mFileInfo64)
+{
+}
+
 nsLocalFile::~nsLocalFile()
 {
 }
@@ -313,18 +320,14 @@ nsLocalFile::Stat()
 NS_IMETHODIMP  
 nsLocalFile::Clone(nsIFile **file)
 {
-    nsresult rv;
+    // Just copy-construct ourselves
+    *file = new nsLocalFile(*this);
+    if (!*file)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<nsILocalFile> localFile;
-
-    rv = NS_NewNativeLocalFile(mWorkingPath, PR_TRUE, getter_AddRefs(localFile));
+    NS_ADDREF(*file);
     
-    if (NS_SUCCEEDED(rv) && localFile)
-    {
-        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)file);
-    }
-            
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
