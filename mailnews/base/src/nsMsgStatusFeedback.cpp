@@ -42,7 +42,7 @@
 #include "nsIWebProgress.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
-
+#include "nsIXULBrowserWindow.h"
 #include "nsMsgStatusFeedback.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocumentViewer.h"
@@ -235,6 +235,15 @@ nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
   if (mStatusFeedback)
     mStatusFeedback->ShowStatusString(status);
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgStatusFeedback::SetStatusString(const PRUnichar *status)
+{
+  nsCOMPtr <nsIXULBrowserWindow> xulBrowserWindow = do_QueryInterface(mStatusFeedback);
+  if (xulBrowserWindow)
+    xulBrowserWindow->SetJSDefaultStatus(status);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

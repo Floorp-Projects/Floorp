@@ -269,7 +269,7 @@ nsresult nsFolderCompactState::ShowStatusMsg(const PRUnichar *aMsg)
   {
     m_window->GetStatusFeedback(getter_AddRefs(statusFeedback));
     if (statusFeedback && aMsg)
-      return statusFeedback->ShowStatusString (aMsg);
+      return statusFeedback->SetStatusString (aMsg);
   }
   return NS_OK;
 }
@@ -455,6 +455,14 @@ nsFolderCompactState::ReleaseFolderLock()
   return result;
 }
 
+void nsFolderCompactState::ShowDoneStatus()
+{
+  nsXPIDLString statusString;
+  nsresult rv = m_folder->GetStringWithFolderNameFromBundle("compactingDone", getter_Copies(statusString));
+  if (statusString && NS_SUCCEEDED(rv))
+    ShowStatusMsg(statusString);
+}
+
 nsresult
 nsFolderCompactState::CompactNextFolder()
 {
@@ -474,7 +482,10 @@ nsFolderCompactState::CompactNextFolder()
          folder->CompactAllOfflineStores(m_window, m_offlineFolderArray);
      }
      else
+     {
+       ShowDoneStatus();
        return rv;
+     }
        
    } 
    nsCOMPtr<nsIMsgFolder> folder = do_QueryElementAt(m_folderArray,
@@ -482,6 +493,8 @@ nsFolderCompactState::CompactNextFolder()
 
    if (NS_SUCCEEDED(rv) && folder)
      rv = Compact(folder, m_compactingOfflineFolders, m_window);                    
+    else
+      ShowDoneStatus();
    return rv;
 }
 

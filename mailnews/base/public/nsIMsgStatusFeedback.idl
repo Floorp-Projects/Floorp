@@ -47,6 +47,7 @@ interface nsIMsgStatusFeedback : nsISupports {
 	void startMeteors();
 	void stopMeteors();
 	void showProgress(in long percent);
+  void setStatusString(in wstring status); // will be displayed until next user action
 	[noscript] void setDocShell(in nsIDocShell shell, in nsIDOMWindow window);
 	void closeWindow();
 };

@@ -311,6 +311,11 @@ NS_IMETHODIMP nsMsgProgress::ShowStatusString(const PRUnichar *status)
   return OnStatusChange(nsnull, nsnull, NS_OK, status);
 }
 
+NS_IMETHODIMP nsMsgProgress::SetStatusString(const PRUnichar *status)
+{
+  return OnStatusChange(nsnull, nsnull, NS_OK, status);
+}
+
 /* void startMeteors (); */
 NS_IMETHODIMP nsMsgProgress::StartMeteors()
 {
