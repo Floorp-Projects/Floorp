@@ -104,6 +104,7 @@ REQUIRES	= xpcom \
 
 CPPSRCS = \
 	NativeBrowserControl.cpp \
+	EmbedWindow.cpp \
 	NativeEventThread.cpp \
 	ns_util.cpp \
 	ns_util_export.cpp \

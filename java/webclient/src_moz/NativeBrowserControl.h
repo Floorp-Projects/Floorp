@@ -101,6 +101,15 @@ public:
     jobject                        mNativeEventThread;
     ShareInitContext               mShareContext;
 
+    // chrome mask
+    PRUint32                       mChromeMask;
+    // is this a chrome window?
+    PRBool                         mIsChrome;
+    // has the chrome finished loading?
+    PRBool                         mChromeLoaded;
+    // has someone called Destroy() on us?
+    PRBool                         mIsDestroyed;
+
     //
     // Class vars
     // 

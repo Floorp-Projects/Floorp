@@ -30,6 +30,7 @@
 #include "nsIServiceManager.h" // for do_GetService
 #include "nsEmbedAPI.h" // for NS_HandleEmbeddingEvent
 
+#include "EmbedWindow.h"
 #include "NativeBrowserControl.h"
 #include "ns_util.h"
 
@@ -58,12 +59,18 @@ NativeBrowserControl::NativeBrowserControl(void)
     mWindow = nsnull;
     mEnv = nsnull;
     mNativeEventThread = nsnull;
-    
+    mChromeMask       = 0;
+    mIsChrome         = PR_FALSE;
+    mChromeLoaded     = PR_FALSE;
+    mIsDestroyed      = PR_FALSE;
 }
 
 NativeBrowserControl::~NativeBrowserControl()
 {
     // PENDING(edburns): assert that this widget has been destroyed
+    mChromeMask       = 0;
+    mIsChrome         = PR_FALSE;
+    mChromeLoaded     = PR_FALSE;
 }
 
 nsresult
@@ -89,69 +96,73 @@ NativeBrowserControl::Init(JNIEnv * env, jobject newNativeEventThread)
     if (nsnull == sEmbeddedThread) {
         nsCOMPtr<nsIEventQueueService> 
             aEventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-	
+        
         if (!aEventQService) {
             mFailureCode = NS_ERROR_FAILURE;
             return mFailureCode;
         }
-	
-	// Create the event queue.
+        
+        // Create the event queue.
         mFailureCode = aEventQService->CreateThreadEventQueue();
         sEmbeddedThread = PR_GetCurrentThread();
-	
-	if (!sEmbeddedThread) {
-	    mFailureCode = NS_ERROR_FAILURE;
-	    return mFailureCode;
-	}
-	
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-	       ("NativeBrowserControl_Init: Create UI Thread EventQueue: %d\n",
-		mFailureCode));
-	
-	// We need to do something different for Unix
-	nsIEventQueue * EQueue = nsnull;
-	
-	mFailureCode = aEventQService->GetThreadEventQueue(sEmbeddedThread, &EQueue);
-	if (NS_FAILED(mFailureCode)) {
-	    return mFailureCode;
-	}
-	
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-	       ("NativeBrowserControl_Init: Get UI Thread EventQueue: %d\n",
-		mFailureCode));
-	
+        
+        if (!sEmbeddedThread) {
+            mFailureCode = NS_ERROR_FAILURE;
+            return mFailureCode;
+        }
+        
+        PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+               ("NativeBrowserControl_Init: Create UI Thread EventQueue: %d\n",
+                mFailureCode));
+        
+        // We need to do something different for Unix
+        nsIEventQueue * EQueue = nsnull;
+        
+        mFailureCode = aEventQService->GetThreadEventQueue(sEmbeddedThread, &EQueue);
+        if (NS_FAILED(mFailureCode)) {
+            return mFailureCode;
+        }
+        
+        PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+               ("NativeBrowserControl_Init: Get UI Thread EventQueue: %d\n",
+                mFailureCode));
+        
 #ifdef XP_UNIX
-	gdk_input_add(EQueue->GetEventQueueSelectFD(),
-		      GDK_INPUT_READ,
-		      event_processor_callback,
-		      EQueue);
+        gdk_input_add(EQueue->GetEventQueueSelectFD(),
+                      GDK_INPUT_READ,
+                      event_processor_callback,
+                      EQueue);
 #endif
-	
-	PLEventQueue * plEventQueue = nsnull;
-	
-	EQueue->GetPLEventQueue(&plEventQueue);
-	sActionQueue = plEventQueue;
-	if (!sActionQueue) {
-	    mFailureCode = NS_ERROR_FAILURE;
-	    return mFailureCode;
-	}
-
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-	       ("NativeBrowserControl_Init: get ActionQueue: %d\n",
-		mFailureCode));
-
+        
+        PLEventQueue * plEventQueue = nsnull;
+        
+        EQueue->GetPLEventQueue(&plEventQueue);
+        sActionQueue = plEventQueue;
+        if (!sActionQueue) {
+            mFailureCode = NS_ERROR_FAILURE;
+            return mFailureCode;
+        }
+        
+        PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+               ("NativeBrowserControl_Init: get ActionQueue: %d\n",
+                mFailureCode));
+        
 #ifdef XP_UNIX
-    
-	// The gdk_x_error function exits in some cases, we don't 
-	// want that.
-	XSetErrorHandler(wc_x_error);
+        
+        // The gdk_x_error function exits in some cases, we don't 
+        // want that.
+        XSetErrorHandler(wc_x_error);
 #endif
-	sInitComplete = PR_TRUE;
+        sInitComplete = PR_TRUE;
     }
-    //
-    // create the EmbedWindow
-    // 
 
+    // Create our embed window, and create an owning reference to it and
+    // initialize it.  It is assumed that this window will be destroyed
+    // when we go out of scope.
+    mWindow = new EmbedWindow();
+    mWindowGuard = NS_STATIC_CAST(nsIWebBrowserChrome *, mWindow);
+    mWindow->Init(this);
+    
     //
     // create the WindowCreator: see
     // NativeEventThread->InitializeWindowCreator
@@ -190,8 +201,9 @@ NativeBrowserControl::Resize(PRUint32 aWidth, PRUint32 aHeight)
 void
 NativeBrowserControl::Destroy(void)
 {
+    mIsDestroyed = PR_TRUE;
     if (nsnull != mNativeEventThread) {
-	::util_DeleteGlobalRef(mEnv, mNativeEventThread);
+        ::util_DeleteGlobalRef(mEnv, mNativeEventThread);
     }
 
     // PENDING(edburns): take over the stuff from
