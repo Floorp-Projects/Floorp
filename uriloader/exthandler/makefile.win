@@ -32,24 +32,23 @@ include <$(DEPTH)\config\config.mak>
 
 XPIDLSRCS=						                \
     .\nsIExternalHelperAppService.idl \
-    .\nsCExternalHelperApp.idl        \
+    .\nsCExternalHandlerService.idl   \
+    .\nsIExternalProtocolService.idl  \
 		$(NULL)
 
 LIBRARY_NAME=exthandlers_s
 
-CPP_OBJS =                            \
-        .\$(OBJDIR)\nsExternalHelperAppService.obj   \
+CPP_OBJS =                                          \
+        .\$(OBJDIR)\nsExternalHelperAppService.obj  \
+        .\win\$(OBJDIR)\nsOSHelperAppService.obj  	\
         $(NULL)
 
 INCS = $(INCS)                  \
         -I$(DEPTH)\dist\include \
         $(NULL)
 
-LLIBS=                                    \
-		    $(DIST)\lib\extprotocolwin_s.lib	\
-        $(NULL)
-
 WIN_LIBS= shell32.lib
+
 
 include <$(DEPTH)\config\rules.mak>
 
