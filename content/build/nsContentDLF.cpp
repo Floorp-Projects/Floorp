@@ -57,6 +57,7 @@
 #include "nsNetUtil.h"
 #include "nsICSSLoader.h"
 #include "nsCRT.h"
+#include "nsIViewSourceChannel.h"
 
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
@@ -88,11 +89,7 @@ static const char* const gHTMLTypes[] = {
   "text/css",
   "text/javascript",
   "application/x-javascript",
-  "text/html; x-view-type=view-source",
-  "text/plain; x-view-type=view-source",
-  "text/css; x-view-type=view-source",
-  "text/javascript; x-view-type=view-source",
-  "application/x-javascript; x-view-type=view-source",
+  "application/x-view-source", //XXX I wish I could just use nsMimeTypes.h here
   0
 };
   
@@ -100,16 +97,12 @@ static const char* const gXMLTypes[] = {
   "text/xml",
   "application/xml",
   "application/xhtml+xml",
-  "text/xml; x-view-type=view-source",
-  "application/xml; x-view-type=view-source",
-  "application/xhtml+xml; x-view-type=view-source",
   0
 };
 
 #ifdef MOZ_SVG
 static char* gSVGTypes[] = {
   "image/svg+xml",
-  "image/svg+xml; x-view-type=view-source",
   0
 };
 #endif
@@ -118,8 +111,6 @@ static const char* const gRDFTypes[] = {
   "text/rdf",
   "application/vnd.mozilla.xul+xml",
   "mozilla.application/cached-xul",
-  "application/vnd.mozilla.xul+xml; x-view-type=view-source",
-  "mozilla.application/cached-xul; x-view-type=view-source",
   0
 };
 
@@ -183,46 +174,62 @@ nsContentDLF::CreateInstance(const char* aCommand,
 {
   EnsureUAStyleSheet();
 
-  // Check aContentType to see if it's a view-source type
-  //
-  // If it's a "view-source:", aContentType will be of the form
-  //
-  //    <orig_type>; x-view-type=view-source
-  //
-  //  where <orig_type> can be text/html, text/xml etc.
-  //
+  // Are we viewing source?
 
-  nsCAutoString strContentType(aContentType);
-  PRInt32 idx = strContentType.Find("; x-view-type=view-source", PR_TRUE, 0, -1);
-  if(idx != -1)
-  { // Found "; x-view-type=view-source" param in content type. 
+  nsCOMPtr<nsIViewSourceChannel> viewSourceChannel = do_QueryInterface(aChannel);
+  if (viewSourceChannel)
+  {
+    aCommand = "view-source";
 
-      // Set aCommand to view-source
+    // The parser freaks out when it sees the content-type that a
+    // view-source channel normally returns.  Get the actual content
+    // type of the data.  If it's known, use it; otherwise use
+    // text/plain.
+    nsCAutoString type;
+    viewSourceChannel->GetOriginalContentType(type);
+    PRBool knownType = PR_FALSE;
+    PRInt32 typeIndex = 0;
+    while (gHTMLTypes[typeIndex] && !knownType) {
+      if (type.Equals(gHTMLTypes[typeIndex++]) &&
+          !type.Equals(NS_LITERAL_CSTRING("application/x-view-source"))) {
+        knownType = PR_TRUE;
+      }
+    }
 
-      aCommand = "view-source";
+    while (gXMLTypes[typeIndex] && !knownType) {
+      if (type.Equals(gXMLTypes[typeIndex++])) {
+        knownType = PR_TRUE;
+      }
+    }
 
-     // Null terminate at the ";" in "text/html; x-view-type=view-source"
-     // The idea is to end up with the original content type i.e. without 
-     // the x-view-type param was added to it.
+#ifdef MOZ_SVG
+    while (gSVGTypes[typeIndex] && !knownType) {
+      if (type.Equals(gSVGTypes[typeIndex++])) {
+        knownType = PR_TRUE;
+      }
+    }
+#endif // MOZ_SVG
+    
+    while (gRDFTypes[typeIndex] && !knownType) {
+      if (type.Equals(gRDFTypes[typeIndex++])) {
+        knownType = PR_TRUE;
+      }
+    }
 
-     strContentType.SetCharAt('\0', idx);
-
-     aContentType = strContentType.get(); //This will point to the "original" mime type
-  }
-
-  if(0==PL_strcmp(aCommand,"view-source")) {
-    NS_ENSURE_ARG(aChannel);
-    // It's a view-source. Reset channel's content type to the original 
-    // type so as not to choke the parser when it asks the channel 
-    // for the content type during the parse phase
-    aChannel->SetContentType(nsDependentCString(aContentType));
-    aContentType=gHTMLTypes[0];    
+    if (knownType) {
+      viewSourceChannel->SetContentType(type);
+    } else {
+      viewSourceChannel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
+    }
+  } else if (0 == PL_strcmp("application/x-view-source", aContentType)) {
+    aChannel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
+    aContentType = "text/plain";
   }
 
   // Try html
   int typeIndex=0;
   while(gHTMLTypes[typeIndex]) {
-    if (0== PL_strcmp(gHTMLTypes[typeIndex++], aContentType)) {
+    if (0 == PL_strcmp(gHTMLTypes[typeIndex++], aContentType)) {
       return CreateDocument(aCommand, 
                             aChannel, aLoadGroup,
                             aContainer, kHTMLDocumentCID,

@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *	Chak Nanga <chak@netscape.com>
+ *  Chak Nanga <chak@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -42,20 +42,16 @@
 interface nsIViewSourceChannel : nsIChannel
 {
     /**
-     * Returns the original (MIME) content type of the channel.
-	 * nsIViewSourceChannel returns a content type of
-	 * the form:
-	 *
-	 * "<orig_type>; x-view-type=view-source via it's GetContentType() 
-	 * method
-	 *
-	 * where "<orig_type>" is the original mime type(which will
-	 * be something like text/html, text/xml etc.
-	 *
-	 * However, callers interested in finding out the original
-	 * content type can utilize this attribute
+     * The actual (MIME) content type of the data.
+     *
+     * nsIViewSourceChannel returns a content type of
+     * "application/x-view-source" if you ask it for the contentType
+     * attribute.
+     *
+     * However, callers interested in finding out or setting the
+     * actual content type can utilize this attribute.
      */
-    readonly attribute ACString originalContentType;
+    attribute ACString originalContentType;
 };
 
 

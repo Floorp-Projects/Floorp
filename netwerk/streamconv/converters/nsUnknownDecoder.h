@@ -83,7 +83,6 @@ protected:
   char *mBuffer;
   PRUint32 mBufferLen;
   PRBool mRequireHTMLsuffix;
-  PRBool mViewingSource;
 
   nsCString mContentType;
 };

@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  widget \
 		  necko \
+		  necko2 \
 		  rdf \
 		  docshell \
 		  dom \
