@@ -70,6 +70,7 @@ static NS_DEFINE_CID(kSupportsPRInt32CID, NS_SUPPORTS_PRINT32_CID);
 static NS_DEFINE_CID(kSupportsPRInt64CID, NS_SUPPORTS_PRINT64_CID);
 static NS_DEFINE_CID(kSupportsFloatCID, NS_SUPPORTS_FLOAT_CID);
 static NS_DEFINE_CID(kSupportsDoubleCID, NS_SUPPORTS_DOUBLE_CID);
+static NS_DEFINE_CID(kSupportsVoidCID, NS_SUPPORTS_VOID_CID);
 // io
 static NS_DEFINE_CID(kFileSpecCID, NS_FILESPEC_CID);
 static NS_DEFINE_CID(kDirectoryIteratorCID, NS_DIRECTORYITERATOR_CID);
@@ -99,6 +100,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRInt32Impl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsPRInt64Impl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsFloatImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsDoubleImpl)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSupportsVoidImpl)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XPCOM initialization
@@ -379,6 +381,12 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result)
                                 NS_SUPPORTS_DOUBLE_CLASSNAME,
                                 NS_SUPPORTS_DOUBLE_PROGID,
                                 nsSupportsDoubleImplConstructor);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = RegisterGenericFactory(compMgr, kSupportsVoidCID,
+                                NS_SUPPORTS_VOID_CLASSNAME,
+                                NS_SUPPORTS_VOID_PROGID,
+                                nsSupportsVoidImplConstructor);
     if (NS_FAILED(rv)) return rv;
 
     // Prepopulate registry for performance

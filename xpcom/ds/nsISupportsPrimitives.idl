@@ -134,6 +134,14 @@ interface nsISupportsDouble : nsISupports
     string toString();
 };
 
+[scriptable, uuid(464484f0-568d-11d3-baf8-00805f8a5dd7)]
+interface nsISupportsVoid : nsISupports
+{
+    [noscript] void GetData([shared,retval] out voidStar aData);
+    [noscript] void SetData(in voidStar aData);
+    string toString();
+};
+
 /////////////////////////////////////////////////////////////////////////
 
 %{C++
@@ -241,6 +249,11 @@ interface nsISupportsDouble : nsISupports
     { 0xba, 0xea, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
 #define NS_SUPPORTS_DOUBLE_PROGID "component://netscape/supports-double"
 #define NS_SUPPORTS_DOUBLE_CLASSNAME "Supports double"
+
+// {AF10F3E0-568D-11d3-BAF8-00805F8A5DD7}
+#define NS_SUPPORTS_VOID_CID \
+{ 0xaf10f3e0, 0x568d, 0x11d3, \
+    { 0xba, 0xf8, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
+#define NS_SUPPORTS_VOID_PROGID "component://netscape/supports-void"
+#define NS_SUPPORTS_VOID_CLASSNAME "Supports void"
 %}
-
-
