@@ -472,7 +472,7 @@ function Startup()
 
   // Add a capturing event listener to the content area
   //  so we'll be notified when onloads complete.
-  var contentArea = document.getElementById("appcontent");
+  var contentArea = document.getElementById("content");
   contentArea.addEventListener("load", loadEventHandlers, true);
   contentArea.addEventListener("focus", contentAreaFrameFocus, true);
 
@@ -2046,4 +2046,74 @@ function FillInHTMLTooltip(tipElement)
   }
 
   return retVal;
+}
+
+function openPanel(aURI, aTitle)
+{
+  SidebarShowHide();
+  var sidebarPane = document.getElementById("browserSidebar");
+  sidebarPane.setAttribute("src", aURI);
+  var sidebarHeader = document.getElementById("sidebarhdrSidebar");
+  sidebarHeader.setAttribute("label", aTitle);
+}
+
+function SidebarShowHide() {
+  var sidebar_box = document.getElementById('boxSidebar');
+  var sidebar_splitter = document.getElementById('splitterSidebar');
+
+  if (sidebar_is_hidden()) {
+    // for older profiles: 
+    sidebar_box.setAttribute('hidden', 'false'); 
+    if (sidebar_splitter.getAttribute('state') == 'collapsed')
+      sidebar_splitter.removeAttribute('state');
+    sidebar_splitter.removeAttribute('hidden');
+  } else {
+      sidebar_box.setAttribute('hidden', 'true');
+      sidebar_splitter.setAttribute('hidden', 'true');
+  }
+  persist_width();
+  window._content.focus();
+}
+
+// sidebar_is_hidden() - Helper function for SidebarShowHide().
+function sidebar_is_hidden() {
+  var sidebar_box = document.getElementById('boxSidebar');
+  return sidebar_box.getAttribute('hidden') == 'true';
+}
+
+function sidebar_is_collapsed() {
+  var sidebar_splitter = document.getElementById('splitterSidebar');
+  return (sidebar_splitter &&
+          sidebar_splitter.getAttribute('state') == 'collapsed');
+}
+
+function SidebarExpandCollapse() {
+  var sidebar_splitter = document.getElementById('splitterSidebar');
+  var sidebar_box = document.getElementById('boxSidebar');
+  if (sidebar_splitter.getAttribute('state') == 'collapsed') {
+    sidebar_splitter.removeAttribute('state');
+    sidebar_box.setAttribute('hidden', 'false');
+  } else {
+    sidebar_splitter.setAttribute('state', 'collapsed');
+    sidebar_box.setAttribute('hidden', 'true');
+  }
+}
+function persist_width() {
+  // XXX Mini hack. Persist isn't working too well. Force the persist,
+  // but wait until the width change has commited.
+  setTimeout("document.persist('boxSidebar', 'width');",100);
+}
+
+function SidebarFinishClick() {
+
+  // XXX Semi-hack for bug #16516.
+  // If we had the proper drag event listener, we would not need this
+  // timeout. The timeout makes sure the width is written to disk after
+  // the sidebar-box gets the newly dragged width.
+  setTimeout("persist_width()",100);
+}
+
+// SidebarCleanUpExpandCollapse() - Respond to grippy click.
+function SidebarCleanUpExpandCollapse() {
+  setTimeout("document.persist('boxSidebar', 'hidden');",100);
 }
