@@ -1088,12 +1088,18 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
 
     // Create the module object and get the factory
     nsCOMPtr<nsIModule> mobj;
-    rv = aEntry->dll->GetModule(serviceMgr, getter_AddRefs(mobj));
+    rv = aEntry->dll->GetModule(gComponentManager, getter_AddRefs(mobj));
     if (NS_SUCCEEDED(rv))
     {
+        nsCOMPtr<nsISupports> classObject;
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
-               ("nsComponentManager: %s using nsIModule to get factory.", aEntry->dll->GetNativePath()));
-        rv = mobj->GetFactory(serviceMgr, aEntry->cid, aFactory);
+               ("nsComponentManager: %s using nsIModule to get factory.",
+                aEntry->dll->GetNativePath()));
+        rv = mobj->GetClassObject(gComponentManager, aEntry->cid, getter_AddRefs(classObject));
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = classObject->QueryInterface(nsIFactory::GetIID(), (void **)aFactory);
+        }
         return rv;
     }
 
@@ -1695,11 +1701,40 @@ nsresult
 nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
                                             const char *aLibrary)
 {
+    nsresult rv;
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass.ToString();
-        PR_LogPrint("nsComponentManager: Unregistering Factory.");
-        PR_LogPrint("nsComponentManager: + %s in \"%s\".", buf, aLibrary);
+        PR_LogPrint("nsComponentManager: UnregisterComponentSpec(%s, %s)", buf,
+                    aLibrary);
+        delete [] buf;
+    }
+
+    // Convert the persistent descriptor into a nsIFileSpec
+    nsCOMPtr<nsIFileSpec>libSpec;
+    NS_DEFINE_IID(kFileSpecIID, NS_IFILESPEC_IID);
+    rv = CreateInstance(NS_FILESPEC_PROGID, NULL, kFileSpecIID, getter_AddRefs(libSpec));
+    if (NS_FAILED(rv)) return rv;
+    rv = libSpec->SetPersistentDescriptorString((char *)aLibrary);
+    if (NS_FAILED(rv)) return rv;
+
+    return UnregisterComponentSpec(aClass, libSpec);
+}
+
+nsresult
+nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
+                                                nsIFileSpec *aLibrarySpec)
+{
+    char *aLibrary;
+    nsresult rv = aLibrarySpec->GetPersistentDescriptorString(&aLibrary);
+    if (NS_FAILED(rv))
+        return NS_ERROR_INVALID_ARG;
+
+    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
+    {
+        char *buf = aClass.ToString();
+        PR_LogPrint("nsComponentManager: UnregisterComponentSpec(%s, %s)", buf,
+                    aLibrary);
         delete [] buf;
     }
     	
@@ -1749,10 +1784,18 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
     {
         return NS_ERROR_INVALID_ARG;
     }
+
+    // Get if the dll was marked for unload in an earlier round
+    PRBool dllMarkedForUnload = dll->IsMarkedForUnload();
+
+    // Reset dll marking for unload just in case we return with
+    // an error.
+    dll->MarkForUnload(PR_FALSE);
+
     
-    // Get the module object and get the factory
+    // Get the module object
     nsCOMPtr<nsIModule> mobj;
-    rv = dll->GetModule(serviceMgr, getter_AddRefs(mobj));
+    rv = dll->GetModule(nsComponentManagerImpl::gComponentManager, getter_AddRefs(mobj));
     if (NS_FAILED(rv))
     {
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
@@ -1760,21 +1803,19 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
         return  rv;
     }
 
-    for (int trial=0; trial < 2; trial++)
+    PRBool canUnload;
+    rv = mobj->CanUnload(nsComponentManagerImpl::gComponentManager, &canUnload);
+    if (NS_FAILED(rv))
     {
-        nsrefcnt objsAlive;
-        PRBool canUnload;
-        rv = mobj->CanUnload(serviceMgr, &canUnload, &objsAlive);
-        if (NS_FAILED(rv))
-        {
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: nsIModule::CanUnload() returned error for %s.", dll->GetNativePath()));
-            return rv;
-        }
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+               ("nsComponentManager: nsIModule::CanUnload() returned error for %s.", dll->GetNativePath()));
+        return rv;
+    }
         
-        if (canUnload)
+    if (canUnload)
+    {
+        if (dllMarkedForUnload)
         {
-            NS_ASSERTION(objsAlive == 0, "Outstanding Object Count not zero before unloading.");
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
                    ("nsComponentManager: + Unloading \"%s\".", dll->GetNativePath()));
 #if 0
@@ -1782,21 +1823,20 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr)
             // XXX hence, dont unload until this gets enforced.
             rv = dll->Unload();
 #endif /* 0 */
-            return rv;
         }
         else
         {
-            // XXX see if the factory cache is the only one preventing
-            // XXX the unload.
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: %d objects outstanding for %s",
-                    objsAlive,dll->GetNativePath()));
-            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
-                   ("nsComponentManager: + NOT Unloading %s", dll->GetNativePath()));
-            return NS_ERROR_FAILURE;
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+                   ("nsComponentManager: Ready for unload \"%s\".", dll->GetNativePath()));
         }
     }
-    return NS_ERROR_FAILURE;
+    else
+    {
+        PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS, 
+               ("nsComponentManager: + NOT Unloading %s", dll->GetNativePath()));
+        rv = NS_ERROR_FAILURE;
+    }
+    return rv;
 }
 
 static PRBool
@@ -2208,7 +2248,7 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
 
     // Tell the module to self register
     nsCOMPtr<nsIModule> mobj;
-    res = dll->GetModule(serviceMgr, getter_AddRefs(mobj));
+    res = dll->GetModule(gComponentManager, getter_AddRefs(mobj));
     if (NS_SUCCEEDED(res))
     {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
@@ -2216,7 +2256,7 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
         nsCOMPtr<nsIFileSpec> fs;
         res = dll->GetDllSpec(getter_AddRefs(fs));
         if (NS_SUCCEEDED(res))
-            res = mobj->RegisterSelf(serviceMgr, fs);
+            res = mobj->RegisterSelf(gComponentManager, fs);
         else
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
@@ -2259,7 +2299,7 @@ nsComponentManagerImpl::SelfUnregisterDll(nsDll *dll)
     	
     // Tell the module to self register
     nsCOMPtr<nsIModule> mobj;
-    res = dll->GetModule(serviceMgr, getter_AddRefs(mobj));
+    res = dll->GetModule(gComponentManager, getter_AddRefs(mobj));
     if (NS_SUCCEEDED(res))
     {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
@@ -2267,7 +2307,7 @@ nsComponentManagerImpl::SelfUnregisterDll(nsDll *dll)
         nsCOMPtr<nsIFileSpec> fs;
         res = dll->GetDllSpec(getter_AddRefs(fs));
         if (NS_SUCCEEDED(res))
-            res = mobj->UnregisterSelf(serviceMgr, fs);
+            res = mobj->UnregisterSelf(gComponentManager, fs);
         else
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ERROR, 
