@@ -30,10 +30,6 @@ include $(DEPTH)/config/config.mk
 CFLAGS += -DIMPORTING_VM_FILES
 LDFLAGS += $(EF_LIBS) $(NSPR_LIBS) 
 
-ifneq ($(OS_ARCH),WINNT)
-LDFLAGS += -lm
-endif
-
 include $(DEPTH)/config/rules.mk
 
 libs:: $(PROGRAM)
