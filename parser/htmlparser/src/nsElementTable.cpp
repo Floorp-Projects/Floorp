@@ -1324,8 +1324,8 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_frameset,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ &gBodyAutoClose,0,0,0,
-      /*parent,incl,exclgroups*/          kFlowEntity, (kFlowEntity|kSelf), kNone,	
-      /*special props, prop-range*/       kLegalOpen, kBodyPropRange,
+      /*parent,incl,exclgroups*/          kFlowEntity, (kInlineEntity|kSelf), kNone,	// Treat userdefined as inline element - Ref bug 56245,66772
+      /*special props, prop-range*/       kNone, kBodyPropRange,                      
       /*special parents,kids,skip*/       &gInNoframes,&gBodyKids,eHTMLTag_unknown);
   }//if
 };
@@ -2169,35 +2169,36 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
   }
 
   else if(IsResidualStyleTag(mTagID)){
-
-    // Ref. bug 37618
+    
     // Before finding a close target, for the current tag, make sure
     // that the tag above does not gate.
-    // Ex. <font><select><option></font></select>
-    // Here the /FONT inside OPTION should not close try to close FONT
-    // above SELECT. This would cause select to get closed!!!
-    eHTMLTags thePrevTag=(eHTMLTags)aContext.Last();
+    // Note: we intentionally make 2 passes: 
+    // The first pass tries to exactly match, the 2nd pass matches the group.
 
-    if(IsInlineParent(thePrevTag) || (eHTMLTag_userdefined==thePrevTag)) {
-    
-      //we intentionally make 2 passes: 
-      //The first pass tries to exactly match, the 2nd pass matches the group.
-      PRInt32 theIndexCopy=theIndex;
-      while(--theIndex>=anIndex){
-        eHTMLTags theTag=aContext.TagAt(theIndex);
-        if(theTag==mTagID) {
-          return theTag;
-        }
+    PRInt32 theIndexCopy=theIndex;
+    while(--theIndex>=anIndex){
+      eHTMLTags theTag=aContext.TagAt(theIndex);
+      if(theTag == mTagID) {
+        return theTag; // we found our target.
       }
-      theIndex=theIndexCopy;
-      while(--theIndex>=anIndex){
-        eHTMLTags theTag=aContext.TagAt(theIndex);
-        if(gHTMLElements[theTag].IsMemberOf(mParentBits)) {
-          return theTag;
-        }
+      else if (!CanContain(theTag)) {
+        // If you cannot contain this tag then
+        // you cannot close it either. It looks like
+        // the tag trying to close is misplaced.
+        // In the following Exs. notice the misplaced /font:
+        // Ex. <font><table><tr><td></font></td></tr></table. -- Ref. bug 56245
+        // Ex. <font><select><option></font></select> -- Ref. bug 37618.
+        return eHTMLTag_unknown;
       }
     }
-    
+
+    theIndex=theIndexCopy;
+    while(--theIndex>=anIndex){
+      eHTMLTags theTag=aContext.TagAt(theIndex);
+      if(gHTMLElements[theTag].IsMemberOf(mParentBits)) {
+        return theTag;
+      }
+    }    
   }
 
   else if(gHTMLElements[mTagID].IsTableElement()) {
