@@ -588,7 +588,14 @@ int interpret(char *cmd)
 		else if (strcmp(cmdname, "modifyProperties") == 0)
 			ModifyProperties(xpifile,entity,newvalue);
 		else
+		{
+			// If the browser window's title bar text field is empty, 
+			// the default browser value is displayed
+			if ((strcmp(entity,"mainWindow.titlemodifier") == 0) &&
+			(strcmp(newvalue,"") == 0))
+				newvalue = "&brandShortName; {&buildId.label;}";
 			ModifyDTD(xpifile, entity, newvalue);
+		}
 	}
 	else if (strcmp(cmdname, "wrapXPI") == 0)
 	{
