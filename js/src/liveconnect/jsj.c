@@ -448,46 +448,11 @@ JSJ_ConnectToJavaVM(SystemJavaVM *java_vm_arg, void* initargs)
             free(jsjava_vm);
             return NULL;
         }
-    } else {
-        JSBool ok;
-        JS_ASSERT(JSJ_callbacks->create_java_vm);
-        JS_ASSERT(JSJ_callbacks->destroy_java_vm);
 
-        ok = JSJ_callbacks->create_java_vm(&java_vm, &jEnv, initargs);
-        if (!ok || java_vm == NULL) {
-            jsj_LogError("Failed to create Java VM\n");
-            free(jsjava_vm);
-            return NULL;
-        }
-
-        /* Remember that we created the VM so that we know to destroy it later */
-        jsjava_vm->jsj_created_java_vm = JS_TRUE;
+        jsjava_vm->java_vm = java_vm;
+        jsjava_vm->main_thread_env = jEnv;
     }
-
-    jsjava_vm->java_vm = java_vm;
-    jsjava_vm->main_thread_env = jEnv;
-
-    /*
-     * JVM initialization for netscape.javascript.JSObject is performed
-     * independently of the other classes that are initialized in
-     * init_java_VM_reflection, because we allow it to fail.  In the case
-     * of failure, LiveConnect is still operative, but only when calling
-     * from JS to Java and not vice-versa.
-     */
-    init_netscape_java_classes(jsjava_vm, jEnv);
-
-    /* Load the Java classes, and the method and field descriptors required for
-       Java reflection. */
-    if (!init_java_VM_reflection(jsjava_vm, jEnv) || 
-        !jsj_InitJavaObjReflectionsTable()) {
-        jsj_LogError("LiveConnect was unable to reflect one or more components of the Java runtime.\nGo to http://bugzilla.mozilla.org/show_bug.cgi?id=5369 for details.\n");
-        /* This function crashes when called from here.
-           Check that all the preconditions for this
-           call are satisfied before making it. [jd]
-           JSJ_DisconnectFromJavaVM(jsjava_vm); */
-        return NULL;
-    }
-   
+       
 #ifdef JSJ_THREADSAFE
     if (jsjava_vm_list == NULL) {
         thread_list_monitor =
@@ -500,6 +465,54 @@ JSJ_ConnectToJavaVM(SystemJavaVM *java_vm_arg, void* initargs)
     jsjava_vm_list = jsjava_vm;
 
     return jsjava_vm;
+}
+
+/* Completes a lazy connection to the host Java VM. */
+static JSBool
+jsj_ConnectToJavaVM(JSJavaVM *jsjava_vm)
+{
+    if (!jsjava_vm->java_vm) {
+        SystemJavaVM* java_vm;
+        JNIEnv *jEnv;
+        JSBool ok;
+        JS_ASSERT(JSJ_callbacks->create_java_vm);
+        JS_ASSERT(JSJ_callbacks->destroy_java_vm);
+
+        ok = JSJ_callbacks->create_java_vm(&java_vm, &jEnv, NULL);
+        if (!ok || java_vm == NULL) {
+            jsj_LogError("Failed to create Java VM\n");
+            return JS_FALSE;
+        }
+
+        /* Remember that we created the VM so that we know to destroy it later */
+        jsjava_vm->jsj_created_java_vm = JS_TRUE;
+
+        jsjava_vm->java_vm = java_vm;
+        jsjava_vm->main_thread_env = jEnv;
+
+        /*
+         * JVM initialization for netscape.javascript.JSObject is performed
+         * independently of the other classes that are initialized in
+         * init_java_VM_reflection, because we allow it to fail.  In the case
+         * of failure, LiveConnect is still operative, but only when calling
+         * from JS to Java and not vice-versa.
+         */
+        init_netscape_java_classes(jsjava_vm, jEnv);
+
+        /* Load the Java classes, and the method and field descriptors required for
+           Java reflection. */
+        if (!init_java_VM_reflection(jsjava_vm, jEnv) || 
+            !jsj_InitJavaObjReflectionsTable()) {
+            jsj_LogError("LiveConnect was unable to reflect one or more components of the Java runtime.\nGo to http://bugzilla.mozilla.org/show_bug.cgi?id=5369 for details.\n");
+            /* This function crashes when called from here.
+               Check that all the preconditions for this
+               call are satisfied before making it. [jd]
+               JSJ_DisconnectFromJavaVM(jsjava_vm); */
+            return JS_FALSE;
+        }
+    }
+
+    return JS_TRUE;
 }
 
 JSJCallbacks *JSJ_callbacks = NULL;
@@ -563,35 +576,37 @@ JSJ_InitJSContext(JSContext *cx, JSObject *global_obj,
 void
 JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
 {
-    JNIEnv *jEnv;
     SystemJavaVM *java_vm;
     JSJavaVM *j, **jp;
 
+    /* Since JSJ_ConnectToJavaVM is now lazy */
     java_vm = jsjava_vm->java_vm;
-    jEnv = jsjava_vm->main_thread_env;
+    if (java_vm) {
+        JNIEnv *jEnv = jsjava_vm->main_thread_env;
 
-    /* Drop all references to Java objects and classes */
-    jsj_DiscardJavaObjReflections(jEnv);
-    jsj_DiscardJavaClassReflections(jEnv);
+        /* Drop all references to Java objects and classes */
+        jsj_DiscardJavaObjReflections(jEnv);
+        jsj_DiscardJavaClassReflections(jEnv);
 
-    if (jsjava_vm->jsj_created_java_vm) { 
-        (void)JSJ_callbacks->destroy_java_vm(java_vm, jEnv);
-    } else {
-        UNLOAD_CLASS(java/lang/Object,                jlObject);
-        UNLOAD_CLASS(java/lang/Class,                 jlClass);
-        UNLOAD_CLASS(java/lang/reflect/Method,        jlrMethod);
-        UNLOAD_CLASS(java/lang/reflect/Constructor,   jlrConstructor);
-        UNLOAD_CLASS(java/lang/reflect/Field,         jlrField);
-        UNLOAD_CLASS(java/lang/reflect/Array,         jlrArray);
-        UNLOAD_CLASS(java/lang/Throwable,             jlThrowable);
-        UNLOAD_CLASS(java/lang/System,                jlSystem);
-        UNLOAD_CLASS(java/lang/Boolean,               jlBoolean);
-        UNLOAD_CLASS(java/lang/Double,                jlDouble);
-        UNLOAD_CLASS(java/lang/String,                jlString);
-        UNLOAD_CLASS(java/lang/Void,                  jlVoid);
-        UNLOAD_CLASS(netscape/javascript/JSObject,    njJSObject);
-        UNLOAD_CLASS(netscape/javascript/JSException, njJSException);
-        UNLOAD_CLASS(netscape/javascript/JSUtil,      njJSUtil);
+        if (jsjava_vm->jsj_created_java_vm) { 
+            (void)JSJ_callbacks->destroy_java_vm(java_vm, jEnv);
+        } else {
+            UNLOAD_CLASS(java/lang/Object,                jlObject);
+            UNLOAD_CLASS(java/lang/Class,                 jlClass);
+            UNLOAD_CLASS(java/lang/reflect/Method,        jlrMethod);
+            UNLOAD_CLASS(java/lang/reflect/Constructor,   jlrConstructor);
+            UNLOAD_CLASS(java/lang/reflect/Field,         jlrField);
+            UNLOAD_CLASS(java/lang/reflect/Array,         jlrArray);
+            UNLOAD_CLASS(java/lang/Throwable,             jlThrowable);
+            UNLOAD_CLASS(java/lang/System,                jlSystem);
+            UNLOAD_CLASS(java/lang/Boolean,               jlBoolean);
+            UNLOAD_CLASS(java/lang/Double,                jlDouble);
+            UNLOAD_CLASS(java/lang/String,                jlString);
+            UNLOAD_CLASS(java/lang/Void,                  jlVoid);
+            UNLOAD_CLASS(netscape/javascript/JSObject,    njJSObject);
+            UNLOAD_CLASS(netscape/javascript/JSException, njJSException);
+            UNLOAD_CLASS(netscape/javascript/JSUtil,      njJSUtil);
+        }
     }
 
     /* Remove this VM from the list of all JSJavaVM objects. */
@@ -649,7 +664,7 @@ find_jsjava_thread(JNIEnv *jEnv)
     jsj_env = NULL;
 
 #ifdef JSJ_THREADSAFE
-        PR_EnterMonitor(thread_list_monitor);
+    PR_EnterMonitor(thread_list_monitor);
 #endif
 
     /* Search for the thread state among the list of all created
@@ -669,7 +684,7 @@ find_jsjava_thread(JNIEnv *jEnv)
     }
     
 #ifdef JSJ_THREADSAFE
-        PR_ExitMonitor(thread_list_monitor);
+    PR_ExitMonitor(thread_list_monitor);
 #endif
 
     return jsj_env;
@@ -681,6 +696,10 @@ JSJ_AttachCurrentThreadToJava(JSJavaVM *jsjava_vm, const char *name, JNIEnv **ja
     JNIEnv *jEnv;
     SystemJavaVM *java_vm;
     JSJavaThreadState *jsj_env;
+    
+    /* Make sure we're fully connected to the Java VM */
+    if (!jsj_ConnectToJavaVM(jsjava_vm))
+        return NULL;
 
     /* Try to attach a Java thread to the current native thread */
     java_vm = jsjava_vm->java_vm;
