@@ -107,7 +107,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, imgIDecoderObserver *aObserver,
 
     ImageCache::Put(aURI, request);
 
-    newChannel->AsyncRead(NS_STATIC_CAST(nsIStreamListener *, request), cx);  // XXX are we calling this too early?
+    newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, request), cx);  // XXX are we calling this too early?
   }
 
   nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));

@@ -345,16 +345,20 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *request, nsISupports *cx, ns
 
 /** nsIStreamObserver methods **/
 
-/* void onStartRequest (in nsIChannel channel, in nsISupports ctxt); */
-NS_IMETHODIMP imgRequest::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
+/* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
+NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequest::OnStartRequest\n", this));
 
   NS_ASSERTION(!mDecoder, "imgRequest::OnStartRequest -- we already have a decoder");
 
-  if (mChannel && (mChannel != channel)) {
-    NS_WARNING("imgRequest::OnStartRequest -- (mChannel != NULL) && (mChannel != channel)");
+  
+
+  nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
+
+  if (mChannel && (mChannel != chan)) {
+    NS_WARNING("imgRequest::OnStartRequest -- (mChannel != NULL) && (mChannel != chan)");
   }
 
   if (!mChannel) {
@@ -400,8 +404,8 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
   return NS_OK;
 }
 
-/* void onStopRequest (in nsIChannel channel, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP imgRequest::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
+/* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequest::OnStopRequest\n", this));
@@ -427,8 +431,8 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, 
 
 /** nsIStreamListener methods **/
 
-/* void onDataAvailable (in nsIChannel channel, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
-NS_IMETHODIMP imgRequest::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
+/* void onDataAvailable (in nsIRequest request, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
+NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("[this=%p] imgRequest::OnDataAvailable\n", this));
