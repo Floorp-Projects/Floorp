@@ -55,7 +55,7 @@ protected:
 	nsresult AddSubNode(nsAutoString name, nsIAbCard **childDir);
 
 protected:
-	nsCOMPtr<nsISupportsArray> mSubCards;
+	 
 	nsVoidArray *mListeners;
 };
 

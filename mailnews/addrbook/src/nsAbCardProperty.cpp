@@ -190,6 +190,12 @@ nsAbCardProperty::~nsAbCardProperty(void)
 		RemoveAnonymousList(m_pAnonymousIntValues);
 	if (m_pAnonymousBoolValues)
 		RemoveAnonymousList(m_pAnonymousBoolValues);
+
+	if (mCardDatabase)
+	{
+		mCardDatabase->Close(PR_TRUE);
+		mCardDatabase = null_nsCOMPtr();
+	}
 }
 
 nsresult nsAbCardProperty::RemoveAnonymousList(nsVoidArray* pArray)
@@ -445,6 +451,12 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const char *v
 	return rv;
 }
 
+NS_IMETHODIMP nsAbCardProperty::SetAbDatabase(nsIAddrDatabase* database)
+{
+	mCardDatabase = database;
+	return NS_OK;
+}
+
 NS_IMETHODIMP nsAbCardProperty::GetAnonymousStrAttrubutesList(nsVoidArray **attrlist)
 {
 	if (attrlist && m_pAnonymousStrAttributes)
@@ -610,22 +622,22 @@ NS_IMETHODIMP nsAbCardProperty::SetAnonymousBoolAttribute
 NS_IMETHODIMP nsAbCardProperty::AddAnonymousAttributesToDB()
 {
 	nsresult rv = NS_OK;
-	if (mDatabase)
-		mDatabase = null_nsCOMPtr();
+	if (mCardDatabase)
+		mCardDatabase = null_nsCOMPtr();
 	rv = GetCardDatabase("abdirectory://abook.mab");
-	if (NS_SUCCEEDED(rv) && mDatabase)
-		rv = mDatabase->AddAnonymousAttributesFromCard(this);
+	if (NS_SUCCEEDED(rv) && mCardDatabase)
+		rv = mCardDatabase->AddAnonymousAttributesFromCard(this);
 	return rv;
 }
 
 NS_IMETHODIMP nsAbCardProperty::EditAnonymousAttributesInDB()
 {
 	nsresult rv = NS_OK;
-	if (mDatabase)
-		mDatabase = null_nsCOMPtr();
+	if (mCardDatabase)
+		mCardDatabase = null_nsCOMPtr();
 	rv = GetCardDatabase("abdirectory://abook.mab");
-	if (NS_SUCCEEDED(rv) && mDatabase)
-		rv = mDatabase->EditAnonymousAttributesFromCard(this);
+	if (NS_SUCCEEDED(rv) && mCardDatabase)
+		rv = mCardDatabase->EditAnonymousAttributesFromCard(this);
 	return rv;
 }
 
@@ -634,9 +646,9 @@ NS_IMETHODIMP nsAbCardProperty::GetCardURI(char **uri)
 {
 	char* cardURI = nsnull;
 	nsFileSpec  *filePath = nsnull;
-	if (mDatabase)
+	if (mCardDatabase)
 	{
-		mDatabase->GetDbPath(&filePath);
+		mCardDatabase->GetDbPath(&filePath);
 		if (filePath)
 		{
 			char* file = nsnull;
@@ -674,26 +686,21 @@ nsresult nsAbCardProperty::GetCardDatabase(const char *uri)
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mCardDatabase), PR_TRUE);
 	}
 	return rv;
 }
 
 NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri)
 {
-	if (!mDatabase && uri)
-	{
+	if (!mCardDatabase && uri)
 		GetCardDatabase(uri);
 
-		if (mDatabase)
-		{
-			mDatabase->CreateNewCardAndAddToDB(this, PR_TRUE);
-			mDatabase->Close(PR_TRUE);
-			mDatabase = null_nsCOMPtr();
-			return NS_OK;
-		}
-		else
-			return NS_ERROR_NULL_POINTER;
+	if (mCardDatabase)
+	{
+		mCardDatabase->CreateNewCardAndAddToDB(this, PR_TRUE);
+		mCardDatabase->Commit(kLargeCommit);
+		return NS_OK;
 	}
 	else
 		return NS_ERROR_FAILURE;
@@ -701,19 +708,14 @@ NS_IMETHODIMP nsAbCardProperty::AddCardToDatabase(const char *uri)
 
 NS_IMETHODIMP nsAbCardProperty::EditCardToDatabase(const char *uri)
 {
-	if (!mDatabase && uri)
-	{
+	if (!mCardDatabase && uri)
 		GetCardDatabase(uri);
 
-		if (mDatabase)
-		{
-			mDatabase->EditCard(this, PR_TRUE);
-			mDatabase->Close(PR_TRUE);
-			mDatabase = null_nsCOMPtr();
-			return NS_OK;
-		}
-		else
-			return NS_ERROR_NULL_POINTER;
+	if (mCardDatabase)
+	{
+		mCardDatabase->EditCard(this, PR_TRUE);
+		mCardDatabase->Commit(kSmallCommit);
+		return NS_OK;
 	}
 	else
 		return NS_ERROR_FAILURE;

@@ -131,6 +131,7 @@ public:
 
 	NS_IMETHOD GetCardValue(const char *attrname, char **value);
 	NS_IMETHOD SetCardValue(const char *attrname, const char *value);
+	NS_IMETHOD SetAbDatabase(nsIAddrDatabase* database);
 
 	NS_IMETHOD GetAnonymousStrAttrubutesList(nsVoidArray **attrlist);
 	NS_IMETHOD GetAnonymousStrValuesList(nsVoidArray **valuelist);
@@ -203,7 +204,8 @@ protected:
 	PRUint32 m_dbTableID;
 	PRUint32 m_dbRowID;
 
-	nsCOMPtr<nsIAddrDatabase> mDatabase;  
+	nsCOMPtr<nsIAddrDatabase> mCardDatabase;  
+
 	nsVoidArray* m_pAnonymousStrAttributes;
 	nsVoidArray* m_pAnonymousStrValues;
 	nsVoidArray* m_pAnonymousIntAttributes;

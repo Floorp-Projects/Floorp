@@ -18,6 +18,8 @@
  
 #include "nsISupports.idl"
 
+interface nsIAddrDatabase;
+
 [ptr] native nsVoidArray(nsVoidArray);
 
 %{C++
@@ -72,6 +74,7 @@ interface nsIAbCard : nsISupports {
 
 	void GetCardValue(in string attrname, out string value);
 	void SetCardValue(in string attrname, in string value);
+	void SetAbDatabase(in nsIAddrDatabase database);
 
 	void GetAnonymousStrAttrubutesList(out nsVoidArray attrlist);
 	void GetAnonymousStrValuesList(out nsVoidArray valuelist);

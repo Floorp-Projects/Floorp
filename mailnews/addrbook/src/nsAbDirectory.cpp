@@ -103,6 +103,7 @@ NS_IMETHODIMP nsAbDirectory::OnCardEntryChange
 				personCard->CopyCard(card);
 				if (mDatabase)
 				{
+					personCard->SetAbDatabase(mDatabase);
 					nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(personCard, &rv));
 					if (NS_FAILED(rv)) 
 						return NS_ERROR_NULL_POINTER;

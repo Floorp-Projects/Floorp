@@ -461,7 +461,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::OnItemRemoved(nsISupports *parentDirector
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
 			{
-				//Notify directories that a message was deleted.
+				//Notify directories that a card was deleted.
 				NotifyObservers(parentResource, kNC_CardChild, itemNode, PR_FALSE);
 			}
 		}

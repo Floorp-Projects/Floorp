@@ -37,19 +37,19 @@ static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 nsAbCard::nsAbCard(void)
   : nsAbRDFResource(), mListeners(nsnull)
 {
-	NS_NewISupportsArray(getter_AddRefs(mSubCards));
 }
 
 nsAbCard::~nsAbCard(void)
 {
-	if (mSubCards)
+	if (mCardDatabase)
 	{
-		PRUint32 count;
-		nsresult rv = mSubCards->Count(&count);
-		NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-		PRInt32 i;
-		for (i = count - 1; i >= 0; i--)
-			mSubCards->RemoveElementAt(i);
+		nsresult rv = NS_OK;
+
+		nsIAddrDBListener* listener = this;
+		mCardDatabase->RemoveListener(listener);
+
+		mCardDatabase->Close(PR_TRUE);
+		mCardDatabase = null_nsCOMPtr();
 	}
 
 	if (mListeners) 
@@ -140,7 +140,6 @@ nsresult nsAbCard::AddSubNode(nsAutoString name, nsIAbCard **childCard)
 		return rv;        
 	delete[] uriStr;
 
-	mSubCards->AppendElement(card);
 	*childCard = card;
 	NS_IF_ADDREF(*childCard);
 

@@ -240,9 +240,13 @@ NS_IMETHODIMP nsAddrDatabase::RemoveListener(nsIAddrDBListener *listener)
 {
     if (m_ChangeListeners == nsnull) 
 		return NS_OK;
-	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
+
+	PRInt32 count = m_ChangeListeners->Count();
+	PRInt32 i;
+	for (i = 0; i < count; i++)
 	{
-		if ((nsIAddrDBListener *) m_ChangeListeners->ElementAt(i) == listener)
+		nsIAddrDBListener *dbListener = (nsIAddrDBListener *)m_ChangeListeners->ElementAt(i);
+		if (dbListener == listener)
 		{
 			m_ChangeListeners->RemoveElementAt(i);
 			return NS_OK;
@@ -255,7 +259,8 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardAttribChange(PRUint32 abCode, nsIAddrDBL
 {
     if (m_ChangeListeners == nsnull)
 		return NS_OK;
-	for (PRInt32 i = 0; i < m_ChangeListeners->Count(); i++)
+	PRInt32 i;
+	for (i = 0; i < m_ChangeListeners->Count(); i++)
 	{
 		nsIAddrDBListener *changeListener =
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
@@ -271,8 +276,9 @@ NS_IMETHODIMP nsAddrDatabase::NotifyCardEntryChange(PRUint32 abCode, nsIAbCard *
 {
     if (m_ChangeListeners == nsnull)
 		return NS_OK;
+	PRInt32 i;
 	PRInt32 count = m_ChangeListeners->Count();
-	for (PRInt32 i = 0; i < count; i++)
+	for (i = 0; i < count; i++)
 	{
 		nsIAddrDBListener *changeListener = 
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
@@ -289,7 +295,8 @@ NS_IMETHODIMP nsAddrDatabase::NotifyAnnouncerGoingAway(void)
 		return NS_OK;
 	// run loop backwards because listeners remove themselves from the list 
 	// on this notification
-	for (PRInt32 i = m_ChangeListeners->Count() - 1; i >= 0 ; i--)
+	PRInt32 i;
+	for (i = m_ChangeListeners->Count() - 1; i >= 0 ; i--)
 	{
 		nsIAddrDBListener *changeListener =
             (nsIAddrDBListener *) m_ChangeListeners->ElementAt(i);
@@ -324,7 +331,8 @@ nsAddrDatabase::CleanupCache()
 {
 	if (m_dbCache) // clean up memory leak
 	{
-		for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
+		PRInt32 i;
+		for (i = 0; i < GetDBCache()->Count(); i++)
 		{
 			nsAddrDatabase* pAddrDB = NS_STATIC_CAST(nsAddrDatabase*, GetDBCache()->ElementAt(i));
 			if (pAddrDB)
@@ -346,7 +354,8 @@ nsAddrDatabase::CleanupCache()
 //----------------------------------------------------------------------
 nsAddrDatabase* nsAddrDatabase::FindInCache(nsFileSpec *dbName)
 {
-	for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
+	PRInt32 i;
+	for (i = 0; i < GetDBCache()->Count(); i++)
 	{
 		nsAddrDatabase* pAddrDB = NS_STATIC_CAST(nsAddrDatabase*, GetDBCache()->ElementAt(i));
 		if (pAddrDB->MatchDbName(dbName))
@@ -363,7 +372,8 @@ nsAddrDatabase* nsAddrDatabase::FindInCache(nsFileSpec *dbName)
 //----------------------------------------------------------------------
 PRInt32 nsAddrDatabase::FindInCache(nsAddrDatabase* pAddrDB)
 {
-	for (PRInt32 i = 0; i < GetDBCache()->Count(); i++)
+	PRInt32 i;
+	for (i = 0; i < GetDBCache()->Count(); i++)
 	{
 		if (GetDBCache()->ElementAt(i) == pAddrDB)
 		{
@@ -1404,8 +1414,17 @@ NS_IMETHODIMP nsAddrDatabase::DeleteCard(nsIAbCard *card, PRBool notify)
 	{
 		err = m_mdbPabTable->CutRow(GetEnv(), pCardRow);
 
-		if (notify) 
-			NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
+		if (NS_SUCCEEDED(err))
+		{
+			
+			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(card, &err));
+			if (NS_FAILED(err)) 
+				return NS_ERROR_NULL_POINTER;
+			RemoveListener(listener);
+
+			if (notify) 
+				NotifyCardEntryChange(AB_NotifyDeleted, card, NULL);
+		}
 	}
 	return NS_OK;
 }
@@ -2224,13 +2243,13 @@ nsresult nsAddrDatabase::CreateABCard(nsIMdbRow* cardRow, nsIAbCard **result)
 			m_mdbPabTable->GetOid(GetEnv(), &tableOid);
 			personCard->SetDbTableID(tableOid.mOid_Id);
 			personCard->SetDbRowID(rowID);
+			personCard->SetAbDatabase(this);
 
 			nsCOMPtr<nsIAddrDBListener> listener(do_QueryInterface(personCard, &rv));
 			if (NS_FAILED(rv)) 
 				return NS_ERROR_NULL_POINTER;
 
 			AddListener(listener);
-
 		}
 		*result = personCard;
 		NS_IF_ADDREF(*result);
