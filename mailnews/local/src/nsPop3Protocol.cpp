@@ -792,7 +792,7 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
 		{
 			if(!PL_strncasecmp(line, "+OK", 3))
  				m_commandResponse = line + 4;
-			else 
+			else if(PL_strncasecmp(m_commandResponse, "Invalid login", 13))
 				m_commandResponse = "+";
 		}
 	
