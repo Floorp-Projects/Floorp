@@ -256,7 +256,7 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
                     ioFlags = PR_RDONLY;
                     break;
                 case nsICache::ACCESS_WRITE:
-                    ioFlags = PR_WRONLY | PR_CREATE_FILE;
+                    ioFlags = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
                     break;
                 case nsICache::ACCESS_READ_WRITE:
                     ioFlags = PR_RDWR | PR_CREATE_FILE;
