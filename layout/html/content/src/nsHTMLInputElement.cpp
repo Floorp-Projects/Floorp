@@ -67,7 +67,43 @@ public:
   NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
 
   // nsIDOMElement
-  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
+    // can't use the macro here because input type=text needs to notify up to 
+    // frame system on SetAttribute("value");
+  NS_IMETHOD GetTagName(nsString& aTagName) {                              
+    return mInner.GetTagName(aTagName);                                        
+  }                                                                        
+  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn) {      
+    return mInner.GetAttribute(aName, aReturn);                                
+  }                                                                        
+  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue) { 
+    nsAutoString valueAttribute;
+    nsHTMLAtoms::value->ToString(valueAttribute);
+    if (PR_TRUE==valueAttribute.Equals(aName))
+      return SetValue(aValue);
+    return mInner.SetAttribute(aName, aValue);                                 
+  }                                                                        
+  NS_IMETHOD RemoveAttribute(const nsString& aName) {                      
+    return mInner.RemoveAttribute(aName);                                      
+  }                                                                        
+  NS_IMETHOD GetAttributeNode(const nsString& aName,                       
+                              nsIDOMAttr** aReturn) {                      
+    return mInner.GetAttributeNode(aName, aReturn);                            
+  }                                                                        
+  NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
+    return mInner.SetAttributeNode(aNewAttr, aReturn);                         
+  }                                                                        
+  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
+    return mInner.RemoveAttributeNode(aOldAttr, aReturn);                      
+  }                                                                        
+  NS_IMETHOD GetElementsByTagName(const nsString& aTagname,                
+                                  nsIDOMNodeList** aReturn) {              
+    return mInner.GetElementsByTagName(aTagname, aReturn);                     
+  }                                                                        
+  NS_IMETHOD Normalize() {                                                 
+    return mInner.Normalize();                                                 
+  }
+
+
 
   // nsIDOMHTMLElement
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
