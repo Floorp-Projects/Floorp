@@ -186,8 +186,8 @@ nsPersistentProperties::nsPersistentProperties()
 PR_STATIC_CALLBACK(PRIntn)
 FreeHashEntries(PLHashEntry* he, PRIntn i, void* arg)
 {
-  delete[] (PRUnichar*)he->key;
-  delete[] (PRUnichar*)he->value;
+  nsCRT::free((PRUnichar*)he->key);
+  nsCRT::free((PRUnichar*)he->value);
   return HT_ENUMERATE_REMOVE;
 }
 
