@@ -279,7 +279,7 @@ Contributor(s): ______________________________________. -->
   titleseparator="&mainWindow.titlemodifierseparator;">
 
   <!-- JS from navigator.xul, to handle the menu commands -->
-  <html:script language="javascript" src="navigator.js"/>
+  <html:script language="javascript" src="chrome://navigator/content/navigator.js"/>
   
   <!-- it's the whole navigator.xul menubar! hidden windows need to
        have a menubar for situations where they're the only window remaining
