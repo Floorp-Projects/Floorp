@@ -121,10 +121,7 @@ NSPR_API(void) PR_Free(void *ptr);
 ** OUTPUTS:	the referenced object is returned to the heap
 ** RETURN:	void
 ***********************************************************************/
-#define PR_DELETE(_ptr)                 \
-    PR_BEGIN_MACRO                      \
-        PR_Free(_ptr); (_ptr) = NULL;   \
-    PR_END_MACRO
+#define PR_DELETE(_ptr) { PR_Free(_ptr); (_ptr) = NULL; }
 
 /***********************************************************************
 ** FUNCTION:	PR_FREEIF()
@@ -136,10 +133,7 @@ NSPR_API(void) PR_Free(void *ptr);
 ** OUTPUTS:	the referenced object is conditionally returned to the heap
 ** RETURN:	void
 ***********************************************************************/
-#define PR_FREEIF(_ptr)             \
-    PR_BEGIN_MACRO                  \
-        if (_ptr) PR_DELETE(_ptr);  \
-    PR_END_MACRO
+#define PR_FREEIF(_ptr)	if (_ptr) PR_DELETE(_ptr)
 
 PR_END_EXTERN_C
 
