@@ -223,9 +223,9 @@ int nsWidgetModuleData::CreateUcsConverter()
 }
 
 // Conversion from appropriate codepage to unicode
-PRUnichar *nsWidgetModuleData::ConvertToUcs( const char *szText, 
-                                             PRUnichar *pBuffer, 
-                                             ULONG ulSize)
+ULONG nsWidgetModuleData::ConvertToUcs( const char *szText, 
+                                        PRUnichar *pBuffer, 
+                                        ULONG ulSize)
 {
    if( supplantConverter)
    {
@@ -233,19 +233,19 @@ PRUnichar *nsWidgetModuleData::ConvertToUcs( const char *szText,
       // Note this algorithm is fine for most of most western charsets, but
       // fails dismally for various glyphs, baltic, points east...
       ULONG ulCount = 0;
-      PRUnichar *pSave = pBuffer;
+      PRUnichar *pTmp = pBuffer;
       while( *szText && ulCount < ulSize - 1) // (one for terminator)
       {
-         *pBuffer = (PRUnichar)((SHORT)*szText & 0x00FF);
-         pBuffer++;
+         *pTmp = (PRUnichar)((SHORT)*szText & 0x00FF);
+         pTmp++;
          szText++;
          ulCount++;
       }
 
       // terminate string
-      *pBuffer = (PRUnichar)0;
+      *pTmp = (PRUnichar)0;
 
-      return pSave;
+      return ulCount;
    }
 
    if( !converter)
@@ -264,8 +264,7 @@ PRUnichar *nsWidgetModuleData::ConvertToUcs( const char *szText,
    size_t   ucsLen = ulSize;
    size_t   cSubs = 0;
 
-   // function alters the out pointer
-   UniChar *tmp = NS_REINTERPRET_CAST(UniChar *,pBuffer);
+   UniChar *tmp = NS_REINTERPRET_CAST(UniChar *,pBuffer); // function alters the out pointer
 
    int unirc = UniUconvToUcs( converter, (void **)&szText, &szLen,
                               &tmp, &ucsLen, &cSubs);
@@ -274,16 +273,21 @@ PRUnichar *nsWidgetModuleData::ConvertToUcs( const char *szText,
    {
       // terminate output string (truncating)
       *(pBuffer + ulSize - 1) = (PRUnichar)0;
+      ucsLen = ulSize - 1;
    }
    else if( unirc != ULS_SUCCESS)
    {
       printf( "UniUconvToUcs failed, rc %X\n", unirc);
       supplantConverter = TRUE;
-      pBuffer = ConvertToUcs( szText, pBuffer, ulSize);
+      ucsLen = ConvertToUcs( szText, pBuffer, ulSize);
       supplantConverter = FALSE;
    }
+   else
+   {
+      *(pBuffer + ucsLen) = (PRUnichar)0;
+   }
 
-   return pBuffer;
+   return (ULONG)ucsLen;
 }
 
 // Conversion from unicode to appropriate codepage
