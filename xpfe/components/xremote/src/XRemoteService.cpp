@@ -657,23 +657,39 @@ XRemoteService::MayOpenURL(const nsCString &aURL)
   // by default, we assume nothing can be loaded.
   PRBool allowURL= PR_FALSE;
 
-  nsCOMPtr<nsIIOService> ios = do_GetIOService();
-  if (ios) {
+  nsCOMPtr<nsIExternalProtocolService> extProtService =
+      do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
+  if (extProtService) {
     nsCAutoString scheme;
-    ios->ExtractScheme(aURL, scheme);
-    if (!scheme.IsEmpty()) {
-      nsCOMPtr<nsIExternalProtocolService> extProtService =
-          do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
-      if (extProtService) {
-        // if the given URL scheme corresponds to an exposed protocol, then we
-        // can try to load it.  otherwise, we must not.
-        PRBool isExposed;
-        nsresult rv = extProtService->IsExposedProtocol(scheme.get(), &isExposed);
-        if (NS_SUCCEEDED(rv) && isExposed)
-          allowURL = PR_TRUE; // ok, we can load this URL.
+
+    // empty URLs will be treated as about:blank by OpenURL
+    if (aURL.IsEmpty()) {
+      scheme = NS_LITERAL_CSTRING("about");
+    }
+    else {
+      nsCOMPtr<nsIIOService> ios = do_GetIOService();
+      if (ios) {
+        ios->ExtractScheme(aURL, scheme);
+        if (scheme.IsEmpty()) {
+          // could not parse out a scheme.  perhaps this is a file path.
+          nsCOMPtr<nsILocalFile> file;
+          NS_NewNativeLocalFile(aURL, PR_FALSE, getter_AddRefs(file));
+          if (file)
+            scheme = NS_LITERAL_CSTRING("file");
+        }
       }
     }
+
+    if (!scheme.IsEmpty()) {
+      // if the given URL scheme corresponds to an exposed protocol, then we
+      // can try to load it.  otherwise, we must not.
+      PRBool isExposed;
+      nsresult rv = extProtService->IsExposedProtocol(scheme.get(), &isExposed);
+      if (NS_SUCCEEDED(rv) && isExposed)
+        allowURL = PR_TRUE; // ok, we can load this URL.
+    }
   }
+
   return allowURL;
 }
 
