@@ -5412,6 +5412,21 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
   return res;
 }
 
+PRBool
+nsHTMLEditor::IsTextInDirtyFrameVisible(nsIDOMNode *aNode)
+{
+  PRBool isEmptyTextNode;
+  nsresult res = IsVisTextNode(aNode, &isEmptyTextNode, PR_FALSE);
+  if (NS_FAILED(res))
+  {
+    // We are following the historical decision:
+    //   if we don't know, we say it's visible...
+
+    return PR_TRUE;
+  }
+
+  return !isEmptyTextNode;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////

@@ -3752,6 +3752,17 @@ nsEditor::IsContainer(nsIDOMNode *aNode)
   return mDTD->IsContainer(tagEnum);
 }
 
+PRBool
+nsEditor::IsTextInDirtyFrameVisible(nsIDOMNode *aNode)
+{
+  // virtual method
+  //
+  // If this is a simple non-html editor,
+  // the best we can do is to assume it's visible.
+
+  return PR_TRUE;
+}
+
 PRBool 
 nsEditor::IsEditable(nsIDOMNode *aNode)
 {
@@ -3778,7 +3789,14 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
     nsFrameState fs;
     resultFrame->GetFrameState(&fs);
     if ((fs & NS_FRAME_IS_DIRTY)) // we can only trust width data for undirty frames
-      return PR_TRUE;  // assume all text nodes with dirty frames are editable
+    {
+      // In the past a comment said:
+      //   "assume all text nodes with dirty frames are editable"
+      // Nowadays we use a virtual function, that assumes TRUE
+      // in the simple editor world,
+      // and uses enhanced logic to find out in the HTML world.
+      return IsTextInDirtyFrameVisible(aNode);
+    }
     nsRect rect;
     resultFrame->GetRect(rect);
     if (rect.width > 0) 

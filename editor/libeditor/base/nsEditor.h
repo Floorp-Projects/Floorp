@@ -474,6 +474,8 @@ public:
   /** returns PR_TRUE if aNode is an editable node */
   PRBool IsEditable(nsIDOMNode *aNode);
 
+  virtual PRBool IsTextInDirtyFrameVisible(nsIDOMNode *aNode);
+
   /** returns PR_TRUE if aNode is a MozEditorBogus node */
   PRBool IsMozEditorBogusNode(nsIDOMNode *aNode);
 
