@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/12/09 18:17:00 $ 
+# $Revision: 1.13 $ 
+# $Date: 2003/01/19 17:26:39 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -47,6 +47,7 @@ use lib '#tinder_libdir#';
 
 use TinderConfig;
 use TreeData;
+use Utils;
 use HTMLPopUp;
 use FileStructure;
 
@@ -54,6 +55,9 @@ use FileStructure;
 
 #       Main        
 {
+    # must call set_static_vars() to ensure that we are taint safe.
+    set_static_vars();
+
     my (%form) = HTMLPopUp::split_cgi_args(
                                            'cgi_remove_args' => ['daemon-mode'],
                                            );
