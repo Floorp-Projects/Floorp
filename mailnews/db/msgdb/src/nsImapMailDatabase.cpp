@@ -35,7 +35,7 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsFileSpec &folderName, PRBool create, ns
 	PRBool			summaryFileExists;
 	struct stat		st;
 	PRBool			newFile = PR_FALSE;
-	nsLocalFolderSummarySpec	summarySpec(folderName);
+	nsLocalFolderSummarySpec	summarySpec(folderName, create);
 
 #ifdef DEBUG
     printf("nsImapMailDatabase::Open(%s, %s, %p, %s) -> %s\n",

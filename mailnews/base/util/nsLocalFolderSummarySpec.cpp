@@ -24,19 +24,19 @@ nsLocalFolderSummarySpec::nsLocalFolderSummarySpec()
 {
 }
 
-nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const char *folderPath)
-  : nsFileSpec(folderPath)
+nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const char *folderPath, PRBool create)
+  : nsFileSpec(folderPath, create)
 {
 	CreateSummaryFileName();
 }
 
-nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsFileSpec& inFolderPath)
-: nsFileSpec(inFolderPath)
+nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsFileSpec& inFolderPath, PRBool create)
+: nsFileSpec(inFolderPath, create)
 {
 	CreateSummaryFileName();
 }
 
-nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsFilePath &inFolderPath) : nsFileSpec(inFolderPath)
+nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const nsFilePath &inFolderPath, PRBool create) : nsFileSpec(inFolderPath, create)
 {
 	CreateSummaryFileName();
 }
