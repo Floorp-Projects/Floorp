@@ -9,8 +9,8 @@
 <!ENTITY advHeader "Advanced">
 <!ENTITY autoLoadImgCheck.label "Automatically load images"> 
 <!ENTITY enbJavaCheck.label "Enable Java">
-<!ENTITY enbJsCheck.label "Enable Javascript">
-<!ENTITY enbJsCheck.labelforMailNNews "Enable javascript for Mail and News">
+<!ENTITY enbJsCheck.label "Enable JavaScript">
+<!ENTITY enbJsCheck.labelforMailNNews "Enable JavaScript for Mail and News">
 <!ENTITY enbCssCheck.label "Enable style sheets">
 <!ENTITY sendAddFtpCheck.label "Send email address as anonymous FTP password">
 <!ENTITY cookies "Cookies">
@@ -24,7 +24,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Advanced');"  title="window.title">
+        onload="return StartUp('Advanced');"  title="&window.title;">
 
 
 <html:script language="JavaScript" src="PrefsWindow.js">

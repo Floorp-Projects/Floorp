@@ -9,18 +9,18 @@
 <!ENTITY header "Offline">
 <!ENTITY header1 "Startup State">
 <!ENTITY descipt1 "Communicator can start in either online or offline modes.  When
-                     you have full access to your network.  When offline you can only read
+                     online you have full access to your network.  When offline you can only read
 					           messages that you have previously downloaded.">
-<!ENTITY prevRadio "Remember Previous State">
+<!ENTITY prevRadio.label "Remember Previous State">
 <!ENTITY communRemember "Communticator will remember the state it was in last and start in that mode.">
-<!ENTITY askOffline "Ask me">
+<!ENTITY askOfflineRadio.label "Ask Me">
 <!ENTITY offlineStartAskEach "Communicator will ask you each time you start the program.">
-<!ENTITY heaeder2 "When going Online">
-<!ENTITY unsentAsk "Ask me if I want to send my unsent messages">
-<!ENTITY unsentAuto "Automatically send my unsent messages">
-<!ENTITY unsentDoNot "Do not send my unsent messages">
-<!ENTITY header3 "When Exiting Communticator">
-<!ENTITY promptSynch "Prompt me to synchronize my messages">
+<!ENTITY heaeder2 "When Going Online">
+<!ENTITY unsentAskRadio.label "Ask me if I want to send my unsent messages">
+<!ENTITY unsentAutoRadio.label "Automatically send my unsent messages">
+<!ENTITY unsentDoNotRadio.label "Do not send my unsent messages">
+<!ENTITY header3 "When Exiting Communicator">
+<!ENTITY promptSynchCheck.label "Prompt me to synchronize my messages">
 
 
 
@@ -29,7 +29,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('offline');"  title="">
+        onload="return StartUp('offline');"  title="&title.label;">
 
 
 <html:script language="JavaScript" src="PrefsWindow.js">
@@ -47,11 +47,11 @@
       <html:tr><html:td>&descipt1;
 			</html:td></html:tr>
 			<html:tr><html:td><html:label>
-				<html:input name="state" type="radio" id="pref:0:int:offline.startup_state" />&prevRadio;
+				<html:input name="state" type="radio" id="pref:0:int:offline.startup_state" />&prevRadio.label;
 				<html:br />&communRemember;
 			</html:label></html:td></html:tr>
 			<html:tr><html:td><html:label>
-				<html:input name="state" type="radio" id="pref:1:int:offline.startup_state" />askOffline
+				<html:input name="state" type="radio" id="pref:1:int:offline.startup_state" />&askOfflineRadio.label;
 				<html:br />&offlineStartAskEach;
 			</html:label></html:td></html:tr>
 
@@ -60,15 +60,15 @@
 <html:table>	
 	
             
-			<html:tr><html:td><html:label><html:input name="offmail" type="radio" id="pref:0:int:offline.send.unsent_messages" />&unsentAsk;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="offmail" type="radio" id="pref:1:int:offline.send.unsent_messages" />&unsentAuto;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="offmail" type="radio" id="pref:2:int:offline.send.unsent_messages" />&unsentDoNot;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input name="offmail" type="radio" id="pref:0:int:offline.send.unsent_messages" />&unsentAskRadio.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input name="offmail" type="radio" id="pref:1:int:offline.send.unsent_messages" />&unsentAutoRadio.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input name="offmail" type="radio" id="pref:2:int:offline.send.unsent_messages" />&unsentDoNotRadio.label;</html:label></html:td></html:tr>
 </html:table>
 &header3;
 <html:table>		
             
 			<html:tr><html:td><html:label>
-				<html:input type="checkbox" id="pref:0:bool:offline.prompt_synch_on_exit" />&promptSynch;
+				<html:input type="checkbox" id="pref:0:bool:offline.prompt_synch_on_exit" />&promptSynchCheck.label;
 			</html:label></html:td></html:tr>
 
 </html:table>
