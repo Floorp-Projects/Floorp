@@ -214,6 +214,7 @@ td textarea {
 hr {
   display: inline;
   -moz-box-sizing: border-box;
+  margin: 0 0.1% 0 0.1%; /* Mmm! Hack-on-a-hack for bug 81776 */
 }
 
 hr:before {
