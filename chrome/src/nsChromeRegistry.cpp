@@ -1710,8 +1710,8 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
           }
         }
 
-        // See if we're a packages seq in a skin/locale.  If so, we need to set up the baseURL and
-        // the package arcs.
+        // See if we're a packages seq in a skin/locale.  If so, we need to set up the baseURL, allowScripts
+        // and package arcs.
         if (val.Find(":packages") != -1 && !aProviderType.Equals(nsCAutoString("package"))) {
           // Iterate over our kids a second time.
           nsCOMPtr<nsISimpleEnumerator> seqKids;
@@ -1724,7 +1724,9 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
             nsCOMPtr<nsIRDFResource> entry(do_QueryInterface(supp));
             if (entry) {
               nsChromeRegistry::UpdateArc(installSource, entry, mBaseURL, baseLiteral, aRemove);
-
+              if (aProviderType.Equals(nsCAutoString("skin")) && !aAllowScripts)
+                nsChromeRegistry::UpdateArc(installSource, entry, mAllowScripts, scriptLiteral, aRemove);
+              
               // Now set up the package arc.
               const char* val;
               entry->GetValueConst(&val);
@@ -1764,8 +1766,6 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
             // We are the main entry for a skin/locale.
             // Set up our loctype and our script access 
             nsChromeRegistry::UpdateArc(installSource, resource, mLocType, locLiteral, aRemove);
-            if (aProviderType.Equals(nsCAutoString("skin")) && !aAllowScripts)
-              nsChromeRegistry::UpdateArc(installSource, resource, mAllowScripts, scriptLiteral, aRemove);
           }
 
           nsCOMPtr<nsIRDFNode> newTarget;
