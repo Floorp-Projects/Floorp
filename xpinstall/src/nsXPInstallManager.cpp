@@ -79,7 +79,7 @@ NS_IMPL_RELEASE( nsXPInstallManager );
 NS_IMETHODIMP 
 nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 {
-  if (!aInstancePtr == NULL)
+  if (!aInstancePtr)
     return NS_ERROR_NULL_POINTER;
 
   if (aIID.Equals(nsIXPINotifier::GetIID()))

@@ -251,7 +251,7 @@ void nsInstallFileOpItem::Abort()
 PRBool
 nsInstallFileOpItem::CanUninstall()
 {
-    return FALSE;
+    return PR_FALSE;
 }
 
 /* RegisterPackageNode
@@ -261,7 +261,7 @@ nsInstallFileOpItem::CanUninstall()
 PRBool
 nsInstallFileOpItem::RegisterPackageNode()
 {
-    return FALSE;
+    return PR_FALSE;
 }
 
 //
