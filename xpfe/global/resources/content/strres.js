@@ -129,7 +129,7 @@ function localeSwitching(winType, baseDirectory, providerName)
   
   // Flush the modified data source to disk
   // (Note: crashes in M4 builds, so don't use Flush() until fix checked in)
-  // ds.Flush();
+  ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush();
 
   // Open up a new window to see your new chrome, since changes aren't yet dynamically
   // applied to the current window
