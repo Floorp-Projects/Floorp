@@ -1266,7 +1266,7 @@ void CBrowserView::OnToolsRemoveGHPage()
 		return;
 	}
 	nsCOMPtr<nsIBrowserHistory> myHistory = do_QueryInterface(myGHistory, &rv);
-	if(!NS_SUCCEEDED(rv)) {
+	if(NS_FAILED(rv)) {
 		WriteToOutputFile("Could not get the history object.\r\n");
 		AfxMessageBox("Could not get the global history object.");
 		return;
