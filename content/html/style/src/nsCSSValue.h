@@ -99,6 +99,7 @@ public:
 
   nsCSSValue&  operator=(const nsCSSValue& aCopy);
   PRBool      operator==(const nsCSSValue& aOther) const;
+  PRBool      operator!=(const nsCSSValue& aOther) const;
 
   nsCSSUnit GetUnit(void) const { return mUnit; };
   PRBool    IsLengthUnit(void) const  
@@ -194,6 +195,12 @@ inline nscolor nsCSSValue::GetColorValue(void) const
   }
   return NS_RGB(0,0,0);
 }
+
+inline PRBool nsCSSValue::operator!=(const nsCSSValue& aOther) const
+{
+  return PRBool(! ((*this) == aOther));
+}
+
 
 
 #endif /* nsCSSValue_h___ */
