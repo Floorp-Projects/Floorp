@@ -541,6 +541,10 @@ EOF
 	# From seanf@swdc.stratus.com.
 	echo i860-stratus-sysv4
 	exit 0 ;;
+    *:Rhapsody:*:*)
+	test ! -z "`echo ${UNAME_MACHINE} | grep Power`" && echo ppc-apple-rhapsody${UNAME_RELEASE} && exit 0
+	echo ${UNAME_MACHINE}-apple-rhapsody${UNAME_RELEASE}
+	exit 0 ;;
     mc68*:A/UX:*:*)
 	echo m68k-apple-aux${UNAME_RELEASE}
 	exit 0 ;;
