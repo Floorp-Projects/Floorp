@@ -21,7 +21,7 @@
 
 #include "nsFrame.h"
 #include "nsVoidArray.h"
-#include "nsTextReflow.h"
+#include "nsTextRun.h"
 
 class nsISpaceManager;
 class nsBlockReflowState;
