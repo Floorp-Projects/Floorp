@@ -366,6 +366,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   // get our current position and max position from our content node
   PRInt32 curpospx = GetCurrentPosition(scrollbar);
   PRInt32 maxpospx = GetMaxPosition(scrollbar);
+  PRInt32 pageIncrement = GetPageIncrement(scrollbar);
 
   if (curpospx < 0)
      curpospx = 0;
@@ -388,39 +389,27 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 
   mRatio = 1;
 
-  // its possible that our max position was set to 0. In that case the
-  // ratio should become 1 to avoid a divide by 0.
-  if (float(maxpos + ourmaxpos) != 0)
-    mRatio = float(ourmaxpos)/float(maxpos + ourmaxpos);
-
-  // if there is more room than the thumb need stretch the
-  // thumb
-
-  nscoord flex = 0;
-  thumbBox->GetFlex(aState, flex);
-
-  if (flex > 0)
+  if ((pageIncrement + maxpospx) != 0)
   {
-    nscoord thumbsize = NSToCoordRound(ourmaxpos * mRatio);
+    // if the thumb is flexible make the thumb bigger.
+    nscoord flex = 0;
+    thumbBox->GetFlex(aState, flex);
 
-    if (thumbsize > thumbcoord)
+    if (flex > 0)
     {
-        // if the thumb is flexible make the thumb bigger.
-      if (isHorizontal)
-         thumbSize.width = thumbsize;
-       else
-         thumbSize.height = thumbsize;
+      mRatio = float(pageIncrement) / float(maxpospx + pageIncrement);
+      nscoord thumbsize = NSToCoordRound(ourmaxpos * mRatio);
 
-    } else {
-        ourmaxpos -= thumbcoord;
-        if (float(maxpos) != 0)
-          mRatio = float(ourmaxpos)/float(maxpos);
+      // if there is more room than the thumb needs stretch the thumb
+      if (thumbsize > thumbcoord)
+        thumbcoord = thumbsize;
     }
-  } else {
-      ourmaxpos -= thumbcoord;
-      if (float(maxpos) != 0)
-         mRatio = float(ourmaxpos)/float(maxpos);
   }
+
+  ourmaxpos -= thumbcoord;
+  if (float(maxpos) != 0)
+    mRatio = float(ourmaxpos)/float(maxpos);
+
   nscoord curpos = curpospx*onePixel;
 
   // set the thumbs y coord to be the current pos * the ratio.
