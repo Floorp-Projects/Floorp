@@ -243,7 +243,7 @@ Contributor(s): ______________________________________. -->
             <button class="button-toolbar bookmarkitem" uri="rdf:*" 
               tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
               value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
-              oncommand="OpenBookmarkURL(event, document.getElementById('innermostBox').database);"/>
+              oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
           </rule>
         
           <rule iscontainer="true">
@@ -263,7 +263,7 @@ Contributor(s): ______________________________________. -->
             <menupopup>
               <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*"
                 value="rdf:http://home.netscape.com/NC-rdf#Name"
-                oncommand="OpenBookmarkURL(event, document.getElementById('innermostBox').database)"/>
+                oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
             </menupopup>
           </rule>
         </template>
