@@ -814,21 +814,10 @@ public class Context
                              "org.mozilla.javascript.NativeJavaTopPackage",
                              sealed);
 
-        // Define the JavaAdapter class, allowing it to be overridden.
-        String adapterClass = "org.mozilla.javascript.JavaAdapter";
-        String adapterProperty = "JavaAdapter";
-        try {
-            adapterClass = System.getProperty(adapterClass, adapterClass);
-            adapterProperty = System.getProperty
-                ("org.mozilla.javascript.JavaAdapterClassName",
-                 adapterProperty);
-        }
-        catch (SecurityException e) {
-            // We may not be allowed to get system properties. Just
-            // use the default adapter in that case.
-        }
-
-        new LazilyLoadedCtor(scope, adapterProperty, adapterClass, sealed);
+        new LazilyLoadedCtor(scope,
+                             "JavaAdapter",
+                             "org.mozilla.javascript.JavaAdapter",
+                             sealed);
 
         return scope;
     }
