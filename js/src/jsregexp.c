@@ -3289,31 +3289,34 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
 {
     JSRegExp *re;
     JSString *source;
-    uint8 flags;
+    uint32 flagsword;
+    JSObject *obj;
 
     if (xdr->mode == JSXDR_ENCODE) {
         re = (JSRegExp *) JS_GetPrivate(xdr->cx, *objp);
         if (!re)
             return JS_FALSE;
         source = re->source;
-        flags = (uint8) re->flags;
+        flagsword = ((uint32)re->cloneIndex << 16) | re->flags;
     }
     if (!JS_XDRString(xdr, &source) ||
-        !JS_XDRUint8(xdr, &flags)) {
+        !JS_XDRUint32(xdr, &flagsword)) {
         return JS_FALSE;
     }
     if (xdr->mode == JSXDR_DECODE) {
-        *objp = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
-        if (!*objp)
+        obj = js_NewObject(xdr->cx, &js_RegExpClass, NULL, NULL);
+        if (!obj)
             return JS_FALSE;
-        re = js_NewRegExp(xdr->cx, NULL, source, flags, JS_FALSE);
+        re = js_NewRegExp(xdr->cx, NULL, source, (uint16)flagsword, JS_FALSE);
         if (!re)
             return JS_FALSE;
-        if (!JS_SetPrivate(xdr->cx, *objp, re) ||
-                !js_SetLastIndex(xdr->cx, *objp, 0)) {
+        if (!JS_SetPrivate(xdr->cx, obj, re) ||
+            !js_SetLastIndex(xdr->cx, obj, 0)) {
             js_DestroyRegExp(xdr->cx, re);
             return JS_FALSE;
         }
+        re->cloneIndex = (uint16)(flagsword >> 16);
+        *objp = obj;
     }
     return JS_TRUE;
 }
