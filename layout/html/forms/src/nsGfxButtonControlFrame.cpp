@@ -172,9 +172,9 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
   nsIFrame* firstKid = mFrames.FirstChild();
 
   nsCOMPtr<nsIFontMetrics> fontMet;
-  nsFormControlHelper::GetFrameFontFM(aPresContext, (nsIFormControlFrame *)this, getter_AddRefs(fontMet));
+  nsresult res = nsFormControlHelper::GetFrameFontFM(aPresContext, (nsIFormControlFrame *)this, getter_AddRefs(fontMet));
   nsSize desiredSize;
-  if (fontMet) {
+  if (NS_SUCCEEDED(res) && fontMet) {
     aReflowState.rendContext->SetFont(fontMet);
 
     // Get the text from the "value" attribute 
