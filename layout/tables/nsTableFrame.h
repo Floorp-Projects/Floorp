@@ -124,12 +124,6 @@ public:
     *         otherwise, the data is returned.
     */
   virtual nsCellLayoutData * GetCellLayoutData(nsTableCell *aCell);
-
-  /** returns PR_TRUE if this table has proportional width
-    */
-  PRBool IsProportionalWidth(nsStylePosition* aStylePosition);
-
-
           
   /**
     * DEBUG METHOD
