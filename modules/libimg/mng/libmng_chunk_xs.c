@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_chunk_xs.c         copyright (c) 2000 G. Juyn       * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 0.9.5                                                      * */
 /* *                                                                        * */
 /* * purpose   : chunk access functions (implementation)                    * */
 /* *                                                                        * */
@@ -48,6 +48,9 @@
 /* *             - added MAGN chunk                                         * */
 /* *             0.9.3 - 10/20/2000 - G.Juyn                                * */
 /* *             - fixed putchunk_plte() to set bEmpty parameter            * */
+/* *                                                                        * */
+/* *             0.9.5 -  1/25/2001 - G.Juyn                                * */
+/* *             - fixed some small compiler warnings (thanks Nikki)        * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -4565,10 +4568,10 @@ mng_retcode MNG_DECL mng_putchunk_pplt_entry (mng_handle hHandle,
                                        /* address proper entry */
   pEntry = (mng_pplt_entryp)(((mng_ppltp)pChunk)->aEntries) + iEntry;
 
-  pEntry->iRed   = iRed;               /* fill the entry */
-  pEntry->iGreen = iGreen;
-  pEntry->iBlue  = iBlue;
-  pEntry->iAlpha = iAlpha;
+  pEntry->iRed   = (mng_uint8)iRed;    /* fill the entry */
+  pEntry->iGreen = (mng_uint8)iGreen;
+  pEntry->iBlue  = (mng_uint8)iBlue;
+  pEntry->iAlpha = (mng_uint8)iAlpha;
   pEntry->bUsed  = bUsed;
 
 #ifdef MNG_SUPPORT_TRACE

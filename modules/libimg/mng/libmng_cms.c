@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_cms.c              copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 0.9.4                                                      * */
 /* *                                                                        * */
 /* * purpose   : color management routines (implementation)                 * */
 /* *                                                                        * */
@@ -41,6 +41,9 @@
 /* *                                                                        * */
 /* *             0.9.3 - 08/31/2000 - G.Juyn                                * */
 /* *             - fixed sRGB precedence for gamma_only corection           * */
+/* *                                                                        * */
+/* *             0.9.4 - 12/16/2000 - G.Juyn                                * */
+/* *             - fixed mixup of data- & function-pointers (thanks Dimitri)* */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -169,7 +172,7 @@ mng_retcode init_full_cms (mng_datap pData)
     if (!hTrans)                       /* handle error ? */
       MNG_ERRORL (pData, MNG_LCMS_NOTRANS)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_full_cms;
+    pData->fCorrectrow = (mng_fptr)correct_full_cms;
 
     return MNG_NOERROR;                /* and done */
   }
@@ -205,7 +208,7 @@ mng_retcode init_full_cms (mng_datap pData)
     if (!hTrans)                       /* handle error ? */
       MNG_ERRORL (pData, MNG_LCMS_NOTRANS)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_full_cms;
+    pData->fCorrectrow = (mng_fptr)correct_full_cms;
 
     return MNG_NOERROR;                /* and done */
   }
@@ -289,7 +292,7 @@ mng_retcode init_full_cms (mng_datap pData)
     if (!hTrans)                       /* handle error ? */
       MNG_ERRORL (pData, MNG_LCMS_NOTRANS)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_full_cms;
+    pData->fCorrectrow = (mng_fptr)correct_full_cms;
 
     return MNG_NOERROR;                /* and done */
   }
@@ -345,7 +348,7 @@ mng_retcode init_full_cms_object (mng_datap pData)
     if (!hTrans)                       /* handle error ? */
       MNG_ERRORL (pData, MNG_LCMS_NOTRANS)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_full_cms;
+    pData->fCorrectrow = (mng_fptr)correct_full_cms;
 
     return MNG_NOERROR;                /* and done */
   }
@@ -374,7 +377,7 @@ mng_retcode init_full_cms_object (mng_datap pData)
     if (!hTrans)                       /* handle error ? */
       MNG_ERRORL (pData, MNG_LCMS_NOTRANS)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_full_cms;
+    pData->fCorrectrow = (mng_fptr)correct_full_cms;
 
     return MNG_NOERROR;                /* and done */
   }
@@ -441,7 +444,7 @@ mng_retcode init_full_cms_object (mng_datap pData)
     if (!hTrans)                       /* handle error ? */
       MNG_ERRORL (pData, MNG_LCMS_NOTRANS)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_full_cms;
+    pData->fCorrectrow = (mng_fptr)correct_full_cms;
 
     return MNG_NOERROR;                /* and done */
   }
@@ -520,7 +523,7 @@ mng_retcode init_gamma_only (mng_datap pData)
     pData->dLastgamma = dGamma;        /* keep for next time */
   }
                                        /* load color-correction routine */
-  pData->fCorrectrow = (mng_ptr)correct_gamma_only;
+  pData->fCorrectrow = (mng_fptr)correct_gamma_only;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_GAMMA_ONLY, MNG_LC_END)
@@ -567,7 +570,7 @@ mng_retcode init_gamma_only_object (mng_datap pData)
     pData->dLastgamma = dGamma;        /* keep for next time */
   }
                                        /* load color-correction routine */
-  pData->fCorrectrow = (mng_ptr)correct_gamma_only;
+  pData->fCorrectrow = (mng_fptr)correct_gamma_only;
 
 #ifdef MNG_SUPPORT_TRACE
   MNG_TRACE (pData, MNG_FN_INIT_GAMMA_ONLY_OBJ, MNG_LC_END)
@@ -660,7 +663,7 @@ mng_retcode init_app_cms (mng_datap pData)
     if (!pData->fProcessiccp ((mng_handle)pData, iProfilesize, pProfile))
       MNG_ERROR (pData, MNG_APPCMSERROR)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_app_cms;
+    pData->fCorrectrow = (mng_fptr)correct_app_cms;
   }
 
   if ( (pData->fProcesssrgb) &&
@@ -676,7 +679,7 @@ mng_retcode init_app_cms (mng_datap pData)
     if (!pData->fProcesssrgb ((mng_handle)pData, iIntent))
       MNG_ERROR (pData, MNG_APPCMSERROR)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_app_cms;
+    pData->fCorrectrow = (mng_fptr)correct_app_cms;
   }
 
   if ( (pData->fProcesschroma) &&
@@ -716,7 +719,7 @@ mng_retcode init_app_cms (mng_datap pData)
                                                    iPrimarybluex,  iPrimarybluey))
       MNG_ERROR (pData, MNG_APPCMSERROR)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_app_cms;
+    pData->fCorrectrow = (mng_fptr)correct_app_cms;
   }
 
   if ( (pData->fProcessgamma) &&
@@ -732,7 +735,7 @@ mng_retcode init_app_cms (mng_datap pData)
     if (!pData->fProcessgamma ((mng_handle)pData, iGamma))
       MNG_ERROR (pData, MNG_APPCMSERROR)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_app_cms;
+    pData->fCorrectrow = (mng_fptr)correct_app_cms;
   }
 
 #ifdef MNG_SUPPORT_TRACE
@@ -759,7 +762,7 @@ mng_retcode init_app_cms_object (mng_datap pData)
     if (!pData->fProcessiccp ((mng_handle)pData, pBuf->iProfilesize, pBuf->pProfile))
       MNG_ERROR (pData, MNG_APPCMSERROR)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_app_cms;
+    pData->fCorrectrow = (mng_fptr)correct_app_cms;
   }
 
   if ((pData->fProcesssrgb) && (pBuf->bHasSRGB))
@@ -767,7 +770,7 @@ mng_retcode init_app_cms_object (mng_datap pData)
     if (!pData->fProcesssrgb ((mng_handle)pData, pBuf->iRenderingintent))
       MNG_ERROR (pData, MNG_APPCMSERROR)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_app_cms;
+    pData->fCorrectrow = (mng_fptr)correct_app_cms;
   }
 
   if ((pData->fProcesschroma) && (pBuf->bHasCHRM))
@@ -778,7 +781,7 @@ mng_retcode init_app_cms_object (mng_datap pData)
                                                    pBuf->iPrimarybluex,  pBuf->iPrimarybluey))
       MNG_ERROR (pData, MNG_APPCMSERROR)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_app_cms;
+    pData->fCorrectrow = (mng_fptr)correct_app_cms;
   }
 
   if ((pData->fProcessgamma) && (pBuf->bHasGAMA))
@@ -786,7 +789,7 @@ mng_retcode init_app_cms_object (mng_datap pData)
     if (!pData->fProcessgamma ((mng_handle)pData, pBuf->iGamma))
       MNG_ERROR (pData, MNG_APPCMSERROR)
                                        /* load color-correction routine */
-    pData->fCorrectrow = (mng_ptr)correct_app_cms;
+    pData->fCorrectrow = (mng_fptr)correct_app_cms;
   }
 
 #ifdef MNG_SUPPORT_TRACE

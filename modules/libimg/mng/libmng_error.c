@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_error.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 0.9.4                                                      * */
 /* *                                                                        * */
 /* * purpose   : Error routines (implementation)                            * */
 /* *                                                                        * */
@@ -45,7 +45,10 @@
 /* *             - fixed processing of unknown critical chunks              * */
 /* *             - added support for nEED                                   * */
 /* *             0.9.3 - 10/20/2000 - G.Juyn                                * */
-/* *             - added errocode for delayed delta-processing              * */
+/* *             - added errorcode for delayed delta-processing             * */
+/* *                                                                        * */
+/* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
+/* *             - added errorcode for MAGN methods                         * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -130,6 +133,7 @@
     {MNG_UNKNOWNCRITICAL,  "Unknown critical chunk encountered"},
     {MNG_UNSUPPORTEDNEED,  "Requested nEED resources are not supported"},
     {MNG_INVALIDDELTA,     "The delta operation is invalid (mismatched color_types?)"},
+    {MNG_INVALIDMETHOD,    "Method is invalid"},
 
     {MNG_INVALIDCNVSTYLE,  "Canvas_style is invalid"},
     {MNG_WRONGCHUNK,       "Attempt to access the wrong chunk"},

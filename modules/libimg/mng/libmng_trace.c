@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_trace.c            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 0.9.4                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (implementation)                           * */
 /* *                                                                        * */
@@ -83,6 +83,9 @@
 /* *             - added get/set for bKGD preference setting                * */
 /* *             0.9.3 - 10/21/2000 - G.Juyn                                * */
 /* *             - added get function for interlace/progressive display     * */
+/* *                                                                        * */
+/* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
+/* *             - added "new" MAGN methods 3, 4 & 5                        * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -983,6 +986,8 @@
     {MNG_FN_STORE_JPEG_RGBA8,          "store_jpeg_rgba8"},
     {MNG_FN_STORE_JPEG_GA12,           "store_jpeg_ga12"},
     {MNG_FN_STORE_JPEG_RGBA12,         "store_jpeg_rgba12"},
+    {MNG_FN_STORE_JPEG_G8_ALPHA,       "store_jpeg_g8_alpha"},
+    {MNG_FN_STORE_JPEG_RGB8_ALPHA,     "store_jpeg_rgb8_alpha"},
 
     {MNG_FN_INIT_JPEG_A1_NI,           "init_jpeg_a1_ni"},
     {MNG_FN_INIT_JPEG_A2_NI,           "init_jpeg_a2_ni"},
@@ -1030,6 +1035,10 @@
     {MNG_FN_MAGNIFY_RGBA8_X2,          "magnify_rgba8_x2"},
     {MNG_FN_MAGNIFY_RGBA8_X3,          "magnify_rgba8_x3"},
     {MNG_FN_MAGNIFY_RGBA8_X4,          "magnify_rgba8_x4"},
+    {MNG_FN_MAGNIFY_G8_X3,             "magnify_g8_x3"},
+    {MNG_FN_MAGNIFY_RGB8_X3,           "magnify_rgb8_x3"},
+    {MNG_FN_MAGNIFY_GA8_X5,            "magnify_ga8_x5"},
+    {MNG_FN_MAGNIFY_RGBA8_X5,          "magnify_rgba8_x5"},
 
     {MNG_FN_MAGNIFY_G8_Y1,             "magnify_g8_y1"},
     {MNG_FN_MAGNIFY_G8_Y2,             "magnify_g8_y2"},
@@ -1043,6 +1052,10 @@
     {MNG_FN_MAGNIFY_RGBA8_Y2,          "magnify_rgba8_y2"},
     {MNG_FN_MAGNIFY_RGBA8_Y3,          "magnify_rgba8_y3"},
     {MNG_FN_MAGNIFY_RGBA8_Y4,          "magnify_rgba8_y4"},
+    {MNG_FN_MAGNIFY_G8_Y3,             "magnify_g8_y3"},
+    {MNG_FN_MAGNIFY_RGB8_Y3,           "magnify_rgb8_y3"},
+    {MNG_FN_MAGNIFY_GA8_Y5,            "magnify_ga8_y5"},
+    {MNG_FN_MAGNIFY_RGBA8_Y5,          "magnify_rgba8_y5"},
 
     {MNG_FN_DELTA_G1_G1,               "delta_g1_g1"},
     {MNG_FN_DELTA_G2_G2,               "delta_g2_g2"},

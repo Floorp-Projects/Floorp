@@ -1,26 +1,74 @@
 -----------------------------------------------------------
 
-0.9.4 (xxxx nnth 2000)
+0.9.5 (... ..th 2001)
 ----------------------
 
 in short:
 
-intermediate for now
+intermediate
 
 -------------------
 
 bugfixes:
+B129681 - fixed compiler warnings SGI/Irix (thanks Dimitri)               
+
+core:
+- fixed compiler-warnings Mozilla (thanks Tim)
+- fixed timing-problem with switching framing_modes       
+- fixed some small compiler warnings (thanks Nikki)        
+
+samples:
+
+contrib:
+
+doc:
+
+makefiles:
+
+autoconf:
+
+-----------------------------------------------------------
+
+0.9.4 (Jan 19th 2001)
+----------------------
+
+in short:
+
+Now that the MNG spec is at 1.0, this should be the last beta. There's a few
+small changes to make it inline with the spec, and a couple of bug-fixes.
+This is a serious release-candidate for libmng-1.0!!
+Please... test test test test!!
+
+-------------------
+
+bugfixes:
+B123314 - fixed number of TERM related problems
+B123322 - fixed unwanted repetition in mng_readdisplay()
+B123443 - fixed by Ralph
+B124910 - fixed definition for WIN32_LEAN_AND_MEAN (thanks Chad)
+B125750 - fixed by Ralph
+B125756 - fixed mixup of data- & function-pointers (thanks Dimitri)
+B127517 - changed inclusion of the lcms header file for non-windows platforms
 
 core:
 - version numbers
 - fixed possible loop in display_resume() (Thanks Vova!)
 - fixed unwanted repetition in mng_readdisplay()
 - changed inclusion of the lcms header file for non-windows platforms
-- changed IHDR filter_method check for PNGs                
-- moved restore of object 0 to libmng_display              
-- added restore of object 0 to TERM processing !!!
-- fixed TERM delay processing                             
-- fixed TERM end processing (count = 0)                   
+- changed IHDR filter_method check for PNGs
+- moved restore of object 0 to libmng_display
+- added restore of object 0 to TERM processing (B123314)
+- fixed TERM delay processing (B123314)
+- fixed TERM end processing when count = 0 (B123314)
+- changed callback convention for MSVC (Thanks Chad)
+- fixed mixup of data- & function-pointers (thanks Dimitri)
+- added support for "nEED MNG-1.0"
+- added errorcode for MAGN methods
+- added errorchecking for MAGN methods
+- removed "old" MAGN methods 3 & 4
+- added "new" MAGN methods 3, 4 & 5
+- removed test filter-methods 1 & 65
+- set default level-set for filtertype=64 to all zeroes
 
 samples:
 
@@ -30,6 +78,7 @@ contrib:
 - updated Jason Summer's mngplg to version 0.9.2
   (that's mngplg-0.9.2 based on libmng-0.9.3 !!!)
 - rearranged contrib directory slightly
+- added MSVC project to build libmng.dll by Chad Austin
 
 doc:
 - added README.dll
@@ -76,8 +125,8 @@ suggestions and testing this little baby. This would get nowhere without YOU!!!
 -------------------
 
 bugfixes:
-- B111300 - fixup for improved portability
-- B117103 - fixed compilation errors on *nix with lcms (thanks Ralph!)
+B111300 - fixup for improved portability
+B117103 - fixed compilation errors on *nix with lcms (thanks Ralph!)
 
 core:
 - fixed compiler-warnings from Mozilla

@@ -5,7 +5,7 @@
 /* *                                                                        * */
 /* * project   : libmng                                                     * */
 /* * file      : libmng_trace.h            copyright (c) 2000 G.Juyn        * */
-/* * version   : 0.9.3                                                      * */
+/* * version   : 0.9.4                                                      * */
 /* *                                                                        * */
 /* * purpose   : Trace functions (definition)                               * */
 /* *                                                                        * */
@@ -92,6 +92,9 @@
 /* *             - added get/set for bKGD preference setting                * */
 /* *             0.9.3 - 10/21/2000 - G.Juyn                                * */
 /* *             - added get function for interlace/progressive display     * */
+/* *                                                                        * */
+/* *             0.9.4 -  1/18/2001 - G.Juyn                                * */
+/* *             - added "new" MAGN methods 3, 4 & 5                        * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -1061,6 +1064,8 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_STORE_JPEG_RGBA8      3506
 #define MNG_FN_STORE_JPEG_GA12       3507
 #define MNG_FN_STORE_JPEG_RGBA12     3508
+#define MNG_FN_STORE_JPEG_G8_ALPHA   3509
+#define MNG_FN_STORE_JPEG_RGB8_ALPHA 3510
 
 #define MNG_FN_INIT_JPEG_A1_NI       3511
 #define MNG_FN_INIT_JPEG_A2_NI       3512
@@ -1110,6 +1115,10 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_MAGNIFY_RGBA8_X2      3710
 #define MNG_FN_MAGNIFY_RGBA8_X3      3711
 #define MNG_FN_MAGNIFY_RGBA8_X4      3712
+#define MNG_FN_MAGNIFY_G8_X3         3713
+#define MNG_FN_MAGNIFY_RGB8_X3       3714
+#define MNG_FN_MAGNIFY_GA8_X5        3715
+#define MNG_FN_MAGNIFY_RGBA8_X5      3716
 
 #define MNG_FN_MAGNIFY_G8_Y1         3751
 #define MNG_FN_MAGNIFY_G8_Y2         3752
@@ -1123,6 +1132,10 @@ mng_retcode mng_trace (mng_datap  pData,
 #define MNG_FN_MAGNIFY_RGBA8_Y2      3760
 #define MNG_FN_MAGNIFY_RGBA8_Y3      3761
 #define MNG_FN_MAGNIFY_RGBA8_Y4      3762
+#define MNG_FN_MAGNIFY_G8_Y3         3763
+#define MNG_FN_MAGNIFY_RGB8_Y3       3764
+#define MNG_FN_MAGNIFY_GA8_Y5        3765
+#define MNG_FN_MAGNIFY_RGBA8_Y5      3766
 
 /* ************************************************************************** */
 
