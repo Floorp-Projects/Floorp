@@ -1301,6 +1301,7 @@ XP_Bool FE_IsNetcasterInstalled()
  */
 void FE_RunNetcaster(MWContext *)
 {
+#if 0
 	CFrontApp	*theApp = CFrontApp::GetApplication();
 	MWContext	*pNetcasterContext = NULL;
 	char *contextName = "Netcaster_SelectorTab";
@@ -1376,15 +1377,20 @@ void FE_RunNetcaster(MWContext *)
 	} else {
 		XP_ASSERT(0);
 	}
+#endif
 }
 
 MWContext * FE_IsNetcasterRunning(void)
 {
+	return NULL;
+	
+#if 0
 	CFrontApp	*theApp = CFrontApp::GetApplication();
 	
 	if (theApp != NULL)
 		return theApp->GetNetcasterContext();
 	else return NULL;
+#endif
 }
 
 MWContext * FE_GetRDFContext()
