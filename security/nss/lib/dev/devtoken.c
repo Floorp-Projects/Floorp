@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.29 $ $Date: 2002/09/30 21:15:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.30 $ $Date: 2002/10/10 20:30:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -469,6 +469,7 @@ find_objects
 	objects = create_objects_from_handles(tok, session,
 	                                      objectHandles, numHandles);
     } else {
+	nss_SetError(NSS_ERROR_NOT_FOUND);
 	objects = NULL;
     }
     if (objectHandles && objectHandles != staticObjects) {

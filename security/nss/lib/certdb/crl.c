@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.26 2002/09/23 21:31:38 wtc%netscape.com Exp $
+ * $Id: crl.c,v 1.27 2002/10/10 20:30:06 relyea%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -567,6 +567,7 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
     SECItem *derCrl = NULL;
     CK_OBJECT_HANDLE crlHandle = 0;
     char *url = NULL;
+    int nsserror;
 
     PORT_Assert(decoded);
     if (!decoded) {
@@ -580,8 +581,15 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
 
     /* XXX it would be really useful to be able to fetch the CRL directly into an
        arena. This would avoid a copy later on in the decode step */
+    PORT_SetError(0);
     derCrl = PK11_FindCrlByName(&slot, &crlHandle, crlKey, type, &url);
     if (derCrl == NULL) {
+	/* if we had a problem other than the CRL just didn't exist, return
+	 * a failure to the upper level */
+	nsserror = PORT_GetError();
+	if ((nsserror != 0) && (nsserror != SEC_ERROR_CRL_NOT_FOUND)) {
+	    rv = SECFailure;
+	}
 	goto loser;
     }
     PORT_Assert(crlHandle != CK_INVALID_HANDLE);

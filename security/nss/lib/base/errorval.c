@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: errorval.c,v $ $Revision: 1.6 $ $Date: 2001/12/12 20:23:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: errorval.c,v $ $Revision: 1.7 $ $Date: 2002/10/10 20:30:03 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -86,4 +86,5 @@ const NSSError NSS_ERROR_CERTIFICATE_ISSUER_NOT_FOUND   = 31;
 const NSSError NSS_ERROR_CERTIFICATE_IN_CACHE           = 32;
 
 const NSSError NSS_ERROR_HASH_COLLISION                 = 33;
+const NSSError NSS_ERROR_DEVICE_ERROR                   = 34;
 
