@@ -1372,55 +1372,36 @@ nsObjectFrame::HandleChild(nsIPresContext*          aPresContext,
                            nsReflowStatus&          aStatus,
                            nsIFrame* child)
 {
-    nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowMetrics kidDesiredSize(nsnull);
+  nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  nsHTMLReflowMetrics kidDesiredSize(nsnull);
 
-    nsReflowReason reflowReason;
-    nsFrameState frameState;
-    child->GetFrameState(&frameState);
-    if (frameState & NS_FRAME_FIRST_REFLOW)
-      reflowReason = eReflowReason_Initial;
-    else
-      reflowReason = eReflowReason_Resize;
+  nsReflowReason reflowReason;
+  nsFrameState frameState;
+  child->GetFrameState(&frameState);
+  if (frameState & NS_FRAME_FIRST_REFLOW)
+    reflowReason = eReflowReason_Initial;
+  else
+    reflowReason = eReflowReason_Resize;
 
-    nsHTMLReflowState kidReflowState(aPresContext, aReflowState, child,
-                                     availSize, reflowReason);
+  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, child,
+                                   availSize, reflowReason);
 
-    nsReflowStatus status;
-
-    if(PR_TRUE)//reflowReason == eReflowReason_Initial)
-    {
-      kidDesiredSize.width = NS_UNCONSTRAINEDSIZE;
-      kidDesiredSize.height = NS_UNCONSTRAINEDSIZE;
-    }
-
-  // adjust kidReflowState
-  nsIHTMLContent* hc = nsnull;
-  mContent->QueryInterface(NS_GET_IID(nsIHTMLContent), (void**) &hc);
-
-  if(hc != nsnull)
-  {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-
-    nsHTMLValue val;
-    if(NS_CONTENT_ATTR_HAS_VALUE == hc->GetHTMLAttribute(nsHTMLAtoms::width, val))
-    {
-      if(eHTMLUnit_Pixel == val.GetUnit())
-      {
-        nscoord width = val.GetPixelValue();
-        kidReflowState.mComputedWidth = NSIntPixelsToTwips(width, p2t);
-      }
-    }
-    if(NS_CONTENT_ATTR_HAS_VALUE == hc->GetHTMLAttribute(nsHTMLAtoms::height, val))
-    {
-      if(eHTMLUnit_Pixel == val.GetUnit())
-      {
-        nscoord height = val.GetPixelValue();
-        kidReflowState.mComputedHeight = NSIntPixelsToTwips(height, p2t);
-      }
-    }
+  if(kidReflowState.mStylePosition->mWidth.GetUnit() == eStyleUnit_Coord ||
+       kidReflowState.mStylePosition->mWidth.GetUnit() == eStyleUnit_Percent) {
+    //the object frame has already calculated the constraints
+    kidReflowState.mComputedWidth = aMetrics.width;
   }
+
+  if(kidReflowState.mStylePosition->mHeight.GetUnit() == eStyleUnit_Coord ||
+       kidReflowState.mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent) {
+    //the object frame has already calculated the constraints
+    kidReflowState.mComputedHeight = aMetrics.height;
+  }
+
+  nsReflowStatus status;
+
+  kidDesiredSize.width = NS_UNCONSTRAINEDSIZE;
+  kidDesiredSize.height = NS_UNCONSTRAINEDSIZE;
 
   ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, 0, 0, 0, status);
   FinishReflowChild(child, aPresContext, &kidReflowState, kidDesiredSize, 0, 0, 0);
