@@ -867,13 +867,13 @@ char *str;
       {
       MyBlendObserver *observer = new MyBlendObserver(aTheImage);
       NS_ColorNameToRGB("white", &white);
-      gImageReq = gImageGroup->GetImage(fileURL,observer,white, 0, 0, 0);
+      gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
       }
     else
       {
       MyObserver *observer = new MyObserver();
       NS_ColorNameToRGB("white", &white);
-      gImageReq = gImageGroup->GetImage(fileURL,observer,white, 0, 0, 0);
+      gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
       }
             
     if (gImageReq == NULL) 
