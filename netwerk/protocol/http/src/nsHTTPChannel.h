@@ -39,6 +39,7 @@
 #include "nsHTTPResponseListener.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamObserver.h"
+#include "nsICachedNetData.h"
 
 class nsHTTPRequest;
 class nsHTTPResponse;
