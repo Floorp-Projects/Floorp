@@ -51,6 +51,11 @@ CSRCS		= \
 		xprintutil_printtofile.c \
 		$(NULL)
 
+# Code shared between GTK+, Xlib and Xprint gfx modules
+# (empty for now - but this will be filled soon...)
+X11SHARED_LCPPSRCS = \
+		$(NULL)
+
 # nsDrawingSurfaceXlib only required for staticbuild 
 XLIB_LCPPSRCS	= \
 		nsDrawingSurfaceXlib.cpp \
@@ -61,6 +66,7 @@ XLIB_LCPPSRCS	= \
 		$(NULL)
 
 CPPSRCS		= \
+		$(X11SHARED_LCPPSRCS) \
 		$(XLIB_LCPPSRCS) \
 		nsDeviceContextXP.cpp \
 		nsGfxFactoryXP.cpp \
@@ -80,7 +86,7 @@ CXXFLAGS	 += $(MOZ_XPRINT_CFLAGS)
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-GARBAGE		+= $(XLIB_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
+GARBAGE		+= $(X11SHARED_LCPPSRCS) $(XLIB_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
@@ -103,8 +109,9 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../xlib \
 		-I$(srcdir)/../xlibrgb \
+		-I$(srcdir)/../x11shared \
 		-I$(srcdir)/.. \
 		$(NULL)
 
-export:: $(addprefix $(srcdir)/../xlib/,$(XLIB_LCPPSRCS))
+export:: $(addprefix $(srcdir)/../x11shared/,$(X11SHARED_LCPPSRCS)) $(addprefix $(srcdir)/../xlib/,$(XLIB_LCPPSRCS))
 	$(INSTALL) $^ .
