@@ -8,7 +8,7 @@ nsHashtableEnumerator.h
 nsIArena.h
 nsIByteBuffer.h
 nsIObserverList.h
-nsIProperties.h
+nsIPersistentProperties.h
 nsISimpleEnumerator.h
 nsISizeOfHandler.h
 nsIUnicharBuffer.h

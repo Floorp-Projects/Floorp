@@ -48,6 +48,7 @@ CPPSRCS		= \
 		nsObserverList.cpp \
 		nsObserverService.cpp \
 		nsProperties.cpp \
+		nsPersistentProperties.cpp \
 		nsQuickSort.cpp \
 		nsSizeOfHandler.cpp \
 		nsStr.cpp \
@@ -74,7 +75,7 @@ EXPORTS		= \
 		nsIArena.h \
 		nsIByteBuffer.h \
 		nsIObserverList.h \
-		nsIProperties.h \
+		nsIPersistentProperties.h \
 		nsISimpleEnumerator.h \
 		nsISizeOfHandler.h \
 		nsIUnicharBuffer.h \
@@ -100,6 +101,7 @@ XPIDLSRCS	= \
 		nsIEnumerator.idl \
 		nsIObserver.idl \
 		nsIObserverService.idl \
+		nsIProperties.idl \
 		nsISupportsArray.idl \
 		nsISupportsPrimitives.idl \
 		$(NULL)

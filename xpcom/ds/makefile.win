@@ -39,7 +39,7 @@ EXPORTS =                          \
         nsIArena.h                 \
         nsIByteBuffer.h            \
         nsIObserverList.h          \
-        nsIProperties.h            \
+        nsIPersistentProperties.h  \
         nsISimpleEnumerator.h      \
         nsISizeOfHandler.h         \
         nsIUnicharBuffer.h         \
@@ -66,6 +66,7 @@ XPIDLSRCS =                         \
         .\nsIEnumerator.idl         \
 	.\nsIObserver.idl           \
 	.\nsIObserverService.idl    \
+        .\nsIProperties.idl         \
 	.\nsISupportsArray.idl	    \
 	.\nsISupportsPrimitives.idl \
         $(NULL)
@@ -100,6 +101,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsObserverList.obj            \
         .\$(OBJDIR)\nsObserverService.obj         \
         .\$(OBJDIR)\nsProperties.obj              \
+        .\$(OBJDIR)\nsPersistentProperties.obj    \
         .\$(OBJDIR)\nsQuickSort.obj               \
         .\$(OBJDIR)\nsSizeOfHandler.obj           \
         .\$(OBJDIR)\nsStr.obj                     \

@@ -23,7 +23,7 @@
 #ifndef nsURLProperties_h__
 #define nsURLProperties_h__
 
-#include "nsIProperties.h"
+#include "nsIPersistentProperties.h"
 #include "nsString.h"
 
 class nsURLProperties {

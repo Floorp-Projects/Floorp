@@ -53,7 +53,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-#include "nsIProperties.h"
+#include "nsIPersistentProperties.h"
 #include "nsIEnumerator.h"
 #include "nsIZipReader.h"
 

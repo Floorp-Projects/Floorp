@@ -3,4 +3,8 @@ nsICollection.idl
 nsIEnumerator.idl
 nsIObserver.idl
 nsIObserverService.idl
+nsIProperties.idl
+nsIStopwatch.idl
+nsIProperties.idl
+nsIStopwatch.idl
 nsISupportsArray.idl
