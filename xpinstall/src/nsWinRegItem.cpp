@@ -198,7 +198,41 @@ char* nsWinRegItem::toString()
 
 PRInt32 nsWinRegItem::Prepare()
 {
-	return nsnull;
+  PRInt32 aReturn = NS_OK;
+  
+  if (mReg == nsnull)
+      return nsInstall::OUT_OF_MEMORY;
+
+  switch (mCommand)
+  {
+    case NS_WIN_REG_CREATE:
+        mReg->PrepareCreateKey(mRootkey, *mSubkey, &aReturn);
+        break;
+    
+    case NS_WIN_REG_DELETE:
+        mReg->PrepareDeleteKey(mRootkey, *mSubkey, &aReturn);
+        break;
+    
+    case NS_WIN_REG_DELETE_VAL:
+        mReg->PrepareDeleteValue(mRootkey, *mSubkey, *mName, &aReturn);
+        break;
+    
+    case NS_WIN_REG_SET_VAL_STRING:
+        mReg->PrepareSetValueString(mRootkey, *mSubkey, &aReturn);
+        break;
+
+    case NS_WIN_REG_SET_VAL_NUMBER:
+        mReg->PrepareSetValueNumber(mRootkey, *mSubkey, &aReturn);
+        break;
+    
+    case NS_WIN_REG_SET_VAL:
+        mReg->PrepareSetValue(mRootkey, *mSubkey, &aReturn);
+        break;
+
+    default:
+        break;
+  }
+	return aReturn;
 }
 
 void nsWinRegItem::Abort()

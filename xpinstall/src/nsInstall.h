@@ -173,7 +173,11 @@ class nsInstall
             CHROME_REGISTRY_ERROR       = -239,
 
             MALFORMED_INSTALL           = -240,
-            
+
+            KEY_ACCESS_DENIED           = -241,
+            KEY_DOES_NOT_EXIST          = -242,
+            VALUE_DOES_NOT_EXIST        = -243,
+
             OUT_OF_MEMORY               = -299,
 
             GESTALT_UNKNOWN_ERR         = -5550,
@@ -234,7 +238,7 @@ class nsInstall
         PRInt32    Patch(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    RegisterChrome(nsIFile* chrome, PRUint32 chromeType, const char* path);
         PRInt32    RefreshPlugins();
-        PRInt32    ResetError();
+        PRInt32    ResetError(PRInt32 aError);
         PRInt32    SetPackageFolder(nsInstallFolder& aFolder);
         PRInt32    StartInstall(const nsString& aUserPackageName, const nsString& aPackageName, const nsString& aVersion, PRInt32* aReturn);
         PRInt32    Uninstall(const nsString& aPackageName, PRInt32* aReturn);

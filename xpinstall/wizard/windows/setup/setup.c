@@ -74,6 +74,7 @@ BOOL            gbILUseTemp;
 BOOL            gbPreviousUnfinishedDownload;
 BOOL            gbIgnoreRunAppX;
 BOOL            gbIgnoreProgramFolderX;
+BOOL            gbRestrictedAccess;
 
 setupGen        sgProduct;
 diS             diSetup;

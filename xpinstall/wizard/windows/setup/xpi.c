@@ -319,6 +319,7 @@ HRESULT SmartUpdateJars()
       siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
     } /* while(siCObject) */
 
+    LogMSXPInstallStatus(NULL, hrResult);
     pfnXpiExit();
     DeInitProgressDlg();
   }

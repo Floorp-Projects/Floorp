@@ -467,6 +467,7 @@ ProcessWndMsgCB()
 
 /* Function used only to send the message stream error */
 int WGet(char *szUrl,
+         char *szFile,
          char *szProxyServer,
          char *szProxyPort,
          char *szProxyUser,
@@ -505,7 +506,7 @@ int WGet(char *szUrl,
   rv = conn->Open();
   if(rv == WIZ_OK)
   {
-    rv = conn->Get(NULL, NULL);
+    rv = conn->Get(NULL, szFile);
     conn->Close();
   }
 
@@ -519,8 +520,12 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
 {
   int  rv;
   char proxyURL[kProxySrvrLen];
+  char *host = NULL;
+  char *path = NULL;
+  char *file = NULL;
+  int  port;
 
-  rv = nsHTTPConn::OK;
+  rv = nsHTTPConn::ParseURL(kHTTP, szUrl, &host, &port, &path);
   memset(proxyURL, 0, kProxySrvrLen);
   wsprintf(proxyURL, "http://%s:%s", szProxyServer, szProxyPort);
 
@@ -544,7 +549,10 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
   if((rv = conn->Open()) != WIZ_OK)
     return(rv);
 
-  rv = conn->Get(ProgressCB, NULL); // use leaf from URL
+  if(strrchr(path, '/') != (path + strlen(path)))
+    file = strrchr(path, '/') + 1; // set to leaf name
+
+  rv = conn->Get(ProgressCB, file); // use leaf from URL
   conn->Close();
 
   if(conn)
@@ -555,9 +563,13 @@ int DownloadViaProxy(char *szUrl, char *szProxyServer, char *szProxyPort, char *
 
 int DownloadViaHTTP(char *szUrl)
 {
-  int rv;
+  int  rv;
+  char *host = NULL;
+  char *path = NULL;
+  char *file = NULL;
+  int  port;
 
-  rv = nsHTTPConn::OK;
+  rv = nsHTTPConn::ParseURL(kHTTP, szUrl, &host, &port, &path);
   nsHTTPConn *conn = new nsHTTPConn(szUrl, ProcessWndMsgCB);
   if(conn == NULL)
   {
@@ -572,7 +584,10 @@ int DownloadViaHTTP(char *szUrl)
   if((rv = conn->Open()) != WIZ_OK)
     return(rv);
 
-  rv = conn->Get(ProgressCB, NULL);
+  if(strrchr(path, '/') != (path + strlen(path)))
+    file = strrchr(path, '/') + 1; // set to leaf name
+
+  rv = conn->Get(ProgressCB, file);
   conn->Close();
 
   if(conn)

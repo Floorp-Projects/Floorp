@@ -69,7 +69,7 @@ nsWinReg::CreateKey(const nsString& subkey, const nsString& classname, PRInt32* 
   }
 
   if(mInstallObject)
-  	mInstallObject->ScheduleForInstall(wi);
+  	*aReturn = mInstallObject->ScheduleForInstall(wi);
 	
   return 0;
 }
@@ -95,7 +95,7 @@ nsWinReg::DeleteKey(const nsString& subkey, PRInt32* aReturn)
   }
 
   if(mInstallObject)
-    mInstallObject->ScheduleForInstall(wi);
+    *aReturn = mInstallObject->ScheduleForInstall(wi);
 
   return 0;
 }
@@ -121,7 +121,7 @@ nsWinReg::DeleteValue(const nsString& subkey, const nsString& valname, PRInt32* 
   }
 
   if(mInstallObject)
-    mInstallObject->ScheduleForInstall(wi);
+    *aReturn = mInstallObject->ScheduleForInstall(wi);
 
   return 0;
 }
@@ -147,7 +147,7 @@ nsWinReg::SetValueString(const nsString& subkey, const nsString& valname, const 
   }
 
   if(mInstallObject)
-    mInstallObject->ScheduleForInstall(wi);
+    *aReturn = mInstallObject->ScheduleForInstall(wi);
 	
   return 0;
 }
@@ -180,7 +180,7 @@ nsWinReg::SetValueNumber(const nsString& subkey, const nsString& valname, PRInt3
   }
 
   if(mInstallObject)
-    mInstallObject->ScheduleForInstall(wi);
+    *aReturn = mInstallObject->ScheduleForInstall(wi);
 
   return 0;
 }
@@ -219,6 +219,126 @@ nsInstall* nsWinReg::InstallObject()
 	return mInstallObject;
 }
   
+PRInt32
+nsWinReg::KeyExists(const nsString& subkey,
+                    PRInt32* aReturn)
+{
+  *aReturn = NativeKeyExists(subkey);
+  return NS_OK;
+}
+
+PRInt32
+nsWinReg::ValueExists(const nsString& subkey,
+                      const nsString& valname,
+                      PRInt32* aReturn)
+{
+  *aReturn = NativeValueExists(subkey, valname);
+  return NS_OK;
+}
+ 
+PRInt32
+nsWinReg::IsKeyWritable(const nsString& subkey,
+                        PRInt32* aReturn)
+{
+  *aReturn = NativeIsKeyWritable(subkey);
+  return NS_OK;
+}
+
+PRInt32
+nsWinReg::PrepareCreateKey(PRInt32 root,
+                           const nsString& subkey,
+                           PRInt32* aReturn)
+{
+  SetRootKey(root);
+  if(NativeIsKeyWritable(subkey))
+    *aReturn = nsInstall::SUCCESS;
+  else
+    *aReturn = nsInstall::KEY_ACCESS_DENIED;
+
+  return NS_OK;
+}
+
+PRInt32
+nsWinReg::PrepareDeleteKey(PRInt32 root,
+                           const nsString& subkey,
+                           PRInt32* aReturn)
+{
+  SetRootKey(root);
+  if(NativeKeyExists(subkey))
+  {
+    if(NativeIsKeyWritable(subkey))
+      *aReturn = nsInstall::SUCCESS;
+    else
+      *aReturn = nsInstall::KEY_ACCESS_DENIED;
+  }
+  else
+    *aReturn = nsInstall::KEY_DOES_NOT_EXIST;
+
+  return NS_OK;
+}
+  
+PRInt32
+nsWinReg::PrepareDeleteValue(PRInt32 root,
+                             const nsString& subkey,
+                             const nsString& valname,
+                             PRInt32* aReturn)
+{
+  SetRootKey(root);
+  if(NativeValueExists(subkey, valname))
+  {
+    if(NativeIsKeyWritable(subkey))
+      *aReturn = nsInstall::SUCCESS;
+    else
+      *aReturn = nsInstall::KEY_ACCESS_DENIED;
+  }
+  else
+    *aReturn = nsInstall::VALUE_DOES_NOT_EXIST;
+
+  return NS_OK;
+}
+
+PRInt32
+nsWinReg::PrepareSetValueString(PRInt32 root,
+                                const nsString& subkey,
+                                PRInt32* aReturn)
+{
+  SetRootKey(root);
+  if(NativeIsKeyWritable(subkey))
+    *aReturn = nsInstall::SUCCESS;
+  else
+    *aReturn = nsInstall::KEY_ACCESS_DENIED;
+
+  return NS_OK;
+}
+ 
+PRInt32
+nsWinReg::PrepareSetValueNumber(PRInt32 root,
+                                const nsString& subkey,
+                                PRInt32* aReturn)
+{
+  SetRootKey(root);
+  if(NativeIsKeyWritable(subkey))
+    *aReturn = nsInstall::SUCCESS;
+  else
+    *aReturn = nsInstall::KEY_ACCESS_DENIED;
+
+  return NS_OK;
+}
+ 
+PRInt32
+nsWinReg::PrepareSetValue(PRInt32 root,
+                          const nsString& subkey,
+                          PRInt32* aReturn)
+{
+  SetRootKey(root);
+  if(NativeIsKeyWritable(subkey))
+    *aReturn = nsInstall::SUCCESS;
+  else
+    *aReturn = nsInstall::KEY_ACCESS_DENIED;
+
+  return NS_OK;
+}
+
 PRInt32
 nsWinReg::FinalCreateKey(PRInt32 root, const nsString& subkey, const nsString& classname, PRInt32* aReturn)
 {
@@ -269,6 +389,149 @@ nsWinReg::FinalSetValue(PRInt32 root, const nsString& subkey, const nsString& va
 
 
 /* Private Methods */
+
+PRInt32
+nsWinReg::NativeKeyExists(const nsString& subkey)
+{
+    HKEY    root, newkey;
+    LONG    result;
+    PRInt32 keyExists     = PR_FALSE;
+    char*   subkeyCString = subkey.ToNewCString();
+
+#ifdef WIN32
+    root   = (HKEY)mRootKey;
+    result = RegOpenKeyEx(root, subkeyCString, 0, KEY_READ, &newkey);
+    switch(result)
+    {
+        case ERROR_SUCCESS:
+            RegCloseKey(newkey);
+            keyExists = PR_TRUE;
+            break;
+
+        case ERROR_FILE_NOT_FOUND:
+        case ERROR_ACCESS_DENIED:
+        default:
+            break;
+    }
+#endif
+
+    if (subkeyCString)     Recycle(subkeyCString);
+
+    return keyExists;
+}
+
+PRInt32
+nsWinReg::NativeValueExists(const nsString& subkey, const nsString& valname)
+{
+    HKEY          root;
+    HKEY          newkey;
+    LONG          result;
+    PRInt32       valueExists = PR_FALSE;
+    DWORD         length      = _MAXKEYVALUE_;
+    unsigned char valbuf[_MAXKEYVALUE_];
+    char*         subkeyCString   = subkey.ToNewCString();
+    char*         valnameCString  = valname.ToNewCString();
+    
+#ifdef WIN32
+    root   = (HKEY) mRootKey;
+    result = RegOpenKeyEx(root, subkeyCString, 0, KEY_READ, &newkey);
+    switch(result)
+    {
+        case ERROR_SUCCESS:
+            result = RegQueryValueEx(newkey,
+                                     valnameCString,
+                                     0,
+                                     NULL,
+                                     valbuf,
+                                     &length);
+            switch(result)
+            {
+                case ERROR_SUCCESS:
+                    valueExists = PR_TRUE;
+                    break;
+
+                case ERROR_FILE_NOT_FOUND:
+                case ERROR_ACCESS_DENIED:
+                default:
+                    break;
+            }
+            RegCloseKey(newkey);
+            break;
+
+        case ERROR_FILE_NOT_FOUND:
+        case ERROR_ACCESS_DENIED:
+        default:
+            break;
+    }
+#endif
+
+    if (subkeyCString)   Recycle(subkeyCString);
+    if (valnameCString)  Recycle(valnameCString);
+
+    return valueExists;
+}
+ 
+PRInt32
+nsWinReg::NativeIsKeyWritable(const nsString& subkey)
+{
+    HKEY     root;
+    HKEY     newkey;
+    LONG     result;
+    char*    subkeyCString;
+    nsString subkeyParent = subkey;
+    PRInt32  index;
+    PRInt32  rv = PR_FALSE;
+
+#ifdef WIN32
+    /* In order to check to see if a key is writable (user has write access
+     * to the key), we need to open the key with KEY_WRITE access.  In order
+     * to open a key, the key must first exist.  If the key passed does not
+     * exist, we need to search for one of its parent key that _does_ exist.
+     * This do{} loop will search for an existing parent key. */
+    do
+    {
+        rv = NativeKeyExists(subkeyParent);
+        if(!rv)
+        {
+            index = subkeyParent.RFindChar('\\', PR_FALSE, -1, -1);
+            if(index > 0)
+                /* delete everything from the '\\' found to the end of the string */
+                subkeyParent.SetLength(index);
+            else
+                /* key does not exist and no parent key found */
+                break;
+        }
+    }while(!rv);
+
+    if(rv)
+    {
+        rv            = PR_FALSE;
+        subkeyCString = subkeyParent.ToNewCString();
+        if(!subkeyCString)
+            result = nsInstall::OUT_OF_MEMORY;
+        else
+        {
+            root   = (HKEY)mRootKey;
+            result = RegOpenKeyEx(root, subkeyCString, 0, KEY_WRITE, &newkey);
+            switch(result)
+            {
+                case ERROR_SUCCESS:
+                    RegCloseKey(newkey);
+                    rv = PR_TRUE;
+                    break;
+
+                case ERROR_FILE_NOT_FOUND:
+                case ERROR_ACCESS_DENIED:
+                default:
+                    break;
+            }
+            if(subkeyCString)
+                Recycle(subkeyCString);
+        }
+    }
+#endif
+    return rv;
+}
 
 PRInt32
 nsWinReg::NativeCreateKey(const nsString& subkey, const nsString& classname)
@@ -390,12 +653,13 @@ nsWinReg::NativeGetValueString(const nsString& subkey, const nsString& valname, 
         result = RegQueryValueEx( newkey, valnameCString, nsnull, &type, valbuf, &length );
 
         RegCloseKey( newkey );
+
+        if(type == REG_SZ)
+            aReturn->AssignWithConversion((char*)valbuf);
     }
 
-    if(ERROR_SUCCESS == result && type == REG_SZ)
-    {
-        aReturn->AssignWithConversion((char*)valbuf);
-    }
+    if(ERROR_ACCESS_DENIED == result)
+        result = nsInstall::ACCESS_DENIED;
 
     if (subkeyCString)   Recycle(subkeyCString);
     if (valnameCString)  Recycle(valnameCString);
@@ -447,12 +711,13 @@ nsWinReg::NativeGetValueNumber(const nsString& subkey, const nsString& valname, 
         result = RegQueryValueEx( newkey, valnameCString, nsnull, &type, (LPBYTE)&valbuf, (LPDWORD)&valbuflen);
 
         RegCloseKey( newkey );
+
+        if(type == REG_DWORD)
+            *aReturn = valbuf;
     }
 
-    if(ERROR_SUCCESS == result && type == REG_DWORD)
-    {
-        *aReturn = valbuf;
-    }
+    if(ERROR_ACCESS_DENIED == result)
+        result = nsInstall::ACCESS_DENIED;
 
     if (subkeyCString)   Recycle(subkeyCString);
     if (valnameCString)  Recycle(valnameCString);

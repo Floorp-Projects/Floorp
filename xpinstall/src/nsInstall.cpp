@@ -1401,9 +1401,9 @@ nsInstall::RefreshPlugins()
 
 
 PRInt32    
-nsInstall::ResetError()
+nsInstall::ResetError(PRInt32 aError)
 {
-    mLastError = nsInstall::SUCCESS;
+    mLastError = aError;
     return NS_OK;
 }
 
@@ -1445,7 +1445,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     *szRegPackagePath = '0';
     *aReturn   = nsInstall::SUCCESS;
     
-    ResetError();
+    ResetError(nsInstall::SUCCESS);
         
     mUserCancelled = PR_FALSE; 
      
@@ -2229,6 +2229,9 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
             nsCRT::free(errRsrc);
         }   
     }
+
+    if (error != SUCCESS)
+        SaveError(error);
 
     if (objString)
         delete [] objString;

@@ -202,6 +202,7 @@ void              UnsetSetupCurrentDownloadFile(void);
 void              SetSetupCurrentDownloadFile(char *szCurrentFilename);
 char              *GetSetupCurrentDownloadFile(char *szCurrentDownloadFile,
                                        DWORD dwCurrentDownloadFileBufSize);
+BOOL              DeleteWGetLog(void);
 
 #endif /* _EXTRA_H_ */
 

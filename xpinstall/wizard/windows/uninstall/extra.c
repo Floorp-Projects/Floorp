@@ -994,6 +994,45 @@ int CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
   return(0);
 }
 
+BOOL VerifyRestrictedAccess(void)
+{
+  char  szSubKey[MAX_BUF];
+  char  szSubKeyToTest[] = "Software\\%s - Test Key";
+  BOOL  bRv;
+  DWORD dwDisp = 0;
+  DWORD dwErr;
+  HKEY  hkRv;
+
+  wsprintf(szSubKey, szSubKeyToTest, ugUninstall.szCompanyName);
+  dwErr = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                         szSubKey,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_WRITE,
+                         NULL,
+                         &hkRv,
+                         &dwDisp);
+  if(dwErr == ERROR_SUCCESS)
+  {
+    RegCloseKey(hkRv);
+    switch(dwDisp)
+    {
+      case REG_CREATED_NEW_KEY:
+        RegDeleteKey(HKEY_LOCAL_MACHINE, szSubKey);
+        break;
+
+      case REG_OPENED_EXISTING_KEY:
+        break;
+    }
+    bRv = FALSE;
+  }
+  else
+    bRv = TRUE;
+
+  return(bRv);
+}
+
 BOOL CheckLegacy(HWND hDlg)
 {
   char      szSection[MAX_BUF];
@@ -1087,6 +1126,7 @@ HRESULT GetUninstallLogPath()
   char szErrorMsg[MAX_BUF];
   char szEUninstallLogFolder[MAX_BUF];
   char szRootKey[MAX_BUF];
+  BOOL bRestrictedAccess;
   HKEY hkRoot;
 
   if(*ugUninstall.szUserAgent != '\0')
@@ -1104,11 +1144,19 @@ HRESULT GetUninstallLogPath()
     strcpy(szKey, ugUninstall.szWrKey);
   }
 
+  bRestrictedAccess = VerifyRestrictedAccess();
+  if(bRestrictedAccess)
+    hkRoot = HKEY_CURRENT_USER;
+
   GetWinReg(hkRoot, szKey, "Uninstall Log Folder",   szLogFolder, sizeof(szLogFolder));
-  GetWinReg(hkRoot, szKey, "Description",            ugUninstall.szUninstallKeyDescription, sizeof(szLogFolder));
-  lstrcpy(szWindowsUninstallKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\");
-  lstrcat(szWindowsUninstallKey, ugUninstall.szUninstallKeyDescription);
-  GetWinReg(HKEY_LOCAL_MACHINE, szWindowsUninstallKey, "DisplayName", ugUninstall.szDescription, sizeof(szLogFolder));
+  GetWinReg(hkRoot, szKey, "Description",            ugUninstall.szUninstallKeyDescription, MAX_BUF);
+
+  if(!bRestrictedAccess)
+  {
+    lstrcpy(szWindowsUninstallKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\");
+    lstrcat(szWindowsUninstallKey, ugUninstall.szUninstallKeyDescription);
+    GetWinReg(HKEY_LOCAL_MACHINE, szWindowsUninstallKey, "DisplayName", ugUninstall.szDescription, MAX_BUF);
+  }
 
   /* if the DisplayName was not found in the windows registry,
    * use the description from read in from config.ini file */
