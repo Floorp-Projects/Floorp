@@ -4417,7 +4417,7 @@ nsEventStateManager::FlushPendingEvents(nsPresContext* aPresContext)
   }
 }
 
-nsresult
+NS_IMETHODIMP
 nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
                                              nsIContent **aEndContent,
                                              nsIFrame **aStartFrame,
