@@ -78,6 +78,7 @@ ParseConfig(void)
 	ERR_CHECK(PopulateSetupTypeWinKeys(cfgText));
 	ERR_CHECK(PopulateTermWinKeys(cfgText));
 	ERR_CHECK(PopulateIDIKeys(cfgText));
+	ERR_CHECK(PopulateMiscKeys(cfgText));
 	
 	ERR_CHECK(MapDependencies());
     
@@ -614,6 +615,105 @@ PopulateIDIKeys(char *cfgText)
 }
 
 OSErr
+PopulateMiscKeys(char *cfgText)
+{
+	OSErr err = noErr;
+	int i;
+	Str255	psection;
+	Ptr		csection;
+	char 	*section, *idx;
+	
+	/* RunAppX section */
+	gControls->cfg->numRunApps = 0;
+	GetIndString(psection, rParseKeys, sRunApp);
+	csection = PascalToC(psection);
+
+	for (i = 0; i < kMaxRunApps; i++)
+	{
+		section = (char*) malloc((strlen(csection) * sizeof(char)) + 3); /* added 3 for idx nums and null termination */
+		if (!section)
+			return eParseFailed;
+		memset( section, 0, ((strlen(csection) * sizeof(char)) + 3) );
+		idx = ltoa(i);
+		strcpy(section, csection);
+		strcat(section, idx);
+		strcat(section, "\0");
+		gControls->cfg->apps[i].targetApp = NewHandleClear(kValueMaxLen);
+		if (!FillKeyValueSecNameKeyID(rParseKeys, section, sTargetApp, gControls->cfg->apps[i].targetApp, cfgText))
+		{
+			if (section)
+				free (section);
+			if (idx)
+				free(idx);
+			break;
+		}
+		gControls->cfg->apps[i].targetDoc = NewHandleClear(kValueMaxLen);
+		if (!FillKeyValueSecNameKeyID(rParseKeys, section, sTargetDoc, gControls->cfg->apps[i].targetDoc, cfgText))
+			gControls->cfg->apps[i].targetDoc = NULL;	// no optional doc supplied
+			
+		gControls->cfg->numRunApps++;
+		if (section)
+			free (section);
+		if (idx)
+			free (idx);
+	}
+	if (csection)
+		DisposePtr(csection);
+	
+	/* LegacyCheckX section */
+	gControls->cfg->numLegacyChecks = 0;
+	GetIndString(psection, rParseKeys, sLegacyCheck);
+	csection = PascalToC(psection);
+	
+	for (i = 0; i < kMaxLegacyChecks; i++)
+	{
+		section = (char *) malloc((strlen(csection) * sizeof(char)) + 3); /* added 3 for idx nums and null termination */
+		if (!section)
+			return eParseFailed;
+		memset( section, 0, ((strlen(csection) * sizeof(char)) + 3) );
+		idx = ltoa(i);
+		strcpy(section, csection);
+		strcat(section, idx);
+		strcat(section, "\0");
+		
+		gControls->cfg->checks[i].filename = NewHandleClear(kValueMaxLen);
+		if (!FillKeyValueSecNameKeyID(rParseKeys, section, sFilename, gControls->cfg->checks[i].filename, cfgText))
+		{
+			if (section)
+				free (section);
+			if (idx)
+				free (idx);
+			break;
+		}
+		
+		/* if no version, we'll detect if the file is there and throw up the warning dlg */
+		gControls->cfg->checks[i].version = NewHandleClear(kValueMaxLen);
+		FillKeyValueSecNameKeyID(rParseKeys, section, sVersion, gControls->cfg->checks[i].version, cfgText);
+		
+		gControls->cfg->checks[i].message = NewHandleClear(kValueMaxLen);
+		if (!FillKeyValueSecNameKeyID(rParseKeys, section, sMessage, gControls->cfg->checks[i].message, cfgText))
+		{
+			if (section)
+				free (section);
+			if (idx)
+				free (idx);
+			break;
+		}
+		gControls->cfg->numLegacyChecks++;
+		if (section)
+			free (section);
+		if (idx)
+			free (idx);
+	}
+	if (csection)
+		DisposePtr(csection);
+	
+	return err;
+}
+
+#pragma mark - 
+
+OSErr
 MapDependencies()
 {
 	OSErr	err = noErr;
@@ -722,6 +822,27 @@ FillKeyValueUsingSLID(short stringListID, short dlgID, short keyID, Handle dest,
         DisposePtr(sectionName);
 	if(key)
         DisposePtr(key);
+	return bFound;
+}
+
+Boolean
+FillKeyValueSecNameKeyID(short strListID, char *sectionName, short keyID, Handle dest, char *cfgText)
+{
+	/* Fill key-value pair using section name str and key res id */
+	
+	unsigned char	pkey[kKeyMaxLen];
+	char		  	*key;
+	Boolean 		bFound = false;
+	
+	GetIndString(pkey, strListID, keyID);
+	key = PascalToC(pkey);
+	
+	if (FillKeyValueUsingName(sectionName, key, dest, cfgText))
+		bFound = true;
+	
+	if (key)
+		DisposePtr(key);
+		
 	return bFound;
 }
 

@@ -187,6 +187,10 @@ pascal void* Install(void* unused)
 	
 	/* launch the downloaded apps who had the LAUNCHAPP attr set */
 	LaunchApps(vRefNum, dirID);
+	
+	/* run apps that were set in RunAppsX sections */
+	if (gControls->cfg->numRunApps > 0)
+		RunApps();
 	 
 #if MOZILLA == 0
 	/* cleanup downloaded .xpis */
@@ -512,6 +516,74 @@ LaunchApps(short vRefNum, long dirID)
 		
 		compsDone++;
 	}
+}
+
+void
+RunApps(void)
+{
+	OSErr 				err = noErr;
+	int 				i;
+	Ptr					appSigStr, docStr;	
+	OSType 				appSig = 0x00000000;
+	FSSpec 				app, doc;
+	ProcessSerialNumber	psn;
+	StringPtr			pdocName;
+	unsigned short 		launchFileFlags, launchControlFlags;
+	Boolean 			running = nil;
+	LaunchParamBlockRec	launchPB;
+	
+	for (i = 0; i < gControls->cfg->numRunApps; i++)
+	{	
+		// convert str to ulong
+		HLock(gControls->cfg->apps[i].targetApp);
+		appSigStr = *(gControls->cfg->apps[i].targetApp);
+		UNIFY_CHAR_CODE(appSig, *(appSigStr), *(appSigStr+1), *(appSigStr+2), *(appSigStr+3));
+		HUnlock(gControls->cfg->apps[i].targetApp);
+		err =  FindAppUsingSig(appSig, &app, &running, &psn);
+		if (err != noErr)
+			continue;
+		
+		// if doc supplied
+		HLock(gControls->cfg->apps[i].targetDoc);
+		docStr = *(gControls->cfg->apps[i].targetDoc);
+		if ( gControls->cfg->apps[i].targetDoc && docStr && *docStr )
+		{	
+			// qualify and create an FSSpec to it ensuring it exists
+			pdocName = CToPascal(docStr);
+			if (pdocName)
+			{
+				err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, pdocName, &doc);
+			
+				// launch app using doc
+				if (err == noErr)
+				{
+					launchFileFlags = NULL;
+					launchControlFlags = launchContinue + launchNoFileFlags + launchUseMinimum;
+					LaunchAppOpeningDoc(running, &app, &psn, &doc, 
+										launchFileFlags, launchControlFlags);
+				}
+			}
+			if (pdocName)
+				DisposePtr((Ptr)pdocName);
+		}
+		// else if doc not supplied
+		else
+		{
+			// launch app							
+			launchPB.launchAppSpec = &app;
+			launchPB.launchAppParameters = NULL;
+			launchPB.launchBlockID = extendedBlock;
+			launchPB.launchEPBLength = extendedBlockLen;
+			launchPB.launchFileFlags = NULL;
+			launchPB.launchControlFlags = launchContinue + launchNoFileFlags + launchUseMinimum;
+
+			err = LaunchApplication( &launchPB );
+			
+		}
+		HUnlock(gControls->cfg->apps[i].targetDoc);
+	}
+	
+	return;
 }
 
 void
