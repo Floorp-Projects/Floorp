@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  msgnews \
 		  txmgr \
 		  msgbase \
+		  import \
 		  $(NULL)
 include <$(DEPTH)\config\config.mak>
 

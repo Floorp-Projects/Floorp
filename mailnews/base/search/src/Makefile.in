@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  timer \
 		  msgnews \
 		  txmgr \
+		  import \
 		  $(NULL)
 
 CPPSRCS		= \
