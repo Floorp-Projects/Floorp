@@ -80,17 +80,14 @@ public class Interpreter {
         if (tree instanceof FunctionNode) {
             FunctionNode f = (FunctionNode) tree;
             itsData.itsFunctionType = f.getFunctionType();
-            InterpretedFunction result = generateFunctionICode(cx, scope, f);
-            createFunctionObject(result, scope, false);
-            return result;
+            generateFunctionICode(cx, scope, f);
+            return createFunction(cx, scope, itsData, false);
         }
-        return generateScriptICode(cx, scope, tree);
+        generateScriptICode(cx, scope, tree);
+        return new InterpretedScript(cx, itsData);
     }
 
-    private InterpretedScript generateScriptICode(Context cx,
-                                                  Scriptable scope,
-                                                  Node tree)
-    {
+    private void generateScriptICode(Context cx, Scriptable scope, Node tree) {
         itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
         itsData.itsSourceFile = itsSourceFile;
         debugSource = (String) tree.getProp(Node.DEBUGSOURCE_PROP);
@@ -106,13 +103,10 @@ public class Interpreter {
         if (cx.debugger != null) {
             cx.debugger.handleCompilationDone(cx, itsData, debugSource);
         }
-
-        return new InterpretedScript(cx, itsData);
     }
 
-    private InterpretedFunction generateFunctionICode(Context cx,
-                                                      Scriptable scope,
-                                                      FunctionNode theFunction)
+    private void generateFunctionICode(Context cx, Scriptable scope,
+                                       FunctionNode theFunction)
     {
         // check if function has own source, which is the case
         // with Function(...)
@@ -140,8 +134,6 @@ public class Interpreter {
             cx.debugger.handleCompilationDone(cx, itsData, debugSource);
         }
         debugSource = savedSource;
-
-        return new InterpretedFunction(cx, itsData);
     }
 
     private void generateNestedFunctions(Context cx, Scriptable scope,
@@ -161,7 +153,8 @@ public class Interpreter {
             jsi.itsData.itsFunctionType = def.getFunctionType();
             jsi.itsInFunctionFlag = true;
             jsi.debugSource = debugSource;
-            array[i] = jsi.generateFunctionICode(cx, scope, def);
+            jsi.generateFunctionICode(cx, scope, def);
+            array[i] = new InterpretedFunction(cx, jsi.itsData);
             def.putIntProp(Node.FUNCTION_PROP, i);
         }
         itsData.itsNestedFunctions = array;
@@ -1515,29 +1508,31 @@ public class Interpreter {
         return presentLines.getKeys();
     }
 
-    private static void createFunctionObject(InterpretedFunction fn,
-                                             Scriptable scope,
-                                             boolean fromEvalCode)
+    private static InterpretedFunction createFunction(Context cx,
+                                                      Scriptable scope,
+                                                      InterpreterData idata,
+                                                      boolean fromEvalCode)
     {
+        InterpretedFunction fn = new InterpretedFunction(cx, idata);
         fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         fn.setParentScope(scope);
-        InterpreterData idata = fn.itsData;
         String fnName = idata.itsName;
-        if (fnName.length() == 0)
-            return;
-        int type = idata.itsFunctionType;
-        if (type == FunctionNode.FUNCTION_STATEMENT) {
-            if (fromEvalCode) {
+        if (fnName.length() != 0) {
+            int type = idata.itsFunctionType;
+            if (type == FunctionNode.FUNCTION_STATEMENT) {
+                if (fromEvalCode) {
+                    scope.put(fnName, scope, fn);
+                } else {
+                    // ECMA specifies that functions defined in global and
+                    // function scope should have DONTDELETE set.
+                    ScriptableObject.defineProperty(scope,
+                            fnName, fn, ScriptableObject.PERMANENT);
+                }
+            } else if (type == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
                 scope.put(fnName, scope, fn);
-            } else {
-                // ECMA specifies that functions defined in global and
-                // function scope should have DONTDELETE set.
-                ScriptableObject.defineProperty(scope,
-                        fnName, fn, ScriptableObject.PERMANENT);
             }
-        } else if (type == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
-            scope.put(fnName, scope, fn);
         }
+        return fn;
     }
 
     static Object interpret(Context cx, Scriptable scope, Scriptable thisObj,
@@ -1631,8 +1626,7 @@ public class Interpreter {
             for (int i = 0; i < idata.itsNestedFunctions.length; i++) {
                 InterpreterData fdata = idata.itsNestedFunctions[i].itsData;
                 if (fdata.itsFunctionType == FunctionNode.FUNCTION_STATEMENT) {
-                    InterpretedFunction f = new InterpretedFunction(cx, fdata);
-                    createFunctionObject(f, scope, idata.itsFromEvalCode);
+                    createFunction(cx, scope, fdata, idata.itsFromEvalCode);
                 }
             }
         }
@@ -2443,9 +2437,9 @@ public class Interpreter {
     case TokenStream.CLOSURE : {
         int i = getIndex(iCode, pc + 1);
         InterpreterData closureData = idata.itsNestedFunctions[i].itsData;
-        InterpretedFunction closure = new InterpretedFunction(cx, closureData);
+        InterpretedFunction closure = createFunction(cx, scope, closureData,
+                                                     idata.itsFromEvalCode);
         closure.itsClosure = scope;
-        createFunctionObject(closure, scope, idata.itsFromEvalCode);
         stack[++stackTop] = closure;
         pc += 2;
         break;
