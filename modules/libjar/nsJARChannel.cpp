@@ -400,7 +400,7 @@ nsJARChannel::GetContentType(char* *aContentType)
             return NS_ERROR_FAILURE;
         char* fileName = nsCRT::strdup(mJAREntry);
         if (fileName != nsnull) {
-            PRInt32 len = nsCRT::strlen(fileName);
+            PRInt32 len = strlen(fileName);
             const char* ext = nsnull;
             for (PRInt32 i = len-1; i >= 0; i--) {
                 if (fileName[i] == '.') {

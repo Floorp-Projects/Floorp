@@ -373,7 +373,7 @@ nsresult
 nsMemoryCacheDevice::EvictEntries(const char * clientID)
 {
     nsCacheEntry * entry;
-    PRUint32 prefixLength = (clientID ? nsCRT::strlen(clientID) : 0);
+    PRUint32 prefixLength = (clientID ? strlen(clientID) : 0);
 
     for (int i=mostLikelyToEvict; i<=leastLikelyToEvict; ++i) {
         PRCList * elem = PR_LIST_HEAD(&mEvictionList[i]);

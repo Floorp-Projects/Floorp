@@ -143,7 +143,7 @@ ConvertStringToUnicode(nsString& aCharset, const char* inString, nsAWritableStri
 
         if(NS_SUCCEEDED(rv) && decoder) {
             PRInt32 uniLength = 0;
-            PRInt32 srcLength = nsCRT::strlen(inString);
+            PRInt32 srcLength = strlen(inString);
             rv = decoder->GetMaxLength(inString, srcLength, &uniLength);
 
             if (NS_SUCCEEDED(rv)) {

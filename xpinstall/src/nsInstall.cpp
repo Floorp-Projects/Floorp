@@ -2855,9 +2855,9 @@ nsresult MakeUnique(nsILocalFile* file)
     }
 
     // 27 should work on Macintosh, Unix, and Win32.
-    const int maxRootLength = 27 - nsCRT::strlen(suffix) - 1;
+    const int maxRootLength = 27 - strlen(suffix) - 1;
 
-    if ((int)nsCRT::strlen(leafName) > (int)maxRootLength)
+    if ((int)strlen(leafName) > (int)maxRootLength)
         leafName[maxRootLength] = '\0';
 
     for (short indx = 1; indx < 1000 && flagExists; indx++)

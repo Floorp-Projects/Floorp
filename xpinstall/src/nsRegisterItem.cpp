@@ -182,7 +182,7 @@ PRInt32 nsRegisterItem::Prepare()
     if (!isChild)
     {
         // Not relative so use the file:// URL we got above
-        PRInt32 urlLen = nsCRT::strlen(localURL) + mPath.Length();
+        PRInt32 urlLen = strlen(localURL) + mPath.Length();
 
         if (isDir)
         {
@@ -205,11 +205,11 @@ PRInt32 nsRegisterItem::Prepare()
         if (NS_FAILED(rv))
             return nsInstall::UNEXPECTED_ERROR;
 
-        PRInt32 binLen = nsCRT::strlen(binURL);
+        PRInt32 binLen = strlen(binURL);
         const char *subURL = localURL + binLen;
         PRInt32 padding = sizeof("resource:/") + sizeof("jar:!/");
 
-        mURL.SetCapacity( nsCRT::strlen(subURL) + mPath.Length() + padding );
+        mURL.SetCapacity( strlen(subURL) + mPath.Length() + padding );
 
         if (!isDir)
             mURL = "jar:";

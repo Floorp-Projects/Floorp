@@ -498,7 +498,7 @@ void nsStrPrivate::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,P
   if((aDest.mLength>0) && aSet){
     PRInt32 theIndex=-1;
     PRInt32 theMax=aDest.mLength;
-    PRInt32 theSetLen=nsCRT::strlen(aSet);
+    PRInt32 theSetLen=strlen(aSet);
 
     if(aEliminateLeading) {
       while(++theIndex<=theMax) {

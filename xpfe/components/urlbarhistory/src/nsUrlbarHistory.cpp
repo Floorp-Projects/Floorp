@@ -657,7 +657,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, const PRUni
         
         // Don't bother checking for hostname if the search string
         // already has a filepath;
-        if (filePath && (nsCRT::strlen(filePath) > 1)) {
+        if (filePath && (strlen(filePath) > 1)) {
             return NS_OK;
         }
           
@@ -665,7 +665,7 @@ nsUrlbarHistory::VerifyAndCreateEntry(const PRUnichar * aSearchItem, const PRUni
 
         // If the match string doesn't have a filepath
         // we need to do nothing here,  return.
-        if (!filePath || (filePath && (nsCRT::strlen(filePath) <=1)))
+        if (!filePath || (filePath && (strlen(filePath) <=1)))
             return NS_OK;
         
         // Find the position of the filepath in the result string

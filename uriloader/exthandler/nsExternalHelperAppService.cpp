@@ -1661,7 +1661,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile( nsIFile* aFile, char 
  
   if (fileName != nsnull) 
   {
-    PRInt32 len = nsCRT::strlen(fileName); 
+    PRInt32 len = strlen(fileName); 
     for (PRInt32 i = len; i >= 0; i--) 
     {
       if (fileName[i] == '.') 

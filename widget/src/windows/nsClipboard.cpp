@@ -397,7 +397,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 // (on 98, these are not the same) so we can't use that.
                 PRUint32 allocLen = 0;
                 if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
-                  *aLen = nsCRT::strlen ( NS_REINTERPRET_CAST(char*, *aData) );
+                  *aLen = strlen ( NS_REINTERPRET_CAST(char*, *aData) );
                   result = NS_OK;
                 }
               } break;

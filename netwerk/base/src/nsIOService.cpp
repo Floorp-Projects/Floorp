@@ -404,7 +404,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
     nsresult rv;
 
     NS_ASSERTION(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH
-                 == nsCRT::strlen(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX),
+                 == strlen(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX),
                  "need to fix NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX_LENGTH");
 
     NS_ENSURE_ARG_POINTER(scheme);
