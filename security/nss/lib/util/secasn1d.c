@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.31 2003/11/18 06:16:26 nelsonb%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.32 2003/11/20 02:08:34 nelsonb%netscape.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -959,7 +959,7 @@ sec_asn1d_parse_more_length (sec_asn1d_state *state,
     count = 0;
 
     while (len && state->pending) {
-	if (HIGH_BITS (state->contents_length, 8) != 0) {
+	if (HIGH_BITS (state->contents_length, 9) != 0) {
 	    /*
 	     * The given full content length overflows our container;
 	     * just give up.
