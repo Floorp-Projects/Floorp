@@ -931,7 +931,7 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
 	// should we let them? no.  let's migrate them to
 	// <profile>/Mail and <profile>/ImapMail
 	// let's make all three platforms the same.
-	rv = (newPath->FromFileSpec(newProfilePath);
+	rv = newPath->FromFileSpec(newProfilePath);
 	if (NS_FAILED(rv)) return rv;
 	rv = newPath->AppendRelativeUnixPath(newDirName);
 	if (NS_FAILED(rv)) return rv;
