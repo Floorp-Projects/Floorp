@@ -141,10 +141,6 @@ struct WindowData {
   WindowData() {
     ww = nsnull;
   }
-
-  void ShowContentSize();
-  void ShowFrameSize();
-  void ShowStyleSize();
 };
 
 class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
@@ -233,6 +229,19 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
 
   void LoadThrobberImages();
   void DestroyThrobberImages();
+
+  // Debug methods
+  nsIPresShell* GetPresShell(nsIWebWidget* aWebWidget);
+  void ToggleFrameBorders(nsIWebWidget* aWebWidget);
+  void DumpContent(nsIWebWidget* aWebWidget);
+  void DumpFrames(nsIWebWidget* aWebWidget);
+  void DumpViews(nsIWebWidget* aWebWidget);
+  void DumpStyleSheets(nsIWebWidget* aWebWidget);
+  void DumpStyleContexts(nsIWebWidget* aWebWidget);
+  void ShowContentSize(nsIWebWidget* aWebWidget);
+  void ShowFrameSize(nsIWebWidget* aWebWidget);
+  void ShowStyleSize(nsIWebWidget* aWebWidget);
+  void ForceRefresh(nsIWebWidget* aWebWidget);
 
   nsITextWidget* mLocation;
   nsIWidget* mThrobber;
