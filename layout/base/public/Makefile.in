@@ -82,6 +82,7 @@ endif
 
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl	\
+		nsISelectionImageService.idl	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
