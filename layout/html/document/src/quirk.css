@@ -286,4 +286,13 @@ img[align=right] {
   font-size: inherit !important; 
 }
 
+/*
+ * Quirk: Use border-box box sizing for text inputs, password inputs, and
+ * textareas.  (b=184478 on why we use content-box sizing in standards mode)
+ */
+input, textarea {
+  /* Note that all other <input>s already use border-box
+     sizing, so we're ok with this selector */
+  -moz-box-sizing: border-box;
+}
 
