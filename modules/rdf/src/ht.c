@@ -659,7 +659,7 @@ refreshItemList1(HT_View view, HT_Resource node)
 					refreshItemListInt(view, node->children[loop]);
 					if (HT_IsContainer(node->children[loop]))
 					{
-						numGrandChildren = refreshItemList1(view,
+						numGrandChildren += refreshItemList1(view,
 									node->children[loop]);
 					}
 				}
