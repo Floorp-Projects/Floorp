@@ -62,7 +62,7 @@ nsHTMLContentSerializer::nsHTMLContentSerializer()
   mColPos = 0;
   mIndent = 0;
   mInBody = PR_FALSE;
-  mInScriptOrStyle = PR_FALSE;
+  mInCDATA = PR_FALSE;
 }
 
 nsHTMLContentSerializer::~nsHTMLContentSerializer()
@@ -269,8 +269,9 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   }
 
   if ((name.get() == nsHTMLAtoms::script) ||
-      (name.get() == nsHTMLAtoms::style)) {
-    mInScriptOrStyle = PR_TRUE;
+      (name.get() == nsHTMLAtoms::style) ||
+      (name.get() == nsHTMLAtoms::noscript)) {
+    mInCDATA = PR_TRUE;
   }
 
   return NS_OK;
@@ -302,10 +303,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   nsCOMPtr<nsIParserService> parserService;
   GetParserService(getter_AddRefs(parserService));
 
-  if ((name.get() == nsHTMLAtoms::script) ||
-      (name.get() == nsHTMLAtoms::style)) {
-    mInScriptOrStyle = PR_FALSE;
-  } else if (parserService) {
+  if (parserService && (name.get() != nsHTMLAtoms::style)) {
     nsAutoString nameStr(sharedName);
     PRBool isContainer;
     PRInt32 id;
@@ -330,6 +328,8 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     AppendToString(mLineBreak, aStr);
     mColPos = 0;
   }
+
+  mInCDATA = PR_FALSE;
 
   return NS_OK;
 }
@@ -488,7 +488,7 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
     mColPos += aStr.Length();
   }
 
-  if (aTranslateEntities && !mInScriptOrStyle) {
+  if (aTranslateEntities && !mInCDATA) {
     if (mFlags & nsIDocumentEncoder::OutputEncodeEntities) {
       nsCOMPtr<nsIParserService> parserService;
       GetParserService(getter_AddRefs(parserService));
