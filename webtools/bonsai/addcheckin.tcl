@@ -103,11 +103,9 @@ set plainlog $log
 set log [html_quote [trim $log]]
 
 
-regsub -all -- {[0-9][0-9][0-9][0-9][0-9]*} $log $BUGSYSTEMEXPR log
-
-
 Lock
 LoadTreeConfig
+regsub -all -- {[0-9][0-9][0-9][0-9][0-9]*} $log $BUGSYSTEMEXPR log
 if {![info exists forcetreeid]} {
     regsub -all -- / $repository _ mungedname
     set filename "data/checkinlog$mungedname"
