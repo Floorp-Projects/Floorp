@@ -54,7 +54,17 @@
 
 #ifdef XP_MAC
 
-#include "nsMacRepository.h"
+#define WIDGET_DLL		"WIDGET_DLL"
+#define GFXWIN_DLL		"GFXWIN_DLL"
+#define VIEW_DLL			"VIEW_DLL"
+#define WEB_DLL				"WEB_DLL"
+#define PLUGIN_DLL		"PLUGIN_DLL"
+#define PREF_DLL			"PREF_DLL"
+#define PARSER_DLL		"PARSER_DLL"
+#define DOM_DLL    		"DOM_DLL"
+#define LAYOUT_DLL		"LAYOUT_DLL"
+#define NETLIB_DLL		"NETLIB_DLL"
+//#define EDITOR_DLL	"EDITOR_DLL"	// temporary
 
 #else
 

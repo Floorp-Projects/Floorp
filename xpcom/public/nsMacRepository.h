@@ -18,6 +18,8 @@
 #ifdef XP_MAC
 #ifdef MOZ_NGLAYOUT
 
+#error "nsMacRepository.h became obsolete when the shared lib conversion was completed."
+
 // The Mac NGLayout is not based on shared libraries yet.
 // All the DLLs are built as static libraries and we present them as
 // shared libraries by redefining PR_LoadLibrary(), PR_UnloadLibrary()
