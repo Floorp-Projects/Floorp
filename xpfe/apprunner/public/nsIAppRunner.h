@@ -33,6 +33,7 @@
 
 class nsIAppRunner : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IAPPRUNNER_IID)
 
   NS_IMETHOD main( int argc, char *argv[] ) = 0;
 
