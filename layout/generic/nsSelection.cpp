@@ -112,8 +112,12 @@ static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 #endif // USE_SELECTION_GENERATED_CONTENT_ITERATOR_CODE
 
+#undef OLD_SELECTION
+#undef OLD_TABLE_SELECTION
+
+
 //PROTOTYPES
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
 static nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode);
 static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset);
 #endif
@@ -126,7 +130,6 @@ static void printRange(nsIDOMRange *aDomRange);
 #endif //MOZ_DEBUG
 
 
-#define OLD_SELECTION 0
 
 //#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
 //#define DEBUG_NAVIGATION
@@ -264,7 +267,7 @@ private:
   nsresult     getTableCellLocationFromRange(nsIDOMRange *aRange, PRInt32 *aSelectionType, PRInt32 *aRow, PRInt32 *aCol);
   nsresult     addTableCellRange(nsIDOMRange *aRange, PRBool *aDidAddRange);
   
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
   NS_IMETHOD   FixupSelectionPoints(nsIDOMRange *aRange, nsDirection *aDir, PRBool *aFixupState);
 #endif //OLD_SELECTION
 
@@ -1355,7 +1358,7 @@ void printRange(nsIDOMRange *aDomRange)
 }
 #endif /* PRINT_RANGE */
 
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
 nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIAtom> atom;
@@ -4858,9 +4861,22 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
     // First select frame of content passed in
     result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(aContent, &frame);
     if (NS_SUCCEEDED(result) && frame)
-       //NOTE: eSpreadDown is now IGNORED. Selected state is set only for given frame
+    {
+      //NOTE: eSpreadDown is now IGNORED. Selected state is set only for given frame
       frame->SetSelected(aPresContext, nsnull, aFlags, eSpreadDown);
-    
+#ifndef OLD_TABLE_SELECTION
+      PRBool tablesel;
+      mFrameSelection->GetTableCellSelection(&tablesel);
+      if (tablesel)
+      {
+        nsITableCellLayout *tcl;
+        if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsITableCellLayout),(void **)&tcl)) && tcl)
+        {
+          return NS_OK;
+        }
+      }
+#endif //OLD_TABLE_SELECTION
+    }
     // Now iterated through the child frames and set them
     nsCOMPtr<nsIContent> innercontent;
     while (NS_ENUMERATOR_FALSE == aInnerIter->IsDone())
@@ -6016,7 +6032,7 @@ nsTypedSelection::GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn)
 	return NS_OK;
 }
 
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
 
 //may change parameters may not.
 //return NS_ERROR_FAILURE if invalid new selection between anchor and passed in parameters
@@ -6412,14 +6428,14 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     res |= difRange->SetStart(FetchFocusNode(), FetchFocusOffset());
     if (NS_FAILED(res))
       return res;
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
 #endif
     if (NS_FAILED(res))
       return res;
     if (fixupState) 
     {
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
 #endif
@@ -6437,7 +6453,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     res = range->SetStart(aParentNode,aOffset);
     if (NS_FAILED(res))
       return res;
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
     if (NS_FAILED(res))
       return res;
@@ -6463,7 +6479,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     res = range->SetEnd(aParentNode,aOffset);
     if (NS_FAILED(res))
       return res;
-#if OLD_SELECTION    
+#ifdef OLD_SELECTION    
     dir = eDirNext;
     res = FixupSelectionPoints(range, &dir, &fixupState);
 #endif
@@ -6471,7 +6487,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
       return res;
     if (fixupState) //unselect previous and select new state has changed to not fixed up
     {
-#if OLD_SELECTION    
+#ifdef OLD_SELECTION    
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
 #endif
@@ -6496,7 +6512,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     res = range->SetEnd(aParentNode,aOffset);
     if (NS_FAILED(res))
       return res;
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
     if (NS_FAILED(res))
       return res;
@@ -6541,14 +6557,14 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     if (NS_FAILED(res))
       return res;
 
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
 #endif
     if (NS_FAILED(res))
       return res;
     if (fixupState) //unselect previous and select new state has changed to not fixed up
     {
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
 #endif
@@ -6571,7 +6587,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     res = range->SetStart(aParentNode,aOffset);
     if (NS_FAILED(res))
       return res;
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
     if (NS_FAILED(res))
       return res;
@@ -6613,14 +6629,14 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     if (NS_FAILED(res))
       return res;
 
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
     res = FixupSelectionPoints(range, &dir, &fixupState);
 #endif
     if (NS_FAILED(res))
       return res;
     if (fixupState) //unselect previous and select new state has changed to not fixed up
     {
-#if OLD_SELECTION
+#ifdef OLD_SELECTION
       selectFrames(mAnchorFocusRange, PR_FALSE);
       selectFrames(range, PR_TRUE);
 #endif
