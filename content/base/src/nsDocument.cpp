@@ -1677,8 +1677,9 @@ void nsDocument::SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
     }
   }
 
-  // XXX Some (nsHTMLEditor, eg) call this function for sheets that
-  // are not document sheets!  So we have to always notify.
+  // We have to always notify, since this will be called for sheets
+  // that are children of sheets in our style set, as well as some
+  // sheets for nsHTMLEditor.
   
   PRInt32 indx;
   // if an observer removes itself, we're ok (not if it removes others though)

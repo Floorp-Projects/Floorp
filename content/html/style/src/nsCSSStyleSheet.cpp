@@ -897,7 +897,7 @@ protected:
 
   CSSImportsCollectionImpl* mImportsCollection;
   CSSRuleListImpl*      mRuleCollection;
-  nsIDocument*          mDocument;
+  nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsIDOMNode*           mOwningNode; // weak ref
   PRPackedBool          mDisabled;
   PRPackedBool          mDirty; // has been modified 
@@ -1657,8 +1657,11 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy,
     do {
       // XXX This is wrong; we should be keeping @import rules and
       // sheets in sync!
-      CSSStyleSheetImpl* child = new CSSStyleSheetImpl(*otherChild, this,
-                                                       nsnull, nsnull, nsnull);
+      CSSStyleSheetImpl* child = new CSSStyleSheetImpl(*otherChild,
+                                                       this,
+                                                       nsnull,
+                                                       aDocumentToUse,
+                                                       nsnull);
       if (child) {
         NS_ADDREF(child);
         (*ourSlot) = child;
@@ -1676,6 +1679,7 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
     CSSStyleSheetImpl* child = mFirstChild;
     do {
       child->mParent = nsnull;
+      child->mDocument = nsnull;
       child = child->mNext;
     } while (child);
     NS_RELEASE(mFirstChild);
@@ -1949,15 +1953,8 @@ CSSStyleSheetImpl::GetParentSheet(nsIStyleSheet*& aParent) const
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetOwningDocument(nsIDocument*& aDocument) const
 {
-  nsIDocument*  doc = mDocument;
-  CSSStyleSheetImpl* parent = (CSSStyleSheetImpl*)mParent;
-  while ((nsnull == doc) && (nsnull != parent)) {
-    doc = parent->mDocument;
-    parent = (CSSStyleSheetImpl*)(parent->mParent);
-  }
-
-  NS_IF_ADDREF(doc);
-  aDocument = doc;
+  aDocument = mDocument;
+  NS_IF_ADDREF(aDocument);
   return NS_OK;
 }
 
@@ -1965,6 +1962,10 @@ NS_IMETHODIMP
 CSSStyleSheetImpl::SetOwningDocument(nsIDocument* aDocument)
 { // not ref counted
   mDocument = aDocument;
+  // Now set the same document on all our child sheets....
+  for (CSSStyleSheetImpl* child = mFirstChild; child; child = child->mNext) {
+    child->mDocument = aDocument;
+  }
   return NS_OK;
 }
 
@@ -2037,6 +2038,7 @@ CSSStyleSheetImpl::AppendStyleSheet(nsICSSStyleSheet* aSheet)
     // This is not reference counted. Our parent tells us when
     // it's going away.
     sheet->mParent = this;
+    sheet->mDocument = mDocument;
     DidDirty();
   }
   return NS_OK;
@@ -2069,6 +2071,7 @@ CSSStyleSheetImpl::InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex)
     // This is not reference counted. Our parent tells us when
     // it's going away.
     sheet->mParent = this;
+    sheet->mDocument = mDocument;
     DidDirty();
   }
   return result;
