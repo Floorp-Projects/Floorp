@@ -543,7 +543,6 @@ NS_IMETHODIMP DocumentViewerImpl::Print(void)
         nsIPageSequenceFrame* pageSequence;
         nsPrintOptions        options;
 
-        options.range = ePrintRange_AllPages;
         ps->GetPageSequenceFrame(pageSequence);
         NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
         pageSequence->Print(*cx, options, nsnull);
