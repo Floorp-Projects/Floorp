@@ -44,7 +44,7 @@ nsDirectoryIndexStream::Init(const nsFileSpec& aDir)
     if (! mIter)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mBuf  = "200: filename content-length last-modified\n";
+    mBuf  = "200: filename content-length last-modified file-type\n";
     return NS_OK;
 }
 
