@@ -2173,6 +2173,13 @@ extern void NET_WarnOnMailtoPost(PRBool warn);
 /* Is the user off-line - uses the network.online preference */
 extern XP_Bool NET_IsOffline();
 
+#ifndef SOCKET_ERRNO
+#define SOCKET_INACTIVE 0   /* value that determines if a socket is inactive */
+#define SOCKET_INVALID  -1
+#define SOCKET_ERRNO  (int)PR_GetError()      /* normal socket errno */
+#endif
+
+
 XP_END_PROTOS
 
 #endif /* _NET_PROTO_H_ */
