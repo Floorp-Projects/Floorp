@@ -26,9 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/config/config.mk
-
-LIBRARY_NAME = $(TIMER_LIB_NAME)
+LIBRARY_NAME = timer_s
 
 MODULE=timer
 
