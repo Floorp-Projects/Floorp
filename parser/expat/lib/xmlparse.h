@@ -116,11 +116,11 @@ XML_ParserCreateNS(const XML_Char *encoding, XML_Char namespaceSeparator);
 /* atts is array of name/value pairs, terminated by 0;
    names and values are 0 terminated. */
 
-typedef int (*XML_StartElementHandler)(void *userData,
+typedef void (*XML_StartElementHandler)(void *userData,
 					const XML_Char *name,
 					const XML_Char **atts);
 
-typedef int (*XML_EndElementHandler)(void *userData,
+typedef void (*XML_EndElementHandler)(void *userData,
 				      const XML_Char *name);
 
 /* s is not 0 terminated. */
@@ -129,7 +129,7 @@ typedef void (*XML_CharacterDataHandler)(void *userData,
 					 int len);
 
 /* target and data are 0 terminated */
-typedef int (*XML_ProcessingInstructionHandler)(void *userData,
+typedef void (*XML_ProcessingInstructionHandler)(void *userData,
 						 const XML_Char *target,
 						 const XML_Char *data);
 
