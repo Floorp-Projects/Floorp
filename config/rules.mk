@@ -726,6 +726,12 @@ $(MKDEPENDENCIES)::
 $(MKDEPEND)::
 	cd $(MKDEPEND_DIR); $(MAKE)
 
+# Rules to for detection
+$(MOZILLA_DETECT_GEN):
+	cd $(MOZILLA_DETECT_DIR); $(MAKE)
+
+detect: $(MOZILLA_DETECT_GEN)
+
 ifdef OBJS
 depend:: $(MKDEPEND) $(MKDEPENDENCIES)
 else

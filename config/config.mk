@@ -316,6 +316,19 @@ include $(DEPTH)/config/coreconf.mk
 endif
 
 #
+# The following platforms support detection of paths and libraries.
+#
+# Need to define these before include the $ARCH.mk makefile
+#
+ifneq (,$(filter Linux,$(OS_ARCH)))
+MOZILLA_DETECT		= 1
+MOZILLA_HOSTNAME	= $(shell hostname -s)
+MOZILLA_DETECT_DIR	= $(DEPTH)/config/mkdetect
+MOZILLA_DETECT_NAME	= detect_$(MOZILLA_HOSTNAME)_gen.mk
+MOZILLA_DETECT_GEN	= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
+endif
+
+#
 # Now include the platform-specific stuff.
 #
 include $(DEPTH)/config/$(OS_ARCH).mk
@@ -629,4 +642,3 @@ JAVA_DEFINES    += -DAWT_11
 else
 JAVA_DEFINES    += -DAWT_102
 endif
-
