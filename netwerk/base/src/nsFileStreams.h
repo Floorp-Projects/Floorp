@@ -66,6 +66,7 @@ public:
 
 protected:
     nsCOMPtr<nsIFile>   mFile;
+    PRFileDesc*         mFD;
     PRInt32             mIOFlags;
     PRInt32             mPerm;
     nsresult            mStatus;
@@ -111,6 +112,7 @@ public:
 
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    nsresult InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file, PRBool deleteOnClose);
 protected:
     nsLineBuffer     *mLineBuffer;
     nsCOMPtr<nsIFile> mFileToDelete;
@@ -128,9 +130,10 @@ public:
 
     nsFileOutputStream() : nsFileStream() {}
     virtual ~nsFileOutputStream() { nsFileOutputStream::Close(); }
-
+    
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    nsresult InitWithFileDescriptor(PRFileDesc* fd, nsIFile* file);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
