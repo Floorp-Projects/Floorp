@@ -39,6 +39,7 @@
 
 XP_BEGIN_PROTOS
 
+char		decodeEntityRef (char* string, int32* stringIndexPtr, int32 len);
 char *		copyStringIgnoreWhiteSpace(char* string);
 char *		getHref(char** attlist);
 int		parseNextRDFXMLBlob (NET_StreamClass *stream, char* blob, int32 size);

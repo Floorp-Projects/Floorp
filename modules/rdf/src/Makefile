@@ -39,6 +39,7 @@ CSRCS		= \
 		  ldap2rdf.c \
 		  glue.c \
 		  rdfht.c \
+		  jsec2rdf.c \
 		  $(NULL)
 
 ifndef RDF_STANDALONE

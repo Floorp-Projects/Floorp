@@ -42,6 +42,7 @@ RDFL		gAllDBs = 0;
 
 
 
+
 RDFT
 getTranslator (char* url)
 {
@@ -83,11 +84,23 @@ getTranslator (char* url)
     ans = MakeFindStore(url);
   } 
 #endif
+
     else if (startsWith("http://", url)) {
 	  ans = MakeFileDB(url); 
   } else {
 	  ans = NULL;
   }
+#ifdef MOZILLA_CLIENT
+#ifdef DEBUG
+  {
+    char* traceLine = getMem(500);
+    sprintf(traceLine, "\nCreated %s \n", url);
+    FE_Trace(traceLine);
+    freeMem(traceLine);
+  }
+#endif
+#endif
+
   if (ans) PL_HashTableAdd(dataSourceHash, ans->url, ans);
   return ans;
 }
@@ -97,8 +110,8 @@ getTranslator (char* url)
 PR_PUBLIC_API(RDF)
 RDF_GetDB (const char** dataSources)
 {
-  uint16 n = 0;
-  uint16 m = 0;
+  int32 n = 0;
+  int32 m = 0;
   char* next ;
   RDF r = (RDF) getMem(sizeof(struct RDF_DBStruct)) ;
   RDFL nrl = (RDFL)getMem(sizeof(struct RDF_ListStruct));
@@ -180,13 +193,16 @@ RDF_ReleaseDataSource(RDF rdf, RDFT dataSource)
   RDFT next;
   while ((next = rdf->translators[n++]) != NULL) {
     if (next != dataSource) {
-      *(temp + m) = (RDFT) next;
+      *(temp + m++) = (RDFT) next;
     }
   }
   memset(rdf->translators, '\0', sizeof(RDFT) * rdf->numTranslators);
   memcpy(rdf->translators, temp, sizeof(RDFT) * (rdf->numTranslators -1));
   rdf->numTranslators--;
-  deleteFromRDFList(dataSource->rdf, rdf);
+  dataSource->rdf = deleteFromRDFList(dataSource->rdf, rdf);
+  if ((dataSource->rdf == NULL) && (dataSource->destroy != NULL)) {
+    (*dataSource->destroy)(dataSource);
+  }
   return 0;
 }
 
@@ -233,10 +249,14 @@ RDF_ReleaseDB(RDF rdf)
   if (rdf != NULL) {
     uint16 n = 0;
     uint16 size = rdf->numTranslators;
-    while (n < size) {
-	  RDFL rlx = (*((RDFT*)rdf->translators + n))->rdf;
-      (*((RDFT*)rdf->translators + n))->rdf =  deleteFromRDFList(rlx, rdf); 
-      callExitRoutine(n, rdf);
+    while (n < size) { 
+	  RDFT rdft = (*((RDFT*)rdf->translators + n));
+	  RDFL rlx ;
+	  if (rdft) {
+		  rlx =  rdft->rdf; 
+		  rdft->rdf =  deleteFromRDFList(rlx, rdf); 
+		  if (rdft->rdf == NULL) callExitRoutine(n, rdf);
+	  }
       n++;
     }
     gAllDBs = deleteFromRDFList(gAllDBs, rdf);
@@ -410,7 +430,7 @@ iscontainerp (RDF_Resource u)
   } 
 #ifdef MOZILLA_CLIENT  
   else if (startsWith("file:", id)) {
-    return fileDirectoryp(u);
+    return (endsWith("/", id) || fileDirectoryp(u));
   } else if (startsWith("ftp:", id) && (endsWith("/", id))) {
     return 1;
   } else if (startsWith("cache:container", id)) {
@@ -433,7 +453,7 @@ resourceTypeFromID (char* id)
     return RDF_RT;
   } else if (endsWith(".mco", id)) {
     return RDF_RT;
-  } else if (startsWith("file:", id) || (startsWith("NC:LocalFiles", id))) {
+  } else if (startsWith("file:", id))  {
     return LFS_RT;
   } else if (startsWith("nes:", id)) {
     return ES_RT;
@@ -977,9 +997,10 @@ RDF_DeleteNotifiable (RDF_Notification ns)
     rdf->notifs = pr->next; 
   } else {
     for (not = rdf->notifs; (not != NULL) ; not = not->next) {
-      if (ns == not) {
-	pr->next = not->next; 
-	return 0;
+      if (ns == not) 
+	  {
+		pr->next = not->next; 
+		break;
       }
       pr = not;
     }
@@ -1089,10 +1110,12 @@ void
 sendNotifications2 (RDFT r, RDF_EventType opType, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv)
 {
   RDFL rl = r->rdf;
+
   if ((opType == RDF_ASSERT_NOTIFY) &&
       (nlocalStoreHasAssertion(gLocalStore, u, s, v, type, !tv))) {
 	  return;
   }
+
   while (rl) {
     sendNotifications(rl->rdf, opType, u, s, v, type, tv, r->url);
     rl = rl->next;

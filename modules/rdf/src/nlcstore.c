@@ -419,7 +419,8 @@ nlocalStoreNextValue (RDFT rdf, RDF_Cursor c)
     if ((c->tv == tvOfAs(nas)) && (c->type == valueTypeOfAs(nas))) {
       if (c->type == RDF_RESOURCE_TYPE) {
         RDF_Resource nu = RDF_GetResource(NULL, dataOfDBMAs(nas), 1);
-        if (nu  && startsWith("http", resourceID(nu)) && strstr(resourceID(nu), ".rdf")) {
+
+        if (nu  && startsWith("http:", resourceID(nu)) && strstr(resourceID(nu), ".rdf")) {
           RDFL rl = rdf->rdf;
           char* dburl = getBaseURL(resourceID(nu));
           while (rl) {
@@ -891,6 +892,8 @@ MakeLocalStore (char* url)
     ntr->arcLabelsOut = nlcStoreArcsOut;
     ntr->pdata = db;
     DBM_OpenDBMStore(db, (startsWith(url, "rdf:localStore") ? "NavCen" : &url[4]));
+    nlocalStoreAssert(ntr,  gNavCenter->RDF_BookmarkFolderCategory,  gCoreVocab->RDF_name, 
+                      copyString("Bookmarks"), RDF_STRING_TYPE, 1);
     return ntr;
   } 
   else return NULL;

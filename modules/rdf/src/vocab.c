@@ -27,18 +27,23 @@
 
 
 	/* globals */
-#ifdef XP_MAC
+
+#ifdef	XP_MAC
 #pragma export on
 #endif
+
 RDF_WDVocab gWebData = NULL;
 RDF_NCVocab gNavCenter = NULL;
 RDF_CoreVocab gCoreVocab = NULL;
-#ifdef XP_MAC
+
+
+#ifdef	XP_MAC
 #pragma export off
 #endif
 
 size_t gCoreVocabSize = 0;
 RDF_Resource* gAllVocab;
+
 
 	/* externs */
 extern char* gLocalStoreURL;
@@ -130,11 +135,14 @@ createNavCenterVocab () {
   gNavCenter->RDF_History =  createContainer("NC:History");
   gNavCenter->RDF_HistoryBySite = createContainer("NC:HistoryBySite");
   gNavCenter->RDF_HistoryByDate = createContainer("NC:HistoryByDate");
+  gNavCenter->RDF_HistoryMostVisited = createContainer("NC:HistoryMostVisited");
   setResourceType(gNavCenter->RDF_History, HISTORY_RT);
   setResourceType(gNavCenter->RDF_HistoryBySite, HISTORY_RT);
   setResourceType(gNavCenter->RDF_HistoryByDate, HISTORY_RT);
+  setResourceType(gNavCenter->RDF_HistoryMostVisited, HISTORY_RT);
   gNavCenter->RDF_bookmarkAddDate  = newResource("bookmarkAddDate", RDF_ADDED_ON_STR);
-  gNavCenter->RDF_PersonalToolbarFolderCategory = RDF_GetResource(gCoreDB, "PersonalToolbarCat", true);
+  gNavCenter->RDF_PersonalToolbarFolderCategory = 
+    RDF_GetResource(gCoreDB, "PersonalToolbarCat", true);
   gNavCenter->RDF_Column = RDF_GetResource(gCoreDB, "Column", true);
   gNavCenter->RDF_ColumnResource = RDF_GetResource(gCoreDB, "ColumnResource", true);
   gNavCenter->RDF_ColumnWidth = RDF_GetResource(gCoreDB, "ColumnWidth", true);
@@ -144,7 +152,8 @@ createNavCenterVocab () {
   gNavCenter->RDF_largeIcon  = newResource("largeIcon", RDF_LARGE_ICON_URL_STR);
   gNavCenter->RDF_HTMLURL = newResource("htmlURL", RDF_HTML_URL_STR);
   gNavCenter->RDF_HTMLHeight = newResource("htmlHeight", RDF_HTML_HEIGHT_STR);
-  gNavCenter->RDF_LocalFiles = RDF_GetResource(gCoreDB, "NC:LocalFiles", true);
+  gNavCenter->RDF_LocalFiles = createContainer("NC:LocalFiles");
+  /*  setResourceType(gNavCenter->RDF_LocalFiles, LFS_RT); */
   gNavCenter->RDF_FTP = createContainer("NC:FTP");
   gNavCenter->RDF_FTP = newResource("NC:FTP", RDF_FTP_NAME_STR);
   gNavCenter->RDF_Appletalk = createContainer("NC:Appletalk");
@@ -155,6 +164,7 @@ createNavCenterVocab () {
   gNavCenter->RDF_Password = RDF_GetResource(gCoreDB, "password", true);
   gNavCenter->RDF_SBProviders = RDF_GetResource(gCoreDB, "NC:SmartBrowsingProviders", true);
   gNavCenter->RDF_WorkspacePos = RDF_GetResource(gCoreDB, "workspacePos", true);
+  gNavCenter->RDF_ItemPos = RDF_GetResource(gCoreDB, "pos", true);
   gNavCenter->RDF_Locks = RDF_GetResource(gCoreDB, "locks", true);
   gNavCenter->RDF_AddLock = RDF_GetResource(gCoreDB, "addLock", true);
   gNavCenter->RDF_DeleteLock = RDF_GetResource(gCoreDB, "deleteLock", true);
@@ -166,27 +176,34 @@ createNavCenterVocab () {
   gNavCenter->RDF_DefaultSelectedView = RDF_GetResource(gCoreDB, "selectedView", true);
   gNavCenter->RDF_AutoOpen = RDF_GetResource(gCoreDB, "autoOpen", true);
   gNavCenter->RDF_resultType = RDF_GetResource (gCoreDB, "resultType", true);
+  gNavCenter->RDF_methodType = RDF_GetResource (gCoreDB, "methodType", true);
+  gNavCenter->RDF_prompt = RDF_GetResource (gCoreDB, "prompt", true);  
   gNavCenter->RDF_HTMLType = RDF_GetResource (gCoreDB, "HTMLPage", true);
   gNavCenter->RDF_URLShortcut = RDF_GetResource(gCoreDB, "URLShortcut", true);
   gNavCenter->RDF_Cookies = createContainer("NC:Cookies");
-#ifdef TRANSACTION_RECEIPTS
-  gNavCenter->RDF_Receipts = createContainer("NC:Receipts");
-#endif
+
+  setResourceType(gNavCenter->RDF_Cookies, COOKIE_RT); 
+
   gNavCenter->RDF_Toolbar = createContainer("NC:Toolbar");
+  gNavCenter->RDF_JSec = createContainer("NC:Jsec");
+  gNavCenter->RDF_JSecPrincipal = RDF_GetResource(gCoreDB, "JsecPrincipal", true);
+  gNavCenter->RDF_JSecTarget = RDF_GetResource(gCoreDB, "JsecTarget", true);
+  gNavCenter->RDF_JSecAccess = RDF_GetResource(gCoreDB, "JsecAccess", true);
 
   /* Commands */
   
   gNavCenter->RDF_Command = RDF_GetResource (gCoreDB, "Command", true);
   gNavCenter->RDF_Command_Launch = RDF_GetResource(gCoreDB, "Command:Launch", true);
   gNavCenter->RDF_Command_Refresh = RDF_GetResource(gCoreDB, "Command:Refresh", true);
+  gNavCenter->RDF_Command_Reveal = RDF_GetResource(gCoreDB, "Command:Reveal", true);
   gNavCenter->RDF_Command_Atalk_FlatHierarchy = RDF_GetResource(gCoreDB, "Command:at:View Zone List", true);
   gNavCenter->RDF_Command_Atalk_Hierarchy = RDF_GetResource(gCoreDB, "Command:at:View Zone Hierarchy", true);
 
   /* NavCenter appearance styles */
 
-  gNavCenter->treeFGColor = newResource("treeFGColor", RDF_FOREGROUND_COLOR_STR);
-  gNavCenter->treeBGColor = newResource("treeBGColor", RDF_BACKGROUND_COLOR_STR);
-  gNavCenter->treeBGURL = newResource("treeBGURL", RDF_BACKGROUND_IMAGE_STR);
+  gNavCenter->viewFGColor = newResource("viewFGColor", RDF_FOREGROUND_COLOR_STR);
+  gNavCenter->viewBGColor = newResource("viewBGColor", RDF_BACKGROUND_COLOR_STR);
+  gNavCenter->viewBGURL = newResource("viewBGURL", RDF_BACKGROUND_IMAGE_STR);
   gNavCenter->showTreeConnections = newResource("showTreeConnections", RDF_SHOW_TREE_CONNECTIONS_STR);
   gNavCenter->treeConnectionFGColor = newResource("treeConnectionFGColor", RDF_CONNECTION_FG_COLOR_STR);
   gNavCenter->treeOpenTriggerIconURL = newResource("treeOpenTriggerIconURL", RDF_OPEN_TRIGGER_IMAGE_STR);
@@ -209,6 +226,35 @@ createNavCenterVocab () {
   gNavCenter->selectedColumnHeaderBGColor = newResource("selectedColumnHeaderBGColor", RDF_SELECTED_HEADER_BG_COLOR_STR);
   gNavCenter->showColumnHilite = newResource("showColumnHilite", RDF_SHOW_COLUMN_HILITING_STR);
   gNavCenter->triggerPlacement = newResource("triggerPlacement", RDF_TRIGGER_PLACEMENT_STR);
+
+  /* Toolbars */
+
+  /* Toolbar Appearance Styles */
+  gNavCenter->toolbarBitmapPosition = newResource("toolbarBitmapPosition", 0 /* XXX "Toolbar Bitmap Position" */ );
+  gNavCenter->toolbarButtonsFixedSize = newResource("toolbarButtonsFixedSize", 0 /* XXX "Toolbar Bitmap Position" */ );
+  gNavCenter->RDF_smallDisabledIcon = newResource("smallDisabledIcon", 0 /* XXX */);
+  gNavCenter->RDF_largeDisabledIcon  = newResource("largeDisabledIcon", 0 /* XXX */);
+  gNavCenter->RDF_smallRolloverIcon = newResource("smallRolloverIcon", 0 /* XXX */);
+  gNavCenter->RDF_largeRolloverIcon  = newResource("largeRolloverIcon", 0 /* XXX */);
+  gNavCenter->RDF_smallPressedIcon = newResource("smallPressedIcon", 0 /* XXX */);
+  gNavCenter->RDF_largePressedIcon  = newResource("largePressedIcon", 0 /* XXX */);
+  gNavCenter->buttonTooltipText = newResource("buttonTooltipText", 0 /* XXX */);
+  gNavCenter->buttonStatusbarText = newResource("buttonStatusbarText", 0 /* XXX */);
+  gNavCenter->urlBar = newResource("urlBar", 0 /* XXX */);
+  gNavCenter->urlBarWidth = newResource("urlBarWidth", 0 /* XXX */);
+  gNavCenter->pos = newResource("pos", 0 /* XXX */);
+  gNavCenter->viewRolloverColor = newResource("viewRolloverColor", 0 /* XXX */);
+  gNavCenter->viewPressedColor = newResource("viewPressedColor", 0 /* XXX */);
+  gNavCenter->viewDisabledColor = newResource("viewDisabledColor", 0 /* XXX */);
+
+  /* Cookies */
+  gNavCenter->cookieDomain = newResource("cookieDomain", 0 /* XXX */);
+  gNavCenter->cookieValue = newResource("cookieValue", 0 /* XXX */);
+  gNavCenter->cookieHost  = newResource("cookieHost", 0 /* XXX */);
+  gNavCenter->cookiePath  = newResource("cookiePath", 0 /* XXX */);
+  gNavCenter->cookieSecure = newResource("cookieSecure", 0 /* XXX */);
+  gNavCenter->cookieExpires = newResource("cookieExpiration", 0 /* XXX */);
+
 #endif /* MOZILLA_CLIENT */
 }
 
@@ -221,6 +267,7 @@ createWebDataVocab ()
 #ifdef MOZILLA_CLIENT
   gWebData->RDF_URL =  newResource("URL", RDF_URL_STR);
   gWebData->RDF_description = newResource("description", RDF_DESCRIPTION_STR);
+  gWebData->RDF_keyword = newResource("keyword", 0 /* XXX */);
   gWebData->RDF_Container = RDF_GetResource (gCoreDB, "Container", true);
   gWebData->RDF_firstVisitDate = newResource("firstVisitDate", RDF_FIRST_VISIT_STR);
   gWebData->RDF_lastVisitDate = newResource("lastVisitDate", RDF_LAST_VISIT_STR);
@@ -273,9 +320,9 @@ getResourceDefaultName(RDF_Resource node)
 	else if (node == gWebData->RDF_creationDate)			strID = RDF_CREATED_ON_STR;
 	else if (node == gWebData->RDF_lastModifiedDate)		strID = RDF_LAST_MOD_STR;
 	else if (node == gWebData->RDF_size)				strID =	RDF_SIZE_STR;
-	else if (node == gNavCenter->treeFGColor)			strID = RDF_FOREGROUND_COLOR_STR;
-	else if (node == gNavCenter->treeBGColor)			strID = RDF_BACKGROUND_COLOR_STR;
-	else if (node == gNavCenter->treeBGURL)				strID = RDF_BACKGROUND_IMAGE_STR;
+	else if (node == gNavCenter->viewFGColor)			strID = RDF_FOREGROUND_COLOR_STR;
+	else if (node == gNavCenter->viewBGColor)			strID = RDF_BACKGROUND_COLOR_STR;
+	else if (node == gNavCenter->viewBGURL)				strID = RDF_BACKGROUND_IMAGE_STR;
 	else if (node == gNavCenter->showTreeConnections)		strID = RDF_SHOW_TREE_CONNECTIONS_STR;
 	else if (node == gNavCenter->treeConnectionFGColor)		strID = RDF_CONNECTION_FG_COLOR_STR;
 	else if (node == gNavCenter->treeOpenTriggerIconURL)		strID = RDF_OPEN_TRIGGER_IMAGE_STR;
@@ -306,3 +353,5 @@ getResourceDefaultName(RDF_Resource node)
 #endif /* MOZILLA_CLIENT */
 	return(defaultName);
 }
+
+char	*gDefaultNavcntr = "<RDF:RDF>   <Topic id=\"NC:Toolbar\">  <child>        <Topic id=\"NC:CommandToolBar\" name=\"Command Toolbar\" toolbarBitmapPosition=\"top\"            toolbarButtonsFixedSize=\"yes\">         <child href=\"command:back\" name=\"Back\"/>          <child buttonTooltipText=\"Reload this page from the server\"                          buttonStatusbarText=\"Reload the current page\"                          href=\"command:reload\" name=\"Reload\"/>          <child href=\"command:forward\" name=\"Forward\"/>          <child name=\"separator0\" href=\"nc:separator0\"/>           <child href=\"command:urlbar\" name=\"Go: \"                          buttonStatusBarText=\"Location/Search Bar\"                          buttonTooltipText=\"Location/Search Bar\"                          urlBar=\"Yes\"                          urlBarWidth=\"*\"/>           <child name=\"separator2\" href=\"nc:separator2\"/>     <child>          <Topic id=\"NC:Bookmarks\" name=\"Bookmarks\">         <child>           <Topic id=\"NC:NavInternals\" name=\"Navigator Internals\">              <child href=\"NC:SmartBrowsingProviders\" name=\"SmartBrowsing Providers\"/>              <child href=\"NC:Toolbar\" name=\"Toolbars\"/>              <child href=\"NC:Receipts\" name=\"Receipts\"/>         </Topic>         </child>          </Topic>     </child>     <child>          <Topic id=\"NC:History\" largeIcon=\"icon/large:workspace,history\" name=\"History\" >           <child href=\"NC:HistoryMostVisited\" name=\"Most Frequented Pages\"/>                       <child href=\"NC:HistoryBySite\" name=\"History By Site\"/>           <child href=\"NC:HistoryByDate\" name=\"History By Date\"/>         </Topic>    </child>         </Topic>      </child>    <child id=\"NC:PersonalToolbar\" >    </Topic>        </RDF:RDF>  ";

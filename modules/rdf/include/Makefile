@@ -21,6 +21,6 @@
 
 MODULE	= rdf
 DEPTH	= ../../..
-EXPORTS	= rdf.h htrdf.h vocab.h
+EXPORTS	= rdf.h htrdf.h vocab.h jsec2rdf.h
 
 include $(DEPTH)/config/rules.mk

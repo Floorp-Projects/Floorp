@@ -57,6 +57,7 @@ C_OBJS=.\$(OBJDIR)\vocab.obj \
        .\$(OBJDIR)\bmk2mcf.obj \
        .\$(OBJDIR)\glue.obj \
        .\$(OBJDIR)\rdfht.obj \
+       .\$(OBJDIR)\jsec2rdf.obj \
        $(NULL)
 
        

@@ -40,7 +40,7 @@ extern	RDF	gNCDB ;
 extern	char	*gGlobalHistoryURL;
 
 static PRBool sRDFInitedB = PR_FALSE;
-
+char*  gNavCntrUrl;
 
 
 char * gNavCenterDataSources[15] = 
@@ -117,11 +117,12 @@ RDF_Init(RDF_InitParams params)
 #ifdef MOZILLA_CLIENT
   PREF_SetDefaultCharPref("browser.NavCenter", "http://rdf.netscape.com/rdf/navcntr.rdf");
   PREF_CopyCharPref("browser.NavCenter", &navCenterURL);
+   gNavCntrUrl = copyString(navCenterURL); 
   if (!strchr(navCenterURL, ':')) {
     navCenterURL = makeDBURL(navCenterURL);
   }
   *(gNavCenterDataSources + 1) = copyString(navCenterURL);
-  gNCDB = newNavCenterDB();
+  gNCDB = newNavCenterDB(); 
   freeMem(navCenterURL);
 
   HT_Startup();

@@ -321,7 +321,7 @@ urlEquals (const char* url1, const char* url2)
 PRBool
 isSeparator (RDF_Resource r)
 {
-  return (startsWith("separator", resourceID(r))) ;
+  return (startsWith("separator", resourceID(r)) || startsWith("nc:separator", resourceID(r))) ;
 }
 
 
@@ -402,6 +402,38 @@ resourceID(RDF_Resource r)
   return r->url;
  }
 
+char* opTypeToString (RDF_EventType opType) {
+  switch (opType) {
+    case RDF_ASSERT_NOTIFY :
+      return "Assert";
+	case RDF_INSERT_NOTIFY :
+      return "Insert";
+	case RDF_DELETE_NOTIFY :
+      return "Unassert";
+  }
+  return "Unknown Op";
+}
+
+
+void traceNotify (char* event, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type) {
+#ifdef DEBUG_guha1    
+      char* traceLine = getMem(1000);
+      if (type == RDF_INT_TYPE) {
+        sprintf(traceLine, "%s  %s(%s, %i)\n", 
+              event, resourceID(s), resourceID(u), (int) v);
+      } else if (type == RDF_STRING_TYPE){
+        sprintf(traceLine, "%s %s(%s, \"%s\")\n", 
+                event,  resourceID(s), resourceID(u), (char*) v);
+      } else if (type == RDF_RESOURCE_TYPE) {
+        sprintf(traceLine, "%s %s(%s, %s)\n", 
+                event,  resourceID(s), resourceID(u), resourceID((RDF_Resource)v));
+      } else {
+        sprintf(traceLine, "%s <gubbish>\n", event);
+      }
+      FE_Trace(traceLine);
+      freeMem(traceLine);    
+#endif
+}
 
 
 char *
@@ -489,11 +521,12 @@ RDFUtil_SetQuickFileFolder(RDF_Resource container)
 }
 
 
-
+RDF_Resource gPTFolder = NULL;
 PR_PUBLIC_API(RDF_Resource)
 RDFUtil_GetPTFolder()
 {
- return RDFUtil_GetFirstInstance(gNavCenter->RDF_PersonalToolbarFolderCategory, "PersonalToolbar");
+  if (gPTFolder) return gPTFolder;
+ return (gPTFolder =  RDFUtil_GetFirstInstance(gNavCenter->RDF_PersonalToolbarFolderCategory, "PersonalToolbar"));
 }
 
 
@@ -548,7 +581,8 @@ NET_InitRDFCookieResources (void) ;
 
 
 PR_PUBLIC_API(void)
-RDF_AddCookieResource(char* name, char* path, char* host, char* expires) {
+RDF_AddCookieResource(char* name, char* path, char* host, char* expires, char* value, 
+                      PRBool isDomain, PRBool secure) {
   char* url = getMem(strlen(name) + strlen(host) + strlen(path) + 10);
   RDF_Resource ru;
   RDF_Resource hostUnit = RDF_GetResource(NULL, host, 0);
@@ -562,6 +596,13 @@ RDF_AddCookieResource(char* name, char* path, char* host, char* expires) {
   sprintf(url, "cookie:%s!%s!%s", host, path,  name);
   ru = RDF_GetResource(NULL, url, 1);
   setResourceType(ru, COOKIE_RT);
+  remoteStoreAdd(gCookieStore, ru, gCoreVocab->RDF_name, name, RDF_STRING_TYPE, 1);
+  remoteStoreAdd(gCookieStore, ru, gNavCenter->cookieDomain, (void *)((isDomain) ? 1:0), RDF_INT_TYPE, 1);
+  remoteStoreAdd(gCookieStore, ru, gNavCenter->cookieValue, value, RDF_STRING_TYPE, 1);
+  remoteStoreAdd(gCookieStore, ru, gNavCenter->cookieHost, host, RDF_STRING_TYPE, 1);
+  remoteStoreAdd(gCookieStore, ru, gNavCenter->cookiePath, path, RDF_STRING_TYPE, 1);
+  remoteStoreAdd(gCookieStore, ru, gNavCenter->cookieSecure, (void *)((secure) ? 1:0), RDF_INT_TYPE, 1);
+  remoteStoreAdd(gCookieStore, ru, gNavCenter->cookieExpires, expires, RDF_STRING_TYPE, 1);
   remoteStoreAdd(gCookieStore, ru, gCoreVocab->RDF_parent, hostUnit, RDF_RESOURCE_TYPE, 1);  
 }
 
@@ -736,7 +777,7 @@ MakeCookieStore (char* url)
       ntr->nextValue = CookieGetNextValue;
       ntr->disposeCursor = CookieDisposeCursor;
       gCookieStore = ntr;
-      /*       NET_InitRDFCookieResources (    ) ; */
+      /*      NET_InitRDFCookieResources (    ) ; */
       return ntr;
     } else return gCookieStore;
   } else return NULL;

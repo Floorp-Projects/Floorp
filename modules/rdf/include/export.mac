@@ -5,3 +5,4 @@
 rdf.h
 vocab.h
 htrdf.h
+jsec2rdf.h

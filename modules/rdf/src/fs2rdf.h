@@ -30,6 +30,8 @@
 #include <Appletalk.h>
 #include <Devices.h>
 #include <Files.h>
+#include <FinderRegistry.h>
+#include <Processes.h>
 #endif
 
 
@@ -55,10 +57,17 @@ extern	int	RDF_VOLUME_DESC_STR, RDF_DIRECTORY_DESC_STR, RDF_FILE_DESC_STR;
 
 XP_BEGIN_PROTOS
 
+#ifdef	XP_MAC
+OSErr		nativeMacPathname(char *fileURL, FSSpec *fss);
+OSErr		getPSNbyTypeSig(ProcessSerialNumber *thePSN, OSType pType, OSType pSignature);
+#endif
+
+void		importForProfile (char *dir, const char *uname);
 void		GuessIEBookmarks(void);
 char *		getVolume(int16 volNum, PRBool afpVols);
 PRDir *		OpenDir(char *name);
 RDFT		MakeLFSStore (char* url);
+PRBool		fsAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 PRBool		fsRemoveFile(char *filePathname, PRBool justCheckWriteAccess);
 PRBool		fsRemoveDir(char *filePathname, PRBool justCheckWriteAccess);
 PRBool		fsUnassert (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
@@ -67,6 +76,7 @@ void *		fsGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType 
 PRBool		fileDirectoryp(RDF_Resource u);
 RDF_Cursor	fsGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv);
 void *		fsNextValue (RDFT rdf, RDF_Cursor c);
+PRBool		isFileVisible(char *fileURL);
 RDF_Error	fsDisposeCursor (RDFT rdf, RDF_Cursor c);
 RDF_Resource	CreateFSUnit (char* nname, PRBool isDirectoryFlag);
 

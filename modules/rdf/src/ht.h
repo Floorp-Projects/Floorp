@@ -32,6 +32,7 @@
 #include "xpassert.h"
 #include "nspr.h"
 #include "prefapi.h"
+#include "fe_proto.h"
 
 #ifdef	XP_MAC
 #include "stdlib.h"
@@ -54,8 +55,8 @@
 #define RDF_RELATED_LINKS		2
 #define FROM_PAGE			1
 #define GUESS_FROM_PREVIOUS_PAGE	2
-#define HTDEL				remoteStoreRemove
 
+#define HTDEL remoteStoreRemove
 
 
 	/* external string references in allxpstr */
@@ -115,6 +116,7 @@ typedef struct _HT_PaneStruct {
 	SBProvider			smartBrowsingProviders;
 	PRBool				dirty;
 	PRBool				personaltoolbar;
+	PRBool				toolbar;
 	PRBool				bookmarkmenu;
 	PRBool				special;
 	char				*windowURL;
@@ -128,6 +130,8 @@ typedef	struct HT_ColumnStruct {
 	uint32				width;
 	uint32				tokenType;
 	void				*token;
+	void				*feData;
+	PRBool				isHiddenFlag;
 } HT_ColumnStruct, *HT_Column;
 
 typedef struct _HT_ViewStruct {
@@ -140,31 +144,34 @@ typedef struct _HT_ViewStruct {
 	struct _HT_ResourceStruct	***itemList;
 	uint32				itemListSize;
 	uint32				itemListCount;
+	uint32				topNodeIndex;
 	uint32				selectedNodeHint;
 	uint32				sortTokenType;
 	void				*sortToken;
 	PRBool				descendingFlag;
 	PRBool				refreshingItemListp;
 	PRBool				inited;
-    RDF_Resource        treeRel;
+	RDF_Resource			treeRel;
 } HT_ViewStruct;
 
 typedef	struct _HT_ValueStruct {
 	struct _HT_ValueStruct		*next;
 	uint32				tokenType;
-	void				*token;
+	RDF_Resource			token;
 	void				*data;
 } HT_ValueStruct, *HT_Value;
 
 #define	HT_CONTAINER_FLAG	0x0001
 #define	HT_OPEN_FLAG		0x0002
-#define	HT_HIDDEN_FLAG		0x0004
-#define	HT_SELECTED_FLAG	0x0008
-#define	HT_VOLATILE_URL_FLAG	0x0010
-#define	HT_FREEICON_URL_FLAG	0x0020
-#define	HT_PASSWORDOK_FLAG	0x0040
-#define	HT_INITED_FLAG		0x0080
-#define	HT_DIRTY_FLAG		0x0100
+#define	HT_AUTOFLUSH_OPEN_FLAG	0x0004
+#define	HT_HIDDEN_FLAG		0x0008
+#define	HT_SELECTED_FLAG	0x0010
+#define	HT_VOLATILE_URL_FLAG	0x0020
+#define	HT_FREEICON_URL_FLAG	0x0040
+#define	HT_PASSWORDOK_FLAG	0x0080
+#define	HT_INITED_FLAG		0x0100
+#define	HT_DIRTY_FLAG		0x0200
+#define	HT_ENABLED_FLAG		0x0400
 
 typedef struct _HT_ResourceStruct {
 	struct _HT_ResourceStruct	*nextItem; 
@@ -173,7 +180,7 @@ typedef struct _HT_ResourceStruct {
 	RDF_Resource			node;
 	void				*feData;
 	char				*dataSource;
-	char				*url[2];
+	char				*url[8];
 	HT_Value			values;
 	HT_Resource			child;
 	HT_Resource			*children;		/* used by sorting */
@@ -231,6 +238,7 @@ typedef struct _HT_URLSiteMapAssoc {
 	RDF_Resource		sitemap;
     char*               name;
     char*               sitemapUrl;
+    RDFT                db;
 	struct _HT_URLSiteMapAssoc	*next;
 } HT_URLSiteMapAssoc;
 
@@ -257,7 +265,10 @@ void				sortNodes(HT_View view, HT_Resource parent, HT_Resource *children, uint3
 uint32				refreshItemList1(HT_View view, HT_Resource node);
 void				refreshItemList (HT_Resource node, HT_Event whatHappened);
 void				refreshPanes();
-HT_Pane				paneFromResource(RDF_Resource resource, HT_Notification notify, PRBool autoFlushFlag, PRBool autoOpenFlag);
+PRBool				initToolbars (HT_Pane pane);
+HT_Pane				paneFromResource(RDF db, RDF_Resource resource, HT_Notification notify, PRBool autoFlushFlag, PRBool autoOpenFlag, PRBool useColumns);
+void				htMetaTagURLExitFunc (URL_Struct *urls, int status, MWContext *cx);
+void				htLookInCacheForMetaTags(char *url);
 void				htSetBookmarkAddDateToNow(RDF_Resource r);
 RDF				newHTPaneDB();
 RDF				HTRDF_GetDB();
@@ -280,6 +291,7 @@ void				removeHTFromHash (HT_Pane pane, HT_Resource item);
 void				deleteHTSubtree (HT_Resource subtree);
 void				deleteContainerItem (HT_Resource container, RDF_Resource item);
 uint32				fillContainer (HT_Resource node);
+void				sendColumnNotification (HT_View view, void *token, uint32 tokenType, HT_Event whatHappened);
 PRBool				htIsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd, PRBool isWorkspaceFlag, PRBool isBackgroundFlag);
 void				freeMenuCommandList();
 void				exportCallbackWrite(PRFileDesc *fp, char *str);
@@ -289,7 +301,8 @@ void				htCopyReference(RDF_Resource original, RDF_Resource newParent, PRBool em
 PRBool				htVerifyUniqueToken(HT_Resource node, void *token, uint32 tokenType, char *data);
 PRBool				ht_isURLReal(HT_Resource node);
 char *				buildInternalIconURL(HT_Resource node, PRBool *volatileURLFlag,	PRBool largeIconFlag, PRBool workspaceFlag);
-char *				getIconURL( HT_Resource node, PRBool largeIconFlag, PRBool workspaceFlag);
+char *				getIconURL( HT_Resource node, PRBool largeIconFlag, PRBool workspaceFlag, int state);
+PRBool				htIsPropertyInMoreOptions(RDF_Resource r);
 void				addHtmlElement(HT_Resource node, RDF_Resource token, uint32 tokenType);
 void				freeHtmlElementList();
 _htmlElementPtr			findHtmlElement(void *token);
@@ -298,16 +311,20 @@ char *				constructHTMLTagData(char *dynStr, int strID, char *data);
 char *				constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType);
 char *				constructHTMLPermission(char *dynStr, HT_Resource node, RDF_Resource token, char *permText);
 PRBool				htIsOpLocked(HT_Resource node, RDF_Resource token);
-static PRBool			rdfFindDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned int button);
+PRBool				rdfFindDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned int button);
 char *				constructBasicHTML(char *dynStr, int strID, char *data1, char *data2);
 void				setHiddenState (HT_Resource node);
 void				htSetFindResourceName(RDF db, RDF_Resource r);
+void				htOpenTo(HT_View view, RDF_Resource u, PRBool selectView);
 PRBool				mutableContainerp (RDF_Resource node);
 void				possiblyCleanUpTitle (char* title);
 PRBool				htRemoveChild(HT_Resource parent, HT_Resource child, PRBool moveToTrash);
 void				ht_SetPassword(HT_Resource node, char *password);
 PRBool				ht_hasPassword(HT_Resource node);
 PRBool				ht_checkPassword(HT_Resource node, PRBool alwaysCheck);
+HT_DropAction			htLaunchSmartNode(HT_Resource dropTarget, char *fullURL);
+HT_DropAction			dropOnSmartNode(HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction);
+HT_DropAction			dropOnSmartURL(HT_Resource dropTarget, char *objTitle, PRBool justAction);
 HT_DropAction			dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction);
 void				Win32FileCopyMove(HT_Resource dropTarget, HT_Resource dropObject);
 HT_DropAction			copyMoveRDFLink (HT_Resource dropTarget, HT_Resource dropObject);
@@ -323,7 +340,7 @@ HT_DropAction			copyRDFLinkURLAt (HT_Resource dropx, char* objURL, char *objTitl
 HT_DropAction			uploadLFSURL (HT_Resource dropTarget, char* objURL);
 HT_DropAction			uploadRDFFileURL (HT_Resource dropTarget, char* objURL);
 HT_DropAction			esfsCopyMoveContentURL (HT_Resource dropTarget, char* objURL);
-void				HTADD(HT_Pane pane, RDF_Resource u, RDF_Resource s, void* v);
+RDFT				HTADD(HT_Pane pane, RDF_Resource u, RDF_Resource s, void* v);
 HT_URLSiteMapAssoc *		makeNewSMP (HT_Pane htPane, char* pUrl, char* sitemapurl);
 void				RetainOldSitemaps (HT_Pane htPane, char *pUrl);
 void				populateSBProviders (HT_Pane htPane);

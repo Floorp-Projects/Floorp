@@ -26,23 +26,56 @@
 #include "mcf.h"
 #include "mcff2mcf.h"
 
+#define wsCharp(c) ((c == '\r') || (c == '\t') || (c == ' ') || (c == '\n'))
+
+
+
+char
+decodeEntityRef (char* string, int32* stringIndexPtr, int32 len)
+{
+  if (startsWith("lt;", string)) {
+    *stringIndexPtr = *stringIndexPtr + 3;
+    return '<';
+  } else if (startsWith("gt;", string)) {
+    *stringIndexPtr = *stringIndexPtr + 3;
+    return '>';
+  } else  if (startsWith("amp;", string)) {
+    *stringIndexPtr = *stringIndexPtr + 4;
+    return '&';
+  } else return -1;
+}
+
 
 
 char *
 copyStringIgnoreWhiteSpace(char* string)
 {
-   char* buf = (char*)malloc(strlen(string) + 1);
-   char* token = strtok(string, " \t\n\r");
+   int32 len = strlen(string);
+   char* buf = (char*)getMem(len + 1);
+   PRBool inWhiteSpace = 1;
+   int32 buffIndex = 0;
+   int32 stringIndex = 0;
 
-   char* p = buf;
-   while(token)
-   {
-      strcpy(p, token);
-      p += strlen(token);
-      token = strtok(NULL, " \t\n\r");
-      if(token)
-         strcpy(p++, " ");
+   while (stringIndex < len) {
+     char nextChar = *(string + stringIndex);
+     PRBool wsp = wsCharp(nextChar);
+     if (!wsp) {
+       if (nextChar == '&') {
+         *(buf + buffIndex++) = decodeEntityRef(&string[stringIndex+1], 
+                                                &stringIndex, len-stringIndex);
+       } else {
+         *(buf + buffIndex++) = nextChar;
+       }
+       inWhiteSpace = 0;
+     } else if (!inWhiteSpace) {
+       *(buf + buffIndex++) = ' ';
+       inWhiteSpace = 1;
+     } else {
+       inWhiteSpace = 1;
+     }
+     stringIndex++;
    }
+
    return buf;
 }
 
@@ -180,7 +213,7 @@ addElementProps (char** attlist, char* elementName, RDFFile f, RDF_Resource obj)
     char* attName = attlist[count++];
     char* attValue = attlist[count++];
     if ((attName == NULL) || (attValue == NULL)) break;
-    if (!tagEquals(f, attName, "href") && !tagEquals(f, attName, "rdf:href") 
+    if (!tagEquals(f, attName, "href") && !tagEquals(f, attName, "rdf:href")  && !tagEquals(f, attName, "RDF:href") 
         && !tagEquals(f, attName, "id")) {
       addSlotValue(f, obj, ResourceFromElementName(f, attName), copyStringIgnoreWhiteSpace(attValue), 
 		   RDF_STRING_TYPE, 1);

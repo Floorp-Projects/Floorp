@@ -30,6 +30,35 @@
 	/* external string references in allxpstr */
 extern	int	RDF_UNABLETODELETEFILE, RDF_UNABLETODELETEFOLDER;
 
+#define IMPORT_LIST_SIZE 8
+
+  	/* XXX localization */
+char	*importList[IMPORT_LIST_SIZE] = {"Favorites", "NC:Bookmarks", "Recent", "NC:Bookmarks",
+					"Start Menu", "NC:Bookmarks", "Desktop", "NC:LocalFiles"};
+
+
+
+void
+importForProfile (char *dir, const char *uname)
+{
+  int32 n = 0;
+  char* pn = getMem(100 + strlen(dir));
+  char* name = getMem(100 + strlen(uname));
+  RDF_Resource item;
+  RDF_Resource parent;
+  while (n < IMPORT_LIST_SIZE) {
+    sprintf(pn, "%s%s/", dir, importList[n++]);
+    item = RDF_GetResource(NULL, pn, 1);
+    parent = RDF_GetResource(NULL, importList[n++], 1);
+    sprintf(name, "%s IE %s", uname,  importList[n-2]);
+    remoteStoreAdd(gRemoteStore, item, gCoreVocab->RDF_name, copyString(name), 
+                   RDF_STRING_TYPE, 1);
+    remoteStoreAdd(gRemoteStore, item, gCoreVocab->RDF_parent, parent, RDF_RESOURCE_TYPE, 1);   
+  }
+  freeMem(pn);
+  freeMem(name);
+}
+
 
 
 void
@@ -38,27 +67,20 @@ GuessIEBookmarks (void)
 #ifdef XP_WIN
   RDF_Resource bmk = RDF_GetResource(NULL, "NC:Bookmarks", true);
   PRDir* ProfilesDir = OpenDir("file:///c|/winnt/profiles/");
-  if (!ProfilesDir) { 
-    RDF_Resource bmkdir = RDF_GetResource(NULL,"file:///c|/windows/favorites/", 1);
-    remoteStoreAdd(gRemoteStore, bmkdir, gCoreVocab->RDF_parent, bmk, RDF_RESOURCE_TYPE, 1);    
+  if (!ProfilesDir) {
+  	/* XXX localization */
+    importForProfile("file:///c|/windows/", "Your");
   } else {
     int32 n = PR_SKIP_BOTH;
     PRDirEntry	*de;
     while (de = PR_ReadDir(ProfilesDir, n++)) {
-      char* pn = getMem(400);
-      sprintf(pn, "file:///c|/winnt/profiles/%s/favorites/", de->name);
       if (strcmp(de->name, "Administrator") && strcmp(de->name, "Default User") && 
           strcmp(de->name, "All Users")) {
-        RDF_Resource bmkdir = RDF_GetResource(NULL,pn, 1);
-        char* name = getMem(300);
-        /* XXX localization ! */
-        sprintf(name, "%s's imported Favorites", de->name);
-        remoteStoreAdd(gRemoteStore, bmkdir, gCoreVocab->RDF_name, copyString(name), 
-                       RDF_STRING_TYPE, 1);
-        remoteStoreAdd(gRemoteStore, bmkdir, gCoreVocab->RDF_parent, bmk, RDF_RESOURCE_TYPE, 1);   
-        freeMem(name);
+        char* dir = getMem(100 + strlen(de->name));
+        sprintf(dir, "file:///c|/winnt/profiles/%s/", de->name);
+        importForProfile(dir, de->name);
+        freeMem(dir);
       }
-      freeMem(pn);
     }
     PR_CloseDir(ProfilesDir);
   }
@@ -146,7 +168,7 @@ getVolume(int16 volNum, PRBool afpVols)
 	driveType = GetDriveType(str);
 	if (driveType != DRIVE_UNKNOWN && driveType != DRIVE_NO_ROOT_DIR)
 	{
-		url = PR_smprintf("file:///%c:/", volNum + 'A');
+		url = PR_smprintf("file:///%c|/", volNum + 'A');
 	}
 #endif
 
@@ -183,7 +205,7 @@ MakeLFSStore (char* url)
 
 	if ((ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct))) != NULL)
 	{
-		ntr->assert = NULL;
+		ntr->assert = fsAssert;
 		ntr->unassert = fsUnassert;
 		ntr->getSlotValue = fsGetSlotValue;
 		ntr->getSlotValues = fsGetSlotValues;
@@ -194,6 +216,166 @@ MakeLFSStore (char* url)
 	}
 	return(ntr);
 }
+
+
+
+PRBool
+fsAssert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, 
+		   RDF_ValueType type, PRBool tv)
+{
+	PRBool			retVal = PR_FALSE;
+#ifdef	XP_MAC
+	AEAddressDesc		finderAddr = { typeNull, NULL };
+	AEDescList		selection = { typeNull, NULL };
+	AppleEvent		theEvent = { typeNull, NULL }, theReply = { typeNull, NULL };
+	FSSpec			fss;
+	OSErr			err;
+	ProcessSerialNumber	finderPSN = { 0, kNoProcess };
+	char			*errorMsg;
+#endif
+
+	if ((startsWith("file://", resourceID(u))) && (s == gNavCenter->RDF_Command))
+	{
+#ifdef	XP_MAC
+		if (((RDF_Resource)v) == gNavCenter->RDF_Command_Reveal)
+		{
+			/* reveal item in Finder */
+			retVal = PR_TRUE;
+			if ((err = nativeMacPathname(resourceID(u), &fss)) != noErr)	{}
+			else if ((err = getPSNbyTypeSig(&finderPSN, 'FNDR', 'MACS')) != noErr)	{}
+			else if ((err = AECreateDesc(typeProcessSerialNumber, &finderPSN,
+				sizeof(ProcessSerialNumber), &finderAddr)) != noErr)	{}
+			else if ((err = AECreateAppleEvent(kAEFinderEvents /* kAEFinderSuite */,
+				kAERevealSelection, &finderAddr, kAutoGenerateReturnID,
+				kAnyTransactionID, &theEvent)) != noErr)	{}
+			else if ((err = AECreateList (NULL, 0, false, &selection)) != noErr)	{}
+			else if ((err = AEPutPtr (&selection, 0, typeFSS, &fss, sizeof(FSSpec))) != noErr)	{}
+			else if ((err = AEPutParamDesc (&theEvent, keySelection, &selection)) != noErr)	{}
+			else err = AESend (&theEvent, &theReply, kAENoReply, kAENormalPriority,
+				kAEDefaultTimeout, NULL, NULL);
+
+			if (err == noErr)
+			{
+				SetFrontProcess(&finderPSN);
+			}
+			else
+			{
+				if ((errorMsg = PR_smprintf("Error %d", (int)err)) != NULL)
+				{
+					FE_Alert(NULL, errorMsg);
+					XP_FREE(errorMsg);
+				}
+			}
+
+			if (finderAddr.dataHandle != NULL)	AEDisposeDesc(&finderAddr);
+			if (selection.dataHandle != NULL)	AEDisposeDesc (&selection);
+			if (theEvent.dataHandle != NULL)	AEDisposeDesc(&theEvent);
+			if (theReply.dataHandle != NULL)	AEDisposeDesc(&theReply);
+		}
+#endif
+	}
+	return(retVal);
+}
+
+
+
+#ifdef	XP_MAC
+OSErr
+nativeMacPathname(char *fileURL, FSSpec *fss)
+{
+	OSErr		err = paramErr;
+	char		*macURL = NULL, *token, *url, *escapedURL, *temp, *pascalStr;
+
+	XP_ASSERT(fileURL != NULL);
+	if (fileURL == NULL)	return(NULL);
+
+	if (!startsWith("file:///", fileURL))	return(NULL);
+	if (!(url = copyString(fileURL + strlen("file:///"))))	return(NULL);
+
+	token = strtok(url, "/");
+	while (token != NULL)
+	{
+		*token;
+		if ((escapedURL = unescapeURL(token)) == NULL)
+		{
+			if (macURL != NULL)
+			{
+				freeMem(macURL);
+				macURL = NULL;
+			}
+			break;			
+		}
+		if (macURL == NULL)
+		{
+			macURL = escapedURL;
+		}
+		else
+		{
+			temp = append2Strings(macURL, ":");
+			freeMem(macURL);
+			if (temp == NULL)
+			{
+				macURL = NULL;
+				break;
+			}
+			macURL = append2Strings(temp, escapedURL);
+			freeMem(temp);
+			if (macURL == NULL)
+			{
+				break;
+			}
+			freeMem(escapedURL);
+		}
+		token = strtok(NULL, "/");
+	}
+	if (endsWith("/", fileURL))
+	{
+		temp = append2Strings(macURL, ":");
+		freeMem(macURL);
+		macURL = temp;
+	}
+	freeMem(url);
+	if (macURL != NULL)
+	{
+		if ((pascalStr = getMem(strlen(macURL) + 3)) != NULL)
+		{
+			pascalStr[0] = strlen(macURL);
+			strcpy(&pascalStr[1], macURL);
+			err = FSMakeFSSpec(0, 0L, (void *)pascalStr, fss);
+			freeMem(pascalStr);
+		}
+		freeMem(macURL);
+	}
+	return(err);
+}
+
+
+
+OSErr
+getPSNbyTypeSig(ProcessSerialNumber *thePSN, OSType pType, OSType pSignature)
+{
+	OSErr			err;
+	ProcessInfoRec		pInfo;
+
+	thePSN->highLongOfPSN=0L;
+	thePSN->lowLongOfPSN=kNoProcess;
+	while (!(err=GetNextProcess(thePSN)))
+	{
+		if ((thePSN->highLongOfPSN==0L) && (thePSN->lowLongOfPSN==kNoProcess))
+		{
+			err=procNotFound;
+			break;
+		}
+		pInfo.processInfoLength=sizeof(ProcessInfoRec);
+		pInfo.processName=NULL;
+		pInfo.processLocation=NULL;
+		pInfo.processAppSpec=NULL;
+		if ((err=GetProcessInformation(thePSN,&pInfo)) != noErr)	break;
+		if ((pInfo.processType==pType) && (pInfo.processSignature==pSignature))	break;
+	}
+	return(err);
+}
+#endif
 
 
 
@@ -425,6 +607,11 @@ fsGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PR
 	int32			creationTime, modifyTime;
 	struct tm		*time;
 
+#ifdef	XP_MAC
+	FInfo			fndrInfo;
+	FSSpec			fss;
+#endif
+
 	if (!startsWith("file://", resourceID(u)))	return(NULL);
 
 	if ((s == gCoreVocab->RDF_name) && (type == RDF_STRING_TYPE) && (tv))
@@ -464,11 +651,39 @@ fsGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PR
 					switch(fn.type)
 					{
 						case	PR_FILE_FILE:
-						retVal = (void *)copyString(XP_GetString(RDF_FILE_DESC_STR));
+#ifdef	XP_MAC
+						if (!nativeMacPathname(pathname, &fss))
+						{
+							if (!FSpGetFInfo(&fss, &fndrInfo))
+							{
+								if (fndrInfo.fdFlags & kIsAlias)
+								{
+									/* XXX localization */
+									retVal = copyString("Alias");
+								}
+							}
+						}
+#endif
+						if (retVal == NULL)
+						{
+							retVal = (void *)copyString(XP_GetString(RDF_FILE_DESC_STR));
+						}
 						break;
 
 						case	PR_FILE_DIRECTORY:
-						retVal = (void *)copyString(XP_GetString(RDF_DIRECTORY_DESC_STR));
+#ifdef	XP_MAC
+						if (!nativeMacPathname(pathname, &fss))
+						{
+							if ((fss.parID == 0) || (fss.parID == 1))
+							{
+								retVal = copyString(XP_GetString(RDF_VOLUME_DESC_STR));
+							}
+						}
+#endif
+						if (retVal == NULL)
+						{
+							retVal = (void *)copyString(XP_GetString(RDF_DIRECTORY_DESC_STR));
+						}
 						break;
 					}
 				}
@@ -556,15 +771,26 @@ fsGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PR
 PRBool
 fileDirectoryp(RDF_Resource u)
 {
+	PRFileInfo	info;
 	PRBool		retVal = PR_FALSE;
-	PRDir		*d;
+	PRStatus	err;
+	char		*pathname, *url;
 
 	if (startsWith("file:",  resourceID(u)))
 	{
-		if ((d = OpenDir(resourceID(u))) != NULL)
+		if ((pathname = resourceID(u)) != NULL)
 		{
-			PR_CloseDir(d);
-			retVal = PR_TRUE;
+			if ((url = unescapeURL(&pathname[FS_URL_OFFSET])) != NULL)
+			{
+				if ((err=PR_GetFileInfo(url, &info)) == PR_SUCCESS)
+				{
+					if (info.type == PR_FILE_DIRECTORY)
+					{
+						retVal = PR_TRUE;
+					}
+				}
+				XP_FREE(url);
+			}
 		}
 	}
 	return(retVal);
@@ -616,6 +842,48 @@ fsGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s,
 		}
 	}
 	return(c);
+}
+
+
+
+PRBool
+isFileVisible(char *fileURL)
+{
+	PRBool			retVal = PR_TRUE;
+#ifdef	XP_MAC
+	FInfo			fndrInfo;
+	FSSpec			fss;
+	OSErr			err;
+#endif
+#ifdef	XP_WIN
+	char			*p;
+#endif
+
+#ifdef	XP_MAC
+	if (!(err=nativeMacPathname(fileURL, &fss)))
+	{
+		if (!(err = FSpGetFInfo(&fss, &fndrInfo)))
+		{
+			if (fndrInfo.fdFlags & kIsInvisible)
+			{
+				retVal = PR_FALSE;
+			}
+		}
+	}
+#endif
+
+#ifdef	XP_WIN
+	if ((p = strrchr(fileURL, '/')) != NULL)
+	{
+		++p;
+		if ((!strcmp(p, ".")) || (!strcmp(p, "..")))
+		{
+			retVal = PR_FALSE;
+		}
+	}
+#endif
+
+	return(retVal);
 }
 
 
@@ -685,13 +953,11 @@ fsNextValue (RDFT rdf, RDF_Cursor c)
 						}
 						freeMem(encoded);
 					}
-#ifdef	XP_WIN
-					if ((!strcmp(url, ".")) || (!strcmp(url, "..")))
+					if (isFileVisible(url) == PR_FALSE)
 					{
 						XP_FREE(url);
 						url = NULL;
 					}
-#endif
 					if (url != NULL)
 					{
 						retVal = (void *)CreateFSUnit(url, isDirectoryFlag);

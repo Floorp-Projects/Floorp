@@ -28,7 +28,7 @@
 #include "pm2rdf.h"
 #include "rdf-int.h"
 #include "bmk2mcf.h"
-
+#include "plstr.h"
 
 	/* globals */
 
@@ -286,7 +286,7 @@ RDFFilePossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inve
       (startsWith(rdf->url, resourceID(u))) &&
 	 
       (s == gCoreVocab->RDF_parent) && (containerp(u))) {
-    RDFFile newFile = readRDFFile( resourceID(u), u, false, rdf);
+    readRDFFile( resourceID(u), u, false, rdf);
     /*    if(newFile) newFile->lastReadTime = PR_Now(); */
   }
 }
@@ -376,7 +376,7 @@ remoteStoreArcLabelsIn (RDFT mcf, RDF_Resource u)
   if (u->rarg2) {
     RDF_Cursor c = (RDF_Cursor)getMem(sizeof(struct RDF_CursorStruct));
     c->u = u;
-    c->type = RDF_ARC_LABELS_IN_QUERY;
+    c->queryType = RDF_ARC_LABELS_IN_QUERY;
     c->pdata = u->rarg2;
     return c;
   } else return NULL;
@@ -390,8 +390,8 @@ remoteStoreArcLabelsOut (RDFT mcf, RDF_Resource u)
   if (u->rarg1) {
     RDF_Cursor c = (RDF_Cursor)getMem(sizeof(struct RDF_CursorStruct));
     c->u = u;
-    c->type = RDF_ARC_LABELS_OUT_QUERY;
-    c->pdata = u->rarg2;
+    c->queryType = RDF_ARC_LABELS_OUT_QUERY;
+    c->pdata = u->rarg1;
     return c;
   } else return NULL;
 }
@@ -491,9 +491,47 @@ leastRecentlyUsedRDFFile (RDF mcf)
 
 
 void
+gcRDFFileInt (RDFFile f)
+{
+  int32 n = 0;
+  while (n < f->assertionCount) {
+    Assertion as = *(f->assertionList + n);
+    remoteStoreRemove(f->db, as->u, as->s, as->value, as->type);
+    freeAssertion(as);
+    *(f->assertionList + n) = NULL;
+    n++;
+  }
+  n = 0;
+  while (n < f->resourceCount) {
+    RDF_Resource u = *(f->resourceList + n);
+    possiblyGCResource(u);
+    n++;
+  }
+  freeMem(f->assertionList);
+  freeMem(f->resourceList);	
+}
+
+
+
+RDF_Error
+DeleteRemStore (RDFT db)
+{
+  RDFFile f = (RDFFile) db->pdata;
+  RDFFile next;
+  while (f) {
+    next = f->next;
+    gcRDFFileInt(f);
+    f = next;
+  }
+  freeMem(db);
+  return 0;
+}
+
+
+
+void
 gcRDFFile (RDFFile f)
 {
-  int16 n = 0;
   RDFFile f1 = (RDFFile) f->db->pdata;
 
   if (f->locked) return;
@@ -511,22 +549,7 @@ gcRDFFile (RDFFile f)
       f1 = f1->next;
     }
   }
-  
-  while (n < f->assertionCount) {
-    Assertion as = *(f->assertionList + n);
-    remoteStoreRemove(f->db, as->u, as->s, as->value, as->type);
-    freeAssertion(as);
-    *(f->assertionList + n) = NULL;
-    n++;
-  }
-  n = 0;
-  while (n < f->resourceCount) {
-    RDF_Resource u = *(f->resourceList + n);
-    possiblyGCResource(u);
-    n++;
-  }
-  freeMem(f->assertionList);
-  freeMem(f->resourceList);	
+  gcRDFFileInt(f);
 }
 
 
@@ -554,19 +577,20 @@ readRDFFile (char* url, RDF_Resource top, PRBool localp, RDFT db)
     return NULL;
   } else {
     RDFFile newFile = makeRDFFile(url, top, localp);  
-#if defined(DEBUG) && defined(MOZILLA_CLIENT) && defined(XP_WIN)
-    char* traceLine = getMem(500);
-    sprintf(traceLine, "\nAccessing %s (%s)\n", url, db->url);
-    FE_Trace(traceLine);
-    freeMem(traceLine);
-#endif
-  
     if (db->pdata) {  
       newFile->next = (RDFFile) db->pdata;
       db->pdata = newFile;
     } else {
       db->pdata = (RDFFile) newFile;
   }
+#ifdef DEBUG_guha
+    {
+      char* traceLine = getMem(500);
+      sprintf(traceLine, "Accessing %s", url);
+      FE_Trace(traceLine);
+      freeMem(traceLine);
+    }
+#endif
     newFile->assert = remoteAssert3;
     if (top) {
       if (resourceType(top) == RDF_RT) {
@@ -641,6 +665,7 @@ NewRemoteStore (char* url)
 		ntr->nextValue = remoteStoreNextValue;
 		ntr->disposeCursor = remoteStoreDisposeCursor;
 		ntr->url = copyString(url);
+        ntr->destroy =  DeleteRemStore;
 		ntr->arcLabelsIn = remoteStoreArcLabelsIn;
 		ntr->arcLabelsOut = remoteStoreArcLabelsOut;
 	}
@@ -658,3 +683,82 @@ MakeSCookDB (char* url)
     return ntr;
   } else return NULL;
 }
+
+struct RDFTOutStruct {
+  char* buffer;
+  int32 bufferSize;
+  int32 bufferPos;
+  char* temp;
+  RDFT store;
+};
+
+typedef struct RDFTOutStruct* RDFTOut;
+
+void addToRDFTOut (RDFTOut out) {
+  int32 len = strlen(out->temp);
+  if (len + out->bufferPos < out->bufferSize) {
+    PL_strcat(out->buffer, out->temp);
+    out->bufferPos = out->bufferPos + len;
+    memset(out->temp, '\0', 1000);
+  } else {
+    PR_Realloc(out->buffer, out->bufferSize + 20000);
+    out->bufferSize = out->bufferSize + 20000;
+    addToRDFTOut (out);
+  }
+}
+
+
+
+PRIntn
+RDFSerializerEnumerator (PLHashEntry *he, PRIntn i, void *arg)
+{
+  RDF_Resource u = (RDF_Resource)he->value;
+  RDFTOut out    = (RDFTOut) arg;
+  Assertion as = u->rarg1;
+  PRBool somethingOutp = 0;
+  while (as) {
+    if (as->db == out->store) {
+      if (!somethingOutp) {
+        somethingOutp = 1;
+        sprintf(out->temp, "<RDF:Description href=\"%s\">\n", resourceID(as->u));
+        addToRDFTOut(out);
+      }
+      if (as->type == RDF_RESOURCE_TYPE) {
+        sprintf(out->temp, "       <%s href=\"%s\"/>\n", resourceID(as->s), 
+                resourceID((RDF_Resource)as->value));    
+      } else if (as->type == RDF_INT_TYPE) {
+        sprintf(out->temp, "       <%s dt=\"int\">%i</%s>\n", resourceID(as->s), 
+                (int)as->value, resourceID(as->s));     
+      } else {  
+        sprintf(out->temp, "       <%s>%s</%s>\n", resourceID(as->s), 
+                (char*)as->value, resourceID(as->s));     
+      }
+      addToRDFTOut(out);
+    }
+    as = as->next;
+  }
+  if (somethingOutp) {
+    sprintf(out->temp, "</RDF:Description>\n\n");
+    addToRDFTOut(out);
+  }
+  return  HT_ENUMERATE_NEXT;    
+}
+
+
+char* 
+RDF_SerializeRDFStore (RDFT store) {
+  RDFTOut out = getMem(sizeof(struct RDFTOutStruct));
+  char* ans = out->buffer = getMem(20000);
+  out->bufferSize = 20000;
+  out->temp = getMem(1000);
+  out->store = store;
+  sprintf(out->temp, "<RDF:RDF>\n\n");
+  addToRDFTOut(out);
+  PL_HashTableEnumerateEntries(resourceHash, RDFSerializerEnumerator, out);
+  sprintf(out->temp, "</RDF:RDF>\n\n");
+  addToRDFTOut(out);
+  freeMem(out->temp);
+  freeMem(out);
+  return ans;
+}
+

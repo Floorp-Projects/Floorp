@@ -57,12 +57,12 @@ XP_BEGIN_PROTOS
 #endif
 #define null NULL
 #define nullp(x) (((void*)x) == ((void*)0))
- 
+#define LookupResource(x) ((RDF_Resource)PL_HashTableLookup(resourceHash, x));
 
 #define noRDFErr 0
 #define noMoreValuesErr 1
 
-#define MAX_ATTRIBUTES 10
+#define MAX_ATTRIBUTES 64
 
 #define RDF_RT 0
 #define LFS_RT 1
@@ -78,9 +78,7 @@ XP_BEGIN_PROTOS
 #define	ATALK_RT 12
 #define	ATALKVIRTUAL_RT 13
 #define COOKIE_RT       14
-#ifdef TRANSACTION_RECEIPTS
-#define RECEIPT_RT 15
-#endif
+#define JSEC_RT 15
 
 
 #define CHECK_VAR(var, return_value) {if (var == NULL) {XP_ASSERT(var); return return_value;}}
@@ -185,11 +183,14 @@ struct RDF_TranslatorStruct {
   arcLabelsInProc   arcLabelsIn;
   arcLabelsInProc   arcLabelsOut;
   accessFileProc    possiblyAccessFile;
+  RDFL dependents;
+  RDFL dependentOn; 
 };
 
 
 extern     PLHashTable*  resourceHash;  
 extern     PLHashTable*  dataSourceHash;  
+extern     char*  gNavCntrUrl;
 struct RDF_DBStruct {
   int16 numTranslators;
   int16 translatorArraySize;
@@ -399,6 +400,10 @@ RDFT MakeCookieStore (char* url);
 
 char* advertURLOfContainer (RDF r, RDF_Resource u) ;
 RDFT RDFTNamed (RDF rdf, char* name) ;
+
+char*  RDF_SerializeRDFStore (RDFT store) ;
+char * unescapeURL(char *inURL);
+
 
 
 

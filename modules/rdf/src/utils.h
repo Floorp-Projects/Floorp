@@ -68,6 +68,11 @@ uint8		resourceType (RDF_Resource r);
 void		setResourceType (RDF_Resource r, uint8 val);
 char *		resourceID(RDF_Resource r);
 char *		makeResourceName (RDF_Resource node);
+char* opTypeToString (RDF_EventType opType) ;
+void traceNotify (char* event, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type) ;
+
+
+
 void		AddCookieResource(char* name, char* path, char* host, char* expires);
 void		RDF_ReadCookies(char * filename);
 PRBool		CookieUnassert (RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);

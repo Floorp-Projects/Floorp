@@ -225,10 +225,10 @@ checkServerLookup (MPPParamBlock *nbp)
 						strcat(afpUrl, escapedURL);
 						/* strcat(afpUrl, ":AFPServer@"); */
 						strcat(afpUrl, ":");
-						strcat(afpUrl, ((char *)nbp->NBP.userData) + strlen("at://"));
 
 						if ((ourNBPData = (ourNBPUserDataPtr)nbp->NBP.userData) != NULL)
 						{
+							strcat(afpUrl, ourNBPData->parentID + strlen("at://"));
 							if ((parent = RDF_GetResource(NULL, (char *)(ourNBPData->parentID), PR_TRUE)) != NULL)
 							{
 								if ((r = RDF_GetResource(NULL, afpUrl, PR_TRUE)) != NULL)

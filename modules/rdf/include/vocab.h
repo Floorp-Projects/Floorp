@@ -63,6 +63,7 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_History;
   RDF_Resource RDF_HistoryBySite;
   RDF_Resource RDF_HistoryByDate;
+  RDF_Resource RDF_HistoryMostVisited;
   RDF_Resource RDF_bookmarkAddDate;
   RDF_Resource RDF_PersonalToolbarFolderCategory;
   RDF_Resource RDF_Column;
@@ -70,8 +71,14 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_ColumnWidth;
   RDF_Resource RDF_ColumnIconURL;
   RDF_Resource RDF_ColumnDataType;
-  RDF_Resource RDF_smallIcon;
-  RDF_Resource RDF_largeIcon;
+  RDF_Resource RDF_smallIcon;				/* Small normal icon. */
+  RDF_Resource RDF_smallRolloverIcon;		/* The small icon to display on rollover. */
+  RDF_Resource RDF_smallPressedIcon;		/* The small icon to display on a press. */
+  RDF_Resource RDF_smallDisabledIcon;		/* The icon to display when disabled. */
+  RDF_Resource RDF_largeIcon;				/* Large normal icon. */
+  RDF_Resource RDF_largeRolloverIcon;		/* Large rollover icon. */
+  RDF_Resource RDF_largePressedIcon;		/* Large pressed icon. */
+  RDF_Resource RDF_largeDisabledIcon;		/* Large disabled icon. */
   RDF_Resource RDF_Guide;
   RDF_Resource RDF_HTMLURL;
   RDF_Resource RDF_HTMLHeight;
@@ -82,6 +89,7 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_Password;
   RDF_Resource RDF_SBProviders;
   RDF_Resource RDF_WorkspacePos;
+  RDF_Resource RDF_ItemPos;
   RDF_Resource RDF_Locks;
   RDF_Resource RDF_AddLock;
   RDF_Resource RDF_DeleteLock;
@@ -93,6 +101,8 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_DefaultSelectedView;
   RDF_Resource RDF_AutoOpen;
   RDF_Resource RDF_resultType;
+  RDF_Resource RDF_methodType;
+  RDF_Resource RDF_prompt;
   RDF_Resource RDF_HTMLType;
   RDF_Resource RDF_URLShortcut;
   RDF_Resource RDF_Cookies;
@@ -100,20 +110,25 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_Receipts;
 #endif
   RDF_Resource RDF_Toolbar;
+  RDF_Resource RDF_JSec;
+  RDF_Resource RDF_JSecPrincipal;
+  RDF_Resource RDF_JSecTarget;
+  RDF_Resource RDF_JSecAccess;
 
   /* Commands */
   
   RDF_Resource RDF_Command;
   RDF_Resource RDF_Command_Launch;
   RDF_Resource RDF_Command_Refresh;
+  RDF_Resource RDF_Command_Reveal;
   RDF_Resource RDF_Command_Atalk_FlatHierarchy;
   RDF_Resource RDF_Command_Atalk_Hierarchy;
 
   /* NavCenter appearance styles */
 
-  RDF_Resource treeFGColor;
-  RDF_Resource treeBGColor;
-  RDF_Resource treeBGURL;
+  RDF_Resource viewFGColor;
+  RDF_Resource viewBGColor;
+  RDF_Resource viewBGURL;
   RDF_Resource showTreeConnections;
   RDF_Resource treeConnectionFGColor;
   RDF_Resource treeOpenTriggerIconURL;
@@ -136,6 +151,28 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource selectedColumnHeaderBGColor;
   RDF_Resource showColumnHilite;
   RDF_Resource triggerPlacement;
+
+  /* Toolbar Appearance Styles */
+  RDF_Resource toolbarBitmapPosition; /* Bitmap's position ("side"/"top") */
+
+
+  /* Cookie Stuff */
+  RDF_Resource cookieDomain;
+  RDF_Resource cookieValue;
+  RDF_Resource cookieHost;
+  RDF_Resource cookiePath;
+  RDF_Resource cookieSecure;
+  RDF_Resource cookieExpires;
+
+  RDF_Resource toolbarButtonsFixedSize; /* Whether or not the buttons must be the same size ("yes"/"no") */
+  RDF_Resource buttonTooltipText;	/* The tooltip text for a button. */
+  RDF_Resource buttonStatusbarText;	/* The status bar text for a button. */
+  RDF_Resource viewRolloverColor;   /* What to display when an item is rolled over in a view.*/
+  RDF_Resource viewPressedColor; /* What to display when an item is pressed in a view. */
+  RDF_Resource viewDisabledColor; /* Color to use when item is disabled in a view. */
+  RDF_Resource urlBar; /* Whether or not the button is a URL bar. */
+  RDF_Resource urlBarWidth; /* The width of the URL bar. */
+  RDF_Resource pos;
 } RDF_NCVocabStruct;
 
 typedef RDF_NCVocabStruct* RDF_NCVocab;
@@ -143,6 +180,7 @@ typedef RDF_NCVocabStruct* RDF_NCVocab;
 typedef struct _RDF_WDVocabStruct {
   RDF_Resource RDF_URL;
   RDF_Resource RDF_description;
+  RDF_Resource RDF_keyword;
   RDF_Resource RDF_Container;
   RDF_Resource RDF_firstVisitDate;
   RDF_Resource RDF_lastVisitDate;

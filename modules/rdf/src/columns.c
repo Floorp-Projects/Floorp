@@ -83,7 +83,9 @@ ColumnsGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type
 			val = (void *)HT_COLUMN_STRING;
 		}
 		else if (u == gWebData->RDF_size ||
-			 u == gWebData->RDF_numAccesses)
+			 u == gWebData->RDF_numAccesses ||
+			 u == gNavCenter->cookieDomain ||
+			 u == gNavCenter->cookieSecure)
 		{
 			val = (void *)HT_COLUMN_INT;
 		}
@@ -145,12 +147,16 @@ ColumnsNextValue (RDFT rdf, RDF_Cursor c)
 
 				case	2:	arc = gWebData->RDF_URL;		break;
 				case	3:	arc = gWebData->RDF_description;	break;
-				case	4:	arc = gNavCenter->RDF_bookmarkAddDate;	break;
-				case	5:	arc = gWebData->RDF_lastVisitDate;	break;
-				case	6:	arc = gWebData->RDF_lastModifiedDate;	break;
+				case	4:	arc = gWebData->RDF_keyword;		break;
+				case	5:	arc = gNavCenter->RDF_bookmarkAddDate;	break;
+				case	6:	arc = gWebData->RDF_lastVisitDate;	break;
+				case	7:	arc = gWebData->RDF_lastModifiedDate;	break;
+				case	8:	arc = gNavCenter->pos;	break;
 			}
 		} while ((c->count <= 6) && (arc == NULL));
 		break;
+
+    
 
 		case	HISTORY_RT:
 		switch(c->count)
@@ -163,6 +169,20 @@ ColumnsNextValue (RDFT rdf, RDF_Cursor c)
 			case	5:	arc = gWebData->RDF_numAccesses;	break;
 		}
 		break;
+
+		case   COOKIE_RT:
+		switch(c->count) 
+	        {
+			case	0:	arc = gCoreVocab->RDF_name;		break;
+			case	1:	arc = gNavCenter->cookieHost;		break;
+			case	2:	arc = gNavCenter->cookiePath;		break;
+			case	3:	arc = gNavCenter->cookieValue;		break;
+			case	4:	arc = gNavCenter->cookieExpires;	break;
+			case	5:	arc = gNavCenter->cookieDomain;		break;
+			case	6:	arc = gNavCenter->cookieSecure;		break;
+		}
+		break;
+
 
 		case	FTP_RT:
 		case	ES_RT:
@@ -211,6 +231,7 @@ ColumnsNextValue (RDFT rdf, RDF_Cursor c)
 			case	1:	arc = gNavCenter->RDF_URLShortcut;	break;
 			case	2:	arc = gWebData->RDF_URL;		break;
 			case	3:	arc = gWebData->RDF_description;	break;
+			case	4:	arc = gWebData->RDF_keyword;		break;
 		}
 		break;
 

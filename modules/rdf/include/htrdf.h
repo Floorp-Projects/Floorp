@@ -94,11 +94,10 @@ typedef uint32 HT_Error;
 struct _HT_NotificationStruct;
 
 typedef void (*HT_NotificationProc)(struct _HT_NotificationStruct*, 
-				 HT_Resource node, HT_Event whatHappened);
-
+				 HT_Resource node, HT_Event whatHappened, void *param, uint32 tokenType);
 typedef struct _HT_NotificationStruct {
-        HT_NotificationProc notifyProc;
-        void* data;
+        HT_NotificationProc		notifyProc;
+        void				*data;
 } HT_NotificationStruct;
 
 
@@ -127,6 +126,16 @@ typedef HT_NotificationStruct* HT_Notification;
 #define	HT_EVENT_WORKSPACE_EDIT			0x00004000UL
 #define	HT_EVENT_VIEW_HTML_ADD			0x00008000UL
 #define	HT_EVENT_VIEW_HTML_REMOVE		0x00010000UL
+#define	HT_EVENT_NODE_ENABLE			0x00020000UL
+#define	HT_EVENT_NODE_DISABLE			0x00040000UL
+#define	HT_EVENT_NODE_SCROLLTO			0x00080000UL
+#define	HT_EVENT_COLUMN_ADD			0x00100000UL
+#define	HT_EVENT_COLUMN_DELETE			0x00200000UL
+#define	HT_EVENT_COLUMN_SIZETO			0x00400000UL
+#define	HT_EVENT_COLUMN_REORDER			0x00800000UL
+#define	HT_EVENT_COLUMN_SHOW			0x01000000UL
+#define	HT_EVENT_COLUMN_HIDE			0x02000000UL
+
 #define HT_EVENT_NO_NOTIFICATION_MASK           0x00000000UL
 #define HT_EVENT_DEFAULT_NOTIFICATION_MASK      0xFFFFFFFFUL
 
@@ -135,7 +144,10 @@ typedef HT_NotificationStruct* HT_Notification;
 /*                    View/Pane Creation / Destruction / Management           */
 /*-----------------------------------------------------------------------*/
 
-PR_PUBLIC_API(HT_Pane) HT_PaneFromResource(RDF_Resource r, HT_Notification n, PRBool autoFlush);
+PR_PUBLIC_API(HT_Pane) HT_PaneFromResource(RDF_Resource r, HT_Notification n, PRBool autoFlush, PRBool autoOpen, PRBool useColumns);
+
+PR_PUBLIC_API(HT_Pane) HT_PaneFromURL(char* url, HT_Notification n, PRBool autoFlush, int32 param_count,
+                                      char** param_names, char** param_values);
 
 /* NewQuickFilePane
  * Creates a pane consisting of one view.  This view has the RDF resource
@@ -143,6 +155,12 @@ PR_PUBLIC_API(HT_Pane) HT_PaneFromResource(RDF_Resource r, HT_Notification n, PR
  */
 
 PR_PUBLIC_API(HT_Pane) HT_NewQuickFilePane (HT_Notification notify);
+
+/* NewToolbarPane
+ * Added by Dave 
+ * Create a pane consisting of multiple views.  Each view corresponds to a single toolbar.
+ */
+PR_PUBLIC_API(HT_Pane) HT_NewToolbarPane (HT_Notification notify);
 
 /* NewPersonalToolbarPane
  * Creates a pane consisting of one view.  This view has the RDF resource
@@ -251,8 +269,8 @@ PR_PUBLIC_API(HT_Resource)  HT_GetParent (HT_Resource node);
  * HT_NodeDisplayString (XXX needs work)
  * obtain the name of a node
  */
-PR_PUBLIC_API(HT_Error)     HT_NodeDisplayString (HT_Resource node, char *buffer, int bufferLen);
-PR_PUBLIC_API(HT_Error)     HT_ViewDisplayString (HT_View view, char *buffer, int bufferLen);
+PR_PUBLIC_API(HT_Error)     HT_NodeDisplayString (HT_Resource node, char *buffer, int bufferLen);	/* obsolete! */
+PR_PUBLIC_API(HT_Error)     HT_ViewDisplayString (HT_View view, char *buffer, int bufferLen);		/* obsolete! */
 
 PR_PUBLIC_API(PRBool)	HT_GetNodeData (HT_Resource node, void *token,
 					uint32 tokenType, void **data);
@@ -271,6 +289,7 @@ PR_PUBLIC_API(char *)	HT_GetWorkspaceLargeIconURL (HT_View view);
 PR_PUBLIC_API(char *)	HT_GetWorkspaceSmallIconURL (HT_View view);
 PR_PUBLIC_API(char *)	HT_GetNodeLargeIconURL (HT_Resource r);
 PR_PUBLIC_API(char *)	HT_GetNodeSmallIconURL (HT_Resource r);
+PR_PUBLIC_API(char *)	HT_GetIconURL(HT_Resource r, PRBool isLargeIcon, PRBool isWorkspace, int buttonState);
 
 PR_PUBLIC_API(char *)	HT_GetLargeIconURL (HT_Resource r);	/* obsolete! */
 PR_PUBLIC_API(char *)	HT_GetSmallIconURL (HT_Resource r);	/* obsolete! */
@@ -295,7 +314,19 @@ PR_PUBLIC_API(void)		HT_SetColumnOrder(HT_View view, void *srcColToken,
 						PRBool afterDestFlag);
 PR_PUBLIC_API(void)		HT_SetSortColumn(HT_View view, void *token,
 						uint32 tokenType, PRBool descendingFlag);
+PR_PUBLIC_API(void)		HT_SetColumnWidth(HT_View view, void *token,
+						uint32 tokenType, uint32 width);
+PR_PUBLIC_API(uint32)		HT_GetColumnWidth(HT_View view, void *token, uint32 tokenType);
+PR_PUBLIC_API(void)		HT_SetColumnVisibility(HT_View view, void *token, uint32 tokenType, PRBool isHiddenFlag);
+PR_PUBLIC_API(PRBool)		HT_GetColumnVisibility(HT_View view, void *token, uint32 tokenType);
+PR_PUBLIC_API(void)		HT_ShowColumn(HT_View view, void *token, uint32 tokenType);
+PR_PUBLIC_API(void)		HT_HideColumn(HT_View view, void *token, uint32 tokenType);
 PR_PUBLIC_API(PRBool)		HT_ContainerSupportsNaturalOrderSort(HT_Resource container);
+PR_PUBLIC_API(void)		HT_SetColumnFEData(HT_View view, void *token, void *data);
+PR_PUBLIC_API(void *)		HT_GetColumnFEData (HT_View view, void *token);
+
+PR_PUBLIC_API(void)		HT_SetTopVisibleNodeIndex(HT_View view, uint32 topNodeIndex);
+PR_PUBLIC_API(uint32)		HT_GetTopVisibleNodeIndex(HT_View view);
 
 
 /*
@@ -351,12 +382,18 @@ PR_PUBLIC_API(RDF_Resource) HT_GetRDFResource (HT_Resource node);
  * Access the node's name and URL
  */
 
-PR_PUBLIC_API(char*) HT_GetNodeURL(HT_Resource node);
-PR_PUBLIC_API(char*) HT_GetNodeName(HT_Resource node);
+PR_PUBLIC_API(char *) HT_GetNodeURL(HT_Resource node);
+PR_PUBLIC_API(char *) HT_GetNodeName(HT_Resource node);
 
 /*-----------------------------------------------------------------------*/
 /*                          Accessor and Mutators                        */
 /*-----------------------------------------------------------------------*/
+
+/*
+ * HT_IsURLBar
+ * determine whether node is a URL bar
+ */
+PR_PUBLIC_API(PRBool) HT_IsURLBar (HT_Resource node);
 
 /*
  * HT_IsSeparator
@@ -398,6 +435,10 @@ PR_PUBLIC_API(HT_Error)	HT_SetSelectionRange (HT_Resource node1, HT_Resource nod
 PR_PUBLIC_API(HT_Resource)	HT_GetNextSelection(HT_View view, HT_Resource startingNode);
 PR_PUBLIC_API(void)	HT_ToggleSelection(HT_Resource node);
 
+PR_PUBLIC_API(PRBool)	HT_IsEnabled (HT_Resource node);
+PR_PUBLIC_API(HT_Error) HT_GetEnabledState (HT_Resource node, PRBool *enabledState);
+PR_PUBLIC_API(HT_Error)	HT_SetEnabledState(HT_Resource node, PRBool isEnabled);
+
 PR_PUBLIC_API(PRBool)	HT_Launch(HT_Resource node, MWContext *context);
 PR_PUBLIC_API(PRBool)	HT_LaunchURL(HT_Pane pane, char *url, MWContext *context);
 
@@ -419,6 +460,8 @@ PR_PUBLIC_API(HT_Resource) HT_GetNextItem (HT_Cursor cursor) ;
 PR_PUBLIC_API(PRBool)   HT_IsContainerOpen (HT_Resource node);
 PR_PUBLIC_API(HT_Error) HT_GetOpenState (HT_Resource containerNode, PRBool *openState);
 PR_PUBLIC_API(HT_Error) HT_SetOpenState (HT_Resource containerNode, PRBool isOpen);
+PR_PUBLIC_API(HT_Error) HT_SetAutoFlushOpenState (HT_Resource containerNode, PRBool isOpen);
+
 
 /*
  * HT_ItemHasForwardSibling / HT_ItemHasBackwardSibling
@@ -449,6 +492,7 @@ typedef uint8 HT_DropAction;
 #define UPLOAD_RDF       2
 #define COPY_MOVE_LINK   3
 #define UPLOAD_LFS       4
+#define	DROP_ABORTED	5
 
 PR_PUBLIC_API(HT_DropAction)   HT_CanDropHTROn(HT_Resource dropTarget, HT_Resource obj); 
 PR_PUBLIC_API(HT_DropAction)   HT_CanDropURLOn(HT_Resource dropTarget, char* url); 
@@ -490,7 +534,9 @@ PR_PUBLIC_API(char *) HT_HTMLPaneHeight(HT_View htView);
 PR_PUBLIC_API(void) HT_AddSitemapFor(HT_Pane htPane, char *pUrl, char *pSitemapUrl, char* name);
 PR_PUBLIC_API(void) HT_AddRelatedLinksFor(HT_Pane htPane, char *pUrl);
 PR_PUBLIC_API(void) HT_ExitPage(HT_Pane htPane, char *pUrl);
-PR_PUBLIC_API(void) RDF_AddCookieResource(char* name, char* path, char* host, char* expires) ;
+PR_PUBLIC_API(void)
+RDF_AddCookieResource(char* name, char* path, char* host, char* expires, char* value, 
+                      PRBool isDomain, PRBool secure) ;
 
 NSPR_END_EXTERN_C
 

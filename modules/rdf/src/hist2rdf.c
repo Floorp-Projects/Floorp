@@ -25,6 +25,7 @@
 #include "hist2rdf.h"
 #include "remstore.h"
 
+static PRBool histInFlatFilep = 0;
 
 	/* extern declarations */
 void GH_DeleteHistoryItem (char * url);
@@ -46,7 +47,7 @@ PLHashTable     *hostHash = 0;
 RDFT grdf = NULL;
 RDFT gHistoryStore = 0;
 PRBool ByDateOpened = 0;
-
+PRBool historyInitialized = 0;
 
 
 char    *prefixList[] = {
@@ -77,9 +78,6 @@ collateHistory (RDFT r, RDF_Resource u, PRBool byDateFlag)
                                   DB_HASH, &hash);
   grdf = r;
   if (db != NULL)	{
-    if (!byDateFlag) {
-      hostHash = PL_NewHashTable(500, idenHash, PL_CompareValues,  PL_CompareValues,  null, null);
-    } else ByDateOpened = 1;
     while (0 ==   (*db->seq)(db, &key, &data, (firstOne ? R_NEXT : R_FIRST))) {
       char* title =    ((char*)data.data + 16);                /* title */
       char* url =      (char*)key.data;                       /* url */
@@ -113,6 +111,7 @@ collateOneHist (RDFT r, RDF_Resource u, char* url, char* title, time_t lastAcces
   struct tm		*time;
   RDF_Resource		hostUnit, urlUnit;
   char* existingName = NULL;
+  uint32      oldNumAccess = 0;
   if (startsWith("404", title)) return;
   urlUnit  = HistCreate(url, 1);
   existingName = nlocalStoreGetSlotValue(gLocalStore, urlUnit, gCoreVocab->RDF_name, RDF_STRING_TYPE, 0, 1);
@@ -156,9 +155,14 @@ collateOneHist (RDFT r, RDF_Resource u, char* url, char* title, time_t lastAcces
 	remoteStoreAdd(gRemoteStore, urlUnit, gWebData->RDF_firstVisitDate,
 		 (void *)copyString(buffer), RDF_STRING_TYPE, 1);
   }
+  /* oldNumAccess = remoteStoreGetSlotValue(gHistoryStore, urlUnit, gWebData->RDF_numAccesses,
+                                         RDF_INT_TYPE, 0, 1);
+  if (oldNumAccess) remoteStoreRemove(gHistoryStore, urlUnit, gWebData->RDF_numAccesses, oldNumAccess,
+                                      RDF_INT_TYPE);
   if (numAccesses==0)	++numAccesses;
   remoteStoreAdd(gHistoryStore, urlUnit, gWebData->RDF_numAccesses,
-		 (void *)numAccesses, RDF_INT_TYPE, 1);
+		 (void *)numAccesses, RDF_INT_TYPE, 1); */
+  if (numAccesses > 5) 	histAddParent(urlUnit, gNavCenter->RDF_HistoryMostVisited);
 }
 
 
@@ -365,6 +369,23 @@ hostUnitOfDate (RDFT r, RDF_Resource u, time_t lastAccessDate)
 	return (node);
 }
 
+void saveHistory () {
+  char* escapedPath = unescapeURL(gGlobalHistoryURL);
+  char* path = WH_FilePlatformName(convertFileURLToNSPRCopaceticPath(escapedPath));
+  PRFileDesc* file = PR_Open(path,  PR_WRONLY | PR_CREATE_FILE, 00200);
+  char* hist;
+  if (file != NULL) {
+    hist = RDF_SerializeRDFStore(gHistoryStore) ;
+    if (hist != NULL) {
+      PR_Write(file, hist, strlen(hist));
+    }
+  }
+  freeMem(path);
+  freeMem(escapedPath);
+  PR_Close(file);
+}
+
+static int saveCount = 0;
 
 PR_PUBLIC_API(void)
 updateNewHistItem (DBT *key, DBT *data)
@@ -372,7 +393,7 @@ updateNewHistItem (DBT *key, DBT *data)
   time_t	last,first,numaccess;
   int32 flg = (int32)*((char*)data->data + 3*sizeof(int32));
   if (!displayHistoryItem((char*)key->data)) return;
-  if (grdf != NULL) {
+  if (historyInitialized && (gHistoryStore != NULL)) {
     HIST_COPY_INT32(&last, (time_t *)((char *)data->data));
     HIST_COPY_INT32(&first, (time_t *)((char *)data->data + sizeof(int32)));
     HIST_COPY_INT32(&numaccess, (time_t *)((char *)data->data + 2*sizeof(int32)));
@@ -385,6 +406,11 @@ updateNewHistItem (DBT *key, DBT *data)
 				     (char*)key->data,                        /* url */
 				     ((char*)data->data + 4*sizeof(int32)),   /* title */
 				     last, first, numaccess, 1);
+    saveCount++;
+    if (saveCount > 5) {
+      if (histInFlatFilep) saveHistory();
+      saveCount = 0;
+    }
   }
 
 }
@@ -558,16 +584,23 @@ historyUnassert (RDFT hst,  RDF_Resource u, RDF_Resource s, void* v,
 
 
 
+
 void
 HistPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
 {
   if ((s ==  gCoreVocab->RDF_parent) && inversep && (rdf == gHistoryStore) &&
       ((u == gNavCenter->RDF_HistoryByDate) ||  (u == gNavCenter->RDF_HistoryBySite))) {
-       collateHistory(rdf, u, (u == gNavCenter->RDF_HistoryByDate)); 
-  } 
+    if (histInFlatFilep) {
+      readRDFFile(gGlobalHistoryURL, NULL, 0, gHistoryStore);
+    } else {
+      collateHistory(rdf, u, (u == gNavCenter->RDF_HistoryByDate)); 
+    }
+  } else if ((s ==  gCoreVocab->RDF_parent) && inversep && (rdf == gHistoryStore) &&
+             (u == gNavCenter->RDF_HistoryMostVisited)) {
+      collateHistory(rdf, gNavCenter->RDF_HistoryBySite, 0); 
+  }
+  historyInitialized = 1;
 }
-
-
 
 RDFT
 MakeHistoryStore (char* url)
@@ -585,11 +618,10 @@ MakeHistoryStore (char* url)
       ntr->disposeCursor = remoteStoreDisposeCursor;
       ntr->possiblyAccessFile = HistPossiblyAccessFile;
       gHistoryStore = ntr;
+      histInFlatFilep = endsWith(".rdf", gGlobalHistoryURL);
       ntr->url = copyString(url);
-      /*   collateHistory(ntr, gNavCenter->RDF_History, 1);
-      remoteStoreAdd(ntr, sep, gCoreVocab->RDF_parent, gNavCenter->RDF_History, RDF_RESOURCE_TYPE, 1);
-      bySite = 1;
-      collateHistory(ntr, gNavCenter->RDF_History, 0); */
+      hostHash = PL_NewHashTable(500, idenHash, PL_CompareValues,  PL_CompareValues,  null, null);
+      ByDateOpened = 1;
       return ntr;
     } else return gHistoryStore;
   } else return NULL;
