@@ -1066,15 +1066,17 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 
   PRBool isContainer = PR_FALSE;
   PRBool isOpen = PR_FALSE;
+  PRBool isDisabled = PR_FALSE;
   if (mCurrentMenu) {
     mCurrentMenu->MenuIsContainer(isContainer);
     mCurrentMenu->MenuIsOpen(isOpen);
+    mCurrentMenu->MenuIsDisabled(isDisabled);
 
     if (isOpen) {
       // Give our child a shot.
       mCurrentMenu->KeyboardNavigation(aDirection, aHandledFlag);
     }
-    else if (aDirection == NS_VK_RIGHT && isContainer) {
+    else if (aDirection == NS_VK_RIGHT && isContainer && !isDisabled) {
       // The menu is not yet open. Open it and select the first item.
       aHandledFlag = PR_TRUE;
       mCurrentMenu->OpenMenu(PR_TRUE);
