@@ -935,15 +935,6 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   if (tag == eHTMLTag_head)
   {
-    if (mCharsetOverride.Length() > 0)
-    {
-      Write(NS_LINEBREAK);
-      Write("<meta http-equiv=\"Content-Type\" content=\"text/html\"; charset=\"");
-      Write(mCharsetOverride);
-      Write("\">");
-      Write(NS_LINEBREAK);
-    }
-
     if(mDoHeader)
     {
       Write(gHeaderComment);
