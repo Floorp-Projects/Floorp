@@ -25,10 +25,7 @@
 
 .sidebarheader-main 
   {
-    border-left           : 1px solid threedhighlight;
-    border-top            : 1px solid threedhighlight;
-    border-right          : 1px solid threedshadow;
-    border-bottom         : 1px solid threedshadow;
+    border: 0px !important;
     background-color      : threedface;
     padding               : 3px 5px 3px 6px;
     background-image      : url("chrome://communicator/skin/toolbar-bg.gif");
