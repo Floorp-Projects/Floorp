@@ -51,8 +51,13 @@ static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static NS_DEFINE_IID(kIScrollBarIID, NS_ISCROLLBAR_IID);
 
+#ifdef XP_MAC
+	#define WIDGET_SUPPORT_EXPORT(returnType)	PR_PUBLIC_API(returnType)
+#else
+	#define WIDGET_SUPPORT_EXPORT(returnType)	returnType
+#endif
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateButton(nsISupports* aParent, 
 								nsIButton* aButton, 
 								const nsRect& aRect, 
@@ -77,7 +82,7 @@ NS_CreateButton(nsISupports* aParent,
   return NS_OK;
 }
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateCheckButton(nsISupports* aParent, 
 											  nsICheckButton* aCheckButton, 
 											  const nsRect& aRect, 
@@ -104,7 +109,7 @@ NS_CreateCheckButton(nsISupports* aParent,
 
 
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateRadioButton( nsISupports* aParent, 
 												nsIRadioButton* aRadioButton, 
 												const nsRect& aRect, 
@@ -129,7 +134,7 @@ NS_CreateRadioButton( nsISupports* aParent,
 }
 
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateLabel( nsISupports* aParent, 
 									nsILabel* aLabel, 
 									const nsRect& aRect, 
@@ -154,7 +159,7 @@ NS_CreateLabel( nsISupports* aParent,
 
 
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateTextAreaWidget(nsISupports* aParent, 
 									nsITextAreaWidget* aWidget, 
 									const nsRect& aRect, 
@@ -184,7 +189,7 @@ NS_CreateTextAreaWidget(nsISupports* aParent,
   return NS_OK;
 }
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateTextWidget(nsISupports* aParent, 
 									nsITextWidget* aWidget, 
 									const nsRect& aRect, 
@@ -216,7 +221,7 @@ NS_CreateTextWidget(nsISupports* aParent,
 
 
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateScrollBar(nsISupports* aParent, 
 									nsIScrollbar* aWidget, 
 									const nsRect& aRect, 
@@ -243,7 +248,7 @@ NS_CreateScrollBar(nsISupports* aParent,
   return NS_OK;
 }
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateListBox(nsISupports* aParent, 
 									nsIListBox* aWidget, 
 									const nsRect& aRect, 
@@ -274,7 +279,7 @@ NS_CreateListBox(nsISupports* aParent,
 }
 
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateComboBox(nsISupports* aParent, 
 									nsIComboBox* aWidget, 
 									const nsRect& aRect, 
@@ -305,7 +310,7 @@ NS_CreateComboBox(nsISupports* aParent,
 }
 
 
-NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateTabWidget(nsISupports* aParent, 
 									nsITabWidget* aWidget, 
 									const nsRect& aRect, 
@@ -339,7 +344,7 @@ NS_CreateTabWidget(nsISupports* aParent,
 
 
 
-extern NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_CreateTooltipWidget(nsISupports* aParent,	
                 nsITooltipWidget* aWidget, 
                 const nsRect& aRect, 
@@ -370,7 +375,7 @@ NS_CreateTooltipWidget(nsISupports* aParent,
 }
 
 
-extern NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_ShowWidget(nsISupports* aWidget, PRBool aShow)
 {
 
@@ -383,7 +388,7 @@ NS_ShowWidget(nsISupports* aWidget, PRBool aShow)
   return NS_OK;
 }
 
-extern NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_MoveWidget(nsISupports* aWidget, PRUint32 aX, PRUint32 aY)
 {
 
@@ -395,7 +400,7 @@ NS_MoveWidget(nsISupports* aWidget, PRUint32 aX, PRUint32 aY)
   return NS_OK;
 }
 
-extern NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_EnableWidget(nsISupports* aWidget, PRBool aEnable)
 {
 	nsIWidget* 	widget;
@@ -408,7 +413,7 @@ NS_EnableWidget(nsISupports* aWidget, PRBool aEnable)
 }
 
 
-extern NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_SetFocusToWidget(nsISupports* aWidget)
 {
 
@@ -420,8 +425,7 @@ NS_SetFocusToWidget(nsISupports* aWidget)
   return NS_OK;
 }
 
-
-extern NS_WIDGET nsresult 
+WIDGET_SUPPORT_EXPORT(nsresult)
 NS_GetWidgetNativeData(nsISupports* aWidget, void** aNativeData)
 {
 	void* 			result = nsnull;

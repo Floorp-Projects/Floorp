@@ -70,7 +70,6 @@ CPPSRCS		= \
 	nsDragService.cpp \
 	nsClipboard.cpp \
 	nsWidgetFactory.cpp \
-	nsWidgetSupport.cpp \
 	$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a

@@ -27,7 +27,6 @@ LIBRARY_NAME = widget_xlib
 REQUIRES=util img xpcom raptor netlib
 
 CPPSRCS = \
-	$(topsrcdir)/widget/src/build/nsWidgetSupport.cpp \
 	nsAppShell.cpp \
 	nsButton.cpp \
 	nsCheckButton.cpp \

@@ -33,7 +33,6 @@ DEFINES += \
 		-I$(srcdir)/.
 
 CPPSRCS = \
-	$(topsrcdir)/widget/src/build/nsWidgetSupport.cpp \
 	nsAppShell.cpp      \
 	nsButton.cpp        \
 	nsCheckButton.cpp   \

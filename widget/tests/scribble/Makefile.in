@@ -58,7 +58,7 @@ LIBS		= \
 		-lxpcom \
 		-lmozreg \
 		-lmozjs \
-		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
+		-lwidgetsupport_s \
 		-lraptorgfx \
 		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 		$(TIMER_LIBS) \

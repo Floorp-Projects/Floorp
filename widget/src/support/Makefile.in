@@ -15,47 +15,36 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=../..
+DEPTH = ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-##
-## Dont build the DSO under the 'build' directory as windows does.
-##
-## The DSOs get built in the toolkit dir itself.  Do this so that 
-## multiple implementations of widget can be built on the same
-##  source tree.
-##
-ifndef MOZ_MONOLITHIC_TOOLKIT
-DIRS = xpwidgets support
+LIBRARY_NAME = widgetsupport_s
 
-ifdef MOZ_ENABLE_GTK
-  DIRS += gtk
-endif
+CPPSRCS= \
+    nsWidgetSupport.cpp \
+	$(NULL)
 
-ifdef MOZ_ENABLE_MOTIF
-  DIRS += motif
-endif
+#LOCAL_INCLUDES := \
+#	-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
+#	-I$(srcdir) \
+#	$(NULL)
+#
+#include $(topsrcdir)/config/config.mk
 
-ifdef MOZ_ENABLE_XLIB
-  DIRS += xlib
-endif
+EXPORTS= \
+    nsWidgetSupport.h \
+	$(NULL)
 
-ifdef MOZ_ENABLE_QT
-  DIRS += qt
-endif
+CXXFLAGS += $(TK_CFLAGS)
 
-DIRS += unix_services
-else
-DIRS = xpwidgets support $(MOZ_WIDGET_TOOLKIT)
-endif
+MKSHLIB :=
 
-include $(topsrcdir)/config/config.mk
-
-TARGET = $(LIBRARY)
+# we don't want the shared lib, but we want to force the creation of a static lib.
+override NO_SHARED_LIB=1
+override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
-
