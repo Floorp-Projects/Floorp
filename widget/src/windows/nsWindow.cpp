@@ -2111,7 +2111,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     *aRetValue = 0;
 
     switch (msg) {
-
         case WM_COMMAND: {
           WORD wNotifyCode = HIWORD(wParam); // notification code 
           if ((CBN_SELENDOK == wNotifyCode) || (CBN_SELENDCANCEL == wNotifyCode)) { // Combo box change
@@ -2265,16 +2264,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               result = OnKeyUp(wParam, (HIWORD(lParam) ));
 			      else
 				      result = PR_FALSE;
-            // Let's consume the ALT key up so that we don't go into
-             // a menu bar if we don't have one.
-             // XXX This will cause a tiny breakage in viewer... namely
-             // that hitting ALT by itself in viewer won't move you into
-             // the menu.  ALT+shortcut key will still work, though, so
-             // I figure this is ok.
-             if (wParam == NS_VK_ALT) {
-               result = PR_TRUE;
-               *aRetValue = 0;
-             }
             break;
 
         // Let ths fall through if it isn't a key pad
@@ -2311,6 +2300,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                result = OnKeyDown(wParam, (HIWORD(lParam)));
 	          else
 	             result = PR_FALSE;
+            }
+
+            if (wParam == VK_MENU) {
+              // This is required to make XP menus work.
+              // Do not remove!  Talk to me if you have
+              // questions. - hyatt@netscape.com
+              result = PR_TRUE;
+              *aRetValue = 0;           
             }
             break;
 
@@ -2405,46 +2402,43 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 			  PRInt32 fActive = LOWORD(wParam);
 			
 			  if(WA_INACTIVE == fActive) {
-                gJustGotDeactivate = PR_TRUE;
-				result = DispatchFocus(NS_DEACTIVATE);
+          gJustGotDeactivate = PR_TRUE;
 			  } else {
-				gJustGotActivate = PR_TRUE;
+				  gJustGotActivate = PR_TRUE;
 			    nsMouseEvent event;
 			    event.eventStructType = NS_GUI_EVENT;
 			    InitEvent(event, NS_MOUSE_ACTIVATE);
 
-                event.acceptActivation = PR_TRUE;
+          event.acceptActivation = PR_TRUE;
 
-                PRBool result = DispatchWindowEvent(&event);
-                NS_RELEASE(event.widget);
-				
-				if(event.acceptActivation)
-					*aRetValue = MA_ACTIVATE;
-				else
-					*aRetValue = MA_NOACTIVATE; 
+          PRBool result = DispatchWindowEvent(&event);
+          NS_RELEASE(event.widget);
+				  
+				  if(event.acceptActivation)
+					  *aRetValue = MA_ACTIVATE;
+				  else
+					  *aRetValue = MA_NOACTIVATE; 
 			  }				
 			}
 			break;
 
-        case WM_SETFOCUS:
-			if(gJustGotActivate) {
-              result = DispatchFocus(NS_ACTIVATE);
-              gJustGotActivate = PR_FALSE;
-			} else {
-            result = DispatchFocus(NS_GOTFOCUS);
-			}
-            break;
+      case WM_SETFOCUS:
+        result = DispatchFocus(NS_GOTFOCUS);
+		    if(gJustGotActivate) {
+          gJustGotActivate = PR_FALSE;
+          result = DispatchFocus(NS_ACTIVATE);
+			  }
+        break;
 
-        case WM_KILLFOCUS:
-			if(gJustGotDeactivate) {
-			  result = DispatchFocus(NS_DEACTIVATE);
-			  gJustGotDeactivate = PR_FALSE;
-			} else {
-            result = DispatchFocus(NS_LOSTFOCUS);
-            }
-            break;
+      case WM_KILLFOCUS:
+        result = DispatchFocus(NS_LOSTFOCUS);
+			  if(gJustGotDeactivate) {
+          gJustGotDeactivate = PR_FALSE;
+			    result = DispatchFocus(NS_DEACTIVATE);
+			  } 
+        break;
 
-        case WM_WINDOWPOSCHANGED: 
+      case WM_WINDOWPOSCHANGED: 
         {
             WINDOWPOS *wp = (LPWINDOWPOS)lParam;
 
