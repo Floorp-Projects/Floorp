@@ -89,8 +89,8 @@ function sidebar_overlay_init() {
   sidebarObj.resource = 'urn:sidebar:current-panel-list';
 
   sidebarObj.master_datasources = '';
-  //sidebarObj.master_datasources += 'chrome://sidebar/content/local-panels.rdf';
-  //sidebarObj.master_datasources += ' chrome://sidebar/content/remote-panels.rdf';
+  sidebarObj.master_datasources += 'chrome://sidebar/content/local-panels.rdf';
+  sidebarObj.master_datasources += ' chrome://sidebar/content/remote-panels.rdf';
   sidebarObj.master_datasources += " " + get_remote_datasource_url();
   sidebarObj.master_resource = 'urn:sidebar:master-panel-list';
   sidebarObj.component = document.location.href;
