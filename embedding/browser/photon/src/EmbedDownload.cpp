@@ -124,7 +124,7 @@ void EmbedDownload::ReportDownload( int type, int current, int total, char *mess
 
 
 /* nsIWebProgressListener interface */
-NS_IMPL_ISUPPORTS1(EmbedDownload, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS2(EmbedDownload, nsIWebProgressListener, nsIWebProgressListener2)
 
 NS_IMETHODIMP EmbedDownload::OnProgressChange(nsIWebProgress *aProgress, nsIRequest *aRequest, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress) {
 
@@ -135,6 +135,13 @@ NS_IMETHODIMP EmbedDownload::OnProgressChange(nsIWebProgress *aProgress, nsIRequ
 
 	return NS_OK;
 	}
+
+NS_IMETHODIMP EmbedDownload::OnProgressChange64(nsIWebProgress *aProgress, nsIRequest *aRequest, PRInt64 curSelfProgress, PRInt64 maxSelfProgress, PRInt64 curTotalProgress, PRInt64 maxTotalProgress) {
+  // XXX truncates 64-bit to 32-bit
+  return OnProgressChange(aProgress, aRequest,
+                          PRInt32(curSelfProgress), PRInt32(maxSelfProgress),
+                          PRInt32(curTotalProgress), PRInt32(maxTotalProgress));
+  }
 
 NS_IMETHODIMP EmbedDownload::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus) {
 	if( aStateFlags & STATE_STOP ) {

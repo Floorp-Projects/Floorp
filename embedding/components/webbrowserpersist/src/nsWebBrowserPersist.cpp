@@ -370,6 +370,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SetProgressListener(
     nsIWebProgressListener * aProgressListener)
 {
     mProgressListener = aProgressListener;
+    mProgressListener2 = do_QueryInterface(aProgressListener);
     return NS_OK;
 }
 
@@ -924,7 +925,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
 //*****************************************************************************
 
 /* void onProgress (in nsIRequest request, in nsISupports ctxt,
-    in unsigned long aProgress, in unsigned long aProgressMax); */
+    in unsigned long long aProgress, in unsigned long long aProgressMax); */
 NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     nsIRequest *request, nsISupports *ctxt, PRUint64 aProgress,
     PRUint64 aProgressMax)
@@ -955,9 +956,17 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
 
     // Notify listener of total progress
     CalcTotalProgress();
-    // XXX this truncates 64-bit to 32bit
-    mProgressListener->OnProgressChange(nsnull, request, nsUint64(aProgress),
-            nsUint64(aProgressMax), mTotalCurrentProgress, mTotalMaxProgress);
+    if (mProgressListener2)
+    {
+      mProgressListener2->OnProgressChange64(nsnull, request, aProgress,
+            aProgressMax, mTotalCurrentProgress, mTotalMaxProgress);
+    }
+    else
+    {
+      // have to truncate 64-bit to 32bit
+      mProgressListener->OnProgressChange(nsnull, request, nsUint64(aProgress),
+              nsUint64(aProgressMax), mTotalCurrentProgress, mTotalMaxProgress);
+    }
 
     return NS_OK;
 

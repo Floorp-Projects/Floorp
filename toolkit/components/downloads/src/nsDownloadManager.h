@@ -51,6 +51,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIWebProgressListener.h"
+#include "nsIWebProgressListener2.h"
 #include "nsIXPIProgressDialog.h"
 #include "nsIURI.h"
 #include "nsIWebBrowserPersist.h"
@@ -198,6 +199,7 @@ class nsDownload : public nsIDownload
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
+  NS_DECL_NSIWEBPROGRESSLISTENER2
   NS_DECL_NSITRANSFER
   NS_DECL_NSIDOWNLOAD
   NS_DECL_ISUPPORTS

@@ -213,6 +213,16 @@ nsProgressDialog.prototype = {
                                 aMaxSelfProgress,
                                 aCurTotalProgress,
                                 aMaxTotalProgress ) {
+      return onProgressChange64(aWebProgress, aRequest, aCurSelfProgress,
+              aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress);
+    },
+
+    onProgressChange64: function( aWebProgress,
+                                  aRequest,
+                                  aCurSelfProgress,
+                                  aMaxSelfProgress,
+                                  aCurTotalProgress,
+                                  aMaxTotalProgress ) {
         var overallProgress = aCurTotalProgress;
 
         // Get current time.
@@ -360,6 +370,7 @@ nsProgressDialog.prototype = {
             iid.equals(Components.interfaces.nsIDownload) ||
             iid.equals(Components.interfaces.nsITransfer) ||
             iid.equals(Components.interfaces.nsIWebProgressListener) ||
+            iid.equals(Components.interfaces.nsIWebProgressListener2) ||
             iid.equals(Components.interfaces.nsIObserver) ||
             iid.equals(Components.interfaces.nsIInterfaceRequestor) ||
             iid.equals(Components.interfaces.nsISupports))

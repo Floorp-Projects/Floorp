@@ -1230,9 +1230,9 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
   PRInt32 currDownloadCount = 0;
 
   if (nsCRT::strcmp(aTopic, "oncancel") == 0) {
-    nsCOMPtr<nsIProgressDialog> dialog = do_QueryInterface(aSubject);
+    nsCOMPtr<nsIDownload> dl = do_QueryInterface(aSubject);
     nsCOMPtr<nsIURI> target;
-    dialog->GetTarget(getter_AddRefs(target));
+    dl->GetTarget(getter_AddRefs(target));
 
     nsAutoString path;
     rv = GetFilePathFromURI(target, path);
@@ -1809,7 +1809,8 @@ nsDownloadsDataSource::FlushTo(const char* aURI)
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownload
 
-NS_IMPL_ISUPPORTS3(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener,
+                   nsIWebProgressListener2)
 
 nsDownload::nsDownload():mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTED),
                          mPercentComplete(0),
@@ -1952,17 +1953,16 @@ nsDownload::SetMIMEInfo(nsIMIMEInfo *aMIMEInfo)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIWebProgressListener
+// nsIWebProgressListener2
 
 NS_IMETHODIMP
-nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
-                             nsIRequest *aRequest,
-                             PRInt32 aCurSelfProgress,
-                             PRInt32 aMaxSelfProgress,
-                             PRInt32 aCurTotalProgress,
-                             PRInt32 aMaxTotalProgress)
+nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
+                               nsIRequest *aRequest,
+                               PRInt64 aCurSelfProgress,
+                               PRInt64 aMaxSelfProgress,
+                               PRInt64 aCurTotalProgress,
+                               PRInt64 aMaxTotalProgress)
 {
-
   if (!mRequest)
     mRequest = aRequest; // used for pause/resume
 
@@ -2002,6 +2002,23 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
   }
 
   return NS_OK;
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIWebProgressListener
+
+NS_IMETHODIMP
+nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
+                             nsIRequest *aRequest,
+                             PRInt32 aCurSelfProgress,
+                             PRInt32 aMaxSelfProgress,
+                             PRInt32 aCurTotalProgress,
+                             PRInt32 aMaxTotalProgress)
+{
+  return OnProgressChange64(aWebProgress, aRequest,
+                            aCurSelfProgress, aMaxSelfProgress,
+                            aCurTotalProgress, aMaxTotalProgress);
 }
 
 NS_IMETHODIMP
@@ -2234,19 +2251,6 @@ NS_IMETHODIMP
 nsDownload::GetSize(PRUint64* aSize)
 {
   *aSize = mMaxBytes;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::SetListener(nsIWebProgressListener* aListener)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDownload::GetListener(nsIWebProgressListener** aListener)
-{
-  *aListener = nsnull;
   return NS_OK;
 }
 

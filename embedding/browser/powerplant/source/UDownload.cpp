@@ -70,7 +70,8 @@ CDownload::~CDownload()
 {
 }
 
-NS_IMPL_ISUPPORTS2(CDownload, nsIDownload, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS4(CDownload, nsIDownload, nsITransfer,
+                   nsIWebProgressListener, nsIWebProgressListener2)
 
 #pragma mark -
 #pragma mark [CDownload::nsIDownload]
@@ -150,19 +151,6 @@ NS_IMETHODIMP CDownload::GetMIMEInfo(nsIMIMEInfo * *aMIMEInfo)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* attribute nsIWebProgressListener listener; */
-NS_IMETHODIMP CDownload::GetListener(nsIWebProgressListener * *aListener)
-{
-    NS_ENSURE_ARG_POINTER(aListener);
-    NS_IF_ADDREF(*aListener = (nsIWebProgressListener *)this);
-    return NS_OK;
-}
-
-NS_IMETHODIMP CDownload::SetListener(nsIWebProgressListener * aListener)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* attribute nsIObserver observer; */
 NS_IMETHODIMP CDownload::GetObserver(nsIObserver * *aObserver)
 {
@@ -226,6 +214,16 @@ NS_IMETHODIMP CDownload::OnProgressChange(nsIWebProgress *aWebProgress, nsIReque
 
     return NS_OK;
 }
+
+/* void onProgressChange64 (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long long aCurSelfProgress, in long long aMaxSelfProgress, in long long aCurTotalProgress, in long long aMaxTotalProgress); */
+NS_IMETHODIMP CDownload::OnProgressChange64(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt64 aCurSelfProgress, PRInt64 aMaxSelfProgress, PRInt64 aCurTotalProgress, PRInt64 aMaxTotalProgress)
+{
+  // XXX truncates 64-bit to 32-bit
+  return OnProgressChange(aProgress, aRequest,
+                          PRInt32(curSelfProgress), PRInt32(maxSelfProgress),
+                          PRInt32(curTotalProgress), PRInt32(maxTotalProgress));
+}
+
 
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
 NS_IMETHODIMP CDownload::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
