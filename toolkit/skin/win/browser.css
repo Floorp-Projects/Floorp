@@ -32,3 +32,7 @@ tabpanels {
 tab[busy] > .tab-icon {
   list-style-image: url("chrome://global/skin/icons/loading-anim.gif");
 }
+
+tab[selected="true"] {
+  font-weight: bold;
+}
