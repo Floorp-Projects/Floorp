@@ -916,25 +916,27 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
         fc = fc->Next();
       }
       
-      //get the frame type
-      nsIAtom* atom;
-      prevFrame->GetFrameType(&atom);
-      if(nsLayoutAtoms::tableOuterFrame == atom) {
-        //see if it has "align="
-        // IE makes a difference between align and he float property
-        nsCOMPtr<nsIContent> content;
-        prevFrame->GetContent(getter_AddRefs(content));
-        if (content) {
-          nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
-            // we're interested only if previous frame is align=left
-            // IE messes things up when "right" (overlapping frames) 
-            if (value.EqualsIgnoreCase("left")) {
-              keepFloaterOnSameLine = PR_TRUE;
-              // don't advance to next line (IE quirkie behaviour)
-              // it breaks rule CSS2/9.5.1/1, but what the hell
-              // since we cannot evangelize the world
-              break;
+      if(prevFrame) {
+        //get the frame type
+        nsIAtom* atom;
+        prevFrame->GetFrameType(&atom);
+        if(nsLayoutAtoms::tableOuterFrame == atom) {
+          //see if it has "align="
+          // IE makes a difference between align and he float property
+          nsCOMPtr<nsIContent> content;
+          prevFrame->GetContent(getter_AddRefs(content));
+          if (content) {
+            nsAutoString value;
+            if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
+              // we're interested only if previous frame is align=left
+              // IE messes things up when "right" (overlapping frames) 
+              if (value.EqualsIgnoreCase("left")) {
+                keepFloaterOnSameLine = PR_TRUE;
+                // don't advance to next line (IE quirkie behaviour)
+                // it breaks rule CSS2/9.5.1/1, but what the hell
+                // since we cannot evangelize the world
+                break;
+              }
             }
           }
         }
