@@ -1915,7 +1915,7 @@ PresShell::PopCurrentEventFrame()
 {
   mCurrentEventFrame = nsnull;
 
-  if (0 != mCurrentEventFrameStack.Count) {
+  if (0 != mCurrentEventFrameStack.Count()) {
     mCurrentEventFrame = (nsIFrame*)mCurrentEventFrameStack.ElementAt(0);
     mCurrentEventFrameStack.RemoveElementAt(0);
   }
