@@ -2071,7 +2071,27 @@ nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
 NS_IMETHODIMP
 nsWebShell::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
 {
-  return NS_OK;
+  nsIDocumentViewer* docViewer;
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  if (nsnull != mScriptGlobal) {
+    if (nsnull != mContentViewer && 
+        NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
+      nsIPresContext *presContext;
+      if (NS_OK == docViewer->GetPresContext(presContext)) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_EVENT;
+        event.message = NS_PAGE_UNLOAD;
+        rv = mScriptGlobal->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+
+        NS_RELEASE(presContext);
+      }
+      NS_RELEASE(docViewer);
+    }
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP
