@@ -46,10 +46,10 @@ OBJS=.\$(OBJDIR)\nsZipArchive.obj \
      .\$(OBJDIR)\nsJARFactory.obj \
      .\$(OBJDIR)\nsJARInputStream.obj \
      .\$(OBJDIR)\nsWildCard.obj	\
-     .\$(OBJDIR)\nsJARStubs.obj	\
      $(NULL)
 
 LINCS=                         \
+    -I$(PUBLIC)\security       \
     -I$(XPDIST)\public\nspr    \
     -I$(XPDIST)\public\raptor  \
     -I$(XPDIST)\public\xpcom   \
