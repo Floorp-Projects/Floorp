@@ -324,7 +324,7 @@ class Component(_XPCOMBase):
                 interface = self.__dict__['_interface_names_'][interface_name]
             setattr(interface, attr, val)
             return
-        raise AttributeError, "XPCOM component '%s' can not set attribute '%s'" % (self._object_name_, attr)
+        raise AttributeError, "XPCOM component '%s' has no attribute '%s'" % (self._object_name_, attr)
     def __repr__(self):
         # We can advantage from nsIClassInfo - use it.
         if not self._tried_classinfo_:

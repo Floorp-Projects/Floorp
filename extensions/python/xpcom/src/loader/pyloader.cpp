@@ -19,7 +19,7 @@
 
 // pyloader
 //
-// Not part of the main Python _xpcom package, but a seperate, thin DLL.
+// Not part of the main Python _xpcom package, but a separate, thin DLL.
 //
 // The main loader and registrar for Python.  A thin DLL that is designed to live in
 // the xpcom "components" directory.  Simply locates and loads the standard
@@ -37,6 +37,8 @@
 #include "stdlib.h"
 #include "stdarg.h"
 
+#include "nsReadableUtils.h"
+#include "nsCRT.h"
 #include <nsFileStream.h> // For console logging.
 
 #ifdef HAVE_LONG_LONG
@@ -48,7 +50,6 @@
 static char *PyTraceback_AsString(PyObject *exc_tb);
 
 #ifdef XP_WIN
-#define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #endif
 
@@ -172,8 +173,14 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 
 void LogMessage(const char *prefix, const char *pszMessageText)
 {
-	nsOutputConsoleStream console;
-	console << prefix << pszMessageText;
+	fprintf(stderr, "%s", pszMessageText);
+}
+
+void LogMessage(const char *prefix, nsACString &text)
+{
+	char *c = ToNewCString(text);
+	LogMessage(prefix, c);
+	nsCRT::free(c);
 }
 
 // A helper for the various logging routines.
@@ -195,36 +202,35 @@ static void LogError(const char *fmt, ...)
 	PyObject *exc_typ = NULL, *exc_val = NULL, *exc_tb = NULL;
 	PyErr_Fetch( &exc_typ, &exc_val, &exc_tb);
 	if (exc_typ) {
-		char *string1 = nsnull;
-	        nsOutputStringStream streamout(string1);
+		nsCAutoString streamout;
 
 		if (exc_tb) {
 			const char *szTraceback = PyTraceback_AsString(exc_tb);
 			if (szTraceback == NULL)
-				streamout << "Can't get the traceback info!";
+				streamout += "Can't get the traceback info!";
 			else {
-				streamout << "Traceback (most recent call last):\n";
-				streamout << szTraceback;
+				streamout += "Traceback (most recent call last):\n";
+				streamout += szTraceback;
 				PyMem_Free((void *)szTraceback);
 			}
 		}
 		PyObject *temp = PyObject_Str(exc_typ);
 		if (temp) {
-			streamout << PyString_AsString(temp);
+			streamout += PyString_AsString(temp);
 			Py_DECREF(temp);
 		} else
-			streamout << "Can convert exception to a string!";
-		streamout << ": ";
+			streamout += "Can convert exception to a string!";
+		streamout += ": ";
 		if (exc_val != NULL) {
 			temp = PyObject_Str(exc_val);
 			if (temp) {
-				streamout << PyString_AsString(temp);
+				streamout += PyString_AsString(temp);
 				Py_DECREF(temp);
 			} else
-				streamout << "Can convert exception value to a string!";
+				streamout += "Can convert exception value to a string!";
 		}
-		streamout << "\n";
-		LogMessage("PyXPCOM Exception:", string1);
+		streamout += "\n";
+		LogMessage("PyXPCOM Exception:", streamout);
 	}
 	PyErr_Restore(exc_typ, exc_val, exc_tb);
 }

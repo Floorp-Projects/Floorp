@@ -18,8 +18,14 @@
 # The XPCOM (Cross Platform COM) package.
 import exceptions
 
-#import sys
+
+import sys
 #sys.stdout = open("pystdout.log", "w")
+if sys.version_info >= (2, 3):
+    # sick off the new hex() warnings, and no time to digest what the 
+    # impact will be!
+    import warnings
+    warnings.filterwarnings("ignore", category=FutureWarning, append=1)
 
 # A global "verbose" flag - currently used by the
 # server package to print trace messages

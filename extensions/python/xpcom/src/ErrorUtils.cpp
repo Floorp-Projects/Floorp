@@ -28,6 +28,7 @@
 // (c) 2000, ActiveState corp.
 
 #include "PyXPCOM_std.h"
+#include "nsReadableUtils.h"
 #include <nsFileStream.h>
 
 static char *PyTraceback_AsString(PyObject *exc_tb);
@@ -37,8 +38,15 @@ static char *PyTraceback_AsString(PyObject *exc_tb);
 
 void LogMessage(const char *prefix, const char *pszMessageText)
 {
-	nsOutputConsoleStream console;
+	nsOutputStream console;
 	console << prefix << pszMessageText;
+}
+
+void LogMessage(const char *prefix, nsACString &text)
+{
+	char *c = ToNewCString(text);
+	LogMessage(prefix, c);
+	nsCRT::free(c);
 }
 
 // A helper for the various logging routines.
@@ -61,36 +69,35 @@ void PyXPCOM_LogError(const char *fmt, ...)
 	PyErr_Fetch( &exc_typ, &exc_val, &exc_tb);
 	if (exc_typ) {
 		PyErr_NormalizeException( &exc_typ, &exc_val, &exc_tb);
-		char *string1 = nsnull;
-		nsOutputStringStream streamout(string1);
+		nsCAutoString streamout;
 
 		if (exc_tb) {
 			const char *szTraceback = PyTraceback_AsString(exc_tb);
 			if (szTraceback == NULL)
-				streamout << "Can't get the traceback info!";
+				streamout += "Can't get the traceback info!";
 			else {
-				streamout << "Traceback (most recent call last):\n";
-				streamout << szTraceback;
+				streamout += "Traceback (most recent call last):\n";
+				streamout += szTraceback;
 				PyMem_Free((void *)szTraceback);
 			}
 		}
 		PyObject *temp = PyObject_Str(exc_typ);
 		if (temp) {
-			streamout << PyString_AsString(temp);
+			streamout += PyString_AsString(temp);
 			Py_DECREF(temp);
 		} else
-			streamout << "Can't convert exception to a string!";
-		streamout << ": ";
+			streamout += "Can't convert exception to a string!";
+		streamout += ": ";
 		if (exc_val != NULL) {
 			temp = PyObject_Str(exc_val);
 			if (temp) {
-				streamout << PyString_AsString(temp);
+				streamout += PyString_AsString(temp);
 				Py_DECREF(temp);
 			} else
-				streamout << "Can't convert exception value to a string!";
+				streamout += "Can't convert exception value to a string!";
 		}
-		streamout << "\n";
-		LogMessage("PyXPCOM Exception:", string1);
+		streamout += "\n";
+		LogMessage("PyXPCOM Exception:", streamout);
 	}
 	PyErr_Restore(exc_typ, exc_val, exc_tb);
 }
