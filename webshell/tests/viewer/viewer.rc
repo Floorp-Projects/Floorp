@@ -69,7 +69,7 @@ VIEWER MENU DISCARDABLE
       MENUITEM SEPARATOR
       MENUITEM "P&refs",                      VIEWER_PREFS
   END
-#if defined(_DEBUG)
+/*#if defined(_DEBUG)*/
   POPUP "&Debug"
   {
     MENUITEM "&Visual Debugging", VIEWER_VISUAL_DEBUGGING
@@ -95,7 +95,7 @@ VIEWER MENU DISCARDABLE
     MENUITEM SEPARATOR
     MENUITEM "Show Content Quality", VIEWER_SHOW_CONTENT_QUALITY
  }
-#endif
+/*#endif*/
   POPUP "&Style"
   {
     POPUP "Select &Style Sheet"
