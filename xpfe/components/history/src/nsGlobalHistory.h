@@ -330,8 +330,7 @@ protected:
   nsresult SaveByteOrder(const char *aByteOrder);
   nsresult GetByteOrder(char **_retval);
   nsresult InitByteOrder(PRBool aForce);
-  void SwapBytes(const PRUint16 *source, PRUint16 *dest, int len);
-  void SwapBytes(const PRUint32 *source, PRUint32 *dest, int len);
+  void SwapBytes(const PRUnichar *source, PRUnichar *dest, PRInt32 aLen);
   PRBool mReverseByteOrder;
 
   //
