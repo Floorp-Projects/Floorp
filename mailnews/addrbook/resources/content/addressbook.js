@@ -24,8 +24,9 @@ function OnLoadAddressBook()
 	}
 
 	SetupCommandUpdateHandlers();
-	
-	SelectFirstAddressBook();
+
+	//workaround - add setTimeout to make sure dynamic overlays get loaded first
+	setTimeout('SelectFirstAddressBook()',0);
 }
 
 
