@@ -203,7 +203,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
     else {
         info.fName = PL_strdup(this->GetCString());
         info.fDescription = PL_strdup("");
-        info.fMimeDescription = PL_strdup("");
     }
 
 #ifdef NS_DEBUG
