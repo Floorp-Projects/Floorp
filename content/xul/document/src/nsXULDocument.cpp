@@ -3069,6 +3069,13 @@ nsXULDocument::Load(const nsString& aUrl)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP    
+nsXULDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
+{
+    NS_NOTREACHED("nsXULDocument::GetPlugins");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //----------------------------------------------------------------------
 //
 // nsIDOMXULDocument interface

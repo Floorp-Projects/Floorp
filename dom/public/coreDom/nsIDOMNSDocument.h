@@ -29,6 +29,7 @@
 #include "nsIScriptContext.h"
 
 class nsIDOMElement;
+class nsIDOMPluginArray;
 class nsIDOMRange;
 
 #define NS_IDOMNSDOCUMENT_IID \
@@ -45,6 +46,8 @@ public:
 
   NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet)=0;
 
+  NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins)=0;
+
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn)=0;
 
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn)=0;
@@ -57,6 +60,7 @@ public:
   NS_IMETHOD    GetWidth(PRInt32* aWidth);  \
   NS_IMETHOD    GetHeight(PRInt32* aHeight);  \
   NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet);  \
+  NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);  \
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn);  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);  \
   NS_IMETHOD    Load(const nsString& aUrl);  \
@@ -67,6 +71,7 @@ public:
   NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to GetWidth(aWidth); } \
   NS_IMETHOD    GetHeight(PRInt32* aHeight) { return _to GetHeight(aHeight); } \
   NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet) { return _to GetCharacterSet(aCharacterSet); } \
+  NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins) { return _to GetPlugins(aPlugins); } \
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn) { return _to CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn) { return _to CreateRange(aReturn); }  \
   NS_IMETHOD    Load(const nsString& aUrl) { return _to Load(aUrl); }  \

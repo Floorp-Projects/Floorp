@@ -46,6 +46,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsIDOMPluginArray.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMText.h"
 #include "nsIDOMDOMImplementation.h"
@@ -75,6 +76,7 @@ static NS_DEFINE_IID(kIDocumentXBLIID, NS_IDOMDOCUMENTXBL_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kICDATASectionIID, NS_IDOMCDATASECTION_IID);
 static NS_DEFINE_IID(kIDocumentEventIID, NS_IDOMDOCUMENTEVENT_IID);
+static NS_DEFINE_IID(kIPluginArrayIID, NS_IDOMPLUGINARRAY_IID);
 static NS_DEFINE_IID(kIEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kITextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMImplementationIID, NS_IDOMDOMIMPLEMENTATION_IID);
@@ -99,7 +101,8 @@ enum Document_slots {
   DOCUMENTVIEW_DEFAULTVIEW = -5,
   NSDOCUMENT_WIDTH = -6,
   NSDOCUMENT_HEIGHT = -7,
-  NSDOCUMENT_CHARACTERSET = -8
+  NSDOCUMENT_CHARACTERSET = -8,
+  NSDOCUMENT_PLUGINS = -9
 };
 
 /***********************************************************************/
@@ -249,6 +252,26 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             rv = b->GetCharacterSet(prop);
             if(NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSDOCUMENT_PLUGINS:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_PLUGINS, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsIDOMPluginArray* prop;
+          nsIDOMNSDocument* b;
+          if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
+            rv = b->GetPlugins(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
             }
             NS_RELEASE(b);
           }
@@ -1368,6 +1391,7 @@ static JSPropertySpec DocumentProperties[] =
   {"width",    NSDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"height",    NSDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"characterSet",    NSDOCUMENT_CHARACTERSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"plugins",    NSDOCUMENT_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

@@ -55,7 +55,6 @@
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMLoadListener.h"
 
-
 #include "nsIDOMStyleSheet.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsDOMAttribute.h"
@@ -65,6 +64,7 @@
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMDocumentXBL.h"
+#include "nsIDOMNavigator.h"
 #include "nsGenericElement.h"
 
 #include "nsICSSStyleSheet.h"
@@ -930,6 +930,16 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   }
 
   return rv;
+}
+
+nsresult 
+nsDocument::SetDocumentURL(nsIURI* aURI)
+{
+  NS_IF_RELEASE(mDocumentURL);
+  mDocumentURL = aURI;
+  NS_IF_ADDREF(mDocumentURL);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2459,6 +2469,39 @@ nsDocument::Load (const nsString& aUrl)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP    
+nsDocument::GetPlugins(nsIDOMPluginArray** aPlugins)
+{
+  NS_ENSURE_ARG_POINTER(aPlugins);
+  *aPlugins = nsnull;
+
+  // XXX Could also get this through mScriptGlobalObject
+  nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell *,
+                                       mPresShells.ElementAt(0));
+  NS_ENSURE_TRUE(shell, NS_OK);
+
+  nsCOMPtr<nsIPresContext> ctx;
+  nsresult rv = shell->GetPresContext(getter_AddRefs(ctx));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && ctx, rv);
+
+  nsCOMPtr<nsISupports> container;
+  rv = ctx->GetContainer(getter_AddRefs(container));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && container, rv);
+
+  nsCOMPtr<nsIInterfaceRequestor> ifrq(do_QueryInterface(container));
+  NS_ENSURE_TRUE(ifrq, NS_OK);
+
+  nsCOMPtr<nsIDOMWindow> window;
+  ifrq->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(window));
+  NS_ENSURE_TRUE(window, NS_OK);
+
+  nsCOMPtr<nsIDOMNavigator> navigator;
+  window->GetNavigator(getter_AddRefs(navigator));
+  NS_ENSURE_TRUE(navigator, NS_OK);
+
+  return navigator->GetPlugins(aPlugins);
+}
+
 //
 // nsIDOMNode methods
 //
@@ -2513,7 +2556,11 @@ nsDocument::GetChildNodes(nsIDOMNodeList** aChildNodes)
 NS_IMETHODIMP    
 nsDocument::HasChildNodes(PRBool* aHasChildNodes)
 {
-  *aHasChildNodes = PR_TRUE;
+  NS_ENSURE_ARG(aHasChildNodes);
+
+  *aHasChildNodes =  (((nsnull != mProlog) && (0 != mProlog->Count())) ||
+                      (nsnull != mRootContent) ||
+                      ((nsnull != mEpilog) && (0 != mEpilog->Count())));
   return NS_OK;
 }
 
@@ -2522,6 +2569,7 @@ nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
   nsresult result = NS_OK;
 
+  *aFirstChild = nsnull;
   if ((nsnull != mProlog) && (0 != mProlog->Count())) {
     nsIContent* content;
     content = (nsIContent *)mProlog->ElementAt(0);
@@ -2533,7 +2581,7 @@ nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
   else {
     nsIDOMElement* element;
     result = GetDocumentElement(&element);
-    if (NS_OK == result) {
+    if ((NS_OK == result) && element) {
       result = element->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aFirstChild);
       NS_RELEASE(element);
     }
@@ -2557,7 +2605,7 @@ nsDocument::GetLastChild(nsIDOMNode** aLastChild)
   else {
     nsIDOMElement* element;
     result = GetDocumentElement(&element);
-    if (NS_OK == result) {
+    if ((NS_OK == result) && element) {
       result = element->QueryInterface(NS_GET_IID(nsIDOMNode), (void**)aLastChild);
       NS_RELEASE(element);
     }
@@ -3393,7 +3441,7 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
     }
     if (!rootElement)
       result=GetDocumentElement(getter_AddRefs(rootElement));
-    if (NS_SUCCEEDED(result))
+    if (NS_SUCCEEDED(result) && rootElement)
     {  
   #if 1
       result=ToXIF(converter,rootElement);
