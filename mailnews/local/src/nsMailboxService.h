@@ -51,8 +51,8 @@ public:
 	NS_IMETHOD ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener * aMailboxParser, 
 							nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
-	NS_IMETHOD DisplayMessage(const nsFilePath& aMailboxPath, PRUint32 aStartByte, PRUint32 aEndByte, 
-		nsISupports * aDisplayConsumer, nsIURL ** aURL);
+	NS_IMETHOD DisplayMessage(const nsFilePath& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
+							  nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End suppport for the nsIMailboxService Interface
