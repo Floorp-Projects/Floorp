@@ -351,6 +351,9 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
+  
+  if (nsnull != mMenuListener)
+  	aStatus = mMenuListener->MenuSelected(*event);
   if (nsnull != mEventCallback) {
     aStatus = (*mEventCallback)(event);
   }
