@@ -113,6 +113,10 @@ nsViewerApp::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 void
 nsViewerApp::Destroy()
 {
+  // Close all of our windows
+  nsBrowserWindow::CloseAllWindows();
+
+  // Release the crawler
   NS_IF_RELEASE(mCrawler);
 
   // Only shutdown if Initialize has been called...
@@ -440,6 +444,7 @@ nsViewerApp::OpenWindow()
   else {
     bw->GoTo(mStartURL);
   }
+  NS_RELEASE(bw);
 
   return NS_OK;
 }
@@ -456,7 +461,6 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
   bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), aNewChromeMask, mAllowPlugins);
 
   aNewWindow = bw;
-  NS_ADDREF(bw);
 
   return NS_OK;
 }
