@@ -39,18 +39,18 @@ extern "C" {
 char *MIME_DecodeMimePartIIStr(const char *header, char *charset);
 
 /**
- * Convert the unicode string into the encoding used in internet message and encode 
- * them into RFC 2047 form.
+ * Encode an input string into RFC 2047 form.
+ * This is a replacement for INTL_EncodeMimePartIIStr.
+ * Unlike INTL_EncodeMimePartIIStr, this does not apply any charset conversion.
+ * Use MIME_ConvertCharset in advance if the encoding string needs a conversion.
  *
  *
- * @param inHeaderUni     [IN] Unicode string.
- * @param inCharLen       [IN] Character length of the unicode string.
+ * @param header          [IN] A header to encode.
  * @param mailCharset     [IN] Charset name (in C string) to convert.
  * @param encodedWordSize [IN] Byte lenght limit of the output, ususally 72 (use kMIME_ENCODED_WORD_SIZE).
- * @return            Encoded buffer (in C string) or NULL in case of error (e.g. converter unavailable).
+ * @return            Encoded buffer (in C string) or NULL in case of error.
  */
-char *MIME_EncodeMimePartIIStr(const void* inHeaderUni, const PRInt32 inCharLen, 
-                               const char* mailCharset, const PRInt32 encodedWordSize);
+char *MIME_EncodeMimePartIIStr(const char *header, const char* mailCharset, const PRInt32 encodedWordSize);
 
 /**
  * Apply charset conversion to a given buffer.
