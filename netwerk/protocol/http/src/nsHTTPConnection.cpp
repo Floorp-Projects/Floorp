@@ -36,7 +36,8 @@ nsHTTPConnection::nsHTTPConnection(
     m_pHandler(dont_QueryInterface(i_Handler)),
     m_pEventSink(dont_QueryInterface(i_HTTPEventSink)),
     m_pResponse(nsnull),
-    m_pEventQ(dont_QueryInterface(i_EQ))
+    m_pEventQ(dont_QueryInterface(i_EQ)),
+    m_pResponseDataListener(nsnull)
     
 {
     //TODO think if we need to make a copy of the URL and keep it here
@@ -67,6 +68,8 @@ nsHTTPConnection::~nsHTTPConnection()
         delete m_pResponse;
         m_pResponse = 0;
     }
+
+    NS_IF_RELEASE(m_pResponseDataListener);
 }
 
 NS_IMPL_ADDREF(nsHTTPConnection);
@@ -92,12 +95,26 @@ nsHTTPConnection::Resume(void)
 NS_METHOD
 nsHTTPConnection::GetInputStream(nsIInputStream* *o_Stream)
 {
+#if 0
+    nsresult rv;
+
     if (!m_bConnected)
         Open();
+
+    nsIInputStream* inStr; // this guy gets passed out to the user
+    rv = NS_NewSyncStreamListener(&m_pResponseDataListener, &inStr);
+    if (NS_FAILED(rv)) return rv;
+
+    *o_Stream = inStr;
+    return NS_OK;
+
+#else
+
     if (m_pResponse)
         return m_pResponse->GetInputStream(o_Stream);
     NS_ERROR("No response!");
     return NS_OK; // change to error ? or block till response is set up?
+#endif // if 0
 
 }
 
@@ -212,7 +229,7 @@ nsHTTPConnection::Open(void)
 #endif // jud
 
     rv = m_pHandler->GetTransport(host, unsignedPort, &temp);
-    if (temp)
+    if (NS_SUCCEEDED(rv) && temp)
     {
         m_pRequest->SetTransport(temp);
 
@@ -288,6 +305,16 @@ nsHTTPConnection::GetURL(nsIURL* *o_URL) const
 {
     if (o_URL)
         *o_URL = m_pURL;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPConnection::GetResponseDataListener(nsIStreamListener* *aListener)
+{
+    if (m_pResponseDataListener) {
+        *aListener = m_pResponseDataListener;
+        NS_ADDREF(m_pResponseDataListener);
+    }
     return NS_OK;
 }
 
