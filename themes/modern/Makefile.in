@@ -33,3 +33,4 @@ libs::
 	@$(REGCHROME) skin modern/global modern.jar
 	@$(REGCHROME) skin modern/messenger modern.jar
 	@$(REGCHROME) skin modern/navigator modern.jar
+	@$(REGCHROME) skin modern/forms modern.jar

@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -43,31 +43,61 @@
  **/
 
 select[size] {
-  -moz-user-focus: normal;
-  -moz-user-select: none;
-  display: -moz-box;
   border: 2px inset ThreeDFace;
+  margin: 0;
+  min-height: none;
+  color: inherit;
+  font: inherit;
 }
   
-xul|outlinerbody:-moz-outliner-row {
+xul|*.select-outlinerbody:-moz-outliner-row {
   border: 1px solid transparent;
 }
 
-xul|outlinercol {
+xul|*.select-outlinercol {
   margin: 0px !important;
   border: none !important;
   padding: 0px !important;
-  -moz-binding: none;
 }
 
-xul|outlinerrows {
-  -moz-binding: none;
-}
-
-xul|outlinercol.outliner-columnpicker {
+xul|*.select-outlinercols > xul|*.outliner-columnpicker {
   display: none;
 }
 
-xul|outlinerbody {
-  -moz-binding: url("chrome://forms/content/select.xml#select-outlinerbody");
+/* ::::: outliner rows ::::: */
+
+xul|*.select-outlinerbody:-moz-outliner-row {
+  border: 1px solid transparent;
+  height: 18px;
+}
+
+xul|*.select-outlinerbody:-moz-outliner-row(selected) {
+  background-color: #C7D0D9;
+}
+
+xul|*.select-outlinerbody:-moz-outliner-row(selected, focus) {
+  background-color: #424F63;
+}
+
+xul|*.select-outlinerbody:-moz-outliner-row(current, focus) {
+  border-top-color: #000000;
+  border-bottom-color: #000000;
+}
+
+/* ::::: outliner cells ::::: */
+
+xul|*.select-outlinerbody:-moz-outliner-cell {
+  padding: 0px 0px 0px 2px;
+}
+
+xul|*.select-outlinerbody:-moz-outliner-cell-text {
+  color: inherit;
+}
+
+xul|*.select-outlinerbody:-moz-outliner-cell-text(selected) {
+  color: #000000;
+}
+
+xul|*.select-outlinerbody:-moz-outliner-cell-text(selected, focus) {
+  color: #FFFFFF;
 }

@@ -364,3 +364,7 @@ modern.jar:
   skin/modern/navigator/toolbar/ubhist-arrow.gif                   (navigator/toolbar/ubhist-arrow.gif)
   skin/modern/navigator/toolbar/urlbar-mid.gif                     (navigator/toolbar/urlbar-mid.gif)
   skin/modern/navigator/icons/btn1.gif                             (navigator/icons/btn1.gif)
+  skin/modern/forms/contents.rdf                                   (forms/contents.rdf)
+  skin/modern/forms/forms.css                                      (forms/forms.css)
+  skin/modern/forms/select.css                                     (forms/select.css)
+  skin/modern/forms/select-dropdown.css                            (forms/select-dropdown.css)
