@@ -3677,11 +3677,22 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
     }
     else {
 #ifdef IBMBIDI // Simon
+    // There is no nextInFlow - check if there is a bidi
+    // continuation frame
+    if (mState & NS_FRAME_IS_BIDI)
+    {
       nsIFrame *nextBidi;
       GetNextSibling(&nextBidi);
       if (nextBidi)
-        return nextBidi->GetChildFrameContainingOffset(inContentOffset, inHint, outFrameContentOffset, outChildFrame);
-      else
+      {
+        PRInt32 start, end;
+        if (NS_SUCCEEDED(nextBidi->GetOffsets(start, end)) && start > 0)
+        {
+          return nextBidi->GetChildFrameContainingOffset(inContentOffset, 
+inHint, outFrameContentOffset, outChildFrame);
+        }
+      }
+    }
 #endif // IBMBIDI
       {
         if (contentOffset != mContentLength) //that condition was only for when there is a choice
