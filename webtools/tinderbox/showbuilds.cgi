@@ -27,16 +27,14 @@ $|=1;
 
 
 #
-# show 36 hours by default
+# show 12 hours by default
 #
 if($form{'showall'} != 0 ){
     $mindate = 0;
 }
 else {
-    $hours = 36;
-    if( $form{hours} ne "" ){
-        $hours = $form{hours};
-    }
+    $hours = 12;
+    $hours = $form{hours} if $form{hours} ne "";
     $mindate = time - ($hours*60*60);
 }
 
@@ -71,23 +69,8 @@ if( $form{'tree'} eq '' ){
     exit;
 }
 else {
-  if( $form{'timeit'} ) {
-    use Benchmark;
-    print "Timing the new express:<br>\n";
-    $t0 = new Benchmark;
-    &do_express_fast;
-    $t1 = new Benchmark;
-    print "express_fast took: ", timestr(timediff($t1,$t0)), "<br>\n";
-    print "Now time the old express:<br>\n";
-    &do_express_old;
-    $t2 = new Benchmark;
-    print "express took: ", timestr(timediff($t2,$t1)), "<br>\n";
-    exit;
-  } 
     if( $form{'express'} ) {
-        &do_express_old;
-    } elsif( $form{'express_fast'} ) {
-        &do_express_fast;
+        &do_express;
     }
     else {
         &load_data;
@@ -682,64 +665,7 @@ $script_str .= "</script>\n";
 
 }
 
-
-sub do_express_old {
-    my($mailtime, $buildtime, $buildname, $errorparser, $buildstatus,
-       $logfile);
-    my $buildrec;
-    my %build;
-    my %times;
-
-    open(BUILDLOG, "<$form{'tree'}/build.dat" ) || die ;
-    while( <BUILDLOG> ){
-        chop;
-        ($mailtime, $buildtime, $buildname, $errorparser, $buildstatus, $logfile) = 
-            split( /\|/ );
-        if( $buildstatus eq 'success' || $buildstatus eq 'busted'){
-            $build{$buildname} = $buildstatus;
-	    $times{$buildname} = $buildtime;
-        }
-    }
-    close( BUILDLOG );
-
-    @keys = sort keys %build;
-    $keycount = @keys;
-    $treename = $form{tree};
-    $tm = &print_time(time);
-    print "<table border=1 align=center><tr><th colspan=$keycount><a href=showbuilds.cgi?tree=$treename";
-    print "&hours=$form{'hours'}" if $form{'hours'};
-    print "&nocrap=1" if $form{'nocrap'};
-    print ">$tree as of $tm</a></tr>"
-          ."<tr>\n";
-    my $maxtime = 0;
-    for $buildname (@keys) {
-	if ($maxtime < $times{$buildname}) {
-	    $maxtime = $times{$buildname};
-	}
-    }
-
-    for $buildname (@keys ){
-	if ($times{$buildname} < $maxtime - 12*60*60) {
-	    # This build is more than 12 hours old.  Ignore it.
-	    next;
-	}
-        if( $build{$buildname} eq 'success' ){
-            print "<td bgcolor=00ff00>";
-        }
-        else {
-            if ($form{'nocrap'}) {
-                print "<td bgcolor=FF0000>";
-            } else {
-                print "<td bgcolor=000000 background=1afi003r.gif>";
-                print "<font color=white>\n";
-            }
-        }
-        print "$buildname</td>";
-    }
-    print "</tr></table>\n";
-}
-
-sub do_express_fast {
+sub do_express {
     my($mailtime, $buildtime, $buildname, $errorparser, $buildstatus,
        $logfile);
     my $buildrec;
