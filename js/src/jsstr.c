@@ -2665,7 +2665,15 @@ js_ValueToSource(JSContext *cx, jsval v)
 {
     if (JSVAL_IS_STRING(v))
         return js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
-    if (!JSVAL_IS_PRIMITIVE(v)) {
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        /* Special case to preserve negative zero, _contra_ toString. */
+        if (JSVAL_IS_DOUBLE(v) && JSDOUBLE_IS_NEGZERO(*JSVAL_TO_DOUBLE(v))) {
+            /* NB: _ucNstr rather than _ucstr to indicate non-terminated. */
+            static const jschar js_negzero_ucNstr[] = {'-', '0'};
+
+            return js_NewStringCopyN(cx, js_negzero_ucNstr, 2, 0);
+        }
+    } else {
         if (!js_TryMethod(cx, JSVAL_TO_OBJECT(v),
                           cx->runtime->atomState.toSourceAtom,
                           0, NULL, &v)) {
