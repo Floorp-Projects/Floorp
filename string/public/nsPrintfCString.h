@@ -67,7 +67,7 @@
    * much more efficiently handled with |NS_LITERAL_[C]STRING| and |nsLiteral[C]String|.
    */
 
-class nsPrintfCString
+class NS_COM nsPrintfCString
     : public nsACString
   {
     enum { kLocalBufferSize=15 };
