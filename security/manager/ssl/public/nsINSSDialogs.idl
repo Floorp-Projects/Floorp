@@ -24,6 +24,7 @@
 #include "nsIX509Cert.idl"
 
 interface nsIInterfaceRequestor;
+interface nsIKeygenThread;
 
 /**
  * nsITokenPasswordDialogs
@@ -45,6 +46,19 @@ interface nsITokenPasswordDialogs : nsISupports
                    in wstring tokenName,
                    out wstring password,
                    out boolean canceled);
+};
+
+
+/**
+ * nsIGeneratingKeypairInfoDialogs
+ *  This is the interface for giving feedback to the user
+ *  while generating a key pair.
+ */
+[scriptable, uuid(11bf5cdc-1dd2-11b2-ba6a-c76afb326fa1)]
+interface nsIGeneratingKeypairInfoDialogs : nsISupports
+{
+  void displayGeneratingKeypairInfo(in nsIInterfaceRequestor ctx,
+                                    in nsIKeygenThread runnable);
 };
 
 

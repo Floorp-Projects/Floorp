@@ -43,7 +43,8 @@ class nsNSSDialogs
   public nsICertificateDialogs,
   public nsIClientAuthDialogs,
   public nsITokenDialogs,
-  public nsIDOMCryptoDialogs
+  public nsIDOMCryptoDialogs,
+  public nsIGeneratingKeypairInfoDialogs
 {
 public:
   NS_DECL_ISUPPORTS
@@ -55,6 +56,7 @@ public:
   NS_DECL_NSICLIENTAUTHDIALOGS
   NS_DECL_NSITOKENDIALOGS
   NS_DECL_NSIDOMCRYPTODIALOGS
+  NS_DECL_NSIGENERATINGKEYPAIRINFODIALOGS
   nsNSSDialogs();
   virtual ~nsNSSDialogs();
 

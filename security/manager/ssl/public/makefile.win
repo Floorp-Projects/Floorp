@@ -59,6 +59,7 @@ XPIDLSRCS= \
     .\nsINSSDialogs.idl \
     .\nsISSLStatus.idl \
     .\nsICertOutliner.idl \
+    .\nsIKeygenThread.idl \
     $(NULL)
 
 

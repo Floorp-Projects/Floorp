@@ -53,6 +53,7 @@ XPIDLSRCS = \
     nsINSSDialogs.idl \
     nsISSLStatus.idl \
     nsICertOutliner.idl \
+    nsIKeygenThread.idl \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk
