@@ -939,25 +939,6 @@ nsEditor::BeginTransaction()
 
   BeginUpdateViewBatch();
 
-  nsCOMPtr<nsIDOMSelection>selection;
-  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
-  if (NS_SUCCEEDED(selectionResult) && selection) {
-    selection->StartBatchChanges();
-  }
-
-  if (nsnull!=mViewManager)
-  {
-    if (0==mUpdateCount)
-    {
-#ifdef HACK_FORCE_REDRAW
-      mViewManager->DisableRefresh();
-#else
-      mViewManager->BeginUpdateViewBatch();
-#endif
-    }
-    mUpdateCount++;
-  }
-
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     mTxnMgr->BeginBatch();
@@ -980,20 +961,6 @@ nsEditor::EndTransaction()
   {
     mTxnMgr->EndBatch();
   }
-
-  if (nsnull!=mViewManager)
-  {
-    mUpdateCount--;
-    if (0==mUpdateCount)
-    {
-#ifdef HACK_FORCE_REDRAW
-      mViewManager->EnableRefresh();
-      HACKForceRedraw();
-#else
-      mViewManager->EndUpdateViewBatch();
-#endif
-    }
-  }  
 
   EndUpdateViewBatch();
 
