@@ -2742,15 +2742,15 @@ XFE_GetEmbedSize (MWContext *context, LO_EmbedStruct *embed_struct,
            to XFE_CreateEmbedWindow() */
 	if((embed_struct->objTag.width == 1) &&
            (embed_struct->objTag.height == 1) &&
-#ifdef OJI
+/* #ifdef OJI */
            (embed_struct->attributes.n > 0) &&
            (!strcmp(embed_struct->attributes.names[0], "src")) &&
            (!strcmp(embed_struct->attributes.values[0], "internal-external-plugin"))) {
-#else
+/* #else
            (embed_struct->attribute_cnt > 0) &&
            (!strcmp(embed_struct->attribute_list[0], "src")) &&
            (!strcmp(embed_struct->value_list[0], "internal-external-plugin"))) {
-#endif /* OJI */
+#endif */ /* OJI */
             CONTEXT_DATA(context)->is_fullpage_plugin = 1;
         }
 
