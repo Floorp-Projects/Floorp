@@ -1454,8 +1454,8 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
     nsCAutoString urlSpec;
     nsresult rv;
 
-	PRUnichar hierarchySeparator = '/';
-    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), dstFolder, urlListener, urlSpec, hierarchySeparator);
+	PRUnichar default_hierarchySeparator = '/';
+    rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), dstFolder, urlListener, urlSpec, default_hierarchySeparator);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
         rv = SetImapUrlSink(dstFolder, imapUrl);

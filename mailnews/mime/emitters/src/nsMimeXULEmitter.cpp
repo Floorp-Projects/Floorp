@@ -383,7 +383,6 @@ nsMimeXULEmitter::DumpAttachmentMenu()
 
   char *escapedUrl = nsnull;
   char *escapedName = nsnull;
-  nsCOMPtr<nsIMsgMessageUrl> messageUrl;
   char *urlString = nsnull;
 
   // Now we can finally write out the attachment information...  
