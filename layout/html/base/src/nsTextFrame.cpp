@@ -2253,7 +2253,9 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
         prevOffset = offset;
         offset++;
         endsInWhitespace = PR_TRUE;
-        endsInNewline = PR_TRUE;
+        if (NS_STYLE_WHITESPACE_PRE == ts.mText->mWhiteSpace) {
+          endsInNewline = PR_TRUE;
+        }
         break;
       }
       if (skipWhitespace) {
