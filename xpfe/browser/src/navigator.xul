@@ -233,7 +233,7 @@
 <!-- Statusbar -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999052616">
+<!ENTITY  buildId.label "Build ID: 1999052803">
 <!ENTITY  security-button.label "Secure Conn">
 
 <!-- taskbar -->
@@ -259,21 +259,21 @@
 
 <popup id="translationlist">
 	<menu>
-		<menuitem name="English to French" onclick="Translate('en', 'fr');" />
-		<menuitem name="English to German" onclick="Translate('en', 'de');"/>
-		<menuitem name="English to Spanish" onclick="Translate('en', 'es');"/>
+		<menuitem name="&translateEngtoFrenCmd.label;" onclick="Translate('en', 'fr');" />
+		<menuitem name="&translateEngtoGermCmd.label;" onclick="Translate('en', 'de');"/>
+		<menuitem name="&translateEngtoSpanCmd.label;" onclick="Translate('en', 'es');"/>
 		<separator />
-		<menuitem name="French to English" onclick="Translate('fr', 'en')"/>
-		<menuitem name="French to German" onclick="Translate('fr', 'de')"/>
-		<menuitem name="French to Spanish" onclick="Translate('fr', 'es')"/>
+		<menuitem name="&translateFrentoEngCmd.label;" onclick="Translate('fr', 'en')"/>
+		<menuitem name="&translateFrentoGermCmd.label;" onclick="Translate('fr', 'de')"/>
+		<menuitem name="&translateFrentoSpanCmd.label;" onclick="Translate('fr', 'es')"/>
 		<separator />
-		<menuitem name="German to English" onclick="Translate('de', 'en')"/>
-		<menuitem name="German to French" onclick="Translate('de', 'fr')"/>
-		<menuitem name="German to Spanish" onclick="Translate('de', 'es')"/>
+		<menuitem name="&translateGermtoEngCmd.label;" onclick="Translate('de', 'en')"/>
+		<menuitem name="&translateGermtoFrenCmd.label;" onclick="Translate('de', 'fr')"/>
+		<menuitem name="&translateGermtoSpanCmd.label;" onclick="Translate('de', 'es')"/>
 		<separator />
-		<menuitem name="Spanish to English" onclick="Translate('es', 'en')"/>
-		<menuitem name="Spanish to French" onclick="Translate('es', 'fr')"/>
-		<menuitem name="Spanish to German" onclick="Translate('es', 'de')"/>
+		<menuitem name="&tanslateSpantoEngCmd.label;" onclick="Translate('es', 'en')"/>
+		<menuitem name="&translateSpantoFrenCmd.label;" onclick="Translate('es', 'fr')"/>
+		<menuitem name="&translateSpantoGermCmd.label;" onclick="Translate('es', 'de')"/>
 	</menu>
 </popup>
 
