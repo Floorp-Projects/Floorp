@@ -354,7 +354,8 @@ nsDiskCacheStreamIO::Close(nsresult status)
     NS_ASSERTION(!mOutStream, "output stream still open");
     NS_ASSERTION(mInStreamCount == 0, "input stream still open");
     NS_ASSERTION(!mFD, "file descriptor not closed");
-    delete [] mBuffer;
+    if (mBuffer)
+        free(mBuffer);
     
     return NS_OK;
 }
