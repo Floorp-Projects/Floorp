@@ -22,6 +22,7 @@
  */
 
 #include "nsFontPackageService.h"
+#include "nsFontPackageHandler.h"
 
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsFontPackageService, 
@@ -59,14 +60,11 @@ NS_IMETHODIMP nsFontPackageService::FontPackageHandled(PRBool aSuccess, PRBool a
 /* void NeedFontPackage (in string aFontPackID); */
 NS_IMETHODIMP nsFontPackageService::NeedFontPackage(const char *aFontPackID)
 {
-    if(mHandler)
-       return mHandler->NeedFontPackage(aFontPackID);
-#ifdef _DEBUG
-    printf("We need to download the font package for %s\n", aFontPackID);
-    printf("But we don't have a nsIFontPackageHandler set up yet.\n");
-    printf("Embedding application, please implement a nsIFontPackageHandler\n");
-    printf("and call nsIFontPackageService::SetHandler to register it. Thanks\n");
-#endif 
-    NS_ASSERTION(0, "no handler for font package");
-    return NS_OK;
+  if (!mHandler) {
+    // create default handler
+    mHandler = new nsFontPackageHandler;
+    if (!mHandler) 
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return mHandler->NeedFontPackage(aFontPackID);
 }
