@@ -1091,8 +1091,8 @@ extern "C" JSBool pref_InitInitialObjects()
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv))
     	return JS_TRUE;
-    nsIFileSpec* defaultPrefDir;
-    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, &defaultPrefDir);
+    nsCOMPtr <nsIFileSpec> defaultPrefDir;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_PrefDefaultsFolder50, getter_AddRefs(defaultPrefDir));
     if (NS_FAILED(rv))
     	return JS_TRUE;
 	static const char* specialFiles[] = {
