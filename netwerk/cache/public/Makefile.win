@@ -36,7 +36,16 @@ XPIDLSRCS =                             \
         .\nsINetDataCacheRecord.idl     \
         .\nsINetDataDiskCache.idl       \
         .\nsIStreamAsFile.idl           \
+!ifdef MOZ_NEW_CACHE
+	.\nsICache.idl		        \
+	.\nsICacheEntryDescriptor.idl   \
+	.\nsICacheListener.idl		\
+	.\nsICacheService.idl		\
+	.\nsICacheSession.idl           \
+	.\nsICacheVisitor.idl           \
+!endif
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
+
 

@@ -26,6 +26,9 @@ DIRS= 	\
 	mgr			\
 	memcache		\
 	filecache		\
+!ifdef MOZ_NEW_CACHE
+	src                     \
+!endif
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
