@@ -28,6 +28,7 @@ libmozjs.dylib
 ; XPCOM:
 ; 
 libxpcom.dylib 
+libxpcom_core.dylib 
 libxpcom_compat.dylib
 components/libxpcom_compat_c.dylib
 components/xpcom_obsolete.xpt

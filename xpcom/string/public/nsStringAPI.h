@@ -48,7 +48,13 @@
 
 #include "nscore.h"
 
-#define NS_STRINGAPI(x) extern "C" NS_COM x
+#if defined( XPCOM_GLUE )
+#define NS_STRINGAPI(type) extern "C" type
+#elif defined( _IMPL_NS_STRINGAPI )
+#define NS_STRINGAPI(type) extern "C" NS_EXPORT type
+#else
+#define NS_STRINGAPI(type) extern "C" NS_IMPORT type
+#endif
 
 /* The base string types */
 class nsAString;
@@ -631,14 +637,14 @@ NS_UTF16ToCString(const nsAString &aSource, nsCStringEncoding aDestEncoding,
  * internal definition of these classes from nsAString.h in the Mozilla tree.
  */
 
-#ifndef NS_STRINGAPI_IMPL
+#ifndef _IMPL_NS_STRINGAPI
 #define nsAString_external nsAString
 #define nsACString_external nsACString
 #endif
 
 class nsAString_external
 {
-#ifndef NS_STRINGAPI_IMPL
+#ifndef _IMPL_NS_STRINGAPI
 
 public:
   typedef PRUnichar             char_type;
@@ -712,7 +718,7 @@ public:
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
-#endif // NS_STRINGAPI_IMPL
+#endif // _IMPL_NS_STRINGAPI
 
 private:
   void *v;
@@ -720,7 +726,7 @@ private:
 
 class nsACString_external
 {
-#ifndef NS_STRINGAPI_IMPL
+#ifndef _IMPL_NS_STRINGAPI
 
 public:
   typedef char                  char_type;
@@ -794,7 +800,7 @@ public:
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
-#endif // NS_STRINGAPI_IMPL
+#endif // _IMPL_NS_STRINGAPI
 
 private:
   void *v;

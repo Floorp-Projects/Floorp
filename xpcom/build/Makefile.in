@@ -43,7 +43,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-LIBRARY_NAME	= xpcom
+LIBRARY_NAME	= xpcom_core
+ifneq ($(OS_ARCH),WINNT)
+SHORT_LIBNAME	= xpcomcor
+endif
 
 PACKAGE_FILE = xpcom.pkg
 PACKAGE_VARS += USE_SHORT_LIBNAME
@@ -64,9 +67,7 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += macmorefiles
 endif
 
-CPPSRCS		= nsXPComInit.cpp \
-		  nsStringAPI.cpp \
-		  $(NULL)
+CPPSRCS		= nsXPComInit.cpp
 
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS		+= dlldeps.cpp
@@ -115,9 +116,6 @@ SDK_HEADERS =  \
 		nsXPCOM.h       \
 		nsXPCOMCID.h    \
 		$(NULL)
-
-SDK_LIBRARY = $(IMPORT_LIBRARY)
-SDK_BINARY = $(SHARED_LIBRARY)
 
 # pull in MoreFiles for MacOSX
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

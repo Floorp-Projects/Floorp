@@ -16,6 +16,7 @@ bin\nspr4.dll
 bin\plc4.dll
 bin\plds4.dll
 bin\xpcom.dll
+bin\xpcom_core.dll
 bin\xpistub.dll
 bin\mozz.dll
 bin\components\jar50.dll

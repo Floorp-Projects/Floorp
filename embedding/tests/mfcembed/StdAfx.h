@@ -72,11 +72,8 @@
 #endif
 
 #include "nsCOMPtr.h"
-#include "nsNetUtil.h"
-#include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsEmbedString.h"
 #include "nsCWebBrowser.h"
-#include "nsXPIDLString.h"
 #include "nsWidgetsCID.h"
 #include "nsIDocShell.h"
 #include "nsIWebBrowser.h"
@@ -100,7 +97,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLFrameSetElement.h"
-#include "nsReadableUtils.h"
 #include "nsIPrompt.h"
 #include "nsEmbedAPI.h"         
 #include "nsISHistory.h"

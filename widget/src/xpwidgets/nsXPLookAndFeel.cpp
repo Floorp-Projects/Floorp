@@ -43,6 +43,7 @@ static int PR_CALLBACK colorPrefChanged(const char* aPref, void* aData);
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 #include "nsCRT.h"
+#include "nsFont.h"
 
 #ifdef DEBUG
 #include "nsSize.h"

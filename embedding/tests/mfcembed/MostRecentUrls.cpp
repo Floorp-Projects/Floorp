@@ -41,7 +41,9 @@
 #include "StdAfx.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "MostRecentUrls.h"
 
 //--------------------------------------------------------
@@ -75,7 +77,7 @@ FILE * CMostRecentUrls::GetFD(const char * aMode)
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsILocalFile> local_file(do_QueryInterface(file));
-        local_file->AppendNative(NS_LITERAL_CSTRING("urls.txt"));
+        local_file->AppendNative(nsEmbedCString("urls.txt"));
         local_file->OpenANSIFileDesc(aMode, &fd);
     }
 

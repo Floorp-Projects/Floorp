@@ -43,7 +43,6 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsString.h"
 
 #include "nsIXPINotifier.h"
 #include "nsCOMPtr.h"

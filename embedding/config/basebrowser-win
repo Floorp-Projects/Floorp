@@ -45,6 +45,7 @@ js3250.dll
 ; XPCOM:
 ; 
 xpcom.dll
+xpcom_core.dll
 xpcom_compat.dll
 components\xpcom_compat_c.dll
 components\xpcom_base.xpt

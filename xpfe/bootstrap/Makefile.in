@@ -65,7 +65,7 @@ endif
 endif
 
 ifdef GRE_BUILD
-DEFINES		+= -DXPCOM_GLUE
+DEFINES		+= -DXPCOM_GLUE -DMOZILLA_STRICT_API
 endif
 
 MODULE		= apprunner
@@ -176,7 +176,6 @@ endif
 # If you change anything that mozilla links to, please talk to dougt@netscape.com
 ifdef GRE_BUILD
 LIBS            += \
-		$(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
 		$(NULL)
 else
@@ -375,7 +374,7 @@ endif
 
 CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
-LOCAL_INCLUDES	= -I$(srcdir) -I.
+LOCAL_INCLUDES  = -I$(srcdir) -I.
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 $(MOZ_APP_NAME).1: mozilla.man.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk

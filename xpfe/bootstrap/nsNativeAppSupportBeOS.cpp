@@ -35,8 +35,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsNativeAppSupportBase.h"
+
+#ifdef XPCOM_GLUE
+#include "nsStringSupport.h"
+#else
 #include "nsString.h"
+#endif
+
+#include "nsNativeAppSupportBase.h"
 #include "nsIObserver.h"
 
 #include <Application.h>

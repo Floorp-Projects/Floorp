@@ -44,12 +44,16 @@
 #define INCL_DOSERRORS
 #include <os2.h>
 
+#ifdef XPCOM_GLUE
+#include "nsStringSupport.h"
+#else
+#include "nsString.h"
+#endif
+
 #include "nsNativeAppSupportBase.h"
 #include "nsNativeAppSupportOS2.h"
-#include "nsString.h"
 #include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsICmdLineHandler.h"

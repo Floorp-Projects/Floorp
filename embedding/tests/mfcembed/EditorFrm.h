@@ -33,13 +33,12 @@
 #ifndef _EDITORFRM_H_
 #define _EDITORFRM_H_
 
-#include "nsICommandParams.h"
+class nsICommandParams;
+class nsIEditor;
+class nsIHTMLEditor;
+
 #include "nsIEditingSession.h"
 #include "nsICommandManager.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
 
 class CEditorFrame : public CBrowserFrame
 {    
@@ -112,7 +111,7 @@ private:
     NS_METHOD ExecuteNoParam(const char *aCommand);
     NS_METHOD MakeCommandParams(const char *aCommand,nsICommandParams **aParams);
     NS_METHOD ExecuteAttribParam(const char *aCommand, const char *aAttribute);
-    NS_METHOD GetAttributeParamValue(const char *aCommand, nsCString &aValue);
+    NS_METHOD GetAttributeParamValue(const char *aCommand, nsEmbedCString &aValue);
 
     void UpdateStyleToolBarBtn(const char *aCommand, CCmdUI* pCmdUI);
 

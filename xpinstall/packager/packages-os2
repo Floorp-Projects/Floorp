@@ -51,6 +51,7 @@ bin/nspr4.dll
 bin/plc4.dll
 bin/plds4.dll
 bin/xpcom.dll
+bin/xpcomcor.dll
 bin/xpistub.dll
 ;bin/zlib.dll
 bin/mozz.dll

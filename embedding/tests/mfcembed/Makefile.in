@@ -47,7 +47,7 @@ GRE_BUILD = 1
 endif
 
 ifdef GRE_BUILD
-DEFINES   += -DXPCOM_GLUE
+DEFINES   += -DXPCOM_GLUE -DMOZILLA_STRICT_API
 endif
 
 REQUIRES = \
@@ -109,7 +109,7 @@ CPPSRCS		= \
 		StdAfx.cpp       \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s
+EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovidersa_s
 
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc
@@ -123,7 +123,6 @@ LIBS		= \
 ifdef GRE_BUILD
 LIBS += \
 		 $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		 $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
 		 $(NULL)
 else
 LIBS += $(XPCOM_LIBS)

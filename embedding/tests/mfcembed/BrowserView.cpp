@@ -63,7 +63,117 @@
 #include "CPageSetupPropSheet.h"
 
 // Mozilla Includes
+#include "nsIIOService.h"
 #include "nsIWidget.h"
+#include "nsIServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsMemory.h"
+#include "nsXPCOM.h"
+
+static nsresult
+NewURI(nsIURI **result, const nsAString &spec)
+{
+  nsEmbedCString specUtf8;
+  NS_UTF16ToCString(spec, NS_CSTRING_ENCODING_UTF8, specUtf8);
+
+  nsCOMPtr<nsIIOService> ios = do_GetService("@mozilla.org/network/io-service;1");
+  NS_ENSURE_TRUE(ios, NS_ERROR_UNEXPECTED);
+
+  return ios->NewURI(specUtf8, nsnull, nsnull, result);
+}
+
+static void
+ReplaceChar(nsAString &str, char oldChar, char newChar)
+{
+  // XXX this could be much more efficient
+
+  PRUnichar *data = NS_StringCloneData(str);
+  for (; *data; ++data)
+  {
+    if ((char ) *data == oldChar)
+      *data = (PRUnichar) newChar;
+  }
+  NS_StringSetData(str, data);
+  nsMemory::Free(data);
+}
+
+static void
+StripChars(nsAString &str, const char *chars)
+{
+  // XXX this could be much more efficient
+
+  PRUint32 len = str.Length();
+
+  PRUnichar *data = NS_StringCloneData(str);
+  PRUnichar *dataEnd = data + len;
+  for (; *data; ++data)
+  {
+    if (strchr(chars, (char ) *data))
+    {
+      // include trailing null terminator in the memmove
+      memmove(data, data + 1, (dataEnd - data) * sizeof(PRUnichar));
+      --dataEnd;
+    }
+  }
+  NS_StringSetData(str, data);
+  nsMemory::Free(data);
+}
+
+static void
+StripChars(nsACString &str, const char *chars)
+{
+  // XXX this could be much more efficient
+
+  PRUint32 len = str.Length();
+
+  char *data = NS_CStringCloneData(str);
+  char *dataEnd = data + len;
+  for (; *data; ++data)
+  {
+    if (strchr(chars, *data))
+    {
+      // include trailing null terminator in the memmove
+      memmove(data, data + 1, dataEnd - data);
+      --dataEnd;
+    }
+  }
+  NS_CStringSetData(str, data);
+  nsMemory::Free(data);
+}
+
+static const char* kWhitespace="\b\t\r\n ";
+
+static void
+CompressWhitespace(nsAString &str)
+{
+  const PRUnichar *p;
+  PRInt32 i, len = (PRInt32) NS_StringGetData(str, &p);
+
+  // trim leading whitespace
+
+  for (i=0; i<len; ++i)
+  {
+    if (!strchr(kWhitespace, (char) p[i]))
+      break;
+  }
+
+  if (i>0)
+  {
+    NS_StringCutData(str, 0, i);
+    len = (PRInt32) NS_StringGetData(str, &p);
+  }
+
+  // trim trailing whitespace
+
+  for (i=len-1; i>=0; --i)
+  {
+    if (!strchr(kWhitespace, (char) p[i]))
+      break;
+  }
+
+  if (++i < len)
+    NS_StringCutData(str, i, len - i);
+}
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -355,7 +465,9 @@ BOOL CBrowserView::IsViewSourceUrl(CString& strUrl)
 
 BOOL CBrowserView::OpenViewSourceWindow(const char* pUrl)
 {
-    return OpenViewSourceWindow(NS_ConvertASCIItoUCS2(pUrl).get());
+    nsEmbedString str;
+    NS_CStringToUTF16(nsEmbedCString(pUrl), NS_CSTRING_ENCODING_ASCII, str);
+    return OpenViewSourceWindow(str.get());
 }
 
 BOOL CBrowserView::OpenViewSourceWindow(const PRUnichar* pUrl)
@@ -391,14 +503,14 @@ void CBrowserView::OnViewSource()
         return;
 
     // Get the uri string associated with the nsIURI object
-    nsCAutoString uriString;
+    nsEmbedCString uriString;
     rv = currentURI->GetSpec(uriString);
     if(NS_FAILED(rv))
         return;
 
     // Build the view-source: url
-    nsAutoString viewSrcUrl(L"view-source:");
-    viewSrcUrl.AppendWithConversion(uriString.get());
+    nsEmbedCString viewSrcUrl("view-source:");
+    viewSrcUrl.Append(uriString);
 
     OpenViewSourceWindow(viewSrcUrl.get());
 }
@@ -626,26 +738,27 @@ void CBrowserView::OnFileOpen()
 
 void CBrowserView::GetBrowserWindowTitle(nsAString& title)
 {
-    nsXPIDLString idlStrTitle;
+    PRUnichar *idlStrTitle = nsnull;
     if(mBaseWindow)
-        mBaseWindow->GetTitle(getter_Copies(idlStrTitle));
+        mBaseWindow->GetTitle(&idlStrTitle);
 
     title = idlStrTitle;
+    nsMemory::Free(idlStrTitle);
 }
 
 void CBrowserView::OnFileSaveAs()
 {
-    nsAutoString fileName;
+    nsEmbedString fileName;
 
     GetBrowserWindowTitle(fileName); // Suggest the window title as the filename
 
     // Sanitize the file name of all illegal characters
 
     USES_CONVERSION;
-    fileName.CompressWhitespace();     // Remove whitespace from the ends
-    fileName.StripChars("\\*|:\"><?"); // Strip illegal characters
-    fileName.ReplaceChar('.', L'_');   // Dots become underscores
-    fileName.ReplaceChar('/', L'-');   // Forward slashes become hyphens
+    CompressWhitespace(fileName);     // Remove whitespace from the ends
+    StripChars(fileName, "\\*|:\"><?"); // Strip illegal characters
+    ReplaceChar(fileName, '.', L'_');   // Dots become underscores
+    ReplaceChar(fileName, '/', L'-');   // Forward slashes become hyphens
 
     TCHAR *lpszFilter =
         _T("Web Page, HTML Only (*.htm;*.html)|*.htm;*.html|")
@@ -688,14 +801,14 @@ void CBrowserView::OnFileSaveAs()
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
         if(persist)
         {
-            nsCAutoString fullPath(T2CA(pStrFullPath));
+            nsEmbedCString fullPath(T2CA(pStrFullPath));
             nsCOMPtr<nsILocalFile> file;
             NS_NewNativeLocalFile(fullPath, TRUE, getter_AddRefs(file));
 
             nsCOMPtr<nsILocalFile> data;
             if (pStrDataPath)
             {
-                nsCAutoString dataPath(T2CA(pStrDataPath));
+                nsEmbedCString dataPath(T2CA(pStrDataPath));
                 NS_NewNativeLocalFile(dataPath, TRUE, getter_AddRefs(data));
             }
 
@@ -709,7 +822,9 @@ void CBrowserView::OnFileSaveAs()
 
 void CBrowserView::OpenURL(const char* pUrl)
 {
-    OpenURL(NS_ConvertASCIItoUCS2(pUrl).get());
+    nsEmbedString str;
+    NS_CStringToUTF16(nsEmbedCString(pUrl), NS_CSTRING_ENCODING_ASCII, str);
+    OpenURL(str.get());
 }
 
 void CBrowserView::OpenURL(const PRUnichar* pUrl)
@@ -765,7 +880,9 @@ void CBrowserView::OnCopyLinkLocation()
     if (! OpenClipboard())
         return;
 
-    HGLOBAL hClipData = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, mCtxMenuLinkUrl.Length() + 1);
+    PRUint32 size = mCtxMenuLinkUrl.Length() + 1;
+
+    HGLOBAL hClipData = ::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE, size);
     if(! hClipData)
         return;
 
@@ -773,7 +890,7 @@ void CBrowserView::OnCopyLinkLocation()
     if(!pszClipData)
         return;
 
-    mCtxMenuLinkUrl.ToCString(pszClipData, mCtxMenuLinkUrl.Length() + 1);
+    memcpy(pszClipData, mCtxMenuLinkUrl.get(), size);
 
     GlobalUnlock(hClipData);
 
@@ -811,17 +928,17 @@ void CBrowserView::OnSaveLinkAs()
     // use it while saving this link to a file
     nsresult rv   = NS_OK;
     nsCOMPtr<nsIURI> linkURI;
-    rv = NS_NewURI(getter_AddRefs(linkURI), mCtxMenuLinkUrl);
+    rv = NewURI(getter_AddRefs(linkURI), mCtxMenuLinkUrl);
     if (NS_FAILED(rv)) 
         return;
 
     // Get the "path" portion (see nsIURI.h for more info
     // on various parts of a URI)
-    nsCAutoString fileName;
+    nsEmbedCString fileName;
     linkURI->GetPath(fileName);
 
     // The path may have the "/" char in it - strip those
-    fileName.StripChars("\\/");
+    StripChars(fileName, "\\/");
 
     // Now, use this file name in a File Save As dlg...
 
@@ -837,7 +954,7 @@ void CBrowserView::OnSaveLinkAs()
     if(cf.DoModal() == IDOK)
     {
         USES_CONVERSION;
-        nsCAutoString fullPath; fullPath.Assign(T2CA(cf.GetPathName()));
+        nsEmbedCString fullPath; fullPath.Assign(T2CA(cf.GetPathName()));
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
         if(persist)
         {
@@ -860,18 +977,18 @@ void CBrowserView::OnSaveImageAs()
     // use it while saving this link to a file
     nsresult rv   = NS_OK;
     nsCOMPtr<nsIURI> linkURI;
-    rv = NS_NewURI(getter_AddRefs(linkURI), mCtxMenuImgSrc);
+    rv = NewURI(getter_AddRefs(linkURI), mCtxMenuImgSrc);
     if (NS_FAILED(rv)) 
         return;
 
     // Get the "path" portion (see nsIURI.h for more info
     // on various parts of a URI)
-    nsCAutoString path;
+    nsEmbedCString path;
     linkURI->GetPath(path);
 
     // The path may have the "/" char in it - strip those
-    nsCAutoString fileName(path);
-    fileName.StripChars("\\/");
+    nsEmbedCString fileName(path);
+    StripChars(fileName, "\\/");
 
     // Now, use this file name in a File Save As dlg...
 
@@ -883,7 +1000,7 @@ void CBrowserView::OnSaveImageAs()
     if(cf.DoModal() == IDOK)
     {
         USES_CONVERSION;
-        nsCAutoString fullPath; fullPath.Assign(T2CA(cf.GetPathName()));
+        nsEmbedCString fullPath; fullPath.Assign(T2CA(cf.GetPathName()));
 
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
         if(persist)
@@ -918,9 +1035,10 @@ void CBrowserView::OnShowFindDlg()
     nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mWebBrowser));
     if(finder)
     {
-        nsXPIDLString stringBuf;
-        finder->GetSearchString(getter_Copies(stringBuf));
-        csSearchStr = stringBuf.get();
+        PRUnichar *stringBuf = nsnull;
+        finder->GetSearchString(&stringBuf);
+        csSearchStr = stringBuf;
+        nsMemory::Free(stringBuf);
 
         finder->GetMatchCase(&bMatchCase);
         finder->GetEntireWord(&bMatchWholeWord);
@@ -1113,17 +1231,17 @@ void CBrowserView::UpdateBusyState(PRBool aBusy)
     mbDocumentLoading = aBusy;
 }
 
-void CBrowserView::SetCtxMenuLinkUrl(nsAutoString& strLinkUrl)
+void CBrowserView::SetCtxMenuLinkUrl(nsEmbedString& strLinkUrl)
 {
     mCtxMenuLinkUrl = strLinkUrl;
 }
 
-void CBrowserView::SetCtxMenuImageSrc(nsAutoString& strImgSrc)
+void CBrowserView::SetCtxMenuImageSrc(nsEmbedString& strImgSrc)
 {
     mCtxMenuImgSrc = strImgSrc;
 }
 
-void CBrowserView::SetCurrentFrameURL(nsAutoString& strCurrentFrameURL)
+void CBrowserView::SetCurrentFrameURL(nsEmbedString& strCurrentFrameURL)
 {
     mCtxMenuCurrentFrameURL = strCurrentFrameURL;
 }
@@ -1198,7 +1316,7 @@ void CBrowserView::OnViewFrameSource()
 {
     // Build the view-source: url
     //
-    nsAutoString viewSrcUrl;
+    nsEmbedString viewSrcUrl;
     viewSrcUrl.Append(L"view-source:");
     viewSrcUrl.Append(mCtxMenuCurrentFrameURL);
 

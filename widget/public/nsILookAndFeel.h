@@ -39,7 +39,6 @@
 #define __nsILookAndFeel
 #include "nsISupports.h"
 #include "nsColor.h"
-#include "nsFont.h"
 
   // for |#ifdef NS_DEBUG|
 struct nsSize;

@@ -48,8 +48,6 @@
 #include "nsIComponentManager.h"
 #include "nsICategoryManager.h"
 #include "nsIFile.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 
 struct nsModuleComponentInfo;   // forward declaration

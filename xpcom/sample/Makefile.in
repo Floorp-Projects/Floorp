@@ -52,7 +52,7 @@ MODULE_NAME	= nsSampleModule
 
 # Ensure that the xpcom classes that we build
 # do not export themselves
-DEFINES		+= -DXPCOM_GLUE 
+DEFINES		+= -DMOZILLA_STRICT_API -DXPCOM_GLUE 
 
 
 REQUIRES	= string \

@@ -11,3 +11,4 @@
 0x0d000000       @executable_path/libmozcomps.dylib
 0x0e000000       @executable_path/libprldap50.dylib
 0x0f000000       @executable_path/libldap50.dylib
+0x10000000       @executable_path/libxpcom_core.dylib

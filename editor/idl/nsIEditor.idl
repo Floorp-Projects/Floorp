@@ -53,9 +53,6 @@ interface nsIEditorObserver;
 interface nsIEditActionListener;
 
 %{C++
-
-#include "nsAString.h"
-
 class nsIPresShell;
 class nsIContent;
 typedef short EDirection;

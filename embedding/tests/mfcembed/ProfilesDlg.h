@@ -121,7 +121,7 @@ public:
     BOOL        m_bAskAtStartUp;
     //}}AFX_DATA
 
-    nsAutoString m_SelectedProfile;
+    nsEmbedString m_SelectedProfile;
 
 // Overrides
     // ClassWizard generated virtual function overrides

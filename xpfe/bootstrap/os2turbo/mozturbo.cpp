@@ -75,6 +75,7 @@ char *bindir[] = {
  "PLC4.DLL",
  "PLDS4.DLL",
  "XPCOM.DLL",
+ "XPCOMCOR.DLL",
  "XPCOMCT.DLL",
  0
  };
