@@ -419,19 +419,16 @@ class Dim {
 
     void enableForAllNewContexts()
     {
-        Context.addContextListener(new ContextListener() {
-
+        ContextFactory.Listener l = new ContextFactory.Listener()
+        {
             public void contextCreated(Context cx)
             {
                 initNewContext(cx);
             }
 
-            public void contextEntered(Context cx) { }
-
-            public void contextExited(Context cx) { }
-
             public void contextReleased(Context cx) { }
-        });
+        };
+        ContextFactory.getGlobal().addListener(l);
     }
 
     void initNewContext(Context cx)

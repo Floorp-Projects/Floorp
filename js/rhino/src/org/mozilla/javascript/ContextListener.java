@@ -38,16 +38,20 @@
 package org.mozilla.javascript;
 
 /**
- * Embeddings that wish to
- * @see org.mozilla.javascript.Context#addContextListener
+ * @deprecated Embeddings that wish to customize newly created
+ * {@link Context} instances should implement
+ * {@link ContextFactory.Listener}.
  */
-public interface ContextListener {
+public interface ContextListener extends ContextFactory.Listener
+{
 
-    public void contextCreated(Context cx);
-
+    /**
+     * @deprecated Rhino runtime never calls the method.
+     */
     public void contextEntered(Context cx);
 
+    /**
+     * @deprecated Rhino runtime never calls the method.
+     */
     public void contextExited(Context cx);
-
-    public void contextReleased(Context cx);
 }

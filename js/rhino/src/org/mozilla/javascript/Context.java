@@ -86,7 +86,7 @@ import org.mozilla.javascript.debug.*;
 public class Context
 {
     /**
-     * Language versions
+     * Language versions.
      *
      * All integral values are reserved for future version numbers.
      */
@@ -218,30 +218,6 @@ public class Context
     }
 
     /**
-     * Create a new Context associated with the given factory.
-     * The factory will be notified about context execution
-     * or it will be used to create Context instances associated
-     * with other threads.
-     * <p>
-     * To associate Context instances created with this constructor
-     * with current execution thread
-     * {@link ContextFactory#call(ContextAction)} must be used.
-     * Using {@link #enter()} or {@link #exit()} methods will
-     * throw an exception if the methods operate on instances
-     * created with this constructor.
-     *
-     * @see ContextFactory#call(ContextAction)
-     */
-    public Context(ContextFactory factory)
-    {
-        this();
-        if (factory == null) {
-            throw new IllegalArgumentException("Factory should not be null");
-        }
-        this.factory = factory;
-    }
-
-    /**
      * Get a context associated with the current thread, creating
      * one if need be.
      *
@@ -306,10 +282,6 @@ public class Context
      */
     public static Context enter(Context cx)
     {
-        if (cx != null && cx.factory != null) {
-            throw new IllegalStateException("Context.enter can not be used to associate with the execution thread Context instances created with Context(ContextFactory) constructor");
-        }
-
         Context[] storage = getThreadContextStorage();
         Context old;
         if (storage != null) {
@@ -320,9 +292,6 @@ public class Context
 
         if (old != null) {
             if (old.factory != null) {
-                throw new IllegalStateException("Context.enter can not be used to recursively enter Context instances created with Context(ContextFactory) constructor");
-            }
-            if (old.enteredUsingCall) {
                 throw new IllegalStateException("Context.enter can not be used to recursively enter Context instances already associated with the current thread using Context.call(ContextAction)");
             }
             if (cx != null && cx != old && cx.enterCount != 0) {
@@ -335,19 +304,19 @@ public class Context
             cx = old;
         } else {
             if (cx == null) {
-                cx = new Context();
+                cx = ContextFactory.getGlobal().makeContext();
             } else {
                 if (cx.sealed) onSealedMutation();
             }
-            if (cx.enterCount != 0) Kit.codeBug();
+            if (cx.enterCount != 0 || cx.factory != null) {
+                throw new IllegalStateException();
+            }
 
             if (!cx.creationEventWasSent) {
                 cx.creationEventWasSent = true;
-                cx.runListeners(CONTEXT_CREATED_EVENT);
+                ContextFactory.getGlobal().onContextCreated(cx);
             }
         }
-
-        cx.runListeners(CONTEXT_ENTER_EVENT);
 
         if (old == null) {
             if (storage != null) {
@@ -390,12 +359,9 @@ public class Context
                 "Calling Context.exit without previous Context.enter");
         }
         if (cx.factory != null) {
-            throw new IllegalStateException("Context.exit can not be used to exit context created with Context(ContextFactory) constructor");
-        }
-        if (cx.enteredUsingCall) {
             throw new IllegalStateException("Context.exit can not be used to exit context associated with the current thread using Context.call(ContextAction)");
         }
-        if (Context.check && cx.enterCount < 1) Kit.codeBug();
+        if (cx.enterCount < 1) Kit.codeBug();
         if (cx.sealed) onSealedMutation();
         --cx.enterCount;
         if (cx.enterCount == 0) {
@@ -406,9 +372,8 @@ public class Context
             }
         }
 
-        cx.runListeners(CONTEXT_EXIT_EVENT);
         if (cx.enterCount == 0) {
-            cx.runListeners(CONTEXT_RELEASED_EVENT);
+            ContextFactory.getGlobal().onContextReleased(cx);
         }
     }
 
@@ -416,15 +381,16 @@ public class Context
      * Call {@link ContextAction#run(Context cx)}
      * using the Context instance associated with the current thread.
      * If no Context is associated with the thread, then
-     * <tt>new Context()</tt> will be called to construct
-     * new Context instance. The instance will be temporary associated
-     * with the thread during call to {@link ContextAction#run(Context)}.
+     * <tt>ContextFactory.getGlobal().makeContext()</tt> will be called to
+     * construct new Context instance. The instance will be temporary
+     * associated with the thread during call to
+     * {@link ContextAction#run(Context)}.
      *
      * @return The result of {@link ContextAction#run(Context)}.
      */
     public static Object call(ContextAction action)
     {
-        return call(null, action);
+        return call(ContextFactory.getGlobal(), action);
     }
 
     /**
@@ -438,8 +404,8 @@ public class Context
      * with the thread during call to {@link ContextAction#run(Context)}.
      * <p>
      * It is allowed to use null for <tt>factory</tt> argument
-     * in which case <tt>new Context()</tt> will be used to create
-     * new context instances.
+     * in which case <tt>ContextFactory.getGlobal().makeContext()</tt> will be
+     * used to create new context instances.
      *
      * @see ContextFactory#call(ContextAction)
      */
@@ -448,6 +414,9 @@ public class Context
                               Object[] args)
         throws JavaScriptException
     {
+        if (factory == null) {
+            factory = ContextFactory.getGlobal();
+        }
         Context[] storage = getThreadContextStorage();
         Context cx;
         if (storage != null) {
@@ -457,14 +426,14 @@ public class Context
         }
 
         if (cx != null) {
-            if (cx.enteredUsingCall) {
+            if (cx.factory != null) {
                 return callable.call(cx, scope, thisObj, args);
             } else {
-                cx.enteredUsingCall = true;
+                cx.factory = factory;
                 try {
                     return callable.call(cx, scope, thisObj, args);
                 } finally {
-                    cx.enteredUsingCall = false;
+                    cx.factory = null;
                 }
             }
         }
@@ -492,14 +461,14 @@ public class Context
         }
 
         if (cx != null) {
-            if (cx.enteredUsingCall) {
+            if (cx.factory != null) {
                 return action.run(cx);
             } else {
-                cx.enteredUsingCall = true;
+                cx.factory = factory;
                 try {
                     return action.run(cx);
                 } finally {
-                    cx.enteredUsingCall = false;
+                    cx.factory = null;
                 }
             }
         }
@@ -515,134 +484,69 @@ public class Context
     private static Context prepareNewContext(ContextFactory factory,
                                              Context[] storage)
     {
-        Context cx;
-        if (factory == null) {
-            cx = new Context();
-            if (!cx.creationEventWasSent) {
-                cx.creationEventWasSent = true;
-                cx.runListeners(CONTEXT_CREATED_EVENT);
-            }
-            cx.runListeners(CONTEXT_ENTER_EVENT);
-        } else {
-            cx = factory.makeContext();
-            if (cx.factory != factory) {
-                throw new IllegalStateException("factory.makeContext() did not use proper Context constructor");
-            }
-            if (cx.enterCount != 0) { throw new IllegalStateException(); }
+        Context cx = factory.makeContext();
+        if (cx.factory != null || cx.enterCount != 0) {
+            throw new IllegalStateException("factory.makeContext() returned Context instance already associated with some thread");
         }
-
+        cx.factory = factory;
+        factory.onContextCreated(cx);
+        if (factory.isSealed() && !cx.isSealed()) {
+            cx.seal(null);
+        }
         if (storage != null) {
             storage[0] = cx;
         } else {
             setThreadContext_jdk11(cx);
         }
-        cx.enterCount = 1;
-        cx.enteredUsingCall = true;
+
         return cx;
     }
 
     private static void releaseContext(Context[] storage, Context cx)
     {
-        if (cx.enterCount != 1) throw new IllegalStateException();
-        cx.enteredUsingCall = false;
-        cx.enterCount = 0;
         if (storage != null) {
             storage[0] = null;
         } else {
             setThreadContext_jdk11(null);
         }
-        if (cx.factory == null) {
-            cx.runListeners(CONTEXT_EXIT_EVENT);
-            cx.runListeners(CONTEXT_RELEASED_EVENT);
-        } else {
-            cx.factory.onContextExit(cx);
+        try {
+            cx.factory.onContextReleased(cx);
+        } finally {
+            cx.factory = null;
         }
     }
 
     /**
-     * Add a Context listener. The listener will receive notifications about
-     * Context events for Context instances created with the default
-     * constructor {@link #Context()}. Rhino runtime never notifies listeners
-     * added with this method for Context instances created with factory
-     * constructor {@link #Context(ContextFactory)}.
-     *
-     * @see #removeContextListener(ContextListener listener)
-     * @see #disableStaticContextListening()
+     * @deprecated Use
+     * {@link ContextFactory#addListener(ContextFactory.Listener)}.
+     * A simple way to upgrate the current code to new API is to replace
+     * <tt>Context.addContextListener(listener)</tt> with
+     * <tt>ContextFactory.getGlobal().addListener(listener)</tt>.
      */
     public static void addContextListener(ContextListener listener)
     {
-        boolean disabled;
-        synchronized (staticListenersLock) {
-            disabled = disabledContextListening;
-            if (!disabled) {
-                staticListeners = Kit.addListener(staticListeners, listener);
-            }
-        }
-        if (disabled) throw new IllegalStateException();
+        ContextFactory.getGlobal().addListener(listener);
     }
 
     /**
-     * Remove a Context listener.
-     * @param listener the listener to remove.
-     *
-     * @see #addContextListener(ContextListener listener)
-     * @see #disableStaticContextListening()
+     * @deprecated Use
+     * {@link ContextFactory#removeListener(ContextFactory.Listener)}.
+     * A simple way to upgrate the current code to new API is to replace
+     * <tt>Context.removeContextListener(listener)</tt> with
+     * <tt>ContextFactory.getGlobal().removeListener(listener)</tt>.
      */
     public static void removeContextListener(ContextListener listener)
     {
-        synchronized (staticListenersLock) {
-            staticListeners = Kit.removeListener(staticListeners, listener);
-        }
+        ContextFactory.getGlobal().addListener(listener);
     }
 
     /**
-     * Disable notifications of listeners registered with
-     * {@link #addContextListener(ContextListener)} about Context events.
-     * All currently registered listeners will be removed and any subsequent
-     * call to {@link #addContextListener(ContextListener)} will throw an
-     * exception.
-     * <p>
-     * Embedding may use this method to prevent Context exposure to potentially
-     * untrusted code.
+     * @deprecated Use {@link ContextFactory#seal()} to seal
+     * appropriate <tt>ContextFactory()</tt>.
      */
     public static void disableStaticContextListening()
     {
-        synchronized (staticListenersLock) {
-            disabledContextListening = true;
-            staticListeners = null;
-        }
-    }
-
-    private static final int CONTEXT_CREATED_EVENT   = 1;
-    private static final int CONTEXT_ENTER_EVENT     = 2;
-    private static final int CONTEXT_EXIT_EVENT      = 3;
-    private static final int CONTEXT_RELEASED_EVENT  = 4;
-
-    private void runListeners(int reason)
-    {
-        Object listeners = staticListeners;
-        for (int i = 0; ; ++i) {
-            ContextListener l;
-            l = (ContextListener)Kit.getListener(listeners, i);
-            if (l == null)
-                break;
-            switch (reason) {
-              case CONTEXT_CREATED_EVENT:
-                l.contextCreated(this);
-                break;
-              case CONTEXT_ENTER_EVENT:
-                l.contextEntered(this);
-                break;
-              case CONTEXT_EXIT_EVENT:
-                l.contextExited(this);
-                break;
-              case CONTEXT_RELEASED_EVENT:
-                l.contextReleased(this);
-                break;
-              default:
-                Kit.codeBug();
-            }
-        }
+        ContextFactory.getGlobal().disableContextListening();
     }
 
     /**
@@ -2674,10 +2578,6 @@ public class Context
         }
     }
 
-    private static final Object staticListenersLock = new Object();
-    private static volatile Object staticListeners;
-    private static boolean disabledContextListening;
-
     private ContextFactory factory;
     private boolean sealed;
     private Object sealKey;
@@ -2710,7 +2610,6 @@ public class Context
     Debugger debugger;
     private Object debuggerData;
     private int enterCount;
-    private boolean enteredUsingCall;
     private Object propertyListeners;
     private Hashtable hashtable;
     private ClassLoader applicationClassLoader;

@@ -43,6 +43,32 @@ package org.mozilla.javascript;
 public class ContextFactory
 {
     /**
+     * Listener of {@link Context} creation and release events.
+     */
+    public interface Listener
+    {
+        /**
+         * Notify about newly created {@link Context} object.
+         */
+        public void contextCreated(Context cx);
+
+        /**
+         * Notify that the specified {@link Context} instance is no longer
+         * associated with the current thread.
+         */
+        public void contextReleased(Context cx);
+    }
+
+    private static volatile boolean hasCustomGlobal;
+    private static ContextFactory global = new ContextFactory();
+
+    private volatile boolean sealed;
+
+    private final Object listenersLock = new Object();
+    private volatile Object listeners;
+    private boolean disabledListening;
+
+    /**
      * Create new {@link Context} instance to be associated with the current
      * thread.
      * This is a callback method used by Rhino to create {@link Context}
@@ -57,17 +83,112 @@ public class ContextFactory
      */
     protected Context makeContext()
     {
-        return new Context(this);
+        return new Context();
+    }
+
+    protected void onContextCreated(Context cx)
+    {
+        Object listeners = this.listeners;
+        for (int i = 0; ; ++i) {
+            Listener l = (Listener)Kit.getListener(listeners, i);
+            if (l == null)
+                break;
+            l.contextCreated(cx);
+        }
+    }
+
+    protected void onContextReleased(Context cx)
+    {
+        Object listeners = this.listeners;
+        for (int i = 0; ; ++i) {
+            Listener l = (Listener)Kit.getListener(listeners, i);
+            if (l == null)
+                break;
+            l.contextReleased(cx);
+        }
+    }
+
+    public final void addListener(Listener listener)
+    {
+        checkNotSealed();
+        synchronized (listenersLock) {
+            if (disabledListening) {
+                throw new IllegalStateException();
+            }
+            listeners = Kit.addListener(listeners, listener);
+        }
+    }
+
+    public final void removeListener(Listener listener)
+    {
+        checkNotSealed();
+        synchronized (listenersLock) {
+            if (disabledListening) {
+                throw new IllegalStateException();
+            }
+            listeners = Kit.removeListener(listeners, listener);
+        }
     }
 
     /**
-     * Perform cleanup action for {@link Context} instance.
-     * Rhino runtime calls the method to notify that {@link Context}
-     * instance created with {@link #makeContext()}
-     * is no longer associated with the current thread.
+     * The method is used only to imlement
+     * Context.disableStaticContextListening()
      */
-    protected void onContextExit(Context cx)
+    final void disableContextListening()
     {
+        checkNotSealed();
+        synchronized (listenersLock) {
+            disabledListening = true;
+            listeners = null;
+        }
+    }
+
+    /**
+     * Checks if this is a sealed ContextFactory.
+     * @see #seal()
+     */
+    public final boolean isSealed()
+    {
+        return sealed;
+    }
+
+    /**
+     * Seal this ContextFactory so any attempt to modify it like to add or
+     * remove its listeners will throw an exception.
+     * @see #isSealed()
+     */
+    public final void seal()
+    {
+        checkNotSealed();
+        sealed = true;
+    }
+
+    protected final void checkNotSealed()
+    {
+        if (sealed) throw new IllegalStateException();
+    }
+
+    /**
+     * Get default ContextFactory.
+     */
+    public static ContextFactory getGlobal()
+    {
+        return global;
+    }
+
+    /**
+     * Initialize default ContextFactory. The method can only be called once.
+     */
+    public static void initGlobal(ContextFactory factory)
+    {
+        if (factory == null) {
+            throw new IllegalArgumentException();
+        }
+        if (hasCustomGlobal) {
+            throw new IllegalStateException();
+        }
+        hasCustomGlobal = true;
+        global = factory;
     }
 
     /**
