@@ -29,6 +29,7 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     XPTHeader *header;
     uint16 annotation_size;
     uint16 xpt_header_size;
+    int i;
 
     if (mode == XPT_DECODE) {
         if (!(*headerp = header = PR_NEWZAP(XPTHeader)))
@@ -38,8 +39,8 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     }
     
     if (mode == XPT_ENCODE) {
-        if !(annotation_size = XPT_GetAnnotationSize(&my_cursor, 
-                                                     &header->annotations)) {
+        if (!(annotation_size = XPT_GetAnnotationSize(&my_cursor, 
+                                                     &header->annotations))) {
             goto error;
         }
         xpt_header_size = XPT_HEADER_BASE_SIZE + annotation_size;
@@ -48,12 +49,12 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
         xpt_header_size = XPT_HEADER_BASE_SIZE;
     }
 
-    if (!XPT_CreateCursor(cursor->state, XPT_HEADER, xpt_header_size,
+    if (!XPT_CreateCursor(cursor, XPT_HEADER, xpt_header_size,
                           &my_cursor)) {
         goto error;
     }
 
-    for (i=0, i<16; i++) {
+    for (i = 0; i < 16; i++) {
         if (!XPT_Do8(&my_cursor, &header->magic[i]))
             goto error;
     }
@@ -64,7 +65,7 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
        !XPT_Do32(&my_cursor, &header->file_length) ||
        !XPT_DoInterfaceDirectoryEntry(&my_cursor, 
                                       &header->interface_directory) ||
-       !XPT_Do8(&my_cursor, &header->data_pool) ||
+       !XPT_Do8(&my_cursor, header->data_pool) ||
        !XPT_DoAnnotation(&my_cursor, &header->annotations)) { 
 
         goto error;
@@ -115,14 +116,14 @@ XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
      */
 
     if (mode == XPT_DECODE) {
-        if !((*idep = ide = PR_NEWZAP(XPTInterfaceDirectoryEntry)))
+        if (!(*idep = ide = PR_NEWZAP(XPTInterfaceDirectoryEntry)))
             goto error;
     } else {
         ide = *idep;
     }    
 
     /* create a cursor, reserving XPT_IDE_SIZE bytes in the encode case */
-    if (!XPT_CreateCursor(cursor->state, XPT_HEADER, XPT_IDE_SIZE,
+    if (!XPT_CreateCursor(cursor, XPT_HEADER, XPT_IDE_SIZE,
                           &my_cursor) ||
         
         /* write the IID in our cursor space */
@@ -157,15 +158,17 @@ PRBool
 XPT_DoInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor **idp)
 {
     XPTMode mode = cursor->state->mode;
-    XPTInterfaceDescriptor id;
+    XPTInterfaceDescriptor *id;
     XPTCursor my_cursor;
+    int i;
 
     if (mode == XPT_DECODE)
         id = PR_NEWZAP(XPTInterfaceDescriptor);
     else
         id = *idp;
     
-    if(!XPT_CreateCursor(cursor->state, XPT_DATA, XPT_ID_SIZE, &my_cursor) ||
+    if(!XPT_CreateCursor(cursor, XPT_DATA, XPT_ID_BASE_SIZE, 
+                         &my_cursor) ||
        !XPT_DoInterfaceDirectoryEntry(&my_cursor, &id->parent_interface) ||
        !XPT_Do16(&my_cursor, &id->num_methods)) {
         
@@ -182,7 +185,7 @@ XPT_DoInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor **idp)
     }
     
     for (i = 0; i < id->num_constants; i++) {
-        if (!XPT_DoConstDescriptor(&my_cursor, &id->constant_descriptors[i])) {
+        if (!XPT_DoConstDescriptor(&my_cursor, &id->const_descriptors[i])) {
             goto error;
         }
     }
@@ -201,7 +204,7 @@ PRBool
 XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
 {
     XPTMode mode = cursor->state->mode;
-    XPTConstDescriptor cd;
+    XPTConstDescriptor *cd;
 
     if (mode == XPT_DECODE)
         cd = PR_NEWZAP(XPTConstDescriptor);
@@ -214,40 +217,40 @@ XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
         goto error;
     }
 
-    switch(cd->type->prefix->tag) {
+    switch(cd->type.prefix->tag) {
     case '0':
-        XPT_Do8(&cursor, &cd->value->i8);
+        XPT_Do8(cursor, &cd->value.i8);
         break;
-    case '1':
-        XPT_Do16(&cursor, &cd->value->i16);
+    case 1:
+        XPT_Do16(cursor, &cd->value.i16);
         break;
-    case '2':
-        XPT_Do32(&cursor, &cd->value->i32);
+    case 2:
+        XPT_Do32(cursor, &cd->value.i32);
         break;
-    case '3':
-        XPT_Do64(&cursor, &cd->value->i64);
+    case 3:
+        XPT_Do64(cursor, &cd->value.i64);
         break;
-    case '4':
-        XPT_Do8(&cursor, &cd->value->ui8);
+    case 4:
+        XPT_Do8(cursor, &cd->value.ui8);
         break;
-    case '5':
-        XPT_Do16(&cursor, &cd->value->ui16);
+    case 5:
+        XPT_Do16(cursor, &cd->value.ui16);
         break;
-    case '6':
-        XPT_Do32(&cursor, &cd->value->ui32);
+    case 6:
+        XPT_Do32(cursor, &cd->value.ui32);
         break;
-    case '7':
-        XPT_Do64(&cursor, &cd->value->ui64);
+    case 7:
+        XPT_Do64(cursor, &cd->value.ui64);
         break;
-    case '11':
-        XPT_Do8(&cursor, &cd->value->ch);
+    case 11:
+        XPT_Do8(cursor, &cd->value.ch);
         break;
-    case '12':
-        XPT_Do16(&cursor, &cd->value->wch);
+    case 12:
+        XPT_Do16(cursor, &cd->value.wch);
         break;
-    case '15':
-        if (cd->type->prefix->is_pointer == 1) {
-            XPT_DoString(&cursor, &cd->value->string);
+    case 15:
+        if (cd->type.prefix->is_pointer == 1) {
+            XPT_DoString(cursor, &cd->value.string);
             break;
         }
         goto error;
@@ -269,7 +272,7 @@ PRBool
 XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor **mdp)
 {
     XPTMode mode = cursor->state->mode;
-    XPTConstDescriptor md;
+    XPTMethodDescriptor *md;
     uintn scratch;
 
     if (mode == XPT_DECODE)
@@ -277,14 +280,14 @@ XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor **mdp)
     else
         md = *mdp;
 
-    if (!XPT_DO_BITS(&cursor, &md->is_getter, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &md->is_setter, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &md->is_varargs, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &md->is_constructor, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &md->is_hidden, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &md->reserved, 3, scratch) ||
+    if (!XPT_DO_BITS(&cursor, md->is_getter, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, md->is_setter, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, md->is_varargs, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, md->is_constructor, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, md->is_hidden, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, md->reserved, 3, scratch) ||
         !XPT_DoCString(&cursor, &md->name) ||
-        !XPT_Do8(&cursor, &md->num_args) ||
+        !XPT_Do8(cursor, &md->num_args) ||
         !XPT_DoParamDescriptor(&cursor, &md->params) ||
         !XPT_DoParamDescriptor(&cursor, &md->result)) {
 
@@ -305,7 +308,7 @@ PRBool
 XPT_DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor **pdp)
 {
     XPTMode mode = cursor->state->mode;
-    XPTParamDescriptor pd;
+    XPTParamDescriptor *pd;
     uintn scratch;
 
     if (mode == XPT_DECODE)
@@ -313,10 +316,10 @@ XPT_DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor **pdp)
     else
         pd = *pdp;
 
-    if (!XPT_DO_BITS(&cursor, &pd->in, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &pd->out, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &pd->retval, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &pd->reserved, 5, scratch) ||
+    if (!XPT_DO_BITS(&cursor, pd->in, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, pd->out, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, pd->retval, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, pd->reserved, 5, scratch) ||
         !XPT_DoTypeDescriptor(&cursor, &pd->type)) {
 
         goto error;
@@ -336,7 +339,7 @@ PRBool
 XPT_DoTypeDescriptorPrefix(XPTCursor *cursor, XPTTypeDescriptorPrefix **tdpp)
 {
     XPTMode mode = cursor->state->mode;
-    XPTTypeDescriptorPrefix tdp;
+    XPTTypeDescriptorPrefix *tdp;
     uintn scratch;
     
     if (mode == XPT_DECODE)
@@ -344,10 +347,10 @@ XPT_DoTypeDescriptorPrefix(XPTCursor *cursor, XPTTypeDescriptorPrefix **tdpp)
     else
         tdp = *tdpp;
     
-    if (!XPT_DO_BITS(&cursor, &tdp->is_pointer, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &tdp->is_unique_pointer, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &tdp->is_reference, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &tdp->tag, 5, scratch)) { 
+    if (!XPT_DO_BITS(&cursor, tdp->is_pointer, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, tdp->is_unique_pointer, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, tdp->is_reference, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, tdp->tag, 5, scratch)) { 
 
         goto error;
     }
@@ -363,26 +366,26 @@ XPT_DoTypeDescriptorPrefix(XPTCursor *cursor, XPTTypeDescriptorPrefix **tdpp)
 }
 
 PRBool
-XPT_DoTypeDescriptor(XPTCursor *cursor, XPTSimpleTypeDescriptor **tdp)
+XPT_DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor **tdp)
 {
     XPTMode mode = cursor->state->mode;
-    XPTSimpleTypeDescriptor td;
+    XPTTypeDescriptor *td;
     
     if (mode == XPT_DECODE)
         td = PR_NEWZAP(XPTTypeDescriptor);
     else
         td = *tdp;
     
-    if (!XPT_DoTypeDescriptorPrefix(&cursor, &td->prefix)) {
+    if (!XPT_DoTypeDescriptorPrefix(cursor, &td->prefix)) {
         goto error;
     }
     
     if (td->prefix->tag == TD_INTERFACE_TYPE) {
-        if (!XPT_DoInterfaceDirectoryEntry(&cursor, &td->type->interface))
+        if (!XPT_DoInterfaceDirectoryEntry(cursor, &td->type.interface))
             goto error;
     } else {
         if (td->prefix->tag == TD_INTERFACE_IS_TYPE) {
-            if (!XPT_Do8(&cursor, &td->type->argnum))
+            if (!XPT_Do8(cursor, &td->type.argnum))
                 goto error;
         }
     }
@@ -401,7 +404,7 @@ PRBool
 XPT_DoAnnotationPrefix(XPTCursor *cursor, XPTAnnotationPrefix **app)
 {
     XPTMode mode = cursor->state->mode;
-    XPTAnnotationPrefix ap;
+    XPTAnnotationPrefix *ap;
     uintn scratch;
     
     if (mode == XPT_DECODE)
@@ -409,8 +412,8 @@ XPT_DoAnnotationPrefix(XPTCursor *cursor, XPTAnnotationPrefix **app)
     else
         ap = *app;
     
-    if (!XPT_DO_BITS(&cursor, &ap->is_last, 1, scratch) ||
-        !XPT_DO_BITS(&cursor, &ap->tag, 7, scratch)) {
+    if (!XPT_DO_BITS(&cursor, ap->is_last, 1, scratch) ||
+        !XPT_DO_BITS(&cursor, ap->tag, 7, scratch)) {
 
         goto error;
     }
@@ -429,15 +432,15 @@ PRBool
 XPT_DoPrivateAnnotation(XPTCursor *cursor, XPTPrivateAnnotation **pap)
 {
     XPTMode mode = cursor->state->mode;
-    XPTPrivateAnnotation pa;
+    XPTPrivateAnnotation *pa;
     
     if (mode == XPT_DECODE)
         pa = PR_NEWZAP(XPTPrivateAnnotation);
     else
         pa = *pap;
     
-    if (!XPT_DoString(&cursor, &pa->creator) ||
-        !XPT_DoString(&cursor, &pa->private_data)) {
+    if (!XPT_DoString(cursor, &pa->creator) ||
+        !XPT_DoString(cursor, &pa->private_data)) {
 
         goto error;
     }
@@ -456,19 +459,19 @@ PRBool
 XPT_DoAnnotation(XPTCursor *cursor, XPTAnnotation **ap)
 {
     XPTMode mode = cursor->state->mode;
-    XPTAnnotation a;
+    XPTAnnotation *a;
     
     if (mode == XPT_DECODE)
-        a = PR_NEWZAP(XPTPrivateAnnotation);
+        a = PR_NEWZAP(XPTAnnotation);
     else
         a = *ap;
     
-    if (!XPT_DoAnnotationPrefix(&cursor, &a->prefix)) {
+    if (!XPT_DoAnnotationPrefix(cursor, &a->prefix)) {
         goto error;
     }
     
     if (a->prefix->tag == PRIVATE_ANNOTATION) {
-        if (!XPT_DoPrivateAnnotation(&cursor, &a->private)) {
+        if (!XPT_DoPrivateAnnotation(cursor, &a->private)) {
             goto error;
         }
     }
