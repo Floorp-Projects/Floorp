@@ -256,6 +256,7 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
 {
   NS_INIT_REFCNT();
+  mRootedScriptObject = nsnull;
   mContext = ::JS_NewContext(aRuntime, gStackSize);
   if (mContext) {
     ::JS_SetContextPrivate(mContext, (void *)this);
@@ -309,6 +310,10 @@ nsJSContext::~nsJSContext()
   // Cope with JS_NewContext failure in ctor (XXXbe move NewContext to Init?)
   if (!mContext)
     return;
+
+  // if we were handed an object to remember to unroot now, do it
+  if (mRootedScriptObject)
+    ::JS_RemoveRoot(mContext, &mRootedScriptObject);
 
   /* Remove global object reference to window object, so it can be collected. */
   ::JS_SetGlobalObject(mContext, nsnull);
@@ -1246,6 +1251,17 @@ nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
   mRef = aRef;
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::SetRootedScriptObject(void *aObject)
+{
+  NS_ASSERTION(mRootedScriptObject == nsnull, "two rooted script objects stored");
+  mRootedScriptObject = aObject;
+  if (::JS_AddNamedRoot(mContext, &mRootedScriptObject, "jscontext_savedroot"))
+    return NS_OK;
+  mRootedScriptObject = nsnull;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
