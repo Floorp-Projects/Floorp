@@ -58,6 +58,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMXULCheckboxElement.h"
@@ -77,6 +78,7 @@
 #include "nsXULSelectAccessible.h"
 #include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
+#include "nsIAccessible.h"
 
 // IFrame
 #include "nsIDocShell.h"
@@ -1238,21 +1240,22 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
     }
   }
 
-  // ---- If <select> option, create select option accessible
+  // ---- If <select> <option>, create select option accessible
+    
   if (!newAcc) {
     nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(do_QueryInterface(aNode));
     if (optionElement) {
-      // nsHTMLSelectOptionAccessible's must be created via the parent
-      nsCOMPtr<nsIDOMNode> parentNode;
-      aNode->GetParentNode(getter_AddRefs(parentNode));
-      if (parentNode) {
-        nsCOMPtr<nsIAccessible> parentAccessible;
-        GetAccessibleFor(parentNode, getter_AddRefs(parentAccessible));
-        if (parentAccessible) {
-          nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(shell));
-          newAcc = new nsHTMLSelectOptionAccessible(parentAccessible, aNode, weakShell);
-        }
-      }
+      nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(shell));
+      newAcc = new nsHTMLSelectOptionAccessible(nsnull, aNode, weakShell);
+    }
+  }
+  // See if this is an <optgroup>, 
+  // create the accessible for the optgroup.
+  if (!newAcc) {
+    nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroupElement(do_QueryInterface(aNode));
+    if (optGroupElement) {
+      nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(shell));
+      newAcc = new nsHTMLSelectOptGroupAccessible(nsnull, aNode, weakShell);
     }
   }
 

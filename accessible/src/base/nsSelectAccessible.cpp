@@ -45,6 +45,8 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMHTMLOptGroupElement.h"
+#include "nsIDOMText.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIFrame.h"
 #include "nsIListControlFrame.h"
@@ -52,6 +54,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsRootAccessible.h"
 #include "nsSelectAccessible.h"
+#include "nsIServiceManager.h"
 
 /** ------------------------------------------------------ */
 /**  First, the common widgets                             */
@@ -109,7 +112,32 @@ NS_IMETHODIMP nsSelectListAccessible::GetAccNextSibling(nsIAccessible **_retval)
 nsSelectOptionAccessible::nsSelectOptionAccessible(nsIAccessible* aParent, nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
 nsLeafAccessible(aDOMNode, aShell)
 {
-  mParent = aParent;
+  if (aParent)
+    mParent = aParent;
+  else {
+    nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
+    nsCOMPtr<nsIDOMNode> parentNode, parentNode1;
+    nsCOMPtr<nsIAccessible> parentAccessible, lastChildAcc;
+    aDOMNode->GetParentNode(getter_AddRefs(parentNode));
+    if (parentNode) {
+      // this parent could be a Combobox or a ListBox. Each has a different
+      // was to get to the ListElement. 
+        nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroupElement(do_QueryInterface(parentNode));
+        if (optGroupElement) {
+          parentNode->GetParentNode(getter_AddRefs(parentNode1));
+          parentNode = parentNode1;
+        }
+        accService->GetAccessibleFor(parentNode, getter_AddRefs(parentAccessible));
+        PRUint32 role;
+        do {
+          parentAccessible->GetAccLastChild(getter_AddRefs(lastChildAcc));
+          if (lastChildAcc)
+            lastChildAcc->GetAccRole(&role);
+          parentAccessible = lastChildAcc;
+        } while (role != nsIAccessible::ROLE_LIST && lastChildAcc);
+    }
+    mParent = parentAccessible;
+  }
 }
 
 /** click us! */
@@ -142,19 +170,40 @@ NS_IMETHODIMP nsSelectOptionAccessible::GetAccParent(nsIAccessible **_retval)
   */
 NS_IMETHODIMP nsSelectOptionAccessible::GetAccName(nsAString& _retval)
 {
-  nsCOMPtr<nsIContent> content (do_QueryInterface(mDOMNode));
-  if (!content) {
-    return NS_ERROR_FAILURE;
-  }
+  // CASE #1 -- great majority of the cases
+  // find the label attribute - this is what the W3C says we should use
+  nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(domElement, "No domElement for accessible DOM node!");
+  nsresult rv = domElement->GetAttribute(NS_LITERAL_STRING("label"), _retval) ;
 
-  nsAutoString option;
-  nsresult rv = AppendFlatStringFromSubtree(content, &option);
-  if (NS_SUCCEEDED(rv)) {
-    // Temp var needed until CompressWhitespace built for nsAString
-    option.CompressWhitespace();
-    _retval.Assign(option);
+  if (NS_SUCCEEDED(rv) && !_retval.IsEmpty() ) {
+    return NS_OK;
   }
-  return rv;
+  
+  // CASE #2 -- no label parameter, get the first child, 
+  // use it if it is a text node
+  nsCOMPtr<nsIDOMNode> child;
+  mDOMNode->GetFirstChild(getter_AddRefs(child));
+
+  if (child) {
+    nsCOMPtr<nsIDOMText> text (do_QueryInterface(child));
+    if (text) {
+      nsCOMPtr<nsIContent> content (do_QueryInterface(child));
+      if (!content) {
+        return NS_ERROR_FAILURE;
+      }
+      nsAutoString txtValue;
+      rv = AppendFlatStringFromContentNode(content, &txtValue);
+      if (NS_SUCCEEDED(rv)) {
+        // Temp var (txtValue) needed until CompressWhitespace built for nsAString
+        txtValue.CompressWhitespace();
+        _retval.Assign(txtValue);
+        return NS_OK;
+      }
+    }
+  }
+  
+  return NS_ERROR_FAILURE;
 }
 
 /** ------------------------------------------------------ */
