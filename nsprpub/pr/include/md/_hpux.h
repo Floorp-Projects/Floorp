@@ -55,7 +55,7 @@
 #undef	HAVE_WEAK_IO_SYMBOLS
 #undef	HAVE_WEAK_MALLOC_SYMBOLS
 #define	HAVE_DLL
-#if defined(IS_64) && defined(__ia64)
+#ifdef IS_64
 #define USE_DLFCN
 #else
 #define USE_HPSHL
