@@ -278,7 +278,6 @@ function initializeFilterWidgets()
     gActionLabel = document.getElementById("actionValueLabel");
     gMoveToFolderCheckbox = document.getElementById("moveToFolder");
     gChangePriorityCheckbox = document.getElementById("changePriority");
-    gChangeJunkScoreCheckbox = document.getElementById("setJunkScore");
     gLabelCheckbox = document.getElementById("label");
     gJunkScoreCheckbox = document.getElementById("setJunkScore");
     gMarkReadCheckbox = document.getElementById("markRead");
@@ -331,7 +330,7 @@ function initializeDialog(filter)
       }
       else if (filterAction.type == nsMsgFilterAction.JunkScore) 
       {
-        gChangeJunkScoreCheckbox.checked = true;
+        gJunkScoreCheckbox.checked = true;
         // initialize junk score
         var selectedJunkScore = gActionJunkScore.getElementsByAttribute("value", filterAction.junkScore).item(0);
 
