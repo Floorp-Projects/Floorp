@@ -728,7 +728,15 @@ COOKIE_GetCookie(nsIURI * address) {
     }
 
     /* shorter strings always come last so there can be no ambiquity */
-    if(cookie_s->path && !PL_strncmp(path.get(), cookie_s->path, PL_strlen(cookie_s->path))) {
+    int cookiePathLen = PL_strlen(cookie_s->path);
+    if (cookiePathLen > 0 && cookie_s->path[cookiePathLen-1] == '/') {
+      cookiePathLen--;
+    }
+    if(cookie_s->path && !PL_strncmp(path.get(), cookie_s->path, cookiePathLen)) {
+      PRUint32 pathLen = path.Length();
+      if (pathLen>cookiePathLen && (path[cookiePathLen] != '/')) {
+        continue;
+      }
 
       /* if the cookie is secure and the path isn't, dont send it */
       if (cookie_s->isSecure & !isSecure) {
