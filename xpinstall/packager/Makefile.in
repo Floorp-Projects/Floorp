@@ -87,9 +87,23 @@ ifneq ($(NSPR_DIR),$(DIST)/bin)
 endif
 	@rm -f $(DIST)/package $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
 	@ln -s bin $(DIST)/package
-	@cd $(DIST)/bin; find . ! -type d -exec strip $(STRIP_FLAGS) {} \;
+	@cd $(DIST)/bin; find . ! -type d \
+			! -name "*.js" \
+			! -name "*.xpt" \
+			! -name "*.gif" \
+			! -name "*.jpg" \
+			! -name "*.txt" \
+			! -name "*.rdf" \
+			! -name "*.sh" \
+			! -name "*.properties" \
+			! -name "*.dtd" \
+			! -name "*.html" \
+			! -name "*.xul" \
+			! -name "*.css" \
+			! -name "*.xml" \
+			-exec strip $(STRIP_FLAGS) {} \;
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
-	cd $(DIST); tar -cvhf - package | gzip > $@
+	cd $(DIST); tar -cvhf - package | gzip -vf9 > $@
 endif
 ifeq ($(MOZ_PKG_FORMAT),RPM)
 	@echo "Sorry, don't know how to build an RPM file yet...."
