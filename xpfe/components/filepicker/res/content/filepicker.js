@@ -7,6 +7,7 @@ const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 var sfile = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
 var retvals;
 var filePickerMode;
+var currentFilter;
 
 function onLoad() {
 
@@ -30,15 +31,16 @@ function onLoad() {
     /* build filter popup */
     var filterPopup = document.createElement("menupopup");
 
+    currentFilter = filterTypes[0];
     for (var i = 0; i < numFilters; i++) {
       var menuItem = document.createElement("menuitem");
       menuItem.setAttribute("value", filterTitles[i] + " (" + filterTypes[i] + ")");
+      menuItem.setAttribute("filters", filterTypes[i]);
       filterPopup.appendChild(menuItem);
     }
 
     var filterMenuList = document.getElementById("filterMenuList");
     filterMenuList.appendChild(filterPopup);
-
   }
 
   // setup the dialogOverlay.xul button handlers
@@ -51,6 +53,15 @@ function onLoad() {
   }
 
   addToHistory(sfile.path);
+
+  getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
+}
+
+function onMenuListChanged(target)
+{
+  dump("onMenuListChanged\n");
+  var filterTypes = target.getAttribute("filters");
+  currentFilter = filterTypes;
 
   getDirectoryContents(document.getElementById("directoryList"), sfile.directoryEntries);
 }
@@ -283,15 +294,45 @@ function getDirectoryContents(parentElement, dirContents)
 {
   var i = 0;
   var array = new Array();
+
+  var splitFilters = currentFilter.split("; ");
+
   while (dirContents.HasMoreElements()) {
-    array[i] = dirContents.GetNext().QueryInterface(nsILocalFile);
-    i++;
+    var file = dirContents.GetNext().QueryInterface(nsILocalFile);
+
+    /* split up the current filter since there might be more than one thing in it */
+    try {
+      /* always add directories */
+      if (file.isDirectory()) {
+        array[i] = file;
+        i++;
+      } else {
+        for (var k = 0; k < splitFilters.length; ++k) {
+          var tmpStr = splitFilters[k];
+          /* split up in to an array */
+          var matchStr;
+          if (tmpStr == "*.*") {
+            matchStr = ".*";
+          } else {
+            var tmpArray = tmpStr.match("\*\.(.*)");
+            var matchStr = ".*\\." + tmpArray[1] + "$";
+          }
+          if (file.leafName.match(matchStr)) {
+            array[i] = file;
+            i++;
+            break;
+          }
+        }
+      }
+    } catch(ex) { }
   }
 
-  /* sort the array */
-  array.sort(dirSort);
-
-  createTree(parentElement, array);
+  if (array.length > 0) {
+    /* sort the array */
+    array.sort(dirSort);
+    
+    createTree(parentElement, array);
+  }
 }
 
 function clearTree() {
