@@ -89,6 +89,8 @@
 
     </html:script>
 
+    <html:div flex="100%">
+
     <html:table style="width:100%;">
         <html:tr>
             <html:td colspan="4">
@@ -114,5 +116,7 @@
             </html:td>
         </html:tr>
     </html:table>
+
+    </html:div>
 
 </window>
