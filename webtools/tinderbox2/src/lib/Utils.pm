@@ -3,9 +3,9 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.12 $ 
-# $Date: 2001/01/06 01:31:30 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.13 $ 
+# $Date: 2001/02/15 20:44:48 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
 
@@ -184,19 +184,31 @@ sub get_env {
   # check both real and effective uid of the process to see if we have
   # been configured to run with too much privileges.
 
-  ( $< >= 100 ) ||
+  # On RedHat Linux
+  #	user nobody has uid 99
+  #	All CGI scripts run as user nobody by defult
+
+  # The largest Solaris daemon ids is lp at 71
+
+  ( $< >= 95 ) ||
     die("Security Error. Must not run this program as root\n");
 
-  ( $> >= 100 ) ||
+  ( $> >= 95 ) ||
     die("Security Error. Must not run this program as root\n");
 
   # check both real and effective gid of the process to see if we have
   # been configured to run with too much privileges.
 
-  ( $( >= 10 ) ||
+  # On RedHat Linux
+  #	the wheel group is group 10
+  #	the ftp group is group 50
+
+  # The largest Solaris daemon group is 15
+
+  ( $( >= 75 ) ||
     die("Security Error. Must not run this program as group root\n");
 
-  ( $) >= 10 ) ||
+  ( $) >= 75 ) ||
     die("Security Error. Must not run this program as group root\n");
 
 
