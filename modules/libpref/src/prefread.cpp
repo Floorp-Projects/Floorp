@@ -42,6 +42,7 @@
 #ifdef TEST_PREFREAD
 #include <stdio.h>
 #define NS_WARNING(_s) printf(">>> " _s "!\n")
+#define NS_NOTREACHED(_s) NS_WARNING(_s)
 #else
 #include "nsDebug.h" // for NS_WARNING
 #endif
@@ -53,8 +54,10 @@ enum {
     PREF_PARSE_UNTIL_NAME,
     PREF_PARSE_NAME,
     PREF_PARSE_UNTIL_COMMA,
-    PREF_PARSE_VALUE,
+    PREF_PARSE_UNTIL_VALUE,
+    PREF_PARSE_STRING_VALUE,
     PREF_PARSE_ESC_STRING_VALUE,
+    PREF_PARSE_INT_VALUE,
     PREF_PARSE_COMMENT_MAYBE_START,
     PREF_PARSE_COMMENT_BLOCK,
     PREF_PARSE_COMMENT_BLOCK_MAYBE_END,
@@ -117,6 +120,47 @@ pref_GrowBuf(PrefParseState *ps)
     return PR_TRUE;
 }
 
+/**
+ * pref_DoCallback
+ *
+ * this function is called when a complete pref name-value pair has
+ * been extracted from the input data.
+ *
+ * @param ps
+ *        parse state instance
+ *
+ * @return PR_FALSE to indicate a fatal error.
+ */
+static PRBool
+pref_DoCallback(PrefParseState *ps)
+{
+    PrefType   type;
+    PrefAction action;
+    PrefValue  value;
+
+    type   = ps->vtype;
+    action = ps->fuser ? PREF_SETUSER : PREF_SETDEFAULT;
+    switch (type) {
+    case PREF_STRING:
+        value.stringVal = ps->vb;
+        break;
+    case PREF_INT:
+        if ((ps->vb[0] == '-' || ps->vb[0] == '+') && ps->vb[1] == '\0') {
+            NS_WARNING("malformed integer value");
+            return PR_FALSE;
+        }
+        value.intVal = atoi(ps->vb);
+        break;
+    case PREF_BOOL:
+        value.boolVal = (ps->vb == kTrue);
+        break;
+    default:
+        break;
+    }
+    (*ps->reader)(ps->closure, ps->lb, value, type, action);
+    return PR_TRUE;
+}
+
 void
 PREF_InitParseState(PrefParseState *ps, PrefReader reader, void *closure)
 {
@@ -156,9 +200,6 @@ PREF_FinalizeParseState(PrefParseState *ps)
 PRBool
 PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
 {
-    PrefValue  value;
-    PrefType   type;
-    PrefAction action;
     const char *end;
     char c;
     int state;
@@ -239,7 +280,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
         case PREF_PARSE_UNTIL_COMMA:
             if (c == ',') {
                 ps->vb = ps->lbcur;
-                state = PREF_PARSE_VALUE;
+                state = PREF_PARSE_UNTIL_VALUE;
             }
             else if (c == '/') {       /* allow embedded comment */
                 ps->nextstate = state; /* return here when done with comment */
@@ -252,72 +293,57 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
             break;
 
         /* value parsing */
-        case PREF_PARSE_VALUE:
-            if (ps->vtype == PREF_INVALID) {
-                if (c == '\"') {
-                    ps->vtype = PREF_STRING;
-                    break; /* wait next char */
-                }
-                else if (c == 't' || c == 'f') {
-                    ps->vb = (char *) (c == 't' ? kTrue : kFalse);
-                    ps->vtype = PREF_BOOL;
-                    ps->smatch = ps->vb;
-                    ps->sindex = 1;
-                    ps->nextstate = PREF_PARSE_UNTIL_CLOSE_PAREN;
-                    state = PREF_PARSE_MATCH_STRING;
-                    break;
-                }
-                else if (isdigit(c) || (c == '-') || (c == '+')) {
-                    ps->vtype = PREF_INT;
-                    /* fall through and write c to line buffer... */
-                }
-                else if (c == '/') {       /* allow embedded comment */
-                    ps->nextstate = state; /* return here when done with comment */
-                    state = PREF_PARSE_COMMENT_MAYBE_START;
-                    break;
-                }
-                else if (!isspace(c)) {
-                    NS_WARNING("malformed pref file");
-                    return PR_FALSE;
-                }
+        case PREF_PARSE_UNTIL_VALUE:
+            /* the pref value type is unknown.  so, we scan for the first
+             * character of the value, and determine the type from that. */
+            if (c == '\"') {
+                ps->vtype = PREF_STRING;
+                state = PREF_PARSE_STRING_VALUE;
             }
+            else if (c == 't' || c == 'f') {
+                ps->vb = (char *) (c == 't' ? kTrue : kFalse);
+                ps->vtype = PREF_BOOL;
+                ps->smatch = ps->vb;
+                ps->sindex = 1;
+                ps->nextstate = PREF_PARSE_UNTIL_CLOSE_PAREN;
+                state = PREF_PARSE_MATCH_STRING;
+            }
+            else if (isdigit(c) || (c == '-') || (c == '+')) {
+                ps->vtype = PREF_INT;
+                /* write c to line buffer... */
+                if (ps->lbcur == ps->lbend && !pref_GrowBuf(ps))
+                    return PR_FALSE; /* out of memory */
+                *ps->lbcur++ = c;
+                state = PREF_PARSE_INT_VALUE;
+            }
+            else if (c == '/') {       /* allow embedded comment */
+                ps->nextstate = state; /* return here when done with comment */
+                state = PREF_PARSE_COMMENT_MAYBE_START;
+            }
+            else if (!isspace(c)) {
+                NS_WARNING("malformed pref file");
+                return PR_FALSE;
+            }
+            break;
+        case PREF_PARSE_STRING_VALUE:
+            /* grow line buffer if necessary... */
             if (ps->lbcur == ps->lbend && !pref_GrowBuf(ps))
                 return PR_FALSE; /* out of memory */
-            switch (ps->vtype) {
-            case PREF_STRING:
-                /* skip char if start of escape sequence */
-                if (c == '\\')
-                    state = PREF_PARSE_ESC_STRING_VALUE;
-                else if (c != '\"')
-                    *ps->lbcur++ = c;
-                else { 
-                    *ps->lbcur++ = '\0';
-                    state = PREF_PARSE_UNTIL_CLOSE_PAREN;
-                }
-                break;
-            case PREF_INT:
-                if (isdigit(c) || (c == '-') || (c == '+'))
-                    *ps->lbcur++ = c;
-                else {
-                    *ps->lbcur++ = '\0'; /* stomp null terminator; we are done. */
-                    if (c == ')')
-                        state = PREF_PARSE_UNTIL_SEMICOLON;
-                    else if (c == '/') { /* allow embedded comment */
-                        ps->nextstate = PREF_PARSE_UNTIL_CLOSE_PAREN;
-                        state = PREF_PARSE_COMMENT_MAYBE_START;
-                    }
-                    else if (isspace(c))
-                        state = PREF_PARSE_UNTIL_CLOSE_PAREN;
-                    else {
-                        NS_WARNING("malformed pref file");
-                        return PR_FALSE;
-                    }
-                }
-            default:
-                break;
+            /* skip char if start of escape sequence.  handle escaped
+             * characters using a separate state. */
+            if (c == '\\')
+                state = PREF_PARSE_ESC_STRING_VALUE;
+            else if (c != '\"')
+                *ps->lbcur++ = c;
+            else { 
+                *ps->lbcur++ = '\0';
+                state = PREF_PARSE_UNTIL_CLOSE_PAREN;
             }
             break;
         case PREF_PARSE_ESC_STRING_VALUE:
+            /* not necessary to resize buffer here since we are only
+             * writing one character and the resize check would have
+             * been done for us in the PREF_PARSE_STRING_VALUE state. */
             switch (c) {
             case '\"':
             case '\\':
@@ -330,12 +356,33 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 break;
             default:
                 NS_WARNING("preserving unexpected JS escape sequence");
-                /* preserve the escape sequence */
-                *ps->lbcur++ = '\\';
+                *ps->lbcur++ = '\\'; /* preserve the escape sequence */
                 break;
             }
             *ps->lbcur++ = c;
-            state = PREF_PARSE_VALUE;
+            state = PREF_PARSE_STRING_VALUE;
+            break;
+        case PREF_PARSE_INT_VALUE:
+            /* grow line buffer if necessary... */
+            if (ps->lbcur == ps->lbend && !pref_GrowBuf(ps))
+                return PR_FALSE; /* out of memory */
+            if (isdigit(c))
+                *ps->lbcur++ = c;
+            else {
+                *ps->lbcur++ = '\0'; /* stomp null terminator; we are done. */
+                if (c == ')')
+                    state = PREF_PARSE_UNTIL_SEMICOLON;
+                else if (c == '/') { /* allow embedded comment */
+                    ps->nextstate = PREF_PARSE_UNTIL_CLOSE_PAREN;
+                    state = PREF_PARSE_COMMENT_MAYBE_START;
+                }
+                else if (isspace(c))
+                    state = PREF_PARSE_UNTIL_CLOSE_PAREN;
+                else {
+                    NS_WARNING("malformed pref file");
+                    return PR_FALSE;
+                }
+            }
             break;
 
         /* comment parsing */
@@ -402,26 +449,8 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
         case PREF_PARSE_UNTIL_SEMICOLON:
             /* tolerate only whitespace and embedded comments */
             if (c == ';') {
-                type   = ps->vtype;
-                action = ps->fuser ? PREF_SETUSER : PREF_SETDEFAULT;
-                switch (type) {
-                case PREF_STRING:
-                    value.stringVal = ps->vb;
-                    break;
-                case PREF_INT:
-                    if ((ps->vb[0] == '-' || ps->vb[0] == '+') && ps->vb[1] == '\0') {
-                        NS_WARNING("malformed integer value");
-                        return PR_FALSE;
-                    }
-                    value.intVal = atoi(ps->vb);
-                    break;
-                case PREF_BOOL:
-                    value.boolVal = (ps->vb == kTrue);
-                    break;
-                default:
-                    break;
-                }
-                (*ps->reader)(ps->closure, ps->lb, value, type, action);
+                if (!pref_DoCallback(ps))
+                    return PR_FALSE;
                 state = PREF_PARSE_INIT;
             }
             else if (c == '/') {
