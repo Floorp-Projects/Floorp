@@ -103,6 +103,11 @@ interface nsIChromeRegistry : nsISupports
   boolean allowScriptsForSkin(in nsIURI url);
 
   void checkForNewChrome();
+
+  boolean checkThemeVersion(in wstring skinName);
+
+  boolean checkLocaleVersion(in wstring localeName);
+
 };
 
 
