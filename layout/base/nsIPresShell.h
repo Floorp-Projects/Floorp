@@ -87,6 +87,19 @@ public:
 
   // XXX events
   // XXX selection
+
+  /**
+   * See if reflow verification is enabled. To enable reflow verification add
+   * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable
+   * (any non-zero debug level will work). Or, call SetVerifyReflowEnable
+   * with PR_TRUE.
+   */
+  static NS_LAYOUT PRBool GetVerifyReflowEnable();
+
+  /**
+   * Set the verify-reflow enable flag.
+   */
+  static NS_LAYOUT void SetVerifyReflowEnable(PRBool aEnabled);
 };
 
 /**
