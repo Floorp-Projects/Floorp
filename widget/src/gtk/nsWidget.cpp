@@ -783,6 +783,8 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 {
   GtkWidget *parentWidget = nsnull;
 
+  //  g_return_val_if_fail ((aRect.width > 0) && (aRect.height > 0), NS_ERROR_FAILURE);
+
 #ifdef NOISY_DESTROY
   if (aParent)
     g_print("nsWidget::CreateWidget (%p) nsIWidget parent\n",
