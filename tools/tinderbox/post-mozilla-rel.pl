@@ -478,13 +478,39 @@ sub pushit {
     $scp_opts = "-oProtocol=".$Settings::ssh_version;
   }
 
-  TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
-  TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory $Settings::ssh_user\@$ssh_server:$upload_path";
-  TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/$short_ud";
+  # The ReleaseToDated and ReleaseToLatest configuration settings give us the
+  # ability to fine-tune where release files are stored.  ReleaseToDated
+  # will store the release files in a directory of the form
+  #
+  #   nightly/YYYY-MM-DD-HH-<milestone>
+  #
+  # while ReleaseToLatest stores the release files in a directory of the form
+  #
+  #   nightly/latest-<milestone>
+  #
+  # Before we allowed the fine-tuning, we either published to both dated and
+  # latest, or to neither.  In case some installations don't have these
+  # variables defined yet, we want to set them to default values here.
+  # Hopefully, though, we'll have also updated tinder-defaults.pl if we've
+  # updated post-mozilla-rel.pl from CVS.
 
-  if ($cachebuild) {
-    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server cp -dpf $upload_path/$short_ud/* $upload_path/latest-$Settings::milestone/";
+  $Settings::ReleaseToDated = 1 if !defined($Settings::ReleaseToDated);
+  $Settings::ReleaseToLatest = 1 if !defined($Settings::ReleaseToLatest);
+
+  if ( $Settings::ReleaseToDated ) {
+    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
+    TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory $Settings::ssh_user\@$ssh_server:$upload_path";
+    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/$short_ud";
+
+    if ( $cachebuild and $Settings::ReleaseToLatest ) {
+      TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server cp -dpf $upload_path/$short_ud/* $upload_path/latest-$Settings::milestone/";
+    }
+  } elsif ( $Settings::ReleaseToLatest ) {
+    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server mkdir -p $upload_path";
+    TinderUtils::run_shell_command "scp $scp_opts -r $upload_directory $Settings::ssh_user\@$ssh_server:$upload_path/latest-$Settings::milestone/";
+    TinderUtils::run_shell_command "ssh $ssh_opts -l $Settings::ssh_user $ssh_server chmod -R 775 $upload_path/latest-$Settings::milestone/";
   }
+
   return 1;
 }
 
