@@ -4306,7 +4306,7 @@ PRBool CSSParserImpl::ParseBorderColors(PRInt32& aErrorCode, nsICSSDeclaration* 
                                         PRInt32& aChangeHint, nsCSSProperty aProperty)
 {
   nsCSSValue value;
-  if (ParseVariant(aErrorCode, value, VARIANT_HCK, nsCSSProps::kBorderColorKTable)) {
+  if (ParseVariant(aErrorCode, value, VARIANT_HCK|VARIANT_NONE, nsCSSProps::kBorderColorKTable)) {
     nsCSSValueList* listHead = new nsCSSValueList();
     nsCSSValueList* list = listHead;
     if (!list) {
@@ -4320,7 +4320,7 @@ PRBool CSSParserImpl::ParseBorderColors(PRInt32& aErrorCode, nsICSSDeclaration* 
         aErrorCode = aDeclaration->AppendStructValue(aProperty, listHead);
         return NS_SUCCEEDED(aErrorCode);
       }
-      if (ParseVariant(aErrorCode, value, VARIANT_HCK, nsCSSProps::kBorderColorKTable)) {
+      if (ParseVariant(aErrorCode, value, VARIANT_HCK|VARIANT_NONE, nsCSSProps::kBorderColorKTable)) {
         list->mNext = new nsCSSValueList();
         list = list->mNext;
         if (list)
