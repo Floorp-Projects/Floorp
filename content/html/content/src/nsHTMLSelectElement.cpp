@@ -84,6 +84,7 @@ public:
 
   void AddOption(nsIContent* aOption);
   void RemoveOption(nsIContent* aOption);
+  PRInt32 IndexOf(nsIContent* aOption);
 
   void Clear();
   void DropReference();
@@ -840,6 +841,21 @@ nsOptionList::RemoveOption(nsIContent* aOption)
     }
     NS_RELEASE(option);
   }
+}
+
+PRInt32
+nsOptionList::IndexOf(nsIContent* aOption)
+{
+  nsIDOMHTMLOptionElement* option;
+
+  if (mDirty && (nsnull != mSelect)) {
+    GetOptions();
+  }
+  if ((nsnull != aOption) &&
+    NS_SUCCEEDED(aOption->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option))) {
+    return mElements.IndexOf(option);
+  }
+  return -1;
 }
 
 PRBool    
