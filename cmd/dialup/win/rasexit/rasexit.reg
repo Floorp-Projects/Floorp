@@ -1,18 +1,22 @@
 REM  -*- Mode: Fundamental -*-
-REM  The contents of this file are subject to the Netscape Public License
-REM  Version 1.0 (the "NPL"); you may not use this file except in
-REM  compliance with the NPL.  You may obtain a copy of the NPL at
-REM  http://www.mozilla.org/NPL/
-REM
-REM  Software distributed under the NPL is distributed on an "AS IS" basis,
-REM  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
-REM  for the specific language governing rights and limitations under the
-REM  NPL.
-REM
-REM  The Initial Developer of this code under the NPL is Netscape
+REM  The contents of this file are subject to the Netscape Public
+REM  License Version 1.1 (the "License"); you may not use this file
+REM  except in compliance with the License. You may obtain a copy of
+REM  the License at http://www.mozilla.org/NPL/
+REM 
+REM  Software distributed under the License is distributed on an "AS
+REM  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+REM  implied. See the License for the specific language governing
+REM  rights and limitations under the License.
+REM 
+REM  The Original Code is mozilla.org code.
+REM 
+REM  The Initial Developer of the Original Code is Netscape
 REM  Communications Corporation.  Portions created by Netscape are
-REM  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
-REM  Reserved.
+REM  Copyright (C) 1998 Netscape Communications Corporation. All
+REM  Rights Reserved.
+REM 
+REM  Contributor(s): 
 REM
 REGEDIT4
 
