@@ -35,31 +35,31 @@ interface nsIDataType : nsISupports
     // These MUST match the declarations in xpt_struct.h. 
     // Otherwise the world is likely to explode.   
                                                   // From xpt_struct.h ...
-    const PRUint16 TYPE_INT8                =  0; // TD_INT8              = 0,
-    const PRUint16 TYPE_INT16               =  1; // TD_INT16             = 1,
-    const PRUint16 TYPE_INT32               =  2; // TD_INT32             = 2,
-    const PRUint16 TYPE_INT64               =  3; // TD_INT64             = 3,
-    const PRUint16 TYPE_UINT8               =  4; // TD_UINT8             = 4,
-    const PRUint16 TYPE_UINT16              =  5; // TD_UINT16            = 5,
-    const PRUint16 TYPE_UINT32              =  6; // TD_UINT32            = 6,
-    const PRUint16 TYPE_UINT64              =  7; // TD_UINT64            = 7,
-    const PRUint16 TYPE_FLOAT               =  8; // TD_FLOAT             = 8, 
-    const PRUint16 TYPE_DOUBLE              =  9; // TD_DOUBLE            = 9,
-    const PRUint16 TYPE_BOOL                = 10; // TD_BOOL              = 10,
-    const PRUint16 TYPE_CHAR                = 11; // TD_CHAR              = 11,
-    const PRUint16 TYPE_WCHAR               = 12; // TD_WCHAR             = 12,
-    const PRUint16 TYPE_VOID                = 13; // TD_VOID              = 13,
-    const PRUint16 TYPE_ID                  = 14; // TD_PNSIID            = 14,
-    const PRUint16 TYPE_ASTRING             = 15; // TD_DOMSTRING         = 15,
-    const PRUint16 TYPE_CHAR_STR            = 16; // TD_PSTRING           = 16,
-    const PRUint16 TYPE_WCHAR_STR           = 17; // TD_PWSTRING          = 17,
-    const PRUint16 TYPE_INTERFACE           = 18; // TD_INTERFACE_TYPE    = 18,
-    const PRUint16 TYPE_INTERFACE_IS        = 19; // TD_INTERFACE_IS_TYPE = 19,
-    const PRUint16 TYPE_ARRAY               = 20; // TD_ARRAY             = 20,
-    const PRUint16 TYPE_STRING_SIZE_IS      = 21; // TD_PSTRING_SIZE_IS   = 21,
-    const PRUint16 TYPE_WSTRING_SIZE_IS     = 22; // TD_PWSTRING_SIZE_IS  = 22
+    const PRUint16 VTYPE_INT8                =  0; // TD_INT8              = 0,
+    const PRUint16 VTYPE_INT16               =  1; // TD_INT16             = 1,
+    const PRUint16 VTYPE_INT32               =  2; // TD_INT32             = 2,
+    const PRUint16 VTYPE_INT64               =  3; // TD_INT64             = 3,
+    const PRUint16 VTYPE_UINT8               =  4; // TD_UINT8             = 4,
+    const PRUint16 VTYPE_UINT16              =  5; // TD_UINT16            = 5,
+    const PRUint16 VTYPE_UINT32              =  6; // TD_UINT32            = 6,
+    const PRUint16 VTYPE_UINT64              =  7; // TD_UINT64            = 7,
+    const PRUint16 VTYPE_FLOAT               =  8; // TD_FLOAT             = 8, 
+    const PRUint16 VTYPE_DOUBLE              =  9; // TD_DOUBLE            = 9,
+    const PRUint16 VTYPE_BOOL                = 10; // TD_BOOL              = 10,
+    const PRUint16 VTYPE_CHAR                = 11; // TD_CHAR              = 11,
+    const PRUint16 VTYPE_WCHAR               = 12; // TD_WCHAR             = 12,
+    const PRUint16 VTYPE_VOID                = 13; // TD_VOID              = 13,
+    const PRUint16 VTYPE_ID                  = 14; // TD_PNSIID            = 14,
+    const PRUint16 VTYPE_ASTRING             = 15; // TD_DOMSTRING         = 15,
+    const PRUint16 VTYPE_CHAR_STR            = 16; // TD_PSTRING           = 16,
+    const PRUint16 VTYPE_WCHAR_STR           = 17; // TD_PWSTRING          = 17,
+    const PRUint16 VTYPE_INTERFACE           = 18; // TD_INTERFACE_TYPE    = 18,
+    const PRUint16 VTYPE_INTERFACE_IS        = 19; // TD_INTERFACE_IS_TYPE = 19,
+    const PRUint16 VTYPE_ARRAY               = 20; // TD_ARRAY             = 20,
+    const PRUint16 VTYPE_STRING_SIZE_IS      = 21; // TD_PSTRING_SIZE_IS   = 21,
+    const PRUint16 VTYPE_WSTRING_SIZE_IS     = 22; // TD_PWSTRING_SIZE_IS  = 22
     
-    const PRUint16 TYPE_EMPTY               = 255;
+    const PRUint16 VTYPE_EMPTY               = 255;
 };
 
 

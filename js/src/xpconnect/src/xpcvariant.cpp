@@ -151,7 +151,7 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
     if(xpcvariant)
     {
         jsval realVal = xpcvariant->GetJSVal();
-        if(JSVAL_IS_PRIMITIVE(realVal) || type == nsIDataType::TYPE_ID)
+        if(JSVAL_IS_PRIMITIVE(realVal) || type == nsIDataType::VTYPE_ID)
         {
             // Not a JSObject (or is a JSObject representing an nsID),.
             // So, just pass through the underlying data.
@@ -180,23 +180,23 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
 
     switch(type)
     {
-        case nsIDataType::TYPE_INT8:        
-        case nsIDataType::TYPE_INT16:        
-        case nsIDataType::TYPE_INT32:        
-        case nsIDataType::TYPE_INT64:        
-        case nsIDataType::TYPE_UINT8:        
-        case nsIDataType::TYPE_UINT16:        
-        case nsIDataType::TYPE_UINT32:        
-        case nsIDataType::TYPE_UINT64:        
-        case nsIDataType::TYPE_FLOAT:        
-        case nsIDataType::TYPE_DOUBLE:        
+        case nsIDataType::VTYPE_INT8:        
+        case nsIDataType::VTYPE_INT16:        
+        case nsIDataType::VTYPE_INT32:        
+        case nsIDataType::VTYPE_INT64:        
+        case nsIDataType::VTYPE_UINT8:        
+        case nsIDataType::VTYPE_UINT16:        
+        case nsIDataType::VTYPE_UINT32:        
+        case nsIDataType::VTYPE_UINT64:        
+        case nsIDataType::VTYPE_FLOAT:        
+        case nsIDataType::VTYPE_DOUBLE:        
         {
             // Easy. Handle inline.
             if(NS_FAILED(variant->GetAsDouble(&xpctvar.val.d)))
                 return JS_FALSE;
             return JS_NewNumberValue(ccx, xpctvar.val.d, pJSVal);
         }
-        case nsIDataType::TYPE_BOOL:        
+        case nsIDataType::VTYPE_BOOL:        
         {
             // Easy. Handle inline.
             if(NS_FAILED(variant->GetAsBool(&xpctvar.val.b)))
@@ -204,54 +204,54 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
             *pJSVal = BOOLEAN_TO_JSVAL(xpctvar.val.b);
             return JS_TRUE;
         }
-        case nsIDataType::TYPE_CHAR: 
+        case nsIDataType::VTYPE_CHAR: 
             if(NS_FAILED(variant->GetAsChar(&xpctvar.val.c)))
                 return JS_FALSE;
             xpctvar.type = (uint8)TD_CHAR;
             break;
-        case nsIDataType::TYPE_WCHAR:        
+        case nsIDataType::VTYPE_WCHAR:        
             if(NS_FAILED(variant->GetAsWChar(&xpctvar.val.wc)))
                 return JS_FALSE;
             xpctvar.type = (uint8)TD_WCHAR;
             break;
-        case nsIDataType::TYPE_ID:        
+        case nsIDataType::VTYPE_ID:        
             if(NS_FAILED(variant->GetAsID(&iid)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PNSIID | XPT_TDP_POINTER);
             xpctvar.val.p = &iid;
             break;
-        case nsIDataType::TYPE_ASTRING:        
+        case nsIDataType::VTYPE_ASTRING:        
             if(NS_FAILED(variant->GetAsAString(astring)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_DOMSTRING | XPT_TDP_POINTER);
             xpctvar.val.p = &astring;
             break;
-        case nsIDataType::TYPE_CHAR_STR:       
+        case nsIDataType::VTYPE_CHAR_STR:       
             if(NS_FAILED(variant->GetAsString((char**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PSTRING | XPT_TDP_POINTER);
             xpctvar.SetValIsAllocated();
             break;
-        case nsIDataType::TYPE_STRING_SIZE_IS:
+        case nsIDataType::VTYPE_STRING_SIZE_IS:
             if(NS_FAILED(variant->GetAsStringWithSize(&size, 
                                                       (char**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PSTRING_SIZE_IS | XPT_TDP_POINTER);
             break;
-        case nsIDataType::TYPE_WCHAR_STR:        
+        case nsIDataType::VTYPE_WCHAR_STR:        
             if(NS_FAILED(variant->GetAsWString((PRUnichar**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PWSTRING | XPT_TDP_POINTER);
             xpctvar.SetValIsAllocated();
             break;
-        case nsIDataType::TYPE_WSTRING_SIZE_IS:        
+        case nsIDataType::VTYPE_WSTRING_SIZE_IS:        
             if(NS_FAILED(variant->GetAsWStringWithSize(&size, 
                                                       (PRUnichar**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PWSTRING_SIZE_IS | XPT_TDP_POINTER);
             break;
-        case nsIDataType::TYPE_INTERFACE:        
-        case nsIDataType::TYPE_INTERFACE_IS:        
+        case nsIDataType::VTYPE_INTERFACE:        
+        case nsIDataType::VTYPE_INTERFACE_IS:        
         {
             nsID* piid;
             if(NS_FAILED(variant->GetAsInterface(&piid, &xpctvar.val.p)))
@@ -265,11 +265,11 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
                 xpctvar.SetValIsInterface();
             break;
         }
-        case nsIDataType::TYPE_ARRAY:        
+        case nsIDataType::VTYPE_ARRAY:        
             // XXX FIXME
             return JS_FALSE;
-        case nsIDataType::TYPE_VOID:        
-        case nsIDataType::TYPE_EMPTY:
+        case nsIDataType::VTYPE_VOID:        
+        case nsIDataType::VTYPE_EMPTY:
             *pJSVal = JSVAL_VOID;
             return JS_TRUE;
         default:
