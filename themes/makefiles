@@ -20,3 +20,4 @@ themes/modern/messenger/Makefile
 themes/modern/messenger/addressbook/Makefile
 themes/modern/messenger/messengercompose/Makefile
 themes/modern/navigator/Makefile
+themes/modern/xmlterm/Makefile

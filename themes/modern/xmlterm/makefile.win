@@ -19,18 +19,16 @@
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-THEME_ROOT_DEPTH = .
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH		= ..\..\..
+THEME_ROOT_DEPTH = ..
 
-include $(DEPTH)/config/autoconf.mk
-include $(THEME_ROOT_DEPTH)/theme.mk
+include <$(DEPTH)\config\rules.mak>
+include <$(THEME_ROOT_DEPTH)\theme.mk>
 
-DIRS  = communicator global navigator editor messenger 
-# extensions, need to deal with this soon.
-DIRS += chatzilla xmlterm
+clobber::
+	rm -f $(DIST)\chrome\$(THEME)\xmlterm\skin\*.*
 
-include $(topsrcdir)/config/rules.mk
-
+install:: 
+	$(MAKE_INSTALL) wheel.gif $(DIST)\bin\chrome\$(THEME)\xmlterm\skin
+	$(MAKE_INSTALL) xmlterm.css $(DIST)\bin\chrome\$(THEME)\xmlterm\skin
+	$(MAKE_INSTALL) xmltpage.css $(DIST)\bin\chrome\$(THEME)\xmlterm\skin

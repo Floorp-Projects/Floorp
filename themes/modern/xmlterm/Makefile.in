@@ -13,14 +13,14 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
 #
 
-DEPTH		= ../..
-THEME_ROOT_DEPTH = .
+DEPTH		= ../../..
+THEME_ROOT_DEPTH = ..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -28,9 +28,18 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-DIRS  = communicator global navigator editor messenger 
-# extensions, need to deal with this soon.
-DIRS += chatzilla xmlterm
+SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/xmlterm/skin
+
+EXPORT_RESOURCE_SAMPLES = \
+	wheel.gif \
+	xmlterm.css \
+	xmltpage.css \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
+
+install::
+	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_SAMPLES)) $(SAMPLES_DIR)
 
