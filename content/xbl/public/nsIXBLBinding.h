@@ -91,6 +91,9 @@ public:
   NS_IMETHOD WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)=0;
 
   NS_IMETHOD SetAllowScripts(PRBool aFlag)=0;
+
+  NS_IMETHOD MarkForDeath()=0;
+  NS_IMETHOD MarkedForDeath(PRBool* aResult)=0;
 };
 
 extern nsresult

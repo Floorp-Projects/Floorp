@@ -5235,8 +5235,10 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 
     // Load the bindings.
     nsCOMPtr<nsIXBLBinding> binding;
-    xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
-  
+    rv = xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
+    if (NS_FAILED(rv))
+      return NS_OK;
+
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsISupportsArray> anonymousItems;
     nsCOMPtr<nsIContent> childElement;
@@ -5467,8 +5469,10 @@ nsCSSFrameConstructor::CreateAnonymousTableCellFrames(nsIPresShell*        aPres
 
     // Load the bindings.
     nsCOMPtr<nsIXBLBinding> binding;
-    xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
-    
+    rv = xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
+    if (NS_FAILED(rv))
+      return NS_OK;
+
     // Retrieve the anonymous content that we should build.
     nsCOMPtr<nsIContent> childElement;
     nsCOMPtr<nsISupportsArray> anonymousItems;

@@ -28,6 +28,7 @@
 #include "nsIMemory.h"
 #include "jsapi.h"              // nsXBLJSClass derives from JSClass
 #include "jsclist.h"            // nsXBLJSClass derives from JSCList
+#include "nsFixedSizeAllocator.h"
 
 class nsIXBLBinding;
 class nsIXBLDocumentInfo;
@@ -53,6 +54,9 @@ class nsXBLService : public nsIXBLService, public nsIMemoryPressureObserver
 
   // This method loads a binding doc and then builds the specific binding required.
   NS_IMETHOD GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult);
+
+  // Indicates whether or not a binding is fully loaded.
+  NS_IMETHOD BindingReady(nsIContent* aBoundElement, const nsCString& aURLStr, PRBool* aIsReady);
 
   // This function clears out the bindings on a given content node.
   NS_IMETHOD FlushStyleBindings(nsIContent* aContent);
@@ -80,6 +84,11 @@ public:
   // This method synchronously loads and parses an XBL file.
   NS_IMETHOD FetchBindingDocument(nsIContent* aBoundElement, nsIURI* aURI, const nsCString& aRef, nsIDocument** aResult);
 
+  // This method loads a binding doc and then builds the specific binding required.  It
+  // can also peek without building.
+  NS_IMETHOD GetBindingInternal(nsIContent* aBoundElement, const nsCString& aURLStr, 
+                                PRBool aPeekFlag, PRBool* aIsReady, nsIXBLBinding** aResult);
+
   // This method walks a binding document and removes any text nodes
   // that contain only whitespace.
   static nsresult StripWhitespaceNodes(nsIContent* aContent);
@@ -104,7 +113,10 @@ public:
 
   // XBL Atoms
   static nsIAtom* kExtendsAtom;
-  static nsIAtom* kHasChildrenAtom;
+  
+  static nsIAtom* kScrollbarAtom;
+
+  nsFixedSizeAllocator mPool;
 };
 
 class nsXBLJSClass : public JSCList, public JSClass

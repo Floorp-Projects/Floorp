@@ -252,11 +252,14 @@ nsXBLBinding::nsXBLBinding(const nsCString& aDocURI, const nsCString& aID)
   mIsStyleBinding(PR_TRUE),
   mAllowScripts(PR_TRUE),
   mInheritStyle(PR_TRUE),
+  mMarkedForDeath(PR_FALSE),
   mAttributeTable(nsnull),
   mInsertionPointTable(nsnull)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
+  //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
+
   if (gRefCnt == 1) {
     kContentAtom = NS_NewAtom("content");
     kInterfaceAtom = NS_NewAtom("interface");
@@ -303,6 +306,8 @@ nsXBLBinding::~nsXBLBinding(void)
   delete mInsertionPointTable;
 
   gRefCnt--;
+  //  printf("REF COUNT DOWN: %d %s\n", gRefCnt, (const char*)mID);
+
   if (gRefCnt == 0) {
     NS_RELEASE(kContentAtom);
     NS_RELEASE(kInterfaceAtom);
@@ -354,6 +359,11 @@ nsXBLBinding::GetBaseBinding(nsIXBLBinding** aResult)
 NS_IMETHODIMP
 nsXBLBinding::SetBaseBinding(nsIXBLBinding* aBinding)
 {
+  if (mNextBinding) {
+    NS_ERROR("Base XBL binding is already defined!");
+    return NS_OK;
+  }
+
   mNextBinding = aBinding; // Comptr handles rel/add
   return NS_OK;
 }
@@ -1454,8 +1464,6 @@ nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList)
 NS_IMETHODIMP
 nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
 {
-  // XXX This function still needs to deal with the
-  // ability to map one attribute to another.
   nsAutoString inherits;
   aElement->GetAttribute(kNameSpaceID_None, kInheritsAtom, inherits);
   if (!inherits.IsEmpty()) {
@@ -1745,7 +1753,19 @@ nsXBLBinding::GetFirstStyleBinding(nsIXBLBinding** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXBLBinding::MarkForDeath()
+{
+  mMarkedForDeath = PR_TRUE;
+  return NS_OK;
+}
 
+NS_IMETHODIMP
+nsXBLBinding::MarkedForDeath(PRBool* aResult)
+{
+  *aResult = mMarkedForDeath;
+  return NS_OK;
+}
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 

@@ -85,6 +85,9 @@ class nsXBLBinding: public nsIXBLBinding
 
   NS_IMETHOD SetAllowScripts(PRBool aFlag) { mAllowScripts = aFlag; return NS_OK; };
 
+  NS_IMETHOD MarkForDeath();
+  NS_IMETHOD MarkedForDeath(PRBool* aResult);
+
 public:
   nsXBLBinding(const nsCString& aDocURI, const nsCString& aRef);
   virtual ~nsXBLBinding();
@@ -172,9 +175,10 @@ protected:
 
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
-  PRBool mIsStyleBinding;
-  PRBool mAllowScripts;
-  PRBool mInheritStyle;
+  PRPackedBool mIsStyleBinding;
+  PRPackedBool mAllowScripts;
+  PRPackedBool mInheritStyle;
+  PRPackedBool mMarkedForDeath;
 
   nsSupportsHashtable* mAttributeTable; // A table for attribute entries.
   nsSupportsHashtable* mInsertionPointTable; // A table of insertion points.

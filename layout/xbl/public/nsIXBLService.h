@@ -59,6 +59,9 @@ public:
   // This method loads a binding doc and then builds the specific binding required.
   NS_IMETHOD GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult) = 0;
 
+  // Indicates whether or not a binding is fully loaded.
+  NS_IMETHOD BindingReady(nsIContent* aBoundElement, const nsCString& aURLStr, PRBool* aIsReady) = 0;
+
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
   NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement, 
