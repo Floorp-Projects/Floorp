@@ -107,6 +107,7 @@ public:
     virtual            nsIFontMetrics* GetFont(void);
     NS_IMETHOD         SetFont(const nsFont &aFont);
     NS_IMETHOD         SetCursor(nsCursor aCursor);
+    NS_IMETHOD         SetCursor(imgIContainer* aCursor);
     NS_IMETHOD         Validate();
     NS_IMETHOD         Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD         Invalidate(const nsRect &aRect,

@@ -61,7 +61,9 @@ REQUIRES	= xpcom \
 		  uconv \
 		  intl \
 		  gtkxtbin \
-		  xremoteservice
+		  xremoteservice \
+		  imglib2 \
+		  $(NULL)
 
 CSRCS		= \
 		mozcontainer.c \

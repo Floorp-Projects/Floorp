@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "prlink.h"
+
 #include "nsWindow.h"
 #include "nsToolkit.h"
 #include "nsIRenderingContext.h"
@@ -57,7 +59,8 @@
 
 #include "gtk2xtbin.h"
 
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsGfxCIID.h"
 
@@ -79,6 +82,16 @@ static const char sAccessibilityKey [] = "config.use_system_prefs.accessibility"
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
+
+/* SetCursor(imgIContainer*) */
+#include <gdk/gdk.h>
+#include "imgIContainer.h"
+#include "gfxIImageFrame.h"
+#include "nsIImage.h"
+#include "nsIGdkPixbufImage.h"
+#include "nsIProperties.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 /* utility functions */
 static PRBool     check_for_rollup(GdkWindow *aWindow,
@@ -225,6 +238,14 @@ static GtkIMContext *IM_get_input_context(MozDrawingarea *aArea);
 // If after selecting profile window, the startup fail, please refer to
 // http://bugzilla.gnome.org/show_bug.cgi?id=88940
 #endif
+
+// needed for imgIContainer cursors
+typedef GdkCursor*  (*_gdk_cursor_new_from_pixbuf_fn)(GdkDisplay *display,
+                                                      GdkPixbuf *pixbuf,
+                                                      gint x,
+                                                      gint y);
+static _gdk_cursor_new_from_pixbuf_fn _gdk_cursor_new_from_pixbuf;
+static PRBool sPixbufCursorChecked;
 
 #define kWindowPositionSlop 20
 
@@ -761,6 +782,89 @@ nsWindow::SetCursor(nsCursor aCursor)
     }
 
     return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsWindow::SetCursor(imgIContainer* aCursor)
+{
+    // if we're not the toplevel window pass up the cursor request to
+    // the toplevel window to handle it.
+    if (!mContainer && mDrawingarea) {
+        GtkWidget *widget =
+            get_gtk_widget_for_gdk_window(mDrawingarea->inner_window);
+        nsWindow *window = get_window_for_gtk_widget(widget);
+        return window->SetCursor(aCursor);
+    }
+
+    if (!sPixbufCursorChecked) {
+        PRLibrary* lib;
+        _gdk_cursor_new_from_pixbuf = (_gdk_cursor_new_from_pixbuf_fn)
+            PR_FindFunctionSymbolAndLibrary("gdk_cursor_new_from_pixbuf", &lib);
+        sPixbufCursorChecked = PR_TRUE;
+    }
+    if (!_gdk_cursor_new_from_pixbuf)
+        return NS_ERROR_NOT_IMPLEMENTED;
+
+    mCursor = nsCursor(-1);
+
+    // Get first image frame
+    nsCOMPtr<gfxIImageFrame> frame;
+    aCursor->GetFrameAt(0, getter_AddRefs(frame));
+    if (!frame)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    nsCOMPtr<nsIGdkPixbufImage> pixImg(do_GetInterface(frame));
+    if (!pixImg)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    GdkPixbuf* pixbuf = pixImg->GetGdkPixbuf();
+    if (!pixbuf)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    // Get the hotspot
+    PRUint32 hX = 0, hY = 0;
+    nsCOMPtr<nsIProperties> props(do_QueryInterface(aCursor));
+    if (props) {
+      nsCOMPtr<nsISupportsPRUint32> hXWrap, hYWrap;
+
+      props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hXWrap));
+      props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32), getter_AddRefs(hYWrap));
+
+      if (hXWrap)
+        hXWrap->GetData(&hX);
+      if (hYWrap)
+        hYWrap->GetData(&hY);
+    }
+
+    // Looks like all cursors need an alpha channel (tested on Gtk 2.4.4). This
+    // is of course not documented anywhere...
+    // So add one if there isn't one yet
+    if (!gdk_pixbuf_get_has_alpha(pixbuf)) {
+        GdkPixbuf* alphaBuf = gdk_pixbuf_add_alpha(pixbuf, FALSE, 0, 0, 0);
+        gdk_pixbuf_unref(pixbuf);
+        if (!alphaBuf) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        pixbuf = alphaBuf;
+    }
+
+    // Now create the cursor
+    GdkCursor* cursor = _gdk_cursor_new_from_pixbuf(gdk_display_get_default(),
+                                                    pixbuf,
+                                                    hX, hY);
+    gdk_pixbuf_unref(pixbuf);
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    if (cursor) {
+        if (mContainer) {
+            gdk_window_set_cursor(GTK_WIDGET(mContainer)->window, cursor);
+            XFlush(GDK_DISPLAY());
+            rv = NS_OK;
+        }
+        gdk_cursor_unref(cursor);
+    }
+
+    return rv;
 }
 
 
@@ -3906,7 +4010,7 @@ nsresult
 initialize_prefs(void)
 {
     // check to see if we should set our raise pref
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
     if (prefs) {
         PRBool val = PR_TRUE;
         nsresult rv;
