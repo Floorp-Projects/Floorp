@@ -4,7 +4,6 @@ browser.jar:
         content/browser/pageInfo.xul                  (content/pageInfo.xul)
         content/browser/browser.xul                   (content/browser.xul)
         content/browser/browser.js                    (content/browser.js)
-        content/browser/urlbarBindings.xml            (content/urlbarBindings.xml)
         content/browser/utilityOverlay.js             (content/utilityOverlay.js)
         content/browser/customizeToolbar.xul          (content/customizeToolbar.xul)
         content/browser/customizeToolbar.js           (content/customizeToolbar.js)
