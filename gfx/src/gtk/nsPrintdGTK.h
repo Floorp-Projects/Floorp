@@ -37,6 +37,7 @@ PR_BEGIN_EXTERN_C
 #define NS_LEGAL_SIZE     1
 #define NS_EXECUTIVE_SIZE 2
 #define NS_A4_SIZE        3
+#define NS_A3_SIZE        4
 #endif
 
 #ifndef PATH_MAX
