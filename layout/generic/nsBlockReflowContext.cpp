@@ -17,7 +17,6 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsBlockReflowContext.h"
-#include "nsFrameReflowState.h"
 #include "nsLineLayout.h"
 #include "nsHTMLIIDs.h"
 #include "nsISpaceManager.h"
@@ -33,48 +32,15 @@
 #endif
 
 nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
-                                           nsLineLayout& aLineLayout,
-                                           nsFrameReflowState& aParentRS)
+                                           const nsHTMLReflowState& aParentRS,
+                                           PRBool aComputeMaxElementSize)
   : mPresContext(aPresContext),
-    mLineLayout(aLineLayout),
     mOuterReflowState(aParentRS),
-    mMetrics(aParentRS.mComputeMaxElementSize ? &mMaxElementSize : nsnull)
+    mMetrics(aComputeMaxElementSize ? &mMaxElementSize : nsnull)
 {
   mRunInFrame = nsnull;
   mCompactMarginWidth = 0;
-  mSpacing = nsnull;
-}
-
-void
-nsBlockReflowContext::ComputeMarginsFor(nsIPresContext& aPresContext,
-                                        nsIFrame* aFrame,
-                                        const nsStyleSpacing* aSpacing,
-                                        const nsFrameReflowState& aParentRS,
-                                        nsMargin& aResult)
-{
-  // XXX pass in mSpacing to ComputeMarginFor
-  nsHTMLReflowState::ComputeMarginFor(aFrame, &aParentRS, aResult);
-
-  // Compute auto top/bottom margin values
-  nsStyleUnit topUnit = aSpacing->mMargin.GetTopUnit();
-  nsStyleUnit bottomUnit = aSpacing->mMargin.GetBottomUnit();
-  nscoord fontHeight = 0;
-  if ((eStyleUnit_Auto == topUnit) || (eStyleUnit_Auto == bottomUnit)) {
-    // XXX Use the font for the frame, not the default font???
-    const nsFont& defaultFont = aPresContext.GetDefaultFontDeprecated();
-    nsIFontMetrics* fm;
-    aPresContext.GetMetricsFor(defaultFont, &fm);
-    fm->GetHeight(fontHeight);
-    NS_RELEASE(fm);
-  }
-
-  // For auto margins use the font height computed above
-  if (eStyleUnit_Auto == topUnit) {
-    aResult.top = fontHeight;
-  }
-  if (eStyleUnit_Auto == bottomUnit) {
-    aResult.bottom = fontHeight;
-  }
+  mStyleSpacing = nsnull;
 }
 
 nsresult
@@ -91,11 +57,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   nsresult rv = NS_OK;
   mFrame = aFrame;
   mSpace = aSpace;
-
-  // Compute the raw margins (including auto margins)
-  aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)mSpacing);
-  ComputeMarginsFor(mPresContext, aFrame, mSpacing, mOuterReflowState,
-                    mMargin);
 
 #ifdef SPECULATIVE_TOP_MARGIN
 #ifdef NOISY_SPECULATIVE_TOP_MARGIN
@@ -118,21 +79,6 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   mSpeculativeTopMargin = 0;
 #endif
 
-  // Compute x/y coordinate where reflow will begin. Use the rules
-  // from 10.3.3 to determine what to apply. At this point in the
-  // reflow auto left/right margins will have a zero value.
-  nscoord x = aSpace.x + mMargin.left;
-  nscoord y = aSpace.y + mSpeculativeTopMargin;
-  mX = x;
-  mY = y;
-  nsSize availSize(aSpace.width, aSpace.height);
-  if (NS_UNCONSTRAINEDSIZE != aSpace.width) {
-    availSize.width -= mMargin.left + mMargin.right;
-  }
-  if (NS_UNCONSTRAINEDSIZE != aSpace.height) {
-    availSize.height -= mMargin.top + mMargin.bottom;
-  }
-
   // Get reflow reason set correctly. It's possible that a child was
   // created and then it was decided that it could not be reflowed
   // (for example, a block frame that isn't at the start of a
@@ -144,30 +90,39 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   if (NS_FRAME_FIRST_REFLOW & state) {
     reason = eReflowReason_Initial;
   }
-  else if (mOuterReflowState.mNextRCFrame == aFrame) {
+  else if (mNextRCFrame == aFrame) {
     reason = eReflowReason_Incremental;
     // Make sure we only incrementally reflow once
-    // XXX caller should do this, yes?
-    mOuterReflowState.mNextRCFrame = nsnull;
+    mNextRCFrame = nsnull;
   }
 
-// XXX update to use the computedMargin information from the reflow-state
-
-// XXX eliminate circular dependency in reflow-state ctor - eliminate
-// availSize argument (since we need margins to compute it!)
-
   // Setup reflow state for reflowing the frame
-  nsHTMLReflowState reflowState(mPresContext, aFrame, mOuterReflowState,
-                                availSize);
+  nsSize availSpace(aSpace.width, aSpace.height);
+  nsHTMLReflowState reflowState(mPresContext, mOuterReflowState, aFrame,
+                                availSpace, reason);
   aComputedOffsets = reflowState.computedOffsets;
   reflowState.lineLayout = nsnull;
   reflowState.mRunInFrame = mRunInFrame;
   reflowState.mCompactMarginWidth = mCompactMarginWidth;
-  reflowState.reason = reason;
   if (!aIsAdjacentWithTop) {
     reflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
   }
-  mLineLayout.SetUnderstandsWhiteSpace(PR_FALSE);
+
+  // Compute x/y coordinate where reflow will begin. Use the rules
+  // from 10.3.3 to determine what to apply. At this point in the
+  // reflow auto left/right margins will have a zero value.
+  mMargin = reflowState.computedMargin;
+  mStyleSpacing = reflowState.mStyleSpacing;
+#ifdef DEBUG_kipp
+  NS_ASSERTION((mMargin.left > -200000) &&
+               (mMargin.left < 200000), "oy");
+  NS_ASSERTION((mMargin.right > -200000) &&
+               (mMargin.right < 200000), "oy");
+#endif
+  nscoord x = aSpace.x + mMargin.left;
+  nscoord y = aSpace.y + mSpeculativeTopMargin;
+  mX = x;
+  mY = y;
 
   // Let frame know that we are reflowing it
   nsIHTMLReflow* htmlReflow;
@@ -184,13 +139,17 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // parents border/padding is <b>inside</b> the parent
   // frame. Therefore we have to subtract out the parents
   // border+padding before translating.
-  nscoord tx = x - mOuterReflowState.mBorderPadding.left;
-  nscoord ty = y - mOuterReflowState.mBorderPadding.top;
-  aFrame->MoveTo(x, y);
+  nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
+  nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
   mOuterReflowState.spaceManager->Translate(tx, ty);
   rv = htmlReflow->Reflow(mPresContext, mMetrics, reflowState,
                           aFrameReflowStatus);
   mOuterReflowState.spaceManager->Translate(-tx, -ty);
+
+#ifdef DEBUG_kipp
+  NS_ASSERTION((mMetrics.width > -200000) && (mMetrics.width < 200000), "oy");
+  NS_ASSERTION((mMetrics.height > -200000) && (mMetrics.height < 200000), "oy");
+#endif
 
   aFrame->GetFrameState(&state);
   if (0 == (NS_FRAME_OUTSIDE_CHILDREN & state)) {
@@ -348,65 +307,91 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
     }
 #endif
 
-    // Position block horizontally according to CSS2 10.3.3
-    if (NS_UNCONSTRAINEDSIZE != mSpace.width) {
-      // XXX left/right block margins should be applied right here.
-      // Because of the issue with floaters and block-left/right
-      // margins this code is not yet complete. This code may need to
-      // move to before reflowing the frame instead of after (because
-      // of floater positioning).
-      nscoord remainder = mSpace.XMost() -
-        (x + mMetrics.width + mMargin.right);
-      if (remainder >= 0) {
-        // The block frame didn't use all of the available space. Apply
-        // auto margins.
-        nsStyleUnit leftUnit = mSpacing->mMargin.GetLeftUnit();
-        nsStyleUnit rightUnit = mSpacing->mMargin.GetRightUnit();
-        if (eStyleUnit_Auto == leftUnit) {
-          if (eStyleUnit_Auto == rightUnit) {
-            // When both margins are auto, we center the block
-            x += remainder / 2;
-          }
-          else {
-            x += remainder;
-          }
-        }
-        else if (eStyleUnit_Auto != rightUnit) {
-          // When neither margin is auto then text-align applies
-          const nsStyleText* styleText = mOuterReflowState.mStyleText;
-          switch (styleText->mTextAlign) {
-          case NS_STYLE_TEXT_ALIGN_DEFAULT:
-          case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-            if (NS_STYLE_DIRECTION_RTL == mOuterReflowState.mDirection) {
-              // When given a default alignment, and a right-to-left
-              // direction, right align the frame.
-              x += remainder;
-            }
-            break;
-          case NS_STYLE_TEXT_ALIGN_RIGHT:
-            x += remainder;
-            break;
-          case NS_STYLE_TEXT_ALIGN_CENTER:
-            x += remainder / 2;
-            break;
-          }
-        }
-      }
-      else {
-        // XXX Handle over-constrained case by forcing the appropriate
-        // margin to be auto
-      }
-    }
-
     // See if the frame fit. If its the first frame then it always
     // fits.
     if (aForceFit || (y + mMetrics.height <= mSpace.YMost())) {
       fits = PR_TRUE;
 
+      // Get style unit associated with the left and right margins
+      nsStyleUnit leftUnit = mStyleSpacing->mMargin.GetLeftUnit();
+      if (eStyleUnit_Inherit == leftUnit) {
+        leftUnit = GetRealMarginLeftUnit();
+      }
+      nsStyleUnit rightUnit = mStyleSpacing->mMargin.GetRightUnit();
+      if (eStyleUnit_Inherit == rightUnit) {
+        rightUnit = GetRealMarginRightUnit();
+      }
+
+      // Apply post-reflow horizontal alignment. When a block element
+      // doesn't use it all of the available width then we need to
+      // align it using the text-align property. Note that
+      // block-non-replaced elements will always take up the available
+      // width (counting the margins!) so we shouldn't be handling
+      // them here.
+      if (NS_UNCONSTRAINEDSIZE != mSpace.width) {
+        nscoord remainder = mSpace.XMost() -
+          (x + mMetrics.width + mMargin.right);
+        if (remainder > 0) {
+          // The block frame didn't use all of the available
+          // space. Synthesize margins for its horizontal placement.
+          if (eStyleUnit_Auto == leftUnit) {
+            if (eStyleUnit_Auto == rightUnit) {
+              // When both margins are auto, we center the block
+              x += remainder / 2;
+            }
+            else {
+              // When the left margin is auto we right align the block
+              x += remainder;
+            }
+          }
+          else if (eStyleUnit_Auto != rightUnit) {
+#if XXX_not_in_css2
+            // When neither margin is auto then text-align applies
+            const nsStyleText* styleText = mOuterReflowState.mStyleText;
+            switch (styleText->mTextAlign) {
+              case NS_STYLE_TEXT_ALIGN_DEFAULT:
+              case NS_STYLE_TEXT_ALIGN_JUSTIFY:
+                if (NS_STYLE_DIRECTION_RTL == mOuterReflowState.mDirection) {
+                  // When given a default alignment, and a right-to-left
+                  // direction, right align the frame.
+                  x += remainder;
+                }
+                break;
+              case NS_STYLE_TEXT_ALIGN_RIGHT:
+                x += remainder;
+                break;
+              case NS_STYLE_TEXT_ALIGN_CENTER:
+                x += remainder / 2;
+                break;
+            }
+#else
+            // When neither margin is auto then the block is said to
+            // be over constrained, Depending on the direction, choose
+            // which margin to treat as auto.
+            if (NS_STYLE_DIRECTION_RTL ==
+                mOuterReflowState.mStyleDisplay->mDirection) {
+              // The left margin becomes auto
+              x += remainder;
+            }
+            else {
+              // The right margin becomes auto which is a no-op
+            }
+#endif
+          }
+        }
+      }
+
       // Update the in-flow bounding box's bounds. Include the margins.
       aInFlowBounds.SetRect(x, y,
                             mMetrics.width + mMargin.right,
                             mMetrics.height);
+
+#ifdef DEBUG_kipp
+      NS_ASSERTION((aInFlowBounds.width > -200000) &&
+                   (aInFlowBounds.width < 200000), "oy");
+      NS_ASSERTION((aInFlowBounds.height > -200000) &&
+                   (aInFlowBounds.height < 200000), "oy");
+#endif
 
       // Apply CSS relative positioning to update x,y coordinates
       const nsStylePosition* stylePos;
@@ -450,9 +435,19 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       // Adjust the max-element-size in the metrics to take into
       // account the margins around the block element. Note that we
       // use the collapsed top and bottom margin values.
-      if (mOuterReflowState.mComputeMaxElementSize) {
+      if (nsnull != mMetrics.maxElementSize) {
         nsSize* m = mMetrics.maxElementSize;
-        m->width += mMargin.left + mMargin.right;
+        // Do not allow auto margins to impact the max-element size
+        // since they are springy and don't really count!
+        if (eStyleUnit_Auto != leftUnit) {
+          m->width += mMargin.left;
+        }
+        if (eStyleUnit_Auto != rightUnit) {
+          m->width += mMargin.right;
+        }
+
+        // Margin height should affect the max-element height (since
+        // auto top/bottom margins are always zero)
         m->height += mTopMargin + mBottomMargin;
       }
     }
@@ -464,3 +459,52 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
   return fits;
 }
 
+// If we have an inherited margin its possible that its auto all the
+// way up to the top of the tree. If that is the case, we need to know
+// it.
+nsStyleUnit
+nsBlockReflowContext::GetRealMarginLeftUnit()
+{
+  nsStyleUnit unit = eStyleUnit_Inherit;
+  nsIStyleContext* sc;
+  mFrame->GetStyleContext(&sc);
+  while ((nsnull != sc) && (eStyleUnit_Inherit == unit)) {
+    // Get parent style context
+    nsIStyleContext* psc;
+    psc = sc->GetParent();
+    NS_RELEASE(sc);
+    sc = psc;
+    if (nsnull != sc) {
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+        sc->GetStyleData(eStyleStruct_Spacing);
+      unit = spacing->mMargin.GetLeftUnit();
+    }
+  }
+  NS_IF_RELEASE(sc);
+  return unit;
+}
+
+// If we have an inherited margin its possible that its auto all the
+// way up to the top of the tree. If that is the case, we need to know
+// it.
+nsStyleUnit
+nsBlockReflowContext::GetRealMarginRightUnit()
+{
+  nsStyleUnit unit = eStyleUnit_Inherit;
+  nsIStyleContext* sc;
+  mFrame->GetStyleContext(&sc);
+  while ((nsnull != sc) && (eStyleUnit_Inherit == unit)) {
+    // Get parent style context
+    nsIStyleContext* psc;
+    psc = sc->GetParent();
+    NS_RELEASE(sc);
+    sc = psc;
+    if (nsnull != sc) {
+      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+        sc->GetStyleData(eStyleStruct_Spacing);
+      unit = spacing->mMargin.GetRightUnit();
+    }
+  }
+  NS_IF_RELEASE(sc);
+  return unit;
+}
