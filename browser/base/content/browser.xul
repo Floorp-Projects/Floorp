@@ -875,8 +875,8 @@ Contributor(s):
  
     <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 
-    <toolbar id="PersonalToolbar" class="chromeclass-directories"
-             customizable="true" defaultset="personal-bookmarks"
+    <toolbar id="PersonalToolbar" class="chromeclass-directories" iconsize="small"
+             customizable="true" defaultset="personal-bookmarks" mode="icons"
              toolbarname="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;"/>
     
   </toolbox>
