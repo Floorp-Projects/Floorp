@@ -67,7 +67,7 @@ TokenEnumeration::TokenEnumeration(PLDHashTable* table)
     mEntryLimit = mEntryAddr + capacity * mEntrySize;
 }
     
-inline bool TokenEnumeration::hasMoreTokens()
+inline PRBool TokenEnumeration::hasMoreTokens()
 {
     return (mEntryOffset < mEntryCount);
 }
@@ -124,7 +124,7 @@ static void PR_CALLBACK ClearEntry(PLDHashTable* table, PLDHashEntryHdr* entry)
 }
 
 struct VisitClosure {
-    bool (*f) (Token*, void*);
+    PRBool (*f) (Token*, void*);
     void* data;
 };
 
@@ -217,7 +217,7 @@ void Tokenizer::remove(const char* word, PRUint32 count)
     }
 }
 
-static bool isDecimalNumber(const char* word)
+static PRBool isDecimalNumber(const char* word)
 {
     const char* p = word;
     if (*p == '-') ++p;
@@ -229,7 +229,7 @@ static bool isDecimalNumber(const char* word)
     return true;
 }
 
-inline bool isUpperCase(char c) { return ('A' <= c) && (c <= 'Z'); }
+inline PRBool isUpperCase(char c) { return ('A' <= c) && (c <= 'Z'); }
 
 static char* toLowerCase(char* str)
 {
@@ -261,7 +261,7 @@ void Tokenizer::tokenize(const char* str)
     }
 }
 
-void Tokenizer::visit(bool (*f) (Token*, void*), void* data)
+void Tokenizer::visit(PRBool (*f) (Token*, void*), void* data)
 {
     VisitClosure closure = { f, data };
     PRUint32 visitCount = PL_DHashTableEnumerate(&mTokenTable, VisitEntry, &closure);
@@ -443,7 +443,7 @@ nsBayesianFilter::nsBayesianFilter()
 {
     NS_INIT_ISUPPORTS();
     
-    bool ok = (mGoodTokens && mBadTokens);
+    PRBool ok = (mGoodTokens && mBadTokens);
     NS_ASSERTION(ok, "error allocating tokenizers");
     if (ok)
         readTrainingData();
@@ -567,7 +567,7 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
         prod2 *= (1.0 - value);
     }
     double prob = (prod1 / (prod1 + prod2));
-    bool isJunk = (prob >= 0.90);
+    PRBool isJunk = (prob >= 0.90);
 
     delete[] tokens;
 
@@ -771,7 +771,7 @@ inline int readUInt32(FILE* stream, PRUint32* value)
     return n;
 }
 
-static bool writeTokens(FILE* stream, Tokenizer& tokenizer)
+static PRBool writeTokens(FILE* stream, Tokenizer& tokenizer)
 {
     PRUint32 tokenCount = tokenizer.countTokens();
     if (writeUInt32(stream, tokenCount) != 1)
@@ -794,7 +794,7 @@ static bool writeTokens(FILE* stream, Tokenizer& tokenizer)
     return true;
 }
 
-static bool readTokens(FILE* stream, Tokenizer& tokenizer)
+static PRBool readTokens(FILE* stream, Tokenizer& tokenizer)
 {
     PRUint32 tokenCount;
     if (readUInt32(stream, &tokenCount) != 1)

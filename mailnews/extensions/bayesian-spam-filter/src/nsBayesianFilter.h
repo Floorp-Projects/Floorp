@@ -60,7 +60,7 @@ class TokenAnalyzer;
 class TokenEnumeration {
 public:
     TokenEnumeration(PLDHashTable* table);
-    bool hasMoreTokens();
+    PRBool hasMoreTokens();
     Token* nextToken();
     
 private:
@@ -97,7 +97,7 @@ public:
     /**
      * Calls passed-in function for each token in the table.
      */
-    void visit(bool (*f) (Token*, void*), void* data);
+    void visit(PRBool (*f) (Token*, void*), void* data);
 
 private:
     char* copyWord(const char* word, PRUint32 len);
