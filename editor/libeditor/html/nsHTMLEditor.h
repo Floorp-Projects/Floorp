@@ -145,7 +145,6 @@ public:
 
   /* ------------ nsPlaintextEditor overrides -------------- */
   NS_IMETHODIMP HandleKeyPress(nsIDOMKeyEvent* aKeyEvent);
-  NS_IMETHODIMP CollapseSelectionToStart();
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
   NS_IMETHODIMP BeginningOfDocument();
 
@@ -199,17 +198,7 @@ public:
 
   /* ------------ nsIEditorMailSupport methods -------------- */
 
-  NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
-  NS_IMETHOD InsertTextWithQuotations(const nsAString & aQuotedText);
-  NS_IMETHOD InsertAsQuotation(const nsAString & aQuotedText,
-                               nsIDOMNode **aNodeInserted);
-  NS_IMETHOD PasteAsCitedQuotation(const nsAString & aCitation,
-                                   PRInt32 aSelectionType);
-  NS_IMETHOD InsertAsCitedQuotation(const nsAString & aQuotedText,
-                                    const nsAString & aCitation,
-                                    PRBool aInsertHTML,
-                                    nsIDOMNode **aNodeInserted);
-  NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
+  NS_DECL_NSIEDITORMAILSUPPORT
 
   /* ------------ nsITableEditor methods -------------- */
 

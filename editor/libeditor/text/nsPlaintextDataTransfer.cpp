@@ -38,7 +38,6 @@
 
 
 #include "nsPlaintextEditor.h"
-#include "nsTextEditUtils.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
@@ -64,14 +63,11 @@
 // Misc
 #include "nsEditorUtils.h"
 
-const PRUnichar nbsp = 160;
 
 NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transferable)
 {
   // Create generic Transferable for getting the data
-  nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/widget/transferable;1", nsnull, 
-                                          NS_GET_IID(nsITransferable), 
-                                          (void**)transferable);
+  nsresult rv = CallCreateInstance("@mozilla.org/widget/transferable;1", transferable);
   if (NS_FAILED(rv))
     return rv;
 
@@ -120,23 +116,18 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
   char* bestFlavor = nsnull;
   nsCOMPtr<nsISupports> genericDataObj;
   PRUint32 len = 0;
-  if ( NS_SUCCEEDED(aTransferable->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len)) )
+  if (NS_SUCCEEDED(aTransferable->GetAnyTransferData(&bestFlavor, getter_AddRefs(genericDataObj), &len))
+      && bestFlavor && 0 == nsCRT::strcmp(bestFlavor, kUnicodeMime))
   {
     nsAutoTxnsConserveSelection dontSpazMySelection(this);
-    nsAutoString flavor, stuffToPaste;
-    flavor.AssignWithConversion( bestFlavor );   // just so we can use flavor.Equals()
-    if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
+    nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
+    if (textDataObj && len > 0)
     {
-      nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
-      if (textDataObj && len > 0)
-      {
-        nsAutoString text;
-        textDataObj->GetData ( text );
-        NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
-        stuffToPaste.Assign ( text.get(), len / 2 );
-        nsAutoEditBatch beginBatching(this);
-        rv = InsertTextAt(stuffToPaste, aDestinationNode, aDestOffset, aDoDeleteSelection);
-      }
+      nsAutoString stuffToPaste;
+      textDataObj->GetData(stuffToPaste);
+      NS_ASSERTION(stuffToPaste.Length() <= (len/2), "Invalid length!");
+      nsAutoEditBatch beginBatching(this);
+      rv = InsertTextAt(stuffToPaste, aDestinationNode, aDestOffset, aDoDeleteSelection);
     }
   }
   nsCRT::free(bestFlavor);
@@ -161,10 +152,13 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   dragService->GetCurrentSession(getter_AddRefs(dragSession));
   if (!dragSession) return NS_OK;
 
+  // Current doc is destination
+  nsCOMPtr<nsIDOMDocument> destdomdoc; 
+  rv = GetDocument(getter_AddRefs(destdomdoc)); 
+  if (NS_FAILED(rv)) return rv;
+
   // transferable hooks
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  GetDocument(getter_AddRefs(domdoc));
-  if (!nsEditorHookUtils::DoAllowDropHook(domdoc, aDropEvent, dragSession))
+  if (!nsEditorHookUtils::DoAllowDropHook(destdomdoc, aDropEvent, dragSession))
     return NS_OK;
 
   // Get the nsITransferable interface for getting the data from the drop
@@ -176,126 +170,115 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   PRUint32 numItems = 0; 
   rv = dragSession->GetNumDropItems(&numItems);
   if (NS_FAILED(rv)) return rv;
+  if (numItems < 1) return NS_ERROR_FAILURE;  // nothing to drop?
 
   // Combine any deletion and drop insertion into one transaction
   nsAutoEditBatch beginBatching(this);
 
   PRBool deleteSelection = PR_FALSE;
+
+  // We have to figure out whether to delete and relocate caret only once
+  // Parent and offset are under the mouse cursor
+  nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDropEvent));
+  if (!nsuiEvent) return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMNode> newSelectionParent;
-  PRInt32 newSelectionOffset = 0;
+  rv = nsuiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
+  if (NS_FAILED(rv)) return rv;
+  if (!newSelectionParent) return NS_ERROR_FAILURE;
+
+  PRInt32 newSelectionOffset;
+  rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsISelection> selection;
+  rv = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+  if (!selection) return NS_ERROR_FAILURE;
+
+  PRBool isCollapsed;
+  rv = selection->GetIsCollapsed(&isCollapsed);
+  if (NS_FAILED(rv)) return rv;
+
+  // Check if mouse is in the selection
+  // if so, jump through some hoops to determine if mouse is over selection (bail)
+  // and whether user wants to copy selection or delete it
+  if (!isCollapsed)
+  {
+    // We never have to delete if selection is already collapsed
+    PRBool cursorIsInSelection = PR_FALSE;
+
+    PRInt32 rangeCount;
+    rv = selection->GetRangeCount(&rangeCount);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 j = 0; j < rangeCount; j++)
+    {
+      nsCOMPtr<nsIDOMRange> range;
+      rv = selection->GetRangeAt(j, getter_AddRefs(range));
+      nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
+      if (NS_FAILED(rv) || !nsrange) 
+        continue;  // don't bail yet, iterate through them all
+
+      rv = nsrange->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
+      if (cursorIsInSelection)
+        break;
+    }
+
+    // Source doc is null if source is *not* the current editor document
+    // Current doc is destination (set earlier)
+    nsCOMPtr<nsIDOMDocument> srcdomdoc;
+    rv = dragSession->GetSourceDocument(getter_AddRefs(srcdomdoc));
+    if (NS_FAILED(rv)) return rv;
+
+    if (cursorIsInSelection)
+    {
+      // Dragging within same doc can't drop on itself -- leave!
+      if (srcdomdoc == destdomdoc)
+        return NS_OK;
+
+      // Dragging from another window onto a selection
+      // XXX Decision made to NOT do this,
+      //     note that 4.x does replace if dropped on
+      //deleteSelection = PR_TRUE;
+    }
+    else 
+    {
+      // We are NOT over the selection
+      if (srcdomdoc == destdomdoc)
+      {
+        // Within the same doc: delete if user doesn't want to copy
+ 
+        // check if the user pressed the key to force a copy rather than a move
+        // if we run into problems here, we'll just assume the user doesn't want a copy
+        PRBool userWantsCopy = PR_FALSE;
+
+        nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aDropEvent) );
+        if (mouseEvent)
+#if defined(XP_MAC) || defined(XP_MACOSX)
+          mouseEvent->GetAltKey(&userWantsCopy);
+#else
+          mouseEvent->GetCtrlKey(&userWantsCopy);
+#endif
+
+        deleteSelection = !userWantsCopy;
+      }
+      else
+      {
+        // Different source doc: Don't delete
+        deleteSelection = PR_FALSE;
+      }
+    }
+  }
 
   PRUint32 i; 
-  PRBool doPlaceCaret = PR_TRUE;
   for (i = 0; i < numItems; ++i)
   {
     rv = dragSession->GetData(trans, i);
     if (NS_FAILED(rv)) return rv;
     if (!trans) return NS_OK; // NS_ERROR_FAILURE; Should we fail?
 
-    if ( doPlaceCaret )
-    {
-      // check if the user pressed the key to force a copy rather than a move
-      // if we run into problems here, we'll just assume the user doesn't want a copy
-      PRBool userWantsCopy = PR_FALSE;
-
-      nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aDropEvent));
-      if (!nsuiEvent) return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aDropEvent) );
-      if (mouseEvent)
-
-#if defined(XP_MAC) || defined(XP_MACOSX)
-        mouseEvent->GetAltKey(&userWantsCopy);
-#else
-        mouseEvent->GetCtrlKey(&userWantsCopy);
-#endif
-      // Source doc is null if source is *not* the current editor document
-      nsCOMPtr<nsIDOMDocument> srcdomdoc;
-      rv = dragSession->GetSourceDocument(getter_AddRefs(srcdomdoc));
-      if (NS_FAILED(rv)) return rv;
-
-      // Current doc is destination
-      nsCOMPtr<nsIDOMDocument>destdomdoc; 
-      rv = GetDocument(getter_AddRefs(destdomdoc)); 
-      if (NS_FAILED(rv)) return rv;
-
-      nsCOMPtr<nsISelection> selection;
-      rv = GetSelection(getter_AddRefs(selection));
-      if (NS_FAILED(rv)) return rv;
-      if (!selection) return NS_ERROR_FAILURE;
-
-      PRBool isCollapsed;
-      rv = selection->GetIsCollapsed(&isCollapsed);
-      if (NS_FAILED(rv)) return rv;
-      
-      // Parent and offset under the mouse cursor
-      rv = nsuiEvent->GetRangeParent(getter_AddRefs(newSelectionParent));
-      if (NS_FAILED(rv)) return rv;
-      if (!newSelectionParent) return NS_ERROR_FAILURE;
-
-      rv = nsuiEvent->GetRangeOffset(&newSelectionOffset);
-      if (NS_FAILED(rv)) return rv;
-
-      // We never have to delete if selection is already collapsed
-      PRBool cursorIsInSelection = PR_FALSE;
-
-      // Check if mouse is in the selection
-      if (!isCollapsed)
-      {
-        PRInt32 rangeCount;
-        rv = selection->GetRangeCount(&rangeCount);
-        if (NS_FAILED(rv)) 
-          return rv;
-
-        for (PRInt32 j = 0; j < rangeCount; j++)
-        {
-          nsCOMPtr<nsIDOMRange> range;
-
-          rv = selection->GetRangeAt(j, getter_AddRefs(range));
-          if (NS_FAILED(rv) || !range) 
-            continue;//dont bail yet, iterate through them all
-
-          nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
-          if (NS_FAILED(rv) || !nsrange) 
-            continue;//dont bail yet, iterate through them all
-
-          rv = nsrange->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
-          if(cursorIsInSelection)
-            break;
-        }
-        if (cursorIsInSelection)
-        {
-          // Dragging within same doc can't drop on itself -- leave!
-          // (We shouldn't get here - drag event shouldn't have started if over selection)
-          if (srcdomdoc == destdomdoc)
-            return NS_OK;
-          
-          // Dragging from another window onto a selection
-          // XXX Decision made to NOT do this,
-          //     note that 4.x does replace if dropped on
-          //deleteSelection = PR_TRUE;
-        }
-        else 
-        {
-          // We are NOT over the selection
-          if (srcdomdoc == destdomdoc)
-          {
-            // Within the same doc: delete if user doesn't want to copy
-            deleteSelection = !userWantsCopy;
-          }
-          else
-          {
-            // Different source doc: Don't delete
-            deleteSelection = PR_FALSE;
-          }
-        }
-      }
-
-      // We have to figure out whether to delete and relocate caret only once
-      doPlaceCaret = PR_FALSE;
-    }
-    
-    if (!nsEditorHookUtils::DoInsertionHook(domdoc, aDropEvent, trans))
+    if (!nsEditorHookUtils::DoInsertionHook(destdomdoc, aDropEvent, trans))
       return NS_OK;
 
     rv = InsertTextFromTransferable(trans, newSelectionParent, newSelectionOffset, deleteSelection);
@@ -337,7 +320,6 @@ NS_IMETHODIMP nsPlaintextEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDr
   nsCOMPtr<nsIDOMEventTarget> eventTarget;
 
   nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aDragEvent));
-
   if (nsevent) {
     res = nsevent->GetTmpRealOriginalTarget(getter_AddRefs(eventTarget));
     if (NS_FAILED(res)) return res;
@@ -382,7 +364,7 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
   /* create an array of transferables */
   nsCOMPtr<nsISupportsArray> transferableArray;
   NS_NewISupportsArray(getter_AddRefs(transferableArray));
-  if (transferableArray == nsnull)
+  if (!transferableArray)
     return NS_ERROR_OUT_OF_MEMORY;
 
   /* add the transferable to the array */
@@ -424,7 +406,7 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(PRInt32 aSelectionType)
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if ( NS_FAILED(rv) )
     return rv;
-    
+
   // Get the nsITransferable interface for getting the data from the clipboard
   nsCOMPtr<nsITransferable> trans;
   rv = PrepareTransferable(getter_AddRefs(trans));
@@ -464,11 +446,8 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
   // the flavors that we can deal with
   const char* const textEditorFlavors[] = { kUnicodeMime, nsnull };
 
-  nsCOMPtr<nsISupportsArray> flavorsList;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
-         NS_GET_IID(nsISupportsArray), getter_AddRefs(flavorsList));
-  if (NS_FAILED(rv)) return rv;
-  
+  nsCOMPtr<nsISupportsArray> flavorsList = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
+
   PRUint32 editorFlags;
   GetFlags(&editorFlags);
   

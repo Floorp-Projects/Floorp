@@ -106,11 +106,6 @@ interface nsIPlaintextEditor : nsISupports
    * @param aString   the string to be inserted
    */
    void insertText(in DOMString aStringToInsert);
-
-  /**
-   * True if the document is modifiable.
-   */
-  readonly attribute boolean canModify;
   
   /**
    * Insert a line break into the content model.
@@ -119,11 +114,4 @@ interface nsIPlaintextEditor : nsISupports
    * This may be more efficient than calling InsertText with a newline.
    */
   void insertLineBreak();
-
-  /**
-    * Set selection to start of text.
-    * This will be moved to a different API eventually!
-    * Should probably be done through the selection controller.
-    */
-  void collapseSelectionToStart();
 };

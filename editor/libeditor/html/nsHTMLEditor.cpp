@@ -1664,12 +1664,6 @@ nsHTMLEditor::GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver)
   return result; 
 } 
   
-NS_IMETHODIMP 
-nsHTMLEditor::CollapseSelectionToStart()
-{
-  return BeginningOfDocument();
-}
-
 nsresult 
 nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsISelection *aSelection, nsIDOMNode *aNode)
 {

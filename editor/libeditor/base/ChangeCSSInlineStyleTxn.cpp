@@ -317,12 +317,12 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::Merge(nsITransaction *aTransaction, PRBoo
 
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::GetTxnDescription(nsAString& aString)
 {
-  aString.Assign(NS_LITERAL_STRING("ChangeCSSInlineStyleTxn: "));
+  aString.Assign(NS_LITERAL_STRING("ChangeCSSInlineStyleTxn: [mRemoveProperty == "));
 
-  if (PR_FALSE==mRemoveProperty)
-    aString += NS_LITERAL_STRING("[mRemoveProperty == false] ");
+  if (!mRemoveProperty)
+    aString += NS_LITERAL_STRING("false] ");
   else
-    aString += NS_LITERAL_STRING("[mRemoveProperty == true] ");
+    aString += NS_LITERAL_STRING("true] ");
   nsAutoString tempString;
   mProperty->ToString(tempString);
   aString += tempString;
