@@ -45,6 +45,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nsOS2Uni.h"
 
 
 void WriteTypeEA(const char* filename, const char* type);
@@ -173,8 +174,20 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
         {
           holder.Left(url, lineIndex);
           holder.Mid ( linkName, lineIndex + 1, (len/2) - (lineIndex + 1) );
-          if (linkName.Length() > 0)
-            dragitem.hstrTargetName = DrgAddStrHandle(ToNewCString(linkName));
+          if (linkName.Length() > 0) {
+            int length = linkName.Length() * 2 + 1;
+            char * newlinkname = new char[length];
+            if (newlinkname) {
+              int outlen = ::WideCharToMultiByte( 0, 
+                             linkName.get(), linkName.Length(),
+                             newlinkname, length);
+              if ( outlen >= 0)
+                newlinkname[outlen] = '\0';
+              dragitem.hstrTargetName = DrgAddStrHandle(newlinkname);
+              delete [] newlinkname;
+            } else
+              dragitem.hstrTargetName = DrgAddStrHandle(ToNewCString(url));
+          }
           else
             dragitem.hstrTargetName = DrgAddStrHandle(ToNewCString(url));
           dragitem.hstrSourceName = DrgAddStrHandle(ToNewCString(url)); 
