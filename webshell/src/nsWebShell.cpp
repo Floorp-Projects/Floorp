@@ -492,7 +492,7 @@ protected:
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
   nsRect  mBounds;
 
-  MOZ_TIMER_DECLARE(mTotalTime);
+  MOZ_TIMER_DECLARE(mTotalTime)
 
 #ifdef DETECT_WEBSHELL_LEAKS
 private:

@@ -200,7 +200,7 @@ protected:
 
   nsIStyleFrameConstruction* mFrameConstructor;
 
-  MOZ_TIMER_DECLARE(mStyleResolutionWatch);
+  MOZ_TIMER_DECLARE(mStyleResolutionWatch)
 };
 
 StyleSetImpl::StyleSetImpl()

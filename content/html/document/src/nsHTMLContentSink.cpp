@@ -285,7 +285,7 @@ public:
   void ForceReflow();
 #endif
 
-  MOZ_TIMER_DECLARE(mWatch); //  Measures content model creation time for current document
+  MOZ_TIMER_DECLARE(mWatch) //  Measures content model creation time for current document
 };
 
 class SinkContext {
