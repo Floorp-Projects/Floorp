@@ -942,6 +942,49 @@ NSRangeInsertFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 }
 
 
+//
+// Native method IsValidFragment
+//
+PR_STATIC_CALLBACK(JSBool)
+NSRangeIsValidFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *privateThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMNSRange *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSRangeIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSRange");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  PRBool nativeRet;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->IsValidFragment(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+  else {
+    JS_ReportError(cx, "Function isValidFragment requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Range
@@ -998,6 +1041,7 @@ static JSFunctionSpec RangeMethods[] =
   {"clone",          RangeClone,     0},
   {"toString",          RangeToString,     0},
   {"insertFragment",          NSRangeInsertFragment,     1},
+  {"isValidFragment",          NSRangeIsValidFragment,     1},
   {0}
 };
 
@@ -1079,7 +1123,7 @@ extern "C" NS_DOM nsresult NS_InitRangeClass(nsIScriptContext *aContext, void **
 //
 // Method for creating a new Range JavaScript object
 //
-NS_DOM nsresult NS_NewScriptRange(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptRange(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptRange");
   JSObject *proto;

@@ -34,16 +34,20 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSRANGE_IID; return iid; }
 
   NS_IMETHOD    InsertFragment(const nsString& aFragment)=0;
+
+  NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMNSRANGE   \
   NS_IMETHOD    InsertFragment(const nsString& aFragment);  \
+  NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMNSRANGE(_to)  \
   NS_IMETHOD    InsertFragment(const nsString& aFragment) { return _to InsertFragment(aFragment); }  \
+  NS_IMETHOD    IsValidFragment(const nsString& aFragment, PRBool* aReturn) { return _to IsValidFragment(aFragment, aReturn); }  \
 
 
 #endif // nsIDOMNSRange_h__
