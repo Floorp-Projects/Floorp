@@ -514,15 +514,15 @@ jsds_ErrorHookProc (JSDContext *jsdc, JSContext *cx, const char *message,
 {
     static PRBool running = PR_FALSE;
 
-    if (running)
-        return JSD_ERROR_REPORTER_PASS_ALONG;
-    
-    running = PR_TRUE;
-    
     nsCOMPtr<jsdIErrorHook> hook;
     gJsds->GetErrorHook(getter_AddRefs(hook));
     if (!hook)
         return JSD_ERROR_REPORTER_PASS_ALONG;
+
+    if (running)
+        return JSD_ERROR_REPORTER_PASS_ALONG;
+    
+    running = PR_TRUE;
     
     jsdIValue *val = 0;
     if (JS_IsExceptionPending(cx)) {
@@ -1004,11 +1004,11 @@ jsdScript::CreatePPLineMap()
     PRBool      scriptOwner = PR_FALSE;
     
     if (fun) {
-        if (fun->nargs > 8)
-            return 0;
+        if (fun->nargs > 12)
+            return nsnull;
         JSString *jsstr = JS_DecompileFunctionBody (cx, fun, 4);
         if (!jsstr)
-            return 0;
+            return nsnull;
     
         const char *argnames[] = {"arg1", "arg2", "arg3", "arg4", 
                                   "arg5", "arg6", "arg7", "arg8",
@@ -1018,20 +1018,20 @@ jsdScript::CreatePPLineMap()
                                     JS_GetStringLength(jsstr),
                                     "x-jsd:internal:ppbuffer:function", 3);
         if (!fun || !(script = JS_GetFunctionScript(cx, fun)))
-            return 0;
+            return nsnull;
         baseLine = 3;
     } else {
         JSString *jsstr = JS_DecompileScript (cx, JSD_GetJSScript(mCx, mScript),
                                               "ppscript", 4);
         if (!jsstr)
-            return 0;
+            return nsnull;
 
         script = JS_CompileUCScript (cx, obj,
                                      JS_GetStringChars(jsstr),
                                      JS_GetStringLength(jsstr),
                                      "x-jsd:internal:ppbuffer:script", 1);
         if (!script)
-            return 0;
+            return nsnull;
         scriptOwner = PR_TRUE;
         baseLine = 1;
     }
