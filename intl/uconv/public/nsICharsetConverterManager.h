@@ -56,11 +56,11 @@
 #define REGSELF_PRINTF(x,y)                                             \
   printf("RegSelf %s to %s converter complete\n",                       \
          x, y)                                                         
-#define DEBUG_PRINTF(x)                                                 \
+#define UCONV_DEBUG_PRINTF(x)                                           \
   printf(x)
 #else
 #define REGSELF_PRINTF(x,y)
-#define DEBUG_PRINTF(x)
+#define UCONV_DEBUG_PRINTF(x)
 #endif
 
 #define NS_IMPL_NSUCONVERTERREGSELF                                     \
@@ -120,7 +120,7 @@ _InstanceClass##UnRegSelf (nsIComponentManager *aCompMgr,             \
                            const char* registryLocation,              \
                            const nsModuleComponentInfo *info)         \
 {                                                                     \
-  DEBUG_PRINTF("UnRegSelf " _From " to " _To "converter not implement\n"); \
+  UCONV_DEBUG_PRINTF("UnRegSelf " _From " to " _To "converter not implement\n"); \
   return NS_OK;                                                       \
 }
 
