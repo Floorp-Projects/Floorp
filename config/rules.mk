@@ -637,7 +637,7 @@ DEPENDENT_LIBS_H = dependentLibs.h
 GARBAGE += $(DEPENDENT_LIBS_H)
 
 export:: $(DEPENDENT_LIBS_H)
-	
+
 $(DEPENDENT_LIBS_H): Makefile Makefile.in
 	@rm -f $@
 	echo "#define DEPENDENT_LIBS $(foreach f,$(DEPENDENT_LIBS),\"${f}\",) " > $@
@@ -1240,7 +1240,11 @@ $(DIST)/bin/defaults/pref::
 
 ifndef NO_DIST_INSTALL
 export:: $(PREF_JS_EXPORTS) $(DIST)/bin/defaults/pref
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+	@for i in $(PREF_JS_EXPORTS); do $(PERL) -pe "s/([^\r]?)\n/\1\r\n/" $$i > $(DIST)/bin/defaults/pref/`basename $$i`; done
+else
 	$(INSTALL) $(IFLAGS1) $^
+endif
 endif
 
 install:: $(PREF_JS_EXPORTS)
