@@ -990,7 +990,8 @@ function formatDate(datestr, unknown)
  *
  * for node==null or url=="", empty string is returned
  *
- * This is basically just copied from http://lxr.mozilla.org/seamonkey/source/xpfe/browser/resources/content/metadata.js
+ * This is basically just copied from http://lxr.mozilla.org/seamonkey/source/xpfe/browser/resources/content/metadata.js,
+ * though I've modified it so that it doesn't assign to .spec
  */
 
 function getAbsoluteURL(url, node)
@@ -1026,7 +1027,14 @@ function getAbsoluteURL(url, node)
 
   for (var i=0; i<urlArr.length; i++) 
   {
-    URL.spec = URL.resolve(urlArr[i]);
+    try
+    {
+      URL = ioService.newURI(urlArr[i], URL.originCharset, URL);
+    }
+    catch (ex)
+    {
+      ; // do nothing
+    }
   }
 
   return URL.spec;
