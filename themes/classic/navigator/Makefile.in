@@ -42,12 +42,10 @@ EXPORT_RESOURCE_SAMPLES = \
 	home.gif \
 	location-hover.gif \
 	location.gif \
-	print.gif \
 	reload.gif \
 	reload-disabled.gif \
 	reload-hover.gif \
 	reload-hover-active.gif \
-	search.gif \
 	stop.gif \
 	stop-disabled.gif \
 	stop-hover.gif \

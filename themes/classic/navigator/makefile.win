@@ -42,12 +42,10 @@ install::
 	$(MAKE_INSTALL) home.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) location-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) location.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) print.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) reload.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) reload-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) reload-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) reload-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) stop-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) stop-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
