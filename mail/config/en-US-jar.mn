@@ -50,7 +50,7 @@ locale/en-US/communicator/utilityOverlay.dtd,            en-US/locale/en-US/comm
 locale/en-US/communicator/utilityOverlay.properties,     en-US/locale/en-US/communicator/utilityOverlay.properties
 locale/en-US/communicator/viewZoomOverlay.dtd,           en-US/locale/en-US/communicator/viewZoomOverlay.dtd
 locale/en-US/communicator/viewZoomOverlay.properties,    en-US/locale/en-US/communicator/viewZoomOverlay.properties
-
+locale/en-US/communicator/askViewZoom.dtd,               en-US/locale/en-US/communicator/askViewZoom.dtd
 locale/en-US/communicator/wallet/wallet.properties,      en-US/locale/en-US/communicator/wallet/wallet.properties
 locale/en-US/communicator/pref/pref-charset.dtd, 	 en-US/locale/en-US/communicator/pref/pref-charset.dtd
 locale/en-US/communicator/pref/pref-colors.dtd,  	 en-US/locale/en-US/communicator/pref/pref-colors.dtd

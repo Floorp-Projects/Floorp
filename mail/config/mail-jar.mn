@@ -45,6 +45,8 @@ content/communicator/contentAreaContextOverlay.xul,   comm/content/communicator/
 content/communicator/nsContextMenu.js,                comm/content/communicator/nsContextMenu.js
 content/communicator/viewZoomOverlay.xul,             comm/content/communicator/viewZoomOverlay.xul
 content/communicator/viewZoomOverlay.js,              comm/content/communicator/viewZoomOverlay.js
+content/communicator/askViewZoom.xul,                 comm/content/communicator/askViewZoom.xul
+content/communicator/askViewZoom.js,                  comm/content/communicator/askViewZoom.js
 content/communicator/findUtils.js,                    comm/content/communicator/findUtils.js
 content/communicator/printPageSetup.js,               comm/content/communicator/printPageSetup.js
 content/communicator/printPageSetup.xul,              comm/content/communicator/printPageSetup.xul
