@@ -41,6 +41,10 @@
 #undef NOISY_VERTICAL_ALIGN
 #endif
 
+// hack for bug 50695
+#include "nsIFormManager.h"
+static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
+
 // Initialize a <b>root</b> reflow state with a rendering context to
 // use for measuring things.
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
@@ -1309,6 +1313,11 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
     // if the ancestor is auto height then skip it and continue up if it 
     // is the first block/area frame and possibly the body/html
     if (nsLayoutAtoms::blockFrame == frameType.get()) {
+      // special hack for bug 50695, skip form frames
+      nsIFrame* formFrame;
+      if (NS_OK == rs->frame->QueryInterface(kIFormManagerIID, (void **)&formFrame)) {
+        continue;
+      }
       if (!firstBlockRS) {
         firstBlockRS = (nsHTMLReflowState*)rs;
         if (NS_AUTOHEIGHT == rs->mComputedHeight) continue;
@@ -1331,7 +1340,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
       if (nsLayoutAtoms::scrollFrame == scrollFrameType.get()) {
         rs = scrollState;
       }
-	}
+    }
     else {
       break;
     }
