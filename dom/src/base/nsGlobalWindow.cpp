@@ -2045,27 +2045,37 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
 
   if (argc > 0) {
     JSString *mJSStrURL = JS_ValueToString(cx, argv[0]);
-    if (nsnull == mJSStrURL || nsnull == mDocument) {
+    if (nsnull == mJSStrURL) {
       return NS_ERROR_FAILURE;
     }
 
-    nsAutoString mURL, mEmpty;
-    nsIURI* mDocURL = 0;
-    nsIDocument* mDoc;
-
-    mURL.SetString(JS_GetStringChars(mJSStrURL));
-
-    if (NS_OK == mDocument->QueryInterface(kIDocumentIID, (void**)&mDoc)) {
-      mDocURL = mDoc->GetDocumentURL();
-      NS_RELEASE(mDoc);
+    if (mDocument) {
+        // Build absolute URL relative to this document.
+        nsAutoString mURL, mEmpty;
+        nsIURI* mDocURL = 0;
+        nsIDocument* mDoc;
+    
+        mURL.SetString(JS_GetStringChars(mJSStrURL));
+    
+        if (NS_OK == mDocument->QueryInterface(kIDocumentIID, (void**)&mDoc)) {
+          mDocURL = mDoc->GetDocumentURL();
+          NS_RELEASE(mDoc);
+        }
+    
+        nsIURI *baseUri = nsnull;
+        rv = mDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+        if (NS_FAILED(rv)) return rv;
+    
+        rv = NS_MakeAbsoluteURI(mURL, baseUri, mAbsURL);
+        NS_RELEASE(baseUri);
+    } else {
+        // No document.  Probably because this window's URL hasn't finished
+        // loading.  All we can do is hope the URL we've been given is absolute.
+        mAbsURL.SetString(JS_GetStringChars(mJSStrURL));
+        nsCOMPtr<nsIURI> test;
+        // Make URI; if mAbsURL is relative (or otherwise bogus) this will fail.
+        rv = NS_NewURI( getter_AddRefs(test), mAbsURL );
     }
-
-    nsIURI *baseUri = nsnull;
-    rv = mDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = NS_MakeAbsoluteURI(mURL, baseUri, mAbsURL);
-    NS_RELEASE(baseUri);
     if (NS_FAILED(rv)) return rv;
   }
   

@@ -439,9 +439,7 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *aCx,
     }
     // Couldn't find principals: no mobile code on stack.
     // Use system principal.
-    *result = mSystemPrincipal;
-    NS_ADDREF(*result);
-    return NS_OK;
+    return GetSystemPrincipal(result);
 }
 
 
