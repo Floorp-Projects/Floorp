@@ -118,11 +118,12 @@ nsPop3Sink::SetMailAccountURL(const char* urlString)
 nsresult 
 nsPop3Sink::BeginMailDelivery(PRBool* aBool)
 {
-    char *path = PR_smprintf("%s\\Inbox", m_mailDirectory);
 #ifdef DEBUG
     m_fileCounter++;
 #endif
-    nsFileSpec fileSpec(path);
+    nsFileSpec fileSpec(m_mailDirectory);
+    fileSpec += "Inbox";
+    printf("\nDirectory: %s\n", (const char *) fileSpec);
     m_outFileStream = new nsOutputFileStream(fileSpec, 
                                              PR_WRONLY | PR_CREATE_FILE | PR_APPEND);
 
@@ -132,7 +133,6 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
       return NS_ERROR_OUT_OF_MEMORY;
     nsresult rv = m_newMailParser->Init(nsnull, fileSpec);
     if (NS_FAILED(rv)) return rv;
-    PR_FREEIF(path);
 
 #ifdef DEBUG
     printf("Begin mail message delivery.\n");
