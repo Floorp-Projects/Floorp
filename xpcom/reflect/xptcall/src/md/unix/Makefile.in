@@ -179,7 +179,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),Linux)
-ifeq ($(OS_TEST),mips)
+ifneq (,$(findstring mips, $(OS_TEST)))
 CPPSRCS		:= xptcinvoke_mips.cpp xptcstubs_mips.cpp
 ASFILES		:= xptcinvoke_asm_mips.s xptcstubs_asm_mips.s
 #xptcstubs_mips.cpp
@@ -281,10 +281,11 @@ DEFINES		+= -DEXPORT_XPTC_API
 INCLUDES	+= -I$(srcdir)/../..
 
 ifeq ($(OS_ARCH),Linux)
-ifeq ($(OS_TEST),mips)
-xptcstubs_asm_mips.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_mips.s.m4
-	m4 $(INCLUDES) $(srcdir)/xptcstubs_asm_mips.s.m4 > ./xptcstubs_asm_mips.s
-	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(srcdir)/xptcstubs_asm_mips.s
+ifneq (,$(findstring mips, $(OS_TEST)))
+xptcstubs_asm_mips.o: xptcstubs_asm_mips.s.m4 $(PUBLIC)/xptcstubsdef.inc
+	m4 $(INCLUDES) $< > ./xptcstubs_asm_mips.s && \
+	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) ./xptcstubs_asm_mips.s
+	$(RM) -f ./xptcstubs_asm_mips.s
 endif
 endif
 
