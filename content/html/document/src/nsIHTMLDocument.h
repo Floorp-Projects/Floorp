@@ -43,6 +43,8 @@ enum nsDTDMode {
  */
 class nsIHTMLDocument : public nsISupports {
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IHTMLDOCUMENT_IID; return iid; }
+
   NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
 
   NS_IMETHOD AddImageMap(nsIDOMHTMLMapElement* aMap) = 0;
