@@ -32,6 +32,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsIURL.h"
 
+#include "nsIXBLBinding.h"
+
 //static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 
@@ -84,6 +86,12 @@ nsXMLElement::QueryInterface(REFNSIID aIID,
   NS_IMPL_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this, nsIXMLContent)
   if (aIID.Equals(kIXMLContentIID)) {
     nsIXMLContent* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(nsIBindableContent::GetIID())) {
+    nsIBindableContent* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -213,3 +221,17 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 
+NS_IMETHODIMP
+nsXMLElement::SetBinding(nsIXBLBinding* aBinding) 
+{
+  mBinding = aBinding; // nsCOMPtr handles addrefing.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXMLElement::GetBinding(nsIXBLBinding** aResult)
+{
+  *aResult = mBinding;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}

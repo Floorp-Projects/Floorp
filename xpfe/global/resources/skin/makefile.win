@@ -29,6 +29,7 @@ DISTXUL=$(DIST)\bin\chrome
 install::
 	$(MAKE_INSTALL) tasksOverlay.css $(DISTBROWSER)
 	$(MAKE_INSTALL) xul.css $(DISTXUL)
+  $(MAKE_INSTALL) xulBindings.xml $(DISTXUL)
 	$(MAKE_INSTALL) global.css $(DISTBROWSER)
 	$(MAKE_INSTALL) lessCols.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) lessCols_mo.gif $(DISTBROWSER)
