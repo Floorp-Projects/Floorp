@@ -31,8 +31,8 @@
         dump("Setting content window\n");
         appCore.setContentWindow( window.frames[0].frames[1] );
 
-        // Call in to BrowserAppcore to load initial page.
-	    //appCore.loadInitialPage();
+         //Call in to BrowserAppcore to load initial page.
+	     appCore.loadInitialPage();
     } else {
         // Try again.
         dump("Scheduling later attempt to set content window\n");
@@ -903,7 +903,7 @@
 		
 		<spring flex="100%"/>
 
-		<titledbutton align="right" value="Build ID: 1999040601" style="font-family:sans-serif;font-size:2.5mm;"/>
+		<titledbutton align="right" value="Build ID: 1999042310" style="font-family:sans-serif;font-size:2.5mm;"/>
 				
 		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
      </box>
