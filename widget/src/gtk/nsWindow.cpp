@@ -181,6 +181,13 @@ NS_IMETHODIMP nsWindow::Destroy(void)
   if (mMozArea)
     gtk_object_remove_data(GTK_OBJECT(mMozArea), "nsWindow");
 
+  /* XXX we should really use a weak ref for gRollupWidget */
+  /* if we are the rollup listener, lets null it out which will decrease our ref */
+  if (gRollupWidget == this) {
+    gRollupListener = nsnull;
+    gRollupWidget = nsnull;
+  }
+
   return nsWidget::Destroy();
 }
 
@@ -729,8 +736,9 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     }
     gRollupConsumeRollupEvent = PR_TRUE;
     gRollupListener = aListener;
-    gRollupWidget = this;
 
+    /* this will cause a circular ref.  we null it out in Destroy(), but we should really be using a weak ref */
+    gRollupWidget = this;
   } else {
     // make sure that the grab window is marked as released
     if (mGrabWindow == this) {
