@@ -775,6 +775,14 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 {
 //printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
 //       event->message, event->point.x, event->point.y);
+
+  // Hold a refcount to the observer. The continued existence of the observer will
+  // delay deletion of this view hierarchy should the event want to cause its
+  // destruction in, say, some JavaScript event handler.
+  nsIViewObserver *obs;
+  if (NS_FAILED(mViewManager->GetViewObserver(obs)))
+    obs = nsnull;
+
   aStatus = nsEventStatus_eIgnore;
   PRBool handledByChild = PR_FALSE;
 
@@ -817,16 +825,10 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
   }
 
   //if no child's bounds matched the event, check the view itself.
-  if (!handledByChild && nsnull != mClientData)
-  {
-    nsIViewObserver *obs;
+  if (!handledByChild && nsnull != mClientData && nsnull != obs)
+    obs->HandleEvent((nsIView *)this, event, aStatus);
 
-    if (NS_OK == mViewManager->GetViewObserver(obs))
-    {
-      obs->HandleEvent((nsIView *)this, event, aStatus);
-      NS_RELEASE(obs);
-    }
-  }
+  NS_IF_RELEASE(obs);
 
   return NS_OK;
 }
