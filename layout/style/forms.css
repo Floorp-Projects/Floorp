@@ -188,7 +188,7 @@ optgroup:before {
 
 :-moz-dropdown-list {
   background-color: inherit;
-  border: 1px outset ThreeDFace; 
+  border: 1px outset black; 
   border-top-style: none;
   z-index: 2147483647;
   -moz-user-select: none;
