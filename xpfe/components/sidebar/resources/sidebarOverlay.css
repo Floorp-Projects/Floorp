@@ -1,14 +1,55 @@
+splitter#sidebar-splitter {
+	margin-right: 2px;
+	margin-top: 2px;
+	min-width: 8px;
+	max-width: 8px;
+	padding: 0px;
+	border: none;
+	background-color: #003366;
+}
+
+splitter#sidebar-splitter #bottomright-cap {
+	min-height: 8px; 
+	background-image: url("chrome://sidebar/skin/sidebar-bottomright-cap.gif"); 
+	background-repeat: no-repeat;
+	background-position: 100% 100%;
+}
+
+splitter#sidebar-splitter #topright-cap {
+	min-height: 8px; 
+	background-image: url("chrome://sidebar/skin/sidebar-topright-cap.gif"); 
+	background-repeat: no-repeat;
+	background-position: 100% 0%;
+}
+
+splitter#sidebar-splitter grippy {
+	margin: 0px;
+	border: 2px solid #003366;
+	padding: 0px;
+	background-color: #6699CC;
+	list-style-image: none;
+}
+
+splitter#sidebar-splitter grippy:hover {
+	background-color: #99CCFF;
+}
+
+splitter#sidebar-splitter grippy:active {
+	background-color: #99CCFF;
+}
+
+
+/**/
+
 box#sidebar-box
 {
+  margin-top: 2px;
   width: 200px;
   min-height: 0px;
   min-width: 10px;
   max-width: 400px;
-}
-
-splitter#sidebar-splitter
-{
-  border: 1px solid outset;
+  border: none;
+  border-bottom: 8px solid #003366;
 }
 
 box#sidebar-box[hidden="true"]
@@ -36,38 +77,42 @@ iframe.panel-frame
 /*
  *  Sidebar and Panel title buttons
  */
-splitter#title-box
-{
-  color: white;
-  background-color: #666699;
-}
-
-splitter#title-box > titledbutton
-{
-  color: inherit;
-}
-
-splitter#title-box > div
-{
-  color: inherit;
-  padding: 5px;
-}
-
-
-splitter.panel-bar
-{
+splitter.sidebar-main-header {
+  color: #CCFFFF;
+  background-color: #003366;
   padding: 0px;
-  border-top: 1px solid #ffffff;
-  background-color: #c8ccd8;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
-splitter.panel-bar div
-{
-  padding: 5px;
+splitter.sidebar-main-header div {
+  font-weight: bold;
+  margin: 2px;
 }
 
-splitter.panel-bar titledbutton
-{
+splitter.sidebar-main-header titledbutton {
+  padding: 0px;
+}
+
+splitter.sidebar-main-header titledbutton:hover {
+  color: white;
+}
+
+splitter.panel-bar {
+  padding: 0px;
+  border-top: 1px solid white;
+  background-color: #CCCCCC;
+  padding: 0px;
+  padding-left: 5px;
+  padding-right: 5px;
+  font-size: smaller;
+}
+
+splitter.panel-bar div {
+  margin: 2px;
+}
+
+splitter.panel-bar titledbutton {
   padding: 0px;
 }
 
@@ -90,15 +135,16 @@ splitter[state="collapsed"] > titledbutton.show-hide
  */
 splitter#alerts-splitter
 {
-  background-color: #666699;
+  color: #CCFFFF;
+  background-color: #003366;
 }
 
 splitter#alerts-splitter > div
 {
+  font-weight: bold;
   padding-left:   5px;
   padding-top:    2px;
   padding-bottom: 3px;
-  color:white;
 }
 
 box#alerts-panel

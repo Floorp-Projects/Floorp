@@ -104,8 +104,8 @@ Contributor(s): ______________________________________. -->
 	<broadcaster id="Browser:Print"  value="&printCmd.label;"        						 oncommand="BrowserPrint();"/>
   
   
-	<broadcaster id="canGoBack" 	 value="&goBackCmd.label;" 	disabled="true" oncommand="BrowserBack();"/>
-	<broadcaster id="canGoForward" value="&goForwardCmd.label;" disabled="true"	oncommand="BrowserForward();"/>
+	<broadcaster id="canGoBack"	disabled="true" oncommand="BrowserBack();"/>
+	<broadcaster id="canGoForward" disabled="true"	oncommand="BrowserForward();"/>
 	<broadcaster id="Browser:Home" value="&goHomeCmd.label;" 					oncommand="BrowserHome();" />
   
 	<broadcaster id="Browser:AddBookmark" value="&addCurPageCmd.label;" 	 oncommand="BrowserAddBookmark(window.content.location.href,window.content.document.title);"/>
@@ -231,7 +231,7 @@ Contributor(s): ______________________________________. -->
         </menupopup>
       </menu>
       <menuseparator />
-      <menuitem  id="menuitem-reload"  observes="canReload" />
+      <menuitem  id="menuitem-reload" value="&reloadCmd.label;" observes="canReload" />
       <menuitem value="&showImagesCmd.label;" oncommand="BrowserReload();"/>
       <menuitem value="&stopCmd.label;" id="menuitem-stop" 
         oncommand="BrowserStop();"/>
@@ -425,8 +425,8 @@ Contributor(s): ______________________________________. -->
   
   <menu accesskey="&goMenu.accesskey;" id="gomenu" value="&goMenu.label;" >
 	  <menupopup>
-		  <menuitem id="menuitem-back" accesskey="&goBackCmd.accesskey;"  key="goBackwardKb" observes="canGoBack"/>
-		  <menuitem id="menuitem-forward" accesskey="&goForwardCmd.accesskey;"  key="goForwardKb" observes="canGoForward" />
+		  <menuitem id="menuitem-back" value="&goBackCmd.label;" accesskey="&goBackCmd.accesskey;"  key="goBackwardKb" observes="canGoBack"/>
+		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;"  key="goForwardKb" observes="canGoForward" />
 		  <menuitem accesskey="&goHomeCmd.accesskey;" key="goHomeKb" observes="Browser:Home"/>
 		  <menuseparator />
 	  </menupopup>

@@ -30,8 +30,6 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/navigator.css \
 	$(srcdir)/questionl.gif \
 	$(srcdir)/contentframe.css \
-	$(srcdir)/animthrob.gif \
-	$(srcdir)/animthrob_single.gif \
 	$(srcdir)/back.gif \
 	$(srcdir)/forward.gif \
 	$(srcdir)/home.gif \
@@ -42,6 +40,11 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/reload.gif \
 	$(srcdir)/search.gif \
 	$(srcdir)/stop.gif \
+	$(srcdir)/navbar-bg-begincap.gif \
+	$(srcdir)/navbar-bg.gif \
+	$(srcdir)/navbar-endcap.gif \
+	$(srcdir)/n-box-persbar.gif \
+	$(srcdir)/n-box-navbar.gif \
 	$(NULL)
 
 install:: 

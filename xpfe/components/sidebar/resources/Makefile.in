@@ -58,6 +58,9 @@ CHROME_SKIN	= \
 		list-up.gif \
 		panel-expand.gif \
 		panel-collapse.gif \
+		alert.gif \
+		sidebar-bottomright-cap.gif \
+		sidebar-topright-cap.gif \
 		$(NULL)
 
 CHROME_L10N	= \

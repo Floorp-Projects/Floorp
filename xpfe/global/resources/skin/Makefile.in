@@ -75,7 +75,25 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/taskbar-tab-minimized.gif \
 		$(srcdir)/taskbar-tab.gif \
 		$(srcdir)/taskbar-popup-arrow.gif \
-		$(srcdir)/taskbar-tab-hover.gif \
+		$(srcdir)/button28-bg-active.gif \
+		$(srcdir)/button28-bg-disabled.gif \
+		$(srcdir)/button28-bg-hover.gif \
+		$(srcdir)/button28-bg.gif \
+		$(srcdir)/button32-bg-active.gif \
+		$(srcdir)/button32-bg-disabled.gif \
+		$(srcdir)/button32-bg-hover.gif \
+		$(srcdir)/button32-bg.gif \
+		$(srcdir)/gray-bottomleft.gif \
+		$(srcdir)/gray-bottomright.gif \
+		$(srcdir)/gray-topright.gif \
+		$(srcdir)/otherbutton28-bg-hover.gif \
+		$(srcdir)/otherbutton28-bg-active.gif \
+		$(srcdir)/toolbar-begincap.gif \
+		$(srcdir)/toolbar-endcap.gif \
+		$(srcdir)/n-box.gif \
+		$(srcdir)/search.gif \
+		$(srcdir)/animthrob.gif \
+		$(srcdir)/animthrob_single.gif \
 		$(NULL)
 
 EXPORT_CHROME	= $(srcdir)/xul.css

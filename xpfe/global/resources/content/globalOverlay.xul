@@ -16,22 +16,22 @@
 	<!-- New SubMenu (Under File Menu) -->
 	<broadcaster id="cmd_newNavigator" oncommand="OpenBrowserWindow()"/>
 	<broadcaster id="cmd_newMessage"   oncommand="goOpenNewMessage()"/>
-  <broadcaster id="cmd_newCard"      oncommand="goNewCardDialog(0)"/>
-  <broadcaster id="cmd_newEditor"    oncommand="NewEditorWindow();"/>
-  <!-- NOT IMPLEMENTED, so temporarily disabled -->
-  <broadcaster id="cmd_newEditorTemplate"   disabled="true"  oncommand="NewEditorFromTemplate();"/>
-  <broadcaster id="cmd_newEditorDraft"      disabled="true"  oncommand="NewEditorFromDraft();"/>
+	<broadcaster id="cmd_newCard"      oncommand="goNewCardDialog(0)"/>
+	<broadcaster id="cmd_newEditor"    oncommand="NewEditorWindow();"/>
+	<!-- NOT IMPLEMENTED, so temporarily disabled -->
+	<broadcaster id="cmd_newEditorTemplate"   disabled="true"  oncommand="NewEditorFromTemplate();"/>
+	<broadcaster id="cmd_newEditorDraft"      disabled="true"  oncommand="NewEditorFromDraft();"/>
 
-  <menuitem id="menu_newEditor"         value="&newBlankPageCmd.label;"         accesskey="&newBlankPageCmd.accesskey;" key="key_newBlankPage" observes="cmd_newEditor"/>
-  <menuitem id="menu_newEditorTemplate" value="&newPageFromTemplateCmd.label;"  accesskey="&newPageFromTemplateCmd.accesskey;"                 observes="cmd_newEditorTemplate"/>
-  <menuitem id="menu_newEditorDraft"    value="&newPageFromDraftCmd.label;"     accesskey="&newPageFromDraftCmd.accesskey;"                    observes="cmd_newEditorDraft"/>
+	<menuitem id="menu_newEditor"         value="&newBlankPageCmd.label;"         accesskey="&newBlankPageCmd.accesskey;" key="key_newBlankPage" observes="cmd_newEditor"/>
+	<menuitem id="menu_newEditorTemplate" value="&newPageFromTemplateCmd.label;"  accesskey="&newPageFromTemplateCmd.accesskey;"                 observes="cmd_newEditorTemplate"/>
+	<menuitem id="menu_newEditorDraft"    value="&newPageFromDraftCmd.label;"     accesskey="&newPageFromDraftCmd.accesskey;"                    observes="cmd_newEditorDraft"/>
  
 	<menu id="menu_New" value="&newMenu.label;" accesskey="&newMenu.accesskey;"/>
 	<menuitem id="menu_newNavigator" value="&newNavigatorCmd.label;" accesskey="&newNavigatorCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
 	<menuitem id="menu_newMessage" value="&newMessageCmd.label;" accesskey="&newMessageCmd.accesskey;" key="key_newMessage" observes="cmd_newMessage"/>
 	<menuitem id="menu_newCard" value="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" key="key_newCard" observes="cmd_newCard"/>
 
-  <key id="key_newBlankPage"  command="true" shift="true" key="&newBlankPageCmd.key;" observes="cmd_newEditor"/>
+	<key id="key_newBlankPage"  command="true" shift="true" key="&newBlankPageCmd.key;" observes="cmd_newEditor"/>
 	<key id="key_newNavigator"  command="true" key="&newNavigatorCmd.key;" observes="cmd_newNavigator"/>
 	<key id="key_newMessage"    command="true" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
 
@@ -101,31 +101,53 @@
 
 	<!-- Help Menu -->
 	<menu id="menu_Help" value="&helpMenu.label;">
-	  <menupopup>
-        <!-- Help Menu disabled
-		<menu value="&helpContentCmd.label;">
-			<menupopup>
-			  <menuitem value="&webBrowsingCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/browserhelp/navtop.html'"/>
-			  <menuitem value="&emailCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/mailhelp/mailtop.html'"/>
-			  <menuitem value="&internetShopCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/shophelp/shoptop.html'"/>
-			  <menuitem value="&customCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/custhelp/custtop.html'"/>
-			  <menuseparator/>
-			  <menuitem value="&softUpdatesCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/updatehelp/updatetop.html'"/>
-			  <menuitem value="&connProbCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/troubleshoot/troubletop.html'"/>
-			  <menuitem value="&secPrivCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/security/basics/index.html'"/>
-			 </menupopup>
-		</menu>
-	-->
+		<menupopup>
+	        <!-- Help Menu disabled
+			<menu value="&helpContentCmd.label;">
+				<menupopup>
+				  <menuitem value="&webBrowsingCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/browserhelp/navtop.html'"/>
+				  <menuitem value="&emailCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/mailhelp/mailtop.html'"/>
+				  <menuitem value="&internetShopCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/shophelp/shoptop.html'"/>
+				  <menuitem value="&customCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/custhelp/custtop.html'"/>
+				  <menuseparator/>
+				  <menuitem value="&softUpdatesCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/updatehelp/updatetop.html'"/>
+				  <menuitem value="&connProbCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/local/troubleshoot/troubletop.html'"/>
+				  <menuitem value="&secPrivCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/security/basics/index.html'"/>
+				 </menupopup>
+			</menu>
+			-->
 			<menuitem value="&helpAtCmd.label;" oncommand="window.content.location.href='http://www.netscape.com/support/index.html?cp=hom09fhlp'"/>		
 		    <menuitem value="&whatNewCmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/projects/user-docs/served/whatsnew/newtop.html'"/>
 			<menuitem value="&newTutorCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/netcenter/newnet/index.html'"/>
-		<menuseparator/>
+			<menuseparator/>
 			<menuitem value="&supportChannelCmd.label;" oncommand="window.content.location.href='http://help.netscape.com/'"/>
 			<menuitem value="&interUsersCmd.label;" oncommand="window.content.location.href='http://home.netscape.com/menu/intl/'"/>
 			<menuitem value="&releaseCommCmd.label;" oncommand="window.content.location.href='about:'"/>
-		<menuseparator/>
-			 <menuitem value="&aboutCommCmd.label;" oncommand="window.content.location.href='about:'"/>
-	  </menupopup>
+			<menuseparator/>
+			<menuitem value="&aboutCommCmd.label;" oncommand="window.content.location.href='about:'"/>
+		</menupopup>
 	</menu>
+	
+	<!-- Gray horizontal splitter -->
+	<splitter id="gray_horizontal_splitter" class="gray-horizontal-splitter">
+		<box id="begincap" align="horizontal">
+			<spring flex="100%"/>
+		</box>
+		<spring flex="100%"/>
+		<grippy/>
+		<spring flex="100%"/>
+		<box id="endcap" align="horizontal">
+			<spring flex="100%"/>
+		</box>
+	</splitter>
+
+	<!-- Toolbar boxes -->
+	<box id="toolbar_button_box" align="horizontal" flex="100%" style="min-width: 1px; overflow:hidden"/>
+	
+	<!-- Status Bar -->
+	<box id="status-bar" align="horizontal" style="min-width: 1px">
+		<box id="status-bar-leftcap" style="width:8px" position="0"/>
+		<box id="status-bar-rightcap" style="width:8px"/>
+	</box>
 	
 </overlay>		
