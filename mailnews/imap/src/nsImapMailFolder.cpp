@@ -3962,6 +3962,8 @@ nsImapMailFolder::BeginMessageUpload()
 // synchronize the message flags in the database with the server flags
 nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
 {
+  nsresult rv = GetDatabase(nsnull); // we need a database for this
+  NS_ENSURE_SUCCESS(rv, rv);
     // update all of the database flags
   PRInt32 messageIndex;
   PRUint32 messageSize;
