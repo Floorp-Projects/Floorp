@@ -529,9 +529,10 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
         PRBool secure = PR_FALSE;
         mCachedCookies->ObjectAt(rowIndex)->GetIsSecure(&secure);
         if (secure)
-          cookieVal = "yes";
+          retVal = NSLocalizedString(@"yes",@"yes");
         else
-          cookieVal = "no";
+          retVal = NSLocalizedString(@"no",@"no");
+        return retVal;
       } else if ([[aTableColumn identifier] isEqualToString: @"Expires"]) {
         PRUint64 expires = 0;
         mCachedCookies->ObjectAt(rowIndex)->GetExpires(&expires);
