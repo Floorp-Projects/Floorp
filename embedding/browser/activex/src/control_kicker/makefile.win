@@ -63,7 +63,6 @@ install:: $(DLL)
 
 clobber::
 	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
-	-del $(DEFFILE)
 
 control_kicker.cpp \
 StdAfx.cpp: StdAfx.h
