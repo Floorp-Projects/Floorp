@@ -6544,61 +6544,6 @@ nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
 }
 
 
-PRInt32 
-nsCSSFrameConstructor::FindRestyledFramesBelow(nsIFrame* aFrame, 
-                                               nsIPresContext* aPresContext,
-                                               PRInt32 aParentHint,
-                                               nsStyleChangeList& aChanges)
-{
-  PRInt32 count = 0;
-  PRInt32 listIndex = 0;
-  PRInt32 childChange;
-  nsIAtom* childList = nsnull;
-
-  do {
-    nsIFrame* child = nsnull;
-    aFrame->FirstChild(childList, &child);
-    while (child) {
-      nsIStyleContext* oldContext;
-      child->GetStyleContext(&oldContext);
-      if (oldContext) {
-        nsIStyleContext* parentContext = oldContext->GetParent();
-        nsresult didChange = child->ReResolveStyleContext(aPresContext, parentContext, 
-                                                          aParentHint, &aChanges,
-                                                          &childChange);
-        NS_IF_RELEASE(parentContext);
-        if (NS_SUCCEEDED(didChange)) {
-          if (NS_COMFALSE == didChange) {
-            count += FindRestyledFramesBelow(child, aPresContext, aParentHint, aChanges);
-          }
-          else {
-            nsIStyleContext* newContext;
-            child->GetStyleContext(&newContext);
-            if (newContext) {
-              PRInt32 hint = NS_STYLE_HINT_NONE;
-              newContext->CalcStyleDifference(oldContext, hint);
-              if (aParentHint < hint) {  // if child needs more than parent did
-                aChanges.AppendChange(child, hint);
-                count++;
-                if (hint < NS_STYLE_HINT_FRAMECHANGE) { // look for greater change below
-                  count += FindRestyledFramesBelow(child, aPresContext, hint, aChanges);
-                }
-              }
-              NS_RELEASE(newContext);
-            }
-          }
-        }
-        NS_RELEASE(oldContext);
-      }
-      child->GetNextSibling(&child);
-    }
-    NS_IF_RELEASE(childList);
-    aFrame->GetAdditionalChildListName(listIndex++, &childList);
-  } while (childList);
-  NS_IF_RELEASE(childList);
-  return count;
-}
-
 NS_IMETHODIMP 
 nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList, 
                                              nsIPresContext* aPresContext)
@@ -6631,35 +6576,6 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   }
   aChangeList.Clear();
   return NS_OK;
-}
-
-PRInt32 
-nsCSSFrameConstructor::ComputeStateChangeFor(nsIPresContext* aPresContext, nsIFrame* aFrame, 
-                                             nsStyleChangeList& aChangeList,
-                                             PRInt32 aFrameChange)
-{
-  nsIFrame* frame = aFrame;
-  do {
-    nsIStyleContext* oldFrameContext;
-    frame->GetStyleContext(&oldFrameContext);
-    NS_ASSERTION(nsnull != oldFrameContext, "frame must have style context");
-    if (oldFrameContext) {
-      nsIStyleContext*  parentContext = oldFrameContext->GetParent();
-      nsresult didChange = frame->ReResolveStyleContext(aPresContext, parentContext,
-                                                        aFrameChange, &aChangeList, 
-                                                        &aFrameChange);
-      NS_IF_RELEASE(parentContext);
-      if (NS_SUCCEEDED(didChange)) {
-        if (NS_COMFALSE == didChange) {
-          // need remap? I don't think so
-          FindRestyledFramesBelow(frame, aPresContext, aFrameChange, aChangeList);
-        }
-      }
-      NS_RELEASE(oldFrameContext);
-    }    
-    frame->GetNextInFlow(&frame);
-  } while (frame);
-  return aFrameChange;
 }
 
 NS_IMETHODIMP
@@ -6719,16 +6635,20 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
         }
       }
 
+      nsCOMPtr<nsIFrameManager> frameManager;
+      shell->GetFrameManager(getter_AddRefs(frameManager));
 
       if (primaryFrame1) {
         nsStyleChangeList changeList1;
         nsStyleChangeList changeList2;
         PRInt32 frameChange1 = NS_STYLE_HINT_NONE;
         PRInt32 frameChange2 = NS_STYLE_HINT_NONE;
-        frameChange1 = ComputeStateChangeFor(aPresContext, primaryFrame1, changeList1, frameChange1);
+        frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame1, changeList1,
+                                            NS_STYLE_HINT_NONE, frameChange1);
 
         if ((frameChange1 != NS_STYLE_HINT_RECONSTRUCT_ALL) && (primaryFrame2)) {
-          frameChange2 = ComputeStateChangeFor(aPresContext, primaryFrame2, changeList2, frameChange2);
+          frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame2, changeList2,
+                                              NS_STYLE_HINT_NONE, frameChange2);
         }
 
         if ((frameChange1 == NS_STYLE_HINT_RECONSTRUCT_ALL) || 
@@ -6770,7 +6690,8 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
       else if (primaryFrame2) {
         nsStyleChangeList changeList;
         PRInt32 frameChange = NS_STYLE_HINT_NONE;
-        frameChange = ComputeStateChangeFor(aPresContext, primaryFrame2, changeList, frameChange);
+        frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame2, changeList,
+                                            NS_STYLE_HINT_NONE, frameChange);
 
         switch (frameChange) {  // max change needed for top level frames
           case NS_STYLE_HINT_RECONSTRUCT_ALL:
@@ -6876,27 +6797,10 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       nsStyleChangeList changeList;
       // put primary frame on list to deal with, re-resolve may update or add next in flows
       changeList.AppendChange(primaryFrame, maxHint);
-      do {
-        nsIStyleContext* oldFrameContext;
-        frame->GetStyleContext(&oldFrameContext);
-        NS_ASSERTION(nsnull != oldFrameContext, "frame must have style context");
-        if (oldFrameContext) {
-          nsIStyleContext*  parentContext = oldFrameContext->GetParent();
-          nsresult didChange = frame->ReResolveStyleContext(aPresContext, parentContext, maxHint,
-                                                            &changeList, &maxHint);
-          NS_IF_RELEASE(parentContext);
-          if (NS_SUCCEEDED(didChange)) {
-            if (NS_COMFALSE == didChange) {
-              if (maxHint < NS_STYLE_HINT_FRAMECHANGE) {
-                oldFrameContext->RemapStyle(aPresContext);
-                FindRestyledFramesBelow(frame, aPresContext, maxHint, changeList);
-              }
-            }
-          }
-          NS_RELEASE(oldFrameContext);
-        }    
-        frame->GetNextInFlow(&frame);
-      } while (frame);
+      nsCOMPtr<nsIFrameManager> frameManager;
+      shell->GetFrameManager(getter_AddRefs(frameManager));
+      frameManager->ComputeStyleChangeFor(*aPresContext, primaryFrame, changeList,
+                                          aHint, maxHint);
 
       switch (maxHint) {  // maxHint is hint for primary only
         case NS_STYLE_HINT_RECONSTRUCT_ALL:
