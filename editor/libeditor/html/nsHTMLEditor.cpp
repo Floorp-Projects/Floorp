@@ -500,12 +500,17 @@ NS_IMETHODIMP nsHTMLEditor::BeginningOfDocument()
     PRInt16 visType=0;
     wsObj.NextVisibleNode(curNode, curOffset, address_of(visNode), &visOffset, &visType);
     if ((visType==nsWSRunObject::eNormalWS) || 
-        (visType==nsWSRunObject::eText)     ||
-        (visType==nsWSRunObject::eBreak)    ||
-        (visType==nsWSRunObject::eSpecial))
+        (visType==nsWSRunObject::eText))
     {
       selNode = visNode;
       selOffset = visOffset;
+      done = PR_TRUE;
+    }
+    else if ((visType==nsWSRunObject::eBreak)    ||
+             (visType==nsWSRunObject::eSpecial))
+    {
+      res = GetNodeLocation(visNode, address_of(selNode), &selOffset);
+      if (NS_FAILED(res)) return res; 
       done = PR_TRUE;
     }
     else if (visType==nsWSRunObject::eOtherBlock)
