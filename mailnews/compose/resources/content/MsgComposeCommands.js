@@ -1537,6 +1537,8 @@ function AddAttachment(attachment, prettyName)
 			cell.setAttribute("tooltiptext", unescape(attachment));
 		}
 		catch(e) {cell.setAttribute("tooltiptext", attachment);}
+    cell.setAttribute("class", "treecell-iconic");
+    cell.setAttribute('src', "moz-icon:" + attachment);
 		row.appendChild(cell);
 		item.appendChild(row);
 		bucketBody.appendChild(item);
