@@ -99,6 +99,7 @@ struct MimeInlineText {
   nsCOMPtr<nsIUnicodeEncoder> utf8Encoder;
 
   PRBool  inputAutodetect;
+  PRBool  initializeCharset;
   PRInt32 lastLineInDam;
   PRInt32 curDamOffset;
   char *lineDamBuffer;

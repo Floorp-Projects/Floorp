@@ -52,6 +52,7 @@ static int MimeInlineText_parse_decoded_buffer (char *, PRInt32, MimeObject *);
 static int MimeInlineText_rotate_convert_and_parse_line(char *, PRInt32,
                  MimeObject *);
 static int MimeInlineText_open_dam(char *line, PRInt32 length, MimeObject *obj);
+static int MimeInlineText_initializeCharset(MimeObject *obj);
 
 static int
 MimeInlineTextClassInitialize(MimeInlineTextClass *clazz)
@@ -73,12 +74,19 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static int
 MimeInlineText_initialize (MimeObject *obj)
 {
-  MimeInlineText *text = (MimeInlineText *) obj;
-  text->inputAutodetect = PR_FALSE;
-  text->charsetOverridable = PR_FALSE;
-  
   /* This is an abstract class; it shouldn't be directly instanciated. */
   PR_ASSERT(obj->clazz != (MimeObjectClass *) &mimeInlineTextClass);
+
+  ((MimeInlineText *) obj)->initializeCharset = PR_FALSE;
+  return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
+}
+
+static int MimeInlineText_initializeCharset(MimeObject *obj)
+{
+  MimeInlineText  *text = (MimeInlineText *) obj;
+
+  text->inputAutodetect = PR_FALSE;
+  text->charsetOverridable = PR_FALSE;
   
   /* Figure out an appropriate charset for this object.
   */
@@ -162,7 +170,9 @@ MimeInlineText_initialize (MimeObject *obj)
     }
   }
 
-  return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
+  text->initializeCharset = PR_TRUE;
+
+  return 0;
 }
 
 
@@ -485,6 +495,9 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
      )
 	{
     MimeInlineText  *text = (MimeInlineText *) obj;
+
+    if (!text->initializeCharset)
+      MimeInlineText_initializeCharset(obj);
 
     //if autodetect is on, push line to dam
     if (text->inputAutodetect)
