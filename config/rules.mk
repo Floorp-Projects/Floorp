@@ -104,7 +104,7 @@ endif
 
 ifdef SRCS_IN_OBJDIR
 ifeq ($(OS_ARCH),WINNT)
-_VPATH_SRCS = $(shell cygpath -m $< | grep ^.:/ || cygpath -m `pwd`/$<)
+_VPATH_SRCS = $(shell cygpath -w $< | sed -e 's|\\|/|g' | grep ^.:/ || cygpath -w `pwd`/$< | sed -e 's|\\|/|g')
 else
 _VPATH_SRCS = $<
 endif
