@@ -36,6 +36,9 @@ else
 ifeq ($(OS_RELEASE),6.2)
 CC	= cc -32 -DIRIX6_2
 endif
+ifeq ($(OS_RELEASE),6.3)
+CC	= cc -32 -DIRIX6_3
+endif
 CCC = CC
 ODD_CFLAGS = -fullwarn -xansi
 ifdef BUILD_OPT

@@ -20,11 +20,11 @@
 #define nspr_irix_defs_h___
 
 #define	HAVE_LONG_LONG
-#ifdef IRIX6_2
+#if defined( IRIX6_2 ) || defined ( IRIX6_3 )
 #define	HAVE_ALIGNED_DOUBLES
 #else
 #undef	HAVE_ALIGNED_DOUBLES
-#endif /* IRIX6_2 */
+#endif /* IRIX6_2 || IRIX6.3 */
 #undef	HAVE_ALIGNED_LONGLONGS
 #define	HAVE_WEAK_IO_SYMBOLS
 #define	HAVE_WEAK_MALLOC_SYMBOLS
