@@ -480,11 +480,24 @@ NS_METHOD nsFrame::LastChild(nsIFrame*& aLastChild) const
   return NS_OK;
 }
 
+
+PRBool nsFrame::DisplaySelection(nsIPresContext& aPresContext)
+{
+  nsIPresShell  *shell      = aPresContext.GetShell();
+  nsIDocument   *doc        = shell->GetDocument();
+  PRBool        result = doc->GetDisplaySelection();
+  NS_RELEASE(shell);
+  NS_RELEASE(doc);
+  
+  return result;
+}
+
 NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect&        aDirtyRect)
 {
-#if DO_SELECTION
+  if (DisplaySelection(aPresContext) == PR_FALSE)
+    return NS_OK;
 
   PRBool clearAfterPaint = PR_FALSE;
 
@@ -534,7 +547,7 @@ NS_METHOD nsFrame::Paint(nsIPresContext&      aPresContext,
   NS_RELEASE(content);
   NS_RELEASE(doc);
   NS_RELEASE(shell);
-#endif
+
   return NS_OK;
 }
 
@@ -551,7 +564,8 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
     mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
   }
 
-#if DO_SELECTION
+  if (DisplaySelection(aPresContext) == PR_FALSE)
+    return NS_OK;
 
   if(nsEventStatus_eIgnore == aEventStatus) {
     if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
@@ -586,7 +600,6 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
       HandlePress(aPresContext, aEvent, aEventStatus, this);
     }
   }
-#endif
 
   return NS_OK;
 }
@@ -599,7 +612,12 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
                                nsEventStatus&  aEventStatus,
                                nsFrame *       aFrame)
 {
-#if DO_SELECTION 
+  if (DisplaySelection(aPresContext) == PR_FALSE)
+  {
+    aEventStatus = nsEventStatus_eIgnore;
+    return NS_OK;
+  }
+
   nsFrame          * currentFrame   = aFrame;
   nsIPresShell     * shell          = aPresContext.GetShell();
   
@@ -793,7 +811,6 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
   NS_RELEASE(shell);
   NS_RELEASE(selection);
 
-#endif
   aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
 
@@ -804,7 +821,12 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
                               nsEventStatus&  aEventStatus,
                               nsFrame *       aFrame)
 {
-#if DO_SELECTION 
+  if (DisplaySelection(aPresContext) == PR_FALSE)
+  {
+    aEventStatus = nsEventStatus_eIgnore;
+    return NS_OK;
+  }
+
   // keep old start and end
   nsIContent * startContent = mSelectionRange->GetStartContent();
   nsIContent * endContent   = mSelectionRange->GetEndContent();
@@ -900,7 +922,6 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
   //RefreshContentFrames(aPresContext, startContent, endContent);
   RefreshFromContentTrackers(aPresContext);
 
-#endif
   aEventStatus = nsEventStatus_eIgnore;
   return NS_OK;
 }
@@ -910,9 +931,7 @@ NS_METHOD nsFrame::HandleRelease(nsIPresContext& aPresContext,
                                  nsEventStatus&  aEventStatus,
                                  nsFrame *       aFrame)
 {
-#if DO_SELECTION 
   mDoingSelection = PR_FALSE;
-#endif
   aEventStatus = nsEventStatus_eIgnore;
   NS_IF_RELEASE(gDoc);
   return NS_OK;
