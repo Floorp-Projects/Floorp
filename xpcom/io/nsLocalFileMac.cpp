@@ -662,12 +662,16 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 
 	NS_ENSURE_ARG(_retval);
 	
-	ResolveAndStat(PR_TRUE);
-	
+	FSSpec 	spec;
 	OSErr err = noErr;
+	
+	nsresult rv = ResolveAndStat(PR_TRUE);
+	if ((rv == NS_ERROR_FILE_NOT_FOUND) && (flags & PR_CREATE_FILE))
+		spec = mResolvedSpec;
+	else
+		spec = mTargetSpec;
 
 	// Resolve the alias to the original file.
-	FSSpec	spec = mTargetSpec;
 	Boolean targetIsFolder;	  
 	Boolean wasAliased;	  
 	err = ::ResolveAliasFile(&spec, TRUE, &targetIsFolder, &wasAliased);
