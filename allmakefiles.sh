@@ -809,6 +809,13 @@ extensions/transformiix/source/Makefile
 extensions/transformiix/Makefile
 "
 
+MAKEFILES_typeaheadfind="
+extensions/typeaheadfind/public/Makefile
+extensions/typeaheadfind/resources/Makefile
+extensions/typeaheadfind/src/Makefile
+extensions/typeaheadfind/Makefile
+"
+
 MAKEFILES_phoenix="
 browser/Makefile
 browser/base/Makefile
@@ -1059,6 +1066,9 @@ for extension in $MOZ_EXTENSIONS; do
             " ;;
         inspector ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_inspector"
+            ;;
+        typeaheadfind ) MAKEFILES_extensions="$MAKEFILES_extensions
+            $MAKEFILES_typeaheadfind"
             ;;
         irc ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/irc/Makefile
