@@ -144,6 +144,7 @@ nsFileTransport::Resume(void)
     PR_CEnterMonitor(this);
     switch (mState) {
       case SUSPENDED:
+        // XXX re-open the stream and seek here?
         mStatus = mService->Resume(this);
 
         mState = RUNNING;

@@ -20,11 +20,14 @@
 #define nsHttpProtocolConnection_h___
 
 #include "nsIHttpProtocolConnection.h"
+#include "nsIStreamListener.h"
 
 class nsIConnectionGroup;
 class nsIHttpEventSink;
+class nsIString;
 
-class nsHttpProtocolConnection : public nsIHttpProtocolConnection
+class nsHttpProtocolConnection : public nsIHttpProtocolConnection,
+                                 public nsIStreamListener
 {
 public:
     NS_DECL_ISUPPORTS
@@ -43,10 +46,24 @@ public:
                           void* closure);
 
     // nsIHttpProtocolConnection methods:
+    NS_IMETHOD GetHeader(const char* header);
+    NS_IMETHOD AddHeader(const char* header, const char* value);
+    NS_IMETHOD RemoveHeader(const char* header);
     NS_IMETHOD Get(void);
     NS_IMETHOD GetByteRange(PRUint32 from, PRUint32 to);
     NS_IMETHOD Put(void);
     NS_IMETHOD Post(void);
+
+    // nsIStreamObserver methods:
+    NS_IMETHOD OnStartBinding(nsISupports* context);
+    NS_IMETHOD OnStopBinding(nsISupports* context,
+                             nsresult aStatus,
+                             nsIString* aMsg);
+
+    // nsIStreamListener methods:
+    NS_IMETHOD OnDataAvailable(nsISupports* context,
+                               nsIInputStream *aIStream, 
+                               PRUint32 aLength);
 
     // nsHttpProtocolConnection methods:
     nsHttpProtocolConnection();
@@ -54,10 +71,16 @@ public:
 
     nsresult Init(nsIUrl* url, nsISupports* eventSink);
 
+    enum State {
+        UNCONNECTED,
+        POSTING,
+        CONNECTED
+    };
+
 protected:
     nsIUrl*             mUrl;
     nsIHttpEventSink*   mEventSink;
-    PRBool              mConnected;
+    State               mState;
 };
 
 #endif /* nsHttpProtocolConnection_h___ */
