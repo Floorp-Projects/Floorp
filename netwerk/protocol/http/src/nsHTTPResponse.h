@@ -29,7 +29,7 @@
 #include "nsHTTPEnums.h"
 #include "nsHTTPHeaderArray.h"
 #include "nsString.h"
-
+#include "prtime.h"
 
 /* 
     The nsHTTPResponse class is the response object created by the response
@@ -73,10 +73,16 @@ public:
 
     nsresult            ParseStatusLine(nsCString& aStatusLine);
     nsresult            ParseHeader(nsCString& aHeaderString);
+    nsresult            ParseHeaders(nsCString& aAllHeaders);
     nsresult            ProcessHeader(nsIAtom* aHeader, nsCString& aValue);
-
+    nsresult            EmitHeaders(nsCString& aResult);
+     
+    PRBool              IsStale(PRBool aUseHeuristicExpiration);
+ 
 protected:
     virtual ~nsHTTPResponse();
+    nsresult            ParseDateHeader(nsIAtom *aAtom, PRUint32 *aResultTime, PRBool *aHeaderIsPresent);
+    nsresult            GetMaxAge(PRUint32* aMaxAge, PRBool* aMaxAgeIsPresent);
 
     HTTPVersion                 mServerVersion;
     nsCString                   mStatusString;
@@ -84,7 +90,6 @@ protected:
     nsCString                   mCharset;
     PRUint32                    mStatus;
     PRInt32                     mContentLength;
-
     nsHTTPHeaderArray           mHeaders;
 };
 
