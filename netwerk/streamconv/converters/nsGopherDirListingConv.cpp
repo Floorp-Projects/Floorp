@@ -36,6 +36,7 @@
 #include "nsIStringStream.h"
 #include "nsIStreamObserver.h"
 #include "nsNetUtil.h"
+#include "nsMimeTypes.h"
 
 #include "nsGopherDirListingConv.h"
 
@@ -147,7 +148,7 @@ nsGopherDirListingConv::AsyncConvertData(const PRUnichar *aFromType,
     rv = NS_NewInputStreamChannel(&mPartChannel,
                                   mUri,
                                   nsnull,
-                                  "application/http-index-format",
+                                  APPLICATION_HTTP_INDEX_FORMAT,
                                   -1);
     if (NS_FAILED(rv)) return rv;
 

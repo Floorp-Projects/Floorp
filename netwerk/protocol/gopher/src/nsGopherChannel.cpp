@@ -288,7 +288,7 @@ nsGopherChannel::GetContentType(char* *aContentType) {
         *aContentType = nsCRT::strdup(TEXT_HTML);
         break;
     case '1':
-        *aContentType = nsCRT::strdup("application/http-index-format");
+        *aContentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
         break;
     case '2': // CSO search - unhandled, should not be selectable
         *aContentType = nsCRT::strdup(TEXT_HTML);

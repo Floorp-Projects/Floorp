@@ -45,7 +45,7 @@
 #define APPLICATION_FORTEZZA_KRL            "application/x-fortezza-krl"
 #define APPLICATION_GZIP                    "application/x-gzip"
 #define APPLICATION_GZIP2                   "application/gzip"
-#define APPLICATION_HTTP_INDEX              "application/http-index"
+#define APPLICATION_HTTP_INDEX_FORMAT       "application/http-index-format"
 #define APPLICATION_JAVASCRIPT              "application/x-javascript"
 #define APPLICATION_NETSCAPE_REVOCATION     "application/x-netscape-revocation"
 #define APPLICATION_NS_PROXY_AUTOCONFIG     "application/x-ns-proxy-autoconfig"

@@ -36,6 +36,7 @@
 #include "nsIMIMEService.h"
 #include "nsISupportsUtils.h"
 #include "prio.h"
+#include "nsMimeTypes.h"
 
 //static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -500,7 +501,7 @@ nsDiskCacheRecordChannel::GetContentType(char * *aContentType)
   nsresult rv; 
   PRBool isDirectory;
   if ( NS_SUCCEEDED(mSpec->IsDirectory(&isDirectory)) && isDirectory) {
-    *aContentType = nsCRT::strdup("application/http-index-format");
+    *aContentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
     return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
   else {

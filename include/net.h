@@ -691,8 +691,8 @@ typedef struct _mdata {
 #ifndef APPLICATION_GZIP2                   
 #define APPLICATION_GZIP2                   "application/gzip"
 #endif
-#ifndef APPLICATION_HTTP_INDEX              
-#define APPLICATION_HTTP_INDEX              "application/http-index"
+#ifndef APPLICATION_HTTP_INDEX_FORMAT              
+#define APPLICATION_HTTP_INDEX_FORMAT       "application/http-index-format"
 #endif
 #ifndef APPLICATION_JAVASCRIPT              
 #define APPLICATION_JAVASCRIPT              "application/x-javascript"

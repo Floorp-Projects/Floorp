@@ -167,7 +167,7 @@ nsFileIO::Open(char **contentType, PRInt32 *contentLength)
         // Directories turn into an HTTP-index stream, with
         // unbounded (i.e., read 'til the stream says it's done)
         // length.
-        *contentType = nsCRT::strdup("application/http-index-format");
+        *contentType = nsCRT::strdup(APPLICATION_HTTP_INDEX_FORMAT);
         *contentLength = -1;
     }
     else {

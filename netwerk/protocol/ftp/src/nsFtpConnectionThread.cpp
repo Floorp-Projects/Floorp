@@ -45,6 +45,7 @@
 #include "nsIMemory.h"
 #include "nsIStringStream.h"
 #include "nsIPref.h"
+#include "nsMimeTypes.h"
 
 #ifdef DOUGT_NEW_CACHE
 #include "nsIInputStreamTee.h"
@@ -1045,11 +1046,10 @@ nsFtpState::S_user() {
             if (!mPrompter) return NS_ERROR_NOT_INITIALIZED;
             PRUnichar *user = nsnull, *passwd = nsnull;
             PRBool retval;
-            nsAutoString message;
             nsXPIDLCString host;
             rv = mURL->GetHost(getter_Copies(host));
             if (NS_FAILED(rv)) return rv;
-            message.AssignWithConversion("Enter username and password for "); //TODO localize it!
+            nsAutoString message(NS_LITERAL_STRING("Enter username and password for ")); //TODO localize it!
             message.AppendWithConversion(host);
 
             nsAutoString realm; // XXX i18n
@@ -1125,16 +1125,14 @@ nsFtpState::S_pass() {
 
             PRUnichar *passwd = nsnull;
             PRBool retval;
-            nsAutoString message;
-            nsAutoString title;
-            title.AssignWithConversion("Password");
+            nsAutoString title(NS_LITERAL_STRING("Password"));
             
             nsXPIDLCString host;
             rv = mURL->GetHost(getter_Copies(host));
             if (NS_FAILED(rv)) return rv;
-            message.AssignWithConversion("Enter password for "); //TODO localize it!
+            nsAutoString message(NS_LITERAL_STRING("Enter password for ")); //TODO localize it!
             message += mUsername;
-            message.AppendWithConversion(" on ");
+            message.Append(NS_LITERAL_STRING(" on "));
             message.AppendWithConversion(host);
 
             nsXPIDLCString prePath;
@@ -1195,7 +1193,7 @@ nsFtpState::R_pass() {
 
 nsresult
 nsFtpState::S_syst() {
-    nsCString systString( nsLiteralCString( "SYST" CRLF) );
+    nsCString systString("SYST" CRLF);
     return SendFTPCommand( systString );
 }
 
@@ -1225,7 +1223,7 @@ nsFtpState::R_syst() {
 
 nsresult
 nsFtpState::S_acct() {
-    nsCString acctString( nsLiteralCString( "ACCT noaccount" CRLF) );
+    nsCString acctString("ACCT noaccount" CRLF);
     return SendFTPCommand(acctString);
 }
 
@@ -1239,7 +1237,7 @@ nsFtpState::R_acct() {
 
 nsresult
 nsFtpState::S_pwd() {
-    nsCString pwdString( nsLiteralCString("PWD" CRLF) ); 
+    nsCString pwdString("PWD" CRLF); 
     return SendFTPCommand(pwdString);
 }
 
@@ -1461,7 +1459,7 @@ nsFtpState::S_list() {
     NS_WITH_SERVICE(nsIStreamConverterService, streamConvService, kStreamConverterServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString fromStr; fromStr.AssignWithConversion("text/ftp-dir-");
+    nsAutoString fromStr(NS_LITERAL_STRING("text/ftp-dir-"));
     SetDirMIMEType(fromStr);
 
 #ifdef DOUGT_NEW_CACHE
@@ -1487,7 +1485,7 @@ nsFtpState::S_list() {
         }
     } else {
         rv = streamConvService->AsyncConvertData(fromStr.GetUnicode(), 
-                                                 NS_LITERAL_STRING("application/http-index-format").get(),
+                                                 NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
                                                  listener, mURL, getter_AddRefs(converterListener));
     }
 
@@ -1513,7 +1511,7 @@ nsFtpState::S_list() {
         if (mGenerateHTMLContent)
             rv = mChannel->SetContentType("text/html");
         else
-            rv = mChannel->SetContentType("application/http-index-format");
+            rv = mChannel->SetContentType(APPLICATION_HTTP_INDEX_FORMAT);
         
         nsCOMPtr<nsITransport> transport;
         rv = mCacheEntry->GetTransport(getter_AddRefs(transport));
@@ -2219,13 +2217,13 @@ nsFtpState::SetDirMIMEType(nsString& aString) {
     // "text/ftp-dir-SERVER_TYPE" where SERVER_TYPE represents the server we're talking to.
     switch (mServerType) {
     case FTP_UNIX_TYPE:
-        aString.AppendWithConversion("unix");
+        aString.Append(NS_LITERAL_STRING("unix"));
         break;
     case FTP_NT_TYPE:
-        aString.AppendWithConversion("nt");
+        aString.Append(NS_LITERAL_STRING("nt"));
         break;
     default:
-        aString.AppendWithConversion("generic");
+        aString.Append(NS_LITERAL_STRING("generic"));
     }
 }
 
