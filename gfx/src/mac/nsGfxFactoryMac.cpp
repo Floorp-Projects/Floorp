@@ -25,12 +25,16 @@
 #include "nsImageMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsRegionMac.h"
+#include "nsDeviceContextSpecMac.h"
+#include "nsDeviceContextSpecFactoryM.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
+static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
+static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -134,6 +138,16 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCRegion)) {
     inst = (nsISupports *)new nsRegionMac();
+  }
+  else if (mClassID.Equals(kCDeviceContextSpec)) {
+    nsDeviceContextSpecMac* dcs;
+    NS_NEWXPCOM(dcs, nsDeviceContextSpecMac);
+    inst = (nsISupports *)dcs;
+  }
+  else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
+    nsDeviceContextSpecFactoryMac* dcs;
+    NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryMac);
+    inst = (nsISupports *)dcs;
   }
 
   if (inst == NULL) {  
