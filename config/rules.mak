@@ -728,5 +728,121 @@ GARBAGE=$(GARBAGE) $(XPIDL_GEN_DIR) $(DIST)\bin\components\$(XPIDL_MODULE).xpt
 !endif
 !endif
 
+# Generate chrome building rules.
+#
+# You need to set these in your makefile.win to utilize this support:
+#   CHROME_DIR - specifies the chrome subdirectory where your chrome files
+#                go; e.g., CHROME_DIR=navigator or CHROME_DIR=global
+#
+# Note:  All file listed in the next three macros MUST be prefaced with .\ (or ./)!
+#
+#   CHROME_CONTENT - list of chrome content files; these can be prefaced with
+#                arbitrary paths; e.g., CHROME_CONTENT=./content/default/foobar.xul
+#   CHROME_SKIN - list of skin files
+#   CHROME_L10N - list of localization files, e.g., CHROME_L10N=./locale/en-US/foobar.dtd
+#
+# These macros are optional, if not specified, each defaults to ".".
+#   CHROME_CONTENT_DIR - specifies chrome subdirectory where content files will be
+#                  installed; this path is inserted between $(CHROME_DIR) and
+#                  the path you specify in each $(CHROME_CONTENT) entry; i.e.,
+#                  for CHROME_CONTENT=./content/default/foobar.xul, it will be
+#                  installed into:
+#                    $(DIST)\bin\chrome\$(CHROME_DIR)\$(CHROME_CONTENT_DIR)\content\default\foobar.xul.
+#                  e.g., CHROME_DIR=global
+#                        CHROME_CONTENT_DIR=content\default
+#                        CHROME_CONTENT=.\foobar.xul
+#                  will install foobar.xul into content/default (even though it
+#                  resides in content/foobar.xul (no default) in the source tree.
+#                  But note that such usage must be put in a makefile.win that
+#                  itself resides in the content directory (i.e., it can't reside
+#                  up a level, since then CHROME_CONTENT=./content/foobar.xul which
+#                  would install into ...global\content\default\content\foobar.xul.
+#   CHROME_SKIN_DIR - Like above, but for skin files
+#   CHROME_L10N_DIR - Like above, but for localization files
+!if "$(CHROME_DIR)" != "$(NULL)"
+
+# Figure out root of chrome dist dir.
+CHROME_DIST=$(DIST)\bin\chrome\$(CHROME_DIR:/=\)
+
+# Content
+!if "$(CHROME_CONTENT)" != "$(NULL)"
+
+CHROME_CONTENT=$(CHROME_CONTENT:/=\)
+
+# Content goes to CHROME_DIR unless specified otherwise.
+!if "$(CHROME_CONTENT_DIR)" == "$(NULL)"
+CHROME_CONTENT_DIR=.
+!endif
+
+# Export content files by copying to dist.
+export:: $(CHROME_CONTENT:.\=EXPORT\.\)
+
+# Pseudo-target specifying how to install content files.
+$(CHROME_CONTENT:.\=EXPORT\.\):
+    $(MAKE_INSTALL) $(@:EXPORT\.=.) $(CHROME_DIST)\$(CHROME_CONTENT_DIR)\$(@D:EXPORT\.=.)
+
+# Clobber content files.
+clobber_all:: $(CHROME_CONTENT:.\=CLOBBER\.\)
+
+# Pseudo-target specifying how to clobber content files.
+$(CHROME_CONTENT:.\=CLOBBER\.\):
+    -@$(RM) $(CHROME_DIST)\$(CHROME_CONTENT_DIR)\$(@:CLOBBER\.=.)
+
+!endif # content
+
+# Skin
+!if "$(CHROME_SKIN)" != "$(NULL)"
+
+CHROME_SKIN=$(CHROME_SKIN:/=\)
+
+# Skin goes to CHROME_DIR unless specified otherwise.
+!if "$(CHROME_SKIN_DIR)" == "$(NULL)"
+CHROME_SKIN_DIR=.
+!endif
+
+# Export content files by copying to dist.
+export:: $(CHROME_SKIN:.\=EXPORT\.\)
+
+# Pseudo-target specifying how to install chrome files.
+$(CHROME_SKIN:.\=EXPORT\.\):
+    $(MAKE_INSTALL) $(@:EXPORT\.=.) $(CHROME_DIST)\$(CHROME_SKIN_DIR)\$(@D:EXPORT\.=.)
+
+# Clobber content files.
+clobber_all:: $(CHROME_SKIN:.\=CLOBBER\.\)
+
+# Pseudo-target specifying how to clobber content files.
+$(CHROME_SKIN:.\=CLOBBER\.\):
+    -@$(RM) $(CHROME_DIST)\$(CHROME_SKIN_DIR)\$(@:CLOBBER\.=.)
+
+!endif # skin
+
+# Localization.
+!if "$(CHROME_L10N)" != "$(NULL)"
+
+CHROME_L10N=$(CHROME_L10N:/=\)
+
+# L10n goes to CHROME_DIR unless specified otherwise.
+!if "$(CHROME_L10N_DIR)" == "$(NULL)"
+CHROME_L10N_DIR=.
+!endif
+
+# Export l10n files by copying to dist.
+export:: $(CHROME_L10N:.\=EXPORT\.\)
+
+# Pseudo-target specifying how to install l10n files.
+$(CHROME_L10N:.\=EXPORT\.\):
+    $(MAKE_INSTALL) $(@:EXPORT\.=.) $(CHROME_DIST)\$(CHROME_L10N_DIR)\$(@D:EXPORT\.=.)
+
+# Clobber l10n files.
+clobber_all:: $(CHROME_L10N:.\=CLOBBER\.\)
+
+# Pseudo-target specifying how to clobber l10n files.
+$(CHROME_L10N:.\=CLOBBER\.\):
+    -@$(RM) $(CHROME_DIST)\$(CHROME_L10N_DIR)\$(@:CLOBBER\.=.)
+
+!endif # localization
+
+!endif # chrome
+
 !endif # CONFIG_RULES_MAK
 
