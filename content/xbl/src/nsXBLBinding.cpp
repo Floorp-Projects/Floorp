@@ -97,9 +97,17 @@ public:
   NS_IMETHOD GetNext(nsIXBLAttributeEntry** aResult) { NS_IF_ADDREF(*aResult = mNext); return NS_OK; }
   NS_IMETHOD SetNext(nsIXBLAttributeEntry* aEntry) { mNext = aEntry; return NS_OK; }
 
-  nsCOMPtr<nsIContent> mElement;
+  nsIContent* mElement;
   nsCOMPtr<nsIAtom> mAttribute;
   nsCOMPtr<nsIXBLAttributeEntry> mNext;
+
+  static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
+    return aAllocator.Alloc(aSize);
+  }
+
+  static void operator delete(void* aPtr, size_t aSize) {
+    nsFixedSizeAllocator::Free(aPtr, aSize);
+  }
 
   nsXBLAttributeEntry(nsIAtom* aAtom, nsIContent* aContent) {
     NS_INIT_REFCNT(); mAttribute = aAtom; mElement = aContent;
@@ -190,6 +198,16 @@ nsIAtom* nsXBLBinding::kInheritStyleAtom = nsnull;
 
 nsIXBLService* nsXBLBinding::gXBLService = nsnull;
 
+nsFixedSizeAllocator nsXBLBinding::kPool;
+
+static const size_t kBucketSizes[] = {
+  sizeof(nsXBLAttributeEntry)
+};
+
+static const PRInt32 kNumBuckets = sizeof(kBucketSizes)/sizeof(size_t);
+static const PRInt32 kNumElements = 128;
+static const PRInt32 kInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLAttributeEntry))) * kNumElements;
+
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
     { "click",         nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
@@ -261,6 +279,8 @@ nsXBLBinding::nsXBLBinding(const nsCString& aDocURI, const nsCString& aID)
   //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
 
   if (gRefCnt == 1) {
+    kPool.Init("XBL Attribute Entries", kBucketSizes, kNumBuckets, kInitialSize);
+
     kContentAtom = NS_NewAtom("content");
     kInterfaceAtom = NS_NewAtom("interface");
     kHandlersAtom = NS_NewAtom("handlers");
@@ -1505,7 +1525,7 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
       }
       
       // Create an XBL attribute entry.
-      nsXBLAttributeEntry* xblAttr = new nsXBLAttributeEntry(attribute, aElement);
+      nsXBLAttributeEntry* xblAttr = new (kPool) nsXBLAttributeEntry(attribute, aElement);
 
       // Now we should see if some element within our anonymous
       // content is already observing this attribute.
