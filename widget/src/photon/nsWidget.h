@@ -31,6 +31,15 @@
 
 #include <Pt.h>
 
+class nsWidget;
+
+typedef struct DamageQueueEntry_s
+{
+  PtWidget_t          *widget;
+  nsWidget            *inst;
+  DamageQueueEntry_s  *next;
+}DamageQueueEntry;
+
 
 /**
  * Base of all Photon native widgets.
@@ -140,9 +149,13 @@ class nsWidget : public nsBaseWidget
                       nsNativeWidget aNativeParent = nsnull);
 
 
-    PRBool DispatchWindowEvent(nsGUIEvent* event);
-    static PRBool SetInstance( PtWidget_t *pWidget, nsWidget * inst );
-    static nsWidget* GetInstance( PtWidget_t *pWidget );
+    PRBool            DispatchWindowEvent(nsGUIEvent* event);
+    static PRBool     SetInstance( PtWidget_t *pWidget, nsWidget * inst );
+    static nsWidget*  GetInstance( PtWidget_t *pWidget );
+    void              QueueWidgetDamage();
+    void              UpdateWidgetDamage();
+    static int        WorkProc( void *data );
+    void              InitDamageQueue();
 
     PtWidget_t *mWidget;
     nsIWidget  *mParent;
@@ -156,6 +169,12 @@ class nsWidget : public nsBaseWidget
     PRBool mShown;
 
     PRUint32 mPreferredWidth, mPreferredHeight;
+    
+    static DamageQueueEntry *mDmgQueue;
+    static PRBool           mDmgQueueInited;
+    static PtWorkProcId_t   *mWorkProcID;
+    PRBool mCreateHold;
+    PRBool mHold;
 };
 
 #endif /* nsWidget_h__ */

@@ -37,6 +37,10 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 //#define DBG 1
 
+DamageQueueEntry *nsWidget::mDmgQueue = nsnull;
+PtWorkProcId_t *nsWidget::mWorkProcID = nsnull;
+PRBool nsWidget::mDmgQueueInited = PR_FALSE;
+
 nsWidget::nsWidget()
 {
   // XXX Shouldn't this be done in nsBaseWidget?
@@ -63,6 +67,8 @@ nsWidget::nsWidget()
   mIsToplevel = PR_FALSE;
   mUpdateArea.SetRect(0, 0, 0, 0);
   mMenuBar = nsnull;
+  mCreateHold = PR_TRUE;
+  mHold = PR_FALSE;
 }
 
 
@@ -604,21 +610,25 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 
   if( mWidget )
   {
-    PtArg_t  arg;
-    int      *flags;
-    
-    PtSetArg( &arg, Pt_ARG_FLAGS, &flags, 0 );
-    if( PtGetResources( mWidget, 1, &arg ) == 0 )
+    mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height );
+
+    if (aIsSynchronous)
     {
-      if( *flags & Pt_DAMAGED )
-        return NS_OK;
-    }
-
-    PtDamageWidget( mWidget );
-
-    // REVISIT - PtFlush may be unstable & cause crashes...
-    if( aIsSynchronous )
+#if 0
+//      ::gtk_widget_draw(mWidget, NULL);
+      mUpdateArea.SetRect(0, 0, 1, 1);
+      PtDamageWidget( mWidget );
       PtFlush();
+      mUpdateArea.SetRect(0, 0, 0, 0);
+#endif
+      UpdateWidgetDamage();
+    }
+    else
+    {
+//      ::gtk_widget_queue_draw(mWidget);
+//      mUpdateArea.SetRect(0, 0, mBounds.width, mBounds.height);
+      QueueWidgetDamage();
+    }
   }
   else
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate - mWidget is NULL!\n" ));
@@ -633,31 +643,34 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
   if( mWidget )
   {
-    PtArg_t  arg;
-    int      *flags;
-    
-    PtSetArg( &arg, Pt_ARG_FLAGS, &flags, 0 );
-    if( PtGetResources( mWidget, 1, &arg ) == 0 )
+    mUpdateArea.UnionRect(mUpdateArea, aRect);
+
+    if( aIsSynchronous)
     {
-      if( *flags & Pt_DAMAGED )
-        return NS_OK;
-    }
+#if 0
+      PhRect_t extent;
+      PhArea_t area;
 
-    PhRect_t extent;
-    PhArea_t area;
+      PtWidgetArea( mWidget, &area );
 
-    PtWidgetArea( mWidget, &area );
-
-    extent.ul.x = aRect.x + area.pos.x;
-    extent.ul.y = aRect.y + area.pos.y;
-    extent.lr.x = extent.ul.x + aRect.width - 1;
-    extent.lr.y = extent.ul.y + aRect.height - 1;
- 
-    PtDamageExtent( mWidget, &extent );
-
-    // REVISIT - PtFlush may be unstable & cause crashes...
-    if( aIsSynchronous )
+      extent.ul.x = aRect.x + area.pos.x;
+      extent.ul.y = aRect.y + area.pos.y;
+      extent.lr.x = extent.ul.x + aRect.width - 1;
+      extent.lr.y = extent.ul.y + aRect.height - 1;
+      mUpdateArea.SetRect(0, 0, 1, 1);
+      PtDamageExtent( mWidget, &extent );
       PtFlush();
+      mUpdateArea.SetRect(0, 0, 0, 0);
+#endif
+      UpdateWidgetDamage();
+    }
+    else
+    {
+      QueueWidgetDamage();
+  //      ::gtk_widget_queue_draw_area(mWidget,
+  //                                   aRect.x, aRect.y,
+  //                                   aRect.width, aRect.height);
+    }
   }
   else
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate(2) - mWidget is NULL!\n" ));
@@ -670,9 +683,71 @@ NS_METHOD nsWidget::Update(void)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Update\n" ));
 
-  PtFlush();
+#if 0
+  if (! mWidget)
+    return NS_OK;
+
+  if (mUpdateArea.width && mUpdateArea.height)
+  {
+    if (!mIsDestroying)
+    {
+      PhRect_t extent;
+      PhArea_t area;
+
+      PtWidgetArea( mWidget, &area );
+
+//      GdkRectangle nRect;
+//      NSRECT_TO_GDKRECT(mUpdateArea,nRect);
+//      ::gtk_widget_draw(mWidget, &nRect);
+
+      extent.ul.x = mUpdateArea.x + area.pos.x;
+      extent.ul.y = mUpdateArea.y + area.pos.y;
+      extent.lr.x = mUpdateArea.x + mUpdateArea.width - 1;
+      extent.lr.y = mUpdateArea.y + mUpdateArea.height - 1;
+
+      PtDamageExtent( mWidget, &extent );
+      PtFlush();
+      mUpdateArea.SetRect(0, 0, 0, 0);
+
+      return NS_OK;
+    }
+    else
+    {
+      return NS_ERROR_FAILURE;
+    }
+  }
+#endif
+
+  UpdateWidgetDamage();
+  return NS_OK;
+
+
+
+#if 0
+  if( mWidget )
+  {
+    if( mDamaged )
+    {
+      PtDamageWidget( mWidget );
+      PtFlush();
+      mDamaged = PR_FALSE;
+    }
+    PtArg_t  arg;
+    int      *flags;
+    
+    PtSetArg( &arg, Pt_ARG_FLAGS, &flags, 0 );
+    if( PtGetResources( mWidget, 1, &arg ) == 0 )
+    {
+      if( !(*flags & Pt_DAMAGED ))
+      {
+        PtDamageWidget( mWidget );
+      }
+    }
+    PtFlush();
+  }
 
   return NS_OK;
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -1354,3 +1429,162 @@ void nsWidget::ScreenToWidget( PhPoint_t &pt )
   pt.x -= x;
   pt.y -= y;
 }
+
+
+//----------------------------------------------------
+// WARNING - Experimental code follows. Beware.
+//----------------------------------------------------
+void nsWidget::InitDamageQueue()
+{
+  mDmgQueue = nsnull;
+
+  mWorkProcID = PtAppAddWorkProc( nsnull, WorkProc, &mDmgQueue );
+  if( mWorkProcID )
+  {
+    mDmgQueueInited = PR_TRUE;
+  }
+  else
+    printf( "*********** damage queue failed to init. ***********\n" );
+}
+
+
+int nsWidget::WorkProc( void *data )
+{
+  DamageQueueEntry **dq = (DamageQueueEntry **) data;
+
+  if( dq && (*dq))
+  {
+    DamageQueueEntry *dqe = *dq;
+    DamageQueueEntry *last_dqe;
+    PhRect_t extent;
+    PhArea_t area;
+
+    while( dqe )
+    {
+      PtWidgetArea( dqe->widget, &area );
+
+      extent.ul.x = dqe->inst->mUpdateArea.x + area.pos.x;
+      extent.ul.y = dqe->inst->mUpdateArea.y + area.pos.y;
+      extent.lr.x = extent.ul.x + dqe->inst->mUpdateArea.width - 1;
+      extent.lr.y = extent.ul.y + dqe->inst->mUpdateArea.height - 1;
+
+      dqe->inst->mCreateHold = PR_FALSE;
+      PtDamageExtent( dqe->widget, &extent );
+      dqe->inst->mUpdateArea.SetRect(0,0,0,0);
+
+      last_dqe = dqe;
+      dqe = dqe->next;
+      delete last_dqe;
+    }
+
+    *dq = nsnull;
+    mDmgQueueInited = PR_FALSE;
+    return Pt_END;
+  }
+
+  return Pt_CONTINUE;
+}
+
+
+void nsWidget::QueueWidgetDamage()
+{
+  if( !mDmgQueueInited )
+    InitDamageQueue();
+
+  if( mWidget && mDmgQueueInited )
+  {
+    // See if we're already in the queue, if so don't add us again
+    DamageQueueEntry *dqe;
+    PRBool           found = PR_FALSE;
+  
+    dqe = mDmgQueue;
+
+    while( dqe )
+    {
+      if( dqe->widget == mWidget )
+      {
+        found = PR_TRUE;
+        break;
+      }
+      dqe = dqe->next;
+    }
+
+    if( !found )
+    {
+      dqe = new DamageQueueEntry;
+      if( dqe )
+      {
+        dqe->widget = mWidget;
+        dqe->inst = this;
+        dqe->next = mDmgQueue;
+        mDmgQueue = dqe;
+      }
+    }
+  }
+}
+
+
+void nsWidget::UpdateWidgetDamage()
+{
+//  if( !mDmgQueueInited )
+//    InitDamageQueue();
+
+  if( mWidget )
+  {
+    if( mDmgQueueInited )
+    {
+      DamageQueueEntry *dqe;
+      DamageQueueEntry *last_dqe = nsnull;
+  
+      dqe = mDmgQueue;
+
+      // If this widget is in the queue, remove it
+      while( dqe )
+      {
+        if( dqe->widget == mWidget )
+        {
+          if( last_dqe )
+            last_dqe->next = dqe->next;
+          else
+            mDmgQueue = dqe->next;
+
+          delete dqe;
+
+          break;
+        }
+        last_dqe = dqe;
+        dqe = dqe->next;
+      }
+    }
+
+    // Now damage the widget directly...
+    if(( mUpdateArea.width && mUpdateArea.height ) || mCreateHold )
+    {
+      if( mCreateHold )
+      {
+        mCreateHold = PR_FALSE;
+        mUpdateArea.SetRect(0,0,1,1); // Just so the RawDrawFunc will work
+        PtDamageWidget( mWidget );
+      }
+      else
+      {
+        PhRect_t extent;
+        PhArea_t area;
+
+        PtWidgetArea( mWidget, &area );
+
+        extent.ul.x = mUpdateArea.x + area.pos.x;
+        extent.ul.y = mUpdateArea.y + area.pos.y;
+        extent.lr.x = extent.ul.x + mUpdateArea.width - 1;
+        extent.lr.y = extent.ul.y + mUpdateArea.height - 1;
+
+        PtDamageExtent( mWidget, &extent );
+      }
+
+      PtFlush();
+      mUpdateArea.SetRect(0,0,0,0);
+    }
+  }
+}
+
+
