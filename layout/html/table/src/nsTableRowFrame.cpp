@@ -174,55 +174,61 @@ nsTableRowFrame::InitChildren(PRInt32 aRowIndex)
 /**
  * Post-reflow hook. This is where the table row does its post-processing
  */
-NS_METHOD
-nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
-                           nsDidReflowStatus aStatus)
+void
+nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
+                           const nsHTMLReflowState& aReflowState)
 {
-  if (gsDebug) printf("Row %p DidReflow: begin mRect.h=%d, mCellMTM=%d, mCellMBM=%d\n",
+  if (gsDebug) printf("Row %p DidResize: begin mRect.h=%d, mCellMTM=%d, mCellMBM=%d\n",
                       this, mRect.height, mCellMaxTopMargin, mCellMaxBottomMargin);
-  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    // Resize and re-align the cell frames based on our row height
-    nscoord cellHeight = mRect.height - mCellMaxTopMargin - mCellMaxBottomMargin;
-    if (gsDebug) printf("Row DidReflow: cellHeight=%d\n", cellHeight);
-    nsIFrame *cellFrame = mFirstChild;
-    nsTableFrame* tableFrame;
-    nsTableFrame::GetTableFrame(this, tableFrame);
-    while (nsnull != cellFrame)
+  // Resize and re-align the cell frames based on our row height
+  nscoord cellHeight = mRect.height - mCellMaxTopMargin - mCellMaxBottomMargin;
+  if (gsDebug) printf("Row DidReflow: cellHeight=%d\n", cellHeight);
+  nsIFrame *cellFrame = mFirstChild;
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  while (nsnull != cellFrame)
+  {
+    const nsStyleDisplay *kidDisplay;
+    cellFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)kidDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
     {
-      const nsStyleDisplay *kidDisplay;
-      cellFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)kidDisplay));
-      if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
+      PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(mRowIndex, (nsTableCellFrame *)cellFrame);
+      if (gsDebug) printf("Row DidReflow: cellFrame %p ", cellFrame);
+      if (1==rowSpan)
       {
-        PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(mRowIndex, (nsTableCellFrame *)cellFrame);
-        if (gsDebug) printf("Row DidReflow: cellFrame %p ", cellFrame);
-        if (1==rowSpan)
+        // resize the cell's height
+        nsSize  cellFrameSize;
+        cellFrame->GetSize(cellFrameSize);
+        if (cellFrameSize.height!=cellHeight)
         {
-          // resize the cell's height
-          nsSize  cellFrameSize;
-          cellFrame->GetSize(cellFrameSize);
           cellFrame->SizeTo(cellFrameSize.width, cellHeight);
           if (gsDebug) printf("given height %d\n", cellHeight);
           // realign cell content based on the new height
-          ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(&aPresContext);
-        }
-        else
-        {
-          if (gsDebug)
-          {
-            nsSize  cellFrameSize;
-            cellFrame->GetSize(cellFrameSize);
-            printf("has rowspan %d and height %d, unchanged.\n", rowSpan, cellFrameSize.height);
-          }
+          nsHTMLReflowMetrics desiredSize(nsnull);
+          nsHTMLReflowState kidReflowState(aPresContext, cellFrame,
+                                           aReflowState, nsSize(cellFrameSize.width, cellHeight),
+                                           eReflowReason_Resize);
+          nsReflowStatus status;
+          ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
+          ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild();
         }
       }
-        // Get the next cell
-      cellFrame->GetNextSibling(cellFrame);
+      else
+      {
+        if (gsDebug)
+        {
+          nsSize  cellFrameSize;
+          cellFrame->GetSize(cellFrameSize);
+          printf("has rowspan %d and height %d, unchanged.\n", rowSpan, cellFrameSize.height);
+        }
+      }
     }
+      // Get the next cell
+    cellFrame->GetNextSibling(cellFrame);
   }
 
   // Let our base class do the usual work
-  if (gsDebug) printf("Row DidReflow: returning superclass DidReflow.\n");
-  return nsContainerFrame::DidReflow(aPresContext, aStatus);
+  if (gsDebug) printf("Row DidResize: returning NS_OK.\n");
 }
 
 void nsTableRowFrame::ResetMaxChildHeight()
@@ -449,6 +455,22 @@ void nsTableRowFrame::PlaceChild(nsIPresContext&    aPresContext,
   }
 }
 
+nsIFrame * nsTableRowFrame::GetNextChildForDirection(PRUint8 aDir, nsIFrame *aCurrentChild)
+{
+  NS_ASSERTION(nsnull!=aCurrentChild, "bad arg");
+
+  nsIFrame *result=nsnull;
+  aCurrentChild->GetNextSibling(result);
+  return result;
+}
+
+nsIFrame * nsTableRowFrame::GetFirstChildForDirection(PRUint8 aDir)
+{
+  nsIFrame *result=nsnull;
+  result = mFirstChild;
+  return result;
+}
+
 /**
  * Called for a resize reflow. Typically because the column widths have
  * changed. Reflows all the existing table cell frames
@@ -461,18 +483,22 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   if (nsnull == mFirstChild)
     return NS_OK;
 
-  nsresult    rv=NS_OK;
-  nsSize      kidMaxElementSize;
-  PRInt32     prevColIndex = -1;       // remember the col index of the previous cell to handle rowspans into this row
-  nsSize*     pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ?
-                                     &kidMaxElementSize : nsnull;
-  nscoord     maxCellTopMargin = 0;
-  nscoord     maxCellBottomMargin = 0;
+  nsresult rv=NS_OK;
+  nsSize  kidMaxElementSize;
+  PRInt32 prevColIndex = -1;       // remember the col index of the previous cell to handle rowspans into this row
+  nsSize* pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ?
+                                  &kidMaxElementSize : nsnull;
+  nscoord maxCellTopMargin = 0;
+  nscoord maxCellBottomMargin = 0;
   nscoord cellSpacing = aReflowState.tableFrame->GetCellSpacing();
   PRInt32 cellColSpan=1;  // must be defined here so it's set properly for non-cell kids
   if (PR_TRUE==gsDebug) printf("Row %p: Resize Reflow\n", this);
+
   // Reflow each of our existing cell frames
-  for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) 
+  const nsStyleDisplay *rowDisplay;
+  GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)rowDisplay);
+  nsIFrame*  kidFrame=GetFirstChildForDirection(rowDisplay->mDirection);
+  for (kidFrame; nsnull != kidFrame; ) 
   {
     const nsStyleDisplay *kidDisplay;
     kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)kidDisplay));
@@ -621,7 +647,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
     }
 
     // Get the next child
-    kidFrame->GetNextSibling(kidFrame);
+    kidFrame = GetNextChildForDirection(rowDisplay->mDirection, kidFrame);
     // if this was the last child, and it had a colspan>1, add in the cellSpacing for the colspan
     // if the last kid wasn't a colspan, then we still have the colspan of the last real cell
     if ((nsnull==kidFrame) && (cellColSpan>1))

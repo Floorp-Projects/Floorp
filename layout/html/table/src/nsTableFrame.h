@@ -90,7 +90,7 @@ public:
   /** return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
     */
-  PRBool IsRowGroup(PRInt32 aDisplayType);
+  PRBool IsRowGroup(PRInt32 aDisplayType) const;
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -368,6 +368,12 @@ protected:
     */
   nscoord ComputeDesiredWidth(const nsHTMLReflowState& aReflowState) const;
 
+  nscoord ComputeDesiredHeight(nsIPresContext&          aPresContext,
+                               const nsHTMLReflowState& aReflowState,
+                               nscoord                  aDefaultHeight);
+
+  nscoord GetEffectiveContainerHeight(const nsHTMLReflowState& aReflowState);
+
   nscoord GetTopMarginFor(nsIPresContext& aCX,
                           InnerTableReflowState& aReflowState,
                           const nsMargin& aKidMargin);
@@ -524,7 +530,7 @@ public: /* ----- Cell Map public methods ----- */
     * if mCellMap has been created, it is asked for the number of rows.<br>
     * otherwise, the content is enumerated and the rows are counted.
     */
-  virtual PRInt32 GetRowCount();
+  virtual PRInt32 GetRowCount() const;
 
   /** returns the number of columns in this table. */
   virtual PRInt32 GetColCount();
@@ -605,7 +611,7 @@ private:
 };
 
 
-inline PRBool nsTableFrame::IsRowGroup(PRInt32 aDisplayType)
+inline PRBool nsTableFrame::IsRowGroup(PRInt32 aDisplayType) const
 {
   return PRBool((NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == aDisplayType) ||
                 (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == aDisplayType) ||

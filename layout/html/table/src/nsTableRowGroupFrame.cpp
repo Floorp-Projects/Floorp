@@ -601,12 +601,15 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
   return rv;
 }
 
-/**
-  */
-void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext, 
-                                              nsHTMLReflowMetrics& aDesiredSize)
+/* CalculateRowHeights provides default heights for all rows in the rowgroup.
+ * Actual row heights are ultimately determined by the table, when the table
+ * height attribute is factored in.
+ */
+void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext, 
+                                               nsHTMLReflowMetrics& aDesiredSize,
+                                               const nsHTMLReflowState& aReflowState)
 {
-  if (gsDebug) printf("TRGF ShrinkWrapChildren begin\n");
+  if (gsDebug) printf("TRGF CalculateRowHeights begin\n");
   // iterate children and for each row get its height
   PRBool atLeastOneRowSpanningCell = PR_FALSE;
   nscoord topInnerMargin = 0;
@@ -717,7 +720,7 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
                                     cellFrameSize.height, heightOfRowsSpanned);
                 cellFrame->SizeTo(cellFrameSize.width, heightOfRowsSpanned);
                 // Realign cell content based on new height
-                ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild(aPresContext);
+                ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild();
               }
               /* otherwise, distribute the excess height to the rows effected.
                * push all subsequent rows down by the total change in height of all the rows above it
@@ -779,6 +782,20 @@ void nsTableRowGroupFrame::ShrinkWrapChildren(nsIPresContext* aPresContext,
       // Get the next rowgroup child (row frame)
       rowFrame->GetNextSibling(rowFrame);
     }
+  }
+
+  // finally, notify the rows of their new heights
+  rowFrame = mFirstChild;
+  while (nsnull != rowFrame)
+  {
+    const nsStyleDisplay *childDisplay;
+    rowFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+    {
+      ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
+    }
+    // Get the next row
+    rowFrame->GetNextSibling(rowFrame);
   }
 
   // Adjust our desired size
@@ -907,7 +924,9 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.height = state.y;
 
     // shrink wrap rows to height of tallest cell in that row
-    ShrinkWrapChildren(&aPresContext, aDesiredSize);
+    if (eReflowReason_Initial != aReflowState.reason) {
+      CalculateRowHeights(aPresContext, aDesiredSize, aReflowState);
+    }
   }
 
   if (gsDebug==PR_TRUE) 
@@ -1337,3 +1356,4 @@ nsTableRowGroupFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("TableRowGroup", aResult);
 }
+

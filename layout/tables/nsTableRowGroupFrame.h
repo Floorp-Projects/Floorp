@@ -133,8 +133,9 @@ protected:
                             nsSize*              aMaxElementSize,
                             nsSize&              aKidMaxElementSize);
 
-  void ShrinkWrapChildren(nsIPresContext* aPresContext, 
-                          nsHTMLReflowMetrics& aDesiredSize);
+  void CalculateRowHeights(nsIPresContext& aPresContext, 
+                           nsHTMLReflowMetrics& aDesiredSize,
+                           const nsHTMLReflowState& aReflowState);
 
 
   /** Incremental Reflow attempts to do column balancing with the minimum number of reflow
