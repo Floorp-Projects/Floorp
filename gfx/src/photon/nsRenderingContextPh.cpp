@@ -1637,7 +1637,7 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
 
  PgFLUSH();	//kedl
 
-#if 1
+#if 0
 #ifdef DEBUG
 {
   //mSurface->Flush();
@@ -1801,10 +1801,11 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   image  = ((nsDrawingSurfacePh *)aSrcSurf)->mPixmap;
   image2 = destsurf->mPixmap;
 
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits aSrcSurf=<%p> destsurf=<%p>\n", aSrcSurf, destsurf ));
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits image=<%p> image2=<%p>\n", image, image2));
 
   //SELECT(destsurf);
-  
+
   if (aSrcSurf == destsurf)
   {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits SrcSurf == destsurf image=<%p>\n", image));
@@ -1812,6 +1813,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
     if (image == nsnull)
     {
       NS_ASSERTION(image, "nsRenderingContextPh::CopyOffScreenBits: Unsupported onscreen to onscreen copy!!\n");
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits  Unsupported onscreen to onscreen copy!!\n"));
 	  abort();
 	  return NS_ERROR_FAILURE;
     }
@@ -1822,12 +1824,12 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
       PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits offscreen-to-offscreen pos=(%d,%d) area=(%d,%d) image->image=<%p> srcY=<%d> srcX=<%d> offset=<%d> image->mask_bm=<%p>\n", pos.x,pos.y, size.w, size.h, image->image, srcY, srcX, (image->bpl * srcY + srcX*3), image->mask_bm));
 
-      /* Is this needed since its the same?? */
-      //destsurf->Select();
-
       unsigned char *ptr;
       ptr = image->image;
       ptr += image->bpl * srcY + srcX*3 ;
+
+
+	  
 
  	  err = PgDrawImagemx( ptr, image->type , &pos, &size, image->bpl, 0); 
       if (err == -1)
@@ -1882,7 +1884,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
 
   PRUint32 w, h;
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits dump onscreen buffer as BMP\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits dump onscreen buffer as BMP image2=<%p>\n", image2));
   ((nsDrawingSurfacePh *)destsurf)->GetDimensions(&w,&h);
   if (image2)
   {
