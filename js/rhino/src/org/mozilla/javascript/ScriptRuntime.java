@@ -1297,7 +1297,6 @@ public class ScriptRuntime {
         catch (ClassCastException e) {
             thisObj = ScriptRuntime.toObject(scope, thisArg);
         }
-
         return function.call(cx, function.getParentScope(), thisObj, args);
     }
 
@@ -2070,6 +2069,10 @@ public class ScriptRuntime {
 
         result.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
         result.setParentScope(scope);
+
+        String fnName = result.jsGet_name();
+        if (fnName != null && fnName.length() != 0 && !fnName.equals("anonymous"))
+            setName(scope, result, scope, fnName);
 
         return result;
     }
