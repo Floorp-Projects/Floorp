@@ -27,6 +27,8 @@
 
 #include "Frame.h"
 
+class XFE_NavCenterView;
+
 class XFE_NavCenterFrame : public XFE_Frame
 {
 public:
@@ -34,16 +36,10 @@ public:
                      Chrome *chromespec);
   virtual ~XFE_NavCenterFrame();
 
-  //virtual void updateToolbar();
+  static void     showBookmarks   (Widget toplevel, XFE_Frame *parent_frame);
+  static void     showHistory     (Widget toplevel, XFE_Frame *parent_frame);
 
-  virtual XP_Bool isCommandEnabled(CommandType cmd, void *calldata = NULL,
-						 XFE_CommandInfo* = NULL);
-  virtual void doCommand(CommandType cmd, void *calldata = NULL,
-						 XFE_CommandInfo* = NULL);
-  virtual XP_Bool handlesCommand(CommandType cmd, void *calldata = NULL,
-						 XFE_CommandInfo* = NULL);
-  virtual char *commandToString(CommandType cmd, void *calldata = NULL,
-						 XFE_CommandInfo* = NULL);
+  XFE_NavCenterView * getNavCenterView() {return (XFE_NavCenterView*)m_view;}
 
 private:
   static MenuSpec menu_bar_spec[];

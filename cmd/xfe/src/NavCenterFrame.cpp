@@ -101,39 +101,29 @@ XFE_NavCenterFrame::~XFE_NavCenterFrame()
 }
 
 //////////////////////////////////////////////////////////////////////////
-XP_Bool
-XFE_NavCenterFrame::isCommandEnabled(CommandType cmd,
-								   void *calldata, XFE_CommandInfo*)
+/*static*/ void
+XFE_NavCenterFrame::showBookmarks (Widget toplevel, XFE_Frame *parent_frame)
 {
-    {
-      return XFE_Frame::isCommandEnabled(cmd, calldata);
-    }
+  // not a static global, since we can have multiple browsers.
+	XFE_NavCenterFrame *theFrame;
+	MWContext *theContext = NULL;
+	
+	theFrame = new XFE_NavCenterFrame(toplevel, parent_frame, NULL);
+    theFrame->getNavCenterView()->newBookmarksPane();
+	theFrame->show();
 }
-
-void
-XFE_NavCenterFrame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo*info)
+//////////////////////////////////////////////////////////////////////////
+/*static*/ void
+XFE_NavCenterFrame::showHistory (Widget toplevel, XFE_Frame *parent_frame)
 {
-    {
-      XFE_Frame::doCommand(cmd,calldata,info);
-    }
+  // not a static global, since we can have multiple browsers.
+	XFE_NavCenterFrame *theFrame;
+	MWContext *theContext = NULL;
+	
+	theFrame = new XFE_NavCenterFrame(toplevel, parent_frame, NULL);
+    theFrame->getNavCenterView()->newHistoryPane();
+	theFrame->show();
 }
-
-Boolean
-XFE_NavCenterFrame::handlesCommand(CommandType cmd, void *calldata,
-                            XFE_CommandInfo* info)
-{
-    {
-      return XFE_Frame::handlesCommand(cmd, calldata, info);
-    }
-}
-
-char *
-XFE_NavCenterFrame::commandToString(CommandType cmd, void* calldata,
-                                    XFE_CommandInfo* info)
-{
-  return XFE_Frame::commandToString(cmd, calldata, info);
-}
-
 //////////////////////////////////////////////////////////////////////////
 extern "C" MWContext *
 fe_showNavCenter(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec, URL_Struct * /* url */)
@@ -154,3 +144,16 @@ fe_showNavCenter(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec, U
 
 	return theContext;
 }
+extern "C" void
+//////////////////////////////////////////////////////////////////////////
+fe_showBookmarks(Widget toplevel)
+{
+    XFE_NavCenterFrame::showBookmarks(toplevel, NULL /*parent_frame*/);
+}
+extern "C" void
+fe_showHistory(Widget toplevel)
+{
+    XFE_NavCenterFrame::showHistory(toplevel, NULL /*parent_frame*/);
+}
+
+
