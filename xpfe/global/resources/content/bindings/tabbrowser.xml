@@ -61,7 +61,7 @@
             <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeAllTabsBut(document.popupNode);"/>
           </xul:menupopup>
           <xul:tabs style="padding-left:1px; padding-top: 1px;" flex="1">
-            <xul:tab flex="1" width="100" class="tabbrowser-tab" label="(Untitled)" crop="center"/>
+            <xul:tab flex="1" width="100" class="tabbrowser-tab" label="(Untitled)" crop="end"/>
           </xul:tabs>
           <xul:hbox mousethrough="always" align="center">
             <spacer flex="1"/>
@@ -354,7 +354,7 @@
             else
               t.setAttribute("label", aURI);
             
-            t.setAttribute("crop", "center");
+            t.setAttribute("crop", "end");
             t.width = 100;
             t.setAttribute("flex", "1");
 
