@@ -3317,7 +3317,7 @@ nsMsgCompose::BuildQuotedMessageAndSignature(void)
 nsresult
 nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsString *aMsgBody)
 {
-  nsresult    rv;
+  nsresult    rv = NS_OK;
 
   // Now, we can get sort of fancy. This is the time we need to check
   // for all sorts of user defined stuff, like signatures and editor
@@ -3382,7 +3382,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
   // Now, if they didn't even want to use a signature, we should
   // just return nicely.
   //
-  if ((!useSigFile) || NS_FAILED(rv))
+  if (!useSigFile || NS_FAILED(rv))
     return NS_OK;
 
   nsFileSpec    testSpec(sigNativePath.get());
