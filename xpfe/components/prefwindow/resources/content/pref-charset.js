@@ -29,7 +29,11 @@ function Init()
     AddRemoveLatin1('add');
   }
 
-  LoadAvailableCharSets();
+  if (applicationArea.indexOf("mail") != -1) {  // mailedit
+    LoadAvailableCharSets("NC:EncodersRoot");
+  } else {                                      // browser, mailview, composer
+    LoadAvailableCharSets("NC:DecodersRoot");
+  }
   LoadActiveCharSets();
 }
 
@@ -44,12 +48,12 @@ function readRDFString(aDS,aRes,aProp)
 }
 
 
-function LoadAvailableCharSets()
+function LoadAvailableCharSets(converterRoot)
 {
   try {
     var available_charsets_listbox = document.getElementById('available_charsets');
     var rdf=Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService); 
-    var kNC_Root = rdf.GetResource("NC:DecodersRoot");
+    var kNC_Root = rdf.GetResource(converterRoot);
     var kNC_name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
     var rdfDataSource = rdf.GetDataSource("rdf:charset-menu"); 
     var rdfContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
