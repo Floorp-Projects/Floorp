@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= sockstuburl
 LIBRARY_NAME	= sockstuburl
 
-CPPCSRCS		= \
+CPPSRCS		= \
 	sockstub.cpp	\
 	$(NULL)
 
