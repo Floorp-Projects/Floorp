@@ -361,9 +361,6 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
   nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(domWindow));
   if (eventTarget)
     AttachNewWindowFocusListener(eventTarget);
-  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  nsCOMPtr<nsIDOMWindow> activeDOMWindow;
-  windowWatcher->GetActiveWindow(getter_AddRefs(activeDOMWindow));
   return NS_OK;
 }
 
