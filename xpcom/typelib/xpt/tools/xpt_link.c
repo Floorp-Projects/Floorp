@@ -380,6 +380,11 @@ main(int argc, char **argv)
                     /* Define td to save some keystrokes.
                      */
                     td = &id->method_descriptors[j].params[k].type;
+
+                    while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
+                        td = &id->additional_types[td->type.additional_type];
+                    }
+
                     if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
                         td->type.interface = 
                             get_new_index(fix_array, 

@@ -209,8 +209,6 @@ nsInterfaceInfo::GetInfoForParam(uint16 methodIndex,
 {
     NS_PRECONDITION(param, "bad pointer");
     NS_PRECONDITION(info, "bad pointer");
-    NS_PRECONDITION(param->GetType().TagPart() == nsXPTType::T_INTERFACE,
-                    "not an interface");
 
     if (methodIndex < mMethodBaseIndex)
         return mParent->GetInfoForParam(methodIndex, param, info);
@@ -221,9 +219,21 @@ nsInterfaceInfo::GetInfoForParam(uint16 methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
+    const XPTTypeDescriptor *td = &param->type;
+
+    while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
+        td = &this->mInterfaceRecord->interfaceDescriptor->
+                                additional_types[td->type.additional_type];
+    }
+
+    if (XPT_TDP_TAG(td->prefix) != TD_INTERFACE_TYPE) {
+        NS_ASSERTION(0, "not an interface");
+        return NS_ERROR_INVALID_ARG;
+    }
+
     nsInterfaceRecord *paramRecord =
         *(this->mInterfaceRecord->typelibRecord->
-          interfaceRecords + (param->type.type.interface - 1));
+          interfaceRecords + (td->type.interface - 1));
 
     return paramRecord->GetInfo((nsInterfaceInfo **)info);
 }
@@ -234,9 +244,6 @@ nsInterfaceInfo::GetIIDForParam(uint16 methodIndex,
 {
     NS_PRECONDITION(param, "bad pointer");
     NS_PRECONDITION(iid, "bad pointer");
-    NS_PRECONDITION(param->GetType().TagPart() == nsXPTType::T_INTERFACE,
-                    "not an interface");
-
 
     if (methodIndex < mMethodBaseIndex)
         return mParent->GetIIDForParam(methodIndex, param, iid);
@@ -247,9 +254,21 @@ nsInterfaceInfo::GetIIDForParam(uint16 methodIndex,
         return NS_ERROR_INVALID_ARG;
     }
 
+    const XPTTypeDescriptor *td = &param->type;
+
+    while (XPT_TDP_TAG(td->prefix) == TD_ARRAY) {
+        td = &this->mInterfaceRecord->interfaceDescriptor->
+                                additional_types[td->type.additional_type];
+    }
+
+    if (XPT_TDP_TAG(td->prefix) != TD_INTERFACE_TYPE) {
+        NS_ASSERTION(0, "not an interface");
+        return NS_ERROR_INVALID_ARG;
+    }
+
     nsInterfaceRecord *paramRecord =
         *(this->mInterfaceRecord->typelibRecord->
-          interfaceRecords + (param->type.type.interface - 1));
+          interfaceRecords + (td->type.interface - 1));
 
     return paramRecord->GetIID(iid);
 }
