@@ -4272,14 +4272,12 @@ nsTextServicesDocument::GetFirstTextNodeInPrevBlock(nsIContent **aContent)
 
   if (!mIterator->IsDone())
   {
-    content = mIterator->GetCurrentNode();
+    NS_ADDREF(*aContent = mIterator->GetCurrentNode());
   }
 
   // Restore the iterator:
 
-  result = mIterator->PositionAt(content);
-
-  return result;
+  return mIterator->PositionAt(content);
 }
 
 nsresult
@@ -4308,15 +4306,11 @@ nsTextServicesDocument::GetFirstTextNodeInNextBlock(nsIContent **aContent)
 
   if (!mIterator->IsDone())
   {
-    *aContent = mIterator->GetCurrentNode();
-    NS_ADDREF(*aContent);
+    NS_ADDREF(*aContent = mIterator->GetCurrentNode());
   }
 
   // Restore the iterator:
-
-  result = mIterator->PositionAt(content);
-
-  return result;
+  return mIterator->PositionAt(content);
 }
 
 nsresult
