@@ -515,10 +515,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     gtk_selection_data_set(aSelectionData,
                            GDK_SELECTION_TYPE_STRING, 8,
                            (unsigned char *)clipboardData,
-                           dataLength-1);
-    // Need to subtract one from dataLength, passed in from the transferable,
-    // to avoid getting a bogus null char.
-    // the format arg, "8", indicates string data with no endianness
+                           dataLength);
   }
   else
     printf("Transferable didn't support the data flavor\n");
