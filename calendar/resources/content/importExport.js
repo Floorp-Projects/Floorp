@@ -67,6 +67,22 @@ const extensionCsv      = ".csv";
 const filterRdf         = "iCalendar RDF";
 const extensionRdf      = ".rdf";
 
+// convert to and from Unicode for file i/o
+function convertFromUnicode( aCharset, aSrc )
+{
+   // http://lxr.mozilla.org/mozilla/source/intl/uconv/idl/nsIScriptableUConv.idl
+   var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+   unicodeConverter.charset = aCharset;
+   return unicodeConverter.ConvertFromUnicode( aSrc );
+}
+
+function convertToUnicode(aCharset, aSrc )
+{
+   // http://lxr.mozilla.org/mozilla/source/intl/uconv/idl/nsIScriptableUConv.idl
+   var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+   unicodeConverter.charset = aCharset;
+   return unicodeConverter.ConvertToUnicode( aSrc );
+}
 
 /**** loadEventsFromFile
  * shows a file dialog, read the selected file and tries to parse events from it.
@@ -89,7 +105,7 @@ function loadEventsFromFile()
 
    if (fp.file && fp.file.path.length > 0) 
    {
-      var aDataStream = readDataFromFile( fp.file.path );
+      var aDataStream = readDataFromFile( fp.file.path, "UTF-8" );
       var calendarEventArray;
 
       switch (fp.filterIndex) {
@@ -314,7 +330,7 @@ function parseXCSData( xcsString )
  * read data from a file. Returns the data read.
  */
 
-function readDataFromFile( aFilePath )
+function readDataFromFile( aFilePath, charset )
 {
    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
    const FILEIN_CTRID = "@mozilla.org/network/file-input-stream;1";
@@ -342,6 +358,9 @@ function readDataFromFile( aFilePath )
       aDataStream = scriptableInputStream.read( -1 );
       scriptableInputStream.close();
       inputStream.close();
+      
+      if( charset)
+         aDataStream = convertToUnicode( charset, aDataStream );
    }
    catch(ex)
    {
@@ -397,12 +416,15 @@ function saveEventsToFile( calendarEventArray )
    // Now find out as what to save, convert the events and save to file.
    if (fp.file && fp.file.path.length > 0) 
    {
+      const UTF8 = "UTF-8";
       var aDataStream;
       var extension;
+      var charset;
       switch (fp.filterIndex) {
       case 0 : // ics
          aDataStream = eventArrayToICalString( calendarEventArray, true );
          extension   = extensionCalendar;
+         charset = "UTF-8";
          break;
       case 1 : // rtf
          aDataStream = eventArrayToRTF( calendarEventArray );
@@ -411,25 +433,29 @@ function saveEventsToFile( calendarEventArray )
       case 2 : // html
          aDataStream = eventArrayToHTML( calendarEventArray );
          extension   = ".htm";
+         charset = "UTF-8";
          break;
       case 3 : // csv
          aDataStream = eventArrayToCsv( calendarEventArray );
          extension   = extensionCsv;
+         charset = "UTF-8";
          break;
       case 4 : // xCal
          aDataStream = eventArrayToXCS( calendarEventArray );
          extension   = extensionXcs;
+         charset = "UTF-8";
          break;
       case 5 : // rdf
          aDataStream = eventArrayToRdf( calendarEventArray );
          extension   = extensionRdf;
+         charset = "UTF-8";
          break;
       }
       var filePath = fp.file.path;
       if(filePath.indexOf(".") == -1 )
           filePath += extension;
 
-      saveDataToFile(filePath, aDataStream);
+      saveDataToFile( filePath, aDataStream, charset );
    }
 }
 
@@ -628,7 +654,7 @@ function eventArrayToXCS( calendarEventArray )
  * Save data to a file. Creates a new file or overwrites an existing file.
  */
 
-function saveDataToFile(aFilePath, aDataStream)
+function saveDataToFile(aFilePath, aDataStream, charset)
 {
    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
    const FILEOUT_CTRID = "@mozilla.org/network/file-output-stream;1";
@@ -644,6 +670,9 @@ function saveDataToFile(aFilePath, aDataStream)
    outputStream = Components.classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
    try
    {
+      if(charset)
+         aDataStream = convertFromUnicode( charset, aDataStream );
+
       outputStream.init(LocalFileInstance, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
       outputStream.write(aDataStream, aDataStream.length);
       // outputStream.flush();
@@ -857,6 +886,57 @@ function makeXmlNode( xmlDocument, calendarEvent )
       eventNode.appendChild( propertyNode );
    }
 
+   var addAlarmNode = function( xmlDocument, eventNode, triggerTime, triggerUnits )
+   {
+      if(triggerUnits == "minutes")
+        triggerIcalUnits = "M";
+      else  if(triggerUnits == "hours")
+        triggerIcalUnits = "H";
+      else  if(triggerUnits == "days")
+        triggerIcalUnits = "D";
+
+      var valarmNode = xmlDocument.createElement( "component" );
+      valarmNode.setAttribute( "name", "VALARM" );
+
+      var propertyNode = xmlDocument.createElement( "property" );
+      propertyNode.setAttribute( "name", "TRIGGER" );
+
+      var valueNode = xmlDocument.createElement( "value" );
+      //valueNode.setAttribute( "value", "DURATION" );
+
+      var textNode  = xmlDocument.createTextNode( "-PT" + triggerTime + triggerIcalUnits );
+
+      valueNode.appendChild( textNode );
+      propertyNode.appendChild( valueNode );
+      valarmNode.appendChild( propertyNode )
+      eventNode.appendChild( valarmNode );
+   }
+   
+   var addRRuleNode = function( xmlDocument, eventNode )
+   {
+      // extremly ugly hack, but this will be done in libical soon
+      var ruleText = "";
+      var eventText = calendarEvent.getIcalString();
+      var i = eventText.indexOf("RRULE");
+      if( i > -1)
+      {
+         ruleText = eventText.substring(i+8);      
+         ruleText = ruleText.substring(0, ruleText.indexOf("\n"));
+      }
+      if( ruleText.length > 0)
+      {
+         var propertyNode = xmlDocument.createElement( "property" );
+         propertyNode.setAttribute( "name", "RRULE" );
+
+         var valueNode = xmlDocument.createElement( "value" );
+         var textNode  = xmlDocument.createTextNode( ruleText );
+
+         valueNode.appendChild( textNode );
+         propertyNode.appendChild( valueNode );
+         eventNode.appendChild( propertyNode );
+      }
+   }
+
      var checkString = function( str )
     {
         if( typeof( str ) == "string" )
@@ -948,6 +1028,9 @@ function makeXmlNode( xmlDocument, calendarEvent )
     addPropertyNode( xmlDocument, eventNode, "PRIVATEEVENT", checkString( calendarEvent.privateEvent ) );
     addPropertyNode( xmlDocument, eventNode, "URL", checkString( calendarEvent.url ) );
     addPropertyNode( xmlDocument, eventNode, "PRIORITY", checkNumber( calendarEvent.priority ) );
+
+    addAlarmNode( xmlDocument, eventNode, calendarEvent.alarmLength, calendarEvent.alarmUnits );
+    addRRuleNode( xmlDocument, eventNode );
 
     calendarNode.appendChild( eventNode );
     return calendarNode;
