@@ -19,20 +19,13 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_util.c Colormap and colorspace utilities.
  *             
- *   $Id: il_util.cpp,v 3.1 1998/07/27 16:09:35 hardts%netscape.com Exp $
+ *   $Id: il_util.cpp,v 3.2 1999/05/27 22:33:55 pnunn%netscape.com Exp $
  */
 
 
-#ifdef STANDALONE_IMAGE_LIB
 #include "xpcompat.h"
-#else
-#include "xp_mcom.h"            /* XP definitions and types. */
-#endif
 #include "ntypes.h"             /* typedefs for commonly used Netscape data
                                    structures. */
-#ifndef STANDALONE_IMAGE_LIB
-#include "xp_core.h"
-#endif
 #include "prtypes.h"
 #include "prmem.h"
 

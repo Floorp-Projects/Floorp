@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.6 1999/05/04 18:36:07 dp%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.7 1999/05/27 22:35:50 pnunn%netscape.com Exp $
  */
 
 
@@ -414,28 +414,7 @@ il_find_in_cache(IL_DisplayType display_type,
 		ILTRACE(2,("il:  found ic=0x%08x in cache\n", ic));
         return ic;
 	}
-
-#ifndef STANDALONE_IMAGE_LIB
-#ifndef M12N                    /* XXXM12N Cache trace: cleanup/eliminate. */
-    if (il_cache_trace) {
-        char buffer[1024];
-        MWContext *alert_context =
-            XP_FindContextOfType(NULL, MWContextBrowser);
-        if(!alert_context)
-            alert_context = XP_FindContextOfType(NULL, MWContextPane);
-
-        XP_SPRINTF(buffer,
-        			XP_GetString(XP_MSG_IMAGE_NOT_FOUND),
-        			image_url);
-
-
-        if (alert_context)
-            FE_Alert(alert_context, buffer);
-    }
-#endif /* M12N */
-#endif /* STANDALONE_IMAGE_LIB */
-    
-    return NULL;
+  return NULL;
 }
 
 static void
@@ -487,9 +466,6 @@ il_get_container(IL_GroupContext *img_cx,
 		((cache_reload_policy == NET_NORMAL_RELOAD) && (!ic->forced)) ||
 				 (cache_reload_policy != NET_CACHE_ONLY_RELOAD &&
 				  ic->expires && (time(NULL) > ic->expires))
-#ifndef STANDALONE_IMAGE_LIB
-				  || (NET_URL_Type(ic->url_address) == MOCHA_TYPE_URL)
-#endif /* STANDALONE_IMAGE_LIB */
         ) {
             /* Get rid of the old copy of the image that we're replacing. */
             if (!ic->is_in_use) 
@@ -586,24 +562,21 @@ il_get_container(IL_GroupContext *img_cx,
         ImgDCallbk* imgdcb;
 
         imgdcb = new ImgDCallbk(ic);
-        imgdcb->AddRef();
+
+        NS_ADDREF(imgdcb);
+
         nsresult res = imgdcb->QueryInterface(kImgDCallbkIID, (void**)&imgdcb);
 
         if (NS_FAILED(res)) {
-	  if(imgdcb)
-             *imgdcb = NULL;
-          delete imgdcb; 
-	  return NULL;
-	}
-/*
-        result = ImgDCallbk::CreateInstance( kImgDCallbkCID, ic, kImgDCallbkIID,
-                                             (void **)&imgdcb);
-        if(NS_FAILED(result))
-          return  NULL;
-*/
+	         if(imgdcb)
+              *imgdcb = NULL;
+           delete imgdcb; 
+	         return NULL;
+        }
 
         imgdcb->SetContainer(ic);
-        ic->imgdcb = imgdcb;           
+        ic->imgdcb = imgdcb;
+        NS_ADDREF(ic->imgdcb);
     }
     
     il_addtocache(ic);
@@ -652,7 +625,7 @@ il_delete_container(il_container *ic)
         }
         
         PR_ASSERT(ic->clients == NULL);
-		il_scour_container(ic);
+		    il_scour_container(ic);
 
 
         PR_FREEIF(ic->background_color);
@@ -661,7 +634,7 @@ il_delete_container(il_container *ic)
         IL_ReleaseColorSpace(ic->src_header->color_space);
         PR_FREEIF(ic->src_header);
 
-		/* delete the image */
+        /* delete the image */
         if (!(ic->image || ic->mask))
             return;
         il_destroy_pixmap(ic->img_cb, ic->image);
@@ -680,20 +653,12 @@ il_delete_container(il_container *ic)
 
 /* Destroy an IL_Pixmap. */
 void
-#ifdef STANDALONE_IMAGE_LIB
 il_destroy_pixmap(ilIImageRenderer *img_cb, IL_Pixmap *pixmap) 
-#else
-il_destroy_pixmap(IMGCBIF *img_cb, IL_Pixmap *pixmap) 
-#endif /* STANDALONE_IMAGE_LIB */
 {
     NI_PixmapHeader *header = &pixmap->header;
 
     /* Free the pixmap's bits, as well as the client_data. */
-#ifdef STANDALONE_IMAGE_LIB
     img_cb->DestroyPixmap(NULL, pixmap);
-#else
-    IMGCBIF_DestroyPixmap(img_cb, NULL, pixmap);
-#endif /* STANDALONE_IMAGE_LIB */
 
     /* Release memory used by the header. */
     IL_ReleaseColorSpace(header->color_space);
@@ -875,147 +840,7 @@ IL_HTMLImageInfo(char *url_address)
     return output;
 }
 
-#ifndef STANDALONE_IMAGE_LIB
-/*
- * Create an HTML stream and generate HTML describing
- * the image cache.  Use "about:memory-cache" URL to acess.
- */
-int 
-IL_DisplayMemCacheInfoAsHTML(FO_Present_Types format_out, URL_Struct *urls,
-                             OPAQUE_CONTEXT *cx)
-{
-	char buffer[2048];
-    char *output = NULL;
-    char *img_info;
-	char *address;
-	char *escaped;
-   	NET_StreamClass *stream;
-	Bool long_form = FALSE;
-	int status;
 
-	if(PL_strcasestr(urls->address, "?long"))
-		long_form = TRUE;
-#ifndef M12N                    /* XXXM12N Cache trace: cleanup/eliminate. */
-	else if(PL_strcasestr(urls->address, "?traceon"))
-		il_cache_trace = TRUE;
-	else if(PL_strcasestr(urls->address, "?traceoff"))
-		il_cache_trace = FALSE;
-#endif /* M12N */
-
-	StrAllocCopy(urls->content_type, TEXT_HTML);
-	format_out = CLEAR_CACHE_BIT(format_out);
-
-	stream = NET_StreamBuilder(format_out, urls, (MWContext *)cx);
-	if (!stream)
-		return 0;
-
-	/*
-     * Define a macro to push a string up the stream
-	 * and handle errors
-	 */
-#define PUT_PART(part)														\
-{                                                                           \
-    status = (*stream->put_block)(stream,						\
-                                  part ? part : "Unknown",					\
-                                  part ? PL_strlen(part) : 7);				\
-    if (status < 0)															\
-        goto END;                                                           \
-}
-
-    /* Send something to the screen immediately.  This will force all
-     * the images on the page to enter the cache now. Otherwise,
-     * layout will be causing cache state to be modified even as we're
-     * trying to display it.
-     */
-    PL_strcpy(buffer,
-              "<TITLE>Information about the Netscape image cache</TITLE>\n");
-    PUT_PART(buffer);
-                                  
- 	XP_SPRINTF(buffer, 
-			   "<h2>Image Cache statistics</h2>\n"
-			   "<TABLE CELLSPACING=0 CELLPADDING=1>\n"
-			   "<TR>\n"
-			   "<TD ALIGN=RIGHT><b>Maximum size:</b></TD>\n"
-			   "<TD>%ld</TD>\n"
-			   "</TR>\n"
-			   "<TR>\n"
-			   "<TD ALIGN=RIGHT><b>Current size:</b></TD>\n"
-			   "<TD>%ld</TD>\n"
-			   "</TR>\n"
-			   "<TR>\n"
-			   "<TD ALIGN=RIGHT><b>Number of images in cache:</b></TD>\n"
-			   "<TD>%d</TD>\n"
-			   "</TR>\n"
-			   "<TR>\n"
-			   "<TD ALIGN=RIGHT><b>Average cached image size:</b></TD>\n"
-			   "<TD>%ld</TD>\n"
-			   "</TR>\n"
-			   "</TABLE>\n"
-			   "<HR>",
-			   (long)il_cache.max_bytes,
-			   (long)il_cache.bytes,
-			   il_cache.items,
-			   (il_cache.bytes ?
-                (long)il_cache.bytes / il_cache.items : 0L));
-
-	PUT_PART(buffer);
-
-    {
-        il_container *ic, *l = NULL;
-        for (ic=il_cache.head; ic; ic=ic->next) {
-            
-            /* Sanity check */
-            if (l)
-                PR_ASSERT(ic->prev == l);
-            l = ic;
-
-            /* Don't display uninteresting images */
-            if ((ic->state != IC_COMPLETE) &&
-                (ic->state != IC_SIZED)    &&
-                (ic->state != IC_MULTI))
-                continue;
-            
-            StrAllocCat(output, "<TABLE>\n");
-
-            /* Emit DocInfo link to URL */
-            address = ic->url_address;
-            PL_strcpy(buffer, "<A TARGET=Internal_URL_Info HREF=\"about:");
-            escaped = NET_EscapeDoubleQuote(address);
-            PL_strcat(buffer, escaped);
-            PR_Free(escaped);
-            PL_strcat(buffer, "\">");
-            escaped = NET_EscapeHTML(address);
-            PL_strcat(buffer, escaped);
-            PR_Free(escaped);
-            PL_strcat(buffer, "</A>");
-            ADD_CELL("URL:", buffer);
-            
-            /* Rest of image info (size, colors, depth, etc.) */
-            img_info = il_HTML_image_info(ic, long_form, FALSE);
-            if (img_info) {
-                StrAllocCat(output, img_info);
-                PR_FREEIF(img_info);
-            }
-            
-            StrAllocCat(output, "</TABLE><P>\n");
-        }
-
-        if (output)
-            PUT_PART(output);
-    }
-        
-  END:
-     
-    PR_FREEIF(output);
-     
-	if(status < 0)
-		(*stream->abort)(stream, status);
-	else
-		(*stream->complete)((NET_StreamClass *)stream);
-
-	return 1;
-}
-#endif
 
 il_container *
 il_removefromcache(il_container *ic)
@@ -1134,23 +959,6 @@ IL_ShrinkCache(void)
 		if (ic->is_in_use)
             continue;
 
-#ifndef STANDALONE_IMAGE_LIB        
-#ifndef M12N                    /* XXXM12N Cache trace: cleanup/eliminate. */
-        if (il_cache_trace) {
-            char buffer[1024];
-            MWContext *alert_context =
-                XP_FindContextOfType(NULL, MWContextBrowser);
-            if(!alert_context)
-                alert_context = XP_FindContextOfType(NULL, MWContextPane);
-            
-            sprintf(buffer,
-                    XP_GetString(XP_MSG_COMPRESS_REMOVE), ic->url_address);
-
-            if (alert_context)
-                FE_Alert(alert_context, buffer);
-        }
-#endif /* M12N */
-#endif /* STANDALONE_IMAGE_LIB */
         il_removefromcache(ic);
         il_delete_container(ic);
         break;
@@ -1326,19 +1134,12 @@ il_delete_all_clients(il_container *ic)
    = Scan image plug-in directory
    = Register individual image decoders with the netlib */
 IL_IMPLEMENT(int)
-#ifdef STANDALONE_IMAGE_LIB
 IL_Init(ilISystemServices *ss)
-#else
-IL_Init()
-#endif /* STANDALONE_IMAGE_LIB */
 {
     if (il_log_module == NULL) {
         il_log_module = PR_NewLogModule("IMGLIB");
     }
-
-#ifdef STANDALONE_IMAGE_LIB
     il_ss = ss;
-#endif /* STANDALONE_IMAGE_LIB */
 
     /* XXXM12N - finish me. */
     return TRUE;
@@ -1441,9 +1242,6 @@ IL_DestroyImage(IL_ImageReq *image_req)
 
     if ((ic->state != IC_COMPLETE) || ic->multi ||
         ic->rendered_with_custom_palette
-#ifndef STANDALONE_IMAGE_LIB
-         || (NET_URL_Type(ic->url_address) == MOCHA_TYPE_URL)
-#endif /* STANDALONE_IMAGE_LIB */
         ) {
         il_removefromcache(ic);
         il_delete_container(ic);

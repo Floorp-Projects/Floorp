@@ -21,7 +21,7 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.8 1999/04/15 03:04:04 alecf%netscape.com Exp $
+   $Id: color.cpp,v 3.9 1999/05/27 22:30:53 pnunn%netscape.com Exp $
 */
 
 
@@ -840,12 +840,10 @@ il_setup_color_space_converter(il_container *ic)
     case IL_GreyToPseudo:
     case IL_PseudoToPseudo:
 
-#ifdef STANDALONE_IMAGE_LIB
         if (src_color_space == img_color_space) {
             ic->converter = NULL;
             return PR_TRUE;
         } else
-#endif
         /* Resolve dither_mode if necessary. */
         if (dither_mode == IL_Auto) {
             int num_colors = src_color_space->cmap.num_colors;

@@ -30,9 +30,6 @@ LOCAL_JMC_SUBDIR = .
 
 
 #LIBRARY_NAME = img$(MOZ_BITS)
-!ifndef STANDALONE_IMAGE_LIB
-IMGSRC=	$(DEPTH)\modules\libimg\src\_jmc
-!endif
 
 #
 # Make sure we have MOZILLA_CLIENT defined so we get the
@@ -94,7 +91,7 @@ DEPTH=..\..\..
 LOCAL_INCLUDES=-I../public_com -I.   
 LIBRARY_NAME=img 
 
-### STANDALONE_IMAGE_LIB
+### 
 CPPSRCS=color.cpp colormap.cpp dither.cpp if.cpp ilclient.cpp il_util.cpp \
     ilNetReader.cpp scale.cpp xpcompat.cpp  
 
