@@ -41,12 +41,13 @@ EXPORTS	=				\
 	nsIPluginTagInfo.h		\
 	nsIPluginTagInfo2.h		\
 	nsIWindowlessPlugInstPeer.h	\
-        nsIPluginInputStream.h          \
-        nsIPluginInputStream2.h         \
-        nsIPluginStreamListener.h       \
+	nsIPluginInputStream.h          \
+	nsIPluginInputStream2.h         \
+	nsIPluginStreamListener.h       \
 	nsIPluginStreamInfo.h		\
 	nsplugin.h			\
-	nsplugindefs.h
+	nsplugindefs.h		\
+	nsICookieStorage.h
 
 # DEPRECATED -- remove before we ship 5.0
 EXPORTS +=				\
