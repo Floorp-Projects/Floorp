@@ -35,6 +35,7 @@
  */
 
 #include "mdcriticalregion.h"
+#include <MacErrors.h>
 
 /*
   This code is a replacement for MPEnterCriticalRegion/MPLeaveCriticalRegion,
