@@ -77,11 +77,16 @@ CXXFLAGS	 += $(MOZ_XPRINT_CFLAGS)
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-# use different MDDEPDIR to work around an issue with multiple dirs 
-# in VPATH (that was bug 87422)
+# use different MDDEPDIR & OBJ_SUFFIX to work around objs in srcdir/VPATH 
+# issue (bug 87422 & 100851)
 MDDEPDIR       := $(MDDEPDIR)_vpath
+ORIG_OBJ_SUFFIX := $(OBJ_SUFFIX)
+OBJ_SUFFIX	:= xp.$(OBJ_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
+
+clean clobber clobber_all realclean distclean::
+	-$(RM) -f $(wildcard *.$(ORIG_OBJ_SUFFIX))
 
 DEFINES         += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES -DUSE_XPRINT
 ifeq ($(OS_ARCH), Linux)
