@@ -260,7 +260,9 @@ function doDelete(promptFlag)
 
 	if (promptFlag == true)
 	{
-		var ok = confirm("Delete the selected item(s)?");	// XXX localize
+		var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+		var deleteStr = bundle.GetStringFromName("DeleteItems");
+		var ok = confirm(deleteStr);
 		if (!ok)	return(false);
 	}
 
@@ -621,8 +623,8 @@ function fillContextMenu(name)
 			}
 
 			// and then add a "Properties" menu items
-			var propMenuName = "Properties...";			// XXX localize
-			
+			var bundle = srGetStrBundle("chrome://bookmarks/locale/bookmark.properties");
+			var propMenuName = bundle.GetStringFromName("BookmarkProperties");
 			var menuItem = document.createElement("menuitem");
 			menuItem.setAttribute("value", propMenuName);
 			popupNode.appendChild(menuItem);

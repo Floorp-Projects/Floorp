@@ -35,6 +35,7 @@
   <html:script src="chrome://bookmarks/content/bm-panel.js" />
   <html:script src="chrome://bookmarks/content/bookmarks.js" />
   <html:script src="chrome://bookmarks/content/bookmarksDD.js"/>
+  <html:script src="chrome://global/content/strres.js"/>
 
   <html:div style="width:100px;height:100px" flex="1">
 
