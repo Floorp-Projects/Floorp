@@ -52,6 +52,15 @@ function onLoad()
   slideOpen(0);
 }
 
+function onUnload(aEvent)
+{
+  removeToolboxListeners();
+  unwrapToolbarItems();
+  persistCurrentSets();
+  
+  notifyParentComplete();
+}
+
 function onAccept(aEvent)
 {
   document.getElementById("main-box").collapsed = true;
@@ -78,15 +87,6 @@ function initDialog()
   wrapToolbarItems();
 }
 
-function closeDialog()
-{
-  removeToolboxListeners();
-  unwrapToolbarItems();
-  persistCurrentSets();
-  notifyParentComplete();
-  window.close();
-}
-
 function slideOpen(aStep)
 {
   if (aStep < kAnimateSteps) {
@@ -103,7 +103,7 @@ function slideClosed(aStep)
     window.outerHeight -= kAnimateIncrement;
     setTimeout(slideClosed, 10, ++aStep);
   } else {
-    closeDialog();
+    window.close();
   }
 }
 
