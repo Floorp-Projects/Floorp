@@ -29,7 +29,6 @@
 
 
 struct nsRect;
-class nsIFileWidget;
 class nsIAppShell;
 class nsIButton;
 class nsIEventListener;

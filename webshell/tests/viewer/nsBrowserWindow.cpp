@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Brian Ryner <bryner@netscape.com>
  * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
  * described herein are Copyright (c) International Business Machines Corporation, 2000.
  * Modifications to Mozilla code or documentation identified per MPL Section 3.3
@@ -45,7 +46,9 @@
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-#include "nsIFileWidget.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIFilePicker.h"
+#include "nsIFileChannel.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
@@ -171,7 +174,6 @@ static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kButtonCID, NS_BUTTON_CID);
-static NS_DEFINE_CID(kFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kTextFieldCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
@@ -185,7 +187,6 @@ static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
@@ -1090,58 +1091,67 @@ nsBrowserWindow::GoTo(const PRUnichar* aURL)
 }
 
 
-static PRBool GetFileFromFileSelector(nsIWidget* aParentWindow,
-                                      nsFileSpec& aFileSpec,
-                                      nsFileSpec& aDisplayDirectory)
+static PRBool GetFileFromFileSelector(nsIDOMWindowInternal* aParentWindow,
+                                      nsILocalFile **aFile,
+                                      nsILocalFile **aDisplayDirectory)
 {
-  PRBool selectedFileName = PR_FALSE;
-  nsIFileWidget *fileWidget;
-  nsString title; title.AssignWithConversion("Open HTML");
-  nsresult rv = nsComponentManager::CreateInstance(kFileWidgetCID,
-                                                   nsnull,
-                                                   kIFileWidgetIID,
-                                                   (void**)&fileWidget);
-  if (NS_OK == rv) {
-      // STRING USE WARNING: this section really needs to be looked at
-    nsString titles[] = {NS_ConvertASCIItoUCS2("All Readable Files"), NS_ConvertASCIItoUCS2("HTML Files"),
-                         NS_ConvertASCIItoUCS2("XML Files"), NS_ConvertASCIItoUCS2("Image Files"), NS_ConvertASCIItoUCS2("All Files")};
-    nsString filters[] = {NS_ConvertASCIItoUCS2("*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png"),
-                          NS_ConvertASCIItoUCS2("*.htm; *.html"),
-                          NS_ConvertASCIItoUCS2("*.xml"),
-                          NS_ConvertASCIItoUCS2("*.gif; *.jpg; *.jpeg; *.png"),
-                          NS_ConvertASCIItoUCS2("*.*")};
-    fileWidget->SetFilterList(5, titles, filters);
+  nsresult rv;
+  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
 
-    fileWidget->SetDisplayDirectory(aDisplayDirectory);
-    fileWidget->Create(aParentWindow,
-                       title,
-                       eMode_load,
-                       nsnull,
-                       nsnull);
+  if (filePicker) {
+    rv = filePicker->Init(aParentWindow, NS_LITERAL_STRING("Open HTML").get(),
+                          nsIFilePicker::modeOpen);
+    if (NS_SUCCEEDED(rv)) {
+      filePicker->AppendFilters(nsIFilePicker::filterAll | nsIFilePicker::filterHTML |
+                                nsIFilePicker::filterXML | nsIFilePicker::filterImages);
+      if (*aDisplayDirectory)
+        filePicker->SetDisplayDirectory(*aDisplayDirectory);
+      
+      PRInt16 dialogResult;
+      rv = filePicker->Show(&dialogResult);
+      if (NS_FAILED(rv) || dialogResult == nsIFilePicker::returnCancel)
+        return PR_FALSE;
 
-    PRUint32 result = fileWidget->Show();
-    if (result) {
-      fileWidget->GetFile(aFileSpec);
-      selectedFileName = PR_TRUE;
+      filePicker->GetFile(aFile);
+      if (*aFile) {
+        NS_IF_RELEASE(*aDisplayDirectory);
+        filePicker->GetDisplayDirectory(aDisplayDirectory);
+        return PR_TRUE;
+      }
     }
- 
-    fileWidget->GetDisplayDirectory(aDisplayDirectory);
-    NS_RELEASE(fileWidget);
   }
 
-  return selectedFileName;
+  return PR_FALSE;
 }
 
 void
 nsBrowserWindow::DoFileOpen()
 {
-  nsFileSpec fileSpec;
-  if (GetFileFromFileSelector(mWindow, fileSpec, mOpenFileDirectory)) {
-    nsFileURL fileURL(fileSpec);
-    // Ask the Web widget to load the file URL
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-    webNav->LoadURI(NS_ConvertASCIItoUCS2(fileURL.GetURLString()).get(), nsIWebNavigation::LOAD_FLAGS_NONE);
-    SetVisibility(PR_TRUE);
+  nsCOMPtr<nsILocalFile> file;
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsCOMPtr<nsIDOMWindowInternal> parentWindow;
+  nsresult rv;
+
+  // get nsIDOMWindowInternal interface for nsIFilePicker
+  rv = mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+  if (NS_SUCCEEDED(rv))
+    parentWindow = do_QueryInterface(domWindow);
+
+  if (GetFileFromFileSelector(parentWindow, getter_AddRefs(file),
+                              getter_AddRefs(mOpenFileDirectory))) {
+    nsCOMPtr<nsIFileURL> fileURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID);
+    if (fileURL) {
+      fileURL->SetFile(file);
+
+      nsXPIDLCString url;
+      fileURL->GetSpec(getter_Copies(url));
+      
+      // Ask the Web widget to load the file URL
+      nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
+      webNav->LoadURI(NS_ConvertASCIItoUCS2(url.get()).get(),
+                      nsIWebNavigation::LOAD_FLAGS_NONE);
+      SetVisibility(PR_TRUE);
+    }
   }
 }
 
@@ -1434,6 +1444,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     if (NS_OK != rv) {
       return rv;
     }
+    mHaveMenuBar = PR_TRUE;
     mWindow->GetClientBounds(r);
     r.x = r.y = 0;
   }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *  Brian Ryner <bryner@netscape.com>
  */
 #ifndef nsBrowserWindow_h___
 #define nsBrowserWindow_h___
@@ -223,7 +224,7 @@ public:
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIWebBrowser> mWebBrowser;
 
-  nsFileSpec mOpenFileDirectory;
+  nsCOMPtr<nsILocalFile> mOpenFileDirectory;
 
   PRTime mLoadStartTime;
   PRBool mShowLoadTimes;
@@ -263,6 +264,7 @@ protected:
   virtual ~nsBrowserWindow();
 
   nsWebBrowserChrome*   mWebBrowserChrome;
+  PRBool mHaveMenuBar;
 };
 
 // XXX This is bad; because we can't hang a closure off of the event

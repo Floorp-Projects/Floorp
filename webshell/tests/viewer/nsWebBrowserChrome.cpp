@@ -18,6 +18,7 @@
  * 
  * Contributor(s):
  *   Travis Bogard <travis@netscape.com>
+ *   Brian Ryner <bryner@netscape.com>
  */
 
 // Local Includes
@@ -38,7 +39,12 @@
 #include "nsIURI.h"
 #include "nsIDOMWindow.h"
 
+struct JSContext;
+#include "nsIJSContextStack.h"
+
 // CIDs
+#include "nsWidgetsCID.h"
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 //*****************************************************************************
 //***    nsWebBrowserChrome: Object Management
@@ -49,7 +55,12 @@ nsWebBrowserChrome::nsWebBrowserChrome() : mBrowserWindow(nsnull), mTimerSet(PR_
 {
 	NS_INIT_REFCNT();
 
-    mActiveDocuments = 0;
+   mActiveDocuments = 0;
+   mChromeFlags = 0;
+   mSizeSet = PR_FALSE;
+   mContinueModalLoop = PR_FALSE;
+   mModalStatus = NS_OK;
+   mChromeLoaded = PR_FALSE;
 }
 
 nsWebBrowserChrome::~nsWebBrowserChrome()
@@ -117,14 +128,14 @@ NS_IMETHODIMP nsWebBrowserChrome::GetWebBrowser(nsIWebBrowser** aWebBrowser)
 
 NS_IMETHODIMP nsWebBrowserChrome::SetChromeFlags(PRUint32 aChromeFlags)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   mChromeFlags = aChromeFlags;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::GetChromeFlags(PRUint32* aChromeFlags)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   *aChromeFlags = mChromeFlags;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeMask,
@@ -142,6 +153,7 @@ NS_IMETHODIMP nsWebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeMask,
    mBrowserWindow->mApp->OpenWindow(aChromeMask, browser);
 
    NS_ENSURE_TRUE(browser, NS_ERROR_FAILURE);
+   browser->mWebBrowserChrome->SetChromeFlags(aChromeMask);
 
    *aWebBrowser = browser->mWebBrowser;
    NS_IF_ADDREF(*aWebBrowser);
@@ -150,6 +162,7 @@ NS_IMETHODIMP nsWebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeMask,
 
 NS_IMETHODIMP nsWebBrowserChrome::DestroyBrowserWindow()
 {
+   ExitModalEventLoop(NS_OK);
    return mBrowserWindow->Destroy();
 }
 
@@ -187,6 +200,7 @@ NS_IMETHODIMP nsWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
 
 NS_IMETHODIMP nsWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
+   mSizeSet = PR_TRUE;
    mBrowserWindow->mWindow->Resize(aCX, aCY, PR_FALSE);
    mBrowserWindow->Layout(aCX, aCY);
 
@@ -195,20 +209,62 @@ NS_IMETHODIMP nsWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 
 NS_IMETHODIMP nsWebBrowserChrome::ShowAsModal()
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+  /* Copied from nsXULWindow */
+  nsCOMPtr<nsIAppShell> appShell(do_CreateInstance(kAppShellCID));
+  if (!appShell)
+    return NS_ERROR_FAILURE;
+
+  appShell->Create(0, nsnull);
+  appShell->Spinup();
+  // Store locally so it doesn't die on us
+  nsCOMPtr<nsIWidget> window = mBrowserWindow->mWindow;
+
+  window->SetModal(PR_TRUE);
+  mContinueModalLoop = PR_TRUE;
+  EnableParent(PR_FALSE);
+
+  nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
+  nsresult rv = NS_OK;
+  if (stack && NS_SUCCEEDED(stack->Push(nsnull))) {
+    while (NS_SUCCEEDED(rv) && mContinueModalLoop) {
+      void* data;
+      PRBool isRealEvent;
+      PRBool processEvent;
+
+      rv = appShell->GetNativeEvent(isRealEvent, data);
+      if (NS_SUCCEEDED(rv)) {
+        window->ModalEventFilter(isRealEvent, data, &processEvent);
+        if (processEvent)
+          appShell->DispatchNativeEvent(isRealEvent, data);
+      }
+    }
+
+    JSContext* cx;
+    stack->Pop(&cx);
+    NS_ASSERTION(!cx, "JSContextStack mismatch");
+  } else
+    rv = NS_ERROR_FAILURE;
+
+  mContinueModalLoop = PR_FALSE;
+  window->SetModal(PR_FALSE);
+  appShell->Spindown();
+
+  return mModalStatus;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::IsWindowModal(PRBool *_retval)
 {
-   *_retval = PR_FALSE;
-   return NS_OK;
+  *_retval = mContinueModalLoop;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+  if (mContinueModalLoop)
+    EnableParent(PR_TRUE);
+  mContinueModalLoop = PR_FALSE;
+  mModalStatus = aStatus;
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -281,7 +337,11 @@ NS_IMETHODIMP nsWebBrowserChrome::GetVisibility(PRBool *aVisibility)
 
 NS_IMETHODIMP nsWebBrowserChrome::SetVisibility(PRBool aVisibility)
 {
-  return mBrowserWindow->SetVisibility(aVisibility);
+  if ((mChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME) && !mChromeLoaded) {
+    // suppress showing the window until the chrome has completely loaded
+    return NS_OK;
+  } else
+    return mBrowserWindow->SetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SetFocus()
@@ -606,4 +666,19 @@ void nsWebBrowserChrome::OnWindowActivityFinished()
    if(mBrowserWindow->mThrobber)
       mBrowserWindow->mThrobber->Stop();
 
+   if (!mSizeSet && (mChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
+     nsCOMPtr<nsIDOMWindow> contentWin;
+     mBrowserWindow->mWebBrowser->GetContentDOMWindow(getter_AddRefs(contentWin));
+     if (contentWin)
+       contentWin->SizeToContent();
+     mBrowserWindow->SetVisibility(PR_TRUE);
+     mChromeLoaded = PR_TRUE;
+   }
+}
+
+void nsWebBrowserChrome::EnableParent(PRBool aEnable)
+{
+  nsCOMPtr<nsIWidget> parentWidget = mBrowserWindow->mWindow;
+  if (parentWidget)
+    parentWidget->Enable(aEnable);
 }
