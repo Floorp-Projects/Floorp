@@ -46,9 +46,9 @@ NS_NewCSS
 <xpcom>
 nsComponentManagerImpl::PlatformPrePopulateRegistry
 
-# fastload js
+# chrome js
 # ----------------------------------------------------------------------
-<fastload-js>
+<chrome-js>
 nsXULPrototypeScript::Deserialize
 
 # Everything else
