@@ -410,26 +410,6 @@ static PRBool is_vk_down(int vk)
   } \
 }
 
-#define NS_IMM_GETOPENSTATUS(hIMC, bRtn) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    bRtn = nsToolkit::gAIMMApp->GetOpenStatus(hIMC); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    bRtn = theIMM.GetOpenStatus(hIMC);  \
-  } \
-}
-
-#define NS_IMM_SETOPENSTATUS(hIMC, bOpen) \
-{ \
-  if (nsToolkit::gAIMMApp) \
-    nsToolkit::gAIMMApp->SetOpenStatus(hIMC, bOpen); \
-  else { \
-    nsIMM& theIMM = nsIMM::LoadModule(); \
-    theIMM.SetOpenStatus(hIMC, bOpen);  \
-  } \
-}
-
 //
 // Macro for Input Method A/W conversion.
 //
@@ -6560,36 +6540,6 @@ NS_IMETHODIMP nsWindow::ResetInputState()
     //NS_ASSERTION(ret, "ImmNotify failed");
     NS_IMM_RELEASECONTEXT(mWnd, hIMC);
   }
-  return NS_OK;
-}
-
-//==========================================================================
-NS_IMETHODIMP nsWindow::SetIMEOpenState(PRBool aState)
-{
-#ifdef DEBUG_KBSTATE
-  printf("SetImeOpenState %s\n", (aState ? "Open" : "Close"));
-#endif 
-  HIMC hIMC;
-  NS_IMM_GETCONTEXT(mWnd, hIMC);
-  if (hIMC) {
-    NS_IMM_SETOPENSTATUS(hIMC, aState ? TRUE : FALSE);
-    NS_IMM_RELEASECONTEXT(mWnd, hIMC);
-  }
-  return NS_OK;
-}
-
-//==========================================================================
-NS_IMETHODIMP nsWindow::GetIMEOpenState(PRBool* aState)
-{
-  HIMC hIMC;
-  NS_IMM_GETCONTEXT(mWnd, hIMC);
-  if (hIMC) {
-    BOOL isOpen;
-    NS_IMM_GETOPENSTATUS(hIMC, isOpen);
-    *aState = isOpen ? PR_TRUE : PR_FALSE;
-    NS_IMM_RELEASECONTEXT(mWnd, hIMC);
-  } else 
-    *aState = PR_FALSE;
   return NS_OK;
 }
 

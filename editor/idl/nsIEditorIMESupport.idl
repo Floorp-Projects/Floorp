@@ -49,7 +49,7 @@ struct nsReconversionEventReply;
 [ptr] native nsReconversionEventReplyPtr(nsReconversionEventReply);
 
 
-[scriptable, uuid(fe489b4d-d2f6-4215-ab33-6afd66388416)]
+[scriptable, uuid(4805e680-49b9-11d3-9ce4-ed60bd6cb5bc)]
 
 interface nsIEditorIMESupport : nsISupports
 {
@@ -89,18 +89,5 @@ interface nsIEditorIMESupport : nsISupports
    * GetReconvertionString()  Get the reconvertion string
    */
   [noscript] void  GetReconversionString(in nsReconversionEventReplyPtr aReply);
-  
-  /**
-   * Notify for IME when the editor got focus.
-   */
-
-  [noscript] void NotifyIMEOnFocus();
-  
-  /**
-   * Notify for IME when the editor lost focus.
-   */
-
-  [noscript] void NotifyIMEOnBlur();
-
 };
 

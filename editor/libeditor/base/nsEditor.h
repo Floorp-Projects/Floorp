@@ -45,7 +45,6 @@
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
-#include "nsIKBStateControl.h"
 
 #include "nsIAtom.h"
 #include "nsIDOMDocument.h"
@@ -144,7 +143,13 @@ public:
   /* ------------ nsIEditor methods -------------- */
   NS_DECL_NSIEDITOR
   /* ------------ nsIEditorIMESupport methods -------------- */
-  NS_DECL_NSIEDITORIMESUPPORT
+  
+  NS_IMETHOD BeginComposition(nsTextEventReply* aReply);
+  NS_IMETHOD QueryComposition(nsTextEventReply* aReply);
+  NS_IMETHOD SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
+  NS_IMETHOD EndComposition(void);
+  NS_IMETHOD ForceCompositionEnd(void);
+  NS_IMETHOD GetReconversionString(nsReconversionEventReply *aReply);
   
   // nsIPhonetic
   NS_DECL_NSIPHONETIC
@@ -327,8 +332,6 @@ protected:
                            nsCOMPtr<nsIDOMNode> *aResultNode,
                            PRBool       bNoBlockCrossing = PR_FALSE);
 
-  // Get nsIKBStateControl interface
-  nsresult GetKBStateControl(nsIKBStateControl **aKBSC);
 public:
 
   /** All editor operations which alter the doc should be prefaced
@@ -581,9 +584,8 @@ protected:
   nsCOMPtr<nsIDOMCharacterData> mIMETextNode;      // current IME text node
   PRUint32                      mIMETextOffset;    // offset in text node where IME comp string begins
   PRUint32                      mIMEBufferLength;  // current length of IME comp string
-  PRPackedBool                  mIsIMEComposing;   // is IME in composition state?
+  PRBool                        mIsIMEComposing;   // is IME in composition state?
                                                    // This is different from mInIMEMode. see Bug 98434.
-  PRPackedBool                  mNeedRecoverIMEOpenState;   // Need IME open state change on blur.
 
   // various listeners
   nsVoidArray*                  mActionListeners;  // listens to all low level actions on the doc
