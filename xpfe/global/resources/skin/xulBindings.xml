@@ -13,6 +13,19 @@
     </content>
   </binding>
 
+  <binding name="slider">
+    <content>
+	  <xul:button align="horizontal"/>
+	</content>
+  </binding>
+
+  <binding name="tab">
+    <content>
+      <xul:image inherits="src" class="tab-left"/>
+      <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+    </content>
+  </binding>
+
   <binding name="menusOnMenuBar">
     <content excludes="template,observes,menupopup">
       <xul:titledbutton class="menubar-left"/>
@@ -84,10 +97,25 @@
   </binding>
 
   <binding name="checkbox">
+    <content>
+	  <xul:box flex="1" class="internal-box" autostretch="never">
+        <xul:image inherits="src"/>
+        <xul:html flex="1" inherits="value"/>
+      </xul:box>
+    </content>
 	<handlers>
       <handler type="mouseup" value="this.checked = !this.checked;"/>
 	  <handler type="keypress" key=" " value="this.checked = !this.checked;"/>
 	</handlers>
+  </binding>
+
+  <binding name="radio">
+    <content>
+	  <xul:box flex="1" class="internal-box" autostretch="never">
+        <xul:image inherits="src"/>
+        <xul:html flex="1" inherits="value"/>
+      </xul:box>
+    </content>
   </binding>
 
   <binding name="radiogroup">
@@ -97,6 +125,41 @@
 	</handlers>
   </binding>
 
+  <binding name="buttonleft" excludes="observes,template">
+    <content>
+	  <xul:box class="internal-box" autostretch="never">
+        <xul:image inherits="src"/>
+        <xul:text inherits="value,accesskey,crop"/>
+      </xul:box>
+    </content>
+  </binding>
+  
+  <binding name="buttontop" excludes="observes,template">
+    <content>
+	  <xul:box orient="vertical" autostretch="never" class="internal-box">
+        <xul:image inherits="src"/>
+        <xul:text inherits="value,accesskey,crop"/>
+	  </xul:box>
+	</content>
+  </binding>
+
+  <binding name="buttonright" excludes="observes,template">
+    <content>
+	  <xul:box autostretch="never" class="internal-box">
+	    <xul:text inherits="value,accesskey,crop"/>
+        <xul:image inherits="src"/>
+      </xul:box>
+	</content>
+  </binding>
+
+  <binding name="buttonbottom" excludes="observes,template">
+    <content>
+	  <xul:box orient="vertical" autostretch="never" class="internal-box">
+	    <xul:text inherits="value,accesskey,crop"/>
+        <xul:image inherits="src"/>
+	  </xul:box>
+	</content>
+  </binding>
 
   <binding name="separator" extends="xul:spring"/>
 
