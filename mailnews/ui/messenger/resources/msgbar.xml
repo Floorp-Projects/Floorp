@@ -106,8 +106,8 @@ function OpenURL(url)
           <html:button cmd="nsCmd:DeleteMessage" style="background-color:rgb(192,192,192);">
                           <html:img src="delmsg.gif"/><html:BR/>Delete
           </html:button>
-          <html:button cmd="nsCmd:LoadURL1" style="background-color:rgb(100,0,100);">
-                          <html:img src="delmsg.gif"/><html:BR/>Delete
+          <html:button cmd="nsCmd:LoadURL1" style="background-color:rgb(192,192,192);">
+                          <html:img src="getmsg.gif"/><html:BR/>Load Msg
           </html:button>
           <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">
                   <html:img alt="Throbber!" border=0 src="resource:/res/throbber/anims00.gif"/>
