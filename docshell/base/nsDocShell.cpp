@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: ft=cpp tw=78 sw=4 et ts=4
+ * vim: ft=cpp tw=78 sw=4 et ts=4 sts=4 cin
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -5565,6 +5565,10 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     channel->SetOriginalURI(aURI);
     if (aTypeHint && *aTypeHint) {
         channel->SetContentType(nsDependentCString(aTypeHint));
+        mContentTypeHint = aTypeHint;
+    }
+    else {
+        mContentTypeHint.Truncate();
     }
     
     //hack
@@ -6322,7 +6326,6 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     nsCOMPtr<nsISupports> cacheToken;
     PRBool expired = PR_FALSE;
     PRBool discardLayoutState = PR_FALSE;
-    nsCAutoString contentType;
     if (aChannel) {
         nsCOMPtr<nsICachingChannel>
             cacheChannel(do_QueryInterface(aChannel));
@@ -6348,7 +6351,6 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
 
             discardLayoutState = ShouldDiscardLayoutState(httpChannel);
         }
-        aChannel->GetContentType(contentType);
     }
 
     //Title is set in nsDocShell::SetTitle()
@@ -6358,7 +6360,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
                   inputStream,  // Post data stream
                   nsnull,       // LayoutHistory state
                   cacheKey,     // CacheKey
-                  contentType); // Content-type
+                  mContentTypeHint); // Content-type
     entry->SetReferrerURI(referrerURI);
     /* If cache got a 'no-store', ask SH not to store
      * HistoryLayoutState. By default, SH will set this

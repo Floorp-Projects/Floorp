@@ -384,6 +384,11 @@ protected:
 
     nsString                   mName;
     nsString                   mTitle;
+    /**
+     * Content-Type Hint of the most-recently initiated load. Used for
+     * session history entries.
+     */
+    nsCString                  mContentTypeHint;
     nsVoidArray                mChildren;
     nsCOMPtr<nsISupportsArray> mRefreshURIList;
     nsDSURIContentListener *   mContentListener;
