@@ -26,7 +26,7 @@ NS_IMPL_ISUPPORTS(nsXPCArbitraryScriptable, NS_IXPCSCRIPTABLE_IID);
 
 #define REAL_WRAPPER(w) ((nsXPCWrappedNative*)(w))
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::Create(JSContext *cx, JSObject *obj,
                   nsIXPConnectWrappedNative* wrapper,
                   nsIXPCScriptable* arbitrary)
@@ -39,7 +39,7 @@ nsXPCArbitraryScriptable::Create(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::LookupProperty(JSContext *cx, JSObject *obj, jsid id,
                           JSObject **objp, JSProperty **propp,
                           nsIXPConnectWrappedNative* wrapper,
@@ -60,7 +60,7 @@ nsXPCArbitraryScriptable::LookupProperty(JSContext *cx, JSObject *obj, jsid id,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::DefineProperty(JSContext *cx, JSObject *obj,
                           jsid id, jsval value,
                           JSPropertyOp getter, JSPropertyOp setter,
@@ -80,7 +80,7 @@ nsXPCArbitraryScriptable::DefineProperty(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::GetProperty(JSContext *cx, JSObject *obj,
                        jsid id, jsval *vp,
                        nsIXPConnectWrappedNative* wrapper,
@@ -97,7 +97,7 @@ nsXPCArbitraryScriptable::GetProperty(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::SetProperty(JSContext *cx, JSObject *obj,
                        jsid id, jsval *vp,
                        nsIXPConnectWrappedNative* wrapper,
@@ -114,7 +114,7 @@ nsXPCArbitraryScriptable::SetProperty(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::GetAttributes(JSContext *cx, JSObject *obj, jsid id,
                          JSProperty *prop, uintN *attrsp,
                          nsIXPConnectWrappedNative* wrapper,
@@ -131,7 +131,7 @@ nsXPCArbitraryScriptable::GetAttributes(JSContext *cx, JSObject *obj, jsid id,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::SetAttributes(JSContext *cx, JSObject *obj, jsid id,
                          JSProperty *prop, uintN *attrsp,
                          nsIXPConnectWrappedNative* wrapper,
@@ -148,7 +148,7 @@ nsXPCArbitraryScriptable::SetAttributes(JSContext *cx, JSObject *obj, jsid id,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::DeleteProperty(JSContext *cx, JSObject *obj,
                           jsid id, jsval *vp,
                           nsIXPConnectWrappedNative* wrapper,
@@ -165,7 +165,7 @@ nsXPCArbitraryScriptable::DeleteProperty(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::DefaultValue(JSContext *cx, JSObject *obj,
                         JSType type, jsval *vp,
                         nsIXPConnectWrappedNative* wrapper,
@@ -182,7 +182,7 @@ nsXPCArbitraryScriptable::DefaultValue(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::Enumerate(JSContext *cx, JSObject *obj,
                      JSIterateOp enum_op,
                      jsval *statep, jsid *idp,
@@ -200,7 +200,7 @@ nsXPCArbitraryScriptable::Enumerate(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::CheckAccess(JSContext *cx, JSObject *obj, jsid id,
                        JSAccessMode mode, jsval *vp, uintN *attrsp,
                        nsIXPConnectWrappedNative* wrapper,
@@ -217,7 +217,7 @@ nsXPCArbitraryScriptable::CheckAccess(JSContext *cx, JSObject *obj, jsid id,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::Call(JSContext *cx, JSObject *obj,
                 uintN argc, jsval *argv,
                 jsval *rval,
@@ -235,7 +235,7 @@ nsXPCArbitraryScriptable::Call(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::Construct(JSContext *cx, JSObject *obj,
                      uintN argc, jsval *argv,
                      jsval *rval,
@@ -253,7 +253,7 @@ nsXPCArbitraryScriptable::Construct(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::Finalize(JSContext *cx, JSObject *obj,
                     nsIXPConnectWrappedNative* wrapper,
                     nsIXPCScriptable* arbitrary)

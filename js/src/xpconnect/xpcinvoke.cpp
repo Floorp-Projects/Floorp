@@ -25,7 +25,7 @@
 // Remember that on Win32 these 'words' are 32bit DWORDS
 
 static uint32 __stdcall
-invoke_count_words(uint32 paramCount, nsXPCVarient* s)
+invoke_count_words(uint32 paramCount, nsXPCVariant* s)
 {
     uint32 result = 0;
     for(uint32 i = 0; i < paramCount; i++, s++)
@@ -70,7 +70,7 @@ invoke_count_words(uint32 paramCount, nsXPCVarient* s)
 }
 
 static void __stdcall
-invoke_copy_to_stack(uint32* d, uint32 paramCount, nsXPCVarient* s)
+invoke_copy_to_stack(uint32* d, uint32 paramCount, nsXPCVariant* s)
 {
     for(uint32 i = 0; i < paramCount; i++, d++, s++)
     {
@@ -105,7 +105,7 @@ invoke_copy_to_stack(uint32* d, uint32 paramCount, nsXPCVarient* s)
 #pragma warning(disable : 4035) // OK to have no return value
 nsresult
 xpc_InvokeNativeMethod(void* that, PRUint32 index,
-                       uint32 paramCount, nsXPCVarient* params)
+                       uint32 paramCount, nsXPCVariant* params)
 {
     __asm {
         push    params
@@ -132,7 +132,7 @@ xpc_InvokeNativeMethod(void* that, PRUint32 index,
 #ifdef DEBUG
 nsresult
 XPC_TestInvoke(void* that, PRUint32 index,
-               uint32 paramCount, nsXPCVarient* params)
+               uint32 paramCount, nsXPCVariant* params)
 {
     return xpc_InvokeNativeMethod(that, index, paramCount, params);
 }

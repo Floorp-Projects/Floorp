@@ -21,7 +21,7 @@
 #include "xpcprivate.h"
 
 // XXX these conversion functions need to be finished.
-// XXX conversion functions may still need paramInfo to handle the additional 
+// XXX conversion functions may still need paramInfo to handle the additional
 // types
 
 
@@ -92,12 +92,12 @@ xpc_ConvertNativeData2JS(jsval* d, const void* s, const nsXPCType& type)
             NS_ASSERTION(0, "bad type");
             return JS_FALSE;
         }
-    }    
+    }
     return JS_TRUE;
 }
 
 JSBool
-xpc_ConvertJSData2Native(JSContext* cx, void* d, const jsval* s, 
+xpc_ConvertJSData2Native(JSContext* cx, void* d, const jsval* s,
                          const nsXPCType& type)
 {
     NS_PRECONDITION(s, "bad param");
@@ -216,5 +216,5 @@ xpc_ConvertJSData2Native(JSContext* cx, void* d, const jsval* s,
         }
     }
     return JS_TRUE;
-}        
+}
 

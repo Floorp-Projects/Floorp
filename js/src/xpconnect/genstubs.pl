@@ -36,7 +36,7 @@ close(OUTFILE);
 
 
 ##
-## Write the definitions include file. This assumes a macro will be used to 
+## Write the definitions include file. This assumes a macro will be used to
 ## expand the entries written...
 ##
 

@@ -35,5 +35,6 @@ class nsXPCWrappedJS;
 class nsXPCWrappedNative;
 class nsXPCWrappedJSClass;
 class nsXPCWrappedNativeClass;
+class nsXPCWrappedJSMethods;
 
 #endif /* xpcforwards_h___ */

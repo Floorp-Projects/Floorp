@@ -322,7 +322,7 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
         *vp = JSVAL_NULL;
         return JS_TRUE;
     }
-    const nsXPCVarient& var = constant->GetValue();
+    const nsXPCVariant& var = constant->GetValue();
 
     return xpc_ConvertNativeData2JS(vp, &var.val, var.type);
 }
@@ -344,10 +344,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
 {
 #define PARAM_BUFFER_COUNT     32
 
-    nsXPCVarient paramBuffer[PARAM_BUFFER_COUNT];
+    nsXPCVariant paramBuffer[PARAM_BUFFER_COUNT];
     JSBool retval = JS_FALSE;
 
-    nsXPCVarient* dispatchParams = NULL;
+    nsXPCVariant* dispatchParams = NULL;
     JSContext* cx = GetJSContext();
     uint8 i;
     const nsXPCMethodInfo* info;
@@ -387,10 +387,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
         goto done;
     }
 
-    // setup varient array pointer
+    // setup variant array pointer
     if(paramCount > PARAM_BUFFER_COUNT)
     {
-        if(!(dispatchParams = new nsXPCVarient[paramCount]))
+        if(!(dispatchParams = new nsXPCVariant[paramCount]))
         {
             ReportError(desc, "out of memory");
             goto done;
@@ -405,7 +405,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
         const nsXPCParamInfo& param = info->GetParam(i);
         const nsXPCType& type = param.GetType();
 
-        nsXPCVarient* dp = &dispatchParams[i];
+        nsXPCVariant* dp = &dispatchParams[i];
         dp->type = type;
         dp->flags = 0;
         dp->val.p = NULL;
@@ -416,7 +416,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
 
         if(param.IsOut())
         {
-            dp->flags = nsXPCVarient::PTR_IS_DATA;
+            dp->flags = nsXPCVariant::PTR_IS_DATA;
 
             // XXX are there no type alignment issues here?
             if(type & nsXPCType::IS_POINTER)
@@ -452,7 +452,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
             if(type & nsXPCType::IS_POINTER)
             {
                 dp->ptr = &dp->val;
-                dp->flags = nsXPCVarient::PTR_IS_DATA;
+                dp->flags = nsXPCVariant::PTR_IS_DATA;
             }
             src = argv[i];
         }
@@ -481,7 +481,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
         const nsXPCParamInfo& param = info->GetParam(i);
         const nsXPCType& type = param.GetType();
 
-        nsXPCVarient* dp = &dispatchParams[i];
+        nsXPCVariant* dp = &dispatchParams[i];
         if(param.IsOut())
         {
             jsval v;
@@ -513,12 +513,12 @@ done:
     // any alloc'd stuff and release wrappers of params
     for(i = 0; i < dispatchParamsInitedCount; i++)
     {
-        nsXPCVarient* dp = &dispatchParams[i];
+        nsXPCVariant* dp = &dispatchParams[i];
         void* p = dp->val.p;
         // XXX verify that ALL this this stuff is right
         if(!p)
             continue;
-        if(dp->flags & nsXPCVarient::VAL_IS_OWNED)
+        if(dp->flags & nsXPCVariant::VAL_IS_OWNED)
             delete [] p;
         else if(info->GetParam(i).GetType() == nsXPCType::T_INTERFACE)
             ((nsISupports*)p)->Release();
@@ -611,7 +611,7 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         {
         case XPCNativeMemberDescriptor::CONSTANT:
             return clazz->GetConstantAsJSVal(wrapper, desc, vp);
-    
+
         case XPCNativeMemberDescriptor::METHOD:
         {
             // allow for lazy creation of 'prototypical' function invoke object
@@ -626,11 +626,11 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             *vp = OBJECT_TO_JSVAL(funobj);
             return JS_TRUE;
         }
-    
+
         case XPCNativeMemberDescriptor::ATTRIB_RO:
         case XPCNativeMemberDescriptor::ATTRIB_RW:
             return clazz->GetAttributeAsJSVal(wrapper, desc, vp);
-    
+
         default:
             NS_ASSERTION(0,"bad category");
             return JS_FALSE;
@@ -642,7 +642,7 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if(NULL != (ds = wrapper->GetDynamicScriptable()))
         {
             JSBool retval;
-            if(NS_SUCCEEDED(ds->GetProperty(cx, obj, id, vp, 
+            if(NS_SUCCEEDED(ds->GetProperty(cx, obj, id, vp,
                         wrapper, wrapper->GetArbitraryScriptable(), &retval)))
                 return retval;
         }
@@ -687,7 +687,7 @@ WrappedNative_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if(NULL != (ds = wrapper->GetDynamicScriptable()))
         {
             JSBool retval;
-            if(NS_SUCCEEDED(ds->SetProperty(cx, obj, id, vp, 
+            if(NS_SUCCEEDED(ds->SetProperty(cx, obj, id, vp,
                         wrapper, wrapper->GetArbitraryScriptable(), &retval)))
                 return retval;
         }
@@ -744,7 +744,7 @@ WrappedNative_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         if(!clazz->LookupMemberByID(id))
         {
             JSBool retval;
-            if(NS_SUCCEEDED(ds->DefineProperty(cx, obj, id, value, 
+            if(NS_SUCCEEDED(ds->DefineProperty(cx, obj, id, value,
                             getter, setter, attrs, propp,
                             wrapper, wrapper->GetArbitraryScriptable(), &retval)))
                 return retval;
@@ -768,7 +768,7 @@ WrappedNative_GetAttributes(JSContext *cx, JSObject *obj, jsid id,
         if(!clazz->LookupMemberByID(id))
         {
             JSBool retval;
-            if(NS_SUCCEEDED(ds->GetAttributes(cx, obj, id, prop, attrsp, 
+            if(NS_SUCCEEDED(ds->GetAttributes(cx, obj, id, prop, attrsp,
                             wrapper, wrapper->GetArbitraryScriptable(), &retval)))
                 return retval;
         }
@@ -791,7 +791,7 @@ WrappedNative_SetAttributes(JSContext *cx, JSObject *obj, jsid id,
         if(!clazz->LookupMemberByID(id))
         {
             JSBool retval;
-            if(NS_SUCCEEDED(ds->SetAttributes(cx, obj, id, prop, attrsp, 
+            if(NS_SUCCEEDED(ds->SetAttributes(cx, obj, id, prop, attrsp,
                             wrapper, wrapper->GetArbitraryScriptable(), &retval)))
                 return retval;
         }
@@ -812,7 +812,7 @@ WrappedNative_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         if(!clazz->LookupMemberByID(id))
         {
             JSBool retval;
-            if(NS_SUCCEEDED(ds->DeleteProperty(cx, obj, id, vp, 
+            if(NS_SUCCEEDED(ds->DeleteProperty(cx, obj, id, vp,
                             wrapper, wrapper->GetArbitraryScriptable(), &retval)))
                 return retval;
         }
@@ -829,7 +829,7 @@ WrappedNative_DefaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
     {
         JSBool retval;
-        if(NS_SUCCEEDED(ds->DefaultValue(cx, obj, type, vp, 
+        if(NS_SUCCEEDED(ds->DefaultValue(cx, obj, type, vp,
                         wrapper, wrapper->GetArbitraryScriptable(), &retval)))
             return retval;
     }
@@ -838,8 +838,8 @@ WrappedNative_DefaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
 struct EnumStateHolder
 {
-    jsval dstate;        
-    jsval sstate;        
+    jsval dstate;
+    jsval sstate;
 };
 
 JSBool
@@ -860,7 +860,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
             jsid  sid;
             JSBool retval;
             if(NS_FAILED(ds->Enumerate(cx, obj, JSENUMERATE_INIT,
-                                &holder->dstate, &did, wrapper, 
+                                &holder->dstate, &did, wrapper,
                                 GetArbitraryScriptable(), &retval)) || !retval)
             {
                 holder->dstate = JSVAL_NULL;
@@ -890,11 +890,11 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
         {
             JSBool retval;
             if(NS_FAILED(ds->Enumerate(cx, obj, JSENUMERATE_NEXT,
-                                &holder->dstate, idp, wrapper, 
+                                &holder->dstate, idp, wrapper,
                                 GetArbitraryScriptable(), &retval)) || !retval)
                 *idp = holder->dstate = JSVAL_NULL;
         }
-    
+
         if(holder->dstate == JSVAL_NULL && holder->sstate != JSVAL_NULL)
             StaticEnumerate(wrapper, JSENUMERATE_NEXT, &holder->sstate, idp);
 
@@ -910,7 +910,7 @@ nsXPCWrappedNativeClass::DynamicEnumerate(nsXPCWrappedNative* wrapper,
             JSBool retval;
             if(holder->dstate != JSVAL_NULL)
                 ds->Enumerate(cx, obj, JSENUMERATE_DESTROY,
-                              &holder->dstate, idp, wrapper, 
+                              &holder->dstate, idp, wrapper,
                               GetArbitraryScriptable(), &retval);
             if(holder->sstate != JSVAL_NULL)
                 StaticEnumerate(wrapper, JSENUMERATE_DESTROY, &holder->sstate, idp);
@@ -998,7 +998,7 @@ WrappedNative_CheckAccess(JSContext *cx, JSObject *obj, jsid id,
         if(!clazz->LookupMemberByID(id))
         {
             JSBool retval;
-            if(NS_SUCCEEDED(ds->CheckAccess(cx, obj, id, mode, vp, attrsp, 
+            if(NS_SUCCEEDED(ds->CheckAccess(cx, obj, id, mode, vp, attrsp,
                             wrapper, wrapper->GetArbitraryScriptable(), &retval)))
                 return retval;
         }
@@ -1028,7 +1028,7 @@ WrappedNative_Call(JSContext *cx, JSObject *obj,
     if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
     {
         JSBool retval;
-        if(NS_SUCCEEDED(ds->Call(cx, obj, argc, argv, rval, 
+        if(NS_SUCCEEDED(ds->Call(cx, obj, argc, argv, rval,
                         wrapper, wrapper->GetArbitraryScriptable(), &retval)))
             return retval;
         JS_ReportError(cx, "Call to nsXPCScriptable failed");
@@ -1047,7 +1047,7 @@ WrappedNative_Construct(JSContext *cx, JSObject *obj,
     if(wrapper && NULL != (ds = wrapper->GetDynamicScriptable()))
     {
         JSBool retval;
-        if(NS_SUCCEEDED(ds->Construct(cx, obj, argc, argv, rval, 
+        if(NS_SUCCEEDED(ds->Construct(cx, obj, argc, argv, rval,
                         wrapper, wrapper->GetArbitraryScriptable(), &retval)))
             return retval;
         JS_ReportError(cx, "Call to nsXPCScriptable failed");
@@ -1055,7 +1055,7 @@ WrappedNative_Construct(JSContext *cx, JSObject *obj,
     else
         JS_ReportError(cx, "Cannot use wrapper as contructor unless it implements nsXPCScriptable");
     return JS_FALSE;
-}        
+}
 
 JS_STATIC_DLL_CALLBACK(void)
 WrappedNative_Finalize(JSContext *cx, JSObject *obj)

@@ -46,32 +46,9 @@
 // XXX declare them in XPIDL :)
 
 /***************************************************************************/
-// {215DBE00-94A7-11d2-BA58-00805F8A5DD7}
-#define NS_IJSCONTEXT_IID     \
-{ 0x215dbe00, 0x94a7, 0x11d2, \
-  { 0xba, 0x58, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-
-class nsIJSContext : public nsISupports
-{
-public:
-    NS_IMETHOD GetNative(JSContext** cx) = 0;
-};
-
-/***************************************************************************/
-// {215DBE01-94A7-11d2-BA58-00805F8A5DD7}
-#define NS_IJSOBJECT_IID        \
-{ 0x215dbe01, 0x94a7, 0x11d2,   \
-  { 0xba, 0x58, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
-
-class nsIJSObject : public nsISupports
-{
-public:
-    NS_IMETHOD GetNative(JSObject** jsobj) = 0;
-};
-
-/***************************************************************************/
-// forward declaration...
+// forward declarations...
 class nsIXPCScriptable;
+class nsIInterfaceInfo;
 
 // {215DBE02-94A7-11d2-BA58-00805F8A5DD7}
 #define NS_IXPCONNECT_WRAPPED_NATIVE_IID   \
@@ -84,6 +61,11 @@ public:
     // XXX add the rest of the fun methods
     NS_IMETHOD GetDynamicScriptable(nsIXPCScriptable** p) = 0;
     NS_IMETHOD GetArbitraryScriptable(nsIXPCScriptable** p) = 0;
+
+    NS_IMETHOD GetJSObject(JSObject** aJSObj) = 0;
+    NS_IMETHOD GetNative(nsISupports** aObj) = 0;
+    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
+    NS_IMETHOD GetIID(nsIID** iid) = 0; // returns IAllocatator alloc'd copy
 };
 
 /***************************************************************************/
@@ -94,7 +76,28 @@ public:
 
 class nsIXPConnectWrappedJS : public nsISupports
 {
-    // no methods allowed since this is a shared vtbl!
+    // no methods allowed since this has a shared vtbl!
+    //
+    // To manipulate this wrapper (as opposed to manipulating the wrapped
+    // JSObject via this wrapper) do a QueryInterface for the
+    // nsIXPConnectWrappedJSMethods interface and use the methods on that
+    // interface. (see below)
+};
+
+/******************************************/
+
+// {BED52030-BCA6-11d2-BA79-00805F8A5DD7}
+#define NS_IXPCONNECT_WRAPPED_JS_METHODS_IID   \
+{ 0xbed52030, 0xbca6, 0x11d2, \
+  { 0xba, 0x79, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
+
+class nsIXPConnectWrappedJSMethods : public nsISupports
+{
+public:
+    // XXX add the rest of the fun methods
+    NS_IMETHOD GetJSObject(JSObject** aJSObj) = 0;
+    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info) = 0;
+    NS_IMETHOD GetIID(nsIID** iid) = 0; // returns IAllocatator alloc'd copy
 };
 
 /***************************************************************************/
@@ -110,6 +113,7 @@ class nsXPCConstant;
 class nsIInterfaceInfo : public nsISupports
 {
 public:
+    // XXX should return IAllocatator alloc'd copy
     NS_IMETHOD GetName(const char** name) = 0;
     NS_IMETHOD GetIID(const nsIID** iid) = 0;
 
@@ -134,33 +138,24 @@ class nsIXPConnect : public nsISupports
 {
 public:
 
-    NS_IMETHOD InitJSContext(nsIJSContext* aJSContext,
-                             nsIJSObject* aGlobalJSObj) = 0;
+    NS_IMETHOD InitJSContext(JSContext* aJSContext,
+                             JSObject* aGlobalJSObj) = 0;
 
     NS_IMETHOD GetInterfaceInfo(REFNSIID aIID,
                                 nsIInterfaceInfo** info) = 0;
 
-    NS_IMETHOD WrapNative(nsIJSContext* aJSContext,
+    NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,
                           nsIXPConnectWrappedNative** aWrapper) = 0;
 
-    NS_IMETHOD WrapJS(nsIJSContext* aJSContext,
-                      nsIJSObject* aJSObj,
+    NS_IMETHOD WrapJS(JSContext* aJSContext,
+                      JSObject* aJSObj,
                       REFNSIID aIID,
                       nsIXPConnectWrappedJS** aWrapper) = 0;
 
-    NS_IMETHOD GetJSObjectOfWrappedJS(nsIXPConnectWrappedJS* aWrapper,
-                                      nsIJSObject** aJSObj) = 0;
-
-    NS_IMETHOD GetJSObjectOfWrappedNative(nsIXPConnectWrappedNative* aWrapper,
-                                          nsIJSObject** aJSObj) = 0;
-
-    NS_IMETHOD GetNativeOfWrappedNative(nsIXPConnectWrappedNative* aWrapper,
-                                        nsISupports** aObj) = 0;
-
-    NS_IMETHOD GetWrappedNativeOfJSObject(nsIJSContext* aJSContext,
-                                    nsIJSObject* aJSObj,
+    NS_IMETHOD GetWrappedNativeOfJSObject(JSContext* aJSContext,
+                                    JSObject* aJSObj,
                                     nsIXPConnectWrappedNative** aWrapper) = 0;
 
     // other stuff...
@@ -172,18 +167,12 @@ JS_BEGIN_EXTERN_C
 XPC_PUBLIC_API(nsIXPConnect*)
 XPC_GetXPConnect();
 
-XPC_PUBLIC_API(nsIJSContext*)
-XPC_NewJSContext(JSContext* cx);
-
-XPC_PUBLIC_API(nsIJSObject*)
-XPC_NewJSObject(nsIJSContext* aJSContext, JSObject* jsobj);
-
 #ifdef DEBUG
-// XXX temprary forawrd declaration
-struct nsXPCVarient;
+// XXX temporary forward declaration
+struct nsXPCVariant;
 XPC_PUBLIC_API(nsresult)
 XPC_TestInvoke(void* that, PRUint32 index,
-               uint32 paramCount, nsXPCVarient* params);
+               uint32 paramCount, nsXPCVariant* params);
 #endif
 
 JS_END_EXTERN_C

@@ -30,9 +30,8 @@ nsrefcnt
 nsXPCWrappedNative::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
-    ++mRefCnt;
 
-    if(1 == mRefCnt && mRoot && mRoot != this)
+    if(1 == ++mRefCnt && mRoot && mRoot != this)
         NS_ADDREF(mRoot);
     else if(2 == mRefCnt)
         JS_AddRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
@@ -45,8 +44,8 @@ nsXPCWrappedNative::Release(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-    --mRefCnt;
-    if(0 == mRefCnt)
+
+    if(0 == --mRefCnt)
     {
         if(mRoot == this)
         {
@@ -210,7 +209,7 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
     if(mRoot == this)
     {
         nsIXPCScriptable* ds;
-        if(NS_SUCCEEDED(mObj->QueryInterface(nsIXPCScriptable::IID(), 
+        if(NS_SUCCEEDED(mObj->QueryInterface(nsIXPCScriptable::IID(),
                                              (void**)&ds)))
             mDynamicScriptable = ds;
     }
@@ -223,7 +222,7 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
 
         nsIXPCScriptable* ds;
         if(NULL != (ds = GetDynamicScriptable()))
-            ds->Create(GetClass()->GetXPCContext()->GetJSContext(), 
+            ds->Create(GetClass()->GetXPCContext()->GetJSContext(),
                        GetJSObject(), this, GetArbitraryScriptable());
     }
 }
@@ -256,7 +255,9 @@ nsXPCWrappedNative::Find(REFNSIID aIID)
     return NULL;
 }
 
-nsresult 
+/***************************************************************************/
+
+NS_IMETHODIMP
 nsXPCWrappedNative::GetArbitraryScriptable(nsIXPCScriptable** p)
 {
     NS_PRECONDITION(p, "bad param");
@@ -269,10 +270,10 @@ nsXPCWrappedNative::GetArbitraryScriptable(nsIXPCScriptable** p)
     }
     // else...
     *p = NULL;
-    return NS_ERROR_NO_INTERFACE;        
-}        
+    return NS_ERROR_NO_INTERFACE;
+}
 
-nsresult 
+NS_IMETHODIMP
 nsXPCWrappedNative::GetDynamicScriptable(nsIXPCScriptable** p)
 {
     NS_PRECONDITION(p, "bad param");
@@ -285,5 +286,58 @@ nsXPCWrappedNative::GetDynamicScriptable(nsIXPCScriptable** p)
     }
     // else...
     *p = NULL;
-    return NS_ERROR_NO_INTERFACE;        
-}        
+    return NS_ERROR_NO_INTERFACE;
+}
+
+NS_IMETHODIMP
+nsXPCWrappedNative::GetJSObject(JSObject** aJSObj)
+{
+    NS_PRECONDITION(aJSObj, "bad param");
+    NS_PRECONDITION(mJSObj, "bad wrapper");
+    if(!(*aJSObj = mJSObj))
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCWrappedNative::GetNative(nsISupports** aObj)
+{
+    NS_PRECONDITION(aObj, "bad param");
+    NS_PRECONDITION(mObj, "bad wrapper");
+    if(!(*aObj = mObj))
+        return NS_ERROR_UNEXPECTED;
+    NS_ADDREF(mObj);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCWrappedNative::GetInterfaceInfo(nsIInterfaceInfo** info)
+{
+    NS_PRECONDITION(info, "bad param");
+    NS_PRECONDITION(GetClass(), "bad wrapper");
+    NS_PRECONDITION(GetClass()->GetInterfaceInfo(), "bad wrapper");
+    if(!(*info = GetClass()->GetInterfaceInfo()))
+        return NS_ERROR_UNEXPECTED;
+    NS_ADDREF(*info);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCWrappedNative::GetIID(nsIID** iid)
+{
+    NS_PRECONDITION(iid, "bad param");
+
+    nsIAllocator* al;
+    void* p;
+
+    al = GetClass()->GetXPCContext()->GetXPConnect()->GetAllocator();
+    if(!al || NULL == (p = al->Alloc(sizeof(nsIID))))
+    {
+        *iid = NULL;
+        return NS_ERROR_UNEXPECTED;
+    }
+    NS_RELEASE(al);
+    memcpy(p, &GetIID(), sizeof(nsIID));
+    *iid = (nsIID*)p;
+    return NS_OK;
+}

@@ -64,7 +64,7 @@ nsInterfaceInfo::nsInterfaceInfo(REFNSIID aIID, const char* aName,
     mConstantCount = 2;
     mConstants = new nsXPCConstant[2];
 
-    nsXPCVarient v;
+    nsXPCVariant v;
     v.type = nsXPCType::T_I32;
     v.val.i32 = 5;
     mConstants[0] = nsXPCConstant("five", v);
@@ -89,7 +89,7 @@ nsInterfaceInfo::~nsInterfaceInfo()
         delete [] mConstants;
 }
 
-nsresult
+NS_IMETHODIMP
 nsInterfaceInfo::GetName(const char** name)
 {
     NS_PRECONDITION(name, "bad param");
@@ -97,7 +97,7 @@ nsInterfaceInfo::GetName(const char** name)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsInterfaceInfo::GetIID(const nsIID** iid)
 {
     NS_PRECONDITION(iid, "bad param");
@@ -105,7 +105,7 @@ nsInterfaceInfo::GetIID(const nsIID** iid)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsInterfaceInfo::GetParent(nsIInterfaceInfo** parent)
 {
     NS_PRECONDITION(parent, "bad param");
@@ -113,7 +113,7 @@ nsInterfaceInfo::GetParent(nsIInterfaceInfo** parent)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsInterfaceInfo::GetMethodCount(int* count)
 {
     NS_PRECONDITION(count, "bad param");
@@ -121,7 +121,7 @@ nsInterfaceInfo::GetMethodCount(int* count)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsInterfaceInfo::GetConstantCount(int* count)
 {
     NS_PRECONDITION(count, "bad param");
@@ -129,7 +129,7 @@ nsInterfaceInfo::GetConstantCount(int* count)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsInterfaceInfo::GetMethodInfo(unsigned index, const nsXPCMethodInfo** info)
 {
     NS_PRECONDITION(info, "bad param");
@@ -148,7 +148,7 @@ nsInterfaceInfo::GetMethodInfo(unsigned index, const nsXPCMethodInfo** info)
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsInterfaceInfo::GetConstant(unsigned index, const nsXPCConstant** constant)
 {
     NS_PRECONDITION(constant, "bad param");

@@ -125,13 +125,14 @@ public:
 /***************************************************************************/
 
 #define XPC_IMPLEMENT_FORWARD_CREATE(_class) \
-    nsresult _class::Create(JSContext *cx, JSObject *obj,                   \
+    NS_IMETHODIMP _class::Create(JSContext *cx, JSObject *obj,              \
                       nsIXPConnectWrappedNative* wrapper,                   \
                       nsIXPCScriptable* arbitrary)                          \
     {return arbitrary->Create(cx, obj, wrapper, NULL);}
 
 #define XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(_class) \
-    nsresult _class::LookupProperty(JSContext *cx, JSObject *obj, jsid id,  \
+    NS_IMETHODIMP _class::LookupProperty(JSContext *cx, JSObject *obj,      \
+                              jsid id,                                      \
                               JSObject **objp, JSProperty **propp,          \
                               nsIXPConnectWrappedNative* wrapper,           \
                               nsIXPCScriptable* arbitrary,                  \
@@ -140,7 +141,7 @@ public:
                                       NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(_class) \
-    nsresult _class::DefineProperty(JSContext *cx, JSObject *obj,           \
+    NS_IMETHODIMP _class::DefineProperty(JSContext *cx, JSObject *obj,      \
                               jsid id, jsval value,                         \
                               JSPropertyOp getter, JSPropertyOp setter,     \
                               uintN attrs, JSProperty **propp,              \
@@ -151,7 +152,7 @@ public:
                                  attrs, propp, wrapper, NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_GETPROPERTY(_class) \
-    nsresult _class::GetProperty(JSContext *cx, JSObject *obj,              \
+    NS_IMETHODIMP _class::GetProperty(JSContext *cx, JSObject *obj,         \
                            jsid id, jsval *vp,                              \
                            nsIXPConnectWrappedNative* wrapper,              \
                            nsIXPCScriptable* arbitrary,                     \
@@ -160,7 +161,7 @@ public:
 
 
 #define XPC_IMPLEMENT_FORWARD_SETPROPERTY(_class) \
-    nsresult _class::SetProperty(JSContext *cx, JSObject *obj,              \
+    NS_IMETHODIMP _class::SetProperty(JSContext *cx, JSObject *obj,         \
                            jsid id, jsval *vp,                              \
                            nsIXPConnectWrappedNative* wrapper,              \
                            nsIXPCScriptable* arbitrary,                     \
@@ -168,7 +169,8 @@ public:
     {return arbitrary->SetProperty(cx, obj, id, vp, wrapper, NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(_class) \
-    nsresult _class::GetAttributes(JSContext *cx, JSObject *obj, jsid id,   \
+    NS_IMETHODIMP _class::GetAttributes(JSContext *cx, JSObject *obj,       \
+                             jsid id,                                       \
                              JSProperty *prop, uintN *attrsp,               \
                              nsIXPConnectWrappedNative* wrapper,            \
                              nsIXPCScriptable* arbitrary,                   \
@@ -177,7 +179,8 @@ public:
                                      NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_SETATTRIBUTES(_class) \
-    nsresult _class::SetAttributes(JSContext *cx, JSObject *obj, jsid id,   \
+    NS_IMETHODIMP _class::SetAttributes(JSContext *cx, JSObject *obj,       \
+                             jsid id,                                       \
                              JSProperty *prop, uintN *attrsp,               \
                              nsIXPConnectWrappedNative* wrapper,            \
                              nsIXPCScriptable* arbitrary,                   \
@@ -186,7 +189,7 @@ public:
                                      NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_DELETEPROPERTY(_class) \
-    nsresult _class::DeleteProperty(JSContext *cx, JSObject *obj,           \
+    NS_IMETHODIMP _class::DeleteProperty(JSContext *cx, JSObject *obj,      \
                               jsid id, jsval *vp,                           \
                               nsIXPConnectWrappedNative* wrapper,           \
                               nsIXPCScriptable* arbitrary,                  \
@@ -195,7 +198,7 @@ public:
                                       NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(_class) \
-    nsresult _class::DefaultValue(JSContext *cx, JSObject *obj,             \
+    NS_IMETHODIMP _class::DefaultValue(JSContext *cx, JSObject *obj,        \
                             JSType type, jsval *vp,                         \
                             nsIXPConnectWrappedNative* wrapper,             \
                             nsIXPCScriptable* arbitrary,                    \
@@ -204,7 +207,7 @@ public:
                                     NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_ENUMERATE(_class) \
-    nsresult _class::Enumerate(JSContext *cx, JSObject *obj,                \
+    NS_IMETHODIMP _class::Enumerate(JSContext *cx, JSObject *obj,           \
                          JSIterateOp enum_op,                               \
                          jsval *statep, jsid *idp,                          \
                          nsIXPConnectWrappedNative* wrapper,                \
@@ -214,7 +217,8 @@ public:
                                  NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_CHECKACCESS(_class) \
-    nsresult _class::CheckAccess(JSContext *cx, JSObject *obj, jsid id,     \
+    NS_IMETHODIMP _class::CheckAccess(JSContext *cx, JSObject *obj,         \
+                           jsid id,                                         \
                            JSAccessMode mode, jsval *vp, uintN *attrsp,     \
                            nsIXPConnectWrappedNative* wrapper,              \
                            nsIXPCScriptable* arbitrary,                     \
@@ -223,7 +227,7 @@ public:
                               wrapper, NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_CALL(_class) \
-    nsresult _class::Call(JSContext *cx, JSObject *obj,                     \
+    NS_IMETHODIMP _class::Call(JSContext *cx, JSObject *obj,                \
                     uintN argc, jsval *argv,                                \
                     jsval *rval,                                            \
                     nsIXPConnectWrappedNative* wrapper,                     \
@@ -233,7 +237,7 @@ public:
                             NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_CONSTRUCT(_class) \
-    nsresult _class::Construct(JSContext *cx, JSObject *obj,                \
+    NS_IMETHODIMP _class::Construct(JSContext *cx, JSObject *obj,           \
                          uintN argc, jsval *argv,                           \
                          jsval *rval,                                       \
                          nsIXPConnectWrappedNative* wrapper,                \
@@ -243,7 +247,7 @@ public:
                                  NULL, retval);}
 
 #define XPC_IMPLEMENT_FORWARD_FINALIZE(_class) \
-    nsresult _class::Finalize(JSContext *cx, JSObject *obj,                 \
+    NS_IMETHODIMP _class::Finalize(JSContext *cx, JSObject *obj,            \
                         nsIXPConnectWrappedNative* wrapper,                 \
                         nsIXPCScriptable* arbitrary)                        \
     {return arbitrary->Finalize(cx, obj, wrapper, NULL);}
