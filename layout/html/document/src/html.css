@@ -184,6 +184,13 @@ table[align="right"] {
   left: inherit;
   z-index: inherit;
   clip: inherit;
+  /* background and border should be inherited so that computed style
+   * (which uses the outer frame) will get the right values for these
+   * properties.  Since the outer frame does not paint, inheriting
+   * these is OK.
+   */
+  background: inherit;
+  border: inherit;
   -moz-opacity: inherit;
 }
    
