@@ -21,7 +21,6 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/subscribe.css" type="text/css"?>
 
-<?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd">
@@ -39,9 +38,6 @@ Rights Reserved.
         ondialogcancel="return subscribeCancel();">
         
 <stringbundle id="bundle_subscribe" src="chrome://messenger/locale/subscribe.properties"/>
-<stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
-<stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
-<script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
@@ -153,11 +149,16 @@ Rights Reserved.
           <spacer flex="1"/>
         </vbox>
       </row>
+      <row>
+        <hbox id="statusContainerBox" >
+           <statusbarpanel id="statusText" crop="right" flex="1"/> 
+           <statusbarpanel class="statusbarpanel-progress">
+             <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
+           </statusbarpanel>
+         </hbox>
+         <hbox/>
+      </row>
     </rows>
   </grid>
-  <hbox id="okayCancelContainerBox" align="right">
-        <button dlgtype="accept"/> 
-        <button dlgtype="cancel"/>
-  </hbox>
-  <statusbar id="status-bar" class="chromeclass-status"/>
+  <separator  class="thin"/>
 </dialog>
