@@ -1,26 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<!-- 
+<!--
 Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
 Requires Ant version 1.2 or later
 -->
-<project name="Rhino" default="default" basedir=".">
+
+<project name="Rhino" default="help" basedir=".">
 
   <target name="properties">
     <property name="name" value="rhino"/>
     <property name="Name" value="Rhino"/>
     <property name="version" value="1_5R5pre"/>
     <property name="rhino.jar" value="js.jar"/>
-  
+
     <property name="debug" value="on"/>
-  
-    <property name="src.dir" value="src"/>
-    <property name="toolsrc.dir" value="toolsrc"/>
-    <property name="src.examples" value="examples"/>
-  
+
     <property name="build.dir" value="./build"/>
-    <property name="build.dest" value="${build.dir}/classes"/>
-  
+    <property name="classes" value="${build.dir}/classes"/>
+
     <property name="dist.name" value="rhino${version}"/>
     <property name="dist.dir" value="${build.dir}/${dist.name}"/>
     <property name="dist.src" value="${dist.dir}/src"/>
@@ -29,18 +26,16 @@ Requires Ant version 1.2 or later
     <property name="dist.docs" value="${dist.dir}/docs"/>
     <property name="dist.apidocs" value="${dist.docs}/apidocs"/>
     <property name="dist.file" value="rhino${version}.zip"/>
+    <property name="dist.source-only-zip" value="rhino${version}-sources.zip"/>
 
     <property file="apiClasses.properties"/>
     <property name="docsrc.dir" value="docs"/>
-    <property name="dist.docsrc.dir" value="${src.dir}/docs"/>
+    <property name="dist.docsrc.dir" value="src/docs"/>
   </target>
 
   <target name="init" depends="properties">
-  </target>
-  
-  <target name="prepare" depends="init">
     <mkdir dir="${build.dir}"/>
-    <mkdir dir="${build.dest}"/>
+    <mkdir dir="${classes}"/>
     <mkdir dir="${dist.dir}"/>
     <mkdir dir="${dist.src}"/>
     <mkdir dir="${dist.toolsrc}"/>
@@ -49,62 +44,56 @@ Requires Ant version 1.2 or later
     <mkdir dir="${dist.apidocs}"/>
   </target>
 
-  <target name="compile-src" depends="prepare">
-    <ant dir="${src.dir}"/>
+  <target name="compile" depends="init">
+    <ant dir="src" target="compile"/>
+    <ant dir="toolsrc" target="compile"/>
   </target>
 
-  <target name="compile-toolsrc" depends="prepare">
-    <ant dir="${toolsrc.dir}"/>
+  <target name="copy-source" depends="init">
+    <ant dir="src" target="copy-source"/>
+    <ant dir="toolsrc" target="copy-source"/>
+    <copy todir="${dist.dir}" file="build.xml"/>
+    <copy todir="${dist.dir}" file="apiClasses.properties"/>
   </target>
-
-  <target name="compile" depends="compile-src,compile-toolsrc"/>
 
   <target name="jar" depends="compile">
-    <jar jarfile="${dist.dir}/${rhino.jar}" 
-         basedir="${build.dest}"
-         manifest="${src.dir}/manifest" />
+    <jar jarfile="${dist.dir}/${rhino.jar}"
+         basedir="${classes}"
+         manifest="src/manifest" />
   </target>
-  
-  <target name="jar-src" depends="compile-src">
-    <jar jarfile="${dist.dir}/${rhino.jar}" 
-         basedir="${build.dest}"
-         manifest="${src.dir}/manifest" />
-  </target>
-  
-  <target name="copy-examples" depends="prepare">
+
+  <target name="copy-examples" depends="init">
     <copy todir="${dist.examples}">
-      <fileset dir="${src.examples}" includes="*.java,*.js,*.html" />
+      <fileset dir="examples" includes="*.java,*.js,*.html" />
     </copy>
   </target>
 
-  <target name="copy-misc" depends="prepare">
+  <target name="copy-misc" depends="init">
     <tstamp/>
     <filter token="datestamp" value="${TODAY}"/>
     <copy todir="${dist.dir}" filtering="yes">
       <fileset dir=".">
         <patternset>
-          <include name="build.xml"/>
-          <include name="apiClasses.properties"/>
           <include name="build-date"/>
         </patternset>
       </fileset>
     </copy>
   </target>
 
-  <target name="copy-all" depends="copy-examples,copy-misc">
+  <target name="copy-all" depends="copy-source,copy-examples,copy-misc">
   </target>
 
-  <target name="copy-docs" depends="prepare"> 
+  <target name="copy-docs" depends="init">
     <echo message="copy from ${docsrc.dir}"/>
     <copy todir="${dist.docs}">
-      <fileset dir="${docsrc.dir}" 
+      <fileset dir="${docsrc.dir}"
                includes="**/*.html,**/*.jpg,**/*.gif" />
     </copy>
   </target>
 
   <target name="javadoc" depends="compile,copy-docs">
     <javadoc sourcefiles="${apiClasses}"
-             sourcepath="${src.dir}"
+             sourcepath="src"
              destdir="${dist.apidocs}"
              overview="${dist.docs}/api.html"
              version="true"
@@ -113,19 +102,53 @@ Requires Ant version 1.2 or later
              windowtitle="${Name}" />
   </target>
 
-  <target name="dist" depends="copy-all,javadoc,jar">
+  <target name="dist" depends="jar,copy-all,javadoc">
     <delete file="${dist.file}" />
     <zip zipfile="${dist.file}"
-         basedir="${build.dir}" 
+         basedir="${build.dir}"
          includes="**"
          excludes="classes/**" />
   </target>
 
-  <target name="default">
-    <echo>
-****  Building core only; for full distribution build, try "ant dist".
-    </echo>
-    <antcall target="jar-src"/>
+  <target name="source-zip" depends="copy-source">
+    <delete file="${dist.source-only-zip}" />
+    <zip zipfile="${dist.source-only-zip}" basedir="${build.dir}"
+         includes="${dist.name}/src/**,${dist.name}/toolsrc/**,${dist.name}/build.xml,${dist.name}/apiClasses.properties"/>
   </target>
-  
+
+  <target name="clean" depends="properties">
+    <delete quiet="true" file="${dist.dir}/${rhino.jar}"/>
+    <delete quiet="true" dir="${classes}"/>
+  </target>
+
+  <target name="deepclean" depends="properties">
+    <delete quiet="true" dir="${build.dir}"/>
+    <delete quiet="true" file="${dist.file}"/>
+    <delete quiet="true" file="${dist.source-only-zip}"/>
+  </target>
+
+  <target name="help" depends="properties">
+<echo>The following targets are available with this build file:
+
+ clean       remove all compiled classes and copied property files
+
+ compile     compile all classes and copy all property files
+             into ${classes} directory
+
+ deepclean   remove all generated files and directories
+
+ dist        create ${dist.file} with full Rhino distribution
+
+ help        print this help
+
+ jar         create ${rhino.jar} in ${dist.dir}
+
+ javadoc     generate generate Rhino API documentation
+             in ${dist.apidocs}
+
+ source-zip  create ${dist.source-only-zip} with all Rhino
+             source files necessary to recreate ${rhino.jar}
+</echo>
+  </target>
+
 </project>

@@ -4,10 +4,12 @@
 Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
 Requires Ant version 1.2
 -->
-<project name="toolsrc" default="build" basedir=".">
+<project name="toolsrc" default="compile" basedir=".">
 
   <target name="properties">
     <property name="nest" value=".."/>
+    <property name="build.dir" value="./build"/>
+    <property name="classes" value="${build.dir}/classes"/>
     <property name="src.debugger"
                value="org/mozilla/javascript/tools/debugger"/>
     <available file="${src.debugger}/AbstractCellEditor.java"
@@ -62,20 +64,17 @@ Requires Ant version 1.2
 
   <target name="compile" depends="properties,get-swing-ex">
     <javac srcdir="."
-           destdir="${nest}/${build.dest}"
+           destdir="${nest}/${classes}"
            includes="org/**/*.java"
            deprecation="on"
            debug="${debug}">
     </javac>
-  </target>
-
-  <target name="copy-properties">
-    <copy todir="${nest}/${build.dest}">
+    <copy todir="${nest}/${classes}">
       <fileset dir="." includes="org/**/*.properties" />
     </copy>
   </target>
 
-  <target name="copy-source">
+  <target name="copy-source" depends="properties">
     <copy todir="${nest}/${dist.toolsrc}">
       <fileset dir="."
                includes="org/**/*.java,org/**/*.properties,build.xml"
@@ -83,6 +82,11 @@ Requires Ant version 1.2
     </copy>
   </target>
 
-  <target name="build" depends="compile,copy-properties,copy-source"/>
+  <target name="clean" depends="properties">
+    <delete includeEmptyDirs="true">
+      <fileset dir="${nest}/${classes}"
+               includes="org/mozilla/javascript/tools/**"/>
+    </delete>
+  </target>
 
 </project>
