@@ -4,7 +4,7 @@ srcdir	= @srcdir@
 
 include $(MOD_DEPTH)/config/autoconf.mk
 
-SRCDIRS	= build include libraries
+SRCDIRS	= include libraries
 ifeq ($(BUILDCLU), 1)
 SRCDIRS += clients/tools
 endif

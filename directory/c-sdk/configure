@@ -6,7 +6,7 @@
 # This configure script is free software; the Free Software Foundation
 # gives unlimited permission to copy, distribute and modify it.
 
-# Defaults:
+# Defaults:  
 ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
@@ -501,7 +501,7 @@ echo > confdefs.h
 
 # A filename unique to this package, relative to the directory that
 # configure is in, which we can look for to find out if srcdir is correct.
-ac_unique_file=ldap/build/dirver.c
+ac_unique_file=ldap/include/ldap.h
 
 # Find the source files, if location was not specified.
 if test -z "$srcdir"; then
@@ -5588,7 +5588,6 @@ Makefile
 config/Makefile
 config/autoconf.mk
 ldap/Makefile
-ldap/build/Makefile
 ldap/clients/tools/Makefile
 ldap/include/Makefile
 ldap/libraries/Makefile

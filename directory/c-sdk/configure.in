@@ -35,7 +35,7 @@ dnl GPL.
 dnl 
 
 AC_PREREQ(2.12)
-AC_INIT(ldap/build/dirver.c)
+AC_INIT(ldap/include/ldap.h)
 
 AC_CONFIG_AUX_DIR(${srcdir}/config/autoconf)
 AC_CANONICAL_SYSTEM
@@ -2314,7 +2314,6 @@ Makefile
 config/Makefile
 config/autoconf.mk
 ldap/Makefile
-ldap/build/Makefile
 ldap/clients/tools/Makefile
 ldap/include/Makefile
 ldap/libraries/Makefile
