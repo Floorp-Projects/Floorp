@@ -288,10 +288,13 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     m_addresses = nsnull;
 
   	m_addressesLeft = nsnull;
-    m_verifyAddress = nsnull;	
+    m_verifyAddress = nsnull;
+#ifdef UNREADY_CODE 
     m_totalAmountWritten = 0;
     m_totalMessageSize = 0;
+#endif /* UNREADY_CODE */
     m_originalContentLength = 0;
+    m_totalAmountRead = 0;
 
     // ** may want to consider caching the server capability to save lots of
     // round trip communication between the client and server
@@ -364,7 +367,15 @@ const char * nsSmtpProtocol::GetUserDomainName()
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult aStatus)
 {
-	nsMsgAsyncWriteProtocol::OnStopRequest(nsnull, ctxt, aStatus);
+  if (aStatus == NS_OK && m_totalAmountRead == 0) {
+    // if we are getting OnStopRequest() with NS_OK, 
+    // but we haven't read any bytes, that's spells trouble.
+    // it means that the server has dropped us before we could read anything
+    // for example, see bug #158059
+    nsMsgAsyncWriteProtocol::OnStopRequest(nsnull, ctxt, NS_ERROR_CONNECTION_REFUSED);
+  }
+	else
+    nsMsgAsyncWriteProtocol::OnStopRequest(nsnull, ctxt, aStatus);
 
 	// okay, we've been told that the send is done and the connection is going away. So 
 	// we need to release all of our state
@@ -438,17 +449,19 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
 {
 	char * line = nsnull;
 	char cont_char;
-	PRInt32 status = 0;
+	PRInt32 bytesRead = 0;
 
-  status = ReadLine(inputStream, length, &line);
+  bytesRead = ReadLine(inputStream, length, &line);
 
-  if (status < 0) // we are blocked waiting for more data...
+  if (bytesRead < 0) // we are blocked waiting for more data...
   {
      m_nextState = SMTP_RESPONSE;
      SetFlag(SMTP_PAUSE_FOR_READ);
      return 0; 
 	}
 	
+  m_totalAmountRead += bytesRead;
+
   PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Response: %s", line));
 	cont_char = ' '; /* default */
   sscanf(line, "%d%c", &m_responseCode, &cont_char);

@@ -177,9 +177,12 @@ private:
   
   PRBool m_tlsInitiated;
 
+  PRInt32 m_totalAmountRead;
+#ifdef UNREADY_CODE 
 	// message specific information
 	PRInt32		m_totalAmountWritten;
 	PRUint32	m_totalMessageSize;
+#endif /* UNREADY_CODE */
     
 	char		*m_dataBuf;
   PRUint32 m_dataBufSize;
