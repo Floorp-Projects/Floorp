@@ -544,7 +544,7 @@ nsresult nsImapUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 			// We have a port number
             cp0 = cp+1;
             cp = PL_strchr(cp, '/');
-            m_port = strtol(cp0, (char **)nsnull, 10);
+            m_port = strtol(cp0, (char **)nsnull, 10 /* base 10 */);
         }
 		imapPartOfUrl = cp + 1; // #### probably not quite right - should check for "/"??
         cp = PL_strchr(cp, '?');
