@@ -479,6 +479,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
 //XXX dashes which span more than two edges are not handled properly MMP
 void nsCSSRendering::DrawDashedSides(PRIntn startSide,
                                      nsIRenderingContext& aContext,
+                                     const nsRect& aDirtyRect,
                                      const PRUint8 borderStyles[],  
                                      const nscolor borderColors[],  
                                      const nsRect& borderOutside,
@@ -486,13 +487,31 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
                                      PRIntn aSkipSides,
                                      nsRect* aGap)
 {
-  PRIntn dashLength;
-  nsRect dashRect, firstRect, currRect;
+PRIntn  dashLength;
+nsRect  dashRect, firstRect, currRect;
+PRBool  bSolid = PR_TRUE;
+float   over = 0.0f;
+PRUint8 style = borderStyles[startSide];  
+PRBool  skippedSide = PR_FALSE;
+nscoord xstart,xwidth,ystart,ywidth;
 
-  PRBool bSolid = PR_TRUE;
-  float over = 0.0f;
-  PRUint8 style = borderStyles[startSide];  
-  PRBool skippedSide = PR_FALSE;
+  // find out were x and y start
+  if(aDirtyRect.x > borderInside.x) {
+    xstart = aDirtyRect.x;
+  } else {
+    xstart = borderInside.x;
+  }
+
+  if(aDirtyRect.y > borderInside.y) {
+    ystart = aDirtyRect.y;
+  } else {
+    ystart = aDirtyRect.y;
+  }
+
+  // find the x and y width
+  xwidth = aDirtyRect.XMost();
+  ywidth = aDirtyRect.YMost();
+
   for (PRIntn whichSide = startSide; whichSide < 4; whichSide++) {
     PRUint8 prevStyle = style;
     style = borderStyles[whichSide];  
@@ -706,9 +725,13 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
   }
 }
 
-
+/** ---------------------------------------------------
+ *  See documentation in nsCSSRendering.h
+ *	@update 10/22/99 dwc
+ */
 void nsCSSRendering::DrawDashedSides(PRIntn startSide,
                                      nsIRenderingContext& aContext,
+                                     const nsRect& aDirtyRect,
                                      const nsStyleSpacing& aSpacing,
                                      PRBool aDoOutline,
                                      const nsRect& borderOutside,
@@ -716,13 +739,34 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
                                      PRIntn aSkipSides,
                                      nsRect* aGap)
 {
-  PRIntn dashLength;
-  nsRect dashRect, firstRect, currRect;
+PRIntn  dashLength;
+nsRect  dashRect, firstRect, currRect;
+nscoord xstart,xwidth,ystart,ywidth,temp,leftover,temp1,cornerLength;
+PRBool  bSolid = PR_TRUE;
+float   over = 0.0f;
+PRUint8 style = aDoOutline?aSpacing.GetOutlineStyle():aSpacing.GetBorderStyle(startSide);  
+PRBool  skippedSide = PR_FALSE;
 
-  PRBool bSolid = PR_TRUE;
-  float over = 0.0f;
-  PRUint8 style = aDoOutline?aSpacing.GetOutlineStyle():aSpacing.GetBorderStyle(startSide);  
-  PRBool skippedSide = PR_FALSE;
+
+  // find out were x and y start
+  if(aDirtyRect.x > borderInside.x) {
+    xstart = aDirtyRect.x;
+  } else {
+    xstart = borderInside.x;
+  }
+
+  if(aDirtyRect.y > borderInside.y) {
+    ystart = aDirtyRect.y;
+  } else {
+    ystart = borderInside.y;
+  }
+
+
+  // find the x and y width
+  xwidth = aDirtyRect.XMost();
+  ywidth = aDirtyRect.YMost();
+
+
   for (PRIntn whichSide = startSide; whichSide < 4; whichSide++) {
     PRUint8 prevStyle = style;
     style = aDoOutline?aSpacing.GetOutlineStyle():aSpacing.GetBorderStyle(whichSide);  
@@ -740,7 +784,6 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
         bSolid = PR_TRUE;
       }
 
-      // XXX units for dash & dot?
       if (style == NS_STYLE_BORDER_STYLE_DASHED) {
         dashLength = DASH_LENGTH;
       } else {
@@ -757,185 +800,117 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
       }
       aContext.SetColor(sideColor);  
       switch (whichSide) {
+      case NS_SIDE_RIGHT:
       case NS_SIDE_LEFT:
-        //XXX need to properly handle wrap around from last edge to first edge
-        //(this is the first edge) MMP
+        bSolid = PR_FALSE;
+        
+        // This is our dot or dash..
         dashRect.width = borderInside.x - borderOutside.x;
-        dashRect.height = nscoord(dashRect.width * dashLength);
-        dashRect.x = borderOutside.x;
-        dashRect.y = borderInside.YMost() - dashRect.height;
-
-        if (over > 0.0f) {
-          firstRect.x = dashRect.x;
-          firstRect.width = dashRect.width;
-          firstRect.height = nscoord(dashRect.height * over);
-          firstRect.y = dashRect.y + (dashRect.height - firstRect.height);
-          over = 0.0f;
-          currRect = firstRect;
-        } else {
-          currRect = dashRect;
-        }
-
-        while (currRect.YMost() > borderInside.y) {
-          //clip if necessary
-          if (currRect.y < borderInside.y) {
-            over = float(borderInside.y - dashRect.y) /
-              float(dashRect.height);
-            currRect.height = currRect.height - (borderInside.y - currRect.y);
-            currRect.y = borderInside.y;
-          }
-
-          //draw if necessary
-          if (bSolid) {
-            aContext.FillRect(currRect);
-          }
-
-          //setup for next iteration
-          if (over == 0.0f) {
-            bSolid = PRBool(!bSolid);
-          }
-          dashRect.y = dashRect.y - currRect.height;
-          currRect = dashRect;
-        }
-        break;
-
-      case NS_SIDE_TOP:
-        //if we are continuing a solid rect, fill in the corner first
-        if (bSolid) {
-          aContext.FillRect(borderOutside.x, borderOutside.y,
-                            borderInside.x - borderOutside.x,
-                            borderInside.y - borderOutside.y);
-        }
-
-        dashRect.height = borderInside.y - borderOutside.y;
-        dashRect.width = dashRect.height * dashLength;
-        dashRect.x = borderInside.x;
+        dashRect.height = dashRect.width * dashLength;
         dashRect.y = borderOutside.y;
 
-        if (over > 0.0f) {
-          firstRect.x = dashRect.x;
-          firstRect.y = dashRect.y;
-          firstRect.width = nscoord(dashRect.width * over);
-          firstRect.height = dashRect.height;
-          over = 0.0f;
-          currRect = firstRect;
+        if(whichSide == NS_SIDE_RIGHT){
+          dashRect.x = borderInside.XMost();
         } else {
-          currRect = dashRect;
+          dashRect.x = borderOutside.x;
         }
 
-        while (currRect.x < borderInside.XMost()) {
-          //clip if necessary
-          if (currRect.XMost() > borderInside.XMost()) {
-            over = float(dashRect.XMost() - borderInside.XMost()) /
-              float(dashRect.width);
-            currRect.width = currRect.width -
-              (currRect.XMost() - borderInside.XMost());
-          }
+        if (style == NS_STYLE_BORDER_STYLE_DASHED) {
+          cornerLength = dashRect.height/2;
+        } else {
+          cornerLength = dashRect.height;
+        }
 
+        // upper corner
+        aContext.FillRect(dashRect.x, dashRect.y,dashRect.width, cornerLength);
+
+        // lower corner
+        aContext.FillRect(dashRect.x, borderOutside.YMost()-cornerLength,dashRect.width, cornerLength);
+ 
+
+        temp = borderOutside.YMost()-(2*cornerLength);
+        temp1 = temp/dashRect.height;
+
+        if((temp1%2)==0){  // then there are an even number of tiles
+          leftover = -((temp%dashRect.height)/2);
+        } else {
+          leftover = (temp%dashRect.height)/2;
+        }
+        
+        currRect = dashRect;
+        currRect.y+=(dashRect.height/2)+leftover;
+        if( temp > ywidth)
+          temp = ywidth;
+        
+        // get the currRect's y into the view before we start
+        if( currRect.y+currRect.height < aDirtyRect.y){
+          currRect.y = NSToCoordFloor((float)(aDirtyRect.y/dashRect.height))*dashRect.height;
+        }
+
+        while(currRect.y<temp) {
           //draw if necessary
           if (bSolid) {
             aContext.FillRect(currRect);
           }
 
-          //setup for next iteration
-          if (over == 0.0f) {
-            bSolid = PRBool(!bSolid);
-          }
-          dashRect.x = dashRect.x + currRect.width;
-          currRect = dashRect;
-        }
-        break;
-
-      case NS_SIDE_RIGHT:
-        //if we are continuing a solid rect, fill in the corner first
-        if (bSolid) {
-          aContext.FillRect(borderInside.XMost(), borderOutside.y,
-                            borderOutside.XMost() - borderInside.XMost(),
-                            borderInside.y - borderOutside.y);
-        }
-
-        dashRect.width = borderOutside.XMost() - borderInside.XMost();
-        dashRect.height = nscoord(dashRect.width * dashLength);
-        dashRect.x = borderInside.XMost();
-        dashRect.y = borderInside.y;
-
-        if (over > 0.0f) {
-          firstRect.x = dashRect.x;
-          firstRect.y = dashRect.y;
-          firstRect.width = dashRect.width;
-          firstRect.height = nscoord(dashRect.height * over);
-          over = 0.0f;
-          currRect = firstRect;
-        } else {
-          currRect = dashRect;
-        }
-
-        while (currRect.y < borderInside.YMost()) {
-          //clip if necessary
-          if (currRect.YMost() > borderInside.YMost()) {
-            over = float(dashRect.YMost() - borderInside.YMost()) /
-              float(dashRect.height);
-            currRect.height = currRect.height -
-              (currRect.YMost() - borderInside.YMost());
-          }
-
-          //draw if necessary
-          if (bSolid) {
-            aContext.FillRect(currRect);
-          }
-
-          //setup for next iteration
-          if (over == 0.0f) {
-            bSolid = PRBool(!bSolid);
-          }
-          dashRect.y = dashRect.y + currRect.height;
-          currRect = dashRect;
+          bSolid = PRBool(!bSolid);
+          currRect.y += dashRect.height;
         }
         break;
 
       case NS_SIDE_BOTTOM:
-        //if we are continuing a solid rect, fill in the corner first
-        if (bSolid) {
-          aContext.FillRect(borderInside.XMost(), borderInside.YMost(),
-                            borderOutside.XMost() - borderInside.XMost(),
-                            borderOutside.YMost() - borderInside.YMost());
-        }
+      case NS_SIDE_TOP:
+        bSolid = PR_FALSE;
+        
+        // This is our dot or dash..
+        dashRect.height = borderInside.y - borderOutside.y;
+        dashRect.width = dashRect.height * dashLength;
+        dashRect.x = borderOutside.x;
 
-        dashRect.height = borderOutside.YMost() - borderInside.YMost();
-        dashRect.width = nscoord(dashRect.height * dashLength);
-        dashRect.x = borderInside.XMost() - dashRect.width;
-        dashRect.y = borderInside.YMost();
-
-        if (over > 0.0f) {
-          firstRect.y = dashRect.y;
-          firstRect.width = nscoord(dashRect.width * over);
-          firstRect.height = dashRect.height;
-          firstRect.x = dashRect.x + (dashRect.width - firstRect.width);
-          over = 0.0f;
-          currRect = firstRect;
+        if(whichSide == NS_SIDE_BOTTOM){
+          dashRect.y = borderInside.YMost();
         } else {
-          currRect = dashRect;
+          dashRect.y = borderOutside.y;
         }
 
-        while (currRect.XMost() > borderInside.x) {
-          //clip if necessary
-          if (currRect.x < borderInside.x) {
-            over = float(borderInside.x - dashRect.x) / float(dashRect.width);
-            currRect.width = currRect.width - (borderInside.x - currRect.x);
-            currRect.x = borderInside.x;
-          }
+        if (style == NS_STYLE_BORDER_STYLE_DASHED) {
+          cornerLength = dashRect.width/2;
+        } else {
+          cornerLength = dashRect.width;
+        }
 
+        // upperleft corner
+        aContext.FillRect(borderOutside.x, dashRect.y,cornerLength, borderInside.y - borderOutside.y);
+
+        // upperright corner
+        aContext.FillRect(borderOutside.XMost()-cornerLength, dashRect.y,cornerLength, borderInside.y - borderOutside.y);
+        temp = borderOutside.XMost()-(2*cornerLength);
+        temp1 = temp/dashRect.width;
+
+        if((temp1%2)==0){  // then there are an even number of tiles
+          leftover = -((temp%dashRect.width)/2);
+        } else {
+          leftover = (temp%dashRect.width)/2;
+        }
+        
+        currRect = dashRect;
+        currRect.x+=(dashRect.width/2)+leftover;
+
+        if( temp > xwidth)
+          temp = xwidth;
+
+        // get the currRect's x into the view before we start
+        if( currRect.x+currRect.width < aDirtyRect.x){
+          currRect.x = NSToCoordFloor((float)(aDirtyRect.x/dashRect.height))*dashRect.width;
+        }
+        while(currRect.x<temp) {
           //draw if necessary
           if (bSolid) {
             aContext.FillRect(currRect);
           }
 
-          //setup for next iteration
-          if (over == 0.0f) {
-            bSolid = PRBool(!bSolid);
-          }
-          dashRect.x = dashRect.x - currRect.width;
-          currRect = dashRect;
+          bSolid = PRBool(!bSolid);
+          currRect.x += dashRect.width;
         }
         break;
       }
@@ -960,13 +935,15 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
                                         PRIntn aSkipSides,
                                         nsRect* aGap)
 {
-  PRIntn dashLength;
-  nsRect dashRect, currRect;
+PRIntn dashLength;
+nsRect dashRect, currRect;
 
-  PRBool bSolid = PR_TRUE;
-  float over = 0.0f;
-  PRBool skippedSide = PR_FALSE;
-  PRIntn whichSide=0;
+PRBool  bSolid = PR_TRUE;
+float   over = 0.0f;
+PRBool  skippedSide = PR_FALSE;
+PRIntn  whichSide=0;
+
+
   // do this just to set up initial condition for loop
   // "segment" is the current portion of the edge we are computing
   nsBorderEdge * segment =  (nsBorderEdge *)(aBorderEdges->mEdges[whichSide].ElementAt(0));
@@ -1376,6 +1353,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
   PRInt16       theRadius;
   nsStyleCoord  borderRadius;
+  float         percent;
 
   if (aHardBorderSize > 0) {
     border.SizeTo(aHardBorderSize, aHardBorderSize, aHardBorderSize, aHardBorderSize);
@@ -1395,6 +1373,8 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
     case eStyleUnit_Inherit:
       break;
     case eStyleUnit_Percent:
+      percent = borderRadius.GetPercentValue();
+      theRadius = (nscoord)(percent * aBorderArea.width);
       break;
     case eStyleUnit_Coord:
       theRadius = borderRadius.GetCoordValue();
@@ -1437,7 +1417,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
     }
   }
   if (cnt < 4) {
-    DrawDashedSides(cnt, aRenderingContext,aBorderStyle, PR_FALSE,
+    DrawDashedSides(cnt, aRenderingContext,aDirtyRect,aBorderStyle, PR_FALSE,
                     inside, outside, aSkipSides, aGap);
   }
 
@@ -1525,7 +1505,7 @@ void nsCSSRendering::PaintOutline(nsIPresContext& aPresContext,
   //see if any sides are dotted or dashed
   if ((outlineStyle == NS_STYLE_BORDER_STYLE_DOTTED) || 
       (outlineStyle == NS_STYLE_BORDER_STYLE_DASHED))  {
-    DrawDashedSides(0, aRenderingContext, aBorderStyle, PR_TRUE,
+    DrawDashedSides(0, aRenderingContext, aDirtyRect, aBorderStyle, PR_TRUE,
                     inside, outside, aSkipSides, aGap);
     aRenderingContext.PopState(clipState);
     return;

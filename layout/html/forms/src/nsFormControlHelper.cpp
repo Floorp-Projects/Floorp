@@ -947,7 +947,7 @@ nsFormControlHelper::PaintFocus(nsIRenderingContext& aRenderingContext,
       borderStyles[i] = NS_STYLE_BORDER_STYLE_DOTTED;
       borderColors[i] = black;
     }
-    nsCSSRendering::DrawDashedSides(0, aRenderingContext, borderStyles, borderColors, aOutside,
+    nsCSSRendering::DrawDashedSides(0, aRenderingContext,aDirtyRect, borderStyles, borderColors, aOutside,
                                     aInside, PR_FALSE, nsnull);
 }
 
