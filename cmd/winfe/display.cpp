@@ -660,8 +660,8 @@ NET_StreamClass *external_viewer_disk_stream(int iFormatOut, void *pDataObj, URL
 	}
 	if(bMoreInfo == TRUE)	{
 		char * url = NULL;
-		PREF_CopyConfigString("internal_url.more_info_plugin.url",&url);
-		if (url) {
+		int iError = PREF_CopyConfigString("internal_url.more_info_plugin.url",&url);
+		if (PREF_ERROR != iError && url) {
 			CString csUrlAddress = url;
 			csUrlAddress += "?";
 			csUrlAddress += pUrl->content_type;

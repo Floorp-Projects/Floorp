@@ -2976,7 +2976,8 @@ HBITMAP wfe_LoadBitmap(HINSTANCE hInst, HDC hDC, LPCSTR pszBmName )
 		HBITMAP hCust = NULL;
 		CString csProfileFile;
 
-		PREF_CopyConfigString("toolbar.logo.win_large_file",&pFile);
+		int iError = PREF_CopyConfigString("toolbar.logo.win_large_file",&pFile);
+		ASSERT(iError != PREF_ERROR);
 
 		// we need to first check the profile for the file (for PE) and then resort to the default of the EXE dir
 		csProfileFile = theApp.m_UserDirectory;
@@ -2995,7 +2996,8 @@ HBITMAP wfe_LoadBitmap(HINSTANCE hInst, HDC hDC, LPCSTR pszBmName )
 		HBITMAP hCust = NULL;
 		CString csProfileFile;
 
-		PREF_CopyConfigString("toolbar.logo.win_small_file",&pFile);
+		int iError = PREF_CopyConfigString("toolbar.logo.win_small_file",&pFile);
+		ASSERT(iError != PREF_ERROR);
 
 		// we need to first check the profile for the file (for PE) and then resort to the default of the EXE dir
 		csProfileFile = theApp.m_UserDirectory;

@@ -601,8 +601,9 @@ void CMainFrame::OnLoadHomePage()
 
 	if (bOverride) {
 		// if the over-ride preference is set, use that instead
-		PREF_CopyConfigString("startup.homepage_override_url",&tmpBuf);
-		if (tmpBuf && tmpBuf[0]) {
+		tmpBuf = NULL;
+		int iError = PREF_CopyConfigString("startup.homepage_override_url",&tmpBuf);
+		if (PREF_ERROR != iError && tmpBuf && tmpBuf[0]) {
 			csTmp = tmpBuf;
 			lpszHomePage = csTmp;
 			XP_FREE(tmpBuf);

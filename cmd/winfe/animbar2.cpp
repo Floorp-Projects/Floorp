@@ -169,9 +169,6 @@ CAnimation2::CAnimation2( CWnd *pParent, LPUNKNOWN pUnk ): CWnd()
 	m_ToolTip.Create(this);
 #endif
 
-    char *pURL;
-    PREF_CopyConfigString("toolbar.logo.url",&pURL);
-
     if( !CUST_IsCustomAnimation( &m_iFrameCount ) )
     {
         m_ToolTip.AddTool(this, szLoadString(IDS_NETSCAPE_TIP));
@@ -361,9 +358,9 @@ void CAnimation2::OnLButtonUp( UINT nFlags, CPoint point )
 			ASSERT(pCX != NULL);
 			if (pCX != NULL)
 			{
-				char *pURL;
-				PREF_CopyConfigString("toolbar.logo.url",&pURL);
-				if (pURL && *pURL) {
+				char *pURL = NULL;
+				int iError = PREF_CopyConfigString("toolbar.logo.url",&pURL);
+				if (PREF_ERROR != iError && pURL && *pURL) {
 					pCX->NormalGetUrl(pURL);
 					XP_FREE(pURL);
 				}

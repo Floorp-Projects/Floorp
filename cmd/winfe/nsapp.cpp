@@ -918,8 +918,8 @@ CString CNetscapeApp::ResolveAppVersion()   {
     csReturn += csVersion;
 
 	char *pCustAgent = NULL;
-	PREF_CopyConfigString("user_agent",&pCustAgent);
-	if (pCustAgent) {
+	int iError = PREF_CopyConfigString("user_agent",&pCustAgent);
+	if (PREF_ERROR != iError && pCustAgent) {
 		if (*pCustAgent) {
 			csReturn += "C-";
 			csReturn += pCustAgent;

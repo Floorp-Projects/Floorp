@@ -391,9 +391,9 @@ void CMainFrame::OnUpdateToggleImageLoad(CCmdUI* pCmdUI)
 void CMainFrame::OnNetSearch()
 {
 	char * url = NULL;
-	PREF_CopyConfigString("internal_url.net_search.url",&url);
+	int iError = PREF_CopyConfigString("internal_url.net_search.url",&url);
 	
-	if(GetMainContext() && url)
+	if(PREF_ERROR != iError && GetMainContext() && url)
 	{
 		GetMainContext()->NormalGetUrl(url);
 		XP_FREE(url);

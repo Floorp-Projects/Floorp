@@ -30,19 +30,20 @@
 
 BOOL CUST_IsCustomAnimation(int * iFrames)
 {
-	char *pFile;
+	char *pFile = NULL;
 	BOOL bRet = FALSE;
 
 	// set iFrames to default
 
-	PREF_CopyConfigString("toolbar.logo.win_small_file",&pFile);
-	if (pFile) {
+	int iError = PREF_CopyConfigString("toolbar.logo.win_small_file",&pFile);
+	if (PREF_ERROR != iError && pFile) {
 		if (*pFile) bRet = TRUE;
 		XP_FREE(pFile);
 		pFile = NULL;
 	}
-	PREF_CopyConfigString("toolbar.logo.win_large_file",&pFile);
-	if (pFile) {
+	pFile = NULL;
+	iError = PREF_CopyConfigString("toolbar.logo.win_large_file",&pFile);
+	if (PREF_ERROR != iError && pFile) {
 		if (*pFile) bRet = TRUE;
 		XP_FREE(pFile);
 		pFile = NULL;
