@@ -41,6 +41,8 @@
 #include "nsIFileStream.h"
 #include "nsFileStream.h"
 
+#include "nsILocalFile.h"
+
 #include "prmem.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileSpecImpl, nsIFileSpec)
@@ -831,6 +833,23 @@ nsresult NS_NewFileSpec(nsIFileSpec** result)
 //----------------------------------------------------------------------------------------
 {
 	return nsFileSpecImpl::Create(nsnull, NS_GET_IID(nsIFileSpec), (void**)result);
+}
+
+//----------------------------------------------------------------------------------------
+nsresult NS_NewFileSpecFromIFile(nsIFile *aFile, nsIFileSpec **result)
+//----------------------------------------------------------------------------------------
+{
+	 nsresult rv = nsFileSpecImpl::Create(nsnull, NS_GET_IID(nsIFileSpec), (void**)result);
+     if (NS_FAILED(rv)) return rv;
+
+     nsCAutoString path;
+     rv = aFile->GetNativePath(path);
+     if (NS_FAILED(rv)) return rv;
+
+     rv = (*result)->SetNativePath(path.get());
+     if (NS_FAILED(rv))
+         NS_RELEASE(*result);
+     return rv;
 }
 
 //----------------------------------------------------------------------------------------

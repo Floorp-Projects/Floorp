@@ -320,7 +320,7 @@ function loadDialog()
   dialog.timeLeft.setAttribute("value", formatSeconds( 0 ));
 
   dialog.location.setAttribute("value", sourceUrl.spec );
-  dialog.fileName.setAttribute( "value", targetFile.unicodePath );
+  dialog.fileName.setAttribute( "value", targetFile.path );
 
   var prefs = Components.classes[prefContractID].getService(Components.interfaces.nsIPrefBranch);
   if (prefs)
@@ -403,7 +403,7 @@ function onLoad() {
           const lfContractID = "@mozilla.org/file/local;1";
           const lfIID = Components.interfaces.nsILocalFile;
           filesFolder = Components .classes[lfContractID].createInstance(lfIID);
-          filesFolder.initWithUnicodePath(persistArgs.target.unicodePath);
+          filesFolder.initWithPath(persistArgs.target.path);
           
           var nameWithoutExtension = filesFolder.leafName;
           nameWithoutExtension = nameWithoutExtension.substring(0, nameWithoutExtension.lastIndexOf("."));

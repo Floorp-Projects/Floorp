@@ -18,6 +18,8 @@
 #include "nsISupports.idl"
 #include "nsIEnumerator.idl"
 
+interface nsIFile;
+
 typedef PRUint32 nsRegistryKey;
 typedef long     nsWellKnownRegistry;
 
@@ -35,7 +37,7 @@ interface nsIRegistry : nsISupports
     // Dont use this one. This for internal use only.
     const long ApplicationCustomRegistry = -1;
 
-    void open(in string regFile);
+    void open(in nsIFile regFile);
     void openWellKnownRegistry(in nsWellKnownRegistry regid);
 
     void flush();

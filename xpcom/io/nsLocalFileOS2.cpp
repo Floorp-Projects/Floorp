@@ -28,6 +28,7 @@
 #include "nsMemory.h"
 
 #include "nsLocalFileOS2.h"
+#include "nsLocalFileUnicode.h"
 
 #include <uconv.h>
 
@@ -157,24 +158,22 @@ class nsDirEnumerator : public nsISimpleEnumerator
 
         nsresult Init(nsILocalFile* parent) 
         {
-            char* filepath;
-            parent->GetTarget(&filepath);
+            nsCAutoString filepath;
+            parent->GetNativeTarget(filepath);
         
-            if (filepath == nsnull)
+            if (filepath.IsEmpty())
             {
-                parent->GetPath(&filepath);
+                parent->GetNativePath(filepath);
             }
             
-            if (filepath == nsnull)
+            if (filepath.IsEmpty())
             {
-                return NS_ERROR_OUT_OF_MEMORY;
+                return NS_ERROR_UNEXPECTED;
             }
 
-            mDir = PR_OpenDir(filepath);
+            mDir = PR_OpenDir(filepath.get());
             if (mDir == nsnull)    // not a directory?
                 return NS_ERROR_FAILURE;
-			
-			nsMemory::Free(filepath);
 
             mParent          = parent;    
             return NS_OK;
@@ -204,13 +203,13 @@ class nsDirEnumerator : public nsISimpleEnumerator
                 if (NS_FAILED(rv)) 
                     return rv;
                 
-                rv = file->Append(entry->name);
+                rv = file->AppendNative(nsDependentCString(entry->name));
                 if (NS_FAILED(rv)) 
                     return rv;
                 
                 // make sure the thing exists.  If it does, try the next one.
                 PRBool exists;
-                    rv = file->Exists(&exists);
+                rv = file->Exists(&exists);
                 if (NS_FAILED(rv) || !exists) 
                 {
                     return HasMoreElements(result); 
@@ -642,55 +641,47 @@ nsLocalFile::Clone(nsIFile **file)
 }
 
 NS_IMETHODIMP  
-nsLocalFile::InitWithPath(const char *filePath)
+nsLocalFile::InitWithNativePath(const nsACString &filePath)
 {
     MakeDirty();
-    NS_ENSURE_ARG(filePath);
-    
-    char* nativeFilePath = nsnull;
+
+    nsACString::const_iterator begin, end;
+    filePath.BeginReading(begin);
+    filePath.EndReading(end);
+
+    // input string must not be empty
+    if (begin == end)
+        return NS_ERROR_FAILURE;
+
+    char firstChar = *begin;
+    char secondChar = *(++begin);
     
     // just do a sanity check.  if it has any forward slashes, it is not a Native path
     // on windows.  Also, it must have a colon at after the first char.
-    if (filePath[0] == 0)
-        return NS_ERROR_FAILURE;
     
-    if ( (filePath[2] == 0) && (filePath[1] == ':') )
-    {
-        // C : //
-        nativeFilePath = (char*) nsMemory::Alloc( 4 );
-        if (!nativeFilePath)
-            return NS_ERROR_OUT_OF_MEMORY;
-        nativeFilePath[0] = filePath[0];
-        nativeFilePath[1] = ':';
-        nativeFilePath[2] = '\\';
-        nativeFilePath[3] = 0;
-    }
-    // XXX is this an 'else'? Otherwise 'nativeFilePath' could leak.
-    if ( ( (filePath[1] == ':')  && (strchr(filePath, '/') == 0) ) ||  // normal windows path
-         ( (filePath[0] == '\\') && (filePath[1] == '\\') ) )  // netwerk path
+    char *path = nsnull;
+    PRInt32 pathLen = 0;
+
+    if ( ( (secondChar == ':') && !FindCharInReadable('/', begin, end) ) ||  // normal path
+         ( (firstChar == '\\') && (secondChar == '\\') ) )  // network path
     {
         // This is a native path
-        if (nativeFilePath) nsCRT::free(nativeFilePath);
-        nativeFilePath = (char*) nsMemory::Clone( filePath, strlen(filePath)+1 );
+        path = ToNewCString(filePath);
+        pathLen = filePath.Length();
     }
-    
-    if (nativeFilePath == nsnull)
+
+    if (path == nsnull)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    // kill any trailing separator
-    char* temp = nativeFilePath;
-    int len = strlen(temp) - 1;
-    // Is '\' second charactor of DBCS?
-#ifdef XP_OS2
-    if(temp[len] == '\\' && !::isleadbyte(temp[len-1]))
-#else
-    if(temp[len] == '\\' && !::IsDBCSLeadByte(temp[len-1]))
-#endif
-        temp[len] = '\0';
+    // kill any trailing '\' provided it isn't the second char of DBCS
+    PRInt32 len = pathLen - 1;
+    if (path[len] == '\\' && !::isleadbyte(path[len-1]))
+    {
+        path[len] = '\0';
+        pathLen = len;
+    }
     
-    mWorkingPath.Assign(nativeFilePath);
-    nsMemory::Free( nativeFilePath );
-
+    mWorkingPath.Adopt(path, pathLen);
     return NS_OK;
 }
 
@@ -794,27 +785,30 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 }
     
 NS_IMETHODIMP  
-nsLocalFile::Append(const char *node)
+nsLocalFile::AppendNative(const nsACString &node)
 {
     // Append only one component. Check for subdirs.
-    if (!node || (_mbschr((const unsigned char*) node, '\\') != nsnull))
+    // XXX can we avoid the PromiseFlatCString call?
+    if (node.IsEmpty() || (_mbschr((const unsigned char*) PromiseFlatCString(node).get(), '\\') != nsnull))
     {
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
-    return AppendRelativePath(node);
+    return AppendRelativeNativePath(node);
 }
 
 NS_IMETHODIMP  
-nsLocalFile::AppendRelativePath(const char *node)
+nsLocalFile::AppendRelativeNativePath(const nsACString &node)
 {
     // Cannot start with a / or have .. or have / anywhere
-    if (!node || strchr(node, '/'))
+    nsACString::const_iterator begin, end;
+    node.BeginReading(begin);
+    node.EndReading(end);
+    if (node.IsEmpty() || FindCharInReadable('/', begin, end))
     {
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
     MakeDirty();
-    mWorkingPath.Append("\\");
-    mWorkingPath.Append(node);
+    mWorkingPath.Append(NS_LITERAL_CSTRING("\\") + node);
     return NS_OK;
 }
 
@@ -825,9 +819,9 @@ nsLocalFile::Normalize()
 }
 
 NS_IMETHODIMP  
-nsLocalFile::GetLeafName(char * *aLeafName)
+nsLocalFile::GetNativeLeafName(nsACString &aLeafName)
 {
-    NS_ENSURE_ARG_POINTER(aLeafName);
+    aLeafName.Truncate();
 
     const char* temp = mWorkingPath.get();
     if(temp == nsnull)
@@ -841,12 +835,12 @@ nsLocalFile::GetLeafName(char * *aLeafName)
     else
         leaf++;
 
-    *aLeafName = (char*) nsMemory::Clone(leaf, strlen(leaf)+1);
+    aLeafName.Assign(leaf);
     return NS_OK;
 }
 
 NS_IMETHODIMP  
-nsLocalFile::SetLeafName(const char * aLeafName)
+nsLocalFile::SetNativeLeafName(const nsACString &aLeafName)
 {
     MakeDirty();
     
@@ -867,36 +861,32 @@ nsLocalFile::SetLeafName(const char * aLeafName)
 
 
 NS_IMETHODIMP  
-nsLocalFile::GetPath(char **_retval)
+nsLocalFile::GetNativePath(nsACString &_retval)
 {
-    NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = (char*) nsMemory::Clone(mWorkingPath.get(), mWorkingPath.Length()+1);
+    _retval = mWorkingPath;
     return NS_OK;
 }
 
 nsresult
-nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char * newName, PRBool followSymlinks, PRBool move)
+nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const nsACString &newName, PRBool followSymlinks, PRBool move)
 {
     nsresult rv;
-    char* filePath;
+    nsCAutoString filePath;
 
     // get the path that we are going to copy to.
     // Since windows does not know how to auto
     // resolve shortcust, we must work with the
     // target.
-    char* inFilePath;
-    destParent->GetTarget(&inFilePath);  
-    nsCString destPath(inFilePath);
-    nsMemory::Free(inFilePath);
+    nsCAutoString destPath;
+    destParent->GetNativeTarget(destPath);  
 
     destPath.Append("\\");
 
-    if (newName == nsnull)
+    if (newName.IsEmpty())
     {
-        char *aFileName;
-        sourceFile->GetLeafName(&aFileName);
+        nsCAutoString aFileName;
+        sourceFile->GetNativeLeafName(aFileName);
         destPath.Append(aFileName);
-        nsMemory::Free(aFileName);
     }
     else
     {
@@ -906,13 +896,13 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
            
     if (followSymlinks)
     {
-        rv = sourceFile->GetTarget(&filePath);
-        if (!filePath)
-            rv = sourceFile->GetPath(&filePath);
+        rv = sourceFile->GetNativeTarget(filePath);
+        if (filePath.IsEmpty())
+            rv = sourceFile->GetNativePath(filePath);
     }
     else
     {
-        rv = sourceFile->GetPath(&filePath);
+        rv = sourceFile->GetNativePath(filePath);
     }
 
     if (NS_FAILED(rv))
@@ -922,7 +912,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
 
     if( move )
     {
-        rc = DosMove(filePath, (PSZ)NS_CONST_CAST(char*, destPath.get()));
+        rc = DosMove(filePath.get(), (PSZ)NS_CONST_CAST(char*, destPath.get()));
     }
 
     if (!move || rc == ERROR_NOT_SAME_DEVICE) {
@@ -930,7 +920,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
          * same drive.  "MoveFile()" on Windows will go ahead and move the
          * file without error, so we need to do the same   IBM-AKR
          */
-        rc = DosCopy(filePath, (PSZ)NS_CONST_CAST(char*, destPath.get()), DCPY_EXISTING);
+        rc = DosCopy(filePath.get(), (PSZ)NS_CONST_CAST(char*, destPath.get()), DCPY_EXISTING);
         /* WSOD2 HACK */
         if (rc == 65) { // NETWORK_ACCESS_DENIED
           CHAR         achProgram[CCHMAXPATH];  // buffer for program name, parameters
@@ -938,7 +928,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
 
           strcpy(achProgram, "CMD.EXE  /C ");
           strcat(achProgram, """COPY ");
-          strcat(achProgram, filePath);
+          strcat(achProgram, filePath.get());
           strcat(achProgram, " ");
           strcat(achProgram, (PSZ)NS_CONST_CAST(char*, destPath.get()));
           strcat(achProgram, """");
@@ -955,21 +945,19 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent, const char
          */
         if( move && (rc == NO_ERROR) )
         {
-          DosDelete( filePath );
+          DosDelete( filePath.get() );
         }
     } /* !move or ERROR */
     
     if (rc)
         rv = ConvertOS2Error(rc);
-    
-    nsMemory::Free(filePath);
 
     return rv;
 }
 
 
 nsresult
-nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSymlinks, PRBool move)
+nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool followSymlinks, PRBool move)
 {
     nsCOMPtr<nsIFile> newParentDir = aParentDir;
     // check to see if this exists, otherwise return an error.
@@ -984,7 +972,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
     {
         // no parent was specified.  We must rename.
         
-        if (!newName)
+        if (newName.IsEmpty())
             return NS_ERROR_INVALID_ARG;
 
         move = PR_TRUE;
@@ -1018,16 +1006,14 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
                 newParentDir->IsSymlink(&isLink);
                 if (isLink)
                 {
-                    char* target;
-                    newParentDir->GetTarget(&target);
+                    nsCAutoString target;
+                    newParentDir->GetNativeTarget(target);
 
                     nsCOMPtr<nsILocalFile> realDest = new nsLocalFile();
                     if (realDest == nsnull)
                         return NS_ERROR_OUT_OF_MEMORY;
 
-                    rv = realDest->InitWithPath(target);
-                    
-                    nsMemory::Free(target);
+                    rv = realDest->InitWithNativePath(target);
 
                     if (NS_FAILED(rv)) 
                         return rv;
@@ -1064,35 +1050,35 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
         if (NS_FAILED(rv)) 
             return rv;
         
-        char *allocatedNewName;
-        if (!newName)
+        nsCAutoString allocatedNewName;
+        if (newName.IsEmpty())
         {
             PRBool isLink;
             IsSymlink(&isLink);
             if (isLink)
             {
-                char* temp;
-                GetTarget(&temp);
-                const char* leaf = (const char*) _mbsrchr((const unsigned char*) temp, '\\');
+                nsCAutoString temp;
+                GetNativeTarget(temp);
+                const char* leaf = (const char*) _mbsrchr((const unsigned char*) temp.get(), '\\');
                 if (leaf[0] == '\\')
                     leaf++;
-                allocatedNewName = (char*) nsMemory::Clone( leaf, strlen(leaf)+1 );
+                allocatedNewName = leaf;
             }
             else
             {
-                GetLeafName(&allocatedNewName);// this should be the leaf name of the 
+                GetNativeLeafName(allocatedNewName);// this should be the leaf name of the 
             }
         }
         else
         {
-            allocatedNewName = (char*) nsMemory::Clone( newName, strlen(newName)+1 );
+            allocatedNewName = newName;
         }
         
-        rv = target->Append(allocatedNewName);
+        rv = target->AppendNative(allocatedNewName);
         if (NS_FAILED(rv)) 
             return rv;
 
-        nsMemory::Free(allocatedNewName);
+        allocatedNewName.Truncate();
 
         target->Create(DIRECTORY_TYPE, 0644);  // TODO, what permissions should we use
         if (NS_FAILED(rv))
@@ -1124,14 +1110,14 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
                 if (followSymlinks)
                     rv = NS_ERROR_FAILURE;
                 else
-                    rv = file->MoveTo(target, nsnull);
+                    rv = file->MoveToNative(target, nsCString());
             }
             else
             {   
                 if (followSymlinks)
-                    rv = file->CopyToFollowingLinks(target, nsnull);
+                    rv = file->CopyToFollowingLinksNative(target, nsCString());
                 else
-                    rv = file->CopyTo(target, nsnull);
+                    rv = file->CopyToNative(target, nsCString());
             }
                     
             iterator->HasMoreElements(&more);
@@ -1144,48 +1130,44 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const char *newName, PRBool followSym
     {
         MakeDirty();
         
-        char* newParentPath;
-        newParentDir->GetPath(&newParentPath);
+        nsCAutoString newParentPath;
+        newParentDir->GetNativePath(newParentPath);
         
-        if (newParentPath == nsnull)
+        if (newParentPath.IsEmpty())
             return NS_ERROR_FAILURE;
 
-        if (newName == nsnull)
+        if (newName.IsEmpty())
         {
-            char *aFileName;
-            GetLeafName(&aFileName);
+            nsCAutoString aFileName;
+            GetNativeLeafName(aFileName);
             
-            InitWithPath(newParentPath);
-            Append(aFileName); 
-
-            nsMemory::Free(aFileName);
+            InitWithNativePath(newParentPath);
+            AppendNative(aFileName); 
         }
         else
         {
-            InitWithPath(newParentPath);
-            Append(newName);
+            InitWithNativePath(newParentPath);
+            AppendNative(newName);
         }
-        
-        nsMemory::Free(newParentPath);
     }
         
     return NS_OK;
 }
 
 NS_IMETHODIMP  
-nsLocalFile::CopyTo(nsIFile *newParentDir, const char *newName)
+nsLocalFile::CopyToNative(nsIFile *newParentDir, const nsACString &newName)
 {
     return CopyMove(newParentDir, newName, PR_FALSE, PR_FALSE);
 }
 
 NS_IMETHODIMP  
-nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const char *newName)
+nsLocalFile::CopyToFollowingLinksNative(nsIFile *newParentDir, const nsACString &newName)
 {
     return CopyMove(newParentDir, newName, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP  
-nsLocalFile::MoveTo(nsIFile *newParentDir, const char *newName)
+nsLocalFile::MoveToNative(nsIFile *newParentDir, const nsACString &newName)
 {
     return CopyMove(newParentDir, newName, PR_FALSE, PR_TRUE);
 }
@@ -1665,7 +1647,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 {
     NS_ENSURE_ARG_POINTER(aParent);
 
-    nsCString parentPath = mWorkingPath;
+    nsCAutoString parentPath(mWorkingPath);
 
     // cannot use nsCString::RFindChar() due to 0x5c problem
     PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.get(), '\\')
@@ -1676,11 +1658,11 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     parentPath.Truncate(offset);
 
     nsCOMPtr<nsILocalFile> localFile;
-    nsresult rv =  NS_NewLocalFile(parentPath.get(), mFollowSymlinks, getter_AddRefs(localFile));
+    nsresult rv =  NS_NewNativeLocalFile(parentPath, mFollowSymlinks, getter_AddRefs(localFile));
     
     if(NS_SUCCEEDED(rv) && localFile)
     {
-        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
+        return CallQueryInterface(localFile, aParent);
     }
     return rv;
 }
@@ -1765,7 +1747,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
 
-    char* path = nsnull;
+    nsCAutoString path;
     PRBool symLink;
     
     rv = IsSymlink(&symLink);
@@ -1773,11 +1755,11 @@ nsLocalFile::IsExecutable(PRBool *_retval)
         return rv;
     
     if (symLink)
-        GetTarget(&path);
+        GetNativeTarget(path);
     else
-        GetPath(&path);
+        GetNativePath(path);
 
-    const char* leaf = (const char*) _mbsrchr((const unsigned char*) path, '\\');
+    const char* leaf = (const char*) _mbsrchr((const unsigned char*) path.get(), '\\');
 
     // XXX On Windows NT / 2000, it should use "PATHEXT" environment value
 #ifdef XP_OS2
@@ -1793,8 +1775,6 @@ nsLocalFile::IsExecutable(PRBool *_retval)
     } else {
         *_retval = PR_FALSE;
     }
-    
-    nsMemory::Free(path);
     
     return NS_OK;
 }
@@ -1878,20 +1858,19 @@ nsLocalFile::IsSymlink(PRBool *_retval)
     *_retval = PR_FALSE;
 
 #ifndef XP_OS2   // No Symlinks on OS/2
-    char* path;
+    nsCAutoString path;
     int   pathLen;
     
-    GetPath(&path);
-    pathLen = strlen(path);
+    GetNativePath(path);
+    pathLen = path.Length();
     
-    const char* leaf = path + pathLen - 4;
+    const char* leaf = path.get() + pathLen - 4;
     
     if ( (strcmp(leaf, ".lnk") == 0)) 
     {
         *_retval = PR_TRUE;
     }
     
-    nsMemory::Free(path);
 #endif
     
     return NS_OK;
@@ -1942,18 +1921,10 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
     NS_ENSURE_ARG(_retval);
     *_retval = PR_FALSE;
 
-    char* inFilePath;
-    inFile->GetPath(&inFilePath);
+    nsCAutoString inFilePath;
+    inFile->GetNativePath(inFilePath);
     
-    char* filePath;
-    GetPath(&filePath);
-
-    if (strcmp(inFilePath, filePath) == 0)
-        *_retval = PR_TRUE;
-    
-    nsMemory::Free(inFilePath);
-    nsMemory::Free(filePath);
-
+    *_retval = inFilePath.Equals(mWorkingPath);
     return NS_OK;
 }
 
@@ -1962,17 +1933,17 @@ nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
     *_retval = PR_FALSE;
        
-    char* myFilePath;
-    if ( NS_FAILED(GetTarget(&myFilePath)))
-        GetPath(&myFilePath);
+    nsCAutoString myFilePath;
+    if ( NS_FAILED(GetNativeTarget(myFilePath)))
+        GetNativePath(myFilePath);
     
-    PRInt32 myFilePathLen = strlen(myFilePath);
+    PRInt32 myFilePathLen = myFilePath.Length();
     
-    char* inFilePath;
-    if ( NS_FAILED(inFile->GetTarget(&inFilePath)))
-        inFile->GetPath(&inFilePath);
+    nsCAutoString inFilePath;
+    if ( NS_FAILED(inFile->GetNativeTarget(inFilePath)))
+        inFile->GetNativePath(inFilePath);
 
-    if ( strncmp( myFilePath, inFilePath, myFilePathLen) == 0)
+    if ( strncmp( myFilePath.get(), inFilePath.get(), myFilePathLen) == 0)
     {
         // now make sure that the |inFile|'s path has a trailing
         // separator.
@@ -1984,19 +1955,15 @@ nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 
     }
         
-    nsMemory::Free(inFilePath);
-    nsMemory::Free(myFilePath);
-
     return NS_OK;
 }
 
 
 
 NS_IMETHODIMP
-nsLocalFile::GetTarget(char **_retval)
+nsLocalFile::GetNativeTarget(nsACString &_retval)
 {   
-    NS_ENSURE_ARG(_retval);
-    *_retval = nsnull;
+    _retval.Truncate();
 #if STRICT_FAKE_SYMLINKS    
     PRBool symLink;
     
@@ -2011,7 +1978,7 @@ nsLocalFile::GetTarget(char **_retval)
 #endif
     ResolveAndStat(PR_TRUE);
  
-    *_retval = (char*) nsMemory::Clone( mResolvedPath.get(), mResolvedPath.Length()+1 );
+    _retval = mResolvedPath;
     return NS_OK;
 }
 
@@ -2062,17 +2029,15 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
 }
 
 NS_IMETHODIMP
-nsLocalFile::GetPersistentDescriptor(char * *aPersistentDescriptor)
+nsLocalFile::GetPersistentDescriptor(nsACString &aPersistentDescriptor)
 {
-    NS_ENSURE_ARG_POINTER(aPersistentDescriptor);
-    return GetPath(aPersistentDescriptor);
+    return GetNativePath(aPersistentDescriptor);
 }
 
 NS_IMETHODIMP
-nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
+nsLocalFile::SetPersistentDescriptor(const nsACString &aPersistentDescriptor)
 {
-   NS_ENSURE_ARG(aPersistentDescriptor); 
-   return InitWithPath(aPersistentDescriptor);   
+   return InitWithNativePath(aPersistentDescriptor);   
 }
 
 #ifndef OPEN_DEFAULT
@@ -2084,22 +2049,22 @@ NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
   PRBool isDirectory = PR_FALSE;
-  nsXPIDLCString path;
+  nsCAutoString path;
 
   IsDirectory(&isDirectory);
   if (isDirectory)
   {
-    GetPath(getter_Copies(path));  
+    GetNativePath(path);  
   }
   else
   {
     nsCOMPtr<nsIFile> parent;
     GetParent(getter_AddRefs(parent));
     if (parent)
-      parent->GetPath(getter_Copies(path));  
+      parent->GetNativePath(path);  
   }
 
-  HOBJECT hobject = WinQueryObject(path);
+  HOBJECT hobject = WinQueryObject(path.get());
   WinOpenObject( hobject, OPEN_DEFAULT, TRUE);
 
   // we don't care if it succeeded or failed.
@@ -2110,11 +2075,7 @@ nsLocalFile::Reveal()
 NS_IMETHODIMP
 nsLocalFile::Launch()
 {
-  nsXPIDLCString platformPath;
-
-  GetPath(getter_Copies(platformPath));  
-
-  HOBJECT hobject = WinQueryObject(platformPath);
+  HOBJECT hobject = WinQueryObject(mWorkingPath.get());
   WinOpenObject( hobject, OPEN_DEFAULT, TRUE);
 
   // we don't care if it succeeded or failed.
@@ -2122,7 +2083,7 @@ nsLocalFile::Launch()
 }
 
 nsresult 
-NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
+NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result)
 {
     nsLocalFile* file = new nsLocalFile();
     if (file == nsnull)
@@ -2131,8 +2092,8 @@ NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
 
     file->SetFollowLinks(followLinks);
 
-    if (path) {
-        nsresult rv = file->InitWithPath(path);
+    if (!path.IsEmpty()) {
+        nsresult rv = file->InitWithNativePath(path);
         if (NS_FAILED(rv)) {
             NS_RELEASE(file);
             return rv;
@@ -2237,7 +2198,7 @@ static int isleadbyte(int c)
 
 static UconvObject  UnicodeConverter = NULL;
 
-nsresult NS_CreateUnicodeConverters()
+static nsresult NS_CreateUnicodeConverters()
 {
     ULONG ulLength;
     ULONG ulCodePage;
@@ -2259,7 +2220,7 @@ nsresult NS_CreateUnicodeConverters()
     }
 }
 
-void NS_DestroyUnicodeConverters()
+static void NS_DestroyUnicodeConverters()
 {
     ::UniFreeUconvObject(UnicodeConverter);
 }
@@ -2326,7 +2287,7 @@ nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
     nsresult rv = UCS2toFS(filePath, getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
-        return InitWithPath(tmp);
+        return InitWithNativePath(tmp);
 
     return rv;
 }
@@ -2343,7 +2304,7 @@ nsLocalFile::AppendUnicode(const PRUnichar *node)
     nsresult rv = UCS2toFS(node, getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
-        return Append(tmp);
+        return AppendNative(tmp);
 
     return rv;
 }
@@ -2364,7 +2325,7 @@ nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
     nsresult rv = UCS2toFS(node, getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
-        return AppendRelativePath(tmp);
+        return AppendRelativeNativePath(tmp);
 
     return rv;
 }
@@ -2373,11 +2334,11 @@ NS_IMETHODIMP
 nsLocalFile::GetUnicodeLeafName(PRUnichar **aLeafName)
 {
     NS_ENSURE_ARG_POINTER(aLeafName);
-    nsXPIDLCString tmp;
-    nsresult rv = GetLeafName(getter_Copies(tmp));
+    nsCAutoString tmp;
+    nsresult rv = GetNativeLeafName(tmp);
 
     if (NS_SUCCEEDED(rv))
-        return FStoUCS2(tmp, aLeafName);
+        return FStoUCS2(tmp.get(), aLeafName);
 
     return rv;
 }
@@ -2394,7 +2355,7 @@ nsLocalFile::SetUnicodeLeafName(const PRUnichar *aLeafName)
     nsresult rv = UCS2toFS(aLeafName, getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
-        return SetLeafName(tmp);
+        return SetNativeLeafName(tmp);
 
     return rv;
 }
@@ -2403,26 +2364,21 @@ NS_IMETHODIMP
 nsLocalFile::GetUnicodePath(PRUnichar **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    nsXPIDLCString tmp;
-    nsresult rv = GetPath(getter_Copies(tmp));
 
-    if (NS_SUCCEEDED(rv))
-        return FStoUCS2(tmp, _retval);
-
-    return rv;
+    return FStoUCS2(mWorkingPath.get(), _retval);
 }
 
 NS_IMETHODIMP
 nsLocalFile::CopyToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
 {
     if (!newName || nsCRT::strlen(newName) == 0)
-        return CopyTo(newParentDir, nsnull);
+        return CopyToNative(newParentDir, nsCString());
 
     nsXPIDLCString tmp;
     nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
-        return CopyTo(newParentDir, tmp);
+        return CopyToNative(newParentDir, tmp);
 
     return rv;
 }
@@ -2431,13 +2387,13 @@ NS_IMETHODIMP
 nsLocalFile::CopyToFollowingLinksUnicode(nsIFile *newParentDir, const PRUnichar *newName)
 {
     if (!newName || nsCRT::strlen(newName) == 0)
-        return CopyToFollowingLinks(newParentDir, nsnull);
+        return CopyToFollowingLinksNative(newParentDir, nsCString());
 
     nsXPIDLCString tmp;
     nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
-        return CopyToFollowingLinks(newParentDir, tmp);
+        return CopyToFollowingLinksNative(newParentDir, tmp);
 
     return rv;
 }
@@ -2446,13 +2402,13 @@ NS_IMETHODIMP
 nsLocalFile::MoveToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
 {
     if (!newName || nsCRT::strlen(newName) == 0)
-        return MoveTo(newParentDir, nsnull);
+        return MoveToNative(newParentDir, nsCString());
 
     nsXPIDLCString tmp;
     nsresult rv = UCS2toFS(newName, getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
-        return MoveTo(newParentDir, tmp);
+        return MoveToNative(newParentDir, tmp);
 
     return rv;
 }
@@ -2461,11 +2417,11 @@ NS_IMETHODIMP
 nsLocalFile::GetUnicodeTarget(PRUnichar **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    nsXPIDLCString tmp;
-    nsresult rv = GetTarget(getter_Copies(tmp));
+    nsCAutoString tmp;
+    nsresult rv = GetNativeTarget(tmp);
 
     if (NS_SUCCEEDED(rv))
-        return FStoUCS2(tmp, _retval);
+        return FStoUCS2(tmp.get(), _retval);
 
     return rv;
 }
@@ -2480,7 +2436,27 @@ NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* 
     nsresult rv = UCS2toFS(path, getter_Copies(tmp));
 
     if (NS_SUCCEEDED(rv))
-        return NS_NewLocalFile(tmp, followLinks, result);
+        return NS_NewNativeLocalFile(tmp, followLinks, result);
 
     return NS_OK;
+}
+
+//----------------------------------------------------------------------------
+// global init/shutdown
+//----------------------------------------------------------------------------
+
+PRBool nsLocalFile::mFSCharsetIsUTF8 = PR_FALSE;
+
+void
+nsLocalFile::GlobalInit()
+{
+    NS_CreateUnicodeConverters();
+
+    // XXX set mFSCharsetIsUTF8
+}
+
+void
+nsLocalFile::GlobalShutdown()
+{
+    NS_DestroyUnicodeConverters();
 }

@@ -264,15 +264,11 @@ nsresult
 nsProfileAccess::FillProfileInfo(nsIFile* regName)
 {
     nsresult rv = NS_OK;
-    nsXPIDLCString regFile;
     PRBool fixRegEntries = PR_FALSE;
-
-    if (regName)
-        regName->GetPath(getter_Copies(regFile));
 
     nsCOMPtr<nsIRegistry> registry(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = registry->Open(regFile);
+    rv = registry->Open(regName);
     if (NS_FAILED(rv)) return rv;   
 
     // Enumerate all subkeys (immediately) under the given node.
@@ -588,8 +584,6 @@ nsProfileAccess::RemoveSubTree(const PRUnichar* profileName)
 
     if (index >= 0)
     {
-        ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
-
         mProfiles->RemoveElementAt(index);
 
         if (mCurrentProfile.Equals(profileName))
@@ -626,7 +620,6 @@ nsresult
 nsProfileAccess::UpdateRegistry(nsIFile* regName)
 {
     nsresult rv;
-    nsXPIDLCString regFile;
 
     if (!mProfileDataChanged)
     {
@@ -635,17 +628,12 @@ nsProfileAccess::UpdateRegistry(nsIFile* regName)
 
     if (!regName)
     {
-        if (mNewRegFile)
-            mNewRegFile->GetPath(getter_Copies(regFile));   
-    }
-    else
-    {
-        regName->GetPath(getter_Copies(regFile));   
+        regName = mNewRegFile;
     }
 
     nsCOMPtr<nsIRegistry> registry(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = registry->Open(regFile);
+    rv = registry->Open(regName);
     if (NS_FAILED(rv)) return rv;   
 
     // Enumerate all subkeys (immediately) under the given node.
@@ -1025,9 +1013,13 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
 #if defined(XP_PC) || defined(XP_MAC)
     NS_ASSERTION(registryName, "Invalid registryName");
 
+    nsCOMPtr<nsILocalFile> registryFile;
+    rv = NS_NewNativeLocalFile(nsDependentCString(registryName), PR_TRUE, getter_AddRefs(registryFile));
+    if (NS_FAILED(rv)) return rv;
+
     nsCOMPtr<nsIRegistry> oldReg(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = oldReg->Open(registryName);
+    rv = oldReg->Open(registryFile);
     if (NS_FAILED(rv)) return rv;
 
     // Enumerate 4x tree and create an array of that information.
@@ -1165,7 +1157,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName, PRBool fromImport)
                 profileItem->profileName = NS_ConvertASCIItoUCS2(unixProfileName).get();
                 
                 nsCOMPtr<nsILocalFile> localFile;
-                rv = NS_NewLocalFile(profileLocation.get(), PR_TRUE, getter_AddRefs(localFile));
+                rv = NS_NewNativeLocalFile(profileLocation, PR_TRUE, getter_AddRefs(localFile));
                 if (NS_FAILED(rv)) return rv;
                 profileItem->SetResolvedProfileDir(localFile);
                 profileItem->isMigrated = PR_FALSE;
@@ -1379,7 +1371,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 #endif
 
         // Now we have a unicode path - make it into a file
-        rv = NS_NewUnicodeLocalFile(convertedProfLoc.get(), PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(convertedProfLoc), PR_TRUE, getter_AddRefs(tempLocal));
     }
     else
     {
@@ -1396,13 +1388,13 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         PRInt32 firstColon = regLocationData.FindChar(PRUnichar(':'));
         if (firstColon == -1)
         {
-            rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(tempLocal));
-            if (NS_SUCCEEDED(rv))
-                rv = tempLocal->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(regLocationData).get());
+            rv = NS_NewLocalFile(nsCString(), PR_TRUE, getter_AddRefs(tempLocal));
+            if (NS_SUCCEEDED(rv)) // XXX this only works on XP_MAC because regLocationData is ASCII
+                rv = tempLocal->SetPersistentDescriptor(NS_ConvertUCS2toUTF8(regLocationData));
         }
         else
 #endif
-        rv = NS_NewUnicodeLocalFile(regLocationData.get(), PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewLocalFile(NS_ConvertUCS2toUTF8(regLocationData), PR_TRUE, getter_AddRefs(tempLocal));
     }
 
     if (NS_SUCCEEDED(rv) && tempLocal)
@@ -1425,21 +1417,21 @@ nsresult ProfileStruct::ExternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 
 #if XP_MAC
         PRBool leafCreated;
-        nsXPIDLCString descBuf;
+        nsCAutoString descBuf;
 
         // It must exist before we try to use GetPersistentDescriptor
         rv = EnsureDirPathExists(resolvedLocation, &leafCreated);
         if (NS_FAILED(rv)) return rv;
-        rv = resolvedLocation->GetPersistentDescriptor(getter_Copies(descBuf));
+        rv = resolvedLocation->GetPersistentDescriptor(descBuf);
         if (NS_FAILED(rv)) return rv;
         if (leafCreated)
             resolvedLocation->Remove(PR_FALSE);
         regData = NS_ConvertUTF8toUCS2(descBuf);
 #else
-        nsXPIDLString ucPath;
-        rv = resolvedLocation->GetUnicodePath(getter_Copies(ucPath));
+        nsCAutoString utf8Path;
+        rv = resolvedLocation->GetPath(utf8Path);
         if (NS_FAILED(rv)) return rv;
-        regData = ucPath;
+        regData = NS_ConvertUTF8toUCS2(utf8Path);
 #endif
 
         rv = aRegistry->SetString(profKey,
@@ -1475,16 +1467,16 @@ nsresult ProfileStruct::InternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
     if (NS_SUCCEEDED(rv))
     {
 #ifdef XP_MAC
-        rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewLocalFile(nsCString(), PR_TRUE, getter_AddRefs(tempLocal));
         if (NS_SUCCEEDED(rv))
         {
             // The persistent desc on Mac is base64 encoded so plain ASCII
-            rv = tempLocal->SetPersistentDescriptor(regData.get());
+            rv = tempLocal->SetPersistentDescriptor(regData);
             if (NS_SUCCEEDED(rv))
                 migratedFrom = tempLocal;
         }
 #else
-        rv = NS_NewUnicodeLocalFile(NS_ConvertUTF8toUCS2(regData).get(), PR_TRUE, getter_AddRefs(tempLocal));
+        rv = NS_NewLocalFile(regData, PR_TRUE, getter_AddRefs(tempLocal));
         if (NS_SUCCEEDED(rv))
             migratedFrom = tempLocal;
 #endif
@@ -1495,17 +1487,14 @@ nsresult ProfileStruct::InternalizeMigratedFromLocation(nsIRegistry *aRegistry, 
 nsresult ProfileStruct::ExternalizeMigratedFromLocation(nsIRegistry *aRegistry, nsRegistryKey profKey)
 {
     nsresult rv = NS_OK;
-    nsXPIDLCString regData;
+    nsCAutoString regData;
     
     if (migratedFrom)
     {
 #if XP_MAC
-        rv = migratedFrom->GetPersistentDescriptor(getter_Copies(regData));
+        rv = migratedFrom->GetPersistentDescriptor(regData);
 #else
-        nsXPIDLString ucPath;
-        rv = resolvedLocation->GetUnicodePath(getter_Copies(ucPath));
-        if (NS_SUCCEEDED(rv))
-            regData = NS_ConvertUCS2toUTF8(ucPath);
+        rv = resolvedLocation->GetPath(regData);
 #endif
 
         if (NS_SUCCEEDED(rv))

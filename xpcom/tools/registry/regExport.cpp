@@ -42,6 +42,8 @@
 #include "nsCOMPtr.h"
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
+#include "nsILocalFile.h"
+#include "nsDependentString.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "nsMemory.h"
@@ -101,7 +103,14 @@ int main( int argc, char *argv[] ) {
     }
     
     // Open it against the input file name.
-    rv = reg->Open( argv[1] );
+    nsCOMPtr<nsILocalFile> regFile;
+    rv = NS_NewNativeLocalFile( nsDependentCString(argv[1]), PR_FALSE, getter_AddRefs(regFile) );
+    if ( NS_FAILED(rv) ) {
+        printf( "Error instantiating local file for %s, rv=%x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
+        return rv;
+    }
+
+    rv = reg->Open( regFile );
     
     if ( rv == NS_OK ) 
     {

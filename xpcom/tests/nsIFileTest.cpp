@@ -1,4 +1,5 @@
 #include "nsILocalFile.h"
+#include "nsString.h"
 
 #include <stdio.h>
 #include "nsXPCOM.h"
@@ -55,14 +56,14 @@ void Inspect()
 void GetPaths(nsILocalFile* file)
 {
     nsresult rv;
-    nsXPIDLCString pathName;
+    nsCAutoString pathName;
 
     printf("Getting Path\n");
 
-    rv = file->GetPath(getter_Copies(pathName));
+    rv = file->GetNativePath(pathName);
     VerifyResult(rv);
     
-    printf("filepath: %s\n", (const char *)pathName);
+    printf("filepath: %s\n", pathName.get());
 }
 
 void InitTest(const char* creationPath, const char* appendPath)
@@ -79,26 +80,26 @@ void InitTest(const char* creationPath, const char* appendPath)
         return;
     }
 
-    nsXPIDLCString leafName;
+    nsCAutoString leafName;
 
     Banner("InitWithPath");
     printf("creationPath == %s\nappendPath == %s\n", creationPath, appendPath);
 
-    rv = file->InitWithPath(creationPath);
+    rv = file->InitWithNativePath(nsDependentCString(creationPath));
     VerifyResult(rv);
     
     printf("Getting Filename\n");
-    rv = file->GetLeafName(getter_Copies(leafName));
-    printf(" %s\n", (const char *)leafName);
+    rv = file->GetNativeLeafName(leafName);
+    printf(" %s\n", leafName.get());
     VerifyResult(rv);
 
     printf("Appending %s \n", appendPath);
-    rv = file->Append(appendPath);
+    rv = file->AppendNative(nsDependentCString(appendPath));
     VerifyResult(rv);
 
     printf("Getting Filename\n");
-    rv = file->GetLeafName(getter_Copies(leafName));
-    printf(" %s\n", (const char *)leafName);
+    rv = file->GetNativeLeafName(leafName);
+    printf(" %s\n", leafName.get());
     VerifyResult(rv);
 
     GetPaths(file);
@@ -135,11 +136,11 @@ void CreationTest(const char* creationPath, const char* appendPath,
     Banner("Creation Test");
     printf("creationPath == %s\nappendPath == %s\n", creationPath, appendPath);
 
-    rv = file->InitWithPath(creationPath);
+    rv = file->InitWithNativePath(nsDependentCString(creationPath));
     VerifyResult(rv);
  
     printf("Appending %s\n", appendPath);
-    rv = file->AppendRelativePath(appendPath);
+    rv = file->AppendRelativeNativePath(nsDependentCString(appendPath));
     VerifyResult(rv);
     
     printf("Check For Existence\n");
@@ -187,11 +188,11 @@ void CreateUniqueTest(const char* creationPath, const char* appendPath,
     Banner("Creation Test");
     printf("creationPath == %s\nappendPath == %s\n", creationPath, appendPath);
 
-    rv = file->InitWithPath(creationPath);
+    rv = file->InitWithNativePath(nsDependentCString(creationPath));
     VerifyResult(rv);
  
     printf("Appending %s\n", appendPath);
-    rv = file->Append(appendPath);
+    rv = file->AppendNative(nsDependentCString(appendPath));
     VerifyResult(rv);
     
     printf("Check For Existence\n");
@@ -240,7 +241,7 @@ CopyTest(const char *testFile, const char *targetDir)
     return;
   }
 
-  rv = file->InitWithPath(testFile);
+  rv = file->InitWithNativePath(nsDependentCString(testFile));
   VerifyResult(rv);
   
   rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, NULL,
@@ -253,10 +254,10 @@ CopyTest(const char *testFile, const char *targetDir)
     return;
   }
 
-  rv = dir->InitWithPath(targetDir);
+  rv = dir->InitWithNativePath(nsDependentCString(targetDir));
   VerifyResult(rv);
 
-  rv = file->CopyTo(dir, NULL);
+  rv = file->CopyTo(dir, nsCString());
   VerifyResult(rv);
 
   printf("end copy test\n");
@@ -280,11 +281,11 @@ DeletionTest(const char* creationPath, const char* appendPath, PRBool recursive)
     Banner("Deletion Test");
     printf("creationPath == %s\nappendPath == %s\n", creationPath, appendPath);
 
-    rv = file->InitWithPath(creationPath);
+    rv = file->InitWithNativePath(nsDependentCString(creationPath));
     VerifyResult(rv);
  
     printf("Appending %s\n", appendPath);
-    rv = file->Append(appendPath);
+    rv = file->AppendNative(nsDependentCString(appendPath));
     VerifyResult(rv);
     
     printf("Check For Existance\n");

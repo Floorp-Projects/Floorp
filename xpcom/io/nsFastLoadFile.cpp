@@ -43,6 +43,8 @@
 #include "nsEnumeratorUtils.h"
 #include "nsMemory.h"
 #include "nsXPIDLString.h"
+#include "nsString.h"
+#include "nsReadableUtils.h"
 
 #include "nsIComponentManager.h"
 #include "nsIFile.h"
@@ -748,10 +750,10 @@ nsFastLoadFileReader::ReadFooter(nsFastLoadFooter *aFooter)
 
         if (LL_NE(fastLoadMtime, currentMtime)) {
 #ifdef DEBUG
-            nsXPIDLCString path;
-            file->GetPath(getter_Copies(path));
+            nsCAutoString path;
+            file->GetPath(path);
             printf("%s mtime changed, invalidating FastLoad file\n",
-                   (const char *)path);
+                   path.get());
 #endif
             return NS_ERROR_FAILURE;
         }
@@ -1488,8 +1490,8 @@ struct nsDependencyMapEntry : public nsStringMapEntry {
 NS_IMETHODIMP
 nsFastLoadFileWriter::AddDependency(nsIFile* aFile)
 {
-    nsXPIDLCString path;
-    nsresult rv = aFile->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    nsresult rv = aFile->GetPath(path);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1501,11 +1503,10 @@ nsFastLoadFileWriter::AddDependency(nsIFile* aFile)
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (!entry->mString) {
-        const char* str = path;
-        void *tmp = nsMemory::Clone(str, strlen(str) + 1);
+        const char *tmp = ToNewCString(path);
         if (!tmp)
             return NS_ERROR_OUT_OF_MEMORY;
-        entry->mString = NS_REINTERPRET_CAST(const char*, tmp);
+        entry->mString = tmp;
         rv = aFile->GetLastModifiedTime(&entry->mLastModified);
     }
     return rv;

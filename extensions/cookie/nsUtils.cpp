@@ -41,6 +41,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
 #include "nsIFileSpec.h"
+#include "nsILocalFile.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "prmem.h"
 
@@ -128,11 +129,7 @@ CKutil_ProfileDirectory(nsFileSpec& dirSpec) {
   
   // TODO: When the calling code can take an nsIFile,
   // this conversion to nsFileSpec can be avoided. 
-  nsXPIDLCString pathBuf;
-  aFile->GetPath(getter_Copies(pathBuf));
-  res = NS_NewFileSpec(getter_AddRefs(tempSpec));
-  if (NS_FAILED(res)) return res;
-  res = tempSpec->SetNativePath(pathBuf);
+  res = NS_NewFileSpecFromIFile(aFile, getter_AddRefs(tempSpec));
   if (NS_FAILED(res)) return res;
   res = tempSpec->GetFileSpec(&dirSpec);
   

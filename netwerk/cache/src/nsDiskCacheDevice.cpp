@@ -178,9 +178,9 @@ NS_IMETHODIMP nsDiskCacheDeviceInfo::GetUsageReport(char ** usageReport)
 
     buffer.Append("<tr><td><b>Cache Directory:</b></td><td><tt> ");
     nsCOMPtr<nsILocalFile> cacheDir;
-    char *                 path;
+    nsCAutoString          path;
     mDevice->getCacheDirectory(getter_AddRefs(cacheDir)); 
-    nsresult rv = cacheDir->GetPath(&path);
+    nsresult rv = cacheDir->GetPath(path);
     if (NS_SUCCEEDED(rv)) {
         buffer.Append(path);
     } else {
@@ -758,7 +758,7 @@ nsDiskCacheDevice::InitializeCacheDirectory()
         }
         
         // create a directory with unique name to contain existing cache directory
-        rv = cacheTrashDir->Append("Cache");
+        rv = cacheTrashDir->Append(NS_LITERAL_CSTRING("Cache"));
         if (NS_FAILED(rv))  return rv;
         rv = cacheTrashDir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0777); 
         if (NS_FAILED(rv))  return rv;
@@ -767,7 +767,7 @@ nsDiskCacheDevice::InitializeCacheDirectory()
         nsCOMPtr<nsIFile> existingCacheDir;
         rv = mCacheDirectory->Clone(getter_AddRefs(existingCacheDir));
         if (NS_FAILED(rv))  return rv;
-        rv = existingCacheDir->MoveTo(cacheTrashDir, nsnull);
+        rv = existingCacheDir->MoveTo(cacheTrashDir, nsCString());
         if (NS_FAILED(rv))  return rv;
     }
     
@@ -786,7 +786,7 @@ nsDiskCacheDevice::GetCacheTrashDirectory(nsIFile ** result)
     nsCOMPtr<nsIFile> cacheTrashDir;
     nsresult rv = mCacheDirectory->Clone(getter_AddRefs(cacheTrashDir));
     if (NS_FAILED(rv))  return rv;
-    rv = cacheTrashDir->SetLeafName("Cache.Trash");
+    rv = cacheTrashDir->SetLeafName(NS_LITERAL_CSTRING("Cache.Trash"));
     if (NS_FAILED(rv))  return rv;
     
     *result = cacheTrashDir.get();
@@ -844,7 +844,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
     
     rv = parentDir->Clone(getter_AddRefs(directory));
     if (NS_FAILED(rv))  return;
-    rv = directory->Append("Cache");
+    rv = directory->Append(NS_LITERAL_CSTRING("Cache"));
     if (NS_FAILED(rv))  return;
     
     rv = directory->Exists(&exists);
@@ -857,7 +857,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
     // clean up Cache.Trash directories
     rv = parentDir->Clone(getter_AddRefs(directory));
     if (NS_FAILED(rv))  return;    
-    rv = directory->Append("Cache.Trash");
+    rv = directory->Append(NS_LITERAL_CSTRING("Cache.Trash"));
     if (NS_FAILED(rv))  return;
     
     rv = directory->Exists(&exists);
@@ -867,7 +867,7 @@ nsDiskCacheDevice::SetCacheParentDirectory(nsILocalFile * parentDir)
     // clean up obsolete NewCache directory
     rv = parentDir->Clone(getter_AddRefs(directory));
     if (NS_FAILED(rv))  return;    
-    rv = directory->Append("NewCache");
+    rv = directory->Append(NS_LITERAL_CSTRING("NewCache"));
     if (NS_FAILED(rv))  return;
     
     rv = directory->Exists(&exists);

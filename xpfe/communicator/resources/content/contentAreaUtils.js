@@ -301,7 +301,7 @@ function foundHeaderInfo(aSniffer, aData)
       const lfContractID = "@mozilla.org/file/local;1";
       const lfIID = Components.interfaces.nsILocalFile;
       filesFolder = Components .classes[lfContractID].createInstance(lfIID);
-      filesFolder.initWithUnicodePath(persistArgs.target.unicodePath);
+      filesFolder.initWithPath(persistArgs.target.path);
       
       var nameWithoutExtension = filesFolder.leafName;
       nameWithoutExtension = nameWithoutExtension.substring(0, nameWithoutExtension.lastIndexOf("."));

@@ -79,10 +79,10 @@ nsProcess::Init(nsIFile* executable)
     mExecutable = executable;
     //Get the path because it is needed by the NSPR process creation
 #ifdef XP_WIN 
-    rv = mExecutable->GetTarget(getter_Copies(mTargetPath));
-    if (NS_FAILED(rv) || !mTargetPath )
+    rv = mExecutable->GetNativeTarget(mTargetPath);
+    if (NS_FAILED(rv) || mTargetPath.IsEmpty() )
 #endif
-        rv = mExecutable->GetPath(getter_Copies(mTargetPath));
+        rv = mExecutable->GetNativePath(mTargetPath);
 
     return rv;
 }
@@ -283,12 +283,12 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count, PRUint32 *pid
 
 #else
     if ( blocking ) {
-        mProcess = PR_CreateProcess(mTargetPath, my_argv, NULL, NULL);
+        mProcess = PR_CreateProcess(mTargetPath.get(), my_argv, NULL, NULL);
         if (mProcess)
             rv = PR_WaitProcess(mProcess, &mExitValue);
     }
     else {
-        rv = PR_CreateProcessDetached(mTargetPath, my_argv, NULL, NULL);
+        rv = PR_CreateProcessDetached(mTargetPath.get(), my_argv, NULL, NULL);
     }
 #endif
 

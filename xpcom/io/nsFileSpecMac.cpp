@@ -536,14 +536,14 @@ char* MacFileHelpers::PathNameFromFSSpec( const FSSpec& inSpec )
 	nsresult rv;
 
     FSSpec nonConstSpec = inSpec;
-    nsXPIDLCString path;	
+    nsCAutoString path;	
     nsCOMPtr<nsILocalFileMac> macFile;
     
     rv = NS_NewLocalFileWithFSSpec(&nonConstSpec, PR_TRUE, getter_AddRefs(macFile));
     if (NS_FAILED(rv)) return nsnull;
     nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(macFile, &rv));
     if (NS_FAILED(rv)) return nsnull;
-    rv = localFile->GetPath(getter_Copies(path));
+    rv = localFile->GetNativePath(path);
     if (NS_FAILED(rv)) return nsnull;
     PRInt32 strLen = path.Length();
     result = new char [strLen + 1];

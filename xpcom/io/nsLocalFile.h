@@ -34,10 +34,21 @@
 
 #define NS_LOCAL_FILE_CID {0x2e23e220, 0x60be, 0x11d3, {0x8c, 0x4a, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
 
+#define NS_DECL_NSLOCALFILE_UNICODE_METHODS                                                      \
+    nsresult AppendUnicode(const PRUnichar *aNode);                                              \
+    nsresult GetUnicodeLeafName(PRUnichar **aLeafName);                                          \
+    nsresult SetUnicodeLeafName(const PRUnichar *aLeafName);                                     \
+    nsresult CopyToUnicode(nsIFile *aNewParentDir, const PRUnichar *aNewLeafName);               \
+    nsresult CopyToFollowingLinksUnicode(nsIFile *aNewParentDir, const PRUnichar *aNewLeafName); \
+    nsresult MoveToUnicode(nsIFile *aNewParentDir, const PRUnichar *aNewLeafName);               \
+    nsresult GetUnicodeTarget(PRUnichar **aTarget);                                              \
+    nsresult GetUnicodePath(PRUnichar **aPath);                                                  \
+    nsresult InitWithUnicodePath(const PRUnichar *aPath);                                        \
+    nsresult AppendRelativeUnicodePath(const PRUnichar *aRelativePath);
+
 // nsXPComInit needs to know about how we are implemented,
 // so here we will export it.  Other users should not depend
 // on this.
-
 #ifdef XP_WIN
 #include "nsLocalFileWin.h"
 #elif defined(XP_MAC) && !defined(XP_MACOSX)
@@ -52,4 +63,5 @@
 
 void NS_StartupLocalFile();
 void NS_ShutdownLocalFile();
+
 #endif

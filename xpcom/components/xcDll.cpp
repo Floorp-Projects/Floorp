@@ -94,7 +94,6 @@ nsDll::nsDll(nsIFile *dllSpec, const char *registryLocation)
 {
 	m_modDate = LL_Zero();
 	m_size = LL_Zero();
-    m_dllSpec = dllSpec;
 
     m_registryLocation = nsCRT::strdup(registryLocation);
     Init(dllSpec);
@@ -113,7 +112,6 @@ nsDll::nsDll(nsIFile *dllSpec, const char *registryLocation, PRInt64* modDate, P
 {
     m_modDate = LL_Zero();
     m_size = LL_Zero();
-    m_dllSpec = dllSpec;
 
     m_registryLocation = nsCRT::strdup(registryLocation);
     Init(dllSpec);
@@ -178,8 +176,7 @@ nsDll::Init(nsIFile *dllSpec)
 {
     // Load will fail anyway. So dont bother to stat the file
 
-    m_dllSpec = dllSpec;
-
+    m_dllSpec = do_QueryInterface(dllSpec);
 	m_status = DLL_OK;			
 }
 
@@ -210,7 +207,7 @@ nsDll::Init(const char *libPersistentDescriptor)
         return;
     }
 
-    rv = dllSpec->InitWithPath((char *)libPersistentDescriptor);
+    rv = dllSpec->InitWithNativePath(nsDependentCString(libPersistentDescriptor));
     if (NS_FAILED(rv))
     {
         m_status = DLL_INVALID_PARAM;
@@ -233,10 +230,6 @@ nsDll::~nsDll(void)
 #endif
     if (m_dllName)
         nsCRT::free(m_dllName);
-    if (m_persistentDescriptor)
-        nsCRT::free(m_persistentDescriptor);
-    if (m_nativePath)
-        nsCRT::free(m_nativePath);
     if (m_registryLocation)
         nsCRT::free(m_registryLocation);
 
@@ -261,10 +254,10 @@ nsDll::GetDisplayPath()
 {
     if (m_dllName)
         return m_dllName;
-    if (m_nativePath)
-        return m_nativePath;
-    m_dllSpec->GetPath(&m_nativePath);
-    return m_nativePath;
+    if (!m_nativePath.IsEmpty())
+        return m_nativePath.get();
+    m_dllSpec->GetNativePath(m_nativePath);
+    return m_nativePath.get();
 }
 
 const char *
@@ -272,10 +265,10 @@ nsDll::GetPersistentDescriptorString()
 {
     if (m_dllName)
         return m_dllName;
-    if (m_persistentDescriptor)
-        return m_persistentDescriptor;
-    m_dllSpec->GetPath(&m_persistentDescriptor);
-    return m_persistentDescriptor;
+    if (!m_persistentDescriptor.IsEmpty())
+        return m_persistentDescriptor.get();
+    m_dllSpec->GetNativePath(m_persistentDescriptor);
+    return m_persistentDescriptor.get();
 }
 
 PRBool
@@ -318,23 +311,19 @@ PRBool nsDll::Load(void)
 
     if (m_dllSpec)
     {
-        nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(m_dllSpec);
-
 #ifdef NS_BUILD_REFCNT_LOGGING
         nsTraceRefcnt::SetActivityIsLegal(PR_FALSE);
 #endif
-        if (localFile)
-            localFile->Load(&m_instance);
+        m_dllSpec->Load(&m_instance);
         
 #ifdef NS_BUILD_REFCNT_LOGGING
         nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);
         if (m_instance) {
             // Inform refcnt tracer of new library so that calls through the
             // new library can be traced.
-            char* displayPath;
-            m_dllSpec->GetPath(&displayPath);
-            nsTraceRefcnt::LoadLibrarySymbols(displayPath, m_instance);
-            nsMemory::Free(displayPath);
+            nsCAutoString displayPath;
+            m_dllSpec->GetNativePath(displayPath);
+            nsTraceRefcnt::LoadLibrarySymbols(displayPath.get(), m_instance);
         }
 #endif
     }

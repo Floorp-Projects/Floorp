@@ -1,4 +1,6 @@
 #include "nsILocalFile.h"
+#include "nsDependentString.h"
+#include "nsString.h"
 
 #include <stdio.h>
 #include "nsIComponentRegistrar.h"
@@ -26,16 +28,16 @@ PRBool LoopInDir(nsILocalFile* file)
         if(!sup)
             return PR_FALSE;
         
-        nsCOMPtr<nsIFile> file = do_QueryInterface(sup);
+        nsCOMPtr<nsILocalFile> file = do_QueryInterface(sup);
         if(!file)
             return PR_FALSE;
     
-        char* name;
-        if(NS_FAILED(file->GetLeafName(&name)))
+        nsCAutoString name;
+        if(NS_FAILED(file->GetNativeLeafName(name)))
             return PR_FALSE;
         
         PRBool isDir;
-        printf("%s\n", name);
+        printf("%s\n", name.get());
         rv = file->IsDirectory(&isDir);
         if (NS_FAILED(rv))
 		{
@@ -48,8 +50,6 @@ PRBool LoopInDir(nsILocalFile* file)
            nsCOMPtr<nsILocalFile> lfile = do_QueryInterface(file);
            LoopInDir(lfile);   
         }        
-       
-         nsMemory::Free(name);
     }
     return PR_TRUE;
 }
@@ -71,7 +71,7 @@ main(int argc, char* argv[])
     if (argc > 1 && argv[1] != nsnull) 
     {
         char* pathStr = argv[1];
-        NS_NewLocalFile(pathStr, PR_FALSE, getter_AddRefs(topDir));
+        NS_NewNativeLocalFile(nsDependentCString(pathStr), PR_FALSE, getter_AddRefs(topDir));
     }
     
     if (!topDir)

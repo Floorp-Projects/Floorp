@@ -33,13 +33,14 @@
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsILocalFile.h"
 
 #include "nspr.h"
 
 #ifdef XP_MAC
-#define INSTALL_LOG "Install Log"
+#define INSTALL_LOG NS_LITERAL_CSTRING("Install Log")
 #else
-#define INSTALL_LOG "install.log"
+#define INSTALL_LOG NS_LITERAL_CSTRING("install.log")
 #endif
 
 
@@ -88,9 +89,9 @@ nsLoggingProgressListener::OnInstallStart(const PRUnichar *URL)
     if (NS_FAILED(rv)) return rv;
 
     if (!nsSoftwareUpdate::GetLogName())
-        rv = iFile->Append(INSTALL_LOG);
+        rv = iFile->AppendNative(INSTALL_LOG);
     else
-        rv = iFile->Append(nsSoftwareUpdate::GetLogName());
+        rv = iFile->AppendNative(nsDependentCString(nsSoftwareUpdate::GetLogName()));
 
     if (NS_FAILED(rv)) return rv;
 
@@ -133,9 +134,9 @@ nsLoggingProgressListener::OnInstallStart(const PRUnichar *URL)
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
         if (!nsSoftwareUpdate::GetLogName())
-            rv = iFile->Append(INSTALL_LOG);
+            rv = iFile->AppendNative(INSTALL_LOG);
         else
-            rv = iFile->Append(nsSoftwareUpdate::GetLogName());
+            rv = iFile->AppendNative(nsDependentCString(nsSoftwareUpdate::GetLogName()));
 
         if (NS_FAILED(rv)) return rv;
 
@@ -315,12 +316,11 @@ Convert_nsIFile_To_nsFileSpec(nsIFile *aInIFile, nsFileSpec **aOutFileSpec)
         *aOutFileSpec = new nsFileSpec(fsSpec, PR_FALSE);
     }
 #else
-    char *path = nsnull;
-
-    rv = aInIFile->GetPath(&path);
+    nsCAutoString path;
+    rv = aInIFile->GetNativePath(path);
     if (NS_SUCCEEDED(rv))
     {
-        *aOutFileSpec = new nsFileSpec(path, PR_FALSE);
+        *aOutFileSpec = new nsFileSpec(path.get(), PR_FALSE);
     }
     // NOTE: don't release path since nsFileSpec's mPath points to it
 #endif

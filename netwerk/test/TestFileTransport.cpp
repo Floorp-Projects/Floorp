@@ -51,6 +51,7 @@
 #include "nsIStreamListener.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
+#include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
 
@@ -157,15 +158,13 @@ public:
     nsresult Init(const char* origFile) {
         nsresult rv;
         nsCOMPtr<nsILocalFile> file;
-        rv = NS_NewLocalFile(origFile, PR_FALSE, getter_AddRefs(file));
+        rv = NS_NewNativeLocalFile(nsDependentCString(origFile), PR_FALSE, getter_AddRefs(file));
         if (NS_FAILED(rv)) return rv;
-        char* name;
-        rv = file->GetLeafName(&name);
+        nsCAutoString name;
+        rv = file->GetLeafName(name);
         if (NS_FAILED(rv)) return rv;
-        nsCAutoString str(name);
-        nsMemory::Free(name);
-        str.Append(".bak");
-        rv = file->SetLeafName(str.get());
+        name += NS_LITERAL_CSTRING(".bak");
+        rv = file->SetLeafName(name);
         if (NS_FAILED(rv)) return rv;
         rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOut),
                                          file, 
@@ -202,7 +201,7 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
 
     nsITransport* fileTrans;
     nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(fileName, PR_FALSE, getter_AddRefs(file));
+    rv = NS_NewNativeLocalFile(nsDependentCString(fileName), PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
     rv = fts->CreateTransport(file, PR_RDONLY, 0, PR_TRUE, &fileTrans);
     if (NS_FAILED(rv)) return rv;
@@ -253,10 +252,10 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString outFile(fileName);
-    outFile.Append(".out");
+    outFile += NS_LITERAL_CSTRING(".out");
     nsITransport* fileTrans;
     nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(outFile.get(), PR_FALSE, getter_AddRefs(file));
+    rv = NS_NewNativeLocalFile(outFile, PR_FALSE, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
     rv = fts->CreateTransport(file,
                               PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
@@ -278,7 +277,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILocalFile> f;
-    rv = NS_NewLocalFile(fileName, PR_FALSE, getter_AddRefs(f));
+    rv = NS_NewNativeLocalFile(nsDependentCString(fileName), PR_FALSE, getter_AddRefs(f));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIInputStream> inStr;
     rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), f);

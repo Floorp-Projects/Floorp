@@ -774,24 +774,23 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     }
 
 #else
-    char *leafName = NULL;
-    rv = component->GetLeafName(&leafName);
+    nsCAutoString leafName;
+    rv = component->GetNativeLeafName(leafName);
     if (NS_FAILED(rv)) return rv;
-    int flen = PL_strlen(leafName);
+    int flen = leafName.Length();
     for (int i=0; ValidDllExtensions[i] != NULL; i++)
     {
         int extlen = PL_strlen(ValidDllExtensions[i]);
             
         // Does fullname end with this extension
         if (flen >= extlen &&
-            !PL_strcasecmp(&(leafName[flen - extlen]), ValidDllExtensions[i])
+            !PL_strcasecmp(leafName.get() + (flen - extlen), ValidDllExtensions[i])
             )
         {
             validExtension = PR_TRUE;
             break;
         }
     }
-    if (leafName) nsMemory::Free(leafName);
 #endif
         
     if (validExtension == PR_FALSE)
@@ -859,9 +858,9 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
             nsCOMPtr<nsIFile> dllSpec;
             if (NS_SUCCEEDED(dll->GetDllSpec(getter_AddRefs(dllSpec))) && dllSpec)
             {
-              nsXPIDLCString dllLeafName;
-              dllSpec->GetLeafName(getter_Copies(dllLeafName));
-              fileName.AssignWithConversion(dllLeafName);
+              nsCAutoString dllLeafName;
+              dllSpec->GetLeafName(dllLeafName); // XXX
+              fileName.Assign(NS_ConvertUTF8toUCS2(dllLeafName));
             }
             
             // this string can't come from a string bundle, because we

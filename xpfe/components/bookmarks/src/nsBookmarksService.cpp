@@ -3176,7 +3176,7 @@ nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, char **aShortcut
 #ifdef XP_WIN
 // *** code copied from widget/src/windows/nsClipboard.cpp
 // Determines the URL for a shortcut file 
-static void ResolveShortcut(const char* aFileName, char** aOutURL)
+static void ResolveShortcut(const nsACString &aFileName, char** aOutURL)
 {
 // IUniformResourceLocator isn't supported by VC5 (bless its little heart)
 #if _MSC_VER >= 1200
@@ -3189,10 +3189,9 @@ static void ResolveShortcut(const char* aFileName, char** aOutURL)
     IPersistFile* urlFile = nsnull;
     result = urlLink->QueryInterface(IID_IPersistFile, (void**)&urlFile);
     if (SUCCEEDED(result) && urlFile) {
-      WORD wideFileName[MAX_PATH];
-      ::MultiByteToWideChar(CP_ACP, 0, aFileName, -1, wideFileName, MAX_PATH);
+      NS_ConvertUTF8toUCS2 wideFileName(aFileName);
 
-      result = urlFile->Load(wideFileName, STGM_READ);
+      result = urlFile->Load(wideFileName.get(), STGM_READ);
       if (SUCCEEDED(result) ) {
         LPSTR lpTemp = nsnull;
 
@@ -3247,8 +3246,9 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
     nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
     fileURL->SetFile(currFile);
 
-    nsXPIDLString bookmarkName;
-    currFile->GetUnicodeLeafName(getter_Copies(bookmarkName));
+    nsCAutoString leafName;
+    currFile->GetLeafName(leafName);
+    NS_ConvertUTF8toUCS2 bookmarkName(leafName);
 
     PRBool isDir = PR_FALSE;
     currFile->IsDirectory(&isDir);
@@ -3272,11 +3272,11 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
       nsAutoString name(Substring(bookmarkName, 0, 
                                   bookmarkName.Length() - extension.Length() - 1));
      
-      nsXPIDLCString path;
-      currFile->GetPath(getter_Copies(path));
+      nsCAutoString path;
+      currFile->GetPath(path);
 
       nsXPIDLCString url;
-      ResolveShortcut(path.get(), getter_Copies(url));
+      ResolveShortcut(path, getter_Copies(url));
 
       nsCOMPtr<nsIRDFResource> bookmark;
       rv = CreateBookmark(name.get(), url.get(), aParentResource, getter_AddRefs(bookmark));
@@ -4652,12 +4652,12 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
                                     getter_AddRefs(bookmarksFile));
         if (NS_SUCCEEDED(rv)) {
 
-            // XXX: When the code which calls this can us nsIFile
+            // XXX: When the code which calls this can use nsIFile
             // or nsILocalFile, this conversion from nsIFile to
             // nsFileSpec can go away. Bug 36974.
 
-            nsXPIDLCString pathBuf;
-            rv = bookmarksFile->GetPath(getter_Copies(pathBuf));
+            nsCAutoString pathBuf;
+            rv = bookmarksFile->GetNativePath(pathBuf);
             if (NS_SUCCEEDED(rv))
                 *aResult = pathBuf.get();
         }

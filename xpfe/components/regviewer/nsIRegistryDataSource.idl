@@ -43,6 +43,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIFile;
+
 [scriptable, uuid(8FA81100-6F88-11d3-BE43-00104BDE6048)]
 interface nsIRegistryDataSource : nsISupports
 {
@@ -51,7 +53,7 @@ interface nsIRegistryDataSource : nsISupports
     /**
      * Open and initialize the registry viewer
      */
-    void open(in string aPlatformFileName);
+    void open(in nsIFile aFile);
 
     /**
      * Open a stock registry

@@ -40,7 +40,6 @@
 /* Mac-specific local file url parsing */
 #include "nsIOService.h"
 #include "nsEscape.h"
-#include "nsPrintfCString.h"
 #include "nsILocalFile.h"
 
 static void SwapSlashColon(char *s)
@@ -72,9 +71,10 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &aURL)
     nsresult rv;
     NS_ENSURE_ARG(aFile);
 
-    nsXPIDLCString ePath;
+    nsCAutoString ePath;
 
-    rv = aFile->GetPath(getter_Copies(ePath));
+    // construct URL spec from native file path
+    rv = aFile->GetNativePath(ePath);
     if (NS_FAILED(rv)) return rv;
  
     SwapSlashColon((char *) ePath.get());
@@ -97,9 +97,8 @@ nsIOService::GetURLSpecFromFile(nsIFile *aFile, nsACString &aURL)
         rv = aFile->IsDirectory(&dir);
         if (NS_FAILED(rv))
             NS_WARNING(PromiseFlatCString(
-                NS_LITERAL_CSTRING("Cannot tell if ") +
-                escPath + NS_LITERAL_CSTRING(" is a directory or file")
-            ).get());
+                NS_LITERAL_CSTRING("Cannot tell if ") + escPath +
+                NS_LITERAL_CSTRING(" is a directory or file")).get());
         else if (dir) {
             // make sure we have a trailing slash
             escPath += "/";
@@ -146,11 +145,12 @@ nsIOService::InitFileFromURLSpec(nsIFile *aFile, const nsACString &aURL)
         NS_EscapeURL(fileExtension, esc_FileExtension|esc_AlwaysCopy, path);
     }
     
-    NS_UnescapeURL((char *) path.get());
+    NS_UnescapeURL(path);
  
     // wack off leading :'s
     if (path.CharAt(0) == ':')
         path.Cut(0, 1);
  
-    return localFile->InitWithPath(path.get());
+    // assuming path is encoded in the native charset
+    return localFile->InitWithNativePath(path);
 }

@@ -136,7 +136,7 @@ nsIconChannel::Open(nsIInputStream **_retval)
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType, char ** aFileExtension)
+nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, nsACString &aContentType, nsACString &aFileExtension)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMozIconURI> iconURI (do_QueryInterface(mUrl, &rv));
@@ -251,11 +251,11 @@ nsIconChannel::GetLockedIcons(IconFamilyHandle icnFamily, PRUint32 desiredImageS
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
   nsCOMPtr<nsIFile> localFile; // file we want an icon for
-  nsXPIDLCString    contentType;
-  nsXPIDLCString    fileExtension;
+  nsCAutoString     contentType;
+  nsCAutoString     fileExtension;
   PRUint32          desiredImageSize;
   nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize,
-                getter_Copies(contentType), getter_Copies(fileExtension));
+                contentType, fileExtension);
   if (NS_FAILED(rv))  return(rv);
 
   // ensure that we DO NOT resolve aliases, very important for file views
@@ -333,13 +333,13 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     nsCOMPtr<nsIMIMEInfo> mimeInfo;
     if (mimeService)
     {
-      if (*contentType.get())
+      if (!contentType.IsEmpty())
       {
-        mimeService->GetFromMIMEType(contentType, getter_AddRefs(mimeInfo));
+        mimeService->GetFromMIMEType(contentType.get(), getter_AddRefs(mimeInfo));
       }
       if (!mimeInfo) // try to grab an extension for the dummy file in the url.
       {
-        mimeService->GetFromExtension(fileExtension, getter_AddRefs(mimeInfo));  
+        mimeService->GetFromExtension(fileExtension.get(), getter_AddRefs(mimeInfo));  
       }
     }
 

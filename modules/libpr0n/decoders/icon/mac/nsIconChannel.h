@@ -53,7 +53,7 @@ protected:
   nsresult mStatus;
   
   nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize,
-                           char ** aContentType, char ** aFileExtension);
+                           nsACString &aContentType, nsACString &aFileExtension);
 
   nsresult GetLockedIconData(IconFamilyHandle iconFamilyH, PRUint32 iconType,
                            Handle iconDataH, PRUint32 *iconDataSize);

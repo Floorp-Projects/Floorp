@@ -64,10 +64,10 @@ typedef unsigned short FT_UShort;
 
 class  nsFontNodeArray;
 
-#define PUBLIC_FONT_SUMMARY_NAME ".mozilla_font_summary.ndb"
-#define FONT_SUMMARIES_SUBDIR "catalog"
-#define FONT_DOWNLOAD_SUBDIR "fonts"
-#define FONT_SUMMARIES_EXTENSION ".ndb"
+#define PUBLIC_FONT_SUMMARY_NAME  NS_LITERAL_CSTRING(".mozilla_font_summary.ndb")
+#define FONT_SUMMARIES_SUBDIR     NS_LITERAL_CSTRING("catalog")
+#define FONT_DOWNLOAD_SUBDIR      NS_LITERAL_CSTRING("fonts")
+#define FONT_SUMMARIES_EXTENSION  NS_LITERAL_CSTRING(".ndb")
 #define FONT_SUMMARY_VERSION_TAG "FontSummaryVersion"
 #define FONT_SUMMARY_VERSION_MAJOR 1
 #define FONT_SUMMARY_VERSION_MINOR 0
@@ -97,7 +97,7 @@ typedef struct nsTTFontFamilyEncoderInfo {
 } nsTTFontFamilyEncoderInfo;
 
 typedef struct {
-  const char   *mDirName;
+  const char   *mDirName; // encoded in the native charset
 } nsDirCatalogEntry;
 
 

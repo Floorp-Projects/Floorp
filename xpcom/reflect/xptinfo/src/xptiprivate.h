@@ -56,7 +56,6 @@
 #include "nsIXPTLoader.h"
 
 #include "nsIServiceManager.h"
-#include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -956,17 +955,17 @@ private:
     static PRBool BuildFileSearchPath(nsISupportsArray** aPath);
 
 private:
-    xptiWorkingSet              mWorkingSet;
-    nsCOMPtr<nsILocalFile>      mStatsLogFile;
-    nsCOMPtr<nsILocalFile>      mAutoRegLogFile;
-    PRFileDesc*                 mOpenLogFile;
-    PRLock*                     mResolveLock;
-    PRLock*                     mAutoRegLock;
-    PRMonitor*                  mInfoMonitor;
-    PRLock*                     mAdditionalManagersLock;
-    nsSupportsArray             mAdditionalManagers;
-    nsCOMPtr<nsILocalFile>      mManifestDir;
-    nsCOMPtr<nsISupportsArray>  mSearchPath;
+    xptiWorkingSet               mWorkingSet;
+    nsCOMPtr<nsILocalFile>       mStatsLogFile;
+    nsCOMPtr<nsILocalFile>       mAutoRegLogFile;
+    PRFileDesc*                  mOpenLogFile;
+    PRLock*                      mResolveLock;
+    PRLock*                      mAutoRegLock;
+    PRMonitor*                   mInfoMonitor;
+    PRLock*                      mAdditionalManagersLock;
+    nsSupportsArray              mAdditionalManagers;
+    nsCOMPtr<nsILocalFile>       mManifestDir;
+    nsCOMPtr<nsISupportsArray>   mSearchPath;
 };
 
 /***************************************************************************/

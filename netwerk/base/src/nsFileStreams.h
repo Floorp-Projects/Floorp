@@ -72,7 +72,7 @@ protected:
     nsresult            mStatus;
     nsCString           mContentType;
 #ifdef PR_LOGGING
-    char*               mSpec;
+    nsCString           mSpec;
 #endif
 };
 

@@ -142,7 +142,7 @@ NS_NewPluginPostDataStream(nsIInputStream **result,
   } else {
     nsCOMPtr<nsILocalFile> file; // tmp file will be deleted on release of stream
     nsCOMPtr<nsIInputStream> fileStream;
-    if (NS_SUCCEEDED(rv = NS_NewLocalFile(data, PR_FALSE, getter_AddRefs(file))) &&
+    if (NS_SUCCEEDED(rv = NS_NewNativeLocalFile(nsDependentCString(data), PR_FALSE, getter_AddRefs(file))) &&
         NS_SUCCEEDED(rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream),
                                      file,
                                      PR_RDONLY,

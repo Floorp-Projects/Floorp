@@ -63,7 +63,7 @@ class nsMPFileLocProvider: public nsIDirectoryServiceProvider
       Initialize:          Must be called after constructor.
       
       profileParentDir ->  The directory that is the parent dir of our profile folder.
-      profileDirName ->    The leaf name of our profile folder.
+      profileDirName ->    The leaf name of our profile folder (native charset).
    */
                         
    virtual nsresult  Initialize(nsIFile* profileParentDir, const char *profileDirName);

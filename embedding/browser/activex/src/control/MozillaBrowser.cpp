@@ -667,10 +667,10 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
         _makepath(szDataPath, drive, dir, szDataFile, "");
 
         nsCOMPtr<nsILocalFile> file;
-        NS_NewLocalFile(T2A(szFile), TRUE, getter_AddRefs(file));
+        NS_NewNativeLocalFile(nsDependentCString(T2A(szFile)), TRUE, getter_AddRefs(file));
 
         nsCOMPtr<nsILocalFile> dataPath;
-        NS_NewLocalFile(szDataPath, TRUE, getter_AddRefs(dataPath));
+        NS_NewNativeLocalFile(nsDependentCString(szDataPath), TRUE, getter_AddRefs(dataPath));
 
         persist->SaveDocument(nsnull, file, dataPath, nsnull, 0, 0);
     }
@@ -987,7 +987,7 @@ HRESULT CMozillaBrowser::Initialize()
     // Create an object to represent the path
     nsCOMPtr<nsILocalFile> binDir;
     USES_CONVERSION;
-    NS_NewLocalFile(T2A(szBinDirPath), TRUE, getter_AddRefs(binDir));
+    NS_NewNativeLocalFile(nsDependentCString(T2A(szBinDirPath)), TRUE, getter_AddRefs(binDir));
     rv = NS_InitEmbedding(binDir, provider);
 
     // Load preferences service

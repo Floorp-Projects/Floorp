@@ -1322,12 +1322,12 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
         // XXX We should use nsIFile::GetUnicodeLeafName().
         // But currently mozilla's xpcom/io is not unicode normalization.
         // And URI cannot use UTF-8 (On RFC2396, URI should use UTF-8)
-        // So, we uses nsIFile::GetLeafName() for performance...
+        // So, we uses nsIFile::GetNativeLeafName() for performance...
  
-        char            *leafStr = nsnull;
-        if (NS_FAILED(rv = aFile->GetLeafName(&leafStr)))
+        nsCAutoString leafStr;
+        if (NS_FAILED(rv = aFile->GetNativeLeafName(leafStr)))
             break;
-        if (!leafStr)
+        if (leafStr.IsEmpty())
             continue;
   
         nsCAutoString           fullURI;
@@ -1337,9 +1337,8 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, PRBool allowHidden,
             fullURI.Append('/');
         }
 
-        char    *escLeafStr = nsEscape(leafStr, url_Path);
-        Recycle(leafStr);
-        leafStr = nsnull;
+        char    *escLeafStr = nsEscape(leafStr.get(), url_Path);
+        leafStr.Truncate();
 
         if (!escLeafStr)
             continue;
@@ -1530,15 +1529,11 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
     if (aFileLocal)
         aFileLocal->SetFollowLinks(PR_FALSE);
 
-    PRUnichar       *nameUni = nsnull;
-    if (NS_FAILED(rv = aFile->GetUnicodeLeafName(&nameUni)))
+    nsCAutoString name;
+    if (NS_FAILED(rv = aFile->GetLeafName(name)))
         return(rv);
-    if (!nameUni)
+    if (name.IsEmpty())
         return(NS_ERROR_UNEXPECTED);
-
-    nsAutoString        name(nameUni);
-    Recycle(nameUni);
-    nameUni = nsnull;
 
 #ifdef  XP_MAC
     nsCOMPtr<nsILocalFileMac>   aMacFile = do_QueryInterface(aFile);
@@ -1561,11 +1556,10 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 #ifdef  XP_WIN
     // special hack for IE favorites under Windows; strip off the
     // trailing ".url" or ".lnk" at the end of IE favorites names
-    PRInt32         nameLen = name.Length();
-    nsAutoString        theURI; theURI.AssignWithConversion(uri);
-    if ((theURI.Find(ieFavoritesDir) == 0) && (nameLen > 4))
+    PRInt32 nameLen = name.Length();
+    if ((strncmp(uri, ieFavoritesDir, strlen(ieFavoritesDir)) == 0) && (nameLen > 4))
     {
-        nsAutoString    extension;
+        nsCAutoString extension;
         name.Right(extension, 4);
         if (extension.EqualsIgnoreCase(".url") ||
             extension.EqualsIgnoreCase(".lnk"))
@@ -1577,8 +1571,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 
 #ifdef  XP_BEOS
     // under BEOS, try and get the "META:title" attribute (if its a file)
-    nsAutoString        theURI; theURI.AssignWithConversion(uri);
-    if (theURI.Find(netPositiveDir) == 0)
+    if (strncmp(uri, netPositiveDir, strlen(netPositiveDir)) == 0)
     {
         nsFileURL       url(uri);
         nsFilePath      path(url);
@@ -1600,21 +1593,21 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
                         0, beNameAttr, sizeof(beNameAttr)-1)) > 0)
                     {
                         beNameAttr[len] = '\0';
-                        name = NS_ConvertUTF8toUCS2(beNameAttr);
+                        name = beNameAttr;
                         rv = NS_OK;
                     }
                 }
             }
             if (NS_OK != rv)
             {
-                name = NS_ConvertUTF8toUCS2(spec.GetLeafName());
+                name = spec.GetLeafName();
                 rv = NS_OK;
             }
         }
     }
 #endif
 
-    gRDFService->GetLiteral(name.get(), aResult);
+    gRDFService->GetLiteral(NS_ConvertUTF8toUCS2(name).get(), aResult);
 
     return NS_OK;
 }

@@ -385,21 +385,21 @@ nsMozIconURI::SetImageSize(PRUint32 aImageSize)  // measured by # of pixels in a
 }
 
 NS_IMETHODIMP
-nsMozIconURI::GetContentType(char ** aContentType)  
+nsMozIconURI::GetContentType(nsACString &aContentType)  
 {
-  *aContentType = ToNewCString(mContentType);
+  aContentType = mContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMozIconURI::SetContentType(const char * aContentType) 
+nsMozIconURI::SetContentType(const nsACString &aContentType) 
 {
   mContentType = aContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMozIconURI::GetFileExtension(char ** aFileExtension)  
+nsMozIconURI::GetFileExtension(nsACString &aFileExtension)  
 {
   nsCAutoString fileExtension;
   nsresult rv = NS_OK;
@@ -416,11 +416,7 @@ nsMozIconURI::GetFileExtension(char ** aFileExtension)
       {
         // unfortunately, this code doesn't give us the required '.' in front of the extension
         // so we have to do it ourselves..
-        nsCAutoString tempFileExt;
-        tempFileExt = ".";
-        tempFileExt.Append(fileExt);
-
-        *aFileExtension = ToNewCString(tempFileExt);
+        aFileExtension = NS_LITERAL_CSTRING(".") + fileExt;
         return NS_OK;
       }
     }
@@ -438,7 +434,7 @@ nsMozIconURI::GetFileExtension(char ** aFileExtension)
   const char * fileExt = strrchr(chFileName, '.');
   if (!fileExt) return NS_ERROR_FAILURE; // no file extension to work from.
   else
-    *aFileExtension = nsCRT::strdup(fileExt);
+    aFileExtension = nsDependentCString(fileExt);
 
   return NS_OK;
 }

@@ -169,13 +169,13 @@ public:
 protected:
   nsCOMPtr<nsIFile> mTempFile;
   nsCOMPtr<nsIURI> mSourceUrl; 
-  nsCString mTempFileExtension;
+  nsCString mTempFileExtension; // UTF-8
   nsCOMPtr<nsIMIMEInfo> mMimeInfo;
   nsCOMPtr<nsIOutputStream> mOutStream; // output stream to the temp file...
   nsCOMPtr<nsISupports> mWindowContext; 
   // the following field is set if we were processing an http channel that had a content disposition header
   // which specified the SUGGESTED file name we should present to the user in the save to disk dialog. 
-  nsString mSuggestedFileName;
+  nsCString mSuggestedFileName; // UTF-8
 
   // the canceled flag is set if the user canceled the launching of this application before we finished
   // saving the data to a temp file...
@@ -204,7 +204,7 @@ protected:
   // if the user tells us how they want to dispose of the content and we still haven't finished downloading while
   // they were deciding, then throw a progress dialog so they know what's going on...
   nsresult ShowProgressDialog();
-  nsresult PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile, const PRUnichar * aDefaultFileExt);
+  nsresult PromptForSaveToFile(nsILocalFile ** aNewFile, const nsACString &aDefaultFile, const nsACString &aDefaultFileExt);
   // if the passed in channel is an nsIHTTPChannel, we'll attempt to extract a suggested file name
   // from the content disposition header...
   void ExtractSuggestedFileNameFromChannel(nsIChannel * aChannel);

@@ -49,17 +49,15 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
+#include "nsDependentString.h"
 
 static PRBool gUnreg = PR_FALSE, gSilent = PR_FALSE, gQuiet = PR_FALSE;
 
 
 nsresult Register(nsIComponentRegistrar* registrar, const char *path) 
 { 
-  nsCOMPtr<nsILocalFile> spec;
-  nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
-                                                   nsnull, 
-                                                   NS_GET_IID(nsILocalFile), 
-                                                   getter_AddRefs(spec));
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> spec( do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv) );
 
   if (NS_FAILED(rv) || (!spec)) 
   {
@@ -67,18 +65,15 @@ nsresult Register(nsIComponentRegistrar* registrar, const char *path)
       return NS_ERROR_FAILURE;
   }
 
-  rv = spec->InitWithPath(path);
+  rv = spec->InitWithNativePath(nsDependentCString(path));
   if (NS_FAILED(rv)) return rv;
   return registrar->AutoRegister(spec);
 }
 
 nsresult Unregister(nsIComponentRegistrar *registrar, const char *path) 
 {
-  nsCOMPtr<nsILocalFile> spec;
-  nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
-                                                   nsnull, 
-                                                   NS_GET_IID(nsILocalFile), 
-                                                   getter_AddRefs(spec));
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> spec( do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv) );
 
   if (NS_FAILED(rv) || (!spec)) 
   {
@@ -86,7 +81,7 @@ nsresult Unregister(nsIComponentRegistrar *registrar, const char *path)
       return NS_ERROR_FAILURE;
   }
 
-  rv = spec->InitWithPath(path);
+  rv = spec->InitWithNativePath(nsDependentCString(path));
   if (NS_FAILED(rv)) return rv;
   return registrar->AutoUnregister(spec);
 }

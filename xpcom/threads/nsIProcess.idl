@@ -9,6 +9,8 @@ interface nsIProcess : nsISupports
 	void initWithPid(in unsigned long pid);
 	
 	void kill();
+
+    /** XXX what charset? **/
 	void run(in boolean blocking, [array, size_is(count)] in string args, in unsigned long count, out unsigned long pid);
 
 	readonly attribute nsIFile location;
@@ -19,6 +21,7 @@ interface nsIProcess : nsISupports
 
         /**
          * Called to get the value of environment variable
+         * XXX what charset?
          *
          * @param aName     The string enviroment variable name 
          * @exception       NS_ERROR_OUT_OF_MEMORY

@@ -31,6 +31,7 @@
 #include "nsFileSpec.h"
 #include "ScheduledTasks.h"
 #include "nsReadableUtils.h"
+#include "nsILocalFile.h"
 
 extern "C" NS_EXPORT PRInt32 SU_Uninstall(char *regPackageName);
 REGERR su_UninstallProcessItem(char *component_path);
@@ -196,7 +197,7 @@ REGERR su_UninstallProcessItem(char *component_path)
     err = VR_GetPath(component_path, sizeof(filepath), filepath);
     if ( err == REGERR_OK )
     {
-        NS_NewLocalFile((char*)filepath, PR_TRUE, getter_AddRefs(nsLFPath));
+        NS_NewNativeLocalFile(nsDependentCString(filepath), PR_TRUE, getter_AddRefs(nsLFPath));
         nsFPath = nsLFPath;
         err = VR_GetRefCount(component_path, &refcount);  
         if ( err == REGERR_OK )

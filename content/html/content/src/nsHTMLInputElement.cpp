@@ -2182,19 +2182,18 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                                   &rv));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = file->InitWithUnicodePath(value.get());
+    rv = file->InitWithPath(NS_ConvertUCS2toUTF8(value));
     if (NS_SUCCEEDED(rv)) {
 
       //
       // Get the leaf path name (to be submitted as the value)
       //
-      PRUnichar* leafNameChars = nsnull;
-      rv = file->GetUnicodeLeafName(&leafNameChars);
+      nsCAutoString leafNameChars;
+      rv = file->GetLeafName(leafNameChars);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (leafNameChars) {
-        nsAutoString filename;
-        filename.Adopt(leafNameChars);
+      if (!leafNameChars.IsEmpty()) {
+        NS_ConvertUTF8toUCS2 filename(leafNameChars);
 
         PRBool acceptsFiles = PR_FALSE;
         aFormSubmission->AcceptsFiles(&acceptsFiles);

@@ -46,7 +46,7 @@ function Startup()
   // if both pref and dir svc fail leave this field blank else show path
   if (path)
     document.getElementById("browserCacheDiskCacheFolder").value = 
-      path.unicodePath;
+      path.path;
 }
 
 
@@ -75,7 +75,7 @@ function prefCacheSelectFolder()
 
   if (ret == nsIFilePicker.returnOK) {
     var localFile = fp.file.QueryInterface(nsILocalFile);
-    var viewable = fp.file.unicodePath;
+    var viewable = fp.file.path;
     var folderField = document.getElementById("browserCacheDiskCacheFolder");
     folderField.value = viewable;
     pref.setComplexValue(kCacheParentDirPref, nsILocalFile, localFile)

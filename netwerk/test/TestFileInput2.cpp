@@ -354,14 +354,12 @@ Test(CreateFun create, PRUint32 count,
     nsresult rv;
     PRUint32 i;
     
-    char* inDir;
-    char* outDir;
-    (void)inDirSpec->GetPath(&inDir);
-    (void)outDirSpec->GetPath(&outDir);
+    nsCAutoString inDir;
+    nsCAutoString outDir;
+    (void)inDirSpec->GetPath(inDir);
+    (void)outDirSpec->GetPath(outDir);
     printf("###########\nTest: from %s to %s, bufSize = %d\n",
-           inDir, outDir, bufSize);
-    nsCRT::free(inDir);
-    nsCRT::free(outDir);
+           inDir.get(), outDir.get(), bufSize);
     gTimeSampler.Reset();
     nsTimeSampler testTime;
     testTime.StartTime();
@@ -388,12 +386,11 @@ Test(CreateFun create, PRUint32 count,
         rv = outDirSpec->Clone(getter_AddRefs(outSpec)); // don't munge the original
         if (NS_FAILED(rv)) goto done;
 
-        char* leafName;
-        rv = inSpec->GetLeafName(&leafName);
+        nsCAutoString leafName;
+        rv = inSpec->GetLeafName(leafName);
         if (NS_FAILED(rv)) goto done;
 
         rv = outSpec->Append(leafName);
-        nsCRT::free(leafName);
         if (NS_FAILED(rv)) goto done;
 
         PRBool exists;
@@ -464,11 +461,11 @@ main(int argc, char* argv[])
     registrar->AutoRegister(nsnull);
 
     nsCOMPtr<nsILocalFile> inDirFile;
-    rv = NS_NewLocalFile(inDir, PR_FALSE, getter_AddRefs(inDirFile));
+    rv = NS_NewNativeLocalFile(nsDependentCString(inDir), PR_FALSE, getter_AddRefs(inDirFile));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsILocalFile> outDirFile;
-    rv = NS_NewLocalFile(outDir, PR_FALSE, getter_AddRefs(outDirFile));
+    rv = NS_NewNativeLocalFile(nsDependentCString(outDir), PR_FALSE, getter_AddRefs(outDirFile));
     if (NS_FAILED(rv)) return rv;
 
     CreateFun create = FileChannelWorker::Create;

@@ -708,7 +708,7 @@ nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
         return NS_OK;
     }
     nsCOMPtr<nsILocalFile> folder;
-    NS_NewLocalFile(NS_LossyConvertUCS2toASCII(aFolder).get(), PR_TRUE,
+    NS_NewLocalFile(NS_ConvertUCS2toUTF8(aFolder), PR_TRUE,
                     getter_AddRefs(folder));
 
     result = folder->GetDiskSpaceAvailable(aReturn);
@@ -1795,7 +1795,7 @@ nsInstall::FileOpFileGetNativeVersion(nsInstallFolder& aTarget, nsString* aRetur
 
 #ifdef XP_WIN
   PRBool            flagExists;
-  nsCOMPtr<nsIFile> localTarget(aTarget.GetFileSpec());
+  nsCOMPtr<nsILocalFile> localTarget(do_QueryInterface(aTarget.GetFileSpec()));
   UINT              uLen;
   UINT              dwLen;
   DWORD             dwHandle;
@@ -1806,7 +1806,7 @@ nsInstall::FileOpFileGetNativeVersion(nsInstallFolder& aTarget, nsString* aRetur
   DWORD             dwMinor   = 0;
   DWORD             dwRelease = 0;
   DWORD             dwBuild   = 0;
-  nsXPIDLCString    nativeTargetPath;
+  nsCAutoString     nativeTargetPath;
   char              *nativeVersionString = nsnull;
 
   if(localTarget == nsnull)
@@ -1816,7 +1816,7 @@ nsInstall::FileOpFileGetNativeVersion(nsInstallFolder& aTarget, nsString* aRetur
   localTarget->Exists(&flagExists);
   if(flagExists)
   {
-    localTarget->GetPath(getter_Copies(nativeTargetPath));
+    localTarget->GetNativePath(nativeTargetPath);
     uLen   = 0;
     /* GetFileVersionInfoSize() requires a char *, but the api doesn't
      * indicate that it will modify it */
@@ -2033,7 +2033,7 @@ nsInstall::FileOpFileWindowsGetShortName(nsInstallFolder& aTarget, nsString& aSh
   PRInt32             err;
   PRBool              flagExists;
   nsString            tmpNsString;
-  nsXPIDLCString      nativeTargetPath;
+  nsCAutoString       nativeTargetPath;
   char                nativeShortPathName[MAX_PATH];
   nsCOMPtr<nsIFile>   localTarget(aTarget.GetFileSpec());
 
@@ -2044,9 +2044,9 @@ nsInstall::FileOpFileWindowsGetShortName(nsInstallFolder& aTarget, nsString& aSh
   if(flagExists)
   {
     memset(nativeShortPathName, 0, MAX_PATH);
-    localTarget->GetPath(getter_Copies(nativeTargetPath));
+    localTarget->GetNativePath(nativeTargetPath);
 
-    err = GetShortPathName(nativeTargetPath, nativeShortPathName, MAX_PATH);
+    err = GetShortPathName(nativeTargetPath.get(), nativeShortPathName, MAX_PATH);
     if((err > 0) && (*nativeShortPathName == '\0'))
     {
       // NativeShortPathName buffer not big enough.
@@ -2056,7 +2056,7 @@ nsInstall::FileOpFileWindowsGetShortName(nsInstallFolder& aTarget, nsString& aSh
       if(nativeShortPathNameTmp == nsnull)
         return NS_OK;
 
-      err = GetShortPathName(nativeTargetPath, nativeShortPathNameTmp, err + 1);
+      err = GetShortPathName(nativeTargetPath.get(), nativeShortPathNameTmp, err + 1);
       // Is it safe to assume that the second time around the buffer is big enough
       // and not to worry about it unless it's a different problem?
 
@@ -2576,7 +2576,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
 
         directoryService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile), getter_AddRefs(tempFile));
 
-        nsString tempFileName(NS_LITERAL_STRING("xpinstall"));
+        nsAutoString tempFileName(NS_LITERAL_STRING("xpinstall"));
 
         // Get the extension of the file in the JAR
         extpos = aJarfile.RFindChar('.');
@@ -2587,7 +2587,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
             aJarfile.Right(extension, (aJarfile.Length() - extpos) );
             tempFileName += extension;
         }
-        tempFile->Append(NS_LossyConvertUCS2toASCII(tempFileName).get());
+        tempFile->Append(NS_ConvertUCS2toUTF8(tempFileName));
 
         // Create a temporary file to extract to
         MakeUnique(tempFile);
@@ -2616,9 +2616,8 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
                 return nsInstall::OUT_OF_MEMORY;
 
             //get the leafname so we can convert its extension to .new
-            nsXPIDLCString leafName;
-            tempFile->GetLeafName(getter_Copies(leafName));
-            nsCString newLeafName (leafName);
+            nsCAutoString newLeafName;
+            tempFile->GetLeafName(newLeafName);
 
             PRInt32 extpos = newLeafName.RFindChar('.');
             if (extpos != -1)
@@ -2629,7 +2628,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName,
             newLeafName.Append("new");
 
             //Now reset the leafname
-            tempFile->SetLeafName(newLeafName.get());
+            tempFile->SetLeafName(newLeafName);
 
             MakeUnique(tempFile);
             extractHereSpec = tempFile;
@@ -2797,6 +2796,7 @@ nsInstall::DeleteVector(nsVoidArray* vector)
     }
 }
 
+// XXX what's wrong with nsIFile::createUnique?
 nsresult MakeUnique(nsILocalFile* file)
 {
     PRBool flagExists;
@@ -2806,10 +2806,13 @@ nsresult MakeUnique(nsILocalFile* file)
     if (NS_FAILED(rv)) return rv;
     if (!flagExists) return NS_ERROR_FAILURE;
 
-    char* leafName;
+    nsCAutoString leafNameBuf;
 
-    rv = file->GetLeafName(&leafName);
+    rv = file->GetLeafName(leafNameBuf);
     if (NS_FAILED(rv)) return rv;
+
+    // XXX this code should use iterators
+    char *leafName = (char *) leafNameBuf.get();
 
     char* lastDot = strrchr(leafName, '.');
     char* suffix = "";
@@ -2830,7 +2833,7 @@ nsresult MakeUnique(nsILocalFile* file)
         // start with "Picture-1.jpg" after "Picture.jpg" exists
         char newName[32];
         sprintf(newName, "%s-%d%s", leafName, indx, suffix);
-        file->SetLeafName(newName);
+        file->SetLeafName(nsDependentCString(newName));
 
         rv = file->Exists(&flagExists);
         if (NS_FAILED(rv)) return rv;

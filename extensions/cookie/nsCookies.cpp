@@ -212,7 +212,7 @@ COOKIE_DeletePersistentUserData(void)
   nsCOMPtr<nsIFile> cookiesFile;
   res = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(cookiesFile));
   if (NS_SUCCEEDED(res)) {
-    res = cookiesFile->Append(kCookiesFileName);
+    res = cookiesFile->AppendNative(nsDependentCString(kCookiesFileName));
     if (NS_SUCCEEDED(res))
         (void) cookiesFile->Remove(PR_FALSE);
   }

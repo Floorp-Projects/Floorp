@@ -250,7 +250,7 @@ NS_IMETHODIMP CHelperAppLauncherDialog::Show(nsIHelperAppLauncher *aLauncher,
         m_FileName = dlg.m_OpenWithAppName;
 
         nsCOMPtr<nsILocalFile> openWith;
-        nsresult rv = NS_NewLocalFile(m_FileName, PR_FALSE, getter_AddRefs(openWith));
+        nsresult rv = NS_NewNativeLocalFile(nsDependentCString(m_FileName), PR_FALSE, getter_AddRefs(openWith));
         if (NS_FAILED(rv))
             return aLauncher->LaunchWithApplication(nsnull, PR_FALSE);
         else
@@ -279,7 +279,7 @@ NS_IMETHODIMP CHelperAppLauncherDialog::PromptForSaveToFile(nsISupports *aWindow
     {
         m_FileName = cf.GetPathName(); // Will be like: c:\tmp\junk.exe
 
-        return NS_NewLocalFile(m_FileName, PR_FALSE, _retval);
+        return NS_NewNativeLocalFile(nsDependentCString(m_FileName), PR_FALSE, _retval);
     }
     else
         return NS_ERROR_FAILURE;

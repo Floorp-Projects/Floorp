@@ -46,7 +46,6 @@ private:
     /* additional members */
     nsresult FileURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
     nsresult ConvertFileToStringURI(nsString& aIn, nsCString& aOut);
-    nsresult ConvertStringURIToFileCharset(nsString& aIn, nsCString& aOut);
     nsresult KeywordURIFixup(const PRUnichar* aStringURI, nsIURI** aURI);
     PRBool PossiblyByteExpandedFileName(nsString& aIn);
     PRBool MakeAlternateURI(nsIURI *aURI);

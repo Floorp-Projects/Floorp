@@ -48,7 +48,7 @@ function Startup()
       // an app may have been selected in the opening dialog but not in the mimeinfo
       var app = info.preferredApplicationHandler || window.arguments[0].chosenApp;
       if ( app ) {
-          gAppPath.value      = app.unicodePath;
+          gAppPath.value      = app.path;
       }
 
       // Don't let user change mime type.
@@ -145,7 +145,7 @@ function onOK()
   if (file) {
     try {
       file.initWithPath(gAppPath.value);
-      handlerInfo.appDisplayName = file.unicodeLeafName;
+      handlerInfo.appDisplayName = file.leafName;
     }
     catch(e) {
       handlerInfo.appDisplayName = gAppPath.value;    

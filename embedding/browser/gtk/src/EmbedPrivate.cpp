@@ -353,7 +353,7 @@ EmbedPrivate::PushStartup(void)
     nsCOMPtr<nsILocalFile> binDir;
     
     if (sCompPath) {
-      rv = NS_NewLocalFile(sCompPath, 1, getter_AddRefs(binDir));
+      rv = NS_NewNativeLocalFile(nsDependentCString(sCompPath), 1, getter_AddRefs(binDir));
       if (NS_FAILED(rv))
 	return;
     }
@@ -788,7 +788,7 @@ EmbedPrivate::StartupProfile(void)
     PRBool exists = PR_FALSE;
     PRBool isDir = PR_FALSE;
     profileDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-    rv = profileDir->InitWithPath(sProfileDir);
+    rv = profileDir->InitWithNativePath(nsDependentCString(sProfileDir));
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
     profileDir->Exists(&exists);

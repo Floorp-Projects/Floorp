@@ -25,9 +25,9 @@
  *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include <string.h>
-#include "nsILocalFile.h"
 #include "nsJARInputStream.h"
 #include "nsJAR.h"
+#include "nsILocalFile.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
@@ -275,16 +275,15 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   else
   {
 #if defined(XP_UNIX)
-    nsXPIDLCString path;
-
-    rv = outFile->GetPath(getter_Copies(path)); 
+    nsCAutoString path;
+    rv = outFile->GetNativePath(path);
     if (NS_SUCCEEDED(rv)) 
     {
       if (item->flags & ZIFLAG_SYMLINK) 
       {
-        err = mZip.ResolveSymlink(path,item);
+        err = mZip.ResolveSymlink(path.get(),item);
       }
-      chmod(path, item->mode);
+      chmod(path.get(), item->mode);
     }
 #endif
 
@@ -1205,8 +1204,8 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   mZipCacheLookups++;
 #endif
 
-  nsXPIDLCString path;
-  rv = zipFile->GetPath(getter_Copies(path));
+  nsCAutoString path;
+  rv = zipFile->GetNativePath(path);
   if (NS_FAILED(rv)) return rv;
 
   nsCStringKey key(path);
@@ -1329,8 +1328,8 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
   rv = oldest->GetFile(getter_AddRefs(zipFile));
   if (NS_FAILED(rv)) return rv;
 
-  nsXPIDLCString path;
-  rv = zipFile->GetPath(getter_Copies(path));
+  nsCAutoString path;
+  rv = zipFile->GetNativePath(path);
   if (NS_FAILED(rv)) return rv;
 
   nsCStringKey key(path);
@@ -1338,7 +1337,7 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
   NS_ASSERTION(removed, "botched");
 
 #ifdef xDEBUG_jband
-  printf("dumped %s from the jar cache\n", (const char*) path);
+  printf("dumped %s from the jar cache\n", path.get());
 #endif
 
   return NS_OK;

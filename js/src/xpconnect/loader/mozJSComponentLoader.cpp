@@ -734,7 +734,7 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
 
     const char jsExtension[] = ".js";
     int jsExtensionLen = 3;
-    nsXPIDLCString leafName;
+    nsCAutoString leafName;
 
     *registered = PR_FALSE;
 
@@ -743,28 +743,28 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
     if (NS_FAILED(rv = component->IsFile(&isFile)) || !isFile)
         return rv;
 
-    if (NS_FAILED(rv = component->GetLeafName(getter_Copies(leafName))))
+    if (NS_FAILED(rv = component->GetNativeLeafName(leafName)))
         return rv;
-    int len = PL_strlen(leafName);
+    int len = leafName.Length();
     
     /* if it's not *.js, return now */
     if (len < jsExtensionLen || // too short
-        PL_strcasecmp(leafName + len - jsExtensionLen, jsExtension))
+        PL_strcasecmp(leafName.get() + len - jsExtensionLen, jsExtension))
         return NS_OK;
 
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: registering JS component %s\n",
-            (const char *)leafName);
+            leafName.get());
 #endif
       
     rv = AttemptRegistration(component, PR_FALSE);
 #ifdef DEBUG_shaver_off
     if (NS_SUCCEEDED(rv))
-        fprintf(stderr, "registered module %s\n", (const char *)leafName);
+        fprintf(stderr, "registered module %s\n", leafName.get());
     else if (rv == NS_ERROR_FACTORY_REGISTER_AGAIN) 
-        fprintf(stderr, "deferred module %s\n", (const char *)leafName);
+        fprintf(stderr, "deferred module %s\n", leafName.get());
     else
-        fprintf(stderr, "failed to register %s\n", (const char *)leafName);
+        fprintf(stderr, "failed to register %s\n", leafName.get());
 #endif    
     *registered = (PRBool) NS_SUCCEEDED(rv);
     return NS_OK;
@@ -781,7 +781,7 @@ mozJSComponentLoader::AutoUnregisterComponent(PRInt32 when,
 
     const char jsExtension[] = ".js";
     int jsExtensionLen = 3;
-    nsXPIDLCString leafName;
+    nsCAutoString leafName;
 
     *unregistered = PR_FALSE;
 
@@ -790,21 +790,21 @@ mozJSComponentLoader::AutoUnregisterComponent(PRInt32 when,
     if (NS_FAILED(rv = component->IsFile(&isFile)) || !isFile)
         return rv;
 
-    if (NS_FAILED(rv = component->GetLeafName(getter_Copies(leafName))))
+    if (NS_FAILED(rv = component->GetNativeLeafName(leafName)))
         return rv;
-    int len = PL_strlen(leafName);
+    int len = leafName.Length();
     
     /* if it's not *.js, return now */
     if (len < jsExtensionLen || // too short
-        PL_strcasecmp(leafName + len - jsExtensionLen, jsExtension))
+        PL_strcasecmp(leafName.get() + len - jsExtensionLen, jsExtension))
         return NS_OK;
 
     rv = UnregisterComponent(component);
 #ifdef DEBUG_dp
     if (NS_SUCCEEDED(rv))
-        fprintf(stderr, "unregistered module %s\n", (const char *)leafName);
+        fprintf(stderr, "unregistered module %s\n", leafName.get());
     else
-        fprintf(stderr, "failed to unregister %s\n", (const char *)leafName);
+        fprintf(stderr, "failed to unregister %s\n", leafName.get());
 #endif    
     *unregistered = (PRBool) NS_SUCCEEDED(rv);
     return NS_OK;
@@ -852,9 +852,9 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
           // get the file name
           if (component)
           {
-            nsXPIDLCString leafName;
-            component->GetLeafName(getter_Copies(leafName));
-            fileName.AssignWithConversion(leafName);
+            nsCAutoString leafName;
+            component->GetLeafName(leafName);
+            fileName.Assign(NS_ConvertUTF8toUCS2(leafName));
           }
           
           // this string can't come from a string bundle, because we

@@ -26,7 +26,8 @@
 #define _nsPROCESSWIN_H_
 
 #include "nsIProcess.h"
-#include "nsXPIDLString.h"
+#include "nsIFile.h"
+#include "nsString.h"
 #include "prproces.h"
 
 #define NS_PROCESS_CID \
@@ -46,7 +47,7 @@ public:
 private:
   nsCOMPtr<nsIFile> mExecutable;
   PRInt32 mExitValue;
-  nsXPIDLCString mTargetPath;
+  nsCString mTargetPath;
   PRProcess *mProcess;
 
 };

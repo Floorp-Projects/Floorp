@@ -413,7 +413,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
 
   // we found the filename; construct a resource for its entry
   nsCAutoString entryuriC(baseStr);
-  
+
   // gopher resources don't point to an entry in the same directory
   // like ftp uris. So the entryuriC is just a unique string, while
   // the URL attribute is the destination of this element
@@ -421,8 +421,8 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
   nsXPIDLCString filename;
   nsresult rv = aIndex->GetLocation(getter_Copies(filename));
   if (NS_FAILED(rv)) return rv;
-  entryuriC.Append(filename.get());
-  
+  entryuriC.Append(filename);
+
   // if its a directory, make sure it ends with a trailing slash.
   // This doesn't matter for gopher, (where directories don't have
   // to end in a trailing /), because the filename is used for the URL
@@ -437,7 +437,7 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
   if (isDirType) {
       entryuriC.Append('/');
   }
-  
+
   nsCOMPtr<nsIRDFResource> entry;
   rv = mDirRDF->GetResource(entryuriC.get(), getter_AddRefs(entry));
 

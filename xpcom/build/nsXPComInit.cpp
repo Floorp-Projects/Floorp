@@ -369,10 +369,9 @@ nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
                 gDirectoryService->Define(NS_XPCOM_INIT_CURRENT_PROCESS_DIR, binDirectory);
 
             //Since people are still using the nsSpecialSystemDirectory, we should init it.
-            char* path;
-            binDirectory->GetPath(&path);
-            nsFileSpec spec(path);
-            nsMemory::Free(path);
+            nsCAutoString path;
+            binDirectory->GetPath(path);
+            nsFileSpec spec(path.get());
 
             nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory, &spec);
 

@@ -116,8 +116,6 @@ nsFileIO::nsFileIO()
     if (nsnull == gFileIOLog) {
         gFileIOLog = PR_NewLogModule("nsFileIO");
     }
-
-    mSpec = nsnull;
 #endif /* PR_LOGGING */
 }
 
@@ -128,9 +126,6 @@ nsFileIO::~nsFileIO()
         PR_Close(mFD);
         mFD = nsnull;
     }
-#ifdef PR_LOGGING
-    if (mSpec) nsCRT::free(mSpec);
-#endif      
 }
 
 NS_METHOD
@@ -158,7 +153,7 @@ nsFileIO::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
     mIOFlags = ioFlags;
     mPerm = perm;
 #ifdef PR_LOGGING
-    nsresult rv = mFile->GetPath(&mSpec);
+    nsresult rv = mFile->GetNativePath(mSpec);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetSpec failed");
 #endif      
     return NS_OK;
@@ -205,7 +200,7 @@ nsFileIO::Open()
     }
 
     PR_LOG(gFileIOLog, PR_LOG_DEBUG,
-           ("nsFileIO: logically opening %s", mSpec));
+           ("nsFileIO: logically opening %s", mSpec.get()));
     return rv;
 }
 
@@ -277,7 +272,7 @@ nsFileIO::Close(nsresult status)
     if (mFile) {
         PR_LOG(gFileIOLog, PR_LOG_DEBUG,
                ("nsFileIO: logically closing %s: status=%x",
-                mSpec, status));
+                mSpec.get(), status));
         mFile = nsnull;
     }
     mStatus = status;
@@ -312,7 +307,7 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
         rv = nsDirectoryIndexStream::Create(mFile, aInputStream);
         PR_LOG(gFileIOLog, PR_LOG_DEBUG,
                ("nsFileIO: opening local dir %s for input (%x)",
-                mSpec, rv));
+                mSpec.get(), rv));
         return rv;
     }
 
@@ -335,7 +330,7 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
 
     PR_LOG(gFileIOLog, PR_LOG_DEBUG,
            ("nsFileIO: opening local file %s for input (%x)",
-            mSpec, rv));
+            mSpec.get(), rv));
     return rv;
 }
 
@@ -380,7 +375,7 @@ nsFileIO::GetOutputStream(nsIOutputStream * *aOutputStream)
 
     PR_LOG(gFileIOLog, PR_LOG_DEBUG,
            ("nsFileIO: opening local file %s for output (%x)",
-            mSpec, rv));
+            mSpec.get(), rv));
     return rv;
 }
 
@@ -391,12 +386,7 @@ nsFileIO::GetName(nsACString &aName)
     if (mFile == nsnull)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsXPIDLCString path;
-    nsresult rv = mFile->GetPath(getter_Copies(path));
-    if (NS_FAILED(rv)) return rv;
-
-    aName = path;
-    return NS_OK;
+    return mFile->GetPath(aName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

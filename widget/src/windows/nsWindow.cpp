@@ -5012,11 +5012,11 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
       return NS_ERROR_FAILURE;
   }
   // Get native file name of that directory.
-  nsXPIDLString rootPath;
-  chromeDir->GetUnicodePath( getter_Copies( rootPath ) );
+  nsCAutoString rootPath;
+  chromeDir->GetPath( rootPath );
 
   // Start there.
-  nsAutoString iconPath( rootPath );
+  NS_ConvertUTF8toUCS2 iconPath( rootPath );
 
   // Now take input path...
   nsAutoString iconSpec( anIconSpec );
@@ -5051,20 +5051,20 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
   // See if unicode API not implemented and if not, try ascii version
   if ( ::GetLastError() == ERROR_CALL_NOT_IMPLEMENTED ) {
       nsCOMPtr<nsILocalFile> pathConverter;
-      if ( NS_SUCCEEDED( NS_NewUnicodeLocalFile( iconPath.get(),
-                                                 PR_FALSE,
-                                                 getter_AddRefs( pathConverter ) ) ) ) {
+      if ( NS_SUCCEEDED( NS_NewLocalFile( NS_ConvertUCS2toUTF8(iconPath),
+                                          PR_FALSE,
+                                          getter_AddRefs( pathConverter ) ) ) ) {
           // Now try the char* path.
-          nsXPIDLCString aPath;
-          pathConverter->GetPath( getter_Copies( aPath ) );
+          nsCAutoString aPath;
+          pathConverter->GetNativePath( aPath );
           bigIcon = (HICON)::LoadImage( NULL,
-                                        (const char*)aPath,
+                                        aPath.get(),
                                         IMAGE_ICON,
                                         ::GetSystemMetrics(SM_CXICON),
                                         ::GetSystemMetrics(SM_CYICON),
                                         LR_LOADFROMFILE | LR_SHARED );
           smallIcon = (HICON)::LoadImage( NULL,
-                                          (const char*)aPath,
+                                          aPath.get(),
                                           IMAGE_ICON,
                                           ::GetSystemMetrics(SM_CXSMICON),
                                           ::GetSystemMetrics(SM_CYSMICON),

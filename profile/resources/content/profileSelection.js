@@ -52,7 +52,7 @@ function StartUp()
 
   Registry = Components.classes['@mozilla.org/registry;1'].createInstance();
   Registry = Registry.QueryInterface(Components.interfaces.nsIRegistry);
-  Registry.open(regFile.path);
+  Registry.open(regFile);
 
   // get new profile registry & users location and dump it to console
   // to let users know about it.

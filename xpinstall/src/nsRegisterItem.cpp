@@ -75,12 +75,12 @@ static nsresult
 hack_nsIFile2URL(nsIFile* file, char * *aURL)
 {
     nsresult rv;
-    char* ePath;
-    rv = file->GetPath(&ePath);
+    nsCAutoString ePath;
+    rv = file->GetNativePath(ePath);
     if (NS_FAILED(rv)) return rv;
 #if defined (XP_PC)
     // Replace \ with / to convert to an url
-    char* s = ePath;
+    char* s = (char *) ePath.get();
     while (*s) {
 #ifndef XP_OS2
         // We need to call IsDBCSLeadByte because
@@ -98,7 +98,7 @@ hack_nsIFile2URL(nsIFile* file, char * *aURL)
 #endif
 #if defined( XP_MAC )
     // Swap the / and colons to convert to an url
-    SwapSlashColon(ePath);
+    SwapSlashColon((char*)ePath.get());
 #endif
     // Escape the path with the directory mask
     nsCAutoString tmp(ePath);
@@ -119,11 +119,9 @@ hack_nsIFile2URL(nsIFile* file, char * *aURL)
         }
         *aURL = ToNewCString(escPath);
         if (*aURL == nsnull) {
-            nsMemory::Free(ePath);
             return NS_ERROR_OUT_OF_MEMORY;
         }
 //    }
-    nsMemory::Free(ePath);
     return rv;
 }
 
@@ -299,7 +297,7 @@ PRInt32 nsRegisterItem::Complete()
                 rv = startupFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
             if (NS_SUCCEEDED(rv))
             {
-                rv = startupFile->Append("installed-chrome.txt");
+                rv = startupFile->Append(NS_LITERAL_CSTRING("installed-chrome.txt"));
                 if (NS_SUCCEEDED(rv))
                 {
                     rv = startupFile->OpenNSPRFileDesc(

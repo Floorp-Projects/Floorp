@@ -415,16 +415,13 @@ nsresult CProfileManager::OpenAppRegistry(nsIRegistry **aRegistry)
     
     nsresult rv;
     nsCOMPtr<nsIFile> regFile;
-    nsXPIDLCString regFilePath;
             
     rv = NS_GetSpecialDirectory(NS_APP_APPLICATION_REGISTRY_FILE, getter_AddRefs(regFile));
-    if (NS_FAILED(rv)) return rv;
-    rv = regFile->GetPath(getter_Copies(regFilePath));   
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIRegistry> registry(do_CreateInstance(NS_REGISTRY_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = registry->Open(regFilePath);
+    rv = registry->Open(regFile);
     if (NS_FAILED(rv)) return rv;
     
     *aRegistry = registry;

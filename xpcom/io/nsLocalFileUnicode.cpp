@@ -62,6 +62,7 @@ public:
      static void CleanUp();
      static nsresult UCSToNewFS( const PRUnichar* aIn, char** aOut);  
      static nsresult FSToNewUCS( const char* aIn, PRUnichar** aOut);  
+     static const nsAString *FSCharset();
 
 private:
      static nsresult PrepareFSCharset();
@@ -89,13 +90,10 @@ void NS_ShutdownLocalFileUnicode()
 
 #define GET_UCS( func , arg)                                    \
 {                                                               \
-   char* tmp;                                                   \
+   nsCAutoString tmp;                                           \
    nsresult res;                                                \
-   if(NS_SUCCEEDED(res = (func)(&tmp))) {                       \
-     if(NS_SUCCEEDED(res = nsFSStringConversion::FSToNewUCS(tmp, (arg)))){ \
-       nsMemory::Free(tmp);                                     \
-     }                                                          \
-   }                                                            \
+   if(NS_SUCCEEDED(res = (func)(tmp)))                          \
+     res = nsFSStringConversion::FSToNewUCS(tmp.get(), (arg));  \
    return res;                                                  \
 }
 #define VOID_SET_UCS( func , arg, assertion_msg)                \
@@ -113,7 +111,7 @@ void NS_ShutdownLocalFileUnicode()
    char* tmp;                                                   \
    nsresult res;                                                \
    if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((arg), &tmp))) { \
-     res = (func)(tmp);                                         \
+     res = (func)(nsDependentCString(tmp));                     \
      nsMemory::Free(tmp);                                       \
    }                                                            \
    return res;                                                  \
@@ -123,7 +121,7 @@ void NS_ShutdownLocalFileUnicode()
    char* tmp;                                                   \
    nsresult res;                                                \
    if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((arg2), &tmp))){ \
-     res = (func)(arg1, tmp);                                   \
+     res = (func)(arg1, nsDependentCString(tmp));                                   \
      nsMemory::Free(tmp);                                       \
    }                                                            \
    return res;                                                  \
@@ -133,7 +131,7 @@ void NS_ShutdownLocalFileUnicode()
    char* tmp;                                                   \
    nsresult res;                                                \
    if(NS_SUCCEEDED(res = nsFSStringConversion::UCSToNewFS((path), &tmp))){ \
-     res = (func)(tmp, followLinks, result);                    \
+     res = (func)(nsDependentCString(tmp), followLinks, result);                    \
      nsMemory::Free(tmp);                                       \
    }                                                            \
    return res;                                                  \
@@ -294,60 +292,79 @@ nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
    return res;
 }
 
+const nsAString *
+nsFSStringConversion::FSCharset()
+{
+#ifndef XPCOM_STANDALONE
+    nsresult res = PrepareFSCharset();
+    if(NS_SUCCEEDED(res))
+        return mFSCharset;
+#endif
+    return nsnull;
+}
+
+PRBool
+nsLocalFile::FSCharsetIsUTF8()
+{
+    // assuming charset is normalized uppercase
+    return nsFSStringConversion::FSCharset() &&
+           nsFSStringConversion::FSCharset()->Equals(NS_LITERAL_STRING("UTF-8"));
+}
+
 // Unicode interface Wrapper
 NS_IMETHODIMP  
 nsLocalFile::InitWithUnicodePath(const PRUnichar *filePath)
 {
-   SET_UCS(InitWithPath, filePath);
+   SET_UCS(InitWithNativePath, filePath);
 }
 NS_IMETHODIMP  
 nsLocalFile::AppendUnicode(const PRUnichar *node)
 {
-   SET_UCS( Append , node);
+   SET_UCS( AppendNative , node);
 }
 NS_IMETHODIMP  
 nsLocalFile::AppendRelativeUnicodePath(const PRUnichar *node)
 {
-   SET_UCS( AppendRelativePath , node);
+   SET_UCS( AppendRelativeNativePath , node);
 }
 NS_IMETHODIMP  
 nsLocalFile::GetUnicodeLeafName(PRUnichar **aLeafName)
 {
-   GET_UCS(GetLeafName, aLeafName);
+   GET_UCS(GetNativeLeafName, aLeafName);
 }
 NS_IMETHODIMP  
 nsLocalFile::SetUnicodeLeafName(const PRUnichar * aLeafName)
 {
-   SET_UCS( SetLeafName , aLeafName);
+   SET_UCS( SetNativeLeafName , aLeafName);
 }
 NS_IMETHODIMP  
 nsLocalFile::GetUnicodePath(PRUnichar **_retval)
 {
-   GET_UCS(GetPath, _retval);
+   GET_UCS(GetNativePath, _retval);
 }
 NS_IMETHODIMP  
 nsLocalFile::CopyToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
 {
-   SET_UCS_2ARGS_2( CopyTo , newParentDir, newName);
+   SET_UCS_2ARGS_2( CopyToNative , newParentDir, newName);
 }
 NS_IMETHODIMP  
 nsLocalFile::CopyToFollowingLinksUnicode(nsIFile *newParentDir, const PRUnichar *newName)
 {
-   SET_UCS_2ARGS_2( CopyToFollowingLinks , newParentDir, newName);
+   SET_UCS_2ARGS_2( CopyToFollowingLinksNative , newParentDir, newName);
 }
 NS_IMETHODIMP  
 nsLocalFile::MoveToUnicode(nsIFile *newParentDir, const PRUnichar *newName)
 {
-   SET_UCS_2ARGS_2( MoveTo , newParentDir, newName);
+   SET_UCS_2ARGS_2( MoveToNative , newParentDir, newName);
 }
 NS_IMETHODIMP
 nsLocalFile::GetUnicodeTarget(PRUnichar **_retval)
 {   
-   GET_UCS(GetTarget, _retval);
+   GET_UCS(GetNativeTarget, _retval);
 }
 nsresult 
 NS_NewUnicodeLocalFile(const PRUnichar* path, PRBool followLinks, nsILocalFile* *result)
 {
-   SET_UCS_2ARGS_1( NS_NewLocalFile, path, followLinks, result)
+   SET_UCS_2ARGS_1( NS_NewNativeLocalFile, path, followLinks, result)
 }
  

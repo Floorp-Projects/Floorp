@@ -107,7 +107,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
                                     getter_AddRefs(file));       
         if (NS_FAILED(rv)) return rv;
 
-        rv = file->Append("bloatlogs");
+        rv = file->Append(NS_LITERAL_CSTRING("bloatlogs"));
         if (NS_FAILED(rv)) return rv;
 
         PRBool exists;
@@ -132,11 +132,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         char time[128];
         PR_FormatTimeUSEnglish(time, 128, "%Y-%m-%d-%H%M%S.txt", &expTime);
         dumpFileName += time;
-        rv = file->Append(dumpFileName.get());
-        if (NS_FAILED(rv)) return rv;
-
-        char* nativePath;
-        rv = file->GetPath(&nativePath);
+        rv = file->Append(dumpFileName);
         if (NS_FAILED(rv)) return rv;
 
         FILE* out;

@@ -58,7 +58,7 @@ function filepickerLoad() {
     const title = o.title;
     filePickerMode = o.mode;
     if (o.displayDirectory) {
-      const directory = o.displayDirectory.unicodePath;
+      const directory = o.displayDirectory.path;
     }
     const initialText = o.defaultString;
     const filterTitles = o.filters.titles;
@@ -136,11 +136,11 @@ function setInitialDirectory(directory)
   homeDir = dirServiceProvider.getFile("Home", persistent);
 
   if (directory) {
-    sfile.initWithUnicodePath(directory);
+    sfile.initWithPath(directory);
   }
   if (!directory || !(sfile.exists() && sfile.isDirectory())) {
     // Start in the user's home directory
-    sfile.initWithUnicodePath(homeDir.unicodePath);
+    sfile.initWithPath(homeDir.path);
   }
 
   gotoDirectory(sfile);
@@ -164,9 +164,9 @@ function changeFilter(filterTypes)
 function showFilePermissionsErrorDialog(titleStrName, messageStrName, file)
 {
   var errorTitle =
-    gFilePickerBundle.getFormattedString(titleStrName, [file.unicodePath]);
+    gFilePickerBundle.getFormattedString(titleStrName, [file.path]);
   var errorMessage =
-    gFilePickerBundle.getFormattedString(messageStrName, [file.unicodePath]);
+    gFilePickerBundle.getFormattedString(messageStrName, [file.path]);
   var promptService =
     Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
 
@@ -204,7 +204,7 @@ function selectOnOK()
 
   var input = textInput.value;
   if (input[0] == '~') // XXX XP?
-    input  = homeDir.unicodePath + input.substring(1);
+    input  = homeDir.path + input.substring(1);
 
   var file = sfile.clone().QueryInterface(nsILocalFile);
   if (!file)
@@ -212,18 +212,18 @@ function selectOnOK()
 
   /* XXX we need an XP way to test for an absolute path! */
   if (input[0] == '/')   /* an absolute path was entered */
-    file.initWithUnicodePath(input);
+    file.initWithPath(input);
   else if ((input.indexOf("/../") > 0) ||
            (input.substr(-3) == "/..") ||
            (input.substr(0,3) == "../") ||
            (input == "..")) {
     /* appendRelativePath doesn't allow .. */
-    file.initWithUnicodePath(file.unicodePath + "/" + input);
+    file.initWithPath(file.path + "/" + input);
     file.normalize();
   }
   else {
     try {
-      file.appendRelativeUnicodePath(input);
+      file.appendRelativePath(input);
     } catch (e) {
       dump("Can't append relative path '"+input+"':\n");
       return false;
@@ -246,7 +246,7 @@ function selectOnOK()
   case nsIFilePicker.modeOpen:
     if (isFile) {
       if (file.isReadable()) {
-        retvals.directory = file.parent.unicodePath;
+        retvals.directory = file.parent.path;
         ret = nsIFilePicker.returnOK;
       } else {
         showFilePermissionsErrorDialog("errorOpeningFileTitle",
@@ -274,12 +274,12 @@ function selectOnOK()
         // we need to pop up a dialog asking if you want to save
         var message =
           gFilePickerBundle.getFormattedString("confirmFileReplacing",
-                                               [file.unicodePath]);
+                                               [file.path]);
 
         var rv = window.confirm(message);
         if (rv) {
           ret = nsIFilePicker.returnReplace;
-          retvals.directory = file.parent.unicodePath;
+          retvals.directory = file.parent.path;
         } else {
           ret = nsIFilePicker.returnCancel;
         }
@@ -295,7 +295,7 @@ function selectOnOK()
       var parent = file.parent;
       if (parent.exists() && parent.isDirectory() && parent.isWritable()) {
         ret = nsIFilePicker.returnOK;
-        retvals.directory = parent.unicodePath;
+        retvals.directory = parent.path;
       } else {
         var oldParent = parent;
         while (!parent.exists()) {
@@ -304,20 +304,20 @@ function selectOnOK()
         }
         var errorTitle =
           gFilePickerBundle.getFormattedString("errorSavingFileTitle",
-                                               [file.unicodePath]);
+                                               [file.path]);
         var errorMessage;
         if (parent.isFile()) {
           errorMessage =
             gFilePickerBundle.getFormattedString("saveParentIsFileMessage",
-                                                 [parent.unicodePath, file.unicodePath]);
+                                                 [parent.path, file.path]);
         } else {
           errorMessage =
             gFilePickerBundle.getFormattedString("saveParentDoesntExistMessage",
-                                                 [oldParent.unicodePath, file.unicodePath]);
+                                                 [oldParent.path, file.path]);
         }
         if (!parent.isWritable()) {
           errorMessage =
-            gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [parent.unicodePath]);
+            gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [parent.path]);
         }
         promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                   .getService(Components.interfaces.nsIPromptService);
@@ -328,9 +328,9 @@ function selectOnOK()
     break;
   case nsIFilePicker.modeGetFolder:
     if (isDir) {
-      retvals.directory = file.parent.unicodePath;
+      retvals.directory = file.parent.path;
     } else { // if nothing selected, the current directory will be fine
-      retvals.directory = sfile.unicodePath;
+      retvals.directory = sfile.path;
     }
     ret = nsIFilePicker.returnOK;
     break;
@@ -480,7 +480,7 @@ function onSelect(event) {
 
 function onFileSelected(file) {
   if (file) {
-    var path = file.unicodeLeafName;
+    var path = file.leafName;
     
     if (path) {
       if ((filePickerMode == nsIFilePicker.modeGetFolder) || !file.isDirectory())
@@ -507,7 +507,7 @@ function onDirectoryChanged(target)
   var path = target.getAttribute("label");
 
   var file = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFile);
-  file.initWithUnicodePath(path);
+  file.initWithPath(path);
 
   if (!sfile.equals(file)) {
     // Do this on a timeout callback so the directory list can roll up
@@ -525,7 +525,7 @@ function populateAncestorList(directory) {
   }
   
   var menuItem = document.createElement("menuitem");
-  menuItem.setAttribute("label", directory.unicodePath);
+  menuItem.setAttribute("label", directory.path);
   menuItem.setAttribute("crop", "start");
   menu.appendChild(menuItem);
 
@@ -533,7 +533,7 @@ function populateAncestorList(directory) {
   var parent = directory.parent;
   while (parent && !parent.equals(directory)) {
     menuItem = document.createElement("menuitem");
-    menuItem.setAttribute("label", parent.unicodePath);
+    menuItem.setAttribute("label", parent.path);
     menuItem.setAttribute("crop", "start");
     menu.appendChild(menuItem);
     directory = parent;

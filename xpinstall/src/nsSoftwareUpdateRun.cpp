@@ -199,7 +199,7 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptB
 
     // Extract the install.js file.
     nsCOMPtr<nsILocalFile> iFile;
-    rv = NS_NewLocalFile(installJSFileSpec, PR_TRUE, getter_AddRefs(iFile));
+    rv = NS_NewNativeLocalFile(nsDependentCString(installJSFileSpec), PR_TRUE, getter_AddRefs(iFile));
     if (NS_SUCCEEDED(rv))
       rv = hZip->Extract("install.js", iFile);
     if ( NS_SUCCEEDED(rv) )

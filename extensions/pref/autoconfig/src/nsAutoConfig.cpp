@@ -445,7 +445,7 @@ nsresult nsAutoConfig::readOfflineFile()
     if (NS_FAILED(rv)) 
         return rv;
     
-    failoverFile->Append("failover.jsc");
+    failoverFile->Append(NS_LITERAL_CSTRING("failover.jsc"));
     rv = evaluateLocalFile(failoverFile);
     if (NS_FAILED(rv)) 
         NS_WARNING("Couldn't open failover.jsc, going back to default prefs");
@@ -491,7 +491,7 @@ nsresult nsAutoConfig::writeFailoverFile()
     if (NS_FAILED(rv)) 
         return rv;
     
-    failoverFile->Append("failover.jsc");
+    failoverFile->Append(NS_LITERAL_CSTRING("failover.jsc"));
     
     rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStr), failoverFile);
     if (NS_FAILED(rv)) 

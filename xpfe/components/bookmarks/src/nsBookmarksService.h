@@ -54,6 +54,7 @@
 #include "nsIIOService.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
+#include "nsILocalFile.h"
 
 #ifdef	DEBUG
 #ifdef	XP_MAC

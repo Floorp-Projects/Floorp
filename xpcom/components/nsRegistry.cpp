@@ -367,7 +367,7 @@ NS_IMPL_ISUPPORTS1( nsRegistryValue,        nsIRegistryValue )
 | Vanilla nsRegistry constructor.                                              |
 ------------------------------------------------------------------------------*/
 nsRegistry::nsRegistry() 
-    : mReg(0), mCurRegFile(nsnull), mCurRegID(0) {
+    : mReg(0), mCurRegID(0) {
     NS_INIT_REFCNT();
 #ifdef EXTRA_THREADSAFE
     mregLock = PR_NewLock();
@@ -382,8 +382,6 @@ nsRegistry::~nsRegistry() {
     if( mReg ) {
         Close();
     }
-    if (mCurRegFile)
-      nsCRT::free(mCurRegFile);
 #ifdef EXTRA_THREADSAFE
     if (mregLock) {
         PR_DestroyLock(mregLock);
@@ -397,7 +395,7 @@ nsRegistry::~nsRegistry() {
 | file.  We first check to see if a registry file is already open and close    |
 | it if so.                                                                    |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
+NS_IMETHODIMP nsRegistry::Open( nsIFile *regFile ) {
     REGERR err = REGERR_OK;
 
     // Check for default.
@@ -405,8 +403,12 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
         return OpenWellKnownRegistry(nsIRegistry::ApplicationRegistry);
     }
 
+    nsCAutoString regPath;
+    nsresult rv = regFile->GetNativePath(regPath);
+    if (NS_FAILED(rv)) return rv;
+
 #ifdef DEBUG_dp
-    printf("nsRegistry: Opening registry %s\n", regFile);
+    printf("nsRegistry: Opening registry %s\n", regPath.get());
 #endif /* DEBUG_dp */
    
     if (mCurRegID != nsIRegistry::None && mCurRegID != nsIRegistry::ApplicationCustomRegistry)
@@ -418,7 +420,8 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
     // Do we have an open registry ?
     if (mCurRegID != nsIRegistry::None)
     {
-        if (mCurRegFile && !nsCRT::strcmp(regFile, mCurRegFile))
+        PRBool equals;
+        if (mCurRegFile && NS_SUCCEEDED(mCurRegFile->Equals(regFile, &equals)) && equals)
         {
             // The right one is already open
             return NS_OK;
@@ -433,12 +436,14 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
 
     // Open specified registry.
     PR_Lock(mregLock);
-    err = NR_RegOpen((char*)regFile, &mReg );
+    err = NR_RegOpen(NS_CONST_CAST(char*,regPath.get()), &mReg);
     PR_Unlock(mregLock);
 
     mCurRegID = nsIRegistry::ApplicationCustomRegistry;
+
     // No error checking for no mem. Trust me.
-    mCurRegFile = nsCRT::strdup(regFile);
+    if (NS_FAILED(regFile->Clone(getter_AddRefs(mCurRegFile))))
+        mCurRegFile = nsnull; // not fatal
 
     // Convert the result.
     return regerr2nsresult( err );
@@ -521,7 +526,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
     nsCOMPtr<nsIFile> registryLocation;
 
     PRBool foundReg = PR_FALSE;
-    char *regFile = nsnull;
+    nsCAutoString regFile;
     
     switch ( (nsWellKnownRegistry) regid ) {
       case ApplicationComponentRegistry:
@@ -539,11 +544,11 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
             if (registryLocation)
             {
                 foundReg = PR_TRUE;
-                registryLocation->GetPath(&regFile);  // dougt fix...
+                rv = registryLocation->GetNativePath(regFile);  // dougt fix...
                 // dveditz needs to fix his registry so that I can pass an
                 // nsIFile interface and not hack 
-                if (!regFile)
-                  return NS_ERROR_OUT_OF_MEMORY;
+                if (NS_FAILED(rv))
+                  return rv;
             }
             
         }
@@ -563,11 +568,11 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
             if (registryLocation)
             {
                 foundReg = PR_TRUE;
-                registryLocation->GetPath(&regFile);  // dougt fix...
+                rv = registryLocation->GetNativePath(regFile);  // dougt fix...
                 // dveditz needs to fix his registry so that I can pass an
                 // nsIFile interface and not hack 
-                if (!regFile)
-                  return NS_ERROR_OUT_OF_MEMORY;
+                if (NS_FAILED(rv))
+                  return rv;
             }
         }
         break;
@@ -581,15 +586,12 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
     }
    
 #ifdef DEBUG_dp
-    printf("nsRegistry: Opening std registry %s\n", regFile);
+    printf("nsRegistry: Opening std registry %s\n", regFile.get());
 #endif /* DEBUG_dp */
 
     PR_Lock(mregLock);
-    err = NR_RegOpen((char*)regFile, &mReg );
+    err = NR_RegOpen((char*)regFile.get(), &mReg );
     PR_Unlock(mregLock);
-
-    if (regFile)
-      nsMemory::Free(regFile);
 
     // Store the registry that was opened for optimizing future opens.
     mCurRegID = regid;
@@ -618,8 +620,6 @@ NS_IMETHODIMP nsRegistry::Close() {
         err = NR_RegClose( mReg );
         PR_Unlock(mregLock);
         mReg = 0;
-        if (mCurRegFile)
-          nsCRT::free(mCurRegFile);
         mCurRegFile = nsnull;
         mCurRegID = 0;
     }

@@ -276,7 +276,7 @@ NS_MakeAbsoluteURI(nsAString &result,
 inline nsresult
 NS_NewPostDataStream(nsIInputStream **result,
                      PRBool isFile,
-                     const char *data,
+                     const nsACString &data,
                      PRUint32 encodeFlags,
                      nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
@@ -297,7 +297,7 @@ NS_NewPostDataStream(nsIInputStream **result,
     }
 
     // otherwise, create a string stream for the data
-    return NS_NewCStringInputStream(result, nsDependentCString(data));
+    return NS_NewCStringInputStream(result, data);
 }
 
 inline nsresult

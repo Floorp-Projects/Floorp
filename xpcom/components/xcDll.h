@@ -49,8 +49,9 @@
 #include "prio.h"
 #include "prlink.h"
 #include "nsISupports.h"
-#include "nsIFile.h"
+#include "nsILocalFile.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 class nsIModule;
 class nsIServiceManager;
@@ -69,7 +70,7 @@ class nsDll
 private:
     char *m_dllName;			// Stores the dllName to load.
 
-    nsCOMPtr<nsIFile> m_dllSpec;	    // Filespec representing the component
+    nsCOMPtr<nsILocalFile> m_dllSpec;	    // Filespec representing the component
 	PRInt64 m_modDate;		// last modified time at creation of this object
 	PRInt64 m_size;		// size of the dynamic library at creation of this object
 
@@ -78,8 +79,8 @@ private:
     nsIModule *m_moduleObject;
 
     // Cache frequent queries
-    char *m_persistentDescriptor;
-    char *m_nativePath;
+    nsCString m_persistentDescriptor;
+    nsCString m_nativePath;
 
     PRBool m_markForUnload;
     char *m_registryLocation;

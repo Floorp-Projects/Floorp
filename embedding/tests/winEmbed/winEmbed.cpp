@@ -427,12 +427,12 @@ void SaveWebPage(nsIWebBrowser *aWebBrowser)
         nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(aWebBrowser));
 
         nsCOMPtr<nsILocalFile> file;
-        NS_NewLocalFile(szFile, TRUE, getter_AddRefs(file));
+        NS_NewNativeLocalFile(nsDependentCString(szFile), TRUE, getter_AddRefs(file));
 
         nsCOMPtr<nsILocalFile> dataPath;
         if (pszDataPath)
         {
-            NS_NewLocalFile(pszDataPath, TRUE, getter_AddRefs(dataPath));
+            NS_NewNativeLocalFile(nsDependentCString(pszDataPath), TRUE, getter_AddRefs(dataPath));
         }
 
         persist->SaveDocument(nsnull, file, dataPath, nsnull, 0, 0);

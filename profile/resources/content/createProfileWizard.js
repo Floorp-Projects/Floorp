@@ -156,11 +156,11 @@ function processCreateProfileData( aProfName, aProfDir, langcode, regioncode)
         fileSpec = fileSpec.QueryInterface( Components.interfaces.nsILocalFile );
 
     if (aProfDir == null)
-        fileSpec.initWithUnicodePath(profile.defaultProfileParentDir.unicodePath);
+        fileSpec.initWithPath(profile.defaultProfileParentDir.path);
     else
-        fileSpec.initWithUnicodePath(aProfDir);
+        fileSpec.initWithPath(aProfDir);
 
-    fileSpec.appendUnicode(aProfName);
+    fileSpec.append(aProfName);
 
     if (fileSpec != null && fileSpec.exists())
       useExistingDir = true;

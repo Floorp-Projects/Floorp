@@ -47,6 +47,7 @@
 #include "nsIModule.h"
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
+#include "nsIFile.h"
 #include "nsRDFCID.h"
 #include "nsXPIDLString.h"
 #include "plstr.h"
@@ -179,11 +180,9 @@ nsRegistryDataSource::GetKey(nsIRDFResource* aResource)
 //
 
 NS_IMETHODIMP
-nsRegistryDataSource::Open(const char* aPlatformFileName)
+nsRegistryDataSource::Open(nsIFile *aFile)
 {
-    NS_PRECONDITION(aPlatformFileName != nsnull, "null ptr");
-    if (! aPlatformFileName)
-        return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aFile);
 
     nsresult rv;
     rv = nsComponentManager::CreateInstance(kRegistryCID,
@@ -192,7 +191,7 @@ nsRegistryDataSource::Open(const char* aPlatformFileName)
                                             getter_AddRefs(mRegistry));
     if (NS_FAILED(rv)) return rv;
 
-    rv = mRegistry->Open(aPlatformFileName);
+    rv = mRegistry->Open(aFile);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;

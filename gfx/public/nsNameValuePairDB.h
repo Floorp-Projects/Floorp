@@ -70,8 +70,8 @@ public:
   PRInt32 GetNextElement(const char** aName, const char** aValue);
   PRInt32 GetNextElement(const char** aName, const char** aValue,
                          char *aBuffer, PRUint32 aBufferLen);
-  PRBool  OpenForRead(const nsACString& aCatalogName);
-  PRBool  OpenTmpForWrite(const nsACString& aCatalogName);
+  PRBool  OpenForRead(const nsACString& aCatalogName);     // native charset
+  PRBool  OpenTmpForWrite(const nsACString& aCatalogName); // native charset
   PRBool  PutElement(const char* aName, const char* aValue);
   PRBool  PutEndGroup(const char* aType);
   PRBool  PutStartGroup(const char* aType);
