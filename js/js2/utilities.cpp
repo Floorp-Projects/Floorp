@@ -32,10 +32,6 @@
  #include <Types.h>
 #endif
 
-#ifdef XP_UNIX
- #include <cstdio>
-#endif
-
 namespace JS = JavaScript;
 
 
@@ -95,7 +91,7 @@ static void dprintf(const char *format, ...)
 void JS::Assert(const char *s, const char *file, int line)
 {
 #if defined(XP_UNIX) || defined(XP_OS2)
-    std::fprintf(std::stderr, "Assertion failure: %s, at %s:%d\n", s, file, line);
+    fprintf(std::stderr, "Assertion failure: %s, at %s:%d\n", s, file, line);
 #endif
 #ifdef XP_MAC
     dprintf("Assertion failure: %s, at %s:%d\n", s, file, line);
@@ -184,7 +180,22 @@ void JS::appendChars(String &str, const char *chars, size_t length)
 	str.append(length, uni::null);
 	std::transform(chars, chars+length, str.begin()+strLen, widen);
 }
+
+
+// Widen and insert length characters starting at chars into the given position of str.
+void JS::insertChars(String &str, String::size_type pos, const char *chars, size_t length)
+{
+	str.insert(pos, length, uni::null);
+	std::transform(chars, chars+length, str.begin()+pos, widen);
+}
 #endif
+
+
+// Widen and insert the null-terminated string cstr into the given position of str.
+void JS::insertChars(String &str, String::size_type pos, const char *cstr)
+{
+	insertChars(str, pos, cstr, strlen(cstr));
+}
 
 
 // Widen and append the null-terminated string cstr to the end of str.
@@ -1664,18 +1675,18 @@ void JS::Arena::newDestructorEntry(void (*destructor)(void *), void *object)
 // Allocate a String in the Arena and register that String so that it is deallocated at
 // the same time as the Arena.
 // DO NOT CALL DELETE ON THE RESULT!
-JS::String *JS::newArenaString(Arena &arena)
+JS::String &JS::newArenaString(Arena &arena)
 {
 	String *s = new(arena) String();
 	arena.registerDestructor(s);
-	return s;
+	return *s;
 }
 
-JS::String *JS::newArenaString(Arena &arena, const String &str)
+JS::String &JS::newArenaString(Arena &arena, const String &str)
 {
 	String *s = new(arena) String(str);
 	arena.registerDestructor(s);
-	return s;
+	return *s;
 }
 
 
@@ -1752,7 +1763,23 @@ const char *JS::Exception::kindString() const
 // Return the full error message.
 JS::String JS::Exception::fullMessage() const
 {
-	return kindString() + (": " + message);
+	String m(sourceFile);
+	if (lineNum) {
+		char b[32];
+		sprintf(b, ", line %d:\n", lineNum);
+		m += b;
+		m += sourceLine;
+		m += '\n';
+		String sourceLine2(sourceLine);
+		insertChars(sourceLine2, charNum, "[ERROR]");
+		m += sourceLine2;
+		m += '\n';
+	} else
+		m += ":\n";
+	m += kindString();
+	m += ": ";
+	m += message;
+	return m;
 }
 
 
