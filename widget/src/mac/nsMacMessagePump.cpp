@@ -41,6 +41,7 @@
 
 #include <MacWindows.h>
 #include <ToolUtils.h>
+#include <DiskInit.h>
 #include <LowMem.h>
 #include <PP_Types.h>
 
@@ -171,6 +172,10 @@ void nsMacMessagePump::DoMessagePump()
 
 				case activateEvt:
 					DoActivate(theEvent);
+					break;
+
+				case diskEvt:
+					DoDisk(theEvent);
 					break;
 
 				case osEvt:
@@ -534,6 +539,19 @@ void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 	}
 }
 
+//-------------------------------------------------------------------------
+void nsMacMessagePump::DoDisk(const EventRecord& anEvent)
+//-------------------------------------------------------------------------
+{
+	if (HiWord(anEvent.message) != noErr)
+	{
+		// Error mounting disk. Ask if user wishes to format it.	
+		Point pt = {120, 120};	// System 7 will auto-center dialog
+		::DILoad();
+		::DIBadMount(pt, (SInt32) anEvent.message);
+		::DIUnload();
+	}
+}
 
 //-------------------------------------------------------------------------
 //
