@@ -60,13 +60,19 @@
 //// nsISupports
 
 nsXULTooltipListener::nsXULTooltipListener()
-  : mSourceNode(nsnull), mTargetNode(nsnull),
-    mCurrentTooltip(nsnull),
-    mMouseClientX(0), mMouseClientY(0),
-    mIsSourceTree(PR_FALSE), mNeedTitletip(PR_FALSE),
-    mLastTreeRow(-1)
+  : mRootBox(nsnull)
+  , mSourceNode(nsnull)
+  , mTargetNode(nsnull)
+  , mCurrentTooltip(nsnull)
+  , mTooltipTimer(nsnull)
+  , mMouseClientX(0)
+  , mMouseClientY(0)
+  , mAutoHideTimer(nsnull)
+  , mIsSourceTree(PR_FALSE)
+  , mNeedTitletip(PR_FALSE)
+  , mLastTreeRow(-1)
 {
-	 NS_INIT_ISUPPORTS();
+  NS_INIT_ISUPPORTS();
 }
 
 nsXULTooltipListener::~nsXULTooltipListener()
@@ -76,8 +82,8 @@ nsXULTooltipListener::~nsXULTooltipListener()
   // unregister the prefs callback
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
   if (prefs) {
-    // register the callback so we get notified of updates
-    prefs->UnregisterCallback("browser.chrome.toolbar_tips", (PrefChangedFunc)sTooltipPrefChanged, (void*)this);
+    prefs->UnregisterCallback("browser.chrome.toolbar_tips", 
+                              (PrefChangedFunc)sTooltipPrefChanged, (void*)this);
   }
 }
 
@@ -112,7 +118,6 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
   // show the tooltip if we move the mouse out of the window
   if (mTooltipTimer && !mCurrentTooltip) {
     mTooltipTimer->Cancel();
-    mTooltipTimer = nsnull;
     return NS_OK;
   }
 
@@ -186,7 +191,8 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   // go away only if it times out or leaves the target node. If nothing is
   // showing, though, we have to do the work.
   if (!mCurrentTooltip) {
-    mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
+    if (!mTooltipTimer) // re-use, if available
+      mTooltipTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (mTooltipTimer) {
       nsCOMPtr<nsIDOMEventTarget> eventTarget;
       aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
@@ -623,7 +629,6 @@ nsXULTooltipListener::DestroyTooltip()
   KillTooltipTimer();
   if (mAutoHideTimer) {
     mAutoHideTimer->Cancel();
-    mAutoHideTimer = nsnull;
   }
 
   return NS_OK;
@@ -634,7 +639,6 @@ nsXULTooltipListener::KillTooltipTimer()
 {
   if (mTooltipTimer) {
     mTooltipTimer->Cancel();
-    mTooltipTimer = nsnull;
     mTargetNode = nsnull;
   }
 }
@@ -644,12 +648,13 @@ nsXULTooltipListener::CreateAutoHideTimer()
 {
   if (mAutoHideTimer) {
     mAutoHideTimer->Cancel();
-    mAutoHideTimer = nsnull;
   }
   
-  mAutoHideTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if ( mAutoHideTimer )
-    mAutoHideTimer->InitWithFuncCallback(sAutoHideCallback, this, kTooltipAutoHideTime, 
+  if (!mAutoHideTimer) // re-use, if available
+    mAutoHideTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (mAutoHideTimer)
+    mAutoHideTimer->InitWithFuncCallback(sAutoHideCallback, this, 
+                                         kTooltipAutoHideTime, 
                                          nsITimer::TYPE_ONE_SHOT);
 }
 
