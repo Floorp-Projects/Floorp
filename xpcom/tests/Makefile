@@ -23,7 +23,7 @@ CPPSRCS		= RegFactory.cpp TestFactory.cpp
 include $(DEPTH)/config/rules.mk
 
 CFLAGS		+= -DUSE_NSREG
-INCLUDES	= -I../src -I$(DIST)/include
+INCLUDES	= -I../public -I$(DIST)/include
 
 EX_LIBS		= $(DIST)/lib/libxpcom.$(LIB_SUFFIX) \
 		  $(DIST)/lib/libreg.$(LIB_SUFFIX) \
