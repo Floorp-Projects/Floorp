@@ -536,17 +536,22 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
         }
 
 #if JS_HAS_ERROR_EXCEPTIONS
-	/*
-	 * If there's a runtime exception type associated with this error
-	 * number, set that as the pending exception.  For errors occuring at
-	 * compile time, this is very likely to be a JSEXN_SYNTAXERR.  If an
-	 * exception is thrown, then the JSREPORT_EXCEPTION flag will be set in
-	 * report.flags.  Proper behavior for error reporters is probably to
-	 * ignore this for all but toplevel compilation errors.
+        /*
+         * If there's a runtime exception type associated with this error
+         * number, set that as the pending exception.  For errors occuring at
+         * compile time, this is very likely to be a JSEXN_SYNTAXERR.
          *
-	 * XXX it'd probably be best if there was only one call to this
-	 * function, but there seem to be two error reporter call points.
-	 */
+         * If an exception is thrown but not caught, the JSREPORT_EXCEPTION
+         * flag will be set in report.flags.  Proper behavior for an error
+         * reporter is to ignore a report with this flag for all but top-level
+         * compilation errors.  The exception will remain pending, and so long
+         * as the non-top-level "load", "eval", or "compile" native function
+         * returns false, the top-level reporter will eventually receive the
+         * uncaught exception report.
+         * 
+         * XXX it'd probably be best if there was only one call to this
+         * function, but there seem to be two error reporter call points.
+         */
 
         /*
          * Only try to raise an exception if there isn't one already set -
@@ -554,7 +559,8 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
          * which is likely spurious.
          */
         if (!(ts && (ts->flags & TSF_ERROR)))
-            (void) js_ErrorToException(cx, message, &report);
+            if (js_ErrorToException(cx, message, &report))
+                onError = NULL;
 
         /*
          * Suppress any compiletime errors that don't occur at the top level.
