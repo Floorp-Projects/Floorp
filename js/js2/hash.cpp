@@ -160,6 +160,7 @@ void JS::GenericHashTable::rehash()
 				e = next;
 			}
 		}
+		delete[] buckets;
 		buckets = newBuckets;
 		bucketsEnd = newBucketsEnd;
 	} catch (std::bad_alloc) {
