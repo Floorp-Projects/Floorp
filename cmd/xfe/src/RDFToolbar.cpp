@@ -41,7 +41,8 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
                                XFE_Toolbox * toolbox,
                                HT_View view)
     : XFE_ToolboxItem(frame, toolbox),
-      XFE_RDFMenuToolbarBase(frame, FALSE /*only headers*/, TRUE /*fancy*/)
+      XFE_RDFMenuToolbarBase(frame, FALSE /*only headers*/, TRUE /*fancy*/),
+      _frame(frame)
 {
 	m_widget = XtVaCreateWidget(HT_GetViewName(view),
                    xfeToolItemWidgetClass,
@@ -69,9 +70,6 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
 	// Attach and configure the logo
 	configureLogo();
 
-	// Update the appearace for the first time
-	//updateAppearance();
-
 	// Make sure the toolbar is not highlighted first
 	setRaised(False);
 
@@ -81,19 +79,104 @@ XFE_RDFToolbar::XFE_RDFToolbar(XFE_Frame * frame,
     setHTView(view);
 
     show();
+
+#ifdef NOT_YET
+	_frame->registerInterest(XFE_View::chromeNeedsUpdating,
+                             this,
+                             (XFE_FunctionNotification)update_cb);
+
+	_frame->registerInterest(XFE_View::commandNeedsUpdating,
+                             this,
+                             (XFE_FunctionNotification)updateCommand_cb);
+
+    XFE_MozillaApp::theApp()->registerInterest(XFE_View::commandNeedsUpdating,
+											   this,
+											   (XFE_FunctionNotification)updateCommand_cb);
+
+    XFE_MozillaApp::theApp()->registerInterest(XFE_MozillaApp::updateToolbarAppearance,
+                                               this,
+                                               (XFE_FunctionNotification)updateToolbarAppearance_cb);
+#endif
 }
 
 
 XFE_RDFToolbar::~XFE_RDFToolbar() 
 {
+#ifdef NOT_YET
+	_frame->unregisterInterest(XFE_View::chromeNeedsUpdating,
+                               this,
+                               (XFE_FunctionNotification)update_cb);
+
+	_frame->unregisterInterest(XFE_View::commandNeedsUpdating,
+                               this,
+                               (XFE_FunctionNotification)updateCommand_cb);
+
+    XFE_MozillaApp::theApp()->unregisterInterest(XFE_View::commandNeedsUpdating,
+												 this,
+												 (XFE_FunctionNotification)updateCommand_cb);
+
+    XFE_MozillaApp::theApp()->unregisterInterest(XFE_MozillaApp::updateToolbarAppearance,
+                                                 this,
+                                                 (XFE_FunctionNotification)updateToolbarAppearance_cb);
+#endif
+}
+#ifdef NOT_YET
+//////////////////////////////////////////////////////////////////////////
+XFE_CALLBACK_DEFN(XFE_RDFToolbar, updateCommand)(XFE_NotificationCenter */*obj*/, 
+					      void */*clientData*/, 
+					      void *callData)
+{
 }
 //////////////////////////////////////////////////////////////////////////
+XFE_CALLBACK_DEFN(XFE_RDFToolbar, update)(XFE_NotificationCenter */*obj*/, 
+									   void */*clientData*/, 
+									   void */*callData*/)
+{
+  update();
+}
+//////////////////////////////////////////////////////////////////////////
+XFE_CALLBACK_DEFN(XFE_RDFToolbar, updateToolbarAppearance)(XFE_NotificationCenter */*obj*/, 
+									   void */*clientData*/, 
+									   void */*callData*/)
+{
+	updateAppearance();
+}
+#endif /*NOT_YET*/
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFToolbar::update()
+{
+#ifdef NOT_YET
+	// Make sure the toolbar is alive
+    if (!XfeIsAlive(_toolbar))
+    {
+        return;
+    }
+  
+	Widget *		children;
+	Cardinal		num_children;
+	Cardinal		i;
 
+	XfeChildrenGet(_toolbar,&children,&num_children);
+
+	for (i = 0; i < num_children; i ++)
+	{
+		if (XfeIsButton(children[i]))
+        {
+            
+        }
+
+    }
+#endif /*NOT_YET*/
+}
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFToolbar::notify(HT_Resource n, HT_Event whatHappened)
 {
   switch (whatHappened) {
-      // Nothing special to do yet
+  case HT_EVENT_NODE_ADDED:
+      addItem(n);
+      break;
   default:
       // Fall through and let the base class handle this.
     break;
@@ -135,6 +218,32 @@ XFE_RDFToolbar::isToolbarFolderValid()
  	return ((toolbarRoot != NULL) && HT_IsContainer(toolbarRoot));
 }
 //////////////////////////////////////////////////////////////////////////
+void
+XFE_RDFToolbar::addItem(HT_Resource node)
+{
+    Widget item = NULL;
+
+    // Headers
+    if (HT_IsContainer(node))
+    {
+        item = createXfeCascade(_toolbar, node);
+    }
+    // Separators
+    else if (HT_IsSeparator(node))
+    {
+        item = createSeparator(_toolbar);
+    }
+    // Normal items
+    else
+    {
+        item = createXfeButton(_toolbar, node);
+    }
+    
+    XP_ASSERT( XfeIsAlive(item) );
+    
+    XtManageChild(item);
+}
+//////////////////////////////////////////////////////////////////////////
 /* virtual */ void
 XFE_RDFToolbar::prepareToUpdateRoot()
 {
@@ -162,27 +271,7 @@ XFE_RDFToolbar::updateRoot()
         HT_Resource child;
 		while ( (child = HT_GetNextItem(child_cursor)) )
 		{
-			Widget item = NULL;
-			
-			// Headers
-			if (HT_IsContainer(child))
-			{
-				item = createXfeCascade(_toolbar,child);
-			}
-			// Separators
-			else if (HT_IsSeparator(child))
-			{
-				item = createSeparator(_toolbar);
-			}
-			// Normal items
-			else
-			{
-				item = createXfeButton(_toolbar,child);
-			}
-			
-			XP_ASSERT( XfeIsAlive(item) );
-			
-			XtManageChild(item);
+			addItem(child);
 		}
 	}
 
@@ -212,11 +301,22 @@ XFE_RDFToolbar::configureXfeButton(Widget item,HT_Resource entry)
 
 		getPixmapsForEntry(entry,&pixmap,&pixmapMask,NULL,NULL);
 		
-		XtVaSetValues(item,
-					  XmNpixmap,		pixmap,
-					  XmNpixmapMask,	pixmapMask,
-					  XmNbuttonLayout,	XmBUTTON_LABEL_ON_RIGHT,
-					  NULL);
+        if (ht_IsFECommand(entry))
+        {
+            XtVaSetValues(item,
+                          XmNpixmap,		pixmap,
+                          XmNpixmapMask,	pixmapMask,
+                          XmNbuttonLayout,	XmBUTTON_LABEL_ON_BOTTOM,
+                          NULL);
+        }
+        else
+        {
+            XtVaSetValues(item,
+                          XmNpixmap,		pixmap,
+                          XmNpixmapMask,	pixmapMask,
+                          XmNbuttonLayout,	XmBUTTON_LABEL_ON_RIGHT,
+                          NULL);
+        }
 	}
 
 #ifdef NOT_YET

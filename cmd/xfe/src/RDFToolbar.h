@@ -48,13 +48,27 @@ public:
 
 	virtual ~XFE_RDFToolbar ();
 
+#ifdef NOT_YET
+	// update all the commands in the toolbar.
+	XFE_CALLBACK_DECL(update)
+	// update a specific command in the toolbar.
+	XFE_CALLBACK_DECL(updateCommand)
+    // update the toolbar appearance
+    XFE_CALLBACK_DECL(updateToolbarAppearance)
+#endif
+	// Method version of the callback above. 
+    // Used by the frame to force the toolbar to update itself
+	virtual void	update();
+
     // Override RDFMenuToolbarBase methods
     virtual void notify(HT_Resource n, HT_Event whatHappened);
 
 protected:
-	void			setRaised			(XP_Bool);
+	void	   setRaised                (XP_Bool);
     void       destroyToolbarWidgets    ();
     XP_Bool    isToolbarFolderValid     ();
+
+    void       addItem                  (HT_Resource);
 
     // Override RDFMenuToolbarBase methods
 	virtual void	configureXfeButton		(Widget, HT_Resource);
@@ -63,12 +77,10 @@ protected:
 	virtual void	updateRoot      		();
 	virtual void	updateAppearance		();
 
-	// Override AbstractToolbar methods
-	virtual void	update() {}
-
 private:
-    XFE_Toolbox * _toolbox;
-    Widget _toolbar;
+    XFE_Frame *	    _frame;
+    XFE_Toolbox *   _toolbox;
+    Widget          _toolbar;
 };
 
 #endif /*_xfe_rdftoolbar_*/
