@@ -4715,52 +4715,50 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext*  aPresContex
     }
     NS_RELEASE(imageElement);
   
-    if (altText.Length() > 0) {
-      // Create a text content element for the alternate text
-      nsCOMPtr<nsIContent> altTextContent;
-      nsIDOMCharacterData* domData;
-  
-      NS_NewTextNode(getter_AddRefs(altTextContent));
-      altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
-      domData->SetData(altText);
-      NS_RELEASE(domData);
-  
-      // Create either an inline frame, block frame, or area frame
-      nsIFrame* containerFrame;
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-        aStyleContext->GetStyleData(eStyleStruct_Display);
-      const nsStylePosition* position = (const nsStylePosition*)
-        aStyleContext->GetStyleData(eStyleStruct_Position);
+    // Create a text content element for the alternate text
+    nsCOMPtr<nsIContent> altTextContent;
+    nsIDOMCharacterData* domData;
 
-      if (position->IsAbsolutelyPositioned()) {
-        NS_NewAreaFrame(containerFrame, NS_BLOCK_MARGIN_ROOT);
-      } else if (display->IsFloating() || (NS_STYLE_DISPLAY_BLOCK == display->mDisplay)) {
-        NS_NewBlockFrame(containerFrame, 0);
-      } else {
-        NS_NewInlineFrame(containerFrame);
-      }
-      containerFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
-      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, containerFrame,
-                                               aStyleContext, PR_FALSE);
+    NS_NewTextNode(getter_AddRefs(altTextContent));
+    altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+    domData->SetData(altText);
+    NS_RELEASE(domData);
 
-      // Create a text frame to display the alt-text. It gets a pseudo-element
-      // style context
-      nsIFrame*        textFrame;
-      nsIStyleContext* textStyleContext;
+    // Create either an inline frame, block frame, or area frame
+    nsIFrame* containerFrame;
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      aStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStylePosition* position = (const nsStylePosition*)
+      aStyleContext->GetStyleData(eStyleStruct_Position);
 
-      NS_NewTextFrame(textFrame);
-      aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::textPseudo,
-                                                 aStyleContext, PR_FALSE,
-                                                 &textStyleContext);
-  
-      textFrame->Init(*aPresContext, altTextContent, containerFrame,
-                      textStyleContext, nsnull);
-      NS_RELEASE(textStyleContext);
-      containerFrame->SetInitialChildList(*aPresContext, nsnull, textFrame);
-
-      // Return the container frame
-      aFrame = containerFrame;
+    if (position->IsAbsolutelyPositioned()) {
+      NS_NewAreaFrame(containerFrame, NS_BLOCK_MARGIN_ROOT);
+    } else if (display->IsFloating() || (NS_STYLE_DISPLAY_BLOCK == display->mDisplay)) {
+      NS_NewBlockFrame(containerFrame, 0);
+    } else {
+      NS_NewInlineFrame(containerFrame);
     }
+    containerFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, containerFrame,
+                                             aStyleContext, PR_FALSE);
+
+    // Create a text frame to display the alt-text. It gets a pseudo-element
+    // style context
+    nsIFrame*        textFrame;
+    nsIStyleContext* textStyleContext;
+
+    NS_NewTextFrame(textFrame);
+    aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::textPseudo,
+                                               aStyleContext, PR_FALSE,
+                                               &textStyleContext);
+
+    textFrame->Init(*aPresContext, altTextContent, containerFrame,
+                    textStyleContext, nsnull);
+    NS_RELEASE(textStyleContext);
+    containerFrame->SetInitialChildList(*aPresContext, nsnull, textFrame);
+
+    // Return the container frame
+    aFrame = containerFrame;
   }
 
   return rv;
@@ -4909,6 +4907,11 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                                     floaterList.childList);
       }
     }
+
+  } else if (nsHTMLAtoms::input == tag.get()) {
+    // XXX image INPUT elements are also image frames, but don't throw away the
+    // image frame, because the frame class has extra logic that is specific to
+    // INPUT elements
 
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected tag");
