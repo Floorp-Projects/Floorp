@@ -126,9 +126,8 @@ install: trapdoor configdata
               -e s#/tools/ns/bin/perl5#$(PERL)#g \
               $$I > $(PREFIX)/$$I && \
 	chmod 755 $(PREFIX)/$$I; done
-	-mkdir -p $(PREFIX)/data
+	-mkdir -p $(PREFIX)/data && chmod 755 $(PREFIX)/data
 	cp trapdoor $(PREFIX)/data
-	chmod 755 $(PREFIX)/data
 	cp bonsai.gif $(PREFIX)
 	chmod 755 $(PREFIX)/bonsai.gif
 	@if test ! -r $(PREFIX)/data/configdata ; then \
