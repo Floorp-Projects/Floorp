@@ -74,6 +74,7 @@ XPIDLSRCS	= \
 		nsISecurityManagerComponent.idl \
 		nsICachingChannel.idl \
 		nsIByteRangeRequest.idl \
+		nsIMultiPartChannel.idl \
 		$(NULL)
 
 EXPORTS		= \
