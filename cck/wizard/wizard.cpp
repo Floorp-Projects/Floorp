@@ -73,12 +73,55 @@ BOOL Config(CString globalsName, CString DialogTitle, WIDGET* curWidget)
 	SetGlobal(globalsName, configField);
 	SetGlobal(targetWid, configField);
 
-	// Making custom config point to files in its own workspace
-	SetGlobal("LargeAnimPath", newDir + "\\Workspace\\AnimLogo\\animlogo32.gif");
-	SetGlobal("LargeStillPath", newDir + "\\Workspace\\AnimLogo\\staticlogo32.gif");
-	SetGlobal("ReadMeFile", newDir + "\\Workspace\\readme.txt");
-	SetGlobal("ShellBgBitmap", newDir + "\\Workspace\\Autorun\\Shell\\bmps\\install.bmp");
-	SetGlobal("ShellInstallTextFile", newDir + "\\Workspace\\Autorun\\install.txt");
+	if(DialogTitle == "Create a Copy")
+	{
+		CString CurAnimPath = GetGlobal("LargeAnimPath");
+		CString CurStillPath = GetGlobal("LargeStillPath");
+		CString CurReadMePath = GetGlobal("ReadMeFile");
+		CString CurBitmapPath = GetGlobal("ShellBgBitmap");
+		CString CurInstallFilePath = GetGlobal("ShellInstallTextFile");
+
+		CString OrigConfigName = GetGlobal("_FromConfigName");
+		CString OrigConfigDir = rootpath + "Configs\\" + OrigConfigName;
+
+		if(CurAnimPath.Find(OrigConfigDir) != -1)
+		{
+			//the file is located in the orig config dir that will be copied
+			CurAnimPath.Replace(OrigConfigDir, newDir);
+			//replace the old config's path with the new one
+			SetGlobal("LargeAnimPath", CurAnimPath);
+		}
+		if(CurStillPath.Find(OrigConfigDir) != -1)
+		{
+			CurStillPath.Replace(OrigConfigDir, newDir);
+			SetGlobal("LargeStillPath", CurStillPath);
+		}
+		if(CurReadMePath.Find(OrigConfigDir) != -1)
+		{
+			CurReadMePath.Replace(OrigConfigDir, newDir);
+			SetGlobal("ReadMeFile", CurReadMePath);
+		}
+		if(CurBitmapPath.Find(OrigConfigDir) != -1)
+		{
+			CurBitmapPath.Replace(OrigConfigDir, newDir);
+			SetGlobal("ShellBgBitmap", CurBitmapPath);
+		}
+		if(CurInstallFilePath.Find(OrigConfigDir) != -1)
+		{
+			CurInstallFilePath.Replace(OrigConfigDir, newDir);
+			SetGlobal("ShellInstallTextFile", CurInstallFilePath);
+		}
+
+	}
+	else
+	{ 	
+		// Making custom config point to files in its own workspace
+		SetGlobal("LargeAnimPath", newDir + "\\Workspace\\AnimLogo\\animlogo32.gif");
+		SetGlobal("LargeStillPath", newDir + "\\Workspace\\AnimLogo\\staticlogo32.gif");
+		SetGlobal("ReadMeFile", newDir + "\\Workspace\\readme.txt");
+		SetGlobal("ShellBgBitmap", newDir + "\\Workspace\\Autorun\\Shell\\bmps\\install.bmp");
+		SetGlobal("ShellInstallTextFile", newDir + "\\Workspace\\Autorun\\install.txt");
+	}
 
 	IsSameCache = FALSE;
 
