@@ -59,6 +59,7 @@
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebShellServices.h"
 #include "nsIDocumentLoader.h"
@@ -1869,6 +1870,20 @@ nsresult
 nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 {
   nsresult result = NS_OK;
+
+  // Stop current loads targetted at the window this document is in.
+  if (mScriptGlobalObject) {
+    nsCOMPtr<nsIDocShell> docshell;
+    mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
+
+    if (docshell) {
+      nsCOMPtr<nsIWebNavigation> wn(do_QueryInterface(docshell));
+      if(wn) {
+        wn->Stop();
+      }
+    }
+  }
+
   // The open occurred after the document finished loading.
   // So we reset the document and create a new one.
   if (nsnull == mParser) {
