@@ -38,7 +38,7 @@
 
 nsReplacementPolicy::nsReplacementPolicy()
     : mRankedEntries(0), mCaches(0), mRecordsRemovedSinceLastRanking(0),
-      mNumEntries(0), mCapacityRankedEntriesArray(0), mLastRankTime(0) {}
+      mNumEntries(0), mCapacityRankedEntriesArray(0), mLastRankTime(0), mLoadedAllDatabaseRecords( PR_FALSE ) {}
 
 nsReplacementPolicy::~nsReplacementPolicy()
 {
