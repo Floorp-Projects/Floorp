@@ -80,8 +80,8 @@ nsMsgFactory::~nsMsgFactory()
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
   
   NS_IF_RELEASE(mServiceManager);
-  delete[] mClassName;
-  delete[] mProgID;
+  PL_strfree(mClassName);
+  PL_strfree(mProgID);
 }   
 
 nsresult
