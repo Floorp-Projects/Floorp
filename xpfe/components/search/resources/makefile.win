@@ -32,6 +32,8 @@ CHROME_CONTENT = \
 	.\default.htm \
 	.\search.js \
 	.\search.xul \
+	.\search-editor.js \
+	.\search-editor.xul \
 	.\search-panel.js \
 	.\search-panel.xul \
 	.\shared.js \
@@ -46,6 +48,7 @@ CHROME_CONTENT = \
 
 CHROME_SKIN = \
 	.\search.css \
+	.\search-editor.css \
 	.\findresults.css \
 	.\icons.css \
 	.\internet.css \
@@ -60,6 +63,7 @@ CHROME_L10N = \
 	.\locale\en-US\internet.dtd \
 	.\locale\en-US\internetresults.dtd \
 	.\locale\en-US\search.dtd \
+	.\locale\en-US\search-editor.dtd \
 	.\locale\en-US\search-panel.dtd \
 	.\locale\en-US\search-panel.properties \
 	$(NULL)
