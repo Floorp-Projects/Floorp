@@ -219,7 +219,7 @@ private:
 	const char             *mIEFavoritesRoot;
 	PRBool                 mFoundIEFavoritesRoot;
 
-friend	nsBookmarksService;
+friend	class nsBookmarksService;
 
 protected:
 	nsresult AssertTime(nsIRDFResource* aSource,
