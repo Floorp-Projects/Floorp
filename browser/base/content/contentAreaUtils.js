@@ -304,7 +304,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
     persist.persistFlags &= ~nsIWBP.PERSIST_FLAGS_NO_CONVERSION;
     
   // Create download and initiate it (below)
-  var tr = Components.classes["@mozilla.org/download;1"].createInstance(Components.interfaces.nsITransfer);
+  var tr = Components.classes["@mozilla.org/transfer;1"].createInstance(Components.interfaces.nsITransfer);
 
   if (isDocument && saveAsType != kSaveAsType_URL) {
     // Saving a Document, not a URI:

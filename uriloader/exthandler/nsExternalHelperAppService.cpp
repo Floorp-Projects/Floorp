@@ -2121,7 +2121,7 @@ nsresult nsExternalAppHandler::CreateProgressListener()
   mDialog = nsnull;
   nsresult rv;
   
-  nsCOMPtr<nsITransfer> tr = do_CreateInstance("@mozilla.org/download;1", &rv);
+  nsCOMPtr<nsITransfer> tr = do_CreateInstance(NS_TRANSFER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     InitializeDownload(tr);
 
