@@ -242,7 +242,7 @@ public:
     char&                        operator [](int i)
                                  {
                                      if (i >= (int)Length())
-                                         ReallocData(i + 1);
+                                         ReallocData((PRUint32)i + 1);
                                      return mData->mString[i]; // caveat appelator
                                  }
     char&                        operator [](unsigned int i) { return (*this)[(int)i]; }
@@ -360,7 +360,7 @@ class NS_BASE nsFileSpec
                                     #endif 
                                     return mError;
                                 }
-        PRBool                  Failed() const { return NS_FAILED(Error()); }
+        PRBool                  Failed() const { return (PRBool)NS_FAILED(Error()); }
 
 
         friend                  NS_BASE nsOutputStream& operator << (
@@ -452,6 +452,8 @@ class NS_BASE nsFileSpec
         //--------------------------------------------------
 
         void                    CreateDirectory(int mode = 0700 /* for unix */);
+        void                    CreateDir(int mode = 0700) { CreateDirectory(mode); }
+                                   // workaround for yet another VC++ bug with long identifiers.
         void                    Delete(PRBool inRecursive) const;
         
         nsresult                Rename(const char* inNewName); // not const: gets updated
