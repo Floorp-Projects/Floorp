@@ -695,7 +695,8 @@ nsPermissionManager::Write()
   // Format: % index \t typestring \n
   // (% sign is to distinguish type string lines from permission lines)
 
-  for (PRUint32 i = 0; i < NUMBER_OF_TYPES; ++i) {
+  PRUint32 i;
+  for (i = 0; i < NUMBER_OF_TYPES; ++i) {
     if (mTypeArray[i]) {
       bufferedOutputStream->Write(&kTypeSign, 1, &rv);
 
@@ -723,7 +724,7 @@ nsPermissionManager::Write()
   nsHostEntry** hostListCopy = hostList;
   mHostTable.EnumerateEntries(AddEntryToList, &hostListCopy);
 
-  for (PRUint32 i = 0; i < mHostCount; ++i) {
+  for (i = 0; i < mHostCount; ++i) {
     nsHostEntry *entry = NS_STATIC_CAST(nsHostEntry*, hostList[i]);
     NS_ASSERTION(entry, "corrupt permission list");
 
