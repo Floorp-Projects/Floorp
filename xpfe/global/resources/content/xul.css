@@ -566,7 +566,7 @@ menulist {
 }
 
 menulist[editable="true"] {
-  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-editable") !important;
+  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-editable");
 }
 
 menulist > menupopup > menuitem {
