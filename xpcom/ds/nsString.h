@@ -794,11 +794,7 @@ private:
 };
 
 #if 0//def NEW_STRING_APIS
-#ifndef STASTANDALONE_STRING_TESTS
-NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCString&, const nsCString&);
-#endif
-NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCString&, const char*)
-NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const char*, const nsCString&)
+NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
 #endif
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);
@@ -862,8 +858,7 @@ public:
 };
 
 #if 0//def NEW_STRING_APIS
-NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsCAutoString&, const char*)
-NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const char*, const nsCAutoString&)
+NS_DEF_STRING_COMPARISON_OPERATORS(nsCAutoString, char)
 #endif
 
 

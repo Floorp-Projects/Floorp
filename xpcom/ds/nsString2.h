@@ -888,8 +888,7 @@ private:
 };
 
 #if 0//def NEW_STRING_APIS
-NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const nsString&, const PRUnichar*)
-NS_DEF_NON_TEMPLATE_STRING_COMPARISON_OPERATORS(const PRUnichar*, const nsString&)
+NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
 #endif
 
 extern NS_COM int fputs(const nsString& aString, FILE* out);
