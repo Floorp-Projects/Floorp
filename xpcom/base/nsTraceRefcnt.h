@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   L. David Baron <dbaron@fas.harvard.edu>
  */
 #ifndef nsTraceRefcnt_h___
 #define nsTraceRefcnt_h___
@@ -25,6 +26,8 @@
 #include "nsCom.h"
 
 #include <stdio.h>
+
+class nsISupports;
 
 // Normaly, the implementation of NS_LOG_ADDREF and NS_LOG_RELEASE
 // will use a stack crawl to determine who called Addref/Release on an
@@ -82,7 +85,7 @@
 
 #endif
 
-#define MOZ_DECL_CTOR_COUNTER(_type);
+#define MOZ_DECL_CTOR_COUNTER(_type)
 
 #define MOZ_COUNT_CTOR(_type)                                 \
 PR_BEGIN_MACRO                                                \
@@ -98,13 +101,14 @@ PR_END_MACRO
                                           // set for non-autoconf platforms)
 
 // nsCOMPtr.h allows these macros to be defined by clients
-// a dynamic_cast to void* gives the most derived object
+// These logging functions require dynamic_cast<void *>, so we don't
+// define these macros if we don't have dynamic_cast.
 #define NSCAP_LOG_ASSIGNMENT(_c, _p)               \
-  if ((_p)) nsTraceRefcnt::LogAddCOMPtr((_c),dynamic_cast<void *>(NS_STATIC_CAST(nsISupports*,_p)))
+  if ((_p)) nsTraceRefcnt::LogAddCOMPtr((_c),NS_STATIC_CAST(nsISupports*,_p))
 
 #define NSCAP_RELEASE(_c, _p);                                      \
   if ((_p)) {                                                       \
-    nsTraceRefcnt::LogReleaseCOMPtr((_c),dynamic_cast<void *>(NS_STATIC_CAST(nsISupports*,_p))); \
+    nsTraceRefcnt::LogReleaseCOMPtr((_c),NS_STATIC_CAST(nsISupports*,_p)); \
     NS_RELEASE(_p);                                                 \
   }
 
@@ -118,7 +122,7 @@ PR_END_MACRO
 #define NS_LOG_DELETE_XPCOM(_p,_file,_line)
 #define NS_LOG_ADDREF_CALL(_p,_rc,_file,_line) _rc
 #define NS_LOG_RELEASE_CALL(_p,_rc,_file,_line) _rc
-#define MOZ_DECL_CTOR_COUNTER(_type);
+#define MOZ_DECL_CTOR_COUNTER(_type)
 #define MOZ_COUNT_CTOR(_type)
 #define MOZ_COUNT_DTOR(_type)
 
@@ -158,6 +162,10 @@ typedef PRBool (PR_CALLBACK *nsTraceRefcntStatFunc)
  */
 class nsTraceRefcnt {
 public:
+  static NS_COM void Startup();
+
+  static NS_COM void Shutdown();
+
   static NS_COM void LogAddRef(void* aPtr,
                                nsrefcnt aNewRefCnt,
                                const char* aTypeName,
@@ -193,9 +201,9 @@ public:
   static NS_COM void LogDtor(void* aPtr, const char* aTypeName,
                              PRUint32 aInstanceSize);
 
-  static NS_COM void LogAddCOMPtr(void *aCOMPtr, void* aObject);
+  static NS_COM void LogAddCOMPtr(void *aCOMPtr, nsISupports *aObject);
 
-  static NS_COM void LogReleaseCOMPtr(void *aCOMPtr, void* aObject);
+  static NS_COM void LogReleaseCOMPtr(void *aCOMPtr, nsISupports *aObject);
 
   enum StatisticsType {
     ALL_STATS,
@@ -220,6 +228,13 @@ public:
   static NS_COM void WalkTheStack(FILE* aStream);
   
   static NS_COM void SetPrefServiceAvailability(PRBool avail);
+
+  /**
+   * Tell nsTraceRefcnt whether refcounting, allocation, and destruction
+   * activity is legal.  This is used to trigger assertions for any such
+   * activity that occurs because of static constructors or destructors.
+   */
+  static NS_COM void SetActivityIsLegal(PRBool aLegal);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

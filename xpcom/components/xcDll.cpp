@@ -313,10 +313,14 @@ PRBool nsDll::Load(void)
     {
         nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(m_dllSpec);
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+        nsTraceRefcnt::SetActivityIsLegal(PR_FALSE);
+#endif
         if (localFile)
             localFile->Load(&m_instance);
         
 #ifdef NS_BUILD_REFCNT_LOGGING
+        nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);
         if (m_instance) {
             // Inform refcnt tracer of new library so that calls through the
             // new library can be traced.
@@ -330,9 +334,13 @@ PRBool nsDll::Load(void)
     else if (m_dllName)
     {
         // if there is not an nsIFile, but there is a dll name, just try to load that..
+#ifdef NS_BUILD_REFCNT_LOGGING
+        nsTraceRefcnt::SetActivityIsLegal(PR_FALSE);
+#endif
         m_instance = PR_LoadLibrary(m_dllName);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
+        nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);
         if (m_instance) {
             // Inform refcnt tracer of new library so that calls through the
             // new library can be traced.
@@ -359,7 +367,14 @@ PRBool nsDll::Unload(void)
     // Shutdown the dll
     Shutdown();
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcnt::SetActivityIsLegal(PR_FALSE);
+#endif
 	PRStatus ret = PR_UnloadLibrary(m_instance);
+#ifdef NS_BUILD_REFCNT_LOGGING
+    nsTraceRefcnt::SetActivityIsLegal(PR_TRUE);
+#endif
+
 	if (ret == PR_SUCCESS)
 	{
 		m_instance = NULL;
