@@ -179,10 +179,10 @@ var downloadViewController = {
       break;
     case "cmd_showinshell":
       var localFile = getFileForItem(selection[0]);
+      var file = localFile.QueryInterface(Components.interfaces.nsIFile);
       
       // on unix, open a browser window rooted at the parent
       if (navigator.platform.indexOf("Win") == -1 && navigator.platform.indexOf("Mac") == -1) {
-        var file = localFile.QueryInterface(Components.interfaces.nsIFile);
         var parent = file.parent;
         if (parent) {
           const browserURL = "chrome://navigator/content/navigator.xul";
