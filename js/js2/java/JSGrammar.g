@@ -1,3 +1,18 @@
+{
+import java.io.*;
+// Test program
+class TestMain {
+	public static void main(String[] args) {
+		try {
+			JSLexer lexer = new JSLexer(new DataInputStream(System.in));
+			JSParser parser = new JSParser(lexer);
+			parser.expression(true, true);
+		} catch(Exception e) {
+			System.err.println("exception: "+e);
+		}
+	}
+}
+}
 
 class JSParser extends Parser;
 
