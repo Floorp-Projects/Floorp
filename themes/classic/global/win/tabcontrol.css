@@ -3,7 +3,7 @@
 /*============ tabpanel widget =============*/
 
 tabpanel {
-  /*behavior: url("chrome://global/skin/tabBindings.xml#tabpanel"); */
+  /*-moz-binding: url("chrome://global/skin/tabBindings.xml#tabpanel"); */
   padding: 5px;
 }
 
@@ -50,7 +50,7 @@ tabpanel.light {
 /*============ tabbox widget ============*/
 
 tabbox {
-  behavior: url("chrome://global/skin/tabBindings.xml#tabbox");
+  -moz-binding: url("chrome://global/skin/tabBindings.xml#tabbox");
 }
 
 /* tabbox-spring ========================== */
