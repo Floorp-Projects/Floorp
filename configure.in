@@ -3133,7 +3133,7 @@ if test -n "$SUNCTL"; then
   MOZ_EXTENSIONS_DEFAULT="$MOZ_EXTENSIONS_DEFAULT ctl"
 fi
 
-MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm access-builtin ctl p3p" 
+MOZ_EXTENSIONS_ALL="$MOZ_EXTENSIONS_DEFAULT xmlterm access-builtin ctl p3p interfaceinfo" 
 
 MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
