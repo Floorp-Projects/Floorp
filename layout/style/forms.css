@@ -162,7 +162,10 @@ select > input[type="button"]:active {
 
 select[size], :-moz-select-scrolled-content {
   overflow: -moz-scrollbars-vertical;
-  -moz-appearance: listbox;
+}
+
+select[size] {
+   -moz-appearance: listbox;
 }
 
 select:-moz-dummy-option { 
