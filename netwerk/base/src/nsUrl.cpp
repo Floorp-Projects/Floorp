@@ -19,3 +19,100 @@
 #include "nsUrl.h"
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsUrl methods:
+
+nsUrl::nsUrl()
+{
+    NS_INIT_REFCNT();
+}
+
+nsUrl::~nsUrl()
+{
+}
+
+nsresult
+nsUrl::Init(const char* aSpec,
+            const nsIUrl* aBaseURL,
+            nsISupports* aContainer)
+{
+    return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(nsUrl, nsIUrl::GetIID());
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIUrl methods:
+
+NS_IMETHODIMP
+nsUrl::GetScheme(const char* *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::SetScheme(const char* scheme)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::GetPreHost(const char* *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::SetPreHost(const char* preHost)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::GetHost(const char* *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::SetHost(const char* host)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::GetPort(PRInt32 *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::SetPort(PRInt32 port)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::GetPath(const char* *result)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::SetPath(const char* path)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::Equals(const nsIUrl* other)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsUrl::ToNewCString(const char* *uriString)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
