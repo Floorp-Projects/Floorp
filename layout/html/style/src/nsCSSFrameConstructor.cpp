@@ -2033,6 +2033,11 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
                                              nsnull, PR_FALSE,
                                              getter_AddRefs(viewportPseudoStyle));
 
+  { // ensure that the viewport thinks it is a block frame, layout goes pootsy if it doesn't
+    nsStyleDisplay* display = (nsStyleDisplay*)viewportPseudoStyle->GetMutableStyleData(eStyleStruct_Display);
+    display->mDisplay = NS_STYLE_DISPLAY_BLOCK;
+  }
+
   // Initialize the viewport frame. It has a NULL content object
   viewportFrame->Init(*aPresContext, nsnull, nsnull, viewportPseudoStyle, nsnull);
 
