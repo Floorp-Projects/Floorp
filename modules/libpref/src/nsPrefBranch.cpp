@@ -735,10 +735,12 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
           pref = getPrefName(aDomain); // aDomain == nsnull only possible failure, trapped above
           rv = _convertRes(PREF_UnregisterCallback(pref, NotifyObserver, pCallback));
           if (NS_SUCCEEDED(rv)) {
-            NS_RELEASE(pCallback->pObserver);
-            nsMemory::Free(pCallback);
+            // Remove this observer from our array so that nobody else can remove
+            // what we're trying to remove ourselves right now.
             mObservers->RemoveElementAt(i);
             mObserverDomains.RemoveCStringAt(i);
+            NS_RELEASE(pCallback->pObserver);
+            nsMemory::Free(pCallback);
           }
           return rv;
         }
@@ -803,20 +805,22 @@ void nsPrefBranch::freeObserverList(void)
     if (count > 0) {
       PRInt32 i;
       nsCAutoString domain;
-      for (i = 0; i < count; i++) {
+      for (i = 0; i < count; ++i) {
         pCallback = (PrefCallbackData *)mObservers->ElementAt(i);
         if (pCallback) {
           mObserverDomains.CStringAt(i, domain);
           // We must pass a fully qualified preference name to remove the callback
           pref = getPrefName(domain.get()); // can't fail because domain must be valid
+          // Remove this observer from our array so that nobody else can remove
+          // what we're trying to remove right now.
+          mObservers->ReplaceElementAt(nsnull, i);
           PREF_UnregisterCallback(pref, NotifyObserver, pCallback);
           NS_RELEASE(pCallback->pObserver);
           nsMemory::Free(pCallback);
         }
       }
 
-      // now empty the observer arrays in bulk
-      mObservers->Clear();
+      // now empty the observer domains array in bulk
       mObserverDomains.Clear();
     }
     delete mObservers;
