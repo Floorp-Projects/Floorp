@@ -47,7 +47,7 @@ if ($as_bytes) {
 print TZDATA <<EOF
 /**
  ** Due to string literal limit in MSVC of 2048 bytes, the tz data
- ** is represented as arrays of byte literals.  This is most unfortunate.
+ ** is represented as arrays of char literals.  This is most unfortunate.
  **/
 
 EOF
@@ -67,9 +67,10 @@ typedef struct {
     const char *icstimezone;
 } ical_timezone_data_struct;
 
-static const char ical_timezone_data_timezones[] = {
 EOF
 ;
+
+print TZDATA "static const char ical_timezone_data_timezones[] = {";
 
 # tzs will store the name/offset of the data in ical_timezone_data_timezones;
 my %tzs;
@@ -99,22 +100,26 @@ foreach my $tz (@zonetab) {
   # put the data in the hash for later
   $tzs{$name} = $hashdata;
 
-  $bytestr = unpack("H*", $tzdata);
-
-  $bytelen = length($bytestr);
+  $bytelen = length($tzdata);
   $clen = 0;
   while ($clen < $bytelen) {
-    print TZDATA "\n" if ($data_offset % 30 == 0);
+    print TZDATA "\n/* $data_offset */ " if ($data_offset % 20 == 0);
 
-    $b = substr $bytestr, $clen, 2;
-    print TZDATA "0x$b,";
-    $clen += 2;
-    $data_offset += 2;
+    local $b = substr $tzdata, $clen, 1;
+    if ($b eq "\n") { $b = "\\n"; }
+    elsif ($b eq "\r") { $b = "\\r"; }
+    elsif ($b eq "\t") { $b = "\\t"; }
+    elsif ($b eq "\\") { $b = "\\\\"; }
+
+    print TZDATA "'$b',";
+    $data_offset++;
+
+    $clen++;
   }
 
-  print TZDATA "\n" if ($data_offset % 30 == 0);
+  print TZDATA "\n" if ($data_offset % 20 == 0);
   print TZDATA "0x00,";
-  $data_offset += 2;
+  $data_offset++;
 }
 
 print TZDATA "0x00\n};\n\n";
