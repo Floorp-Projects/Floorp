@@ -90,19 +90,8 @@ public:
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate)
   {
-    if (!aFlagsToUpdate && !aScriptLevelIncrement)
-      return NS_OK;
-    PRInt32 index = 0;
-    nsIFrame* childFrame = mFrames.FirstChild();
-    while (childFrame) {
-      if ((index >= aFirstIndex) &&
-          ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
-        PropagatePresentationDataFor(aPresContext, childFrame,
-          aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-      }
-      index++;
-      childFrame->GetNextSibling(&childFrame);
-    }
+    PropagatePresentationDataFromChildAt(aPresContext, this,
+      aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
     return NS_OK;
   }
 
@@ -265,6 +254,15 @@ public:
                                PRInt32         aScriptLevelIncrement,
                                PRUint32        aFlagsValues,
                                PRUint32        aFlagsToUpdate);
+
+  static void
+  PropagatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                       nsIFrame*       aParentFrame,
+                                       PRInt32         aFirstChildIndex,
+                                       PRInt32         aLastChildIndex,
+                                       PRInt32         aScriptLevelIncrement,
+                                       PRUint32        aFlagsValues,
+                                       PRUint32        aFlagsToUpdate);
 
 protected:
   virtual PRIntn GetSkipSides() const { return 0; }

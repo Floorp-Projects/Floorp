@@ -47,18 +47,8 @@ public:
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate)
   {
-    PRInt32 index = 0;
-    nsIFrame* childFrame;
-    FirstChild(aPresContext, nsnull, &childFrame);
-    while (childFrame) {
-      if ((index >= aFirstIndex) &&
-          ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
-        nsMathMLContainerFrame::PropagatePresentationDataFor(aPresContext,
-          childFrame, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-      }
-      index++;
-      childFrame->GetNextSibling(&childFrame);
-    }
+    nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(aPresContext, this,
+      aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
     return NS_OK;
   }
 
@@ -110,18 +100,8 @@ public:
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate)
   {
-    PRInt32 index = 0;
-    nsIFrame* childFrame;
-    FirstChild(aPresContext, nsnull, &childFrame);
-    while (childFrame) {
-      if ((index >= aFirstIndex) &&
-          ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
-        nsMathMLContainerFrame::PropagatePresentationDataFor(aPresContext,
-          childFrame, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-      }
-      index++;
-      childFrame->GetNextSibling(&childFrame);
-    }
+    nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(aPresContext, this,
+      aFirstIndex, aLastIndex, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
     return NS_OK;
   }
 
