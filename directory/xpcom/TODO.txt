@@ -1,40 +1,29 @@
 implementation
 --------------
-* make AsyncRead actually be asynchronous (and probably cause ldapSearch.cpp 
-  to be split and moved) by factoring out the lowlevel stuff into another
-  thread (in progress: dmose)
-
-housecleaning
-------------- 
 * get the ldap sdk unix build cleanly hooked up to the browser build
   (we'll need to talk to the SDK guys about this -- the quick-n-dirty
   thing to do might be to just whack some of the Makefile.client files
-  in the SDK; in the long run, autoconfifying it might be better)
+  in the SDK; in the long run, autoconfifying it might be better).  
+
+* are we using the right constructs for -lldap40 and -llber40 in 
+  Makefile.in?  (maybe should set up MOZ_LDAP_LIBS?)
 
 * get the mac build glue wired up, and make the mac build work
 
 * get the windows build glue wired up, and make the windows build work
 
-* implement nsLDAPChannel::Cancel()
+housecleaning
+------------- 
+* remove nsILDAPService from (at least) the build and
+  nsLDAPProtocolModule.cpp (if not CVS), since it's not currently in use.
 
 * should nsILDAPOperation subclass nsIRequest?  why do some
   non-nsIChannel things in the mozilla code base implement nsIRequest?
 
-* implement shutdown for nsLDAPService (probably analogous to the way
-  nsSocketTransportService shuts down.  but how does
-  nsIShutdownListener fit in here? and CanUnload?)
-
 * get rid of unixy, non-NSPR/XPCOM includes, functions, and error handling
   from nsLDAP{Connection,Operation,Message}.[ch]
 
-* are we using the right constructs for -lldap40 and -llber40 in 
-  Makefile.in?
-
-* why is there a JS assert after loading an LDAP URL bookmark?
-
 * switch all old-style casts to use either QI or NS_CAST_* macros
-
-* use NS_ENSURE_* on incoming args to interface methods
 
 * some (many?) destructors don't clean up completely or correctly.  
   audit for this and fix.
@@ -44,7 +33,8 @@ housecleaning
 
 * implement nsIPipeObserver in case pipe fills up?
 
-* audit for and implement all NOT_IMPLEMENTED functions
+* audit for and implement any appropriate NOT_IMPLEMENTED functions
+  (eg nsLDAPChannel::Cancel() and friends)
 
 * grep for XXXs and fix the issues 
 
@@ -62,8 +52,6 @@ housecleaning
 
 * figure out our strategy for LDAPv2 vs. LDAPv3
 
-* the output from nsILDAPChannel is probably cachable.  make sure this works.
-
 * the LDAP SDK returns UTF8, but I think nsILDAPChannel is handing it
   off to callers as ASCII.
 
@@ -72,8 +60,16 @@ housecleaning
 * investigate the MOZILLA_CLIENT define as used by the SDK. eg do we still
   want the reference to "xp_sort.h"?
 
-* does NS_ENSURE_* provide adequate error-checking at interface boundaries
-  for JS in non-debug builds?
+* error handling: sort out what should be NS_ASSERTIONs vs. normal
+  error conditions (eg network & data errors).  also: does NS_ENSURE_*
+  provide adequate error-checking at interface boundaries for JS in
+  non-debug builds?  should we move away from NS_ENSURE_* as per scc's
+  suggestion of just using NS_PRECONDITION, NS_POSTCONDITION,
+  NS_ASSERTION?  whatever the answers to these questions, should audit 
+  interface boundaries to make sure they do appropriate checking.
+
+* migrate from "#ifdef DEBUG_dmose PR_fprintf(PR_STDERR)" to a more
+  general logging mechanism (NSPR logging facilities? nsIConsoleService?)
 
 * does always using this-> for member vars cause inheritance problems?  if so, 
   does it matter in an XPCOM world?
@@ -86,10 +82,13 @@ housecleaning
   thread-crossing operations (side benefit: also exposes more LDAPy
   goodness to JS) 
 
-features
---------
+misc
+----
+* i18n / l10n (any text strings)
 
-* i18n / l10n
+* implement progress info interfaces, if possible (% done)
+
+* cachability of nsILDAPChannel content: browser cache? ldap_memcache? both?
 
 * use a rebind_proc?
 
@@ -100,14 +99,24 @@ features
   * nsILDAPURI (see nsIIOService.idl: extractScheme())
   * non-anonymous binding
 
+perf
+----
+* rather than having one thread per URL, probably should (at least)
+  have one thread per LDAP server, perhaps chosen from an already
+  spun-up thread pool
 
-later features
---------------
+* nsLDAPService: assuming that we do the above and start using
+  nsLDAPService again, need to implement shutdown for nsLDAPService
+  (probably analogous to the way nsSocketTransportService shuts down.
+  but how does nsIShutdownListener fit in here? and CanUnload?)
+
+
+later
+-----
 * referrals
 * failover
-* ldap_memcache
 * addressbook/mail UI glue
 * PSM certs from directory glue(?)
 * secure (& proxied/socksified?) ldap
 * ldap_io_functions for portability? (wait for new mcs code?)
-* implement progress info interfaces, if possible (% done)
+
