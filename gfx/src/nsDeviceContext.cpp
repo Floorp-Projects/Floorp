@@ -63,6 +63,7 @@ DeviceContextImpl :: DeviceContextImpl()
   mCPixelScale = 1.0f;
   mGammaTable = new PRUint8[256];
   mZoom = 1.0f;
+  mTextZoom = 1.0f;
   mWidget = nsnull;
   mIconImageGroup = nsnull;
   for (PRInt32 i = 0; i < NS_NUMBER_OF_ICONS; i++) {
@@ -267,17 +268,35 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetri
 
 NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)
 {
-  mZoom = aZoom;
-
-  if (mFontCache)
-    mFontCache->Flush();
-
+  if (mZoom != aZoom) {
+    mZoom = aZoom;
+    if (mFontCache) {
+      mFontCache->Flush();
+    }
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP DeviceContextImpl :: GetZoom(float &aZoom) const
 {
   aZoom = mZoom;
+  return NS_OK;
+}
+
+NS_IMETHODIMP DeviceContextImpl :: SetTextZoom(float aTextZoom)
+{
+  if (mTextZoom != aTextZoom) {
+    mTextZoom = aTextZoom;
+    if (mFontCache) {
+      mFontCache->Flush();
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP DeviceContextImpl :: GetTextZoom(float &aTextZoom) const
+{
+  aTextZoom = mTextZoom;
   return NS_OK;
 }
 
