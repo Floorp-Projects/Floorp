@@ -57,6 +57,10 @@
 #include "nsNeckoUtil.h"
 #endif
 
+#include "nsProxiedService.h"
+#include "nsINetSupportDialogService.h"
+#include "nsIPrompt.h"
+
 #ifdef _WINDOWS
 #include "nsWinReg.h"
 #include "nsWinProfile.h"
@@ -85,6 +89,9 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 #endif
+
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 	
@@ -2012,6 +2019,32 @@ nsInstall::SetInstallArguments(const nsString& args)
 
 void nsInstall::GetInstallURL(nsString& url)        { url = mInstallURL; }
 void nsInstall::SetInstallURL(const nsString& url)  { mInstallURL = url; }
+
+
+PRInt32    
+nsInstall::Alert(nsString& string)
+{
+    nsresult res;  
+
+    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, nsnull, &res);
+    if (NS_FAILED(res)) 
+        return res;
+    
+    return dialog->Alert(string.GetUnicode());
+}
+
+PRInt32    
+nsInstall::Confirm(nsString& string, PRBool* aReturn)
+{
+    *aReturn = PR_FALSE; /* default value */
+    
+    nsresult res;  
+    NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, nsnull, &res);
+    if (NS_FAILED(res)) 
+        return res;
+    
+    return dialog->Confirm(string.GetUnicode(), aReturn);
+}
 
 
 

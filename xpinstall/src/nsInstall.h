@@ -235,6 +235,10 @@ class nsInstall
 
         void       GetInstallURL(nsString& url);
         void       SetInstallURL(const nsString& url);
+        
+        PRInt32    Alert(nsString& string);
+        PRInt32    Confirm(nsString& string, PRBool* aReturn);
+
 
 
     private:
