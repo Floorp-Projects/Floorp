@@ -566,9 +566,11 @@ hdestroy(HTAB *hashp)
 #endif
 		free(hashp->filename);
 	}
-
+	if (hashp->tmp_buf)
+	    free(hashp->tmp_buf);
+	if (hashp->tmp_key)
+	    free(hashp->tmp_key);
 	free(hashp);
-
 	if (save_errno) {
 		errno = save_errno;
 		return (DBM_ERROR);
@@ -900,7 +902,7 @@ hash_access(
 			n = *bp++;
 			ndx = 1;
 			off = hashp->BSIZE;
-		                } else if (bp[1] < REAL_KEY) {
+		} else if (bp[1] < REAL_KEY) {
 			if ((ndx =
 			    __find_bigpair(hashp, rbufp, ndx, kp, (int)size)) > 0)
 				goto found;
