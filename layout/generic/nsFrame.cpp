@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
++/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -1022,32 +1022,32 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
   // link and steal all its glory.
   PRBool isEditor = PR_FALSE;
   shell->GetDisplayNonTextSelection ( &isEditor );
-  if ( !isEditor ) {
+  nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+  if (!isEditor && !keyEvent->isAlt) {
     nsCOMPtr<nsIContent> content;
-    GetContent ( getter_AddRefs(content) );
-    if ( content ) {
-      do {
-        // are we an anchor with an href? If so, bail out now!
-        nsCOMPtr<nsIAtom> tag;
-        content->GetTag(*getter_AddRefs(tag));
-        if ( tag.get() == nsHTMLAtoms::a ) {
-          // Fix for bug #53326: Make sure we bail only
-          // in the presence of an href with a value!
-          nsAutoString href;
-          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href))
-            return NS_OK;
-        }
-        
-        // now try the parent
-        nsIContent* parent;
-        content->GetParent(parent);
-        content = dont_AddRef(parent);
-      } while ( content );   
-    }
-  } // if browser, not editor
+    GetContent (getter_AddRefs(content));
+    while (content) {
+       // are we an anchor with an href? If so, bail out now!
+       nsCOMPtr<nsIAtom> tag;
+       content->GetTag(*getter_AddRefs(tag));
+       if ( tag.get() == nsHTMLAtoms::a ) {
+         // Fix for bug #53326: Make sure we bail only
+         // in the presence of an href with a value!
+         nsAutoString href;
+         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href))
+           return NS_OK;
+       }
+  
+       // now try the parent
+       nsIContent* parent;
+       content->GetParent(parent);
+       content = dont_AddRef(parent);
+  
+    } // if browser, not editor
+  }
 
   // check whether style allows selection
-  // if not, don't tell selection the mouse event even occured.  
+  // if not, don't tell selection the mouse event even occurred.  
   PRBool  selectable;
   PRUint8 selectStyle;
   rv = IsSelectable(&selectable, &selectStyle);

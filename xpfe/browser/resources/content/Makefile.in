@@ -36,7 +36,6 @@ CHROME_CONTENT = \
 	tooltip.js \
 	openLocation.js \
 	viewsource.js \
-	viewSourceDD.js \
 	navigator.xul \
 	sessionHistoryUI.js \
 	keywords.js \

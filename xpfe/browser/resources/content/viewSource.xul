@@ -7,44 +7,44 @@
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/viewSource.dtd" >
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	onload="onLoadViewSource()"
+	onload="onLoadViewSource();"
 	title="&mainWindow.title;" 
 	titlemodifier="&mainWindow.titlemodifier;" 
 	titlepreface="&mainWindow.preface;"
 	titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
-	windowtype="Browser:view-source"
+	windowtype="navigator:view-source"
 	align="vertical" width="640" height="480"
 	screenX="10" screenY="10"
 	persist="screenX screenY width height sizemode"> 
   
 
-  <script language="javascript" src="chrome://global/content/nsJSSupportsUtils.js"></script>
-  <script language="javascript" src="chrome://global/content/nsJSComponentManager.js"></script>
-  <script language="javascript" src="chrome://global/content/nsTransferable.js"></script>
-  <script language="javascript" src="chrome://global/content/nsDragAndDrop.js"></script>
-
-  <script language="javascript" src="chrome://navigator/content/viewSourceDD.js"></script>
-  <script language="javascript" src="chrome://navigator/content/viewsource.js"></script>
+  <script type="text/javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/contentAreaDD.js"/>
+  <script type="text/javascript" src="chrome://navigator/content/viewsource.js"/>
 
   <broadcasterset id="broadcasterset"/>
 
-	<commands id="commands">
-		<commandset id="globalEditMenuItems"/>
-		<commandset id="selectEditMenuItems"/>
-		<commandset id="undoEditMenuItems"/>
-		<commandset id="clipboardEditMenuItems"/>
-	</commands>
+  <commands id="commands">
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="undoEditMenuItems"/>
+    <commandset id="clipboardEditMenuItems"/>
+  </commands>
 
   <!-- keys are appended from the overlay -->
   <keyset id="keyset"/>
 
   <!-- Menu -->
   
-    <box id="appcontent" align="vertical" flex="1"
-      ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
-      ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);">
+  <box id="appcontent" align="vertical" flex="1"
+       ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
+       ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"
+       ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
 
-      <iframe id="content-frame" type="content-primary" name="content" src="about:blank" flex="1"/>
+    <iframe id="content-frame" type="content-primary" name="content" src="about:blank" flex="1"/>
 
   </box>
 
