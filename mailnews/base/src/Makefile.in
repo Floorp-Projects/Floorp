@@ -83,7 +83,6 @@ CPPSRCS		= \
 		nsMsgAccountManagerDS.cpp \
 		nsMsgRDFUtils.cpp \
 		nsMsgBiffManager.cpp \
-		nsMsgNotificationManager.cpp \
 		nsMsgCopyService.cpp \
 		nsMsgFolderCache.cpp \
 		nsMsgFolderCacheElement.cpp \
@@ -126,7 +125,6 @@ EXPORTS		= \
 		nsMsgRDFDataSource.h \
 		nsMsgRDFUtils.h \
 		nsMsgBiffManager.h \
-		nsMsgNotificationManager.h \
 		nsCopyMessageStreamListener.h \
 		nsMsgCopyService.h \
 		nsMsgStatusFeedback.h \

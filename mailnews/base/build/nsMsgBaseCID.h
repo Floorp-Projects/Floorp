@@ -184,18 +184,6 @@
 { 0x7f9a9fb0, 0x4161, 0x11d4,                      \
   {0x98, 0x76, 0x00, 0xc0, 0x4f, 0xa0, 0xd2, 0xa6} }
 
-
-//
-// nsMsgNotificationManager
-//
-#define NS_MSGNOTIFICATIONMANAGER_CONTRACTID \
-  NS_RDF_DATASOURCE_CONTRACTID_PREFIX "msgnotifications"
-
-/* 7C601F60-1EF3-11d3-9574-006097222B83 */
-#define NS_MSGNOTIFICATIONMANAGER_CID							\
-{ 0x7c601f60, 0x1ef3, 0x11d3,							\
-    { 0x95, 0x74, 0x0, 0x60, 0x97, 0x22, 0x2b, 0x83 } }
-
 //
 // nsCopyMessageStreamListener
 //
