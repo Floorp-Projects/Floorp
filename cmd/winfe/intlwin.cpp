@@ -155,8 +155,9 @@ struct FontCharTable  fontchar_tbl[] =
         CS_VIET_VIQR,    "Times New Roman",     12, "Courier New",  10, 163,163,
         CS_VIET_VISCII,  "ÁnhMinh 1.1",         12, "MinhQuân 1.1", 10, 163,163,
         CS_VIET_VPS,     "VPS Times",           12, "VPS Courier",  10, 163,163,
-        CS_VIET_TCVN,    ".VNTime",             12, ".VNTime",      10, 163,163,
-        CS_VIET_VNI,     "VNI-Times",           12, "VNI-Times",    10, 163,163,
+        CS_VIET_TCVN,    ".VNTime",             12, ".VNCourier New",   10, 163,163,
+        CS_VIET_VNI,     "VNI-Times",           12, "VNI-Internet Mail",10, 163,163,
+        CS_CP_1258,      "Times New Roman",     12, "Courier New",  10, 163,163,
 	CS_TIS620, 	"AngsanaUPC", 	16, "CordiaUPC", 14, THAI_CHARSET, THAI_CHARSET,
 	CS_UTF8, 	DEF_PROPORTIONAL_FONT, 	12, DEF_FIXED_FONT, 10, DEFAULT_CHARSET, DEFAULT_CHARSET,
 	CS_USER_DEFINED_ENCODING, 	DEF_PROPORTIONAL_FONT, 	12, DEF_FIXED_FONT, 10, ANSI_CHARSET, ANSI_CHARSET,
@@ -183,11 +184,12 @@ unsigned int lang_table[] =
 	IDS_LANGUAGE_ARMENIAN, CS_ARMSCII8, CS_ARMSCII8, 0,
 	IDS_LANGUAGE_GREEK, CS_CP_1253, CS_CP_1253, CS_8859_7, 0,
 	IDS_LANGUAGE_TURKISH, CS_8859_9, CS_8859_9, 0,
-        IDS_LANGUAGE_VIETNAMESE_VIQR, CS_VIET_VIQR, CS_VIET_VIQR, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_TCVN, CS_VIET_VNI, 0,
-        IDS_LANGUAGE_VIETNAMESE_VISCII, CS_VIET_VISCII, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_TCVN, CS_VIET_VIQR, CS_VIET_VNI, 0,
-        IDS_LANGUAGE_VIETNAMESE_VPS, CS_VIET_VPS, CS_VIET_VPS, CS_VIET_VISCII, CS_VIET_TCVN, CS_VIET_VIQR, CS_VIET_VNI, 0,
-        IDS_LANGUAGE_VIETNAMESE_TCVN, CS_VIET_TCVN, CS_VIET_TCVN, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, 0,
-        IDS_LANGUAGE_VIETNAMESE_VNI, CS_VIET_VNI, CS_VIET_TCVN, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, 0,
+        IDS_LANGUAGE_VIETNAMESE_VIQR, CS_VIET_VIQR, CS_VIET_VIQR, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_TCVN, CS_VIET_VNI, CS_CP_1258, 0,
+        IDS_LANGUAGE_VIETNAMESE_VISCII, CS_VIET_VISCII, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_TCVN, CS_VIET_VIQR, CS_VIET_VNI, CS_CP_1258, 0,
+        IDS_LANGUAGE_VIETNAMESE_VPS, CS_VIET_VPS, CS_VIET_VPS, CS_VIET_VISCII, CS_VIET_TCVN, CS_VIET_VIQR, CS_VIET_VNI, CS_CP_1258, 0,
+        IDS_LANGUAGE_VIETNAMESE_TCVN, CS_VIET_TCVN, CS_VIET_TCVN, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, CS_CP_1258, 0,
+        IDS_LANGUAGE_VIETNAMESE_VNI, CS_VIET_VNI, CS_VIET_TCVN, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, CS_CP_1258, 0,
+        IDS_LANGUAGE_VIETNAMESE_CP1258, CS_CP_1258, CS_CP_1258, CS_VIET_VISCII, CS_VIET_VPS, CS_VIET_VIQR, CS_VIET_VNI, CS_VIET_TCVN, 0,
 	IDS_LANGUAGE_THAI, CS_TIS620, CS_TIS620, 0,
 	IDS_LANGUAGE_UTF8, CS_UTF8, CS_UTF8, CS_UTF7, CS_UCS2, CS_UCS2_SWAP, CS_T61, 0,
 	IDS_LANGUAGE_USERDEFINED, CS_USER_DEFINED_ENCODING, CS_USER_DEFINED_ENCODING, 0,
@@ -341,6 +343,7 @@ int CIntlFont::DocCSIDtoID(int doc_csid)
                (def_doccsid == CS_VIET_VPS) ||
                (def_doccsid == CS_VIET_TCVN) ||
                (def_doccsid == CS_VIET_VNI) ||
+               (def_doccsid == CS_CP_1258) ||
                (def_doccsid == CS_VIET_VIQR)
            )) {
                 def_doccsid = 0;
@@ -790,6 +793,9 @@ int16 CIntlWin::CodePageToCsid(UINT cp)
 	case 874:
 		return CS_TIS620;
 
+        case 1258:
+                return CS_CP_1258;
+
 	default:
 		return CS_UNKNOWN;
 	}
@@ -851,6 +857,8 @@ static BOOL intlUnicodeFlag(int16 wincsid)
         if((CS_VIET_VISCII == wincsid)	||
            (CS_VIET_VPS == wincsid)		||
            (CS_VIET_TCVN == wincsid)	||
+           (CS_VIET_VNI == wincsid)    ||
+           (CS_CP_1258 == wincsid)    ||
            (CS_VIET_VIQR == wincsid)	||
 		   (CS_TIS620 == wincsid)
           )

@@ -21,7 +21,7 @@
 
 #define DEFAULT_WINCSID 0
 
-#define MAXLANGNUM 18
+#define MAXLANGNUM 19
 
 class	CyaFont;
 

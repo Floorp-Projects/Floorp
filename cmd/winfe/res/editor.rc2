@@ -144,6 +144,7 @@ BEGIN
                 MENUITEM "Vietnamese (VPS)",     ID_OPTIONS_ENCODING_24
                 MENUITEM "Vietnamese (TCVN)",    ID_OPTIONS_ENCODING_25
                 MENUITEM "Vietnamese (VNI)",     ID_OPTIONS_ENCODING_27
+                MENUITEM "Vietnamese (Windows-1258)",     ID_OPTIONS_ENCODING_28
                 MENUITEM SEPARATOR
 	        MENUITEM "Unicode (UTF-8)",              ID_OPTIONS_ENCODING_18
 	        MENUITEM "Unicode (UTF-7)",            ID_OPTIONS_ENCODING_20
@@ -515,6 +516,7 @@ BEGIN
             MENUITEM "Vietnamese (VPS)",     ID_OPTIONS_ENCODING_24
             MENUITEM "Vietnamese (TCVN)",    ID_OPTIONS_ENCODING_25
             MENUITEM "Vietnamese (VNI)",     ID_OPTIONS_ENCODING_27
+            MENUITEM "Vietnamese (Windows-1258)",     ID_OPTIONS_ENCODING_28
             MENUITEM SEPARATOR
             MENUITEM "Unicode (UTF-8)",              ID_OPTIONS_ENCODING_18
             MENUITEM "Unicode (UTF-7)",              ID_OPTIONS_ENCODING_20
