@@ -1008,7 +1008,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     if (NS_FAILED(rv = nsComponentManager::CreateInstance(kParserCID,
                                                     nsnull,
                                                     kIParserIID,
-                                                    (void**) &parser))) {
+                                                    (void**) getter_AddRefs(parser)))) {
         NS_ERROR("unable to create parser");
         return rv;
     }
