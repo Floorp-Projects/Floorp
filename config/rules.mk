@@ -516,10 +516,10 @@ ifdef LIBRARY_NAME
 ifdef EXPORT_LIBRARY
 ifdef IS_COMPONENT
 ifndef NO_STATIC_LIB
-	@$(PERL) $(topsrcdir)/config/build-list.pl $(FINAL_LINK_COMPS) $(LIBRARY_NAME)
+	@$(PERL) $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_COMPS) $(LIBRARY_NAME)
 endif
 else
-	$(PERL) $(topsrcdir)/config/build-list.pl $(FINAL_LINK_LIBS) $(LIBRARY_NAME)
+	$(PERL) $(MOZILLA_DIR)/config/build-list.pl $(FINAL_LINK_LIBS) $(LIBRARY_NAME)
 endif # IS_COMPONENT
 endif # EXPORT_LIBRARY
 endif # LIBRARY_NAME
