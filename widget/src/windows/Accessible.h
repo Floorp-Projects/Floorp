@@ -238,7 +238,7 @@ public:
     // nsIAccessibleEventListener
     NS_DECL_NSIACCESSIBLEEVENTLISTENER
 
-    virtual PRInt32 GetIdFor(nsIAccessible* aAccessible);
+    virtual PRUint32 GetIdFor(nsIAccessible* aAccessible);
     virtual void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
 
 private:
@@ -246,7 +246,6 @@ private:
     // events fire.
     nsAccessibleEventMap mList[MAX_LIST_SIZE];
     PRInt32 mListCount;
-    PRInt32 mNextId;
     PRInt32 mNextPos;
 };
 #endif

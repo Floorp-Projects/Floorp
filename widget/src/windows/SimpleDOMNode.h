@@ -67,6 +67,7 @@ class SimpleDOMNode : public ISimpleDOMNode
         /* [out] */ short __RPC_FAR *nameSpaceID,
         /* [out] */ BSTR __RPC_FAR *nodeValue,
         /* [out] */ unsigned int __RPC_FAR *numChildren,
+        /* [out] */ unsigned int __RPC_FAR *aUniqueID,
         /* [out][retval] */ unsigned short __RPC_FAR *nodeType);
   
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_attributes( 

@@ -926,7 +926,6 @@ RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):DocAccessible(aAc
 {
 
   mListCount = 0;
-  mNextId = -1;
   mNextPos = 0;
 
   nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
@@ -947,12 +946,16 @@ RootAccessible::~RootAccessible()
 
 void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc)
 {
-  aAcc = nsnull;
-  DocAccessible::GetNSAccessibleFor(varChild, aAcc);
+  // If the child ID given == 0 (CHILDID_SELF), they are asking for the root accessible object
+  // If the child ID given < NS_CONTENT_ID_COUNTER_BASE, then they are navigating to the children 
+  // immediately below the root accessible (pane) object
+  if (varChild.lVal < NS_CONTENT_ID_COUNTER_BASE) {
+    Accessible::GetNSAccessibleFor(varChild, aAcc);
+    return; 
+  }
 
-  if (aAcc)
-    return;
-
+  // Otherwise fall through and check our circular array of event information, because the child ID
+  // asked for corresponds to an event target. See RootAccessible::HandleEvent to see how we provide this unique ID.
   for (int i=0; i < mListCount; i++)
   {
     if (varChild.lVal == mList[i].mId) {
@@ -964,37 +967,37 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
 
 NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible)
 {
-#ifdef DEBUG
-  // print focus event!!
-  printf("Focus Changed!!!\n");
-#endif
-
   // get the id for the accessible
   PRInt32 id = GetIdFor(aAccessible);
 
   // notify the window system
   NotifyWinEvent(aEvent, mWnd, OBJID_CLIENT, id);
   
-
   return NS_OK;
 }
 
-PRInt32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
+PRUint32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
 {
-  // max of 99999 ids can be generated
-  if (mNextId < -99999)
-    mNextId = -1;
-  
+  // A child ID of the window is required, when we use NotifyWinEvent, so that the 3rd party application
+  // can call back and get the IAccessible the event occured on.
+  // We use the unique ID exposed through nsIContent::GetContentID()
+
+  PRUint32 uniqueID = 0;  // magic value of 0 means we're on the document itself
+  nsCOMPtr<nsIDOMNode> domNode;
+  aAccessible->AccGetDOMNode(getter_AddRefs(domNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(domNode));
+  if (content)
+    content->GetContentID(&uniqueID);
+
   // Lets make one and add it to the list
-  mList[mNextPos].mId = mNextId;
+  mList[mNextPos].mId = uniqueID;
   mList[mNextPos].mAccessible = aAccessible;
 
-  mNextId--;
   if (++mNextPos >= MAX_LIST_SIZE)
     mNextPos = 0;
   if (mListCount < MAX_LIST_SIZE)
     mListCount++;
 
-  return mNextId+1;
+  return uniqueID;
 }
 

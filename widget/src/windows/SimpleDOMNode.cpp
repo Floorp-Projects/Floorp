@@ -142,13 +142,14 @@ STDMETHODIMP SimpleDOMNode::get_nodeInfo(
     /* [out] */ short __RPC_FAR *aNameSpaceID,
     /* [out] */ BSTR __RPC_FAR *aNodeValue,
     /* [out] */ unsigned int __RPC_FAR *aNumChildren,
+    /* [out] */ unsigned int __RPC_FAR *aUniqueID,
     /* [out] */ unsigned short __RPC_FAR *aNodeType)
 {
   *aNodeName = nsnull;
   nsCOMPtr<nsIDOMElement> domElement;
   nsCOMPtr<nsIContent> content;
   GetElementAndContentFor(domElement, content);
-  
+
   PRUint16 nodeType = 0;
   mDOMNode->GetNodeType(&nodeType);
   *aNodeType=NS_STATIC_CAST(unsigned short, nodeType);
@@ -165,8 +166,14 @@ STDMETHODIMP SimpleDOMNode::get_nodeInfo(
   *aNodeValue = ::SysAllocString(nodeValue.get());
 
   PRInt32 nameSpaceID = 0;
-  if (content)
+  *aUniqueID = 0; // magic value of 0 means we're on the document node.
+  if (content) {
     content->GetNameSpaceID(nameSpaceID);
+    // This is a unique ID for every content node.
+    // The 3rd party accessibility application can compare this to the childID we return for 
+    // events such as focus events, to correlate back to data nodes in their internal object model.
+    content->GetContentID(NS_STATIC_CAST(PRUint32*, aUniqueID));
+  }
   *aNameSpaceID = NS_STATIC_CAST(short, nameSpaceID);
 
   *aNumChildren = 0;
