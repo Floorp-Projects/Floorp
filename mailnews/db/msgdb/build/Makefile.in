@@ -34,9 +34,8 @@ EXPORTS= \
 	nsMsgDBCID.h			\
 	$(NULL)
 
-
 SHARED_LIBRARY_LIBS =	\
-	$(DIST)/lib/libmsgdb_s.a	\
+	$(DIST)/lib/libmailnewsmsgdb_s.a	\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = 	\
@@ -51,7 +50,6 @@ EXTRA_DSO_LDOPTS = 	\
 	-lxp				\
 	-lrdfutil_s			\
 	-lmsgbaseutil			\
-	-lmailnewsmsgdb			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
