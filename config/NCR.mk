@@ -36,7 +36,7 @@ OS_LIBS			=
 
 PLATFORM_FLAGS		= -DNCR -D_ATT4 -Di386
 MOVEMAIL_FLAGS		= -DUSG -DHAVE_STRERROR
-PORT_FLAGS		= -DSVR4 -DSYSV -DSW_THREADS -DHAVE_FILIO_H -DHAVE_LCHOWN -DNEED_S_ISLNK -DNEED_S_ISSOCK -DSYS_ENDIAN_H -DSYS_BYTEORDER_H -DUSE_NODL_TABS -DMITSHM -DHAVE_WAITID -DHAVE_NETINET_IN_H -DHAVE_REMAINDER -DHAVE_SYS_BITYPES_H -DPRFSTREAMS_BROKEN
+PORT_FLAGS		= -DSVR4 -DSYSV -DSW_THREADS -DHAVE_FILIO_H -DHAVE_LCHOWN -DNEED_S_ISLNK -DNEED_S_ISSOCK -DSYS_ENDIAN_H -DSYS_BYTEORDER_H -DUSE_NODL_TABS -DMITSHM -DHAVE_WAITID -DHAVE_NETINET_IN_H -DHAVE_REMAINDER -DPRFSTREAMS_BROKEN
 PDJAVA_FLAGS		=
 
 ifdef USE_AUTOCONF
@@ -59,6 +59,10 @@ I2_LOCALE		= i2
 ######################################################################
 # Version-specific stuff
 ######################################################################
+
+ifneq ($(OS_RELEASE),2.03)
+PORT_FLAGS		+= -DHAVE_SYS_BITYPES_H
+endif
 
 ######################################################################
 # Overrides for defaults in config.mk (or wherever)
