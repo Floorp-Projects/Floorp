@@ -164,6 +164,7 @@ $notify_list   = "leaf\@mozilla.org";
 $stub_installer = 1;
 $sea_installer = 1;
 $archive       = 0;
+$push_raw_xpis = 1;
 
 # Reboot the OS at the end of build-and-test cycle. This is primarily
 # intended for Win9x, which can't last more than a few cycles before

@@ -128,21 +128,46 @@ sub packit {
       #chomp ($dos_stagedir);
     }
     mkdir($stagedir, 0775);
+
+    my $push_raw_xpis;
+    if ($Settings::stub_installer) {
+      $push_raw_xpis = 1;
+    } else {
+      $push_raw_xpis = $Settings::push_raw_xpis;
+    }
+
     if (is_windows()) {
       if ($Settings::stub_installer) {
-        TinderUtils::run_shell_command "cp -r $package_location/xpi $stagedir/windows-xpi";
         TinderUtils::run_shell_command "cp $package_location/stub/*.exe $stagedir/";
       }
       if ($Settings::sea_installer) {
         TinderUtils::run_shell_command "cp $package_location/sea/*.exe $stagedir/";
       }
+
+      if ($push_raw_xpis) {
+	# We need to recreate the xpis with compression on, for update.
+        # Since we've already copied over the 7zip-compressed installer, just
+        # re-run the installer creation with 7zip disabled to get compressed
+        # xpi's, then copy them to stagedir.
+        my $save_7zip = $ENV{MOZ_INSTALLER_USE_7ZIP};
+        $ENV{MOZ_INSTALLER_USE_7ZIP} = "";
+        TinderUtils::run_shell_command "make -C $packaging_dir installer";
+        $ENV{MOZ_INSTALLER_USE_7ZIP} = $save_7zip;
+        TinderUtils::run_shell_command "cp -r $package_location/xpi $stagedir/windows-xpi";
+      }
     } elsif (is_linux()) {
       if ($Settings::stub_installer) {
-        TinderUtils::run_shell_command "cp -r $package_location/raw/xpi $stagedir/linux-xpi";
         TinderUtils::run_shell_command "cp $package_location/stub/*.tar.gz $stagedir/";
       }
       if ($Settings::sea_installer) {
         TinderUtils::run_shell_command "cp $package_location/sea/*.tar.gz $stagedir/";
+      }
+      if ($push_raw_xpis) {
+        my $xpi_loc = $package_location;
+        if ($Settings::package_creation_path eq "/xpinstall/packager") {
+          $xpi_loc = "$xpi_loc/raw";
+        }
+        TinderUtils::run_shell_command "cp -r $xpi_loc/xpi $stagedir/linux-xpi";
       }
     }
   }
@@ -156,7 +181,11 @@ sub packit {
       system("mkdir -p $stagedir");
       TinderUtils::run_shell_command "cp $package_location/../*.dmg.gz $stagedir/";
     } else {
-      TinderUtils::run_shell_command "cp $package_location/../dist/*.tar.gz $stagedir/";
+      my $archive_loc = "$package_location/..";
+      if ($Settings::package_creation_path eq "/xpinstall/packager") {
+        $archive_loc = "$archive_loc/dist";
+      }
+      TinderUtils::run_shell_command "cp $archive_loc/*.tar.gz $stagedir/";
     }
   }
 
@@ -286,7 +315,7 @@ sub main {
   # need to modify the settings from tinder-config.pl
   my $package_creation_path = $objdir . $Settings::package_creation_path;
   my $package_location;
-  if (is_windows() || is_mac()) {
+  if (is_windows() || is_mac() || $Settings::package_creation_path ne "/xpinstall/packager") {
     $package_location = $objdir . "/dist/install";
   } else {
     $package_location = $objdir . "/installer";
