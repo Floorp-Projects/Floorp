@@ -43,6 +43,7 @@ DBD::MySQL v1.2209
 AppConfig v1.52
 Template Toolkit v2.07
 Text::Wrap v20001.0131
+File::Spec v0.82
 Data::Dumper, Date::Parse, CGI::Carp (any)
 GD v1.19 (optional)
 Chart::Base v0.99 (optional)
@@ -124,6 +125,9 @@ XML::Parser (any)
   the compiled templates.
   (bug 97832)
 
+- Querying on CC takes too long on big databases.
+  (bug 127200)
+
 ************************************************************
 *** USERS UPGRADING FROM 2.14.1 OR EARLIER - 2.16 ISSUES ***
 ************************************************************
@@ -173,18 +177,32 @@ XML::Parser (any)
   (bug 86168)
 
 - Administrators can now configure maximum attachment sizes.  These
-  should remain below the maximum size for MySQL, or you will get
-  obscure MySQL errors if you attach a bigger attachment.  ??? the size is ???
+  should remain below the maximum size for your MySQL server, or you
+  will get obscure MySQL errors if you attach a bigger attachment.
+
+  To find out the current size attachment that MySQL can accept, type
+  the command 'mysqladmin variables' and find out the value of the
+  'max_allowed_packet' varible in bytes.
+
+  To change the maximum size that MySQL can accept you can alter this
+  variable in your 'my.cnf' file.
   (bug 91664)
 
 - Perl 5.004 is no longer supported because the Template Toolkit
   requires 5.005.
   (bug 97721)
 
+- New requirements: Text::Wrap, Template [requires AppConfig].
+  (bugs 97784, 84338)
+
+- New version required: Perl v5.005, File::Spec v0.82
+  (bugs 97721, ???)
+
 - The index page is now a CGI instead of an HTML page.  You should remove
   any existing HTML page and make sure your web server allows index.cgi to
-  be the default page.  If you are not able to do that you can set index_html
-  to 1 and checksetup.pl will create a redirect page for you.
+  be the default page in a directory.  If you are not able to do that you
+  can instead set index_html in the 'localconfig' file to 1 and checksetup.pl
+  will create a redirect page for you.
   (bug 80183)
 
 - It is now strongly recommended that administrators run
@@ -262,7 +280,7 @@ XML::Parser (any)
   field or use the back/forward buttons in your browser to return
   to the page.
   (bug 97966)
-- You could not reverse dependencies in one step. ??? really fixed ???
+- You could not reverse dependencies in one step.
   (bug 82143)
 - Mass reassignment of non-open bugs will no longer reopen them.
   (bug 30731)
@@ -284,7 +302,7 @@ XML::Parser (any)
   (bug 98368)
 - Apostrophes in component/milestone/version names no longer cause
   a problem on the query page.
-  (bug 30689/42810) ??? resolve dupe ???
+  (bug 30689/42810)
 - File attachment comments will now wrap.
   (bug 52060)
 - Saved queries are no longer mangled if you need to log in again,
@@ -308,9 +326,6 @@ XML::Parser (any)
 - Quicksearch gave a weird error message when Bugzilla was
   shut down.
   (bug 121741)
-- Querying on CC took too long on big databases, it is quicker
-  now.
-  (bug 127200) ??? reopened ???
 - Operating system detection fixes.
   (bugs 92763, 135666)
 
