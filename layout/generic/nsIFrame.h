@@ -550,6 +550,11 @@ public:
   nsIContent* GetContent() const { return mContent; }
 
   /**
+   * Get the frame that should be the parent for the frames of child elements
+   */
+  virtual nsIFrame* GetContentInsertionFrame() { return this; }
+
+  /**
    * Get the offsets of the frame. most will be 0,0
    *
    */

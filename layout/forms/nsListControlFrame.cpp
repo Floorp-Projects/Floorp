@@ -1441,6 +1441,12 @@ nsListControlFrame::IsOptionElement(nsIContent* aContent)
   return result;
 }
 
+nsIFrame*
+nsListControlFrame::GetContentInsertionFrame() {
+  nsIFrame* frame;
+  GetOptionsContainer(GetPresContext(), &frame);
+  return frame->GetContentInsertionFrame();
+}
 
 //---------------------------------------------------------
 // Starts at the passed in content object and walks up the 

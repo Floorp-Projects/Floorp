@@ -102,10 +102,8 @@ nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
 NS_IMETHODIMP
 nsHTMLScrollFrame::GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const
 {
-   nsIBox* child = nsnull;
-   mInner.mScrollAreaBox->GetChildBox(&child);
-   child->GetFrame(&aScrolledFrame);
-   return NS_OK;
+  aScrolledFrame = mInner.GetScrolledFrame();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -644,10 +642,8 @@ nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
 NS_IMETHODIMP
 nsXULScrollFrame::GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const
 {
-   nsIBox* child = nsnull;
-   mInner.mScrollAreaBox->GetChildBox(&child);
-   child->GetFrame(&aScrolledFrame);
-   return NS_OK;
+  aScrolledFrame = mInner.GetScrolledFrame();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

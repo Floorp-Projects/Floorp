@@ -116,6 +116,10 @@ public:
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
+  virtual nsIFrame* GetContentInsertionFrame() {
+    return GetFirstChild(nsnull)->GetContentInsertionFrame();
+  }
+
   virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState);
 
   virtual PRBool NeedsToObserve(const nsHTMLReflowState& aReflowState);
