@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Steve Clark (buster@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,43 +37,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIDOMEventReceiver_h__
-#define nsIDOMEventReceiver_h__
+#include "nsDOMEventGroup.h"
 
-#include "nsIDOMEventTarget.h"
+NS_IMPL_ISUPPORTS1(nsDOMEventGroup, nsIDOMEventGroup)
 
-class nsIDOMEventListener;
-class nsIDOMMouseListener;
-class nsIDOMMouseMotionListener;
-class nsIDOMKeyListener;
-class nsIDOMFocusListener;
-class nsIDOMLoadListener;
-class nsIDOMDragListener;
-class nsIEventListenerManager;
-class nsIDOMEvent;
-class nsIDOMEventGroup;
-
-/*
- * DOM event source class.  Object that allow event registration and
- * distribution from themselves implement this interface.
- */
-
-#define NS_IDOMEVENTRECEIVER_IID \
-{ /* e1dbcba0-fb38-11d1-bd87-00805f8ae3f4 */ \
-0xe1dbcba0, 0xfb38, 0x11d1, \
-{0xbd, 0x87, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
-
-class nsIDOMEventReceiver : public nsIDOMEventTarget
+nsDOMEventGroup::nsDOMEventGroup()
 {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENTRECEIVER_IID)
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+}
 
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
-                                   const nsIID& aIID) = 0;
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
-                                      const nsIID& aIID) = 0;
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
-  NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) = 0;
-  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup) = 0;
-};
-#endif // nsIDOMEventReceiver_h__
+nsDOMEventGroup::~nsDOMEventGroup()
+{
+  /* destructor code */
+}
+
+/* boolean isSameEventGroup (in nsIDOMEventGroup other); */
+NS_IMETHODIMP nsDOMEventGroup::IsSameEventGroup(nsIDOMEventGroup *other, PRBool *retval)
+{
+  *retval = PR_FALSE;
+  if (other == this) {
+   *retval = PR_TRUE;
+  }
+  return NS_OK;
+} 
+
+nsresult NS_NewDOMEventGroup(nsIDOMEventGroup** aResult);
+
+nsresult
+NS_NewDOMEventGroup(nsIDOMEventGroup** aInstancePtrResult) 
+{
+  *aInstancePtrResult = new nsDOMEventGroup;
+  if (!*aInstancePtrResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aInstancePtrResult);
+  return NS_OK;
+}

@@ -44,6 +44,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOM3EventTarget.h"
 #include "nsHashtable.h"
 
 class nsIDOMEvent;
@@ -55,6 +56,7 @@ typedef struct {
   PRUint8 mSubType;
   PRUint8 mHandlerIsString;
   PRUint8 mSubTypeCapture;
+  PRUint16 mGroupFlags;
 } nsListenerStruct;
 
 //These define the internal type of the EventListenerManager
@@ -95,7 +97,8 @@ enum EventArrayType {
  */
 
 class nsEventListenerManager : public nsIEventListenerManager,
-                               public nsIDOMEventReceiver
+                               public nsIDOMEventReceiver,
+                               public nsIDOM3EventTarget
 {
 
 public:
@@ -114,10 +117,12 @@ public:
                                       const nsIID& aIID, PRInt32 aFlags);
   NS_IMETHOD AddEventListenerByType(nsIDOMEventListener *aListener,
                                     const nsAString& type,
-                                    PRInt32 aFlags);
+                                    PRInt32 aFlags,
+                                    nsIDOMEventGroup* aEvtGrp);
   NS_IMETHOD RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                        const nsAString& type,
-                                       PRInt32 aFlags) ;
+                                       PRInt32 aFlags,
+                                       nsIDOMEventGroup *aEvtGrp) ;
   NS_IMETHOD AddScriptEventListener(nsIScriptContext*aContext,
                                     nsISupports *aObject,
                                     nsIAtom *aName,
@@ -157,18 +162,17 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD GetSystemEventGroupLM(nsIDOMEventGroup** aGroup);
+
   static nsresult GetIdentifiersForType(nsIAtom* aType,
                                         EventArrayType* aArrayType,
                                         PRInt32* aSubType);
 
-  // nsIDOMEventTarget interface
-  NS_IMETHOD AddEventListener(const nsAString& aType, 
-                              nsIDOMEventListener* aListener, 
-                              PRBool aUseCapture);
-  NS_IMETHOD RemoveEventListener(const nsAString& aType, 
-                                 nsIDOMEventListener* aListener, 
-                                 PRBool aUseCapture);
-  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent, PRBool *_retval);
+  // nsIDOMEventTarget
+  NS_DECL_NSIDOMEVENTTARGET
+
+  // nsIDOM3EventTarget
+  NS_DECL_NSIDOM3EVENTTARGET
 
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
@@ -177,6 +181,7 @@ public:
                                       const nsIID& aIID);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
+  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
   static void Shutdown();
 
@@ -199,16 +204,19 @@ protected:
                             EventArrayType aType, 
                             PRInt32 aSubType,
                             nsHashKey* aKey,
-                            PRInt32 aFlags);
+                            PRInt32 aFlags,
+                            nsIDOMEventGroup* aEvtGrp);
   nsresult RemoveEventListener(nsIDOMEventListener *aListener,
                                EventArrayType aType,
                                PRInt32 aSubType,
                                nsHashKey* aKey,
-                               PRInt32 aFlags);
+                               PRInt32 aFlags,
+                               nsIDOMEventGroup* aEvtGrp);
   void ReleaseListeners(nsVoidArray** aListeners, PRBool aScriptOnly);
   nsresult FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture);
   nsVoidArray* GetListenersByType(EventArrayType aType, nsHashKey* aKey, PRBool aCreate);
   EventArrayType GetTypeForIID(const nsIID& aIID);
+  nsresult GetDOM2EventGroup(nsIDOMEventGroup** aGroup);
 
   PRUint8 mManagerType;
   EventArrayType mSingleListenerType;
@@ -216,6 +224,7 @@ protected:
   nsVoidArray* mMultiListeners;
   nsHashtable* mGenericListeners;
   PRBool mListenersRemoved;
+  static PRUint32 mInstanceCount;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsISupports* mTarget;  //WEAK

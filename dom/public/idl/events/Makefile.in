@@ -40,6 +40,10 @@ XPIDLSRCS =					\
 	nsIDOMUIEvent.idl			\
 	nsIDOMNSUIEvent.idl			\
 	nsIDOMEventListener.idl			\
+	nsIDOM3DocumentEvent.idl			\
+	nsIDOM3EventTarget.idl			\
+	nsIDOMEventGroup.idl			\
+	nsIDOMCustomEvent.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

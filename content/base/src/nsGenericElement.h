@@ -47,6 +47,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsIDOM3EventTarget.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
@@ -126,7 +127,8 @@ private:
 
 #define NS_EVENT_TEAROFF_CACHE_SIZE 4
 
-class nsDOMEventRTTearoff : public nsIDOMEventReceiver
+class nsDOMEventRTTearoff : public nsIDOMEventReceiver,
+                            public nsIDOM3EventTarget
 {
 private:
   // This class uses a caching scheme so we don't let users of this
@@ -146,6 +148,7 @@ private:
   void LastRelease();
 
   nsresult GetEventReceiver(nsIDOMEventReceiver **aReceiver);
+  nsresult GetDOM3EventTarget(nsIDOM3EventTarget **aTarget);
 
 public:
   virtual ~nsDOMEventRTTearoff();
@@ -161,6 +164,9 @@ public:
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET
 
+  // nsIDOM3EventTarget
+  NS_DECL_NSIDOM3EVENTTARGET
+
   // nsIDOMEventReceiver
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
                                    const nsIID& aIID);
@@ -168,6 +174,7 @@ public:
                                       const nsIID& aIID);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult);
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
+  NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup);
 
 private:
   // Strong reference back to the content object from where an

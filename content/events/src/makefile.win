@@ -55,6 +55,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
 	    .\$(OBJDIR)\nsDOMEvent.obj	    \
 	    .\$(OBJDIR)\nsDOMMutationEvent.obj \
 	    .\$(OBJDIR)\nsPrivateTextRange.obj	    \
+	    .\$(OBJDIR)\nsDOMEventGroup.obj	    \
 	    $(NULL)
 
 
