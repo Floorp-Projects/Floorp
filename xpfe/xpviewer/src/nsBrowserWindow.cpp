@@ -174,7 +174,7 @@ static NS_DEFINE_IID(kIToolbarItemIID, NS_ITOOLBARITEM_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuButtonIID, NS_IMENUBUTTON_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
-//static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
+static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
 
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
@@ -1070,7 +1070,7 @@ void nsBrowserWindow::DoFind()
                                              kIXPBaseWindowIID,
                                              (void**) &dialog);
   if (rv == NS_OK) {
-    dialog->Init(eXPBaseWindowType_window, mAppShell, nsnull, findHTML, title, rect, PRUint32(~0), PR_FALSE);
+    dialog->Init(eXPBaseWindowType_dialog, mAppShell, nsnull, findHTML, title, rect, PRUint32(~0), PR_FALSE);
     dialog->SetVisible(PR_TRUE);
  	  if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**) &mXPDialog)) {
     }
