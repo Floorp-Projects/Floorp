@@ -519,16 +519,6 @@ nsLookAndFeel::InitColors()
     gtk_widget_destroy(window);
 }
 
-void
-nsLookAndFeel::InitWidget()
-{
-    mWidget = gtk_invisible_new();
-    gtk_object_ref(GTK_OBJECT(mWidget));
-    gtk_object_sink(GTK_OBJECT(mWidget));
-    gtk_widget_ensure_style(mWidget);
-    mStyle = gtk_widget_get_style(mWidget);
-}
-
 NS_IMETHODIMP
 nsLookAndFeel::LookAndFeelChanged()
 {
