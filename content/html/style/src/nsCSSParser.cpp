@@ -625,7 +625,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAReadableString& aAttributeValue,
 
   // XXXldb XXXperf nsIUnicharInputStream is horrible!  It makes us make
   // a copy.
-  nsString* str = new nsString(aAttributeValue);
+  nsString* str = new nsAutoString(aAttributeValue);
   if (nsnull == str) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -791,7 +791,7 @@ CSSParserImpl::ParseProperty(const nsAReadableString& aPropName,
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
 
-  nsString* str = new nsString(aPropValue);
+  nsString* str = new nsAutoString(aPropValue);
   if (!str) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -55,16 +55,18 @@ NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
                         nsIFrame*                    aChildFrame,
                         nsIAtom*                     aAttribute)
 {
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsHTMLReflowCommand* cmd = new nsHTMLReflowCommand(aTargetFrame, aReflowType, aChildFrame, aAttribute);
-  if (nsnull == cmd) {
+  NS_ASSERTION(aInstancePtrResult,
+               "null result passed to NS_NewHTMLReflowCommand");
+
+  *aInstancePtrResult = new nsHTMLReflowCommand(aTargetFrame, aReflowType,
+                                                aChildFrame, aAttribute);
+  if (!*aInstancePtrResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return cmd->QueryInterface(NS_GET_IID(nsIReflowCommand), (void**)aInstancePtrResult);
+  NS_ADDREF(*aInstancePtrResult);
+
+  return NS_OK;
 }
 
 #ifdef DEBUG_jesup
