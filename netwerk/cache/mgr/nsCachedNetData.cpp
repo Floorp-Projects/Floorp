@@ -1052,6 +1052,11 @@ nsCachedNetData::Delete(void)
             // on disk for performance reasons.
         }
 
+        // Since the cache manager recycles us once we are recycled
+        // (with presumably a refcount of 1), tell the refcount logging
+        // that we have been deleted.
+        NS_LOG_RELEASE(this, 0, "nsCachedNetData");
+
         // Now record is available for recycling
         SetFlag(RECYCLED);
         return NS_OK;
