@@ -350,13 +350,13 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->RegisterComponent(kCUrlListenerManagerCID,
                                        "UrlListenerManager",
-                                       "component://netscape/messenger/urlListenerManager",
+                                       NS_URLLISTENERMANAGER_PROGID,
                                        path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kCMessengerBootstrapCID,
                                   "Netscape Messenger Bootstrapper",
-                                  "component://netscape/appshell/component/messenger",
+                                  NS_MESSENGERBOOTSTRAP_PROGID,
                                   path,
                                   PR_TRUE, PR_TRUE);
   if ( NS_SUCCEEDED( rv ) ) {
@@ -383,7 +383,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->RegisterComponent(kCMessengerCID,
                                   "Messenger DOM interaction object",
-                                  "component://netscape/messenger",
+                                  NS_MESSENGER_PROGID,
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
@@ -391,7 +391,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->RegisterComponent(kMsgAccountManagerCID,
                                   "Messenger Account Manager",
-                                  "component://netscape/messenger/account-manager",
+                                  NS_MSGACCOUNTMANAGER_PROGID,
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
@@ -401,21 +401,21 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 
   rv = compMgr->RegisterComponent(kMsgAccountCID,
                                   "Messenger User Account",
-                                  "component://netscape/messenger/account",
+                                  NS_MSGACCOUNT_PROGID,
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kMsgIdentityCID,
                                   "Messenger User Identity",
-                                  "component://netscape/messenger/identity",
+                                  NS_MSGIDENTITY_PROGID,
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
   
   rv = compMgr->RegisterComponent(kCMsgMailSessionCID,
                                   "Mail Session",
-                                  "component://netscape/messenger/services/session",
+                                  NS_MSGMAILSESSION_PROGID,
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
@@ -423,20 +423,20 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   // register our RDF datasources:
   rv = compMgr->RegisterComponent(kMailNewsFolderDataSourceCID, 
                                   "Mail/News Folder Data Source",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "mailnewsfolders",
+                                  NS_MAILNEWSFOLDERDATASOURCE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
   // register our RDF datasources:
   rv = compMgr->RegisterComponent(kMailNewsMessageDataSourceCID, 
                                   "Mail/News Message Data Source",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "mailnewsmessages",
+                                  NS_MAILNEWSMESSAGEDATASOURCE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->RegisterComponent(kCMessageViewDataSourceCID, 
                                   "Mail/News Message View Data Source",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "mail-messageview",
+                                  NS_MESSAGEVIEWDATASOURCE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
@@ -466,33 +466,33 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   printf("register filter service\n");
   rv = compMgr->RegisterComponent(kMsgFilterServiceCID,
                                   "Message Filter Service",
-                                  "component://netscape/messenger/services/filters",
+                                  NS_MSGFILTERSERVICE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 #endif   
   
   rv = compMgr->RegisterComponent(kMsgBiffManagerCID,
                                   "Messenger Biff Manager",
-                                  "component://netscape/messenger/biffManager",
+                                  NS_MSGBIFFMANAGER_PROGID,
                                   path,
                                   PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kMsgNotificationManagerCID,
                                   "Mail/News Notification Manager",
-                                  NS_RDF_DATASOURCE_PROGID_PREFIX "msgnotifications",
+                                  NS_MSGNOTIFICATIONMANAGER_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kCopyMessageStreamListenerCID,
                                   "Mail/News CopyMessage Stream Listener",
-                                  "component://netscape/messenger/copymessagestreamlistener",
+                                  NS_COPYMESSAGESTREAMLISTENER_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
 	rv = compMgr->RegisterComponent(kMsgCopyServiceCID,
                                   "Mail/News Message Copy Service",
-                                  "component://netscape/messenger/messagecopyservice",
+                                  NS_MSGCOPYSERVICE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
