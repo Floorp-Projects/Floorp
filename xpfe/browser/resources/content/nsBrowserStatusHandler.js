@@ -294,7 +294,8 @@ nsBrowserStatusHandler.prototype =
   {
     this.setOverLink("");
 
-    var location = "";
+    var locationURI = null;
+    var location = "";    
 
     if (aLocation) {
       try {
@@ -304,7 +305,9 @@ nsBrowserStatusHandler.prototype =
         // If the url has "wyciwyg://" as the protocol, strip it off.
         // Nobody wants to see it on the urlbar for dynamically generated
         // pages.
-        location = gURIFixup.createExposableURI(aLocation).spec;
+        locationURI = gURIFixup.createExposableURI(aLocation);
+        location = locationURI.spec;
+        
       }
       catch(ex) {
         location = aLocation.spec;
@@ -344,11 +347,20 @@ nsBrowserStatusHandler.prototype =
 
     //clear popupDomain accordingly so that icon will go away when visiting
     //an unblocked site after a blocked site. note: if a popup is blocked 
-    //the icon will stay as long as we are in the same domain.
+    //the icon will stay as long as we are in the same domain.    
+
     if (blank ||
-        !("popupDomain" in browser) ||
-        aLocation.hostPort != browser.popupDomain) {
+        !("popupDomain" in browser)) {
       browser.popupDomain = null;
+    }
+    else {
+      var hostPort = "";
+      try {
+        hostPort = locationURI.hostPort;
+      }
+      catch(ex) { }
+      if (hostPort != browser.popupDomain)
+        browser.popupDomain = null;
     }
 
     var popupIcon = document.getElementById("popupIcon");
