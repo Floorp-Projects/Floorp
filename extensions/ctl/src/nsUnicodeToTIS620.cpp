@@ -163,6 +163,7 @@ NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar* input,
 {
   textRunList txtRuns;
   textRun     *aPtr, *aTmpPtr;
+  int i;
   
 #ifdef DEBUG_prabhath_no_shaper
   printf("Debug/Test Case of No thai pango shaper Object\n");
@@ -213,7 +214,7 @@ NS_IMETHODIMP nsUnicodeToTIS620::Convert(const PRUnichar* input,
   Itemize(input, *aSrcLength, &txtRuns);
 
   aPtr = txtRuns.head;
-  for (int i = 0; i < txtRuns.numRuns; i++) {
+  for (i = 0; i < txtRuns.numRuns; i++) {
     PRInt32 tmpSrcLen = aPtr->length;
     
     if (aPtr->isOther) {
