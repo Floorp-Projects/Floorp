@@ -30,6 +30,10 @@ CSRCS		= \
 	mkaccess.c	\
 	$(NULL)
 
+ifdef MOZ_BRPROF
+CPPSRCS += nsGetBrowsingProfile.cpp
+endif
+
 EXPORTS = mkaccess.h httpurl.h httpauth.h cookies.h 
 
 include $(topsrcdir)/config/rules.mk
