@@ -102,6 +102,7 @@ sub check_registryurl {
 # of the following:
 #
 # t -- A short text entry field (suitable for a single line)
+# p -- A password text entry field
 # l -- A long text field (suitable for many lines)
 # b -- A boolean value (either 1 or 0)
 # i -- An integer.
@@ -143,7 +144,7 @@ DefParam("mysqluser",
 
 DefParam("mysqlpassword",
          "The password of the bonsai database user.",
-         "t",
+         "p",
          "");
 
 DefParam("dbiparam",

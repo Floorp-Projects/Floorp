@@ -55,7 +55,12 @@ foreach my $i (@::param_list) {
                 value_quote($value) . "\">\n";
             last SWITCH;
 	};
-	/^l$/ && do {
+        /^p/ && do {
+            print "<input size=80 type=password name=$i value=\"" .
+                value_quote($value) . "\">\n";
+            last SWITCH;
+        };
+        /^l$/ && do {
             print "<textarea wrap=hard name=$i rows=10 cols=80>" .
                 value_quote($value) . "</textarea>\n";
             last SWITCH;
