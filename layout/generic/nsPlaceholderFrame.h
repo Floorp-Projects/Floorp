@@ -47,15 +47,6 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
-                             nsIContent*     aChild,
-                             nsISupports*    aSubContent);
-
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              nsIAtom* aAttribute,
-                              PRInt32 aHint);
-
   /**
    * Get the "type" of the frame
    *
