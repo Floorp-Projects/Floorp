@@ -135,6 +135,7 @@ table {
 /* border-style: outset; */
   border-color: #c0c0c0;
   border-spacing: 2px; 
+  border-collapse: separate;
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -994,18 +995,18 @@ sourcetext { /* XXX should not be in HTML namespace */
   height: 0;
 }
 
-:-moz-viewport {
+:viewport, :viewport-scroll {
   display: block;
   background-color: inherit;
 }
 
 /* XXX Temporary until @page is supported... */
-:-moz-page {
+:-moz-page, :-moz-page-sequence {
   background: none;
   display: block;
 }
 
-:root {
+:canvas {
   display: block;
   background-color: inherit;
 }
