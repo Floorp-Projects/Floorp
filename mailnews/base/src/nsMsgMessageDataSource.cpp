@@ -63,41 +63,8 @@ nsMsgMessageDataSource::nsMsgMessageDataSource():
   mRDFService(nsnull),
   mHeaderParser(nsnull)
 {
-  nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsIRDFService::GetIID(),
-                                             (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
 
-	rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
-                                          NULL, 
-                                          nsIMsgHeaderParser::GetIID(), 
-                                          (void **) &mHeaderParser);
 
-	nsILocaleFactory *localeFactory; 
-	rv = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
-
-	if(NS_SUCCEEDED(rv) && localeFactory)
-	{
-		rv = localeFactory->GetApplicationLocale(getter_AddRefs(mApplicationLocale));
-		NS_IF_RELEASE(localeFactory);
-	}
-
-	rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
-		kIDateTimeFormatIID, getter_AddRefs(mDateTimeFormat));				
-		
-	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		mailSession->AddFolderListener(this);
-	PR_ASSERT(NS_SUCCEEDED(rv));
-
-  // XXX This call should be moved to a NS_NewMsgFooDataSource()
-  // method that the factory calls, so that failure to construct
-  // will return an error code instead of returning a partially
-  // initialized object.
-  rv = Init();
-  NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh, initialization failed");
-  if (NS_FAILED(rv)) return /* rv */;
-
-  return /* NS_OK */;
 }
 
 nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
@@ -128,25 +95,62 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 
 nsresult nsMsgMessageDataSource::Init()
 {
-  if (mInitialized)
-      return NS_ERROR_ALREADY_INITIALIZED;
+	if (mInitialized)
+		return NS_ERROR_ALREADY_INITIALIZED;
 
-  mRDFService->RegisterDataSource(this, PR_FALSE);
 
-  if (! kNC_Subject) {
+    nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+                                             nsIRDFService::GetIID(),
+                                             (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	mRDFService->RegisterDataSource(this, PR_FALSE);
+	rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
+                                          NULL, 
+                                          nsIMsgHeaderParser::GetIID(), 
+                                          (void **) &mHeaderParser);
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	nsILocaleFactory *localeFactory; 
+	rv = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
+
+	if(NS_SUCCEEDED(rv) && localeFactory)
+	{
+		rv = localeFactory->GetApplicationLocale(getter_AddRefs(mApplicationLocale));
+		NS_IF_RELEASE(localeFactory);
+	}
+
+	if(NS_FAILED(rv))
+		return rv;
+
+	rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
+		kIDateTimeFormatIID, getter_AddRefs(mDateTimeFormat));				
+		
+	if(NS_FAILED(rv))
+		return rv;
+
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		mailSession->AddFolderListener(this);
+	PR_ASSERT(NS_SUCCEEDED(rv));
+	if (! kNC_Subject) {
     
-	mRDFService->GetResource(NC_RDF_SUBJECT, &kNC_Subject);
-	mRDFService->GetResource(NC_RDF_SENDER, &kNC_Sender);
-    mRDFService->GetResource(NC_RDF_DATE, &kNC_Date);
-    mRDFService->GetResource(NC_RDF_STATUS, &kNC_Status);
+		mRDFService->GetResource(NC_RDF_SUBJECT, &kNC_Subject);
+		mRDFService->GetResource(NC_RDF_SENDER, &kNC_Sender);
+		mRDFService->GetResource(NC_RDF_DATE, &kNC_Date);
+		mRDFService->GetResource(NC_RDF_STATUS, &kNC_Status);
 
-    mRDFService->GetResource(NC_RDF_MARKREAD, &kNC_MarkRead);
-    mRDFService->GetResource(NC_RDF_MARKUNREAD, &kNC_MarkUnread);
-    mRDFService->GetResource(NC_RDF_TOGGLEREAD, &kNC_ToggleRead);
+		mRDFService->GetResource(NC_RDF_MARKREAD, &kNC_MarkRead);
+		mRDFService->GetResource(NC_RDF_MARKUNREAD, &kNC_MarkUnread);
+		mRDFService->GetResource(NC_RDF_TOGGLEREAD, &kNC_ToggleRead);
     
-  }
-  mInitialized = PR_TRUE;
-  return NS_OK;
+	}
+	mInitialized = PR_TRUE;
+	return rv;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgMessageDataSource, nsMsgRDFDataSource)
@@ -636,4 +640,23 @@ nsresult nsMsgMessageDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 	return NS_OK;
 }
 
+nsresult
+NS_NewMsgMessageDataSource(const nsIID& iid, void **result)
+{
+    NS_PRECONDITION(result != nsnull, "null ptr");
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
 
+    nsMsgMessageDataSource* datasource = new nsMsgMessageDataSource();
+    if (! datasource)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = datasource->Init();
+    if (NS_FAILED(rv)) {
+        delete datasource;
+        return rv;
+    }
+
+	return datasource->QueryInterface(iid, result);
+}

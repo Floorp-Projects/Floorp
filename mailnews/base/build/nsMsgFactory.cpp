@@ -247,36 +247,15 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
   }
 	else if (mClassID.Equals(kMailNewsFolderDataSourceCID)) 
 	{
-		nsMsgFolderDataSource * folderDataSource = new nsMsgFolderDataSource();
-		if (folderDataSource == nsnull)
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    else {
-      rv = folderDataSource->QueryInterface(aIID, aResult);
-      if (NS_FAILED(rv))
-        delete folderDataSource;
-    }
+		rv = NS_NewMsgFolderDataSource(aIID, aResult);
 	}
 	else if (mClassID.Equals(kMailNewsMessageDataSourceCID)) 
 	{
-		nsMsgMessageDataSource * messageDataSource = new nsMsgMessageDataSource();
-		if (messageDataSource == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
-    else {
-      rv = messageDataSource->QueryInterface(aIID, aResult);
-      if (NS_FAILED(rv))
-        delete messageDataSource;
-    }
+		rv = NS_NewMsgMessageDataSource(aIID, aResult);
 	}
  	else if (mClassID.Equals(kCMessageViewDataSourceCID))
 	{
-		nsMessageViewDataSource * msgView = new nsMessageViewDataSource();
-		if (msgView == nsnull)
-			rv = NS_ERROR_OUT_OF_MEMORY;
-    else {
-      rv =  msgView->QueryInterface(aIID, aResult);
-      if (NS_FAILED(rv))
-        delete msgView;
-    }
+		rv = NS_NewMessageViewDataSource(aIID, aResult);
 	}
 
   // account manager RDF datasources

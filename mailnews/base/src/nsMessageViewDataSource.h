@@ -251,3 +251,7 @@ protected:
 
 };
 #endif
+
+
+PR_EXTERN(nsresult)
+NS_NewMessageViewDataSource(const nsIID& iid, void **result);

@@ -69,17 +69,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource():
   mInitialized(PR_FALSE),
   mRDFService(nsnull)
 {
-    nsresult rv;
-    rv = Init();
 
-    // XXX This call should be moved to a NS_NewMsgFooDataSource()
-    // method that the factory calls, so that failure to construct
-    // will return an error code instead of returning a partially
-    // initialized object.
-    NS_ASSERTION(NS_SUCCEEDED(rv), "uh oh, initialization failed");
-    if (NS_FAILED(rv)) return /* rv */;
-
-    return /* NS_OK */;
 }
 
 nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
@@ -727,6 +717,12 @@ nsMsgFolderDataSource::createFolderSpecialNode(nsIMsgFolder *folder,
     specialFolderString = "Trash";
   else if(flags & MSG_FOLDER_FLAG_QUEUE)
     specialFolderString = "Unsent Messages";
+  else if(flags & MSG_FOLDER_FLAG_SENTMAIL)
+    specialFolderString = "Sent";
+  else if(flags & MSG_FOLDER_FLAG_DRAFTS)
+    specialFolderString = "Drafts";
+  else if(flags & MSG_FOLDER_FLAG_TEMPLATES)
+    specialFolderString = "Templates";
   else
     specialFolderString = "none";
   
@@ -1049,4 +1045,25 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder, nsIRD
 	return rv;
 
 
+}
+
+nsresult
+NS_NewMsgFolderDataSource(const nsIID& iid, void **result)
+{
+    NS_PRECONDITION(result != nsnull, "null ptr");
+    if (! result)
+        return NS_ERROR_NULL_POINTER;
+
+    nsMsgFolderDataSource* datasource = new nsMsgFolderDataSource();
+    if (! datasource)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = datasource->Init();
+    if (NS_FAILED(rv)) {
+        delete datasource;
+        return rv;
+    }
+
+	return datasource->QueryInterface(iid, result);
 }

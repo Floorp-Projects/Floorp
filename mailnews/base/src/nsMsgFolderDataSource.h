@@ -175,3 +175,6 @@ protected:
   static nsIRDFResource* kNC_Move;
 
 };
+
+PR_EXTERN(nsresult)
+NS_NewMsgFolderDataSource(const nsIID& iid, void **result);
