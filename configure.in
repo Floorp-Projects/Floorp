@@ -175,7 +175,8 @@ AC_SUBST(GNU_CXX)
 dnl set the defaults first
 dnl ========================================================
 AR='ar cr $@'
-AS=
+AS='$(CC)'
+ASFLAGS='$(CFLAGS)'
 AS_DASH_C_FLAG='-c'
 NS_USE_NATIVE=
 DLL_SUFFIX="so"
@@ -270,7 +271,6 @@ case "$target" in
     fi
     MKSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso -berok'
     MKCSHLIB='$(AIX_SHLIB_BIN) -p1 -brtl -bso -berok'
-    AS='$(CC)'
     ;;
 
 *-beos*)
@@ -336,8 +336,6 @@ case "$target" in
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(DSO_LDOPTS)'
     MKCSHLIB='$(CC) $(DSO_LDOPTS)'
-    AS='$(CC)'
-    ASFLAGS='$(CFLAGS)'
     if test "$GNU_CC"; then
        MKSHLIB_FORCE_ALL='-Wl,-all'
        MKSHLIB_UNFORCE_ALL='-Wl,-none'
@@ -502,14 +500,10 @@ dnl the qsort routine under solaris is faulty
 
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
-       AS='$(CC)'
-       ASFLAGS='$(CFLAGS)'
     fi
     ;;
 
 *-sunos*) 
-    AS='$(CC)'
-    ASFLAGS='$(CFLAGS)'
     DSO_LDOPTS='-Bdynamic'
     MKSHLIB='-$(LD) $(DSO_LDOPTS)'
     MKCSHLIB='-$(LD) $(DSO_LDOPTS)'
