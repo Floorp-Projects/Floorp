@@ -64,6 +64,7 @@ static NS_DEFINE_IID(kIDOMSelectionIID,     NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kIDOMRangeIID,         NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID,      NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIPresShellIID,        NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIFactoryIID,          NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID,           NS_IEDITOR_IID);
@@ -236,16 +237,28 @@ nsEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-
-
 NS_IMETHODIMP 
 nsEditor::GetDocument(nsIDOMDocument **aDoc)
 {
+  if (!aDoc)
+    return NS_ERROR_NULL_POINTER;
   *aDoc = nsnull; // init out param
   NS_PRECONDITION(mDoc, "bad state, null mDoc");
   if (!mDoc)
-    return NS_ERROR_NULL_POINTER;
+    return NS_ERROR_NOT_INITIALIZED;
   return mDoc->QueryInterface(kIDOMDocumentIID, (void **)aDoc);
+}
+
+nsresult 
+nsEditor::GetPresShell(nsIPresShell **aPS)
+{
+  if (!aPS)
+    return NS_ERROR_NULL_POINTER;
+  *aPS = nsnull; // init out param
+  NS_PRECONDITION(mPresShell, "bad state, null mPresShell");
+  if (!mPresShell)
+    return NS_ERROR_NOT_INITIALIZED;
+  return mPresShell->QueryInterface(kIPresShellIID, (void **)aPS);
 }
 
 
@@ -847,7 +860,7 @@ nsEditor::InsertText(const nsString& aStringToInsert)
 }
 
 NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
-                                          InsertTextTxn ** aTxn)
+                                               InsertTextTxn ** aTxn)
 {
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
@@ -1628,6 +1641,9 @@ nsresult nsIEditorSupport::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParen
   return result;
 }
 
+
+//END nsEditor Private methods
+
 NS_IMETHODIMP nsEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject)
 {
   nsresult result = NS_ERROR_FAILURE;  // we return an error unless we get the index
@@ -1649,7 +1665,6 @@ NS_IMETHODIMP nsEditor::GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayout
   }
   return result;
 }
-
 
 
 //END nsEditor Private methods

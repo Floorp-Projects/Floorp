@@ -88,6 +88,13 @@ public:
    */
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc)=0;
 
+  /**
+   * return the presentation shell this editor is associated with
+   *
+   * @param aPS [OUT] the pres shell, refcounted
+   */
+  NS_IMETHOD GetPresShell(nsIPresShell **aPS)=0;
+
   /** 
    * return the DOM Selection for the presentation shell that has focus
    * (or most recently had focus.)

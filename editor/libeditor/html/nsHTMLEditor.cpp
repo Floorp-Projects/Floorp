@@ -116,32 +116,32 @@ NS_IMETHODIMP nsHTMLEditor::InitHTMLEditor(nsIDOMDocument *aDoc,
   return result;
 }
 
-NS_IMETHODIMP nsHTMLEditor::SetTextProperties(nsISupportsArray *aPropList)
+NS_IMETHODIMP nsHTMLEditor::SetTextProperty(nsIAtom *aProperty)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
   {
-    result = mTextEditor->SetTextProperties(aPropList);
+    result = mTextEditor->SetTextProperty(aProperty);
   }
   return result;
 }
 
-NS_IMETHODIMP nsHTMLEditor::GetTextProperties(nsISupportsArray *aPropList)
+NS_IMETHODIMP nsHTMLEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PRBool &aAll)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
   {
-    result = mTextEditor->GetTextProperties(aPropList);
+    result = mTextEditor->GetTextProperty(aProperty, aAny, aAll);
   }
   return result;
 }
 
-NS_IMETHODIMP nsHTMLEditor::RemoveTextProperties(nsISupportsArray *aPropList)
+NS_IMETHODIMP nsHTMLEditor::RemoveTextProperty(nsIAtom *aProperty)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   if (mEditor)
   {
-    result = mTextEditor->RemoveTextProperties(aPropList);
+    result = mTextEditor->RemoveTextProperty(aProperty);
   }
   return result;
 }

@@ -63,7 +63,7 @@ public:
    * @param aPropList  a list of properties to set across the selection 
    * NOTE: this method is experimental, expect it to change.
    */
-  NS_IMETHOD SetTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD SetTextProperty(nsIAtom *aProperty)=0;
 
   /**
    * GetTextProperties() gets the aggregate properties of the current selection.
@@ -74,7 +74,7 @@ public:
    *                  in the current selection.  Each item in aPropList is an nsEditProperty.
    * NOTE: this method is experimental, expect it to change.
    */
-  NS_IMETHOD GetTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PRBool &aAll)=0;
 
   /**
    * RemoveTextProperties() deletes the properties from all text in the current selection.
@@ -83,7 +83,7 @@ public:
    * @param aElement      the content element to operate on
    * @param aAttribute    the string representation of the attribute to get
    */
-  NS_IMETHOD RemoveTextProperties(nsISupportsArray *aPropList)=0;
+  NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty)=0;
 
   /** 
    * DeleteSelection removes all nodes in the current selection.

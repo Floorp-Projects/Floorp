@@ -86,6 +86,8 @@ public:
 
   NS_IMETHOD GetDocument(nsIDOMDocument **aDoc);
 
+  NS_IMETHOD GetPresShell(nsIPresShell **aPS);
+
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection);
 
   NS_IMETHOD SetProperties(nsVoidArray *aPropList);
@@ -112,7 +114,7 @@ public:
                         nsIDOMNode * aParent,
                         PRInt32      aPosition);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
-
+  
   NS_IMETHOD DeleteNode(nsIDOMNode * aChild);
 
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
@@ -127,7 +129,7 @@ public:
                        nsIDOMNode * aNodeToJoin,
                        nsIDOMNode * aParent,
                        PRBool       aNodeToKeepIsFirst);
-  
+
   NS_IMETHOD InsertBreak(PRBool aCtrlKey);
 
   NS_IMETHOD EnableUndo(PRBool aEnable);

@@ -273,8 +273,8 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent
 }
 
 NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent, 
-                                                   PRUint32    aOffset, 
-                                                   nsIEditor::Direction aDir)
+                                                        PRUint32    aOffset, 
+                                                        nsIEditor::Direction aDir)
 {
   nsresult result;
   // see what kind of node we have
