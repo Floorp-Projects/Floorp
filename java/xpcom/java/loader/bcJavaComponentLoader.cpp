@@ -416,7 +416,7 @@ NS_IMETHODIMP bcJavaComponentLoader::UnloadAll(PRInt32 aWhen) { //nb
 /* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
 static NS_METHOD
 RegisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
-		 const char *registryLocation, const char *componentType)
+		 const char *registryLocation, const char * componentType, const nsModuleComponentInfo *info)
 {
     printf("--JavaLoader got registered\n");
     nsresult rv;
@@ -432,7 +432,7 @@ RegisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 static NS_METHOD
 UnregisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
-		   const char *registryLocation)
+		   const char *registryLocation, const nsModuleComponentInfo *info)
 {
     nsresult rv;
     nsCOMPtr<nsICategoryManager> catman =
@@ -453,11 +453,12 @@ UnregisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(bcJavaComponentLoader);
+
 static nsModuleComponentInfo components[] = {
     { "Java component loader", BC_JAVACOMPONENTLOADER_CID,
       BC_JAVACOMPONENTLOADER_ContractID, 
       bcJavaComponentLoaderConstructor,
-      RegisterJavaLoader, UnregisterJavaLoader }
+      RegisterJavaLoader, UnregisterJavaLoader },
 };
 
 NS_IMPL_NSGETMODULE("Java component loader", components);
