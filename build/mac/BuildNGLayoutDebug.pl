@@ -28,11 +28,11 @@ use Moz;
 # configuration variables
 $DEBUG = 1;
 $ALIAS_SYM_FILES = $DEBUG;
-$CLOBBER_LIBS = 1;			# turn on to clobber existing libs and .xSYM files before
+$CLOBBER_LIBS = 0;			# turn on to clobber existing libs and .xSYM files before
 							# building each project
 $MOZ_FULLCIRCLE = 0;
 
-$pull{all} = 0;
+$pull{all} = 1;
 $pull{lizard} = 0;
 $pull{xpcom} = 0;
 $pull{imglib} = 0;
@@ -48,7 +48,7 @@ $build{common} = 0;
 $build{nglayout} = 0;
 $build{resources} = 0;
 $build{editor} = 0;
-$build(mailnews} = 0;
+$build{mailnews} = 0;
 $build{viewer} = 0;
 $build{xpapp} = 0;
 
@@ -61,13 +61,13 @@ if ($pull{all})
 }
 if ($build{all})
 {
-	$temp = $build(mailnews};
+	$temp = $build{mailnews};
 	
 	foreach $k (keys(%build))
 	{
 		$build{$k} = 1;
 	}
-	$build(mailnews) = $temp;
+	$build{mailnews} = $temp;
 	    # don't turn on mailnews until we are sure that everything is ok on tinderbox
 }
 if ($build{most})
