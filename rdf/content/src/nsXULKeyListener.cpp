@@ -1484,13 +1484,13 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 				switch(aEventType) {
 					case eKeyPress:
 						keyElement->GetAttribute(nsAutoString("onkeypress"), cmdToExecute);
-#if defined(DEBUG_saari) || defined(DEBUG_akkana)
+#if defined(DEBUG_saari)
 						printf("onkeypress = %s\n",
                                cmdToExecute.ToNewCString());
 #endif
 
 						keyElement->GetAttribute(nsAutoString("oncommand"), oncommand);
-#if defined(DEBUG_saari) || defined(DEBUG_akkana)
+#if defined(DEBUG_saari)
 						printf("oncommand = %s\n", oncommand.ToNewCString());
 #endif
 					break;
