@@ -1,15 +1,40 @@
-var zName = "Name";
-var zNickname = "Nickname: ";
-var zDisplayName = "Display Name: ";
-var zWork = "Work: ";
-var zHome = "Home: ";
-var zFax = "Fax: ";
-var zCellular = "Cellular: ";
-var zPager = "Pager: ";
-var zCustom1 = "Custom 1: ";
-var zCustom2 = "Custom 2: ";
-var zCustom3 = "Custom 3: ";
-var zCustom4 = "Custom 4: ";
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * Contributor(s):
+ * Paul Hangas <hangas@netscape.com>
+ * Alec Flett <alecf@netscape.com>
+ */
+
+var Bundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties")
+
+var zName = Bundle.GetStringFromName("propertyName") + ": ";
+var zNickname = Bundle.GetStringFromName("propertyNickname") + ": ";
+var zDisplayName = Bundle.GetStringFromName("propertyDisplayName") + ": ";
+var zWork = Bundle.GetStringFromName("propertyWork") + ": ";
+var zHome = Bundle.GetStringFromName("propertyHome") + ": ";
+var zFax = Bundle.GetStringFromName("propertyFax") + ": ";
+var zCellular = Bundle.GetStringFromName("propertyCellular") + ": ";
+var zPager = Bundle.GetStringFromName("propertyPager") + ": ";
+var zCustom1 = Bundle.GetStringFromName("propertyCustom1") + ": ";
+var zCustom2 = Bundle.GetStringFromName("propertyCustom2") + ": ";
+var zCustom3 = Bundle.GetStringFromName("propertyCustom3") + ": ";
+var zCustom4 = Bundle.GetStringFromName("propertyCustom4") + ": ";
 
 var rdf;
 var cvData;

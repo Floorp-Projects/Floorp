@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,6 +22,8 @@
 
 var editCard;
 var gOnSaveListeners = new Array;
+
+var Bundle = srGetStrBundle("chrome://messenger/locale/addressbook/addressBook.properties");
 
 function OnLoadNewCard()
 {
@@ -152,8 +154,10 @@ function InitEditCard()
 			editCard.generateDisplayName = prefs.GetBoolPref("mail.addr_book.displayName.autoGeneration");
 			editCard.lastFirstSeparator = ", ";
 			editCard.firstLastSeparator = " ";
-			editCard.newCardTitlePrefix = "New Card for ";
-			editCard.editCardTitlePrefix = "Card for ";
+			editCard.newCardTitlePrefix =
+              Bundle.GetStringFromName("newCardTitlePrefix") + " ";
+			editCard.editCardTitlePrefix =
+              Bundle.GetStringFromName("editCardTitlePrefix") + " ";
 		}
 		catch (ex) {
 			dump("failed to get pref\n");
