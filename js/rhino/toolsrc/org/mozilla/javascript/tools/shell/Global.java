@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  * Patrick Beard
+ * Igor Bukanov
  * Norris Boyd
  * Rob Ginda
  * Kurt Westerfeld
@@ -295,6 +296,7 @@ public class Global extends ImporterTopLevel {
             if (args.length > 1 && args[1] instanceof Scriptable) {
                 newArgs = cx.getElements((Scriptable) args[1]);
             }
+            if (newArgs == null) { newArgs = ScriptRuntime.emptyArgs; }
             runner = new Runner(scope, (Function) args[0], newArgs);
         } else if (args.length != 0 && args[0] instanceof Script) {
             runner = new Runner(scope, (Script) args[0]);
@@ -377,7 +379,7 @@ public class Global extends ImporterTopLevel {
     {
         int L = args.length;
         if (L == 0 || (L == 1 && args[0] instanceof Scriptable)) {
-            throw reportRuntimeError("msg.system.args");
+            throw reportRuntimeError("msg.runCommand.bad.args");
         }
 
         InputStream in = null;
@@ -396,7 +398,7 @@ public class Global extends ImporterTopLevel {
                     environment = new String[0];
                 } else {
                     if (!(envObj instanceof Scriptable)) {
-                        throw reportRuntimeError("msg.system.args");
+                        throw reportRuntimeError("msg.runCommand.bad.env");
                     }
                     Scriptable envHash = (Scriptable)envObj;
                     Object[] ids = ScriptableObject.getPropertyIds(envHash);
