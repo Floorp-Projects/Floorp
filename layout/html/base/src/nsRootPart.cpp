@@ -548,14 +548,14 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
           if (mLastContent != mTargetContent) {
             if (nsnull != mLastContent) {
               //fire mouseout
-              nsEventStatus mStatus;
+              nsEventStatus mStatus = nsEventStatus_eIgnore;
               nsMouseEvent mEvent;
               mEvent.eventStructType = NS_MOUSE_EVENT;
               mEvent.message = NS_MOUSE_EXIT;
               mLastContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
             }
             //fire mouseover
-            nsEventStatus mStatus;
+            nsEventStatus mStatus = nsEventStatus_eIgnore;
             nsMouseEvent mEvent;
             mEvent.eventStructType = NS_MOUSE_EVENT;
             mEvent.message = NS_MOUSE_ENTER;
@@ -578,7 +578,7 @@ NS_METHOD RootContentFrame::HandleEvent(nsIPresContext& aPresContext,
           mStateManager->GetLastMouseOverContent(&mLastContent);
           if (nsnull != mLastContent) {
             //fire mouseout
-            nsEventStatus mStatus;
+            nsEventStatus mStatus = nsEventStatus_eIgnore;
             nsMouseEvent mEvent;
             mEvent.eventStructType = NS_MOUSE_EVENT;
             mEvent.message = NS_MOUSE_EXIT;

@@ -402,7 +402,7 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
         ((nsInput*)mContent)->SetClickPoint(NSTwipsToIntPixels(aEvent->point.x, t2p),
                                             NSTwipsToIntPixels(aEvent->point.y, t2p));   
 
-        nsEventStatus mStatus;
+        nsEventStatus mStatus = nsEventStatus_eIgnore;
         nsMouseEvent mEvent;
         mEvent.eventStructType = NS_MOUSE_EVENT;
         mEvent.message = NS_MOUSE_LEFT_CLICK;
