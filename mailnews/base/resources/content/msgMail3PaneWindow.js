@@ -665,30 +665,6 @@ function OnLoadMessenger()
     messengerBox.setAttribute("width","500px");
   }
 
-  if (CheckForUnsentMessages())
-  {
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-    if (!ioService.offline) 
-    {
-      InitPrompts();
-      InitServices();
-
-      if (gPromptService) 
-      {
-        var buttonPressed = gPromptService.confirmEx(window, 
-                            gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
-                            gOfflinePromptsBundle.getString('sendMessagesLabel'),
-                            gPromptService.BUTTON_TITLE_IS_STRING * (gPromptService.BUTTON_POS_0 + 
-                              gPromptService.BUTTON_POS_1),
-                            gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
-                            gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
-                            null, null, {value:0});
-        if (buttonPressed == 0) 
-          SendUnsentMessages();
-      }
-    }
-  }
-
   //Set focus to the Thread Pane the first time the window is opened.
   SetFocusThreadPane();
 }
@@ -819,6 +795,30 @@ function loadStartFolder(initialUri)
     }
 
     MsgGetMessagesForAllServers(defaultServer);
+
+    if (CheckForUnsentMessages())
+    {
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+        if (!ioService.offline) 
+        {
+            InitPrompts();
+            InitServices();
+
+            if (gPromptService) 
+            {
+                var buttonPressed = gPromptService.confirmEx(window, 
+                                    gOfflinePromptsBundle.getString('sendMessagesOfflineWindowTitle'), 
+                                    gOfflinePromptsBundle.getString('sendMessagesLabel'),
+                                    gPromptService.BUTTON_TITLE_IS_STRING * (gPromptService.BUTTON_POS_0 + 
+                                        gPromptService.BUTTON_POS_1),
+                                    gOfflinePromptsBundle.getString('sendMessagesSendButtonLabel'),
+                                    gOfflinePromptsBundle.getString('sendMessagesNoSendButtonLabel'),
+                                    null, null, {value:0});
+                if (buttonPressed == 0) 
+                    SendUnsentMessages();
+            }
+        }
+    }
 }
 
 function TriggerGetMessages(server)
