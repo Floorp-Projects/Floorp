@@ -2,7 +2,14 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
 
-<!DOCTYPE window>
+<!DOCTYPE window
+[
+<!ENTITY home.heading	 "Home">
+<!ENTITY other.heading	 "Other">
+<!ENTITY phone.heading	 "Phone">
+<!ENTITY work.heading	 "Work">
+]>
+
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
@@ -24,7 +31,7 @@
 		
 		<box align="vertical" flex="50%">
 			<box id="cvbName" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhName">Name</html:div>
+				<html:div class="CardViewHeading" hide="true" id="cvhName">*</html:div>
 				<spring class="CardViewHeadingSpace"/>
 				<html:div class="CardViewText" hide="true" id="cvNickname">*</html:div>
 				<html:div class="CardViewText" hide="true" id="cvEmail1">*</html:div>
@@ -33,7 +40,7 @@
 			</box>
 			
 			<box id="cvbHome" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhHome">Home</html:div>
+				<html:div class="CardViewHeading" hide="true" id="cvhHome">&home.heading;</html:div>
 				<spring class="CardViewHeadingSpace"/>
 				<html:div class="CardViewText" hide="true" id="cvHomeAddress">*</html:div>
 				<html:div class="CardViewText" hide="true" id="cvHomeAddress2">*</html:div>
@@ -42,7 +49,7 @@
 			</box>
 			
 			<box id="cvbOther" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhOther">Other</html:div>
+				<html:div class="CardViewHeading" hide="true" id="cvhOther">&other.heading;</html:div>
 				<html:div class="CardViewText" hide="true" id="cvCustom1">*</html:div>
 				<html:div class="CardViewText" hide="true" id="cvCustom2">*</html:div>
 				<html:div class="CardViewText" hide="true" id="cvCustom3">*</html:div>
@@ -55,7 +62,7 @@
 		
 		<box align="vertical" flex="50%">
 			<box id="cvbPhone" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhPhone">Phone</html:div>
+				<html:div class="CardViewHeading" hide="true" id="cvhPhone">&phone.heading;</html:div>
 				<spring class="CardViewHeadingSpace"/>
 				<html:div class="CardViewText" hide="true" id="cvPhWork">*</html:div>
 				<html:div class="CardViewText" hide="true" id="cvPhHome">*</html:div>
@@ -66,7 +73,7 @@
 			</box>
 			
 			<box id="cvbWork" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhWork">Work</html:div>
+				<html:div class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</html:div>
 				<spring class="CardViewHeadingSpace"/>
 				<html:div class="CardViewText" hide="true" id="cvJobTitle">*</html:div>
 				<html:div class="CardViewText" hide="true" id="cvDepartment">*</html:div>
