@@ -28,6 +28,8 @@ pippki.jar:
     content/pippki/domainMismatch.js         (content/domainMismatch.js)
     content/pippki/serverCertExpired.xul     (content/serverCertExpired.xul)
     content/pippki/serverCertExpired.js      (content/serverCertExpired.js)
+    content/pippki/clientauthask.xul	     (content/clientauthask.xul)
+    content/pippki/clientauthask.js			 (content/clientauthask.js)
     content/pippki/certViewer.xul            (content/certViewer.xul)
     content/pippki/certDump.xul              (content/certDump.xul)
     locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
