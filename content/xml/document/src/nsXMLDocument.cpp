@@ -230,7 +230,7 @@ NS_IMETHODIMP
 nsXMLDocument::GetContentType(nsString& aContentType) const
 {
   // XXX Should get document type from incoming stream
-  aContentType.SetString("text/xml");
+  aContentType.Assign("text/xml");
   return NS_OK;
 }
 
