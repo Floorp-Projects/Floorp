@@ -537,6 +537,13 @@ ifndef NO_UNIX_LDAP
 DEFINES		+= -DUNIX_LDAP
 endif
 
+# i'm not sure if SHACK and ENDER still need to be defined explicitly
+# but I will just to be on the safe side. -skinny
+ifdef SMART_MAIL
+DEFINES     += -DSMART_MAIL -DENDER -DSHACK
+endif
+
+
 #
 # Platform dependent switching off of NSPR, JAVA
 #
