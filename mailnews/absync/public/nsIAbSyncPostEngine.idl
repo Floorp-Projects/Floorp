@@ -1,0 +1,51 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+*/
+#include "nsISupports.idl"
+#include "nsIAbSyncPostListener.idl"
+
+[scriptable, uuid(E0ED29D3-BEEF-11d4-8FD6-00A024A7D144)]
+interface nsIAbSyncPostEngineState
+{ 
+  const long nsIAbSyncPostIdle = 0;
+  const long nsIAbSyncPostRunning = 1;
+}; 
+
+[scriptable, uuid(E0ED29D3-098A-11d4-8FD6-00A024A7D144)]
+interface nsIAbSyncPostEngine : nsISupports {
+	/*
+	 * This is the primary interface for posting operations to the 
+	 * Address Book server in the sky
+	 */
+	 
+	/* Add or remove a listener for this particular sync operation */
+	void		AddPostListener(in nsIAbSyncPostListener aListener);
+	void		RemovePostListener(in nsIAbSyncPostListener aListener);
+
+  /* Get the nsIAbSyncPostEngineState of the sync operation */
+  PRInt32 GetCurrentState();
+  
+  /* 
+   * Send the protocol request and get a transaction ID in return that
+   * will be sent along with all sync listener operations
+   */
+  void    SendAbRequest(in string aSpec, in string aProtocolRequest, in PRInt32 aTransactionID);
+};
