@@ -506,6 +506,13 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   if (aName == nsHTMLAtoms::type) {
+    if (!aValue) {
+      // We're now a text input.  Note that we have to handle this manually,
+      // since removing an attribute (which is what happened, since aValue is
+      // null) doesn't call ParseAttribute.
+      mType = NS_FORM_INPUT_TEXT;
+    }
+    
     // If we are changing type from File/Text/Passwd to other input types
     // we need save the mValue into value attribute
     if (mValue &&
