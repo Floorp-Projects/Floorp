@@ -621,7 +621,7 @@ DrawGaugeBorder(HWND hWnd)
 	ReleaseDC(hWnd, hDC);
 }
 
-// Draws the blue progress bar
+// Draws the progress bar
 static void
 DrawProgressBar(HWND hWnd, int nBars)
 {
@@ -642,7 +642,7 @@ DrawProgressBar(HWND hWnd, int nBars)
   else
   {
   	// Draw the bars
-    hBrush = CreateSolidBrush(RGB(0, 0, 128));
+    hBrush = CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
 	  rect.left     = rect.top = BAR_MARGIN;
 	  rect.bottom  -= BAR_MARGIN;
 	  rect.right    = rect.left + BAR_WIDTH;
@@ -662,7 +662,7 @@ DrawProgressBar(HWND hWnd, int nBars)
 	EndPaint(hWnd, &ps);
 }
 
-// Draws the blue progress bar
+// Draws the progress bar
 static void
 DrawBarberBar(HWND hWnd, int nBars)
 {
@@ -685,7 +685,7 @@ DrawBarberBar(HWND hWnd, int nBars)
   {
   	// Draw the bars
     hBrushClear   = CreateSolidBrush(GetSysColor(COLOR_MENU));
-    hBrush        = CreateSolidBrush(RGB(0, 0, 128));
+    hBrush        = CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
 	  rect.left     = rect.top = BAR_MARGIN;
 	  rect.bottom  -= BAR_MARGIN;
 	  rect.right    = rect.left + BAR_WIDTH;
