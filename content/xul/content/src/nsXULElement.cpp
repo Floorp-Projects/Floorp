@@ -33,8 +33,6 @@
  */
 
 #include "jsapi.h"      // for JS_AddNamedRoot and JS_RemoveRootRT
-#include "jsobj.h"      
-#include "jscntxt.h"     
 #include "nsCOMPtr.h"
 #include "nsDOMCID.h"
 #include "nsDOMEvent.h"
@@ -1709,7 +1707,7 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
         // We don't have a prototype; do a one-off compile.
         shared = PR_FALSE;
         context = aContext;
-        scopeObject = NS_STATIC_CAST(JSObject*, aTarget);
+        scopeObject = NS_REINTERPRET_CAST(JSObject*, aTarget);
     }
 
     NS_ASSERTION(context != nsnull, "no script context");
@@ -4134,7 +4132,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     if (NS_FAILED(rv)) return rv;
 
     // Root the compiled prototype script object.
-    JSContext* cx = NS_STATIC_CAST(JSContext*, context->GetNativeContext());
+    JSContext* cx = NS_REINTERPRET_CAST(JSContext*, context->GetNativeContext());
     if (!cx)
         return NS_ERROR_UNEXPECTED;
 

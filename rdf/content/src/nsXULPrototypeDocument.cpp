@@ -38,7 +38,6 @@
 #include "nsString2.h"
 #include "nsVoidArray.h"
 #include "nsXULElement.h"
-#include "jscntxt.h"
 
 
 class nsXULPrototypeDocument : public nsIXULPrototypeDocument,
@@ -348,7 +347,7 @@ nsXULPrototypeDocument::GetScriptObject(nsIScriptContext *aContext, void **aObje
     }
 
     if (! mScriptObject) {
-        JSContext* cx = NS_STATIC_CAST(JSContext*, context->GetNativeContext());
+        JSContext* cx = NS_REINTERPRET_CAST(JSContext*, context->GetNativeContext());
         if (! cx)
             return NS_ERROR_OUT_OF_MEMORY;
 
