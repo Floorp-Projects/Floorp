@@ -359,87 +359,87 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                         nsXPIDLString text, label, shortName;
                         if ( NS_SUCCEEDED( ( rv = brandBundle->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(), 
                                              getter_Copies( shortName ) ) ) ) ) {
-                          const PRUnichar* formatStrings[] = { shortName.get() };
-                          if ( NS_SUCCEEDED( ( rv = bundle->FormatStringFromName( NS_LITERAL_STRING( "promptText" ).get(), 
-                                               formatStrings, 1, getter_Copies( text ) ) ) )
-                               &&
-                               NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "checkBoxLabel" ).get(),
-                                                                               getter_Copies( label ) ) ) ) ) {
-                              // Got the text, now show dialog.
-                              PRBool  showDialog = settings->mShowDialog;
-                              PRInt32 dlgResult  = -1;
-                              // No checkbox for initial display.
-                              const PRUnichar *labelArg = 0;
-                              if ( settings->mHaveBeenSet ) {
-                                  // Subsequent display uses label string.
-                                  labelArg = label;
-                              }
-                              // Note that the buttons need to be passed in this order:
-                              //    o Yes
-                              //    o Cancel
-                              //    o No
-                              rv = promptService->ConfirmEx(aParent, shortName, text,
-                                                            (nsIPromptService::BUTTON_TITLE_YES * nsIPromptService::BUTTON_POS_0) +
-                                                            (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_1) +
-                                                            (nsIPromptService::BUTTON_TITLE_NO * nsIPromptService::BUTTON_POS_2),
-                                                            nsnull, nsnull, nsnull, labelArg, &showDialog, &dlgResult);
-                              
-                              if ( NS_SUCCEEDED( rv ) ) {
-                                  // Did they say go ahead?
-                                  switch ( dlgResult ) {
-                                      case 0:
-                                          // User says: make the changes.
-                                          // Remember "show dialog" choice.
-                                          settings->mShowDialog = showDialog;
-                                          // Apply settings; this single line of
-                                          // code will do different things depending
-                                          // on whether this is the first time (i.e.,
-                                          // when "haveBeenSet" is false).  The first
-                                          // time, this will set all prefs to true
-                                          // (because that's how we initialized 'em
-                                          // in GetSettings, above) and will update the
-                                          // registry accordingly.  On subsequent passes,
-                                          // this will only update the registry (because
-                                          // the settings we got from GetSettings will
-                                          // not have changed).
-                                          //
-                                          // BTW, the term "prefs" in this context does not
-                                          // refer to conventional Mozilla "prefs."  Instead,
-                                          // it refers to "Desktop Integration" prefs which
-                                          // are stored in the windows registry.
-                                          rv = SetSettings( settings );
-                                          #ifdef DEBUG_law
-                                              printf( "Yes, SetSettings returned 0x%08X\n", (int)rv );
-                                          #endif
-                                          break;
+                            const PRUnichar* formatStrings[] = { shortName.get() };
+                            if ( NS_SUCCEEDED( ( rv = bundle->FormatStringFromName( NS_LITERAL_STRING( "promptText" ).get(), 
+                                                  formatStrings, 1, getter_Copies( text ) ) ) )
+                                  &&
+                                  NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "checkBoxLabel" ).get(),
+                                                                                  getter_Copies( label ) ) ) ) ) {
+                                // Got the text, now show dialog.
+                                PRBool  showDialog = settings->mShowDialog;
+                                PRInt32 dlgResult  = -1;
+                                // No checkbox for initial display.
+                                const PRUnichar *labelArg = 0;
+                                if ( settings->mHaveBeenSet ) {
+                                    // Subsequent display uses label string.
+                                    labelArg = label;
+                                }
+                                // Note that the buttons need to be passed in this order:
+                                //    o Yes
+                                //    o Cancel
+                                //    o No
+                                rv = promptService->ConfirmEx(aParent, shortName, text,
+                                                              (nsIPromptService::BUTTON_TITLE_YES * nsIPromptService::BUTTON_POS_0) +
+                                                              (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_1) +
+                                                              (nsIPromptService::BUTTON_TITLE_NO * nsIPromptService::BUTTON_POS_2),
+                                                              nsnull, nsnull, nsnull, labelArg, &showDialog, &dlgResult);
+                                
+                                if ( NS_SUCCEEDED( rv ) ) {
+                                    // Did they say go ahead?
+                                    switch ( dlgResult ) {
+                                        case 0:
+                                            // User says: make the changes.
+                                            // Remember "show dialog" choice.
+                                            settings->mShowDialog = showDialog;
+                                            // Apply settings; this single line of
+                                            // code will do different things depending
+                                            // on whether this is the first time (i.e.,
+                                            // when "haveBeenSet" is false).  The first
+                                            // time, this will set all prefs to true
+                                            // (because that's how we initialized 'em
+                                            // in GetSettings, above) and will update the
+                                            // registry accordingly.  On subsequent passes,
+                                            // this will only update the registry (because
+                                            // the settings we got from GetSettings will
+                                            // not have changed).
+                                            //
+                                            // BTW, the term "prefs" in this context does not
+                                            // refer to conventional Mozilla "prefs."  Instead,
+                                            // it refers to "Desktop Integration" prefs which
+                                            // are stored in the windows registry.
+                                            rv = SetSettings( settings );
+                                            #ifdef DEBUG_law
+                                                printf( "Yes, SetSettings returned 0x%08X\n", (int)rv );
+                                            #endif
+                                            break;
 
-                                      case 2:
-                                          // User says: Don't mess with Windows.
-                                          // We update only the "showDialog" and
-                                          // "haveBeenSet" keys.  Note that this will
-                                          // have the effect of setting all the prefs
-                                          // *off* if the user says no to the initial
-                                          // prompt.
-                                          BoolRegistryEntry( "haveBeenSet" ).set();
-                                          if ( showDialog ) {
-                                              BoolRegistryEntry( "showDialog" ).set();
-                                          } else {
-                                              BoolRegistryEntry( "showDialog" ).reset();
-                                          }
-                                          #ifdef DEBUG_law
-                                              printf( "No, haveBeenSet=1 and showDialog=%d\n", (int)showDialog );
-                                          #endif
-                                          break;
+                                        case 2:
+                                            // User says: Don't mess with Windows.
+                                            // We update only the "showDialog" and
+                                            // "haveBeenSet" keys.  Note that this will
+                                            // have the effect of setting all the prefs
+                                            // *off* if the user says no to the initial
+                                            // prompt.
+                                            BoolRegistryEntry( "haveBeenSet" ).set();
+                                            if ( showDialog ) {
+                                                BoolRegistryEntry( "showDialog" ).set();
+                                            } else {
+                                                BoolRegistryEntry( "showDialog" ).reset();
+                                            }
+                                            #ifdef DEBUG_law
+                                                printf( "No, haveBeenSet=1 and showDialog=%d\n", (int)showDialog );
+                                            #endif
+                                            break;
 
-                                      default:
-                                          // User says: I dunno.  Make no changes (which
-                                          // should produce the same dialog next time).
-                                          #ifdef DEBUG_law
-                                              printf( "Cancel\n" );
-                                          #endif
-                                          break;
-                                  }
-                              }
+                                        default:
+                                            // User says: I dunno.  Make no changes (which
+                                            // should produce the same dialog next time).
+                                            #ifdef DEBUG_law
+                                                printf( "Cancel\n" );
+                                            #endif
+                                            break;
+                                    }
+                                }
                             }
                         }
                     }
