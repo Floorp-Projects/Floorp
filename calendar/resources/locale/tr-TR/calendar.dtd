@@ -66,9 +66,9 @@
 <!ENTITY priority.level.low               "Yavaş">
 <!ENTITY priority.level.low.accesskey     "N">
 <!ENTITY priority.level.medium            "Orta">
-<!ENTITY priority.level.medium.accesskey  "M">
+<!ENTITY priority.level.medium.accesskey  "m">
 <!ENTITY priority.level.high              "Hızlı">
-<!ENTITY priority.level.high.accesskey    "H">
+<!ENTITY priority.level.high.accesskey    "k">
 
 <!ENTITY newevent.title.label        "Başlık" >
 <!ENTITY newevent.location.label     "Konum" >
@@ -216,10 +216,10 @@
 <!ENTITY calendar.events.filter.month.label "Gelecek aydaki olaylar">
 <!ENTITY calendar.events.filter.future.label "Gelecekdeki bütün olaylar">
 <!ENTITY calendar.events.filter.current.label "Güncel seçili gün">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "İlerki 7 gündeki olaylar">
+<!ENTITY calendar.events.filter.next14Days.label "İlerki 14 gündeki olaylar">
+<!ENTITY calendar.events.filter.next31Days.label "İlerki 31 gün içindeki olaylar">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Bu aydaki olaylar">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Tamamlandı">
 <!ENTITY calendar.unifinder.tree.priority.label      "Önemlilik">
@@ -288,7 +288,7 @@
 <!ENTITY calendar.menu.options.modify           "Düzenle" >
 <!ENTITY calendar.menu.options.remove           "Sil" >
 <!ENTITY calendar.menu.options.close            "Pencereyi kapat" >
-<!ENTITY calendar.menu.options.close.key        "">
+<!ENTITY calendar.menu.options.close.key        "w">
 <!ENTITY calendar.menu.options.close.accesskey  "c" >
 
 <!ENTITY calendar.main.tab.label        "Olaylar" >
@@ -340,7 +340,7 @@
 <!ENTITY calendar.context.deleteevent.label           "İşaretli olayı sil">
 <!ENTITY calendar.context.deleteevent.accesskey       "o">
 <!ENTITY calendar.context.deletetask.label            "Görevi sil">
-<!ENTITY calendar.context.deletetask.accesskey        "l">
+<!ENTITY calendar.context.deletetask.accesskey        "L">
 <!ENTITY calendar.context.cutevent.label              "Kes">
 <!ENTITY calendar.context.cutevent.accesskey          "s">
 <!ENTITY calendar.context.copyevent.label             "Kopyala">
@@ -364,7 +364,7 @@
 <!ENTITY calendar.context.emailevent.label            "Seçili olay(lar)ı postala">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
 <!ENTITY calendar.context.emailtask.label             "Görevi postala">
-<!ENTITY calendar.context.emailtask.accesskey         "i">
+<!ENTITY calendar.context.emailtask.accesskey         "P">
 
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "İlerleme">
@@ -387,7 +387,7 @@
                                                                  
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Yeni takvim">
-<!ENTITY calendar.context.newserver.accesskey          "N">
+<!ENTITY calendar.context.newserver.accesskey          "Y">
 <!ENTITY calendar.context.editserver.label             "Takvim düzenle">
 <!ENTITY calendar.context.editserver.accesskey         "e">
 <!ENTITY calendar.context.deleteserver.label           "Takvimleri silr">
@@ -415,7 +415,7 @@
 
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Yeni takvim ekle">
-<!ENTITY calendar.server.dialog.title.open          "">
+<!ENTITY calendar.server.dialog.title.open          "Takvim Dosyasını Aç">
 <!ENTITY calendar.server.dialog.title.edit          "Takvim düzenle">
 <!ENTITY calendar.server.dialog.name.label          "İsim">
 <!ENTITY calendar.server.dialog.publish.label       "Değişiklikler otomatik olarak yayınlansın mı? Bu, uzaktaki takvimler için, olayları eklemeden, düzenlemeden ve silmeden önce yeni sürümünü indirir. İşlemlerinizi performansını artırır ve sunucuya yenı dosyayı yükler.">

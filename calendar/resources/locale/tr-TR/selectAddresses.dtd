@@ -52,5 +52,5 @@
 <!ENTITY ab-selectAddressesDialogPrefixBcc.label "Bcc: ">
 <!ENTITY ab-selectAddressesDialogNoEmailMessage.label "E-Posta adresi yok">
 <!ENTITY ab-selectAddressesDialogInvite.label "Gizle">
-<!ENTITY ab-selectAddressesDialogUninvite.label "Sil">
+<!ENTITY ab-selectAddressesDialogUninvite.label "Kaldır">
 <!ENTITY ab-selectAddressesDialogInviteList.label "Gizli liste:">
