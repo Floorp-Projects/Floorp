@@ -2492,7 +2492,7 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 								 const char *lname_url,
 								 const char *body)
 {
-  int status = 0;
+  int     status = 0;
 
   mimeEmitterStartAttachment(opt, lname, content_type, lname_url);
 
@@ -2586,10 +2586,23 @@ mime_decode_filename(char *name)
 		mail_csid = INTL_CharSetNameToID(s);
 		if (d) *d = '?';
 		win_csid = INTL_DocToWinCharSetID(mail_csid);
-		
-		cvt = MIME_DecodeMimePartIIStr(returnVal, charsetName);
+
+    cvt = MIME_DecodeMimePartIIStr(returnVal, charsetName);
+
+    // rhp - trying to fix header conversion bug
+    //
 		if (cvt && cvt != returnVal)
-			returnVal = cvt;
+    {
+      char *newString = nsnull;
+      PRInt32 res = MIME_ConvertString(charsetName, "UTF-8", cvt, &newString); 
+      if ( (res != 0) || (!newString) )
+        returnVal = cvt;
+      else
+      {
+        PR_FREEIF(cvt);
+        returnVal = newString;
+      }
+    }
 	}
 
 //TODO: naoki - We now have a charset name returned and no need for the hack.
