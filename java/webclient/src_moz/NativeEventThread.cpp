@@ -419,20 +419,16 @@ int processEventLoop(WebShellInitContext * initContext)
     ::PR_Sleep(PR_INTERVAL_NO_WAIT);
     
     if ((initContext->initComplete) && (gActionQueue)) {
+        PLEvent * event = nsnull;
         
         PL_ENTER_EVENT_QUEUE_MONITOR(gActionQueue);
-        
         if (::PL_EventAvailable(gActionQueue)) {
-            
-            PLEvent * event = ::PL_GetEvent(gActionQueue);
-            
-            if (event != nsnull) {
-                ::PL_HandleEvent(event);
-            }
+            event = ::PL_GetEvent(gActionQueue);
         }
-        
         PL_EXIT_EVENT_QUEUE_MONITOR(gActionQueue);
-        
+        if (event != nsnull) {
+            ::PL_HandleEvent(event);
+        }
     }
     if (initContext->stopThread) {
         initContext->stopThread++;
