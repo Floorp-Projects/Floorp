@@ -62,6 +62,7 @@ public:
 protected:
 	// protocol specific code to parse a url...
     virtual nsresult ParseUrl(const nsString& aSpec);
+	virtual const char * GetUserName() { return nsnull;}
 
 	// mailboxurl specific state
 	nsCOMPtr<nsIStreamListener> m_mailboxParser;
