@@ -89,7 +89,6 @@ nsresult nsPrefWindowFactory::CreateInstance(
 {  
 	if (aResult == nsnull)  
 		return NS_ERROR_NULL_POINTER;  
-	nsresult rv = NS_OK;
 	*aResult = nsnull;  
   
 //	if (!mClassID.Equals(nsPrefWindow::GetCID())) 

@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -397,6 +396,10 @@ nsresult nsPrefWindow::InitializeOneWidget(
             NS_RELEASE(specVal);
             break;
         }
+	case eNoType:
+	{
+		NS_ASSERTION(0, "eNoType not handled");
+	}
     }
     return NS_OK;
 } // nsPrefWindow::InitializeOneWidget
@@ -551,6 +554,10 @@ nsresult nsPrefWindow::FinalizeOneWidget(
             NS_RELEASE(specValue);
             break;
         }
+	case eNoType:
+	{
+		NS_ASSERTION(0, "eNoType not handled");
+	}
     }
 //    if (inWidgetType == "checkbox" || inWidgetType = "radio")
 //    {
