@@ -210,7 +210,7 @@ nsCopyOrDeleteCommand::DoCommand(const nsAReadableString & aCommandName, nsISupp
       PRBool isCollapsed;
       rv = selection->GetIsCollapsed(&isCollapsed);
       if (NS_SUCCEEDED(rv) && isCollapsed)
-        return editor->DeleteSelection(nsIEditor::eNext);
+        return editor->DeleteSelection(nsIEditor::eToEndOfLine);
     }
     return editor->Copy();
   }
