@@ -1964,7 +1964,7 @@ public class ScriptRuntime {
             d1 = toNumber(val1);
             d2 = toNumber(val2);
         }
-        return d1 == d1 && d2 == d2 && d1 < d2;
+        return d1 < d2;
     }
 
     public static boolean cmp_LE(Object val1, Object val2)
@@ -1984,7 +1984,7 @@ public class ScriptRuntime {
             d1 = toNumber(val1);
             d2 = toNumber(val2);
         }
-        return d1 == d1 && d2 == d2 && d1 <= d2;
+        return d1 <= d2;
     }
 
     // ------------------

@@ -2129,7 +2129,7 @@ public class Interpreter
         if (rhs == DBL_MRK || lhs == DBL_MRK) {
             double rDbl = stack_double(stack, sDbl, stackTop + 1);
             double lDbl = stack_double(stack, sDbl, stackTop);
-            valBln = (rDbl == rDbl && lDbl == lDbl && rDbl <= lDbl);
+            valBln = (rDbl <= lDbl);
         } else {
             valBln = ScriptRuntime.cmp_LE(rhs, lhs);
         }
@@ -2144,7 +2144,7 @@ public class Interpreter
         if (rhs == DBL_MRK || lhs == DBL_MRK) {
             double rDbl = stack_double(stack, sDbl, stackTop + 1);
             double lDbl = stack_double(stack, sDbl, stackTop);
-            valBln = (rDbl == rDbl && lDbl == lDbl && lDbl <= rDbl);
+            valBln = (lDbl <= rDbl);
         } else {
             valBln = ScriptRuntime.cmp_LE(lhs, rhs);
         }
@@ -2159,7 +2159,7 @@ public class Interpreter
         if (rhs == DBL_MRK || lhs == DBL_MRK) {
             double rDbl = stack_double(stack, sDbl, stackTop + 1);
             double lDbl = stack_double(stack, sDbl, stackTop);
-            valBln = (rDbl == rDbl && lDbl == lDbl && rDbl < lDbl);
+            valBln = (rDbl < lDbl);
         } else {
             valBln = ScriptRuntime.cmp_LT(rhs, lhs);
         }
@@ -2174,7 +2174,7 @@ public class Interpreter
         if (rhs == DBL_MRK || lhs == DBL_MRK) {
             double rDbl = stack_double(stack, sDbl, stackTop + 1);
             double lDbl = stack_double(stack, sDbl, stackTop);
-            valBln = (rDbl == rDbl && lDbl == lDbl && lDbl < rDbl);
+            valBln = (lDbl < rDbl);
         } else {
             valBln = ScriptRuntime.cmp_LT(lhs, rhs);
         }
