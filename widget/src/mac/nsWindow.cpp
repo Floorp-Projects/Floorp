@@ -606,23 +606,47 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
     return NS_OK;
 
   // mac specific cursor manipulation
-	//¥TODO: We need a way to get non-os cursors here.
 	if (nsToolkit::HasAppearanceManager())
 	{
 		short cursor = -1;
-		bool localResource = false;
 	  switch (aCursor)
 	  {
-	    case eCursor_standard:	cursor = kThemeArrowCursor;		break;
-	    case eCursor_wait:			cursor = kThemeWatchCursor;		break;
-	    case eCursor_select:		cursor = kThemeIBeamCursor;		break;
-	    case eCursor_hyperlink:	cursor = kThemePointingHandCursor;		break;
-			case eCursor_sizeWE:		cursor = kThemeResizeLeftRightCursor;	break;
-			case eCursor_sizeNS:		cursor = 129;	localResource = true; 	break;
+	    case eCursor_standard:				cursor = kThemeArrowCursor;						break;
+	    case eCursor_wait:						cursor = kThemeWatchCursor;						break;
+	    case eCursor_select:					cursor = kThemeIBeamCursor;						break;
+	    case eCursor_hyperlink:				cursor = kThemePointingHandCursor;		break;
+			case eCursor_sizeWE:					cursor = kThemeResizeLeftRightCursor;	break;
+			case eCursor_sizeNS:					cursor = 129; 	break;
+			case eCursor_sizeNW:					cursor = 130; 	break;
+			case eCursor_sizeSE:					cursor = 131; 	break;
+			case eCursor_sizeNE:					cursor = 132; 	break;
+			case eCursor_sizeSW:					cursor = 133; 	break;
+			case eCursor_arrow_north:			cursor = 134; 	break;
+			case eCursor_arrow_north_plus:cursor = 135; 	break;
+			case eCursor_arrow_south:			cursor = 136; 	break;
+			case eCursor_arrow_south_plus:cursor = 137; 	break;
+			case eCursor_arrow_west:			cursor = 138; 	break;
+			case eCursor_arrow_west_plus:	cursor = 139; 	break;
+			case eCursor_arrow_east:			cursor = 140; 	break;
+			case eCursor_arrow_east_plus:	cursor = 141; 	break;
+			case eCursor_crosshair:				cursor = kThemeCrossCursor; 					break;
+			case eCursor_move:						cursor = kThemeOpenHandCursor; 				break;
+			case eCursor_help:						cursor = 143; 	break;
+			case eCursor_copy:						cursor = 144; 	break; // CSS3
+			case eCursor_alias:						cursor = 145; 	break;
+			case eCursor_context_menu:		cursor = 146; 	break;
+			case eCursor_cell:						cursor = kThemePlusCursor; 			 			break;
+			case eCursor_grab:						cursor = kThemeOpenHandCursor; 				break;
+			case eCursor_grabbing:				cursor = kThemeClosedHandCursor; 			break;
+			case eCursor_spinning:				cursor = kThemeSpinningCursor; 				break;
+			case eCursor_count_up:				cursor = kThemeCountingUpHandCursor; 					break;
+			case eCursor_count_down:			cursor = kThemeCountingDownHandCursor;				break;
+			case eCursor_count_up_down:		cursor = kThemeCountingUpAndDownHandCursor; 	break;
+
 	  }
 	  if (cursor >= 0)
 	  {
-	  	if (localResource)
+	  	if (cursor >= 128)
 	  	{
 				nsMacResources::OpenLocalResourceFile();
 		  	::SetCursor(*(::GetCursor(cursor)));
@@ -635,19 +659,43 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   else
   {
 		short cursor = -1;
-		bool localResource = false;
 	  switch (aCursor)
 	  {
-	    case eCursor_standard:	::InitCursor();					break;
-	    case eCursor_wait:			cursor = watchCursor;		break;
-	    case eCursor_select:		cursor = iBeamCursor;		break;
-	    case eCursor_hyperlink:	cursor = plusCursor;		break;
-			case eCursor_sizeWE:		cursor = 128;	localResource = true; 	break;
-			case eCursor_sizeNS:		cursor = 129;	localResource = true; 	break;
+	    case eCursor_standard:				::InitCursor();					break;
+	    case eCursor_wait:						cursor = watchCursor;		break;
+	    case eCursor_select:					cursor = iBeamCursor;		break;
+	    case eCursor_hyperlink:				cursor = plusCursor;		break;
+			case eCursor_sizeWE:					cursor = 128; 					break;
+			case eCursor_sizeNS:					cursor = 129; 	break;
+			case eCursor_sizeNW:					cursor = 130; 	break;
+			case eCursor_sizeSE:					cursor = 131; 	break;
+			case eCursor_sizeNE:					cursor = 132; 	break;
+			case eCursor_sizeSW:					cursor = 133; 	break;
+			case eCursor_arrow_north:			cursor = 134; 	break;
+			case eCursor_arrow_north_plus:cursor = 135; 	break;
+			case eCursor_arrow_south:			cursor = 136; 	break;
+			case eCursor_arrow_south_plus:cursor = 137; 	break;
+			case eCursor_arrow_west:			cursor = 138; 	break;
+			case eCursor_arrow_west_plus:	cursor = 139; 	break;
+			case eCursor_arrow_east:			cursor = 140; 	break;
+			case eCursor_arrow_east_plus:	cursor = 141; 	break;
+			case eCursor_crosshair:				cursor = crossCursor; 	break;
+			case eCursor_move:						cursor = 142; 	break;
+			case eCursor_help:						cursor = 143; 	break;
+			case eCursor_copy:						cursor = 144; 	break; // CSS3
+			case eCursor_alias:						cursor = 145; 	break;
+			case eCursor_context_menu:		cursor = 146; 	break;
+			case eCursor_cell:						cursor = plusCursor; 	 break;
+			case eCursor_grab:						cursor = 147; 	break;
+			case eCursor_grabbing:				cursor = 148; 	break;
+			case eCursor_spinning:				cursor = 149; 	break;
+			case eCursor_count_up:				cursor = watchCursor; 	break;
+			case eCursor_count_down:			cursor = watchCursor; 	break;
+			case eCursor_count_up_down:		cursor = watchCursor; 	break;
 	  }
 	  if (cursor > 0)
 	  {
-	  	if (localResource)
+	  	if (cursor >= 128)
 	  	{
 				nsMacResources::OpenLocalResourceFile();
 		  	::SetCursor(*(::GetCursor(cursor)));
