@@ -23,7 +23,7 @@
 // Default configuration information for the client
 //
 
-config("startup.homepage_override_url","http://home.netscape.com/home/first.html");
+config("startup.homepage_override_url","http://www.mozilla.org/mozorg.html");
 config("autoadmin.append_emailaddr",false);
 config("autoadmin.failover_to_cached",true);
 

@@ -146,6 +146,11 @@ static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
 
 #define FILE_PROTOCOL "file://"
 
+#define PREF_HOMEPAGE_OVERRIDE_URL "startup.homepage_override_url"
+#define PREF_HOMEPAGE_OVERRIDE "browser.startup.homepage_override.1"
+#define PREF_BROWSER_STARTUP_PAGE "browser.startup.page"
+#define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
+
 static nsresult
 FindNamedXULElement(nsIWebShell * aShell, const char *aId, nsCOMPtr<nsIDOMElement> * aResult );
 
@@ -2438,20 +2443,32 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 
     nsresult rv;
     nsString args("about:blank");
-    NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
-    NS_WITH_SERVICE(nsIGlobalHistory, history, kCGlobalHistoryCID, &rv);
     nsXPIDLCString url;
 
-    if (NS_SUCCEEDED(rv) && prefs) {
+    nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID));
+    if (!prefs) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
+
+    PRBool override = PR_FALSE;
+    rv = prefs->GetBoolPref(PREF_HOMEPAGE_OVERRIDE, &override);
+    if (NS_SUCCEEDED(rv) && override) {
+        rv = prefs->CopyCharPref(PREF_HOMEPAGE_OVERRIDE_URL, getter_Copies(url));
+        if (NS_SUCCEEDED(rv) && (const char *)url) {
+            rv = prefs->SetBoolPref(PREF_HOMEPAGE_OVERRIDE, PR_FALSE);
+        }
+    }
+        
+    if (!((const char *)url) || (PL_strlen((const char *)url) == 0)) {
         PRInt32 choice = 0;
-        rv = prefs->GetIntPref("browser.startup.page", &choice);
+        rv = prefs->GetIntPref(PREF_BROWSER_STARTUP_PAGE, &choice);
         if (NS_SUCCEEDED(rv)) {
             switch (choice) {
                 case 1:
-                    rv = prefs->CopyCharPref("browser.startup.homepage", getter_Copies(url));
+                    rv = prefs->CopyCharPref(PREF_BROWSER_STARTUP_HOMEPAGE, getter_Copies(url));
                     break;
                 case 2:
-                    if (NS_SUCCEEDED(rv)) {
+                    if (history) {
                         rv = history->GetLastPageVisted(getter_Copies(url));
                     }
                     break;
