@@ -528,6 +528,13 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
   dropdownRect.y = dropdownYOffset; 
   nsRect currentRect;
   dropdownFrame->GetRect(currentRect);
+  ////////////////////////////////////
+  // XXX temporary fix to stop crashing
+  dropdownRect.width  = PR_MAX(dropdownRect.width, 300);
+  dropdownRect.height = PR_MAX(dropdownRect.height, 300);
+  // XXX temporary fix to stop crashing
+  ////////////////////////////////////
+
   //if (currentRect != dropdownRect) {
     dropdownFrame->SetRect(dropdownRect);
 #ifdef DEBUG_rods
@@ -1064,16 +1071,16 @@ nsComboboxControlFrame::SelectionChanged(PRBool aDoDispatchEvent)
       nsIDOMNode* node = nsnull;
       res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
       if (NS_SUCCEEDED(res) && node) {
-	nsIPrivateDOMEvent* pDOMEvent = nsnull;
+	      nsIPrivateDOMEvent* pDOMEvent = nsnull;
         res = DOMEvent->QueryInterface(kIPrivateDOMEventIID, (void**)&pDOMEvent);
         if (NS_SUCCEEDED(res) && pDOMEvent) {
           pDOMEvent->SetTarget(node);
-	  NS_RELEASE(pDOMEvent);
+	        NS_RELEASE(pDOMEvent);
 
            // Have the content handle the event.
           mContent->HandleDOMEvent(*mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, status); 
         }
-	NS_RELEASE(node);
+	      NS_RELEASE(node);
       }
       NS_RELEASE(DOMEvent);
     }
