@@ -130,11 +130,17 @@
     </resources>
     <content>
       <xul:hbox class="updateCategoryBox" xbl:inherits="selected,checked,disabled">
+#ifdef MOZ_WIDGET_GTK2
+        <xul:hbox class="radio-spacer-box">
+#endif
         <xul:hbox class="radio-check-box1" xbl:inherits="selected,checked,disabled">
           <xul:hbox class="radio-check-box2" flex="1">
             <xul:image class="radio-check" xbl:inherits="selected,checked,disabled"/>
           </xul:hbox>
         </xul:hbox>
+#ifdef MOZ_WIDGET_GTK2
+        </xul:hbox>
+#endif
         <xul:image class="updateCategoryIcon" xbl:inherits="src"/>
         <xul:label class="updateCategoryLabel" xbl:inherits="xbl:text=label,accesskey,crop,selected" flex="1"/>
       </xul:hbox>
@@ -225,12 +231,22 @@
 
   <binding id="updateItem" extends="chrome://global/content/bindings/checkbox.xml#checkbox">
     <content>
+#ifdef MOZ_WIDGET_GTK2
+      <xul:hbox class="checkbox-spacer-box">
+#endif
       <xul:image class="checkbox-check" xbl:inherits="checked,disabled"/>
+#ifdef MOZ_WIDGET_GTK2
+      </xul:hbox>
+      <xul:hbox class="checkbox-label-center-box" flex="1">
+#endif
       <xul:hbox class="checkbox-label-box" flex="1">
         <xul:label class="checkbox-label foundLabel" xbl:inherits="xbl:text=label,accesskey" flex="1"/>
         <xul:label class="checkbox-label" value="&from.label;"/>
         <xul:label class="checkbox-label foundSource" xbl:inherits="xbl:text=source,infoURL,accesskey,crop"/>
       </xul:hbox>
+#ifdef MOZ_WIDGET_GTK2
+      </xul:hbox>
+#endif
     </content>
     <implementation>
       <property name="type" 
