@@ -153,11 +153,30 @@ NS_NewPolylineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 #include "nsIDOMDocumentXBL.h"
 #include "nsIScrollable.h"
 #include "nsINodeInfo.h"
+#include "prenv.h"
 
 #ifdef DEBUG
+// Set the environment variable GECKO_FRAMECTOR_DEBUG_FLAGS to one or
+// more of the following flags (comma separated) for handy debug
+// output.
 static PRBool gNoisyContentUpdates = PR_FALSE;
 static PRBool gReallyNoisyContentUpdates = PR_FALSE;
 static PRBool gNoisyInlineConstruction = PR_FALSE;
+static PRBool gVerifyFastFindFrame = PR_FALSE;
+
+struct FrameCtorDebugFlags {
+  char*   name;
+  PRBool* on;
+};
+
+static FrameCtorDebugFlags gFlags[] = {
+  { "content-updates",              &gNoisyContentUpdates },
+  { "really-noisy-content-updates", &gReallyNoisyContentUpdates },
+  { "noisy-inline",                 &gNoisyInlineConstruction },
+  { "fast-find-frame",              &gVerifyFastFindFrame },
+};
+
+#define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
 #endif
 
 
@@ -901,16 +920,54 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(void)
     mGfxScrollFrame(nsnull)
 {
   NS_INIT_REFCNT();
-  
-#ifdef NS_DEBUG
-  mVerifyFastFindFrame = PR_FALSE;
-  // Get the pref for verifying the new fast find frame with hint code.
-  // Note that this makes finding frames *slower* than it was before the fix.
-  nsresult rv;
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && prefs)
-  {
-    prefs->GetBoolPref("nglayout.debug.verifyFastFindFrame", &mVerifyFastFindFrame);
+
+#ifdef DEBUG
+  static PRBool gFirstTime = PR_TRUE;
+  if (gFirstTime) {
+    gFirstTime = PR_FALSE;
+    char* flags = PR_GetEnv("GECKO_FRAMECTOR_DEBUG_FLAGS");
+    if (flags) {
+      PRBool error = PR_FALSE;
+      for (;;) {
+        char* comma = PL_strchr(flags, ',');
+        if (comma)
+          *comma = '\0';
+
+        PRBool found = PR_FALSE;
+        FrameCtorDebugFlags* flag = gFlags;
+        FrameCtorDebugFlags* limit = gFlags + NUM_DEBUG_FLAGS;
+        while (flag < limit) {
+          if (PL_strcasecmp(flag->name, flags) == 0) {
+            *(flag->on) = PR_TRUE;
+            printf("nsCSSFrameConstructor: setting %s debug flag on\n", flag->name);
+            found = PR_TRUE;
+            break;
+          }
+          ++flag;
+        }
+
+        if (! found)
+          error = PR_TRUE;
+
+        if (! comma)
+          break;
+
+        *comma = ',';
+        flags = comma + 1;
+      }
+
+      if (error) {
+        printf("Here are the available GECKO_FRAMECTOR_DEBUG_FLAGS:\n");
+        FrameCtorDebugFlags* flag = gFlags;
+        FrameCtorDebugFlags* limit = gFlags + NUM_DEBUG_FLAGS;
+        while (flag < limit) {
+          printf("  %s\n", flag->name);
+          ++flag;
+        }
+        printf("Note: GECKO_FRAMECTOR_DEBUG_FLAGS is a comma separated list of flag\n");
+        printf("names (no whitespace)\n");
+      }
+    }
   }
 #endif
 }
@@ -8256,6 +8313,16 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       }
     } 
 
+#ifdef DEBUG
+    if (gReallyNoisyContentUpdates) {
+      nsIFrameDebug* fdbg = nsnull;
+      parentFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg);
+      if (fdbg) {
+        printf("nsCSSFrameConstructor::ContentAppended: resulting frame model:\n");
+        fdbg->List(aPresContext, stdout, 0);
+      }
+    }
+#endif
   }
 
   return NS_OK;
@@ -8764,6 +8831,16 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       RemoveDummyFrameFromSelect(aPresContext, shell, aContainer, aChild, selectElement);
     } 
 
+#ifdef DEBUG
+    if (gReallyNoisyContentUpdates) {
+      nsIFrameDebug* fdbg = nsnull;
+      parentFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg);
+      if (fdbg) {
+        printf("nsCSSFrameConstructor::ContentInserted: resulting frame model:\n");
+        fdbg->List(aPresContext, stdout, 0);
+      }
+    }
+#endif
   }
 
   return rv;
@@ -9183,6 +9260,23 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 #endif
     }
 
+#ifdef DEBUG
+    if (gReallyNoisyContentUpdates) {
+      printf("nsCSSFrameConstructor::ContentRemoved: childFrame=");
+      nsFrame::ListTag(stdout, childFrame);
+      printf("\n");
+
+      if (parentFrame) {
+        nsIFrameDebug* fdbg = nsnull;
+        parentFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg);
+        if (fdbg)
+          fdbg->List(aPresContext, stdout, 0);
+      }
+      else
+        printf("  ==> no parent frame\n");
+    }
+#endif
+
     // Walk the frame subtree deleting any out-of-flow frames, and
     // remove the mapping from content objects to frames
     DeletingFrameSubtree(aPresContext, shell, frameManager, childFrame);
@@ -9273,6 +9367,17 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                     nsnull);
       RecoverLetterFrames(shell, aPresContext, state, containingBlock);
     }
+
+#ifdef DEBUG
+    if (gReallyNoisyContentUpdates && parentFrame) {
+      nsIFrameDebug* fdbg = nsnull;
+      parentFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg);
+      if (fdbg) {
+        printf("nsCSSFrameConstructor::ContentRemoved: resulting frame model:\n");
+        fdbg->List(aPresContext, stdout, 0);
+      }
+    }
+#endif
   }
 
   return rv;
@@ -11096,12 +11201,12 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
       printf("FindFrameWithContent returned %p\n", *aFrame);
 #endif
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
       // if we're given a hint and we were told to verify, then compare the resulting frame with
       // the frame we get by calling FindFrameWithContent *without* the hint.  
       // Assert if they do not match
       // Note that this makes finding frames *slower* than it was before the fix.
-      if (mVerifyFastFindFrame && aHint) 
+      if (gVerifyFastFindFrame && aHint) 
       {
 #ifdef NOISY_FINDFRAME
         printf("VERIFYING...\n");
