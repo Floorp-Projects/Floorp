@@ -30,6 +30,11 @@ typedef long           mdb_i4;  // make sure this is four bytes
 typedef long           mdb_ip;  // make sure sizeof(mdb_ip) == sizeof(void*)
 
 typedef mdb_u1 mdb_bool;  // unsigned byte with zero=false, nonzero=true
+
+/* canonical boolean constants provided only for code clarity: */
+#define mdbBool_kTrue  ((mdb_bool) 1) /* actually any nonzero means true */
+#define mdbBool_kFalse ((mdb_bool) 0) /* only zero means false */
+
 typedef mdb_u4 mdb_id;    // unsigned object identity in a scope
 typedef mdb_id mdb_rid;          // unsigned row identity inside scope
 typedef mdb_id mdb_tid;          // unsigned table identity inside scope
@@ -44,6 +49,8 @@ typedef mdb_u4 mdb_size;  // unsigned physical media size
 typedef mdb_u4 mdb_fill;  // unsigned logical content size
 typedef mdb_u4 mdb_more;  // more available bytes for larger buffer
 
+#define mdbId_kNone ((mdb_id) -1) /* never a valid Mork object ID */
+
 typedef mdb_u4 mdb_percent; // 0..100, with values >100 same as 100
 
 typedef mdb_u1 mdb_priority; // 0..9, for a total of ten different values
@@ -54,8 +61,13 @@ typedef mdb_u4 mdb_err;   // equivalent to NS_RESULT
 // sequence position is signed; negative is useful to mean "before first":
 typedef mdb_i4 mdb_pos; // signed zero-based ordinal collection position
 
+#define mdbPos_kBeforeFirst ((mdb_pos) -1) /* any negative is before zero */
+
 // order is also signed, so we can use three states for comparison order:
 typedef mdb_i4 mdb_order; // neg:lessthan, zero:equalto, pos:greaterthan 
+
+typedef mdb_order (* mdbAny_Order)(const void* inA, const void* inB, 
+  const void* inClosure);
 
 // } %%%%% end scalar typedefs %%%%%
 
@@ -175,21 +187,6 @@ struct mdbColumnSet { // array of column tokens (just the same as mdbTokenSet)
   mdb_column*  mColumnSet_Columns;  // count mdb_column instances
 };
 #endif /*mdbColumnSet_struct*/
-
-#ifndef mdbSearch_typedef
-typedef struct mdbSearch mdbSearch;
-#define mdbSearch_typedef 1
-#endif
-
-#ifndef mdbSearch_struct
-#define mdbSearch_struct 1
-struct mdbSearch { // parallel in and out arrays for search results
-  mdb_count    mSearch_Count;    // number of columns and ranges
-  mdb_column*  mSearch_Columns;  // count mdb_column instances
-  mdbRange*    mSearch_Ranges;   // count mdbRange instances
-};
-#define mdbSearch_AsColumnSet(me) ((me)->mSearch_Count, (mdbColumnSet*) (me))
-#endif /*mdbSearch_struct*/
 
 #ifndef mdbYarn_typedef
 typedef struct mdbYarn mdbYarn;
@@ -327,6 +324,7 @@ class nsIMdbRow;
 class nsIMdbRowCellCursor;
 class nsIMdbBlob;
 class nsIMdbCell;
+class nsIMdbSorting;
 // } %%%%% end class forward defines %%%%%
 
 // { %%%%% begin temporary dummy base class for class hierarchy %%%%%
@@ -435,6 +433,9 @@ public:
     const mdbYarn* inFirst,   // first yarn in comparison
     const mdbYarn* inSecond,  // second yarn in comparison
     mdb_order* outOrder) = 0; // negative="<", zero="=", positive=">"
+    
+  virtual mdb_err AddStrongRef(nsIMdbEnv* ev) = 0; // does nothing
+  virtual mdb_err CutStrongRef(nsIMdbEnv* ev) = 0; // does nothing
 // } ===== end nsIMdbCompare methods =====
   
 };
@@ -626,7 +627,8 @@ public:
 
   // { ----- begin file methods -----
   virtual mdb_err OpenOldFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
-    const char* inFilePath, mdb_bool inFrozen, nsIMdbFile** acqFile) = 0;
+    const char* inFilePath,
+    mdb_bool inFrozen, nsIMdbFile** acqFile) = 0;
   // Choose some subclass of nsIMdbFile to instantiate, in order to read
   // (and write if not frozen) the file known by inFilePath.  The file
   // returned should be open and ready for use, and presumably positioned
@@ -635,7 +637,8 @@ public:
   // other portions or Mork source code don't want to know how it's done.
 
   virtual mdb_err CreateNewFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
-    const char* inFilePath, nsIMdbFile** acqFile) = 0;
+    const char* inFilePath,
+    nsIMdbFile** acqFile) = 0;
   // Choose some subclass of nsIMdbFile to instantiate, in order to read
   // (and write if not frozen) the file known by inFilePath.  The file
   // returned should be created and ready for use, and presumably positioned
@@ -653,6 +656,10 @@ public:
   virtual mdb_err MakeHeap(nsIMdbEnv* ev, nsIMdbHeap** acqHeap) = 0; // acquire new heap
   // } ----- end heap methods -----
 
+  // { ----- begin compare methods -----
+  virtual mdb_err MakeCompare(nsIMdbEnv* ev, nsIMdbCompare** acqCompare) = 0; // ASCII
+  // } ----- end compare methods -----
+
   // { ----- begin row methods -----
   virtual mdb_err MakeRow(nsIMdbEnv* ev, nsIMdbHeap* ioHeap, nsIMdbRow** acqRow) = 0; // new row
   // ioHeap can be nil, causing the heap associated with ev to be used
@@ -661,15 +668,17 @@ public:
   // { ----- begin port methods -----
   virtual mdb_err CanOpenFilePort(
     nsIMdbEnv* ev, // context
-    const char* inFilePath, // the file to investigate
-    const mdbYarn* inFirst512Bytes,
+    // const char* inFilePath, // the file to investigate
+    // const mdbYarn* inFirst512Bytes,
+    nsIMdbFile* ioFile, // db abstract file interface
     mdb_bool* outCanOpen, // whether OpenFilePort() might succeed
     mdbYarn* outFormatVersion) = 0; // informal file format description
     
   virtual mdb_err OpenFilePort(
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-    const char* inFilePath, // the file to open for readonly import
+    // const char* inFilePath, // the file to open for readonly import
+    nsIMdbFile* ioFile, // db abstract file interface
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
     nsIMdbThumb** acqThumb) = 0; // acquire thumb for incremental port open
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
@@ -684,8 +693,9 @@ public:
   // { ----- begin store methods -----
   virtual mdb_err CanOpenFileStore(
     nsIMdbEnv* ev, // context
-    const char* inFilePath, // the file to investigate
-    const mdbYarn* inFirst512Bytes,
+    // const char* inFilePath, // the file to investigate
+    // const mdbYarn* inFirst512Bytes,
+    nsIMdbFile* ioFile, // db abstract file interface
     mdb_bool* outCanOpenAsStore, // whether OpenFileStore() might succeed
     mdb_bool* outCanOpenAsPort, // whether OpenFilePort() might succeed
     mdbYarn* outFormatVersion) = 0; // informal file format description
@@ -693,7 +703,8 @@ public:
   virtual mdb_err OpenFileStore( // open an existing database
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-    const char* inFilePath, // the file to open for general db usage
+    // const char* inFilePath, // the file to open for general db usage
+    nsIMdbFile* ioFile, // db abstract file interface
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
     nsIMdbThumb** acqThumb) = 0; // acquire thumb for incremental store open
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
@@ -708,7 +719,8 @@ public:
   virtual mdb_err CreateNewFileStore( // create a new db with minimal content
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
-    const char* inFilePath, // name of file which should not yet exist
+    // const char* inFilePath, // name of file which should not yet exist
+    nsIMdbFile* ioFile, // db abstract file interface
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
     nsIMdbStore** acqStore) = 0; // acquire new db store object
   // } ----- end store methods -----
@@ -923,6 +935,10 @@ public:
     nsIMdbEnv* ev, // context
     mdbYarn* outFilePath, // name of file holding port content
     mdbYarn* outFormatVersion) = 0; // file format description
+    
+  virtual mdb_err GetPortFile(
+    nsIMdbEnv* ev, // context
+    nsIMdbFile** acqFile) = 0; // acquire file used by port or store
   // } ----- end filepath methods -----
 
   // { ----- begin export methods -----
@@ -955,7 +971,8 @@ public:
 
   virtual mdb_err ExportToFormat( // export content in given specific format
     nsIMdbEnv* ev, // context
-    const char* inFilePath, // the file to receive exported content
+    // const char* inFilePath, // the file to receive exported content
+    nsIMdbFile* ioFile, // destination abstract file interface
     const char* inFormatVersion, // file format description
     nsIMdbThumb** acqThumb) = 0; // acquire thumb for incremental export
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
@@ -1287,6 +1304,13 @@ public:
     nsIMdbEnv* ev, // context
     mdb_scope inRowScope, // scope for rows (or zero for all?)
     nsIMdbPort* ioPort, // the port with content to add to store
+    nsIMdbThumb** acqThumb) = 0; // acquire thumb for incremental import
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then the import will be finished.
+
+  virtual mdb_err ImportFile( // import content from port
+    nsIMdbEnv* ev, // context
+    nsIMdbFile* ioFile, // the file with content to add to store
     nsIMdbThumb** acqThumb) = 0; // acquire thumb for incremental import
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the import will be finished.
@@ -1642,7 +1666,7 @@ public:
     // meta row is created, it will have the row oid that was previously
     // requested for this table's meta row; or if no oid was ever explicitly
     // specified for this meta row, then a unique oid will be generated in
-    // the row scope named "metaScope" (so obviously MDB clients should not
+    // the row scope named "m" (so obviously MDB clients should not
     // manually allocate any row IDs from that special meta scope namespace).
     // The meta row oid can be specified either when the table is created, or
     // else the first time that GetMetaRow() is called, by passing a non-nil
@@ -1720,23 +1744,6 @@ public:
     nsIMdbEnv* ev) = 0; // context
   // } ----- end row set methods -----
 
-  // { ----- begin searching methods -----
-  virtual mdb_err SearchOneSortedColumn( // search only currently sorted col
-    nsIMdbEnv* ev, // context
-    const mdbYarn* inPrefix, // content to find as prefix in row's column cell
-    mdbRange* outRange) = 0; // range of matching rows
-    
-  virtual mdb_err SearchManyColumns( // search variable number of sorted cols
-    nsIMdbEnv* ev, // context
-    const mdbYarn* inPrefix, // content to find as prefix in row's column cell
-    mdbSearch* ioSearch, // columns to search and resulting ranges
-    nsIMdbThumb** acqThumb) = 0; // acquire thumb for incremental search
-  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then the search will be finished.  Until that time, the ioSearch argument
-  // is assumed referenced and used by the thumb; one should not inspect any
-  // output results in ioSearch until after the thumb is finished with it.
-  // } ----- end searching methods -----
-
   // { ----- begin hinting methods -----
   virtual mdb_err SearchColumnsHint( // advise re future expected search cols  
     nsIMdbEnv* ev, // context
@@ -1752,6 +1759,7 @@ public:
     // If batch starts nest by virtue of nesting calls in the stack, then
     // the address of a local variable makes a good batch start label that
     // can be used at batch end time, and such addresses remain unique.
+    
   virtual mdb_err EndBatchChangeHint( // advise before many adds and cuts  
     nsIMdbEnv* ev, // context
     const void* inLabel) = 0; // label matching start label
@@ -1766,6 +1774,30 @@ public:
     // a surprise request occurs for row position during batch changes.
   // } ----- end hinting methods -----
 
+  // { ----- begin searching methods -----
+  virtual mdb_err FindRowMatches( // search variable number of sorted cols
+    nsIMdbEnv* ev, // context
+    const mdbYarn* inPrefix, // content to find as prefix in row's column cell
+    nsIMdbTableRowCursor** acqCursor) = 0; // set of matching rows
+    
+  virtual mdb_err GetSearchColumns( // query columns used by FindRowMatches()
+    nsIMdbEnv* ev, // context
+    mdb_count* outCount, // context
+    mdbColumnSet* outColSet) = 0; // caller supplied space to put columns
+    // GetSearchColumns() returns the columns actually searched when the
+    // FindRowMatches() method is called.  No more than mColumnSet_Count
+    // slots of mColumnSet_Columns will be written, since mColumnSet_Count
+    // indicates how many slots are present in the column array.  The
+    // actual number of search column used by the table is returned in
+    // the outCount parameter; if this number exceeds mColumnSet_Count,
+    // then a caller needs a bigger array to read the entire column set.
+    // The minimum of mColumnSet_Count and outCount is the number slots
+    // in mColumnSet_Columns that were actually written by this method.
+    //
+    // Callers are expected to change this set of columns by calls to
+    // nsIMdbTable::SearchColumnsHint() or SetSearchSorting(), or both.
+  // } ----- end searching methods -----
+
   // { ----- begin sorting methods -----
   // sorting: note all rows are assumed sorted by row ID as a secondary
   // sort following the primary column sort, when table rows are sorted.
@@ -1775,46 +1807,38 @@ public:
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to query sorting potential
     mdb_bool* outCanSort) = 0; // whether the column can be sorted
-  
-  virtual mdb_err
-  NewSortColumn( // change the column used for sorting in the table
-    nsIMdbEnv* ev, // context
-    mdb_column inColumn, // requested new column for sorting table
-    mdb_column* outActualColumn, // column actually used for sorting
-    nsIMdbThumb** acqThumb) = 0; // acquire thumb for incremental table resort
-  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then the sort will be finished. 
-  
-  virtual mdb_err
-  NewSortColumnWithCompare( // change sort column with explicit compare
-    nsIMdbEnv* ev, // context
-    nsIMdbCompare* ioCompare, // explicit interface for yarn comparison
-    mdb_column inColumn, // requested new column for sorting table
-    mdb_column* outActualColumn, // column actually used for sorting
-    nsIMdbThumb** acqThumb) = 0; // acquire thumb for incremental table resort
-  // Note the table will hold a reference to inCompare if this object is used
-  // to sort the table.  Until the table closes, callers can only force release
-  // of the compare object by changing the sort (by say, changing to unsorted).
-  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then the sort will be finished. 
-  
-  virtual mdb_err GetSortColumn( // query which col is currently sorted
-    nsIMdbEnv* ev, // context
-    mdb_column* outColumn) = 0; // col the table uses for sorting (or zero)
-
-  
-  virtual mdb_err CloneSortColumn( // view same table with a different sort
-    nsIMdbEnv* ev, // context
-    mdb_column inColumn, // requested new column for sorting table
-    nsIMdbThumb** acqThumb) = 0; // acquire thumb for incremental table clone
-  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then call nsIMdbTable::ThumbToCloneSortTable() to get the table instance.
     
-  virtual mdb_err
-  ThumbToCloneSortTable( // redeem complete CloneSortColumn() thumb
+  virtual mdb_err GetSorting( // view same table in particular sorting
     nsIMdbEnv* ev, // context
-    nsIMdbThumb* ioThumb, // thumb from CloneSortColumn() with done status
-    nsIMdbTable** acqTable) = 0; // new table instance (or old if sort unchanged)
+    mdb_column inColumn, // requested new column for sorting table
+    nsIMdbSorting** acqSorting) = 0; // acquire sorting for column
+    
+  virtual mdb_err SetSearchSorting( // use this sorting in FindRowMatches()
+    nsIMdbEnv* ev, // context
+    mdb_column inColumn, // often same as nsIMdbSorting::GetSortColumn()
+    nsIMdbSorting* ioSorting) = 0; // requested sorting for some column
+    // SetSearchSorting() attempts to inform the table that ioSorting
+    // should be used during calls to FindRowMatches() for searching
+    // the column which is actually sorted by ioSorting.  This method
+    // is most useful in conjunction with nsIMdbSorting::SetCompare(),
+    // because otherwise a caller would not be able to override the
+    // comparison ordering method used during searchs.  Note that some
+    // database implementations might be unable to use an arbitrarily
+    // specified sort order, either due to schema or runtime interface
+    // constraints, in which case ioSorting might not actually be used.
+    // Presumably ioSorting is an instance that was returned from some
+    // earlier call to nsIMdbTable::GetSorting().  A caller can also
+    // use nsIMdbTable::SearchColumnsHint() to specify desired change
+    // in which columns are sorted and searched by FindRowMatches().
+    //
+    // A caller can pass a nil pointer for ioSorting to request that
+    // column inColumn no longer be used at all by FindRowMatches().
+    // But when ioSorting is non-nil, then inColumn should match the
+    // column actually sorted by ioSorting; when these do not agree,
+    // implementations are instructed to give precedence to the column
+    // specified by ioSorting (so this means callers might just pass
+    // zero for inColumn when ioSorting is also provided, since then
+    // inColumn is both redundant and ignored).
   // } ----- end sorting methods -----
 
   // { ----- begin moving methods -----
@@ -1873,6 +1897,91 @@ public:
 // } ===== end nsIMdbTable methods =====
 };
 
+/*| nsIMdbSorting: a view of a table in some particular sort order.  This
+**| row order closely resembles a readonly array of rows with the same row
+**| membership as the underlying table, but in a different order than the
+**| table's explicit row order.  But the sorting's row membership changes
+**| whenever the table's membership changes (without any notification, so
+**| keep this in mind when modifying the table).
+**|
+**|| table: every sorting is associated with a particular table.  You
+**| cannot change which table is used by a sorting (just ask some new
+**| table for a suitable sorting instance instead).
+**|
+**|| compare: the ordering method used by a sorting, wrapped up in a
+**| abstract plug-in interface.  When this was never installed by an
+**| explicit call to SetNewCompare(), a compare object is still returned,
+**| and it might match the compare instance returned by the factory method
+**| nsIMdbFactory::MakeCompare(), which represents a default sort order
+**| (which we fervently hope is consistently ASCII byte ordering).
+**|
+**|| cursor: in case callers are more comfortable with a cursor style
+**| of accessing row members, each sorting will happily return a cursor
+**| instance with behavior very similar to a cursor returned from a call
+**| to nsIMdbTable::GetTableRowCursor(), but with different row order.
+**| A cursor should show exactly the same information as the pos methods.
+**|
+**|| pos: the PosToOid() and PosToRow() methods are just like the table
+**| methods of the same name, except they show rows in the sort order of 
+**| the sorting, rather than that of the table.  These methods are like
+**| readonly array position accessor's, or like a C++ operator[].
+|*/
+class nsIMdbSorting : public nsIMdbObject { // sorting of some table
+public:
+// { ===== begin nsIMdbSorting methods =====
+
+  // { ----- begin attribute methods -----
+  // sorting: note all rows are assumed sorted by row ID as a secondary
+  // sort following the primary column sort, when table rows are sorted.
+  
+  virtual mdb_err GetTable(nsIMdbEnv* ev, nsIMdbTable** acqTable) = 0;
+  virtual mdb_err GetSortColumn( // query which col is currently sorted
+    nsIMdbEnv* ev, // context
+    mdb_column* outColumn) = 0; // col the table uses for sorting (or zero)
+
+  virtual mdb_err SetNewCompare(nsIMdbEnv* ev,
+    nsIMdbCompare* ioNewCompare) = 0;
+    // Setting the sorting's compare object will typically cause the rows
+    // to be resorted, presumably in a lazy fashion when the sorting is
+    // next required to be in a valid row ordering state, such as when a
+    // call to PosToOid() happens.  ioNewCompare can be nil, in which case
+    // implementations should revert to the default sort order, which must
+    // be equivalent to whatever is used by nsIMdbFactory::MakeCompare().
+
+  virtual mdb_err GetOldCompare(nsIMdbEnv* ev,
+    nsIMdbCompare** acqOldCompare) = 0;
+    // Get this sorting instance's compare object, which handles the
+    // ordering of rows in the sorting, by comparing yarns from the cells
+    // in the column being sorted.  Since nsIMdbCompare has no interface
+    // to query the state of the compare object, it is not clear what you
+    // would do with this object when returned, except maybe compare it
+    // as a pointer address to some other instance, to check identities.
+  
+  // } ----- end attribute methods -----
+
+  // { ----- begin cursor methods -----
+  virtual mdb_err GetSortingRowCursor( // make a cursor, starting at inRowPos
+    nsIMdbEnv* ev, // context
+    mdb_pos inRowPos, // zero-based ordinal position of row in table
+    nsIMdbTableRowCursor** acqCursor) = 0; // acquire new cursor instance
+    // A cursor interface turning same info as PosToOid() or PosToRow().
+  // } ----- end row position methods -----
+
+  // { ----- begin row position methods -----
+  virtual mdb_err PosToOid( // get row member for a table position
+    nsIMdbEnv* ev, // context
+    mdb_pos inRowPos, // zero-based ordinal position of row in table
+    mdbOid* outOid) = 0; // row oid at the specified position
+    
+  virtual mdb_err PosToRow( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
+    mdb_pos inRowPos, // zero-based ordinal position of row in table
+    nsIMdbRow** acqRow) = 0; // acquire row at table position inRowPos
+  // } ----- end row position methods -----
+
+// } ===== end nsIMdbSorting methods =====
+};
+
 /*| nsIMdbTableRowCursor: cursor class for iterating table rows
 **|
 **|| table: the cursor is associated with a specific table, which can be
@@ -1903,9 +2012,41 @@ public:
 // { ===== begin nsIMdbTableRowCursor methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err SetTable(nsIMdbEnv* ev, nsIMdbTable* ioTable) = 0; // sets pos to -1
+  // virtual mdb_err SetTable(nsIMdbEnv* ev, nsIMdbTable* ioTable) = 0; // sets pos to -1
+  // Method SetTable() cut and made obsolete in keeping with new sorting methods.
+  
   virtual mdb_err GetTable(nsIMdbEnv* ev, nsIMdbTable** acqTable) = 0;
   // } ----- end attribute methods -----
+
+  // { ----- begin duplicate row removal methods -----
+  virtual mdb_err CanHaveDupRowMembers(nsIMdbEnv* ev, // cursor might hold dups?
+    mdb_bool* outCanHaveDups) = 0;
+    
+  virtual mdb_err MakeUniqueCursor( // clone cursor, removing duplicate rows
+    nsIMdbEnv* ev, // context
+    nsIMdbTableRowCursor** acqCursor) = 0;    // acquire clone with no dups
+    // Note that MakeUniqueCursor() is never necessary for a cursor which was
+    // created by table method nsIMdbTable::GetTableRowCursor(), because a table
+    // never contains the same row as a member more than once.  However, a cursor
+    // created by table method nsIMdbTable::FindRowMatches() might contain the
+    // same row more than once, because the same row can generate a hit by more
+    // than one column with a matching string prefix.  Note this method can
+    // return the very same cursor instance with just an incremented refcount,
+    // when the original cursor could not contain any duplicate rows (calling
+    // CanHaveDupRowMembers() shows this case on a false return).  Otherwise
+    // this method returns a different cursor instance.  Callers should not use
+    // this MakeUniqueCursor() method lightly, because it tends to defeat the
+    // purpose of lazy programming techniques, since it can force creation of
+    // an explicit row collection in a new cursor's representation, in order to
+    // inspect the row membership and remove any duplicates; this can have big
+    // impact if a collection holds tens of thousands of rows or more, when
+    // the original cursor with dups simply referenced rows indirectly by row
+    // position ranges, without using an explicit row set representation.
+    // Callers are encouraged to use nsIMdbCursor::GetCount() to determine
+    // whether the row collection is very large (tens of thousands), and to
+    // delay calling MakeUniqueCursor() when possible, until a user interface
+    // element actually demands the creation of an explicit set representation.
+  // } ----- end duplicate row removal methods -----
 
   // { ----- begin oid iteration methods -----
   virtual mdb_err NextRowOid( // get row id of next row in the table
@@ -1922,17 +2063,17 @@ public:
   // } ----- end row iteration methods -----
 
   // { ----- begin copy iteration methods -----
-  virtual mdb_err NextRowCopy( // put row cells into sink only when already in sink
-    nsIMdbEnv* ev, // context
-    nsIMdbRow* ioSinkRow, // sink for row cells read from next row
-    mdbOid* outOid, // out row oid
-    mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
-
-  virtual mdb_err NextRowCopyAll( // put all row cells into sink, adding to sink
-    nsIMdbEnv* ev, // context
-    nsIMdbRow* ioSinkRow, // sink for row cells read from next row
-    mdbOid* outOid, // out row oid
-    mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
+  // virtual mdb_err NextRowCopy( // put row cells into sink only when already in sink
+  //   nsIMdbEnv* ev, // context
+  //   nsIMdbRow* ioSinkRow, // sink for row cells read from next row
+  //   mdbOid* outOid, // out row oid
+  //   mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
+  // 
+  // virtual mdb_err NextRowCopyAll( // put all row cells into sink, adding to sink
+  //   nsIMdbEnv* ev, // context
+  //   nsIMdbRow* ioSinkRow, // sink for row cells read from next row
+  //   mdbOid* outOid, // out row oid
+  //   mdb_pos* outRowPos) = 0;    // zero-based position of the row in table
   // } ----- end copy iteration methods -----
 
 // } ===== end nsIMdbTableRowCursor methods =====
