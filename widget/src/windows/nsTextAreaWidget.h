@@ -64,6 +64,8 @@ public:
     virtual void            SetCaretPosition(PRUint32 aPosition);
     virtual PRUint32        GetCaretPosition();
 
+    virtual void            SetUpForPaint(HDC aHDC);
+
 protected:
 
     virtual LPCTSTR         WindowClass();
