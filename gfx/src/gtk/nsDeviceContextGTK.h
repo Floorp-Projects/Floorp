@@ -35,8 +35,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
-  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo& aPaletteInfo);
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
@@ -52,9 +50,6 @@ public:
 
 protected:
   ~nsDeviceContextGTK();
-
-  void InstallColormap(void);
-  void AllocDefaultColors(void);
 
 private:
   PRUint32      mDepth;

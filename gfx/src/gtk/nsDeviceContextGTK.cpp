@@ -82,68 +82,12 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   
   mWidget = aNativeWidget;
   
-  // ugh magic numbers here: what are 25.4 and 72 (dpi?)
+  // Calculate mTwipsToPixels as  (pixels/inch) / (twips/inch)
   mTwipsToPixels = 
     (float)(((::gdk_screen_width()/::gdk_screen_width_mm()) * 25.4) /
             (float)NSIntPointsToTwips(72));
 
   mPixelsToTwips = 1.0f / mTwipsToPixels;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextGTK::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
-{
-  aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
-  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
-  aPaletteInfo.numReserved = mPaletteInfo.numReserved;
-  aPaletteInfo.palette = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextGTK::GetILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-  InstallColormap();
-  
-  if ((8 == mDepth) && mPaletteInfo.isPaletteDevice) 
-    {
-      // First implement AllocDefaultColors
-    }
-  else if (16 == mDepth) 
-    {
-      // 
-      // 16-BIT Visual
-      //
-      IL_RGBBits colorRGBBits;
-      // Default is to create a 16-bit color space
-      colorRGBBits.red_shift = mRedOffset;  
-      colorRGBBits.red_bits = mRedBits;
-      colorRGBBits.green_shift = mGreenOffset;
-      colorRGBBits.green_bits = mGreenBits; 
-      colorRGBBits.blue_shift = mBlueOffset; 
-      colorRGBBits.blue_bits = mBlueBits;  
-      
-      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 16);
-    } 
-  else if (24 == mDepth) 
-    {
-      DeviceContextImpl::GetILColorSpace(aColorSpace);
-      return NS_OK;
-    }
-  else 
-    {
-      DeviceContextImpl::GetILColorSpace(aColorSpace);
-      return NS_OK;
-    }
-  
-  if (nsnull == mColorSpace) 
-    {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  
-  NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
   return NS_OK;
 }
 
@@ -165,27 +109,9 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDrawingSurface(nsIRenderingContext &aContex
 NS_IMETHODIMP nsDeviceContextGTK::ConvertPixel(nscolor aColor, 
                                                PRUint32 & aPixel)
 {
-  PRUint32 newcolor = 0;
-  
-  InstallColormap();
-  
-  switch (mDepth) {
-    
-  case 8: 
-    {
-      //Tedious
-    }
-    break;
-    
-  default: 
-    {
-      newcolor = (PRUint32)NS_TO_X(aColor);
-    }
-    break;
-  }
-  
-  aPixel = newcolor;
-  return NS_OK;
+  ::gdk_rgb_init ();
+  aPixel = ::gdk_rgb_xpixel_from_rgb ((guint32)aColor);
+
   return NS_OK;
 }
 
@@ -195,81 +121,6 @@ NS_IMETHODIMP nsDeviceContextGTK::CheckFontExistence(const nsString& aFontName)
   return NS_OK;
 }
 
-void nsDeviceContextGTK::InstallColormap(void) 
-{
-
-  if (nsnull != mColormap)
-    return;
-  mDepth = ::gdk_visual_get_best_depth();
-  
-  GdkVisualType type = ::gdk_visual_get_best_type();  
-  if (type != GDK_VISUAL_TRUE_COLOR)
-    mPaletteInfo.isPaletteDevice = PR_TRUE;
-  else 
-    {
-      mPaletteInfo.isPaletteDevice = PR_FALSE;
-      if (mDepth == 8) 
-        {
-          mPaletteInfo.numReserved = RESERVED_SIZE;
-          mPaletteInfo.sizePalette = (PRUint32) pow(2, mDepth);
-        }
-    }
-  
-  if (type == GDK_VISUAL_GRAYSCALE || 
-      type == GDK_VISUAL_PSEUDO_COLOR ||
-      type == GDK_VISUAL_DIRECT_COLOR) 
-    {
-      mWriteable = PR_TRUE;
-    }
-  else 
-    {
-      mWriteable = PR_FALSE;
-    }
-  
-  mNumCells = (PRUint32) pow(2, mDepth);
-  mPaletteInfo.sizePalette = mNumCells;
-  
-  // and get ourselves our colormap
-  mColormap = ::gdk_colormap_new(::gdk_visual_get_best(), 0);
-
-  // I am not entirely sure what is going on here, but I think that 
-  // when the bitmap depth is 8, we want a set of default colors allocated
-  // I changed the name of the method to make it a bit cleared
-  if (mWriteable) 
-    {
-      if (mDepth == 8) 
-        {
-          AllocDefaultColors();
-        }
-    }
-  GdkVisual *tmpVisual = ::gdk_visual_get_best(); //no destroy on this!
-
-  // I sure hope this is the right way around; is red_shift mRedBits? I checked in 
-  // gdk_visual_decompose_mask and I think this is correct.
-  // In principle we do not set all this mask stuff, just get the visual and 
-  // use these values. However, this keeps us closer to the Motif code, so it
-  // easier to implement for now.
-  // FRV
-  mRedMask = tmpVisual->red_mask;
-  mRedBits = tmpVisual->red_shift;
-  mRedOffset = tmpVisual->red_prec;
-  
-  mGreenMask = tmpVisual->green_mask;
-  mGreenBits = tmpVisual->green_shift;
-  mGreenOffset = tmpVisual->green_prec;
-  
-  mBlueMask = tmpVisual->blue_mask;
-  mBlueBits = tmpVisual->blue_shift;
-  mBlueOffset = tmpVisual->blue_prec;
-  
-  PRUint32 i = mRedMask;
-} 
-
-
-void nsDeviceContextGTK :: AllocDefaultColors()
-{
-  // Implement this: tedious because I have > 8 bitmapdepth :-)
-}
 
 
 
