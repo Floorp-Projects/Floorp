@@ -54,7 +54,7 @@
 <!ENTITY  noPolicy.label          "Site has no privacy policy">
 <!ENTITY  noConsent.label         "Site collects personally identifiable information without your consent">
 <!ENTITY  implicitConsent.label   "Site collects personally identifiable information with only your implicit consent">
-<!ENTITY  explicitConsent.label   "Site does not collect personally identifiable information without your explicity consent">
+<!ENTITY  explicitConsent.label   "Site does not collect personally identifiable information without your explicit consent">
 
 <!ENTITY  accept.label            "Accept">
 <!ENTITY  downgrade.label         "Downgrade">
