@@ -207,14 +207,14 @@ void nsAboutCache::DumpCacheInfo(nsIOutputStream *aStream, nsINetDataCache *aCac
   mBuffer.AppendInt(value);
   mBuffer.Append("</td>\n</tr>\n");
 
-  mBuffer.Append("\n<tr><td><b>Storage in use:</td>\n");
+  mBuffer.Append("\n<tr><td><b>Storage in use:</b></td>\n");
   mBuffer.Append("<td>");
   value = 0;
   aCache->GetStorageInUse(&value);
   mBuffer.AppendInt(value);
-  mBuffer.Append("kb</td>\n</tr>\n");
+  mBuffer.Append(" KB</td>\n</tr>\n");
 
-  mBuffer.Append("</table>\n<HR>\n");
+  mBuffer.Append("</table>\n<hr>\n");
 
   aStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 }
@@ -234,8 +234,11 @@ void nsAboutCache::DumpCacheEntryInfo(nsIOutputStream *aStream,
                                    getter_AddRefs(entry));
   if (NS_FAILED(rv)) return;
 
+  // Entry start...
+  mBuffer.Assign("<p>\n");
+
   // URI
-  mBuffer.Assign("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+  mBuffer.Append("<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                      "&nbsp;&nbsp;&nbsp;&nbsp;URL: </tt>");
   entry->GetUriSpec(getter_Copies(str));
   mBuffer.Append("<a href=\"");
@@ -322,7 +325,7 @@ void nsAboutCache::DumpCacheEntryInfo(nsIOutputStream *aStream,
   }
 
   // Entry is done...
-  mBuffer.Append("\n\n<p>\n");
+  mBuffer.Append("</p>\n");
 
   aStream->Write(mBuffer, mBuffer.Length(), &bytesWritten);
 }
