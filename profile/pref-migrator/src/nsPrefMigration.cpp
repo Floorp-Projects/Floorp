@@ -549,6 +549,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   nsCOMPtr<nsIFileSpec> newIMAPLocalMailPath;
   nsCOMPtr<nsIFileSpec> oldNewsPath;
   nsCOMPtr<nsIFileSpec> newNewsPath;
+  nsCOMPtr<nsIFileSpec> newPrefsFile;
 #ifdef HAVE_MOVEMAIL
   nsCOMPtr<nsIFileSpec> oldMOVEMAILMailPath;
   nsCOMPtr<nsIFileSpec> newMOVEMAILMailPath;
@@ -665,6 +666,12 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       rv = GetSizes(tempMailSpec, PR_TRUE, &totalLocalMailSize);
 
       /* Next get IMAP mail summary files location */
+      rv = NS_NewFileSpec(getter_AddRefs(newIMAPMailPath));
+      if (NS_FAILED(rv)) return rv;
+    
+      rv = NS_NewFileSpec(getter_AddRefs(oldIMAPMailPath));
+      if (NS_FAILED(rv)) return rv;
+
       rv = GetDirFromPref(oldProfilePath,newProfilePath, NEW_IMAPMAIL_DIR_NAME, PREF_MAIL_IMAP_ROOT_DIR,newIMAPMailPath,oldIMAPMailPath);
       if (NS_FAILED(rv)) {
         /* default paths */
@@ -918,12 +925,6 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       if (NS_FAILED(rv)) return rv;
     }
 
-    rv = NS_NewFileSpec(getter_AddRefs(newIMAPMailPath));
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = NS_NewFileSpec(getter_AddRefs(oldIMAPMailPath));
-    if (NS_FAILED(rv)) return rv;
-
     /* Now deal with the IMAP mail summary file location */
     rv = SetPremigratedFilePref(PREF_MAIL_IMAP_ROOT_DIR, oldIMAPMailPath);
     if (NS_FAILED(rv)) return rv;   
@@ -1089,7 +1090,13 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   if (NS_FAILED(rv)) return rv;
   PR_FREEIF(popServerName);
 
-  rv=m_prefs->SavePrefFileAs(m_prefsFile);
+  NS_NewFileSpec(getter_AddRefs(newPrefsFile));
+  newPrefsFile->FromFileSpec(newProfilePath);
+
+  rv = newPrefsFile->AppendRelativeUnixPath(PREF_FILE_NAME_IN_5x);
+  if (NS_FAILED(rv)) return rv;
+
+  rv=m_prefs->SavePrefFileAs(newPrefsFile);
   if (NS_FAILED(rv)) return rv;
   rv=m_prefs->ResetPrefs();
   return rv;
@@ -1671,6 +1678,7 @@ nsPrefMigration::DoSpecialUpdates(nsIFileSpec  * profilePath)
   nsresult rv;
   PRInt32 serverType;
   nsFileSpec fs;
+  nsCOMPtr<nsIFileSpec> historyFile;
 
   rv = profilePath->GetFileSpec(&fs);
   if (NS_FAILED(rv)) return rv;
@@ -1726,12 +1734,15 @@ nsPrefMigration::DoSpecialUpdates(nsIFileSpec  * profilePath)
   // TODO remove any 4.x files that should not be left around
   //
   // examples: prefs, history
-  rv = profilePath->AppendRelativeUnixPath(HISTORY_FILE_NAME_IN_5x);
+  NS_NewFileSpec(getter_AddRefs(historyFile));
+  historyFile->FromFileSpec(profilePath);
+
+  rv = historyFile->AppendRelativeUnixPath(HISTORY_FILE_NAME_IN_5x);
   PRBool fileExists;
-  rv = profilePath->Exists(&fileExists);
+  rv = historyFile->Exists(&fileExists);
   if (NS_FAILED(rv)) return rv;
   if (fileExists) {
-	profilePath->Rename(RENAMED_OLD_HISTORY_FILE_NAME);
+	historyFile->Rename(RENAMED_OLD_HISTORY_FILE_NAME);
   }
 
   return rv;
