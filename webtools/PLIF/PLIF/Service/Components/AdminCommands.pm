@@ -81,7 +81,7 @@ sub cmdSetup {
         $result = $app->getSelectingServiceList('setup.install')->setupInstall($app);
     }
     # report on the result
-    if ($result) {
+    if (defined($result)) {
         # if we failed, first report that then signal that
         # configuration has ended
         $self->dump(9, "Failed to setup because argument '$result' was missing.");
