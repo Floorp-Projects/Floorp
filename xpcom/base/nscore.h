@@ -38,6 +38,15 @@
 #define nscore_h___
 
 /**
+ * Make sure that we have the proper platform specific 
+ * c++ definitions needed by nscore.h
+ * Add ifdef to speed up compliation but mozilla-config.h is still required
+ */
+#ifndef _MOZILLA_CONFIG_H_
+#include "mozilla-config.h"
+#endif
+
+/**
  * Incorporate the core NSPR data types which XPCOM uses.
  */
 #include "prtypes.h"
