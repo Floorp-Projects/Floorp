@@ -326,9 +326,47 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
-  if (mWidget) {
-    ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+  if (mWidget) 
+  {
+    GtkWidget *    layout = mWidget->parent;
+
+    GtkAdjustment* ha = gtk_layout_get_hadjustment(GTK_LAYOUT(layout));
+    GtkAdjustment* va = gtk_layout_get_vadjustment(GTK_LAYOUT(layout));
+
+    // This correction is needed because the view manager code in
+    // gecko assumes that the implementation of scrolling happens
+    // only in one window (as is the case in win32 and mac).  The
+    // GtkLayout widget uses 2 windows to do arbitrarily long scrolling
+    // (beyond the 16 bit dimension hard limit of X windows)
+    //
+    // The first window is the base.
+    // 
+    // The second window is a clip window (called the bin_window).
+    //
+    // The position of the bin_window is controlled by 2 GtkAdjustment
+    // data structures.
+    // 
+    // What happens is that the view manager computes offsets for 
+    // widgets from the viewport's origin.  
+    //
+    // The GtkLayout widget scrolls the bin_window (which is the true
+    // parent window of the widgets we are trying to Move) from
+    // its own origin.
+    // 
+    // So, the widgets end up being positioned off by the amount of
+    // offset between the viewport's origin, and the position of
+    // the GtkLayout's clip window and hence the correction...
+    //
+    // Simple...
+    PRInt32        x_correction = (PRInt32) ha->value;
+    PRInt32        y_correction = (PRInt32) va->value;
+    
+    ::gtk_layout_move(GTK_LAYOUT(layout), 
+                      mWidget, 
+                      aX + x_correction, 
+                      aY + y_correction);
   }
+
   return NS_OK;
 }
 
@@ -1391,8 +1429,8 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 
   if (aGdkMotionEvent)
   {
-    x = aGdkMotionEvent->x;
-    y = aGdkMotionEvent->y;
+    x = (gint) aGdkMotionEvent->x;
+    y = (gint) aGdkMotionEvent->y;
  
     gdk_window_get_pointer(aGdkMotionEvent->window, &x, &y, nsnull);
 

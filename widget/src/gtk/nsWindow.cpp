@@ -753,8 +753,21 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
       gtk_widget_set_uposition(mShell, newrect.x, newrect.y);
     }
   }
-  else if (mWidget) {
-    ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+  else if (mWidget) 
+  {
+    GtkWidget *    layout = mWidget->parent;
+
+    GtkAdjustment* ha = gtk_layout_get_hadjustment(GTK_LAYOUT(layout));
+    GtkAdjustment* va = gtk_layout_get_vadjustment(GTK_LAYOUT(layout));
+
+    // See nsWidget::Move() for comments on this correction thing
+    PRInt32        x_correction = (PRInt32) ha->value;
+    PRInt32        y_correction = (PRInt32) va->value;
+    
+    ::gtk_layout_move(GTK_LAYOUT(layout), 
+                      mWidget, 
+                      aX + x_correction, 
+                      aY + y_correction);
   }
 
   return NS_OK;
