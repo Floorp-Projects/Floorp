@@ -134,14 +134,15 @@ static NS_DEFINE_IID(kIShutdownListenerIID, NS_ISHUTDOWNLISTENER_IID);
 NS_IMPL_ISUPPORTS(HandleCaseConversionShutdown, kIShutdownListenerIID);
 
 nsresult
-HandleCaseConversionShutdown::OnShutdown(const nsCID& cid, nsISupports* service)
+HandleCaseConversionShutdown::OnShutdown(const nsCID& cid,
+                                         nsISupports* aService)
 {
-    if (cid.Equals(kUnicharUtilCID)) {
-        NS_ASSERTION(service == gCaseConv, "wrong service!");
-        nsrefcnt cnt = gCaseConv->Release();
-        gCaseConv = NULL;
-    }
-    return NS_OK;
+  if (cid.Equals(kUnicharUtilCID)) {
+    NS_ASSERTION(aService == gCaseConv, "wrong service!");
+    gCaseConv->Release();
+    gCaseConv = NULL;
+  }
+  return NS_OK;
 }
 
 static HandleCaseConversionShutdown* gListener = NULL;
@@ -351,8 +352,8 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const PRUnichar* s2)
 PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
 {
   if(s1 && s2) {
-    if(0<n){
-      while (--n >= 0) {
+    if(n != 0){
+      do {
         PRUnichar c1 = *s1++;
         PRUnichar c2 = *s2++;
         if (c1 != c2) {
@@ -364,7 +365,7 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRUint32 n)
           }
         }
         if ((0==c1) || (0==c2)) break;
-      }
+      } while (--n != 0);
     }
   }
   return 0;
