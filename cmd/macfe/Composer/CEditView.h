@@ -20,6 +20,7 @@
 
 #include <TextServices.h>
 #include "CHTMLView.h"
+#include "CURLDragHelper.h"
 
 // dangling prototype
 Boolean GetCaretPosition(MWContext *context, LO_Element * element, int32 caretPos, 
@@ -35,7 +36,27 @@ class CFontMenuPopup;
 class HTMLInlineTSMProxy;
 class HoldUpdatesProxy;
 
-class CEditView: public CHTMLView
+
+class CComposerAwareURLDragMixin : public CHTAwareURLDragMixin
+{
+	CComposerAwareURLDragMixin ( );
+	virtual ~CComposerAwareURLDragMixin ( ) { } ;
+	
+protected:
+
+		// overridden to handle composer flavor drops
+	virtual void ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
+											ItemReference inItemRef, Rect & inItemBounds,
+											SPoint32 & inMouse ) ;
+
+		// must override to do the right thing
+	virtual void HandleDropOfComposerFlavor ( const char* inData, bool inDoCopy, SPoint32 & inMouse ) = 0 ;
+
+}; // class CComposerAwareURLDragMixin
+
+
+
+class CEditView: public CHTMLView, public CComposerAwareURLDragMixin
 {
 #if !defined(__MWERKS__) || (__MWERKS__ >= 0x2000)
 	typedef CHTMLView inherited;
@@ -127,14 +148,7 @@ public:
 	void			RemoveCaret();
 	void 			DisplayGenericCaret( MWContext *context, LO_Element * pLoAny, 
 										ED_CaretObjectPosition caretPos );
-	
-	// ее Drag and Drop 
-	virtual Boolean	ItemIsAcceptable (DragReference	dragRef, ItemReference itemRef);
-	virtual void	ReceiveDragItem( DragReference inDragRef, DragAttributes inDragAttr, 
-									ItemReference inItemRef, Rect& inItemBounds );
-	virtual void	DoDragSendData( FlavorType inFlavor, ItemReference inItemRef,
-									DragReference inDragRef );
-	
+		
 	virtual void	ClickSelf (const SMouseDownEvent& where );
 	virtual	Boolean	ClickTrackSelection( const SMouseDownEvent&	inMouseDown, 
 										CHTMLClickRecord& inClickRecord );
@@ -195,10 +209,23 @@ protected:
 	virtual void		DisplayFeedback( int inLocation, LO_Element *inElement );
 	virtual void		DisplaySelectionFeedback( uint16 ele_attrmask, const Rect &inRect );
 	
-	
+	// ее Drag and Drop 
+	virtual Boolean		ItemIsAcceptable (DragReference	dragRef, ItemReference itemRef);
+	virtual void		ReceiveDragItem( DragReference inDragRef, DragAttributes inDragAttr, 
+											ItemReference inItemRef, Rect& inItemBounds );
+	virtual void		DoDragSendData( FlavorType inFlavor, ItemReference inItemRef,
+											DragReference inDragRef );
 	virtual void		InsideDropArea( DragReference inDragRef );
 	virtual void 		EnterDropArea( DragReference inDragRef, Boolean inDragHasLeftSender );
+	virtual void		HandleDropOfComposerFlavor ( const char* inData, bool inDoCopy,
+														SPoint32 & inMouse ) ;
+	virtual void 		HandleDropOfPageProxy ( const char* inURL, const char* inTitle ) ;
+	virtual void		HandleDropOfLocalFile ( const char* inFileURL, const char* fileName,
+											const HFSFlavor & inFileData ) ;
+	virtual void 		HandleDropOfText ( const char* inTextData ) ;
+	virtual void 		HandleDropOfHTResource ( HT_Resource node ) ;
 	DragReference 		mDragRef;
+	SPoint32			mDropLocationImageCoords;
 
 	enum {
 		ED_SELECTION_BORDER = 3

@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include <vector>
+
 #include "CEditView.h"
 #include "CHTMLView.h"			// ::SafeSetCursor
 
@@ -138,6 +140,71 @@ void SetMenuCommandAndString( CommandT oldCommand, CommandT newCommand,
 		}
 	}
 }
+
+#pragma mark -- CComposerAwareURLDragMixin
+
+//
+// CComposerAwareURLDragMixin constructor
+//
+// As the name implies, this version of the URLDragMixin class knows about composer.
+// Add the composer native drag flavor to the front of the acceptable flavors
+// list, because we want to use that first if it is present over all other drag flavors
+//
+CComposerAwareURLDragMixin :: CComposerAwareURLDragMixin ( )
+{
+	AcceptedFlavors().insert ( AcceptedFlavors().begin(), 1, (FlavorType)emComposerNativeDrag );
+
+} // constructor
+
+
+//
+// ReceiveDragItem
+//
+// Overridden to handle the composer native drag flavor before all the others
+//
+void
+CComposerAwareURLDragMixin :: ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttrs,
+												ItemReference inItemRef, Rect & inItemBounds,
+												SPoint32 & inMouseLoc )
+{
+	try {
+		FlavorType useFlavor;
+		FindBestFlavor ( inDragRef, inItemRef, useFlavor );
+		Size theDataSize = 0;
+		
+		switch ( useFlavor ) {
+		
+			case emComposerNativeDrag:
+			{				
+				SInt16 mods, mouseDownModifiers, mouseUpModifiers;
+				OSErr err = ::GetDragModifiers( inDragRef, &mods, &mouseDownModifiers, &mouseUpModifiers );
+				if (err != noErr)
+					mouseDownModifiers = 0;
+				bool doCopy = ( (mods & optionKey) == optionKey ) || ( (mouseDownModifiers & optionKey) == optionKey );
+
+				err = ::GetFlavorDataSize( inDragRef, inItemRef, emComposerNativeDrag, &theDataSize );
+				ThrowIfOSErr_( err );
+	
+				vector<char> datap ( theDataSize + 1 );
+				if ( noErr == ::GetFlavorData( inDragRef, inItemRef, emComposerNativeDrag, datap.begin(), &theDataSize, 0 )
+					&& ( theDataSize > 0 ) ) {
+					datap[ theDataSize ] = 0;
+					HandleDropOfComposerFlavor ( datap.begin(), doCopy, inMouseLoc );
+				}
+			}
+			break;
+	
+			default:
+				CHTAwareURLDragMixin::ReceiveDragItem(inDragRef, inDragAttrs, inItemRef, inItemBounds);
+				break;
+		
+		} // switch on best flavor
+	}
+	catch ( ... ) {
+		DebugStr ( "\pCan't find the flavor we want; g" );	
+	}
+
+} // ReceiveDragItem
 
 
 #pragma mark -- CEditView --
@@ -2836,235 +2903,165 @@ CEditView::InsideDropArea(DragReference	inDragRef)
 }
 
 
+//
+// ReceiveDragItem
+//
+// Called once for each item reference dropped on the composer window. After doing some view
+// specific work, farm off the bulk of data extraction to our mixin class which will in turn
+// call the HandleDropOf* classes below to do the work.
+//
 void 
-CEditView::ReceiveDragItem( DragReference inDragRef, DragAttributes inDragAttr, 
-							ItemReference inItemRef, Rect& inItemBounds	)
+CEditView::ReceiveDragItem ( DragReference inDragRef, DragAttributes inDragAttr, 
+								ItemReference inItemRef, Rect& inItemBounds	)
 {
-#pragma unused( inDragAttr, inItemBounds )
-
-	Boolean isImageDropped = false;
-	char *isURLDroppedString = NULL, *isTitleDroppedString = NULL;
-
 	mIsHilited = false;
 	UnhiliteDropArea( inDragRef );
+
+	FocusDraw();
 	
-	try
-	{	
-		HFSFlavor	fileData;
-		Size		dataSize = sizeof(fileData);
-		OSErr		err;
-		Point		mouseLoc;
-		SPoint32	imagePt;
-		Size		size;
-		FlavorFlags	flags;
-		SInt16		mods, mouseDownModifiers, mouseUpModifiers;
+	Point mouseLoc;
+	::GetDragMouse( inDragRef, &mouseLoc, NULL );
+	::GlobalToLocal( &mouseLoc );
+	LocalToImagePoint( mouseLoc, mDropLocationImageCoords );
+	
+	CComposerAwareURLDragMixin::ReceiveDragItem ( inDragRef, inDragAttr, inItemRef, inItemBounds,
+													mDropLocationImageCoords );
+													
+} // ReceiveDragItem
 
-		err = ::GetDragModifiers( inDragRef, &mods, &mouseDownModifiers, &mouseUpModifiers );
-		if (err != noErr)
-			mouseDownModifiers = 0;
-		Boolean doCopy = ( (mods & optionKey) == optionKey ) || ( (mouseDownModifiers & optionKey) == optionKey );
-		
-		FocusDraw();
-		::GetDragMouse( inDragRef, &mouseLoc, NULL );
-		::GlobalToLocal( &mouseLoc );
-		LocalToImagePoint( mouseLoc, imagePt );
+
+//
+// HandleDropOfComposerFlavor
+//
+// Put the data in the right place, given the current mouse location and if this is a copy 
+// or a move. Will delete the current selection if it is a move.
+//
+void
+CEditView :: HandleDropOfComposerFlavor ( const char* inData, bool inDoCopy, SPoint32 & inMouseLoc )
+{
+	EDT_BeginBatchChanges( *GetContext() );
+	if ( inDoCopy || mDragData == NULL )
+		EDT_PositionCaret( *GetContext(), inMouseLoc.h, inMouseLoc.v );
+	else
+		EDT_DeleteSelectionAndPositionCaret( *GetContext(), inMouseLoc.h, inMouseLoc.v );
+	EDT_PasteHTML( *GetContext(), const_cast<char*>(inData) );
+	EDT_EndBatchChanges( *GetContext() );
+
+} // HandleDropOfComposerFlavor
+
+
+//
+// HandleDropOfPageProxy
+//
+// This one's real easy since all the data extraction code is already done for us.
+//
+void
+CEditView :: HandleDropOfPageProxy ( const char* inURL, const char* inTitle )
+{
+	char* url = const_cast<char*>(inURL);
+	char* title = const_cast<char*>(inTitle);
+	
+	if ( inURL ) {
+		if ( inTitle )
+			EDT_PasteHREF( *GetContext(), &url, &title, 1 );
+		else
+			EDT_PasteHREF( *GetContext(), &url, &url, 1 );
+	}
+	
+} // HandleDropOfPageProxy
+
+
+//
+// HandleDropOfLocalFile
+//
+// Accepts gif/jpeg drops and puts them inline and inserts the url for other kinds
+// of files. Clippings files are already handled by responding to the 'TEXT' flavor, so we 
+// never get here (which is why that code was removed).
+//
+void
+CEditView :: HandleDropOfLocalFile ( const char* inFileURL, const char* fileName,
+											const HFSFlavor & inFileData )
+{
+	Boolean isImageDropped = false;
+	char* URLStr = const_cast<char*>(inFileURL);
+	char* titleStr = const_cast<char*>(fileName);
+
+	switch ( inFileData.fileType )
+	{
+		case 'GIFf':
+		case 'JPEG':
+			isImageDropped = true;
+			titleStr = NULL;
+			break;
 				
-		if ( ::GetFlavorData( inDragRef, inItemRef, flavorTypeHFS, &fileData, &dataSize, 0 ) == noErr )
-		{
-			switch ( fileData.fileType )
+		default:
+			if ( inFileURL )
 			{
-				case 'GIFf':
-				case 'JPEG':
-					isImageDropped = true;
-					isURLDroppedString = CFileMgr::GetURLFromFileSpec( fileData.fileSpec );
-					isTitleDroppedString = NULL;
-					break;
-				
-				case 'clpt':
-					/* This implements support for text clippings.  Note: I assume that 
-					   the text clippings are of type 'clpt' and store the text in 'TEXT' 
-					   resource ID 256.  All the examples I found fit this criteria.  
-					   Unfortunately, I couldn't find any Apple documentation that
-					   verified this.  The actual pasting is done below.
-					*/
-					short resnum = ::FSpOpenResFile( &fileData.fileSpec, fsRdPerm );
-					if ( -1 != resnum )
-					{
-						Handle clipping_text = ::Get1Resource ( 'TEXT', 256 );
-
-						if ( clipping_text != NULL )
-						{		// Assuming we got the resource, create it
-							int clipping_text_size = ::GetHandleSize( clipping_text );
-							if ( clipping_text_size > 0 )
-							{
-								char *droppedString = (char *)XP_ALLOC( clipping_text_size + 1 );
-								if ( droppedString )
-								{
-									::BlockMove( *clipping_text, droppedString, clipping_text_size );
-									droppedString[ clipping_text_size ] = '\0';
-	  								EDT_PasteText( *GetContext(), droppedString );
-
-									XP_FREE( droppedString );
-								}
-							}
-						}
-						::CloseResFile( resnum );
-					}
-					return;
-					break;
-				
-				default:
-					char *link = CFileMgr::GetURLFromFileSpec( fileData.fileSpec );
-					if ( link )
-					{
-						Bool bAutoAdjustLinks = CPrefs::GetBoolean( CPrefs::PublishMaintainLinks );
-						if ( bAutoAdjustLinks )
-						{
-							char *abs = NULL;		// lets try making it relative
-							if ( NET_MakeRelativeURL( LO_GetBaseURL( *GetContext() ), link, &abs )
-								!= NET_URL_FAIL && abs )
-							{
-								XP_FREE( link );
-								link = abs;
-								abs = NULL;
-							}
-							else if ( abs )
-								XP_FREE(abs);
-						}
-						
-						isURLDroppedString = link;
-						isTitleDroppedString = XP_STRDUP( link );
-					}
-					break;
-			}
-		}
-		else if ( ::GetFlavorDataSize( inDragRef, inItemRef, emBookmarkDrag, &size ) == noErr )
-		{
-			char *buffer = (char *)XP_ALLOC( size + 1 );
-			if ( buffer )
-			{
-				if ( ::GetFlavorData( inDragRef, inItemRef, emBookmarkDrag, buffer, &size, 0 ) == noErr )
+				char *link = URLStr;
+				Bool bAutoAdjustLinks = CPrefs::GetBoolean( CPrefs::PublishMaintainLinks );
+				if ( bAutoAdjustLinks )
 				{
-					buffer[ size ] = 0;	// Terminate the string
-					isURLDroppedString = XP_STRDUP( buffer );
-
-					char * title = strchr( isURLDroppedString, '\r' );
-					if ( title == NULL )
+					char *abs = NULL;		// lets try making it relative
+					if ( NET_MakeRelativeURL( LO_GetBaseURL( *GetContext() ), link, &abs )
+						!= NET_URL_FAIL && abs )
 					{
-						// Bookmark without a title
-						isTitleDroppedString = XP_STRDUP( buffer );
-					//	EDT_PasteHREF( mContext, &buffer, &buffer, 1);
+						link = abs;
+						abs = NULL;
 					}
-					else
-					{
-						*title = 0;
-						title++;
-						
-						isImageDropped = (XP_STRCMP(title,"[Image]") == 0);
-						if ( isImageDropped )
-						{
-							isTitleDroppedString = NULL;
-							
-							// we need to chop off [Image] from isURLDroppedString
-							if ( isURLDroppedString )
-							{
-								char *positionMarker = strchr( isURLDroppedString, '\r' );
-								if ( positionMarker )
-									positionMarker[0] = 0;
-							}
-						}
-						else
-						{
-							isTitleDroppedString = XP_STRDUP(title);
-						//	EDT_PasteHREF( mContext, &buffer, &title, 1);
-						}
-					}
+					else if ( abs )
+						XP_FREE(abs);
 				}
-				XP_FREE( buffer );
+				
+				URLStr = link;
+				titleStr = link;
 			}
-		}
-		else if ( ::GetFlavorFlags( inDragRef, inItemRef, emComposerNativeDrag, &flags ) == noErr )
-		{
-			/* if the mouse is over the selection (in the same window), we shouldn't do anything/just bail out */
-			
-			OSErr err = ::GetFlavorDataSize( inDragRef, inItemRef, emComposerNativeDrag, &size );
-			ThrowIfOSErr_( err );
-			
-			char *datap = (char *)XP_ALLOC( size + 1 );
-			if ( datap )
-			{
-				if ( noErr == ::GetFlavorData( inDragRef, inItemRef, emComposerNativeDrag, datap, &size, 0 )
-					&& ( size > 0 ) )
-				{
-					datap[ size ] = 0;
-					EDT_BeginBatchChanges( *GetContext() );
-					if ( doCopy || mDragData == NULL )
-						EDT_PositionCaret( *GetContext(), mouseLoc.h, mouseLoc.v );
-					else
-						EDT_DeleteSelectionAndPositionCaret( *GetContext(), mouseLoc.h, mouseLoc.v );
-	  				EDT_PasteHTML( *GetContext(), datap );
-	  				EDT_EndBatchChanges( *GetContext() );
-				} 
-				XP_FREE( datap );
-			}
-			
-			return;
-		}
-		else if ( ::GetFlavorFlags( inDragRef, inItemRef, 'TEXT', &flags ) == noErr )
-		{
-			/* text being dragged */
-			OSErr err = ::GetFlavorDataSize( inDragRef, inItemRef, 'TEXT', &size );
-			ThrowIfOSErr_ (err); // caught by PP handler
-			
-			char *lDroppedString = (char *)XP_ALLOC( size + 1 );
-			if ( lDroppedString )
-			{
-				if ( ::GetFlavorData( inDragRef, inItemRef, 'TEXT', lDroppedString, &size, 0 ) == noErr )
-				{
-					lDroppedString[ size ] = 0;
-	  				EDT_PasteText( *GetContext(), lDroppedString );
-				} 
-				XP_FREE( lDroppedString );
-			}
-			
-			return;
-		}
-		
+			break;
 	}
-	catch(...)
-	{
-	}
-	
-	if ( isURLDroppedString )
-	{
-		if ( isImageDropped )
-		{
+
+	// if the user dragged an image, insert the image inline, otherwise paste in the URL (with 
+	// title if one is present).
+	if ( URLStr ) {
+		if ( isImageDropped ) {
 			EDT_ImageData* imageData = EDT_NewImageData(); 
 			if ( imageData )
 			{
-				imageData->pSrc = isURLDroppedString;
+				imageData->pSrc = XP_STRDUP(URLStr);
 				EDT_InsertImage( *GetContext(), imageData, CPrefs::GetBoolean( CPrefs::PublishKeepImages ) );
 				EDT_FreeImageData( imageData );
 			}
-			
-			XP_FREEIF( isTitleDroppedString );
-			isURLDroppedString = NULL;
-			isTitleDroppedString = NULL;
 		}
-		else
-		{
-			if ( isTitleDroppedString )
-				EDT_PasteHREF( *GetContext(), &isURLDroppedString, &isTitleDroppedString, 1 );
+		else {
+			if ( titleStr )
+				EDT_PasteHREF( *GetContext(), &URLStr, &titleStr, 1 );
 			else
-				EDT_PasteHREF( *GetContext(), &isURLDroppedString, &isURLDroppedString, 1 );
-			
-			XP_FREE( isURLDroppedString );
-			XP_FREEIF( isTitleDroppedString );
-			isURLDroppedString = NULL;
-			isTitleDroppedString = NULL;
+				EDT_PasteHREF( *GetContext(), &URLStr, &URLStr, 1 );
 		}
 	}
-}
+		
+} // HandleDropOfLocalFile
+
+
+//
+// HandleDropOfText
+//
+// Very simple, since all of the data extraction is done for us already
+//
+void
+CEditView :: HandleDropOfText ( const char* inTextData )
+{
+	EDT_PositionCaret( *GetContext(), mDropLocationImageCoords.h, mDropLocationImageCoords.v );
+	EDT_PasteText( *GetContext(), const_cast<char*>(inTextData) );
+
+} // HandleDropOfText
+
+
+
+void
+CEditView :: HandleDropOfHTResource ( HT_Resource /*node*/ )
+{
+	DebugStr("\pNot yet implemented");
+
+} // HandleDropOfHTResource
 
 
 void CEditView::InsertDefaultLine()
