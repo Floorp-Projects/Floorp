@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dbinit.c,v 1.22 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
+/* $Id: dbinit.c,v 1.23 2004/06/11 22:25:13 wchang0222%aol.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -199,7 +199,7 @@ pk11_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly,
 
     name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);	
     if (name == NULL) 
-	return SECFailure;
+	return CKR_HOST_MEMORY;
     keydb = nsslowkey_OpenKeyDB(readOnly, appName, prefix, 
 					pk11_keydb_name_cb, (void *)name);
     PR_smprintf_free(name);
@@ -267,12 +267,10 @@ pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle,
     if (certHandle) {
     	nsslowcert_ClosePermCertDB(certHandle);
 	PORT_Free(certHandle);
-	certHandle= NULL;
     }
 
     if (keyHandle) {
     	nsslowkey_CloseKeyDB(keyHandle);
-	keyHandle= NULL;
     }
 }
 
