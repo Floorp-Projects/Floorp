@@ -54,6 +54,13 @@
 	  <treecol persist="width" width="1*" id="TotalUnreadCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 	  <treecol persist="width" width="1*" id="TotalMsgCol" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
 
+          <treehead>
+            <treerow>
+              <treecell value="&nameColumn.label;"/>
+              <treecell value="&unreadColumn.label;"/>
+              <treecell value="&totalColumn.label;"/>
+            </treerow>
+          </treehead>
 	</tree>
 </html:div>
 </overlay>
