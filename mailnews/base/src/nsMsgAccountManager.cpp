@@ -1551,7 +1551,7 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
 
   // set the default local path for "none"
-  server->SetDefaultLocalPath(mailDir);
+  rv = server->SetDefaultLocalPath(mailDir);
   if (NS_FAILED(rv)) return rv;
 
   rv = mailDir->Exists(&dirExists);
@@ -1670,7 +1670,7 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   if (NS_FAILED(rv)) return rv;
 
   // set the default local path for "pop3"
-  server->SetDefaultLocalPath(mailDir);
+  rv = server->SetDefaultLocalPath(mailDir);
   if (NS_FAILED(rv)) return rv;
 
   rv = mailDir->Exists(&dirExists);
@@ -1853,7 +1853,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   // we only need to do this once
   if (!m_alreadySetImapDefaultLocalPath) {
     // set the default local path for "imap"
-    server->SetDefaultLocalPath(imapMailDir);
+    rv = server->SetDefaultLocalPath(imapMailDir);
     if (NS_FAILED(rv)) return rv;
 
     m_alreadySetImapDefaultLocalPath = PR_TRUE;
@@ -2153,7 +2153,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
       if (NS_FAILED(rv)) return rv;
       
       // set the default local path for "nntp"
-      server->SetDefaultLocalPath(nntpRootDir);
+      rv = server->SetDefaultLocalPath(nntpRootDir);
       if (NS_FAILED(rv)) return rv;
 
       // set the newsrc root for "nntp"
