@@ -16,6 +16,9 @@ call rtest.bat %1
 cd ..\bugs
 call rtest.bat %1
 
+cd ..\printing
+call rtest.bat %1
+
 cd ..\..\table
 call rtest.bat %1
 

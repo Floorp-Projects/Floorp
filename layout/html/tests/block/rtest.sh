@@ -16,6 +16,7 @@ nodots() {
 
 dirs="	base			\
 	bugs			\
+	printing			\
 	../table/core		\
 	../table/viewer_tests	\
 	../table/bugs		\
