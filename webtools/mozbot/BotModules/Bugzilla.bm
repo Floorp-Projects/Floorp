@@ -23,7 +23,7 @@ sub RegisterConfig {
         ['bugsDWIMQueryDefault', 1, 1, 'short_desc_type=substring&short_desc='], 
         ['bugsHistory', 0, 0, {}], 
         ['backoffTime', 1, 1, 120], 
-        ['ignoreCommentsTo', 1, 1, ['techbot1']],
+        ['ignoreCommentsTo', 1, 1, ['']],
         ['ignoreCommentsFrom', 1, 1, ['|']],
         ['skipPrefixFor', 1, 1, []],
         ['mutes', 1, 1, ''],  # "channel channel channel"

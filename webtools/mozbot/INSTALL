@@ -251,16 +251,16 @@ The main variables are:
    autojoin -- whether (1) or not (0) the module should automatically
    add a new channel to its "channels" list when the bot joins a new
    channel. If this is not enabled, then you will have to add new
-   channels to the "channels" list each time.
+   channels to the "channels" list of this module each time.
 
    channelsBlocked -- channels that will not be autojoined, so if a
    module has been disabled, it won't rejoin the channel if the bot is
    kicked then reinvited.
 
    denyusers -- user@host regexp masks of users that should be
-   completely ignored. The regexp will be placed between "^" and "$"
-   modifiers, so do not include them, and *do* include everything
-   required to make the whole user@host mask match.
+   completely ignored (for this module). The regexp will be placed
+   between "^" and "$" modifiers, so do not include them, and *do*
+   include everything required to make the whole user@host mask match.
 
    allowusers -- identical in usage to denyusers, but checked first to
    override it. So to give access to everyone but a few people, leave
@@ -308,6 +308,40 @@ are prompted for during initial startup. The interesting ones are:
    to 10 (10 seconds) may not be of much immediate use. In these
    cases, setting the variable to the new value then cycling the bot
    is a good plan.
+
+   ignoredUsers -- a list of regular expressions that are matched
+   against the user@host strings of everything that is said. If a user
+   matches one of the entires in this list, then that user will be
+   completely ignored. (^ and $ symbols are implied at the start and
+   end of this regular expression.) Use this sparingly. It will stop
+   the user's statements from having _any_ effect on the bot,
+   including in any statistic-collecting modules, etc. If you just
+   want to block a user from certain modules, add a regular expression
+   to the 'denyusers' variable of those modules.
+   Example:
+      >mozbot< vars Admin ignoredUsers '+root@.*'
+      *** moron (root@example.org) has joined #mozbot
+      <moron> mozbot: help
+      * you watch the tumbleweed roll on by
+
+   ignoredTargets -- when someone says something to someone who
+   matches one of the regular expressions in this list, the line will
+   be ignored as if the person saying it was banned with ignoreUsers. 
+   This is useful when you have other bots in the channel, and don't
+   want the mozbot to respond in place of the other bots (e.g. with an
+   auto-helping Infobot module). Note: It is safe to user a regular
+   expression that matches the mozbot bot's name; it will always
+   respond to messages to itself (as well as messages that are sent
+   via /msg) irrespective of this setting.
+   Example:
+      <user> foobot: what is green?
+      <foobot> user: green is good.
+      <mozbot> user: green is good.
+      <user> mozbot: vars Admin ignoredTargets '+.*bot[0-9]*'
+      <mozbot> Variable 'ignoredTargets' in module 'Admin' has changed.
+      <user> foobot: what is green?
+      <foobot> user: green is good.
+      * user patpats mozbot
 
 Changes to variables are usually immediately recorded in the
 configuration file and will be saved for the next time the bot is

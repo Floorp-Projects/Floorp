@@ -179,7 +179,8 @@ $cfgfile = $1; # untaint it -- we trust this, it comes from the admin.
 
 # - setup variables
 # note: owner is only used by the Mails module
-my ($server, $port, $localAddr, @nicks, @channels, %channelKeys, $owner, @ignoredUsers);
+my ($server, $port, $localAddr, @nicks, @channels, %channelKeys, $owner,
+    @ignoredUsers, @ignoredTargets);
 my $nick = 0;
 my $sleepdelay = 60;
 my $connectTimeout = 120;
@@ -200,6 +201,7 @@ my @modulenames = ('General');
     [\@channels, 'channels'],
     [\%channelKeys, 'channelKeys'],
     [\@ignoredUsers, 'ignoredUsers'],
+    [\@ignoredTargets, 'ignoredTargets'],
     [\@modulenames, 'modules'],
     [\$owner, 'owner'],
     [\$sleepdelay, 'sleep'],
@@ -239,7 +241,6 @@ until (@nicks) {
 $nick = 0 if (($nick > $#nicks) or ($nick < 0));
 
 # - check channel names are all lowercase
-
 foreach (@channels) { $_ = lc; }
 
 # save configuration straight away, to make sure it is possible and to save
@@ -599,20 +600,32 @@ sub on_destroy {
     &debug("Connection: garbage collected");
 }
 
+sub targetted {
+    my ($data, $nick) = @_;
+    return $data =~ /^(\s*$nick(?:[\s,:;.!?]+|\s*:-\s*|\s*--+\s*|\s*-+>?\s+))(.+)$/is ?
+      (defined $2 ? $2 : '') : undef;
+}
+
 # on_public: messages received on channels
 sub on_public {
     my ($self, $event) = @_;
     my $data = join(' ', $event->args);
-    my $nick = quotemeta($self->nick);
-    if ($data =~ /^(\s*$nick(?:[\s,:;.!?]+|\s*:-\s*|\s*--+\s*|\s*-+>?\s+))(.+)$/is) {
-        if ($2) {
-            $event->args($2);
+    if (defined($_ = targetted($data, quotemeta($self->nick)))) {
+        if ($_ ne '') {
+            $event->args($_);
             $event->{'__mozbot__fulldata'} = $data;
             &do($self, $event, 'Told', 'Baffled');
         } else {
             &do($self, $event, 'Heard');
         }
     } else {
+        foreach my $nick (@ignoredTargets) {
+            if (defined targetted($data, $nick)) {
+                my $channel = &toToChannel($self, @{$event->to});
+                &debug("Ignored (target matched /$nick/): $channel <".$event->nick.'> '.join(' ', $event->args));
+                return;
+            }
+        }
         &do($self, $event, 'Heard');
     }
 }
@@ -759,7 +772,7 @@ sub do {
     } else {
         $e->{'userName'} = 0;
     }
-    unless (scalar(grep $e->{'user'} =~ /^\Q$_\E$/g, @ignoredUsers)) {
+    unless (scalar(grep $e->{'user'} =~ /^$_$/gi, @ignoredUsers)) {
         my $continue;
         do {
             my $type = shift @_;
@@ -793,7 +806,7 @@ sub do {
             } while (@modulesInNextLoop);
         } while ($continue and scalar(@_));
     } else {
-        &debug("Ignored: $channel <".$event->nick.'> '.join(' ', $event->args));
+        &debug('Ignored (from \'' . $event->userhost . "'): $channel <".$event->nick.'> '.join(' ', $event->args));
     }
     &doLog($e);
 }
