@@ -235,14 +235,14 @@ clobber_all: clobber_nspr clobber_psm clobber_seamonkey
 
 build_all: build_nspr build_seamonkey
 
-distclean:
+distclean: nsprpub\config.status
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake distclean
 	@cd $(MOZ_SRC)\$(MOZ_TOP)
 	nmake /f client.mak clobber_psm
 	nmake /f client.mak clobber_seamonkey
 		
-clobber_nspr:
+clobber_nspr: nsprpub\config.status
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	gmake clobber
 
