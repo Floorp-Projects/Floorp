@@ -293,7 +293,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         </div>
     <?php } ?>
 		<h2 class="first"><strong><?php echo"$name"; ?></strong> - <?php echo ucwords("$application")." Extension"; ?></h2>
-		<p class="first"><?php echo"$name $version"; ?>, by <?php echo"$authors"; ?>, released on <?php echo"$releasedate"; ?></p>
+		<p class="first"><a href="?<?php echo uriparams()."&amp;id=$id"; ?>"><?php echo"$name $version"; ?></a>, by <?php echo"$authors"; ?>, released on <?php echo"$releasedate"; ?></p>
 
 
     <?php
@@ -772,7 +772,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
     ?>
     <FORM NAME="opinon" METHOD="POST" ACTION="../core/postfeedback.php?<?php echo uriparams(); ?>">
     <DIV>
-    <input name="formkey" type="hidden" value="<?php print(md5(substr(0,10,md5(mt_rand())))); ?>">
+    <input name="formkey" type="hidden" value="<?php print(md5(substr(md5(mt_rand()),0,10))); ?>">
     <INPUT NAME="id" TYPE="HIDDEN" VALUE="<?php echo"$id"; ?>">
     <INPUT NAME="vid" TYPE="HIDDEN" VALUE="<?php echo"$vid"; ?>">
     <INPUT name="type" type="hidden" value="E">
