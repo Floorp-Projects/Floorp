@@ -82,10 +82,6 @@ function OnLoadMsgHeaderPane()
 
     msgPaneData.NewsgroupBox = document.getElementById("NewsgroupBox");
     msgPaneData.NewsgroupValue = document.getElementById("NewsgroupValue");
-
-    // Third toolbar
-    msgPaneData.UserAgentBox = document.getElementById("UserAgentBox");
-    msgPaneData.UserAgentValue = document.getElementById("UserAgentValue");
   }
   
   // load any preferences that at are global with regards to 
@@ -165,10 +161,6 @@ var messageHeaderSink = {
       if (headerName == "newsgroups")
       {
          currentHeaderData.NewsgroupsValue = headerValue;   
-      }
-      if (headerName == "user-agent")
-      {
-        currentHeaderData.UserAgentValue = headerValue;
       }
     },
 
@@ -404,7 +396,6 @@ function UpdateMessageHeaders()
   OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData.ToValue, true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
   OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData.CcValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
   hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData.NewsgroupsValue); 
-  hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData.UserAgentValue);
   FinishEmailProcessing();
 }
 
@@ -416,7 +407,6 @@ function ClearCurrentHeaders()
   currentHeaderData.ToValue = "";
   currentHeaderData.CcValue = "";
   currentHeaderData.NewsgroupsValue = "";
-  currentHeaderData.UserAgentValue = "";
 }
 
 function ShowMessageHeaderPane()
@@ -427,9 +417,6 @@ function ShowMessageHeaderPane()
   node = document.getElementById("headerPart2");
   if (node)
     node.removeAttribute("hide");
-  node = document.getElementById("headerPart3");
-  if (node)
-    node.removeAttribute("hide");
 }
 
 function HideMessageHeaderPane()
@@ -438,9 +425,6 @@ function HideMessageHeaderPane()
   if (node)
     node.setAttribute("hide", "true");
   node = document.getElementById("headerPart2");
-  if (node)
-    node.setAttribute("hide", "true");
-  node = document.getElementById("headerPart3");
   if (node)
     node.setAttribute("hide", "true");
 }

@@ -113,15 +113,5 @@ Rights Reserved.
 				</box>
 			</box>
 		</toolbar>
-
-    <toolbar id="headerPart3" hide="true">
-			<box class="header-part3" align="vertical" flex="1">
-				<box id="UserAgentBox" class="headerBox" align="horizontal" hide="true">
-            <html:div class="headerdisplayname">&userAgentField.label;</html:div>
-						<html:div class="headerValue" id="UserAgentValue" flex="1">*</html:div>
-				</box>
-			</box>
-		</toolbar>
-
 	</toolbox>
 </overlay>
