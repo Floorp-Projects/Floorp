@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.2 2000/12/28 03:26:29 nelsonb%netscape.com Exp $
+ * $Id: loader.c,v 1.3 2001/01/06 17:07:07 mcgreer%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -159,7 +159,7 @@ RSA_NewKey(int keySizeInBits, SECItem * publicExponent)
 SECStatus 
 RSA_PublicKeyOp(RSAPublicKey *   key,
 				 unsigned char *  output,
-				 unsigned char *  input)
+				 const unsigned char *  input)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
@@ -169,7 +169,7 @@ RSA_PublicKeyOp(RSAPublicKey *   key,
 SECStatus 
 RSA_PrivateKeyOp(RSAPrivateKey *  key,
 				  unsigned char *  output,
-				  unsigned char *  input)
+				  const unsigned char *  input)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
@@ -177,7 +177,7 @@ RSA_PrivateKeyOp(RSAPrivateKey *  key,
 }
 
 SECStatus 
-DSA_NewKey(PQGParams * params, DSAPrivateKey ** privKey)
+DSA_NewKey(const PQGParams * params, DSAPrivateKey ** privKey)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
@@ -185,7 +185,7 @@ DSA_NewKey(PQGParams * params, DSAPrivateKey ** privKey)
 }
 
 SECStatus 
-DSA_SignDigest(DSAPrivateKey * key, SECItem * signature, SECItem * digest)
+DSA_SignDigest(DSAPrivateKey * key, SECItem * signature, const SECItem * digest)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
@@ -193,7 +193,8 @@ DSA_SignDigest(DSAPrivateKey * key, SECItem * signature, SECItem * digest)
 }
 
 SECStatus 
-DSA_VerifyDigest(DSAPublicKey * key, SECItem * signature, SECItem * digest)
+DSA_VerifyDigest(DSAPublicKey * key, const SECItem * signature, 
+                 const SECItem * digest)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
@@ -201,8 +202,8 @@ DSA_VerifyDigest(DSAPublicKey * key, SECItem * signature, SECItem * digest)
 }
 
 SECStatus 
-DSA_NewKeyFromSeed(PQGParams *params, unsigned char * seed,
-                                    DSAPrivateKey **privKey)
+DSA_NewKeyFromSeed(const PQGParams *params, const unsigned char * seed,
+                   DSAPrivateKey **privKey)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
@@ -211,7 +212,7 @@ DSA_NewKeyFromSeed(PQGParams *params, unsigned char * seed,
 
 SECStatus 
 DSA_SignDigestWithSeed(DSAPrivateKey * key, SECItem * signature,
-		       SECItem * digest, unsigned char * seed)
+		       const SECItem * digest, const unsigned char * seed)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
@@ -319,7 +320,7 @@ RC2_DestroyContext(RC2Context *cx, PRBool freeit)
 
 SECStatus 
 RC2_Encrypt(RC2Context *cx, unsigned char *output, unsigned int *outputLen, 
-	    unsigned int maxOutputLen, unsigned char *input, 
+	    unsigned int maxOutputLen, const unsigned char *input, 
 	    unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
@@ -330,7 +331,7 @@ RC2_Encrypt(RC2Context *cx, unsigned char *output, unsigned int *outputLen,
 
 SECStatus 
 RC2_Decrypt(RC2Context *cx, unsigned char *output, unsigned int *outputLen, 
-	    unsigned int maxOutputLen, unsigned char *input, 
+	    unsigned int maxOutputLen, const unsigned char *input, 
 	    unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
@@ -358,7 +359,7 @@ RC5_DestroyContext(RC5Context *cx, PRBool freeit)
 
 SECStatus 
 RC5_Encrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen, 
-	    unsigned int maxOutputLen, unsigned char *input, 
+	    unsigned int maxOutputLen, const unsigned char *input, 
 	    unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
@@ -369,7 +370,7 @@ RC5_Encrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen,
 
 SECStatus 
 RC5_Decrypt(RC5Context *cx, unsigned char *output, unsigned int *outputLen, 
-	    unsigned int maxOutputLen, unsigned char *input, 
+	    unsigned int maxOutputLen, const unsigned char *input, 
 	    unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
@@ -397,7 +398,7 @@ DES_DestroyContext(DESContext *cx, PRBool freeit)
 
 SECStatus 
 DES_Encrypt(DESContext *cx, unsigned char *output, unsigned int *outputLen, 
-	    unsigned int maxOutputLen, unsigned char *input, 
+	    unsigned int maxOutputLen, const unsigned char *input, 
 	    unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
@@ -408,7 +409,7 @@ DES_Encrypt(DESContext *cx, unsigned char *output, unsigned int *outputLen,
 
 SECStatus 
 DES_Decrypt(DESContext *cx, unsigned char *output, unsigned int *outputLen, 
-	    unsigned int maxOutputLen, unsigned char *input, 
+	    unsigned int maxOutputLen, const unsigned char *input, 
 	    unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
@@ -438,7 +439,7 @@ AES_DestroyContext(AESContext *cx, PRBool freeit)
 SECStatus 
 AES_Encrypt(AESContext *cx, unsigned char *output,
             unsigned int *outputLen, unsigned int maxOutputLen,
-            unsigned char *input, unsigned int inputLen)
+            const unsigned char *input, unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
@@ -449,7 +450,7 @@ AES_Encrypt(AESContext *cx, unsigned char *output,
 SECStatus 
 AES_Decrypt(AESContext *cx, unsigned char *output,
             unsigned int *outputLen, unsigned int maxOutputLen,
-            unsigned char *input, unsigned int inputLen)
+            const unsigned char *input, unsigned int inputLen)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
