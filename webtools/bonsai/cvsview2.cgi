@@ -870,7 +870,9 @@ sub html_diff {
                  (($point) = /^d(\d+)$/)) {
             $mark = $point if (!$mark);
             $old_line_num = skip_to_line($point, *OLDREV, $old_line_num);
-            while ($old_line = <OLDREV>) {
+            while (1) {
+                $old_line = <OLDREV>;
+                last unless defined $old_line;
                 $old_line_num++;
                 &print_row($old_line, $deletion_bg_color, '', $stable_bg_color);
                 last if ($. == $mark);
@@ -888,7 +890,9 @@ sub html_diff {
     # were not modified in the later revision
     #
     my ($base_old_line_num) = $old_line_num;
-    while ($old_line = <OLDREV>) {
+    while (1) {
+        $old_line = <OLDREV>;
+        last unless defined $old_line;
         $old_line_num++;
         &print_row($old_line, $stable_bg_color, $old_line, $stable_bg_color)
             if ($opt_diff_mode eq 'full' ||
