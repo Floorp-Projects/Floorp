@@ -1006,17 +1006,19 @@ PRBool nsOutlookMail::BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, n
 	nsString		nickName;
 	nsString		middleName;
 	nsString		secondEMail;
+  ULONG       emailTag;
 
-  LPSPropValue	pProp;
-
-  ULONG emailTag = m_mapi.GetEmailPropertyTag(pUser, OUTLOOK_EMAIL1_MAPI_ID1);
-  if (emailTag) {
-	  pProp = m_mapi.GetMapiProperty( pUser, emailTag);
-	  if (pProp) {
-		  m_mapi.GetStringFromProp( pProp, eMail);
-		  SanitizeValue( eMail);
-	  }
+	LPSPropValue	pProp = m_mapi.GetMapiProperty( pUser, PR_EMAIL_ADDRESS);
+	if (!pProp) {
+    emailTag = m_mapi.GetEmailPropertyTag(pUser, OUTLOOK_EMAIL1_MAPI_ID1);
+    if (emailTag) {
+	    pProp = m_mapi.GetMapiProperty( pUser, emailTag);
+    }
   }
+	if (pProp) {
+		m_mapi.GetStringFromProp( pProp, eMail);
+		SanitizeValue( eMail);
+	}
 
   // for secondary email
   emailTag = m_mapi.GetEmailPropertyTag(pUser, OUTLOOK_EMAIL2_MAPI_ID1);

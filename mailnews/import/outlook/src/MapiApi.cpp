@@ -632,7 +632,10 @@ void CMapiApi::ListProperties( LPMAPIPROP lpProp, BOOL getValues)
 		GetPropTagName( pArray->aulPropTag[i], desc);
 		if (getValues) {
       tagArray.aulPropTag[0] = pArray->aulPropTag[i];
-      hr = lpProp->GetNamesFromIDs(&lpTagArray, nsnull, 0, &count, &lppPropNames);  
+      hr = lpProp->GetNamesFromIDs(&lpTagArray, nsnull, 0, &count, &lppPropNames); 
+      if (hr == S_OK)
+        MAPIFreeBuffer(lppPropNames);
+
 			LPSPropValue pVal = GetMapiProperty( lpProp, pArray->aulPropTag[i]);
 			if (pVal) {
 				desc += ", ";
@@ -662,7 +665,11 @@ static GUID emailGUID = {
 
   HRESULT result = lpProp->GetIDsFromNames(1L, &lpMapiNames, 0, &lpMailTagArray);
   if (result == S_OK)
-    return lpMailTagArray->aulPropTag[0];
+  {
+    ULONG lTag = lpMailTagArray->aulPropTag[0];
+    MAPIFreeBuffer(lpMailTagArray);
+    return lTag;
+  }
   else
     return 0L;
 }
