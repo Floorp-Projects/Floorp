@@ -60,6 +60,7 @@ EXPORTS =				\
 	nsIScrollableFrame.h \
 	nsIScrollableViewProvider.h \
   nsIPrintContext.h \
+  nsICanvasFrame.h \
 !ifdef IBMBIDI
 	nsBidiPresUtils.h		\
 	nsITextFrame.h			\

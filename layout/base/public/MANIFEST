@@ -39,3 +39,4 @@ nsIFrameTraversal.h
 nsIObjectFrame.h
 nsIImageFrame.h
 nsITextFrame.h
+nsICanvasFrame.h

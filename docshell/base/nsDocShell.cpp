@@ -52,6 +52,7 @@
 #include "nsISecurityEventSink.h"
 #include "nsScriptSecurityManager.h"
 #include "nsDocumentCharsetInfoCID.h"
+#include "nsICanvasFrame.h"
 
 // Local Includes
 #include "nsDocShell.h"
@@ -117,6 +118,9 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
                      NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
+#ifdef DEBUG_rods
+//#define DEBUG_DOCSHELL_FOCUS
+#endif
 //
 // Local function prototypes
 //
@@ -136,6 +140,31 @@ static NS_METHOD AHTC_WriteFunc(nsIInputStream * in,
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDocShellLog;
 #endif
+
+//*****************************************************************************
+//***    nsDocShellFocusController
+//*****************************************************************************
+
+class nsDocShellFocusController
+{
+
+public:
+  static nsDocShellFocusController* GetInstance() { return &mDocShellFocusControllerSingleton; }
+  virtual ~nsDocShellFocusController(){}
+
+  void Focus(nsIDocShell* aDS);
+  void ClosingDown(nsIDocShell* aDS);
+
+protected:
+  nsDocShellFocusController(){}
+
+  nsIDocShell* mFocusedDocShell; // very weak reference
+
+private:
+  static nsDocShellFocusController mDocShellFocusControllerSingleton;
+};
+
+nsDocShellFocusController nsDocShellFocusController::mDocShellFocusControllerSingleton;
 
 //*****************************************************************************
 //***    nsDocShell: Object Management
@@ -175,6 +204,10 @@ nsDocShell::nsDocShell():
 
 nsDocShell::~nsDocShell()
 {
+    nsDocShellFocusController* dsfc = nsDocShellFocusController::GetInstance();
+    if (dsfc) {
+      dsfc->ClosingDown(this);
+    }
     Destroy();
 }
 
@@ -1492,9 +1525,92 @@ nsDocShell::GetTreeOwner(nsIDocShellTreeOwner ** aTreeOwner)
     return NS_OK;
 }
 
+#ifdef DEBUG_DOCSHELL_FOCUS
+static void 
+PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
+{
+  for (PRInt32 i=0;i<aLevel;i++) printf("  ");
+
+  PRInt32 childWebshellCount;
+  aParentNode->GetChildCount(&childWebshellCount);
+  nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(aParentNode));
+  nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(aParentNode));
+  PRInt32 type;
+  parentAsItem->GetItemType(&type);
+  nsCOMPtr<nsIPresShell> presShell;
+  parentAsDocShell->GetPresShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIPresContext> presContext;
+  parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
+  nsCOMPtr<nsIDocument> doc;
+  presShell->GetDocument(getter_AddRefs(doc));
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+  nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
+
+  nsCOMPtr<nsIWidget> widget;
+  nsCOMPtr<nsIViewManager> vm;
+  presShell->GetViewManager(getter_AddRefs(vm));
+  if (vm) {
+    vm->GetWidget(getter_AddRefs(widget));
+  }
+  nsCOMPtr<nsIEventStateManager> esm;
+  presContext->GetEventStateManager(getter_AddRefs(esm));
+  nsCOMPtr<nsIContent>rootContent(getter_AddRefs(doc->GetRootContent()));
+
+  printf("DS %p  Ty %s  Doc %p DW %p EM %p CN %p\n",  
+    parentAsDocShell.get(), 
+    type==nsIDocShellTreeItem::typeChrome?"Chr":"Con", 
+     doc.get(), domwin.get(), esm.get(), rootContent.get());
+
+  if (childWebshellCount > 0) {
+    for (PRInt32 i=0;i<childWebshellCount;i++) {
+      nsCOMPtr<nsIDocShellTreeItem> child;
+      aParentNode->GetChildAt(i, getter_AddRefs(child));
+      nsCOMPtr<nsIDocShellTreeNode> childAsNode(do_QueryInterface(child));
+      PrintDocTree(childAsNode, aLevel+1);
+    }
+  }
+}
+
+static void 
+PrintDocTree(nsIDocShellTreeNode * aParentNode)
+{
+  NS_ASSERTION(aParentNode, "Pointer is null!");
+
+  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(aParentNode));
+  nsCOMPtr<nsIDocShellTreeItem> parentItem;
+  item->GetParent(getter_AddRefs(parentItem));
+  while (parentItem) {
+    nsCOMPtr<nsIDocShellTreeItem>tmp;
+    parentItem->GetParent(getter_AddRefs(tmp));
+    if (!tmp) {
+      break;
+    }
+    parentItem = tmp;
+  }
+
+  if (!parentItem) {
+    parentItem = do_QueryInterface(aParentNode);
+  }
+
+  if (parentItem) {
+    nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(parentItem));
+    PrintDocTree(parentAsNode, 0);
+  }
+}
+#endif
+
 NS_IMETHODIMP
 nsDocShell::SetTreeOwner(nsIDocShellTreeOwner * aTreeOwner)
 {
+#ifdef DEBUG_DOCSHELL_FOCUS
+    nsCOMPtr<nsIDocShellTreeNode> node(do_QueryInterface(aTreeOwner));
+    if (node) {
+      PrintDocTree(node);
+    }
+#endif
+
     // Don't automatically set the progress based on the tree owner for frames
     if (!IsFrame()) {
         nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
@@ -2480,9 +2596,31 @@ nsDocShell::GetMainWidget(nsIWidget ** aMainWidget)
     return GetParentWidget(aMainWidget);
 }
 
+void 
+nsDocShell::ForceUpdate(nsIDocShell* aDocShell)
+{
+  NS_ASSERTION(aDocShell, "DocShell is null!");
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aDocShell->GetPresShell(getter_AddRefs(presShell));
+
+  nsCOMPtr<nsIViewManager> vm;
+  presShell->GetViewManager(getter_AddRefs(vm));
+  if (vm) {
+    vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+#ifdef DEBUG_DOCSHELL_FOCUS
+    printf("nsDocShell::ForceUpdate - DS: %p **********\n", aDocShell);
+#endif
+  }
+}
+
 NS_IMETHODIMP
 nsDocShell::SetFocus()
 {
+#ifdef DEBUG_DOCSHELL_FOCUS
+    printf("nsDocShell::SetFocus %p\n", (nsIDocShell*)this);
+#endif
+
     nsCOMPtr<nsIPresShell> presShell;
     nsCOMPtr<nsIDocument> document;
     GetPresShell(getter_AddRefs(presShell));
@@ -2522,23 +2660,183 @@ nsDocShell::SetFocus()
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIContent> focusContent;
-    esm->GetNextTabbableContent(rootContent, nsnull, PR_TRUE,
-                                getter_AddRefs(focusContent));
+
+    // Figure out what type of document this is
+    // if parent doc is content then set focus to document itself
+    // and set the "special" flag so it knows we are at the beginning
+    // of the document
+    PRBool doFocusDoc = PR_FALSE;
+    nsIDocShellTreeItem* treeItem = NS_STATIC_CAST(nsIDocShellTreeItem *, this);
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    treeItem->GetParent(getter_AddRefs(parentItem));
+    if (parentItem) {
+      PRInt32 type;
+      parentItem->GetItemType(&type);
+      doFocusDoc = type == nsIDocShellTreeItem::typeContent;
+    }
+
+    // Tell itself (and the DocShellFocusController) who has focus
+    // this way focus gets removed from the currently focused DocShell
+    SetHasFocus(PR_TRUE);
+
+    // Either focus the document or the "first" piece of content
+    if (doFocusDoc) {
+      esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+      esm->SetSpecialTopOfDoc(PR_TRUE);
+    } else {
+      nsCOMPtr<nsIContent> content;
+      esm->GetNextTabbableIndexContent(rootContent, PR_TRUE, PR_TRUE, getter_AddRefs(content));
+      if (!content) {
+        esm->GetNextTabbableContent(rootContent, nsnull, PR_TRUE,
+                                    getter_AddRefs(focusContent));
+      } else {
+        focusContent = content;
+      }
+    }
+
     if (focusContent) {
         nsIFrame *focusFrame = nsnull;
         presShell->GetPrimaryFrameFor(focusContent, &focusFrame);
         esm->ChangeFocus(focusContent, focusFrame, PR_TRUE);
+        SetCanvasHasFocus(PR_FALSE);
     } else {
         nsCOMPtr<nsIScriptGlobalObject> sgo;
         document->GetScriptGlobalObject(getter_AddRefs(sgo));
         if (sgo) {
             nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
-            if (domwin)
+            if (domwin) {
                 domwin->Focus();
+            }
         }
     }
 
     return NS_OK;
+}
+
+//-------------------------------------------------
+// Finds the very next DocShell after the arg aNode
+nsresult 
+nsDocShell::FindNextChildDoc(nsIDocShellTreeNode* aNode, PRBool aForward, nsIDocShell** aDocShell)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+  *aDocShell = nsnull;
+
+  PRInt32 count;
+  aNode->GetChildCount(&count);
+  if (count > 0) {
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    aNode->GetChildAt(aForward?0:count-1, getter_AddRefs(child));
+    NS_ASSERTION(child, "Child can't be null!");
+    nsCOMPtr<nsIDocShell>ds = do_QueryInterface(child);
+    *aDocShell = ds.get();
+    NS_ADDREF(*aDocShell);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+//-------------------------------------------------
+// Finds the very next DocShell after the arg aNode
+PRBool 
+nsDocShell::FocusNextChild(nsIBaseWindow * aCurrentFocus, PRBool aForward)
+{
+  // Make sure the current focused item is content
+  // and if so find the next content DS and give it focus
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(aCurrentFocus));
+  if (treeItem) {
+    PRInt32 type;
+    treeItem->GetItemType(&type);
+    if (type == nsIDocShellTreeItem::typeContent) {
+      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aCurrentFocus));
+      if (!docShell) return PR_FALSE;
+
+      nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(aCurrentFocus));
+      if (!treeNode) return PR_FALSE;
+      PRInt32 childCount;
+      treeNode->GetChildCount(&childCount);
+
+      nsCOMPtr<nsIPresContext> presContext;
+      docShell->GetPresContext(getter_AddRefs(presContext));
+      if (!presContext) return PR_FALSE;
+
+      nsCOMPtr<nsIEventStateManager> esm;
+      presContext->GetEventStateManager(getter_AddRefs(esm));
+      if (!esm) return PR_FALSE;
+
+      nsCOMPtr<nsIPresShell> presShell;
+      docShell->GetPresShell(getter_AddRefs(presShell));
+      if (!presShell) return PR_FALSE;
+
+      nsCOMPtr<nsIDocument> document;
+      presShell->GetDocument(getter_AddRefs(document));
+      if (!document) return PR_FALSE;
+
+      nsIEventStateManager::eDocType docType;
+      if (NS_FAILED(esm->FigureOutKindOfDoc(document, &docType))) return PR_FALSE;
+
+      nsCOMPtr<nsIContent> rootContent = getter_AddRefs(document->GetRootContent());
+      if (!rootContent) return PR_FALSE;
+
+      PRBool hasTabIndexes;
+      esm->HasPositiveTabIndex(rootContent, &hasTabIndexes); // ignoring return code
+
+      nsIDocShell* thisDS = NS_STATIC_CAST(nsIDocShell *, this);
+      // leave printf for debugging
+      //printf("DS: %p  TBI: %s  chld: %s  DSE: %s\n", docShell.get(), hasTabIndexes?"Y":"N", childCount > 0?"Y":"N", docShell.get() != thisDS?"Y":"N");
+      if (docType == nsIEventStateManager::eFrameSet ||
+          (docShell.get() != thisDS && !hasTabIndexes && childCount > 0)) {
+        nsCOMPtr<nsIDocShell> childDS;
+        if (NS_SUCCEEDED(FindNextChildDoc(treeNode, aForward, getter_AddRefs(childDS)))) {
+          nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(childDS));
+          if (NS_SUCCEEDED(baseWin->SetFocus())) {
+            MakeSureOfSetFocus(baseWin);
+            return PR_TRUE;
+          }
+        }
+      } else if (docShell.get() != thisDS) {
+        nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(docShell));
+        if (NS_SUCCEEDED(baseWin->SetFocus())) {
+          MakeSureOfSetFocus(baseWin);
+          return PR_TRUE;
+        }
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
+//------------------------------------------------------------
+// This is just in case we run into a window that 
+// isn't implemented nsDocShell, because if it is implemented
+// by this class then all this will have already been done.
+void
+nsDocShell::MakeSureOfSetFocus(nsIBaseWindow * aCurrentFocus, nsIDocShell* aDocShell)
+{
+  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aCurrentFocus);
+  if (!docShell) {
+    if (aDocShell != nsnull) {
+      docShell = aDocShell;
+    } else {
+      return;
+    }
+  }
+
+  PRBool hasFocus;
+  docShell->GetHasFocus(&hasFocus);
+
+  // leave printf for debugging purposes
+  //printf(">>>>>>>>>> nsDocShell::SetHasFocus: %p  %s\n", docShell.get(), hasFocus?"Yes":"No");
+
+  if (!hasFocus) {
+    docShell->SetHasFocus(PR_TRUE);
+
+    nsDocShellFocusController* dsfc = nsDocShellFocusController::GetInstance();
+    if (dsfc) {
+      dsfc->Focus(docShell);
+    }
+    ForceUpdate(docShell);// Force Paint Here
+  }
 }
 
 NS_IMETHODIMP
@@ -2561,8 +2859,19 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
             ret = chromeFocus->FocusNextElement();
         else
             ret = chromeFocus->FocusPrevElement();
+
+        // For DocShell's not implemented by this class
+        nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(chromeFocus));
+        MakeSureOfSetFocus(nsnull, docShell);
         return ret;
     }
+
+#ifdef DEBUG_DOCSHELL_FOCUS
+    nsIDocShellTreeNode* node = NS_STATIC_CAST(nsIDocShellTreeNode *, this);
+    if (node) {
+      PrintDocTree(node);
+    }
+#endif
 
     // Otherwise, first person we should call is the parent, or the 
     // docshell tree owner.
@@ -2573,6 +2882,14 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
     //If the current focus is us, offer it to the next owner.
     if (aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow *, this)) {
         if (nextCallWin) {
+
+            // Make sure the current focused item is content
+            // and if so find the next content DS and give it focus
+            if (FocusNextChild(aCurrentFocus, aForward)) {
+              *aTookFocus = PR_TRUE;
+              return NS_OK;
+            }
+
             ret = nextCallWin->FocusAvailable(aCurrentFocus,
                                               aForward, aTookFocus);
             if (NS_SUCCEEDED(ret) && *aTookFocus)
@@ -2595,9 +2912,18 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
             child(do_QueryInterface((nsISupports *) mChildren.ElementAt(i)));
         //If we have focus we offer it to our first child.
         if (aCurrentFocus == NS_STATIC_CAST(nsIBaseWindow *, this)) {
+            // Make sure the current focused item is content
+            // and if so find the next content DS and give it focus
+            if (FocusNextChild(child, aForward)) {
+              *aTookFocus = PR_TRUE;
+              return NS_OK;
+            }
+
             if (NS_SUCCEEDED(child->SetFocus())) {
                 *aTookFocus = PR_TRUE;
-                return NS_OK;
+                // For DocShell's not implemented by this class
+                MakeSureOfSetFocus(child);
+               return NS_OK;
             }
         }
         //If we don't have focus, find the child that does then
@@ -2608,6 +2934,8 @@ nsDocShell::FocusAvailable(nsIBaseWindow * aCurrentFocus,
                     do_QueryInterface((nsISupports *) mChildren.ElementAt(i));
                 if (NS_SUCCEEDED(child->SetFocus())) {
                     *aTookFocus = PR_TRUE;
+                    // For DocShell's not implemented by this class
+                    MakeSureOfSetFocus(child);
                     return NS_OK;
                 }
             }
@@ -5375,6 +5703,78 @@ nsDocShell::IsFrame()
     return PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsDocShell::GetHasFocus(PRBool *aHasFocus)
+{
+  *aHasFocus = mHasFocus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetHasFocus(PRBool aHasFocus)
+{
+  if (mParent != nsnull) {
+    PRInt32 type;
+    mParent->GetItemType(&type);
+    if (type != nsIDocShellTreeItem::typeContent) {
+      return NS_OK;
+    }
+  }
+
+  // leave printf for debgging purposes
+  //printf(">>>>>>>>>> nsDocShell::SetHasFocus: %p  %s\n", this, aHasFocus?"Yes":"No");
+
+  mHasFocus = aHasFocus;
+
+  nsDocShellFocusController* dsfc = nsDocShellFocusController::GetInstance();
+  if (dsfc && aHasFocus) {
+    dsfc->Focus(this);
+  }
+
+  SetCanvasHasFocus(aHasFocus);
+
+  // Force Paint Here
+  ForceUpdate(this);
+  return NS_OK;
+}
+
+//-------------------------------------------------------
+// Tells the HTMLFrame/CanvasFrame that is now has focus
+NS_IMETHODIMP
+nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
+{
+  nsCOMPtr<nsIPresShell> presShell;
+  GetPresShell(getter_AddRefs(presShell));
+  if (!presShell) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocument> doc;
+  presShell->GetDocument(getter_AddRefs(doc));
+  if (!doc) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> rootContent = getter_AddRefs(doc->GetRootContent());
+  if (!rootContent) return NS_ERROR_FAILURE;
+
+  nsIFrame* frame;
+  presShell->GetPrimaryFrameFor(rootContent, &frame);
+  if (frame != nsnull) {
+    frame->GetParent(&frame);
+    if (frame != nsnull) {
+      nsICanvasFrame* canvasFrame;
+      if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsICanvasFrame), (void**)&canvasFrame))) {
+        canvasFrame->SetHasFocus(aCanvasHasFocus);
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetCanvasHasFocus(PRBool *aCanvasHasFocus)
+{
+  return NS_ERROR_FAILURE;
+}
+
 //*****************************************************************************
 //***    nsRefreshTimer: Object Management
 //*****************************************************************************
@@ -5457,4 +5857,33 @@ nsRefreshTimer::Notify(nsITimer * aTimer)
             loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
         mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
     }
+}
+
+//*****************************************************************************
+//***    nsDocShellFocusController: Object Management
+//*****************************************************************************
+void 
+nsDocShellFocusController::Focus(nsIDocShell* aDocShell)
+{
+#ifdef DEBUG_DOCSHELL_FOCUS
+  printf("****** nsDocShellFocusController Focus To: %p  Blur To: %p\n", aDocShell, mFocusedDocShell);
+#endif
+
+  if (aDocShell != mFocusedDocShell) {
+    if (mFocusedDocShell) {
+      mFocusedDocShell->SetHasFocus(PR_FALSE);
+    }
+    mFocusedDocShell = aDocShell;
+  }
+
+}
+
+//--------------------------------------------------
+// This is need for when the document with focus goes away
+void 
+nsDocShellFocusController::ClosingDown(nsIDocShell* aDocShell)
+{
+  if (aDocShell == mFocusedDocShell) {
+    mFocusedDocShell = nsnull;
+  }
 }

@@ -67,6 +67,7 @@ nsILayoutHistoryState.h \
 nsIStatefulFrame.h \
 nsIScrollableFrame.h \
 nsIScrollableViewProvider.h \
+nsICanvasFrame.h \
 $(NULL)
 
 ifdef IBMBIDI

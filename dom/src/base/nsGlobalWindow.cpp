@@ -1719,8 +1719,9 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
     treeOwnerAsWin->SetVisibility(PR_TRUE);
 
   nsCOMPtr<nsIPresShell> presShell;
-  if (mDocShell)
+  if (mDocShell) {
     mDocShell->GetPresShell(getter_AddRefs(presShell));
+  }
 
   nsresult result = NS_OK;
   if (presShell) {
@@ -1759,6 +1760,10 @@ NS_IMETHODIMP GlobalWindowImpl::Blur()
 
     if (newFocusWin)
       newFocusWin->SetFocus();
+  }
+
+  if (mDocShell) {
+    mDocShell->SetHasFocus(PR_FALSE);
   }
 
   return NS_OK;

@@ -43,6 +43,23 @@
 #include "nsIScrollableView.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
+#include "nsIScrollPositionListener.h"
+
+// for focus
+#include "nsIDOMWindowInternal.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIFocusController.h"
+#include "nsPIDOMWindow.h"
+#include "nsIScrollableFrame.h"
+#include "nsIScrollableView.h"
+#include "nsIDocShell.h"
+#include "nsICanvasFrame.h"
+#include "nsIPref.h"
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+#ifdef DEBUG_rods
+//#define DEBUG_CANVAS_FOCUS
+#endif
 
 // Interface IDs
 
@@ -53,8 +70,21 @@
  * It only supports having a single child frame which must be an area
  * frame
  */
-class CanvasFrame : public nsHTMLContainerFrame {
+class CanvasFrame : public nsHTMLContainerFrame, 
+                    public nsIScrollPositionListener, 
+                    public nsICanvasFrame {
 public:
+  CanvasFrame() : mDoPaintFocus(PR_FALSE) {}
+
+   // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow);
+
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
@@ -90,6 +120,13 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
+  // nsIScrollPositionListener
+  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
+	NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
+
+  // nsICanvasFrame
+  NS_IMETHOD SetHasFocus(PRBool aHasFocus) { mDoPaintFocus = aHasFocus; return NS_OK; }
+
   /**
    * Get the "type" of the frame
    *
@@ -113,7 +150,23 @@ public:
 
 protected:
   virtual PRIntn GetSkipSides() const;
+  void DrawDottedRect(nsIRenderingContext& aRenderingContext, nsRect& aRect);
+
+  // Data members
+  PRPackedBool             mDoPaintFocus;
+  nsCOMPtr<nsIPresContext> mPresContext;
+
+  // static members
+  static PRBool       mShowFocusPrefOn;
+
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 };
+
+PRBool CanvasFrame::mShowFocusPrefOn   = PR_TRUE;
+
 
 //----------------------------------------------------------------------
 
@@ -129,6 +182,102 @@ NS_NewCanvasFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   *aNewFrame = it;
+  return NS_OK;
+}
+
+//--------------------------------------------------------------
+// Frames are not refcounted, no need to AddRef
+NS_IMETHODIMP
+CanvasFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIScrollPositionListener))) {
+    *aInstancePtr = (void*) ((nsIScrollPositionListener*) this);
+    return NS_OK;
+  } 
+  
+  if (aIID.Equals(NS_GET_IID(nsICanvasFrame))) {
+    *aInstancePtr = (void*) ((nsICanvasFrame*) this);
+    return NS_OK;
+  } 
+  
+
+  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP
+CanvasFrame::Init(nsIPresContext*  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsHTMLContainerFrame::Init(aPresContext,aContent,aParent,aContext,aPrevInFlow);
+
+  mPresContext = aPresContext;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+  nsCOMPtr<nsIViewManager> vm;
+  presShell->GetViewManager(getter_AddRefs(vm));
+
+  nsIScrollableView* scrollingView = nsnull;
+  vm->GetRootScrollableView(&scrollingView);
+
+  if (scrollingView) {
+    scrollingView->AddScrollPositionListener((nsIScrollPositionListener *)this);
+  }
+
+  // Get the prefs service
+  nsresult result;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+  if (NS_SUCCEEDED(result)) {
+    prefs->GetBoolPref("layout.reflow.showframecounts", &mShowFocusPrefOn);
+  }
+
+  return rv;
+
+}
+
+NS_IMETHODIMP
+CanvasFrame::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+{
+#ifdef DEBUG_CANVAS_FOCUS
+  {
+    PRBool hasFocus = PR_FALSE;
+    nsCOMPtr<nsISupports> container;
+    mPresContext->GetContainer(getter_AddRefs(container));
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+    if (docShell) {
+      docShell->GetHasFocus(&hasFocus);
+    }
+    printf("SPWC: %p  HF: %s  mDoPaintFocus: %s\n", docShell.get(), hasFocus?"Y":"N", mDoPaintFocus?"Y":"N");
+  }
+#endif
+
+  if (mDoPaintFocus) {
+    mDoPaintFocus = PR_FALSE;
+    
+    nsCOMPtr<nsIPresShell> presShell;
+    mPresContext->GetShell(getter_AddRefs(presShell));
+    if (presShell) {
+      nsCOMPtr<nsIViewManager> vm;
+      presShell->GetViewManager(getter_AddRefs(vm));
+      if (vm) {
+        vm->UpdateAllViews(NS_VMREFRESH_NO_SYNC);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CanvasFrame::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+{
   return NS_OK;
 }
 
@@ -228,6 +377,26 @@ CanvasFrame::RemoveFrame(nsIPresContext* aPresContext,
   return rv;
 }
 
+void
+CanvasFrame::DrawDottedRect(nsIRenderingContext& aRenderingContext, nsRect& aRect)
+{
+#ifdef DEBUG_CANVAS_FOCUS
+  printf("** DrawDottedRect: %d,%d,%d,%d\n",aRect.x, aRect.y, aRect.width, aRect.height);
+#endif
+
+  aRenderingContext.DrawLine(aRect.x, aRect.y, 
+                             aRect.x+aRect.width, aRect.y);
+  aRenderingContext.DrawLine(aRect.x+aRect.width, aRect.y, 
+                             aRect.x+aRect.width, aRect.y+aRect.height);
+  aRenderingContext.DrawLine(aRect.x+aRect.width, aRect.y+aRect.height, 
+                             aRect.x, aRect.y+aRect.height);
+  aRenderingContext.DrawLine(aRect.x, aRect.y+aRect.height, 
+                             aRect.x, aRect.y);
+  aRenderingContext.DrawLine(aRect.x, aRect.y+aRect.height, 
+                             aRect.x, aRect.y);
+}
+ 
+
 NS_IMETHODIMP
 CanvasFrame::Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -237,7 +406,90 @@ CanvasFrame::Paint(nsIPresContext* aPresContext,
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     SetDefaultBackgroundColor(aPresContext);
   }
-  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  nsresult rv = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+
+#ifdef DEBUG_CANVAS_FOCUS
+    nsCOMPtr<nsIContent> focusContent;
+    nsCOMPtr<nsIEventStateManager> esm;
+    aPresContext->GetEventStateManager(getter_AddRefs(esm));
+    if (esm) {
+      esm->GetFocusedContent(getter_AddRefs(focusContent));
+    }
+
+    PRBool hasFocus = PR_FALSE;
+    nsCOMPtr<nsISupports> container;
+    aPresContext->GetContainer(getter_AddRefs(container));
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+    if (docShell) {
+      docShell->GetHasFocus(&hasFocus);
+      printf("%p - CanvasFrame::Paint R:%d,%d,%d,%d  DR: %d,%d,%d,%d\n", this, 
+              mRect.x, mRect.y, mRect.width, mRect.height,
+              aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+    }
+    printf("%p - Focus: %s   c: %p  DoPaint:%s\n", docShell.get(), hasFocus?"Y":"N", 
+           focusContent.get(), mDoPaintFocus?"Y":"N");
+#endif
+
+    if (mDoPaintFocus) {
+      aRenderingContext.PushState();
+      PRBool clipEmpty;
+      nsRect focusRect;
+      GetRect(focusRect);
+      /////////////////////
+      // draw focus
+      // XXX This is only temporary
+      const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+      // Only paint the focus if we're visible
+      if (disp->IsVisible()) {
+        nsCOMPtr<nsIEventStateManager> stateManager;
+        nsresult rv = aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
+        if (NS_SUCCEEDED(rv)) {
+          nsIFrame * parentFrame;
+          GetParent(&parentFrame);
+          nsIScrollableFrame* scrollableFrame;
+          if (NS_SUCCEEDED(parentFrame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollableFrame))) {
+            nscoord width, height;
+            scrollableFrame->GetClipSize(aPresContext, &width, &height);
+          }
+          nsIView* parentView;
+          parentFrame->GetView(aPresContext, &parentView);
+
+          nsIScrollableView* scrollableView;
+          if (NS_SUCCEEDED(parentView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView))) {
+            nscoord width, height;
+            scrollableView->GetContainerSize(&width, &height);
+            const nsIView* clippedView;
+            scrollableView->GetClipView(&clippedView);
+            nsRect vcr;
+            clippedView->GetBounds(vcr);
+            focusRect.height = vcr.height;
+            nscoord x,y;
+            scrollableView->GetScrollPosition(x, y);
+            focusRect.x += x;
+            focusRect.y += y;
+          }
+          aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
+          aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+          float p2t;
+          aPresContext->GetPixelsToTwips(&p2t);
+          nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+          focusRect.width  -= onePixel;
+          focusRect.height -= onePixel;
+
+          DrawDottedRect(aRenderingContext, focusRect);
+
+          focusRect.Deflate(onePixel, onePixel);
+          DrawDottedRect(aRenderingContext, focusRect);
+        }
+      }
+      aRenderingContext.PopState(clipEmpty);
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
