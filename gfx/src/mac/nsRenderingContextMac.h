@@ -23,7 +23,7 @@
 #ifndef nsRenderingContextMac_h___
 #define nsRenderingContextMac_h___
 
-#include "nsIRenderingContext.h"
+#include "nsRenderingContextImpl.h"
 #include "nsDrawingSurfaceMac.h"
 #include "nsUnicodeRenderingToolkit.h"
 #include <QDOffscreen.h>
@@ -45,7 +45,7 @@ class nsIGraphics;
 //------------------------------------------------------------------------
 
 
-class nsRenderingContextMac : public nsIRenderingContext
+class nsRenderingContextMac : public nsRenderingContextImpl
 {
 public:
   nsRenderingContextMac();
