@@ -38,6 +38,8 @@
 
 use Getopt::Mixed "nextOption";
 
+$SIG{INT} = 'int_handler';
+
 # command line option defaults
 local $opt_classpath = "";
 local $opt_engine_type = "";
@@ -58,12 +60,7 @@ local $options = "b=s bugurl>b c=s classpath>c d smdebug>d f=s file>f " .
 
 &parse_args;
 
-if (!$opt_engine_type) {
-    die "You must select a type of engine to test.\n";
-}
-
-&dd ("output file is '$opt_output_file'");
-
+local $engine_command = &get_engine_command;
 local $user_exit = 0;
 local $html = "";
 local @failed_tests;
@@ -71,20 +68,25 @@ local $os_type = &get_os_type;
 local $failures_reported = 0;
 local $tests_completed = 0;
 local @test_list = &get_test_list;
-
-$SIG{INT} = 'int_handler';
+local $exec_time_string;
+local $start_time = time;
 
 &execute_tests (@test_list);
-&write_results;
 
-&status ("Wrote results to '$opt_output_file'.");
-if ($opt_console_failures) {
-    &status ("$failures_reported test(s) failed");
+local $exec_time = (time - $start_time);
+local $exec_mins = int($exec_time / 60);
+local $exec_secs = ($exec_time % 60);
+
+if ($exec_mins > 0) {
+    $exec_time_string = "$exec_mins minutes, $exec_secs seconds";
+} else {
+    $exec_time_string = "$exec_secs seconds";
 }
+
+&write_results;
 
 sub execute_tests {
     local (@test_list) = @_;
-    local $engine_command = &get_engine_command;
     local $test, $shell_command, $line, @output;
     local $file_param = " -f ";
     local $last_suite, $last_test_dir;
@@ -182,8 +184,9 @@ sub write_results {
     local $list_name = ($opt_test_list_file) ?
       "List '$opt_test_list_file'" : "All tests";
     local ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = 
-      &get_padded_localtime;
-
+      &get_padded_time(localtime);
+    local $failure_pct = int(($failures_reported / $tests_completed) * 10000) /
+      100;
     &dd ("Writing output to $opt_output_file.");
 
     open (OUTPUT, "> $opt_output_file") ||
@@ -198,31 +201,49 @@ sub write_results {
      "<p class='results_summary'>\n" .
      ($#test_list + 1) . " test(s) selected, $tests_completed test(s) " .
      "completed, $failures_reported failures reported " .
-     "(" . (($failures_reported / $tests_completed) * 100) . "% failed)<br>\n" .
-     "[ <a href='#fail_detail'>Failure Details</a> | " .
-     "<a href='#retest_list'>Retest List</a> | " .
-     "<a href='menu.html'>Test Selection Page</a> ]<br>\n" .
-     "<hr>\n" .
-     "<a name='fail_detail'></a>\n" .
-     "<h2>Failure Details</h2><br>\n<dl>" .
-     $html .
-     "</dl>\n[ <a href='#tippy_top'>Top of Page</a> | " .
-     "<a href='#fail_detail'>Top of Failures</a> ]<br>\n" .
-     "<hr>\n<pre>\n" .
-     "<a name='retest_list'></a>\n" .
-     "<h2>Retest List</h2><br>\n" .
-     "# Retest List, $opt_engine_type, " .
-     "generated $year $mon $mday $hour:$min.\n" .
-     "# Original test base was: $list_name.\n" .
-     "# $tests_completed of " . ($#test_list + 1) . " test(s) were completed, " .
-     "$failures_reported failures reported.\n" .
-     join ("\n", @failed_tests) .
-     "</pre>\n" .
-     "[ <a href='#tippy_top'>Top of Page</a> | " .
-     "<a href='#retest_list'>Top of Retest List</a> ]<br>\n" .
-     "</body>");
+     "($failure_pct% failed)<br>\n" .
+     "Engine command line: $engine_command<br>\n" .
+     "OS type: $os_type<br>\n" .
+     "Testcase execution time: $exec_time_string.<br><br>\n");
+
+    if ($failures_reported > 0) {
+        print OUTPUT
+          ("[ <a href='#fail_detail'>Failure Details</a> | " .
+           "<a href='#retest_list'>Retest List</a> | " .
+           "<a href='menu.html'>Test Selection Page</a> ]<br>\n" .
+           "<hr>\n" .
+           "<a name='fail_detail'></a>\n" .
+           "<h2>Failure Details</h2><br>\n<dl>" .
+           $html .
+           "</dl>\n[ <a href='#tippy_top'>Top of Page</a> | " .
+           "<a href='#fail_detail'>Top of Failures</a> ]<br>\n" .
+           "<hr>\n<pre>\n" .
+           "<a name='retest_list'></a>\n" .
+           "<h2>Retest List</h2><br>\n" .
+           "# Retest List, $opt_engine_type, " .
+           "generated $mon/$mday/$year $hour:$min.\n" .
+           "# Original test base was: $list_name.\n" .
+           "# $tests_completed of " . ($#test_list + 1) .
+           " test(s) were completed, " .
+           "$failures_reported failures reported.\n" .
+           join ("\n", @failed_tests) .
+           "</pre>\n" .
+           "[ <a href='#tippy_top'>Top of Page</a> | " .
+           "<a href='#retest_list'>Top of Retest List</a> ]<br>\n");
+    } else {
+        print OUTPUT 
+          ("<h1>Whoop-de-doo, nothing failed!</h1>\n");
+    }
+    
+    print OUTPUT "</body>";
 
     close (OUTPUT);
+
+    &status ("Wrote results to '$opt_output_file'.");
+
+    if ($opt_console_failures) {
+        &status ("$failures_reported test(s) failed");
+    }
 
 }
  
@@ -298,10 +319,6 @@ sub parse_args {
             $opt_console_failures = 1;
             $opt_trace = 1;
             
-        } elsif ($option eq "v") {
-            &dd ("opt: setting verbose mode.");
-            $opt_verbose = 1;
-            
         } elsif ($option eq "x") {
             &dd ("opt: setting lxr url to '$value'.");
             $opt_lxr_url = $value;
@@ -313,11 +330,17 @@ sub parse_args {
     
     Getopt::Mixed::cleanup();
     
+    if (!$opt_engine_type) {
+        die "You must select a type of engine to test.\n";
+    }
+
     if (!$opt_output_file) {
         $opt_output_file = "results-" . $opt_engine_type . "-" . 
           &get_tempfile_id . ".html";
     }
     
+    &dd ("output file is '$opt_output_file'");
+
 }
 
 #
@@ -342,7 +365,6 @@ sub usage {
        "(-r|--rhino)            Test Rhino engine.\n" .
        "(-s|--shellpath) <path> Location of JavaScript shell.\n" .
        "(-t|--trace)            Trace script execution.\n" .
-       # "(-v|--verbose)          Show all test cases (not recommended)\n" .
        "(-x|--lxrurl) <url>     Complete URL to tests subdirectory on lxr.\n" .
        "                        (default is $opt_lxr_url)\n\n");
     
@@ -500,7 +522,8 @@ sub get_user_test_list {
     local @retval;
     
     if (!(-f $list_file)) {
-        die ("Test List file '$list_file' not found.");
+        print STDERR "Test List file '$list_file' not found.\n";
+        exit 1;
     }
 
     if ($list_file =~ /\.js$/) {
@@ -560,15 +583,14 @@ sub get_default_test_list {
 #
 sub get_tempfile_id {
     local ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
-      &get_padded_localtime;   
+      &get_padded_time (localtime);
     
     return $year . "-" . $mon . "-" . $mday . "-" . $hour . $min . $sec;
     
 }
 
-sub get_padded_localtime {
-    local ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = 
-      localtime;
+sub get_padded_time {
+    local ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = @_;
     
     $mon++;
     $mon = &zero_pad($mon);
