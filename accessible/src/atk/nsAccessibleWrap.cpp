@@ -285,27 +285,33 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    //nsIAccessibleText
-    nsCOMPtr<nsIAccessibleText> accessInterfaceText;
-    QueryInterface(NS_GET_IID(nsIAccessibleText),
-                   getter_AddRefs(accessInterfaceText));
-    if (accessInterfaceText) {
-        MaiInterfaceText *maiInterfaceText = new MaiInterfaceText(this);
-        NS_ENSURE_TRUE(maiInterfaceText, NS_ERROR_OUT_OF_MEMORY);
-        rv = AddMaiInterface(maiInterfaceText);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
 
-    //nsIAccessibleEditableText
-    nsCOMPtr<nsIAccessibleEditableText> accessInterfaceEditableText;
-    QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
-                   getter_AddRefs(accessInterfaceEditableText));
-    if (accessInterfaceEditableText) {
-        MaiInterfaceEditableText *maiInterfaceEditableText =
-            new MaiInterfaceEditableText(this);
-        NS_ENSURE_TRUE(maiInterfaceEditableText, NS_ERROR_OUT_OF_MEMORY);
-        rv = AddMaiInterface(maiInterfaceEditableText);
-        NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 accRole;
+    rv = GetRole(&accRole);
+
+    if (accRole != nsIAccessible::ROLE_HTML_CONTAINER) {
+        //nsIAccessibleText
+        nsCOMPtr<nsIAccessibleText> accessInterfaceText;
+        QueryInterface(NS_GET_IID(nsIAccessibleText),
+                       getter_AddRefs(accessInterfaceText));
+        if (accessInterfaceText) {
+            MaiInterfaceText *maiInterfaceText = new MaiInterfaceText(this);
+            NS_ENSURE_TRUE(maiInterfaceText, NS_ERROR_OUT_OF_MEMORY);
+            rv = AddMaiInterface(maiInterfaceText);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        //nsIAccessibleEditableText
+        nsCOMPtr<nsIAccessibleEditableText> accessInterfaceEditableText;
+        QueryInterface(NS_GET_IID(nsIAccessibleEditableText),
+                       getter_AddRefs(accessInterfaceEditableText));
+        if (accessInterfaceEditableText) {
+            MaiInterfaceEditableText *maiInterfaceEditableText =
+                new MaiInterfaceEditableText(this);
+            NS_ENSURE_TRUE(maiInterfaceEditableText, NS_ERROR_OUT_OF_MEMORY);
+            rv = AddMaiInterface(maiInterfaceEditableText);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
     }
 
     //nsIAccessibleSelection
@@ -348,14 +354,19 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
     }
 
     //nsIAccessibleTable
-    nsCOMPtr<nsIAccessibleTable> accessInterfaceTable;
-    QueryInterface(NS_GET_IID(nsIAccessibleTable),
-                   getter_AddRefs(accessInterfaceTable));
-    if (accessInterfaceTable) {
-        MaiInterfaceTable *maiInterfaceTable = new MaiInterfaceTable(this);
-        NS_ENSURE_TRUE(maiInterfaceTable, NS_ERROR_OUT_OF_MEMORY);
-        rv = AddMaiInterface(maiInterfaceTable);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (accRole == nsIAccessible::ROLE_TREE_TABLE) {
+      // In most cases, html table is used as container to arrange the webpage,
+      // not to represent a "real" table with practical colum, colum heaer, row.
+      // So, only add maiInterfaceTable for XUL table.
+      nsCOMPtr<nsIAccessibleTable> accessInterfaceTable;
+      QueryInterface(NS_GET_IID(nsIAccessibleTable),
+                     getter_AddRefs(accessInterfaceTable));
+      if (accessInterfaceTable) {
+          MaiInterfaceTable *maiInterfaceTable = new MaiInterfaceTable(this);
+          NS_ENSURE_TRUE(maiInterfaceTable, NS_ERROR_OUT_OF_MEMORY);
+          rv = AddMaiInterface(maiInterfaceTable);
+          NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
 
     return rv;
@@ -556,7 +567,6 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, void *aAtkStateSet)
 
     if (aState & nsIAccessible::STATE_VERTICAL)
         atk_state_set_add_state (state_set, ATK_STATE_VERTICAL);
-
 }
 
 PRBool nsAccessibleWrap::IsValidObject()
