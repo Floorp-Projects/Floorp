@@ -252,7 +252,7 @@ Rights Reserved.
 		<!-- sidebar with dir tree -->
 		<box id="sidebar-box">
 			<splitter class="sidebarheader-main" collapse="after">
-				<text style="min-width:1px" value="&addressbook-sidebar-header.label;"/>
+				<sidebarheader class="sidebarheader-main" value="&addressbook-sidebar-header.label;"/>
 			</splitter>
 			
 			<tree id="dirTree" flex="1"/>
@@ -282,4 +282,3 @@ Rights Reserved.
 	<box id="taskbar" class="toolbox-bottom"/>
 
 </window>
-

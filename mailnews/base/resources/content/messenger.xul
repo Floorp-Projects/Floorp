@@ -327,7 +327,7 @@ Rights Reserved.
 	<box align="horizontal" style="height:100px" flex="1">
 		<box id="sidebar-box">
 			<splitter class="sidebarheader-main" collapse="after" persist="state">
-				<text value="&mail-sidebar-header.label;"/>
+				<sidebarheader class="sidebarheader-main" value="&mail-sidebar-header.label;"/>
 			</splitter>
 			<tree id="folderTree" style="width:100px; height: 600px;" flex="1" context="folderPaneContext"/>
 		</box>
@@ -359,4 +359,3 @@ Rights Reserved.
 	<box id="taskbar" class="toolbox-bottom"/>
 
 </window>
-
