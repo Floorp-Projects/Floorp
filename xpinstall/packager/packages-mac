@@ -229,7 +229,6 @@ viewer:res:rdf:unread.gif
 viewer:res:rdf:xpidl-test-1.xul
 viewer:res:samples:*
 ; the line above will skip aliases to subdirectories; let's list them explicitly
-viewer:res:samples:resources
 viewer:res:samples:sampleimages
 
 -viewer:res:samples:.cvsignore
@@ -245,8 +244,6 @@ viewer:res:SchemaConcat.tbl
 viewer:res:strres-test.js
 viewer:res:strres-test.xul
 viewer:res:throbber:*
-viewer:res:toolbar:*
--viewer:res:toolbar:.cvsignore
 viewer:res:ua.css
 viewer:res:URLFieldSchema.tbl
 viewer:res:xpinstall:*
