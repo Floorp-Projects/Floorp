@@ -769,9 +769,9 @@ sub DefCol {
     $::needquote{$name} = $q;
 }
 
-DefCol("opendate", "date_format(bugs.creation_ts,'Y-m-d')", "Opened",
+DefCol("opendate", "date_format(bugs.creation_ts,'%Y-%m-%d')", "Opened",
        "bugs.creation_ts");
-DefCol("changeddate", "date_format(bugs.delta_ts,'Y-m-d')", "Changed",
+DefCol("changeddate", "date_format(bugs.delta_ts,'%Y-%m-%d')", "Changed",
        "bugs.delta_ts");
 DefCol("severity", "substring(bugs.bug_severity, 1, 3)", "Sev",
        "bugs.bug_severity");

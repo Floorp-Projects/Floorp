@@ -146,7 +146,7 @@ select
 	target_milestone,
 	qa_contact,
 	status_whiteboard,
-        date_format(creation_ts,'Y-m-d H:i'),
+        date_format(creation_ts,'%Y-%m-%d %H:%i'),
         groupset,
 	delta_ts,
 	sum(votes.count)
