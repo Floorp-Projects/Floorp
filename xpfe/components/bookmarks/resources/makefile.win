@@ -44,6 +44,8 @@ CHROME_CONTENT = \
 CHROME_SKIN = \
 	.\bookmark-folder-closed.gif \
 	.\bookmark-folder-closed-sel.gif \
+	.\home.gif \
+	.\home-sel.gif \
 	.\bookmark-folder-open.gif \
 	.\bookmark-folder-open-sel.gif \
 	.\bookmark-item.gif \

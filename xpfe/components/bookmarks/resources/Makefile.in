@@ -48,6 +48,8 @@ CHROME_SKIN = \
 	bookmark-folder-closed-sel.gif \
 	bookmark-folder-open.gif \
 	bookmark-folder-open-sel.gif \
+	home.gif \
+	home-sel.gif \
 	bookmark-item.gif \
 	bookmarks.css \
 	iefavorite.gif \
