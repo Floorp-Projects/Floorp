@@ -33,6 +33,34 @@ interface nsIURI;
 [uuid(58df5780-8006-11d2-bd91-00805f8ae3f4)]
 interface nsIScriptSecurityManager : nsISupports
 {
+	///////////////// Principals /////////////////////// 
+
+	/**
+	 * Return the principal of the innermost frame of the currently 
+	 * executing script. Will return null if there is no script 
+	 * currently executing.
+	 */
+    nsIPrincipal GetSubjectPrincipal();
+
+	/**
+	 * Return the all-powerful system principal.
+	 */
+    nsIPrincipal GetSystemPrincipal();
+
+	/**
+	 * Return a principal that can be QI'd to nsICodebasePrincipal and 
+	 * has the same origin as aURI.
+	 */
+    nsIPrincipal GetCodebasePrincipal(in nsIURI aURI);
+
+	/**
+	 * Return a principal that can be QI'd to nsICertificatePrincipal.
+	 */
+    nsIPrincipal GetCertificatePrincipal(in string aIssuer, in string aSerialNumber);
+
+	
+	///////////////// Security Checks //////////////////
+
     /**
      * Checks whether the currently executing script can access the given 
      * property.
@@ -50,6 +78,9 @@ interface nsIScriptSecurityManager : nsISupports
 	 *
 	 * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
 	 * should be denied.
+	 *
+	 * @param cx the JSContext of the script causing the load
+	 * @param uri the URI that is being loaded
 	 */
     void CheckLoadURIFromScript(in JSContextPtr cx, in nsIURI uri);
 
@@ -58,33 +89,53 @@ interface nsIScriptSecurityManager : nsISupports
 	 *
 	 * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
 	 * should be denied.
+	 *
+	 * @param from the URI causing the load
+	 * @param uri the URI that is being loaded
+	 * @param disallowFromMail if true, return NS_ERROR_DOM_BAD_URI if 'from'
+	 *                         is a URI associated with mail or news
 	 */
-    void CheckLoadURI(in nsIURI from, in nsIURI uri);
+    void CheckLoadURI(in nsIURI from, in nsIURI uri, 
+	                  in boolean disallowFromMail);
 
 	/**
-	 * Return the principal of the innermost frame of the currently 
-	 * executing script. Will return null if there is no script 
-	 * currently executing.
+	 * Return true if content from the given principal is allowed to
+	 * execute scripts.
 	 */
-    nsIPrincipal GetSubjectPrincipal();
-
-    nsIPrincipal GetSystemPrincipal();
-
-    nsIPrincipal GetCodebasePrincipal(in nsIURI aURI);
-
     boolean CanExecuteScripts(in nsIPrincipal principal);
 
+	/**
+	 * Return true if the given JavaScript function was compiled with
+	 * a principal that is allowed to execute scripts.
+	 */
     boolean CanExecuteFunction(in voidStar jsFunction);
 
+
+	///////////////// Capabilities /////////////////////
+	
+	/**
+	 * Return true if the currently executing script has 'capability' enabled.
+	 */
     boolean IsCapabilityEnabled(in string capability);
 	
+	/**
+	 * Enable 'capability' in the innermost frame of the currently executing
+	 * script.
+	 */
 	void EnableCapability(in string capability);
 
+	/**
+	 * Remove 'capability' from the innermost frame of the currently executing
+	 * script. Any setting of 'capability' from enclosing frames thus comes into
+	 * effect.
+	 */
     void RevertCapability(in string capability);
 
+	/**
+	 * Disable 'capability' in the innermost frame of the currently executing
+	 * script.
+	 */
     void DisableCapability(in string capability);
-
-    nsIPrincipal GetCertificatePrincipal(in string aIssuer, in string aSerialNumber);
 };
 
 %{C++

@@ -3788,7 +3788,8 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
                                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
                     if (NS_SUCCEEDED(rv))
-                        rv = securityManager->CheckLoadURI(baseURI, uri);
+                        rv = securityManager->CheckLoadURI(baseURI, uri, 
+			                                   PR_TRUE);
                 }
                 if (NS_FAILED(rv)) return rv;
 
@@ -4247,7 +4248,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
                       NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
       if (NS_FAILED(rv)) 
           return rv;
-      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url);
+      rv = securityManager->CheckLoadURI(mDocumentBaseURL, url, PR_FALSE);
       if (NS_FAILED(rv)) 
           return rv;
 

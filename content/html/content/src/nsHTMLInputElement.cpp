@@ -51,6 +51,9 @@
 #include "nsIXBLBinding.h"
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
+#include "nsIServiceManager.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsDOMError.h"
 
 #include "nsIPresState.h"
 #include "nsIDOMNodeList.h"
@@ -453,6 +456,24 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
   PRInt32 type;
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type || NS_FORM_INPUT_FILE == type) {
+    if (NS_FORM_INPUT_FILE == type) {
+      nsresult result;
+      NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
+                      NS_SCRIPTSECURITYMANAGER_PROGID, &result);
+      if (NS_FAILED(result)) 
+        return result;
+      PRBool enabled;
+      if (NS_FAILED(result = securityManager->IsCapabilityEnabled("UniversalFileRead", 
+                                                                  &enabled)))
+      {
+        return result;
+      }
+      if (!enabled) {
+        // setting the value of a "FILE" input widget requires the UniversalFileRead privilege
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
+
+    }
     nsIFormControlFrame* formControlFrame = nsnull;
     if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
       if (nsnull != formControlFrame ) { 
