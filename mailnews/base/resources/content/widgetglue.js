@@ -187,7 +187,7 @@ function MsgCompactFolder(isAll)
                 }
                 else
                 {
-                    ClearThreadTreeSelection();
+                    ClearThreadPaneSelection();
                     ClearMessagePane();
                 }
             }

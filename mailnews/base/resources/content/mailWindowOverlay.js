@@ -128,6 +128,7 @@ function InitViewSortByMenu()
     setSortByMenuItemCheckState("sortBySizeMenuitem", (sortType == nsMsgViewSortType.bySize));
     setSortByMenuItemCheckState("sortByStatusMenuitem", (sortType == nsMsgViewSortType.byStatus));
     setSortByMenuItemCheckState("sortBySubjectMenuitem", (sortType == nsMsgViewSortType.bySubject));
+    setSortByMenuItemCheckState("sortByThreadMenuitem", (sortType == nsMsgViewSortType.byThread));
     setSortByMenuItemCheckState("sortByUnreadMenuitem", (sortType == nsMsgViewSortType.byUnread));
 
     var sortOrder = gDBView.sortOrder;

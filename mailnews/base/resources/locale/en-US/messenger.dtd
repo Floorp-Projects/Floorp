@@ -90,6 +90,7 @@ Rights Reserved.
 <!ENTITY selectMenu.accesskey "l">  
 <!ENTITY selectThreadCmd.label "Thread">  
 <!ENTITY selectThreadCmd.accesskey "t">  
+<!ENTITY selectThreadCmd.key "a">  
 <!ENTITY selectFlaggedCmd.label "Flagged Messages">  
 <!ENTITY selectFlaggedCmd.accesskey "f">  
 <!ENTITY selectInvertCmd.label ".Invert Selection">  
@@ -142,6 +143,8 @@ Rights Reserved.
 <!ENTITY sortBySubjectCmd.accesskey "s">  
 <!ENTITY sortByUnreadCmd.label "Unread">  
 <!ENTITY sortByUnreadCmd.accesskey "n">  
+<!ENTITY sortByThreadCmd.label "Thread">  
+<!ENTITY sortByThreadCmd.accesskey "t">  
 <!ENTITY sortByOrderReceivedCmd.label "Order Received">  
 <!ENTITY sortByOrderReceivedCmd.accesskey "o">  
 <!ENTITY sortAscending.label "Ascending">

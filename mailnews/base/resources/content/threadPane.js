@@ -182,7 +182,7 @@ function MsgSortBySize()
 
 function MsgSortByLines() 
 {
-    dump("XXX fix this\n");
+    dump("XXX fix MsgSortByLines()\n");
     //MsgSortThreadPane(nsMsgViewSortType.byLines);
 }
 
@@ -198,7 +198,7 @@ function MsgSortByOrderReceived()
 
 function MsgSortByTotal()
 {
-    dump("XXX fix this\n");
+    dump("XXX fix MsgSortByTotal\n");
     //MsgSortThreadPane(nsMsgViewSortType.byTotal);
 }
 
@@ -260,14 +260,3 @@ function EnsureRowInThreadOutlinerIsVisible(index)
   var outliner = GetThreadOutliner();
   outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).ensureRowIsVisible(index); 
 }
-
-function GetThreadTree()
-{
-    dump("GetThreadTree, fix (or remove?) this\n");
-}
-
-function GetThreadTreeFolder() 
-{
-    dump("GetThreadTreeFolder, fix (or remove?) this\n");
-}
-

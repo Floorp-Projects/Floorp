@@ -211,6 +211,7 @@ Rights Reserved.
 	<key id="key_delete" oncommand="goDoCommand('cmd_delete');" shift="false"/>
 	<key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete')"/>
 	<key id="key_selectAll"/>
+	<key id="key_selectThread" key="&selectThreadCmd.key;"             oncommand="goDoCommand('cmd_selectThread');" modifiers="accel, shift"/>
 	
 	<key id="key_toggleRead" key="&markAsReadCmd.key;"               oncommand="goDoCommand('cmd_markAsRead');"/>
 	<key id="key_markAllRead" key="&markAllReadCmd.key;"             oncommand="goDoCommand('cmd_markAllRead');" modifiers="accel, shift"/>
@@ -223,7 +224,7 @@ Rights Reserved.
 	<key id="key_replyall" key="&replyToAllMsgCmd.key;"              oncommand="goDoCommand('cmd_replyall')" modifiers="accel, shift"/>
 	<key id="key_forward" key="&forwardMsgCmd.key;"                  oncommand="goDoCommand('cmd_forward')" modifiers="accel"/>
   <key id="key_editAsNew" key="&editMsgAsNewCmd.key;"              oncommand="goDoCommand('cmd_editAsNew')" modifiers="accel"/>
-  <key id="key_watchThread" key="&watchThreadMenu.key;"            oncommand="goDoCommand('cmd_watchThread')" modifiers="accel"/>
+  <key id="key_watchThread" key="&watchThreadMenu.key;"            oncommand="goDoCommand('cmd_watchThread')" />
   <key id="key_killThread" key="&killThreadMenu.key;"              oncommand="goDoCommand('cmd_killThread')" />
   <key id="key_openMessage" key="&openMessageWindowCmd.key;"       oncommand="goDoCommand('cmd_openMessage')" modifiers="accel"/>
   <key id="key_print" key="&printCmd.key;"                         oncommand="goDoCommand('cmd_print')" modifiers="accel"/>
@@ -824,6 +825,7 @@ Rights Reserved.
         <menupopup>
           <menuitem label="&selectThreadCmd.label;"
            accesskey="&selectThreadCmd.accesskey;"
+           key="key_selectThread"
            observes="cmd_selectThread"/>
           <menuitem label="&selectFlaggedCmd.label;"
            accesskey="&selectFlaggedCmd.accesskey;"
@@ -872,6 +874,7 @@ Rights Reserved.
           <menuitem id="sortBySizeMenuitem" type="checkbox" label="&sortBySizeCmd.label;" accesskey="&sortBySizeCmd.accesskey;" oncommand="MsgSortBySize()"/>
           <menuitem id="sortByStatusMenuitem" type="checkbox" label="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" oncommand="MsgSortByStatus()"/>
           <menuitem id="sortBySubjectMenuitem" type="checkbox" label="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" oncommand="MsgSortBySubject()"/>
+          <menuitem id="sortByThreadMenuitem" type="checkbox" label="&sortByThreadCmd.label;"  accesskey="&sortByThreadCmd.accesskey;" oncommand="MsgSortByThread()"/>
           <menuitem id="sortByUnreadMenuitem" type="checkbox" label="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByUnread()"/>
           <menuseparator/>
           <menuitem id="sortAscending" type="checkbox" label="&sortAscending.label;" accesskey="&sortAscending.accesskey;" oncommand="MsgSortAscending()"/>

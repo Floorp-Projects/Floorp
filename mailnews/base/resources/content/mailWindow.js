@@ -417,7 +417,7 @@ function loadStartPage() {
             if (startpage != "") {
                 window.frames["messagepane"].location = startpage;
                 //dump("start message pane with: " + startpage + "\n");
-        ClearMessageSelection();
+                ClearMessageSelection();
             }
         }
   }

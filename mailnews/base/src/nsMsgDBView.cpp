@@ -506,7 +506,8 @@ NS_IMETHODIMP nsMsgDBView::LoadMessageByMsgKey(nsMsgKey aMsgKey)
       if (viewPosition != nsMsgViewIndex_None)
       {
         nsCOMPtr <nsIMsgDBHdr> msgHdr;
-        GetMsgHdrForViewIndex(viewPosition, getter_AddRefs(msgHdr));
+        rv = GetMsgHdrForViewIndex(viewPosition, getter_AddRefs(msgHdr));
+        NS_ENSURE_SUCCESS(rv,rv);
         nsXPIDLString subject;
         FetchSubject(msgHdr, m_flags[viewPosition], getter_Copies(subject));
         mCommandUpdater->DisplayMessageChanged(m_folder, subject);
@@ -615,18 +616,18 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
     msgHdr = m_cachedHdr;
   else
   {
-    GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
+    rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
     if (NS_SUCCEEDED(rv))
     {
       m_cachedHdr = msgHdr;
       m_cachedMsgKey = key;
     }
-    else
-      return rv;
   }
 
-  if (!msgHdr)
+  if (NS_FAILED(rv) || !msgHdr) {
+    ClearHdrCache();
     return NS_MSG_INVALID_DBVIEW_INDEX;
+  }
 
   char    flags = m_flags.GetAt(aRow);
   if (!(flags & MSG_FLAG_READ))
@@ -787,17 +788,18 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
     msgHdr = m_cachedHdr;
   else
   {
-    GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
+    rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
     if (NS_SUCCEEDED(rv))
     {
       m_cachedHdr = msgHdr;
       m_cachedMsgKey = key;
     }
-    else
-      return rv;
   }
-  if (!msgHdr)
+
+  if (NS_FAILED(rv) || !msgHdr) {
+    ClearHdrCache();
     return NS_MSG_INVALID_DBVIEW_INDEX;
+  }
 
   *aValue = 0;
   // just a hack
@@ -1015,6 +1017,9 @@ NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement *
 
 NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
 {
+  if (!IsValidIndex(row))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+
   switch (colID[0])
   {
   case 'u': // unreadButtonColHeader
@@ -3211,12 +3216,31 @@ NS_IMETHODIMP nsMsgDBView::OnParentChanged (nsMsgKey aKeyChanged, nsMsgKey oldPa
 
 NS_IMETHODIMP nsMsgDBView::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator)
 {
-  ClearHdrCache();
   if (m_db)
   {
     m_db->RemoveListener(this);
     m_db = nsnull;
   }
+
+  ClearHdrCache();
+
+  // this is important, because the outliner will ask us for our
+  // row count, which get determine from the number of keys.
+  m_keys.RemoveAll();
+  // be consistent
+  m_flags.RemoveAll();
+  m_levels.RemoveAll();
+
+  // clear the existing selection.
+  if (mOutlinerSelection) {
+    mOutlinerSelection->ClearSelection(); 
+  }
+
+  // this will force the outliner to ask for the cell values
+  // since we don't have a db and we don't have any keys, 
+  // the thread pane goes blank
+  mOutliner->Invalidate();
+
   return NS_OK;
 }
 

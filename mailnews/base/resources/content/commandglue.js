@@ -161,7 +161,7 @@ function setTitleFromFolder(msgfolder, subject)
 
 function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
 {
-  dump('In ChangeFolderByURI uri = ' + uri + "\n");
+  //dump("In ChangeFolderByURI uri = " + uri + " sortType = " + sortType + "\n");
   if (uri == gCurrentLoadingFolderURI)
     return;
   var resource = RDF.GetResource(uri);
@@ -173,7 +173,6 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
   } catch (ex) {
       dump("error setting title: " + ex + "\n");
   }
-
 
   //if it's a server, clear the threadpane and don't bother trying to load.
   if(msgfolder.isServer) {
@@ -228,16 +227,16 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
   else
   {
     SetBusyCursor(window, true);
-  gCurrentFolderToReroot = "";
-  gCurrentLoadingFolderViewFlags = 0;  // is this correct?
-  gCurrentLoadingFolderSortType = 0;  // is this correct?
-  gCurrentLoadingFolderSortOrder = 0;  // is this correct?
+    gCurrentFolderToReroot = "";
+    gCurrentLoadingFolderViewFlags = 0;  // is this correct?
+    gCurrentLoadingFolderSortType = 0;  // is this correct?
+    gCurrentLoadingFolderSortOrder = 0;  // is this correct?
     gCurrentLoadingFolderViewType = 0;  // is this correct?
-  RerootFolder(uri, msgfolder, viewType, viewFlags, sortType, sortOrder);
+    RerootFolder(uri, msgfolder, viewType, viewFlags, sortType, sortOrder);
 
-  //Need to do this after rerooting folder.  Otherwise possibility of receiving folder loaded
-  //notification before folder has actually changed.
-  msgfolder.updateFolder(msgWindow);
+    //Need to do this after rerooting folder.  Otherwise possibility of receiving folder loaded
+    //notification before folder has actually changed.
+    msgfolder.updateFolder(msgWindow);
   }
 
   document.commandDispatcher.updateCommands('mail-toolbar');
@@ -255,32 +254,26 @@ function isNewsURI(uri)
 
 function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 {
-  dump('In reroot folder\n');
+  //dump("In reroot folder, sortType = " +  sortType + "\n");
 
   // workaround for #39655
   gFolderJustSwitched = true;
 
-  ClearThreadTreeSelection();
+  ClearThreadPaneSelection();
+
+  //Clear the new messages of the old folder
+  var oldFolder = msgWindow.openFolder;
+  if (oldFolder) {
+    if (oldFolder.hasNewMessages) {
+      oldFolder.clearNewMessages();
+    }
+  }
 
   //Set the window's new open folder.
   msgWindow.openFolder = newFolder;
 
   SetViewFlags(viewFlags);
 
-  //Clear the new messages of the old folder
-  dump("some work needed here\n");
-/*
-  var oldFolderURI = folder.getAttribute("ref");
-  if(oldFolderURI && (oldFolderURI != "null") && (oldFolderURI !=""))
-  {
-   var oldFolder = GetMsgFolderFromURI(oldFolderURI);
-   if(oldFolder)
-   {
-       if (oldFolder.hasNewMessages)
-           oldFolder.clearNewMessages();
-   }
-  }
-*/
   //the new folder being selected should have its biff state get cleared.
   if(newFolder)
   {
@@ -372,7 +365,7 @@ function SetSentFolderColumns(isSentFolder)
 
 function SetNewsFolderColumns(isNewsFolder)
 {
-  dump("fix me, I need to show lines or size depending on if the folder is news or not\n");
+  dump("XXX fix me, I need to show lines or size depending on if the folder is news or not\n");
 /*
   var sizeColumn = document.getElementById("SizeColumnHeader");
   var sizeColumnTemplate = document.getElementById("SizeColumnTemplate");
@@ -396,8 +389,6 @@ function SetNewsFolderColumns(isNewsFolder)
 */
 }
 
-
-
 function UpdateStatusMessageCounts(folder)
 {
   var unreadElement = GetUnreadCountElement();
@@ -418,23 +409,6 @@ function UpdateStatusMessageCounts(folder)
 
 }
 
-function SaveThreadPaneSelection()
-{
-  var tree = GetThreadTree();
-  var selectedItems = tree.selectedItems;
-  var numSelected = selectedItems.length;
-
-  var selectionArray = new Array(numSelected);
-
-  for(var i = 0; i < numSelected; i++)
-  {
-    selectionArray[i] = selectedItems[i].getAttribute("id");
-  }
-
-  return selectionArray;
-}
-
-// XXX remove this?
 function ConvertColumnIDToSortType(columnID)
 {
   var sortKey;
@@ -468,7 +442,7 @@ function ConvertColumnIDToSortType(columnID)
       sortKey = nsMsgViewSortType.byThread;
       break;
     default:
-      dump("unsupported sort: " + columnID + "\n");
+      dump("unsupported sort column: " + columnID + "\n");
       sortKey = 0;
       break;
   }
@@ -479,7 +453,8 @@ function ConvertSortTypeToColumnID(sortKey)
 {
   var columnID;
 
-  // hack to turn this into an integer, if it was a string;
+  // hack to turn this into an integer, if it was a string
+  // it would be a string if it came from localStore.rdf
   sortKey = sortKey - 0;
 
   switch (sortKey) {
@@ -515,7 +490,7 @@ function ConvertSortTypeToColumnID(sortKey)
       columnID = null;
       break;
     default:
-      dump("unsupported sort: " + sortKey + "\n");
+      dump("unsupported sort key: " + sortKey + "\n");
       columnID = null;
       break;
   }
@@ -531,6 +506,7 @@ var nsMsgNavigationType = Components.interfaces.nsMsgNavigationType;
 
 var gDBView = null;
 var gCurViewFlags;
+var gCurSortType;
 
 // CreateDBView is called when we have a thread pane. CreateBareDBView is called when there is no
 // outliner associated with the view. CreateDBView will call into CreateBareDBView...
@@ -584,6 +560,8 @@ function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   if (!gThreadPaneCommandUpdater)
     gThreadPaneCommandUpdater = new nsMsgDBViewCommandUpdater();
 
+  gCurSortType = sortType;
+
   gDBView.init(messenger, msgWindow, gThreadPaneCommandUpdater);
   gDBView.open(msgFolder, sortType, sortOrder, viewFlags, count);
 }
@@ -603,7 +581,7 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   else
     gDBView.supressMsgDisplay = false;
 
-  var colID = ConvertSortTypeToColumnID(sortType);
+  var colID = ConvertSortTypeToColumnID(gCurSortType);
   if (colID) {
     var column = document.getElementById(colID);
     gDBView.sortedColumn = column;
@@ -615,7 +593,7 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
 
 function ShowAppropriateColumns()
 {
-    if (gDBView.sortType == nsMsgViewSortType.byThread) {
+    if (gDBView && (gDBView.sortType == nsMsgViewSortType.byThread)) {
       // don't hide them when sorted by thread
       SetHiddenAttributeOnThreadOnlyColumns("");
     }
@@ -740,10 +718,8 @@ function OnClickThreadAndMessagePaneSplitter()
 
 function PositionThreadPane()
 {
-    dump("XXX need for cross folder navigation. fix me: PositionThreadPane()\n");
+    dump("XXX fix PositionThreadPane\n");
 /*
-       var tree = GetThreadTree();
-
        var selArray = tree.selectedItems;
 
        if ( selArray && (selArray.length > 0))
@@ -781,7 +757,7 @@ function FolderPaneSelectionChange()
 
 function ClearThreadPane()
 {
-    dump("XXX implement ClearThreadPane()\n");
+  gDBView = null; 
 }
 
 function OpenFolderTreeToFolder(folderURI)
@@ -837,10 +813,6 @@ function IsSpecialFolder(msgFolder, flags)
 function SelectNextMessage(nextMessage)
 {
     dump("XXX implement SelectNextMessage()\n");
-/*
-  var tree = GetThreadTree();
-  ChangeSelection(tree, nextMessage);
-*/
 }
 
 function GetSelectTrashUri(folder)

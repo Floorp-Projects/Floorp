@@ -194,6 +194,8 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
 	}
 	else
 	{
+    NS_ASSERTION(m_db, "no db");
+    if (!m_db) return NS_ERROR_UNEXPECTED;
     rv = m_db->EnumerateThreads(getter_AddRefs(m_threadEnumerator));
     NS_ENSURE_SUCCESS(rv, rv);
 	}

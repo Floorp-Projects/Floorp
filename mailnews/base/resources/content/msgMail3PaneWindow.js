@@ -24,7 +24,6 @@
 var showPerformance = false;
 
 var gFolderTree; 
-var gThreadTree;
 var gThreadOutliner;
 var gMessagePane;
 var gMessagePaneFrame;
@@ -52,9 +51,7 @@ var gStartFolderUri = null;
 //If we've loaded a message, set to true.  Helps us keep the start page around.
 var gHaveLoadedMessage;
 
-var gBatching = false;
 var gDisplayStartupPage = false;
-
 
 // the folderListener object
 var folderListener = {
@@ -108,7 +105,7 @@ var folderListener = {
 			if(resource)
 			{
 				var uri = resource.Value;
-				dump("In OnFolderLoaded for " + uri +"\n");
+				//dump("In OnFolderLoaded for " + uri +"\n");
             
 				if(uri == gCurrentFolderToReroot)
 				{
@@ -178,35 +175,24 @@ function HandleDeleteOrMoveMsgFailed(folder)
     }
   }
 
-  if (gBatching) {
-    gBatching = false;
-    //threadTree.treeBoxObject.endBatch();
-    //dump("XXX end tree batch (delete or move failed)\n");
-  }
   // fix me???
-//  ThreadPaneSelectionChange(true);
+  // ThreadPaneSelectionChange(true);
 }
-
 
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
-	var threadTree = GetThreadTree();
-//	if(IsCurrentLoadedFolder(folder)) ### rewrite/implement this
-//	{
-		if(gNextMessageViewIndexAfterDelete != -1)
-		{
+  if (IsCurrentLoadedFolder(folder)) {
+    if (gNextMessageViewIndexAfterDelete != -1) {
       var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
       var outlinerSelection = outlinerView.selection;
       viewSize = outlinerView.rowCount;
-      dump("view size = " + viewSize + "\n");
-      if (gNextMessageViewIndexAfterDelete >= viewSize)
-      {
+      if (gNextMessageViewIndexAfterDelete >= viewSize) {
         if (viewSize > 0)
           gNextMessageViewIndexAfterDelete = viewSize - 1;
         else
           gNextMessageViewIndexAfterDelete = -1;
       }
-      
+
       // if we are about to set the selection with a new element then DON'T clear
       // the selection then add the next message to select. This just generates
       // an extra round of command updating notifications that we are trying to
@@ -222,29 +208,17 @@ function HandleDeleteOrMoveMsgCompleted(folder)
           outlinerView.selectionChanged();
         EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
       }
-      else
+      else {
         outlinerSelection.clearSelection(); /* clear selection in either case  */
+        ClearMessagePane();
+      }
 
-			gNextMessageViewIndexAfterDelete = -1;
-		}
-/*
-		//if there's nothing to select then see if the tree has any messages.
-		//if not, then clear the message pane.
-		else
-		{
-			var tree = GetThreadTree();
-//			var topmost = msgNavigationService.FindFirstMessage(tree);
-			if(!topmost)
-				ClearMessagePane()
-		}
-//	}
-
-    if (gBatching) {
-      gBatching = false;
-      //threadTree.treeBoxObject.endBatch();
-      //dump("XXX end tree batch (delete or move succeeded)\n");
+      gNextMessageViewIndexAfterDelete = -1;
     }
-*/
+    else {
+      ClearMessagePane();
+    }
+  }
 }
 
 
@@ -553,10 +527,6 @@ function AddToSession()
 
 function InitPanes()
 {
-//	var threadTree = GetThreadTree();
-//	if(threadTree);
-//  	OnLoadThreadPane(threadTree);
-
 	var folderTree = GetFolderTree();
 	if(folderTree)
 		OnLoadFolderPane(folderTree);
@@ -683,9 +653,18 @@ function FindMessenger()
   return messenger;
 }
 
-function ClearThreadTreeSelection()
+function ClearThreadPaneSelection()
 {
-  // mscott --> implement me
+  try {
+    if (gDBView) {
+      var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
+      var outlinerSelection = outlinerView.selection;
+      outlinerSelection.clearSelection(); 
+    }
+  }
+  catch (ex) {
+    dump("ClearThreadPaneSelection: ex = " + ex + "\n");
+  }
 }
 
 function ClearMessagePane()
@@ -778,12 +757,12 @@ function FolderPaneDoubleClick(treeitem)
 				var uri = treeitem.getAttribute("id");
 				server = GetServer(uri);
 				if (server) {
-					//dump("double clicking open, PerformExpand()\n");
+					// double clicking open, PerformExpand()
 					server.PerformExpand(msgWindow);
 				}
 			}
 			else {
-				//dump("double clicking close, don't PerformExpand()\n");
+				// double clicking close, don't PerformExpand()
 			}
 		}
 	}
@@ -906,7 +885,7 @@ function GetLoadedMessage()
 //Clear everything related to the current message. called after load start page.
 function ClearMessageSelection()
 {
-	ClearThreadTreeSelection();
+	ClearThreadPaneSelection();
 }
 
 function GetCompositeDataSource(command)
@@ -917,12 +896,11 @@ function GetCompositeDataSource(command)
 	}
 
 	return null;
-
 }
 
 function SetNextMessageAfterDelete()
 {
-    dump("setting next msg view index after delete to " + gDBView.firstSelected + "\n");
+    //dump("setting next msg view index after delete to " + gDBView.firstSelected + "\n");
     gNextMessageViewIndexAfterDelete = gDBView.firstSelected;
 }
 
@@ -936,8 +914,8 @@ function SelectFolder(folderUri)
 
 function SelectMessage(messageUri)
 {
-  dump("fix this or remove this\n");
   // this isn't going to work anymore
+  dump("XXX fix this or remove SelectMessage()\n");
 }
 
 function ReloadMessage()

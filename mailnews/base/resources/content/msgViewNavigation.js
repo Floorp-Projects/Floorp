@@ -74,42 +74,6 @@ function FindNextFolder(originalFolderURI)
 function ScrollToFirstNewMessage()
 {
   dump("XXX ScrollToFirstNewMessage needs to be rewritten.\n");
-/*
-	var tree = GetThreadTree();
-	var treeFolder = GetThreadTreeFolder();
-
-	var folderURI = treeFolder.getAttribute('ref');
-	var folderResource = RDF.GetResource(folderURI);
-	var folder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-	var hasNew = folder.hasNewMessages;
-	if(hasNew)
-	{
-		var newMessage = folder.firstNewMessage;
-
-		if(messageView.showThreads)
-		{
-			//if we're in thread mode, then we need to actually make sure the message is showing.
-			var topLevelMessage = GetTopLevelMessageForMessage(newMessage, folder);
-			var topLevelResource = topLevelMessage.QueryInterface(Components.interfaces.nsIRDFResource);
-			var topLevelURI = topLevelResource.Value;
-			var topElement = document.getElementById(topLevelURI);
-			if(topElement)
-			{
-//				msgNavigationService.OpenTreeitemAndDescendants(topElement);
-			}
-
-		}
-		
-		var messageResource = newMessage.QueryInterface(Components.interfaces.nsIRDFResource);
-		var messageURI = messageResource.Value;
-		var messageElement = document.getElementById(messageURI);
-
-		if(messageElement)
-		{
-			tree.ensureElementIsVisible(messageElement); 
-		}
-	}
-  */
 }
 
 function GetTopLevelMessageForMessage(message, folder)
@@ -232,7 +196,7 @@ function GoNextMessage(type, startFromBeginning)
     CrossFolderNavigation(type, true);
   }
   catch (ex) {
-    dump("XXX ex = " + ex + "\n");
+    dump("GoNextMessage ex = " + ex + "\n");
   }
 }
 

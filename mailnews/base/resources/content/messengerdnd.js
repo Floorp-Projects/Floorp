@@ -424,7 +424,7 @@ function DropOnFolderTree(event)
 
 function DropOnThreadPane(event)
 {
-	debugDump("DropOnThreadTree\n");
+	debugDump("DropOnThreadPane()\n");
     /* you can't drop on the thread pane */
 	return false;
 }
