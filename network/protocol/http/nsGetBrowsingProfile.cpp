@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -36,10 +36,9 @@ PRBool BP_GetProfile(char** aProfileStringCopy)
     nsIBrowsingProfile* profile;
     if (NS_FAILED(rv = nsServiceManager::GetService(kBrowsingProfileCID,
                                                     nsIBrowsingProfile::GetIID(),
-                                                    (nsISupports**) &profile))) {
-        NS_ERROR("unable to get current browsing profile");
+                                                    (nsISupports**) &profile)))
+        // browsing profile not available
         return PR_FALSE;
-    }
 
     char buf[kBrowsingProfileCookieSize];
     if (NS_FAILED(rv = profile->GetCookieString(buf))) {
