@@ -437,7 +437,7 @@ pref("security.xpconnect.plugin.unrestricted", true);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
-pref("ui.key.acceleratorKey", 17);
+pref("ui.key.accelKey", 17);
 pref("ui.key.menuAccessKey", 18);
 pref("ui.key.menuAccessKeyFocuses", false);
 
