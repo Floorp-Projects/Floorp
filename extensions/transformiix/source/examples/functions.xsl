@@ -400,6 +400,7 @@
    </TR>
 
    </TABLE>
+
    <!-- ******************** -->
    <!-- * String Functions * -->
    <!-- ******************** -->
@@ -1107,6 +1108,53 @@
       </TD>
    </TR>
    </TABLE>
+
+   <!-- **************************** -->
+   <!-- * XSLT Extension Functions * -->
+   <!-- **************************** -->
+   <TABLE>
+   <TR BGColor="#E0E0FF">
+      <TD Colspan="2" ALIGN="CENTER">
+         <B>XSLT Extension Functions</B>
+      </TD>
+   </TR>
+   <!-- new test -->
+   <TR>
+      <TD BGColor="#EEEEEE"><B>Function:</B></TD>
+      <TD BGColor="#EEEEEE">
+         <I>string</I><B> generate-id(</B><I>NodeSet?</I><B>)</B>
+      </TD>
+   </TR>
+   <TR>
+      <TD VALIGN="TOP"><B>Test:</B></TD>
+      <TD>
+         &lt;xsl:value-of select="generate-id()"/&gt;<BR />
+         <BR />
+         <B>Note:</B>
+         <UL>
+            <FONT COLOR="red">
+               This function will generate a unique id for the current node.
+               I don't what this will be exactly, until run-time
+            </FONT>
+         </UL>
+      </TD>
+   </TR>
+   <TR>
+      <TD><B>Desired Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">id{some-number}.0.1</FONT><BR/>
+      </TD>
+    </TR>
+    <TR>
+      <TD><B>Result:</B></TD>
+      <TD>
+         <FONT COLOR="blue">
+            <xsl:value-of select="generate-id()"/>
+         </FONT>
+      </TD>
+   </TR>
+   </TABLE>
+
   </BODY>
 </HTML>
 </xsl:template>
