@@ -27,6 +27,8 @@
 */
 
 #include <stdio.h>
+#include <fstream.h>
+//using namespace std;
 
 #include "plstr.h"
 #include "nsIServiceManager.h"
@@ -35,68 +37,90 @@
 #include "nsCOMPtr.h"
 #include "iostream.h"
 #include "nsXPIDLString.h"
+#include "nsString.h"
 
 // Define CIDs...
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStdURLCID,                 NS_STANDARDURL_CID);
 
+char* gFileIO = 0;
+
+int writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRUE)
+{
+    if (!o_Result || !i_pURL)
+        return -1;
+    *o_Result = 0;
+    nsCOMPtr<nsIURI> pURL;
+    nsresult result = NS_OK;
+
+    if (bUseStd) 
+    {
+        nsIURI* url;
+        result = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
+                NS_GET_IID(nsIURI), (void**)&url);
+        if (NS_FAILED(result))
+        {
+            cout << "CreateInstance failed" << endl;
+            return 1;
+        }
+        pURL = url;
+        pURL->SetSpec((char*)i_pURL);
+    }
+    else 
+    {
+        NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
+        if (NS_FAILED(result)) 
+        {
+            cout << "Service failed!" << endl;
+            return 1;
+        }   
+
+        result = pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
+    }
+    if (NS_SUCCEEDED(result))
+    {
+        nsCOMPtr<nsIURL> tURL = do_QueryInterface(pURL);
+        nsXPIDLCString temp;
+        PRInt32 port;
+
+        nsCString output;
+        tURL->GetScheme(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+        output += ',';
+        tURL->GetPreHost(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+        output += ',';
+        tURL->GetHost(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+        output += ',';
+        tURL->GetPort(&port);
+        output += port;
+        output += ',';
+        tURL->GetQuery(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+        output += ',';
+        tURL->GetPath(getter_Copies(temp));
+        output += temp ? (const char*)temp : "";
+
+        *o_Result = output.ToNewCString();
+    } 
+    else  {
+        cout << "Can not create URL" << endl; 
+        return -1;
+    }
+    return 1;
+}
+
 int writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
 {
-    if (i_pURL)
-    {
-        cout << "Analyzing " << i_pURL << endl;
-
-        nsCOMPtr<nsIURI> pURL;
-        nsresult result = NS_OK;
-        
-        if (bUseStd) 
-        {
-            nsIURI* url;
-            result = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
-                NS_GET_IID(nsIURI), (void**)&url);
-            if (NS_FAILED(result))
-            {
-                cout << "CreateInstance failed" << endl;
-                return result;
-            }
-            pURL = url;
-            pURL->SetSpec((char*)i_pURL);
-        }
-        else 
-        {
-            NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &result);
-            if (NS_FAILED(result)) 
-            {
-                cout << "Service failed!" << endl;
-                return result;
-            }   
-
-            result = pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
-        }
-        if (NS_SUCCEEDED(result))
-        {
-            nsCOMPtr<nsIURL> tURL = do_QueryInterface(pURL);
-            nsXPIDLCString temp;
-            PRInt32 port;
-            tURL->GetScheme(getter_Copies(temp));
-            cout << "Got    " << (temp ? (const char*)temp : "") << ',';
-            tURL->GetPreHost(getter_Copies(temp));
-            cout << (temp ? (const char*)temp : "") << ',';
-            tURL->GetHost(getter_Copies(temp));
-            cout << (temp ? (const char*)temp : "") << ',';
-            tURL->GetPort(&port);
-            cout << port << ',';
-            tURL->GetQuery(getter_Copies(temp));
-            cout << (temp ? (const char*)temp : "") << ',';
-            tURL->GetPath(getter_Copies(temp));
-            cout << (temp ? (const char*)temp : "") << endl;
-
-        } else {
-            cout << "Can not create URL" << endl; 
-        }
-        return NS_OK;
-    }
-    return -1;
+    char* temp = 0;
+    if (!i_pURL) return -1;
+    int rv = writeoutto(i_pURL, &temp, bUseStd);
+    if (rv < 0)
+        return rv;
+    cout << i_pURL << endl << temp << endl;
+    delete[] temp;
+    return rv;
 }
 
 /* construct a url and print out its five elements separated by commas */
@@ -106,78 +130,55 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
     if (i_pURL)
         return writeout(i_pURL, bUseStd);
 
-    /* 
-        If you add a test case then make sure you also add the expected
-        result in the resultset as well. 
-    */
+    if (!gFileIO)
+        return NS_ERROR_FAILURE;
 
-    const int tests = 13;
-    const char* url[tests] = 
+    ifstream testfile(gFileIO);
+    if (!testfile) 
     {
-        "http://username:password@hostname.com:80/pathname/./more/stuff/../path",
-        "username@host:8080/path",
-        "http://gagan/",
-        "scheme:host/netlib", 
-        "", //empty string
-        "mailbox:///foo", // No host specified path should be /foo
-        "scheme:user@hostname.edu:80/pathname", //this is always http:user and not user:pass
-        "http://username:password@hostname:80/pathname",
-        "resource:/pathname",
-        "ftp://uname%here.com:pwd@there.com/aPath/a.html",
-        "http://www.inf.bme.hu?foo=bar",
-        "http://test.com/aPath/a.html#/1/2",
-        "http://user:pass@ipaddres:2/get?foo/something"
-    };
-
-    const char* resultset[tests] =
-    {
-        "http,username:password,hostname.com,80,,/pathname/more/path",
-        ",username,host,8080,,/path",
-        "http,,gagan,-1,,/",
-        "scheme,,host,-1,,/netlib",
-        ",,,-1,,/",
-        "mailbox,,,-1,,/foo",
-        "scheme,user,hostname.edu,80,,/pathname",
-        "http,username:password,hostname,80,,/pathname",
-        "resource,,,-1,,/pathname",
-        "ftp,uname%here.com:pwd,there.com,-1,,/aPath/a.html",
-        "http,,www.inf.bme.hu,-1,,/?foo=bar",
-        "http,,test.com,-1,,/aPath/a.html#/1/2",
-        "http,user:pass,ipaddres,2,foo/something,/get?foo/something"
-    };
-
-    // These tests will fail to create a URI from NS_NewURI calls...
-    // because of a missing scheme: in front. This set assumes
-    // an only working http handler is available. When we switch on mail these
-    // results will change!
-    PRBool failWithURI[tests] =
-    {
-        PR_FALSE,
-        PR_TRUE,
-        PR_FALSE,
-        PR_TRUE,
-        PR_TRUE,
-        PR_FALSE, // we now have mailbox: 
-        PR_TRUE,
-        PR_FALSE,
-        PR_FALSE,
-        PR_FALSE,
-        PR_FALSE,
-        PR_FALSE
-    };
-    nsresult stat;
-    for (int i = 0; i< tests; ++i)
-    {
-        cout << "--------------------" << endl;
-        if (!bUseStd)
-            cout << "Should" << (failWithURI[i] ? " not " : " ")
-                << "create URL" << endl;
-        stat = writeout(url[i], bUseStd);
-        if (NS_FAILED(stat))
-            return stat;
-        if (bUseStd || !failWithURI[i])
-            cout << "Expect " << resultset[i] << endl << endl;
+        cerr << "Cannot open testfile: " << gFileIO << endl;
+        return NS_ERROR_FAILURE;
     }
+
+    char temp[512];
+    int count=0;
+    int failed=0;
+    char* prevResult =0;
+
+    while (testfile.getline(temp,512))
+    {
+        if ((*temp == '#') || (PL_strlen(temp)==0))
+            continue;
+
+        if (0 == count%2)
+        {
+            if (prevResult) delete[] prevResult;
+            writeoutto(temp, &prevResult, bUseStd);
+        }
+        else 
+        {
+            if (!prevResult)
+                cout << "no results to compare to!" << endl;
+            else 
+            {
+                cout << prevResult << endl;
+                cout << temp << endl;
+                if (PL_strcmp(temp, prevResult) == 0)
+                    cout << "\tPASSED" << endl;
+                else 
+                {
+                    cout << "\tFAILED" << endl;
+                    failed++;
+                }
+            }
+        }
+        count++;
+   }
+    if (failed>0)
+        cout << failed << " tests FAILED out of " << count << endl;
+    else
+        cout << "All " << count << " tests PASSED." << endl;
+
     return 0;
 }
 
@@ -322,13 +323,15 @@ nsresult NS_AutoregisterComponents()
 
 void printusage(void)
 {
-    printf("urltest [-std] [-all] <URL> [-abs <relative>]\n");
-    printf("\n");
-    printf("    -std  : Generate results using nsStdURL. \n");
-    printf("    <URL> : The string representing the URL. \n");
-    printf("    -all  : Run all standard tests. Ignores <URL> then. \n");
-    printf("    -abs  : Make an absolute URL from the base (<URI>) and the\n"); 
-    printf("            relative path specified. Can be used with -all. Implies -std.\n");
+    cout << "urltest [-std] [-all] [-file <filename>] <URL> " <<
+        " [-abs <relative>]" << endl << endl
+        << "\t-std  : Generate results using nsStdURL. "  << endl
+        << "\t-file : Read URLs from file. "  << endl
+        << "\t-all  : Run all standard tests. Ignores <URL> then." << endl
+        << "\t-abs  : Make an absolute URL from the base (<URI>) and the" << endl
+        << "\t\trelative path specified. Can be used with -all. " 
+        << "Implies -std" << endl
+        << "\t<URL> : The string representing the URL." << endl;
 }
 
 int main(int argc, char **argv)
@@ -344,10 +347,10 @@ int main(int argc, char **argv)
     result = NS_AutoregisterComponents();
     if (NS_FAILED(result)) return result;
 
-    cout << "------------------" << endl << endl; // end of all messages from register components...
+    // end of all messages from register components...
+    cout << "------------------" << endl << endl; 
 
     PRBool bStdTest= PR_FALSE;
-    PRBool bTestAll= PR_FALSE;
     PRBool bMakeAbs= PR_FALSE;
     char* relativePath = 0;
     char* url = 0;
@@ -356,19 +359,28 @@ int main(int argc, char **argv)
         {
             bStdTest = PR_TRUE;
         }
-        else if (PL_strcasecmp(argv[i], "-all") == 0) 
-        {
-            bTestAll = PR_TRUE;
-        } 
         else if (PL_strcasecmp(argv[i], "-abs") == 0)
+        {
+            if (!gFileIO) 
+            {
+                if (i+1 >= argc)
+                {
+                    printusage(); 
+                    return 0;
+                }
+                relativePath = argv[i+1]; 
+                i++;
+            }
+            bMakeAbs = PR_TRUE;
+        }
+        else if (PL_strcasecmp(argv[i], "-file") == 0)
         {
             if (i+1 >= argc)
             {
-                printusage(); 
+                printusage();
                 return 0;
             }
-            relativePath = argv[i+1]; 
-            bMakeAbs = PR_TRUE;
+            gFileIO = argv[i+1];
             i++;
         }
         else
@@ -379,13 +391,14 @@ int main(int argc, char **argv)
     PRTime startTime = PR_Now();
     if (bMakeAbs)
     {
-        rv = bTestAll ? doMakeAbsTest() : doMakeAbsTest(url, relativePath); 
+        rv = (url && relativePath) ?  doMakeAbsTest(url, relativePath) : 
+            doMakeAbsTest();
     }
     else
     {
-        rv = bTestAll ? testURL(0, bStdTest) : testURL(url, bStdTest);
+        rv = gFileIO ? testURL(0, bStdTest) : testURL(url, bStdTest);
     }
-    if (bTestAll)
+    if (gFileIO)
     {
         PRTime endTime = PR_Now();
         printf("Elapsed time: %d micros.\n", (PRInt32) 
