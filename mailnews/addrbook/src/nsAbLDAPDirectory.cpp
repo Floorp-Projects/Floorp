@@ -78,6 +78,13 @@ nsAbLDAPDirectory::~nsAbLDAPDirectory()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsAbLDAPDirectory, nsAbDirectoryRDFResource, nsIAbDirectory, nsIAbDirectoryQuery, nsIAbDirectorySearch)
+
+NS_IMETHODIMP nsAbLDAPDirectory::Init(const char* aURI)
+{
+  mInitialized = PR_FALSE;
+  return nsAbDirectoryRDFResource::Init(aURI);
+}
+
 nsresult nsAbLDAPDirectory::Initiate ()
 {
     if (!mIsQueryURI)

@@ -105,6 +105,7 @@ private:
   nsCOMPtr<nsICollation> mCollationKeyGenerator;
   nsCOMPtr<nsIAbViewListener> mAbViewListener;
 
+  PRPackedBool mSearchView;
   PRPackedBool mSuppressSelectionChange;
   PRPackedBool mSuppressCountChange;
   PRInt32 mGeneratedNameFormat;

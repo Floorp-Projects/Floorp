@@ -56,7 +56,7 @@ interface nsIAbView : nsISupports
      * to netscape 6.x, etc, could cause
      * the "persisted" sortColumn to be bogus.
      */
-    wstring init(in string URI, in nsIAbViewListener abViewListener, in wstring sortColumn, in wstring sortDirection);
+    wstring init(in string URI, in boolean aSearchView, in nsIAbViewListener abViewListener, in wstring sortColumn, in wstring sortDirection);
     void close();
 
     /**

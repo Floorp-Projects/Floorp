@@ -445,7 +445,7 @@ function onEnterInSearchBar()
     searchURI += gQueryURIFormat.replace(/@V/g, encodeURIComponent(gSearchInput.value));
   }
 
-  SetAbView(searchURI, sortColumn, sortDirection);
+  SetAbView(searchURI, true, sortColumn, sortDirection);
   
   SelectFirstCard();
 }

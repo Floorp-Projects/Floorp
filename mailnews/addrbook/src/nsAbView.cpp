@@ -81,6 +81,7 @@ nsAbView::nsAbView()
   mMailListAtom = do_GetAtom("MailList");
   mSuppressSelectionChange = PR_FALSE;
   mSuppressCountChange = PR_FALSE;
+  mSearchView = PR_FALSE;
   mGeneratedNameFormat = 0;
 }
 
@@ -100,6 +101,7 @@ NS_IMETHODIMP nsAbView::Close()
   mAbViewListener = nsnull;
   mTree = nsnull;
   mTreeSelection = nsnull;
+  mSearchView = PR_FALSE;
 
   nsresult rv = NS_OK;
 
@@ -205,7 +207,7 @@ nsresult nsAbView::RemovePrefObservers()
   return rv;
 }
 
-NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener, 
+NS_IMETHODIMP nsAbView::Init(const char *aURI, PRBool aSearchView, nsIAbViewListener *abViewListener, 
                              const PRUnichar *colID, const PRUnichar *sortDirection, PRUnichar **result)
 {
   nsresult rv;
@@ -215,22 +217,37 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
   mURI = aURI;
   mAbViewListener = abViewListener;
 
-  rv = AddPrefObservers();
-  NS_ENSURE_SUCCESS(rv,rv);
+  // clear out old cards
+  PRInt32 i = mCards.Count();
+  while(i-- > 0)
+  {
+    rv = RemoveCardAt(i);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "remove card failed\n");
+  }
+  if (!mDirectory || mSearchView != aSearchView)
+  {
+    mSearchView = aSearchView;
+    rv = AddPrefObservers();
+    NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = SetGeneratedNameFormatFromPrefs();
-  NS_ENSURE_SUCCESS(rv,rv);
+    rv = SetGeneratedNameFormatFromPrefs();
+    NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr <nsIRDFResource> resource;
-  rv = rdfService->GetResource(nsDependentCString(aURI), getter_AddRefs(resource));
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIRDFResource> resource;
+    rv = rdfService->GetResource(nsDependentCString(aURI), getter_AddRefs(resource));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  mDirectory = do_QueryInterface(resource, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-    
+    mDirectory = do_QueryInterface(resource, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else
+  {
+    nsCOMPtr <nsIRDFResource> resource = do_QueryInterface(mDirectory);
+    rv = resource->Init(aURI);
+  }
   rv = EnumerateCards();
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -100,6 +100,8 @@ NS_IMETHODIMP nsAbDirectoryRDFResource::Init(const char* aURI)
 
         mIsQueryURI = PR_TRUE;
     }
+    else 
+      mIsQueryURI = PR_FALSE;
 
     return rv;
 }

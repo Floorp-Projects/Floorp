@@ -144,6 +144,12 @@ function OnLoadAddressBook()
 
   UpgradeAddressBookResultsPaneUI("mailnews.ui.addressbook_results.version");
 
+  //This migrates the LDAPServer Preferences from 4.x to mozilla format.
+  try {
+      gLDAPPrefsService = Components.classes["@mozilla.org/ldapprefs-service;1"].getService();       
+      gLDAPPrefsService = gLDAPPrefsService.QueryInterface( Components.interfaces.nsILDAPPrefsService);                  
+  } catch (ex) {dump ("ERROR: Cannot get the LDAP service\n" + ex + "\n");}
+
   GetCurrentPrefs();
 
   AddPrefObservers();
@@ -624,7 +630,7 @@ function onEnterInSearchBar()
     searchURI += gQueryURIFormat.replace(/@V/g, encodeURIComponent(gSearchInput.value));
   }
 
-  SetAbView(searchURI, sortColumn, sortDirection);
+  SetAbView(searchURI, gSearchInput.value != "", sortColumn, sortDirection);
   
   // XXX todo 
   // this works for synchronous searches of local addressbooks, 

@@ -60,6 +60,8 @@ public:
     nsAbLDAPDirectory();
     virtual ~nsAbLDAPDirectory();
 
+    NS_IMETHOD Init(const char *aUri);
+
     // nsIAbDirectory methods
     NS_IMETHOD GetOperations(PRInt32 *aOperations);
     NS_IMETHOD GetChildNodes(nsISimpleEnumerator* *result);
