@@ -143,6 +143,16 @@
             (format *trace-output* "!")))))))
 
 
+; Simple JS2 read-eval-print loop.
+(defun rep ()
+  (loop
+    (let ((s (read-line *terminal-io* t)))
+      (format *terminal-io* "<~S>~%" s)
+      (dolist (r (multiple-value-list (js-parse s)))
+        (write r :stream *terminal-io* :pretty t)
+        (terpri *terminal-io*)))))
+
+
 #|
 (js-parse "1+2*/4*/
 32")
