@@ -34,21 +34,19 @@ class nsIDMItem : public nsISupports
 {
 public:
 	// Inspectors
-	NS_IMETHOD GetIconImage(nsIImage*& pImage, nsIImageGroup* pGroup) = 0;
-	NS_IMETHOD GetOpenState(PRBool& answer) = 0;
+	NS_IMETHOD GetIconImage(nsIImage*& pImage, nsIImageGroup* pGroup) const = 0;
+	NS_IMETHOD GetOpenState(PRBool& answer) const = 0;
 
 	// Methods for iterating over children.
-	NS_IMETHOD GetChildCount(PRUint32& count) = 0;
-	NS_IMETHOD GetNthChild(nsIDMItem*& pItem, PRUint32 item) = 0;
+	NS_IMETHOD GetChildCount(PRUint32& count) const = 0;
+	NS_IMETHOD GetNthChild(nsIDMItem*& pItem, PRUint32 item) const = 0;
 
 	// Parent access
-	NS_IMETHOD GetParent(nsIDMItem*& pItem) = 0;
-
-	// Setters
+	NS_IMETHOD GetParent(nsIDMItem*& pItem) const = 0;
 
 	// Methods to query the data model for a specific item displayed within the widget.
-	NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& itemProperty) = 0;
-	NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) = 0;
+	NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& itemProperty) const = 0;
+	NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) const = 0;
 };
 
 #endif /* nsIDMItem_h___ */

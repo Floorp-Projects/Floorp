@@ -34,14 +34,14 @@ class nsIDataModel : public nsISupports
 
 public:
 	// Inspectors
-	NS_IMETHOD GetDMWidget(nsIDMWidget*& pWidget) = 0;
+	NS_IMETHOD GetDMWidget(nsIDMWidget*& pWidget) const = 0;
 	
 	// Setters
 	NS_IMETHOD SetDMWidget(nsIDMWidget* pWidget) = 0;
 
 	// Methods to query the data model for property values for an entire widget.
-	NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& property) = 0;
-	NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& property) = 0;
+	NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& property) const = 0;
+	NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& property) const = 0;
 };
 
 #endif /* nsIDataModel_h___ */
