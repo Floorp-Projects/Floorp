@@ -243,7 +243,7 @@ _OBJS			= \
 	$(CPPSRCS:.cpp=.$(OBJ_SUFFIX)) \
 	$(CMMSRCS:.mm=.$(OBJ_SUFFIX)) \
 	$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX))
-OBJS	= $(strip $(addprefix $(OBJ_PREFIX),$(_OBJS)))
+OBJS	= $(strip $(_OBJS))
 endif
 
 ifndef HOST_OBJS
@@ -1080,7 +1080,7 @@ else
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $<
 endif
 
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.c Makefile.in
+%.$(OBJ_SUFFIX): %.c Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifdef _NO_AUTO_VARS
@@ -1089,7 +1089,7 @@ else
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $<
 endif
 
-$(OBJ_PREFIX)%.ho: %.c Makefile.in
+%.ho: %.c Makefile.in
 	$(REPORT_BUILD)
 ifdef _NO_AUTO_VARS
 	$(ELOG) $(HOST_CC) $(OUTOPTION)$@ -c $(HOST_CFLAGS) $(INCLUDES) $(NSPR_CFLAGS) $(srcdir)/$*.c
@@ -1123,7 +1123,7 @@ endif
 #
 # Please keep the next two rules in sync.
 #
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.cc Makefile.in
+%.$(OBJ_SUFFIX): %.cc Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifdef _NO_AUTO_VARS
@@ -1132,7 +1132,7 @@ else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $<
 endif
 
-$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.cpp Makefile.in
+%.$(OBJ_SUFFIX): %.cpp Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifdef STRICT_CPLUSPLUS_SUFFIX
@@ -1191,7 +1191,7 @@ endif
 ###############################################################################
 # Note: Passing depth to make-makefile is optional.
 #       It saves the script some work, though.
-Makefile: Makefile.in $(topsrcdir)/configure
+Makefile: Makefile.in
 	@$(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) 
 
 ifdef SUBMAKEFILES
@@ -1846,7 +1846,7 @@ endif
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .out .a .ln .o .ho .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX) .mm
+.SUFFIXES: .out .a .ln .o .ho .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX) .mm .idl $(BIN_SUFFIX)
 
 #
 # Don't delete these files if we get killed.
