@@ -10377,10 +10377,10 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
       
       // no frames, reconstruct for content
       if (!primaryFrame1 && aContent1) {
-        result = RecreateFramesForContent(aPresContext, aContent1);
+        result = MaybeRecreateFramesForContent(aPresContext, aContent1);
       }
       if (!primaryFrame2 && aContent2) {
-        result = RecreateFramesForContent(aPresContext, aContent2);
+        result = MaybeRecreateFramesForContent(aPresContext, aContent2);
       }
     }
   }
@@ -10546,7 +10546,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       ProcessRestyledFrames(changeList, aPresContext);
     }
     else {  // no frame now, possibly genetate one with new style data
-      result = RecreateFramesForContent(aPresContext, aContent);
+      result = MaybeRecreateFramesForContent(aPresContext, aContent);
     }
   }
 
@@ -11782,6 +11782,30 @@ nsCSSFrameConstructor::CaptureStateFor(nsIPresContext* aPresContext,
     }
   }
   return rv;
+}
+
+nsresult
+nsCSSFrameConstructor::MaybeRecreateFramesForContent(nsIPresContext* aPresContext,
+                                                     nsIContent* aContent)
+{
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  nsCOMPtr<nsIFrameManager> frameManager;
+  shell->GetFrameManager(getter_AddRefs(frameManager));
+
+  nsStyleContext *oldContext = frameManager->GetUndisplayedContent(aContent);
+  if (oldContext) {
+    // The parent has a frame, so try resolving a new context.
+    nsRefPtr<nsStyleContext> newContext =
+      aPresContext->ResolveStyleContextFor(aContent,
+                                           oldContext->GetParent());
+    frameManager->ChangeUndisplayedContent(aContent, newContext);
+    if (newContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_NONE) {
+      result = RecreateFramesForContent(aPresContext, aContent);
+    }
+  }
+  return result;
 }
 
 nsresult

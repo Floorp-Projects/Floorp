@@ -741,6 +741,9 @@ protected:
   // cache the "nglayout.debug.enable_xbl_forms" pref
   PRBool UseXBLForms();
 
+  nsresult MaybeRecreateFramesForContent(nsIPresContext*  aPresContext,
+                                         nsIContent*      aContent);
+
   nsresult RecreateFramesForContent(nsIPresContext*  aPresContext,
                                     nsIContent*      aContent);
 
