@@ -170,7 +170,7 @@ JSValue JSValue::toPrimitive(ECMA_type hint) const
 
 JSValue JSValue::valueToString(const JSValue& value) // can assume value is not a string
 {
-    char *chrp;
+    const char* chrp;
     char buf[dtosStandardBufferSize];
     switch (value.tag) {
     case i32_tag:
