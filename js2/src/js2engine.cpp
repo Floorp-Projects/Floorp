@@ -155,8 +155,10 @@ namespace MetaData {
                     pc = hndlr->mPC;
                     push(x);
                 }
-                else
+                else {
+                    activationStackTop = activationStack;
                     throw jsx; //reportError(Exception::uncaughtError, "No handler for throw");
+                }
             }
         }
         return retval;

@@ -1573,18 +1573,24 @@ namespace MetaData {
     js2val JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
         js2val retval;
-        CompilationData *oldData;
+        uint8 *savePC;
+
+        CompilationData *oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
         try {
-            oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
             Reference *r = EvalExprNode(env, phase, p);
             if (r) r->emitReadBytecode(bCon, p->pos);
             bCon->emitOp(eReturn, p->pos);
+            savePC = engine->pc;
+            engine->pc = NULL;
             retval = engine->interpret(phase, bCon);
         }
         catch (Exception &x) {
+            engine->pc = savePC;
             restoreCompilationUnit(oldData);
             throw x;
         }
+        engine->pc = savePC;
+        restoreCompilationUnit(oldData);
         return retval;
     }
 
@@ -3544,6 +3550,8 @@ deleteClassProperty:
         GCMARKOBJECT(regexpClass);
         GCMARKOBJECT(mathClass);
 
+        for (BConListIterator i = bConList.begin(), end = bConList.end(); (i != end); i++)
+            (*i)->mark();
         if (bCon)
             bCon->mark();
         if (engine)
@@ -3634,6 +3642,10 @@ deleteClassProperty:
             char16 *numEnd;
             return stringToDouble(str->data(), str->data() + str->length(), numEnd);
         }
+        if (JS2VAL_IS_INACCESSIBLE(x))
+            reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
+        if (JS2VAL_IS_UNINITIALIZED(x))
+            reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
         return toFloat64(toPrimitive(x));
     }
 
@@ -3738,6 +3750,7 @@ deleteClassProperty:
     {
         CompilationData *result = new CompilationData();
         result->bCon = bCon;
+        bConList.push_back(bCon);
 
         if (newBCon)
             bCon = newBCon;
@@ -3753,6 +3766,10 @@ deleteClassProperty:
     // Restore the compilation data, and then delete the cached copy.
     void JS2Metadata::restoreCompilationUnit(CompilationData *oldData)
     {
+        BytecodeContainer *xbCon = bConList.back();
+        ASSERT(oldData->bCon == xbCon);
+        bConList.pop_back();
+
         bCon = oldData->bCon;
 
         delete oldData;

@@ -1045,6 +1045,10 @@ public:
 
     BytecodeContainer *bCon;        // the current output container
 
+    typedef std::vector<BytecodeContainer *> BConList;
+    typedef std::vector<BytecodeContainer *>::iterator BConListIterator;
+    BConList bConList;
+
     GlobalObject *glob;
     Environment env;
     Context cxt;
