@@ -214,7 +214,15 @@ nsMozIconURI::SetPath(const char * aPath)
 NS_IMETHODIMP
 nsMozIconURI::Equals(nsIURI *other, PRBool *result)
 {
-  *result = PR_FALSE;
+  nsXPIDLCString spec1;
+  nsXPIDLCString spec2;
+
+  other->GetSpec(getter_Copies(spec2));
+  GetSpec(getter_Copies(spec1));
+  if (!nsCRT::strcasecmp(spec1, spec2))
+    *result = PR_TRUE;
+  else
+    *result = PR_FALSE;
   return NS_OK;
 }
 
