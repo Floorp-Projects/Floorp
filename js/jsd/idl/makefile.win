@@ -31,14 +31,11 @@
 #  
 #
 
-DEPTH		= ..\..\..
+DEPTH=..\..\..
+include <$(DEPTH)\config\config.mak>
 
-include <$(DEPTH)/config/config.mak>
+MODULE=jsdservice
 
-MODULE		= jsdservice
+XPIDLSRCS=.\jsdIDebuggerService.idl
 
-XPIDLSRCS	= \
-		jsdIDebuggerService.idl \
-		$(NULL)
-
-include <$(DEPTH)/config/rules.mk>
+include <$(DEPTH)\config\rules.mak>

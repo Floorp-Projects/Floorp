@@ -26,8 +26,8 @@
 DEPTH=..\..
 include <$(DEPTH)\config\config.mak>
 
-!ifdef MOZ_OJI
-# DIRS = java classes
+!if !defined(JSD_STANDALONE)
+DIRS=idl
 !endif
 
 #//------------------------------------------------------------------------
@@ -36,41 +36,29 @@ include <$(DEPTH)\config\config.mak>
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME		= jsd$(MOZ_BITS)$(VERSION_NUMBER)
-PDBFILE		= $(DLLNAME).pdb
-MAPFILE		= $(DLLNAME).map
-RESFILE		= jsd$(MOZ_BITS)40.res
-DLL		=.\$(OBJDIR)\$(DLLNAME).dll
-MAKE_OBJ_TYPE	= DLL
+MAKE_OBJ_TYPE=DLL
+DLLNAME=jsd$(MOZ_BITS)$(VERSION_NUMBER)
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-!if "$(MOZ_BITS)" != "16"
-LINCS = -I$(DEPTH)\include \
-        -I$(PUBLIC)\js
-!endif
+LINCS= -I$(DEPTH)\include \
+       -I$(PUBLIC)\js
 
-!if "$(MOZ_BITS)" == "16"
-DEFFILE		= $(DLLNAME).def
-!endif
-
-# LCFLAGS= $(LCFLAGS) -DEXPORT_JSD_API -DJSD_THREADSAFE
+LCFLAGS= $(LCFLAGS) -DEXPORT_JSD_API -DJSD_THREADSAFE
 
 LLIBS=	$(LIBNSPR) 										\
 		$(DIST)\lib\js$(MOZ_BITS)$(VERSION_NUMBER).lib	\
-!ifdef MOZ_OJI
-		$(DIST)\lib\oji$(MOZ_BITS).lib	
-!endif
-
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
-!endif
+		$(DIST)\lib\xpcom.lib                           \
+		$(DIST)\lib\string_s.lib                        \
+		$(NULL)
 
 #//------------------------------------------------------------------------
 #// 
 #// Define the files necessary to build the target (ie. OBJS)
 #//
 #//------------------------------------------------------------------------
-OBJS =					\
+OBJS=						 \
     .\$(OBJDIR)\jsdebug.obj  \
+    .\$(OBJDIR)\jsd_atom.obj \
     .\$(OBJDIR)\jsd_high.obj \
     .\$(OBJDIR)\jsd_hook.obj \
     .\$(OBJDIR)\jsd_lock.obj \
@@ -78,8 +66,13 @@ OBJS =					\
     .\$(OBJDIR)\jsd_stak.obj \
     .\$(OBJDIR)\jsd_step.obj \
     .\$(OBJDIR)\jsd_text.obj \
+    .\$(OBJDIR)\jsd_obj.obj \
     .\$(OBJDIR)\jsd_val.obj  \
     $(NULL)
+
+!ifndef JSD_STANDALONE
+OBJS=$(OBJS) .\$(OBJDIR)\jsd_xpc.obj
+!endif
 
 #//------------------------------------------------------------------------
 #//
@@ -99,9 +92,9 @@ INSTALL_FILE_LIST=	\
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
-export:: INSTALL_FILES
-
-
+clobber::
+	rm -f $(DIST)\bin\components
+	rm -f $(DIST)\lib
