@@ -318,34 +318,6 @@ NS_IMETHODIMP nsWidget::SetModal(void)
 	return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// grab mouse events for this widget
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWidget::CaptureMouse(PRBool aCapture)
-{
-  if (aCapture)
-  {
-    mGrabTime = gdk_time_get();
-
-    gdk_pointer_grab (mWidget->window, PR_TRUE,(GdkEventMask)
-                      (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                      GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                      GDK_POINTER_MOTION_MASK),
-                      mWidget->window, NULL, GDK_CURRENT_TIME);
-    //    gtk_grab_add(mWidget);
-  }
-  else
-  {
-    gdk_pointer_ungrab(mGrabTime);
-    //    gtk_grab_remove(mWidget);
-  }
-
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
 {
   if (mWidget)
@@ -1633,6 +1605,10 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 {
   nsMouseEvent event;
   PRUint32 eventType = 0;
+
+#ifdef DEBUG_pavlov
+  printf("button press\n");
+#endif
 
   // Switch on single, double, triple click.
   switch (aGdkButtonEvent->type) 

@@ -85,7 +85,6 @@ public:
   NS_IMETHOD SetModal(void);
   NS_IMETHOD Show(PRBool state);
   NS_IMETHOD IsVisible(PRBool &aState);
-  NS_IMETHOD CaptureMouse(PRBool aCapture);
 
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
@@ -123,10 +122,12 @@ public:
   virtual void ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 
   // the following are nsWindow specific, and just stubbed here
-
   NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect) { return NS_ERROR_FAILURE; }
   NS_IMETHOD SetMenuBar(nsIMenuBar *aMenuBar) { return NS_ERROR_FAILURE; }
   NS_IMETHOD ShowMenuBar(PRBool aShow) { return NS_ERROR_FAILURE; }
+  // *could* be done on a widget, but that would be silly wouldn't it?
+  NS_IMETHOD CaptureMouse(PRBool aCapture) { return NS_ERROR_FAILURE; }
+
 
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
