@@ -24,6 +24,7 @@
 
 #include "nsIFactory.h"
 #include "nsIHistoryDataSource.h"
+#include "nsILocalStore.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFContentSink.h"
@@ -48,6 +49,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
+static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,         NS_RDFCONTENTSINK_CID);
@@ -237,6 +239,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
         if (NS_FAILED(rv = NS_NewDefaultResource((nsIRDFResource**) &inst)))
             return rv;
     }
+    else if (mClassID.Equals(kLocalStoreCID)) {
+        if (NS_FAILED(rv = NS_NewLocalStore((nsILocalStore**) &inst)))
+            return rv;
+    }
     else {
         return NS_ERROR_NO_INTERFACE;
     }
@@ -335,6 +341,13 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                          "RDF In-Memory Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "in-memory-datasource",
                                          aPath, PR_TRUE, PR_TRUE);
+
+    rv = compMgr->RegisterComponent(kLocalStoreCID,
+                                    "Local Store",
+                                    NS_RDF_DATASOURCE_PROGID_PREFIX "local-store",
+                                    aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) goto done;
+
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->RegisterComponent(kRDFXMLDataSourceCID,
                                          "RDF XML Data Source",
@@ -443,6 +456,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     rv = compMgr->UnregisterComponent(kRDFCompositeDataSourceCID, aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFInMemoryDataSourceCID,  aPath);
+    if (NS_FAILED(rv)) goto done;
+    rv = compMgr->UnregisterComponent(kLocalStoreCID,             aPath);
     if (NS_FAILED(rv)) goto done;
     rv = compMgr->UnregisterComponent(kRDFXMLDataSourceCID,       aPath);
     if (NS_FAILED(rv)) goto done;
