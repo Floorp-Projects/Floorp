@@ -1955,8 +1955,10 @@ EOF
 EOF
                       ac_cv_visibility_pragma=no
                       if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
-                        if grep '\.hidden.*foo_hidden' conftest.s >/dev/null && ! grep '\.hidden.*foo_default' conftest.s > /dev/null ; then
-                          ac_cv_visibility_pragma=yes
+                        if grep '\.hidden.*foo_hidden' conftest.s >/dev/null; then
+                          if ! grep '\.hidden.*foo_default' conftest.s > /dev/null; then
+                            ac_cv_visibility_pragma=yes
+                          fi
                         fi
                       fi
                       rm -f conftest.[cs]
