@@ -90,7 +90,7 @@ case "$target" in
     if test "$CC" = "cl" || test "$CXX" = "cl"; then
         _WIN32_MSVC=1
     elif test -z "$CC"; then
-        echo 'main() { return 0; }' > dummy.c
+        echo 'int main() { return 0; }' > dummy.c
         cl -o dummy dummy.c
         if test $? = 0; then
             _WIN32_MSVC=1
@@ -445,7 +445,7 @@ dnl ========================================================
 AC_MSG_CHECKING([for gcc -pipe support])
 if test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
     echo '#include <stdio.h>' > dummy-hello.c
-    echo 'int main() { printf("Hello World\n"); exit(0); }' >> dummy-hello.c
+    echo 'int main() { printf("Hello World\n"); return 0; }' >> dummy-hello.c
     ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
     cat dummy-hello.s | ${AS} -o dummy-hello.S - 2>&5
     if test $? = 0; then
@@ -1884,13 +1884,13 @@ AC_DEFUN(MOZ_CHECK_PTHREADS,
 AC_MSG_CHECKING([for pthread_create in -l$1])
 echo "
     #include <pthread.h> 
-    void *foo(void *v) { int a = 1;  } 
+    void *foo(void *v) { return v; } 
     int main() { 
         pthread_t t;
         if (!pthread_create(&t, 0, &foo, 0)) {
             pthread_join(t, 0);
         }
-        exit(0);
+        return 0;
     }" > dummy.c ;
     echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -l[$1] $LDFLAGS $LIBS" 1>&5;
     ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -l[$1] $LDFLAGS $LIBS 2>&5;

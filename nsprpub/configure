@@ -716,7 +716,7 @@ case "$target" in
     if test "$CC" = "cl" || test "$CXX" = "cl"; then
         _WIN32_MSVC=1
     elif test -z "$CC"; then
-        echo 'main() { return 0; }' > dummy.c
+        echo 'int main() { return 0; }' > dummy.c
         cl -o dummy dummy.c
         if test $? = 0; then
             _WIN32_MSVC=1
@@ -2559,7 +2559,7 @@ echo $ac_n "checking for gcc -pipe support""... $ac_c" 1>&6
 echo "configure:2560: checking for gcc -pipe support" >&5
 if test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
     echo '#include <stdio.h>' > dummy-hello.c
-    echo 'int main() { printf("Hello World\n"); exit(0); }' >> dummy-hello.c
+    echo 'int main() { printf("Hello World\n"); return 0; }' >> dummy-hello.c
     ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
     cat dummy-hello.s | ${AS} -o dummy-hello.S - 2>&5
     if test $? = 0; then
@@ -4895,13 +4895,13 @@ echo $ac_n "checking for pthread_create in -lpthreads""... $ac_c" 1>&6
 echo "configure:4896: checking for pthread_create in -lpthreads" >&5
 echo "
     #include <pthread.h> 
-    void *foo(void *v) { int a = 1;  } 
+    void *foo(void *v) { return v; } 
     int main() { 
         pthread_t t;
         if (!pthread_create(&t, 0, &foo, 0)) {
             pthread_join(t, 0);
         }
-        exit(0);
+        return 0;
     }" > dummy.c ;
     echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthreads $LDFLAGS $LIBS" 1>&5;
     ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthreads $LDFLAGS $LIBS 2>&5;
@@ -4917,13 +4917,13 @@ echo $ac_n "checking for pthread_create in -lpthread""... $ac_c" 1>&6
 echo "configure:4918: checking for pthread_create in -lpthread" >&5
 echo "
     #include <pthread.h> 
-    void *foo(void *v) { int a = 1;  } 
+    void *foo(void *v) { return v; } 
     int main() { 
         pthread_t t;
         if (!pthread_create(&t, 0, &foo, 0)) {
             pthread_join(t, 0);
         }
-        exit(0);
+        return 0;
     }" > dummy.c ;
     echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthread $LDFLAGS $LIBS" 1>&5;
     ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthread $LDFLAGS $LIBS 2>&5;
@@ -4939,13 +4939,13 @@ echo $ac_n "checking for pthread_create in -lc_r""... $ac_c" 1>&6
 echo "configure:4940: checking for pthread_create in -lc_r" >&5
 echo "
     #include <pthread.h> 
-    void *foo(void *v) { int a = 1;  } 
+    void *foo(void *v) { return v; } 
     int main() { 
         pthread_t t;
         if (!pthread_create(&t, 0, &foo, 0)) {
             pthread_join(t, 0);
         }
-        exit(0);
+        return 0;
     }" > dummy.c ;
     echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc_r $LDFLAGS $LIBS" 1>&5;
     ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc_r $LDFLAGS $LIBS 2>&5;
@@ -4961,13 +4961,13 @@ echo $ac_n "checking for pthread_create in -lc""... $ac_c" 1>&6
 echo "configure:4962: checking for pthread_create in -lc" >&5
 echo "
     #include <pthread.h> 
-    void *foo(void *v) { int a = 1;  } 
+    void *foo(void *v) { return v; } 
     int main() { 
         pthread_t t;
         if (!pthread_create(&t, 0, &foo, 0)) {
             pthread_join(t, 0);
         }
-        exit(0);
+        return 0;
     }" > dummy.c ;
     echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc $LDFLAGS $LIBS" 1>&5;
     ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc $LDFLAGS $LIBS 2>&5;
