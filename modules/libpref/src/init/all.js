@@ -850,3 +850,4 @@ pref("viewmanager.do_doublebuffering", true);
 pref("privacy.popups.sound_enabled",              false);
 pref("privacy.popups.sound_url",                  "");
 pref("privacy.popups.statusbar_icon_enabled",     true);
+pref("privacy.popups.prefill_whitelist",          false);
