@@ -564,7 +564,9 @@ var BookmarksCommand = {
     case "tab":
       var tab = browser.addTab(url);
       browser.selectedTab = tab;
-      browser.focus();
+      break;
+    case "tab_background":
+      browser.addTab(url);
       break;
     }
   },
@@ -596,7 +598,7 @@ var BookmarksCommand = {
     } else {
       var browser = w.getBrowser();
       var tab = browser.loadGroup(URIs);
-      if (!PREF.getBoolPref("browser.tabs.loadInBackground"))
+      if (aTargetBrowser != "tab_background")
         browser.selectedTab = tab;
     }
   },
@@ -1569,11 +1571,57 @@ var BookmarksUtils = {
     }
   },
 
-  loadBookmarkBrowser: function (aEvent, aTarget, aDS)
+  shouldLoadTabInBackground: function(aEvent)
   {
-    var rSource   = RDF.GetResource(aTarget.id);
+    var loadInBackground = PREF.getBoolPref("browser.tabs.loadInBackground");
+    if (aEvent.shiftKey)
+      loadInBackground = !loadInBackground;
+    return loadInBackground;
+  },
+
+  getBrowserTargetFromEvent: function (aEvent)
+  {
+    if (!aEvent)
+      return null;
+
+    switch (aEvent.type) {
+    case "click":
+    case "dblclick":
+      if (aEvent.button > 1)
+        return null;
+
+      if (aEvent.button != 1 && !aEvent.metaKey && !aEvent.ctrlKey)
+        return "current";
+
+      break;
+    case "keypress":
+    case "command":
+      if (!aEvent.metaKey && !aEvent.ctrlKey)
+        return "current";
+
+      break;
+    default:
+      return null;
+    }
+
+    if (PREF && PREF.getBoolPref("browser.tabs.opentabfor.middleclick"))
+      return this.shouldLoadTabInBackground(aEvent) ? "tab_background" : "tab";
+
+    if (PREF && PREF.getBoolPref("middlemouse.openNewWindow"))
+      return "window";
+
+    return null;
+  },
+
+  loadBookmarkBrowser: function (aEvent, aDS)
+  {
+    var target = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
+    if (!target)
+      return;
+
+    var rSource   = RDF.GetResource(aEvent.target.id);
     var selection = BookmarksUtils.getSelectionFromResource(rSource);
-    BookmarksCommand.openBookmark(selection, "current", aDS)
+    BookmarksCommand.openBookmark(selection, target, aDS)
   }
 }
 

@@ -271,14 +271,10 @@ var BookmarksMenu = {
     }
   },
 
-  loadBookmark: function (aTarget, aDS)
+  loadBookmark: function (aEvent, aDS)
   {
-    // Check for invalid bookmarks (most likely a static menu item like "Manage Bookmarks")
-    if (!this.isBTBookmark(aTarget.id))
-      return;
-    var rSource   = RDF.GetResource(aTarget.id);
-    var selection = BookmarksUtils.getSelectionFromResource(rSource);
-    BookmarksCommand.openBookmark(selection, "current", aDS)
+    if (this.isBTBookmark(aEvent.target.id))
+      BookmarksUtils.loadBookmarkBrowser(aEvent, aDS);
   }
 }
 
@@ -691,18 +687,6 @@ var BookmarksMenuDNDObserver = {
 
 var BookmarksToolbar = 
 {
-  ////////////////////////////////////////////////
-  // loads a bookmark with the mouse middle button
-  loadBookmarkMiddleClick: function (aEvent, aDS)
-  {
-    if (aEvent.button != 1)
-      return;
-    // unlike for command events, we have to close the menus manually
-    BookmarksMenuDNDObserver.mCurrentDragOverTarget = null;
-    BookmarksMenuDNDObserver.onDragCloseTarget();
-    BookmarksUtils.loadBookmarkBrowser(aEvent, aEvent.target, aDS);
-  },
-
   /////////////////////////////////////////////////////////////////////////////
   // returns the node of the last visible bookmark on the toolbar -->
   getLastVisibleBookmark: function ()

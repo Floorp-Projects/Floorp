@@ -426,17 +426,22 @@
             }
           }
 
-          BookmarksCommand.openBookmark(selection, "current", this.db);
+          var target = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
+          if (target)
+            BookmarksCommand.openBookmark(selection, target, this.db);
         ]]></body>
       </method>
 
       <method name="openItemKey">
+        <parameter name="aEvent"/>
         <body><![CDATA[
-          if (this._selection.length != 1) {
+          if (this._selection.length != 1)
             return;
+          if (!this._selection.isContainer[0]) {
+            var target = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
+            if (target)
+              BookmarksCommand.openBookmark(this._selection, target, this.db)
           }
-          if (!this._selection.isContainer[0])
-            BookmarksCommand.openBookmark(this._selection, "current", this.db)
         ]]></body>
       </method>
 
@@ -724,7 +729,7 @@
       <vbox flex="1">
         <tree anonid="bookmarks-tree" flex="1" class="plain" enableColumnDrag="true"
                   datasources="rdf:bookmarks rdf:internetsearch rdf:localsearch" ref="NC:BookmarksTopRoot" flags="dont-build-content"
-                  onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItemKey();"
+                  onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItemKey(event);"
                   onclick="this.parentNode.parentNode.openItemClick(event, 1);"
                   ondblclick="this.parentNode.parentNode.openItemClick(event, 2);"
                   ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
