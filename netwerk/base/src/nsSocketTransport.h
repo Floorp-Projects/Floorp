@@ -142,9 +142,10 @@ protected:
   nsIBufferInputStream*     mReadStream;
   nsIBuffer*                mReadBuffer;
 
+  PRInt32                   mWriteCount;
   nsISupports*              mWriteContext;
   nsIStreamObserver*        mWriteObserver;
-  nsIBufferInputStream*     mWriteStream;
+  nsIInputStream*           mWriteStream;
   
   PRUint32 mSourceOffset;
 

@@ -144,6 +144,7 @@ nsSocketTransport::nsSocketTransport()
   mWriteContext   = nsnull;
   mWriteObserver  = nsnull;
 
+  mWriteCount     = 0;
   mSourceOffset   = 0;
   mService        = nsnull;
 
@@ -688,39 +689,41 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
     // XXX: What should this error code be?
     rv = NS_ERROR_FAILURE;
   }
-
   //
   // Fill the stream with as much data from the network as possible...
   //
   //
-  totalBytesWritten = 0;
-  rv = mReadBuffer->WriteSegments(nsReadFromSocket, (void*)mSocketFD, 
-                                  MAX_IO_TRANSFER_SIZE, &totalBytesWritten);
-  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("FillStream [fd=%x].  rv = %x. Bytes read =%d\n",
-                  mSocketFD, rv, totalBytesWritten));
+  else {
+    totalBytesWritten = 0;
+    rv = mReadBuffer->WriteSegments(nsReadFromSocket, (void*)mSocketFD, 
+                                    MAX_IO_TRANSFER_SIZE, &totalBytesWritten);
+    PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+           ("FillStream [fd=%x].  rv = %x. Bytes read =%d\n",
+           mSocketFD, rv, totalBytesWritten));
 
-  //
-  // Deal with the possible return values...
-  //
-  if (NS_BASE_STREAM_FULL == rv) {
-    rv = NS_BASE_STREAM_WOULD_BLOCK;
-  }
-  else if (NS_BASE_STREAM_EOF == rv) {
-    rv = NS_OK;
-  } 
-  else if (NS_SUCCEEDED(rv)) {
-    rv = NS_BASE_STREAM_WOULD_BLOCK;
-  }
+    //
+    // Deal with the possible return values...
+    //
+    if (NS_BASE_STREAM_FULL == rv) {
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
+    }
+    else if (NS_BASE_STREAM_EOF == rv) {
+      mSelectFlags &= (~PR_POLL_READ);
+      rv = NS_OK;
+    } 
+    else if (NS_SUCCEEDED(rv)) {
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
+    }
 
-  //
-  // Fire a single OnDataAvaliable(...) notification once as much data has
-  // been filled into the stream as possible...
-  //
-  if (totalBytesWritten && mReadListener) {
-    mReadListener->OnDataAvailable(mReadContext, mReadStream, mSourceOffset, 
-                                   totalBytesWritten);
-    mSourceOffset += totalBytesWritten;
+    //
+    // Fire a single OnDataAvaliable(...) notification once as much data has
+    // been filled into the stream as possible...
+    //
+    if (totalBytesWritten && mReadListener) {
+      mReadListener->OnDataAvailable(mReadContext, mReadStream, mSourceOffset, 
+                                     totalBytesWritten);
+      mSourceOffset += totalBytesWritten;
+    }
   }
 
   //
@@ -756,7 +759,7 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
 nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
 {
   PRUint32 bytesRead, totalBytesRead;
-  PRInt32 len;
+  PRInt32 maxBytesToRead, len;
   PRErrorCode code;
   nsresult rv = NS_OK;
 
@@ -764,8 +767,9 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::doWrite() [this=%x].\t"
-          "aSelectFlags = %x.\n",
-          this, aSelectFlags));
+          "aSelectFlags = %x.\t"
+          "mWriteCount = %d\n",
+          this, aSelectFlags, mWriteCount));
 
   //
   // Check for an error during PR_Poll(...)
@@ -777,13 +781,23 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
     // XXX: What should this error code be?
     rv = NS_ERROR_FAILURE;
   }
-
-  totalBytesRead = 0;
-  while (NS_OK == rv) {
-    rv = mWriteStream->Read(gIOBuffer, sizeof(gIOBuffer), &bytesRead);
-    if (NS_SUCCEEDED(rv)) {
-      if (bytesRead > 0) {
+  else {
+    totalBytesRead = 0;
+    while (NS_OK == rv) {
+      // Determine the amount of data to read from the input stream...
+      if ((mWriteCount > 0) && (mWriteCount < MAX_IO_TRANSFER_SIZE)) {
+        maxBytesToRead = mWriteCount;
+      } else {
+        maxBytesToRead = sizeof(gIOBuffer);
+      }
+      rv = mWriteStream->Read(gIOBuffer, maxBytesToRead, &bytesRead);
+      if (NS_SUCCEEDED(rv) && bytesRead) {
+        // Update the counters...
         totalBytesRead += bytesRead;
+        if (mWriteCount > 0) {
+          mWriteCount -= bytesRead;
+        }
+        // Write the data to the socket...
         len = PR_Write(mSocketFD, gIOBuffer, bytesRead);
 
         if (len < 0) {
@@ -801,11 +815,11 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
             rv = NS_ERROR_FAILURE;
           }
         }
-      } 
+      }
       //
       // The write operation has completed...
       //
-      else if (bytesRead == 0) {
+      if ((mWriteCount == 0) || (NS_BASE_STREAM_EOF == rv) ) {
         mSelectFlags &= (~PR_POLL_WRITE);
         rv = NS_OK;
         break;
@@ -1029,7 +1043,9 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
   nsAutoLock lock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("+++ Entering nsSocketTransport::AsyncRead() [this=%x].\n", this));
+         ("+++ Entering nsSocketTransport::AsyncRead() [this=%x]\t"
+          "readCount = %d.\n", 
+          this, readCount));
 
   // If a read is already in progress then fail...
   if (mReadListener) {
@@ -1084,7 +1100,9 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
   nsAutoLock lock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
-         ("+++ Entering nsSocketTransport::AsyncWrite() [this=%x].\n", this));
+         ("+++ Entering nsSocketTransport::AsyncWrite() [this=%x]\t"
+          "writeCount = %d.\n", 
+          this, writeCount));
 
   // If a write is already in progress then fail...
   if (mWriteStream) {
@@ -1092,11 +1110,8 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    nsIBufferInputStream* str;
-    rv = aFromStream->QueryInterface(nsIBufferInputStream::GetIID(), (void**)&str);    // XXX not sure this is the right thing here
-    if (NS_FAILED(rv)) return rv;
-    mWriteStream = str;
-    NS_ADDREF(mWriteStream);
+    mWriteStream = aFromStream;
+    NS_ADDREF(aFromStream);
 
     NS_IF_RELEASE(mWriteContext);
     mWriteContext = aContext;
@@ -1107,6 +1122,8 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
     if (aObserver) {
       rv = NS_NewAsyncStreamObserver(&mWriteObserver, aAppEventQueue, aObserver);
     }
+
+    mWriteCount = writeCount;
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1200,8 +1217,11 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
 
     // XXX not sure if this should be blocking (PR_TRUE) or non-blocking.
     nsIBufferOutputStream* out = nsnull;
-    rv = NS_NewPipe(&mWriteStream, &out,
+    nsIBufferInputStream* in = nsnull;
+    rv = NS_NewPipe(&in, &out,
                     MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE, PR_TRUE, nsnull);
+    // No need to addref since NewPipe(...) already did!!!
+    mWriteStream = in;
     *result = out;
   }
 
