@@ -20,42 +20,49 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-DIRS=public
-
 include $(DEPTH)/config/autoconf.mk
 
+DIRS	= public
 
-TOOLKIT_GFX_LIB		= $(addprefix -lgfx, $(MOZ_TOOLKIT))
-TOOLKIT_WIDGET_LIB	= $(addprefix -lwidget, $(MOZ_TOOLKIT))
-TOOLKIT_BASE_LIB	= $(addprefix -lgmbase, $(MOZ_TOOLKIT))
+PROGRAM	= viewer
+
+EXPORT_RESOURCE_SAMPLES := \
+	$(wildcard $(srcdir)/samples/test*.html) \
+	$(srcdir)/resources/find.html \
+	$(srcdir)/resources/printsetup.html \
+	$(srcdir)/resources/image_props.html \
+	$(srcdir)/samples/raptor.jpg \
+	$(srcdir)/samples/Anieyes.gif \
+	$(srcdir)/samples/gear1.gif \
+	$(srcdir)/samples/rock_gra.gif \
+	$(srcdir)/samples/bg.jpg \
+
+EXPORT_RESOURCE_THROBBER := \
+	$(wildcard $(srcdir)/throbber/anim*.gif)
 
 
-#
+TOOLKIT_GFX_LIB		:= -lgfx$(MOZ_TOOLKIT)
+TOOLKIT_WIDGET_LIB	:= -lwidget$(MOZ_TOOLKIT)
+TOOLKIT_BASE_LIB	:= -lgmbase$(MOZ_TOOLKIT)
+
 # Hardcoding dlopen()'s?  This needs to get fixed.
 #
-TOOLKIT_CFLAGS = \
--DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
--DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\"
+TOOLKIT_CFLAGS := \
+	-DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+	-DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+	$(TK_CFLAGS)
 
-ifneq (,$(filter gtk,$(MOZ_TOOLKIT)))
 
-TOOLKIT_CPPSRCS = \
+TOOLKIT_CPPSRCS_gtk := \
 	nsGTKMain.cpp \
 	nsGTKMenu.cpp
 
-TOOLKIT_CFLAGS += $(TK_GTK_CFLAGS)
-TOOLKIT_LIBS   = $(TK_GTK_LIBS)
-else
-ifneq (,$(filter motif,$(MOZ_TOOLKIT)))
-
-TOOLKIT_CPPSRCS = \
+TOOLKIT_CPPSRCS_motif := \
 	nsMotifMenu.cpp \
-	nsMotifMain.cpp
+	nsUnixMain.cpp
 
-TOOLKIT_CFLAGS += $(TK_MOTIF_CFLAGS)
-TOOLKIT_LIBS   = $(TK_MOTIF_LIBS)
-endif
-endif
+TOOLKIT_CPPSRCS := $(TOOLKIT_CPPSRCS_$(MOZ_TOOLKIT))
+
 
 CPPSRCS = \
 	$(TOOLKIT_CPPSRCS)      \
@@ -72,10 +79,6 @@ CPPSRCS = \
 	nsWebCrawler.cpp        \
 	nsStubs.cpp             \
 	$(NULL)
-
-include $(topsrcdir)/config/config.mk
-
-CFLAGS += $(TOOLKIT_CFLAGS)
 
 ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
@@ -129,93 +132,15 @@ LIBS = \
 	$(ZLIB_LIBS) \
 	-lraptorplugin \
 	-lmozdbm \
-	$(TOOLKIT_LIBS) \
+	$(TK_LIBS) \
 	$(NULL)
 
+include $(topsrcdir)/config/config.mk
 
-
-PROGRAM = viewer
+CFLAGS += $(TOOLKIT_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/resources/find.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/resources/printsetup.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/resources/image_props.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test0.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test1.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test2.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test3.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test4.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test5.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test6.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test7.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test8.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test8siz.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test8sca.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test8tab.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test9.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test9a.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test9b.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/raptor.jpg $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/Anieyes.gif $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/gear1.gif $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/rock_gra.gif $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/bg.jpg $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/samples/test10.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/throbber/anims00.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims01.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims02.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims03.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims04.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims05.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims06.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims07.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims08.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims09.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims10.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims11.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims12.gif $(DIST)/bin/res/throbber
-	$(INSTALL) $(srcdir)/throbber/anims13.gif $(DIST)/bin/res/throbber
-
-clobber::
-	rm -f $(DIST)/bin/viewer
-	rm -f $(DIST)/bin/res/samples/find.html
-	rm -f $(DIST)/bin/res/samples/printsetup.html
-	rm -f $(DIST)/bin/res/samples/test0.html
-	rm -f $(DIST)/bin/res/samples/test1.html
-	rm -f $(DIST)/bin/res/samples/test2.html
-	rm -f $(DIST)/bin/res/samples/test3.html
-	rm -f $(DIST)/bin/res/samples/test4.html
-	rm -f $(DIST)/bin/res/samples/test5.html
-	rm -f $(DIST)/bin/res/samples/test6.html
-	rm -f $(DIST)/bin/res/samples/test7.html
-	rm -f $(DIST)/bin/res/samples/test8.html
-	rm -f $(DIST)/bin/res/samples/test8siz.html
-	rm -f $(DIST)/bin/res/samples/test8sca.html
-	rm -f $(DIST)/bin/res/samples/test8tab.html
-	rm -f $(DIST)/bin/res/samples/test9.html
-	rm -f $(DIST)/bin/res/samples/test9a.html
-	rm -f $(DIST)/bin/res/samples/test9b.html
-	rm -f $(DIST)/bin/res/samples/raptor.jpg
-	rm -f $(DIST)/bin/res/samples/Anieyes.gif
-	rm -f $(DIST)/bin/res/samples/gear1.gif
-	rm -f $(DIST)/bin/res/samples/rock_gra.gif
-	rm -f $(DIST)/bin/res/samples/bg.jpg
-	rm -f $(DIST)/bin/res/samples/test10.html
-	rm -f $(DIST)/bin/res/throbber/anims00.gif
-	rm -f $(DIST)/bin/res/throbber/anims01.gif
-	rm -f $(DIST)/bin/res/throbber/anims02.gif
-	rm -f $(DIST)/bin/res/throbber/anims03.gif
-	rm -f $(DIST)/bin/res/throbber/anims04.gif
-	rm -f $(DIST)/bin/res/throbber/anims05.gif
-	rm -f $(DIST)/bin/res/throbber/anims06.gif
-	rm -f $(DIST)/bin/res/throbber/anims07.gif
-	rm -f $(DIST)/bin/res/throbber/anims08.gif
-	rm -f $(DIST)/bin/res/throbber/anims09.gif
-	rm -f $(DIST)/bin/res/throbber/anims10.gif
-	rm -f $(DIST)/bin/res/throbber/anims11.gif
-	rm -f $(DIST)/bin/res/throbber/anims12.gif
-	rm -f $(DIST)/bin/res/throbber/anims13.gif
-
-
+install::
+	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
+	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
