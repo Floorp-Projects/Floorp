@@ -85,6 +85,52 @@ JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,
                                 JavaScript::stdOut);
 const bool showTokens = true;
 
+static Register genExpr(ICodeGenerator &icg, ExprNode *p)
+{
+    Register ret;
+    switch (p->getKind()) {
+            case ExprNode::identifier : {
+                Register r1 = icg.allocateVariable((static_cast<IdentifierExprNode *>(p))->name);
+                ASSERT(r1 == icg.findVariable((static_cast<IdentifierExprNode *>(p))->name));
+
+                icg.saveName((static_cast<IdentifierExprNode *>(p))->name, icg.loadImmediate(0.0));
+                ret = icg.loadName((static_cast<IdentifierExprNode *>(p))->name);
+            }
+            break;
+        case ExprNode::number :
+            ret = icg.loadImmediate((static_cast<NumberExprNode *>(p))->value);
+            break;
+        case ExprNode::string :
+            ret = icg.loadString(world.identifiers[(static_cast<StringExprNode *>(p))->str]);
+            break;
+        case ExprNode::add: {
+                BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+                Register r1 = genExpr(icg, b->op1);
+                Register r2 = genExpr(icg, b->op2);
+                ret = icg.op(ADD, r1, r2);
+            }
+            break;
+    }
+    return ret;
+}
+
+static void genCode(ExprNode *p)
+{
+    JSScope glob;
+    Context cx(world, &glob);
+
+    ICodeGenerator icg;
+    
+    icg.beginStatement(0);
+    Register ret = genExpr(icg, p);
+    icg.endStatement();
+
+    icg.returnStatement(ret);
+    stdOut << icg;
+    JSValue result = cx.interpret(icg.complete(), JSValues());
+    stdOut << "result = " << result.f64 << "\n";
+}
+
 static void readEvalPrint(FILE *in, World &world)
 {
     String buffer;
@@ -108,7 +154,8 @@ static void readEvalPrint(FILE *in, World &world)
                     t.print(stdOut, true);
                 }
             } else {
-                /*ExprNode *parseTree = */ p.parsePostfixExpression();
+                ExprNode *parseTree = p.parsePostfixExpression();
+                genCode(parseTree);
             }
             clear(buffer);
             stdOut << '\n';
@@ -335,6 +382,39 @@ static float64 testFunctionCall(World &world, float64 n)
     stdOut << "sum(" << n << ") = " << result.f64 << "\n";
         
     return result.f64;    
+}
+
+JSValue *print(const JSValues &argv)
+{
+    for (int i = 0; i < argv.size(); i++)
+        stdOut << argv[i];
+    stdOut << "\n";
+    return new JSValue();       // undefined???
+}
+
+static void testPrint(World &world)
+{
+    JSScope glob;
+    Context cx(world, &glob);
+    uint32 position = 0;
+
+    StringAtom& printName = world.identifiers[widenCString("print")];
+    String text = widenCString("pi is ");
+    String piVal = widenCString("3.14159");
+
+    ICodeGenerator script;
+    script.beginStatement(position);
+    Register r1 = script.loadName(printName);
+    RegisterList args_2(1);
+    Register r2 = script.op(POSATE, script.loadString(piVal));
+    args_2[0] = script.op(ADD, script.loadString(text), r2);
+    script.returnStatement(script.call(r1, args_2));
+        
+    stdOut << script;
+
+    glob.defineNativeFunction(printName, print);
+
+    JSValue result = cx.interpret(script.complete(), JSValues());
 }
 
 static float64 testFactorial(World &world, float64 n)
@@ -570,12 +650,12 @@ int main(int argc, char **argv)
   #endif
     using namespace JavaScript;
     using namespace Shell;
-
     assert(testFactorial(world, 5) == 120);
     assert(testObjects(world, 5) == 5);
     assert(testProto(world, 5) == 5);
-	//JavaScript::Shell::testICG(world);
+//    testICG(world);
     assert(testFunctionCall(world, 5) == 5);
+    testPrint(world);
     readEvalPrint(stdin, world);
     return 0;
     // return ProcessArgs(argv + 1, argc - 1);
