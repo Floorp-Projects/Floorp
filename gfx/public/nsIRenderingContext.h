@@ -379,6 +379,12 @@ public:
    */
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints) = 0;
 
+  /**
+   * Rasterize a polygon with the current fill color.
+   * @param aPoints points to use for the drawing, last must equal first
+   * @param aNumPonts number of points in the polygon
+   */
+  NS_IMETHOD RasterPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)=0;
 
   /**
    * Fill a poly in the current foreground color, without transformation taking place

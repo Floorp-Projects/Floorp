@@ -24,6 +24,14 @@
 #include "nsIDeviceContext.h"
 #include "nsIImage.h"
 #include "nsTransform2D.h"
+#include <stdlib.h>
+
+
+const nsPoint *gPts;
+
+// comparison routines for qsort 
+int compare_ind(const void *u,const void *v){return gPts[(int)*((int*)u)].y <= gPts[(int)*((int*)v)].y ? -1 : 1;}
+int compare_active(const void *u,const void *v){return ((Edge*)u)->x <= ((Edge*)v)->x ? -1 : 1;}
 
 
 /** ---------------------------------------------------
@@ -209,7 +217,6 @@ nsPathIter::eSegType  curveType;
 nsPoint               thePath[MAXPATHSIZE];
 PRInt16               curPoint=0;
 
-
   // Transform the points first
   if (aNumPts > 20){
     pp0 = new nsPathPoint[aNumPts];
@@ -245,6 +252,141 @@ PRInt16               curPoint=0;
 
   return NS_OK;
 }
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsRenderingContextImpl.h
+ *	@update 3/29/00 dwc
+ */
+NS_IMETHODIMP
+nsRenderingContextImpl::RasterPolygon(const nsPoint aPointArray[],PRInt32 aNumPts)
+{
+int           x,k,y0,y1,y,i,j,xl,xr;
+int           *ind;
+nsPoint       pts[20];
+nsPoint       *pp,*pp0;
+const nsPoint *np;
+nsPoint       thePath[MAXPATHSIZE];
+
+
+  if (aNumPts<=0)
+    return NS_OK;
+
+  // Transform the points first
+  if (aNumPts > 20){
+    pp0 = new nsPoint[aNumPts];
+  } else {
+    pp0 = &pts[0];
+  }
+  pp = pp0;
+  np = &aPointArray[0];
+
+	for ( i= 0; i < aNumPts; i++,np++,pp++){
+		pp->x = np->x;
+		pp->y = np->y;
+		mTranMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
+	}
+
+  ind = new PRInt32[aNumPts];
+  mActive = new Edge[aNumPts];
+
+  gPts = pp0;
+
+  // create y-sorted array of indices ind[k] into vertex list 
+  for (k=0; k<aNumPts; k++)
+	  ind[k] = k;
+  qsort(ind, aNumPts, sizeof ind[0], compare_ind);	// sort ind by mPointList[ind[k]].y 
+
+  mAct = 0;			// start with empty active list 
+  k = 0;				// ind[k] is next vertex to process 
+  y0 = (int)ceil(pp0[ind[0]].y-.5);
+  y1 = (int)floor(pp0[ind[aNumPts-1]].y-.5);
+
+  for (y=y0; y<=y1; y++) {		// step through scanlines
+	// check vertices between previous scanline and current one, if any */
+	  for (; k<aNumPts && pp0[ind[k]].y<=y+.5; k++) {
+	    i = ind[k];	
+	    j = i>0 ? i-1 : aNumPts-1;	
+	    if (pp0[j].y <= y-.5)	
+		    cdelete(j);
+	    else if (pp0[j].y > y+.5)	
+		    cinsert(j, y,pp0, aNumPts);
+	    j = i<aNumPts-1 ? i+1 : 0;	
+	    if (pp0[j].y <= y-.5)	
+		    cdelete(i);
+	    else if (pp0[j].y > y+.5)	
+		    cinsert(i, y,pp0, aNumPts);
+	  }
+
+	  // sort active edge list by active[j].x 
+	  qsort(mActive, mAct, sizeof mActive[0], compare_active);
+
+	  // draw horizontal segments for scanline y
+	  for (j=0; j<mAct; j+=2) {	// draw horizontal segments
+	    xl = (int) ceil(mActive[j].x-.5);		/* left end of span */
+
+	    xr = (int)floor(mActive[j+1].x-.5);	/* right end of span */
+
+      if(xl<=xr){
+        DrawStdLine(xl,y,xr,y);
+        //for(x=xl;x<xr;x++){
+          //aTheBits->SetPixel(x,y,aRed,aGreen,aBlue);
+        //}
+      }
+	    mActive[j].x += mActive[j].dx;	/* increment edge coords */
+	    mActive[j+1].x += mActive[j+1].dx;
+	  }
+  }
+
+  delete[] ind;
+  delete[] mActive;
+
+  return NS_OK;
+}
+
+
+
+/**-------------------------------------------------------------------
+ * remove edge i from active list
+ * @update dc 12/06/1999
+ */
+void
+nsRenderingContextImpl::cdelete(int i)		
+{
+int j;
+
+  for (j=0; j<mAct && mActive[j].i!=i; j++);
+  if (j>=mAct) 
+    return;	
+  mAct--;
+  memcpy(&mActive[j], &mActive[j+1],(mAct-j)*sizeof mActive[0]);
+}
+
+/**-------------------------------------------------------------------
+ * append edge i to end of active list 
+ * @update dc 12/06/1999
+ */
+void 
+nsRenderingContextImpl::cinsert(int i,int y,const nsPoint aPointArray[],PRInt32 aNumPts)		
+{
+int j;
+double  dx;
+const nsPoint *p, *q;
+
+  j = i<aNumPts-1 ? i+1 : 0;
+  if (aPointArray[i].y < aPointArray[j].y) {
+    p = &aPointArray[i]; q = &aPointArray[j];
+  }else{
+    p = &aPointArray[j]; q = &aPointArray[i];
+  }
+  // initialize x position at intersection of edge with scanline y
+  mActive[mAct].dx = dx = ((double)q->x-(double)p->x)/((double)q->y-(double)p->y);
+  mActive[mAct].x = dx*(y+.5-(double)p->y)+(double)p->x;
+  mActive[mAct].i = i;
+  mAct++;
+}
+
+
 
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextImpl.h
@@ -299,11 +441,31 @@ float         fx,fy,smag;
     curve2.SubDivide(aRenderingContext);
 	}else{
     // draw the curve 
+#ifdef DEBUGCURVE
+    printf("LINE 1- %d,%d %d,%d\n",NSToCoordRound(curve1.mAnc1.x),NSToCoordRound(curve1.mAnc1.y),
+                                NSToCoordRound(curve1.mAnc1.x),NSToCoordRound(curve1.mAnc1.y));
+    printf("LINE 2- %d,%d %d,%d\n",NSToCoordRound(curve1.mAnc2.x),NSToCoordRound(curve1.mAnc2.y),
+                                NSToCoordRound(curve2.mAnc2.x),NSToCoordRound(curve2.mAnc2.y));
+#endif
     aRenderingContext->DrawStdLine(NSToCoordRound(curve1.mAnc1.x),NSToCoordRound(curve1.mAnc1.y),NSToCoordRound(curve1.mAnc2.x),NSToCoordRound(curve1.mAnc2.y)); 
     aRenderingContext->DrawStdLine(NSToCoordRound(curve1.mAnc2.x),NSToCoordRound(curve1.mAnc2.y),NSToCoordRound(curve2.mAnc2.x),NSToCoordRound(curve2.mAnc2.y));
 	}
 }
 
+
+/** ---------------------------------------------------
+ *  See documentation in nsRenderingContextImpl.h
+ *	@update 3/29/00 dwc
+ */
+void 
+QBezierCurve::DebugPrint()
+{
+  printf("CURVE COORDINATES\n");
+  printf("Anchor 1 %f %f\n",mAnc1.x,mAnc1.y);
+  printf("Control %f %f\n",mCon.x,mCon.y);
+  printf("Anchor %f %f\n",mAnc2.x,mAnc2.y);
+
+}
 
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextImpl.h
@@ -320,10 +482,8 @@ float         fx,fy,smag;
 	
 
   // for now to fix the build
-	//fx = (float) fabs(curve1.mAnc2.x - this->mCon.x);
-	//fy = (float) fabs(curve1.mAnc2.y - this->mCon.y);
-  fx = fy = 0;
-
+	fx = (float) fabs(curve1.mAnc2.x - this->mCon.x);
+	fy = (float) fabs(curve1.mAnc2.y - this->mCon.y);
 	//smag = fx+fy-(PR_MIN(fx,fy)>>1);
   smag = fx*fx + fy*fy;
  
@@ -333,9 +493,17 @@ float         fx,fy,smag;
     curve2.SubDivide(aThePoints,aNumPts);
 	}else{
     // draw the curve 
-      aThePoints[(*aNumPts)++].MoveTo(NSToCoordRound(curve1.mAnc1.x),NSToCoordRound(curve1.mAnc1.y));
-      aThePoints[(*aNumPts)++].MoveTo(NSToCoordRound(curve1.mAnc2.x),NSToCoordRound(curve1.mAnc2.y));
-      aThePoints[(*aNumPts)++].MoveTo(NSToCoordRound(curve2.mAnc2.x),NSToCoordRound(curve2.mAnc2.y));
+    aThePoints[(*aNumPts)++].MoveTo(NSToCoordRound(curve1.mAnc1.x),NSToCoordRound(curve1.mAnc1.y));
+    aThePoints[(*aNumPts)++].MoveTo(NSToCoordRound(curve1.mAnc2.x),NSToCoordRound(curve1.mAnc2.y));
+    aThePoints[(*aNumPts)++].MoveTo(NSToCoordRound(curve2.mAnc2.x),NSToCoordRound(curve2.mAnc2.y));
+
+#ifdef DEBUGCURVE
+    printf("LINE 1- %d,%d %d,%d\n",NSToCoordRound(curve1.mAnc1.x),NSToCoordRound(curve1.mAnc1.y),
+                                NSToCoordRound(curve1.mAnc1.x),NSToCoordRound(curve1.mAnc1.y));
+    printf("LINE 2- %d,%d %d,%d\n",NSToCoordRound(curve1.mAnc2.x),NSToCoordRound(curve1.mAnc2.y),
+                                NSToCoordRound(curve2.mAnc2.x),NSToCoordRound(curve2.mAnc2.y));
+#endif
+
 	}
 }
 
@@ -431,7 +599,7 @@ float         avx,avy,av1x,av1y;
         switch(code) {
           case 07:                        // 111
           case 06:                        // 110
-            TheSegment.SetPoints(pt1->x,pt1->y,0,0,pt2->x,pt2->y);
+            TheSegment.SetPoints(pt1->x,pt1->y,0.0,0.0,pt2->x,pt2->y);
             aCurveType = eLINE;  
             mCurPoint++;
             break;
@@ -443,18 +611,18 @@ float         avx,avy,av1x,av1y;
           case 04:                        // 100
               avx = (float)((pt2->x+pt3->x)/2.0);
               avy = (float)((pt2->y+pt3->y)/2.0);
-              TheSegment.SetPoints((float)pt1->x,(float)pt1->y,(float)pt2->x,(float)pt2->y,avx,avy);
+              TheSegment.SetPoints(pt1->x,pt1->y,pt2->x,pt2->y,avx,avy);
               aCurveType = eQCURVE;
               mCurPoint++;
           case 03:                        // 011
           case 02:                        // 010
-              TheSegment.SetPoints(pt1->x,pt1->y,0,0,pt2->x,pt2->y);
+              TheSegment.SetPoints(pt1->x,pt1->y,0.0,0.0,pt2->x,pt2->y);
               aCurveType = eLINE;  
               mCurPoint++;
           case 01:                        // 001
               avx = (float)((pt1->x+pt2->x)/2.0);
               avy = (float)((pt1->y+pt2->y)/2.0);
-              TheSegment.SetPoints(avx,avy,(float)pt2->x,(float)pt3->y,(float)pt2->x,(float)pt3->y);
+              TheSegment.SetPoints(avx,avy,pt2->x,pt3->y,pt2->x,pt3->y);
               aCurveType = eQCURVE;
               mCurPoint+=2;
           case 00:                        // 000
@@ -462,13 +630,13 @@ float         avx,avy,av1x,av1y;
               avy = (float)((pt1->y+pt2->y)/2.0);
               av1x = (float)((pt2->x+pt3->x)/2.0);
               av1y = (float)((pt2->y+pt3->y)/2.0);
-              TheSegment.SetPoints(avx,avy,(float)pt2->x,(float)pt2->y,av1x,av1y);
+              TheSegment.SetPoints(avx,avy,pt2->x,pt2->y,av1x,av1y);
           default:
             break;
         }
       } else {
         // have two points.. draw a line
-        TheSegment.SetPoints(pt1->x,pt1->y,0,0,pt2->x,pt2->y);
+        TheSegment.SetPoints(pt1->x,pt1->y,0.0,0.0,pt2->x,pt2->y);
         aCurveType = eLINE;  
         mCurPoint++;
       }
