@@ -1474,6 +1474,8 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
     // Inform the row of its new height.
     PRBool  isJustSingleRow = PR_FALSE;  /* how to determine this now? */
     if (isJustSingleRow) {
+      // XXX If someone enables this, note that this is a bad cast, since your
+      // child could be a nested table row group (the tree widget strikes again).
       ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
       
       // Adjust the frames that follow...

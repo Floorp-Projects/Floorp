@@ -43,39 +43,6 @@ static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
 
 NS_DEF_PTR(nsIStyleContext);
 
-/* ----------- RowReflowState ---------- */
-
-struct RowReflowState {
-  // Our reflow state
-  const nsHTMLReflowState& reflowState;
-
-  // The body's available size (computed from the body's parent)
-  nsSize availSize;
-
-  // the running x-offset
-  nscoord x;
-
-  // Height of tallest cell (excluding cells with rowspan > 1)
-  nscoord maxCellHeight;    // just the height of the cell frame
-  nscoord maxCellVertSpace; // the maximum MAX(cellheight + topMargin + bottomMargin)
-  
-  nsTableFrame *tableFrame;
-
-  RowReflowState(const nsHTMLReflowState& aReflowState,
-                 nsTableFrame*            aTableFrame)
-    : reflowState(aReflowState)
-  {
-    availSize.width = reflowState.availableWidth;
-    availSize.height = reflowState.availableHeight;
-    maxCellHeight = 0;
-    maxCellVertSpace = 0;
-    tableFrame = aTableFrame;
-    x=0;
-  }
-};
-
-
-
 
 /* ----------- nsTableRowpFrame ---------- */
 
