@@ -739,28 +739,34 @@ FrameManager::DequeuePostedEventFor(nsIFrame* aFrame)
 }
 
 void
-FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
-{
-  FrameManager* frameManager = (FrameManager*)aEvent->owner;
-  
-  // Remove the posted event from the linked list
-  CantRenderReplacedElementEvent** events = &frameManager->mPostedEvents;
-  while (*events) {
-    if (*events == aEvent) {
-      *events = (*events)->mNext;
-      break;
-    } else {
-      events = &(*events)->mNext;
-    }
-  }
+FrameManager::HandlePLEvent(CantRenderReplacedElementEvent* aEvent) {
 
-  // Notify the style system and then process any reflow commands that
-  // are generated
-  nsCOMPtr<nsIPresContext>  presContext;
-  frameManager->mPresShell->EnterReflowLock();
-  frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
-  frameManager->mStyleSet->CantRenderReplacedElement(presContext, aEvent->mFrame);    
-  frameManager->mPresShell->ExitReflowLock(PR_TRUE);
+  FrameManager* frameManager = (FrameManager*)aEvent->owner;
+
+    //adding a ptr check since talkback is complaining about a crash here.
+    //I suspect that if the event->owner is really null, bad things will happen
+    //elsewhere.
+  if(frameManager) { 
+  
+    // Remove the posted event from the linked list
+    CantRenderReplacedElementEvent** events = &frameManager->mPostedEvents;
+    while (*events) {
+      if (*events == aEvent) {
+        *events = (*events)->mNext;
+        break;
+      } else {
+        events = &(*events)->mNext;
+      }
+    }
+
+    // Notify the style system and then process any reflow commands that
+    // are generated
+    nsCOMPtr<nsIPresContext>  presContext;
+    frameManager->mPresShell->EnterReflowLock();
+    frameManager->mPresShell->GetPresContext(getter_AddRefs(presContext));
+    frameManager->mStyleSet->CantRenderReplacedElement(presContext, aEvent->mFrame);    
+    frameManager->mPresShell->ExitReflowLock(PR_TRUE);
+  }
 }
 
 void
