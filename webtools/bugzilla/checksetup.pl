@@ -1678,7 +1678,10 @@ if ($sth->rows == 0) {
       unless ($login =~ /$mailcheckexp/) {
         print "\nThe login address is invalid:\n";
         print "$mailcheck\n";
-        die "Please try again\n";
+        print "You can change this test on the params page once checksetup has successfully\n";
+        print "completed.\n\n";
+        # Go round, and ask them again
+        $login = "";
       }
     }
     $login = $dbh->quote($login);
