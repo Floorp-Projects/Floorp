@@ -1403,7 +1403,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
               // Note: the transferable owns the pointer to the data
               nsCOMPtr<nsISupports> genericDataObj;
               PRUint32 len;
-              char* whichFlavor;
+              char* whichFlavor = nsnull;
               trans->GetAnyTransferData(&whichFlavor, getter_AddRefs(genericDataObj), &len);
               nsCOMPtr<nsISupportsString> textDataObj( do_QueryInterface(genericDataObj) );
               // If the string was not empty then paste it in
@@ -1417,6 +1417,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
                 dragSession->SetCanDrop(PR_TRUE);
               }
 
+              delete [] whichFlavor;
               // XXX This is where image support might go
               //void * data;
               //trans->GetTransferData(mImageDataFlavor, (void **)&data, &len);
