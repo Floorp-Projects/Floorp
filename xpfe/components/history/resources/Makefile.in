@@ -20,20 +20,28 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-include $(DEPTH)/config/autoconf.mk
-
-include $(topsrcdir)/config/rules.mk
-
 FILES = \
-	history.xul	\
-	history.css	\
-	history.js	\
-	history-test.xul	\
-	history-test.js		\
 	$(NULL)
 
-FILES := $(addprefix $(srcdir)/, $(FILES))
+CHROME_DIR          = history
+CHROME_CONTENT_DIR  = content/default
+CHROME_SKIN_DIR     = skin/default
 
-install::
-	$(INSTALL) $(FILES) $(DIST)/bin/res/samples
+CHROME_CONTENT = \
+	history.xul \
+	history.js \
+	history-test.xul \
+	history-test.js \
+	$(NULL)
 
+CHROME_SKIN = \
+	history.css \
+	$(NULL)
+
+CHROME_L10N = \
+	./locale/en-US/history.dtd \
+	$(NULL)
+
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/config/rules.mk
