@@ -1313,30 +1313,28 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
         nsIPluginInstance *inst;
         float             t2p;
         aPresContext->GetTwipsToPixels(&t2p);
-        nscoord           offx, offy;
+        nscoord           offx = 0;
+        nscoord           offy = 0;
 
         GetOffsetFromView(aPresContext, origin, &parentWithView);
 
         // if it's windowless we want to get the offset from the parent frame
         if (window->type == nsPluginWindowType_Drawable)
         {
-          nsIFrame* parentFrame;
 
+          nsIWidget* aWidget;
+          parentWithView->GetOffsetFromWidget(&offx, &offy, aWidget);
+
+          nsIFrame* parentFrame;
           GetParentWithView(aPresContext, &parentFrame);
 
           if(parentFrame != nsnull)
             parentFrame->GetOffsetFromView(aPresContext, origin, &parentWithView);
+
         }
 
-#if 0
-        // beard:  how do we get this?
-        parentWithView->GetScrollOffset(&offx, &offy);
-#else
-        offx = offy = 0;
-#endif
-
-        window->x = NSTwipsToIntPixels(origin.x, t2p);
-        window->y = NSTwipsToIntPixels(origin.y, t2p);
+        window->x = NSTwipsToIntPixels(origin.x + offx, t2p);
+        window->y = NSTwipsToIntPixels(origin.y + offy, t2p);
         // window->width = NSTwipsToIntPixels(aMetrics.width, t2p);
         // window->height = NSTwipsToIntPixels(aMetrics.height, t2p);
 
