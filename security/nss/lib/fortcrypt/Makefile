@@ -50,6 +50,10 @@ ifeq ($(OS_TARGET), WIN95)
 ORIG_CILIB              = libci/tssp32.lib
 endif
 
+ifeq ($(OS_ARCH), WINNT)
+STUBDLL                 = $(OBJDIR)/stub.$(DLL_SUFFIX)
+endif
+
 STUBLIB                 = $(OBJDIR)/stub.$(LIB_SUFFIX)
 
 ifeq ($(OS_TARGET), WIN16)
@@ -92,8 +96,20 @@ $(CILIB):
 
 $(STUBLIB): $(OBJDIR)/maci.o
 	@$(MAKE_OBJDIR)
+ifeq ($(OS_ARCH), WINNT)
+	$(MAKE) $(STUBDLL)
+else
 	$(AR) $<
+endif
 	cp $@ $(CILIB)
+
+ifeq ($(OS_ARCH), WINNT)
+$(STUBDLL): $(OBJDIR)/maci.o
+	$(LINK_DLL) -MAP $(DLLBASE) $(OBJDIR)/maci.o $(OS_LIBS)
+
+$(OBJDIR)/maci.o: maci.c
+	$(CC) -Fo$@ -c $(CFLAGS) $<
+endif
 
 #
 # The following rules packages the shared library into a JAR,
@@ -144,3 +160,5 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 endif
 
 export:: private_export
+
+

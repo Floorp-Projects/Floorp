@@ -30,7 +30,13 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
+#include "seccomon.h"
+
+#if defined( _WIN32 ) || defined( __WIN32__ )
+#define RETURN_TYPE  extern _declspec( dllexport ) int _cdecl
+#endif /* Windows */
 #include "maci.h"
+
 
 RETURN_TYPE
 MACI_ChangePIN PROTO_LIST( (
