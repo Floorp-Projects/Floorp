@@ -495,3 +495,12 @@ ER3(SEC_ERROR_CRL_V1_CRITICAL_EXTENSION,        (SEC_ERROR_BASE + 148),
 
 ER3(SEC_ERROR_CRL_UNKNOWN_CRITICAL_EXTENSION,   (SEC_ERROR_BASE + 149),
 "Issuer's V2 Certificate Revocation List has an unknown critical extension.")
+
+ER3(SEC_ERROR_UNKNOWN_OBJECT_TYPE,	        (SEC_ERROR_BASE + 150),
+"Unknown object type specified.")
+
+ER3(SEC_ERROR_INCOMPATIBLE_PKCS11,	        (SEC_ERROR_BASE + 151),
+"PKCS #11 driver violates the spec in an incompatible way.")
+
+ER3(SEC_ERROR_NO_EVENT,	        		(SEC_ERROR_BASE + 152),
+"No new slot event is available at this time.")
