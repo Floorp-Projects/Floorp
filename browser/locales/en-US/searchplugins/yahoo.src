@@ -11,6 +11,7 @@
    searchForm="http://www.yahoo.com/r/so"
    method="GET"
    action="http://search.yahoo.com/search" 
+   queryCharset="utf-8"
 >
 
 <input name="p" user>
@@ -18,6 +19,7 @@
 
 <interpret 
     browserResultType="category" 
+    charset="UTF-8"
     resultListStart="<div class=padrc>" 
     resultListEnd="SPONSOR RESULTS" 
     resultItemStart="149" 
@@ -26,6 +28,7 @@
 
 <interpret 
     browserResultType="result" 
+    charset="UTF-8"
     resultListStart="<div id=web>" 
     resultListEnd="MORE SPONSOR RESULTS" 
     resultItemStart="<li>" 
