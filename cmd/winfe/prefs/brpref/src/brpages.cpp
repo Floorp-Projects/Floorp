@@ -1322,9 +1322,9 @@ CNewTypeDialog::DoTransfer(BOOL bSaveAndValidate)
 	if (bSaveAndValidate) {
 		char	szFileClass[80];
 		
-		// See if the extension begins with a leading '.' If it does strip
-		// it off
-		while (m_strExtension[0] == '.') {
+		// See if the extension begins with leading punctuation or white space.
+		// If it does, strip it off
+		while (!isalnum(m_strExtension[0])) {
 			m_strExtension = m_strExtension.Mid(1);
 
 			// Update what's displayed so the user sees we changed the extension

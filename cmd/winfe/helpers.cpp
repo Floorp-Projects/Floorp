@@ -41,7 +41,7 @@ CPtrList CHelperApp::m_cplHelpers;
 //
 
 
-void fe_ParseExtList(const char * ext_string, int *num_exts, char **list) 
+void fe_ParseExtList(const char * ext_string, int *num_exts, char **list, int maxExts) 
 {
 	char * start, *cur, *newext;
 	int iLen, idx;
@@ -53,7 +53,7 @@ void fe_ParseExtList(const char * ext_string, int *num_exts, char **list)
 	iLen = strlen(copy);
 
 	// traverse string	
-	for (idx =0; idx < iLen; idx++) {
+	for (idx =0; idx < iLen && iExtCnt < maxExts; idx++) {
 		if (bInExt) {
 			// We are currently reading an extension
 			// If we have a character add it to the current extension
@@ -101,12 +101,12 @@ void fe_ParseExtList(const char * ext_string, int *num_exts, char **list)
 static BOOL
 ExtensionIsInList(LPCSTR lpszExtList, LPCSTR lpszExt)
 {
-	LPSTR	extlist[50]; // XXX - fe_ParseExtList needs another parameter...
+	LPSTR	extlist[50];
 	int 	nExtensions = 0;
 	BOOL	bResult = FALSE;
 	
     ASSERT(lpszExt && (*lpszExt != '.'));
-	fe_ParseExtList(lpszExtList, &nExtensions, extlist);
+	fe_ParseExtList(lpszExtList, &nExtensions, extlist, 50);
 
 	// Look for our extension
 	for (int i = 0; i < nExtensions; i++) {
@@ -234,14 +234,14 @@ void fe_SetExtensionList(NET_cdataStruct *cd_item)
 	if (!cd_item)
 		return;
 
-	char * extlist[50]; // BUG shouldn't limit it to 50 extensions-- big deal...blah easier to debug
+	char * extlist[50];
 	int iNumExt =0;  // number from ini file
 	int idx;
 
 	CString csExtListFromINI = theApp.GetProfileString("Suffixes",cd_item->ci.type);
 	if (!csExtListFromINI.IsEmpty()) {
 		// add extension out of ini file
-		fe_ParseExtList((const char *) csExtListFromINI, &iNumExt, extlist);
+		fe_ParseExtList((const char *) csExtListFromINI, &iNumExt, extlist, 50);
 	}
 
 	if (iNumExt > 0) {
@@ -1093,9 +1093,17 @@ fe_NewFileType(LPCSTR lpszDescription,
     BOOL    bAlreadyHasMimeType;
 #endif
 
+    // Parse out list of extensions.
+    LPSTR exts[50];
+    int   i, numExts;
+    fe_ParseExtList( lpszExtension, &numExts, exts, 50 );
+
+    // Process each extension...
+    for( i = 0; i < numExts; i++ ) {
+
 	// Create a key for the file type extension. There may already be a key for
 	// this extension; that's okay this will open it
-	wsprintf(szExtKey, ".%s", lpszExtension);
+	wsprintf(szExtKey, ".%s", exts[i]);
 	if (RegCreateKey(HKEY_CLASSES_ROOT, szExtKey, &hKey) != ERROR_SUCCESS)
         return NULL;
 
@@ -1104,7 +1112,7 @@ fe_NewFileType(LPCSTR lpszDescription,
 	// we assume that we're just adding another MIME type for this file type
 	if (!GetClassName(lpszExtension, strFileClass)) {
 		// Create a file type class
-		strFileClass = lpszExtension;
+		strFileClass = exts[i];
 		strFileClass += "file";
 	
 		// Set the file type class
@@ -1151,6 +1159,7 @@ fe_NewFileType(LPCSTR lpszDescription,
 #else
 	AddNetscapeMimeType(lpszMimeType, szExtKey);
 #endif
+    } // end for loop for each extension
 
 	// Create the NET_cdataStruct structure and associated CHelperApp object
     NET_cdataStruct *pcdata = NET_cdataCreate();
@@ -1158,17 +1167,11 @@ fe_NewFileType(LPCSTR lpszDescription,
     if (pcdata) {
         pcdata->ci.desc = XP_STRDUP(lpszDescription);
         pcdata->ci.type = XP_STRDUP(lpszMimeType);
-        pcdata->num_exts = 0;
-        pcdata->exts = (char **)XP_ALLOC(sizeof(char *));
+        pcdata->num_exts = numExts;
+        pcdata->exts = (char **)XP_ALLOC(numExts*sizeof(char *));
         if (pcdata->exts) {
-            pcdata->exts[0] = XP_STRDUP(lpszExtension);
-            
-            if (pcdata->exts[0]) {
-                pcdata->num_exts = 1;
-
-            } else {
-                XP_FREE(pcdata->exts);
-                pcdata->exts = 0;
+            for( i = 0; i < numExts; i++ ) {
+                pcdata->exts[i] = XP_STRDUP(exts[i]);
             }
         }
 
