@@ -70,7 +70,7 @@ void nsDrawingSurfaceOS2::SelectFont( nsIFontMetrics *metrics)
    metrics->GetFontHandle( fh);
 
    nsFontHandleOS2 *pHandle = (nsFontHandleOS2 *) fh;
-   FontHandleKey    key( pHandle);
+   FontHandleKey    key((void*)pHandle->ulHashMe);
 
    if( !mHTFonts->Get( &key))
    {

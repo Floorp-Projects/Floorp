@@ -55,6 +55,7 @@ struct nsFontHandleOS2
 
    nsFontHandleOS2();
    void SelectIntoPS( HPS hps, long lcid);
+   ULONG ulHashMe;
 };
 
 #ifndef FM_DEFN_LATIN1
