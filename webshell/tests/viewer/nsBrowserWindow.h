@@ -72,10 +72,8 @@ public:
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
   NS_IMETHOD Close();
-  NS_IMETHOD OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow);
-  NS_IMETHOD ChangeChrome(PRUint32 aNewChromeMask);
+  NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
-  NS_IMETHOD LoadURL(const PRUnichar* aURL);
   NS_IMETHOD SetTitle(const PRUnichar* aTitle);
   NS_IMETHOD GetTitle(PRUnichar** aResult);
   NS_IMETHOD SetStatus(const PRUnichar* aStatus);
@@ -93,7 +91,6 @@ public:
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
-  NS_IMETHOD OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec);
   NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell);
 
   // nsINetSupport

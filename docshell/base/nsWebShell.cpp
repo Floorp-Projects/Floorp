@@ -43,6 +43,7 @@
 #include "nsIRefreshUrl.h"
 #include "nsITimer.h"
 #include "jsurl.h"
+#include "nsIBrowserWindow.h"
 
 #include "prlog.h"
 
@@ -182,7 +183,6 @@ public:
   NS_IMETHOD BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL);
   NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStatus);
-  NS_IMETHOD OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec);
   NS_IMETHOD NewWebShell(nsIWebShell *&aNewWebShell);
 
   // nsILinkHandler
@@ -291,6 +291,7 @@ static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_I
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
+static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
@@ -1210,10 +1211,22 @@ nsWebShell::SetTitle(const PRUnichar* aTitle)
   mTitle = aTitle;
 
   // Title's set on the top level web-shell are passed ont to the container
-  if (nsnull == mParent) {
-    if (nsnull != mContainer) {
-      mContainer->SetTitle(aTitle);
+  nsIWebShell *rootWebShell;
+
+  GetRootWebShell(rootWebShell);
+
+  if (nsnull != rootWebShell) {
+    nsIWebShellContainer *rootContainer;
+    rootWebShell->GetContainer(rootContainer);
+    if (nsnull != rootContainer) {
+      nsIBrowserWindow *browserWindow;
+      if (NS_OK == rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow)) {
+        browserWindow->SetTitle(aTitle);
+        NS_RELEASE(browserWindow);
+      }
+      NS_RELEASE(rootContainer);
     }
+    NS_RELEASE(rootWebShell);
   }
 
   return NS_OK;
@@ -1267,15 +1280,6 @@ nsWebShell::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aStat
   if (nsnull != mContainer) {
     // XXX: do not propagate this notification up from any frames...
 //  return mContainer->EndLoadURL(aShell, aURL, aStatus);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec)
-{
-  if (nsnull != mContainer) {
-    return mContainer->OverLink(aShell, aURLSpec, aTargetSpec);
   }
   return NS_OK;
 }
@@ -1455,10 +1459,23 @@ fputs("Was '", stdout); fputs(mOverURL, stdout); fputs("' '", stdout); fputs(mOv
     mOverURL = aURLSpec;
     mOverTarget = aTargetSpec;
 
-    // XXX: Should the IWebShell being passed out be the target WebShell?
-    if (nsnull != mContainer) {
-      mContainer->OverLink(this, aURLSpec, aTargetSpec);
-    } 
+    // Get the browser window and setStatus
+    nsIWebShell *rootWebShell;
+    GetRootWebShell(rootWebShell);
+
+    if (nsnull != rootWebShell) {
+      nsIWebShellContainer *rootContainer;
+      rootWebShell->GetContainer(rootContainer);
+      if (nsnull != rootContainer) {
+        nsIBrowserWindow *browserWindow;
+        if (NS_OK == rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow)) {
+          browserWindow->SetStatus(aURLSpec);
+          NS_RELEASE(browserWindow);
+        }
+        NS_RELEASE(rootContainer);
+      }
+      NS_RELEASE(rootWebShell);
+    }
   }
   return NS_OK;
 }

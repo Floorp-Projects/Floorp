@@ -72,13 +72,9 @@ public:
 
   NS_IMETHOD Close() = 0;
 
-  NS_IMETHOD OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow) = 0;
-
-  NS_IMETHOD ChangeChrome(PRUint32 aNewChromeMask) = 0;
+  NS_IMETHOD SetChrome(PRUint32 aNewChromeMask) = 0;
 
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult) = 0;
-
-  NS_IMETHOD LoadURL(const PRUnichar* aURL) = 0;
 
   NS_IMETHOD SetTitle(const PRUnichar* aTitle) = 0;
 

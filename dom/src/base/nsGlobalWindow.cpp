@@ -1023,52 +1023,61 @@ GlobalWindowImpl::Open(JSContext *cx,
     mChrome = (PRUint32)~0;
   }
 
-  nsIBrowserWindow *mNewWindow, *mBrowser;
-  nsIScriptGlobalObject *mNewGlobalObject = nsnull;
+  nsIBrowserWindow *newWindow = nsnull;
+  nsIScriptGlobalObject *newGlobalObject = nsnull;
+  nsIWebShell *newWebShell;
+  nsIWebShellContainer *webShellContainer, *newContainer;
   
   /* XXX check for existing window of same name.  If exists, set url and 
    * update chrome */
-  
-  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    mBrowser->OpenWindow(mChrome, mNewWindow);
-    mNewWindow->LoadURL(mAbsURL);
-    //How should we do default size/pos
-    mNewWindow->SizeTo(mWidth ? mWidth : 620, mHeight ? mHeight : 400);
-    mNewWindow->MoveTo(mLeft, mTop);
-    mNewWindow->Show();
+  if (NS_OK == mWebShell->GetContainer(webShellContainer)) {
+    if (NS_OK == webShellContainer->NewWebShell(newWebShell)) {
+      if (NS_OK == newWebShell->GetContainer(newContainer) && nsnull != newContainer) {
+        newContainer->QueryInterface(kIBrowserWindowIID, (void**)&newWindow);
+        NS_RELEASE(newContainer);
+      }
+    }
+    NS_RELEASE(webShellContainer);
+  }
 
-    NS_RELEASE(mBrowser);
+  if (nsnull != newWindow) {
+    //How should we do default size/pos
+    newWindow->SetChrome(mChrome);
+    newWindow->SizeTo(mWidth ? mWidth : 620, mHeight ? mHeight : 400);
+    newWindow->MoveTo(mLeft, mTop);
+
+    newWebShell->LoadURL(mAbsURL);
+
+    newWindow->Show();
 
     /* Get win obj */
-    nsIWebShell *mNewWebShell = nsnull;
-    nsIScriptContextOwner *mNewContextOwner = nsnull;
+    nsIScriptContextOwner *newContextOwner = nsnull;
 
-    if (NS_OK != mNewWindow->GetWebShell(mNewWebShell) ||
-        NS_OK != mNewWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mNewContextOwner) ||
-        NS_OK != mNewContextOwner->GetScriptGlobalObject(&mNewGlobalObject)) {
+    if (NS_OK != newWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&newContextOwner) ||
+        NS_OK != newContextOwner->GetScriptGlobalObject(&newGlobalObject)) {
 
-      NS_IF_RELEASE(mNewWindow);
-      NS_IF_RELEASE(mNewWebShell);
-      NS_IF_RELEASE(mNewContextOwner);
+      NS_IF_RELEASE(newWindow);
+      NS_IF_RELEASE(newWebShell);
+      NS_IF_RELEASE(newContextOwner);
       return NS_ERROR_FAILURE;
     }
 
-    mNewWebShell->SetName(mName);
+    newWebShell->SetName(mName);
     
-    NS_RELEASE(mNewWindow);
-    NS_RELEASE(mNewWebShell);
-    NS_RELEASE(mNewContextOwner);
+    NS_RELEASE(newWindow);
+    NS_RELEASE(newWebShell);
+    NS_RELEASE(newContextOwner);
   }
 
-  nsIDOMWindow *mNewDOMWindow;
-  if (nsnull != mNewGlobalObject && NS_OK == mNewGlobalObject->QueryInterface(kIDOMWindowIID, (void**)&mNewDOMWindow)) {
-    *aReturn = mNewDOMWindow;
+  nsIDOMWindow *newDOMWindow;
+  if (nsnull != newGlobalObject && NS_OK == newGlobalObject->QueryInterface(kIDOMWindowIID, (void**)&newDOMWindow)) {
+    *aReturn = newDOMWindow;
   }
 
   /* Set opener */
-  mNewGlobalObject->SetOpenerWindow(this);
+  newGlobalObject->SetOpenerWindow(this);
 
-  NS_IF_RELEASE(mNewGlobalObject);
+  NS_IF_RELEASE(newGlobalObject);
 
   return NS_OK;
 }
@@ -1378,7 +1387,10 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Capturing stage
-  
+  /*if (mEventCapturer) {
+    mEventCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+  }*/
+
   //Local handling stage
   if (nsnull != mListenerManager) {
     mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aEventStatus);

@@ -590,7 +590,12 @@ nsWebCrawler::LoadNextURL()
       mPendingURLs.RemoveElementAt(0);
       if (OkToLoad(*url)) {
         RecordLoadedURL(*url);
-        mBrowser->LoadURL(*url);
+
+        nsIWebShell* webShell;
+        mBrowser->GetWebShell(webShell);
+        webShell->LoadURL(*url);
+        NS_RELEASE(webShell);
+
         if (mMaxPages > 0) {
           --mMaxPages;
         }

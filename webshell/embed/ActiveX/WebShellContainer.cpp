@@ -58,20 +58,6 @@ nsresult CWebShellContainer::QueryInterface(const nsIID& aIID, void** aInstanceP
 }
 
 NS_IMETHODIMP
-CWebShellContainer::SetTitle(const PRUnichar* aTitle)
-{
-	m_sTitle = aTitle;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-CWebShellContainer::GetTitle(PRUnichar** aResult)
-{
-	*aResult = m_sTitle;
-	return NS_OK;
-}
-
-NS_IMETHODIMP
 CWebShellContainer::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
 {
 //  if (mStatus) {
@@ -104,16 +90,6 @@ CWebShellContainer::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt
 //  if (mThrobber) {
 //    mThrobber->Stop();
 // }
-	return NS_OK;
-}
-
-NS_IMETHODIMP
-CWebShellContainer::OverLink(nsIWebShell* aShell, const PRUnichar* aURLSpec, const PRUnichar* aTargetSpec)
-{
-//  if (nsnull != mStatus)
-//  {
-//    mStatus->SetText(aURLSpec);
-//  }
 	return NS_OK;
 }
 
