@@ -187,7 +187,7 @@ NS_IMETHODIMP nsAccessProxy::Observe(nsISupports *aSubject, const char *aTopic, 
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
       if (NS_SUCCEEDED(rv)) 
-        rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+        rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
     }
   }
   return rv;
