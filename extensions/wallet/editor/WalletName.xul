@@ -77,7 +77,7 @@
           </menulist>
         </row>
 
-         <row>
+        <row>
           <html>&nameMiddle.label;</html>
           <menulist id="name.middle" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">

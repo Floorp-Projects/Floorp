@@ -90,7 +90,7 @@
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
-          <html>  &phoneDayExt.label;</html>
+          <text value="&phoneDayExt.label;" />
           <menulist id="phone.extension" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup>
@@ -122,7 +122,7 @@
               <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
-          <html>  &phoneEveExt.label;</html>
+          <text value="&phoneEveExt.label;" />
           <menulist id="altphone.extension" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
             <menupopup>

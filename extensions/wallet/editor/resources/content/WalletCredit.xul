@@ -80,14 +80,14 @@
         <row>
           <html>&creditExpires.label;</html>
           <hbox>
-            <html>&creditExpiresMonth.label;</html>
+            <text value="&creditExpiresMonth.label;" />
             <menulist id="card.expdate.month" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">
               <menupopup>
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <html>&creditExpiresYear.label;</html>
+            <text value="&creditExpiresYear.label;" />
             <menulist id="card.expdate.year" editable="true" autoSelectMenuitem="false" flex="60%" width="0"
                       onchange="Append(this)">
               <menupopup>
