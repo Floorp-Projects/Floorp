@@ -9,6 +9,7 @@ Move PLIF/Service/Components to PLIF/Component
 Move PLIF/Service/User* to PLIF/Session/*
 Move PLIF/Service/Session.pm to PLIF/Session.pm
 Move PLIF/Service/ContactMethods to PLIF/ProtocolHelper/...
+Move PLIF/DataSource/*/MySQL.pm to PLIF/DataSource/MySQL/*.pm
 
 
 CGI input needs POST support
