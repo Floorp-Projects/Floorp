@@ -27,8 +27,6 @@
 #include "nsIURI.h"
 #include "nsString2.h"
 #include "nsIEventQueue.h"
-#include "nsIBufferOutputStream.h"
-#include "nsIBufferInputStream.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
@@ -63,29 +61,27 @@ public:
                   nsIProtocolHandler* aHandler);
 
 protected:
-    nsCOMPtr<nsIURI>        mOriginalURI;
-    nsIURI*                 mUrl;
-    nsIEventQueue*          mEventQueue;
-    nsIProgressEventSink*   mEventSink;
+    nsCOMPtr<nsIURI>                mOriginalURI;
+    nsCOMPtr<nsIURI>                mURL;
+    nsCOMPtr<nsIEventQueue>         mEventQueue;
+    nsCOMPtr<nsIProgressEventSink>  mEventSink;
 
-    PRBool                  mConnected;
-    nsIStreamListener*      mListener;
-    nsISupports*            mContext;
-    PRUint32                mLoadAttributes;
+    PRBool                          mConnected;
+    nsCOMPtr<nsIStreamListener>     mListener;
+    nsCOMPtr<nsISupports>           mContext;
+    PRUint32                        mLoadAttributes;
 
-    nsIBufferInputStream*   mBufferInputStream;
-    nsIBufferOutputStream*  mBufferOutputStream;
-    PRUint32                mSourceOffset;
-    PRInt32                 mAmount;
-    nsILoadGroup*           mLoadGroup;
-    nsAutoString            mContentType;
-    PRInt32                 mContentLength;
-    nsCOMPtr<nsISupports>   mOwner;
-    nsIThread*              mConnectionThread; // the thread for this connection.
+    PRUint32                        mSourceOffset;
+    PRInt32                         mAmount;
+    nsCOMPtr<nsILoadGroup>          mLoadGroup;
+    nsAutoString                    mContentType;
+    PRInt32                         mContentLength;
+    nsCOMPtr<nsISupports>           mOwner;
+    nsCOMPtr<nsIThread>             mConnectionThread; // the thread for this connection.
 
-    nsIEventQueue*          mConnectionEventQueue;
-    nsIRequest*             mThreadRequest; // the nsIRequest proxy object.
-    nsIProtocolHandler*     mHandler;
+    nsCOMPtr<nsIEventQueue>         mConnectionEventQueue;
+    nsCOMPtr<nsIRequest>            mThreadRequest; // the nsIRequest proxy object.
+    nsCOMPtr<nsIProtocolHandler>    mHandler;
 };
 
 #define NS_FTP_SEGMENT_SIZE   (4*1024)
