@@ -31,7 +31,6 @@ LIBRARY_NAME	= nkres_s
 REQUIRES	= xpcom string exthandler mimetype
 
 CPPSRCS		=			 \
-		nsResChannel.cpp	 \
 		nsResProtocolHandler.cpp \
 		$(NULL)
 
@@ -40,6 +39,10 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
 FORCE_STATIC_LIB = 1
+
+LOCAL_INCLUDES =                    \
+        -I$(DEPTH)/netwerk/base/src \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

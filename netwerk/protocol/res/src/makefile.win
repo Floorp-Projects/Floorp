@@ -28,9 +28,12 @@ LIBRARY_NAME=nkres_s
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 CPP_OBJS=                                    \
-	.\$(OBJDIR)\nsResChannel.obj         \
 	.\$(OBJDIR)\nsResProtocolHandler.obj \
 	$(NULL)
+
+INCS = $(INCS)                  \
+    -I$(DEPTH)\netwerk\base\src \
+    $(NULL)
 
 include <$(DEPTH)\config\rules.mak> 
 

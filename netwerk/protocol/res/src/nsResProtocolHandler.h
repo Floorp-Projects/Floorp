@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #ifndef nsResProtocolHandler_h___
@@ -26,6 +27,7 @@
 #include "nsIResProtocolHandler.h"
 #include "nsHashtable.h"
 #include "nsISupportsArray.h"
+#include "nsIIOService.h"
 #include "nsWeakReference.h"
 
 class nsResProtocolHandler : public nsIResProtocolHandler, public nsSupportsWeakReference
@@ -45,9 +47,13 @@ public:
     nsresult Init();
     nsresult SetSpecialDir(const char* rootName, const char* specialDir);
 
-protected:
-    PRLock*             mLock;
-    nsSupportsHashtable mSubstitutions;
+    static nsResProtocolHandler *get() { return mGlobalInstance; }
+
+private:
+    static nsResProtocolHandler *mGlobalInstance;
+
+    nsSupportsHashtable    mSubstitutions;
+    nsCOMPtr<nsIIOService> mIOService;
 };
 
 #endif /* nsResProtocolHandler_h___ */
