@@ -126,7 +126,7 @@ static ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[] = {
   {k2ndEmailColumn, nsnull, PR_TRUE},
   {kPreferMailFormatColumn, "xmozillausehtmlmail", PR_FALSE},
   {kLastModifiedDateColumn, "modifytimestamp", PR_FALSE},
-  {kWorkPhoneColumn, "telehoneNumber", PR_TRUE}, 
+  {kWorkPhoneColumn, "telephoneNumber", PR_TRUE}, 
   {kHomePhoneColumn, "homePhone", PR_TRUE},
   {kFaxColumn, "facsimileTelephoneNumber", PR_TRUE},
   {kPagerColumn, "pager", PR_TRUE},
