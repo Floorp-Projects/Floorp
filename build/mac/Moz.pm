@@ -133,8 +133,9 @@ sub log_message_with_time($)
 			}
 	}
 
-sub log_recent_errors()
+sub log_recent_errors($)
 	{
+		my ($project_name) = @_;
 		my $found_errors = 0;
 
 		if ( $logging )
@@ -157,7 +158,7 @@ sub log_recent_errors()
 		if ( $stop_on_1st_error && $found_errors )
 			{
 				print ERROR_LOG "### Build failed.\n";
-				die "### Build failed with errors, stopped";
+				die "### Errors encountered building \"$project_name\".\n";
 			}
 	}
 
@@ -179,7 +180,7 @@ END_OF_APPLESCRIPT
 			# Append any errors to the globally accumulated log file
 		if ( $had_errors )
 			{
-				log_recent_errors();
+				log_recent_errors($project_path);
 			}
 	}
 
