@@ -565,6 +565,10 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
   if (NS_SUCCEEDED(rv) && prefs)
     prefs->GetBoolPref("mail.do_glyph_substitution", &do_glyph_substitution);
 
+  // We shouldn't do the fun smiley stuff if we are only looking for URL's
+  if (urls_only)
+    do_glyph_substitution = PR_FALSE;
+
   mailToTag = FindAmbitiousMailToTag(input, (PRInt32)input_size);
 
   /* Normal lines are scanned for buried references to URL's
