@@ -113,11 +113,19 @@ nsProfileDirServiceProvider::~nsProfileDirServiceProvider()
 nsresult
 nsProfileDirServiceProvider::SetProfileDir(nsIFile* aProfileDir)
 {
-  mProfileDir = aProfileDir;
-  if (!aProfileDir) {
-    return UndefineFileLocations();
+  if (mProfileDir) {    
+    PRBool isEqual;
+    if (aProfileDir &&
+        NS_SUCCEEDED(aProfileDir->Equals(mProfileDir, &isEqual)) && isEqual) {
+      NS_WARNING("Setting profile dir to same as current");
+      return NS_OK;
+    }
+    UndefineFileLocations();
   }
-  
+  mProfileDir = aProfileDir;
+  if (!mProfileDir)
+    return NS_OK;
+    
   nsresult rv = InitProfileDir(mProfileDir);
   if (NS_FAILED(rv))
     return rv;
