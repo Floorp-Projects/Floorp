@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -145,8 +145,31 @@ JS_GetFrameScript(JSContext *cx, JSStackFrame *fp);
 extern JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp);
 
-extern JS_PUBLIC_API(JSBool)
-JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp);
+/*
+ * Get the closest scripted frame below fp.  If fp is null, start from cx->fp.
+ */
+extern JS_PUBLIC_API(JSStackFrame *)
+JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp);
+
+/*
+ * Return a weak reference to fp's principals.  A null return does not denote
+ * an error, it means there are no principals.
+ */
+extern JS_PUBLIC_API(JSPrincipals *)
+JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp);
+
+/*
+ * Like JS_StackFramePrincipals(cx, caller), but if cx->findObjectPrincipals
+ * is non-null, return the object principals for fp's callee function object
+ * (fp->argv[-2]), which is eval, Function, or a similar eval-like method.
+ * The caller parameter should be the result of JS_GetScriptedCaller(cx, fp).
+ *
+ * All eval-like methods must use JS_EvalFramePrincipals to acquire a weak
+ * reference to the correct principals for the eval call to be secure, given
+ * an embedding that calls JS_SetObjectPrincipalsFinder (see jsapi.h).
+ */
+extern JS_PUBLIC_API(JSPrincipals *)
+JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller);
 
 extern JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp);
@@ -156,6 +179,9 @@ JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation);
 
 extern JS_PUBLIC_API(void *)
 JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp);
 
 /* this is deprecated, use JS_GetFrameScopeChain instead */
 extern JS_PUBLIC_API(JSObject *)
@@ -203,7 +229,7 @@ JS_GetScriptLineExtent(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(JSVersion)
 JS_GetScriptVersion(JSContext *cx, JSScript *script);
-     
+
 /************************************************************************/
 
 /*

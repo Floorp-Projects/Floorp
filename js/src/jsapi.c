@@ -2874,6 +2874,20 @@ JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
     return JS_TRUE;
 }
 
+#ifdef JS_THREADSAFE
+JS_PUBLIC_API(jsrefcount)
+JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals)
+{
+    return JS_ATOMIC_INCREMENT(&principals->refcount);
+}
+
+JS_PUBLIC_API(jsrefcount)
+JS_DropPrincipals(JSContext *cx, JSPrincipals *principals)
+{
+    return JS_ATOMIC_DECREMENT(&principals->refcount);
+}
+#endif
+
 JS_PUBLIC_API(JSPrincipalsTranscoder)
 JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px)
 {
@@ -2882,6 +2896,16 @@ JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px)
     oldpx = rt->principalsTranscoder;
     rt->principalsTranscoder = px;
     return oldpx;
+}
+
+JS_PUBLIC_API(JSObjectPrincipalsFinder)
+JS_SetObjectPrincipalsFinder(JSContext *cx, JSObjectPrincipalsFinder fop)
+{
+    JSObjectPrincipalsFinder oldfop;
+
+    oldfop = cx->findObjectPrincipals;
+    cx->findObjectPrincipals = fop;
+    return oldfop;
 }
 
 JS_PUBLIC_API(JSFunction *)

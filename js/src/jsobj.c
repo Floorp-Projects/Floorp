@@ -962,8 +962,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
     fp = cx->fp;
-    caller = fp->down;
-    indirectCall = (!caller->pc || *caller->pc != JSOP_EVAL);
+    caller = JS_GetScriptedCaller(cx, fp);
+    indirectCall = (caller && caller->pc && *caller->pc != JSOP_EVAL);
 
     if (JSVERSION_IS_ECMA(cx->version) &&
         indirectCall &&
@@ -1024,21 +1024,23 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         scopeobj = obj;
 #else
         /* Compile using caller's current scope object. */
-        scopeobj = caller->scopeChain;
+        if (caller)
+            scopeobj = caller->scopeChain;
 #endif
     }
 
     str = JSVAL_TO_STRING(argv[0]);
-    if (caller->script) {
+    if (caller) {
         file = caller->script->filename;
         line = js_PCToLineNumber(cx, caller->script, caller->pc);
-        principals = caller->script->principals;
+        principals = JS_EvalFramePrincipals(cx, fp, caller);
     } else {
         file = NULL;
         line = 0;
         principals = NULL;
     }
 
+    /* XXXbe set only for the compiler, which does not currently test it */
     fp->flags |= JSFRAME_EVAL;
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
                                              JSSTRING_CHARS(str),
@@ -1055,7 +1057,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
     {
         /* Execute using caller's new scope object (might be a Call object). */
-        scopeobj = caller->scopeChain;
+        if (caller)
+            scopeobj = caller->scopeChain;
     }
 #endif
     ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);

@@ -398,6 +398,9 @@ struct JSContext {
 
     /* PDL of stack headers describing stack slots not rooted by argv, etc. */
     JSStackHeader       *stackHeaders;
+
+    /* Optional hook to find principals for an object being accessed on cx. */
+    JSObjectPrincipalsFinder findObjectPrincipals;
 };
 
 /* Slightly more readable macros, also to hide bitset implementation detail. */

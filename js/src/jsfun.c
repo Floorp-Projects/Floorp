@@ -45,6 +45,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
+#include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
@@ -1615,6 +1616,7 @@ js_IsIdentifier(JSString *str)
 static JSBool
 Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    JSStackFrame *fp, *caller;
     JSFunction *fun;
     JSObject *parent;
     uintN i, n, lineno, dupflag;
@@ -1623,7 +1625,6 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *obj2;
     JSScopeProperty *sprop;
     JSString *str, *arg;
-    JSStackFrame *fp;
     void *mark;
     JSTokenStream *ts;
     JSPrincipals *principals;
@@ -1632,7 +1633,8 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSTokenType tt;
     JSBool ok;
 
-    if (cx->fp && !(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
+    fp = cx->fp;
+    if (fp && !(fp->flags & JSFRAME_CONSTRUCTING)) {
         obj = js_NewObject(cx, &js_FunctionClass, NULL, NULL);
         if (!obj)
             return JS_FALSE;
@@ -1660,7 +1662,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
     fun = js_NewFunction(cx, obj, NULL, 0, JSFUN_LAMBDA, parent,
-                         (JSVERSION_IS_ECMA(cx->version))
+                         JSVERSION_IS_ECMA(cx->version)
                          ? cx->runtime->atomState.anonymousAtom
                          : NULL);
 
@@ -1674,26 +1676,16 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * are built for Function.prototype.call or .apply activations that invoke
      * Function indirectly from a script.
      */
-    fp = cx->fp;
     JS_ASSERT(!fp->script && fp->fun && fp->fun->native == Function);
-    for (;;) {
-        fp = fp->down;
-        if (!fp) {
-            filename = NULL;
-            lineno = 0;
-            principals = NULL;
-            break;
-        }
-        if (fp->script) {
-            /*
-             * Load fp->script->* before calling js_PCToLineNumber, to avoid
-             * a pessimal reload of fp->script.
-             */
-            principals = fp->script->principals;
-            filename = fp->script->filename;
-            lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
-            break;
-        }
+    caller = JS_GetScriptedCaller(cx, fp);
+    if (caller) {
+        filename = caller->script->filename;
+        lineno = js_PCToLineNumber(cx, caller->script, caller->pc);
+        principals = JS_EvalFramePrincipals(cx, fp, caller);
+    } else {
+        filename = NULL;
+        lineno = 0;
+        principals = NULL;
     }
 
     n = argc ? argc - 1 : 0;

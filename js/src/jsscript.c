@@ -174,8 +174,8 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* Compile using the caller's scope chain, which js_Invoke passes to fp. */
     fp = cx->fp;
-    caller = fp->down;
-    JS_ASSERT(fp->scopeChain == caller->scopeChain);
+    caller = JS_GetScriptedCaller(cx, fp);
+    JS_ASSERT(!caller || fp->scopeChain == caller->scopeChain);
 
     scopeobj = NULL;
     if (argc >= 2) {
@@ -183,18 +183,21 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return JS_FALSE;
         argv[1] = OBJECT_TO_JSVAL(scopeobj);
     }
-    if (!scopeobj)
-        scopeobj = caller->scopeChain;
+    if (caller) {
+        if (!scopeobj)
+            scopeobj = caller->scopeChain;
 
-    if (caller->script) {
         file = caller->script->filename;
         line = js_PCToLineNumber(cx, caller->script, caller->pc);
-        principals = caller->script->principals;
+        principals = JS_EvalFramePrincipals(cx, fp, caller);
     } else {
         file = NULL;
         line = 0;
         principals = NULL;
     }
+
+    /* XXXbe set only for the compiler, which does not currently test it */
+    fp->flags |= JSFRAME_EVAL;
 
     /* Compile the new script using the caller's scope chain, a la eval(). */
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
@@ -242,13 +245,10 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Emulate eval() by using caller's this, scope chain, and sharp array. */
     fp = cx->fp;
-    caller = fp->down;
-    if (!scopeobj)
-      scopeobj = caller->scopeChain;
-    fp->thisp = caller->thisp;
-    JS_ASSERT(fp->scopeChain == caller->scopeChain);
-    fp->sharpArray = caller->sharpArray;
-    return js_Execute(cx, scopeobj, script, fp, 0, rval);
+    caller = JS_GetScriptedCaller(cx, fp);
+    if (caller && !scopeobj)
+        scopeobj = caller->scopeChain;
+    return js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 }
 
 #if JS_HAS_XDR
