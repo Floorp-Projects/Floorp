@@ -90,7 +90,7 @@
       tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
     <spacer class="bigspacer"/>
-    <groupbox style="padding-left: 8px; padding-right: 8px">
+    <groupbox orient="horizontal" style="padding-left: 8px; padding-right: 8px">
       <caption label="&previewBox.label;"/>
       <hbox id="preview-image-box" align="center">
         <spacer flex="1"/>

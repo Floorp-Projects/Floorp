@@ -72,7 +72,7 @@
     <rows>
       <row flex="1">
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
-        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()">
+        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()" style="min-height:6em">
           <treecolgroup>
             <treecol flex="1"/>
           </treecolgroup>
