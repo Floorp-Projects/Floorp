@@ -174,7 +174,6 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   // nsIContentViewerContainer
-  NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult);
   NS_IMETHOD Embed(nsIContentViewer* aDocViewer,
                    const char* aCommand,
                    nsISupports* aExtraInfo);
@@ -803,12 +802,6 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
       return mPluginManager->QueryInterface(aIID, aInstancePtr);
 
    return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
-nsWebShell::QueryCapability(const nsIID &aIID, void** aInstancePtr)
-{
-   return GetInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
@@ -1872,7 +1865,7 @@ nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
                     NS_ERROR_FAILURE); 
 
   // (2) Feed the webshell to the content viewer
-  NS_ENSURE_SUCCESS(documentViewer->SetContainer(this), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(documentViewer->SetContainer((nsIWebShell*)this), NS_ERROR_FAILURE);
 
   // (3) Tell the content viewer container to embed the content viewer.
   //     (This step causes everything to be set up for an initial flow.)
