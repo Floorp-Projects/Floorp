@@ -214,20 +214,7 @@ NS_IMETHODIMP
 nsEditorAppCore::Init(const nsString& aId)
 {
    
-  nsBaseAppCore::Init(aId);
-
-  // register object into Service Manager
-  static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
-  static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
-
-  nsIDOMAppCoresManager * appCoreManager;
-  nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID,
-                                             kIDOMAppCoresManagerIID,
-                                             (nsISupports**)&appCoreManager);
-  if (NS_OK == rv) {
-	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
-  }
-	return rv;
+  return nsBaseAppCore::Init(aId);
 }
 
 nsIPresShell*
