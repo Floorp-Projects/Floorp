@@ -35,8 +35,8 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.20 $
-# $Date: 2004/01/07 02:20:24 $
+# $Revision: 1.21 $
+# $Date: 2004/01/14 00:22:50 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -366,9 +366,12 @@ sub daemonize {
     # Stevens did not mention this but it is now fashionable to close
     # the standard file discriptors.
 
-    close (STDIN) || die ("Could not close STDIN. $!\n");
-    close (STDOUT) || die ("Could not close STDOUT. $!\n");
-    close (STDERR) || die ("Could not close STDERR. $!\n");
+    # however when I do this users complain about not getting output from
+    # their build processes. I need to investigate some other time.
+
+    #close (STDIN) || die ("Could not close STDIN. $!\n");
+    #close (STDOUT) || die ("Could not close STDOUT. $!\n");
+    #close (STDERR) || die ("Could not close STDERR. $!\n");
     
     return ;
 }
