@@ -451,14 +451,6 @@ PROF_FLAGS	= $(OS_GPROF_FLAGS) -DMOZILLA_GPROF
 endif
 endif
 
-ifdef FORCE_BUILD_REFCNT_LOGGING
-DEFINES	+= -DFORCE_BUILD_REFCNT_LOGGING
-endif
-
-ifdef NO_BUILD_REFCNT_LOGGING
-DEFINES += -DNO_BUILD_REFCNT_LOGGING
-endif
-
 ######################################################################
 
 GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
