@@ -65,8 +65,8 @@
         if ( !explicitURL ) {
             var pref = Components.classes['component://netscape/preferences'];
     
-            // if all else fails, use trusty "about:" as the start page
-            var startpage = "about:";  
+            // if all else fails, use trusty "about:blank" as the start page
+            var startpage = "about:blank";  
             if (pref) {
               pref = pref.getService();
             }
@@ -78,7 +78,6 @@
               // 0 = blank 
               // 1 = home (browser.startup.homepage)
               // 2 = last 
-              // 3 = splash (browser.startup.splash)
               choice = pref.GetIntPref("browser.startup.page");
     	  switch (choice) {
     		case 0:
@@ -99,11 +98,8 @@
     				startpage = history.GetLastPageVisted();
     	    		}
           			break;
-    		case 3:
-                		startpage = pref.CopyCharPref("browser.startup.splash");
-          			break;
        		default:
-                		startpage = "about:";
+                		startpage = "about:blank";
     	  }
             }
             document.getElementById("args").setAttribute("value", startpage);
