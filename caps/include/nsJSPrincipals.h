@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,29 +15,21 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-#ifndef nsIScriptGlobalObjectData_h__
-#define nsIScriptGlobalObjectData_h__
-
-#include "nsISupports.h"
-#include "nsIURI.h"
+/* describes principals by their orginating uris*/
+#ifndef _NS_JSPRINCIPALS_H_
+#define _NS_JSPRINCIPALS_H_
+#include "jsapi.h"
 #include "nsIPrincipal.h"
 
-#define NS_ISCRIPTGLOBALOBJECTDATA_IID \
-{ 0x98485f80, 0x9615, 0x11d2,  \
-{ 0xbd, 0x92, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
-/**
- * JS Global Object information.
- */
+struct nsJSPrincipals : JSPrincipals {
 
-class nsIScriptGlobalObjectData : public nsISupports {
 public:
+  nsJSPrincipals();
+  nsresult Init(nsIPrincipal * prin);
+  ~nsJSPrincipals(void);
 
-NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECTDATA_IID)
-
-  NS_IMETHOD       GetPrincipal(nsIPrincipal * * aPrincipal) = 0;
-  NS_IMETHOD       SetPrincipal(nsIPrincipal * aPrincipal) = 0;
-  NS_IMETHOD       GetOrigin(nsIURI * * aOrigin) = 0;
+  nsIPrincipal *nsIPrincipalPtr;
 };
 
-#endif //nsIScriptGlobalObjectData_h__
+#endif /* _NS_JSPRINCIPALS_H_ */
+

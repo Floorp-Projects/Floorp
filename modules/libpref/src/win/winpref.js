@@ -152,3 +152,68 @@ pref("netinst.profile.show_profile_wizard", true);
 //The following pref is internal to Communicator. Please
 //do *not* place it in the docs...
 pref("netinst.profile.show_dir_overwrite_msg",  true); 
+
+/***************************
+    Security information
+***************************/
+/* DISABLE FOR NOW
+pref("js_security.default.htmlinputelement.value", 2);
+
+pref("js_security.default.htmlimageelement.src", 2);
+pref("js_security.default.htmlimageelement.lowsrc", 2);
+
+pref("js_security.default.location.hash", 2);
+pref("js_security.default.location.host", 2);
+pref("js_security.default.location.hostname", 2);
+pref("js_security.default.location.pathname", 2);
+pref("js_security.default.location.port", 2);
+pref("js_security.default.location.protocol", 2);
+pref("js_security.default.location.search", 2);
+pref("js_security.default.location.replace", 2);
+pref("js_security.default.location.tostring", 2);
+pref("js_security.default.location.reload", 2);
+pref("js_security.default.location.replace", 2);
+
+pref("js_security.default.htmldocument.anchors", 2);
+pref("js_security.default.htmldocument.applets", 2);
+pref("js_security.default.htmldocument.cookie", 2);
+pref("js_security.default.htmldocument.domain", 2);
+pref("js_security.default.htmldocument.getelementbyid", 2);
+pref("js_security.default.htmldocument.getelementsbyname", 2);
+pref("js_security.default.htmldocument.embeds", 2);
+pref("js_security.default.htmldocument.forms", 2);
+pref("js_security.default.htmldocument.lastmodified", 2);
+pref("js_security.default.htmldocument.links", 2);
+pref("js_security.default.htmldocument.referrer", 2);
+pref("js_security.default.htmldocument.title", 2);
+pref("js_security.default.htmldocument.url", 2);
+*/
+/*
+  Need preference names for 
+	document.length 
+	document.<form name> (for each named form)
+	reflectedJavaClass (for each Java class reflected 
+			    into JavaScript using LiveConnect)
+  Need to protect against write:
+    htmldocument.images
+    nshtmldocument.alinkcolor
+    nshtmldocument.linkcolor
+    nshtmldocument.vlinkcolor
+    nshtmldocument.bgcolor
+    nshtmldocument.fgcolor
+    nshtmldocument.layers
+    nshtmldocument.plugins
+    htmldocument.body
+    nshtmldocument.alinkcolor
+    nshtmldocument.linkcolor
+    nshtmldocument.vlinkcolor
+    nshtmldocument.bgcolor
+    nshtmldocument.fgcolor
+    htmldocument.close
+    nshtmldocument.getselection
+    nshtmldocument.nameditem
+    nshtmldocument.open
+    nshtmldocument.write
+    nshtmldocument.writeln
+*/
+

@@ -433,33 +433,29 @@ nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aConte
   JSObject *mScriptObject;
   nsIScriptGlobalObject *global;
   nsIScriptGlobalObjectData *globalData;
-  JSPrincipals* principals = nsnull;
-
+  nsIPrincipal * prin = nsnull;
+  JSPrincipals * jsprin = nsnull;
   global = aContext->GetGlobalObject();
   if (global && NS_SUCCEEDED(global->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData))) {
-    if (NS_FAILED(globalData->GetPrincipals((void**)&principals))) {
+    if (NS_FAILED(globalData->GetPrincipal(& prin))) {
       NS_RELEASE(global);
       NS_RELEASE(globalData);
       return NS_ERROR_FAILURE;
     }
+     prin->ToJSPrincipal(& jsprin);
     NS_RELEASE(globalData);
   }
   NS_IF_RELEASE(global);
-  
   if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)&mScriptObject)) {
     JSContext* mJSContext = (JSContext*)aContext->GetNativeContext();
     nsString mName, mLowerName;
     char* mCharName;
-
     aName->ToString(mName);
     mName.ToLowerCase(mLowerName);
     mCharName = mLowerName.ToNewCString();
-
-
     if (nsnull != mCharName) {
-      JS_CompileUCFunctionForPrincipals(mJSContext, mScriptObject, principals, mCharName,
-		           1, mEventArgv, (jschar*)aFunc.GetUnicode(), aFunc.Length(),
-		           nsnull, 0);
+      JS_CompileUCFunctionForPrincipals(mJSContext, mScriptObject, jsprin, mCharName,
+               1, mEventArgv, (jschar*)aFunc.GetUnicode(), aFunc.Length(), nsnull, 0);
       delete[] mCharName;
       return SetJSEventListener(aContext, mScriptObject, aIID);
     }

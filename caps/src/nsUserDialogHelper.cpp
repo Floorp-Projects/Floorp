@@ -16,18 +16,6 @@
  * Reserved.
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-#include "nsUserDialogHelper.h"
-#include "xp.h"
-#include "xpgetstr.h"
-#include "prprf.h"
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif /* __cplusplus */
 
 /*
  * This is a c++ header, which includes other c++ headers.  It needs to
@@ -37,6 +25,10 @@ extern "C" {
  * isnt this file a .c file ?
  *
  */
+#include "nsUserDialogHelper.h"
+#include "xp.h"
+#include "xpgetstr.h"
+#include "prprf.h"
 #include "nsTarget.h"
 
 #ifdef __cplusplus

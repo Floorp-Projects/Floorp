@@ -41,7 +41,7 @@ class nsIDOMWindow;
 
 class nsIScriptGlobalObject : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISCRIPTGLOBALOBJECT_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECT_IID)
 
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext)=0;
   NS_IMETHOD_(void)       GetContext(nsIScriptContext **aContext)=0;

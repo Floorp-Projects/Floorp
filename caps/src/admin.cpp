@@ -41,14 +41,12 @@ extern "C" {
 PR_PUBLIC_API(const char *)
 java_netscape_security_getPrincipals(const char *charSetName)
 {
-
-
-	const char * prins = nsPrincipalManager::GetPrincipalManager()->GetAllPrincipalsString();
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+	const char * prins = prinMan->GetAllPrincipalsString();
 	PRBool test_admin_api = PR_FALSE;
 	if (test_admin_api) {
-		char *a1;
-		char *a2;
-		char *a3;
+		char * a1, * a2, * a3;
 		java_netscape_security_getPrivilegeDescs(NULL, "raman tenneti", &a1, &a2, &a3);
 		java_netscape_security_removePrivilege(NULL, "raman tenneti", "Reading, modification, or deletion of any of your files");
 		java_netscape_security_removePrincipal(NULL, "raman tenneti");

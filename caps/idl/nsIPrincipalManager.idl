@@ -20,13 +20,13 @@
 #include "nsIPrincipal.idl"
 #include "nsITarget.idl"
 #include "nsIPrincipalArray.idl"
-
+interface nsIURI;
 interface nsIScriptContext;
 
 [uuid(dc7d0bb0-25e1-11d2-8160-006008119d7a)]
 interface nsIPrincipalManager : nsISupports
 {
-	void CreateCodebasePrincipal([const] in string codebaseURL, out nsIPrincipal prin);
+	void CreateCodebasePrincipal([const] in string codebaseURL, in nsIURI uri, out nsIPrincipal prin);
 
 %{C++
 	NS_IMETHOD
@@ -45,9 +45,6 @@ interface nsIPrincipalManager : nsISupports
 
 };
 %{C++
-#define NS_PRINCIPALMANAGER_CID \
-{ 0x7ee2a4c0, 0x4b91, 0x11d3, \
-{ 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 #define NS_PRINCIPALMANAGER_PROGID "component://netscape/principalmanager"
 #define NS_PRINCIPALMANAGER_CLASSNAME "principalmanager"
 %}

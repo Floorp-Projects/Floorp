@@ -707,7 +707,8 @@ nsTarget::RegisterTarget(void * context, nsITarget * * targetResult)
 		return NS_OK;
 	}
 	nsPrivilegeManager * privMgr = nsPrivilegeManager::GetPrivilegeManager();
-	nsPrincipalManager * prinMgr = nsPrincipalManager::GetPrincipalManager();
+  nsPrincipalManager * prinMgr;
+  nsPrincipalManager::GetPrincipalManager(& prinMgr);
 	PRBool cmp = PR_FALSE;
 	prinMgr->CheckMatchPrincipal((nsIScriptContext *)context, itsPrincipal, 1,& cmp);
 	if ((privMgr != NULL) && (context != NULL) && !cmp) {

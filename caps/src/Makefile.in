@@ -27,17 +27,19 @@ LIBRARY_NAME = caps
 
 IS_COMPONENT = 1
 
-CPPSRCS		= \
+CPPSRCS = \
 		admin.cpp \
 		nsCaps.cpp \
 		nsCCapsManager.cpp \
 		nsCertificatePrincipal.cpp \
 		nsCodebasePrincipal.cpp \
+		nsJSPrincipals.cpp \
 		nsPrincipalArray.cpp \
 		nsPrincipalManager.cpp \
 		nsPrivilege.cpp \
 		nsPrivilegeManager.cpp \
 		nsPrivilegeTable.cpp \
+		nsScriptSecurityManager.cpp \
 		nsSecurityManagerFactory.cpp \
 		nsSystemPrivilegeTable.cpp \
 		nsTarget.cpp \
@@ -53,7 +55,7 @@ EXTRA_DSO_LDOPTS = \
 		$(NSPR_LIBS) \
 		$(NULL)
 
-CSRCS		= \
+CSRCS = \
 		jpermission.c \
 		$(NULL)
 

@@ -86,9 +86,10 @@ nsCapsInitialize()
 PR_IMPLEMENT(PRBool) 
 nsCapsRegisterPrincipal(class nsIPrincipal *principal) 
 {
-  nsPrincipalManager * nsPrinManager = nsPrincipalManager::GetPrincipalManager();
-  if(nsPrinManager == NULL) return PR_FALSE; 
-  nsPrinManager->RegisterPrincipal(principal);
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+  if(prinMan == NULL) return PR_FALSE; 
+  prinMan->RegisterPrincipal(principal);
   return PR_TRUE;
 }
 
@@ -139,7 +140,8 @@ nsCapsDisablePrivilege(void* context, class nsITarget * target, PRInt32 callerDe
 PR_IMPLEMENT(void*) 
 nsCapsGetClassPrincipalsFromStack(void* context, PRInt32 callerDepth)
 {
-	nsPrincipalManager * nsPrinManager = nsPrincipalManager::GetPrincipalManager();
+	nsPrincipalManager * nsPrinManager;
+  nsPrincipalManager::GetPrincipalManager(& nsPrinManager);
 	return (nsPrinManager == NULL) ? NULL 
 	: (void *)nsPrinManager->GetClassPrincipalsFromStack((nsIScriptContext *)context, callerDepth);
 }
@@ -163,7 +165,8 @@ nsCapsGetClassPrincipalsFromStack(void* context, PRInt32 callerDepth)
 PR_IMPLEMENT(PRBool) 
 nsCapsCanExtendTrust(void* from, void* to)
 {
-	nsPrincipalManager * nsPrinManager = nsPrincipalManager::GetPrincipalManager();
+	nsPrincipalManager * nsPrinManager;
+  nsPrincipalManager::GetPrincipalManager(& nsPrinManager);
 	PRBool result = PR_FALSE;
 	if (nsPrinManager != NULL) nsPrinManager->CanExtendTrust((nsIPrincipalArray *)from, (nsIPrincipalArray *)to,& result);
 	return result;

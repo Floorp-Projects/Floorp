@@ -38,7 +38,7 @@ class nsIScriptContext;
 
 class nsIScriptContextOwner : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ISCRIPTCONTEXTOWNER_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXTOWNER_IID)
 
   /**
    * Returns a script context. The assumption is that the

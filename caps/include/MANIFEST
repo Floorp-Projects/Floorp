@@ -4,11 +4,13 @@ nsCaps.h
 nsCCapsManager.h
 nsCertificatePrincipal.h
 nsCodebasePrincipal.h
+nsJSPrincipals.h
 nsPrincipalArray.h
 nsPrincipalManager.h
 nsPrivilege.h
 nsPrivilegeManager.h
 nsPrivilegeTable.h
+nsScriptSecurityManager.h
 nsSystemPrivilegeTable.h
 nsTarget.h
 nsUserDialogHelper.h

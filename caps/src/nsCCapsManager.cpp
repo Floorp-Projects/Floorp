@@ -46,9 +46,11 @@ nsCCapsManager::GetSecurityManager()
 }
 
 NS_IMETHODIMP
-nsCCapsManager::GetPrincipalManager(nsIPrincipalManager * * prinMan)
+nsCCapsManager::GetPrincipalManager(nsIPrincipalManager * * iprinMan)
 {
-	* prinMan = (nsIPrincipalManager *)nsPrincipalManager::GetPrincipalManager();
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+	* iprinMan = (nsIPrincipalManager *)prinMan;
 	return NS_OK;
 }
 
@@ -62,14 +64,18 @@ nsCCapsManager::GetPrivilegeManager(nsIPrivilegeManager * * privMan)
 NS_IMETHODIMP
 nsCCapsManager::CreateCodebasePrincipal(const char * codebaseURL, nsIPrincipal * * prin)
 {
-	return nsPrincipalManager::GetPrincipalManager()->CreateCodebasePrincipal(codebaseURL, prin);
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+  return prinMan->CreateCodebasePrincipal(codebaseURL, nsnull, prin);
 }
 
 NS_IMETHODIMP
 nsCCapsManager::CreateCertificatePrincipal(const unsigned char **certChain, PRUint32 * certChainLengths, 
 											PRUint32 noOfCerts, nsIPrincipal** prin)
 {
-	return nsPrincipalManager::GetPrincipalManager()->CreateCertificatePrincipal(certChain,certChainLengths,noOfCerts,prin);
+  nsPrincipalManager * prinMan;
+  nsPrincipalManager::GetPrincipalManager(& prinMan);
+	return prinMan->CreateCertificatePrincipal(certChain,certChainLengths,noOfCerts,prin);
 }
 
 NS_IMETHODIMP

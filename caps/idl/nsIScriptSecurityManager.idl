@@ -16,11 +16,11 @@
  * Reserved.
  */
 #include "nsISupports.idl"
+#include "nsIPrincipal.idl"
 
 [ptr] native nsJSPrincipalsList(nsJSPrincipalsList);
 [ptr] native JSContext(JSContext);
 [ptr] native JSObject(JSObject);
-[ptr] native JSPrincipals(JSPrincipals);
 [ptr] native JSFunction(JSFunction);
 [ptr] native jsval(jsval);
 
@@ -31,6 +31,8 @@ interface nsIURI;
 
 %{C++
 struct nsJSPrincipalsList;
+struct JSContext;
+struct JSObject;
 %}
 
 [uuid(58df5780-8006-11d2-bd91-00805f8ae3f4)]
@@ -40,7 +42,6 @@ interface nsIScriptSecurityManager : nsISupports
 	const short SCRIPT_SECURITY_NO_ACCESS = 1 << 0;
 	const short SCRIPT_SECURITY_SAME_DOMAIN_ACCESS  = 1 << 1;
 	const short SCRIPT_SECURITY_SIGNED_ACCESS = 1 << 2;
-
 
 	const short eJSTarget_UniversalBrowserRead=0;
 	const short eJSTarget_UniversalBrowserWrite=1;
@@ -52,26 +53,29 @@ interface nsIScriptSecurityManager : nsISupports
 	const short eJSTarget_UniversalDialerAccess=7;
 	const short eJSTarget_Max=8;
 
-	void Init();
+	void NewJSPrincipals(in nsIURI aURL, in nsString aName, out nsIPrincipal aPrincipal);
 	void CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, [const] in string prop, out boolean res);
-	void GetSubjectOriginURL(in JSContext cx, out nsString origin);
-	void GetObjectOriginURL(in JSContext cx, in JSObject obj, out nsString origin);
-	void GetPrincipalsFromStackFrame(in JSContext cx, out JSPrincipals prins);
-	void GetCompilationPrincipals(in nsIScriptContext cx, in nsIScriptGlobalObject go, in JSPrincipals prins, out JSPrincipals resultprins);
-	void CanAccessTarget(in JSContext cx, in short target, out boolean res);
+	void GetSubjectOriginURL(in JSContext cx, out string origin);
+	void GetObjectOriginURL(in JSContext cx, in JSObject obj, out string origin);
 	void CheckPermissions(in JSContext cx, in JSObject obj, in short target, out boolean res);
+	void GetContainerPrincipals(in JSContext cx, in JSObject container, out nsIPrincipal prin);
+	void CanAccessTarget(in JSContext cx, in short target, out boolean res);
+	void GetPrincipalsFromStackFrame(in JSContext cx, out JSPrincipals prins);
+/*
+	void GetCompilationPrincipals(in nsIScriptContext cx, in nsIScriptGlobalObject go, in JSPrincipals prins, out JSPrincipals resultprins);
 	void CheckContainerAccess(in JSContext cx, in JSObject obj, in short target, out boolean res);
-	void GetContainerPrincipals(in JSContext cx, in JSObject container, out JSPrincipals prins);
 	void SetContainerPrincipals(in JSContext cx, in JSObject container, in JSPrincipals prins);
 	void CanCaptureEvent(in JSContext cx, in JSFunction func, in JSObject eventTarget, out boolean res);
 	void SetExternalCapture(in JSContext cx, in JSPrincipals prins, in boolean abool);
 	void CheckSetParentSlot(in JSContext cx, in JSObject obj, in jsval aVp, out boolean res);
 	void SetDocumentDomain(in JSContext cx, in JSPrincipals prins, in nsString aNewDomain, out boolean res);
 	void DestroyPrincipalsList(in JSContext cx, in nsJSPrincipalsList list);
-	void NewJSPrincipals(in nsIURI aURL, in nsString aName, in nsString aCodebase, out JSPrincipals aPrincipals);
 	void RegisterPrincipals(in nsIScriptContext aContext, in nsIScriptGlobalObject aGlobal, in JSPrincipals principals, 
 							in nsString aName, in nsString aSrc, out JSPrincipals aPrincipals);
+*/
 };
+
 %{C++
-extern "C" NS_DOM nsresult NS_NewScriptSecurityManager(nsIScriptSecurityManager ** aInstancePtrResult);
+#define NS_SCRIPTSECURITYMANAGER_PROGID "component://netscape/scriptsecuritymanager"
+#define NS_SCRIPTSECURITYMANAGER_CLASSNAME "scriptsecuritymanager"
 %}

@@ -86,9 +86,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "jsapi.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectDataIID, NS_ISCRIPTGLOBALOBJECTDATA_IID);
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
 static NS_DEFINE_IID(kIDOMNavigatorIID, NS_IDOMNAVIGATOR_IID);
@@ -107,7 +104,6 @@ static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
-static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 #ifndef NECKO
@@ -137,7 +133,7 @@ GlobalWindowImpl::GlobalWindowImpl()
   mLocation = nsnull;
   mFrames = nsnull;
   mOpener = nsnull;
-  mPrincipals = nsnull;
+  mPrincipal = nsnull;
 
   mTimeouts = nsnull;
   mTimeoutInsertionPoint = nsnull;
@@ -152,10 +148,6 @@ GlobalWindowImpl::GlobalWindowImpl()
 
 GlobalWindowImpl::~GlobalWindowImpl() 
 {  
-  if (mPrincipals && mContext) {
-    JSPRINCIPALS_DROP((JSContext*)mContext->GetNativeContext(), mPrincipals);
-  }
-
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mNavigator);
@@ -170,6 +162,7 @@ GlobalWindowImpl::~GlobalWindowImpl()
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mFrames);
   NS_IF_RELEASE(mOpener);
+  NS_IF_RELEASE(mPrincipal);
   NS_IF_RELEASE(mListenerManager);
 }
 
@@ -184,17 +177,17 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptGlobalObjectIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptGlobalObject))) {
     *aInstancePtrResult = (void*) ((nsIScriptGlobalObject*)this);
     AddRef();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptGlobalObjectDataIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptGlobalObjectData))) {
     *aInstancePtrResult = (void*) ((nsIScriptGlobalObjectData*)this);
     AddRef();
     return NS_OK;
@@ -326,9 +319,9 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
   }
 
   //XXX Should this be outside the about:blank clearscope exception?
-  if (mPrincipals && mContext) {
-    JSPRINCIPALS_DROP((JSContext *)mContext->GetNativeContext(), mPrincipals);
-    mPrincipals = nsnull;
+  if (nsnull != mPrincipal)
+  {
+    NS_RELEASE(mPrincipal);
   }
 
   if (nsnull != mDocument) {
@@ -1157,7 +1150,7 @@ GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aRe
       if (nsnull != rootContainer) {
 #ifdef NECKO
         nsIPrompt *prompter;
-        if (NS_OK == (ret = rootContainer->QueryInterface(nsIPrompt::GetIID(), (void**)&prompter))) {
+        if (NS_OK == (ret = rootContainer->QueryInterface(NS_GET_IID(nsIPrompt), (void**)&prompter))) {
           ret = prompter->Confirm(str.GetUnicode(), aReturn);
           NS_RELEASE(prompter);
         }
@@ -1203,7 +1196,7 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
       if (nsnull != rootContainer) {
 #ifdef NECKO
         nsIPrompt *prompter;
-        if (NS_OK == (ret = rootContainer->QueryInterface(nsIPrompt::GetIID(), (void**)&prompter))) {
+        if (NS_OK == (ret = rootContainer->QueryInterface(NS_GET_IID(nsIPrompt), (void**)&prompter))) {
           PRBool b;
           PRUnichar* uniResult = nsnull;
           ret = prompter->Prompt(str.GetUnicode(), initial.GetUnicode(), &uniResult, &b);
@@ -1677,11 +1670,9 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     
     for (timeout = mTimeouts; timeout != &dummy_timeout; timeout = next) {
       next = timeout->next;
-
       /* Hold the timeout in case expr or funobj releases its doc. */
       HoldTimeout(timeout);
       mRunningTimeout = timeout;
-
       NS_WITH_SERVICE(nsIJSContextStack, stack, "nsThreadJSContextStack", &rv);
       if (NS_FAILED(rv)) {
         NS_RELEASE(temp);
@@ -1691,7 +1682,6 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
       rv = stack->Push(cx);
       // XXX Should check for rv. If failed, then what?
-
       if (timeout->expr) {
         /* Evaluate the timeout expression. */
 #if 0
@@ -1703,14 +1693,12 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
                                  timeout->filename,
                                  timeout->lineno, nsAutoString(""), &isundefined);
 #endif
-        JS_EvaluateUCScriptForPrincipals(cx,
-                                         (JSObject *)mScriptObject,
-                                         timeout->principals,
-                                         JS_GetStringChars(timeout->expr),
-                                         JS_GetStringLength(timeout->expr),
-                                         timeout->filename,
-                                         timeout->lineno,
-                                         &result);
+        JSPrincipals * jsprin;
+        timeout->principal->ToJSPrincipal(& jsprin);
+        JS_EvaluateUCScriptForPrincipals(cx, (JSObject *)mScriptObject,
+                                         jsprin, JS_GetStringChars(timeout->expr),
+                                         JS_GetStringLength(timeout->expr), timeout->filename,
+                                         timeout->lineno, &result);
       } 
       else {
         PRInt64 lateness64;
@@ -1722,14 +1710,11 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         LL_L2I(lateness, lateness64);
         lateness = PR_IntervalToMilliseconds(lateness);
         timeout->argv[timeout->argc] = INT_TO_JSVAL((jsint)lateness);
-        JS_CallFunctionValue(cx, (JSObject *)mScriptObject,
-                             OBJECT_TO_JSVAL(timeout->funobj),
+        JS_CallFunctionValue(cx, (JSObject *)mScriptObject, OBJECT_TO_JSVAL(timeout->funobj),
                              timeout->argc + 1, timeout->argv, &result);
       }
-
       tempContext->ScriptEvaluated();
       rv = stack->Pop(nsnull);
-
       mRunningTimeout = nsnull;
       /* If the temporary reference is the only one that is keeping
          the timeout around, the document was released and we should
@@ -1803,7 +1788,6 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         InsertTimeoutIntoList(mTimeoutInsertionPoint, timeout);
       }
     }
-
     /* Take the dummy timeout off the head of the list */
     mTimeouts = dummy_timeout.next;
     mTimeoutInsertionPoint = nsnull;
@@ -1830,12 +1814,11 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   nsTimeoutImpl *timeout, **insertion_point;
   jsdouble interval;
   PRInt64 now, delta;
-  JSPrincipals* principals;
+  nsIPrincipal * principal;
 
-  if (NS_FAILED(GetPrincipals((void**)&principals))) {
+  if (NS_FAILED(GetPrincipal(& principal))) {
     return NS_ERROR_FAILURE;
   }
-
   if (argc < 2) {
     JS_ReportError(cx, "Function %s requires at least 2 parameters",
                    aIsInterval ? kSetIntervalStr : kSetTimeoutStr);
@@ -1910,13 +1893,10 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
       timeout->argc++;
     }
   }
-
-  timeout->principals = principals;
-
+  timeout->principal = principal;
   LL_I2L(now, PR_IntervalNow());
   LL_D2L(delta, PR_MillisecondsToInterval((PRUint32)interval));
   LL_ADD(timeout->when, now, delta);
-
   nsresult err = NS_NewTimer(&timeout->timer);
   if (NS_OK != err) {
     DropTimeout(timeout);
@@ -1929,10 +1909,8 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
     DropTimeout(timeout);
     return err;
   } 
-
   timeout->window = this;
   NS_ADDREF(this);
-
   insertion_point = (mTimeoutInsertionPoint == NULL)
                     ? &mTimeouts
                     : mTimeoutInsertionPoint;
@@ -2124,11 +2102,11 @@ GlobalWindowImpl::AttachArguments(nsIDOMWindow *aWindow, jsval *argv, PRUint32 a
   JSContext *jsContext;
   nsIScriptContext *scriptContext;
 
-  if (NS_SUCCEEDED(aWindow->QueryInterface(kIScriptGlobalObjectIID, (void **)&scriptGlobal))) {
+  if (NS_SUCCEEDED(aWindow->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), (void **)&scriptGlobal))) {
     scriptGlobal->GetContext(&scriptContext);
     if (scriptContext) {
       jsContext = (JSContext *) scriptContext->GetNativeContext();
-      if (NS_SUCCEEDED(aWindow->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner))) {
+      if (NS_SUCCEEDED(aWindow->QueryInterface(NS_GET_IID(nsIScriptObjectOwner), (void**)&owner))) {
         owner->GetScriptObject(scriptContext, (void **) &scriptObject);
         args = JS_NewArrayObject(jsContext, argc, argv);
         if (args) {
@@ -2372,7 +2350,7 @@ GlobalWindowImpl::ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDO
   nsresult              res;
 
   *aDOMWindow = nsnull;
-  res = aWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&newContextOwner);
+  res = aWebShell->QueryInterface(NS_GET_IID(nsIScriptContextOwner), (void**)&newContextOwner);
   if (NS_SUCCEEDED(res)) {
     res = newContextOwner->GetScriptGlobalObject(&newGlobalObject);
     if (NS_SUCCEEDED(res)) {
@@ -2609,8 +2587,7 @@ GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
       if (NS_OK == GetLocation(&location)) {
         if (location != nsnull) {
           nsIScriptObjectOwner *owner = nsnull;
-          if (NS_OK == location->QueryInterface(kIScriptObjectOwnerIID, 
-                                                (void**)&owner)) {
+          if (NS_OK == location->QueryInterface(NS_GET_IID(nsIScriptObjectOwner), (void**)&owner)) {
             JSObject *object = nsnull;
             nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(aContext);
             if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
@@ -2735,11 +2712,11 @@ GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
             JSObject *childObj;
             //We found a subframe of the right name.  The rest of this is to get its script object.
             nsIScriptContextOwner *contextOwner;
-            if (NS_SUCCEEDED(child->QueryInterface(kIScriptContextOwnerIID, (void**)&contextOwner))) {
+            if (NS_SUCCEEDED(child->QueryInterface(NS_GET_IID(nsIScriptContextOwner), (void**)&contextOwner))) {
               nsIScriptGlobalObject *childGlobalObj;
               if (NS_SUCCEEDED(contextOwner->GetScriptGlobalObject(&childGlobalObj))) {
                 nsIScriptObjectOwner *objOwner;
-                  if (NS_SUCCEEDED(childGlobalObj->QueryInterface(kIScriptObjectOwnerIID, (void**)&objOwner))) {
+                  if (NS_SUCCEEDED(childGlobalObj->QueryInterface(NS_GET_IID(nsIScriptObjectOwner), (void**)&objOwner))) {
                     nsIScriptContext *scriptContext;
                     childGlobalObj->GetContext(&scriptContext);
                     if (scriptContext) {
@@ -2939,75 +2916,44 @@ GlobalWindowImpl::ReleaseEvent(const nsString& aType)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetPrincipals(void** aPrincipals) 
+GlobalWindowImpl::GetPrincipal(nsIPrincipal * * prin) 
 {
-  if (!mPrincipals) {
+  if (!mPrincipal) {
     if (mContext) {
-      nsIScriptSecurityManager* secMan = nsnull;
+      nsIScriptSecurityManager * secMan = nsnull;
       mContext->GetSecurityManager(&secMan);
       if (secMan) {
-        nsAutoString codebase;
-        if (NS_SUCCEEDED(GetOrigin(&codebase))) {
-          secMan->NewJSPrincipals(nsnull, nsnull, &codebase, &mPrincipals);
-        }
+        nsIURI * origin;
+        if (NS_SUCCEEDED(this->GetOrigin(& origin))) secMan->NewJSPrincipals(origin, nsnull, & mPrincipal);
         NS_RELEASE(secMan);
       }
     }
-
-    if (!mPrincipals) {
-      return NS_ERROR_FAILURE;
-    }
-    if (mContext) {
-      JSPRINCIPALS_HOLD((JSContext *)mContext->GetNativeContext(), mPrincipals);
-    }
+    if (!mPrincipal) return NS_ERROR_FAILURE;
+    if (mContext) NS_ADDREF(mPrincipal);
   }
-
-  *aPrincipals = (void*)mPrincipals;
+  * prin = mPrincipal;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::SetPrincipals(void* aPrincipals)
+GlobalWindowImpl::SetPrincipal(nsIPrincipal * aPrin)
 {
-  if (mPrincipals && mContext) {
-    JSPRINCIPALS_DROP((JSContext *)mContext->GetNativeContext(), mPrincipals);
-  }
-
-  mPrincipals = (JSPrincipals*)aPrincipals;
-
-  if (mPrincipals && mContext) {
-    JSPRINCIPALS_HOLD((JSContext *)mContext->GetNativeContext(), mPrincipals);
-  }
-
+  NS_IF_RELEASE(mPrincipal);
+  mPrincipal = aPrin;
+  if (mPrincipal) NS_ADDREF(mPrincipal);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetOrigin(nsString* aOrigin)
+GlobalWindowImpl::GetOrigin(nsIURI * * aOrigin)
 {
   nsIDocument* doc;
-  if (mDocument && NS_OK == mDocument->QueryInterface(kIDocumentIID, (void**)&doc)) {
+  if (mDocument && NS_OK == mDocument->QueryInterface(kIDocumentIID, (void * *)&doc)) {
     nsIURI* docURL = doc->GetDocumentURL();
-    if (docURL) {
-#ifdef NECKO
-      char* str;
-      docURL->GetSpec(&str);
-#else
-      PRUnichar* str;
-      docURL->ToString(&str);
-#endif
-      *aOrigin = str;
-#ifdef NECKO
-      nsCRT::free(str);
-#else
-      delete [] str;
-#endif
-      NS_RELEASE(docURL);
-    }
+    if (docURL) * aOrigin = docURL;
+    // else return error code
     NS_RELEASE(doc);
   }
-
-
 #if 0
   //Old code from 4.0 to show what funcitonality needs replicating
   History_entry *he;
@@ -3072,7 +3018,7 @@ NS_NewScriptGlobalObject(nsIScriptGlobalObject **aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return global->QueryInterface(kIScriptGlobalObjectIID, (void **)aResult);
+  return global->QueryInterface(NS_GET_IID(nsIScriptGlobalObject), (void **)aResult);
 }
 
 
@@ -3105,7 +3051,7 @@ NavigatorImpl::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
     *aInstancePtrResult = (void*) ((nsIScriptObjectOwner*)this);
     AddRef();
     return NS_OK;

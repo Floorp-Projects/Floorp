@@ -30,6 +30,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "prmem.h"
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -352,7 +353,7 @@ LocationImpl::SetHostname(const nsString& aHostname)
 NS_IMETHODIMP    
 LocationImpl::GetHref(nsString& aHref)
 {
-  PRInt32 index;
+//  PRInt32 index;
   nsresult result = NS_OK;
 
   if (nsnull != mWebShell) {
@@ -423,6 +424,23 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
   }
 
   if ((NS_OK == result) && (nsnull != mWebShell)) {
+
+#if 0 // need to find a way to get a JSContext
+    PRBool ok = PR_FALSE;
+    nsIScriptContext *scriptCX;
+    nsIScriptSecurityManager *secMan;
+
+    // Check to see if URI is legal.
+    scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    if (!NS_SUCCEEDED(result = scriptCX->GetSecurityManager(&secMan)) ||
+        !NS_SUCCEEDED(result = secMan->CheckURI(&newHref, aBase, PR_TRUE, &ok))) 
+      return result;
+    if (!ok) {
+      // TODO: report error
+      return NS_ERROR_FAILURE;  // TODO: get security error code
+    }
+#endif
+
     result = mWebShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace);
   }
   
