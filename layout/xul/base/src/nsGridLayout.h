@@ -31,19 +31,30 @@
 #define nsGridLayout_h___
 
 #include "nsStackLayout.h"
+#include "nsIMonument.h"
 #include "nsCOMPtr.h"
 class nsTempleLayout;
 class nsMonumentLayout;
 class nsBoxSizeList;
 
-class nsGridLayout : public nsStackLayout
+class nsGridLayout : public nsStackLayout, 
+                     public nsIMonument
 {
 public:
 
   friend nsresult NS_NewGridLayout(nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout);
 
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_IMETHOD CastToTemple(nsTempleLayout** aTemple);
+  NS_IMETHOD CastToObelisk(nsObeliskLayout** aObelisk);
+  NS_IMETHOD GetOtherMonuments(nsIBox* aBox, nsBoxSizeList** aList);
   NS_IMETHOD GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsBoxSizeList** aList, nsMonumentLayout* aRequestor = nsnull);
-  NS_IMETHOD GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTempleLayout, nsIBox** aTempleBox, nsMonumentLayout* aRequestor = nsnull);
+  NS_IMETHOD GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aTempleBox, nsMonumentLayout* aRequestor = nsnull);
+  NS_IMETHOD GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList);
+  NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast);
+  NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsCOMPtr<nsIMonument>& aParentMonument);
+  NS_IMETHOD GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList);
 
 protected:
   nsGridLayout(nsIPresShell* aShell);

@@ -36,6 +36,7 @@ class nsObeliskLayout;
 class nsMonumentLayout;
 class nsBoxLayoutState;
 class nsIPresShell;
+class nsBoxSize;
 
 class nsBoxSizeList
 {
@@ -66,7 +67,7 @@ class nsIMonument : public nsISupports {
 
 public:
 
-  static const nsIID& GetIID() { static nsIID iid = NS_IBOX_LAYOUT_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IMONUMENT_IID; return iid; }
 
   NS_IMETHOD CastToTemple(nsTempleLayout** aTemple)=0;
   NS_IMETHOD CastToObelisk(nsObeliskLayout** aObelisk)=0;
@@ -75,8 +76,8 @@ public:
   NS_IMETHOD GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aTempleBox, nsMonumentLayout* aRequestor = nsnull)=0;
   NS_IMETHOD GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList)=0;
   //NS_IMETHOD CountMonuments(PRInt32& aCount)=0;
-  NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize** aFirst, nsBoxSize** aLast)=0;
-  NS_IMETHOD GetParentMonument(nsIBox* aBox, nsIMonument** aMonument)=0;
+  NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)=0;
+  NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsCOMPtr<nsIMonument>& aParentMonument)=0;
   NS_IMETHOD GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList)=0;
 
 };

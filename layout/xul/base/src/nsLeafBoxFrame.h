@@ -33,7 +33,7 @@ public:
 
   friend nsresult NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIBox frame interface
   NS_IMETHOD GetFrame(nsIFrame** aFrame);

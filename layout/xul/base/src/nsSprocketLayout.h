@@ -138,7 +138,7 @@ protected:
                          nsBoxLayoutState& aState, 
                          nscoord& aGivenSize, 
                          nsBoxSize* aBoxSizes, 
-                         nsComputedBoxSize* aComputedBoxSizes);
+                         nsComputedBoxSize*& aComputedBoxSizes);
 
 
   virtual void PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsBoxSize*& aBoxSizes, nsComputedBoxSize*& aComputedBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes);

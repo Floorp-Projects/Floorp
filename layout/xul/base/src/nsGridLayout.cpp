@@ -101,3 +101,62 @@ nsGridLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aT
 
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsGridLayout::CastToTemple(nsTempleLayout** aTemple)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsGridLayout::CastToObelisk(nsObeliskLayout** aObelisk)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsGridLayout::GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsCOMPtr<nsIMonument>& aParentMonument)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsGridLayout::GetOtherMonuments(nsIBox* aBox, nsBoxSizeList** aList)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsGridLayout::GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+nsGridLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsGridLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList)
+{
+  NS_ERROR("Should not be called");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMPL_ADDREF_INHERITED(nsGridLayout, nsStackLayout);
+NS_IMPL_RELEASE_INHERITED(nsGridLayout, nsStackLayout);
+
+NS_INTERFACE_MAP_BEGIN(nsGridLayout)
+  NS_INTERFACE_MAP_ENTRY(nsIMonument)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMonument)
+NS_INTERFACE_MAP_END_INHERITING(nsStackLayout)

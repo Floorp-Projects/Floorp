@@ -78,11 +78,12 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
   nsIBox* box = nsnull;
   aBox->GetChildBox(&box);
   nsBoxSizeList* current = nsnull;
-
+  nsCOMPtr<nsIBoxLayout> layout;
   while(box) {
 
     nsIMonument* monument = nsnull;
-    if (NS_SUCCEEDED(box->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument)) && monument) 
+    box->GetLayoutManager(getter_AddRefs(layout));
+    if (NS_SUCCEEDED(layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument)) && monument) 
     {
       if (!mMonuments) {
         mMonuments = new nsBoxSizeListImpl(box);
@@ -90,20 +91,20 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
 
       current = mMonuments;
       nsBoxSizeList* node = nsnull;
-      monument->GetMonumentList(aBox, aState, &node);
+      monument->GetMonumentList(box, aState, &node);
 
       while(node)
       {
         current->Append(aState, node);
-        if (!current->GetNext()) {
+        node = node->GetNext();
+
+        if (node && !current->GetNext()) {
           nsBoxSizeList* newOne = new nsBoxSizeListImpl(box);
           current->SetNext(aState, newOne);
           current = newOne;
         } else {
           current = current->GetNext();
         }
-
-        node = node->GetNext();
       }
 
       box->GetNextBox(&box);
@@ -115,7 +116,7 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
 }
 
 NS_IMETHODIMP
-nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize** aFirst, nsBoxSize** aLast)
+nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)
 {
   nsIBox* box = nsnull;
   aBox->GetChildBox(&box);
@@ -126,17 +127,19 @@ nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSi
   nsBoxSize* first;
   nsBoxSize* last;
   PRInt32 count = 0;
+  nsCOMPtr<nsIBoxLayout> layout;
   while(box) {
     nsIMonument* monument = nsnull;
-    if (NS_SUCCEEDED(box->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument)) && monument) 
+    box->GetLayoutManager(getter_AddRefs(layout));
+    if (NS_SUCCEEDED(layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument)) && monument) 
     {
-      monument->BuildBoxSizeList(box, aState, &first, &last);
+      monument->BuildBoxSizeList(box, aState, first, last);
       if (count == 0)
-        *aFirst = first;
+        aFirst = first;
       else 
-        (*aLast)->next = first;
+        (aLast)->next = first;
 
-      *aLast = last;
+      aLast = last;
     }
     box->GetNextBox(&box);
     count++;
@@ -153,8 +156,8 @@ nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSi
   PRBool isHorizontal = PR_FALSE;
   aBox->GetOrientation(isHorizontal);
 
-  (*aFirst)->Add(leftMargin,isHorizontal);
-  (*aLast)->Add(rightMargin,isHorizontal);
+  (aFirst)->Add(leftMargin,isHorizontal);
+  (aLast)->Add(rightMargin,isHorizontal);
 
   return NS_OK;
 }

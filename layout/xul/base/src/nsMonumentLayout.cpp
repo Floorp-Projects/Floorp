@@ -214,28 +214,36 @@ nsMonumentLayout::SetHorizontal(PRBool aIsHorizontal)
 */
 
 NS_IMETHODIMP
-nsMonumentLayout::GetParentMonument(nsIBox* aBox, nsIMonument** aMonument)
+nsMonumentLayout::GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsCOMPtr<nsIMonument>& aParentMonument)
 {
   // go up and find our parent monument. Skip and non monument
   // parents.
-  nsIBoxLayout* parent = this;
-  *aMonument = nsnull;
-  while (parent) {
-    GetParentLayout(aBox, &parent);
-
-    if (parent && NS_SUCCEEDED(parent->QueryInterface(NS_GET_IID(nsIMonument), (void**)aMonument)) && *aMonument) 
-      return NS_OK;
+  nsCOMPtr<nsIBoxLayout> layout;
+  nsresult rv = NS_OK;
+  aParentMonument = nsnull;
+  aBox->GetParentBox(&aBox);
+  
+  while (aBox) {
+    aBox->GetLayoutManager(getter_AddRefs(layout));
+    aParentMonument = do_QueryInterface(layout, &rv);
+    if (NS_SUCCEEDED(rv) && aParentMonument) {
+      aParentBox = aBox;
+      return rv;
+    }
+    aBox->GetParentBox(&aBox);
   }
 
-  return NS_OK;
+  aParentBox = nsnull;
+  return rv;
 }
 
 NS_IMETHODIMP
 nsMonumentLayout::GetOtherMonuments(nsIBox* aBox, nsBoxSizeList** aList)
 {
-  nsIMonument* parent;
-  GetParentMonument(aBox, &parent);
-  return parent->GetOtherMonumentsAt(aBox, 0, aList, this);
+  nsCOMPtr<nsIMonument> parent;
+  nsCOMPtr<nsIBox> parentBox;
+  GetParentMonument(aBox, parentBox, parent);
+  return parent->GetOtherMonumentsAt(parentBox, 0, aList, this);
 }
 
 /**
@@ -244,7 +252,7 @@ nsMonumentLayout::GetOtherMonuments(nsIBox* aBox, nsBoxSizeList** aList)
 NS_IMETHODIMP
 nsMonumentLayout::GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsBoxSizeList** aList, nsMonumentLayout* aRequestor)
 {
-   PRInt32 index = 0;
+   PRInt32 index = -1;
    nsIBox* child = nsnull;
    aBox->GetChildBox(&child);
    PRInt32 count = 0;
@@ -265,25 +273,46 @@ nsMonumentLayout::GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsB
    NS_ASSERTION(index != -1,"Error can't find requestor!!");
    aIndexOfObelisk += index;
 
-   nsIMonument* parent;
-   GetParentMonument(aBox, &parent);
+   nsCOMPtr<nsIMonument> parent;
+   nsCOMPtr<nsIBox> parentBox;
+   GetParentMonument(aBox, parentBox, parent);
 
-   parent->GetOtherMonumentsAt(aBox, aIndexOfObelisk, aList, this);
+   parent->GetOtherMonumentsAt(parentBox, aIndexOfObelisk, aList, this);
    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMonumentLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aTempleBox, nsMonumentLayout* aRequestor)
 {
-   nsIMonument* parent;
-   GetParentMonument(aBox, &parent);
-   parent->GetOtherTemple(aBox, aTemple, aTempleBox, this);
+   nsCOMPtr<nsIMonument> parent;
+   nsCOMPtr<nsIBox> parentBox;
+   GetParentMonument(aBox, parentBox, parent);
+   parent->GetOtherTemple(parentBox, aTemple, aTempleBox, this);
    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMonumentLayout::GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList)
 {
+  nsBoxLayoutState state(nsnull);
+
+  nsBoxSizeList* list = nsnull;
+
+  GetMonumentList(aBox, state, &list);
+
+  // create an info list for the given column.
+  PRInt32 count = 0;
+  while(list) {
+     if (count == aMonumentIndex)
+     {
+        *aList = list;
+        return NS_OK;
+     }
+     list = list->GetNext();
+     count++;
+  }
+
+  /*
   // create an info list for the given column.
   nsIBox* box = nsnull;
   aBox->GetChildBox(&box);
@@ -297,6 +326,7 @@ nsMonumentLayout::GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSize
      box->GetNextBox(&box);
      count++;
   }
+  */
   return NS_ERROR_FAILURE;
 }
 
@@ -310,9 +340,9 @@ nsMonumentLayout::CountMonuments(PRInt32& aCount)
 */
 
 NS_IMETHODIMP
-nsMonumentLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize** aFirst, nsBoxSize** aLast)
+nsMonumentLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)
 {
-   *aFirst = *aLast = new nsBoxSize();
+   aFirst = aLast = new nsBoxSize();
 
    nsSize pref(0,0);
    nsSize min(0,0);
@@ -335,9 +365,9 @@ nsMonumentLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
    PRBool isHorizontal = PR_FALSE;
    aBox->GetOrientation(isHorizontal);
 
-   (*aFirst)->Add(min, pref, max, ascent, flex, isHorizontal); 
-   (*aFirst)->Add(borderPadding,isHorizontal);
-   (*aFirst)->Add(margin,isHorizontal);
+   (aFirst)->Add(min, pref, max, ascent, flex, isHorizontal); 
+   (aFirst)->Add(borderPadding,isHorizontal);
+   (aFirst)->Add(margin,isHorizontal);
 
    return NS_OK;
 }
@@ -357,6 +387,7 @@ nsMonumentLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxS
       last->SetNext(aState, newOne);
       last = newOne;
     }
+    child->GetNextBox(&child);
   }
 
   return NS_OK;
@@ -366,5 +397,6 @@ NS_IMPL_ADDREF_INHERITED(nsMonumentLayout, nsBoxLayout);
 NS_IMPL_RELEASE_INHERITED(nsMonumentLayout, nsBoxLayout);
 
 NS_INTERFACE_MAP_BEGIN(nsMonumentLayout)
+  NS_INTERFACE_MAP_ENTRY(nsIMonument)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMonument)
 NS_INTERFACE_MAP_END_INHERITING(nsBoxLayout)

@@ -891,13 +891,16 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
                            nsBoxLayoutState& aState, 
                            nscoord& aGivenSize, 
                            nsBoxSize* aBoxSizes, 
-                           nsComputedBoxSize* aComputedBoxSizes)
+                           nsComputedBoxSize*& aComputedBoxSizes)
 {  
   PRInt32 sizeRemaining            = aGivenSize;
   PRInt32 springConstantsRemaining = 0;
 
    // ----- calculate the springs constants and the size remaining -----
 
+  if (aBoxSizes && !aComputedBoxSizes)
+      aComputedBoxSizes = new (aState) nsComputedBoxSizeSpecial();
+  
   nsBoxSize*         boxSizes = aBoxSizes;
   nsComputedBoxSize* computedBoxSizes = aComputedBoxSizes;
   PRInt32 count = 0;
@@ -905,6 +908,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
 
   while (boxSizes || computedBoxSizes) 
   {
+
     NS_ASSERTION(!boxSizes || (boxSizes->min <= boxSizes->pref && boxSizes->pref <= boxSizes->max),"bad pref, min, max size");
 
      // ignore collapsed children
@@ -918,7 +922,7 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
         sizeRemaining -= computedBoxSizes->size;
         validCount++;
       } else {
-        if (boxSizes) {
+        if (boxSizes && computedBoxSizes) {
             if (boxSizes->flex == 0)
             {
               computedBoxSizes->valid = PR_TRUE;
@@ -932,7 +936,11 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
       }
     } 
 
-    boxSizes         = boxSizes->next;
+    boxSizes = boxSizes->next;
+
+    if (boxSizes && !computedBoxSizes->next) 
+      computedBoxSizes->next = new (aState) nsComputedBoxSizeSpecial();
+
     computedBoxSizes = computedBoxSizes->next;
     count++;
   }

@@ -91,7 +91,7 @@ class nsMonumentLayout : public nsSprocketLayout,
                          public nsIMonument
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD CastToTemple(nsTempleLayout** aTemple);
   NS_IMETHOD CastToObelisk(nsObeliskLayout** aObelisk);
@@ -100,8 +100,8 @@ public:
   NS_IMETHOD GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aTempleBox, nsMonumentLayout* aRequestor = nsnull);
   NS_IMETHOD GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList);
   //NS_IMETHOD CountMonuments(PRInt32& aCount);
-  NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize** aFirst, nsBoxSize** aLast);
-  NS_IMETHOD GetParentMonument(nsIBox* aBox, nsIMonument** aMonument);
+  NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast);
+  NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsCOMPtr<nsIMonument>& aParentMonument);
   NS_IMETHOD GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList);
 
   //virtual void SetHorizontal(PRBool aIsHorizontal);

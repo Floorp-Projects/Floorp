@@ -32,7 +32,7 @@ class nsBox : public nsIBox {
 
 public:
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD GetChildBox(nsIBox** aBox);
   NS_IMETHOD GetNextBox(nsIBox** aBox);
