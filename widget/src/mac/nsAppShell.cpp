@@ -124,7 +124,7 @@ NS_IMETHODIMP nsAppShell::Run(void)
 
 	if (mExitCalled)	// hack: see below
 	{
-		mRefCnt --;
+		--mRefCnt;
 		if (mRefCnt == 0)
 			delete this;
 	}
@@ -143,7 +143,7 @@ NS_IMETHODIMP nsAppShell::Exit(void)
 	{
 		Spindown();
 		mExitCalled = PR_TRUE;
-		mRefCnt ++;			// hack: since the applications are likely to delete us
+		++mRefCnt;			// hack: since the applications are likely to delete us
 										// after calling this method (see nsViewerApp::Exit()),
 										// we temporarily bump the refCnt to let the message pump
 										// exit properly. The object will delete itself afterwards.
