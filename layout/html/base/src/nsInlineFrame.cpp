@@ -536,10 +536,17 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
   if (aState.mIsMarginRoot) {
     aMetrics.mCarriedOutTopMargin = 0;
     aMetrics.mCarriedOutBottomMargin = 0;
+    aMetrics.mCarriedOutMarginFlags = 0;
   }
   else {
     aMetrics.mCarriedOutTopMargin = aState.mCollapsedTopMargin;
     aMetrics.mCarriedOutBottomMargin = aState.mPrevBottomMargin;
+    if (aInlineReflow.GetIsBlock()) {
+      aMetrics.mCarriedOutMarginFlags = aInlineReflow.GetMarginFlags();
+    }
+    else {
+      aMetrics.mCarriedOutMarginFlags = 0;
+    }
   }
 
   if (aState.mComputeMaxElementSize) {
