@@ -130,21 +130,26 @@ void
 nsWindow::UpdateIdle (void *data)
 {
   if (update_queue != nsnull) {
-    nsList *old_queue = update_queue;
-    nsListItem *tmp_list = old_queue->getHead();
+    nsList     *old_queue;
+    nsListItem *tmp_list;
 
+    old_queue    = update_queue;
     update_queue = nsnull;
-  
-    if (tmp_list != nsnull) {
-      while (tmp_list != nsnull)
-      {
-        nsWindow *window = (nsWindow *)tmp_list->getData();
-        window->Update();
-        window->mIsUpdating = PR_FALSE;
+    
+    for( tmp_list = old_queue->getHead() ; tmp_list != nsnull ; tmp_list = tmp_list->getNext() )
+    {
+      nsWindow *window = NS_STATIC_CAST(nsWindow*,(tmp_list->getData()));       
 
-        tmp_list = tmp_list->getNext();
-      }
+      window->mIsUpdating = PR_FALSE;
     }
+    
+    for( tmp_list = old_queue->getHead() ; tmp_list != nsnull ; tmp_list = tmp_list->getNext() )
+    {
+      nsWindow *window = NS_STATIC_CAST(nsWindow*,(tmp_list->getData()));
+       
+      window->Update();
+    }    
+
     delete old_queue;
   }
 }
