@@ -84,6 +84,7 @@
 #include "nsIWindowCreator.h"
 #include "nsIWindowMediator.h"
 #include "nsIWindowWatcher.h"
+#include "nsIXULAppInfo.h"
 
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -840,6 +841,92 @@ DumpHelp()
   DumpArbitraryHelp();
 }
 
+/**
+ * The nsXULAppInfo object implements nsIFactory so that it can be its own
+ * singleton.
+ */
+class nsXULAppInfo : public nsIXULAppInfo,
+                     public nsIFactory
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIXULAPPINFO
+  NS_DECL_NSIFACTORY
+};
+
+NS_IMPL_QUERY_INTERFACE2(nsXULAppInfo,
+                         nsIXULAppInfo,
+                         nsIFactory)
+
+NS_IMETHODIMP_(nsrefcnt)
+nsXULAppInfo::AddRef()
+{
+  return 1;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsXULAppInfo::Release()
+{
+  return 1;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetVendor(nsACString& aResult)
+{
+  aResult.Assign(gAppData->appVendor ? gAppData->appVendor : "");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetName(nsACString& aResult)
+{
+  aResult.Assign(gAppData->appName);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetVersion(nsACString& aResult)
+{
+  aResult.Assign(gAppData->appVersion ? gAppData->appVersion : "");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetAppBuildID(nsACString& aResult)
+{
+  aResult.Assign(gAppData->appBuildID ? gAppData->appBuildID : "");
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetGeckoBuildID(nsACString& aResult)
+{
+  aResult.Assign(BUILD_ID);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::CreateInstance(nsISupports* aOuter,
+                             REFNSIID aIID,
+                             void** aResult)
+{
+  NS_ENSURE_NO_AGGREGATION(aOuter);
+
+  return QueryInterface(aIID, aResult);
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::LockFactory(PRBool aLock)
+{
+  return NS_OK;
+}
+
+static const nsXULAppInfo kAppInfo;
 
 /**
  * Because we're starting/stopping XPCOM several times in different scenarios,
@@ -874,6 +961,11 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
   }
 }
 
+// {95d89e3e-a169-41a3-8e56-719978e15b12}
+static const nsCID kAppInfoCID =
+  { 0x95d89e3e, 0xa169, 0x41a3, { 0x8e, 0x56, 0x71, 0x99, 0x78, 0xe1, 0x5b, 0x12 } };
+
+
 nsresult
 ScopedXPCOMStartup::Initialize()
 {
@@ -885,6 +977,15 @@ ScopedXPCOMStartup::Initialize()
   if (NS_FAILED(rv)) {
     NS_ERROR("Couldn't start xpcom!");
     mServiceManager = nsnull;
+  }
+  else {
+    nsCOMPtr<nsIComponentRegistrar> reg =
+      do_QueryInterface(mServiceManager);
+    NS_ASSERTION(reg, "Service Manager doesn't QI to Registrar.");
+
+    reg->RegisterFactory(kAppInfoCID, "nsXULAppInfo",
+                         XULAPPINFO_SERVICE_CONTRACTID,
+                         NS_CONST_CAST(nsXULAppInfo*,&kAppInfo));
   }
 
   return rv;

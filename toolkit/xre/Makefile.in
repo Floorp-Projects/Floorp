@@ -88,7 +88,10 @@ endif
 
 FORCE_STATIC_LIB = 1
 
-XPIDLSRCS = nsINativeAppSupport.idl
+XPIDLSRCS = \
+	nsINativeAppSupport.idl \
+	nsIXULAppInfo.idl \
+	$(NULL)
 
 EXPORTS = nsXULAppAPI.h
 
@@ -102,6 +105,9 @@ CPPSRCS = \
 	nsXREDirProvider.cpp \
 	nsNativeAppSupportBase.cpp \
 	$(NULL)
+
+BUILD_ID = $(shell cat $(DEPTH)/config/build_number)
+DEFINES += -DBUILD_ID=\"$(BUILD_ID)\"
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += nsNativeAppSupportWin.cpp
