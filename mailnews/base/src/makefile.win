@@ -53,6 +53,7 @@ EXPORTS=						\
 	nsMsgViewNavigationService.h \
 	nsMsgServiceProvider.h	\
 	nsSubscribeDataSource.h	\
+	nsSubscribableServer.h \
 	nsMsgPrintEngine.h	\
 	nsMsgRDFUtils.h		\
 	$(NULL)
@@ -90,6 +91,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsMsgViewNavigationService.obj \
 	.\$(OBJDIR)\nsMsgServiceProvider.obj	\
 	.\$(OBJDIR)\nsSubscribeDataSource.obj	\
+	.\$(OBJDIR)\nsSubscribableServer.obj \
 	.\$(OBJDIR)\nsMsgPrintEngine.obj	\
 	$(NULL)
 
