@@ -1430,7 +1430,6 @@ void nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent
       nsAutoString closeQuoteString, urlString;
       GetTranslatedString(NS_LITERAL_STRING("closequote"), closeQuoteString);
       statusString += mTypeAheadBuffer + closeQuoteString;
-#ifdef ADD_TYPEAHEADFIND_URL_TO_STATUS
       nsCOMPtr<nsIDOMNode> focusedNode(do_QueryInterface(aFocusedContent));
       if (focusedNode)
         presShell->GetLinkLocation(focusedNode, urlString);
@@ -1440,7 +1439,6 @@ void nsTypeAheadFind::DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent
         GetTranslatedString(NS_LITERAL_STRING("closeparen"), closeParenString);
         statusString += NS_LITERAL_STRING("   ")  + openParenString + urlString + closeParenString;
       }
-#endif
     }
   }
   browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, PromiseFlatString(statusString).get());
