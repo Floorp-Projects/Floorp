@@ -339,6 +339,12 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
   // XXX - Could this be a GC? If so, store the type of surface in nsDrawingSurfaceUnix
   ::XFreePixmap(surface->display, surface->drawable);
 
+  if (mOffscreenSurface == surface)
+    mOffscreenSurface = nsnull;
+
+  if (mRenderingSurface == surface)
+    mRenderingSurface == nsnull;
+
   delete aDS;
 }
 
@@ -575,12 +581,13 @@ void nsRenderingContextUnix :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 
 nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
 {
+  
   ::XCopyArea(mRenderingSurface->display, 
 	      mRenderingSurface->drawable,
 	      mOffscreenSurface->drawable,
 	      mOffscreenSurface->gc,
 	      aBounds.x, aBounds.y, aBounds.width, aBounds.height, 0, 0);
-
+	      
   return NS_OK;
 }
 
