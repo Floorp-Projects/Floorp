@@ -35,6 +35,7 @@ MODULE = exthandler
 LIBRARY_NAME    = exthandler_s
 REQUIRES	= xpcom \
 		  string \
+		  unicharutil \
 		  mimetype \
 		  uriloader \
 		  dom \
