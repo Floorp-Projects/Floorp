@@ -19,19 +19,24 @@
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsGUIEvent.h"
-
+#include "plevent.h"
 
 
 nsWindow* nsToolkit::mFocusedWidget = nsnull;
-  
+PLEventQueue*	nsToolkit::sPLEventQueue = nsnull;
 
+extern "C" NS_EXPORT PLEventQueue* GetMacPLEventQueue()
+{
+	return nsToolkit::GetEventQueue();
+ }
+ 
 //=================================================================
 /*  Constructor
  *  @update  dc 08/31/98
  *  @param   NONE
  *  @return  NONE
  */
-nsToolkit::nsToolkit() 
+nsToolkit::nsToolkit(): LPeriodical()
 {
 	NS_INIT_REFCNT();
 }
@@ -45,6 +50,9 @@ nsToolkit::nsToolkit()
  */
 nsToolkit::~nsToolkit()
 {
+	if ( GetEventQueue() )
+		PL_DestroyEventQueue( GetEventQueue() );
+	StopRepeating();
 }
 
 //=================================================================
@@ -94,5 +102,23 @@ NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
  */
 NS_IMETHODIMP nsToolkit::Init(PRThread *aThread)
 {
+	 // Create the NSPR event Queue and start the repeater
+	NS_ASSERTION( sPLEventQueue == NULL, " Leaking event queue" );
+	sPLEventQueue = PL_CreateEventQueue("toolkit", aThread);
+ 	StartRepeating();
+	
 	return NS_OK;
+}
+
+
+//=================================================================
+/*  Process the NSPR event queue. 
+ *  @update  dc 08/31/98
+ *  @param   inMacEvent -- A mac os event, Not used
+ *  @return  NONE
+ */
+void	nsToolkit::SpendTime(const EventRecord& /*inMacEvent*/)
+{
+	// Handle pending NSPR events
+	PL_ProcessPendingEvents( sPLEventQueue );
 }
