@@ -2454,20 +2454,6 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
   aResult.y = y;
 }
 
-// Returns the nearest scroll frame ancestor
-static nsIFrame*
-GetNearestScrollFrame(nsIFrame* aFrame)
-{
-  for (nsIFrame* f = aFrame; f; f = f->GetParent()) {
-    // Is it a scroll frame?
-    if (nsLayoutAtoms::scrollFrame == f->GetType()) {
-      return f;
-    }
-  }
-
-  return nsnull;
-}
-
 // Returns the root scrollable frame, which is the first child of the root
 // frame.
 static nsIScrollableFrame*
@@ -3011,48 +2997,30 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   nsPoint anchor;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
     // If it's a fixed background attachment, then the image is placed 
-    // relative to the nearest scrolling ancestor, or the viewport if
-    // the frame doesn't have a scrolling ancestor
-    nsIFrame* scrolledFrame = nsnull;
+    // relative to the viewport
     nsIView* viewportView = nsnull;
     nsRect viewportArea;
 
-    // get the nsIScrollableFrame interface from the scrollFrame
-    nsIScrollableFrame* scrollableFrame;
-    nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
-    if (scrollFrame) {
-      CallQueryInterface(scrollFrame, &scrollableFrame);
-      if (scrollableFrame) {
-        scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
-      }
+    nsIFrame* rootFrame;
+    aPresContext->PresShell()->GetRootFrame(&rootFrame);
+    NS_ASSERTION(rootFrame, "no root frame");
+
+    PRBool isPaginated = PR_FALSE;
+    aPresContext->IsPaginated(&isPaginated);
+    if (isPaginated) {
+      nsIFrame* page = nsLayoutUtils::GetPageFrame(aForFrame);
+      NS_ASSERTION(page, "no page");
+      rootFrame = page;
     }
 
-    if (scrolledFrame) {
-      viewportArea = scrolledFrame->GetRect();
-      viewportView = scrolledFrame->GetView();
-    }
-    else {
-      // The viewport isn't scrollable, so use the root frame's view
-      nsIFrame* rootFrame;
-      aPresContext->PresShell()->GetRootFrame(&rootFrame);
-      NS_ASSERTION(rootFrame, "no root frame");
+    viewportView = rootFrame->GetView();
+    NS_ASSERTION(viewportView, "no viewport view");
+    viewportArea = viewportView->GetBounds();
+    viewportArea.x = 0;
+    viewportArea.y = 0;
 
-      PRBool isPaginated = PR_FALSE;
-      aPresContext->IsPaginated(&isPaginated);
-      if (isPaginated) {
-        nsIFrame* page = nsLayoutUtils::GetPageFrame(aForFrame);
-        NS_ASSERTION(page, "no page");
-        rootFrame = page;
-      }
-
-      viewportView = rootFrame->GetView();
-      NS_ASSERTION(viewportView, "no viewport view");
-      viewportArea = viewportView->GetBounds();
-      viewportArea.x = 0;
-      viewportArea.y = 0;
-
-      scrollableFrame = GetRootScrollableFrame(aPresContext, rootFrame);
-    }
+    nsIScrollableFrame* scrollableFrame =
+      GetRootScrollableFrame(aPresContext, rootFrame);
 
     if (scrollableFrame) {
       nsMargin scrollbars = scrollableFrame->GetActualScrollbarSizes();
