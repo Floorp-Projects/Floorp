@@ -21,6 +21,10 @@
 
 #include "nsIProtocolHandler.h"
 
+class nsISupportsArray;
+
+#define NS_FILE_TRANSPORT_WORKER_COUNT  4
+
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FILEPROTOCOLHANDLER_CID                   \
 { /* fbc81170-1f69-11d3-9344-00104ba0fd40 */         \
@@ -47,6 +51,10 @@ public:
                           nsIEventQueue *eventQueue,
                           nsIChannel **_retval);
 
+    // nsIFileProtocolHandler methods:
+    NS_IMETHOD NewChannelFromNativePath(const char* nativePath, 
+                                        nsIFileChannel* *result);
+
     // nsFileProtocolHandler methods:
     nsFileProtocolHandler();
     virtual ~nsFileProtocolHandler();
@@ -54,8 +62,16 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
+    nsresult Init();
+    nsresult DispatchRequest(nsIRunnable* runnable);
+    nsresult Suspend(nsFileChannel* request);
+    nsresult Resume(nsFileChannel* request);
+    nsresult ProcessPendingRequests(void);
+
 protected:
     nsISupports*        mEventSinkGetter;
+    nsIThreadPool*      mPool;
+    nsISupportsArray*   mSuspended;
 };
 
 #endif /* nsFileProtocolHandler_h___ */
