@@ -1780,7 +1780,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
    if(browserChrome)
       browserChrome->SetChromeFlags(aChromeFlags);
 
-   nsCOMPtr<nsIAppShell> subShell(do_CreateInstance(NS_APPSHELLSERVICE_CONTRACTID));
+   nsCOMPtr<nsIAppShell> subShell(do_CreateInstance(kAppShellCID));
    NS_ENSURE_TRUE(subShell, NS_ERROR_FAILURE);
 
    subShell->Create(0, nsnull);
