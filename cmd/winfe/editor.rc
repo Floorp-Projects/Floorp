@@ -335,11 +335,6 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDS_MERGE_NEXT_CELL     "&Join to the Cell to the Right"
-END
-
-STRINGTABLE PRELOAD DISCARDABLE 
-BEGIN
     ID_COMBO_FONTSIZE       "Change font size\nFont Size"
     ID_COMBO_FONTFACE       "Change font face\nFont"
     ID_COMBO_FONTCOLOR      "Change font color\nFont Color"
@@ -447,25 +442,28 @@ END
 
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDS_PERCENT_PARENT_CELL "% of parent cell"
-    IDS_PROPS_TABLE_CAPTION "Table Properties"
-    IDS_POPUP_TABLE_PROPS   "T&able Properties"
-    IDS_POPUP_TABLE_CELL_PROPS "Table Cell Pr&operties"
-    IDS_SUBMENU_SELECT_TABLE "&Select"
-    IDS_SUBMENU_INSERT_TABLE "&Insert"
-    IDS_SUBMENU_DELETE_TABLE "&Delete"
-    IDS_CHANGE_SELECTED_CELL "Change Selected Cell "
+    IDS_PROPS_TABLE_CAPTION     "Table Properties"
+    IDS_POPUP_TABLE_PROPS       "T&able Properties"
+    IDS_POPUP_TABLE_CELL_PROPS  "Table Cell Pr&operties"
+    IDS_MERGE_NEXT_CELL         "&Join with Cell to the Right"
+    IDS_SUBMENU_SELECT_TABLE    "&Select"
+    IDS_SUBMENU_INSERT_TABLE    "&Insert"
+    IDS_SUBMENU_DELETE_TABLE    "&Delete"
+    IDS_SUBMENU_PASTE_TABLE     "&Paste Table or Cells"
+    IDS_REPLACE_SELECTED_CELLS  "Replace &Selected Cells"
 END
-
+    
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
-    IDS_CHANGE_SELECTED_ROW "Change Selected Row "
-    IDS_CHANGE_SELECTED_COL "Change Selected Column "
-    IDS_ROW                 "Row"
-    IDS_COLUMN              "Column"
-    IDS_CELL                "Cell"
-    IDS_PERCENT_TABLE       "% of table"
-    IDS_SMALL_ROMAN         "i, ii, iii..."
+    IDS_CHANGE_SELECTED_CELL    "Change Selected Cell "
+    IDS_CHANGE_SELECTED_ROW     "Change Selected Row "
+    IDS_CHANGE_SELECTED_COL     "Change Selected Column "
+    IDS_ROW                     "Row"
+    IDS_COLUMN                  "Column"
+    IDS_CELL                    "Cell"
+    IDS_PERCENT_TABLE           "% of table"
+    IDS_PERCENT_PARENT_CELL     "% of parent cell"
+    IDS_SMALL_ROMAN             "i, ii, iii..."
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

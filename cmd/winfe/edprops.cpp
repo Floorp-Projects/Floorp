@@ -161,8 +161,7 @@ void wfe_FreeTrueTypeArray()
     wfe_iTrueTypeFontCount = 0;
 }
 
-char pSepFont1[128] = "_";
-char pSepFont2[128] = "_";
+static char pSepFont1[128] = "_";
 
 int wfe_FillFontComboBox(CComboBox * pCombo, int * pMaxWidth)
 {
@@ -753,41 +752,6 @@ BOOL CNSComboBox::PreTranslateMessage(MSG* pMsg)
     return CComboBox::PreTranslateMessage(pMsg);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Netscape Color string for Default Text color
-char pDefaultFontColorString[256] = "";
-// COLORREF equivalent
-COLORREF crDefaultColor;
-
-char pDefaultNoColorString[256] = "";
-
-char * wfe_GetDefaultColorString(COLORREF crColor)
-{
-    if( crColor == NO_COLORREF){
-        if( *pDefaultNoColorString == '\0' ){
-            strcpy(pDefaultNoColorString, szLoadString(IDS_DEFAULT_NOCOLOR));
-        }
-        crDefaultColor = RGB(255,255,255);
-        return pDefaultNoColorString;
-    } 
-
-    if( crColor == DEFAULT_COLORREF ){
-        // Get default text color
-        PREF_GetDefaultColorPrefDWord("browser.foreground_color", &crDefaultColor);
-    } else {
-        // Use the supplied color
-        crDefaultColor = crColor;
-    }
-
-	sprintf(pDefaultFontColorString,"%d,%d%,%d,%s", 
-	        GetRValue(crDefaultColor),
-	        GetGValue(crDefaultColor),
-	        GetBValue(crDefaultColor), 
-	        szLoadString(IDS_DEFAULT));
-
-    return pDefaultFontColorString;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // Custom Combobox - containing colors
 
@@ -964,7 +928,7 @@ int CColorComboBox::SetColor(COLORREF cr)
         m_crColor = RGB(255,255,255);
     }else if( cr == DEFAULT_COLORREF )
     {
-        m_crColor = crDefaultColor;
+        m_crColor = prefInfo.m_rgbForegroundColor;
         iIndex = 0;
     } else {
         m_crColor = cr; 
@@ -1050,12 +1014,7 @@ CColorPicker::CColorPicker(CWnd      * pParent,
         if( crDefColor == DEFAULT_COLORREF || crDefColor == MIXED_COLORREF )
         {
             // Get the "Default" color used by the Browser
-	        COLORREF tmpColor,defColor;
-	        XP_Bool bCust;
-	        PREF_GetColorPrefDWord("browser.foreground_color",&tmpColor);
-	        PREF_GetDefaultColorPrefDWord("browser.foreground_color",&defColor);
-	        PREF_GetBoolPref("browser.custom_text_color",&bCust);
-            m_crCurrentColor = bCust ? tmpColor : defColor;
+            m_crCurrentColor = prefInfo.m_rgbForegroundColor;
         } else if( crDefColor == BACKGROUND_COLORREF )
         {
             // Get current page's background color
@@ -3462,25 +3421,10 @@ BOOL CDocColorPage::OnSetActive()
         pSchemeListBox->AddString(pColorData->pSchemeName);
     }
 
-	COLORREF tmpColor,defColor;
-	XP_Bool bCust;
     // Get Browser preference colors
-	PREF_GetColorPrefDWord("browser.foreground_color",&tmpColor);
-	PREF_GetDefaultColorPrefDWord("browser.foreground_color",&defColor);
-	PREF_GetBoolPref("browser.custom_text_color",&bCust);
-    m_crBrowserText = bCust ? tmpColor : defColor;
-
-	PREF_GetColorPrefDWord("browser.anchor_color",&tmpColor);
-	PREF_GetDefaultColorPrefDWord("browser.anchor_color",&defColor);
-	PREF_GetBoolPref("browser.custom_link_color",&bCust);
-    m_crBrowserLink = bCust ? tmpColor : defColor;
-
-    
-	PREF_GetColorPrefDWord("browser.visited_color",&tmpColor);
-	PREF_GetDefaultColorPrefDWord("browser.visited_color",&defColor);
-	PREF_GetBoolPref("browser.custom_visited_color",&bCust);
-	m_crBrowserFollowedLink = bCust ? tmpColor : defColor;
-
+    m_crBrowserText = prefInfo.m_rgbForegroundColor;
+    m_crBrowserLink = prefInfo.m_rgbAnchorColor;
+    m_crBrowserFollowedLink  = prefInfo.m_rgbVisitedColor;
     m_crBrowserBackground = prefInfo.m_rgbBackgroundColor;
 
     // m_pPageData may be NULL if we are not an Editor
@@ -4593,12 +4537,7 @@ BOOL CCharacterPage::OnSetActive()
     }
     
     // Get the "Default" color used by the Browser
-	COLORREF tmpColor,defColor;
-	XP_Bool bCust;
-	PREF_GetColorPrefDWord("browser.foreground_color",&tmpColor);
-	PREF_GetDefaultColorPrefDWord("browser.foreground_color",&defColor);
-	PREF_GetBoolPref("browser.custom_text_color",&bCust);
-    m_crDefault = bCust ? tmpColor : defColor;
+    m_crDefault = prefInfo.m_rgbForegroundColor;
 
     // Get current color at cursor or selection
     m_crColor = WFE_GetCurrentFontColor(m_pMWContext);
@@ -6761,6 +6700,8 @@ void CImagePage::OnImageFile()
         wfe_ValidateImage( m_pMWContext, m_csImage );
         XP_FREE( szFilename );
         SetModified(TRUE);
+        // Supply a default AltText = image filename
+        AutoFillAltText();
         UpdateData(FALSE);
         m_bValidImage = TRUE;
         m_csLastValidImage = m_csImage;
@@ -6788,10 +6729,25 @@ void CImagePage::OnKillfocusImage()
     {
         wfe_ValidateImage( m_pMWContext, m_csImage );
         m_bValidImage = TRUE;
+        AutoFillAltText();
         UpdateData(FALSE);
     }
 }
 
+        // Automatically fill in the ALT text string if none currently
+void CImagePage::AutoFillAltText()
+{
+    CleanupString(m_csAltText);
+    if( m_csAltText.IsEmpty() )
+    {
+        char *pName = EDT_GetFilename(CHAR_STR(m_csImage), FALSE);
+        if( pName )
+        {
+            m_csAltText = XP_STRDUP(pName);
+            XP_FREE(pName);
+        }
+    }
+}
 void CImagePage::OnEditImage() 
 {
    UpdateData(TRUE);
@@ -7342,20 +7298,6 @@ BOOL CLinkPage::OnKillActive()
     }
     if ( !m_bValidHref ){
         ValidateHref();
-    }
-    if( m_csHref.IsEmpty() )
-    {
-        // Notify user they must have a URL filled in
-        MessageBox(szLoadString(IDS_MISSING_LINK),
-                   szLoadString(IDS_LINK_PROPS_CAPTION), 
-                   MB_ICONEXCLAMATION | MB_OK);
-
-        // Put focus in the offending control
-        // And select all text, just like DDV functions
-        CEdit *pEdit = (CEdit*)GetDlgItem(IDC_HREF_URL);
-        pEdit->SetFocus();
-        pEdit->SetSel(0, -1, TRUE);
-        return FALSE;
     }
 
     return CPropertyPage::OnKillActive();

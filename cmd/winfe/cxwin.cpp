@@ -1058,6 +1058,8 @@ void CWinCX::AftWMSize(PaneMessage *pMessage)
 #ifdef EDITOR
     if( EDT_IS_EDITOR(GetContext()) ){
         EDT_RefreshLayout( GetContext() );
+        m_crWindowRect = crNewRect;
+        return;
     }
     else 
 #endif // EDITOR

@@ -653,7 +653,7 @@ extern void INTL_Relayout(MWContext * pContext)
     //      more immediate effect:  Reload(NET_SUPER_RELOAD)
     //      but that is not nice to the cache, or the user if working
     //      offline, etc.
-#ifdef EDITOR
+#if 0 //#ifdef EDITOR
     if(EDT_IS_EDITOR(pContext)){
         EDT_RefreshLayout(pContext);
     } else

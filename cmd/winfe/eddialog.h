@@ -480,13 +480,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-// CPasteSpecialDlg::m_iResult values
-enum {
-    ED_PASTE_CANCEL,
-    ED_PASTE_TEXT,
-    ED_PASTE_IMAGE
-};
-
 /////////////////////////////////////////////////////////////////////////////
 // CPasteSpecialDlg dialog
 // Called for user feedback when saving remote images
@@ -512,10 +505,7 @@ private:
 // Implementation
 protected:
 
-	// Generated message map functions
 	//{{AFX_MSG(CSaveFileOverwriteDlg)
-	afx_msg void OnPasteText();
-	afx_msg void OnPasteImage();
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

@@ -680,18 +680,26 @@ void FE_DisplayDropTableFeedback(MWContext * pMWContext, EDT_DragTableData *pDra
     CNetscapeEditView * pView = (CNetscapeEditView *)pWinCX->GetView();
     if( pView )
     {
-        if( pDragData->iDropType == ED_DROP_REPLACE_CELL )
+        if( pDragData->iDropType != ED_DROP_REPLACE_CELLS )
         {
-            //TODO: FEEDBACK WHEN REPLACING
-            // THIS MAY BE DONE IN XP CODE BY SETTING LO_ELE_SELECTED_SPECIAL
-            // THEN JUST REDRAWING THE TABLE
-        } else {
+            // Figure out X and Y coords of the cell in the View's coordinate system
+            CWinCX *pWinCX = VOID2CX(pMWContext->fe.cx, CWinCX);
+            int32 xVal = pDragData->X + pDragData->pDragOverCell->lo_cell.x_offset 
+                            - pWinCX->GetOriginX();
+            int32 yVal = pDragData->Y + pDragData->pDragOverCell->lo_cell.y_offset 
+                            - pWinCX->GetOriginY();
+
             // Use caret to show inserting between cells
             pView->CreateSolidCaret(pDragData->iWidth, pDragData->iHeight);
-            pView->SetCaretPos(CPoint(pDragData->X, pDragData->Y));
+            pView->SetCaretPos(CPoint(xVal, yVal));
             pView->m_caret.cShown = 1;
             pView->m_caret.bEnabled = TRUE;
             pView->ShowCaret();
         }
+        // Note that feedback for ED_DROP_REPLACE_CELLS is marking cells to
+        //  be replaced with the "special selection"
+        // XP code handles this, calling FE_DisplayEntireTableOrCell for
+        //   each cell marked as "special"
+
     }
 }

@@ -326,8 +326,8 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_COMMAND(ID_SELECT_NEXT_NONTEXT, OnSelectNextNonTextObject)
 	//}}AFX_MSG_MAP
     // Put update commands here so we can remove them temporarily for overhead assesments
-	ON_UPDATE_COMMAND_UI(ID_FORMAT_INCREASE_FONTSIZE, OnUpdateIncreaseFontSize)
-	ON_UPDATE_COMMAND_UI(ID_FORMAT_DECREASE_FONTSIZE, OnUpdateDecreaseFontSize)
+	ON_UPDATE_COMMAND_UI(ID_FORMAT_INCREASE_FONTSIZE, OnCanInteractInText)
+	ON_UPDATE_COMMAND_UI(ID_FORMAT_DECREASE_FONTSIZE, OnCanInteractInText)
     ON_UPDATE_COMMAND_UI(ID_COMBO_PARA, OnUpdateParagraphComboBox)
     ON_UPDATE_COMMAND_UI(ID_COMBO_FONTFACE, OnUpdateFontFaceComboBox)
 	ON_UPDATE_COMMAND_UI(ID_COMBO_FONTSIZE, OnUpdateFontSizeComboBox)
@@ -349,7 +349,7 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_UPDATE_COMMAND_UI(ID_PROPS_PARAGRAPH, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_PROPS_CHARACTER, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_PROPS_DOC_COLOR, HaveEditContext)
-    ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_NONE, OnCanInteract)     
+    ON_UPDATE_COMMAND_UI(ID_FORMAT_CHAR_NONE, OnCanInteractInText)     
     ON_UPDATE_COMMAND_UI(ID_FORMAT_INDENT, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_FORMAT_OUTDENT, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_ALIGN_POPUP, HaveEditContext)
@@ -1339,10 +1339,12 @@ void CNetscapeEditView::OnChar(UINT nChar, UINT nRepCnt, UINT nflags)
 
     MWContext * pMWContext = GET_MWCONTEXT;
 
-    // Any kepress except Ctrl+[ (for decrease font size)
-    //   should clear a table selection
-    if( !(nChar == 27 && bControl) )
-        EDT_ClearTableAndCellSelection(pMWContext);
+    // Any kepress except when holding Ctrl
+    //   should clear a table selection???
+    // Allows Ctrl+[ for decrease font size,
+    //  and Ctrl+C, X, and V for copy/cut/paste
+//    if( !bControl )
+//        EDT_ClearTableAndCellSelection(pMWContext);
 
     // Ignore keys if we can't interact
     INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(pMWContext);
@@ -2088,6 +2090,13 @@ void CNetscapeEditView::OnCanInteract(CCmdUI* pCmdUI)
     pCmdUI->Enable(CAN_INTERACT);
 }
 
+// XP call checks same things as CAN_INTERACT, and we must be
+//  in some text (or mixed selection) as well
+void CNetscapeEditView::OnCanInteractInText(CCmdUI* pCmdUI)
+{
+    pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
+}
+
 // Gets data from bookmark item - returns TRUE if found
 BOOL wfe_GetBookmarkData( COleDataObject* pDataObject, char ** ppURL, char ** ppTitle ) {
     HGLOBAL h = pDataObject->GetGlobalData(RegisterClipboardFormat(NETSCAPE_BOOKMARK_FORMAT));
@@ -2174,15 +2183,20 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
  
     HGLOBAL hString = NULL;
     char * pString = NULL;
-
+    char * pConvertedString = NULL;
+    BOOL bHaveText = FALSE;
+    BOOL bHaveHTML = pDataObject->IsDataAvailable(m_cfEditorFormat);
+ 
     // Get any string data
     if ( pDataObject->IsDataAvailable(CF_TEXT) ) {
         hString = pDataObject->GetGlobalData(CF_TEXT);
 
         // get a pointer to the actual bytes
         if ( hString ) {
-            pString = (char *) GlobalLock(hString);    
-        }
+            pString = (char *) GlobalLock(hString);
+            if( pString && *pString )
+                bHaveText = TRUE;
+       }
     }
 
     if ( m_bIsEditor )
@@ -2196,36 +2210,84 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
 
         EDT_BeginBatchChanges(pMWContext);
 
-        BOOL bHaveText = pDataObject->IsDataAvailable(CF_TEXT);
-        BOOL bHaveUnicode = FALSE;
         BOOL bHaveImage = FALSE;
 
-#ifdef XP_WIN32
-        bHaveUnicode = pDataObject->IsDataAvailable(CF_UNICODETEXT) && 
-					(CS_USER_DEFINED_ENCODING != INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(pMWContext)));
-#endif        
-#ifdef EDITOR
-#ifdef _IMAGE_CONVERT
-        bHaveImage = pDataObject->IsDataAvailable(CF_DIB);
-        if( bHaveImage && (bHaveText || bHaveUnicode) )
+        if( !bHaveHTML ) // HTML overrides image and text formats
         {
-            //TODO: POPUP DIALOG TO 
-            CPasteSpecialDlg dlg(this);
-            if( IDOK == dlg.DoModal() || dlg.m_iResult > 0)
+#ifdef XP_WIN32
+            if( pDataObject->IsDataAvailable(CF_UNICODETEXT) && 
+                (CS_USER_DEFINED_ENCODING != INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(pMWContext))) )
             {
-                if( dlg.m_iResult == ED_PASTE_IMAGE )
+			    int datacsid = 
+				    INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(pMWContext)) & ~CS_AUTO;
+			    HGLOBAL hUnicodeStr = NULL;
+			    char * pUnicodeString = NULL;
+
+			    // Get any string data
+			    if ( pDataObject->IsDataAvailable(CF_UNICODETEXT) ) {
+				    hUnicodeStr = pDataObject->GetGlobalData(CF_UNICODETEXT);
+
+				    // get a pointer to the actual bytes
+				    if ( hUnicodeStr ) {
+					    pUnicodeString = (char *) GlobalLock(hUnicodeStr);    
+
+					    // Now, let's convert the Unicode text into the datacsid encoding
+					    int ucs2len = CASTINT(INTL_UnicodeLen((INTL_Unicode*)pUnicodeString));
+					    int	mbbufneeded = CASTINT(INTL_UnicodeToStrLen(datacsid, 
+																	    (INTL_Unicode*)pUnicodeString, 
+																	    ucs2len));
+					    if(NULL != (pConvertedString = (char*)XP_ALLOC(mbbufneeded + 1)))
+					    {
+						    INTL_UnicodeToStr(datacsid, (INTL_Unicode*)pUnicodeString, ucs2len, 
+													    (unsigned char*) pConvertedString, mbbufneeded + 1);
+                        
+                            // The UNICODE string will be used instead of the regular string data
+                            if( pConvertedString && *pConvertedString )
+                            {
+                                pString = pConvertedString;
+                                bHaveText = TRUE;
+                            }
+					    }
+					    GlobalUnlock(hUnicodeStr);    
+				    }
+			    }
+            } 
+#endif // XP_WIN32
+#ifdef EDITOR
+
+            // Check if text data is a tab-delimited spreadsheet format
+
+#ifdef _IMAGE_CONVERT
+            bHaveImage = pDataObject->IsDataAvailable(CF_DIB);
+#endif
+            intn iRows, iCols;
+            XP_Bool bInTable = FALSE;
+
+            if( bHaveText && 
+                (bHaveImage || 
+                 EDT_CanPasteTextAsTable(pMWContext, pString, &iRows, &iCols, &bInTable)) )
+            {
+                CPasteSpecialDlg dlg(this);
+                if( IDOK == dlg.DoModal() && dlg.m_iResult > 0 )
                 {
-                    bHaveText = bHaveUnicode = FALSE;                
-                } else if( dlg.m_iResult == ED_PASTE_TEXT )
-                {
-                    bHaveImage = FALSE;
-                } 
-            } else {
-                goto NO_PASTE;                
+#if 0
+// TODO: FINISH NEW DIALOG
+                    if( dlg.m_iResult == ED_PASTE_IMAGE )
+                    {
+                        // Paste the image - ignore the text
+                        bHaveText = FALSE;                
+                    } else {
+                        // Ignore the image
+                        bHaveImage = FALSE;
+                        if( dlg.m_iResult == ED_PASTE_TEXT )
+                    } 
+#endif
+                } else {
+                    goto NO_PASTE;                
+                }
             }
         }
-#endif
-#endif
+#endif // EDITOR
 
         if( bDeleteSource ){
             // This deletes current selection and sets
@@ -2283,16 +2345,16 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
             }
             if( pURL) XP_FREE(pURL);
             XP_FREE(pTitle);
-        } else if ( pDataObject->IsDataAvailable(m_cfEditorFormat) ) {
+        } else if ( bHaveHTML ) {
             h = pDataObject->GetGlobalData(m_cfEditorFormat);
             if( h ){
                 char * pHTML = (char*) GlobalLock( h );
-                EDT_PasteHTML( pMWContext, pHTML );
+                EDT_PasteHTML( pMWContext, pHTML, ED_PASTE_NORMAL );
                 GlobalUnlock( h );
             }
         } 
 #ifdef EDITOR
-        else if(pDataObject->IsDataAvailable(m_cfImageFormat) ) {
+        else if( pDataObject->IsDataAvailable(m_cfImageFormat) ) {
                 h = pDataObject->GetGlobalData(m_cfImageFormat);
                 WFE_DragDropImage(h, pMWContext);
             } 
@@ -2307,44 +2369,11 @@ BOOL CNetscapeEditView::DoPasteItem(COleDataObject* pDataObject,
                 DropFiles(handle, FALSE);
             }
         // **** Test for other formats here
-        } 
-        else if ( bHaveUnicode )
-        {
-			int datacsid = 
-				INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(pMWContext)) & ~CS_AUTO;
-			HGLOBAL hUnicodeStr = NULL;
-			char * pUnicodeString = NULL;
-		    char * pConvertedString = NULL;
-
-			// Get any string data
-			if ( pDataObject->IsDataAvailable(CF_UNICODETEXT) ) {
-				hUnicodeStr = pDataObject->GetGlobalData(CF_UNICODETEXT);
-
-				// get a pointer to the actual bytes
-				if ( hUnicodeStr ) {
-					pUnicodeString = (char *) GlobalLock(hUnicodeStr);    
-
-					// Now, let's convert the Unicode text into the datacsid encoding
-					int ucs2len = CASTINT(INTL_UnicodeLen((INTL_Unicode*)pUnicodeString));
-					int	mbbufneeded = CASTINT(INTL_UnicodeToStrLen(datacsid, 
-																	(INTL_Unicode*)pUnicodeString, 
-																	ucs2len));
-					if(NULL != (pConvertedString = (char*)XP_ALLOC(mbbufneeded + 1)))
-					{
-						INTL_UnicodeToStr(datacsid, (INTL_Unicode*)pUnicodeString, ucs2len, 
-													(unsigned char*) pConvertedString, mbbufneeded + 1);
-						
-						EDT_PasteText( pMWContext, pConvertedString ); 
-						XP_FREE(pConvertedString);
-					}
-					GlobalUnlock(hUnicodeStr);    
-				}
-			}
         }
 #endif //XP_WIN32
         else if ( bHaveText ) {
             if( pString ) {
-                // *** TODO: Analyze string:
+                // *** TODO: Analyze string?
                 // Check if its a valid local filename (use XP_STAT). If yes, pop-up menu:
                 //    1. If over selected text: Create a link to 
                 //         Pop-up menu: Create Link or paste filename or load file
@@ -2402,6 +2431,8 @@ NO_PASTE:
     
     if ( m_bIsEditor )
         EDT_EndBatchChanges(pMWContext);
+
+    XP_FREEIF(pConvertedString);
 
     SetCursor(theApp.LoadStandardCursor(IDC_ARROW));
 

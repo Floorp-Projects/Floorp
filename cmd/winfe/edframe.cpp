@@ -497,6 +497,10 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, unsigned ett)
     		    }
 	        }
 	    }
+        // Add some list-type items to the combobox:
+        csTemp = "_Blockquote";
+        m_ParagraphCombo.AddString((LPCTSTR)csTemp);
+
         // String used to get width of FontSize combobox
         csTemp = "55";
         cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());

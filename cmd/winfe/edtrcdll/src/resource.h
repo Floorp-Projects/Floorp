@@ -355,8 +355,7 @@
 #define IDD_PAGE_TABLE_CELL             2269
 #define IDD_FEJPEGOPTIONS               2270
 #define IDC_APPLY                       2272
-#define IDC_PASTE_TEXT                  2401
-#define IDC_PASTE_IMAGE                 2402
+#define IDC_PASTE_FORMAT_LIST           2401
 #define IDS_HREF_OTHER_ATTRIBS          42271
 #define IDS_HREF_OTHER_ATTRIBS_CAPTION  42272
 #define IDS_ERROR_HTML_CAPTION          42296
@@ -418,6 +417,10 @@
 #define IDS_SPELL_COULD_NOT_LOAD        59458
 #define IDS_SPELL_CORRUPT               59459
 #define IDS_CORRECT_SPELLING            59460
+#define IDS_PASTE_IMAGE                 59461
+#define IDS_PASTE_TEXT_PLAIN            59462
+#define IDS_PASTE_TEXT_NEW_TABLE        59463
+#define IDS_PASTE_TEXT_REPLACE_CELLS    59464
 
 // Next default values for new objects
 // 
@@ -425,7 +428,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        137
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1079
+#define _APS_NEXT_CONTROL_VALUE         1081
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

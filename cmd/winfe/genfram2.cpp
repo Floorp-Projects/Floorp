@@ -365,10 +365,7 @@ void CGenericFrame::OnSysColorChange()
 	
 	//	We'll need to do a reload to handle the current
 	//		colors internal to the document.
-//#ifdef GOLD
-    // This fixes critical bug 27239
-    //  put in ifdef GOLD to minizize impact on non-gold version - TEMPORARY:
-    // TODO: MERGE THIS TO REMOVE IFDEF GOLD
+
 	if(GetMainContext())	{
         CWinCX *pContext = GetMainWinContext();
         if( pContext && pContext->GetContext()){
@@ -379,15 +376,12 @@ void CGenericFrame::OnSysColorChange()
             } else 
 #endif // EDITOR
             {
-			    pContext->NiceReload();
+			    /* Must use NET_NORMAL_RELOAD else reload uses NET_RESIZE_RELOAD
+                   and the window colors are not updated */
+                pContext->NiceReload(NET_NORMAL_RELOAD);
 		    }
         }
 	}
-//#else
-//	if(GetMainContext())	{
-//		GetMainContext()->NiceReload();
-//	}
-//#endif
 
 	//	Hopfully they'll redraw us so that the frame takes
 	//		on the new colors.

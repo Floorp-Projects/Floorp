@@ -31,6 +31,7 @@
 #ifdef EDITOR
 //#include "edview.h"
 #endif
+#include "prefs.h" //To access g_bReloadChangeColor;
 
 #ifdef NSPR20
 #include "private/prpriv.h"
@@ -108,6 +109,9 @@ wfe_SetLayoutColor(int type, COLORREF color)
 	uint8 blue  = GetBValue(color);
 
 	LO_SetDefaultColor(type, red, green, blue);
+    if( type != LO_COLOR_BG )
+        g_bReloadChangeColor = TRUE;
+
 #endif /* MOZ_NGLAYOUT */
 }
 

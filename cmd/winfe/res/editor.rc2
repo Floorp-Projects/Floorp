@@ -353,8 +353,6 @@ BEGIN
         MENUITEM SEPARATOR
 	    MENUITEM "&Close\tCtrl+W",              ID_FILE_CLOSE
         MENUITEM "E&xit\tCtrl+Q",               ID_APP_EXIT
-        // Use this when we it is followed by most-recently-used-file list
-        //MENUITEM SEPARATOR
     END
     POPUP "&Edit"
     BEGIN
@@ -622,6 +620,19 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "&Cell Before"                ID_INSERT_TABLE_CELL_BEFORE
     MENUITEM "C&ell After"                 ID_INSERT_TABLE_CELL
+END
+
+IDM_COMPOSER_TABLE_PASTEMENU MENU DISCARDABLE
+BEGIN
+    MENUITEM "Nested &Table..."            ID_PASTE_TABLE_BASE
+    MENUITEM SEPARATOR
+    MENUITEM "Above current &Row"          ID_PASTE_TABLE_BASE+1
+    MENUITEM "&Below current Row"          ID_PASTE_TABLE_BASE+2
+    MENUITEM SEPARATOR
+    MENUITEM "Before current C&olumn"      ID_PASTE_TABLE_BASE+3
+    MENUITEM "After current Co&lumn"       ID_PASTE_TABLE_BASE+4
+    MENUITEM SEPARATOR
+    MENUITEM "&Replace cells"              ID_PASTE_TABLE_BASE+5
 END
 
 

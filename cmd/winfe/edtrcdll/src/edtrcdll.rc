@@ -822,15 +822,18 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,84,133,50,14
 END
 
-IDD_PASTE_SPECIAL DIALOG DISCARDABLE  0, 0, 142, 81
+IDD_PASTE_SPECIAL DIALOG DISCARDABLE  0, 0, 199, 111
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Paste Special"
+CAPTION "Select Paste Format"
+MENU Image","Text","Table
 FONT 8, "MS Sans Serif"
 BEGIN
-    PUSHBUTTON      "Paste &Text",IDC_PASTE_TEXT,36,40,69,14
-    PUSHBUTTON      "Paste &Image",IDC_PASTE_IMAGE,36,60,69,14
-    LTEXT           "The clipboard contains both text and image versions of the same data.\nSelect which type to paste:",
-                    IDC_STATIC,7,7,127,29
+    LTEXT           "The clipboard contains multiple formats of the same data.\nSelect which type to paste:",
+                    IDC_STATIC,8,7,182,21
+    LISTBOX         IDC_PASTE_FORMAT_LIST,8,34,182,47,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,46,89,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,103,89,50,14
 END
 
 IDD_GET_TABLE_COLUMNS DIALOG DISCARDABLE  0, 0, 153, 73
@@ -1005,6 +1008,14 @@ BEGIN
         RIGHTMARGIN, 149
         TOPMARGIN, 7
         BOTTOMMARGIN, 147
+    END
+
+    IDD_PASTE_SPECIAL, DIALOG
+    BEGIN
+        RIGHTMARGIN, 190
+        VERTGUIDE, 8
+        VERTGUIDE, 190
+        BOTTOMMARGIN, 103
     END
 
     IDD_GET_TABLE_COLUMNS, DIALOG

@@ -314,8 +314,6 @@ protected:
     afx_msg void OnCancelComboBox();
     afx_msg void OnIncreaseFontSize();
     afx_msg void OnDecreaseFontSize();
-    afx_msg void OnUpdateIncreaseFontSize(CCmdUI* pCmdUI);
-    afx_msg void OnUpdateDecreaseFontSize(CCmdUI* pCmdUI);
     afx_msg void OnUpdateFontSizeMenu(CCmdUI* pCmdUI);
     afx_msg void OnSelendokFontSizeCombo();
     afx_msg void OnUpdateParagraphComboBox(CCmdUI* pCmdUI);
@@ -478,7 +476,7 @@ protected:
     afx_msg void OnUpdateEditCopy(CCmdUI* pCmdUI);
     afx_msg void OnUpdateEditPaste(CCmdUI* pCmdUI);
     afx_msg void OnCanInteract(CCmdUI* pCmdUI);
-//    afx_msg void OnEditFindAgain();
+    afx_msg void OnCanInteractInText(CCmdUI* pCmdUI);
 	afx_msg void OnFileOpen();
     afx_msg void OnFileOpenURL();
     afx_msg void OnSetImageAsBackground();

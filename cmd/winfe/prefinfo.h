@@ -39,15 +39,13 @@ public:
 public:
 	COLORREF	m_rgbBackgroundColor;
 	COLORREF	m_rgbForegroundColor;
+	COLORREF	m_rgbAnchorColor;
+	COLORREF	m_rgbVisitedColor;
 	XP_Bool		m_bUnderlineAnchors;
 
 private:
-	COLORREF	m_rgbAnchorColor;
-	COLORREF	m_rgbVisitedColor;
 	XP_Bool		m_bUseWindowsColors;
 	XP_Bool		m_bUseDocumentColors;
-
-	void		UpdateAllWindows();
 
 	friend int PR_CALLBACK	prefWatcher(LPCSTR lpszPrefName, LPVOID lpvData);
 	friend int PR_CALLBACK SetToolbarButtonStyle(const char *newPref, void *data);

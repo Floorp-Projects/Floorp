@@ -737,7 +737,7 @@ void CNetscapeEditView::OnUpdateParagraphComboBox(CCmdUI* pCmdUI)
 		}
 	    m_EditState.bParaFormatMaybeChanged = FALSE;
 	}
-    pCmdUI->Enable( CAN_INTERACT ); // Should we do this: !EDT_IsJavaScript(GET_MWCONTEXT) );
+    pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -786,7 +786,7 @@ void CNetscapeEditView::OnUpdateFontFaceComboBox(CCmdUI* pCmdUI)
             }
         }
     }
-    pCmdUI->Enable( CAN_INTERACT ); // Should we do this: !EDT_IsJavaScript(GET_MWCONTEXT) );
+    pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
 }
 
 void CNetscapeEditView::OnSelendokFontFaceCombo()
@@ -1056,16 +1056,6 @@ void CNetscapeEditView::OnDecreaseFontSize()
     m_EditState.bFontSizeMaybeChanged = TRUE;
 }
 
-void CNetscapeEditView::OnUpdateIncreaseFontSize(CCmdUI* pCmdUI)
-{
-    pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-}
-
-void CNetscapeEditView::OnUpdateDecreaseFontSize(CCmdUI* pCmdUI)
-{
-    pCmdUI->Enable( EDT_CanSetCharacterAttribute(GET_MWCONTEXT) );
-}
-
 /////////////////////////////////////////////////////////////////////////
 // Font Color controls
 
@@ -1120,10 +1110,10 @@ void CNetscapeEditView::OnUpdateFontColorComboBox(CCmdUI* pCmdUI)
             m_EditState.bFontColorMaybeChanged = FALSE;
         }
     }
-    pCmdUI->Enable( CAN_INTERACT ); // Should we do this: !EDT_IsJavaScript(GET_MWCONTEXT) );
+    // We can allow this to be active if not in text because
+    //   we allow access to background color as well
+    pCmdUI->Enable(CAN_INTERACT);
 }
-
-extern COLORREF crDefaultColor;
 
 //////////////////////////////////////////////////////////////////
 // Insert Objects and Properties
@@ -1677,7 +1667,6 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
 		PREF_CopyCharPref("editor.image_editor",&pImageEditor);
 	    
         // Add "Edit Image..." if editor was designated
-        // TODO: USE IDS_EDIT_IMAGE FOR VERSION 5.0 (String is missing for 4.0x)
 	    if( pImageEditor && XP_STRLEN(pImageEditor) > 0 )
         {
     	    cmPopup.AppendMenu(MF_ENABLED, ID_POPUP_EDIT_IMAGE,
@@ -3208,7 +3197,7 @@ void CNetscapeEditView::OnUpdateInsertTableRow(CCmdUI* pCmdUI)
 
 void CNetscapeEditView::OnDeleteTableRow()
 {
-    EDT_DeleteTableRows(GET_MWCONTEXT, 1);
+    EDT_DeleteTableRows(GET_MWCONTEXT, 0);
 }
 
 void CNetscapeEditView::OnUpdateInTableRow(CCmdUI* pCmdUI)
@@ -3288,7 +3277,7 @@ void CNetscapeEditView::OnUpdateInsertTableColumn(CCmdUI* pCmdUI)
 
 void CNetscapeEditView::OnDeleteTableColumn()
 {
-    EDT_DeleteTableColumns(GET_MWCONTEXT, 1);
+    EDT_DeleteTableColumns(GET_MWCONTEXT, 0);
 }
 
 void CNetscapeEditView::OnUpdateInTableColumn(CCmdUI* pCmdUI)
@@ -4403,11 +4392,16 @@ void CNetscapeEditView::BuildEditHistoryMenu(HMENU hMenu, int iStartItem)
             CString csMenuString = pUrl;
             WFE_CondenseURL(csMenuString, MAX_MENU_ITEM_LENGTH, FALSE);
 
-            // Add 1 - 9 as first character menu accelerator
 	        if (i < 9)
-		        pMenuItem = PR_smprintf("&%d %s", i+1, csMenuString);
-	        else
-		        pMenuItem = PR_smprintf("  %s", csMenuString);
+                // Add 1 - 9 as first character menu accelerator
+		        pMenuItem = PR_smprintf(" &%d %s", i+1, csMenuString);
+	        else if (i == 9)
+                // Use "0" as accelerator for tenth file            
+		        pMenuItem = PR_smprintf("1&%d %s", 10, csMenuString);
+            else
+                // This isn't used with our current maximum of 10 files,
+                //   but keep in case we increase MAX_EDIT_HISTORY_LOCATIONS
+		        pMenuItem = PR_smprintf("   %s", csMenuString);
             
             if( pMenuItem )
             {
@@ -4660,18 +4654,10 @@ DROPEFFECT CEditViewDropTarget::OnDragOver(CWnd* pWnd,
             case FE_DRAG_HTML:
             case FE_DRAG_TABLE:
             case FE_DRAG_IMAGE:
-             // If no selected text, fall through to allow inserting bookmark anywhere
             case FE_DRAG_TEXT:
                 int32 xVal, yVal;        
                 pView->ClientToDocXY( cPoint, &xVal, &yVal );        
-#if 0
-// Let back-end destroy caret if it needs to
-                // This should be destroyed (bEnabled = FALSE) if we don't have focus?
-                if ( pView->m_caret.bEnabled && pView->m_caret.cShown )
-                {
-                    FE_DestroyCaret(pMWContext);
-                }
-#endif
+
                 // Note: This will also handle feedback for where to drop table/cells
                 if( EDT_PositionDropCaret(pMWContext, xVal, yVal) )
                 {

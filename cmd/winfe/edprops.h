@@ -122,8 +122,6 @@ extern COLORREF wfe_crLastBkgrndColorPicked;
 //    or don't draw a color swatch or button
 #define NO_COLORREF  MIXED_COLORREF
 
-char * wfe_GetDefaultColorString(COLORREF crDefColor);
-
 /*convert image p_file (in URLFORM) and return the resultant filename, or null if failure/cancel*/
 char * wfe_ConvertImage(char *p_fileurl,void *p_parentwindow,MWContext *p_pMWContext);
 
@@ -144,7 +142,6 @@ private:
     COLORREF  * m_pColorRef;
     // If we set focus to ourselves, return the color here
     COLORREF  * m_pSetFocusColor;
-    COLORREF    m_crDefaultColor;
     HPALETTE    m_hPal;
     BOOL        m_bColorSwatchMode;
     char        m_pTipText[80];
@@ -1253,6 +1250,7 @@ public:
 protected:
 
     void SetLockAspectEnable();
+    void AutoFillAltText();
 
     // Controls common to Image, Java, Plugin property pages
     CAlignControls m_AlignControls;

@@ -25,6 +25,8 @@
 #include "statbar.h"
 #endif //MOZ_OFFLINE
 
+extern void wfe_ReloadAllWindows();
+
 int PR_CALLBACK prefWatcher(const char *pPrefName, void *pData)
 {
 	BOOL		bReload = FALSE;
@@ -165,27 +167,6 @@ CPrefInfo::CPrefInfo()
 	m_bAutoLoadImages = TRUE;
 }
 
-void CPrefInfo::UpdateAllWindows()
-{
-	// Update layout in all current windows    
-	for (CGenericFrame *f = theApp.m_pFrameList; f; f = f->m_pNext) {
-		CWinCX *pContext = f->GetMainWinContext();
-
-		if (pContext && pContext->GetContext()) {
-#ifdef EDITOR
-			if (EDT_IS_EDITOR(pContext->GetContext())) {
-				// Edit can relayout page without having to do NET_GetURL
-				EDT_RefreshLayout(pContext->GetContext());
-
-			} else 
-#endif // EDITOR
-            {
-				pContext->NiceReload();
-			}
-		}
-	}
-}
-
 void CPrefInfo::SysColorChange()
 {
 	if (m_bUseWindowsColors) {
@@ -207,7 +188,10 @@ void CPrefInfo::SysColorChange()
 		}
 
 		if (bReload)
-			UpdateAllWindows();
+        {
+            g_bReloadChangeColor = TRUE;
+            wfe_ReloadAllWindows();
+        }
 	}
 }
 

@@ -20,7 +20,7 @@
 #define _PREFS_H
 
 extern BOOL	g_bReloadAllWindows;
-
+extern BOOL g_bReloadChangeColor;
 void
 wfe_DisplayPreferences(CGenericFrame *);
 

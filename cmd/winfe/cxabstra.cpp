@@ -744,6 +744,20 @@ void CAbstractCX::Reload(NET_ReloadMethod iReloadType)	{
 //	Returns:	void
 //	Comments:	Standard stuff.
 
+#ifdef EDITOR
+		if( EDT_IS_EDITOR(GetContext()) ) 
+        {
+            if( iReloadType == NET_RESIZE_RELOAD) 
+            {
+			    // Edit has its own refresh mechanism
+			    EDT_RefreshLayout(GetContext());
+                return;
+            }
+            // For all other types of reload, Editor must use this:
+            iReloadType = NET_NORMAL_RELOAD;
+		}
+#endif // EDITOR
+
 	if(CanCreateUrlFromHist())	{
         URL_Struct *pUrl = CreateUrlFromHist(FALSE, NULL, iReloadType == NET_RESIZE_RELOAD);
 

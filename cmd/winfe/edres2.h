@@ -75,5 +75,8 @@
 
 #define ID_EDIT_HISTORY_BASE            (ID_TOOLS_MENU_BASE+MAX_EDITOR_PLUGINS+10+105)
 // RESERVE MAX_EDIT_HISTORY_LOCATIONS (Currently 10) items here
-#define ID_EDIT_LAST_ID                 (ID_EDIT_HISTORY_BASE + 10)
+
+#define ID_PASTE_TABLE_BASE             (ID_EDIT_HISTORY_BASE + 10)
+
+#define ID_EDIT_LAST_ID                 (ID_PASTE_TABLE_BASE + 10)
 #endif

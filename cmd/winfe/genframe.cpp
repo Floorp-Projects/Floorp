@@ -2531,22 +2531,6 @@ void CGenericFrame::OnUpdateViewLocationToolbar(CCmdUI *pCmdUI)
     }
 }
 
-static void
-NiceReloadAllWindows()
-{
-	for(CGenericFrame *f = theApp.m_pFrameList; f; f= f->m_pNext){
-		CWinCX *pContext = f->GetMainWinContext();
-		if(pContext && pContext->GetContext()) {
-#ifdef EDITOR
-			if( EDT_IS_EDITOR(pContext->GetContext())) 
-				EDT_RefreshLayout(pContext->GetContext());
-			else
-#endif // EDITOR
-				pContext->NiceReload();
-		}
-	}
-}
-
 void CGenericFrame::OnIncreaseFont()
 {
 	CWinCX *pWinCX = GetActiveWinContext();

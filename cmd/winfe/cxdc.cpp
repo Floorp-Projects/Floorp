@@ -1775,9 +1775,9 @@ void CDCCX::EditorDisplayZeroWidthBorder(LTRB& Rect, BOOL bSelected){
     // Use dotted line if not selected, or solid if selecting
 	HPEN pPen = ::CreatePen(bSelected ? PS_SOLID : PS_DOT, 1, rgbColor);
 	HPEN pOldPen = (HPEN)::SelectObject(hdc, pPen);
-    
+	HBRUSH hOldBrush = (HBRUSH) ::SelectObject(hdc, ::GetStockObject(NULL_BRUSH));
     ::Rectangle(hdc, Rect.left, Rect.top, Rect.right, Rect.bottom);
-
+	::SelectObject(hdc, hOldBrush);
 	::SelectObject(hdc, pOldPen);
 	ReleaseContextDC(hdc);
 	VERIFY(::DeleteObject(pPen));

@@ -80,8 +80,10 @@ extern int MK_MSG_REMOVE_MAILHOST_CONFIRM;
 };
 #include "nethelp.h"
 #include "ngdwtrst.h"
+#include "prefinfo.h" //cmanske: for access to global prefInfo struct
 
 BOOL	g_bReloadAllWindows;
+BOOL    g_bReloadChangeColor;
 
 #ifdef MOZ_MAIL_NEWS
 extern "C" void GetFolderServerNames
@@ -2013,26 +2015,37 @@ CAdvancedPrefs::Release()
 	return m_uRef;
 }
 
-
-static void
-ReloadAllWindows()
+void wfe_ReloadAllWindows()
 {
-	for (CGenericFrame *f = theApp.m_pFrameList; f; f = f->m_pNext) {
+	for (CGenericFrame *f = theApp.m_pFrameList; f; f = f->m_pNext)
+    {
 		CWinCX *pContext = f->GetMainWinContext();
-
-		if (pContext && pContext->GetContext()) {
+        MWContext *pMWContext = pContext ? pContext->GetContext() : 0;
+		if( pMWContext )
+        {
 #ifdef EDITOR 
-			if (EDT_IS_EDITOR(pContext->GetContext())) {
+			if (EDT_IS_EDITOR(pMWContext))
+            {
 				// Edit can relayout page without having to do NET_GetURL
-				EDT_RefreshLayout(pContext->GetContext());
+				EDT_RefreshLayout(pMWContext);
 
 			} else 
 #endif // EDITOR
             {
-				pContext->NiceReload();
+			    /* Must use NET_NORMAL_RELOAD when changing colors.
+                   Default reload now uses NET_RESIZE_RELOAD
+                      and the window colors are not updated. 
+                   Note: if we ever change layout to be able to determine which
+                   elements are using the default color, we could use NET_RESIZE_RELOAD,
+                   but we would have to set the changed colors here first.
+                */
+                pContext->NiceReload(g_bReloadChangeColor ? 
+                                     NET_NORMAL_RELOAD : NET_RESIZE_RELOAD);
 			}
 		}
 	}
+    g_bReloadChangeColor = FALSE;
+    g_bReloadAllWindows = FALSE;
 }
 
 static BOOL
@@ -2388,6 +2401,7 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 		// changes we'll get several callbacks (we don't have a way to do batch changes)
 		// and we'll reload the windows multiple times which is very sloppy...
 		g_bReloadAllWindows = FALSE;
+		g_bReloadChangeColor = FALSE;
 
 		// Figure out what the initial category we display should be
 		if (pFrame && pFrame->IsEditFrame()) {
@@ -2420,11 +2434,11 @@ wfe_DisplayPreferences(CGenericFrame *pFrame)
 
 		// See if we need to reload the windows
 		if (g_bReloadAllWindows) {
-			ReloadAllWindows();
+			wfe_ReloadAllWindows();
 			g_bReloadAllWindows = FALSE;
 		}
 
-		// Save out the preferences
+        // Save out the preferences
 		PREF_SavePrefFile();
 
 	} else {
