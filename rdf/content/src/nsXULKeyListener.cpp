@@ -1323,8 +1323,10 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
         nsAutoString keyName; // This should be phased out for keycode and charcode
         keyElement->GetAttribute(nsAutoString("key"), keyName);
         if ( !keyName.IsEmpty() ) {
-	          aKeyEvent->GetCharCode(&theChar);
-		}
+            if (aEventType != eKeyPress)
+                break;
+            aKeyEvent->GetCharCode(&theChar);
+        }
         //printf("Found key [%s] \n", keyName.ToNewCString()); // this leaks
 
         nsAutoString code; // either keycode or charcode
