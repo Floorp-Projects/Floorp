@@ -73,12 +73,12 @@ public:
   NS_IMETHOD SetElementAt(PRUint32 aIndex, nsISupports* value) {
     return ReplaceElementAt(value, aIndex) ? NS_OK : NS_ERROR_FAILURE;
   }
-  NS_IMETHOD_(PRBool) AppendElement(nsISupports *aElement) {
-    return InsertElementAt(aElement, mCount);
+  NS_IMETHOD AppendElement(nsISupports *aElement) {
+    return InsertElementAt(aElement, mCount)/* ? NS_OK : NS_ERROR_FAILURE*/;
   }
-  // NB: This may seem silly, but it implements nsICollection::RemoveElement.
-  NS_IMETHOD_(PRBool) RemoveElement(nsISupports *aElement) {
-    return RemoveElement(aElement, 0);
+  // XXX this is badly named - should be RemoveFirstElement
+  NS_IMETHOD RemoveElement(nsISupports *aElement) {
+    return RemoveElement(aElement, 0)/* ? NS_OK : NS_ERROR_FAILURE*/;
   }
   NS_IMETHOD_(PRBool) MoveElement(PRInt32 aFrom, PRInt32 aTo);
   NS_IMETHOD Enumerate(nsIEnumerator* *result);

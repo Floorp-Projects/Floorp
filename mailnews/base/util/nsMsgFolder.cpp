@@ -326,12 +326,12 @@ nsMsgFolder::SetElementAt(PRUint32 i, nsISupports* value) {
   return mSubFolders->SetElementAt(i, value);
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP
 nsMsgFolder::AppendElement(nsISupports *aElement) {
   return mSubFolders->AppendElement(aElement);
 }
 
-NS_IMETHODIMP_(PRBool)
+NS_IMETHODIMP
 nsMsgFolder::RemoveElement(nsISupports *aElement) {
   return mSubFolders->RemoveElement(aElement);
 }
