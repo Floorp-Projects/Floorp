@@ -33,8 +33,8 @@
 
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
-static PRUint32 nsWidget::sWidgetCount = 0;
+nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
+PRUint32 nsWidget::sWidgetCount = 0;
 
 //#define DBG 1
 
@@ -77,7 +77,7 @@ nsWidget::~nsWidget()
     Destroy();
   }
   if (!sWidgetCount--) {
-    NS_RELEASE_IF(sLookAndFeel);
+    NS_IF_RELEASE(sLookAndFeel);
   }
 }
 
