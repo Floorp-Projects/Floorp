@@ -253,10 +253,10 @@ nsPopupSetFrame::Reflow(nsIPresContext*   aPresContext,
       nsRect rect;
       popupChild->GetRect(rect);
       nsresult rv = ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
-                       rect.x, rect.y, 0, aStatus);
+                       rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW, aStatus);
 
        // Set the child's width and height to its desired size
-      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, 0);
+      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW);
   }
 
   nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, boxState, aStatus);
