@@ -481,7 +481,7 @@ DoInterfaceDescriptor(XPTCursor *outer, XPTInterfaceDescriptor **idp)
     if (!XPT_Do32(outer, &cursor->offset))
         goto error;
     if (mode == XPT_DECODE && !cursor->offset) {
-        *idp = NULL;
+        XPT_DELETE(*idp);
         return PR_TRUE;
     }
     if(!XPT_Do16(cursor, &id->parent_interface) ||
