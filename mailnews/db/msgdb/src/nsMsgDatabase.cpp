@@ -563,7 +563,11 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 				first512Bytes.mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
 
 				{
+#if defined(XP_MAC)
+					nsIOFileStream *dbStream = new nsIOFileStream(nsFileSpec(m_dbName)); //Mac need a unix path!!
+#else
 					nsIOFileStream *dbStream = new nsIOFileStream(nsFileSpec(dbName));
+#endif
 					PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
 					first512Bytes.mYarn_Fill = bytesRead;
 					dbStream->close();
@@ -2491,6 +2495,7 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 nsresult nsMsgDatabase::DumpContents()
 {
     nsMsgKey key;
+    PRUint32 i;
 
 #ifdef HAVE_INT_ENUMERATORS
     nsIEnumerator* keys;
@@ -2503,7 +2508,7 @@ nsresult nsMsgDatabase::DumpContents()
 #else
     nsMsgKeyArray keys;
     nsresult rv = ListAllKeys(keys);
-    for (PRUint32 i = 0; i < keys.GetSize(); i++) {
+    for (i = 0; i < keys.GetSize(); i++) {
         key = keys[i];
 #endif
 		nsIMessage *msg = NULL;
