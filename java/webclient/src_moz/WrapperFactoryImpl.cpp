@@ -60,9 +60,10 @@ JNIEXPORT void JNICALL
 Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitialize(
 										JNIEnv *env, jobject obj, jstring verifiedBinDirAbsolutePath)
 {
-
+    prLogModuleInfo = PR_NewLogModule("webclient");
     const char *nativePath = (const char *) ::util_GetStringUTFChars(env, 
                                                                      verifiedBinDirAbsolutePath);
+
     gBinDir = PL_strdup(nativePath);
     ::util_ReleaseStringUTFChars(env, verifiedBinDirAbsolutePath, nativePath);
 }

@@ -1021,15 +1021,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
   OMDNI_QUERY_AND_CALL(node, SetValue, *value)
   if (input) {
     nsAutoString typeStr;
-    nsString empty;
     nsString val;
     
     if (NS_SUCCEEDED(rv = input->GetType(typeStr))) {
       if (0 == typeStr.CompareWithConversion("radio", PR_TRUE) ||
 	  0 == typeStr.CompareWithConversion("checkbox", PR_TRUE)) {
-	empty.AssignWithConversion("");
 	val = *value;
-	if (0 == empty.CompareWithConversion(val)) {
+	if (0 == val.Length()) {
 	  input->SetChecked(PR_FALSE);
 	}
 	else {

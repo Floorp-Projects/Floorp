@@ -20,6 +20,7 @@
 */
 
 #include "prlog.h"
+#include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include"nsIDOMEvent.h"
 #include"nsIDOMNSEvent.h"

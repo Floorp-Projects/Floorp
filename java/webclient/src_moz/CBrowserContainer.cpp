@@ -568,16 +568,19 @@ NS_IMETHODIMP CBrowserContainer::UniversalDialog(const PRUnichar *inTitleMessage
 
 NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress, 
                                                nsIRequest *aRequest, 
-                                               PRInt32 aStateFlags, 
+                                               PRUint32 aStateFlags, 
                                                PRUint32 aStatus)
 {
-    nsXPIDLString name;
+    nsCAutoString name;
+    nsAutoString uname;
     nsCOMPtr<nsIDOMWindow> domWin;
     nsresult rv;
 
-    if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
+    if (NS_FAILED(rv = aRequest->GetName(name))) {
         return rv;
     }
+
+    uname.AssignWithConversion(name.get());
 
     // 
     // document states
@@ -589,7 +592,7 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
         }
         
         domWin->GetDocument(getter_AddRefs(mInitContext->currentDocument));
-        doStartDocumentLoad(name.get());
+        doStartDocumentLoad(uname.get());
     }
     if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_DOCUMENT)) {
         doEndDocumentLoad(aWebProgress);
@@ -598,10 +601,10 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
     // request states
     //
     if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_REQUEST)) {
-        doStartURLLoad(name.get());
+        doStartURLLoad(uname.get());
     }
     if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_REQUEST)) {
-        doEndURLLoad(name.get());
+        doEndURLLoad(uname.get());
     }
     if (aStateFlags & STATE_REDIRECTING) {
         printf("debug: edburns: STATE_REDIRECTING\n");
@@ -617,7 +620,7 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP CBrowserContainer::OnSecurityChange(nsIWebProgress *aWebProgress,
                                                   nsIRequest *aRequest, 
-                                                  PRInt32 state)
+                                                  PRUint32 state)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -631,7 +634,7 @@ NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress,
                                                   PRInt32 maxTotalProgress)
 {
     PRInt32 percentComplete = 0;
-    nsXPIDLString name;
+    nsCAutoString name;
     nsAutoString autoName;
     jobject msgJStr = nsnull;
     nsresult rv;
@@ -653,10 +656,10 @@ NS_IMETHODIMP CBrowserContainer::OnProgressChange(nsIWebProgress *aWebProgress,
     }
 #endif
 
-    if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
+    if (NS_FAILED(rv = aRequest->GetName(name))) {
         return rv;
     }
-    autoName = name;
+    autoName.AssignWithConversion(name.get());
     // build up the string to be sent
     autoName.AppendWithConversion(" ");
     autoName.AppendInt(percentComplete);

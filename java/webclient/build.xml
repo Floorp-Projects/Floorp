@@ -95,7 +95,8 @@
 
   <target name="compile.src_share" depends="compile.javah.headers">
 
-    <exec os="Linux" dir="${basedir}/src_share" executable="make"/>
+    <exec os="Linux" dir="${basedir}/src_share" failonerror="yes" 
+                     executable="make"/>
 
   </target>
 
@@ -172,20 +173,31 @@
 
   <target name="compile.src_moz" depends="compile.src_share">
 
-    <exec os="Linux" dir="${basedir}/src_moz" executable="make"/>
+    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
+                     failonerror="yes">
+    </exec>
+
+    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
+                     failonerror="yes">
+      <arg line="buildRunems"/>
+    </exec>
 
   </target>
 
 
   <target name="clean">
 
-    <exec os="Linux" dir="${basedir}/src_moz" executable="make">
+    <ant antfile="build-tests.xml" target="clean"/>   
+
+    <exec os="Linux" dir="${basedir}/src_moz" executable="make" 
+          failonerror="yes">
 
       <arg line="clobber_all"/>
 
     </exec>
 
-    <exec os="Linux" dir="${basedir}/src_share" executable="make">
+    <exec os="Linux" dir="${basedir}/src_share" executable="make"
+          failonerror="yes">
 
       <arg line="clobber_all"/>
 
@@ -200,9 +212,17 @@
       </fileset>
     </delete>
 
+    <delete file="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"/>
+
+
     <delete dir="${build.home}/classes/org/mozilla/webclient"/>
 
   </target>
 
+  <target name="run.test" depends="main" description="Run unit tests">
+
+    <ant antfile="build-tests.xml" target="run.test"/>
+    
+  </target>
 
 </project>

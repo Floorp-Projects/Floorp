@@ -27,6 +27,12 @@ import org.mozilla.util.Assert;
 import org.mozilla.util.Log;
 import org.mozilla.util.ParameterCheck;
 
+import org.mozilla.webclient.BrowserControlCanvas;
+
+import java.awt.Graphics;
+import java.awt.Toolkit;
+import java.awt.Dimension;
+
 /**
 
  * GtkBrowserControlCanvas provides a concrete realization
@@ -34,26 +40,16 @@ import org.mozilla.util.ParameterCheck;
 
  * <B>Lifetime And Scope</B> <P>
 
- * There is one instance of the WebShellCanvas per top level awt Frame.
+ * There is one instance of GtkBrowserControlCanvas per top level awt Frame.
 
- * @version $Id: GtkBrowserControlCanvas.java,v 1.1 2002/09/18 18:25:23 edburns%acm.org Exp $
+ * @version $Id: GtkBrowserControlCanvas.java,v 1.2 2002/10/01 00:39:21 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
 
  */
 
-import sun.awt.*;
-import sun.awt.motif.*;
-import java.awt.*;
 
-import org.mozilla.webclient.*;
-import org.mozilla.webclient.wrapper_native.*;
-
-/**
- * GtkBrowserControlCanvas provides a concrete realization
- * of the RaptorCanvas.
- */
 public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements ActionListener*/  {
 
     static {
@@ -70,14 +66,14 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
     //    private MDrawingSurfaceInfo drawingSurfaceInfo;
 
     static private native void loadMainDll();
-    private native int createTopLevelWindow();
-    private native int createContainerWindow(int parent, int width, int height);
-    private native int getGTKWinID(int gtkWinPtr);
-    private native void reparentWindow(int child, int parent);
-    private native void processEvents();
-    private native void setGTKWindowSize(int gtkWinPtr, int width, int height);
+    native int createTopLevelWindow();
+    native int createContainerWindow(int parent, int width, int height);
+    native int getGTKWinID(int gtkWinPtr);
+    native void reparentWindow(int child, int parent);
+    native void processEvents();
+    native void setGTKWindowSize(int gtkWinPtr, int width, int height);
     //New method for obtaining access to the Native Peer handle
-    private native int getHandleToPeer();
+    native int getHandleToPeer();
 
     public GtkBrowserControlCanvas() {
         super();
@@ -143,6 +139,8 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
 
 		return this.gtkWinPtr;
 	}
+
+    // The test for this class is TestGtkBrowserControlCanvas
     
 }
 

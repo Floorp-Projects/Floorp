@@ -393,22 +393,8 @@ InputStreamShim::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32
 }
 
 NS_IMETHODIMP 
-InputStreamShim::GetNonBlocking(PRBool *aNonBlocking)
+InputStreamShim::IsNonBlocking(PRBool *_retval)
 {
-    NS_NOTREACHED("GetNonBlocking");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-InputStreamShim::GetObserver(nsIInputStreamObserver * *aObserver)
-{
-    NS_NOTREACHED("GetObserver");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-InputStreamShim::SetObserver(nsIInputStreamObserver * aObserver)
-{
-    NS_NOTREACHED("SetObserver");
+    NS_NOTREACHED("IsNonBlocking");
     return NS_ERROR_NOT_IMPLEMENTED;
 }

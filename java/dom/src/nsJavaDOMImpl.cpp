@@ -39,6 +39,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 
 #if defined(DEBUG)
 #include <stdio.h>
@@ -216,7 +217,7 @@ nsresult nsJavaDOMImpl::GetDocument(nsIWebProgress* aWebProgress,
 {
   nsCOMPtr<nsIDOMWindow> domWin;
   nsCOMPtr<nsIDOMDocument> domDoc;
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   NS_PRECONDITION(nsnull != aResult, "null ptr");
   if (nsnull == aResult) {
@@ -236,7 +237,7 @@ nsresult nsJavaDOMImpl::GetDocument(nsIWebProgress* aWebProgress,
   fprintf(stderr, 
 	  "nsJavaDOMImpl::GetDocument: failed: "
 	  "webProgress=%x, domWin=%x, domDoc=%x, "
-	  "error=%x\n",
+	  "error=%d\n",
 	  aWebProgress,
 	  domWin.get(),
 	  domDoc.get(),
@@ -250,18 +251,20 @@ nsresult nsJavaDOMImpl::GetDocument(nsIWebProgress* aWebProgress,
 
 NS_IMETHODIMP nsJavaDOMImpl::OnStateChange(nsIWebProgress *aWebProgress, 
 					   nsIRequest *aRequest, 
-					   PRInt32 aStateFlags, 
+					   PRUint32 aStateFlags, 
 					   PRUint32 aStatus)
 {
-  nsXPIDLString name;
-  nsresult rv;
+  nsCAutoString name;
+  nsresult rv = NS_OK;
 
-  if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
+  if (NS_FAILED(rv = aRequest->GetName(name))) {
     return rv;
   }
-  
+  nsAutoString uname;
+  uname.AssignWithConversion(name.get());
+
   if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_DOCUMENT)) {
-    doStartDocumentLoad(name.get());
+    doStartDocumentLoad(uname.get());
   }
   if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_DOCUMENT)) {
     doEndDocumentLoad(aWebProgress, aRequest, aStatus);
@@ -278,7 +281,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStateChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP nsJavaDOMImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
                                                   nsIRequest *aRequest, 
-                                                  PRInt32 state)
+                                                  PRUint32 state)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -459,12 +462,12 @@ NS_IMETHODIMP nsJavaDOMImpl::doStartURLLoad(nsIWebProgress *aWebProgress,
   nsMemory::Free(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
-  char* contentType = (char*) "";
+  nsCAutoString contentType("");
   if (channel)
-      channel->GetContentType(&contentType);
-  if (!contentType) 
+      channel->GetContentType(contentType);
+  if (!contentType.Length()) 
     contentType = (char*) "";
-  jstring jContentType = env->NewStringUTF(contentType);
+  jstring jContentType = env->NewStringUTF(contentType.get());
   if (!jContentType) return NS_ERROR_FAILURE;
 
   env->CallStaticVoidMethod(domAccessorClass,

@@ -44,7 +44,7 @@ import java.io.FileNotFoundException;
  * This is a static class, it is neven instantiated.
 
  *
- * @version $Id: BrowserControlFactory.java,v 1.6 2001/09/10 22:02:05 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.7 2002/10/01 00:39:20 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.test.EmbeddedMozilla
 
@@ -197,7 +197,7 @@ public static void deleteBrowserControl(BrowserControl toDelete)
  * figures out the proper name for the class that is the
  * BrowserControlCanvas. 
 
- * @return  "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas" or "org.mozilla.webclient.wrapper_native.motif.MotifBrowserControlCanvas"
+ * @return  "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas" or "org.mozilla.webclient.wrapper_native.gtk.GtkBrowserControlCanvas"
 
  */
 
@@ -225,7 +225,7 @@ private static String determinePlatformCanvasClassName()
            result = "org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas";
        }
        else {
-           result = "org.mozilla.webclient.wrapper_native.motif.MotifBrowserControlCanvas";
+           result = "org.mozilla.webclient.wrapper_native.gtk.GtkBrowserControlCanvas";
        }
     }
     
@@ -244,7 +244,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlFactory");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.6 2001/09/10 22:02:05 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.7 2002/10/01 00:39:20 edburns%acm.org Exp $");
 
     BrowserControlCanvas canvas = null;
     BrowserControl control = null;

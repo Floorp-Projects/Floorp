@@ -43,7 +43,7 @@ class nsIJavaDOM : public nsIWebProgressListener {
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJAVADOM_IID)
 
   NS_IMETHOD OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, 
-			   PRInt32 aStateFlags, PRUint32 aStatus) = 0;
+			   PRUint32 aStateFlags, PRUint32 aStatus) = 0;
 
   NS_IMETHOD OnProgressChange(nsIWebProgress *aWebProgress, 
 			      nsIRequest *aRequest, PRInt32 aCurSelfProgress, 
@@ -58,7 +58,7 @@ class nsIJavaDOM : public nsIWebProgressListener {
 			    nsresult aStatus, const PRUnichar *aMessage) = 0;
 
   NS_IMETHOD OnSecurityChange(nsIWebProgress *aWebProgress, 
-			      nsIRequest *aRequest, PRInt32 state) = 0;
+			      nsIRequest *aRequest, PRUint32 state) = 0;
 
 
   NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,

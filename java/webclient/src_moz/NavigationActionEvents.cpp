@@ -304,9 +304,10 @@ wsPostEvent::handleEvent ()
   nsCOMPtr<nsIInputStream> headersDataStream = nsnull;
 
   if (mPostData) {
+      nsCAutoString postData(mPostData);
       NS_NewPostDataStream(getter_AddRefs(postDataStream),
                            PR_FALSE,
-                           (const char *) mPostData, 0);
+                           postData, 0);
   }
 
   if (mPostHeaders) {

@@ -46,7 +46,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessor_register
 	       ("DOMAccessor::register: QueryInterface(nsIWebProgressService) failed: %x\n", 
 		rv));
       } else {
-	rv = webProgressService->AddProgressListener((nsIWebProgressListener*)javaDOM);
+	rv = webProgressService->AddProgressListener((nsIWebProgressListener*)javaDOM, nsIWebProgress::NOTIFY_ALL);
 	if (NS_FAILED(rv)) {
 	  PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 		 ("DOMAccessor::register: AddObserver(JavaDOM) failed x\n", 

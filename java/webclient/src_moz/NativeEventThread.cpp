@@ -472,8 +472,9 @@ void DoMozInitialization(WebShellInitContext * initContext)
         nsILocalFile * pathFile = nsnull;
         nsresult rv = nsnull;
         JNIEnv *   env = initContext->env;
-        const char * BinDir = gBinDir;
-        
+        nsAutoString BinDir;
+        BinDir.AssignWithConversion(gBinDir);
+
         rv = NS_NewLocalFile(BinDir, PR_TRUE, &pathFile);
         if (NS_FAILED(rv)) {
             ::util_ThrowExceptionToJava(env, "call to NS_NewLocalFile failed.");
@@ -488,7 +489,6 @@ void DoMozInitialization(WebShellInitContext * initContext)
             ::util_ThrowExceptionToJava(env, "NS_GetGlobalComponentManager() failed.");
             return;
         }
-        prLogModuleInfo = PR_NewLogModule("webclient");
         const char *webclientLogFile = PR_GetEnv("WEBCLIENT_LOG_FILE");
         if (nsnull != webclientLogFile) {
             PR_SetLogFile(webclientLogFile);

@@ -33,7 +33,6 @@
 
 #include "CurrentPageActionEvents.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIFindComponent.h"
 #include "nsISearchContext.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
@@ -102,6 +101,7 @@ wsFindEvent::handleEvent ()
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
     
     if (mInitContext) {
+#if 0
         //First get the FindComponent object
         nsCOMPtr<nsIFindComponent> findComponent;
         findComponent = do_GetService(NS_IFINDCOMPONENT_CONTRACTID, &rv);
@@ -150,6 +150,7 @@ wsFindEvent::handleEvent ()
                 mInitContext->initFailCode = kSearchContextError;
                 return (void *) rv;
             }
+
         }
         else {
             // this is findNext
@@ -194,6 +195,10 @@ wsFindEvent::handleEvent ()
         }
         // Save in initContext struct for future findNextInPage calls
         mInitContext->searchContext = srchcontext;
+
+#else
+        return (void *) rv;
+#endif  
   
     }
     return result;

@@ -47,6 +47,8 @@
 #include "wsRDFObserver.h"
 #include "nsString.h" // for nsCAutoString
 #include "nsReadableUtils.h" 
+#include "nsCRT.h"
+
 
 static NS_DEFINE_CID(kRDFContainerCID, NS_RDFCONTAINER_CID);
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
