@@ -222,8 +222,11 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
              * file, we only look for it in the first entry in the include
              * path, which we assume to be the current directory.
              */
-            IncludePathEntry first_entry = { stack->include_path->directory,
-                                             NULL };
+            IncludePathEntry first_entry;
+
+            first_entry.directory = stack->include_path->directory;
+            first_entry.next = NULL;
+
             new_data = new_input_callback_data(cb_data->init.filename,
                                                &first_entry);
         } else {
