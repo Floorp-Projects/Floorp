@@ -275,7 +275,7 @@ sub create {
         && ($flag->{'requestee'}->email_prefs->{'FlagRequestee'} 
             || $flag->{'type'}->{'cc_list'}))
     {
-        notify($flag, "request/created-email.txt.tmpl");
+        notify($flag, "request/email.txt.tmpl");
     }
 }
 
@@ -347,7 +347,7 @@ sub modify {
                 || $flag->{'type'}->{'cc_list'})
             {
                 $flag->{'status'} = $status;
-                notify($flag, "request/fulfilled-email.txt.tmpl");
+                notify($flag, "request/email.txt.tmpl");
             }
         }
         elsif ($status eq '?') {
@@ -371,7 +371,7 @@ sub modify {
                 && ($flag->{'requestee'}->email_prefs->{'FlagRequestee'} 
                     || $flag->{'type'}->{'cc_list'}))
             {
-                notify($flag, "request/created-email.txt.tmpl");
+                notify($flag, "request/email.txt.tmpl");
             }
         }
         # The user unset the flag, so delete it from the database.
@@ -398,7 +398,7 @@ sub clear {
     # knows why email is being sent about the request.
     $flag->{'status'} = "X";
     
-    notify($flag, "request/fulfilled-email.txt.tmpl") if $flag->{'requestee'};
+    notify($flag, "request/email.txt.tmpl") if $flag->{'requestee'};
 }
 
 
