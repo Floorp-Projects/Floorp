@@ -435,12 +435,6 @@ function EnableTree(enabled, element)
     EnableTree(enabled, children.item(i));
 }
 
-function InitElement(elementID)
-{
-  var e = document.getElementById(elementID);
-  eval(e.getAttribute("oncommand").replace(/this/g, "e")); //hackish, but WFM
-}
-
 function E(elementID)
 {
   return document.getElementById(elementID);
