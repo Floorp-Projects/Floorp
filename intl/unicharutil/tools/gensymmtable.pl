@@ -23,6 +23,12 @@
 # This program generates the header file symmtable.h from the Unicode
 # informative data file BidiMirroring.txt.
 # See the comments in that file for details of its structure and contents.
+#
+# At the moment we only handle cases where there is another Unicode
+# character whose glyph can serve as at least an adequate version of
+# the mirror image of the original character's glyph. This leaves open
+# the problem of how to provide mirrored glyphs for characters where
+# this is not the case.
 
 # Process the input file
 $ucp = "[0-9a-fA-F]{4}";               # Unicode code point (4 successive hex digits) as a pattern to match
@@ -37,11 +43,6 @@ while (<UNICODATA>) {
                                        # (example: 0028; 0029 # LEFT PARENTHESIS)
     @table[hex($1)]=hex($1) ^ hex($2); # Enter the character XOR its symmetric pair in the table
     @isblock[hex(substr($1, 0, 2))]=1; # Remember this block
-  }
-  elsif (/^# ($ucp); (.+)/) {          # If the line looks like this pattern
-                                       # (example: # 2201; COMPLEMENT)
-    @table[hex($1)]=0xff;              # Enter 0xff in the table
-    @isblock[hex(substr($1, 0, 2))]=2; # Remember this block
   }
 }
 close(UNICODATA);
@@ -76,12 +77,7 @@ $npl = <<END_OF_NPL;
 END_OF_NPL
 print OUT $npl;
 
-print OUT "#ifdef IBMBIDI\n\n";
-print OUT "#ifdef HANDLE_GLYPHS_WITHOUT_MATES\n";
-print OUT "#define GWM 0xff\n";
-print OUT "#else\n";
-print OUT "#define GWM 0\n";
-print OUT "#endif\n";
+print OUT "#ifdef IBMBIDI\n";
 
 # Generate data tables
 foreach $block (0 .. 0xff) {
@@ -97,7 +93,7 @@ foreach $block (0 .. 0xff) {
       printf OUT "/* %X_ */ ", $row;
       foreach $byte (0 .. 0xf) {
          $ix = ($block << 8) | ($row << 4) | ($byte);
-         printf OUT ((0xff == @table[$ix]) ? " GWM, " : "%#4x, ", @table[$ix]);
+         printf OUT ("%#4x, ", @table[$ix]);
       }
       print OUT "\n";
     }
@@ -107,30 +103,13 @@ foreach $block (0 .. 0xff) {
 
 # Generate conversion method
 print OUT "\nstatic PRUnichar Mirrored(PRUnichar u)\n{\n";
-print OUT "#ifdef HANDLE_GLYPHS_WITHOUT_MATES\n";
-print OUT "  PRUint8 mask;\n";
-print OUT "#endif\n\n";
 print OUT "  switch (u & 0xFF00) {\n";
+print OUT "    // XOR the character with the bitmap in the conversion table to give the symmetric equivalent\n";
 foreach $block (0 .. 0xff) {
   if (1==@isblock[$block]) {
-    printf OUT "\n    case %#x:\n", $block * 256;
-    printf OUT "      u ^= symmtable_%02X[u & 0xff];\n", $block;
-    print  OUT "      break;\n";
-  }
-  elsif (2==@isblock[$block]) {
-    print  OUT "#ifdef HANDLE_GLYPHS_WITHOUT_MATES // placeholder for code to do something in these cases\n";
-    printf OUT "    case %#x:\n", $block * 256;
-    printf OUT "      mask = symmtable_%02X[u & 0xff];\n", $block;
-    print  OUT "      if (GWM == mask)\n";
-    print  OUT "        ; // Do something\n";
-    print  OUT "      else\n";
-    print  OUT "        u ^= mask;\n";
-    print  OUT "      break;\n";
-    print  OUT "#else\n";
     printf OUT "    case %#x:\n", $block * 256;
     printf OUT "      u ^= symmtable_%02X[u & 0xff];\n", $block;
     print  OUT "      break;\n";
-    print  OUT "#endif\n";
   }
 }
 print OUT "  }\n  return u;\n}\n";
