@@ -27,12 +27,12 @@
 
 include $(MOD_DEPTH)/config/UNIX.mk
 
-ifeq ($(OS_RELEASE),7)
-CC		= cc
-CCC		= CC
-else
+ifeq (,$(filter-out 2.1,$(OS_RELEASE)))
 CC		= $(NSDEPTH)/build/hcc
 CCC		= $(NSDEPTH)/build/hcpp
+else
+CC		= cc
+CCC		= CC
 endif
 
 RANLIB		= true
@@ -40,10 +40,10 @@ RANLIB		= true
 DEFINES		+= -D_PR_LOCAL_THREADS_ONLY
 OS_CFLAGS	= -DSVR4 -DSYSV -DUNIXWARE
 
-ifeq ($(OS_RELEASE),7)
-OS_CFLAGS	+= -D_LARGEFILE64_SOURCE -D_PR_HAVE_OFF64_T -D_PR_HAVE_SOCKADDR_LEN
-else
+ifeq (,$(filter-out 2.1,$(OS_RELEASE)))
 OS_CFLAGS	+= -D_PR_NO_LARGE_FILES
+else
+OS_CFLAGS	+= -D_LARGEFILE64_SOURCE -D_PR_HAVE_OFF64_T -D_PR_HAVE_SOCKADDR_LEN
 endif
 
 MKSHLIB		= $(LD) $(DSO_LDOPTS)

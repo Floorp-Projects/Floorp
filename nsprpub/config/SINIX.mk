@@ -66,6 +66,10 @@ MKSHLIB			= $(LD) -G -z defs -h $(@:$(OBJDIR)/%.so=%.so)
 #DSO_LDOPTS		= -G -W l,-Blargedynsym
 endif
 
+ifeq ($(CPU_ARCH),x86)
+DEFINES			+= -Di386
+endif
+
 ODD_CFLAGS		+= -DSVR4 -DSNI -DRELIANTUNIX -Dsinix -DHAVE_SVID_GETTOD
 
 # On SINIX 5.43, need to define IP_MULTICAST in order to get the
