@@ -24,6 +24,7 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
+#include "nsRect.h"
 
 class nsIPresContext;
 class  nsIPrintOptions;
@@ -127,6 +128,15 @@ public:
   NS_IMETHOD GetNumPages(PRInt32* aNumPages) = 0;
   NS_IMETHOD IsDoingPrintRange(PRBool* aDoing) = 0;
   NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage) = 0;
+
+  NS_IMETHOD SkipPageBegin() = 0;
+  NS_IMETHOD SkipPageEnd() = 0;
+
+  NS_IMETHOD DoPageEnd(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD GetPrintThisPage(PRBool* aPrintThisPage) = 0;
+  NS_IMETHOD SetOffset(nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup) = 0;
+  NS_IMETHOD SetClipRect(nsIPresContext*  aPresContext, nsRect* aSize) = 0;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;

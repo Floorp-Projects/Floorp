@@ -57,10 +57,19 @@ public:
   NS_IMETHOD GetNumPages(PRInt32* aNumPages);
   NS_IMETHOD IsDoingPrintRange(PRBool* aDoing);
   NS_IMETHOD GetPrintRange(PRInt32* aFromPage, PRInt32* aToPage);
+  NS_IMETHOD SkipPageBegin() { mSkipPageBegin = PR_TRUE; return NS_OK; }
+  NS_IMETHOD SkipPageEnd() { mSkipPageEnd = PR_TRUE; return NS_OK; }
+  NS_IMETHOD DoPageEnd(nsIPresContext*  aPresContext);
+  NS_IMETHOD GetPrintThisPage(PRBool*  aPrintThisPage) { *aPrintThisPage = mPrintThisPage; return NS_OK; }
+  NS_IMETHOD SetOffset(nscoord aX, nscoord aY) { mOffsetX = aX; mOffsetY = aY; return NS_OK; }
+  NS_IMETHOD SuppressHeadersAndFooters(PRBool aDoSup);
+  NS_IMETHOD SetClipRect(nsIPresContext* aPresContext, nsRect* aSize);
 
-#ifdef DEBUG
+#ifdef NS_DEBUG
   // Debugging
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
+  NS_IMETHOD SetDebugFD(FILE* aFD);
+  FILE * mDebugFD;
 #endif
 
 protected:
@@ -94,6 +103,13 @@ protected:
   PRInt32      mPrintRangeType;
   PRInt32      mFromPageNum;
   PRInt32      mToPageNum;
+  PRPackedBool mSkipPageBegin;
+  PRPackedBool mSkipPageEnd;
+  PRPackedBool mPrintThisPage;
+
+  PRPackedBool mSupressHF;
+  nscoord      mOffsetX;
+  nscoord      mOffsetY;
 
 };
 

@@ -53,6 +53,24 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 // tstaic data members
 PRUnichar * nsPageFrame::mPageNumFormat = nsnull;
 
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+#define DEBUG_PRINTING
+#endif
+
+#ifdef DEBUG_PRINTING
+#define PRINT_DEBUG_MSG1(_msg1) fprintf(mDebugFD, (_msg1))
+#define PRINT_DEBUG_MSG2(_msg1, _msg2) fprintf(mDebugFD, (_msg1), (_msg2))
+#define PRINT_DEBUG_MSG3(_msg1, _msg2, _msg3) fprintf(mDebugFD, (_msg1), (_msg2), (_msg3))
+#define PRINT_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) fprintf(mDebugFD, (_msg1), (_msg2), (_msg3), (_msg4))
+#define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5) fprintf(mDebugFD, (_msg1), (_msg2), (_msg3), (_msg4), (_msg5))
+#else //--------------
+#define PRINT_DEBUG_MSG1(_msg) 
+#define PRINT_DEBUG_MSG2(_msg1, _msg2) 
+#define PRINT_DEBUG_MSG3(_msg1, _msg2, _msg3) 
+#define PRINT_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) 
+#define PRINT_DEBUG_MSG5(_msg1, _msg2, _msg3, _msg4, _msg5) 
+#endif
+
 nsresult
 NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -69,8 +87,14 @@ NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 nsPageFrame::nsPageFrame() :
-  mHeadFootFont(nsnull)
+  mHeadFootFont(nsnull),
+  mSupressHF(PR_FALSE),
+  mClipRect(-1, -1, -1, -1)
+
 {
+#ifdef NS_DEBUG
+  mDebugFD = stdout;
+#endif
 }
 
 nsPageFrame::~nsPageFrame()
@@ -174,11 +198,15 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext*          aPresContext,
         NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
       }
     }
+    PRINT_DEBUG_MSG2("PageFrame::Reflow %p ", this);
+    PRINT_DEBUG_MSG5("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.availableWidth, aReflowState.availableHeight);
 
     // Return our desired size
     aDesiredSize.width = aReflowState.availableWidth;
     aDesiredSize.height = aReflowState.availableHeight;
   }
+  PRINT_DEBUG_MSG2("PageFrame::Reflow %p ", this);
+  PRINT_DEBUG_MSG3("[%d,%d]\n", aReflowState.availableWidth, aReflowState.availableHeight);
 
   return NS_OK;
 }
@@ -254,6 +282,7 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
                               nscoord              aHeight,
                               PRBool               aUseHalfThePage)
 {
+
   // first make sure we have a vaild string and that the height of the
   // text will fit in the margin
   if (aStr.Length() > 0 && 
@@ -300,6 +329,25 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
     aRenderingContext.DrawString(str, x, y);
     aRenderingContext.PopState(clipEmpty);
+#ifdef DEBUG_PRINTING
+    PRINT_DEBUG_MSG2("Page: %p", this);
+    char * s = str.ToNewCString();
+    if (s) {
+      PRINT_DEBUG_MSG2(" [%s]", s);
+      nsMemory::Free(s);
+    }
+    char justStr[64];
+    switch (aJust) {
+      case nsIPrintOptions::kJustLeft:strcpy(justStr, "Left");break;
+      case nsIPrintOptions::kJustCenter:strcpy(justStr, "Center");break;
+      case nsIPrintOptions::kJustRight:strcpy(justStr, "Right");break;
+    } // switch
+    PRINT_DEBUG_MSG2(" HF: %s ", aHeaderFooter==eHeader?"Header":"Footer");
+    PRINT_DEBUG_MSG2(" JST: %s ", justStr);
+    PRINT_DEBUG_MSG3(" x,y: %d,%d", x, y);
+    PRINT_DEBUG_MSG2(" Hgt: %d ", aHeight);
+    PRINT_DEBUG_MSG2(" Half: %s\n", aUseHalfThePage?"Yes":"No");
+#endif
   }
 }
 
@@ -310,9 +358,30 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer)
 {
+  aRenderingContext.PushState();
+  PRBool clipEmpty;
+  if (mClipRect.width != -1 || mClipRect.height != -1) {
+#ifdef DEBUG_PRINTING
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+      printf("*** ClipRect: %5d,%5d,%5d,%5d\n", mClipRect.x, mClipRect.y, mClipRect.width, mClipRect.height);
+    }
+#endif
+    mClipRect.x = 0;
+    mClipRect.y = 0;
+    aRenderingContext.SetClipRect(mClipRect, nsClipCombine_kReplace, clipEmpty);
+  }
+
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+    nsRect r;
+    fprintf(mDebugFD, "PF::Paint    -> %p  SupHF: %s  Rect: [%5d,%5d,%5d,%5d]\n", this, 
+            mSupressHF?"Yes":"No", mRect.x, mRect.y, mRect.width, mRect.height);
+  }
+#endif
+
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && !mSupressHF) {
     // get the current margin
     mPrintOptions->GetMarginInTwips(mMargin);
 
@@ -325,9 +394,9 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     aPresContext->GetPixelsToTwips(&p2t);
     rect.Deflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
-    //aRenderingContext.DrawRect(rect);
+    aRenderingContext.DrawRect(rect);
     rect.Inflate(NSToCoordRound(p2t), NSToCoordRound(p2t));
-    printf("SPSF::PaintChild -> Painting Frame %p Page No: %d\n", this, mPageNum);
+    fprintf(mDebugFD, "PageFr::PaintChild -> Painting Frame %p Page No: %d\n", this, mPageNum);
 #endif
     // use the whole page
     rect.width  += mMargin.left + mMargin.right;
@@ -419,6 +488,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
   }
 
+  aRenderingContext.PopState(clipEmpty);
   return rv;
 }
 
@@ -441,7 +511,7 @@ void
 nsPageFrame::SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages) 
 { 
   mPageNum     = aPageNumber; 
-  mTotNumPages = aTotalPages; 
+  mTotNumPages = aTotalPages;
 }
 
 

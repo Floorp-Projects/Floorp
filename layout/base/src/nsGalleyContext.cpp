@@ -31,8 +31,8 @@ public:
 
   NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
-  NS_IMETHOD GetPageWidth(nscoord* aResult);
-  NS_IMETHOD GetPageHeight(nscoord* aResult);
+  NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
+  NS_IMETHOD SetPageDim(nsRect* aRect);
 };
 
 GalleyContext::GalleyContext()
@@ -67,25 +67,20 @@ GalleyContext::IsPaginated(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-GalleyContext::GetPageWidth(nscoord* aResult)
+GalleyContext::GetPageDim(nsRect* aActualRect, nsRect* aAdjRect)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = 0;
-  return NS_OK;
+  NS_ENSURE_ARG_POINTER(aActualRect);
+  NS_ENSURE_ARG_POINTER(aAdjRect);
+  aActualRect->SetRect(0, 0, 0, 0);
+  aAdjRect->SetRect(0, 0, 0, 0);
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-GalleyContext::GetPageHeight(nscoord* aResult)
+GalleyContext::SetPageDim(nsRect* aPageDim)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = 0;
-  return NS_OK;
+  NS_ENSURE_ARG_POINTER(aPageDim);
+  return NS_ERROR_FAILURE;
 }
 
 NS_LAYOUT nsresult

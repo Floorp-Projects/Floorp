@@ -28,6 +28,11 @@
 #include "nsLayoutAtoms.h"
 #include "prlog.h"
 
+// Print Options
+#include "nsIPrintOptions.h"
+#include "nsGfxCIID.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 class PrintPreviewContext : public nsPresContext {
 public:
@@ -36,12 +41,14 @@ public:
 
   NS_IMETHOD GetMedium(nsIAtom** aMedium);
   NS_IMETHOD IsPaginated(PRBool* aResult);
-  NS_IMETHOD GetPageWidth(nscoord* aResult);
-  NS_IMETHOD GetPageHeight(nscoord* aResult);
+  NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
+  NS_IMETHOD SetPageDim(nsRect* aRect);
 
 #ifdef NS_DEBUG
   static PRBool UseFakePageSize();
 #endif
+protected:
+  nsRect mPageDim;
 };
 
 #ifdef NS_DEBUG
@@ -60,7 +67,8 @@ PrintPreviewContext::UseFakePageSize()
 }
 #endif
 
-PrintPreviewContext::PrintPreviewContext()
+PrintPreviewContext::PrintPreviewContext() :
+  mPageDim(-1,-1,-1,-1)
 {
 }
 
@@ -71,10 +79,7 @@ PrintPreviewContext::~PrintPreviewContext()
 NS_IMETHODIMP
 PrintPreviewContext::GetMedium(nsIAtom** aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nsLayoutAtoms::print;
   NS_ADDREF(*aResult);
   return NS_OK;
@@ -83,57 +88,71 @@ PrintPreviewContext::GetMedium(nsIAtom** aResult)
 NS_IMETHODIMP
 PrintPreviewContext::IsPaginated(PRBool* aResult)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aResult);
   *aResult = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PrintPreviewContext::GetPageWidth(nscoord* aResult)
+PrintPreviewContext::GetPageDim(nsRect* aActualRect, nsRect* aAdjRect)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aActualRect);
+  NS_ENSURE_ARG_POINTER(aAdjRect);
+
+  // XXX maybe we get the size of the default printer instead
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  // Setting what would be the "default" case here, because
+  // getting the PrintService could fail
+  aActualRect->width  = (nscoord) NS_INCHES_TO_TWIPS(8.5);
+  aActualRect->height = (nscoord) NS_INCHES_TO_TWIPS(11);
+  if (NS_SUCCEEDED(rv) && printService) {
+    PRInt32 paperSize = nsIPrintOptions::kLetterPaperSize; 
+    printService->GetPaperSize(&paperSize);
+    switch (paperSize) {
+      case nsIPrintOptions::kLegalPaperSize :
+        aActualRect->width  = (nscoord) NS_INCHES_TO_TWIPS(8.5);
+        aActualRect->height = (nscoord) NS_INCHES_TO_TWIPS(14);
+        break;
+
+      case nsIPrintOptions::kExecutivePaperSize :
+        aActualRect->width  = (nscoord) NS_INCHES_TO_TWIPS(7.5);
+        aActualRect->height = (nscoord) NS_INCHES_TO_TWIPS(10.5);
+        break;
+
+      case nsIPrintOptions::kA3PaperSize :
+        aActualRect->width  = (nscoord) NS_MILLIMETERS_TO_TWIPS(297);
+        aActualRect->height = (nscoord) NS_MILLIMETERS_TO_TWIPS(420);
+        break;
+
+      case nsIPrintOptions::kA4PaperSize :
+        aActualRect->width  = (nscoord) NS_MILLIMETERS_TO_TWIPS(210);
+        aActualRect->height = (nscoord) NS_MILLIMETERS_TO_TWIPS(297);
+        break;
+
+    } // switch 
   }
 
 #ifdef NS_DEBUG
   if (UseFakePageSize()) {
-    // For testing purposes make the page width smaller than the visible
-    // area
+    // For testing purposes make the page width smaller than the visible area
     float sbWidth, sbHeight;
     mDeviceContext->GetScrollBarDimensions(sbWidth, sbHeight);
     nscoord sbar = NSToCoordRound(sbWidth);
-    *aResult = mVisibleArea.width - sbar - 2*100;
-    return NS_OK;
+    aActualRect->width  = mVisibleArea.width - sbar - 2*100;
+    aActualRect->height = mVisibleArea.height * 60 / 100;
   }
 #endif
+  *aAdjRect = mPageDim;
 
-  // XXX assumes a 1/2 margin around all sides
-  *aResult = (nscoord) NS_INCHES_TO_TWIPS(7.5);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PrintPreviewContext::GetPageHeight(nscoord* aResult)
+PrintPreviewContext::SetPageDim(nsRect* aPageDim)
 {
-  NS_PRECONDITION(nsnull != aResult, "null ptr");
-  if (nsnull == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-#ifdef NS_DEBUG
-  if (UseFakePageSize()) {
-    // For testing purposes make the page height 60% of the visible area
-    *aResult = mVisibleArea.height * 60 / 100;
-    return NS_OK;
-  }
-#endif
-
-  // XXX assumes a 1/2 margin around all sides
-  *aResult = (nscoord) NS_INCHES_TO_TWIPS(10);
+  NS_ENSURE_ARG_POINTER(aPageDim);
+  mPageDim = *aPageDim;
   return NS_OK;
 }
 

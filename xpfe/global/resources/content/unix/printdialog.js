@@ -65,7 +65,7 @@ function initDialog()
   dialog.topageInput     = document.getElementById("topageInput");
   dialog.topageLabel     = document.getElementById("topageLabel");
 
-  dialog.aslayedoutRadio      = document.getElementById("aslayedoutRadio");
+  dialog.aslaidoutRadio       = document.getElementById("aslaidoutRadio");
   dialog.selectedframeRadio   = document.getElementById("selectedframeRadio");
   dialog.eachframesepRadio    = document.getElementById("eachframesepRadio");
   dialog.printrangeGroupLabel = document.getElementById("printrangeGroupLabel");
@@ -126,9 +126,9 @@ function doPrintToFile( value )
 }
 
 //---------------------------------------------------
-function doPrintRange( value )
+function doPrintRange( inx )
 {
-  if ( value) {
+  if ( inx == 1 ) {
     dialog.frompageInput.removeAttribute("disabled");
     dialog.frompageLabel.removeAttribute("disabled");
     dialog.topageInput.removeAttribute("disabled");
@@ -277,9 +277,7 @@ function loadDialog()
 
   // print frame
   if (print_howToEnableUI == gPrintOptInterface.kFrameEnableAll) {
-    // XXX this is just temporary until we have impemented "AsIs"
-    dialog.aslayedoutRadio.setAttribute("disabled","true" );
-    //dialog.aslayedoutRadio.removeAttribute("disabled");
+    dialog.aslaidoutRadio.removeAttribute("disabled");
 
     dialog.selectedframeRadio.removeAttribute("disabled");
     dialog.eachframesepRadio.removeAttribute("disabled");
@@ -289,9 +287,7 @@ function loadDialog()
     dialog.selectedframeRadio.checked = true;
 
   } else if (print_howToEnableUI == gPrintOptInterface.kFrameEnableAsIsAndEach) {
-    // XXX this is just temporary until we have impemented "AsIs"
-    dialog.aslayedoutRadio.setAttribute("disabled","true" );
-    //dialog.aslayedoutRadio.removeAttribute("disabled");       //enable
+    dialog.aslaidoutRadio.removeAttribute("disabled");       //enable
 
     dialog.selectedframeRadio.setAttribute("disabled","true" ); // disable
     dialog.eachframesepRadio.removeAttribute("disabled");       // enable
@@ -301,7 +297,7 @@ function loadDialog()
     dialog.eachframesepRadio.checked = true;
 
   } else {
-    dialog.aslayedoutRadio.setAttribute("disabled","true" );
+    dialog.aslaidoutRadio.setAttribute("disabled","true" );
     dialog.selectedframeRadio.setAttribute("disabled","true" );
     dialog.eachframesepRadio.setAttribute("disabled","true" );
     dialog.printrangeGroupLabel.setAttribute("disabled","true" );
@@ -341,10 +337,12 @@ function onOK()
   var print_paper_size = 0;
 
   if (printService) {
+    var print_howToEnableUI = gPrintOptInterface.kFrameEnableNone;
 
     printService.printToFile   = dialog.fileRadio.checked;
     printService.printReversed = dialog.lastRadio.checked;
     printService.printInColor  = dialog.colorRadio.checked;
+    print_howToEnableUI        = printService.howToEnableFrameUI;
 
     if (dialog.letterRadio.checked) {
       print_paper_size = gPrintOptInterface.kLetterPaperSize;
@@ -376,15 +374,17 @@ function onOK()
     printService.startPageRange = dialog.frompageInput.value;
     printService.endPageRange   = dialog.topageInput.value;
 
-    var frametype;
-    if (dialog.aslayedoutRadio.checked) {
-      frametype = gPrintOptInterface.kFramesAsIs;
-    } else if (dialog.selectedframeRadio.checked) {
-      frametype = gPrintOptInterface.kSelectedFrame;
-    } else if (dialog.eachframesepRadio.checked) {
-      frametype = gPrintOptInterface.kEachFrameSep;
-    } else {
-      frametype = gPrintOptInterface.kSelectedFrame;
+    var frametype = gPrintOptInterface.kNoFrames;
+    if (print_howToEnableUI != gPrintOptInterface.kFrameEnableNone) {
+      if (dialog.aslaidoutRadio.checked) {
+        frametype = gPrintOptInterface.kFramesAsIs;
+      } else if (dialog.selectedframeRadio.checked) {
+        frametype = gPrintOptInterface.kSelectedFrame;
+      } else if (dialog.eachframesepRadio.checked) {
+        frametype = gPrintOptInterface.kEachFrameSep;
+      } else {
+        frametype = gPrintOptInterface.kSelectedFrame;
+      }
     }
     printService.printFrameType = frametype;
   } else {
