@@ -32,6 +32,11 @@
 #include "prmon.h"
 #include "jutility.h"
 
+/**
+ *  nsCapiBufferStruct is contains the data passed in by the callback in CAPI.  
+ *  This struct encapsulates the data in m_pBuf,
+ *  and the size of the passed in data in m_pBufSize.
+ */
 CLASS_EXPORT_CAPI nsCapiBufferStruct
 {
 public:
@@ -51,6 +56,7 @@ private:
     /*-----------------------------
     ** MEMBERS
     **---------------------------*/
+    
     /* current buffer of iCal information,
      * when CAPI has information to return to
      * the buffer, it must append to this buffer
@@ -59,12 +65,14 @@ private:
      * notified when CAPI gets back more information
      */
     char * m_Buffer;
+    
     t_int32 m_BufferSize;
     t_bool m_Init;
     t_int32 m_Mark;
     t_int32 m_ChunkMark;
     t_int32 m_Pos;
     t_int32 m_ChunkIndex;
+   
 
     /** encoding of stream */
     JulianUtility::MimeEncoding m_Encoding;
@@ -85,7 +93,7 @@ private:
     UnicodeString & createLine(t_int32 oldPos, t_int32 oldChunkIndex,
         t_int32 newPos, t_int32 newChunkIndex, UnicodeString & aLine);
 
-    static void deleteUnicodeStringVector(JulianPtrArray * stringVector);
+    static void deleteCapiBufferStructVector(JulianPtrArray * bufferVector);
 
     nsCapiCallbackReader();
 public:
@@ -105,23 +113,13 @@ public:
     void setFinished() { m_bFinished = TRUE; }
     void setEncoding(JulianUtility::MimeEncoding encoding) { m_Encoding = encoding; }
     t_bool isFinished() const { return m_bFinished; }
-    /**
-     * Sets a the buffer to read from.
-     * Appends the m_Buffer.
-     */
-    /*virtual void setBuffer(const char * capiChunk);*/
-
 
     /**
      * Don't delete u until this object is deleted.
-     * @param           UnicodeString * u
+     * @param           nsCapiBufferStruct * cBuf
      *
      * @return          void
      */
-    void AddChunk(UnicodeString * u);
-
-    /** buffer to contain current line, assumed to be less than 1024 bytes */
-    char m_pBuffer[1024];
     void AddBuffer(nsCapiBufferStruct * cBuf);
     /*-----------------------------
     ** UTILITIES
@@ -138,8 +136,6 @@ public:
      * @return          next character of string
      */
     virtual t_int8 read(ErrorCode & status);
-
-
 
     /**
      * Read the next ICAL full line of the file.  The definition
@@ -164,11 +160,6 @@ public:
      * @return          next line of string
      */
     virtual UnicodeString & readLine(UnicodeString & aLine, ErrorCode & status);
-public:
-
-    /*virtual UnicodeString & readLineZero(UnicodeString & aLine, ErrorCode & status);*/
-
-
 
 };
 
