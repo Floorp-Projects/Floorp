@@ -227,6 +227,7 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
       mJSObj(NULL),
       mClass(aClass),
       mDynamicScriptable(NULL),
+      mDynamicScriptableFlags(0),
       mRoot(root ? root : this),
       mNext(NULL),
       mFinalizeListener(NULL)
@@ -243,7 +244,9 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
         nsIXPCScriptable* ds;
         if(NS_SUCCEEDED(mObj->QueryInterface(nsIXPCScriptable::GetIID(),
                                              (void**)&ds)))
+        {
             mDynamicScriptable = ds;
+        }
     }
 
     mJSObj = aClass->NewInstanceJSObject(this);
@@ -259,7 +262,12 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
         if(NULL != (ds = GetDynamicScriptable()) &&
            NULL != (as = GetArbitraryScriptable()) &&
            NULL != (xpcc = GetClass()->GetXPCContext()))
+        {
             ds->Create(xpcc->GetJSContext(), GetJSObject(), this, as);
+            if(mRoot == this)
+                ds->GetFlags(xpcc->GetJSContext(), GetJSObject(), this, 
+                             &mDynamicScriptableFlags, as);
+        }
     }
 }
 

@@ -40,6 +40,21 @@ nsXPCArbitraryScriptable::Create(JSContext *cx, JSObject *obj,
 }
 
 NS_IMETHODIMP
+nsXPCArbitraryScriptable::GetFlags(JSContext *cx, JSObject *obj,
+                  nsIXPConnectWrappedNative* wrapper,
+                  JSUint32* flagsp,
+                  nsIXPCScriptable* arbitrary)
+{
+    NS_PRECONDITION(wrapper, "bad param");
+    NS_PRECONDITION(cx, "bad param");
+    NS_PRECONDITION(obj, "bad param");
+    NS_PRECONDITION(flagsp, "bad param");
+    NS_PRECONDITION(obj==REAL_WRAPPER(wrapper)->GetJSObject(), "bad param");
+    *flagsp = 0;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCArbitraryScriptable::LookupProperty(JSContext *cx, JSObject *obj, jsid id,
                           JSObject **objp, JSProperty **propp,
                           nsIXPConnectWrappedNative* wrapper,

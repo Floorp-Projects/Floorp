@@ -96,6 +96,7 @@ NS_IMPL_ISUPPORTS(xpcoverloadedScriptable, kxpcoverloadedScriptableIID);
 // These macros give default implementations for these methods.
 
 //XPC_IMPLEMENT_FORWARD_CREATE(xpcoverloadedScriptable)
+XPC_IMPLEMENT_IGNORE_GETFLAGS(xpcoverloadedScriptable);
 XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(xpcoverloadedScriptable)
 XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(xpcoverloadedScriptable)
 XPC_IMPLEMENT_FORWARD_GETPROPERTY(xpcoverloadedScriptable)

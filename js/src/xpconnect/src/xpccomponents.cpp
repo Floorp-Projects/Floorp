@@ -30,9 +30,19 @@ public:
     InterfacesScriptable();
     virtual ~InterfacesScriptable();
 private:
+
+    void RealizeInterface(JSContext *cx, JSObject *obj, const char *iface_name,
+                          nsIXPConnectWrappedNative* wrapper,
+                          nsIXPCScriptable* arbitrary);
+
     void CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
                        nsIXPConnectWrappedNative* wrapper,
                        nsIXPCScriptable* arbitrary);
+
+    void FillCache(JSContext *cx, JSObject *obj,
+                   nsIXPConnectWrappedNative *wrapper,
+                   nsIXPCScriptable *arbitrary);
+
  };
 
 /**********************************************/
@@ -48,7 +58,8 @@ InterfacesScriptable::~InterfacesScriptable() {}
 static NS_DEFINE_IID(kInterfacesScriptableIID, NS_IXPCSCRIPTABLE_IID);
 NS_IMPL_ISUPPORTS(InterfacesScriptable, kInterfacesScriptableIID);
 
-XPC_IMPLEMENT_FORWARD_CREATE(InterfacesScriptable);
+XPC_IMPLEMENT_IGNORE_CREATE(InterfacesScriptable);
+// XPC_IMPLEMENT_IGNORE_GETFLAGS(InterfacesScriptable);
 // XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(InterfacesScriptable);
 XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(InterfacesScriptable);
 // XPC_IMPLEMENT_FORWARD_GETPROPERTY(InterfacesScriptable);
@@ -57,11 +68,22 @@ XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(InterfacesScriptable);
 XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(InterfacesScriptable);
 XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(InterfacesScriptable);
 XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(InterfacesScriptable);
-XPC_IMPLEMENT_FORWARD_ENUMERATE(InterfacesScriptable);
+// XPC_IMPLEMENT_FORWARD_ENUMERATE(InterfacesScriptable);
 XPC_IMPLEMENT_FORWARD_CHECKACCESS(InterfacesScriptable);
 XPC_IMPLEMENT_IGNORE_CALL(InterfacesScriptable);
 XPC_IMPLEMENT_IGNORE_CONSTRUCT(InterfacesScriptable);
 XPC_IMPLEMENT_FORWARD_FINALIZE(InterfacesScriptable);
+
+NS_IMETHODIMP
+InterfacesScriptable::GetFlags(JSContext *cx, JSObject *obj,
+                               nsIXPConnectWrappedNative* wrapper,
+                               JSUint32* flagsp,
+                               nsIXPCScriptable* arbitrary)
+{
+    NS_PRECONDITION(flagsp, "bad param");
+    *flagsp = XPCSCRIPTABLE_DONT_ENUM_STATIC_PROPS;
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 InterfacesScriptable::LookupProperty(JSContext *cx, JSObject *obj,
@@ -87,14 +109,120 @@ InterfacesScriptable::GetProperty(JSContext *cx, JSObject *obj,
                                   JSBool* retval)
 {
     if(NS_SUCCEEDED(arbitrary->GetProperty(cx, obj, id, vp, wrapper,
-                                              NULL, retval)) && *retval &&
-                                              *vp != JSVAL_VOID)
+                                           NULL, retval)) && *retval &&
+                                           *vp != JSVAL_VOID)
         return NS_OK;
 
     CacheDynaProp(cx, obj, id, wrapper, arbitrary);
     return arbitrary->GetProperty(cx, obj, id, vp, wrapper, NULL, retval);
 }
 
+
+NS_IMETHODIMP
+InterfacesScriptable::Enumerate(JSContext *cx, JSObject *obj,
+                                JSIterateOp enum_op,
+                                jsval *statep, jsid *idp,
+                                nsIXPConnectWrappedNative *wrapper,
+                                nsIXPCScriptable *arbitrary,
+                                JSBool *retval)
+{
+    if(enum_op == JSENUMERATE_INIT)
+        FillCache(cx, obj, wrapper, arbitrary);
+
+    return arbitrary->Enumerate(cx, obj, enum_op, statep, idp, wrapper,
+                                arbitrary, retval);
+}
+
+/* enumerate the known interfaces, adding a property for each new one */
+void
+InterfacesScriptable::FillCache(JSContext *cx, JSObject *obj,
+                                nsIXPConnectWrappedNative *wrapper,
+                                nsIXPCScriptable *arbitrary)
+{
+    nsIInterfaceInfoManager*  iim = nsnull;
+    nsIEnumerator*            Interfaces = nsnull;
+    nsISupports*              is_Interface;
+    nsIInterfaceInfo*         Interface;
+    nsresult                  rv;
+
+    if(!(iim = XPTI_GetInterfaceInfoManager()))
+    {
+        NS_ASSERTION(0,"failed to get the InterfaceInfoManager");
+        goto done;
+    }
+
+    if(NS_FAILED(iim->GetInterfaceEnumerator(&Interfaces)))
+    {
+        NS_ASSERTION(0,"failed to get interface enumeration");
+        goto done;
+    }
+
+    if(NS_FAILED(rv = Interfaces->First()))
+    {
+        NS_ASSERTION(0,"failed to go to first item in interface enumeration");
+        goto done;
+    }
+
+    do
+    {
+        if(NS_FAILED(rv = Interfaces->CurrentItem(&is_Interface)))
+        {
+            /* maybe something should be done,
+             * debugging info at least? */
+            Interfaces->Next();
+            continue;
+        }
+
+        rv = is_Interface->
+            QueryInterface(nsCOMTypeInfo<nsIInterfaceInfo>::GetIID(),
+                           (void **)&Interface);
+
+        if(!NS_FAILED(rv))
+        {
+            char *interface_name;
+            Interface->GetName(&interface_name);
+            RealizeInterface(cx, obj, interface_name, wrapper, arbitrary);
+            nsAllocator::Free(interface_name);
+            NS_RELEASE(Interface);
+        }
+        else
+        {
+            /* that would be odd */
+        }
+
+        NS_RELEASE(is_Interface);
+        Interfaces->Next();
+
+    } while (!NS_FAILED(Interfaces->IsDone()));
+
+done:
+    if(Interfaces)
+        NS_RELEASE(Interfaces);
+    if(iim)
+        NS_RELEASE(iim);
+}
+
+void
+InterfacesScriptable::RealizeInterface(JSContext *cx, JSObject *obj,
+                                       const char *iface_name,
+                                       nsIXPConnectWrappedNative* wrapper,
+                                       nsIXPCScriptable* arbitrary)
+{
+    jsval prop;
+
+    if(!JS_LookupProperty(cx, obj, iface_name, &prop) ||
+       JSVAL_IS_PRIMITIVE(prop))
+    {
+        jsid id;
+        JSString *jstrid;
+
+        if(NULL != (jstrid = JS_InternString(cx, iface_name)) &&
+           JS_ValueToId(cx, STRING_TO_JSVAL(jstrid), &id))
+        {
+            CacheDynaProp(cx, obj, id, wrapper, arbitrary);
+        }
+    }
+}
 
 void
 InterfacesScriptable::CacheDynaProp(JSContext *cx, JSObject *obj, jsid id,
@@ -159,7 +287,8 @@ nsXPCInterfaces::nsXPCInterfaces()
 
 nsXPCInterfaces::~nsXPCInterfaces()
 {
-    NS_RELEASE(mScriptable);
+    if(mScriptable)
+        NS_RELEASE(mScriptable);
 }
 
 NS_IMPL_ADDREF(nsXPCInterfaces)
@@ -195,6 +324,7 @@ static NS_DEFINE_IID(kClassesScriptableIID, NS_IXPCSCRIPTABLE_IID);
 NS_IMPL_ISUPPORTS(ClassesScriptable, kClassesScriptableIID);
 
 XPC_IMPLEMENT_FORWARD_CREATE(ClassesScriptable);
+XPC_IMPLEMENT_IGNORE_GETFLAGS(ClassesScriptable);
 // XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(ClassesScriptable);
 XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(ClassesScriptable);
 // XPC_IMPLEMENT_FORWARD_GETPROPERTY(ClassesScriptable);
@@ -336,6 +466,7 @@ static NS_DEFINE_IID(kComponentsScriptableIID, NS_IXPCSCRIPTABLE_IID);
 NS_IMPL_ISUPPORTS(ComponentsScriptable, kComponentsScriptableIID)
 
 XPC_IMPLEMENT_FORWARD_CREATE(ComponentsScriptable);
+XPC_IMPLEMENT_IGNORE_GETFLAGS(ComponentsScriptable);
 XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(ComponentsScriptable);
 XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(ComponentsScriptable);
 // XPC_IMPLEMENT_FORWARD_GETPROPERTY(ComponentsScriptable);
@@ -357,7 +488,7 @@ ComponentsScriptable::GetProperty(JSContext *cx, JSObject *obj,
                                nsIXPCScriptable* arbitrary,
                                JSBool* retval)
 {
-    *retval = JS_TRUE; 
+    *retval = JS_TRUE;
 
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
     if(xpcc && xpcc->GetStringID(XPCContext::IDX_LAST_RESULT) == id)
@@ -365,7 +496,7 @@ ComponentsScriptable::GetProperty(JSContext *cx, JSObject *obj,
         if(JS_NewDoubleValue(cx, (jsdouble) (PRInt32)xpcc->GetLastResult(), vp))
             return NS_OK;
     }
-    *vp = JSVAL_VOID; 
+    *vp = JSVAL_VOID;
     return NS_OK;
 }
 
@@ -424,4 +555,4 @@ NS_IMETHODIMP
 nsXPCComponents::GetStack(nsIJSStackFrameLocation * *aStack)
 {
     return nsXPConnect::GetXPConnect()->GetCurrentJSStack(aStack);
-}        
+}

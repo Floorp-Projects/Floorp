@@ -628,6 +628,9 @@ public:
     nsIXPCScriptable* GetDynamicScriptable() const
         {return mRoot->mDynamicScriptable;}
 
+    JSUint32 GetDynamicScriptableFlags() const
+        {return mRoot->mDynamicScriptableFlags;}
+
     nsIXPCScriptable* GetArbitraryScriptable() const
         {return GetClass()->GetArbitraryScriptable();}
 
@@ -649,6 +652,7 @@ private:
     JSObject* mJSObj;
     nsXPCWrappedNativeClass* mClass;
     nsIXPCScriptable* mDynamicScriptable;   // only set in root!
+    JSUint32 mDynamicScriptableFlags;   // only set in root!
     nsXPCWrappedNative* mRoot;
     nsXPCWrappedNative* mNext;
     nsIXPConnectFinalizeListener* mFinalizeListener;
