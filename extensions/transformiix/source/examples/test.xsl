@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    - original author.
  *
- * $Id: test.xsl,v 1.6 2000/08/26 04:43:33 Peter.VanderBeken%pandora.be Exp $
+ * $Id: test.xsl,v 1.7 2000/10/25 16:45:33 axel%pike.org Exp $
  */
 -->
 
@@ -29,7 +29,7 @@
   This is a test stylesheet used for testing the XSL processor
 -->
 
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
 <!-- set the output properties -->
 <xsl:output method="html"/>
