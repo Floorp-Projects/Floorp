@@ -31,6 +31,7 @@ ac_add_options --disable-xpinstall
 ac_add_options --disable-xpfe-components
 ac_add_options --disable-xprint
 ac_add_options --disable-necko-disk-cache
+ac_add_options --disable-plugins
 
 # configure necko to allocate smaller network buffers
 ac_add_options --enable-necko-small-buffers
