@@ -82,6 +82,7 @@ void
 nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
 {
   mURLSpec = aNewSpec;
+  mURLSpec.Trim(" \t\n\r");
   if (mBaseURL && !aNewSpec.IsEmpty()) {
     nsString empty;
     nsresult rv;

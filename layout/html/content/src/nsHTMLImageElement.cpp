@@ -688,6 +688,7 @@ nsHTMLImageElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
       JSString *jsstring;
       if ((jsstring = JS_ValueToString(aContext, *aVp)) != nsnull) {
         src.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
+        src.Trim(" \t\n\r");
       }
       else {
         src.Truncate();
@@ -834,6 +835,7 @@ nsHTMLImageElement::GetSrc(nsAWritableString& aSrc)
 
   // Get href= attribute (relative URL).
   mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, relURLSpec);
+  relURLSpec.Trim(" \t\n\r");
 
   if (nsnull != baseURL && relURLSpec.Length() > 0) {
     // Get absolute URL.

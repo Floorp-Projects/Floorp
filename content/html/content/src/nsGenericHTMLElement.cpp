@@ -1807,6 +1807,7 @@ nsGenericHTMLElement::GetBaseURL(const nsHTMLValue& aBaseHref,
   if (eHTMLUnit_String == aBaseHref.GetUnit()) {
     nsAutoString baseHref;
     aBaseHref.GetStringValue(baseHref);
+    baseHref.Trim(" \t\n\r");
 
     nsIURI* url = nsnull;
     {
