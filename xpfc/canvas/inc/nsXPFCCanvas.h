@@ -41,13 +41,11 @@
 #include "nsIImageObserver.h"
 #include "nsIImageRequest.h"
 #include "nsIView.h"
-#include "nsIViewObserver.h"
 
 CLASS_EXPORT_XPFC nsXPFCCanvas : public nsIXPFCCanvas,
                                  public nsIXPFCObserver,
                                  public nsIXMLParserObject,
-                                 public nsIImageRequestObserver,
-                                 public nsIViewObserver
+                                 public nsIImageRequestObserver
 
 {
 public:
@@ -76,7 +74,9 @@ public:
   NS_IMETHOD_(nsEventStatus) DefaultProcessing(nsGUIEvent *aEvent);
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
-  NS_IMETHOD_(nsEventStatus) OnPaint(nsGUIEvent *aEvent);
+  NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
+                                     const nsRect& aDirtyRect);
+
   NS_IMETHOD_(nsEventStatus) OnResize(nsGUIEvent *aEvent);
   NS_IMETHOD_(nsEventStatus) OnMove(nsGUIEvent *aEvent);
 
@@ -105,10 +105,16 @@ public:
   NS_IMETHOD_(void) AddChildCanvas(nsIXPFCCanvas * aChildCanvas, PRInt32 aPosition = -1);
   NS_IMETHOD_(void) RemoveChildCanvas(nsIXPFCCanvas * aChildCanvas);
   NS_IMETHOD_(void) Reparent(nsIXPFCCanvas * aParentCanvas);
-  NS_IMETHOD_(nsEventStatus) PaintBackground(nsGUIEvent *aEvent);
-  NS_IMETHOD_(nsEventStatus) PaintForeground(nsGUIEvent *aEvent);
-  NS_IMETHOD_(nsEventStatus) PaintBorder(nsGUIEvent *aEvent);
-  NS_IMETHOD_(nsEventStatus) PaintChildWidgets(nsGUIEvent *aEvent);
+
+  NS_IMETHOD_(nsEventStatus) PaintBackground(nsIRenderingContext& aRenderingContext,
+                                             const nsRect& aDirtyRect);
+  NS_IMETHOD_(nsEventStatus) PaintForeground(nsIRenderingContext& aRenderingContext,
+                                             const nsRect& aDirtyRect);
+  NS_IMETHOD_(nsEventStatus) PaintBorder(nsIRenderingContext& aRenderingContext,
+                                         const nsRect& aDirtyRect);
+  NS_IMETHOD_(nsEventStatus) PaintChildWidgets(nsIRenderingContext& aRenderingContext,
+                                               const nsRect& aDirtyRect);
+
   NS_IMETHOD_(nsEventStatus) ResizeChildWidgets(nsGUIEvent *aEvent);
 
   NS_IMETHOD  SetOpacity(PRFloat64 aOpacity) ;
@@ -205,7 +211,7 @@ public:
    * @param aRenderingContext, rendering context to save state to
    * @result nsresult, NS_OK if successful
    */
-  NS_IMETHOD PushState(nsIRenderingContext * aRenderingContext) ;
+  NS_IMETHOD PushState(nsIRenderingContext& aRenderingContext) ;
 
   /**
    * Get and and set RenderingContext to this graphical state
@@ -213,7 +219,7 @@ public:
    * @return if PR_TRUE, indicates that the clipping region after
    *         popping state is empty, else PR_FALSE
    */
-  NS_IMETHOD_(PRBool) PopState(nsIRenderingContext * aRenderingContext) ;
+  NS_IMETHOD_(PRBool) PopState(nsIRenderingContext& aRenderingContext) ;
 
   NS_IMETHOD FindLargestTabGroup(PRUint32& aTabGroup);
   NS_IMETHOD FindLargestTabID(PRUint32 aTabGroup, PRUint32& aTabID);
@@ -228,16 +234,6 @@ public:
   virtual void NotifyError(nsIImageRequest *aImageRequest,
                            nsImageError aErrorType);
 
-
-  // nsIViewObserver Interfaces
-  NS_IMETHOD Paint(nsIView *            aView,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect&        aDirtyRect);
-  NS_IMETHOD HandleEvent(nsIView *       aView,
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
-  NS_IMETHOD Scrolled(nsIView * aView);
-  NS_IMETHOD ResizeReflow(nsIView * aView, nscoord aWidth, nscoord aHeight);
 
 
 #if defined(DEBUG) && defined(XP_PC)
@@ -293,6 +289,8 @@ protected:
   nsIRenderingContext *mRenderingContext;
   nsIXPFCCanvas * mParent;
 
+public:
+  nsIView           *mView;
 
 };
 

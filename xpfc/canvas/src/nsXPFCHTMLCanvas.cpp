@@ -112,9 +112,11 @@ nsresult nsXPFCHTMLCanvas :: SetBounds(const nsRect &aBounds)
 }
 
 
-nsEventStatus nsXPFCHTMLCanvas :: OnPaint(nsGUIEvent *aEvent)
+nsEventStatus nsXPFCHTMLCanvas :: OnPaint(nsIRenderingContext& aRenderingContext,
+                                          const nsRect& aDirtyRect)
+
 {
-  nsEventStatus es = nsXPFCCanvas::OnPaint(aEvent);
+  nsEventStatus es = nsXPFCCanvas::OnPaint(aRenderingContext,aDirtyRect);
   if (mWebShell != nsnull)
     mWebShell->Repaint(PR_FALSE);
   return (es);

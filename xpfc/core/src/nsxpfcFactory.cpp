@@ -137,7 +137,7 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
   } else if (mClassID.Equals(kCXPFCSubject)) {
     inst = (nsISupports *)new nsXPFCSubject();
   } else if (mClassID.Equals(kCXPFCCanvasManager)) {
-    inst = (nsISupports *)new nsXPFCCanvasManager();
+    inst = (nsISupports *)(nsIXPFCCanvasManager *)new nsXPFCCanvasManager();
   } else if (mClassID.Equals(kCXPFCCommand)) {
     inst = (nsISupports *)new nsXPFCCommand();
   } else if (mClassID.Equals(kCXPFCCommandServerCID)) {

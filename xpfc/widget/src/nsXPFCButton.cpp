@@ -198,12 +198,13 @@ nsresult nsXPFCButton :: SetBounds(const nsRect &aBounds)
 
 }
 
-nsEventStatus nsXPFCButton :: OnPaint(nsGUIEvent *aEvent)
+nsEventStatus nsXPFCButton :: OnPaint(nsIRenderingContext& aRenderingContext,
+                                      const nsRect& aDirtyRect)
 {
   if (GetLabel() == "Throbber")
   {
     mThrobber->Hide();
     mThrobber->Show();
   }
-  return (nsXPFCCanvas::OnPaint(aEvent));
+  return (nsXPFCCanvas::OnPaint(aRenderingContext,aDirtyRect));
 }

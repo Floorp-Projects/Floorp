@@ -128,7 +128,8 @@ public:
    * @param aEvent The GUI Event to be handled
    * @result nsEventStatus, status of OnPaint event processing
    */
-  NS_IMETHOD_(nsEventStatus) OnPaint(nsGUIEvent *aEvent) = 0;
+  NS_IMETHOD_(nsEventStatus) OnPaint(nsIRenderingContext& aRenderingContext,
+                                     const nsRect& aDirtyRect) = 0;
 
   /**
    * Handle an OnResize Message
@@ -557,7 +558,7 @@ public:
    * @param aRenderingContext, rendering context to save state to
    * @result nsresult, NS_OK if successful
    */
-  NS_IMETHOD PushState(nsIRenderingContext * aRenderingContext) = 0;
+  NS_IMETHOD PushState(nsIRenderingContext& aRenderingContext) = 0;
 
   /**
    * Get and and set RenderingContext to this graphical state
@@ -565,7 +566,7 @@ public:
    * @return if PR_TRUE, indicates that the clipping region after
    *         popping state is empty, else PR_FALSE
    */
-  NS_IMETHOD_(PRBool) PopState(nsIRenderingContext * aRenderingContext) = 0;
+  NS_IMETHOD_(PRBool) PopState(nsIRenderingContext& aRenderingContext) = 0;
 
   /**
    * Set the tab id for this canvas
