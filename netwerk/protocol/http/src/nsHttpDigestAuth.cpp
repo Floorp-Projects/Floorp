@@ -113,6 +113,14 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
   PRBool isDigestAuth = !PL_strncasecmp(challenge, "digest ", 7);
   NS_ENSURE_TRUE(isDigestAuth, NS_ERROR_UNEXPECTED);
 
+  // IIS implementation requires extra quotes
+  PRBool requireExtraQuotes = PR_FALSE;
+  nsCAutoString serverVal;
+  httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Server"), serverVal);
+  if (!serverVal.IsEmpty()) {
+    requireExtraQuotes = !PL_strncasecmp(serverVal.get(), "Microsoft-IIS", 13);
+  }
+
   NS_ConvertUCS2toUTF8 cUser(username), cPass(password);
 
   nsresult rv;
@@ -253,10 +261,14 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
 
   if (qop) {
     authString += "\", qop=";
+    if (requireExtraQuotes)
+      authString += "\"";
     if (qop & QOP_AUTH_INT)
       authString += "auth-int";
     else
       authString += "auth";
+    if (requireExtraQuotes)
+      authString += "\"";
     authString += ", nc=";
     authString += nonce_count;
     authString += ", cnonce=\"";
