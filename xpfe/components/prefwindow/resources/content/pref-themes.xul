@@ -51,7 +51,7 @@
     <template>
       <rule>
         <treechildren flex="1">
-          <treeitem uri="?child" skin="true"
+          <treeitem uri="..." skin="true"
                     author="rdf:http://www.mozilla.org/rdf/chrome#author"
                     displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
                     name="rdf:http://www.mozilla.org/rdf/chrome#name"
