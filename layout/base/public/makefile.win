@@ -59,6 +59,10 @@ EXPORTS =				\
 	nsIScrollableFrame.h \
 	nsIScrollableViewProvider.h \
   nsIPrintContext.h \
+!ifdef IBMBIDI
+	nsBidiPresUtils.h		\
+	nsITextFrame.h			\
+!endif
 	$(NULL)
 
 MODULE=layout_base
