@@ -86,6 +86,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #back-button[disabled="true"]:hover,
 #back-button[disabled="true"]:hover:active,
 #back-button[disabled="true"] > .menubutton-dual-ex-button:hover,
+#back-button[disabled="true"] > .menubutton-dual-ex-button:hover:active,
 #back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
 #back-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
@@ -116,6 +117,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #forward-button[disabled="true"]:hover,
 #forward-button[disabled="true"]:hover:active,
 #forward-button[disabled="true"] > .menubutton-dual-ex-button:hover,
+#forward-button[disabled="true"] > .menubutton-dual-ex-button:hover:active,
 #forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover,
 #forward-button[disabled="true"] > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
