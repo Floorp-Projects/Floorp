@@ -105,15 +105,17 @@ morkCell::SetAtom(morkEnv* ev, morkAtom* ioAtom, morkPool* ioPool)
       mCell_Atom = 0;
       if ( oldAtom->CutCellUse(ev) == 0 )
       {
-        if ( ioPool )
-        {
-          if ( oldAtom->IsBook() )
-            ((morkBookAtom*) oldAtom)->CutBookAtomFromSpace(ev);
+		  // this was zapping atoms still in use - comment out until davidmc
+		  // can figure out a better fix.
+//        if ( ioPool )
+//        {
+//          if ( oldAtom->IsBook() )
+//            ((morkBookAtom*) oldAtom)->CutBookAtomFromSpace(ev);
             
-          ioPool->ZapAtom(ev, oldAtom);
-        }
-        else
-          ev->NilPointerError();
+//          ioPool->ZapAtom(ev, oldAtom);
+//        }
+//        else
+//          ev->NilPointerError();
       }
     }
     if ( ioAtom )
