@@ -65,11 +65,11 @@ class MessageDialogWrapper {
 	    for(i = 0; i < len; i++, j++) {
 		char c = msg.charAt(i);
 		buf.append(c);
-		if(Character.isSpace(c)) {
+		if(Character.isWhitespace(c)) {
 		    int remainder = len - i;
 		    int k;
 		    for(k = i + 1; k < len; k++) {
-			if(Character.isSpace(msg.charAt(k))) {
+			if(Character.isWhitespace(msg.charAt(k))) {
 			    break;
 			}
 		    }
