@@ -1656,7 +1656,12 @@ PRBool nsCString::EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCa
   return result;
 }
 
-
+ PRBool nsCString::EqualsWithConversion(const nsString& aString, PRBool aIgnoreCase,PRInt32 aCount) const {
+  PRInt32 theAnswer=CompareWithConversion(aString.GetUnicode(),aIgnoreCase,aCount);
+  PRBool  result=PRBool(0==theAnswer);  
+  return result;
+}
+   
 
 /**************************************************************
   Define the string deallocator class...
