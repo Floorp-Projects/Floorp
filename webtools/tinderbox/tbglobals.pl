@@ -327,7 +327,6 @@ sub load_bloat {
   while (<BLOATLOG>) {
     chomp;
     my ($logfile, $leaks, $bloat) = split /\|/;
-    warn "$logfile $leaks $bloat\n";
     $bloat_by_log->{$logfile} = [ $leaks, $bloat ];
   }
 }
