@@ -22,7 +22,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
-
+#include "nsIWebShellWindow.h"
 
 #include "nsINetService.h"
 #include "nsIComponentManager.h"
