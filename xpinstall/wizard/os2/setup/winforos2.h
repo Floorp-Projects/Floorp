@@ -6,7 +6,6 @@
 #include <sys/stat.h>
 
 typedef ULONG DWORD;
-typedef unsigned long long ULONGLONG;
 typedef PSZ LPSTR;
 typedef PFNWP WNDPROC;
 typedef long HRESULT;

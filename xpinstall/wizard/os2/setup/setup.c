@@ -174,16 +174,13 @@ int main(int argc, char *argv[], char *envp[])
   {
     DlgSequence(NEXT_DLG);
   }
-//#ifdef OLDCODE
 
-   while ( WinGetMsg( hab, &qmsg, NULLHANDLE, 0, 0 ) )
-       WinDispatchMsg( hab, &qmsg );
-#ifdef OLDCODE
+  while ( WinGetMsg( hab, &qmsg, NULLHANDLE, 0, 0 ) )
+    WinDispatchMsg( hab, &qmsg );
 
   if(iRv != WIZ_SETUP_ALREADY_RUNNING)
     /* Do clean up before exiting from the application */
     DeInitialize();
-#endif
 
   WinDeleteAtom(WinQuerySystemAtomTable(), atom);
 

@@ -79,7 +79,7 @@ void PrintError(PSZ szMsg, ULONG ulErrorCodeSH)
   else if(sgProduct.ulMode == AUTO)
   {
     ShowMessage(szErrorString, TRUE);
-    Delay(5);
+    DosSleep(5000);
     ShowMessage(szErrorString, FALSE);
   }
 }
@@ -165,11 +165,6 @@ HRESULT NS_LoadString(HMODULE hInstance, ULONG ulID, PSZ szStringBuf, ULONG ulSt
     return(1);
   }
   return(WIZ_OK);
-}
-
-void Delay(ULONG ulSeconds)
-{
-  DosSleep(ulSeconds * 1000);
 }
 
 void UnsetSetupState(void)
@@ -1758,9 +1753,7 @@ HRESULT LaunchApps()
         }
 
         LogISLaunchAppsComponent(siCObject->szDescriptionShort);
-#ifdef OLDCODE
-        WinSpawn(szSpawnFile, szParameterBuf, szTempDir, SW_SHOWNORMAL, TRUE);
-#endif
+        WinSpawn(szSpawnFile, szParameterBuf, szTempDir, TRUE);
 
         if(siCObject->dwAttributes & SIC_UNCOMPRESS)
           FileDelete(szSpawnFile);
@@ -1798,14 +1791,6 @@ HRESULT ProcessOS2Integration()
                           "DefaultWorkingDir",
                           sgProduct.szPath);
 
-#ifdef OLDCODE
-    strcat(szSetupString, ";PARAMETERS=");
-    strcat(szSetupString, pszDefaultParms);
-    PrfWriteProfileString(HINI_USER,
-                          "WPURLDEFAULTSETTINGS",
-                          "DefaultParameters",
-                          pszDefaultParms);
-#endif
     if (hObjURL = WinCreateObject("WPUrl",
                                   "Temporary URL",
                                   szSetupString,
@@ -1884,44 +1869,40 @@ void DetermineOSVersionEx()
   UpdateInstallStatusLog(szBuf);
 }
 
-#ifdef OLDCODE
-HRESULT WinSpawn(LPSTR szClientName, LPSTR szParameters, LPSTR szCurrentDir, int iShowCmd, BOOL bWait)
+HRESULT WinSpawn(LPSTR szClientName, LPSTR szParameters, LPSTR szCurrentDir, BOOL bWait)
 {
-  SHELLEXECUTEINFO seInfo;
-
-  seInfo.cbSize       = sizeof(SHELLEXECUTEINFO);
-  seInfo.fMask        = SEE_MASK_DOENVSUBST | SEE_MASK_FLAG_DDEWAIT | SEE_MASK_NOCLOSEPROCESS;
-  seInfo.hwnd         = hWndMain;
-  seInfo.lpVerb       = NULL;
-  seInfo.lpFile       = szClientName;
-  seInfo.lpParameters = szParameters;
-  seInfo.lpDirectory  = szCurrentDir;
-  seInfo.nShow        = SW_SHOWNORMAL;
-  seInfo.hInstApp     = 0;
-  seInfo.lpIDList     = NULL;
-  seInfo.lpClass      = NULL;
-  seInfo.hkeyClass    = 0;
-  seInfo.dwHotKey     = 0;
-  seInfo.hIcon        = 0;
-  seInfo.hProcess     = 0;
-
-  if((ShellExecuteEx(&seInfo) != 0) && (seInfo.hProcess != NULL))
-  {
-    if(bWait)
-    {
-      for(;;)
-      {
-        if(WaitForSingleObject(seInfo.hProcess, 200) == WAIT_OBJECT_0)
-          break;
-
-        ProcessWindowsMessages();
+  STARTDATA startdata;
+  PID       pid, endpid;
+  ULONG     ulSessID;
+  APIRET rc;
+  RESULTCODES resultcodes;
+  ULONG     ulFlags;
+  
+  rc = DosQueryAppType(szClientName, &ulFlags);
+  if (rc == NO_ERROR) {
+    memset(&startdata, 0, sizeof(STARTDATA));
+    startdata.Length  = sizeof(STARTDATA);
+    startdata.PgmName = szClientName;
+    startdata.PgmInputs = szParameters;
+    rc = DosStartSession(&startdata, &ulSessID, &pid);
+    if (rc == NO_ERROR) {
+      if (bWait) {
+        DosWaitChild(DCWA_PROCESS, DCWW_NOWAIT, &resultcodes, &endpid, pid);
       }
+      return (TRUE);
     }
-    return(TRUE);
+  } else {
+    CHAR szBuf[CCHMAXPATH];
+    HOBJECT hobject;
+    strcpy(szBuf, szCurrentDir);
+    strcat(szBuf, szClientName);
+    hobject = WinQueryObject(szBuf);
+    WinSetFocus(HWND_DESKTOP, HWND_DESKTOP);
+    WinOpenObject(hobject, 0, TRUE); // 0 = OPEN_DEFAULT
   }
+
   return(FALSE);
 }
-#endif
 
 HRESULT InitDlgWelcome(diW *diDialog)
 {
@@ -2867,7 +2848,7 @@ char *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwA
   return(NULL);
 }
 
-ULONGLONG SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
+unsigned long long SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount   = 0;
   siC   *siCTemp  = siComponents;
@@ -2905,7 +2886,7 @@ ULONGLONG SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwA
   return(0L);
 }
 
-ULONGLONG SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
+unsigned long long SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount   = 0;
   siC   *siCTemp  = siComponents;
@@ -2943,7 +2924,7 @@ ULONGLONG SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible, DWO
   return(0L);
 }
 
-ULONGLONG SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
+unsigned long long SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag)
 {
   DWORD dwCount   = 0;
   siC   *siCTemp  = siComponents;
@@ -3158,9 +3139,9 @@ void DsNodeDelete(dsN **dsNTemp)
 }
 
 /* returns the value in kilobytes */
-ULONGLONG GetDiskSpaceRequired(DWORD dwType)
+unsigned long long GetDiskSpaceRequired(DWORD dwType)
 {
-  ULONGLONG ullTotalSize = 0;
+  unsigned long long ullTotalSize = 0;
   siC       *siCTemp     = siComponents;
 
   if(siCTemp != NULL)
@@ -3239,12 +3220,12 @@ int LocateExistingPath(char *szPath, char *szExistingPath, DWORD dwExistingPathS
 }
 
 /* returns the value in bytes */
-ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
+unsigned long long GetDiskSpaceAvailable(LPSTR szPath)
 {
   char szBuf[MAX_BUF];
   char szBuf2[MAX_BUF];
   FSALLOCATE fsAllocate;
-  ULONGLONG nBytes = 0;
+  unsigned long long nBytes = 0;
   APIRET rc;
   ULONG ulDriveNo;
 
@@ -3277,7 +3258,7 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
   return nBytes;
 }
 
-HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPSTR szPath, BOOL bCrutialMsg)
+HRESULT ErrorMsgDiskSpace(unsigned long long ullDSAvailable, unsigned long long ullDSRequired, LPSTR szPath, BOOL bCrutialMsg)
 {
   char      szBuf0[MAX_BUF];
   char      szBuf1[MAX_BUF];
@@ -3327,7 +3308,7 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
   else if(sgProduct.ulMode == AUTO)
   {
     ShowMessage(szBufMsg, TRUE);
-    Delay(5);
+    DosSleep(5000);
     ShowMessage(szBufMsg, FALSE);
     exit(1);
   }
@@ -3335,7 +3316,7 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
   return(MBID_CANCEL);
 }
 
-void UpdatePathDiskSpaceRequired(LPSTR szPath, ULONGLONG ullSize, dsN **dsnComponentDSRequirement)
+void UpdatePathDiskSpaceRequired(LPSTR szPath, unsigned long long ullSize, dsN **dsnComponentDSRequirement)
 {
   BOOL  bFound = FALSE;
   dsN   *dsnTemp = *dsnComponentDSRequirement;
@@ -3438,7 +3419,7 @@ HRESULT InitComponentDiskSpaceInfo(dsN **dsnComponentDSRequirement)
 
 HRESULT VerifyDiskSpace()
 {
-  ULONGLONG ullDSAvailable;
+  unsigned long long ullDSAvailable;
   HRESULT   hRetValue = FALSE;
   dsN       *dsnTemp = NULL;
 
@@ -4564,113 +4545,121 @@ void GetAlternateArchiveSearchPath(LPSTR lpszCmdLine)
   }
 }
 
-BOOL CheckForProcess(LPSTR szProcessName, DWORD dwProcessName)
+#define BUFMIN	8*1024
+#define BUFMAX	256*1024
+#define BUFDEFAULT 32*1024
+
+BOOL CheckForProcess(PID pid, LPSTR szProcessName, DWORD dwProcessName, PSZ szFQProcessName, DWORD dwFQProcessName)
 {
+/* Only compile this code if we have the new toolkit */
+#ifdef QS_PROCESS
+  ULONG bufsize = BUFDEFAULT;
+  QSPTRREC* pbh;
+  APIRET rc = 0;
+  CHAR szUpperAppName[CCHMAXPATH] = {0};
+
+  /* Can't call with both - only one or the other */
+  if (pid && szProcessName) {
+    return FALSE;
+  }
+  if (szProcessName) {
+    strcpy(szUpperAppName, szProcessName);
+    strupr(szUpperAppName);
+  }
+  do {
+    pbh = (QSPTRREC*) malloc(bufsize);
+    if(!pbh) {
+      if(bufsize <= BUFMIN)
+        rc = ERROR_NOT_ENOUGH_MEMORY;
+      else if(rc != ERROR_BUFFER_OVERFLOW)
+        bufsize /= 2;
+    } else {
+      rc = DosQuerySysState(QS_PROCESS | QS_MTE, 0, 0, 0, pbh, bufsize);
+      if(rc == ERROR_BUFFER_OVERFLOW) {
+        if(bufsize < BUFMAX) {
+          free(pbh);
+          bufsize *= 2;
+        } else {
+          rc = ERROR_TOO_MANY_NAMES;    // give up.
+        }
+      }
+    }
+  } while(rc == ERROR_BUFFER_OVERFLOW);
+
+  if(rc == NO_ERROR) {
+    QSPREC* ppiLocal = pbh->pProcRec;
+    while(ppiLocal->RecType == QS_PROCESS) {
+      QSLREC* pmi = pbh->pLibRec;
+      while (pmi && pmi->hmte != ppiLocal->hMte)
+        pmi = (QSLREC*)pmi->pNextRec;
+      if(pmi) {
+        if ((szUpperAppName[0] && strstr((char*)pmi->pName, szUpperAppName)) ||
+           (ppiLocal->pid == pid)) {
+            if (szFQProcessName)
+              strcpy(szFQProcessName, (char*)pmi->pName);
+            if (pbh)
+              free(pbh);
+            return TRUE;
+        }
+      }
+      ppiLocal=(QSPREC*)(ppiLocal->pThrdRec+ppiLocal->cTCB);
+    }
+  }
+  if(pbh)
+    free(pbh);
+#endif
+  return FALSE;
 }
 
-int PreCheckInstance(char *szSection, char *szIniFile)
+int PreCheckInstance(char *szSection, char *szIniFile, char *szFQProcessName)
 {
-/* @MAK this function appears to try a -kill to get rid of turbo */
-/* We don't have a good way to do this */
-#ifdef OLDCODE
-  char  szBuf[MAX_BUF];
-  char  szKey[MAX_BUF];
-  char  szName[MAX_BUF];
   char  szParameter[MAX_BUF];
   char  szPath[MAX_BUF];
-  char  szFile[MAX_BUF];
-  char  *ptrName = NULL;
-//  HKEY  hkeyRoot;
-  int   iRv = WIZ_OK;
-  DWORD dwCounter = 0;
+  ULONG ulCounter = 0;
   BOOL  bContinue = TRUE;
   char  szExtraCmd[] = "Extra Cmd";
-  char  szExtraCmdKey[MAX_BUF];
+  char  szExtraCmdParameter[MAX_BUF];
 
   do
   {
     /* Read the win reg key path */
-    sprintf(szExtraCmdKey, "%s%d Reg Key", szExtraCmd, dwCounter);
+    sprintf(szExtraCmdParameter, "%s%d Parameter", szExtraCmd, ulCounter);
     GetPrivateProfileString(szSection,
-                            szExtraCmdKey,
-                            "",
-                            szKey,
-                            sizeof(szKey),
-                            szIniFile);
-    if(*szKey == '\0')
-    {
-      bContinue = FALSE;
-      continue;
-    }
-
-    /* Read the win reg root key */
-    sprintf(szExtraCmdKey, "%s%d Reg Key Root", szExtraCmd, dwCounter);
-    GetPrivateProfileString(szSection,
-                            szExtraCmdKey,
-                            "",
-                            szBuf,
-                            sizeof(szBuf),
-                            szIniFile);
-    if(*szBuf == '\0')
-    {
-      bContinue = FALSE;
-      continue;
-    }
-//    hkeyRoot = ParseRootKey(szBuf);
-
-    /* Read the win reg name value */
-    sprintf(szExtraCmdKey, "%s%d Reg Name", szExtraCmd, dwCounter);
-    GetPrivateProfileString(szSection,
-                            szExtraCmdKey,
-                            "",
-                            szName,
-                            sizeof(szName),
-                            szIniFile);
-    if(*szName == '\0')
-      ptrName = NULL;
-    else
-      ptrName = szName;
-
-    /* Read the parameter to use for quitting the browser's turbo mode */
-    sprintf(szExtraCmdKey, "%s%d Parameter", szExtraCmd, dwCounter);
-    GetPrivateProfileString(szSection,
-                            szExtraCmdKey,
+                            szExtraCmdParameter,
                             "",
                             szParameter,
                             sizeof(szParameter),
                             szIniFile);
-
-    /* Read the win reg key that contains the path to the browser */
-//    GetWinReg(hkeyRoot, szKey, ptrName, szFile, sizeof(szFile));
-    ParsePath(szFile, szPath, sizeof(szPath), FALSE, PP_PATH_ONLY);
-
-    /* Make sure the file exists */
-    if(FileExists(szFile))
+    if(*szParameter == '\0')
     {
-      // we've found a file, so let's execute it and stop.  No need to look
-      // for other keys to parse.  We only want to do that if the file is
-      // _not_ found.  This is for when we change the name of the browser
-      // app file and still need to deal with locating it and calling
-      // -kill on it. ie.
-      //   previous name: netscp6.exe
-      //   new name: netscp.exe
-      // We only need to call one of them, not both.
       bContinue = FALSE;
-
-      /* Run the file */
-//      WinSpawn(szFile, szParameter, szPath, SW_HIDE, TRUE);
-
-      /* Even though WinSpawn is suppose to wait for the app to finish, this
-       * does not really work that way for trying to quit the browser when
-       * it's in turbo mode, so we wait 2 secs for it to complete. */
-      Delay(2);
+      continue;
     }
 
-    ++dwCounter;
+    ParsePath(szFQProcessName, szPath, sizeof(szPath), FALSE, PP_PATH_ONLY);
+
+    // we've found a file, so let's execute it and stop.  No need to look
+    // for other keys to parse.  We only want to do that if the file is
+    // _not_ found.  This is for when we change the name of the browser
+    // app file and still need to deal with locating it and calling
+    // -kill on it. ie.
+    //   previous name: netscp6.exe
+    //   new name: netscp.exe
+    // We only need to call one of them, not both.
+    bContinue = FALSE;
+
+    /* Run the file */
+    WinSpawn(szFQProcessName, szParameter, szPath, TRUE);
+
+    /* Even though WinSpawn is suppose to wait for the app to finish, this
+     * does not really work that way for trying to quit the browser when
+     * it's in turbo mode, so we wait 2 secs for it to complete. */
+    DosSleep(2000);
+    
+    ++ulCounter;
   } while(bContinue);
 
-  return(iRv);
-#endif
+  return(WIZ_OK);
 }
 
 ULONG CloseAllWindowsOfWindowHandle(HWND hwndWindow)
@@ -4685,14 +4674,17 @@ ULONG CloseAllWindowsOfWindowHandle(HWND hwndWindow)
   henum = WinBeginEnumWindows(HWND_DESKTOP);
   while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
   {
-    WinQueryWindowProcess(hwndWindow, &pid, &tid);
+    WinQueryWindowProcess(hwnd, &pid, &tid);
     if (pid == mainpid) {
       if (WinIsWindowVisible(hwnd)) {
-        WinSendMsg(hwnd, WM_CLOSE, 0, 0);
+        MRESULT rc = WinSendMsg(hwnd, WM_CLOSE, 0, 0);
+        printf("rc = %x\n", rc);
       }
     }
   }
   WinEndEnumWindows(henum);
+  /* The windows don't close quick enough, so we need to wait a bit */
+  DosSleep(2500);
 
   return(WIZ_OK);
 }
@@ -4700,7 +4692,8 @@ ULONG CloseAllWindowsOfWindowHandle(HWND hwndWindow)
 HRESULT CheckInstances()
 {
   char  szSection[MAX_BUF];
-  char  szProcessName[MAX_BUF];
+  char  szProcessName[CCHMAXPATH];
+  char  szFQProcessName[CCHMAXPATH];
   char  szClassName[MAX_BUF];
   char  szCloseAllWindows[MAX_BUF];
   char  szAttention[MAX_BUF];
@@ -4715,7 +4708,6 @@ HRESULT CheckInstances()
   DWORD dwRv0;
   DWORD dwRv1;
 
-  return (FALSE); /* @MAK */
   bContinue = TRUE;
   iIndex    = -1;
   while(bContinue)
@@ -4740,17 +4732,17 @@ HRESULT CheckInstances()
       if(*szProcessName != '\0')
       {
         /* If an instance is found, call PreCheckInstance first */
-        if(CheckForProcess(szProcessName, sizeof(szProcessName)) == TRUE)
-          PreCheckInstance(szSection, szFileIniConfig);
+        if(CheckForProcess(0, szProcessName, sizeof(szProcessName), szFQProcessName, sizeof(szFQProcessName)) == TRUE)
+          PreCheckInstance(szSection, szFileIniConfig, szFQProcessName);
 
-        if(CheckForProcess(szProcessName, sizeof(szProcessName)) == TRUE)
+        if(CheckForProcess(0, szProcessName, sizeof(szProcessName), NULL, 0) == TRUE)
         {
           if(*szMessage != '\0')
           {
             switch(sgProduct.ulMode)
             {
               case NORMAL:
-                switch(WinMessageBox(HWND_DESKTOP, hWndMain, szMessage, szAttention, 0, MB_ICONEXCLAMATION))
+                switch(WinMessageBox(HWND_DESKTOP, hWndMain, szMessage, szAttention, 0, MB_ICONEXCLAMATION | MB_OKCANCEL))
                 {
                   case MBID_CANCEL:
                     /* User selected to cancel Setup */
@@ -4766,7 +4758,7 @@ HRESULT CheckInstances()
 
               case AUTO:
                 ShowMessage(szMessage, TRUE);
-                Delay(5);
+                DosSleep(5000);
                 ShowMessage(szMessage, FALSE);
 
                 /* Setup mode is AUTO.  Show message, timeout, then cancel because we can't allow user to continue */
@@ -4809,8 +4801,13 @@ HRESULT CheckInstances()
         szCN = szClassName;
 
       /* If an instance is found, call PreCheckInstance first */
-      if((hwndFW = FindWindow(szCN)) != NULL)
-        PreCheckInstance(szSection, szFileIniConfig);
+      if((hwndFW = FindWindow(szCN)) != NULL) {
+        PID pid;
+        TID tid;
+        WinQueryWindowProcess(hwndFW, &pid, &tid);
+        CheckForProcess(pid, NULL, 0, szFQProcessName, sizeof(szFQProcessName));
+        PreCheckInstance(szSection, szFileIniConfig, szFQProcessName);
+      }
 
       if((hwndFW = FindWindow(szCN)) != NULL)
       {
@@ -4819,7 +4816,7 @@ HRESULT CheckInstances()
           switch(sgProduct.ulMode)
           {
             case NORMAL:
-              switch(WinMessageBox(HWND_DESKTOP, hWndMain, szMessage, szAttention, 0, MB_ICONEXCLAMATION))
+              switch(WinMessageBox(HWND_DESKTOP, hWndMain, szMessage, szAttention, 0, MB_ICONEXCLAMATION | MB_OKCANCEL))
               {
                 case MBID_CANCEL:
                   /* User selected to cancel Setup */
@@ -4841,7 +4838,7 @@ HRESULT CheckInstances()
                * all the windows associated with the process */
 
               ShowMessage(szMessage, TRUE);
-              Delay(5);
+              DosSleep(5000);
               ShowMessage(szMessage, FALSE);
 
               if(bCloseAllWindows)
@@ -4981,7 +4978,7 @@ int StartupCheckArchives(void)
         case AUTO:
           GetPrivateProfileString("Strings", "Error Corrupted Archives Detected AUTO mode", "", szBuf, sizeof(szBuf), szFileIniConfig);
           ShowMessage(szBuf, TRUE);
-          Delay(5);
+          DosSleep(5000);
           ShowMessage(szBuf, FALSE);
           break;
       }
@@ -5565,56 +5562,14 @@ BOOL LocatePreviousPath(PSZ szMainSectionName, PSZ szPath, ULONG ulPathSize)
     strcpy(szSection, szMainSectionName);
     strcat(szSection, szIndex);
 
-    GetPrivateProfileString(szSection, "Key", "", szValue, sizeof(szValue), szFileIniConfig);
+    GetPrivateProfileString(szSection, "App", "", szValue, sizeof(szValue), szFileIniConfig);
     if(*szValue != '\0')
-      bFound = LocatePathNscpReg(szSection, szPath, ulPathSize);
+      bFound = LocatePathOS2INI(szSection, szPath, ulPathSize);
     else
-    {
-      GetPrivateProfileString(szSection, "App", "", szValue, sizeof(szValue), szFileIniConfig);
-      if(*szValue != '\0')
-        bFound = LocatePathOS2INI(szSection, szPath, ulPathSize);
-      else
-      {
-        GetPrivateProfileString(szSection, "Path", "", szValue, sizeof(szValue), szFileIniConfig);
-        if(*szValue != '\0')
-          bFound = LocatePath(szSection, szPath, ulPathSize);
-        else
-          break;
-      }
-    }
+      break;
   }
 
   return(bFound);
-}
-
-BOOL LocatePathNscpReg(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
-{
-  char  szKey[MAX_BUF];
-  char  szContainsFilename[MAX_BUF];
-  char  szBuf[MAX_BUF];
-  BOOL  bReturn;
-
-  bReturn = FALSE;
-  GetPrivateProfileString(szSection, "Key", "", szKey, sizeof(szKey), szFileIniConfig);
-  if(*szKey != '\0')
-  {
-    bReturn = FALSE;
-    memset(szPath, 0, dwPathSize);
-
-    VR_GetPath(szKey, MAX_BUF, szBuf);
-    if(*szBuf != '\0')
-    {
-      GetPrivateProfileString(szSection, "Contains Filename", "", szContainsFilename, sizeof(szContainsFilename), szFileIniConfig);
-      if(strcmpi(szContainsFilename, "TRUE") == 0)
-        ParsePath(szBuf, szPath, dwPathSize, FALSE, PP_PATH_ONLY);
-      else
-        strcpy(szPath, szBuf);
-
-      bReturn = TRUE;
-    }
-  }
-
-  return(bReturn);
 }
 
 DWORD GetTotalArchivesToDownload()
@@ -5727,25 +5682,6 @@ BOOL LocatePathOS2INI(PSZ szSection, PSZ szPath, ULONG ulPathSize)
         bReturn = TRUE;
       }
     }
-  }
-
-  return(bReturn);
-}
-
-BOOL LocatePath(LPSTR szSection, LPSTR szPath, DWORD dwPathSize)
-{
-  char  szPathKey[MAX_BUF];
-  BOOL  bReturn;
-
-  bReturn = FALSE;
-  GetPrivateProfileString(szSection, "Path", "", szPathKey, sizeof(szPathKey), szFileIniConfig);
-  if(*szPathKey != '\0')
-  {
-    bReturn = FALSE;
-    memset(szPath, 0, dwPathSize);
-
-    DecryptString(szPath, szPathKey);
-    bReturn = TRUE;
   }
 
   return(bReturn);
@@ -5903,7 +5839,7 @@ HRESULT DecryptVariable(PSZ szVariable, ULONG ulVariableSize)
     if(*szBuf == '\0')
       return(FALSE);
 
-    sprintf(szVariable, "%s %s", sgProduct.szProductNameInternal, szBuf);
+    strcpy(szVariable, szBuf);
   }
   else if(strcmpi(szVariable, "Product PreviousVersion") == 0)
   {
@@ -6654,12 +6590,37 @@ HWND FindWindow(PCSZ pszAtomString)
     while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
     {
       ULONG ulWindowWord;
-        ulWindowWord = WinQueryWindowULong(hwnd, QWL_USER);
-        if (ulWindowWord == atom) {
-          break;
+      ulWindowWord = WinQueryWindowULong(hwnd, QWL_USER);
+      if (ulWindowWord == atom) {
+        break;
+      } else {
+        /* Try the class name method to support older browsers */
+        HWND hwndClient;
+        CHAR szClassName[MAX_BUF];
+        hwndClient = WinWindowFromID(hwnd, FID_CLIENT);
+        WinQueryClassName(hwndClient ? hwndClient : hwnd, MAX_BUF, szClassName);
+        if (strcmp(szClassName, pszAtomString) == 0) {
+           break;
         }
+      }
+    }
+    WinEndEnumWindows(henum);
+  }
+  if (!hwnd) {
+     /* Try the object windows just in case, but only for the classname */
+    henum = WinBeginEnumWindows(HWND_OBJECT);
+    while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
+    {
+      /* Try the class name method to support older browsers */
+      HWND hwndClient;
+      CHAR szClassName[MAX_BUF];
+      hwndClient = WinWindowFromID(hwnd, FID_CLIENT);
+      WinQueryClassName(hwndClient ? hwndClient : hwnd, MAX_BUF, szClassName);
+      if (strcmp(szClassName, pszAtomString) == 0) {
+         break;
+      }
     }
   }
-  WinEndEnumWindows(henum);
   return  hwnd;
 }
+
