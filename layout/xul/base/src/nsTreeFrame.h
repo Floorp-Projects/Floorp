@@ -104,6 +104,8 @@ public:
   NS_IMETHOD ScrollToIndex(PRInt32 aRowIndex);
   NS_IMETHOD GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aResult);
   NS_IMETHOD GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult);
+  NS_IMETHOD GetNumberOfVisibleRows(PRInt32* aResult);
+  NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32* aResult);
 
   PRInt32 GetFixedRowSize() { return mFixedRows; };
   

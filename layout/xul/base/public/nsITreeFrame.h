@@ -43,6 +43,8 @@ public:
   NS_IMETHOD ScrollToIndex(PRInt32 aRowIndex) = 0;
   NS_IMETHOD GetItemAtIndex(PRInt32 aIndex, nsIDOMElement** aResult) = 0;
   NS_IMETHOD GetIndexOfItem(nsIPresContext* aPresContext, nsIDOMElement* aElement, PRInt32* aResult) = 0;
+  NS_IMETHOD GetNumberOfVisibleRows(PRInt32* aResult) = 0;
+  NS_IMETHOD GetIndexOfFirstVisibleRow(PRInt32* aResult) = 0;
 };
 
 #endif

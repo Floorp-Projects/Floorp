@@ -363,8 +363,8 @@ void nsXULTreeGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
   // Go ahead and delete the frame.
   nsBoxLayoutState state(aPresContext);
   if (aChildFrame) {
-    Remove(state, aChildFrame);
     mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, aChildFrame, nsnull);
+    Remove(state, aChildFrame);
     mFrames.DestroyFrame(aPresContext, aChildFrame);
 
   }
