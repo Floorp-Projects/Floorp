@@ -938,8 +938,11 @@ NS_IMETHODIMP nsLocalFile::IsDirectory(PRBool *_retval)
   
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef, PR_FALSE);
+  // CFURLGetFSRef only returns a Boolean for success,
+  // so we have to assume what the error was. This is
+  // the only probable cause.  
   if (NS_FAILED(rv))
-    return rv;
+    return NS_ERROR_FILE_NOT_FOUND;
     
   FSCatalogInfo catalogInfo;
   OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNodeFlags, &catalogInfo,
@@ -958,8 +961,11 @@ NS_IMETHODIMP nsLocalFile::IsFile(PRBool *_retval)
   
   FSRef fsRef;
   nsresult rv = GetFSRefInternal(fsRef, PR_FALSE);
+  // CFURLGetFSRef only returns a Boolean for success,
+  // so we have to assume what the error was. This is
+  // the only probable cause.
   if (NS_FAILED(rv))
-    return rv;
+    return NS_ERROR_FILE_NOT_FOUND;
     
   FSCatalogInfo catalogInfo;
   OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNodeFlags, &catalogInfo,
