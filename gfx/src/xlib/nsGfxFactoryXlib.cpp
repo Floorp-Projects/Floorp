@@ -50,28 +50,18 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 class nsGfxFactoryXlib : public nsIFactory
 {
 public:
-  // nsISuports methods
-  NS_IMETHOD QueryInterface(const nsIID &aIID,
-                                       void **aResult);
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-  // nsIFactory Methods
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-  
-  NS_IMETHOD LockFactory(PRBool aLock);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFACTORY
 
   nsGfxFactoryXlib(const nsCID &aClass);
   virtual ~nsGfxFactoryXlib();
 private:
-  nsrefcnt mRefCnt;
   nsCID    mClassID;
 };
 
 nsGfxFactoryXlib::nsGfxFactoryXlib(const nsCID &aClass)
 {
-  mRefCnt = 0;
+  NS_INIT_REFCNT();
   mClassID = aClass;
 }
 

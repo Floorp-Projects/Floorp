@@ -45,31 +45,20 @@ static NS_DEFINE_CID(kCNavDTDCID,		NS_CNAVDTD_CID);
 
 class nsParserFactory : public nsIFactory
 {   
-  public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                              void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
-
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIFACTORY
 
     nsParserFactory(const nsCID &aClass);   
     virtual ~nsParserFactory();   
 
   private:   
-    nsrefcnt  mRefCnt;   
     nsCID     mClassID;
 };   
 
 nsParserFactory::nsParserFactory(const nsCID &aClass)   
 {   
-  mRefCnt = 0;
+  NS_INIT_REFCNT();
   mClassID = aClass;
   nsHTMLTags::AddRefTable();
   nsHTMLEntities::AddRefTable();
