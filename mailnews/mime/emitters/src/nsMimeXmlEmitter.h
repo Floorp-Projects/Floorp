@@ -60,7 +60,4 @@ protected:
     PRInt32             mAttachCount;
 };
 
-/* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewMimeXmlEmitter(const nsIID& iid, void **result);
-
 #endif /* _nsMimeXmlEmitter_h_ */

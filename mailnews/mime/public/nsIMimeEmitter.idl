@@ -51,6 +51,9 @@ interface nsIMimeEmitter : nsISupports{
     // Set the output stream/listener for processed data.
     void    SetPipe(in nsIInputStream inputStream, in nsIOutputStream outStream);
     void    SetOutputListener(in nsIStreamListener listener);
+    
+    //Get the output listener to allow access to it from mime
+    nsIStreamListener    GetOutputListener();
 
     // Header handling routines.
     void    StartHeader(in PRBool rootMailHeader, in PRBool headerOnly, 

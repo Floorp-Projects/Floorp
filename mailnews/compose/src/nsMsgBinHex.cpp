@@ -43,12 +43,6 @@
 #pragma warn_unusedarg off
 #endif
 
-extern int MK_MSG_SAVE_DECODED_AS;
-
-extern int MK_UNABLE_TO_OPEN_TMP_FILE;
-extern int MK_MIME_ERROR_WRITING_FILE;
-extern int MK_MIME_DATA_CORRUPTED;
-
 static char BinHexTable[64] = 
 {
 	0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
@@ -504,22 +498,14 @@ static char binhex_decode[256] =
 **	the decode for bin hex format.
 */
 int binhex_decode_init (
-	binhex_decode_object *p_bh_decode_obj,
-	MWContext  *context)
+	binhex_decode_object *p_bh_decode_obj)
 {
 	nsCRT::memset(p_bh_decode_obj, 0, sizeof(binhex_decode_object));
 	
 	p_bh_decode_obj->octetin 	= 26;
 	p_bh_decode_obj->donepos 	= 3;
-	p_bh_decode_obj->context	= context;
 
 	return NOERR;
-}
-
-static void
-simple_copy(MWContext* context, char* newFile, void* closure)
-{
-	PL_strcpy((char *)closure, newFile);
 }
 
 PRIVATE void binhex_process(
@@ -753,14 +739,18 @@ PRIVATE void binhex_process(
 					char* filename;
 					
 					filename = XP_ALLOC(1024);
-					if (filename == NULL ||
+					if (filename == NULL 
+/*JFD Do we still need this?
+					  ||
 						FE_PromptForFileName(p_bh_decode_obj->context, 
 										XP_GetString(MK_MSG_SAVE_DECODED_AS),
 										0,
 										FALSE,
 										FALSE,
 										simple_copy,
-										filename) == -1)
+										filename) == -1
+*/
+										)
 					{
 						FREEIF(filename);
 						p_bh_decode_obj->state = errUsrCancel;

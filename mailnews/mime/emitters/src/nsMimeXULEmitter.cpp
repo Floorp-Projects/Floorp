@@ -51,15 +51,6 @@ static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-nsresult NS_NewMimeXULEmitter(const nsIID& iid, void **result)
-{
-	nsMimeXULEmitter *obj = new nsMimeXULEmitter();
-	if (obj)
-		return obj->QueryInterface(iid, result);
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-}
-
 /*
  * nsMimeXULEmitter definitions....
  */

@@ -128,8 +128,6 @@ typedef struct _binhex_decode_object
 	nsFileSpec      *name;			/* file spec for the output file in non-mac OS */
 	nsIOFileStream  *fileId;			/* the file if for the outpur file. non-mac OS */
 #endif
-
-	MWContext* context; 	/* context for call back function.		*/
 	
 	int32	s_inbuff;		/* the valid size of the inbuff			*/
 	int32	pos_inbuff;		/* the index of the inbuff.				*/
@@ -167,8 +165,7 @@ int binhex_reencode_head(
 **	The binhex stream decode prototypes. 
 */
 
-int binhex_decode_init(binhex_decode_object *p_bh_decode_env, 		
-					MWContext  *context);
+int binhex_decode_init(binhex_decode_object *p_bh_decode_env);
 					
 int binhex_decode_next(binhex_decode_object *p_bh_decode_env, 
 					const char 	*in_buff, 

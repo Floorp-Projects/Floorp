@@ -98,7 +98,4 @@ protected:
 };
 
 
-/* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewMimeXULEmitter(const nsIID& iid, void **result);
-
 #endif /* _nsMimeXULEmitter_h_ */

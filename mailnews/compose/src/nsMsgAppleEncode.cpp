@@ -29,14 +29,12 @@
 
 #include "nscore.h"
 #include "msgCore.h"
+#include "nsMimeTypes.h"
 
 #include "nsMsgAppleDouble.h"
 #include "nsMsgAppleCodes.h"
 
 #ifdef XP_MAC
-
-extern int MK_UNABLE_TO_OPEN_TMP_FILE;
-extern int MK_MIME_ERROR_WRITING_FILE;
 
 #include <Errors.h>
 
@@ -471,6 +469,9 @@ int ap_encode_data(
       
       /* don't forget to rewind the index to start point. */ 
       SetFPos(fileId, fsFromStart, 0L);
+      /* and reset retVal just in case... */
+      if (retval == eofErr)
+        retval = noErr;
 		}
 		else
 		{

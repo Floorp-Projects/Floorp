@@ -30,10 +30,10 @@
 #ifndef AppleDouble_h
 #define AppleDouble_h
 
-#include "xp.h"
 #include "msgCore.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
+#include "nsMsgComposeStringBundle.h"
 
 
 #define NOERR			0
@@ -45,16 +45,11 @@
 								/* 	End of a Part.				*/
 
 					
-#define errMemoryAlloc 	MK_OUT_OF_MEMORY
-#define errDataCrupt	-1
-#define errDiskFull		MK_DISK_FULL
-#define errFileOpen		MK_UNABLE_TO_OPEN_TMP_FILE
-
-#define errVersion		-1
-#define errFileWrite	MK_MIME_ERROR_WRITING_FILE
+#define errFileOpen		NS_MSG_UNABLE_TO_OPEN_TMP_FILE
+#define errFileWrite	-202 /*Error writing temporary file.*/
+#define errUsrCancel	-2  /*MK_INTERRUPTED */
 #define errDecoding		-1
 
-#define errUsrCancel	MK_INTERRUPTED
 /*
 ** The envirment block data type. 
 */
@@ -164,11 +159,6 @@ typedef struct _appledouble_decode_object
 	PRInt16	fileId;				/* the id for the open file (data/resource fork) */
 #endif
 	nsIOFileStream *fileSpec;					/* the stream for data fork work.					 */
-
-  // RICHIE - REMOVE THIS OLD STUFF!!!
-	MWContext *context;
-  NET_StreamClass* binhex_stream;		/* the stream to output as binhex output.*/
-  // RICHIE - REMOVE THIS OLD STUFF!!!
 
 	int 	state;
 	

@@ -29,6 +29,11 @@
 #include "prio.h"
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
+#include "nsISaveMsgListener.h"
+
+#ifdef XP_MAC
+  extern MimeObjectClass mimeMultipartAppleDoubleClass;
+#endif
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMultipart, MimeMultipartClass,
@@ -376,8 +381,37 @@ MimeMultipart_create_child(MimeObject *obj)
    */
   body->output_p = (((MimeMultipartClass *) obj->clazz)->output_child_p(obj, body));
   if (body->output_p)
-	{
+	{  
 	  status = body->clazz->parse_begin(body);
+
+#ifdef XP_MAC
+    /* if we are saving an apple double attachment, we need to inform the output stream listener
+       which fork we are currently processing
+    */
+    if (mime_typep(obj, (MimeObjectClass *) &mimeMultipartAppleDoubleClass))
+    {
+      struct mime_stream_data *msd = (struct mime_stream_data *)body->options->stream_closure;
+      
+      if (msd && msd->output_emitter)
+      {
+        nsCOMPtr<nsIStreamListener> outputListener;
+        msd->output_emitter->GetOutputListener(getter_AddRefs(outputListener));
+        nsCOMPtr<nsISaveMsgListener> saveListener(do_QueryInterface(outputListener));
+        if (saveListener)
+        {
+          if (body->content_type && !nsCRT::strcasecmp(body->content_type, APPLICATION_APPLEFILE))
+            saveListener->OnStartAppleDoubleResourceFork();
+          else
+          {
+            /* before start writting the data fork, we mush flush the emitter buffer */
+            msd->output_emitter->Complete();
+            saveListener->OnStartAppleDoubleDataFork();
+          }
+        }
+      }
+    }
+#endif
+
 	  if (status < 0) return status;
 	}
 
@@ -388,7 +422,8 @@ MimeMultipart_create_child(MimeObject *obj)
 static PRBool
 MimeMultipart_output_child_p(MimeObject *obj, MimeObject *child)
 {
-  return PR_TRUE;
+  /* if we are saving an apple double attachment, ignore the appledouble wrapper part */
+  return obj->options->write_html_p || nsCRT::strcasecmp(child->content_type, MULTIPART_APPLEDOUBLE);
 }
 
 

@@ -36,6 +36,7 @@
 #include "nsCRT.h"
 #include "nsMimeStringResources.h"
 #include "mimemsg.h"
+#include "mimemapl.h"
 
 /* Way to destroy any notions of modularity or class hierarchy, Terry! */
 # include "mimetpla.h"
@@ -211,12 +212,13 @@ MimeObject_parse_begin (MimeObject *obj)
     {
       if (obj->options->format_out == nsMimeOutput::nsMimeMessageRaw)
       {
-        if ( (obj->parent) && 
-             (mime_typep(obj->parent, (MimeObjectClass*) &mimeMessageClass)) )
-        {
-          obj->output_p = !nsCRT::strncmp(id, obj->options->part_to_load, 
-                                          nsCRT::strlen(obj->options->part_to_load));
-        }
+        if (obj->parent)
+          if (mime_typep(obj->parent, (MimeObjectClass*) &mimeMessageClass) ||
+            mime_typep(obj->parent, (MimeObjectClass*) &mimeMultipartAppleDoubleClass))
+          {
+            obj->output_p = !nsCRT::strncmp(id, obj->options->part_to_load, 
+                                            nsCRT::strlen(obj->options->part_to_load));
+          }
       }
     }
 

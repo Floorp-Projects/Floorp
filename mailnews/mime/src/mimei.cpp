@@ -699,7 +699,7 @@ mime_typep(MimeObject *obj, MimeObjectClass *clazz)
 }
 
 
-
+
 /* URL munging
  */
 
@@ -1214,7 +1214,7 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
   return 0;
 }
 
-
+
 /* Some output-generation utility functions...
  */
 
@@ -1308,8 +1308,20 @@ MimeObject_output_init(MimeObject *obj, const char *content_type)
 							   PR_FALSE, PR_FALSE);
 		  if (ct)
 			{
-			  x_mac_type   = MimeHeaders_get_parameter(ct,PARAM_X_MAC_TYPE, NULL, NULL);
-			  x_mac_creator= MimeHeaders_get_parameter(ct,PARAM_X_MAC_CREATOR, NULL, NULL);
+			  x_mac_type   = MimeHeaders_get_parameter(ct, PARAM_X_MAC_TYPE, NULL, NULL);
+			  x_mac_creator= MimeHeaders_get_parameter(ct, PARAM_X_MAC_CREATOR, NULL, NULL);
+        /* if don't have a x_mac_type and x_mac_creator, we need to try to get it from its parent */
+        if (!x_mac_type && !x_mac_creator && obj->parent && obj->parent->headers)
+        {
+          char * ctp = MimeHeaders_get(obj->parent->headers, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
+          if (ctp)
+          {
+            x_mac_type   = MimeHeaders_get_parameter(ctp, PARAM_X_MAC_TYPE, NULL, NULL);
+            x_mac_creator= MimeHeaders_get_parameter(ctp, PARAM_X_MAC_CREATOR, NULL, NULL);
+            PR_Free(ctp);
+          }
+        }
+			  
 			  PR_FREEIF(obj->options->default_charset);
 			  obj->options->default_charset = MimeHeaders_get_parameter(ct, "charset", NULL, NULL);
 			  PR_Free(ct);

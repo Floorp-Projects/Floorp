@@ -28,14 +28,13 @@
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
 #include "nsCRT.h"
+#include "mimemapl.h"
+#include "nsMimeTypes.h"
+
 
 #define MIME_SUPERCLASS mimeLeafClass
 MimeDefClass(MimeExternalObject, MimeExternalObjectClass,
 			 mimeExternalObjectClass, &MIME_SUPERCLASS);
-
-#ifdef XP_MAC
-extern MimeObjectClass mimeMultipartAppleDoubleClass;
-#endif
 
 static int MimeExternalObject_initialize (MimeObject *);
 static void MimeExternalObject_finalize (MimeObject *);
@@ -84,12 +83,6 @@ MimeExternalObject_parse_begin (MimeObject *obj)
   
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
   if (status < 0) return status;
-  
-#ifdef XP_MAC
-  if (obj->parent && mime_typep(obj->parent,
-    (MimeObjectClass *) &mimeMultipartAppleDoubleClass))
-    goto done;
-#endif /* XP_MAC */
   
   // If we're writing this object, and we're doing it in raw form, then
   // now is the time to inform the backend what the type of this data is.
@@ -199,10 +192,6 @@ GOTTA STILL DO THIS FOR QUOTING!
     PR_FREEIF(id_name);
     if (status < 0) return status;
   }
-  
-#ifdef XP_MAC
-done:
-#endif /* XP_MAC */
   
   return 0;
 }

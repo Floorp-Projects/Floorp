@@ -41,16 +41,6 @@
 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
-nsresult NS_NewMimeHtmlDisplayEmitter(const nsIID& iid, void **result)
-{
-	nsMimeHtmlDisplayEmitter *obj = new nsMimeHtmlDisplayEmitter();
-	if (obj)
-		return obj->QueryInterface(iid, result);
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-}
-
-
 /*
  * nsMimeHtmlEmitter definitions....
  */

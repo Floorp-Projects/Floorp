@@ -76,7 +76,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 #ifdef XP_MAC
   if (obj->options && obj->options->state) 
   {
-	obj->options->state->separator_suppressed_p = PR_TRUE;
+//	obj->options->state->separator_suppressed_p = PR_TRUE;
 	goto done;
   }
   /*
@@ -192,14 +192,17 @@ MimeMultipartAppleDouble_output_child_p(MimeObject *obj, MimeObject *child)
 	 the first one should always be an application/applefile.)
    */
 
-  if (obj->output_p &&
-	  obj->options &&
-	  obj->options->write_html_p &&
-	  cont->nchildren >= 1 &&
-	  cont->children[0] == child &&
-	  child->content_type &&
-	  !nsCRT::strcasecmp(child->content_type, APPLICATION_APPLEFILE))
-	return PR_FALSE;
-  else
-	return PR_TRUE;
+  if (cont->nchildren >= 1 && cont->children[0] == child && child->content_type &&
+      !nsCRT::strcasecmp(child->content_type, APPLICATION_APPLEFILE))
+  {
+#ifdef XP_MAC
+    if (obj->output_p && obj->options && obj->options->write_html_p) //output HTML
+      return PR_FALSE;
+#else
+    /* if we are not on a Macintosh, don't emitte the resources fork at all. */
+    return PR_FALSE;
+#endif
+  }
+  
+  return PR_TRUE;
 }

@@ -324,6 +324,18 @@ nsMimeBaseEmitter::SetOutputListener(nsIStreamListener *listener)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMimeBaseEmitter::GetOutputListener(nsIStreamListener **listener)
+{
+  if (listener)
+  {
+    *listener = mOutListener;
+    NS_IF_ADDREF(*listener);
+  }
+  return NS_OK;
+}
+
+
 // Attachment handling routines
 nsresult
 nsMimeBaseEmitter::StartAttachment(const char *name, const char *contentType, const char *url,

@@ -72,8 +72,4 @@ protected:
 };
 
 
-/* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result);
-extern nsresult NS_NewMimeHtmlDisplayEmitter(const nsIID& iid, void **result);
-
 #endif /* _nsMimeHtmlEmitter_h_ */

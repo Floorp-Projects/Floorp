@@ -66,6 +66,9 @@
 
 #include "mimeebod.h"
 
+#include "nsISaveMsgListener.h"
+
+
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -976,6 +979,33 @@ mime_insert_html_convert_charset (const PRBool input_autodetect, const char *inp
                                stream_closure, decoder, encoder);
 }
 
+#ifdef XP_MAC
+static PRUint32
+mime_convert_chars_to_ostype(const char *osTypeStr)
+{
+	if (!osTypeStr)
+		return '????';
+
+	PRUint32 result;
+	char *p = osTypeStr;
+	PRInt32 i;
+
+	for (result = 0; *p; p++)
+	{
+		char C = *p;
+
+		PRInt8 unhex = ((C >= '0' && C <= '9') ? C - '0' :
+			((C >= 'A' && C <= 'F') ? C - 'A' + 10 :
+			 ((C >= 'a' && C <= 'f') ? C - 'a' + 10 : -1)));
+		if (unhex < 0)
+			break;
+		result = (result << 4) | unhex;
+	}
+
+	return result;
+}
+#endif
+
 static int
 mime_output_init_fn (const char *type,
                      const char *charset,
@@ -986,6 +1016,20 @@ mime_output_init_fn (const char *type,
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
   
+#ifdef XP_MAC
+  if (msd && msd->output_emitter)
+  {
+    nsCOMPtr<nsIStreamListener> outputListener;
+    msd->output_emitter->GetOutputListener(getter_AddRefs(outputListener));
+    nsCOMPtr<nsISaveMsgListener> saveListener(do_QueryInterface(outputListener));
+    if (saveListener)
+    {
+      saveListener->SetMacTypeAndCreator(mime_convert_chars_to_ostype(x_mac_type),
+        mime_convert_chars_to_ostype(x_mac_creator));
+    }
+  }
+#endif
+
   // Now, all of this stream creation is done outside of libmime, so this
   // is just a check of the pluginObj member and returning accordingly.
   if (!msd->pluginObj2)

@@ -31,15 +31,6 @@
 #include "nsEmitterUtils.h"
 #include "nsCOMPtr.h"
 
-nsresult NS_NewMimeXmlEmitter(const nsIID& iid, void **result)
-{
-	nsMimeXmlEmitter *obj = new nsMimeXmlEmitter();
-	if (obj)
-		return obj->QueryInterface(iid, result);
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-}
-
 /*
  * nsMimeXmlEmitter definitions....
  */

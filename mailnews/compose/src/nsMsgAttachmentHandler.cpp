@@ -19,9 +19,6 @@
  *
  * Contributor(s): 
  */
-
-// RICHIE - MAKE SURE THIS IS REMOVED BEFORE CHECKIN! 
-//#define RICHIE_XP_MAC 1
  
 #include "nsMsgCopy.h"
 #include "nsIPref.h"
@@ -47,29 +44,13 @@ static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 ///////////////////////////////////////////////////////////////////////////
 // Mac Specific Attachment Handling for AppleDouble Encoded Files
 ///////////////////////////////////////////////////////////////////////////
-// The implementation for this (below) is #ifdef RICHIE_XP_MAC.
-// It is not functional, but we are keeping the code here as a base for
-// bringing back the functionality.
-#if 0
-#include "xp.h"                 // mac only
-#include "errors.h"
-#include "m_cvstrm.h"
-#include "nsFileStream.h"
+#ifdef XP_MAC
 
 #define AD_WORKING_BUFF_SIZE	                8192
 
 
-#ifdef RICHIE_XP_MAC
-
 extern PRBool       nsMsgIsMacFile(char       *aUrlString);
 extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
-
-#else
-
-PRBool nsMsgIsMacFile(char    *aUrlString) { return PR_FALSE; }
-void   MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding) { *useDefault = PR_TRUE;}
-
-#endif
 
 #endif /* XP_MAC */
 
@@ -418,11 +399,17 @@ FetcherURLDoneCallback(nsIURI* aURL, nsresult aStatus,
   if (ma != nsnull)
   {
     ma->m_size = totalSize;
+#ifdef XP_MAC
     if (aContentType)
     {
-      PR_FREEIF(ma->m_type);
-      ma->m_type = PL_strdup(aContentType);
+      //Do not change the type if we are dealing with an apple double file
+      if (!ma->mAppleFileSpec || PL_strcasecmp(aContentType, APPLICATION_BINHEX))
+      {
+        PR_FREEIF(ma->m_type);
+        ma->m_type = PL_strdup(aContentType);
+      }
     }
+#endif
 
     if (aCharset)
     {
@@ -562,26 +549,42 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 
   mURL->GetSpec(getter_Copies(url_string));
 
-#ifdef RICHIE_XP_MAC
+#ifdef XP_MAC
   // do we need to add IMAP: to this list? nsMsgIsLocalFileURL returns PR_FALSE always for IMAP 
   if ( (nsMsgIsLocalFile(url_string) &&	    
 	     (PL_strncasecmp(url_string, "mailbox:", 8) != 0)) )
 	{
 	  // convert the apple file to AppleDouble first, and then patch the
 		// address in the url.
-	  char  *src_filename = nsMsgGetLocalFileFromURL (url_string);
+	  const char  *src_filename = nsMsgGetLocalFileFromURL (url_string);
     if (!src_filename)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    PRBool      isAMacFile = nsMsgIsMacFile(src_filename);
+    //We need to retrieve the file type and creator...
+    nsFileSpec scr_fileSpec(src_filename);
+    FSSpec fsSpec = scr_fileSpec.GetFSSpec();;
+    FInfo info;
+		if (FSpGetFInfo (&fsSpec, &info) == noErr)
+		{
+		  char filetype[32];
+		  PR_snprintf(filetype, sizeof(filetype), "%X", info.fdType);
+		  PR_FREEIF(m_x_mac_type);
+		  m_x_mac_type = PL_strdup(filetype);
+
+		  PR_snprintf(filetype, sizeof(filetype), "%X", info.fdCreator);
+		  PR_FREEIF(m_x_mac_creator);
+		  m_x_mac_creator = PL_strdup(filetype);
+		}
+
+    PRBool isAMacFile = nsMsgIsMacFile(url_string);
 
 		// Only use appledouble if we aren't uuencoding.
 	  if( isAMacFile && (! UseUUEncode_p()) )
 		{
 		  char	          		*separator;
-      nsInputFileStream   *myInputFile = new nsInputFileStream(nsFileSpec(src_filename));
+      nsInputFileStream   *myInputFile = new nsInputFileStream(scr_fileSpec);
 
-      if ((myInputFile) || (!myInputFile->is_open()))
+      if ((!myInputFile) || (!myInputFile->is_open()))
         return NS_ERROR_OUT_OF_MEMORY;
 
 		  separator = mime_make_separator("ad");
@@ -618,7 +621,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       }
    
 	    obj->fileStream = new nsIOFileStream(*mAppleFileSpec, (PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE));
-      if ( (!obj->fileStream) || (obj->fileStream->is_open()) )
+      if ( (!obj->fileStream) || (!obj->fileStream->is_open()) )
 	    {
 	    	delete myInputFile;
         PR_FREEIF(src_filename);
@@ -656,10 +659,10 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       PRInt32   size, count;
 
       status = noErr;
-      while ( (myInputFile->read(obj->buff, obj->s_buff, &size) > 0) &&
-              (status == noErr || status == errDone) )
+      m_size = 0;
+      while (status == noErr)
       {      
-        status = ap_encode_next(&(obj->ap_encode_obj), obj->buff, size, &count);
+        status = ap_encode_next(&(obj->ap_encode_obj), obj->buff, bSize, &count);
         if (status == noErr || status == errDone)
         {
 	        //
@@ -711,7 +714,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 		  PR_FREEIF(separator);
   		PR_FREEIF (m_type);
   		m_type = PL_strdup(tmp);
-		}
+ 		}
 	  else
 		{
       if ( isAMacFile )
@@ -725,42 +728,24 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
         printf("...we could ask the user about this conversion, but for now, nahh..\n");
 			}
 
-		  /* make sure the file type and create are set.	*/
-		  char      filetype[32];
-		  FSSpec    fsSpec;
-		  FInfo     info;
 		  PRBool 	  useDefault;
 		  char	    *macType, *macEncoding;
-
-      fsSpec = mAppleFileSpec->GetFSSpec();
-		  if (FSpGetFInfo (&fsSpec, &info) == noErr)
+		  if (m_type == NULL || !PL_strcasecmp (m_type, TEXT_PLAIN))
 			{
-			  PR_snprintf(filetype, sizeof(filetype), "%X", info.fdType);
-			  PR_FREEIF(m_x_mac_type);
-			  m_x_mac_type    = PL_strdup(filetype);
-
-			  PR_snprintf(filetype, sizeof(filetype), "%X", info.fdCreator);
-			  PR_FREEIF(m_x_mac_creator);
-			  m_x_mac_creator = PL_strdup(filetype);
-			  if (m_type == NULL || !PL_strcasecmp (m_type, TEXT_PLAIN))
-				{
 # define TEXT_TYPE	0x54455854  /* the characters 'T' 'E' 'X' 'T' */
 # define text_TYPE	0x74657874  /* the characters 't' 'e' 'x' 't' */
 
-				  if (info.fdType != TEXT_TYPE && info.fdType != text_TYPE)
-					{
-					  MacGetFileType(mAppleFileSpec, &useDefault, &macType, &macEncoding);
-					  PR_FREEIF(m_type);
-					  m_type = macType;
-					}
+			  if (info.fdType != TEXT_TYPE && info.fdType != text_TYPE)
+				{
+				  MacGetFileType(&scr_fileSpec, &useDefault, &macType, &macEncoding);
+				  PR_FREEIF(m_type);
+				  m_type = macType;
 				}
 			}
 		  // don't bother to set the types if we failed in getting the file info.
 		}
 
     PR_FREEIF(src_filename);
-	  PR_FREEIF(src_filename);
-	  src_filename = 0;
 	}
 #endif /* XP_MAC */
 

@@ -76,6 +76,11 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsMsgRDFUtils.h"
 
+#include "nsISaveMsgListener.h"
+#ifdef XP_MAC
+  #include "nsDecodeAppleFile.h"
+#endif
+
 // compose
 #include "nsMsgCompCID.h"
 #include "nsMsgI18N.h"
@@ -184,16 +189,18 @@ ConvertBufToPlainText(nsString &aConBuf)
 // 
 class nsSaveAllAttachmentsState;
 
-class nsSaveAsListener : public nsIUrlListener,
-                         public nsIMsgCopyServiceListener,
-                         public nsIStreamListener
+class nsSaveMsgListener : public nsISaveMsgListener,
+                          public nsIUrlListener,
+                          public nsIMsgCopyServiceListener,
+                          public nsIStreamListener
 {
 public:
-    nsSaveAsListener(nsIFileSpec* fileSpec, nsMessenger* aMessenger);
-    virtual ~nsSaveAsListener();
+    nsSaveMsgListener(nsIFileSpec* fileSpec, nsMessenger* aMessenger);
+    virtual ~nsSaveMsgListener();
 
     NS_DECL_ISUPPORTS
 
+    NS_DECL_NSISAVEMSGLISTENER
     NS_DECL_NSIURLLISTENER
     NS_DECL_NSIMSGCOPYSERVICELISTENER
     NS_DECL_NSISTREAMLISTENER
@@ -212,6 +219,12 @@ public:
     nsString      m_charset;
     nsString      m_outputFormat;
     nsString      m_msgBuffer;
+
+private:
+#ifdef XP_MAC
+    //For Mac attachment handling
+    ProcessAppleDoubleResourceFork  *m_processADRsrcFk;
+#endif   
 };
 
 class nsSaveAllAttachmentsState
@@ -536,7 +549,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
                             void *closure)
 {
   nsIMsgMessageService * messageService = nsnull;
-  nsSaveAsListener *aListener = nsnull;
+  nsSaveMsgListener *aListener = nsnull;
   nsSaveAllAttachmentsState *saveState= (nsSaveAllAttachmentsState*) closure;
   nsAutoString from, to;
   nsCOMPtr<nsISupports> channelSupport;
@@ -553,7 +566,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
                   kIStreamConverterServiceCID, &rv);
   if (NS_FAILED(rv)) goto done;
 
-  aListener = new nsSaveAsListener(fileSpec, this);
+  aListener = new nsSaveMsgListener(fileSpec, this);
   if (!aListener)
   {
       rv = NS_ERROR_OUT_OF_MEMORY;
@@ -784,7 +797,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
     nsIMsgMessageService* messageService = nsnull;
     nsAutoString defaultFile(NS_ConvertASCIItoUCS2("mail"));
     nsCOMPtr<nsIUrlListener> urlListener;
-    nsSaveAsListener *aListener = nsnull;
+    nsSaveMsgListener *aListener = nsnull;
     nsCOMPtr<nsIURI> aURL;
     nsAutoString urlString;
     char *urlCString = nsnull;
@@ -858,7 +871,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         if (NS_FAILED(rv)) goto done;
         fileSpec->SetNativePath(path);
 
-        aListener = new nsSaveAsListener(fileSpec, this);
+        aListener = new nsSaveMsgListener(fileSpec, this);
         if (!aListener) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto done;
@@ -934,7 +947,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(fileSpec));
         if (NS_FAILED(rv)) goto done;
 
-        aListener = new nsSaveAsListener(fileSpec, this);
+        aListener = new nsSaveMsgListener(fileSpec, this);
         if (!aListener) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto done;
@@ -1455,7 +1468,7 @@ NS_IMETHODIMP nsMessenger::DoPrintPreview()
   return rv;  
 }
 
-nsSaveAsListener::nsSaveAsListener(nsIFileSpec* aSpec, nsMessenger *aMessenger)
+nsSaveMsgListener::nsSaveMsgListener(nsIFileSpec* aSpec, nsMessenger *aMessenger)
 {
     NS_INIT_REFCNT();
     if (aSpec)
@@ -1466,29 +1479,33 @@ nsSaveAsListener::nsSaveAsListener(nsIFileSpec* aSpec, nsMessenger *aMessenger)
     // rhp: for charset handling
     m_doCharsetConversion = PR_FALSE;
     m_saveAllAttachmentsState = nsnull;
+
+#ifdef XP_MAC    
+    m_processADRsrcFk = nsnull;
+#endif
 }
 
-nsSaveAsListener::~nsSaveAsListener()
+nsSaveMsgListener::~nsSaveMsgListener()
 {
 }
 
 // 
 // nsISupports
 //
-NS_IMPL_ISUPPORTS3(nsSaveAsListener, nsIUrlListener,
+NS_IMPL_ISUPPORTS4(nsSaveMsgListener, nsISaveMsgListener, nsIUrlListener,
                    nsIMsgCopyServiceListener, nsIStreamListener)
 
 // 
 // nsIUrlListener
 // 
 NS_IMETHODIMP
-nsSaveAsListener::OnStartRunningUrl(nsIURI* url)
+nsSaveMsgListener::OnStartRunningUrl(nsIURI* url)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
+nsSaveMsgListener::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
 {
   nsresult rv = exitCode;
   PRBool killSelf = PR_TRUE;
@@ -1536,31 +1553,31 @@ done:
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnStartCopy(void)
+nsSaveMsgListener::OnStartCopy(void)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
+nsSaveMsgListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::SetMessageKey(PRUint32 aKey)
+nsSaveMsgListener::SetMessageKey(PRUint32 aKey)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::GetMessageId(nsCString* aMessageId)
+nsSaveMsgListener::GetMessageId(nsCString* aMessageId)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnStopCopy(nsresult aStatus)
+nsSaveMsgListener::OnStopCopy(nsresult aStatus)
 {
   if (m_fileSpec)
   {
@@ -1573,7 +1590,7 @@ nsSaveAsListener::OnStopCopy(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnStartRequest(nsIChannel* aChannel, nsISupports* aSupport)
+nsSaveMsgListener::OnStartRequest(nsIChannel* aChannel, nsISupports* aSupport)
 {
     nsresult rv = NS_OK;
     if (m_fileSpec)
@@ -1590,7 +1607,7 @@ nsSaveAsListener::OnStartRequest(nsIChannel* aChannel, nsISupports* aSupport)
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
+nsSaveMsgListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
                                 nsresult status, const PRUnichar* aMsg)
 {
   nsresult    rv = NS_OK;
@@ -1618,6 +1635,16 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
     if ( (NS_SUCCEEDED(rv)) && (conBuf) )
     {
       PRUint32      writeCount;
+#ifdef XP_MAC
+      if (m_processADRsrcFk)
+      {
+        if (noErr == m_processADRsrcFk->Write((unsigned char *)conBuf, conLength, &writeCount))
+		      rv = NS_OK;
+		    else
+		      rv = NS_ERROR_FAILURE;
+      }
+      else
+#endif
       rv = m_outputStream->Write(conBuf, conLength, &writeCount);
       if (conLength != writeCount)
         rv = NS_ERROR_FAILURE;
@@ -1627,6 +1654,13 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
   }
 
   // close down the file stream and release ourself
+#ifdef XP_MAC    
+  if (m_processADRsrcFk)
+  {
+    delete m_processADRsrcFk;
+    m_processADRsrcFk = nsnull;
+  }
+#endif
   if (m_fileSpec)
   {
     m_fileSpec->Flush();
@@ -1688,7 +1722,7 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
 }
 
 NS_IMETHODIMP
-nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel, 
+nsSaveMsgListener::OnDataAvailable(nsIChannel* aChannel, 
                                   nsISupports* aSupport,
                                   nsIInputStream* inStream, 
                                   PRUint32 srcOffset,
@@ -1733,6 +1767,16 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
         }
         else
         {
+#ifdef XP_MAC
+          if (m_processADRsrcFk)
+          {
+            if (noErr == m_processADRsrcFk->Write((unsigned char *)m_dataBuffer, readCount, &writeCount))
+				      rv = NS_OK;
+				    else
+				      rv = NS_ERROR_FAILURE;
+          }
+          else
+#endif
           rv = m_outputStream->Write(m_dataBuffer, readCount, &writeCount);
         }
 
@@ -1742,6 +1786,61 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
   }
   return rv;
 }
+
+NS_IMETHODIMP
+nsSaveMsgListener::SetMacTypeAndCreator(PRUint32 type, PRUint32 creator)
+{
+#ifdef XP_MAC
+  if (m_fileSpec)
+  {
+    nsFileSpec realSpec;
+    m_fileSpec->GetFileSpec(&realSpec);
+    realSpec.SetFileTypeAndCreator((OSType)type, (OSType)creator);
+  }
+#endif
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSaveMsgListener::OnStartAppleDoubleDataFork()
+{
+#ifdef XP_MAC
+  if (m_processADRsrcFk)
+  {
+    delete m_processADRsrcFk;
+    m_processADRsrcFk = nsnull;
+  }
+#endif
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSaveMsgListener::OnStartAppleDoubleResourceFork()
+{
+#ifdef XP_MAC
+  if (m_fileSpec)
+  {
+    nsFileSpec realSpec;
+    m_fileSpec->GetFileSpec(&realSpec);
+    
+    if (m_processADRsrcFk)
+      return NS_ERROR_FAILURE;
+
+    OSErr anErr = -1;
+    m_processADRsrcFk = new ProcessAppleDoubleResourceFork;
+    if (m_processADRsrcFk)
+      anErr = m_processADRsrcFk->Initialize(realSpec);
+
+    if (anErr != noErr)
+      return NS_ERROR_FAILURE;
+  }
+#endif
+
+  return NS_OK;
+}
+
 
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 

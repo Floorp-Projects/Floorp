@@ -31,15 +31,6 @@
 #include "prmem.h"
 #include "nsEmitterUtils.h"
 
-nsresult NS_NewMimeRawEmitter(const nsIID& iid, void **result)
-{
-	nsMimeRawEmitter *obj = new nsMimeRawEmitter();
-	if (obj)
-		return obj->QueryInterface(iid, result);
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-}
-
 /*
  * nsMimeRawEmitter definitions....
  */
@@ -58,6 +49,4 @@ nsMimeRawEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWrit
   Write(buf, size, amountWritten);
   return NS_OK;
 }
-
-
 

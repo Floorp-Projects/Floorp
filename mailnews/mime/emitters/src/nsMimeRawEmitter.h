@@ -41,7 +41,5 @@ public:
 protected:
 };
 
-/* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewMimeRawEmitter(const nsIID& iid, void **result);
 
 #endif /* _nsMimeRawEmitter_h_ */

@@ -355,6 +355,7 @@ nsMsgComposeAndSend::Clear()
       {
 				m_attachments[i].mAppleFileSpec->Delete(PR_FALSE);
 				delete m_attachments[i].mAppleFileSpec;
+        m_attachments[i].mAppleFileSpec = nsnull;
 			}
 #endif /* XP_MAC */
 		}
@@ -1844,7 +1845,12 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
 			  m_attachments[newLoc].m_mime_delivery_state = this;
 
 			  // These attachments are already "snarfed"...
+#ifdef XP_MAC
+        //We need to snarf the file to figure out how to send it...
+        m_attachments[newLoc].m_done = PR_FALSE;
+#else
 			  m_attachments[newLoc].m_done = PR_TRUE;
+#endif
 
         if (m_attachments[newLoc].mURL)
           NS_RELEASE(m_attachments[newLoc].mURL);
@@ -2223,9 +2229,12 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 		}
   }
 
+/*
   if ( (attachments && attachments[0].url) || 
        (mMultipartRelatedAttachmentCount > 0) ||
        (mCompFieldRemoteAttachments > 0) )
+*/
+  if (m_attachment_count > 0)
   {
 	  // If there is more than one mailbox URL, or more than one NNTP url,
 	  // do the load in serial rather than parallel, for efficiency.

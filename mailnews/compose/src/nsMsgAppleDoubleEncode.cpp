@@ -38,11 +38,11 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
+#include "nsMimeTypes.h"
 
 #ifdef XP_MAC
 
 #pragma warn_unusedarg off
-#include "m_cvstrm.h"
 
 #pragma cplusplus on
 
@@ -59,11 +59,15 @@ nsMsgIsMacFile(char *aUrlString)
 {
 	Boolean returnValue = PR_FALSE;
 
-  char  *ext = nsMsgGetExtensionFromFileURL(nsString(aUrlString));
+  nsAutoString urlStr; urlStr.AssignWithConversion(aUrlString);
+  char  *ext = nsMsgGetExtensionFromFileURL(urlStr);
   if ( (!ext) || (!*ext) )
+  {
+    PR_FREEIF(ext);
     return PR_TRUE;
+  }
 
-  if (
+  PRBool isMacFile = 
        (!PL_strcasecmp(ext, "JPG")) ||
        (!PL_strcasecmp(ext, "GIF")) ||
        (!PL_strcasecmp(ext, "TIF")) ||
@@ -72,11 +76,11 @@ nsMsgIsMacFile(char *aUrlString)
        (!PL_strcasecmp(ext, "ART")) ||
        (!PL_strcasecmp(ext, "XUL")) ||
        (!PL_strcasecmp(ext, "XML")) ||
-       (!PL_strcasecmp(ext, "XUL"))
-     )
-     return PR_FALSE;
-  else
-    return PR_TRUE;
+       (!PL_strcasecmp(ext, "CSS")) ||
+       (!PL_strcasecmp(ext, "JS"));
+ 
+  PR_Free(ext);
+  return isMacFile;
 }
 
 void	
