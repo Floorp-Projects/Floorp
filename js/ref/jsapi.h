@@ -288,7 +288,7 @@ extern JS_PUBLIC_API(JSVersion)
 JS_SetVersion(JSContext *cx, JSVersion version);
 
 extern JS_PUBLIC_API(const char *)
-JS_GetImplementationVersion();
+JS_GetImplementationVersion(void);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalObject(JSContext *cx);
