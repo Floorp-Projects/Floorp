@@ -21,8 +21,10 @@
 #define __ART_SVP_VPATH_H__
 
 #ifdef LIBART_COMPILATION
+#include "art_svp.h"
 #include "art_vpath.h"
 #else
+#include <libart_lgpl/art_svp.h>
 #include <libart_lgpl/art_vpath.h>
 #endif
 

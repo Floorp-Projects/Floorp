@@ -20,6 +20,14 @@
 #ifndef __ART_UTA_RECT_H__
 #define __ART_UTA_RECT_H__
 
+#ifdef LIBART_COMPILATION
+#include "art_rect.h"
+#include "art_uta.h"
+#else
+#include <libart_lgpl/art_rect.h>
+#include <libart_lgpl/art_uta.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

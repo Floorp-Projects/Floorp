@@ -17,9 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "art_misc.h"
-#include "art_uta.h"
-#include "art_rect.h"
+#include "config.h"
 #include "art_rect_uta.h"
 
 /* Functions to decompose a microtile array into a list of rectangles. */

@@ -24,6 +24,12 @@
    to think about this module is as a virtualization over specific
    pixel buffer formats. */
 
+#ifdef LIBART_COMPILATION
+#include "art_misc.h"
+#else
+#include <libart_lgpl/art_misc.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

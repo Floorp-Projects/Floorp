@@ -17,14 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* LGPL Copyright 1998 Raph Levien <raph@acm.org> */
+#include "config.h"
+#include "art_uta_vpath.h"
 
 #include <math.h>
 
 #include "art_misc.h"
 #include "art_vpath.h"
 #include "art_uta.h"
-#include "art_uta_vpath.h"
 
 #ifndef MAX
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
@@ -195,7 +195,12 @@ art_uta_add_line (ArtUta *uta, double x0, double y0, double x1, double y1,
 	      printf ("%% %d,%d\n", xt0, yt0);
 #endif
 	      yn = (yt0 + 1) << ART_UTILE_SHIFT;
-	      xn = x0 + dx_dy * (yn - y0);
+
+	      /* xn is the intercept with bottom edge of this tile. The
+		 following expression is careful to result in exactly
+		 x1 when yn = y1. */
+	      xn = x1 + dx_dy * (yn - y1);
+
 	      if (xt0 != (int)floor (xn) >> ART_UTILE_SHIFT)
 		{
 		  /* horizontal crossing */

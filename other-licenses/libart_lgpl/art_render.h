@@ -23,6 +23,12 @@
 #ifndef __ART_RENDER_H__
 #define __ART_RENDER_H__
 
+#ifdef LIBART_COMPILATION
+#include "art_alphagamma.h"
+#else
+#include <libart_lgpl/art_alphagamma.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -73,38 +79,6 @@ typedef enum {
   ART_IMAGE_SOURCE_CAN_COMPOSITE = 2
 } ArtImageSourceFlags;
 
-/* added by James Turner - note the hevay GL influence here :-) */
-
-#define ART_PF_PIXEL_SIZE_MASK 0xFF	/* bits 0 -> 7, pizel size in bits */
-#define ART_PF_CMP_SIZE_MASK 0xFF00	/* bits 8 -> 15, component size in bits */
-
-#define ART_CMP_8_BIT		8 << 8
-#define ART_CMP_5_BIT		5 << 8
-#define ART_CMP_16_BIT		16 << 8
-
-#define ART_PF_RGB_MASK			1 << 16
-#define ART_PF_ALPHA_MASK		1 << 17
-#define ART_PF_INDEXED_MASK		1 << 18
-/* alpha is before the first color component (MSB on big-endian) */
-#define ART_PF_SWAP_ALPHA_MASK	1 << 19
-#define ART_PF_GREEN_6_MASK		1 << 20
-
-typedef enum {
-	ART_PF_RGB8		= ART_PF_RGB_MASK | ART_CMP_8_BIT | 24,	/* current default */
-	ART_PF_RGB16	= ART_PF_RGB_MASK | ART_CMP_16_BIT | 48,
-	ART_PF_RGBA8	= ART_PF_RGB_MASK | ART_PF_ALPHA_MASK | ART_CMP_8_BIT | 32,
-	/* suprisingly common - needed for mac */
-	ART_PF_ARGB8 	= ART_PF_RGB_MASK | ART_PF_ALPHA_MASK | ART_PF_SWAP_ALPHA_MASK | ART_CMP_8_BIT | 32,
-	ART_PF_555		= ART_PF_RGB_MASK | ART_CMP_5_BIT | 16,
-	ART_PF_565		= ART_PF_RGB_MASK | ART_PF_GREEN_6_MASK | ART_CMP_5_BIT | 16,
-	
-	/* highly questionable .... */
-	ART_PF_INDEXED8 = ART_PF_INDEXED_MASK | 8
-	
-} ArtDestinationPixelFormat;
-
-/* end of te pixel format damage */
-
 struct _ArtRenderMaskRun {
   int x;
   int alpha;
@@ -141,7 +115,6 @@ struct _ArtRender {
   int n_chan;
   int depth;
   ArtAlphaType alpha_type;
-  ArtDestinationPixelFormat pixel_format;
 
   art_boolean clear;
   ArtPixMaxDepth clear_color[ART_MAX_CHAN + 1];
@@ -173,8 +146,7 @@ struct _ArtRender {
 ArtRender *
 art_render_new (int x0, int y0, int x1, int y1,
 		art_u8 *pixels, int rowstride,
-		ArtDestinationPixelFormat pixf,
-		ArtAlphaType alpha_type,
+		int n_chan, int depth, ArtAlphaType alpha_type,
 		ArtAlphaGamma *alphagamma);
 
 void

@@ -19,11 +19,11 @@
 
 /* Basic constructors and operations for bezier paths */
 
+#include "config.h"
+#include "art_bpath.h"
+
 #include <math.h>
 
-#include "art_misc.h"
-
-#include "art_bpath.h"
 
 /**
  * art_bpath_affine_transform: Affine transform an #ArtBpath.

@@ -28,6 +28,7 @@ CSRCS  = \
 	art_rect_uta.c \
 	art_render.c \
 	art_render_gradient.c \
+	art_render_mask.c \
 	art_render_svp.c \
 	art_rgb.c \
 	art_rgb_affine.c \
@@ -54,6 +55,7 @@ CSRCS  = \
 	art_vpath.c \
 	art_vpath_bpath.c \
 	art_vpath_dash.c \
+	art_vpath_filters.c \
 	art_vpath_svp.c	\
 	libart-features.c \
 	$(NULL)
@@ -74,6 +76,7 @@ EXPORTS = \
 	art_rect_uta.h \
 	art_render.h \
 	art_render_gradient.h \
+	art_render_mask.h \
 	art_render_svp.h \
 	art_rgb.h \
 	art_rgb_affine.h \
@@ -99,15 +102,18 @@ EXPORTS = \
 	art_vpath.h \
 	art_vpath_bpath.h \
 	art_vpath_dash.h \
+	art_vpath_filters.h \
 	art_vpath_svp.h	\
 	config.h \
 	libart.h	\
 	libart-features.h \
 	$(NULL)
 
-ifdef ENABLE_TESTS
-SIMPLE_PROGRAMS	= testart$(BIN_SUFFIX) testuta$(BIN_SUFFIX)
-endif
+# XXX For some reason, building the tests in this way on Windows will
+# wreck Libart's PDB-file
+#ifdef ENABLE_TESTS
+#SIMPLE_PROGRAMS	= testart$(BIN_SUFFIX) testuta$(BIN_SUFFIX)
+#endif
 
 FORCE_SHARED_LIB=1
 

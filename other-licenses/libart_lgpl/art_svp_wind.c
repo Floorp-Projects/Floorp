@@ -23,6 +23,8 @@
    These routines are internal to libart, used to construct operations
    like intersection, union, and difference. */
 
+#include "config.h"
+#include "art_svp_wind.h"
 
 #include <stdio.h> /* for printf of debugging info */
 #include <string.h> /* for memcpy */
@@ -31,7 +33,6 @@
 
 #include "art_rect.h"
 #include "art_svp.h"
-#include "art_svp_wind.h"
 
 #define noVERBOSE
 

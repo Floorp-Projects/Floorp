@@ -1,6 +1,6 @@
 ; libart.def : Declares the funcion exports of the DLL.
 
-LIBRARY 
+LIBRARY
 DESCRIPTION  'libart Windows Dynamic Link Library'
 
 EXPORTS
@@ -17,6 +17,7 @@ EXPORTS
  art_affine_shear
  art_affine_to_string
  art_affine_translate
+ art_alloc
  art_alphagamma_free
  art_alphagamma_new
  art_bez_path_to_vec
@@ -31,6 +32,7 @@ EXPORTS
  art_drect_svp_union
  art_drect_to_irect
  art_drect_union
+ art_free
  art_gray_svp_aa
  art_irect_copy
  art_irect_empty
@@ -45,6 +47,7 @@ EXPORTS
  art_pixbuf_new_rgb_dnotify
  art_pixbuf_new_rgba
  art_pixbuf_new_rgba_dnotify
+ art_realloc
  art_rect_list_from_uta
  art_render_clear_rgb
  art_render_gradient_linear
@@ -93,12 +96,18 @@ EXPORTS
  art_uta_union
  art_vpath_add_point
  art_vpath_affine_transform
+ art_vpath_array_iterator_init
  art_vpath_bbox_drect
  art_vpath_bbox_irect
+ art_vpath_clip_filter_init
+ art_vpath_contract_filter_init
  art_vpath_dash
+ art_vpath_dash_filter_init
  art_vpath_from_svp
  art_vpath_new_circle
+ art_vpath_new_vpath_array
  art_vpath_perturb
+ art_vpath_poly_rect_clip_filter_init
  art_warn
 ; trap_epsilon
 ; traverse

@@ -82,6 +82,14 @@ native FTC_Font(FTC_Font);
 native FTC_Image_Cache(FTC_Image_Cache);
 native FTC_Manager(FTC_Manager);
 
+#ifdef MOZ_SVG
+[ptr] native FT_Matrix_p(FT_Matrix);
+native FT_Vector(FT_Vector);
+[ptr] native FT_Vector_p(FT_Vector);
+native FT_Render_Mode(FT_Render_Mode);
+native FT_Bool(FT_Bool);
+#endif
+
 /*
  * A XPCOM interface to the run-time loaded functions
  */
@@ -117,6 +125,15 @@ interface nsIFreeType2 : nsISupports
                        in FTC_Face_Requester requester, in FT_Pointer req_data,
                        out FTC_Manager manager);
     void    imageCacheNew(in FTC_Manager manager, out FTC_Image_Cache cache);
+#ifdef MOZ_SVG
+    void glyphTransform(in FT_Glyph glyph, in FT_Matrix_p matrix,
+                        in FT_Vector_p delta);
+    void getKerning(in FT_Face face, in FT_UInt left_glyph, in FT_UInt right_glyph,
+                    in FT_UInt kern_mode, out FT_Vector akerning);
+    void glyphCopy(in FT_Glyph source, out FT_Glyph target);
+    void glyphToBitmap(inout FT_Glyph the_glyph, in FT_Render_Mode render_mode,
+                       in FT_Vector_p origin, in FT_Bool destroy);
+#endif
 
     FT_ULong getFirstChar(in FT_Face face, out FT_UInt gindex);
     FT_ULong getNextChar(in FT_Face face, in FT_ULong charcode, out FT_UInt gindex);

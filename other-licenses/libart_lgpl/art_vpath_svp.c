@@ -19,12 +19,14 @@
 
 /* "Unsort" a sorted vector path into an ordinary vector path. */
 
+#include "config.h"
+#include "art_vpath_svp.h"
+
 #include <stdio.h> /* for printf - debugging */
 #include "art_misc.h"
 
 #include "art_vpath.h"
 #include "art_svp.h"
-#include "art_vpath_svp.h"
 
 typedef struct _ArtVpathSVPEnd ArtVpathSVPEnd;
 

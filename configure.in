@@ -3772,7 +3772,36 @@ MOZ_ARG_ENABLE_BOOL(svg,
     MOZ_SVG=1,
     MOZ_SVG= )
 if test -n "$MOZ_SVG"; then
-    AC_DEFINE(MOZ_SVG)
+  AC_DEFINE(MOZ_SVG)
+fi
+
+MOZ_ARG_ENABLE_BOOL(svg-renderer-gdiplus,
+[  --enable-svg-renderer-gdiplus Enable SVG gdi+ renderer],
+    MOZ_SVG_RENDERER_GDIPLUS=1,
+    MOZ_SVG_RENDERER_GDIPLUS= )
+if test -n "$MOZ_SVG_RENDERER_GDIPLUS"; then
+  dnl XXX This is the test we'd like to perform but it isn't working
+  dnl under Windows for some reason:
+  dnl   AC_CHECK_HEADER(Gdiplus.h,,
+  dnl                   AC_MSG_ERROR([Gdiplus.h not found!]))
+  dnl So do this instead:
+  AC_MSG_CHECKING(for Gdiplus.h)
+  AC_LANG_SAVE
+  AC_LANG_CPLUSPLUS
+  AC_TRY_COMPILE([#include <windows.h>
+                  #include <unknwn.h>
+                  #include <Gdiplus.h>],,AC_MSG_RESULT(yes),
+                 AC_MSG_ERROR([Building the SVG GDI+ renderer requires an appropriate Microsoft SDK.]))
+  AC_LANG_RESTORE
+  AC_DEFINE(MOZ_SVG_RENDERER_GDIPLUS)
+fi
+
+MOZ_ARG_ENABLE_BOOL(svg-renderer-libart,
+[  --enable-svg-renderer-libart Enable SVG libart renderer],
+    MOZ_SVG_RENDERER_LIBART=1,
+    MOZ_SVG_RENDERER_LIBART= )
+if test -n "$MOZ_SVG_RENDERER_LIBART"; then
+  AC_DEFINE(MOZ_SVG_RENDERER_LIBART)
 fi
 
 dnl To build transformiix standalone, set TX_EXE while configuring
@@ -4862,7 +4891,7 @@ dnl ========================================================
 MOZ_LIBART_CFLAGS=
 MOZ_LIBART_LIBS=
 
-if test "$MOZ_SVG"; then
+if test "$MOZ_SVG_RENDERER_LIBART"; then
   if test "$MOZ_INTERNAL_LIBART_LGPL"; then
     dnl libart's configure hasn't been run yet, but we know what the
     dnl answer should be anyway
@@ -5081,6 +5110,8 @@ AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MINIMO)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_SVG)
+AC_SUBST(MOZ_SVG_RENDERER_GDIPLUS)
+AC_SUBST(MOZ_SVG_RENDERER_LIBART)
 AC_SUBST(TX_EXE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)

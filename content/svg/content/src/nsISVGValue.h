@@ -72,10 +72,16 @@ public:
 
   NS_IMETHOD AddObserver(nsISVGValueObserver* observer)=0;
   NS_IMETHOD RemoveObserver(nsISVGValueObserver* observer)=0;
+
+  NS_IMETHOD BeginBatchUpdate()=0;
+  NS_IMETHOD EndBatchUpdate()=0;
 };
 
 nsresult
 NS_CreateSVGGenericStringValue(const nsAString& aValue, nsISVGValue** aResult);
 
+nsresult
+NS_CreateSVGStringProxyValue(nsISVGValue* proxiedValue, nsISVGValue** aResult);
+                             
 #endif // __NS_ISVGVALUE_H__
 

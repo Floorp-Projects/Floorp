@@ -332,6 +332,9 @@ CNavDTD::CanParse(CParserContext& aParserContext,
     else if (aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)) ||
              aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType)) ||
              aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType)) ||
+#ifdef MOZ_SVG
+             aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kSVGTextContentType)) ||
+#endif
              aParserContext.mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType))) {
       result=eUnknownDetect;
     }

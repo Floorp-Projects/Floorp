@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    William Cook <william.cook@crocodile-clips.com> (original author)
+ *    Alex Fritze <alex.fritze@crocodile-clips.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -36,26 +37,32 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#include "nsSVGGraphicFrame.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGLineElement.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsASVGPathBuilder.h"
+#include "nsISVGRendererPathBuilder.h"
 
-class nsSVGLineFrame : public nsSVGGraphicFrame
+class nsSVGLineFrame : public nsSVGPathGeometryFrame
 {
+protected:
   friend nsresult
   NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   virtual ~nsSVGLineFrame();
-
   virtual nsresult Init();
-  virtual void ConstructPath(nsASVGPathBuilder* pathBuilder);
-  virtual const nsStyleSVG* GetStyle();
 
+public:
+  // nsISVGValueObserver interface:
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable);
+
+  // nsISVGPathGeometrySource interface:
+  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+  
+private:
   nsCOMPtr<nsIDOMSVGLength> mX1;
   nsCOMPtr<nsIDOMSVGLength> mY1;
   nsCOMPtr<nsIDOMSVGLength> mX2;
@@ -101,6 +108,9 @@ nsSVGLineFrame::~nsSVGLineFrame()
 
 nsresult nsSVGLineFrame::Init()
 {
+  nsresult rv = nsSVGPathGeometryFrame::Init();
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIDOMSVGLineElement> line = do_QueryInterface(mContent);
   NS_ASSERTION(line,"wrong content element");
 
@@ -148,10 +158,29 @@ nsresult nsSVGLineFrame::Init()
       value->AddObserver(this);
   }
 
-  return nsSVGGraphicFrame::Init();
+  return NS_OK; 
 }
 
-void nsSVGLineFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGLineFrame::DidModifySVGObservable(nsISVGValue* observable)
+{
+  nsCOMPtr<nsIDOMSVGLength> l = do_QueryInterface(observable);
+  if (l && (mX1==l || mY1==l || mX2==l || mY2==l)) {
+    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    return NS_OK;
+  }
+  // else
+  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable);
+}
+
+//----------------------------------------------------------------------
+// nsISVGPathGeometrySource methods:
+
+/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
+NS_IMETHODIMP nsSVGLineFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 {
   float x1,y1,x2,y2;
 
@@ -163,10 +192,12 @@ void nsSVGLineFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
   // move to start coordinates then draw line to end coordinates
   pathBuilder->Moveto(x1, y1);
   pathBuilder->Lineto(x2, y2);
+
+  return NS_OK;
 }
 
-const nsStyleSVG* nsSVGLineFrame::GetStyle()
-{
-  // XXX TODO: strip out any fill color as per svg specs
-  return nsSVGGraphicFrame::GetStyle();
-}
+// const nsStyleSVG* nsSVGLineFrame::GetStyle()
+// {
+//   // XXX TODO: strip out any fill color as per svg specs
+//   return nsSVGGraphicFrame::GetStyle();
+// }

@@ -19,12 +19,14 @@
 
 /* LGPL Copyright 1998 Raph Levien <raph@acm.org> */
 
+#include "config.h"
+#include "art_uta_svp.h"
+
 #include "art_misc.h"
 #include "art_vpath.h"
 #include "art_uta.h"
 #include "art_uta_vpath.h"
 #include "art_svp.h"
-#include "art_uta_svp.h"
 #include "art_vpath_svp.h"
 
 /**

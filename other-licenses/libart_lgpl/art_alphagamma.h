@@ -22,15 +22,15 @@
 
 /* Alphagamma tables */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #ifdef LIBART_COMPILATION
 #include "art_misc.h"
 #else
 #include <libart_lgpl/art_misc.h>
 #endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 typedef struct _ArtAlphaGamma ArtAlphaGamma;
 

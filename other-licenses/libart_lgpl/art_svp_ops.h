@@ -20,6 +20,12 @@
 #ifndef __ART_SVP_OPS_H__
 #define __ART_SVP_OPS_H__
 
+#ifdef LIBART_COMPILATION
+#include "art_svp.h"
+#else
+#include <libart_lgpl/art_svp.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

@@ -19,13 +19,15 @@
 
 /* Basic constructors and operations for vector paths */
 
+#include "config.h"
+#include "art_vpath.h"
+
 #include <math.h>
 #include <stdlib.h>
 
 #include "art_misc.h"
 
 #include "art_rect.h"
-#include "art_vpath.h"
 
 /**
  * art_vpath_add_point: Add point to vpath.

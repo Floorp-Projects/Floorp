@@ -38,35 +38,37 @@
 
 #include "nsSVGLength.h"
 #include "prdtoa.h"
-#include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGMatrix.h"
-#include "nsSVGPoint.h"
-#include "nsIDOMSVGSVGElement.h"
 #include "nsSVGAtoms.h"
-#include "nsIDOMSVGRect.h"
 #include "nsSVGValue.h"
-#include "nsIWeakReference.h"
 #include "nsReadableUtils.h"
 #include "nsTextFormatter.h"
 #include "nsCRT.h"
-#include <math.h>
+#include "nsISVGViewportAxis.h"
+#include "nsIDOMSVGNumber.h"
+#include "nsISVGValueUtils.h"
+#include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////
 // nsSVGLength class
 
-class nsSVGLength : public nsIDOMSVGLength,
-                    public nsSVGValue
+class nsSVGLength : public nsISVGLength,
+                    public nsSVGValue,
+                    public nsISVGValueObserver,
+                    public nsSupportsWeakReference
 {
-public:
-  static nsresult Create(nsIDOMSVGLength** aResult,
-                         nsIDOMSVGElement* owner,
-                         float value, PRUint16 unit,
-                         nsSVGLengthDirection dir);
-  
 protected:
-  nsSVGLength(float value, PRUint16 unit,
-                    nsSVGLengthDirection dir);
-  nsresult Init(nsIDOMSVGElement* owner);
+  friend nsresult NS_NewSVGLength(nsISVGLength** result,
+                                  float value,
+                                  PRUint16 unit);
+
+  friend nsresult NS_NewSVGLength(nsISVGLength** result,
+                                  const nsAString &value);
+  
+  nsSVGLength(float value, PRUint16 unit);
+  nsSVGLength();
+  virtual ~nsSVGLength();
+
 public:
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -74,24 +76,35 @@ public:
   // nsIDOMSVGLength interface:
   NS_DECL_NSIDOMSVGLENGTH
 
+  // nsISVGLength interface:
+  NS_IMETHOD SetContext(nsISVGViewportAxis* context);
+  
   // nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString& aValue);
   NS_IMETHOD GetValueString(nsAString& aValue);
   
+  // nsISVGValueObserver interface:
+  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
+  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
+
+  // nsISupportsWeakReference
+  // implementation inherited from nsSupportsWeakReference
   
 protected:
   // implementation helpers:
   float UserUnitsPerPixel();
   float mmPerPixel();
-  float ViewportDimension();
+  float AxisLength();
   void  GetUnitString(nsAString& unit);
   PRUint16 GetUnitTypeForString(const char* unitStr);
   PRBool IsValidUnitType(PRUint16 unit);
+
+  void MaybeAddAsObserver();
+  void MaybeRemoveAsObserver();
   
   float mValueInSpecifiedUnits;
   PRUint16 mSpecifiedUnitType;
-  nsCOMPtr<nsIWeakReference> mOwnerElementRef;
-  nsSVGLengthDirection mDirection;
+  nsCOMPtr<nsISVGViewportAxis> mContext;
 };
 
 
@@ -99,38 +112,49 @@ protected:
 // Implementation
 
 nsresult
-nsSVGLength::Create(nsIDOMSVGLength** aResult,
-                          nsIDOMSVGElement* owner,
-                          float value, PRUint16 unit,
-                          nsSVGLengthDirection dir)
+NS_NewSVGLength(nsISVGLength** result,
+                float value,
+                PRUint16 unit)
 {
-  nsSVGLength *pl = new nsSVGLength(value, unit, dir);
+  nsSVGLength *pl = new nsSVGLength(value, unit);
   NS_ENSURE_TRUE(pl, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(pl);
-  if (NS_FAILED(pl->Init(owner))) {
+  *result = pl;
+  return NS_OK;
+}
+
+nsresult
+NS_NewSVGLength(nsISVGLength** result,
+                const nsAString &value)
+{
+  *result = nsnull;
+  nsSVGLength *pl = new nsSVGLength();
+  NS_ENSURE_TRUE(pl, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(pl);
+  if (NS_FAILED(pl->SetValueAsString(value))) {
     NS_RELEASE(pl);
     return NS_ERROR_FAILURE;
   }
-  *aResult = pl;
+  *result = pl;
   return NS_OK;
-}
+}  
 
 
 nsSVGLength::nsSVGLength(float value,
-                                     PRUint16 unit,
-                                     nsSVGLengthDirection dir)
+                         PRUint16 unit)
     : mValueInSpecifiedUnits(value),
-      mSpecifiedUnitType(unit),
-      mDirection(dir)
+      mSpecifiedUnitType(unit)
+{
+  MaybeAddAsObserver();
+}
+
+nsSVGLength::nsSVGLength()
 {
 }
 
-nsresult nsSVGLength::Init(nsIDOMSVGElement* owner)
+nsSVGLength::~nsSVGLength()
 {
-  NS_ASSERTION(owner, "need owner");
-  mOwnerElementRef = do_GetWeakReference(owner);
-  NS_ENSURE_TRUE(mOwnerElementRef, NS_ERROR_FAILURE);
-  return NS_OK;
+  MaybeRemoveAsObserver();
 }
 
 //----------------------------------------------------------------------
@@ -141,7 +165,10 @@ NS_IMPL_RELEASE(nsSVGLength)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGLength)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
+  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISVGLength)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGLength)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGLength)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END
@@ -158,6 +185,23 @@ NS_IMETHODIMP
 nsSVGLength::GetValueString(nsAString& aValue)
 {
   return GetValueAsString(aValue);
+}
+
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods
+
+NS_IMETHODIMP
+nsSVGLength::WillModifySVGObservable(nsISVGValue* observable)
+{
+  WillModify();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGLength::DidModifySVGObservable(nsISVGValue* observable)
+{
+  DidModify();
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -200,7 +244,7 @@ nsSVGLength::GetValue(float *aValue)
       *aValue = mValueInSpecifiedUnits * 25.4f*12.0f/72.0f / mmPerPixel() * UserUnitsPerPixel();
       break;
     case SVG_LENGTHTYPE_PERCENTAGE:
-      *aValue = mValueInSpecifiedUnits * ViewportDimension() / 100.0f;
+      *aValue = mValueInSpecifiedUnits * AxisLength() / 100.0f;
       break;
     case SVG_LENGTHTYPE_EMS:
     case SVG_LENGTHTYPE_EXS:
@@ -210,7 +254,6 @@ nsSVGLength::GetValue(float *aValue)
       rv = NS_ERROR_FAILURE;
       break;
   }
-  
   return rv;
 }
 
@@ -244,7 +287,7 @@ nsSVGLength::SetValue(float aValue)
       mValueInSpecifiedUnits = aValue / UserUnitsPerPixel() * mmPerPixel() * 72.0f/24.4f/12.0f;
       break;
     case SVG_LENGTHTYPE_PERCENTAGE:
-      mValueInSpecifiedUnits = aValue * 100.0f / ViewportDimension();
+      mValueInSpecifiedUnits = aValue * 100.0f / AxisLength();
       break;
     case SVG_LENGTHTYPE_EMS:
     case SVG_LENGTHTYPE_EXS:
@@ -282,7 +325,9 @@ nsSVGLength::GetValueAsString(nsAString & aValueAsString)
   aValueAsString.Truncate();
 
   PRUnichar buf[24];
-  nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar), NS_LITERAL_STRING("%g").get(), (double)mValueInSpecifiedUnits);
+  nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
+                            NS_LITERAL_STRING("%g").get(),
+                            (double)mValueInSpecifiedUnits);
   aValueAsString.Append(buf);
   
   nsAutoString unitString;
@@ -297,13 +342,7 @@ nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
 {
   nsresult rv = NS_OK;
   
-  // XXX how am I supposed to do this ??? 
-  // char* str  = aValue.ToNewCString();
-  char* str;
-  {
-    nsAutoString temp(aValueAsString);
-    str = ToNewCString(temp);
-  }
+  char *str = ToNewCString(aValueAsString);
 
   char* number = str;
   while (*number && isspace(*number))
@@ -322,12 +361,13 @@ nsSVGLength::SetValueAsString(const nsAString & aValueAsString)
       }
       else { // parse error
         // not a valid unit type
-        // rv = ???
+        rv = NS_ERROR_FAILURE;
+        NS_ERROR("invalid length type");
       }
     }
     else { // parse error
-    // no number
-    // rv = NS_ERROR_???;
+      // no number
+      rv = NS_ERROR_FAILURE;
     }
   }
   
@@ -342,9 +382,15 @@ nsSVGLength::NewValueSpecifiedUnits(PRUint16 unitType, float valueInSpecifiedUni
 {
   if (!IsValidUnitType(unitType)) return NS_ERROR_FAILURE;
 
+  bool observer_change = (unitType != mSpecifiedUnitType);
+  
   WillModify();
+  if (observer_change)
+    MaybeRemoveAsObserver();
   mValueInSpecifiedUnits = valueInSpecifiedUnits;
   mSpecifiedUnitType     = unitType;
+  if (observer_change)
+    MaybeAddAsObserver();
   DidModify();
   
   return NS_OK;
@@ -356,13 +402,17 @@ nsSVGLength::ConvertToSpecifiedUnits(PRUint16 unitType)
 {
   if (!IsValidUnitType(unitType)) return NS_ERROR_FAILURE;
 
+  bool observer_change = (unitType != mSpecifiedUnitType);
+
   WillModify();
-  
+  if (observer_change)
+    MaybeRemoveAsObserver();
   float valueInUserUnits;
   GetValue(&valueInUserUnits);
   mSpecifiedUnitType = unitType;
   SetValue(valueInUserUnits);
-  
+  if (observer_change)
+    MaybeAddAsObserver();
   DidModify();
   
   return NS_OK;
@@ -374,15 +424,29 @@ nsSVGLength::GetTransformedValue(nsIDOMSVGMatrix *matrix,
                                        float *_retval)
 {
 
-// XXX we don't have enough information here. is the length part of a
-// coordinate pair (in which case it should transform like a point) or
-// is it used like a vector-component (in which case it doesn't
+// XXX we don't have enough information here. is it the length part of
+// a coordinate pair (in which case it should transform like a point)
+// or is it used like a vector-component (in which case it doesn't
 // translate)
 
   
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;
 }
+
+
+//----------------------------------------------------------------------
+// nsISVGLength methods:
+NS_IMETHODIMP
+nsSVGLength::SetContext(nsISVGViewportAxis* context)
+{
+  // XXX should we bracket this inbetween WillModify/DidModify pairs?
+  MaybeRemoveAsObserver();
+  mContext = context;
+  MaybeAddAsObserver();
+  return NS_OK;
+}
+
 
 
 //----------------------------------------------------------------------
@@ -439,37 +503,17 @@ float nsSVGLength::UserUnitsPerPixel()
 
 float nsSVGLength::mmPerPixel()
 {
-  float mmPerPx = 0.28f; // 90dpi by default
-
-  if (!mOwnerElementRef) return mmPerPx;
-  nsCOMPtr<nsIDOMSVGElement> ownerElement = do_QueryReferent(mOwnerElementRef);
-  if (!ownerElement) return mmPerPx;
-
-  nsCOMPtr<nsIDOMSVGSVGElement> SVGElement;
-  ownerElement->GetOwnerSVGElement(getter_AddRefs(SVGElement));
-  if (!SVGElement) { // maybe our owner is the svg element...
-      SVGElement = do_QueryInterface(ownerElement);
+  if (!mContext) {
+    NS_WARNING("no context in mmPerPixel()");
+    return 1e-20f;
   }
   
-  if (!SVGElement) return mmPerPx;
+  nsCOMPtr<nsIDOMSVGNumber> num;
+  mContext->GetMillimeterPerPixel(getter_AddRefs(num));
+  NS_ASSERTION(num, "null interface");
+  float mmPerPx;
+  num->GetValue(&mmPerPx);
   
-  switch (mDirection) {
-    case eXDirection:
-      SVGElement->GetPixelUnitToMillimeterX(&mmPerPx);
-      break;
-    case eYDirection:
-      SVGElement->GetPixelUnitToMillimeterY(&mmPerPx);
-      break;
-    case eNoDirection:
-    {
-      float x,y;
-      SVGElement->GetPixelUnitToMillimeterX(&x);
-      SVGElement->GetPixelUnitToMillimeterY(&y);
-      mmPerPx = (x==y ? x : (x+y)/2);
-      break;
-    }
-  }
-
   if (mmPerPx == 0.0f) {
     NS_ASSERTION(PR_FALSE, "invalid mm/pixels");
     mmPerPx = 1e-20f; // some small value
@@ -478,50 +522,20 @@ float nsSVGLength::mmPerPixel()
   return mmPerPx;
 }
 
-float nsSVGLength::ViewportDimension()
+float nsSVGLength::AxisLength()
 {
-  float d = 1e-20f; 
-  
-  NS_ASSERTION(mOwnerElementRef, "need owner");
-  if (!mOwnerElementRef) return d;
-  nsCOMPtr<nsIDOMSVGElement> ownerElement = do_QueryReferent(mOwnerElementRef);
-  NS_ASSERTION(ownerElement, "need owner");
-  if (!ownerElement) return d;
-  
-  // find element that establishes the current viewport:
-  nsCOMPtr<nsIDOMSVGElement> vpElement;
-  ownerElement->GetViewportElement(getter_AddRefs(vpElement));
-  if (!vpElement) { // maybe our owner is the outermost svg element...
-    vpElement = ownerElement;
+  if (!mContext) {
+    NS_WARNING("no context in AxisLength()");
+    return 1e-20f;
   }
 
-  // only 'svg' elements establish explicit viewports ? XXX
-  nsCOMPtr<nsIDOMSVGSVGElement> SVGElement = do_QueryInterface(vpElement);
-  NS_ASSERTION(SVGElement, "need svg element to obtain vieport");
-  if (!SVGElement) return d;
+  nsCOMPtr<nsIDOMSVGNumber> num;
+  mContext->GetLength(getter_AddRefs(num));
+  NS_ASSERTION(num, "null interface");
+  float d;
+  num->GetValue(&d);
   
-  nsCOMPtr<nsIDOMSVGRect> vp;
-  SVGElement->GetViewport(getter_AddRefs(vp));
-  if (!vp) return d;
-
-  switch (mDirection) {
-    case eXDirection:
-      vp->GetWidth(&d);
-      break;
-    case eYDirection:
-      vp->GetHeight(&d);
-      break;
-    case eNoDirection:
-    {
-      float x,y;
-      vp->GetWidth(&x);
-      vp->GetHeight(&y);
-      d = (float) sqrt(x*x+y*y);
-      break;
-    }
-  }
-
-  NS_ASSERTION(d!=0.0f, "zero viewport w/h?");
+  NS_ASSERTION(d!=0.0f, "zero axis length");
   
   if (d == 0.0f)
     d = 1e-20f;
@@ -602,21 +616,29 @@ PRUint16 nsSVGLength::GetUnitTypeForString(const char* unitStr)
 
 PRBool nsSVGLength::IsValidUnitType(PRUint16 unit)
 {
-  if (unit>0 && unit<10)
+  if (unit>0 && unit<=10)
     return PR_TRUE;
 
   return PR_FALSE;
 }
 
-////////////////////////////////////////////////////////////////////////
-// Exported creation functions:
-
-nsresult
-NS_NewSVGLength(nsIDOMSVGLength** result,
-                nsIDOMSVGElement* owner,
-                nsSVGLengthDirection dir,
-                float value,
-                PRUint16 unit)
+void nsSVGLength::MaybeAddAsObserver()
 {
-  return nsSVGLength::Create(result, owner, value, unit, dir);
+  if ((mSpecifiedUnitType==SVG_LENGTHTYPE_PERCENTAGE) &&
+      mContext) {
+    nsCOMPtr<nsIDOMSVGNumber> num;
+    mContext->GetLength(getter_AddRefs(num));
+    NS_ADD_SVGVALUE_OBSERVER(num);
+  }
 }
+
+void nsSVGLength::MaybeRemoveAsObserver()
+{
+  if ((mSpecifiedUnitType==SVG_LENGTHTYPE_PERCENTAGE) &&
+      mContext) {
+    nsCOMPtr<nsIDOMSVGNumber> num;
+    mContext->GetLength(getter_AddRefs(num));
+    NS_REMOVE_SVGVALUE_OBSERVER(num);
+  }
+}
+

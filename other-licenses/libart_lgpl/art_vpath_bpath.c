@@ -19,13 +19,15 @@
 
 /* Basic constructors and operations for bezier paths */
 
+#include "config.h"
+#include "art_vpath_bpath.h"
+
 #include <math.h>
 
 #include "art_misc.h"
 
 #include "art_bpath.h"
 #include "art_vpath.h"
-#include "art_vpath_bpath.h"
 
 /* p must be allocated 2^level points. */
 

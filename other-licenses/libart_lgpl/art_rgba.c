@@ -20,8 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <config.h>
-#include "art_misc.h"
+#include "config.h"
 #include "art_rgba.h"
 
 #define ART_OPTIMIZE_SPACE

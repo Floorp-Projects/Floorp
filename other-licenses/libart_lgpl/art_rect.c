@@ -17,9 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <math.h>
-#include "art_misc.h"
+#include "config.h"
 #include "art_rect.h"
+
+#include <math.h>
 
 #ifndef MAX
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))

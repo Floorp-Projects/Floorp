@@ -20,6 +20,14 @@
 #ifndef __ART_VPATH_BPATH_H__
 #define __ART_VPATH_BPATH_H__
 
+#ifdef LIBART_COMPILATION
+#include "art_bpath.h"
+#include "art_vpath.h"
+#else
+#include <libart_lgpl/art_bpath.h>
+#include <libart_lgpl/art_vpath.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

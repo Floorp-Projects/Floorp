@@ -19,13 +19,15 @@
 
 /* Apply a dash style to a vector path. */
 
+#include "config.h"
+#include "art_vpath_dash.h"
+
 #include <math.h>
 #include <stdlib.h>
 
 #include "art_misc.h"
 
 #include "art_vpath.h"
-#include "art_vpath_dash.h"
 
 
 /* Return the length of the largest subpath within vpath */

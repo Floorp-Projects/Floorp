@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *    William Cook <william.cook@crocodile-clips.com> (original author)
+ *    Alex Fritze <alex.fritze@crocodile-clips.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -42,11 +43,14 @@
 #include "nsSVGLength.h"
 #include "nsIDOMSVGEllipseElement.h"
 #include "nsCOMPtr.h"
+#include "nsISVGSVGElement.h"
+#include "nsISVGViewportAxis.h"
+#include "nsISVGViewportRect.h"
 
 typedef nsSVGGraphicElement nsSVGEllipseElementBase;
 
 class nsSVGEllipseElement : public nsSVGEllipseElementBase,
-                           public nsIDOMSVGEllipseElement
+                            public nsIDOMSVGEllipseElement
 {
 protected:
   friend nsresult NS_NewSVGEllipseElement(nsIContent **aResult,
@@ -67,6 +71,8 @@ public:
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGEllipseElementBase::)
 
 protected:
+  virtual void ParentChainChanged();
+
   nsCOMPtr<nsIDOMSVGAnimatedLength> mCx;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mCy;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mRx;
@@ -153,9 +159,8 @@ nsSVGEllipseElement::Init()
 
   // DOM property: cx ,  #IMPLIED attrib: cx
   {
-    nsCOMPtr<nsIDOMSVGLength> length;
+    nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         (nsSVGElement*)this, eXDirection,
                          0.0f);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mCx), length);
@@ -166,9 +171,8 @@ nsSVGEllipseElement::Init()
 
   // DOM property: cy ,  #IMPLIED attrib: cy
   {
-    nsCOMPtr<nsIDOMSVGLength> length;
+    nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         (nsSVGElement*)this, eYDirection,
                          0.0f);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mCy), length);
@@ -180,9 +184,8 @@ nsSVGEllipseElement::Init()
   // DOM property: rx ,  #REQUIRED  attrib: rx
   // XXX: enforce requiredness
   {
-    nsCOMPtr<nsIDOMSVGLength> length;
+    nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         (nsSVGElement*)this, eXDirection,
                          0.0f);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mRx), length);
@@ -194,9 +197,8 @@ nsSVGEllipseElement::Init()
   // DOM property: ry ,  #REQUIRED  attrib: ry
   // XXX: enforce requiredness
   {
-    nsCOMPtr<nsIDOMSVGLength> length;
+    nsCOMPtr<nsISVGLength> length;
     rv = NS_NewSVGLength(getter_AddRefs(length),
-                         (nsSVGElement*)this, eYDirection,
                          0.0f);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mRy), length);
@@ -248,6 +250,7 @@ nsSVGEllipseElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
+
 //----------------------------------------------------------------------
 // nsIDOMSVGEllipseElement methods
 
@@ -282,3 +285,83 @@ NS_IMETHODIMP nsSVGEllipseElement::GetRy(nsIDOMSVGAnimatedLength * *aRy)
   NS_IF_ADDREF(*aRy);
   return NS_OK;
 }
+
+//----------------------------------------------------------------------
+//
+
+
+void nsSVGEllipseElement::ParentChainChanged()
+{
+  // set new context information on our length-properties:
+  
+  nsCOMPtr<nsIDOMSVGSVGElement> dom_elem;
+  GetOwnerSVGElement(getter_AddRefs(dom_elem));
+  if (!dom_elem) return;
+
+  nsCOMPtr<nsISVGSVGElement> svg_elem = do_QueryInterface(dom_elem);
+  NS_ASSERTION(svg_elem, "<svg> element missing interface");
+
+  // cx:
+  {
+    nsCOMPtr<nsIDOMSVGLength> dom_length;
+    mCx->GetBaseVal(getter_AddRefs(dom_length));
+    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
+    NS_ASSERTION(length, "svg length missing interface");
+
+    nsCOMPtr<nsIDOMSVGRect> vp_dom;
+    svg_elem->GetViewport(getter_AddRefs(vp_dom));
+    nsCOMPtr<nsISVGViewportRect> vp = do_QueryInterface(vp_dom);
+    nsCOMPtr<nsISVGViewportAxis> ctx;
+    vp->GetXAxis(getter_AddRefs(ctx));
+    
+    length->SetContext(ctx);
+  }
+
+  // cy:
+  {
+    nsCOMPtr<nsIDOMSVGLength> dom_length;
+    mCy->GetBaseVal(getter_AddRefs(dom_length));
+    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
+    NS_ASSERTION(length, "svg length missing interface");
+
+    nsCOMPtr<nsIDOMSVGRect> vp_dom;
+    svg_elem->GetViewport(getter_AddRefs(vp_dom));
+    nsCOMPtr<nsISVGViewportRect> vp = do_QueryInterface(vp_dom);
+    nsCOMPtr<nsISVGViewportAxis> ctx;
+    vp->GetYAxis(getter_AddRefs(ctx));
+    
+    length->SetContext(ctx);
+  }
+
+  // rx:
+  {
+    nsCOMPtr<nsIDOMSVGLength> dom_length;
+    mRx->GetBaseVal(getter_AddRefs(dom_length));
+    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
+    NS_ASSERTION(length, "svg length missing interface");
+
+    nsCOMPtr<nsIDOMSVGRect> vp_dom;
+    svg_elem->GetViewport(getter_AddRefs(vp_dom));
+    nsCOMPtr<nsISVGViewportRect> vp = do_QueryInterface(vp_dom);
+    nsCOMPtr<nsISVGViewportAxis> ctx;
+    vp->GetXAxis(getter_AddRefs(ctx));
+    
+    length->SetContext(ctx);
+  }
+  
+  // rx:
+  {
+    nsCOMPtr<nsIDOMSVGLength> dom_length;
+    mRy->GetBaseVal(getter_AddRefs(dom_length));
+    nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
+    NS_ASSERTION(length, "svg length missing interface");
+
+    nsCOMPtr<nsIDOMSVGRect> vp_dom;
+    svg_elem->GetViewport(getter_AddRefs(vp_dom));
+    nsCOMPtr<nsISVGViewportRect> vp = do_QueryInterface(vp_dom);
+    nsCOMPtr<nsISVGViewportAxis> ctx;
+    vp->GetYAxis(getter_AddRefs(ctx));
+    
+    length->SetContext(ctx);
+  }
+}  

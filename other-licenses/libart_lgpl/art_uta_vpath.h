@@ -22,6 +22,14 @@
 
 /* Basic data structures and constructors for microtile arrays */
 
+#ifdef LIBART_COMPILATION
+#include "art_uta.h"
+#include "art_vpath.h"
+#else
+#include <libart_lgpl/art_uta.h>
+#include <libart_lgpl/art_vpath.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

@@ -19,12 +19,13 @@
 
 /* Simple manipulations with affine transformations */
 
+#include "config.h"
+#include "art_affine.h"
+#include "art_misc.h" /* for M_PI */
+
 #include <math.h>
 #include <stdio.h> /* for sprintf */
 #include <string.h> /* for strcpy */
-#include "art_misc.h"
-#include "art_point.h"
-#include "art_affine.h"
 
 
 /* According to a strict interpretation of the libart structure, this

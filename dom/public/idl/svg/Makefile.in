@@ -36,6 +36,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedNumberList.idl \
 		nsIDOMSVGAnimatedPathData.idl \
 		nsIDOMSVGAnimatedPoints.idl \
+		nsIDOMSVGAnimatedString.idl \
 		nsIDOMSVGAnimPresAspRatio.idl \
 		nsIDOMSVGAnimatedRect.idl \
 		nsIDOMSVGAnimTransformList.idl \
@@ -46,6 +47,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGFitToViewBox.idl \
 		nsIDOMSVGForeignObjectElem.idl \
 		nsIDOMSVGGElement.idl \
+		nsIDOMSVGImageElement.idl \
 		nsIDOMSVGLength.idl \
 		nsIDOMSVGLengthList.idl \
 		nsIDOMSVGLineElement.idl \
@@ -72,6 +74,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGTransformList.idl \
 		nsIDOMSVGTransformable.idl \
 		nsIDOMSVGTSpanElement.idl \
+		nsIDOMSVGURIReference.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

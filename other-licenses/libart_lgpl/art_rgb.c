@@ -17,11 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <string.h>	/* for memset */
-#include "art_misc.h"
+#include "config.h"
 #include "art_rgb.h"
 
-#include "config.h" /* for endianness */
+#include <string.h>	/* for memset */
 
 /* Basic operators for manipulating 24-bit packed RGB buffers. */
 

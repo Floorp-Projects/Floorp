@@ -26,6 +26,14 @@
 #ifndef __ART_RENDER_GRADIENT_H__
 #define __ART_RENDER_GRADIENT_H__
 
+#ifdef LIBART_COMPILATION
+#include "art_filterlevel.h"
+#include "art_render.h"
+#else
+#include <libart_lgpl/art_filterlevel.h>
+#include <libart_lgpl/art_render.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

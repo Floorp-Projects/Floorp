@@ -22,6 +22,12 @@
 
 /* Determine whether a point is inside, or near, an svp. */
 
+#ifdef LIBART_COMPILATION
+#include "art_svp.h"
+#else
+#include <libart_lgpl/art_svp.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

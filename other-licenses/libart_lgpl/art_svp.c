@@ -19,10 +19,10 @@
 
 /* Basic constructors and operations for sorted vector paths */
 
-#include "art_misc.h"
-
-#include "art_rect.h"
+#include "config.h"
 #include "art_svp.h"
+
+#include "art_misc.h"
 
 /* Add a new segment. The arguments can be zero and NULL if the caller
    would rather fill them in later.

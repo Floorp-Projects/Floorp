@@ -22,6 +22,7 @@
  * Contributor(s):
  *    William Cook <william.cook@crocodile-clips.com> (original author)
  *    Håkan Waara <hwaara@chello.se>
+ *    Alex Fritze <alex.fritze@crocodile-clips.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -37,25 +38,33 @@
  *
  * ----- END LICENSE BLOCK ----- */
 
-#include "nsSVGGraphicFrame.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "nsIDOMSVGAnimatedLength.h"
 #include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGRectElement.h"
 #include "nsIDOMSVGElement.h"
 #include "nsIDOMSVGSVGElement.h"
-#include "nsASVGPathBuilder.h"
 
-class nsSVGRectFrame : public nsSVGGraphicFrame
+#include "nsISVGRendererPathBuilder.h"
+
+class nsSVGRectFrame : public nsSVGPathGeometryFrame
 {
+protected:
   friend nsresult
   NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 
   virtual ~nsSVGRectFrame();
-
   virtual nsresult Init();
-  virtual void ConstructPath(nsASVGPathBuilder* pathBuilder);
 
+public:
+  // nsISVGValueObserver interface:
+  NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable);
+
+  // nsISVGPathGeometrySource interface:
+  NS_IMETHOD ConstructPath(nsISVGRendererPathBuilder *pathBuilder);
+
+private:
   nsCOMPtr<nsIDOMSVGLength> mX;
   nsCOMPtr<nsIDOMSVGLength> mY;
   nsCOMPtr<nsIDOMSVGLength> mWidth;
@@ -107,6 +116,9 @@ nsSVGRectFrame::~nsSVGRectFrame()
 
 nsresult nsSVGRectFrame::Init()
 {
+  nsresult rv = nsSVGPathGeometryFrame::Init();
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIDOMSVGRectElement> Rect = do_QueryInterface(mContent);
   NS_ASSERTION(Rect,"wrong content element");
 
@@ -175,10 +187,29 @@ nsresult nsSVGRectFrame::Init()
       value->AddObserver(this);
   }
 
-  return nsSVGGraphicFrame::Init();
+  return NS_OK; 
 }
 
-void nsSVGRectFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
+//----------------------------------------------------------------------
+// nsISVGValueObserver methods:
+
+NS_IMETHODIMP
+nsSVGRectFrame::DidModifySVGObservable(nsISVGValue* observable)
+{
+  nsCOMPtr<nsIDOMSVGLength> l = do_QueryInterface(observable);
+  if (l && (mX==l || mY==l || mWidth==l || mHeight==l || mRx==l || mRy==l)) {
+    UpdateGraphic(nsISVGPathGeometrySource::UPDATEMASK_PATH);
+    return NS_OK;
+  }
+  // else
+  return nsSVGPathGeometryFrame::DidModifySVGObservable(observable);
+}
+
+//----------------------------------------------------------------------
+// nsISVGPathGeometrySource methods:
+
+/* void constructPath (in nsISVGRendererPathBuilder pathBuilder); */
+NS_IMETHODIMP nsSVGRectFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 {
   float x, y, width, height, rx, ry;
 
@@ -192,7 +223,7 @@ void nsSVGRectFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
   /* In a perfect world, this would be handled by the DOM, and 
      return a DOM exception. */
   if (width == 0 || height == 0 || ry < 0 || rx < 0)
-    return;
+    return NS_OK;
 
   /* If any of the attributes are not set, we need to set it to the corresponding
      attribute's value (e.g. if rx is not set, assign ry's value to rx). */
@@ -222,4 +253,5 @@ void nsSVGRectFrame::ConstructPath(nsASVGPathBuilder* pathBuilder)
   pathBuilder->Arcto(x+rx, y, rx, ry, 0.0, 0, 1);
   pathBuilder->ClosePath(&x,&y);
 
+  return NS_OK;
 }

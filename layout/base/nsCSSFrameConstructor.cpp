@@ -153,6 +153,7 @@ static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 #include "nsISVGAttribute.h"
 #include "nsISVGValue.h"
 #include "nsISVGStyleValue.h"
+#include "nsISVGTextContainerFrame.h"
 
 nsresult
 NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
@@ -176,6 +177,12 @@ nsresult
 NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
 nsresult
 NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+extern nsresult
+NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
+extern nsresult
+NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+extern nsresult
+NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
 #endif
 
 #include "nsIDocument.h"
@@ -4395,7 +4402,17 @@ nsCSSFrameConstructor::ConstructTextFrame(nsIPresShell*            aPresShell,
     ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems);
 
   nsIFrame* newFrame = nsnull;
+
+#ifdef MOZ_SVG
+  nsresult rv;
+  nsCOMPtr<nsISVGTextContainerFrame> svg_parent = do_QueryInterface(aParentFrame);
+  if (svg_parent)
+    rv = NS_NewSVGGlyphFrame(aPresShell, aContent, aParentFrame, &newFrame);
+  else
+    rv = NS_NewTextFrame(aPresShell, &newFrame);
+#else
   nsresult rv = NS_NewTextFrame(aPresShell, &newFrame);
+#endif
   if (NS_FAILED(rv) || !newFrame)
     return rv;
 
@@ -6752,9 +6769,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
                                           nsStyleContext*          aStyleContext,
                                           nsFrameItems&            aFrameItems)
 {
-  NS_ASSERTION((aContent->GetNameSpaceID(&aNameSpaceID),
-                (aNameSpaceID == kNameSpaceID_SVG)),
-               "SVG frame constructed in wrong namespace");
+  NS_ASSERTION(aNameSpaceID == kNameSpaceID_SVG, "SVG frame constructed in wrong namespace");
 
   nsresult  rv = NS_OK;
   PRBool isAbsolutelyPositioned = PR_FALSE;
@@ -6796,6 +6811,8 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
     rv = NS_NewSVGPolylineFrame(aPresShell, aContent, &newFrame);
   else if (aTag == nsSVGAtoms::circle)
     rv = NS_NewSVGCircleFrame(aPresShell, aContent, &newFrame);
+  else if (aTag == nsSVGAtoms::defs)
+    rv = NS_NewSVGGenericContainerFrame(aPresShell, aContent, &newFrame);
   else if (aTag == nsSVGAtoms::ellipse)
     rv = NS_NewSVGEllipseFrame(aPresShell, aContent, &newFrame);
   else if (aTag == nsSVGAtoms::line)
@@ -6808,6 +6825,14 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
   }
   else if (aTag == nsSVGAtoms::path)
     rv = NS_NewSVGPathFrame(aPresShell, aContent, &newFrame);
+  else if (aTag == nsSVGAtoms::text) {
+    processChildren = PR_TRUE;
+    rv = NS_NewSVGTextFrame(aPresShell, aContent, &newFrame);
+  }
+  else if (aTag == nsSVGAtoms::tspan) {
+    processChildren = PR_TRUE;
+    rv = NS_NewSVGTSpanFrame(aPresShell, aContent, aParentFrame, &newFrame);
+  }
   
   if (newFrame == nsnull) {
     // Either we have an unknown tag, or construction of a frame
@@ -6819,10 +6844,10 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
     // a standard xml element, and not be of the right type.
     // The best we can do here is to create a generic svg container frame.
 #ifdef DEBUG
-    printf("Warning: Creating SVGGenericContainerFrame for tag <");
-    nsAutoString str;
-    aTag->ToString(str);
-    printf("%s>\n", NS_ConvertUCS2toUTF8(str).get());
+    //printf("Warning: Creating SVGGenericContainerFrame for tag <");
+    //nsAutoString str;
+    //aTag->ToString(str);
+    //printf("%s>\n", NS_ConvertUCS2toUTF8(str).get());
 #endif
     processChildren = PR_TRUE;
     rv = NS_NewSVGGenericContainerFrame(aPresShell, aContent, &newFrame);
@@ -7063,8 +7088,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
     aState.mFrameManager->SetUndisplayedContent(aContent, styleContext);
     return NS_OK;
   }
-
-  if (aTag == nsLayoutAtoms::textTagName)
+  
+  if (aTag == nsLayoutAtoms::textTagName) 
     return ConstructTextFrame(aPresShell, aPresContext, aState,
                               aContent, aParentFrame, styleContext,
                               aFrameItems);
@@ -12938,7 +12963,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
         ContentReplaced(aPresContext, parentContainer, aBlockContent, aBlockContent, ix);
       }
       else {
-        // XXX uh oh. the block we need to reframe has no parent!
+        NS_ERROR("uh oh. the block we need to reframe has no parent!");
       }
       return PR_TRUE;
     }

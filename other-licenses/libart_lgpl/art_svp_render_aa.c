@@ -19,6 +19,9 @@
 
 /* The spiffy antialiased renderer for sorted vector paths. */
 
+#include "config.h"
+#include "art_svp_render_aa.h"
+
 #include <math.h>
 #include <string.h> /* for memmove */
 #include "art_misc.h"
@@ -26,8 +29,7 @@
 #include "art_rect.h"
 #include "art_svp.h"
 
-#include "art_svp_render_aa.h"
-#include "stdio.h"
+#include <stdio.h>
 
 typedef double artfloat;
 

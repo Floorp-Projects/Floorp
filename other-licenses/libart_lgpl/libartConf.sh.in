@@ -1,0 +1,6 @@
+#
+# Configuration file for using the LIBART library in GNOME applications
+#
+LIBART_LIBDIR="@LIBART_LIBDIR@"
+LIBART_LIBS="@LIBART_LIBS@"
+LIBART_INCLUDEDIR="@LIBART_INCLUDEDIR@"

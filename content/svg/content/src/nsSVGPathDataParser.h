@@ -40,28 +40,29 @@
 #define __NS_SVGPATHDATAPARSER_H__
 
 #include "nsCOMPtr.h"
-#include "nsIDOMSVGPathSegList.h"
+#include "nsVoidArray.h"
+#include "nsIDOMSVGPathSeg.h"
 
 ////////////////////////////////////////////////////////////////////////
-// nsSVGPathDataParser: a simple recurvice descent parser that builds
+// nsSVGPathDataParser: a simple recursive descent parser that builds
 // nsIDOMPathSegs from path data strings. The grammar for path data
 // can be found in SVG CR 20001102, chapter 8.
 
 class nsSVGPathDataParser
 {
 public:
-  nsSVGPathDataParser(nsIDOMSVGPathSegList* segList);
+  nsSVGPathDataParser(nsVoidArray* data);
   nsresult Parse(const char* str);
-  
+
 protected:
+  nsVoidArray *mData;
+  
   const char* inputpos;
   
   char tokenval;
   const char* tokenpos;
   enum { DIGIT, WSP, COMMA, POINT, SIGN, OTHER, END } tokentype;
   
-  nsCOMPtr<nsIDOMSVGPathSegList> mSegList;
-
 
   // helpers
   nsresult AppendSegment(nsIDOMSVGPathSeg* seg);

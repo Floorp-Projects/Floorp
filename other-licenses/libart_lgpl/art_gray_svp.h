@@ -23,8 +23,10 @@
 #define __ART_GRAY_SVP_H__
 
 #ifdef LIBART_COMPILATION
+#include "art_misc.h"
 #include "art_svp.h"
 #else
+#include <libart_lgpl/art_misc.h>
 #include <libart_lgpl/art_svp.h>
 #endif
 

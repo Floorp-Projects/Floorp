@@ -180,6 +180,17 @@ PR_STATIC_CALLBACK(void) Shutdown(nsIModule* aSelf);
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
+#include "nsSVGTypeCIDs.h"
+#include "nsISVGRenderer.h"
+#include "nsSVGRect.h"
+#ifdef MOZ_SVG_RENDERER_LIBART
+void NS_InitSVGRendererLibartGlobals();
+void NS_FreeSVGRendererLibartGlobals();
+#endif
+#ifdef MOZ_SVG_RENDERER_GDIPLUS
+void NS_InitSVGRendererGDIPlusGlobals();
+void NS_FreeSVGRendererGDIPlusGlobals();
+#endif
 #endif
 
 // jst says, ``we need this to avoid holding on to XPConnect past its
@@ -264,6 +275,12 @@ Initialize(nsIModule* aSelf)
 
 #ifdef MOZ_SVG
   nsSVGAtoms::AddRefAtoms();
+#ifdef MOZ_SVG_RENDERER_LIBART
+  NS_InitSVGRendererLibartGlobals();
+#endif
+#ifdef MOZ_SVG_RENDERER_GDIPLUS
+  NS_InitSVGRendererGDIPlusGlobals();
+#endif
 #endif
 
 #ifdef DEBUG
@@ -344,6 +361,15 @@ Shutdown(nsIModule* aSelf)
   nsMathMLOperators::ReleaseTable();
 #endif
 
+#ifdef MOZ_SVG
+#ifdef MOZ_SVG_RENDERER_LIBART
+  NS_FreeSVGRendererLibartGlobals();
+#endif
+#ifdef MOZ_SVG_RENDERER_GDIPLUS
+  NS_FreeSVGRendererGDIPlusGlobals();
+#endif
+#endif
+
   nsCSSFrameConstructor::ReleaseGlobals();
   nsTextTransformer::Shutdown();
   nsSpaceManager::Shutdown();
@@ -413,6 +439,13 @@ nsresult NS_NewMathMLElementFactory(nsIElementFactory** aResult);
 #endif
 
 #ifdef MOZ_SVG
+#ifdef MOZ_SVG_RENDERER_GDIPLUS
+nsresult NS_NewSVGRendererGDIPlus(nsISVGRenderer** aResult);
+#endif // MOZ_SVG_RENDERER_GDIPLUS
+#ifdef MOZ_SVG_RENDERER_LIBART
+nsresult NS_NewSVGRendererLibart(nsISVGRenderer** aResult);
+#endif // MOZ_SVG_RENDERER_LIBART
+
 nsresult NS_NewSVGElementFactory(nsIElementFactory** aResult);
 #endif
 
@@ -457,6 +490,14 @@ MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObj
 #endif
 MAKE_CTOR(CreateNewAutoCopyService,     nsIAutoCopyService,     NS_NewAutoCopyService)
 MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
+#ifdef MOZ_SVG
+#ifdef MOZ_SVG_RENDERER_GDIPLUS
+MAKE_CTOR(CreateNewSVGRendererGDIPlus,  nsISVGRenderer,         NS_NewSVGRendererGDIPlus)
+#endif // MOZ_SVG_RENDERER_GDIPLUS
+#ifdef MOZ_SVG_RENDERER_LIBART
+MAKE_CTOR(CreateNewSVGRendererLibart,   nsISVGRenderer,         NS_NewSVGRendererLibart)
+#endif // MOZ_SVG_RENDERER_LIBART
+#endif
 MAKE_CTOR(CreateCaret,                  nsICaret,               NS_NewCaret)
 
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
@@ -521,6 +562,7 @@ MAKE_CTOR(CreateMathMLElementFactory,     nsIElementFactory,           NS_NewMat
 #endif
 #ifdef MOZ_SVG
 MAKE_CTOR(CreateSVGElementFactory,        nsIElementFactory,           NS_NewSVGElementFactory)
+MAKE_CTOR(CreateSVGRect,                  nsIDOMSVGRect,               NS_NewSVGRect)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentHTTPStartup)
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
@@ -664,6 +706,21 @@ UnregisterHTMLOptionElement(nsIComponentManager* aCompMgr,
 
 // The list of components we register
 static const nsModuleComponentInfo gComponents[] = {
+#ifdef MOZ_SVG
+#ifdef MOZ_SVG_RENDERER_GDIPLUS
+  { "SVG GdiPlus Renderer",
+    NS_SVG_RENDERER_GDIPLUS_CID,
+    NS_SVG_RENDERER_GDIPLUS_CONTRACTID,
+    CreateNewSVGRendererGDIPlus },
+#endif // MOZ_SVG_RENDERER_GDIPLUS
+#ifdef MOZ_SVG_RENDERER_LIBART
+  { "SVG Libart Renderer",
+    NS_SVG_RENDERER_LIBART_CID,
+    NS_SVG_RENDERER_LIBART_CONTRACTID,
+    CreateNewSVGRendererLibart },
+#endif // MOZ_SVG_RENDERER_LIBART
+#endif // MOZ_SVG
+
 #ifdef DEBUG
   { "Frame utility",
     NS_FRAME_UTIL_CID,
@@ -1135,15 +1192,15 @@ static const nsModuleComponentInfo gComponents[] = {
 #endif
 
 #ifdef MOZ_SVG
-  { "SVG element factory (deprecated namespace)",
-    NS_SVGELEMENTFACTORY_CID,
-    NS_SVG_DEPRECATED_ELEMENT_FACTORY_CONTRACTID,
-    CreateSVGElementFactory },
-
   { "SVG element factory",
     NS_SVGELEMENTFACTORY_CID,
     NS_SVG_ELEMENT_FACTORY_CONTRACTID,
     CreateSVGElementFactory },
+  
+  { "SVG Rect",
+    NS_SVGRECT_CID,
+    NS_SVGRECT_CONTRACTID,
+    CreateSVGRect },
 #endif
 
   { "Content HTTP Startup Listener",

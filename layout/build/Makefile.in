@@ -114,7 +114,7 @@ ifdef MOZ_MATHML
 SHARED_LIBRARY_LIBS += \
                 $(DIST)/lib/$(LIB_PREFIX)gkmathmlcon_s.$(LIB_SUFFIX) \
                 $(DIST)/lib/$(LIB_PREFIX)gkmathmlbase_s.$(LIB_SUFFIX) \
-                $(NSNULL)
+                $(NULL)
 endif
 
 ifdef MOZ_SVG
@@ -122,7 +122,22 @@ SHARED_LIBRARY_LIBS += \
                 $(DIST)/lib/$(LIB_PREFIX)gksvgbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconsvgdoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkcontentsvg_s.$(LIB_SUFFIX) \
-                $(NSNULL)
+                $(NULL)
+
+ifdef MOZ_SVG_RENDERER_GDIPLUS
+SHARED_LIBRARY_LIBS += \
+                $(DIST)/lib/$(LIB_PREFIX)gksvgrenderergdiplus_s.$(LIB_SUFFIX) \
+                $(NULL)
+
+OS_LIBS += \
+	Gdiplus.lib \
+	$(NULL)
+endif
+ifdef MOZ_SVG_RENDERER_LIBART
+SHARED_LIBRARY_LIBS += \
+                $(DIST)/lib/$(LIB_PREFIX)gksvgrendererlibart_s.$(LIB_SUFFIX) \
+                $(NULL)
+endif
 endif
 
 EXTRA_DSO_LDOPTS = \
@@ -133,8 +148,14 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-ifdef MOZ_SVG
-EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS)
+ifdef MOZ_SVG_RENDERER_LIBART
+EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS) \
+		    $(NULL)
+
+ifdef MOZ_ENABLE_GTK2
+EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
+		    $(NULL)
+endif
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
@@ -164,6 +185,10 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 
 ifdef MOZ_MATHML
 INCLUDES += -I$(srcdir)/../mathml/content/src
+endif
+
+ifdef MOZ_SVG
+INCLUDES += -I$(srcdir)/../../content/svg/content/src
 endif
 
 DEFINES += -D_IMPL_NS_LAYOUT

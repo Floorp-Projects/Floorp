@@ -19,12 +19,14 @@
 
 /* Render a sorted vector path into a graymap. */
 
+#include "config.h"
+#include "art_gray_svp.h"
+
 #include <string.h>	/* for memset */
 #include "art_misc.h"
 
 #include "art_svp.h"
 #include "art_svp_render_aa.h"
-#include "art_gray_svp.h"
 
 typedef struct _ArtGraySVPData ArtGraySVPData;
 

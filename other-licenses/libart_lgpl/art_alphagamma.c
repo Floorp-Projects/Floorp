@@ -19,10 +19,10 @@
 
 /* Some functions to build alphagamma tables */
 
-#include <math.h>
-#include "art_misc.h"
-
+#include "config.h"
 #include "art_alphagamma.h"
+
+#include <math.h>
 
 /**
  * art_alphagamma_new: Create a new #ArtAlphaGamma.

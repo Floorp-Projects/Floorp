@@ -20,6 +20,12 @@
 #ifndef __ART_RGB_H__
 #define __ART_RGB_H__
 
+#ifdef LIBART_COMPILATION
+#include "art_misc.h"
+#else
+#include <libart_lgpl/art_misc.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

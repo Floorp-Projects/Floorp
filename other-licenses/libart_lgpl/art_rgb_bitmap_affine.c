@@ -17,12 +17,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
+#include "art_rgb_bitmap_affine.h"
+
 #include <math.h>
 #include "art_misc.h"
 #include "art_point.h"
 #include "art_affine.h"
 #include "art_rgb_affine_private.h"
-#include "art_rgb_bitmap_affine.h"
 
 /* This module handles compositing of affine-transformed bitmap images
    over rgb pixel buffers. */

@@ -22,6 +22,12 @@
 
 /* Basic operations on microtile arrays */
 
+#ifdef LIBART_COMPILATION
+#include "art_uta.h"
+#else
+#include <libart_lgpl/art_uta.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

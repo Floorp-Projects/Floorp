@@ -19,12 +19,12 @@
 
 /* Render a sorted vector path into an RGB buffer. */
 
-#include "art_misc.h"
+#include "config.h"
+#include "art_rgb_svp.h"
 
 #include "art_svp.h"
 #include "art_svp_render_aa.h"
 #include "art_rgb.h"
-#include "art_rgb_svp.h"
 
 typedef struct _ArtRgbSVPData ArtRgbSVPData;
 typedef struct _ArtRgbSVPAlphaData ArtRgbSVPAlphaData;

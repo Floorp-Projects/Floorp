@@ -22,6 +22,14 @@
 
 /* Sort vector paths into sorted vector paths. */
 
+#ifdef LIBART_COMPILATION
+#include "art_svp.h"
+#include "art_vpath.h"
+#else
+#include <libart_lgpl/art_svp.h>
+#include <libart_lgpl/art_vpath.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

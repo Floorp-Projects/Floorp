@@ -142,7 +142,17 @@ nsresult
 NS_NewSVGDocument(nsIDocument** aInstancePtrResult)
 {
   nsSVGDocument* doc = new nsSVGDocument();
+
   NS_ENSURE_TRUE(doc, NS_ERROR_OUT_OF_MEMORY);
 
-  return CallQueryInterface(doc, aInstancePtrResult);
+  NS_ADDREF(doc);
+  nsresult rv = doc->Init();
+
+  if (NS_FAILED(rv)) {
+    NS_RELEASE(doc);
+    return rv;
+  }
+
+  *aInstancePtrResult = doc;
+  return rv;
 }

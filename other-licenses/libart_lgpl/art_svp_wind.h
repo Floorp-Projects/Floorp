@@ -23,6 +23,12 @@
 /* Primitive intersection and winding number operations on sorted
    vector paths. */
 
+#ifdef LIBART_COMPILATION
+#include "art_svp.h"
+#else
+#include <libart_lgpl/art_svp.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

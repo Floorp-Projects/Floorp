@@ -17,8 +17,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "art_misc.h"
+#include "config.h"
 #include "art_pixbuf.h"
+
+#include "art_misc.h"
 #include <string.h>
 
 /**

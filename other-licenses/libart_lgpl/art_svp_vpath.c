@@ -19,6 +19,9 @@
 
 /* Sort vector paths into sorted vector paths */
 
+#include "config.h"
+#include "art_svp_vpath.h"
+
 #include <stdlib.h>
 #include <math.h>
 
@@ -26,7 +29,6 @@
 
 #include "art_vpath.h"
 #include "art_svp.h"
-#include "art_svp_vpath.h"
 
 
 /* reverse a list of points in place */

@@ -432,8 +432,8 @@ test_render_gradient (art_u8 *buf)
   vpath = randstar (50);
   svp = art_svp_from_vpath (vpath);
 
-  render = art_render_new (0, 0, 512, 512, buf, 512 * 3, ART_PF_RGB8,
-			   ART_ALPHA_NONE, NULL);
+  render = art_render_new (0, 0, 512, 512, buf, 512 * 3, 3, 8, ART_ALPHA_NONE,
+			   NULL);
   art_render_svp (render, svp);
   art_render_gradient_linear (render, &gradient, ART_FILTER_NEAREST);
   art_render_invoke (render);
@@ -468,8 +468,8 @@ test_render_rad_gradient (art_u8 *buf)
   vpath = randstar (50);
   svp = art_svp_from_vpath (vpath);
 
-  render = art_render_new (0, 0, 512, 512, buf, 512 * 3, ART_PF_RGB8,
-                           ART_ALPHA_NONE, NULL);
+  render = art_render_new (0, 0, 512, 512, buf, 512 * 3, 3, 8, ART_ALPHA_NONE,
+			   NULL);
   art_render_svp (render, svp);
   art_render_gradient_radial (render, &gradient, ART_FILTER_NEAREST);
   art_render_invoke (render);
@@ -494,8 +494,7 @@ test_gradient (void)
     {
 #define USE_RENDER
 #ifdef USE_RENDER
-      render = art_render_new (0, 0, 512, 512, buf, 512 * 3, ART_PF_RGB8,
-                               ART_ALPHA_NONE,
+      render = art_render_new (0, 0, 512, 512, buf, 512 * 3, 3, 8, ART_ALPHA_NONE,
 			       NULL);
       art_render_clear_rgb (render, 0xfff0c0);
       art_render_svp (render, svp);

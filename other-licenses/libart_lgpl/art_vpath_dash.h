@@ -22,6 +22,12 @@
 
 /* Apply a dash style to a vector path. */
 
+#ifdef LIBART_COMPILATION
+#include "art_vpath.h"
+#else
+#include <libart_lgpl/art_vpath.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

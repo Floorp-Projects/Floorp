@@ -17,10 +17,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
+#include "art_rect_svp.h"
+
 #include "art_misc.h"
 #include "art_svp.h"
 #include "art_rect.h"
-#include "art_rect_svp.h"
+
+#ifndef MAX
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#endif /* MAX */
+
+#ifndef MIN
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#endif /* MIN */
 
 /**
  * art_drect_svp: Find the bounding box of a sorted vector path.
@@ -34,14 +44,23 @@ art_drect_svp (ArtDRect *bbox, const ArtSVP *svp)
 {
   int i;
 
+  if (svp->n_segs == 0)
+    {
   bbox->x0 = 0;
   bbox->y0 = 0;
   bbox->x1 = 0;
   bbox->y1 = 0;
+      return;
+    }
 
-  for (i = 0; i < svp->n_segs; i++)
+  art_drect_copy (bbox, &svp->segs[0].bbox);
+
+  for (i = 1; i < svp->n_segs; i++)
     {
-      art_drect_union (bbox, bbox, &svp->segs[i].bbox);
+      bbox->x0 = MIN (bbox->x0, svp->segs[i].bbox.x0);
+      bbox->y0 = MIN (bbox->y0, svp->segs[i].bbox.y0);
+      bbox->x1 = MAX (bbox->x1, svp->segs[i].bbox.x1);
+      bbox->y1 = MAX (bbox->y1, svp->segs[i].bbox.y1);
     }
 }
 
@@ -56,10 +75,8 @@ art_drect_svp (ArtDRect *bbox, const ArtSVP *svp)
 void
 art_drect_svp_union (ArtDRect *bbox, const ArtSVP *svp)
 {
-  int i;
+  ArtDRect svp_bbox;
 
-  for (i = 0; i < svp->n_segs; i++)
-    {
-      art_drect_union (bbox, bbox, &svp->segs[i].bbox);
-    }
+  art_drect_svp (&svp_bbox, svp);
+  art_drect_union (bbox, bbox, &svp_bbox);
 }

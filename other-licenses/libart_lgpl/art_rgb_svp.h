@@ -24,8 +24,10 @@
 
 #ifdef LIBART_COMPILATION
 #include "art_alphagamma.h"
+#include "art_svp.h"
 #else
 #include <libart_lgpl/art_alphagamma.h>
+#include <libart_lgpl/art_svp.h>
 #endif
 
 #ifdef __cplusplus

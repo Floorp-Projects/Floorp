@@ -23,11 +23,11 @@
 /* "Unsort" a sorted vector path into an ordinary vector path. */
 
 #ifdef LIBART_COMPILATION
-#include "art_rect.h"
-#include "art_point.h"
+#include "art_svp.h"
+#include "art_vpath.h"
 #else
-#include <libart_lgpl/art_rect.h>
-#include <libart_lgpl/art_point.h>
+#include <libart_lgpl/art_svp.h>
+#include <libart_lgpl/art_vpath.h>
 #endif
 
 #ifdef __cplusplus

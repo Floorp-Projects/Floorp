@@ -17,11 +17,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
+#include "art_svp_point.h"
+
 #include <math.h>
 #include "art_misc.h"
 
 #include "art_svp.h"
-#include "art_svp_point.h"
 
 /* Determine whether a point is inside, or near, an svp. */
 

@@ -17,9 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
+#include "art_uta.h"
+
 #include <string.h>
 #include "art_misc.h"
-#include "art_uta.h"
 
 /**
  * art_uta_new: Allocate a new uta.

@@ -791,6 +791,13 @@ static const PropertyCheckData SVGCheckProperties[] = {
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVG
 };
+
+static const PropertyCheckData SVGResetCheckProperties[] = {
+#define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
+#include "nsCSSPropList.h"
+#undef CSS_PROP_SVGRESET
+};  
 #endif
 
 #undef CSS_PROP_INCLUDE_NOT_CSS
@@ -1193,6 +1200,16 @@ nsRuleNode::GetSVGData(nsStyleContext* aContext)
 
   return WalkRuleTree(eStyleStruct_SVG, aContext, &ruleData, &svgData);
 }
+
+const nsStyleStruct*
+nsRuleNode::GetSVGResetData(nsStyleContext* aContext)
+{
+  nsRuleDataSVG svgData; // Declare a struct with null CSS values.
+  nsRuleData ruleData(eStyleStruct_SVGReset, mPresContext, aContext);
+  ruleData.mSVGData = &svgData;
+
+  return WalkRuleTree(eStyleStruct_SVGReset, aContext, &ruleData, &svgData);
+}
 #endif
 
 const nsStyleStruct*
@@ -1499,6 +1516,13 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       nsStyleSVG* svg = new (mPresContext) nsStyleSVG();
       aContext->SetStyle(eStyleStruct_SVG, svg);
       return svg;
+    }
+
+    case eStyleStruct_SVGReset:
+    {
+      nsStyleSVGReset* svgReset = new (mPresContext) nsStyleSVGReset();
+      aContext->SetStyle(eStyleStruct_SVGReset, svgReset);
+      return svgReset;
     }
 #endif
   }
@@ -4278,6 +4302,27 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     svg->mFillRule = parentSVG->mFillRule;
   }
   
+  // pointer-events: enum, inherit
+  if (eCSSUnit_Enumerated == SVGData.mPointerEvents.GetUnit()) {
+    svg->mPointerEvents = SVGData.mPointerEvents.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == SVGData.mPointerEvents.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mPointerEvents = parentSVG->mPointerEvents;
+  }
+
+  // shape-rendering: enum, auto, inherit
+  if (eCSSUnit_Enumerated == SVGData.mShapeRendering.GetUnit()) {
+    svg->mShapeRendering = SVGData.mShapeRendering.GetIntValue();
+  }
+  else if (eCSSUnit_Auto == SVGData.mShapeRendering.GetUnit()) {
+    svg->mShapeRendering = NS_STYLE_SHAPE_RENDERING_AUTO;
+  }
+  else if (eCSSUnit_Inherit == SVGData.mShapeRendering.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mShapeRendering = parentSVG->mShapeRendering;
+  }
+
   // stroke: 
   SetSVGPaint(SVGData.mStroke, parentSVG->mStroke, mPresContext, svg->mStroke, inherited);
 
@@ -4318,7 +4363,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   // stroke-miterlimit: <miterlimit>, inherit
   if (eCSSUnit_Number == SVGData.mStrokeMiterlimit.GetUnit()) {
     float value = SVGData.mStrokeMiterlimit.GetFloatValue();
-    if (value > 1) { // XXX this check should probably be in nsCSSParser
+    if (value >= 1.0f) { // XXX this check should probably be in nsCSSParser
       svg->mStrokeMiterlimit = value;
     }
   }
@@ -4334,6 +4379,27 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   SetSVGLength(SVGData.mStrokeWidth, parentSVG->mStrokeWidth,
                svg->mStrokeWidth, aContext, mPresContext, inherited);
 
+  // text-anchor: enum, inherit
+  if (eCSSUnit_Enumerated == SVGData.mTextAnchor.GetUnit()) {
+    svg->mTextAnchor = SVGData.mTextAnchor.GetIntValue();
+  }
+  else if (eCSSUnit_Inherit == SVGData.mTextAnchor.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mTextAnchor = parentSVG->mTextAnchor;
+  }
+  
+  // text-rendering: enum, auto, inherit
+  if (eCSSUnit_Enumerated == SVGData.mTextRendering.GetUnit()) {
+    svg->mTextRendering = SVGData.mTextRendering.GetIntValue();
+  }
+  else if (eCSSUnit_Auto == SVGData.mTextRendering.GetUnit()) {
+    svg->mTextRendering = NS_STYLE_TEXT_RENDERING_AUTO;
+  }
+  else if (eCSSUnit_Inherit == SVGData.mTextRendering.GetUnit()) {
+    inherited = PR_TRUE;
+    svg->mTextRendering = parentSVG->mTextRendering;
+  }
+
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
@@ -4348,6 +4414,64 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   }
 
   return svg;
+}
+
+const nsStyleStruct* 
+nsRuleNode::ComputeSVGResetData(nsStyleStruct* aStartStruct,
+                                const nsRuleDataStruct& aData,
+                                nsStyleContext* aContext, 
+                                nsRuleNode* aHighestNode,
+                                const RuleDetail& aRuleDetail, PRBool aInherited)
+{
+  nsStyleContext* parentContext = aContext->GetParent();
+
+  const nsRuleDataSVG& SVGData = NS_STATIC_CAST(const nsRuleDataSVG&, aData);
+  nsStyleSVGReset* svgReset = nsnull;
+
+  if (aStartStruct)
+    // We only need to compute the delta between this computed data and our
+    // computed data.
+    svgReset = new (mPresContext) nsStyleSVGReset(*NS_STATIC_CAST(nsStyleSVGReset*,aStartStruct));
+  else 
+    svgReset = new (mPresContext) nsStyleSVGReset();
+
+  
+  const nsStyleSVGReset* parentSVGReset = svgReset;
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
+    parentSVGReset = parentContext->GetStyleSVGReset();
+
+  PRBool inherited = aInherited;
+
+  // dominant-baseline: enum, auto, inherit
+  if (eCSSUnit_Enumerated == SVGData.mDominantBaseline.GetUnit()) {
+    svgReset->mDominantBaseline = SVGData.mDominantBaseline.GetIntValue();
+  }
+  else if (eCSSUnit_Auto == SVGData.mDominantBaseline.GetUnit()) {
+    svgReset->mDominantBaseline = NS_STYLE_DOMINANT_BASELINE_AUTO;
+  }
+  else if (eCSSUnit_Inherit == SVGData.mDominantBaseline.GetUnit()) {
+    inherited = PR_TRUE;
+    svgReset->mDominantBaseline = parentSVGReset->mDominantBaseline;
+  }
+
+  
+  if (inherited)
+    // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
+    // style context.
+    aContext->SetStyle(eStyleStruct_SVGReset, svgReset);
+  else {
+    // We were fully specified and can therefore be cached right on the rule node.
+    if (!aHighestNode->mStyleData.mResetData)
+      aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
+    aHighestNode->mStyleData.mResetData->mSVGResetData = svgReset;
+    // Propagate the bit down.
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(SVGReset), aHighestNode);
+  }
+
+  return svgReset;
 }
 #endif
 

@@ -1,5 +1,5 @@
 /*
- * art_render_gradient.h: SVP mask source for modular rendering.
+ * art_render_svp.h: SVP mask source for modular rendering.
  *
  * Libart_LGPL - library of basic graphic primitives
  * Copyright (C) 2000 Raph Levien
@@ -24,6 +24,14 @@
 
 #ifndef __ART_RENDER_SVP_H__
 #define __ART_RENDER_SVP_H__
+
+#ifdef LIBART_COMPILATION
+#include "art_render.h"
+#include "art_svp.h"
+#else
+#include <libart_lgpl/art_render.h>
+#include <libart_lgpl/art_svp.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

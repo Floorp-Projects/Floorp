@@ -1,3 +1,214 @@
+2002-10-16  John Harper  <jsh@unfactored.org>
+
+	* art_render_svp.c (art_render_svp_callback,
+	art_render_svp_callback_span, art_render_svp_callback_opacity,
+	art_render_svp_callback_opacity_span): if no runs would
+	normally be emitted, but start is greater than zero, emit a
+	single run covering the entire width of the rendered region
+
+2002-08-18  Havoc Pennington  <hp@pobox.com>
+
+	* autogen.sh: hardcode aclocal-1.4/automake-1.4 so that users with
+	both automake 1.6 and 1.4 installed get the right automake. Means
+	compilation from CVS will now require the latest automake 1.4
+	release, or manually creating symlinks called "automake-1.4" and
+	"aclocal-1.4"
+
+2002-07-01  Alexander Larsson  <alexl@redhat.com>
+
+	* Release 2.3.10
+
+2002-07-01  Alexander Larsson  <alexl@redhat.com>
+
+	* configure.in (LIBART_VERSION_INFO):
+	Bump to 2.3.10
+
+	* art_svp_intersect.c (art_svp_intersect_add_seg):
+	Initialize seg->wind_left to zero, this avoids
+	uninitialized memory read later in art_svp_intersect_horiz_commit.
+
+2002-06-24  Alexander Larsson  <alexl@redhat.com>
+
+	Release 2.3.9.
+	
+2002-06-24  Alexander Larsson  <alexl@redhat.com>
+
+	* configure.in: Bump to 2.3.9
+
+2002-06-04  Balamurali Viswanathan <balamurali.viswanathan@wipro.com>
+
+	* Makefile.am: Added -lm to libart_lgpl_2_la_LIBADD
+	fixes bug 75711 (Jacob's suggestion)
+
+2002-05-08  Raph Levien  <raph@pixel.artofcode.com>
+
+	* art_uta_vpath.c (art_uta_add_line): Fixes very subtle
+	edge case found by Federico Mena Quintero: (96, 96) -
+	(96.220200017562348, 93.034868598919431). Previously, through
+	numerical error, xn was a hair to the left, throwing off
+	the Bresenham iteration.
+
+2002-03-08  Tor Lillqvist  <tml@iki.fi>
+
+	* configure.in: Minor changes for build on Win32. Call
+	AC_LIBTOOL_WIN32_DLL. Set automake conditionals OS_WIN32 and
+	MS_LIB_AVAILABLE.
+
+	* art_affine.c: Include art_misc.h for M_PI, which not necessarily
+	is in math.h.
+
+	* Makefile.am: On Win32, build and install import libraries, both
+	for gcc and for MSVC (if available).
+
+	* libart-zip.in: New file. Used to build runtime and developer
+	package for Win32.
+
+2002-02-06  Laszlo Peter  <laca@ireland.sun.com>
+
+	* configure.in: add AC_FUNC_ALLOCA
+
+	* art_render_gradient.c: copy alloca hacks from glib/galloca.h
+
+2002-02-02  Alexander Larsson  <alla@lysator.liu.se>
+
+	* art_render.c:
+	Add special case for art_render_composite_8 for two cases
+	that are very common when rendering SVGs with librsvg.
+	I'm sure these can be optimized further, but i'm feeling
+	very slow today.
+
+2002-02-01  Alex Larsson  <alexl@redhat.com>
+
+	* art_render_gradient.c:
+	Add optimized case for depth==8,  n_channels == 3
+
+	* test_gradient.c:
+	Test case for gradients. Uses gtk+, so not built by
+	default.
+
+2002-01-10  Anders Carlsson  <andersca@gnu.org>
+
+	* Release 2.3.8
+
+2002-01-04  Anders Carlsson  <andersca@gnu.org>
+
+	* configure.in: Bump version to 2.3.8.
+
+2002-01-03  Darin Adler  <darin@bentspoon.com>
+
+	* Makefile.am: Add art_render_mask.[ch].
+
+	* art_bpath.h:
+	* art_rect_svp.h:
+	* art_rect_uta.h:
+	* art_render.h:
+	* art_render_gradient.h:
+	* art_render_mask.h:
+	* art_render_svp.h:
+	* art_rgb_svp.h:
+	* art_svp_intersect.h:
+	* art_svp_ops.h:
+	* art_svp_point.h:
+	* art_svp_render_aa.h:
+	* art_svp_vpath.h:
+	* art_svp_vpath_stroke.h:
+	* art_svp_wind.h:
+	* art_uta.h:
+	* art_uta_rect.h:
+	* art_uta_ops.h:
+	* art_uta_svp.h:
+	* art_uta_vpath.h:
+	* art_vpath_bpath.h:
+	* art_vpath_dash.h:
+	* art_vpath_svp.h:
+	Fix includes so that each header includes what it needs.
+
+	* art_affine.c:
+	* art_alphagamma.c:
+	* art_bpath.c:
+	* art_gray_svp.c:
+	* art_misc.c:
+	* art_pixbuf.c:
+	* art_rect.c:
+	* art_rect_svp.c:
+	* art_rect_uta.c:
+	* art_render.c:
+	* art_render_gradient.c:
+	* art_render_mask.c:
+	* art_render_svp.c:
+	* art_rgb.c:
+	* art_rgb_a_affine.c:
+	* art_rgb_affine.c:
+	* art_rgb_affine_private.c:
+	* art_rgb_bitmap_affine.c:
+	* art_rgb_pixbuf_affine.c:
+	* art_rgb_rgba_affine.c:
+	* art_rgb_svp.c:
+	* art_rgba.c:
+	* art_svp.c:
+	* art_svp_intersect.c:
+	* art_svp_ops.c:
+	* art_svp_point.c:
+	* art_svp_render_aa.c:
+	* art_svp_vpath.c:
+	* art_svp_vpath_stroke.c:
+	* art_svp_wind.c:
+	* art_uta.c:
+	* art_uta_ops.c:
+	* art_uta_rect.c:
+	* art_uta_svp.c:
+	* art_uta_vpath.c:
+	* art_vpath.c:
+	* art_vpath_bpath.c:
+	* art_vpath_dash.c:
+	* art_vpath_svp.c:
+	Fix order of includes so that the corresponding header is
+	included first, to test that each header includes what it
+	needs.
+
+2002-01-02  Darin Adler  <darin@bentspoon.com>
+
+	* art_alphagamma.h:
+	* art_gray_svp.h:
+	* art_pixbuf.h:
+	* art_render.h:
+	* art_rgb.h:
+	* art_rgba.h:
+	Add some missing includes.
+
+2001-12-26  Raph Levien  <raph@pixel.artofcode.com>
+
+	* art_svp_intersect.c: More fixes to intersector. When tops
+	coincide, full ordering test is performed (with breaking),
+	rather than just comparing b from line eq. Also, had a test
+	for x >= backwards in art_svp_intersect_add_point. Thanks
+	to Bruce Q. Hammond for test cases.
+
+2001-11-21  Raph Levien  <raph@pixel.artofcode.com>
+
+	* art_svp_intersect.c (art_svp_intersect_break): Changed break
+	logic systematically so that new breaks are always in order,
+	rather than allowing them to become out of order, then try to fix
+	them up later. It's no doubt possible to come up with cases in
+	which this reduces precision, but it simplifies life nicely, so I
+	did it.
+	
+	* (art_svp_intersect_horiz): Initialize (a, b, c) values of hs to
+	avoid UMR's when they are tested later.
+
+	* art_svp_ops.c (print_ps_vpath): Changed the coordinate
+	transform so that it's done in the PostScript rather than
+	the C code that outputs the coordinates. This makes it easier
+	to reconstruct the vector path from the debug output.
+
+2001-11-16  Alex Larsson  <alexl@redhat.com>
+
+	* art_rect.c (art_drect_svp_union, art_drect_svp):
+	Don't call art_drect_union() in these functions, since
+	it considers zero-width or zero-height svg segments to
+	be empty. This causes it to think i.e. rectangular svps
+	are empty.
+
 2001-11-07  Raph Levien  <raph@pixel.artofcode.com>
 
 	* art_svp_intersect.c (art_svp_intersect_horiz): Fixed important

@@ -18,6 +18,9 @@
  */
 
 
+#include "config.h"
+#include "art_svp_vpath_stroke.h"
+
 #include <stdlib.h>
 #include <math.h>
 
@@ -31,7 +34,6 @@
 #include "art_svp_wind.h"
 #endif
 #include "art_svp_vpath.h"
-#include "art_svp_vpath_stroke.h"
 
 #define EPSILON 1e-6
 #define EPSILON_2 1e-12

@@ -965,6 +965,9 @@ nsExpatDriver::CanParse(CParserContext& aParserContext,
         aParserContext.mMimeType.EqualsWithConversion(kXMLApplicationContentType)  ||
         aParserContext.mMimeType.EqualsWithConversion(kXHTMLApplicationContentType)||
         aParserContext.mMimeType.EqualsWithConversion(kRDFTextContentType)         ||
+#ifdef MOZ_SVG
+        aParserContext.mMimeType.EqualsWithConversion(kSVGTextContentType)         ||
+#endif
         aParserContext.mMimeType.EqualsWithConversion(kXULTextContentType)) {
       result=ePrimaryDetect;
     }

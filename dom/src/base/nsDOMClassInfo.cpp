@@ -294,6 +294,7 @@
 
 #ifdef MOZ_SVG
 #include "nsIDOMSVGAnimatedLength.h"
+#include "nsIDOMSVGAnimatedLengthList.h"
 #include "nsIDOMSVGAnimatedPoints.h"
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGAnimTransformList.h"
@@ -308,6 +309,7 @@
 #include "nsIDOMSVGForeignObjectElem.h"
 #include "nsIDOMSVGMatrix.h"
 #include "nsIDOMSVGLength.h"
+#include "nsIDOMSVGLengthList.h"
 #include "nsIDOMSVGLocatable.h"
 #include "nsIDOMSVGPathElement.h"
 #include "nsIDOMSVGPathSeg.h"
@@ -317,11 +319,18 @@
 #include "nsIDOMSVGPolygonElement.h"
 #include "nsIDOMSVGPolylineElement.h"
 #include "nsIDOMSVGSVGElement.h"
+#include "nsIDOMSVGTextElement.h"
 #include "nsIDOMSVGTransformable.h"
 #include "nsIDOMSVGTransform.h"
 #include "nsIDOMSVGTransformList.h"
 #include "nsIDOMSVGRect.h"
 #include "nsIDOMSVGAnimatedRect.h"
+#include "nsIDOMSVGNumber.h"
+#include "nsIDOMSVGTextElement.h"
+#include "nsIDOMSVGTSpanElement.h"
+#include "nsIDOMSVGAnimatedString.h"
+#include "nsIDOMSVGImageElement.h"
+#include "nsIDOMSVGURIReference.h"
 #endif
 
 #include "nsIImageDocument.h"
@@ -694,6 +703,61 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Pkcs11, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
+  // DOM Traversal classes
+  NS_DEFINE_CLASSINFO_DATA(TreeWalker, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  // We are now trying to preserve binary compat in classinfo.  No
+  // more putting things in those categories up there.  New entries
+  // are to be added to the end of the list
+  NS_DEFINE_CLASSINFO_DATA(CSSRect, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  // DOM Chrome Window class.
+  NS_DEFINE_CLASSINFO_DATA(ChromeWindow, nsWindowSH,
+                           DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_GETPROPERTY |
+                           nsIXPCScriptable::WANT_SETPROPERTY |
+                           nsIXPCScriptable::WANT_NEWRESOLVE |
+                           nsIXPCScriptable::WANT_PRECREATE |
+                           nsIXPCScriptable::WANT_FINALIZE |
+                           nsIXPCScriptable::WANT_ADDPROPERTY |
+                           nsIXPCScriptable::WANT_DELPROPERTY |
+                           nsIXPCScriptable::WANT_ENUMERATE |
+                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
+
+  NS_DEFINE_CLASSINFO_DATA(CSSRGBColor, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(RangeException, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(CSSValueList, nsCSSValueListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(ContentList, HTMLCollection,
+                                     nsContentListSH,
+                                     ARRAY_SCRIPTABLE_FLAGS |
+                                     nsIXPCScriptable::WANT_PRECREATE)
+
+  NS_DEFINE_CLASSINFO_DATA(XMLStylesheetProcessingInstruction, nsNodeSH,
+                           NODE_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(ImageDocument, nsHTMLDocumentSH,
+                           DOCUMENT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_ENUMERATE)
+
+#ifdef MOZ_XUL
+  NS_DEFINE_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
+                           DEFAULT_SCRIPTABLE_FLAGS)
+#endif
+
+  NS_DEFINE_CLASSINFO_DATA(DOMStringList, nsStringListSH,
+                           ARRAY_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(NameList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
 #ifdef MOZ_SVG
   // SVG document
   NS_DEFINE_CLASSINFO_DATA(SVGDocument, nsDocumentSH,
@@ -783,63 +847,22 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGRect, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGAnimatedRect, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedLengthList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-#endif
-
-  // DOM Traversal classes
-  NS_DEFINE_CLASSINFO_DATA(TreeWalker, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(SVGLengthList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  // We are now trying to preserve binary compat in classinfo.  No
-  // more putting things in those categories up there.  New entries
-  // are to be added to the end of the list
-  NS_DEFINE_CLASSINFO_DATA(CSSRect, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(SVGNumber, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)    
+  NS_DEFINE_CLASSINFO_DATA(SVGTextElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGTSpanElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGAnimatedString, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  // DOM Chrome Window class.
-  NS_DEFINE_CLASSINFO_DATA(ChromeWindow, nsWindowSH,
-                           DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_GETPROPERTY |
-                           nsIXPCScriptable::WANT_SETPROPERTY |
-                           nsIXPCScriptable::WANT_NEWRESOLVE |
-                           nsIXPCScriptable::WANT_PRECREATE |
-                           nsIXPCScriptable::WANT_FINALIZE |
-                           nsIXPCScriptable::WANT_ADDPROPERTY |
-                           nsIXPCScriptable::WANT_DELPROPERTY |
-                           nsIXPCScriptable::WANT_ENUMERATE |
-                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
-
-  NS_DEFINE_CLASSINFO_DATA(CSSRGBColor, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(RangeException, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(CSSValueList, nsCSSValueListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(ContentList, HTMLCollection,
-                                     nsContentListSH,
-                                     ARRAY_SCRIPTABLE_FLAGS |
-                                     nsIXPCScriptable::WANT_PRECREATE)
-
-  NS_DEFINE_CLASSINFO_DATA(XMLStylesheetProcessingInstruction, nsNodeSH,
-                           NODE_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(ImageDocument, nsHTMLDocumentSH,
-                           DOCUMENT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_ENUMERATE)
-
-#ifdef MOZ_XUL
-  NS_DEFINE_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
-                           DEFAULT_SCRIPTABLE_FLAGS)
-#endif
-
-  NS_DEFINE_CLASSINFO_DATA(DOMStringList, nsStringListSH,
-                           ARRAY_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(NameList, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SVGImageElement, nsElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)  
+#endif  
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2001,6 +2024,57 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeWindow, nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventReceiver)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(RangeException, nsIDOMRangeException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMRangeException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIException)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ContentList, nsIDOMHTMLCollection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ImageDocument, nsIImageDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIImageDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+  DOM_CLASSINFO_MAP_END
+
+#ifdef MOZ_XUL
+  DOM_CLASSINFO_MAP_BEGIN(XULTreeBuilder, nsIXULTreeBuilder)
+    DOM_CLASSINFO_MAP_ENTRY(nsIXULTreeBuilder)
+    DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
+  DOM_CLASSINFO_MAP_END
+#endif
+
+  DOM_CLASSINFO_MAP_BEGIN(DOMStringList, nsIDOMDOMStringList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMStringList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(NameList, nsIDOMNameList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNameList)
+  DOM_CLASSINFO_MAP_END
+
 #ifdef MOZ_SVG
 #define DOM_CLASSINFO_SVG_ELEMENT_MAP_ENTRIES \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGElement) \
@@ -2210,59 +2284,41 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedRect, nsIDOMSVGAnimatedRect)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedRect)
   DOM_CLASSINFO_MAP_END
-#endif
 
-  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ChromeWindow, nsIDOMWindow)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMJSWindow)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMChromeWindow)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventReceiver)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedLengthList, nsIDOMSVGAnimatedLengthList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedLengthList)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(RangeException, nsIDOMRangeException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMRangeException)
-    DOM_CLASSINFO_MAP_ENTRY(nsIException)
+  DOM_CLASSINFO_MAP_BEGIN(SVGLengthList, nsIDOMSVGLengthList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGLengthList)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(ContentList, nsIDOMHTMLCollection)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
+  DOM_CLASSINFO_MAP_BEGIN(SVGNumber, nsIDOMSVGNumber)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGNumber)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(ImageDocument, nsIImageDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIImageDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocument)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOM3Node)
+  DOM_CLASSINFO_MAP_BEGIN(SVGTextElement, nsIDOMSVGTextElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextPositioningElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextContentElement)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-#ifdef MOZ_XUL
-  DOM_CLASSINFO_MAP_BEGIN(XULTreeBuilder, nsIXULTreeBuilder)
-    DOM_CLASSINFO_MAP_ENTRY(nsIXULTreeBuilder)
-    DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
-  DOM_CLASSINFO_MAP_END
-#endif
-
-  DOM_CLASSINFO_MAP_BEGIN(DOMStringList, nsIDOMDOMStringList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMStringList)
+  DOM_CLASSINFO_MAP_BEGIN(SVGTSpanElement, nsIDOMSVGTSpanElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextPositioningElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGTextContentElement)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(NameList, nsIDOMNameList)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNameList)
+  DOM_CLASSINFO_MAP_BEGIN(SVGAnimatedString, nsIDOMSVGAnimatedString)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGAnimatedString)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(SVGImageElement, nsIDOMSVGImageElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGImageElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
+    DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+    
+#endif //MOZ_SVG
 
 #ifdef NS_DEBUG
   {

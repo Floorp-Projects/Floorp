@@ -20,11 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "art_misc.h"
-#include "art_alphagamma.h"
-#include "art_rgb.h"
-
+#include "config.h"
 #include "art_render.h"
+
+#include "art_rgb.h"
 
 typedef struct _ArtRenderPriv ArtRenderPriv;
 
@@ -43,8 +42,7 @@ struct _ArtRenderPriv {
 ArtRender *
 art_render_new (int x0, int y0, int x1, int y1,
 		art_u8 *pixels, int rowstride,
-		ArtDestinationPixelFormat pixf,
-		ArtAlphaType alpha_type,
+		int n_chan, int depth, ArtAlphaType alpha_type,
 		ArtAlphaGamma *alphagamma)
 {
   ArtRenderPriv *priv;
@@ -52,7 +50,7 @@ art_render_new (int x0, int y0, int x1, int y1,
 
   priv = art_new (ArtRenderPriv, 1);
   result = &priv->super;
-/*
+
   if (n_chan > ART_MAX_CHAN)
     {
       art_warn ("art_render_new: n_chan = %d, exceeds %d max\n",
@@ -65,7 +63,6 @@ art_render_new (int x0, int y0, int x1, int y1,
 		depth, ART_MAX_DEPTH);
       return NULL;
     }
-  */
   if (x0 >= x1)
     {
       art_warn ("art_render_new: x0 >= x1 (x0 = %d, x1 = %d)\n", x0, x1);
@@ -77,14 +74,8 @@ art_render_new (int x0, int y0, int x1, int y1,
   result->y1 = y1;
   result->pixels = pixels;
   result->rowstride = rowstride;
-
-   result->n_chan = 0;
-   if (pixf & ART_PF_RGB_MASK)
-    result->n_chan += 3;
-   
-   result->depth = (pixf & ART_PF_CMP_SIZE_MASK) >> 8;
-   result->pixel_format = pixf;
-  
+  result->n_chan = n_chan;
+  result->depth = depth;
   result->alpha_type = alpha_type;
 
   result->clear = ART_FALSE;
@@ -197,11 +188,9 @@ art_render_clear_render_8 (ArtRenderCallback *self, ArtRender *render,
     }
 
   ix = 0;
-  for (i = 0; i < width; i++) {
+  for (i = 0; i < width; i++)
     for (j = 0; j < n_ch; j++)
       dest[ix++] = color[j];
-  	
-  }
 }
 
 const ArtRenderCallback art_render_clear_rgb8_obj =
@@ -530,10 +519,7 @@ art_render_composite_8 (ArtRenderCallback *self, ArtRender *render,
   int n_chan = render->n_chan;
   ArtAlphaType alpha_type = render->alpha_type;
   int n_ch = n_chan + (alpha_type != ART_ALPHA_NONE);
-  
-  /* extract the pixel size (in bits) and divide by 8 */
-  int dst_pixstride = (render->pixel_format & ART_PF_PIXEL_SIZE_MASK) >> 8;
-  
+  int dst_pixstride = n_ch;
   ArtAlphaType buf_alpha = render->buf_alpha;
   int buf_n_ch = n_chan + (buf_alpha != ART_ALPHA_NONE);
   int buf_pixstride = buf_n_ch;
@@ -657,9 +643,14 @@ const ArtRenderCallback art_render_composite_8_obj =
 };
 
 
+/* Assumes:
+ * alpha_buf is NULL
+ * buf_alpha = ART_ALPHA_NONE  (source)
+ * alpha_type = ART_ALPHA_SEPARATE (dest)
+ * n_chan = 3;
+ */
 static void
-art_render_composite_rgb8 (ArtRenderCallback *self, 
-			ArtRender *render,
+art_render_composite_8_opt1 (ArtRenderCallback *self, ArtRender *render,
 			art_u8 *dest, int y)
 {
   ArtRenderMaskRun *run = render->run;
@@ -667,22 +658,107 @@ art_render_composite_rgb8 (ArtRenderCallback *self,
   int x0 = render->x0;
   int x;
   int run_x0, run_x1;
-  art_u8 *alpha_buf = render->alpha_buf;
   art_u8 *image_buf = render->image_buf;
   int i, j;
   art_u32 tmp;
   art_u32 run_alpha;
-  art_u32 alpha;
   int image_ix;
-  
-  /* extract the pixel size (in bits) and divide by 8 */
-  int dst_pixstride = (render->pixel_format & ART_PF_PIXEL_SIZE_MASK) >> 3 ;
-  
-  int n_chan = 3;
-  
-  ArtAlphaType buf_alpha = render->buf_alpha;
-  int buf_n_ch = n_chan + (buf_alpha != ART_ALPHA_NONE);
-  int buf_pixstride = buf_n_ch;
+  art_u8 *bufptr;
+  art_u32 src_mul;
+  art_u8 *dstptr;
+  art_u32 dst_alpha;
+  art_u32 dst_mul, dst_save_mul;
+
+  image_ix = 0;
+  for (i = 0; i < n_run - 1; i++)
+    {
+      run_x0 = run[i].x;
+      run_x1 = run[i + 1].x;
+      tmp = run[i].alpha;
+      if (tmp < 0x10000)
+        continue;
+
+      run_alpha = (tmp + (tmp >> 8) + (tmp >> 16) - 0x8000) >> 8; /* range [0 .. 0x10000] */
+      bufptr = image_buf + (run_x0 - x0) * 3;
+      dstptr = dest + (run_x0 - x0) * 4;
+      if (run_alpha == 0x10000)
+	{
+	  for (x = run_x0; x < run_x1; x++)
+	    {
+	      *dstptr++ = *bufptr++;
+	      *dstptr++ = *bufptr++;
+	      *dstptr++ = *bufptr++;
+	      *dstptr++ = 0xff;
+	    }
+	    }
+	  else
+	    {
+	  for (x = run_x0; x < run_x1; x++)
+	    {
+	      src_mul = run_alpha * 0x101;
+
+	      tmp = dstptr[3];
+	      /* range 0..0xff */
+	      dst_alpha = (tmp << 8) + tmp + (tmp >> 7);
+	      dst_mul = dst_alpha;
+	      /* dst_alpha is the alpha of the dest pixel,
+	     range 0..0x10000 */
+
+	  dst_mul *= 0x101;
+	  
+	      dst_alpha += ((((0x10000 - dst_alpha) * run_alpha) >> 8) + 0x80) >> 8;
+	      if (dst_alpha == 0)
+	  dst_save_mul = 0xff;
+	      else /* (dst_alpha != 0) */
+		  dst_save_mul = 0xff0000 / dst_alpha;
+	  
+	      for (j = 0; j < 3; j++)
+		{
+		  art_u32 src, dst;
+		  art_u32 tmp;
+
+		  src = (bufptr[j] * src_mul + 0x8000) >> 16;
+		  dst = (dstptr[j] * dst_mul + 0x8000) >> 16;
+		  tmp = ((dst * (0x10000 - run_alpha) + 0x8000) >> 16) + src;
+		  tmp -= tmp >> 16;
+		  dstptr[j] = (tmp * dst_save_mul + 0x8000) >> 16;
+		}
+	      dstptr[3] = (dst_alpha * 0xff + 0x8000) >> 16;
+
+	      bufptr += 3;
+	      dstptr += 4;
+	    }
+	}
+    }
+}
+
+
+const ArtRenderCallback art_render_composite_8_opt1_obj =
+{
+  art_render_composite_8_opt1,
+  art_render_nop_done
+};
+
+/* Assumes:
+ * alpha_buf is NULL
+ * buf_alpha = ART_ALPHA_PREMUL  (source)
+ * alpha_type = ART_ALPHA_SEPARATE (dest)
+ * n_chan = 3;
+ */
+static void
+art_render_composite_8_opt2 (ArtRenderCallback *self, ArtRender *render,
+			art_u8 *dest, int y)
+{
+  ArtRenderMaskRun *run = render->run;
+  int n_run = render->n_run;
+  int x0 = render->x0;
+  int x;
+  int run_x0, run_x1;
+  art_u8 *image_buf = render->image_buf;
+  int i, j;
+  art_u32 tmp;
+  art_u32 run_alpha;
+  int image_ix;
   art_u8 *bufptr;
   art_u32 src_alpha;
   art_u32 src_mul;
@@ -690,9 +766,6 @@ art_render_composite_rgb8 (ArtRenderCallback *self,
   art_u32 dst_alpha;
   art_u32 dst_mul, dst_save_mul;
 
-  art_u32 src, dst;
- /* art_u32 tmp; */
-
   image_ix = 0;
   for (i = 0; i < n_run - 1; i++)
     {
@@ -703,252 +776,129 @@ art_render_composite_rgb8 (ArtRenderCallback *self,
         continue;
 
       run_alpha = (tmp + (tmp >> 8) + (tmp >> 16) - 0x8000) >> 8; /* range [0 .. 0x10000] */
-      bufptr = image_buf + (run_x0 - x0) * buf_pixstride;
-      dstptr = dest + (run_x0 - x0) * dst_pixstride;
-      
-      if (render->pixel_format & ART_PF_SWAP_ALPHA_MASK)
-      	dstptr++;
-      
-      for (x = run_x0; x < run_x1; x++)
+      bufptr = image_buf + (run_x0 - x0) * 4;
+      dstptr = dest + (run_x0 - x0) * 4;
+      if (run_alpha == 0x10000)
 	{
-	  if (alpha_buf)
+	  for (x = run_x0; x < run_x1; x++)
 	    {
-	      tmp = run_alpha * alpha_buf[x - x0] + 0x80;
-	      /* range 0x80 .. 0xff0080 */
-	      alpha = (tmp + (tmp >> 8) + (tmp >> 16)) >> 8;
-	    }
+	      src_alpha = (bufptr[3] << 8) + bufptr[3] + (bufptr[3] >> 7);
+	      /* src_alpha is the (alpha of the source pixel),
+		 range 0..0x10000 */
+	      
+	      dst_alpha = (dstptr[3] << 8) + dstptr[3] + (dstptr[3] >> 7);
+	      /* dst_alpha is the alpha of the dest pixel,
+		 range 0..0x10000 */
+	      
+	      dst_mul = dst_alpha*0x101;
+	      
+	      if (src_alpha >= 0x10000)
+		dst_alpha = 0x10000;
 	  else
-	    alpha = run_alpha;
-	  /* alpha is run_alpha * alpha_buf[x], range 0 .. 0x10000 */
+		dst_alpha += ((((0x10000 - dst_alpha) * src_alpha) >> 8) + 0x80) >> 8;
 
-	  /* convert (src pixel * alpha) to premul alpha form,
-	     store in src as 0..0xffff range */
-	  if (buf_alpha == ART_ALPHA_NONE)
+	      if (dst_alpha == 0)
+		  dst_save_mul = 0xff;
+	      else /* dst_alpha != 0) */
+		  dst_save_mul = 0xff0000 / dst_alpha;
+	      
+	      for (j = 0; j < 3; j++)
 	    {
-	      src_alpha = alpha;
-	      src_mul = src_alpha;
+		  art_u32 src, dst;
+		  art_u32 tmp;
+		  
+		  src = (bufptr[j] << 8) |  bufptr[j];
+		  dst = (dstptr[j] * dst_mul + 0x8000) >> 16;
+		  tmp = ((dst * (0x10000 - src_alpha) + 0x8000) >> 16) + src;
+		  tmp -= tmp >> 16;
+		  dstptr[j] = (tmp * dst_save_mul + 0x8000) >> 16;
+		}
+	      dstptr[3] = (dst_alpha * 0xff + 0x8000) >> 16;
+	      
+	      bufptr += 4;
+	      dstptr += 4;
+	    }
 	    }
 	  else
 	    {
-	      tmp = alpha * bufptr[n_chan] + 0x80;
+	  for (x = run_x0; x < run_x1; x++)
+	    {
+	      tmp = run_alpha * bufptr[3] + 0x80;
 	      /* range 0x80 .. 0xff0080 */
 	      src_alpha = (tmp + (tmp >> 8) + (tmp >> 16)) >> 8;
-
-	      if (buf_alpha == ART_ALPHA_SEPARATE)
-		src_mul = src_alpha;
-	      else /* buf_alpha == (ART_ALPHA_PREMUL) */
-		src_mul = alpha;
-	    }
 	  /* src_alpha is the (alpha of the source pixel * alpha),
 	     range 0..0x10000 */
 
-	  src_mul *= 0x101;
+	      src_mul = run_alpha * 0x101;
 
-	 /* if (alpha_type == ART_ALPHA_NONE) */
-	  dst_alpha = 0x10000;
+	      tmp = dstptr[3];
+	      /* range 0..0xff */
+	      dst_alpha = (tmp << 8) + tmp + (tmp >> 7);
 	  dst_mul = dst_alpha;
-	  dst_mul *= 0x101;
+	      /* dst_alpha is the alpha of the dest pixel,
+		 range 0..0x10000 */
 	  
-	  dst_save_mul = 0xff;
-	  
-	  /* unrolling damage */
+	      dst_mul *= 0x101;
 
-	  src = (bufptr[0] * src_mul + 0x8000) >> 16;
-	  dst = (dstptr[0] * dst_mul + 0x8000) >> 16;
-	  tmp = ((dst * (0x10000 - src_alpha) + 0x8000) >> 16) + src;
-	  tmp &= 0x0000FFFF;
-	  dstptr[0] = (tmp * dst_save_mul + 0x8000) >> 16;
+	      if (src_alpha >= 0x10000)
+		dst_alpha = 0x10000;
+	      else
+		dst_alpha += ((((0x10000 - dst_alpha) * src_alpha) >> 8) + 0x80) >> 8;
 	  
-	  src = (bufptr[1] * src_mul + 0x8000) >> 16;
-	  dst = (dstptr[1] * dst_mul + 0x8000) >> 16;
-	  tmp = ((dst * (0x10000 - src_alpha) + 0x8000) >> 16) + src;
-	  tmp &= 0x0000FFFF;
-	  dstptr[1] = (tmp * dst_save_mul + 0x8000) >> 16;
+	      if (dst_alpha == 0)
+		{
+		  dst_save_mul = 0xff;
+		}
+	      else /* dst_alpha != 0) */
+		{
+		  dst_save_mul = 0xff0000 / dst_alpha;
+		}
 	  
-	  src = (bufptr[2] * src_mul + 0x8000) >> 16;
-	  dst = (dstptr[2] * dst_mul + 0x8000) >> 16;
+	      for (j = 0; j < 3; j++)
+		{
+		  art_u32 src, dst;
+		  art_u32 tmp;
+	  
+		  src = (bufptr[j] * src_mul + 0x8000) >> 16;
+		  dst = (dstptr[j] * dst_mul + 0x8000) >> 16;
 	  tmp = ((dst * (0x10000 - src_alpha) + 0x8000) >> 16) + src;
-	  tmp &= 0x0000FFFF;
-	  dstptr[2] = (tmp * dst_save_mul + 0x8000) >> 16; 
+		  tmp -= tmp >> 16;
+		  dstptr[j] = (tmp * dst_save_mul + 0x8000) >> 16;
+		}
+	      dstptr[3] = (dst_alpha * 0xff + 0x8000) >> 16;
 
-		/* end of unrolled loop */
-
-	  bufptr += buf_pixstride;
-	  dstptr += dst_pixstride;
+	      bufptr += 4;
+	      dstptr += 4;
+	    }
 	}
     }
 }
 
-const ArtRenderCallback art_render_composite_rgb8_obj =
+const ArtRenderCallback art_render_composite_8_opt2_obj =
 {
-  art_render_composite_rgb8,
+  art_render_composite_8_opt2,
   art_render_nop_done
 };
 
-static void
-art_render_composite_rgb5 (ArtRenderCallback *self, 
-			ArtRender *render,
-			art_u8 *dest, int y)
-{
-  ArtRenderMaskRun *run = render->run;
-  int n_run = render->n_run;
-  int x0 = render->x0;
-  int x;
-  int run_x0, run_x1;
-  art_u8 *alpha_buf = render->alpha_buf;
-  art_u8 *image_buf = render->image_buf;
-  int i, j;
-  art_u32 tmp;
-  art_u32 run_alpha;
-  art_u32 alpha;
-  int image_ix;
-  
-  int n_chan = 3;
-  
-  ArtAlphaType buf_alpha = render->buf_alpha;
-  int buf_n_ch = n_chan + (buf_alpha != ART_ALPHA_NONE);
-  int buf_pixstride = buf_n_ch;
-  art_u8 *bufptr;
-  art_u32 src_alpha;
-  art_u32 src_mul;
- 
-  art_u16 *dstptr;
-  art_u32 dst_alpha;
-  art_u32 dst_mul, dst_save_mul;
-
-  art_u32 src, dst;
-  
-  art_u16 dstval,
-    result;
-   
-  int 
-    redShift = 7,
-    redMask = 0x7C00,	/* bits 14 - 10 */
-    greenShift = 2,
-    greenMask = 0x03E0,	/* bits 5 - 9 */
-    blueMask = 0x001F;	/* lowest 5 bits [0 - 4] */
-  
-  if (render->pixel_format & ART_PF_GREEN_6_MASK) {
-    redMask <<= 1; /* Red pushed left 1 */
-    ++redShift;
-    greenMask += (1<<10); /* Extra bit for green */
-    ++greenShift;
-  }
-  
-  /* art_u32 tmp; */
-
-  image_ix = 0;
-  for (i = 0; i < n_run - 1; i++)
-    {
-      run_x0 = run[i].x;
-      run_x1 = run[i + 1].x;
-      tmp = run[i].alpha;
-      if (tmp < 0x10000)
-        continue;
-
-      run_alpha = (tmp + (tmp >> 8) + (tmp >> 16) - 0x8000) >> 8; /* range [0 .. 0x10000] */
-      bufptr = image_buf + (run_x0 - x0) * buf_pixstride;
-      dstptr = ((art_u16*)dest) + (run_x0 - x0);
-      
-      if (render->pixel_format & ART_PF_SWAP_ALPHA_MASK)
-      	dstptr++;
-      
-      for (x = run_x0; x < run_x1; x++)
-	{
-	  if (alpha_buf)
-	    {
-	      tmp = run_alpha * alpha_buf[x - x0] + 0x80;
-	      /* range 0x80 .. 0xff0080 */
-	      alpha = (tmp + (tmp >> 8) + (tmp >> 16)) >> 8;
-	    }
-	  else
-	    alpha = run_alpha;
-	  /* alpha is run_alpha * alpha_buf[x], range 0 .. 0x10000 */
-
-	  /* convert (src pixel * alpha) to premul alpha form,
-	     store in src as 0..0xffff range */
-	  if (buf_alpha == ART_ALPHA_NONE)
-	    {
-	      src_alpha = alpha;
-	      src_mul = src_alpha;
-	    }
-	  else
-	    {
-	      tmp = alpha * bufptr[n_chan] + 0x80;
-	      /* range 0x80 .. 0xff0080 */
-	      src_alpha = (tmp + (tmp >> 8) + (tmp >> 16)) >> 8;
-
-	      if (buf_alpha == ART_ALPHA_SEPARATE)
-		src_mul = src_alpha;
-	      else /* buf_alpha == (ART_ALPHA_PREMUL) */
-		src_mul = alpha;
-	    }
-	  /* src_alpha is the (alpha of the source pixel * alpha),
-	     range 0..0x10000 */
-
-	  src_mul *= 0x101;
-
-	 /* if (alpha_type == ART_ALPHA_NONE) */
-	  dst_alpha = 0x10000;
-	  dst_mul = dst_alpha;
-	  dst_mul *= 0x101;
-	  
-	  dst_save_mul = 0xff;
-	  
-	  /* unrolling damage */
-	  
-	  dstval = *dstptr;
-
-	  src = (bufptr[0] * src_mul + 0x8000) >> 16;
-	  dst = ( ( (dstval & redMask) >> redShift ) * dst_mul + 0x8000) >> 16;
-	  tmp = ((dst * (0x10000 - src_alpha) + 0x8000) >> 16) + src;
-	  tmp &= 0x0000FFFF;
-	  result = (((tmp * dst_save_mul + 0x8000) >> 16) << redShift) & redMask;
-	  
-	  src = (bufptr[1] * src_mul + 0x8000) >> 16;
-	  dst = ( ((dstval & greenMask)  >> greenShift) * dst_mul + 0x8000) >> 16;
-	  
-	  tmp = ((dst * (0x10000 - src_alpha) + 0x8000) >> 16) + src;
-	  tmp &= 0x0000FFFF;
-	  result |= (((tmp * dst_save_mul + 0x8000) >> 16) << greenShift) & greenMask;
-	  
-	  src = (bufptr[2] * src_mul + 0x8000) >> 16;
-	  dst = (((dstval & blueMask) << 3) * dst_mul + 0x8000) >> 16;
-	  tmp = ((dst * (0x10000 - src_alpha) + 0x8000) >> 16) + src;
-	  tmp &= 0x0000FFFF;
-	  result |= (((tmp * dst_save_mul + 0x8000) >> 16) >> 3) & blueMask;
-	  
-	  *dstptr++ = result;
-	  
-          /* end of unrolled loop */
-
-	  bufptr += buf_pixstride;
-	}
-    }
-}
-
-const ArtRenderCallback art_render_composite_rgb5_obj =
-{
-  art_render_composite_rgb5,
-  art_render_nop_done
-};
 
 /* todo: inline */
 static ArtRenderCallback *
 art_render_choose_compositing_callback (ArtRender *render)
 {
-  if (render->pixel_format & ART_PF_RGB_MASK) {
   	if (render->depth == 8 && render->buf_depth == 8)
-  		return (ArtRenderCallback *)&art_render_composite_rgb8_obj;
+    {
+      if (render->n_chan == 3 &&
+	  render->alpha_buf == NULL &&
+	  render->alpha_type == ART_ALPHA_SEPARATE)
+	{
+	  if (render->buf_alpha == ART_ALPHA_NONE)
+	    return (ArtRenderCallback *)&art_render_composite_8_opt1_obj;
+	  else if (render->buf_alpha == ART_ALPHA_PREMUL)
+	    return (ArtRenderCallback *)&art_render_composite_8_opt2_obj;
+	}
   	
-  	if (render->depth == 5 && render->buf_depth == 8)
-  		return (ArtRenderCallback *)&art_render_composite_rgb5_obj;
-  	
-  	art_die("We are scrwed.");
-  	
-  } else
-  if (render->depth == 8 && render->buf_depth == 8)
     return (ArtRenderCallback *)&art_render_composite_8_obj;
+    }
   return (ArtRenderCallback *)&art_render_composite_obj;
 }
 
@@ -1379,7 +1329,7 @@ art_render_image_solid_negotiate (ArtImageSource *self, ArtRender *render,
 
   render_cbk = NULL;
 
-  if (render->depth <= 8 && render->n_chan == 3 &&
+  if (render->depth == 8 && render->n_chan == 3 &&
       render->alpha_type == ART_ALPHA_NONE)
     {
       if (render->clear)
@@ -1391,7 +1341,7 @@ art_render_image_solid_negotiate (ArtImageSource *self, ArtRender *render,
     }
   if (render_cbk == NULL)
     {
-      if (render->depth <= 8)
+      if (render->depth == 8)
 	{
 	  render_cbk = art_render_image_solid_rgb8;
 	  *p_buf_depth = 8;

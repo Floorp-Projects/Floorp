@@ -20,12 +20,13 @@
 /* Various utility functions RLL finds useful. */
 
 #include "config.h"
+#include "art_misc.h"
+
 #ifdef HAVE_UINSTD_H
 #include <unistd.h>
 #endif
 #include <stdio.h>
 #include <stdarg.h>
-#include "art_misc.h"
 
 /**
  * art_die: Print the error message to stderr and exit with a return code of 1.
@@ -76,3 +77,17 @@ art_dprint (const char *fmt, ...)
   va_end (ap);
 }
 
+void * art_alloc(size_t size)
+{
+  return malloc(size);
+}
+
+void art_free(void *ptr)
+{
+  free(ptr);
+}
+
+void * art_realloc(void* ptr, size_t size)
+{
+  realloc(ptr, size);
+}

@@ -29,7 +29,8 @@ typedef enum {
   ART_MOVETO_OPEN,
   ART_CURVETO,
   ART_LINETO,
-  ART_END
+  ART_END,
+  ART_LINETO_CLIPPED /* only used in results of ArtVpathClipFilter */
 } ArtPathcode;
 
 #ifdef __cplusplus

@@ -41,10 +41,13 @@
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGAtoms.h"
 #include "nsSVGMatrix.h"
-#include "nsIDOMSVGSVGElement.h"
+#include "nsISVGSVGElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIBindingManager.h"
 #include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIFrame.h"
+#include "nsISVGChildFrame.h"
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -104,8 +107,27 @@ NS_IMETHODIMP nsSVGGraphicElement::GetFarthestViewportElement(nsIDOMSVGElement *
 /* nsIDOMSVGRect getBBox (); */
 NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = nsnull;
+  
+  if (!mDocument) return NS_ERROR_FAILURE;
+  nsIPresShell *presShell = mDocument->GetShellAt(0);
+  NS_ASSERTION(presShell, "no presShell");
+  if (!presShell) return NS_ERROR_FAILURE;
+
+  nsIFrame* frame;
+  presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
+
+  NS_ASSERTION(frame, "can't get bounding box for element without frame");
+
+  if (frame) {
+    nsISVGChildFrame* svgframe;
+    frame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&svgframe);
+    NS_ASSERTION(svgframe, "wrong frame type");
+    if (svgframe) {
+      return svgframe->GetBBox(_retval);
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /* nsIDOMSVGMatrix getCTM (); */
@@ -278,5 +300,46 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransform(nsIDOMSVGAnimatedTransformList *
   *aTransform = mTransforms;
   NS_IF_ADDREF(*aTransform);
   return NS_OK;
+}
+
+
+//----------------------------------------------------------------------
+// nsISVGContent methods
+
+NS_IMETHODIMP
+nsSVGGraphicElement::IsPresentationAttribute(const nsIAtom* name, PRBool *retval)
+{
+  if (
+      // PresentationAttributes-FillStroke
+      name==nsSVGAtoms::fill              ||
+      name==nsSVGAtoms::fill_opacity      ||
+      name==nsSVGAtoms::fill_rule         ||
+      name==nsSVGAtoms::stroke            ||
+      name==nsSVGAtoms::stroke_dasharray  ||
+      name==nsSVGAtoms::stroke_dashoffset ||
+      name==nsSVGAtoms::stroke_linecap    ||
+      name==nsSVGAtoms::stroke_linejoin   ||
+      name==nsSVGAtoms::stroke_miterlimit ||
+      name==nsSVGAtoms::stroke_opacity    ||
+      name==nsSVGAtoms::stroke_width      ||
+      // PresentationAttributes-Graphics
+      name==nsSVGAtoms::clip_path         ||
+      name==nsSVGAtoms::clip_rule         ||
+      name==nsSVGAtoms::cursor            ||
+      name==nsSVGAtoms::display           ||
+      name==nsSVGAtoms::filter            ||
+      name==nsSVGAtoms::image_rendering   ||
+      name==nsSVGAtoms::mask              ||
+      name==nsSVGAtoms::opacity           ||
+      name==nsSVGAtoms::pointer_events    ||
+      name==nsSVGAtoms::shape_rendering   ||
+      name==nsSVGAtoms::text_rendering    ||
+      name==nsSVGAtoms::visibility        
+      ) {
+    *retval = PR_TRUE;
+    return NS_OK;
+  }
+  else
+    return nsSVGGraphicElementBase::IsPresentationAttribute(name, retval);
 }
 
