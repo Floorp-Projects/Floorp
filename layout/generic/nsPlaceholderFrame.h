@@ -21,7 +21,8 @@
 #include "nsFrame.h"
 
 /**
- * Implementation of a frame that's used as a placeholder for an anchored item
+ * Implementation of a frame that's used as a placeholder for a frame that
+ * has been moved out of the flow
  */
 class nsPlaceholderFrame : public nsFrame {
 public:
@@ -30,9 +31,9 @@ public:
    */
   friend nsresult NS_NewPlaceholderFrame(nsIFrame**  aInstancePtrResult);
 
-  // Get/Set the associated anchored item
-  nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
-  void        SetAnchoredItem(nsIFrame* aAnchoredItem) {mAnchoredItem = aAnchoredItem;}
+  // Get/Set the associated out of flow frame
+  nsIFrame*   GetOutOfFlowFrame() const {return mOutOfFlowFrame;}
+  void        SetOutOfFlowFrame(nsIFrame* aFrame) {mOutOfFlowFrame = aFrame;}
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
@@ -55,10 +56,17 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::placeholderFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
 
 protected:
-  nsIFrame* mAnchoredItem;
+  nsIFrame* mOutOfFlowFrame;
 };
 
 #endif /* nsPlaceholderFrame_h___ */

@@ -1734,8 +1734,13 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     NS_NewAreaFrame(areaFrame, NS_BLOCK_DOCUMENT_ROOT|NS_BLOCK_MARGIN_ROOT);
     areaFrame->Init(*aPresContext, aDocElement, scrollFrame ? scrollFrame :
                     aParentFrame, styleContext, nsnull);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
-                                             styleContext, PR_FALSE);
+    if (scrollFrame) {
+      // If the document element is scrollable, then it needs a view. Otherwise,
+      // don't bother, because the root frame has a view and the extra view is
+      // just overhead we don't need
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
+                                               styleContext, PR_FALSE);
+    }
 
     // The area frame is the "initial containing block"
     mInitialContainingBlock = areaFrame;
@@ -1747,6 +1752,36 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
 
     ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems,
                     childItems, aFixedItems, floatingItems, PR_TRUE);
+
+    // See if the document element has a fixed background attachment.
+    // Note: the reason we wait until after processing the document element's
+    // children is because of special treatment of the background for the HTML
+    // element. See BodyFixupRule::MapStyleInto() for details
+    const nsStyleColor* color;
+    color = (const nsStyleColor*)styleContext->GetStyleData(eStyleStruct_Color);
+    if (NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
+      // Fixed background attachments are handled by setting the
+      // NS_VIEW_PUBLIC_FLAG_DONT_BITBLT flag bit on the view.
+      //
+      // If the document element's frame is scrollable, then set the bit on its
+      // view; otherwise, set it on the root frame's view. This avoids
+      // unnecessarily creating another view and should be faster
+      nsIView*  view;
+
+      if (scrollFrame) {
+        areaFrame->GetView(&view);
+      } else {
+        nsIFrame* parentFrame;
+
+        areaFrame->GetParent(&parentFrame);
+        parentFrame->GetView(&view);
+      }
+
+      NS_ASSERTION(view, "expected a view");
+      PRUint32  viewFlags;
+      view->GetViewFlags(&viewFlags);
+      view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+    }
     
     // Set the initial child lists
     areaFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -2017,7 +2052,7 @@ nsCSSFrameConstructor::CreateFloaterPlaceholderFrameFor(nsIPresContext*  aPresCo
     aPresContext->GetShell(getter_AddRefs(presShell));
     presShell->SetPlaceholderFrameFor(aFrame, placeholder);
   
-    placeholder->SetAnchoredItem(aFrame);
+    placeholder->SetOutOfFlowFrame(aFrame);
 
     *aPlaceholderFrame = NS_STATIC_CAST(nsIFrame*, placeholder);
   }
@@ -4876,7 +4911,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
           nsPlaceholderFrame* floaterPlaceholderFrame;
            
           floaterPlaceholderFrame = (nsPlaceholderFrame*)placeholderFrame;
-          floaterPlaceholderFrame->SetAnchoredItem(newFrame);
+          floaterPlaceholderFrame->SetOutOfFlowFrame(newFrame);
         }
       }
       parentFrame->InsertFrames(*aPresContext, *presShell, listName, prevSibling, newFrame);

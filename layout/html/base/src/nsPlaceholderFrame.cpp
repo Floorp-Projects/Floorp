@@ -18,11 +18,11 @@
 #include "nsPlaceholderFrame.h"
 #include "nsLineLayout.h"
 #include "nsHTMLIIDs.h"
-
 #include "nsIContent.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
+#include "nsLayoutAtoms.h"
 
 nsresult
 NS_NewPlaceholderFrame(nsIFrame**  aInstancePtrResult)
@@ -94,9 +94,9 @@ nsPlaceholderFrame::ContentChanged(nsIPresContext* aPresContext,
 {
   NS_ASSERTION(mContent == aChild, "bad content-changed target");
 
-  // Forward the notification to the floater
-  if (nsnull != mAnchoredItem) {
-    return mAnchoredItem->ContentChanged(aPresContext, aChild, aSubContent);
+  // Forward the notification to the out of flow frame
+  if (nsnull != mOutOfFlowFrame) {
+    return mOutOfFlowFrame->ContentChanged(aPresContext, aChild, aSubContent);
   }
   return NS_OK;
 }
@@ -107,13 +107,22 @@ nsPlaceholderFrame::AttributeChanged(nsIPresContext* aPresContext,
                                      nsIAtom* aAttribute,
                                      PRInt32 aHint)
 {
-  // Forward the notification to the floater
-  if (nsnull != mAnchoredItem) {
-    return mAnchoredItem->AttributeChanged(aPresContext, aChild,
-                                           aAttribute, aHint);
+  // Forward the notification to the out of flow frame
+  if (nsnull != mOutOfFlowFrame) {
+    return mOutOfFlowFrame->AttributeChanged(aPresContext, aChild, aAttribute, aHint);
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPlaceholderFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::placeholderFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsPlaceholderFrame::GetFrameName(nsString& aResult) const
