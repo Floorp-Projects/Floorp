@@ -138,7 +138,7 @@ protected:
 
   /**
    */
-  nsresult RemoveFrame(nsIFrame * aRemovedFrame);
+  nsresult RemoveAFrame(nsIFrame* aRemovedFrame);
 
   /**
    * Returns PR_TRUE if aChild is a child of this frame.

@@ -1145,7 +1145,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     }
     else
     {
-      rv = RemoveFrame(objectFrame);
+      rv = RemoveAFrame(objectFrame);
     }
     break;
 
@@ -1309,7 +1309,7 @@ NS_METHOD nsTableRowGroupFrame::IR_RowRemoved(nsIPresContext&      aPresContext,
                                               nsTableRowFrame *    aDeletedFrame)
 {
   if (PR_TRUE==gsDebugIR) printf("\nTRGF IR: IR_RowRemoved\n");
-  nsresult rv = RemoveFrame((nsIFrame *)aDeletedFrame);
+  nsresult rv = RemoveAFrame((nsIFrame *)aDeletedFrame);
   if (NS_SUCCEEDED(rv))
   {
     aReflowState.tableFrame->InvalidateCellMap();

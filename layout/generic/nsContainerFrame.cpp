@@ -550,7 +550,7 @@ nsContainerFrame::AddFrame(const nsHTMLReflowState& aReflowState,
 }
 
 nsresult
-nsContainerFrame::RemoveFrame(nsIFrame* aRemovedFrame)
+nsContainerFrame::RemoveAFrame(nsIFrame* aRemovedFrame)
 {
   PRBool zap = mFrames.RemoveFrame(aRemovedFrame);
   NS_ASSERTION(zap, "failure to remove a frame");
