@@ -2008,6 +2008,11 @@ nsHTTPChannel::ProcessStatusCode(void)
             }
         }
 
+        if (statusCode == 204) {
+        PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+               ("ProcessStatusCode [this=%x].\tStatus - Successful: %d.\n",
+                this, statusCode));
+        }
         break;
 
         //
