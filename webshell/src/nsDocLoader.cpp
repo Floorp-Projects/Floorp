@@ -744,6 +744,8 @@ nsDocLoaderImpl::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
         mIsLoadingDocument = PR_FALSE;
         FireOnEndDocumentLoad(this, status);
     }
+
+	mDocumentChannel = null_nsCOMPtr();
     return NS_OK;
 }
 
