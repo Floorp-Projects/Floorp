@@ -53,12 +53,14 @@ nsXULTabAccessible(aDOMNode, aShell)
 NS_IMETHODIMP nsXULTabAccessibleWrap::GetDescription(nsAString& aDescription)
 {
   aDescription.Truncate();
-  NS_ENSURE_TRUE(mParent, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIAccessible> parent;
+  GetParent(getter_AddRefs(parent));
+  NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
   
   PRInt32 indexInParent = 0, numSiblings = 0;
   
   nsCOMPtr<nsIAccessible> sibling, nextSibling;
-  mParent->GetFirstChild(getter_AddRefs(sibling));
+  parent->GetFirstChild(getter_AddRefs(sibling));
   NS_ENSURE_TRUE(sibling, NS_ERROR_FAILURE);
   
   PRBool foundCurrentTab = PR_FALSE;
