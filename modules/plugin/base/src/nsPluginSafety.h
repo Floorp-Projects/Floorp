@@ -40,6 +40,8 @@
 
 #include "npapi.h"
 #include "nsIPluginHost.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #ifdef XP_WIN
 #define CALL_SAFETY_ON
@@ -52,7 +54,7 @@ extern PRBool gSkipPluginSafeCalls;
 #define NS_INIT_PLUGIN_SAFE_CALLS                               \
 PR_BEGIN_MACRO                                                  \
   nsresult res;                                                 \
-  nsCOMPtr<nsIPref> pref(do_GetService(kPrefServiceCID, &res)); \
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &res)); \
   if(NS_SUCCEEDED(res) && pref)                                 \
     res = pref->GetBoolPref("plugin.dont_try_safe_calls", &gSkipPluginSafeCalls);\
 PR_END_MACRO

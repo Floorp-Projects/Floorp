@@ -41,6 +41,8 @@
 
 #include "nsIDirectoryService.h"
 
+class nsISimpleEnumerator;
+
 // Note: Our directory service provider scan keys are prefs which are check
 //       for minimum versions compatibility
 #define NS_WIN_JRE_SCAN_KEY            "plugin.scan.SunJRE"
@@ -56,13 +58,17 @@
 class nsPluginDirServiceProvider : public nsIDirectoryServiceProvider
 {
 public:
-                        nsPluginDirServiceProvider();
+   nsPluginDirServiceProvider();
    
    NS_DECL_ISUPPORTS
    NS_DECL_NSIDIRECTORYSERVICEPROVIDER
 
+#ifdef XP_WIN
+   static nsresult GetPLIDDirectories(nsISimpleEnumerator **aEnumerator);
+#endif
+
 protected:
-   virtual              ~nsPluginDirServiceProvider();
+   virtual ~nsPluginDirServiceProvider();
 };
 
 #endif // __nsPluginDirServiceProvider_h__

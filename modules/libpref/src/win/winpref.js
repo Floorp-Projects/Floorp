@@ -216,6 +216,10 @@ pref("plugin.scan.Quicktime", "5.0");
 // Locate and scan the Window Media Player installation directory for plugins with a minimum version
 pref("plugin.scan.WindowsMediaPlayer", "7.0");
 
+// Locate plugins by the directories specified in the Windows registry for PLIDs
+// Which is currently HKLM\Software\MozillaPlugins\xxxPLIDxxx\Path
+pref("plugin.scan.plid.all", true);
+
 // Controls the scanning of the Navigator 4.x directory for plugins
 // When pref is missing, the default is to pickup popular plugins such as
 // Flash, Shockwave, Acrobat, and Quicktime. If set to true, ALL plugins
