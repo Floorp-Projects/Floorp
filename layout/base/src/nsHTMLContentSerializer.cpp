@@ -143,11 +143,18 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
 
   nsresult rv;
   rv = AppendTextData((nsIDOMNode*)aText, aStartOffset, 
-                      aEndOffset, data, PR_TRUE);
+                      aEndOffset, data, PR_TRUE, PR_FALSE);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
-  if (mPreLevel || (!mDoFormat && !HasLongLines(data))) {
+  PRInt32 lastNewlineOffset = kNotFound;
+  PRBool hasLongLines = HasLongLines(data, lastNewlineOffset);
+
+  if (mPreLevel || (!mDoFormat && !hasLongLines)) {
     AppendToString(data, aStr);
+
+    if (lastNewlineOffset != kNotFound) {
+      mColPos = data.Length() - lastNewlineOffset;
+    }   
   }
   else {
     AppendToStringWrapped(data, aStr, PR_FALSE);
@@ -251,12 +258,14 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     mColPos = 0;
   }
 
-  if (name.get() == nsHTMLAtoms::pre) {
+  StartIndentation(name, hasDirtyAttr, aStr);
+
+  if ((name.get() == nsHTMLAtoms::pre) ||
+      (name.get() == nsHTMLAtoms::script) ||
+      (name.get() == nsHTMLAtoms::style)) {
     mPreLevel++;
   }
   
-  StartIndentation(name, hasDirtyAttr, aStr);
-
   AppendToString(kLessThan, aStr);
 
   nsXPIDLString sharedName;
@@ -289,7 +298,9 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   nsCOMPtr<nsIAtom> name;
   content->GetTag(*getter_AddRefs(name));
 
-  if (name.get() == nsHTMLAtoms::pre) {
+  if ((name.get() == nsHTMLAtoms::pre) ||
+      (name.get() == nsHTMLAtoms::script) ||
+      (name.get() == nsHTMLAtoms::style)) {
     mPreLevel--;
   }
 
@@ -301,8 +312,10 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   if (parserService) {
     nsAutoString nameStr(sharedName);
     PRBool isContainer;
+    PRInt32 id;
 
-    parserService->IsContainer(nameStr, isContainer);
+    parserService->HTMLStringTagToId(nameStr, &id);
+    parserService->IsContainer(id, isContainer);
     if (!isContainer) return NS_OK;
   }
 
@@ -361,50 +374,86 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
 {
   PRInt32 length = aStr.Length();
 
-  if ((mColPos + length) < mMaxColumn) {
-    AppendToString(aStr, aOutputStr, aTranslateEntities);
+  nsAutoString line;
+  PRBool    done = PR_FALSE;
+  PRInt32   indx = 0;
+  PRInt32   strOffset = 0;
+  PRInt32   oldLineOffset = 0;
+  PRInt32   lineLength, oldLineEnd;
+  
+  // Make sure we haven't gone too far already
+  if (mColPos > mMaxColumn) {
+    AppendToString(mLineBreak, aOutputStr);
+    mColPos = 0;
   }
-  else {
-    nsAutoString line;
-    PRBool    done = PR_FALSE;
-    PRInt32   indx = 0;
-    PRInt32   strOffset = 0;
-    PRInt32   lineLength;
+  
+  // Find the end of the first old line
+  oldLineEnd = aStr.FindChar(PRUnichar('\n'), 0);
+  
+  while ((!done) && (strOffset < length)) {
+    // This is how much is needed to fill up the new line
+    PRInt32 leftInLine = mMaxColumn - mColPos;
     
-    while ((!done) && (strOffset < length)) {
-      // find the next break
-      PRInt32 start = mMaxColumn - mColPos;
-      if (start < 0)
-        start = 0;
-      
-      if ((strOffset + start) < length) {
-        indx = aStr.FindChar(PRUnichar(' '), strOffset + start);
-      }
-      else {
-        indx = kNotFound;
-      }
+    // This is the last position in the current old line
+    PRInt32 oldLineLimit;
+    if (oldLineEnd == kNotFound) {
+      oldLineLimit = length;
+    }
+    else {
+      oldLineLimit = oldLineEnd;
+    }
+    
+    PRBool addLineBreak = PR_FALSE;
 
-      // if there is no break than just add the entire string
-      if (indx == kNotFound)
-      {
-        if (strOffset == 0) {
-          AppendToString(aStr, aOutputStr, aTranslateEntities);
-        }
-        else {
-          lineLength = length - strOffset;
-          aStr.Right(line, lineLength);
-          AppendToString(line, aOutputStr, aTranslateEntities);
-        }
-        done = PR_TRUE;
+    // if we can fill up the new line with less than what's
+    // in the current old line...
+    if ((strOffset + leftInLine) < oldLineLimit) {
+      addLineBreak = PR_TRUE;
+      
+      // Look for the next word end to break
+      indx = aStr.FindChar(PRUnichar(' '), strOffset + leftInLine);
+      
+      // If it's after the end of the current line, then break at
+      // the current line
+      if ((indx == kNotFound) || 
+          ((oldLineEnd != kNotFound) && (oldLineEnd < indx))) {
+        indx = oldLineEnd;
+      }
+    }
+    else {
+      indx = oldLineEnd;
+    }
+    
+    // if there was no place to break, then just add the entire string
+    if (indx == kNotFound) {
+      if (strOffset == 0) {
+        AppendToString(aStr, aOutputStr, aTranslateEntities);
       }
       else {
-        lineLength = indx - strOffset;
-        aStr.Mid(line, strOffset, lineLength);
+        lineLength = length - strOffset;
+        aStr.Right(line, lineLength);
         AppendToString(line, aOutputStr, aTranslateEntities);
+      }
+      done = PR_TRUE;
+    }
+    else {
+      // Add the part of the current old line that's part of the 
+      // new line
+      lineLength = indx - strOffset;
+      aStr.Mid(line, strOffset, lineLength);
+      AppendToString(line, aOutputStr, aTranslateEntities);
+      
+      // if we've reached the end of an old line, don't add the
+      // old line break and find the end of the next old line.
+      if (indx == oldLineEnd) {
+        oldLineEnd = aStr.FindChar(PRUnichar('\n'), indx+1);
+      }
+      
+      if (addLineBreak) {
         AppendToString(mLineBreak, aOutputStr);
-        strOffset = indx+1;
         mColPos = 0;
       }
+      strOffset = indx+1;
     }
   }
 }
@@ -412,16 +461,19 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
 void
 nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
                                         nsAWritableString& aOutputStr,
-                                        PRBool aTranslateEntities)
+                                        PRBool aTranslateEntities,
+                                        PRBool aIncrColumn)
 {
   if (mBodyOnly && !mInBody) {
     return;
   }
 
   nsresult rv;
-  
-  mColPos += aStr.Length();
 
+  if (aIncrColumn) {
+    mColPos += aStr.Length();
+  }
+  
   if (aTranslateEntities) {
     nsCOMPtr<nsIEntityConverter> converter;
 
@@ -465,10 +517,12 @@ nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName,
     return PR_FALSE;
   }
         
-  if (aName == nsHTMLAtoms::html) {
-    return PR_FALSE;
-  }
-  else if (aName == nsHTMLAtoms::title) {
+  if (aName == nsHTMLAtoms::title ||
+      aName == nsHTMLAtoms::meta  ||
+      aName == nsHTMLAtoms::link  ||
+      aName == nsHTMLAtoms::style ||
+      aName == nsHTMLAtoms::script ||
+      aName == nsHTMLAtoms::html) {
     return PR_TRUE;
   }
   else {
@@ -479,7 +533,10 @@ nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName,
       nsAutoString str;
       aName->ToString(str);
       PRBool res;
-      parserService->IsBlock(str, res);
+      PRInt32 id;
+
+      parserService->HTMLStringTagToId(str, &id);
+      parserService->IsBlock(id, res);
       return res;
     }
   }
@@ -500,11 +557,15 @@ nsHTMLContentSerializer::LineBreakAfterOpen(nsIAtom* aName,
       (aName == nsHTMLAtoms::body) ||
       (aName == nsHTMLAtoms::ul) ||
       (aName == nsHTMLAtoms::ol) ||
+      (aName == nsHTMLAtoms::dl) ||
       (aName == nsHTMLAtoms::table) ||
       (aName == nsHTMLAtoms::tbody) ||
-      (aName == nsHTMLAtoms::style) ||
       (aName == nsHTMLAtoms::tr) ||
-      (aName == nsHTMLAtoms::br)) {
+      (aName == nsHTMLAtoms::br) ||
+      (aName == nsHTMLAtoms::meta) ||
+      (aName == nsHTMLAtoms::link) ||
+      (aName == nsHTMLAtoms::script) ||
+      (aName == nsHTMLAtoms::style)) {
     return PR_TRUE;
   }
 
@@ -524,9 +585,9 @@ nsHTMLContentSerializer::LineBreakBeforeClose(nsIAtom* aName,
       (aName == nsHTMLAtoms::body) ||
       (aName == nsHTMLAtoms::ul) ||
       (aName == nsHTMLAtoms::ol) ||
+      (aName == nsHTMLAtoms::dl) ||
       (aName == nsHTMLAtoms::table) ||
-      (aName == nsHTMLAtoms::tbody) ||
-      (aName == nsHTMLAtoms::style)) {
+      (aName == nsHTMLAtoms::tbody)) {
     return PR_TRUE;
   }
   
@@ -549,7 +610,12 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
       (aName == nsHTMLAtoms::td) ||
       (aName == nsHTMLAtoms::pre) ||
       (aName == nsHTMLAtoms::title) ||
-      (aName == nsHTMLAtoms::meta)) {
+      (aName == nsHTMLAtoms::li) ||
+      (aName == nsHTMLAtoms::dt) ||
+      (aName == nsHTMLAtoms::dd) ||
+      (aName == nsHTMLAtoms::blockquote) ||
+      (aName == nsHTMLAtoms::p) ||
+      (aName == nsHTMLAtoms::div)) {
     return PR_TRUE;
   }
   else {
@@ -560,7 +626,10 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
       nsAutoString str;
       aName->ToString(str);
       PRBool res;
-      parserService->IsBlock(str, res);
+      PRInt32 id;
+
+      parserService->HTMLStringTagToId(str, &id);
+      parserService->IsBlock(id, res);
       return res;
     }
   }
@@ -587,7 +656,11 @@ nsHTMLContentSerializer::StartIndentation(nsIAtom* aName,
       (aName == nsHTMLAtoms::ol) ||
       (aName == nsHTMLAtoms::tbody) ||
       (aName == nsHTMLAtoms::form) ||
-      (aName == nsHTMLAtoms::frameset)) {
+      (aName == nsHTMLAtoms::frameset) ||
+      (aName == nsHTMLAtoms::blockquote) ||
+      (aName == nsHTMLAtoms::li) ||
+      (aName == nsHTMLAtoms::dt) ||
+      (aName == nsHTMLAtoms::dd)) {
     mIndent++;
   }
 }
@@ -602,6 +675,7 @@ nsHTMLContentSerializer::EndIndentation(nsIAtom* aName,
       (aName == nsHTMLAtoms::tr) ||
       (aName == nsHTMLAtoms::ul) ||
       (aName == nsHTMLAtoms::ol) ||
+      (aName == nsHTMLAtoms::li) ||
       (aName == nsHTMLAtoms::tbody) ||
       (aName == nsHTMLAtoms::form) ||
       (aName == nsHTMLAtoms::frameset)) {
@@ -620,17 +694,24 @@ nsHTMLContentSerializer::EndIndentation(nsIAtom* aName,
 // if so, we presume formatting is wonky (e.g. the node has been edited)
 // and we'd better rewrap the whole text node.
 PRBool 
-nsHTMLContentSerializer::HasLongLines(const nsString& text)
+nsHTMLContentSerializer::HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset)
 {
   PRUint32 start=0;
   PRUint32 theLen=text.Length();
+  PRBool rv = PR_FALSE;
+  aLastNewlineOffset = kNotFound;
   for (start = 0; start < theLen; )
   {
     PRInt32 eol = text.FindChar('\n', PR_FALSE, start);
-    if (eol < 0) eol = text.Length();
+    if (eol < 0) {
+      eol = text.Length();
+    }
+    else {
+      aLastNewlineOffset = eol;
+    }
     if (PRInt32(eol - start) > kLongLineLen)
-      return PR_TRUE;
+      rv = PR_TRUE;
     start = eol+1;
   }
-  return PR_FALSE;
+  return rv;
 }

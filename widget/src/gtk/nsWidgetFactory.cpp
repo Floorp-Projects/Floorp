@@ -37,7 +37,7 @@
 #include "nsLabel.h"
 #include "nsTransferable.h"
 #include "nsClipboard.h"
-#include "nsXIFFormatConverter.h"
+#include "nsHTMLFormatConverter.h"
 #include "nsFontRetrieverService.h"
 #include "nsDragService.h"
 #include "nsFileSpecWithUIImpl.h"
@@ -56,7 +56,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLabel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXIFFormatConverter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontRetrieverService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
@@ -185,10 +185,10 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/clipboard/gtk;1",
     "@mozilla.org/widget/clipboard;1",
     nsClipboardConstructor },
-  { "XIF Format Converter",
-    NS_XIFFORMATCONVERTER_CID,
-    "@mozilla.org/widget/xifformatconverter/gtk;1",
-    nsXIFFormatConverterConstructor },
+  { "HTML Format Converter",
+    NS_HTMLFORMATCONVERTER_CID,
+    "@mozilla.org/widget/htmlformatconverter/gtk;1",
+    nsHTMLFormatConverterConstructor },
   { "Gtk Font Retriever Service",
     NS_FONTRETRIEVERSERVICE_CID,
     "@mozilla.org/widget/fontretrieverservice/gtk;1",

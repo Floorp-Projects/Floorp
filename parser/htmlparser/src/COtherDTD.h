@@ -356,7 +356,12 @@ protected:
 
 extern NS_HTMLPARS nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult);
 
-
+CLASS_EXPORT_HTMLPARS CTransitionalDTD : public COtherDTD
+{
+  public:
+    CTransitionalDTD();
+    virtual ~CTransitionalDTD();
+};
 
 #endif //NS_OTHERDTD__
 

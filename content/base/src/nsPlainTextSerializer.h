@@ -32,9 +32,12 @@
 #include "nsIParserService.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
+#include "nsIHTMLToTextSink.h"
+
 
 class nsPlainTextSerializer : public nsIContentSerializer,
-                              public nsIHTMLContentSink
+                              public nsIHTMLContentSink,
+                              public nsIHTMLToTextSink
 {
 public:
   nsPlainTextSerializer();
@@ -62,6 +65,7 @@ public:
                                 nsAWritableString& aStr); 
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
                               nsAWritableString& aStr);
+  NS_IMETHOD Flush(nsAWritableString& aStr);
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void) { return NS_OK; }
@@ -98,6 +102,10 @@ public:
   NS_IMETHOD BeginContext(PRInt32 aPosition) { return NS_OK; }
   NS_IMETHOD EndContext(PRInt32 aPosition) { return NS_OK; }
 
+  // nsIHTMLToTextSink
+  NS_IMETHOD Initialize(nsAWritableString* aOutString,
+                        PRUint32 aFlags, PRUint32 aWrapCol);
+
 protected:
   nsresult GetAttributeValue(nsIAtom* aName, nsString& aValueRet);
   void AddToLine(const PRUnichar* aStringToAdd, PRInt32 aLength);
@@ -109,17 +117,14 @@ protected:
   void Write(const nsString& aString);
   PRBool DoOutput();
   PRBool MayWrap(); 
-  PRBool IsBlockLevel(nsIAtom* aAtom);
-  PRBool IsContainer(nsIAtom* aAtom);
+  PRBool IsBlockLevel(PRInt32 aId);
+  PRBool IsContainer(PRInt32 aId);
   PRBool IsCurrentNodeConverted();
   nsresult GetIdForContent(nsIContent* aContent, PRInt32* aID);
   nsresult GetParserService(nsIParserService** aParserService);
-  nsresult DoOpenContainer(PRInt32 aTag, 
-                           nsIAtom* aName);
-  nsresult DoCloseContainer(PRInt32 aTag, 
-                            nsIAtom* aName);
-  nsresult DoAddLeaf(PRInt32 aTag, 
-                     const nsString& aText);
+  nsresult DoOpenContainer(PRInt32 aTag);
+  nsresult DoCloseContainer(PRInt32 aTag);
+  nsresult DoAddLeaf(PRInt32 aTag, const nsString& aText);
 
 protected:
   nsString         mCurrentLine;
@@ -180,5 +185,7 @@ protected:
   nsCOMPtr<nsILineBreaker>     mLineBreaker;
   nsCOMPtr<nsIParserService>   mParserService;
 };
+
+extern nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer);
 
 #endif

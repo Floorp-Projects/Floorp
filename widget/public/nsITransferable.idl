@@ -30,7 +30,6 @@
 // these probably shouldn't live here, but in some central repository shared
 // by the entire app.
 #define kTextMime      "text/plain"
-#define kXIFMime       "text/xif"
 #define kUnicodeMime   "text/unicode"
 #define kHTMLMime      "text/html"
 #define kAOLMailMime   "AOLMAIL"

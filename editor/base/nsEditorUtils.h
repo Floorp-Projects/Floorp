@@ -186,4 +186,14 @@ class nsDOMSubtreeIterator : public nsDOMIterator
     nsresult Init(nsIDOMNode* aNode);
 };
 
+class nsTrivialFunctor : public nsBoolDomIterFunctor
+{
+  public:
+    virtual PRBool operator()(nsIDOMNode* aNode)  // used to build list of all nodes iterator covers
+    {
+      return PR_TRUE;
+    }
+};
+
+
 #endif // nsEditorUtils_h__

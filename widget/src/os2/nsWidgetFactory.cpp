@@ -58,7 +58,7 @@
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
 #include "nsTransferable.h"
-#include "nsXIFFormatConverter.h"
+#include "nsHTMLFormatConverter.h"
 // OS2TODO #include "nsDragService.h"
 
 #include "nsFrameWindow.h"     // OS/2 only
@@ -82,7 +82,7 @@ static NS_DEFINE_IID(kCTimerManager, NS_TIMERMANAGER_CID);
 static NS_DEFINE_IID(kCDataObj,       NS_DATAOBJ_CID);
 static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kCXIFFormatConverter,  NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_IID(kCHTMLFormatConverter,  NS_HTMLFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
@@ -226,8 +226,8 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCTransferable)) {
       inst = (nsISupports*)new nsTransferable();
     }
-    else if (mClassID.Equals(kCXIFFormatConverter)) {
-        inst = (nsISupports*)new nsXIFFormatConverter();
+    else if (mClassID.Equals(kCHTMLFormatConverter)) {
+        inst = (nsISupports*)new nsHTMLFormatConverter();
     }
     else if (mClassID.Equals(kCTimer)) {
         inst = (nsISupports*)(nsITimer*) new nsTimer();

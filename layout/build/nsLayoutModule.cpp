@@ -56,6 +56,8 @@
 #include "nsIElementFactory.h"
 
 #include "nsIDocumentEncoder.h"
+#include "nsIContentSerializer.h"
+#include "nsIHTMLToTextSink.h"
 
 // SVG
 #ifdef MOZ_SVG
@@ -355,8 +357,18 @@ static Components gComponents[] = {
     NS_DOC_ENCODER_CONTRACTID_BASE "text/html", },
   { "Plaintext document encoder", NS_TEXT_ENCODER_CID,
     NS_DOC_ENCODER_CONTRACTID_BASE "text/plain", },
-  { "XIF document encoder", NS_TEXT_ENCODER_CID,
-    NS_DOC_ENCODER_CONTRACTID_BASE "text/xif", },
+  { "HTML copy encoder", NS_HTMLCOPY_TEXT_ENCODER_CID,
+    NS_HTMLCOPY_ENCODER_CONTRACTID, },
+  { "XML content serializer", NS_XMLCONTENTSERIALIZER_CID,
+    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/xml", },
+  { "HTML content serializer", NS_HTMLCONTENTSERIALIZER_CID,
+    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/html", },
+  { "XUL content serializer", NS_XMLCONTENTSERIALIZER_CID,
+    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/xul", },
+  { "plaintext content serializer", NS_PLAINTEXTSERIALIZER_CID,
+    NS_CONTENTSERIALIZER_CONTRACTID_PREFIX "text/plain", },
+  { "plaintext sink", NS_PLAINTEXTSERIALIZER_CID,
+    NS_PLAINTEXTSINK_CONTRACTID, },
 
   { "XBL Service", NS_XBLSERVICE_CID, "@mozilla.org/xbl;1" },
   { "XBL Binding Manager", NS_BINDINGMANAGER_CID, "@mozilla.org/xbl/binding-manager;1" },
@@ -372,7 +384,6 @@ static Components gComponents[] = {
 
   { "AutoCopy Service", NS_AUTOCOPYSERVICE_CID, "@mozilla.org/autocopy;1" },
   { "Content policy service", NS_CONTENTPOLICY_CID, NS_CONTENTPOLICY_CONTRACTID },
-  { "XIF Converter", NS_XIFCONVERTER_CID, nsnull },
   { "NodeInfoManager", NS_NODEINFOMANAGER_CID, NS_NODEINFOMANAGER_CONTRACTID },
   { "DOM CSS Computed Style Declaration", NS_COMPUTEDDOMSTYLE_CID,
     "@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1" }

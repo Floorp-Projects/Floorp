@@ -210,11 +210,6 @@ struct nsGenericDOMDataNode {
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                   size_t aInstanceSize) const;
 
-  // Implementation for nsIContent
-  nsresult BeginConvertToXIF(nsIXIFConverter * aConverter) const;
-  nsresult ConvertContentToXIF(const nsIContent *aOuterContent,
-                               nsIXIFConverter * aConverter) const;
-  nsresult FinishConvertToXIF(nsIXIFConverter * aConverter) const;
   nsresult CanContainChildren(PRBool& aResult) const {
     aResult = PR_FALSE;
     return NS_OK;
@@ -525,15 +520,6 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD DumpContent(FILE* out,                                        \
                          PRInt32 aIndent,                                  \
                          PRBool aDumpAll) const;                           \
-  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter * aConverter) const {       \
-    return _g.BeginConvertToXIF(aConverter);                               \
-  }                                                                        \
-  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const {       \
-    return _g.ConvertContentToXIF(this, aConverter);                       \
-  }                                                                        \
-  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const {        \
-    return _g.FinishConvertToXIF(aConverter);                              \
-  }                                                                        \
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
                             nsEvent* aEvent,                               \
                             nsIDOMEvent** aDOMEvent,                       \

@@ -112,6 +112,9 @@ nsHTMLTags::LookupTag(const nsString& aTag)
       if (theTag.Equals("__moz_text")) {
         tag = eHTMLTag_text;
       }
+      else if (theTag.Equals("#text")) {
+        tag = eHTMLTag_text;
+      }
       else {
         tag = eHTMLTag_userdefined;
       }

@@ -49,15 +49,6 @@ function EditorGetHTML()
   }
 }
 
-function EditorGetXIF()
-{
-  if (window.editorShell) {
-    dump("Getting XIF\n");
-    var  outputHTML = editorShell.GetContentsAs("text/xif", 2);
-    dump(outputHTML + "\n");
-  }
-}
-
 function EditorDumpContent()
 {
   if (window.editorShell) {
@@ -87,10 +78,6 @@ function EditorTestSelection()
 
   var output;
 
-  dump("\n====== Selection as XIF =======================\n");
-  output = editorShell.GetContentsAs("text/xif", 1);
-  dump(output + "\n\n");
-
   dump("====== Selection as unformatted text ==========\n");
   output = editorShell.GetContentsAs("text/plain", 1);
   dump(output + "\n\n");
@@ -101,6 +88,10 @@ function EditorTestSelection()
 
   dump("====== Selection as HTML ======================\n");
   output = editorShell.GetContentsAs("text/html", 1);
+  dump(output + "\n\n");  
+
+  dump("====== Selection as prettyprinted HTML ========\n");
+  output = editorShell.GetContentsAs("text/html", 3);
   dump(output + "\n\n");  
 
   dump("====== Length and status =====================\n");

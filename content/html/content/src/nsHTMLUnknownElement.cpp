@@ -149,15 +149,6 @@ public:
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {
     return mInner.DumpContent(out, aIndent,aDumpAll);
   }
-  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const {
-    return mInner.BeginConvertToXIF(aConverter);
-  }
-  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter* aConverter) const {
-    return mInner.ConvertContentToXIF(aConverter);
-  }
-  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter* aConverter) const {
-    return mInner.FinishConvertToXIF(aConverter);
-  }
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,

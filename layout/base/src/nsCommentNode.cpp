@@ -28,7 +28,6 @@
 #include "nsLayoutAtoms.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
-#include "nsIXIFConverter.h"
 #include "nsIDocument.h"
 #include "nsIEnumerator.h"
 #include "nsCOMPtr.h"
@@ -144,13 +143,6 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const {
     return NS_OK;
-  }
-  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const {
-    return mInner.BeginConvertToXIF(aConverter);
-  }
-  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter* aConverter) const;
-  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter* aConverter) const {
-    return mInner.FinishConvertToXIF(aConverter);
   }
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
@@ -395,100 +387,6 @@ NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame*& aResult)
   return NS_OK;
 }
 
-/**
- * Translate the content object into the (XIF) XML Interchange Format
- * XIF is an intermediate form of the content model, the buffer
- * will then be parsed into any number of formats including HTML, TXT, etc.
- */
-nsresult
-nsCommentNode::ConvertContentToXIF(nsIXIFConverter* aConverter) const
-{
-  const nsIContent* content = this;
-  nsCOMPtr<nsISelection> sel;
-  aConverter->GetSelection(getter_AddRefs(sel));
-  nsIDocument* document;
-  nsresult res;
-  res = GetDocument(document);
-  if (!NS_SUCCEEDED(res))
-    return res;
-
-  const nsTextFragment* textFrag;
-
-  // XXX This method is const, but GetText() isn't,
-  // XXX so cast away the constness of mInner:
-  nsGenericDOMDataNode* inner = (nsGenericDOMDataNode*)&mInner;
-  res = inner->GetText(&textFrag);
-  if (!NS_SUCCEEDED(res))
-    return res;
-
-  if (sel != nsnull && document->IsInSelection(sel,content))
-  {
-    nsIEnumerator *enumerator;
-    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(sel));
-    if (NS_SUCCEEDED(selPrivate->GetEnumerator(&enumerator))) {
-      for (enumerator->First();NS_OK != enumerator->IsDone(); enumerator->Next()) {
-        nsIDOMRange* range = nsnull;
-        if (NS_SUCCEEDED(enumerator->CurrentItem((nsISupports**)&range))) {
-      
-          nsCOMPtr<nsIDOMNode> startNode;
-          nsCOMPtr<nsIDOMNode> endNode;
-          PRInt32 startOffset = 0;
-          PRInt32 endOffset = 0;
-
-          range->GetStartContainer(getter_AddRefs(startNode));
-          range->GetEndContainer(getter_AddRefs(endNode));
-
-          range->GetStartOffset(&startOffset);
-          range->GetEndOffset(&endOffset);
-
-          nsCOMPtr<nsIContent> startContent;
-          nsCOMPtr<nsIContent> endContent;
-          startContent = do_QueryInterface(startNode);
-          endContent = do_QueryInterface(endNode);
-
-
-          nsString  buffer;
-          textFrag->AppendTo(buffer);
-          if (startContent.get() == content || endContent.get() == content)
-          { 
-            // NOTE: ORDER MATTERS!
-            // This must go before the Cut
-            if (endContent.get() == content)
-              buffer.Truncate(endOffset);            
-      
-            // This must go after the Trunctate
-            if (startContent.get() == content)
-             buffer.Cut(0,startOffset); 
-          }
-          aConverter->AddContentComment(buffer);
-        }
-      }
-    }
-  }
-  else  
-  {
-    nsString  buffer;
-    textFrag->AppendTo(buffer);
-    aConverter->AddContentComment(buffer);
-  }
-  NS_IF_RELEASE(document);
-  // XXX Possible mem leak: Do we need to delete textFrag?
-  return NS_OK;
-}
-
-#if 0
-nsresult
-nsCommentNode::BeginConvertToXIF(nsIXIFConverter* aConverter) const
-{
-  return NS_OK;
-}
-
-nsresult
-nsCommentNode::FinishConvertToXIF(nsIXIFConverter* aConverter) const
-{
-  return NS_OK;
-}
-#endif
 
 // This would ideally be done by the parser, but for the sake
 // of "genericity" it's being done in the comment content code

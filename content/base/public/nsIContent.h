@@ -33,7 +33,6 @@ class nsIAtom;
 class nsIDocument;
 class nsIPresContext;
 class nsVoidArray;
-class nsIXIFConverter;
 class nsIDOMEvent;
 class nsIContent;
 class nsISupportsArray;
@@ -250,19 +249,6 @@ public:
    * Returns NS_OK unless a file error occurs.
    */
   NS_IMETHOD DumpContent(FILE* out = stdout, PRInt32 aIndent = 0,PRBool aDumpAll=PR_TRUE) const = 0;
-
-  /**
-   * Translate the content object into the (XIF) XML Interchange Format
-   * XIF is an intermediate form of the content model, the buffer
-   * will then be parsed into any number of formats including HTML, TXT, etc.
-
-   * BeginConvertToXIF -- opens a container and writes out the attributes
-   * ConvertContentToXIF -- typically does nothing unless there is text content
-   * FinishConvertToXIF -- closes a container
-   */
-  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter *aConverter) const = 0;
-  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter * aConverter) const = 0;
-  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter * aConverter) const = 0;
 
   /**
    * Inform content of range ownership changes.  This allows content

@@ -70,11 +70,12 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
                               nsAWritableString& aOutputStr);
   virtual void AppendToString(const nsAReadableString& aStr,
                               nsAWritableString& aOutputStr,
-                              PRBool aTranslateEntities = PR_FALSE);
+                              PRBool aTranslateEntities = PR_FALSE,
+                              PRBool aIncrColumn = PR_TRUE);
   virtual void AppendToStringWrapped(const nsAReadableString& aStr,
                                      nsAWritableString& aOutputStr,
                                      PRBool aTranslateEntities);
-  PRBool HasLongLines(const nsString& text);
+  PRBool HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset);
 
   nsCOMPtr<nsIParserService> mParserService;
   nsCOMPtr<nsIEntityConverter> mEntityConverter;

@@ -49,7 +49,6 @@ class nsIDOMEvent;
 class nsIDeviceContext;
 class nsIParser;
 class nsIDOMNode;
-class nsIXIFConverter;
 class nsINameSpaceManager;
 class nsIDOMDocumentFragment;
 class nsILineBreaker;
@@ -298,24 +297,6 @@ public:
    */
   NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
 
-  /**
-    * Converts the document or a selection of the 
-    * document to XIF (XML Interchange Format)
-    * and places the result in aBuffer.
-    
-    * NOTE: we may way to place the result in a stream,
-    * but we will use a string for now -- gpk
-  */
-  NS_IMETHOD   CreateXIF(nsAWritableString & aBuffer, nsISelection* aSelection = nsnull) = 0;
-  NS_IMETHOD   ToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
-  virtual void BeginConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
-  virtual void ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
-  virtual void FinishConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
-
-  /* Helper methods to help determine the logical positioning of content */
-  virtual PRBool IsInSelection(nsISelection* aSelection, const nsIContent *aContent) const = 0;
-  virtual nsIContent* GetPrevContent(const nsIContent *aContent) const = 0;
-  virtual nsIContent* GetNextContent(const nsIContent *aContent) const = 0;
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 

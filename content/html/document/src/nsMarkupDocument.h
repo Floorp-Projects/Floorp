@@ -45,29 +45,11 @@ public:
   nsMarkupDocument();
   virtual ~nsMarkupDocument();
 
-  /**
-    * Converts the document or a selection of the 
-    * document to XIF (XML Interchange Format)
-    * and places the result in aBuffer.
-    
-    * NOTE: we may way to place the result in a stream,
-    * but we will use a string for now -- gpk
-  */
-  virtual void FinishConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode);
-  
   // XXX Temp hack: moved from nsDocument
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager,
                          nsIStyleSet* aStyleSet,
                          nsIPresShell** aInstancePtrResult);
-
-protected:
-  virtual void CSSSelectorsToXIF(nsIXIFConverter* aConverter, nsICSSStyleRule& aRule);
-  virtual void CSSDeclarationToXIF(nsIXIFConverter* aConverter, nsICSSDeclaration& aDeclaration);
-  virtual void StyleSheetsToXIF(nsIXIFConverter* aConverter);
-
-
-private:
 };
 
 #endif /* nsMarkupDocument_h___ */

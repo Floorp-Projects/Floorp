@@ -195,12 +195,6 @@ public:
   {
     return mInner.DumpContent(out, aIndent,aDumpAll); 
   }
-  NS_IMETHOD BeginConvertToXIF(nsIXIFConverter* aConverter) const
-    { return NS_OK; }
-  NS_IMETHOD ConvertContentToXIF(nsIXIFConverter* aConverter) const
-    { return NS_OK; }
-  NS_IMETHOD FinishConvertToXIF(nsIXIFConverter* aConverter) const
-    { return NS_OK; }
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,

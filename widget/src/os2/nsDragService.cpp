@@ -930,7 +930,6 @@ static const char *gFormatMap[][2] =
    { "DRF_TEXT",    kTextMime      },
    { "DRF_UNICODE", kUnicodeMime   },
    { "DRF_HTML",    kHTMLMime      },
-   { "DRF_XIF",     kXIFMime       },
    { "DRF_PNG",     kPNGImageMime  },
    { "DRF_GIF",     kGIFImageMime  },
    { "DRF_JPEG",    kJPEGImageMime },
