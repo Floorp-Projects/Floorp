@@ -54,32 +54,36 @@ nsMsgProtocol::nsMsgProtocol(nsIURI * aURL, nsIURI* originalURI)
 nsMsgProtocol::~nsMsgProtocol()
 {}
 
-nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL) // open a connection on this url
+nsresult nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName, PRInt32 aGetPort)
 {
-	nsresult rv = NS_OK;
-	nsXPIDLCString hostName;
-	PRInt32 port = 0;
+  NS_ENSURE_ARG(aHostName);
 
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISocketTransportService> socketService (do_GetService(kSocketTransportServiceCID));
+  NS_ENSURE_TRUE(socketService, NS_ERROR_FAILURE);
+  
 	m_readCount = -1; // with socket connections we want to read as much data as arrives
 	m_startPosition = 0;
 
-    NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
+  rv = socketService->CreateTransport(aHostName, aGetPort, nsnull, 0, 0, getter_AddRefs(m_channel));
+  if (NS_FAILED(rv)) return rv;
 
-	if (NS_SUCCEEDED(rv) && aURL)
-	{
-		aURL->GetPort(&port);
-		aURL->GetHost(getter_Copies(hostName));
+  m_socketIsOpen = PR_FALSE;
+	return SetupTransportState();
+}
 
-		rv = socketService->CreateTransport(hostName, port, nsnull, 0, 0,
-                                            getter_AddRefs(m_channel));
-		if (NS_SUCCEEDED(rv) && m_channel)
-		{
-			m_socketIsOpen = PR_FALSE;
-			rv = SetupTransportState();
-		}
-	}
+nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL) // open a connection on this url
+{
+  NS_ENSURE_ARG(aURL);
+	nsresult rv = NS_OK;
 
-	return rv;
+  nsXPIDLCString hostName;
+	PRInt32 port = 0;
+
+	aURL->GetPort(&port);
+	aURL->GetHost(getter_Copies(hostName));
+
+  return OpenNetworkSocketWithInfo(hostName, port);
 }
 
 nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSpec, PRUint32 aStartPosition, PRInt32 aReadCount)
@@ -266,12 +270,12 @@ nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		{
 			nsCOMPtr<nsISupports> urlSupports = do_QueryInterface(aURL);
 
-            if (m_channel)
-            {
-                // put us in a state where we are always notified of incoming data
-                m_channel->AsyncRead(m_startPosition, m_readCount, urlSupports ,this /* stream observer */);
-                m_socketIsOpen = PR_TRUE; // mark the channel as open
-            }
+      if (m_channel)
+      {
+          // put us in a state where we are always notified of incoming data
+          m_channel->AsyncRead(m_startPosition, m_readCount, urlSupports ,this /* stream observer */);
+          m_socketIsOpen = PR_TRUE; // mark the channel as open
+      }
 		} // if we got an event queue service
 		else  // the connection is already open so we should begin processing our new url...
 			rv = ProcessProtocolState(aURL, nsnull, 0, 0); 

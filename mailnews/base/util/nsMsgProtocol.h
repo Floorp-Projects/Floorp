@@ -31,6 +31,7 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
+
 // This is a helper class used to encapsulate code shared between all of the
 // mailnews protocol objects (imap, news, pop, smtp, etc.) In particular,
 // it unifies the core networking code for the protocols. My hope is that
@@ -47,8 +48,8 @@ public:
 	NS_DECL_NSICHANNEL
 	NS_DECL_NSIREQUEST
   
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSISTREAMOBSERVER
 
 	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
 	// then calls the base class which opens the socket if it needs opened. If the socket is 
@@ -68,6 +69,7 @@ protected:
 	// mscott -okay this is lame. I should break this up into a file protocol and a socket based
 	// protocool class instead of cheating and putting both methods here...
 	virtual nsresult OpenNetworkSocket(nsIURI * aURL); // open a connection on this url
+  virtual nsresult OpenNetworkSocketWithInfo(const char * aHostName, PRInt32 aGetPort); // open a connection with a specific host and port
 	virtual nsresult OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSpec, PRUint32 aStartPosition, PRInt32 aReadCount); // used to open a file socket connection
 
 	// a Protocol typically overrides this method. They free any of their own connection state and then
