@@ -70,7 +70,7 @@ static nsresult MakeMIMEInfo( ICMapEntry &entry, nsIMIMEInfo*& info )
 	
 	nsCString description( (char*)&entry.entryName[1], entry.entryName[0]);
 	nsString  unicodeDescription;
-	unicodeDescription.AssignWithConversion ( description );
+	unicodeDescription.AssignWithConversion ( description.get() );
 	info->SetDescription( unicodeDescription.get() );
 	
 
@@ -110,7 +110,7 @@ NS_IMETHODIMP nsMacMIMEDataSource::GetFromExtension(const char *aFileExt, nsIMIM
 		nsCString filename("foobar.");
 		filename+=aFileExt;
 		Str255 pFileName;
-		ConvertCharStringToStr255( filename, pFileName  );
+		ConvertCharStringToStr255( filename.get(), pFileName  );
 		ICMapEntry entry;
 		OSStatus err = ::ICMapFilename( instance, pFileName, &entry );
 		if( err == noErr )
@@ -131,7 +131,7 @@ NS_IMETHODIMP nsMacMIMEDataSource::GetFromTypeCreator(PRUint32 aType, PRUint32 a
 		nsCString filename("foobar.");
 		filename+=aFileExt;
 		Str255 pFileName;
-		ConvertCharStringToStr255( filename, pFileName  );
+		ConvertCharStringToStr255( filename.get(), pFileName  );
 		ICMapEntry entry;
 		OSStatus err = ::ICMapTypeCreator( instance, aType, aCreator, pFileName, &entry );
 		if( err == noErr )

@@ -296,7 +296,7 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     // convert entry.extension which is a Str255 
     // don't forget to remove the '.' in front of the file extension....
     nsCAutoString temp((char *)&entry.extension[2], (int)entry.extension[0]-1);
-    info->AppendExtension(temp);
+    info->AppendExtension(temp.get());
     info->SetMacType(entry.fileType);
     info->SetMacCreator(entry.fileCreator);
     temp.Assign((char *) &entry.entryName[1], entry.entryName[0]);
@@ -352,7 +352,7 @@ NS_IMETHODIMP nsInternetConfigService::FillInMIMEInfo(const char *mimetype, cons
     nsCAutoString fileExtension;
     fileExtension.Assign(".");  
     fileExtension.Append(aFileExtension);
-    rv = GetMappingForMIMEType(mimetype, fileExtension, &entry);
+    rv = GetMappingForMIMEType(mimetype, fileExtension.get(), &entry);
   }
   else
   {
@@ -379,7 +379,7 @@ NS_IMETHODIMP nsInternetConfigService::GetMIMEInfoFromExtension(const char *aFil
     nsCAutoString filename("foobar.");
 	filename+=aFileExt;
 	Str255 pFileName;
-	ConvertCharStringToStr255( filename, pFileName  );
+	ConvertCharStringToStr255( filename.get(), pFileName  );
 	ICMapEntry entry;
 	OSStatus err = ::ICMapFilename( instance, pFileName, &entry );
 	if( err == noErr )
@@ -401,7 +401,7 @@ NS_IMETHODIMP nsInternetConfigService::GetMIMEInfoFromTypeCreator(PRUint32 aType
 	nsCAutoString filename("foobar.");
 	filename+=aFileExt;
 	Str255 pFileName;
-	ConvertCharStringToStr255( filename, pFileName  );
+	ConvertCharStringToStr255( filename.get(), pFileName  );
 	ICMapEntry entry;
 	OSStatus err = ::ICMapTypeCreator( instance, aType, aCreator, pFileName, &entry );
 	if( err == noErr )
