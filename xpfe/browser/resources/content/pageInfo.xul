@@ -139,7 +139,7 @@
       <splitter collapse="after" id="imageSplitter"/>
       
       <hbox id="imagePreviewContainer" flex="1">
-        <iframe id="imageFrame" class="inset" src="about:blank" flex="1"/>
+        <iframe id="imageFrame" class="inset" type="content" src="about:blank" flex="1"/>
       </hbox>
     </vbox>
 
