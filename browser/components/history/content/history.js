@@ -146,7 +146,7 @@ function handleHistoryClick(aEvent)
     // Clear all other selection since we're loading a link now. We must
     // do this *before* attempting to load the link since openURL uses
     // selection as an indication of which link to load. 
-    tbo.selection.select(row.value);
+    tbo.view.selection.select(row.value);
 
     openURL(aEvent);
   }
