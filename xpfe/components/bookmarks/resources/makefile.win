@@ -17,31 +17,35 @@
 
 DEPTH=..\..\..\..
 
-FILES=\
-        bm-panel.xul                    \
-        bm-props.xul                    \
-        bm-props.js                     \
-        bookmark-folder-closed.gif      \
-        bookmark-folder-open.gif        \
-        bookmark-item.gif               \
-        bookmark-popup.js               \
-        bookmarks.css                   \
-        bookmarks.html                  \
-        bookmarks.js                    \
-        bookmarks.xul                   \
-        iefavorite.gif                  \
-        manage-bookmarks.css            \
-        personal-folder-closed.gif      \
-        personal-folder-open.gif        \
-        locale/en-US/bm-props.dtd \
-        locale/en-US/bookmarks.dtd \
-        $(NULL)
+CHROME_DIR          = bookmarks
+CHROME_CONTENT_DIR  = content/default
+CHROME_SKIN_DIR     = skin/default
+CHROME_SOURCE_DIR	= $(srcdir)
+
+CHROME_CONTENT = \
+	.\bm-panel.xul \
+	.\bm-props.xul \
+	.\bm-props.js \
+	.\bookmark-popup.js \
+	.\bookmarks.html \
+	.\bookmarks.js \
+	.\bookmarks.xul \
+	$(NULL)
+
+CHROME_SKIN = \
+	.\bookmark-folder-closed.gif \
+	.\bookmark-folder-open.gif \
+	.\bookmark-item.gif \
+	.\bookmarks.css \
+	.\iefavorite.gif \
+	.\manage-bookmarks.css \
+	.\personal-folder-closed.gif \
+	.\personal-folder-open.gif \
+	$(NULL)
+
+CHROME_L10N = \
+	.\locale\en-US\bm-props.dtd \
+	.\locale\en-US\bookmarks.dtd \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(FILES:/=\)
-	!@$(MAKE_INSTALL) $** $(DIST)\bin\res\samples
-
-clobber:: $(FILES:/=\)
-        !$(RM) $(DIST)\bin\res\samples\$**
-

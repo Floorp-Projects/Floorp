@@ -23,7 +23,7 @@
    type="text/css"?>
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "resource:/res/samples/bookmarks.dtd">
+<!DOCTYPE window SYSTEM "chrome://bookmarks/content/locale/bookmarks.dtd">
 <xul:window title="&bookmarksWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -37,7 +37,7 @@
     <menu value="&menu.file.label;">
 	  <menupopup>
       <menuitem value="&menuitem.newWindow.label;"
-                onaction="window.open('resource:/res/samples/bookmarks.xul',
+                onaction="window.open('chrome://bookmarks/content/',
                                      'ManageBookmarks',
                                      'chrome,menubar,resizable');" />
       <menuitem value="&menuitem.newBookmark.label;" onaction="return doContextCmd('http://home.netscape.com/NC-rdf#bookmarkcommand?newbookmark');" />

@@ -25,31 +25,31 @@ treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > t
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > treecell > titledbutton {
- list-style-image: url("resource:/res/samples/bookmark-folder-closed.gif");
+ list-style-image: url("chrome://bookmarks/skin/bookmark-folder-closed.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > treecell > titledbutton {
- list-style-image: url("resource:/res/samples/bookmark-folder-open.gif");
+ list-style-image: url("chrome://bookmarks/skin/bookmark-folder-open.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treerow > treecell > titledbutton {
- list-style-image: url("resource:/res/samples/personal-folder-closed.gif");
+ list-style-image: url("chrome://bookmarks/skin/personal-folder-closed.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treerow > treecell > titledbutton {
- list-style-image: url("resource:/res/samples/personal-folder-open.gif");
+ list-style-image: url("chrome://bookmarks/skin/personal-folder-open.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treerow > treecell > titledbutton {
- list-style-image: url("resource:/res/samples/bookmark-item.gif");
+ list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#IEFavorite"] > treerow > treecell > titledbutton {
- list-style-image: url("resource:/res/samples/IEFavorite.gif");
+ list-style-image: url("chrome://bookmarks/skin/iefavorite.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treerow > treecell > titledbutton {
- list-style-image: url("resource:/res/samples/bookmark-item.gif");
+ list-style-image: url("chrome://bookmarks/skin/bookmark-item.gif");
 }
 
 treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treerow > treecell > titledbutton {
@@ -77,5 +77,5 @@ treeitem > treerow > treecell > titledbutton {
 }
 
 titledbutton#bookmarks {
-	list-style-image:url("resource:/res/samples/bookmark-item.gif");
+	list-style-image:url("chrome://bookmarks/skin/bookmark-item.gif");
 }
