@@ -123,7 +123,6 @@ protected:
                                         // one channel per part.
     nsCOMPtr<nsISupports> mContext;
     nsCString           mContentType;
-    nsCString           mContentCharset;
     nsCString           mContentDisposition;
     PRInt32             mContentLength;
     
