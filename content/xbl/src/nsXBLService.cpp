@@ -444,6 +444,7 @@ PRUint32 nsXBLService::gClassLRUListQuota = 64;
 
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
 nsIAtom* nsXBLService::kScrollbarAtom = nsnull;
+nsIAtom* nsXBLService::kInputAtom = nsnull;
 
 // Enabled by default. Must be over-ridden to disable
 PRBool nsXBLService::gDisableChromeCache = PR_FALSE;
@@ -482,6 +483,7 @@ nsXBLService::nsXBLService(void)
     // Create our atoms
     kExtendsAtom = NS_NewAtom("extends");
     kScrollbarAtom = NS_NewAtom("scrollbar");
+    kInputAtom = NS_NewAtom("input");
 
     // Find out if the XUL cache is on or off
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
@@ -516,6 +518,7 @@ nsXBLService::~nsXBLService(void)
     // Release our atoms
     NS_RELEASE(kExtendsAtom);
     NS_RELEASE(kScrollbarAtom);
+    NS_RELEASE(kInputAtom);
 
     // Walk the LRU list removing and deleting the nsXBLJSClasses.
     FlushMemory(REASON_HEAP_MINIMIZE, 0);
@@ -932,7 +935,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
     nsCOMPtr<nsIAtom> tagName;
     if (aBoundElement)
       aBoundElement->GetTag(*getter_AddRefs(tagName));
-    if (!info && (tagName.get() != kScrollbarAtom) && !aForceSyncLoad) {
+    if (!info && (tagName.get() != kScrollbarAtom) && (tagName.get() != kInputAtom) 
+        && !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no
       // document yet, but we need to glom on our request so that it will be
@@ -1043,7 +1047,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   nsCOMPtr<nsIAtom> tagName;
   if (aBoundElement)
     aBoundElement->GetTag(*getter_AddRefs(tagName)); 
-  if (tagName.get() != kScrollbarAtom && !aForceSyncLoad) {
+  if ((tagName.get() != kScrollbarAtom) && (tagName.get() != kInputAtom) && !aForceSyncLoad) {
     // We can be asynchronous
     nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener, aBoundDocument, doc);
     

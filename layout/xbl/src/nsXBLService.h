@@ -119,6 +119,7 @@ public:
   static nsIAtom* kExtendsAtom;
   
   static nsIAtom* kScrollbarAtom;
+  static nsIAtom* kInputAtom;
 
   nsFixedSizeAllocator mPool;
 };
