@@ -86,7 +86,8 @@ nsNSSDialogHelper::openDialog(
     nsISupports *params)
 {
   nsresult rv;
-  NS_WITH_SERVICE(nsIWindowWatcher, windowWatcher, "@mozilla.org/embedcomp/window-watcher;1", &rv);
+  nsCOMPtr<nsIWindowWatcher> windowWatcher = 
+           do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDOMWindow> newWindow;
