@@ -713,20 +713,17 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
                                                uint16 methodIndex,
                                                const nsXPTType& type,
                                                nsXPTCMiniVariant* nativeParams,
-                                               JSBool* iidIsOwned,
-                                               nsID** result)
+                                               nsID* result)
 {
     uint8 type_tag = type.TagPart();
-    nsID* iid;
 
     if(type_tag == nsXPTType::T_INTERFACE)
     {
-        if(NS_FAILED(GetInterfaceInfo()->
-                GetIIDForParam(methodIndex, &param, &iid)))
+        if(NS_SUCCEEDED(GetInterfaceInfo()->
+                GetIIDForParamNoAlloc(methodIndex, &param, result)))
         {
-            return JS_FALSE;
+            return JS_TRUE;
         }
-        *iidIsOwned = JS_TRUE;
     }
     else if(type_tag == nsXPTType::T_INTERFACE_IS)
     {
@@ -743,15 +740,23 @@ nsXPCWrappedJSClass::GetInterfaceTypeFromParam(JSContext* cx,
            arg_type.TagPart() == nsXPTType::T_IID)
         {
             if(arg_param.IsOut())
-               iid = *((nsID**)nativeParams[argnum].val.p);
+            {
+                nsID** p = (nsID**) nativeParams[argnum].val.p;
+                if(!p || !*p)
+                    return JS_FALSE;
+                *result = **p;
+            }
             else
-               iid = (nsID*) nativeParams[argnum].val.p;
-            *iidIsOwned = JS_FALSE;
+            {
+                nsID* p = (nsID*) nativeParams[argnum].val.p;
+                if(!p)
+                    return JS_FALSE;
+                *result = *p;
+            }
+            return JS_TRUE;
         }
     }
-
-    *result = iid;
-    return iid ? JS_TRUE : JS_FALSE;
+    return JS_FALSE;
 }
 
 void
@@ -813,8 +818,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     JSErrorReporter older;
     JSBool success;
     JSBool readyToDoTheCall = JS_FALSE;
-    nsID* conditional_iid = nsnull;
-    JSBool iidIsOwned = JS_FALSE;
+    nsID  param_iid;
     uint8 outConversionFailedIndex;
     JSObject* obj;
     const char* name = info->GetName();
@@ -1055,7 +1059,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             if(datum_type.IsInterfacePointer() &&
                !GetInterfaceTypeFromParam(cx, info, param, methodIndex,
                                           datum_type, nativeParams,
-                                          &iidIsOwned, &conditional_iid))
+                                          &param_iid))
                 goto pre_call_clean_up;
 
             if(isArray || isSizedString)
@@ -1070,7 +1074,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             {
 
                 if(!XPCConvert::NativeArray2JS(ccx, &val, (const void**)&pv->val,
-                                               datum_type, conditional_iid,
+                                               datum_type, &param_iid,
                                                array_count, obj, nsnull))
                     goto pre_call_clean_up;
             }
@@ -1085,17 +1089,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
             else
             {
                 if(!XPCConvert::NativeData2JS(ccx, &val, &pv->val, type,
-                                              conditional_iid, obj, nsnull))
+                                              &param_iid, obj, nsnull))
                     goto pre_call_clean_up;
-            }
-            if(conditional_iid)
-            {
-                if(iidIsOwned)
-                {
-                    nsMemory::Free((void*)conditional_iid);
-                    iidIsOwned = JS_FALSE;
-                }
-                conditional_iid = nsnull;
             }
         }
 
@@ -1172,16 +1167,6 @@ pre_call_clean_up:
                 CleanupPointerTypeObject(type, (void**)p);
         }
         *((void**)p) = nsnull;
-    }
-
-    if(conditional_iid)
-    {
-        if(iidIsOwned)
-        {
-            nsMemory::Free((void*)conditional_iid);
-            iidIsOwned = JS_FALSE;
-        }
-        conditional_iid = nsnull;
     }
 
     if(!readyToDoTheCall)
@@ -1432,27 +1417,17 @@ pre_call_clean_up:
 
         if(type_tag == nsXPTType::T_INTERFACE)
         {
-            if(NS_FAILED(GetInterfaceInfo()->GetIIDForParam(methodIndex, &param,
-                                                            &conditional_iid)))
+            if(NS_FAILED(GetInterfaceInfo()->
+                            GetIIDForParamNoAlloc(methodIndex, &param,
+                                                  &param_iid)))
                 HANDLE_OUT_CONVERSION_FAILURE
-            iidIsOwned = JS_TRUE;
         }
         else if(type.IsPointer() && !param.IsShared() && !param.IsDipper())
             useAllocator = JS_TRUE;
 
         if(!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
-                                      useAllocator, conditional_iid, nsnull))
+                                      useAllocator, &param_iid, nsnull))
             HANDLE_OUT_CONVERSION_FAILURE
-
-        if(conditional_iid)
-        {
-            if(iidIsOwned)
-            {
-                nsMemory::Free((void*)conditional_iid);
-                iidIsOwned = JS_FALSE;
-            }
-            conditional_iid = nsnull;
-        }
     }
 
     // if any params were dependent, then we must iterate again to convert them.
@@ -1503,7 +1478,7 @@ pre_call_clean_up:
             {
                if(!GetInterfaceTypeFromParam(cx, info, param, methodIndex,
                                              datum_type, nativeParams,
-                                             &iidIsOwned, &conditional_iid))
+                                             &param_iid))
                     HANDLE_OUT_CONVERSION_FAILURE
             }
             else if(type.IsPointer() && !param.IsShared())
@@ -1522,7 +1497,7 @@ pre_call_clean_up:
                 if(!XPCConvert::JSArray2Native(ccx, (void**)&pv->val, val,
                                                array_count, array_count,
                                                datum_type,
-                                               useAllocator, conditional_iid,
+                                               useAllocator, &param_iid,
                                                nsnull))
                     HANDLE_OUT_CONVERSION_FAILURE
             }
@@ -1538,19 +1513,9 @@ pre_call_clean_up:
             else
             {
                 if(!XPCConvert::JSData2Native(ccx, &pv->val, val, type,
-                                              useAllocator, conditional_iid,
+                                              useAllocator, &param_iid,
                                               nsnull))
                     HANDLE_OUT_CONVERSION_FAILURE
-            }
-
-            if(conditional_iid)
-            {
-                if(iidIsOwned)
-                {
-                    nsMemory::Free((void*)conditional_iid);
-                    iidIsOwned = JS_FALSE;
-                }
-                conditional_iid = nsnull;
             }
         }
     }
@@ -1607,9 +1572,6 @@ pre_call_clean_up:
 done:
     if(sp)
         js_FreeStack(cx, mark);
-
-    if(conditional_iid && iidIsOwned)
-        nsMemory::Free((void*)conditional_iid);
 
     if(cx)
     {

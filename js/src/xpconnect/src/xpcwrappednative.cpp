@@ -1537,7 +1537,7 @@ GetInterfaceTypeFromParam(XPCCallContext& ccx,
                           uint8 paramIndex,
                           const nsXPTType& datum_type,
                           nsXPTCVariant* dispatchParams,
-                          nsID** result)
+                          nsID* result)
 {
     uint8 argnum;
     nsresult rv;
@@ -1547,7 +1547,7 @@ GetInterfaceTypeFromParam(XPCCallContext& ccx,
 
     if(type_tag == nsXPTType::T_INTERFACE)
     {
-        rv = ifaceInfo->GetIIDForParam(vtblIndex, &paramInfo, result);
+        rv = ifaceInfo->GetIIDForParamNoAlloc(vtblIndex, &paramInfo, result);
         if(NS_FAILED(rv))
             return ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO, paramIndex, ccx);
     }
@@ -1564,9 +1564,10 @@ GetInterfaceTypeFromParam(XPCCallContext& ccx,
         if(!arg_type.IsPointer() || arg_type.TagPart() != nsXPTType::T_IID)
             return ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO, paramIndex, ccx);
 
-        if(!(*result = (nsID*) nsMemory::Clone(dispatchParams[argnum].val.p,
-                                               sizeof(nsID))))
-            return ReportOutOfMemory(ccx);
+        nsID* p = (nsID*) dispatchParams[argnum].val.p;
+        if(!p)
+            return ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO, paramIndex, ccx);
+        *result = *p;
     }
     return JS_TRUE;
 }
@@ -1621,7 +1622,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     uint8 paramCount;
     jsval src;
     nsresult invokeResult;
-    nsID* conditional_iid = nsnull;
+    nsID param_iid;
     uintN err;
     nsIXPCSecurityManager* sm;
     JSBool foundDependentParam;
@@ -1832,24 +1833,18 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         }
 
         if(type_tag == nsXPTType::T_INTERFACE &&
-           NS_FAILED(ifaceInfo->GetIIDForParam(vtblIndex, &paramInfo,
-                                               &conditional_iid)))
+           NS_FAILED(ifaceInfo->GetIIDForParamNoAlloc(vtblIndex, &paramInfo,
+                                               &param_iid)))
         {
             ThrowBadParam(NS_ERROR_XPC_CANT_GET_PARAM_IFACE_INFO, i, ccx);
             goto done;
         }
 
         if(!XPCConvert::JSData2Native(ccx, &dp->val, src, type,
-                                      useAllocator, conditional_iid, &err))
+                                      useAllocator, &param_iid, &err))
         {
             ThrowBadParam(err, i, ccx);
             goto done;
-        }
-
-        if(conditional_iid)
-        {
-            nsMemory::Free((void*)conditional_iid);
-            conditional_iid = nsnull;
         }
     }
 
@@ -1940,7 +1935,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             if(datum_type.IsInterfacePointer() &&
                !GetInterfaceTypeFromParam(ccx, ifaceInfo, methodInfo, paramInfo,
                                           vtblIndex, i, datum_type,
-                                          dispatchParams, &conditional_iid))
+                                          dispatchParams, &param_iid))
                 goto done;
 
             if(isArray || isSizedString)
@@ -1959,7 +1954,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                                                    array_count, array_capacity,
                                                    datum_type,
                                                    useAllocator,
-                                                   conditional_iid, &err))
+                                                   &param_iid, &err))
                     {
                         // XXX need exception scheme for arrays to indicate bad element
                         ThrowBadParam(err, i, ccx);
@@ -1983,18 +1978,12 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             else
             {
                 if(!XPCConvert::JSData2Native(ccx, &dp->val, src, type,
-                                              useAllocator, conditional_iid,
+                                              useAllocator, &param_iid,
                                               &err))
                 {
                     ThrowBadParam(err, i, ccx);
                     goto done;
                 }
-            }
-
-            if(conditional_iid)
-            {
-                nsMemory::Free((void*)conditional_iid);
-                conditional_iid = nsnull;
             }
         }
     }
@@ -2065,13 +2054,13 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         if(datum_type.IsInterfacePointer() &&
            !GetInterfaceTypeFromParam(ccx, ifaceInfo, methodInfo, paramInfo,
                                       vtblIndex, i, datum_type, dispatchParams,
-                                      &conditional_iid))
+                                      &param_iid))
             goto done;
 
         if(isArray)
         {
             if(!XPCConvert::NativeArray2JS(ccx, &v, (const void**)&dp->val,
-                                           datum_type, conditional_iid,
+                                           datum_type, &param_iid,
                                            array_count, ccx.GetCurrentJSObject(),
                                            &err))
             {
@@ -2094,7 +2083,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
         else
         {
             if(!XPCConvert::NativeData2JS(ccx, &v, &dp->val, datum_type,
-                                          conditional_iid,
+                                          &param_iid,
                                           ccx.GetCurrentJSObject(), &err))
             {
                 ThrowBadParam(err, i, ccx);
@@ -2117,11 +2106,6 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                 ThrowBadParam(NS_ERROR_XPC_CANT_SET_OUT_VAL, i, ccx);
                 goto done;
             }
-        }
-        if(conditional_iid)
-        {
-            nsMemory::Free((void*)conditional_iid);
-            conditional_iid = nsnull;
         }
     }
 
@@ -2185,9 +2169,6 @@ done:
                 delete (nsAString*)p;
         }
     }
-
-    if(conditional_iid)
-        nsMemory::Free((void*)conditional_iid);
 
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;
