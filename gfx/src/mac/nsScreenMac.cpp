@@ -138,13 +138,3 @@ nsScreenMac :: SubtractMenuBar ( const Rect & inScreenRect, Rect* outAdjustedRec
 }
 
 #endif
-
-NS_IMETHODIMP
-nsScreenMac :: GetGammaValue(double *aGammaValue)
-{
-  // XXX - Replace this with code to query the gamma value for your platform
-
-  *aGammaValue = 2.2*(1.8/2.61);
-
-  return NS_OK;
-} // GetGammaValue

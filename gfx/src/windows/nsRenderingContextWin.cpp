@@ -961,9 +961,9 @@ NS_IMETHODIMP nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
 NS_IMETHODIMP nsRenderingContextWin :: SetColor(nscolor aColor)
 {
   mCurrentColor = aColor;
-  mColor = RGB(NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(aColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NS_GET_G(aColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NS_GET_B(aColor)));
+  mColor = RGB(NS_GET_R(aColor),
+               NS_GET_G(aColor),
+               NS_GET_B(aColor));
   return NS_OK;
 }
 

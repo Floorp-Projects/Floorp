@@ -648,9 +648,9 @@ NS_IMETHODIMP nsRenderingContextQT::DestroyDrawingSurface(nsDrawingSurface aDS)
 void nsRenderingContextQT::UpdateGC()
 {
   QPainter *pGC;
-  QColor color(NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(mCurrentColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NS_GET_G(mCurrentColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NS_GET_B(mCurrentColor)));
+  QColor color(NS_GET_R(mCurrentColor),
+               NS_GET_G(mCurrentColor),
+               NS_GET_B(mCurrentColor));
   QPen   pen(color,0,mQLineStyle);
   QBrush brush(color);
 
@@ -822,9 +822,9 @@ NS_IMETHODIMP nsRenderingContextQT::FillRect(nscoord aX,nscoord aY,
   ConditionRect(x,y,w,h);
   UpdateGC();
 
-  QColor color(NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(mCurrentColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NS_GET_G(mCurrentColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NS_GET_B(mCurrentColor)));
+  QColor color(NS_GET_R(mCurrentColor),
+               NS_GET_G(mCurrentColor),
+               NS_GET_B(mCurrentColor));
 
   mSurface->GetGC()->fillRect(x,y,w,h,color);
   return NS_OK;
@@ -860,9 +860,9 @@ NS_IMETHODIMP nsRenderingContextQT::InvertRect(nscoord aX,nscoord aY,
   UpdateGC();
 
   // Fill the rect
-  QColor color(NS_GAMMA_CORRECT_COMPONENT(NS_GET_R(mCurrentColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NS_GET_G(mCurrentColor)),
-               NS_GAMMA_CORRECT_COMPONENT(NS_GET_B(mCurrentColor)));
+  QColor color(NS_GET_R(mCurrentColor),
+               NS_GET_G(mCurrentColor),
+               NS_GET_B(mCurrentColor));
 
   mSurface->GetGC()->fillRect(x,y,w,h,color);
     

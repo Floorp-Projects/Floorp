@@ -454,43 +454,6 @@ extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor)
   return NS_RGBA(r, g, b, NS_GET_A(inColor));
 }
 
-
-/* Gamma correction stuff */
-
-PR_IMPLEMENT_DATA(PRUint8) nsGammaRamp[256], nsInverseGammaRamp[256];
-static double  gammaValue = 2.2;
-
-extern "C" NS_GFX_(double) NS_DisplayGammaValue(void)
-{
-  return gammaValue;
-}
-
-extern "C" NS_GFX_(void) NS_InitializeGamma(void)
-{
-  nsresult result;
-  static PRBool gammaInitialized = PR_FALSE;
-
-  if (gammaInitialized)
-    return;
-
-  nsCOMPtr<nsIScreenManager> screenmgr =
-    do_GetService("@mozilla.org/gfx/screenmanager;1", &result);
-  if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIScreen> screen;
-    screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
-    if (screen)
-      screen->GetGammaValue(&gammaValue);
-  }
-
-  double gamma = 2.2/gammaValue;
-
-  for (int i=0; i<256; i++) {
-    nsGammaRamp[i]        = pow(double(i)/255.0, gamma)   * 255.0 + 0.5;
-    nsInverseGammaRamp[i] = pow(double(i)/255.0, 1/gamma) * 255.0 + 0.5;
-  }
-  gammaInitialized = PR_TRUE;
-}
-
 // Function to convert RGB color space into the HSV colorspace
 // Hue is the primary color defined from 0 to 359 degrees
 // Saturation is defined from 0 to 255.  The higher the number.. the deeper the color

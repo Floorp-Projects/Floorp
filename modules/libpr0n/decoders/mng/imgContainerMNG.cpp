@@ -524,7 +524,7 @@ imgContainerMNG::InitMNG(nsMNGDecoder *decoder)
   mHandle = mng_initialize(this, il_mng_alloc, il_mng_free, NULL);
 
   mng_set_dfltimggamma(mHandle, 0.45455);
-  mng_set_displaygamma(mHandle, NS_DisplayGammaValue());
+  mng_set_displaygamma(mHandle, 2.2);
 
   mng_setcb_openstream(mHandle, il_mng_openstream);
   mng_setcb_closestream(mHandle, il_mng_closestream);

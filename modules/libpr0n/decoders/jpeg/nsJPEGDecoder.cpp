@@ -32,7 +32,6 @@
 #include "nspr.h"
 #include "nsCRT.h"
 #include "ImageLogging.h"
-#include "nsColor.h"
 
 NS_IMPL_ISUPPORTS1(nsJPEGDecoder, imgIDecoder)
 
@@ -330,12 +329,14 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
                                            JPOOL_IMAGE,
                                            row_stride, 1);
 
-    // allocate buffer to do byte flipping (if needed) and gamma correction
+#if defined(XP_PC) || defined(XP_BEOS) || defined(XP_MAC) || defined(XP_MACOSX) || defined(MOZ_WIDGET_PHOTON)
+    // allocate buffer to do byte flipping if needed
     if (mInfo.output_components == 3) {
       mRGBPadRow = (PRUint8*) PR_MALLOC(row_stride);
       mRGBPadRowLength = row_stride;
       memset(mRGBPadRow, 0, mRGBPadRowLength);
     }
+#endif
 
     /* Allocate RGB buffer for conversion from greyscale. */
     if (mInfo.output_components != 3) {
@@ -496,14 +497,14 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
         /* Convert from grayscale to RGB. */
         while (j1 < j1end) {
 #if defined(XP_MAC) || defined(XP_MACOSX)
-          j = NS_GAMMA_CORRECT_COMPONENT(*j1++);
+          j = *j1++;
           j3[0] = 0;
           j3[1] = j;
           j3[2] = j;
           j3[3] = j;
           j3 += 4;
 #else
-          j = NS_GAMMA_CORRECT_COMPONENT(*j1++);
+          j = *j1++;
           j3[0] = j;
           j3[1] = j;
           j3[2] = j;
@@ -513,27 +514,36 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
         samples = mSamples3[0];
       } else {
         /* 24-bit color image */
+#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
         memset(mRGBPadRow, 0, mInfo.output_width * 4);
         PRUint8 *ptrOutputBuf = mRGBPadRow;
 
         JSAMPLE *j1 = mSamples[0];
         for (PRUint32 i=0;i<mInfo.output_width;++i) {
-#if defined(XP_MAC) || defined(XP_MACOSX)
-          *ptrOutputBuf++ = 0;
-#endif
-#if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-          ptrOutputBuf[2] = NS_GAMMA_CORRECT_COMPONENT(*j1++);
-          ptrOutputBuf[1] = NS_GAMMA_CORRECT_COMPONENT(*j1++);
-          ptrOutputBuf[0] = NS_GAMMA_CORRECT_COMPONENT(*j1++);
-#else
-          ptrOutputBuf[0] = NS_GAMMA_CORRECT_COMPONENT(*j1++);
-          ptrOutputBuf[1] = NS_GAMMA_CORRECT_COMPONENT(*j1++);
-          ptrOutputBuf[2] = NS_GAMMA_CORRECT_COMPONENT(*j1++);
-#endif
+          ptrOutputBuf[2] = *j1++;
+          ptrOutputBuf[1] = *j1++;
+          ptrOutputBuf[0] = *j1++;
           ptrOutputBuf += 3;
         }
 
         samples = mRGBPadRow;
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+        memset(mRGBPadRow, 0, mInfo.output_width * 4);
+        PRUint8 *ptrOutputBuf = mRGBPadRow;
+
+        JSAMPLE *j1 = mSamples[0];
+        for (PRUint32 i=0;i<mInfo.output_width;++i) {
+          ptrOutputBuf[0] = 0;
+          ptrOutputBuf[1] = *j1++;
+          ptrOutputBuf[2] = *j1++;
+          ptrOutputBuf[3] = *j1++;
+          ptrOutputBuf += 4;
+        }
+
+        samples = mRGBPadRow;
+#else
+        samples = mSamples[0];
+#endif
       }
 
       PRUint32 bpr;

@@ -474,7 +474,7 @@ nsRenderingContextPS :: GetClipRegion(nsIRegion **aRegion)
 NS_IMETHODIMP 
 nsRenderingContextPS :: SetColor(nscolor aColor)
 {
-  mPSObj->setcolor(NS_GAMMA_CORRECT_COLOR(aColor));
+  mPSObj->setcolor(aColor);
   mCurrentColor = aColor;
 
   return NS_OK;

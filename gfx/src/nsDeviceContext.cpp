@@ -111,8 +111,6 @@ void DeviceContextImpl::CommonInit(void)
   nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
   if (obs)
     obs->AddObserver(this, "memory-pressure", PR_TRUE);
-
-  NS_InitializeGamma();
 }
 
 NS_IMETHODIMP DeviceContextImpl::GetTwipsToDevUnits(float &aTwipsToDevUnits) const
