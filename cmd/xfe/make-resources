@@ -70,6 +70,7 @@ else
 	ONLYSCO="!"
 fi
 
+# Sed sucks!  I have to hard code the filename
 rm -f ${DEST}
 cat ${RESOURCES} ${LOCALE_MAP} ${STRS} | sed \
 	"s/@NAME@/${NAME}/g;
@@ -89,7 +90,6 @@ cat ${RESOURCES} ${LOCALE_MAP} ${STRS} | sed \
 	 s/@URLVERSION@/${VERS}/g;
 	 s/@MOZ_USER_DIR@/${MOZ_USER_DIR}/g;
 	 /@INCLUDE resources-translations@.*/ {
-	   # Sed sucks!  I have to hard code the filename
 	   r resources-translations
 	   d
 	   }" > ${DEST}
