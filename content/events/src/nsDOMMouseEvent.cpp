@@ -152,7 +152,7 @@ nsDOMMouseEvent::GetButton(PRUint16* aButton)
   }
 
   // If button has been set then use that instead.
-  if (mButton > 0) {
+  if (mButton >= 0) {
     *aButton = (PRUint16)mButton;
   }
   else {
@@ -173,9 +173,12 @@ nsDOMMouseEvent::GetButton(PRUint16* aButton)
     case NS_MOUSE_RIGHT_BUTTON_DOWN:
     case NS_MOUSE_RIGHT_CLICK:
     case NS_MOUSE_RIGHT_DOUBLECLICK:
+    case NS_CONTEXTMENU:
       *aButton = 2;
       break;
     default:
+      // This event doesn't have a mouse button associated with it
+      *aButton = (PRUint16)-1;
       break;
     }
   }
