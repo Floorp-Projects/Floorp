@@ -2295,7 +2295,8 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		}
 	}
 
-	PRBool	trimItemEnd = PR_TRUE;
+	PRBool	trimItemEnd = PR_FALSE;		// rjc note: testing shows we should NEVER trim???
+
 	// if resultItemEndStr is not specified, try making it the same as resultItemStartStr
 	if (resultItemEndStr.Length() < 1)
 	{
