@@ -63,6 +63,10 @@ public:
 
   NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif)=0;
 
+  NS_IMETHOD    ScrollByLines(PRInt32 aNumLines)=0;
+
+  NS_IMETHOD    ScrollByPages(PRInt32 aNumPages)=0;
+
   NS_IMETHOD    GetSelection(nsIDOMSelection** aReturn)=0;
 };
 
@@ -79,6 +83,8 @@ public:
   NS_IMETHOD    GetScrollY(PRInt32* aScrollY);  \
   NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll);  \
   NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif);  \
+  NS_IMETHOD    ScrollByLines(PRInt32 aNumLines);  \
+  NS_IMETHOD    ScrollByPages(PRInt32 aNumPages);  \
   NS_IMETHOD    GetSelection(nsIDOMSelection** aReturn);  \
 
 
@@ -95,6 +101,8 @@ public:
   NS_IMETHOD    GetScrollY(PRInt32* aScrollY) { return _to GetScrollY(aScrollY); } \
   NS_IMETHOD    ScrollTo(PRInt32 aXScroll, PRInt32 aYScroll) { return _to ScrollTo(aXScroll, aYScroll); }  \
   NS_IMETHOD    ScrollBy(PRInt32 aXScrollDif, PRInt32 aYScrollDif) { return _to ScrollBy(aXScrollDif, aYScrollDif); }  \
+  NS_IMETHOD    ScrollByLines(PRInt32 aNumLines) { return _to ScrollByLines(aNumLines); }  \
+  NS_IMETHOD    ScrollByPages(PRInt32 aNumPages) { return _to ScrollByPages(aNumPages); }  \
   NS_IMETHOD    GetSelection(nsIDOMSelection** aReturn) { return _to GetSelection(aReturn); }  \
 
 

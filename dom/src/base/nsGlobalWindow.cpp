@@ -1780,6 +1780,36 @@ NS_IMETHODIMP GlobalWindowImpl::ScrollBy(PRInt32 aXScrollDif,
   return result;
 }
 
+NS_IMETHODIMP GlobalWindowImpl::ScrollByLines(PRInt32 numLines)
+{
+  nsresult result;
+  nsIScrollableView *view = nsnull;   // no addref/release for views
+  float p2t, t2p;
+
+  result = GetScrollInfo(&view, &p2t, &t2p);
+  if (view)
+  {
+    result = view->ScrollByLines(0, numLines);
+  }
+
+  return result;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::ScrollByPages(PRInt32 numPages)
+{
+  nsresult result;
+  nsIScrollableView *view = nsnull;   // no addref/release for views
+  float p2t, t2p;
+
+  result = GetScrollInfo(&view, &p2t, &t2p);
+  if (view)
+  {
+    result = view->ScrollByPages(numPages);
+  }
+
+  return result;
+}
+
 NS_IMETHODIMP GlobalWindowImpl::ClearTimeout(PRInt32 aTimerID)
 {
   return ClearTimeoutOrInterval(aTimerID);
