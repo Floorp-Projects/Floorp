@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.11 2002/07/25 03:59:38 wtc%netscape.com Exp $
+ * $Id: lowcert.c,v 1.12 2002/08/24 00:49:11 jpierre%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -512,7 +512,7 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
     PORT_Memset(&spki,0,sizeof(spki));
 
     /* we haven't bothered decoding the spki struct yet, do it now */
-    rv = SEC_ASN1DecodeItem(arena, &spki, 
+    rv = SEC_QuickDERDecodeItem(arena, &spki, 
 		nsslowcert_SubjectPublicKeyInfoTemplate, &cert->derSubjKeyInfo);
     if (rv != SECSuccess) {
  	PORT_FreeArena (arena, PR_FALSE);
@@ -529,7 +529,7 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
       case SEC_OID_PKCS1_RSA_ENCRYPTION:
         pubk->keyType = NSSLOWKEYRSAKey;
         prepare_low_rsa_pub_key_for_asn1(pubk);
-        rv = SEC_ASN1DecodeItem(arena, pubk, 
+        rv = SEC_QuickDERDecodeItem(arena, pubk, 
 				nsslowcert_RSAPublicKeyTemplate, &os);
         if (rv == SECSuccess)
             return pubk;
@@ -537,14 +537,14 @@ nsslowcert_ExtractPublicKey(NSSLOWCERTCertificate *cert)
       case SEC_OID_ANSIX9_DSA_SIGNATURE:
         pubk->keyType = NSSLOWKEYDSAKey;
         prepare_low_dsa_pub_key_for_asn1(pubk);
-        rv = SEC_ASN1DecodeItem(arena, pubk,
+        rv = SEC_QuickDERDecodeItem(arena, pubk,
 				 nsslowcert_DSAPublicKeyTemplate, &os);
         if (rv == SECSuccess) return pubk;
         break;
       case SEC_OID_X942_DIFFIE_HELMAN_KEY:
         pubk->keyType = NSSLOWKEYDHKey;
         prepare_low_dh_pub_key_for_asn1(pubk);
-        rv = SEC_ASN1DecodeItem(arena, pubk,
+        rv = SEC_QuickDERDecodeItem(arena, pubk,
 				 nsslowcert_DHPublicKeyTemplate, &os);
         if (rv == SECSuccess) return pubk;
         break;

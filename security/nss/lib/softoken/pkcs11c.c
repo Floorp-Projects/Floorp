@@ -3668,7 +3668,7 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
 	return SECFailure;
     }
 
-    if(SEC_ASN1DecodeItem(arena, pki, nsslowkey_PrivateKeyInfoTemplate, bpki) 
+    if(SEC_QuickDERDecodeItem(arena, pki, nsslowkey_PrivateKeyInfoTemplate, bpki) 
 				!= SECSuccess) {
 	PORT_FreeArena(arena, PR_FALSE);
 	return SECFailure;
@@ -3710,12 +3710,12 @@ pk11_unwrapPrivateKey(PK11Object *key, SECItem *bpki)
     }
 
     /* decode the private key and any algorithm parameters */
-    rv = SEC_ASN1DecodeItem(arena, lpk, keyTemplate, &pki->privateKey);
+    rv = SEC_QuickDERDecodeItem(arena, lpk, keyTemplate, &pki->privateKey);
     if(rv != SECSuccess) {
 	goto loser;
     }
     if(paramDest && paramTemplate) {
-	rv = SEC_ASN1DecodeItem(arena, paramDest, paramTemplate, 
+	rv = SEC_QuickDERDecodeItem(arena, paramDest, paramTemplate, 
 				 &(pki->algorithm.parameters));
 	if(rv != SECSuccess) {
 	    goto loser;

@@ -119,7 +119,7 @@ CERT_DecodeAuthKeyID (PRArenaPool *arena, SECItem *encodedValue)
 	value->DERAuthCertIssuer = NULL;
 	if (value == NULL)
 	    break;
-	rv = SEC_ASN1DecodeItem
+	rv = SEC_QuickDERDecodeItem
 	     (arena, value, CERTAuthKeyIDTemplate, encodedValue);
 	if (rv != SECSuccess)
 	    break;

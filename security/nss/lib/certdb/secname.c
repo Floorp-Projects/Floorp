@@ -566,6 +566,7 @@ CERT_DecodeAVAValue(SECItem *derAVAValue)
           PRBool            convertUCS4toUTF8 = PR_FALSE;
           PRBool            convertUCS2toUTF8 = PR_FALSE;
           SECItem           avaValue          = {siBuffer, 0}; 
+    PRArenaPool* newarena = NULL;
 
     if(!derAVAValue) {
 	return NULL;
@@ -598,7 +599,11 @@ CERT_DecodeAVAValue(SECItem *derAVAValue)
     }
 
     PORT_Memset(&avaValue, 0, sizeof(SECItem));
-    if(SEC_ASN1DecodeItem(NULL, &avaValue, theTemplate, derAVAValue) 
+    newarena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!newarena) {
+        return NULL;
+    }
+    if(SEC_QuickDERDecodeItem(newarena, &avaValue, theTemplate, derAVAValue) 
 				!= SECSuccess) {
 	return NULL;
     }
@@ -610,11 +615,11 @@ CERT_DecodeAVAValue(SECItem *derAVAValue)
 	if(!PORT_UCS4_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
 				     utf8Val, utf8ValLen, &utf8ValLen)) {
 	    PORT_Free(utf8Val);
-	    PORT_Free(avaValue.data);
+            PORT_FreeArena(newarena, PR_FALSE);
 	    return NULL;
 	}
 
-	PORT_Free(avaValue.data);
+        PORT_FreeArena(newarena, PR_FALSE);
 	avaValue.data = utf8Val;
 	avaValue.len = utf8ValLen;
 
@@ -626,16 +631,16 @@ CERT_DecodeAVAValue(SECItem *derAVAValue)
 	if(!PORT_UCS2_UTF8Conversion(PR_FALSE, avaValue.data, avaValue.len,
 				     utf8Val, utf8ValLen, &utf8ValLen)) {
 	    PORT_Free(utf8Val);
-	    PORT_Free(avaValue.data);
+            PORT_FreeArena(newarena, PR_FALSE);
 	    return NULL;
 	}
 
-	PORT_Free(avaValue.data);
+        PORT_FreeArena(newarena, PR_FALSE);
 	avaValue.data = utf8Val;
 	avaValue.len = utf8ValLen;
     }
 
     retItem = SECITEM_DupItem(&avaValue);
-    PORT_Free(avaValue.data);
+    PORT_FreeArena(newarena, PR_FALSE);
     return retItem;
 }

@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.41 2002/08/22 18:05:32 wtc%netscape.com Exp $
+ * $Id: certdb.c,v 1.42 2002/08/24 00:45:55 jpierre%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -263,14 +263,14 @@ CERT_NameFromDERCert(SECItem *derCert, SECItem *derName)
     }
    
     PORT_Memset(&sd, 0, sizeof(CERTSignedData));
-    rv = SEC_ASN1DecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
+    rv = SEC_QuickDERDecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
     
     if ( rv ) {
 	goto loser;
     }
     
     PORT_Memset(derName, 0, sizeof(SECItem));
-    rv = SEC_ASN1DecodeItem(arena, derName, SEC_CertSubjectTemplate, &sd.data);
+    rv = SEC_QuickDERDecodeItem(arena, derName, SEC_CertSubjectTemplate, &sd.data);
 
     if ( rv ) {
 	goto loser;
@@ -307,14 +307,14 @@ CERT_IssuerNameFromDERCert(SECItem *derCert, SECItem *derName)
     }
    
     PORT_Memset(&sd, 0, sizeof(CERTSignedData));
-    rv = SEC_ASN1DecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
+    rv = SEC_QuickDERDecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
     
     if ( rv ) {
 	goto loser;
     }
     
     PORT_Memset(derName, 0, sizeof(SECItem));
-    rv = SEC_ASN1DecodeItem(arena, derName, SEC_CertIssuerTemplate, &sd.data);
+    rv = SEC_QuickDERDecodeItem(arena, derName, SEC_CertIssuerTemplate, &sd.data);
 
     if ( rv ) {
 	goto loser;
@@ -351,14 +351,14 @@ CERT_SerialNumberFromDERCert(SECItem *derCert, SECItem *derName)
     }
    
     PORT_Memset(&sd, 0, sizeof(CERTSignedData));
-    rv = SEC_ASN1DecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
+    rv = SEC_QuickDERDecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
     
     if ( rv ) {
 	goto loser;
     }
     
     PORT_Memset(derName, 0, sizeof(SECItem));
-    rv = SEC_ASN1DecodeItem(arena, derName, SEC_CertSerialNumberTemplate, &sd.data);
+    rv = SEC_QuickDERDecodeItem(arena, derName, SEC_CertSerialNumberTemplate, &sd.data);
 
     if ( rv ) {
 	goto loser;
@@ -770,7 +770,7 @@ CERT_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
     }
 
     /* decode the certificate info */
-    rv = SEC_ASN1DecodeItem(arena, cert, SEC_SignedCertificateTemplate,
+    rv = SEC_QuickDERDecodeItem(arena, cert, SEC_SignedCertificateTemplate,
 		    &cert->derCert);
 
     if ( rv ) {
