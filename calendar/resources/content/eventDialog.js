@@ -1219,11 +1219,10 @@ function updateDeleteExceptionButton()
 {
     var repeatCheckBox = document.getElementById( "repeat-checkbox" );
 
-    if ( !repeatCheckBox.checked ) {
+    if ( !repeatCheckBox.checked )
         disableElement("delete-exception-button");
-    } else {
+    else
         updateListboxDeleteButton("exception-dates-listbox", "delete-exception-button");
-    }
 }
 
 

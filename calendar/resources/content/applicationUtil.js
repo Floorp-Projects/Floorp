@@ -219,11 +219,10 @@ function processEnableCheckbox( checkboxId, elementId )
 
 function updateListboxDeleteButton( listboxId, buttonId )
 {
-    if ( document.getElementById( listboxId ).getRowCount() > 0 ) {
+    if ( document.getElementById( listboxId ).getRowCount() > 0 )
         enableElement( buttonId );
-    } else {
+    else
         disableElement( buttonId );
-    }
 }
 
 
