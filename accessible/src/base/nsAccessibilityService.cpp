@@ -452,6 +452,7 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame,
 #ifndef MOZ_ACCESSIBILITY_ATK
            ||
            tag == nsAccessibilityAtoms::blockquote ||
+           tag == nsAccessibilityAtoms::form ||
            tag == nsAccessibilityAtoms::h1 ||
            tag == nsAccessibilityAtoms::h2 ||
            tag == nsAccessibilityAtoms::h3 ||
