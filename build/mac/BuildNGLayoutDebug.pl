@@ -47,6 +47,13 @@ $build{editor} = 0;
 $build{viewer} = 0;
 $build{xpapp} = 0;
 
+if ($pull{all})
+{
+	foreach $k (keys(%pull))
+	{
+		$pull{$k} = 1;
+	}
+}
 if ($build{all})
 {
 	foreach $k (keys(%build))
