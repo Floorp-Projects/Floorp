@@ -67,6 +67,7 @@ class nsMsgCompose : public nsIMsgCompose
   nsresult                      BuildBodyMessageAndSignature();
 
   nsString                      mQuoteURI;
+  nsString                      mOriginalMsgURI; // used so we can mark message disposition flags after we send the message
 
   PRInt32                       mWhatHolder;
 
@@ -87,6 +88,10 @@ class nsMsgCompose : public nsIMsgCompose
                                   *aIdentity = m_identity;
                                   return NS_OK;
                                 }
+
+  // when we've successfully sent a message, the message send listener will call back into the compose
+  // object telling it to set any reply flags on the original message's folder.
+  nsresult                      ProcessReplyFlags();
 
  private:
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity);

@@ -1047,6 +1047,11 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
     PRInt32 offset = firstURI.FindChar(',');
     if (offset >= 0)
     	firstURI.Truncate(offset);
+
+    // store the original message URI so we can extract it after we send the message to properly
+    // mark any disposition flags like replied or forwarded on the message.
+
+    mOriginalMsgURI = firstURI;
     
     nsCOMPtr<nsIMessage> message = getter_AddRefs(GetIMessageFromURI(firstURI.GetUnicode()));
     if ((NS_SUCCEEDED(rv)) && message)
@@ -1630,6 +1635,45 @@ void nsMsgCompose::CleanUpRecipients(nsString& recipients)
 	recipients = newRecipient;
 }
 
+nsresult nsMsgCompose::ProcessReplyFlags()
+{
+  // check to see if we were doing a reply or a forward, if we were, set the answered field flag on the message folder
+  // for this URI.
+  if (mType == nsIMsgCompType::Reply || 
+      mType == nsIMsgCompType::ReplyAll ||
+      mType == nsIMsgCompType::ReplyToGroup ||
+      mType == nsIMsgCompType::ReplyToSenderAndGroup ||
+      mType == nsIMsgCompType::ForwardAsAttachment ||              
+  	  mType == nsIMsgCompType::ForwardInline)
+  {
+    nsCOMPtr<nsIRDFService> rdfService (do_GetService(kRDFServiceCID));
+    if (rdfService && !mOriginalMsgURI.IsEmpty())
+    {
+      nsCOMPtr<nsIRDFResource> resource;
+      rdfService->GetResource(NS_ConvertUCS2toUTF8(mOriginalMsgURI), getter_AddRefs(resource));
+      nsCOMPtr<nsIMessage> messageResource (do_QueryInterface(resource));
+      if (messageResource)
+      {
+        // get the folder for the message resource
+        nsCOMPtr<nsIMsgFolder> msgFolder;
+        messageResource->GetMsgFolder(getter_AddRefs(msgFolder));
+        if (msgFolder)
+        {
+          nsMsgDispositionState dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Replied;
+          if (mType == nsIMsgCompType::ForwardAsAttachment ||              
+  	          mType == nsIMsgCompType::ForwardInline)
+              dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Forwarded;
+
+          msgFolder->AddMessageDispositionState(messageResource, dispositionSetting);
+        }
+      }
+      
+    }
+  }
+
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 // This is the listener class for both the send operation and the copy operation. 
 // We have to create this class to listen for message send completion and deal with
@@ -1719,6 +1763,9 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #endif
       nsIMsgCompFields *compFields = nsnull;
       mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
+
+      // only process the reply flags if we successfully sent the message
+      mComposeObj->ProcessReplyFlags();
 
 			// Close the window ONLY if we are not going to do a save operation
       PRUnichar *fieldsFCC = nsnull;
