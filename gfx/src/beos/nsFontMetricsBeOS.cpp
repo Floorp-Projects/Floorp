@@ -174,13 +174,11 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       // family is generic string like 
       // "serif" "sans-serif" "cursive" "fantasy" "monospace" "-moz-fixed"
       // so look up preferences and get real family name
-      const PRUnichar *langGroup;
-      aLangGroup->GetUnicode( &langGroup );
-      char *lang = ToNewUTF8String(nsDependentString(langGroup));
+      const char *lang;
+      aLangGroup->GetUTF8String( &lang );
       char prop[256];
       sprintf( prop, "font.name.%s.%s", family, lang );
 
-      nsMemory::Free(lang);
       nsMemory::Free(family);
 
       // look up prefs
