@@ -28,6 +28,7 @@ LIBRARY_NAME=compose
 
 EXPORTS = \
 	nsSmtpUrl.h	\
+	nsSmtpProtocol.h \
 	$(NULL)
 
 CPPSRCS = \
