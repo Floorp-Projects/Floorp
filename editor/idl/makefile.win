@@ -19,8 +19,6 @@ IGNORE_MANIFEST=1
 
 DEPTH=..\..
 
-EXPORTS=\
-						$(NULL)
 						
 MODULE=editor
 XPIDL_MODULE=editor
