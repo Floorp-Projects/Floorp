@@ -20,7 +20,27 @@
   <box align="horizontal">
     <html:input name="identity.doFcc" type="checkbox"/>
     <html:div>&fccMailFolder.label;</html:div>
-    <html:input type="text" name="identity.fccFolder"/> 
+        <html:select name="identity.fccFolder"
+         onchange="dump('value=' + event.target.value + '\n')"
+         rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager"
+         ref="msgaccounts:/">
+<!--
+    <html:input type="text" name="identity.fccFolder"/>
+-->
+    <html:optgroup/>
+    <template>
+      <rule iscontainer="true" isempty="false">
+          <html:optgroup uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <html:option value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          </html:optgroup>
+      </rule>
+      <rule>
+        <html:optgroup>
+          <html:option value="..." uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+        </html:optgroup>
+      </rule>
+    </template>
+    </html:select>
     <spring flex="100%"/>
     <titledbutton value="&chooseFolderButton.label;"/>
   </box>
