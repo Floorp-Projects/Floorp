@@ -2912,8 +2912,8 @@ PRBool nsWindow::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
       WinQueryPointerPos(HWND_DESKTOP, &ptl);
       WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1 );
     } else {
-      ptl.x = SHORT1FROMMP(mp1);
-      ptl.y = SHORT2FROMMP(mp1);
+      ptl.x = (SHORT)SHORT1FROMMP(mp1);
+      ptl.y = (SHORT)SHORT2FROMMP(mp1);
     }
     PM2NS(ptl);
     nsPoint pt( ptl.x, ptl.y);
