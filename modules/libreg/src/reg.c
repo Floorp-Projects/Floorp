@@ -528,7 +528,6 @@ static REGERR nr_UnlockRange(FILEHANDLE fh, REGOFF offset, int32 len)
 {
     /* TODO: Implement XP unlock function with built-in retry. */
 
-    XP_FileFlush( fh );
     return REGERR_OK;
 
 }   /* UnlockRange */
