@@ -36,7 +36,8 @@ EXPORTS = \
 	nsIDOMDocumentStyle.h			\
 	nsIDOMDocumentType.h			\
 	nsIDOMDocumentView.h			\
-	nsIDOMElement.h				\
+        nsIDOMDocumentXBL.h                     \
+        nsIDOMElement.h                         \
 	nsIDOMEntity.h				\
 	nsIDOMEntityReference.h			\
 	nsIDOMLinkStyle.h			\

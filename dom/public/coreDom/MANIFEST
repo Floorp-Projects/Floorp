@@ -32,6 +32,7 @@ nsIDOMDocumentFragment.h
 nsIDOMDocumentStyle.h
 nsIDOMDocumentType.h
 nsIDOMDocumentView.h
+nsIDOMDocumentXBL.h
 nsIDOMElement.h
 nsIDOMEntity.h
 nsIDOMEntityReference.h

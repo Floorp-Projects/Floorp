@@ -256,6 +256,9 @@
     "documenttype.publicid", \
     "documenttype.systemid", \
     "documentview.defaultview", \
+    "documentxbl.addbinding", \
+    "documentxbl.getanonymousnodes", \
+    "documentxbl.removebinding", \
     "domexception.code", \
     "domexception.message", \
     "domexception.name", \
@@ -749,7 +752,6 @@
     "nsdocument.characterset", \
     "nsdocument.createelementwithnamespace", \
     "nsdocument.createrange", \
-    "nsdocument.getanonymousnodes", \
     "nsdocument.height", \
     "nsdocument.load", \
     "nsdocument.width", \

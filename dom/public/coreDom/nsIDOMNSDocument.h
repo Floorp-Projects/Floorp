@@ -30,7 +30,6 @@
 
 class nsIDOMElement;
 class nsIDOMRange;
-class nsIDOMNodeList;
 
 #define NS_IDOMNSDOCUMENT_IID \
  { 0xa6cf90cd, 0x15b3, 0x11d2, \
@@ -51,8 +50,6 @@ public:
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn)=0;
 
   NS_IMETHOD    Load(const nsString& aUrl, const nsString& aMimeType)=0;
-
-  NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn)=0;
 };
 
 
@@ -63,7 +60,6 @@ public:
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn);  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);  \
   NS_IMETHOD    Load(const nsString& aUrl, const nsString& aMimeType);  \
-  NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn);  \
 
 
 
@@ -74,7 +70,6 @@ public:
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn) { return _to CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn) { return _to CreateRange(aReturn); }  \
   NS_IMETHOD    Load(const nsString& aUrl, const nsString& aMimeType) { return _to Load(aUrl, aMimeType); }  \
-  NS_IMETHOD    GetAnonymousNodes(nsIDOMElement* aElt, nsIDOMNodeList** aReturn) { return _to GetAnonymousNodes(aElt, aReturn); }  \
 
 
 #endif // nsIDOMNSDocument_h__
