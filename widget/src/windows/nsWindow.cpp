@@ -800,7 +800,7 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 {
    // When moving a borderless top-level window the window
-   // must be placed relative to its parent. WIN32 want's to
+   // must be placed relative to its parent. WIN32 wants to
    // place it relative to the screen, so we used the cached parent
    // to calculate the parent's location then add the x,y passed to
    // the move to get the screen coordinate for the borderless top-level
