@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.272 $ ';
+$::UtilsVersion = '$Revision: 1.273 $ ';
 
 package TinderUtils;
 
@@ -890,13 +890,13 @@ sub BuildIt {
         my $binary_url   = '';
 
         my $external_build = "$Settings::BaseDir/post-mozilla.pl";
-        if (-e $external_build) {
-            PostMozilla::PreBuild();
-        }
 
         # Allow skipping of mozilla phase.
         unless ($Settings::SkipMozilla) {
           
+          if (-e $external_build) {
+              PostMozilla::PreBuild();
+          }
           # Make sure we have $Settings::moz_client_mk
           unless (-e "$TreeSpecific::name/$Settings::moz_client_mk") {
             
@@ -1130,7 +1130,8 @@ sub get_profile_dir {
           ($profile_dir) = <$profile_dir*>;
         }
         else {
-          $profile_dir = "$build_dir/.".lc($Settings::ProductName)."/$Settings::MozProfileName";
+          $profile_dir = "$build_dir/.".lc($Settings::ProductName)."/";
+          ($profile_dir) = <$profile_dir . "*" . $Settings::MozProfileName . "*">;
         }
     }
 
