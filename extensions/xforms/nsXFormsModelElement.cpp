@@ -40,9 +40,6 @@
 #include "nsXFormsModelElement.h"
 #include "nsIXTFGenericElementWrapper.h"
 #include "nsMemory.h"
-#include "nsIDOMDocumentEvent.h"
-#include "nsIDOMEvent.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIDOMElement.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
@@ -81,29 +78,6 @@ static const nsIID sScriptingIIDs[] = {
   NS_IDOMEVENTTARGET_IID,
   NS_IDOM3NODE_IID,
   NS_IXFORMSMODELELEMENT_IID
-};
-
-struct EventData
-{
-  const char *name;
-  PRBool      canCancel;
-  PRBool      canBubble;
-};
-
-static const EventData sModelEvents[] = {
-  { "xforms-model-construct",      PR_FALSE, PR_TRUE },
-  { "xforms-model-construct-done", PR_FALSE, PR_TRUE },
-  { "xforms-ready",                PR_FALSE, PR_TRUE },
-  { "xforms-model-destruct",       PR_FALSE, PR_TRUE },
-  { "xforms-rebuild",              PR_TRUE,  PR_TRUE },
-  { "xforms-refresh",              PR_TRUE,  PR_TRUE },
-  { "xforms-revalidate",           PR_TRUE,  PR_TRUE },
-  { "xforms-recalculate",          PR_TRUE,  PR_TRUE },
-  { "xforms-reset",                PR_TRUE,  PR_TRUE },
-  { "xforms-binding-exception",    PR_FALSE, PR_TRUE },
-  { "xforms-link-exception",       PR_FALSE, PR_TRUE },
-  { "xforms-link-error",           PR_FALSE, PR_TRUE },
-  { "xforms-compute-exception",    PR_FALSE, PR_TRUE }
 };
 
 static nsIAtom* sModelPropsList[eModel__count];
@@ -226,7 +200,7 @@ nsXFormsModelElement::DoneAddingChildren()
   // We wait until all children are added to dispatch xforms-model-construct,
   // since the model may have an action handler for this event.
 
-  nsresult rv = DispatchEvent(eEvent_ModelConstruct);
+  nsresult rv = nsXFormsUtils::DispatchEvent(mElement, eEvent_ModelConstruct);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // xforms-model-construct is not cancellable, so always proceed.
@@ -257,7 +231,8 @@ nsXFormsModelElement::DoneAddingChildren()
                 nsnull, baseURI);
 
       if (!newURI) {
-        DispatchEvent(eEvent_LinkException);  // this is a fatal error
+        // this is a fatal error
+        nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
         return NS_OK;
       }
 
@@ -266,7 +241,8 @@ nsXFormsModelElement::DoneAddingChildren()
 
       rv = loader->LoadAsync(NS_ConvertUTF8toUTF16(uriSpec), this);
       if (NS_FAILED(rv)) {
-        DispatchEvent(eEvent_LinkException);  // this is a fatal error
+        // this is a fatal error
+        nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
         return NS_OK;
       }
       if (index == -1)
@@ -432,7 +408,7 @@ nsXFormsModelElement::OnLoad(nsISchema* aSchema)
     nsresult rv = FinishConstruction();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    DispatchEvent(eEvent_Refresh);
+    nsXFormsUtils::DispatchEvent(mElement, eEvent_Refresh);
   }
 
   return NS_OK;
@@ -444,7 +420,7 @@ NS_IMETHODIMP
 nsXFormsModelElement::OnError(nsresult aStatus,
                               const nsAString &aStatusMessage)
 {
-  DispatchEvent(eEvent_LinkException);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
   return NS_OK;
 }
 
@@ -473,8 +449,9 @@ nsXFormsModelElement::Load(nsIDOMEvent* aEvent)
 
     NS_ASSERTION(models, "models list is empty!");
     for (PRInt32 i = 0; i < models->Count(); ++i) {
-      NS_STATIC_CAST(nsXFormsModelElement*, models->ElementAt(i))
-        ->DispatchEvent(eEvent_ModelConstructDone);
+      nsXFormsModelElement* model =
+        NS_STATIC_CAST(nsXFormsModelElement*, models->ElementAt(i));
+      nsXFormsUtils::DispatchEvent(model->mElement, eEvent_ModelConstructDone);
     }
   }
 
@@ -496,14 +473,14 @@ nsXFormsModelElement::Unload(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsXFormsModelElement::Abort(nsIDOMEvent* aEvent)
 {
-  DispatchEvent(eEvent_LinkException);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXFormsModelElement::Error(nsIDOMEvent* aEvent)
 {
-  DispatchEvent(eEvent_LinkException);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
   return NS_OK;
 }
 
@@ -544,11 +521,11 @@ nsXFormsModelElement::InstanceLoadFinished(PRBool aSuccess)
 {
   --mPendingInstanceCount;
   if (!aSuccess) {
-    DispatchEvent(eEvent_LinkException);
+    nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
   } else if (IsComplete()) {
     nsresult rv = FinishConstruction();
     if (NS_SUCCEEDED(rv))
-      DispatchEvent(eEvent_Refresh);
+      nsXFormsUtils::DispatchEvent(mElement, eEvent_Refresh);
   }
 
   return NS_OK;
@@ -647,7 +624,7 @@ nsXFormsModelElement::FinishConstruction()
       if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
         if (!ProcessBind(xpath, firstInstanceRoot, nsnull,
                          nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)))) {
-          DispatchEvent(eEvent_BindingException);
+          nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
           return NS_OK;
         }
       }
@@ -656,9 +633,9 @@ nsXFormsModelElement::FinishConstruction()
 
   // 5. dispatch xforms-rebuild, xforms-recalculate, xforms-revalidate
 
-  DispatchEvent(eEvent_Rebuild);
-  DispatchEvent(eEvent_Recalculate);
-  DispatchEvent(eEvent_Revalidate);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Rebuild);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Recalculate);
+  nsXFormsUtils::DispatchEvent(mElement, eEvent_Revalidate);
 
   // We're done initializing this model.
 
@@ -807,27 +784,6 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
   }
 
   return PR_TRUE;
-}
-
-nsresult
-nsXFormsModelElement::DispatchEvent(nsXFormsModelEvent aEvent)
-{
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-
-  nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(domDoc);
-
-  nsCOMPtr<nsIDOMEvent> event;
-  doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
-  const EventData *data = &sModelEvents[aEvent];
-  event->InitEvent(NS_ConvertUTF8toUTF16(data->name),
-                   data->canBubble, data->canCancel);
-
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mElement);
-  PRBool cancelled;
-  return target->DispatchEvent(event, &cancelled);
 }
 
 /* static */ void

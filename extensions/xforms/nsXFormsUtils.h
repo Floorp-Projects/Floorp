@@ -55,6 +55,56 @@ class nsString;
 #define NS_NAMESPACE_XML_SCHEMA_INSTANCE "http://www.w3.org/2001/XMLSchema-instance"
 
 /**
+ * XForms event types
+ *
+ * @see http://www.w3.org/TR/xforms/slice4.html#rpm-events
+ */
+
+enum nsXFormsEvent {
+  eEvent_ModelConstruct,
+  eEvent_ModelConstructDone,
+  eEvent_Ready,
+  eEvent_ModelDestruct,
+  eEvent_Previous,
+  eEvent_Next,
+  eEvent_Focus,
+  eEvent_Help,
+  eEvent_Hint,
+  eEvent_Rebuild,
+  eEvent_Refresh,
+  eEvent_Revalidate,
+  eEvent_Recalculate,
+  eEvent_Reset,
+  eEvent_Submit,
+  eEvent_DOMActivate,
+  eEvent_ValueChanged,
+  eEvent_Select,
+  eEvent_Deselect,
+  eEvent_ScrollFirst,
+  eEvent_ScrollLast,
+  eEvent_Insert,
+  eEvent_Delete,
+  eEvent_Valid,
+  eEvent_Invalid,
+  eEvent_DOMFocusIn,
+  eEvent_DOMFocusOut,
+  eEvent_Readonly,
+  eEvent_Readwrite,
+  eEvent_Required,
+  eEvent_Optional,
+  eEvent_Enabled,
+  eEvent_Disabled,
+  eEvent_InRange,
+  eEvent_OutOfRange,
+  eEvent_SubmitDone,
+  eEvent_SubmitError,
+  eEvent_BindingException,
+  eEvent_LinkException,
+  eEvent_LinkError,
+  eEvent_ComputeException
+};
+
+/**
  * This class has static helper methods that don't fit into a specific place
  * in the class hierarchy.
  */
@@ -72,6 +122,12 @@ public:
      */
     ELEMENT_WITH_MODEL_ATTR = 1 << 0
   };
+
+  /**
+   * Initialize nsXFormsUtils.
+   */
+  static NS_HIDDEN_(nsresult)
+    Init();
 
   /**
    * Locate the model that is a parent of |aElement|.  This method walks up the
@@ -150,6 +206,38 @@ public:
    */
   static NS_HIDDEN_(void) SetNodeValue(nsIDOMNode     *aDataNode,
                                        const nsString &aNodeValue);
+
+  /**
+   * Convenience method for doing XPath evaluations to get string value
+   * for an element.
+   * Returns PR_TRUE if the evaluation succeeds.
+   */
+  static NS_HIDDEN_(PRBool)
+    GetSingleNodeBindingValue(nsIDOMElement* aElement, nsString& aValue);
+
+  /**
+   * Dispatch an XForms event. 
+   */
+  static NS_HIDDEN_(nsresult)
+    DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent);
+  
+  /**
+   * Returns PR_TRUE, if aEvent is an XForms event, and sets the values
+   * of aCancelable and aBubbles parameters according to the event type.
+   */
+  static NS_HIDDEN_(PRBool)
+    IsXFormsEvent(const nsAString& aEvent,
+                  PRBool& aCancelable,
+                  PRBool& aBubbles);
+
+  /**
+   * Checks if aEvent is a predefined event and sets the values
+   * of aCancelable and aBubbles parameters according to the event type.
+   */
+  static NS_HIDDEN_(void)
+    GetEventDefaults(const nsAString& aEvent,
+                     PRBool& aCancelable,
+                     PRBool& aBubbles);
 
   /**
    * Clone the set of IIDs in |aIIDList| into |aOutArray|.

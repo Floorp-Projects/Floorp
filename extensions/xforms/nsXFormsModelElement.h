@@ -58,27 +58,6 @@ class nsIDOMXPathEvaluator;
 class nsXFormsControl;
 
 /**
- * XForms event types
- *
- * @see http://www.w3.org/TR/xforms/slice4.html#rpm-events
- */
-enum nsXFormsModelEvent {
-  eEvent_ModelConstruct,
-  eEvent_ModelConstructDone,
-  eEvent_Ready,
-  eEvent_ModelDestruct,
-  eEvent_Rebuild,
-  eEvent_Refresh,
-  eEvent_Revalidate,
-  eEvent_Recalculate,
-  eEvent_Reset,
-  eEvent_BindingException,
-  eEvent_LinkException,
-  eEvent_LinkError,
-  eEvent_ComputeException
-};
-
-/**
  * Implementation of the XForms \<model\> element.
  *
  * This includes all of the code for loading the model's external resources and
@@ -121,7 +100,6 @@ public:
   static NS_HIDDEN_(void) Startup();
 
 private:
-  NS_HIDDEN_(nsresult) DispatchEvent(nsXFormsModelEvent aEvent);
 
   NS_HIDDEN_(already_AddRefed<nsIDOMDocument>)
     FindInstanceDocument(const nsAString &aID);

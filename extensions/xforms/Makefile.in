@@ -70,6 +70,8 @@ XPIDLSRCS	= \
 		nsIInstanceElementPrivate.idl \
 		nsIModelElementPrivate.idl \
 		nsIXFormsControl.idl \
+		nsIXFormsActionElement.idl \
+		nsIXFormsActionModuleElement.idl \
 		$(NULL)
 
 CPPSRCS		= \
@@ -91,6 +93,18 @@ CPPSRCS		= \
 		nsXFormsXPathParser.cpp \
 		nsXFormsXPathScanner.cpp \
 		nsXFormsXPathXMLUtil.cpp \
+		nsXFormsActionElement.cpp \
+		nsXFormsActionModuleBase.cpp \
+		nsXFormsDispatchElement.cpp \
+		nsXFormsRebuildElement.cpp \
+		nsXFormsRecalculateElement.cpp \
+		nsXFormsRefreshElement.cpp \
+		nsXFormsRevalidateElement.cpp \
+		nsXFormsResetElement.cpp \
+		nsXFormsSendElement.cpp \
+		nsXFormsSetFocusElement.cpp \
+		nsXFormsSetValueElement.cpp \
+		nsXFormsLoadElement.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)

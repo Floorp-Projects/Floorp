@@ -15,16 +15,16 @@
  * The Original Code is Mozilla XForms support.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
+ * Olli Pettay.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
+ *   Olli Pettay <Olli.Pettay@helsinki.fi> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,28 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsXFormsElementFactory.h"
-#include "nsXFormsAtoms.h"
-#include "nsXFormsModelElement.h"
+#ifndef nsXFormsActionModuleBase_h_
+#define nsXFormsActionModuleBase_h_
+
+#include "nsIDOMEventListener.h"
+#include "nsXFormsStubElement.h"
+#include "nsIDOMElement.h"
+#include "nsIXFormsActionModuleElement.h"
+#include "nsCOMPtr.h"
 #include "nsXFormsUtils.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsElementFactory)
-
-static const nsModuleComponentInfo components[] = {
-  { "XForms element factory",
-    NS_XFORMSELEMENTFACTORY_CID,
-    NS_XTF_ELEMENT_FACTORY_CONTRACTID_PREFIX NS_NAMESPACE_XFORMS,
-    nsXFormsElementFactoryConstructor }
+class nsXFormsActionModuleBase : public nsIDOMEventListener,
+                                 public nsXFormsStubElement,
+                                 public nsIXFormsActionModuleElement
+{
+public:
+  nsXFormsActionModuleBase();
+  virtual ~nsXFormsActionModuleBase();
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIXTFGENERICELEMENT
+  NS_DECL_NSIDOMEVENTLISTENER
+  NS_IMETHOD OnDestroyed();
+protected:
+  nsCOMPtr<nsIDOMElement> mElement;
 };
 
-PR_STATIC_CALLBACK(nsresult)
-XFormsModuleCtor(nsIModule* aSelf)
-{
-  nsXFormsAtoms::InitAtoms();
-  nsXFormsUtils::Init();
-  nsXFormsModelElement::Startup();
-  return NS_OK;
-}
+#endif
 
-NS_IMPL_NSGETMODULE_WITH_CTOR(xforms, components, XFormsModuleCtor)

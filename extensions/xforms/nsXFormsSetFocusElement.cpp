@@ -15,16 +15,16 @@
  * The Original Code is Mozilla XForms support.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
+ * Olli Pettay.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Brian Ryner <bryner@brianryner.com>
+ *   Olli Pettay <Olli.Pettay@helsinki.fi> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,28 +36,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsXFormsElementFactory.h"
-#include "nsXFormsAtoms.h"
-#include "nsXFormsModelElement.h"
-#include "nsXFormsUtils.h"
+#include "nsXFormsActionModuleBase.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMElement.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsElementFactory)
-
-static const nsModuleComponentInfo components[] = {
-  { "XForms element factory",
-    NS_XFORMSELEMENTFACTORY_CID,
-    NS_XTF_ELEMENT_FACTORY_CONTRACTID_PREFIX NS_NAMESPACE_XFORMS,
-    nsXFormsElementFactoryConstructor }
+class nsXFormsSetFocusElement : public nsXFormsActionModuleBase
+{
+public:
+  nsXFormsSetFocusElement();
+  NS_DECL_NSIXFORMSACTIONMODULEELEMENT
 };
 
-PR_STATIC_CALLBACK(nsresult)
-XFormsModuleCtor(nsIModule* aSelf)
+nsXFormsSetFocusElement::nsXFormsSetFocusElement()
 {
-  nsXFormsAtoms::InitAtoms();
-  nsXFormsUtils::Init();
-  nsXFormsModelElement::Startup();
+}
+
+NS_IMETHODIMP
+nsXFormsSetFocusElement::HandleAction(nsIDOMEvent* aEvent,
+                                      nsIXFormsActionElement *aParentAction)
+{
+  if (!mElement)
+    return NS_OK;
+  
+  nsAutoString control;
+  mElement->GetAttribute(NS_LITERAL_STRING("control"), control);
+  if (control.IsEmpty())
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMDocument> doc;
+  mElement->GetOwnerDocument(getter_AddRefs(doc));
+  if (!doc)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMElement> el;
+  doc->GetElementById(control, getter_AddRefs(el));
+  if (!el)
+    return NS_OK;
+  //XXX Should we check the type of the element?
+  
+  return nsXFormsUtils::DispatchEvent(el, eEvent_Focus);
+}
+
+NS_HIDDEN_(nsresult)
+NS_NewXFormsSetFocusElement(nsIXTFElement **aResult)
+{
+  *aResult = new nsXFormsSetFocusElement();
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 
-NS_IMPL_NSGETMODULE_WITH_CTOR(xforms, components, XFormsModuleCtor)

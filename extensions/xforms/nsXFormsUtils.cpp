@@ -52,6 +52,133 @@
 #include "nsIDOMText.h"
 #include "nsIXFormsModelElement.h"
 
+#include "nsIDOMDocumentEvent.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventTarget.h"
+#include "nsDataHashtable.h"
+
+struct EventData
+{
+  const char *name;
+  PRBool      canCancel;
+  PRBool      canBubble;
+};
+
+#define CANCELABLE 0x01
+#define BUBBLES    0x02
+
+static const EventData sXFormsEventsEntries[] = {
+  { "xforms-model-construct",      PR_FALSE, PR_TRUE  },
+  { "xforms-model-construct-done", PR_FALSE, PR_TRUE  },
+  { "xforms-ready",                PR_FALSE, PR_TRUE  },
+  { "xforms-model-destruct",       PR_FALSE, PR_TRUE  },
+  { "xforms-previous",             PR_TRUE,  PR_FALSE },
+  { "xforms-next",                 PR_TRUE,  PR_FALSE },
+  { "xforms-focus",                PR_TRUE,  PR_FALSE },
+  { "xforms-help",                 PR_TRUE,  PR_TRUE  },
+  { "xforms-hint",                 PR_TRUE,  PR_TRUE  },
+  { "xforms-rebuild",              PR_TRUE,  PR_TRUE  },
+  { "xforms-refresh",              PR_TRUE,  PR_TRUE  },
+  { "xforms-revalidate",           PR_TRUE,  PR_TRUE  },
+  { "xforms-recalculate",          PR_TRUE,  PR_TRUE  },
+  { "xforms-reset",                PR_TRUE,  PR_TRUE  },
+  { "xforms-submit",               PR_TRUE,  PR_TRUE  },
+  { "DOMActivate",                 PR_TRUE,  PR_TRUE  },
+  { "xforms-value-changed",        PR_FALSE, PR_TRUE  },
+  { "xforms-select",               PR_FALSE, PR_TRUE  },
+  { "xforms-deselect",             PR_FALSE, PR_TRUE  },
+  { "xforms-scroll-first",         PR_FALSE, PR_TRUE  },
+  { "xforms-scroll-last",          PR_FALSE, PR_TRUE  },
+  { "xforms-insert",               PR_FALSE, PR_TRUE  },
+  { "xforms-delete",               PR_FALSE, PR_TRUE  },
+  { "xforms-valid",                PR_FALSE, PR_TRUE  },
+  { "xforms-invalid",              PR_FALSE, PR_TRUE  },
+  { "DOMFocusIn",                  PR_FALSE, PR_TRUE  },
+  { "DOMFocusOut",                 PR_FALSE, PR_TRUE  },
+  { "xforms-readonly",             PR_FALSE, PR_TRUE  },
+  { "xforms-readwrite",            PR_FALSE, PR_TRUE  },
+  { "xforms-required",             PR_FALSE, PR_TRUE  },
+  { "xforms-optional",             PR_FALSE, PR_TRUE  },
+  { "xforms-enabled",              PR_FALSE, PR_TRUE  },
+  { "xforms-disabled",             PR_FALSE, PR_TRUE  },
+  { "xforms-in-range",             PR_FALSE, PR_TRUE  },
+  { "xforms-out-of-range",         PR_FALSE, PR_TRUE  },
+  { "xforms-submit-done",          PR_FALSE, PR_TRUE  },
+  { "xforms-submit-error",         PR_FALSE, PR_TRUE  },
+  { "xforms-binding-exception",    PR_FALSE, PR_TRUE  },
+  { "xforms-link-exception",       PR_FALSE, PR_TRUE  },
+  { "xforms-link-error",           PR_FALSE, PR_TRUE  },
+  { "xforms-compute-exception",    PR_FALSE, PR_TRUE  }
+};
+
+static const EventData sEventDefaultsEntries[] = {
+  //UIEvents already in sXFormsEvents
+  
+  //MouseEvent
+  { "click",                       PR_TRUE,  PR_TRUE  },
+  { "mousedown",                   PR_TRUE,  PR_TRUE  },
+  { "mouseup",                     PR_TRUE,  PR_TRUE  },
+  { "mouseover",                   PR_TRUE,  PR_TRUE  },
+  { "mousemove",                   PR_FALSE, PR_TRUE  },
+  { "mouseout",                    PR_TRUE,  PR_TRUE  },
+  //MutationEvent
+  { "DOMSubtreeModified",          PR_FALSE, PR_TRUE  },
+  { "DOMNodeInserted",             PR_FALSE, PR_TRUE  },
+  { "DOMNodeRemoved",              PR_FALSE, PR_TRUE  },
+  { "DOMNodeRemovedFromDocument",  PR_FALSE, PR_FALSE },
+  { "DOMNodeInsertedIntoDocument", PR_FALSE, PR_FALSE },
+  { "DOMAttrModified",             PR_FALSE, PR_TRUE  },
+  { "DOMCharacterDataModified",    PR_FALSE, PR_TRUE  },
+  //HTMLEvents
+  { "load",                        PR_FALSE, PR_FALSE },
+  { "unload",                      PR_FALSE, PR_FALSE },
+  { "abort",                       PR_FALSE, PR_TRUE  },
+  { "error",                       PR_FALSE, PR_TRUE  },
+  { "select",                      PR_FALSE, PR_TRUE  },
+  { "change",                      PR_FALSE, PR_TRUE  },
+  { "submit",                      PR_TRUE,  PR_TRUE  },
+  { "reset",                       PR_FALSE, PR_TRUE  },
+  { "focus",                       PR_FALSE, PR_FALSE },
+  { "blur",                        PR_FALSE, PR_FALSE },
+  { "resize",                      PR_FALSE, PR_TRUE  },
+  { "scroll",                      PR_FALSE, PR_TRUE  }
+};
+
+static nsDataHashtable<nsStringHashKey,PRUint32> sXFormsEvents;
+static nsDataHashtable<nsStringHashKey,PRUint32> sEventDefaults;
+
+/* static */ nsresult
+nsXFormsUtils::Init()
+{
+  if (!sXFormsEvents.Init())
+    return NS_ERROR_FAILURE;
+
+  unsigned int i;
+
+  for (i = 0; i < NS_ARRAY_LENGTH(sXFormsEventsEntries); ++i) {
+    PRUint32 flag = 0;
+    if (sXFormsEventsEntries[i].canCancel)
+      flag |= CANCELABLE;
+    if (sXFormsEventsEntries[i].canBubble)
+      flag |= BUBBLES;
+    sXFormsEvents.Put(NS_ConvertUTF8toUTF16(sXFormsEventsEntries[i].name),
+                                            flag);
+  }
+
+  if (!sEventDefaults.Init())
+    return NS_ERROR_FAILURE;
+  for (i = 0; i < NS_ARRAY_LENGTH(sEventDefaultsEntries); ++i) {
+    PRUint32 flag = 0;
+    if (sEventDefaultsEntries[i].canCancel)
+      flag |= CANCELABLE;
+    if (sEventDefaultsEntries[i].canBubble)
+      flag |= BUBBLES;
+    sEventDefaults.Put(NS_ConvertUTF8toUTF16(sEventDefaultsEntries[i].name),
+                                             flag);
+  }
+  return NS_OK;
+}
+
 /* static */ nsIDOMNode*
 nsXFormsUtils::GetParentModel(nsIDOMElement *aElement)
 {
@@ -84,23 +211,26 @@ nsXFormsUtils::GetModelAndBind(nsIDOMElement  *aElement,
                                PRUint32        aElementFlags,
                                nsIDOMElement **aBindElement)
 {
-  *aBindElement = nsnull;
   NS_ENSURE_TRUE(aElement, nsnull);
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   aElement->GetOwnerDocument(getter_AddRefs(domDoc));
   if (!domDoc)
     return nsnull;
-
-  nsAutoString bindId;
-  aElement->GetAttribute(NS_LITERAL_STRING("bind"), bindId);
-
-  if (!bindId.IsEmpty()) {
-    // Get the bind element with the given id.
-    domDoc->GetElementById(bindId, aBindElement);
-
-    if (*aBindElement)
-      return GetParentModel(*aBindElement);
+  
+  if (aBindElement) {
+    *aBindElement = nsnull;
+  
+    nsAutoString bindId;
+    aElement->GetAttribute(NS_LITERAL_STRING("bind"), bindId);
+  
+    if (!bindId.IsEmpty()) {
+      // Get the bind element with the given id.
+      domDoc->GetElementById(bindId, aBindElement);
+  
+      if (*aBindElement)
+        return GetParentModel(*aBindElement);
+    }
   }
 
   if (aElementFlags & ELEMENT_WITH_MODEL_ATTR) {
@@ -460,6 +590,81 @@ nsXFormsUtils::SetNodeValue(nsIDOMNode* aDataNode, const nsString& aNodeValue)
   }
 }
 
+/* static */ PRBool
+nsXFormsUtils::GetSingleNodeBindingValue(nsIDOMElement* aElement,
+                                         nsString& aValue)
+{
+  if (!aElement)
+    return PR_FALSE;
+  nsCOMPtr<nsIDOMNode> model;
+  nsCOMPtr<nsIDOMElement> bindElement;
+  nsCOMPtr<nsIDOMXPathResult> result =
+    EvaluateNodeBinding(aElement,
+                        nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
+                        NS_LITERAL_STRING("ref"),
+                        EmptyString(),
+                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                        getter_AddRefs(model),
+                        getter_AddRefs(bindElement));
+  if (!result)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNode> singleNode;
+  result->GetSingleNodeValue(getter_AddRefs(singleNode));
+  if (!singleNode)
+    return PR_FALSE;
+
+  nsXFormsUtils::GetNodeValue(singleNode, aValue);
+  return PR_TRUE;
+}
+
+/* static */ nsresult
+nsXFormsUtils::DispatchEvent(nsIDOMNode* aTarget, nsXFormsEvent aEvent)
+{
+  if (!aTarget)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aTarget->GetOwnerDocument(getter_AddRefs(domDoc));
+
+  nsCOMPtr<nsIDOMDocumentEvent> doc = do_QueryInterface(domDoc);
+
+  nsCOMPtr<nsIDOMEvent> event;
+  doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+
+  const EventData *data = &sXFormsEventsEntries[aEvent];
+  event->InitEvent(NS_ConvertUTF8toUTF16(data->name),
+                   data->canBubble, data->canCancel);
+
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(aTarget);
+  PRBool cancelled;
+  return target->DispatchEvent(event, &cancelled);
+}
+
+/* static */ PRBool
+nsXFormsUtils::IsXFormsEvent(const nsAString& aEvent,
+                             PRBool& aCancelable,
+                             PRBool& aBubbles)
+{
+  PRUint32 flag = 0;
+  if (!sXFormsEvents.Get(aEvent, &flag))
+    return PR_FALSE;
+  aCancelable = (flag & CANCELABLE) ? PR_TRUE : PR_FALSE;
+  aBubbles = (flag & BUBBLES) ? PR_TRUE : PR_FALSE;
+  return PR_TRUE;
+}
+
+/* static */ void
+nsXFormsUtils::GetEventDefaults(const nsAString& aEvent,
+                                PRBool& aCancelable,
+                                PRBool& aBubbles)
+{
+  PRUint32 flag = 0;
+  if (!sEventDefaults.Get(aEvent, &flag))
+    return;
+  aCancelable = (flag & CANCELABLE) ? PR_TRUE : PR_FALSE;
+  aBubbles = (flag & BUBBLES) ? PR_TRUE : PR_FALSE;
+}
 
 /* static */ nsresult
 nsXFormsUtils::CloneScriptingInterfaces(const nsIID *aIIDList,
