@@ -1043,34 +1043,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 static PRBool
 HaveAutoWidth(const nsHTMLReflowState& aReflowState)
 {
-  const nsHTMLReflowState* rs = &aReflowState;
-  if (NS_UNCONSTRAINEDSIZE == rs->mComputedWidth) {
-    // XXXldb Why isn't this always true for the cases where this
-    // function returns true?
-    return PR_TRUE;
-  }
-  const nsStylePosition* pos = rs->mStylePosition;
-
-  for (;;) {
-    if (!pos) {
-      return PR_TRUE;
-    }
-    nsStyleUnit widthUnit = pos->mWidth.GetUnit();
-    if (eStyleUnit_Auto == widthUnit) {
-      return PR_TRUE;
-    }
-    if (eStyleUnit_Inherit != widthUnit) {
-      break;
-    }
-    const nsHTMLReflowState* prs = rs->parentReflowState;
-    if (!prs) {
-      return PR_TRUE;
-    }
-    rs = prs;
-    pos = prs->mStylePosition;
-  }
-
-  return PR_FALSE;
+  return NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth ||
+         eStyleUnit_Auto == aReflowState.mStylePosition->mWidth.GetUnit();
 }
 
 

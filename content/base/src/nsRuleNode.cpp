@@ -290,23 +290,8 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   } 
   else if (((aMask & SETCOORD_INHERIT) != 0) && 
            (aValue.GetUnit() == eCSSUnit_Inherit)) {
-    nsStyleUnit unit = aParentCoord.GetUnit();
-    if ((eStyleUnit_Null == unit) ||  // parent has explicit computed value
-        (eStyleUnit_Factor == unit) ||
-        (eStyleUnit_Coord == unit) ||
-        (eStyleUnit_Integer == unit) ||
-        (eStyleUnit_Enumerated == unit) ||
-        (eStyleUnit_Normal == unit) ||
-        (eStyleUnit_Chars == unit)) {
-      aCoord = aParentCoord;  // just inherit value from parent
-      aInherited = PR_TRUE;
-    }
-    else {
-      aCoord.SetInheritValue(); // needs to be computed by client
-                                // Since this works just like being
-                                // specified and not inherited, that's
-                                // how it's treated.
-    }
+    aCoord = aParentCoord;  // just inherit value from parent
+    aInherited = PR_TRUE;
   }
   else if (((aMask & SETCOORD_NORMAL) != 0) && 
            (aValue.GetUnit() == eCSSUnit_Normal)) {
@@ -599,7 +584,6 @@ nsRuleNode::PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 struct PropertyCheckData {
   size_t offset;
   nsCSSType type;
-  PRPackedBool mayHaveExplicitInherit;
 };
 
 /* the information for all the properties in a style struct */
@@ -645,48 +629,6 @@ ExamineRectProperties(const nsCSSRect* aRect,
   }
 }
 
-static void
-ExamineRectCoordProperties(const nsCSSRect* aRect,
-                           PRUint32& aSpecifiedCount,
-                           PRUint32& aInheritedCount,
-                           PRBool& aCanHaveExplicitInherit)
-{
-  if (!aRect)
-    return;
-
-  if (eCSSUnit_Null != aRect->mLeft.GetUnit()) {
-    aSpecifiedCount++;
-    if (eCSSUnit_Inherit == aRect->mLeft.GetUnit()) {
-      aInheritedCount++;
-      aCanHaveExplicitInherit = PR_TRUE;
-    }
-  }
-
-  if (eCSSUnit_Null != aRect->mTop.GetUnit()) {
-    aSpecifiedCount++;
-    if (eCSSUnit_Inherit == aRect->mTop.GetUnit()) {
-      aInheritedCount++;
-      aCanHaveExplicitInherit = PR_TRUE;
-    }
-  }
-
-  if (eCSSUnit_Null != aRect->mRight.GetUnit()) {
-    aSpecifiedCount++;
-    if (eCSSUnit_Inherit == aRect->mRight.GetUnit()) {
-      aInheritedCount++;
-      aCanHaveExplicitInherit = PR_TRUE;
-    }
-  }
-
-  if (eCSSUnit_Null != aRect->mBottom.GetUnit()) {
-    aSpecifiedCount++;
-    if (eCSSUnit_Inherit == aRect->mBottom.GetUnit()) {
-      aInheritedCount++;
-      aCanHaveExplicitInherit = PR_TRUE;
-    }
-  }
-}
-
 PR_STATIC_CALLBACK(nsRuleNode::RuleDetail)
 CheckFontCallback(const nsRuleDataStruct& aData)
 {
@@ -725,140 +667,140 @@ CheckFontCallback(const nsRuleDataStruct& aData)
 
 static const PropertyCheckData FontCheckProperties[] = {
 #define CSS_PROP_FONT(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_FONT
 };
 
 static const PropertyCheckData DisplayCheckProperties[] = {
 #define CSS_PROP_DISPLAY(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_DISPLAY
 };
 
 static const PropertyCheckData VisibilityCheckProperties[] = {
 #define CSS_PROP_VISIBILITY(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_VISIBILITY
 };
 
 static const PropertyCheckData MarginCheckProperties[] = {
 #define CSS_PROP_MARGIN(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_MARGIN
 };
 
 static const PropertyCheckData BorderCheckProperties[] = {
 #define CSS_PROP_BORDER(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_BORDER
 };
 
 static const PropertyCheckData PaddingCheckProperties[] = {
 #define CSS_PROP_PADDING(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_PADDING
 };
 
 static const PropertyCheckData OutlineCheckProperties[] = {
 #define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_OUTLINE
 };
 
 static const PropertyCheckData ListCheckProperties[] = {
 #define CSS_PROP_LIST(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_LIST
 };
 
 static const PropertyCheckData ColorCheckProperties[] = {
 #define CSS_PROP_COLOR(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_COLOR
 };
 
 static const PropertyCheckData BackgroundCheckProperties[] = {
 #define CSS_PROP_BACKGROUND(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_BACKGROUND
 };
 
 static const PropertyCheckData PositionCheckProperties[] = {
 #define CSS_PROP_POSITION(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_POSITION
 };
 
 static const PropertyCheckData TableCheckProperties[] = {
 #define CSS_PROP_TABLE(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TABLE
 };
 
 static const PropertyCheckData TableBorderCheckProperties[] = {
 #define CSS_PROP_TABLEBORDER(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TABLEBORDER
 };
 
 static const PropertyCheckData ContentCheckProperties[] = {
 #define CSS_PROP_CONTENT(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_CONTENT
 };
 
 static const PropertyCheckData QuotesCheckProperties[] = {
 #define CSS_PROP_QUOTES(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_QUOTES
 };
 
 static const PropertyCheckData TextCheckProperties[] = {
 #define CSS_PROP_TEXT(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TEXT
 };
 
 static const PropertyCheckData TextResetCheckProperties[] = {
 #define CSS_PROP_TEXTRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_TEXTRESET
 };
 
 static const PropertyCheckData UserInterfaceCheckProperties[] = {
 #define CSS_PROP_USERINTERFACE(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_USERINTERFACE
 };
 
 static const PropertyCheckData UIResetCheckProperties[] = {
 #define CSS_PROP_UIRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_UIRESET
 };
 
 static const PropertyCheckData XULCheckProperties[] = {
 #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_XUL
 };
@@ -866,7 +808,7 @@ static const PropertyCheckData XULCheckProperties[] = {
 #ifdef MOZ_SVG
 static const PropertyCheckData SVGCheckProperties[] = {
 #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_) \
-  { offsetof(nsRuleData##datastruct_, member_), type_, iscoord_ },
+  { offsetof(nsRuleData##datastruct_, member_), type_ },
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SVG
 };
@@ -964,8 +906,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
             ++specified;
             if (eCSSUnit_Inherit == value.GetUnit()) {
               ++inherited;
-              if (prop->mayHaveExplicitInherit)
-                canHaveExplicitInherit = PR_TRUE;
             }
           }
         }
@@ -973,13 +913,8 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
 
       case eCSSType_Rect:
         total += 4;
-        if (prop->mayHaveExplicitInherit)
-          ExamineRectCoordProperties(RectAtOffset(aRuleDataStruct, prop->offset),
-                                     specified, inherited,
-                                     canHaveExplicitInherit);
-        else
-          ExamineRectProperties(RectAtOffset(aRuleDataStruct, prop->offset),
-                                specified, inherited);
+        ExamineRectProperties(RectAtOffset(aRuleDataStruct, prop->offset),
+                              specified, inherited);
         break;
 
       case eCSSType_ValueList:
@@ -991,8 +926,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
             ++specified;
             if (eCSSUnit_Inherit == valueList->mValue.GetUnit()) {
               ++inherited;
-              if (prop->mayHaveExplicitInherit)
-                canHaveExplicitInherit = PR_TRUE;
             }
           }
         }
@@ -1001,8 +934,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
       case eCSSType_CounterData:
         {
           ++total;
-          NS_ASSERTION(!prop->mayHaveExplicitInherit,
-                       "counters can't be coordinates");
           const nsCSSCounterData* counterData =
               CounterDataAtOffset(aRuleDataStruct, prop->offset);
           if (counterData) {
@@ -1017,8 +948,6 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
       case eCSSType_Quotes:
         {
           ++total;
-          NS_ASSERTION(!prop->mayHaveExplicitInherit,
-                       "quotes can't be coordinates");
           const nsCSSQuotes* quotes =
               QuotesAtOffset(aRuleDataStruct, prop->offset);
           if (quotes) {

@@ -2189,13 +2189,6 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // Get vertical-align property
     const nsStyleTextReset* textStyle = frame->GetStyleTextReset();
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
-#ifdef DEBUG
-    if (eStyleUnit_Inherit == verticalAlignUnit) {
-      printf("XXX: vertical-align: inherit not implemented for ");
-      nsFrame::ListTag(stdout, frame);
-      printf("\n");
-    }
-#endif
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  [frame]");
     nsFrame::ListTag(stdout, frame);

@@ -48,7 +48,6 @@ enum nsStyleUnit {
   eStyleUnit_Null         = 0,      // (no value) value is not specified
   eStyleUnit_Normal       = 1,      // (no value)
   eStyleUnit_Auto         = 2,      // (no value)
-  eStyleUnit_Inherit      = 3,      // (no value) value should be inherited
   eStyleUnit_Percent      = 10,     // (float) 1.0 == 100%
   eStyleUnit_Factor       = 11,     // (float) a multiplier
   eStyleUnit_Coord        = 20,     // (nscoord) value is twips
@@ -97,7 +96,6 @@ public:
   void  SetFactorValue(float aValue);
   void  SetNormalValue(void);
   void  SetAutoValue(void);
-  void  SetInheritValue(void);
   void  SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit);
 
   void  AppendToString(nsString& aBuffer) const;

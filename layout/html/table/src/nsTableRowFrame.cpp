@@ -663,7 +663,6 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
       // pct heights are handled when all of the cells are finished, so don't set specifiedHeight 
       break;
     }
-    case eStyleUnit_Inherit:
     case eStyleUnit_Auto:
     default:
       break;
