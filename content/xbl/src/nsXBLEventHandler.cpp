@@ -45,7 +45,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsXBLBinding.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
@@ -598,7 +598,7 @@ nsXBLEventHandler::GetController(nsIController** aResult)
   }
 
   if (!controllers) {
-    nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(mEventReceiver));
+    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(mEventReceiver));
     if (domWindow)
       domWindow->GetControllers(getter_AddRefs(controllers));
   }
