@@ -1274,6 +1274,7 @@ nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev)
 
    mHistoryCurrentIndex = aGotoIndex;
 
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1342,6 +1343,7 @@ nsSessionHistory::canForward(PRBool & aResult)
    else
       aResult = PR_TRUE;
 
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1352,6 +1354,7 @@ nsSessionHistory::canBack(PRBool & aResult)
    else
       aResult = PR_TRUE;
 
+   return NS_OK;
 }
 
 NS_IMETHODIMP
