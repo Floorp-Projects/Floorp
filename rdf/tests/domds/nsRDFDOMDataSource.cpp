@@ -191,14 +191,13 @@ nsRDFDOMDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProperty
       else if (aProperty == kNC_Type) {
         PRUint16 type;
         node->GetNodeType(&type);
-        str = type;
-      } else
-        str = "Valid node, unknown arc";
-        
+        char buf[10];
+        PR_snprintf(buf, 10, "%d", type);
+        str=buf;
+      }        
     }
   }
 
-  printf("GetTarget() returning %s\n", str.ToNewCString());
   nsCOMPtr<nsIRDFLiteral> literal;
 
   PRUnichar* uniStr = str.ToNewUnicode();
@@ -223,7 +222,7 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
 #ifdef DEBUG_alecf
   nsXPIDLCString propval;
   aProperty->GetValue(getter_Copies(propval));
-  printf("GetTarget(%s, %s,..)\n", (const char*)sourceval,
+  printf("GetTargets(%s, %s,..)\n", (const char*)sourceval,
          (const char*)propval);
 #endif
 
@@ -256,17 +255,19 @@ nsRDFDOMDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aPropert
 
   // node is now the node we're interested in.
 
-  if (aProperty == kNC_Child) {
+  if (aProperty == kNC_Child && node ) {
     
     PRUint32 i;
-    PRUint32 length;
 
     // attributes
     nsCOMPtr<nsIDOMNamedNodeMap> attrmap;
     node->GetAttributes(getter_AddRefs(attrmap));
-    rv = attrmap->GetLength(&length);
-    if (NS_FAILED(rv)) return rv;
-    
+
+    PRUint32 length=0;
+    if (attrmap) {
+      rv = attrmap->GetLength(&length);
+      if (NS_FAILED(rv)) return rv;
+    }
     for (i=0; i<length; i++) {
       nsCOMPtr<nsIDOMNode> attrNode;
       attrmap->Item(i,getter_AddRefs(attrNode));
@@ -562,6 +563,9 @@ NS_NewRDFDOMDataSource(nsISupports* aOuter,
 {
   nsRDFDOMDataSource* ds = new nsRDFDOMDataSource();
   if (!ds) return NS_ERROR_NULL_POINTER;
-  return ds->QueryInterface(iid, result);
-
+  NS_ADDREF(ds);
+  nsresult rv =
+    ds->QueryInterface(iid, result);
+  NS_RELEASE(ds);
+  return rv;
 }
