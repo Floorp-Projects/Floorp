@@ -953,3 +953,5 @@ scalbn
 #longjmp
 #__terminate
 #__initialize
+
+InitializeMacToolbox
