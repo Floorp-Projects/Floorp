@@ -60,6 +60,7 @@ enum
 
 nsHTMLEditRules::nsHTMLEditRules()
 {
+  mPINSelection = PR_FALSE;
 }
 
 nsHTMLEditRules::~nsHTMLEditRules()
@@ -452,85 +453,27 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   *aCancel = PR_TRUE;
   
   nsAutoSelectionReset selectionResetter(aSelection);
-  nsresult res = NS_OK;
+  nsresult res;
   
-  // get selection range - XXX generalize to collection of ranges
-  // gather up factoids about the range
-  nsCOMPtr<nsIDOMRange> selectionRange;
-  nsCOMPtr<nsIDOMNode> startNode;
-  nsCOMPtr<nsIDOMNode> endNode;
-  nsCOMPtr<nsIDOMNode> commonParent;
-  PRInt32 startOffset, endOffset;
+  // convert the selection ranges into "promoted" selection ranges:
+  // this basically just expands the range to include the immediate
+  // block parent, and then further expands to include any ancestors
+  // whose children are all in the range
   
-  res = aSelection->GetRangeAt(0,getter_AddRefs(selectionRange));
+  nsCOMPtr<nsISupportsArray> arrayOfRanges;
+  res = GetPromotedRanges(aSelection, &arrayOfRanges, kMakeList);
   if (NS_FAILED(res)) return res;
-  res = selectionRange->GetStartParent(getter_AddRefs(startNode));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetStartOffset(&startOffset);
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetEndParent(getter_AddRefs(endNode));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetEndOffset(&endOffset);
-  if (NS_FAILED(res)) return res;
-//  res = selectionRange->GetCommonParent(getter_AddRefs(commonParent));
-//  if (NS_FAILED(res)) return res;
   
-  // make a new adjusted range to represent the appropriate block content
-  // this is tricky.  the basic idea is to push out the range endpoints
-  // to truly enclose the blocks that we will affect
-  
-  nsCOMPtr<nsIDOMNode> listStartNode;
-  nsCOMPtr<nsIDOMNode> listEndNode;
-  PRInt32 listStartOffset, listEndOffset;
-  nsCOMPtr<nsIDOMRange> opRange;
-  
-  res = GetPromotedPoint( kStart, startNode, startOffset, kMakeList, &listStartNode, &listStartOffset);
-  if (NS_FAILED(res)) return res;
-  res = GetPromotedPoint( kEnd, endNode, endOffset, kMakeList, &listEndNode, &listEndOffset);
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->Clone(getter_AddRefs(opRange));
-  if (NS_FAILED(res)) return res;
-  opRange->SetStart(listStartNode, listStartOffset);
-  if (NS_FAILED(res)) return res;
-  opRange->SetEnd(listEndNode, listEndOffset);
-  if (NS_FAILED(res)) return res;
-
-  // use subtree iterator to boogie over the snazzy new range
-  // we wil gather the top level nodes to process into a list
-  nsCOMPtr<nsIContentIterator> iter;
-  res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
-                                        nsnull,
-                                        nsIContentIterator::GetIID(), 
-                                        getter_AddRefs(iter));
-  if (NS_FAILED(res)) return res;
-  res = iter->Init(opRange);
-  if (NS_FAILED(res)) return res;
-    
-  nsCOMPtr<nsISupportsArray> list;
-  res = NS_NewISupportsArray(getter_AddRefs(list));
-
-  while (NS_COMFALSE == iter->IsDone())
-  {
-    nsCOMPtr<nsIDOMNode> node;
-    nsCOMPtr<nsIContent> content;
-    res = iter->CurrentNode(getter_AddRefs(content));
-    node = do_QueryInterface(content);
-    if ((NS_SUCCEEDED(res)) && node)
-    {
-      // can't manipulate tree while using subtree iterator, or we will 
-      // confuse it's little mind
-      // instead chuck the results into an array.
-      list->AppendElement(node);
-    }
-    res = iter->Next();
-    if (NS_FAILED(res)) return res;
-  }
-  
+  // use these ranges to contruct a list of nodes to act on.
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  res = GetNodesForOperation(arrayOfRanges, &arrayOfNodes, kMakeList);
+  if (NS_FAILED(res)) return res;                                 
+                                     
   // if we ended up with any nodes in the list that aren't blocknodes, 
   // find their block parent instead and use that.
   
     // i started writing this and then the sky fell.  there are big questions
-    // about what to do here.  i may need to switch rom think about an array of
+    // about what to do here.  i may need to switch from thinking about an array of
     // nodes to act on to instead think of an array of ranges to act on.
   
   // Next we remove all the <br>'s in the array.  This won't prevent <br>'s 
@@ -541,28 +484,28 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   
   PRUint32 listCount;
   PRInt32 i;
-  list->Count(&listCount);
+  arrayOfNodes->Count(&listCount);
   for (i=listCount-1; i>=0; i--)
   {
-    nsISupports *thingy = list->ElementAt(i);
-    nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(thingy) );
+    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
     if (IsBreak(testNode))
     {
-      list->RemoveElementAt(i);
+      arrayOfNodes->RemoveElementAt(i);
     }
     else if (!nsEditor::IsEditable(testNode))
     {
-      list->RemoveElementAt(i);
+      arrayOfNodes->RemoveElementAt(i);
     }
   }
   
   // if there is only one node in the array, and it is a list, div, or blockquote,
   // then look inside of it until we find what we want to make a list out of.
+  arrayOfNodes->Count(&listCount);
   if (listCount == 1)
   {
-    nsISupports *thingy;
-    thingy = list->ElementAt(0);
-    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
     
     while (IsDiv(curNode) || IsOrderedList(curNode) || IsUnorderedList(curNode) || IsBlockquote(curNode))
     {
@@ -575,57 +518,40 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
       {
         // keep diving
         nsCOMPtr <nsIDOMNode> tmpNode = nsEditor::GetChildAt(curNode, 0);
-        // check editablility XXX moose
-        curNode = tmpNode;
+        if (IsDiv(tmpNode) || IsOrderedList(tmpNode) || IsUnorderedList(tmpNode) || IsBlockquote(tmpNode))
+        {
+          // check editablility XXX moose
+          curNode = tmpNode;
+        }
+        else break;
       }
-      else
-      {
-        // stop diving
-        break;
-      }
+      else break;
     }
     // we've found innermost list/blockquote/div: 
     // replace the one node in the array with this node
-    list->ReplaceElementAt(curNode, 0);
+    isupports = do_QueryInterface(curNode);
+    arrayOfNodes->ReplaceElementAt(isupports, 0);
   }
 
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
   
-  list->Count(&listCount);
   nsVoidArray transitionList;
-  nsCOMPtr<nsIDOMNode> prevElementParent;
-  nsCOMPtr<nsIDOMNode> curElementParent;
-  
-  for (i=0; i<listCount; i++)
-  {
-    nsISupports *thingy;
-    thingy = list->ElementAt(i);
-    nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(thingy) );
-    transNode->GetParentNode(getter_AddRefs(curElementParent));
-    if (curElementParent != prevElementParent)
-    {
-      transitionList.InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
-    }
-    else
-    {
-      transitionList.InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
-    }
-    prevElementParent = curElementParent;
-  }
-  
-  
+  res = MakeTransitionList(arrayOfNodes, &transitionList);
+  if (NS_FAILED(res)) return res;                                 
+
   // Ok, now go through all the nodes and put then in the list, 
   // or whatever is approriate.  Wohoo!
+
+  arrayOfNodes->Count(&listCount);
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curList;
     
     for (i=0; i<listCount; i++)
     {
       // here's where we actually figure out what to do
-      nsISupports *thingy;
-      thingy = list->ElementAt(i);
-      nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+      nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+      nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
       PRInt32 offset;
       res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
       if (NS_FAILED(res)) return res;
@@ -730,116 +656,42 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel)
   *aCancel = PR_TRUE;
   
   nsAutoSelectionReset selectionResetter(aSelection);
-  nsresult res = NS_OK;
+  nsresult res;
   
-  // get selection range - XXX generalize to collection of ranges
-  // gather up factoids about the range
-  nsCOMPtr<nsIDOMRange> selectionRange;
-  nsCOMPtr<nsIDOMNode> startNode;
-  nsCOMPtr<nsIDOMNode> endNode;
-  PRInt32 startOffset, endOffset;
+  // convert the selection ranges into "promoted" selection ranges:
+  // this basically just expands the range to include the immediate
+  // block parent, and then further expands to include any ancestors
+  // whose children are all in the range
   
-  res = aSelection->GetRangeAt(0,getter_AddRefs(selectionRange));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetStartParent(getter_AddRefs(startNode));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetStartOffset(&startOffset);
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetEndParent(getter_AddRefs(endNode));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetEndOffset(&endOffset);
+  nsCOMPtr<nsISupportsArray> arrayOfRanges;
+  res = GetPromotedRanges(aSelection, &arrayOfRanges, kIndent);
   if (NS_FAILED(res)) return res;
   
-  // make a new adjusted range to represent the appropriate block content
-  // this is tricky.  the basic idea is to push out the range endpoints
-  // to truly enclose the blocks that we will affect
-  
-  nsCOMPtr<nsIDOMNode> quoteStartNode;
-  nsCOMPtr<nsIDOMNode> quoteEndNode;
-  PRInt32 quoteStartOffset, quoteEndOffset;
-  nsCOMPtr<nsIDOMRange> opRange;
-  
-  res = GetPromotedPoint( kStart, startNode, startOffset, kIndent, &quoteStartNode, &quoteStartOffset);
-  if (NS_FAILED(res)) return res;
-  res = GetPromotedPoint( kEnd, endNode, endOffset, kIndent, &quoteEndNode, &quoteEndOffset);
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->Clone(getter_AddRefs(opRange));
-  if (NS_FAILED(res)) return res;
-  opRange->SetStart(quoteStartNode, quoteStartOffset);
-  if (NS_FAILED(res)) return res;
-  opRange->SetEnd(quoteEndNode, quoteEndOffset);
-  if (NS_FAILED(res)) return res;
-
-  // use subtree iterator to boogie over the snazzy new range
-  // we wil gather the top level nodes to process into an array
-  nsCOMPtr<nsIContentIterator> iter;
-  res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
-                                        nsnull,
-                                        nsIContentIterator::GetIID(), 
-                                        getter_AddRefs(iter));
-  if (NS_FAILED(res)) return res;
-  res = iter->Init(opRange);
-  if (NS_FAILED(res)) return res;
-    
-  nsCOMPtr<nsISupportsArray> list;
-  res = NS_NewISupportsArray(getter_AddRefs(list));
-
-  while (NS_COMFALSE == iter->IsDone())
-  {
-    nsCOMPtr<nsIDOMNode> node;
-    nsCOMPtr<nsIContent> content;
-    res = iter->CurrentNode(getter_AddRefs(content));
-    node = do_QueryInterface(content);
-    if ((NS_SUCCEEDED(res)) && node)
-    {
-      // can't manipulate tree while using subtree iterator, or we will 
-      // confuse it's little mind
-      // instead chuck the results into an array.
-      list->AppendElement(node);
-    }
-    res = iter->Next();
-    if (NS_FAILED(res)) return res;
-  }
-  
+  // use these ranges to contruct a list of nodes to act on.
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  res = GetNodesForOperation(arrayOfRanges, &arrayOfNodes, kIndent);
+  if (NS_FAILED(res)) return res;                                 
+                                     
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
   
+  nsVoidArray transitionList;
+  res = MakeTransitionList(arrayOfNodes, &transitionList);
+  if (NS_FAILED(res)) return res;                                 
+  
+  // Ok, now go through all the nodes and put them in a blockquote, 
+  // or whatever is appropriate.  Wohoo!
+
   PRUint32 listCount;
   PRInt32 i;
-  list->Count(&listCount);
-  nsVoidArray transitionList;
-  nsCOMPtr<nsIDOMNode> prevElementParent;
-  nsCOMPtr<nsIDOMNode> curElementParent;
-  
-  for (i=0; i<listCount; i++)
-  {
-    nsISupports *thingy;
-    thingy = list->ElementAt(i);
-    nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(thingy) );
-    transNode->GetParentNode(getter_AddRefs(curElementParent));
-    if (curElementParent != prevElementParent)
-    {
-      transitionList.InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
-    }
-    else
-    {
-      transitionList.InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
-    }
-    prevElementParent = curElementParent;
-  }
-  
-  
-  // Ok, now go through all the lodes and put them in a blockquote, 
-  // or whatever is appropriate.  Wohoo!
-  
+  arrayOfNodes->Count(&listCount);
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curQuote;
   for (i=0; i<listCount; i++)
   {
     // here's where we actually figure out what to do
-    nsISupports *thingy;
-    thingy = list->ElementAt(i);
-    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
     if (NS_FAILED(res)) return res;
@@ -878,113 +730,39 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel)
   nsAutoSelectionReset selectionResetter(aSelection);
   nsresult res = NS_OK;
   
-  // get selection range - XXX generalize to collection of ranges
-  // gather up factoids about the range
-  nsCOMPtr<nsIDOMRange> selectionRange;
-  nsCOMPtr<nsIDOMNode> startNode;
-  nsCOMPtr<nsIDOMNode> endNode;
-  PRInt32 startOffset, endOffset;
+  // convert the selection ranges into "promoted" selection ranges:
+  // this basically just expands the range to include the immediate
+  // block parent, and then further expands to include any ancestors
+  // whose children are all in the range
   
-  res = aSelection->GetRangeAt(0,getter_AddRefs(selectionRange));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetStartParent(getter_AddRefs(startNode));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetStartOffset(&startOffset);
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetEndParent(getter_AddRefs(endNode));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetEndOffset(&endOffset);
+  nsCOMPtr<nsISupportsArray> arrayOfRanges;
+  res = GetPromotedRanges(aSelection, &arrayOfRanges, kOutdent);
   if (NS_FAILED(res)) return res;
   
-  // make a new adjusted range to represent the appropriate block content
-  // this is tricky.  the basic idea is to push out the range endpoints
-  // to truly enclose the blocks that we will affect
-  
-  nsCOMPtr<nsIDOMNode> quoteStartNode;
-  nsCOMPtr<nsIDOMNode> quoteEndNode;
-  PRInt32 quoteStartOffset, quoteEndOffset;
-  nsCOMPtr<nsIDOMRange> opRange;
-  
-  res = GetPromotedPoint( kStart, startNode, startOffset, kIndent, &quoteStartNode, &quoteStartOffset);
-  if (NS_FAILED(res)) return res;
-  res = GetPromotedPoint( kEnd, endNode, endOffset, kIndent, &quoteEndNode, &quoteEndOffset);
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->Clone(getter_AddRefs(opRange));
-  if (NS_FAILED(res)) return res;
-  opRange->SetStart(quoteStartNode, quoteStartOffset);
-  if (NS_FAILED(res)) return res;
-  opRange->SetEnd(quoteEndNode, quoteEndOffset);
-  if (NS_FAILED(res)) return res;
-
-  // use subtree iterator to boogie over the snazzy new range
-  // we wil gather the top level nodes to process into an array
-  nsCOMPtr<nsIContentIterator> iter;
-  res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
-                                        nsnull,
-                                        nsIContentIterator::GetIID(), 
-                                        getter_AddRefs(iter));
-  if (NS_FAILED(res)) return res;
-  res = iter->Init(opRange);
-  if (NS_FAILED(res)) return res;
-    
-  nsCOMPtr<nsISupportsArray> list;
-  res = NS_NewISupportsArray(getter_AddRefs(list));
-
-  while (NS_COMFALSE == iter->IsDone())
-  {
-    nsCOMPtr<nsIDOMNode> node;
-    nsCOMPtr<nsIContent> content;
-    res = iter->CurrentNode(getter_AddRefs(content));
-    node = do_QueryInterface(content);
-    if ((NS_SUCCEEDED(res)) && node)
-    {
-      // can't manipulate tree while using subtree iterator, or we will 
-      // confuse it's little mind
-      // instead chuck the results into an array.
-      list->AppendElement(node);
-    }
-    res = iter->Next();
-    if (NS_FAILED(res)) return res;
-  }
-  
+  // use these ranges to contruct a list of nodes to act on.
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  res = GetNodesForOperation(arrayOfRanges, &arrayOfNodes, kOutdent);
+  if (NS_FAILED(res)) return res;                                 
+                                     
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
   
+  nsVoidArray transitionList;
+  res = MakeTransitionList(arrayOfNodes, &transitionList);
+  if (NS_FAILED(res)) return res;                                 
+  
+  // Ok, now go through all the nodes and remove a level of blockquoting, 
+  // or whatever is appropriate.  Wohoo!
+
   PRUint32 listCount;
   PRInt32 i;
-  list->Count(&listCount);
-  nsVoidArray transitionList;
-  nsCOMPtr<nsIDOMNode> prevElementParent;
-  nsCOMPtr<nsIDOMNode> curElementParent;
-  
-  for (i=0; i<listCount; i++)
-  {
-    nsISupports *thingy;
-    thingy = list->ElementAt(i);
-    nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(thingy) );
-    transNode->GetParentNode(getter_AddRefs(curElementParent));
-    if (curElementParent != prevElementParent)
-    {
-      transitionList.InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
-    }
-    else
-    {
-      transitionList.InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
-    }
-    prevElementParent = curElementParent;
-  }
-  
-  
-  // Ok, now go through all the lodes and remove a level of blockquoting, 
-  // or whatever is appropriate.  Wohoo!
-  
+  arrayOfNodes->Count(&listCount);
   nsCOMPtr<nsIDOMNode> curParent;
   for (i=0; i<listCount; i++)
   {
     // here's where we actually figure out what to do
-    nsISupports *thingy;
-    thingy = list->ElementAt(i);
-    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
     if (NS_FAILED(res)) return res;
@@ -1022,114 +800,40 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, const nsString *alignTyp
   nsAutoSelectionReset selectionResetter(aSelection);
   nsresult res = NS_OK;
   
-  // get selection range - XXX generalize to collection of ranges
-  // gather up factoids about the range
-  nsCOMPtr<nsIDOMRange> selectionRange;
-  nsCOMPtr<nsIDOMNode> startNode;
-  nsCOMPtr<nsIDOMNode> endNode;
-  PRInt32 startOffset, endOffset;
+  // convert the selection ranges into "promoted" selection ranges:
+  // this basically just expands the range to include the immediate
+  // block parent, and then further expands to include any ancestors
+  // whose children are all in the range
   
-  res = aSelection->GetRangeAt(0,getter_AddRefs(selectionRange));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetStartParent(getter_AddRefs(startNode));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetStartOffset(&startOffset);
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetEndParent(getter_AddRefs(endNode));
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->GetEndOffset(&endOffset);
+  nsCOMPtr<nsISupportsArray> arrayOfRanges;
+  res = GetPromotedRanges(aSelection, &arrayOfRanges, kAlign);
   if (NS_FAILED(res)) return res;
   
-  // make a new adjusted range to represent the appropriate block content
-  // this is tricky.  the basic idea is to push out the range endpoints
-  // to truly enclose the blocks that we will affect
-  
-  nsCOMPtr<nsIDOMNode> quoteStartNode;
-  nsCOMPtr<nsIDOMNode> quoteEndNode;
-  PRInt32 quoteStartOffset, quoteEndOffset;
-  nsCOMPtr<nsIDOMRange> opRange;
-  
-  res = GetPromotedPoint( kStart, startNode, startOffset, kIndent, &quoteStartNode, &quoteStartOffset);
-  if (NS_FAILED(res)) return res;
-  res = GetPromotedPoint( kEnd, endNode, endOffset, kIndent, &quoteEndNode, &quoteEndOffset);
-  if (NS_FAILED(res)) return res;
-  res = selectionRange->Clone(getter_AddRefs(opRange));
-  if (NS_FAILED(res)) return res;
-  opRange->SetStart(quoteStartNode, quoteStartOffset);
-  if (NS_FAILED(res)) return res;
-  opRange->SetEnd(quoteEndNode, quoteEndOffset);
-  if (NS_FAILED(res)) return res;
-
-  // use subtree iterator to boogie over the snazzy new range
-  // we wil gather the top level nodes to process into an array
-  nsCOMPtr<nsIContentIterator> iter;
-  res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
-                                        nsnull,
-                                        nsIContentIterator::GetIID(), 
-                                        getter_AddRefs(iter));
-  if (NS_FAILED(res)) return res;
-  res = iter->Init(opRange);
-  if (NS_FAILED(res)) return res;
-    
-  nsCOMPtr<nsISupportsArray> list;
-  res = NS_NewISupportsArray(getter_AddRefs(list));
-
-  while (NS_COMFALSE == iter->IsDone())
-  {
-    nsCOMPtr<nsIDOMNode> node;
-    nsCOMPtr<nsIContent> content;
-    res = iter->CurrentNode(getter_AddRefs(content));
-    node = do_QueryInterface(content);
-    if ((NS_SUCCEEDED(res)) && node)
-    {
-      // can't manipulate tree while using subtree iterator, or we will 
-      // confuse it's little mind
-      // instead chuck the results into an array.
-      list->AppendElement(node);
-    }
-    res = iter->Next();
-    if (NS_FAILED(res)) return res;
-  }
-  
+  // use these ranges to contruct a list of nodes to act on.
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  res = GetNodesForOperation(arrayOfRanges, &arrayOfNodes, kAlign);
+  if (NS_FAILED(res)) return res;                                 
+                                     
   // Next we detect all the transitions in the array, where a transition
   // means that adjacent nodes in the array don't have the same parent.
   
-  PRUint32 listCount;
-  PRInt32 i;
-  list->Count(&listCount);
   nsVoidArray transitionList;
-  nsCOMPtr<nsIDOMNode> prevElementParent;
-  nsCOMPtr<nsIDOMNode> curElementParent;
-  
-  for (i=0; i<listCount; i++)
-  {
-    nsISupports *thingy;
-    thingy = list->ElementAt(i);
-    nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(thingy) );
-    transNode->GetParentNode(getter_AddRefs(curElementParent));
-    if (curElementParent != prevElementParent)
-    {
-      transitionList.InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
-    }
-    else
-    {
-      transitionList.InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
-    }
-    prevElementParent = curElementParent;
-  }
-  
-  
-  // Ok, now go through all the lodes and give them an align attrib or put them in a div, 
+  res = MakeTransitionList(arrayOfNodes, &transitionList);
+  if (NS_FAILED(res)) return res;                                 
+
+  // Ok, now go through all the nodes and give them an align attrib or put them in a div, 
   // or whatever is appropriate.  Wohoo!
   
+  PRUint32 listCount;
+  PRInt32 i;
+  arrayOfNodes->Count(&listCount);
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curDiv;
   for (i=0; i<listCount; i++)
   {
     // here's where we actually figure out what to do
-    nsISupports *thingy;
-    thingy = list->ElementAt(i);
-    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(thingy) );
+    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
     if (NS_FAILED(res)) return res;
@@ -1526,6 +1230,165 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
   return res;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+// GetPromotedRanges: run all the selection range endpoint through 
+//                    GetPromotedPoint()
+//                       
+nsresult 
+nsHTMLEditRules::GetPromotedRanges(nsIDOMSelection *inSelection, 
+                                   nsCOMPtr<nsISupportsArray> *outArrayOfRanges, 
+                                   PRInt32 inOperationType)
+{
+  if (!inSelection || !outArrayOfRanges) return NS_ERROR_NULL_POINTER;
+
+  nsresult res = NS_NewISupportsArray(getter_AddRefs(*outArrayOfRanges));
+  if (NS_FAILED(res)) return res;
+  
+  PRInt32 rangeCount;
+  res = inSelection->GetRangeCount(&rangeCount);
+  if (NS_FAILED(res)) return res;
+  
+  PRInt32 i;
+  nsCOMPtr<nsIDOMRange> selectionRange;
+  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsIDOMNode> endNode;
+  PRInt32 startOffset, endOffset;
+
+  for (i = 0; i < rangeCount; i++)
+  {
+    res = inSelection->GetRangeAt(i, getter_AddRefs(selectionRange));
+    if (NS_FAILED(res)) return res;
+    res = selectionRange->GetStartParent(getter_AddRefs(startNode));
+    if (NS_FAILED(res)) return res;
+    res = selectionRange->GetStartOffset(&startOffset);
+    if (NS_FAILED(res)) return res;
+    res = selectionRange->GetEndParent(getter_AddRefs(endNode));
+    if (NS_FAILED(res)) return res;
+    res = selectionRange->GetEndOffset(&endOffset);
+    if (NS_FAILED(res)) return res;
+  
+    // make a new adjusted range to represent the appropriate block content
+    // this is tricky.  the basic idea is to push out the range endpoints
+    // to truly enclose the blocks that we will affect
+  
+    nsCOMPtr<nsIDOMNode> opStartNode;
+    nsCOMPtr<nsIDOMNode> opEndNode;
+    PRInt32 opStartOffset, opEndOffset;
+    nsCOMPtr<nsIDOMRange> opRange;
+  
+    res = GetPromotedPoint( kStart, startNode, startOffset, inOperationType, &opStartNode, &opStartOffset);
+    if (NS_FAILED(res)) return res;
+    res = GetPromotedPoint( kEnd, endNode, endOffset, inOperationType, &opEndNode, &opEndOffset);
+    if (NS_FAILED(res)) return res;
+    res = selectionRange->Clone(getter_AddRefs(opRange));
+    if (NS_FAILED(res)) return res;
+    opRange->SetStart(opStartNode, opStartOffset);
+    if (NS_FAILED(res)) return res;
+    opRange->SetEnd(opEndNode, opEndOffset);
+    if (NS_FAILED(res)) return res;
+    
+    // stuff new opRange into nsISupportsArray
+    nsCOMPtr<nsISupports> isupports = do_QueryInterface(opRange);
+    (*outArrayOfRanges)->AppendElement(isupports);
+  }
+  return res;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetNodesForOperation: run through the ranges in the array and construct 
+//                       a new array of nodes to be acted on.
+//                       
+nsresult 
+nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges, 
+                                   nsCOMPtr<nsISupportsArray> *outArrayOfNodes, 
+                                   PRInt32 inOperationType)
+{
+  if (!inArrayOfRanges || !outArrayOfNodes) return NS_ERROR_NULL_POINTER;
+
+  nsresult res = NS_NewISupportsArray(getter_AddRefs(*outArrayOfNodes));
+  if (NS_FAILED(res)) return res;
+  
+  PRUint32 rangeCount;
+  res = inArrayOfRanges->Count(&rangeCount);
+  if (NS_FAILED(res)) return res;
+  
+  PRInt32 i;
+  nsCOMPtr<nsIDOMRange> opRange;
+  nsCOMPtr<nsISupports> isupports;
+  nsCOMPtr<nsIContentIterator> iter;
+
+  for (i = 0; i < rangeCount; i++)
+  {
+    isupports = (dont_AddRef)(inArrayOfRanges->ElementAt(i));
+    opRange = do_QueryInterface(isupports);
+    res = nsComponentManager::CreateInstance(kSubtreeIteratorCID,
+                                        nsnull,
+                                        nsIContentIterator::GetIID(), 
+                                        getter_AddRefs(iter));
+    if (NS_FAILED(res)) return res;
+    res = iter->Init(opRange);
+    if (NS_FAILED(res)) return res;
+    
+    while (NS_COMFALSE == iter->IsDone())
+    {
+      nsCOMPtr<nsIDOMNode> node;
+      nsCOMPtr<nsIContent> content;
+      res = iter->CurrentNode(getter_AddRefs(content));
+      node = do_QueryInterface(content);
+      if ((NS_SUCCEEDED(res)) && node)
+      {
+        isupports = do_QueryInterface(node);
+        (*outArrayOfNodes)->AppendElement(isupports);
+      }
+      res = iter->Next();
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  return res;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// MakeTransitionList: detect all the transitions in the array, where a 
+//                     transition means that adjacent nodes in the array 
+//                     don't have the same parent.
+//                       
+nsresult 
+nsHTMLEditRules::MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
+                                   nsVoidArray *inTransitionArray)
+{
+  if (!inArrayOfNodes || !inTransitionArray) return NS_ERROR_NULL_POINTER;
+
+  PRUint32 listCount;
+  PRInt32 i;
+  inArrayOfNodes->Count(&listCount);
+  nsVoidArray transitionList;
+  nsCOMPtr<nsIDOMNode> prevElementParent;
+  nsCOMPtr<nsIDOMNode> curElementParent;
+  
+  for (i=0; i<listCount; i++)
+  {
+    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(inArrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(isupports ) );
+    transNode->GetParentNode(getter_AddRefs(curElementParent));
+    if (curElementParent != prevElementParent)
+    {
+      inTransitionArray->InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
+    }
+    else
+    {
+      inTransitionArray->InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
+    }
+    prevElementParent = curElementParent;
+  }
+  return NS_OK;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // ReplaceContainer: replace inNode with a new node (outNode) which is contructed 
 //                   to be of type aNodeType.  Put inNodes children into outNode.
@@ -1915,9 +1778,6 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
   res = aSelection->Collapse(aNode,0);
   return res;
 }
-
-
-
 
 
 

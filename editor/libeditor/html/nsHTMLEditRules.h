@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 
 class nsISupportsArray;
+class nsVoidArray;
 
 class nsHTMLEditRules : public nsTextEditRules
 {
@@ -93,6 +94,14 @@ protected:
   static PRBool IsLastNode(nsIDOMNode *aNode);
   static nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
                                   PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
+  static nsresult GetPromotedRanges(nsIDOMSelection *inSelection, 
+                                   nsCOMPtr<nsISupportsArray> *outArrayOfRanges, 
+                                   PRInt32 inOperationType);
+  static nsresult GetNodesForOperation(nsISupportsArray *inArrayOfRanges, 
+                                   nsCOMPtr<nsISupportsArray> *outArrayOfNodes, 
+                                   PRInt32 inOperationType);
+  static nsresult MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
+                                   nsVoidArray *inTransitionArray);
   
   nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, nsString &aNodeType);
   nsresult RemoveContainer(nsIDOMNode *inNode);
