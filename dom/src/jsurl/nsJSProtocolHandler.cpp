@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "jsapi.h"
 #include "nsCRT.h"
 #include "nsDOMError.h"
@@ -67,6 +68,7 @@
 #include "prprf.h"
 #include "nsEscape.h"
 #include "nsIJSContextStack.h"
+#include "nsIWebNavigation.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -363,37 +365,49 @@ public:
 protected:
     virtual ~nsJSChannel();
 
+    nsresult StopAll();
+
 protected:
     nsCOMPtr<nsIChannel>    mStreamChannel;
 
-    nsLoadFlags             mLoadFlags;
-
-    nsJSThunk *             mIOThunk;
+    nsRefPtr<nsJSThunk>     mIOThunk;
     PRBool                  mIsActive;
 };
 
 nsJSChannel::nsJSChannel() :
-    mLoadFlags(LOAD_NORMAL),
-    mIOThunk(nsnull),
     mIsActive(PR_FALSE)
 {
 }
 
 nsJSChannel::~nsJSChannel()
 {
-    NS_IF_RELEASE(mIOThunk);
 }
 
+nsresult nsJSChannel::StopAll()
+{
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    mStreamChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
+
+    nsresult rv = NS_ERROR_UNEXPECTED;
+    nsCOMPtr<nsIWebNavigation> webNav(do_GetInterface(callbacks));
+
+    NS_ASSERTION(webNav, "Can't get nsIWebNavigation from callbacks!");
+
+    if (webNav) {
+        rv = webNav->Stop(nsIWebNavigation::STOP_ALL);
+    }
+
+    return rv;
+}
 
 nsresult nsJSChannel::Init(nsIURI *aURI)
 {
     nsresult rv;
-    
+
     // Create the nsIStreamIO layer used by the nsIStreamIOChannel.
-    mIOThunk= new nsJSThunk();
-    if (mIOThunk == nsnull)
+    mIOThunk = new nsJSThunk();
+    if (!mIOThunk)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mIOThunk);
 
     // Create a stock input stream channel...
     // Remember, until AsyncOpen is called, the script will not be evaluated
@@ -457,6 +471,14 @@ nsJSChannel::GetStatus(nsresult *aResult)
 NS_IMETHODIMP
 nsJSChannel::Cancel(nsresult aStatus)
 {
+    if (mIsActive && aStatus == NS_BINDING_ABORTED) {
+        // We're aborted while active, this means we're canceled from
+        // the call to StopAll() in Open() or AsyncOpen(), ignore the
+        // cancel call, since we're not done with mStreamChannel yet.
+
+        return NS_OK;
+    }
+
     return mStreamChannel->Cancel(aStatus);
 }
 
@@ -507,7 +529,16 @@ nsJSChannel::Open(nsIInputStream **aResult)
     rv = mIOThunk->EvaluateScript(mStreamChannel);
 
     if (NS_SUCCEEDED(rv)) {
-        rv = mStreamChannel->Open(aResult);
+        // EvaluateScript() succeeded, that means there's data to
+        // parse as a result of evaluating the script. Stop all
+        // pending network loads.
+
+        rv = StopAll();
+
+        if (NS_SUCCEEDED(rv)) {
+            // This will add mStreamChannel to the load group.
+            rv = mStreamChannel->Open(aResult);
+        }
     } else {
         // Propagate the failure down to the underlying channel...
         (void) mStreamChannel->Cancel(rv);
@@ -524,12 +555,6 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 
     nsCOMPtr<nsILoadGroup> loadGroup;
 
-    // Add the javascript channel to its loadgroup...
-    mStreamChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-    if (loadGroup) {
-        (void) loadGroup->AddRequest(this, aContext);
-    }
-
     // Synchronously execute the script...
     // mIsActive is used to indicate the the request is 'busy' during the
     // the script evaluation phase.  This means that IsPending() will 
@@ -538,16 +563,21 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
     rv = mIOThunk->EvaluateScript(mStreamChannel);
 
     if (NS_SUCCEEDED(rv)) {
-        rv = mStreamChannel->AsyncOpen(aListener, aContext);
+        // EvaluateScript() succeeded, that means there's data to
+        // parse as a result of evaluating the script. Stop all
+        // pending network loads.
+
+        rv = StopAll();
+
+        if (NS_SUCCEEDED(rv)) {
+            // This will add mStreamChannel to the load group.
+            rv = mStreamChannel->AsyncOpen(aListener, aContext);
+        }
     } else {
         // Propagate the failure down to the underlying channel...
         (void) mStreamChannel->Cancel(rv);
     }
 
-    // Remove the javascript channel from its loadgroup...
-    if (loadGroup) {
-        (void) loadGroup->RemoveRequest(this, aContext, rv);
-    }
     mIsActive = PR_FALSE;
     return rv;
 }
@@ -555,20 +585,13 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 NS_IMETHODIMP
 nsJSChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    *aLoadFlags = mLoadFlags;
-    return NS_OK;
+    return mStreamChannel->GetLoadFlags(aLoadFlags);
 }
 
 NS_IMETHODIMP
 nsJSChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-    mLoadFlags = aLoadFlags;
-    //
-    // Since the javascript channel is considered the 'document channel'
-    // clear this bit before passing it down...  Otherwise, there will be
-    // two document channels!!
-    //
-    return mStreamChannel->SetLoadFlags(aLoadFlags & ~(LOAD_DOCUMENT_URI));
+    return mStreamChannel->SetLoadFlags(aLoadFlags);
 }
 
 NS_IMETHODIMP

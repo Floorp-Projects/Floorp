@@ -4916,13 +4916,22 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         *aRequest = nsnull;
     }
 
+    if (!aURI) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
     // wyciwyg urls can only be loaded through history. Any normal load of
     // wyciwyg through docshell is  illegal. Disallow such loads.
-    if (aURI && (aLoadType & LOAD_CMD_NORMAL)) {
+    if (aLoadType & LOAD_CMD_NORMAL) {
         PRBool isWyciwyg = PR_FALSE;
         rv = aURI->SchemeIs("wyciwyg", &isWyciwyg);   
         if ((isWyciwyg && NS_SUCCEEDED(rv)) || NS_FAILED(rv)) 
             return NS_ERROR_FAILURE;
+    }
+
+    PRBool bIsJavascript = PR_FALSE;
+    if (NS_FAILED(aURI->SchemeIs("javascript", &bIsJavascript))) {
+        bIsJavascript = PR_FALSE;
     }
 
     //
@@ -4970,9 +4979,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         // See bug #52182
         //
         if (mUseExternalProtocolHandler && aLoadType == LOAD_LINK) {
-            PRBool bIsJavascript = PR_FALSE;
-
-            aURI->SchemeIs("javascript", &bIsJavascript);
             // don't do it for javascript urls!
             if (!bIsJavascript &&
                 (name.EqualsIgnoreCase("_content") || 
@@ -5190,28 +5196,35 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             return NS_OK;
         }
     }
-    //
-    // Stop any current network activity.
-    // Also stop content if this is a zombie doc. otherwise 
-    // the onload will be delayed by other loads initiated in the 
-    // background by the first document that
-    // didn't fully load before the next load was initiated.
-    // If not a zombie, don't stop content until data 
-    // starts arriving from the new URI...
 
-    nsCOMPtr<nsIContentViewer> zombieViewer;
-    if (mContentViewer) {
-        mContentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
+    // Don't stop current network activity for javascript: URL's since
+    // they might not result in any data, and thus nothing should be
+    // stopped in those cases. In the case where they do result in
+    // data, the javascript: URL channel takes care of stopping
+    // current network activity.
+    if (!bIsJavascript) {
+        // Stop any current network activity.
+        // Also stop content if this is a zombie doc. otherwise 
+        // the onload will be delayed by other loads initiated in the 
+        // background by the first document that
+        // didn't fully load before the next load was initiated.
+        // If not a zombie, don't stop content until data 
+        // starts arriving from the new URI...
+
+        nsCOMPtr<nsIContentViewer> zombieViewer;
+        if (mContentViewer) {
+            mContentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
+        }
+
+        if (zombieViewer) {
+            rv = Stop(nsIWebNavigation::STOP_ALL);
+        } else {
+            rv = Stop(nsIWebNavigation::STOP_NETWORK);
+        }
+
+        if (NS_FAILED(rv)) 
+            return rv;
     }
-
-    if (zombieViewer) {
-       rv = Stop(nsIWebNavigation::STOP_ALL);
-    } else {
-       rv = Stop(nsIWebNavigation::STOP_NETWORK);
-    }
-
-    if (NS_FAILED(rv)) 
-      return rv;
 
     mLoadType = aLoadType;
     // mLSHE should be assigned to aSHEntry, only after Stop() has
