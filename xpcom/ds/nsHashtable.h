@@ -277,7 +277,8 @@ public:
   };
 
   nsCStringKey(const char* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
-  nsCStringKey(const nsCString& str);
+  nsCStringKey(const nsAFlatCString& str);
+  nsCStringKey(const nsACString& str);
   ~nsCStringKey(void);
 
   PRUint32 HashCode(void) const;
@@ -306,7 +307,8 @@ public:
   };
 
   nsStringKey(const PRUnichar* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
-  nsStringKey(const nsAReadableString& str);
+  nsStringKey(const nsAFlatString& str);
+  nsStringKey(const nsAString& str);
   ~nsStringKey(void);
 
   PRUint32 HashCode(void) const;

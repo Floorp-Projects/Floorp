@@ -33,6 +33,7 @@
 #include "prmem.h"
 #include "prlog.h"
 #include "nsHashtable.h"
+#include "nsReadableUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // These functions really should be part of nspr, and have internal knowledge
@@ -390,8 +391,22 @@ void nsHashtable::Reset(nsHashtableEnumFunc destroyFunc, void* closure)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsCStringKey::nsCStringKey(const nsCString& str)
-    : mStr((char*)str.get()), mStrLen(str.Length()), mOwnership(OWN_CLONE)
+nsCStringKey::nsCStringKey(const nsAFlatCString& str)
+    : mStr(NS_CONST_CAST(char*, str.get())),
+      mStrLen(str.Length()),
+      mOwnership(OWN_CLONE)
+{
+    NS_ASSERTION(mStr, "null string key");
+#ifdef DEBUG
+    mKeyType = CStringKey;
+#endif
+    MOZ_COUNT_CTOR(nsCStringKey);
+}
+
+nsCStringKey::nsCStringKey(const nsACString& str)
+    : mStr(ToNewCString(str)),
+      mStrLen(str.Length()),
+      mOwnership(OWN)
 {
     NS_ASSERTION(mStr, "null string key");
 #ifdef DEBUG
@@ -456,8 +471,22 @@ nsCStringKey::Clone() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsStringKey::nsStringKey(const nsAReadableString& str)
-    : mStr(NS_CONST_CAST(PRUnichar*, NS_STATIC_CAST(const PRUnichar *, PromiseFlatString(str).get()))), mStrLen(str.Length()),  mOwnership(OWN_CLONE)
+nsStringKey::nsStringKey(const nsAFlatString& str)
+    : mStr(NS_CONST_CAST(PRUnichar*,  str.get())),
+      mStrLen(str.Length()),
+      mOwnership(OWN_CLONE)
+{
+    NS_ASSERTION(mStr, "null string key");
+#ifdef DEBUG
+    mKeyType = StringKey;
+#endif
+    MOZ_COUNT_CTOR(nsStringKey);
+}
+
+nsStringKey::nsStringKey(const nsAString& str)
+    : mStr(ToNewUnicode(str)),
+      mStrLen(str.Length()),
+      mOwnership(OWN)
 {
     NS_ASSERTION(mStr, "null string key");
 #ifdef DEBUG
