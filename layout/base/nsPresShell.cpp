@@ -893,10 +893,10 @@ public:
                                          nsVoidArray&         aQueue);   
   NS_IMETHOD CancelReflowCommand(nsIFrame*                     aTargetFrame, 
                                  nsReflowType* aCmdType);  
-  NS_IMETHOD CancelReflowCommandInternal(nsIFrame*                        aTargetFrame, 
+  NS_IMETHOD CancelReflowCommandInternal(nsIFrame*     aTargetFrame, 
                                          nsReflowType* aCmdType,
-                                         nsVoidArray&                     aQueue,
-                                         PRBool                           aProcessDummyLayoutRequest = PR_TRUE);  
+                                         nsVoidArray&  aQueue,
+                                         PRBool        aProcessDummyLayoutRequest = PR_TRUE);  
   NS_IMETHOD CancelAllReflowCommands();
   NS_IMETHOD IsSafeToFlush(PRBool& aIsSafeToFlush);
   NS_IMETHOD FlushPendingNotifications(PRBool aUpdateViews);
@@ -3680,10 +3680,10 @@ PresShell :: IsDragInProgress ( ) const
 
 
 NS_IMETHODIMP
-PresShell::CancelReflowCommandInternal(nsIFrame*                        aTargetFrame, 
+PresShell::CancelReflowCommandInternal(nsIFrame*     aTargetFrame, 
                                        nsReflowType* aCmdType,
-                                       nsVoidArray&                     aQueue,
-                                       PRBool                           aProcessDummyLayoutRequest)
+                                       nsVoidArray&  aQueue,
+                                       PRBool        aProcessDummyLayoutRequest)
 {
   PRInt32 i, n = aQueue.Count();
   for (i = 0; i < n; i++) {
@@ -3728,7 +3728,7 @@ PresShell::CancelReflowCommandInternal(nsIFrame*                        aTargetF
 }
 
 NS_IMETHODIMP
-PresShell::CancelReflowCommand(nsIFrame*                        aTargetFrame, 
+PresShell::CancelReflowCommand(nsIFrame*     aTargetFrame, 
                                nsReflowType* aCmdType)
 {
   return CancelReflowCommandInternal(aTargetFrame, aCmdType, mReflowCommands);
