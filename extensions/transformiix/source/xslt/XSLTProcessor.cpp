@@ -1940,9 +1940,9 @@ void XSLTProcessor::process(Document& aXMLDocument,
             return;
         
         if (stylesheetElem)
-            processTopLevel(&aXMLDocument, stylesheetElem, &importFrame, &ps);
+            processTopLevel(stylesheetElem, &importFrame, &ps);
         else
-            processStylesheet(&aXMLDocument, stylesheetDoc, &importFrame, &ps);
+            processStylesheet(stylesheetDoc, &importFrame, &ps);
 
         initializeHandlers(&ps);
         if (mOutputHandler)
