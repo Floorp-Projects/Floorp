@@ -336,7 +336,8 @@ NS_METHOD nsContainerFrame::GetCursorAt(nsIPresContext& aPresContext,
 {
   aCursor = NS_STYLE_CURSOR_INHERIT;
 
-  nsIFrame* kid = mFirstChild;
+  nsIFrame* kid;
+  FirstChild(kid);
   nsPoint tmp;
   while (nsnull != kid) {
     nsRect kidRect;
