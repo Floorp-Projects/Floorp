@@ -319,7 +319,12 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRowExtentAt(PRInt32 aRow, PRInt32 aCol
 
 NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumnDescription(PRInt32 aColumn, nsAString & _retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIAccessibleTable> columnHeader;
+  nsresult rv = GetColumnHeader(getter_AddRefs(columnHeader));
+  if (NS_SUCCEEDED(rv) && columnHeader) {
+    return columnHeader->GetColumnDescription(aColumn, _retval);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULTreeAccessibleWrap::GetRowDescription(PRInt32 aRow, nsAString & _retval)
@@ -533,7 +538,12 @@ NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetRowExtentAt(PRInt32 aRow, PRInt
 
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetColumnDescription(PRInt32 aColumn, nsAString & _retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIAccessible> column;  
+  nsresult rv = CellRefAt(0, aColumn, getter_AddRefs(column));
+  if (NS_SUCCEEDED(rv) && column) {
+    return column->GetName(_retval);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsXULTreeColumnsAccessibleWrap::GetRowDescription(PRInt32 aRow, nsAString & _retval)
