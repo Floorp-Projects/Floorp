@@ -551,6 +551,37 @@ mozSanitizingHTMLSerializer::DoAddLeaf(PRInt32 aTag,
     // using + operator here might give an infinitive loop, see above.
     // not adding ";", because Gecko delivers that as part of |aText| (freaky)
   }
+  else if (type == eHTMLTag_script ||
+           type == eHTMLTag_style ||
+           type == eHTMLTag_textarea ||
+           type == eHTMLTag_server)
+  {
+    // These special tags require some extra care. The parser gives them
+    // to us as leaves, but they're really containers. Their content is
+    // contained in the "skipped content" of the parser. This code is
+    // adapted from nsHTMLContentSink.cpp
+    nsString skippedContent;
+    PRInt32 lineNo;
+
+    NS_ASSERTION(mParser, "We are receiving containers as leaves with "
+                          "no skipped content.");
+
+    nsCOMPtr<nsIDTD> dtd;
+    mParser->GetDTD(getter_AddRefs(dtd));
+    NS_ENSURE_TRUE(dtd, NS_ERROR_UNEXPECTED);
+
+    // Note: we want to collect the skipped content no matter what. We
+    // may end up throwing it away anyway, but the DTD doesn't care
+    // about that.
+    dtd->CollectSkippedContent(type, skippedContent, lineNo);
+
+    DoOpenContainer(type);
+    if (IsAllowedTag(type))
+    {
+      Write(skippedContent);
+    }
+    DoCloseContainer(type);
+  }
   else
   {
     DoOpenContainer(type);

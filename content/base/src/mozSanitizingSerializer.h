@@ -96,7 +96,7 @@ public:
   NS_IMETHOD DidBuildModel(void) { return NS_OK; }
   NS_IMETHOD WillInterrupt(void) { return NS_OK; }
   NS_IMETHOD WillResume(void) { return NS_OK; }
-  NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
+  NS_IMETHOD SetParser(nsIParser* aParser) { mParser = aParser; return NS_OK; }
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
   NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddHeadContent(const nsIParserNode& aNode);
@@ -161,6 +161,7 @@ protected:
   nsAString*                   mOutputString;
   nsIParserNode*               mParserNode;
   nsCOMPtr<nsIParserService>   mParserService;
+  nsCOMPtr<nsIParser>          mParser;
 };
 
 nsresult
