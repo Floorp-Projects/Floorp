@@ -1654,29 +1654,27 @@ AC_ARG_WITH(libIDL,
 	SKIP_IDL_CHECK="yes"
    fi ])
 
-dnl RedHat 6.0 (Hedwig) ships with orbit which includes libIDL
-if test -f /etc/redhat-release
-then
-	if egrep "Hedwig" /etc/redhat-release >/dev/null
-	then
-		if test -x /usr/bin/orbit-config
-		then
-			SKIP_IDL_CHECK="yes"
-			LIBIDL_CFLAGS="-I/usr/lib/glib/include"
-			LIBIDL_LIBS="-lglib -lIDL"
-			AC_SUBST(LIBIDL_CFLAGS)
-			AC_SUBST(LIBIDL_LIBS)
-		fi
-	fi
+AC_PATH_PROGS(LIBIDL_CONFIG, $LIBIDL_CONFIG libIDL-config)
+
+dnl We don't have a libIDL config program.  Look for orbit-config instead
+if test -z $LIBIDL_CONFIG; then
+    AC_PATH_PROGS(ORBIT_CONFIG, $ORBIT_CONFIG orbit-config)
+    if test -n "$ORBIT_CONFIG"; then
+        SKIP_IDL_CHECK="yes"
+	_ORBIT_CFLAGS=`${ORBIT_CONFIG} client --cflags`
+	_ORBIT_LIBS=`${ORBIT_CONFIG} client --libs`
+        _ORBIT_INC_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-I/); } }' -- ${_ORBIT_CFLAGS}`
+        _ORBIT_LIB_PATH=`${PERL} -e '{ for $f (@ARGV) { print "$f " if ($f =~ m/^-L/); } }' -- ${_ORBIT_LIBS}`
+        LIBIDL_CFLAGS="$_ORBIT_INC_PATH"
+        LIBIDL_LIBS="$_ORBIT_LIB_PATH -lIDL -lglib"
+    fi
 fi
 
 if test "$SKIP_IDL_CHECK" = "no"
 then
 AM_PATH_LIBIDL($LIBIDL_VERSION,,
   [echo libIDL $LIBIDL_VERSION or higher is required.]
-  [echo Get yourself a RPM or source package from ftp://ftp.mozilla.org/]
-  [echo before your tree is HOSED.]
-  [echo See http://atv.ne.mediaone.net/libIDL/ for more information.]
+  [echo See http://andrewtv.org/libIDL/ for more information.]
   [AC_MSG_ERROR(libIDL not installed.)])
 fi
 
@@ -1684,8 +1682,13 @@ if test -n "$CROSS_COMPILE"; then
     if test -z "$HOST_LIBIDL_CONFIG"; then
         HOST_LIBIDL_CONFIG="$LIBIDL_CONFIG"
     fi
-    HOST_LIBIDL_CFLAGS=`${HOST_LIBIDL_CONFIG} --cflags`
-    HOST_LIBIDL_LIBS=`${HOST_LIBIDL_CONFIG} --libs`
+    if test -n "$HOST_LIBIDL_CONFIG"; then
+        HOST_LIBIDL_CFLAGS=`${HOST_LIBIDL_CONFIG} --cflags`
+        HOST_LIBIDL_LIBS=`${HOST_LIBIDL_CONFIG} --libs`
+    else
+        HOST_LIBIDL_CFLAGS="$LIBIDL_CFLAGS"
+        HOST_LIBIDL_LIBS="$LIBIDL_LIBS"
+    fi
     if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
       LIBIDL_CFLAGS=`${LIBIDL_CONFIG}-VMS --cflags`
       LIBIDL_LIBS=`${LIBIDL_CONFIG}-VMS --libs`
@@ -1696,6 +1699,8 @@ if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
     AM_PATH_GLIB(${GLIB_VERSION})
 fi
 
+AC_SUBST(LIBIDL_CFLAGS)
+AC_SUBST(LIBIDL_LIBS)
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
