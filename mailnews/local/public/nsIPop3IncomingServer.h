@@ -6,11 +6,7 @@
 #define __gen_nsIPop3IncomingServer_h__
 
 #include "nsISupports.h" /* interface nsISupports */
-#include "nsID.h" /* interface nsID */
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
+#include "nsrootidl.h" /* interface nsrootidl */
 
 /* starting interface:    nsIPop3IncomingServer */
 
@@ -24,10 +20,6 @@ class nsIPop3IncomingServer : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPOP3INCOMINGSERVER_IID)
 
-  /* attribute string rootFolderPath; */
-  NS_IMETHOD GetRootFolderPath(char * *aRootFolderPath) = 0;
-  NS_IMETHOD SetRootFolderPath(char * aRootFolderPath) = 0;
-
   /* attribute boolean leaveMessagesOnServer; */
   NS_IMETHOD GetLeaveMessagesOnServer(PRBool *aLeaveMessagesOnServer) = 0;
   NS_IMETHOD SetLeaveMessagesOnServer(PRBool aLeaveMessagesOnServer) = 0;
@@ -35,11 +27,6 @@ class nsIPop3IncomingServer : public nsISupports {
   /* attribute boolean deleteMailLeftOnServer; */
   NS_IMETHOD GetDeleteMailLeftOnServer(PRBool *aDeleteMailLeftOnServer) = 0;
   NS_IMETHOD SetDeleteMailLeftOnServer(PRBool aDeleteMailLeftOnServer) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIPop3IncomingServer *priv);
-#endif
 };
 
 #endif /* __gen_nsIPop3IncomingServer_h__ */

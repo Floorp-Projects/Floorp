@@ -38,7 +38,6 @@ nsPop3Sink::nsPop3Sink()
     m_senderAuthed = PR_FALSE;
     m_outputBuffer = nsnull;
     m_outputBufferSize = 0;
-    m_mailDirectory = 0;
     m_newMailParser = NULL;
 #ifdef DEBUG
     m_fileCounter = 0;
@@ -51,7 +50,6 @@ nsPop3Sink::~nsPop3Sink()
 {
     PR_FREEIF(m_accountUrl);
     PR_FREEIF(m_outputBuffer);
-    PR_FREEIF(m_mailDirectory);
     NS_IF_RELEASE(m_popServer);
 	if (m_newMailParser)
 		delete m_newMailParser;
@@ -71,6 +69,16 @@ nsPop3Sink::SetUserAuthenticated(PRBool authed)
 }
 
 nsresult
+nsPop3Sink::GetUserAuthenticated(PRBool* authed)
+{
+    NS_ASSERTION(authed, "null getter in GetUserAuthenticated");
+    if (!authed) return NS_ERROR_NULL_POINTER;
+
+    *authed=m_authed;
+    return NS_OK;
+}
+
+nsresult
 nsPop3Sink::SetSenderAuthedFlag(void* closure, PRBool authed)
 {
 #ifdef DEBUG
@@ -85,7 +93,7 @@ nsPop3Sink::SetSenderAuthedFlag(void* closure, PRBool authed)
 }
 
 nsresult 
-nsPop3Sink::SetMailAccountURL(const char* urlString)
+nsPop3Sink::SetMailAccountURL(char* urlString)
 {
     if (urlString)
     {
@@ -105,6 +113,16 @@ nsPop3Sink::SetMailAccountURL(const char* urlString)
     return NS_OK;
 }
 
+nsresult
+nsPop3Sink::GetMailAccountURL(char* *urlString)
+{
+    NS_ASSERTION(urlString, "null getter in getMailAccountURL");
+    if (!urlString) return NS_ERROR_NULL_POINTER;
+
+    *urlString = nsCRT::strdup(m_accountUrl);
+    return NS_OK;
+}
+
 nsresult 
 nsPop3Sink::BeginMailDelivery(PRBool* aBool)
 {
@@ -112,7 +130,17 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     m_fileCounter++;
 #endif
 
-    nsFileSpec fileSpec(m_mailDirectory);
+    nsresult rv;
+    
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
+    if (!server) return NS_ERROR_UNEXPECTED;
+
+    char *mailDirectory;
+    rv = server->GetLocalPath(&mailDirectory);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsFileSpec fileSpec(mailDirectory);
+    PL_strfree(mailDirectory);
     fileSpec += "Inbox";
     m_outFileStream = new nsIOFileStream(fileSpec, 
                                              PR_WRONLY | PR_CREATE_FILE);
@@ -125,10 +153,11 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     if (m_newMailParser == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
 
-	nsCOMPtr <nsIFolder> serverFolder;
-	nsresult res = GetServerFolder(getter_AddRefs(serverFolder));
+    nsCOMPtr <nsIFolder> serverFolder;
+    rv = GetServerFolder(getter_AddRefs(serverFolder));
+    if (NS_FAILED(rv)) return rv;
 
-    nsresult rv = m_newMailParser->Init(serverFolder, fileSpec, m_outFileStream);
+    rv = m_newMailParser->Init(serverFolder, fileSpec, m_outFileStream);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG
@@ -187,7 +216,6 @@ nsPop3Sink::IncorporateBegin(const char* uidlString,
 #endif 
     if (closure)
         *closure = (void*) this;
-    PR_ASSERT(m_mailDirectory);
     
     char *dummyEnvelope = GetDummyEnvelope();
 
@@ -205,9 +233,6 @@ nsPop3Sink::SetPopServer(nsIPop3IncomingServer *server)
   m_popServer=server;
   NS_ADDREF(m_popServer);
   
-  PR_FREEIF(m_mailDirectory);
-  m_popServer->GetRootFolderPath(&m_mailDirectory);
-
   return NS_OK;
 }
 

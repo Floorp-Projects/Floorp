@@ -40,7 +40,9 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD SetUserAuthenticated(PRBool authed);
-    NS_IMETHOD SetMailAccountURL(const char* urlString);
+    NS_IMETHOD GetUserAuthenticated(PRBool *authed);
+    NS_IMETHOD SetMailAccountURL(char* urlString);
+    NS_IMETHOD GetMailAccountURL(char* *urlString);
     NS_IMETHOD BeginMailDelivery(PRBool *aBool);
     NS_IMETHOD EndMailDelivery();
     NS_IMETHOD AbortMailDelivery();
@@ -70,7 +72,6 @@ protected:
     PRBool m_senderAuthed;
     char* m_outputBuffer;
     PRInt32 m_outputBufferSize;
-    char* m_mailDirectory;
     nsIPop3IncomingServer *m_popServer;
 	nsParseNewMailState	*m_newMailParser;
 #ifdef DEBUG
