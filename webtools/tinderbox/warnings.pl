@@ -71,7 +71,7 @@ $source_root_pat = '^.*/mozilla/';
   'by \`nsHTML(?:Anchor|[^:]*Element)::(?:Set|Get)Attribute', # kipp says this is bogus
 );
 @ignore_match = (
-  { warning=>'Statement with no effect', source=>'(?:JS_|PR_)?ASSERT'},
+  { warning=>'statement with no effect', source=>'(?:JS_|PR_)?ASSERT'},
 );
 $ignore_pat       = "(?:".join('|',@ignore).")";
 
