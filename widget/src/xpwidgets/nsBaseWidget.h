@@ -79,7 +79,9 @@ public:
   virtual nsIDeviceContext* GetDeviceContext();
   virtual nsIAppShell *   GetAppShell();
   virtual nsIToolkit*     GetToolkit();  
-  NS_IMETHOD              SetModal(void); 
+  NS_IMETHOD              SetModal(PRBool aModal); 
+  NS_IMETHOD              ModalEventFilter(PRBool aRealEvent, void *aEvent,
+                            PRBool *aForWindow);
   NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
   NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
   NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
