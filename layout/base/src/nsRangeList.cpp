@@ -25,6 +25,7 @@
 #include "nsIDOMRange.h"
 #include "nsIFrameSelection.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMSelectionListener.h"
 #include "nsIFocusTracker.h"
 #include "nsIComponentManager.h"
 #include "nsLayoutCID.h"
@@ -34,11 +35,14 @@
 #include "nsRange.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMSelectionListener.h"
+
+#include "nsIScriptObjectOwner.h"
+#include "nsIScriptGlobalObject.h"
 
 static NS_DEFINE_IID(kIEnumeratorIID, NS_IENUMERATOR_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFrameSelectionIID, NS_IFRAMESELECTION_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
@@ -66,7 +70,8 @@ enum {FORWARD  =1, BACKWARD = 0};
 class nsRangeListIterator;
 
 class nsRangeList : public nsIFrameSelection,
-                    public nsIDOMSelection
+                    public nsIDOMSelection,
+                    public nsIScriptObjectOwner
 {
 public:
   /*interfaces for addref and release and queryinterface*/
@@ -87,8 +92,8 @@ public:
   NS_IMETHOD    GetFocusNode(nsIDOMNode** aFocusNode);
   NS_IMETHOD    GetFocusOffset(PRInt32* aFocusOffset);
   NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);
-  NS_IMETHOD    GetAnchorNodeAndOffset(nsIDOMNode** aAnchorNode, PRInt32* aOffset);
-  NS_IMETHOD    GetFocusNodeAndOffset(nsIDOMNode** aFocusNode, PRInt32* aOffset);
+  NS_IMETHOD    GetRangeCount(PRInt32* aRangeCount);
+  NS_IMETHOD    GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn);
   NS_IMETHOD    ClearSelection();
   NS_IMETHOD    Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD    Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
@@ -101,6 +106,11 @@ public:
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener);
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove);
 /*END nsIDOMSelection interface implementations*/
+
+/*BEGIN nsIScriptObjectOwner interface implementations*/
+  NS_IMETHOD 		GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD 		SetScriptObject(void *aScriptObject);
+/*END nsIScriptObjectOwner interface implementations*/
 
   nsRangeList();
   virtual ~nsRangeList();
@@ -147,9 +157,11 @@ private:
   PRUint32 mBatching;
   PRBool mChangesDuringBatching;
   PRBool mNotifyFrames;
-
-
+  
   nsCOMPtr<nsISupportsArray> mSelectionListeners;
+  
+  // for nsIScriptContextOwner
+  void*		mScriptObject;
 };
 
 class nsRangeListIterator : public nsIBidirectionalEnumerator
@@ -358,9 +370,11 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 ////////////END nsIRangeListIterator methods
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 ////////////BEGIN nsRangeList methods
-
-
 
 nsRangeList::nsRangeList()
 {
@@ -370,6 +384,7 @@ nsRangeList::nsRangeList()
   mBatching = 0;
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
+  mScriptObject = nsnull;
 }
 
 
@@ -419,6 +434,12 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIFrameSelectionIID)) {
     nsIFrameSelection* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    nsIScriptObjectOwner* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -542,6 +563,9 @@ nsRangeList::Clear()
 
 
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 //BEGIN nsIFrameSelection methods
 
@@ -1214,10 +1238,11 @@ nsRangeList::NotifySelectionListeners()
 
 //END nsIFrameSelection methods
 
-//BEGIN nsIDOMSelection interface implementations
 #ifdef XP_MAC
 #pragma mark -
 #endif
+
+//BEGIN nsIDOMSelection interface implementations
 
 /** ClearSelection zeroes the selection
  */
@@ -1320,6 +1345,9 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 NS_IMETHODIMP
 nsRangeList::GetIsCollapsed(PRBool* aIsCollapsed)
 {
+	if (!aIsCollapsed)
+		return NS_ERROR_NULL_POINTER;
+		
   if (!mRangeArray || (mRangeArray->Count() == 0))
   {
     *aIsCollapsed = PR_TRUE;
@@ -1342,6 +1370,51 @@ nsRangeList::GetIsCollapsed(PRBool* aIsCollapsed)
   }
                              
   return (range->GetIsCollapsed(aIsCollapsed));
+}
+
+
+NS_IMETHODIMP
+nsRangeList::GetRangeCount(PRInt32* aRangeCount)
+{
+	if (!aRangeCount)
+		return NS_ERROR_NULL_POINTER;
+
+	if (mRangeArray)
+	{
+		*aRangeCount = mRangeArray->Count();
+	}
+	else
+	{
+		*aRangeCount = 0;
+	}
+	
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRangeList::GetRangeAt(PRInt32 aIndex, nsIDOMRange** aReturn)
+{
+	if (!aReturn)
+		return NS_ERROR_NULL_POINTER;
+
+	if (!mRangeArray)
+		return NS_ERROR_INVALID_ARG;
+		
+	if (aIndex < 0 || aIndex >= mRangeArray->Count())
+		return NS_ERROR_INVALID_ARG;
+
+	// the result of all this is one additional ref on the item, as
+	// the caller would expect.
+	//
+	// ElementAt addrefs once
+	// do_QueryInterface addrefs once
+	// when the COMPtr goes out of scope, it releases.
+	//
+	nsISupports*	element = mRangeArray->ElementAt((PRUint32)aIndex);
+	nsCOMPtr<nsIDOMRange>	foundRange = do_QueryInterface(element);
+	*aReturn = foundRange;
+	
+	return NS_OK;
 }
 
 /*
@@ -1520,37 +1593,34 @@ nsRangeList::DeleteFromDocument()
 }
 
 
-/*
- * Return the anchor node and offset for the anchor point
- */
-NS_IMETHODIMP
-nsRangeList::GetAnchorNodeAndOffset(nsIDOMNode** outAnchorNode, PRInt32 *outAnchorOffset)
-{
-	if (!outAnchorNode || !outAnchorOffset)
-		return NS_ERROR_NULL_POINTER;
+//END nsIDOMSelection interface implementations
 
-	*outAnchorNode = mAnchorNode;
-  *outAnchorOffset = mAnchorOffset;
-	NS_IF_ADDREF(*outAnchorNode);
-	return NS_OK;
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+// BEGIN nsIScriptContextOwner interface implementations
+NS_IMETHODIMP
+nsRangeList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  nsIScriptGlobalObject *globalObj = aContext->GetGlobalObject();
+
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptSelection(aContext, (nsISupports *)(nsIDOMSelection *)this, globalObj, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+
+  NS_RELEASE(globalObj);
+  return res;
 }
 
-
-/*
- * Return the anchor node and offset for the focus point
- */
 NS_IMETHODIMP
-nsRangeList::GetFocusNodeAndOffset(nsIDOMNode** outFocusNode, PRInt32 *outFocusOffset)
+nsRangeList::SetScriptObject(void *aScriptObject)
 {
-	if (!outFocusNode || !outFocusOffset)
-		return NS_ERROR_NULL_POINTER;
-	
-  *outFocusNode = mFocusNode;
-  *outFocusOffset = mFocusOffset;  
-  NS_IF_ADDREF(*outFocusNode);
+  mScriptObject = aScriptObject;
   return NS_OK;
 }
 
-
-//END nsIDOMSelection interface implementations
+// END nsIScriptContextOwner interface implementations
 

@@ -32,8 +32,11 @@
 #include "nsIDOMText.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMNodeList.h"
+#include "nsIScriptGlobalObject.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+
 nsVoidArray* nsRange::mStartAncestors = nsnull;      
 nsVoidArray* nsRange::mEndAncestors = nsnull;        
 nsVoidArray* nsRange::mStartAncestorOffsets = nsnull; 
@@ -247,7 +250,8 @@ nsRange::nsRange() :
   mStartParent(),
   mStartOffset(0),
   mEndParent(),
-  mEndOffset(0)
+  mEndOffset(0),
+  mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
 } 
@@ -276,7 +280,7 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kISupportsIID)) 
   {
-    *aInstancePtrResult = (void*)(nsISupports*)this;
+    *aInstancePtrResult = (void*)(nsISupports*)(nsIDOMRange *)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -286,7 +290,13 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  return !NS_OK;
+  if (aIID.Equals(kIScriptObjectOwnerIID)) {
+    nsIScriptObjectOwner* tmp = this;
+    *aInstancePtrResult = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
 }
 
 /******************************************************
@@ -1488,8 +1498,6 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   parent->GetRangeList(theRangeList);
   if (!theRangeList) return NS_OK;
   
-  PRInt32  loop = 0;
-  nsCOMPtr<nsRange> theRange;
   nsCOMPtr<nsIDOMNode> domNode;
   nsresult res;
   
@@ -1497,7 +1505,9 @@ nsresult nsRange::OwnerChildInserted(nsIContent* aParentNode, PRInt32 aOffset)
   if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  while (theRange = do_QueryInterface(NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))) 
+  PRInt32		loop = 0;
+  nsRange*	theRange; 
+  while ((theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) != nsnull)
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1534,8 +1544,6 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   parent->GetRangeList(theRangeList);
   if (!theRangeList) return NS_OK;
   
-  PRInt32  loop = 0;
-  nsCOMPtr<nsRange> theRange;
   nsCOMPtr<nsIDOMNode> domNode;
   nsresult res;
   
@@ -1543,8 +1551,9 @@ nsresult nsRange::OwnerChildRemoved(nsIContent* aParentNode, PRInt32 aOffset, ns
   if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  // any ranges that are in the parentNode may need to have offsets updated
-  while (theRange = do_QueryInterface(NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop))))) 
+  PRInt32		loop = 0;
+  nsRange*	theRange; 
+  while ((theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) != nsnull)
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1610,8 +1619,6 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   aTextNode->GetRangeList(theRangeList);
   // the caller already checked to see if there was a range list
   
-  PRInt32  loop = 0;
-  nsCOMPtr<nsRange> theRange;
   nsCOMPtr<nsIDOMNode> domNode;
   nsresult res;
   
@@ -1619,8 +1626,9 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   if (NS_FAILED(res))  return res;
   if (!domNode) return NS_ERROR_UNEXPECTED;
 
-  // any ranges that are in the textNode may need to have offsets updated
-  while (theRange = do_QueryInterface(NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))))
+  PRInt32		loop = 0;
+  nsRange*	theRange; 
+  while ((theRange = NS_STATIC_CAST(nsRange*, (theRangeList->ElementAt(loop)))) != nsnull)
   {
     // sanity check - do range and content agree over ownership?
     res = theRange->ContentOwnsUs(domNode);
@@ -1661,3 +1669,28 @@ nsresult nsRange::TextOwnerChanged(nsIContent* aTextNode, PRInt32 aStartChanged,
   
   return NS_OK;
 }
+
+// BEGIN nsIScriptContextOwner interface implementations
+NS_IMETHODIMP
+nsRange::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  nsIScriptGlobalObject *globalObj = aContext->GetGlobalObject();
+
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptRange(aContext, (nsISupports *)(nsIDOMRange *)this, globalObj, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+
+  NS_RELEASE(globalObj);
+  return res;
+}
+
+NS_IMETHODIMP
+nsRange::SetScriptObject(void *aScriptObject)
+{
+  mScriptObject = aScriptObject;
+  return NS_OK;
+}
+
+// END nsIScriptContextOwner interface implementations

@@ -25,10 +25,12 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
+#include "nsIScriptObjectOwner.h"
 
 class nsVoidArray;
 
-class nsRange : public nsIDOMRange
+class nsRange : public nsIDOMRange,
+                public nsIScriptObjectOwner
 {
 public:
   NS_DECL_ISUPPORTS
@@ -79,6 +81,11 @@ public:
 
   NS_IMETHOD    ToString(nsString& aReturn);
   
+/*BEGIN nsIScriptObjectOwner interface implementations*/
+  NS_IMETHOD 		GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD 		SetScriptObject(void *aScriptObject);
+/*END nsIScriptObjectOwner interface implementations*/
+
   // nsRange interface extensions
   
   static NS_METHOD    OwnerGone(nsIContent* aParentNode);
@@ -142,6 +149,10 @@ public:
   nsresult      RemoveFromListOf(nsCOMPtr<nsIDOMNode> aNode);
  
   nsresult      ContentOwnsUs(nsCOMPtr<nsIDOMNode> domNode);
+  
+  protected:
+  	void*				mScriptObject;
+  	
 };
 
 // Make a new nsIDOMRange object
