@@ -58,7 +58,7 @@ class mozILineTermAux : public mozILineTerm {
 
   NS_IMETHOD Write(const PRUnichar *buf, const PRUnichar* aCookie) = 0;
 
-  NS_IMETHOD Read(PRInt32 *opcodes,
+  NS_IMETHOD Read(PRInt32 *opcodes, PRInt32 *opvals,
                   PRInt32 *buf_row, PRInt32 *buf_col,
                   const PRUnichar* aCookie,
                   PRUnichar **_retval) = 0;
@@ -102,14 +102,15 @@ class mozILineTermAux : public mozILineTerm {
 
   /** Read output data and style strings and parameters from LineTerm
    * @param opcodes (output) output data descriptor bits (see lineterm.h)
+   * @param opvals (output) output data value(s)
    * @param buf_row (output) row number (>=-1)
-                   (-1 denotes line mode and 0 represents bottom row)
+   *                (-1 denotes line mode and 0 represents bottom row)
    * @param buf_col (output) column number (>=0)
    * @param _retval (output) success code
    * @param retstyle (output) output style string
    * @return output data string from LineTerm
    */
-  NS_IMETHOD ReadAux(PRInt32 *opcodes,
+  NS_IMETHOD ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
                      PRInt32 *buf_row, PRInt32 *buf_col,
                      PRUnichar **_retval, PRUnichar **retstyle) = 0;
 };

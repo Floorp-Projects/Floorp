@@ -66,14 +66,15 @@ interface mozILineTerm : nsISupports
 
   /** Read output data string and parameters from LineTerm (command output)
    * @param opcodes (output) output data descriptor bits (see lineterm.h)
+   * @param opvals (output) output data value(s)
    * @param buf_row (output) row number (>=-1)
-                   (-1 denotes line mode and 0 represents bottom row)
+   *               (-1 denotes line mode and 0 represents bottom row)
    * @param buf_col (output) column number (>=0)
    * @param aCookie document.cookie string for authentication
    * @return output data string from LineTerm
    */
-  wstring Read(out PRInt32 opcodes, out PRInt32 buf_row,
-               out PRInt32 buf_col, in wstring aCookie);
+  wstring Read(out PRInt32 opcodes, out PRInt32 opvals,
+               out PRInt32 buf_row, out PRInt32 buf_col, in wstring aCookie);
 };
 
 

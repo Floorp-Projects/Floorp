@@ -535,7 +535,7 @@ NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
 }
 
 
-NS_IMETHODIMP mozLineTerm::Read(PRInt32 *opcodes,
+NS_IMETHODIMP mozLineTerm::Read(PRInt32 *opcodes, PRInt32 *opvals,
                                 PRInt32 *buf_row, PRInt32 *buf_col,
                                 const PRUnichar* aCookie,
                                 PRUnichar **_retval)
@@ -551,13 +551,13 @@ NS_IMETHODIMP mozLineTerm::Read(PRInt32 *opcodes,
     return NS_ERROR_FAILURE;
   }
 
-  return ReadAux(opcodes, buf_row, buf_col, _retval, nsnull);
+  return ReadAux(opcodes, opvals, buf_row, buf_col, _retval, nsnull);
 }
 
 
 /** Reads a line from LTERM and returns it as a string (may be null string)
  */
-NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes,
+NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
                                    PRInt32 *buf_row, PRInt32 *buf_col,
                                    PRUnichar **_retval, PRUnichar **retstyle)
 {
@@ -569,7 +569,7 @@ NS_IMETHODIMP mozLineTerm::ReadAux(PRInt32 *opcodes,
   XMLT_LOG(mozLineTerm::ReadAux,30,("\n"));
 
   retCode = lterm_read(mLTerm, 0, ubuf, MAXCOL-1,
-                       ustyle, opcodes,
+                       ustyle, opcodes, opvals,
                        buf_row, buf_col, &cursor_row, &cursor_col);
   if (retCode < 0)
     return NS_ERROR_FAILURE;

@@ -63,7 +63,7 @@ public:
 
   NS_IMETHOD Write(const PRUnichar *buf, const PRUnichar* aCookie);
 
-  NS_IMETHOD Read(PRInt32 *opcodes,
+  NS_IMETHOD Read(PRInt32 *opcodes, PRInt32 *opvals,
                   PRInt32 *buf_row, PRInt32 *buf_col,
                   const PRUnichar* aCookie,
                   PRUnichar **_retval);
@@ -83,7 +83,7 @@ public:
 
   NS_IMETHOD CloseAllAux(void);
 
-  NS_IMETHOD ReadAux(PRInt32 *opcodes,
+  NS_IMETHOD ReadAux(PRInt32 *opcodes, PRInt32 *opvals,
                      PRInt32 *buf_row, PRInt32 *buf_col,
                      PRUnichar **_retval, PRUnichar **retstyle);
   // others

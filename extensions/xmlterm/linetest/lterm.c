@@ -86,13 +86,16 @@ typedef unsigned int nfds_t;
 */
 
 /* GLOBAL VARIABLES */
-static int lineFlag = 0;
+static int ncursesFlag = 0;
 static int ptyFlag = 1;
 static int debugFlag = 0;
 static int ltermNumber = -1;
 static SCREEN  *termScreen = NULL;
 static char *ttyDevice;
 static char *errDevice;
+
+static int screenMode = 0;
+static int topScrollRow, botScrollRow;
 
 static struct termios tios;    /* TERMIOS structure */
 
@@ -114,7 +117,7 @@ int main(int argc, char *argv[]) {
   char *defaultCommand[] = {(char *)getenv("SHELL"), "-i", NULL};
 
   /* Process command line arguments */
-  lineFlag = 0;
+  ncursesFlag = 0;
   ptyFlag = 1;
   debugFlag = 0;
   processType = LTERM_DETERMINE_PROCESS;
@@ -122,17 +125,15 @@ int main(int argc, char *argv[]) {
   errDevice = NULL;
   promptStr = "#$%>?";  /* JUST A LIST OF DELIMITERS AT PRESENT */
 
-  lineFlag = 1;         /* Temporary */
-
   argNo = 1;
   while (argNo < argc) {
 
     if ((strcmp(argv[argNo],"-h") == 0)||(strcmp(argv[argNo],"-help") == 0)) {
-      fprintf(stderr, "Usage: %s [-help] [-line] [-nopty] [-debug] [-tcsh / -bash] [-tty /dev/ttyname] [-err /dev/ttyname] [-prompt <prompt>] <command> ...\n", argv[0]);
+      fprintf(stderr, "Usage: %s [-help] [-ncurses] [-nopty] [-debug] [-tcsh / -bash] [-tty /dev/ttyname] [-err /dev/ttyname] [-prompt <prompt>] <command> ...\n", argv[0]);
       exit(0);
 
-    } else if (strcmp(argv[argNo],"-line") == 0) {
-      lineFlag = 1;
+    } else if (strcmp(argv[argNo],"-ncurses") == 0) {
+      ncursesFlag = 1;
       argNo++;
 
     } else if (strcmp(argv[argNo],"-nopty") == 0) {
@@ -218,30 +219,8 @@ int main(int argc, char *argv[]) {
 
   signal(SIGINT, finish); /* Interrupt handler */
 
-  if (lineFlag) {
-    /* Line mode */
-
-    /* Get terminal attributes */
-    if (tcgetattr(0, &tios) == -1) {
-      fprintf(stderr, "lterm: Failed to get TTY attributes\n");
-      exit(-1);
-    }
-
-    /* Disable signals, canonical mode processing, and echo  */
-    tios.c_lflag &= ~(ISIG | ICANON | ECHO );
-
-    /* set MIN=1 and TIME=0 */
-    tios.c_cc[VMIN] = 1;
-    tios.c_cc[VTIME] = 0;
-
-    /* Set terminal attributes */
-    if (tcsetattr(0, TCSAFLUSH, &tios) == -1) {
-      fprintf(stderr, "lterm: Failed to set TTY attributes\n");
-      exit(-1);
-    }
-
-  } else {
-    /* Screen mode */
+  if (ncursesFlag) {
+    /* NCURSES mode */
     if (ttyDevice == NULL) {
       /* Initialize screen on controlling TTY */
       initscr();
@@ -268,6 +247,29 @@ int main(int argc, char *argv[]) {
 #endif
 
     clear(); /* Clear screen */
+
+  } else {
+    /* XTERM mode */
+
+    /* Get terminal attributes */
+    if (tcgetattr(0, &tios) == -1) {
+      fprintf(stderr, "lterm: Failed to get TTY attributes\n");
+      exit(-1);
+    }
+
+    /* Disable signals, canonical mode processing, and echo  */
+    tios.c_lflag &= ~(ISIG | ICANON | ECHO );
+
+    /* set MIN=1 and TIME=0 */
+    tios.c_cc[VMIN] = 1;
+    tios.c_cc[VTIME] = 0;
+
+    /* Set terminal attributes */
+    if (tcsetattr(0, TCSAFLUSH, &tios) == -1) {
+      fprintf(stderr, "lterm: Failed to set TTY attributes\n");
+      exit(-1);
+    }
+
   }
 
   /* Initialize LTERM operations */
@@ -285,8 +287,6 @@ int main(int argc, char *argv[]) {
 
   options = 0;
   if (!ptyFlag) options |= LTERM_NOPTY_FLAG;
-
-  // options |= LTERM_NOSTDERR_FLAG;
 
   ltermNumber = lterm_new();
   retValue = lterm_open(ltermNumber, commandArgs, NULL, uregexp,
@@ -327,7 +327,7 @@ int main(int argc, char *argv[]) {
 
 void finish(int sig)
 {
-  if (!lineFlag) {
+  if (ncursesFlag) {
     endwin(); /* Close window */
     if (termScreen != NULL)
       delscreen(termScreen);
@@ -344,7 +344,9 @@ void finish(int sig)
   exit(0);
 }
 
-/** Output an Unicode message to specified file descriptor. */
+/** Output an Unicode message to specified file descriptor or
+ * to NCURSES window if fd == -1;
+ */
 void writeUnicode(int fd, const UNICHAR *buf, int count)
 {
   char str[MAXCOL];
@@ -369,9 +371,13 @@ void writeUnicode(int fd, const UNICHAR *buf, int count)
 
   if (k == 0) return;
 
-  if (write(fd, str, k) != k) {
-    fprintf(stderr, "writeUnicode: Error in writing to FD %d\n", fd);
-    exit(-1);
+  if (fd >= 0) {
+    if (write(fd, str, k) != k) {
+      fprintf(stderr, "writeUnicode: Error in writing to FD %d\n", fd);
+      exit(-1);
+    }
+  } else {
+    addnstr(str, k);
   }
 }
 
@@ -421,32 +427,37 @@ void input_handler(int *plterm)
   UNICHAR uch;
   int n_written;
 
-  if (lineFlag) {
-
-    for (;;) {
-      /* Read a character from TTY (raw mode) */
+  for (;;) {
+    /* Read a character from TTY (raw mode) */
+    if (ncursesFlag) {
+      ch = getch();
+      if (ch == '\r')
+        ch = '\n';
+    } else {
       ch = getchar();
+    }
 
-      if (ch == 0) {
-        fprintf(stderr, "input_handler-00: NUL character read; terminating\n");
-        break;
-      }
+    /* fprintf(stderr, "input_handler-00: ch=%d\n", ch); */
 
-      uch = (UNICHAR) ch;
-      n_written = lterm_write(*plterm, &uch, 1, LTERM_WRITE_PLAIN_INPUT);
+    if (ch == 0) {
+      fprintf(stderr, "input_handler-00: NUL character read; terminating\n");
+      break;
+    }
 
-      /* Exit loop if TTY has been closed */
-      if (n_written == -2) {
-        if (errDevice != NULL)
-          fprintf(stderr, "input_handler-00: pseudo-TTY has been closed\n", *plterm);
-        break;
-      }
+    uch = (UNICHAR) ch;
+    n_written = lterm_write(*plterm, &uch, 1, LTERM_WRITE_PLAIN_INPUT);
 
-      if (n_written < 0) {
-        fprintf(stderr, "input_handler: Error %d return from lterm_write\n",
-                         n_written);
-        return;
-      }
+    /* Exit loop if TTY has been closed */
+    if (n_written == -2) {
+      if (errDevice != NULL)
+        fprintf(stderr, "input_handler-00: pseudo-TTY has been closed\n", *plterm);
+      break;
+    }
+
+    if (n_written < 0) {
+      fprintf(stderr, "input_handler: Error %d return from lterm_write\n",
+              n_written);
+      return;
     }
   }
 
@@ -465,7 +476,7 @@ void *output_handler(void *arg)
   int timeout = -1;
   UNICHAR buf[MAXCOL];
   UNISTYLE style[MAXCOL];
-  int n_read, opcodes, buf_row, buf_col, cursor_row, cursor_col;
+  int n_read, opcodes, opvals, buf_row, buf_col, cursor_row, cursor_col;
   int xmax, ymax, x, y, c;
   MEVENT mev;
 
@@ -473,18 +484,22 @@ void *output_handler(void *arg)
     fprintf(stderr, "output_handler-00: thread ID = %d, LTERM=%d\n",
                     pthread_self(), *plterm);
 
-  if (!lineFlag) {
-    /* Get screen size */
+  /* Get screen size */
+  if (ncursesFlag) {
     getmaxyx(stdscr, ymax, xmax);
 
-    if (errDevice != NULL)
-      fprintf(stderr, "output_handler-00: screen xmax = %d, ymax = %d\n",
-              xmax,ymax);
+  } else {
+    ymax = 24;
+    xmax = 80;
   }
+
+  if (errDevice != NULL)
+    fprintf(stderr, "output_handler-00: screen xmax = %d, ymax = %d\n",
+            xmax,ymax);
 
   for (;;) {
     n_read = lterm_read(*plterm, timeout, buf, MAXCOL,
-                        style, &opcodes,
+                        style, &opcodes, &opvals,
                         &buf_row, &buf_col, &cursor_row, &cursor_col);
 
     if (n_read == -1) {
@@ -503,8 +518,8 @@ void *output_handler(void *arg)
     }
 
     if (debugFlag) {
-      fprintf(stderr, "output_handler-00: n_read=%d, opcodes=%x, buf_row/col=%d/%d, cursor_row/col=%d/%d\n",
-            n_read, opcodes, buf_row, buf_col, cursor_row, cursor_col);
+      fprintf(stderr, "output_handler-00: n_read=%d, opcodes=%x, opvals=%d, buf_row/col=%d/%d, cursor_row/col=%d/%d\n",
+            n_read, opcodes, opvals, buf_row, buf_col, cursor_row, cursor_col);
       fprintf(stderr, "output_handler-00: U(%d): ", n_read);
       printUnicode(stderr, buf, n_read, 1);
       fprintf(stderr, "\n");
@@ -515,18 +530,144 @@ void *output_handler(void *arg)
       if (debugFlag)
         fprintf(stderr, "output_handler-00: STREAMDATA\n");
 
+
     } else if (opcodes & LTERM_SCREENDATA_CODE) {
       /* Screen data */
+
+      if (!screenMode) {
+        screenMode = 1;
+        topScrollRow = ymax-1;
+        botScrollRow = 0;
+      }
+
       if (debugFlag)
-        fprintf(stderr, "output_handler-00: SCREENDATA\n");
+        fprintf(stderr, "output_handler-00: SCREENDATA, topScrollRow=%d, botScrollRow=%d\n", topScrollRow, botScrollRow);
+
+      if (ncursesFlag) {
+        /* NCURSES mode */
+
+        if (opcodes & LTERM_CLEAR_CODE) {
+          clear();
+
+        } else if (opcodes & LTERM_INSERT_CODE) {
+          if ((botScrollRow > 0) && (opvals > 0)) {
+            move(ymax-botScrollRow-opvals, 0);
+            insdelln(-opvals);
+          }
+
+          move(ymax-1-buf_row, 0);
+          insdelln(opvals);
+
+        } else if (opcodes & LTERM_DELETE_CODE) {
+
+          move(ymax-1-buf_row, 0);
+          insdelln(-opvals);
+
+          if ((botScrollRow > 0) && (opvals > 0)) {
+            move(ymax-botScrollRow-opvals, 0);
+            insdelln(opvals);
+          }
+
+        } else if (opcodes & LTERM_SCROLL_CODE) {
+          topScrollRow = opvals;
+          botScrollRow = buf_row;
+
+        } else if (n_read > 0) {
+          /* Data available for display */
+          move(ymax-1-buf_row, buf_col);
+          clrtoeol();
+
+          if (style[0] != LTERM_STDOUT_STYLE)
+            attr_on(A_REVERSE, NULL);
+
+          writeUnicode(-1, buf, n_read);
+
+          if (style[0] != LTERM_STDOUT_STYLE)
+            attr_off(A_REVERSE, NULL);
+        }
+
+        /* Position cursor */
+        move(ymax-1-cursor_row, cursor_col);
+
+        refresh();
+
+      } else {
+        /* XTERM MODE */
+        char esc_seq[21];
+
+        if (opcodes & LTERM_CLEAR_CODE) {
+          /* Clear screen */
+          write(1, "\033[H\033[2J", 7);
+
+        } else if (opcodes & LTERM_INSERT_CODE) {
+          /* Insert lines */
+          sprintf(esc_seq, "\033[%d;%dH", ymax-buf_row, buf_col+1);
+          write(1, esc_seq, strlen(esc_seq));
+
+          sprintf(esc_seq, "\033[%dL", opvals);
+          write(1, esc_seq, strlen(esc_seq));
+
+        } else if (opcodes & LTERM_DELETE_CODE) {
+          /* Delete lines */
+          sprintf(esc_seq, "\033[%d;%dH", ymax-buf_row, buf_col+1);
+          write(1, esc_seq, strlen(esc_seq));
+
+          sprintf(esc_seq, "\033[%dM", opvals);
+          write(1, esc_seq, strlen(esc_seq));
+
+        } else if (opcodes & LTERM_SCROLL_CODE) {
+          /* Set scrolling region */
+          sprintf(esc_seq, "\033[%d;%dr", ymax-opvals, ymax-buf_row);
+          write(1, esc_seq, strlen(esc_seq));
+
+        } else if (n_read > 0) {
+          /* Data available for display */
+          sprintf(esc_seq, "\033[%d;%dH", ymax-buf_row, buf_col+1);
+          write(1, esc_seq, strlen(esc_seq));
+
+          if (style[0] != LTERM_STDOUT_STYLE)
+            write(1, "\033[7m", 4);
+
+          writeUnicode(1, buf, n_read);
+
+          if (style[0] != LTERM_STDOUT_STYLE)
+            write(1, "\033[27m", 5);
+        }
+
+        sprintf(esc_seq, "\033[%d;%dH", ymax-cursor_row, cursor_col+1);
+        write(1, esc_seq, strlen(esc_seq));
+      }
 
     } else if (opcodes & LTERM_LINEDATA_CODE) {
       /* Line data */
       if (debugFlag)
         fprintf(stderr, "output_handler-00: LINEDATA\n");
 
-      if (lineFlag) {
+      if (screenMode)
+        screenMode = 0;
+
+      if (ncursesFlag) {
+        /* NCURSES mode */
+
+        /* Move cursor to bottom of screen, clear line and display line */
+        move(ymax-1,0);
+        clrtoeol();
+        writeUnicode(-1, buf, n_read);
+        move(ymax-1,cursor_col);
+
+        if (opcodes & LTERM_NEWLINE_CODE) {
+          move(0,0);
+          insdelln(-1);
+          move(ymax-1,0);
+        }
+
+        refresh();
+
+      } else {
+        /* Screen mode */
         int j;
+
+        /* Clear line */
         write(1, "\033[2K", 4);
         write(1, "\r", 1);
 

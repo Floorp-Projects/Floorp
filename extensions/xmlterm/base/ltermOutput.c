@@ -52,17 +52,19 @@ static int ltermPromptLocate(struct lterms *lts);
 
 
 /** Processes output from decoded output buffer and returns *opcodes:
- * OPCODES ::= SCREENDATA BELL? (  CLEAR
- *                               | INSERT MOVEDOWN?
- *                               | DELETE MOVEDOWN?
- *                               | OUTPUT )
+ * OPCODES ::= SCREENDATA BELL? ( CLEAR | INSERT | DELETE | SCROLL )?
  * if ScreenMode data is being returned.
  * OPCODES ::= LINEDATA BELL? (  CLEAR
  *                             | OUTPUT NEWLINE?)
  * if LineMode data is being returned.
+ * OPVALS contains return value(s) for specific screen operations
+ *  such as INSERT, DELETE, and SCROLL.
+ * OPROW contains the row value for specific screen operations such as
+ *  INSERT, DELETE, and SCROLL (or -1, cursor row is to be used).
  * @return 0 on success and -1 on error.
  */
-int ltermProcessOutput(struct lterms *lts, int *opcodes)
+int ltermProcessOutput(struct lterms *lts, int *opcodes, int *opvals,
+                       int *oprow)
 {
   struct LtermOutput *lto = &(lts->ltermOutput);
   UNICHAR uch;
@@ -76,7 +78,11 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes)
   LTERM_LOG(ltermProcessOutput,32, ("lts->commandNumber=%d\n",
                                       lts->commandNumber));
 
+  /* Set default returned opcodes, opvals, oprow */
   *opcodes = 0;
+  *opvals = 0;
+  *oprow = -1;
+
   charIndex = 0;
   bellFlag = 0;
 
@@ -95,7 +101,7 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes)
       returnCode = ltermProcessEscape(lts, lto->decodedOutput+charIndex,
                                       lto->decodedChars-charIndex,
                                       lto->decodedStyle+charIndex,
-                                      &consumedChars, opcodes);
+                                      &consumedChars, opcodes, opvals, oprow);
       if (returnCode < 0)
         return -1;
 
@@ -103,7 +109,7 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes)
         /* Incomplete escape sequence */
         lto->incompleteEscapeSequence = 1;
         if (lto->outputMode == LTERM1_SCREEN_MODE)
-          *opcodes = LTERM_SCREENDATA_CODE | LTERM_OUTPUT_CODE;
+          *opcodes = LTERM_SCREENDATA_CODE;
         else
           *opcodes = LTERM_LINEDATA_CODE | LTERM_OUTPUT_CODE;
       }
@@ -123,7 +129,7 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes)
 
         if (lto->insertMode) {
           /* Insert blank character at cursor position */
-          if (ltermInsDelEraseChar(lts, 1, LTERM_INSERT_CHAR) != 0)
+          if (ltermInsDelEraseChar(lts, 1, LTERM_INSERT_ACTION) != 0)
             return -1;
         }
 
@@ -143,14 +149,6 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes)
         if (lto->cursorCol < lts->nCols-1) {
           /* Move cursor right */
           lto->cursorCol++;
-
-          /* Increase row column count, if necessary */
-          if (lto->rowCols[lto->cursorRow] < lto->cursorCol)
-            lto->rowCols[lto->cursorRow] = lto->cursorCol;
-
-        } else {
-          /* Set row column count to maximum value */
-          lto->rowCols[lto->cursorRow] = lts->nCols;
         }
 
       } else {
@@ -166,6 +164,29 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes)
         case U_BEL:                       /* Bell */
           LTERM_LOG(ltermProcessOutput,32,("************ Screen mode, BELL\n"));
           bellFlag = 1;
+          break;
+
+        case U_CRETURN:                   /* Carriage return */
+          lto->cursorCol = 0;
+          break;
+
+        case U_LINEFEED:                  /* Newline */
+          LTERM_LOG(ltermProcessOutput,32,("************ Screen mode, NEWLINE\n\n"));
+
+          *opcodes =  LTERM_SCREENDATA_CODE;
+
+          if (lto->cursorRow > lto->botScrollRow) {
+            /* Not bottom scrolling line; simply move cursor down one row */
+            lto->cursorRow--;
+
+          } else {
+            /* Delete top scrollable line, scrolling up */
+            if (ltermInsDelEraseLine(lts, 1, lto->topScrollRow, LTERM_DELETE_ACTION) != 0)
+              return -1;
+            *opcodes |= LTERM_DELETE_CODE;
+            *opvals = 1;
+            *oprow = lto->topScrollRow;
+          }
           break;
 
         default:
@@ -204,7 +225,7 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes)
 
           if (lto->insertMode) {
             /* Insert blank character at cursor position */
-            if (ltermInsDelEraseChar(lts, 1, LTERM_INSERT_CHAR) != 0)
+            if (ltermInsDelEraseChar(lts, 1, LTERM_INSERT_ACTION) != 0)
               return -1;
           }
 
@@ -285,7 +306,7 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes)
     /* All output processed; without any special terminating condition */
     if (lto->outputMode == LTERM1_SCREEN_MODE) {
       /* Full screen mode */
-      *opcodes = LTERM_SCREENDATA_CODE | LTERM_OUTPUT_CODE;
+      *opcodes = LTERM_SCREENDATA_CODE;
 
     } else {
       /* Line mode */
@@ -402,11 +423,16 @@ int ltermClearOutputScreen(struct lterms *lts)
     }
   }  
 
+  /* Position cursor at home */
   lto->cursorRow = lts->nRows - 1;
   lto->cursorCol = 0;
 
+  /* Blank out entire screen */
+  if (ltermInsDelEraseLine(lts, lts->nRows, lts->nRows-1, LTERM_ERASE_ACTION) != 0)
+    return -1;
+
+  /* No rows modified yet */
   for (j=0; j<lts->nRows; j++) {
-    lto->rowCols[j] = 0;
     lto->modifiedCol[j] = -1;
   }
 
@@ -474,14 +500,31 @@ int ltermSwitchToScreenMode(struct lterms *lts)
 
   LTERM_LOG(ltermSwitchToScreenMode,40,("\n"));
 
-  if (lto->outputMode == LTERM1_SCREEN_MODE) {
+  if (lto->outputMode == LTERM2_LINE_MODE) {
     /* Switching from line mode to screen mode */
-
-    if (ltermClearOutputScreen(lts) != 0)
-      return -1;
 
     /* Clear styleMask */
     lto->styleMask = 0;
+
+    /* Clear screen */
+    if (ltermClearOutputScreen(lts) != 0)
+      return -1;
+
+    /* Reset returned cursor location */
+    lto->returnedCursorRow = -1;
+    lto->returnedCursorCol = -1;
+
+    /* Scrolling region */
+    lto->topScrollRow = lts->nRows-1;
+    lto->botScrollRow = 0;
+
+    /* Disable input echo */
+    lts->restoreInputEcho = !lts->disabledInputEcho;
+    lts->disabledInputEcho = 1;
+
+    /* Switch to raw input mode */
+    ltermSwitchToRawMode(lts);
+
   }
 
   lto->outputMode = LTERM1_SCREEN_MODE;
@@ -501,20 +544,31 @@ int ltermSwitchToLineMode(struct lterms *lts)
 
   if (lto->outputMode == LTERM1_SCREEN_MODE) {
     /* Switching from screen mode to line mode */
-    ltermClearOutputLine(lts);
 
-    /* Copy bottom line to line output buffer */
-    lto->outputChars = lto->rowCols[0];
+    /* Switch to line input mode */
+    ltermClearInputLine(lts);
 
-    assert(lto->rowCols[0] < MAXCOL);
-
-    for (j=0; j<lto->rowCols[0]; j++) {
-      lto->outputLine[j] =  lto->screenChar[j];
-      lto->outputStyle[j] = lto->screenStyle[j];
+    if (lts->restoreInputEcho) {
+      /* Re-enable input echo */
+      lts->disabledInputEcho = 0;
+      lts->restoreInputEcho = 0;
     }
 
     /* Clear styleMask */
     lto->styleMask = 0;
+
+    /* Clear output line */
+    ltermClearOutputLine(lts);
+
+    /* Copy bottom line to line output buffer ??? */
+    lto->outputChars = lts->nCols;
+
+    assert(lts->nCols < MAXCOL);
+
+    for (j=0; j<lts->nCols; j++) {
+      lto->outputLine[j] =  lto->screenChar[j];
+      lto->outputStyle[j] = lto->screenStyle[j];
+    }
 
   }
 

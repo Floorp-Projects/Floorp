@@ -351,7 +351,7 @@ NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
 NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                                          PRBool& processedData)
 {
-  PRInt32 opcodes, buf_row, buf_col;
+  PRInt32 opcodes, opvals, buf_row, buf_col;
   PRUnichar *buf_str, *buf_style;
   PRBool newline, streamData;
   nsAutoString bufString, bufStyle;
@@ -371,8 +371,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
   for (;;) {
     // NOTE: Remember to de-allocate buf_str and buf_style
     //       using nsAllocator::Free, if opcodes != 0
-    result = lineTermAux->ReadAux(&opcodes, &buf_row, &buf_col, &buf_str,
-                                  &buf_style);
+    result = lineTermAux->ReadAux(&opcodes, &opvals, &buf_row, &buf_col,
+                                  &buf_str, &buf_style);
     if (NS_FAILED(result))
       break;
 
@@ -407,8 +407,9 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         // Determine effective stream URL and default markup type
         nsAutoString streamURL;
         OutputMarkupType streamMarkupType;
+        PRBool streamIsSecure = (opcodes & LTERM_COOKIESTR_CODE);
 
-        if (opcodes & LTERM_COOKIESTR_CODE) {
+        if (streamIsSecure) {
           // Secure stream, i.e., prefixed with cookie; fragments allowed
           streamURL = "chrome://xmlterm/content/xmltblank.html";
 
@@ -439,7 +440,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         }
 
         // Initialize stream output
-        result = InitStream(streamURL, streamMarkupType);
+        result = InitStream(streamURL, streamMarkupType, streamIsSecure);
         if (NS_FAILED(result))
           return result;
       }
@@ -615,8 +616,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
               url.Append(commandArgs);
               nsAutoString width = "100%";
               nsAutoString height = "100";
-              result = NewIFrame(mCurrentEntryNumber, mOutputBlockNode,
-                                 url, width, height);
+              result = NewIFrame(mOutputBlockNode, mCurrentEntryNumber,
+                                 2, url, width, height);
               if (NS_FAILED(result))
                 return result;
 
@@ -918,7 +919,7 @@ NS_IMETHODIMP mozXMLTermSession::AutoDetectMarkup(const nsString& aString,
   if (newMarkupType != PLAIN_TEXT) {
     // Markup found; initialize (insecure) stream
     nsAutoString streamURL = "http://in.sec.ure";
-    result = InitStream(streamURL, newMarkupType);
+    result = InitStream(streamURL, newMarkupType, false);
     if (NS_FAILED(result))
       return result;
 
@@ -937,9 +938,11 @@ NS_IMETHODIMP mozXMLTermSession::AutoDetectMarkup(const nsString& aString,
 /** Initializes display of stream output with specified markup type
  * @param streamURL effective URL of stream output
  * @param streamMarkupType stream markup type
+ * @param streamIsSecure true if stream is secure
  */
 NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
-                                            OutputMarkupType streamMarkupType)
+                                            OutputMarkupType streamMarkupType,
+                                            PRBool streamIsSecure)
 {
   nsresult result;
 
@@ -962,8 +965,13 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
     nsAutoString src = "about:blank";
     nsAutoString width = "100%";
     nsAutoString height = "10";
-    result = NewIFrame(mCurrentEntryNumber, mOutputBlockNode,
-                       src, width, height);
+    PRInt32 frameBorder = 0;
+
+    if (!streamIsSecure)
+      frameBorder = 2;
+
+    result = NewIFrame(mOutputBlockNode, mCurrentEntryNumber,
+                       frameBorder, src, width, height);
 
     if (NS_FAILED(result))
       return result;
@@ -2431,21 +2439,24 @@ NS_IMETHODIMP mozXMLTermSession::NewTextNode( nsIDOMNode* parentNode,
 }
 
 
-/** Creates a new IFRAME element with attributes NAME="iframe#",
- * FRAMEBORDER="0" and appends it as a child of the specified parent.
+/** Creates a new IFRAME element with attribute NAME="iframe#",
+ * and appends it as a child of the specified parent.
  * ("#" denotes the specified number)
+ * @param parentNode parent node for element
  * @param number numeric suffix for element ID
  *             (If < 0, no name attribute is defined)
- * @param parentNode parent node for element
+ * @param frameBorder IFRAME FRAMEBORDER attribute
  * @param src IFRAME SRC attribute
  * @param width IFRAME width attribute
  * @param height IFRAME height attribute
  */
-NS_IMETHODIMP mozXMLTermSession::NewIFrame(PRInt32 number,
-                                           nsIDOMNode* parentNode,
+NS_IMETHODIMP mozXMLTermSession::NewIFrame(nsIDOMNode* parentNode,
+                                           PRInt32 number,
+                                           PRInt32 frameBorder,
                                            const nsString& src,
                                            const nsString& width,
                                            const nsString& height)
+                                           
 {
   nsresult result;
 
@@ -2454,9 +2465,11 @@ NS_IMETHODIMP mozXMLTermSession::NewIFrame(PRInt32 number,
 #if 0
   nsAutoString iframeFrag = "<iframe name='iframe";
   iframeFrag.Append(number,10);
-  iframeFrag.Append("' src='");
+  iframeFrag.Append("' frameborder=")
+  iframeFrag.Append(frameBorder,10);
+  iframeFrag.Append(" src='");
   iframeFrag.Append(src)
-  iframeFrag.Append("' frameborder=0> </iframe>\n");
+  iframeFrag.Append("'> </iframe>\n");
   result = InsertFragment(iframeFrag, parentNode, number);
   if (NS_FAILED(result))
     return result;
@@ -2481,7 +2494,8 @@ NS_IMETHODIMP mozXMLTermSession::NewIFrame(PRInt32 number,
   }
 
   attName = "frameborder";
-  attValue = "0";
+  attValue = "";
+  attValue.Append(frameBorder,10);
   newElement->SetAttribute(attName, attValue);
 
   if (src.Length() > 0) {

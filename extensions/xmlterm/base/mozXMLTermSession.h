@@ -211,10 +211,12 @@ protected:
 
   /** Initializes display of stream output with specified markup type
    * @param streamURL effective URL of stream output
-   * @param streamMarkupType stream markup stype
+   * @param streamMarkupType stream markup type
+   * @param streamIsSecure true if stream is secure
    */
   NS_IMETHOD InitStream(const nsString& streamURL,
-                        OutputMarkupType streamMarkupType);
+                        OutputMarkupType streamMarkupType,
+                        PRBool streamIsSecure);
 
   /** Breaks output display by flushing and deleting incomplete lines */
   NS_IMETHOD BreakOutput(void);
@@ -369,18 +371,20 @@ protected:
   NS_IMETHOD NewTextNode( nsIDOMNode* parentNode,
                           nsCOMPtr<nsIDOMNode>& textNode);
 
-  /** Creates a new IFRAME element with attributes NAME="iframe#",
-   * FRAMEBORDER="0" and appends it as a child of the specified parent.
+  /** Creates a new IFRAME element with attribute NAME="iframe#",
+   * and appends it as a child of the specified parent.
    * ("#" denotes the specified number)
+   * @param parentNode parent node for element
    * @param number numeric suffix for element ID
    *             (If < 0, no name attribute is defined)
-   * @param parentNode parent node for element
+   * @param frameBorder IFRAME FRAMEBORDER attribute
    * @param src IFRAME SRC attribute
    * @param width IFRAME width attribute
    * @param height IFRAME height attribute
    */
-  NS_IMETHOD NewIFrame(PRInt32 number,
-                       nsIDOMNode* parentNode,
+  NS_IMETHOD NewIFrame(nsIDOMNode* parentNode,
+                       PRInt32 number,
+                       PRInt32 frameBorder,
                        const nsString& src,
                        const nsString& width,
                        const nsString& height);

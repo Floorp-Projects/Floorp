@@ -392,7 +392,7 @@ int lterm_open(int lterm, char *const argv[], const char* cookie,
   lts->disabledInputEcho = 1;
   lts->restoreInputEcho = 1;
 
-  nostderr = (options & LTERM_NOSTDERR_FLAG) != 0;
+  nostderr = (options & LTERM_STDERR_FLAG) == 0;
 
 #if defined(NO_PTY) || defined(USE_NSPR_IO)
   /* Current implementation of pseudo-TTY is incompatible with the NSPR I/O
@@ -420,9 +420,13 @@ int lterm_open(int lterm, char *const argv[], const char* cookie,
     int noblock = 1;
     int noexport = 0;
     int debugPTY = (tlogGlobal.messageLevel[LTERM_TLOG_MODULE] > 1);
+    int errfd = nostderr?-1:-2;
 
+    LTERM_LOG(lterm_open,11,
+              ("errfd=%d, noecho=%d, noblock=%d, noexport=%d, debugPTY=%d\n",
+               errfd, lts->noTTYEcho, noblock, noexport, debugPTY));
 #ifndef NO_PTY
-    if (pty_create(&ptyStruc, cargv, nostderr?-1:-2,
+    if (pty_create(&ptyStruc, cargv, errfd,
                    noblock, lts->noTTYEcho, noexport, debugPTY) == -1) {
       LTERM_OPEN_ERROR_RETURN(lterm,lts,
             "lterm_open: Error - PTY creation failed\n")
@@ -976,7 +980,7 @@ int lterm_write(int lterm, const UNICHAR *buf, int count, int dataType)
  * (documented in the LTERM interface)
  */
 int lterm_read(int lterm, int timeout, UNICHAR *buf, int count,
-               UNISTYLE *style, int *opcodes,
+               UNISTYLE *style, int *opcodes, int *opvals,
                int *buf_row, int *buf_col, int *cursor_row, int *cursor_col)
 {
   struct lterms *lts;
@@ -997,6 +1001,7 @@ int lterm_read(int lterm, int timeout, UNICHAR *buf, int count,
       LTERM_WARNING("lterm_read: Warning - LTERM %d not active\n", lterm);
 
     *opcodes = 0;
+    *opvals = 0;
     *buf_row = 0;
     *buf_col = 0;
     *cursor_row = 0;
@@ -1026,6 +1031,7 @@ int lterm_read(int lterm, int timeout, UNICHAR *buf, int count,
 
   /* Copy "output" parameters from LtermRead structure */
   *opcodes = ltrStruc.opcodes;
+  *opvals = ltrStruc.opvals;
   *buf_row = ltrStruc.buf_row;
   *buf_col = ltrStruc.buf_col;
   *cursor_row = ltrStruc.cursor_row;
@@ -1049,8 +1055,8 @@ int lterm_read(int lterm, int timeout, UNICHAR *buf, int count,
   }
   GLOBAL_UNLOCK;
 
-  LTERM_LOG(lterm_read,11,("return code = %d, opcodes=0x%x\n",
-                           returnCode, *opcodes));
+  LTERM_LOG(lterm_read,11,("return code = %d, opcodes=0x%x, opvals=%d\n",
+                           returnCode, *opcodes, *opvals));
 
   return returnCode;
 }
