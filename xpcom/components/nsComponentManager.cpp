@@ -1491,13 +1491,17 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     nsCOMPtr<nsIComponentLoader> loader;
     PRBool sanity;
 
+    // Normalize proid and classname
+    const char *progID = (aProgID && *aProgID) ? aProgID : NULL;
+    const char *className = (aClassName && *aClassName) ? aClassName : NULL;
+
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS))
     {
         char *buf = aClass.ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
                ("nsComponentManager: RegisterComponentCommon(%s, %s, %s, %s)",
                 buf,
-                aProgID ? aProgID : "(null)",
+                progID ? progID : "(null)",
                 aRegistryName, aType));
         delete [] buf;
     }
@@ -1512,11 +1516,11 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
 #ifdef USE_REGISTRY
     if (aPersist) {
         /* Add to the registry */
-        rv = AddComponentToRegistry(aClass, aClassName, aProgID,
+        rv = AddComponentToRegistry(aClass, className, progID,
                                     aRegistryName, aType);
         if (NS_FAILED(rv)) {
 	    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-		   ("\t\tadding %s %s to registry FAILED", aClassName, aProgID));
+		   ("\t\tadding %s %s to registry FAILED", className, progID));
             goto out;
 	}
     }
@@ -1551,26 +1555,26 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
     newEntry = nsnull;
  
    // Update the ProgID->CLSID Map
-    if (aProgID
+    if (progID
 #ifdef USE_REGISTRY
         && (mPrePopulationDone || !aPersist)
 #endif
         ) {
-        rv = HashProgID(aProgID, aClass);
+        rv = HashProgID(progID, aClass);
         if (NS_FAILED(rv)) {
 	    PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
-		   ("\t\tHashProgID(%s) FAILED\n", aProgID));
+		   ("\t\tHashProgID(%s) FAILED\n", progID));
             goto out;
 	}
     }
 
     // Let the loader do magic things now
-    rv = loader->OnRegister(aClass, aType, aClassName, aProgID, aRegistryName,
+    rv = loader->OnRegister(aClass, aType, className, progID, aRegistryName,
                             aReplace, aPersist);
     if (NS_FAILED(rv)) {
         PR_LOG(nsComponentManagerLog, PR_LOG_ERROR,
                ("\t\tloader->OnRegister FAILED for %s \"%s\" %s %s", aType,
-                aClassName, aProgID, aRegistryName));
+                className, progID, aRegistryName));
         goto out;
     }
     
