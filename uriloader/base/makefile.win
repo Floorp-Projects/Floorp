@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  content \
 		  gfx \
-		  mimetype \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
