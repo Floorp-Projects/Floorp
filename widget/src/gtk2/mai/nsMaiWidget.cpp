@@ -384,11 +384,12 @@ MaiWidget::GetUniqueMaiAtkTypeName(void)
 guint
 MaiWidget::GetChildUniqueID(gint aChildIndex)
 {
-    gpointer pValue= g_hash_table_lookup(mChildren, (const void *)aChildIndex);
-    if (pValue)
-        return guint(pValue);
-    else
+    gpointer pValue=
+        g_hash_table_lookup(mChildren,
+                            NS_REINTERPRET_CAST(const void *, aChildIndex));
+    if (!pValue)
         return 0;
+    return NS_REINTERPRET_CAST(guint, pValue);
 }
 
 void
@@ -396,5 +397,7 @@ MaiWidget::SetChildUniqueID(gint aChildIndex, guint aChildUid)
 {
     //If the key already exists in the GHashTable its current value is
     //replaced with the new value.
-    g_hash_table_insert(mChildren, (void*)aChildIndex, (void*)aChildUid);
+    g_hash_table_insert(mChildren,
+                        NS_REINTERPRET_CAST(void*, aChildIndex),
+                        NS_REINTERPRET_CAST(void*, aChildUid));
 }

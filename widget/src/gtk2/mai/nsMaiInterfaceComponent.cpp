@@ -41,10 +41,10 @@
 
 #include "nsMaiInterfaceComponent.h"
 
-G_BEGIN_DECLS
-
 /* helpers */
-static MaiInterfaceComponent *getComponent (AtkComponent *aIface);
+static MaiInterfaceComponent *getComponent(AtkComponent *aIface);
+
+G_BEGIN_DECLS
 
 /* component interface callbacks */
 static void interfaceInitCB(AtkComponentIface *aIface);
@@ -156,10 +156,7 @@ MaiInterfaceComponent::GrabFocus()
     g_return_val_if_fail(accessible != NULL, FALSE);
 
     nsresult rv = accessible->AccTakeFocus();
-    if (NS_FAILED(rv))
-        return FALSE;
-    else
-        return TRUE;
+    return (NS_FAILED(rv)) ? FALSE : TRUE;
 }
 
 /* static functions */
@@ -233,8 +230,7 @@ gboolean
 grabFocusCB(AtkComponent *aComponent)
 {
     MaiInterfaceComponent *maiInterfaceComponent = getComponent(aComponent);
-    if (maiInterfaceComponent)
-        return maiInterfaceComponent->GrabFocus();
-    else
+    if (!maiInterfaceComponent)
         return FALSE;
+    return maiInterfaceComponent->GrabFocus();
 }

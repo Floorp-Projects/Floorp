@@ -43,7 +43,7 @@
 #include "nsMaiInterfaceTable.h"
 
 /* helpers */
-inline static MaiInterfaceTable *getTable (AtkTable *aIface);
+static MaiInterfaceTable *getTable (AtkTable *aIface);
 
 G_BEGIN_DECLS
 
@@ -182,7 +182,7 @@ MaiInterfaceTable::GetIndexAt(gint aRow, gint aColumn)
     nsresult rv = accessIface->GetIndexAt(aRow, aColumn, &index);
     if (NS_FAILED(rv))
         return -1;
-    return gint(index);
+    return NS_STATIC_CAST(gint, index);
 }
 
 gint
@@ -194,7 +194,7 @@ MaiInterfaceTable::GetColumnAtIndex(gint aIndex)
     nsresult rv = accessIface->GetColumnAtIndex(aIndex, &col);
     if (NS_FAILED(rv))
         return -1;
-    return gint(col);
+    return NS_STATIC_CAST(gint, col);
 }
 
 gint
@@ -206,7 +206,7 @@ MaiInterfaceTable::GetRowAtIndex(gint aIndex)
     nsresult rv = accessIface->GetRowAtIndex(aIndex, &row);
     if (NS_FAILED(rv))
         return -1;
-    return gint(row);
+    return NS_STATIC_CAST(gint, row);
 }
 
 gint
@@ -218,7 +218,7 @@ MaiInterfaceTable::GetColumnCount()
     nsresult rv = accessIface->GetColumns(&count);
     if (NS_FAILED(rv))
         return -1;
-    return gint(count);
+    return NS_STATIC_CAST(gint, count);
 }
 
 gint
@@ -230,7 +230,7 @@ MaiInterfaceTable::GetRowCount()
     nsresult rv = accessIface->GetRows(&count);
     if (NS_FAILED(rv))
         return -1;
-    return gint(count);
+    return NS_STATIC_CAST(gint, count);
 }
 
 gint
@@ -242,7 +242,7 @@ MaiInterfaceTable::GetColumnExtentAt(gint aRow, gint aColumn)
     nsresult rv = accessIface->GetColumnExtentAt(aRow, aColumn, &extent);
     if (NS_FAILED(rv))
         return -1;
-    return gint(extent);
+    return NS_STATIC_CAST(gint, extent);
 }
 
 gint
@@ -254,7 +254,7 @@ MaiInterfaceTable::GetRowExtentAt(gint aRow, gint aColumn)
     nsresult rv = accessIface->GetRowExtentAt(aRow, aColumn, &extent);
     if (NS_FAILED(rv))
         return -1;
-    return gint(extent);
+    return NS_STATIC_CAST(gint, extent);
 }
 
 MaiWidget*
@@ -366,7 +366,7 @@ MaiInterfaceTable::IsColumnSelected(gint aColumn)
 
     PRBool outValue;
     nsresult rv = accessIface->IsColumnSelected(aColumn, &outValue);
-    return NS_FAILED(rv) ? FALSE : (gboolean)outValue;
+    return NS_FAILED(rv) ? FALSE : NS_STATIC_CAST(gboolean, outValue);
 }
 
 gboolean
@@ -376,7 +376,7 @@ MaiInterfaceTable::IsRowSelected(gint aRow)
 
     PRBool outValue;
     nsresult rv = accessIface->IsRowSelected(aRow, &outValue);
-    return NS_FAILED(rv) ? FALSE : (gboolean)outValue;
+    return NS_FAILED(rv) ? FALSE : NS_STATIC_CAST(gboolean, outValue);
 }
 
 gboolean
@@ -386,7 +386,7 @@ MaiInterfaceTable::IsCellSelected(gint aRow, gint aColumn)
 
     PRBool outValue;
     nsresult rv = accessIface->IsCellSelected(aRow, aColumn, &outValue);
-    return NS_FAILED(rv) ? FALSE : (gboolean)outValue;
+    return NS_FAILED(rv) ? FALSE : NS_STATIC_CAST(gboolean, outValue);
 }
 
 /* static functions */
@@ -398,12 +398,14 @@ MaiInterfaceTable *
 getTable(AtkTable *aTable)
 {
     g_return_val_if_fail(MAI_IS_ATK_WIDGET(aTable), NULL);
-    MaiWidget *maiWidget = (MaiWidget*)(MAI_ATK_OBJECT(aTable)->maiObject);
+    MaiWidget *maiWidget =
+        NS_STATIC_CAST(MaiWidget*, (MAI_ATK_OBJECT(aTable)->maiObject));
     g_return_val_if_fail(maiWidget != NULL, NULL);
     g_return_val_if_fail(maiWidget->GetAtkObject() == (AtkObject*)aTable,
                          NULL);
-    MaiInterfaceTable *maiInterfaceTable = (MaiInterfaceTable*)
-        maiWidget->GetMaiInterface(MAI_INTERFACE_TABLE);
+    MaiInterfaceTable *maiInterfaceTable =
+        NS_STATIC_CAST(MaiInterfaceTable*,
+                       maiWidget->GetMaiInterface(MAI_INTERFACE_TABLE));
     return maiInterfaceTable;
 }
 

@@ -43,7 +43,7 @@
 #include "nsMaiInterfaceText.h"
 
 /* helpers */
-inline static MaiInterfaceText *getText(AtkText *aIface);
+static MaiInterfaceText *getText(AtkText *aIface);
 
 G_BEGIN_DECLS
 
@@ -201,7 +201,7 @@ MaiInterfaceText::GetCharacterAtOffset(gint aOffset)
     PRUnichar uniChar;
     nsresult rv =
         accessIface->GetCharacterAtOffset(aOffset, &uniChar);
-    return (NS_FAILED(rv)) ? gunichar(0) : gunichar(uniChar);
+    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gunichar, uniChar);
 }
 
 const gchar *
@@ -232,7 +232,7 @@ MaiInterfaceText::GetCaretOffset(void)
 
     PRInt32 offset;
     nsresult rv = accessIface->GetCaretOffset(&offset);
-    return (NS_FAILED(rv)) ? 0 : gint(offset);
+    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gint, offset);
 }
 
 AtkAttributeSet *
@@ -291,7 +291,7 @@ MaiInterfaceText::GetCharacterCount(void)
 
     PRInt32 count = 0;
     nsresult rv = accessIface->GetCharacterCount(&count);
-    return (NS_FAILED(rv)) ? 0 : gint(count);
+    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gint, count);
 }
 
 gint
@@ -302,7 +302,7 @@ MaiInterfaceText::GetOffsetAtPoint(gint aX, gint aY,
 
     PRInt32 offset = 0;
     nsresult rv = accessIface->GetOffsetAtPoint(aX, aY, aCoords, &offset);
-    return (NS_FAILED(rv)) ? 0 : gint(offset);
+    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gint, offset);
 }
 
 gint
@@ -343,7 +343,7 @@ MaiInterfaceText::AddSelection(gint aStartOffset, gint aEndOffset)
 
     nsresult rv = accessIface->AddSelection(aStartOffset, aEndOffset);
 
-    return !(NS_FAILED(rv));
+    return NS_SUCCEEDED(rv);
 }
 
 gboolean
@@ -353,7 +353,7 @@ MaiInterfaceText::RemoveSelection(gint aSelectionNum)
 
     nsresult rv = accessIface->RemoveSelection(aSelectionNum);
 
-    return !(NS_FAILED(rv));
+    return NS_SUCCEEDED(rv);
 }
 
 gboolean
@@ -364,7 +364,7 @@ MaiInterfaceText::SetSelection(gint aSelectionNum,
 
     nsresult rv = accessIface->SetSelectionBounds(aSelectionNum,
                                                   aStartOffset, aEndOffset);
-    return !(NS_FAILED(rv));
+    return NS_SUCCEEDED(rv);
 }
 
 gboolean
@@ -373,7 +373,7 @@ MaiInterfaceText::SetCaretOffset(gint aOffset)
     MAI_IFACE_RETURN_VAL_IF_FAIL(accessIface, FALSE);
 
     nsresult rv = accessIface->SetCaretOffset(aOffset);
-    return !(NS_FAILED(rv));
+    return NS_SUCCEEDED(rv);
 }
 
 /* statics */
@@ -385,12 +385,14 @@ MaiInterfaceText *
 getText(AtkText *aText)
 {
     g_return_val_if_fail(MAI_IS_ATK_WIDGET(aText), NULL);
-    MaiWidget *maiWidget = (MaiWidget*)(MAI_ATK_OBJECT(aText)->maiObject);
+    MaiWidget *maiWidget =
+        NS_STATIC_CAST(MaiWidget*, (MAI_ATK_OBJECT(aText)->maiObject));
     g_return_val_if_fail(maiWidget != NULL, NULL);
     g_return_val_if_fail(maiWidget->GetAtkObject() == (AtkObject*)aText,
                          NULL);
-    MaiInterfaceText *maiInterfaceText = (MaiInterfaceText*)
-        maiWidget->GetMaiInterface(MAI_INTERFACE_TEXT);
+    MaiInterfaceText *maiInterfaceText =
+        NS_STATIC_CAST(MaiInterfaceText*,
+                       (maiWidget->GetMaiInterface(MAI_INTERFACE_TEXT)));
     return maiInterfaceText;
 }
 
@@ -426,7 +428,8 @@ getTextCB(AtkText *aText, gint aStartOffset, gint aEndOffset)
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
         return NULL;
-    return (gchar*)maiIfaceText->GetText(aStartOffset, aEndOffset);
+    return NS_CONST_CAST(gchar*,
+                         maiIfaceText->GetText(aStartOffset, aEndOffset));
 }
 
 gchar *
@@ -437,8 +440,11 @@ getTextAfterOffsetCB(AtkText *aText, gint aOffset,
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
         return NULL;
-    return (gchar*)maiIfaceText->GetTextAfterOffset(aOffset, aBoundaryType,
-                                                    aStartOffset, aEndOffset);
+    return NS_CONST_CAST(gchar*,
+                         maiIfaceText->GetTextAfterOffset(aOffset,
+                                                          aBoundaryType,
+                                                          aStartOffset,
+                                                          aEndOffset));
 }
 
 gchar *
@@ -449,8 +455,11 @@ getTextAtOffsetCB(AtkText *aText, gint aOffset,
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
         return NULL;
-    return (gchar*)maiIfaceText->GetTextAtOffset(aOffset, aBoundaryType,
-                                                 aStartOffset, aEndOffset);
+    return NS_CONST_CAST(gchar*,
+                         maiIfaceText->GetTextAtOffset(aOffset,
+                                                       aBoundaryType,
+                                                       aStartOffset,
+                                                       aEndOffset));
 }
 
 gunichar
@@ -458,7 +467,7 @@ getCharacterAtOffsetCB(AtkText *aText, gint aOffset)
 {
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
-        return gunichar(0);
+        return 0;
     return maiIfaceText->GetCharacterAtOffset(aOffset);
 }
 
@@ -470,8 +479,11 @@ getTextBeforeOffsetCB(AtkText *aText, gint aOffset,
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
         return NULL;
-    return (gchar*)maiIfaceText->GetTextBeforeOffset(aOffset, aBoundaryType,
-                                                     aStartOffset, aEndOffset);
+    return NS_CONST_CAST(gchar*,
+                         maiIfaceText->GetTextBeforeOffset(aOffset,
+                                                           aBoundaryType,
+                                                           aStartOffset,
+                                                           aEndOffset));
 }
 
 gint
@@ -552,8 +564,10 @@ getSelectionCB(AtkText *aText, gint aSelectionNum,
     MaiInterfaceText *maiIfaceText = getText(aText);
     if (!maiIfaceText)
         return NULL;
-    return (gchar*)maiIfaceText->GetSelection(aSelectionNum,
-                                              aStartOffset, aEndOffset);
+    return NS_CONST_CAST(gchar*,
+                         maiIfaceText->GetSelection(aSelectionNum,
+                                                    aStartOffset,
+                                                    aEndOffset));
 }
 
 // set methods

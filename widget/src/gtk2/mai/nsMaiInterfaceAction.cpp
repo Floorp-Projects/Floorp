@@ -42,7 +42,7 @@
 #include "nsMaiInterfaceAction.h"
 
 /* helpers */
-inline static MaiInterfaceAction *getAction(AtkAction *aAction);
+static MaiInterfaceAction *getAction(AtkAction *aAction);
 
 G_BEGIN_DECLS
 
