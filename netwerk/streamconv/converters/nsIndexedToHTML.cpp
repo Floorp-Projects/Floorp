@@ -138,6 +138,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     rv = channel->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
+    channel->SetContentType(NS_LITERAL_CSTRING("text/html"));
+
     mParser = do_CreateInstance("@mozilla.org/dirIndexParser;1",&rv);
     if (NS_FAILED(rv)) return rv;
 
