@@ -1483,9 +1483,6 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 			macPoint = topLeft(portRect);
 			::LocalToGlobal(&macPoint);
 			mTopLevelWidget->MoveToGlobalPoint(macPoint.h, macPoint.v);
-			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
-				gRollupListener->Rollup();
-			}
 			break;
 		}
 
