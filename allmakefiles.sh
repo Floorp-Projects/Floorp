@@ -756,6 +756,7 @@ security/manager/ssl/public/Makefile
 security/manager/pki/Makefile
 security/manager/pki/resources/Makefile
 security/manager/pki/src/Makefile
+security/manager/pki/public/Makefile
 netwerk/protocol/http/public/Makefile
 netwerk/build/Makefile
 netwerk/base/public/Makefile
