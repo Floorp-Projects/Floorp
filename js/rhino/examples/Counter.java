@@ -29,11 +29,11 @@ public class Counter extends ScriptableObject {
     public String getClassName() { return "Counter"; }
 
     // The method jsGet_count defines the count property. 
-    public void jsFunction_resetCount() { count = 0; }
+    public int jsGet_count() { return count++; }
 
     // Methods can be defined using the jsFunction_ prefix. Here we define 
     //  resetCount for JavaScript. 
-    public int jsGet_count() { return count++; }
+    public void jsFunction_resetCount() { count = 0; }
 
     private int count;
 }
