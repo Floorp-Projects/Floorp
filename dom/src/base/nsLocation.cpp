@@ -84,20 +84,22 @@ GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
   rv = stack->Peek(&cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMWindow> window =
-    do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+  if (cx) {
+    nsCOMPtr<nsIDOMWindow> window =
+      do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
+    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  rv = window->GetDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!domDoc)
-    return NS_OK;
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    rv = window->GetDocument(getter_AddRefs(domDoc));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
 
-  aCharset = doc->GetDocumentCharacterSet();
+    if (doc) {
+      aCharset = doc->GetDocumentCharacterSet();
+    }
+  }
+
   return NS_OK;
 }
 
