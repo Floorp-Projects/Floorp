@@ -2851,7 +2851,7 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
     else
     {
       res = mEditor->CreateNode(brType, *aOutMergeParent, *aOutMergeOffset, getter_AddRefs(brNode));
-      *aOutMergeOffset++;   // out offset _after_ <br>
+      (*aOutMergeOffset)++;   // out offset _after_ <br>
     }
     return res;
   }
@@ -2867,7 +2867,7 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
     // for list items, divs, etc, merge smart
     res = mEditor->JoinNodes(aNodeLeft, aNodeRight, parent);
     if (NS_FAILED(res)) return res;
-    // figure out newNodeLeft & newNodeRight and recurse
+    // XXX floppy moose - figure out newNodeLeft & newNodeRight and recurse
     // res = JoinNodesSmart(newNodeLeft, newNodeRight, aOutMergeParent, aOutMergeOffset);
     // if (NS_FAILED(res)) return res;
     return res;
