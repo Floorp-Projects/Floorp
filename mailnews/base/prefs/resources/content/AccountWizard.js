@@ -18,13 +18,40 @@
  * Rights Reserved.
  */
 
-// the account wizard path is something like:
+/* The account wizard creates new accounts */
 
-// accounttype -> identity -> server -> login -> accname -> done
-//                        \-> newsserver ----/
-//
-// where the accounttype determines which path to take
-// (server vs. newsserver
+/*
+  data flow into the account wizard like this:
+
+  For new accounts:
+  * pageData -> Array -> createAccount -> finishAccount
+  
+  For accounts coming from the ISP setup:
+  * RDF  -> Array -> pageData -> Array -> createAccount -> finishAccount
+  
+  for "unfinished accounts" 
+  * account -> Array -> pageData -> Array -> finishAccount
+  
+  Where:
+  pageData - the actual pages coming out of the Widget State Manager
+  RDF      - the ISP datasource
+  Array    - associative array of attributes, that very closely
+             resembles the nsIMsgAccount/nsIMsgIncomingServer/nsIMsgIdentity
+             structure
+  createAccount() - creates an account from the above Array
+  finishAccount() - fills an existing account with data from the above Array 
+
+*/
+
+/* 
+   the account wizard path is something like:
+   
+   accounttype -> identity -> server -> login -> accname -> done
+                             \-> newsserver ----/
+
+   where the accounttype determines which path to take
+   (server vs. newsserver)
+*/
 
 var wizardMap = {
     accounttype: { next: "identity" },
@@ -44,9 +71,16 @@ var currentPageTag;
 var contentWindow;
 
 var smtpService;
+var am;
+
+var nsIMsgIdentity = Components.interfaces.nsIMsgIdentity;
+var nsIMsgIncomingServer = Components.interfaces.nsIMsgIncomingServer;
+
+var currentAccount;
 
 // event handlers
 function onLoad() {
+
     // wizard stuff
     // instantiate the Wizard Manager
     wizardManager = new WizardManager( "wizardContents", null, null,
@@ -55,14 +89,27 @@ function onLoad() {
     wizardManager.URL_PagePostfix = ".xul"; 
     wizardManager.SetHandlers(null, null, onFinish, null, null, null);
 
+    checkForInvalidAccounts();
+    var pageData = parent.wizardManager.WSM.PageData;
+    updateMap(pageData, wizardMap);
+
     // load up the SMTP service for later
     if (!smtpService) {
         smtpService =
             Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);;
     }
-    
-    wizardManager.LoadPage("accounttype", false);
+
+    // skp
+    if (currentAccount) {
+        // skip past first pane
+        wizardMap.identity.previous = null;
+        wizardManager.LoadPage("identity", false);
+    }
+    else
+        wizardManager.LoadPage("accounttype", false);
 }
+
+    
 
 function onFinish() {
     if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
@@ -70,10 +117,18 @@ function onFinish() {
     var pageData = parent.wizardManager.WSM.PageData;
 
     dump(parent.wizardManager.WSM);
-    var account = createAccount(pageData);
 
-    if (account)
-        verifyLocalFoldersAccount(account);
+    var accountData=[];
+    PageDataToAccountData(pageData, accountData);
+
+    // we might be simply finishing another account
+    if (!currentAccount)
+        currentAccount = createAccount(accountData);
+
+    // transfer all attributes from the accountdata
+    finishAccount(currentAccount, accountData);
+    
+    verifyLocalFoldersAccount(currentAccount);
 
     // hack hack - save the prefs file NOW in case we crash
     try {
@@ -86,54 +141,98 @@ function onFinish() {
     window.close();
 }
 
-function createAccount(pageData) {
 
-  try {
-    var am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
-
-    // shared fields across all accounts
-    var fullname = pageData.identity.fullName.value; 
-    var email    = pageData.identity.email.value;
-    var prettyName = pageData.accname.prettyName.value;
-
-    // required fields for each account
-    var hostname = getCurrentHostname(pageData);
-    var servertype = getCurrentServerType(pageData);
-
-    // optional fields, depending on the panels that were displayed
-    var smtphostname;
-    var username=null;
-    var password=null;
-    var rememberPassword=false;
-
-    // generic server panel
-    if (pageData.server) {
-        smtphostname = pageData.server.smtphostname.value;
+// prepopulate pageData with stuff from accountData
+// use: to prepopulate the wizard with account information
+function AccountDataToPageData(accountData, pageData)
+{
+    if (accountData.incomingServer) {
+        var server = accountData.incomingServer;
+        
+        if (server.type == "nntp") {
+            setPageData(pageData, "accounttype", "newsaccount", true);
+            setPageData(pageData, "newsserver", "hostname", server.hostName);
+        }
+        
+        else {
+            setPageData(pageData, "accounttype", "mailaccount", true);
+            setPageData(pageData, "server", "servertype", server.type);
+            setPageData(pageData, "server", "hostname", server.hostName);
+        }
+        
+        setPageData(pageData, "login", "username", server.username);
+        setPageData(pageData, "login", "password", server.password);
+        setPageData(pageData, "login", "rememberPassword", server.rememberPassword);
+        setPageData(pageData, "accname", "prettyName", server.prettyName);
     }
 
-    // login panel
-    if (pageData.login) {
-        username = pageData.login.username.value;
-        password = pageData.login.password.value;
-        rememberPassword = pageData.login.rememberPassword.value;
+    var identity;
+    
+    if (accountData.identity) {
+        dump("This is an accountdata\n");
+        identity = accountData.identity;
+    }
+    else if (accountData.identities) {
+        identity = accountData.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
+        dump("this is an account, id= " + identity + "\n");
+    }
+    if (identity) {
+        setPageData(pageData, "identity", "email", identity.email);
+        setPageData(pageData, "identity", "fullName", identity.fullName);
+    }
+}
+
+
+// take data from each page of pageData and dump it into accountData
+// use: to put results of wizard into a account-oriented object
+function PageDataToAccountData(pageData, accountData)
+{
+    if (!accountData.identity)
+        accountData.identity = new Object;
+    if (!accountData.incomingServer)
+        accountData.incomingServer = new Object;
+
+    var identity = accountData.identity;
+    var server = accountData.incomingServer;
+
+    dump("Setting identity for " + pageData.identity.email.value + "\n");
+    identity.email = pageData.identity.email.value;
+    identity.fullName = pageData.identity.fullName.value;
+
+    server.type = getCurrentServerType(pageData);
+    server.hostName = getCurrentHostname(pageData);
+
+    if (serverIsNntp(pageData)) {
+        // this stuff probably not relevant
+        dump("not setting username/password/rememberpassword/etc\n");
+    } else {
+        server.username = pageData.login.username.value;
+        server.password = pageData.login.password.value;
+        server.rememberPassword = pageData.login.rememberPassword.value;
     }
     
-    dump("am.createIncomingServer(" + username + "," +
-                                      hostname + "," +
-                                      servertype + "\n");
-    var server = am.createIncomingServer(username, hostname, servertype);
-    server.rememberPassword = rememberPassword;
-    server.password = password;
-    server.prettyName = prettyName;
+    server.prettyName = pageData.accname.prettyName.value;
+}
+
+// given an accountData structure, create an account
+// (but don't fill in any fields, that's for finishAccount()
+function createAccount(accountData)
+{
+
+    var server = accountData.incomingServer;
+    dump("am.createIncomingServer(" + server.username + "," +
+                                      server.hostName + "," +
+                                      server.type + ")\n");
+    var server = am.createIncomingServer(server.username,
+                                         server.hostName,
+                                         server.type);
     
     dump("am.createIdentity()\n");
     var identity = am.createIdentity();
-    identity.email = email;
-    identity.fullName = fullname;
-
+    
     /* new nntp identities should use plain text by default
      * we wan't that GNKSA (The Good Net-Keeping Seal of Approval) */
-    if (servertype == "nntp") {
+    if (server.type == "nntp") {
 			identity.composeHtml = false;
     }
 
@@ -141,26 +240,52 @@ function createAccount(pageData) {
     var account = am.createAccount();
     account.incomingServer = server;
     account.addIdentity(identity);
+    return account;
+}
 
-    if (smtphostname) {
-        dump("Setting SMTP server..\n");
-        smtpService.defaultServer.hostname = smtphostname;
+// given an accountData structure, copy the data into the
+// given account, incoming server, and so forth
+function finishAccount(account, accountData) {
+
+    if (accountData.incomingServer) {
+        copyObjectToInterface(account.incomingServer,
+                              accountData.incomingServer);
+        account.incomingServer.valid=true;
     }
-  }
-  
-  catch (ex) {
-      dump("Error creating account: " + ex + "\n");
-      return null;
-  }
-  
-  return account;
+    
+    if (accountData.identity) {
+        var destIdentity =
+            account.identities.QueryElementAt(0, nsIMsgIdentity);
+        copyObjectToInterface(destIdentity,
+                              accountData.identity);
+        destIdentity.valid=true;
+    }
+}
+
+
+// copy over all attributes from dest into src that already exist in src
+// the assumption is that src is an XPConnect interface full of attributes
+function copyObjectToInterface(dest, src) {
+    if (!dest) return;
+    if (!src) return;
+    
+    var i;
+    for (i in src) {
+        try {
+            if (dest[i] != src[i])
+                dest[i] = src[i];
+        }
+        catch (ex) {
+            dump("Error copying the " +
+                 i + " attribute: " + ex + "\n");
+        }
+    }
 }
 
 // check if there already is a "none" account. (aka "Local Folders")
 // if not, create it.
 function verifyLocalFoldersAccount(account) {
     
-    var am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
     dump("Looking for local mail..\n");
 	var localMailServer = null;
 	try {
@@ -203,15 +328,13 @@ function verifyLocalFoldersAccount(account) {
 	
 	setDefaultCopiesAndFoldersPrefs(identity, copiesAndFoldersServer);
 
-    return true;
-
     } catch (ex) {
         // return false (meaning we did not create the account)
         // on any error
         dump("Error creating local mail: " + ex + "\n");
         return false;
     }
-return true;
+    return true;
 }
 
 function setDefaultCopiesAndFoldersPrefs(identity, server)
@@ -254,12 +377,62 @@ function setDefaultCopiesAndFoldersPrefs(identity, server)
 	dump("draftFolder = " + identity.draftFolder + "\n");
 	dump("stationeryFolder = " + identity.stationeryFolder + "\n");
 
-	return;
+}
+
+function checkForInvalidAccounts()
+{
+    am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+
+    var account = getFirstInvalidAccount();
+
+    if (account) {
+        var pageData = parent.wizardManager.WSM.PageData;
+        dump("We have an invalid account, " + account + ", let's use that!\n");
+        currentAccount = account;
+        AccountDataToPageData(account, pageData);
+        dump(parent.wizardManager.WSM);
+    }
+}
+
+// returns the first account with an invalid server or identity
+function getFirstInvalidAccount()
+{
+    var accounts = am.accounts;
+
+    var numAccounts = accounts.Count();
+    for (var i=0; i<numAccounts; i++) {
+        var account = accounts.QueryElementAt(i, Components.interfaces.nsIMsgAccount);
+        if (!account.incomingServer.valid)
+            return account;
+
+        var identities = account.identities;
+        var numIdentities = identities.Count();
+
+        for (var j=0; j<numIdentities; j++) {
+            var identity = identities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
+            if (!identity.valid)
+                return account
+        }
+    }
+
+    // none found
+    return null;
+}
+
+
+// sets the page data, automatically creating the arrays as necessary
+function setPageData(pageData, tag, slot, value) {
+    if (!pageData[tag]) pageData[tag] = [];
+    if (!pageData[tag][slot]) pageData[tag][slot] = [];
+    
+    pageData[tag][slot].value = value;
 }
 
 // value of checkbox on the first page
 function serverIsNntp(pageData) {
-    return pageData.accounttype.newsaccount.value == true;
+    if (pageData.accounttype.newsaccount)
+        return pageData.accounttype.newsaccount.value;
+    return false;
 }
 
 function getCurrentServerType(pageData) {
@@ -278,3 +451,22 @@ function getCurrentHostname(pageData) {
         return pageData.server.hostname.value;
 }
         
+function updateMap(pageData, wizardMap) {
+    if (pageData.accounttype) {
+        if (pageData.accounttype.mailaccount &&
+            pageData.accounttype.mailaccount.value) {
+            wizardMap.identity.next = "server";
+            wizardMap.accname.previous = "server";
+        }
+
+        else if (pageData.accounttype.newsaccount &&
+                 pageData.accounttype.newsaccount.value) {
+            wizardMap.identity.next = "newsserver";
+            wizardMap.accname.previous = "newsserver";
+        }
+        else {
+            dump("Handle other types here?");
+        }
+    }
+
+}
