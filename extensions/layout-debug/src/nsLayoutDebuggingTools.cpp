@@ -103,7 +103,7 @@ pres_context(nsIDocShell *aDocShell)
 }
 #endif
 
-nsIViewManager*
+static nsIViewManager*
 view_manager(nsIDocShell *aDocShell)
 {
     nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
