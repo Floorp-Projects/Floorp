@@ -451,6 +451,14 @@ nsTreeFrame::Reflow(nsIPresContext*          aPresContext,
 							      const nsHTMLReflowState& aReflowState,
 							      nsReflowStatus&          aStatus)
 {
+  NS_ASSERTION(aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE, 
+               "Reflowing tree with unconstrained width!!!!");
+  
+  NS_ASSERTION(aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE, 
+               "Reflowing tree with unconstrained height!!!!");
+
+  //printf("Tree Width: %d, Tree Height: %d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+
   nsresult rv = NS_OK;
 
   mSlatedForReflow = PR_FALSE;
@@ -477,11 +485,11 @@ nsTreeFrame::Reflow(nsIPresContext*          aPresContext,
 
   if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) 
     aDesiredSize.width = aReflowState.mComputedWidth + 
-       aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
+        aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
   
   if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE)
     aDesiredSize.height = aReflowState.mComputedHeight +
-       aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
+      aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
   aDesiredSize.ascent = aDesiredSize.height;
   

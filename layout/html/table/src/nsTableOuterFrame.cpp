@@ -584,6 +584,17 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*        aPresCont
   nscoord tableMaxWidth = PR_MAX(aReflowState.reflowState.availableWidth, mMinCaptionWidth);
   nsHTMLReflowState innerReflowState(aPresContext, aReflowState.reflowState, mInnerTableFrame,
                                      nsSize(tableMaxWidth, aReflowState.reflowState.availableHeight));
+  
+  // Tables are completely screwed up. They do not really obey mComputedWidth and mComputedHeight,
+  // and when the innerReflowState is constructed, they attempt to set it themselves by looking
+  // for their styled width and height.  This is totally bogus, since there's no reason to
+  // believe that those #s are always accurate now that the notion of flex has been
+  // introduced.
+  
+  // The following function will at least make trees behave properly inside boxes.  Maybe one
+  // day we'll be able to make tables behave too.
+  FixBadReflowState(aReflowState.reflowState, innerReflowState);
+
   rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState,
                    0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
   mInnerTableFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);

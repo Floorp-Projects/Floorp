@@ -142,11 +142,13 @@ nsTableFrame* nsTreeCellFrame::GetTreeFrame()
 	return mTreeFrame;
 }
 
-NS_METHOD nsTreeCellFrame::Reflow(nsIPresContext* aPresContext,
+NS_IMETHODIMP nsTreeCellFrame::Reflow(nsIPresContext* aPresContext,
                                    nsHTMLReflowMetrics& aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus& aStatus)
 {
+  //printf("Tree Cell Width: %d, Tree Cell Height: %d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+
 	nsresult rv = nsTableCellFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
 	return rv;

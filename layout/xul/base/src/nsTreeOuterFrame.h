@@ -21,8 +21,9 @@
  */
 
 #include "nsTableOuterFrame.h"
+#include "nsIBox.h"
 
-class nsTreeOuterFrame : public nsTableOuterFrame
+class nsTreeOuterFrame : public nsTableOuterFrame, nsIBox
 {
 public:
   friend nsresult NS_NewTreeOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
@@ -30,6 +31,19 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
                              nsEventStatus*  aEventStatus);
+
+  NS_IMETHOD     Reflow(nsIPresContext*          aPresContext,
+							         nsHTMLReflowMetrics&     aDesiredSize,
+							         const nsHTMLReflowState& aReflowState,
+							         nsReflowStatus&          aStatus);
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
+
+  NS_IMETHOD FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
+                               nsHTMLReflowState& aChildReflowState);
 
 protected:
   nsTreeOuterFrame();

@@ -228,6 +228,12 @@ protected:
 
 // end Incremental Reflow methods
 
+  // The following function at least lets the tree widget work
+  // inside boxes.  It repairs the reflow state after it's been
+  // screwed up by the nsHTMLReflowState code.
+  NS_IMETHOD FixBadReflowState(const nsHTMLReflowState& aParentReflowState,
+                               nsHTMLReflowState& aChildReflowState) { return NS_OK; };
+
 private:
   /** used to keep track of this frame's children */
   nsIFrame *mInnerTableFrame;
