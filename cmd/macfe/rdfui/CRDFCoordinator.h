@@ -40,7 +40,7 @@ class CHyperTreeFlexTable;
 
 
 class CRDFCoordinator :	public LView,
-						public LListener, public LCommander,
+						public LListener, public LCommander, LBroadcaster,
 						public CRDFNotificationHandler,
 						public LDragAndDrop
 {
