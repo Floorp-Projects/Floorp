@@ -138,6 +138,13 @@ void nsDocLoader::StartLoading()
   if (mStart == PR_FALSE)
   {
     mStart = PR_TRUE;
+
+    // Enable observing each URL load...
+    nsIWebShell* shell = nsnull;
+    mBrowser->GetWebShell(shell);
+    shell->SetObserver((nsIStreamObserver*)this);
+    NS_RELEASE(shell);
+
     if (mURLList)
     {
       if (mDocNum < mURLList->Count())
@@ -158,7 +165,6 @@ nsDocLoader::LoadDoc(PRInt32 aDocNum, PRBool aObserveIt)
     mBrowser->GetWebShell(shell);
     if (nsnull != shell) {
       shell->LoadURL(*url,                           // URL string
-                     aObserveIt ? this : nsnull,     // Observer
                      nsnull);                        // Post Data
       NS_RELEASE(shell);
     }

@@ -260,6 +260,7 @@ void
 nsBrowserWindow::Destroy()
 {
   mWebShell->SetContainer(nsnull);
+  mWebShell->SetObserver(nsnull);
   printf("refcnt=%d\n", mRefCnt);
   Release();
 }
@@ -267,21 +268,20 @@ nsBrowserWindow::Destroy()
 void
 nsBrowserWindow::Back()
 {
-  mWebShell->Back((nsIStreamObserver*) this);
+  mWebShell->Back();
 }
 
 void
 nsBrowserWindow::Forward()
 {
-  mWebShell->Forward((nsIStreamObserver*) this);
+  mWebShell->Forward();
 }
 
 void
 nsBrowserWindow::GoTo(const nsString& aURL)
 {
-  mWebShell->LoadURL(aURL, (nsIStreamObserver*) this, nsnull);
+  mWebShell->LoadURL(aURL, nsnull);
 }
-
 
 #define FILE_PROTOCOL "file://"
 
@@ -429,6 +429,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), r);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
+  mWebShell->SetObserver((nsIStreamObserver*)this);
   mWebShell->Show();
 
   if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
@@ -638,7 +639,7 @@ nsBrowserWindow::GetChrome(PRUint32& aChromeMaskResult)
 NS_IMETHODIMP
 nsBrowserWindow::LoadURL(const nsString& aURL)
 {
-  return mWebShell->LoadURL(aURL, this, nsnull);
+  return mWebShell->LoadURL(aURL, nsnull);
 }
 
 NS_IMETHODIMP
