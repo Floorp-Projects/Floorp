@@ -151,6 +151,7 @@ protected:
 	PRBool							mWindowMadeHere; // true if we created the window
 	PRBool							mIsDialog;       // true if the window is a dialog
 	PRBool							mIsSheet;        // true if the window is a sheet (Mac OS X)
+	PRBool							mIgnoreDeactivate;  // true if this window has a (Mac OS X) sheet opening
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
 	nsIWidget                      *mOffsetParent;
 	PRBool                          mAcceptsActivation;
