@@ -35,6 +35,8 @@ ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
   BASEBROWSER = basebrowser-win
   BASEBROWSER_SUPP = basebrowser-win-supp
   CLIENTMANIFEST = client-win
+  MREMANIFEST = mre-win
+  MREMANIFEST_SUPP = mre-win-supp
   _PLATFORM = dos
   WINAPP=mfcembed
   #WINAPP=winembed
@@ -93,9 +95,11 @@ mre:: embed_chrome
 	$(PERL) -I$(srcdir) $(srcdir)/mre.pl mre < $(srcdir)/$(BASEBROWSER) > $(MOZILLA_DIR)/embedding/config/mre-win.tmp
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(MOZILLA_DIR)/embedding/config/mre-win.tmp -o $(_PLATFORM) -v
 	-$(RM) -f $(MOZILLA_DIR)/embedding/config/mre-win.tmp
+	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(MREMANIFEST) -o $(_PLATFORM) -v
 	$(PERL) -I$(srcdir) $(srcdir)/mre.pl mre_app_support < $(srcdir)/$(BASEBROWSER_SUPP) > $(MOZILLA_DIR)/embedding/config/mre-win-supp.tmp
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(MOZILLA_DIR)/embedding/config/mre-win-supp.tmp -o $(_PLATFORM) -v
 	-$(RM) -f $(MOZILLA_DIR)/embedding/config/mre-win-supp.tmp
+	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(MREMANIFEST_SUPP) -o $(_PLATFORM) -v
 	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/mre_app_support/chrome
 	test -d $(DIST)/mre_app_support/plugins || mkdir $(DIST)/mre_app_support/plugins
 	test -d $(DIST)/mre_app_support/components || mkdir $(DIST)/mre_app_support/components
