@@ -14,7 +14,6 @@ function Init()
   sidebar.db       = window.arguments[0];
   sidebar.resource = window.arguments[1];
 
- dump("Sidebar Customize Init("+sidebar.db+",\n                       "+sidebar.resource+")\n");
   var registry;
   try {
     // First try to construct a new one and load it
@@ -42,8 +41,6 @@ function Init()
   sb_datasource = sb_datasource.QueryInterface(Components.interfaces.nsIRDFContainer);
   sb_datasource.Init(registry, RDF.GetResource(sidebar.resource));
   
-  var sideoption = document.getElementById('selectList');
-
   // Now enumerate all of the flash datasources.
   var enumerator = sb_datasource.GetElements();
   var count = 0;
@@ -52,25 +49,19 @@ function Init()
     var service = enumerator.GetNext();
     service = service.QueryInterface(Components.interfaces.nsIRDFResource);
 
-    var new_option = createOption(registry, service);
-    if (new_option) {
-      sideoption.appendChild(new_option);
-    }
+    addOption(registry, service);
   }
   enableButtons();
 }
 
-function createOption(registry, service) {
+function addOption(registry, service) {
   
   var option_title = getAttr(registry, service, 'title');
   var option_customize = getAttr(registry, service, 'customize');
   var option_content   = getAttr(registry, service, 'content');
 
-  dump(option_title + "\n");
-  
   var optionSelect = createOptionTitle(option_title);
   var option = document.createElement('html:option');
-  dump(option);
   
   option.setAttribute('title', option_title);
   option.setAttribute('customize', option_customize);
@@ -79,16 +70,14 @@ function createOption(registry, service) {
  
   option.appendChild(optionSelect);
 
-  return option;
+  var sideoption = document.getElementById('selectList');
+  sideoption.appendChild(option);
 }
-
 
 function createOptionTitle(titletext)
 {
- dump('create optionText');
   var title = document.createElement('html:option');
   var textOption = document.createTextNode(titletext);
-  //should be able to use title.add actaully
   title.appendChild(textOption);
 
   return textOption;
@@ -99,26 +88,10 @@ function getAttr(registry,service,attr_name) {
            RDF.GetResource('http://home.netscape.com/NC-rdf#' + attr_name),
            true);
   if (attr)
-    attr = attr.QueryInterface(
-          Components.interfaces.nsIRDFLiteral);
+    attr = attr.QueryInterface(Components.interfaces.nsIRDFLiteral);
   if (attr)
       attr = attr.Value;
   return attr;
-}
-
-function Reload(url, pollInterval)
-{
-    // Reload the specified datasource and reschedule.
-    dump('Reload(' + url + ', ' + pollInterval + ')\n');
-
-    var datasource = RDF.GetDataSource(url);
-    datasource = datasource.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
-
-    // Reload, asynchronously.
-    datasource.Open(false);
-
-    // Reschedule
-    Schedule(url, pollInterval);
 }
 
 function selectChange() {
@@ -178,12 +151,9 @@ function enableButtons() {
     var option = list.childNodes.item(index);
     customizeURL = option.getAttribute('customize');
   }
-  dump("customize="+customizeURL+"\n");
   if (customizeURL == 'null') {
-    dump("...so disable it\n");
     customize.setAttribute('disabled','true');
   } else {
-    dump("...enable\n");
     customize.setAttribute('disabled','');
   }
 }
@@ -193,7 +163,6 @@ function deleteOption()
   var list  = document.getElementById('selectList');	
   var index = list.selectedIndex;
   if (index != -1) {
-    //list.remove(index);
     // XXX prompt user
     list.options[index] = null;
   }
@@ -299,24 +268,32 @@ function writeRDF(title,content,customize,append)
     dump("wrote " + FileURL + " back to disk.\n");
 }
 
-function selected(event, node)
+function selected()
 { 
-   dump('node:\n' + node);
-   selectedNode_Title = node.getAttribute('title');
-   selectedNode_Content = node.getAttribute('content');
-   selectedNode_Customize = node.getAttribute('customize');
+  var add_button = document.getElementById('add_button');
+  var preview_button = document.getElementById('preview_button');
+  var select_list = document.getElementsByAttribute("selected", "true");
+  if (select_list.length >= 1) {
+    add_button.setAttribute('disabled','');
+    preview_button.setAttribute('disabled','');
+  } else {
+    add_button.setAttribute('disabled','true');
+    preview_button.setAttribute('disabled','true');
+  }
 }
 
 function Addit() 
 {
-	if (window.frames[0].selectedNode_Title != null) {
-	dump(window.frames[0].selectedNode_Title + '\n');
-	createOption();
-      } else {
-	  dump('Nothing selected');
-	  }
-}
-
-function Cancel() {
-  window.close();
+  var tree = document.getElementById('other-panels');
+  var database = tree.database;
+  var select_list = document.getElementsByAttribute("selected", "true");
+  for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
+    var node = select_list[nodeIndex];
+    if (!node)    break;
+    var id = node.getAttribute("id");
+    if (!id)      break;
+    var rdfNode = RDF.GetResource(id);
+    if (!rdfNode) break;
+    addOption(database,rdfNode);
+  }
 }

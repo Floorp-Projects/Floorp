@@ -30,7 +30,7 @@
 
     <html:form name="one" >
       <html:select name="two" id="selectList" size="10" 
-                   onchange="selectChange();">
+         onclick="selectChange();">
       </html:select>
     </html:form>
 
@@ -51,14 +51,14 @@
 
   <box align="horizontal"  class="box-group">
 
-      <tree id="tree" style="width:15em;"
-            datasources="resource:/res/rdf/sidebar-registry.rdf"
-    		onclick="selected(event,event.target.parentNode)" >
+      <tree id="other-panels" style="width:15em;height:15em;"
+            datasources="resource://res/rdf/sidebar-registry.rdf"
+    		onclick="selected()" >
     
         <!-- The template we'll use to build rows in the content model. -->
         <template>
           <rule rootcontainment="treechildren" subcontainment="treechildren">
-            <treeitem uri="...">
+            <treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
               <treerow>
                 <treecell>
                   <treeindentation />
@@ -69,21 +69,23 @@
             </treeitem>
           </rule>
         </template>
-    
-        <!-- The tree header: display some column info. -->
+
         <treehead>
           <treerow>
+            <treecell>Name</treecell>
           </treerow>
         </treehead>
-    
+  
         <!-- The tree body: it's rooted at sitemap1.rdf's root -->
-        <treechildren ref="NC:BrowserSidebarRoot" open="true" />
+        <treechildren id="other-panels-children" ref="NC:SidebarRoot" open="true"/>
       </tree>
   
     <box align="vertical" class="button-group">
       <spring flex="50%"/>
-      <titledbutton  onclick="Addit()" value="Add"/>
-      <titledbutton  onclick=""        value="Preview..."/>
+      <titledbutton id="add_button" onclick="Addit()" value="Add"
+         disabled="true"/>
+      <titledbutton id="preview_button" onclick="" value="Preview..."
+         disabled="true"/>
       <spring flex="50%"/>
     </box>
 
@@ -101,7 +103,7 @@
 
   <box align="horizontal">
     <spring flex="48%"/>
-    <titledbutton onclick="Cancel();" value="Cancel" />
+    <titledbutton onclick="window.close()" value="Cancel" />
     <spring flex="4%"/>
     <titledbutton onclick="Save();" value="Save" disabled="true"/>
     <spring flex="48%"/>
