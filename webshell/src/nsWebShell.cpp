@@ -2651,7 +2651,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
 
   if (name.EqualsIgnoreCase("_blank")) {
     nsIWebShell *shell;
-    if (NS_OK == NewWebShell(PRUint32(~0), PR_TRUE, shell))
+    if (NS_OK == NewWebShell(NS_CHROME_ALL_CHROME, PR_TRUE, shell))
       target = shell;
     else
     {
