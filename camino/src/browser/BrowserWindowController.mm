@@ -1085,7 +1085,7 @@ enum BWCOpenDest {
     [toolbarItem setToolTip:NSLocalizedString(@"BookmarkToolTip", @"Add this page to your bookmarks")];
     [toolbarItem setImage:[NSImage imageNamed:@"add_to_bookmark.tif"]];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector(bookmarkPage:)];
+    [toolbarItem setAction:@selector(addBookmark:)];
   }
   else if ([itemIdent isEqual:TextBiggerToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"BigText", @"Enlarge Text")];
@@ -1175,7 +1175,7 @@ enum BWCOpenDest {
     return (![mBrowserView isBusy] && ![self bookmarkManagerIsVisible]);
   else if (action == @selector(stop:))
     return [mBrowserView isBusy];
-  else if (action == @selector(bookmarkPage:))
+  else if (action == @selector(addBookmark:))
     return ![mBrowserView isEmpty];
   else if (action == @selector(biggerTextSize:))
     return ![mBrowserView isEmpty] && [[mBrowserView getBrowserView] canMakeTextBigger];
