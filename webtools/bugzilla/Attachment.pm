@@ -65,6 +65,11 @@ sub query
   my ($bugid) = @_;
 
   my $in_editbugs = &::UserInGroup("editbugs");
+  &::SendSQL("SELECT product_id
+           FROM bugs 
+           WHERE bug_id = $bugid");
+  my $productid = &::FetchOneColumn();
+  my $caneditproduct = &::CanEditProductId($productid);
 
   # Retrieve a list of attachments for this bug and write them into an array
   # of hashes in which each hash represents a single attachment.
@@ -88,8 +93,8 @@ sub query
     # ie the are the submitter, or they have canedit.
     # Also show the link if the user is not logged in - in that cae,
     # They'll be prompted later
-    $a{'canedit'} = ($::userid == 0 || $submitter_id == $::userid ||
-                     $in_editbugs);
+    $a{'canedit'} = ($::userid == 0 || (($submitter_id == $::userid ||
+                     $in_editbugs) && $caneditproduct));
     push @attachments, \%a;
   }
   

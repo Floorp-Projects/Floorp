@@ -77,12 +77,14 @@ elsif ($action eq "enter")
 { 
   confirm_login();
   ValidateBugID($::FORM{'bugid'});
+  validateCanChangeBug($::FORM{'bugid'});
   enter(); 
 }
 elsif ($action eq "insert")
 {
   confirm_login();
   ValidateBugID($::FORM{'bugid'});
+  validateCanChangeBug($::FORM{'bugid'});
   ValidateComment($::FORM{'comment'});
   validateFilename();
   validateIsPatch();
@@ -105,6 +107,7 @@ elsif ($action eq "update")
   ValidateComment($::FORM{'comment'});
   validateID();
   validateCanEdit($::FORM{'id'});
+  validateCanChangeAttachment($::FORM{'id'});
   validateDescription();
   validateIsPatch();
   validateContentType() unless $::FORM{'ispatch'};
@@ -168,6 +171,29 @@ sub validateCanEdit
             "attach_id = $attach_id AND submitter_id = $::userid");
 
     FetchSQLData()
+      || ThrowUserError("illegal_attachment_edit");
+}
+
+sub validateCanChangeAttachment 
+{
+    my ($attachid) = @_;
+    SendSQL("SELECT product_id
+             FROM attachments, bugs 
+             WHERE attach_id = $attachid
+             AND bugs.bug_id = attachments.bug_id");
+    my $productid = FetchOneColumn();
+    CanEditProductId($productid)
+      || ThrowUserError("illegal_attachment_edit");
+}
+
+sub validateCanChangeBug
+{
+    my ($bugid) = @_;
+    SendSQL("SELECT product_id
+             FROM bugs 
+             WHERE bug_id = $bugid");
+    my $productid = FetchOneColumn();
+    CanEditProductId($productid)
       || ThrowUserError("illegal_attachment_edit");
 }
 
