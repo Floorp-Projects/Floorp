@@ -41,7 +41,6 @@ CPPSRCS		= \
 		nsJSBaseAppCore.cpp \
 		nsJSAppCoresManager.cpp \
 		nsJSToolkitCore.cpp \
-		nsJSBrowserAppCore.cpp \
 		nsAppCores.cpp \
 		$(NULL)
 
