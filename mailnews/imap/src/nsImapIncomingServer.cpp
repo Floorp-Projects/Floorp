@@ -2130,7 +2130,7 @@ nsImapIncomingServer::FEAlert(const PRUnichar* aString, nsIMsgWindow * aMsgWindo
 
   if (!dialog) // if we didn't get one, use the default....
   {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (wwatch)
       wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
   }
@@ -2150,7 +2150,7 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIM
 
   if (!dialog) // if we didn't get one, use the default....
   {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (wwatch)
       wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
   }

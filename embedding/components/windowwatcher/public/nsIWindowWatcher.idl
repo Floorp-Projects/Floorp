@@ -162,5 +162,6 @@ interface nsIWindowWatcher : nsISupports {
 // {002286a8-494b-43b3-8ddd-49e3fc50622b}
 #define NS_WINDOWWATCHER_IID \
  {0x002286a8, 0x494b, 0x43b3, {0x8d, 0xdd, 0x49, 0xe3, 0xfc, 0x50, 0x62, 0x2b}}
-%}
 
+#define NS_WINDOWWATCHER_CONTRACTID "@mozilla.org/embedcomp/window-watcher;1"
+%}
