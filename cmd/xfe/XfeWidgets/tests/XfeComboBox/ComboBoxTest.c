@@ -156,7 +156,7 @@ main(int argc,char *argv[])
 		XmNfillOnArm,				False,
 		XmNraiseOnEnter,			True,
 		XmNshadowThickness,			0,
-		XmNraiseBorderThickness,	0,
+		XmNaccentBorderThickness,	0,
 		NULL);
 
 
