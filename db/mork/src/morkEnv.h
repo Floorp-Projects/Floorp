@@ -35,27 +35,31 @@
 #include "morkPool.h"
 #endif
 
+// sean was here
+#include "nsError.h"
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #define morkDerived_kEnv     /*i*/ 0x4576 /* ascii 'Ev' */
 
-#define morkEnv_kNoError         0 /* no error has happened */
+// use NS error codes to make Mork easier to use with the rest of mozilla 
+#define morkEnv_kNoError         NS_SUCCEEDED /* no error has happened */
+#define morkEnv_kGenericError    NS_ERROR_FAILURE /* non-specific error code */
+#define morkEnv_kNonEnvTypeError NS_ERROR_FAILURE /* morkEnv::IsEnv() is false */
 
-#define morkEnv_kGenericError    1 /* non-specific error code */
-#define morkEnv_kNonEnvTypeError 2 /* morkEnv::IsEnv() is false */
+#define morkEnv_kStubMethodOnlyError NS_ERROR_NO_INTERFACE
+#define morkEnv_kOutOfMemoryError    NS_ERROR_OUT_OF_MEMORY
+#define morkEnv_kNilPointerError     NS_ERROR_NULL_POINTER
+#define morkEnv_kNewNonEnvError      NS_ERROR_FAILURE 
+#define morkEnv_kNilEnvSlotError     NS_ERROR_FAILURE
 
-#define morkEnv_kStubMethodOnlyError 3
-#define morkEnv_kOutOfMemoryError    4
-#define morkEnv_kNilPointerError     5
-#define morkEnv_kNewNonEnvError      6
-#define morkEnv_kNilEnvSlotError     7
+#define morkEnv_kBadFactoryError     NS_ERROR_FACTORY_NOT_LOADED
+#define morkEnv_kBadFactoryEnvError  NS_ERROR_FACTORY_NOT_LOADED
+#define morkEnv_kBadEnvError         NS_ERROR_FAILURE
 
-#define morkEnv_kBadFactoryError     8
-#define morkEnv_kBadFactoryEnvError  9
-#define morkEnv_kBadEnvError         10
+#define morkEnv_kNonHandleTypeError  NS_ERROR_FAILURE
+#define morkEnv_kNonOpenNodeError    NS_ERROR_FAILURE 
 
-#define morkEnv_kNonHandleTypeError  11
-#define morkEnv_kNonOpenNodeError    12
 
 #define morkEnv_kWeakRefCountEnvBonus 0 /* try NOT to leak all env instances */
 
