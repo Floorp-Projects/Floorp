@@ -32,10 +32,10 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom string uconv
 
 CPPSRCS		= \
+		nsUnicodeToTeXCMRt1.cpp \
+		nsUnicodeToTeXCMMIt1.cpp \
 		nsUnicodeToTeXCMSYt1.cpp \
-		nsUnicodeToTeXCMSYttf.cpp \
 		nsUnicodeToTeXCMEXt1.cpp \
-		nsUnicodeToTeXCMEXttf.cpp \
 		nsUnicodeToMathematica1.cpp \
 		nsUnicodeToMathematica2.cpp \
 		nsUnicodeToMathematica3.cpp \

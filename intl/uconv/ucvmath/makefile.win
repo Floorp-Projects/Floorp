@@ -31,10 +31,10 @@ DLLNAME = ucvmath
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 CPPSRCS =				\
+	nsUnicodeToTeXCMRttf.cpp 	\
+	nsUnicodeToTeXCMMIttf.cpp 	\
 	nsUnicodeToTeXCMSYttf.cpp 	\
-	nsUnicodeToTeXCMSYt1.cpp 	\
 	nsUnicodeToTeXCMEXttf.cpp 	\
-	nsUnicodeToTeXCMEXt1.cpp 	\
 	nsUnicodeToMathematica1.cpp 	\
 	nsUnicodeToMathematica2.cpp 	\
 	nsUnicodeToMathematica3.cpp 	\
@@ -46,10 +46,10 @@ CPPSRCS =				\
 	$(NULL)
 
 CPP_OBJS=						\
+	.\$(OBJDIR)\nsUnicodeToTeXCMRttf.obj		\
+	.\$(OBJDIR)\nsUnicodeToTeXCMMIttf.obj		\
 	.\$(OBJDIR)\nsUnicodeToTeXCMSYttf.obj		\
-	.\$(OBJDIR)\nsUnicodeToTeXCMSYt1.obj		\
 	.\$(OBJDIR)\nsUnicodeToTeXCMEXttf.obj		\
-	.\$(OBJDIR)\nsUnicodeToTeXCMEXt1.obj		\
 	.\$(OBJDIR)\nsUnicodeToMathematica1.obj		\
 	.\$(OBJDIR)\nsUnicodeToMathematica2.obj		\
 	.\$(OBJDIR)\nsUnicodeToMathematica3.obj		\
