@@ -530,7 +530,9 @@ function GetArgs()
 		if (argvalue.charAt(0) == "'" && argvalue.charAt(argvalue.length - 1) == "'")
 			args[argname] = argvalue.substring(1, argvalue.length - 1);
 		else
-			args[argname] = unescape(argvalue);
+		  try {
+        args[argname] = unescape(argvalue);
+      } catch (e) {args[argname] = argvalue;}
 		dump("[" + argname + "=" + args[argname] + "]\n");
 	}
 	return args;
@@ -659,20 +661,26 @@ function ComposeStartup()
 	    	if (msgCompFields)
 	    	{
 	    		if (args.body) //We need to set the body before setting
-                               //msgCompose.editor;
-                {
-                    if (args.bodyislink == "true")
-					{
-						if (msgCompose.composeHTML)
-							msgCompFields.SetBody("<BR><A HREF=\"" + args.body +
-													  "\">" + unescape(args.body)
-													  + "</A><BR>");
-						else
-							msgCompFields.SetBody("\n<" + args.body + ">\n");
-					}
-                    else
-                        msgCompFields.SetBody(args.body);
-                }
+                         //msgCompose.editor;
+          {
+            if (args.bodyislink == "true")
+            {
+              if (msgCompose.composeHTML)
+              {
+                var cleanBody;
+                try {
+                  cleanBody = unescape(args.body);
+                } catch(e) { cleanBody = args.body;}
+
+                msgCompFields.SetBody("<BR><A HREF=\"" + args.body +
+                                      "\">" + cleanBody + "</A><BR>");
+              }
+              else
+                msgCompFields.SetBody("\n<" + args.body + ">\n");
+            }
+            else
+              msgCompFields.SetBody(args.body);
+          }
 
 	    		if (args.to)
 	    			msgCompFields.SetTo(args.to);
