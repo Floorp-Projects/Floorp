@@ -107,7 +107,7 @@ protected:
                                nscoord                  aContainingBlockWidth,
                                nscoord                  aContainingBlockHeight,
                                nsIFrame*                aKidFrame,
-                               PRBool                   aInitialReflow,
+                               nsReflowReason           aReason,
                                nsReflowStatus&          aStatus);
 
   void CalculateChildBounds(nsIPresContext* aPresContext, nsRect& aChildBounds);
