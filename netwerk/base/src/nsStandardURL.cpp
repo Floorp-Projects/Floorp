@@ -1121,6 +1121,8 @@ nsStandardURL::SetUserPass(const nsACString &input)
     LOG(("nsStandardURL::SetUserPass [userpass=%s]\n", userpass.get()));
 
     if (mURLType == URLTYPE_NO_AUTHORITY) {
+        if (userpass.IsEmpty())
+            return NS_OK;
         NS_ERROR("cannot set user:pass on no-auth url");
         return NS_ERROR_UNEXPECTED;
     }
@@ -1218,6 +1220,8 @@ nsStandardURL::SetUsername(const nsACString &input)
     LOG(("nsStandardURL::SetUsername [username=%s]\n", username.get()));
 
     if (mURLType == URLTYPE_NO_AUTHORITY) {
+        if (username.IsEmpty())
+            return NS_OK;
         NS_ERROR("cannot set username on no-auth url");
         return NS_ERROR_UNEXPECTED;
     }
@@ -1261,6 +1265,8 @@ nsStandardURL::SetPassword(const nsACString &input)
     LOG(("nsStandardURL::SetPassword [password=%s]\n", password.get()));
 
     if (mURLType == URLTYPE_NO_AUTHORITY) {
+        if (password.IsEmpty())
+            return NS_OK;
         NS_ERROR("cannot set password on no-auth url");
         return NS_ERROR_UNEXPECTED;
     }
@@ -1327,6 +1333,8 @@ nsStandardURL::SetHost(const nsACString &input)
     LOG(("nsStandardURL::SetHost [host=%s]\n", host));
 
     if (mURLType == URLTYPE_NO_AUTHORITY) {
+        if (flat.IsEmpty())
+            return NS_OK;
         NS_ERROR("cannot set host on no-auth url");
         return NS_ERROR_UNEXPECTED;
     }
@@ -1387,6 +1395,11 @@ nsStandardURL::SetPort(PRInt32 port)
 
     if ((port == mPort) || (mPort == -1 && port == mDefaultPort))
         return NS_OK;
+
+    if (mURLType == URLTYPE_NO_AUTHORITY) {
+        NS_ERROR("cannot set port on no-auth url");
+        return NS_ERROR_UNEXPECTED;
+    }
 
     InvalidateCache();
 
