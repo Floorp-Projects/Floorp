@@ -1,22 +1,35 @@
-README for libpng 0.95
+README for libpng 1.0.2 - June 14, 1998 (shared library 2.1)
+See the note about version numbers near the top of png.h
 
-This is the fifth (and hopefully last) beta release of libpng 1.0.
-The changes from libpng-0.90 include bug fixes, a C++ wrapper for
-png.h, some additions to the API, as well as internal changes to
-the library.  See "CHANGES" for a detailed list of differences.
+See INSTALL for instructions on how to install libpng.
+
+This is the first official release of libpng.  Don't let the fact that
+it's the first release fool you.  The libpng library has been in
+extensive use and testing for about two and a half years.  However, it's
+finally gotten to the stage where there haven't been significant
+changes to the API in some time, and people have a bad feeling about
+libraries with versions < 1.0.
 
 ****
 Note that some of the changes to the png_info structure render this
 version of the library binary incompatible with libpng-0.89 or
-earlier versions if you are using a shared library.  Also, the type
-of the "filler" parameter for png_set_filler() has changed from png_byte
-to png_uint_32, which will affect shared-library applications which use
+earlier versions if you are using a shared library.  The type of the
+"filler" parameter for png_set_filler() has changed from png_byte to
+png_uint_32, which will affect shared-library applications that use
 this function.
 
 To avoid problems with changes to the internals of png_info_struct,
 new APIs have been made available in 0.95 to avoid direct application
 access to info_ptr.  These functions are the png_set_<chunk> and
-png_get_<chunk> functions.
+png_get_<chunk> functions.  These functions should be used when
+accessing/storing the info_struct data, rather than manipulating it
+directly, to avoid such problems in the future.
+
+It is important to note that the APIs do not make current programs
+that access the info struct directly incompatible with the new
+library.  However, it is strongly suggested that new programs use
+the new APIs (as shown in example.c), and older programs be converted
+to the new format, to facilitate upgrades in the future.
 ****
 
 Additions since 0.90 include the ability to compile libpng as a
@@ -63,7 +76,7 @@ If not, it should be at ftp.uu.net in /graphics/png
 Eventually, it will be at ftp.uu.net in /pub/archiving/zip/zlib
 
 You may also want a copy of the PNG specification.  It is available
-as an Internet Draft, and RFC, and a W3C Recommendation.  Failing
+as an RFC and a W3C Recommendation.  Failing
 these resources you can try ftp.uu.net in the /graphics/png directory.
 
 This code is currently being archived at ftp.uu.net in the
@@ -83,19 +96,19 @@ Finally, if you get any warning messages when compiling libpng
 fix.  Please mention "libpng" somewhere in the subject line.  Thanks.
 
 This release was created and will be supported by myself (of course
-based in a large way on Guy's earlier work), and the PNG group.
+based in a large way on Guy's and Andreas' earlier work), and the PNG group.
 
-adilger@enel.ucalgary.ca
+randeg@alumni.rpi.edu
 png-implement@dworkin.wustl.edu
 
-You can reach Guy, the original libpng author, at (internet preferred):
-
-internet: schalnat@group42.com
-CompuServe: 75501,1625
+You can't reach Guy, the original libpng author, at the addresses
+given in previous versions of this document.  He and Andreas will read mail
+addressed to the png-implement list, however.
 
 Please do not send general questions about PNG.  Send them to
-the address in the specification.  At the same time, please do
-not send libpng questions to that address, send them to me.  I'll
+the address in the specification (png-group@w3.org).  At the same
+time, please do not send libpng questions to that address, send them to me
+or to png-implement@dworkin.wustl.edu.  I'll
 get them in the end anyway.  If you have a question about something
 in the PNG specification that is related to using libpng, send it
 to me.  Send me any questions that start with "I was using libpng,
@@ -103,7 +116,7 @@ and ...".  If in doubt, send questions to me.  I'll bounce them
 to others, if necessary.
 
 Please do not send suggestions on how to change PNG.  We have
-been discussing PNG for a couple years now, and it is official and
+been discussing PNG for three years now, and it is official and
 finished.  If you have suggestions for libpng, however, I'll
 gladly listen.  Even if your suggestion is not used for version
 1.0, it may be used later.
@@ -113,28 +126,20 @@ Files in this distribution:
       CHANGES       =>  Description of changes between libpng versions
       README        =>  This file
       TODO          =>  Things not implemented in the current library
+      ansi2knr.1    =>  Manual page for ansi2knr
       ansi2knr.c    =>  Converts files to K&R style function declarations
       build.bat     =>  MS-DOS batch file for Borland compiler
       descrip.mms   =>  VMS project file
       example.c     =>  Example code for using libpng functions
+      libpng.3      =>  manual page for libpng
       libpng.txt    =>  Description of libpng and its functions
-      makefile      =>  Default Unixish makefile
-      makefile.aco  =>  ACORN makefile
-      makefile.ama  =>  Amiga makefile
-      makefile.atr  =>  Atari makefile
-      makefile.bor  =>  Borland makefile
-      makefile.dj2  =>  DJGPP 2 makefile
-      makefile.elf  =>  Unix ELF makefile
-      makefile.knr  =>  Makefile which calls ansi2knr to convert files
-      makefile.mip  =>  MIPS makefile
-      makefile.msc  =>  Microsoft C makefile
-      makefile.std  =>  Standard Unix makefile
-      makefile.tc   =>  Turbo C makefile
-      makevms.com   =>  VMS make program
+      libpngpf.3    =>  manual page for libpng's private functions
+      png.5         =>  manual page for the PNG format
       png.c         =>  Basic interface functions common to library
       png.h         =>  Library function and interface declarations
       pngconf.h     =>  System specific library configuration
       pngerror.c    =>  Error/warning message I/O functions
+      pngget.c      =>  Functions for retrieving info from struct
       pngmem.c      =>  Memory handling functions
       pngpread.c    =>  Progressive reading functions
       pngread.c     =>  Read data/helper high-level functions
@@ -149,16 +154,44 @@ Files in this distribution:
       pngwrite.c    =>  High-level write functions
       pngwtran.c    =>  Write data transformations
       pngwutil.c    =>  Write utility functions
+      scripts       =>  Directory containing scripts for building libpng:
+        descrip.mms   =>  VMS makefile for MMS or MMK
+        makefile.std  =>  Generic UNIX makefile
+        makefile.knr  =>  Archaic UNIX Makefile that converts files with ansi2knr
+        makefile.dec  =>  DEC Alpha UNIX makefile
+        makefile.sgi  =>  Silicon Graphics IRIX makefile
+        makefile.sun  =>  Sun makefile
+        makefile.s2x  =>  Solaris 2.X makefile (gcc, creates libpng.so.2.1.0)
+        makefile.lnx  =>  Linux/ELF makefile (gcc, creates libpng.so.2.1.0)
+        makefile.mip  =>  MIPS makefile
+        makefile.aco  =>  Acorn makefile
+        makefile.ama  =>  Amiga makefile
+        smakefile.ppc =>  AMIGA smakefile for SAS C V6.58/7.00 PPC compiler
+                          (Requires SCOPTIONS, copied from scripts/SCOPTIONS.ppc)
+        makefile.atr  =>  Atari makefile
+        makefile.bor  =>  Borland makefile
+        build.bat     =>  MS-DOS batch file for Borland compiler
+        makefile.dj2  =>  DJGPP 2 makefile
+        makefile.msc  =>  Microsoft C makefile
+        makefile.w32  =>  makefile for Microsoft Visual C++ 4.0 and later
+        makefile.tc3  =>  Turbo C 3.0 makefile
+        makefile.os2  =>  OS/2 Makefile (gcc and emx, requires pngos2.def)
+        makefile.wat  =>  Watcom 10a+ Makefile, 32-bit flat memory model
+        pngos2.def    =>  OS/2 module definition file used by makefile.os2
+        makevms.com   =>  VMS build script
+        pngdll.mak    =>  To make a png32bd.dll with Borland C++ 4.5
+        pngdef.pas    =>  Defines for a png32bd.dll with Borland C++ 4.5
 
 Good luck, and happy coding.
+
+-Glenn Randers-Pehrson
+ Internet: randeg@alumni.rpi.edu
+ Web: http://www.rpi.edu/~randeg/index.html
 
 -Andreas Eric Dilger
  Internet: adilger@enel.ucalgary.ca
  Web: http://www-mddsp.enel.ucalgary.ca/People/adilger/
 
 -Guy Eric Schalnat
- Group 42, Inc.
- Internet: schalnat@group42.com
- CompuServe: 75501,1625
- Web: http://www.group42.com/
-
+ (formerly of Group 42, Inc)
+ Internet: gschal@infinet.com
