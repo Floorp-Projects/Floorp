@@ -76,7 +76,7 @@ xmlns:html="http://www.w3.org/TR/REC-html40"
 			</box>
 			<box align="horizontal">
 				<titledbutton value="&startCmd.label;"  onclick="StartCommunicator();" />
-				<titledbutton value="&closeCmd.label;"  onclick="ExitApp();" />
+				<titledbutton value="&exitCmd.label;"  onclick="onExit();" />
 			</box>
 		</box>
 	</box>

@@ -332,13 +332,6 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
              * Start up the main event loop...
              */	
             rv = profAppShell->Run();
-
-	    char *currentProfileStr = nsnull;
-	    rv = GetCurrentProfile(&currentProfileStr);
-	    if (NS_FAILED(rv) || !currentProfileStr) {
-		return NS_ERROR_FAILURE;
-	    }
-	    PR_DELETE(currentProfileStr);
         }
 
     if (pregPref && PL_strcmp(isPregInfoSet, REGISTRY_TRUE_STRING) != 0)
@@ -699,15 +692,14 @@ NS_IMETHODIMP nsProfile::GetProfileCount(PRInt32 *numProfiles)
 
 
 // If only a single profile exists
-// and returns the name of the single profile.
-// Otherwise it returns the name of the first valid profile.
-// Commonly used in picking the current profile name if it is not set.
-NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
+// return the name of the single profile.
+// Otherwise it return the name of the first valid profile.
+NS_IMETHODIMP nsProfile::GetFirstProfile(char **profileName)
 {
 	nsresult rv = NS_OK;
 
 #if defined(DEBUG_profile)
-    printf("ProfileManager : GetSingleProfile\n");
+    printf("ProfileManager : GetFirstProfile\n");
 #endif
 
     // Enumerate all subkeys (immediately) under the given node.
@@ -855,7 +847,7 @@ nsProfile::GetCurrentProfile(char **profileName)
             // if fails to get the current profile set the value to null
             if (NS_FAILED(rv))
 				{
-		            profileName = '\0';
+		            *profileName = nsnull;
                     
 #if defined(DEBUG_profile)
                     printf("Profiles:Can't get Current Profile value.\n" );
@@ -868,34 +860,11 @@ nsProfile::GetCurrentProfile(char **profileName)
             printf("Registry : Couldn't get Profiles subtree.\n");
 #endif
         }
-    
+#if defined(DEBUG_profile)
+        printf("current profile = %s\n", *profileName?*profileName:"(null)");
+#endif
 	return rv;
 }
-
-
-//  Returns the name of the first profile in the Registry
-//  This is essentially GetSingleProfile(). Should go away.
-//	Check for dependencies.
-NS_IMETHODIMP nsProfile::GetFirstProfile(char **profileName)
-{
-	nsresult rv = NS_OK;
-
-#if defined(DEBUG_profile)
-    printf("ProfileManager : GetFirstProfile\n");
-#endif
-
-    rv = GetSingleProfile(profileName);
-
-    if (NS_FAILED(rv))
-    {
-#if defined(DEBUG_profile)
-            printf("Couldn't get the first profile.\n" );
-#endif
-    }
-
-    return rv;
-}
-
 
 // Returns the name of the current profile directory
 NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
@@ -928,11 +897,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 #endif
 	}
 
-
-    if (profileName) {
-	PR_DELETE(profileName);
-    }
-    
+    PR_FREEIF(profileName);
     return rv;
 }
 
@@ -1238,6 +1203,7 @@ NS_IMETHODIMP nsProfile::RenameProfile(const char* oldName, const char* newName)
 		}
 		mRenameCurrProfile = PR_FALSE;
 	}
+    PR_FREEIF(currProfile);
    	return rv;
 }
 
@@ -1306,6 +1272,31 @@ nsresult nsProfile::CopyRegKey(const char *oldProfile, const char *newProfile)
 	return rv;
 }
 
+NS_IMETHODIMP nsProfile::ForgetCurrentProfile()
+{
+    nsresult rv;
+
+    rv = OpenRegistry();
+    if (NS_FAILED(rv)) return rv;
+
+    nsRegistryKey profileRootKey;
+    rv = m_reg->GetSubtree(nsIRegistry::Common, REGISTRY_PROFILE_SUBTREE_STRING, &profileRootKey);
+    if (NS_FAILED(rv)) return rv;
+
+    // Remove the current profile subtree from the registry.
+    rv = m_reg->SetString(profileRootKey, REGISTRY_CURRENT_PROFILE_STRING, "");
+    if (NS_FAILED(rv)) return rv;  
+
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!locator) return NS_ERROR_FAILURE;
+
+    rv = locator->ForgetProfileDir();
+    if (NS_FAILED(rv)) return rv;  
+
+    return NS_OK;
+}
 
 // Delete a profile from the registry
 // Not deleting the directories on the harddisk yet.
@@ -1368,7 +1359,8 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName, const char* canD
 #endif
                         }
                 }
-		}
+            PR_FREEIF(oldCurrProfile);
+        }
 
     // If user asks for it, delete profile directory
 	if (PL_strcmp(canDeleteFiles, REGISTRY_TRUE_STRING) == 0)
@@ -2025,11 +2017,10 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
 	if (userServiceDenial.mLength > 0)
 		userProfileName.SetString("");
 
-	char *curProfile = nsnull;
-
     rv = OpenRegistry();
     if (NS_FAILED(rv)) return rv;
     
+	char *curProfile = nsnull;
 	rv = GetCurrentProfile(&curProfile);
 
 	if (NS_SUCCEEDED(rv))
@@ -2093,6 +2084,7 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(const char* data)
                 }
         }
 	}
+    PR_FREEIF(curProfile);
 	return rv;
 }
 

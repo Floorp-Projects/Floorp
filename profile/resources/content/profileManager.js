@@ -89,6 +89,17 @@ function StartCommunicator()
 	ExitApp();
 }
 
+function onExit()
+{
+	try {
+		profile.forgetCurrentProfile();
+	}
+	catch (ex) {
+		dump("failed to forget current profile.\n");
+	}
+	ExitApp();
+}
+
 function ExitApp()
 {
 	// Need to call this to stop the event loop

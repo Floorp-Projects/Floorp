@@ -11,5 +11,5 @@
 <!ENTITY renameCmd.label "Rename...">
 <!ENTITY deleteCmd.label "Delete">
 <!ENTITY startCmd.label "Start">
-<!ENTITY closeCmd.label "Close">
+<!ENTITY exitCmd.label "Exit">
 <!ENTITY windowtitle.label "Profiles and Migration">

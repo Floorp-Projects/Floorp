@@ -7,6 +7,9 @@ var content;
 var wizardHash = new Array;
 var firstTime = true;
 
+var profile = Components.classes["component://netscape/profile/manager"].createInstance();
+profile = profile.QueryInterface(Components.interfaces.nsIProfile); 
+
 var testMap = {
     newProfile1_1: { previous: null, next: "newProfile1_2" },
     newProfile1_2: { previous: "newProfile1_1", next: null},
@@ -129,10 +132,20 @@ function saveData()
 function onCancel()
 {
   // we came from the profile manager window...
-  if (top.window.opener)
+  if (top.window.opener) {
+    //dump("just close\n");
     window.close();
-  else
-    ExitApp()
+  }
+  else { 
+    //dump("exit\n");
+    try {
+    	profile.forgetCurrentProfile();
+    }
+    catch (ex) {
+	dump("failed to forget current profile.\n");
+    }
+    ExitApp();
+  }
 }
 
 // utility functions
@@ -153,13 +166,20 @@ function Finish(opener)
     return null;
 	try {
 		saveData();
-		processCreateProfileData();
-		if (opener) {
-			opener.CreateProfile();
+		proceed = processCreateProfileData();
+		if (proceed) {
+			if (opener) {
+				opener.CreateProfile();
+				window.close();
+			}
+			else {
+				ExitApp();
+			}
 		}
 	}
 	catch (ex) {
 		alert("Failed to create a profile.");
+		return;
 	}
 }
 
@@ -176,23 +196,21 @@ function processCreateProfileData()
 	  		profDir = wizardHash[i];
   		}
     }
-
-	var profile = Components.classes["component://netscape/profile/manager"].createInstance();
-	profile = profile.QueryInterface(Components.interfaces.nsIProfile);
 	try {
 		//dump("name,dir = " + profName + "," + profDir + "\n");
 		if (profName == "") {
 			alert("You need to enter a profile name.");
-			return;
+			return false;
                 }
 		profile.createNewProfile(profName, profDir);
 		profile.startCommunicator(profName);
+		return true;
 	}
 	catch (ex) {
 		alert("Failed to create a profile.");
-		return;
+		return false;
 	}	
-	ExitApp();
+	return false;
 }
 
 function ExitApp()
