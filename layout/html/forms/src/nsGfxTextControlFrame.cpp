@@ -524,7 +524,7 @@ nsGfxTextControlFrame::DoesAttributeExist(nsIAtom *aAtt)
 nsresult 
 nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
 {
-  if (!mFramePresContext) { nsresult NS_ERROR_NULL_POINTER; }
+  if (!mFramePresContext) { return NS_ERROR_NULL_POINTER; }
 
   nsresult rv = NS_OK;
 
