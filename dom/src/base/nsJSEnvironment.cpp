@@ -177,6 +177,28 @@ nsJSContext::InitializeExternalClasses()
   return result;
 }
 
+nsresult
+nsJSContext::InitializeLiveConnectClasses()
+{
+  nsresult result = NS_OK;
+
+#if defined(OJI) && defined(XP_MAC)
+  if (!mIsInitialized) {
+    nsILiveConnectManager* manager = NULL;
+    result = nsServiceManager::GetService(nsIJVMManager::GetCID(),
+                                          nsILiveConnectManager::GetIID(),
+                                          (nsISupports **)&manager);
+    if (result == NS_OK) {
+      result = manager->InitLiveConnectClasses(mContext, JS_GetGlobalObject(mContext));
+      nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
+    }
+  }
+#endif
+
+  // return all is well until things are stable.
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsJSContext::InitClasses()
 {
@@ -192,6 +214,7 @@ nsJSContext::InitClasses()
       NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
       NS_OK == NS_InitNodeListClass(this, nsnull) &&
       NS_OK == InitializeExternalClasses() && 
+      NS_OK == InitializeLiveConnectClasses() &&
       // XXX Temporarily here. This shouldn't be hardcoded.
       NS_OK == NS_InitHTMLImageElementClass(this, nsnull)) {
     res = NS_OK;
@@ -314,18 +337,16 @@ nsJSEnvironment::nsJSEnvironment()
 
 #if defined(OJI) && defined(XP_MAC)
   // Initialize LiveConnect.
-  static NS_DEFINE_IID(kJVMManagerCID, NS_JVMMANAGER_CID);
-  static NS_DEFINE_IID(kILiveConnectManagerIID, NS_ILIVECONNECTMANAGER_IID);
   nsILiveConnectManager* manager = NULL;
-  nsresult result = nsServiceManager::GetService(kJVMManagerCID,
-                                        kILiveConnectManagerIID,
+  nsresult result = nsServiceManager::GetService(nsIJVMManager::GetCID(),
+                                        nsILiveConnectManager::GetIID(),
                                         (nsISupports **)&manager);
 
   // Should the JVM manager perhaps define methods for starting up LiveConnect?
   if (result == NS_OK && manager != NULL) {
     PRBool started = PR_FALSE;
     result = manager->StartupLiveConnect(mRuntime, started);
-    result = nsServiceManager::ReleaseService(kJVMManagerCID, manager);
+    result = nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
   }
 #endif
 }
