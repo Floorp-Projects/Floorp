@@ -254,7 +254,8 @@ nsGenericDOMDataNode::IsSupported(const nsAString& aFeature,
                                   const nsAString& aVersion,
                                   PRBool* aReturn)
 {
-  return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
+  return nsGenericElement::InternalIsSupported(NS_STATIC_CAST(nsIContent*, this),
+                                               aFeature, aVersion, aReturn);
 }
 
 nsresult

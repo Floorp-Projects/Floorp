@@ -64,6 +64,7 @@ class nsIURI;
 class nsVoidArray;
 class nsINodeInfo;
 class nsIControllers;
+class nsIDOMNSFeatureFactory;
 
 typedef unsigned long PtrBits;
 
@@ -598,13 +599,24 @@ public:
 
   /**
    * Check whether a spec feature/version is supported.
+   * @param aObject the object, which should support the feature,
+   *        for example nsIDOMNode or nsIDOMDOMImplementation
    * @param aFeature the feature ("Views", "Core", "HTML", "Range" ...)
    * @param aVersion the version ("1.0", "2.0", ...)
    * @param aReturn whether the feature is supported or not [OUT]
    */
-  static nsresult InternalIsSupported(const nsAString& aFeature,
+  static nsresult InternalIsSupported(nsISupports* aObject,
+                                      const nsAString& aFeature,
                                       const nsAString& aVersion,
                                       PRBool* aReturn);
+
+  static nsresult InternalGetFeature(nsISupports* aObject,
+                                     const nsAString& aFeature,
+                                     const nsAString& aVersion,
+                                     nsISupports** aReturn);
+  
+  static already_AddRefed<nsIDOMNSFeatureFactory>
+    GetDOMFeatureFactory(const nsAString& aFeature, const nsAString& aVersion);
 
   /**
    * Quick helper to determine whether there are any mutation listeners

@@ -332,7 +332,9 @@ nsDOMImplementation::HasFeature(const nsAString& aFeature,
                                 const nsAString& aVersion,
                                 PRBool* aReturn)
 {
-  return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
+  return nsGenericElement::InternalIsSupported(
+           NS_STATIC_CAST(nsIDOMDOMImplementation*, this),
+           aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
@@ -3421,7 +3423,8 @@ NS_IMETHODIMP
 nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
                         PRBool* aReturn)
 {
-  return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
+  return nsGenericElement::InternalIsSupported(NS_STATIC_CAST(nsIDOMDocument*, this),
+                                               aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
@@ -3557,9 +3560,8 @@ nsDocument::GetFeature(const nsAString& aFeature,
                        const nsAString& aVersion,
                        nsISupports** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("nsDocument::GetFeature()");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsGenericElement::InternalGetFeature(NS_STATIC_CAST(nsIDOMDocument*, this),
+                                              aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
