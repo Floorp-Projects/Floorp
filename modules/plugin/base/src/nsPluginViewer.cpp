@@ -705,6 +705,20 @@ PluginViewerImpl::GetEnableRendering(PRBool* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PluginViewerImpl::SetSticky(PRBool aSticky)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::GetSticky(PRBool *aSticky)
+{
+  *aSticky = PR_FALSE;
+
+  return NS_OK;
+}
+
 void
 PluginViewerImpl::ForceRefresh()
 {
