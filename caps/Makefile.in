@@ -21,7 +21,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =	idl public include src
+DIRS = idl public include src
 
 include $(topsrcdir)/config/rules.mk
 

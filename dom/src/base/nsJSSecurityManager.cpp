@@ -25,6 +25,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nspr.h"
 #include "plstr.h"
+#include "nsPrivilegeManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectData.h"
 #include "nsIPref.h"
@@ -492,7 +493,7 @@ nsJSSecurityManager::CanAccessTarget(JSContext *aCx, PRInt16 aTarget, PRBool* aR
 PRBool
 nsJSSecurityManager::PrincipalsCanAccessTarget(JSContext *aCx, PRInt16 aTarget)
 {
-  struct nsPrivilegeTable *annotation;
+  nsPrivilegeTable * annotation;
   JSStackFrame *fp;
   void *annotationRef;
   void *principalArray = nsnull;
@@ -552,7 +553,7 @@ nsJSSecurityManager::PrincipalsCanAccessTarget(JSContext *aCx, PRInt16 aTarget)
   }
 
   if (annotationRef) {
-    annotation = (struct nsPrivilegeTable *)annotationRef;
+    annotation = (nsPrivilegeTable *)annotationRef;
   } 
   else {
 #ifdef OJI
@@ -1909,10 +1910,10 @@ nsJSSecurityManager::PrincipalsEqual(JSContext *aCx, JSPrincipals *aPrinA, JSPri
     void* arrayA = aPrinA->getPrincipalArray(aCx, aPrinA);
     void* arrayB = aPrinB->getPrincipalArray(aCx, aPrinB);
 
-    nsSetComparisonType prinCompare;
-    mCapsManager->ComparePrincipalArray(arrayA, arrayB, &prinCompare);
+    PRInt16 comparisonType;
+    mCapsManager->ComparePrincipalArray(arrayA, arrayB, & comparisonType);
 
-    return (PRBool)(nsSetComparisonType_Equal == prinCompare);
+    return (PRBool)(nsPrivilegeManager::SetComparisonType_Equal == comparisonType);
 }
 
 /*******************************************************************************

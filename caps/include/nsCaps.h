@@ -20,14 +20,14 @@
 #define _NS_CAPS_H_
 
 #include "prtypes.h"
-#include "nsCapsEnums.h"
 PR_BEGIN_EXTERN_C
 
 class nsTarget;
 class nsIPrincipal;
+class nsIPrivilege;
 class nsPrivilegeTable;
+
 struct nsPrivilegeManager;
-struct nsPrivilege;
 struct NSJSJavaFrameWrapper;
 
 /* wrappers for nsPrivilegeManager object */
@@ -52,7 +52,7 @@ nsCapsDisablePrivilege(void* context, class nsTarget *target, PRInt32 callerDept
 PR_EXTERN(void*) 
 nsCapsGetClassPrincipalsFromStack(void* context, PRInt32 callerDepth);
 
-PR_EXTERN(nsSetComparisonType) 
+PR_EXTERN(PRInt16) 
 nsCapsComparePrincipalArray(void* prin1Array, void* prin2Array);
 
 PR_EXTERN(void*) 
@@ -99,12 +99,12 @@ nsCapsFindTarget(char *name);
 
 
 /* wrappers for nsPrivilege object */
-PR_EXTERN(nsPermissionState) 
-nsCapsGetPermission(struct nsPrivilege *privilege);
+PR_EXTERN(PRInt16) 
+nsCapsGetPermission(class nsIPrivilege * privilege);
 
 
 /* wrappers for nsPrivilegeTable object */
-PR_EXTERN(nsPrivilege *)
+PR_EXTERN(nsIPrivilege *)
 nsCapsGetPrivilege(nsPrivilegeTable * annotation, class nsTarget * target);
 
 /* Methods for stack walking */

@@ -16,10 +16,11 @@
  * Reserved.
  */
 
-#ifndef _NS_CCAPS_MANANGER_H_
+#ifndef _NS_CCAPS_MANAGER_H_
 #define _NS_CCAPS_MANAGER_H_
 
 #include "nsIPrincipal.h"
+#include "nsIPrivilege.h"
 #include "nsISupports.h"
 #include "nsICapsManager.h"
 #include "nsAgg.h"
@@ -47,7 +48,7 @@ NS_IMETHOD
 CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal** prin);
 
 NS_IMETHOD
-CreateCertPrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsIPrincipal** prin);
+CreateCertificatePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsIPrincipal** prin);
 
 /**
  * Creates a CodeSourcePrincipal, which has both nsICodebasePrincipal 
@@ -70,7 +71,7 @@ CreateCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLe
  * @param state  - the return value is passed in this parameter.
  */
 NS_IMETHOD
-GetPermission(nsIPrincipal * prin, nsTarget * target, nsPermission * state);
+GetPermission(nsIPrincipal * prin, nsTarget * target, PRInt16 * privilegeState);
 
 /**
  * Set the permission state for given principal and target. This wouldn't 
@@ -82,7 +83,7 @@ GetPermission(nsIPrincipal * prin, nsTarget * target, nsPermission * state);
  *                 and target parameters.
  */
 NS_IMETHOD
-SetPermission(nsIPrincipal * prin, nsTarget* target, nsPermission state);
+SetPermission(nsIPrincipal * prin, nsTarget* target, PRInt16 * privilegeState);
 
 /**
  * Prompts the user if they want to grant permission for the given principal and 
@@ -94,7 +95,7 @@ SetPermission(nsIPrincipal * prin, nsTarget* target, nsPermission state);
  *                 target
  */
 NS_IMETHOD
-AskPermission(nsIPrincipal * prin, nsTarget * target, nsPermission * result);
+AskPermission(nsIPrincipal * prin, nsTarget * target, PRInt16 * privilegeState);
 
 
 
@@ -113,7 +114,7 @@ NS_IMETHOD
 Initialize(PRBool * result);
 
 NS_IMETHOD
-InitializeFrameWalker(nsICapsSecurityCallbacks* aInterface);
+InitializeFrameWalker(nsICapsSecurityCallbacks * aInterface);
 
 /**
  * Registers the given Principal with the system.
@@ -185,7 +186,7 @@ DisablePrivilege(void* context, const char* targetName, PRInt32 callerDepth, PRB
  * This is a first cut. I need to talk to joki. We should get rid of void* parameters.
  */
 NS_IMETHOD
-ComparePrincipalArray(void* prin1Array, void* prin2Array, nsSetComparisonType *result);
+ComparePrincipalArray(void* prin1Array, void* prin2Array, PRInt16 * comparisonType);
 
 NS_IMETHOD
 IntersectPrincipalArray(void* prin1Array, void* prin2Array, void* *result);
@@ -193,21 +194,6 @@ IntersectPrincipalArray(void* prin1Array, void* prin2Array, void* *result);
 NS_IMETHOD
 CanExtendTrust(void* fromPrinArray, void* toPrinArray, PRBool *result);
 
-
-/* interfaces for nsIPrincipal object, may be we should move some of them to nsIprincipal */
-/*
-NS_IMETHOD
-NewPrincipal(PRInt16 prinType, void* key, PRUint32 key_len, void *zig, nsIPrincipal* *result);
-
-NS_IMETHOD
-IsCodebaseExact(nsIPrincipal* principal, PRBool *result);
-
-NS_IMETHOD
-ToString(nsIPrincipal* principal, char* *result);
-
-NS_IMETHOD
-GetVendor(nsIPrincipal* principal, char* *result);
-*/
 NS_IMETHOD
 CreateMixedPrincipalArray(void *zig, char* name, const char* codebase, void** result);
 
@@ -249,12 +235,6 @@ GetNSPrincipal(nsIPrincipal * pNSIPrincipal, nsIPrincipal ** ppNSPRincipal);
 */
 NS_METHOD
 GetNSPrincipalArray(nsPrincipalArray* prinArray, nsPrincipalArray* *pPrincipalArray);
-
-nsPermission
-ConvertPrivilegeToPermission(nsPrivilege *pNSPrivilege);
-
-nsPrivilege *
-ConvertPermissionToPrivilege(nsPermission state);
 
 void
 SetSystemPrivilegeManager();

@@ -30,13 +30,16 @@
 #include "jsec2rdf.h"
 #endif /* ENABLE_RDF */
 
+
+
+
 static nsPrivilegeManager * thePrivilegeManager = NULL;
 static nsIPrincipal * theSystemPrincipal = NULL;
 static nsIPrincipal * theUnsignedPrincipal;
-static nsPrincipalArray * theUnsignedPrincipalArray;
 static nsIPrincipal * theUnknownPrincipal;
 static nsPrincipalArray * theUnknownPrincipalArray;
-
+static nsPrincipalArray * theUnsignedPrincipalArray;
+static nsIPrivilege * thePrivilegeCache[nsIPrivilege::PrivilegeState_NumberOfPrivileges][nsIPrivilege::PrivilegeDuration_NumberOfDurations];
 static PRMonitor *caps_lock = NULL;
 
 /* We could avoid the following globals if nsHashTable's Enumerate accepted
@@ -74,6 +77,23 @@ CMGetBoolPref(char * pref_name)
 }
 PR_END_EXTERN_C
 
+PRBool 
+nsPrivilegeInitialize(void)
+{
+	PRInt16 privState;
+	PRInt16 durationState;
+	for (int i = 0; i < nsIPrivilege::PrivilegeState_NumberOfPrivileges; i++) {
+		for(int j = 0; j < nsIPrivilege::PrivilegeDuration_NumberOfDurations; j++) {
+			privState = (PRInt16) i;
+			durationState = (PRInt16) j;
+			thePrivilegeCache[i][j] = new nsPrivilege(privState, durationState);
+		}
+	}
+	return PR_TRUE;
+}
+
+PRBool theInited = nsPrivilegeInitialize();
+
 PRBool
 nsCaps_lock(void)
 {
@@ -92,8 +112,6 @@ nsCaps_unlock(void)
 	if(caps_lock != NULL) PR_ExitMonitor(caps_lock);
 }
 
-
-// 			PUBLIC METHODS 
 
 
 nsPrivilegeManager::nsPrivilegeManager(void)
@@ -114,8 +132,72 @@ nsPrivilegeManager::~nsPrivilegeManager(void)
 	nsCaps_unlock();
 }
 
+nsIPrivilege * 
+nsPrivilegeManager::FindPrivilege(PRInt16 privState, PRInt16 privDuration) {
+	return thePrivilegeCache[privState][privDuration];
+}
+
+nsIPrivilege * 
+nsPrivilegeManager::FindPrivilege(nsIPrivilege * priv)
+{
+	PRInt16 privState;
+	PRInt16 privDuration;
+	priv->GetState(& privState);
+	priv->GetDuration(& privDuration);
+	return nsPrivilegeManager::FindPrivilege(privState, privDuration);
+}
+
+nsIPrivilege *
+nsPrivilegeManager::FindPrivilege(char * privStr)
+{
+	PRInt16 privState; 
+	PRInt16 privDuration;
+	if (XP_STRCMP(privStr, "allowed in scope") == 0) {
+		privState = nsIPrivilege::PrivilegeState_Allowed;
+		privDuration = nsIPrivilege::PrivilegeDuration_Scope;
+	} else if (XP_STRCMP(privStr, "allowed in session") == 0) {
+		privState = nsIPrivilege::PrivilegeState_Allowed;
+		privDuration = nsIPrivilege::PrivilegeDuration_Session;
+	} else if (XP_STRCMP(privStr, "allowed forever") == 0) {
+		privState = nsIPrivilege::PrivilegeState_Allowed;
+		privDuration = nsIPrivilege::PrivilegeDuration_Forever;
+	} else if (XP_STRCMP(privStr, "forbidden forever") == 0) {
+		privState = nsIPrivilege::PrivilegeState_Forbidden;
+		privDuration = nsIPrivilege::PrivilegeDuration_Forever;
+	} else if (XP_STRCMP(privStr, "forbidden in session") == 0) {
+		privState = nsIPrivilege::PrivilegeState_Forbidden;
+		privDuration = nsIPrivilege::PrivilegeDuration_Session;
+	} else if (XP_STRCMP(privStr, "forbidden in scope") == 0) {
+		privState = nsIPrivilege::PrivilegeState_Forbidden;
+		privDuration = nsIPrivilege::PrivilegeDuration_Scope;
+	} else if (XP_STRCMP(privStr, "blank forever") == 0) {
+		privState = nsIPrivilege::PrivilegeState_Blank;
+		privDuration = nsIPrivilege::PrivilegeDuration_Forever;
+	} else if (XP_STRCMP(privStr, "blank in session") == 0) {
+		privState = nsIPrivilege::PrivilegeState_Blank;
+		privDuration = nsIPrivilege::PrivilegeDuration_Session;
+	} else if (XP_STRCMP(privStr, "blank in scope") == 0) {
+		privState = nsIPrivilege::PrivilegeState_Blank;
+		privDuration = nsIPrivilege::PrivilegeDuration_Scope;
+	} else {
+		privState = nsIPrivilege::PrivilegeState_Blank;
+		privDuration = nsIPrivilege::PrivilegeDuration_Scope;
+	}
+	return nsPrivilegeManager::FindPrivilege(privState, privDuration);
+}
+
+nsIPrivilege *
+nsPrivilegeManager::Add(nsIPrivilege * priv1, nsIPrivilege * priv2) {
+	nsresult rv;
+	PRInt16 * p1state;
+	PRInt16 * p2state;
+	rv = priv1->GetState(p1state);
+	rv = priv2->GetState(p2state);
+	return (p1state < p2state) ? priv1 : priv2; 
+}
+
 void 
-nsPrivilegeManager::AddToPrinNameToPrincipalTable(nsIPrincipal * prin)
+nsPrivilegeManager::AddToPrincipalNameToPrincipalTable(nsIPrincipal * prin)
 {
 	char *prinName;
 	prin->ToString(&prinName);
@@ -126,7 +208,6 @@ nsPrivilegeManager::AddToPrinNameToPrincipalTable(nsIPrincipal * prin)
 		itsPrinNameToPrincipalTable->Put(&prinNameKey, prin);
 	nsCaps_unlock();
 }
-
 
 void 
 nsPrivilegeManager::RegisterSystemPrincipal(nsIPrincipal * prin)
@@ -159,7 +240,7 @@ nsPrivilegeManager::RegisterPrincipal(nsIPrincipal * prin)
 	if (NULL == itsPrinToMacroTargetPrivTable->Get(&prinKey)) {
 		itsPrinToMacroTargetPrivTable->Put(&prinKey, new nsPrivilegeTable());
 	}
-	this->AddToPrinNameToPrincipalTable(prin);
+	this->AddToPrincipalNameToPrincipalTable(prin);
 	nsCaps_unlock();
 }
 
@@ -221,8 +302,7 @@ nsPrivilegeManager::EnablePrivilege(void* context, nsTarget * target, PRInt32 ca
 }
 
 PRBool 
-nsPrivilegeManager::EnablePrivilege(nsTarget *target, 
-                                           nsIPrincipal * preferredPrincipal, 
+nsPrivilegeManager::EnablePrivilege(nsTarget * target, nsIPrincipal * preferredPrincipal, 
                                            PRInt32 callerDepth)
 {
   return this->EnablePrivilegePrivate(NULL, target, preferredPrincipal, callerDepth);
@@ -236,8 +316,7 @@ nsPrivilegeManager::EnablePrivilege(void* context, nsTarget * target, nsIPrincip
 }
 
 PRBool 
-nsPrivilegeManager::RevertPrivilege(nsTarget *target, 
-                                           PRInt32 callerDepth)
+nsPrivilegeManager::RevertPrivilege(nsTarget * target, PRInt32 callerDepth)
 {
 	return this->RevertPrivilege(NULL, target, callerDepth);
 }
@@ -249,7 +328,7 @@ nsPrivilegeManager::RevertPrivilege(void* context, nsTarget * target, PRInt32 ca
 	if (targ != target)  return PR_FALSE;
 	nsPrivilegeTable *privTable = this->GetPrivilegeTableFromStack(context, callerDepth, PR_TRUE);
 	nsCaps_lock();
-	privTable->Put(target, nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Scope));
+	privTable->Put(target, nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Scope));
 	nsCaps_unlock();
 	return PR_TRUE;
 }
@@ -268,7 +347,7 @@ nsPrivilegeManager::DisablePrivilege(void * context, nsTarget * target, PRInt32 
 	if (targ != target) return PR_FALSE;
 	nsPrivilegeTable *privTable = this->GetPrivilegeTableFromStack(context, callerDepth, PR_TRUE);
 	nsCaps_lock();
-	privTable->Put(target, nsPrivilege::findPrivilege(nsPermissionState_Forbidden, nsDurationState_Scope));
+	privTable->Put(target, nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Forbidden, nsIPrivilege::PrivilegeDuration_Scope));
 	nsCaps_unlock();
 	return PR_TRUE;
 }
@@ -367,7 +446,7 @@ nsPrivilegeManager::EnableScopePrivilegeHelper(void* context, nsTarget *target,
                                                nsIPrincipal * prefPrin)
 {
   nsPrivilegeTable *privTable;
-  nsPrivilege * allowedScope;
+  nsIPrivilege * allowedScope;
   PRBool res;
 
   nsTarget * targ = nsTarget::FindTarget(target);
@@ -383,7 +462,7 @@ nsPrivilegeManager::EnableScopePrivilegeHelper(void* context, nsTarget *target,
     if (privTable == NULL)  privTable = new nsPrivilegeTable();
   }
                 
-  allowedScope = nsPrivilege::findPrivilege(nsPermissionState_Allowed, nsDurationState_Scope);
+  allowedScope = nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Allowed, nsIPrivilege::PrivilegeDuration_Scope);
   this->UpdatePrivilegeTable(target, privTable, allowedScope);
   return privTable;
 }
@@ -391,9 +470,10 @@ nsPrivilegeManager::EnableScopePrivilegeHelper(void* context, nsTarget *target,
 PRBool 
 nsPrivilegeManager::AskPermission(nsIPrincipal * useThisPrin, nsTarget * target, void * data)
 {
+	/*
   PRBool ret_val = PR_FALSE;
   nsPrivilege* newPrivilege = NULL;
-  /* Get the Lock to display the dialog */
+//   Get the Lock to display the dialog 
   nsCaps_lock();
   nsPrincipalArray* callerPrinArray = new nsPrincipalArray();
   callerPrinArray->Add(useThisPrin);
@@ -408,15 +488,15 @@ nsPrivilegeManager::AskPermission(nsIPrincipal * useThisPrin, nsTarget * target,
   // That is user should be prompted again when this applet 
   // performs the same privileged operation
   //
-  if ((!newPrivilege->isAllowed()) &&
-      (newPrivilege->getDuration() == nsDurationState_Session)) {
+  if ((!newPrivilege->IsAllowed()) &&
+      (newPrivilege->GetDuration() == nsIPrivilege::PrivilegeDuration_Session)) {
     // "User didn't grant the " + target->getName() + " privilege.";
     ret_val = PR_FALSE;
     goto done;
   }
   this->SetPermission(useThisPrin, target, newPrivilege);
   // if newPrivilege is FORBIDDEN then throw an exception
-  if (newPrivilege->isForbidden()) {
+  if (newPrivilege->IsForbidden()) {
     // "User didn't grant the " + target->getName() + " privilege.";
     ret_val = PR_FALSE;
     goto done;
@@ -427,14 +507,13 @@ nsPrivilegeManager::AskPermission(nsIPrincipal * useThisPrin, nsTarget * target,
 done:
   delete callerPrinArray;
   nsCaps_unlock();
+  */
   return PR_TRUE;
 
 }
 
 void 
-nsPrivilegeManager::SetPermission(nsIPrincipal * useThisPrin, 
-                                  nsTarget *target, 
-                                  nsPrivilege *newPrivilege)
+nsPrivilegeManager::SetPermission(nsIPrincipal * useThisPrin, nsTarget * target, nsIPrivilege * newPrivilege)
 {
 	/*
   registerPrincipalAndSetPrivileges(useThisPrin, target, newPrivilege);
@@ -460,12 +539,10 @@ nsPrivilegeManager::SetPermission(nsIPrincipal * useThisPrin,
 
 void 
 nsPrivilegeManager::RegisterPrincipalAndSetPrivileges(nsIPrincipal * prin, nsTarget *target, 
-                                                      nsPrivilege *newPrivilege)
+                                                      nsIPrivilege * newPrivilege)
 {
   nsPrivilegeTable *privTable;
-
   this->RegisterPrincipal(prin);
-
   //Store the list of targets for which the user has given privilege
   PrincipalKey prinKey(prin);
   nsCaps_lock();
@@ -479,21 +556,16 @@ nsPrivilegeManager::RegisterPrincipalAndSetPrivileges(nsIPrincipal * prin, nsTar
 
 
 void 
-nsPrivilegeManager::UpdatePrivilegeTable(nsTarget *target, nsPrivilegeTable *privTable, nsPrivilege *newPrivilege)
+nsPrivilegeManager::UpdatePrivilegeTable(nsTarget *target, nsPrivilegeTable *privTable, nsIPrivilege * newPrivilege)
 {
   nsTargetArray * primitiveTargets = target->GetFlattenedTargetArray();
-  nsPrivilege * oldPrivilege;
-  nsPrivilege * privilege;
+  nsIPrivilege * oldPrivilege, * privilege;
   nsTarget * primTarget;
   nsCaps_lock();
   for (int i = primitiveTargets->GetSize(); i-- > 0;) {
     primTarget = (nsTarget *)primitiveTargets->Get(i);
     oldPrivilege = privTable->Get(primTarget);
-    if (oldPrivilege != NULL) {
-      privilege = nsPrivilege::add(oldPrivilege, newPrivilege);
-    } else {
-      privilege = newPrivilege;
-    }
+    privilege = (oldPrivilege != NULL) ? nsPrivilegeManager::Add(oldPrivilege, newPrivilege) :  newPrivilege;
     privTable->Put(primTarget, privilege);
   }
   nsCaps_unlock();
@@ -514,8 +586,10 @@ nsPrivilegeManager::CheckPrivilegeGranted(void* context, nsTarget *target, PRInt
 PRBool 
 nsPrivilegeManager::CheckPrivilegeGranted(nsTarget *target, nsIPrincipal *prin, void *data)
 {
-	nsPrivilege * privilege = this->GetPrincipalPrivilege(target, prin, data);
-	return (privilege->isAllowed()) ? PR_TRUE : PR_FALSE;
+	nsIPrivilege * privilege = this->GetPrincipalPrivilege(target, prin, data);
+	PRBool allowed;
+	privilege->IsAllowed(& allowed);
+	return (allowed) ? PR_TRUE : PR_FALSE;
 }
 
 PRBool 
@@ -528,8 +602,8 @@ PRBool
 nsPrivilegeManager::CheckPrivilegeGranted(void* context, nsTarget *target, PRInt32 callerDepth, void *data)
 {
 	nsPrincipalArray* callerPrinArray = GetClassPrincipalsFromStack(context, callerDepth);
-	nsPermissionState privilege = GetPrincipalPrivilege(target, callerPrinArray, data);
-	return (privilege == nsPermissionState_Allowed) ? PR_TRUE : PR_FALSE;
+	PRInt16 privilegeState = GetPrincipalPrivilege(target, callerPrinArray, data);
+	return (privilegeState == nsIPrivilege::PrivilegeState_Allowed) ? PR_TRUE : PR_FALSE;
 }
 
 nsPrivilegeManager * 
@@ -584,7 +658,7 @@ nsPrivilegeManager::GetUnknownPrincipal(void)
 	return theUnknownPrincipal;
 }
 
-nsSetComparisonType 
+PRInt16
 nsPrivilegeManager::ComparePrincipalArray(nsPrincipalArray * p1, nsPrincipalArray * p2)
 {
   nsHashtable *p2Hashtable = new nsHashtable();
@@ -600,16 +674,16 @@ nsPrivilegeManager::ComparePrincipalArray(nsPrincipalArray * p1, nsPrincipalArra
     prin = (nsIPrincipal *)p1->Get(i);
     PrincipalKey prinKey(prin);
     value = (PRBool)p2Hashtable->Get(&prinKey);
-    if (!value) return nsSetComparisonType_NoSubset;
+    if (!value) return nsPrivilegeManager::SetComparisonType_NoSubset;
     if (value == PR_TRUE) p2Hashtable->Put(&prinKey, (void *)PR_FALSE);
   }
   for (i = p2->GetSize(); i-- > 0;) {
     prin = (nsIPrincipal *)p2->Get(i);
     PrincipalKey prinKey(prin);
     value = (PRBool)p2Hashtable->Get(&prinKey);
-    if (value == PR_TRUE) return nsSetComparisonType_ProperSubset;
+    if (value == PR_TRUE) return nsPrivilegeManager::SetComparisonType_ProperSubset;
   }
-  return nsSetComparisonType_Equal;
+  return nsPrivilegeManager::SetComparisonType_Equal;
 }
 
 nsPrincipalArray* 
@@ -690,14 +764,13 @@ nsPrivilegeManager::CheckMatchPrincipal(nsIPrincipal * prin, PRInt32 callerDepth
 	return this->CheckMatchPrincipal(NULL, prin, callerDepth);
 }
 
-
 PRBool 
 nsPrivilegeManager::CheckMatchPrincipal(void * context, nsIPrincipal * prin, PRInt32 callerDepth)
 {
-  nsPrincipalArray *prinArray = new nsPrincipalArray();
-  prinArray->Add(prin);
-  nsPrincipalArray *classPrinArray = this->GetClassPrincipalsFromStack(context, callerDepth);
-  return (this->ComparePrincipalArray(prinArray, classPrinArray) != nsSetComparisonType_NoSubset) ? PR_TRUE : PR_FALSE;
+	nsPrincipalArray *prinArray = new nsPrincipalArray();
+	prinArray->Add(prin);
+	nsPrincipalArray *classPrinArray = this->GetClassPrincipalsFromStack(context, callerDepth);
+	return (this->ComparePrincipalArray(prinArray, classPrinArray) != nsPrivilegeManager::SetComparisonType_NoSubset) ? PR_TRUE : PR_FALSE;
 }
 
 static PRBool 
@@ -748,14 +821,15 @@ nsPrivilegeManager::GetPrincipalFromString(char *prinName)
 static PRBool 
 GetPermissionsString(nsHashKey * aKey, void * aData, void * closure) 
 {
-	/* Admin UI */
+	/*
 	TargetKey *targetKey = (TargetKey *) aKey;
 	nsTarget *target = targetKey->itsTarget;
-	nsPrivilege *priv = (nsPrivilege *)aData;
+	nsIPrivilege * priv = (nsIPrivilege *)aData;
 	char * desc = target->GetDescription();
 	if (priv->isAllowedForever())  gForever = PR_sprintf_append(gForever, "<option>%s", desc);
 	else if (priv->isForbiddenForever()) gDenied = PR_sprintf_append(gDenied, "<option>%s", desc);
 	else if (priv->isAllowed())  gSession = PR_sprintf_append(gSession, "<option>%s", desc);
+	*/
 	return PR_TRUE;
 }
 
@@ -876,42 +950,41 @@ nsPrivilegeManager::EnablePrivilegePrivate(void* context, nsTarget *target, nsIP
   ? PR_FALSE : PR_TRUE;
 }
 
-
-nsPermissionState 
-nsPrivilegeManager::GetPrincipalPrivilege(nsTarget *target, nsPrincipalArray* callerPrinArray,
-                                          void *data)
+PRInt16
+nsPrivilegeManager::GetPrincipalPrivilege(nsTarget * target, nsPrincipalArray * callerPrinArray, void *data)
 {
-	nsPrivilege *privilege;
+	nsIPrivilege * privilege;
 	nsIPrincipal * principal;
 	PRBool isAllowed = PR_FALSE;
 	for (int i = callerPrinArray->GetSize(); i-- > 0; ) {
 		principal = (nsIPrincipal *)callerPrinArray->Get(i);
 		privilege = this->GetPrincipalPrivilege(target, principal, data);
 		if (privilege == NULL) continue;
-		switch(privilege->getPermission()) {
-			case nsPermissionState_Allowed: isAllowed = PR_TRUE;
-			case nsPermissionState_Blank: continue;
+		PRInt16 privilegeState;
+		privilege->GetState(& privilegeState);
+		switch(privilegeState) {
+			case nsIPrivilege::PrivilegeState_Allowed: isAllowed = PR_TRUE;
+			case nsIPrivilege::PrivilegeState_Blank: continue;
 			default: PR_ASSERT(FALSE);
-			case nsPermissionState_Forbidden: return nsPermissionState_Forbidden;
+			case nsIPrivilege::PrivilegeState_Forbidden: return nsIPrivilege::PrivilegeState_Forbidden;
 	  	}
 	}
-	return isAllowed ? nsPermissionState_Allowed : nsPermissionState_Blank;
+	return (isAllowed) ? (PRInt16)nsIPrivilege::PrivilegeState_Allowed : (PRInt16)nsIPrivilege::PrivilegeState_Blank;
 }
-
-nsPrivilege *
-nsPrivilegeManager::GetPrincipalPrivilege(nsTarget *target,nsIPrincipal * prin, void *data)
+nsIPrivilege *
+nsPrivilegeManager::GetPrincipalPrivilege(nsTarget *target, nsIPrincipal * prin, void *data)
 {
 	if ( (prin == NULL) || (target == NULL) )
-		return nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Session);
+		return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 	if (this->GetSystemPrincipal() == prin) 
-		return nsPrivilege::findPrivilege(nsPermissionState_Allowed, nsDurationState_Session);
+		return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Allowed, nsIPrivilege::PrivilegeDuration_Session);
 	PrincipalKey prinKey(prin);
 	nsPrivilegeTable *privTable = (nsPrivilegeTable *) itsPrinToPrivTable->Get(&prinKey);
 	if (privTable == NULL) 
-		return nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Session);
+		return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 	nsTarget * tempTarget = nsTarget::FindTarget(target);
 	if (tempTarget != target) 
-		return nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Session);
+		return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 	return privTable->Get(target);
 }
 
@@ -920,12 +993,12 @@ nsPrivilegeManager::IsPermissionGranted(nsTarget *target,
                                         nsPrincipalArray* callerPrinArray, 
                                         void *data)
 {
-	nsPermissionState privilege = this->GetPrincipalPrivilege(target, callerPrinArray, data);
-	switch(privilege) {
-		case nsPermissionState_Allowed: return PR_TRUE;
+	PRInt16 privilegeState = this->GetPrincipalPrivilege(target, callerPrinArray, data);
+	switch(privilegeState) {
+		case nsIPrivilege::PrivilegeState_Allowed: return PR_TRUE;
 		default: PR_ASSERT(PR_FALSE);
-		case nsPermissionState_Forbidden:
-		case nsPermissionState_Blank: return PR_FALSE;
+		case nsIPrivilege::PrivilegeState_Forbidden:
+		case nsIPrivilege::PrivilegeState_Blank: return PR_FALSE;
 	}
 }
 
@@ -940,6 +1013,7 @@ char *
 nsPrivilegeManager::CheckPrivilegeEnabled(void *context, nsTargetArray * targetArray, 
                                           PRInt32 callerDepth, void *data)
 {
+	/*
 	struct NSJSJavaFrameWrapper *wrapper = NULL;
 	nsTarget *target;
 	nsPrivilegeTable *annotation;
@@ -965,11 +1039,9 @@ nsPrivilegeManager::CheckPrivilegeEnabled(void *context, nsTargetArray * targetA
 	for ((*nsCapsGetStartFrameCallback)(wrapper); 
 		(!(*nsCapsIsEndOfFrameCallback)(wrapper));
 		)
-	{
 		if ((*nsCapsIsValidFrameCallback)(wrapper)) {
 			if (depth >= callerDepth) {
-				scopePerm = nsPermissionState_Blank;
-				prinPerm = nsPermissionState_Blank;
+				scopePerm = prinPerm = nsIPrivilege::PrivilegeState_Blank;
 				for (idx = 0; idx < noOfTargets; idx++) {
 					target = (nsTarget *)targetArray->Get(idx);
 					if (!target) {
@@ -979,13 +1051,11 @@ nsPrivilegeManager::CheckPrivilegeEnabled(void *context, nsTargetArray * targetA
 					annotation =(nsPrivilegeTable *) (*nsCapsGetAnnotationCallback)(wrapper);
 					prinArray = (nsPrincipalArray *) (*nsCapsGetPrincipalArrayCallback)(wrapper);
 				
-			/* 
 			 * When the Registration Mode flag is enabled, we allow secure
 			 * operations if and only iff the principal codebase is 'file:'.
 			 * That means we load files only after recognizing that they
 			 * reside on local harddrive. Any other code is considered as
 			 * dangerous and an exception will be thrown in such cases.
-			 */
 					if ((nsCapsGetRegistrationModeFlag()) && (prinArray != NULL)){
 						noOfPrincipals = prinArray->GetSize();
 						for (idx=0; idx < noOfPrincipals; idx++){
@@ -998,7 +1068,6 @@ nsPrivilegeManager::CheckPrivilegeEnabled(void *context, nsTargetArray * targetA
 							}
 						}
 					}
-/*
  * frame->annotation holds a PrivilegeTable, describing
  * the scope privileges of this frame.  We'll check
  * if it permits the target, and if so, we just return.
@@ -1013,24 +1082,20 @@ nsPrivilegeManager::CheckPrivilegeEnabled(void *context, nsTargetArray * targetA
  * insures that we don't have a non-permitted (attacker)
  * class somewhere in the call chain between the request
  * for scope privilege and the chedk for privilege.
- */
 
-/*
  * If there isn't a annotation, then we assume the default
  * value of blank and avoid allocating a new annotation.
- */
 				if (annotation) {
 					privilege = annotation->Get(target);
 					PR_ASSERT(privilege != NULL);
-					perm = privilege->getPermission();
+					perm = privilege->etPermission();
 					scopePerm = nsPrivilege::add(perm, scopePerm);
 				}
 				if (prinArray != NULL) {
-/* XXX: We need to allow sub-classing of Target, so that
+XXX: We need to allow sub-classing of Target, so that
  * we would call the method on Developer Sub-class'ed Target.
  * That would allow us to implement Parameterized targets
  * May be checkPrivilegeEnabled should go back into Java.
- */
 					privilege = target->CheckPrivilegeEnabled(prinArray,data);
 					PR_ASSERT(privilege != NULL);
 					perm = privilege->getPermission();
@@ -1041,20 +1106,18 @@ nsPrivilegeManager::CheckPrivilegeEnabled(void *context, nsTargetArray * targetA
 					? saw_non_system_code = PR_TRUE : saw_unsigned_principal = PR_TRUE;
 				}
 			}
-			if (scopePerm == nsPermissionState_Allowed) goto done;
-			if ((scopePerm == nsPermissionState_Forbidden) ||
+			if (scopePerm == nsIPrivilege::PrivilegeState_Allowed) goto done;
+			if ((scopePerm == nsIPrivilege::PrivilegeState_Forbidden) ||
 				(saw_non_system_code && 
-				(prinPerm != nsPermissionState_Allowed))) {
+				(prinPerm != nsIPrivilege::PrivilegeState_Allowed))) {
 				errMsg = "access to target forbidden";
 				goto done;
 			}
 		}
 	}
 //	if (!(* nsCapsGetNextFrameCallback)(wrapper, &depth)) break;
-/*
  * If we get here, there is no non-blank capability on the stack,
  * and there is no ClassLoader, thus give privilege for now
- */
 	if (saw_non_system_code) {
 		errMsg = "access to target forbidden. Target was not enabled on stack (stack included non-system code)";
 		goto done;
@@ -1062,13 +1125,13 @@ nsPrivilegeManager::CheckPrivilegeEnabled(void *context, nsTargetArray * targetA
 	if (CMGetBoolPref("signed.applets.local_classes_have_30_powers")) goto done;
 	errMsg =  "access to target forbidden. Target was not enabled on stack (stack included only system code)";
 done:
-/* 
  * If the Registration Mode flag is set and principals have
  * 'file:' code base, we set the error message to NULL.
- */
 	if ((nsCapsGetRegistrationModeFlag()) && !(saw_dangerous_code)) errMsg = NULL;
 	(*nsCapsFreeNSJSJavaFrameWrapperCallback)(wrapper);
 	return errMsg;
+	*/
+	return NULL;
 }
 
 nsPrincipalArray *
@@ -1294,7 +1357,7 @@ RDF_RemovePrincipalsPrivilege(nsIPrincipal * prin, nsTarget *target)
 /* The following methods are used to save and load the persistent store */
 
 void 
-nsPrivilegeManager::Save(nsIPrincipal * prin, nsTarget *target, nsPrivilege *newPrivilege)
+nsPrivilegeManager::Save(nsIPrincipal * prin, nsTarget *target, nsIPrivilege *newPrivilege)
 {
 	PRBool eq;
 	prin->Equals(this->GetSystemPrincipal(), &eq);

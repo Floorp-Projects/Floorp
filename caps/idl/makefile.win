@@ -20,10 +20,10 @@ DEPTH=..\..
 MODULE=caps
 
 XPIDLSRCS=                                \
-	   .\nsIScriptSecurityManager.idl \
+           .\nsIScriptSecurityManager.idl \
            .\nsICapsSecurityCallbacks.idl \
-	   .\nsIPrincipal.idl             \
-           $(NULL)
+           .\nsIPrincipal.idl             \
+           .\nsIPrivilege.idl             \
+            $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-

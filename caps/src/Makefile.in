@@ -23,38 +23,38 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-MODULE		= caps
+MODULE = caps
 
-LIBRARY_NAME	= caps
+LIBRARY_NAME = caps
 
-CPPSRCS		=	        		  \
-		admin.cpp                         \
-		nsCaps.cpp                        \
-		nsCCapsManager.cpp		  \
-		nsCCapsManagerFactory.cpp	  \
-		nsCertificatePrincipal.cpp	  \
-		nsCodebasePrincipal.cpp	          \
-		nsPrivilege.cpp                   \
-		nsPrivilegeManager.cpp            \
-		nsPrivilegeTable.cpp              \
-		nsSystemPrivilegeTable.cpp        \
-		nsTarget.cpp                      \
-                nsUserDialogHelper.cpp            \
-		nsUserTarget.cpp                  \
-		nsZig.cpp                         \
-		$(NULL)
+CPPSRCS =                                 \
+        admin.cpp                         \
+        nsCaps.cpp                        \
+        nsCCapsManager.cpp                \
+        nsCCapsManagerFactory.cpp         \
+        nsCertificatePrincipal.cpp        \
+        nsCodebasePrincipal.cpp           \
+        nsPrivilege.cpp                   \
+        nsPrivilegeManager.cpp            \
+        nsPrivilegeTable.cpp              \
+        nsSystemPrivilegeTable.cpp        \
+        nsTarget.cpp                      \
+        nsUserDialogHelper.cpp            \
+        nsUserTarget.cpp                  \
+        nsZig.cpp                         \
+        $(NULL)
 
-REQUIRES	= nspr xpcom security layer js jar pref img util rdf caps 
+REQUIRES = nspr xpcom security layer js jar pref img util rdf caps 
 
 ifndef MOZ_NATIVE_ZLIB
 REQUIRES += zlib
 endif
 
-CSRCS		=	                        \
-		jpermission.c                   \
-		nsLoadZig.c                     \
-		nsZip.c                         \
-		$(NULL)
+CSRCS=                                  \
+        jpermission.c                   \
+        nsLoadZig.c                     \
+        nsZip.c                         \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

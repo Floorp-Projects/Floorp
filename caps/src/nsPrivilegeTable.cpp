@@ -19,10 +19,6 @@
 #include "nsPrivilegeTable.h"
 #include "nsPrivilegeManager.h"
 
-//
-// 			PUBLIC METHODS 
-//
-
 nsPrivilegeTable::nsPrivilegeTable(void)
 {
 	this->itsTable = NULL;
@@ -32,7 +28,6 @@ nsPrivilegeTable::~nsPrivilegeTable(void)
 {
 	/* XXX: We need to incr and decr objects that we put into this hashtable.
 	 * There is a big memory leak.
-	 *
 	 * We need to delete all the entries in the privilege Table
 	 */
 	if (this->itsTable) delete this->itsTable;
@@ -42,44 +37,45 @@ nsPrivilegeTable::~nsPrivilegeTable(void)
 PRInt32
 nsPrivilegeTable::Size(void)
 {
-	return (itsTable != NULL) ? itsTable->Count() : 0;
+	return (this->itsTable != NULL) ? this->itsTable->Count() : 0;
 }
 
 PRBool
 nsPrivilegeTable::IsEmpty(void)
 {
-	return ((itsTable == NULL) && (itsTable->Count() == 0)) ? PR_TRUE : PR_FALSE;
+	return ((this->itsTable == NULL) && (this->itsTable->Count() == 0)) ? PR_TRUE : PR_FALSE;
 }
 
-nsPrivilege * 
+nsIPrivilege * 
 nsPrivilegeTable::Get(nsTarget *target)
 {
 	if (itsTable == NULL) 
-		return nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Session);
+		return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 	TargetKey targKey(target);
-	nsPrivilege *priv = (nsPrivilege *) itsTable->Get(&targKey);
+	nsIPrivilege * priv = (nsIPrivilege *) this->itsTable->Get(& targKey);
 	return (priv == NULL)
-	? nsPrivilege::findPrivilege(nsPermissionState_Blank, nsDurationState_Session) : priv;
+	? nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session)
+	: priv;
 }
 
-nsPrivilege * 
-nsPrivilegeTable::Put(nsTarget * target, nsPrivilege * priv)
+nsIPrivilege * 
+nsPrivilegeTable::Put(nsTarget * target, nsIPrivilege * priv)
 {
-  nsCaps_lock();
-  if (itsTable == NULL) this->itsTable = new nsHashtable();
-  TargetKey targKey(target);
-  nsPrivilege *priv2 = (nsPrivilege *)itsTable->Put(&targKey, (void *)priv);
-  nsCaps_unlock();
-  return priv2;
+	nsCaps_lock();
+	if (itsTable == NULL) this->itsTable = new nsHashtable();
+	TargetKey targKey(target);
+	nsIPrivilege * priv2 = (nsIPrivilege *)this->itsTable->Put(& targKey, (void *)priv);
+	nsCaps_unlock();
+	return priv2;
 }
 
-nsPrivilege * 
-nsPrivilegeTable::Remove(nsTarget *target)
+nsIPrivilege * 
+nsPrivilegeTable::Remove(nsTarget * target)
 {
 	if (itsTable == NULL) return NULL;
 	TargetKey targKey(target);
 	nsCaps_lock();
-	nsPrivilege *priv = (nsPrivilege *)itsTable->Remove(&targKey);
+	nsIPrivilege * priv = (nsIPrivilege *)this->itsTable->Remove(& targKey);
 	nsCaps_unlock();
 	return priv;
 }
@@ -87,21 +83,20 @@ nsPrivilegeTable::Remove(nsTarget *target)
 nsPrivilegeTable * 
 nsPrivilegeTable::Clone(void)
 {
-  nsCaps_lock();
-  nsPrivilegeTable *newbie = new nsPrivilegeTable();
-  if (itsTable != NULL) newbie->itsTable = itsTable->Clone();
-  nsCaps_unlock();
-  return newbie;
+	nsCaps_lock();
+	nsPrivilegeTable *newbie = new nsPrivilegeTable();
+	if (itsTable != NULL) newbie->itsTable = itsTable->Clone();
+	nsCaps_unlock();
+	return newbie;
 }
 
 void 
 nsPrivilegeTable::Clear(void)
 {
-  /* XXX: free the entries also */
-  nsCaps_lock();
-  delete itsTable;
-  itsTable = NULL;
-  nsCaps_unlock();
+	/* XXX: free the entries also */
+	nsCaps_lock();
+	if (this->itsTable) delete this->itsTable;
+	nsCaps_unlock();
 }
 
 void 

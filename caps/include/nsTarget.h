@@ -26,7 +26,7 @@
 #include "nsVector.h"
 //#include "nsCaps.h"
 #include "nsIPrincipal.h"
-#include "nsPrivilege.h"
+#include "nsIPrivilege.h"
 #include "nsUserDialogHelper.h"
 
 typedef nsVector nsTargetArray;
@@ -89,15 +89,15 @@ public:
 
 	static nsTarget * FindTarget(char * name, nsIPrincipal *prin);
 
-	nsPrivilege * CheckPrivilegeEnabled(nsTargetArray* prinArray, void *data);
+	nsIPrivilege * CheckPrivilegeEnabled(nsTargetArray* prinArray, void *data);
 
-	nsPrivilege * CheckPrivilegeEnabled(nsTargetArray* prinArray);
+	nsIPrivilege * CheckPrivilegeEnabled(nsTargetArray* prinArray);
 
-	nsPrivilege * CheckPrivilegeEnabled(nsIPrincipal *p, void *data);
+	nsIPrivilege * CheckPrivilegeEnabled(nsIPrincipal *p, void *data);
 
-	virtual nsPrivilege * EnablePrivilege(nsIPrincipal *prin, void *data);
+	virtual nsIPrivilege * EnablePrivilege(nsIPrincipal *prin, void *data);
 
-	nsPrivilege * GetPrincipalPrivilege(nsIPrincipal *prin, void *data);
+	nsIPrivilege * GetPrincipalPrivilege(nsIPrincipal *prin, void *data);
 
 	nsTargetArray* GetFlattenedTargetArray(void);
 

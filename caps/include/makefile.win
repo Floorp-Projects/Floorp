@@ -29,25 +29,24 @@ IGNORE_MANIFEST=1
 MODULE=caps 
 DEPTH=..\..
 EXPORTS=                           \
-	admin.h                    \
-	jpermission.h              \
-	nsCaps.h                   \
-	nsCapsEnums.h              \
-	nsCCapsManager.h           \
-	nsCCapsManagerFactory.h    \
-	nsCertificatePrincipal.h   \
-	nsCodebasePrincipal.h      \
-	nsLoadZig.h                \
-	nsPrincipalTools.h         \
-	nsPrivilege.h              \
-	nsPrivilegeManager.h       \
-	nsPrivilegeTable.h         \
-	nsSystemPrivilegeTable.h   \
-	nsTarget.h                 \
-	nsUserDialogHelper.h       \
-	nsUserTarget.h             \
-	nsZig.h                    \
-	nsZip.h
+        admin.h                    \
+        jpermission.h              \
+        nsCaps.h                   \
+        nsCCapsManager.h           \
+        nsCCapsManagerFactory.h    \
+        nsCertificatePrincipal.h   \
+        nsCodebasePrincipal.h      \
+        nsLoadZig.h                \
+        nsPrincipalTools.h         \
+        nsPrivilege.h              \
+        nsPrivilegeManager.h       \
+        nsPrivilegeTable.h         \
+        nsSystemPrivilegeTable.h   \
+        nsTarget.h                 \
+        nsUserDialogHelper.h       \
+        nsUserTarget.h             \
+        nsZig.h                    \
+        nsZip.h
 
 include <$(DEPTH)/config/rules.mak>
 

@@ -1,7 +1,6 @@
 admin.h
 jpermission.h
 nsCaps.h
-nsCapsEnums.h
 nsCCapsManager.h
 nsCCapsManagerFactory.h
 nsCertificatePrincipal.h
@@ -17,9 +16,3 @@ nsUserDialogHelper.h
 nsUserTarget.h
 nsZig.h
 nsZip.h
-
-
-
-
-
-

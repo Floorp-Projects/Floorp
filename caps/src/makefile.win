@@ -52,8 +52,7 @@ C_OBJS=                                     \
     .\$(OBJDIR)\jpermission.obj             \
     .\$(OBJDIR)\nsLoadZig.obj               \
     .\$(OBJDIR)\nsZip.obj                   \
-    $(NULL)
-
+     $(NULL)
 
 CPP_OBJS=                                   \
     .\$(OBJDIR)\admin.obj                   \
@@ -62,16 +61,15 @@ CPP_OBJS=                                   \
     .\$(OBJDIR)\nsCCapsManagerFactory.obj   \
     .\$(OBJDIR)\nsCertificatePrincipal.obj  \
     .\$(OBJDIR)\nsCodebasePrincipal.obj     \
-    .\$(OBJDIR)\nsUserDialogHelper.obj      \
     .\$(OBJDIR)\nsPrivilege.obj             \
     .\$(OBJDIR)\nsPrivilegeManager.obj      \
     .\$(OBJDIR)\nsPrivilegeTable.obj        \
     .\$(OBJDIR)\nsSystemPrivilegeTable.obj  \
     .\$(OBJDIR)\nsTarget.obj                \
+    .\$(OBJDIR)\nsUserDialogHelper.obj      \
     .\$(OBJDIR)\nsUserTarget.obj            \
     .\$(OBJDIR)\nsZig.obj                   \
-    $(NULL)
-
+     $(NULL)
 
 #//------------------------------------------------------------------------
 #//
@@ -104,10 +102,10 @@ LINCS= $(LINCS) \
 		$(NULL)
 
 LLIBS = \
-	$(LIBNSPR)			\
+	$(LIBNSPR)                    \
 	$(DIST)\lib\xpcom.lib         \
-	$(DIST)\lib\xplib.lib           \
-	$(DIST)\lib\zlib.lib \
+	$(DIST)\lib\xplib.lib         \
+	$(DIST)\lib\zlib.lib          \
 	$(NULL)
 
 

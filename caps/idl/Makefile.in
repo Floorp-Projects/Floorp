@@ -15,19 +15,20 @@
 # Copyright (C) 1999 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH       = ../..
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = caps
 
 XPIDLSRCS =                          \
-	nsIScriptSecurityManager.idl \
-	nsICapsSecurityCallbacks.idl \
-	nsIPrincipal.idl             \
-	$(NULL)
+        nsIScriptSecurityManager.idl \
+        nsICapsSecurityCallbacks.idl \
+        nsIPrincipal.idl             \
+        nsIPrivilege.idl             \
+        $(NULL)
 
 include $(topsrcdir)/config/rules.mk

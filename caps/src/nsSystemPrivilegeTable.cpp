@@ -17,16 +17,14 @@
  */
 
 #include "nsSystemPrivilegeTable.h"
-
-//
-// 			PUBLIC METHODS 
-//
+#include "nsPrivilegeManager.h"
 
 nsSystemPrivilegeTable::nsSystemPrivilegeTable(void) : nsPrivilegeTable()
 {
 }
 
-nsPrivilege * nsSystemPrivilegeTable::get(nsTarget *a)
+nsIPrivilege * 
+nsSystemPrivilegeTable::Get(nsTarget *a)
 {
-  return nsPrivilege::findPrivilege(nsPermissionState_Allowed, nsDurationState_Forever);
+	return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Allowed, nsIPrivilege::PrivilegeDuration_Forever);
 }
