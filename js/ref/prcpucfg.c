@@ -45,7 +45,7 @@
 #endif
 #endif
 
-#if defined(__alpha)
+#if defined(__osf__)
 #ifndef OSF1
 # error "OSF1 is not defined"
 #endif
