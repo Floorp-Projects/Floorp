@@ -33,6 +33,7 @@
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
 #include "nsStyleConsts.h"
+#include "nsIStyleSet.h"
 #include "nsCOMPtr.h"
 #include "nsILanguageAtom.h"
 
@@ -42,6 +43,8 @@ class nsIFrame;
 class nsIPresContext;
 class nsISupportsArray;
 
+
+#define SHARE_STYLECONTEXTS
 
 // The lifetime of these objects is managed by the nsIStyleContext.
 
@@ -123,18 +126,18 @@ struct nsStyleSpacing: public nsStyleStruct {
   void CalcBorderPaddingFor(const nsIFrame* aFrame, nsMargin& aBorderPadding) const;
 
 protected:
-  PRBool    mHasCachedMargin;
-  PRBool    mHasCachedPadding;
-  PRBool    mHasCachedBorder;
-  PRBool    mHasCachedOutline;
+  PRPackedBool    mHasCachedMargin;
+  PRPackedBool    mHasCachedPadding;
+  PRPackedBool    mHasCachedBorder;
+  PRPackedBool    mHasCachedOutline;
   nsMargin  mCachedMargin;
   nsMargin  mCachedPadding;
   nsMargin  mCachedBorder;
   nsMargin  mCachedBorderPadding;
+  nscoord   mCachedOutlineWidth;
 
   PRUint8   mBorderStyle[4];  // [reset] See nsStyleConsts.h
   nscolor   mBorderColor[4];  // [reset] 
-  nscoord   mCachedOutlineWidth;
   PRUint8   mOutlineStyle;    // [reset] See nsStyleConsts.h
   nscolor   mOutlineColor;    // [reset] 
 };
@@ -375,9 +378,9 @@ inline nsBorderEdge::nsBorderEdge()
   */
 struct nsBorderEdges
 {
-  nsVoidArray mEdges[4];
-  nsMargin    mMaxBorderWidth;
-  PRBool      mOutsideEdge;
+  nsVoidArray  mEdges[4];
+  nsMargin     mMaxBorderWidth;
+  PRPackedBool mOutsideEdge;
 
   nsBorderEdges();
 };
@@ -415,12 +418,19 @@ public:
   NS_IMETHOD GetStyle(nsStyleStructID aSID, nsStyleStruct& aStruct) const = 0;
 
   // compute the effective difference between two contexts
-  NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) const = 0;
+  NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint, PRBool aStopAtFirst = PR_FALSE) const = 0;
 
   // debugging
   virtual void  List(FILE* out, PRInt32 aIndent) = 0;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize) = 0;
+
+#ifdef SHARE_STYLECONTEXTS
+  // sets aMatches to PR_TRUE if the style data of aStyleContextToMatch matches the 
+  // style data of this, PR_FALSE otherwise
+  NS_IMETHOD StyleDataMatches(nsIStyleContext* aStyleContextToMatch, PRBool *aMatches) = 0;
+  NS_IMETHOD GetStyleContextKey(scKey &aKey) const = 0;
+#endif
 
   // -------------------------------------------------------------
   // DEPRECATED METHODS - these are all going away, stop using them

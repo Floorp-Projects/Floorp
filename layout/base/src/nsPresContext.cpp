@@ -420,13 +420,15 @@ nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
     mCompatibilityMode = aMode;
   }
 
-  // enable the QuirkSheet
-  nsCOMPtr<nsIStyleSet> set;
-  nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
-  if (NS_SUCCEEDED(rv) && set) {
-    set->EnableQuirkStyleSheet(mCompatibilityMode != eCompatibility_Standard ? PR_TRUE : PR_FALSE);
+  // enable/disable the QuirkSheet
+  NS_ASSERTION(mShell, "PresShell must be set on PresContext before calling nsPresContext::SetCompatibilityMode");
+  if (mShell) {
+    nsCOMPtr<nsIStyleSet> set;
+    nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
+    if (NS_SUCCEEDED(rv) && set) {
+      set->EnableQuirkStyleSheet((mCompatibilityMode != eCompatibility_Standard) ? PR_TRUE : PR_FALSE);
+    }
   }
-
   return NS_OK;
 }
 

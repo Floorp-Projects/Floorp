@@ -35,10 +35,16 @@ class nsIContent;
 class nsIFrame;
 class nsIDocument;
 class nsIFrameManager;
+class nsISupportsArray;
 
 #include "nsVoidArray.h"
 class nsISizeOfHandler;
-class nsISupportsArray;
+
+#define SHARE_STYLECONTEXTS
+
+#ifdef SHARE_STYLECONTEXTS
+#include "nsHashtable.h"
+#endif
 
 // IID for the nsIStyleSet interface {e59396b0-b244-11d1-8031-006008159b5a}
 #define NS_ISTYLE_SET_IID     \
@@ -74,10 +80,13 @@ public:
   virtual PRInt32 GetNumberOfBackstopStyleSheets() = 0;
   virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex) = 0;
   virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets) = 0;
-
+  
   // enable / disable the Quirk style sheet: 
   // returns NS_FAILURE if none is found, otherwise NS_OK
   NS_IMETHOD EnableQuirkStyleSheet(PRBool aEnable) = 0;
+
+  
+  NS_IMETHOD NotifyStyleSheetStateChanged(PRBool aDisabled) = 0;
 
   // get a style context for a non-pseudo frame
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
@@ -197,10 +206,14 @@ public:
   NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
                                    PRBool &aAffects) = 0;
 
-#ifdef DEBUG_SC_SHARING
+#ifdef SHARE_STYLECONTEXTS
   // add and remove from the cache of all contexts
   NS_IMETHOD AddStyleContext(nsIStyleContext *aNewStyleContext) = 0;
   NS_IMETHOD RemoveStyleContext(nsIStyleContext *aNewStyleContext) = 0;
+  // find another context with the same style data
+  // - if an exact match is found, the out-param aMatchingContext is set (AddRef'd)
+  NS_IMETHOD FindMatchingContext(nsIStyleContext *aStyleContextToMatch, 
+                                 nsIStyleContext **aMatchingContext) = 0;
 #endif
 };
 
@@ -208,21 +221,20 @@ extern NS_LAYOUT nsresult
   NS_NewStyleSet(nsIStyleSet** aInstancePtrResult);
 
 
-
 class nsUniqueStyleItems : private nsVoidArray
 {
 public :
   // return a singleton instance of the nsUniqueStyleItems object
-  // - will create the instance if none yet exists
   static nsUniqueStyleItems *GetUniqueStyleItems( void ){
     if(mInstance == nsnull){
 #ifdef DEBUG
-      nsUniqueStyleItems *pInstance =
+      nsUniqueStyleItems *pInstance = 
 #endif
       new nsUniqueStyleItems;
-      NS_ASSERTION(pInstance==mInstance, "Singleton?");
 
-      // mInstance static data member is set in the constructor
+      NS_ASSERTION(pInstance == mInstance, "Singleton?");
+
+      // the ctor sets the mInstance static member variable...
       //  if it is null, then we just end up returning null...
     }
     return mInstance;
@@ -274,5 +286,36 @@ protected:
   nsUniqueStyleItems* ##_name = nsUniqueStyleItems::GetUniqueStyleItems(); \
   NS_ASSERTION(##_name != nsnull, "UniqueItems cannot be null: error in nsUniqueStyleImtes factory");
 
+
+#ifdef SHARE_STYLECONTEXTS
+
+typedef PRUint32 scKey; // key for style contexts: it is a CRC32 value actually...
+
+class StyleContextCache
+{
+public :
+  StyleContextCache(void);
+  ~StyleContextCache(void);
+
+  nsresult AddContext(scKey aKey, nsIStyleContext *aContext);
+  nsresult RemoveContext(scKey aKey, nsIStyleContext *aContext);
+  nsresult RemoveAllContexts(scKey aKey);
+  nsresult GetContexts(scKey aKey, nsVoidArray **aResults); // do not munge list
+  PRUint32 Count(void);
+private:
+  StyleContextCache(StyleContextCache &aNoSrcAllowed); // Not Implemented
+
+  void DumpStats(void);
+  void Tickle(const char *msg = nsnull);
+
+  // make sure there is a list for the specified key
+  nsresult VerifyList(scKey aKey);
+  // returns the list for the key, may be null
+  nsVoidArray *GetList(scKey aKey);
+
+  nsHashtable mHashTable;
+  PRUint32    mCount;
+};
+#endif /* SHARE_STYLECONTEXTS */
 
 #endif /* nsIStyleSet_h___ */
