@@ -627,19 +627,22 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
           mMolecule.floats = NS_STYLE_FLOAT_RIGHT;
         }
       }
-    } else if (buf.EqualsIgnoreCase("CAPTION")) {                   // CAPTION
+    } else if (buf.EqualsIgnoreCase("CAPTION")) {                   // table captions
       mMolecule.verticalAlign = NS_STYLE_VERTICAL_ALIGN_TOP;
-    } else if (buf.EqualsIgnoreCase("TBODY")) {                     // TBODY
-      mSpacing.mPadding.top = NS_POINTS_TO_TWIPS_INT(0);
-      mSpacing.mPadding.bottom = NS_POINTS_TO_TWIPS_INT(0);
-      mSpacing.mPadding.right = NS_POINTS_TO_TWIPS_INT(0);
-      mSpacing.mPadding.left = NS_POINTS_TO_TWIPS_INT(0);
-    } else if (buf.EqualsIgnoreCase("TR")) {                        // TROW
-      mSpacing.mPadding.top = NS_POINTS_TO_TWIPS_INT(0);
-      mSpacing.mPadding.bottom = NS_POINTS_TO_TWIPS_INT(0);
-      mSpacing.mPadding.right = NS_POINTS_TO_TWIPS_INT(0);
-      mSpacing.mPadding.left = NS_POINTS_TO_TWIPS_INT(0);
-    } else if (buf.EqualsIgnoreCase("TD")) {                        // TD
+    } else if (buf.EqualsIgnoreCase("TBODY") ||
+               buf.EqualsIgnoreCase("THEAD") ||
+               buf.EqualsIgnoreCase("TFOOT") ) {                    // table rowgroups
+      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(0);
+    } else if (buf.EqualsIgnoreCase("TR")) {                        // table rows
+      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(0);
+      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(0);
+    } else if (buf.EqualsIgnoreCase("TD") ||
+               buf.EqualsIgnoreCase("TH")) {                        // table cells
       float p2t = aPresContext->GetPixelsToTwips();
       
       
