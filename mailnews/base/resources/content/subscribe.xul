@@ -62,6 +62,7 @@ Rights Reserved.
 	<box orient="horizontal" >
 		<box orient="vertical" flex="100%">
 <tree class="inset"	
+	flex="100%"
 	width="500px"
 	id="subscribetree"
 	datasources="rdf:subscribe"
