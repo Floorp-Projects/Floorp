@@ -389,44 +389,53 @@ void nsStr::StripChars(nsStr& aDest,const char* aSet){
     Searching methods...
    **************************************************************/
 
+
 /**
  *  This searches aDest for a given substring
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 2/04/00: added aCount argument to restrict search
  *  @param   aDest string to search
  *  @param   aTarget is the substring you're trying to find.
  *  @param   aIgnorecase indicates case sensitivity of search
  *  @param   anOffset tells us where to start the search
+ *  @param   aCount tells us how many iterations to make from offset; -1 means the full length of the string
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
 PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-  // NS_PRECONDITION(aTarget.mLength!=1,kCallFindChar);
+  PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
 
-  PRInt32 result=kNotFound;
-  
-  if((0<aDest.mLength) && (anOffset<(PRInt32)aDest.mLength)) {
-    PRInt32 theMax=aDest.mLength-aTarget.mLength;
-    PRInt32 index=(0<=anOffset) ? anOffset : 0;
-    
-    if((aDest.mLength>=aTarget.mLength) && (aTarget.mLength>0) && (index>=0)){
-      PRInt32 theTargetMax=aTarget.mLength;
-      while(index<=theMax) {
-        PRInt32 theSubIndex=-1;
-        PRBool  matches=PR_TRUE;
-        while((++theSubIndex<theTargetMax) && (matches)){
-          PRUnichar theChar=(aIgnoreCase) ? nsCRT::ToLower(GetCharAt(aDest,index+theSubIndex)) : GetCharAt(aDest,index+theSubIndex);
-          PRUnichar theTargetChar=(aIgnoreCase) ? nsCRT::ToLower(GetCharAt(aTarget,theSubIndex)) : GetCharAt(aTarget,theSubIndex);
-          matches=PRBool(theChar==theTargetChar);
-        }
-        if(matches) { 
-          result=index;
-          break;
-        }
-        index++;
-      } //while
-    }//if
-  }//if
-  return result;
+  if(0<=theMaxPos) {
+
+    if(anOffset<0)
+      anOffset=0;
+
+    if((0<aDest.mLength) && (anOffset<=theMaxPos) && (aTarget.mLength)) {
+
+      if(aCount<0)
+        aCount = MaxInt(theMaxPos,1);
+      
+      if(0<aCount) {
+
+        PRInt32     aDelta= (aDest.mCharSize == eOneByte) ? 1 : 2;
+        const char* root  = aDest.mStr; 
+        const char* left  = root+(anOffset*aDelta);
+        const char* last  = left+((aCount)*aDelta);
+        const char* max   = root+(theMaxPos*aDelta);
+        const char* right = (last<max) ? last : max;
+
+        while(left<=right){
+          PRInt32 cmp=(*gCompare[aDest.mCharSize][aTarget.mCharSize])(left,aTarget.mStr,aTarget.mLength,aIgnoreCase);
+          if(0==cmp) {
+            return (left-root)/aDelta;
+          }
+          left+=aDelta;
+        } //while
+
+      } //if 
+    }
+  } //if
+
+  return kNotFound;
 }
 
 
@@ -483,52 +492,47 @@ PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnore
 /**
  *  This searches aDest (in reverse) for a given substring
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 2/04/00
  *  @param   aDest string to search
  *  @param   aTarget is the substring you're trying to find.
  *  @param   aIgnorecase indicates case sensitivity of search
  *  @param   anOffset tells us where to start the search (counting from left)
+ *  @param   aCount tell us how many iterations to perform from offset
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
 PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-  //NS_PRECONDITION(aTarget.mLength!=1,kCallRFindChar);
+  if(anOffset<0)
+    anOffset=(PRInt32)aDest.mLength-1;
 
-  PRInt32 result=kNotFound;
+  if(aCount<0)
+    aCount = aDest.mLength;
 
-  if((0<aDest.mLength) && (anOffset<(PRInt32)aDest.mLength)) {
-    PRInt32 index=(0<=anOffset) ? anOffset : aDest.mLength-1;
+  if((0<aDest.mLength) && ((PRUint32)anOffset<aDest.mLength) && (aTarget.mLength)) {
+ 
+    if(0<aCount) {
+  
+      PRInt32     aDelta    = (aDest.mCharSize == eOneByte) ? 1 : 2;
+      const char* root      = aDest.mStr;
+      const char* destLast  = root+((aDest.mLength-1)*aDelta); //pts to last char in aDest (likely null)
 
-    if((aDest.mLength>=aTarget.mLength) && (aTarget.mLength>0) && (index>=0)){
+      const char* rightmost = root+(anOffset*aDelta);
+      const char* min       = rightmost-((aCount-1)*aDelta);
 
-      nsStr theCopy;
-      nsStr::Initialize(theCopy,eOneByte);
-      nsStr::Assign(theCopy,aTarget,0,aTarget.mLength);
-      if(aIgnoreCase){
-        nsStr::ChangeCase(theCopy,PR_FALSE); //force to lowercase
-      }
-    
-      PRInt32   theTargetMax=theCopy.mLength;
-      while(index>=0) {
-        PRInt32 theSubIndex=-1;
-        PRBool  matches=PR_FALSE;
-        if(index+theCopy.mLength<=aDest.mLength) {
-          matches=PR_TRUE;
-          while((++theSubIndex<theTargetMax) && (matches)){
-            PRUnichar theDestChar=(aIgnoreCase) ? nsCRT::ToLower(GetCharAt(aDest,index+theSubIndex)) : GetCharAt(aDest,index+theSubIndex);
-            PRUnichar theTargetChar=GetCharAt(theCopy,theSubIndex);
-            matches=PRBool(theDestChar==theTargetChar);
-          } //while
+      const char* leftmost  = (min<root) ? root: min;
+
+      while(leftmost<=rightmost) {
+        if(aTarget.mLength<=PRUint32(destLast-rightmost)) {
+          PRInt32 result=(*gCompare[aDest.mCharSize][aTarget.mCharSize])(rightmost,aTarget.mStr,aTarget.mLength,aIgnoreCase);
+          if(0==result) {
+            return (rightmost-root)/aDelta;
+          }
         } //if
-        if(matches) {
-          result=index;
-          break;
-        }
-        index--;
+        rightmost-=aDelta;
       } //while
-      nsStr::Destroy(theCopy);
-    }//if
-  }//if
-  return result;
+    }
+  }
+
+  return kNotFound;
 }
  
 
@@ -546,6 +550,7 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
 PRInt32 nsStr::RFindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
   return gRFindChars[aDest.mCharSize](aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
+
 
 /**
  *  This searches aDest (in reverese) for a character found in aSet. 
@@ -575,7 +580,6 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
   }
   return kNotFound;
 }
-
 
 /**
  * Compare source and dest strings, up to an (optional max) number of chars

@@ -343,16 +343,12 @@ public:
    */
   float ToFloat(PRInt32* aErrorCode) const;
 
-  /**
-   * Try to derive the radix from the value contained in this string
-   * @return  kRadix10, kRadix16 or kAutoDetect (meaning unknown)
-   */
-  PRUint32  DetermineRadix(void);
 
   /**
    * Perform string to int conversion.
    * @param   aErrorCode will contain error if one occurs
-   * @return  int rep of string value
+   * @param   aRadix tells us which radix to assume; kAutoDetect tells us to determine the radix for you.
+   * @return  int rep of string value, and possible (out) error code
    */
   PRInt32   ToInteger(PRInt32* aErrorCode,PRUint32 aRadix=kRadix10) const;
 

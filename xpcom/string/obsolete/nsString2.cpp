@@ -827,201 +827,17 @@ float nsString::ToFloat(PRInt32* aErrorCode) const {
   return f;
 }
 
-/**
- * Perform numeric string to int conversion with given radix.
- * NOTE: 1. This method mandates that the string is well formed and uppercased
- *       2. This method will return an error if the string you give
-            contains chars outside the range for the specified radix.
-
- * @update  gess 10/01/98
- * @param   aErrorCode will contain error if one occurs
- * @param   aRadix tells us what base to expect the string in.
- * @return  int rep of string value
- */
-static PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
-
-  //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
-  PRInt32 result=0;
-
-  char*   cp = aString.mStr + aString.mLength;
-  PRInt32 theMult=1;
-
-  *anErrorCode = NS_OK;
-
-    //now iterate the numeric chars and build our result
-  char theDigit=0;
-  while(--cp>=aString.mStr){
-    char theChar=*cp;
-    if((theChar>='0') && (theChar<='9')){
-      theDigit=theChar-'0';
-    }
-    else if((theChar>='A') && (theChar<='F')) {
-      if(10==aRadix){
-        *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
-        result=0;
-        break;
-      }
-      theDigit=(theChar-'A')+10;
-    }
-    else if('-'==theChar) {
-      result=-result;
-      break;
-    }
-    else if(('+'==theChar) || (' '==theChar)) { //stop in a good state if you see this...
-      break;
-    }
-    else {
-      //we've encountered a char that's not a legal number or sign
-      *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
-      result=0;
-      break;
-    }
-
-    result+=theDigit*theMult;
-    theMult*=aRadix;
-  }
-  return result;
-}
-
-/**
- * Call this method to extract the rightmost numeric value from the given 
- * 1-byte input string, and simultaneously determine the radix.
- * NOTE: This method mandates that the string is well formed.
- *       Leading and trailing gunk should be removed, and the case upper.
- * @update  gess 10/01/98
- * @param   anInputString contains orig string
- * @param   anOutString contains numeric portion copy of input string
- * @param   aRadix (an out parm) tells the caller what base we think the string is in.
- * @return  non-zero error code if this string is non-numeric
- */
-static PRInt32 GetNumericSubstring(nsCString& aString,PRUint32& aRadix) {
-
-  const char* cp=aString.mStr;
-  PRInt32 result=NS_ERROR_ILLEGAL_VALUE;
-  if(cp) {
-
-    aRadix = (kAutoDetect==aRadix) ? 10 : aRadix;
-    
-    //begin by skipping over leading chars that shouldn't be part of the number...
-    
-    char* to=(char*)cp;
-    const char* endcp=cp+aString.mLength;
-    PRBool  done=PR_FALSE;
-
-    while(!done){
-      switch(*cp) {
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-          aRadix=16;
-          done=PR_TRUE;
-          break;
-        case '0': case '1': case '2': case '3': case '4': 
-        case '5': case '6': case '7': case '8': case '9':
-        case '-': case '+': case '#': 
-          done=PR_TRUE;
-          break;
-        default:
-          cp++;
-          done=(cp==endcp);
-          break;
-      } //switch
-    }
-
-    while(cp<endcp) {
-      char theChar=*cp;
-      
-      if('A'<=theChar) {
-        if('F'>=theChar) {
-          aRadix=16;
-          *to++=theChar;
-        }
-        else if('X'==theChar) {
-          if('-'==aString.mStr[0])
-            to=&aString.mStr[1];
-          else to=aString.mStr;
-          aRadix=16;
-        }
-        else if('a'<=theChar) {
-          if('f'>=theChar) {
-            aRadix=16;
-            *to++='A'+(theChar-'a');
-          }
-          else if('x'==theChar) {
-            if('-'==aString.mStr[0])
-              to=&aString.mStr[1];
-            else to=aString.mStr;
-            aRadix=16;
-          }
-        }
-        else break; //bad char
-      }
-      else if((theChar>='0') && (theChar<='9')) {
-        *to++=theChar;
-      }
-      else if('-'==theChar) {
-        *to++=theChar;
-      }
-      else if(('#'!=theChar) && ('+'!=theChar)){
-        break; //terminate on invalid char!
-      }
-      cp++;
-    }
-
-    aString.Truncate(to-aString.mStr);
-    result=(0==aString.mLength) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
-  }
-  return result;
-}
-
-
-/**
- * This method tries to autodetect that radix given a string
- * @update  gess 10/01/98
- * @return  10,16,or 0 (meaning I don't know)
- */
-PRUint32 nsString::DetermineRadix(void) {
-  PRUint32 result=kRadixUnknown;
-  if(0<mLength) {
-    nsCAutoString theString(*this);
-    if(NS_OK!=GetNumericSubstring(theString,result))
-      result=kRadixUnknown;
-  }
-  return result;
-}
-
 
 /**
  * Perform decimal numeric string to int conversion.
  * NOTE: In this version, we use the radix you give, even if it's wrong.
- * @update  gess 10/01/98
+ * @update  gess 02/14/00
  * @param   aErrorCode will contain error if one occurs
- * @param   aRadix tells us what base to expect the given string in.
+ * @param   aRadix tells us what base to expect the given string in. kAutoDetect tells us to determine the radix.
  * @return  int rep of string value
  */
 PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
-#if 1
-  //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
-  PRInt32   result=0;
-
-  if(0<mLength) {
-
-    nsCAutoString theString(mUStr,mLength);
-    PRUint32  theRadix=aRadix;
-
-    *anErrorCode=GetNumericSubstring(theString,theRadix); //we actually don't use this radix; use given radix instead
-
-    if(NS_OK==*anErrorCode){
-      if(kAutoDetect==aRadix)
-        aRadix=theRadix;
-      if((kRadix10==aRadix) || (kRadix16==aRadix))
-        result=_ToInteger(theString,anErrorCode,aRadix); //note we use the given radix, not the computed one.
-      else *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
-    }
-  }
-
-  return result;
-#else 
-  PRUnichar*  cp=aString.mUStr;
+  PRUnichar*  cp=mUStr;
   PRInt32     theRadix = (kAutoDetect==aRadix) ? 10 : aRadix;
   PRInt32     result=0;
   PRBool      negate=PR_FALSE;
@@ -1033,7 +849,7 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
   
     //begin by skipping over leading chars that shouldn't be part of the number...
     
-    PRUnichar*  endcp=cp+aString.mLength;
+    PRUnichar*  endcp=cp+mLength;
     PRBool      done=PR_FALSE;
     
     while((cp<endcp) && (!done)){
@@ -1119,7 +935,6 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
     } //if
   }
   return result;
-#endif
 }
 
 /**********************************************************************
