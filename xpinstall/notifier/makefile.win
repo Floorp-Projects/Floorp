@@ -27,7 +27,7 @@ DLLNAME=xpiflash
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS =                                \
-        $(DIST)\lib\libreg32.lib       \
+        $(DIST)\lib\mozreg.lib       \
         $(DIST)\lib\xpcom.lib          \
         $(LIBNSPR)                     \
         $(NULL)
