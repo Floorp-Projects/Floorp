@@ -302,7 +302,9 @@ function LoadNopreview()
     currSignon = RemoveHTMLFormatting(currSignon);
     AddItem("nopreviewlist",[currSignon],"nopreview_",i-1);
   }
-  nopreviews_count = nopreviewList.length-1;
+  if (nopreviewList) {
+    nopreviews_count = nopreviewList.length-1; // -1 because first item is always blank
+  }
   if (nopreviews_count == 0) {
     document.getElementById("removeAllNopreviews").setAttribute("disabled","true");
   }
@@ -355,7 +357,9 @@ function LoadNocapture()
     currSignon = RemoveHTMLFormatting(currSignon);
     AddItem("nocapturelist",[currSignon],"nocapture_",i-1);
   }
-  nocaptures_count = nocaptureList.length-1;
+  if (nocaptureList) {
+    nocaptures_count = nocaptureList.length-1; // -1 because first item is always blank
+  }
   if (nocaptures_count == 0) {
     document.getElementById("removeAllNocaptures").setAttribute("disabled","true");
   }
