@@ -81,6 +81,7 @@ DIRS +=				\
   silentdl			\
   xpinstall			\
   sun-java			\
+  profile			\
   $(NULL)
 
 ifdef MOZ_BUILD_XPFE
