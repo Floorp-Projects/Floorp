@@ -254,8 +254,7 @@ Feed.prototype.parseAsRSS2 = function() {
                  || (item.description ? item.description.substr(0, 150) : null)
                  || item.title;
     item.author = getNodeValue(itemNode.getElementsByTagName("author")[0]
-                               || itemNode.getElementsByTagName("creator")[0]
-                               || channel.getElementsByTagName("creator")[0])
+                               || itemNode.getElementsByTagName("creator")[0])
                   || this.title
                   || item.author;
     item.date = getNodeValue(itemNode.getElementsByTagName("pubDate")[0]
