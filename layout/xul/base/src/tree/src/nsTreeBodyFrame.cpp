@@ -1879,7 +1879,9 @@ nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUs
 
     mImageGuard = PR_TRUE;
     // XXX: initialDocumentURI is NULL!
-    rv = il->LoadImage(srcURI, nsnull, documentURI, nsnull, listener, mPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(imageRequest));
+    rv = il->LoadImage(srcURI, nsnull, documentURI, nsnull, listener, doc,
+                       nsIRequest::LOAD_NORMAL, nsnull, nsnull,
+                       getter_AddRefs(imageRequest));
     mImageGuard = PR_FALSE;
 
     if (!imageRequest)
@@ -3784,43 +3786,53 @@ nsTreeImageListener::~nsTreeImageListener()
 {
 }
 
-NS_IMETHODIMP nsTreeImageListener::OnStartDecode(imgIRequest *aRequest, nsISupports *aContext)
+NS_IMETHODIMP nsTreeImageListener::OnStartDecode(imgIRequest *aRequest)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeImageListener::OnStartContainer(imgIRequest *aRequest, nsISupports *aContext, imgIContainer *aImage)
+NS_IMETHODIMP nsTreeImageListener::OnStartContainer(imgIRequest *aRequest,
+                                                    imgIContainer *aImage)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeImageListener::OnStartFrame(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame)
+NS_IMETHODIMP nsTreeImageListener::OnStartFrame(imgIRequest *aRequest,
+                                                gfxIImageFrame *aFrame)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeImageListener::OnDataAvailable(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame, const nsRect *aRect)
+NS_IMETHODIMP nsTreeImageListener::OnDataAvailable(imgIRequest *aRequest,
+                                                   gfxIImageFrame *aFrame,
+                                                   const nsRect *aRect)
 {
   Invalidate();
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeImageListener::OnStopFrame(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame)
+NS_IMETHODIMP nsTreeImageListener::OnStopFrame(imgIRequest *aRequest,
+                                               gfxIImageFrame *aFrame)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeImageListener::OnStopContainer(imgIRequest *aRequest, nsISupports *aContext, imgIContainer *aImage)
+NS_IMETHODIMP nsTreeImageListener::OnStopContainer(imgIRequest *aRequest,
+                                                   imgIContainer *aImage)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeImageListener::OnStopDecode(imgIRequest *aRequest, nsISupports *aContext, nsresult status, const PRUnichar *statusArg)
+NS_IMETHODIMP nsTreeImageListener::OnStopDecode(imgIRequest *aRequest,
+                                                nsresult status,
+                                                const PRUnichar *statusArg)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeImageListener::FrameChanged(imgIContainer *aContainer, nsISupports *aContext, gfxIImageFrame *newframe, nsRect * dirtyRect)
+NS_IMETHODIMP nsTreeImageListener::FrameChanged(imgIContainer *aContainer,
+                                                gfxIImageFrame *newframe,
+                                                nsRect * dirtyRect)
 {
   Invalidate();
   return NS_OK;

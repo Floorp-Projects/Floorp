@@ -307,7 +307,7 @@ NS_IMETHODIMP imgContainerGIF::ResetAnimation()
   if (observer) {
     nsCOMPtr<gfxIImageFrame> firstFrame;
     inlinedGetFrameAt(0, getter_AddRefs(firstFrame));
-    observer->FrameChanged(this, nsnull, firstFrame, &mFirstFrameRefreshArea);
+    observer->FrameChanged(this, firstFrame, &mFirstFrameRefreshArea);
   }
 
   if (oldAnimating)
@@ -442,7 +442,7 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
   // Set mCurrentAnimationFrameIndex at the last possible moment
   mCurrentAnimationFrameIndex = nextFrameIndex;
   // Refreshes the screen
-  observer->FrameChanged(this, nsnull, frameToUse, &dirtyRect);
+  observer->FrameChanged(this, frameToUse, &dirtyRect);
   return NS_OK;
 }
 

@@ -115,8 +115,8 @@ NS_IMETHODIMP nsBMPDecoder::Close()
     mStateData = 0;
 
     if (mObserver) {
-        mObserver->OnStopContainer(nsnull, nsnull, mImage);
-        mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+        mObserver->OnStopContainer(nsnull, mImage);
+        mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
         mObserver = nsnull;
     }
     mImage = nsnull;
@@ -162,7 +162,7 @@ nsresult nsBMPDecoder::SetData()
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRect r(0, line, mBIH.width, 1);
-    rv = mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+    rv = mObserver->OnDataAvailable(nsnull, mFrame, &r);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -202,7 +202,7 @@ nsresult nsBMPDecoder::WriteRLERows(PRUint32 rows)
 
     line = (mBIH.height < 0) ? (-mBIH.height - mCurLine - rows) : mCurLine;
     nsRect r(0, line, mBIH.width, rows);
-    return mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+    return mObserver->OnDataAvailable(nsnull, mFrame, &r);
 }
 
 static void calcBitmask(PRUint32 aMask, PRUint8& aBegin, PRUint8& aLength)
@@ -257,7 +257,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         aBuffer += toCopy;
     }
     if (mPos == 18) {
-        rv = mObserver->OnStartDecode(nsnull, nsnull);
+        rv = mObserver->OnStartDecode(nsnull);
         NS_ENSURE_SUCCESS(rv, rv);
         ProcessFileHeader();
         if (mBFH.signature[0] != 'B' || mBFH.signature[1] != 'M')
@@ -314,7 +314,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         PRUint32 real_height = (mBIH.height > 0) ? mBIH.height : -mBIH.height;
         rv = mImage->Init(mBIH.width, real_height, mObserver);
         NS_ENSURE_SUCCESS(rv, rv);
-        rv = mObserver->OnStartContainer(nsnull, nsnull, mImage);
+        rv = mObserver->OnStartContainer(nsnull, mImage);
         NS_ENSURE_SUCCESS(rv, rv);
         mCurLine = real_height;
 
@@ -333,7 +333,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         NS_ENSURE_SUCCESS(rv, rv);
         rv = mImage->AppendFrame(mFrame);
         NS_ENSURE_SUCCESS(rv, rv);
-        mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+        mObserver->OnStartFrame(nsnull, mFrame);
         NS_ENSURE_SUCCESS(rv, rv);
     }
     PRUint8 bpc; // bytes per color
@@ -469,7 +469,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                     NS_ENSURE_SUCCESS(rv, rv);
 
                     if (mCurLine == 0) { // Finished last line
-                        return mObserver->OnStopFrame(nsnull, nsnull, mFrame);
+                        return mObserver->OnStopFrame(nsnull, mFrame);
                     }
                     mRowBytes = 0;
 
@@ -649,7 +649,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                 // Because of the use of the continue statement
                 // we only get here for eol, eof or y delta
                 if (mCurLine == 0) { // Finished last line
-                    return mObserver->OnStopFrame(nsnull, nsnull, mFrame);
+                    return mObserver->OnStopFrame(nsnull, mFrame);
                 }
             }
         }

@@ -85,7 +85,7 @@ imgRequestProxy::~imgRequestProxy()
 
 
 
-nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx)
+nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver)
 {
   NS_PRECONDITION(request, "no request");
   if (!request)
@@ -99,7 +99,6 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
   NS_ADDREF(mOwner);
 
   mListener = aObserver;
-  mContext = cx;
 
   if (aLoadGroup) {
     //
@@ -110,7 +109,7 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
     PRUint32 imageStatus = mOwner->GetImageStatus();
     if (!(imageStatus & imgIRequest::STATUS_LOAD_COMPLETE) &&
         !(imageStatus & imgIRequest::STATUS_ERROR)) {
-      aLoadGroup->AddRequest(this, cx);
+      aLoadGroup->AddRequest(this, nsnull);
       mLoadGroup = aLoadGroup;
       mIsInLoadGroup = PR_TRUE;
     }
@@ -296,7 +295,7 @@ void imgRequestProxy::FrameChanged(imgIContainer *container, gfxIImageFrame *new
   LOG_FUNC(gImgLog, "imgRequestProxy::FrameChanged");
 
   if (mListener)
-    mListener->FrameChanged(container, mContext, newframe, dirtyRect);
+    mListener->FrameChanged(container, newframe, dirtyRect);
 }
 
 /** imgIDecoderObserver methods **/
@@ -306,7 +305,7 @@ void imgRequestProxy::OnStartDecode()
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartDecode");
 
   if (mListener)
-    mListener->OnStartDecode(this, mContext);
+    mListener->OnStartDecode(this);
 }
 
 void imgRequestProxy::OnStartContainer(imgIContainer *image)
@@ -314,7 +313,7 @@ void imgRequestProxy::OnStartContainer(imgIContainer *image)
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartContainer");
 
   if (mListener)
-    mListener->OnStartContainer(this, mContext, image);
+    mListener->OnStartContainer(this, image);
 }
 
 void imgRequestProxy::OnStartFrame(gfxIImageFrame *frame)
@@ -322,7 +321,7 @@ void imgRequestProxy::OnStartFrame(gfxIImageFrame *frame)
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStartFrame");
 
   if (mListener)
-    mListener->OnStartFrame(this, mContext, frame);
+    mListener->OnStartFrame(this, frame);
 }
 
 void imgRequestProxy::OnDataAvailable(gfxIImageFrame *frame, const nsRect * rect)
@@ -330,7 +329,7 @@ void imgRequestProxy::OnDataAvailable(gfxIImageFrame *frame, const nsRect * rect
   LOG_FUNC(gImgLog, "imgRequestProxy::OnDataAvailable");
 
   if (mListener)
-    mListener->OnDataAvailable(this, mContext, frame, rect);
+    mListener->OnDataAvailable(this, frame, rect);
 }
 
 void imgRequestProxy::OnStopFrame(gfxIImageFrame *frame)
@@ -338,7 +337,7 @@ void imgRequestProxy::OnStopFrame(gfxIImageFrame *frame)
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopFrame");
 
   if (mListener)
-    mListener->OnStopFrame(this, mContext, frame);
+    mListener->OnStopFrame(this, frame);
 }
 
 void imgRequestProxy::OnStopContainer(imgIContainer *image)
@@ -346,7 +345,7 @@ void imgRequestProxy::OnStopContainer(imgIContainer *image)
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopContainer");
 
   if (mListener)
-    mListener->OnStopContainer(this, mContext, image);
+    mListener->OnStopContainer(this, image);
 }
 
 void imgRequestProxy::OnStopDecode(nsresult status, const PRUnichar *statusArg)
@@ -354,7 +353,7 @@ void imgRequestProxy::OnStopDecode(nsresult status, const PRUnichar *statusArg)
   LOG_FUNC(gImgLog, "imgRequestProxy::OnStopDecode");
 
   if (mListener)
-    mListener->OnStopDecode(this, mContext, status, statusArg);
+    mListener->OnStopDecode(this, status, statusArg);
 }
 
 
@@ -368,7 +367,7 @@ void imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 #endif
 
   if (!mIsInLoadGroup && mLoadGroup) {
-    mLoadGroup->AddRequest(this, mContext);
+    mLoadGroup->AddRequest(this, nsnull);
     mIsInLoadGroup = PR_TRUE;
   }
 
@@ -393,7 +392,7 @@ void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
    */
   nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
 
-  mLoadGroup->RemoveRequest(this, mContext, statusCode);
+  mLoadGroup->RemoveRequest(this, nsnull, statusCode);
   mIsInLoadGroup = PR_FALSE;
 }
 

@@ -41,6 +41,7 @@ interface gfxIImageFrame;
 [uuid(153f1518-1dd2-11b2-b9cd-b16eb63e0471)]
 interface imgIContainerObserver : nsISupports
 {
-  [noscript] void frameChanged(in imgIContainer aContainer, in nsISupports aCX,
-                               in gfxIImageFrame aFrame, in nsRect aDirtyRect);
+  [noscript] void frameChanged(in imgIContainer aContainer,
+                               in gfxIImageFrame aFrame,
+                               in nsRect aDirtyRect);
 };

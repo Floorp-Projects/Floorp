@@ -83,7 +83,7 @@ nsresult nsICODecoder::SetImageData()
   nsRect r(0, 0, 0, 0);
   mFrame->GetWidth(&r.width);
   mFrame->GetHeight(&r.height);
-  mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+  mObserver->OnDataAvailable(nsnull, mFrame, &r);
 
   return NS_OK;
 }
@@ -150,8 +150,8 @@ NS_IMETHODIMP nsICODecoder::Init(imgILoad *aLoad)
 
 NS_IMETHODIMP nsICODecoder::Close()
 {
-  mObserver->OnStopContainer(nsnull, nsnull, mImage);
-  mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+  mObserver->OnStopContainer(nsnull, mImage);
+  mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   mObserver = nsnull;
 
   mImage = nsnull;
@@ -185,7 +185,7 @@ NS_IMETHODIMP nsICODecoder::Flush()
   if (mDecodingAndMask) {
     SetAlphaData();
     SetImageData();
-    mObserver->OnStopFrame(nsnull, nsnull, mFrame);
+    mObserver->OnStopFrame(nsnull, mFrame);
   }
   return NS_OK;
 }
@@ -292,7 +292,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
 
     nsresult rv = mImage->Init(mDirEntry.mWidth, mDirEntry.mHeight, mObserver);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mObserver->OnStartContainer(nsnull, nsnull, mImage);
+    rv = mObserver->OnStartContainer(nsnull, mImage);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mCurLine = mDirEntry.mHeight;
@@ -307,7 +307,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mImage->AppendFrame(mFrame);
     NS_ENSURE_SUCCESS(rv, rv);
-    mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+    mObserver->OnStartFrame(nsnull, mFrame);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

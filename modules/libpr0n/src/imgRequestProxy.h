@@ -54,7 +54,7 @@ public:
   virtual ~imgRequestProxy();
 
   /* additional members */
-  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx);
+  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver);
   nsresult ChangeOwner(imgRequest *aNewOwner); // this will change mOwner.  Do not call this if the previous
                                                // owner has already sent notifications out!
 
@@ -83,7 +83,6 @@ private:
   imgRequest *mOwner;
 
   nsCOMPtr<imgIDecoderObserver> mListener;
-  nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   nsLoadFlags mLoadFlags;

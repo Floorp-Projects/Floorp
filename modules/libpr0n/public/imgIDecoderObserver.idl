@@ -44,37 +44,37 @@ interface imgIDecoderObserver : imgIContainerObserver
   /**
    * called as soon as the image begins getting decoded
    */
-  void onStartDecode(in imgIRequest aRequest, in nsISupports cx);
+  void onStartDecode(in imgIRequest aRequest);
 
   /**
    * called once the image has been inited and therefore has a width and height
    */
-  void onStartContainer(in imgIRequest aRequest, in nsISupports cx, in imgIContainer aContainer);
+  void onStartContainer(in imgIRequest aRequest, in imgIContainer aContainer);
 
   /**
    * called when each frame is created
    */
-  void onStartFrame(in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame);
+  void onStartFrame(in imgIRequest aRequest, in gfxIImageFrame aFrame);
 
   /**
    * called when some part of the frame has new data in it
    */
-  [noscript] void onDataAvailable(in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame, [const] in nsRect aRect);
+  [noscript] void onDataAvailable(in imgIRequest aRequest, in gfxIImageFrame aFrame, [const] in nsRect aRect);
 
   /**
    * called when a frame is finished decoding
    */
-  void onStopFrame(in imgIRequest aRequest, in nsISupports cx, in gfxIImageFrame aFrame);
+  void onStopFrame(in imgIRequest aRequest, in gfxIImageFrame aFrame);
 
   /**
    * probably not needed.  called right before onStopDecode
    */
-  void onStopContainer(in imgIRequest aRequest, in nsISupports cx, in imgIContainer aContainer);
+  void onStopContainer(in imgIRequest aRequest, in imgIContainer aContainer);
 
   /**
    * called when the decoder is dying off
    */
-  void onStopDecode(in imgIRequest aRequest, in nsISupports cx,
-                    in nsresult status, in wstring statusArg);
+  void onStopDecode(in imgIRequest aRequest, in nsresult status,
+                    in wstring statusArg);
 
 };

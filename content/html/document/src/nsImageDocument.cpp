@@ -163,15 +163,12 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPresShell> shell;
-  nsCOMPtr<nsIPresContext> context;
-  mDocument->GetShellAt(0, getter_AddRefs(shell));
-  if (shell) {
-    shell->GetPresContext(getter_AddRefs(context));
-  }
-
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
-  il->LoadImageWithChannel(channel, mDocument, context, getter_AddRefs(mNextStream), 
+  nsCOMPtr<nsISupports> docSupports;
+  CallQueryInterface(mDocument, NS_STATIC_CAST(nsISupports**,
+                                               getter_AddRefs(docSupports)));
+  il->LoadImageWithChannel(channel, mDocument, docSupports,
+                           getter_AddRefs(mNextStream), 
                            getter_AddRefs(mDocument->mImageRequest));
 
   mDocument->StartLayout();
@@ -406,16 +403,13 @@ nsImageDocument::ToggleImageSize()
 
 
 NS_IMETHODIMP
-nsImageDocument::OnStartDecode(imgIRequest* aRequest,
-                               nsISupports* aCX)
+nsImageDocument::OnStartDecode(imgIRequest* aRequest)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsImageDocument::OnStartContainer(imgIRequest* aRequest,
-                                  nsISupports* aCX,
-                                  imgIContainer* aImage)
+nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 {
   aImage->GetWidth(&mImageWidth);
   aImage->GetHeight(&mImageHeight);
@@ -427,16 +421,13 @@ nsImageDocument::OnStartContainer(imgIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-nsImageDocument::OnStartFrame(imgIRequest* aRequest,
-                              nsISupports* aCX,
-                              gfxIImageFrame* aFrame)
+nsImageDocument::OnStartFrame(imgIRequest* aRequest, gfxIImageFrame* aFrame)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImageDocument::OnDataAvailable(imgIRequest* aRequest,
-                                 nsISupports *aCX,
                                  gfxIImageFrame* aFrame,
                                  const nsRect* aRect)
 {
@@ -445,7 +436,6 @@ nsImageDocument::OnDataAvailable(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsImageDocument::OnStopFrame(imgIRequest* aRequest,
-                             nsISupports* aCX,
                              gfxIImageFrame* aFrame)
 {
   return NS_OK;
@@ -453,7 +443,6 @@ nsImageDocument::OnStopFrame(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsImageDocument::OnStopContainer(imgIRequest* aRequest,
-                                 nsISupports* aCX,
                                  imgIContainer* aImage)
 {
   return NS_OK;
@@ -461,7 +450,6 @@ nsImageDocument::OnStopContainer(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsImageDocument::OnStopDecode(imgIRequest* aRequest,
-                              nsISupports* aCX,
                               nsresult status,
                               const PRUnichar* statusArg)
 {
@@ -470,7 +458,6 @@ nsImageDocument::OnStopDecode(imgIRequest* aRequest,
 
 NS_IMETHODIMP
 nsImageDocument::FrameChanged(imgIContainer* aContainer,
-                              nsISupports *aCX,
                               gfxIImageFrame* aFrame,
                               nsRect* aDirtyRect)
 {

@@ -131,9 +131,9 @@ NS_IMETHODIMP nsPPMDecoder::Init(imgILoad *aLoad)
 NS_IMETHODIMP nsPPMDecoder::Close()
 {
   if (mObserver) {
-    mObserver->OnStopFrame(nsnull, nsnull, mFrame);
-    mObserver->OnStopContainer(nsnull, nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+    mObserver->OnStopFrame(nsnull, mFrame);
+    mObserver->OnStopContainer(nsnull, mImage);
+    mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
   
   return NS_OK;
@@ -167,7 +167,7 @@ NS_IMETHODIMP nsPPMDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRU
   if (NS_FAILED(rv)) return rv;
 
   if (mState == F_P && mObserver)
-    mObserver->OnStartDecode(nsnull, nsnull);
+    mObserver->OnStartDecode(nsnull);
 
   char *p = mBuffer;
   char *bufferEnd = mBuffer+readLen;
@@ -256,11 +256,11 @@ NS_IMETHODIMP nsPPMDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRU
     case F_INITIALIZE:
       mImage->Init(mWidth, mHeight, mObserver);
       if (mObserver)
-	mObserver->OnStartContainer(nsnull, nsnull, mImage);
+        mObserver->OnStartContainer(nsnull, mImage);
       mFrame->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB, 24);
       mImage->AppendFrame(mFrame);
       if (mObserver)
-	mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+        mObserver->OnStartFrame(nsnull, mFrame);
       mRow = 0;
       mBytesPerRow = 3*mWidth;
       mFrame->GetImageBytesPerRow(&mFrameBytesPerRow);
@@ -380,7 +380,7 @@ NS_METHOD nsPPMDecoder::checkSendRow()
     if (NS_FAILED(rv)) return rv;
     nsRect r(0, mRow, mWidth, 1);
     if (mObserver)
-      mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+      mObserver->OnDataAvailable(nsnull, mFrame, &r);
     mRow++;
     mRowDataFill = 0;
   }
