@@ -107,9 +107,10 @@ class SocketBase {
         socketClose();
     }
 
-    // This method is synchronized because there is a potential race
-    // condition in the native code.
-    native synchronized void socketClose() throws IOException;
+    // SSLServerSocket and SSLSocket close methods
+    // have their own synchronization control that 
+    // protects SocketBase.socketClose.
+    native void socketClose() throws IOException;
 
     private boolean requestingClientAuth = false;
 

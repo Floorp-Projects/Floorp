@@ -39,7 +39,6 @@
 #include <ssl.h>
 #include <sslerr.h>
 #include <stdio.h>
-
 #include <jssutil.h>
 #include <jss_exceptions.h>
 #include <java_ids.h>
@@ -686,13 +685,9 @@ Java_org_mozilla_jss_ssl_SSLSocket_socketRead(JNIEnv *env, jobject self,
     jbyte *buf = NULL;
     jint size;
     PRIntervalTime ivtimeout;
+    PRThread *me;
     jint nread;
-
-    /* get the socket */
-    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
-        goto finish;
-    }
-
+    
     size = (*env)->GetArrayLength(env, bufBA);
     if( off < 0 || len < 0 || (off+len) > size) {
         JSS_throw(env, INDEX_OUT_OF_BOUNDS_EXCEPTION);
@@ -707,42 +702,49 @@ Java_org_mozilla_jss_ssl_SSLSocket_socketRead(JNIEnv *env, jobject self,
     ivtimeout = (timeout > 0) ? PR_MillisecondsToInterval(timeout)
                               : PR_INTERVAL_NO_TIMEOUT;
 
-    for(;;) {
-        nread = PR_Recv(sock->fd, buf+off, len, 0 /*flags*/, ivtimeout);
+    /* get the socket */
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
+    }
 
-        if( nread >= 0 ) {
-            /* either we read some bytes, or we hit EOF. Either way, we're
-               done */
-            break;
-        } else {
-            /* some error, but is it recoverable? */
-            PRErrorCode err = PR_GetError();
+    /* set the current thread doing the read */
+    me = PR_GetCurrentThread();
+    PR_Lock(sock->lock);
+    PR_ASSERT(sock->reader == NULL);
+    sock->reader = me;
+    PR_Unlock(sock->lock);
 
+    nread = PR_Recv(sock->fd, buf+off, len, 0 /*flags*/, ivtimeout);
 
-            if( err == PR_PENDING_INTERRUPT_ERROR ||
-                err == PR_IO_PENDING_ERROR )
-            {
-                /* just try again */
-            } else {
+    PR_Lock(sock->lock);
+    PR_ASSERT(sock->reader == me);
+    sock->reader = NULL; 
+    PR_Unlock(sock->lock);
+
+    if( nread < 0 ) {
+        PRErrorCode err = PR_GetError();
+
+        if( err == PR_PENDING_INTERRUPT_ERROR ) {
 #ifdef WINNT
-                if (err == PR_IO_TIMEOUT_ERROR ) {
-                /*
-                 * if timeout was set, and the PR_Accept() timed out,
-                 * then cancel the I/O on the port, otherwise PR_Accept()
-                 * will always return PR_IO_PENDING_ERROR on subsequent
-                 * calls
-                 */
-                    PR_NT_CancelIo(sock->fd);
-                    JSSL_throwSSLSocketException(env, "Operation timed out");
-                    goto finish;
-                }
+            /* Clean up after PR_interrupt called by abortReadWrite. */
+            PR_NT_CancelIo(sock->fd);
 #endif 
-                /* unrecoverable error */
-                JSSL_throwSSLSocketException(env,
-                   "Error reading from socket");
-                goto finish;
-            }
+            JSSL_throwSSLSocketException(env, "Read operation interrupted");
+        } else if( err == PR_IO_TIMEOUT_ERROR ) {
+#ifdef WINNT
+            /*
+             * if timeout was set, and the PR_Recv timed out,
+             * then cancel the I/O on the socket, otherwise PR_Recv()
+             * will always return PR_IO_PENDING_ERROR on subsequent
+             * calls
+             */
+            PR_NT_CancelIo(sock->fd);
+#endif
+            JSSL_throwSSLSocketException(env, "Operation timed out");
+        } else {
+            JSSL_throwSSLSocketException(env, "Error reading from socket");
         }
+        goto finish;
     }
 
     if( nread == 0 ) {
@@ -784,6 +786,8 @@ Java_org_mozilla_jss_ssl_SSLSocket_socketWrite(JNIEnv *env, jobject self,
     jbyte *buf = NULL;
     jint size;
     PRIntervalTime ivtimeout;
+    PRThread *me;
+    PRInt32 numwrit;
 
     if( bufBA == NULL ) {
         JSS_throw(env, NULL_POINTER_EXCEPTION);
@@ -796,10 +800,6 @@ Java_org_mozilla_jss_ssl_SSLSocket_socketWrite(JNIEnv *env, jobject self,
         goto finish;
     }
 
-    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
-        goto finish;
-    }
-
     buf = (*env)->GetByteArrayElements(env, bufBA, NULL);
     if( buf == NULL ) {
         goto finish;
@@ -808,46 +808,83 @@ Java_org_mozilla_jss_ssl_SSLSocket_socketWrite(JNIEnv *env, jobject self,
     ivtimeout = (timeout > 0) ? PR_MillisecondsToInterval(timeout)
                               : PR_INTERVAL_NO_TIMEOUT;
 
-    for(;;) {
-        PRInt32 numwrit;
-
-        numwrit = PR_Send(sock->fd, buf+off, len, 0 /*flags*/, ivtimeout);
-
-        if( numwrit < 0 ) {
-            PRErrorCode err = PR_GetError();
-            if( err == PR_PENDING_INTERRUPT_ERROR ||
-                err == PR_IO_PENDING_ERROR)
-            {
-                /* just try again */
-            } else if( err == PR_IO_TIMEOUT_ERROR ) {
-#ifdef WINNT
-                /*
-                 * if timeout was set, and the PR_Accept() timed out,
-                 * then cancel the I/O on the port, otherwise PR_Accept()
-                 * will always return PR_IO_PENDING_ERROR on subsequent
-                 * calls
-                 */
-                PR_NT_CancelIo(sock->fd);
-#endif 
-                JSSL_throwSSLSocketException(env, "Operation timed out");
-                goto finish;
-            } else {
-                JSSL_throwSSLSocketException(env,
-                    "Failed to write to socket");
-                goto finish;
-            }
-        } else {
-            /* PR_Send is supposed to block until it sends everything */
-            PR_ASSERT(numwrit == len);
-            break;
-        }
+    /* get the socket */
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS ) {
+        goto finish;
     }
+    /* set the current thread doing the write */
+    me = PR_GetCurrentThread();
+    PR_Lock(sock->lock);
+    PR_ASSERT(sock->writer == NULL);
+    sock->writer = me;
+    PR_Unlock(sock->lock);
+
+    numwrit = PR_Send(sock->fd, buf+off, len, 0 /*flags*/, ivtimeout);
+
+    PR_Lock(sock->lock);
+    PR_ASSERT(sock->writer == me);
+    sock->writer = NULL;
+    PR_Unlock(sock->lock);
+
+    if( numwrit < 0 ) {
+        PRErrorCode err = PR_GetError();
+        if( err == PR_PENDING_INTERRUPT_ERROR ) {
+#ifdef WINNT
+            /* clean up after PR_Interrupt called by abortReadWrite. */
+            PR_NT_CancelIo(sock->fd);
+#endif 
+            JSSL_throwSSLSocketException(env, "Write operation interrupted");
+        } else if( err == PR_IO_TIMEOUT_ERROR ) {
+#ifdef WINNT
+            /*
+             * if timeout was set, and the PR_Send() timed out,
+             * then cancel the I/O on the socket, otherwise PR_Send()
+             * will always return PR_IO_PENDING_ERROR on subsequent
+             * calls
+             */
+            PR_NT_CancelIo(sock->fd);
+#endif 
+            JSSL_throwSSLSocketException(env, "Operation timed out");
+        } else {
+            JSSL_throwSSLSocketException(env, "Failed to write to socket");
+        }
+        goto finish;
+    }
+    /* PR_Send is supposed to block until it sends everything */
+    PR_ASSERT(numwrit == len);
 
 finish:
     if( buf != NULL ) {
         (*env)->ReleaseByteArrayElements(env, bufBA, buf, JNI_ABORT);
     }
     EXCEPTION_CHECK(env, sock)
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_abortReadWrite(
+    JNIEnv *env, jobject self)
+{
+    JSSL_SocketData *sock = NULL;
+
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS ) goto finish;
+
+    /*
+     * The java layer prevents I/O once close has been 
+     * called but if an I/O operation is in progress then abort it.
+     * For WINNT the read and write methods must check for the 
+     * PR_PENDING_INTERRUPT_ERROR and call PR_NT_CancelIo.
+     */
+    PR_Lock(sock->lock);
+    if ( sock->reader ) {
+        PR_Interrupt(sock->reader); 
+    }
+    if ( sock->writer ) {
+	PR_Interrupt(sock->writer); 
+    }
+    PR_Unlock(sock->lock);
+finish:
+    EXCEPTION_CHECK(env, sock)
+    return;
 }
 
 JNIEXPORT void JNICALL

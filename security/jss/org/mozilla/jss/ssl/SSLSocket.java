@@ -49,6 +49,31 @@ import java.security.AccessController;
  */
 public class SSLSocket extends java.net.Socket {
 
+    /*
+     * Locking strategy of SSLSocket
+     *
+     * isClosed, inRead, and inWrite must be accessed with the object
+     * locked.
+     *
+     * readLock must be locked throughout the read method.  It is used
+     * to serialize read calls.
+     *
+     * writeLock must be locked throughout the write method. It is used
+     * to serialize write calls.
+     */
+
+    private java.lang.Object readLock = new java.lang.Object();
+    private java.lang.Object writeLock = new java.lang.Object();
+    private boolean isClosed = false;
+    private boolean inRead = false;
+    private boolean inWrite = false;
+    private InetAddress inetAddress;
+    private int port;
+    private SocketProxy sockProxy = null;
+    private boolean open = false;
+    private boolean handshakeAsClient = true;
+    private SocketBase base = new SocketBase();
+
     /**
      * For sockets that get created by accept().
      */
@@ -338,7 +363,7 @@ public class SSLSocket extends java.net.Socket {
     }
 
     private native void shutdownNative(int how) throws IOException;
-
+    private native void abortReadWrite() throws IOException;
     /**
      * Sets the SO_LINGER socket option.
      * param linger The time (in seconds) to linger for.
@@ -391,7 +416,36 @@ public class SSLSocket extends java.net.Socket {
      * Closes this socket.
      */
     public void close() throws IOException {
-        base.close();
+        synchronized (this) {
+            if( isClosed ) {
+                /* finalize calls close or user calls close more than once */
+                return;
+            }
+            isClosed = true;
+            if( sockProxy == null ) {
+                /* nothing to do */
+                return;
+            }
+            /*
+             * If a read or write is occuring, abort the I/O.  Any
+             * further attempts to read/write will fail since isClosed
+             * is true
+             */
+            if ( inRead || inWrite ) {
+                abortReadWrite();
+            }
+        }
+        /*
+         * Lock readLock and writeLock to ensure that read and write
+         * have been aborted.
+         */
+        synchronized (readLock) {
+            synchronized (writeLock) {
+                base.close();
+                sockProxy = null;
+                base.setProxy(null);
+            }
+        }
     }
 
     private native void socketConnect(byte[] addr, String hostname, int port)
@@ -620,12 +674,6 @@ public class SSLSocket extends java.net.Socket {
         setSSLDefaultOption(SocketBase.SSL_NO_CACHE, !b);
     }
 
-    private InetAddress inetAddress;
-    private int port;
-    private SocketProxy sockProxy;
-    private boolean open = false;
-    private boolean handshakeAsClient=true;
-    private SocketBase base = new SocketBase();
 
     private static void setSSLDefaultOption(int option, boolean on)
         throws SocketException
@@ -663,11 +711,49 @@ public class SSLSocket extends java.net.Socket {
         throws IOException;
 
     int read(byte[] b, int off, int len) throws IOException {
-        return socketRead(b, off, len, base.getTimeout());
+        synchronized (readLock) {
+            synchronized (this) {
+                if ( isClosed ) { /* abort read if socket is closed */
+                    throw new IOException(
+                        "Socket has been closed, and cannot be reused."); 
+                }
+                inRead = true;            
+            }
+            int iRet;
+            try {
+                iRet = socketRead(b, off, len, base.getTimeout()); 
+            } catch (IOException ioe) {
+                throw new IOException(
+                    "SocketException cannot read on socket");
+            } finally {
+                synchronized (this) {
+                    inRead = false;
+                }
+            }
+            return iRet;
+        }
     }
 
     void write(byte[] b, int off, int len) throws IOException {
-        socketWrite(b, off, len, base.getTimeout());
+        synchronized (writeLock) {
+            synchronized (this) {
+                if ( isClosed ) { /* abort write if socket is closed */
+                    throw new IOException(
+                        "Socket has been closed, and cannot be reused."); 
+                }
+                inWrite = true;
+            }
+            try {
+                socketWrite(b, off, len, base.getTimeout());
+            } catch (IOException ioe) {
+                throw new IOException(
+                    "SocketException cannot write on socket");
+            } finally {
+                synchronized (this) {
+                    inWrite = false;
+                }
+            }
+        }
     }
 
     private native int socketRead(byte[] b, int off, int len, int timeout)
@@ -701,7 +787,9 @@ public class SSLSocket extends java.net.Socket {
      */
     public native void redoHandshake(boolean flushCache) throws SocketException;
 
-    protected void finalize() throws Throwable { }
+    protected void finalize() throws Throwable {
+        close(); /* in case user did not call close */
+    }
 
     public static class CipherPolicy {
         private int _enum;

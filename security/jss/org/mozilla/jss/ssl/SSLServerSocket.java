@@ -49,6 +49,22 @@ import org.mozilla.jss.crypto.TokenException;
  */
 public class SSLServerSocket extends java.net.ServerSocket {
 
+    /*
+     * Locking rules of SSLServerSocket
+     *
+     * isClosed and inAccept must be accessed with the object locked.
+     *
+     * acceptLock must be locked throughout the accept method.  It is
+     * used to serialize accept calls on the object.
+     */
+
+    private SocketProxy sockProxy = null;
+    private boolean handshakeAsClient = false;
+    private SocketBase base = new SocketBase();
+    private boolean isClosed = false;
+    private boolean inAccept = false;
+    private java.lang.Object acceptLock = new java.lang.Object();
+    
     /**
      * The default size of the listen queue.
      */
@@ -140,10 +156,6 @@ public class SSLServerSocket extends java.net.ServerSocket {
         socketListen(backlog);
     }
 
-    private SocketProxy sockProxy;
-    private boolean handshakeAsClient=false;
-    private SocketBase base = new SocketBase();
-
     private native void socketListen(int backlog) throws SocketException;
 
     private static InetAddress anyLocalAddr;
@@ -158,14 +170,37 @@ public class SSLServerSocket extends java.net.ServerSocket {
      *   or the timeout is reached.
      */
     public Socket accept() throws IOException {
-        SSLSocket s = new SSLSocket();
-        /* socketAccept can throw an exception for timeouts or IO errors */
-        /* so first get a socket pointer, and if successful create the SocketProxy */
-        byte[] socketPointer = null;
-        socketPointer = socketAccept(s, base.getTimeout(), handshakeAsClient);
-        SocketProxy sp = new SocketProxy(socketPointer );
-        s.setSockProxy(sp);
-        return s;
+        synchronized (acceptLock) {
+            synchronized (this) {
+                if (isClosed) {
+                    throw new IOException(
+                    "SSLServerSocket has been closed, and cannot be reused."); 
+                }
+                inAccept = true;
+            }
+            SSLSocket s = new SSLSocket();
+            try {
+                /*
+                 * socketAccept can throw an exception for timeouts,
+                 * IO errors, or PR_Interrupt called by abortAccept.
+                 * So first get a socket pointer, and if successful
+                 * create the SocketProxy.
+                 */
+                byte[] socketPointer = null;
+                socketPointer = socketAccept(s, base.getTimeout(),
+                    handshakeAsClient);
+                SocketProxy sp = new SocketProxy(socketPointer);
+                s.setSockProxy(sp);
+            } catch (Exception e) {
+                /* unnessary to do a s.close() since exception thrown*/
+                throw new IOException("accept method failed");
+            } finally {
+                synchronized (this) {
+                    inAccept=false;
+                }
+            }
+            return s;
+        }
     }
 
     /**
@@ -186,7 +221,7 @@ public class SSLServerSocket extends java.net.ServerSocket {
 
     public native void setReuseAddress(boolean reuse) throws SocketException;
     public native boolean getReuseAddress() throws SocketException;
-
+    private native void abortAccept() throws SocketException;
     private native byte[] socketAccept(SSLSocket s, int timeout,
         boolean handshakeAsClient) throws SocketException;
 
@@ -195,7 +230,9 @@ public class SSLServerSocket extends java.net.ServerSocket {
      */
     public static native void clearSessionCache();
 
-    protected void finalize() throws Throwable { }
+    protected void finalize() throws Throwable {
+        close(); /* in case user never called close */
+    }
 
 
     /**
@@ -209,7 +246,26 @@ public class SSLServerSocket extends java.net.ServerSocket {
      * Closes this socket.
      */
     public void close() throws IOException {
-        base.close();
+        synchronized (this) {
+            if( isClosed ) {
+                /* finalize calls close or user calls close more than once */
+                return;
+            }
+            isClosed = true;
+            if( sockProxy == null ) {
+                /* nothing to do */
+                return;
+            }
+            if( inAccept ) {
+                abortAccept();
+            }
+        }
+        /* Lock acceptLock to ensure that accept has been aborted. */
+        synchronized (acceptLock) {
+            base.close();
+            sockProxy = null; 
+            base.setProxy(null);
+        }
     }
 
     // This directory is used as the default for the Session ID cache

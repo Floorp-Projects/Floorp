@@ -81,6 +81,7 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
     JSSL_SocketData *newSD=NULL;
     jbyteArray sdArray = NULL;
     SECStatus status;
+    PRThread *me;
 
     if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
 
@@ -96,41 +97,37 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
         }
     }
 
-    for(;;) {
-        newFD = PR_Accept(sock->fd, &addr, ivtimeout);
+    /* Set the current thread doing the accept. */
+    me = PR_GetCurrentThread();
+    PR_Lock(sock->lock);
+    PR_ASSERT(sock->accepter == NULL);
+    sock->accepter = me;
+    PR_Unlock(sock->lock);
 
-        if( newFD != NULL ) {
-            /* success! */
-            break;
-        } else {
-            switch( PR_GetError() ) {
-              case PR_PENDING_INTERRUPT_ERROR:
-              case PR_IO_PENDING_ERROR:
-                break; /* out of the switch and loop again */
+    newFD = PR_Accept(sock->fd, &addr, ivtimeout);
+
+    PR_Lock(sock->lock);
+    PR_ASSERT(sock->accepter == me);
+    sock->accepter = NULL;
+    PR_Unlock(sock->lock);
+    if( newFD == NULL ) {
 #ifdef WINNT
-              case PR_IO_TIMEOUT_ERROR:
-                    /*
-                     * if timeout was set, and the PR_Accept() timed out,
-                     * then cancel the I/O on the port, otherwise PR_Accept()
-                     * will always return PR_IO_PENDING_ERROR on subsequent
-                     * calls
-                     */
-                      PR_NT_CancelIo(sock->fd);
-                     /* don't break here, let it fall through */
-#endif 
-              default:
-                JSSL_throwSSLSocketException(env,
-                    "Failed to accept new connection");
-                goto finish;
-            }
+        PRErrorCode err = PR_GetError();
+        if( err == PR_PENDING_INTERRUPT_ERROR ||
+            err == PR_IO_TIMEOUT_ERROR ) {
+            PR_NT_CancelIo(sock->fd);
         }
+#endif
+        JSSL_throwSSLSocketException(env,
+            "Failed to accept new connection");
+        goto finish;
     }
 
     newSD = JSSL_CreateSocketData(env, newSock, newFD, NULL /* priv */);
-    newFD = NULL;
     if( newSD == NULL ) {
         goto finish;
     }
+    newFD = NULL;
 
     /* setup the handshake callback */
     status = SSL_HandshakeCallback(newSD->fd, JSSL_HandshakeCallback,
@@ -138,6 +135,7 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_socketAccept
     if( status != SECSuccess ) {
         JSSL_throwSSLSocketException(env,
             "Unable to install handshake callback");
+        goto finish;
     }
 
     /* pass the pointer back to Java */
@@ -157,6 +155,30 @@ finish:
         }
     }
     return sdArray;
+}
+
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SSLServerSocket_abortAccept(
+    JNIEnv *env, jobject self)
+{
+    JSSL_SocketData *sock = NULL;
+
+    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
+
+    /*
+     * The java layer prevents I/O once close has been 
+     * called but if an accept is in progress then abort it.
+     * For WINNT the accept method must check for
+     * PR_PENDING_INTERRUPT_ERROR and call PR_NT_CancelIo.
+     */
+    PR_Lock(sock->lock);
+    if ( sock->accepter ) {
+        PR_Interrupt(sock->accepter); 
+    }
+    PR_Unlock(sock->lock);
+finish:
+    EXCEPTION_CHECK(env, sock)
+    return;
 }
 
 JNIEXPORT void JNICALL

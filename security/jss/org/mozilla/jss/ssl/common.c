@@ -149,9 +149,10 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
     jobject clientCertSelectionCallback, jobject javaSock, jstring host)
 {
     jbyteArray sdArray = NULL;
-    JSSL_SocketData *sockdata;
+    JSSL_SocketData *sockdata = NULL;
     SECStatus status;
     PRFileDesc *newFD;
+    PRFileDesc *tmpFD;
     PRFilePrivate *priv = NULL;
 
     if( javaSock == NULL ) {
@@ -173,16 +174,18 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
     }
 
     /* enable SSL on the socket */
-    newFD = SSL_ImportFD(NULL, newFD);
-    if( newFD == NULL ) {
+    tmpFD = SSL_ImportFD(NULL, newFD);
+    if( tmpFD == NULL ) {
         JSSL_throwSSLSocketException(env, "SSL_ImportFD() returned NULL");
         goto finish;
     }
+    newFD = tmpFD;
 
     sockdata = JSSL_CreateSocketData(env, sockObj, newFD, priv);
     if( sockdata == NULL ) {
         goto finish;
     }
+    newFD = NULL;
 
     if( host != NULL ) {
         const char *chars;
@@ -266,6 +269,9 @@ finish:
         if( sockdata != NULL ) {
             JSSL_DestroySocketData(env, sockdata);
         }
+        if( newFD != NULL ) {
+            PR_Close(newFD);
+        }
     } else {
         PR_ASSERT( sdArray != NULL );
     }
@@ -280,6 +286,10 @@ JSSL_CreateSocketData(JNIEnv *env, jobject sockObj, PRFileDesc* newFD,
 
     /* make a JSSL_SocketData structure */
     sockdata = PR_Malloc( sizeof(JSSL_SocketData) );
+    if( sockdata == NULL ) {
+        JSS_throw(env, OUT_OF_MEMORY_ERROR);
+        goto finish;
+    }
     sockdata->fd = newFD;
     sockdata->socketObject = NULL;
     sockdata->certApprovalCallback = NULL;
@@ -287,7 +297,16 @@ JSSL_CreateSocketData(JNIEnv *env, jobject sockObj, PRFileDesc* newFD,
     sockdata->clientCert = NULL;
     sockdata->clientCertSlot = NULL;
     sockdata->jsockPriv = priv;
-    sockdata->closed = PR_FALSE;
+    sockdata->lock = NULL;
+    sockdata->reader = NULL;
+    sockdata->writer = NULL;
+    sockdata->accepter = NULL;
+
+    sockdata->lock = PR_NewLock();
+    if( sockdata->lock == NULL ) {
+        JSS_throw(env, OUT_OF_MEMORY_ERROR);
+        goto finish;
+    }
 
     /*
      * Make a global ref to the socket. Since it is a weak reference, it will
@@ -303,8 +322,6 @@ finish:
         if( sockdata != NULL ) {
             JSSL_DestroySocketData(env, sockdata);
             sockdata = NULL;
-        } else {
-            PR_ASSERT( sockdata != NULL );
         }
     }
     return sockdata;
@@ -314,18 +331,13 @@ JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SocketProxy_releaseNativeResources
     (JNIEnv *env, jobject this)
 {
-    JSSL_SocketData *sock = NULL;
-
-    /* get the FD */
-    if( JSS_getPtrFromProxy(env, this, (void**)&sock) != PR_SUCCESS) {
-        /* exception was thrown */
-        goto finish;
-    }
-
-    JSSL_DestroySocketData(env, sock);
-
-finish:
-    return;
+    /* SSLSocket.close and SSLServerSocket.close call	  */
+    /* SocketBase.close to destroy all native Resources */
+    /* attached to the socket. There is no native resource */
+    /* to release after close has been called. This method  */
+    /* remains because SocketProxy extends org.mozilla.jss.util.NativeProxy*/                 
+    /* which defines releaseNativeResources as abstract and */
+    /* therefore must be implemented by SocketProxy */
 }
 
 void
@@ -333,11 +345,7 @@ JSSL_DestroySocketData(JNIEnv *env, JSSL_SocketData *sd)
 {
     PR_ASSERT(sd != NULL);
 
-    if( !sd->closed ) {
-        PR_Close(sd->fd);
-        sd->closed = PR_TRUE;
-        /* this may have thrown an exception */
-    }
+    PR_Close(sd->fd);
 
     if( sd->socketObject != NULL ) {
         DELETE_WEAK_GLOBAL_REF(env, sd->socketObject );
@@ -353,6 +361,9 @@ JSSL_DestroySocketData(JNIEnv *env, JSSL_SocketData *sd)
     }
     if( sd->clientCertSlot != NULL ) {
         PK11_FreeSlot(sd->clientCertSlot);
+    }
+    if( sd->lock != NULL ) {
+        PR_DestroyLock(sd->lock);
     }
     PR_Free(sd);
 }
@@ -425,9 +436,8 @@ finish:
 }
 
 /*
- * This method is synchronized because of a potential race condition.
- * We want to avoid two threads simultaneously calling this code, in case
- * one sets sd->fd to NULL and then the other calls PR_Close on the NULL.
+ * SSLServerSocket and SSLSocket have their own synchronization 
+ * that protects SocketBase.socketClose.
  */
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SocketBase_socketClose(JNIEnv *env, jobject self)
@@ -440,11 +450,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketClose(JNIEnv *env, jobject self)
         goto finish;
     }
 
-    if( ! sock->closed ) {
-        PR_Close(sock->fd);
-        sock->closed = PR_TRUE;
-        /* this may have thrown an exception */
-    }
+    JSSL_DestroySocketData(env, sock);
 
 finish:
     EXCEPTION_CHECK(env, sock)

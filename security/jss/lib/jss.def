@@ -1,7 +1,7 @@
 ;+#
 ;+# ***** BEGIN LICENSE BLOCK *****
 ;+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-;+#
+LIBRARY jss4	;-
 ;+# The contents of this file are subject to the Mozilla Public License Version
 ;+# 1.1 (the "License"); you may not use this file except in compliance with
 ;+# the License. You may obtain a copy of the License at
@@ -50,7 +50,7 @@
 
 ;+JSS_3.0 {       # JSS 3.0 release
 ;+    global:
-LIBRARY jss3	;-
+LIBRARY jss4	;-
 EXPORTS		;-
 Java_org_mozilla_jss_crypto_EncryptionAlgorithm_getIVLength;
 Java_org_mozilla_jss_crypto_PQGParams_generateNative__I;
@@ -281,6 +281,13 @@ Java_org_mozilla_jss_pkcs11_PK11Cipher_initContextWithKeyBits;
 ;+    global:
 Java_org_mozilla_jss_SecretDecoderRing_KeyManager_generateUniqueNamedKeyNative;
 Java_org_mozilla_jss_SecretDecoderRing_KeyManager_lookupUniqueNamedKeyNative;
+;+    local:
+;+       *;
+;+};
+;+JSS_4.1 {       # JSS 4.1 release
+;+    global:
+Java_org_mozilla_jss_ssl_SSLSocket_abortReadWrite;
+Java_org_mozilla_jss_ssl_SSLServerSocket_abortAccept;
 ;+    local:
 ;+       *;
 ;+};

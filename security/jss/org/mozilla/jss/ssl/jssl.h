@@ -45,7 +45,10 @@ struct JSSL_SocketData {
     CERTCertificate *clientCert;
     PK11SlotInfo *clientCertSlot;
     PRFilePrivate *jsockPriv;
-    PRBool closed;
+    PRLock *lock;  /* protects reader, writer, and accepter */
+    PRThread *reader;
+    PRThread *writer;
+    PRThread *accepter;
 };
 typedef struct JSSL_SocketData JSSL_SocketData;
 
