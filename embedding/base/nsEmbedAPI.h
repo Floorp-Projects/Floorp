@@ -105,6 +105,19 @@ typedef MSG nsEmbedNativeEvent;
 #define MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
 #endif
 
+/* OS/2 specific stuff */
+#ifdef OS2
+#include "os2.h"
+
+/**
+ * @var typedef MSG nsEmbedNativeEvent
+ * 
+ * Embedding events are native <CODE>QMSG</CODE> structs on OS/2.
+ */
+typedef QMSG nsEmbedNativeEvent;
+#define MOZ_SUPPORTS_EMBEDDING_EVENT_PROCESSING
+#endif
+
 /* Mac specific stuff */
 /* TODO implementation left as an exercise for the reader */
 
