@@ -452,8 +452,10 @@ sub DBNameToIdAndCheck {
         print "Yikes; couldn't create user $name.  Please report problem to " .
             Param("maintainer") ."\n";
     } else {
-        print "The name <TT>$name</TT> is not a valid username.  Please hit\n";
-        print "the <B>Back</B> button and try again.\n";
+        print "The name <TT>$name</TT> is not a valid username.  Either you\n";
+        print "misspelled it, or the person has not registered for a\n";
+        print "Bugzilla account.\n";
+        print "<P>Please hit the <B>Back</B> button and try again.\n";
     }
     exit(0);
 }
