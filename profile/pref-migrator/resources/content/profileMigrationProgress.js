@@ -31,20 +31,18 @@ function onLoad(oldProfilePath, newProfilePath) {
   //dialog.current   = document.getElementByID( "xpi.currentlyprocessing");
   //dialog.newWindow   = document.getElementById( "dialog.newWindow" );
 
-  var retval;
 	
+  dump("start of pref migration\n");
   var prefmigrator = Components.classes['component://netscape/profile/migration'].createInstance(Components.interfaces.nsIPrefMigration);
   if (prefmigrator) 
   {
-	 dump("-----  Migrating prefs\n");
-     retval = prefmigrator.ProcessPrefsFromJS();
-	 dump("-----  Migrating prefs done " + retval + "\n" );
+	try {
+    	prefmigrator.ProcessPrefsFromJS();
+    }
+    catch (ex) {
+		dump("failed to migrate: ex="+ ex + "\n");
+	}
   }
-  else
-  {
-	  dump("-----  ERROR Migrating prefs failed create instances failed\n");
-  }
-  return retval;
 }
 
 

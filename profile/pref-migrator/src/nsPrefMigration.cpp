@@ -251,6 +251,7 @@ nsPrefMigration::GetInstance()
 nsPrefMigration::nsPrefMigration() : m_prefs(0)
 {
   NS_INIT_REFCNT();
+  mErrorCode = NS_OK;
 }
 
 
@@ -369,6 +370,10 @@ extern "C" void ProfileMigrationController(void *data)
     }
   }
 
+  if (NS_FAILED(rv)) {
+	printf("failed to migrate properly.  err=%d\n",rv);
+  }
+
   NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
   if(NS_FAILED(rv))
     return;
@@ -393,8 +398,11 @@ nsPrefMigration::WindowCloseCallback()
    nsCOMPtr<nsIWebShellWindow> progressWindow(do_QueryInterface(mPMProgressWindow));
    if(progressWindow)
       progressWindow->Close();
-
-  return NS_OK;
+  
+#ifdef DEBUG
+   printf("end of pref migration\n");
+#endif
+   return NS_OK;
 }
 
 
@@ -414,10 +422,9 @@ nsPrefMigration::ProcessPrefsFromJS()  // called via js so that we can have prog
     
 
 NS_IMETHODIMP
-nsPrefMigration::GetError(PRUint32 *error)
+nsPrefMigration::GetError()
 {
-  *error = mErrorCode;
-  return NS_OK;
+  return mErrorCode;
 }
 
 nsresult
@@ -827,7 +834,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
     newProfilePath->GetFileSpec(&tempSpec);
     if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
     {
-      return NOT_ENOUGH_SPACE;
+      return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE;
     }
   }
   else
@@ -840,7 +847,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
         newIMAPLocalMailPath->GetFileSpec(&tempSpec);
         if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
         {
-          return NOT_ENOUGH_SPACE; /* Need error code for not enough space */
+          return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE; 
         }
       }
       else if (serverType == POP_4X_MAIL_TYPE) 
@@ -848,7 +855,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
         newPOPMailPath->GetFileSpec(&tempSpec);
         if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
         {
-            return NOT_ENOUGH_SPACE; /* Need error code for not enough space */
+            return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE;
         }
       }
 #ifdef HAVE_MOVEMAIL
@@ -857,7 +864,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
         newMOVEMAILMailPath->GetFileSpec(&tempSpec);
         if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
         {
-          return NOT_ENOUGH_SPACE; /* Need error code for not enough space */
+          return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE;
         }
       }
 #endif /* HAVE_MOVEMAIL */
@@ -869,7 +876,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
       newProfilePath->GetFileSpec(&tempSpec);
       if(NS_FAILED(CheckForSpace(tempSpec, totalProfileSize)))
       {
-          return NOT_ENOUGH_SPACE; /* Need error code for not enough space */
+          return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE;
       }
 
     }
@@ -881,12 +888,12 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
         newProfilePath->GetFileSpec(&tempSpec);
         if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
         {
-          return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+          return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE; 
         }
         newNewsPath->GetFileSpec(&tempSpec);
         if(NS_FAILED(CheckForSpace(tempSpec, totalNewsSize)))
         {
-          return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+          return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE; 
         }
       }
       else
@@ -897,14 +904,14 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
           newProfilePath->GetFileSpec(&tempSpec);
           if(NS_FAILED(CheckForSpace(tempSpec, totalRequired)))
           {
-            return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+            return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE; 
           }
           if (serverType == IMAP_4X_MAIL_TYPE)
           {
             newIMAPMailPath->GetFileSpec(&tempSpec);
             if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
             {
-              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+              return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE;
             }
           }
           else if (serverType == POP_4X_MAIL_TYPE) 
@@ -912,7 +919,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
             newPOPMailPath->GetFileSpec(&tempSpec);
             if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
             {
-              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+              return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE; 
             }
           }
 #ifdef HAVE_MOVEMAIL
@@ -921,7 +928,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
             newMOVEMAILMailPath->GetFileSpec(&tempSpec);
             if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
             {
-               return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+               return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE; 
             }
           }
 #endif /* HAVE_MOVEMAIL */
@@ -939,7 +946,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
             newIMAPMailPath->GetFileSpec(&tempSpec);
             if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
             {
-              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+              return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE;  
             }
           }
           else if (serverType == POP_4X_MAIL_TYPE)
@@ -947,7 +954,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
             newPOPMailPath->GetFileSpec(&tempSpec);
             if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
             {
-              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+              return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE;  
             }
           }
 #ifdef HAVE_MOVEMAIL
@@ -956,7 +963,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
             newPOPMailPath->GetFileSpec(&tempSpec);
             if(NS_FAILED(CheckForSpace(tempSpec, totalMailSize)))
             {
-              return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+              return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE; 
             }
           }
 #endif /* HAVE_MOVEMAIL */
@@ -969,13 +976,13 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
           newNewsPath->GetFileSpec(&tempSpec);
           if(NS_FAILED(CheckForSpace(tempSpec, totalNewsSize)))
           {
-            return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+            return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE;  
           }
           
           newProfilePath->GetFileSpec(&tempSpec);
           if(NS_FAILED(CheckForSpace(tempSpec, totalProfileSize)))
           {
-            return NOT_ENOUGH_SPACE;  /* Need error code for not enough space */
+            return NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE;  
           }
         }
       } /* else */
@@ -1370,7 +1377,7 @@ nsPrefMigration::GetDriveName(nsFileSpec inputPath, char**driveName)
  *        requiredSpace - The space needed on the new profile drive
  *
  * RETURNS: NS_OK if enough space is available
- *          NOT_ENOUGH_SPACE (error -200) if there is not enough space
+ *          NS_ERROR_NOT_ENOUGH_SPACE_TO_MIGRATE if there is not enough space
  *
  * Todo: you may want to change this proto from a float to a int64.
  *--------------------------------------------------------------------------*/
