@@ -27,6 +27,7 @@
 #include "nsIAppShell.h"
 #include "nsWindow.h"
 #include "nsSwitchToUIThread.h"
+#include "nsTimerBeOS.h"
 #include "plevent.h"
 
 #include <stdlib.h>
@@ -185,8 +186,11 @@ nsresult nsAppShell::Run()
 		switch(code)
 		{
 			case 'WMti' :
-				extern void nsTimerExpired(void *);	// hack: this is in gfx
-				nsTimerExpired(id.data);
+				{
+				// Hack
+				nsCOMPtr<nsTimerBeOS> timer = (nsTimerBeOS *)id.data;
+				timer->FireTimeout();
+				}
 				break;
 
 			case WM_CALLMETHOD :

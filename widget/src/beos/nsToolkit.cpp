@@ -24,7 +24,7 @@
 #include "nsWindow.h"
 #include "prmon.h"
 #include "prtime.h"
-#include "nsITimer.h"
+#include "nsTimerBeOS.h"
 #include "nsGUIEvent.h"
 #include "nsSwitchToUIThread.h"
 #include "plevent.h"
@@ -107,8 +107,11 @@ void nsToolkit::RunPump(void* arg)
 		switch(code)
 		{
 			case 'WMti' :
-				extern void nsTimerExpired(void *);	// hack: this is in gfx
-				nsTimerExpired(id.data);
+				{
+				// Hack
+				nsCOMPtr<nsTimerBeOS> timer = (nsTimerBeOS *)id.data;
+				timer->FireTimeout();
+				}
 				break;
 
 			case WM_CALLMETHOD :
