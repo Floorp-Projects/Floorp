@@ -38,6 +38,17 @@ MANIFEST="./mozilla/embedding/config/basebrowser-win"
 
 
 #
+# Check for optional objdir
+# 
+if [ "$1" = "-o" ]; then 
+OBJROOT="$2"
+shift
+shift
+else
+OBJROOT="./mozilla"
+fi
+
+#
 #   A little help for my friends.
 #
 if [ "-h" == "$1" ];then 
@@ -103,7 +114,7 @@ MYTMPDIR=`mktemp -d ./codesighs.tmp.XXXXXXXX`
 #   Find the types of files we are interested in.
 #
 ONEFINDPASS="$MYTMPDIR/onefind.list"
-find ./mozilla -type f -name "*.obj" -or -name "*.map" > $ONEFINDPASS
+find $OBJROOT -type f -name "*.obj" -or -name "*.map" > $ONEFINDPASS
 
 
 #
@@ -124,7 +135,7 @@ xargs -n 1 dumpbin.exe /symbols < $ALLOBJSFILE > $ALLOBJSYMSFILE 2> /dev/null
 #   Produce the symdb for the symbols in all object files.
 #
 SYMDBFILE="$MYTMPDIR/symdb.tsv"
-./mozilla/dist/bin/msdump2symdb --input $ALLOBJSYMSFILE | sort > $SYMDBFILE 2> /dev/null
+$OBJROOT/dist/bin/msdump2symdb --input $ALLOBJSYMSFILE | sort > $SYMDBFILE 2> /dev/null
 
 
 #
@@ -148,7 +159,7 @@ RELEVANTARG=`xargs -n 1 echo --match-module < $RELEVANTSETFILE`
 #   Produce the TSV output.
 #
 RAWTSVFILE="$MYTMPDIR/raw.tsv"
-./mozilla/dist/bin/msmap2tsv --symdb $SYMDBFILE --batch $RELEVANTARG < $ALLMAPSFILE > $RAWTSVFILE 2> /dev/null
+$OBJROOT/dist/bin/msmap2tsv --symdb $SYMDBFILE --batch $RELEVANTARG < $ALLMAPSFILE > $RAWTSVFILE 2> /dev/null
 
 
 #
@@ -167,9 +178,9 @@ rm -f $SUMMARYFILE
 DIFFFILE="$MYTMPDIR/diff.txt"
 if [ -e $OLDTSVFILE ]; then
   diff $OLDTSVFILE $COPYSORTTSV > $DIFFFILE
-  ./mozilla/dist/bin/maptsvdifftool --negation --input $DIFFFILE | dos2unix >> $SUMMARYFILE
+  $OBJROOT/dist/bin/maptsvdifftool --negation --input $DIFFFILE | dos2unix >> $SUMMARYFILE
 else
-  ./mozilla/dist/bin/codesighs --modules --input $COPYSORTTSV | dos2unix >> $SUMMARYFILE
+  $OBJROOT/dist/bin/codesighs --modules --input $COPYSORTTSV | dos2unix >> $SUMMARYFILE
 fi
 
 
@@ -184,13 +195,13 @@ fi
 if [ $TINDERBOX_OUTPUT ]; then
     echo -n "__codesize:"
 fi
-./mozilla/dist/bin/codesighs --totalonly --input $COPYSORTTSV | dos2unix
+$OBJROOT/dist/bin/codesighs --totalonly --input $COPYSORTTSV | dos2unix
 
 if [ -e $DIFFFILE ]; then
 if [ $TINDERBOX_OUTPUT ]; then
     echo -n "__codesizeDiff:"
 fi
-    ./mozilla/dist/bin/maptsvdifftool --negation --summary --input $DIFFFILE | dos2unix
+    $OBJROOT/dist/bin/maptsvdifftool --negation --summary --input $DIFFFILE | dos2unix
 fi
 
 #
