@@ -47,11 +47,16 @@ if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+\s*$/) {
 
 GetVersionTable();
 
-PutHeader("Bugzilla bug $::FORM{'id'}", "Bugzilla Bug", $::FORM{'id'});
+SendSQL("select short_desc from bugs where bug_id = $::FORM{'id'}");
+my $summary = FetchOneColumn();
+if( $summary ) {
+    PutHeader("Bug $::FORM{'id'} - $summary", "Bugzilla Bug $::FORM{'id'}", $summary );
+}else {
+    PutHeader("Bugzilla bug $::FORM{'id'}", "Bugzilla Bug", $::FORM{'id'});
+}
 navigation_header();
 
 print "<HR>\n";
 
 $! = 0;
 do "bug_form.pl" || die "Error doing bug_form.pl: $!";
-
