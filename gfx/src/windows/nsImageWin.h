@@ -179,7 +179,6 @@ private:
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
   HBITMAP             mHBitmap;           // the GDI bitmaps
-  HBITMAP             mAlphaHBitmap;
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
 
 };
