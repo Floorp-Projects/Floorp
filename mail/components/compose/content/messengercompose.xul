@@ -526,7 +526,7 @@
           <menuseparator id="menu_HelpAboutSeparator"/>
           <menuitem id="aboutName" accesskey="&aboutCmd.accesskey;"
                     label="&aboutCmd.label;"
-                    oncommand="window.openDialog('chrome://messenger/content/aboutDialog.xul', 'About', 'modal,centerscreen,chrome,resizable=no');"/>
+                    oncommand="openAboutDialog();"/>
         </menupopup>
       </menu>
     </menubar>

@@ -2473,12 +2473,3 @@ function loadThrobberUrl(urlPref)
         messenger.launchExternalURL(url);  
     } catch (ex) {}
 }
-
-function openAboutDialog()
-{
-#ifdef XP_MACOSX
-  window.open("chrome://messenger/content/aboutDialog.xul", "About", "centerscreen,chrome,resizable=no");
-#else
-  window.openDialog("chrome://messenger/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
-#endif
-}
