@@ -914,6 +914,7 @@ public:
     mContent = aOther.mContent;
     mIndex = aOther.mIndex;
     mNodes = aOther.mNodes;
+    return *this;
   }
 
   ChildIterator& operator++() {
