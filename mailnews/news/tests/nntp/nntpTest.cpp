@@ -54,12 +54,15 @@
 #include "nsIPref.h"
 #include "nsIFileLocator.h"
 
+#include "nsLayoutCID.h" // for NS_NAMESPACEMANAGER_CID
+
 #ifdef XP_PC
-#define NETLIB_DLL "netlib.dll"
-#define XPCOM_DLL  "xpcom32.dll"
+#define NETLIB_DLL	"netlib.dll"
+#define XPCOM_DLL	"xpcom32.dll"
 #define NEWS_DLL	"msgnews.dll"
-#define PREF_DLL   "xppref32.dll"
-#define APPSHELL_DLL "nsappshell.dll"
+#define PREF_DLL	"xppref32.dll"
+#define APPSHELL_DLL	"nsappshell.dll"
+#define LAYOUT_DLL	"raptorhtml.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -69,6 +72,7 @@
 #define NEWS_DLL   "libmsgnews.so"
 #define PREF_DLL   "libpref.so"
 #define APPSHELL_DLL "libnsappshell.so"
+#define LAYOUT_DLL	"libraptorhtml.so"
 #endif
 #endif
 
@@ -83,6 +87,8 @@ static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
+
+static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -771,6 +777,8 @@ int main()
     nsComponentManager::RegisterComponent(kNntpUrlCID, NULL, NULL, NEWS_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
+
 	// make sure prefs get initialized and loaded..
 	// mscott - this is just a bad bad bad hack right now until prefs
 	// has the ability to take nsnull as a parameter. Once that happens,
