@@ -1108,7 +1108,7 @@ done:
             else if(dp->IsValInterface())
                 ((nsISupports*)p)->Release();
             else if(dp->IsValDOMString())
-                delete (nsAReadableString*)p;
+                delete (nsAString*)p;
         }
     }
 
