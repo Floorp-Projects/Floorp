@@ -367,6 +367,22 @@ void CRDFCoordinator::HandleNotification(
 			break;
 		}
 			
+		case HT_EVENT_COLUMN_ADD:
+		case HT_EVENT_COLUMN_DELETE:
+			// just wipe everything out and start over...¥¥¥but we can't because we're not allowed
+			// to iterate over the columns at this time (will crash)....hmmmm....
+//			if ( view == mTreePane->GetHTView() )
+//				mTreePane->SetupColumns();
+			break;
+
+
+		case HT_EVENT_COLUMN_SIZETO:
+		case HT_EVENT_COLUMN_REORDER:
+		case HT_EVENT_COLUMN_SHOW:
+		case HT_EVENT_COLUMN_HIDE:
+			//¥¥¥ not implemented
+			break;
+
 		case HT_EVENT_VIEW_WORKSPACE_REFRESH:			
 		case HT_EVENT_VIEW_ADDED:
 		case HT_EVENT_VIEW_DELETED:

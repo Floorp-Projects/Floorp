@@ -74,6 +74,8 @@ public:
 
 	virtual void	RedrawRow ( HT_Resource ) ;
 	
+	virtual void	SetupColumns ( ) ;
+	
 protected:
 		
 		// Background image tiling stuff
@@ -104,7 +106,7 @@ protected:
 	virtual void ClickCell ( const STableCell & inCell, const SMouseDownEvent & inMouse ) ;
 		
 		// Stuff related to hiliting
-	virtual TableIndexT	GetHiliteColumn() const { return 1; } ;
+	virtual TableIndexT	GetHiliteColumn() const { return FindTitleColumnID(); } ;
 	virtual Boolean GetHiliteTextRect ( TableIndexT inRow, Boolean inOkIfRowHidden, Rect& outRect) const ;
 	virtual void GetMainRowText( TableIndexT inRow, char* outText, UInt16 inMaxBufferLength) const ;
 	virtual void DoHiliteRgn ( RgnHandle inHiliteRgn ) const;

@@ -42,12 +42,17 @@ public:
 					CHyperTreeHeader(LStream* inStream);
 	virtual			~CHyperTreeHeader();
 	
-	void			SetUpColumns(HT_Cursor columnCursor);
+	void			SetUpColumns ( HT_View inView );
 	
 		// NOTE: inColumnKey should be zero-based.
 	ColumnInfo&		GetColumnInfo(Uint32 inColumnKey);
 	
 protected:
 
+		// overridden to talk to HT
+	virtual void	ShowHideRightmostColumn(Boolean inShow);
+	virtual void	MoveColumn(ColumnIndexT inColumn, ColumnIndexT inMoveTo);
+
+	HT_View				mHTView;
 	vector<ColumnInfo>	mColumnInfo;
 };

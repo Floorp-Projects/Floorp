@@ -645,6 +645,24 @@ void CHyperTreeFlexTable::SetCellExpansion(
 }
 
 
+//
+// SetupColumns
+//
+// Build columns from HT. Simply pitches existing columns and rebuilds from scratch.
+//
+void
+CHyperTreeFlexTable :: SetupColumns ( )
+{
+	CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
+	if ( !header )
+		return;
+		
+	header->SetUpColumns( GetHTView() );
+	SynchronizeColumnsWithHeader();	
+
+} // SetupColumns
+
+
 // ------------------------------------------------------------
 // HT Operations
 // ------------------------------------------------------------
@@ -692,15 +710,12 @@ CHyperTreeFlexTable::OpenView( HT_View inHTView )
 
 	// Rebuild the column headers based on the new view contents and which columns the
 	// user had visible last time.
-	HT_Cursor columnCursor = HT_NewColumnCursor(inHTView);
-	header->SetUpColumns(columnCursor);
-	HT_DeleteColumnCursor(columnCursor);
-	SynchronizeColumnsWithHeader();	
-	if ( header->GetHeaderWidth() )	{	// don't do this if shelf collapsed, we'll do it again later
-		//¥¥¥ implement this too
-		SetRightmostVisibleColumn(1);	//¥¥¥ HACK UNTIL WE GET THE COLUMN STUFF FIGURED OUT....
-	}
+	SetupColumns();
 	
+//¥¥¥hack until rjc gets the columns to remember visibility across pane deletions
+//¥¥¥this should not go in the shipping product! (pinkerton)
+	header->SetRightmostVisibleColumn(1);
+		
 	Uint32 count = HT_GetItemListCount(inHTView);
 	if (mRows != count)
 	{
@@ -862,7 +877,7 @@ CHyperTreeFlexTable :: OpenRow ( TableIndexT inRow )
 			// click is not in a container. If HT doesn't want it (and it's not
 			// a separator), launch the url
 			if ( !HT_IsSeparator(node) && !URDFUtilities::LaunchNode(node) )
-				CFrontApp::DoGetURL( HT_GetNodeURL(node), GetTargetFrame() );
+				CFrontApp::DoGetURL( HT_GetNodeURL(node), NULL, GetTargetFrame() );
 		}
 		else {
 			// we are a container. If tree connections hidden, open up the folder otherwise
@@ -870,7 +885,7 @@ CHyperTreeFlexTable :: OpenRow ( TableIndexT inRow )
 			if ( URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->showTreeConnections, true) == false ) {
 				PRBool openState = false;
 				HT_GetOpenState(node, &openState);
-				SetCellExpansion(STableCell(inRow, 1), !openState);
+				SetCellExpansion(STableCell(inRow, FindTitleColumnID()), !openState);
 			}
 		}
 	} // if valid node
