@@ -110,10 +110,6 @@ protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
 
-  nscoord GetTopMarginFor(nsIPresContext*      aCX,
-                          RowGroupReflowState& aReflowState,
-                          const nsMargin&      aKidMargin);
-
   void PlaceChild(nsIPresContext&      aPresContext,
                   RowGroupReflowState& aReflowState,
                   nsIFrame*            aKidFrame,

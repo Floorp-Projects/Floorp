@@ -462,10 +462,6 @@ protected:
 
   nscoord GetEffectiveContainerHeight(const nsHTMLReflowState& aReflowState);
 
-  nscoord GetTopMarginFor(nsIPresContext& aCX,
-                          InnerTableReflowState& aReflowState,
-                          const nsMargin& aKidMargin);
-
   void PlaceChild(nsIPresContext&        aPresContext,
                   InnerTableReflowState& aReflowState,
                   nsIFrame*              aKidFrame,
