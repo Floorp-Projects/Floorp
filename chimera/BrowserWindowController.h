@@ -161,6 +161,7 @@ class nsIDOMNode;
 -(void)enterModalSession;
 
 -(void)openNewWindowWithURL: (NSURL*)aURL loadInBackground: (BOOL)aLoadInBG;
+-(void)openNewWindowWithGroup: (nsIDOMElement*)aFolderElement loadInBackground: (BOOL)aLoadInBG;
 -(void)openNewTabWithURL: (NSURL*)aURL loadInBackground: (BOOL)aLoadInBG;
 
 -(void)autosaveWindowFrame;

@@ -675,8 +675,44 @@
     NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
     NSURL* urlToLoad = [NSURL URLWithString: hrefStr];
 
-    [mBrowserWindowController openNewWindowWithURL: urlToLoad loadInBackground: NO];
+    nsAutoString group;
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
+    elt->GetAttribute(NS_LITERAL_STRING("group"), group);
+    if (group.IsEmpty()) 
+      [mBrowserWindowController openNewWindowWithURL: urlToLoad loadInBackground: NO];
+    else
+      [mBrowserWindowController openNewWindowWithGroup: elt loadInBackground: NO];
   }
+}
+
+-(void)openBookmarkGroup:(id)aTabView groupElement:(nsIDOMElement*)aFolder
+{
+  mBookmarks->OpenBookmarkGroup(aTabView, aFolder);
+}
+
+-(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
+{
+  int index = [mOutlineView selectedRow];
+  if (index == -1)
+    return NO;
+
+  BookmarkItem* item = [mOutlineView itemAtRow: index];
+  BOOL isBookmark = [mOutlineView isExpandable:item] == NO;
+  
+  nsAutoString group;
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface([item contentNode]));
+  elt->GetAttribute(NS_LITERAL_STRING("group"), group);
+  BOOL isGroup = !group.IsEmpty();
+
+  if (([aMenuItem action] == @selector(openBookmarkInNewWindow:))) {
+    // Bookmarks and Bookmark Groups can be opened in a new window
+    return (isBookmark || isGroup);
+  }
+  else if (([aMenuItem action] == @selector(openBookmarkInNewTab:))) {
+    // Only Bookmarks can be opened in new tabs
+    return isBookmark;
+  }
+  return YES;
 }
 
 @end
