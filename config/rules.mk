@@ -193,7 +193,13 @@ TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LI
 endif
 
 ifndef OBJS
-OBJS			= $(strip $(JRI_STUB_CFILES) $(addsuffix .$(OBJ_SUFFIX), $(JMC_GEN)) $(CSRCS:.c=.$(OBJ_SUFFIX)) $(CPPSRCS:.cpp=.$(OBJ_SUFFIX)) $(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX)))
+_OBJS			= \
+	$(JRI_STUB_CFILES) \
+	$(addsuffix .$(OBJ_SUFFIX), $(JMC_GEN)) \
+	$(CSRCS:.c=.$(OBJ_SUFFIX)) \
+	$(CPPSRCS:.cpp=.$(OBJ_SUFFIX)) \
+	$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX))
+OBJS	= $(strip $(addprefix $(OBJ_PREFIX),$(_OBJS)))
 endif
 
 ifndef HOST_OBJS
@@ -866,7 +872,7 @@ else
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 endif
 
-%.$(OBJ_SUFFIX): %.c Makefile.in
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.c Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
@@ -875,7 +881,7 @@ else
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $<
 endif
 
-%.ho: %.c Makefile.in
+$(OBJ_PREFIX)%.ho: %.c Makefile.in
 	$(REPORT_BUILD)
 	$(ELOG) $(HOST_CC) -o $@ -c $(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS) $<
 
@@ -901,12 +907,12 @@ endif
 #
 # Please keep the next two rules in sync.
 #
-%.$(OBJ_SUFFIX): %.cc Makefile.in
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.cc Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $<
 
-%.$(OBJ_SUFFIX): %.cpp Makefile.in
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.cpp Makefile.in
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_AUTO)
 ifdef STRICT_CPLUSPLUS_SUFFIX
