@@ -888,6 +888,8 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 #ifdef MOZ_THREADSAFE_RDF
     mLock = nsnull;
 #endif
+    mForwardArcs.ops = nsnull;
+    mReverseArcs.ops = nsnull;
     mPropagateChanges = PR_TRUE;
 }
 
@@ -895,17 +897,22 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 nsresult
 InMemoryDataSource::Init()
 {
-    PL_DHashTableInit(&mForwardArcs,
-                      PL_DHashGetStubOps(),
-                      nsnull,
-                      sizeof(Entry),
-                      PL_DHASH_MIN_SIZE);
-
-    PL_DHashTableInit(&mReverseArcs,
-                      PL_DHashGetStubOps(),
-                      nsnull,
-                      sizeof(Entry),
-                      PL_DHASH_MIN_SIZE);
+    if (!PL_DHashTableInit(&mForwardArcs,
+                           PL_DHashGetStubOps(),
+                           nsnull,
+                           sizeof(Entry),
+                           PL_DHASH_MIN_SIZE)) {
+        mForwardArcs.ops = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!PL_DHashTableInit(&mReverseArcs,
+                           PL_DHashGetStubOps(),
+                           nsnull,
+                           sizeof(Entry),
+                           PL_DHASH_MIN_SIZE)) {
+        mReverseArcs.ops = nsnull;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
 #ifdef MOZ_THREADSAFE_RDF
     mLock = PR_NewLock();
@@ -929,14 +936,16 @@ InMemoryDataSource::~InMemoryDataSource()
     fprintf(stdout, "%d - RDF: InMemoryDataSource\n", gInstanceCount);
 #endif
 
-    // This'll release all of the Assertion objects that are
-    // associated with this data source. We only need to do this
-    // for the forward arcs, because the reverse arcs table
-    // indexes the exact same set of resources.
-    PL_DHashTableEnumerate(&mForwardArcs, DeleteForwardArcsEntry, &mAllocator);
-    PL_DHashTableFinish(&mForwardArcs);
-
-    PL_DHashTableFinish(&mReverseArcs);
+    if (mForwardArcs.ops) {
+        // This'll release all of the Assertion objects that are
+        // associated with this data source. We only need to do this
+        // for the forward arcs, because the reverse arcs table
+        // indexes the exact same set of resources.
+        PL_DHashTableEnumerate(&mForwardArcs, DeleteForwardArcsEntry, &mAllocator);
+        PL_DHashTableFinish(&mForwardArcs);
+    }
+    if (mReverseArcs.ops)
+        PL_DHashTableFinish(&mReverseArcs);
 
     PR_LOG(gLog, PR_LOG_ALWAYS,
            ("InMemoryDataSource(%p): destroyed.", this));
