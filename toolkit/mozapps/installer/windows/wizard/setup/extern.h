@@ -97,6 +97,7 @@ extern diAS             diAdvancedSettings;
 extern diSI             diStartInstall;
 extern diDL             diDownloading;
 extern diI              diInstalling;
+extern diIS             diInstallSuccessful;
 extern diD              diDownload;
 extern diR              diReboot;
 extern siSD             siSDObject;

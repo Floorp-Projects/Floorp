@@ -399,8 +399,8 @@ typedef struct dlgWindowsIntegration
 {
   BOOL  bShowDialog;
   LPSTR szTitle;
+  LPSTR szSubTitle;
   LPSTR szMessage0;
-  LPSTR szMessage1;
   wiCBs wiCB0;
   wiCBs wiCB1;
   wiCBs wiCB2;
@@ -468,6 +468,17 @@ typedef struct dlgInstalling
   LPSTR szStatusFile;
   LPSTR szStatusComponent;
 } diI;
+
+typedef struct dlgInstallSuccessful
+{
+  BOOL bShowDialog;
+  LPSTR szTitle;
+  LPSTR szMessageHeader;
+  LPSTR szMessage0;
+  LPSTR szMessage1;
+  LPSTR szLaunchApp;
+  BOOL bLaunchAppChecked;
+} diIS;
 
 typedef struct dlgDownload
 {

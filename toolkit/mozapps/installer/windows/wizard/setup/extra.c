@@ -3501,9 +3501,9 @@ HRESULT InitDlgWindowsIntegration(diWI *diDialog)
   diDialog->bShowDialog = FALSE;
   if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
-  if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->szSubTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
-  if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+  if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
 
   diDialog->wiCB0.bEnabled = FALSE;
@@ -3540,8 +3540,8 @@ HRESULT InitDlgWindowsIntegration(diWI *diDialog)
 void DeInitDlgWindowsIntegration(diWI *diDialog)
 {
   FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szSubTitle));
   FreeMemory(&(diDialog->szMessage0));
-  FreeMemory(&(diDialog->szMessage1));
 
   FreeMemory(&(diDialog->wiCB0.szDescription));
   FreeMemory(&(diDialog->wiCB1.szDescription));
@@ -3701,6 +3701,33 @@ void DeInitDlgInstalling(diI *diDialog)
   FreeMemory(&(diDialog->szBlurb));
   FreeMemory(&(diDialog->szStatusFile));
   FreeMemory(&(diDialog->szStatusComponent));
+}
+
+HRESULT InitDlgInstallSuccessful(diIS *diDialog)
+{
+  diDialog->bShowDialog = FALSE;
+  diDialog->bLaunchAppChecked = TRUE;
+  if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessage1 = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szLaunchApp = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szMessageHeader = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  return 0;
+}
+
+void DeInitDlgInstallSuccessful(diIS *diDialog)
+{
+  FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szMessage0));
+  FreeMemory(&(diDialog->szMessage1));
+  FreeMemory(&(diDialog->szLaunchApp));
+  FreeMemory(&(diDialog->szMessageHeader));
 }
 
 HRESULT InitDlgDownload(diD *diDialog)
@@ -7086,6 +7113,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgInstalling(&diInstalling))
     return(1);
+  if(InitDlgInstallSuccessful(&diInstallSuccessful))
+    return(1);
   if(InitDlgDownload(&diDownload))
     return(1);
   if(InitDlgReboot(&diReboot))
@@ -7367,8 +7396,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* Windows Integration dialog */
   GetPrivateProfileString("Dialog Windows Integration", "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
   GetPrivateProfileString("Dialog Windows Integration", "Title",        "", diWindowsIntegration.szTitle,    MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Windows Integration", "Sub Title",    "", diWindowsIntegration.szSubTitle, MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Windows Integration", "Message0",     "", diWindowsIntegration.szMessage0, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Windows Integration", "Message1",     "", diWindowsIntegration.szMessage1, MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diWindowsIntegration.bShowDialog = TRUE;
 
@@ -7481,6 +7510,19 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diInstalling.bShowDialog = TRUE;
 
+  // Install Successful page. 
+  GetPrivateProfileString("Dialog Install Successful",  "Show Dialog",      "", szShowDialog,                       sizeof(szShowDialog), szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diInstallSuccessful.bShowDialog = TRUE;
+  GetPrivateProfileString("Dialog Install Successful",  "Title",              "", diInstallSuccessful.szTitle,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Install Successful",  "MessageHeader",      "", diInstallSuccessful.szMessageHeader,  MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Install Successful",  "Message0",           "", diInstallSuccessful.szMessage0,       MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Install Successful",  "Message1",           "", diInstallSuccessful.szMessage1,       MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Install Successful",  "Launch App",         "", diInstallSuccessful.szLaunchApp,      MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Install Successful",  "Launch App Checked", "", szShowDialog,                         MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diInstallSuccessful.bLaunchAppChecked = TRUE;
+  
   /* Download dialog */
   GetPrivateProfileString("Dialog Download",       "Show Dialog",        "", szShowDialog,                   sizeof(szShowDialog),        szFileIniConfig);
   GetPrivateProfileString("Dialog Download",       "Title",              "", diDownload.szTitle,             MAX_BUF_TINY,   szFileIniConfig);
@@ -9032,6 +9074,7 @@ void DeInitialize()
   DeInitDlgStartInstall(&diStartInstall);
   DeInitDlgDownloading(&diDownloading);
   DeInitDlgInstalling(&diInstalling);
+  DeInitDlgInstallSuccessful(&diInstallSuccessful);
   DeInitDlgAdditionalOptions(&diAdditionalOptions);
   DeInitDlgAdvancedSettings(&diAdvancedSettings);
   DeInitDlgProgramFolder(&diProgramFolder);

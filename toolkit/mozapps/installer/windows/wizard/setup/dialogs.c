@@ -21,6 +21,9 @@
  * Contributor(s): 
  *     Sean Su <ssu@netscape.com>
  *     Curt Patrick <curt@netscape.com>
+ *
+ *  Next Generation Apps Version:
+ *     Ben Goodger <ben@mozilla.org>
  */
 
 #include "extern.h"
@@ -1550,10 +1553,15 @@ LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
     initialized = TRUE;
 
     if (InstallFiles(hDlg)) {
-      PropSheet_SetCurSelByID(GetParent(hDlg), DLG_WELCOME);
+      if (dwSetupType == ST_RADIO0) 
+        PropSheet_SetCurSelByID(GetParent(hDlg), DLG_INSTALL_SUCCESSFUL);
+      else
+        PropSheet_SetCurSelByID(GetParent(hDlg), DLG_INSTALL_SUCCESSFUL);
+
       break;
     }
     else {
+      // XXXben TODO: handle error. 
       printf("Files NOT Installed...\n");
     }
     break;
@@ -1673,7 +1681,164 @@ BOOL InstallFiles(HWND hDlg)
   
   CleanupXpcomFile();
 
+  gbProcessingXpnstallFiles = FALSE;
+
   return TRUE;
+}
+
+#if 0
+///////////////////////////////////////////////////////////////////////////////
+// DIALOG: WINTEGRATION
+//         Not actually used yet!
+
+LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  LPNMHDR notifyMessage;
+  char szBuf[MAX_BUF];
+
+  switch (msg) {
+  case WM_INITDIALOG:
+    wsprintf(szBuf, diWindowsIntegration.szMessage0, sgProduct.szProductName);
+    SetDlgItemText(hDlg, IDC_MESSAGE0, szBuf);
+
+    if (diWindowsIntegration.wiCB0.bEnabled) {
+      ShowWindow(GetDlgItem(hDlg, IDC_CHECK0), SW_SHOW);
+      SetDlgItemText(hDlg, IDC_CHECK0, diWindowsIntegration.wiCB0.szDescription);
+    }
+    else
+      ShowWindow(GetDlgItem(hDlg, IDC_CHECK0), SW_HIDE);
+
+    if (diWindowsIntegration.wiCB1.bEnabled) {
+      ShowWindow(GetDlgItem(hDlg, IDC_CHECK1), SW_SHOW);
+      SetDlgItemText(hDlg, IDC_CHECK1, diWindowsIntegration.wiCB1.szDescription);
+    }
+    else
+      ShowWindow(GetDlgItem(hDlg, IDC_CHECK1), SW_HIDE);
+
+    if (diWindowsIntegration.wiCB2.bEnabled) {
+      ShowWindow(GetDlgItem(hDlg, IDC_CHECK2), SW_SHOW);
+      SetDlgItemText(hDlg, IDC_CHECK2, diWindowsIntegration.wiCB2.szDescription);
+    }
+    else
+      ShowWindow(GetDlgItem(hDlg, IDC_CHECK2), SW_HIDE);
+
+    if (diWindowsIntegration.wiCB3.bEnabled) {
+      ShowWindow(GetDlgItem(hDlg, IDC_CHECK3), SW_SHOW);
+      wsprintf(szBuf, diWindowsIntegration.wiCB3.szDescription, sgProduct.szProductName);
+      SetDlgItemText(hDlg, IDC_CHECK3, szBuf);
+    }
+    else
+      ShowWindow(GetDlgItem(hDlg, IDC_CHECK3), SW_HIDE);
+
+    break;
+
+  case WM_NOTIFY:
+    notifyMessage = (LPNMHDR)lParam;
+    switch (notifyMessage->code) {
+    case PSN_SETACTIVE:
+      // Wizard dialog title
+      PropSheet_SetTitle(GetParent(hDlg), 0, (LPTSTR)diWindowsIntegration.szTitle); 
+
+      // Restore state from default or cached value. 
+      CheckDlgButton(hDlg, IDC_CHECK0, 
+                     diWindowsIntegration.wiCB0.bCheckBoxState);
+      CheckDlgButton(hDlg, IDC_CHECK1, 
+                     diWindowsIntegration.wiCB1.bCheckBoxState);
+      CheckDlgButton(hDlg, IDC_CHECK2, 
+                     diWindowsIntegration.wiCB2.bCheckBoxState);
+      CheckDlgButton(hDlg, IDC_CHECK3, 
+                     diWindowsIntegration.wiCB3.bCheckBoxState);
+
+      // Don't show the back button here UNLESS the previous 
+      // page was Windows Integration - and that only happens on a custom
+      // install. 
+      PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT);
+      break;
+
+    case PSN_WIZNEXT:
+      diWindowsIntegration.wiCB0.bCheckBoxState = 
+        IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED;
+      diWindowsIntegration.wiCB1.bCheckBoxState = 
+        IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED;
+      diWindowsIntegration.wiCB2.bCheckBoxState = 
+        IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED;
+      diWindowsIntegration.wiCB3.bCheckBoxState = 
+        IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED;
+
+      break;
+    }
+      
+    break;
+  }
+
+  return 0;
+}
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+// DIALOG: SUCCESSFUL INSTALL
+//
+
+LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  char szBuf[MAX_BUF];
+  LPNMHDR notifyMessage;
+  HWND ctrl;
+  static BOOL launchAppChecked = TRUE;
+  
+  switch(msg) {
+  case WM_INITDIALOG:
+    // The header on the welcome page uses a larger font.
+    ctrl = GetDlgItem(hDlg, IDC_STATIC_TITLE);
+    SendMessage(ctrl, WM_SETFONT, (WPARAM)sgInstallGui.welcomeTitleFont, (LPARAM)TRUE);
+
+    // UI Text, from localized config files
+    SetDlgItemText(hDlg, IDC_STATIC_TITLE, diInstallSuccessful.szMessageHeader);
+    wsprintf(szBuf, diInstallSuccessful.szMessage0, sgProduct.szProductName);
+    SetDlgItemText(hDlg, IDC_STATIC0, szBuf);
+    SetDlgItemText(hDlg, IDC_STATIC1, diInstallSuccessful.szMessage1);
+    wsprintf(szBuf, diInstallSuccessful.szLaunchApp, sgProduct.szProductName);
+    SetDlgItemText(hDlg, IDC_START_APP, szBuf);
+
+    launchAppChecked = diInstallSuccessful.bLaunchAppChecked;
+
+    break;
+
+  case WM_NOTIFY:
+    notifyMessage = (LPNMHDR)lParam;
+    switch (notifyMessage->code) {
+    case PSN_SETACTIVE:
+      // Wizard dialog title
+      PropSheet_SetTitle(GetParent(hDlg), 0, (LPTSTR)diInstallSuccessful.szTitle); 
+
+      // Restore state from default or cached value. 
+      CheckDlgButton(hDlg, IDC_START_APP, 
+                     launchAppChecked ? BST_CHECKED : BST_UNCHECKED);
+
+      // Don't show the back button here UNLESS the previous 
+      // page was Windows Integration - and that only happens on a custom
+      // install. 
+      // XXXben we've disabled the wintegration panel for now since its 
+      // functionality is duplicated elsewhere.
+      PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_FINISH);
+      break;
+
+    case PSN_WIZBACK:
+      // Store the checkbox state in case the user goes back to the Wintegration
+      // page. 
+      launchAppChecked = IsDlgButtonChecked(hDlg, IDC_START_APP);
+      
+      break;
+
+    case PSN_WIZFINISH:
+      // Apply settings and close. 
+      break;
+    }
+      
+    break;
+  }
+  
+  return 0;
 }
 
 LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
@@ -1901,6 +2066,28 @@ void InitSequence(HINSTANCE hInstance)
     psp.pfnDlgProc        = DlgProcInstalling;
     psp.pszTemplate       = MAKEINTRESOURCE(DLG_EXTRACTING);
 
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+#if 0
+  // Windows Integration Page
+  if (diWindowsIntegration.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diWindowsIntegration.szTitle;
+    psp.pszHeaderSubTitle = diWindowsIntegration.szSubTitle;
+    psp.pfnDlgProc        = DlgProcWindowsIntegration;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_WINDOWS_INTEGRATION);
+    
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+#endif
+
+  // Successful Install Page
+  if (diInstallSuccessful.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_HIDEHEADER;
+    psp.pfnDlgProc        = DlgProcInstallSuccessful;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_INSTALL_SUCCESSFUL);
+    
     pages[count++]        = CreatePropertySheetPage(&psp);
   }
 

@@ -113,6 +113,8 @@
 #define IDC_INSTALL_FOLDER              1086
 #define IDC_INSTALL_FOLDER_LABEL        1087
 #define IDC_STATIC_DOWNLOAD_SIZE        1088
+#define DLG_INSTALL_SUCCESSFUL          1089
+#define IDC_START_APP                   1090
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
