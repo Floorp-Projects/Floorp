@@ -1432,7 +1432,7 @@ function MsgFilters(emailAddress, folder)
          we check this here in args to show filterList dialog */
       if ("refresh" in args && args.refresh)
       {
-         args = { refresh: true, folder: preselectedFolder };
+         args = { refresh: true, folder: folder };
          MsgFilterList(args);
       }
     }
