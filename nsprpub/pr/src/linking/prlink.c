@@ -167,10 +167,6 @@ struct _imcb *IAC$GL_IMAGE_LIST = NULL;
 #define NEED_LEADING_UNDERSCORE
 #endif
 
-#ifdef XP_PC
-typedef PRStaticLinkTable *NODL_PROC(void);
-#endif
-
 /************************************************************************/
 
 struct PRLibrary {
@@ -955,7 +951,6 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 #if defined(WIN32) || defined(WIN16)
     {
     HINSTANCE h;
-    NODL_PROC *pfn;
 
     h = LoadLibrary(name);
     if (h < (HINSTANCE)HINSTANCE_ERROR) {
@@ -967,15 +962,6 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
     lm->dlh = h;
     lm->next = pr_loadmap;
     pr_loadmap = lm;
-
-    /*
-    ** Try to load a table of "static functions" provided by the DLL
-    */
-
-    pfn = (NODL_PROC *)GetProcAddress(h, "NODL_TABLE");
-    if (pfn != NULL) {
-        lm->staticTable = (*pfn)();
-    }
     }
 #endif /* WIN32 || WIN16 */
 
