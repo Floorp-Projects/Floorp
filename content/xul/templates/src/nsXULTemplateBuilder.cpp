@@ -106,12 +106,13 @@
 #include "nsIFormControl.h"
 #include "nsIDOMHTMLFormElement.h"
 
-#define RDF_USE_HAS_ARC_OUT 1
-
 // Return values for EnsureElementHasGenericChild()
 #define NS_RDF_ELEMENT_GOT_CREATED NS_RDF_NO_VALUE
 #define NS_RDF_ELEMENT_WAS_THERE   NS_OK
+
+#ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
+#endif
 
 //----------------------------------------------------------------------
 
@@ -550,7 +551,7 @@ public:
      * @param aVariable the variable to which the name is bound
      * @return NS_OK if no errors occurred
      */
-    nsresult AddSymbol(const nsString& aSymbol, PRInt32 aVariable);
+    nsresult AddSymbol(const nsAReadableString& aSymbol, PRInt32 aVariable);
 
     /**
      * Retrieve the variable for a symbolic name
@@ -694,7 +695,7 @@ Rule::GetContent(nsIContent** aResult) const
 }
 
 nsresult
-Rule::AddSymbol(const nsString& aSymbol, PRInt32 aVariable)
+Rule::AddSymbol(const nsAReadableString& aSymbol, PRInt32 aVariable)
 {
     if (mCount >= mCapacity) {
         PRInt32 capacity = mCapacity + 4;
@@ -2557,6 +2558,9 @@ public:
     nsresult
     AddSimpleRuleBindings(Rule* aRule, nsIContent* aElement);
 
+    static void
+    AddBindingsFor(nsXULTemplateBuilder* aSelf, const nsAReadableString& aVariable, void* aClosure);
+
     nsresult
     CompileExtendedRule(nsIContent* aRule, PRInt32 aPriorty, InnerNode* aParentNode);
 
@@ -2590,15 +2594,33 @@ public:
     PRBool
     IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAtom);
 
+    // XXX sigh, the string template foo doesn't mix with
+    // operator->*() on egcs-1.1.2, so we'll need to explicitly pass
+    // "this" and use good ol' fashioned static callbacks.
+    void
+    ParseAttribute(const nsAReadableString& aAttributeValue,
+                   void (*aVariableCallback)(nsXULTemplateBuilder* aThis, const nsAReadableString&, void*),
+                   void (*aTextCallback)(nsXULTemplateBuilder* aThis, const nsAReadableString&, void*),
+                   void* aClosure);
+
     nsresult
     SubstituteText(Match& aMatch,
-                   const nsString& aAttributeValue,
+                   const nsAReadableString& aAttributeValue,
                    nsString& aResult);
+
+    static void
+    SubstituteTextAppendText(nsXULTemplateBuilder* aThis, const nsAReadableString& aText, void* aClosure);
+
+    static void
+    SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis, const nsAReadableString& aVariable, void* aClosure);    
 
     PRBool
     IsAttrImpactedByVars(Match& aMatch,
                          const nsAReadableString& aAttributeValue,
                          const VariableSet& aModifiedVars);
+
+    static void
+    IsVarInSet(nsXULTemplateBuilder* aThis, const nsAReadableString& aVariable, void* aClosure);
 
     nsresult
     BuildContentFromTemplate(nsIContent *aTemplateNode,
@@ -4926,38 +4948,17 @@ nsXULTemplateBuilder::IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttr
 }
 
 
-nsresult
-nsXULTemplateBuilder::SubstituteText(Match& aMatch,
-                                     const nsString& aAttributeValue,
-                                     nsString& aResult)
+void
+nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
+                                     void (*aVariableCallback)(nsXULTemplateBuilder*, const nsAReadableString&, void*),
+                                     void (*aTextCallback)(nsXULTemplateBuilder*, const nsAReadableString&, void*),
+                                     void* aClosure)
 {
-    // See if it's the special value "..."
-    if (aAttributeValue.Length() == 3
-        && aAttributeValue[0] == PRUnichar('.')
-        && aAttributeValue[1] == PRUnichar('.')
-        && aAttributeValue[2] == PRUnichar('.')) {
-        Value memberval;
-        aMatch.GetAssignmentFor(mConflictSet, mMemberVar, &memberval);
-
-        nsIRDFResource* member = VALUE_TO_IRDFRESOURCE(memberval);
-        NS_ASSERTION(member != nsnull, "no member!");
-        if (! member)
-            return NS_ERROR_UNEXPECTED;
-
-        const char *uri = nsnull;
-        member->GetValueConst(&uri);
-        aResult.AssignWithConversion(uri);
-        return NS_OK;
-    }
-
-    // Reasonable guess at how big it should be
-    aResult.SetCapacity(aAttributeValue.Length());
-
     // XXX wish we could use iterators, but we can't right now.
     PRInt32 len = aAttributeValue.Length();
-    for (PRInt32 i = 0; i < len; ++i) {
-        PRInt32 backup = i;
+    PRInt32 mark = 0, backup = 0;
 
+    for (PRInt32 i = 0; i < len; backup = ++i) {
         // A variable is either prefixed with '?' (in the extended
         // syntax) or "rdf:" (in the simple syntax).
         PRBool isvar;
@@ -4980,8 +4981,12 @@ nsXULTemplateBuilder::SubstituteText(Match& aMatch,
             // have slurped down some characters before realizing that
             // fact, back up to the point where we started.
             i = backup;
-            aResult += aAttributeValue[i];
             continue;
+        }
+        else if (backup != mark && aTextCallback) {
+            // Okay, we've found a variable, and there's some vanilla
+            // text that's been buffered up. Flush it.
+            (*aTextCallback)(this, Substring(aAttributeValue, mark, backup - mark), aClosure);
         }
 
         // Construct a substring that is the symbol we need to look up
@@ -4990,7 +4995,7 @@ nsXULTemplateBuilder::SubstituteText(Match& aMatch,
         // whichever comes first.
         PRInt32 first = backup;
 
-        PRUnichar c;
+        PRUnichar c = 0;
         while (i < len) {
             c = aAttributeValue[i];
             if ((c == PRUnichar(' ')) || (c == PRUnichar('^')))
@@ -5007,61 +5012,162 @@ nsXULTemplateBuilder::SubstituteText(Match& aMatch,
         if (c != PRUnichar('^'))
             --i;
 
-        nsPromiseSubstring<PRUnichar> symbol(aAttributeValue, first, last - first);
-
-        // The symbol "rdf:*" is special, and means "this guy's URI"
-        PRInt32 var = 0;
-        if (symbol == NS_LITERAL_STRING("rdf:*"))
-            var = mMemberVar;
-        else
-            var = aMatch.mRule->LookupSymbol(symbol);
-
-        // No variable; treat as a variable with no
-        // substitution. (This shouldn't ever happen, really...)
-        if (! var)
-            continue;
-
-        // Got a variable; get the value it's assigned to
-        Value value;
-        PRBool hasAssignment =
-            aMatch.GetAssignmentFor(mConflictSet, var, &value);
-
-        // If there was no assignment for the variable, bail. This'll
-        // leave the result string with an empty substitution for the
-        // variable.
-        if (! hasAssignment)
-            continue;
-
-        // Got a value; substitute it.
-        switch (value.GetType()) {
-        case Value::eISupports:
-            {
-                nsISupports* isupports = NS_STATIC_CAST(nsISupports*, value);
-
-                nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
-                if (node) {
-                    // XXX ideally we'd just point this right at the
-                    // substring which is the end of the string,
-                    // turning this into an in-place append.
-                    nsAutoString temp;
-                    gXULUtils->GetTextForNode(node, temp);
-                    aResult += temp;
-                }
-            }
-            break;
-
-        case Value::eString:
-            aResult += NS_STATIC_CAST(const PRUnichar*, value);
-            break;
-
-        default:
-            break;
-        }
+        (*aVariableCallback)(this, Substring(aAttributeValue, first, last - first), aClosure);
+        mark = i + 1;
     }
+
+    if (backup != mark && aTextCallback) {
+        // If there's any text left over, then fire the text callback
+        (*aTextCallback)(this, Substring(aAttributeValue, mark, backup - mark), aClosure);
+    }
+}
+
+
+struct SubstituteTextClosure {
+    SubstituteTextClosure(Match& aMatch, nsString& aResult)
+        : match(aMatch), result(aResult) {}
+
+    Match&    match;
+    nsString& result;
+};
+
+nsresult
+nsXULTemplateBuilder::SubstituteText(Match& aMatch,
+                                     const nsAReadableString& aAttributeValue,
+                                     nsString& aResult)
+{
+    // See if it's the special value "..."
+    if (aAttributeValue.Length() == 3
+        && aAttributeValue[0] == PRUnichar('.')
+        && aAttributeValue[1] == PRUnichar('.')
+        && aAttributeValue[2] == PRUnichar('.')) {
+        Value memberval;
+        aMatch.GetAssignmentFor(mConflictSet, mMemberVar, &memberval);
+
+        nsIRDFResource* member = VALUE_TO_IRDFRESOURCE(memberval);
+        NS_ASSERTION(member != nsnull, "no member!");
+        if (! member)
+            return NS_ERROR_UNEXPECTED;
+
+        const char *uri = nsnull;
+        member->GetValueConst(&uri);
+        aResult = NS_ConvertUTF8toUCS2(uri);
+        return NS_OK;
+    }
+
+    // Reasonable guess at how big it should be
+    aResult.SetCapacity(aAttributeValue.Length());
+
+    SubstituteTextClosure closure(aMatch, aResult);
+    ParseAttribute(aAttributeValue,
+                   SubstituteTextReplaceVariable,
+                   SubstituteTextAppendText,
+                   &closure);
 
     return NS_OK;
 }
 
+
+void
+nsXULTemplateBuilder::SubstituteTextAppendText(nsXULTemplateBuilder* aThis,
+                                               const nsAReadableString& aText,
+                                               void* aClosure)
+{
+    // Append aString to the closure's result
+    SubstituteTextClosure* c = NS_STATIC_CAST(SubstituteTextClosure*, aClosure);
+    c->result.Append(aText);
+}
+
+void
+nsXULTemplateBuilder::SubstituteTextReplaceVariable(nsXULTemplateBuilder* aThis,
+                                                    const nsAReadableString& aVariable,
+                                                    void* aClosure)
+{
+    // Substitute the value for the variable and append to the
+    // closure's result.
+    SubstituteTextClosure* c = NS_STATIC_CAST(SubstituteTextClosure*, aClosure);
+
+    // The symbol "rdf:*" is special, and means "this guy's URI"
+    PRInt32 var = 0;
+    if (aVariable == NS_LITERAL_STRING("rdf:*"))
+        var = c->match.mRule->GetMemberVariable();
+    else
+        var = c->match.mRule->LookupSymbol(aVariable);
+
+    // No variable; treat as a variable with no substitution. (This
+    // shouldn't ever happen, really...)
+    if (! var)
+        return;
+
+    // Got a variable; get the value it's assigned to
+    Value value;
+    PRBool hasAssignment =
+        c->match.GetAssignmentFor(aThis->mConflictSet, var, &value);
+
+    // If there was no assignment for the variable, bail. This'll
+    // leave the result string with an empty substitution for the
+    // variable.
+    if (! hasAssignment)
+        return;
+
+    // Got a value; substitute it.
+    switch (value.GetType()) {
+    case Value::eISupports:
+        {
+            nsISupports* isupports = NS_STATIC_CAST(nsISupports*, value);
+
+            nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
+            if (node) {
+                // XXX ideally we'd just point this right at the
+                // substring which is the end of the string,
+                // turning this into an in-place append.
+                nsAutoString temp;
+                gXULUtils->GetTextForNode(node, temp);
+                c->result += temp;
+            }
+        }
+    break;
+
+    case Value::eString:
+        c->result += NS_STATIC_CAST(const PRUnichar*, value);
+        break;
+
+    default:
+        break;
+    }
+    
+}
+
+struct IsVarInSetClosure {
+    IsVarInSetClosure(Match& aMatch, const VariableSet& aModifiedVars)
+        : match(aMatch), modifiedVars(aModifiedVars), result(PR_FALSE) {}
+
+    Match& match;
+    const VariableSet& modifiedVars;
+    PRBool result;
+};
+
+
+void
+nsXULTemplateBuilder::IsVarInSet(nsXULTemplateBuilder* aThis,
+                                 const nsAReadableString& aVariable,
+                                 void* aClosure)
+{
+    IsVarInSetClosure* c = NS_STATIC_CAST(IsVarInSetClosure*, aClosure);
+
+    PRInt32 var;
+    var = c->match.mRule->LookupSymbol(aVariable);
+
+    // No variable; treat as a variable with no substitution. (This
+    // shouldn't ever happen, really...)
+    if (! var)
+        return;
+
+    // See if this was one of the variables that was modified. If it
+    // *was*, then this attribute *will* be impacted by the modified
+    // variable set...
+    c->result = c->modifiedVars.Contains(var);
+}
 
 PRBool
 nsXULTemplateBuilder::IsAttrImpactedByVars(Match& aMatch,
@@ -5072,83 +5178,10 @@ nsXULTemplateBuilder::IsAttrImpactedByVars(Match& aMatch,
     // are impacted by variable changes using information that we
     // could get at rule compilation time, rather than grovelling over
     // the attribute string.
+    IsVarInSetClosure closure(aMatch, aModifiedVars);
+    ParseAttribute(aAttributeValue, IsVarInSet, nsnull, &closure);
 
-    // XXX I suck, and should spend some time trying to figure out how
-    // not to duplicate all this code between IsAttrImpactedByVars()
-    // and SubstituteText().
-
-    // XXX wish we could use iterators, but we can't right now.
-    PRInt32 len = aAttributeValue.Length();
-    for (PRInt32 i = 0; i < len; ++i) {
-        PRInt32 backup = i;
-
-        // A variable is either prefixed with '?' (in the extended
-        // syntax) or "rdf:" (in the simple syntax).
-        PRBool isvar;
-        if (aAttributeValue[i] == PRUnichar('?')) {
-            isvar = PR_TRUE;
-        }
-        else if ((aAttributeValue[i] == PRUnichar('r') && ++i < len) &&
-                 (aAttributeValue[i] == PRUnichar('d') && ++i < len) &&
-                 (aAttributeValue[i] == PRUnichar('f') && ++i < len) &&
-                 (aAttributeValue[i] == PRUnichar(':'))) {
-            isvar = PR_TRUE;
-        }
-        else {
-            isvar = PR_FALSE;
-        }
-
-        if (! isvar || ++i >= len) {
-            // It's not a variable. Since we may have slurped down
-            // some characters before realizing that fact, back up to
-            // the point where we started.
-            i = backup;
-            continue;
-        }
-
-        // Construct a substring that is the symbol we need to look up
-        // in the rule's symbol table. The symbol is terminated by a
-        // space character, a caret, or the end of the string,
-        // whichever comes first.
-        PRInt32 first = backup;
-
-        PRUnichar c;
-        while (i < len) {
-            c = aAttributeValue[i];
-            if ((c == PRUnichar(' ')) || (c == PRUnichar('^')))
-                break;
-
-            ++i;
-        }
-
-        PRInt32 last = i;
-
-        // Back up so we don't consume the terminating character
-        // *unless* the terminating character was a caret: the caret
-        // means "concatenate with no space in between".
-        if (c != PRUnichar('^'))
-            --i;
-
-        nsPromiseSubstring<PRUnichar> symbol(aAttributeValue, first, last - first);
-
-        PRInt32 var;
-        var = aMatch.mRule->LookupSymbol(symbol);
-
-        // No variable; treat as a variable with no
-        // substitution. (This shouldn't ever happen, really...)
-        if (! var)
-            continue;
-
-        // See if this was one of the variables that was modified. If
-        // it *was*, then this attribute *will* be impacted by the
-        // modified variable set...
-        if (aModifiedVars.Contains(var))
-            return PR_TRUE;
-    }
-
-    // If we get here, then this attribute was not affected by the
-    // modified variable set.
-    return PR_FALSE;
+    return closure.result;
 }
 
 nsresult
@@ -5407,7 +5440,7 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource URI");
             if (NS_FAILED(rv)) return rv;
 
-            nsAutoString id; id.AssignWithConversion(uri);
+            const nsAReadableString& id = NS_ConvertUTF8toUCS2(uri);
             rv = realKid->SetAttribute(kNameSpaceID_None, nsXULAtoms::id, id, PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set id attribute");
             if (NS_FAILED(rv)) return rv;
@@ -7413,32 +7446,9 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(Rule* aRule, nsIContent* aElement)
             nsAutoString value;
             element->GetAttribute(nameSpaceID, attr, value);
 
-            // If it's not "rdf:something", or it's "rdf:*", then
-            // mosey along. We don't care.
-            if (value.Find("rdf:") != 0 || value[4] == PRUnichar('*'))
-                continue;
-
-            // Check to see if we've already seen this property. We'll
-            // know because we'll have already added a symbol for it.
-            PRInt32 var = aRule->LookupSymbol(value);
-            if (var != 0)
-                continue;
-
-            // Strip it down to the raw RDF property
-            nsAutoString propertyStr;
-            value.Right(propertyStr, value.Length() - 4);
-
-            nsCOMPtr<nsIRDFResource> property;
-            gRDFService->GetUnicodeResource(propertyStr.GetUnicode(), getter_AddRefs(property));
-
-            // Create a new variable that we'll binding to the
-            // property's value
-            mRules.CreateVariable(&var);
-            aRule->AddSymbol(value, var);
-
-            // In the simple syntax, the binding is always from the
-            // member variable, through the property, to the target.
-            aRule->AddBinding(mMemberVar, property, var);
+            // Scan the attribute for variables, adding a binding for
+            // each one.
+            ParseAttribute(value, AddBindingsFor, nsnull, aRule);
         }
 
         // Push kids onto the stack, and search them next.
@@ -7452,6 +7462,42 @@ nsXULTemplateBuilder::AddSimpleRuleBindings(Rule* aRule, nsIContent* aElement)
     }
 
     return NS_OK;
+}
+
+
+void
+nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
+                                     const nsAReadableString& aVariable,
+                                     void* aClosure)
+{
+    // We should *only* be recieving "rdf:"-style variables. Make
+    // sure...
+    if (Substring(aVariable, 0, 4) != NS_LITERAL_STRING("rdf:"))
+        return;
+
+    Rule* rule = NS_STATIC_CAST(Rule*, aClosure);
+
+    // Check to see if we've already seen this property. We'll
+    // know because we'll have already added a symbol for it.
+    PRInt32 var = rule->LookupSymbol(aVariable);
+    if (var != 0)
+        return;
+
+    // Strip it down to the raw RDF property by clobbering the "rdf:"
+    // prefix
+    const nsAReadableString& propertyStr = Substring(aVariable, 4, aVariable.Length() - 4);
+
+    nsCOMPtr<nsIRDFResource> property;
+    gRDFService->GetUnicodeResource(nsPromiseFlatString(propertyStr), getter_AddRefs(property));
+
+    // Create a new variable that we'll binding to the
+    // property's value
+    aThis->mRules.CreateVariable(&var);
+    rule->AddSymbol(aVariable, var);
+
+    // In the simple syntax, the binding is always from the
+    // member variable, through the property, to the target.
+    rule->AddBinding(aThis->mMemberVar, property, var);
 }
 
 
