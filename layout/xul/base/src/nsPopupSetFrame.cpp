@@ -556,8 +556,9 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
   
     // popupsetframe::mElementFrame
     nsCOMPtr<nsIContent> content;
-    mElementFrame->GetContent(getter_AddRefs(content));
+    GetContent(getter_AddRefs(content));
     nsAutoString property;
+    
     content->GetAttribute(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
     if ( !property.EqualsWithConversion("true") && childPopup )
       childPopup->InstallKeyboardNavigator();
