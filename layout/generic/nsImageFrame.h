@@ -244,6 +244,7 @@ private:
   PRPackedBool        mGotInitialReflow;
   PRPackedBool        mInitialLoadCompleted;
   PRPackedBool        mCanSendLoadEvent;
+  PRPackedBool        mImageBlocked;   // true if the image has been blocked
 
   PRBool              mFailureReplace;
 
