@@ -487,7 +487,7 @@ nsDOMEvent::GetView(nsIDOMAbstractView** aView)
     nsCOMPtr<nsIDOMWindowInternal> window = do_GetInterface(container);
     NS_ENSURE_TRUE(window, NS_OK);
 
-    CallQueryInterface(container, aView);
+    CallQueryInterface(window, aView);
   }
 
   return rv;
