@@ -12,12 +12,19 @@
 <!ENTITY deleteCmd.label            "Delete">
 <!ENTITY selAllCmd.label            "Select All">
 <!ENTITY findHisCmd.label           "Find in History...">
-<!ENTITY findAgainCmd.label         "Find Again...">
+<!ENTITY findHisCmd.accesskey   "f">
 <!ENTITY historyWindowTitle.label   "History">
 <!ENTITY tree.header.name.label     "Title">
+<!ENTITY tree.header.name.accesskey "t">
 <!ENTITY tree.header.url.label      "URL">
+<!ENTITY tree.header.url.label "u">
 <!ENTITY tree.header.date.label     "Last Visited">
+<!ENTITY tree.header.date.label "l">
 <!ENTITY menuitem.view.unsorted.label "Unsorted">
+<!ENTITY menuitem.view.unsorted.accesskey "u">
 <!ENTITY menuitem.view.ascending.label "A > Z Sort Order">
+<!ENTITY menuitem.view.ascending.accesskey "a">
 <!ENTITY menuitem.view.descending.label "Z > A Sort Order">
+<!ENTITY menuitem.view.descending.accesskey "z">
 <!ENTITY menuitem.view.show_columns.label "Show columns">
+<!ENTITY menuitem.view.show_columns.accesskey "s">
