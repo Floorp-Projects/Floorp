@@ -19,7 +19,7 @@
 #ifndef nsFileTransport_h__
 #define nsFileTransport_h__
 
-#include "nsITransport.h"
+#include "nsIChannel.h"
 #include "nsIRunnable.h"
 #include "nsFileSpec.h"
 #include "prlock.h"
@@ -35,14 +35,14 @@ class nsIBaseStream;
 class nsIBufferInputStream;
 class nsIBufferOutputStream;
 
-class nsFileTransport : public nsITransport, 
+class nsFileTransport : public nsIChannel, 
                         public nsIRunnable,
                         public nsIPipeObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
-    NS_DECL_NSITRANSPORT
+    NS_DECL_NSICHANNEL
     NS_DECL_NSIPIPEOBSERVER
     NS_DECL_NSIRUNNABLE
 
