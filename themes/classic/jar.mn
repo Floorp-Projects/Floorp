@@ -2,12 +2,9 @@ skins/classic.jar:
     manifest.rdf                                               
     preview.png                                                  (preview/win/preview.png)
     communicator/skin/search-widgets.css                         (communicator/win/search-widgets.css)
-    communicator/skin/navbar-endbox.gif                          (communicator/navbar-endbox.gif)
     communicator/skin/broken.gif                                 (communicator/broken.gif)
     communicator/skin/lock.gif                                   (communicator/lock.gif)
     communicator/skin/unlock.gif                                 (communicator/unlock.gif)
-    communicator/skin/tb-menubutton-dm.gif                       (communicator/tb-menubutton-dm.gif)
-    communicator/skin/tb-menubutton-dm-disabled.gif              (communicator/tb-menubutton-dm-disabled.gif)
     communicator/skin/menubuttonBindings.xml                     (communicator/menubuttonBindings.xml)
     communicator/skin/offline.gif                                (communicator/offline.gif)
     communicator/skin/online.gif                                 (communicator/online.gif)
