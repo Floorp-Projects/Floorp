@@ -66,10 +66,6 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (6) Execute "component" rules. (OPTIONAL)                           #
 #######################################################################
 
-ifeq ($(OS_CONFIG),OSF1V4.0D)
-INCLUDES	+= -I/usr/sys/include/arch/alpha
-endif
-
 #######################################################################
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
