@@ -128,6 +128,10 @@ NGLAYOUT_DIST=$(XPDIST)\NGL$(MOZ_BITS)_D.OBJ
 #//
 #//-----------------------------------------------------------------------
 
+!ifndef DISABLE_LDAP
+LDAP_CFLAGS=-I$(XPDIST)\include\ldap
+!endif
+
 CFGFILE=$(OBJDIR)\cmd.cfg
 INCS=$(INCS) -I$(PUBLIC) -I$(DIST)\include -I$(XPDIST)\include\nspr
 

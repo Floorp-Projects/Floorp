@@ -48,6 +48,11 @@ CPP_OBJS = .\$(OBJDIR)\nsLDAPURL.obj             \
 
 # There might be some issues here with how DEFINES might get duplicated
 # in the LCFLAGS.
+LCFLAGS = \
+	$(LCFLAGS) \
+	$(LDAP_CFLAGS) \
+	$(NULL)
+
 !if defined(ENABLE_LDAP_EXPERIMENTAL)
 DEFINES = -DMOZ_LDAP_XPCOM_EXPERIMENTAL $(DEFINES)
 LCFLAGS = \
@@ -60,3 +65,4 @@ C_OBJS = .\$(OBJDIR)\nsLDAPConnectionCallbacks.obj \
 	 $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
