@@ -2636,8 +2636,19 @@ NS_IMETHODIMP nsImapService::NewURI(const nsACString &aSpec,
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
     //nsCAutoString unescapedSpec(aSpec);
     // nsUnescape(NS_CONST_CAST(char*, unescapedSpec.get()));
-    mailnewsUrl->SetSpec(aSpec); // set the url spec...
-    
+
+    // set the spec
+    if (aBaseURI) 
+    {
+      nsCAutoString newSpec;
+      aBaseURI->Resolve(aSpec, newSpec);
+      mailnewsUrl->SetSpec(newSpec);
+    } 
+    else 
+    {
+      mailnewsUrl->SetSpec(aSpec);
+    }
+
     nsXPIDLCString folderName;
     nsXPIDLCString urlPath;
 

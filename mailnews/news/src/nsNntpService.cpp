@@ -1472,13 +1472,19 @@ NS_IMETHODIMP nsNntpService::NewURI(const nsACString &aSpec,
 {
     nsresult rv;
 
-    nsCOMPtr<nsINntpUrl> nntpUrl = do_CreateInstance(NS_NNTPURL_CONTRACTID, &rv);
+    nsCOMPtr<nsIURI> nntpUri = do_CreateInstance(NS_NNTPURL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr<nsIURI> nntpUri = do_QueryInterface(nntpUrl, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = nntpUri->SetSpec(aSpec);
+    if (aBaseURI) 
+    {
+      nsCAutoString newSpec;
+      aBaseURI->Resolve(aSpec, newSpec);
+      rv = nntpUri->SetSpec(newSpec);
+    } 
+    else 
+    {
+      rv = nntpUri->SetSpec(aSpec);
+    }
     NS_ENSURE_SUCCESS(rv,rv);
 
     NS_ADDREF(*_retval = nntpUri);

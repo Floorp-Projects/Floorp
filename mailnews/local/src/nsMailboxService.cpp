@@ -466,7 +466,6 @@ NS_IMETHODIMP nsMailboxService::NewURI(const nsACString &aSpec,
                                        nsIURI *aBaseURI,
                                        nsIURI **_retval)
 {
-    nsCOMPtr<nsIMailboxUrl> aMsgUrl;
     nsresult rv = NS_OK;
     nsACString::const_iterator b, e;
     if (FindInReadable(NS_LITERAL_CSTRING("?uidl="), aSpec.BeginReading(b), aSpec.EndReading(e)) ||
@@ -482,16 +481,21 @@ NS_IMETHODIMP nsMailboxService::NewURI(const nsACString &aSpec,
   }
   else
   {
-    rv = nsComponentManager::CreateInstance(kCMailboxUrl,
-                                            nsnull,
-                                            NS_GET_IID(nsIMailboxUrl),
-                                            getter_AddRefs(aMsgUrl));
+    nsCOMPtr<nsIURI> aMsgUri = do_CreateInstance(kCMailboxUrl, &rv);
         
     if (NS_SUCCEEDED(rv))
     {
-      nsCOMPtr<nsIURL> aUrl = do_QueryInterface(aMsgUrl);
-      aUrl->SetSpec(aSpec);
-      aMsgUrl->QueryInterface(NS_GET_IID(nsIURI), (void **) _retval);
+      if (aBaseURI) 
+      {
+        nsCAutoString newSpec;
+        aBaseURI->Resolve(aSpec, newSpec);
+        aMsgUri->SetSpec(newSpec);
+      } 
+      else 
+      {
+        aMsgUri->SetSpec(aSpec);
+      }
+      NS_ADDREF(*_retval = aMsgUri);
     }
   }
 
