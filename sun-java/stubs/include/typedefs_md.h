@@ -21,6 +21,11 @@
 #include "prtypes.h"
 #include "nspr_md.h"
 
+/* Some platforms need this to define int32_t */
+#ifdef HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif
+
 PR_BEGIN_EXTERN_C
 
 #if (defined(__sun) && !defined(SOLARIS2_6)) || defined(HPUX9) || defined(HPUX10_10) || defined(XP_PC) || defined(AIX) || defined(OSF1) || defined(XP_MAC) || defined(SONY) || defined(SNI) || defined(UNIXWARE) || defined(LINUX)
