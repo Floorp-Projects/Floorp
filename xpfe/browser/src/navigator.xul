@@ -185,6 +185,7 @@
       <menuitem name="Forward" onclick="BrowserForward();" />
       <menuitem name="Home" onclick="BrowserHome();"/>
     </menu>
+	
 	<menu name="Bookmarks" datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true"/>
 
     <menu name="Window">
@@ -195,7 +196,6 @@
   
   <html:div id="header">
   <toolbox>
-  
     <toolbar>
  	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
 
@@ -242,10 +242,7 @@
      
     </toolbar>
 
-    <toolbar>
-      <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="Mozilla" onclick="window.frames[0].location.href='http://www.mozilla.org'"/>
-	  <titledbutton align="right" src="resource:/res/toolbar/TB_Location.gif" value="ABC News" onclick="window.frames[0].location.href='http://www.abcnews.com'"/>
-    </toolbar>
+	<toolbar datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder"/>
     
   </toolbox>
   </html:div>
