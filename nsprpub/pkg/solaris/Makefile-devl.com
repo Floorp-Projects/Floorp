@@ -1,8 +1,8 @@
 #
-# Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: Makefile.com,v 1.7 2004/11/29 16:26:02 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile-devl.com,v 1.2 2004/11/29 16:26:02 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MACH = $(shell mach)
@@ -20,11 +20,8 @@ FILES = $(DATAFILES) pkginfo
 
 PACKAGE = $(shell basename `pwd`)
 
-PRODUCT_VERSION = $(shell grep PR_VERSION $(dist_includedir)/prinit.h \
-		   | sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//')
-
+PRODUCT_VERSION = "$(MOD_VERSION).$(MOD_MINOR).$(MOD_PATCH)$(MOD_BETA)"
 LN = /usr/bin/ln
-CP = /usr/bin/cp
 
 CLOBBERFILES = $(FILES)
 

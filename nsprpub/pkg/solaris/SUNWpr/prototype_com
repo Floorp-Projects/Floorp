@@ -2,7 +2,7 @@
 # Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: prototype_com,v 1.2 2003/01/04 02:14:02 wtc%netscape.com Exp $"
+#ident	"$Id: prototype_com,v 1.3 2004/11/29 16:26:02 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -26,6 +26,10 @@ i depend
 d none usr 755 root sys
 d none usr/lib 755 root bin
 d none usr/lib/mps 755 root bin
+d none usr/lib/mps/secv1 755 root bin
 f none usr/lib/mps/libnspr4.so 755 root bin
 f none usr/lib/mps/libplc4.so 755 root bin
 f none usr/lib/mps/libplds4.so 755 root bin
+s none usr/lib/mps/secv1/libnspr4.so=../libnspr4.so
+s none usr/lib/mps/secv1/libplc4.so=../libplc4.so
+s none usr/lib/mps/secv1/libplds4.so=../libplds4.so

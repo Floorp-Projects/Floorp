@@ -1,8 +1,8 @@
 #
-# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
 # Use is subject to license terms.
 #
-#ident	"$Id: prototype_i386,v 1.2 2003/01/04 02:14:02 wtc%netscape.com Exp $"
+#ident	"$Id: prototype_i386,v 1.3 2004/11/29 16:26:02 christophe.ravel.bugs%sun.com Exp $"
 #
 # This required package information file contains a list of package contents.
 # The 'pkgmk' command uses this file to identify the contents of a package
@@ -28,3 +28,14 @@
 #
 # SUNWpr
 #
+#64#s none usr/lib/mps/64=amd64
+#64#s none usr/lib/mps/secv1/64=amd64
+#64#d none usr/lib/mps/amd64 755 root bin
+#64#d none usr/lib/mps/secv1/amd64 755 root bin
+#64#f none usr/lib/mps/amd64/libnspr4.so 755 root bin
+#64#f none usr/lib/mps/amd64/libplc4.so 755 root bin
+#64#f none usr/lib/mps/amd64/libplds4.so 755 root bin
+#64#s none usr/lib/mps/secv1/amd64/libnspr4.so=../../amd64/libnspr4.so
+#64#s none usr/lib/mps/secv1/amd64/libplc4.so=../../amd64/libplc4.so
+#64#s none usr/lib/mps/secv1/amd64/libplds4.so=../../amd64/libplds4.so
+
