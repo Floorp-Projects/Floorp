@@ -67,7 +67,6 @@
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
     <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
     <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" > %brandDTD;
-    <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" > %browserDTD;
 ]>
 
 
@@ -214,7 +213,6 @@
 <script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/unifinderToDo.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/pref/rootCalendarPref.js"/>
-<script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
 
 <!--<script type="application/x-javascript" src="chrome://calendar/content/email.js"/>-->
 
