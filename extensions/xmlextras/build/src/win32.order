@@ -1,18 +1,15 @@
-nsXMLExtrasNameset::InitializeClasses ; 372
-nsCOMPtr_base::assign_assuming_AddRef ; 35
-nsXMLExtrasNameset::AddNameSet ; 35
-nsXMLExtrasNameset::Release ; 7
-nsDefaultSOAPEncoder::AddRef ; 7
-nsXMLExtras::~nsXMLExtras ; 2
-nsXMLExtras::QueryInterface ; 2
-nsXMLExtras::GetInstance ; 2
-NSGetModule ; 1
-nsXMLExtrasNameset::nsXMLExtrasNameset ; 1
-NSGetModule ; 1
-nsXMLExtrasNameset::~nsXMLExtrasNameset ; 1
-nsXMLExtras::nsXMLExtras ; 1
-nsXMLExtras::`vector deleting destructor' ; 1
-nsXMLHttpRequest::HandleEvent ; 1
-nsXMLExtras::Initialize ; 1
-nsXMLExtras::~nsXMLExtras ; 1
-nsXMLExtrasNameset::`scalar deleting destructor' ; 1
+?InitializeClasses@nsXMLExtrasNameset@@UAGIPAVnsIScriptContext@@@Z ; 136
+?AddNameSet@nsXMLExtrasNameset@@UAGIPAVnsIScriptContext@@@Z ; 23
+?AddRef@nsLoadListenerProxy@@UAGKXZ ; 4
+?Release@nsXMLExtras@@UAGKXZ ; 3
+??1nsXMLExtrasNameset@@UAE@XZ ; 1
+??0nsXMLExtrasNameset@@QAE@XZ ; 1
+??_GnsXMLExtras@@UAEPAXI@Z ; 1
+??0nsXMLExtras@@QAE@XZ ; 1
+?QueryInterface@nsXMLExtras@@UAGIABUnsID@@PAPAX@Z ; 1
+?Observe@nsXMLExtras@@UAGIPAVnsISupports@@PBG1@Z ; 1
+??1nsXMLExtras@@UAE@XZ ; 1
+_NSGetModule ; 1
+??_EnsXMLExtrasNameset@@UAEPAXI@Z ; 1
+?do_GetService@@YA?BVnsGetServiceByCID@@ABUnsID@@PAI@Z ; 1
+?Release@nsXMLExtrasNameset@@UAGKXZ ; 1

@@ -1,2 +1,2 @@
-NSRegisterSelf ; 1
-NSCanUnload ; 1
+_NSCanUnload ; 1
+_NSRegisterSelf ; 1
