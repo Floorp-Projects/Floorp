@@ -10,7 +10,7 @@ replaceXPI(browser.xpi,bin/chrome/skins/modern/global/skin/animthrob.gif,%LargeA
 replaceXPI(browser.xpi,bin/chrome/skins/modern/global/skin/animthrob_single.gif,%LargeStillPath%)
 replaceXPI(browser.xpi,bin/defaults/profile/bookmarks.html,%CustomBookmarkFile%)
 replaceXPI(browser.xpi,bin/defaults/profile/panels.rdf,%SidebarPath%)
-modifyDTD(browser.xpi,bin/chrome/navigator/locale/navigator.dtd,mainWindow.titlemodifier,%CompanyName%)
+modifyDTD(browser.xpi,bin/chrome/locales/en-US/navigator/locale/navigator.dtd,mainWindow.titlemodifier,%CompanyName%)
 modifyDTD(browser.xpi,bin/chrome/navigator/locale/navigator.dtd,throbber.url,%AnimatedLogoURL%)
 modifyJS(browser.xpi,bin/defaults/pref/all-ns.js,browser.startup.homepage,%HomePageURL%)
 modifyJS(browser.xpi,bin/defaults/pref/all-ns.js,browser.throbber.url,%AnimatedLogoURL%)
