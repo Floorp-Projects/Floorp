@@ -128,7 +128,7 @@ CBrowserShellProgressListener::~CBrowserShellProgressListener()
 {
 }
 
-NS_IMETHODIMP CBrowserShellProgressListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+NS_IMETHODIMP CBrowserShellProgressListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
     NS_ENSURE_TRUE(mpOwner, NS_ERROR_NULL_POINTER);
 
