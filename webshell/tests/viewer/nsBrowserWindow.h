@@ -138,6 +138,7 @@ public:
   NS_IMETHOD ForceRefresh();
 
   void ShowPrintPreview(PRInt32 aID);
+  void DoPrint(void);
 
 #ifdef NS_DEBUG
   void DumpContent(FILE *out = stdout);

@@ -29,6 +29,7 @@
 #include "nsIPresShell.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
+#include "nsIFrame.h"
 
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -37,78 +38,83 @@
 
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
+#include "nsGfxCIID.h"
 #include "nsIDeviceContext.h"
+#include "nsIDeviceContextSpec.h"
+#include "nsIDeviceContextSpecFactory.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
+
+#include "nsIPref.h"
 
 #include "nsIURL.h"
 
 class DocumentViewerImpl : public nsIDocumentViewer
 {
 public:
-    DocumentViewerImpl();
-    DocumentViewerImpl(nsIPresContext* aPresContext);
-    
-    void* operator new(size_t sz) {
-        void* rv = new char[sz];
-        nsCRT::zero(rv, sz);
-        return rv;
-    }
-
-    // nsISupports interface...
-    NS_DECL_ISUPPORTS
-
-    // nsIContentViewer interface...
-    NS_IMETHOD Init(nsNativeWidget aParent,
-                    nsIDeviceContext* aDeviceContext,
-                    nsIPref* aPrefs,
-                    const nsRect& aBounds,
-                    nsScrollPreference aScrolling = nsScrollPreference_kAuto);
-    
-    NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
-    NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
-    NS_IMETHOD GetContainer(nsIContentViewerContainer*& aContainerResult);
-
-    virtual nsRect GetBounds();
-    virtual void SetBounds(const nsRect& aBounds);
-    virtual void Move(PRInt32 aX, PRInt32 aY);
-    virtual void Show();
-    virtual void Hide();
-
-
-    // nsIDocumentViewer interface...
-    NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
+  DocumentViewerImpl();
+  DocumentViewerImpl(nsIPresContext* aPresContext);
   
-    NS_IMETHOD GetDocument(nsIDocument*& aResult);
-  
-    NS_IMETHOD GetPresShell(nsIPresShell*& aResult);
-  
-    NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
+  void* operator new(size_t sz) {
+      void* rv = new char[sz];
+      nsCRT::zero(rv, sz);
+      return rv;
+  }
 
-    NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
-                                         nsIDocumentViewer*& aResult);
+  // nsISupports interface...
+  NS_DECL_ISUPPORTS
+
+  // nsIContentViewer interface...
+  NS_IMETHOD Init(nsNativeWidget aParent,
+                  nsIDeviceContext* aDeviceContext,
+                  nsIPref* aPrefs,
+                  const nsRect& aBounds,
+                  nsScrollPreference aScrolling = nsScrollPreference_kAuto);
+  
+  NS_IMETHOD BindToDocument(nsISupports* aDoc, const char* aCommand);
+  NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer);
+  NS_IMETHOD GetContainer(nsIContentViewerContainer*& aContainerResult);
+
+  virtual nsRect GetBounds();
+  virtual void SetBounds(const nsRect& aBounds);
+  virtual void Move(PRInt32 aX, PRInt32 aY);
+  virtual void Show();
+  virtual void Hide();
+  NS_IMETHOD Print(void);
+
+
+  // nsIDocumentViewer interface...
+  NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet);
+
+  NS_IMETHOD GetDocument(nsIDocument*& aResult);
+
+  NS_IMETHOD GetPresShell(nsIPresShell*& aResult);
+
+  NS_IMETHOD GetPresContext(nsIPresContext*& aResult);
+
+  NS_IMETHOD CreateDocumentViewerUsing(nsIPresContext* aPresContext,
+                                       nsIDocumentViewer*& aResult);
 
 protected:
-    virtual ~DocumentViewerImpl();
+  virtual ~DocumentViewerImpl();
 
 private:
-    void ForceRefresh(void);
-    nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
-    nsresult MakeWindow(nsNativeWidget aNativeParent,
-                        const nsRect& aBounds,
-                        nsScrollPreference aScrolling);
+  void ForceRefresh(void);
+  nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
+  nsresult MakeWindow(nsNativeWidget aNativeParent,
+                      const nsRect& aBounds,
+                      nsScrollPreference aScrolling);
 
 protected:
-    nsIViewManager* mViewManager;
-    nsIView*        mView;
-    nsIWidget*      mWindow;
-    nsIContentViewerContainer* mContainer;
+  nsIViewManager* mViewManager;
+  nsIView*        mView;
+  nsIWidget*      mWindow;
+  nsIContentViewerContainer* mContainer;
 
-    nsIDocument*    mDocument;
-    nsIPresContext* mPresContext;
-    nsIPresShell*   mPresShell;
-    nsIStyleSheet*  mUAStyleSheet;
-
+  nsIDocument*    mDocument;
+  nsIPresContext* mPresContext;
+  nsIPresShell*   mPresShell;
+  nsIStyleSheet*  mUAStyleSheet;
 };
 
 //Class IDs
@@ -434,6 +440,102 @@ void DocumentViewerImpl::Hide()
 }
 
 
+static NS_DEFINE_IID(kIDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
+static NS_DEFINE_IID(kDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
+
+NS_IMETHODIMP DocumentViewerImpl :: Print(void)
+{
+  nsIDeviceContextSpecFactory *factory = nsnull;
+
+  nsRepository::CreateInstance(kDeviceContextSpecFactoryCID, nsnull,
+                               kIDeviceContextSpecFactoryIID, (void **)&factory);
+
+  if (nsnull != factory)
+  {
+    nsIDeviceContextSpec *devspec = nsnull;
+    nsIDeviceContext *dx = nsnull;
+    nsIDeviceContext *newdx = nsnull;
+
+    factory->CreateDeviceContextSpec(nsnull, devspec, PR_FALSE);
+
+    dx = mPresContext->GetDeviceContext();
+
+    if (NS_OK == dx->GetDeviceContextFor(devspec, newdx))
+    {
+      nsIPresShell *ps;
+      nsIPresContext *cx;
+      nsIStyleSet *ss;
+      nsIPref *prefs;
+      nsIViewManager *vm;
+      PRInt32 width, height;
+      nsIView *view;
+
+      NS_RELEASE(devspec);
+
+      newdx->GetDeviceSurfaceDimensions(width, height);
+
+      NS_NewGalleyContext(&cx);
+      mPresContext->GetPrefs(prefs);
+      cx->Init(newdx, prefs);
+
+      CreateStyleSet(mDocument, &ss);
+
+      NS_NewPresShell(&ps);
+
+      {
+        nsresult rv;
+
+        rv = nsRepository::CreateInstance(kViewManagerCID, 
+                                          nsnull, 
+                                          kIViewManagerIID, 
+                                          (void **)&vm);
+
+        if ((NS_OK != rv) || (NS_OK != vm->Init(newdx))) {
+          NS_ASSERTION(PR_FALSE, "can't get good VM");
+        }
+
+        nsRect tbounds = nsRect(0, 0, width, height);
+
+        // Create a child window of the parent that is our "root view/window"
+        // Create a view
+        rv = nsRepository::CreateInstance(kViewCID, 
+                                          nsnull, 
+                                          kIViewIID, 
+                                          (void **)&view);
+        if ((NS_OK != rv) || (NS_OK != view->Init(vm, 
+                                                  tbounds,
+                                                  nsnull))) {
+          NS_ASSERTION(PR_FALSE, "can't get good view");
+        }
+
+        // Setup hierarchical relationship in view manager
+        vm->SetRootView(view);
+      }
+
+      ps->Init(mDocument, cx, vm, ss);
+
+      //lay it out...
+      ps->InitialReflow(width, height);
+
+      newdx->BeginDocument();
+      newdx->BeginPage();
+      vm->Display();
+      newdx->EndPage();
+      newdx->EndDocument();
+
+      NS_RELEASE(ps);
+      NS_RELEASE(vm);
+      NS_RELEASE(ss);
+      NS_RELEASE(newdx);
+      NS_RELEASE(prefs);
+    }
+
+    NS_RELEASE(dx);
+    NS_RELEASE(factory);
+  }
+
+  return NS_OK;
+}
 
 void DocumentViewerImpl::ForceRefresh()
 {

@@ -354,6 +354,11 @@ public:
    * @return error status
    */
   NS_IMETHOD EnableRefresh(void) = 0;
+
+  //XXX this needs to take parameters to tell
+  //it what part of the document to display, not just the
+  //whole thing. MMP
+  NS_IMETHOD Display(void) = 0;
 };
 
 //when the refresh happens, should it be double buffered?

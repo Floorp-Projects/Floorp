@@ -110,6 +110,8 @@ public:
 
   nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext, nsRect& aBounds);
 
+  NS_IMETHOD Display(void);
+
 private:
   virtual ~nsViewManager();
   nsIRenderingContext *CreateRenderingContext(nsIView &aView);

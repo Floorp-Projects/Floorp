@@ -134,6 +134,7 @@ public:
   virtual void Move(PRInt32 aX, PRInt32 aY);
   virtual void Show();
   virtual void Hide();
+  NS_IMETHOD Print(void);
 
   ~PluginViewerImpl();
 
@@ -428,6 +429,11 @@ PluginViewerImpl::Hide()
   if (nsnull != mWindow) {
     mWindow->Show(PR_FALSE);
   }
+}
+
+NS_IMETHODIMP PluginViewerImpl :: Print(void)
+{
+  return NS_OK;
 }
 
 void
