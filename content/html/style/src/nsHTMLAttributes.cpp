@@ -54,6 +54,7 @@
 #include "nsVoidArray.h"
 #include "nsISizeOfHandler.h"
 #include "nsCOMPtr.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIStyleSet.h"
 #include "nsRuleWalker.h"
@@ -1401,27 +1402,31 @@ HTMLAttributesImpl::GetClasses(nsVoidArray& aArray) const
 NS_IMETHODIMP
 HTMLAttributesImpl::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {
-  const nsClassList* classList = &mFirstClass;
-  while (classList) {
+  NS_PRECONDITION(aClass, "unexpected null pointer");
+  if (mFirstClass.mAtom) {
+    const nsClassList* classList = &mFirstClass;
     if (aCaseSensitive) {
-      if (classList->mAtom == aClass) {
-        return NS_OK;
-      }
+      do {
+        if (classList->mAtom == aClass)
+          return NS_OK;
+        classList = classList->mNext;
+      } while (classList);
+    } else {
+      const PRUnichar* class1Buf;
+      aClass->GetUnicode(&class1Buf);
+      // This length calculation (and the |aCaseSensitive| check above) could
+      // theoretically be pulled out of another loop by creating a separate
+      // |HasClassCI| function.
+      nsDependentString class1(class1Buf);
+      do {
+        const PRUnichar* class2Buf;
+        classList->mAtom->GetUnicode(&class2Buf);
+        nsDependentString class2(class2Buf);
+        if (Compare(class1, class2, nsCaseInsensitiveStringComparator()) == 0)
+          return NS_OK;
+        classList = classList->mNext;
+      } while (classList);
     }
-    else {
-      nsAutoString s1;
-      nsAutoString s2;
-      if (classList->mAtom) {
-        classList->mAtom->ToString(s1);
-      }
-      if (aClass) {
-        aClass->ToString(s2);
-      }
-      if (s1.EqualsIgnoreCase(s2)) {
-        return NS_OK;
-      }
-    }
-    classList = classList->mNext;
   }
   return NS_COMFALSE;
 }
