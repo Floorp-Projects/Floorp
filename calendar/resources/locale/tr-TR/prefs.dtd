@@ -1,0 +1,519 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Mike Potter <mikep@oeone.com>
+   -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!ENTITY calendar.label             "Takvim" >
+<!ENTITY calendarPanel.label        "Takvim" >
+<!ENTITY calendar.accesskey         "t" >
+<!ENTITY calendar.publish.label     "Yayınlama">
+<!ENTITY calendar.general.label     "Genel">
+<!ENTITY calendar.alarms.label      "Uyarılar">
+<!ENTITY calendar.views.label       "Görünüm">
+<!ENTITY calendar.timezone.label    "Zaman dilimim">
+
+<!ENTITY prefWindow.title            "Kalender-Optionen">
+<!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
+<!ENTITY prefWindow.category         "Kategori">
+
+<!ENTITY pref.mainbox.label         "Genel Ayarlar" >
+<!ENTITY pref.alarmgoesoff.label "Eğer bir uyarı zamanı gelirse:">
+<!ENTITY pref.playasound  "Sesli uyar" >
+
+<!ENTITY pref.alarmbox.label    "Alarm" >
+<!ENTITY pref.showalarmbox    "Uyarı kutusunu göster" >
+<!ENTITY pref.defaultemail.label "Alarm gönderilecek öntanımlı adres:">
+<!ENTITY pref.defaulttext.label "Alarm için varsayılan metin:">
+<!ENTITY pref.missedalarms    "Kaçırılan alarmları göster" >
+<!ENTITY pref.defalarm4events.label "Olaylar için öntanımlı alarm ayarları:">
+<!ENTITY pref.defalarm4todos.label "Görevler için öntanımlı alarm ayarları:">
+<!ENTITY pref.alarm.on "açık">
+<!ENTITY pref.alarm.off "kapalı">
+<!ENTITY pref.defalarmlen4events.label "Alarm olaydan önce otomatik olarak başlıyor:">
+<!ENTITY pref.defalarmlen4todos.label "Alarm görevden önce otomatik olarak başlıyor:">
+
+<!ENTITY pref.dateformat.label      "Tarih gösterim biçimi:" >
+<!ENTITY pref.dateformat.long       "Uzun" >
+<!ENTITY pref.dateformat.short      "Kısa"  >
+<!ENTITY pref.dateformat.storeingmt "Universal Time" >
+<!ENTITY pref.defaultlength.label   "Öntanımlı olay süresi:" >
+<!ENTITY pref.defaultsnoozelength.label   "Öntanımlı uyuklama süresi:" >
+
+<!ENTITY pref.weekstarts.label     "Haftanın ilk günü:" >
+<!ENTITY pref.daysoff.label     "Haftadaki tatiller:" >
+
+<!ENTITY pref.numberofweeks.label     "Haftaların toplam sayısı (varsayılan)" >
+<!ENTITY pref.numberofweeks.0      "yok" >
+<!ENTITY pref.numberofweeks.1      "1 Hafta" >
+<!ENTITY pref.numberofweeks.2      "2 Hafta" >
+<!ENTITY pref.numberofweeks.3      "3 Hafta" >
+<!ENTITY pref.numberofweeks.4      "4 Hafta" >
+<!ENTITY pref.numberofweeks.5      "5 Hafta" >
+<!ENTITY pref.numberofweeks.6      "6 Hafta" >
+<!ENTITY pref.numberofpreviousweeks.label     "Geçen haftaların süresi:" >
+
+<!ENTITY pref.hour.help.description    "eğer olaylar bu zaman dışında durursa üstüne yazılacak. " >
+<!ENTITY pref.hour.00    "00:00" >
+<!ENTITY pref.hour.01    "01:00" >
+<!ENTITY pref.hour.02    "02:00" >
+<!ENTITY pref.hour.03    "03:00" >
+<!ENTITY pref.hour.04    "04:00" >
+<!ENTITY pref.hour.05    "05:00" >
+<!ENTITY pref.hour.06    "06:00" >
+<!ENTITY pref.hour.07    "07:00" >
+<!ENTITY pref.hour.08    "08:00" >
+<!ENTITY pref.hour.09    "09:00" >
+<!ENTITY pref.hour.10    "10:00" >
+<!ENTITY pref.hour.11    "11:00" >
+<!ENTITY pref.hour.12    "12:00" >
+<!ENTITY pref.hour.13    "13:00" >
+<!ENTITY pref.hour.14    "14:00" >
+<!ENTITY pref.hour.15    "15:00" >
+<!ENTITY pref.hour.16    "16:00" >
+<!ENTITY pref.hour.17    "17:00" >
+<!ENTITY pref.hour.18    "18:00" >
+<!ENTITY pref.hour.19    "19:00" >
+<!ENTITY pref.hour.20    "20:00" >
+<!ENTITY pref.hour.21    "21:00" >
+<!ENTITY pref.hour.22    "22:00" >
+<!ENTITY pref.hour.23    "23:00" >
+
+<!ENTITY pref.calendar.view.allview.caption "Genel">
+<!ENTITY pref.calendar.view.dayview.caption "Günlük görünüm">
+<!ENTITY pref.calendar.view.weekview.caption "Haftalık görünüm">
+<!ENTITY pref.calendar.view.weekanddayview.caption "Haftalar ve Gün Görünümleri">
+<!ENTITY pref.calendar.view.monthview.caption "Aylık görünüm">
+<!ENTITY pref.calendar.view.multiweekview.caption "Çok haftalı görünüm">
+
+<!ENTITY pref.calendar.view.restrict.label "Görünümü sınırla">
+<!ENTITY pref.calendar.view.starttime.label "Başlama saati:">
+<!ENTITY pref.calendar.view.endtime.label   "Bitiş saati:">
+
+<!ENTITY pref.categories.label   "Kategoriler" >
+
+<!ENTITY pref.categories.help.description   "Eklemek istediğiniz kategoriler arasına virgul koyun.">
+
+<!ENTITY pref.categories.add.title    "Kategori ekle">
+<!ENTITY pref.categories.add.prompt   "Kategori ismini girin">
+<!ENTITY pref.categories.edit.title   "Kategori düzenle">
+
+
+<!ENTITY pref.reloadonlaunch       "Başlarken takvimleri tekrar yükle">
+
+<!ENTITY pref.publish.caption        "Yayınlama ayarları">
+<!ENTITY pref.publish.path.label     "Sunucu kısayolu">
+
+<!ENTITY pref.minutes.label "Dakika">
+
+<!-- Calendar Timezone preferences information -->
+<!ENTITY pref.calendar.timezone.label "Zaman Dilimim">
+<!ENTITY pref.calendar.timezone.caption "Zaman Dilimi">
+<!ENTITY pref.calendar.timezone.description "Zaman dilimi ID si">
+<!ENTITY pref.defaultzone.label     "Öntanımlı zaman Dilimi:" >
+
+<!ENTITY pref.timezone.Africa.Abidjan "Africa/Abidjan" >
+<!ENTITY pref.timezone.Africa.Accra "Africa/Accra" >
+<!ENTITY pref.timezone.Africa.Addis_Ababa "Africa/Addis_Ababa" >
+<!ENTITY pref.timezone.Africa.Algiers "Africa/Algiers" >
+<!ENTITY pref.timezone.Africa.Asmera "Africa/Asmera" >
+<!ENTITY pref.timezone.Africa.Bamako "Africa/Bamako" >
+<!ENTITY pref.timezone.Africa.Bangui "Africa/Bangui" >
+<!ENTITY pref.timezone.Africa.Banjul "Africa/Banjul" >
+<!ENTITY pref.timezone.Africa.Bissau "Africa/Bissau" >
+<!ENTITY pref.timezone.Africa.Blantyre "Africa/Blantyre" >
+<!ENTITY pref.timezone.Africa.Brazzaville "Africa/Brazzaville" >
+<!ENTITY pref.timezone.Africa.Bujumbura "Africa/Bujumbura" >
+<!ENTITY pref.timezone.Africa.Cairo "Africa/Cairo" >
+<!ENTITY pref.timezone.Africa.Casablanca "Africa/Casablanca" >
+<!ENTITY pref.timezone.Africa.Ceuta "Africa/Ceuta" >
+<!ENTITY pref.timezone.Africa.Conakry "Africa/Conakry" >
+<!ENTITY pref.timezone.Africa.Dakar "Africa/Dakar" >
+<!ENTITY pref.timezone.Africa.Dar_es_Salaam "Africa/Dar_es_Salaam" >
+<!ENTITY pref.timezone.Africa.Djibouti "Africa/Djibouti" >
+<!ENTITY pref.timezone.Africa.Douala "Africa/Douala" >
+<!ENTITY pref.timezone.Africa.El_Aaiun "Africa/El_Aaiun" >
+<!ENTITY pref.timezone.Africa.Freetown "Africa/Freetown" >
+<!ENTITY pref.timezone.Africa.Gaborone "Africa/Gaborone" >
+<!ENTITY pref.timezone.Africa.Harare "Africa/Harare" >
+<!ENTITY pref.timezone.Africa.Johannesburg "Africa/Johannesburg" >
+<!ENTITY pref.timezone.Africa.Kampala "Africa/Kampala" >
+<!ENTITY pref.timezone.Africa.Khartoum "Africa/Khartoum" >
+<!ENTITY pref.timezone.Africa.Kigali "Africa/Kigali" >
+<!ENTITY pref.timezone.Africa.Kinshasa "Africa/Kinshasa" >
+<!ENTITY pref.timezone.Africa.Lagos "Africa/Lagos" >
+<!ENTITY pref.timezone.Africa.Libreville "Africa/Libreville" >
+<!ENTITY pref.timezone.Africa.Lome "Africa/Lome" >
+<!ENTITY pref.timezone.Africa.Luanda "Africa/Luanda" >
+<!ENTITY pref.timezone.Africa.Lubumbashi "Africa/Lubumbashi" >
+<!ENTITY pref.timezone.Africa.Lusaka "Africa/Lusaka" >
+<!ENTITY pref.timezone.Africa.Malabo "Africa/Malabo" >
+<!ENTITY pref.timezone.Africa.Maputo "Africa/Maputo" >
+<!ENTITY pref.timezone.Africa.Maseru "Africa/Maseru" >
+<!ENTITY pref.timezone.Africa.Mbabane "Africa/Mbabane" >
+<!ENTITY pref.timezone.Africa.Mogadishu "Africa/Mogadishu" >
+<!ENTITY pref.timezone.Africa.Monrovia "Africa/Monrovia" >
+<!ENTITY pref.timezone.Africa.Nairobi "Africa/Nairobi" >
+<!ENTITY pref.timezone.Africa.Ndjamena "Africa/Ndjamena" >
+<!ENTITY pref.timezone.Africa.Niamey "Africa/Niamey" >
+<!ENTITY pref.timezone.Africa.Nouakchott "Africa/Nouakchott" >
+<!ENTITY pref.timezone.Africa.Ouagadougou "Africa/Ouagadougou" >
+<!ENTITY pref.timezone.Africa.Porto-Novo "Africa/Porto-Novo" >
+<!ENTITY pref.timezone.Africa.Sao_Tome "Africa/Sao_Tome" >
+<!ENTITY pref.timezone.Africa.Timbuktu "Africa/Timbuktu" >
+<!ENTITY pref.timezone.Africa.Tripoli "Africa/Tripoli" >
+<!ENTITY pref.timezone.Africa.Tunis "Africa/Tunis" >
+<!ENTITY pref.timezone.Africa.Windhoek "Africa/Windhoek" >
+<!ENTITY pref.timezone.America.Adak "America/Adak" >
+<!ENTITY pref.timezone.America.Anchorage "America/Anchorage" >
+<!ENTITY pref.timezone.America.Anguilla "America/Anguilla" >
+<!ENTITY pref.timezone.America.Antigua "America/Antigua" >
+<!ENTITY pref.timezone.America.Araguaina "America/Araguaina" >
+<!ENTITY pref.timezone.America.Aruba "America/Aruba" >
+<!ENTITY pref.timezone.America.Asuncion "America/Asuncion" >
+<!ENTITY pref.timezone.America.Barbados "America/Barbados" >
+<!ENTITY pref.timezone.America.Belem "America/Belem" >
+<!ENTITY pref.timezone.America.Belize "America/Belize" >
+<!ENTITY pref.timezone.America.Boa_Vista "America/Boa_Vista" >
+<!ENTITY pref.timezone.America.Bogota "America/Bogota" >
+<!ENTITY pref.timezone.America.Boise "America/Boise" >
+<!ENTITY pref.timezone.America.Buenos_Aires "America/Buenos_Aires" >
+<!ENTITY pref.timezone.America.Cambridge_Bay "America/Cambridge_Bay" >
+<!ENTITY pref.timezone.America.Cancun "America/Cancun" >
+<!ENTITY pref.timezone.America.Caracas "America/Caracas" >
+<!ENTITY pref.timezone.America.Catamarca "America/Catamarca" >
+<!ENTITY pref.timezone.America.Cayenne "America/Cayenne" >
+<!ENTITY pref.timezone.America.Cayman "America/Cayman" >
+<!ENTITY pref.timezone.America.Chicago "America/Chicago" >
+<!ENTITY pref.timezone.America.Chihuahua "America/Chihuahua" >
+<!ENTITY pref.timezone.America.Cordoba "America/Cordoba" >
+<!ENTITY pref.timezone.America.Costa_Rica "America/Costa_Rica" >
+<!ENTITY pref.timezone.America.Cuiaba "America/Cuiaba" >
+<!ENTITY pref.timezone.America.Curacao "America/Curacao" >
+<!ENTITY pref.timezone.America.Dawson "America/Dawson" >
+<!ENTITY pref.timezone.America.Dawson_Creek "America/Dawson_Creek" >
+<!ENTITY pref.timezone.America.Denver "America/Denver" >
+<!ENTITY pref.timezone.America.Detroit "America/Detroit" >
+<!ENTITY pref.timezone.America.Dominica "America/Dominica" >
+<!ENTITY pref.timezone.America.Edmonton "America/Edmonton" >
+<!ENTITY pref.timezone.America.Eirunepe "America/Eirunepe" >
+<!ENTITY pref.timezone.America.El_Salvador "America/El_Salvador" >
+<!ENTITY pref.timezone.America.Fortaleza "America/Fortaleza" >
+<!ENTITY pref.timezone.America.Glace_Bay "America/Glace_Bay" >
+<!ENTITY pref.timezone.America.Godthab "America/Godthab" >
+<!ENTITY pref.timezone.America.Goose_Bay "America/Goose_Bay" >
+<!ENTITY pref.timezone.America.Grand_Turk "America/Grand_Turk" >
+<!ENTITY pref.timezone.America.Grenada "America/Grenada" >
+<!ENTITY pref.timezone.America.Guadeloupe "America/Guadeloupe" >
+<!ENTITY pref.timezone.America.Guatemala "America/Guatemala" >
+<!ENTITY pref.timezone.America.Guayaquil "America/Guayaquil" >
+<!ENTITY pref.timezone.America.Guyana "America/Guyana" >
+<!ENTITY pref.timezone.America.Halifax "America/Halifax" >
+<!ENTITY pref.timezone.America.Havana "America/Havana" >
+<!ENTITY pref.timezone.America.Hermosillo "America/Hermosillo" >
+<!ENTITY pref.timezone.America.Indiana.Indianapolis "America/Indiana/Indianapolis" >
+<!ENTITY pref.timezone.America.Indiana.Knox "America/Indiana/Knox" >
+<!ENTITY pref.timezone.America.Indiana.Marengo "America/Indiana/Marengo" >
+<!ENTITY pref.timezone.America.Indiana.Vevay "America/Indiana/Vevay" >
+<!ENTITY pref.timezone.America.Indianapolis "America/Indianapolis" >
+<!ENTITY pref.timezone.America.Inuvik "America/Inuvik" >
+<!ENTITY pref.timezone.America.Iqaluit "America/Iqaluit" >
+<!ENTITY pref.timezone.America.Jamaica "America/Jamaica" >
+<!ENTITY pref.timezone.America.Jujuy "America/Jujuy" >
+<!ENTITY pref.timezone.America.Juneau "America/Juneau" >
+<!ENTITY pref.timezone.America.Kentucky.Louisville "America/Kentucky/Louisville" >
+<!ENTITY pref.timezone.America.Kentucky.Monticello "America/Kentucky/Monticello" >
+<!ENTITY pref.timezone.America.La_Paz "America/La_Paz" >
+<!ENTITY pref.timezone.America.Lima "America/Lima" >
+<!ENTITY pref.timezone.America.Los_Angeles "America/Los_Angeles" >
+<!ENTITY pref.timezone.America.Louisville "America/Louisville" >
+<!ENTITY pref.timezone.America.Maceio "America/Maceio" >
+<!ENTITY pref.timezone.America.Managua "America/Managua" >
+<!ENTITY pref.timezone.America.Manaus "America/Manaus" >
+<!ENTITY pref.timezone.America.Martinique "America/Martinique" >
+<!ENTITY pref.timezone.America.Mazatlan "America/Mazatlan" >
+<!ENTITY pref.timezone.America.Mendoza "America/Mendoza" >
+<!ENTITY pref.timezone.America.Menominee "America/Menominee" >
+<!ENTITY pref.timezone.America.Merida "America/Merida" >
+<!ENTITY pref.timezone.America.Mexico_City "America/Mexico_City" >
+<!ENTITY pref.timezone.America.Miquelon "America/Miquelon" >
+<!ENTITY pref.timezone.America.Monterrey "America/Monterrey" >
+<!ENTITY pref.timezone.America.Montevideo "America/Montevideo" >
+<!ENTITY pref.timezone.America.Montreal "America/Montreal" >
+<!ENTITY pref.timezone.America.Montserrat "America/Montserrat" >
+<!ENTITY pref.timezone.America.Nassau "America/Nassau" >
+<!ENTITY pref.timezone.America.New_York "America/New_York" >
+<!ENTITY pref.timezone.America.Nipigon "America/Nipigon" >
+<!ENTITY pref.timezone.America.Nome "America/Nome" >
+<!ENTITY pref.timezone.America.Noronha "America/Noronha" >
+<!ENTITY pref.timezone.America.Panama "America/Panama" >
+<!ENTITY pref.timezone.America.Pangnirtung "America/Pangnirtung" >
+<!ENTITY pref.timezone.America.Paramaribo "America/Paramaribo" >
+<!ENTITY pref.timezone.America.Phoenix "America/Phoenix" >
+<!ENTITY pref.timezone.America.Port-au-Prince "America/Port-au-Prince" >
+<!ENTITY pref.timezone.America.Port_of_Spain "America/Port_of_Spain" >
+<!ENTITY pref.timezone.America.Porto_Velho "America/Porto_Velho" >
+<!ENTITY pref.timezone.America.Puerto_Rico "America/Puerto_Rico" >
+<!ENTITY pref.timezone.America.Rainy_River "America/Rainy_River" >
+<!ENTITY pref.timezone.America.Rankin_Inlet "America/Rankin_Inlet" >
+<!ENTITY pref.timezone.America.Recife "America/Recife" >
+<!ENTITY pref.timezone.America.Regina "America/Regina" >
+<!ENTITY pref.timezone.America.Rio_Branco "America/Rio_Branco" >
+<!ENTITY pref.timezone.America.Rosario "America/Rosario" >
+<!ENTITY pref.timezone.America.Santiago "America/Santiago" >
+<!ENTITY pref.timezone.America.Santo_Domingo "America/Santo_Domingo" >
+<!ENTITY pref.timezone.America.Sao_Paulo "America/Sao_Paulo" >
+<!ENTITY pref.timezone.America.Scoresbysund "America/Scoresbysund" >
+<!ENTITY pref.timezone.America.Shiprock "America/Shiprock" >
+<!ENTITY pref.timezone.America.St_Johns "America/St_Johns" >
+<!ENTITY pref.timezone.America.St_Kitts "America/St_Kitts" >
+<!ENTITY pref.timezone.America.St_Lucia "America/St_Lucia" >
+<!ENTITY pref.timezone.America.St_Thomas "America/St_Thomas" >
+<!ENTITY pref.timezone.America.St_Vincent "America/St_Vincent" >
+<!ENTITY pref.timezone.America.Swift_Current "America/Swift_Current" >
+<!ENTITY pref.timezone.America.Tegucigalpa "America/Tegucigalpa" >
+<!ENTITY pref.timezone.America.Thule "America/Thule" >
+<!ENTITY pref.timezone.America.Thunder_Bay "America/Thunder_Bay" >
+<!ENTITY pref.timezone.America.Tijuana "America/Tijuana" >
+<!ENTITY pref.timezone.America.Tortola "America/Tortola" >
+<!ENTITY pref.timezone.America.Vancouver "America/Vancouver" >
+<!ENTITY pref.timezone.America.Whitehorse "America/Whitehorse" >
+<!ENTITY pref.timezone.America.Winnipeg "America/Winnipeg" >
+<!ENTITY pref.timezone.America.Yakutat "America/Yakutat" >
+<!ENTITY pref.timezone.America.Yellowknife "America/Yellowknife" >
+<!ENTITY pref.timezone.Antarctica.Casey "Antarctica/Casey" >
+<!ENTITY pref.timezone.Antarctica.Davis "Antarctica/Davis" >
+<!ENTITY pref.timezone.Antarctica.DumontDUrville "Antarctica/DumontDUrville" >
+<!ENTITY pref.timezone.Antarctica.Mawson "Antarctica/Mawson" >
+<!ENTITY pref.timezone.Antarctica.McMurdo "Antarctica/McMurdo" >
+<!ENTITY pref.timezone.Antarctica.Palmer "Antarctica/Palmer" >
+<!ENTITY pref.timezone.Antarctica.South_Pole "Antarctica/South_Pole" >
+<!ENTITY pref.timezone.Antarctica.Syowa "Antarctica/Syowa" >
+<!ENTITY pref.timezone.Antarctica.Vostok "Antarctica/Vostok" >
+<!ENTITY pref.timezone.Arctic.Longyearbyen "Arctic/Longyearbyen" >
+<!ENTITY pref.timezone.Asia.Aden "Asia/Aden" >
+<!ENTITY pref.timezone.Asia.Almaty "Asia/Almaty" >
+<!ENTITY pref.timezone.Asia.Amman "Asia/Amman" >
+<!ENTITY pref.timezone.Asia.Anadyr "Asia/Anadyr" >
+<!ENTITY pref.timezone.Asia.Aqtau "Asia/Aqtau" >
+<!ENTITY pref.timezone.Asia.Aqtobe "Asia/Aqtobe" >
+<!ENTITY pref.timezone.Asia.Ashgabat "Asia/Ashgabat" >
+<!ENTITY pref.timezone.Asia.Baghdad "Asia/Baghdad" >
+<!ENTITY pref.timezone.Asia.Bahrain "Asia/Bahrain" >
+<!ENTITY pref.timezone.Asia.Baku "Asia/Baku" >
+<!ENTITY pref.timezone.Asia.Bangkok "Asia/Bangkok" >
+<!ENTITY pref.timezone.Asia.Beirut "Asia/Beirut" >
+<!ENTITY pref.timezone.Asia.Bishkek "Asia/Bishkek" >
+<!ENTITY pref.timezone.Asia.Brunei "Asia/Brunei" >
+<!ENTITY pref.timezone.Asia.Calcutta "Asia/Calcutta" >
+<!ENTITY pref.timezone.Asia.Chungking "Asia/Chungking" >
+<!ENTITY pref.timezone.Asia.Colombo "Asia/Colombo" >
+<!ENTITY pref.timezone.Asia.Damascus "Asia/Damascus" >
+<!ENTITY pref.timezone.Asia.Dhaka "Asia/Dhaka" >
+<!ENTITY pref.timezone.Asia.Dili "Asia/Dili" >
+<!ENTITY pref.timezone.Asia.Dubai "Asia/Dubai" >
+<!ENTITY pref.timezone.Asia.Dushanbe "Asia/Dushanbe" >
+<!ENTITY pref.timezone.Asia.Gaza "Asia/Gaza" >
+<!ENTITY pref.timezone.Asia.Harbin "Asia/Harbin" >
+<!ENTITY pref.timezone.Asia.Hong_Kong "Asia/Hong_Kong" >
+<!ENTITY pref.timezone.Asia.Hovd "Asia/Hovd" >
+<!ENTITY pref.timezone.Asia.Irkutsk "Asia/Irkutsk" >
+<!ENTITY pref.timezone.Asia.Istanbul "Asia/Istanbul" >
+<!ENTITY pref.timezone.Asia.Jakarta "Asia/Jakarta" >
+<!ENTITY pref.timezone.Asia.Jayapura "Asia/Jayapura" >
+<!ENTITY pref.timezone.Asia.Jerusalem "Asia/Jerusalem" >
+<!ENTITY pref.timezone.Asia.Kabul "Asia/Kabul" >
+<!ENTITY pref.timezone.Asia.Kamchatka "Asia/Kamchatka" >
+<!ENTITY pref.timezone.Asia.Karachi "Asia/Karachi" >
+<!ENTITY pref.timezone.Asia.Kashgar "Asia/Kashgar" >
+<!ENTITY pref.timezone.Asia.Katmandu "Asia/Katmandu" >
+<!ENTITY pref.timezone.Asia.Krasnoyarsk "Asia/Krasnoyarsk" >
+<!ENTITY pref.timezone.Asia.Kuala_Lumpur "Asia/Kuala_Lumpur" >
+<!ENTITY pref.timezone.Asia.Kuching "Asia/Kuching" >
+<!ENTITY pref.timezone.Asia.Kuwait "Asia/Kuwait" >
+<!ENTITY pref.timezone.Asia.Macao "Asia/Macao" >
+<!ENTITY pref.timezone.Asia.Magadan "Asia/Magadan" >
+<!ENTITY pref.timezone.Asia.Manila "Asia/Manila" >
+<!ENTITY pref.timezone.Asia.Muscat "Asia/Muscat" >
+<!ENTITY pref.timezone.Asia.Nicosia "Asia/Nicosia" >
+<!ENTITY pref.timezone.Asia.Novosibirsk "Asia/Novosibirsk" >
+<!ENTITY pref.timezone.Asia.Omsk "Asia/Omsk" >
+<!ENTITY pref.timezone.Asia.Phnom_Penh "Asia/Phnom_Penh" >
+<!ENTITY pref.timezone.Asia.Pontianak "Asia/Pontianak" >
+<!ENTITY pref.timezone.Asia.Pyongyang "Asia/Pyongyang" >
+<!ENTITY pref.timezone.Asia.Qatar "Asia/Qatar" >
+<!ENTITY pref.timezone.Asia.Rangoon "Asia/Rangoon" >
+<!ENTITY pref.timezone.Asia.Riyadh "Asia/Riyadh" >
+<!ENTITY pref.timezone.Asia.Saigon "Asia/Saigon" >
+<!ENTITY pref.timezone.Asia.Samarkand "Asia/Samarkand" >
+<!ENTITY pref.timezone.Asia.Seoul "Asia/Seoul" >
+<!ENTITY pref.timezone.Asia.Shanghai "Asia/Shanghai" >
+<!ENTITY pref.timezone.Asia.Singapore "Asia/Singapore" >
+<!ENTITY pref.timezone.Asia.Taipei "Asia/Taipei" >
+<!ENTITY pref.timezone.Asia.Tashkent "Asia/Tashkent" >
+<!ENTITY pref.timezone.Asia.Tbilisi "Asia/Tbilisi" >
+<!ENTITY pref.timezone.Asia.Tehran "Asia/Tehran" >
+<!ENTITY pref.timezone.Asia.Thimphu "Asia/Thimphu" >
+<!ENTITY pref.timezone.Asia.Tokyo "Asia/Tokyo" >
+<!ENTITY pref.timezone.Asia.Ujung_Pandang "Asia/Ujung_Pandang" >
+<!ENTITY pref.timezone.Asia.Ulaanbaatar "Asia/Ulaanbaatar" >
+<!ENTITY pref.timezone.Asia.Urumqi "Asia/Urumqi" >
+<!ENTITY pref.timezone.Asia.Vientiane "Asia/Vientiane" >
+<!ENTITY pref.timezone.Asia.Vladivostok "Asia/Vladivostok" >
+<!ENTITY pref.timezone.Asia.Yakutsk "Asia/Yakutsk" >
+<!ENTITY pref.timezone.Asia.Yekaterinburg "Asia/Yekaterinburg" >
+<!ENTITY pref.timezone.Asia.Yerevan "Asia/Yerevan" >
+<!ENTITY pref.timezone.Atlantic.Azores "Atlantic/Azores" >
+<!ENTITY pref.timezone.Atlantic.Bermuda "Atlantic/Bermuda" >
+<!ENTITY pref.timezone.Atlantic.Canary "Atlantic/Canary" >
+<!ENTITY pref.timezone.Atlantic.Cape_Verde "Atlantic/Cape_Verde" >
+<!ENTITY pref.timezone.Atlantic.Faeroe "Atlantic/Faeroe" >
+<!ENTITY pref.timezone.Atlantic.Jan_Mayen "Atlantic/Jan_Mayen" >
+<!ENTITY pref.timezone.Atlantic.Madeira "Atlantic/Madeira" >
+<!ENTITY pref.timezone.Atlantic.Reykjavik "Atlantic/Reykjavik" >
+<!ENTITY pref.timezone.Atlantic.South_Georgia "Atlantic/South_Georgia" >
+<!ENTITY pref.timezone.Atlantic.St_Helena "Atlantic/St_Helena" >
+<!ENTITY pref.timezone.Atlantic.Stanley "Atlantic/Stanley" >
+<!ENTITY pref.timezone.Australia.Adelaide "Australia/Adelaide" >
+<!ENTITY pref.timezone.Australia.Brisbane "Australia/Brisbane" >
+<!ENTITY pref.timezone.Australia.Broken_Hill "Australia/Broken_Hill" >
+<!ENTITY pref.timezone.Australia.Darwin "Australia/Darwin" >
+<!ENTITY pref.timezone.Australia.Hobart "Australia/Hobart" >
+<!ENTITY pref.timezone.Australia.Lindeman "Australia/Lindeman" >
+<!ENTITY pref.timezone.Australia.Lord_Howe "Australia/Lord_Howe" >
+<!ENTITY pref.timezone.Australia.Melbourne "Australia/Melbourne" >
+<!ENTITY pref.timezone.Australia.Perth "Australia/Perth" >
+<!ENTITY pref.timezone.Australia.Sydney "Australia/Sydney" >
+<!ENTITY pref.timezone.Europe.Amsterdam "Europe/Amsterdam" >
+<!ENTITY pref.timezone.Europe.Andorra "Europe/Andorra" >
+<!ENTITY pref.timezone.Europe.Athens "Europe/Athens" >
+<!ENTITY pref.timezone.Europe.Belfast "Europe/Belfast" >
+<!ENTITY pref.timezone.Europe.Belgrade "Europe/Belgrade" >
+<!ENTITY pref.timezone.Europe.Berlin "Europe/Berlin" >
+<!ENTITY pref.timezone.Europe.Bratislava "Europe/Bratislava" >
+<!ENTITY pref.timezone.Europe.Brussels "Europe/Brussels" >
+<!ENTITY pref.timezone.Europe.Bucharest "Europe/Bucharest" >
+<!ENTITY pref.timezone.Europe.Budapest "Europe/Budapest" >
+<!ENTITY pref.timezone.Europe.Chisinau "Europe/Chisinau" >
+<!ENTITY pref.timezone.Europe.Copenhagen "Europe/Copenhagen" >
+<!ENTITY pref.timezone.Europe.Dublin "Europe/Dublin" >
+<!ENTITY pref.timezone.Europe.Gibraltar "Europe/Gibraltar" >
+<!ENTITY pref.timezone.Europe.Helsinki "Europe/Helsinki" >
+<!ENTITY pref.timezone.Europe.Istanbul "Europe/Istanbul" >
+<!ENTITY pref.timezone.Europe.Kaliningrad "Europe/Kaliningrad" >
+<!ENTITY pref.timezone.Europe.Kiev "Europe/Kiev" >
+<!ENTITY pref.timezone.Europe.Lisbon "Europe/Lisbon" >
+<!ENTITY pref.timezone.Europe.Ljubljana "Europe/Ljubljana" >
+<!ENTITY pref.timezone.Europe.London "Europe/London" >
+<!ENTITY pref.timezone.Europe.Luxembourg "Europe/Luxembourg" >
+<!ENTITY pref.timezone.Europe.Madrid "Europe/Madrid" >
+<!ENTITY pref.timezone.Europe.Malta "Europe/Malta" >
+<!ENTITY pref.timezone.Europe.Minsk "Europe/Minsk" >
+<!ENTITY pref.timezone.Europe.Monaco "Europe/Monaco" >
+<!ENTITY pref.timezone.Europe.Moscow "Europe/Moscow" >
+<!ENTITY pref.timezone.Europe.Nicosia "Europe/Nicosia" >
+<!ENTITY pref.timezone.Europe.Oslo "Europe/Oslo" >
+<!ENTITY pref.timezone.Europe.Paris "Europe/Paris" >
+<!ENTITY pref.timezone.Europe.Prague "Europe/Prague" >
+<!ENTITY pref.timezone.Europe.Riga "Europe/Riga" >
+<!ENTITY pref.timezone.Europe.Rome "Europe/Rome" >
+<!ENTITY pref.timezone.Europe.Samara "Europe/Samara" >
+<!ENTITY pref.timezone.Europe.San_Marino "Europe/San_Marino" >
+<!ENTITY pref.timezone.Europe.Sarajevo "Europe/Sarajevo" >
+<!ENTITY pref.timezone.Europe.Simferopol "Europe/Simferopol" >
+<!ENTITY pref.timezone.Europe.Skopje "Europe/Skopje" >
+<!ENTITY pref.timezone.Europe.Sofia "Europe/Sofia" >
+<!ENTITY pref.timezone.Europe.Stockholm "Europe/Stockholm" >
+<!ENTITY pref.timezone.Europe.Tallinn "Europe/Tallinn" >
+<!ENTITY pref.timezone.Europe.Tirane "Europe/Tirane" >
+<!ENTITY pref.timezone.Europe.Uzhgorod "Europe/Uzhgorod" >
+<!ENTITY pref.timezone.Europe.Vaduz "Europe/Vaduz" >
+<!ENTITY pref.timezone.Europe.Vatican "Europe/Vatican" >
+<!ENTITY pref.timezone.Europe.Vienna "Europe/Vienna" >
+<!ENTITY pref.timezone.Europe.Vilnius "Europe/Vilnius" >
+<!ENTITY pref.timezone.Europe.Warsaw "Europe/Warsaw" >
+<!ENTITY pref.timezone.Europe.Zagreb "Europe/Zagreb" >
+<!ENTITY pref.timezone.Europe.Zaporozhye "Europe/Zaporozhye" >
+<!ENTITY pref.timezone.Europe.Zurich "Europe/Zurich" >
+<!ENTITY pref.timezone.Indian.Antananarivo "Indian/Antananarivo" >
+<!ENTITY pref.timezone.Indian.Chagos "Indian/Chagos" >
+<!ENTITY pref.timezone.Indian.Christmas "Indian/Christmas" >
+<!ENTITY pref.timezone.Indian.Cocos "Indian/Cocos" >
+<!ENTITY pref.timezone.Indian.Comoro "Indian/Comoro" >
+<!ENTITY pref.timezone.Indian.Kerguelen "Indian/Kerguelen" >
+<!ENTITY pref.timezone.Indian.Mahe "Indian/Mahe" >
+<!ENTITY pref.timezone.Indian.Maldives "Indian/Maldives" >
+<!ENTITY pref.timezone.Indian.Mauritius "Indian/Mauritius" >
+<!ENTITY pref.timezone.Indian.Mayotte "Indian/Mayotte" >
+<!ENTITY pref.timezone.Indian.Reunion "Indian/Reunion" >
+<!ENTITY pref.timezone.Pacific.Apia "Pacific/Apia" >
+<!ENTITY pref.timezone.Pacific.Auckland "Pacific/Auckland" >
+<!ENTITY pref.timezone.Pacific.Chatham "Pacific/Chatham" >
+<!ENTITY pref.timezone.Pacific.Easter "Pacific/Easter" >
+<!ENTITY pref.timezone.Pacific.Efate "Pacific/Efate" >
+<!ENTITY pref.timezone.Pacific.Enderbury "Pacific/Enderbury" >
+<!ENTITY pref.timezone.Pacific.Fakaofo "Pacific/Fakaofo" >
+<!ENTITY pref.timezone.Pacific.Fiji "Pacific/Fiji" >
+<!ENTITY pref.timezone.Pacific.Funafuti "Pacific/Funafuti" >
+<!ENTITY pref.timezone.Pacific.Galapagos "Pacific/Galapagos" >
+<!ENTITY pref.timezone.Pacific.Gambier "Pacific/Gambier" >
+<!ENTITY pref.timezone.Pacific.Guadalcanal "Pacific/Guadalcanal" >
+<!ENTITY pref.timezone.Pacific.Guam "Pacific/Guam" >
+<!ENTITY pref.timezone.Pacific.Honolulu "Pacific/Honolulu" >
+<!ENTITY pref.timezone.Pacific.Johnston "Pacific/Johnston" >
+<!ENTITY pref.timezone.Pacific.Kiritimati "Pacific/Kiritimati" >
+<!ENTITY pref.timezone.Pacific.Kosrae "Pacific/Kosrae" >
+<!ENTITY pref.timezone.Pacific.Kwajalein "Pacific/Kwajalein" >
+<!ENTITY pref.timezone.Pacific.Majuro "Pacific/Majuro" >
+<!ENTITY pref.timezone.Pacific.Marquesas "Pacific/Marquesas" >
+<!ENTITY pref.timezone.Pacific.Midway "Pacific/Midway" >
+<!ENTITY pref.timezone.Pacific.Nauru "Pacific/Nauru" >
+<!ENTITY pref.timezone.Pacific.Niue "Pacific/Niue" >
+<!ENTITY pref.timezone.Pacific.Norfolk "Pacific/Norfolk" >
+<!ENTITY pref.timezone.Pacific.Noumea "Pacific/Noumea" >
+<!ENTITY pref.timezone.Pacific.Pago_Pago "Pacific/Pago_Pago" >
+<!ENTITY pref.timezone.Pacific.Palau "Pacific/Palau" >
+<!ENTITY pref.timezone.Pacific.Pitcairn "Pacific/Pitcairn" >
+<!ENTITY pref.timezone.Pacific.Ponape "Pacific/Ponape" >
+<!ENTITY pref.timezone.Pacific.Port_Moresby "Pacific/Port_Moresby" >
+<!ENTITY pref.timezone.Pacific.Rarotonga "Pacific/Rarotonga" >
+<!ENTITY pref.timezone.Pacific.Saipan "Pacific/Saipan" >
+<!ENTITY pref.timezone.Pacific.Tahiti "Pacific/Tahiti" >
+<!ENTITY pref.timezone.Pacific.Tarawa "Pacific/Tarawa" >
+<!ENTITY pref.timezone.Pacific.Tongatapu "Pacific/Tongatapu" >
+<!ENTITY pref.timezone.Pacific.Truk "Pacific/Truk" >
+<!ENTITY pref.timezone.Pacific.Wake "Pacific/Wake" >
+<!ENTITY pref.timezone.Pacific.Wallis "Pacific/Wallis" >
+<!ENTITY pref.timezone.Pacific.Yap "Pacific/Yap" >

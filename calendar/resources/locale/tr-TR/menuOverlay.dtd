@@ -1,0 +1,183 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley <garths@oeone.com>
+   -                 Mike Potter <mikep@oeone.com>
+   -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 Matthew Willis <mattwillis@gmail.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!-- Event Menu -->
+<!ENTITY event.menu.title                       "Olay">
+<!ENTITY eventMenuCmd.accesskey                 "o">
+
+<!ENTITY event.new.event                        "Yeni olay">
+<!ENTITY event.new.event.key                    "N">
+<!ENTITY event.new.event.accesskey              "y">
+
+<!ENTITY event.new.todo                         "Yeni görev">
+<!ENTITY event.new.todo.key                     "T">
+<!ENTITY event.new.todo.accesskey               "g">
+
+<!ENTITY calendar.new.server.label              "Yeni Takvim">
+<!ENTITY calendar.new.server.key                "L">
+<!ENTITY calendar.new.server.accesskey          "v">
+
+<!ENTITY calendar.open.file.label               "Open Calendar File…">
+<!ENTITY calendar.open.file.accesskey           "O">
+
+<!ENTITY event.edit.event                       "Düzenle">
+<!ENTITY event.edit.event.key                   "E">
+<!ENTITY event.edit.event.accesskey             "d">
+
+<!ENTITY event.delete.event                     "Sil">
+<!ENTITY event.delete.event.accesskey           "s">
+
+<!ENTITY event.delete.tasks                     "Seçili Görev(ler)i sil">
+<!ENTITY event.delete.tasks.accesskey           "A">
+
+<!ENTITY event.mail.event                       "İşaretlenmiş olayı(ları) postala">
+<!ENTITY event.mail.event.key                   "M">
+<!ENTITY event.mail.event.accesskey             "m">
+
+<!ENTITY calendar.print.label                   "Olayları yazdır...">
+<!ENTITY calendar.print.key                     "P">
+<!ENTITY calendar.print.accesskey               "r">
+
+<!ENTITY calendar.printpreview.label            "Yazdırma önizleme">
+<!ENTITY calendar.printpreview.accesskey        "y">
+
+<!ENTITY calendar.pagesetup.label               "Sayfa düzenle...">
+<!ENTITY calendar.pagesetup.accesskey           "S">
+
+<!ENTITY calendar.import.label                  "Dosyadan içe aktar...">
+<!ENTITY calendar.import.key                    "I">
+<!ENTITY calendar.import.accesskey              "i">
+
+<!ENTITY calendar.wizard.label                  "Sihirbazı çalıştır">
+<!ENTITY calendar.wizard.accesskey              "A">
+
+<!ENTITY calendar.export.label                  "Olayları dışa aktar...">
+<!ENTITY calendar.export.key                    "O">
+<!ENTITY calendar.export.accesskey              "a">
+
+<!ENTITY calendar.subscribe.label               "Uzaktaki takvime kaydol...">
+<!ENTITY calendar.subscribe.accesskey           "u">
+
+<!ENTITY calendar.publish.label                 "Olayları yayınla...">
+<!ENTITY calendar.publish.accesskey             "y">
+
+<!ENTITY calendar.about.label                   "Takvim hakkında">
+<!ENTITY calendar.about.accesskey               "a">
+
+<!ENTITY calendar.cut.label                     "Kes">
+<!ENTITY calendar.cut.key                       "X">
+<!ENTITY calendar.cut.accesskey                 "s">
+
+<!ENTITY calendar.copy.label                    "Kopyala">
+<!ENTITY calendar.copy.key                      "C">
+<!ENTITY calendar.copy.accesskey                "K">
+
+<!ENTITY calendar.paste.label                   "Yapıştır">
+<!ENTITY calendar.paste.key                     "V">
+<!ENTITY calendar.paste.accesskey               "p">
+
+<!ENTITY calendar.selectall.label               "Hepsini seç">
+<!ENTITY calendar.selectall.key                 "A">
+<!ENTITY calendar.selectall.accesskey           "e">
+
+<!ENTITY calendar.preferences.label             "Ayarlar...">
+<!ENTITY calendar.preferences.accesskey         "A">
+
+<!ENTITY goMenu.label                           "Git">
+<!ENTITY goMenu.accesskey                       "g">
+
+<!ENTITY goTodayCmd.label                       "Bugüne git">
+<!ENTITY goTodayCmd.accesskey                   "t">
+
+<!ENTITY goDateCmd.label                        "Güne git">
+<!ENTITY goDateCmd.accesskey                    "G">
+
+<!ENTITY goPreviousCmd.label                    "Önceki">
+<!ENTITY goPreviousCmd.accesskey                "n">
+
+<!ENTITY goNextCmd.label                        "Sonraki">
+<!ENTITY goNextCmd.accesskey                    "n">
+
+<!ENTITY taskMenu.label                         "Araçlar">
+<!ENTITY taskMenu.accesskey                     "A">
+
+<!ENTITY toolsMenu.label                        "Ekstralar">
+<!ENTITY toolsMenu.accesskey                    "E">
+
+<!ENTITY javaScriptConsoleCmd.label             "JavaScript Konsolu">
+<!ENTITY javaScriptConsoleCmd.accesskey         "S">
+
+<!ENTITY navigatorCmd.label                     "Tarayıcı">
+<!ENTITY navigatorCmd.accesskey                 "T">
+
+<!ENTITY messengerCmd.label                     "Posta">
+<!ENTITY messengerCmd.accesskey                 "P">
+
+<!ENTITY addressBookCmd.label                   "Adres defteri">
+<!ENTITY addressBookCmd.accesskey               "A">
+
+<!ENTITY helpMenu.label                         "Yardım">
+<!ENTITY helpMenu.accesskey                     "Y">
+
+<!ENTITY walletPasswordManager.label            "Parola yöneticisi">
+<!ENTITY walletPasswordManager.accesskey        "P">
+
+<!-- Toolbar items -->
+<!ENTITY fileMenu.label                         "Dosya">
+<!ENTITY fileMenu.accesskey                     "D">
+
+<!ENTITY editMenu.label                         "Düzenle">
+<!ENTITY editMenu.accesskey                     "E">
+<!ENTITY preferencesCmd.label                   "Seçenekler...">
+<!ENTITY preferencesCmd.accesskey               "S">
+
+<!ENTITY viewMenu.label                         "Görünüm">
+<!ENTITY viewMenu.accesskey                     "G">
+
+<!ENTITY releaseCmd.label                       "Sürüm notları">
+<!ENTITY releaseCmd.accesskey                   "S">
+<!ENTITY aboutCmd.label                         "&brandFullName; Hakkında">
+<!ENTITY aboutCmd.accesskey                     "A">
+
+<!-- Mac OS X "Window" menu items -->
+<!ENTITY windowMenu.label                       "Window">
+<!ENTITY minimizeWindow.label                   "Minimize">
+<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY minimizeWindow.key                     "M">
+<!ENTITY bringAllToFront.label                  "Bring All to Front">
