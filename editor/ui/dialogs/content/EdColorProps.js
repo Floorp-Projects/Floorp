@@ -117,15 +117,25 @@ function Startup()
     {
       // How do I get current colors as show in page?
     } else {
-      // Use author's browser pref colors
-      defaultTextColor =         prefs.CopyCharPref("browser.foreground_color");
-      defaultLinkColor =         prefs.CopyCharPref("browser.anchor_color");
-      // Note: Browser doesn't store a value for ActiveLinkColor
-      defaultVisitedLinkColor =  prefs.CopyCharPref("browser.visited_color");
-      defaultBackgroundColor=    prefs.CopyCharPref("browser.background_color");
+      try {
+        // Use author's browser pref colors
+        defaultTextColor =         prefs.CopyCharPref("browser.foreground_color");
+        defaultLinkColor =         prefs.CopyCharPref("browser.anchor_color");
+        // Note: Browser doesn't store a value for ActiveLinkColor
+        defaultVisitedLinkColor =  prefs.CopyCharPref("browser.visited_color");
+        defaultBackgroundColor=    prefs.CopyCharPref("browser.background_color");
+      }
+      catch (ex) {
+        dump("Failed getting browser colors from prefs\n");
+      }
     }
-    // Get the last-set background image
-    lastSetBackgroundImage = prefs.CopyCharPref("editor.default_background_image");
+    try {
+      // Get the last-set background image
+      lastSetBackgroundImage = prefs.CopyCharPref("editor.default_background_image");
+    }
+    catch (ex) {
+      dump("Failed getting browser colors from prefs\n");
+    }
   }
   InitDialog();
 
@@ -164,8 +174,10 @@ function InitDialog()
   if (dialog.BackgroundImage)
     dialog.BackgroundImageCheckbox.checked = true;
   else 
+  {
     // See if we saved an image from previous dialog usage
     dialog.BackgroundImage = lastSetBackgroundImage;
+  }
 
   if (dialog.BackgroundImage)
   {
@@ -255,7 +267,9 @@ function onBackgroundImageCheckbox()
   if (dialog.BackgroundImageCheckbox.checked)
   {
     if (ValidateImage())
+    {
       dialog.ColorPreview.setAttribute(backgroundStr, dialog.BackgroundImage);
+    }
   } else {
     dialog.ColorPreview.removeAttribute(backgroundStr);
   }
@@ -288,12 +302,14 @@ function ValidateImage()
       return true;
     } else {
       dialog.BackgroundImage = null;
-      dialog.BackgroundImageInput.focus();
-      ShowInputErrorMessage(GetString("MissingImageError"));
     }
   }
+  dialog.BackgroundImageInput.focus();
+  ShowInputErrorMessage(GetString("MissingImageError"));
+
   // Don't allow checkbox if bad or no image
   dialog.BackgroundImageCheckbox.checked = false;
+  // TODO: Do fancy enabling/disabling instead?
   return false;
 }
 

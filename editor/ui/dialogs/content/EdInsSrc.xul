@@ -45,7 +45,7 @@
   <xul:keyset id="keyset"/>
 
   <label id="srcMessage" for="srcInput">&sourceEditField.label;</label>
-  <textarea rows="16" cols="80" id="srcInput" />
+  <textarea rows="16" cols="80" id="srcInput" flex="1"/>
   <div>&example.label;</div>
   <xul:spring class="spacer"/>
   <div class="separator" align="horizontal"/>
