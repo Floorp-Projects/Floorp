@@ -30,13 +30,13 @@
 
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
-#include "nsIBrowserWindow.h"
 
 #include "nsIIOService.h"
 #include "nsNetUtil.h"
 
 //Interfaces Needed
 #include "nsIXULWindow.h"
+#include "nsIWebBrowserChrome.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -58,8 +58,8 @@ static nsresult DisplayURI(const char *urlStr, PRBool block)
     rv = appShell->CreateTopLevelWindow(nsnull, 
                                         URL,
                                         PR_TRUE, 
-                                        PR_TRUE, 
-                                        NS_CHROME_ALL_CHROME,
+                                        PR_TRUE,
+                                        nsIWebBrowserChrome::allChrome, 
 						                NS_SIZETOCONTENT,           // width 
 						                NS_SIZETOCONTENT,           // height
                                         getter_AddRefs(window));
