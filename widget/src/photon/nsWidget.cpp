@@ -371,10 +371,9 @@ NS_METHOD nsWidget::IsVisible( PRBool &aState ) {
 // Constrain a potential move to see if it fits onscreen
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWidget::ConstrainPosition( PRBool aAllowSlop,
-                                       PRInt32 *aX, PRInt32 *aY ) {
+NS_METHOD nsWidget::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY ) {
   return NS_OK;
-}
+	}
 
 //-------------------------------------------------------------------------
 //
@@ -1365,10 +1364,12 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
 
     PRBool IsChar;
     unsigned long keysym;
-    if (Pk_KF_Cap_Valid & aPhKeyEvent->key_flags)
-    	keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
+	if (Pk_KF_Sym_Valid & aPhKeyEvent->key_flags)
+	    keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
 	else
-        keysym = nsConvertKey(aPhKeyEvent->key_sym, &IsChar);
+		/* Need this to support key release events on numeric key pad */
+	    keysym = nsConvertKey(aPhKeyEvent->key_cap, &IsChar);
+
 
     anEvent.isShift =   ( aPhKeyEvent->key_mods & Pk_KM_Shift ) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = ( aPhKeyEvent->key_mods & Pk_KM_Ctrl )  ? PR_TRUE : PR_FALSE;
