@@ -1,0 +1,5 @@
+<!ENTITY  brandShortName        "Browser">
+<!ENTITY  brandFullName         "Gecko Browser">            
+<!ENTITY  vendorShortName       "Generic">
+
+<!ENTITY  releaseURL            "http://www.mozilla.org/">

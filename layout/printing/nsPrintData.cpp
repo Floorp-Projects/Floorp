@@ -89,7 +89,7 @@ nsPrintData::nsPrintData(ePrintDataType aType) :
   nsCOMPtr<nsIStringBundle> brandBundle;
   nsCOMPtr<nsIStringBundleService> svc( do_GetService( NS_STRINGBUNDLE_CONTRACTID ) );
   if (svc) {
-    svc->CreateBundle( "chrome://global/locale/brand.properties", getter_AddRefs( brandBundle ) );
+    svc->CreateBundle( "chrome://branding/locale/brand.properties", getter_AddRefs( brandBundle ) );
     if (brandBundle) {
       brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), &mBrandName );
     }

@@ -356,7 +356,7 @@ function showIncompatibleError(aDS)
   var title = extensionStrings.formatStringFromName("incompatibleTitle", 
                                                     params, params.length);
   
-  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
   var brandShortName = brandStrings.GetStringFromName("brandShortName");
 
   var vendorSub = "";
@@ -404,7 +404,7 @@ function showMalformedError(aFile)
   var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
   var title = extensionStrings.GetStringFromName("malformedTitle");
 
-  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
   var brandShortName = brandStrings.GetStringFromName("brandShortName");
   var message = extensionStrings.formatStringFromName("malformedMessage", [brandShortName, aFile], 2);
   
@@ -420,7 +420,7 @@ function showInvalidVersionError(aItemName, aVersion)
   var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
   var title = extensionStrings.GetStringFromName("invalidVersionTitle");
 
-  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
   var brandShortName = brandStrings.GetStringFromName("brandShortName");
   var params = [brandShortName, aItemName, aVersion];
   var message = extensionStrings.formatStringFromName("invalidVersionMessage", params, params.length);
@@ -439,7 +439,7 @@ function showOldThemeError(aDS)
   var title = extensionStrings.formatStringFromName("incompatibleTitle", 
                                                     params, params.length);
 
-  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
   var brandShortName = brandStrings.GetStringFromName("brandShortName");
   var appVersion = extensionStrings.GetStringFromName("incompatibleOlder");
   
@@ -483,7 +483,7 @@ function showMissingFileError(aSourceFile, aMissingFileName)
   var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
   var title = extensionStrings.GetStringFromName("missingFileTitle");
 
-  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
   var brandShortName = brandStrings.GetStringFromName("brandShortName");
   var params = [brandShortName, aMissingFileName];
   var message = extensionStrings.formatStringFromName("missingFileMessage", params, params.length);
@@ -507,7 +507,7 @@ function showMalformedRegistrationError(aCRException)
   var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
   var title = extensionStrings.GetStringFromName("malformedRegistrationTitle");
 
-  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
   var brandShortName = brandStrings.GetStringFromName("brandShortName");
   var params = [brandShortName];
   var message = extensionStrings.formatStringFromName("malformedRegistrationMessage", 
@@ -4201,7 +4201,7 @@ nsExtensionsDataSource.prototype = {
           var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                               .getService(Components.interfaces.nsIStringBundleService);
           var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
-          var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+          var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
           var brandShortName = brandStrings.GetStringFromName("brandShortName");
           var appVersion = gApp.version;
           var incompatibleMessage = extensionStrings.formatStringFromName("incompatibleExtension", 

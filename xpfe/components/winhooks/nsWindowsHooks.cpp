@@ -429,7 +429,7 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
                     nsCOMPtr<nsIStringBundle> brandBundle;
                     rv = bundleService->CreateBundle( "chrome://global-platform/locale/nsWindowsHooks.properties",
                                                       getter_AddRefs( bundle ) );
-                    rv = bundleService->CreateBundle( "chrome://global/locale/brand.properties",
+                    rv = bundleService->CreateBundle( "chrome://branding/locale/brand.properties",
                                                       getter_AddRefs( brandBundle ) );
                     if ( NS_SUCCEEDED( rv ) && bundle && brandBundle ) {
                         nsXPIDLString text, label, shortName;
@@ -978,7 +978,7 @@ nsWindowsHooks::SetImageAsWallpaper(nsIDOMElement* aElement, PRBool aUseBackgrou
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(bundleCID));
   if (bundleService) {
     nsCOMPtr<nsIStringBundle> brandBundle;
-    rv = bundleService->CreateBundle("chrome://global/locale/brand.properties",
+    rv = bundleService->CreateBundle("chrome://branding/locale/brand.properties",
                                      getter_AddRefs(brandBundle));
     if (NS_SUCCEEDED(rv) && brandBundle) {
       if (NS_FAILED(rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),

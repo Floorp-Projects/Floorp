@@ -72,7 +72,7 @@
   <stringbundle id="bundle_profileManager"
                 src="chrome://communicator/locale/profile/profileManager.properties"/>
   <stringbundle id="bundle_brand"
-                src="chrome://global/locale/brand.properties"/>
+                src="chrome://branding/locale/brand.properties"/>
   
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileSelection.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/profile/profileManager.js"/>

@@ -135,7 +135,7 @@
 
 const char* kDefaultOpenWindowParams = "centerscreen,chrome,modal,titlebar";
 
-const char* kBrandBundleURL = "chrome://global/locale/brand.properties";
+const char* kBrandBundleURL = "chrome://branding/locale/brand.properties";
 const char* kMigrationBundleURL = "chrome://communicator/locale/profile/migration.properties";
 
 // we want everyone to have the debugging info to the console for now

@@ -864,11 +864,13 @@ extensions/typeaheadfind/Makefile
 MAKEFILES_firefox_branding="
 other-licenses/branding/firefox/Makefile
 other-licenses/branding/firefox/content/Makefile
+other-licenses/branding/firefox/locales/Makefile
 "
 
 MAKEFILES_thunderbird_branding="
 other-licenses/branding/thunderbird/Makefile
 other-licenses/branding/thunderbird/content/Makefile
+other-licenses/branding/thunderbird/locales/Makefile
 "
 
 MAKEFILES_phoenix="

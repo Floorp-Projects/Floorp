@@ -1,10 +1,7 @@
 browser.jar:
-+ content/browser/about.png                     (about.png)
-+ content/browser/aboutCredits.png              (aboutCredits.png)
-+ content/browser/aboutFooter.png               (aboutFooter.png)
-+ content/browser/searchconfig.properties       (searchconfig.properties)
-  
-classic.jar:  
-+ skin/classic/global/icons/alert-exclam.png    (alert-exclam.png)
-+ skin/classic/mozapps/update/icon32.png        (icon32.png)
-  
+  content/branding/contents.rdf                  (contents.rdf)
+  content/branding/about.png                     (about.png)
+  content/branding/aboutCredits.png              (aboutCredits.png)
+  content/branding/aboutFooter.png               (aboutFooter.png)
+  content/branding/searchconfig.properties       (searchconfig.properties)
+  content/branding/icon64.png                    (icon64.png)

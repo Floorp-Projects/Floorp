@@ -34,7 +34,7 @@
                   type="bool"/>
     </preferences>
     
-    <stringbundle id="bundleBrand" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundleShell" src="chrome://browser/locale/shellservice.properties"/>
 
     <groupbox>

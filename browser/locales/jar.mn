@@ -1,8 +1,6 @@
 #filter substitution
 
 @AB_CD@.jar:
-*   locale/@AB_CD@/global/brand.dtd        (%chrome/global/brand.dtd)
-+   locale/@AB_CD@/global/brand.properties (%chrome/global/brand.properties)
 *   locale/browser/contents.rdf                    (generic/chrome/browser/contents.rdf)
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
     locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
@@ -56,4 +54,9 @@
 *   locale/@AB_CD@/cookie/contents.rdf                     (generic/chrome/cookie/contents.rdf)
     locale/@AB_CD@/cookie/cookieAcceptDialog.dtd           (%chrome/cookie/cookieAcceptDialog.dtd)
     locale/@AB_CD@/cookie/cookieAcceptDialog.properties    (%chrome/cookie/cookieAcceptDialog.properties)
+#ifndef MOZ_USE_OFFICIAL_BRANDING
+*   locale/branding/contents.rdf      (generic/chrome/branding/contents.rdf)
+    locale/branding/brand.dtd         (%chrome/branding/brand.dtd)
+    locale/branding/brand.properties  (%chrome/branding/brand.properties)
+#endif
 #includesubst @AB_CD@/extra-jar.mn

@@ -3,7 +3,7 @@
  }
 
  #clientBox {
-   background-image: url("chrome://browser/content/about.png");
+   background-image: url("chrome://branding/content/about.png");
    background-repeat: no-repeat;
    background-color: #FFFFFF;
    padding-top: 203px;

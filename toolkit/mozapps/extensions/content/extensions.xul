@@ -64,7 +64,7 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   
   <stringbundleset id="extensionsSet">
-    <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
     <stringbundle id="xpinstallStrings" src="chrome://global/locale/xpinstall/xpinstall.properties"/>
   </stringbundleset>

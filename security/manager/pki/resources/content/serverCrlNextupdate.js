@@ -53,7 +53,7 @@ function onLoad()
   var isupport = pkiParams.getISupportAtIndex(1);
   var cert = isupport.QueryInterface(nsIX509Cert);
   var connectURL = dialogParams.GetString(1); 
-  var gBundleBrand = srGetStrBundle("chrome://global/locale/brand.properties");
+  var gBundleBrand = srGetStrBundle("chrome://branding/locale/brand.properties");
   var brandName = gBundleBrand.GetStringFromName("brandShortName");
 
   bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");

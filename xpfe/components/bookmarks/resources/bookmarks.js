@@ -1053,7 +1053,7 @@ var BookmarksUtils = {
                                 .getService(Components.interfaces.nsIStringBundleService);
       var bookmarksBundle  = "chrome://communicator/locale/bookmarks/bookmarks.properties";
       this._bundle         = BUNDLESVC.createBundle(bookmarksBundle, LOCALESVC.getApplicationLocale());
-      var brandBundle      = "chrome://global/locale/brand.properties";
+      var brandBundle      = "chrome://branding/locale/brand.properties";
       this._brandShortName = BUNDLESVC.createBundle(brandBundle,     LOCALESVC.getApplicationLocale())
                                       .GetStringFromName("brandShortName");
     }

@@ -63,7 +63,7 @@
   <script type="application/x-javascript" src="chrome://mozapps/content/update/update.js"/>
   
   <stringbundleset id="updateSet">
-    <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
+    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="updateStrings" src="chrome://mozapps/locale/update/update.properties"/>
   </stringbundleset>
 

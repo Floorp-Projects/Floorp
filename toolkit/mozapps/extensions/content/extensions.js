@@ -119,7 +119,7 @@ function setRestartMessage(aItem)
   var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
                       .getService(Components.interfaces.nsIStringBundleService);
   var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
-  var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+  var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
   var brandShortName = brandStrings.GetStringFromName("brandShortName");
   var themeName = aItem.getAttribute("name");
   var restartMessage = extensionStrings.formatStringFromName("dssSwitchAfterRestart", 
@@ -383,7 +383,7 @@ XPInstallDownloadManager.prototype = {
         var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
         var title = extensionStrings.GetStringFromName("errorInstallTitle");
 
-        var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+        var brandStrings = sbs.createBundle("chrome://branding/locale/brand.properties");
         var brandShortName = brandStrings.GetStringFromName("brandShortName");
         var params = [brandShortName, aURL, msg];
         var message = extensionStrings.formatStringFromName("errorInstallMessage", params, params.length);

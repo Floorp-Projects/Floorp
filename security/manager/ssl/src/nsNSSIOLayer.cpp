@@ -492,7 +492,7 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   nsCOMPtr<nsIStringBundleService> service = 
                               do_GetService(StringBundleServiceCID, &rv);
   nsCOMPtr<nsIStringBundle> brandBundle;
-  service->CreateBundle("chrome://global/locale/brand.properties",
+  service->CreateBundle("chrome://branding/locale/brand.properties",
                         getter_AddRefs(brandBundle));
   nsXPIDLString brandShortName;
   brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
