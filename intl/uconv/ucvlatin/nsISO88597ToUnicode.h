@@ -20,18 +20,12 @@
 #ifndef nsISO88597ToUnicode_h___
 #define nsISO88597ToUnicode_h___
 
-#include "nsIFactory.h"
-#include "nsICharsetConverterInfo.h"
+#include "ns1ByteToUnicodeBase.h"
 
 //----------------------------------------------------------------------
-// Class nsISO88597ToUnicodeFactory [declaration]
+// Class nsISO88597ToUnicode [declaration]
 
-/**
- * Factory class for the nsISO88597ToUnicode objects.
- * 
- */
-class nsISO88597ToUnicodeFactory : public nsIFactory, 
-public nsICharsetConverterInfo
+class nsISO88597ToUnicode : public ns1ByteToUnicodeBase
 {
   NS_DECL_ISUPPORTS
 
@@ -40,28 +34,24 @@ public:
   /**
    * Class constructor.
    */
-  nsISO88597ToUnicodeFactory();
+  nsISO88597ToUnicode();
 
   /**
    * Class destructor.
    */
-  ~nsISO88597ToUnicodeFactory();
+  ~nsISO88597ToUnicode();
 
-  //--------------------------------------------------------------------
-  // Interface nsIFactory [declaration]
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
 
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate, const nsIID &aIID,
-                            void **aResult);
+protected:
+  virtual uMappingTable* GetMappingTable();
+  virtual PRUnichar* GetFastTable();
+  virtual PRBool GetFastTableInitState();
+  virtual void SetFastTableInit();
 
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-  //--------------------------------------------------------------------
-  // Interface nsICharsetConverterInfo [declaration]
-
-  NS_IMETHOD GetCharsetSrc(char ** aCharset);
-  NS_IMETHOD GetCharsetDest(char ** aCharset);
 };
-
-
 
 #endif 

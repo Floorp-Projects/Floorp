@@ -19,15 +19,19 @@
 
 #define NS_IMPL_IDS
 
+#include "pratom.h"
 #include "nsRepository.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsIUnicodeDecoder.h"
+#include "nsIFactory.h"
+#include "nsICharsetConverterInfo.h"
+#include "nsUCvLatinCID.h"
 #include "nsLatin1ToUnicode.h"
 #include "nsISO88597ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
 #include "nsUnicodeToLatin1.h"
-#include "nsUCvLatinCID.h"
-// just for NS_IMPL_IDS
+
+// just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
+#include "nsIUnicodeEncoder.h"
+#include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeDecodeUtil.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeEncodeHelper.h"
@@ -37,6 +41,92 @@
 
 extern "C" PRInt32 g_InstanceCount = 0;
 extern "C" PRInt32 g_LockCount = 0;
+
+typedef nsresult (* fpCreateInstance) (nsISupports **);
+
+struct FactoryData
+{
+  const nsCID   * mCID;
+  fpCreateInstance  CreateInstance;
+  char    * mCharsetSrc;
+  char    * mCharsetDest;
+};
+
+FactoryData g_FactoryData[] =
+{
+  {
+    &kLatin1ToUnicodeCID,
+    nsLatin1ToUnicode::CreateInstance,
+    "ISO-8859-1",
+    "Unicode"
+  },
+  {
+    &kISO88597ToUnicodeCID,
+    nsISO88597ToUnicode::CreateInstance,
+    "ISO-8859-7",
+    "Unicode"
+  },
+  {
+    &kCP1253ToUnicodeCID,
+    nsCP1253ToUnicode::CreateInstance,
+    "windows-1253",
+    "Unicode"
+  },
+  {
+    &kUnicodeToLatin1CID,
+    nsUnicodeToLatin1::CreateInstance,
+    "Unicode",
+    "ISO-8859-1"
+  }
+};
+
+#define ARRAY_SIZE(_array)                                      \
+     (sizeof(_array) / sizeof(_array[0]))
+
+//----------------------------------------------------------------------
+// Class nsConverterFactory [declaration]
+
+/**
+ * General factory class for converter objects.
+ * 
+ * @created         24/Feb/1998
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsConverterFactory : public nsIFactory, 
+public nsICharsetConverterInfo
+{
+  NS_DECL_ISUPPORTS
+
+private:
+
+  FactoryData * mData;
+
+public:
+
+  /**
+   * Class constructor.
+   */
+  nsConverterFactory(FactoryData * aData);
+
+  /**
+   * Class destructor.
+   */
+  virtual ~nsConverterFactory();
+
+  //--------------------------------------------------------------------
+  // Interface nsIFactory [declaration]
+
+  NS_IMETHOD CreateInstance(nsISupports *aDelegate, const nsIID &aIID,
+                            void **aResult);
+
+  NS_IMETHOD LockFactory(PRBool aLock);
+
+  //--------------------------------------------------------------------
+  // Interface nsICharsetConverterInfo [declaration]
+
+  NS_IMETHOD GetCharsetSrc(char ** aCharset);
+  NS_IMETHOD GetCharsetDest(char ** aCharset);
+};
 
 //----------------------------------------------------------------------
 // Global functions and data [implementation]
@@ -48,61 +138,28 @@ extern "C" NS_EXPORT PRBool NSCanUnload()
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, 
+                                           nsISupports* serviceMgr,
                                            nsIFactory **aFactory)
 {
   if (aFactory == NULL) return NS_ERROR_NULL_POINTER;
 
-  // the Latin1ToUnicode converter
-  if (aCID.Equals(kLatin1ToUnicodeCID)) {
-    nsLatin1ToUnicodeFactory *factory = new nsLatin1ToUnicodeFactory();
-    nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
+  nsresult res;
+  nsConverterFactory * fac;
+  FactoryData * data;
 
-    if (NS_FAILED(res)) {
-      *aFactory = NULL;
-      delete factory;
+  for (PRInt32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+    data = &(g_FactoryData[i]);
+    if (aCID.Equals(*(data->mCID))) {
+      fac = new nsConverterFactory(data);
+      res = fac->QueryInterface(kIFactoryIID, (void **) aFactory);
+      if (NS_FAILED(res)) {
+        *aFactory = NULL;
+        delete fac;
+      }
+
+      return res;
     }
-
-    return res;
-  }
-
-  // the ISO88597ToUnicode converter
-  if (aCID.Equals(kISO88597ToUnicodeCID)) {
-    nsISO88597ToUnicodeFactory *factory = new nsISO88597ToUnicodeFactory();
-    nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
-
-    if (NS_FAILED(res)) {
-      *aFactory = NULL;
-      delete factory;
-    }
-
-    return res;
-  }
-
-  // the CP1253ToUnicode converter
-  if (aCID.Equals(kCP1253ToUnicodeCID)) {
-    nsCP1253ToUnicodeFactory *factory = new nsCP1253ToUnicodeFactory();
-    nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
-
-    if (NS_FAILED(res)) {
-      *aFactory = NULL;
-      delete factory;
-    }
-
-    return res;
-  }
-
-  // the UnicodeToLatin1 converter
-  if (aCID.Equals(kUnicodeToLatin1CID)) {
-    nsUnicodeToLatin1Factory *factory = new nsUnicodeToLatin1Factory();
-    nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
-
-    if (NS_FAILED(res)) {
-      *aFactory = NULL;
-      delete factory;
-    }
-
-    return res;
   }
 
   return NS_NOINTERFACE;
@@ -112,20 +169,11 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
 {
   nsresult res;
 
-  res = nsRepository::RegisterFactory(kLatin1ToUnicodeCID, path, 
+  for (PRInt32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+    res = nsRepository::RegisterFactory(*(g_FactoryData[i].mCID), path, 
       PR_TRUE, PR_TRUE);
-  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsRepository::RegisterFactory(kCP1253ToUnicodeCID, path, 
-      PR_TRUE, PR_TRUE);
-  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsRepository::RegisterFactory(kISO88597ToUnicodeCID, path, 
-      PR_TRUE, PR_TRUE);
-  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-
-  res = nsRepository::RegisterFactory(kUnicodeToLatin1CID, path, 
-      PR_TRUE, PR_TRUE);
+    if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+  }
 
   return res;
 }
@@ -134,15 +182,107 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
 {
   nsresult res;
 
-  res = nsRepository::UnregisterFactory(kLatin1ToUnicodeCID, path);
-  if(NS_FAILED(res)) return res;
+  for (PRInt32 i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+    res = nsRepository::UnregisterFactory(*(g_FactoryData[i].mCID), path);
+    if(NS_FAILED(res)) return res;
+  }
 
-  res = nsRepository::UnregisterFactory(kCP1253ToUnicodeCID, path);
-  if(NS_FAILED(res)) return res;
-
-  res = nsRepository::UnregisterFactory(kISO88597ToUnicodeCID, path);
-  if(NS_FAILED(res)) return res;
-
-  res = nsRepository::UnregisterFactory(kUnicodeToLatin1CID, path);
   return res;
+}
+
+//----------------------------------------------------------------------
+// Class nsConverterFactory [implementation]
+
+nsConverterFactory::nsConverterFactory(FactoryData * aData) 
+{
+  mData = aData;
+
+  NS_INIT_REFCNT();
+  PR_AtomicIncrement(&g_InstanceCount);
+}
+
+nsConverterFactory::~nsConverterFactory() 
+{
+  PR_AtomicDecrement(&g_InstanceCount);
+}
+
+//----------------------------------------------------------------------
+// Interface nsISupports [implementation]
+
+NS_IMPL_ADDREF(nsConverterFactory);
+NS_IMPL_RELEASE(nsConverterFactory);
+
+nsresult nsConverterFactory::QueryInterface(REFNSIID aIID, 
+                                            void** aInstancePtr)
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                         
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
+  static NS_DEFINE_IID(kClassIID, kICharsetConverterInfoIID);                         
+  static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+
+  if (aIID.Equals(kClassIID)) {                                          
+    *aInstancePtr = (void*) ((nsICharsetConverterInfo*)this); 
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kIFactoryIID)) {                                          
+    *aInstancePtr = (void*) ((nsIFactory*)this); 
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*) ((nsISupports*)(nsIFactory*)this);
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+
+  return NS_NOINTERFACE;                                                 
+}
+
+//----------------------------------------------------------------------
+// Interface nsIFactory [implementation]
+
+NS_IMETHODIMP nsConverterFactory::CreateInstance(nsISupports *aDelegate,
+                                                 const nsIID &aIID,
+                                                 void **aResult)
+{
+  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+  if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
+
+  nsISupports * t;
+  mData->CreateInstance(&t);
+  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
+  
+  nsresult res = t->QueryInterface(aIID, aResult);
+  if (NS_FAILED(res)) delete t;
+
+  return res;
+}
+
+NS_IMETHODIMP nsConverterFactory::LockFactory(PRBool aLock)
+{
+  if (aLock) PR_AtomicIncrement(&g_LockCount);
+  else PR_AtomicDecrement(&g_LockCount);
+
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// Interface nsICharsetConverterInfo [implementation]
+
+NS_IMETHODIMP nsConverterFactory::GetCharsetSrc(char ** aCharset)
+{
+  (*aCharset) = mData->mCharsetSrc;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsConverterFactory::GetCharsetDest(char ** aCharset)
+{
+  (*aCharset) = mData->mCharsetDest;
+  return NS_OK;
 }

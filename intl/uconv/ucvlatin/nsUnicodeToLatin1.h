@@ -20,50 +20,38 @@
 #ifndef nsUnicodeToLatin1_h___
 #define nsUnicodeToLatin1_h___
 
-#include "nsIFactory.h"
-#include "nsICharsetConverterInfo.h"
+#include "nsUCvLatinSupport.h"
 
 //----------------------------------------------------------------------
-// Class nsUnicodeToLatin1Factory [declaration]
+// Class nsUnicodeToLatin1 [declaration]
 
 /**
- * Factory class for the nsUnicodeToLatin1 objects.
- * 
+ * A character set converter from Unicode to Latin1.
+ *
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsUnicodeToLatin1Factory : public nsIFactory, 
-public nsICharsetConverterInfo
+class nsUnicodeToLatin1 : public nsTableEncoderSupport
 {
-  NS_DECL_ISUPPORTS
-
 public:
 
   /**
    * Class constructor.
    */
-  nsUnicodeToLatin1Factory();
+  nsUnicodeToLatin1();
 
   /**
-   * Class destructor.
+   * Static class constructor.
    */
-  ~nsUnicodeToLatin1Factory();
+  static nsresult CreateInstance(nsISupports **aResult);
+
+protected:
 
   //--------------------------------------------------------------------
-  // Interface nsIFactory [declaration]
+  // Subclassing of nsEncoderSupport class [declaration]
 
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate, const nsIID &aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-  //--------------------------------------------------------------------
-  // Interface nsICharsetConverterInfo [declaration]
-
-  NS_IMETHOD GetCharsetSrc(char ** aCharset);
-  NS_IMETHOD GetCharsetDest(char ** aCharset);
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
 };
-
-
 
 #endif /* nsUnicodeToLatin1_h___ */
