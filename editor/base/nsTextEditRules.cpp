@@ -997,6 +997,10 @@ nsTextEditRules::EchoInsertionToPWBuff(nsIDOMSelection *aSelection, nsString *aO
   PRInt32 start, end;
   nsresult res = mEditor->GetTextSelectionOffsets(aSelection, start, end);
   NS_ASSERTION((NS_SUCCEEDED(res)), "getTextSelectionOffsets failed!");
+  if (end!=start)
+  {
+    mPasswordText.Cut(start, end-start);
+  }
   mPasswordText.Insert(*aOutString, start);
 
 #ifdef DEBUG_jfrancis
