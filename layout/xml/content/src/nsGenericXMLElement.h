@@ -33,7 +33,8 @@ public:
   ~nsGenericXMLElement();
 
   nsresult CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericXMLElement* aDest);
+                       nsGenericXMLElement* aDest,
+                       PRBool aDeep);
 
   // Implementation for nsIDOMElement
   nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 

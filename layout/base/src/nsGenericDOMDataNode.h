@@ -16,106 +16,94 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#ifndef nsGenericElement_h___
-#define nsGenericElement_h___
+#ifndef nsGenericDOMDataNode_h___
+#define nsGenericDOMDataNode_h___
 
-#include "nsIContent.h"
-#include "nsIDOMAttr.h"
-#include "nsIDOMNamedNodeMap.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMNodeList.h"
-#include "nsVoidArray.h"
+#include "nsIDOMCharacterData.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIJSScriptObject.h"
-#include "nsILinkHandler.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIContent.h"
+#include "nsTextFragment.h"
+#include "nsVoidArray.h"
+#include "nsINameSpaceManager.h"
 
+extern const nsIID kIDOMCharacterDataIID;
 extern const nsIID kIDOMNodeIID;
-extern const nsIID kIDOMElementIID;
 extern const nsIID kIDOMEventReceiverIID;
 extern const nsIID kIScriptObjectOwnerIID;
-extern const nsIID kIJSScriptObjectIID;
 extern const nsIID kISupportsIID;
 extern const nsIID kIContentIID;
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
+class nsIDOMNodeList;
 class nsIEventListenerManager;
 class nsIFrame;
+class nsIStyleContext;
+class nsIStyleRule;
 class nsISupportsArray;
-class nsIDOMScriptObjectFactory;
-class nsDOMCSSDeclaration;
-class nsIDOMCSSStyleDeclaration;
-class nsDOMAttributeMap;
 
+struct nsGenericDOMDataNode {
+  nsGenericDOMDataNode();
+  ~nsGenericDOMDataNode();
 
-// Class that holds the child list of a content element and also
-// implements the nsIDOMNodeList interface.
-class nsChildContentList : public nsIDOMNodeList, 
-                           public nsIScriptObjectOwner 
-{
-public:
-  nsChildContentList(nsIContent *aContent);
-  ~nsChildContentList() {}
-  
-  NS_DECL_ISUPPORTS
-  
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-  
-  // nsIDOMNodeList interface
-  NS_DECL_IDOMNODELIST
-  
-  void DropReference();
-
-private:
-  nsIContent *mContent;
-  void *mScriptObject;
-};
-
-// There are a set of DOM- and scripting-specific instance variables
-// that may only be instantiated when a content object is accessed
-// through the DOM. Rather than burn actual slots in the content
-// objects for each of these instance variables, we put them off
-// in a side structure that's only allocated when the content is
-// accessed through the DOM.
-typedef struct {
-  void *mScriptObject;
-  nsChildContentList *mChildNodes;
-  nsDOMCSSDeclaration *mStyle;
-  nsDOMAttributeMap* mAttributeMap;
-  nsVoidArray *mRangeList;
-} nsDOMSlots;
-
-class nsGenericElement : public nsIJSScriptObject {
-public:
-  nsGenericElement();
-  ~nsGenericElement();
-
-  void Init(nsIContent* aOuterContentObject, nsIAtom* aTag);
+  void Init(nsIContent* aOuterContentObject);
 
   // Implementation for nsIDOMNode
-  nsresult    GetNodeName(nsString& aNodeName);
+  nsresult    GetNodeName(nsString& aNodeName) {
+    aNodeName.Truncate();
+    return NS_OK;
+  }
   nsresult    GetNodeValue(nsString& aNodeValue);
   nsresult    SetNodeValue(const nsString& aNodeValue);
-  nsresult    GetNodeType(PRUint16* aNodeType);
   nsresult    GetParentNode(nsIDOMNode** aParentNode);
-  nsresult    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+  nsresult    GetAttributes(nsIDOMNamedNodeMap** aAttributes) {
+    *aAttributes = nsnull;
+    return NS_OK;
+  }
   nsresult    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
   nsresult    GetNextSibling(nsIDOMNode** aNextSibling);
+  nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes) {
+    *aChildNodes = nsnull;
+    return NS_OK;
+  }
+  nsresult    HasChildNodes(PRBool* aHasChildNodes) {
+    *aHasChildNodes = PR_FALSE;
+    return NS_OK;
+  }
+  nsresult    GetFirstChild(nsIDOMNode** aFirstChild) {
+    *aFirstChild = nsnull;
+    return NS_OK;
+  }
+  nsresult    GetLastChild(nsIDOMNode** aLastChild) {
+    *aLastChild = nsnull;
+    return NS_OK;
+  }
+  nsresult    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                           nsIDOMNode** aReturn) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                           nsIDOMNode** aReturn) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) {
+    return NS_ERROR_FAILURE;
+  }
   nsresult    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
 
-  // Implementation for nsIDOMElement
-  nsresult    GetTagName(nsString& aTagName);
-  nsresult    GetAttribute(const nsString& aName, nsString& aReturn);
-  nsresult    SetAttribute(const nsString& aName, const nsString& aValue);
-  nsresult    RemoveAttribute(const nsString& aName);
-  nsresult    GetAttributeNode(const nsString& aName,
-                               nsIDOMAttr** aReturn);
-  nsresult    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
-  nsresult    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);
-  nsresult    GetElementsByTagName(const nsString& aTagname,
-                                   nsIDOMNodeList** aReturn);
-  nsresult    Normalize();
+  // Implementation for nsIDOMCharacterData
+  nsresult    GetData(nsString& aData);
+  nsresult    SetData(const nsString& aData);
+  nsresult    GetLength(PRUint32* aLength);
+  nsresult    SubstringData(PRUint32 aOffset, PRUint32 aCount, nsString& aReturn);
+  nsresult    AppendData(const nsString& aArg);
+  nsresult    InsertData(PRUint32 aOffset, const nsString& aArg);
+  nsresult    DeleteData(PRUint32 aOffset, PRUint32 aCount);
+  nsresult    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg);
 
   // nsIDOMEventReceiver interface
   nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -137,8 +125,46 @@ public:
     aResult = PR_FALSE;
     return NS_OK;
   }
-  nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
-  nsresult GetTag(nsIAtom*& aResult) const;
+  nsresult GetNameSpaceID(PRInt32& aID) const {
+    aID = kNameSpaceID_None;
+    return NS_OK;
+  }
+  nsresult GetTag(nsIAtom*& aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  nsresult ParseAttributeString(const nsString& aStr, 
+                                nsIAtom*& aName,
+                                PRInt32& aNameSpaceID) { 
+    aName = nsnull;
+    aNameSpaceID = kNameSpaceID_None;
+    return NS_OK; 
+  }
+  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,
+                                nsIAtom*& aPrefix) {
+    aPrefix = nsnull;
+    return NS_OK;
+  }
+  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsString& aValue,
+                        PRBool aNotify) {
+    return NS_OK;
+  }
+  nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) {
+    return NS_OK;
+  }
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsString &aResult) const {
+    return NS_CONTENT_ATTR_NOT_THERE;
+  }
+  nsresult GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
+                              nsIAtom*& aName) const {
+    aName = nsnull;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  nsresult GetAttributeCount(PRInt32& aResult) const {
+    aResult = 0;
+    return NS_OK;
+  }
+  nsresult List(FILE* out, PRInt32 aIndent) const;
   nsresult HandleDOMEvent(nsIPresContext& aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
@@ -147,48 +173,44 @@ public:
   nsresult RangeAdd(nsIDOMRange& aRange);
   nsresult RangeRemove(nsIDOMRange& aRange);
   nsresult GetRangeList(nsVoidArray*& aResult) const;
-  
-  // Implementation for nsIJSScriptObject
-  PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
-  PRBool    EnumerateProperty(JSContext *aContext);
-  PRBool    Resolve(JSContext *aContext, jsval aID);
-  PRBool    Convert(JSContext *aContext, jsval aID);
-  void      Finalize(JSContext *aContext);
 
-  // Implementation for nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID,
-                            void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+  // Implementation for nsIContent
+  nsresult SizeOf(nsISizeOfHandler* aHandler) const;
+  nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
+  nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  nsresult CanContainChildren(PRBool& aResult) const {
+    aResult = PR_FALSE;
+    return NS_OK;
+  }
+  nsresult ChildCount(PRInt32& aResult) const {
+    aResult = 0;
+    return NS_OK;
+  }
+  nsresult ChildAt(PRInt32 aIndex, nsIContent*& aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  nsresult IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const {
+    aResult = -1;
+    return NS_OK;
+  }
+  nsresult InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) {
+    return NS_OK;
+  }
+  nsresult ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify) {
+    return NS_OK;
+  }
+  nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify) {
+    return NS_OK;
+  }
+  nsresult RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
+    return NS_OK;
+  }
 
   //----------------------------------------
 
-  nsresult RenderFrame();
-
-  nsresult AddScriptEventListener(nsIAtom* aAttribute,
-                                  const nsString& aValue,
-                                  REFNSIID aIID);
-
-  void TriggerLink(nsIPresContext& aPresContext,
-		   nsLinkVerb aVerb,
-                   const nsString& aBase,
-                   const nsString& aURLSpec,
-                   const nsString& aTargetSpec,
-                   PRBool aClick);
-
-  static void SetDocumentInChildrenOf(nsIContent* aContent, 
-				      nsIDocument* aDocument);
-
-  static nsresult GetScriptObjectFactory(nsIDOMScriptObjectFactory **aFactory);
-
-  static nsIDOMScriptObjectFactory *gScriptObjectFactory;
-
-  static nsIAtom* CutNameSpacePrefix(nsString& aString);
-
-  nsDOMSlots *GetDOMSlots();
+  void ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 
   // Up pointer to the real content object that we are
   // supporting. Sometimes there is work that we just can't do
@@ -198,73 +220,12 @@ public:
 
   nsIDocument* mDocument;
   nsIContent* mParent;
-  nsIAtom* mTag;
+  void* mScriptObject;
   nsIEventListenerManager* mListenerManager;
-  nsDOMSlots *mDOMSlots;
+
+  nsTextFragment mText;
+  nsVoidArray *mRangeList;
 };
-
-class nsGenericContainerElement : public nsGenericElement {
-public:
-  nsGenericContainerElement();
-  ~nsGenericContainerElement();
-
-  nsresult CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericContainerElement* aDest,
-                       PRBool aDeep);
-
-  // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
-  nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
-  {
-    return nsGenericElement::GetAttribute(aName, aReturn);
-  }
-  nsresult    SetAttribute(const nsString& aName, const nsString& aValue)
-  {
-    return nsGenericElement::SetAttribute(aName, aValue);
-  }
-  nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
-  nsresult    HasChildNodes(PRBool* aHasChildNodes);
-  nsresult    GetFirstChild(nsIDOMNode** aFirstChild);
-  nsresult    GetLastChild(nsIDOMNode** aLastChild);
-  
-  nsresult    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                           nsIDOMNode** aReturn);
-  nsresult    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                           nsIDOMNode** aReturn);
-  nsresult    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-  nsresult    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
-
-  // Remainder of nsIContent
-  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                        const nsString& aValue,
-                        PRBool aNotify);
-  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                        nsString& aResult) const;
-  nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
-                          PRBool aNotify);
-  nsresult GetAttributeNameAt(PRInt32 aIndex,
-                              PRInt32& aNameSpaceID, 
-                              nsIAtom*& aName) const;
-  nsresult GetAttributeCount(PRInt32& aResult) const;
-  nsresult List(FILE* out, PRInt32 aIndent) const;
-  nsresult SizeOf(nsISizeOfHandler* aHandler) const;
-  nsresult CanContainChildren(PRBool& aResult) const;
-  nsresult ChildCount(PRInt32& aResult) const;
-  nsresult ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;
-  nsresult IndexOf(nsIContent* aPossibleChild, PRInt32& aResult) const;
-  nsresult InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
-  nsresult ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify);
-  nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
-  nsresult RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
-  nsresult BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
-
-  void ListAttributes(FILE* out) const;
-
-  nsVoidArray* mAttributes;
-  nsVoidArray mChildren;
-};
-
 
 //----------------------------------------------------------------------
 
@@ -274,9 +235,10 @@ public:
  * nsGenericHTMLContainerContent)
  *
  * Note that classes using this macro will need to implement:
+ *       NS_IMETHOD GetNodeType(PRUint16* aNodeType);
  *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
  */
-#define NS_IMPL_IDOMNODE_USING_GENERIC(_g)                              \
+#define NS_IMPL_IDOMNODE_USING_GENERIC_DOM_DATA(_g)                     \
   NS_IMETHOD GetNodeName(nsString& aNodeName) {                         \
     return _g.GetNodeName(aNodeName);                                   \
   }                                                                     \
@@ -286,9 +248,7 @@ public:
   NS_IMETHOD SetNodeValue(const nsString& aNodeValue) {                 \
     return _g.SetNodeValue(aNodeValue);                                 \
   }                                                                     \
-  NS_IMETHOD GetNodeType(PRUint16* aNodeType) {                         \
-    return _g.GetNodeType(aNodeType);                                   \
-  }                                                                     \
+  NS_IMETHOD GetNodeType(PRUint16* aNodeType);                          \
   NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode) {                  \
     return _g.GetParentNode(aParentNode);                               \
   }                                                                     \
@@ -332,48 +292,40 @@ public:
   }                                                                     \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
-/**
- * Implement the nsIDOMElement API by forwarding the methods to a
- * generic content object (either nsGenericHTMLLeafElement or
- * nsGenericHTMLContainerContent)
- */
-#define NS_IMPL_IDOMELEMENT_USING_GENERIC(_g)                                 \
-  NS_IMETHOD GetTagName(nsString& aTagName) {                                 \
-    return _g.GetTagName(aTagName);                                           \
-  }                                                                           \
-  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn) {         \
-    return _g.GetAttribute(aName, aReturn);                                   \
-  }                                                                           \
-  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue) {    \
-    return _g.SetAttribute(aName, aValue);                                    \
-  }                                                                           \
-  NS_IMETHOD RemoveAttribute(const nsString& aName) {                         \
-    return _g.RemoveAttribute(aName);                                         \
-  }                                                                           \
-  NS_IMETHOD GetAttributeNode(const nsString& aName,                          \
-                              nsIDOMAttr** aReturn) {                         \
-    return _g.GetAttributeNode(aName, aReturn);                               \
-  }                                                                           \
-  NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {   \
-    return _g.SetAttributeNode(aNewAttr, aReturn);                            \
-  }                                                                           \
-  NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {\
-    return _g.RemoveAttributeNode(aOldAttr, aReturn);                         \
-  }                                                                           \
-  NS_IMETHOD GetElementsByTagName(const nsString& aTagname,                   \
-                                  nsIDOMNodeList** aReturn) {                 \
-    return _g.GetElementsByTagName(aTagname, aReturn);                        \
-  }                                                                           \
-  NS_IMETHOD Normalize() {                                                    \
-    return _g.Normalize();                                                    \
+#define NS_IMPL_IDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(_g)                         \
+  NS_IMETHOD GetData(nsString& aData) {                                     \
+    return _g.GetData(aData);                                               \
+  }                                                                         \
+  NS_IMETHOD SetData(const nsString& aData) {                               \
+    return _g.SetData(aData);                                               \
+  }                                                                         \
+  NS_IMETHOD GetLength(PRUint32* aLength) {                                 \
+    return _g.GetLength(aLength);                                           \
+  }                                                                         \
+  NS_IMETHOD SubstringData(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn) { \
+    return _g.SubstringData(aStart, aEnd, aReturn);                         \
+  }                                                                         \
+  NS_IMETHOD AppendData(const nsString& aData) {                            \
+    return _g.AppendData(aData);                                            \
+  }                                                                         \
+  NS_IMETHOD InsertData(PRUint32 aOffset, const nsString& aData) {          \
+    return _g.InsertData(aOffset, aData);                                   \
+  }                                                                         \
+  NS_IMETHOD DeleteData(PRUint32 aOffset, PRUint32 aCount) {                \
+    return _g.DeleteData(aOffset, aCount);                                  \
+  }                                                                         \
+  NS_IMETHOD ReplaceData(PRUint32 aOffset, PRUint32 aCount,                 \
+                     const nsString& aData) {                               \
+    return _g.ReplaceData(aOffset, aCount, aData);                          \
   }
+
 
 /**
  * Implement the nsIDOMEventReceiver API by forwarding the methods to a
  * generic content object (either nsGenericHTMLLeafElement or
  * nsGenericHTMLContainerContent)
  */
-#define NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(_g)                     \
+#define NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC_DOM_DATA(_g)            \
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener,           \
                               const nsIID& aIID) {                      \
     return _g.AddEventListener(aListener, aIID);                        \
@@ -389,7 +341,21 @@ public:
     return _g.GetNewListenerManager(aResult);                           \
   }
 
-#define NS_IMPL_ICONTENT_USING_GENERIC(_g)                                 \
+/**
+ * Implement the nsIScriptObjectOwner API by forwarding the methods to a
+ * generic content object (either nsGenericHTMLLeafElement or
+ * nsGenericHTMLContainerContent)
+ */
+#define NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC_DOM_DATA(_g) \
+  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,      \
+                             void** aScriptObject) {          \
+    return _g.GetScriptObject(aContext, aScriptObject);       \
+  }                                                           \
+  NS_IMETHOD SetScriptObject(void *aScriptObject) {           \
+    return _g.SetScriptObject(aScriptObject);                 \
+  }
+
+#define NS_IMPL_ICONTENT_USING_GENERIC_DOM_DATA(_g)                        \
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
     return _g.GetDocument(aResult);                                        \
   }                                                                        \
@@ -431,8 +397,8 @@ public:
   NS_IMETHOD IsSynthetic(PRBool& aResult) {                                \
     return _g.IsSynthetic(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD GetNameSpaceID(PRInt32& aResult) const {                      \
-    return _g.GetNameSpaceID(aResult);                                     \
+  NS_IMETHOD GetNameSpaceID(PRInt32& aID) const {                          \
+    return _g.GetNameSpaceID(aID);                                         \
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {                             \
     return _g.GetTag(aResult);                                             \
@@ -446,13 +412,13 @@ public:
                                 nsIAtom*& aPrefix) {                       \
     return _g.GetNameSpacePrefix(aNameSpaceID, aPrefix);                   \
   }                                                                        \
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsString& aValue, PRBool aNotify) {        \
-    return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,       \
+                          nsString &aResult) const {                       \
+    return _g.GetAttribute(aNameSpaceID, aAttribute, aResult);             \
   }                                                                        \
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsString& aResult) const {                       \
-    return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,       \
+                          const nsString& aValue, PRBool aNotify) {        \
+    return _g.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);     \
   }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
                             PRBool aNotify) {                              \
@@ -466,9 +432,7 @@ public:
   NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
     return _g.GetAttributeCount(aResult);                                  \
   }                                                                        \
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {                      \
-    return _g.List(out, aIndent);                                          \
-  }                                                                        \
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;                       \
   NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const {         \
     return _g.BeginConvertToXIF(aConverter);                               \
   }                                                                        \
@@ -486,73 +450,57 @@ public:
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
                             nsEventStatus& aEventStatus);                  \
-  NS_IMETHOD RangeAdd(nsIDOMRange& aRange) {                               \
+  NS_IMETHOD RangeAdd(nsIDOMRange& aRange){                                \
     return _g.RangeAdd(aRange);                                            \
   }                                                                        \
-  NS_IMETHOD RangeRemove(nsIDOMRange& aRange) {                            \
+  NS_IMETHOD RangeRemove(nsIDOMRange& aRange){                             \
     return _g.RangeRemove(aRange);                                         \
   }                                                                        \
   NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const {                   \
     return _g.GetRangeList(aResult);                                       \
   }                                                                        
-  
+
 /**
- * Implement the nsIScriptObjectOwner API by forwarding the methods to a
- * generic content object
+ * This macro implements the portion of query interface that is
+ * generic to all html content objects.
  */
-#define NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(_g)     \
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, \
-                             void** aScriptObject) {     \
-    return _g.GetScriptObject(aContext, aScriptObject);  \
-  }                                                      \
-  NS_IMETHOD SetScriptObject(void *aScriptObject) {      \
-    return _g.SetScriptObject(aScriptObject);            \
+#define NS_IMPL_DOM_DATA_QUERY_INTERFACE(_id, _iptr, _this) \
+  if (_id.Equals(kISupportsIID)) {                          \
+    nsIContent* tmp = _this;                                \
+    nsISupports* tmp2 = tmp;                                \
+    *_iptr = (void*) tmp2;                                  \
+    NS_ADDREF_THIS();                                       \
+    return NS_OK;                                           \
+  }                                                         \
+  if (_id.Equals(kIDOMNodeIID)) {                           \
+    nsIDOMNode* tmp = _this;                                \
+    *_iptr = (void*) tmp;                                   \
+    NS_ADDREF_THIS();                                       \
+    return NS_OK;                                           \
+  }                                                         \
+  if (_id.Equals(kIDOMCharacterDataIID)) {                  \
+    nsIDOMCharacterData* tmp = _this;                       \
+    *_iptr = (void*) tmp;                                   \
+    NS_ADDREF_THIS();                                       \
+    return NS_OK;                                           \
+  }                                                         \
+  if (_id.Equals(kIDOMEventReceiverIID)) {                  \
+    nsIDOMEventReceiver* tmp = _this;                       \
+    *_iptr = (void*) tmp;                                   \
+    NS_ADDREF_THIS();                                       \
+    return NS_OK;                                           \
+  }                                                         \
+  if (_id.Equals(kIScriptObjectOwnerIID)) {                 \
+    nsIScriptObjectOwner* tmp = _this;                      \
+    *_iptr = (void*) tmp;                                   \
+    NS_ADDREF_THIS();                                       \
+    return NS_OK;                                           \
+  }                                                         \
+  if (_id.Equals(kIContentIID)) {                           \
+    nsIContent* tmp = _this;                                \
+    *_iptr = (void*) tmp;                                   \
+    NS_ADDREF_THIS();                                       \
+    return NS_OK;                                           \
   }
 
-#define NS_IMPL_CONTENT_QUERY_INTERFACE(_id, _iptr, _this, _base) \
-  if (_id.Equals(kISupportsIID)) {                              \
-    _base* tmp = _this;                                         \
-    nsISupports* tmp2 = tmp;                                    \
-    *_iptr = (void*) tmp2;                                      \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }                                                             \
-  if (_id.Equals(kIDOMNodeIID)) {                               \
-    nsIDOMNode* tmp = _this;                                    \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }                                                             \
-  if (_id.Equals(kIDOMElementIID)) {                            \
-    nsIDOMElement* tmp = _this;                                 \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }                                                             \
-  if (_id.Equals(kIDOMEventReceiverIID)) {                      \
-    nsIDOMEventReceiver* tmp = _this;                           \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }                                                             \
-  if (_id.Equals(kIScriptObjectOwnerIID)) {                     \
-    nsIScriptObjectOwner* tmp = _this;                          \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }                                                             \
-  if (_id.Equals(kIContentIID)) {                               \
-    _base* tmp = _this;                                         \
-    nsIContent* tmp2 = tmp;                                     \
-    *_iptr = (void*) tmp2;                                      \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }                                                             \
-  if (_id.Equals(kIJSScriptObjectIID)) {                        \
-    nsIJSScriptObject* tmp = (nsIJSScriptObject*)&mInner;       \
-    *_iptr = (void*) tmp;                                       \
-    NS_ADDREF_THIS();                                           \
-    return NS_OK;                                               \
-  }                                                             
-
-#endif /* nsGenericElement_h___ */
+#endif /* nsGenericDOMDataNode_h___ */

@@ -223,7 +223,7 @@ int main(int argc, char** argv)
   testStrings(myDoc);
 
   // Create a new text content object.
-  nsIHTMLContent *text;
+  nsIContent *text;
   rv = NS_NewTextNode(&text);
   if (NS_OK != rv) {
     printf("Could not create text content.\n");

@@ -52,6 +52,7 @@
 #include "nsXIFConverter.h"
 
 #include "nsIDOMText.h"
+#include "nsIDOMComment.h"
 #include "nsDocumentFragment.h"
 
 #include "nsINameSpaceManager.h"
@@ -62,6 +63,7 @@
 #include "nsIEnumerator.h"
 
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 #include "nsIDOMElement.h"
@@ -1069,8 +1071,15 @@ nsDocument::CreateElement(const nsString& aTagName,
 NS_IMETHODIMP
 nsDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsIContent* text = nsnull;
+  nsresult        rv = NS_NewTextNode(&text);
+
+  if (NS_OK == rv) {
+    rv = text->QueryInterface(kIDOMTextIID, (void**)aReturn);
+    (*aReturn)->AppendData(aData);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP    
@@ -1082,8 +1091,15 @@ nsDocument::CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)
 NS_IMETHODIMP    
 nsDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
 {
-  // Should be implemented by subclass
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsIContent* comment = nsnull;
+  nsresult        rv = NS_NewCommentNode(&comment);
+
+  if (NS_OK == rv) {
+    rv = comment->QueryInterface(kIDOMCommentIID, (void**)aReturn);
+    (*aReturn)->AppendData(aData);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -1275,8 +1291,9 @@ nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP    
 nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  // XXX TBI
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // We don't allow cloning of a document
+  *aReturn = nsnull;
+  return NS_OK;
 }
 
 

@@ -51,6 +51,10 @@ public:
   nsGenericHTMLElement();
   ~nsGenericHTMLElement();
 
+  nsresult CopyInnerTo(nsIContent* aSrcContent,
+                       nsGenericHTMLElement* aDest,
+                       PRBool aDeep);
+
   // Implementation for nsIDOMElement
   nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
   {
@@ -241,7 +245,8 @@ public:
   ~nsGenericHTMLLeafElement();
 
   nsresult CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericHTMLLeafElement* aDest);
+                       nsGenericHTMLLeafElement* aDest,
+                       PRBool aDeep);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
   nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);
@@ -318,7 +323,8 @@ public:
   ~nsGenericHTMLContainerElement();
 
   nsresult CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericHTMLContainerElement* aDest);
+                       nsGenericHTMLContainerElement* aDest,
+                       PRBool aDeep);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
   nsresult    GetChildNodes(nsIDOMNodeList** aChildNodes);

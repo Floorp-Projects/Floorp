@@ -279,21 +279,6 @@ nsXMLDocument::CreateEntityReference(const nsString& aName, nsIDOMEntityReferenc
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateComment(const nsString& aData, nsIDOMComment** aReturn)
-{
-  // XXX Should just be regular nsIContent
-  nsIHTMLContent* comment = nsnull;
-  nsresult        rv = NS_NewCommentNode(&comment);
-
-  if (NS_OK == rv) {
-    rv = comment->QueryInterface(kIDOMCommentIID, (void**)aReturn);
-    (*aReturn)->AppendData(aData);
-  }
-
-  return rv;
-}
- 
-NS_IMETHODIMP    
 nsXMLDocument::CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn)
 {
   // XXX TBI
@@ -320,21 +305,6 @@ nsXMLDocument::CreateElement(const nsString& aTagName,
   return rv;
 }
  
-NS_IMETHODIMP    
-nsXMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aReturn)
-{
-  // XXX Should just be regular nsIContent
-  nsIHTMLContent* text = nsnull;
-  nsresult        rv = NS_NewTextNode(&text);
-
-  if (NS_OK == rv) {
-    rv = text->QueryInterface(kIDOMTextIID, (void**)aReturn);
-    (*aReturn)->AppendData(aData);
-  }
-
-  return rv;
-}
-
 
 // nsIXMLDocument interface
 NS_IMETHODIMP 

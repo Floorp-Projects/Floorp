@@ -84,7 +84,6 @@ typedef struct {
   nsDOMCSSDeclaration *mStyle;
   nsDOMAttributeMap* mAttributeMap;
   nsVoidArray *mRangeList;
-  PRBool mIsContainer;
 } nsDOMSlots;
 
 class nsGenericElement : public nsIJSScriptObject {
@@ -210,7 +209,8 @@ public:
   ~nsGenericContainerElement();
 
   nsresult CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericContainerElement* aDest);
+                       nsGenericContainerElement* aDest,
+                       PRBool aDeep);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
   nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 

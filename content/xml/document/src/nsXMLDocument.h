@@ -50,11 +50,9 @@ public:
   NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDocumentType);
   NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn);
   NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
-  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn);
   NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
   NS_IMETHOD    CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn);
-  NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn);
 
   // nsIXMLDocument interface
   NS_IMETHOD PrologElementAt(PRInt32 aOffset, nsIContent** aContent);

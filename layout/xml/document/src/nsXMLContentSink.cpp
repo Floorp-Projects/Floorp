@@ -739,7 +739,7 @@ nsXMLContentSink::AddComment(const nsIParserNode& aNode)
   FlushText();
 
   nsAutoString text;
-  nsIHTMLContent *comment;
+  nsIContent *comment;
   nsIDOMComment *domComment;
   nsresult result = NS_OK;
 
@@ -1139,7 +1139,7 @@ nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
   PRBool didFlush = PR_FALSE;
   if (0 != mTextLength) {
     if (aCreateTextNode) {
-      nsIHTMLContent* content;
+      nsIContent* content;
       rv = NS_NewTextNode(&content);
       if (NS_OK == rv) {
         // Set the content's document

@@ -244,6 +244,22 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
   }
 }
 
+nsresult 
+nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
+                                  nsGenericHTMLElement* aDst,
+                                  PRBool aDeep)
+{
+  nsresult result = NS_OK;
+  
+  if (nsnull != mAttributes) {
+    aDst->mAttributes = mAttributes;
+    NS_ADDREF(mAttributes);
+    mAttributes->AddContentRef();
+  }
+
+  return result;
+}
+
 // Implementation for nsIDOMHTMLElement
 nsresult
 nsGenericHTMLElement::GetId(nsString& aId)
@@ -1772,12 +1788,13 @@ nsGenericHTMLLeafElement::~nsGenericHTMLLeafElement()
 
 nsresult
 nsGenericHTMLLeafElement::CopyInnerTo(nsIContent* aSrcContent,
-                                      nsGenericHTMLLeafElement* aDst)
+                                      nsGenericHTMLLeafElement* aDst,
+                                      PRBool aDeep)
 {
-  aDst->mContent = aSrcContent;
-  // XXX should the node's document be set?
-  // XXX copy attributes not yet impelemented
-  return NS_OK;
+  nsresult result = nsGenericHTMLElement::CopyInnerTo(aSrcContent,
+                                                      aDst,
+                                                      aDeep);
+  return result;
 }
 
 nsresult
@@ -1872,12 +1889,48 @@ nsGenericHTMLContainerElement::~nsGenericHTMLContainerElement()
 
 nsresult
 nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
-                                           nsGenericHTMLContainerElement* aDst)
+                                           nsGenericHTMLContainerElement* aDst,
+                                           PRBool aDeep)
 {
-  aDst->mContent = aSrcContent;
-  // XXX should the node's document be set?
-  // XXX copy attributes not yet impelemented
-  // XXX deep copy?
+  nsresult result = nsGenericHTMLElement::CopyInnerTo(aSrcContent,
+                                                      aDst,
+                                                      aDeep);
+  if (NS_OK != result) {
+    return result;
+  }
+
+  if (aDeep) {
+    PRInt32 index;
+    PRInt32 count = mChildren.Count();
+    for (index = 0; index < count; index++) {
+      nsIContent* child = (nsIContent*)mChildren.ElementAt(index);
+      if (nsnull != child) {
+        nsIDOMNode* node;
+        result = child->QueryInterface(kIDOMNodeIID, (void**)&node);
+        if (NS_OK == result) {
+          nsIDOMNode* newNode;
+          
+          result = node->CloneNode(aDeep, &newNode);
+          if (NS_OK == result) {
+            nsIContent* newContent;
+            
+            result = newNode->QueryInterface(kIContentIID, (void**)&newContent);
+            if (NS_OK == result) {
+              result = aDst->AppendChildTo(newContent, PR_FALSE);
+              NS_RELEASE(newContent);
+            }
+            NS_RELEASE(newNode);
+          }
+          NS_RELEASE(node);
+        }
+
+        if (NS_OK != result) {
+          return result;
+        }
+      }
+    }
+  }
+
   return NS_OK;
 }
 

@@ -126,7 +126,7 @@ nsHTMLParagraphElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->mInner.Init(it, mInner.mTag);
-  mInner.CopyInnerTo(this, &it->mInner);
+  mInner.CopyInnerTo(this, &it->mInner, aDeep);
   return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
 }
 

@@ -26,8 +26,6 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
 CPPSRCS=				\
-	nsCommentNode.cpp		\
-	nsGenericDOMDataNode.cpp	\
 	nsGenericHTMLElement.cpp	\
 	nsGenericDOMHTMLCollection.cpp	\
 	GenericElementCollection.cpp    \
@@ -44,7 +42,7 @@ CPPSRCS=				\
 	nsHTMLDirectoryElement.cpp	\
 	nsHTMLDivElement.cpp		\
 	nsHTMLEmbedElement.cpp		\
-	nsHTMLFieldSetElement.cpp		\
+	nsHTMLFieldSetElement.cpp	\
 	nsHTMLFontElement.cpp		\
 	nsHTMLFormElement.cpp		\
 	nsHTMLFrameElement.cpp		\
@@ -91,12 +89,9 @@ CPPSRCS=				\
 	nsHTMLTitleElement.cpp		\
 	nsHTMLUListElement.cpp		\
 	nsHTMLWBRElement.cpp		\
-	nsTextNode.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
-	.\$(OBJDIR)\nsCommentNode.obj			\
-	.\$(OBJDIR)\nsGenericDOMDataNode.obj		\
 	.\$(OBJDIR)\nsGenericHTMLElement.obj		\
 	.\$(OBJDIR)\nsGenericDOMHTMLCollection.obj	\
 	.\$(OBJDIR)\GenericElementCollection.obj    \
@@ -160,7 +155,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLTitleElement.obj		\
 	.\$(OBJDIR)\nsHTMLUListElement.obj		\
 	.\$(OBJDIR)\nsHTMLWBRElement.obj		\
-	.\$(OBJDIR)\nsTextNode.obj			\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
