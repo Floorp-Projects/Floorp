@@ -18,12 +18,12 @@
 
   <titledbox>
  		<html:div style="width: 45px; margin: 5px;">
-      <titledbutton class="message-icon plain"/>
+      <titledbutton/>
 	  </html:div>
  		<box orient="vertical" flex="100%">    
       <html:div>&startDownload;</html:div>
       <html:div style="width: 100%; margin: 3px;">
-        <titledbutton id="dialog.contentType" align="left" class="plain" flex="100%" style="width: 100%; font-weight: bold;"/>
+        <titledbutton id="dialog.contentType" align="left" flex="100%" style="width: 100%; font-weight: bold;"/>
       </html:div> 
   		<html:div style="margin-bottom: 0.5em;">&helpText;</html:div> 
     </box>
@@ -31,7 +31,7 @@
   
   <box style="width: 100%" autostretch="never">
     <spring flex="5%"/>
-    <html:div><titledbutton class="dialog push" id="dialog.more" value="&dialogMore.label;" onclick="more()"/></html:div>
+    <html:div><titledbutton id="dialog.more" value="&dialogMore.label;" onclick="more()"/></html:div>
     <spring flex="100%"/>
     <box id="okCancelButtons"/>
     <spring flex="5%"/>
