@@ -71,6 +71,7 @@ PRLogModuleInfo *IMAP;
 #include "nsIPref.h"
 #include "nsImapUtils.h"
 #include "nsIProxyObjectManager.h"
+#include "nsIStreamConverterService.h"
 
 #if 0
 #include "nsIHashAlgorithm.h"
@@ -80,6 +81,7 @@ PRLogModuleInfo *IMAP;
 
 const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
 
+static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -6963,6 +6965,7 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
         // if we are going to read from the cache, then create a mock stream listener class and use it
         nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
         NS_ADDREF(cacheListener);
+        SetupPartExtractor(imapUrl, m_channelListener);
         cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
         rv = cacheChannel->AsyncOpen(cacheListener, m_channelContext);
         NS_RELEASE(cacheListener);
@@ -7017,6 +7020,7 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
         // if we are going to read from the cache, then create a mock stream listener class and use it
         nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
         NS_ADDREF(cacheListener);
+        SetupPartExtractor(imapUrl, m_channelListener);
         cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
         nsCOMPtr<nsIRequest> request;
         rv = fileChannel->AsyncRead(cacheListener, m_channelContext, offset, size, 0, getter_AddRefs(request));
@@ -7032,6 +7036,8 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
       }
     }
   }
+
+  SetupPartExtractor(imapUrl, m_channelListener);
 
   // okay, add the mock channel to the load group..
   imapUrl->AddChannelToLoadGroup();
@@ -7053,6 +7059,28 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
   if (NS_FAILED(rv)) return rv;
   rv = imapServer->GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull);
   return rv;
+}
+
+nsresult nsImapMockChannel::SetupPartExtractor(nsIImapUrl * aUrl, nsIStreamListener * aConsumer)
+{
+  // if the url we are loading refers to a specific part then we need 
+  // libmime to extract that part from the message for us.
+  PRBool refersToPart = PR_FALSE;
+  aUrl->GetMimePartSelectorDetected(&refersToPart);
+  if (refersToPart)
+  {
+    nsCOMPtr<nsIStreamConverterService> converter = do_GetService(kIStreamConverterServiceCID);
+    if (converter && aConsumer)
+    {
+      nsCOMPtr<nsIStreamListener> newConsumer;
+      converter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(), NS_LITERAL_STRING("*/*").get(),
+           aConsumer, this, getter_AddRefs(newConsumer));
+      if (newConsumer)
+        m_channelListener = newConsumer;
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)

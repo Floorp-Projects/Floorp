@@ -610,6 +610,8 @@ protected:
   nsCOMPtr<nsISupports> mOwner;
   nsCOMPtr<nsISupports> mSecurityInfo;
   nsCString m_ContentType;
+
+  nsresult SetupPartExtractor(nsIImapUrl * aUrl, nsIStreamListener * aConsumer);
 };
 
 #endif  // nsImapProtocol_h___

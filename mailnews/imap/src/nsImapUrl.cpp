@@ -1400,7 +1400,8 @@ void nsImapUrl::ParseListOfMessageIds()
 	else
 	{
     m_listOfMessageIds = nsCRT::strdup(m_listOfMessageIds);
-		m_mimePartSelectorDetected = PL_strstr(m_listOfMessageIds, "&part=") != 0;
+		m_mimePartSelectorDetected = PL_strstr(m_listOfMessageIds, "&part=") != 0 || PL_strstr(m_listOfMessageIds, "?part=") != 0;
+
 	}
 }
 
