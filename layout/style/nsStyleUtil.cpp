@@ -411,8 +411,9 @@ static nscoord NewCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
     case eFontSize_CSS:  column = sCSSColumns;  break;
   }
 
+  // Make special call specifically for fonts (needed PrintPreview)
   float t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixelsForFonts(&t2p);
   PRInt32 fontSize = NSTwipsToIntPixels(aBasePointSize, t2p);
 
   if ((fontSize >= sFontSizeTableMin) && (fontSize <= sFontSizeTableMax))
