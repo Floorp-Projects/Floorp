@@ -928,7 +928,7 @@ nsRegistry::GetBytesUTF8IntoBuffer( nsRegistryKey baseKey, const char *path,
     // Attempt to get bytes into our fixed buffer
     PR_Lock(mregLock);
     err = NR_RegGetEntry( mReg,(RKEY)baseKey,NS_CONST_CAST(char*,path),
-                          buf, (unsigned long *)length );
+                          buf, (uint32 *)length );
     PR_Unlock(mregLock);
 
     rv = regerr2nsresult(rv);
