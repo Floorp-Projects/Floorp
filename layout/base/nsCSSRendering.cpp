@@ -1375,8 +1375,8 @@ nsMargin            border;
 const nsStyleColor* bgColor = nsStyleUtil::FindNonTransparentBackground(aStyleContext); 
 nsStyleCoord        bordStyleRadius[4];
 PRInt16             borderRadii[4],i;
-nsStyleCoord        tr,lr,rr,br;
-nsStyleCoord        borderRadius;
+//nsStyleCoord        tr,lr,rr,br;
+//nsStyleCoord        borderRadius;
 float               percent;
 
   if (aHardBorderSize > 0) {

@@ -828,7 +828,6 @@ nsFtpConnectionThread::SetStreamObserver(nsIStreamObserver* aObserver, nsISuppor
 
 nsresult
 nsFtpConnectionThread::SetStreamListener(nsIStreamListener* aListener, nsISupports *aContext) {
-    nsresult rv = NS_OK;
     mListener = aListener;
     mListenerContext = aContext;
     return NS_OK;
@@ -1387,7 +1386,6 @@ nsFtpConnectionThread::S_list() {
 
 FTP_STATE
 nsFtpConnectionThread::R_list() {
-    nsresult rv = NS_OK;
     if ((mResponseCode/100 == 4) 
         ||
         (mResponseCode/100 == 5)) {
@@ -1433,7 +1431,6 @@ nsFtpConnectionThread::S_retr() {
 
 FTP_STATE
 nsFtpConnectionThread::R_retr() {
-    nsresult rv = NS_OK;
     if (mResponseCode/100 == 1) {
         // success.
         return FTP_READ_BUF;
