@@ -561,8 +561,11 @@ nsresult nsScanner::SkipWhitespace(void) {
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
-  NS_ENSURE_SUCCESS(result, result);
-
+  
+  if (result == kEOF) {
+    return Eof();
+  }
+  
   while (current != mEndPosition) {
     switch(theChar) {
       case '\n': mNewlinesSkipped++;
@@ -584,18 +587,14 @@ nsresult nsScanner::SkipWhitespace(void) {
     skipped = PR_TRUE;
   }
 
-  if (!skipped)
-    return NS_OK;
-  
-  if (current == mEndPosition) {
+  if (skipped) {
     SetPosition(current);
-    return Eof();
+    if (current == mEndPosition) {
+      return Eof();
+    }
   }
 
-  SetPosition(current);
-
   return NS_OK;
-
 }
 
 /**
@@ -1195,7 +1194,10 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
-  NS_ENSURE_SUCCESS(result, result);
+
+  if (result == kEOF) {
+    return Eof();
+  }
   
   while (current != mEndPosition) {
     // Filter out completely wrong characters
@@ -1251,7 +1253,11 @@ nsresult nsScanner::ReadUntil(nsReadingIterator<PRUnichar>& aStart,
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
-  NS_ENSURE_SUCCESS(result, result);
+  
+  if (result == kEOF) {
+    aStart = aEnd = current;
+    return Eof();
+  }
   
   while (current != mEndPosition) {
     // Filter out completely wrong characters
@@ -1310,7 +1316,6 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
 
   PRUnichar theChar;
   nsresult  result=Peek(theChar);
-  NS_ENSURE_SUCCESS(result, result);
   
   while (current != mEndPosition) {
     if (aTerminalChar == theChar) {
