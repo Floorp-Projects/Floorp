@@ -137,7 +137,7 @@ function copySelectionToClipboard()
 		trans.setTransferData ( "text/html", htmlData, html.length*2 );			// double byte data
 	}
 
-	clip.setData(trans, null);
+	clip.setData(trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard);
 
 	return(true);
 }
@@ -185,7 +185,7 @@ function doPaste()
 	if ( !trans )	return(false);
 	trans.addDataFlavor("moz/bookmarkclipboarditem");
 
-	clip.getData(trans);
+	clip.getData(trans, Components.interfaces.nsIClipboard.kGlobalClipboard);
 	var data = new Object();
 	var dataLen = new Object();
 	trans.getTransferData("moz/bookmarkclipboarditem", data, dataLen);

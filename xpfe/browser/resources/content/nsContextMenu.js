@@ -467,7 +467,7 @@ nsContextMenu.prototype = {
             data.data = text ;
             transferable.setTransferData( "text/unicode", data, text.length * 2 );
             // Put on clipboard.
-            clipboard.setData( transferable, null );
+            clipboard.setData( transferable, null, Components.interfaces.nsIClipboard.kGlobalClipboard );
           }
         }
     },
