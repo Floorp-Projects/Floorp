@@ -1091,6 +1091,7 @@
 #define EDITDLG_LIMITS					5118
 #define EDITDLG_FILE_MODIFIED			5119
 #define EDITDLG_AUTOSAVE				5120
+#define EDITDLG_BROWSE_PUBLISHED		5121
 
 // These are Tabbed dialog boxes used for the editor
 // Each dialog box below has a Tab with several views
