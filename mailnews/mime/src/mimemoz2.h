@@ -201,7 +201,8 @@ extern "C" nsresult         nsMimeNewURI(nsIURI** aInstancePtrResult, const char
 
 extern "C" nsresult SetMailCharacterSetToMsgWindow(MimeObject *obj, const PRUnichar *aCharacterSet); 
 
-extern "C" nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRUint32 nameBuffSize, PRInt32 *fontPixelSize, PRInt32 *fontSizePercentage);
+extern "C"  nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, PRInt32 *fontPixelSize, PRInt32 *fontSizePercentage, nsCString& fontLang);
+
 
 #ifdef __cplusplus
 }

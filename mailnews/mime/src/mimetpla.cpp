@@ -169,35 +169,31 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
       // Get font
       // only used for viewing (!plainHTML)
       nsCAutoString fontstyle;
+      nsCAutoString fontLang;  // langgroup of the font
+
+      // generic font-family name ( -moz-fixed for fixed font and NULL for
+      // variable font ) is sufficient now that bug 105199 has been fixed.
+
+      if (!obj->options->variable_width_plaintext_p)
+        fontstyle = "font-family: -moz-fixed";
+
       if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
           nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
       {
-        /* Use a langugage sensitive default font
-           (otherwise unicode font will be used since the data is UTF-8). */
-        char fontName[128];     // default font name
         PRInt32 fontSize;       // default font size
         PRInt32 fontSizePercentage;   // size percentage
         nsresult rv = GetMailNewsFont(obj,
                            !obj->options->variable_width_plaintext_p,
-                           fontName, 128, &fontSize, &fontSizePercentage);
+                           &fontSize, &fontSizePercentage, fontLang);
         if (NS_SUCCEEDED(rv))
         {
-          fontstyle = "font-family: ";
-          fontstyle += fontName;
-          fontstyle += "; font-size: ";
+          if ( ! fontstyle.IsEmpty() ) {
+            fontstyle += "; ";
+          }
+          fontstyle += "font-size: ";
           fontstyle.AppendInt(fontSize);
           fontstyle += "px;";
         }
-        else
-        {
-          if (!obj->options->variable_width_plaintext_p)
-            fontstyle = "font-family: -moz-fixed";
-        }
-      }
-      else  // DELETEME: makes sense?
-      {
-        if (!obj->options->variable_width_plaintext_p)
-          fontstyle = "font-family: -moz-fixed";
       }
 
       // Opening <div>. We currently have to add formatting here. :-(
@@ -223,6 +219,12 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
           {
             openingDiv += " style=\"";
             openingDiv += fontstyle;
+            openingDiv += '\"';
+          }
+          if (!fontLang.IsEmpty())
+          {
+            openingDiv += " lang=\"";
+            openingDiv += fontLang;
             openingDiv += '\"';
           }
         }

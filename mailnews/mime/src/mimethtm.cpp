@@ -76,13 +76,13 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
       nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
   {
     char buf[256];            // local buffer for html tag
-    char fontName[128];       // default font name
     PRInt32 fontSize;         // default font size
     PRInt32 fontSizePercentage;   // size percentage
-    if (NS_SUCCEEDED(GetMailNewsFont(obj, PR_FALSE, fontName, sizeof(fontName), &fontSize, &fontSizePercentage)))
+    nsCAutoString fontLang;       // langgroup of the font. 
+    if (NS_SUCCEEDED(GetMailNewsFont(obj, PR_FALSE, &fontSize, &fontSizePercentage,fontLang)))
     {
-      PR_snprintf(buf, 256, "<div class=\"moz-text-html\" style=\"font-family: %s;\">", 
-                  (const char *) fontName);
+      PR_snprintf(buf, 256, "<div class=\"moz-text-html\"  lang=\"%s\">", 
+                  PromiseFlatCString(fontLang).get());
       status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
     }
     else
