@@ -4197,10 +4197,6 @@ char* nsImapProtocol::CreateNewLineFromSocket()
     }
   } while (!newLine && !DeathSignalReceived()); // until we get the next line and haven't been interrupted
   
-  if (newLine && strlen(newLine) != numBytesInLine)
-  {
-    NS_ASSERTION(PR_FALSE, "line with nulls");
-  }
   Log("CreateNewLineFromSocket", nsnull, newLine);
   SetConnectionStatus(newLine && numBytesInLine ? 1 : -1); // set > 0 if string is not null or empty
   return newLine;
