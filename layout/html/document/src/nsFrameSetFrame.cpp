@@ -51,8 +51,10 @@
 #define ALL_VIS    0x000F
 #define NONE_VIS   0x0000
 
+// Use these defines
+#define NULL_POINT_X -1000000
+#define NULL_POINT_Y 1000000
 
-static nsPoint NULL_POINT(-1000000,1000000);
 static PRInt32 LEFT_EDGE  = -1;
 static PRInt32 RIGHT_EDGE = 1000000;
 
@@ -1338,7 +1340,10 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext& aPresContext, nsHTMLFrameset
       viewMan->GrabMouseEvents(view, ignore);
       NS_RELEASE(viewMan);
       mDragger = aBorder;
-      mLastDragPoint = NULL_POINT; // can't set it to this event's point - it is not in framesetframe coords
+
+      // can't set it to this event's point - it is not in framesetframe coords
+      mLastDragPoint.MoveTo(NULL_POINT_X, NULL_POINT_Y);
+
       gDragInProgress = PR_TRUE;
     }
   }
@@ -1348,7 +1353,8 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext& aPresContext, nsHTMLFrameset
 void
 nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
 {
-  if (NULL_POINT == mLastDragPoint) {
+  if ((mLastDragPoint.x == NULL_POINT_X) &&
+      (mLastDragPoint.y == NULL_POINT_Y)) {
     mLastDragPoint.x = aEvent->point.x;
     mLastDragPoint.y = aEvent->point.y;
     return;

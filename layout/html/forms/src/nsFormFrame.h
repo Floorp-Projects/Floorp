@@ -95,18 +95,15 @@ public:
   NS_IMETHOD GetTarget(nsString* aTarget);
   NS_IMETHOD GetAction(nsString* aAction);
 
-  static nsFormFrame* GetFormFrame(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem) { 
-    return gFormFrameTable->Get(aPresContext, aFormElem);
-  }
+  static nsFormFrame* GetFormFrame(nsIPresContext& aPresContext,
+                                   nsIDOMHTMLFormElement& aFormElem);
 
-  static void PutFormFrame(nsIPresContext& aPresContext, nsIDOMHTMLFormElement& aFormElem, 
-                           nsFormFrame& aFrame) { 
-    gFormFrameTable->Put(aPresContext, aFormElem, aFrame);
-  }
+  static void PutFormFrame(nsIPresContext& aPresContext,
+                           nsIDOMHTMLFormElement& aFormElem, 
+                           nsFormFrame& aFrame);
 
-  static void RemoveFormFrame(nsFormFrame& aFrame) { 
-    gFormFrameTable->Remove(aFrame);
-  }
+  static void RemoveFormFrame(nsFormFrame& aFrame);
+
   // static helper functions for nsIFormControls
   
   static PRBool GetDisabled(nsIFrame* aChildFrame, nsIContent* aContent = 0);
@@ -131,8 +128,6 @@ protected:
   static PRBool Temp_GetTempDir(char* aTempDirName);
   static char* Temp_GenerateTempFileName(PRInt32 aMaxSize, char* aBuffer);
   static void  Temp_GetContentType(char* aPathName, char* aContentType);
-
-  static nsFormFrameTable* gFormFrameTable;
 
   nsVoidArray          mFormControls;
   nsVoidArray          mRadioGroups;

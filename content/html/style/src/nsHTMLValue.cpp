@@ -21,8 +21,6 @@
 #include "nsCRT.h"
 #include "nsISizeOfHandler.h"
 
-const nsHTMLValue nsHTMLValue::kNull;
-
 nsHTMLValue::nsHTMLValue(nsHTMLUnit aUnit)
   : mUnit(aUnit)
 {

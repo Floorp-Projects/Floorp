@@ -78,8 +78,41 @@ static NS_DEFINE_IID(kIDOMNSHTMLFormElementIID, NS_IDOMNSHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
+// XXX This crud needs to go! The FindFrameWithContent *will* be using
+// a hashtable so this code will be redundant. In addition,
+// FindFrameWithContent will be connected to the frame construction
+// and guaranteed to be kept properly up to date.
+static nsFormFrameTable* gFormFrameTable;
 
-nsFormFrameTable* nsFormFrame::gFormFrameTable = new nsFormFrameTable();
+nsFormFrame*
+nsFormFrame::GetFormFrame(nsIPresContext& aPresContext,
+                          nsIDOMHTMLFormElement& aFormElem)
+{ 
+  if (nsnull == gFormFrameTable) {
+    gFormFrameTable = new nsFormFrameTable();
+  }
+  return gFormFrameTable->Get(aPresContext, aFormElem);
+}
+
+void
+nsFormFrame::PutFormFrame(nsIPresContext& aPresContext,
+                          nsIDOMHTMLFormElement& aFormElem, 
+                          nsFormFrame& aFrame)
+{ 
+  if (nsnull == gFormFrameTable) {
+    gFormFrameTable = new nsFormFrameTable();
+  }
+  gFormFrameTable->Put(aPresContext, aFormElem, aFrame);
+}
+
+void
+nsFormFrame::RemoveFormFrame(nsFormFrame& aFrame)
+{
+  if (nsnull == gFormFrameTable) {
+    gFormFrameTable = new nsFormFrameTable();
+  }
+  gFormFrameTable->Remove(aFrame);
+}
 
 nsFormFrameTableEntry::
 nsFormFrameTableEntry(nsIPresContext&        aPresContext, 

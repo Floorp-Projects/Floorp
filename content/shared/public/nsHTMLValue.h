@@ -82,9 +82,6 @@ protected:
     nsISupports*  mISupports;
     nscolor       mColor;
   }           mValue;
-
-public:
-  static const nsHTMLValue kNull;
 };
 
 inline PRInt32 nsHTMLValue::GetIntValue(void) const
