@@ -1921,7 +1921,7 @@ nsExtensionManager.prototype = {
         for (var i = 0; i < items.length; ++i) {
           // Now disable the extension so it won't hurt anything. 
           var itemType = getItemType(this._ds._getResourceForItem(items[i].id).Value);
-          if (itemType & nsIUpdateItem.TYPE_EXTENSION)
+          if (itemType != -1 && itemType & nsIUpdateItem.TYPE_EXTENSION)
             this.disableExtension(items[i].id);
           else if (itemType & nsIUpdateItem.TYPE_THEME) {
             var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
@@ -2362,8 +2362,6 @@ nsExtensionManager.prototype = {
   installTheme: function (aJARFile, aFlags)
   {
     this._ensureDS();
-    
-    dump("*** installTheme\n");
     
     var isProfile = aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE;
     var installer = new nsThemeInstaller(this._ds, this);
@@ -3535,7 +3533,7 @@ nsExtensionsDataSource.prototype = {
       
     if (aProperty.EqualsNode(this._emR("iconURL"))) {
       var itemType = getItemType(aSource.Value);
-      if (itemType & nsIUpdateItem.TYPE_EXTENSION) {
+      if (itemType != -1 && itemType & nsIUpdateItem.TYPE_EXTENSION) {
         var hasIconURL = this._composite.hasArcOut(aSource, aProperty);
         // If the download entry doesn't have a IconURL property, use a
         // generic icon URL instead.
@@ -3558,7 +3556,7 @@ nsExtensionsDataSource.prototype = {
           }
         }
       }
-      else if (itemType & nsIUpdateItem.TYPE_THEME) {
+      else if (itemType != -1 && itemType & nsIUpdateItem.TYPE_THEME) {
         var res = this._getThemeJARURL(aSource, "icon.png", "chrome://mozapps/skin/extensions/themeGeneric.png");
         if (res)
           return res;
@@ -3566,7 +3564,7 @@ nsExtensionsDataSource.prototype = {
     }
     else if (aProperty.EqualsNode(this._emR("previewImage"))) {
       var itemType = getItemType(aSource.Value);
-      if (itemType & nsIUpdateItem.TYPE_THEME) {
+      if (itemType != -1 && itemType & nsIUpdateItem.TYPE_THEME) {
         var res = this._getThemeJARURL(aSource, "preview.png", null);
         if (res)
           return res;

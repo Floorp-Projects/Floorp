@@ -274,7 +274,21 @@ XPInstallDownloadManager.prototype = {
         catch (e) {
           msg = xpinstallStrings.getFormattedString("unknown.error", [aValue]);
         }
-        element.setAttribute("error", msg);
+        var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                            .getService(Components.interfaces.nsIStringBundleService);
+        var extensionStrings = sbs.createBundle("chrome://mozapps/locale/extensions/extensions.properties");
+        var title = extensionStrings.GetStringFromName("errorInstallTitle");
+
+        var brandStrings = sbs.createBundle("chrome://global/locale/brand.properties");
+        var brandShortName = brandStrings.GetStringFromName("brandShortName");
+        var params = [brandShortName, aURL, msg];
+        var message = extensionStrings.formatStringFromName("errorInstallMessage", params, params.length);
+        
+        var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                           .getService(Components.interfaces.nsIPromptService);
+        ps.alert(window, title, message);
+        element.setAttribute("status", msg);
+
       }
       // Remove the dummy, since we installed successfully
       var type = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION 
