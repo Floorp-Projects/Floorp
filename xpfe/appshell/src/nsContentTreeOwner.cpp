@@ -36,6 +36,7 @@
 #include "nsIPrompt.h"
 #include "nsIWindowMediator.h"
 #include "nsIXULBrowserWindow.h"
+#include "nsPIDOMWindow.h"
 
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -196,15 +197,17 @@ NS_IMETHODIMP nsContentTreeOwner::SetJSStatus(const PRUnichar* aStatus)
 {
    nsCOMPtr<nsIDOMWindow> domWindow;
    mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
-   if(!domWindow)
+   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(domWindow));
+   if(!piDOMWindow)
       return NS_OK;
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   domWindow->GetXPConnectObject("XULBrowserWindow", getter_AddRefs(xpConnectObj));
-   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
+   nsAutoString xulBrowserWinId("XULBrowserWindow");
+   piDOMWindow->GetXPConnectObject(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
 
+   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
    if(xulBrowserWindow)
-      xulBrowserWindow->SetStatus(aStatus);
+      xulBrowserWindow->SetJSStatus(aStatus);
    return NS_OK;
 }
 
@@ -212,15 +215,17 @@ NS_IMETHODIMP nsContentTreeOwner::SetJSDefaultStatus(const PRUnichar* aStatus)
 {
    nsCOMPtr<nsIDOMWindow> domWindow;
    mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
-   if(!domWindow)
+   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(domWindow));
+   if(!piDOMWindow)
       return NS_OK;
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   domWindow->GetXPConnectObject("XULBrowserWindow", getter_AddRefs(xpConnectObj));
+   nsAutoString xulBrowserWinId("XULBrowserWindow");
+   piDOMWindow->GetXPConnectObject(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
    if(xulBrowserWindow)
-      xulBrowserWindow->SetDefaultStatus(aStatus);
+      xulBrowserWindow->SetJSDefaultStatus(aStatus);
    return NS_OK;
 }
 
@@ -228,11 +233,13 @@ NS_IMETHODIMP nsContentTreeOwner::SetOverLink(const PRUnichar* aLink)
 {
    nsCOMPtr<nsIDOMWindow> domWindow;
    mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
-   if(!domWindow)
+   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(domWindow));
+   if(!piDOMWindow)
       return NS_OK;
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   domWindow->GetXPConnectObject("XULBrowserWindow", getter_AddRefs(xpConnectObj));
+   nsAutoString xulBrowserWinId("XULBrowserWindow");
+   piDOMWindow->GetXPConnectObject(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
    if(xulBrowserWindow)
