@@ -230,9 +230,15 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
         break;
  
       case nsIDOMKeyEvent::DOM_VK_DELETE:
-        if (isAnyModifierKeyButShift)
-          return NS_OK;
+        /* on certain platforms (such as windows) the shift key
+           modifies what delete does (cmd_cut in this case).
+           bailing here to allow the keybindings to do the cut.*/
+        PRBool isShiftModifierKey;
+        rv = keyEvent->GetShiftKey(&isShiftModifierKey);
+        if (NS_FAILED(rv)) return rv;
 
+        if (isAnyModifierKeyButShift || isShiftModifierKey)
+           return NS_OK;
         mEditor->DeleteSelection(nsIEditor::eNext);
         ScrollSelectionIntoView(mEditor);
         aKeyEvent->PreventDefault(); // consumed

@@ -117,6 +117,7 @@
       <handler event="keypress" keycode="VK_RIGHT" modifiers="meta" command="cmd_wordNext" /> 
       <handler event="keypress" keycode="VK_LEFT" modifiers="shift,meta" command="cmd_selectWordPrevious" /> 
       <handler event="keypress" keycode="VK_RIGHT" modifiers="shift,meta" command="cmd_selectWordNext" /> 
+      <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_deleteCharForward" /> 
     </handlers>
   </binding>
 
