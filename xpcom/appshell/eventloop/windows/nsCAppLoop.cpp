@@ -29,7 +29,6 @@
 
 nsCAppLoop::nsCAppLoop() : nsCBaseAppLoop()
 {
-	m_WinThreadId = ::GetCurrentThreadId();
 }
 
 nsCAppLoop::~nsCAppLoop()
@@ -60,82 +59,4 @@ nsresult nsCAppLoop::PlatformExit(PRInt32 exitCode)
 {
 	PostQuitMessage(exitCode);
 	return NS_OK;
-}
-
-nsresult nsCAppLoop::PlatformGetNextEvent(void* platformFilterData, 
-	void* platformEventData)
-{
-	nsCWinFilter* filter=(nsCWinFilter*)platformFilterData;
-	MSG* pMsg=(MSG*)platformEventData;
-	if(::GetMessage(pMsg, filter->hWnd, filter->wMsgFilterMin, 
-		filter->wMsgFilterMax))
-		return NS_OK;
-	return  NS_COMFALSE; 
-}
-
-nsresult nsCAppLoop::PlatformPeekNextEvent(void* platformFilterData, 
-	void* platformEventData, PRBool fRemoveEvent)
-{
-	nsCWinFilter* filter=(nsCWinFilter*)platformFilterData;
-	MSG* pMsg=(MSG*)platformEventData;
-	
-	if(fRemoveEvent)
-		filter->wRemoveFlags|= PM_REMOVE;
-	else
-		filter->wRemoveFlags&= ~PM_REMOVE;
-	if(::PeekMessage(pMsg, filter->hWnd, filter->wMsgFilterMin, 
-		filter->wMsgFilterMax, filter->wRemoveFlags))
-		return NS_OK;
-	return NS_COMFALSE;
-}
-
-nsresult nsCAppLoop::PlatformTranslateEvent(void* platformEventData)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	::TranslateMessage(pMsg);
-	return NS_OK;
-}
-
-nsresult nsCAppLoop::PlatformDispatchEvent(void* platformEventData)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	::DispatchMessage(pMsg);
-	return NS_OK;
-}
-
-nsresult nsCAppLoop::PlatformSendLoopEvent(void* platformEventData, PRInt32* result)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	*result = ::SendMessage(pMsg->hwnd, pMsg->message, pMsg->wParam,pMsg->lParam);
-	return NS_OK;
-}
-
-nsresult nsCAppLoop::PlatformPostLoopEvent(void* platformEventData)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	if(!pMsg->hwnd)
-		{
-		if(!::PostThreadMessage(m_WinThreadId, pMsg->message, pMsg->wParam,
-			pMsg->lParam))
-			return NS_ERROR_FAILURE;
-		}
-	else if(!::PostMessage(pMsg->hwnd, pMsg->message, pMsg->wParam, pMsg->lParam))
-		return NS_ERROR_FAILURE;
-	return NS_OK;
-}
-
-nsNativeEventDataType nsCAppLoop::PlatformGetEventType()
-{
-	return nsNativeEventDataTypes::WinMsgStruct;
-}
-
-nsNativeEventDataType nsCAppLoop::PlatformGetFilterType()
-{
-	return nsNativeFilterDataTypes::WinFilter;
-}
-
-PRInt32 nsCAppLoop::PlatformGetReturnCode(void* platformEventData)
-{
-	MSG* pMsg=(MSG*)platformEventData;
-	return pMsg->wParam;
 }

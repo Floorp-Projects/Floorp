@@ -23,9 +23,9 @@
 #ifndef nsCBaseThreadLoop_h__
 #define nsCBaseThreadLoop_h__
 
-#include "nsCBaseLoop.h"
+#include "nsCPlatformBaseLoop.h"
 
-class nsCBaseThreadLoop : public nsCBaseLoop
+class nsCBaseThreadLoop : public nsCPlatformBaseLoop
 {
 public:
 

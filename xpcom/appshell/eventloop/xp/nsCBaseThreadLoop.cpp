@@ -31,7 +31,7 @@
 //*****************************************************************************
 
 nsCBaseThreadLoop::nsCBaseThreadLoop() : 
-	nsCBaseLoop(nsEventLoopTypes::ThreadLoop)
+	nsCPlatformBaseLoop(nsEventLoopTypes::ThreadLoop)
 {
 }
 

@@ -23,9 +23,9 @@
 #ifndef nsCBaseBreathLoop_h__
 #define nsCBaseBreathLoop_h__
 
-#include "nsCBaseLoop.h"
+#include "nsCPlatformBaseLoop.h"
 
-class nsCBaseBreathLoop : public nsCBaseLoop
+class nsCBaseBreathLoop : public nsCPlatformBaseLoop
 {
 public:
 

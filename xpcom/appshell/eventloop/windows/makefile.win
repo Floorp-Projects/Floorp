@@ -33,6 +33,7 @@ CPP_OBJS=												\
 		.\..\xp\$(OBJDIR)\nsCBaseAppLoop.obj	\
 		.\..\xp\$(OBJDIR)\nsCBaseBreathLoop.obj	\
 		.\..\xp\$(OBJDIR)\nsCBaseThreadLoop.obj	\
+		.\$(OBJDIR)\nsCPlatformBaseLoop.obj			\
 		.\$(OBJDIR)\nsCEvent.obj					\
 		.\$(OBJDIR)\nsCEventFilter.obj			\
 		.\$(OBJDIR)\nsCAppLoop.obj					\
