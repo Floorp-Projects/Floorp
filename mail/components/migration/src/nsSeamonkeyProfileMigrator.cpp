@@ -401,6 +401,8 @@ nsSeamonkeyProfileMigrator::PrefTransform gTransforms[] = {
   MAKESAMETYPEPREFTRANSFORM("signon.SignonFileName",                    String),
   MAKESAMETYPEPREFTRANSFORM("mailnews.headers.showUserAgent",           Bool),
   MAKESAMETYPEPREFTRANSFORM("mailnews.headers.showOrganization",        Bool),
+  MAKESAMETYPEPREFTRANSFORM("mail.collect_addressbook",                 String), 
+  MAKESAMETYPEPREFTRANSFORM("mail.collect_email_address_outgoing",      Bool),
   MAKESAMETYPEPREFTRANSFORM("mail.wrap_long_lines",                     Bool),
   MAKESAMETYPEPREFTRANSFORM("news.wrap_long_lines",                     Bool),
   MAKESAMETYPEPREFTRANSFORM("mailnews.customHeaders",                   String),
