@@ -74,8 +74,9 @@
 #if 0
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXTCONTENT_IID);
 #endif
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kIScriptObjectOwner, NS_ISCRIPTOBJECTOWNER_IID);
 
@@ -157,7 +158,7 @@ protected:
                             const nsSize& aMaxSize,
                             nsSize* aMaxElementSize,
                             nsStyleFont& aFont,
-                            nsStyleMolecule& aMol,
+                            nsStyleText& aTextStyle,
                             PRInt32 aStartingOffset,
                             nsBlockReflowState* aState);
 
@@ -387,14 +388,14 @@ NS_METHOD TextFrame::GetCursorAt(nsIPresContext& aPresContext,
                                  nsIFrame** aFrame,
                                  PRInt32& aCursor)
 {
-  nsStyleMolecule* mol = (nsStyleMolecule*)
-    mStyleContext->GetData(kStyleMoleculeSID);
-  if (mol->cursor != NS_STYLE_CURSOR_INHERIT) {
+  nsStyleColor* styleColor = (nsStyleColor*)
+    mStyleContext->GetData(kStyleColorSID);
+  if (styleColor->mCursor != NS_STYLE_CURSOR_INHERIT) {
     // If this container has a particular cursor, use it, otherwise
     // let the child decide.
     *aFrame = this;
   }
-  aCursor = (PRInt32) mol->cursor;
+  aCursor = (PRInt32) styleColor->mCursor;
   return NS_OK;
 }
 
@@ -703,10 +704,10 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
     }
   }
 
-  nsStyleMolecule* mol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+  nsStyleText* text =
+    (nsStyleText*)mStyleContext->GetData(kStyleTextSID);
 
-  if (NS_STYLE_WHITESPACE_PRE == mol->whiteSpace) {
+  if (NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) {
     // Use a specialized routine for pre-formatted text
     aStatus = ReflowPre(aCX, aDesiredSize, aMaxSize,
                        aMaxElementSize, *font, startingOffset, state);
@@ -714,7 +715,8 @@ NS_METHOD TextFrame::ResizeReflow(nsIPresContext* aCX,
     // Use normal wrapping routine for non-pre text (this includes
     // text that is not wrapping)
     aStatus = ReflowNormal(aCX, aDesiredSize, aMaxSize,
-                          aMaxElementSize, *font, *mol, startingOffset, state);
+                           aMaxElementSize, *font, *text,
+                           startingOffset, state);
   }
 
 #ifdef NOISY
@@ -734,7 +736,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
                         const nsSize& aMaxSize,
                         nsSize* aMaxElementSize,
                         nsStyleFont& aFont,
-                        nsStyleMolecule& aMol,
+                        nsStyleText& aTextStyle,
                         PRInt32 aStartingOffset,
                         nsBlockReflowState* aState)
 {
@@ -748,7 +750,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   PRInt32 spaceWidth = fm->GetWidth(' ');
   PRBool atLeftMargin = PR_TRUE;
   PRBool wrapping = PR_TRUE;
-  if (NS_STYLE_WHITESPACE_NORMAL != aMol.whiteSpace) {
+  if (NS_STYLE_WHITESPACE_NORMAL != aTextStyle.mWhiteSpace) {
     wrapping = PR_FALSE;
   }
 
@@ -772,7 +774,6 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   // XXX what about &zwj and it's cousins?
   nscoord x = 0;
   nscoord maxWidth = aMaxSize.width;
-  nscoord width = 0;
   nscoord maxWordWidth = 0;
   const PRUnichar* lastWordEnd = cpStart;
   PRBool hasMultibyte = PR_FALSE;
@@ -780,6 +781,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   while (cp < end) {
     PRUnichar ch = *cp++;
     PRBool isWhitespace;
+    nscoord width;
     if (XP_IS_SPACE(ch)) {
       // Compress whitespace down to a single whitespace
       while (cp < end) {
@@ -839,7 +841,6 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
     }
     atLeftMargin = PR_FALSE;
     lastWordEnd = cp;
-    width = 0;
     endsInWhitespace = isWhitespace;
   }
   if (hasMultibyte) {
@@ -847,7 +848,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   }
 
   if (nsnull != aState) {
-    if (0 == width) {
+    if (0 == x) {
       // Since we collapsed into nothingness (all our whitespace
       // is ignored) leave the aState->allowLeadingWhitespace
       // flag alone since it doesn't want leading whitespace
