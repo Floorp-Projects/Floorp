@@ -39,6 +39,7 @@
 #include "nsISupports.idl"
 
 interface nsIInputStream;
+interface nsIRDFDataSource;
 
 [scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
 interface nsIExtensionManager : nsISupports
@@ -52,5 +53,7 @@ interface nsIExtensionManager : nsISupports
   void uninstallTheme(in wstring aThemeID);
   void enableTheme(in wstring aThemeID);
   void disableTheme(in wstring aThemeID);
+
+  readonly attribute nsIRDFDataSource datasource;
 };
 
