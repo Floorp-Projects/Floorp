@@ -1260,11 +1260,14 @@ nsInstall::Patch(const nsString& aRegName, const nsString& aVersion, const nsStr
         return NS_OK;
     }
 
-    mPatchList = new nsHashtable();
-    if (mPatchList == nsnull)
+    if (!mPatchList)
     {
-        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
-        return NS_OK;
+        mPatchList = new nsHashtable();
+        if (mPatchList == nsnull)
+        {
+            *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+            return NS_OK;
+        }
     }
  
     nsInstallPatch* ip = new nsInstallPatch( this,
@@ -1446,6 +1449,11 @@ nsInstall::AddPatch(nsHashKey *aKey, nsFileSpec* fileName)
 void       
 nsInstall::GetPatch(nsHashKey *aKey, nsFileSpec** fileName)
 {
+    if (!fileName) 
+        return;
+    else
+        *fileName = nsnull;
+
     if (mPatchList != nsnull)
     {
         *fileName = (nsFileSpec*) mPatchList->Get(aKey);
@@ -2063,16 +2071,6 @@ nsInstall::SaveError(PRInt32 errcode)
   return errcode;
 }
 
-PRBool DeleteEntry(nsHashKey *aKey, void *aData, void *closure)
-{
-    nsFileSpec* data = (nsFileSpec *)aData;
-    if (data) {
-	    delete data;
-	    data = nsnull;
-    }
-    return PR_TRUE;
-}
-
 
 /*
  * CleanUp
@@ -2100,13 +2098,16 @@ nsInstall::CleanUp(void)
 
     if (mPatchList != nsnull)
     {
-        mPatchList->Enumerate(DeleteEntry, nsnull);
         mPatchList->Reset();
         delete mPatchList;
+        mPatchList = nsnull;
     }
     
-    if (mPackageFolder != nsnull)
+    if (mPackageFolder != nsnull) 
+    {
       delete (mPackageFolder);
+      mPackageFolder = nsnull;
+    }
 
     mRegistryPackageName = ""; // used to see if StartInstall() has been called
     mStartInstallCompleted = PR_FALSE;
