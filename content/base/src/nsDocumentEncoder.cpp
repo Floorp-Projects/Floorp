@@ -879,7 +879,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
   aOutputString.Truncate();
 
   nsCAutoString progId(NS_CONTENTSERIALIZER_CONTRACTID_PREFIX);
-  progId.AppendWithConversion(mMimeType);
+  AppendUTF16toUTF8(mMimeType, progId);
 
   mSerializer = do_CreateInstance(progId.get());
   NS_ENSURE_TRUE(mSerializer, NS_ERROR_NOT_IMPLEMENTED);

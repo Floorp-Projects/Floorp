@@ -1641,7 +1641,7 @@ nsTypedSelection::ToStringWithFormat(const char * aFormatType, PRUint32 aFlags,
   // Flags should always include OutputSelectionOnly if we're coming from here:
   aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
   nsAutoString readstring;
-  readstring.AssignWithConversion(aFormatType);
+  readstring.AssignASCII(aFormatType);
   rv = encoder->Init(doc, readstring, aFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2130,14 +2130,15 @@ nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
   nsIFrame *blockFrame = currentFrame;
   nsIFrame *thisBlock = nsnull;
   PRInt32   thisLine;
-  nsCOMPtr<nsILineIteratorNavigator> it; 
+  nsILineIteratorNavigator* it;  // This is qi'd off a frame, and those aren't
+                                 // refcounted
   result = NS_ERROR_FAILURE;
   while (NS_FAILED(result) && blockFrame)
   {
     thisBlock = blockFrame;
     blockFrame = blockFrame->GetParent();
     if (blockFrame) {
-      it = do_QueryInterface(blockFrame, &result);
+      CallQueryInterface(blockFrame, &it);
     }
   }
   if (!blockFrame || !it)
