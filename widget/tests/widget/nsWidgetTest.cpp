@@ -24,6 +24,7 @@
 #include "nsIComponentManager.h" 
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 #include "nsXPComCIID.h"
 #include "nsGfxCIID.h" 
 
@@ -161,6 +162,7 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCTabWidgetCID, NS_TABWIDGET_CID);
 static NS_DEFINE_IID(kCTooltipWidgetCID, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 
@@ -1208,6 +1210,7 @@ nsresult WidgetTest(int *argc, char **argv)
 
     // register xpcom classes
     nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
     
     // register widget classes
     nsComponentManager::RegisterComponent(kLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
