@@ -19,6 +19,7 @@
 #include "nsISupports.idl"
 #include "nsIUrlListener.idl"
 #include "nsIPop3IncomingServer.idl"
+#include "nsIMsgFolder.idl"
 
 interface nsIURL;
 interface nsIStreamListener;
@@ -52,6 +53,7 @@ interface nsIPop3Service : nsISupports {
                     in nsIPop3IncomingServer popServer);
 
   nsIURL CheckForNewMail(in nsIUrlListener aUrlListener,
+						 in nsIMsgFolder inbox,
                          in nsIPop3IncomingServer popServer);
   
 };

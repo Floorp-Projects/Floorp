@@ -18,6 +18,7 @@
 
 #include "nsISupports.idl"
 #include "nsIPop3IncomingServer.idl"
+#include "nsIMsgFolder.idl"
 
 interface nsIURL;
 
@@ -43,10 +44,11 @@ interface nsIPop3Sink : nsISupports {
 
   void BiffGetNewMail();
 
-  void SetBiffStateAndUpdateFE(in unsigned long biffState);
+  void SetBiffStateAndUpdateFE(in unsigned long biffState, in long numNewMessages);
 
   void SetSenderAuthedFlag(in voidStar closure, in boolean authed);
 
   attribute nsIPop3IncomingServer popServer;
+  attribute nsIMsgFolder folder;
 
 };
