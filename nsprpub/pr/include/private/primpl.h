@@ -1796,7 +1796,7 @@ extern PRFileDesc *_pr_stderr;
 #if !defined(_PR_NO_PREEMPT) && defined(XP_UNIX) \
         && !defined(_PR_PTHREADS) && !defined(_PR_GLOBAL_THREADS_ONLY) \
         && !defined(PURIFY) \
-        && !defined(RHAPSODY) \
+        && !defined(DARWIN) \
         && !defined(NEXTSTEP) \
         && !defined(QNX) \
         && !(defined (UNIXWARE) && defined (USE_SVR4_THREADS))

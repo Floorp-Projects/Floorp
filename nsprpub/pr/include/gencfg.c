@@ -94,8 +94,8 @@
 #endif
 
 #if defined(__APPLE__)
-#ifndef RHAPSODY
-      error - RHAPSODY is not defined
+#ifndef DARWIN
+      error - DARWIN is not defined
 #endif
 #endif
 

@@ -424,7 +424,7 @@ LIBPTHREAD = -lpthread
 ifeq ($(OS_ARCH),AIX)
 LIBPTHREAD = -lpthreads
 endif
-ifeq (,$(filter-out FreeBSD OpenBSD BSD_OS NTO Rhapsody,$(OS_ARCH)))
+ifeq (,$(filter-out FreeBSD OpenBSD BSD_OS NTO Darwin,$(OS_ARCH)))
 LIBPTHREAD =
 endif
 ifeq ($(OS_ARCH)$(basename $(OS_RELEASE)),HP-UXB.10)

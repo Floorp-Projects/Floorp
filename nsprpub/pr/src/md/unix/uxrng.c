@@ -278,7 +278,7 @@ GetHighResClock(void *buf, size_t maxbytes)
     return 0;
 }
 #elif defined(SCO) || defined(UNIXWARE) || defined(BSDI) || defined(NTO) \
-    || defined(QNX) || defined(RHAPSODY)
+    || defined(QNX) || defined(DARWIN)
 #include <sys/times.h>
 
 static size_t

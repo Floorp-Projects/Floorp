@@ -91,7 +91,7 @@ endif
 # To create a loadable module on Rhapsody, we must override
 # -dynamiclib with -bundle.
 #
-ifeq ($(OS_ARCH),Rhapsody)
+ifeq ($(OS_ARCH),Darwin)
 DSO_LDOPTS = -bundle
 endif
 

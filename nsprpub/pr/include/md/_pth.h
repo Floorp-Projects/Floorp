@@ -134,7 +134,7 @@
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
 	|| defined(HPUX) || defined(LINUX) || defined(FREEBSD) \
 	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
-	|| defined(VMS) || defined(NTO) || defined(RHAPSODY)
+	|| defined(VMS) || defined(NTO) || defined(DARWIN)
 #define _PT_PTHREAD_INVALIDATE_THR_HANDLE(t)  (t) = 0
 #define _PT_PTHREAD_THR_HANDLE_IS_INVALID(t)  (t) == 0
 #define _PT_PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
@@ -245,7 +245,7 @@
 #define PT_PRIO_MIN            1
 #define PT_PRIO_MAX            127
 #elif defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-	|| defined(BSDI) || defined(RHAPSODY) /* XXX */
+	|| defined(BSDI) || defined(DARWIN) /* XXX */
 #define PT_PRIO_MIN            0
 #define PT_PRIO_MAX            126
 #else
@@ -278,7 +278,7 @@ extern int (*_PT_aix_yield_fcn)();
     PR_END_MACRO
 #elif defined(HPUX) || defined(LINUX) || defined(SOLARIS) \
 	|| defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-	|| defined(BSDI) || defined(NTO) || defined(RHAPSODY)
+	|| defined(BSDI) || defined(NTO) || defined(DARWIN)
 #define _PT_PTHREAD_YIELD()            	sched_yield()
 #else
 #error "Need to define _PT_PTHREAD_YIELD for this platform"

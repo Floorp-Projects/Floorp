@@ -69,7 +69,7 @@
 #elif defined(IRIX) || defined(HPUX) || defined(OSF1) || defined(SOLARIS) \
     || defined(AIX4_1) || defined(LINUX) || defined(SONY) \
     || defined(BSDI) || defined(SCO) || defined(NEC) || defined(SNI) \
-    || defined(SUNOS4) || defined(NCR) || defined(RHAPSODY) \
+    || defined(SUNOS4) || defined(NCR) || defined(DARWIN) \
     || defined(NEXTSTEP) || defined(QNX)
 #define _PRSockLen_t int
 #elif (defined(AIX) && !defined(AIX4_1)) || defined(FREEBSD) \

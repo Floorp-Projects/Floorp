@@ -93,8 +93,8 @@ PR_BEGIN_EXTERN_C
 #elif defined(OSF1)
 #include "md/_osf1.h"
 
-#elif defined(RHAPSODY)
-#include "md/_rhapsody.h"
+#elif defined(DARWIN)
+#include "md/_darwin.h"
 
 #elif defined(NEXTSTEP)
 #include "md/_nextstep.h"

@@ -51,7 +51,7 @@
 
 /* BSD-derived systems use sysctl() to get the number of processors */
 #if defined(BSDI) || defined(FREEBSD) || defined(NETBSD) \
-    || defined(OPENBSD) || defined(RHAPSODY)
+    || defined(OPENBSD) || defined(DARWIN)
 #define _PR_HAVE_SYSCTL
 #include <sys/param.h>
 #include <sys/sysctl.h>
