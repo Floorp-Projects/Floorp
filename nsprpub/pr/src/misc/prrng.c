@@ -17,10 +17,9 @@
  */
 
 #include "primpl.h"
-#include "prrng.h"
 
 
-extern PRSize _pr_CopyLowBits( 
+PRSize _pr_CopyLowBits( 
     void *dst, 
     PRSize dstlen, 
     void *src, 
@@ -38,7 +37,7 @@ extern PRSize _pr_CopyLowBits(
     return dstlen;
 }    
 
-PR_EXTERN(PRSize) PR_GetRandomNoise( 
+PR_IMPLEMENT(PRSize) PR_GetRandomNoise( 
     void    *buf,
     PRSize  size
 )
