@@ -866,6 +866,8 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
             jsval returnValue;
             if (mContext->EvaluateString(cleanBuffer, 
                                          strlen(cleanBuffer),
+                                         nsnull,
+                                         0,
                                          &returnValue)) {
                 // output the result on the console and on the edit area
                 CHAR result[128];

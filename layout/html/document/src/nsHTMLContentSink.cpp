@@ -1812,8 +1812,17 @@ nsresult HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       }
       
       jsval val;
-      PRBool result = context->EvaluateString(script, len, &val);
+      nsIURL* mDocURL = mDocument->GetDocumentURL();
+      const char* mURL;
+      if (mDocURL) {
+        mURL = mDocURL->GetSpec();
+      }
+      PRUint32 mLineNo = (PRUint32)aNode.GetSourceLineNumber();
+
+      PRBool result = context->EvaluateString(script, len, mURL, mLineNo, &val);
       
+      NS_IF_RELEASE(mDocURL);
+
       if (PR_FALSE == result) {
         rv = NS_ERROR_FAILURE;
       }

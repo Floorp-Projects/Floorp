@@ -38,7 +38,8 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 void PR_CALLBACK
 NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
-  printf("Script error: %s\n", message);
+  printf("JavaScript error: %s\nURL :%s, LineNo :%u\nLine text: '%s', Error text: '%s'\n", message, 
+         report->filename, report->lineno, report->linebuf, report->tokenptr);
 }
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime)
@@ -56,15 +57,17 @@ nsJSContext::~nsJSContext()
 NS_IMPL_ISUPPORTS(nsJSContext, kIScriptContextIID);
 
 PRBool nsJSContext::EvaluateString(const char *aScript, 
-                                  PRUint32 aScriptSize, 
+                                  PRUint32 aScriptSize,
+                                  const char *aURL,
+                                  PRUint32 aLineNo,
                                   jsval *aRetValue)
 {
   return ::JS_EvaluateScript(mContext, 
                               JS_GetGlobalObject(mContext),
                               aScript, 
                               aScriptSize,
-                              NULL, 
-                              0,
+                              aURL, 
+                              aLineNo,
                               aRetValue);
 }
 
