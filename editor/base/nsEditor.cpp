@@ -883,35 +883,49 @@ NS_IMETHODIMP nsEditor::Paste()
   nsString stuffToPaste;
 
 #ifdef NEW_CLIPBOARD_SUPPORT
+
+  // Get Clipboard Service
   nsIClipboard* clipboard;
   nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                              kIClipboardIID,
                                              (nsISupports **)&clipboard);
+
+  // Create generic Transferable for getting the data
   nsIGenericTransferable *genericTrans = 0;
   rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
                                           kIGenericTransferableIID, (void**) &genericTrans);
   if (NS_OK == rv) {
+    // Get the nsITransferable interface for getting the data from the clipboard
     nsCOMPtr<nsITransferable> trans = do_QueryInterface(genericTrans);
     if (trans) {
       nsIDataFlavor *flavor = 0;
+
+      // Create the desired DataFlavor for the type of data we want to get out of the transferable
       rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
       if (NS_OK == rv) {
+        // Initialize the DataFlavor and set it into the GenericTransferable
         flavor->Init(kTextMime, "Text");
         genericTrans->AddDataFlavor(flavor);
 
+        // Get the Data from the clipboard
         clipboard->GetData(trans);
 
+        // Now we ask the transferable for the data
+        // it still owns the data, we just have a pointer to it.
+        // If it can't support a "text" output of the data the call will fail
         char *str = 0;
         PRUint32 len;
-        trans->GetTransferData(flavor, (void **)&str, &len);
+        if (NS_OK == trans->GetTransferData(flavor, (void **)&str, &len)) {
 
-        if (str) {
-          if (str[len-1] == 0) {
-            len--;
+          // Make adjustments for null terminated strings
+          if (str) {
+            if (str[len-1] == 0) {
+              len--;
+            }
+            // stuffToPaste is ready for insertion into the content
+            stuffToPaste.SetString(str, len);
           }
-          stuffToPaste.SetString(str, len);
         }
-
         NS_IF_RELEASE(flavor);
       }
     }
