@@ -1418,17 +1418,16 @@ PRBool nsXULWindow::ConstrainToZLevel(
   return altered;
 }
 
-/* Disable scrollbars in the primary content shell (to open a browser window
-   without scrollbars, for example)
-*/
-void nsXULWindow::KillContentScrollbars() {
+void nsXULWindow::SetContentScrollbarVisibility(PRBool aVisible) {
 
   nsCOMPtr<nsIDocShellTreeItem> content;
   if (NS_SUCCEEDED(GetPrimaryContentShell(getter_AddRefs(content))) && content) {
     nsCOMPtr<nsIScrollable> shell(do_QueryInterface(content));
-    if (shell)
-      shell->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, NS_STYLE_OVERFLOW_HIDDEN);
-      shell->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, NS_STYLE_OVERFLOW_HIDDEN);
+    if (shell) {
+      long prefValue = aVisible ? NS_STYLE_OVERFLOW_AUTO : NS_STYLE_OVERFLOW_HIDDEN;
+      shell->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, prefValue);
+      shell->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, prefValue);
+    }
   }
 }
 

@@ -91,7 +91,7 @@ public:
   // nsWebShellWindow methods...
   nsresult Initialize(nsIXULWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       PRBool aCreatedVisible, PRBool aLoadDefaultPage,
-                      PRBool aContentScrollbars, PRUint32 aZlevel,
+                      PRUint32 aZlevel,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                       nsWidgetInitData& widgetInitData);
   nsIWidget* GetWidget(void) { return mWindow; }
@@ -192,7 +192,6 @@ protected:
   nsIWebShell*            mWebShell;
   PRBool                  mLockedUntilChromeLoad;
   PRBool                  mLoadDefaultPage;
-  PRBool                  mKillScrollbarsAfterLoad;
 
   nsVoidArray mMenuDelegates;
 

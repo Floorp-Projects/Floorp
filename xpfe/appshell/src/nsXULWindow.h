@@ -94,7 +94,7 @@ protected:
    void ActivateParent();
    PRBool ConstrainToZLevel(PRBool aImmediate, nsWindowZ *aPlacement,
             nsIWidget *aReqBelow, nsIWidget **aActualBelow);
-   void                    KillContentScrollbars();
+   void                    SetContentScrollbarVisibility(PRBool aVisible);
 
    nsChromeTreeOwner*      mChromeTreeOwner;
    nsContentTreeOwner*     mContentTreeOwner;
