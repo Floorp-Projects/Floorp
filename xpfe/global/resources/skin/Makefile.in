@@ -29,10 +29,10 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/tasksOverlay.css \
 	$(srcdir)/xul.css \
 	$(srcdir)/lessCols.gif \
-	$(srcdir)/lessCols-mo.gif \
+	$(srcdir)/lessCols_mo.gif \
 	$(srcdir)/lessCOls_dis.gif \
 	$(srcdir)/moreCols.gif \
-	$(srcdir)/moreCols-mo.gif \
+	$(srcdir)/moreCols_mo.gif \
 	$(srcdir)/moreCols_dis.gif \
 	$(srcdir)/scrollUp.gif \
 	$(srcdir)/scrollUp_mo.gif \
