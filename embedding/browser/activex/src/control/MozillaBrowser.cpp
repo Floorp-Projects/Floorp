@@ -37,7 +37,7 @@
 #include "PropertyDlg.h"
 
 #include "nsCWebBrowser.h"
-#include "nsFileSpec.h"
+#include "nsIDiskDocument.h"
 #include "nsILocalFile.h"
 #include "nsIContentViewerFile.h"
 #include "nsISelectionController.h"
@@ -523,7 +523,7 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 			return E_NOINTERFACE;
 		}
 
-		// Create an nsFilelSpec from the selected file path.
+		// Create an nsILocalFile from the selected file path.
 		nsCOMPtr<nsILocalFile> theFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &hr);
 		if (FAILED(hr))
 		  return hr;
