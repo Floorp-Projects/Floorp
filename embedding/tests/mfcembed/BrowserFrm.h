@@ -51,7 +51,6 @@
 #include "BrowserView.h"
 #include "IBrowserFrameGlue.h"
 #include "MostRecentUrls.h"
-#include "CCommandObserver.h"
 
 // A simple UrlBar class...
 class CUrlBar : public CComboBoxEx
@@ -137,6 +136,7 @@ protected:
 class CBrowserFrame : public CFrameWnd
 {	
 public:
+	CBrowserFrame();
 	CBrowserFrame(PRUint32 chromeMask);
 
 protected: 
@@ -192,8 +192,8 @@ protected:
 
 public:
 	void SetupFrameChrome();
-  void SetEditable(BOOL isEditor){mIsEditor = isEditor;}
-  BOOL GetEditable(){return mIsEditor;}
+    void SetEditable(BOOL isEditor) { mIsEditor = isEditor; }
+    BOOL GetEditable() { return mIsEditor; }
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -218,18 +218,11 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnClose();
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
-	afx_msg void OnNewEditor();
-	afx_msg void OnBold();
-	afx_msg void OnUpdateBold(CCmdUI* pCmdUI);
-	afx_msg void OnItalics();
-	afx_msg void OnUpdateItalics(CCmdUI* pCmdUI);
-	afx_msg void OnUnderline();
-	afx_msg void OnUpdateUnderline(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+
 private:
-  BOOL mIsEditor;
-  CCommandObserver mToolBarObserver;
+	BOOL mIsEditor;
 };
 
 /////////////////////////////////////////////////////////////////////////////

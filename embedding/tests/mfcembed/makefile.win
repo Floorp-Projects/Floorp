@@ -58,6 +58,7 @@ LINCS = -Icomponents \
 OBJS =                           \
     .\$(OBJDIR)\MfcEmbed.obj     \
     .\$(OBJDIR)\BrowserFrm.obj   \
+    .\$(OBJDIR)\EditorFrm.obj   \
     .\$(OBJDIR)\BrowserFrameGlue.obj   \
     .\$(OBJDIR)\BrowserView.obj \
     .\$(OBJDIR)\BrowserImpl.obj \

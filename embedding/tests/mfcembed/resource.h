@@ -98,13 +98,12 @@
 #define ID_EDIT_PREFERENCES             32788
 #define ID_FILE_PRINTPREVIEW            32789
 #define ID_FILE_PRINTSETUP              32790
-#define ID_NEW_EDITORWINDOW             32790
 #define ID_VIEW_FRAME_SOURCE            32791
 #define ID_OPEN_FRAME_IN_NEW_WINDOW     32792
 #define ID_BOLD                         32793
 #define ID_UNDERLINE                    32794
 #define ID_ITALICS                      32795
-#define ID_NEW_EDITWINDOW               32796
+#define ID_NEW_EDITORWINDOW             32796
 
 // Next default values for new objects
 // 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mike Judge <mjudge@netscape.com>
  *   Chak Nanga <chak@netscape.com> 
  *
  *
@@ -37,40 +38,48 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _BROWSERIMPL_H
-#define _BROWSERIMPL_H
+#ifndef _EDITORFRM_H_
+#define _EDITORFRM_H_
 
-#include "IBrowserFrameGlue.h"
-#include "nsIWebBrowserChromeFocus.h"
 #include "nsICommandParams.h"
-
-class CBrowserImpl : public nsIInterfaceRequestor,
-					 public nsIWebBrowserChrome,
-                     public nsIWebBrowserChromeFocus,
-					 public nsIEmbeddingSiteWindow,
-					 public nsIWebProgressListener,
-					 public nsIContextMenuListener,
-					 public nsSupportsWeakReference
-{
+#include "nsIEditingSession.h"
+#include "nsICommandManager.h"
+#include "CCommandObserver.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsISimpleEnumerator.h"
+	
+class CEditorFrame : public CBrowserFrame
+{	
 public:
-    CBrowserImpl();
-    ~CBrowserImpl();
-    NS_METHOD Init(PBROWSERFRAMEGLUE pBrowserFrameGlue,
-                   nsIWebBrowser* aWebBrowser);
+    CEditorFrame(PRUint32 chromeMask);
+    virtual ~CEditorFrame();
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSIWEBBROWSERCHROME
-    NS_DECL_NSIWEBBROWSERCHROMEFOCUS
-    NS_DECL_NSIEMBEDDINGSITEWINDOW
-    NS_DECL_NSIWEBPROGRESSLISTENER
-    NS_DECL_NSICONTEXTMENULISTENER
+protected: 
+    DECLARE_DYNAMIC(CEditorFrame)
 
+public:
+    BOOL InitEditor();
+    NS_METHOD MakeEditable();
+    NS_METHOD AddEditorObservers();
+    NS_METHOD DoCommand(nsICommandParams *aCommandParams);
+    NS_METHOD IsCommandEnabled(const nsAString &aCommand, PRBool *retval);
+    NS_METHOD GetCommandState(nsICommandParams *aCommandParams);
+
+// Generated message map functions
 protected:
+	//{{AFX_MSG(CEditorFrame)
+    afx_msg void OnBold();
+    afx_msg void OnUpdateBold(CCmdUI* pCmdUI);
+    afx_msg void OnItalics();
+    afx_msg void OnUpdateItalics(CCmdUI* pCmdUI);
+    afx_msg void OnUnderline();
+    afx_msg void OnUpdateUnderline(CCmdUI* pCmdUI);
+    //}}AFX_MSG
 
-    PBROWSERFRAMEGLUE  m_pBrowserFrameGlue;
+    DECLARE_MESSAGE_MAP()
 
-    nsCOMPtr<nsIWebBrowser> mWebBrowser;
+private:
+    CCommandObserver mToolBarObserver;
 };
 
-#endif //_BROWSERIMPL_H
+#endif //_EDITORFRM_H_

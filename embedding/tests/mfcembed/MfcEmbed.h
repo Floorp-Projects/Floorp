@@ -113,6 +113,7 @@ public:
 	//{{AFX_MSG(CMfcEmbedApp)
 	afx_msg void OnAppAbout();
 	afx_msg void OnNewBrowser();
+	afx_msg void OnNewEditor();
     afx_msg void OnManageProfiles();
     afx_msg void OnEditPreferences();
 		// NOTE - the ClassWizard will add and remove member functions here.

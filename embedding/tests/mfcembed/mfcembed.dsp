@@ -114,7 +114,15 @@ SOURCE=.\BrowserView.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CCommandObserver.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Dialogs.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditorFrm.cpp
 # End Source File
 # Begin Source File
 
@@ -174,7 +182,15 @@ SOURCE=.\BrowserView.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\CCommandObserver.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Dialogs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditorFrm.h
 # End Source File
 # Begin Source File
 
