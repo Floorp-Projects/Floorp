@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(PtRawDrawContainerLog, 0)
+NS_IMPL_LOG(PtRawDrawContainerLog)
 #define PRINTF NS_LOG_PRINTF(PtRawDrawContainerLog)
 #define FLUSH  NS_LOG_FLUSH(PtRawDrawContainerLog)
 

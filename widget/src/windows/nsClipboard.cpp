@@ -51,7 +51,7 @@
 #include "nsIImage.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsClipboardLog, 0)
+NS_IMPL_LOG(nsClipboardLog)
 #define PRINTF NS_LOG_PRINTF(nsClipboardLog)
 #define FLUSH  NS_LOG_FLUSH(nsClipboardLog)
 

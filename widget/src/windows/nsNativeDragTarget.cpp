@@ -32,7 +32,7 @@
 #include "nsWindow.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsNativeDragTargetLog, 0)
+NS_IMPL_LOG(nsNativeDragTargetLog)
 #define PRINTF NS_LOG_PRINTF(nsNativeDragTargetLog)
 #define FLUSH  NS_LOG_FLUSH(nsNativeDragTargetLog)
 

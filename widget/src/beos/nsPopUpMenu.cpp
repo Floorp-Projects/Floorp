@@ -36,7 +36,7 @@
 #include "nsGfxCIID.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsPopUpMenuLog, 0)
+NS_IMPL_LOG(nsPopUpMenuLog)
 #define PRINTF NS_LOG_PRINTF(nsPopUpMenuLog)
 #define FLUSH  NS_LOG_FLUSH(nsPopUpMenuLog)
 

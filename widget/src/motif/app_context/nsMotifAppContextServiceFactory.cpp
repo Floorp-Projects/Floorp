@@ -31,7 +31,7 @@
 #include "nsMotifAppContextService.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsMotifAppContextServiceFactoryLog, 0)
+NS_IMPL_LOG(nsMotifAppContextServiceFactoryLog)
 #define PRINTF NS_LOG_PRINTF(nsMotifAppContextServiceFactoryLog)
 #define FLUSH  NS_LOG_FLUSH(nsMotifAppContextServiceFactoryLog)
 

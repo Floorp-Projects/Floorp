@@ -30,7 +30,7 @@
 #include "nsWindow.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsDropTargetLog, 0)
+NS_IMPL_LOG(nsDropTargetLog)
 #define PRINTF NS_LOG_PRINTF(nsDropTargetLog)
 #define FLUSH  NS_LOG_FLUSH(nsDropTargetLog)
 

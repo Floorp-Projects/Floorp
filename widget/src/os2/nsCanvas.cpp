@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsCanvasLog, 0)
+NS_IMPL_LOG(nsCanvasLog)
 #define PRINTF NS_LOG_PRINTF(nsCanvasLog)
 #define FLUSH  NS_LOG_FLUSH(nsCanvasLog)
 

@@ -33,7 +33,7 @@
 #include "nsIFontMetrics.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsTextAreaWidgetLog, 0)
+NS_IMPL_LOG(nsTextAreaWidgetLog)
 #define PRINTF NS_LOG_PRINTF(nsTextAreaWidgetLog)
 #define FLUSH  NS_LOG_FLUSH(nsTextAreaWidgetLog)
 

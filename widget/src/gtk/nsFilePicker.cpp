@@ -27,7 +27,7 @@
 #include "nsILocalFile.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsFilePickerLog, 0)
+NS_IMPL_LOG(nsFilePickerLog)
 #define PRINTF NS_LOG_PRINTF(nsFilePickerLog)
 #define FLUSH  NS_LOG_FLUSH(nsFilePickerLog)
 

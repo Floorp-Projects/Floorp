@@ -39,7 +39,7 @@
 #undef PRINTF
 #undef FLUSH
 
-NS_IMPL_LOG(nsFileWidgetLog, 0)
+NS_IMPL_LOG(nsFileWidgetLog)
 #define PRINTF NS_LOG_PRINTF(nsFileWidgetLog)
 #define FLUSH  NS_LOG_FLUSH(nsFileWidgetLog)
 

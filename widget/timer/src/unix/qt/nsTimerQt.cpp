@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include "nslog.h"
 
-NS_IMPL_LOG(nsTimerQtLog, 0)
+NS_IMPL_LOG(nsTimerQtLog)
 #define PRINTF NS_LOG_PRINTF(nsTimerQtLog)
 #define FLUSH  NS_LOG_FLUSH(nsTimerQtLog)
 

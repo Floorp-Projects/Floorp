@@ -32,7 +32,7 @@
 #include "nsXlibWindowService.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsXlibWindowServiceFactoryLog, 0)
+NS_IMPL_LOG(nsXlibWindowServiceFactoryLog)
 #define PRINTF NS_LOG_PRINTF(nsXlibWindowServiceFactoryLog)
 #define FLUSH  NS_LOG_FLUSH(nsXlibWindowServiceFactoryLog)
 

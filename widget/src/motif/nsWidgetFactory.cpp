@@ -42,7 +42,7 @@
 #include "nsLabel.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsWidgetFactoryLog, 0)
+NS_IMPL_LOG(nsWidgetFactoryLog)
 #define PRINTF NS_LOG_PRINTF(nsWidgetFactoryLog)
 #define FLUSH  NS_LOG_FLUSH(nsWidgetFactoryLog)
 // #include "nsFontRetrieverService.h"

@@ -32,7 +32,7 @@
 #include "nsCOMPtr.h"
 #include "nslog.h"
 
-NS_IMPL_LOG(nsTimerMotifFactoryLog, 0)
+NS_IMPL_LOG(nsTimerMotifFactoryLog)
 #define PRINTF NS_LOG_PRINTF(nsTimerMotifFactoryLog)
 #define FLUSH  NS_LOG_FLUSH(nsTimerMotifFactoryLog)
 
