@@ -675,8 +675,8 @@ NS_IMETHODIMP	nsWindow::Update(nsIRenderingContext* aRenderingContext)
 
 			// draw the widget
 			StartDraw(renderingContext);
-			OnPaint(paintEvent);
-			DispatchWindowEvent(paintEvent);
+			if (OnPaint(paintEvent))
+				DispatchWindowEvent(paintEvent);
 			EndDraw();
 
 			// recursively scan through its children to draw them too
