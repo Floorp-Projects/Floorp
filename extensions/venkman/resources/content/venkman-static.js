@@ -158,10 +158,12 @@ function displayCommands (pattern)
     if (pattern)
         display (getMsg(MSN_CMDMATCH,
                         [pattern, "["  + 
-                        console._commands.listNames(pattern).join(", ") + "]"]));
+                        console._commands.listNames(pattern).join(MSG_COMMASP) +
+                        "]"]));
     else
         display (getMsg(MSN_CMDMATCH_ALL,
-                        "[" + console._commands.listNames().join(", ") + "]"));
+                        "[" + console._commands.listNames().join(MSG_COMMASP) +
+                        "]"));
 }
 
 function focusSource (url, lineNumber)
