@@ -24,4 +24,20 @@
      </content>
   </binding>
 
+  <binding id="sidebar-header-box" extends="xul:box">
+    <content>
+      <xul:text inherits="value,crop" crop="right" />
+      <xul:spring flex="100%"/>
+      <xul:box><children/></xul:box>
+    </content>
+  </binding>  
+
+  <binding id="sidebar-header-splitter" extends="xul:splitter">
+    <content>
+      <xul:text inherits="value,crop" crop="right" />
+      <xul:spring flex="100%"/>
+      <xul:box><children/></xul:box>
+    </content>
+  </binding>  
+
 </bindings>
