@@ -6,12 +6,12 @@
 
   <binding id="tab-base">
     <resources>
-      <stylesheet src="chrome://global/skin/tabcontrol.css"/>
+      <stylesheet src="chrome://global/skin/tabbox.css"/>
     </resources>
   </binding>
 
-  <binding id="tabcontrol" display="xul:box"
-           extends="chrome://global/content/bindings/tabcontrol.xml#tab-base">
+  <binding id="tabbox" display="xul:box"
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content orient="vertical"/>
 
     <implementation>
@@ -68,7 +68,7 @@
   </binding>
 
   <binding id="tabs" display="xul:box"
-           extends="chrome://global/content/bindings/tabcontrol.xml#tab-base">
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation>
       <constructor>
       <![CDATA[
@@ -145,7 +145,7 @@
   </binding>
   
   <binding id="tabpanels" display="xul:deck"
-           extends="chrome://global/content/bindings/tabcontrol.xml#tab-base">
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation>
       <!-- should be defined on deck! -->
       <property name="index"
@@ -155,7 +155,7 @@
   </binding>
 
   <binding id="tab" display="xul:button"
-           extends="chrome://global/content/bindings/tabcontrol.xml#tab-base">
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content>
       <xul:box class="tab-box" flex="1" autostretch="never" orient="horizontal">
         <xul:image class="tab-image" inherits="src"/>
@@ -202,7 +202,7 @@
           if (tabs.localName == "tabs")
             break;
           tabs = tabs.parentNode;
-        } while(tabs.localName != "tabcontrol");
+        } while(tabs.localName != "tabbox");
         tabs.selectedTab = this;
         if (!this.selected) this.selected = true;
       ]]>
