@@ -660,7 +660,7 @@ int main()
     nsIEventQueueService* pEventQService;
     result = nsServiceManager::GetService(kEventQueueServiceCID,
                                           nsIEventQueueService::GetIID(),
-                                          (nsISupports**)&pNetService);
+                                          (nsISupports**)&pEventQService);
 	if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateThreadEventQueue();
