@@ -108,7 +108,6 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 					{
 						if (curName && nsCRT::strlen(curName) > 0)
 						{
-							senderCard->SetDisplayName(curName);
 						}
 						else
 						{
@@ -126,12 +125,6 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 				}
 				else
 				{
-					char *displayName = nsnull;
-
-					rv = existingCard->GetDisplayName(&displayName);
-					if (NS_SUCCEEDED(rv) && displayName)
-					{
-					}
 				}
 			}
 			curName += strlen(curName) + 1;
@@ -212,6 +205,29 @@ nsresult nsAbAddressCollecter::IsDomainExcluded(const char *address, nsIPref *pP
 			token = nsCRT::strtok(rest, ",", &rest);
 		}
 	}
+	return rv;
+}
+
+nsresult nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char *fullName)
+{
+	char *firstName = nsnull;
+	char *lastName = nsnull;
+
+	char *displayName = nsnull;
+
+	nsresult rv = senderCard->GetFirstName(&firstName);
+	if (NS_SUCCEEDED(rv) && firstName)
+	{
+	}
+	senderCard->SetDisplayName((char *) fullName);
+	rv = SplitFullName (fullName, &firstName, &lastName);
+	if (NS_SUCCEEDED(rv))
+	{
+		senderCard->SetFirstName(firstName);
+		senderCard->SetLastName(lastName);
+	}
+	PR_FREEIF(firstName);
+	PR_FREEIF(lastName);
 	return rv;
 }
 
