@@ -155,7 +155,7 @@
     <menu label="&walletFormManager.label;"
           accesskey="&walletFormManager.accesskey;"
           id="wallet"
-          insertafter="menu_searchWeb">
+          insertbefore="navBeginGlobalItems">
       <menupopup>
         <menuitem id="edit_prefill"
                   label="&prefillCmd.label;"
