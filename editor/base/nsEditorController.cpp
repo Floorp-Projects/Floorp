@@ -28,7 +28,6 @@
 
 #include "nsISelectionController.h"
 #include "nsIDocument.h"
-#include "nsIHTMLContent.h"
 #include "nsIPresShell.h"
 
 //USED FOR DEPRICATED CALL...
