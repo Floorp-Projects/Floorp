@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<!-- Descrpt: Test nsIAccessible Interface attributes and methods
+     for XUL TABBOX TAB Node
+     Author: dsirnapalli@netscape.com
+     Created:06.17.02
+     Last Updated:06.17.02.
+
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -
+   - The Original Code is Mozilla Communicator Test Cases.
+   -
+   - The Initial Developer of the Original Code is Netscape Communications
+   - Corp.  Portions created by Netscape Communications Corp. are
+   - Copyright (C) 1999 Netscape Communications Corp.  All
+   - Rights Reserved.
+   -
+   - Contributor(s):
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window
+  id="tab-window"
+  title="XUL Tabbox Tab"
+  orient="vertical"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <html:script src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/accesslib.js"> </html:script>
+  <html:script src="http://www.mozilla.org/quality/embed/jstests/accessibility/jslib/bridge.js"> </html:script>
+
+  <html:script>
+  <![CDATA[
+
+  function getDomNodeTabboxTab()
+  {
+    try{
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  
+      var node = document.getElementsByTagName("tab").item(0);
+      var node1 = document.getElementsByTagName("tab").item(1);
+      return node;
+    }
+    catch(e){
+      alert("Exception: " + e);
+    }
+  }  
+
+  function nodeSwitched()
+  {
+    alert("here");
+    nodeClick = "Tab Switched";
+  }
+  
+  function executeTestCase()
+  {
+    var domNode = getDomNodeTabboxTab();
+    accNode = getAccessibleNode(domNode);
+    setTimeout("constructResults();", 2000);
+  }  
+ 
+  function constructResults()
+  {
+    try{
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+
+    var name = getName();
+    var role = getRole();
+    var state = getState();
+    var value = getValue();
+    var newvalue = value.toString();
+    var numActions = getNumActions();
+    var actionName = getActionName();
+    var action = doAction();
+
+    var expectedName          = "Mail";
+    var expectedRole          = "37";
+    var expectedState         = "0";
+    var expectedValue         = "NS_ERROR_NOT_IMPLEMENTED";
+    var expectednumActions    = "1";
+    var expectedactionName    = "Switch";
+    var expectednodeClick     = "Tab Switched";
+
+    var row0 = new Array("Property/Method", "Expected Values", "Actual Values", "Result");
+    var row1 = new Array("Name->", expectedName, name);
+    var row2 = new Array("Role->", expectedRole, role);
+    var row3 = new Array("State->", expectedState, state);
+    var row4 = new Array("Value->", expectedValue, value);
+    var row5 = new Array("accNumActions->", expectednumActions, numActions);
+    var row6 = new Array("getAccActionName()->", expectedactionName, actionName);
+    var row7 = new Array("accDoAction()->", expectednodeClick, nodeClick);
+
+    row = new Array(row0, row1, row2, row3, row4, row5, row6, row7);
+
+    if (name == expectedName)                 row1[3] = "PASS"; else row1[3] = "FAIL";
+    if (role == expectedRole)                 row2[3] = "PASS"; else row2[3] = "FAIL";
+    if (state == expectedState)               row3[3] = "PASS"; else row3[3] = "FAIL";
+    if (newvalue.match(expectedValue))        row4[3] = "PASS"; else row4[3] = "FAIL";
+    if (numActions == expectednumActions)     row5[3] = "PASS"; else row5[3] = "FAIL";
+    if (actionName == expectedactionName)     row6[3] = "PASS"; else row6[3] = "FAIL";
+    if (nodeClick == expectednodeClick)       row7[3] = "PASS"; else row7[3] = "FAIL";
+
+    appendTableRes();
+    WriteResults(res);    
+   }
+   catch(e){
+    alert("Exception**: " + e);
+   }
+  }
+ 
+  ]]>
+  </html:script>
+  
+  <box orient="vertical" flex="1">
+    <description>
+      <html:b> Testing XUL Tabbox's Tab for Accessibility.. </html:b>
+    </description>
+    <box oreint="horizontal">
+      <tabbox>
+        <tabs>
+          <tab label="Mail"/>
+          <tab label="News" onclick="alert('hi');"/>    
+        </tabs>
+        <tabpanels>
+          <tabpanel id="mailtab">
+            <checkbox label="Automatically check for mail"/>
+          </tabpanel>
+          <tabpanel id="newstab">
+            <button label="Clear News Buffer"/>
+          </tabpanel>  
+        </tabpanels>
+      </tabbox>  
+      <spacer flex="1"/>
+    </box>
+  </box>
+
+  <html:script>
+  <![CDATA[
+    res = "<b><u> Results for XUL Tabbox's Tab Node:</u></b><br><br>";
+    nodeClick = "Tab Not Switched";    
+
+    setTimeout("executeTestCase();", 2000);
+  ]]>
+  </html:script>  
+</window>
