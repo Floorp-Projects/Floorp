@@ -14,13 +14,12 @@
   </script>
          
   <!-- advanced settings -->
-  <titledbox id="advancedSettings">
-    <checkbox class="indent" id="javascriptAllowMailNews" position="4"
+  <vbox id="contentEnablingBox">
+    <checkbox class="indent" id="javascriptAllowMailNews" position="3"
               value="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
               pref="true" preftype="bool" prefstring="javascript.allow.mailnews"
               prefattribute="checked"/>
-  </titledbox>        
-
+  </vbox>
     
          
 </overlay> 
