@@ -62,6 +62,14 @@ interface nsIFile : nsISupports
      */
     void init([const] in string filePath, in unsigned long pathType);
     
+
+    /**
+     *   Initialization routines.  These function shall be called to 
+     *   setup the nsIFile.  
+     */
+    void initFromFile(in nsIFile file);
+
+
     /**
      *  Create() will create a new file, directory or symlink in the file system.  
      *  Any nodes that have not been created or resolved, will be.
@@ -84,9 +92,10 @@ interface nsIFile : nsISupports
     void appendPath([const] in string node, in unsigned long pathType);
 
     /**
-     *   Accessor to the file name (the leaf name not the full file path) of the file itself.   
+     *   Accessor to the file name (the leaf name not the full file path) of the file itself. 
+     *   Calling Set() on this will not rename the file on disk!  
      */
-    readonly attribute string fileName;
+    attribute string fileName;
     
     /**
      *  Accessor to the full file path.  The use of the Path is strongly discouraged 
@@ -109,8 +118,8 @@ interface nsIFile : nsISupports
 	 *  (the nsIFile instance being operated on).  It will resolve all
      *  components in its newParentDir parameter (non-terminal and terminal). 
 	 */
-    void copyTo([const] in nsIFile newParentDir, [const] in string newName);
-    void copyToFollowingLinks([const] in nsIFile newParentDir, [const] in string newName);
+    void copyTo(in nsIFile newParentDir, [const] in string newName);
+    void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     
     /**
      *  This will move (copy then delete) this file (if created) 
@@ -121,8 +130,8 @@ interface nsIFile : nsISupports
      *  If a newName is specified, the file will be renamed.
      *
      */
-    void moveTo([const] in nsIFile newParentDir, [const] in string newName);
-    void moveToFollowingLinks([const] in nsIFile newParentDir, [const] in string newName);
+    void moveTo(in nsIFile newParentDir, [const] in string newName);
+    void moveToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     
     /**
      *  This will try to execute this file.  It will not block for
@@ -175,7 +184,7 @@ interface nsIFile : nsISupports
     /**
      *  Will determine if the inFile equals this.
      */
-    boolean isEqual([const] in nsIFile inFile);
+    boolean isEqual(in nsIFile inFile);
 };
 
 %{C++
