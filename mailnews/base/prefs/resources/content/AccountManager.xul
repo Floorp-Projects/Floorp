@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
 <window	id="account-manager" xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -8,8 +9,8 @@
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&accountManagerTitle.label;"
         width="600" height="420"
-        onload="onLoad(event);"
-		align="horizontal">
+        align="vertical"
+        onload="onLoad(event);">
 
     <html:script src="resource:/res/samples/DumpDOM.js"/>
     <html:script src="AccountManager.js"/>
@@ -46,4 +47,5 @@
            </tabcontrol>
         </box>
 	</box>
+    <box id="okCancelButtons"/>
 </window>

@@ -37,6 +37,45 @@ function onLoad() {
     Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession);
 
   accountManager = mailsession.accountManager;
+
+  doSetOKCancel(onOk, 0);
+}
+
+function onOk() {
+  dump("Ok pressed!\n");
+  onSave();
+  return true;
+}
+
+function onSave() {
+
+  // make sure the current visible page is saved
+  savePage(lastServerId, lastPageId);
+  
+  for (var accountid in accountArray) {
+    var account = getAccountFromServerId(accountid);
+    var accountValues = accountArray[accountid];
+
+    var identity = account.defaultIdentity;
+    var server = account.incomingServer;
+    
+    for (var val in accountValues) {
+      var vals = val.split(".");
+      if (vals[0] == "identity") {
+        dump("Saving identity info " + vals[1] + "(" +
+             accountValues[val] + ") to " + identity +"\n");
+        identity[vals[1]] = accountValues[val];
+      }
+
+      if (vals[0] == "server") {
+        dump("Saving server info " + vals[1] + "(" +
+             accountValues[val] + ") to " + server +"\n");
+        server[vals[1]] = accountValues[val];
+      }
+
+    }
+  }
+
 }
 
 // called when a prefs page is done loading
