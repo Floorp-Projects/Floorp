@@ -39,7 +39,7 @@ struct NS_GFX nsRect {
   nsRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) {x = aX; y = aY;
                                                                    width = aWidth; height = aHeight;}
 
-  // Emptiness. An empty rect is one that has no area, i.e. its width of height
+  // Emptiness. An empty rect is one that has no area, i.e. its width or height
   // is <= 0
   PRBool IsEmpty() const {
     return (PRBool) ((width <= 0) || (height <= 0));
@@ -55,15 +55,18 @@ struct NS_GFX nsRect {
   // FALSE otherwise
   PRBool Intersects(const nsRect& aRect) const;
 
-  // Computes the area in which aRect1 and aRect2 overlap and fills 'this' with
-  // the result. Returns FALSE if the rectangles don't intersect.
+  // Computes the area in which aRect1 and aRect2 overlap, and fills 'this' with
+  // the result. Returns FALSE if the rectangles don't intersect, and sets 'this'
+  // rect to be an empty rect.
   //
   // 'this' can be the same object as either aRect1 or aRect2
   PRBool IntersectRect(const nsRect& aRect1, const nsRect& aRect2);
 
   // Computes the smallest rectangle that contains both aRect1 and aRect2 and
-  // fills 'this' with the result. Returns FALSE if both aRect1 and aRect2 are
-  // empty and TRUE otherwise
+  // fills 'this' with the result. Returns FALSE and sets 'this' rect to be an
+  // empty rect if both aRect1 and aRect2 are empty
+  //
+  // 'this' can be the same object as either aRect1 or aRect2
   PRBool UnionRect(const nsRect& aRect1, const nsRect& aRect2);
 
   // Accessors
@@ -89,14 +92,14 @@ struct NS_GFX nsRect {
   void Deflate(const nsMargin& aMargin);
 
   // Overloaded operators. Note that '=' isn't defined so we'll get the
-  // compiler generated default assignment operator
+  // compiler generated default assignment operator.
   PRBool  operator==(const nsRect& aRect) const {
-    return (PRBool) ((x == aRect.x) && (y == aRect.y) &&
-                     (width == aRect.width) && (height == aRect.height));
+    return (PRBool) ((IsEmpty() && aRect.IsEmpty()) ||
+                     ((x == aRect.x) && (y == aRect.y) &&
+                      (width == aRect.width) && (height == aRect.height)));
   }
   PRBool  operator!=(const nsRect& aRect) const {
-    return (PRBool) ((x != aRect.x) || (y != aRect.y) ||
-                     (width != aRect.width) || (height != aRect.height));
+    return (PRBool) !operator==(aRect);
   }
   nsRect  operator+(const nsRect& aRect) const {
     return nsRect(x + aRect.x, y + aRect.y,
