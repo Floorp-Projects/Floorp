@@ -406,7 +406,7 @@ nsXPInstallManager::OnDataAvailable(nsIURI* aURL,
             return err;
         }
         err = mItem->mFile->Write( buffer, amt, &result);
-        printf("mItem->mFile->Write err:%d   amt:%d    result:%d\n", err, amt, result);
+        //printf("mItem->mFile->Write err:%d   amt:%d    result:%d\n", err, amt, result);
         if (NS_FAILED(err) || result != (PRInt32)amt) 
         {
             //printf("mItem->mFile->Write Failed!  err:%d   amt:%d    result:%d\n", err, amt, result);
