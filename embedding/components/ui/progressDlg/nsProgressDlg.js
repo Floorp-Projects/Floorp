@@ -400,7 +400,8 @@ function onLoad() {
 
         filesFolder.leafName = filesFolderLeafName;
         
-        filesFolder.create(lfIID.DIRECTORY_TYPE, 0644);
+        if (!filesFolder.exists())
+          filesFolder.create(lfIID.DIRECTORY_TYPE, 0755);
         webBrowserPersist.saveDocument(persistArgs.source, targetFile, filesFolder);
       }
     }
@@ -456,7 +457,7 @@ function onCancel ()
 
      catch( exception ) {}
    }
-   else
+   else if (webBrowserPersist)
    {
      webBrowserPersist.cancelSave();
    }
