@@ -3789,7 +3789,14 @@ BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)
 	};
 #endif
 
-	// not implement yet
+  // add hacky code here
+  if(IS_VK_DOWN(NS_VK_ALT)) {
+      mIsShiftDown = PR_FALSE;
+      mIsControlDown = PR_FALSE;
+      mIsAltDown = PR_TRUE;
+      DispatchKeyEvent(NS_KEY_PRESS, 0, 192);// XXX hack hack hack
+  }
+	// not implement yet 
 	return PR_FALSE;
 }
 //==========================================================================
