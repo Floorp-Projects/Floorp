@@ -55,6 +55,8 @@
 
 // XXXdmose first listeners, then observers
 
+// XXXdmose getItem and getItems() should return immutable events
+
 function calDavCalendar() {
     this.wrappedJSObject = this;
     this.mObservers = [ ];
@@ -429,6 +431,7 @@ calDavCalendar.prototype = {
                 // create calIItemBase from e4x object
                 // XXX error-check that we only have one result, etc
                 var C = new Namespace("urn:ietf:params:xml:ns:caldav");
+                var D = new Namespace("DAV:");
 
                 // create a local event item
                 // XXX not just events
