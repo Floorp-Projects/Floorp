@@ -37,7 +37,6 @@
 #include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
-#include "nsIHTMLTableColElement.h"
 #include "nsIDOMHTMLTableColElement.h"
 #include "nsReflowPath.h"
 #include "nsStyleContext.h"
