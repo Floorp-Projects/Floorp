@@ -33,6 +33,7 @@ The following preprocessor instructions are recognised.
    #endif
    #error STRING
    #include FILENAME
+   #includesubst @VAR@FILENAME
    #expand STRING
    #literal STRING
    #filter FILTER1 FILTER2 ... FILTERn
@@ -114,6 +115,9 @@ ended in another, although this practice is strongly discouraged.
 There is no predefined limit to the depth of #includes, and there is
 no restriction on self-inclusion, so care should be taken to avoid
 infinite loops.
+
+The #includesubst instruction behaves like #include, except that any
+variables in @ATSIGNS@ are expanded, like the substitution filter.
 
 The #expand instruction will print the given STRING with variable
 substitutions. See the substitution section below.

@@ -427,6 +427,19 @@ sub include {
     }
 }
 
+sub includesubst {
+    my ($stack, $filename) = @_;
+    return if $stack->disabled;
+    die "argument expected\n" unless $filename;
+    $filename =~ s/@(\w+)@/$stack->get($1, 1)/gose;
+    $filename = File::Spec::_0_8::catpath(File::Spec::_0_8::splitpath($filename));
+    if ($stack->{'dependencies'}) {
+        $stack->visit($filename);
+    } else {
+        main::include($stack, $filename);
+    }
+}
+
 sub filter {
     my $stack = shift;
     return if $stack->disabled;
