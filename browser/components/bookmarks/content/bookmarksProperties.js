@@ -199,6 +199,10 @@ function Init()
   var isSeparator = BookmarksUtils.resolveType(resource) == "BookmarkSeparator";
 
   if (isContainerFlag || isSeparator) {
+    // Hide the "Load in sidebar" checkbox unless it's a bookmark.
+    var webpanelCheckbox = document.getElementById("webpanel");
+    webpanelCheckbox.hidden = true;
+
     // If it is a folder, it has no URL or Keyword
     document.getElementById("locationrow").setAttribute("hidden", "true");
     document.getElementById("shortcutrow").setAttribute("hidden", "true");
