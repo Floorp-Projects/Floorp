@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsMessageBaseCID_h__
-#define nsMessageBaseCID_h__
+#ifndef nsMessageCompCID_h__
+#define nsMessageCompCID_h__
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
@@ -43,4 +43,4 @@
  0x80a368c0, 0xf1bf, 0x11d2,                      \
  {0x89, 0x21, 0x00, 0x40, 0x05, 0x26, 0x30, 0x78}}
 
-#endif // nsMessageBaseCID_h__
+#endif // nsMessageCompCID_h__
