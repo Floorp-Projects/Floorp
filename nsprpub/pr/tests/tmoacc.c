@@ -180,6 +180,7 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
 	PLOptStatus os;
 	PRThread **thread;
     PRNetAddr listenAddr;
+    PRSocketOptionData sockOpt;
     PRIntn timeout = DEFAULT_TIMEOUT;
     PRIntn threads = DEFAULT_THREADS;
     PRIntn backlog = DEFAULT_BACKLOG;
@@ -243,6 +244,10 @@ PRIntn Tmoacc(PRIntn argc, char **argv)
     shared->listenSock = PR_NewTCPSocket();
     if (shared->listenSock)
     {
+        sockOpt.option = PR_SockOpt_Reuseaddr;
+        sockOpt.value.reuse_addr = PR_TRUE;
+        rv = PR_SetSocketOption(shared->listenSock, &sockOpt);
+        PR_ASSERT(PR_SUCCESS == rv);
         rv = PR_Bind(shared->listenSock, &listenAddr);
         if (rv != PR_FAILURE)
         {
