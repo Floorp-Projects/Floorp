@@ -81,11 +81,7 @@ LINCS=  \
 LLIBS=                         \
  $(DIST)\lib\raptorgfxwin.lib   \
  $(DIST)\lib\timer_s.lib \
- $(DIST)\lib\raptorhtml.lib     \
- $(DIST)\lib\raptorweb.lib      \
  $(DIST)\lib\widgetsupport_s.lib \
- $(DIST)\lib\raptorwidget.lib     \
- $(DIST)\lib\raptorhtmlpars.lib         \
  $(DIST)\lib\DebugRobot.lib     \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib \
