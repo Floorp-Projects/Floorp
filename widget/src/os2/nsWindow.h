@@ -204,7 +204,7 @@ protected:
    // palette, control, paint & scroll is to do nothing.
 
    // Return whether message has been processed.
-   virtual PRBool ProcessMessage( ULONG m, MPARAM p1, MPARAM p2, MRESULT *r);
+   virtual PRBool ProcessMessage( ULONG m, MPARAM p1, MPARAM p2, MRESULT &r);
    virtual PRBool OnPaint();
    virtual void   OnDestroy();
    virtual PRBool OnReposition( PSWP pNewSwp);
@@ -221,7 +221,7 @@ protected:
 //   virtual PRBool OnActivateMenu( HWND aMenu, BOOL aActivate);
    // called after param has been set...
    virtual PRBool OnPresParamChanged( MPARAM mp1, MPARAM mp2);
-   virtual PRBool OnDragOver( MPARAM mp1, MPARAM mp2, MRESULT *mr);
+   virtual PRBool OnDragOver( MPARAM mp1, MPARAM mp2, MRESULT &mr);
    virtual PRBool OnDragLeave( MPARAM mp1, MPARAM mp2);
    virtual PRBool OnDrop( MPARAM mp1, MPARAM mp2);
 
