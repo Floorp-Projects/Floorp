@@ -353,7 +353,7 @@ nsInlineReflow::ApplyTopLeftMargins()
     }
     else if (eStyleUnit_Percent == unit) {
       nscoord width;
-      if (mOuterReflowState.HaveConstrainedWidth()) {
+      if (mOuterReflowState.HaveFixedContentWidth()) {
         width = mOuterReflowState.minWidth;
       }
       else if (NS_UNCONSTRAINEDSIZE == mOuterReflowState.maxSize.width) {

@@ -266,7 +266,7 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   nscoord horTaken = borderPadding.left + borderPadding.right + (2 * minTopBorder) + 
                      legendMargin.left + legendMargin.right;
   nscoord verTaken = padding.top + borderPadding.bottom + legendMargin.top + legendMargin.bottom;
-  if (aReflowState.HaveConstrainedWidth()) {
+  if (aReflowState.HaveFixedContentWidth()) {
     availSize.width = aReflowState.minWidth;
   }
   else {
@@ -347,7 +347,7 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   nscoord contentWidth = contentSize.width + borderPadding.left + borderPadding.right;
 
   aDesiredSize.width = (legendWidth > contentWidth) ? legendWidth : contentWidth;
-  if (aReflowState.HaveConstrainedWidth() && (aReflowState.minWidth > aDesiredSize.width)) {
+  if (aReflowState.HaveFixedContentWidth() && (aReflowState.minWidth > aDesiredSize.width)) {
     aDesiredSize.width = aReflowState.minWidth;
   }
 
@@ -410,7 +410,7 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   aDesiredSize.height  = contentTopOffset + contentSize.height + borderPadding.bottom;
   if (mInline) // XXX parents don't yet ...... 
     aDesiredSize.height += margin.bottom;
-  if (aReflowState.HaveConstrainedHeight() && (aReflowState.minHeight > aDesiredSize.height)) {
+  if (aReflowState.HaveFixedContentHeight() && (aReflowState.minHeight > aDesiredSize.height)) {
     aDesiredSize.height = aReflowState.minHeight;
   }
   aDesiredSize.ascent  = aDesiredSize.height;

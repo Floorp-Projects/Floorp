@@ -27,7 +27,7 @@ BODY {
   line-height: normal;
 //XXX not yet...  margin: 8px;
   padding: 8px;
-  overflow: scroll;
+  overflow: auto;
 }
 
 FRAMESET {

@@ -302,11 +302,11 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // Determine our size stylistically
   PRBool haveWidth = PR_FALSE;
   PRBool haveHeight = PR_FALSE;
-  if (aReflowState.HaveConstrainedWidth()) {
+  if (aReflowState.HaveFixedContentWidth()) {
     aMetrics.width = aReflowState.minWidth;
     haveWidth = PR_TRUE;
   }
-  if (aReflowState.HaveConstrainedHeight()) {
+  if (aReflowState.HaveFixedContentHeight()) {
     aMetrics.height = aReflowState.minHeight;
     haveHeight = PR_TRUE;
   }

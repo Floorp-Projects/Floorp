@@ -208,16 +208,12 @@ struct nsHTMLReflowState : nsReflowState {
                     const nsSize&            aMaxSize,
                     nsReflowReason           aReflowReason);
 
-  PRBool HaveConstrainedWidth() const {
-    return eHTMLFrameConstraint_Unconstrained != widthConstraint;
+  PRBool HaveFixedContentWidth() const {
+    return eHTMLFrameConstraint_FixedContent == widthConstraint;
   }
 
-  PRBool HaveConstrainedHeight() const {
-    return eHTMLFrameConstraint_Unconstrained != heightConstraint;
-  }
-
-  PRBool HaveConstrainedWidthAndHeight() const {
-    return HaveConstrainedWidth() && HaveConstrainedHeight();
+  PRBool HaveFixedContentHeight() const {
+    return eHTMLFrameConstraint_FixedContent == heightConstraint;
   }
 
 protected:

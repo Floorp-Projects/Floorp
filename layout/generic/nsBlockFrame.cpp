@@ -1366,7 +1366,7 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
 
   nscoord lr = mBorderPadding.left + mBorderPadding.right;
   mY = mBorderPadding.top;
-  if (eHTMLFrameConstraint_Unconstrained != widthConstraint) {
+  if (eHTMLFrameConstraint_FixedContent == widthConstraint) {
     // The CSS2 spec says that the width attribute defines the width
     // of the "content area" which does not include the border
     // padding. So we add those back in.
@@ -1879,7 +1879,7 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
                                nsHTMLReflowMetrics& aMetrics)
 {
   // Compute final width
-  if (eHTMLFrameConstraint_Unconstrained != aState.widthConstraint) {
+  if (eHTMLFrameConstraint_FixedContent == aState.widthConstraint) {
     // Use style defined width
     aMetrics.width = aState.mBorderPadding.left +
       aState.minWidth + aState.mBorderPadding.right;
@@ -1899,7 +1899,7 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
   }
 
   // Compute final height
-  if (eHTMLFrameConstraint_Unconstrained != aState.heightConstraint) {
+  if (eHTMLFrameConstraint_FixedContent == aState.heightConstraint) {
     // Use style defined height
     aMetrics.height = aState.mBorderPadding.top +
       aState.minHeight + aState.mBorderPadding.bottom;
@@ -4162,8 +4162,8 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
   // If either dimension is constrained then get the border and
   // padding values in advance.
   nsMargin bp(0, 0, 0, 0);
-  if (reflowState.HaveConstrainedWidth() ||
-      reflowState.HaveConstrainedHeight()) {
+  if (reflowState.HaveFixedContentWidth() ||
+      reflowState.HaveFixedContentHeight()) {
     const nsStyleSpacing* spacing;
     if (NS_OK == aFloaterFrame->GetStyleData(eStyleStruct_Spacing,
                                              (const nsStyleStruct*&)spacing)) {
@@ -4172,7 +4172,7 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
   }
 
   // Compute the available width for the floater
-  if (reflowState.HaveConstrainedWidth()) {
+  if (reflowState.HaveFixedContentWidth()) {
     // When the floater has a contrained width, give it just enough
     // space for its styled width plus its borders and paddings.
     kidAvailSize.width = reflowState.minWidth + bp.left + bp.right;
@@ -4184,7 +4184,7 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
     const nsHTMLReflowState* rsp = &aState;
     kidAvailSize.width = 0;
     while (nsnull != rsp) {
-      if (eHTMLFrameConstraint_Unconstrained != rsp->widthConstraint) {
+      if (eHTMLFrameConstraint_FixedContent == rsp->widthConstraint) {
         kidAvailSize.width = rsp->minWidth;
         break;
       }
@@ -4200,7 +4200,7 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
   }
 
   // Compute the available height for the floater
-  if (reflowState.HaveConstrainedHeight()) {
+  if (reflowState.HaveFixedContentHeight()) {
     kidAvailSize.height = reflowState.minHeight + bp.top + bp.bottom;
   }
   else {

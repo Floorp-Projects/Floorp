@@ -240,13 +240,13 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
   float p2t = aPresContext->GetPixelsToTwips();
 
   // XXX this needs to be changed from (200,200) to a better default for inline frames
-  if (aReflowState.HaveConstrainedWidth()) {
+  if (aReflowState.HaveFixedContentWidth()) {
     aDesiredSize.width = aReflowState.minWidth;
   }
   else {
     aDesiredSize.width = NSIntPixelsToTwips(200, p2t);
   }
-  if (aReflowState.HaveConstrainedHeight()) {
+  if (aReflowState.HaveFixedContentHeight()) {
     aDesiredSize.height = aReflowState.minHeight;
   }
   else {
