@@ -24,14 +24,12 @@
 #define nsClipboard_h__
 
 #include "nsBaseClipboard.h"
-#include "nsString.h"
-
 #include <Pt.h>
+
 
 class nsITransferable;
 class nsIClipboardOwner;
 class nsIWidget;
-struct IDataObject;
 
 /**
  * Native Photon Clipboard wrapper
@@ -46,16 +44,13 @@ public:
 
   // nsIClipboard  
   NS_IMETHOD ForceDataToClipboard();
+  NS_IMETHOD HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRBool * outResult);
 
 protected:
   NS_IMETHOD SetNativeClipboardData();
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable);
 
-  void GetFormat(const nsString & aMimeStr, PhClipHeader *cliphdr );
-
-  nsIWidget         * mWindow;
-  //IDataObject       * mDataObj;
-
+  nsresult GetFormat(const char* aMimeStr, PhClipHeader *cliphdr );
 };
 
 #endif // nsClipboard_h__
