@@ -41,6 +41,7 @@
 #include "nsXPCOM.h"
 
 #include "nsIComponentLoader.h"
+#include "xpcom-private.h"
 #include "nsNativeComponentLoader.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
