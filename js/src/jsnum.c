@@ -30,6 +30,17 @@
  * and other provisions required by the GPL.  If you do not delete
  * the provisions above, a recipient may use your version of this
  * file under either the NPL or the GPL.
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 05/15/2000  IBM Corp.       Modified OS/2 floating point init. 
  */
 
 /*
@@ -394,22 +405,23 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     JSObject *proto, *ctor;
 
     rt = cx->runtime;
-    if (!rt->jsNaN) {
-#ifndef __MWERKS__
-#ifdef XP_PC
-#ifdef XP_OS2
+
+    #ifdef XP_OS2
 	/*DSR071597 - I have no idea what this really does other than mucking with the floating     */
 	/*point unit, but it does fix a "floating point underflow" exception I am getting, and there*/
 	/*is similar code in the Hursley java. Making sure we have the same code in Javascript      */
 	/*where Netscape was calling control87 on Windows...                                        */
 	_control87(MCW_EM+PC_53+RC_NEAR,MCW_EM+MCW_PC+MCW_RC);
-#else
+    #endif /* XP_OS2 */
+
+    if (!rt->jsNaN) {
+#ifndef __MWERKS__
+#if defined (XP_PC) && !defined(XP_OS2)
 #if defined (_M_IX86)
         /* On Alpha platform this is handled via Compiler option */
         _control87(MCW_EM, MCW_EM);
 #endif
-#endif /* XP_OS2 */
-#endif /* XP_PC */
+#endif /* XP_PC && !XP_OS2 */
 #endif /* __MWERKS__ */
 
 	u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
