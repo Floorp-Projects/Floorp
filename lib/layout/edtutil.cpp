@@ -4903,7 +4903,7 @@ void CSizingObject::ResizeObject()
         }
         if( m_bHeightPercent )
         {
-            iHeight = (iHeight * 100) / m_iViewHeight;
+            iHeight = (iHeightPixels * 100) / m_iViewHeight;
         } else {
             iHeight = iHeightPixels;
         }
