@@ -54,9 +54,9 @@ public:
    NS_IMETHOD IsBidiControl(PRUnichar aChar, PRBool* oResult);
 
    /**
-    * Give a Unichar, return a UCharDirection (compatible with ICU)
+    * Give a Unichar, return a nsCharType (compatible with ICU)
     */
-   NS_IMETHOD GetDirection(PRUnichar aChar, UCharDirection* oResult);
+   NS_IMETHOD GetCharType(PRUnichar aChar, nsCharType* oResult);
 
    /**
     * Give a Unichar, return the symmetric equivalent
@@ -68,9 +68,6 @@ public:
                             PRUnichar* aBuf, PRUint32 *aBufLen);
 
    NS_IMETHOD HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, PRUint32  aNumFlag);
-   NS_IMETHOD Conv_FE_06(const nsString aSrc, nsString & aDst );
-   NS_IMETHOD Conv_FE_06_WithReverse(const nsString aSrc, nsString & aDst );
-   NS_IMETHOD Conv_06_FE_WithReverse(const nsString aSrc, nsString & aDst, PRUint32 aDir);
    NS_IMETHOD HandleNumbers(const nsString aSrc, nsString & aDst );
 };
 

@@ -31,33 +31,32 @@
 #include "nsIUBidiUtils.h"
 #include "nsIBidi.h"
 static NS_DEFINE_CID(kBidiCID, NS_BIDI_CID);
-NS_DEFINE_IID(kIUBidiUtilsIID, NS_IUBIDIUTILS_IID);
-NS_IMPL_ISUPPORTS(nsBidiUtilsImp, kIUBidiUtilsIID);
+NS_IMPL_ISUPPORTS(nsBidiUtilsImp, NS_GET_IID(nsIUBidiUtils));
 
-static UCharDirection ebc2ucd[15] = {
-    U_OTHER_NEUTRAL, /* Placeholder -- there will never be a 0 index value */
-    U_LEFT_TO_RIGHT,
-    U_RIGHT_TO_LEFT,
-    U_RIGHT_TO_LEFT_ARABIC,
-    U_ARABIC_NUMBER,
-    U_EUROPEAN_NUMBER,
-    U_EUROPEAN_NUMBER_SEPARATOR,
-    U_EUROPEAN_NUMBER_TERMINATOR,
-    U_COMMON_NUMBER_SEPARATOR,
-    U_OTHER_NEUTRAL,
-    U_DIR_NON_SPACING_MARK,
-    U_BOUNDARY_NEUTRAL,
-    U_BLOCK_SEPARATOR,
-    U_SEGMENT_SEPARATOR,
-    U_WHITE_SPACE_NEUTRAL
+static nsCharType ebc2ucd[15] = {
+    eCharType_OtherNeutral, /* Placeholder -- there will never be a 0 index value */
+    eCharType_LeftToRight,
+    eCharType_RightToLeft,
+    eCharType_RightToLeftArabic,
+    eCharType_ArabicNumber,
+    eCharType_EuropeanNumber,
+    eCharType_EuropeanNumberSeparator,
+    eCharType_EuropeanNumberTerminator,
+    eCharType_CommonNumberSeparator,
+    eCharType_OtherNeutral,
+    eCharType_DirNonSpacingMark,
+    eCharType_BoundaryNeutral,
+    eCharType_BlockSeparator,
+    eCharType_SegmentSeparator,
+    eCharType_WhiteSpaceNeutral
 };
 
-static UCharDirection cc2ucd[5] = {
-    U_LEFT_TO_RIGHT_EMBEDDING,
-    U_RIGHT_TO_LEFT_EMBEDDING,
-    U_POP_DIRECTIONAL_FORMAT,
-    U_LEFT_TO_RIGHT_OVERRIDE,
-    U_RIGHT_TO_LEFT_OVERRIDE
+static nsCharType cc2ucd[5] = {
+    eCharType_LeftToRightEmbedding,
+    eCharType_RightToLeftEmbedding,
+    eCharType_PopDirectionalFormat,
+    eCharType_LeftToRightOverride,
+    eCharType_RightToLeftOverride
 };
 
 // the Array Index = FE_CHAR - FE_TO_06_OFFSET
@@ -166,7 +165,7 @@ enum {
      (((LeftJCClass(jl)) ? eInitial                         \
                          : eIsolated))                      \
     )                     : eIsolated))                     \
-  
+
 
 static PRInt8 gJoiningClass[] = {
           eRJ, eRJ, eRJ, eRJ, eDJ, eRJ, // 0620-0627
@@ -246,21 +245,21 @@ NS_IMETHODIMP nsBidiUtilsImp::IsBidiControl(PRUnichar aChar, PRBool* oResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidiUtilsImp::GetDirection(PRUnichar aChar, UCharDirection* oResult)
+NS_IMETHODIMP nsBidiUtilsImp::GetCharType(PRUnichar aChar, nsCharType* oResult)
 {
   eBidiCategory bCat = GetBidiCat(aChar);
   if (eBidiCat_CC != bCat) {
-    NS_ASSERTION(bCat < (sizeof(ebc2ucd)/sizeof(UCharDirection)), "size mismatch");
-    if(bCat < (sizeof(ebc2ucd)/sizeof(UCharDirection)))
-       *oResult = ebc2ucd[bCat];
+    NS_ASSERTION(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)), "size mismatch");
+    if(bCat < (sizeof(ebc2ucd)/sizeof(nsCharType)))
+      *oResult = ebc2ucd[bCat];
     else 
-       *oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
+      *oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
   } else {
-    NS_ASSERTION((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(UCharDirection)), "size mismatch");
-    if((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(UCharDirection)))
-       *oResult = cc2ucd[aChar - 0x202a];
+    NS_ASSERTION((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)), "size mismatch");
+    if((aChar-0x202a) < (sizeof(cc2ucd)/sizeof(nsCharType)))
+      *oResult = cc2ucd[aChar - 0x202a];
     else 
-       *oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
+      *oResult = ebc2ucd[0]; // something is very wrong, but we need to return a value
   }
   return NS_OK;
 }
@@ -271,7 +270,6 @@ NS_IMETHODIMP nsBidiUtilsImp::SymmSwap(PRUnichar* aChar)
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 aLen,
                                             PRUnichar* aBuf, PRUint32 *aBufLen)
 {
@@ -280,7 +278,7 @@ NS_IMETHODIMP nsBidiUtilsImp::ArabicShaping(const PRUnichar* aString, PRUint32 a
   // a stub routine which simply copy the data is now place here untill the
   // real code get check in.
   for(*aBufLen = 0;*aBufLen < aLen; *aBufLen++)
-     aBuf[*aBufLen] = aString[*aBufLen];
+    aBuf[*aBufLen] = aString[*aBufLen];
   return NS_OK;
 }
 
@@ -292,7 +290,7 @@ NS_IMETHODIMP nsBidiUtilsImp::HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, 
   // IBMBIDI_NUMERAL_HINDICONTEXT
   // IBMBIDI_NUMERAL_ARABIC
   // IBMBIDI_NUMERAL_HINDI
-  
+
   switch (aNumFlag) {
     case IBMBIDI_NUMERAL_HINDI:
       for (i=0;i<aSize;i++)
@@ -314,35 +312,7 @@ NS_IMETHODIMP nsBidiUtilsImp::HandleNumbers(PRUnichar* aBuffer, PRUint32 aSize, 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06(const nsString aSrc, nsString & aDst)
-{
-  // Note: The real implementation is still under reviewing process 
-  // will be check in soon. 
-  // a stub routine which simply copy the data is now place here untill the
-  // real code get check in.
-  aDst = aSrc;
-  return NS_OK;
-}
 NS_IMETHODIMP nsBidiUtilsImp::HandleNumbers(const nsString aSrc, nsString & aDst)
-{
-  // Note: The real implementation is still under reviewing process 
-  // will be check in soon. 
-  // a stub routine which simply copy the data is now place here untill the
-  // real code get check in.
-  aDst = aSrc;
-  return NS_OK;
-}
-NS_IMETHODIMP nsBidiUtilsImp::Conv_06_FE_WithReverse(const nsString aSrc, nsString & aDst,PRUint32 mDir)
-{
-  // Note: The real implementation is still under reviewing process 
-  // will be check in soon. 
-  // a stub routine which simply copy the data is now place here untill the
-  // real code get check in.
-  aDst = aSrc;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06_WithReverse(const nsString aSrc, nsString & aDst)
 {
   // Note: The real implementation is still under reviewing process 
   // will be check in soon. 

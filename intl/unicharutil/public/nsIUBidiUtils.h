@@ -27,7 +27,7 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
-// Include nsIBidi.h for UcharDirection data type
+// Include nsIBidi.h for nsCharType data type
 #include "nsIBidi.h"
 
    /**
@@ -103,9 +103,9 @@ class nsIUBidiUtils : public nsISupports {
     NS_IMETHOD IsBidiControl(PRUnichar aChar, PRBool* oResult) = 0;
 
    /**
-    * Give a Unichar, return a UCharDirection (compatible with ICU)
+    * Give a Unichar, return a nsCharType (compatible with ICU)
     */
-    NS_IMETHOD GetDirection(PRUnichar aChar, UCharDirection* oResult) = 0 ;
+    NS_IMETHOD GetCharType(PRUnichar aChar, nsCharType* oResult) = 0 ;
 
    /**
     * Give a Unichar, return the symmetric equivalent
@@ -185,9 +185,9 @@ class nsIUBidiUtils : public nsISupports {
 //  Controls Text Mode
 //  ------------------
 //  bidi.controlstextmode
-#define IBMBIDI_CONTROLSTEXTMODE_LOGICAL   1 //  1 = logicalcontrolstextmodeBidiCmd
+#define IBMBIDI_CONTROLSTEXTMODE_LOGICAL   1 //  1 = logicalcontrolstextmodeBidiCmd *
 #define IBMBIDI_CONTROLSTEXTMODE_VISUAL    2 //  2 = visualcontrolstextmodeBidi
-#define IBMBIDI_CONTROLSTEXTMODE_CONTAINER 3 //  3 = containercontrolstextmodeBidi *
+#define IBMBIDI_CONTROLSTEXTMODE_CONTAINER 3 //  3 = containercontrolstextmodeBidi
 //  ------------------
 //  Clipboard Text Mode
 //  ------------------
@@ -217,6 +217,15 @@ class nsIUBidiUtils : public nsISupports {
 #define IBMBIDI_CHARSET_BIDI        1 //  1 = doccharactersetBidi *
 #define IBMBIDI_CHARSET_DEFAULT     2 //  2 = defaultcharactersetBidi
 
+#define IBMBIDI_DEFAULT_BIDI_OPTIONS              \
+        ((IBMBIDI_TEXTDIRECTION_LTR<<0)         | \
+         (IBMBIDI_TEXTTYPE_CHARSET<<4)          | \
+         (IBMBIDI_CONTROLSTEXTMODE_LOGICAL<<8)  | \
+         (IBMBIDI_CLIPBOARDTEXTMODE_SOURCE<<12) | \
+         (IBMBIDI_NUMERAL_REGULAR<<16)          | \
+         (IBMBIDI_SUPPORTMODE_MOZILLA<<20)      | \
+         (IBMBIDI_CHARSET_BIDI<<24))
+
 typedef PRUint32 nsBidiOptions;
 
 #define GET_BIDI_OPTION_DIRECTION(bo) (((bo)>>0) & 0x0000000F) /* 4 bits for DIRECTION */
@@ -243,6 +252,14 @@ typedef PRUint32 nsBidiOptions;
 #define IS_HINDI_DIGIT(u)   ( ( (u) >= START_HINDI_DIGITS )  && ( (u) <= END_HINDI_DIGITS ) )
 #define IS_ARABIC_DIGIT(u)  ( ( (u) >= START_ARABIC_DIGITS ) && ( (u) <= END_ARABIC_DIGITS ) )
 
+#define IS_BIDI_DIACRITIC(u) ( \
+  ( (u) >= 0x0591 && (u) <= 0x05A1) || ( (u) >= 0x05A3 && (u) <= 0x05B9) \
+    || ( (u) >= 0x05BB && (u) <= 0x05BD) || ( (u) == 0x05BF) || ( (u) == 0x05C1) \
+    || ( (u) == 0x05C2) || ( (u) == 0x05C4) \
+    || ( (u) >= 0x064B && (u) <= 0x0652) || ( (u) == 0x0670) \
+    || ( (u) >= 0x06D7 && (u) <= 0x06E4) || ( (u) == 0x06E7) || ( (u) == 0x06E8) \
+    || ( (u) >= 0x06EA && (u) <= 0x06ED) )
+
 #define IS_HEBREW_CHAR(c) (((0x0590 <= (c)) && ((c)<= 0x05FF)) || (((c) >= 0xfb1d) && ((c) <= 0xfb4f)))
 #define IS_06_CHAR(c) ((0x0600 <= (c)) && ((c)<= 0x06FF))
 #define IS_FE_CHAR(c) ((0xfe70 <= (c)) && ((c)<= 0xfeFF))
@@ -252,4 +269,5 @@ typedef PRUint32 nsBidiOptions;
 #define CHAR_IS_BIDI(c) ( (IS_HINDI_DIGIT(c) ) || (IS_HEBREW_CHAR(c) ) \
                         || (IS_06_CHAR(c) ) || (IS_FE_CHAR(c) ) )
 #endif  /* nsIUbidiUtils_h__ */
+
 
