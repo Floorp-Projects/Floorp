@@ -238,10 +238,15 @@ nsLayoutDLF::CreateInstance(nsIURI* aURL,
 {
   nsresult rv = NS_ERROR_FAILURE;
 
+
   // XXX vile hack
-  if(0==PL_strcmp(gXMLTypes[0],aContentType))
-    if(0==PL_strcmp(aCommand,"view-source"))
+  if(0==PL_strcmp(aCommand,"view-source")) {
+    if((0==PL_strcmp(gXMLTypes[0],aContentType)) ||
+       (0==PL_strcmp(gRDFTypes[0],aContentType)) ||
+       (0==PL_strcmp(gRDFTypes[1],aContentType))) {
       aContentType=gHTMLTypes[0];
+    }
+  }
 
   // Try html
   int typeIndex=0;
