@@ -1933,26 +1933,38 @@ PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
     return NULL;
 
 #elif defined(HPUX) && defined(USE_HPSHL)
-    shl_t handle;
+    int index;
     struct shl_descriptor desc;
     char *result;
 
-    handle = shl_load(name, DYNAMIC_PATH, 0L);
-    if (handle == NULL) {
-        PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, _MD_ERRNO());
-        DLLErrorInternal(_MD_ERRNO());
-        return NULL;
+    for (index = 0; shl_get_r(index, &desc) == 0; index++) {
+        if (strstr(desc.filename, name) != NULL) {
+            result = PR_Malloc(strlen(desc.filename)+1);
+            if (result != NULL) {
+                strcpy(result, desc.filename);
+            }
+            return result;
+        }
     }
-    if (shl_gethandle_r(handle, &desc) == -1) {
-        /* should not happen */
-        _PR_MD_MAP_DEFAULT_ERROR(_MD_ERRNO());
-        return NULL;
+    /*
+     * Since the index value of a library is decremented if
+     * a library preceding it in the shared library search
+     * list was unloaded, it is possible that we missed some
+     * libraries as we went up the list.  So we should go
+     * down the list to be sure that we not miss anything.
+     */
+    for (index--; index >= 0; index--) {
+        if ((shl_get_r(index, &desc) == 0)
+                && (strstr(desc.filename, name) != NULL)) {
+            result = PR_Malloc(strlen(desc.filename)+1);
+            if (result != NULL) {
+                strcpy(result, desc.filename);
+            }
+            return result;
+        }
     }
-    result = PR_Malloc(strlen(desc.filename)+1);
-    if (result != NULL) {
-        strcpy(result, desc.filename);
-    }
-    return result;
+    PR_SetError(PR_LIBRARY_NOT_LOADED_ERROR, 0);
+    return NULL;
 #elif defined(HPUX) && defined(USE_DLFCN)
     struct load_module_desc desc;
     char *result;
