@@ -1067,6 +1067,8 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
 
       const char * symbol = info.dli_sname;
 
+      if (!symbol)
+        break; // XXX Lazy.  We should look at the filename or something.
       int len = strlen(symbol);
       if (! len)
         break; // XXX Lazy. We could look at the filename or something.
