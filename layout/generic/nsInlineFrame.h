@@ -33,7 +33,7 @@ class nsAnonymousBlockFrame;
 
 #define nsInlineFrameSuper nsHTMLContainerFrame
 
-#define NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD 0X00010000
+#define NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD 0x00100000
 
 /**
  * Inline frame class.

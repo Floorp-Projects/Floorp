@@ -40,13 +40,6 @@ class nsFirstLineFrame;
 #define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX  2
 #define NS_BLOCK_FRAME_LAST_LIST_INDEX      NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX
 
-/**
- * Additional frame-state bits. There are more of these bits
- * defined in nsHTMLParts.h (XXX: note: this should be cleaned up)
- */
-#define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET 0x40000000
-#define NS_BLOCK_HAS_FIRST_LETTER_STYLE   0x20000000
-
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
 #define NS_BLOCK_FRAME_CID \
