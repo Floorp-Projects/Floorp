@@ -944,9 +944,7 @@
       (multiple-value-bind (lhs-nonterminal lhs-arguments) (grammar-parametrization-intern grammar-parametrization production-lhs-source)
         (list lhs-nonterminal
               (mapcar #'(lambda (grammar-symbol-source)
-                          (if (consp grammar-symbol-source)
-                            (grammar-parametrization-intern grammar-parametrization grammar-symbol-source lhs-arguments)
-                            grammar-symbol-source))
+                          (grammar-parametrization-intern grammar-parametrization grammar-symbol-source lhs-arguments))
                       production-rhs-source)
               production-name))
       production-source)))
@@ -963,7 +961,11 @@
 ; of the lhs nonterminal.  The lhs nonterminal must not have duplicate arguments.  The lhs
 ; nonterminal can have attributes, thereby designating a specialization instead of a fully
 ; generic production.
-(defun make-grammar (grammar-parametrization start-symbol grammar-source)
+;
+; excluded-nonterminals-source is a list of nonterminals not used in the grammar.  Productions,
+; including productions expanded from generic productions, that have one of these nonterminals
+; on the lhs are ignored.
+(defun make-grammar (grammar-parametrization start-symbol grammar-source &optional excluded-nonterminals-source)
   (let ((interned-grammar-source
          (mapcar #'(lambda (production-source)
                      (intern-production-source grammar-parametrization production-source))
@@ -972,7 +974,14 @@
         (terminals-hash (make-hash-table :test *grammar-symbol-=*))
         (general-productions (make-hash-table :test #'equal))
         (production-number 0)
-        (max-production-length 1))
+        (max-production-length 1)
+        (excluded-nonterminals-hash (make-hash-table :test *grammar-symbol-=*)))
+    
+    ;Set up excluded-nonterminals-hash.  The values of the hash table are either :seen or :unseen
+    ;depending on whether a production with the particular nonterminal has been seen yet.
+    (dolist (excluded-nonterminal-source excluded-nonterminals-source)
+      (setf (gethash (grammar-parametrization-intern grammar-parametrization excluded-nonterminal-source nil) excluded-nonterminals-hash)
+            :unseen))
     
     ;Create the starting production:  *start-nonterminal* ==> start-symbol
     (setf (gethash *start-nonterminal* rules)
@@ -985,7 +994,11 @@
            (push production (gethash lhs rules))
            (dolist (rhs-terminal (production-terminals production))
              (setf (gethash rhs-terminal terminals-hash) t))
-           production)))
+           production))
+       
+       (nonterminal-excluded (nonterminal)
+         (and (gethash nonterminal excluded-nonterminals-hash)
+              (setf (gethash nonterminal excluded-nonterminals-hash) :seen))))
       
       (dolist (production-source interned-grammar-source)
         (let* ((production-lhs (first production-source))
@@ -995,23 +1008,29 @@
           (setq max-production-length (max max-production-length (length production-rhs)))
           (when (gethash production-name general-productions)
             (error "Duplicate production name ~S" production-name))
-          (setf (gethash production-name general-productions)
-                (if lhs-arguments
-                  (let ((productions nil))
-                    (grammar-parametrization-each-permutation
-                     grammar-parametrization
-                     #'(lambda (bound-argument-alist)
-                         (push (create-production
-                                (instantiate-general-grammar-symbol bound-argument-alist production-lhs)
-                                (mapcar #'(lambda (general-grammar-symbol)
-                                            (instantiate-general-grammar-symbol bound-argument-alist general-grammar-symbol))
-                                        production-rhs)
-                                production-name)
-                               productions))
-                     lhs-arguments)
-                    (make-generic-production production-lhs production-rhs production-name (nreverse productions)))
-                  (create-production production-lhs production-rhs production-name))))))
-
+          (if lhs-arguments
+            (let ((productions nil))
+              (grammar-parametrization-each-permutation
+               grammar-parametrization
+               #'(lambda (bound-argument-alist)
+                   (let ((instantiated-lhs (instantiate-general-grammar-symbol bound-argument-alist production-lhs)))
+                     (unless (nonterminal-excluded instantiated-lhs)
+                       (push (create-production
+                              instantiated-lhs
+                              (mapcar #'(lambda (general-grammar-symbol)
+                                          (instantiate-general-grammar-symbol bound-argument-alist general-grammar-symbol))
+                                      production-rhs)
+                              production-name)
+                             productions))))
+               lhs-arguments)
+              (when productions
+                (setf (gethash production-name general-productions)
+                      (make-generic-production production-lhs production-rhs production-name (nreverse productions)))))
+            
+            (unless (nonterminal-excluded production-lhs)
+              (setf (gethash production-name general-productions)
+                    (create-production production-lhs production-rhs production-name)))))))
+    
     
     ;Change all values of the rules hash table to contain rule structures
     ;instead of mere lists of rules.  Also check that all referenced nonterminals
@@ -1025,6 +1044,13 @@
          (setf (gethash rule-lhs rules)
                (make-rule (nreverse rule-productions))))
      rules)
+    
+    ;Check that all excluded nonterminals have been seen.
+    (maphash
+     #'(lambda (excluded-nonterminal seen)
+         (unless (eq seen :seen)
+           (warn "Nonterminal ~S declared excluded but not defined" excluded-nonterminal)))
+     excluded-nonterminals-hash)
     
     (let ((nonterminals-list (depth-first-search
                               *grammar-symbol-=*
@@ -1078,7 +1104,7 @@
                 (unless (eq new-derives-epsilon (rule-derives-epsilon rule))
                   (setf (rule-derives-epsilon rule) t)
                   (setq changed t)))))
-
+          
           ;Compute the parameter-trees entries.
           (let ((parameter-trees (grammar-parameter-trees grammar)))
             (dolist (production-source interned-grammar-source)

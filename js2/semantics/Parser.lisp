@@ -412,8 +412,8 @@
 
 
 ; Make the grammar and compile its parser.  kind should be either :lalr-1 or :lr-1.
-(defun make-and-compile-grammar (kind parametrization start-symbol grammar-source)
-  (compile-parser (make-grammar parametrization start-symbol grammar-source)
+(defun make-and-compile-grammar (kind parametrization start-symbol grammar-source &optional excluded-nonterminals-source)
+  (compile-parser (make-grammar parametrization start-symbol grammar-source excluded-nonterminals-source)
                   kind))
 
 

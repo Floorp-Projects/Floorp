@@ -551,10 +551,11 @@
 ;   list of extra commands that:
 ;     define the partitions used in this lexer;
 ;     define the actions of these productions.
-(defun make-lexer-and-grammar (kind charclasses-source lexer-actions-source parametrization start-symbol grammar-source)
+(defun make-lexer-and-grammar (kind charclasses-source lexer-actions-source parametrization start-symbol grammar-source &optional excluded-nonterminals-source)
   (let ((lexer (make-lexer charclasses-source lexer-actions-source grammar-source)))
     (multiple-value-bind (extra-grammar-source extra-commands) (lexer-grammar-and-commands lexer)
-      (let ((grammar (make-and-compile-grammar kind parametrization start-symbol (append extra-grammar-source grammar-source))))
+      (let ((grammar (make-and-compile-grammar kind parametrization start-symbol
+                                               (append extra-grammar-source grammar-source) excluded-nonterminals-source)))
         (setf (lexer-grammar lexer) grammar)
         (values lexer extra-commands)))))
 

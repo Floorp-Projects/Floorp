@@ -2126,7 +2126,8 @@
      (grammar preprocess-grammar)
      (lexer preprocess-lexer)
      (grammar-argument preprocess-grammar-argument)
-     (production preprocess-production))
+     (production preprocess-production)
+     (exclude preprocess-exclude))
     
     (:macro
      (let expand-let depict-let)
@@ -2532,6 +2533,7 @@
   (parametrization nil :type (or null grammar-parametrization)) ;Parametrization of the grammar being accumulated or nil if none
   (start-symbol nil :type symbol)                     ;Start symbol of the grammar being accumulated or nil if none
   (grammar-source-reverse nil :type list)             ;List of productions in the grammar being accumulated (in reverse order)
+  (excluded-nonterminals-source nil :type list)       ;List of nonterminals to be excluded from the grammar
   (charclasses-source nil)                            ;List of charclasses in the lexical grammar being accumulated
   (lexer-actions-source nil)                          ;List of lexer actions in the lexical grammar being accumulated
   (grammar-infos-reverse nil :type list))             ;List of grammar-infos already completed (in reverse order)
@@ -2551,12 +2553,16 @@
     (and kind
          (let ((parametrization (preprocessor-state-parametrization preprocessor-state))
                (start-symbol (preprocessor-state-start-symbol preprocessor-state))
-               (grammar-source (nreverse (preprocessor-state-grammar-source-reverse preprocessor-state))))
+               (grammar-source (nreverse (preprocessor-state-grammar-source-reverse preprocessor-state)))
+               (excluded-nonterminals-source (preprocessor-state-excluded-nonterminals-source preprocessor-state)))
            (multiple-value-bind (grammar lexer extra-commands)
                                 (ecase kind
                                   (:grammar
                                    (values (make-and-compile-grammar (preprocessor-state-kind2 preprocessor-state)
-                                                                     parametrization start-symbol grammar-source)
+                                                                     parametrization
+                                                                     start-symbol
+                                                                     grammar-source
+                                                                     excluded-nonterminals-source)
                                            nil
                                            nil))
                                   (:lexer 
@@ -2565,7 +2571,10 @@
                                                          (preprocessor-state-kind2 preprocessor-state)
                                                          (preprocessor-state-charclasses-source preprocessor-state)
                                                          (preprocessor-state-lexer-actions-source preprocessor-state)
-                                                         parametrization start-symbol grammar-source)
+                                                         parametrization
+                                                         start-symbol
+                                                         grammar-source
+                                                         excluded-nonterminals-source)
                                      (values (lexer-grammar lexer) lexer extra-commands))))
              (let ((grammar-info (make-grammar-info (preprocessor-state-name preprocessor-state) grammar lexer)))
                (setf (preprocessor-state-kind preprocessor-state) nil)
@@ -2574,6 +2583,7 @@
                (setf (preprocessor-state-parametrization preprocessor-state) nil)
                (setf (preprocessor-state-start-symbol preprocessor-state) nil)
                (setf (preprocessor-state-grammar-source-reverse preprocessor-state) nil)
+               (setf (preprocessor-state-excluded-nonterminals-source preprocessor-state) nil)
                (setf (preprocessor-state-charclasses-source preprocessor-state) nil)
                (setf (preprocessor-state-lexer-actions-source preprocessor-state) nil)
                (push grammar-info (preprocessor-state-grammar-infos-reverse preprocessor-state))
@@ -2744,4 +2754,16 @@
                      (list 'action (first action) name (second action)))
                  actions))
    t))
+
+
+; (exclude <lhs> ... <lhs>)
+;   ==>
+; grammar excluded nonterminals:
+;   <lhs> ... <lhs>;
+(defun preprocess-exclude (preprocessor-state command &rest excluded-nonterminals-source)
+  (declare (ignore command))
+  (preprocess-ensure-grammar preprocessor-state)
+  (setf (preprocessor-state-excluded-nonterminals-source preprocessor-state)
+        (append excluded-nonterminals-source (preprocessor-state-excluded-nonterminals-source preprocessor-state)))
+  (values nil nil))
 
