@@ -38,6 +38,8 @@ REQUIRES	= xpcom \
 		  mime \
 		  msgcompose \
 		  pipnss \
+		  necko \
+		  intl \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)

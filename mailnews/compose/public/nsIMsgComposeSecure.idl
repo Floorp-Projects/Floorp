@@ -20,8 +20,10 @@
  * Contributor(s): 
  *       David Drinan <ddrinan@netscape.com>
  *       Scott MacGregor <mscott@netscape.com> 
+ *       Stephane Saux <ssaux@netscape.com>
  */
 
+#include "nsIMsgSendReport.idl"
 #include "nsISupports.idl"
 
 interface nsIMsgCompFields;
@@ -41,7 +43,7 @@ interface nsIMsgComposeSecure : nsISupports
 	// some encryption work. In the case of false, you can disregard the compose secure object.
     boolean requiresCryptoEncapsulation(in nsIMsgIdentity aIdentity, in nsIMsgCompFields aCompFields);
 
-	void beginCryptoEncapsulation(in nsOutputFileStream aStream, in string aRecipients, in nsIMsgCompFields aCompFields, in nsIMsgIdentity aIdentity, in boolean aIsDraft);
+	void beginCryptoEncapsulation(in nsOutputFileStream aStream, in string aRecipients, in nsIMsgCompFields aCompFields, in nsIMsgIdentity aIdentity, in nsIMsgSendReport sendReport, in boolean aIsDraft);
 	void finishCryptoEncapsulation(in boolean aAbort);
 	void mimeCryptoWriteBlock(in string aBuf, in long aLen);
 };

@@ -1290,7 +1290,12 @@ nsresult nsMsgComposeAndSend::BeginCryptoEncapsulation ()
 	    FROB(mCompFields->GetNewsgroups())
 
       // end section of code I'd like to move to the implementor.....
-      rv = m_crypto_closure->BeginCryptoEncapsulation(mOutputFile, recipients, mCompFields, mUserIdentity, (m_deliver_mode == nsMsgSaveAsDraft));
+      rv = m_crypto_closure->BeginCryptoEncapsulation(mOutputFile,
+                                                      recipients,
+                                                      mCompFields,
+                                                      mUserIdentity,
+                                                      mSendReport,
+                                                      (m_deliver_mode == nsMsgSaveAsDraft));
 
       PR_FREEIF(recipients);
     }

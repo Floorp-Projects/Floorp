@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *     David Drinan <ddrinan@netscape.com>
+ *     Stephane Saux <ssaux@netscape.com>
  */
 
 #include "nsMsgComposeSecure.h"
@@ -38,6 +39,9 @@
 #include "nsIMsgIdentity.h"
 #include "nsIMsgCompFields.h"
 
+// String bundle for smime. Class static.
+nsCOMPtr<nsIStringBundle> nsMsgComposeSecure::mSMIMEBundle = nsnull;
+
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 
 // XXX These strings should go in properties file XXX //
@@ -47,7 +51,7 @@ static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
 #define MK_MIME_ERROR_WRITING_FILE -1
 
-#define SEC_ERROR_NO_EMAIL_CERT -100
+#define SMIME_STRBUNDLE_URL "chrome://messenger/locale/am-smime.properties"
 
 static void mime_crypto_write_base64 (void *closure, const char *buf,
 						  unsigned long size);
@@ -277,6 +281,70 @@ NS_IMETHODIMP nsMsgComposeSecure::RequiresCryptoEncapsulation(nsIMsgIdentity * a
   return NS_OK;
 }
 
+
+nsresult nsMsgComposeSecure::GetSMIMEBundleString(const PRUnichar *name,
+                                                  PRUnichar **outString)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  *outString = nsnull;
+
+  if ( ! mSMIMEBundle ) {
+    InitializeSMIMEBundle();
+    if ( ! mSMIMEBundle ) {
+      return rv;
+    }
+  }
+
+  if (name) {
+    rv = mSMIMEBundle->GetStringFromName(name, outString);
+    if (NS_SUCCEEDED(rv)) {
+      rv = NS_OK;
+    }
+  }
+
+  return rv;
+}
+
+
+nsresult
+nsMsgComposeSecure::
+SMIMEBundleFormatStringFromName(const PRUnichar *name,
+                                const PRUnichar **params,
+                                PRUint32 numParams,
+                                PRUnichar **outString)
+{
+
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if ( ! mSMIMEBundle ) {
+    InitializeSMIMEBundle();
+    if ( ! mSMIMEBundle ) {
+      return rv;
+    }
+  }
+
+  if (name) {
+    rv = mSMIMEBundle->FormatStringFromName(name, params, 
+                                             numParams, outString);
+  }
+  return rv;
+}
+
+void nsMsgComposeSecure::InitializeSMIMEBundle()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+
+  if ( NS_FAILED(rv) ) {
+    return;
+  }  
+
+  bundleService->CreateBundle(SMIME_STRBUNDLE_URL,
+                              getter_AddRefs(mSMIMEBundle));
+}
+
 nsresult nsMsgComposeSecure::ExtractEncryptionState(nsIMsgIdentity * aIdentity, nsIMsgCompFields * aComposeFields, PRBool * aSignMessage, PRBool * aEncrypt)
 {
   if (!aComposeFields && !aIdentity)
@@ -305,7 +373,12 @@ nsresult nsMsgComposeSecure::ExtractEncryptionState(nsIMsgIdentity * aIdentity, 
 }
 
 /* void beginCryptoEncapsulation (in nsOutputFileStream aStream, in boolean aEncrypt, in boolean aSign, in string aRecipeints, in boolean aIsDraft); */
-NS_IMETHODIMP nsMsgComposeSecure::BeginCryptoEncapsulation(nsOutputFileStream * aStream, const char * aRecipients, nsIMsgCompFields * aCompFields, nsIMsgIdentity * aIdentity, PRBool aIsDraft)
+NS_IMETHODIMP nsMsgComposeSecure::BeginCryptoEncapsulation(nsOutputFileStream * aStream,
+                                                           const char * aRecipients,
+                                                           nsIMsgCompFields * aCompFields,
+                                                           nsIMsgIdentity * aIdentity,
+                                                           nsIMsgSendReport *sendReport,
+                                                           PRBool aIsDraft)
 {
   nsresult rv = NS_OK;
 
@@ -330,7 +403,7 @@ NS_IMETHODIMP nsMsgComposeSecure::BeginCryptoEncapsulation(nsOutputFileStream * 
   aIdentity->GetUnicharAttribute("signing_cert_name", getter_Copies(mSigningCertName));
   aIdentity->GetUnicharAttribute("encryption_cert_name", getter_Copies(mEncryptionCertName));
 
-  rv = MimeCryptoHackCerts(aRecipients, encryptMessages, signMessage);
+  rv = MimeCryptoHackCerts(aRecipients, sendReport, encryptMessages, signMessage);
   if (NS_FAILED(rv)) {
     goto FAIL;
   }
@@ -705,13 +778,15 @@ nsresult nsMsgComposeSecure::MimeFinishEncryption (PRBool aSign)
 
 /* Used to figure out what certs should be used when encrypting this message.
  */
-nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients, PRBool aEncrypt, PRBool aSign)
+nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients,
+                                                 nsIMsgSendReport *sendReport,
+                                                 PRBool aEncrypt,
+                                                 PRBool aSign)
 {
   int status = 0;
   char *all_mailboxes = 0, *mailboxes = 0, *mailbox_list = 0;
   const char *mailbox = 0;
   PRUint32 count = 0;
-  PRUint32 numCerts;
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
   nsCOMPtr<nsIMsgHeaderParser>  pHeader;
   nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
@@ -722,18 +797,38 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients, PRBool
     return res;
   }
 
+  nsXPIDLString errorString;
   PRBool no_clearsigning_p = PR_FALSE;
 
   PR_ASSERT(aEncrypt || aSign);
   certdb->GetEmailEncryptionCert(mEncryptionCertName, getter_AddRefs(mSelfEncryptionCert));
   certdb->GetEmailSigningCert(mSigningCertName, getter_AddRefs(mSelfSigningCert));
+
+  // must have both the signing and encryption certs to sign
 	if ((mSelfSigningCert == nsnull) && aSign) {
-		status = SEC_ERROR_NO_EMAIL_CERT;
+    res = GetSMIMEBundleString(NS_LITERAL_STRING("NoSenderSigningCert").get(),
+                               getter_Copies(errorString));
+    if ( NS_SUCCEEDED(res) ) {
+      res = NS_ERROR_FAILURE;
+    }
 		goto FAIL;
 	}
 
+	if ((mSelfEncryptionCert == nsnull) && aSign) {
+    res = GetSMIMEBundleString(NS_LITERAL_STRING("SignNoSenderEncryptionCert").get(),
+                               getter_Copies(errorString));
+    if ( NS_SUCCEEDED(res) ) {
+      res = NS_ERROR_FAILURE;
+    }
+    goto FAIL;
+  }
+
 	if ((mSelfEncryptionCert == nsnull) && aEncrypt) {
-    status = SEC_ERROR_NO_EMAIL_CERT;
+    res = GetSMIMEBundleString(NS_LITERAL_STRING("NoSenderEncriptionCert").get(),
+                               getter_Copies(errorString));
+    if ( NS_SUCCEEDED(res) ) {
+      res = NS_ERROR_FAILURE;
+    }
     goto FAIL;
   }
 
@@ -754,8 +849,22 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients, PRBool
       nsCOMPtr<nsIX509Cert> cert;
 		  certdb->GetCertByEmailAddress(nsnull, mailbox, getter_AddRefs(cert));
 		  if (!cert) {
-			  mailbox += nsCRT::strlen(mailbox) + 1;
-			  continue;
+        // failure to find an encryption cert is
+        // fatal for now. We won't be able to encrypt anyway
+        // ssaux 12/03/2001.
+        const PRUnichar *params[1];
+        // here I assume that mailbox contains ascii rather than utf8.
+        params[0]= NS_ConvertASCIItoUCS2(mailbox).get();
+        res = 
+          SMIMEBundleFormatStringFromName(NS_LITERAL_STRING("MissingRecipientEncryptionCert").get(),
+                                          params,
+                                          1,
+                                          getter_Copies(errorString));
+
+        if ( NS_SUCCEEDED(res) ) {
+          res = NS_ERROR_FAILURE;
+        }
+        goto FAIL;
 		  }
 
 	  /* #### see if recipient requests `signedData'.
@@ -767,14 +876,16 @@ nsresult nsMsgComposeSecure::MimeCryptoHackCerts(const char *aRecipients, PRBool
       mCerts->AppendElement(cert);
 		  mailbox += nsCRT::strlen(mailbox) + 1;
 	  }
-    mCerts->Count(&numCerts);
-	  if (numCerts == 0) {
-      res = NS_ERROR_FAILURE; // XXX We should set a specific error in this case XXX //
-	  	goto FAIL;
-		}
 	}
 FAIL:
   PR_FREEIF(mailbox_list);
+
+  if (NS_FAILED(res) && errorString.get() && sendReport) {
+    sendReport->SetMessage(nsIMsgSendReport::process_Current,
+                           errorString.get(),
+                           PR_TRUE);
+  }
+
   return res;
 }
 

@@ -28,6 +28,7 @@
 #include "nsICMS.h"
 #include "nsIX509Cert.h"
 #include "nsIMimeConverter.h"
+#include "nsIStringBundle.h"
 
 class nsIMsgCompFields;
 
@@ -68,8 +69,14 @@ private:
   nsresult MimeInitEncryption(PRBool aSign);
   nsresult MimeFinishMultipartSigned (PRBool aOuter);
   nsresult MimeFinishEncryption (PRBool aSign);
-  nsresult MimeCryptoHackCerts(const char *aRecipients, PRBool aEncrypt, PRBool aSign);
-
+  nsresult MimeCryptoHackCerts(const char *aRecipients, nsIMsgSendReport *sendReport, PRBool aEncrypt, PRBool aSign);
+  static void InitializeSMIMEBundle();
+  nsresult GetSMIMEBundleString(const PRUnichar *name,
+				PRUnichar **outString);
+  nsresult SMIMEBundleFormatStringFromName(const PRUnichar *name,
+					   const PRUnichar **params,
+					   PRUint32 numParams,
+					   PRUnichar **outString);
   nsresult ExtractEncryptionState(nsIMsgIdentity * aIdentity, nsIMsgCompFields * aComposeFields, PRBool * aSignMessage, PRBool * aEncrypt);
 
   mimeDeliveryCryptoState mCryptoState;
@@ -85,6 +92,8 @@ private:
   nsCOMPtr<nsISupportsArray> mCerts;
   nsCOMPtr<nsICMSMessage> mEncryptionCinfo;
   nsCOMPtr<nsICMSEncoder> mEncryptionContext;
+  static nsCOMPtr<nsIStringBundle> mSMIMEBundle;
+
   MimeEncoderData *mCryptoEncoderData;
   PRBool mIsDraft;
 };
