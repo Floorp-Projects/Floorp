@@ -28,7 +28,7 @@
 #include "nsString.h"
 #include "nsCRT.h"
 #include "nsIDOMElement.h"    // for some older c++ compilers.
-#include "nsIWebShell.h"      // for some older c++ compilers.
+#include "nsIDocShell.h"
 #include "nsCOMPtr.h"
 
 // Forward Declarations
@@ -53,7 +53,7 @@ public:
   NS_IMETHOD AttributeHasBeenSet(const nsString & aAttr);
   NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
-  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+  NS_IMETHOD SetDocShell(nsIDocShell * aDocShell);
 
   NS_IMETHOD SetCommand(const nsString & aStrCmd);
   NS_IMETHOD DoCommand();
@@ -74,7 +74,7 @@ public:
 protected:
   
   nsString        mCommandStr;
-  nsIWebShell   * mWebShell;
+  nsIDocShell   * mDocShell;
   nsIDOMElement * mDOMElement;
   nsIMenuItem   * mMenuItem;
 };
