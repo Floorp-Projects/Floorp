@@ -22,7 +22,7 @@ Release 1.3</h2></center>
 
 <center>
 <h2>
-9/14/2000</h2></center>
+9/18/2000</h2></center>
 
 <center>
 <hr WIDTH="100%"></center>
@@ -92,35 +92,52 @@ Mozilla and Netscape 6. It is not intended for use with Communicator.
 <hr WIDTH="100%">
 <h2>
 <a NAME="unpacking"></a>Installing Personal Security Manager</h2>
-Personal Security Manager 1.3 comes installed with Netscape 6 PR3. To install
-Netscape 1.3 with Mozilla, see <a href="http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html">http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html</a>.
-<p>The instructions that follow describe how the Personal Security Manager
-files are installed on each platform.
+Personal Security Manager 1.3 is installed with Netscape 6 PR3. To install
+Personal Security Manager 1.3 with Mozilla, see <a href="http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html">http://docs.iplanet.com/docs/manuals/psm/psm-mozilla/index.html</a>.
+<p>The sections that follow describe how the Personal Security Manager
+files are installed with Netscape 6 PR3.
 <h3>
 Installing on Windows 95/98/2000/NT</h3>
-Personal Security Manager is installed in a directory called <tt>psm</tt>
-in the same directory where the Netscape or Mozilla executable resides.
-<p><b>Windows NT users:</b> On Windows NT, you must have administrator
-privileges to install Personal Security Manager.
+When you install Netscape 6 PR3 on Windows, Personal Security Manager is
+installed in the directory <tt>C:\Program Files\Common Files\Netscape Shared\Security\</tt>.
 <p><b>All Windows users:</b> Personal Security Manager 1.3 works with Mozilla
-and Netscape 6, and Personal Security Manager 1.2 works with Mozilla, Netscape
-6, and Communicator 4.7x--but not when any of these browsers are running
-at the same time. For example, you must exit Netscape 6 PR3 before launching
-Communicator with Personal Security Manager 1.2 enabled.
+and Netscape 6, but it is not currently supported for Communicator 4.x.
+Therefore, you should not attempt to run Personal Security Manager 1.3
+with Communicator 4.x.
+<p>If you have Personal Security Manager 1.2 installed for use with Communicator
+4.x and you want to install Netscape 6 PR3, you should first exit Communicator,
+then rename the directory <tt>C:\Program Files\Common Files\Netscape Shared\Security\</tt>
+to something else, such as <tt>SecurityC47</tt>. When you install Netscape
+6, a new <tt>Security</tt> directory will be created during the installation
+process.
+<p>If you want to run Communicator 4.x with Personal Security Manager 1.2
+after Netscape 6 PR3 has been installed, you should first exit Netscape
+6, then rename the <tt>Security</tt> directory (which now contains the
+Personal Security Manager 1.3 files) to something else (such as <tt>SecurityN6</tt>)
+and rename your <tt>SecurityC47</tt> directory (which contains the Personal
+Security Manager 1.2 files) to Security. You can then launch Communicator
+as usual.
 <h3>
 Installing on Unix</h3>
-Personal Security Manager must be installed locally, either in the default
-location (<tt>/opt/netscape/security</tt>) or in some other local location.
-However, if you install Personal Security Manager anywhere other than the
-default location, Netscape 6 must also be installed locally.
-<p>To run Personal Security Manager on Unix, you must be logged in as the
-same Unix user you were logged in as when you installed it.
+When you install Netscape 6 PR3 on Unix, Personal Security Manager is installed
+in a directory called <tt>psm</tt> in the same directory where the <tt>netscape</tt>
+executable resides.
+<br>&nbsp;
 <h3>
 Disabling Personal Security Manager</h3>
-To <b>disable</b> Personal Security Manager temporarily, remove the directory
-<tt>psm</tt>
-from the directory where the Netscape or Mozilla executable resides.
-<p>
+To <b>disable</b> Personal Security Manager temporarily, exit Netscape
+6, then:
+<ul>
+<li>
+on Unix, remove the directory
+<tt>psm</tt> from the directory where the
+<tt>netscape</tt> executable resides.</li>
+
+<li>
+on Windows, rename the directory <tt>C:\Program Files\Common Files\Netscape
+Shared\Security</tt> to something else.</li>
+</ul>
+
 <hr WIDTH="100%">
 <h2>
 <a NAME="Using the Test Bed"></a>Using Personal Security Manager</h2>
@@ -289,6 +306,10 @@ the OCSP responder's certificate) correctly.</li>
 Security Manager 1.3</h2>
 
 <ul>
+<li>
+To run Personal Security Manager on Unix, you must be logged in as the
+same Unix user you were logged in as when Netscape 6 was installed.</li>
+
 <li>
 FORTEZZA is not guaranteed to work with this release. [# 94220]</li>
 
