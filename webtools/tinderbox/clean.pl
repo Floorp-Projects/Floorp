@@ -53,15 +53,16 @@ sub log_files_to_trim {
       $range_start = $line;
     } elsif ($range_start != 0 and $log_time >= $expire_time) {
       if ($range_start == $line - 1) {
-        $ed_cmds .= "${range_start}d\n";
+        $ed_cmds = "${range_start}d\n$ed_cmds";
       } else {
-        $ed_cmds .= "$range_start,".($line - 1)."d\n";
+        $ed_cmds = "$range_start,".($line - 1)."d\n$ed_cmds";
       }
       $range_start = 0;
     }
     $line++;
   }
   close LOG;
+  next if $ed_cmds eq '';
   open ED,"| ed $file" or die "died ed'ing: $!\n";
   print ED "${ed_cmds}w\nq\n";
   close ED;
