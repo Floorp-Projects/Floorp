@@ -2174,7 +2174,7 @@ nsFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsFrame::Invalidate(nsIPresContext* aPresContext,
                     const nsRect&   aDamageRect,
                     PRBool          aImmediate) const
@@ -2188,7 +2188,7 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
       PRBool suppressed = PR_FALSE;
       shell->IsPaintingSuppressed(&suppressed);
       if (suppressed)
-        return;
+        return NS_OK;
     }
   }
 
@@ -2225,6 +2225,7 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
   }
 
   NS_IF_RELEASE(viewManager);
+  return NS_OK;
 }
 
 //#define MAX_REFLOW_DEPTH 500  get this from nsIHTMLContentSink.h; bug 55095
