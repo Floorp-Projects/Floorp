@@ -354,6 +354,12 @@
   <broadcaster id="canReload"/>
   <broadcaster id="canStop"/>
   <broadcaster id="canPrint"/>
+  <broadcaster id="Browser:LoadingProgress"/>
+  <broadcaster id="Browser:Status"/>
+  <broadcaster id="Browser:OnStartBinding"/>
+  <broadcaster id="Browser:OnStopBinding"/>
+  <broadcaster id="Browser:Security" secure="false"/>
+  <broadcaster id="Browser:Throbber" busy="false"/>
   
   <menubar>
       <menu name="File">
@@ -729,13 +735,6 @@
 
   <box align="horizontal" id="status-bar">
  
-    <broadcaster id="Browser:LoadingProgress"/>
-    <broadcaster id="Browser:Status"/>
-    <broadcaster id="Browser:OnStartBinding"/>
-    <broadcaster id="Browser:OnStopBinding"/>
-    <broadcaster id="Browser:Security" secure="false"/>
-    <broadcaster id="Browser:Throbber" busy="false"/>
-    
     <titledbutton value="[Notification Component]" onclick="doTests()"/>
 
 	<box id="security-box" class="insecure" align="horizontal" flex="100%">
