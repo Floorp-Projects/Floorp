@@ -166,7 +166,7 @@ private:
 	void AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const;
 	void UpdateTransCnt(nsIView *oldview, nsIView *newview);
 
-    PRBool UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget, nsRect &aDamagedRect);
+    PRBool UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget, nsRect &aDamagedRect, PRBool aOnlyRepaintIfUnblittable);
 
 	
 	void UpdateViews(nsIView *aView, PRUint32 aUpdateFlags);

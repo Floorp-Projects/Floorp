@@ -1583,7 +1583,7 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
       return NS_OK;
     }
 
-    UpdateAllCoveringWidgets(mRootView, aView, damageRect);
+    UpdateAllCoveringWidgets(mRootView, aView, damageRect, PR_FALSE);
     Composite();
     return NS_OK;
 }
@@ -1592,10 +1592,11 @@ nsViewManager::UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY)
 // The specified rectangle, relative to aView, is invalidated in every widget child of aView.
 // If non-null, aTarget and its children are ignored and only widgets above aTarget's widget
 // in Z-order are invalidated (if possible).
-PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget, nsRect &aDamagedRect)
+PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
+    nsRect &aDamagedRect, PRBool aRepaintOnlyUnblittableViews)
 {
     if (aView == aTarget) {
-        return PR_TRUE;
+        aRepaintOnlyUnblittableViews = PR_TRUE;
     }
 
     nsRect bounds;
@@ -1611,6 +1612,9 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
 	PRBool hasWidget = PR_FALSE;
     aView->HasWidget(&hasWidget);
     PRBool covering = PR_FALSE;
+    PRUint32 flags = 0;
+    aView->GetViewFlags(&flags);
+    PRBool isBlittable = (flags & NS_VIEW_PUBLIC_FLAG_DONT_BITBLT) == 0;
     
     if (hasWidget && bounds == aDamagedRect) {
         covering = PR_TRUE;
@@ -1625,7 +1629,7 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
         childView->GetBounds(childBounds);
         childRect.x -= childBounds.x;
         childRect.y -= childBounds.y;
-        if (UpdateAllCoveringWidgets(childView, aTarget, childRect)) {
+        if (UpdateAllCoveringWidgets(childView, aTarget, childRect, aRepaintOnlyUnblittableViews)) {
           childCovers = PR_TRUE;
           // we can't stop here. We're not making any assumptions about how the child
           // widgets are z-ordered, and we can't risk failing to invalidate the top-most
@@ -1634,21 +1638,22 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
 		childView->GetNextSibling(childView);
 	}
 
-    if (hasWidget && !childCovers) {
+    if (!childCovers && (!isBlittable || (hasWidget && !aRepaintOnlyUnblittableViews))) {
         ++mUpdateCnt;
 
  	    if (!mRefreshEnabled) {
 		    // accumulate this rectangle in the view's dirty region, so we can process it later.
 		    AddRectToDirtyRegion(aView, bounds);
-        mHasPendingInvalidates = PR_TRUE;
+            mHasPendingInvalidates = PR_TRUE;
         } else {
-            float t2p;
-            mContext->GetAppUnitsToDevUnits(t2p);
-            bounds.ScaleRoundOut(t2p);
-          
-            nsCOMPtr<nsIWidget> widget;
-            aView->GetWidget(*getter_AddRefs(widget));
-            widget->Invalidate(bounds, PR_FALSE);
+     	    nsIView* widgetView = GetWidgetView(aView);
+	        if (widgetView != nsnull) {
+		        ViewToWidget(aView, widgetView, bounds);
+
+                nsCOMPtr<nsIWidget> widget;
+                widgetView->GetWidget(*getter_AddRefs(widget));
+                widget->Invalidate(bounds, PR_FALSE);
+			}
         }
     }
 
@@ -1707,14 +1712,14 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
         widgetParent->HasWidget(&hasWidget);
       }
 
-      UpdateAllCoveringWidgets(widgetParent, nsnull, damagedRect);
+      UpdateAllCoveringWidgets(widgetParent, nsnull, damagedRect, PR_FALSE);
     } else {
       nsPoint origin(damagedRect.x, damagedRect.y);
       ComputeViewOffset(aView, &origin);
       damagedRect.x = origin.x;
       damagedRect.y = origin.y;
 
-      UpdateAllCoveringWidgets(mRootView, nsnull, damagedRect);
+      UpdateAllCoveringWidgets(mRootView, nsnull, damagedRect, PR_FALSE);
     }
 
     ++mUpdateCnt;
