@@ -669,44 +669,17 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
-
-// XXX Temporary Fix for too many resize reflows
-#ifdef OPTIMIZE_RESIZE_RELOW
-  if (aReflowState.reason == eReflowReason_Resize) {
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth &&
-        NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) {
-
-      if (mCacheSize.width > -1 && mCacheSize.height > -1) {
-        aDesiredSize.width  = mCacheSize.width;
-        aDesiredSize.height = mCacheSize.height;
-        if (aDesiredSize.maxElementSize != nsnull) {
-          aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
-          aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
-        }
-        aDesiredSize.ascent  = aDesiredSize.height;
-        aDesiredSize.descent = 0;
-        aStatus = NS_FRAME_COMPLETE;
-        return NS_OK;
-      }
-    } else {
-      if (mCacheSize.width == aReflowState.mComputedWidth && 
-          mCacheSize.height == aReflowState.mComputedHeight) {
-        if (aDesiredSize.maxElementSize != nsnull) {
-          aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
-          aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
-        }
-        aDesiredSize.ascent  = aDesiredSize.height;
-        aDesiredSize.descent = 0;
-        aStatus = NS_FRAME_COMPLETE;
-       return NS_OK;
-      }
-    }
+#if 1
+  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
+                                                         aDesiredSize, aReflowState, aStatus);
+  if (NS_SUCCEEDED(skiprv)) {
+    return skiprv;
   }
 #endif
 
   nsresult rv = NS_OK;
-  nsIFrame* buttonFrame = GetButtonFrame(aPresContext);
-  nsIFrame* displayFrame = GetDisplayFrame(aPresContext);
+  nsIFrame* buttonFrame   = GetButtonFrame(aPresContext);
+  nsIFrame* displayFrame  = GetDisplayFrame(aPresContext);
   nsIFrame* dropdownFrame = GetDropdownFrame();
 
   // Don't try to do any special sizing and positioning unless all of the frames
@@ -759,11 +732,6 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
       displayFrame->GetRect(displayRect);
       buttonFrame->GetRect(buttonRect);
       if ((oldDisplayRect == displayRect) && (oldButtonRect == buttonRect)) {
-        // Reposition the popup.
-        //nsRect absoluteTwips;
-        //nsRect absolutePixels;
-        //GetAbsoluteFramePosition(aPresContext, displayFrame,  absoluteTwips, absolutePixels);
-        //PositionDropdown(aPresContext, displayRect.height, absoluteTwips, absolutePixels);
         aStatus = NS_FRAME_COMPLETE;
         return rv;
       }
@@ -774,6 +742,18 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     firstPassState.reflowCommand = nsnull;
   }
 
+  // the default size of the of scrollbar
+  // that will be the default width of the dropdown button
+  // the height will be the height of the text
+  nscoord scrollbarWidth = -1;
+  nsCOMPtr<nsIDeviceContext> dx;
+  aPresContext->GetDeviceContext(getter_AddRefs(dx));
+  if (dx) { 
+    float sbWidth;
+    float sbHeight;
+    dx->GetScrollBarDimensions(sbWidth, sbHeight);
+    scrollbarWidth  = (nscoord)sbWidth;
+  }   
 
   //Set the desired size for the button and display frame
   if (NS_UNCONSTRAINEDSIZE == firstPassState.mComputedWidth) {
@@ -796,28 +776,35 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     mListControlFrame->GetNumberOfOptions(&length);
     dropdownFrame->GetRect(dropdownRect);
 
+    const nsStyleSpacing* dropSpacing;
+    dropdownFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)dropSpacing);
+    nsMargin dropBorderPadding;
+    dropBorderPadding.SizeTo(0, 0, 0, 0);
+    dropSpacing->CalcBorderPaddingFor(dropdownFrame, dropBorderPadding);
+    dropdownRect.width -= (dropBorderPadding.left + dropBorderPadding.right);
+
     // Get maximum size and height of a option in the dropdown
     mListControlFrame->GetMaximumSize(size);
 
-     // Set width of display to match width of the drop down 
-    SetChildFrameSize(displayFrame, dropdownRect.width, size.height);
+    if (scrollbarWidth > 0) {
+      size.width = scrollbarWidth;
+    }
+    const nsStyleSpacing* dspSpacing;
+    displayFrame->GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)dspSpacing);
+    nsMargin dspBorderPadding;
+    dspBorderPadding.SizeTo(0, 0, 0, 0);
+    dspSpacing->CalcBorderPaddingFor(displayFrame, dspBorderPadding);
 
-    // the default size of the of scrollbar
-    // that will be the default width of the dropdown button
-    // the height will be the height of the text
-    nsCOMPtr<nsIDeviceContext> dx;
-    aPresContext->GetDeviceContext(getter_AddRefs(dx));
-    if (dx) { 
-      float sbWidth;
-      float sbHeight;
-      dx->GetScrollBarDimensions(sbWidth, sbHeight);
-      size.width  = (nscoord)sbWidth;
-    }   
+     // Set width of display to match width of the drop down 
+    SetChildFrameSize(displayFrame, dropdownRect.width-size.width+dspBorderPadding.left+dspBorderPadding.right, 
+                      size.height+dspBorderPadding.top+dspBorderPadding.bottom);
+
     // Size the button 
     SetChildFrameSize(buttonFrame, size.width, size.height);
 
      // Reflow display + button
     nsAreaFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
+
     displayFrame->GetRect(displayRect);
     buttonFrame->GetRect(buttonRect);
     buttonRect.y = displayRect.y;
@@ -831,6 +818,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     if (maxElementSize) {
       delete maxElementSize;
     }
+
   } else {
     // A width has been specified for the select.
     // Make the display frame's width + button frame width = the width specified.
@@ -840,30 +828,37 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsSize size;
     mListControlFrame->GetMaximumSize(size);
 
-      // Size the button to be the same height as the displayFrame
-    SetChildFrameSize(buttonFrame, size.height, size.height);
+    if (scrollbarWidth > 0) {
+      size.width = scrollbarWidth;
+    }
+      // Size the button to be the same as the scrollbar width
+    SetChildFrameSize(buttonFrame, size.width, size.height);
 
     // Compute display width
-    // Since the button's width is the same as its height
-    // we subtract size.height (the width)
-    nscoord displayWidth = firstPassState.mComputedWidth - size.height;
+    nscoord displayWidth = firstPassState.mComputedWidth - size.width;
     // nsAreaFrame::Reflow adds in the border and padding so we need to remove it
-    displayWidth -= borderPadding.left + borderPadding.right;
+    //displayWidth -= borderPadding.left + borderPadding.right;
 
-     // Set the displayFrame to match the displayWidth computed above
+    // Set the displayFrame to match the displayWidth computed above
     SetChildFrameSize(displayFrame, displayWidth, size.height);
 
-      // Reflow again with the width of the display frame set.
+    // Reflow again with the width of the display frame set.
     nsAreaFrame::Reflow(aPresContext, aDesiredSize, firstPassState, aStatus);
     // nsAreaFrame::Reflow adds in the border and padding so we need to remove it
     // XXX rods - this hould not be subtracted in
-    //aDesiredSize.width -= borderPadding.left + borderPadding.right;
+    //aDesiredSize.width += borderPadding.left + borderPadding.right;
 
      // Reflow the dropdown list to match the width of the display + button
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, aDesiredSize.width, NS_UNCONSTRAINEDSIZE);
     
   }
- 
+
+  // Set the max element size to be the same as the desired element size.
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width  = aDesiredSize.width;
+	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+
   nsRect absoluteTwips;
   nsRect absolutePixels;
   GetAbsoluteFramePosition(aPresContext, this,  absoluteTwips, absolutePixels);
@@ -871,19 +866,10 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 #if 0
-  COMPARE_QUIRK_SIZE("nsComboboxControlFrame", 56, 22) 
+  COMPARE_QUIRK_SIZE("nsComboboxControlFrame", 127, 22) 
 #endif
 
-// XXX Temporary Fix for too many resize reflows
-#ifdef OPTIMIZE_RESIZE_RELOW
-  mCacheSize.width  = aDesiredSize.width;
-  mCacheSize.height = aDesiredSize.height;
-  if (aDesiredSize.maxElementSize != nsnull) {
-    mCachedMaxElementSize.width  = aDesiredSize.maxElementSize->width;
-    mCachedMaxElementSize.height = aDesiredSize.maxElementSize->height;
-  }
-#endif
-
+  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
   return rv;
 
 }

@@ -211,11 +211,9 @@ protected:
   nsIListControlFrame * mListControlFrame;        // ListControl Interface for the dropdown frame
   PRBool                mIgnoreFocus;             // Tells the combo to ignore all focus notifications
 
-// XXX Temporary Fix for too many resize reflows
-#ifdef OPTIMIZE_RESIZE_RELOW
+  // Resize Reflow Optimization
   nsSize                mCacheSize;
   nsSize                mCachedMaxElementSize;
-#endif
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
