@@ -203,14 +203,24 @@ var downloadViewController = {
       window.updateCommands("tree-select");
       break;
     case "cmd_remove":
+    case "cmd_remove":
       selectedItems = getSelectedItems();
-      var minValue = gDownloadView.contentView.getIndexOfItem(selectedItems[0]);
       gDownloadManager.startBatchUpdate();
-      for (i = 0; i < selectedItems.length; i++) {
-        if (i == selectedItems.length - 1)
-          gDownloadManager.endBatchUpdate();
+      
+      // Notify the datasource that we're about to begin a batch operation
+      var observer = gDownloadView.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
+      var ds = gDownloadView.database;
+      observer.beginUpdateBatch(ds);
+      
+      for (i = 0; i <= selectedItems.length - 1; ++i) {
         gDownloadManager.removeDownload(selectedItems[i].id);
       }
+
+      gDownloadManager.endBatchUpdate();
+      observer.endUpdateBatch(ds);
+      var remote = window.arguments[0].QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+      remote.Flush();
+      gDownloadView.builder.rebuild();
       if (minValue >= gDownloadView.treeBoxObject.view.rowCount)
         --minValue;
       gDownloadView.treeBoxObject.selection.select(minValue);

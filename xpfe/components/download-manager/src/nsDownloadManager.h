@@ -90,6 +90,7 @@ protected:
 private:
   nsCOMPtr<nsIRDFDataSource> mDataSource;
   nsCOMPtr<nsIDOMDocument> mDocument;
+  nsCOMPtr<nsIRDFContainer> mDownloadsContainer;
   nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsCOMPtr<nsIStringBundle> mBundle;
