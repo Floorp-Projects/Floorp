@@ -615,11 +615,11 @@ function openURL(event, treeitem, root)
 	// a "#URL" property, use it, otherwise default to using the id
 	try
 	{
-		var rootNode = document.getElementById(root);
+		var theRootNode = document.getElementById(root);
 		var ds = null;
 		if (rootNode)
 		{
-			ds = rootNode.database;
+			ds = theRootNode.database;
 		}
 		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
 		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
@@ -742,4 +742,228 @@ function switchTab( aPageIndex )
   var deck = document.getElementById( "advancedDeck" );
   deck.setAttribute( "index", aPageIndex );
   return(true);
+}
+
+
+
+function fillContextMenu(name)
+{
+    if (!name)    return(false);
+    var popupNode = document.getElementById(name);
+    if (!popupNode)    return(false);
+    // remove the menu node (which tosses all of its kids);
+    // do this in case any old command nodes are hanging around
+	while (popupNode.childNodes.length)
+	{
+	  popupNode.removeChild(popupNode.childNodes[0]);
+	}
+
+    var treeNode = document.getElementById("Tree");
+    if (!treeNode)    return(false);
+    var db = treeNode.database;
+    if (!db)    return(false);
+    
+    var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    if (!compositeDB)    return(false);
+
+    var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
+    if (!isupports)    return(false);
+    var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
+    if (!rdf)    return(false);
+
+    var target_item = document.popupNode.parentNode.parentNode;
+    if (target_item && target_item.nodeName == "treeitem")
+    {
+	    if (target_item.getAttribute('selected') != 'true') {
+	      treeNode.selectItem(target_item);
+	    }
+    }
+
+    var select_list = treeNode.selectedItems;
+
+    // perform intersection of commands over selected nodes
+    var cmdArray = new Array();
+    var selectLength = select_list.length;
+    if (selectLength == 0)	selectLength = 1;
+    for (var nodeIndex=0; nodeIndex < selectLength; nodeIndex++)
+    {
+    	var id = null;
+
+	// if nothing is selected, get commands for the "ref" of the tree root
+    	if (select_list.length == 0)
+    	{
+		id = treeNode.getAttribute("ref");
+	        if (!id)    break;
+    	}
+    	else
+    	{
+	        var node = select_list[nodeIndex];
+	        if (!node)    break;
+	        id = node.getAttribute("id");
+	        if (!id)    break;
+	}
+
+        var rdfNode = rdf.GetResource(id);
+        if (!rdfNode)    break;
+        var cmdEnum = db.GetAllCmds(rdfNode);
+        if (!cmdEnum)    break;
+
+        var nextCmdArray = new Array();
+        while (cmdEnum.HasMoreElements())
+        {
+            var cmd = cmdEnum.GetNext();
+            if (!cmd)    break;
+            if (nodeIndex == 0)
+            {
+                cmdArray[cmdArray.length] = cmd;
+            }
+            else
+            {
+                nextCmdArray[cmdArray.length] = cmd;
+            }
+        }
+        if (nodeIndex > 0)
+        {
+            // perform command intersection calculation
+            for (var cmdIndex = 0; cmdIndex < cmdArray.length; cmdIndex++)
+            {
+                var    cmdFound = false;
+                for (var nextCmdIndex = 0; nextCmdIndex < nextCmdArray.length; nextCmdIndex++)
+                {
+                    if (nextCmdArray[nextCmdIndex] == cmdArray[cmdIndex])
+                    {
+                        cmdFound = true;
+                        break;
+                    }
+                }
+                if (cmdFound == false)
+                {
+                    cmdArray[cmdIndex] = null;
+                }
+            }
+        }
+    }
+
+    // need a resource to ask RDF for each command's name
+    var rdfNameResource = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
+    if (!rdfNameResource)        return(false);
+
+    // build up menu items
+    if (cmdArray.length < 1)    return(false);
+
+    for (var cmdIndex = 0; cmdIndex < cmdArray.length; cmdIndex++)
+    {
+        var cmd = cmdArray[cmdIndex];
+        if (!cmd)        continue;
+        var cmdResource = cmd.QueryInterface(Components.interfaces.nsIRDFResource);
+        if (!cmdResource)    break;
+        var cmdNameNode = compositeDB.GetTarget(cmdResource, rdfNameResource, true);
+        if (!cmdNameNode)    break;
+        cmdNameLiteral = cmdNameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        if (!cmdNameLiteral)    break;
+        cmdName = cmdNameLiteral.Value;
+        if (!cmdName)        break;
+
+        var menuItem = document.createElement("menuitem");
+        menuItem.setAttribute("value", cmdName);        
+        popupNode.appendChild(menuItem);
+        // work around bug # 26402 by setting "oncommand" attribute AFTER appending menuitem
+        menuItem.setAttribute("oncommand", "return doContextCmd('" + cmdResource.Value + "');");
+    }
+
+    return(true);
+}
+
+
+
+function doContextCmd(cmdName)
+{
+	var treeNode = document.getElementById("Tree");
+	if (!treeNode)    return(false);
+	var db = treeNode.database;
+	if (!db)    return(false);
+
+	var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+	if (!compositeDB)    return(false);
+
+	var isupports = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	if (!isupports)    return(false);
+	var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
+	if (!rdf)    return(false);
+
+	// need a resource for the command
+	var cmdResource = rdf.GetResource(cmdName);
+	if (!cmdResource)        return(false);
+	cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
+	if (!cmdResource)        return(false);
+
+	// set up selection nsISupportsArray
+	var selectionInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
+
+	// set up arguments nsISupportsArray
+	var argumentsInstance = Components.classes["component://netscape/supports-array"].createInstance();
+	var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
+
+	// get argument (parent)
+	var parentArc = rdf.GetResource("http://home.netscape.com/NC-rdf#parent");
+	if (!parentArc)        return(false);
+
+	var select_list = treeNode.selectedItems;
+	if (select_list.length < 1)
+	{
+		// if nothing is selected, default to using the "ref" on the root of the tree
+		var	uri = treeNode.getAttribute("ref");
+		if (!uri || uri=="")    return(false);
+		var rdfNode = rdf.GetResource(uri);
+		// add node into selection array
+		if (rdfNode)
+		{
+			selectionArray.AppendElement(rdfNode);
+		}
+	}
+	else for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+	{
+		var node = select_list[nodeIndex];
+		if (!node)    break;
+		var	uri = node.getAttribute("ref");
+		if ((uri) || (uri == ""))
+		{
+			uri = node.getAttribute("id");
+		}
+		if (!uri)    return(false);
+
+		var rdfNode = rdf.GetResource(uri);
+		if (!rdfNode)    break;
+
+		// add node into selection array
+		selectionArray.AppendElement(rdfNode);
+
+		// get the parent's URI
+		var parentURI="";
+		var	theParent = node;
+		while (theParent)
+		{
+			theParent = theParent.parentNode;
+
+			parentURI = theParent.getAttribute("ref");
+			if ((!parentURI) || (parentURI == ""))
+			{
+				parentURI = theParent.getAttribute("id");
+			}
+			if (parentURI != "")	break;
+		}
+		if (parentURI == "")    return(false);
+
+		var parentNode = rdf.GetResource(parentURI, true);
+		if (!parentNode)	return(false);
+
+		// add parent arc and node into arguments array
+		argumentsArray.AppendElement(parentArc);
+		argumentsArray.AppendElement(parentNode);
+	}
+
+	// do the command
+	compositeDB.DoCommand( selectionArray, cmdResource, argumentsArray );
+	return(true);
 }
