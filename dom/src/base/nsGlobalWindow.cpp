@@ -1102,10 +1102,9 @@ GlobalWindowImpl::GetHistory(nsIDOMHistory** aHistory)
     if (!mHistory) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    NS_ADDREF(*aHistory = mHistory);
   }
 
+  NS_IF_ADDREF(*aHistory = mHistory);
   return NS_OK;
 }
 
