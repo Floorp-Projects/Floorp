@@ -543,7 +543,7 @@ SWITCH: for ($::FORM{'knob'}) {
         if ( Param('strictvaluechecks') ) {
           CheckFormFieldDefined(\%::FORM,'comment');
         }
-		SendSQL("INSERT INTO duplicates VALUES ($num, $::FORM{'id'})");
+        SendSQL("INSERT INTO duplicates VALUES ($num, $::FORM{'id'})");
         $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $num ***";
         print "<TABLE BORDER=1><TD><H2>Notation added to bug $num</H2>\n";
         system("./processmail", $num, $::FORM{'who'});
