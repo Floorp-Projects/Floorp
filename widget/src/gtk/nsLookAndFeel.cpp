@@ -26,7 +26,7 @@
 #include "nsXPLookAndFeel.h"
 
 #define GDK_COLOR_TO_NS_RGB(c) \
-    ((nscolor) NS_RGB(c.red, c.green, c.blue))
+    ((nscolor) NS_RGB(c.red>>8, c.green>>8, c.blue>>8))
 
 
 NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
@@ -151,6 +151,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
     break;
   case eColor_scrollbar:
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
 
   case eColor_threedface:
@@ -160,7 +161,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 
   case eColor_buttonhighlight:  // ?
   case eColor_threedhighlight:
-    aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_ACTIVE]);
+    aColor = NS_BrightenColor(GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]));
     break;
 
   case eColor_buttontext:
@@ -170,8 +171,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   case eColor_buttonshadow:
   case eColor_threeddarkshadow:
   case eColor_threedshadow: // i think these should be the same
-    aColor = NS_DarkenColor(NS_DarkenColor(NS_DarkenColor(NS_DarkenColor(NS_DarkenColor(GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]))))));
-    //    aColor = GDK_COLOR_TO_NS_RGB(mStyle->dark[GTK_STATE_NORMAL]);   // dark style gives me bright green?!
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->dark[GTK_STATE_NORMAL]);
     break;
 
   case eColor_threedlightshadow:
