@@ -43,7 +43,7 @@ VPATH   = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_THUNDERBIRD
-DIRS = console filepicker
+DIRS = console filepicker printing
 else
 DIRS = 		\
 	autocomplete \
