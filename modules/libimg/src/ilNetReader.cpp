@@ -29,7 +29,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual unsigned int WriteReady();
+  /*NS_IMETHOD*/virtual int WriteReady();
   
   virtual int FirstWrite(const unsigned char *str, int32 len);
 
@@ -63,15 +63,17 @@ NetReaderImpl::~NetReaderImpl()
 
 NS_IMPL_ISUPPORTS(NetReaderImpl, kINetReaderIID)
 
-unsigned int 
+int
 NetReaderImpl::WriteReady()
 {
+    PRUint32 ret;
+
     if (ilContainer != NULL) {
-        return IL_StreamWriteReady(ilContainer);
+        ret = IL_StreamWriteReady(ilContainer);
+        if( ret != 0)
+            return -1;
     }
-    else {
-        return 0;
-    }
+    return 0;
 }
   
 int 

@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 3.8 1999/06/09 20:16:03 pnunn%netscape.com Exp $
+ * $Id: if.h,v 3.9 1999/08/19 22:18:44 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -365,7 +365,7 @@ extern ilINetReader *IL_NewNetReader(il_container *ic);
 extern il_container *IL_GetNetReaderContainer(ilINetReader *reader);
 
 #ifndef M12N_NEW_DEPENDENCIES   /* XXXM12N */
-extern unsigned int IL_StreamWriteReady(il_container *ic);
+extern int IL_StreamWriteReady(il_container *ic);
 extern int IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len);
 extern int IL_StreamWrite(il_container *ic, const unsigned char *str, int32 len);
 extern void IL_StreamAbort(il_container *ic, int status);
