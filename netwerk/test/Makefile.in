@@ -32,6 +32,7 @@ REQUIRES	= xpcom string necko timer cookie layout widget dom dbm
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
 
 CPPSRCS		= \
+		TestOverlappedIO.cpp \
 		TestSocketIO.cpp \
 		TestSocketInput.cpp \
 		TestSocketTransport.cpp \
