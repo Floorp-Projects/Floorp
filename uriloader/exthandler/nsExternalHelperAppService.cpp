@@ -894,6 +894,9 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
           // The filename must be ASCII, see RFC 2183, section 2.3
           CopyASCIItoUCS2(Substring(start, iter), mSuggestedFileName);
 
+          // Make sure extension is still correct.
+          EnsureSuggestedFileName();
+
           // replace platform specific path separator and illegal characters to avoid any confusion
           mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');
         }
@@ -950,6 +953,36 @@ const char table[] =
     'u','v','w','x','y','z','0','1','2','3',
     '4','5','6','7','8','9'};
 
+// Make sure mSuggestedFileName has the extension indicated by mTempFileExtension.
+// This is required so that the (renamed) temporary file has the correct extension
+// after downloading to make sure the OS will launch the application corresponding
+// to the MIME type (which was used to calculate mTempFileExtension).  This prevents
+// a cgi-script named foobar.exe that returns application/zip from being named
+// foobar.exe.  It also blocks content that a web site might provide with a
+// content-disposition header indicating filename="foobar.exe" from being downloaded
+// to a file with extension .exe.
+void nsExternalAppHandler::EnsureSuggestedFileName()
+{
+  // Make sure there is a mTempFileExtension (not "" or ".").
+  // Remember that mTempFileExtension will always have the leading "."
+  // (the check for empty is just to be safe).
+  if (mTempFileExtension.Length() > 1)
+  {
+    // Get mSuggestedFileName's current extension.
+    nsAutoString fileExt;
+    PRInt32 pos = mSuggestedFileName.RFindChar(PRUnichar('.'));
+    if (pos != kNotFound)
+      mSuggestedFileName.Right(fileExt, mSuggestedFileName.Length() - pos);
+
+    // Now, compare fileExt to mTempFileExtension.
+    NS_ConvertASCIItoUCS2 tempFileExt(mTempFileExtension);
+    if (!fileExt.Equals(tempFileExt, nsCaseInsensitiveStringComparator()))
+    {
+      // Doesn't match, so force mSuggestedFileName to have the extension we want.
+      mSuggestedFileName.Append(tempFileExt);
+    }
+  }
+}
 
 nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 {
@@ -999,6 +1032,9 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     {
       NS_UnescapeURL((char *) leafName.get());
       mSuggestedFileName = NS_ConvertUTF8toUCS2(leafName);
+
+      // Make sure extension is still correct.
+      EnsureSuggestedFileName();
 
       // replace platform specific path separator and illegal characters to avoid any confusion
       mSuggestedFileName.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '-');

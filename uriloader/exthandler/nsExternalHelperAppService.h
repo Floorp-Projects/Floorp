@@ -223,6 +223,10 @@ protected:
   // helper routine which peaks at the mime action specified by mMimeInfo
   // and calls either MoveFile or OpenWithApplication
   nsresult ExecuteDesiredAction();
+  // helper routine to ensure mSuggestedFileName is "correct";
+  // the base class implementation ensures that mSuggestedFileName has
+  // mTempFileExtension as extension;
+  virtual void EnsureSuggestedFileName();
   
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
   nsCOMPtr<nsIWebProgressListener> mWebProgressListener;
