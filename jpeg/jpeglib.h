@@ -15,10 +15,6 @@
 
 #include "xp_core.h"
 
-#ifdef XP_WIN32
-	extern int MMXAvailable;
-#endif
-
 /*
  * First we include the configuration files that record how this
  * installation of the JPEG library is set up.  jconfig.h can be
@@ -30,6 +26,11 @@
 #include "jconfig.h"		/* widely used configuration options */
 #endif
 #include "jmorecfg.h"		/* seldom changed options */
+
+
+#ifdef HAVE_MMX_INTEL_MNEMONICS
+	extern int MMXAvailable;
+#endif
 
 
 /* Version ID for the JPEG library.

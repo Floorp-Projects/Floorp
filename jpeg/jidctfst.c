@@ -38,6 +38,7 @@
 #include "jdct.h"		/* Private declarations for DCT subsystem */
 #include "xp_core.h"
 
+
 #ifdef DCT_IFAST_SUPPORTED
 
 
@@ -160,7 +161,7 @@
 #define IDESCALE(x,n)  ((int) IRIGHT_SHIFT(x, n))
 #endif
 
-#ifdef XP_WIN32
+#ifdef HAVE_MMX_INTEL_MNEMONICS
 __inline GLOBAL(void)
 jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
@@ -177,7 +178,7 @@ jpeg_idct_ifast(j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JSAMPARRAY output_buf, JDIMENSION output_col);
 
 
-#ifdef XP_WIN32
+#ifdef HAVE_MMX_INTEL_MNEMONICS
 GLOBAL(void)
 jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
@@ -397,7 +398,7 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 #endif
 
-#ifdef XP_WIN32
+#ifdef HAVE_MMX_INTEL_MNEMONICS
 
 
 _inline GLOBAL(void)

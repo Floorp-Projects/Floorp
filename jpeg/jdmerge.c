@@ -39,7 +39,7 @@
 
 #ifdef UPSAMPLE_MERGING_SUPPORTED
 
-#ifdef XP_WIN32
+#ifdef HAVE_MMX_INTEL_MNEMONICS
   __int64 const1 = 0x59BA0000D24B59BA;       // Cr_r Cr_b Cr_g Cr_r
   __int64 const2 = 0x00007168E9FA0000;		 // Cb-r Cb_b Cb_g Cb_r
   __int64 const5 = 0x0000D24B59BA0000;		 // Cr_b Cr_g Cr_r Cr_b
@@ -300,7 +300,7 @@ h2v1_merged_upsample (j_decompress_ptr cinfo,
  * Upsample and color convert for the case of 2:1 horizontal and 2:1 vertical.
  */
 
-#ifdef XP_WIN32
+#ifdef HAVE_MMX_INTEL_MNEMONICS
 __inline METHODDEF(void)
 h2v2_merged_upsample_orig (j_decompress_ptr cinfo,
 		      JSAMPIMAGE input_buf, JDIMENSION in_row_group_ctr,
@@ -316,7 +316,7 @@ h2v2_merged_upsample (j_decompress_ptr cinfo,
 		      JSAMPIMAGE input_buf, JDIMENSION in_row_group_ctr,
 		      JSAMPARRAY output_buf);
 
-#ifdef XP_WIN32
+#ifdef HAVE_MMX_INTEL_MNEMONICS
 METHODDEF(void)
 h2v2_merged_upsample (j_decompress_ptr cinfo,
 		      JSAMPIMAGE input_buf, JDIMENSION in_row_group_ctr,
