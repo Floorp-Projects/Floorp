@@ -299,9 +299,6 @@ public class NativeDate extends ScriptableObject {
             return d - step;
         step = next;
         
-        System.err.println("step is " + step);
-        System.err.println("result is " + (d - step));
-
         return d - step;
     }
 
