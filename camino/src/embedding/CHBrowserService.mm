@@ -48,6 +48,8 @@
 #include "nsIPrompt.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIExternalHelperAppService.h"
+#include "nsIDownload.h"
 
 #include "nsINSSDialogs.h"
 #include "nsIFactory.h"
@@ -72,11 +74,12 @@ nsCocoaBrowserService::~nsCocoaBrowserService()
 {
 }
 
-NS_IMPL_ISUPPORTS6(nsCocoaBrowserService,
+NS_IMPL_ISUPPORTS9(nsCocoaBrowserService,
                    nsIWindowCreator,
                    nsIPromptService,
                    nsIFactory, 
-                   nsIBadCertListener, nsISecurityWarningDialogs, nsINSSDialogs)
+                   nsIBadCertListener, nsISecurityWarningDialogs, nsINSSDialogs,
+                   nsIHelperAppLauncherDialog, nsIDownload, nsIWebProgressListener)
 
 nsresult
 nsCocoaBrowserService::InitEmbedding()
@@ -115,6 +118,18 @@ nsCocoaBrowserService::InitEmbedding()
   // on our own dialogs in the alert nib and use the alert controller to display them.
   static NS_DEFINE_CID(kBadCertHandlerCID, NS_BADCERTHANDLER_CID);
   rv = cr->RegisterFactory(kBadCertHandlerCID, "Bad Cert Handler", NS_NSSDIALOGS_CONTRACTID,
+                            sSingleton);
+
+  // replace the external helper app dialog with our own
+  #define NS_HELPERAPPLAUNCHERDIALOG_CID \
+          {0xf68578eb, 0x6ec2, 0x4169, {0xae, 0x19, 0x8c, 0x62, 0x43, 0xf0, 0xab, 0xe1}}
+  static NS_DEFINE_CID(kHelperDlgCID, NS_HELPERAPPLAUNCHERDIALOG_CID);
+  rv = cr->RegisterFactory(kHelperDlgCID, NS_IHELPERAPPLAUNCHERDLG_CLASSNAME, NS_IHELPERAPPLAUNCHERDLG_CONTRACTID,
+                            sSingleton);
+  
+  // replace the downloader with our own which does rely on the xpfe downlaod manager
+  static NS_DEFINE_CID(kDownloadCID, NS_DOWNLOAD_CID);
+  rv = cr->RegisterFactory(kDownloadCID, "Download", NS_DOWNLOAD_CONTRACTID,
                             sSingleton);
 
   return rv;
@@ -670,7 +685,6 @@ nsCocoaBrowserService::CertExpired(nsITransportSecurityInfo *socketInfo,
   return NS_OK;
 }
 
-
 NS_IMETHODIMP 
 nsCocoaBrowserService::CrlNextupdate(nsITransportSecurityInfo *socketInfo, 
                                       const PRUnichar * targetURL, nsIX509Cert *cert)
@@ -807,5 +821,175 @@ nsCocoaBrowserService::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ct
   // that's what we'll do. Yes, it's wrong. Yes, it's skanky. Oh well.
   *_result = (PRBool)[controller postToInsecureFromSecure:[NSApp mainWindow]];
   
+  return NS_OK;
+}
+
+//    void show( in nsIHelperAppLauncher aLauncher, in nsISupports aContext );
+NS_IMETHODIMP
+nsCocoaBrowserService::Show(nsIHelperAppLauncher* inLauncher, nsISupports* inContext)
+{
+NSLog(@"Show");
+  return inLauncher->SaveToDisk(nsnull, PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::PromptForSaveToFile(nsISupports *aWindowContext, const PRUnichar *aDefaultFile, const PRUnichar *aSuggestedFileExtension, nsILocalFile **_retval)
+{
+NSLog(@"PromptForSaveToFile");
+  NSString* filename = [NSString stringWithCharacters:aDefaultFile length:nsCRT::strlen(aDefaultFile)];
+  NSSavePanel *thePanel = [NSSavePanel savePanel];
+  
+  // Note: although the docs for NSSavePanel specifically state "path and filename can be empty strings, but
+  // cannot be nil" if you want the last used directory to persist between calls to display the save panel
+  // use nil for the path given to runModalForDirectory
+  int runResult = [thePanel runModalForDirectory: nil file:filename];
+  if (runResult == NSOKButton) {
+NSLog([thePanel filename]);
+    NSString *theName = [thePanel filename];
+    return NS_NewNativeLocalFile(nsDependentCString([theName fileSystemRepresentation]), PR_FALSE, _retval);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+/* void showProgressDialog (in nsIHelperAppLauncher aLauncher, in nsISupports aContext); */
+NS_IMETHODIMP
+nsCocoaBrowserService::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::Init(nsIURI* aSource,
+                            nsILocalFile* aTarget,
+                            const PRUnichar* aDisplayName,
+                            const PRUnichar* aOpeningWith,
+                            PRInt64 aStartTime,
+                            nsIWebBrowserPersist* aPersist)
+{
+  NSLog(@"nsIDownload::Init");
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsCocoaBrowserService::GetDisplayName(PRUnichar** aDisplayName)
+{
+  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::SetDisplayName(const PRUnichar* aDisplayName)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::GetOpeningWith(PRUnichar** aOpeningWith)
+{
+  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::GetSource(nsIURI** aSource)
+{
+  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::GetTarget(nsILocalFile** aTarget)
+{
+  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::GetStartTime(PRInt64* aStartTime)
+{
+  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::GetPercentComplete(PRInt32* aPercentComplete)
+{
+  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+  
+NS_IMETHODIMP
+nsCocoaBrowserService::GetListener(nsIWebProgressListener** aListener)
+{
+  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::SetListener(nsIWebProgressListener* aListener)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::GetObserver(nsIObserver** aObserver)
+{
+  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::SetObserver(nsIObserver* aObserver)
+{
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
+nsCocoaBrowserService::GetPersist(nsIWebBrowserPersist** aPersist)
+{
+  NS_ERROR("NS_ERROR_NOT_IMPLEMENTED");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::OnStateChange(nsIWebProgress* aWebProgress,
+                            nsIRequest* aRequest, PRUint32 aStateFlags,
+                            PRUint32 aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::OnStatusChange(nsIWebProgress *aWebProgress,
+                              nsIRequest *aRequest, nsresult aStatus,
+                              const PRUnichar *aMessage)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::OnLocationChange(nsIWebProgress *aWebProgress,
+                                nsIRequest *aRequest, nsIURI *aLocation)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::OnProgressChange(nsIWebProgress *aWebProgress,
+                                nsIRequest *aRequest,
+                                PRInt32 aCurSelfProgress,
+                                PRInt32 aMaxSelfProgress,
+                                PRInt32 aCurTotalProgress,
+                                PRInt32 aMaxTotalProgress)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserService::OnSecurityChange(nsIWebProgress *aWebProgress,
+                                nsIRequest *aRequest, PRUint32 aState)
+{
   return NS_OK;
 }

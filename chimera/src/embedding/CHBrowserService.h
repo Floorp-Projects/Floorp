@@ -47,11 +47,15 @@
 #include "nsISecurityWarningDialogs.h"
 #include "nsINSSDialogs.h"
 #include "nsIStringBundle.h"
+#include "nsIHelperAppLauncherDialog.h"
+#include "nsIDownload.h"
+#include "nsIWebProgressListener.h"
 
 class nsCocoaBrowserService :  public nsIWindowCreator,
                                public nsIPromptService,
                                public nsIFactory, 
-                               public nsIBadCertListener, public nsISecurityWarningDialogs, public nsINSSDialogs
+                               public nsIBadCertListener, public nsISecurityWarningDialogs, public nsINSSDialogs,
+                               public nsIHelperAppLauncherDialog, public nsIDownload, public nsIWebProgressListener
 {
 public:
   nsCocoaBrowserService();
@@ -64,6 +68,9 @@ public:
   NS_DECL_NSINSSDIALOGS
   NS_DECL_NSIBADCERTLISTENER
   NS_DECL_NSISECURITYWARNINGDIALOGS
+  NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
+  NS_DECL_NSIDOWNLOAD
+  NS_DECL_NSIWEBPROGRESSLISTENER
   
   static nsresult InitEmbedding();
   static void TermEmbedding();
