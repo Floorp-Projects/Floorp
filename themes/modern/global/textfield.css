@@ -14,11 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Joe Hewitt (hewitt@netscape.com)
  */
 
 /* ===== textfield.css ==================================================
@@ -62,9 +62,15 @@ textfield[readonly="true"][focused="true"] > .textarea-internal-box {
   margin: 0px !important;
   border: none !important;
   padding: 0px !important;
-  font: inherit;
   background-color: inherit;
   color: inherit;
+  font: inherit;
+}
+
+/* ..... readonly state ..... */
+
+textfield[readonly="true"] {
+  background-color: #B4C3D4;
 }
 
 /* ..... focused state ..... */
@@ -76,10 +82,6 @@ textfield[focused="true"] {
 textfield[focused="true"] > .textfield-internal-box,
 textfield[focused="true"] > .textarea-internal-box {
   border-color: #000000;
-}
-
-textfield[readonly="true"] {
-  background-color: #B4C3D4;
 }
 
 /* ..... disabled state ..... */

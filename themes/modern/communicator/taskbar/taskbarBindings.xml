@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<bindings id="taskbarBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   
+  <binding id="taskbar" extends="xul:box">
+    <content>
+        <xul:box class="taskbar-image-middle" flex="1">
+            <children/>
+        </xul:box>
+        <xul:box orient="vertical">
+          <xul:spring class="taskbar-image-right"/>
+          <xul:spring class="taskbar-image-right-bg" flex="1"/>
+        </xul:box>
+    </content>
+  </binding>
+
+  <binding id="taskbar-menu-box" extends="xul:box">
+    <content>
+        <xul:box orient="vertical">
+          <xul:spring class="taskbar-mb-image-left"/>
+          <xul:spring class="taskbar-mb-image-left-bg" flex="1"/>
+        </xul:box>
+        <xul:box flex="1" class="taskbar-mb-middle-border-outer">
+          <xul:box flex="1" class="taskbar-mb-middle-border-middle">
+            <xul:box flex="1" class="taskbar-mb-middle-border-inner">  
+                <children/>
+            </xul:box>
+          </xul:box>
+        </xul:box>
+        <xul:box orient="vertical">
+          <xul:spring class="taskbar-mb-image-right"/>
+          <xul:spring class="taskbar-mb-image-right-bg" flex="1"/>
+        </xul:box>
+    </content>
+  </binding>
+
+</bindings>
+

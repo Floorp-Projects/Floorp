@@ -14,11 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Joe Hewitt (hewitt@netscape.com)
  */
 
 /* ===== menubutton.css =================================================
@@ -27,7 +27,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: Regular menubutton ::::::::::
+/* ::::: regular menubutton ::::::::::
    :: Shows a caption and brings up a popup menu which executes a command.
    ::::: */
 
@@ -48,8 +48,8 @@ menubutton[disabled="true"] {
   vertical-align: middle;
 }
 
-/* ::::: "Dual Functionality" menubutton ::::::::::
-   :: Has a popup spawning button and a command invoking button, e.g. back/forward
+/* ::::: dual menubutton ::::::::::
+   :: Has a popup spawning button and a command invoking button
    :::::: */
 
 .menubutton-dual,
@@ -62,7 +62,7 @@ menubutton[disabled="true"] {
 }
 
 .menubutton-dual-dropmarker-box {
-  list-style-image: url("chrome://global/skin/simple-arrow-down.gif");
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
 
 .menubutton-dual > menupopup {

@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<bindings id="navigatorBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   
+  <binding id="nav-bar-inner" extends="xul:box">
+    <content>
+      <xul:box class="navbar-inner-groove-left" orient="vertical">
+        <xul:spring class="navbar-inner-groove-left-top"/>
+        <xul:spring class="navbar-inner-groove-left-mid" flex="1"/>
+        <xul:spring class="navbar-inner-groove-left-btm"/>
+      </xul:box>
+      <xul:box flex="1" class="navbar-inner-border-outer">
+        <xul:box flex="1" class="navbar-inner-border-middle">
+          <xul:box flex="1" class="navbar-inner-border-inner">
+            <children/>
+          </xul:box>
+        </xul:box>
+      </xul:box>
+      <xul:box class="navbar-inner-groove-right" orient="vertical">
+        <xul:spring class="navbar-inner-groove-right-top"/>
+        <xul:spring class="navbar-inner-groove-right-mid" flex="1"/>
+        <xul:spring class="navbar-inner-groove-right-btm"/>
+      </xul:box>
+    </content>
+
+    <resources>
+      <resources type="image" src="chrome://navigator/skin/btn1/back.gif"/>
+      <resources type="image" src="chrome://navigator/skin/btn1/back-hov.gif"/>
+      <resources type="image" src="chrome://navigator/skin/btn1/back-act.gif"/>
+      <resources type="image" src="chrome://navigator/skin/btn1/back-dis.gif"/>
+    </resources>
+  </binding>
+  
+  <binding id="urlbar-group" extends="xul:box">
+    <content>
+      <xul:box class="urlbar-left" orient="vertical">
+        <xul:spring class="urlbar-left-top"/>
+        <xul:spring class="urlbar-left-mid" flex="1"/>
+        <xul:spring class="urlbar-left-btm"/>
+      </xul:box>
+      <xul:box flex="1" class="urlbar-border-outer">
+        <xul:box flex="1" class="urlbar-border-inner">
+          <children/>
+        </xul:box>
+      </xul:box>
+      <xul:box class="urlbar-right" orient="vertical">
+        <xul:spring class="urlbar-right-top"/>
+        <xul:spring class="urlbar-right-mid" flex="1"/>
+        <xul:spring class="urlbar-right-btm"/>
+      </xul:box>
+    </content>
+  </binding>
+
+</bindings>

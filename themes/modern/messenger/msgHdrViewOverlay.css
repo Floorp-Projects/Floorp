@@ -1,98 +1,136 @@
 /*
-The contents of this file are subject to the Netscape Public
-License Version 1.1 (the "License"); you may not use this file
-except in compliance with the License. You may obtain a copy of
-the License at http://www.mozilla.org/NPL/
-
-Software distributed under the License is distributed on an "AS
-IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-implied. See the License for the specific language governing
-rights and limitations under the License.
-
-The Original Code is Mozilla Communicator client code, released
-March 31, 1998.
-
-The Initial Developer of the Original Code is Netscape
-Communications Corporation. Portions created by Netscape are
- Copyright (C) 1998-1999 Netscape Communications Corporation. All
-Rights Reserved.
-*/
-
-
-/* These are the style attributes we are applying to the message header
- * view overlay which shows the message headers for a selected message.
- * some of this stuff originated from mailheaders.css
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
  */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
-@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for XUL elements */
+/* ===== msgHdrViewOverlay.css ==========================================
+  == Styles for the header toolbars of a mail message.
+  ======================================================================= */
 
-mail-emailaddress {
-  -moz-binding: url(chrome://messenger/content/mailWidgets.xml#mail-emailaddress);
-  display: inline;
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: msg header toolbars ::::: */
+
+#msgHeaderView {
+  border-bottom: 1px solid #000000;
 }
-
-
-[hide] {
-  visibility: collapse;
-}
-
-.buttonTopSpacer     { height: .3em; }
-.buttonSpacer        { width: .5em; }
-.headerBox              { overflow: hidden; min-width:50px;}
-.header-part1           { background-color: #EEEEEE; border: none; color: #000000; }
-.header-part2           { background-color: #CCCCCC; border: none; color: #000000; }
-.header-part3           { background-color: #CCCCCC; border: none; color: #000000; }
 
 #msgHeaderView > toolbar > .toolbar-holder {
   border: none;
 }
 
-.headerValueBox { width: 7.7em; text-align: right;}
-
-#addToAddressBookButton {
-	list-style-image:url("chrome://messenger/skin/addtoab.gif");
-  min-height: 20px;
-  margin: 0px;
+.header-part1 {
+  background-color: #EEEEEE;
+  color: #000000;
 }
+
+.header-part2 {
+  background-color: #C2D0D0;
+  color: #000000;
+}
+
+.header-part3 {
+  background-color: #C2D0D0;
+  color: #000000;
+}
+
+.headerValueBox {
+  width: 7.7em;
+  text-align: right;
+}
+
+/* ::::: msg header buttons ::::: */
 
 #attachmentButton {
-  list-style-image:url("chrome://messenger/skin/attach.gif");
-  min-height: 20px;
   margin: 0px;
+  list-style-image: url("chrome://messenger/skin/icons/attach.gif");
 }
 
-.emailDisplayImage
-{
-  align: right;
-  display: inline;
+/* ::::: msg header captions ::::: */
+
+.headerBox {
+  overflow: hidden;
+  min-width: 50px;
 }
 
-.emailSeparator {
-  display: inline;
+html.headerValue {
+  margin: 0px;
+  min-width: 50px;
+  white-space: normal;
+}
+
+text.headerValue {
+  min-width: 50px;
+  white-space: normal;
+}
+
+html.subjectvalue {
+  font-weight: bold;
+}
+
+text.headerdisplayname {
+  margin-right: .5em;
+  margin-left: .5em;
+  min-height: 18px;
+  font-weight: bold;
+}
+
+/* ::::: msg header email addresses ::::: */
+
+mail-emailaddress {
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#mail-emailaddress");
+  display: -moz-xul-inline-box;
 }
 
 .emailDisplayButton {
-  color: blue;
-  text-decoration: underline;
   cursor: pointer;
   max-height: 15px;
-  display: inline;
-  orient: horizontal;
+  color: blue;
+  text-decoration: underline;
 }
 
+.emailDisplayImage {
+  text-align: right;
+}
+
+/* ::::: email address twisty ::::: */
+
 .showMoreAddressesButton {
-  list-style-image:url("chrome://messenger/skin/more.gif");
-  display: inline;
+  list-style-image: url("chrome://messenger/skin/icons/twisty-more.gif");
 }
 
 .showFewerAddressesButton {
-  list-style-image:url("chrome://messenger/skin/less.gif");
-  display: inline;
+  list-style-image: url("chrome://messenger/skin/icons/twisty-less.gif");
 }
 
-html.headerValue   { white-space: normal; min-width: 50px; margin: 0px;}
-html.subjectvalue      {font-weight: bold;}
+/* ::::: miscellaneous ::::: */
 
-text.headerdisplayname { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
-text.headerValue { white-space: normal; min-width: 50px; }
+[hide] {
+  visibility: collapse;
+}
+
+.buttonTopSpacer {
+  height: .3em;
+}
+
+.buttonSpacer {
+  width: .5em;
+}

@@ -169,7 +169,7 @@
       <observes element="Editor:Throbber" attribute="busy"/>
     </button>
   </toolbar>
-  <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="always">
+  <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="never">
     <!-- We need this else menulists get stretched -->
     <box autostretch="never">
       <!-- from editorOverlay -->

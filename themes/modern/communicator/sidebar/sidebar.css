@@ -1,33 +1,33 @@
-/* 
- * The contents of this file are subject to the Mozilla Public
+/*
+ * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/MPL/
- * 
+ * the License at http://www.mozilla.org/NPL/
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
- * The Original Code is Mozilla Communicator.
- * 
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corp. Portions created by Netscape Communications
- * Corp. are Copyright (C) 1999 Netscape Communications Corp. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): Stephen Lamm <slamm@netscape.com>
- *                 Joe Hewitt <hewitt@netscape.com>                   
- */ 
+ *
+ * Contributor(s):
+ *  Stephen Lamm <slamm@netscape.com>
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ */
 
+/* ===== sidebar.css ====================================================
+  == Styles used by the Sidebar panel and Sidebar tabs.
+  ======================================================================= */
 
-#sidebar-splitter {
-  border-left             : none;
-}
-
-/**
- *    other sidebar stuff
- **/
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #sidebar-box {
   margin-top: 0px;
@@ -35,31 +35,16 @@
   border-right: 1px solid #000000;
 }
 
-#sidebar-title-box {
-  border-bottom: none;
+.sidebar-splitter {
+  border-left: none;
 }
 
-.text-panel-loading {
-    margin: 5px 0px;
-}
+/* ::::: sidebar header ::::: */
 
-.image-panel-loading {
-    margin: 5px;
-    list-style-image: url("chrome://global/skin/loading.gif"); 
-}
-
-box[loadstate="stopped"] > box > box >  .image-panel-loading {
-    visibility: hidden;
-}
-
-/*
- *    Sidebar and Panel title buttons
- */
 .sidebarheader-main {
-  color: #ffffff;
+  padding: 0px 0px 2px 18px;
   background-color: #5C7794;
-  padding-left: 18px;
-  padding-bottom: 2px;
+  color: #FFFFFF;
 }
 
 .sidebarheader-main > .sidebar-header-text {
@@ -70,147 +55,149 @@ box[loadstate="stopped"] > box > box >  .image-panel-loading {
   min-height: 8px;
 }
 
+/* ..... picker button ..... */
+
 #sidebar-panel-picker {
-  border                  : 1px solid #5C7794;
-  margin-right            : 1px;
-  margin-top              : 1px;
-  padding                 : 2px;
-  color                   : #ffffff;
-  -moz-border-radius      : 0px;
+  margin: 1px;
+  border: 1px solid #5C7794;
+  padding: 2px;
+  color: #FFFFFF;
 }
 
 #sidebar-panel-picker:hover {
-  border                  : 1px outset #5C7794;
+  border: 1px outset #5C7794;
 }
 
 #sidebar-panel-picker[menuactive="true"],
-#sidebar-panel-picker[open="true"] 
-{
-  border-style                  : inset;
+#sidebar-panel-picker[open="true"] {
+  border-style: inset;
 }
 
 #sidebar-panel-picker > .menu-right {
-  padding-right                 : 2px;
+  padding-right: 2px;
 }
 
-#sidebar-panel-picker > .menubutton-internal-box > .menubutton-single-icon
-{
-  list-style-image              : url("chrome://communicator/skin/sidebar/sbpicker-arrow.gif");
-  padding-left                  : 2px;
+#sidebar-panel-picker > .menubutton-internal-box > .menubutton-single-icon {
+  padding-left: 2px;
+  list-style-image: url("chrome://communicator/skin/sidebar/sbpicker-arrow.gif");
 }
 
 #sidebar-panel-picker > .menu-text {
-    padding-left: 4px;
+  padding-left: 4px;
 }
 
 #sidebar-panel-picker > .menu-accel {
-    display: none;
+  display: none;
 }
 
-.iframe-panel
+/* ::::: loading info ::::: */
+
+.text-panel-loading {
+  margin: 5px 0px;
+}
+
+.image-panel-loading {
+  margin: 5px;
+  list-style-image: url("chrome://communicator/skin/icons/loading.gif");
+}
+
+box[loadstate="stopped"] > box > box > .image-panel-loading {
+  visibility: hidden;
+}
+
+/* ::::: sidebar panel ::::: */
+
+.iframe-panel {
+  border-bottom: 1px solid #C1C8D5;
+}
+
+/* ::::: sidebar tabs ::::: */
+
+/* ..... normal tabs ..... */
+
+.box-texttab {
+  -moz-binding: url("chrome://communicator/skin/sidebar/sidebarBindings.xml#sidebar-tab");
+  border-bottom: 3px solid #5C7794;
+  background-color: #5C7794;
+}
+
+.box-texttab-left {
+  width: 15px;
+  min-height: 18px;
+  background: url("chrome://communicator/skin/sidebar/sbtab-dod-lft.gif") no-repeat top;
+}
+
+.box-texttab-text-container {
+  padding-top: 4px;
+  background-color: #5C7794;
+  background: url("chrome://communicator/skin/sidebar/sbtab-dark.gif") repeat-x;
+  color: #FFFFFF;
+  vertical-align: top !important;
+}
+
+.box-texttab-right {
+  width: 30px;
+  min-height: 18px;
+  background: url("chrome://communicator/skin/sidebar/sbtab-dod-rit.gif") no-repeat top;
+}
+
+/* ..... top tab ..... */
+
+.box-texttab[top-panel="true"] {
+  background-color: #5C7794;
+}
+
+/* ..... bottom tab ..... */
+
+.box-texttab[last-panel="true"] {
+  border-bottom: 7px solid #5C7794;
+}
+
+.box-texttab[last-panel="true"][selected="true"] {
+  border-bottom: none;
+}
+
+/* ..... selected tab ..... */
+
+.box-texttab[selected="true"] {
+  border-bottom: none;
+  min-height: 24px;
+}
+
+.box-texttab[selected="true"] > .box-texttab-left {
+  background: url("chrome://communicator/skin/sidebar/sbtab-lod-lft.gif") #C1C8D5 no-repeat top;
+}
+
+.box-texttab[selected="true"] > .box-texttab-text-container {
+  background: url("chrome://communicator/skin/sidebar/sbtab-light.gif") #C1C8D5 repeat-x;
+  color: #000000;
+}
+
+.box-texttab[selected="true"] > .box-texttab-right {
+  background: url("chrome://communicator/skin/sidebar/sbtab-lod-rit.gif") #C1C8D5 no-repeat top;
+}
+
+/* ..... first tab after selected ..... */
+
+.box-texttab[first-panel-after-selected="true"] {
+  border-top: 1px solid #E7EBF7;
+  background-color: #C1C8D5;
+}
+
+.box-texttab[first-panel-after-selected="true"]  > .box-texttab-left {
+  margin-top: 3px;
+  background: url("chrome://communicator/skin/sidebar/sbtab-dol-lft.gif") #5C7794 no-repeat top;
+}
+
+.box-texttab[first-panel-after-selected="true"]
+    > .box-texttab-text-container
 {
-  border-bottom          : 1px solid #C1C8D5;
+  border-top: 3px solid #C1C8D5;
+  background-color: #5C7794;
 }
 
-/**
- * texttab folder lookalike e.g. for sidebar panel headers
- */
-  .box-texttab
-    {
-      -moz-binding        : url("chrome://communicator/content/sidebar/sidebarBindings.xml#texttab");
-      border-bottom       : 3px solid #5C7794;
-      background-color    : #5C7794;
-    }
-   
-  .box-texttab-left
-    {
-      background    : url("chrome://communicator/skin/sidebar/sbtab-darkondark-left.gif") no-repeat top;
-      width: 15px;
-      min-height: 18px;
-    }
+.box-texttab[first-panel-after-selected="true"]  > .box-texttab-right {
+  margin-top: 3px;
+  background: url("chrome://communicator/skin/sidebar/sbtab-dol-rit.gif") #5C7794 no-repeat top;
+}
 
-  .box-texttab-text-container
-    {
-      background-color    : #5C7794;
-      background          : url("chrome://communicator/skin/sidebar/sbtab-dark.gif") repeat-x;
-      color               : #ffffff;
-      padding-top         : 2px;
-    }
-
-  .box-texttab-right
-    {
-      background: url("chrome://communicator/skin/sidebar/sbtab-darkondark-right.gif") no-repeat top;
-      width: 30px;
-      min-height: 18px;
-    }
-
-  .box-texttab-right-space 
-    {
-      width               : 0px;
-    }
-
-  .box-texttab[top-panel="true"]
-    {
-      background-color    : #5C7794;
-    }
-  
-  .box-texttab[last-panel="true"]
-    {
-      border-bottom       : 7px solid #5C7794;
-    } 
-
-  .box-texttab[last-panel="true"][selected="true"] 
-    {
-      border-bottom       : 3px solid #C1C8D5;
-    } 
-
-  .box-texttab[selected="true"]
-    {
-      border-bottom: none;
-      height              : 24px;
-    }
-    
-  .box-texttab[selected="true"] > .box-texttab-left
-    {
-      background: url("chrome://communicator/skin/sidebar/sbtab-lightondark-left.gif") no-repeat top;
-      background-color    : #C1C8D5;
-    }
-
-  .box-texttab[selected="true"] > .box-texttab-text-container
-    {
-      background: url("chrome://communicator/skin/sidebar/sbtab-light.gif") repeat-x;
-      background-color    : #C1C8D5;
-      color               : #000000;
-    }
-
-  .box-texttab[selected="true"] > .box-texttab-right
-    {
-      background: url("chrome://communicator/skin/sidebar/sbtab-lightondark-right.gif") no-repeat top;
-      background-color    : #C1C8D5;
-    }
-
-  .box-texttab[first-panel-after-selected="true"] 
-    {
-      background-color    : #C1C8D5;
-      border-top          : 1px solid #E7EBF7;
-    }
-
-  .box-texttab[first-panel-after-selected="true"]  > .box-texttab-left
-    {
-      background: url("chrome://communicator/skin/sidebar/sbtab-darkonlight-left.gif") no-repeat top;
-      background-color    : #5C7794;
-      margin-top: 3px;
-    }
-
-  .box-texttab[first-panel-after-selected="true"]  > .box-texttab-text-container
-    {
-      border-top          : 3px solid #C1C8D5;
-      background-color    : #5C7794;
-    }
-    
-  .box-texttab[first-panel-after-selected="true"]  > .box-texttab-right
-    {
-      background: url("chrome://communicator/skin/sidebar/sbtab-darkonlight-right.gif") no-repeat top;
-      background-color    : #5C7794;
-      margin-top: 3px;
-    }

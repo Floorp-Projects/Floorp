@@ -14,11 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Joe Hewitt (hewitt@netscape.com)
  */
 
 /* ==== menubuttons.css =================================================
@@ -30,7 +30,7 @@
 /* ::::: button-toolbar menubuttons ::::: */
 
 menubutton.button-toolbar {
-  -moz-binding: url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-toolbar-single");
 }
 
 .menubutton-internal-box,
@@ -52,16 +52,6 @@ menubutton.button-toolbar {
   max-width: 8em;
 }
 
-.button-toolbar:hover {
-  background-color: #6684A5;
-}
-  
-.button-toolbar:hover:active,
-.button-toolbar[open="true"] {
-  background-color: #455A70;
-  color: #9DB8C1;
-}
-  
 .button-toolbar > .menubutton-internal-box > .menubutton-dropmarker {
   margin: 2px;
   list-style-image: url("chrome://communicator/skin/toolbar/mbtn-tb-arrow.gif");
@@ -91,17 +81,17 @@ menubutton.button-toolbar {
 /* ::::: single toolbar menubuttons ::::: */
 
 menubutton.button-toolbar-2.top {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#button-doubletext");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-toolar-2");
 }
 
 menubutton.button-toolbar-2.bottom {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#button-doubletext");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-toolar-2");
 }
 
 /* ::::: dual toolbar menubuttons ::::: */
 
 .menubutton-dual {
-  -moz-binding: url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-1");
   margin: 3px 2px 0px 2px;
   border: 0px;
   padding: 0px;

@@ -14,11 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Joe Hewitt (hewitt@netscape.com)
  */
 
 /* ==== button.css ==========================================================
@@ -56,6 +56,7 @@
 }
 
 .button-toolbar:hover:active,
+.button-toolbar[open="true"], /* for menubuttons */
 .button-toolbar[home-dragover="true"] {
   background-color: #455A70;
   color: #9DB8C1;
@@ -77,6 +78,8 @@
   background-color: transparent;
   color: #D0E7E7;
 }
+
+/* ..... toggled state ..... */
 
 .button-toolbar[toggled="true"],
 .button-toolbar[toggled="true"]:hover,
@@ -137,7 +140,7 @@
    ::::: */
 
 .button-toolbar-2 {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#button-doubletext");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#button-doubletext");
   -moz-user-focus: ignore;
   margin: 3px 3px 1px 3px;
   border: none;
@@ -156,14 +159,10 @@
 
 .button-text-shadow {
   margin: 1px 0px 0px 1px;
-  color: #394B6E;
+  color: #394B6E !important;
 }
 
 .button-text[disabled="true"] {
-  color: #425D84;
-}
-
-.button-text-shadow[disabled="true"] {
   display: none;
 }
 

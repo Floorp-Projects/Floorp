@@ -36,7 +36,7 @@
 
 
 <!-- dialog containing a control requiring initial setup -->
-<window class="dialog" title="&windowTitle.label;"
+<window title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
@@ -96,76 +96,74 @@
   <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
   <broadcaster id="dialog.start" ready="false"/>
   <observes element="dialog.start" attribute="ready" onchange="EditorStartup('html')"/>
-    
-<menubar>
-  <!-- File menu -->
-  <menu id="mapfileMenu" value="&mapfileMenu.label;" accesskey="&mapfilemenu.accesskey;">
-    <menupopup>
-      <menuitem accesskey="&mapfileclear.accesskey;" key="mapclearkb" observes="Map:Clear"/>
-      <menuitem accesskey="&mapfileclose.accesskey;" key="mapclosekb" observes="Map:Close"/>
-    </menupopup>
-  </menu>
 
-  <!-- Edit menu -->
-  <menu id="mapeditMenu" value="&mapeditMenu.label;" accesskey="&mapeditmenu.accesskey;">
-    <menupopup>
-      <menuitem accesskey="&mapselectall.accesskey;" key="mapselectkb" observes="Map:SelectAll"/>
-      <menuitem accesskey="&mapeditcut.accesskey;" key="mapcutkb" observes="Map:Cut"/>
-      <menuitem accesskey="&mapeditcopy.accesskey;" key="mapcopykb" observes="Map:Copy"/>
-      <menuitem accesskey="&mapeditpaste.accesskey;" key="mappastekb" observes="Map:Paste"/>
-      <menuseparator/>
-      <menuitem accesskey="&mapeditprops.accesskey;" key="mappropskb" observes="Map:Props"/>
-    </menupopup>
-  </menu>
-
-  <!-- View menu -->
-  <menu id="mapviewMenu" value="&mapviewMenu.label;" accesskey="&mapviewmenu.accesskey;">
-    <menupopup>
-      <menuitem id="view_hidetoolbar" accesskey="&mapviewtbar.accesskey;" key="maptbarkb" observes="Map:ViewToolbar"/>
-      <menu id="mapscalingMenu" value="&mapviewScale.label;" accesskey="&mapviewscale.accesskey;">
-        <menupopup>
-          <menuitem accesskey="&zoomone.accesskey;" key="" observes="Map:Apercent"/>
-          <menuitem accesskey="&zoomtwo.accesskey;" key="" observes="Map:Bpercent"/>
-          <menuitem accesskey="&zoomthree.accesskey;" key="" observes="Map:Cpercent"/>
-        </menupopup>
-      </menu>
-      <menuseparator/>
-      <menuitem accesskey="&contrast.accesskey;" observes="Map:Contrast" />
-    </menupopup>
-  </menu>
-
-  <menu id="maphelpMenu" value="&maphelpMenu.label;" accesskey="&maphelpmenu.accesskey;">
-    <menupopup>
-      <menuitem accesskey="&about.accesskey;" observes="Map:About"/>
-    </menupopup>
-  </menu>
-
-  <spring flex="1"/>
-</menubar>
-
-
-<toolbar id="toolbar" class="toolbar-primary" persist="collapsed">
-  <button id="cutButton" class="button-toolbar-2 top" observes="Map:Cut"/>
-  <button id="copyButton" class="button-toolbar-2 top" observes="Map:Copy"/>
-  <button id="pasteButton" class="button-toolbar-2 top" observes="Map:Paste"/>
-  <button id="zoomInButton" class="button-toolbar-2 top" observes="Map:ZoomIn"/>
-  <button id="zoomOutButton" class="button-toolbar-2 top" observes="Map:ZoomOut"/>
-  <button id="contrastButton" class="button-toolbar-2 top" observes="Map:Contrast"/>
-  <spring flex="1"/>
-</toolbar> 
-
+<toolbox>
+  <menubar>
+    <!-- File menu -->
+    <menu id="mapfileMenu" value="&mapfileMenu.label;" accesskey="&mapfilemenu.accesskey;">
+      <menupopup>
+        <menuitem accesskey="&mapfileclear.accesskey;" key="mapclearkb" observes="Map:Clear"/>
+        <menuitem accesskey="&mapfileclose.accesskey;" key="mapclosekb" observes="Map:Close"/>
+      </menupopup>
+    </menu>
+  
+    <!-- Edit menu -->
+    <menu id="mapeditMenu" value="&mapeditMenu.label;" accesskey="&mapeditmenu.accesskey;">
+      <menupopup>
+        <menuitem accesskey="&mapselectall.accesskey;" key="mapselectkb" observes="Map:SelectAll"/>
+        <menuitem accesskey="&mapeditcut.accesskey;" key="mapcutkb" observes="Map:Cut"/>
+        <menuitem accesskey="&mapeditcopy.accesskey;" key="mapcopykb" observes="Map:Copy"/>
+        <menuitem accesskey="&mapeditpaste.accesskey;" key="mappastekb" observes="Map:Paste"/>
+        <menuseparator/>
+        <menuitem accesskey="&mapeditprops.accesskey;" key="mappropskb" observes="Map:Props"/>
+      </menupopup>
+    </menu>
+  
+    <!-- View menu -->
+    <menu id="mapviewMenu" value="&mapviewMenu.label;" accesskey="&mapviewmenu.accesskey;">
+      <menupopup>
+        <menuitem id="view_hidetoolbar" accesskey="&mapviewtbar.accesskey;" key="maptbarkb" observes="Map:ViewToolbar"/>
+        <menu id="mapscalingMenu" value="&mapviewScale.label;" accesskey="&mapviewscale.accesskey;">
+          <menupopup>
+            <menuitem accesskey="&zoomone.accesskey;" key="" observes="Map:Apercent"/>
+            <menuitem accesskey="&zoomtwo.accesskey;" key="" observes="Map:Bpercent"/>
+            <menuitem accesskey="&zoomthree.accesskey;" key="" observes="Map:Cpercent"/>
+          </menupopup>
+        </menu>
+        <menuseparator/>
+        <menuitem accesskey="&contrast.accesskey;" observes="Map:Contrast" />
+      </menupopup>
+    </menu>
+  
+    <menu id="maphelpMenu" value="&maphelpMenu.label;" accesskey="&maphelpmenu.accesskey;">
+      <menupopup>
+        <menuitem accesskey="&about.accesskey;" observes="Map:About"/>
+      </menupopup>
+    </menu>
+  
+    <spring flex="1"/>
+  </menubar>
+  
+  <toolbar id="toolbar" class="toolbar-primary" persist="collapsed">
+    <button id="cutButton" class="button-toolbar-2 top" observes="Map:Cut"/>
+    <button id="copyButton" class="button-toolbar-2 top" observes="Map:Copy"/>
+    <button id="pasteButton" class="button-toolbar-2 top" observes="Map:Paste"/>
+    <button id="zoomInButton" class="button-toolbar-2 top" observes="Map:ZoomIn"/>
+    <button id="zoomOutButton" class="button-toolbar-2 top" observes="Map:ZoomOut"/>
+    <button id="contrastButton" class="button-toolbar-2 top" observes="Map:Contrast"/>
+    <spring flex="1"/>
+  </toolbar> 
+</toolbox>
 
 <box align="horizontal" flex="100">
 
-  <toolbar id="toolbox" orient="vertical">
-  <box orient="vertical">
+  <box id="VerticalToolbar" orient="vertical">
     <button id="pointerButton" class="tool" toggled="1" oncommand="changeTool(event, 'pointer');"/>
     <button id="rectButton" class="tool" oncommand="changeTool(event, 'rect');"/>
     <button id="cirButton" class="tool" oncommand="changeTool(event, 'cir');"/>
     <button id="polyButton" class="tool" oncommand="changeTool(event, 'poly');"/>
     <spring flex="1"/>
   </box>
-  </toolbar>
 
   <!-- Content Area -->
   <iframe id="content" src="EdImageMapPage.html" flex="1"

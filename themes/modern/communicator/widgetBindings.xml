@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+
+<bindings id="widgetBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+   
+  <binding id="button-doubletext" extends="chrome://global/content/xulBindings.xml#basetext">
+    <content>
+      <xul:box class="button-internal-box" orient="vertical" autostretch="never" flex="1">
+        <xul:image class="button-icon" inherits="src"/>
+        <xul:box orient="vertical" class="button-text-container" autostretch="never" flex="1">
+          <xul:stack flex="1">
+            <xul:text class="button-text-shadow" inherits="value,accesskey,crop,dragover-top,disabled"/>
+            <xul:text class="button-text" inherits="value,accesskey,crop,dragover-top,disabled"/>
+          </xul:stack>
+        </xul:box>
+      </xul:box>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
+  <binding id="menubutton-dual-1">
+    <content>
+      <xul:stack class="menubutton-dual-stack">
+        <xul:button class="menubutton-dual-button button-toolbar-1 top" allowevents="true" 
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"/>
+        <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" flex="1">
+          <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
+        </xul:box>
+      </xul:stack>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
+  <binding id="menubutton-dual-2">
+    <content>
+      <xul:stack class="menubutton-dual-stack">
+        <xul:button class="menubutton-dual-button button-toolbar-2 top" allowevents="true" 
+                    inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"/>
+        <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" flex="1">
+          <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
+        </xul:box>
+      </xul:stack>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
+  <binding id="menubutton-toolbar-single" extends="chrome://global/content/menulistBindings.xml#menubutton-single-left">
+    <content>
+      <xul:box class="menubutton-internal-box" flex="1" autostretch="never">
+        <xul:image class="menubutton-icon" inherits="src,disabled"/>
+        <xul:text class="menubutton-text" inherits="value,accesskey,crop,disabled,dragover-top" flex="1"/>
+        <xul:image class="menubutton-dropmarker" inherits="menubuttontype,disabled"/>
+      </xul:box>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+  
+</bindings>

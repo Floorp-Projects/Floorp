@@ -1,137 +1,155 @@
-#mini-nav 
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-navigator.gif");
-  }
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
 
-#mini-nav:hover:active 
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-navigator-clicked.gif");
-  }
+/* ==== tasksOverlay.css ================================================
+   == Styles used by the the overlay which contains tasks related
+   == content, such as the taskbar and product launcher icons.
+   ====================================================================== */
 
-#mini-mail
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-mail.gif");
-  }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#mini-mail:hover:active
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-mail-clicked.gif");
-  }
+/* ::::: communicator product icons ::::: */
 
-#mini-mail[BiffState="NewMail"]
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-mailnew.gif");
-  }
+#mini-nav {
+  list-style-image: url("chrome://communicator/skin/taskbar/navigator.gif");
+}
 
-#mini-mail[BiffState="NewMail"]:hover:active
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-mailnew-clicked.gif");
-  }
+#mini-nav:hover:active {
+  list-style-image: url("chrome://communicator/skin/taskbar/navigator-act.gif");
+}
 
-#mini-addr 
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-addressbook.gif");
-  }
+#mini-mail {
+  list-style-image: url("chrome://communicator/skin/taskbar/mail.gif");
+}
 
-#mini-addr:hover:active
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-addressbook-clicked.gif");
-  }
+#mini-mail:hover:active {
+  list-style-image: url("chrome://communicator/skin/taskbar/mail-act.gif");
+}
 
-#mini-comp 
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-composer.gif");
-  }
+#mini-mail[BiffState="NewMail"] {
+  list-style-image: url("chrome://communicator/skin/taskbar/mailnew.gif");
+}
 
-#mini-comp:hover:active
-  {
-	  list-style-image      : url("chrome://global/skin/taskbar-composer-clicked.gif");
-  }
+#mini-mail[BiffState="NewMail"]:hover:active {
+  list-style-image: url("chrome://communicator/skin/taskbar/mailnew-act.gif");
+}
 
-#taskbar
-  {
-    -moz-binding		  : url(chrome://global/skin/globalBindings.xml#taskbar);
-    min-height            : 1em;
-    -moz-user-focus       : ignore;
-    background-color: #435772;
-  }
+#mini-addr {
+  list-style-image: url("chrome://communicator/skin/taskbar/addressbook.gif");
+}
 
-.taskbar-image-middle
-  {
-	background			  : url(chrome://global/skin/taskbar-bg.gif) repeat-x;
-	height				  : 17px;
-  }
+#mini-addr:hover:active {
+  list-style-image: url("chrome://communicator/skin/taskbar/addressbook-act.gif");
+}
 
-.taskbar-image-right
-  {
-	background			  : url(chrome://global/skin/taskbar-bg-right.gif) no-repeat;
-	width				  : 12px;
-	height				  : 17px;  
-  }
+#mini-comp {
+  list-style-image: url("chrome://communicator/skin/taskbar/composer.gif");
+}
+
+#mini-comp:hover:active {
+  list-style-image: url("chrome://communicator/skin/taskbar/composer-act.gif");
+}
+
+/* ::::: taskbar ::::: */
+
+#taskbar {
+  -moz-binding: url("chrome://communicator/skin/taskbar/taskbarBindings.xml#taskbar");
+  -moz-user-focus: ignore;
+  min-height: 1em;
+  background-color: #435772;
+}
+
+.taskbar-image-middle {
+  height: 17px;
+  background: url("chrome://communicator/skin/taskbar/tbar-mid.gif") repeat-x;
+}
+
+.taskbar-image-right {
+  width: 12px;
+  height: 17px;
+  background: url("chrome://communicator/skin/taskbar/tbar-rit-top.gif") no-repeat;
+}
+
+.taskbar-image-right-bg {
+  background: url("chrome://communicator/skin/taskbar/tbar-rit-btm.gif") repeat-y;
+}
+
+/* ::::: taskbar menu box ::::: */
+
+#taskbarMenuBox {
+  -moz-binding: url("chrome://communicator/skin/taskbar/taskbarBindings.xml#taskbar-menu-box");
+  -moz-user-focus: ignore;
+}
+
+.taskbar-mb-image-left {
+  width: 6px;
+  height: 17px;
+  background: url("chrome://communicator/skin/taskbar/groove-lft.gif") no-repeat;
+}
+
+.taskbar-mb-image-right-bg {
+  background: url("chrome://communicator/skin/taskbar/groove-rit-bg.gif") repeat-y;
+}
+
+.taskbar-mb-image-left-bg {
+  background: url("chrome://communicator/skin/taskbar/groove-lft-bg.gif") repeat-y;
+}
+
+.taskbar-mb-middle-border-outer {
+  border-top: 1px solid #5A728E;
+}
+
+.taskbar-mb-middle-border-middle {
+  border-top: 1px solid #2B3746;
+}
+
+.taskbar-mb-middle-border-inner {
+  border-top: 1px solid #A9BED8;
+}
+
+.taskbar-mb-image-right {
+  width: 7px;
+  height: 17px;
+  background: url("chrome://communicator/skin/taskbar/groove-rit.gif") no-repeat;
+}
+
+/* hide goto menu bug #47633 */
+#taskbarGotoMenuBox{
+  display: none;
+}
+
+/* ::::: taskbar buttons and spacers ::::: */
 
 .taskbutton {
   margin: 0px;
   padding: 0px;
 }
 
-.taskbarspacer
-  {
-  	max-width				  : 0px;
-  }
-
-#taskbarMenuBox 
-  {
-	-moz-binding      : url(chrome://global/skin/globalBindings.xml#taskbar-menu-box);
-	-moz-user-focus	  : ignore;
-  }
-
-.taskbar-mb-image-left
-  {
-	background			  : url(chrome://global/skin/taskbar-groove-left.gif) no-repeat;
-	width				  : 6px;
-	height				  : 17px;
-  }
-
-#taskButtons > .button-toolbar-4 > .button-internal-box
-  {
-    vertical-align: bottom;
-  }
-
-.taskbar-mb-image-right-bg {
-  background: url("chrome://global/skin/taskbar-groove-right-bg.gif") repeat-y;
+.taskbutton > .button-internal-box {
+  vertical-align: bottom;
 }
 
-.taskbar-mb-image-left-bg {
-  background: url("chrome://global/skin/taskbar-groove-left-bg.gif") repeat-y;
+.taskbarspacer {
+  max-width: 0px;
 }
 
-.taskbar-image-right-bg {
-  background: url("chrome://global/skin/taskbar-image-right-bg.gif") repeat-y;
-}
-
-.taskbar-mb-middle-border-outer
-  {
-	border-top			  : 1px solid #5A728E;
-  }
-
-.taskbar-mb-middle-border-middle
-  {
-	border-top			  : 1px solid #2B3746;
-  }
-
-.taskbar-mb-middle-border-inner
-  {
-	border-top			  : 1px solid #A9BED8;
-  }
-
-.taskbar-mb-image-right
-  {
-	background			  : url(chrome://global/skin/taskbar-groove-right.gif) no-repeat;
-	width				  : 7px;
-	height				  : 17px;
-  }
-  
-/* hide goto menu bug #47633 */ 
-#taskbarGotoMenuBox{
-	display:none;	
-}  

@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -15,55 +14,49 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributors:
+ * Contributor(s):
  *   Ben Goodger <ben@netscape.com>
  *   Chris Nelson <chrisn@statecollege.com>
  *
  */
 
-@import url(chrome://global/skin/global.css);
+/* ===== profile.css ====================================================
+  == Styles for Profile Manager window and dialogs.
+  ======================================================================= */
 
-window.dialog {
-  padding: none;
+@import url("chrome://global/skin/");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: Profile Selection dialog ::::: */
+
+#profiles > treechildren > treeitem > treerow > treecell
+    > .tree-cell-icon
+{
+  list-style-image: url("chrome://communicator/skin/profile/profile.gif");
 }
 
-.dimmed-highcontrast {
-  color: #99cccc ! important;
-} 
-
-#profiles > treechildren > treeitem > treerow > treecell > .tree-cell-icon {
-  list-style-image: url("chrome://communicator/skin/profile/profileicon-large.gif");
-}
-
-#profiles > treechildren > treeitem > treerow > treecell[rowMigrate="no"] > .tree-cell-icon {
+#profiles > treechildren > treeitem > treerow > treecell[rowMigrate="no"]
+    > .tree-cell-icon
+{
   list-style-image: url("chrome://communicator/skin/profile/migrate.gif");
 }
 
-/* profile selection dialog */
-html#intro {
+#intro {
   width: 17em;
 }
 
-box#managebuttons > button {
+#managebuttons > button {
   min-width: 8em;
-}
-
-/* display area */
-box#contentarea {
-  border-top: 2px groove #CCCCCC;
-  border-bottom: 2px groove #CCCCCC;
-  padding: 7px;
-}
-
-/* top border on status area */
-box#wizardButtons {
-  padding-top: 1px;
-  padding-bottom: 1px;
 }
 
 box.selection {
   margin-top: 4px;
+}
+
+#finishtext {
+  margin-top: -20px;
 }

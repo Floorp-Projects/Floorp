@@ -1,746 +1,689 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
  */
 
-/* This contains CSS just for editor toolbars */
+/* ==== EditorToolbars.css ==================================================
+   == Styles related to toolbars in the Editor application.
+   ========================================================================== */
 
-#EditorToolbox {
-  min-width: 1px;
-}
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#FormatToolbar > toolbargrippy {
-  margin-left: 0px;
-}
-
-.separator_small { 
-  width: 1em; 
-}
-
-.margin-left-right {
-  margin-left:  3px;
-  margin-right: 3px;
-}
-
-.toolbar, .key-toolbar {
-  margin-right: 2px;
-}
-
-.inset-border {
-  border: 1px inset white;
-}
+/* ::::: primary toolbar buttons ::::: */
 
 .button-toolbar-2 {
-  min-width: 3.4em; 
-}
-
-
-/* THIS DOESN'T WORK ON <text>! */
-.center {
-  text-align: center;
-}
-
-#EditModeToolbar {
-  padding:       0px;
-  /* Same as "standard" toolbar background */
-  border-bottom: 1px solid #B4C3D4;
-  margin-bottom: 0px;
-  min-width:     1px;
-  color:         white;
-  background-color: #B4C3D4;
-  overflow:      hidden;
-  padding-bottom: 2px;
-}
-
-#EditModeToolbar > toolbargrippy {
-	display: none;
-}
-
-button.edit-mode:hover, button.edit-mode:hover:active,
-button.edit-mode {
-  -moz-border-radius: 0px 0px 8px 8px;
-  padding: 1px 5px 1px 4px;
-  margin: 0px 1px;
-  color: black;
-  background-color: #CCCCCC;
-  border-top: 0px;
-  border-bottom: 1px solid #666666;
-  border-left: 1px solid white;
-  border-right: 1px solid #666666;
-}
-
-button.edit-mode:hover {
-  border:  1px solid white;
-  border-top: 0px;
-}
-
-button.edit-mode:hover:active {
-  padding: 2px 4px 0px 5px;
-}
-
-button.edit-mode[selected="1"] {
-/* Not resizing well! - use color instead
-  font-weight: bold; 
-*/
-  background-color: #FFFFFF;
-}
-
-button.edit-mode[selected="1"]:active,
-button.edit-mode[selected="1"]:hover:active {
-  padding: 2px 4px 0px 5px;
-}
-
-#NormalModeButton {
-  list-style-image:url(chrome://editor/skin/images/editmode-normal.gif); 
-}
-
-#TagModeButton {
-  list-style-image:url(chrome://editor/skin/images/editmode-tags.gif); 
-}
-#SourceModeButton {
-  list-style-image:url(chrome://editor/skin/images/editmode-html.gif); 
-}
-#PreviewModeButton {
-  list-style-image:url(chrome://editor/skin/images/editmode-preview.gif); 
-}
-
-/* Needed to suppress inner box settings - same as button.plain
-   (we can't use 'plain', else we get no outer borders!)
-*/
-button.edit-mode:hover:active > .button-internal-box,
-button.edit-mode > .button-internal-box, 
-button.edit-mode > .button-internal-box:hover:active,
-button.edit-mode > .button-internal-box > .button-text-container, 
-button.edit-mode > .button-internal-box > .button-text-container:hover:active,
-button.edit-mode > .button-internal-box > .button-text-container > .button-text, 
-button.edit-mode > .button-internal-box > .button-text-container > .button.text:hover:active,
-button.edit-mode > .button-internal-box > .button-icon, 
-button.edit-mode > .button-internal-box > .button.icon:hover:active
-{
-  border  : 0px ! important;
-  margin  : 0px;
-  padding : 0px;
-}
-
-/* Image URLs for all Editor toolbar buttons */
-
-#newButton, #openButton, #saveButton, #previewButton, #printButton, #linkButton, #imageButton, #namedAnchorButton,
-#hlineButton, #tableButton {
-	min-width			: 42px;
+  min-width: 48px;
 }
 
 #newButton {
-	list-style-image:url("chrome://editor/skin/images/newfile.gif");
+  list-style-image: url("chrome://editor/skin/btn1/newfile.gif");
 }
 
 #newButton[disabled="true"],
 #newButton[disabled="true"]:hover,
-#newButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/newfile-disabled.gif");
-  } 
+#newButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/newfile-dis.gif");
+}
 
-#newButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/newfile-hover.gif");
-  } 
+#newButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/newfile-hov.gif");
+}
 
-#newButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/newfile-clicked.gif");
-  }
+#newButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/newfile-act.gif");
+}
 
 #openButton {
-	list-style-image:url("chrome://editor/skin/images/openfile.gif");
+  list-style-image: url("chrome://editor/skin/btn1/openfile.gif");
 }
 
 #openButton[disabled="true"],
 #openButton[disabled="true"]:hover,
-#openButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/openfile-disabled.gif");
-  } 
+#openButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/openfile-dis.gif");
+}
 
-#openButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/openfile-hover.gif");
-  } 
+#openButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/openfile-hov.gif");
+}
 
-#openButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/openfile-clicked.gif");
-  }
+#openButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/openfile-act.gif");
+}
 
 #saveButton {
-	list-style-image:url("chrome://editor/skin/images/savefile.gif");
+  list-style-image: url("chrome://editor/skin/btn1/savefile.gif");
 }
 
 #saveButton[disabled="true"],
 #saveButton[disabled="true"]:hover,
-#saveButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/savefile-disabled.gif");
-  } 
+#saveButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/savefile-dis.gif");
+}
 
-#saveButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/savefile-hover.gif");
-  } 
+#saveButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/savefile-hov.gif");
+}
 
-#saveButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/savefile-clicked.gif");
-  }
-
-#saveButton[dirty="true"] {
-  list-style-image:url(chrome://editor/skin/images/savemod.gif); 
+#saveButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/savefile-act.gif");
 }
 
 #publishButton {
-	list-style-image:url("chrome://editor/skin/images/publish.gif");
+  list-style-image: url("chrome://editor/skin/btn1/publish.gif");
 }
 
 #previewButton {
-	list-style-image:url("chrome://editor/skin/images/preview.gif");
+  list-style-image: url("chrome://editor/skin/btn1/preview.gif");
 }
 
 #previewButton[disabled="true"],
 #previewButton[disabled="true"]:hover,
-#previewButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/preview-disabled.gif");
-  } 
+#previewButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/preview-dis.gif");
+}
 
-#previewButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/preview-hover.gif");
-  } 
+#previewButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/preview-hov.gif");
+}
 
-#previewButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/preview-clicked.gif");
-  }
+#previewButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/preview-act.gif");
+}
 
-#printButton 
-  {
-    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
-	list-style-image      : url("chrome://global/skin/print.gif");
-    margin                : 3px 3px 1px 3px;
-    text-align			  : center;
-  }
+#printButton {
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-2");
+  margin: 3px 3px 1px 3px;
+  list-style-image: url("chrome://communicator/skin/btn1/print.gif");
+}
 
 #printButton[disabled="true"],
-#printButton[disabled="true"]:hover,
-#printButton[disabled="true"]:hover:active,
-#printButton[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
-#printButton[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#printButton[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/print-disabled.gif");
-  }
+#printButton[disabled="true"] > .menubutton-dual-stack
+    > .menubutton-dual-button:hover,
+#printButton[disabled="true"] > .menubutton-dual-stack
+    > .menubutton-dual-button:hover:active
+{
+  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
+}
 
-#printButton > .menubutton-dual-stack > .menubutton-dual-button:hover
-  {
-    list-style-image      : url("chrome://global/skin/print-hover.gif");
-  }
+#printButton > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
+}
 
-#printButton > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/print-clicked.gif");
-  }
+#printButton > .menubutton-dual-stack
+    > .menubutton-dual-button:hover:active
+{
+  list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
+}
 
 #findButton {
-	list-style-image:url("chrome://editor/skin/images/find.gif");
+  list-style-image: url("chrome://editor/skin/btn1/find.gif");
 }
+
 #linkButton {
-	list-style-image:url("chrome://editor/skin/images/link.gif");
+  list-style-image: url("chrome://editor/skin/btn1/link.gif");
 }
 
 #linkButton[disabled="true"],
 #linkButton[disabled="true"]:hover,
-#linkButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/link-disabled.gif");
-  } 
+#linkButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/link-dis.gif");
+}
 
-#linkButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/link-hover.gif");
-  } 
+#linkButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/link-hov.gif");
+}
 
-#linkButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/link-clicked.gif");
-  }
+#linkButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/link-act.gif");
+}
 
 #imageButton {
-	list-style-image:url("chrome://editor/skin/images/image.gif");
+  list-style-image: url("chrome://editor/skin/btn1/image.gif");
 }
 
 #imageButton[disabled="true"],
 #imageButton[disabled="true"]:hover,
-#imageButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/image-disabled.gif");
-  } 
+#imageButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/image-dis.gif");
+}
 
-#imageButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/image-hover.gif");
-  } 
+#imageButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/image-hov.gif");
+}
 
-#imageButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/image-clicked.gif");
-  }
+#imageButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/image-act.gif");
+}
 
 #namedAnchorButton {
-	list-style-image:url("chrome://editor/skin/images/anchor.gif");
+  list-style-image: url("chrome://editor/skin/btn1/anchor.gif");
 }
 
 #namedAnchorButton[disabled="true"],
 #namedAnchorButton[disabled="true"]:hover,
-#namedAnchorButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/anchor-disabled.gif");
-  } 
+#namedAnchorButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/anchor-dis.gif");
+}
 
-#namedAnchorButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/anchor-hover.gif");
-  } 
+#namedAnchorButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/anchor-hov.gif");
+}
 
-#namedAnchorButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/anchor-clicked.gif");
-  }
+#namedAnchorButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/anchor-act.gif");
+}
 
 #hlineButton {
-	list-style-image:url("chrome://editor/skin/images/hline.gif");
+  list-style-image: url("chrome://editor/skin/btn1/hline.gif");
 }
 
 #hlineButton[disabled="true"],
 #hlineButton[disabled="true"]:hover,
-#hlineButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/hline-disabled.gif");
-  } 
+#hlineButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/hline-dis.gif");
+}
 
-#hlineButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/hline-hover.gif");
-  } 
+#hlineButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/hline-hov.gif");
+}
 
-#hlineButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/hline-clicked.gif");
-  }
+#hlineButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/hline-act.gif");
+}
 
 #tableButton {
-	list-style-image:url("chrome://editor/skin/images/table.gif");
+  list-style-image: url("chrome://editor/skin/btn1/table.gif");
 }
 
 #tableButton[disabled="true"],
 #tableButton[disabled="true"]:hover,
-#tableButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/table-disabled.gif");
-  } 
+#tableButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/table-dis.gif");
+}
 
-#tableButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/table-hover.gif");
-  } 
+#tableButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/table-hov.gif");
+}
 
-#tableButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/table-clicked.gif");
-  }
+#tableButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/table-act.gif");
+}
 
 #spellingButton {
-	list-style-image:url("chrome://editor/skin/images/spell.gif");
+  list-style-image: url("chrome://editor/skin/btn1/spell.gif");
 }
 
 #spellingButton[disabled="true"],
 #spellingButton[disabled="true"]:hover,
-#spellingButton[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/spell-disabled.gif");
-  } 
+#spellingButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/spell-dis.gif");
+}
 
-#spellingButton:hover
-  {
-    list-style-image      : url("chrome://editor/skin/images/spell-hover.gif");
-  } 
+#spellingButton:hover {
+  list-style-image: url("chrome://editor/skin/btn1/spell-hov.gif");
+}
 
-#spellingButton:hover:active
-  {
-    list-style-image      : url("chrome://editor/skin/images/spell-clicked.gif");
-  }
+#spellingButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn1/spell-act.gif");
+}
 
-/* formatting buttons */
-
-/* This prevents all these formatting buttons from shifting when clicked */
-.button-toolbar:hover:active > .button-internal-box
- {
-    padding               : 1px 3px 1px 3px;
- }
+/* ::::: formatting buttons ::::: */
 
 #DecreaseFontSizeButton {
-	list-style-image:url("chrome://editor/skin/images/dec-font-size.gif");
+  list-style-image: url("chrome://editor/skin/btn2/dec-font-size.gif");
 }
 
-#DecreaseFontSizeButton:hover, #DecreaseFontSizeButton[toggled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/dec-font-size_hover.gif");
+#DecreaseFontSizeButton:hover {
+  list-style-image: url("chrome://editor/skin/btn2/dec-font-size-hov.gif");
 }
 
-#DecreaseFontSizeButton[toggled="true"], #DecreaseFontSizeButton:hover:active{
-	list-style-image:url("chrome://editor/skin/images/dec-font-size_active.gif");
+#DecreaseFontSizeButton[toggled="true"],
+#DecreaseFontSizeButton[toggled="true"]:hover,
+#DecreaseFontSizeButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/dec-font-size-act.gif");
 }
 
-#DecreaseFontSizeButton[disabled="true"], #DecreaseFontSizeButton[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/dec-font-size_disabled.gif");
+#DecreaseFontSizeButton[disabled="true"],
+#DecreaseFontSizeButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/dec-font-size-dis.gif");
 }
 
 #IncreaseFontSizeButton {
-	list-style-image:url("chrome://editor/skin/images/inc-font-size.gif");
+  list-style-image: url("chrome://editor/skin/btn2/inc-font-size.gif");
 }
 
-#IncreaseFontSizeButton:hover, #IncreaseFontSizeButton[toggled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/inc-font-size_hover.gif");
+#IncreaseFontSizeButton:hover {
+  list-style-image: url("chrome://editor/skin/btn2/inc-font-size-hov.gif");
 }
 
-#IncreaseFontSizeButton[toggled="true"], #IncreaseFontSizeButton:hover:active {
-	list-style-image:url("chrome://editor/skin/images/inc-font-size_active.gif");
+#IncreaseFontSizeButton[toggled="true"],
+#IncreaseFontSizeButton[toggled="true"]:hover,
+#IncreaseFontSizeButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/inc-font-size-act.gif");
 }
 
-#IncreaseFontSizeButton[disabled="true"], #IncreaseFontSizeButton[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/inc-font-size_disabled.gif");
+#IncreaseFontSizeButton[disabled="true"],
+#IncreaseFontSizeButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/inc-font-size-dis.gif");
 }
 
 #boldButton {
-  list-style-image:url(chrome://editor/skin/images/bold.gif); 
+  list-style-image: url("chrome://editor/skin/btn2/bold.gif");
 }
 
-#boldButton:hover, #boldButton[toggled="true"]:hover:active {
-  list-style-image:url(chrome://editor/skin/images/bold_hover.gif); 
+#boldButton:hover {
+  list-style-image: url("chrome://editor/skin/btn2/bold-hov.gif");
 }
 
-#boldButton[toggled="true"], #boldButton:hover:active {
-  list-style-image:url(chrome://editor/skin/images/bold_active.gif); 
+#boldButton[toggled="true"],
+#boldButton[toggled="true"]:hover,
+#boldButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/bold-act.gif");
 }
 
-#boldButton[disabled="true"], #boldButton[disabled="true"]:hover:active {
-  list-style-image:url(chrome://editor/skin/images/bold_disabled.gif); 
+#boldButton[disabled="true"],
+#boldButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/bold-dis.gif");
 }
-
-#smilyPopup  {
-
-    width : 130px;
-}
-
-#smileButton {
-  list-style-image:url("chrome://editor/skin/images/smile.gif"); 
-}
-
-menu:hover > #smileButton, 
-menu:hover:active > #smileButton[toggled="true"] {
-	list-style-image:url("chrome://editor/skin/images/smile_hover.gif");
-}
-
-menu:hover:active > #smileButton,
-menu:hover > #smileButton[toggled="true"] {
-	list-style-image:url("chrome://editor/skin/images/smile_active.gif");
-}
-
-#smileButton[disabled="true"], 
-menu:hover > #smileButton[disabled="true"], 
-menu:hover:active > #smileButton[disabled="true"] {
-	list-style-image:url("chrome://editor/skin/images/smile_disabled.gif");
-}
-
-#insert-smile {
-  list-style-image:url(chrome://editor/skin/images/smile.gif); 
-}
-
-#insert-sick {
-  list-style-image:url(chrome://editor/skin/images/sick.gif); 
-}
-
-#insert-frown {
-  list-style-image:url(chrome://editor/skin/images/frown.gif); 
-}
-
-#insert-wink {
-  list-style-image:url(chrome://editor/skin/images/wink.gif); 
-}
-
-#insert-smile5 {
-  list-style-image:url(chrome://editor/skin/images/s_smile.gif); 
-}
-
-#insert-smile6 {
-  list-style-image:url(chrome://editor/skin/images/s_frown.gif); 
-}
-
-#insert-smile7 {
-  list-style-image:url(chrome://editor/skin/images/s_wink.gif); 
-}
-
 
 #italicButton {
-  list-style-image:url(chrome://editor/skin/images/italic.gif); 
+  list-style-image: url("chrome://editor/skin/btn2/italic.gif");
 }
 
-#italicButton:hover, #italicButton[toggled="true"]:hover:active {
-  list-style-image:url(chrome://editor/skin/images/italic_hover.gif); 
+#italicButton:hover {
+  list-style-image: url("chrome://editor/skin/btn2/italic-hov.gif");
 }
 
-#italicButton[toggled="true"], #italicButton:hover:active {
-  list-style-image:url(chrome://editor/skin/images/italic_active.gif); 
+#italicButton[toggled="true"],
+#italicButton[toggled="true"]:hover,
+#italicButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/italic-act.gif");
 }
 
-#italicButton[disabled="true"], #italicButton[disabled="true"]:hover:active {
-  list-style-image:url(chrome://editor/skin/images/italic_disabled.gif); 
+#italicButton[disabled="true"],
+#italicButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/italic-dis.gif");
 }
 
 #underlineButton {
-  list-style-image:url(chrome://editor/skin/images/underline.gif); 
+  list-style-image: url("chrome://editor/skin/btn2/underline.gif");
 }
 
-#underlineButton:hover, #underlineButton[toggled="true"]:hover:active {
-  list-style-image:url(chrome://editor/skin/images/underline_hover.gif); 
+#underlineButton:hover {
+  list-style-image: url("chrome://editor/skin/btn2/underline-hov.gif");
 }
 
-#underlineButton[toggled="true"], #underlineButton:hover:active {
-  list-style-image:url(chrome://editor/skin/images/underline_active.gif); 
+#underlineButton[toggled="true"],
+#underlineButton[toggled="true"]:hover,
+#underlineButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/underline-act.gif");
 }
 
-#underlineButton[disabled="true"], #underlineButton[disabled="true"]:hover:active {
-  list-style-image:url(chrome://editor/skin/images/underline_disabled.gif); 
+#underlineButton[disabled="true"],
+#underlineButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/underline-dis.gif");
 }
 
 #ulButton {
-	list-style-image:url("chrome://editor/skin/images/bullets.gif");
+  list-style-image: url("chrome://editor/skin/btn2/bullets.gif");
 }
 
-#ulButton:hover, #ulButton[toggled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/bullets_hover.gif");
+#ulButton:hover {
+  list-style-image: url("chrome://editor/skin/btn2/bullets-hov.gif");
 }
 
-#ulButton[toggled="true"], #ulButton:hover:active {
-	list-style-image:url("chrome://editor/skin/images/bullets_active.gif");
+#ulButton[toggled="true"],
+#ulButton[toggled="true"]:hover,
+#ulButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/bullets-act.gif");
 }
 
-#ulButton[disabled="true"], #ulButton[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/bullets_disabled.gif");
+#ulButton[disabled="true"],
+#ulButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/bullets-dis.gif");
 }
 
 #olButton {
-	list-style-image:url("chrome://editor/skin/images/numbers.gif");
+  list-style-image: url("chrome://editor/skin/btn2/numbers.gif");
 }
 
-#olButton:hover, #olButton[toggled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/numbers_hover.gif");
+#olButton:hover {
+  list-style-image: url("chrome://editor/skin/btn2/numbers-hov.gif");
 }
 
-#olButton[toggled="true"], #olButton:hover:active {
-	list-style-image:url("chrome://editor/skin/images/numbers_active.gif");
+#olButton[toggled="true"],
+#olButton[toggled="true"]:hover,
+#olButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/numbers-act.gif");
 }
 
-#olButton[disabled="true"], #olButton[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/numbers_disabled.gif");
+#olButton[disabled="true"],
+#olButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/numbers-dis.gif");
 }
 
 #outdentButton {
-	list-style-image:url("chrome://editor/skin/images/outdent.gif");
+  list-style-image: url("chrome://editor/skin/btn2/outdent.gif");
 }
 
-#outdentButton:hover, #outdentButton[toggled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/outdent_hover.gif");
+#outdentButton:hover {
+  list-style-image: url("chrome://editor/skin/btn2/outdent-hov.gif");
 }
 
-#outdentButton[toggled="true"], #outdentButton:hover:active {
-	list-style-image:url("chrome://editor/skin/images/outdent_active.gif");
+#outdentButton[toggled="true"],
+#outdentButton[toggled="true"]:hover,
+#outdentButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/outdent-act.gif");
 }
 
-#outdentButton[disabled="true"], #outdentButton[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/outdent_disabled.gif");
+#outdentButton[disabled="true"],
+#outdentButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/outdent-dis.gif");
 }
 
 #indentButton {
-	list-style-image:url("chrome://editor/skin/images/indent.gif");
+  list-style-image: url("chrome://editor/skin/btn2/indent.gif");
 }
 
-#indentButton:hover, #indentButton[toggled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/indent_hover.gif");
+#indentButton:hover {
+  list-style-image: url("chrome://editor/skin/btn2/indent-hov.gif");
 }
 
-#indentButton[toggled="true"], #indentButton:hover:active {
-	list-style-image:url("chrome://editor/skin/images/indent_active.gif");
+#indentButton[toggled="true"],
+#indentButton[toggled="true"]:hover,
+#indentButton:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/indent-act.gif");
 }
 
-#indentButton[disabled="true"], #indentButton[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/indent_disabled.gif");
+#indentButton[disabled="true"],
+#indentButton[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/indent-dis.gif");
 }
 
 #AlignPopupButton {
-	list-style-image:url("chrome://editor/skin/images/align.gif");
+  list-style-image: url("chrome://editor/skin/btn2/align.gif");
 }
 
 #AlignPopupButton:hover {
-	list-style-image:url("chrome://editor/skin/images/align_hover.gif");
+  list-style-image: url("chrome://editor/skin/btn2/align-hov.gif");
 }
 
 #AlignPopupButton:hover:active,
 #AlignPopupButton[open="true"] {
-	list-style-image:url("chrome://editor/skin/images/align_active.gif");
+  list-style-image: url("chrome://editor/skin/btn2/align-act.gif");
 }
 
 #AlignPopupButton[disabled="true"],
 #AlignPopupButton[disabled="true"]:hover,
 #AlignPopupButton[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/align_disabled.gif");
+  list-style-image: url("chrome://editor/skin/btn2/align-dis.gif");
+}
+
+#AlignLeftItem {
+  list-style-image: url("chrome://editor/skin/btn2/align-left.gif");
+}
+
+#AlignLeftItem:hover {
+  list-style-image: url("chrome://editor/skin/btn2/align-left-hov.gif");
+}
+
+#AlignCenterItem {
+  list-style-image: url("chrome://editor/skin/btn2/align-center.gif");
+}
+
+#AlignCenterItem:hover {
+  list-style-image: url("chrome://editor/skin/btn2/align-center-hov.gif");
+}
+
+#AlignRightItem {
+  list-style-image: url("chrome://editor/skin/btn2/align-right.gif");
+}
+
+#AlignRightItem:hover {
+  list-style-image: url("chrome://editor/skin/btn2/align-right-hov.gif");
+}
+
+#AlignJustifyItem {
+  list-style-image: url("chrome://editor/skin/btn2/align-justify.gif");
+}
+
+#AlignJustifyItem:hover {
+  list-style-image: url("chrome://editor/skin/btn2/align-justify-hov.gif");
 }
 
 #InsertPopupButton {
-	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
+  list-style-image: url("chrome://editor/skin/btn2/insert.gif");
 }
 
 #InsertPopupButton:hover {
-	list-style-image:url("chrome://editor/skin/images/object-popup_hover.gif");
+  list-style-image: url("chrome://editor/skin/btn2/insert-hov.gif");
 }
 
 #InsertPopupButton:hover:active,
 #InsertPopupButton[open="true"] {
-	list-style-image:url("chrome://editor/skin/images/object-popup_active.gif");
+  list-style-image: url("chrome://editor/skin/btn2/insert-act.gif");
 }
 
 #InsertPopupButton[disabled="true"],
 #InsertPopupButton[disabled="true"]:hover,
 #InsertPopupButton[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/object-popup_disabled.gif");
+  list-style-image: url("chrome://editor/skin/btn2/insert-dis.gif");
+}
+
+#InsertLinkItem {
+  list-style-image: url("chrome://editor/skin/btn2/insert-link.gif");
+}
+
+#InsertLinkItem:hover {
+  list-style-image: url("chrome://editor/skin/btn2/insert-link-hov.gif");
+}
+
+#InsertAnchorItem {
+  list-style-image: url("chrome://editor/skin/btn2/insert-anchor.gif");
+}
+
+#InsertAnchorItem:hover {
+  list-style-image: url("chrome://editor/skin/btn2/insert-anchor-hov.gif");
+}
+
+#InsertImageItem {
+  list-style-image: url("chrome://editor/skin/btn2/insert-image.gif");
+}
+
+#InsertImageItem:hover {
+  list-style-image: url("chrome://editor/skin/btn2/insert-image-hov.gif");
+}
+
+#InsertHRuleItem {
+  list-style-image: url("chrome://editor/skin/btn2/insert-hrule.gif");
+}
+
+#InsertHRuleItem:hover {
+  list-style-image: url("chrome://editor/skin/btn2/insert-hrule-hov.gif");
+}
+
+#InsertTableItem {
+  list-style-image: url("chrome://editor/skin/btn2/insert-table.gif");
+}
+
+#InsertTableItem:hover {
+  list-style-image: url("chrome://editor/skin/btn2/insert-table-hov.gif");
 }
 
 #text-align-left,
-#align-left-button
-{
-	list-style-image:url("chrome://editor/skin/images/left.gif");
+#align-left-button {
+  list-style-image: url("chrome://editor/skin/btn2/left.gif");
 }
 
 #text-align-left:hover,
-#align-left-button:hover
-{
-	list-style-image:url("chrome://editor/skin/images/left_hover.gif");
+#align-left-button:hover {
+  list-style-image: url("chrome://editor/skin/btn2/left-hov.gif");
 }
 
-#text-align-left[toggled="true"], #text-align-left:hover:active,
-#align-left-button[toggled="true"], #align-left-button:hover:active
-{
-	list-style-image:url("chrome://editor/skin/images/left_active.gif");
+#text-align-left[toggled="true"],
+#text-align-left:hover:active,
+#align-left-button[toggled="true"],
+#align-left-button:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/left-act.gif");
 }
 
-#text-align-left[disabled="true"], #text-align-left[disabled="true"]:hover:active,
-#align-left-button[disabled="true"], #align-left-button[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/left_disabled.gif");
+#text-align-left[disabled="true"],
+#text-align-left[disabled="true"]:hover:active,
+#align-left-button[disabled="true"],
+#align-left-button[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/left-dis.gif");
 }
 
 #text-align-center,
 #align-center-button {
-	list-style-image:url("chrome://editor/skin/images/center.gif");
+  list-style-image: url("chrome://editor/skin/btn2/center.gif");
 }
 
 #text-align-center:hover,
 #align-center-button:hover {
-	list-style-image:url("chrome://editor/skin/images/center_hover.gif");
+  list-style-image: url("chrome://editor/skin/btn2/center-hov.gif");
 }
 
-#text-align-center[toggled="true"], #text-align-center:hover:active,
-#align-center-button[toggled="true"], #align-center-button:hover:active {
-	list-style-image:url("chrome://editor/skin/images/center_active.gif");
+#text-align-center[toggled="true"],
+#text-align-center:hover:active,
+#align-center-button[toggled="true"],
+#align-center-button:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/center-act.gif");
 }
 
-#text-align-center[disabled="true"], #text-align-center[disabled="true"]:hover:active,
-#align-center-button[disabled="true"], #align-center-button[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/center_disabled.gif");
+#text-align-center[disabled="true"],
+#text-align-center[disabled="true"]:hover:active,
+#align-center-button[disabled="true"],
+#align-center-button[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/center-dis.gif");
 }
 
 #text-align-right,
 #align-right-button {
-	list-style-image:url("chrome://editor/skin/images/right.gif");
+  list-style-image: url("chrome://editor/skin/btn2/right.gif");
 }
 
 #text-align-right:hover,
 #align-right-button:hover {
-	list-style-image:url("chrome://editor/skin/images/right_hover.gif");
+  list-style-image: url("chrome://editor/skin/btn2/right-hov.gif");
 }
 
-#text-align-right[toggled="true"], #text-align-right:hover:active,
-#align-right-button[toggled="true"], #align-right-button:hover:active {
-	list-style-image:url("chrome://editor/skin/images/right_active.gif");
+#text-align-right[toggled="true"],
+#text-align-right:hover:active,
+#align-right-button[toggled="true"],
+#align-right-button:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/right-act.gif");
 }
 
-#text-align-right[disabled="true"], #text-align-right[disabled="true"]:hover:active,
-#align-right-button[disabled="true"], #align-right-button[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/right_disabled.gif");
+#text-align-right[disabled="true"],
+#text-align-right[disabled="true"]:hover:active,
+#align-right-button[disabled="true"],
+#align-right-button[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/right-dis.gif");
 }
 
 #text-align-justify,
 #align-justify-button {
-	list-style-image:url("chrome://editor/skin/images/justify.gif");
+  list-style-image: url("chrome://editor/skin/btn2/justify.gif");
 }
 
 #text-align-justify:hover,
 #align-justify-button:hover {
-	list-style-image:url("chrome://editor/skin/images/justify_hover.gif");
+  list-style-image: url("chrome://editor/skin/btn2/justify-hov.gif");
 }
 
-#text-align-justify[toggled="true"], #text-align-justify:hover:active,
-#align-justify-button[toggled="true"], #align-justify-button:hover:active {
-	list-style-image:url("chrome://editor/skin/images/justify_active.gif");
+#text-align-justify[toggled="true"],
+#text-align-justify:hover:active,
+#align-justify-button[toggled="true"],
+#align-justify-button:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/justify-act.gif");
 }
 
-#text-align-justify[disabled="true"], #text-align-justify[disabled="true"]:hover:active,
-#align-justify-button[disabled="true"], #align-justify-button[disabled="true"]:hover:active {
-	list-style-image:url("chrome://editor/skin/images/justify_disabled.gif");
+#text-align-justify[disabled="true"],
+#text-align-justify[disabled="true"]:hover:active,
+#align-justify-button[disabled="true"],
+#align-justify-button[disabled="true"]:hover:active {
+  list-style-image: url("chrome://editor/skin/btn2/justify-dis.gif");
 }
 
-
-.ColorPickerLabel {
-  border:     1px inset white;
-  margin:     0px;
-  padding:    2px;
-  text-align: center;
+#smileButtonMenu {
+  list-style-image: url("chrome://editor/skin/btn2/smiley.gif");
 }
 
-/* TODO: How to make inset color skinable? */
+#smileButtonMenu:hover > #smileButton {
+  list-style-image: url("chrome://editor/skin/btn2/smiley-hov.gif");
+}
+
+#smileButtonMenu:hover:active > #smileButton {
+  list-style-image: url("chrome://editor/skin/btn2/smiley-act.gif");
+}
+
+#smileButton[disabled="true"],
+#smileButtonMenu:hover:active > #smileButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/btn2/smiley-dis.gif");
+}
+
+/* ::::: smiley icons ::::: */
+
+#insert-smile {
+  list-style-image: url("chrome://editor/skin/icons/smiley/smile.gif");
+}
+
+#insert-sick {
+  list-style-image: url("chrome://editor/skin/icons/smiley/sick.gif");
+}
+
+#insert-frown {
+  list-style-image: url("chrome://editor/skin/icons/smiley/frown.gif");
+}
+
+#insert-wink {
+  list-style-image: url("chrome://editor/skin/icons/smiley/wink.gif");
+}
+
+#insert-smile5 {
+  list-style-image: url("chrome://editor/skin/icons/smiley/smile.gif");
+}
+
+#insert-smile6 {
+  list-style-image: url("chrome://editor/skin/icons/smiley/frown.gif");
+}
+
+#insert-smile7 {
+  list-style-image: url("chrome://editor/skin/icons/smiley/wink.gif");
+}
+
+/* ::::: fg/bg color picker ::::: */
+
 .color-button {
-  border: 1px inset #CCCCCC;
+  margin: 2px;
+  border: 1px inset #5B7693;
   padding: 0px;
-  width:  14px;
+  width: 14px;
   height: 12px;
-  margin:  2px;
 }
 
 .color-button:hover {
-  border:  1px solid white;
+  border: 1px solid #ffffff;
 }
 
 #TextColorButton {
@@ -750,3 +693,46 @@ menu:hover:active > #smileButton[disabled="true"] {
 #BackgroundColorButton {
   margin: 9px 2px 2px 9px;
 }
+
+/* ::::: edit mode toolbar ::::: */
+
+#EditModeToolbar {
+  margin-bottom: 0px;
+  border-bottom: 1px solid #B4C3D4;
+  padding: 0px 0px 2px 0px;
+  min-width: 1px;
+  background-color: #B4C3D4;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+#EditModeToolbar > toolbargrippy {
+  display: none;
+}
+
+#NormalModeButton {
+  list-style-image: url("chrome://editor/skin/icons/editmode-normal.gif");
+}
+
+#TagModeButton {
+  list-style-image: url("chrome://editor/skin/icons/editmode-tags.gif");
+}
+
+#SourceModeButton {
+  list-style-image: url("chrome://editor/skin/icons/editmode-html.gif");
+}
+
+#PreviewModeButton {
+  list-style-image: url("chrome://editor/skin/icons/editmode-preview.gif");
+}
+
+/* ::::: miscellany ::::: */
+
+.separator_small {
+  width: 1em;
+}
+
+.center {
+  text-align: center;
+}
+

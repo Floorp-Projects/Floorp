@@ -1,258 +1,207 @@
-/** Contains style definitions for the navigator application 
- **/
-
-@import url(chrome://communicator/skin/);
-@import url(chrome://navigator/skin/personalToolbar.css);
-@import url(chrome://communicator/skin/sidebar/sidebar.css);
-
-
-#sidebar-parent 
-  {
-    margin-right          : 2px;
-  }
-
 /*
- * Rules for 'hiding' portions of the chrome for special
- * kinds of browser windows.
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
  */
-window[chromehidden~="menubar"] .chromeclass-menubar {
-  display: none;
+
+/* ===== navigator.css ==================================================
+  == Styles shared throughout the Navigator application.
+  ======================================================================= */
+
+@import url("chrome://communicator/skin/");
+@import url("chrome://communicator/skin/sidebar/sidebar.css");
+@import url("chrome://navigator/skin/personalToolbar.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: primary toolbar buttons ::::: */
+
+#back-button {
+  margin-left: 0px;
+  list-style-image: url("chrome://navigator/skin/btn1/back.gif");
 }
-
-window[chromehidden~="toolbar"] .chromeclass-toolbar {
-        display: none;
-}
-
-window[chromehidden~="location"] .chromeclass-location {
-        display: none;
-}
-
-window[chromehidden~="directories"] .chromeclass-directories {
-        display: none;
-}
-
-window[chromehidden~="status"] .chromeclass-status {
-        display: none;
-}
-
-window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
-        display: none;
-}
-
-/*
- * Images for the main buttons
- */
- 
-#nav-bar-buttons > button,
-#nav-bar-buttons > menubutton {
- margin-bottom: 0px;
-}
-
-
-#back-button 
-  {
-    margin-left        : 0px;
-    list-style-image      : url("chrome://navigator/skin/back.gif");
-  }
 
 #back-button[disabled="true"],
-#back-button[disabled="true"]:hover,
-#back-button[disabled="true"]:hover:active,
-#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
 #back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://navigator/skin/back-disabled.gif");
-  }
+#back-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/back-dis.gif");
+}
 
-#back-button > .menubutton-dual-stack > .menubutton-dual-button:hover
-  {
-    list-style-image      : url("chrome://navigator/skin/back-hover.gif");
-  }
+#back-button > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://navigator/skin/btn1/back-hov.gif");
+}
 
-#back-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://navigator/skin/back-clicked.gif");
-  }
+#back-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/back-act.gif");
+}
 
-#forward-button 
-  {
-    list-style-image      : url("chrome://navigator/skin/forward.gif");
-  }
+#forward-button {
+  list-style-image: url("chrome://navigator/skin/btn1/forward.gif");
+}
 
 #forward-button[disabled="true"],
-#forward-button[disabled="true"]:hover,
-#forward-button[disabled="true"]:hover:active,
-#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
 #forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://navigator/skin/forward-disabled.gif");
-  }
+#forward-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/forward-dis.gif");
+}
 
-#forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover
-  {
-    list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
-  }
+#forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://navigator/skin/btn1/forward-hov.gif");
+}
 
-#forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://navigator/skin/forward-clicked.gif");
-  }
+#forward-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/forward-act.gif");
+}
 
-#stop-button 
-  {
-    list-style-image      : url("chrome://navigator/skin/stop.gif");
-  } 
+#stop-button {
+  list-style-image: url("chrome://navigator/skin/btn1/stop.gif");
+}
 
 #stop-button[disabled="true"],
 #stop-button[disabled="true"]:hover,
-#stop-button[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://navigator/skin/stop-disabled.gif");
-  } 
+#stop-button[disabled="true"]:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/stop-dis.gif");
+}
 
-#stop-button:hover
-  {
-    list-style-image      : url("chrome://navigator/skin/stop-hover.gif");
-  } 
+#stop-button:hover {
+  list-style-image: url("chrome://navigator/skin/btn1/stop-hov.gif");
+}
 
-#stop-button:hover:active
-  {
-    list-style-image      : url("chrome://navigator/skin/stop-clicked.gif");
-  } 
+#stop-button:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/stop-act.gif");
+}
 
-#reload-button 
-  {
-    list-style-image        : url("chrome://navigator/skin/reload.gif");
-  }
-  
+#reload-button {
+  list-style-image: url("chrome://navigator/skin/btn1/reload.gif");
+}
+
 #reload-button[disabled="true"],
 #reload-button[disabled="true"]:hover,
-#reload-button[disabled="true"]:hover:active
-  {
-   list-style-image      : url("chrome://navigator/skin/reload-disabled.gif");
-  }
+#reload-button[disabled="true"]:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/reload-dis.gif");
+}
 
-#reload-button:hover
-  {
-    list-style-image        : url("chrome://navigator/skin/reload-hover.gif");
-  }
+#reload-button:hover {
+  list-style-image: url("chrome://navigator/skin/btn1/reload-hov.gif");
+}
 
-#reload-button:hover:active
-  {
-    list-style-image        : url("chrome://navigator/skin/reload-clicked.gif");
-  }
+#reload-button:hover:active {
+  list-style-image: url("chrome://navigator/skin/btn1/reload-act.gif");
+}
 
-#print-button 
-  {
-    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-foo");
-    list-style-image    : url("chrome://global/skin/print.gif");
-    margin                : 6px 6px 0px 6px;
-  }
+#print-button {
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-1");
+  margin: 6px 6px 0px 6px;
+  list-style-image: url("chrome://communicator/skin/btn1/print.gif");
+}
 
 #print-button[disabled="true"],
-#print-button[disabled="true"]:hover,
-#print-button[disabled="true"]:hover:active,
-#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
 #print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/print-disabled.gif");
-  }
+#print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
+}
 
-#print-button > .menubutton-dual-stack > .menubutton-dual-button:hover
-  {
-    list-style-image      : url("chrome://global/skin/print-hover.gif");
-  }
+#print-button > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
+}
 
-#print-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/print-clicked.gif");
-  }
+#print-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
+}
 
-#print-button > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
-  {
-    margin-left             : 19px;
-    margin-top        : 22px;
-  }
-
+#print-button > .menubutton-dual-stack > .menubutton-dual-dropmarker-box {
+  margin-left: 19px;
+  margin-top: 22px;
+}
 
 /* Hides text below the above buttons */
-.button-toolbar-1 > .button-internal-box > .button-text-container
-  {
-    display          : none;
-  }
+.button-toolbar-1 > .button-internal-box > .button-text-container {
+  display: none;
+}
 
+/* ::::: navbar-inner - the grooved area around the urlbar ::::: */
 
-/* navbar-inner ::: the grooved area around the urlbar */
-
-#nav-bar-inner
-  {
-    -moz-binding      : url("chrome://global/skin/globalBindings.xml#nav-bar-inner");
-    margin            : 6px 0px 0px 6px;
-    min-width          : 0px;
-  }
+#nav-bar-inner {
+  -moz-binding: url("chrome://navigator/skin/navigatorBindings.xml#nav-bar-inner");
+  margin: 6px 0px 0px 6px;
+  min-width: 0px;
+}
 
 .navbar-inner-groove-left {
-  width: 6px;                                
+  width: 6px;
 }
 
 .navbar-inner-groove-left-top {
-  background: url("chrome://navigator/skin/nav-groove-left-top.gif") no-repeat;
   height: 22px;
+  background: url("chrome://navigator/skin/toolbar/nav-groove-lft-top.gif") no-repeat;
 }
 
 .navbar-inner-groove-left-mid {
-  background: url("chrome://navigator/skin/nav-groove-left-mid.gif") repeat-y;
+  background: url("chrome://navigator/skin/toolbar/nav-groove-lft-mid.gif") repeat-y;
 }
 
 .navbar-inner-groove-left-btm {
-  background: url("chrome://navigator/skin/nav-groove-left-btm.gif") no-repeat;
   height: 6px;
+  background: url("chrome://navigator/skin/toolbar/nav-groove-lft-btm.gif") no-repeat;
 }
 
-.navbar-inner-border-outer
-  {
-    border-top        : 1px solid #A0B3C7;
-    border-bottom      : 1px solid #7C92AF;
-  }
+.navbar-inner-border-outer {
+  border-top: 1px solid #A0B3C7;
+  border-bottom: 1px solid #7C92AF;
+}
 
-.navbar-inner-border-middle
-  {
-    border-top        : 1px solid #7D91AA;
-    border-bottom      : 1px solid #4E6179;
-  }
- 
-.navbar-inner-border-inner
-  {
-    border-top        : 1px solid #BBCDE3;
-    border-bottom      : 1px solid #556D8B;
-  }
+.navbar-inner-border-middle {
+  border-top: 1px solid #7D91AA;
+  border-bottom: 1px solid #4E6179;
+}
+
+.navbar-inner-border-inner {
+  border-top: 1px solid #BBCDE3;
+  border-bottom: 1px solid #556D8B;
+}
 
 .navbar-inner-groove-right {
-  width: 6px;                                
+  width: 6px;
 }
 
 .navbar-inner-groove-right-top {
-  background: url("chrome://navigator/skin/nav-groove-right-top.gif") no-repeat;
   height: 22px;
+  background: url("chrome://navigator/skin/toolbar/nav-groove-rit-top.gif") no-repeat;
 }
 
 .navbar-inner-groove-right-mid {
-  background: url("chrome://navigator/skin/nav-groove-right-mid.gif") repeat-y;
+  background: url("chrome://navigator/skin/toolbar/nav-groove-rit-mid.gif") repeat-y;
 }
 
 .navbar-inner-groove-right-btm {
-  background: url("chrome://navigator/skin/nav-groove-right-btm.gif") no-repeat;
   height: 6px;
+  background: url("chrome://navigator/skin/toolbar/nav-groove-rit-btm.gif") no-repeat;
 }
 
-/* urlbar ::: the box that contains the url textfield */
+/* ::::: urlbar - the box that contains the url textfield ::::: */
 
 #urlbar-group {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#urlbar-group");
+  -moz-binding: url("chrome://navigator/skin/navigatorBindings.xml#urlbar-group");
   margin: 3px 8px 4px 2px;
+  -moz-border-radius: 5px;
+  background-color: #ffffff;
 }
 
 .urlbar-left {
@@ -260,17 +209,17 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 }
 
 .urlbar-left-top {
-  background: url("chrome://navigator/skin/urlbar-left-top.gif") no-repeat;
   height: 4px;
+  background: url("chrome://navigator/skin/toolbar/urlbar-lft-top.gif") no-repeat;
 }
 
 .urlbar-left-mid {
-  background: url("chrome://navigator/skin/urlbar-left-mid.gif") repeat-y;
+  background: url("chrome://navigator/skin/toolbar/urlbar-lft-mid.gif") repeat-y;
 }
 
 .urlbar-left-btm {
-  background: url("chrome://navigator/skin/urlbar-left-btm.gif") no-repeat;
   min-height: 3px;
+  background: url("chrome://navigator/skin/toolbar/urlbar-lft-btm.gif") no-repeat;
 }
 
 .urlbar-border-outer {
@@ -286,112 +235,89 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 }
 
 .urlbar-right-top {
-  background: url("chrome://navigator/skin/urlbar-right-top.gif") no-repeat;
   height: 3px;
+  background: url("chrome://navigator/skin/toolbar/urlbar-rit-top.gif") no-repeat;
 }
 
 .urlbar-right-mid {
-  background: url("chrome://navigator/skin/urlbar-right-mid.gif") repeat-y;
+  background: url("chrome://navigator/skin/toolbar/urlbar-rit-mid.gif") repeat-y;
 }
 
 .urlbar-right-btm {
-  background: url("chrome://navigator/skin/urlbar-right-btm.gif") no-repeat;
   min-height: 3px;
+  background: url("chrome://navigator/skin/toolbar/urlbar-rit-btm.gif") no-repeat;
 }
 
-#page-proxy-button 
-  {
-    margin-left        : 0px;
-    margin-right      : 2px;
-    margin-top        : 0px;
-    list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
-  cursor                : grab;
-  } 
+/* ::::: more toolbar buttons ::::: */
 
+#page-proxy-button {
+  cursor: grab;
+  margin: 0px 2px 0px 0px;
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
+}
 
-/* #ubhist-keyword-popup does not exist in Mozilla, only in Netscape.  It gets overlayed in with 
- * navExtraOverlay.xul.  Ideally, this styling should only exist in Netscape, but since it is
- * in Mozilla right now, it should not be removed before we ship.  Take this out and put it in
- * commercial after shipping.  (8/24/00) - nbhatla
- */
+#ubhist {
+  margin: 1px 1px 3px 0px;
+  border: none;
+  padding: 0px;
+  width: 10px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
 
-#ubhist-keyword-popup
-  {
-    margin                : 3px 4px 8px 3px;
-    width                 : 10px; 
-    list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup.gif");
-    background-color    : transparent;
-    border          : 0px;
-  } 
-
-#ubhist-keyword-popup > .menubutton-icon-internal-box
-  {
-    border          : 0px;
-  }
-
-#ubhist-keyword-popup:hover:active
-  {
-    margin                : 3px 4px 8px 3px;
-    width                 : 10px; 
-    list-style-image      : url("chrome://navigator/skin/ubhist-keyword-popup-active.gif"); 
-  } 
-
-/*************************************/
-
-#ubhist
-  {
-    margin                : 1px 1px 3px 0px;
-    width                 : 10px; 
-    list-style-image      : url("chrome://global/skin/simple-arrow-down.gif"); 
-    border                : none;
-    padding               : 0px;
-  }
-
-#ubhist-popup > menuitem
-  {
-    max-width             : 550px !important;
-  }
-
-#action-popup 
-  {
-    list-style-image      : url("chrome://global/skin/simple-arrow-down.gif"); 
-    margin                : 0px; 
-    -moz-border-radius    : 4px;
-  }
-
-#content-frame 
-  {
-    min-width             : 0px;
-    min-height            : 0px;
-  }
-
-#statusbar-icon 
-  {
-    width                 : 100px;
-  }
+#ubhist-popup > menuitem {
+  max-width: 550px !important;
+}
 
 #go-button {
   min-width: 0px;
 }
-  
-#search-button
-  {
-    margin-right          : 4px;
-    font-size: larger;
-  }
-  
-#home-button
-  {
-    list-style-image      : url("chrome://communicator/skin/bookmarks/home.gif");
-  }
-  
-.menuitem-iconic
-  {
-    padding               : 2px;
-  }
 
-#navigator-throbber
-  {
-    -moz-user-focus       : ignore !important;
-  }
+#search-button {
+  margin-right: 4px;
+  min-width: 0px;
+  font-size: larger;
+}
 
+/* ::::: move this to content ::::: */
+
+window[chromehidden~="menubar"] .chromeclass-menubar {
+  display: none;
+}
+
+window[chromehidden~="toolbar"] .chromeclass-toolbar {
+  display: none;
+}
+
+window[chromehidden~="location"] .chromeclass-location {
+  display: none;
+}
+
+window[chromehidden~="directories"] .chromeclass-directories {
+  display: none;
+}
+
+window[chromehidden~="status"] .chromeclass-status {
+  display: none;
+}
+
+window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
+  display: none;
+}
+
+/* ::::: move this to commercial tree ::::: */
+
+#ubhist-keyword-popup {
+  margin: 3px 4px 8px 3px;
+  border: none;
+  width: 10px;
+  background-color: transparent;
+  list-style-image: url("chrome://navigator/skin/ubhist-keyword-popup.gif");
+}
+
+#ubhist-keyword-popup > .menubutton-icon-internal-box {
+  border: none;
+}
+
+#ubhist-keyword-popup:hover:active {
+  list-style-image: url("chrome://navigator/skin/ubhist-keyword-popup-active.gif");
+}

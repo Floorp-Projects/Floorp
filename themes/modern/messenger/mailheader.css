@@ -1,35 +1,82 @@
-/* 
- * These are the style attributes for the XUL display.
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
  */
-window						          { overflow: auto; }
-mailheader					        { display: block; }
-mailattachcount				      { display: none; }
 
-box[name=header-attachment] { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
-box[name=header-part1]      { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
-box[name=header-part2]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
-box[name=header-part3]      { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
-box[name=header-seamonkey]  { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
+/* ===== mailheader.css =================================================
+  == Styles for the body of a mail message.
+  ======================================================================= */
 
-headerdisplayname			      { font-weight: bold;  white-space: pre; }
-header						          { text-align: left; }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-menubar[name=attachment-menubar]  { background-color: #EFEFEF; border: 0px solid #EFEFEF; }
-menu[name=attachment-menu]        { background-color: #EFEFEF; border: 0px solid #EFEFEF; }
-
-/* 
- * For printing/HTML display...
- */
-table[name=header-part1]    { background-color: #EFEFEF; border: 0px solid #EFEFEF; border-left-width: 4px; }
-table[name=header-part2]    { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
-table[name=header-part3]    { background-color: #DEDEDE; border: 0px solid #DEDEDE; border-left-width: 4px; }
-div.headerdisplayname       { font-weight: bold;  white-space: pre; display: inline; }
-
-body {
-  background-color: white;
+window {
+  overflow: auto;
 }
 
+body {
+  background-color: #FFFFFF;
+}
 
+mailattachcount {
+  display: none;
+}
+
+menu[name="attachment-menu"] {
+  background-color: #EFEFEF;
+}
+
+/* :::: message header ::::: */
+
+header {
+  text-align: left;
+}
+
+headerdisplayname {
+  font-weight: bold;
+  white-space: pre;
+}
+
+box[name="header-attachment"],
+box[name="header-part1"],
+table[name="header-part1"] {
+  border-left: 4px solid #EFEFEF;
+  background-color: #EFEFEF;
+}
+
+box[name="header-part2"],
+box[name="header-part3"],
+box[name="header-seamonkey"],
+table[name="header-part2"],
+table[name="header-part3"] {
+  border: 4px solid #DEDEDE;
+  background-color: #DEDEDE;
+}
+
+div.headerdisplayname {
+  display: inline;
+  font-weight: bold;
+  white-space: pre;
+}
+
+/* ::::: message text ::::: */
 
 .moz-text-flowed blockquote {
   margin: inherit;
@@ -38,35 +85,46 @@ body {
 }
 
 .moz-text-plain pre {
-  font-family: inherit;
   margin: inherit;
+  font-family: inherit;
 }
-.moz-text-plain[wrap=true] {
+
+.moz-text-plain[wrap="true"] {
   white-space: -moz-pre-wrap;
 }
-.moz-text-plain[wrap=false] {
+
+.moz-text-plain[wrap="false"] {
   white-space: pre;
 }
-.moz-text-plain[wrap=flow] .moz-txt-sig {
+
+.moz-text-plain[wrap="flow"] .moz-txt-sig {
   white-space: -moz-pre-wrap;
 }
-.moz-text-plain[graphical-quote=false] blockquote {
-  padding-left: inherit;
-  border-left: inherit;
+
+.moz-text-plain[graphical-quote="false"] blockquote {
   margin: inherit;
+  border-left: inherit;
+  padding-left: inherit;
 }
-.moz-text-plain[graphical-quote=true] blockquote {
+
+.moz-text-plain[graphical-quote="true"] blockquote {
   margin: inherit;
   border-width: medium;
   border-color: gray;
 }
-.moz-text-plain[graphical-quote=true] .moz-txt-citetags {
+
+.moz-text-plain[graphical-quote="true"] .moz-txt-citetags {
   display: none;
 }
 
-.moz-txt-sig, .moz-signature {
+/* :::: signature ::::: */
+
+.moz-txt-sig,
+.moz-signature {
   color: gray;
 }
-.moz-txt-sig > a, .moz-signature > a {
-  color: 7777FF /* light blue */;
+.moz-txt-sig > a,
+.moz-signature > a {
+  color: #7777FF;
 }
+

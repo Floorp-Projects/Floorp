@@ -1,37 +1,37 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
- *   Pete Collins, Ben Goodger
+ *
+ * Contributor(s):
+ *   Pete Collins
+ *   Ben Goodger
  */
 
-/*
-   THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST HAVING YOUR
-   CHANGES REVIEWED BY cmanske@netscape.com.
-*/
+/* ==== EditorDialog.css ====================================================
+   == Styles used by all dialog boxes in the Editor application.
+   ==
+   == THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT
+   == FIRST HAVING YOUR CHANGES REVIEWED BY cmanske@netscape.com.
+   ========================================================================== */
 
-/* The defaults are WAY to big! */
-titledbox {
-  margin:         2px 5px; 4px; 5px;
-  padding-top:    2px;
-  padding-bottom: 4px;
-}
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: common styles ::::: */
 
 .MinWidth5em {
   min-width: 5em;
@@ -46,7 +46,7 @@ titledbox {
 }
 
 .big-left-margin {
-  margin-left:    10px;
+  margin-left: 10px;
 }
 
 .middle {
@@ -65,7 +65,6 @@ titledbox {
   font-size: 120%;
 }
 
-
 .narrow {
   width: 3em;
 }
@@ -75,22 +74,96 @@ titledbox {
 }
 
 .wrap {
- width: 1em;
+  width: 1em;
 }
 
-/* Use this with groove-thin in dialogs 
-   to add margins to top and bottom
-*/
-.tb-margin {
-  margin-top    : 6px;
-  margin-bottom : 6px;
+/* ::::: common buttons ::::: */
+
+#MoreFewerButton[more="0"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  min-width: 12em;
+}
+
+#MoreFewerButton[more="1"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+  min-width: 12em;
+}
+
+#PreviousButton {
+  list-style-image: url("chrome://global/skin/arrow/arrow-lft.gif");
+}
+
+#NextButton {
+  list-style-image: url("chrome://global/skin/arrow/arrow-rit.gif");
+}
+
+#PreviousButton[type="row"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+#NextButton[type="row"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+#MisspelledWord {
+  font-weight: bold;
+}
+
+/* ::::: spacers ::::: */
+
+.smallspacer {
+  width: 3px;
+  height: 3px;
+  min-width: 3px;
+  min-height: 3px;
+}
+
+.spacer {
+  width: 5px;
+  height: 5px;
+  min-width: 5px;
+  min-height: 5px;
+}
+
+.bigspacer {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  min-height: 10px;
+}
+
+/* ::::: widget adjustments ::::: */
+
+/* The defaults are WAY to big! */
+titledbox {
+  margin: 2px 5px 4px 5px;
+  padding-top: 2px;
+  padding-bottom: 4px;
+}
+
+/* temporary -- we need a simple box-based list defined in XBL */
+tree.list {
+  /* same as in menulist.css */
+  margin: 1px 5px 2px 5px;
+  border: 1px inset #B4C3D4;
+  width: 10em;
+  height: 3em;
+  /* use rows="#" in XUL to define height */
+}
+
+/* ::::: color picker button ::::: */
+
+button.color-button {
+  margin: 4px;
+  width: 32px;
+  min-width: 32px;
 }
 
 .color-well {
-  width: 20px;
-  height: 12px; 
+  margin: 4px 10px 4px 10px;
   border: 1px inset #B4C3D4;
-  margin: 4px; 10px 4px 10px;
+  width: 20px;
+  height: 12px;
 }
 
 .color-well[default="true"] {
@@ -98,212 +171,97 @@ titledbox {
   background-color: inherit;
 }
 
-button.color-button {
-  /* need to override large default min-width */
-  min-width : 32px;
-  width : 32px;
-  margin: 4px;
-}
-
-.menu-list[selected="true"] {
-  color: black;
-}
+/* ::::: color picker dialog ::::: */
 
 #ColorPickerSwatch {
-  border : 2px outset #B4C3D4;
+  margin: 0px 3px 0px 0px;
+  border: 2px outset #B4C3D4;
   width: 25px;
   height: 20px;
-  margin: 0px 3px 0px 0px;
 }
 
 #ColorPickerSwatch[default="true"] {
-  border : 2px solid transparent;
+  border: 2px solid transparent;
   background-color: inherit;
 }
 
 #LastPickedColor {
-  width: 17px;
-  height: 13px; 
-  border: 1px inset #B4C3D4;
   margin: 2px 2px 2px 8px;
-}
-
-.popup-trigger {
-  list-style-image: url(chrome://global/skin/simple-arrow-down.gif);
-}
-
-/* temporary -- we need a simple box-based list defined in XBL */
-tree.list {
   border: 1px inset #B4C3D4;
-  /* same as in menulist.css */
-  margin: 1px 5px 2px 5px;
-  width: 10em;
-  height: 3em;
-  /* use rows="#" in XUL to define height */
-}
-
-#ColorPreview {
-  border: 1px inset #B4C3D4;
-  margin-left:    10px;
-  padding-left:    5px;
-  padding-right:   5px;
-  min-width:     100px;
-  min-height:     50px;
-}
-
-#alignTypeSelect,label#alignLabel {
-  margin-left: 5px;
-}
-
-#MoreFewerButton[more="0"] {
-  list-style-image: url(chrome://global/skin/simple-arrow-down.gif);
-  /* bug 9459 - changing button text doesn't resize width.
-     This covers that problem, but we want this size anyway */
-  min-width: 12em;
-}
-
-#MoreFewerButton[more="1"] {
-  list-style-image: url(chrome://global/skin/simple-arrow-up.gif);
-  min-width: 12em;
-}
-
-#PreviousButton {
-  list-style-image: url(chrome://global/skin/arrow-left.gif);
-}
-
-#NextButton {
-  list-style-image: url(chrome://global/skin/arrow-right.gif);
-}
-
-#PreviousButton[type="row"] {
-  list-style-image: url(chrome://global/skin/arrow-up.gif);
-}
-
-#NextButton[type="row"] {
-  list-style-image: url(chrome://global/skin/arrow-down.gif);
-}
-
-#MisspelledWord {
-  font-weight: bold;
-}
-
-.right {
-  /* doesn't work yet! must use align="right" in <text> */
-  text-align:   right;
-}
-
-/* use outset shape for a button look */
-.colorpicker {
-  border: 1px outset #B4C3D4;
-  /* This should be the same as for textfield */
-  margin-left: 4px;
-  /* For a little extra space between buttons */
-  margin-bottom: 2px;
+  width: 17px;
+  height: 13px;
 }
 
 
-.colorpicker:active {
-  border: 1px inset #CCCCCC;
-}
-
-.smallspacer {
-  width:  3px;
-  height: 3px;
-  min-width:  3px;
-  min-height: 3px;
-}
-
-.spacer {
-  width:  5px;
-  height: 5px;
-  min-width:  5px;
-  min-height: 5px;
-}
-
-.bigspacer {
-  width:  10px;
-  height: 10px;
-  min-width:  10px;
-  min-height: 10px;
-}
+/* ::::: Image Properties dialog ::::: */
 
 .align-menu[data="top"] {
-	list-style-image: url("chrome://editor/skin/images/img-align-top.gif") !important;
+	list-style-image: url("chrome://editor/skin/icons/img-align-top.gif") !important;
 }
 
 .align-menu[data="center"] {
-	list-style-image: url("chrome://editor/skin/images/img-align-middle.gif") !important;
+	list-style-image: url("chrome://editor/skin/icons/img-align-mid.gif") !important;
 }
 
 .align-menu[data="bottom"] {
-	list-style-image: url("chrome://editor/skin/images/img-align-bottom.gif") !important;
+	list-style-image: url("chrome://editor/skin/icons/img-align-btm.gif") !important;
 }
 
 .align-menu[data="right"] {
-	list-style-image: url("chrome://editor/skin/images/img-align-right.gif") !important;
+	list-style-image: url("chrome://editor/skin/icons/img-align-rit.gif") !important;
 }
 
 .align-menu[data="left"] {
-	list-style-image: url("chrome://editor/skin/images/img-align-left.gif") !important;
+	list-style-image: url("chrome://editor/skin/icons/img-align-lft.gif") !important;
 }
 
-/* Don't change width/height of these without changing values in 
-  GetOriginalWidth(), EdImageProps.js
-*/    
+/* Don't change width/height of these without changing values in
+  GetOriginalWidth(), EdImageProps.js */
 #preview-image-box {
+  margin: 6px 5px 6px 5px;
   border: 1px inset #B4C3D4;
-  width      : 82px;
-  max-width  : 82px;
-  min-width  : 82px;
-  height     : 52px;
-  max-height : 52px;
-  min-height : 52px;
-  margin     : 6px 5px 6px 5px;
-  overflow   : hidden;
+  width: 82px;
+  height: 52px;
+  min-width: 82px;
+  min-height: 52px;
+  max-width: 82px;
+  max-height: 52px;
+  overflow: hidden;
 }
 
 #preview-image-holder {
-  padding : 0px;
-  margin  : 0px;
+  padding: 0px;
+  margin: 0px;
 }
 
-/* Rest are from Ben Goodger for Advanced Edit dialog 
-   These need reviewing and eliminate all but essential attributes */
-/* Have made some mods and eliminated some unnecessary portions. 
-   hope to merge most of the treecell formatting into global as some of 
-   this "property list" style treecell formatting is used by cookie/signon 
-   viewers. */
-
+/* :::::: Advanced Edit dialog ::::: */
 
 #tagLabel {
   font-weight: bold;
 }
 
-/* styles for an attribute tree-table */
-tree.AttributesTree {
-  min-width : 200px;
+.AttributesTree {
+  min-width: 200px;
   min-height: 200px;
 }
 
-tree.AttributesTree > treechildren > treeitem > treerow > treecell.value {
-    padding     : 0px 0px 0px 2px;
-    margin-left : 0px;
+.AttributesTree > treechildren > treeitem > treerow > treecell.value {
+  padding: 0px 0px 0px 2px;
 }
 
-/* Selection color for "name" column */
-treeitem.ae-selection[selected="true"] > treerow { 
-  color : inherit;
-  background-color :  #D0E7E7; 
+treeitem.ae-selection[selected="true"] > treerow {
+  background-color: #D0E7E7;
+  color: inherit;
 }
 
-.AttributesCell {
-  border: none;
-  width: 100%;
-  background-color: #FFFFFF;
-  font-weight: normal;
-  border: none;
-  outline: none;
-  margin: 0px;
-  width: 100%;
+/* ::::: Editor pref panels ::::: */
+
+#ColorPreview {
+  margin-left: 10px;
+  border: 1px inset #B4C3D4;
+  padding-left: 5px;
+  padding-right: 5px;
+  min-width: 100px;
+  min-height: 50px;
 }
 

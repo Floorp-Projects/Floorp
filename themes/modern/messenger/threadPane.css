@@ -1,123 +1,146 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
  */
 
+/* ===== threadPane.css ==============================================
+  == Styles for the thread pane in the Messenger 3-pane window.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: tree rows ::::: */
+
 .tree-thread-row.unread-true {
-	font-weight: bold;
+  font-weight: bold;
 }
 
-.tree-thread-row { min-height: 17px; }
-.prioritycol-highest
-{
-	color:red;
+.tree-thread-row {
+  min-height: 14px;
 }
 
-.prioritycol-high
-{
-	color: rgb(128, 0, 0);
+/* ::::: priority colors ::::: */
+
+.prioritycol-highest {
+  color: red;
 }
 
-.prioritycol-lowest
-{
-	color: rgb(170, 170, 170);
+.prioritycol-high {
+  color: rgb(128, 0, 0);
 }
 
-.prioritycol-low
-{
-	color: rgb(85, 85, 85);
+.prioritycol-lowest {
+  color: rgb(170, 170, 170);
 }
+
+.prioritycol-low {
+  color: rgb(85, 85, 85);
+}
+
+/* ::::: message icons ::::: */
 
 .tree-cell-threadpane-icon {
-  list-style-image: url("chrome://messenger/skin/message-mail.gif");
   min-height: 14px;
+  list-style-image: url("chrome://messenger/skin/icons/message-mail.gif");
 }
 
 .tree-cell-threadpane-icon.status-new {
-  list-style-image: url("chrome://messenger/skin/message-mail-new.gif");
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-new.gif");
 }
 
 .tree-cell-threadpane-icon.message-type-news {
-  list-style-image: url("chrome://messenger/skin/message-news.gif");
+  list-style-image: url("chrome://messenger/skin/icons/message-news.gif");
 }
 
 .tree-cell-threadpane-icon.message-type-news.status-new {
-  list-style-image: url("chrome://messenger/skin/message-news-new.gif");
+  list-style-image: url("chrome://messenger/skin/icons/message-news-new.gif");
 }
 
 .tree-cell-threadpane-icon.message-type-mail.has-attachment-true {
-  list-style-image: url("chrome://messenger/skin/message-mail-attach.gif");
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
 }
 
 .tree-cell-threadpane-icon.is-imap-deleted-true {
-  list-style-image: url("chrome://messenger/skin/message-mail-imapdelete.gif");
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.gif");
 }
 
+/* ::::: message column icons ::::: */
+
+/* ..... thread column ..... */
+
+.threadColumnHeader[currentView="threaded"] {
+  list-style-image: url("chrome://messenger/skin/icons/threadcol-threaded.gif");
+}
+
+.threadColumnHeader[currentView="unthreaded"] {
+  list-style-image: url("chrome://messenger/skin/icons/threadcol-unthreaded.gif");
+}
+
+/* message row icons */
+
+.threadcol-thread {
+  list-style-image: url("chrome://messenger/skin/icons/thread-closed.gif");
+}
+
+.threadcol-threadWithUnread {
+  list-style-image: url("chrome://messenger/skin/icons/thread-new-closed.gif");
+}
+
+treeitem[open="true"] > treerow > .threadcol-thread {
+  list-style-image: url("chrome://messenger/skin/icons/thread-open.gif");
+}
+
+treeitem[open="true"] > treerow > .threadcol-threadWithUnread {
+  list-style-image: url("chrome://messenger/skin/icons/thread-new-open.gif");
+}
+
+/* ..... read column ..... */
+
+.readColumnHeader {
+  list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
+}
+
+/* message row icons */
+
 .unreadcol-false {
-  list-style-image: url("chrome://messenger/skin/readmail.gif");
-  min-height: 14px;
+  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
 }
 
 .unreadcol-true {
-  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
 }
 
+/* ..... flag column ..... */
+
+.flagColumnHeader {
+  list-style-image: url("chrome://messenger/skin/icons/flagcol-flagged.gif");
+}
+
+/* message row icons */
+
 .flagcol-unflagged {
-  list-style-image: url("chrome://messenger/skin/readmail.gif");
-  min-height: 14px;
+  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
 }
 
 .flagcol-flagged {
-  list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
+  list-style-image: url("chrome://messenger/skin/icons/flagcol-flagged.gif");
 }
 
-treeitem > treerow > .threadcol-thread{
-  list-style-image: url("chrome://messenger/skin/thread-closed.gif");
-}
-
-treeitem[open="true"] > treerow > .threadcol-thread{
-  list-style-image: url("chrome://messenger/skin/thread-open.gif");
-}
-
-treeitem > treerow > .threadcol-threadWithUnread{
-  list-style-image: url("chrome://messenger/skin/thread-new-closed.gif");
-}
-
-treeitem[open="true"] > treerow > .threadcol-threadWithUnread{
-  list-style-image: url("chrome://messenger/skin/thread-new-open.gif");
-}
-
-treecell.threadColumnHeader[currentView="threaded"] {
-  list-style-image: url("chrome://messenger/skin/threadcol.gif");
-}
-
-treecell.threadColumnHeader[currentView="unthreaded"] {
-  list-style-image: url("chrome://messenger/skin/unthreadcol.gif");
-}
-
-treecell.readColumnHeader {
-  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
-}
-
-treecell.flagColumnHeader {
-  list-style-image: url("chrome://messenger/skin/flaggedmail.gif");
-}
-
-treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
-  visibility:hidden;
- }    

@@ -1,5 +1,4 @@
-/* -*- Mode: C; c-basic-offset: 2 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -10,77 +9,65 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
  */
 
-/*
+/* ===== directory.css ==================================================
+  == Styles specific to the directory listing window.
+  ======================================================================= */
 
-  Style rules specific to the directory listing window.
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-*/
-
-/* Hide twisty for files */
-.treecell-indent[type="FILE"] > .tree-cell-twisty 
-  {
-    list-style-image      : none;
-  }
-
-.treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file-icon.gif");
-  }  
-  
-treeitem[container="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file-folder-closed.gif");
-  }
-
-treeitem[container="true"][open="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file-folder-open.gif");
-  }
-  
-  
-/* Show an animated icon when a directory/symlink is loading */
-treeitem[type="SYMBOLIC-LINK"][loading="true"] > treerow > .treecell-filename > .tree-cell-twisty,
-treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .tree-cell-twisty
-  {
-    list-style-image      : url("chrome://global/skin/loading.gif");
-  }
-
-/* Italicize a symbolic link and make it look like a link (it can be a dir or link) */
-.treecell-filename[type="SYMBOLIC-LINK"] 
-  {
-    color                 : inherit;
-    text-decoration       : inherit;
-    font-style            : italic;
-  }
-
-treerow
-  {
-    min-height            : 19px;
-  }
-
-/**
- * This fixes a bug. As you scroll down in a tree the computed column width
- * can change. That would make the columns shift durning scrolling.
- * So we give them inital preferred widths so they aren't computed.
- */
-#FilenameColumn {
-  width: 100px;
+.treecell-filename {
+  list-style-image: url("chrome://communicator/skin/directory/file-icon.gif");
 }
 
+treeitem[container="true"] > treerow > .treecell-filename {
+  list-style-image: url("chrome://communicator/skin/directory/file-folder-closed.gif");
+}
+
+treeitem[container="true"][open="true"] > treerow > .treecell-filename {
+  list-style-image: url("chrome://communicator/skin/directory/file-folder-open.gif");
+}
+
+/* Show an animated icon when a directory/symlink is loading */
+treeitem[type="SYMBOLIC-LINK"][loading="true"] > treerow
+    > .treecell-filename > .tree-cell-twisty,
+treeitem[type="DIRECTORY"][loading="true"] > treerow
+    > treecell > .tree-cell-twisty
+{
+  list-style-image: url("chrome://communicator/skin/icons/loading.gif");
+}
+
+/* Italicize a symbolic link and make it look like a link (it can be a dir or link) */
+.treecell-filename[type="SYMBOLIC-LINK"] {
+  color: inherit;
+  font-style: italic;
+  text-decoration: inherit;
+}
+
+.treecell-indent[type="FILE"] > .tree-cell-twisty {
+  list-style-image: none;
+}
+
+/* ::::: column/row preferred sizes ::::: */
+
+#FilenameColumn,
+#LastModColumn,
 #ContentLengthColumn {
   width: 100px;
 }
 
-#LastModColumn {
-  width: 100px;
+treerow {
+  min-height: 19px;
 }
+

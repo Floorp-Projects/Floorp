@@ -1,10 +1,36 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
 
-/******** Outliner widget **********/
+/* ===== outliner.css ===================================================
+  == Styles used by the XUL outliner element.
+  ======================================================================= */
 
-/** basic outliner ****************************************************
- *  basic outliner widget for use in main windows where no decoration
- *  is required.
- **/
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: basic outliner ::::::::::
+   :: basic outliner widget for use in main windows where no decoration
+   :: is required.
+   ::::: */
 
 outliner {
   border: none;
@@ -16,127 +42,93 @@ outliner {
 outlinerbody {
   background-color: white;
   color: black;
-  -moz-user-select: none;
 }
 
-outlinerbody:-moz-outliner-row
-{
-  height: 17px;
-  border: 1px solid transparent;
+:-moz-outliner-row {
+  border-right: 1px solid transparent;
+  border-left: 1px solid transparent;
+  height: 19px;
 }
 
-outlinerbody:-moz-outliner-row(current)
-{
-  border: 1px #768AA0 dotted;
+:-moz-outliner-cell {
+
 }
 
-outlinerbody:-moz-outliner-row(selected)
-{
-  background-color:  #CCCCCC;
-}
-
-outlinerbody:-moz-outliner-row(selected,focus)
-{
-  background-color:  #486380;
-}
-
-outlinerbody:-moz-outliner-cell
-{
-  border-top: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-  padding: 0px 0px 1px 1px;
-}
-
-outlinerbody:-moz-outliner-cell-text
-{
+:-moz-outliner-cell-text {
   color: inherit;
-  padding-left: 2px;
-  padding-right: 2px;
 }
 
-outlinerbody:-moz-outliner-cell-text(selected)
-{
-  color: black;  
-}
-
-outlinerbody:-moz-outliner-cell-text(selected,focus)
-{
-  color: white;  
-}
-
-outlinercol
-{ 
-  border-left: 1px solid #EDEDED !important;
+.outlinercell-header,
+.outlinercell-inset-header,
+.outlinercell-header-image {
   border-top: 1px solid #EDEDED !important;
   border-right: 1px solid #6E7070 !important;
   border-bottom: 1px solid #6E7070 !important;
+  border-left: 1px solid #EDEDED !important;
   padding: 0px;
-  background-color: #C2D0D0; 
+  background-color: #C2D0D0;
   color: #000000;
 }
 
-outlinerbody:-moz-outliner-line
-{
-  border: 1px dotted grey;
-}
-
-outlinerbody:-moz-outliner-line(selected)
-{
-  border: 1px dotted black;
-}
-
-.outlinercol-box,
-.outlinercol-image-box {
-  border-left: 1px solid #C2D0D0;
+.outlinercell-header-box,
+.outlinercell-header-image-box {
   border-top: 1px solid #C2D0D0;
   border-right: 1px solid #A4ACAC;
   border-bottom: 1px solid #A4ACAC;
+  border-left: 1px solid #C2D0D0;
   vertical-align: middle;
-}  
+}
 
-.outlinercol-box {
+.outlinercell-header-box {
   padding: 0px 4px 0px 4px;
 }
 
-.outlinercol-image-box {
+.outlinercell-header-image-box {
   padding: 0px 1px 0px 1px;
 }
-  
-outlinercol:hover:active
+
+.outlinercell-header:hover:active,
+.outlinercell-header-image:hover:active,
+.outlinercell-inset-header:hover:active
 {
   border: 1px solid #A4ACAC !important;
 }
 
-outlinercol:hover:active > .outlinercol-box,
-outlinercol:hover:active > .outlinercol-image-box
+.outlinercell-header:hover:active > .outlinercell-header-box,
+.outlinercell-inset-header:hover:active > .outlinercell-header-box,
+.outlinercell-header-image:hover:active > .outlinercell-header-image-box
 {
   border-top: 1px solid transparent;
   border-right: none;
   border-bottom: none;
   border-left: 1px solid transparent;
 }
-  
-outlinercol:hover:active > .outlinercol-box,
-outlinercol:hover:active > .outlinercol-image-box
+
+.outlinercell-header:hover:active > .outlinercell-header-box,
+.outlinercell-inset-header:hover:active > .outlinercell-header-box
 {
   padding: 1px 4px 0px 5px;
 }
 
+.outlinercell-header-image:hover:active > .outlinercell-header-image-box
+{
+  padding: 1px 1px 0px 2px;
+}
+
 /* outliner header with sort direction indicators */
 
-.outlinercol-sortdirection {
+.outliner-header-sortdirection
+{
   list-style-image: none;
 }
 
-.sortDirectionIndicator[sortDirection="ascending"] > .outlinercol-box > .outlinercol-sortdirection {
+.sortDirectionIndicator[sortDirection="ascending"] > .outlinercell-header-box > .outliner-header-sortdirection
+{
   list-style-image: url("chrome://global/skin/sortAscending.gif");
 }
 
-.sortDirectionIndicator[sortDirection="descending"] > .outlinercol-box > .outlinercol-sortdirection {
+.sortDirectionIndicator[sortDirection="descending"] > .outlinercell-header-box > .outliner-header-sortdirection
+{
   list-style-image: url("chrome://global/skin/sortDescending.gif");
 }
 
-.outliner-colpicker-icon
-{
-  list-style-image       : url("chrome://global/skin/columnselect.gif");
-}

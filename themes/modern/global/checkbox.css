@@ -1,81 +1,108 @@
-/* stylesheet for XUL <checkbox> element */
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
 
-/* default checkbox for dialogs */
+/* ===== checkbox.css ===================================================
+  == Styles used by the XUL checkbox element.
+  ======================================================================= */
 
-/* outer checkbox frame */
-  checkbox 
-    {
-      border        : 2px solid transparent;
-      margin			  : 0px 2px 0px 2px;
-      padding-left  : 1px;
-      padding-right : 1px;
-    }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-  checkbox > .internal-box
-    {
-      -moz-user-focus: none;
-    }   
+/* ::::: checkbox ::::: */
 
-/* checkmark outer frame */
-  checkbox > .internal-box > .checkmark-box 
-    {
-	  margin: 3px 2px 3px 3px;
-    }
+checkbox {
+  margin: 0px 2px;
+  border: 2px solid transparent;
+}
 
-/* checkmark inner frame */
-  checkbox > .internal-box > .checkmark-box > .checkbox-check 
-    {
-      list-style-image: url(chrome://global/skin/check-cb.gif);
-      
-    }
-  
-  checkbox[checked="true"] > .internal-box > .checkmark-box > .checkbox-check 
-    {
-      list-style-image: url(chrome://global/skin/check-cb-check.gif);
-    }
-    
-  checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
-  checkbox[checked="true"][disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check
-    {
-      list-style-image: url(chrome://global/skin/check-cb-check-disabled.gif);
-    }  
+/* ..... focused state ..... */
 
-  checkbox:hover:active > .internal-box > .checkmark-box > .checkbox-check 
-    {
-      list-style-image: url(chrome://global/skin/check-cb-pressed.gif);  
-    }
-  
-  checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
-  checkbox[disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check
-    {
-  	  list-style-image: url(chrome://global/skin/check-cb-disabled.gif);  
-    }
+checkbox:focus {
+  border-color: #96A7BD;
+  -moz-border-radius: 4px 5px 4px 5px;
+}
 
-  checkbox[checked="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check 
-    {
-      list-style-image: url(chrome://global/skin/check-cb-check-pressed.gif);
-    }
+/* ..... disabled state ..... */
 
-  checkbox > .internal-box > .checkbox-icon 
-    {
-      list-style-image: inherit;
-    }
-    
-/* checkmark label/icon frame */
-  checkbox[value] > .internal-box > html
-    {
-      margin: 0px 0px 2px 0px;
-      padding: 1px;
-    }
+checkbox[disabled="true"][value] > .internal-box > .checkbox-label {
+  color: #85959E;
+}
 
-  checkbox[disabled="true"][value] > .internal-box > html,
-  checkbox[disabled="true"][value]:hover:active > .internal-box > html
-    {
-      color: #999999;
-    }
-    
-  checkbox:focus
-    {
-      border-color        : #8C9EB5;
-      -moz-border-radius  : 4px 5px 4px 5px;
-    }
+/* ..... internal box ..... */
+
+checkbox > .internal-box {
+  -moz-user-focus: none;
+}
+
+checkbox > .internal-box > .checkmark-box {
+  margin: 3px;
+  list-style-image: none;
+}
+
+/* ::::: icon and label ::::: */
+
+checkbox > .internal-box > .checkbox-icon {
+  list-style-image: inherit;
+}
+
+checkbox[value] > .internal-box > .checkbox-label {
+  margin: 0px;
+  padding: 2px;
+}
+
+/* ::::: checkmark image ::::: */
+
+checkbox > .internal-box > .checkmark-box > .checkbox-check {
+  list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
+}
+
+checkbox:hover:active > .internal-box > .checkmark-box > .checkbox-check {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-act.gif");
+}
+
+checkbox[disabled="true"] > .internal-box > .checkmark-box
+    > .checkbox-check,
+checkbox[disabled="true"]:hover:active > .internal-box > .checkmark-box
+    > .checkbox-check
+{
+  list-style-image: url("chrome://global/skin/checkbox/cbox-dis.gif");
+}
+
+/* ..... checked state ..... */
+
+checkbox[checked="true"] > .internal-box > .checkmark-box > .checkbox-check {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
+checkbox[checked="true"]:hover:active > .internal-box > .checkmark-box
+    > .checkbox-check
+{
+  list-style-image: url("chrome://global/skin/checkbox/cbox-act-check.gif");
+}
+
+checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box
+    > .checkbox-check,
+checkbox[checked="true"][disabled="true"]:hover:active > .internal-box
+    > .checkmark-box > .checkbox-check
+{
+  list-style-image: url("chrome://global/skin/checkbox/cbox-dis-check.gif");
+}

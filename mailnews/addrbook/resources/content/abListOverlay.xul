@@ -63,10 +63,9 @@ Rights Reserved.
 	<spring style="height:0.1em"/>
 	<box orient="horizontal"  flex="100%">
 		<box orient="vertical" flex="80%">
-			<tree id="addressListTree"		
+			<tree id="addressListTree" class="inset"
 				  rows="8"
-				  onclick="awClickEmptySpace(event.target, true)"
-				  style="border:solid black 1px">
+				  onclick="awClickEmptySpace(event.target, true)">
 
 				<treecolgroup>
 				<treecol flex="1"/>

@@ -1,355 +1,396 @@
-/********************************/
-/* nine slice menulist - This is the default style used for all menulists.
- * This style is fully scalable in 2 dimensions.  It supports menulists in
- * both active and disabled states, which includes 3 sets of sliced images.
- ********************************/
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
 
-  menulist {
-    -moz-binding		  : url(chrome://global/skin/globalBindings.xml#nine-slice-menulist);
-    margin			      : 0px 1px 0px 1px;
-    border            : 3px solid transparent;
-    padding           : 0px;
-    min-height        : 19px;
-    font              : message-box;
-  }
+/* ===== menulist.css ===================================================
+  == Styles used by the XUL menulist element.
+  ======================================================================= */
 
-  .menulist-text-mid {
-    color             : #000000;
-    padding-right     : 2px;
-  }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-  .menulist-icon-mid {
-    padding-right     : 2px;
-  }
+/* :::::nine slice menulist ::::::::::
+   :: This is the default style used for all menulists.
+   :: This style is fully scalable in 2 dimensions.  It supports menulists in
+   :: both active and disabled states, which includes 3 sets of sliced images.
+   ::::: */
 
-  .menulist-dropmarker {
-    list-style-image  : url("chrome://global/skin/menulist-arrow.gif");
-    width				      : 9px;
-    height			      : 6px;
-  }
+menulist {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#nine-slice-menulist");
+  margin: 0px 2px;
+  border: 2px solid transparent;
+  padding: 0px;
+  min-height: 19px;
+  color: #000000;
+  font: message-box;
+}
 
-  /* .......... focused state .......... */
+.menulist-text-mid {
+  padding-right: 2px;
+}
 
-  menulist:focus {
-    border-color        : #8C9EB5;
-    -moz-border-radius  : 10px 7px 11px 10px;
-  }
+.menulist-icon-mid {
+  padding-right: 2px;
+}
 
-  /* .......... normal state .......... */
+.menulist-dropmarker {
+  width: 9px;
+  height: 6px;
+  list-style-image: url("chrome://global/skin/menulist/mlist-arrow.gif");
+}
 
-  .menulist-box-left {
-    width           : 8px;
-  }
-    
-  .menulist-left-top {
-    background			: url("chrome://global/skin/menulist-left-top.gif") no-repeat;
-    height          : 10px;
-  }
+/* ..... focused state ..... */
 
-  .menulist-left-mid {
-    background			: url("chrome://global/skin/menulist-left-mid.gif") repeat-y;
-  }
+menulist:focus {
+  border-color: #96A7BD;
+  -moz-border-radius: 6px 5px 8px 6px;
+}
 
-  .menulist-left-btm {
-    background			  : url("chrome://global/skin/menulist-left-btm.gif") no-repeat;
-    height            : 7px;
-  }
+menulist:focus > .menulist-box-left,
+menulist:focus > .menulist-stack-right {
+  background-color: #96A7BD;
+}
 
-  .menulist-box-mid {
-    background-color  : #A5BABD;
-  }
-  
-  .menulist-mid-top {
-  	background			: url("chrome://global/skin/menulist-mid-top.gif") repeat-x;
-  	height          : 3px;
-    vertical-align  : top;
-  }
+/* ..... normal state ..... */
 
-  .menulist-mid-mid {
-  	background			  : url("chrome://global/skin/menulist-mid-mid.gif") repeat-x;
-  }
+.menulist-box-left {
+  width: 8px;
+}
 
-  .menulist-mid-btm {
-    background			  : url("chrome://global/skin/menulist-mid-btm.gif") repeat-x;
-    height            : 4px;
-    vertical-align    : bottom;
-  }
+.menulist-left-top {
+  height: 10px;
+  background: url("chrome://global/skin/menulist/mlist-lft-top.gif") no-repeat;
+}
 
-  .menulist-text-box {
-    vertical-align    : middle;
-  	text-align        : left;
-    padding           : 1px 0px 2px 0px;
-  }
+.menulist-left-mid {
+  background: url("chrome://global/skin/menulist/mlist-lft-mid.gif") repeat-y;
+}
 
-  .menulist-box-right {
-    width           : 22px;
-  }
-  
-  .menulist-right-mid {
-  	background			: url("chrome://global/skin/menulist-right-mid.gif") repeat-y;
-  }
+.menulist-left-btm {
+  height: 7px;
+  background: url("chrome://global/skin/menulist/mlist-lft-btm.gif") no-repeat;
+}
 
-  .menulist-right-mid2 {
-  	background			: url("chrome://global/skin/menulist-right-top.gif") no-repeat;
-    padding-left    : 3px;
-    padding-right   : 2px;
-    padding-top     : 6px;
-    text-align      : center;
-    vertical-align  : middle;
-  }
+.menulist-box-mid {
+  background-color: #A5BABD;
+}
 
-  .menulist-right-btm {
-    background			  : url("chrome://global/skin/menulist-right-btm.gif") no-repeat;
-    height            : 7px;
-  }
+.menulist-mid-top {
+  height: 3px;
+  background: url("chrome://global/skin/menulist/mlist-mid-top.gif") repeat-x;
+  vertical-align: top;
+}
 
-  /* .......... active state .......... */
+.menulist-mid-mid {
+  background: url("chrome://global/skin/menulist/mlist-mid-mid.gif") repeat-x;
+}
 
-  menulist:hover:active > .menulist-box-left > .menulist-left-top,
-  menulist[open="true"] > .menulist-box-left > .menulist-left-top {
-    background-image   : url("chrome://global/skin/menulist-active-left-top.gif");
-  }
+.menulist-mid-btm {
+  height: 4px;
+  background: url("chrome://global/skin/menulist/mlist-mid-btm.gif") repeat-x;
+  vertical-align: bottom;
+}
 
-  menulist:hover:active > .menulist-box-left > .menulist-left-mid,
-  menulist[open="true"] > .menulist-box-left > .menulist-left-mid {
-    background-image   : url("chrome://global/skin/menulist-active-left-mid.gif");
-  }
+.menulist-text-box {
+  padding: 2px 0px 3px 0px;
+  text-align: left;
+  vertical-align: middle;
+}
 
-  menulist:hover:active > .menulist-box-left > .menulist-left-btm,
-  menulist[open="true"] > .menulist-box-left > .menulist-left-btm {
-    background-image   : url("chrome://global/skin/menulist-active-left-btm.gif");
-  }
+.menulist-stack-right {
+  width: 22px;
+}
 
-  menulist:hover:active > .menulist-stack > .menulist-box-mid,
-  menulist[open="true"] > .menulist-stack > .menulist-box-mid {
-    background-color  : #84969C;
-  }
-  
-  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-top,
-  menulist[open="true"] > .menulist-stack > .menulist-box-mid > .menulist-mid-top {
-  	background-image  : url("chrome://global/skin/menulist-active-mid-top.gif");
-  }
+.menulist-right-top {
+  height: 10px;
+  background: url("chrome://global/skin/menulist/mlist-rit-top.gif") no-repeat;
+}
 
-  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-mid,
-  menulist[open="true"] > .menulist-stack > .menulist-box-mid > .menulist-mid-mid {
-  	background-image  : url("chrome://global/skin/menulist-active-mid-mid.gif");
-  }
+.menulist-right-mid {
+  background: url("chrome://global/skin/menulist/mlist-rit-mid.gif") repeat-x;
+}
 
-  menulist:hover:active > .menulist-stack > .menulist-text-box > .menulist-text-mid,
-  menulist[open="true"] > .menulist-stack > .menulist-text-box > .menulist-text-mid {
-    color: #ffffff;
-  }
+.menulist-right-btm {
+  height: 7px;
+  background: url("chrome://global/skin/menulist/mlist-rit-btm.gif") no-repeat;
+}
 
-  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-btm,
-  menulist[open="true"] > .menulist-stack > .menulist-box-mid > .menulist-mid-btm {
-    background-image  : url("chrome://global/skin/menulist-active-mid-btm.gif");
-  }
+.menulist-dropmarker-box {
+  padding-left: 2px;
+  text-align: center;
+}
 
-  menulist:hover:active > .menulist-box-right > .menulist-right-mid,
-  menulist[open="true"] > .menulist-box-right > .menulist-right-mid {
-  	background-image  : url("chrome://global/skin/menulist-active-right-mid.gif");
-  }
+/* ..... active state ..... */
 
-  menulist:hover:active > .menulist-box-right > .menulist-right-mid > .menulist-right-mid2,
-  menulist[open="true"] > .menulist-box-right > .menulist-right-mid > .menulist-right-mid2 {
-  	background-image  : url("chrome://global/skin/menulist-active-right-top.gif");
-  }
+menulist:hover:active,
+menulist[open="true"] {
+  color: #ffffff;
+}
 
-  menulist:hover:active > .menulist-box-right > .menulist-right-btm,
-  menulist[open="true"] > .menulist-box-right > .menulist-right-btm {
-    background-image  : url("chrome://global/skin/menulist-active-right-btm.gif");
-  }
+menulist:hover:active > .menulist-box-left > .menulist-left-top,
+menulist[open="true"] > .menulist-box-left > .menulist-left-top
+{
+  background-image: url("chrome://global/skin/menulist/mlist-act-lft-top.gif");
+}
 
-  /* .......... disabled state .......... */
+menulist:hover:active > .menulist-box-left > .menulist-left-mid,
+menulist[open="true"] > .menulist-box-left > .menulist-left-mid
+{
+  background-image: url("chrome://global/skin/menulist/mlist-act-lft-mid.gif");
+}
 
-  menulist:hover:active > .menulist-box-left > .menulist-left-top[disabled="true"],
-  .menulist-left-top[disabled="true"] {
-    background-image   : url("chrome://global/skin/menulist-dis-left-top.gif");
-  }
+menulist:hover:active > .menulist-box-left > .menulist-left-btm,
+menulist[open="true"] > .menulist-box-left > .menulist-left-btm
+{
+  background-image: url("chrome://global/skin/menulist/mlist-act-lft-btm.gif");
+}
 
-  menulist:hover:active > .menulist-box-left > .menulist-left-mid[disabled="true"],
-  .menulist-left-mid[disabled="true"] {
-    background-image   : url("chrome://global/skin/menulist-dis-left-mid.gif");
-  }
+menulist:hover:active > .menulist-stack-mid > .menulist-box-mid,
+menulist[open="true"] > .menulist-stack-mid > .menulist-box-mid
+{
+  background-color: #84969C;
+}
 
-  menulist:hover:active > .menulist-box-left > .menulist-left-btm[disabled="true"],
-  .menulist-left-btm[disabled="true"] {
-    background-image   : url("chrome://global/skin/menulist-dis-left-btm.gif");
-  }
+menulist:hover:active > .menulist-stack-mid > .menulist-box-mid
+    > .menulist-mid-top,
+menulist[open="true"] > .menulist-stack-mid > .menulist-box-mid
+    > .menulist-mid-top
+{
+  background-image: url("chrome://global/skin/menulist/mlist-act-mid-top.gif");
+}
 
-  menulist:hover:active > .menulist-stack > .menulist-text-box > .menulist-text-mid[disabled="true"],
-  .menulist-text-mid[disabled="true"] {
-    color              : #7F8997;
-  }
+menulist:hover:active > .menulist-stack-mid > .menulist-box-mid
+    > .menulist-mid-mid,
+menulist[open="true"] > .menulist-stack-mid > .menulist-box-mid
+    > .menulist-mid-mid
+{
+  background-image: url("chrome://global/skin/menulist/mlist-act-mid-mid.gif");
+}
 
-  menulist:hover:active > .menulist-stack > .menulist-box-mid[disabled="true"],
-  .menulist-box-mid[disabled="true"] {
-    background-color    : #ADBEC6;
-  }
+menulist:hover:active > .menulist-stack-mid > .menulist-box-mid
+    > .menulist-mid-btm,
+menulist[open="true"] > .menulist-stack-mid > .menulist-box-mid
+    > .menulist-mid-btm
+{
+  background-image: url("chrome://global/skin/menulist/mlist-act-mid-btm.gif");
+}
 
-  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-top[disabled="true"],
-  .menulist-mid-top[disabled="true"] {
-  	background-image  : url("chrome://global/skin/menulist-dis-mid-top.gif");
-  }
+menulist:hover:active > .menulist-stack-right > .menulist-box-right
+    > .menulist-right-top,
+menulist[open="true"] > .menulist-stack-right > .menulist-box-right
+    > .menulist-right-top
+{
+  background-image: url("chrome://global/skin/menulist/mlist-act-rit-top.gif");
+}
 
-  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-mid[disabled="true"],
-  .menulist-mid-mid[disabled="true"] {
-  	background-image  : url("chrome://global/skin/menulist-dis-mid-mid.gif");
-  }
+menulist:hover:active > .menulist-stack-right > .menulist-box-right
+    > .menulist-right-mid,
+menulist[open="true"] > .menulist-stack-right > .menulist-box-right
+    > .menulist-right-mid
+{
+  background-image: url("chrome://global/skin/menulist/mlist-act-rit-mid.gif");
+}
 
-  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-btm[disabled="true"],
-  .menulist-mid-btm[disabled="true"] {
-    background-image  : url("chrome://global/skin/menulist-dis-mid-btm.gif");
-  }
+menulist:hover:active > .menulist-stack-right > .menulist-box-right
+    > .menulist-right-btm,
+menulist[open="true"] > .menulist-stack-right > .menulist-box-right
+    > .menulist-right-btm
+{
+  background-image: url("chrome://global/skin/menulist/mlist-act-rit-btm.gif");
+}
 
-  menulist:hover:active > .menulist-box-right > .menulist-right-mid[disabled="true"],
-  .menulist-right-mid[disabled="true"] {
-  	background-image  : url("chrome://global/skin/menulist-dis-right-mid.gif");
-  }
+/* ..... disabled state ..... */
 
-  menulist:hover:active > .menulist-box-right > .menulist-right-mid > .menulist-right-mid2[disabled="true"],
-  .menulist-right-mid2[disabled="true"] {
-  	background-image  : url("chrome://global/skin/menulist-dis-right-top.gif");
-  }
+menulist[disabled="true"],
+menulist[disabled="true"]:hover:active {
+  color: #7F8997;
+}
 
-  menulist:hover:active > .menulist-box-right > .menulist-right-btm[disabled="true"],
-  .menulist-right-btm[disabled="true"] {
-    background-image  : url("chrome://global/skin/menulist-dis-right-btm.gif");
-  }
+.menulist-left-top[disabled="true"],
+menulist:hover:active > .menulist-box-left
+    > .menulist-left-top[disabled="true"]
+{
+  background-image: url("chrome://global/skin/menulist/mlist-dis-lft-top.gif");
+}
 
-  .menulist-dropmarker[disabled="true"] {
-    list-style-image  : url("chrome://global/skin/menulist-dis-arrow.gif");
-  }
+.menulist-left-mid[disabled="true"],
+menulist:hover:active > .menulist-box-left
+    > .menulist-left-mid[disabled="true"]
+{
+  background-image: url("chrome://global/skin/menulist/mlist-dis-lft-mid.gif");
+}
 
-/** rules for EDITABLE menulists (aka 'comboboxes'). 
- **/
+.menulist-left-btm[disabled="true"],
+menulist:hover:active > .menulist-box-left
+    > .menulist-left-btm[disabled="true"]
+{
+  background-image: url("chrome://global/skin/menulist/mlist-dis-lft-btm.gif");
+}
 
-/* outer frame */
-  menulist[editable="true"] 
-    {
-      padding             : 0px;
-    }
+.menulist-box-mid[disabled="true"],
+menulist:hover:active > .menulist-stack-mid > .menulist-box-mid[disabled="true"]
+{
+  background-color: #ADBEC6;
+}
 
-/* icon display frame */
-  menulist[editable="true"] > .menu-icon 
-    {
-      list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
-      background-color    : white;
-      padding             : 1px;
-      border-left         : 1px inset #CCCCCC;
-      border-top          : 1px inset #CCCCCC;
-      border-right        : none;
-      border-bottom       : 1px inset #CCCCCC;
-    }
+.menulist-mid-top[disabled="true"],
+menulist:hover:active > .menulist-stack-mid > .menulist-box-mid
+    > .menulist-mid-top[disabled="true"]
+{
+  background-image: url("chrome://global/skin/menulist/mlist-dis-mid-top.gif");
+}
 
-/* text display frame */    
-  menulist[editable="true"] > .menu-text 
-    {
-      border-left         : none;
-      border-top          : 1px inset #CCCCCC;
-      border-right        : 1px inset #CCCCCC;
-      border-bottom       : 1px inset #CCCCCC;
-      margin              : 0px 2px 0px 0px;
-    }
+.menulist-mid-mid[disabled="true"],
+menulist:hover:active > .menulist-stack-mid > .menulist-box-mid
+    > .menulist-mid-mid[disabled="true"]
+{
+  background-image: url("chrome://global/skin/menulist/mlist-dis-mid-mid.gif");
+}
 
-/* drop marker display frame */
-  menulist[editable="true"] > .menu-dropmarker 
-	{
-      border              : 1px outset #CCCCCC;
-	}
+.menulist-mid-btm[disabled="true"],
+menulist:hover:active > .menulist-stack-mid > .menulist-box-mid
+    > .menulist-mid-btm[disabled="true"]
+{
+  background-image: url("chrome://global/skin/menulist/mlist-dis-mid-btm.gif");
+}
 
-  menulist[editable="true"][open="true"] > .menu-dropmarker 
-    {
-      border              : 1px inset #CCCCCC;
-    }
+.menulist-right-top[disabled="true"],
+menulist:hover:active > .menulist-stack-right > .menulist-box-right
+    > .menulist-right-top[disabled="true"]
+{
+  background-image: url("chrome://global/skin/menulist/mlist-dis-rit-top.gif");
+}
 
-/* rules for popups and separators associated with menulists */
-  menulist > menupopup {
-    border              : 1px solid #313948;
-    padding             : 0px;
-    min-width           : 0px;
-    background-color	  : #C2D0D0;
-  }
-    
-  menulist > menupopup > .popup-internal-box
-    {
-      border: 0px;
-    }
-  
-  menulist > menupopup > menuseparator 
-    {
-      border-top: 1px solid #919FA3;
-      border-bottom: 1px solid #E6EFEE;
-    }
+.menulist-right-mid[disabled="true"],
+menulist:hover:active > .menulist-stack-right > .menulist-box-right
+    > .menulist-right-mid[disabled="true"]
+{
+  background-image: url("chrome://global/skin/menulist/mlist-dis-rit-mid.gif");
+}
 
-  menulist > menupopup > menuitem,
-  menulist > menupopup > menu 
-    {
-      padding-right       : 12px;
-      padding-top         : 1px;
-      padding-bottom      : 1px;
-      min-width           : 0px;
-      max-width           : none !important;
-      color				        : #000000;
-      font                : message-box;
-    }
+.menulist-right-btm[disabled="true"],
+menulist:hover:active > .menulist-stack-right > .menulist-box-right
+    > .menulist-right-btm[disabled="true"]
+{
+  background-image: url("chrome://global/skin/menulist/mlist-dis-rit-btm.gif");
+}
 
+.menulist-dropmarker[disabled="true"]
+{
+  list-style-image: url("chrome://global/skin/menulist/mlist-dis-arrow.gif");
+}
 
-  menulist > menupopup > menuitem[menuactive="true"]
-    {
-    	background-color  : #465B75;
-    	color			  : #FFFFFF;
-    }
+/* ::::: menulist popup and contents :::::: */
 
-  menulist > menupopup > menuitem[selected="true"]
-    {
-      list-style-image    : url(chrome://global/skin/menu-check.gif);
-    }
-  
-  menulist > menupopup > menuitem[menuactive="true"][selected="true"]
-    {
-      list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
-    }
-  
-  menulist > menupopup > arrowscrollbox > vbox > autorepeatbutton:hover 
-    {
-      background-color: #B2BFBF;
-      border: 1px inset #B2BFBF;
-    }
+menulist > menupopup {
+  border: 1px solid #313948;
+  padding: 0px;
+  min-width: 0px;
+  background-color: #CCCCCC;
+}
 
-/* :::::::::: compact menulists :::::::::: */
+menulist > menupopup > .popup-internal-box {
+  border: 0px;
+}
+
+/* ..... menu/menuitem ..... */
+
+menulist > menupopup > menuitem,
+menulist > menupopup > menu
+{
+  padding-top: 1px;
+  padding-right: 12px;
+  padding-bottom: 1px;
+  min-width: 0px;
+  max-width: none !important;
+  color: #000000;
+  font: message-box;
+}
+
+menulist > menupopup > menuitem[menuactive="true"] {
+  background-color: #465B75;
+  color: #FFFFFF;
+}
+
+/* ..... menuitem selected state ..... */
+
+menulist > menupopup > menuitem[selected="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check.gif");
+}
+
+menulist > menupopup > menuitem[menuactive="true"][selected="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
+}
+
+/* ..... menuseparator ..... */
+
+menulist > menupopup > menuseparator {
+  border-top: 1px solid #919FA3;
+  border-bottom: 1px solid #E6EFEE;
+}
+
+/* ..... auto-repeat button ..... */
+
+menulist > menupopup > arrowscrollbox > vbox > autorepeatbutton:hover {
+  border: 1px inset #B2BFBF;
+  background-color: #B2BFBF;
+}
+
+/* ::::: compact menulists ::::: */
 
 .menulist-compact {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#menulist-compact");
+  -moz-user-focus: normal;
   margin: 0px;
   border: 1px solid #000000;
   min-width: 0px;
   min-height: 0px;
   background-color: #D6DFDF;
-  -moz-user-focus: normal;
+}
+
+.menulist-compact:focus {
+  border-color: #000000;
+  -moz-border-radius: 0px;
 }
 
 .menulist-compact-text {
   margin-right: 3px;
-}  
+}
 
 .menulist-compact-internal-box {
-  border-left: 1px solid #F7F7F7;
   border-top: 1px solid #F7F7F7;
   border-right: 1px solid #8CA2A5;
   border-bottom: 1px solid #8CA2A5;
+  border-left: 1px solid #F7F7F7;
   padding: 1px;
 }
-    
+
 .menulist-compact-dropmarker {
-  list-style-image: url("chrome://global/skin/menulist-compact-arrow.gif");
+  list-style-image: url("chrome://global/skin/menulist/mlist-compact-arrow.gif");
   margin-left: 2px;
 }
-      
+
 .menulist-compact:hover:active > .menulist-compact-internal-box,
 .menulist-compact[open="true"] > .menulist-compact-internal-box {
-  background-color: #949EA5;
   border: 1px solid #808080;
+  background-color: #949EA5;
 }
-
 

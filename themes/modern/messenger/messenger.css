@@ -1,501 +1,406 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
  */
 
-@import url(chrome://communicator/skin/);
-@import url(chrome://communicator/skin/sidebar/sidebar.css);
+/* ===== messenger.css ==================================================
+  == Styles shared throughout the Messenger application.
+  ======================================================================= */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
-@namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for XUL elements */
+@import url("chrome://communicator/skin/");
+@import url("chrome://communicator/skin/sidebar/sidebar.css");
 
-[hide] {
- display: none;
-} 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.sidebarheader-main 
-{
-  border-bottom: 1px solid #000000;
-}
-
-dummy.usesMailWidgets {
- -moz-binding: url(chrome://messenger/content/mailWidgets.xml#dummy);
-}
-
-spring.spacer {
-    width: 5px;
-    height: 5px;
-}
-
-box.cleanborder {
-    margin: 10px;
-    padding: 10px;
-    border: 2px groove white;
-    width: 100%;
-}
-
-box.padded {
-    margin: 10px;
-    width: 100%;
-}
-
-iframe {
- min-width: 10px;
- min-height: 10px;
- width: 100px;
- height: 100px;
-}
-
-/**
- * boxes
- */
-#results_box {
-	border-left: 8px solid #CCCCCC;
-	min-width: 10px;
-}
-
-
- 
-/**
- * toolbar button images
- */
-
-#button-getmsg, #button-newmsg, #button-reply, #button-replyall, #button-forward, #button-file, #button-next, #button-mark, #button-delete, #button-print, #button-stop  {
-	min-width			: 52px;
-}
+/* ::::: primary toolbar buttons ::::: */
 
 #button-getmsg {
-  -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
-  margin                : 3px 3px 1px 3px;
-  list-style-image      : url("chrome://messenger/skin/getmsg.gif");
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-2");
+  margin: 3px 3px 1px 3px;
+  list-style-image: url("chrome://messenger/skin/btn1/getmsg.gif");
 }
 
 #button-getmsg[disabled="true"],
-#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#button-getmsg[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/getmsg-disabled.gif");
-  } 
+#button-getmsg[disabled="true"] > .menubutton-dual-stack
+    > .menubutton-dual-button:hover,
+#button-getmsg[disabled="true"] > .menubutton-dual-stack
+    > .menubutton-dual-button:hover:active
+{
+  list-style-image: url("chrome://messenger/skin/btn1/getmsg-dis.gif");
+}
 
-#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/getmsg-hover.gif");
-  } 
+#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/getmsg-hov.gif");
+}
 
-#button-getmsg > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/getmsg-clicked.gif");
-  } 
+#button-getmsg > .menubutton-dual-stack
+    > .menubutton-dual-button:hover:active
+{
+  list-style-image: url("chrome://messenger/skin/btn1/getmsg-act.gif");
+}
 
 #button-newmsg {
-	list-style-image:url("chrome://messenger/skin/newmsg.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg.gif");
 }
 
 #button-newmsg[disabled="true"],
 #button-newmsg[disabled="true"]:hover,
-#button-newmsg[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/newmsg-disabled.gif");
-  } 
+#button-newmsg[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg-dis.gif");
+}
 
-#button-newmsg:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/newmsg-hover.gif");
-  } 
+#button-newmsg:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg-hov.gif");
+}
 
-#button-newmsg:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/newmsg-clicked.gif");
-  } 
+#button-newmsg:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/newmsg-act.gif");
+}
 
 #button-reply {
-	list-style-image:url("chrome://messenger/skin/reply.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/reply.gif");
 }
 
 #button-reply[disabled="true"],
 #button-reply[disabled="true"]:hover,
-#button-reply[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/reply-disabled.gif");
-  } 
+#button-reply[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/reply-dis.gif");
+}
 
-#button-reply:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/reply-hover.gif");
-  } 
+#button-reply:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/reply-hov.gif");
+}
 
-#button-reply:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/reply-clicked.gif");
-  } 
+#button-reply:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/reply-act.gif");
+}
 
 #button-replyall {
-	list-style-image:url("chrome://messenger/skin/replyall.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/replyall.gif");
 }
 
 #button-replyall[disabled="true"],
 #button-replyall[disabled="true"]:hover,
-#button-replyall[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/replyall-disabled.gif");
-  } 
+#button-replyall[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/replyall-dis.gif");
+}
 
-#button-replyall:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/replyall-hover.gif");
-  } 
+#button-replyall:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/replyall-hov.gif");
+}
 
-#button-replyall:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/replyall-clicked.gif");
-  } 
+#button-replyall:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/replyall-act.gif");
+}
 
 #button-forward {
-	list-style-image:url("chrome://messenger/skin/forward.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/forward.gif");
 }
 
 #button-forward[disabled="true"],
 #button-forward[disabled="true"]:hover,
-#button-forward[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/forward-disabled.gif");
-  } 
+#button-forward[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/forward-dis.gif");
+}
 
-#button-forward:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/forward-hover.gif");
-  } 
+#button-forward:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/forward-hov.gif");
+}
 
-#button-forward:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/forward-clicked.gif");
-  } 
+#button-forward:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/forward-act.gif");
+}
 
 #button-file {
-	list-style-image: url("chrome://messenger/skin/file.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/file.gif");
 }
 
 #button-file[disabled="true"],
 #button-file[disabled="true"]:hover,
-#button-file[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/file-disabled.gif");
-  } 
+#button-file[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/file-dis.gif");
+}
 
-#button-file:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/file-hover.gif");
-  } 
+#button-file:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/file-hov.gif");
+}
 
 #button-file:hover:active,
-#button-file[open="true"]
-  {
-    list-style-image      : url("chrome://messenger/skin/file-clicked.gif");
-  } 
+#button-file[open="true"] {
+  list-style-image: url("chrome://messenger/skin/btn1/file-act.gif");
+}
 
 #button-next {
-	list-style-image:url("chrome://messenger/skin/next.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/next.gif");
 }
 
 #button-next[disabled="true"],
 #button-next[disabled="true"]:hover,
-#button-next[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/next-disabled.gif");
-  } 
+#button-next[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/next-dis.gif");
+}
 
-#button-next:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/next-hover.gif");
-  } 
+#button-next:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/next-hov.gif");
+}
 
-#button-next:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/next-clicked.gif");
-  } 
+#button-next:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/next-act.gif");
+}
 
 #button-delete {
-	list-style-image:url("chrome://messenger/skin/trash.gif");
+  list-style-image: url("chrome://messenger/skin/btn1/trash.gif");
 }
 
 #button-delete[disabled="true"],
 #button-delete[disabled="true"]:hover,
-#button-delete[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/trash-disabled.gif");
-  } 
+#button-delete[disabled="true"]:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/trash-dis.gif");
+}
 
-#button-delete:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/trash-hover.gif");
-  } 
+#button-delete:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/trash-hov.gif");
+}
 
-#button-delete:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/trash-clicked.gif");
-  }
+#button-delete:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/trash-act.gif");
+}
 
-#button-mark
-  {
-    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
-    margin                : 3px 3px 1px 3px;
-    list-style-image      : url("chrome://messenger/skin/mark.gif");
-  }
-    
+#button-mark {
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-2");
+  margin: 3px 3px 1px 3px;
+  list-style-image: url("chrome://messenger/skin/btn1/mark.gif");
+}
+
 #button-mark[disabled="true"],
-#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#button-mark[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/mark-disabled.gif");
-  } 
+#button-mark[disabled="true"] > .menubutton-dual-stack
+    > .menubutton-dual-button:hover,
+#button-mark[disabled="true"] > .menubutton-dual-stack
+    > .menubutton-dual-button:hover:active
+{
+  list-style-image: url("chrome://messenger/skin/btn1/mark-dis.gif");
+}
 
-#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover
-  {
-    list-style-image      : url("chrome://messenger/skin/mark-hover.gif");
-  } 
+#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://messenger/skin/btn1/mark-hov.gif");
+}
 
-#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://messenger/skin/mark-clicked.gif");
-  } 
+#button-mark > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://messenger/skin/btn1/mark-act.gif");
+}
 
-#button-print 
-  {
-    -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
-    margin                : 3px 3px 1px 3px;
-    list-style-image      : url("chrome://global/skin/print.gif");
-  }
+#button-print {
+  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-2");
+  margin: 3px 3px 1px 3px;
+  list-style-image: url("chrome://communicator/skin/btn1/print.gif");
+}
 
 #button-print[disabled="true"],
-#button-print[disabled="true"]:hover,
-#button-print[disabled="true"]:hover:active,
-#button-print[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
-#button-print[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
-#button-print[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/print-disabled.gif");
-  }
+#button-print[disabled="true"] > .menubutton-dual-stack
+    > .menubutton-dual-button:hover,
+#button-print[disabled="true"] > .menubutton-dual-stack
+    > .menubutton-dual-button:hover:active
+{
+  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
+}
 
-#button-print > .menubutton-dual-stack > .menubutton-dual-button:hover
-  {
-    list-style-image      : url("chrome://global/skin/print-hover.gif");
-  }
+#button-print > .menubutton-dual-stack > .menubutton-dual-button:hover {
+  list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
+}
 
-#button-print > .menubutton-dual-stack > .menubutton-dual-button:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/print-clicked.gif");
-  }
+#button-print > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
+}
 
 #button-stop {
-	list-style-image:url("chrome://global/skin/stop.gif");
+  list-style-image: url("chrome://communicator/skin/btn1/stop.gif");
 }
 
 #button-stop[disabled="true"],
 #button-stop[disabled="true"]:hover,
-#button-stop[disabled="true"]:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/stop-disabled.gif");
-  } 
-
-#button-stop:hover
-  {
-    list-style-image      : url("chrome://global/skin/stop-hover.gif");
-  } 
-
-#button-stop:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/stop-clicked.gif");
-  }
-
-/* .......... folderPane icons ..................... */
-
-.folderMenuItem > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-closed.gif");
+#button-stop[disabled="true"]:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/stop-dis.gif");
 }
 
-.folderMenuItem[open="true"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-open.gif");
+#button-stop:hover {
+  list-style-image: url("chrome://communicator/skin/btn1/stop-hov.gif");
 }
 
-/* special folders */
-
-.folderMenuItem[SpecialFolder="Inbox"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-inbox.gif");
+#button-stop:hover:active {
+  list-style-image: url("chrome://communicator/skin/btn1/stop-act.gif");
 }
 
-.folderMenuItem[SpecialFolder="Inbox"][open="true"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-inbox-open.gif");
+/* ::::: folder icons for menus ::::: */
+
+.folderMenuItem {
+  list-style-image: url("chrome://messenger/skin/icons/folder-closed.gif");
 }
 
-.folderMenuItem[SpecialFolder="Sent"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-sent.gif");
+.folderMenuItem[open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-open.gif");
 }
 
-.folderMenuItem[SpecialFolder="Sent"][open="true"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-sent-open.gif");
+/* ..... special folders ..... */
+
+.folderMenuItem[SpecialFolder="Inbox"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-inbox.gif");
 }
 
-.folderMenuItem[SpecialFolder="Drafts"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-draft.gif");
+.folderMenuItem[SpecialFolder="Inbox"][open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-inbox-open.gif");
 }
 
-.folderMenuItem[SpecialFolder="Drafts"][open="true"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-draft-open.gif");
+.folderMenuItem[SpecialFolder="Sent"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-sent.gif");
 }
 
-.folderMenuItem[SpecialFolder="Templates"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-template.gif");
+.folderMenuItem[SpecialFolder="Sent"][open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-sent-open.gif");
 }
 
-.folderMenuItem[SpecialFolder="Templates"][open="true"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-template-open.gif");
+.folderMenuItem[SpecialFolder="Drafts"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-draft.gif");
 }
 
-.folderMenuItem[SpecialFolder="Trash"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-trash.gif");
+.folderMenuItem[SpecialFolder="Drafts"][open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-draft-open.gif");
 }
 
-.folderMenuItem[SpecialFolder="Trash"][open="true"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/folder-trash-open.gif");
+.folderMenuItem[SpecialFolder="Templates"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-template.gif");
 }
 
-.folderMenuItem[IsServer="true"] > .menu-iconic-left {
- list-style-image: url("chrome://messenger/skin/server-mail.gif");
+.folderMenuItem[SpecialFolder="Templates"][open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-template-open.gif");
 }
 
-/* IMAP folders */
-
-.folderMenuItem[IsServer="true"][ServerType="imap"][IsSecure="true"] > .menu-left {
-    list-style-image: url("chrome://messenger/skin/server-remote-lock.gif");
+.folderMenuItem[SpecialFolder="Trash"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-trash.gif");
 }
 
-/* Local Servers */
-.folderMenuItem[IsServer="true"][ServerType="none"] > .menu-iconic-left
-{
- list-style-image: url("chrome://messenger/skin/server-local.gif");
+.folderMenuItem[SpecialFolder="Trash"][open="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-trash-open.gif");
 }
 
-/* News folders */
-.folderMenuItem[ServerType="nntp"] > .menu-iconic-left {
-    list-style-image: url("chrome://messenger/skin/folder-newsgroup.gif");
+/* ..... servers ..... */
+
+.folderMenuItem[IsServer="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/server-mail.gif");
 }
 
-.folderMenuItem[IsServer="true"][ServerType="nntp"][IsSecure="true"] > .menu-iconic-left {
-    list-style-image: url("chrome://messenger/skin/server-news-lock.gif");
+.folderMenuItem[IsServer="true"][ServerType="imap"][IsSecure="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
 }
 
-.folderMenuItem[IsServer="true"][ServerType="nntp"] > .menu-iconic-left {
-    list-style-image: url("chrome://messenger/skin/server-news.gif");
+.folderMenuItem[IsServer="true"][ServerType="none"] {
+  list-style-image: url("chrome://messenger/skin/icons/server-local.gif");
 }
+
+/* ..... newsgroups ..... */
+
+.folderMenuItem[IsServer="true"][ServerType="nntp"][IsSecure="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/server-news-lock.gif");
+}
+
+.folderMenuItem[IsServer="true"][ServerType="nntp"] {
+  list-style-image: url("chrome://messenger/skin/icons/server-news.gif");
+}
+
+.folderMenuItem[ServerType="nntp"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
+}
+
+/* ::::: button-like menus ::::: */
 
 menu.push {
+  margin: 2px;
   border: 1px outset #B4C3D4;
   padding: 2px;
-  margin: 2px;
+  background: transparent;
   text-align: center;
-  background-color:inherit;
-  background-image: inherit;
 }
 
 menu.push:hover:active,
-menu.push[open],
-menu.push[toggled="1"] {
+menu.push[open] {
   border-style: inset;
   padding: 3px 1px 1px 3px;
-}
-
-menu.push[toggled="2"] {
-  background-color: lightgray;
-  border: 1px solid gray;
 }
 
 menu.push[disabled="true"],
 menu.push[disabled="true"]:hover,
 menu.push[disabled="true"]:hover:active {
-  border: 1px solid #999999;
-  color: #999999;
+  border: 1px solid #85959E;
+  color: #85959E;
 }
 
-/**
- * Make sure the min height is small so we can 
- * resize the pane vertically -EDV
- */
-box#messagepanebox
-{
-   min-height: 10px;
-   height: 0px;
-}
-
-/**
- * this belongs in the mail filter window
- */
+/* ::::: Mail Filter dialog :::::: */
 
 .enabledcol {
-  list-style-image: url("chrome://messenger/skin/readmail.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
 }
 
 .enabledcol[value="true"] {
-  list-style-image: url("chrome://messenger/skin/unreadmail.gif");
+  list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
 }
 
 searchattribute {
-  -moz-binding: url(chrome://messenger/content/mailWidgets.xml#searchattribute);
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchattribute");
 }
 
 searchoperator {
-  -moz-binding: url(chrome://messenger/content/mailWidgets.xml#searchoperator);
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchoperator");
 }
 
 searchvalue {
- -moz-binding: url(chrome://messenger/content/mailWidgets.xml#searchvalue);
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchvalue");
 }
 
 searchterm {
-
- behavior: url(chrome://messenger/content/mailWidgets.xml#searchterm);
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#searchterm");
 }
 
-#status-bar
-{
+/* ::::: tree focus-ring border adjustments ::::: */
+
+/* ..... status bar adjustments ..... */
+
+#status-bar {
   border-left: 1px solid #63717B;
   border-top: none;
 }
 
-#status-bar > :first-child
-{
-  border-left         : 1px solid #000000;
+#status-bar > :first-child {
+  border-left: 1px solid #000000;
 }
 
-#subscribeWindow > statusbar
-{
+#subscribeWindow > statusbar {
   color: #000000;
 }
 
 #subscribeWindow > statusbar,
-#subscribeWindow > statusbar > :first-child
-{
-  background-color: transparent;
+#subscribeWindow > statusbar > :first-child {
   border-left: none;
+  background-color: transparent;
 }
 
-/******
- * Adjusting the borders on splitters so they seem to join where vertical meets horizontal
- ******/
+/* ..... splitter adjustments ..... */
 
 #sidebar-splitter {
   border: none;
@@ -506,85 +411,78 @@ searchterm {
 }
 
 #threadpane-splitter,
-#threadpane-splitter > box
-{
+#threadpane-splitter > .splitter-internal-box {
   border-top: none;
   border-left: none;
   border-right: none;
   border-bottom: none;
 }
 
-#threadpane-splitter[state="collapsed"]
-{
+#threadpane-splitter[state="collapsed"] {
   border-bottom: 1px solid #000000;
 }
 
-#threadpane-splitter[state="collapsed"] > box
-{
+#threadpane-splitter[state="collapsed"] > .splitter-internal-box {
   border-bottom: 1px solid #63717B;
 }
 
 .gray-vertical-splitter,
-.gray-vertical-splitter > box
-{
+.gray-vertical-splitter > .splitter-internal-box {
   border-right: none;
 }
 
-.gray-vertical-splitter > box
-{
+.gray-vertical-splitter > .splitter-internal-box {
   border-bottom: none;
 }
 
 #sidebar-panels-splitter,
-#sidebar-panels-splitter > box
-{
+#sidebar-panels-splitter > .splitter-internal-box {
   border-top: none;
 }
 
-/** 
- * Focus rings on 3 pane view
- **/
- 
-#folderTree
-{
+/* ..... sidebar adjustments ..... */
+
+.sidebarheader-main {
+  border-bottom: 1px solid #000000;
+}
+
+/* ..... tree adjustments ..... */
+
+#folderTree {
   border-bottom: 1px solid #C6D3D6;
   border-left: 1px solid #63717B;
 }
 
-#folderTree > .tree-container-treerows
-{
+#folderTree > .tree-container-treerows {
   border-bottom: 1px solid #7B969C;
   border-left: 1px solid #000000;
 }
 
-#threadTree
-{
+#threadTree {
   border-top: 1px solid #63717B;
   border-right: none;
   border-bottom: 1px solid #C6D3D6;
   border-left: 1px solid #63717B;
 }
 
-#threadTree > .tree-container-treerows
-{
+#threadTree > .tree-container-treerows {
   border-left: 1px solid #000000;
   border-bottom: 1px solid #7B969C;
 }
 
 #folderTree > treechildren,
-#threadTree > treechildren
-{
+#threadTree > treechildren {
   border: 1px solid transparent;
 }
 
 #folderTree:focus > treechildren,
-#threadTree[focusring="true"] > treechildren
-{
+#threadTree[focusring="true"] > treechildren {
   border: 1px solid black;
 }
 
-#messagepanebox
-{
+/* ..... message pane adjustments ..... */
+
+#messagepanebox {
   border-top: 1px solid #63717B;
   border-left: 1px solid #63717B;
   border-bottom: 1px solid #000000;
@@ -596,27 +494,64 @@ searchterm {
   border-left: 1px solid #000000;
 }
 
-#messagepane
-{
-  border-top: 1px solid #000000;
-  border-bottom: none;
+#messagepane {
   border-left: 1px solid #000000;
 }
 
-#messagepanebox[focusring="true"]
-{
+#messagepanebox[focusring="true"] {
   border-top: 1px solid #000000;
   border-bottom: 1px solid #000000;
   border-left: 1px solid #000000;
 }
 
-.awIdentityLabel
-{
-  width: 8em; 
-  margin-left: 5px;
-}
+/* ..... account central adjustments ..... */
 
 #accountCentralBox
 {
-  background-color:#FFFFFF;
+  border-left: 1px solid #63717B;
+  border-bottom: 1px solid #000000;
 }
+
+[name="accountCentralPane"]
+{
+  border-left: 1px solid #000000;
+}
+
+/* ::::: account wizard :::::: */
+
+.awIdentityLabel {
+  width: 8em;
+  margin-left: 5px;
+}
+
+/* ::::: account central :::::: */
+
+#accountCentralBox {
+  background-color: #FFFFFF;
+}
+
+/* :::::
+   :: Make sure the min height is small so we can
+   :: resize the pane vertically -EDV
+   ::::: */
+
+#messagepanebox {
+  min-height: 10px;
+  height: 0px;
+}
+
+/* ::::: miscellany :::::: */
+
+[hide] {
+   display: none;
+}
+
+dummy.usesMailWidgets {
+  -moz-binding: url("chrome://messenger/content/mailWidgets.xml#dummy");
+}
+
+spring.spacer {
+  width: 5px;
+  height: 5px;
+}
+

@@ -1,89 +1,78 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 2000 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *   Dan Haddix
  *   Brian King
  */
 
-toolbar#toolbox {
-  margin :0px;
-  padding: 4px; 0px; 0px; 0px;
+/* ==== EdImageMap.css ======================================================
+   == Styles used by the Image Map Editor window.
+   ========================================================================== */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+#VerticalToolbar {
+  background-color: #5B7693;
 }
 
-toolbar#toolbox button.tool:active {
-	margin: 2px 0px 0px 2px;
-}
-
-toolbar#toolbox button.tool[toggled="1"] {
-  margin: 2px 0px 0px 2px;
-  border: 1px white inset;
-}
-
-toolbar#toolbox button.tool {
-  border: 1px solid transparent;
-  margin: 1px 1px 1px 1px;
-	padding: 2px;
-	text-decoration: none;
-	color: inherit;
-}
-
-toolbar.toolbox > toolbargrippy {
-	visibility: collapse;
+#okCancelButtons {
+  padding: 5px;
 }
 
 #pointerButton {
-	list-style-image:url("chrome://editor/skin/images/Map_pointerTool.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-pointerTool.gif");
 }
 
 #rectButton {
-	list-style-image:url("chrome://editor/skin/images/Map_rectangleTool.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-rectangleTool.gif");
 }
 
 #cirButton {
-	list-style-image:url("chrome://editor/skin/images/Map_circleTool.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-circleTool.gif");
 }
 
 #polyButton {
-	list-style-image:url("chrome://editor/skin/images/Map_polygonTool.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-polygonTool.gif");
 }
 
 #cutButton {
-	list-style-image:url("chrome://editor/skin/images/Map_Cut.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-cut.gif");
 }
 
 #copyButton {
-	list-style-image:url("chrome://editor/skin/images/Map_Copy.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-copy.gif");
 }
 
 #pasteButton {
-	list-style-image:url("chrome://editor/skin/images/Map_Paste.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-paste.gif");
 }
 
 #zoomInButton {
-	list-style-image:url("chrome://editor/skin/images/Map_zoomIn.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-zoomIn.gif");
 }
 
 #zoomOutButton {
-	list-style-image:url("chrome://editor/skin/images/Map_zoomOut.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-zoomOut.gif");
 }
 
 #contrastButton {
-	list-style-image:url("chrome://editor/skin/images/Map_contrast.gif");
+  list-style-image: url("chrome://editor/skin/btn1/map-contrast.gif");
 }
+

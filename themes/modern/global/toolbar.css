@@ -1,112 +1,124 @@
-/**
- * toolbar
- **/ 
- 
-toolbar
-  {
-    border-bottom         : 1px solid #000000;
-  	background-color	    : #5B7693;
-    /*
-     * DON'T DELETE.  Removes disappearance of scrollbars in content
-     * pane when window is made smaller.
-     * Talk to evaughan@netscape.com for details.
-     */
-    min-width			        : 1px;      
-    color                 : #FFFFFF;
-  }
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
 
-toolbar > .toolbar-holder 
-  {
-    border-left          : 1px solid #92ABC9;
-    border-top           : 1px solid #92ABC9;
-  }
-  
-/**
- * toolbargrippy 
- **/
- 
-toolbargrippy 
-  { 
-    -moz-binding         : url("chrome://global/skin/globalBindings.xml#toolbargrippy");
-    background-image     : url("chrome://global/skin/tb-grippy-bg.gif");
-    width                : 12px;
-    margin				       : 0px;
-  } 
+/* ===== toolbar.css ====================================================
+  == Styles used by XUL toolbar-related elements.
+  ======================================================================= */
 
-.toolbargrippy-top 
-  {
-    background-image     : url("chrome://global/skin/tb-grippy-top.gif");
-    height                : 3px;
-  }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.toolbargrippy-btm 
-  {
-    background-image     : url("chrome://global/skin/tb-grippy-btm.gif");
-    height                : 8px;
-  }
-  
-toolbargrippy:hover:active
-  {
-    background-image     : url("chrome://global/skin/tb-grippy-bg-active.gif");
-  }
+/* ::::: toolbar ::::: */
 
-toolbargrippy:hover:active > .toolbargrippy-top
-  {
-  	background-image     : url("chrome://global/skin/tb-grippy-top-active.gif");
-  }
+toolbar {
+  border-bottom: 1px solid #000000;
+  min-width: 1px; /* DON'T DELETE!
+    Removes disappearance of scrollbars in content pane when window
+    is made smaller. Talk to evaughan@netscape.com for details. */
+  background-color: #5B7693;
+  color: #FFFFFF;
+}
 
-toolbargrippy:hover:active > .toolbargrippy-btm
-  {
-  	background-image     : url("chrome://global/skin/tb-grippy-btm-active.gif");
-  }
+toolbar > .toolbar-holder {
+  border-top: 1px solid #92ABC9;
+  border-left: 1px solid #92ABC9;
+}
 
-/**
- * collapsed tray and grippies
- **/
-  
-.collapsed-tray-holder
-  {
-    background-color    : #5B7693;
-    height              : 11px;
-  	border-bottom		    : 1px solid #000000;
-  }
+/* ::::: toolbargrippy ::::: */
 
-toolbargrippy[tbgrippy-collapsed="true"]
-  {
-    -moz-binding          : url("chrome://global/skin/globalBindings.xml#toolbargrippy-collapsed");
-    background-image      : none;
-    width                 : 200px;
-  }
+toolbargrippy {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#toolbargrippy");
+  width: 12px;
+  background-image: url("chrome://global/skin/toolbar/tbgrip-mid.gif");
+}
 
-toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-left
-  {
-    background-image      : url("chrome://global/skin/tb-grippy-collapsed.gif");
-    width                 : 12px;
-  }
+.toolbargrippy-top {
+  background-image: url("chrome://global/skin/toolbar/tbgrip-top.gif");
+  height: 3px;
+}
 
-toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-context
-  {
-  	background-color	    : #5B7693;
-    border                : 1px outset #5B7693;
-  }
+.toolbargrippy-btm {
+  background-image: url("chrome://global/skin/toolbar/tbgrip-btm.gif");
+  height: 8px;
+}
 
-toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-left
-  {
-    background-image      : url("chrome://global/skin/tb-grippy-collapsed-active.gif");
-  }
+toolbargrippy:hover:active {
+  background-image: url("chrome://global/skin/toolbar/tbgrip-act-mid.gif");
+}
 
-toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-context
-  {
-    border-style          :inset;
-  }
+toolbargrippy:hover:active > .toolbargrippy-top {
+  background-image: url("chrome://global/skin/toolbar/tbgrip-act-top.gif");
+}
 
-toolbarseparator
-  { 
-    width                 : 1px;
-    border-left           : 1px solid #425973;
-    border-right          : 1px solid #92ABC9;
-    margin                : 2px 0.2em 2px 0.2em;
-  } 
+toolbargrippy:hover:active > .toolbargrippy-btm {
+  background-image: url("chrome://global/skin/toolbar/tbgrip-act-btm.gif");
+}
+
+/* ::::: collapsed tray and grippies ::::: */
+
+.collapsed-tray-holder {
+  border-bottom: 1px solid #000000;
+  height: 11px;
+  background-color: #5B7693;
+}
+
+toolbargrippy[tbgrippy-collapsed="true"] {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#toolbargrippy-collapsed");
+  width: 200px;
+  background-image: none;
+}
+
+toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-left {
+  width: 12px;
+  background-image: url("chrome://global/skin/toolbar/tbgrip-clps.gif");
+}
+
+toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-context {
+  border: 1px outset #5B7693;
+  background-color: #5B7693;
+}
+
+toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-left {
+  background-image: url("chrome://global/skin/toolbar/tbgrip-clps-act.gif");
+}
+
+toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-context {
+  border-style: inset;
+}
+
+/* ::::: toolbarseparator ::::: */
+
+toolbarseparator {
+  margin: 2px 0.2em 2px 0.2em;
+  border-left: 1px solid #425973;
+  border-right: 1px solid #92ABC9;
+  width: 1px;
+}
+
+/* ::::: miscellaneous ::::: */
+
+.toolbar-focustarget {
+  -moz-user-focus: ignore !important;
+}
 
 /* ::::: special looks for widgets in toolbars ::::: */
 

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<bindings id="dialogBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+ <binding id="largeheader" extends="xul:box">
+    <content>
+      <xul:box class="largeheader-box" flex="1">
+        <xul:box class="largeheader-text-container" orient="vertical">
+          <xul:text class="largeheader-header-text" inherits="value=title" crop="right"/>
+          <xul:html class="largeheader-desc-text" inherits="value=description"/>
+        </xul:box>
+        <xul:spring flex="1"/>
+        <xul:box class="largeheader-icon-container" autostretch="never">
+          <xul:image class="largeheader-icon" inherits="src"/>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
+  
+  <binding id="smallheader" extends="chrome://communicator/content/dialogBindings.xml#smallheader">
+    <content>
+      <xul:box class="box-smallheader-text-container" autostretch="never" flex="1">
+        <xul:text class="box-smallheader-left" inherits="value=title"/>
+        <xul:spring flex="1"/>
+        <xul:text class="box-smallheader-right" inherits="value=description"/>
+      </xul:box>
+    </content>
+  </binding>
+
+</bindings>
