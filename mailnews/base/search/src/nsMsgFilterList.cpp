@@ -127,7 +127,7 @@ NS_IMETHODIMP nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterType filterType, nsI
 				nsresult matchTermStatus = NS_OK;
 
 				matchTermStatus = filter->MatchHdr(msgHdr, folder, db, headers, headersSize);
-				if (NS_SUCCEEDED(matchTermStatus) && listener)
+				if (matchTermStatus == NS_OK && listener)
 				{
 					PRBool applyMore;
 
