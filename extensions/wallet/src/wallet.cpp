@@ -1158,7 +1158,7 @@ PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
     return NS_ERROR_FAILURE;
   }
   nsresult res = spec->GetFileSpec(&dirSpec);
-  delete spec;
+  NS_RELEASE(spec);
   return res;
 }
 
@@ -1169,7 +1169,7 @@ PUBLIC nsresult Wallet_ResourceDirectory(nsFileSpec& dirSpec) {
     return NS_ERROR_FAILURE;
   }
   nsresult res = spec->GetFileSpec(&dirSpec);
-  delete spec;
+  NS_RELEASE(spec);
   return res;
 }
 
