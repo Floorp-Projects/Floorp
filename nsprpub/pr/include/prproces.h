@@ -57,6 +57,12 @@ PR_EXTERN(PRStatus) PR_ProcessAttrSetCurrentDirectory(
     const char *dir
 );
 
+PR_EXTERN(PRStatus) PR_ProcessAttrSetInheritableFD(
+    PRProcessAttr *attr,
+    PRFileDesc *fd,
+    const char *name
+);
+
 /*
 ** Create a new process
 **

@@ -249,13 +249,13 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
     PRInt32 osfd;
     PRFileDesc *fd = 0;
 
-	if (!_pr_initialized) _PR_ImplicitInitialization();
+    if (!_pr_initialized) _PR_ImplicitInitialization();
 
     /* Map pr open flags and mode to os specific flags */
 
     osfd = _PR_MD_OPEN(name, flags, mode);
     if (osfd != -1) {
-	fd = PR_AllocFileDesc(osfd, &_pr_fileMethods);
+        fd = PR_AllocFileDesc(osfd, &_pr_fileMethods);
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
         }

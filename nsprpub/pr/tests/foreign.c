@@ -218,7 +218,7 @@ static void OneShot(void *arg)
     PRFileDesc *pair[2];
     PRIntn test = (PRIntn)arg;
 
-	for (test = 0; test < 11; ++test) {
+	for (test = 0; test < 12; ++test) {
 
     switch (test)
     {
@@ -295,6 +295,12 @@ static void OneShot(void *arg)
 			DPRINTF((output,"Thread[0x%x] called PR_SetConcurrency\n",
 			PR_GetCurrentThread()));
             break;
+
+        case 11:
+            PR_SetThreadPriority(PR_GetCurrentThread(), PR_PRIORITY_HIGH);
+			DPRINTF((output,"Thread[0x%x] called PR_SetThreadPriority\n",
+			PR_GetCurrentThread()));
+            break;
             
         default: 
             break;
@@ -305,7 +311,6 @@ static void OneShot(void *arg)
 PRIntn main(PRIntn argc, char **argv)
 {
     PRStatus rv;
-    PRIntn test_number;
 	PRInt32	thread_cnt = DEFAULT_THREAD_COUNT;
 	PLOptStatus os;
 	PLOptState *opt = PL_CreateOptState(argc, argv, "dt:");

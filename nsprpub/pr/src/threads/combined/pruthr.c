@@ -368,8 +368,6 @@ void _PR_NativeRunThread(void *arg)
     while(1) {
         thread->state = _PR_RUNNING;
 
-        if ( !_PR_IS_NATIVE_THREAD(thread)) _PR_MD_SET_INTSOFF(0);
-
         /*
          * Add to list of active threads
          */

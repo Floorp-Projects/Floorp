@@ -377,6 +377,7 @@ extern PRStatus _MD_setsockopt(PRFileDesc *fd, PRInt32 level, PRInt32 optname, c
 #define _MD_SENDTO			_MD_sendto
 #define _MD_RECVFROM		_MD_recvfrom
 #define _MD_PR_POLL			_MD_poll
+#define _MD_INIT_FILEDESC(fd)
 #define _MD_MAKE_NONBLOCK	_MD_makenonblock
 
 #define _MD_GET_SOCKET_ERROR() 		_PR_MD_CURRENT_THREAD()->md.osErrCode
@@ -450,15 +451,12 @@ extern int _MD_PutEnv(const char *variableCopy);
 #define GCPTR
 #define CALLBACK
 typedef int (*FARPROC)();
-#define gcmemcpy(a,b,c) memcpy(a,b,c)
 
 
 #define MAX_NON_PRIMARY_TIME_SLICES 	6
 
 extern long gTimeSlicesOnNonPrimaryThread;
 extern struct PRThread *gPrimaryThread;
-
-typedef short PROSFD;
 
 // Errors not found in the Mac StdCLib
 #define EACCES  		13      	// Permission denied

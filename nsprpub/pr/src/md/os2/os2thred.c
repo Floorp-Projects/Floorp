@@ -60,8 +60,8 @@ _PR_MD_EARLY_INIT()
 #endif
 }
 
-PR_IMPLEMENT(void)
-_PR_MD_INIT_PRIMORDIAL_THREAD(PRThread *thread)
+static void
+_pr_SetThreadMDHandle(PRThread *thread)
 {
    PTIB ptib;
    PPIB ppib;
@@ -76,8 +76,9 @@ _PR_MD_INIT_PRIMORDIAL_THREAD(PRThread *thread)
 PR_IMPLEMENT(PRStatus)
 _PR_MD_INIT_THREAD(PRThread *thread)
 {
-   if (thread->flags & _PR_PRIMORDIAL)
-      _PR_MD_INIT_PRIMORDIAL_THREAD(thread);
+   if (thread->flags & (_PR_PRIMORDIAL | _PR_ATTACHED)) {
+      _pr_SetThreadMDHandle(thread);
+   }
 
    /* Create the blocking IO semaphore */
    _PR_MD_NEW_SEM(&thread->md.blocked_sema, 1);

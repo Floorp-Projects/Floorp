@@ -90,6 +90,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
         fd->methods = methods;
         fd->secret->state = _PR_FILEDESC_OPEN;
 	fd->secret->md.osfd = osfd;
+        _PR_MD_INIT_FILEDESC(fd);
     } else {
 	    PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
     }
@@ -109,4 +110,33 @@ PR_IMPLEMENT(void) PR_FreeFileDesc(PRFileDesc *fd)
 PR_IMPLEMENT(PRInt32) PR_Poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 {
 	return(_PR_MD_PR_POLL(pds, npds, timeout));
+}
+
+/*
+** Set the inheritance attribute of a file descriptor.
+*/
+PR_IMPLEMENT(PRStatus) PR_SetFDInheritable(
+    PRFileDesc *fd,
+    PRBool inheritable)
+{
+#if defined(XP_UNIX) || defined(WIN32)
+    /*
+     * Only a non-layered, NSPR file descriptor can be inherited
+     * by a child process.
+     */
+    if (fd->identity != PR_NSPR_IO_LAYER) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return PR_FAILURE;
+    }
+    if (fd->secret->inheritable != inheritable) {
+        if (_PR_MD_SET_FD_INHERITABLE(fd, inheritable) == PR_FAILURE) {
+            return PR_FAILURE;
+        }
+        fd->secret->inheritable = inheritable;
+    }
+    return PR_SUCCESS;
+#else
+    PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
+    return PR_FAILURE;
+#endif
 }

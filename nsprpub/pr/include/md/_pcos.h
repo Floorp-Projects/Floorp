@@ -21,13 +21,8 @@
 
 #define PR_DLL_SUFFIX		".dll"
 
-#ifndef OS2
-#include <windows.h>
-#endif
-#include <setjmp.h>
 #include <stdlib.h>
 
-#define USE_SETJMP
 #define DIRECTORY_SEPARATOR         '\\'
 #define DIRECTORY_SEPARATOR_STR     "\\"
 #define PATH_SEPARATOR              ';'
@@ -49,34 +44,18 @@ extern int getopt(int argc, char **argv, char *spec);
 #endif
 PR_END_EXTERN_C
 
-#define gcmemcpy(a,b,c) memcpy(a,b,c)
-
 
 /*
 ** Definitions of directory structures amd functions
 ** These definitions are from:
 **      <dirent.h>
 */
-#ifdef MOZ_BITS
-#include <time.h>
-#endif
 #ifdef XP_OS2_EMX
 #include <sys/types.h>
 #endif
 #include <sys/stat.h>
 #include <io.h>
 #include <fcntl.h>          /* O_BINARY */
-
-typedef int PROSFD;
-
-/*
-** Undo the macro define in the Microsoft header files...
-*/
-#ifndef XP_OS2 /* Uh... this seems a bit insane in itself to we OS/2 folk */
-#ifdef _stat
-#undef _stat
-#endif
-#endif
 
 #ifdef OS2
 extern PRStatus _MD_OS2GetHostName(char *name, PRUint32 namelen);

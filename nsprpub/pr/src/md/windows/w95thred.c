@@ -57,31 +57,28 @@ void _PR_MD_CLEANUP_BEFORE_EXIT(void)
 #endif
 }
 
-void
-_PR_MD_INIT_PRIMORDIAL_THREAD(PRThread *thread)
-{
-    /*
-    ** Warning:
-    ** --------
-    ** NSPR requires a real handle to every thread.  GetCurrentThread()
-    ** returns a pseudo-handle which is not suitable for some thread
-    ** operations (ie. suspending).  Therefore, get a real handle from
-    ** the pseudo handle via DuplicateHandle(...)
-    */
-    DuplicateHandle( GetCurrentProcess(),     /* Process of source handle */
-                     GetCurrentThread(),      /* Pseudo Handle to dup */
-                     GetCurrentProcess(),     /* Process of handle */
-                     &(thread->md.handle),       /* resulting handle */
-                     0L,                      /* access flags */
-                     FALSE,                   /* Inheritable */
-                     DUPLICATE_SAME_ACCESS ); /* Options */
-}
-
 PRStatus
 _PR_MD_INIT_THREAD(PRThread *thread)
 {
-    if (thread->flags & _PR_PRIMORDIAL)
-       _PR_MD_INIT_PRIMORDIAL_THREAD(thread);
+    if (thread->flags & (_PR_PRIMORDIAL | _PR_ATTACHED)) {
+        /*
+        ** Warning:
+        ** --------
+        ** NSPR requires a real handle to every thread.
+        ** GetCurrentThread() returns a pseudo-handle which
+        ** is not suitable for some thread operations (e.g.,
+        ** suspending).  Therefore, get a real handle from
+        ** the pseudo handle via DuplicateHandle(...)
+        */
+        DuplicateHandle(
+                GetCurrentProcess(),     /* Process of source handle */
+                GetCurrentThread(),      /* Pseudo Handle to dup */
+                GetCurrentProcess(),     /* Process of handle */
+                &(thread->md.handle),    /* resulting handle */
+                0L,                      /* access flags */
+                FALSE,                   /* Inheritable */
+                DUPLICATE_SAME_ACCESS);  /* Options */
+    }
 
     /* Create the blocking IO semaphore */
     thread->md.blocked_sema = CreateSemaphore(NULL, 0, 1, NULL);
@@ -164,13 +161,17 @@ _PR_MD_SET_PRIORITY(_MDThread *thread, PRThreadPriority newPri)
 void
 _PR_MD_CLEAN_THREAD(PRThread *thread)
 {
+    BOOL rv;
+
     if (thread->md.blocked_sema) {
-        CloseHandle(thread->md.blocked_sema);
+        rv = CloseHandle(thread->md.blocked_sema);
+        PR_ASSERT(rv);
         thread->md.blocked_sema = 0;
     }
 
     if (thread->md.handle) {
-        CloseHandle(thread->md.handle);
+        rv = CloseHandle(thread->md.handle);
+        PR_ASSERT(rv);
         thread->md.handle = 0;
     }
 }
@@ -254,4 +255,5 @@ PRThread *thread;
             PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL, 0);
 	}
 	PR_ASSERT(thread != NULL);
+	return thread;
 }

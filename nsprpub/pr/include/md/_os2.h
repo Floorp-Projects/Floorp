@@ -237,6 +237,7 @@ extern PRInt32 _MD_CloseFile(PRInt32 osfd);
 /*  #define INADDR_LOOPBACK         INADDR_ANY */
 #endif  
 
+#define _MD_INIT_FILEDESC(fd)
 extern void _MD_MakeNonblock(PRFileDesc *f);
 #define _MD_MAKE_NONBLOCK             _MD_MakeNonblock
 #define _MD_SHUTDOWN                  (_PR_MD_SHUTDOWN)
@@ -302,7 +303,6 @@ extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 #define _MD_DEFAULT_STACK_SIZE      32767L
 #define _MD_INIT_THREAD             (_PR_MD_INIT_THREAD)
 #define _MD_INIT_ATTACHED_THREAD    (_PR_MD_INIT_THREAD)
-#define _MD_INIT_PRIMORDIAL_THREAD  (_PR_MD_INIT_PRIMORDIAL_THREAD)
 #define _MD_CREATE_THREAD           (_PR_MD_CREATE_THREAD)
 #define _MD_YIELD                   (_PR_MD_YIELD)
 #define _MD_SET_PRIORITY            (_PR_MD_SET_PRIORITY)

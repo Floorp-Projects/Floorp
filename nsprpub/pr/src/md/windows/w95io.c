@@ -754,6 +754,22 @@ _PR_MD_GETOPENFILEINFO(const PRFileDesc *fd, PRFileInfo *info)
     return rv;
 }
 
+PRStatus
+_PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
+{
+    BOOL rv;
+
+    rv = SetHandleInformation(
+            (HANDLE)fd->secret->md.osfd,
+            HANDLE_FLAG_INHERIT,
+            inheritable ? HANDLE_FLAG_INHERIT : 0);
+    if (0 == rv) {
+        PR_SetError(PR_UNKNOWN_ERROR, GetLastError());
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
+} 
+
 PRInt32
 _PR_MD_RENAME(const char *from, const char *to)
 {

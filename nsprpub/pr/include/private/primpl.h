@@ -921,9 +921,6 @@ extern PRThread* _PR_MD_CREATE_USER_THREAD(
 #define    _PR_MD_CREATE_USER_THREAD _MD_CREATE_USER_THREAD
 #endif
 
-extern void _PR_MD_INIT_PRIMORDIAL_THREAD(PRThread *thread);
-#define _PR_MD_INIT_PRIMORDIAL_THREAD _MD_INIT_PRIMORDIAL_THREAD
-
 extern PRStatus _PR_MD_CREATE_THREAD(
                         PRThread *thread, 
                         void (*start) (void *), 
@@ -966,6 +963,9 @@ extern PRInt32 _PR_MD_CLOSE_DIR(_MDDir *md);
 #define    _PR_MD_CLOSE_DIR _MD_CLOSE_DIR
 
 /* I/O related */
+extern void _PR_MD_INIT_FILEDESC(PRFileDesc *fd);
+#define    _PR_MD_INIT_FILEDESC _MD_INIT_FILEDESC
+
 extern void _PR_MD_MAKE_NONBLOCK(PRFileDesc *fd);
 #define    _PR_MD_MAKE_NONBLOCK _MD_MAKE_NONBLOCK
 
@@ -1122,6 +1122,9 @@ extern PRInt32 _PR_MD_SOCKETAVAILABLE(PRFileDesc *fd);
 extern PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds,
                                                                                         PRIntervalTime timeout);
 #define    _PR_MD_PR_POLL _MD_PR_POLL
+
+extern PRStatus _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable);
+#define    _PR_MD_SET_FD_INHERITABLE _MD_SET_FD_INHERITABLE
 
 
 #define _PR_PROCESS_TIMEOUT_INTERRUPT_ERRORS(me) \
@@ -1414,6 +1417,9 @@ struct PRProcessAttr {
     PRFileDesc *stdoutFd;
     PRFileDesc *stderrFd;
     char *currentDirectory;
+    char *fdInheritBuffer;
+    PRSize fdInheritBufferSize;
+    PRSize fdInheritBufferUsed;
 };
 
 struct PRProcess {
@@ -1431,6 +1437,7 @@ struct PRFileMap {
 struct PRFilePrivate {
     PRInt32 state;
     PRBool nonblocking;
+    PRBool inheritable;
     PRFileDesc *next;
     PRIntn lockCount;
     _MDFileDesc md;
