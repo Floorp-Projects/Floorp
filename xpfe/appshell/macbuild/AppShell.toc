@@ -1,4 +1,0 @@
-# target: AppShellDebug.shlb
-mozilla/xpfe/appshell/src/nsAppShellFactory.cpp
-mozilla/xpfe/appshell/src/nsAppShellService.cpp
-mozilla/xpfe/appshell/src/nsWebShellWindow.cpp

@@ -1,2 +1,0 @@
-# target: libutilDebug.shlb
-mozilla/modules/libutil/src/obs.c

@@ -1,6 +1,0 @@
-# target: libimgDebug.shlb
-mozilla/modules/libimg/gifcom/gif.cpp
-mozilla/modules/libimg/gifcom/nsGIFCallback.cpp
-mozilla/modules/libimg/gifcom/nsGIFDecoder.cpp
-mozilla/modules/libimg/gifcom/dllcompat.cpp
-

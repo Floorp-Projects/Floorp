@@ -1,2 +1,0 @@
-# target: RaptorShellDebug.shlb
-mozilla/webshell/tests/viewer/nsSetupRegistry.cpp

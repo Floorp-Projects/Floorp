@@ -1,7 +1,0 @@
-# target: webshellDebug.shlb
-mozilla/webshell/src/nsDLLFactory.cpp
-mozilla/webshell/src/nsDocLoader.cpp
-mozilla/webshell/src/nsDocumentViewer.cpp
-mozilla/webshell/src/nsPluginViewer.cpp
-mozilla/webshell/src/nsThrobber.cpp
-mozilla/webshell/src/nsWebShell.cpp

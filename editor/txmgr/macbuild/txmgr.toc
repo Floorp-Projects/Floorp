@@ -1,5 +1,0 @@
-# target: EditorTxmgrDebug.shlb
-mozilla/editor/txmgr/src/nsTransactionItem.cpp
-mozilla/editor/txmgr/src/nsTransactionManager.cpp
-mozilla/editor/txmgr/src/nsTransactionManagerFactory.cpp
-mozilla/editor/txmgr/src/nsTransactionStack.cpp

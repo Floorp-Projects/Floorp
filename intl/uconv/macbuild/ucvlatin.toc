@@ -1,4 +1,0 @@
-mozilla/intl/uconv/ucvlatin/ns1ByteToUnicodeBase.cpp
-mozilla/intl/uconv/ucvlatin/nsCP1253ToUnicode.cpp
-mozilla/intl/uconv/ucvlatin/nsLatin1ToUnicode.cpp
-mozilla/intl/uconv/ucvlatin/nsUCvLatinDll.cpp

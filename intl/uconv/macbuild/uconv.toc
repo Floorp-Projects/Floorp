@@ -1,9 +1,0 @@
-mozilla/intl/uconv/src/nsCharsetConverterManager.cpp
-mozilla/intl/uconv/src/nsUConvDll.cpp
-mozilla/intl/uconv/src/nsUnicodeEncodeHelper.cpp
-mozilla/intl/uconv/src/nsUnicodeDecodeUtil.cpp
-mozilla/intl/uconv/src/nsMacCharset.cpp
-mozilla/intl/uconv/src/nsCharsetAliasImp.cpp
-mozilla/intl/uconv/src/ugen.c
-mozilla/intl/uconv/src/umap.c
-mozilla/intl/uconv/src/uscan.c

@@ -1,5 +1,0 @@
-# target: EditorCoreDebug.shlb
-mozilla/editor/core/editor.cpp
-mozilla/editor/core/editorInterfaces.cpp
-mozilla/editor/core/nsContextLoader.cpp
-mozilla/editor/core/nsEditFactory.cpp
