@@ -618,9 +618,12 @@ NS_IMETHODIMP
 nsDOMAttribute::IsDefaultNamespace(const nsAString& aNamespaceURI,
                                    PRBool* aReturn)
 {
-  NS_NOTYETIMPLEMENTED("nsDOMAttribute::IsDefaultNamespace()");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aReturn = PR_FALSE;
+  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(mContent));
+  if (node) {
+    return node->IsDefaultNamespace(aNamespaceURI, aReturn);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

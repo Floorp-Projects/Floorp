@@ -489,9 +489,10 @@ NS_IMETHODIMP
 nsNode3Tearoff::IsDefaultNamespace(const nsAString& aNamespaceURI,
                                    PRBool* aReturn)
 {
-  NS_NOTYETIMPLEMENTED("nsNode3Tearoff::IsDefaultNamespace()");
-
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsAutoString defaultNamespace;
+  LookupNamespaceURI(EmptyString(), defaultNamespace);
+  *aReturn = aNamespaceURI.Equals(defaultNamespace);
+  return NS_OK;
 }
 
 nsDOMEventRTTearoff *
