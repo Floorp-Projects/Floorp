@@ -2431,6 +2431,20 @@ nsHTMLReflowState::ComputePadding(nscoord aContainingBlockWidth,
                              mComputedPadding.bottom);
     }
   }
+  // a table row/col group, row/col doesn't have padding
+  if (frame) {
+    nsCOMPtr<nsIAtom> frameType;
+    frame->GetFrameType(getter_AddRefs(frameType));
+    if ((nsLayoutAtoms::tableRowGroupFrame == frameType.get()) ||
+        (nsLayoutAtoms::tableColGroupFrame == frameType.get()) ||
+        (nsLayoutAtoms::tableRowFrame      == frameType.get()) ||
+        (nsLayoutAtoms::tableColFrame      == frameType.get())) {
+      mComputedPadding.top    = 0;
+      mComputedPadding.right  = 0;
+      mComputedPadding.bottom = 0;
+      mComputedPadding.left   = 0;
+    }
+  }
 }
 
 void
