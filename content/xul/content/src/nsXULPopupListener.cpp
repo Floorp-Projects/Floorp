@@ -223,6 +223,7 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
         // Time to launch a popup menu.
         LaunchPopup(aMouseEvent);
         aMouseEvent->PreventBubble();
+        aMouseEvent->PreventDefault();
       }
       break;
     case eXULPopupType_context:
@@ -232,6 +233,7 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
         // Time to launch a context menu.
         LaunchPopup(aMouseEvent);
         aMouseEvent->PreventBubble();
+        aMouseEvent->PreventDefault();
       }
       break;
     
