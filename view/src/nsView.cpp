@@ -116,7 +116,7 @@ nsView :: ~nsView()
   {
     nsIView *rootView;
     mViewManager->GetRootView(rootView);
-
+    
     if (nsnull != rootView)
     {
       if (rootView == this)
@@ -135,6 +135,14 @@ nsView :: ~nsView()
     else if (nsnull != mParent)
     {
       mParent->RemoveChild(this);
+    }
+
+    nsIView* grabbingView; //check to see if we are capturing!!!
+    mViewManager->GetMouseEventGrabber(grabbingView);
+    if (grabbingView == this)
+    {
+      PRBool boolResult;//not used
+      mViewManager->GrabMouseEvents(nsnull,boolResult);
     }
 
     mViewManager = nsnull;
