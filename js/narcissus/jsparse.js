@@ -216,8 +216,8 @@ var CCp = CompilerContext.prototype;
 CCp.bracketLevel = CCp.curlyLevel = CCp.parenLevel = CCp.hookLevel = 0;
 CCp.inForLoopInit = false;
 
-function compile(s) {
-    var t = new Tokenizer(s);
+function compile(s, f, l) {
+    var t = new Tokenizer(s, f, l);
     var x = new CompilerContext(false);
     var n = Script(t, x);
     if (!t.done)
@@ -291,6 +291,9 @@ Np.toString = function () {
 Np.getSource = function () {
     return this.tokenizer.source.slice(this.start, this.end);
 };
+
+Np.__defineGetter__('filename',
+                    function () { return this.tokenizer.filename; });
 
 String.prototype.repeat = function (n) {
     var s = "", t = this + s;
@@ -398,8 +401,10 @@ function Statement(t, x) {
         if (n2 && t.match(IN)) {
             n.type = FOR_IN;
             if (n2.type == VAR) {
-                if (n2.length != 1)
-                    throw new SyntaxError("Invalid for..in left-hand side");
+                if (n2.length != 1) {
+                    throw new SyntaxError("Invalid for..in left-hand side",
+                                          t.filename, n2.lineno);
+                }
 
                 // NB: n2[0].type == IDENTIFIER and n2[0].value == n2[0].name.
                 n.iterator = n2[0];

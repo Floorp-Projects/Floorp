@@ -39,14 +39,10 @@
  *
  * Execution of parse trees.
  *
- * XXX Standard classes except for eval and Function are bootlegged from the
- *     host JS environment.  Until Array and String are metacircular,
- *       load('js.js');
- *       evaluate(snarf('js.js'));
- *     will fail due to pigeon-hole problems in standard class prototypes.
- *     First such error concerns Array.prototype.top not being callable from
- *     the host engine, because it has been overwritten with a target object
- *     (FunctionObject) that the host engine cannot call.
+ * Standard classes except for eval, Function, Array, and String are borrowed
+ * from the host JS environment.  Function is metacircular.  Array and String
+ * are reflected via wrapping the corresponding native constructor and adding
+ * an extra level of prototype-based delegation.
  */
 
 const GLOBAL_CODE = 0, EVAL_CODE = 1, FUNCTION_CODE = 2;
@@ -60,7 +56,7 @@ var global = {
     NaN: NaN, Infinity: Infinity, undefined: undefined,
 
     // Function properties.
-    eval: function eval (s) {
+    eval: function eval(s) {
         if (typeof s != "string")
             return s;
 
@@ -104,8 +100,26 @@ var global = {
         var s = {object: global, parent: null};
         return new FunctionObject(f, s);
     },
-    Array: Array, String: String, Boolean: Boolean, Number: Number,
-    Date: Date, RegExp: RegExp,
+    Array: function Array() {
+        var a = this;
+        if (a instanceof Array) {
+            // Called as constructor.
+        } else {
+            a.__proto__ = Array.prototype;
+        }
+        return a;
+    },
+    String: function String() {
+        var s = this;
+        if (s instanceof String) {
+            // Called as constructor.
+        } else {
+            // Called as function.
+            s = GLOBAL.String.apply(this, arguments);
+        }
+        return s;
+    },
+    Boolean: Boolean, Number: Number, Date: Date, RegExp: RegExp,
     Error: Error, EvalError: EvalError, RangeError: RangeError,
     ReferenceError: ReferenceError, SyntaxError: SyntaxError,
     TypeError: TypeError, URIError: URIError,
@@ -113,6 +127,16 @@ var global = {
     // Other properties.
     Math: Math
 };
+
+// Reflect a host class into the target global environment by delegation.
+function reflectClass(name, proto) {
+    var gctor = global[name];
+    gctor.__defineProperty__('prototype', proto, true, true, true);
+    proto.__defineProperty__('constructor', gctor, false, false, true);
+}
+
+reflectClass('Array', new Array);
+reflectClass('String', new String);
 
 var XCp = ExecutionContext.prototype;
 ExecutionContext.current = XCp.caller = XCp.callee = null;
@@ -131,17 +155,20 @@ Reference.prototype.toString = function () { return this.node.getSource(); }
 
 function getValue(v) {
     if (v instanceof Reference) {
-        if (!v.base)
-            throw new ReferenceError(v.propertyName + " is not defined");
+        if (!v.base) {
+            throw new ReferenceError(v.propertyName + " is not defined",
+                                     this.node.filename, this.node.lineno);
+        }
         return v.base[v.propertyName];
     }
     return v;
 }
 
-function putValue(v, w) {
+function putValue(v, w, vn) {
     if (v instanceof Reference)
         return (v.base || global)[v.propertyName] = w;
-    throw new ReferenceError("Invalid assignment left-hand side");
+    throw new ReferenceError("Invalid assignment left-hand side",
+                             vn.filename, vn.lineno);
 }
 
 function isPrimitive(v) {
@@ -154,22 +181,25 @@ function isObject(v) {
     return (t == "object") ? v !== null : t == "function";
 }
 
-// If r instanceof Reference, v == getValue(r); else v === r.
-function toObject(v, r) {
+// If r instanceof Reference, v == getValue(r); else v === r.  If passed, rn
+// is the node whose execute result was r.
+function toObject(v, r, rn) {
     switch (typeof v) {
-      case "undefined":
-        throw new TypeError(r + " has no properties");
       case "boolean":
         return new Boolean(v);
       case "number":
         return new Number(v);
       case "string":
         return new String(v);
+      case "function":
+        return v;
       case "object":
-        if (v === null)
-            throw new TypeError(r + " has no properties");
+        if (v !== null)
+            return v;
     }
-    return v;
+    var message = r + " (type " + (typeof v) + ") has no properties";
+    throw rn ? new TypeError(message, rn.filename, rn.lineno)
+             : new TypeError(message);
 }
 
 function execute(n, x) {
@@ -205,8 +235,10 @@ function execute(n, x) {
         for (i = 0, j = a.length; i < j; i++) {
             u = a[i];
             s = u.name;
-            if (u.readOnly && t.hasOwnProperty(s))
-                throw new TypeError("Redeclaration of const " + s);
+            if (u.readOnly && t.hasOwnProperty(s)) {
+                throw new TypeError("Redeclaration of const " + s,
+                                    u.filename, u.lineno);
+            }
             if (u.readOnly || !t.hasOwnProperty(s)) {
                 t.__defineProperty__(s, undefined, x.type != EVAL_CODE,
                                      u.readOnly);
@@ -288,12 +320,12 @@ function execute(n, x) {
             execute(u, x);
         r = n.iterator;
         s = execute(n.object, x);
-        t = toObject(getValue(s), s);
+        t = toObject(getValue(s), s, n.object);
         a = [];
         for (i in t)
             a.push(i);
         for (i = 0, j = a.length; i < j; i++) {
-            putValue(execute(r, x), a[i]);
+            putValue(execute(r, x), a[i], r);
             try {
                 execute(n.body, x);
             } catch (e if e == BREAK && x.target == n) {
@@ -360,7 +392,7 @@ function execute(n, x) {
 
       case WITH:
         r = execute(n.object, x);
-        t = toObject(getValue(r), r);
+        t = toObject(getValue(r), r, n.object);
         x.scope = {object: t, parent: x.scope};
         try {
             execute(n.body, x);
@@ -429,7 +461,7 @@ function execute(n, x) {
               case MOD:         v = u % v; break;
             }
         }
-        putValue(r, v);
+        putValue(r, v, n[0]);
         break;
 
       case CONDITIONAL:
@@ -572,7 +604,7 @@ function execute(n, x) {
         u = Number(getValue(t));
         if (n.postfix)
             v = u;
-        putValue(t, (n.type == INCREMENT) ? ++u : --u);
+        putValue(t, (n.type == INCREMENT) ? ++u : --u, n[0]);
         if (!n.postfix)
             v = u;
         break;
@@ -581,14 +613,14 @@ function execute(n, x) {
         r = execute(n[0], x);
         t = getValue(r);
         u = n[1].value;
-        v = new Reference(toObject(t, r), u, n);
+        v = new Reference(toObject(t, r, n[0]), u, n);
         break;
 
       case INDEX:
         r = execute(n[0], x);
         t = getValue(r);
         u = getValue(execute(n[1], x));
-        v = new Reference(toObject(t, r), String(u), n);
+        v = new Reference(toObject(t, r, n[0]), String(u), n);
         break;
 
       case LIST:
@@ -605,8 +637,10 @@ function execute(n, x) {
         r = execute(n[0], x);
         a = execute(n[1], x);
         f = getValue(r);
-        if (isPrimitive(f) || typeof f.__call__ != "function")
-            throw new TypeError(r + " is not callable");
+        if (isPrimitive(f) || typeof f.__call__ != "function") {
+            throw new TypeError(r + " is not callable",
+                                n[0].filename, n[0].lineno);
+        }
         t = (r instanceof Reference) ? r.base : null;
         if (t instanceof Activation)
             t = null;
@@ -623,8 +657,10 @@ function execute(n, x) {
         } else {
             a = execute(n[1], x);
         }
-        if (isPrimitive(f) || typeof f.__construct__ != "function")
-            throw new TypeError(r + " is not a constructor");
+        if (isPrimitive(f) || typeof f.__construct__ != "function") {
+            throw new TypeError(r + " is not a constructor",
+                                n[0].filename, n[0].lineno);
+        }
         v = f.__construct__(a, x);
         break;
 
@@ -704,8 +740,8 @@ function FunctionObject(node, scope) {
     this.scope = scope;
     this.__defineProperty__('length', node.params.length, true, true, true);
     var proto = {};
-    proto.__defineProperty__('constructor', this, false, false, true);
     this.__defineProperty__('prototype', proto, true);
+    proto.__defineProperty__('constructor', this, false, false, true);
 }
 
 var FOp = FunctionObject.prototype = {
@@ -750,8 +786,10 @@ var FOp = FunctionObject.prototype = {
         if (isPrimitive(v))
             return false;
         var p = this.prototype;
-        if (isPrimitive(p))
-            throw new TypeError("'prototype' property is not an object");
+        if (isPrimitive(p)) {
+            throw new TypeError("'prototype' property is not an object",
+                                this.node.filename, this.node.lineno);
+        }
         var o;
         while ((o = v.__proto__)) {
             if (o == p)
@@ -789,7 +827,8 @@ var FOp = FunctionObject.prototype = {
         } else if (!(a instanceof Object)) {
             // XXX check for a non-arguments object
             throw new TypeError("Second argument to Function.prototype.apply" +
-                                " must be an array or arguments object");
+                                " must be an array or arguments object",
+                                this.node.filename, this.node.lineno);
         }
 
         return this.__call__(t, a, ExecutionContext.current);
@@ -802,17 +841,22 @@ var FOp = FunctionObject.prototype = {
     }
 };
 
-// Connect Function.prototype and Function.prototype.constructor.
-global.Function.__defineProperty__('prototype', FOp, true, true, true);
-FOp.__defineProperty__('constructor', global.Function, false, false, true);
+// Connect Function.prototype and Function.prototype.constructor in global.
+reflectClass('Function', FOp);
 
 // Help native and host-scripted functions be like FunctionObjects.
 var Fp = Function.prototype;
+var Rp = RegExp.prototype;
 
 Fp.__call__ = function (t, a, x) {
     // Curse ECMA yet again!
     a = Array.prototype.splice.call(a, 0, a.length);
     return this.apply(t, a);
+};
+
+Rp.__call__ = function (t, a, x) {
+    a = Array.prototype.splice.call(a, 0, a.length);
+    return this.exec.apply(this, a);
 };
 
 Fp.__construct__ = function (a, x) {
@@ -848,12 +892,12 @@ function thunk(f, x) {
     return function () { return f.__call__(this, arguments, x); };
 }
 
-function evaluate(s) {
+function evaluate(s, f, l) {
     var x = ExecutionContext.current;
     var x2 = new ExecutionContext(GLOBAL_CODE);
     ExecutionContext.current = x2;
     try {
-        execute(compile(s), x2);
+        execute(compile(s, f, l), x2);
     } finally {
         ExecutionContext.current = x;
     }
