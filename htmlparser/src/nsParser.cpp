@@ -2206,8 +2206,13 @@ static PRBool detectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsS
                 if(kNotFound != encEnd) {
                    PRInt32 count = encEnd - encStart -1;
                    if(count >0) {
-                      firstXbytes.Mid(oCharset,(encStart+1), count);
-                      oCharsetSource= kCharsetFromMetaTag;
+                      const PRUnichar *u = firstXbytes.GetUnicode();
+                      // if UTF-16, it should have been detected by now
+                      // otherwise, the label must be invalid
+                      if (nsCRT::strncasecmp(&u[encStart+1], NS_LITERAL_STRING("UTF-16").get(), count)) {
+                        firstXbytes.Mid(oCharset,(encStart+1), count);
+                        oCharsetSource= kCharsetFromMetaTag;
+                      }
                    }
                 }
              }
