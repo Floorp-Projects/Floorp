@@ -40,6 +40,16 @@
 
 #include "domstubs.idl"
 
+/**
+ * The nsIDOMDocumentEvent interface is the interface to the event
+ * factory method on a DOM document object.
+ *
+ * For more information on this interface please see 
+ * http://www.w3.org/TR/DOM-Level-2-Events/
+ *
+ * @status FROZEN
+ */
+
 [scriptable, uuid(46b91d66-28e2-11d4-ab1e-0010830123b4)]
 interface nsIDOMDocumentEvent : nsISupports
 {

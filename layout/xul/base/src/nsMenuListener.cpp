@@ -44,6 +44,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsGUIEvent.h"
 
 // Drag & Drop, Clipboard
@@ -91,9 +92,14 @@ nsMenuListener::~nsMenuListener()
 ////////////////////////////////////////////////////////////////////////
 nsresult
 nsMenuListener::KeyUp(nsIDOMEvent* aKeyEvent)
-{  
-  aKeyEvent->PreventBubble();
-	aKeyEvent->PreventCapture();
+{
+  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+
+  if (nsevent) {
+    nsevent->PreventBubble();
+    nsevent->PreventCapture();
+  }
+
   aKeyEvent->PreventDefault();
 
   return NS_ERROR_BASE; // I am consuming event
@@ -157,8 +163,13 @@ nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
       mMenuParent->DismissChain();
   }
 
-  aKeyEvent->PreventBubble();
-	aKeyEvent->PreventCapture();
+  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+
+  if (nsevent) {
+    nsevent->PreventBubble();
+    nsevent->PreventCapture();
+  }
+
   aKeyEvent->PreventDefault();
 
   return NS_ERROR_BASE; // I am consuming event
@@ -235,8 +246,13 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
     }
   }
 
-  aKeyEvent->PreventBubble();
-	aKeyEvent->PreventCapture();
+  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aKeyEvent));
+
+  if (nsevent) {
+    nsevent->PreventBubble();
+    nsevent->PreventCapture();
+  }
+
   aKeyEvent->PreventDefault();
 
   return NS_ERROR_BASE; // I am consuming event

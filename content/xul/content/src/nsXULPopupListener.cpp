@@ -65,6 +65,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMNSEvent.h"
 
 #include "nsIBoxObject.h"
 #include "nsIPopupBoxObject.h"
@@ -269,6 +270,8 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
   // Store clicked-on node in xul document for context menus and menu popups.
   xulDocument->SetPopupNode( targetNode );
 
+  nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aMouseEvent));
+
   switch (popupType) {
     case eXULPopupType_popup:
       // Check for left mouse button down
@@ -276,7 +279,11 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
       if (button == 0) {
         // Time to launch a popup menu.
         LaunchPopup(aMouseEvent);
-        aMouseEvent->PreventBubble();
+
+        if (nsevent) {
+            nsevent->PreventBubble();
+        }
+
         aMouseEvent->PreventDefault();
       }
       break;
@@ -289,7 +296,11 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
     FireFocusOnTargetContent(targetNode);
 #endif
     LaunchPopup(aMouseEvent);
-    aMouseEvent->PreventBubble();
+
+    if (nsevent) {
+        nsevent->PreventBubble();
+    }
+
     aMouseEvent->PreventDefault();
     break;
   }

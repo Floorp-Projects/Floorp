@@ -42,6 +42,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsISupports.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIPrivateCompositionEvent.h"
@@ -55,15 +56,16 @@
 class nsIContent;
 class nsIScrollableView;
 
-class nsDOMEvent : public nsIDOMKeyEvent, 
+class nsDOMEvent : public nsIDOMKeyEvent,
+                   public nsIDOMNSEvent,
                    public nsIDOMMouseEvent,
-                   public nsIDOMNSUIEvent, 
-                   public nsIPrivateDOMEvent, 
-                   public nsIPrivateTextEvent, 
+                   public nsIDOMNSUIEvent,
+                   public nsIPrivateDOMEvent,
+                   public nsIPrivateTextEvent,
                    public nsIPrivateCompositionEvent
 {
-
 public:
+
   // Note: this enum must be kept in sync with mEventNames in nsDOMEvent.cpp
   enum nsDOMEvents {
     eDOMEvents_mousedown=0,
@@ -124,27 +126,13 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDOMEvent Interface
-  NS_IMETHOD    GetType(nsAWritableString& aType);
-  NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget);
-  NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget);
-  NS_IMETHOD    GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget);
-  NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase);
-  NS_IMETHOD    GetBubbles(PRBool* aBubbles);
-  NS_IMETHOD    GetCancelable(PRBool* aCancelable);
-  NS_IMETHOD    GetTimeStamp(PRUint64* aTimestamp);
-  NS_IMETHOD    StopPropagation();
-  NS_IMETHOD    PreventBubble();
-  NS_IMETHOD    PreventCapture();
-  NS_IMETHOD    PreventDefault();
-  NS_IMETHOD    InitEvent(const nsAReadableString& aEventTypeArg,
-                          PRBool aCanBubbleArg, PRBool aCancelableArg);
+  NS_DECL_NSIDOMEVENT
+
+  // nsIDOMNSEvent Interface
+  NS_DECL_NSIDOMNSEVENT
 
   // nsIDOMUIEvent Interface
-  NS_IMETHOD    GetView(nsIDOMAbstractView** aView);
-  NS_IMETHOD    GetDetail(PRInt32* aDetail);
-  NS_IMETHOD    InitUIEvent(const nsAReadableString& aTypeArg,
-                            PRBool aCanBubbleArg, PRBool aCancelableArg,
-                            nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg);
+  NS_DECL_NSIDOMUIEVENT
 
   // nsIDOMMouseEvent Interface and nsIDOMKeyEvent Interface
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX);

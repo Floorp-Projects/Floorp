@@ -54,6 +54,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsISizeOfHandler.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
@@ -496,11 +497,20 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
     case NS_MOUSE_RIGHT_DOUBLECLICK:
     case NS_MOUSE_RIGHT_BUTTON_DOWN:
     case NS_MOUSE_RIGHT_BUTTON_UP:
-      if (aDOMEvent != nsnull && *aDOMEvent != nsnull) {
-        (*aDOMEvent)->PreventBubble();
-      } else {
-        ret = NS_ERROR_FAILURE;
+      {
+        nsCOMPtr<nsIDOMNSEvent> nsevent;
+
+        if (aDOMEvent) {
+          nsevent = do_QueryInterface(*aDOMEvent);
+        }
+
+        if (nsevent) {
+          nsevent->PreventBubble();
+        } else {
+          ret = NS_ERROR_FAILURE;
+        }
       }
+
       break;
 
     case NS_MOUSE_ENTER_SYNTH:

@@ -40,6 +40,7 @@
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsEventListenerManager.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
@@ -2379,7 +2380,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
   EventArrayType arrayType;
   nsListenerStruct *ls;
 
-  if (aEventTypes & nsIDOMEvent::MOUSEDOWN) {
+  if (aEventTypes & nsIDOMNSEvent::MOUSEDOWN) {
     arrayType = eEventArrayType_Mouse;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2388,7 +2389,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::MOUSEUP) {
+  if (aEventTypes & nsIDOMNSEvent::MOUSEUP) {
     arrayType = eEventArrayType_Mouse;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2397,7 +2398,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::MOUSEOVER) {
+  if (aEventTypes & nsIDOMNSEvent::MOUSEOVER) {
     arrayType = eEventArrayType_Mouse;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2406,7 +2407,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::MOUSEOUT) {
+  if (aEventTypes & nsIDOMNSEvent::MOUSEOUT) {
     arrayType = eEventArrayType_Mouse;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2415,7 +2416,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::MOUSEMOVE) {
+  if (aEventTypes & nsIDOMNSEvent::MOUSEMOVE) {
     arrayType = eEventArrayType_MouseMotion;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2424,7 +2425,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::CLICK) {
+  if (aEventTypes & nsIDOMNSEvent::CLICK) {
     arrayType = eEventArrayType_Mouse;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2433,7 +2434,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::DBLCLICK) {
+  if (aEventTypes & nsIDOMNSEvent::DBLCLICK) {
     arrayType = eEventArrayType_Mouse;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2442,7 +2443,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::KEYDOWN) {
+  if (aEventTypes & nsIDOMNSEvent::KEYDOWN) {
     arrayType = eEventArrayType_Key;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2451,7 +2452,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::KEYUP) {
+  if (aEventTypes & nsIDOMNSEvent::KEYUP) {
     arrayType = eEventArrayType_Key;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2460,7 +2461,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::KEYPRESS) {
+  if (aEventTypes & nsIDOMNSEvent::KEYPRESS) {
     arrayType = eEventArrayType_Key;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2469,7 +2470,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::DRAGDROP) {
+  if (aEventTypes & nsIDOMNSEvent::DRAGDROP) {
     arrayType = eEventArrayType_Drag;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2478,7 +2479,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  /*if (aEventTypes & nsIDOMEvent::MOUSEDRAG) {
+  /*if (aEventTypes & nsIDOMNSEvent::MOUSEDRAG) {
     arrayType = kIDOMMouseListenerarrayType;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2487,7 +2488,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }*/
-  if (aEventTypes & nsIDOMEvent::FOCUS) {
+  if (aEventTypes & nsIDOMNSEvent::FOCUS) {
     arrayType = eEventArrayType_Focus;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2496,7 +2497,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::BLUR) {
+  if (aEventTypes & nsIDOMNSEvent::BLUR) {
     arrayType = eEventArrayType_Focus;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2505,7 +2506,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::SELECT) {
+  if (aEventTypes & nsIDOMNSEvent::SELECT) {
     arrayType = eEventArrayType_Form;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2514,7 +2515,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::CHANGE) {
+  if (aEventTypes & nsIDOMNSEvent::CHANGE) {
     arrayType = eEventArrayType_Form;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2523,7 +2524,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::RESET) {
+  if (aEventTypes & nsIDOMNSEvent::RESET) {
     arrayType = eEventArrayType_Form;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2532,7 +2533,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::SUBMIT) {
+  if (aEventTypes & nsIDOMNSEvent::SUBMIT) {
     arrayType = eEventArrayType_Form;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2541,7 +2542,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::LOAD) {
+  if (aEventTypes & nsIDOMNSEvent::LOAD) {
     arrayType = eEventArrayType_Load;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2550,7 +2551,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::UNLOAD) {
+  if (aEventTypes & nsIDOMNSEvent::UNLOAD) {
     arrayType = eEventArrayType_Load;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2559,7 +2560,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::ABORT) {
+  if (aEventTypes & nsIDOMNSEvent::ABORT) {
     arrayType = eEventArrayType_Load;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2568,7 +2569,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::ERROR) {
+  if (aEventTypes & nsIDOMNSEvent::ERROR) {
     arrayType = eEventArrayType_Load;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2577,7 +2578,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::RESIZE) {
+  if (aEventTypes & nsIDOMNSEvent::RESIZE) {
     arrayType = eEventArrayType_Paint;
     ls = FindJSEventListener(arrayType);
     if (ls) {
@@ -2586,7 +2587,7 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }
-  if (aEventTypes & nsIDOMEvent::SCROLL) {
+  if (aEventTypes & nsIDOMNSEvent::SCROLL) {
     arrayType = eEventArrayType_Scroll;
     ls = FindJSEventListener(arrayType);
     if (ls) {

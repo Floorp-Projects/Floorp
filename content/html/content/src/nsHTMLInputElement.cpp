@@ -75,6 +75,7 @@
 
 #include "nsIPresState.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsICheckboxControlFrame.h"
@@ -1074,7 +1075,13 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
 
       nsCOMPtr<nsIDOMEventTarget> originalTarget;
-      (*aDOMEvent)->GetOriginalTarget(getter_AddRefs(originalTarget));
+
+      nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(*aDOMEvent));
+
+      if (nsevent) {
+        nsevent->GetOriginalTarget(getter_AddRefs(originalTarget));
+      }
+
       if (!originalTarget) {
         privateEvent->SetOriginalTarget(oldTarget);
       }
@@ -1299,8 +1306,14 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
         if (type == NS_FORM_INPUT_BUTTON || 
             type == NS_FORM_INPUT_RESET || 
             type == NS_FORM_INPUT_SUBMIT ) {
-          if (aDOMEvent != nsnull && *aDOMEvent != nsnull) {
-            (*aDOMEvent)->PreventBubble();
+          nsCOMPtr<nsIDOMNSEvent> nsevent;
+
+          if (aDOMEvent) {
+            nsevent = do_QueryInterface(*aDOMEvent);
+          }
+
+          if (nsevent) {
+            nsevent->PreventBubble();
           } else {
             rv = NS_ERROR_FAILURE;
           }
