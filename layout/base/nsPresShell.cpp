@@ -1193,6 +1193,7 @@ public:
   NS_IMETHOD SetCaretWidth(PRInt16 aPixels);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
+  NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
 
   NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable);
   NS_IMETHOD GetSelectionFlags(PRInt16 *aOutEnable);
@@ -3187,6 +3188,13 @@ NS_IMETHODIMP PresShell::GetCaretEnabled(PRBool *aOutEnabled)
 {
   NS_ENSURE_ARG_POINTER(aOutEnabled);
   *aOutEnabled = mCaretEnabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP PresShell::SetCaretVisibilityDuringSelection(PRBool aVisibility)
+{
+  if (mCaret)
+    mCaret->SetVisibilityDuringSelection(aVisibility);
   return NS_OK;
 }
 

@@ -85,6 +85,7 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.caretBlinkTime", eMetric_CaretBlinkTime, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.caretWidthTwips", eMetric_SingleLineCaretWidth, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.caretVisibleWithSelection", eMetric_ShowCaretDuringSelection, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.submenuDelay", eMetric_SubmenuDelay, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.dragFullWindow", eMetric_DragFullWindow, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.dragThresholdX", eMetric_DragThresholdX, PR_FALSE, nsLookAndFeelTypeInt, 0 },
