@@ -29,10 +29,11 @@
 #include "cmtcmn.h"
 
 #include "nsIPSMUIHandler.h"
+#include "nsIDOMWindow.h"
 
 PRStatus InitPSMUICallbacks(PCMT_CONTROL gControl);
 PRStatus InitPSMEventLoop(PCMT_CONTROL gControl);
-PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char* pickledStatus, const char *hostName);
+PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char* pickledStatus, const char *hostName, nsIDOMWindow * window);
 
 
 #define NS_PSMUIHANDLER_CID {0x15944e30, 0x601e, 0x11d3, {0x8c, 0x4a, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
