@@ -38,36 +38,7 @@
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-
-
-
-
-NS_IMPL_ADDREF(nsMsgAccount)
-NS_IMPL_RELEASE(nsMsgAccount)
-
-nsresult
-nsMsgAccount::QueryInterface(const nsIID& iid, void **result)
-{
-  nsresult rv = NS_NOINTERFACE;
-  if (!result)
-    return NS_ERROR_NULL_POINTER;
-
-  void *res = nsnull;
-  if (iid.Equals(nsCOMTypeInfo<nsIMsgAccount>::GetIID()) ||
-      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-    res = NS_STATIC_CAST(nsIMsgAccount*, this);
-  else if (iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
-    res = NS_STATIC_CAST(nsIShutdownListener*, this);
-
-  if (res) {
-    NS_ADDREF(this);
-    *result = res;
-    rv = NS_OK;
-  }
-
-  return rv;
-}
-
+NS_IMPL_ISUPPORTS(nsMsgAccount, NS_GET_IID(nsIMsgAccount));
 
 nsMsgAccount::nsMsgAccount():
   m_accountKey(0),
@@ -84,7 +55,7 @@ nsMsgAccount::~nsMsgAccount()
 
   // release of servers an identites happen automatically
   // thanks to nsCOMPtrs and nsISupportsArray
-  
+  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);  
   PR_FREEIF(m_accountKey);
   
 }
@@ -105,8 +76,7 @@ nsMsgAccount::getPrefService() {
   
   return nsServiceManager::GetService(kPrefServiceCID,
                                       nsCOMTypeInfo<nsIPref>::GetIID(),
-                                      (nsISupports**)&m_prefs,
-                                      this);
+                                      (nsISupports**)&m_prefs);
 }
 
 NS_IMETHODIMP
@@ -379,18 +349,6 @@ nsMsgAccount::ToString(PRUnichar **aResult)
   val += m_accountKey;
   val += "]";
   *aResult = val.ToNewUnicode();
-  return NS_OK;
-}
-
-/* called if the prefs service goes offline */
-NS_IMETHODIMP
-nsMsgAccount::OnShutdown(const nsCID& aClass, nsISupports *service)
-{
-  if (aClass.Equals(kPrefServiceCID)) {
-    if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
-    m_prefs = nsnull;
-  }
-
   return NS_OK;
 }
 

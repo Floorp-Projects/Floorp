@@ -19,8 +19,7 @@
 #include "nscore.h"
 #include "nsIMsgAccount.h"
 
-class nsMsgAccount : public nsIMsgAccount,
-                     public nsIShutdownListener
+class nsMsgAccount : public nsIMsgAccount
 {
   
 public:
@@ -30,9 +29,6 @@ public:
   NS_DECL_ISUPPORTS
     
   NS_DECL_NSIMSGACCOUNT
-  // nsIShutdownListener
-
-  NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
   
 private:
   char *m_accountKey;
