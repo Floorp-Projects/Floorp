@@ -1869,9 +1869,9 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
             nsString attributeValue;
 
             PRInt32 namespaceID = -1;
-            //nsCOMPtr<nsIXMLContent> pXMLContent(pChildContent);
-            //if (pXMLContent)
-              pChildContent->GetNameSpaceID(namespaceID);
+           
+
+            pChildContent->GetNameSpaceID(namespaceID);
 
             pChildContent->GetAttribute(namespaceID, 
                                         pElementAtom,
