@@ -1109,7 +1109,6 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIChannel * /* aChannel */, nsISu
 
     nsresult res = NS_OK;
 
-
     if(NS_SUCCEEDED(res) && aLength > 0)
     {
 		// make sure m_inputStream is set to the right input stream...
@@ -1555,7 +1554,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 				if (HandlingMultipleMessages(messageIdString))
 				{
 					// multiple messages, fetch them all
-						m_progressStringId =  IMAP_FOLDER_RECEIVING_MESSAGE_OF;
+					SetProgressString(IMAP_FOLDER_RECEIVING_MESSAGE_OF);
 					
 					m_progressIndex = 0;
 					m_progressCount = CountMessagesInIdString(messageIdString);
@@ -1563,7 +1562,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
 	                FetchMessage(messageIdString, 
 								 kEveryThingRFC822Peek,
 								 bMessageIdsAreUids);
-					m_progressStringId = 0;
+					SetProgressString(0);
 				}
 				else
 				{
@@ -1887,7 +1886,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 m_runningUrl->CreateListOfMessageIdsString(&messageIdString);
                 if (messageIdString)
                 {
-					m_progressStringId =  XP_FOLDER_RECEIVING_MESSAGE_OF;
+					SetProgressString(XP_FOLDER_RECEIVING_MESSAGE_OF);
 					m_progressIndex = 0;
 					m_progressCount = CountMessagesInIdString(messageIdString);
 					
@@ -1895,7 +1894,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
                                  kEveryThingRFC822Peek,
                                  bMessageIdsAreUids);
                       
-                    m_progressStringId = 0;           
+                    SetProgressString(0);
                     OnlineCopyCompleted(
                         GetServerStateParser().LastCommandSuccessful() ? 
                                 kSuccessfulCopy : kFailedCopy);
@@ -2930,13 +2929,13 @@ void nsImapProtocol::FolderMsgDump(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPe
 	// lets worry about this progress stuff later.
 	switch (fields) {
 	case kHeadersRFC822andUid:
-		m_progressStringId =  IMAP_RECEIVING_MESSAGE_HEADERS_OF;
+		SetProgressString(IMAP_RECEIVING_MESSAGE_HEADERS_OF);
 		break;
 	case kFlags:
-		m_progressStringId =  IMAP_RECEIVING_MESSAGE_FLAGS_OF;
+		SetProgressString(IMAP_RECEIVING_MESSAGE_FLAGS_OF);
 		break;
 	default:
-		m_progressStringId =  IMAP_FOLDER_RECEIVING_MESSAGE_OF;
+		SetProgressString(IMAP_FOLDER_RECEIVING_MESSAGE_OF);
 		break;
 	}
 	
@@ -2944,7 +2943,7 @@ void nsImapProtocol::FolderMsgDump(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPe
 	m_progressCount = msgCount;
 	FolderMsgDumpLoop(msgUids, msgCount, fields);
 	
-	m_progressStringId = 0;
+	SetProgressString(0);
 }
 
 void nsImapProtocol::WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount)
@@ -3579,6 +3578,12 @@ char* nsImapProtocol::CreateNewLineFromSocket()
 				PR_Wait(m_dataAvailableMonitor, /* PR_INTERVAL_NO_TIMEOUT */ 50);
 				PR_ExitMonitor(m_dataAvailableMonitor);
 
+        // this is just a HACK to get around an awful unix bug involving
+        // the UI thread processing events from our event queue!!!
+        // if this is still here after say 11/05/99 please see
+        // mscott to take it away!!
+        ClearFlag(IMAP_WAITING_FOR_DATA);
+
 				// now that we are awake...process some events
 				m_eventQueue->ProcessPendingEvents();
 			} while (TestFlag(IMAP_WAITING_FOR_DATA) && !DeathSignalReceived());
@@ -3869,20 +3874,22 @@ void nsImapProtocol::ResetProgressInfo()
 	m_lastProgressStringId = -1;
 }
 
+void nsImapProtocol::SetProgressString(PRInt32 stringId)
+{
+  m_progressStringId = stringId;
+	if (m_progressStringId && m_imapServerSink)
+		m_imapServerSink->GetImapStringByID(stringId, getter_Copies(m_progressString));
+}
+
 void
 nsImapProtocol::ShowProgress()
 {
-	if (m_progressStringId)
-	{
-		PRUnichar *progressString = NULL;
-		if (m_imapServerSink)
-			m_imapServerSink->GetImapStringByID(m_progressStringId, &progressString);
-		if (progressString)
+		if (m_progressString && m_progressStringId)
 		{
+			PRUnichar *progressString = NULL;
 			// lossy if localized string has non-8-bit chars, but we're 
 			// stuck with PR_smprintf for now.
-			nsCString cProgressString(progressString);
-			PR_FREEIF(progressString);
+			nsCString cProgressString(m_progressString);
 			const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
 
 			char *printfString = PR_smprintf(cProgressString, (mailboxName) ? mailboxName : "", ++m_progressIndex, m_progressCount);
@@ -3897,7 +3904,6 @@ nsImapProtocol::ShowProgress()
 				PercentProgressUpdateEvent(progressString,(100*(m_progressIndex))/m_progressCount );
 			PR_FREEIF(progressString);
 		}
-	}
 }
 
 void
@@ -6262,27 +6268,27 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(PRUint32 startPosition, PRInt32 readC
 		}
 	} // if aLoadGroup
 
-    // loading the url consists of asking the server to add the url to it's imap event queue....
-    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(m_url);
-    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = mailnewsUrl->GetServer(getter_AddRefs(server));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIImapIncomingServer> imapServer;
-    imapServer = do_QueryInterface(server, &rv);
-    if (NS_FAILED(rv)) return rv;
+  // loading the url consists of asking the server to add the url to it's imap event queue....
+  nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(m_url);
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = mailnewsUrl->GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIImapIncomingServer> imapServer;
+  imapServer = do_QueryInterface(server, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-    // Assume AsyncRead is always called from the UI thread.....
-    nsCOMPtr<nsIEventQueue> queue;
- 	// get the Event Queue for this thread...
-	NS_WITH_SERVICE(nsIEventQueueService, pEventQService,kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+  // Assume AsyncRead is always called from the UI thread.....
+  nsCOMPtr<nsIEventQueue> queue;
+  // get the Event Queue for this thread...
+  NS_WITH_SERVICE(nsIEventQueueService, pEventQService,kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-    rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
-    if (NS_FAILED(rv)) return rv;
-    rv = imapServer->GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull);
-    return rv;
+  rv = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(queue));
+  if (NS_FAILED(rv)) return rv;
+  rv = imapServer->GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull);
+  return rv;
 }
 
 NS_IMETHODIMP nsImapMockChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer)
