@@ -305,10 +305,10 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
         if(descr)
             *descr++=0;
 
-//#ifdef NS_DEBUG
+#ifdef DEBUG_av
         printf("Registering plugin %d for: \"%s\",\"%s\",\"%s\"\n",
                i, mtype,descr ? descr : "null",exten ? exten : "null");
-//#endif
+#endif /* DEBUG_av */
 
         if(!*mtype && !descr && !exten) {
             i--;
