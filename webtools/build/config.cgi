@@ -135,6 +135,8 @@ sub print_script {
   print "# See http://www.mozilla.org/build/unix.html for build instructions.\n";
   print "#\n";
   print "\n";
+
+  print "# Options for client.mk\n";
   foreach $param ($query->param()) {
     if ($param =~ /^MOZ_/) {
       next if $query->param($param) eq '';
@@ -143,6 +145,7 @@ sub print_script {
     }
   }
   print "\n" if $need_blank_line;
+  print "# Options for 'configure' (same as command-line options).\n";
   foreach $param ($query->param()) {
     if ($param =~ /^--/) {
       next if $query->param($param) eq '';
