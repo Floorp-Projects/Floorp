@@ -307,7 +307,8 @@ nsXPCWrappedNativeClass::GetInterfaceName()
 }
 
 JSBool
-nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
+nsXPCWrappedNativeClass::GetConstantAsJSVal(JSContext *cx,
+                                            nsXPCWrappedNative* wrapper,
                                             const XPCNativeMemberDescriptor* desc,
                                             jsval* vp)
 {
@@ -328,7 +329,8 @@ nsXPCWrappedNativeClass::GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
     v.type = constant->GetType();
     memcpy(&v.val, &mv.val, sizeof(mv.val));
 
-    return XPCConvert::NativeData2JS(vp, &v.val, v.type);
+    // XXX if iid consts are supported, then coditionally fill it in here
+    return XPCConvert::NativeData2JS(cx, vp, &v.val, v.type, NULL);
 }
 
 void
@@ -362,7 +364,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     uint8 vtblIndex;
     nsresult invokeResult;
     nsIAllocator* al = NULL;
-    
+
     *vp = JSVAL_NULL;
 
     if(!(al = nsXPConnect::GetAllocator()))
@@ -443,8 +445,12 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
             if(!param.IsIn())
                 continue;
 
+            // in the future there may be a param flag indicating 'stingy'
             if(type.IsPointer())
+            {
                 conditional_al = al;
+                dp->flags |= nsXPCVariant::VAL_IS_OWNED;
+            }
         }
         else
         {
@@ -458,14 +464,33 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
 
         if(type.TagPart() == nsXPTType::T_INTERFACE)
         {
-            // XXX get the iid                
+            dp->flags |= nsXPCVariant::VAL_IS_IFACE;
+
+            if(!(conditional_iid = param.GetInterfaceIID()))
+            {
+                // XXX this (and others!) should throw rather than report error
+                ReportError(desc, "could not get interface type");
+                goto done;
+            }
         }
         else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
         {
-            // XXX get the iid                
+            dp->flags |= nsXPCVariant::VAL_IS_IFACE;
+
+            uint8 arg_num = param.GetInterfaceIsArgNumber();
+            const nsXPTParamInfo& param = info->GetParam(arg_num);
+            const nsXPTType& type = param.GetType();
+            if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
+               !XPCConvert::JSData2Native(cx, &conditional_iid, argv[arg_num],
+                                          type, NULL, NULL))
+            {
+                // XXX this (and others!) should throw rather than report error
+                ReportError(desc, "could not get interface type");
+                goto done;
+            }
         }
 
-        if(!XPCConvert::JSData2Native(cx, &dp->val, src, type, 
+        if(!XPCConvert::JSData2Native(cx, &dp->val, src, type,
                                       conditional_al, conditional_iid))
         {
             NS_ASSERTION(0, "bad type");
@@ -489,13 +514,38 @@ nsXPCWrappedNativeClass::CallWrappedMethod(nsXPCWrappedNative* wrapper,
     {
         const nsXPTParamInfo& param = info->GetParam(i);
         const nsXPTType& type = param.GetType();
+        nsID* conditional_iid = NULL;
 
         nsXPCVariant* dp = &dispatchParams[i];
         if(param.IsOut())
         {
             jsval v;
 
-            if(!XPCConvert::NativeData2JS(&v, &dp->val, type))
+            if(type.TagPart() == nsXPTType::T_INTERFACE)
+            {
+                if(!(conditional_iid = param.GetInterfaceIID()))
+                {
+                    // XXX this (and others!) should throw rather than report error
+                    ReportError(desc, "could not get interface type");
+                    goto done;
+                }
+            }
+            else if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
+            {
+                uint8 arg_num = param.GetInterfaceIsArgNumber();
+                const nsXPTParamInfo& param = info->GetParam(arg_num);
+                const nsXPTType& type = param.GetType();
+                if(!type.IsPointer() || type.TagPart() != nsXPTType::T_IID ||
+                   !(conditional_iid = (nsID*)dispatchParams[arg_num].val.p))
+                {
+                    // XXX this (and others!) should throw rather than report error
+                    ReportError(desc, "could not get interface type");
+                    goto done;
+                }
+            }
+
+            if(!XPCConvert::NativeData2JS(cx, &v, &dp->val, type,
+                                          conditional_iid))
             {
                 retval = NS_ERROR_FAILURE;
                 goto done;
@@ -524,12 +574,11 @@ done:
     {
         nsXPCVariant* dp = &dispatchParams[i];
         void* p = dp->val.p;
-        // XXX verify that ALL this this stuff is right
         if(!p)
             continue;
-        if(dp->flags & nsXPCVariant::VAL_IS_OWNED)
-            delete [] p;
-        else if(info->GetParam(i).GetType() == nsXPTType::T_INTERFACE)
+        if(dp->IsValOwned() && al)
+            al->Free(p);
+        if(dp->IsValInterface())
             ((nsISupports*)p)->Release();
     }
 
@@ -619,7 +668,7 @@ WrappedNative_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if(desc)
     {
         if(desc->IsConstant())
-            return clazz->GetConstantAsJSVal(wrapper, desc, vp);
+            return clazz->GetConstantAsJSVal(cx, wrapper, desc, vp);
         else if(desc->IsMethod())
         {
             // allow for lazy creation of 'prototypical' function invoke object

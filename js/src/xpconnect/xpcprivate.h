@@ -68,8 +68,8 @@ public:
     static nsXPConnect* GetXPConnect();
     static nsIAllocator* GetAllocator(nsXPConnect* xpc = NULL);
     static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = NULL);
+    static XPCContext*  GetContext(JSContext* cx, nsXPConnect* xpc = NULL);
 
-    XPCContext*              GetContext(JSContext* cx);
     JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
     nsIXPCScriptable* GetArbitraryScriptable() {return mArbitraryScriptable;}
 
@@ -144,26 +144,6 @@ class nsIXPCWrappedJSClass : public nsISupports
 
 /*************************/
 
-// nsXPCWrappedJSClass maintains an array of these things
-class XPCJSMemberDescriptor
-{
-private:
-    enum {
-        // these are all bitwise flags!
-        JSMD_REFLECTABLE = 0x1
-    };
-
-public:
-    JSBool IsReflectable() const {return flags & JSMD_REFLECTABLE;}
-    void SetReflectable(JSBool b) {if(b) flags |= JSMD_REFLECTABLE;
-                                   else  flags &= ~JSMD_REFLECTABLE;}
-    XPCJSMemberDescriptor(){}
-private:
-    uint16          flags;
-};
-
-/*************************/
-
 class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
@@ -177,7 +157,7 @@ public:
     nsIInterfaceInfo* GetInterfaceInfo() const {return mInfo;}
 
     static JSBool InitForContext(XPCContext* xpcc);
-    JSBool IsWrappedJS(nsISupports* aPtr);
+    static JSBool IsWrappedJS(nsISupports* aPtr);
 
     NS_IMETHOD DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,
                                        void** aInstancePtr);
@@ -200,9 +180,9 @@ private:
 
     JSObject*  CallQueryInterfaceOnJSObject(JSObject* jsobj, REFNSIID aIID);
 
-    JSBool IsReflectable(uint16 i) const 
+    JSBool IsReflectable(uint16 i) const
         {return mDescriptors[i/32] & (1 << (i%32));}
-    void SetReflectable(uint16 i, JSBool b) 
+    void SetReflectable(uint16 i, JSBool b)
         {if(b) mDescriptors[i/32] |= (1 << (i%32));
          else  mDescriptors[i/32] &= ~(1 << (i%32));}
 
@@ -276,7 +256,7 @@ private:
         // these are all bitwise flags!
         NMD_CONSTANT    = 0x0, // categories...
         NMD_METHOD      = 0x1,
-        NMD_ATTRIB_RO   = 0x2, 
+        NMD_ATTRIB_RO   = 0x2,
         NMD_ATTRIB_RW   = 0x3,
         NMD_CAT_MASK    = 0x3, // & mask for the categories above
         // any new bits start at 0x04
@@ -351,7 +331,8 @@ public:
 
     const XPCNativeMemberDescriptor* LookupMemberByID(jsid id) const;
 
-    JSBool GetConstantAsJSVal(nsXPCWrappedNative* wrapper,
+    JSBool GetConstantAsJSVal(JSContext* cx,
+                              nsXPCWrappedNative* wrapper,
                               const XPCNativeMemberDescriptor* desc,
                               jsval* vp);
 
@@ -409,15 +390,6 @@ private:
 
 /*************************/
 
-class nsXPCArbitraryScriptable : public nsIXPCScriptable
-{
-public:
-    // all the interface method declarations...
-    NS_DECL_ISUPPORTS;
-    XPC_DECLARE_IXPCSCRIPTABLE;
-    nsXPCArbitraryScriptable() {NS_INIT_REFCNT();NS_ADDREF_THIS();}
-};
-
 class nsXPCWrappedNative : public nsIXPConnectWrappedNative
 {
     // all the interface method declarations...
@@ -466,6 +438,17 @@ private:
 };
 
 /***************************************************************************/
+
+class nsXPCArbitraryScriptable : public nsIXPCScriptable
+{
+public:
+    // all the interface method declarations...
+    NS_DECL_ISUPPORTS;
+    XPC_DECLARE_IXPCSCRIPTABLE;
+    nsXPCArbitraryScriptable() {NS_INIT_REFCNT();NS_ADDREF_THIS();}
+};
+
+/***************************************************************************/
 // nsID JavaScript class functions
 
 JSBool
@@ -486,11 +469,11 @@ class XPCConvert
 public:
     static JSBool IsMethodReflectable(const nsXPTMethodInfo& info);
 
-    static JSBool NativeData2JS(jsval* d, const void* s,
-                                const nsXPTType& type);
+    static JSBool NativeData2JS(JSContext* cx, jsval* d, const void* s,
+                                const nsXPTType& type, const nsID* iid);
 
     static JSBool JSData2Native(JSContext* cx, void* d, jsval s,
-                                const nsXPTType& type, 
+                                const nsXPTType& type,
                                 nsIAllocator* al, const nsID* iid);
 private:
     XPCConvert(); // not implemented

@@ -51,8 +51,8 @@ nsXPConnect::GetXPConnect()
     return mSelf;
 }
 
-// static 
-nsIAllocator* 
+// static
+nsIAllocator*
 nsXPConnect::GetAllocator(nsXPConnect* xpc /*= NULL*/)
 {
     nsIAllocator* al;
@@ -67,8 +67,8 @@ nsXPConnect::GetAllocator(nsXPConnect* xpc /*= NULL*/)
     return al;
 }
 
-// static 
-nsIInterfaceInfoManager* 
+// static
+nsIInterfaceInfoManager*
 nsXPConnect::GetInterfaceInfoManager(nsXPConnect* xpc /*= NULL*/)
 {
     nsIInterfaceInfoManager* iim;
@@ -81,6 +81,25 @@ nsXPConnect::GetInterfaceInfoManager(nsXPConnect* xpc /*= NULL*/)
     if(!xpc)
         NS_RELEASE(xpcl);
     return iim;
+}
+
+// static
+XPCContext*
+nsXPConnect::GetContext(JSContext* cx, nsXPConnect* xpc /*= NULL*/)
+{
+    NS_PRECONDITION(cx,"bad param");
+
+    XPCContext* xpcc;
+    nsXPConnect* xpcl = xpc;
+
+    if(!xpcl && !(xpcl = GetXPConnect()))
+        return NULL;
+    xpcc = xpcl->mContextMap->Find(cx);
+    if(!xpcc)
+        xpcc = xpcl->NewContext(cx, JS_GetGlobalObject(cx));
+    if(!xpc)
+        NS_RELEASE(xpcl);
+    return xpcc;
 }
 
 nsXPConnect::nsXPConnect()
@@ -131,17 +150,6 @@ nsXPConnect::InitJSContext(JSContext* aJSContext,
 }
 
 XPCContext*
-nsXPConnect::GetContext(JSContext* cx)
-{
-    XPCContext* xpcc;
-    NS_PRECONDITION(cx,"bad param");
-    xpcc = mContextMap->Find(cx);
-    if(!xpcc)
-        xpcc = NewContext(cx, JS_GetGlobalObject(cx));
-    return xpcc;
-}
-
-XPCContext*
 nsXPConnect::NewContext(JSContext* cx, JSObject* global)
 {
     XPCContext* xpcc;
@@ -171,7 +179,7 @@ nsXPConnect::WrapNative(JSContext* aJSContext,
 
     *aWrapper = NULL;
 
-    XPCContext* xpcc = GetContext(aJSContext);
+    XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
     if(!xpcc)
         return NS_ERROR_FAILURE;
 
@@ -197,7 +205,7 @@ nsXPConnect::WrapJS(JSContext* aJSContext,
 
     *aWrapper = NULL;
 
-    XPCContext* xpcc = GetContext(aJSContext);
+    XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
     if(!xpcc)
         return NS_ERROR_FAILURE;
 

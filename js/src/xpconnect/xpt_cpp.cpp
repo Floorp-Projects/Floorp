@@ -168,6 +168,13 @@ nsXPTParamInfo::GetInterface() const
     return info;
 }
 
+nsIID*
+nsXPTParamInfo::GetInterfaceIID() const
+{
+    NS_PRECONDITION(GetType() == nsXPTType::T_INTERFACE,"not an interface");
+    return &InterfaceDirectoryEntryTable[type.type.interface].iid;
+}
+
 /***************************************************************************/
 // VERY simple implementations...
 
@@ -179,8 +186,8 @@ XPT_GetInterfaceInfoManager()
     return InterfaceInfoManagerImpl::GetInterfaceInfoManager();
 }
 
-// static 
-InterfaceInfoManagerImpl* 
+// static
+InterfaceInfoManagerImpl*
 InterfaceInfoManagerImpl::GetInterfaceInfoManager()
 {
     static InterfaceInfoManagerImpl* impl = NULL;
@@ -192,10 +199,10 @@ InterfaceInfoManagerImpl::GetInterfaceInfoManager()
     if(impl)
         NS_ADDREF(impl);
     return impl;
-}        
+}
 
-// static 
-nsIAllocator* 
+// static
+nsIAllocator*
 InterfaceInfoManagerImpl::GetAllocator(InterfaceInfoManagerImpl* iim /*= NULL*/)
 {
     nsIAllocator* al;
@@ -208,7 +215,7 @@ InterfaceInfoManagerImpl::GetAllocator(InterfaceInfoManagerImpl* iim /*= NULL*/)
     if(!iim)
         NS_RELEASE(iiml);
     return al;
-}        
+}
 
 
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
@@ -228,17 +235,17 @@ InterfaceInfoManagerImpl::InterfaceInfoManagerImpl()
     nsServiceManager::GetService(kAllocatorCID,
                                  kIAllocatorIID,
                                  (nsISupports **)&mAllocator);
-}        
+}
 
 InterfaceInfoManagerImpl::~InterfaceInfoManagerImpl()
 {
     // let the singleton leak
-}        
+}
 
-PRBool 
+PRBool
 InterfaceInfoManagerImpl::BuildInterfaceForEntry(uint16 i)
 {
-    XPTInterfaceDirectoryEntry *parent_interface = 
+    XPTInterfaceDirectoryEntry *parent_interface =
         InterfaceDirectoryEntryTable[i].interface_descriptor->parent_interface;
     uint16 parent_index = 0;
 
@@ -252,7 +259,7 @@ InterfaceInfoManagerImpl::BuildInterfaceForEntry(uint16 i)
                                           parent_interface ?
                                               mInfoArray[parent_index] : NULL);
     return (PRBool) mInfoArray[i];
-}        
+}
 
 NS_IMETHODIMP
 InterfaceInfoManagerImpl::GetInfoForIID(const nsIID* iid, nsIInterfaceInfo** info)
@@ -263,7 +270,7 @@ InterfaceInfoManagerImpl::GetInfoForIID(const nsIID* iid, nsIInterfaceInfo** inf
         if(iid->Equals(entry->iid))
         {
             if(!mInfoArray[i] && !BuildInterfaceForEntry(i))
-                break;            
+                break;
             *info = mInfoArray[i];
             NS_ADDREF(*info);
             return NS_OK;
@@ -282,7 +289,7 @@ InterfaceInfoManagerImpl::GetInfoForName(const char* name, nsIInterfaceInfo** in
         if(!strcmp(name, entry->name))
         {
             if(!mInfoArray[i] && !BuildInterfaceForEntry(i))
-                break;            
+                break;
             *info = mInfoArray[i];
             NS_ADDREF(*info);
             return NS_OK;
@@ -338,7 +345,7 @@ NS_IMPL_ISUPPORTS(InterfaceInfoImpl, NS_IINTERFACEINFO_IID)
 
 InterfaceInfoImpl::InterfaceInfoImpl(XPTInterfaceDirectoryEntry* entry,
                                      InterfaceInfoImpl* parent)
-    :   mEntry(entry), 
+    :   mEntry(entry),
         mParent(parent)
 {
     NS_INIT_REFCNT();
@@ -349,7 +356,7 @@ InterfaceInfoImpl::InterfaceInfoImpl(XPTInterfaceDirectoryEntry* entry,
     {
         mMethodBaseIndex = mParent->mMethodBaseIndex + mParent->mMethodCount;
         mConstantBaseIndex = mParent->mConstantBaseIndex + mParent->mConstantCount;
-    }        
+    }
     else
         mMethodBaseIndex = mConstantBaseIndex = 0;
 
@@ -361,7 +368,7 @@ InterfaceInfoImpl::~InterfaceInfoImpl()
 {
     if(mParent)
         NS_RELEASE(mParent);
-}        
+}
 
 NS_IMETHODIMP
 InterfaceInfoImpl::GetName(char** name)
@@ -381,10 +388,10 @@ InterfaceInfoImpl::GetName(char** name)
             return NS_OK;
         }
     }
-    
+
     *name = NULL;
     return NS_ERROR_FAILURE;
-}        
+}
 
 NS_IMETHODIMP
 InterfaceInfoImpl::GetIID(nsIID** iid)
@@ -403,7 +410,7 @@ InterfaceInfoImpl::GetIID(nsIID** iid)
             return NS_OK;
         }
     }
-    
+
     *iid = NULL;
     return NS_ERROR_FAILURE;
 }
@@ -436,7 +443,7 @@ InterfaceInfoImpl::GetConstantCount(uint16* count)
     NS_PRECONDITION(count, "bad param");
     *count = mConstantBaseIndex + mConstantCount;
     return NS_OK;
-        
+
 }
 
 NS_IMETHODIMP
@@ -456,7 +463,7 @@ InterfaceInfoImpl::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
     // else...
     *info = NS_STATIC_CAST(nsXPTMethodInfo*, &mEntry->interface_descriptor->method_descriptors[index-mMethodBaseIndex]);
     return NS_OK;
-        
+
 }
 
 NS_IMETHODIMP
