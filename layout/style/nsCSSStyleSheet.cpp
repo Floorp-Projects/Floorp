@@ -90,7 +90,7 @@
 #include "nsICSSLoader.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsRuleWalker.h"
-#include "nsCSSAtoms.h"
+#include "nsCSSPseudoClasses.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
 #include "nsITextContent.h"
@@ -2315,7 +2315,7 @@ CSSStyleSheetImpl::CheckRuleForAttributes(nsICSSRule *aRule)
         // Search for the :lang() pseudo class.  If it is there add
         // the lang attribute to the relevant attribute list.
         for (nsAtomStringList* p = iter->mPseudoClassList; p; p = p->mNext) {
-          if (p->mAtom == nsCSSAtoms::langPseudo) {
+          if (p->mAtom == nsCSSPseudoClasses::lang) {
             DependentAtomKey langKey(nsHTMLAtoms::lang);
             mInner->mRelevantAttributes.Put(&langKey, nsHTMLAtoms::lang);
             break;
@@ -3512,18 +3512,18 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
 
 inline PRBool IsEventPseudo(nsIAtom* aAtom)
 {
-  return PRBool ((nsCSSAtoms::activePseudo == aAtom)   || 
-                 (nsCSSAtoms::dragOverPseudo == aAtom) || 
-                 (nsCSSAtoms::focusPseudo == aAtom)    || 
-                 (nsCSSAtoms::hoverPseudo == aAtom)); 
+  return PRBool ((nsCSSPseudoClasses::active == aAtom)   || 
+                 (nsCSSPseudoClasses::mozDragOver == aAtom) || 
+                 (nsCSSPseudoClasses::focus == aAtom)    || 
+                 (nsCSSPseudoClasses::hover == aAtom)); 
                  // XXX selected, enabled, disabled, selection?
 }
 
 inline PRBool IsLinkPseudo(nsIAtom* aAtom)
 {
-  return PRBool ((nsCSSAtoms::linkPseudo == aAtom) || 
-                 (nsCSSAtoms::visitedPseudo == aAtom) ||
-                 (nsCSSAtoms::anyLinkPseudo == aAtom));
+  return PRBool ((nsCSSPseudoClasses::link == aAtom) || 
+                 (nsCSSPseudoClasses::visited == aAtom) ||
+                 (nsCSSPseudoClasses::mozAnyLink == aAtom));
 }
 
 // Return whether we should apply a "global" (i.e., universal-tag)
@@ -3647,8 +3647,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     nsAtomStringList* pseudoClass = aSelector->mPseudoClassList;
 
     while (result && (nsnull != pseudoClass)) {
-      if ((nsCSSAtoms::firstChildPseudo == pseudoClass->mAtom) ||
-          (nsCSSAtoms::firstNodePseudo == pseudoClass->mAtom) ) {
+      if ((nsCSSPseudoClasses::firstChild == pseudoClass->mAtom) ||
+          (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom) ) {
         nsIContent* firstChild = nsnull;
         nsIContent* parent = data.mParentContent;
         if (parent) {
@@ -3656,7 +3656,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           do {
             parent->ChildAt(++index, firstChild);
             if (firstChild) { // stop at first non-comment and non-whitespace node (and non-text node for firstChild)
-              if (IsSignificantChild(firstChild, (nsCSSAtoms::firstNodePseudo == pseudoClass->mAtom))) {
+              if (IsSignificantChild(firstChild, (nsCSSPseudoClasses::firstNode == pseudoClass->mAtom))) {
                 break;
               }
               NS_RELEASE(firstChild);
@@ -3669,8 +3669,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         result = PRBool(localTrue == (data.mContent == firstChild));
         NS_IF_RELEASE(firstChild);
       }
-      else if ((nsCSSAtoms::lastChildPseudo == pseudoClass->mAtom) ||
-               (nsCSSAtoms::lastNodePseudo == pseudoClass->mAtom)) {
+      else if ((nsCSSPseudoClasses::lastChild == pseudoClass->mAtom) ||
+               (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom)) {
         nsIContent* lastChild = nsnull;
         nsIContent* parent = data.mParentContent;
         if (parent) {
@@ -3679,7 +3679,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           do {
             parent->ChildAt(--index, lastChild);
             if (lastChild) { // stop at first non-comment and non-whitespace node (and non-text node for lastChild)
-              if (IsSignificantChild(lastChild, (nsCSSAtoms::lastNodePseudo == pseudoClass->mAtom))) {
+              if (IsSignificantChild(lastChild, (nsCSSPseudoClasses::lastNode == pseudoClass->mAtom))) {
                 break;
               }
               NS_RELEASE(lastChild);
@@ -3692,7 +3692,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         result = PRBool(localTrue == (data.mContent == lastChild));
         NS_IF_RELEASE(lastChild);
       }
-      else if (nsCSSAtoms::emptyPseudo == pseudoClass->mAtom) {
+      else if (nsCSSPseudoClasses::empty == pseudoClass->mAtom) {
         nsIContent* child = nsnull;
         nsIContent* element = data.mContent;
         PRInt32 index = -1;
@@ -3711,7 +3711,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         result = PRBool(localTrue == (child == nsnull));
         NS_IF_RELEASE(child);
       }
-      else if (nsCSSAtoms::rootPseudo == pseudoClass->mAtom) {
+      else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
         if (data.mParentContent) {
           result = localFalse;
         }
@@ -3719,11 +3719,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           result = localTrue;
         }
       }
-      else if (nsCSSAtoms::xblBoundElementPseudo == pseudoClass->mAtom) {
+      else if (nsCSSPseudoClasses::mozBoundElement == pseudoClass->mAtom) {
         result = (data.mScopedRoot && data.mScopedRoot == data.mContent)
                    ? localTrue : localFalse;
       }
-      else if (nsCSSAtoms::langPseudo == pseudoClass->mAtom) {
+      else if (nsCSSPseudoClasses::lang == pseudoClass->mAtom) {
         NS_ASSERTION(nsnull != pseudoClass->mString, "null lang parameter");
         result = localFalse;
         if (pseudoClass->mString && *pseudoClass->mString) {
@@ -3775,8 +3775,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             !aSelector->mTag && !aSelector->mClassList &&
             !aSelector->mIDList && !aSelector->mAttrList &&
             // :hover or :active
-            (nsCSSAtoms::activePseudo == pseudoClass->mAtom ||
-             nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) &&
+            (nsCSSPseudoClasses::active == pseudoClass->mAtom ||
+             nsCSSPseudoClasses::hover == pseudoClass->mAtom) &&
             // important for |IsQuirkEventSensitive|:
             data.mIsHTMLContent && !data.mIsHTMLLink &&
             !IsQuirkEventSensitive(data.mContentTag)) {
@@ -3786,19 +3786,19 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // quirk should apply only to ":hover" (if to anything at all).
           result = localFalse;
         } else {
-          if (nsCSSAtoms::activePseudo == pseudoClass->mAtom) {
+          if (nsCSSPseudoClasses::active == pseudoClass->mAtom) {
             result = (aStateMask & NS_EVENT_STATE_ACTIVE) ||
                      (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_ACTIVE)));
           }
-          else if (nsCSSAtoms::focusPseudo == pseudoClass->mAtom) {
+          else if (nsCSSPseudoClasses::focus == pseudoClass->mAtom) {
             result = (aStateMask & NS_EVENT_STATE_FOCUS) ||
                      (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_FOCUS)));
           }
-          else if (nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) {
+          else if (nsCSSPseudoClasses::hover == pseudoClass->mAtom) {
             result = (aStateMask & NS_EVENT_STATE_HOVER) ||
                      (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_HOVER)));
           }
-          else if (nsCSSAtoms::dragOverPseudo == pseudoClass->mAtom) {
+          else if (nsCSSPseudoClasses::mozDragOver == pseudoClass->mAtom) {
             result = (aStateMask & NS_EVENT_STATE_DRAGOVER) ||
                      (localTrue == (0 != (data.mEventState & NS_EVENT_STATE_DRAGOVER)));
           }
@@ -3807,13 +3807,13 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       else if (IsLinkPseudo(pseudoClass->mAtom)) {
         if (data.mIsHTMLLink || data.mIsSimpleXLink) {
           if (result) {
-            if (nsCSSAtoms::anyLinkPseudo == pseudoClass->mAtom) {
+            if (nsCSSPseudoClasses::mozAnyLink == pseudoClass->mAtom) {
               result = localTrue;
             }
-            else if (nsCSSAtoms::linkPseudo == pseudoClass->mAtom) {
+            else if (nsCSSPseudoClasses::link == pseudoClass->mAtom) {
               result = PRBool(localTrue == (eLinkState_Unvisited == data.mLinkState));
             }
-            else if (nsCSSAtoms::visitedPseudo == pseudoClass->mAtom) {
+            else if (nsCSSPseudoClasses::visited == pseudoClass->mAtom) {
               result = PRBool(localTrue == (eLinkState_Visited == data.mLinkState));
             }
           }
@@ -3822,7 +3822,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           result = localFalse;  // not a link
         }
       }
-      else if (nsCSSAtoms::checkedPseudo == pseudoClass->mAtom) {
+      else if (nsCSSPseudoClasses::checked == pseudoClass->mAtom) {
         // This pseudoclass matches the selected state on the following elements:
         //  <option>
         //  <input type=checkbox>
@@ -4398,11 +4398,11 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
 {
   nsAtomStringList* pseudoClass = aSelector.mPseudoClassList;
   while (pseudoClass) {
-    if ((pseudoClass->mAtom == nsCSSAtoms::activePseudo) ||
-        (pseudoClass->mAtom == nsCSSAtoms::checkedPseudo) ||
-        (pseudoClass->mAtom == nsCSSAtoms::dragOverPseudo) || 
-        (pseudoClass->mAtom == nsCSSAtoms::focusPseudo) || 
-        (pseudoClass->mAtom == nsCSSAtoms::hoverPseudo)) {
+    if ((pseudoClass->mAtom == nsCSSPseudoClasses::active) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::checked) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::mozDragOver) || 
+        (pseudoClass->mAtom == nsCSSPseudoClasses::focus) || 
+        (pseudoClass->mAtom == nsCSSPseudoClasses::hover)) {
       return PR_TRUE;
     }
     pseudoClass = pseudoClass->mNext;

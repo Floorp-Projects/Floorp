@@ -53,13 +53,15 @@
 #include "nsIPrintPreviewContext.h"
 #include "nsTextTransformer.h"
 
-#include "nsXBLAtoms.h"     // to addref/release table
-#include "nsHTMLAtoms.h"    // to addref/release table
-#include "nsLayoutAtoms.h"  // to addref/release table
-#include "nsCSSKeywords.h"  // to addref/release table
-#include "nsCSSProps.h"     // to addref/release table
-#include "nsCSSAtoms.h"     // to addref/release table
-#include "nsColorNames.h"   // to addref/release table
+#include "nsXBLAtoms.h"                 // to addref/release table
+#include "nsHTMLAtoms.h"                // to addref/release table
+#include "nsLayoutAtoms.h"              // to addref/release table
+#include "nsCSSKeywords.h"              // to addref/release table
+#include "nsCSSProps.h"                 // to addref/release table
+#include "nsCSSAnonBoxes.h"             // to addref/release table
+#include "nsCSSPseudoClasses.h"         // to addref/release table
+#include "nsCSSPseudoElements.h"        // to addref/release table
+#include "nsColorNames.h"               // to addref/release table
 #include "nsCSSFrameConstructor.h"
 #include "nsSpaceManager.h"
 #include "nsISelectionImageService.h"
@@ -98,7 +100,9 @@ Initialize(nsIModule* self)
   gInitialized = PR_TRUE;
     
   // Register all of our atoms once
-  nsCSSAtoms::AddRefAtoms();
+  nsCSSAnonBoxes::AddRefAtoms();
+  nsCSSPseudoClasses::AddRefAtoms();
+  nsCSSPseudoElements::AddRefAtoms();
   nsCSSKeywords::AddRefTable();
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
@@ -144,7 +148,9 @@ Shutdown(nsIModule* self)
   nsColorNames::ReleaseTable();
   nsCSSProps::ReleaseTable();
   nsCSSKeywords::ReleaseTable();
-  nsCSSAtoms::ReleaseAtoms();
+  nsCSSAnonBoxes::ReleaseAtoms();
+  nsCSSPseudoClasses::ReleaseAtoms();
+  nsCSSPseudoElements::ReleaseAtoms();
   nsHTMLAtoms::ReleaseAtoms();
   nsXBLAtoms::ReleaseAtoms();
   nsLayoutAtoms::ReleaseAtoms();

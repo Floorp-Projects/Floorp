@@ -53,8 +53,8 @@
 #include "nsTreeSelection.h"
 
 #include "nsXULAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsHTMLAtoms.h"
-#include "nsCSSAtoms.h"
 
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
@@ -437,7 +437,7 @@ nsTreeBodyFrame::CalcMaxRowWidth(nsBoxLayoutState& aState)
     return 0;
 
   nsCOMPtr<nsIStyleContext> rowContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreerow, getter_AddRefs(rowContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreerow, getter_AddRefs(rowContext));
   nsMargin rowMargin(0,0,0,0);
   nsStyleBorderPadding  bPad;
   rowContext->GetBorderPaddingFor(bPad);
@@ -1244,7 +1244,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
     mView->GetCellProperties(aRow, currCol->GetID().get(), mScratchArray);
 
     nsCOMPtr<nsIStyleContext> rowContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreerow, getter_AddRefs(rowContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreerow, getter_AddRefs(rowContext));
 
     // We don't want to consider any of the decorations that may be present
     // on the current row, so we have to deflate the rect by the border and 
@@ -1252,7 +1252,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
     AdjustForBorderPadding(rowContext, cellRect);
 
     nsCOMPtr<nsIStyleContext> cellContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreecell, getter_AddRefs(cellContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell, getter_AddRefs(cellContext));
 
     NS_NAMED_LITERAL_STRING(cell, "cell");
     if (currCol->IsCycler() || cell.Equals(aCellItem)) {
@@ -1301,7 +1301,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
 
       // Find the twisty rect by computing its size. 
       nsCOMPtr<nsIStyleContext> twistyContext;
-      GetPseudoStyleContext(nsXULAtoms::moztreetwisty, getter_AddRefs(twistyContext));
+      GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty, getter_AddRefs(twistyContext));
 
       // |GetImageSize| returns the rect of the twisty image, including the 
       // borders and padding. 
@@ -1326,7 +1326,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
 
     // Cell Image
     nsCOMPtr<nsIStyleContext> imageContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreeimage, getter_AddRefs(imageContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreeimage, getter_AddRefs(imageContext));
 
     nsRect imageSize = GetImageSize(aRow, currCol->GetID().get(), PR_FALSE, imageContext);
     if (NS_LITERAL_STRING("image").Equals(aCellItem)) {
@@ -1354,7 +1354,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
     // been cropped and use the remaining rect as the text Rect. Otherwise,
     // we add in borders and padding to the text dimension and give that back. 
     nsCOMPtr<nsIStyleContext> textContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreecelltext, getter_AddRefs(textContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext, getter_AddRefs(textContext));
 
     const nsStyleFont* fontStyle = (const nsStyleFont*) textContext->GetStyleData(eStyleStruct_Font);
     nsCOMPtr<nsIDeviceContext> dc;
@@ -1412,7 +1412,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
   // Resolve style for the cell.
   nsCOMPtr<nsIStyleContext> cellContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreecell, getter_AddRefs(cellContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell, getter_AddRefs(cellContext));
 
   // Obtain the margins for the cell and then deflate our rect by that 
   // amount.  The cell is assumed to be contained within the deflated rect.
@@ -1464,7 +1464,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
 
     // Resolve style for the twisty.
     nsCOMPtr<nsIStyleContext> twistyContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreetwisty, getter_AddRefs(twistyContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty, getter_AddRefs(twistyContext));
 
     // We will treat a click as hitting the twisty if it happens on the margins, borders, padding,
     // or content of the twisty object.  By allowing a "slop" into the margin, we make it a little
@@ -1496,7 +1496,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
   
   // Resolve style for the image.
   nsCOMPtr<nsIStyleContext> imageContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreeimage, getter_AddRefs(imageContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreeimage, getter_AddRefs(imageContext));
 
   nsRect iconSize = GetImageSize(aRowIndex, aColumn->GetID().get(), PR_FALSE, imageContext);
   const nsStyleMargin* imageMarginData = (const nsStyleMargin*)imageContext->GetStyleData(eStyleStruct_Margin);
@@ -1535,7 +1535,7 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
 
     // Adjust borders and padding for the cell.
     nsCOMPtr<nsIStyleContext> cellContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreecell, getter_AddRefs(cellContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell, getter_AddRefs(cellContext));
     nsMargin m(0,0,0,0);
     nsStyleBorderPadding  bPad;
     cellContext->GetBorderPaddingFor(bPad);
@@ -1555,7 +1555,7 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
       
       // Find the twisty rect by computing its size.
       nsCOMPtr<nsIStyleContext> twistyContext;
-      GetPseudoStyleContext(nsXULAtoms::moztreetwisty, getter_AddRefs(twistyContext));
+      GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty, getter_AddRefs(twistyContext));
 
       // |GetImageSize| returns the rect of the twisty image, including the 
       // borders and padding.
@@ -1571,7 +1571,7 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
     }
 
     nsCOMPtr<nsIStyleContext> imageContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreeimage, getter_AddRefs(imageContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreeimage, getter_AddRefs(imageContext));
 
     // Account for the width of the cell image.
     nsRect imageSize = GetImageSize(aRow, currCol->GetID().get(), PR_FALSE, imageContext);
@@ -1582,7 +1582,7 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
     mView->GetCellText(aRow, currCol->GetID().get(), cellText);
 
     nsCOMPtr<nsIStyleContext> textContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreecelltext, getter_AddRefs(textContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext, getter_AddRefs(textContext));
 
     // Get the borders and padding for the text.
     nsStyleBorderPadding borderPadding;
@@ -1966,7 +1966,7 @@ PRInt32 nsTreeBodyFrame::GetRowHeight()
   // + the specified margins.
   nsCOMPtr<nsIStyleContext> rowContext;
   mScratchArray->Clear();
-  GetPseudoStyleContext(nsXULAtoms::moztreerow, getter_AddRefs(rowContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreerow, getter_AddRefs(rowContext));
   if (rowContext) {
     const nsStylePosition* myPosition = (const nsStylePosition*)
           rowContext->GetStyleData(eStyleStruct_Position);
@@ -2013,7 +2013,7 @@ PRInt32 nsTreeBodyFrame::GetIndentation()
   // Look up the correct indentation.  It is equal to the specified indentation width.
   nsCOMPtr<nsIStyleContext> indentContext;
   mScratchArray->Clear();
-  GetPseudoStyleContext(nsXULAtoms::moztreeindentation, getter_AddRefs(indentContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreeindentation, getter_AddRefs(indentContext));
   if (indentContext) {
     const nsStylePosition* myPosition = (const nsStylePosition*)
           indentContext->GetStyleData(eStyleStruct_Position);
@@ -2176,7 +2176,7 @@ nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
   // Resolve style for the column.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> colContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreecolumn, getter_AddRefs(colContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreecolumn, getter_AddRefs(colContext));
 
   // Obtain the margins for the cell and then deflate our rect by that 
   // amount.  The cell is assumed to be contained within the deflated rect.
@@ -2214,7 +2214,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
   // Resolve style for the row.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> rowContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreerow, getter_AddRefs(rowContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreerow, getter_AddRefs(rowContext));
 
   // Obtain the margins for the row and then deflate our rect by that 
   // amount.  The row is assumed to be contained within the deflated rect.
@@ -2258,7 +2258,7 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
 
     // Resolve style for the separator.
     nsCOMPtr<nsIStyleContext> separatorContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreeseparator, getter_AddRefs(separatorContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreeseparator, getter_AddRefs(separatorContext));
     PRBool useTheme = PR_FALSE;
     nsCOMPtr<nsITheme> theme;
     const nsStyleDisplay* displayData = (const nsStyleDisplay*)separatorContext->GetStyleData(eStyleStruct_Display);
@@ -2338,7 +2338,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
   // Resolve style for the cell.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> cellContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreecell, getter_AddRefs(cellContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell, getter_AddRefs(cellContext));
 
   // Obtain the margins for the cell and then deflate our rect by that 
   // amount.  The cell is assumed to be contained within the deflated rect.
@@ -2377,7 +2377,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
 
     // Resolve the style to use for the connecting lines.
     nsCOMPtr<nsIStyleContext> lineContext;
-    GetPseudoStyleContext(nsXULAtoms::moztreeline, getter_AddRefs(lineContext));
+    GetPseudoStyleContext(nsCSSAnonBoxes::moztreeline, getter_AddRefs(lineContext));
     const nsStyleVisibility* vis = 
       (const nsStyleVisibility*)lineContext->GetStyleData(eStyleStruct_Visibility);
     
@@ -2388,7 +2388,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
       // before painting of connecting lines since it would paint lines over
       // the twisty. But we need to leave a place for it.
       nsCOMPtr<nsIStyleContext> twistyContext;
-      GetPseudoStyleContext(nsXULAtoms::moztreetwisty, getter_AddRefs(twistyContext));
+      GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty, getter_AddRefs(twistyContext));
 
       nsRect twistySize = GetImageSize(aRowIndex, aColumn->GetID().get(), PR_TRUE, twistyContext);
 
@@ -2528,7 +2528,7 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
 
   // Resolve style for the twisty.
   nsCOMPtr<nsIStyleContext> twistyContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreetwisty, getter_AddRefs(twistyContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty, getter_AddRefs(twistyContext));
 
   PRBool useTheme = PR_FALSE;
   nsCOMPtr<nsITheme> theme;
@@ -2636,7 +2636,7 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
 {
   // Resolve style for the image.
   nsCOMPtr<nsIStyleContext> imageContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreeimage, getter_AddRefs(imageContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreeimage, getter_AddRefs(imageContext));
 
   // Obtain the margins for the twisty and then deflate our rect by that 
   // amount.  The twisty is assumed to be contained within the deflated rect.
@@ -2725,7 +2725,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   // Resolve style for the text.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> textContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreecelltext, getter_AddRefs(textContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext, getter_AddRefs(textContext));
 
   // Obtain the margins for the text and then deflate our rect by that 
   // amount.  The text is assumed to be contained within the deflated rect.
@@ -2949,7 +2949,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
   // Resolve style for the progress meter.  It contains all the info we need
   // to lay ourselves out and to paint.
   nsCOMPtr<nsIStyleContext> meterContext;
-  GetPseudoStyleContext(nsXULAtoms::moztreeprogressmeter, getter_AddRefs(meterContext));
+  GetPseudoStyleContext(nsCSSAnonBoxes::moztreeprogressmeter, getter_AddRefs(meterContext));
 
   // Obtain the margins for the progress meter and then deflate our rect by that 
   // amount. The progress meter is assumed to be contained within the deflated
@@ -3043,7 +3043,7 @@ nsTreeBodyFrame::PaintDropFeedback(nsIPresContext*      aPresContext,
 
         // Resolve the style to use for the drop feedback.
         nsCOMPtr<nsIStyleContext> feedbackContext;
-        GetPseudoStyleContext(nsXULAtoms::moztreedropfeedback, getter_AddRefs(feedbackContext));
+        GetPseudoStyleContext(nsCSSAnonBoxes::moztreedropfeedback, getter_AddRefs(feedbackContext));
 
         const nsStyleVisibility* vis = 
           (const nsStyleVisibility*)feedbackContext->GetStyleData(eStyleStruct_Visibility);
@@ -3077,7 +3077,7 @@ nsTreeBodyFrame::PaintDropFeedback(nsIPresContext*      aPresContext,
           currX += mIndentation * level;
 
           nsCOMPtr<nsIStyleContext> twistyContext;
-          GetPseudoStyleContext(nsXULAtoms::moztreetwisty, getter_AddRefs(twistyContext));
+          GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty, getter_AddRefs(twistyContext));
           nsRect twistySize = GetImageSize(mDropRow, currCol->GetID().get(), PR_TRUE, twistyContext);
           const nsStyleMargin* twistyMarginData = (const nsStyleMargin*)twistyContext->GetStyleData(eStyleStruct_Margin);
           nsMargin twistyMargin;

@@ -105,18 +105,6 @@ XUL_ATOM(progressNormal, "progressNormal")
 XUL_ATOM(progressUndetermined, "progressUndetermined")
 XUL_ATOM(progressNone, "progressNone")
 
-XUL_ATOM(moztreerow, ":-moz-tree-row")
-XUL_ATOM(moztreecell, ":-moz-tree-cell")
-XUL_ATOM(moztreecolumn, ":-moz-tree-column")
-XUL_ATOM(moztreecelltext, ":-moz-tree-cell-text")
-XUL_ATOM(moztreetwisty, ":-moz-tree-twisty")
-XUL_ATOM(moztreeindentation, ":-moz-tree-indentation")
-XUL_ATOM(moztreeline, ":-moz-tree-line")
-XUL_ATOM(moztreeimage, ":-moz-tree-image")
-XUL_ATOM(moztreeseparator, ":-moz-tree-separator")
-XUL_ATOM(moztreedropfeedback, ":-moz-tree-drop-feedback")
-XUL_ATOM(moztreeprogressmeter, ":-moz-tree-progressmeter")
-
 XUL_ATOM(menubar, "menubar") // An XP menu bar.
 XUL_ATOM(menu, "menu") // Represents an XP menu
 XUL_ATOM(menuitem, "menuitem") // Represents an XP menu item
@@ -213,7 +201,6 @@ XUL_ATOM(ddNoDropBetweenRows, "dd-nodropbetweenrows")
 XUL_ATOM(container, "container")
 XUL_ATOM(leaf,"leaf")
 XUL_ATOM(ddDragDropArea, "dragdroparea")
-XUL_ATOM(ddDropMarker, ":-moz-drop-marker")
 
 XUL_ATOM(widget, "widget")
 XUL_ATOM(window, "window")

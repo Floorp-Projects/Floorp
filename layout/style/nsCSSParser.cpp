@@ -63,7 +63,8 @@
 #include "nsISupportsArray.h"
 #include "nsColor.h"
 #include "nsStyleConsts.h"
-#include "nsCSSAtoms.h"
+#include "nsLayoutAtoms.h"
+#include "nsCSSPseudoClasses.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
 #include "nsThemeConstants.h"
@@ -1563,28 +1564,6 @@ PRBool CSSParserImpl::ParseSelectorList(PRInt32& aErrorCode,
   return PR_FALSE;
 }
 
-static PRBool IsPseudoClass(const nsIAtom* aAtom)
-{
-  return PRBool((nsCSSAtoms::activePseudo == aAtom) || 
-                (nsCSSAtoms::anyLinkPseudo == aAtom) ||
-                (nsCSSAtoms::checkedPseudo == aAtom) ||
-                (nsCSSAtoms::disabledPseudo == aAtom) ||
-                (nsCSSAtoms::dragOverPseudo == aAtom) ||
-                (nsCSSAtoms::enabledPseudo == aAtom) ||
-                (nsCSSAtoms::emptyPseudo == aAtom) ||
-                (nsCSSAtoms::firstChildPseudo == aAtom) ||
-                (nsCSSAtoms::firstNodePseudo == aAtom) ||
-                (nsCSSAtoms::focusPseudo == aAtom) ||
-                (nsCSSAtoms::hoverPseudo == aAtom) ||
-                (nsCSSAtoms::langPseudo == aAtom) ||
-                (nsCSSAtoms::lastChildPseudo == aAtom) ||
-                (nsCSSAtoms::lastNodePseudo == aAtom) ||
-                (nsCSSAtoms::linkPseudo == aAtom) ||
-                (nsCSSAtoms::rootPseudo == aAtom) ||
-                (nsCSSAtoms::xblBoundElementPseudo == aAtom) ||
-                (nsCSSAtoms::visitedPseudo == aAtom));
-}
-
 static PRBool IsSinglePseudoClass(const nsCSSSelector& aSelector)
 {
   return PRBool((aSelector.mNameSpace == kNameSpaceID_Unknown) && 
@@ -1637,7 +1616,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(PRInt32& aErrorCode,
     nsAtomStringList* prevList = nsnull;
     nsAtomStringList* pseudoClassList = listSel->mPseudoClassList;
     while (nsnull != pseudoClassList) {
-      if (! IsPseudoClass(pseudoClassList->mAtom)) {
+      if (! nsCSSPseudoClasses::IsPseudoClass(pseudoClassList->mAtom)) {
         havePseudoElement = PR_TRUE;
         if (IsSinglePseudoClass(*listSel)) {  // convert to pseudo element selector
           nsIAtom* pseudoElement = pseudoClassList->mAtom;  // steal ref count
@@ -2209,9 +2188,9 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
           (!aIsNegated && IsTreePseudoElement(mToken.mIdent)) ||
 #endif
           // the negation pseudo-class is a function
-          (nsCSSAtoms::notPseudo == pseudo) ||
+          (nsCSSPseudoClasses::notPseudo == pseudo) ||
           // as is the lang pseudo-class
-          (nsCSSAtoms::langPseudo == pseudo))) {
+          (nsCSSPseudoClasses::lang == pseudo))) {
       REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for pseudo-class selector not found"));
       UngetToken();
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
@@ -2219,7 +2198,7 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
     }
   }
 
-  if (nsCSSAtoms::notPseudo == pseudo) {
+  if (nsCSSPseudoClasses::notPseudo == pseudo) {
     if (aIsNegated) { // :not() can't be itself negated
       REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Negation pseudo-class can't be negated"));
       aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
@@ -2231,9 +2210,9 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
       return;
     }
   }    
-  else if (IsPseudoClass(pseudo)) {
+  else if (nsCSSPseudoClasses::IsPseudoClass(pseudo)) {
     aDataMask |= SEL_MASK_PCLASS;
-    if (nsCSSAtoms::langPseudo == pseudo) {
+    if (nsCSSPseudoClasses::lang == pseudo) {
       ParseLangSelector(aSelector, aParsingStatus, aErrorCode);
     }
     // XXX are there more pseudo classes which accept arguments ?
@@ -2384,7 +2363,7 @@ void CSSParserImpl::ParseLangSelector(nsCSSSelector& aSelector,
     }
 
     // Add the pseudo with the language parameter
-    aSelector.AddPseudoClass(nsCSSAtoms::langPseudo, mToken.mIdent.get());
+    aSelector.AddPseudoClass(nsCSSPseudoClasses::lang, mToken.mIdent.get());
 
     // close the parenthesis
     if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {

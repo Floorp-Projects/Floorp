@@ -54,6 +54,7 @@
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsGfxCIID.h"
@@ -854,7 +855,7 @@ nsContainerFrame::FrameNeedsView(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIAtom>  pseudoTag;
   aStyleContext->GetPseudoType(*getter_AddRefs(pseudoTag));
-  if (pseudoTag == nsLayoutAtoms::scrolledContentPseudo) {
+  if (pseudoTag == nsCSSAnonBoxes::scrolledContent) {
     return PR_TRUE;
   }
 

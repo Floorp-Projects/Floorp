@@ -43,7 +43,9 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsCSSAtoms.cpp \
+		nsCSSAnonBoxes.cpp \
+		nsCSSPseudoClasses.cpp \
+		nsCSSPseudoElements.cpp \
 		nsCSSKeywords.cpp \
 		nsCSSProps.cpp \
 		nsHTMLAtoms.cpp \

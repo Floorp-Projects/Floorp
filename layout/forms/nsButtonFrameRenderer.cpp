@@ -41,6 +41,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLAtoms.h"
+#include "nsCSSPseudoElements.h"
 #include "nsINameSpaceManager.h"
 
 #define ACTIVE   "active"
@@ -328,11 +329,11 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext* aPresContext)
 
 
   // style for the inner such as a dotted line (Windows)
-  aPresContext->ProbePseudoStyleContextFor(content, nsHTMLAtoms::mozFocusInnerPseudo, context,
+  aPresContext->ProbePseudoStyleContextFor(content, nsCSSPseudoElements::mozFocusInner, context,
                                           getter_AddRefs(mInnerFocusStyle));
 
   // style for outer focus like a ridged border (MAC).
-  aPresContext->ProbePseudoStyleContextFor(content, nsHTMLAtoms::mozFocusOuterPseudo, context,
+  aPresContext->ProbePseudoStyleContextFor(content, nsCSSPseudoElements::mozFocusOuter, context,
                                           getter_AddRefs(mOuterFocusStyle));
 
 }

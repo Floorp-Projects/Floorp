@@ -83,7 +83,8 @@
 #include "nsTableRowGroupFrame.h"
 #include "nsStyleChangeList.h"
 #include "nsIFormControl.h"
-#include "nsCSSAtoms.h"
+#include "nsCSSAnonBoxes.h"
+#include "nsCSSPseudoElements.h"
 #include "nsIDeviceContext.h"
 #include "nsTextFragment.h"
 #include "nsISupportsArray.h"
@@ -1584,10 +1585,10 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
             nsIAtom *wrapperPseudo;
             if (display->IsBlockLevel()) {
               NS_NewBlockFrame(aPresShell, aWrapperFrame);
-              wrapperPseudo = nsCSSAtoms::mozGCWrapperBlock;
+              wrapperPseudo = nsCSSAnonBoxes::mozGCWrapperBlock;
             } else {
               NS_NewInlineFrame(aPresShell, aWrapperFrame);
-              wrapperPseudo = nsCSSAtoms::mozGCWrapperInline;
+              wrapperPseudo = nsCSSAnonBoxes::mozGCWrapperInline;
             }        
             nsCOMPtr<nsIStyleContext> parentSC = aStyleContext->GetParent(); 
             nsCOMPtr<nsIStyleContext> wrapperSC;
@@ -1978,7 +1979,8 @@ nsCSSFrameConstructor::CreatePseudoTableFrame(nsIPresShell*            aPresShel
   parentFrame->GetContent(getter_AddRefs(parentContent));   
 
   // create the SC for the inner table which will be the parent of the outer table's SC
-  aPresContext->ResolvePseudoStyleContextFor(parentContent, nsHTMLAtoms::tablePseudo, 
+  aPresContext->ResolvePseudoStyleContextFor(parentContent,
+                                             nsCSSAnonBoxes::table,
                                              parentStyle,
                                              getter_AddRefs(childStyle));
 
@@ -2027,7 +2029,8 @@ nsCSSFrameConstructor::CreatePseudoRowGroupFrame(nsIPresShell*            aPresS
   parentFrame->GetStyleContext(getter_AddRefs(parentStyle)); 
   parentFrame->GetContent(getter_AddRefs(parentContent));   
 
-  aPresContext->ResolvePseudoStyleContextFor(parentContent, nsHTMLAtoms::tableRowGroupPseudo, 
+  aPresContext->ResolvePseudoStyleContextFor(parentContent,
+                                             nsCSSAnonBoxes::tableRowGroup, 
                                              parentStyle,
                                              getter_AddRefs(childStyle));
 
@@ -2072,7 +2075,8 @@ nsCSSFrameConstructor::CreatePseudoColGroupFrame(nsIPresShell*            aPresS
   parentFrame->GetStyleContext(getter_AddRefs(parentStyle)); 
   parentFrame->GetContent(getter_AddRefs(parentContent));   
 
-  aPresContext->ResolvePseudoStyleContextFor(parentContent, nsHTMLAtoms::tableColGroupPseudo, 
+  aPresContext->ResolvePseudoStyleContextFor(parentContent,
+                                             nsCSSAnonBoxes::tableColGroup, 
                                              parentStyle,
                                              getter_AddRefs(childStyle));
 
@@ -2115,7 +2119,8 @@ nsCSSFrameConstructor::CreatePseudoRowFrame(nsIPresShell*            aPresShell,
   parentFrame->GetStyleContext(getter_AddRefs(parentStyle)); 
   parentFrame->GetContent(getter_AddRefs(parentContent));   
 
-  aPresContext->ResolvePseudoStyleContextFor(parentContent, nsHTMLAtoms::tableRowPseudo, 
+  aPresContext->ResolvePseudoStyleContextFor(parentContent,
+                                             nsCSSAnonBoxes::tableRow, 
                                              parentStyle,
                                              getter_AddRefs(childStyle));
 
@@ -2159,7 +2164,8 @@ nsCSSFrameConstructor::CreatePseudoCellFrame(nsIPresShell*            aPresShell
   parentFrame->GetStyleContext(getter_AddRefs(parentStyle)); 
   parentFrame->GetContent(getter_AddRefs(parentContent));   
 
-  aPresContext->ResolvePseudoStyleContextFor(parentContent, nsHTMLAtoms::tableCellPseudo, 
+  aPresContext->ResolvePseudoStyleContextFor(parentContent,
+                                             nsCSSAnonBoxes::tableCell, 
                                              parentStyle,
                                              getter_AddRefs(childStyle));
 
@@ -2532,7 +2538,8 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
 
   // create the pseudo SC for the outer table as a child of the inner SC
   nsCOMPtr<nsIStyleContext> outerStyleContext;
-  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::tableOuterPseudo,
+  aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                             nsCSSAnonBoxes::tableOuter,
                                              aStyleContext,
                                              getter_AddRefs(outerStyleContext));
   
@@ -2918,7 +2925,8 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*            aPresShe
   
   // Resolve pseudo style and initialize the body cell frame
   nsCOMPtr<nsIStyleContext> innerPseudoStyle;
-  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::cellContentPseudo,
+  aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                             nsCSSAnonBoxes::cellContent,
                                              aStyleContext,
                                              getter_AddRefs(innerPseudoStyle));
   InitAndRestoreFrame(aPresContext, aState, aContent, 
@@ -3424,7 +3432,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                               aDocElement,
                               styleContext,
                               aParentFrame,
-                              nsLayoutAtoms::scrolledContentPseudo,
+                              nsCSSAnonBoxes::scrolledContent,
                               mDocument,
                               PR_FALSE,
                               scrollFrame,
@@ -3628,7 +3636,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   nsIFrame*                 viewportFrame = nsnull;
   nsCOMPtr<nsIStyleContext> viewportPseudoStyle;
 
-  aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::viewportPseudo,
+  aPresContext->ResolvePseudoStyleContextFor(nsnull, nsCSSAnonBoxes::viewport,
                                            nsnull,
                                            getter_AddRefs(viewportPseudoStyle));
 
@@ -3682,12 +3690,12 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
           NS_NewCanvasFrame(aPresShell, &rootFrame);
         }
 
-        rootPseudo = nsLayoutAtoms::canvasPseudo;
+        rootPseudo = nsCSSAnonBoxes::canvas;
         mDocElementContainingBlock = rootFrame;
     } else {
         // Create a page sequence frame
         NS_NewSimplePageSequenceFrame(aPresShell, &rootFrame);
-        rootPseudo = nsLayoutAtoms::pageSequencePseudo;
+        rootPseudo = nsCSSAnonBoxes::pageSequence;
     }
 
 
@@ -3851,7 +3859,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       // resolve a context for the scrollframe
       nsCOMPtr<nsIStyleContext>  styleContext;
       aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                                 nsLayoutAtoms::viewportScrollPseudo,
+                                                 nsCSSAnonBoxes::viewportScroll,
                                                  viewportPseudoStyle,
                                                  getter_AddRefs(styleContext));
 
@@ -3901,7 +3909,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       // create a style context for the scrollport of the viewport
       nsCOMPtr<nsIStyleContext> scrollPseudoStyle;
       aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                                nsLayoutAtoms::scrolledContentPseudo,
+                                                nsCSSAnonBoxes::scrolledContent,
                                                 viewportPseudoStyle,
                                                 getter_AddRefs(scrollPseudoStyle));
 
@@ -3967,7 +3975,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     // the pages easier and faster.
     nsCOMPtr<nsIStyleContext> pagePseudoStyle;
 
-    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pagePseudo,
+    aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                                               nsCSSAnonBoxes::page,
                                                rootPseudoStyle,
                                                getter_AddRefs(pagePseudoStyle));
 
@@ -3979,7 +3988,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     NS_NewPageContentFrame(aPresShell, &pageContentFrame);
 
     nsCOMPtr<nsIStyleContext> pageContentPseudoStyle;
-    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pageContentPseudo,
+    aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                                               nsCSSAnonBoxes::pageContent,
                                                pagePseudoStyle,
                                                getter_AddRefs(pageContentPseudoStyle));
 
@@ -4115,7 +4125,7 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIPresShell*        aPresShel
 
   nsCOMPtr<nsIStyleContext> radioStyle;
   aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                             nsHTMLAtoms::radioPseudo,
+                                             nsCSSAnonBoxes::radio,
                                              aStyleContext,
                                              getter_AddRefs(radioStyle));
   nsIRadioControlFrame* radio = nsnull;
@@ -4145,7 +4155,7 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIPresShell*    aPresShell
   }
 
   nsCOMPtr<nsIStyleContext> checkboxStyle;
-  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::checkPseudo, 
+  aPresContext->ResolvePseudoStyleContextFor(aContent, nsCSSAnonBoxes::check, 
                                              aStyleContext, getter_AddRefs(checkboxStyle));
   nsICheckboxControlFrame* checkbox = nsnull;
   if (aNewFrame != nsnull && 
@@ -4318,7 +4328,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         // Resolve psuedo element style for the dropdown list 
       nsCOMPtr<nsIStyleContext> listStyle;
       rv = aPresContext->ResolvePseudoStyleContextFor(aContent, 
-                                              nsHTMLAtoms::dropDownListPseudo, 
+                                              nsCSSAnonBoxes::dropDownList, 
                                               aStyleContext,
                                               getter_AddRefs(listStyle));
 
@@ -4447,7 +4457,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsIPresShell*        aPresShell,
 
   
     aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                  nsLayoutAtoms::scrolledContentPseudo,
+                                  nsCSSAnonBoxes::scrolledContent,
                                   aStyleContext,
                                   getter_AddRefs(scrolledPseudoStyle));
 
@@ -4574,7 +4584,7 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*            aPresShel
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
-  aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::fieldsetContentPseudo,
+  aPresContext->ResolvePseudoStyleContextFor(aContent, nsCSSAnonBoxes::fieldsetContent,
                                              aStyleContext, &styleContext);
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       newFrame, styleContext, nsnull, areaFrame);
@@ -5091,13 +5101,15 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
       nsIFrame *wrapperFrame = nsnull, *beforeFrame, *afterFrame;
       if (!CreateGeneratedContentFrame(aPresShell, aPresContext,
                                        aState, aParentFrame, aContent,
-                                       aStyleContext, nsCSSAtoms::beforePseudo,
+                                       aStyleContext,
+                                       nsCSSPseudoElements::before,
                                        &wrapperFrame, &beforeFrame)) {
         beforeFrame = nsnull;
       }
       if (!CreateGeneratedContentFrame(aPresShell, aPresContext,
                                       aState, aParentFrame, aContent,
-                                      aStyleContext, nsCSSAtoms::afterPseudo,
+                                      aStyleContext,
+                                      nsCSSPseudoElements::after,
                                       &wrapperFrame, &afterFrame)) {
         afterFrame = nsnull;
       }
@@ -6008,7 +6020,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
     // we used the style that was passed in. So resolve another one.
     nsCOMPtr<nsIStyleContext> scrollPseudoStyle;
     aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                              nsLayoutAtoms::scrolledContentPseudo,
+                                              nsCSSAnonBoxes::scrolledContent,
                                               contentStyle,
                                               getter_AddRefs(scrollPseudoStyle));
 
@@ -6160,7 +6172,7 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                      aContent,
                      aContentStyle,
                      aParentFrame,
-                     nsLayoutAtoms::scrolledContentPseudo,
+                     nsCSSAnonBoxes::scrolledContent,
                      mDocument,
                      PR_FALSE,
                      aNewFrame,
@@ -6960,7 +6972,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
       if (NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIStyleContext> blockContext;
       aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                                 nsHTMLAtoms::mozAnonymousBlock,
+                                                 nsCSSAnonBoxes::mozAnonymousBlock,
                                                  mrowContext,
                                                  getter_AddRefs(blockContext));
       InitAndRestoreFrame(aPresContext, aState, aContent, newFrame,
@@ -7244,7 +7256,8 @@ nsCSSFrameConstructor::ConstructPageBreakFrame(nsIPresShell*            aPresShe
                                                nsFrameItems&            aFrameItems)
 {
   nsCOMPtr<nsIStyleContext> pseudoStyle;
-  aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pageBreakPseudo,
+  aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                                             nsCSSAnonBoxes::pageBreak,
                                              aStyleContext,
                                              getter_AddRefs(pseudoStyle));
   nsIFrame* pageBreakFrame;
@@ -7816,7 +7829,8 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
   nsIFrame* lastChild = frames.LastChild();
 
   // See if the parent has an :after pseudo-element
-  if (lastChild && IsGeneratedContentFor(aContainer, lastChild, nsCSSAtoms::afterPseudo)) {
+  if (lastChild && IsGeneratedContentFor(aContainer, lastChild,
+                                         nsCSSPseudoElements::after)) {
     // Insert the frames before the :after pseudo-element.
     return aFrameManager->InsertFrames(aPresContext, *aPresShell, aParentFrame,
                                        nsnull, frames.GetPrevSiblingFor(lastChild),
@@ -8719,7 +8733,7 @@ nsCSSFrameConstructor::AddDummyFrameToSelect(nsIPresContext*  aPresContext,
         if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState,
                                         aParentFrame, aContainer,
                                         styleContext,
-                                        nsLayoutAtoms::dummyOptionPseudo,
+                                        nsCSSAnonBoxes::dummyOption,
                                         nsnull, &generatedFrame)) {
           // Add the generated frame to the child list
           if (aChildItems) {
@@ -9261,7 +9275,8 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
         nsIFrame* firstChild;
         parentFrame->FirstChild(aPresContext, nsnull, &firstChild);
 
-        if (firstChild && IsGeneratedContentFor(aContainer, firstChild, nsCSSAtoms::beforePseudo)) {
+        if (firstChild && IsGeneratedContentFor(aContainer, firstChild,
+                                                nsCSSPseudoElements::before)) {
           // Insert the new frames after the :before pseudo-element
           prevSibling = firstChild;
         }
@@ -11445,7 +11460,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
       NS_NewPageContentFrame(aPresShell, &pageContentFrame);
 
       nsCOMPtr<nsIStyleContext> pageContentPseudoStyle;
-      aPresContext->ResolvePseudoStyleContextFor(nsnull, nsLayoutAtoms::pageContentPseudo,
+      aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                                                 nsCSSAnonBoxes::pageContent,
                                                  styleContext,
                                                  getter_AddRefs(pageContentPseudoStyle));
 
@@ -11672,7 +11688,8 @@ nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
             // next sibling.
 
             if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
-                IsGeneratedContentFor(aContent, kidFrame, nsCSSAtoms::beforePseudo)) {
+                IsGeneratedContentFor(aContent, kidFrame,
+                                      nsCSSPseudoElements::before)) {
               kidFrame->GetNextSibling(&kidFrame);
 #ifdef DEBUG
               NS_ASSERTION(kidFrame, ":before with no next sibling");
@@ -11685,7 +11702,7 @@ nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
 
                 NS_ASSERTION(nextSiblingContent.get() == aContent &&
                              !IsGeneratedContentFor(aContent, kidFrame,
-                                                    nsCSSAtoms::afterPseudo),
+                                                    nsCSSPseudoElements::after),
                              ":before frame not followed by primary frame");
               }
 #endif
@@ -12089,7 +12106,7 @@ nsCSSFrameConstructor::GetFirstLetterStyle(nsIPresContext* aPresContext,
   nsIStyleContext* fls = nsnull;
   if (aContent) {
     aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                               nsHTMLAtoms::firstLetterPseudo,
+                                               nsCSSPseudoElements::firstLetter,
                                                aStyleContext, &fls);
   }
   return fls;
@@ -12103,7 +12120,7 @@ nsCSSFrameConstructor::GetFirstLineStyle(nsIPresContext* aPresContext,
   nsIStyleContext* fls = nsnull;
   if (aContent) {
     aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                               nsHTMLAtoms::firstLinePseudo,
+                                               nsCSSPseudoElements::firstLetter,
                                                aStyleContext, &fls);
   }
   return fls;
@@ -12117,7 +12134,7 @@ nsCSSFrameConstructor::HaveFirstLetterStyle(nsIPresContext* aPresContext,
                                             nsIStyleContext* aStyleContext)
 {
   return HasPseudoStyle(aPresContext, aContent, aStyleContext,
-                        nsHTMLAtoms::firstLetterPseudo);
+                        nsCSSPseudoElements::firstLetter);
 }
 
 PRBool
@@ -12126,7 +12143,7 @@ nsCSSFrameConstructor::HaveFirstLineStyle(nsIPresContext* aPresContext,
                                           nsIStyleContext* aStyleContext)
 {
   return HasPseudoStyle(aPresContext, aContent, aStyleContext,
-                        nsHTMLAtoms::firstLinePseudo);
+                        nsCSSPseudoElements::firstLetter);
 }
 
 void
@@ -12169,7 +12186,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
     // Probe for generated content before
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
-                                    styleContext, nsCSSAtoms::beforePseudo,
+                                    styleContext, nsCSSPseudoElements::before,
                                     nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
@@ -12211,7 +12228,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresShell*            aPresShell,
     // Probe for generated content after
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
-                                    styleContext, nsCSSAtoms::afterPseudo,
+                                    styleContext, nsCSSPseudoElements::after,
                                     nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
@@ -13362,7 +13379,7 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresShell* aPresShell,
     nsIFrame* generatedFrame;
     aFrame->GetStyleContext(getter_AddRefs(styleContext));
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
-                                    styleContext, nsCSSAtoms::beforePseudo,
+                                    styleContext, nsCSSPseudoElements::before,
                                     nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
@@ -13391,7 +13408,7 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresShell* aPresShell,
     // Probe for generated content after
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
-                                    styleContext, nsCSSAtoms::afterPseudo,
+                                    styleContext, nsCSSPseudoElements::after,
                                     nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
@@ -13541,11 +13558,11 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   nsIAtom* blockStyle;
   if (aIsPositioned) {
     NS_NewRelativeItemWrapperFrame(aPresShell, &blockFrame);
-    blockStyle = nsHTMLAtoms::mozAnonymousPositionedBlock;
+    blockStyle = nsCSSAnonBoxes::mozAnonymousPositionedBlock;
   }
   else {
     NS_NewBlockFrame(aPresShell, &blockFrame);
-    blockStyle = nsHTMLAtoms::mozAnonymousBlock;
+    blockStyle = nsCSSAnonBoxes::mozAnonymousBlock;
   }
 
   nsCOMPtr<nsIStyleContext> blockSC;
@@ -13665,7 +13682,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
     nsIFrame* generatedFrame;
     aFrame->GetStyleContext(getter_AddRefs(styleContext));
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
-                                    styleContext, nsCSSAtoms::beforePseudo,
+                                    styleContext, nsCSSPseudoElements::before,
                                     nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
@@ -13712,7 +13729,7 @@ nsCSSFrameConstructor::ProcessInlineChildren(nsIPresShell* aPresShell,
     // Probe for generated content after
     nsIFrame* generatedFrame;
     if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, aFrame, aContent,
-                                    styleContext, nsCSSAtoms::afterPseudo,
+                                    styleContext, nsCSSPseudoElements::after,
                                     nsnull, &generatedFrame)) {
       // Add the generated frame to the child list
       aFrameItems.AddChild(generatedFrame);
@@ -14035,7 +14052,7 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
 
   nsCOMPtr<nsIStyleContext> blockSC;
   aPresContext->ResolvePseudoStyleContextFor(content,
-                                             nsHTMLAtoms::mozAnonymousBlock,
+                                             nsCSSAnonBoxes::mozAnonymousBlock,
                                              styleContext,
                                              getter_AddRefs(blockSC));
 

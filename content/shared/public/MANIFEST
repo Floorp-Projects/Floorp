@@ -3,8 +3,12 @@
 #
 nsBidiUtils.h
 nsChangeHint.h
-nsCSSAtomList.h
-nsCSSAtoms.h
+nsCSSAnonBoxList.h
+nsCSSAnonBoxes.h
+nsCSSPseudoClassList.h
+nsCSSPseudoClasses.h
+nsCSSPseudoElementList.h
+nsCSSPseudoElements.h
 nsCSSKeywordList.h
 nsCSSKeywords.h
 nsCSSPropList.h

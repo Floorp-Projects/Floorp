@@ -59,6 +59,7 @@
 #include "nsIFontMetrics.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
+#include "nsCSSPseudoElements.h"
 #include "nsHTMLValue.h"
 #include "nsIDOMEvent.h"
 #include "nsIHTMLContent.h"
@@ -6383,7 +6384,7 @@ nsBlockFrame::GetFirstLetterStyle(nsIPresContext* aPresContext)
 
   nsIStyleContext* fls;
   aPresContext->ProbePseudoStyleContextFor(mContent,
-                                           nsHTMLAtoms::firstLetterPseudo,
+                                           nsCSSPseudoElements::firstLetter,
                                            mStyleContext, &fls);
   return fls;
 }
@@ -6437,10 +6438,10 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
         case NS_STYLE_LIST_STYLE_DISC:
         case NS_STYLE_LIST_STYLE_CIRCLE:
         case NS_STYLE_LIST_STYLE_SQUARE:
-          pseudoElement = nsHTMLAtoms::mozListBulletPseudo;
+          pseudoElement = nsCSSPseudoElements::mozListBullet;
           break;
         default:
-          pseudoElement = nsHTMLAtoms::mozListNumberPseudo;
+          pseudoElement = nsCSSPseudoElements::mozListNumber;
           break;
       }
       nsIStyleContext* kidSC;

@@ -43,7 +43,7 @@
 #include "nsIAtom.h"
 #include "nsIURL.h"
 #include "nsISupportsArray.h"
-#include "nsHTMLAtoms.h"
+#include "nsCSSPseudoElements.h"
 #include "nsIHTMLContent.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
@@ -318,7 +318,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData,
     return NS_OK;
 
   nsIAtom* pseudoTag = aData->mPseudoTag;
-  if (pseudoTag == nsHTMLAtoms::firstLinePseudo) {
+  if (pseudoTag == nsCSSPseudoElements::firstLine) {
     if (!mFirstLineRule) {
       mFirstLineRule = new CSSFirstLineRule(this);
       if (!mFirstLineRule)
@@ -327,7 +327,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData,
     }
     aData->mRuleWalker->Forward(mFirstLineRule);
   }
-  else if (pseudoTag == nsHTMLAtoms::firstLetterPseudo) {
+  else if (pseudoTag == nsCSSPseudoElements::firstLetter) {
     if (!mFirstLetterRule) {
       mFirstLetterRule = new CSSFirstLetterRule(this);
       if (!mFirstLetterRule)

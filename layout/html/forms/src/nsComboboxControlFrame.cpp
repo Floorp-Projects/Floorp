@@ -43,6 +43,7 @@
 #include "nsFormControlFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
@@ -2169,7 +2170,7 @@ nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)
   // create the style context for the anonymous frame
   nsCOMPtr<nsIStyleContext> styleContext;
   rv = aPresContext->ResolvePseudoStyleContextFor(mContent, 
-                                                  nsHTMLAtoms::mozDisplayComboboxControlFrame,
+                                                  nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
                                                   mStyleContext,
                                                   getter_AddRefs(styleContext));
   if (NS_FAILED(rv)) { return rv; }
@@ -2309,7 +2310,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
     // create the style context for the anonymous block frame
     nsCOMPtr<nsIStyleContext> styleContext;
     rv = aPresContext->ResolvePseudoStyleContextFor(mContent, 
-                                                    nsHTMLAtoms::mozDisplayComboboxControlFrame,
+                                                    nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
                                                     mStyleContext,
                                                     getter_AddRefs(styleContext));
     if (NS_FAILED(rv)) { return rv; }

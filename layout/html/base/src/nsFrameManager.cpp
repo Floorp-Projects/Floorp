@@ -44,6 +44,7 @@
 #include "pldhash.h"
 #include "nsPlaceholderFrame.h"
 #include "nsLayoutAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsHTMLAtoms.h"
 #ifdef NS_DEBUG
 #include "nsISupportsArray.h"
@@ -1731,7 +1732,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
     
     // do primary context
     nsIStyleContext* newContext = nsnull;
-    if (pseudoTag == nsHTMLAtoms::mozNonElementPseudo) {
+    if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
       aPresContext->ResolveStyleContextForNonElement(parentContext,
@@ -1787,7 +1788,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         }
       }
       else {
-        if (pseudoTag && pseudoTag != nsHTMLAtoms::mozNonElementPseudo &&
+        if (pseudoTag && pseudoTag != nsCSSAnonBoxes::mozNonElement &&
             aAttribute &&
             (!(aMinChange &
                (nsChangeHint_ReflowFrame | nsChangeHint_ReconstructFrame
@@ -1814,7 +1815,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
           nsIStyleContext* newExtraContext = nsnull;
           oldExtraContext->GetPseudoType(pseudoTag);
           NS_ASSERTION(pseudoTag &&
-                       pseudoTag != nsHTMLAtoms::mozNonElementPseudo,
+                       pseudoTag != nsCSSAnonBoxes::mozNonElement,
                        "extra style context is not pseudo element");
           result = aPresContext->ResolvePseudoStyleContextFor(content, pseudoTag, newContext,
                                                               &newExtraContext);
@@ -1831,7 +1832,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 #if 0
               // XXXldb |oldContext| is null by this point, so this will
               // never do anything.
-              if (pseudoTag && pseudoTag != nsHTMLAtoms::mozNonElementPseudo &&
+              if (pseudoTag && pseudoTag != nsCSSAnonBoxes::mozNonElement &&
                   aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
                   HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
                 aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
@@ -1859,7 +1860,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                                                newContext, 
                                                &undisplayedContext);
         }
-        else if (pseudoTag == nsHTMLAtoms::mozNonElementPseudo) {
+        else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
           aPresContext->ResolveStyleContextForNonElement(newContext, 
                                                          &undisplayedContext);
         }

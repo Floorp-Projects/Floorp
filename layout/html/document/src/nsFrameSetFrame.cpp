@@ -52,6 +52,8 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsINameSpaceManager.h"
+#include "nsCSSPseudoElements.h"
+#include "nsCSSAnonBoxes.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -452,9 +454,9 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
     // should just have null content, if we support that
     nsHTMLFramesetBlankFrame* blankFrame = new (shell.get()) nsHTMLFramesetBlankFrame;
     nsCOMPtr<nsIStyleContext> pseudoStyleContext;
-    aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::framesetBlankPseudo,
-                                               mStyleContext,
-                                               getter_AddRefs(pseudoStyleContext));
+    aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                            nsCSSAnonBoxes::framesetBlank, mStyleContext,
+                            getter_AddRefs(pseudoStyleContext));
     if(blankFrame)
       blankFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
    
@@ -1079,7 +1081,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       if (firstTime) { // create horizontal border
         borderFrame = new (shell.get()) nsHTMLFramesetBorderFrame(borderWidth, PR_FALSE, PR_FALSE);
         nsIStyleContext* pseudoStyleContext;
-        aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::horizontalFramesetBorderPseudo,
+        aPresContext->ResolvePseudoStyleContextFor(mContent, nsCSSPseudoElements::horizontalFramesetBorder,
                                                    mStyleContext,
                                                    &pseudoStyleContext);
         borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);
@@ -1107,7 +1109,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
           if (firstTime) { // create vertical border
             borderFrame = new (shell.get()) nsHTMLFramesetBorderFrame(borderWidth, PR_TRUE, PR_FALSE);
             nsIStyleContext* pseudoStyleContext;
-            aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::verticalFramesetBorderPseudo,
+            aPresContext->ResolvePseudoStyleContextFor(mContent, nsCSSPseudoElements::verticalFramesetBorder,
                                                        mStyleContext,
                                                        &pseudoStyleContext);
             borderFrame->Init(aPresContext, mContent, this, pseudoStyleContext, nsnull);

@@ -52,6 +52,7 @@
 #include "nsCSSRendering.h"
 #include "nsISupports.h"
 #include "nsHTMLAtoms.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsIImage.h"
 #include "nsStyleConsts.h"
 #include "nsIHTMLContent.h"
@@ -146,7 +147,8 @@ nsHTMLButtonControlFrame::Init(nsIPresContext*  aPresContext,
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
-  aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo,
+  aPresContext->ResolvePseudoStyleContextFor(mContent,
+                                            nsCSSAnonBoxes::buttonContent,
                                             mStyleContext,
                                             &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
